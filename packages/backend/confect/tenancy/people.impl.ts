@@ -31,21 +31,35 @@ const view = (person: TenantPeopleDoc) => ({
 
 /**
  * The Persons of one status in the member's school, a page at a time, read on
- * the status index. A cohort's members are listed by `cohorts:members`: the
- * placements of a cohort are not indexed by status, and a page filtered after
- * it is read would come back short.
+ * the status index. With `account: "unclaimed"` the page is read on the index of
+ * the status and the account state, so the Persons who hold no account are never
+ * cut off by the Persons who hold one. A cohort's members are listed by
+ * `cohorts:members`: the placements of a cohort are not indexed by status, and a
+ * page filtered after it is read would come back short.
  */
 const list = FunctionImpl.make(
   databaseSchema,
   spec,
   "list",
-  Effect.fn("tenancy.people.list")(function* ({ paginationOpts, status }) {
+  Effect.fn("tenancy.people.list")(function* ({
+    account,
+    paginationOpts,
+    status,
+  }) {
     const { tenant } = yield* Member;
-    const page = yield* (yield* DatabaseReader)
-      .table("tenantPeople")
-      .index("by_tenantId_and_status", (query) =>
-        query.eq("tenantId", tenant._id).eq("status", status)
-      )
+    const people = (yield* DatabaseReader).table("tenantPeople");
+    const page = yield* (
+      account === undefined
+        ? people.index("by_tenantId_and_status", (query) =>
+            query.eq("tenantId", tenant._id).eq("status", status)
+          )
+        : people.index("by_tenantId_and_status_and_account_state", (query) =>
+            query
+              .eq("tenantId", tenant._id)
+              .eq("status", status)
+              .eq("account.state", account)
+          )
+    )
       .paginate(paginationOpts)
       .pipe(Effect.orDie);
     return Struct.assign(page, { page: Arr.map(page.page, view) });

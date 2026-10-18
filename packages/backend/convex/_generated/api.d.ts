@@ -49,29 +49,45 @@ export declare const api: {
       list: FunctionReference<
         "query",
         "public",
-        { personId: Id<"tenantPeople">; slug: string },
-        Array<{
-          id: Id<"tenantGrants">;
-          role: {
-            key:
-              | "owner"
-              | "admin"
-              | "principal"
-              | "deputy"
-              | "teacher"
-              | "counselor"
-              | "staff"
-              | "student"
-              | "guardian"
-              | "proctor"
-              | "auditor"
-              | "integration";
-            kind: "builtin";
+        {
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
           };
-          scope:
-            { kind: "tenant" } | { kind: "unit"; unitId: Id<"tenantUnits"> };
-          term: { kind: "standing" } | { expiresAt: number; kind: "temporary" };
-        }>
+          slug: string;
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            id: Id<"tenantGrants">;
+            person: { id: Id<"tenantPeople">; name: string };
+            role: {
+              key:
+                | "owner"
+                | "admin"
+                | "principal"
+                | "deputy"
+                | "teacher"
+                | "counselor"
+                | "staff"
+                | "student"
+                | "guardian"
+                | "proctor"
+                | "auditor"
+                | "integration";
+              kind: "builtin";
+            };
+            scope:
+              { kind: "tenant" } | { kind: "unit"; unitId: Id<"tenantUnits"> };
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
       >;
       revoke: FunctionReference<
         "mutation",
@@ -4204,6 +4220,34 @@ export declare const api: {
         { code: string; expiresAt: number; loginName: string }
       >;
     };
+    logins: {
+      list: FunctionReference<
+        "query",
+        "public",
+        {
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          slug: string;
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            issuedAt: number;
+            loginName: string;
+            person: { id: Id<"tenantPeople">; name: string };
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
+    };
   };
   integrations: {
     clients: {
@@ -4427,6 +4471,7 @@ export declare const api: {
               | { type: "period.created" }
               | { type: "period.opened" }
               | { type: "period.archived" }
+              | { type: "period.rename" }
               | { type: "person.created" }
               | {
                   invite: Id<"tenantInvites">;
@@ -4568,6 +4613,7 @@ export declare const api: {
                 }
               | { type: "unit.archived" }
               | { type: "unit.unarchived" }
+              | { npsn: string; type: "unit.npsn.set" }
               | {
                   minutes: number;
                   reason: "support" | "onboarding" | "incident";
@@ -5860,6 +5906,7 @@ export declare const api: {
         "query",
         "public",
         {
+          account?: "unclaimed";
           paginationOpts: {
             cursor: string | null;
             endCursor?: string | null;
@@ -5974,6 +6021,18 @@ export declare const api: {
         "mutation",
         "public",
         { periodId: Id<"tenantPeriods">; slug: string },
+        {
+          end: string;
+          id: Id<"tenantPeriods">;
+          name: string;
+          start: string;
+          status: "planned" | "active" | "archived";
+        }
+      >;
+      rename: FunctionReference<
+        "mutation",
+        "public",
+        { name: string; periodId: Id<"tenantPeriods">; slug: string },
         {
           end: string;
           id: Id<"tenantPeriods">;
@@ -6635,6 +6694,30 @@ export declare const api: {
         { slug: string; unitId: Id<"tenantUnits"> },
         "active" | "archived"
       >;
+      list: FunctionReference<
+        "query",
+        "public",
+        { slug: string },
+        Array<{
+          contentLanguage: "en" | "id" | "de";
+          id: Id<"tenantUnits">;
+          level:
+            | "paud"
+            | "sd"
+            | "mi"
+            | "smp"
+            | "mts"
+            | "sma"
+            | "ma"
+            | "smk"
+            | "slb"
+            | "other";
+          name: string;
+          npsn: string | null;
+          status: "active" | "archived";
+          timeZone: string;
+        }>
+      >;
       setLocale: FunctionReference<
         "mutation",
         "public",
@@ -6645,6 +6728,12 @@ export declare const api: {
           unitId: Id<"tenantUnits">;
         },
         { contentLanguage: "en" | "id" | "de"; timeZone: string }
+      >;
+      setNpsn: FunctionReference<
+        "mutation",
+        "public",
+        { npsn: string; slug: string; unitId: Id<"tenantUnits"> },
+        string
       >;
       unarchive: FunctionReference<
         "mutation",
@@ -12766,6 +12855,19 @@ export declare const internal: {
           tenant: Id<"tenants">;
           units: Array<Id<"tenantUnits">>;
         }
+      >;
+    };
+    seed: {
+      teacher: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          email: string;
+          locale: "en" | "id" | "de";
+          name: string;
+          slug: string;
+        },
+        { invite: Id<"tenantInvites">; person: Id<"tenantPeople"> }
       >;
     };
   };

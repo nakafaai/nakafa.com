@@ -279,3 +279,15 @@ export class PromotionCohortOccupied extends Schema.TaggedError<PromotionCohortO
     "A cohort this promotion created still holds people, a homeroom teacher, or a class."
   )
 ) {}
+
+/** A national school number that is not eight digits. */
+export class NpsnInvalid extends Schema.TaggedError<NpsnInvalid>()(
+  "NpsnInvalid",
+  refusal("NPSN_INVALID", "A national school number has eight digits.")
+) {}
+
+/** A national school number that another unit of this school already holds. */
+export class NpsnTaken extends Schema.TaggedError<NpsnTaken>()(
+  "NpsnTaken",
+  refusal("NPSN_TAKEN", "Another unit of this school has this number.")
+) {}

@@ -12,7 +12,7 @@ import { Array as Arr, Effect } from "effect";
 
 const nf = slugOf("nf");
 const other = slugOf("other");
-const { archive, create, list, open } = refs.public.tenancy.periods;
+const { archive, create, list, open, rename } = refs.public.tenancy.periods;
 const denied = (reason: "resource" | "role" | "condition") => ({
   _tag: "AccessDenied",
   code: "ACCESS_DENIED",
@@ -297,6 +297,81 @@ describe("tenancy/periods open and archive", () => {
         denied("condition"),
         denied("condition"),
       ]);
+    })
+  );
+});
+
+describe("tenancy/periods rename", () => {
+  it.effect(
+    "renames a period in place, answers the new name, and journals the rename",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const period = yield* admin(fixture, SMA_TERMS);
+        const renamed = yield* fixture.as("admin").mutation(rename, {
+          name: "Genap 2026/2027",
+          periodId: period.id,
+          slug: nf,
+        });
+        const entries = yield* fixture.run(journal);
+        expect(renamed).toEqual({ ...period, name: "Genap 2026/2027" });
+        expect(
+          Arr.filter(entries, (entry) => entry.change.type === "period.rename")
+        ).toMatchObject([
+          {
+            actor: { id: fixture.people.admin.personId, kind: "person" },
+            change: { type: "period.rename" },
+            owner: { kind: "tenant", tenantId: fixture.tenants.nf },
+            subject: { id: period.id, kind: "period" },
+          },
+        ]);
+      })
+  );
+
+  it.effect(
+    "writes and records nothing for the name a period already has",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const period = yield* admin(fixture, SMA_TERMS);
+        const before = yield* fixture.run(journal);
+        const same = yield* fixture.as("admin").mutation(rename, {
+          name: period.name,
+          periodId: period.id,
+          slug: nf,
+        });
+        expect(same).toEqual(period);
+        expect(yield* fixture.run(journal)).toEqual(before);
+      })
+  );
+
+  it.effect("refuses a teacher, who does not hold period.manage", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const period = yield* admin(fixture, SMA_TERMS);
+      const denial = yield* fixture
+        .as("teacher")
+        .mutation(rename, { name: "Lain", periodId: period.id, slug: nf })
+        .pipe(Effect.flip);
+      expect(denial).toMatchObject(denied("role"));
+    })
+  );
+
+  it.effect("refuses to rename an archived period", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const period = yield* admin(fixture, SMA_TERMS);
+      yield* fixture
+        .as("admin")
+        .mutation(open, { periodId: period.id, slug: nf });
+      yield* fixture
+        .as("admin")
+        .mutation(archive, { periodId: period.id, slug: nf });
+      const denial = yield* fixture
+        .as("admin")
+        .mutation(rename, { name: "Lain", periodId: period.id, slug: nf })
+        .pipe(Effect.flip);
+      expect(denial).toMatchObject(denied("condition"));
     })
   );
 });

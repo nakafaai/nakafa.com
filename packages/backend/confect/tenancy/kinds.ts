@@ -13,6 +13,7 @@ import {
 } from "@repo/backend/confect/tenancy/promotion/schema";
 import {
   ClaimMethod,
+  Npsn,
   PersonReason,
 } from "@repo/backend/confect/tenancy/schema";
 import { Schema } from "effect";
@@ -113,6 +114,10 @@ export const unit = Kind.make("unit", "tenantUnits", {
     }),
     Schema.Struct({ type: Schema.Literal("unit.archived") }),
     Schema.Struct({ type: Schema.Literal("unit.unarchived") }),
+    Schema.Struct({
+      npsn: Npsn,
+      type: Schema.Literal("unit.npsn.set"),
+    }),
   ],
   published: ["unit.created"],
   relations: ["member"],
@@ -232,6 +237,7 @@ export const period = Kind.make("period", "tenantPeriods", {
     Schema.Struct({ type: Schema.Literal("period.created") }),
     Schema.Struct({ type: Schema.Literal("period.opened") }),
     Schema.Struct({ type: Schema.Literal("period.archived") }),
+    Schema.Struct({ type: Schema.Literal("period.rename") }),
   ],
   published: [],
   relations: [],

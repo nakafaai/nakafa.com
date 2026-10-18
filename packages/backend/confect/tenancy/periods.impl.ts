@@ -153,6 +153,35 @@ const open = FunctionImpl.make(
   })
 );
 
+/**
+ * Renames one period in place. A name that the period already has writes and
+ * records nothing, so a screen that sends it twice is done the first time. An
+ * archived period refuses the rename, as it refuses every other write.
+ */
+const rename = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "rename",
+  Effect.fn("tenancy.periods.rename")(function* ({ name }) {
+    const { person } = yield* Member;
+    const period = yield* Period;
+    if (period.name === name) {
+      return view(period);
+    }
+    yield* (yield* DatabaseWriter)
+      .table("tenantPeriods")
+      .replace(
+        period._id,
+        Struct.assign(Struct.omit(period, ["_creationTime", "_id"]), { name })
+      )
+      .pipe(Effect.orDie);
+    yield* periodAuthority.record(personActor(person), period, {
+      type: "period.rename",
+    });
+    return view(Struct.assign(period, { name }));
+  })
+);
+
 /** Archives an active period, which then stays readable and refuses writes. Only an active period can be archived. */
 const archive = FunctionImpl.make(
   databaseSchema,
@@ -170,6 +199,7 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(create),
   Layer.provide(open),
   Layer.provide(archive),
+  Layer.provide(rename),
   Layer.provide(session),
   Layer.provide(member),
   Layer.provide(periodAccess),

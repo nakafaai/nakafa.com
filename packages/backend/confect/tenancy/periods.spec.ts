@@ -70,4 +70,16 @@ export default GroupSpec.make()
       returns: () => PeriodView,
       error: () => Schema.Union([AccessDenied, PeriodNotActive]),
     }).middleware(PeriodAccess, { action: "period.manage", arg: "periodId" })
+  )
+  .addFunction(
+    FunctionSpec.publicMutation({
+      name: "rename",
+      args: () => ({
+        name: PeriodName,
+        periodId: Id("tenantPeriods"),
+        slug: TenantSlug,
+      }),
+      returns: () => PeriodView,
+      error: () => AccessDenied,
+    }).middleware(PeriodAccess, { action: "period.manage", arg: "periodId" })
   );

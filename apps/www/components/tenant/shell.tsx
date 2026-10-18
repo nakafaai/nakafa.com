@@ -7,9 +7,6 @@ import type {
 import {
   SidebarContent,
   SidebarFooter,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
 } from "@repo/design-system/components/ui/sidebar-content";
 import {
@@ -32,6 +29,7 @@ import { TenantAccountItems } from "@/components/tenant/account";
 import { signOutSchoolAccount } from "@/components/tenant/account.client";
 import { TenantContext, type TenantValue } from "@/components/tenant/context";
 import { SchoolMark } from "@/components/tenant/mark";
+import { TenantNavigation } from "@/components/tenant/navigation";
 
 /**
  * Signs out of the school, then returns to the school address, which shows the
@@ -56,10 +54,12 @@ function signOutOfSchool() {
  */
 function TenantAccount({
   account,
+  canManage,
   name,
   role,
 }: {
   account: typeof ViewerAccount.Type;
+  canManage: boolean;
   name: string;
   role: TenantValue["role"];
 }) {
@@ -78,7 +78,10 @@ function TenantAccount({
           name={name}
           onSignOut={signOutOfSchool}
         >
-          <TenantAccountItems username={account.username} />
+          <TenantAccountItems
+            canManage={canManage}
+            username={account.username}
+          />
         </AccountMenu>
       </SidebarMenu>
     </SidebarFooter>
@@ -93,19 +96,19 @@ function TenantAccount({
  */
 export function TenantShell({
   account,
+  canManage,
   children,
   personName,
   profile,
   role,
 }: {
   account: typeof ViewerAccount.Type;
+  canManage: boolean;
   children: ReactNode;
   personName: string;
   profile: typeof TenantProfile.Type;
   role: TenantValue["role"];
 }) {
-  const t = useTranslations("School");
-
   return (
     <TenantContext value={{ name: profile.name, role }}>
       <SidebarProvider>
@@ -123,20 +126,14 @@ export function TenantShell({
             </SidebarMenu>
           </SidebarHeader>
           <SidebarContent>
-            <SidebarGroup>
-              <SidebarGroupLabel>{t("for-you")}</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton isActive render={<Link href="/" />}>
-                      {t("home")}
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
+            <TenantNavigation canManage={canManage} />
           </SidebarContent>
-          <TenantAccount account={account} name={personName} role={role} />
+          <TenantAccount
+            account={account}
+            canManage={canManage}
+            name={personName}
+            role={role}
+          />
         </Sidebar>
         <SidebarInset>
           <header className="flex h-12 items-center gap-2 px-4">

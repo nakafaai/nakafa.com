@@ -23,6 +23,286 @@
     "signed-in": "Kamu sudah masuk.",
     "signed-in-as": "Kamu masuk sebagai {role}."
   },
+  "SchoolSettings": {
+    "school": "Sekolah",
+    "people": "Orang",
+    "integrations": "Integrasi",
+    "security": "Keamanan",
+    "profile": "Profil",
+    "periods": "Periode",
+    "units": "Unit",
+    "roles": "Peran dan akses",
+    "invites": "Undangan",
+    "students": "Akun siswa",
+    "clients": "Klien API",
+    "policies": "Kebijakan",
+    "audit": "Jejak audit",
+    "manage-group": "Pengelolaan",
+    "manage-settings": "Pengaturan",
+    "profile-description": "Logo, nama, dan alamat sekolah ini.",
+    "address-copy": "Salin alamat",
+    "logo-footer": "Gambar PNG atau SVG, paling besar 1 MB.",
+    "logo-upload": "Unggah logo",
+    "logo-remove": "Hapus logo",
+    "logo-remove-title": "Hapus logo?",
+    "logo-remove-description": "Sekolah kembali menampilkan hewannya sampai logo baru diunggah.",
+    "logo-remove-confirm": "Hapus logo",
+    "policy-nina": "Nina untuk siswa",
+    "policy-nina-description": "Siswa boleh meminta bantuan Nina di sekolah ini.",
+    "policy-threads": "Thread siswa",
+    "policy-threads-description": "Siswa boleh membuka thread di sekolah ini.",
+    "policy-domains": "Domain email",
+    "policy-domains-description": "Hanya alamat pada domain ini yang boleh bergabung dengan sekolah ini.",
+    "policy-domains-placeholder": "sekolah.sch.id",
+    "policy-domains-footer": "Daftar kosong menerima setiap alamat.",
+    "save": "Simpan",
+    "level-other": "Lainnya",
+    "unit-level": "Jenjang",
+    "unit-description": "Jenjang, zona waktu, dan bahasa konten sekolah ini.",
+    "unit-archived-description": "Sekolah ini diarsipkan dan menolak perubahan sampai dipulihkan.",
+    "unit-time-zone": "Zona waktu",
+    "unit-content-language": "Bahasa konten",
+    "unit-archive-footer": "Sekolah yang diarsipkan tetap dapat dibaca.",
+    "unit-restore-footer": "Memulihkan sekolah membuatnya dapat diubah lagi.",
+    "unit-restore": "Pulihkan",
+    "unit-archive": "Arsipkan",
+    "unit-archive-title": "Arsipkan sekolah ini?",
+    "unit-archive-description": "Sekolah menolak setiap perubahan sampai dipulihkan.",
+    "unit-archive-confirm": "Arsipkan",
+    "unit-choice": "Sekolah",
+    "unit-choice-description": "Pilih sekolah yang periodenya ingin Anda kelola.",
+    "periods-description": "Tahun dan semester sekolah ini.",
+    "period-name": "Nama",
+    "period-dates": "Tanggal",
+    "period-status": "Status",
+    "period-planned": "Direncanakan",
+    "period-active": "Aktif",
+    "period-archived": "Diarsipkan",
+    "period-open": "Buka",
+    "period-archive": "Arsipkan",
+    "period-add": "Tambah periode",
+    "period-add-description": "Periode memiliki nama, hari pertama, dan hari terakhir.",
+    "period-name-placeholder": "Semester 1",
+    "period-start": "Hari pertama",
+    "period-end": "Hari terakhir",
+    "period-add-footer": "Periode baru dimulai sebagai direncanakan.",
+    "invites-description": "Undangan yang menunggu diterima, dan kapan kedaluwarsanya.",
+    "invite-name": "Nama",
+    "invite-email": "Email",
+    "invite-expires": "Berakhir",
+    "invite-resend": "Kirim ulang",
+    "invite-revoke": "Cabut",
+    "invite-revoke-title": "Cabut undangan ini?",
+    "invite-revoke-description": "Alamat ini tidak dapat lagi menerima undangan ini.",
+    "invite-revoke-confirm": "Cabut",
+    "clients-description": "Aplikasi yang mengakses data sekolah ini melalui API.",
+    "client-name": "Nama",
+    "client-actions": "Aksi",
+    "client-status": "Status",
+    "client-active": "Aktif",
+    "client-revoked": "Dicabut",
+    "client-rotate": "Ganti rahasia",
+    "client-revoke": "Cabut",
+    "client-revoke-title": "Cabut klien ini?",
+    "client-revoke-description": "Aplikasi langsung berhenti bekerja dengan sekolah ini.",
+    "client-revoke-confirm": "Cabut",
+    "client-secret-title": "Rahasia baru",
+    "client-secret-description": "Salin sekarang, karena rahasia ini tidak akan ditampilkan lagi.",
+    "audit-description": "Siapa mengubah apa di sekolah ini, dan kapan.",
+    "audit-when": "Kapan",
+    "audit-who": "Siapa",
+    "audit-change": "Perubahan",
+    "audit-operator": "Staf Nakafa",
+    "audit-system": "Sistem",
+    "audit-label": {
+      "assignment": {
+        "created": "Wali kelas ditetapkan",
+        "removed": "Wali kelas dilepas"
+      },
+      "card": {
+        "issued": "Kartu masuk diterbitkan",
+        "reissued": "Kartu masuk diterbitkan ulang",
+        "redeemed": "Kartu masuk dipakai"
+      },
+      "class": {
+        "created": "Ruang kelas ditambahkan",
+        "renamed": "Ruang kelas diganti nama",
+        "archived": "Ruang kelas diarsipkan",
+        "teacherAssigned": "Guru ditetapkan ke ruang kelas",
+        "teacherRemoved": "Guru dilepas dari ruang kelas"
+      },
+      "cohort": {
+        "created": "Kelas ditambahkan",
+        "renamed": "Kelas diganti nama",
+        "archived": "Kelas diarsipkan"
+      },
+      "grant": {
+        "created": "Peran diberikan",
+        "ended": "Peran berakhir"
+      },
+      "integration": {
+        "created": "Klien dibuat",
+        "rotated": "Rahasia diganti",
+        "revoked": "Klien dicabut"
+      },
+      "invite": {
+        "expired": "Undangan kedaluwarsa",
+        "resent": "Undangan dikirim ulang",
+        "revoked": "Undangan dibatalkan"
+      },
+      "period": {
+        "created": "Periode ditambahkan",
+        "opened": "Periode dibuka",
+        "archived": "Periode diarsipkan",
+        "rename": "Periode diganti nama"
+      },
+      "person": {
+        "claimed": "Akun bergabung",
+        "created": "Orang ditambahkan",
+        "graduated": "Siswa lulus",
+        "invited": "Undangan dikirim",
+        "moved": "Siswa pindah kelas",
+        "placed": "Siswa ditempatkan di kelas",
+        "released": "Akun dilepas",
+        "removed": "Orang dihapus",
+        "renamed": "Nama diubah",
+        "reactivated": "Orang diaktifkan kembali",
+        "suspended": "Orang ditangguhkan"
+      },
+      "promotion": {
+        "applied": "Kenaikan kelas diterapkan",
+        "approved": "Kenaikan kelas disetujui",
+        "cancelled": "Kenaikan kelas dibatalkan",
+        "created": "Kenaikan kelas dimulai",
+        "opened": "Kenaikan kelas dibuka",
+        "planned": "Kenaikan kelas direncanakan",
+        "studentPlanned": "Kenaikan kelas siswa direncanakan",
+        "submitted": "Kenaikan kelas diajukan",
+        "returned": "Kenaikan kelas dikembalikan",
+        "undone": "Langkah kenaikan kelas dibatalkan"
+      },
+      "sitting": {
+        "schedule": "Sesi ujian dijadwalkan",
+        "lock": "Percobaan ujian dikunci",
+        "unlock": "Kunci percobaan ujian dibuka",
+        "addMinutes": "Waktu percobaan ujian ditambah",
+        "changeToken": "Token sesi ujian diganti",
+        "allowDevice": "Perangkat kedua diizinkan untuk percobaan ujian",
+        "close": "Sesi ujian ditutup"
+      },
+      "tenant": {
+        "provisioned": "Sekolah dibuka",
+        "locale": {
+          "set": "Negara dan mata uang diubah"
+        },
+        "logo": {
+          "removed": "Logo dihapus",
+          "set": "Logo diubah"
+        },
+        "policy": {
+          "set": "Pengaturan diubah"
+        },
+        "suspended": "Sekolah ditangguhkan",
+        "reactivated": "Sekolah diaktifkan kembali"
+      },
+      "unit": {
+        "created": "Unit ditambahkan",
+        "archived": "Unit diarsipkan",
+        "unarchived": "Unit dipulihkan",
+        "locale": {
+          "set": "Zona waktu atau bahasa diubah"
+        },
+        "npsn": {
+          "set": "NPSN diubah"
+        }
+      },
+      "visit": {
+        "requested": "Kunjungan diminta",
+        "approved": "Kunjungan disetujui",
+        "declined": "Kunjungan ditolak",
+        "ended": "Kunjungan selesai"
+      },
+      "unknown": "Perubahan lain"
+    },
+    "role-description": {
+      "owner": "Dapat melakukan semua hal di sekolah ini.",
+      "admin": "Mengelola pengaturan, orang, unit, periode, undangan, dan akses sekolah.",
+      "principal": "Melihat rencana dan catatan sekolah, dan menyetujui kenaikan kelas.",
+      "deputy": "Melihat rencana, orang, dan kenaikan kelas sekolah.",
+      "teacher": "Menyunting ujian dan dokumen sekolah.",
+      "counselor": "Melihat orang di sekolah.",
+      "staff": "Melihat rencana, orang, dan kenaikan kelas sekolah.",
+      "student": "Belajar di sekolah dan mengerjakan ujiannya sendiri.",
+      "guardian": "Mengikuti siswa yang terhubung dengannya dan mencatat persetujuan untuk siswa tersebut.",
+      "proctor": "Mengawasi sesi ujian sekolah.",
+      "auditor": "Melihat catatan dan jejak audit sekolah tanpa mengubahnya.",
+      "integration": "Membaca data sekolah melalui aksi yang dimiliki kliennya."
+    },
+    "roles-overview": "Yang boleh dilakukan setiap peran",
+    "roles-overview-description": "Setiap peran di sekolah ini, dan apa yang boleh dilakukannya.",
+    "secret-copy": "Salin",
+    "unit-npsn": "NPSN",
+    "unit-npsn-placeholder": "Delapan digit",
+    "unit-npsn-footer": "Nomor pokok sekolah nasional terdiri atas delapan digit dan hanya dimiliki satu unit.",
+    "unit-npsn-save": "Simpan",
+    "logins": "Nama login",
+    "logins-description": "Nama login orang di sekolah, beserta waktu penerbitannya.",
+    "login-name": "Nama login",
+    "login-person": "Orang",
+    "login-issued": "Diterbitkan",
+    "invite-action": "Undang",
+    "invites-footer": "Undang orang yang belum punya akun.",
+    "invite-dialog-title": "Undang orang",
+    "invite-dialog-description": "Orang itu menerima undangan ke alamat email ini, dan masuk dengan alamat tersebut.",
+    "invite-person": "Orang",
+    "invite-person-placeholder": "Pilih orang yang belum punya akun",
+    "invite-none-left": "Semua orang aktif di sekolah ini sudah punya akun.",
+    "invite-locale": "Bahasa email",
+    "invite-submit": "Undang",
+    "grant-person": "Orang",
+    "client-add": "Buat klien",
+    "client-add-footer": "Rahasia ditampilkan sekali, saat klien dibuat.",
+    "client-add-description": "Klien menghubungkan sistem lain ke sekolah ini.",
+    "client-create": "Buat",
+    "client-scope": "Berlaku untuk",
+    "client-name-placeholder": "Nama sistem",
+    "client-actions-footer": "Klien selalu memiliki paling sedikit satu aksi.",
+    "client-action": {
+      "cohort": {
+        "view": "Lihat kelas"
+      },
+      "period": {
+        "view": "Lihat periode"
+      },
+      "person": {
+        "view": "Lihat orang"
+      }
+    },
+    "person-placeholder": "Pilih orang",
+    "roles-description": "Pilih orang untuk melihat dan mengubah peran yang dimilikinya.",
+    "roles-grants": "Peran yang dimiliki",
+    "roles-grants-description": "Setiap peran yang dimiliki orang di sekolah ini, dan wilayah yang dicakupnya.",
+    "grant-role": "Peran",
+    "grant-scope": "Berlaku untuk",
+    "grant-scope-school": "Seluruh sekolah",
+    "grant-scope-unit": "Satu unit",
+    "grant-revoke": "Cabut",
+    "grant-revoke-title": "Cabut peran ini?",
+    "grant-revoke-description": "Orang ini langsung kehilangan apa yang diizinkan peran ini.",
+    "grant-revoke-confirm": "Cabut",
+    "roles-role-placeholder": "Pilih peran",
+    "roles-assign": "Berikan peran",
+    "roles-assign-footer": "Peran berlaku untuk seluruh sekolah.",
+    "students-description": "Pilih orang untuk menerbitkan atau menerbitkan ulang kartu masuknya.",
+    "card-issue": "Terbitkan kartu",
+    "card-issue-description": "Kartu masuk membuat siswa dapat masuk dengan nama masuk dan kode.",
+    "card-login-name": "Nama masuk",
+    "card-login-name-placeholder": "Nama masuk",
+    "card-issue-footer": "Kode hanya ditampilkan sekali.",
+    "card-reissue": "Terbitkan ulang kartu",
+    "card-code-title": "Kode kartu masuk",
+    "card-code-description": "Berikan kode kepada siswa, karena kode ini tidak akan ditampilkan lagi."
+  },
   "Metadata": {
     "title": "Nakafa: Materi Belajar Gratis dari SD sampai Universitas",
     "description": "Belajar Matematika, Sains, Komputer, AI, dan persiapan ujian di Nakafa. Materi gratis dari SD sampai universitas dengan latihan dan pembahasan.",
@@ -576,6 +856,10 @@
     "count": "{count, number} / {limit, number}"
   },
   "Toast": {
+    "school-logo-size": { "description": "Pilih logo yang paling besar 1 MB." },
+    "school-logo-type": { "description": "Pilih gambar PNG atau SVG." },
+    "school-logo-refused": { "title": "Logo tidak disimpan." },
+    "school-address-copied": { "title": "Alamat disalin." },
     "action-error": {
       "title": "Tindakan ini belum berhasil.",
       "description": "Silakan coba lagi."

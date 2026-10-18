@@ -19,72 +19,84 @@ const rejected = (code: string) => ({ _tag: "GrantRejected", code });
 
 describe("access/grants list", () => {
   it.effect(
-    "shows a Person's grants to admins, unit admins of their unit, and themselves",
+    "lists every active grant of the school with its Person, role and scope, to the Admin",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
-        const views = yield* Effect.forEach(
-          ["admin", "unitAdmin", "teacher"] as const,
-          (account) =>
-            fixture.as(account).query(list, {
-              personId: fixture.people.teacher.personId,
-              slug: nf,
-            })
-        );
-        expect(views).toEqual(
-          Arr.replicate(
-            [
-              {
-                id: fixture.people.teacher.grantId,
-                role: { key: "teacher", kind: "builtin" },
-                scope: { kind: "unit", unitId: fixture.units.smp },
-                term: { kind: "standing" },
-              },
-            ],
-            3
-          )
-        );
+        const answer = yield* fixture.as("admin").query(list, {
+          paginationOpts: { cursor: null, numItems: 100 },
+          slug: nf,
+        });
+        expect(answer.page).toContainEqual({
+          id: fixture.people.teacher.grantId,
+          person: { id: fixture.people.teacher.personId, name: "Teacher" },
+          role: { key: "teacher", kind: "builtin" },
+          scope: { kind: "unit", unitId: fixture.units.smp },
+        });
+        expect(answer.isDone).toBe(true);
       })
   );
 
-  it.effect("refuses roles that do not cover the Person", () =>
+  it.effect("pages through the grants a page at a time", () =>
     Effect.gen(function* () {
       const fixture = yield* tenancyFixture;
-      const denials = [
-        yield* fixture
-          .as("unitAdmin")
-          .query(list, {
-            personId: fixture.people.principal.personId,
-            slug: nf,
-          })
-          .pipe(Effect.flip),
-        yield* fixture
-          .as("teacher")
-          .query(list, { personId: fixture.people.student.personId, slug: nf })
-          .pipe(Effect.flip),
-      ];
-      expect(denials).toMatchObject([denied("role"), denied("role")]);
+      const first = yield* fixture.as("admin").query(list, {
+        paginationOpts: { cursor: null, numItems: 1 },
+        slug: nf,
+      });
+      const second = yield* fixture.as("admin").query(list, {
+        paginationOpts: { cursor: first.continueCursor, numItems: 1 },
+        slug: nf,
+      });
+      expect(first.page).toHaveLength(1);
+      expect(first.isDone).toBe(false);
+      expect(second.page).toHaveLength(1);
+      expect(Arr.map(second.page, (row) => row.id)).not.toEqual(
+        Arr.map(first.page, (row) => row.id)
+      );
     })
   );
 
-  it.effect("denies another tenant by slug and by Person ID", () =>
+  it.effect("lists no grant that was revoked", () =>
     Effect.gen(function* () {
       const fixture = yield* tenancyFixture;
-      const denials = [
-        yield* fixture
-          .as("otherOwner")
-          .query(list, { personId: fixture.people.teacher.personId, slug: nf })
-          .pipe(Effect.flip),
-        yield* fixture
-          .as("admin")
-          .query(list, {
-            personId: fixture.people.otherOwner.personId,
-            slug: nf,
-          })
-          .pipe(Effect.flip),
-      ];
-      expect(denials).toMatchObject([notMember, denied("resource")]);
+      yield* fixture.as("admin").mutation(revoke, {
+        grantId: fixture.people.teacher.grantId,
+        slug: nf,
+      });
+      const answer = yield* fixture.as("admin").query(list, {
+        paginationOpts: { cursor: null, numItems: 100 },
+        slug: nf,
+      });
+      expect(Arr.map(answer.page, (row) => row.id)).not.toContain(
+        fixture.people.teacher.grantId
+      );
     })
+  );
+
+  it.effect(
+    "refuses an account without tenant.manage, and another tenant",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const denials = [
+          yield* fixture
+            .as("teacher")
+            .query(list, {
+              paginationOpts: { cursor: null, numItems: 100 },
+              slug: nf,
+            })
+            .pipe(Effect.flip),
+          yield* fixture
+            .as("otherOwner")
+            .query(list, {
+              paginationOpts: { cursor: null, numItems: 100 },
+              slug: nf,
+            })
+            .pipe(Effect.flip),
+        ];
+        expect(denials).toMatchObject([denied("role"), notMember]);
+      })
   );
 });
 

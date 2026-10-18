@@ -8,23 +8,37 @@ import {
 import {
   BuiltinRole,
   GrantScope,
-  GrantView,
+  RoleRef,
 } from "@repo/backend/confect/access/schema";
+import { TenantAccess } from "@repo/backend/confect/access/tenant";
 import RequireMember from "@repo/backend/confect/middleware/member.spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
 import { PersonAccess } from "@repo/backend/confect/tenancy/access";
+import { PersonName } from "@repo/backend/confect/tenancy/schema";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Schema } from "effect";
+
+/**
+ * One active grant of the school as its Admin lists it: the Person who holds
+ * it, the role, and the scope, which is the whole school or one unit.
+ */
+const GrantRow = Schema.Struct({
+  id: Id("tenantGrants"),
+  person: Schema.Struct({ id: Id("tenantPeople"), name: PersonName }),
+  role: RoleRef,
+  scope: GrantScope,
+});
 
 export default GroupSpec.make()
   .middleware(Session)
   .middleware(RequireMember)
   .addFunction(
-    FunctionSpec.publicQuery({
+    FunctionSpec.publicPaginatedQuery({
       name: "list",
-      args: () => ({ personId: Id("tenantPeople"), slug: TenantSlug }),
-      returns: () => Schema.Array(GrantView),
-    }).middleware(PersonAccess, { action: "person.view", arg: "personId" })
+      args: () => ({ slug: TenantSlug }),
+      item: () => GrantRow,
+      error: () => AccessDenied,
+    }).middleware(TenantAccess, { action: "tenant.manage" })
   )
   .addFunction(
     FunctionSpec.publicMutation({
