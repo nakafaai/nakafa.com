@@ -5,6 +5,7 @@ import { Thing } from "@repo/design-system/components/ui/thing";
 import type { Array as Arr } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { ClosingQuestion } from "@/components/marketing/about/closing/question.client";
+import { MarketingSection } from "@/components/marketing/shared/section";
 import { getCurriculumIndexHref } from "@/lib/curriculum/routes";
 
 /**
@@ -23,7 +24,7 @@ export function Closing() {
   ];
 
   return (
-    <section className="scroll-mt-28 px-6 py-20 lg:px-10 lg:py-32" id="closing">
+    <MarketingSection id="closing">
       <div className="mx-auto grid w-full max-w-4xl justify-items-center gap-10 text-center">
         <ClosingQuestion template={t.raw("closing-ask")} topics={topics} />
         <div className="flex flex-wrap items-center justify-center gap-3">
@@ -52,6 +53,6 @@ export function Closing() {
           <Thing className="absolute -end-4 bottom-4" name="balls" size={48} />
         </div>
       </div>
-    </section>
+    </MarketingSection>
   );
 }
