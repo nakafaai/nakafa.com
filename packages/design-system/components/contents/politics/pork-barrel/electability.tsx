@@ -19,11 +19,11 @@ import {
 } from "@repo/design-system/components/evilcharts/ui/tooltip";
 import {
   VisualCard,
+  VisualCardActions,
   VisualCardBody,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
-  VisualCardScene,
 } from "@repo/design-system/components/visual/card";
 import {
   formatLongMonthYear,
@@ -167,89 +167,88 @@ export function ElectabilityChart({
     <VisualCard>
       <VisualCardHeader description={description} title={title} />
       <VisualCardBody>
-        <VisualCardScene>
-          <EvilLineChart
-            config={chartConfig}
-            curveType="natural"
-            data={electabilityChartData}
+        <EvilLineChart
+          className="p-(--card-spacing)"
+          config={chartConfig}
+          curveType="natural"
+          data={electabilityChartData}
+        >
+          <Grid vertical={false} />
+          <XAxis
+            dataKey="date"
+            tickFormatter={(value) => formatShortMonthYear(String(value))}
+            tickMargin={8}
+          />
+          <YAxis
+            label={{
+              value: yLabel,
+              angle: -90,
+              position: "insideLeft",
+              style: { textAnchor: "middle" },
+            }}
+          />
+          <ChartTooltip
+            content={
+              <ChartTooltipContent
+                indicator="line"
+                labelFormatter={(value) => formatLongMonthYear(String(value))}
+              />
+            }
+            cursor={false}
+          />
+          <Line
+            dataKey="anies_muhaimin"
+            lineProps={{
+              ...(ELECTABILITY_CUES.aniesMuhaimin.strokeDasharray === undefined
+                ? {}
+                : {
+                    strokeDasharray:
+                      ELECTABILITY_CUES.aniesMuhaimin.strokeDasharray,
+                  }),
+              strokeWidth: 2,
+            }}
           >
-            <Grid vertical={false} />
-            <XAxis
-              dataKey="date"
-              tickFormatter={(value) => formatShortMonthYear(String(value))}
-              tickMargin={8}
-            />
-            <YAxis
-              label={{
-                value: yLabel,
-                angle: -90,
-                position: "insideLeft",
-                style: { textAnchor: "middle" },
-              }}
-            />
-            <ChartTooltip
-              content={
-                <ChartTooltipContent
-                  indicator="line"
-                  labelFormatter={(value) => formatLongMonthYear(String(value))}
-                />
-              }
-              cursor={false}
-            />
-            <Line
-              dataKey="anies_muhaimin"
-              lineProps={{
-                ...(ELECTABILITY_CUES.aniesMuhaimin.strokeDasharray ===
-                undefined
-                  ? {}
-                  : {
-                      strokeDasharray:
-                        ELECTABILITY_CUES.aniesMuhaimin.strokeDasharray,
-                    }),
-                strokeWidth: 2,
-              }}
-            >
-              <Dot variant={ELECTABILITY_CUES.aniesMuhaimin.dot} />
-              <ActiveDot variant={ELECTABILITY_CUES.aniesMuhaimin.activeDot} />
-            </Line>
-            <Line
-              dataKey="prabowo_gibran"
-              lineProps={{
-                ...(ELECTABILITY_CUES.prabowoGibran.strokeDasharray ===
-                undefined
-                  ? {}
-                  : {
-                      strokeDasharray:
-                        ELECTABILITY_CUES.prabowoGibran.strokeDasharray,
-                    }),
-                strokeWidth: 2,
-              }}
-            >
-              <Dot variant={ELECTABILITY_CUES.prabowoGibran.dot} />
-              <ActiveDot variant={ELECTABILITY_CUES.prabowoGibran.activeDot} />
-            </Line>
-            <Line
-              dataKey="ganjar_mahfud"
-              lineProps={{
-                ...(ELECTABILITY_CUES.ganjarMahfud.strokeDasharray === undefined
-                  ? {}
-                  : {
-                      strokeDasharray:
-                        ELECTABILITY_CUES.ganjarMahfud.strokeDasharray,
-                    }),
-                strokeWidth: 2,
-              }}
-            >
-              <Dot variant={ELECTABILITY_CUES.ganjarMahfud.dot} />
-              <ActiveDot variant={ELECTABILITY_CUES.ganjarMahfud.activeDot} />
-            </Line>
-            <Legend />
-          </EvilLineChart>
-        </VisualCardScene>
+            <Dot variant={ELECTABILITY_CUES.aniesMuhaimin.dot} />
+            <ActiveDot variant={ELECTABILITY_CUES.aniesMuhaimin.activeDot} />
+          </Line>
+          <Line
+            dataKey="prabowo_gibran"
+            lineProps={{
+              ...(ELECTABILITY_CUES.prabowoGibran.strokeDasharray === undefined
+                ? {}
+                : {
+                    strokeDasharray:
+                      ELECTABILITY_CUES.prabowoGibran.strokeDasharray,
+                  }),
+              strokeWidth: 2,
+            }}
+          >
+            <Dot variant={ELECTABILITY_CUES.prabowoGibran.dot} />
+            <ActiveDot variant={ELECTABILITY_CUES.prabowoGibran.activeDot} />
+          </Line>
+          <Line
+            dataKey="ganjar_mahfud"
+            lineProps={{
+              ...(ELECTABILITY_CUES.ganjarMahfud.strokeDasharray === undefined
+                ? {}
+                : {
+                    strokeDasharray:
+                      ELECTABILITY_CUES.ganjarMahfud.strokeDasharray,
+                  }),
+              strokeWidth: 2,
+            }}
+          >
+            <Dot variant={ELECTABILITY_CUES.ganjarMahfud.dot} />
+            <ActiveDot variant={ELECTABILITY_CUES.ganjarMahfud.activeDot} />
+          </Line>
+          <Legend />
+        </EvilLineChart>
       </VisualCardBody>
+      <VisualCardActions>
+        <VisualCardFullscreen />
+      </VisualCardActions>
       <VisualCardFooter>
         <p className="text-sm">{footnote}</p>
-        <VisualCardFullscreen />
       </VisualCardFooter>
     </VisualCard>
   );

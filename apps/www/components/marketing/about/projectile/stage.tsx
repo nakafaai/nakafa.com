@@ -14,7 +14,7 @@ import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { Array as Arr } from "effect";
 import { getLocale, getTranslations } from "next-intl/server";
 import { ProjectileClient } from "@/components/marketing/about/projectile/client";
-import { Talk, TalkReply } from "@/components/marketing/about/talk.client";
+import { MarketingSection } from "@/components/marketing/shared/section";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { decimalSeparators } from "@/lib/marketing/decimal";
 
@@ -110,18 +110,16 @@ export async function ProjectileStage() {
     };
   });
   return (
-    <ProjectileClient
-      lead={tHome("scene-lead")}
-      scenarios={scenarios}
-      talk={
-        <Talk ask={tHome("scene-ask")} tone="sky">
-          <TalkReply act="gripping" mood="proud">
-            {tHome("scene-answer")}
-          </TalkReply>
-        </Talk>
-      }
-      title={tHome("scene-title")}
-      viewLabel={tHome("scene-label")}
-    />
+    <MarketingSection id="scene">
+      <div className="mx-auto w-full max-w-6xl">
+        <ProjectileClient
+          chooseLabel={tHome("scene-choose")}
+          lead={tHome("scene-lead")}
+          scenarios={scenarios}
+          title={tHome("scene-title")}
+          viewLabel={tHome("scene-label")}
+        />
+      </div>
+    </MarketingSection>
   );
 }

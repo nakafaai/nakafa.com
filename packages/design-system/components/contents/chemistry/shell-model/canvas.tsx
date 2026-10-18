@@ -7,7 +7,7 @@ import {
 } from "@repo/design-system/components/contents/chemistry/shell-model/data";
 import { SceneSpinner } from "@repo/design-system/components/three/placeholder";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
-import { VisualCardScene } from "@repo/design-system/components/visual/card";
+import { VisualCardBody } from "@repo/design-system/components/visual/card";
 import dynamic from "next/dynamic";
 import { useTheme } from "next-themes";
 
@@ -41,7 +41,7 @@ export function ShellModelCanvas({
   const sceneColors = getShellModelSceneColors(resolvedTheme);
 
   return (
-    <VisualCardScene
+    <VisualCardBody
       aria-label={ariaLabel}
       className={threeSceneFrameVariants()}
       render={<section />}
@@ -54,6 +54,6 @@ export function ShellModelCanvas({
           shells={shells}
         />
       ) : null}
-    </VisualCardScene>
+    </VisualCardBody>
   );
 }

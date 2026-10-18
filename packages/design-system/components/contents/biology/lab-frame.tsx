@@ -16,12 +16,13 @@ import {
 } from "@repo/design-system/components/ui/toggle-group";
 import {
   VisualCard,
+  VisualCardActions,
   VisualCardBody,
-  VisualCardControls,
+  VisualCardFacts,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
-  VisualCardScene,
+  VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import type { NarrowCameraPose } from "@repo/design-system/lib/geometry/camera";
@@ -106,6 +107,7 @@ export function BiologyLabFrame<Item extends BiologyLabItemProps>({
   const selectedItem = labels.items[selectedIndex];
   const hasMultipleItems = labels.items.length > 1;
   const readings = biologyReadings(selectedItem, labels);
+  const hasFooter = selectedItem.caption !== undefined || readings.length > 0;
 
   /**
    * Keeps one tab active when ToggleGroup emits an empty value.
@@ -128,8 +130,8 @@ export function BiologyLabFrame<Item extends BiologyLabItemProps>({
     <VisualCard>
       <VisualCardHeader description={description} title={title} />
 
-      <VisualCardBody className="flex flex-col gap-4">
-        {hasMultipleItems && (
+      {hasMultipleItems && (
+        <VisualCardToolbar>
           <ToggleGroup
             aria-label={labels.chooseMode}
             gridColumns="auto"
@@ -144,36 +146,42 @@ export function BiologyLabFrame<Item extends BiologyLabItemProps>({
               </ToggleGroupItem>
             ))}
           </ToggleGroup>
-        )}
+        </VisualCardToolbar>
+      )}
 
-        <VisualCardScene
-          aria-label={labels.viewLabel}
-          className={threeSceneFrameVariants()}
-          render={<section />}
-        >
-          {live ? (
-            <BiologyStage
+      <VisualCardBody
+        aria-label={labels.viewLabel}
+        className={threeSceneFrameVariants()}
+        render={<section />}
+      >
+        {live ? (
+          <BiologyStage
+            colors={colors}
+            selectedIndex={selectedIndex}
+            view={view}
+          >
+            <Scene
               colors={colors}
+              item={selectedItem}
               selectedIndex={selectedIndex}
-              view={view}
-            >
-              <Scene
-                colors={colors}
-                item={selectedItem}
-                selectedIndex={selectedIndex}
-              />
-            </BiologyStage>
-          ) : null}
-        </VisualCardScene>
+            />
+          </BiologyStage>
+        ) : null}
+      </VisualCardBody>
 
-        {selectedItem.caption === undefined ? null : (
-          <p className="text-muted-foreground text-sm">
-            {selectedItem.caption}
-          </p>
-        )}
-        {readings.length === 0 ? null : (
-          <VisualCardControls>
-            <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
+      <VisualCardActions>
+        <VisualCardFullscreen />
+      </VisualCardActions>
+
+      {hasFooter && (
+        <VisualCardFooter>
+          {selectedItem.caption === undefined ? null : (
+            <p className="text-muted-foreground text-sm">
+              {selectedItem.caption}
+            </p>
+          )}
+          {readings.length === 0 ? null : (
+            <VisualCardFacts>
               {Arr.map(readings, (reading) => (
                 <VisualFact
                   key={reading.key}
@@ -181,14 +189,10 @@ export function BiologyLabFrame<Item extends BiologyLabItemProps>({
                   value={reading.value}
                 />
               ))}
-            </dl>
-          </VisualCardControls>
-        )}
-      </VisualCardBody>
-
-      <VisualCardFooter>
-        <VisualCardFullscreen />
-      </VisualCardFooter>
+            </VisualCardFacts>
+          )}
+        </VisualCardFooter>
+      )}
     </VisualCard>
   );
 }

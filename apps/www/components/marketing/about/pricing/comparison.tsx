@@ -37,6 +37,11 @@ function Comparison({
 }
 
 /** The coin of a price: its currency symbol in a round yellow badge as tall as the other pictures. */
+/** One name for each cup the comparison draws, in order: its place in the row. */
+function cupsOf(count: number) {
+  return Arr.makeBy(count, (place) => `cup-${place + 1}`);
+}
+
 function PriceCoin({ symbol }: { symbol: string }) {
   return (
     <span
@@ -76,8 +81,8 @@ function ResolvedComparison() {
           note={t("drink-note")}
           picture={
             <span className="flex gap-1">
-              {Arr.makeBy(sums.drinks, (index) => (
-                <Thing key={index} name="coffee" size={40} />
+              {Arr.map(cupsOf(sums.drinks), (cup) => (
+                <Thing key={cup} name="coffee" size={40} />
               ))}
             </span>
           }

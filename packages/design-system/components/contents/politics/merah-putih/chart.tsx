@@ -12,11 +12,11 @@ import {
 import type { ChartConfig } from "@repo/design-system/components/evilcharts/ui/chart-config";
 import {
   VisualCard,
+  VisualCardActions,
   VisualCardBody,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
-  VisualCardScene,
 } from "@repo/design-system/components/visual/card";
 import { getBarSeriesCue } from "@repo/design-system/lib/charts/series-cue";
 import { Array as Arr } from "effect";
@@ -90,30 +90,30 @@ export function CabinetChart({
     <VisualCard>
       <VisualCardHeader description={description} title={title} />
       <VisualCardBody>
-        <VisualCardScene>
-          <EvilBarChart
-            chartProps={{ margin: { right: VALUE_LABEL_MARGIN } }}
-            className="min-h-80"
-            config={chartConfig}
-            data={CabinetChartData}
-            layout="horizontal"
-          >
-            <Grid horizontal={false} />
-            <YAxis dataKey="name" tickMargin={10} />
-            <XAxis dataKey="cabinet" domain={[0, cabinetAxisMax]} hide />
-            <Tooltip />
-            <Bar
-              barProps={{ label: { position: "right", fontSize: 12 } }}
-              dataKey="cabinet"
-              radius={8}
-            />
-            <Legend />
-          </EvilBarChart>
-        </VisualCardScene>
+        <EvilBarChart
+          chartProps={{ margin: { right: VALUE_LABEL_MARGIN } }}
+          className="min-h-80 p-(--card-spacing)"
+          config={chartConfig}
+          data={CabinetChartData}
+          layout="horizontal"
+        >
+          <Grid horizontal={false} />
+          <YAxis dataKey="name" tickMargin={10} />
+          <XAxis dataKey="cabinet" domain={[0, cabinetAxisMax]} hide />
+          <Tooltip />
+          <Bar
+            barProps={{ label: { position: "right", fontSize: 12 } }}
+            dataKey="cabinet"
+            radius={8}
+          />
+          <Legend />
+        </EvilBarChart>
       </VisualCardBody>
+      <VisualCardActions>
+        <VisualCardFullscreen />
+      </VisualCardActions>
       <VisualCardFooter>
         <p className="text-sm">{footnote}</p>
-        <VisualCardFullscreen />
       </VisualCardFooter>
     </VisualCard>
   );
@@ -179,7 +179,7 @@ export function CompositionChart({
     <VisualCard>
       <VisualCardHeader description={description} title={title} />
       <VisualCardBody>
-        <div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid w-full grid-cols-1 gap-4 p-(--card-spacing) sm:grid-cols-2 lg:grid-cols-3">
           <EvilBarChart
             className="aspect-square"
             config={ministerChartConfig}
@@ -244,9 +244,11 @@ export function CompositionChart({
           </EvilBarChart>
         </div>
       </VisualCardBody>
+      <VisualCardActions>
+        <VisualCardFullscreen />
+      </VisualCardActions>
       <VisualCardFooter>
         <p className="text-sm">{footnote}</p>
-        <VisualCardFullscreen />
       </VisualCardFooter>
     </VisualCard>
   );

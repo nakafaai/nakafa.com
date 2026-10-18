@@ -21,11 +21,12 @@ import {
 } from "@repo/design-system/components/ui/toggle-group";
 import {
   VisualCard,
-  VisualCardBody,
-  VisualCardControls,
+  VisualCardActions,
+  VisualCardFacts,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
+  VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { Array as Arr } from "effect";
@@ -90,7 +91,7 @@ export function ModernPeriodicTableLab({
     <VisualCard>
       <VisualCardHeader description={description} title={title} />
 
-      <VisualCardBody className="flex flex-col gap-4">
+      <VisualCardToolbar>
         <ToggleGroup
           aria-label={labels.chooseFocus}
           gridColumns="3"
@@ -109,33 +110,33 @@ export function ModernPeriodicTableLab({
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
+      </VisualCardToolbar>
 
-        <ModernPeriodicTableCanvas
-          aria-label={labels.tableLabel}
-          focusId={selectedFocusId}
-          labels={labels}
-        />
+      <ModernPeriodicTableCanvas
+        aria-label={labels.tableLabel}
+        focusId={selectedFocusId}
+        labels={labels}
+      />
 
+      <VisualCardActions>
+        <VisualCardFullscreen />
+      </VisualCardActions>
+
+      <VisualCardFooter>
         <p className="mx-auto max-w-3xl text-center text-muted-foreground text-sm leading-relaxed">
           {selectedLabels.detail}
         </p>
 
         <Legend colors={colors} labels={labels} />
-        <VisualCardControls>
-          <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
-            <VisualFact label={labels.focusLabel} value={selectedLabels.name} />
-            <VisualFact label={labels.group} value="1–18" />
-            <VisualFact label={labels.period} value="1–7" />
-            <VisualFact
-              label={labels.atomicNumber}
-              value={<InlineMath math="Z" />}
-            />
-          </dl>
-        </VisualCardControls>
-      </VisualCardBody>
-
-      <VisualCardFooter>
-        <VisualCardFullscreen />
+        <VisualCardFacts>
+          <VisualFact label={labels.focusLabel} value={selectedLabels.name} />
+          <VisualFact label={labels.group} value="1–18" />
+          <VisualFact label={labels.period} value="1–7" />
+          <VisualFact
+            label={labels.atomicNumber}
+            value={<InlineMath math="Z" />}
+          />
+        </VisualCardFacts>
       </VisualCardFooter>
     </VisualCard>
   );
