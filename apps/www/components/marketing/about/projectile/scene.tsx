@@ -50,7 +50,6 @@ export function ProjectileScene({
           position={PROJECTILE_SCENE.launchOffset}
         />
         <CameraControls
-          autoRotate={false}
           cameraPosition={PROJECTILE_SCENE.cameraPosition}
           cameraTarget={PROJECTILE_SCENE.cameraTarget}
           enablePan

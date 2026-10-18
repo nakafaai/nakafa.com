@@ -1,25 +1,13 @@
 "use client";
 
-import type { ResolvedLine } from "@repo/design-system/components/contents/mathematics/line/spec";
+import { useLineScene } from "@repo/design-system/components/contents/mathematics/line/context";
 import { CoordinateSystem } from "@repo/design-system/components/three/coordinate-system";
 import { LineEquation } from "@repo/design-system/components/three/line-equation";
 import { Array as Arr } from "effect";
 
-/** Exact serializable payload owned by the deferred WebGL boundary. */
-export interface LineSceneProps {
-  cameraPosition: [number, number, number];
-  cameraTarget?: [number, number, number];
-  lines: readonly ResolvedLine[];
-  showZAxis: boolean;
-}
-
 /** Renders the client-only WebGL implementation of one line scene. */
-export function LineScene({
-  cameraPosition,
-  cameraTarget,
-  lines,
-  showZAxis,
-}: LineSceneProps) {
+export function LineScene() {
+  const { cameraPosition, cameraTarget, lines, showZAxis } = useLineScene();
   const isFrontalPlane =
     cameraPosition[0] === (cameraTarget?.[0] ?? 0) &&
     cameraPosition[1] === (cameraTarget?.[1] ?? 0) &&

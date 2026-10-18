@@ -1,5 +1,7 @@
 "use client";
 
+import { ChartDataProvider } from "@repo/design-system/components/contents/mathematics/chart/context";
+import { ChartSeriesFacts } from "@repo/design-system/components/contents/mathematics/chart/facts";
 import { Bar } from "@repo/design-system/components/evilcharts/charts/bar/series";
 import {
   EvilBarChart,
@@ -14,6 +16,7 @@ import {
   VisualCard,
   VisualCardActions,
   VisualCardBody,
+  VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
@@ -30,10 +33,10 @@ const chartData = [
 interface Props {
   description: ReactNode;
   seriesLabels: {
-    A: ReactNode;
-    B: ReactNode;
-    C: ReactNode;
-    D: ReactNode;
+    A: string;
+    B: string;
+    C: string;
+    D: string;
   };
   title: ReactNode;
   yAxisLabel: string;
@@ -73,53 +76,91 @@ export function SalesChart({
     [seriesLabels.A, seriesLabels.B, seriesLabels.C, seriesLabels.D]
   );
 
-  return (
-    <VisualCard>
-      <VisualCardHeader description={description} title={title} />
-      <VisualCardBody className="p-(--card-spacing)">
-        <EvilBarChart
-          className="aspect-video"
-          config={chartConfig}
-          data={chartData}
-        >
-          <Grid vertical={false} />
-          <XAxis
-            axisLine={false}
-            dataKey="month"
-            tickLine={false}
-            tickMargin={10}
-          />
-          <YAxis
-            axisLine={false}
-            label={{
-              value: yAxisLabel,
-              angle: -90,
-              position: "insideLeft",
-              offset: 10,
-              style: { textAnchor: "middle" },
-            }}
-            tickLine={false}
-            tickMargin={10}
-          />
-          <Tooltip />
-          <Legend />
-          {Arr.map(Rec.keys(chartConfig), (key, index) => {
-            const cue = getBarSeriesCue(index);
+  const chartSummary = useMemo(
+    () => ({
+      categories: Arr.map(chartData, (row) => row.month),
+      series: [
+        {
+          key: "A",
+          label: chartConfig.A.label,
+          color: chartConfig.A.colors.light[0],
+          values: Arr.map(chartData, (row) => row.A),
+        },
+        {
+          key: "B",
+          label: chartConfig.B.label,
+          color: chartConfig.B.colors.light[0],
+          values: Arr.map(chartData, (row) => row.B),
+        },
+        {
+          key: "C",
+          label: chartConfig.C.label,
+          color: chartConfig.C.colors.light[0],
+          values: Arr.map(chartData, (row) => row.C),
+        },
+        {
+          key: "D",
+          label: chartConfig.D.label,
+          color: chartConfig.D.colors.light[0],
+          values: Arr.map(chartData, (row) => row.D),
+        },
+      ],
+    }),
+    [chartConfig]
+  );
 
-            return (
-              <Bar
-                dataKey={key}
-                key={key}
-                radius={cue.radius}
-                variant={cue.variant}
-              />
-            );
-          })}
-        </EvilBarChart>
-      </VisualCardBody>
-      <VisualCardActions>
-        <VisualCardFullscreen />
-      </VisualCardActions>
-    </VisualCard>
+  return (
+    <ChartDataProvider data={chartSummary}>
+      <VisualCard>
+        <VisualCardHeader description={description} title={title} />
+        <VisualCardBody className="p-(--card-spacing)">
+          <EvilBarChart
+            className="aspect-video"
+            config={chartConfig}
+            data={chartData}
+          >
+            <Grid vertical={false} />
+            <XAxis
+              axisLine={false}
+              dataKey="month"
+              tickLine={false}
+              tickMargin={10}
+            />
+            <YAxis
+              axisLine={false}
+              label={{
+                value: yAxisLabel,
+                angle: -90,
+                position: "insideLeft",
+                offset: 10,
+                style: { textAnchor: "middle" },
+              }}
+              tickLine={false}
+              tickMargin={10}
+            />
+            <Tooltip />
+            <Legend />
+            {Arr.map(Rec.keys(chartConfig), (key, index) => {
+              const cue = getBarSeriesCue(index);
+
+              return (
+                <Bar
+                  dataKey={key}
+                  key={key}
+                  radius={cue.radius}
+                  variant={cue.variant}
+                />
+              );
+            })}
+          </EvilBarChart>
+        </VisualCardBody>
+        <VisualCardActions>
+          <VisualCardFullscreen />
+        </VisualCardActions>
+        <VisualCardFooter>
+          <ChartSeriesFacts />
+        </VisualCardFooter>
+      </VisualCard>
+    </ChartDataProvider>
   );
 }

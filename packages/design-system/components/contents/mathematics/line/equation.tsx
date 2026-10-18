@@ -1,17 +1,17 @@
+import { LineEquationProvider } from "@repo/design-system/components/contents/mathematics/line/context";
 import { DeferredLineScene } from "@repo/design-system/components/contents/mathematics/line/deferred";
-import { resolveAuthoredLines } from "@repo/design-system/components/contents/mathematics/line/resolve";
+import { LineFacts } from "@repo/design-system/components/contents/mathematics/line/facts";
+import { resolveLineScene } from "@repo/design-system/components/contents/mathematics/line/resolve";
 import type {
   AuthoredLine,
   CircleArcFields,
   CircleArcLabelFields,
   ResolvedLineLabel,
 } from "@repo/design-system/components/contents/mathematics/line/spec";
-import {
-  CoordinateControls,
-  CoordinateProvider,
-} from "@repo/design-system/components/three/controls";
+import { CoordinateControls } from "@repo/design-system/components/three/controls";
 import {
   VisualCard,
+  VisualCardFooter,
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
 import type { ReactNode } from "react";
@@ -24,10 +24,6 @@ export interface CircleArcLineProps extends CircleArcFields {
   readonly label?: Omit<ResolvedLineLabel, "at"> & CircleArcLabelFields;
 }
 
-const DEFAULT_CAMERA_POSITION_X = 10;
-const DEFAULT_CAMERA_POSITION_Y = 6;
-const DEFAULT_CAMERA_POSITION_Z = 10;
-
 interface Props {
   cameraPosition?: [number, number, number];
   cameraTarget?: [number, number, number];
@@ -37,33 +33,36 @@ interface Props {
   title: ReactNode;
 }
 
-/** Renders one interactive line-equation card. */
+/**
+ * Renders one interactive line-equation card: its header, the scene with its actions, and
+ * the readouts of the scene in the footer. The footer is drawn on the server, so its math
+ * never reaches the browser; the scene parts read the scene from `LineEquationProvider`.
+ */
 export function LineEquation({
   title,
   description,
   data,
-  cameraPosition = [
-    DEFAULT_CAMERA_POSITION_X,
-    DEFAULT_CAMERA_POSITION_Y,
-    DEFAULT_CAMERA_POSITION_Z,
-  ],
+  cameraPosition,
   cameraTarget,
-  showZAxis = true,
+  showZAxis,
 }: Props) {
-  const lines = resolveAuthoredLines(data);
+  const config = resolveLineScene({
+    cameraPosition,
+    cameraTarget,
+    data,
+    showZAxis,
+  });
 
   return (
-    <CoordinateProvider>
+    <LineEquationProvider config={config}>
       <VisualCard>
         <VisualCardHeader description={description} title={title} />
-        <DeferredLineScene
-          cameraPosition={cameraPosition}
-          {...(cameraTarget === undefined ? {} : { cameraTarget })}
-          lines={lines}
-          showZAxis={showZAxis}
-        />
+        <DeferredLineScene />
         <CoordinateControls />
+        <VisualCardFooter>
+          <LineFacts lines={config.lines} />
+        </VisualCardFooter>
       </VisualCard>
-    </CoordinateProvider>
+    </LineEquationProvider>
   );
 }
