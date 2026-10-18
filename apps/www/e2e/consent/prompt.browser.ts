@@ -329,7 +329,7 @@ const verifyActionsOnOneRow = Effect.fn(
   });
 });
 
-/** The footer's content edges, and the box of each of its buttons, in CSS pixels. */
+/** The footer's content edges, its sentence's left edge, and the box of each of its buttons, in CSS pixels. */
 const readFooterRow = (prompt: Locator) =>
   prompt.locator('[data-slot="card-footer"]').evaluate((footer) => {
     const style = getComputedStyle(footer);
@@ -345,6 +345,7 @@ const readFooterRow = (prompt: Locator) =>
         };
       }),
       contentLeft: box.left + Number.parseFloat(style.paddingLeft),
+      hintLeft: footer.querySelector("p")?.getBoundingClientRect().left,
       contentRight: box.right - Number.parseFloat(style.paddingRight),
     };
   });
@@ -368,13 +369,13 @@ const verifyActionsShareRow = Effect.fn(
       expect(action.inside).toBe(true);
       expect(action.clipped).toBe(false);
     }
-    // The footer is narrower than 16rem here, and both actions still share its
-    // row from one edge to the other, instead of stacking at one action's width.
+    // The footer is narrower than 16rem here and still one row: its sentence
+    // starts at the left edge, and both actions share the row up to the right edge.
     expect(row.actions).toHaveLength(2);
     expect(decline?.top).toBeLessThan(allow?.bottom ?? 0);
     expect(allow?.top).toBeLessThan(decline?.bottom ?? 0);
     expect(decline?.right).toBeLessThanOrEqual(allow?.left ?? 0);
-    expect(decline?.left).toBeCloseTo(row.contentLeft, 0);
+    expect(row.hintLeft).toBeCloseTo(row.contentLeft, 0);
     expect(allow?.right).toBeCloseTo(row.contentRight, 0);
   });
 });

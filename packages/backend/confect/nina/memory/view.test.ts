@@ -161,14 +161,17 @@ describe("Nina memory page", () => {
     ).toEqual(["Rahasia mereka limit"]);
   });
 
-  it("pages through 300 memories in order, newest confirmation first, and never more than 50 to a page", async () => {
+  // 120 memories make three pages, the last one short, which proves the order across
+  // pages and the cap as well as more would; each memory is sealed, so 300 took over
+  // five seconds on a loaded machine.
+  it("pages through 120 memories in order, newest confirmation first, and never more than 50 to a page", async () => {
     const f = await createMemoryTest();
-    await f.fill(300);
+    await f.fill(120);
     const pages = await pagesOf(f.owner, 50);
-    expect(Arr.every(pages, (page) => Arr.length(page) <= 50)).toBe(true);
+    expect(Arr.map(pages, Arr.length)).toEqual([50, 50, 20]);
     const all = Arr.flatten(pages);
     expect(Arr.map(all, (item) => item.text)).toEqual(
-      Arr.makeBy(300, (index) => `Memory ${299 - index}`)
+      Arr.makeBy(120, (index) => `Memory ${119 - index}`)
     );
     // However many the browser asks for, a page holds 50.
     expect(Arr.length((await pageOf(f.owner, 1000)).page)).toBe(50);

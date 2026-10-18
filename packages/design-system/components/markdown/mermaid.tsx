@@ -22,13 +22,84 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { normalizeMermaidChart } from "@repo/design-system/lib/markdown/mermaid";
 import type { MermaidRenderConfig } from "@repo/design-system/lib/mermaid/render";
 import { useTranslations } from "next-intl";
+import { createContext, use, useMemo } from "react";
 
 interface Props {
   chart: string;
-  className?: string;
-  config?: MermaidRenderConfig;
+  className?: string | undefined;
+  config?: MermaidRenderConfig | undefined;
   description: string;
   title: string;
+}
+
+/** What the diagram's card and its dialog draw: the source, the settings and the words. */
+type MermaidFigure = Pick<Props, "chart" | "className" | "config" | "title">;
+
+const MermaidFigureContext = createContext<MermaidFigure | null>(null);
+
+/** Selects the figure of the surrounding diagram. */
+function useMermaidFigure() {
+  const figure = use(MermaidFigureContext);
+  if (figure === null) {
+    // A missing diagram is a programmer composition error at this React seam.
+    throw new Error("Diagram parts require MermaidMdx.");
+  }
+  return figure;
+}
+
+/** The diagram in its card, with the controls that open it and copy its source. */
+function DiagramCard() {
+  const t = useTranslations("Ai");
+  const { chart, className, config, title } = useMermaidFigure();
+
+  return (
+    <DiagramFrame
+      actions={
+        <>
+          <DialogTrigger
+            render={
+              <Button
+                aria-label={t("open-diagram")}
+                size="icon"
+                title={t("open-diagram")}
+                variant="ghost"
+              >
+                <HugeIcons icon={Maximize02Icon} />
+              </Button>
+            }
+          />
+          <CodeBlockSource code={chart} language="mermaid">
+            <CodeBlockDownloadButton />
+            <CodeBlockCopyButton />
+          </CodeBlockSource>
+        </>
+      }
+      className={className}
+      title={title}
+    >
+      <Mermaid
+        chart={chart}
+        className="size-full"
+        config={config}
+        label={title}
+      />
+    </DiagramFrame>
+  );
+}
+
+/** The diagram at its natural size, in the dialog that opens it. */
+function DialogDiagram() {
+  const { chart, config, title } = useMermaidFigure();
+
+  return (
+    <Mermaid
+      chart={chart}
+      className="h-[60dvh] rounded-lg bg-muted/40 p-4 text-base"
+      config={config}
+      fit="natural"
+      label={title}
+    />
+  );
 }
 
 /**
@@ -43,58 +114,27 @@ export function MermaidMdx({
   description,
   title,
 }: Props) {
-  const t = useTranslations("Ai");
   const renderableChart = normalizeMermaidChart(chart);
+  const figure = useMemo(
+    () => ({ chart: renderableChart, className, config, title }),
+    [className, config, renderableChart, title]
+  );
 
   return (
-    <Dialog>
-      <DiagramFrame
-        actions={
-          <>
-            <DialogTrigger
-              render={
-                <Button
-                  aria-label={t("open-diagram")}
-                  size="icon"
-                  title={t("open-diagram")}
-                  variant="ghost"
-                >
-                  <HugeIcons icon={Maximize02Icon} />
-                </Button>
-              }
-            />
-            <CodeBlockSource code={renderableChart} language="mermaid">
-              <CodeBlockDownloadButton />
-              <CodeBlockCopyButton />
-            </CodeBlockSource>
-          </>
-        }
-        className={className}
-        title={title}
-      >
-        <Mermaid
-          chart={renderableChart}
-          className="size-full"
-          config={config}
-          label={title}
-        />
-      </DiagramFrame>
+    <MermaidFigureContext value={figure}>
+      <Dialog>
+        <DiagramCard />
 
-      <DialogContent size="wide">
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>{description}</DialogDescription>
-        </DialogHeader>
-        <DialogPanel>
-          <Mermaid
-            chart={renderableChart}
-            className="h-[60dvh] rounded-lg bg-muted/40 p-4 text-base"
-            config={config}
-            fit="natural"
-            label={title}
-          />
-        </DialogPanel>
-      </DialogContent>
-    </Dialog>
+        <DialogContent size="wide">
+          <DialogHeader>
+            <DialogTitle>{title}</DialogTitle>
+            <DialogDescription>{description}</DialogDescription>
+          </DialogHeader>
+          <DialogPanel>
+            <DialogDiagram />
+          </DialogPanel>
+        </DialogContent>
+      </Dialog>
+    </MermaidFigureContext>
   );
 }

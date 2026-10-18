@@ -173,6 +173,7 @@ describe("access/policy authority", () => {
         expect(lists).toEqual([
           [
             "audit.view",
+            "connection.view",
             "document.edit",
             "exam.edit",
             "exam.view",
@@ -183,6 +184,7 @@ describe("access/policy authority", () => {
             "owner.manage",
             "person.manage",
             "person.view",
+            "scheme.manage",
             "tenant.manage",
             "tenant.view",
             "visit.approve",

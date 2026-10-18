@@ -194,6 +194,58 @@ export const createTenantKey = Effect.fn("vault.keys.createTenant")(function* (
     .pipe(Effect.orDie);
 }, Effect.provide(WebCryptoLayer));
 
+/** Finds the one row of the connector key, or null while no Google account has been blinded. */
+const findConnectorKey = Effect.fn("vault.keys.findConnector")(function* () {
+  return yield* (yield* DatabaseReader)
+    .table("connectorKeys")
+    .get("by_key", "primary")
+    .pipe(
+      Effect.catchTag("GetByIndexFailure", () => Effect.succeed(null)),
+      Effect.orDie
+    );
+});
+
+/** What the connector key's wrap is bound to: the platform's own key, with no owner. */
+export function connectorWrapBinding() {
+  return encodeJsonText(["nakafa/vault/connector-key/v1"]);
+}
+
+/**
+ * Derives the connector key's keys, and creates the key on first use: 32 random
+ * bytes, stored only wrapped by the current root key. Every connection blinds a
+ * Google account with these keys, so one account gets one blind under every owner
+ * (ADR 0015). The key is never shredded.
+ */
+export const ensureConnectorKeys = Effect.fn("vault.keys.ensureConnector")(
+  function* () {
+    const ring = yield* readRing();
+    const row = yield* findConnectorKey();
+    if (row) {
+      const key = yield* unwrap(
+        ring,
+        row.root,
+        row.wrapped,
+        connectorWrapBinding()
+      );
+      return yield* deriveKeys(key);
+    }
+    const key = yield* (yield* Crypto.Crypto)
+      .randomBytes(KEY_BYTES)
+      .pipe(Effect.orDie);
+    yield* (yield* DatabaseWriter)
+      .table("connectorKeys")
+      .insert({
+        createdAt: yield* Clock.currentTimeMillis,
+        key: "primary",
+        root: ring.current.id,
+        wrapped: yield* seal(ring.current.keys, connectorWrapBinding(), key),
+      })
+      .pipe(Effect.orDie);
+    return yield* deriveKeys(key);
+  },
+  Effect.provide(WebCryptoLayer)
+);
+
 /**
  * Deletes a learner's key. Everything sealed for the learner stays unreadable,
  * in old backups too once every copy of the root key that wrapped it is

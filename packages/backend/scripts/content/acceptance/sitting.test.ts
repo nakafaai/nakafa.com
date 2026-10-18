@@ -31,7 +31,11 @@ type CommandSpec = Parameters<typeof runAcceptanceCommand>[0];
 
 /** The arguments of the seed function, as the Convex CLI receives them. */
 const SeedArgs = Schema.fromJsonString(
-  Schema.Struct({ email: Schema.String, slug: Schema.String })
+  Schema.Struct({
+    crowd: Schema.optionalKey(Schema.Finite),
+    email: Schema.String,
+    slug: Schema.String,
+  })
 );
 
 /** A runtime whose backend folder sits under the test's own temporary root. */
@@ -67,7 +71,8 @@ describe("acceptance sitting", () => {
           root,
           "acc-1234abcd",
           "learner@acceptance.example.test",
-          `${root}/sitting.json`
+          `${root}/sitting.json`,
+          undefined
         );
 
         const [spec] = MutableList.toArray(specs);
@@ -96,6 +101,46 @@ describe("acceptance sitting", () => {
       }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
   );
 
+  it.effect(
+    "passes a crowd the command line names to the seed as a number",
+    () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const root = yield* fs.makeTempDirectoryScoped({
+          prefix: "acceptance-sitting-test-",
+        });
+        runtimeIn(root);
+        const specs = MutableList.make<CommandSpec>();
+        mocks.command.mockImplementation((spec: CommandSpec) =>
+          Effect.gen(function* () {
+            MutableList.append(specs, spec);
+            yield* fs.writeFileString(
+              spec.stdoutPath,
+              '{"examId":"exam-1","sittingId":"sitting-1","token":"K7Q4XM"}'
+            );
+          })
+        );
+
+        yield* createAcceptanceSitting(
+          root,
+          "acc-1234abcd",
+          "learner@acceptance.example.test",
+          `${root}/sitting.json`,
+          "101"
+        );
+
+        const [spec] = MutableList.toArray(specs);
+        const args = yield* Schema.decodeEffect(SeedArgs)(
+          Option.getOrThrow(Arr.last(spec?.args ?? []))
+        );
+        expect(args).toEqual({
+          crowd: 101,
+          email: "learner@acceptance.example.test",
+          slug: "acc-1234abcd",
+        });
+      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+  );
+
   it.effect("seeds no sitting when no local runtime is running", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
@@ -109,7 +154,8 @@ describe("acceptance sitting", () => {
           root,
           "acc-1234abcd",
           "learner@acceptance.example.test",
-          `${root}/sitting.json`
+          `${root}/sitting.json`,
+          undefined
         )
       );
 

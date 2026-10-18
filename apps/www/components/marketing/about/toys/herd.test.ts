@@ -22,14 +22,12 @@ describe("the animals of the home page", () => {
 });
 
 describe("the animals of the pricing page", () => {
-  it("takes its toys and its class from the cast after the home page's, so no animal repeats on either page", () => {
+  it("takes its toys and its class from its own cast, so no animal repeats on the page", () => {
     const parts = [...PRICING_TOY_HERD, ...PRICING_CLASS_HERD];
     const names = Arr.map(parts, (mascot) => mascot.animal);
-    const homeNames = Arr.map(HOME_CAST, (mascot) => mascot.animal);
 
-    expect(PRICING_TOY_HERD).toHaveLength(6);
+    expect(PRICING_TOY_HERD).toHaveLength(12);
     expect(PRICING_CLASS_HERD).toHaveLength(7);
     expect(HashSet.size(HashSet.fromIterable(names))).toBe(names.length);
-    expect(Arr.difference(names, homeNames)).toEqual(names);
   });
 });

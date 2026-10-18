@@ -10,6 +10,7 @@ import { toast } from "@repo/design-system/lib/toast/notify";
 import { Effect } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { useTransition } from "react";
+import type { PricingButtonVariant } from "@/components/marketing/about/pricing/button.client";
 import { reportClientException } from "@/lib/analytics/client";
 import {
   getPostAuthOnboardingHref,
@@ -22,7 +23,7 @@ import { isActiveLocale } from "@/lib/i18n/active";
 import { useViewer } from "@/lib/identity/client";
 
 /** Opens browser-originated checkout or the existing customer's portal. */
-export function BillingButton() {
+export function BillingButton({ variant }: { variant: PricingButtonVariant }) {
   const locale = useLocale();
   const t = useTranslations("Pricing");
   const callbackURL = getPostAuthOnboardingHref("/pricing", locale);
@@ -94,6 +95,7 @@ export function BillingButton() {
       className="w-full"
       disabled={isPending || !billingReady || !isActiveLocale(locale)}
       onClick={handleBilling}
+      variant={variant}
     >
       <Spinner icon={Diamond02Icon} isLoading={isPending || !billingReady} />
       {t("pro-cta")}
