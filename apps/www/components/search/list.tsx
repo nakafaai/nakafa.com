@@ -2,8 +2,12 @@ import {
   FileIcon,
   InformationCircleIcon,
   Rocket01Icon,
-  Sad02Icon,
 } from "@hugeicons/core-free-icons";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+} from "@repo/design-system/components/ui/empty";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { Separator } from "@repo/design-system/components/ui/separator";
@@ -14,6 +18,7 @@ import { useTranslations } from "next-intl";
 import { createContext, Fragment, type ReactElement, use } from "react";
 import { SearchExcerpt } from "@/components/search/excerpt";
 import { useSearchSectionLabels } from "@/components/search/labels";
+import { EmptyNina } from "@/components/state/empty";
 import type { ContentSearchResultItem } from "@/lib/search/query";
 
 interface Props {
@@ -79,10 +84,12 @@ export function SearchResults({
 
   if (results.length === 0 && query) {
     return (
-      <div className="flex items-center justify-center gap-1 text-muted-foreground text-sm">
-        <HugeIcons className="size-4" icon={Sad02Icon} />
-        <p>{t("search-not-found")}</p>
-      </div>
+      <Empty>
+        <EmptyHeader>
+          <EmptyNina act="searching" />
+          <EmptyDescription>{t("search-not-found")}</EmptyDescription>
+        </EmptyHeader>
+      </Empty>
     );
   }
 

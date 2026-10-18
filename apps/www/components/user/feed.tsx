@@ -2,14 +2,13 @@ import {
   Empty,
   EmptyDescription,
   EmptyHeader,
-  EmptyMedia,
 } from "@repo/design-system/components/ui/empty";
-import { Nina } from "@repo/design-system/components/ui/nina";
 import { NumberFormat } from "@repo/design-system/components/ui/number-flow";
 import { PersonAvatar } from "@repo/design-system/components/ui/person";
 import { cva } from "class-variance-authority";
 import { DateTime } from "effect";
 import type { ComponentProps, ReactNode } from "react";
+import { EmptyNina } from "@/components/state/empty";
 
 /** The frame every row of a profile shares, the composer's included. */
 const rowVariants = cva("relative flex items-start gap-3 border-b py-4");
@@ -131,9 +130,6 @@ export function FeedNotice({ children }: { children: ReactNode }) {
   return <div className="py-4">{children}</div>;
 }
 
-/** How wide Nina sleeps over a list with no rows. */
-const EMPTY_NINA_SIZE = 96;
-
 /**
  * What a list says when it has no rows: Nina asleep, since there is nothing to
  * do yet, over the one sentence. She only stands beside the sentence, so a
@@ -143,9 +139,7 @@ export function FeedEmpty({ children }: { children: ReactNode }) {
   return (
     <Empty className="py-12">
       <EmptyHeader>
-        <EmptyMedia>
-          <Nina act="sleeping" label="" size={EMPTY_NINA_SIZE} whole />
-        </EmptyMedia>
+        <EmptyNina act="sleeping" />
         <EmptyDescription>{children}</EmptyDescription>
       </EmptyHeader>
     </Empty>

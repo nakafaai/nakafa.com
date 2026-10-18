@@ -8,10 +8,7 @@ import {
   usePaginatedQuery,
   useQuery,
 } from "@confect/react";
-import {
-  MoreHorizontalIcon,
-  UserShield01Icon,
-} from "@hugeicons/core-free-icons";
+import { MoreHorizontalIcon } from "@hugeicons/core-free-icons";
 import access from "@repo/backend/confect/_generated/refs/access";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { BuiltinRole } from "@repo/backend/confect/access/schema";
@@ -139,8 +136,8 @@ function SchoolGrantTable({
   if (Arr.isReadonlyArrayEmpty(grants)) {
     return (
       <TableEmpty
+        act="juggling"
         description={t("roles-grants-description")}
-        icon={<HugeIcons icon={UserShield01Icon} />}
         title={t("roles-empty")}
       />
     );

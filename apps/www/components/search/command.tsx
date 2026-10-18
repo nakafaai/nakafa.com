@@ -6,7 +6,6 @@ import {
   ArrowUp02Icon,
   FileIcon,
   InformationCircleIcon,
-  Sad02Icon,
 } from "@hugeicons/core-free-icons";
 import { useDebouncedValue } from "@mantine/hooks";
 import {
@@ -41,6 +40,7 @@ import {
   getSubjectMenuHref,
   subjectMenu,
 } from "@/components/sidebar/data/subject";
+import { EmptyNina } from "@/components/state/empty";
 import type { ArticleNavigationItem } from "@/lib/content/article/navigation";
 import { getErrorMessage } from "@/lib/error";
 import { useSearch } from "@/lib/search/context";
@@ -203,7 +203,7 @@ function SearchEmpty({
       )}
       {!(error || isLoading) && !!search && (
         <>
-          <HugeIcons className="size-4" icon={Sad02Icon} />
+          <EmptyNina act="searching" />
           <p>{t("search-not-found")}</p>
         </>
       )}
