@@ -12,12 +12,17 @@ import { desktopViewport, viewportSize } from "@/e2e/support/viewport";
  * The owner's rule (18 Oct): every page header is one row at every width. A header
  * is 64 px tall when its content fits one row, so a header that wraps a title, a
  * path or an action under another grows past it. Nothing inside it may reach past
- * its edges either: a long title truncates instead.
+ * its edges either: a long title truncates instead. A page without a header row of
+ * its own has the app's bar as its header below the desktop breakpoint, so the bar
+ * is held to the same rule.
  */
 const ONE_ROW_PX = 64.5;
 
 /** The widths the window narrows through: a desktop, a tablet, and two phones. */
 const widths = [desktopViewport.width, 768, 390, 320];
+
+/** Below this width the app's sidebar folds away, so every page shows a header row. */
+const DESKTOP_PX = 1024;
 
 /** The pages that need no account: each kind of public header, with long titles. */
 const publicRoutes = [
@@ -28,7 +33,9 @@ const publicRoutes = [
   "/en/try-out/indonesia/snbt",
   "/en/try-out/indonesia/snbt/2027",
   "/en/try-out/indonesia/snbt/2027/set-1",
-  "/id/curricula/merdeka",
+  "/en/curriculum",
+  "/en/curriculum/merdeka",
+  "/en/curriculum/merdeka/class-10",
   LESSON_PATH,
   "/en/articles/politics",
   "/en/articles/politics/merah-putih-cabinet-analysis",
@@ -41,13 +48,16 @@ const learnerRoutes = ["/en/chat", "/en/user/settings", "/en/notifications"];
 const schoolPaths = ["/", "/exams", "/settings/profile", "/settings/roles"];
 
 /**
- * Reads every page header that is drawn: its height, and the elements inside it
- * whose box reaches past its right or bottom edge. Elements hidden at this width
- * and the screen reader's one-pixel boxes are left out.
+ * Reads every header row that is drawn, the page's own or the app's bar: its
+ * height, and the elements inside it whose box reaches past its right or bottom
+ * edge. Elements hidden at this width and the screen reader's one-pixel boxes are
+ * left out.
  */
 function readHeaders() {
   return Array.from(
-    document.querySelectorAll<HTMLElement>('[data-slot="page-header"]')
+    document.querySelectorAll<HTMLElement>(
+      '[data-slot="page-header"], [data-slot="app-header"]'
+    )
   )
     .filter((header) => header.getBoundingClientRect().height > 0)
     .map((header) => {
@@ -82,9 +92,7 @@ const twoFrames = (page: Page) =>
 const expectOneRowHeaders = Effect.fn("NakafaE2E.expectOneRowHeaders")(
   function* (page: Page, label: string) {
     yield* Effect.promise(() =>
-      expect(page.locator('[data-slot="page-header"]').first()).toBeVisible({
-        timeout: 30_000,
-      })
+      expect(page.locator("h1").first()).toBeAttached({ timeout: 30_000 })
     );
     yield* Effect.forEach(
       widths,
@@ -98,7 +106,11 @@ const expectOneRowHeaders = Effect.fn("NakafaE2E.expectOneRowHeaders")(
             page.evaluate(readHeaders)
           );
           yield* Effect.sync(() => {
-            expect(headers.length, `${label} at ${width}px`).toBeGreaterThan(0);
+            if (width < DESKTOP_PX) {
+              expect(headers.length, `${label} at ${width}px`).toBeGreaterThan(
+                0
+              );
+            }
             Arr.forEach(headers, (header) => {
               expect(
                 header.height,
