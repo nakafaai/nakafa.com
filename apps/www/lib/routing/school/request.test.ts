@@ -12,12 +12,23 @@ const mockSchool = vi.hoisted(() => ({
       new Response(null, { headers: { "x-locale-proxy": "school" } })
   ),
 }));
+const mockMain = vi.hoisted(() => ({
+  middleware: vi.fn(
+    (_request: NextRequest) =>
+      new Response(null, { headers: { "x-locale-proxy": "main" } })
+  ),
+}));
 
 vi.mock("@repo/internationalization/src/routing", () => ({
-  schoolRouting: { locales: ["en", "id", "de"] },
+  routing: { defaultLocale: "en", locales: ["en", "id", "de"] },
+  schoolRouting: { localePrefix: "never", locales: ["en", "id", "de"] },
 }));
 vi.mock("next-intl/middleware", () => ({
-  default: vi.fn(() => mockSchool.middleware),
+  default: vi.fn((config: { localePrefix?: string }) =>
+    config.localePrefix === "never"
+      ? mockSchool.middleware
+      : mockMain.middleware
+  ),
 }));
 
 /**
@@ -37,6 +48,7 @@ function visit(
 describe("school requests", () => {
   beforeEach(() => {
     mockSchool.middleware.mockClear();
+    mockMain.middleware.mockClear();
   });
   afterEach(() => {
     vi.unstubAllEnvs();
@@ -153,22 +165,44 @@ describe("school requests", () => {
   });
 
   it.each([
-    "https://nakafa.com/school/harapan",
-    "https://nakafa.com/id/school/harapan",
+    ["https://nakafa.com/school/harapan", "en"],
+    ["https://nakafa.com/id/school/harapan", "id"],
   ])(
-    "answers the school tree with a plain 404 on the main host: %s",
-    async (address) => {
+    "answers the school tree with the not-found page and 404 on the main host: %s",
+    (address, locale) => {
       const response = routeSchoolRequest(visit(address));
 
       expect(response?.status).toBe(404);
-      expect(response?.headers.get("content-type")).toBe(
-        "text/plain; charset=utf-8"
+      expect(response?.headers.get("x-middleware-rewrite")).toBe(
+        `https://nakafa.com/_not-found/${locale}`
       );
+      expect(
+        response?.headers.get("x-middleware-request-x-next-intl-locale")
+      ).toBe(locale);
       expect(response?.headers.get("x-robots-tag")).toBe("noindex");
-      expect(await response?.text()).toBe("Not Found\n");
       expect(mockSchool.middleware).not.toHaveBeenCalled();
     }
   );
+
+  it("answers the school tree in the locale that the routing negotiates for a path without one", () => {
+    mockMain.middleware.mockReturnValueOnce(
+      new Response(null, {
+        headers: {
+          "x-middleware-rewrite": "https://nakafa.com/de/school/harapan",
+        },
+      })
+    );
+
+    const response = routeSchoolRequest(
+      visit("https://nakafa.com/school/harapan")
+    );
+
+    expect(response?.status).toBe(404);
+    expect(response?.headers.get("x-middleware-rewrite")).toBe(
+      "https://nakafa.com/_not-found/de"
+    );
+    expect(response?.headers.get("vary")).toContain("Accept-Language");
+  });
 
   it("answers an encoded school path with 404 on the main host", () => {
     const response = routeSchoolRequest(
