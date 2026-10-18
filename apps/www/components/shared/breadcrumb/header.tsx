@@ -35,6 +35,7 @@ interface BreadcrumbHeaderProps {
   /** Complete render value for one sticky, bounded breadcrumb header. */
   value: {
     action?: ReactNode;
+    homeHref: string;
     homeLabel: string;
     items: readonly BreadcrumbHeaderItem[];
     menuLabel: string;
@@ -50,11 +51,12 @@ type BreadcrumbHeaderValue = BreadcrumbHeaderProps["value"];
  * phone, wraps under the path.
  */
 export function BreadcrumbHeader({ value }: BreadcrumbHeaderProps) {
-  const { action, homeLabel, items, menuLabel, title } = value;
+  const { action, homeHref, homeLabel, items, menuLabel, title } = value;
   return (
     <BreadcrumbHeaderFrame contentClassName="flex-wrap sm:flex-nowrap sm:py-0">
       <h1 className="sr-only">{title}</h1>
       <BreadcrumbHeaderPath
+        homeHref={homeHref}
         homeLabel={homeLabel}
         items={Arr.map(items, (item, index) =>
           index === items.length - 1 ? { ...item, href: undefined } : item
@@ -69,11 +71,15 @@ export function BreadcrumbHeader({ value }: BreadcrumbHeaderProps) {
 /** Bounded path navigation with linked parents and one collapsed middle group. */
 export function BreadcrumbHeaderPath({
   children,
+  homeHref,
   homeLabel,
   items,
   menuLabel,
   visibleItemCount = 2,
-}: Pick<BreadcrumbHeaderValue, "homeLabel" | "items" | "menuLabel"> & {
+}: Pick<
+  BreadcrumbHeaderValue,
+  "homeHref" | "homeLabel" | "items" | "menuLabel"
+> & {
   children?: ReactNode;
   visibleItemCount?: 1 | 2;
 }) {
@@ -84,7 +90,7 @@ export function BreadcrumbHeaderPath({
       <BreadcrumbList className="flex-nowrap">
         <BreadcrumbItem className="shrink-0">
           <BreadcrumbLink
-            render={<IntentLink href="/home">{homeLabel}</IntentLink>}
+            render={<IntentLink href={homeHref}>{homeLabel}</IntentLink>}
           />
         </BreadcrumbItem>
         {hiddenItems.length > 0 && (

@@ -19,6 +19,7 @@ export function SchoolSettingsHeader() {
   return (
     <BreadcrumbHeader
       value={{
+        homeHref: "/",
         homeLabel: tCommon("home"),
         items: [
           { href: section.group.href, label: t(section.group.key) },

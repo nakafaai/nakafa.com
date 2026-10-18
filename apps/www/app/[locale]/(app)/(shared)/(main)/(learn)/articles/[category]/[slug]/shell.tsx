@@ -59,6 +59,7 @@ export async function ArticleShell({
         <ContentHeader
           breadcrumb={
             <BreadcrumbHeaderPath
+              homeHref="/home"
               homeLabel={tCommon("home")}
               items={[
                 { href: "/articles", label: tCommon("articles") },
