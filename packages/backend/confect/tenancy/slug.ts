@@ -76,6 +76,7 @@ export const reservedSlugs = HashSet.fromIterable([
   "verify",
   "webmail",
   ...APP_LOCALE_CODES,
+  "new",
   "onboarding",
   "select",
 ]);
