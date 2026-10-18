@@ -23,10 +23,10 @@ export function FeatureRow({
   );
 }
 
-/** The words of a feature: Nina doing what fits it, its title, and one sentence. */
+/** The words of a feature: Nina doing what fits it, its title, and one sentence. They rise into place as they scroll in. */
 export function FeatureText({ children }: { children: ReactNode }) {
   return (
-    <div className="grid min-w-0 content-center justify-items-start gap-3">
+    <div className="rise-on-scroll grid min-w-0 content-center justify-items-start gap-3">
       {children}
     </div>
   );
@@ -52,12 +52,13 @@ export function FeatureLead({ children }: { children: ReactNode }) {
 
 /**
  * The card of a feature: the real product inside the design system's card, at
- * the card's own spacing. A feature whose product draws its own cards, such as
- * the lesson window, puts it in `FeatureProduct` instead.
+ * the card's own spacing, rising into place a little after its words. A feature
+ * whose product draws its own cards, such as the lesson window, puts it in
+ * `FeatureProduct` instead.
  */
 export function FeatureCard({ children }: { children: ReactNode }) {
   return (
-    <Card className="min-w-0">
+    <Card className="rise-on-scroll min-w-0 [--rise-delay:15%]">
       <div className="grid gap-6 px-(--card-spacing)">{children}</div>
     </Card>
   );
@@ -65,5 +66,7 @@ export function FeatureCard({ children }: { children: ReactNode }) {
 
 /** The end side of a feature, for a product that draws its own cards. */
 export function FeatureProduct({ children }: { children: ReactNode }) {
-  return <div className="min-w-0">{children}</div>;
+  return (
+    <div className="rise-on-scroll min-w-0 [--rise-delay:15%]">{children}</div>
+  );
 }
