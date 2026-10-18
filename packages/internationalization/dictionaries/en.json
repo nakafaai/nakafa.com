@@ -418,6 +418,19 @@
     "card-code-description": "Give the code to the student, because it will not be shown again.",
     "invites-empty": "No invite is waiting."
   },
+  "Classroom": {
+    "tabs-home": "Home",
+    "tabs-forum": "Forum",
+    "general-channel": "General",
+    "channels-title": "Channel",
+    "channels-empty": "No channel yet",
+    "channels-empty-description": "This class has no channel yet.",
+    "add-channel": "Add channel",
+    "add-channel-title": "Add a topic channel",
+    "add-channel-description": "Everyone in the class reads a topic channel, and its name shows in the list.",
+    "channel-name": "Channel name",
+    "add-submit": "Add"
+  },
   "Metadata": {
     "title": "Nakafa: Free Lessons from K-12 to University",
     "description": "Study math, science, computer science, AI, and exam prep on Nakafa. Free lessons from K-12 to university with practice questions and explanations.",

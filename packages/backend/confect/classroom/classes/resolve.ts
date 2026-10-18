@@ -97,6 +97,9 @@ export const resolve = FunctionImpl.make(
       });
     }
     yield* classAuthority.check("class.view", found.value);
-    return classView(found.value);
+    return {
+      ...classView(found.value),
+      can: yield* classAuthority.allowed(found.value),
+    };
   })
 );

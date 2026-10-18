@@ -418,6 +418,19 @@
     "card-code-description": "Berikan kode kepada siswa, karena kode ini tidak akan ditampilkan lagi.",
     "invites-empty": "Belum ada undangan yang menunggu."
   },
+  "Classroom": {
+    "tabs-home": "Beranda",
+    "tabs-forum": "Forum",
+    "general-channel": "Umum",
+    "channels-title": "Kanal",
+    "channels-empty": "Belum ada kanal",
+    "channels-empty-description": "Kelas ini belum memiliki kanal.",
+    "add-channel": "Tambah kanal",
+    "add-channel-title": "Tambah kanal topik",
+    "add-channel-description": "Semua anggota kelas membaca kanal topik, dan namanya tampil di daftar.",
+    "channel-name": "Nama kanal",
+    "add-submit": "Tambah"
+  },
   "Metadata": {
     "title": "Nakafa: Materi Belajar Gratis dari SD sampai Universitas",
     "description": "Belajar Matematika, Sains, Komputer, AI, dan persiapan ujian di Nakafa. Materi gratis dari SD sampai universitas dengan latihan dan pembahasan.",

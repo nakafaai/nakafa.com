@@ -38,7 +38,12 @@ describe("classroom/classes resolve", () => {
         const student = yield* fixture
           .as("student")
           .query(resolve, { classSlug: "fisika-x-1", slug: nf });
-        expect([leader, student]).toEqual([made, made]);
+        expect([leader, student]).toMatchObject([made, made]);
+        expect(leader.can).toContain("forum.manage");
+        expect(student.can).toEqual(
+          expect.arrayContaining(["class.view", "forum.read"])
+        );
+        expect(student.can).not.toContain("forum.manage");
       })
   );
 
@@ -89,7 +94,7 @@ describe("classroom/classes resolve", () => {
         .as("admin")
         .query(resolve, { classSlug: "fisika-x-1", slug: nf })
         .pipe(Effect.flip);
-      expect(beforeArchive).toEqual(made);
+      expect(beforeArchive).toMatchObject(made);
       expect(afterArchive).toMatchObject(denied("resource"));
     })
   );
@@ -117,7 +122,7 @@ describe("classroom/classes resolve", () => {
         const found = yield* fixture
           .as("admin")
           .query(resolve, { classSlug: "fisika-x-1", slug: nf });
-        expect(found).toEqual(active);
+        expect(found).toMatchObject(active);
       })
   );
 
@@ -241,7 +246,7 @@ describe("classroom/classes resolve", () => {
         const found = yield* fixture
           .as("admin")
           .query(resolve, { classSlug: "fisika-x-1", slug: nf });
-        expect(found).toEqual(made);
+        expect(found).toMatchObject(made);
       })
   );
 

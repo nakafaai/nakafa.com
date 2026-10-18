@@ -23,6 +23,7 @@ import {
   ClassSubjectRequired,
   ClassSubjectTaken,
 } from "@repo/backend/confect/classroom/errors";
+import { insertGeneral } from "@repo/backend/confect/classroom/forum/general";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import { Cohort } from "@repo/backend/confect/tenancy/access";
 import { personActor } from "@repo/backend/confect/tenancy/actor";
@@ -64,7 +65,8 @@ const freeAddress = (
  * cohort holds classes that name a subject. An active class of the cohort may not
  * have the same name or the same subject, and a cohort holds at most CLASS_LIMIT
  * classes, archived ones included. The address is the name's letters and digits,
- * unique within the period.
+ * unique within the period. The class's general channel is written in the same
+ * transaction, so every class has one from its creation.
  */
 export const create = FunctionImpl.make(
   databaseSchema,
@@ -147,6 +149,7 @@ export const create = FunctionImpl.make(
         ...(subject === undefined ? {} : { subject }),
       })
       .pipe(Effect.orDie);
+    yield* insertGeneral(classId, cohort.tenantId, now);
     const created = yield* reader
       .table("classes")
       .get(classId)

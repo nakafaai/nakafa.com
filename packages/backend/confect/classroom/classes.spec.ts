@@ -1,6 +1,8 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id } from "@repo/backend/confect/_generated/id";
+import { entries } from "@repo/backend/confect/access/catalog";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
+import { Kind } from "@repo/backend/confect/access/kind";
 import { ClassAccess } from "@repo/backend/confect/classroom/access";
 import {
   ClassAddress,
@@ -38,6 +40,15 @@ const ClassView = Schema.Struct({
   slug: Schema.String,
   status: ClassStatus,
   subject: Schema.optionalKey(ClassSubject),
+});
+
+/**
+ * A class as `resolve` returns it: the class, and the class actions the caller
+ * holds on it, so a page offers only the actions the caller may take.
+ */
+const ClassResolved = Schema.Struct({
+  ...ClassView.fields,
+  can: Schema.Array(Kind.actions(entries, "class")),
 });
 
 /**
@@ -118,7 +129,7 @@ export default GroupSpec.make()
     FunctionSpec.publicQuery({
       name: "resolve",
       args: () => ({ classSlug: ClassAddress, slug: TenantSlug }),
-      returns: () => ClassView,
+      returns: () => ClassResolved,
       error: () => Schema.Union([AccessDenied, ClassAmbiguous]),
     })
   );
