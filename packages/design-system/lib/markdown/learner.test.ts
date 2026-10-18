@@ -28,9 +28,24 @@ describe("rehypeLearnerText", () => {
       "<p>Baris satu<br/>Baris dua</p>"
     );
     expect(render("- satu\n  dua\n- tiga")).toContain("<li>satu<br/>dua</li>");
-    expect(render("Judul\n===")).toBe("<h1>Judul</h1>");
+    expect(render("Judul\nbaris\n===")).toBe("<h1>Judul<br/>baris</h1>");
     expect(render("[satu\ndua](https://example.com)")).toContain(
       "satu<br/>dua</a>"
+    );
+  });
+
+  it("keeps a line break between two inline runs and between lines of typed HTML", () => {
+    expect(render("**Judul**\n*isi*")).toBe(
+      "<p><strong>Judul</strong><br/><em>isi</em></p>"
+    );
+    expect(render("**Judul**\n[tautan](https://example.com)")).toBe(
+      '<p><strong>Judul</strong><br/><a href="https://example.com">tautan</a></p>'
+    );
+    expect(render("**a**\n<b>c</b>")).toBe(
+      "<p><strong>a</strong><br/>&lt;b&gt;c&lt;/b&gt;</p>"
+    );
+    expect(render("<li>Satu</li>\n<li>Dua</li>")).toBe(
+      "&lt;li&gt;Satu&lt;/li&gt;<br/>&lt;li&gt;Dua&lt;/li&gt;"
     );
   });
 
@@ -39,6 +54,7 @@ describe("rehypeLearnerText", () => {
       "<ul>\n<li>satu\n<ul>\n<li>dua</li>\n</ul>\n</li>\n</ul>"
     );
     expect(render("```\na\nb\n```")).toBe("<pre><code>a\nb\n</code></pre>");
+    expect(render("`a\nb` c")).toBe("<p><code>a b</code> c</p>");
     expect(render("$$\na\nb\n$$")).toContain("a\nb");
   });
 

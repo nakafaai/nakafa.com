@@ -14,6 +14,29 @@ type Node = Element["children"][number];
 /** The elements whose text is written exactly as it stands: code and the math that rides in it. */
 const VERBATIM = ["code", "pre"];
 
+/** The elements that stand as blocks: the white space beside them is layout, not a line the learner wrote. */
+const BLOCKS = [
+  "blockquote",
+  "h1",
+  "h2",
+  "h3",
+  "h4",
+  "h5",
+  "h6",
+  "hr",
+  "li",
+  "ol",
+  "p",
+  "pre",
+  "table",
+  "tbody",
+  "td",
+  "th",
+  "thead",
+  "tr",
+  "ul",
+];
+
 /** The delimiter of each emphasis, by the element it becomes. */
 const DELIMITERS: Readonly<Record<string, string>> = {
   em: "*",
@@ -83,15 +106,35 @@ function breakLines(value: string): Node[] {
   });
 }
 
-/** The children of an element as learner text draws them. */
+/** Whether a node runs inside a line: text, HTML the learner typed, or an element that is not a block. */
+function isInline(node: Node | undefined): boolean {
+  if (node === undefined) {
+    return false;
+  }
+  if (node.type === "element") {
+    return !Arr.contains(BLOCKS, node.tagName);
+  }
+  return node.type === "text" || node.type === "raw";
+}
+
+/**
+ * The children of an element as learner text draws them. A line ending with
+ * only white space is a line break when it sits between two inline nodes, as
+ * between a bold run and a link on the next line, and layout beside a block.
+ * HTML the learner typed is drawn as its text, so its lines break there too.
+ */
 function learnerChildren(children: readonly Node[]): Node[] {
   return Arr.flatMap(children, (child, index): Node[] => {
-    if (child.type === "text") {
-      return Str.trim(child.value) === "" || !Str.includes("\n")(child.value)
-        ? [child]
-        : breakLines(child.value);
+    if (child.type !== "element") {
+      if (!Str.includes("\n")(child.value)) {
+        return [child];
+      }
+      const layout =
+        Str.trim(child.value) === "" &&
+        !(isInline(children[index - 1]) && isInline(children[index + 1]));
+      return layout ? [child] : breakLines(child.value);
     }
-    if (child.type !== "element" || Arr.contains(VERBATIM, child.tagName)) {
+    if (Arr.contains(VERBATIM, child.tagName)) {
       return [child];
     }
     child.children = learnerChildren(child.children);
@@ -110,16 +153,20 @@ function learnerChildren(children: readonly Node[]): Node[] {
 
 /**
  * A rehype plugin for text a learner wrote. Each line break inside a paragraph,
- * a list item, a heading or a cell stays a line break, as the learner pressed
- * Enter, and asterisks written inside words stay asterisks, so `2*3 + 4*5`
+ * a list item, a heading, a cell or a line of HTML the learner typed stays a
+ * line break, as the learner pressed Enter, and asterisks written inside words stay asterisks, so `2*3 + 4*5`
  * reads as written. Code and math keep their text as it stands.
  */
 export function rehypeLearnerText() {
   return (tree: Tree) => {
-    Arr.forEach(tree.children, (block) => {
+    tree.children = Arr.flatMap(tree.children, (block): Tree["children"] => {
+      if (block.type === "raw") {
+        return breakLines(block.value);
+      }
       if (block.type === "element" && !Arr.contains(VERBATIM, block.tagName)) {
         block.children = learnerChildren(block.children);
       }
+      return [block];
     });
   };
 }
