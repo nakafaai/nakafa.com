@@ -31,6 +31,7 @@ import { QuranVerseList } from "@/components/shared/quran/verses/list";
 import { ReferenceButton } from "@/components/sidebar/actions/reference";
 import { ReportButton } from "@/components/sidebar/actions/report";
 import { ShareButton } from "@/components/sidebar/actions/share";
+import { applyContentCache } from "@/lib/content/cache";
 import {
   getQuranPagination,
   getQuranSurahName,
@@ -154,6 +155,7 @@ async function ResolvedSurahPage({
 /** Reads lightweight cached surah metadata for route metadata. */
 async function getSurahMetadataData(surahNumber: number) {
   "use cache";
+  applyContentCache("quran");
 
   const catalog = await getPublishedQuranCatalog();
   return Option.getOrNull(
@@ -174,6 +176,7 @@ async function CachedSurahShell({
   toolbar: ReactNode;
 }) {
   "use cache";
+  applyContentCache("quran");
 
   const [t, tCommon, result] = await Promise.all([
     getTranslations({ locale, namespace: "Holy" }),
