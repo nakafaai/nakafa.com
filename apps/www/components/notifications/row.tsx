@@ -6,10 +6,11 @@ import { toast } from "@repo/design-system/lib/toast/notify";
 import { cn } from "cn";
 import { Effect, Match, Option } from "effect";
 import { useLocale, useTranslations } from "next-intl";
-import { type ReactNode, use } from "react";
+import { type MouseEvent, type ReactNode, use } from "react";
 import { NotificationsClockContext } from "@/components/notifications/clock";
 import { pageOf } from "@/components/notifications/destination";
 import { markReadInLists } from "@/components/notifications/mutation.client";
+import { navigationOf } from "@/components/notifications/press";
 import type { ListNotification } from "@/components/notifications/state";
 import { SchoolMark } from "@/components/tenant/mark";
 import { formatShortAge } from "@/components/user/age";
@@ -40,8 +41,9 @@ function useNotificationsNow() {
  * One row of the inbox, in the anatomy of the profile rows: the school's mark, then
  * the school's name and the age, then the sentence that says what happened. An
  * unread row's sentence is in the foreground and bold, and a read row's is muted.
- * Pressing the row marks it read at once, and a row whose subject has a page also
- * follows the link to that page.
+ * Pressing the row marks it read at once. A plain press on a row with a page moves
+ * to that page once the read has settled, and any other press leaves the link to the
+ * browser, so a modifier click or a middle click opens it in a new tab.
  */
 export function NotificationRow({
   notification,
@@ -62,35 +64,53 @@ export function NotificationRow({
     Match.when("person.invited", () => t("person-invited")),
     Match.exhaustive
   );
+  // The change shows at once. The server's answer, success or refusal, ends the
+  // effect, and a refusal is reported with the shared error toast. The effect never
+  // fails, so a page move that waits for it always runs.
+  const markRead =
+    readAt === undefined
+      ? Effect.tryPromise(() =>
+          readOne({ notificationId: notification.id })
+        ).pipe(
+          Effect.flatMap(Effect.fromResult),
+          Effect.matchEffect({
+            onSuccess: () => Effect.void,
+            onFailure: (error) =>
+              reportClientException(error, {
+                source: "components/notifications/row",
+              }).pipe(
+                Effect.andThen(
+                  Effect.sync(() => {
+                    toast.error({
+                      title: "action-error.title",
+                      description: "action-error.description",
+                    });
+                  })
+                )
+              ),
+          })
+        )
+      : Effect.void;
 
-  /** Marks the row read, and tells the learner when the server refuses. */
-  function markRead() {
-    if (readAt !== undefined) {
+  /** A press on the row: a plain press moves to the page once the read has settled. */
+  function press(event: MouseEvent<HTMLElement>) {
+    if (href === undefined || navigationOf(event) === "browser") {
+      Effect.runPromise(markRead);
       return;
     }
+    event.preventDefault();
     Effect.runPromise(
-      Effect.tryPromise(() =>
-        readOne({ notificationId: notification.id })
-      ).pipe(
-        Effect.flatMap(Effect.fromResult),
-        Effect.matchEffect({
-          onSuccess: () => Effect.void,
-          onFailure: (error) =>
-            reportClientException(error, {
-              source: "components/notifications/row",
-            }).pipe(
-              Effect.andThen(
-                Effect.sync(() => {
-                  toast.error({
-                    title: "action-error.title",
-                    description: "action-error.description",
-                  });
-                })
-              )
-            ),
-        })
+      markRead.pipe(
+        Effect.andThen(Effect.sync(() => window.location.assign(href)))
       )
     );
+  }
+
+  /** A middle click opens the link in a new tab as usual, and marks the row read. */
+  function pressWithMiddleButton(event: MouseEvent<HTMLElement>) {
+    if (event.button === 1) {
+      Effect.runPromise(markRead);
+    }
   }
 
   return (
@@ -105,7 +125,8 @@ export function NotificationRow({
         </FeedHeader>
         <NotificationAction
           href={href}
-          onPress={markRead}
+          onAuxPress={pressWithMiddleButton}
+          onPress={press}
           read={readAt !== undefined}
         >
           {sentence}
@@ -117,18 +138,21 @@ export function NotificationRow({
 
 /**
  * The sentence of a row, as a link across the whole row to the page it opens, or as
- * a button across the whole row when its subject has no page. The overlay of
- * `after:` covers the row, as the chats list does.
+ * a button across the whole row when its subject has no page. The link is a real
+ * link, so a modifier click or a middle click opens it as the browser opens any link.
+ * The overlay of `after:` covers the row, as the chats list does.
  */
 function NotificationAction({
   children,
   href,
+  onAuxPress,
   onPress,
   read,
 }: {
   children: ReactNode;
   href: string | undefined;
-  onPress: () => void;
+  onAuxPress: (event: MouseEvent<HTMLElement>) => void;
+  onPress: (event: MouseEvent<HTMLElement>) => void;
   read: boolean;
 }) {
   const className = cn(
@@ -144,7 +168,12 @@ function NotificationAction({
     );
   }
   return (
-    <a className={className} href={href} onClick={onPress}>
+    <a
+      className={className}
+      href={href}
+      onAuxClick={onAuxPress}
+      onClick={onPress}
+    >
       {children}
     </a>
   );
