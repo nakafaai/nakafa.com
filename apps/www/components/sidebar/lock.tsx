@@ -1,6 +1,7 @@
 "use client";
 
 import { SidebarProvider } from "@repo/design-system/components/ui/sidebar-provider";
+import { SidebarScope } from "@repo/design-system/components/ui/sidebar-scope";
 import { SidebarInset } from "@repo/design-system/components/ui/sidebar-shell";
 import {
   createContext,
@@ -54,7 +55,7 @@ export function LockableShell({
   return (
     <ShellLocksContext value={setLocks}>
       <SidebarProvider
-        className="[--app-header-top:4rem] has-[[data-shell-lock]]:[--app-header-top:0rem] data-locked:[--app-header-top:0rem]"
+        className="[--app-header-top:4rem] has-[[data-shell-lock]]:[--app-header-top:0rem] has-[[data-slot=page-header]]:[--app-header-top:0rem] data-locked:[--app-header-top:0rem]"
         data-locked={locked ? "" : undefined}
         locked={locked}
       >
@@ -63,12 +64,14 @@ export function LockableShell({
             wrapper of their own would move when a lock change drops the
             header. */}
         <SidebarInset className="block transition-[--app-sidebar-offset] duration-surface [--app-shell-inset:var(--app-sidebar-offset)] [--app-sidebar-offset:0rem] lg:pl-(--app-shell-inset) group-has-[[data-shell-lock]]/sidebar-wrapper:[--app-shell-inset:0rem] group-has-[[data-side=left][data-sidebar-state=expanded]]/sidebar-wrapper:[--app-sidebar-offset:--spacing(64)] group-data-locked/sidebar-wrapper:[--app-shell-inset:0rem]">
-          {locked ? null : (
-            <div className="contents group-has-[[data-shell-lock]]/sidebar-wrapper:hidden">
-              {header}
-            </div>
-          )}
-          {children}
+          <SidebarScope>
+            {locked ? null : (
+              <div className="contents group-has-[[data-shell-lock]]/sidebar-wrapper:hidden">
+                {header}
+              </div>
+            )}
+            {children}
+          </SidebarScope>
         </SidebarInset>
         {/* Hidden rather than collapsed, so locking and unlocking swap the
             sidebar at once and the learner's open or closed choice returns
