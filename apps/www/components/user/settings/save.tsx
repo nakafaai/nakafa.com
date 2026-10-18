@@ -6,7 +6,6 @@ import { useTranslations } from "next-intl";
 import {
   CardSectionActions,
   CardSectionFooter,
-  CardSectionHint,
 } from "@/components/shared/card/section";
 
 /** The Save action of a settings card, which submits its form. */
@@ -39,8 +38,7 @@ export function SettingsFormFooter({
   );
 
   return (
-    <CardSectionFooter>
-      <CardSectionHint>{hint}</CardSectionHint>
+    <CardSectionFooter hint={hint}>
       <SettingsSave disabled={!canSave} />
     </CardSectionFooter>
   );
