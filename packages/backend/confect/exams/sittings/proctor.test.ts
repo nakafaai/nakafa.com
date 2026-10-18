@@ -379,10 +379,12 @@ describe("exams/sittings proctor actions", () => {
           deviceId: null,
           retiredDeviceIds: [deviceOf(1)],
         });
+        // The retired device resumes without the token, as a reload does, and is refused as
+        // retired rather than as a wrong token.
         const retired = yield* enterWith(fixture, {
           device: 1,
           sittingId: made.id,
-          token: made.token,
+          token: "",
         }).pipe(Effect.flip);
         expect(retired).toMatchObject({ _tag: "DeviceRetired" });
         const signalFromRetired = yield* fixture

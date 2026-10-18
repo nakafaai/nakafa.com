@@ -1,4 +1,7 @@
 import { expect, type Page, test } from "@playwright/test";
+import en from "@repo/internationalization/dictionaries/standalone/en.json" with {
+  type: "json",
+};
 import {
   Array as Arr,
   Effect,
@@ -17,7 +20,7 @@ import {
   readRecordedSizeChanges,
   recordSizeChanges,
 } from "@/e2e/support/resize";
-import { openRoute } from "@/e2e/support/route";
+import { abortChunkHolding, openRoute } from "@/e2e/support/route";
 import { isKnownSceneDiagnostic } from "@/e2e/support/scene";
 import { scrollThroughPage } from "@/e2e/support/scroll";
 import { TOASTER } from "@/e2e/support/selector";
@@ -71,6 +74,12 @@ const SIZED_ELEMENTS = "section[id], [data-slot='lesson-panel']";
  * and the message lists candidate causes, not proven ones.
  */
 const SHIFT_TOLERANCE_MILLISECONDS = 50;
+
+/**
+ * The start of a dot colour that only the particle field's code holds: the dark
+ * theme paints its dots with it. The field loads while the hero hydrates.
+ */
+const PARTICLES_MARKER = "oklch(0.985 0 0 / ";
 
 /** Collects the console errors and warnings a page writes, hydration warnings included. */
 function observeConsole(page: Page) {
@@ -176,6 +185,57 @@ for (const viewport of HOME_VIEWPORTS) {
     });
   }
 }
+
+test("home page keeps the hero when the particle field fails to load", async ({
+  baseURL,
+  browser,
+}) => {
+  expect(baseURL).toBeTruthy();
+  await Effect.runPromise(
+    withBrowserContext(
+      browser,
+      {
+        baseURL: baseURL ?? "",
+        reducedMotion: "reduce",
+        serviceWorkers: "block",
+        viewport: viewportSize(tabletPortraitViewport),
+      },
+      (context) =>
+        Effect.gen(function* () {
+          const page = yield* Effect.promise(() => context.newPage());
+          yield* withObservedPageErrors(
+            page,
+            Effect.gen(function* () {
+              // The particle field's code fails while the page hydrates. The hero must stay, and no error page may replace it.
+              const abortedParticles = yield* abortChunkHolding(
+                page,
+                PARTICLES_MARKER
+              );
+              yield* openRoute(page, "/en", "denied");
+              // Waits for the page's requests to settle, so the aborted chunk has failed before the hero is checked.
+              yield* Effect.promise(() => page.waitForLoadState("networkidle"));
+              yield* Effect.sync(() =>
+                expect(MutableList.toArray(abortedParticles)).not.toEqual([])
+              );
+              yield* Effect.promise(() =>
+                expect(
+                  page.getByRole("heading", { level: 1, name: en.Error.title })
+                ).toHaveCount(0)
+              );
+              yield* Effect.promise(() =>
+                expect(
+                  page.locator("#hero").getByRole("heading", { level: 1 })
+                ).toBeVisible()
+              );
+              yield* Effect.promise(() =>
+                expect(page.locator("#hero canvas")).toHaveCount(0)
+              );
+            })
+          );
+        })
+    )
+  );
+});
 
 test("home page carries every part in Indonesian, English and German", async ({
   baseURL,

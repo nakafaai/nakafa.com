@@ -2,7 +2,9 @@
 
 import {
   useDocumentVisibility,
+  useElementSize,
   useMediaQuery,
+  useMergedRef,
   useReducedMotion,
 } from "@mantine/hooks";
 import { useMousePosition } from "@repo/design-system/hooks/use-mouse";
@@ -13,7 +15,13 @@ import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { cn } from "cn";
 import { Array as Arr, MutableList, Schema } from "effect";
 import { useTheme } from "next-themes";
-import { useCallback, useEffect, useEffectEvent, useMemo, useRef } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+} from "react";
 
 const MIN_PARTICLE_SIZE = 1;
 const MAX_PARTICLE_SIZE = 3;
@@ -133,6 +141,13 @@ export function Particles({
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const canvasContainerRef = useRef<HTMLDivElement>(null);
+  // The observer reports the container's size, so the field follows its parent.
+  const {
+    ref: containerSizeRef,
+    width,
+    height,
+  } = useElementSize<HTMLDivElement>();
+  const containerRef = useMergedRef(canvasContainerRef, containerSizeRef);
   const context = useRef<CanvasRenderingContext2D | null>(null);
   const circles = useRef<Circle[]>([]);
   const mousePositionRef = useMousePosition();
@@ -360,28 +375,22 @@ export function Particles({
     animationFrameRef.current = null;
   }, []);
 
-  const handleResize = useEffectEvent(() => {
-    initCanvas(shouldReduceMotion);
-  });
-
   useEffect(() => {
     if (canvasRef.current) {
       context.current = canvasRef.current.getContext("2d");
     }
 
-    const onResize = () => handleResize();
-
-    window.addEventListener("resize", onResize);
-
-    return () => {
-      stopAnimation();
-      window.removeEventListener("resize", onResize);
-    };
+    return stopAnimation;
   }, [stopAnimation]);
 
-  useEffect(() => {
+  // The field draws once the observer has measured the container, then again
+  // each time the container changes size. A zero box is not laid out yet.
+  useLayoutEffect(() => {
+    if (width === 0 && height === 0) {
+      return;
+    }
     initCanvas(shouldReduceMotion);
-  }, [initCanvas, shouldReduceMotion]);
+  }, [height, initCanvas, shouldReduceMotion, width]);
 
   useEffect(() => {
     const isDocumentVisible =
@@ -405,7 +414,7 @@ export function Particles({
   ]);
 
   return (
-    <div aria-hidden="true" className={cn(className)} ref={canvasContainerRef}>
+    <div aria-hidden="true" className={cn(className)} ref={containerRef}>
       <canvas ref={canvasRef} />
     </div>
   );
