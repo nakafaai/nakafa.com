@@ -1,4 +1,4 @@
-import { Button } from "@repo/design-system/components/ui/button";
+import { buttonVariants } from "@repo/design-system/lib/button";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { getLocale, getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
@@ -43,19 +43,23 @@ export async function AuthLegal() {
   );
 }
 
-/** Opens one policy page in a new tab, with the look of a text link. */
+/**
+ * Opens one policy page in a new tab, with the look of a text link. It is a
+ * plain anchor, so assistive technology names it a link, not a button.
+ */
 function LegalLink({ children, href }: { children: ReactNode; href: string }) {
   return (
-    <Button
-      className="h-auto p-0"
-      nativeButton={false}
-      render={
-        <a href={href} rel="noopener noreferrer" target="_blank">
-          {children}
-        </a>
-      }
-      size="sm"
-      variant="link"
-    />
+    <a
+      className={buttonVariants({
+        className: "h-auto p-0",
+        size: "sm",
+        variant: "link",
+      })}
+      href={href}
+      rel="noopener noreferrer"
+      target="_blank"
+    >
+      {children}
+    </a>
   );
 }
