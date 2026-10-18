@@ -84,7 +84,7 @@ const learnerComponents: ReactMarkdownComponents = {
   img: ({ node: _node, ...props }) => <LearnerImage {...props} />,
   li: ({ node: _node, ...props }) => (
     <li
-      className="ms-8 mt-1 text-pretty ps-1 text-start leading-relaxed first:mt-0 [&>p:first-child]:inline"
+      className="ms-8 mt-1 max-w-xl text-pretty ps-1 text-start leading-relaxed first:mt-0 [&>p:first-child]:inline"
       data-nakafa="list-item"
       {...props}
     />
@@ -97,7 +97,7 @@ const learnerComponents: ReactMarkdownComponents = {
   ),
   p: ({ node: _node, ...props }) => (
     <p
-      className="text-pretty leading-relaxed"
+      className="max-w-xl text-pretty leading-relaxed"
       data-nakafa="paragraph"
       {...props}
     />

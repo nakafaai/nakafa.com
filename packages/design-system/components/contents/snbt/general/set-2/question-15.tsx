@@ -1,5 +1,7 @@
 "use client";
 
+import { ChartDataProvider } from "@repo/design-system/components/contents/mathematics/chart/context";
+import { ChartSeriesFacts } from "@repo/design-system/components/contents/mathematics/chart/facts";
 import {
   ActiveDot,
   Dot,
@@ -18,6 +20,7 @@ import {
   VisualCard,
   VisualCardActions,
   VisualCardBody,
+  VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
@@ -43,8 +46,8 @@ interface Props {
   description: ReactNode;
   monthLabels: Record<ChartMonth, string>;
   seriesLabels: {
-    governmentPrice: ReactNode;
-    grainPrice: ReactNode;
+    governmentPrice: string;
+    grainPrice: string;
   };
   title: ReactNode;
   yAxisLabel: string;
@@ -84,70 +87,97 @@ export function SalesChart({
     [monthLabels]
   );
 
+  const chartSummary = useMemo(
+    () => ({
+      categories: Arr.map(translatedData, (row) => row.month),
+      series: [
+        {
+          key: "grainPrice",
+          label: chartConfig.grainPrice.label,
+          color: chartConfig.grainPrice.colors.light[0],
+          values: Arr.map(translatedData, (row) => row.grainPrice),
+        },
+        {
+          key: "governmentPrice",
+          label: chartConfig.governmentPrice.label,
+          color: chartConfig.governmentPrice.colors.light[0],
+          values: Arr.map(translatedData, (row) => row.governmentPrice),
+        },
+      ],
+    }),
+    [chartConfig, translatedData]
+  );
+
   return (
-    <VisualCard>
-      <VisualCardHeader description={description} title={title} />
-      <VisualCardBody className="p-(--card-spacing)">
-        <EvilLineChart
-          className="aspect-video"
-          config={chartConfig}
-          data={translatedData}
-        >
-          <Grid vertical={false} />
-          <XAxis
-            axisLine={false}
-            dataKey="month"
-            tickLine={false}
-            tickMargin={10}
-          />
-          <YAxis
-            axisLine={false}
-            domain={[3000, 6000]}
-            label={{
-              value: yAxisLabel,
-              angle: -90,
-              position: "insideLeft",
-              offset: 0,
-            }}
-            tickFormatter={(value) => `${value / 1000}k`}
-            tickLine={false}
-            tickMargin={10}
-          />
-          <Tooltip />
-          <Legend />
-          <Line
-            curveType="monotone"
-            dataKey="grainPrice"
-            lineProps={{
-              ...(SALES_CUES.grainPrice.strokeDasharray === undefined
-                ? {}
-                : { strokeDasharray: SALES_CUES.grainPrice.strokeDasharray }),
-              strokeWidth: 2,
-            }}
+    <ChartDataProvider data={chartSummary}>
+      <VisualCard>
+        <VisualCardHeader description={description} title={title} />
+        <VisualCardBody className="p-(--card-spacing)">
+          <EvilLineChart
+            className="aspect-video"
+            config={chartConfig}
+            data={translatedData}
           >
-            <Dot variant={SALES_CUES.grainPrice.dot} />
-            <ActiveDot variant={SALES_CUES.grainPrice.activeDot} />
-          </Line>
-          <Line
-            curveType="monotone"
-            dataKey="governmentPrice"
-            lineProps={{
-              ...(SALES_CUES.governmentPrice.strokeDasharray === undefined
-                ? {}
-                : {
-                    strokeDasharray: SALES_CUES.governmentPrice.strokeDasharray,
-                  }),
-              strokeWidth: 2,
-            }}
-          >
-            <Dot variant={SALES_CUES.governmentPrice.dot} />
-            <ActiveDot variant={SALES_CUES.governmentPrice.activeDot} />
-          </Line>
-        </EvilLineChart>
-      </VisualCardBody>
-      <VisualCardActions>
-        <VisualCardFullscreen />
-      </VisualCardActions>
-    </VisualCard>
+            <Grid vertical={false} />
+            <XAxis
+              axisLine={false}
+              dataKey="month"
+              tickLine={false}
+              tickMargin={10}
+            />
+            <YAxis
+              axisLine={false}
+              domain={[3000, 6000]}
+              label={{
+                value: yAxisLabel,
+                angle: -90,
+                position: "insideLeft",
+                offset: 0,
+              }}
+              tickFormatter={(value) => `${value / 1000}k`}
+              tickLine={false}
+              tickMargin={10}
+            />
+            <Tooltip />
+            <Legend />
+            <Line
+              curveType="monotone"
+              dataKey="grainPrice"
+              lineProps={{
+                ...(SALES_CUES.grainPrice.strokeDasharray === undefined
+                  ? {}
+                  : { strokeDasharray: SALES_CUES.grainPrice.strokeDasharray }),
+                strokeWidth: 2,
+              }}
+            >
+              <Dot variant={SALES_CUES.grainPrice.dot} />
+              <ActiveDot variant={SALES_CUES.grainPrice.activeDot} />
+            </Line>
+            <Line
+              curveType="monotone"
+              dataKey="governmentPrice"
+              lineProps={{
+                ...(SALES_CUES.governmentPrice.strokeDasharray === undefined
+                  ? {}
+                  : {
+                      strokeDasharray:
+                        SALES_CUES.governmentPrice.strokeDasharray,
+                    }),
+                strokeWidth: 2,
+              }}
+            >
+              <Dot variant={SALES_CUES.governmentPrice.dot} />
+              <ActiveDot variant={SALES_CUES.governmentPrice.activeDot} />
+            </Line>
+          </EvilLineChart>
+        </VisualCardBody>
+        <VisualCardActions>
+          <VisualCardFullscreen />
+        </VisualCardActions>
+        <VisualCardFooter>
+          <ChartSeriesFacts />
+        </VisualCardFooter>
+      </VisualCard>
+    </ChartDataProvider>
   );
 }

@@ -78,7 +78,6 @@ function ResponsiveShellModelCamera() {
 
   return (
     <CameraControls
-      autoRotate={false}
       cameraPosition={cameraPosition}
       cameraTarget={CAMERA_TARGET}
       fov={45}

@@ -30,6 +30,7 @@ import {
   use,
   useLayoutEffect,
   useState,
+  useSyncExternalStore,
 } from "react";
 import { useStore } from "zustand";
 import { useShallow } from "zustand/react/shallow";
@@ -44,6 +45,26 @@ function useVisual<T>(selector: (state: VisualState) => T) {
     throw new Error("Visual card parts require VisualCard.");
   }
   return useStore(store, useShallow(selector));
+}
+
+/** A scene outside a card has no store to follow. */
+const followNothing = () => () => undefined;
+
+/**
+ * Reads one primitive of the surrounding card's scene state: whether it plays,
+ * or how many times its view was reset. A scene drawn outside a card, such as
+ * a stand-in, stays still at its first view.
+ */
+function useVisualScene<T extends boolean | number>(
+  select: (state: VisualState) => T,
+  still: T
+) {
+  const store = use(VisualContext);
+  return useSyncExternalStore(
+    store ? store.subscribe : followNothing,
+    () => (store ? select(store.getState()) : still),
+    () => still
+  );
 }
 
 /**
@@ -252,12 +273,13 @@ function VisualCardFooter(props: Omit<ComponentProps<"div">, "className">) {
 
 /**
  * The readouts of a visual in its footer: a grid of `VisualFact` terms and
- * values, two columns on a phone and up to four on a wide card.
+ * values in two columns at every width, so every row is full. A card gives an
+ * even number of readouts; a lone last one spans both columns.
  */
 function VisualCardFacts(props: Omit<ComponentProps<"dl">, "className">) {
   return (
     <dl
-      className="grid @3xl/visual:grid-cols-4 @md/visual:grid-cols-3 grid-cols-2 gap-x-6 gap-y-3"
+      className="grid grid-cols-2 gap-x-6 gap-y-3 [&>:last-child:nth-child(odd)]:col-span-2"
       data-slot="visual-card-facts"
       {...props}
     />
@@ -312,6 +334,8 @@ function VisualCardFullscreen({ inert = false }: { inert?: boolean }) {
 }
 
 export {
+  useVisual,
+  useVisualScene,
   VisualCard,
   VisualCardActions,
   VisualCardBody,

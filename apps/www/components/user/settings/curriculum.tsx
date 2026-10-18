@@ -4,7 +4,6 @@ import type { Ref } from "@confect/core";
 import type { InvokeReturn } from "@confect/react";
 import { QueryResult, useQuery } from "@confect/react";
 import learningPreferences from "@repo/backend/confect/_generated/refs/learningPreferences";
-import { Button } from "@repo/design-system/components/ui/button";
 import {
   CardContent,
   CardDescription,
@@ -27,13 +26,9 @@ import { Array as Arr, Effect, Option, Schema } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { useRef } from "react";
 import { useConvexAuth } from "@/components/providers/convex";
-import {
-  CardSection,
-  CardSectionActions,
-  CardSectionFooter,
-  CardSectionHint,
-} from "@/components/shared/card/section";
+import { CardSection } from "@/components/shared/card/section";
 import { CountryFlagIcon } from "@/components/shared/flag";
+import { SettingsFormFooter } from "@/components/user/settings/save";
 import { reportClientException } from "@/lib/analytics/client";
 import { useSetPreferredCurriculumMutation } from "@/lib/curriculum/mutation.client";
 import { isActiveLocale } from "@/lib/i18n/active";
@@ -243,26 +238,7 @@ function UserSettingsCurriculumForm({
             )}
           </form.Field>
         </CardContent>
-        <CardSectionFooter>
-          <form.Subscribe
-            selector={(state) => [state.isDirty, state.isValid] as const}
-          >
-            {([isDirty, isValid]) => (
-              <>
-                <CardSectionHint>{t("curriculum-footer")}</CardSectionHint>
-                <CardSectionActions>
-                  <Button
-                    disabled={!(isDirty && isValid)}
-                    size="sm"
-                    type="submit"
-                  >
-                    {t("save")}
-                  </Button>
-                </CardSectionActions>
-              </>
-            )}
-          </form.Subscribe>
-        </CardSectionFooter>
+        <SettingsFormFooter form={form} hint={t("curriculum-footer")} />
       </CardSection>
     </form>
   );

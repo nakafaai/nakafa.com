@@ -28,15 +28,14 @@ import {
 } from "@repo/design-system/components/ui/toggle-group";
 import {
   VisualCard,
-  VisualCardActions,
   VisualCardBody,
   VisualCardFacts,
   VisualCardFooter,
-  VisualCardFullscreen,
   VisualCardHeader,
   VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
+import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { getColor } from "@repo/design-system/lib/color";
 import { Array as Arr } from "effect";
 import { type ReactNode, Suspense, useMemo, useState } from "react";
@@ -176,7 +175,6 @@ export function ParabolicMovementAnalysisLab({
               position={PROJECTILE_SCENE.launchOffset}
             />
             <CameraControls
-              autoRotate={false}
               cameraPosition={PROJECTILE_SCENE.cameraPosition}
               cameraTarget={PROJECTILE_SCENE.cameraTarget}
               enablePan
@@ -191,9 +189,7 @@ export function ParabolicMovementAnalysisLab({
         </ThreeCanvas>
       </VisualCardBody>
 
-      <VisualCardActions>
-        <VisualCardFullscreen />
-      </VisualCardActions>
+      <VisualCardSceneActions />
 
       <VisualCardFooter>
         <VisualCardFacts>

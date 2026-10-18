@@ -244,6 +244,13 @@ describe("test ownership policy", () => {
           'const isRecord = (value: unknown) => typeof value === "object";\n',
       },
     },
+    {
+      category: "a dictionary key named twice",
+      files: {
+        "packages/internationalization/dictionaries/en.json":
+          '{"Exams":{},"Exams":{}}\n',
+      },
+    },
   ])("fails for $category alone", ({ files }) =>
     Effect.gen(function* () {
       const fileSystem = yield* FileSystem.FileSystem;
@@ -282,13 +289,24 @@ describe("test ownership policy", () => {
         "apps/web/value.ts": "export const value = 1;\n",
         "packages/core/_generated/api.ts": "export const api = 1;\n",
         "packages/core/value.ts": "export const value = 1;\n",
+        "packages/internationalization/dictionaries/en.json": '{"Common":{}}\n',
+        "packages/typescript-config/base.json":
+          '{"compilerOptions":{"plugins":[{"name":"@effect/language-service"}]}}\n',
+        "packages/typescript-config/package.json":
+          '{"name":"@repo/typescript-config"}\n',
         "scripts/tool.ts": "export const tool = true;\n",
+        "tsconfig.json":
+          '{"extends":"./packages/typescript-config/base.json"}\n',
       });
       const unreadableTest = path.join(repository, "apps/web/value.test.ts");
       const unreadableSource = path.join(repository, "scripts/tool.ts");
       const unreadableGenerated = path.join(
         repository,
         "packages/core/_generated/api.ts"
+      );
+      const unreadableDictionary = path.join(
+        repository,
+        "packages/internationalization/dictionaries/en.json"
       );
 
       const failures = [
@@ -304,6 +322,10 @@ describe("test ownership policy", () => {
           Effect.provide(unreadableFile(unreadableGenerated)),
           Effect.flip
         ),
+        yield* checkFixture(repository).pipe(
+          Effect.provide(unreadableFile(unreadableDictionary)),
+          Effect.flip
+        ),
       ];
 
       assert.deepStrictEqual(
@@ -312,6 +334,7 @@ describe("test ownership policy", () => {
           ["RepositoryReadError", `Unable to read ${unreadableTest}.`],
           ["RepositoryReadError", `Unable to read ${unreadableSource}.`],
           ["RepositoryReadError", `Unable to read ${unreadableGenerated}.`],
+          ["RepositoryReadError", `Unable to read ${unreadableDictionary}.`],
         ]
       );
     }).pipe(Effect.provide(NodeServices.layer))

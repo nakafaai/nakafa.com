@@ -1,5 +1,7 @@
 "use client";
 
+import { ChartDataProvider } from "@repo/design-system/components/contents/mathematics/chart/context";
+import { ChartSeriesFacts } from "@repo/design-system/components/contents/mathematics/chart/facts";
 import { Bar } from "@repo/design-system/components/evilcharts/charts/bar/series";
 import {
   EvilBarChart,
@@ -17,6 +19,7 @@ import {
   VisualCard,
   VisualCardActions,
   VisualCardBody,
+  VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
@@ -35,9 +38,9 @@ const chartData = [
 interface Props {
   description: ReactNode;
   seriesLabels: {
-    A: ReactNode;
-    B: ReactNode;
-    C: ReactNode;
+    A: string;
+    B: string;
+    C: string;
   };
   title: ReactNode;
   yAxisLabel: string;
@@ -74,55 +77,87 @@ export function SalesChart({
     [seriesLabels.A, seriesLabels.B, seriesLabels.C]
   );
 
+  const chartSummary = useMemo(
+    () => ({
+      categories: Arr.map(chartData, (row) => row.year),
+      series: [
+        {
+          key: "A",
+          label: chartConfig.A.label,
+          color: chartConfig.A.colors.light[0],
+          values: Arr.map(chartData, (row) => row.A),
+        },
+        {
+          key: "B",
+          label: chartConfig.B.label,
+          color: chartConfig.B.colors.light[0],
+          values: Arr.map(chartData, (row) => row.B),
+        },
+        {
+          key: "C",
+          label: chartConfig.C.label,
+          color: chartConfig.C.colors.light[0],
+          values: Arr.map(chartData, (row) => row.C),
+        },
+      ],
+    }),
+    [chartConfig]
+  );
+
   /** Formats one chart year with its MDX-owned localized prefix. */
   const formatYear = (value: string) => `${yearLabel}${value}`;
 
   return (
-    <VisualCard>
-      <VisualCardHeader description={description} title={title} />
-      <VisualCardBody className="p-(--card-spacing)">
-        <EvilBarChart
-          className="aspect-video"
-          config={chartConfig}
-          data={chartData}
-        >
-          <Grid vertical={false} />
-          <XAxis dataKey="year" tickFormatter={formatYear} tickMargin={10} />
-          <YAxis
-            label={{
-              value: yAxisLabel,
-              angle: -90,
-              position: "insideLeft",
-              offset: 10,
-              style: { textAnchor: "middle" },
-            }}
-            tickMargin={10}
-          />
-          <ChartTooltip
-            content={
-              <ChartTooltipContent
-                labelFormatter={(value) => formatYear(String(value))}
-              />
-            }
-          />
-          <Legend />
-          {Arr.map(Rec.keys(chartConfig), (key, index) => {
-            const cue = getBarSeriesCue(index);
+    <ChartDataProvider data={chartSummary}>
+      <VisualCard>
+        <VisualCardHeader description={description} title={title} />
+        <VisualCardBody className="p-(--card-spacing)">
+          <EvilBarChart
+            className="aspect-video"
+            config={chartConfig}
+            data={chartData}
+          >
+            <Grid vertical={false} />
+            <XAxis dataKey="year" tickFormatter={formatYear} tickMargin={10} />
+            <YAxis
+              label={{
+                value: yAxisLabel,
+                angle: -90,
+                position: "insideLeft",
+                offset: 10,
+                style: { textAnchor: "middle" },
+              }}
+              tickMargin={10}
+            />
+            <ChartTooltip
+              content={
+                <ChartTooltipContent
+                  labelFormatter={(value) => formatYear(String(value))}
+                />
+              }
+            />
+            <Legend />
+            {Arr.map(Rec.keys(chartConfig), (key, index) => {
+              const cue = getBarSeriesCue(index);
 
-            return (
-              <Bar
-                dataKey={key}
-                key={key}
-                radius={cue.radius}
-                variant={cue.variant}
-              />
-            );
-          })}
-        </EvilBarChart>
-      </VisualCardBody>
-      <VisualCardActions>
-        <VisualCardFullscreen />
-      </VisualCardActions>
-    </VisualCard>
+              return (
+                <Bar
+                  dataKey={key}
+                  key={key}
+                  radius={cue.radius}
+                  variant={cue.variant}
+                />
+              );
+            })}
+          </EvilBarChart>
+        </VisualCardBody>
+        <VisualCardActions>
+          <VisualCardFullscreen />
+        </VisualCardActions>
+        <VisualCardFooter>
+          <ChartSeriesFacts />
+        </VisualCardFooter>
+      </VisualCard>
+    </ChartDataProvider>
   );
 }

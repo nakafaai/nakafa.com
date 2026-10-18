@@ -1,8 +1,12 @@
 // @vitest-environment node
 
 import { describe, expect, it } from "@effect/vitest";
-import { resolveAuthoredLines } from "@repo/design-system/components/contents/mathematics/line/resolve";
-import { Array as Arr } from "effect";
+import {
+  resolveAuthoredLines,
+  resolveLineScene,
+  summarizeLines,
+} from "@repo/design-system/components/contents/mathematics/line/resolve";
+import { Array as Arr, Option } from "effect";
 
 const rawLine = {
   color: "blue",
@@ -91,5 +95,59 @@ describe("authored mathematical lines", () => {
           line.smooth === false
       )
     );
+  });
+});
+
+describe("line scene configuration", () => {
+  it("resolves the authored lines and keeps the default camera and axis", () => {
+    const config = resolveLineScene({ data: [rawLine] });
+
+    expect(config.cameraPosition).toEqual([10, 6, 10]);
+    expect(config).not.toHaveProperty("cameraTarget");
+    expect(config.showZAxis).toBe(true);
+    expect(config.lines).toEqual([rawLine]);
+  });
+
+  it("keeps the camera and the axis the author sets", () => {
+    const config = resolveLineScene({
+      cameraPosition: [1, 2, 3],
+      cameraTarget: [4, 5, 6],
+      data: [rawLine],
+      showZAxis: false,
+    });
+
+    expect(config).toMatchObject({
+      cameraPosition: [1, 2, 3],
+      cameraTarget: [4, 5, 6],
+      showZAxis: false,
+    });
+  });
+});
+
+describe("line scene summary", () => {
+  it("counts the lines and spans every point on each axis", () => {
+    const summary = summarizeLines([
+      {
+        points: [
+          { x: 0, y: 1, z: 0 },
+          { x: 2, y: -1, z: 3 },
+        ],
+      },
+      { points: [{ x: -1, y: 4, z: 3 }] },
+    ]);
+
+    expect(summary).toEqual(
+      Option.some({
+        count: 2,
+        x: { max: 2, min: -1 },
+        y: { max: 4, min: -1 },
+        z: { max: 3, min: 0 },
+      })
+    );
+  });
+
+  it("has no summary when the lines have no points", () => {
+    expect(summarizeLines([])).toEqual(Option.none());
+    expect(summarizeLines([{ points: [] }])).toEqual(Option.none());
   });
 });

@@ -148,6 +148,7 @@ function SchoolDomainsPolicy({
           {t("policy-domains")}
         </Label>
         <Textarea
+          className="w-full max-w-md"
           id={id}
           onChange={(event) => setDraft(event.target.value)}
           placeholder={t("policy-domains-placeholder")}

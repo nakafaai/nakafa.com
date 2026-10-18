@@ -34,12 +34,19 @@ export const examKind = Kind.make("exam", "exams", {
 /**
  * Creating an exam is decided on the scope it covers, as a document is: the tenant
  * for a tenant-wide exam, the unit for a unit exam. The tenant and the unit each take
- * the `exam.edit` action of their own.
+ * the `exam.edit` action of their own, and the `exam.view` action that lets the school
+ * show its exams to their editors.
  */
 const tenantExams = Kind.extend(tenant, {
   actions: {
     "exam.edit": {
       access: "write",
+      grantedBy: "roles",
+      relations: [],
+      roles: examEditors,
+    },
+    "exam.view": {
+      access: "read",
       grantedBy: "roles",
       relations: [],
       roles: examEditors,
@@ -53,6 +60,12 @@ const unitExams = Kind.extend(unit, {
   actions: {
     "exam.edit": {
       access: "write",
+      grantedBy: "roles",
+      relations: [],
+      roles: examEditors,
+    },
+    "exam.view": {
+      access: "read",
       grantedBy: "roles",
       relations: [],
       roles: examEditors,

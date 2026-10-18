@@ -14,7 +14,11 @@ import type { Step } from "@tiptap/pm/transform";
 import { Array as Arr, Effect, Option, Ref, Schema } from "effect";
 import { sendableSteps } from "prosemirror-collab";
 import { dropUnsendable } from "@/lib/editor/replay";
-import { SyncFailed, type SyncSession } from "@/lib/editor/session";
+import {
+  type EditorClosed,
+  SyncFailed,
+  type SyncSession,
+} from "@/lib/editor/session";
 
 /** A batch as the loop encodes it: its text, and the number of steps the text holds. */
 const FittedBatch = Schema.Struct({
@@ -89,7 +93,7 @@ const fittingBatch = Effect.fn("editor.sync.batch")(function* (
  */
 export const push = Effect.fn("editor.sync.push")(function* (
   session: SyncSession
-): Effect.fn.Return<void, SyncFailed | ClientTaken> {
+): Effect.fn.Return<void, SyncFailed | ClientTaken | EditorClosed> {
   const state = yield* session.port.state;
   const sendable = sendableSteps(state);
   if (sendable === null) {

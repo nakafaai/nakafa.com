@@ -1,14 +1,25 @@
+import {
+  formatInterval,
+  type Interval,
+  intervalSeparator,
+} from "@repo/design-system/components/contents/mathematics/interval";
+import { MATH_NUMBER_OPTIONS } from "@repo/design-system/components/contents/mathematics/number";
+import { solutionSetMath } from "@repo/design-system/components/contents/mathematics/solution";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import {
   VisualCard,
   VisualCardActions,
   VisualCardBody,
+  VisualCardFacts,
+  VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
+import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { cva } from "class-variance-authority";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
+import { useFormatter, useLocale, useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
 const numberLineSegmentVariants = cva("absolute top-1/2 h-8 -translate-y-1/2", {
@@ -32,33 +43,43 @@ const NUMBER_LINE_SEGMENT_EDGE = {
   startInfinity: "startInfinity",
 } as const;
 
+/** One authored segment of a number line. */
+export interface NumberLineSegment {
+  /** The background color of the segment */
+  backgroundColor?: string;
+  /** The end value of the segment */
+  end: number;
+  /** Whether the end value is inclusive */
+  endInclusive?: boolean;
+  /** Custom label for the end point (e.g., fraction in LaTeX) */
+  endLabel?: ReactNode;
+  /** The label of the segment */
+  label?: ReactNode;
+  /** Whether the segment is shaded */
+  shaded?: boolean;
+  /** Whether the segment should show points */
+  showPoints?: boolean;
+  /** The start value of the segment */
+  start: number;
+  /** Whether the start value is inclusive */
+  startInclusive?: boolean;
+  /** Custom label for the start point (e.g., fraction in LaTeX) */
+  startLabel?: ReactNode;
+}
+
 interface NumberLineProps {
   description: ReactNode;
   max?: number;
   min?: number;
-  segments: {
-    /** The background color of the segment */
-    backgroundColor?: string;
-    /** The end value of the segment */
-    end: number;
-    /** Whether the end value is inclusive */
-    endInclusive?: boolean;
-    /** Custom label for the end point (e.g., fraction in LaTeX) */
-    endLabel?: ReactNode;
-    /** The label of the segment */
-    label?: ReactNode;
-    /** Whether the segment is shaded */
-    shaded?: boolean;
-    /** Whether the segment should show points */
-    showPoints?: boolean;
-    /** The start value of the segment */
-    start: number;
-    /** Whether the start value is inclusive */
-    startInclusive?: boolean;
-    /** Custom label for the start point (e.g., fraction in LaTeX) */
-    startLabel?: ReactNode;
-  }[];
+  segments: NumberLineSegment[];
   title: ReactNode;
+}
+
+/** The range and segments of one number line, which its body and its facts both draw from. */
+interface NumberLineConfig {
+  max?: number | undefined;
+  min?: number | undefined;
+  segments: readonly NumberLineSegment[];
 }
 
 /**
@@ -87,10 +108,7 @@ function getSegmentEdge({
 }
 
 /** Returns the finite bounds that should contribute to the number-line range. */
-function getFiniteSegmentValues({
-  end,
-  start,
-}: NumberLineProps["segments"][number]) {
+function getFiniteSegmentValues({ end, start }: NumberLineSegment) {
   const hasFiniteStart = Number.isFinite(start);
   const hasFiniteEnd = Number.isFinite(end);
 
@@ -109,22 +127,22 @@ function getFiniteSegmentValues({
   return [];
 }
 
-export function NumberLine({
-  min,
-  max,
-  segments,
-  title,
-  description,
-}: NumberLineProps) {
+/** The interval the scale draws: the range of its segments, with a margin of fifteen percent on each side. */
+function drawnScale({ max, min, segments }: NumberLineConfig): Interval {
   const allValues = Arr.flatMap(segments, getFiniteSegmentValues);
 
   const rangeMin = min ?? (allValues.length > 0 ? Math.min(...allValues) : -10);
   const rangeMax = max ?? (allValues.length > 0 ? Math.max(...allValues) : 10);
-  const range = rangeMax - rangeMin;
+  const padding = (rangeMax - rangeMin) * 0.15;
+  return { max: rangeMax + padding, min: rangeMin - padding };
+}
 
-  const padding = range * 0.15;
-  const paddedMin = rangeMin - padding;
-  const paddedMax = rangeMax + padding;
+/** Draws one number line's scale, its segments, their labels, and its full screen action. */
+function NumberLineBody({ config }: { config: NumberLineConfig }) {
+  const { segments } = config;
+  const scale = drawnScale(config);
+  const paddedMin = scale.min;
+  const paddedMax = scale.max;
   const paddedRange = paddedMax - paddedMin;
 
   const getPosition = (value: number) => {
@@ -165,8 +183,7 @@ export function NumberLine({
   });
 
   return (
-    <VisualCard>
-      <VisualCardHeader description={description} title={title} />
+    <>
       <VisualCardBody>
         <div className="w-full p-(--card-spacing)">
           <div className="relative h-20 w-full">
@@ -266,6 +283,61 @@ export function NumberLine({
       <VisualCardActions>
         <VisualCardFullscreen />
       </VisualCardActions>
+    </>
+  );
+}
+
+/** The scale and the solution set of a number line, as the readouts of its footer. */
+function NumberLineFacts({ config }: { config: NumberLineConfig }) {
+  const t = useTranslations("Common");
+  const format = useFormatter();
+  const locale = useLocale();
+  const formatNumber = (value: number) =>
+    format.number(value, MATH_NUMBER_OPTIONS);
+  const separator = intervalSeparator(locale);
+
+  return (
+    <VisualCardFacts>
+      <VisualFact
+        label={t("scale")}
+        value={
+          <InlineMath
+            math={formatInterval(drawnScale(config), formatNumber, separator)}
+          />
+        }
+      />
+      <VisualFact
+        label={t("solution-set")}
+        value={
+          <InlineMath
+            math={solutionSetMath(config.segments, formatNumber, separator)}
+          />
+        }
+      />
+    </VisualCardFacts>
+  );
+}
+
+/**
+ * Draws one number line card: its header, its scale, and the readouts of its footer. It
+ * holds no client state, so a server card draws it and its math stays on the server.
+ */
+export function NumberLine({
+  min,
+  max,
+  segments,
+  title,
+  description,
+}: NumberLineProps) {
+  const config = { max, min, segments };
+
+  return (
+    <VisualCard>
+      <VisualCardHeader description={description} title={title} />
+      <NumberLineBody config={config} />
+      <VisualCardFooter>
+        <NumberLineFacts config={config} />
+      </VisualCardFooter>
     </VisualCard>
   );
 }

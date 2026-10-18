@@ -9,8 +9,9 @@ import {
   VisualCardFullscreen,
   VisualCardGroup,
 } from "@repo/design-system/components/visual/card";
-import { Array as Arr } from "effect";
+import { Array as Arr, Schema } from "effect";
 import { useTranslations } from "next-intl";
+import { createContext, type ReactNode, use } from "react";
 
 const SPEED_STEP = 0.25;
 const SPEED_VALUES = Array.from(
@@ -72,20 +73,51 @@ export function BacterialSpeeds({
   );
 }
 
+/** The time that one growth card labels its generations with. */
+const BacterialTimeSchema = Schema.Struct({
+  timeInterval: Schema.Finite,
+  timeUnit: Schema.String,
+});
+
+type BacterialTime = typeof BacterialTimeSchema.Type;
+
+const BacterialTimeContext = createContext<BacterialTime | null>(null);
+
+/** Provides the time that one growth card labels its generations with. */
+export function BacterialTimeProvider({
+  children,
+  time,
+}: {
+  children: ReactNode;
+  time: BacterialTime;
+}) {
+  return <BacterialTimeContext value={time}>{children}</BacterialTimeContext>;
+}
+
+/** Reads the time that the surrounding growth card labels its generations with. */
+function useBacterialTime() {
+  const time = use(BacterialTimeContext);
+  if (!time) {
+    // A missing provider is a programmer composition error at this React seam.
+    throw new Error(
+      "useBacterialTime must be used within BacterialTimeProvider"
+    );
+  }
+  return time;
+}
+
 /** Renders one choice per generation, labelled with its time. */
 export function BacterialGenerations({
   generation,
   maxGenerations,
   onGenerationChange,
-  timeInterval,
-  timeUnit,
 }: {
   generation: number;
   maxGenerations: number;
   onGenerationChange: (generation: number) => void;
-  timeInterval: number;
-  timeUnit: string;
 }) {
+  const { timeInterval, timeUnit } = useBacterialTime();
+
   return (
     <VisualCardGroup>
       {Array.from({ length: maxGenerations + 1 }, (_, index) => {

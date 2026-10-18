@@ -17,15 +17,15 @@ import {
 } from "@repo/design-system/components/ui/toggle-group";
 import {
   VisualCard,
-  VisualCardActions,
   VisualCardFacts,
   VisualCardFooter,
-  VisualCardFullscreen,
   VisualCardHeader,
   VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
+import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { Array as Arr, Result } from "effect";
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { useState } from "react";
 
@@ -60,6 +60,7 @@ export function ElectronConfigurationLab({
     useState<ElectronConfigurationSampleId>(HYDROGEN_ID);
   const selectedSample = ELECTRON_CONFIGURATION_SAMPLES[selectedSampleId];
   const selectedLabels = labels.samples[selectedSampleId];
+  const t = useTranslations("Common");
   const shellConfiguration = Result.getOrThrow(
     getSimpleShellConfiguration(selectedSample.atomicNumber)
   );
@@ -124,15 +125,11 @@ export function ElectronConfigurationLab({
         shells={shellConfiguration}
       />
 
-      <VisualCardActions>
-        <VisualCardFullscreen />
-      </VisualCardActions>
+      <VisualCardSceneActions />
 
       <VisualCardFooter>
-        <p className="mx-auto max-w-3xl text-center text-muted-foreground text-sm leading-relaxed">
-          {selectedLabels.note}
-        </p>
         <VisualCardFacts>
+          <VisualFact label={t("note")} value={selectedLabels.note} />
           <VisualFact
             label={labels.atomicNumber}
             value={<InlineMath math={`Z = ${selectedSample.atomicNumber}`} />}

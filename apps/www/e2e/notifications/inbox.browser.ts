@@ -56,7 +56,7 @@ test("pressing an invitation marks it read before the page moves to the school, 
   await context.close();
 });
 
-test("Mark all as read marks both invitations of one learner read", async ({
+test("Mark all read marks both invitations of one learner read", async ({
   browser,
   baseURL,
 }) => {
@@ -80,7 +80,7 @@ test("Mark all as read marks both invitations of one learner read", async ({
   await expect(invitations).toHaveCount(2);
   await expect(invitations.nth(0)).toHaveCSS("font-weight", "500");
   await expect(invitations.nth(1)).toHaveCSS("font-weight", "500");
-  await page.getByRole("button", { name: "Mark all as read" }).click();
+  await page.getByRole("button", { name: "Mark all read" }).click();
   await expect(invitations.nth(0)).toHaveCSS("font-weight", "400");
   await expect(invitations.nth(1)).toHaveCSS("font-weight", "400");
   await context.close();
@@ -101,7 +101,7 @@ test("an empty inbox shows Nina asleep beside its sentence and offers no action"
           page.locator('[data-slot="empty"] [data-slot="empty-icon"] svg')
         ).toBeVisible();
         await expect(
-          page.getByRole("button", { name: "Mark all as read" })
+          page.getByRole("button", { name: "Mark all read" })
         ).toHaveCount(0);
       });
     })
