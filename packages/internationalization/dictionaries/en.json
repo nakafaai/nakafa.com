@@ -249,6 +249,8 @@
     "roles-overview": "What each role may do",
     "roles-overview-description": "Each role of this school, and what it may do.",
     "roles-overview-footer": "A person may hold more than one role.",
+    "roles-person-footer": "Choose a person to give them a role.",
+    "students-person-footer": "Choose a person to issue a login card.",
     "secret-copy": "Copy",
     "unit-npsn": "NPSN",
     "unit-npsn-placeholder": "Eight digits",

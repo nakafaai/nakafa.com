@@ -79,6 +79,7 @@ export function SchoolRolesSettings({ slug }: { slug: TenantSlug }) {
       <SchoolGrantsCard slug={slug} />
       <SchoolPersonCard
         description={t("roles-description")}
+        footer={t("roles-person-footer")}
         onChoose={setPersonId}
         personId={personId}
         slug={slug}

@@ -15,9 +15,9 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
-import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import { Array as Arr, Schema } from "effect";
 import type { ReactNode } from "react";
+import { BreadcrumbAnchor } from "@/components/shared/breadcrumb/anchor";
 import { BreadcrumbHeaderFrame } from "@/components/shared/breadcrumb/frame";
 
 const BreadcrumbHeaderItemSchema = Schema.Struct({
@@ -90,7 +90,9 @@ export function BreadcrumbHeaderPath({
       <BreadcrumbList className="flex-nowrap">
         <BreadcrumbItem className="shrink-0">
           <BreadcrumbLink
-            render={<IntentLink href={homeHref}>{homeLabel}</IntentLink>}
+            render={
+              <BreadcrumbAnchor href={homeHref}>{homeLabel}</BreadcrumbAnchor>
+            }
           />
         </BreadcrumbItem>
         {hiddenItems.length > 0 && (
@@ -159,7 +161,7 @@ function BreadcrumbMenuItem({ item }: { item: BreadcrumbHeaderItem }) {
 
   return (
     <DropdownMenuItem
-      render={<IntentLink href={item.href}>{label}</IntentLink>}
+      render={<BreadcrumbAnchor href={item.href}>{label}</BreadcrumbAnchor>}
     />
   );
 }
@@ -189,7 +191,9 @@ export function BreadcrumbHeaderSegment({
       <BreadcrumbItem className="min-w-0">
         <BreadcrumbLink
           className="truncate"
-          render={<IntentLink href={item.href}>{item.label}</IntentLink>}
+          render={
+            <BreadcrumbAnchor href={item.href}>{item.label}</BreadcrumbAnchor>
+          }
         />
       </BreadcrumbItem>
     </>
