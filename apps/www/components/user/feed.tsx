@@ -1,3 +1,10 @@
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+} from "@repo/design-system/components/ui/empty";
+import { Nina } from "@repo/design-system/components/ui/nina";
 import { NumberFormat } from "@repo/design-system/components/ui/number-flow";
 import { PersonAvatar } from "@repo/design-system/components/ui/person";
 import { cva } from "class-variance-authority";
@@ -124,11 +131,23 @@ export function FeedNotice({ children }: { children: ReactNode }) {
   return <div className="py-4">{children}</div>;
 }
 
-/** What a tab says when it has no rows. */
+/** How wide Nina sleeps over a list with no rows. */
+const EMPTY_NINA_SIZE = 96;
+
+/**
+ * What a list says when it has no rows: Nina asleep, since there is nothing to
+ * do yet, over the one sentence. She only stands beside the sentence, so a
+ * screen reader hears the sentence alone.
+ */
 export function FeedEmpty({ children }: { children: ReactNode }) {
   return (
-    <p className="py-12 text-center text-muted-foreground text-sm">
-      {children}
-    </p>
+    <Empty className="py-12">
+      <EmptyHeader>
+        <EmptyMedia>
+          <Nina act="sleeping" label="" size={EMPTY_NINA_SIZE} whole />
+        </EmptyMedia>
+        <EmptyDescription>{children}</EmptyDescription>
+      </EmptyHeader>
+    </Empty>
   );
 }

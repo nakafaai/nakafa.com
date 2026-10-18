@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
+import { openChatPage, runOnPage } from "@/e2e/support/chat";
 import { createSchool, inviteLearner } from "@/e2e/support/school";
 
 /** The sentence an invitation row shows in English. */
@@ -83,4 +84,26 @@ test("Mark all as read marks both invitations of one learner read", async ({
   await expect(invitations.nth(0)).toHaveCSS("font-weight", "400");
   await expect(invitations.nth(1)).toHaveCSS("font-weight", "400");
   await context.close();
+});
+
+test("an empty inbox shows Nina asleep beside its sentence and offers no action", async ({
+  baseURL,
+  page,
+}) => {
+  await runOnPage(page, baseURL, (origin) =>
+    Effect.gen(function* () {
+      yield* openChatPage(page, origin);
+      yield* Effect.promise(async () => {
+        await page.goto("/en/notifications");
+        const empty = page.getByText("You have no notifications yet.");
+        await expect(empty).toBeVisible({ timeout: 30_000 });
+        await expect(
+          page.locator('[data-slot="empty"] [data-slot="empty-icon"] svg')
+        ).toBeVisible();
+        await expect(
+          page.getByRole("button", { name: "Mark all as read" })
+        ).toHaveCount(0);
+      });
+    })
+  );
 });

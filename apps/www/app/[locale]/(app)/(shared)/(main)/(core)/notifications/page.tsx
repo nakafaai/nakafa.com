@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import { NotificationsFeed } from "@/components/notifications/feed";
 import { NotificationsHeader } from "@/components/notifications/header";
+import { NotificationsProvider } from "@/components/notifications/provider";
 import { LayoutContent } from "@/components/shared/content/layout";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/layout";
@@ -40,10 +41,12 @@ async function AuthenticatedNotifications({
   return (
     <LayoutMaterial>
       <LayoutMaterialContent>
-        <NotificationsHeader />
-        <LayoutContent className="flex flex-col gap-6 py-6">
-          <NotificationsFeed />
-        </LayoutContent>
+        <NotificationsProvider>
+          <NotificationsHeader />
+          <LayoutContent className="flex flex-col gap-6 py-6">
+            <NotificationsFeed />
+          </LayoutContent>
+        </NotificationsProvider>
       </LayoutMaterialContent>
     </LayoutMaterial>
   );
