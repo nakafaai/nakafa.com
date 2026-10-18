@@ -29,7 +29,7 @@ test("an admin opens the profile and the periods of a school", async ({
   // The links of the settings stay on the school host, whose paths carry no
   // locale: View trail opens the audit trail, and the breadcrumb's Home opens
   // the school's own home.
-  await page.goto(address("/settings/roles"));
+  await page.goto(address("/settings/policies"));
   await page.getByRole("link", { name: "View trail" }).click();
   await expect(page).toHaveURL(address("/settings/audit"));
   await page
@@ -54,5 +54,60 @@ test("a teacher of the school, who may not manage it, sees no settings", async (
   await page.goto(address("/settings/profile"));
   await expect(page.getByRole("link", { name: "Periods" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Add period" })).toHaveCount(0);
+  await context.close();
+});
+
+test("an admin reads the role guide and finds the owner's grant on Roles", async ({
+  browser,
+  baseURL,
+}) => {
+  const school = await Effect.runPromise(createSchool());
+  const address = (path: string) =>
+    hostAddress(baseURL, `${school.slug}.localhost`, path);
+  const context = await browser.newContext();
+  await Effect.runPromise(signInOwner(context, school.slug, address("/")));
+  const page = await context.newPage();
+
+  await page.goto(address("/settings/roles"));
+  const header = page
+    .locator("header")
+    .filter({ has: page.getByRole("button", { name: "Give role" }) });
+  await expect(
+    header.getByRole("button", { name: "Role guide" })
+  ).toBeVisible();
+  await header.getByRole("button", { name: "Role guide" }).click();
+  const guide = page.getByRole("dialog", { name: "What each role may do" });
+  await expect(guide.getByText("Owner", { exact: true })).toBeVisible();
+  await expect(guide.getByText("Teacher", { exact: true })).toBeVisible();
+  await page.keyboard.press("Escape");
+
+  const ownerGrant = page
+    .getByRole("row")
+    .filter({ hasText: "Acceptance Owner" });
+  await expect(
+    ownerGrant.getByRole("cell", { name: "Owner", exact: true })
+  ).toBeVisible();
+  await context.close();
+});
+
+test("an admin sees that no login card is issued yet on Student accounts, and the header offers Issue card", async ({
+  browser,
+  baseURL,
+}) => {
+  const school = await Effect.runPromise(createSchool());
+  const address = (path: string) =>
+    hostAddress(baseURL, `${school.slug}.localhost`, path);
+  const context = await browser.newContext();
+  await Effect.runPromise(signInOwner(context, school.slug, address("/")));
+  const page = await context.newPage();
+
+  await page.goto(address("/settings/students"));
+  const header = page
+    .locator("header")
+    .filter({ has: page.getByRole("button", { name: "Issue card" }) });
+  await expect(
+    header.getByRole("button", { name: "Issue card" })
+  ).toBeVisible();
+  await expect(page.getByText("No login card issued yet.")).toBeVisible();
   await context.close();
 });
