@@ -1,7 +1,10 @@
 import { expect, type Page } from "@playwright/test";
 import { Effect, Schema } from "effect";
 import { FIGURE_WIDTH } from "@/components/state/size";
-import { readCumulativeLayoutShift } from "@/e2e/support/layout";
+import {
+  expectNoOverflow,
+  readCumulativeLayoutShift,
+} from "@/e2e/support/layout";
 import { STATE_FIGURE } from "@/e2e/support/selector";
 
 /** What a full-page state says and offers: its title, its sentence, and each way on with where it leads. */
@@ -71,20 +74,6 @@ export const expectThings = Effect.fn("NakafaE2E.expectThings")(function* (
     { discard: true }
   );
 });
-
-/** The page is no wider than the window, whatever the state holds and whatever the window is. */
-export const expectNoOverflow = Effect.fn("NakafaE2E.expectNoOverflow")(
-  function* (page: Page) {
-    const overflow = yield* Effect.promise(() =>
-      page.evaluate(
-        () =>
-          document.documentElement.scrollWidth -
-          document.documentElement.clientWidth
-      )
-    );
-    yield* Effect.sync(() => expect(overflow).toBeLessThanOrEqual(0));
-  }
-);
 
 /** The files of a web font, as the browser asks for them. */
 const WEB_FONT = "**/*.woff2";

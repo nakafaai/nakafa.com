@@ -69,10 +69,16 @@ export function BreadcrumbHeader({ value }: BreadcrumbHeaderProps) {
   );
 }
 
-/** Bounded path navigation with linked parents and one collapsed middle group. */
+/**
+ * Bounded path navigation with linked parents and one collapsed group, as Google Drive
+ * and shadcn's responsive breadcrumb fold a long path. From the small breakpoint up it
+ * shows Home, a menu of the middle items, and the nearest `visibleItemCount` items. On a
+ * phone a path of two items or more keeps only its last item beside one menu that holds
+ * Home and every item before it, so the page's name stays readable next to the page's
+ * actions.
+ */
 export function BreadcrumbHeaderPath({
   children,
-  className,
   homeHref,
   homeLabel,
   items,
@@ -83,15 +89,27 @@ export function BreadcrumbHeaderPath({
   "homeHref" | "homeLabel" | "items" | "menuLabel"
 > & {
   children?: ReactNode;
-  className?: string;
   visibleItemCount?: 1 | 2;
 }) {
   const hiddenItems = Arr.dropRight(items, visibleItemCount);
   const visibleItems = Arr.takeRight(items, visibleItemCount);
+  const foldsOnPhone = items.length > 1;
   return (
-    <Breadcrumb className={cn("min-w-0", className)}>
+    <Breadcrumb className="min-w-0">
       <BreadcrumbList className="flex-nowrap">
-        <BreadcrumbItem className="shrink-0">
+        {foldsOnPhone ? (
+          <BreadcrumbMenu
+            className="sm:hidden"
+            items={[
+              { href: homeHref, label: homeLabel },
+              ...Arr.dropRight(items, 1),
+            ]}
+            menuLabel={menuLabel}
+          />
+        ) : null}
+        <BreadcrumbItem
+          className={cn("shrink-0", foldsOnPhone && "max-sm:hidden")}
+        >
           <BreadcrumbLink
             render={
               <BreadcrumbAnchor href={homeHref}>{homeLabel}</BreadcrumbAnchor>
@@ -99,10 +117,20 @@ export function BreadcrumbHeaderPath({
           />
         </BreadcrumbItem>
         {hiddenItems.length > 0 && (
-          <BreadcrumbMenu items={hiddenItems} menuLabel={menuLabel} />
+          <>
+            <BreadcrumbSeparator className="shrink-0 max-sm:hidden" />
+            <BreadcrumbMenu
+              className="max-sm:hidden"
+              items={hiddenItems}
+              menuLabel={menuLabel}
+            />
+          </>
         )}
-        {Arr.map(visibleItems, (item) => (
+        {Arr.map(visibleItems, (item, index) => (
           <BreadcrumbHeaderSegment
+            className={cn(
+              foldsOnPhone && index < visibleItems.length - 1 && "max-sm:hidden"
+            )}
             item={item}
             key={`${item.label}:${item.href ?? "current"}`}
           />
@@ -113,44 +141,43 @@ export function BreadcrumbHeaderPath({
   );
 }
 
-/** Renders collapsed middle breadcrumb items inside an ellipsis menu. */
+/** Renders folded breadcrumb items inside an ellipsis menu. */
 function BreadcrumbMenu({
+  className,
   items,
   menuLabel,
 }: {
+  className: string;
   items: readonly BreadcrumbHeaderItem[];
   menuLabel: string;
 }) {
   return (
-    <>
-      <BreadcrumbSeparator className="shrink-0" />
-      <BreadcrumbItem className="min-w-0">
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            render={
-              <button
-                aria-label={menuLabel}
-                className="flex size-6 cursor-pointer items-center justify-center rounded-md transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                type="button"
-              >
-                <BreadcrumbEllipsis />
-              </button>
-            }
-          />
-          <DropdownMenuContent align="start" className="w-48">
-            <DropdownMenuGroup>
-              <DropdownMenuLabel>{menuLabel}</DropdownMenuLabel>
-              {Arr.map(items, (item) => (
-                <BreadcrumbMenuItem
-                  item={item}
-                  key={`${item.label}:${item.href ?? "current"}`}
-                />
-              ))}
-            </DropdownMenuGroup>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </BreadcrumbItem>
-    </>
+    <BreadcrumbItem className={cn("min-w-0", className)}>
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          render={
+            <button
+              aria-label={menuLabel}
+              className="flex size-6 cursor-pointer items-center justify-center rounded-md transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              type="button"
+            >
+              <BreadcrumbEllipsis />
+            </button>
+          }
+        />
+        <DropdownMenuContent align="start" className="w-48">
+          <DropdownMenuGroup>
+            <DropdownMenuLabel>{menuLabel}</DropdownMenuLabel>
+            {Arr.map(items, (item) => (
+              <BreadcrumbMenuItem
+                item={item}
+                key={`${item.label}:${item.href ?? "current"}`}
+              />
+            ))}
+          </DropdownMenuGroup>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </BreadcrumbItem>
   );
 }
 
@@ -169,17 +196,22 @@ function BreadcrumbMenuItem({ item }: { item: BreadcrumbHeaderItem }) {
   );
 }
 
-/** Renders one visible current or linked breadcrumb segment. */
+/**
+ * Renders one visible current or linked breadcrumb segment, with the separator before
+ * it. A `className` applies to both, so a path can hide a segment whole.
+ */
 export function BreadcrumbHeaderSegment({
+  className,
   item,
 }: {
+  className?: string;
   item: BreadcrumbHeaderItem;
 }) {
   if (!item.href) {
     return (
       <>
-        <BreadcrumbSeparator className="shrink-0" />
-        <BreadcrumbItem className="min-w-0">
+        <BreadcrumbSeparator className={cn("shrink-0", className)} />
+        <BreadcrumbItem className={cn("min-w-0", className)}>
           <BreadcrumbPage className="truncate" lang={item.language}>
             {item.label}
           </BreadcrumbPage>
@@ -190,8 +222,8 @@ export function BreadcrumbHeaderSegment({
 
   return (
     <>
-      <BreadcrumbSeparator className="shrink-0" />
-      <BreadcrumbItem className="min-w-0">
+      <BreadcrumbSeparator className={cn("shrink-0", className)} />
+      <BreadcrumbItem className={cn("min-w-0", className)}>
         <BreadcrumbLink
           className="truncate"
           render={

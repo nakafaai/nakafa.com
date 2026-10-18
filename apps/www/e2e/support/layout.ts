@@ -201,6 +201,48 @@ export const readPageLayoutShift = Effect.fn("NakafaE2E.readPageLayoutShift")(
 );
 
 /**
+ * Asserts that the page is no wider than the window. A failure names the
+ * outermost elements that reach past the window's right edge, after `label`,
+ * so the route and width that failed say which parts overflow.
+ */
+export const expectNoOverflow = Effect.fn("NakafaE2E.expectNoOverflow")(
+  function* (page: Page, label = "page") {
+    const sideways = yield* Effect.promise(() =>
+      page.evaluate(() => {
+        const edge = window.innerWidth + 0.5;
+        const wide = Array.from(
+          document.body.querySelectorAll<HTMLElement>("*")
+        )
+          .filter(
+            (element) =>
+              element.getBoundingClientRect().right > edge &&
+              !(
+                element.parentElement &&
+                element.parentElement.getBoundingClientRect().right > edge
+              )
+          )
+          .slice(0, 5)
+          .map(
+            (element) =>
+              `${element.tagName.toLowerCase()}.${element.getAttribute("class") ?? ""}`
+          );
+        return {
+          clientWidth: document.documentElement.clientWidth,
+          scrollWidth: document.documentElement.scrollWidth,
+          wide,
+        };
+      })
+    );
+    yield* Effect.sync(() =>
+      expect(
+        sideways.scrollWidth,
+        `${label}: ${Arr.join(sideways.wide, "; ")}`
+      ).toBeLessThanOrEqual(sideways.clientWidth)
+    );
+  }
+);
+
+/**
  * Waits until a reader sees the element rather than a sticky header over it:
  * the topmost element at its center is the element itself or one inside it.
  */
