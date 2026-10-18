@@ -3,7 +3,7 @@ import { Effect } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { activateUntilVisible } from "@/e2e/support/input";
 import { withObservedPageErrors } from "@/e2e/support/observe";
-import { SHEET_POPUP, VISIBLE_SIDEBAR_TRIGGER } from "@/e2e/support/selector";
+import { VISIBLE_SIDEBAR_TRIGGER } from "@/e2e/support/selector";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /** The page header a page draws for itself. */
@@ -45,7 +45,7 @@ test("a phone shows one header row: the page's own, with the app sidebar's trigg
         // Its trigger opens the app's navigation, once the page has hydrated.
         yield* activateUntilVisible(
           trigger,
-          page.locator(SHEET_POPUP),
+          page.getByRole("dialog", { name: "Sidebar" }),
           readinessTimeoutMilliseconds
         );
       })
