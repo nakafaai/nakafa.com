@@ -850,8 +850,8 @@
     "count": "{count, number} / {limit, number}"
   },
   "Toast": {
-    "school-logo-size": { "description": "Choose a logo of at most 1 MB." },
-    "school-logo-type": { "description": "Choose a PNG or SVG image." },
+    "school-logo-size": { "title": "The logo was not saved.", "description": "Choose a logo of at most 1 MB." },
+    "school-logo-type": { "title": "The logo was not saved.", "description": "Choose a PNG or SVG image." },
     "school-logo-refused": { "title": "The logo was not saved." },
     "school-address-copied": { "title": "The address was copied." },
     "action-error": {
