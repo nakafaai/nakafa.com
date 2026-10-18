@@ -22,6 +22,7 @@ import { toast } from "@repo/design-system/lib/toast/notify";
 import { useForm } from "@tanstack/react-form";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 import { useTranslations } from "next-intl";
+import { useRef } from "react";
 import {
   CardSection,
   CardSectionActions,
@@ -44,7 +45,8 @@ const formSchema = Schema.toStandardSchemaV1(
  * save does not wait: the new role is the form's saved one at once and the
  * optimistic update shows it everywhere, so Save has nothing left to save. A
  * refused save brings the stored role back as the saved one and keeps the
- * chosen role, so Save offers it again beside the error toast.
+ * newest chosen role, so Save offers it again beside the error toast. A refusal
+ * that a later save overtook leaves the form to that save.
  */
 export function UserSettingsRole({ user }: { user: CurrentUser }) {
   const t = useTranslations("Auth");
@@ -58,6 +60,7 @@ export function UserSettingsRole({ user }: { user: CurrentUser }) {
     value: role.value,
   }));
   const updateUserRole = useUpdateUserRoleMutation();
+  const latestSave = useRef(0);
   const initialRole = Option.getOrUndefined(
     Option.map(
       Arr.findFirst(roles, (role) => role.value === user.appUser.role),
@@ -73,6 +76,8 @@ export function UserSettingsRole({ user }: { user: CurrentUser }) {
     },
     onSubmit: ({ value, formApi }) => {
       const stored = formApi.options.defaultValues?.role;
+      const save = latestSave.current + 1;
+      latestSave.current = save;
       // The new role is the saved one at once, so Save has nothing to save.
       formApi.reset(value);
       Effect.runPromise(
@@ -89,14 +94,20 @@ export function UserSettingsRole({ user }: { user: CurrentUser }) {
               }).pipe(
                 Effect.andThen(
                   Effect.sync(() => {
-                    // The stored role comes back as the saved one, and the
-                    // chosen role stays, so Save offers it again.
-                    formApi.reset({ role: stored });
-                    formApi.setFieldValue("role", value.role);
                     toast.error({
                       description: "action-error.description",
                       title: "action-error.title",
                     });
+                    if (save !== latestSave.current) {
+                      return;
+                    }
+                    // The stored role comes back as the saved one, and the
+                    // newest chosen role stays, so Save offers it again.
+                    const chosen = formApi.getFieldMeta("role")?.isTouched
+                      ? formApi.getFieldValue("role")
+                      : value.role;
+                    formApi.reset({ role: stored });
+                    formApi.setFieldValue("role", chosen);
                   })
                 )
               ),

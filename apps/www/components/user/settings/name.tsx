@@ -13,6 +13,7 @@ import { toast } from "@repo/design-system/lib/toast/notify";
 import { useForm } from "@tanstack/react-form";
 import { Effect, Schema, String as Str } from "effect";
 import { useTranslations } from "next-intl";
+import { useRef } from "react";
 import {
   CardSection,
   CardSectionActions,
@@ -37,12 +38,14 @@ const formSchema = Schema.toStandardSchemaV1(
  * Render the validated user-name settings form. A save does not wait: the new
  * name is the form's saved one at once and the optimistic update shows it
  * everywhere, so Save has nothing left to save. A refused save brings the
- * stored name back as the saved one and keeps the typed name in the field, so
- * Save offers it again beside the error toast.
+ * stored name back as the saved one and keeps the newest typed name in the
+ * field, so Save offers it again beside the error toast. A refusal that a later
+ * save overtook leaves the form to that save.
  */
 export function UserSettingsName({ user }: { user: CurrentUser }) {
   const t = useTranslations("Auth");
   const updateUserName = useUpdateUserNameMutation();
+  const latestSave = useRef(0);
   const form = useForm({
     defaultValues: {
       name: user.authUser.name,
@@ -52,6 +55,8 @@ export function UserSettingsName({ user }: { user: CurrentUser }) {
     },
     onSubmit: ({ value, formApi }) => {
       const stored = formApi.options.defaultValues?.name ?? value.name;
+      const save = latestSave.current + 1;
+      latestSave.current = save;
       // The new name is the saved one at once, so Save has nothing to save.
       formApi.reset(value);
       Effect.runPromise(
@@ -67,14 +72,20 @@ export function UserSettingsName({ user }: { user: CurrentUser }) {
               }).pipe(
                 Effect.andThen(
                   Effect.sync(() => {
-                    // The stored name comes back as the saved one, and the
-                    // typed name stays in the field, so Save offers it again.
-                    formApi.reset({ name: stored });
-                    formApi.setFieldValue("name", value.name);
                     toast.error({
                       description: "action-error.description",
                       title: "action-error.title",
                     });
+                    if (save !== latestSave.current) {
+                      return;
+                    }
+                    // The stored name comes back as the saved one, and the
+                    // newest typed name stays in the field, so Save offers it.
+                    const typed = formApi.getFieldMeta("name")?.isTouched
+                      ? formApi.getFieldValue("name")
+                      : value.name;
+                    formApi.reset({ name: stored });
+                    formApi.setFieldValue("name", typed);
                   })
                 )
               ),
