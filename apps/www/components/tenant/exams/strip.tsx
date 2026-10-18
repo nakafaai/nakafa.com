@@ -240,6 +240,7 @@ function Thumbnail({
             number={index + 1}
             open={selected}
             question={question}
+            saved={!pending}
           />
         </button>
         {pending ? null : (

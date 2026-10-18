@@ -36,17 +36,21 @@ const PREVIEW_CLIENT = "preview";
  * What one question looks like on its canvas, drawn at a quarter of the size for the strip:
  * the same page, with its prompt and its options. The open question draws its prompt from
  * the editor on the canvas, so it changes as the teacher types. Any other question reads its
- * prompt once it scrolls into view, and again only when someone edits it. The page is
- * inert: the strip's button names the question.
+ * prompt once it scrolls into view, and again only when someone edits it; a question the
+ * server has not saved yet reads nothing. The page is inert: the strip's button names the
+ * question.
  */
 export function QuestionPreview({
   number,
   open,
   question,
+  saved,
 }: {
   number: number;
   open: boolean;
   question: Question;
+  /** Whether the server has saved the question; a placeholder's prompt has no document to read yet. */
+  saved: boolean;
 }) {
   const { slug } = useExam();
   const { inViewport, ref } = useInViewport();
@@ -54,7 +58,7 @@ export function QuestionPreview({
   const live = HashMap.get(docs, question.prompt);
   const reply = useQuery(
     editors.documents.open,
-    (open && Option.isSome(live)) || !inViewport
+    !saved || (open && Option.isSome(live)) || !inViewport
       ? "skip"
       : { clientId: PREVIEW_CLIENT, documentId: question.prompt, slug }
   );
