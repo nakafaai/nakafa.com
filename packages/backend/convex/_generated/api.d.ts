@@ -12805,6 +12805,17 @@ export declare const internal: {
       };
     };
     provision: {
+      invite: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          email: string;
+          locale: "en" | "id" | "de";
+          name: string;
+          slug: string;
+        },
+        { invite: Id<"tenantInvites">; person: Id<"tenantPeople"> }
+      >;
       open: FunctionReference<
         "mutation",
         "internal",

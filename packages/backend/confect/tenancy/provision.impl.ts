@@ -14,7 +14,10 @@ import {
   unitAuthority,
 } from "@repo/backend/confect/tenancy/authority";
 import { ProvisionRejected } from "@repo/backend/confect/tenancy/errors";
-import { writeInvite } from "@repo/backend/confect/tenancy/invite";
+import {
+  inviteToSchool,
+  writeInvite,
+} from "@repo/backend/confect/tenancy/invite";
 import { NEW_TENANT_POLICIES } from "@repo/backend/confect/tenancy/policy";
 import spec, {
   type OpenRequest,
@@ -142,6 +145,16 @@ export const openTenant = Effect.fn("tenancy.provision.tenant")(function* (
   return { invite: invite._id, owner: ownerId, tenant: tenantId, units };
 });
 
+/** The acceptance command's invite, as the system, so the journal names no staff member. */
+const invite = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "invite",
+  Effect.fn("tenancy.provision.invite")(function* (args) {
+    return yield* inviteToSchool(systemActor, args);
+  })
+);
+
 /** Nakafa staff's command: opens an organisation as the system, so the journal names no staff member. */
 const open = FunctionImpl.make(
   databaseSchema,
@@ -154,5 +167,6 @@ const open = FunctionImpl.make(
 
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(open),
+  Layer.provide(invite),
   GroupImpl.finalize
 );
