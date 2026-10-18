@@ -1,19 +1,17 @@
 "use client";
 
-import { AiBrain01Icon } from "@hugeicons/core-free-icons";
 import { CardContent } from "@repo/design-system/components/ui/card";
 import {
   Empty,
   EmptyDescription,
   EmptyHeader,
-  EmptyMedia,
   EmptyTitle,
 } from "@repo/design-system/components/ui/empty";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
 import { useEffect, useEffectEvent } from "react";
+import { EmptyNina } from "@/components/state/empty";
 import {
   isSearching,
   MEMORY_FILL,
@@ -116,9 +114,7 @@ function MemoryEmpty({ empty, whole }: { empty: boolean; whole: boolean }) {
       data-waiting={whole ? undefined : ""}
     >
       <EmptyHeader>
-        <EmptyMedia variant="icon">
-          <HugeIcons icon={AiBrain01Icon} />
-        </EmptyMedia>
+        <EmptyNina act={empty ? "relaxed" : "searching"} />
         <EmptyTitle className="text-base">
           {empty ? t("empty") : t("no-result")}
         </EmptyTitle>
