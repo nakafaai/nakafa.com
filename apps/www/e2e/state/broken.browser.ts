@@ -9,11 +9,11 @@ import en from "@repo/internationalization/dictionaries/standalone/en.json" with
 import { Effect } from "effect";
 import { NINA_SIZE } from "@/components/state/size";
 import { activateUntilVisible } from "@/e2e/support/input";
+import { expectNoOverflow } from "@/e2e/support/layout";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { NEXT_CHUNK_PATH, openRoute } from "@/e2e/support/route";
 import { STATE_FIGURE } from "@/e2e/support/selector";
-import { expectNoOverflow } from "@/e2e/support/state";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import {
   compactViewport,
