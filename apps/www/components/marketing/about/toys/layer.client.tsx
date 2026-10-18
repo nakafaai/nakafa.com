@@ -158,7 +158,8 @@ const PLACEMENTS: readonly ToyPlacement[] = [
  * moves when it mounts. It covers the nearest positioned parent, so a toy can be
  * carried from the top of the page to the footer, and `Scatter` puts each toy
  * where its place says at the current width of the page. The layer lets every
- * press through to the page, except on a toy.
+ * press through to the page, except on a toy, and clips a toy at the page's
+ * edges, so a toy placed or carried there never makes the page scroll sideways.
  */
 export function ToyOverlay({
   children,
@@ -169,7 +170,7 @@ export function ToyOverlay({
   placements: readonly ToyPlacement[];
 }) {
   return (
-    <Toys className="pointer-events-none absolute inset-0">
+    <Toys className="pointer-events-none absolute inset-0 overflow-clip">
       <Scatter>
         {Arr.map(placements, (toy) => (
           <Toy key={toy.key} place={toy.place}>
