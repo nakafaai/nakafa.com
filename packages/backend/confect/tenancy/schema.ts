@@ -4,6 +4,7 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import { Currency, TimeZone } from "@repo/backend/confect/tenancy/locale";
 import { TenantPolicies } from "@repo/backend/confect/tenancy/policy";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
+import { MascotCode } from "@repo/mascot/code";
 import { isSingleLine } from "@repo/utilities/line";
 import { Duration, Schema, Struct } from "effect";
 
@@ -105,6 +106,25 @@ export const InviteState = Schema.Union([
   Schema.Struct({ at: Schema.Finite, status: Schema.Literal("revoked") }),
 ]);
 
+/** A logo is a PNG or an SVG image. The arguments that set one name this type. */
+export const LogoType = Schema.Literals(["image/png", "image/svg+xml"]);
+/** The most bytes a logo may hold: one megabyte. */
+export const LOGO_BYTE_LIMIT = 1_048_576;
+/** `set` answers with the address of the file that now shows as the school's logo. */
+export const LogoSet = Schema.TaggedStruct("LogoSet", {
+  logo: Schema.String,
+});
+/**
+ * `set` answers this, and changes nothing else, when the file is over the logo
+ * limit: `size` names the reason. The file is deleted, so the answer is a value
+ * and not a failure, because a failed mutation rolls its writes back.
+ */
+export const LogoRefused = Schema.TaggedStruct("LogoRefused", {
+  reason: Schema.Literal("size"),
+});
+/** The answer of `set`: a logo that is set, or a file that is refused. */
+export const LogoAnswer = Schema.Union([LogoSet, LogoRefused]);
+
 /**
  * The organisation holds its country and the currency of its contract (ADR
  * 0032), and the choices its Owner makes for the whole tenant. The country is
@@ -116,21 +136,33 @@ export const tenantValidator = Schema.Struct({
   country: CountryCodeSchema,
   currency: Currency,
   kind: TenantKind,
+  logo: Schema.optionalKey(Id("_storage")),
   name: TenantName,
   policies: TenantPolicies,
   slug: TenantSlug,
   status: TenantStatus,
 });
 /**
- * A tenant's public identity, shown before anyone signs in. Only these fields
- * leave the server, so tenant fields added later stay private.
+ * A tenant's public identity, shown before anyone signs in: its kind, name,
+ * address and status, its animal, and the address of its logo when it has one.
+ * Only these fields leave the server, so tenant fields added later stay private.
  */
-export const TenantProfile = tenantValidator.mapFields(
-  Struct.pick(["kind", "name", "slug", "status"])
-);
-/** Projects a stored tenant onto its public profile, with exactly the profile's fields. */
-export const tenantProfile = (tenant: typeof tenantValidator.Type) =>
-  Struct.pick(tenant, Struct.keys(TenantProfile.fields));
+export const TenantProfile = Schema.Struct({
+  ...Struct.pick(tenantValidator.fields, ["kind", "name", "slug", "status"]),
+  logo: Schema.optionalKey(Schema.String),
+  mascot: MascotCode,
+});
+/**
+ * The caller's account as its school shows it: its name, its animal, and its
+ * username when it has one. Its photo is in the view only while the account
+ * shows it, which `photoOf` decides (`confect/users/picture.ts`).
+ */
+export const ViewerAccount = Schema.Struct({
+  image: Schema.optionalKey(Schema.String),
+  mascot: MascotCode,
+  name: Schema.String,
+  username: Schema.optionalKey(Schema.String),
+});
 /** What an Owner sets for the whole tenant; every member sees it. */
 export const TenantSettings = tenantValidator.mapFields(
   Struct.pick(["country", "currency", "policies"])

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
+import { schoolMascot } from "@repo/backend/confect/tenancy/mascot";
 import { tenancyFixture } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect } from "effect";
 
@@ -16,6 +17,7 @@ describe("tenancy/memberships", () => {
           person: { id: fixture.people.owner.personId, name: "Owner" },
           tenant: {
             kind: "foundation",
+            mascot: schoolMascot(fixture.tenants.nf),
             name: "Yayasan Nakafa",
             slug: "nf",
             status: "active",

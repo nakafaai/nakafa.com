@@ -77,6 +77,8 @@ export const tenant = Kind.make("tenant", "tenants", {
       currency: Currency,
       type: Schema.Literal("tenant.locale.set"),
     }),
+    Schema.Struct({ type: Schema.Literal("tenant.logo.removed") }),
+    Schema.Struct({ type: Schema.Literal("tenant.logo.set") }),
     Schema.Struct({
       key: PolicyKey,
       type: Schema.Literal("tenant.policy.set"),
