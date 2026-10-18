@@ -58,7 +58,7 @@ type Call = Parameters<RunConvex<string, never>>;
  * A runner that answers the way the Better Auth adapter does and records each
  * call. The operations in `failing` fail with their own name.
  */
-function recordingRunner(failing: readonly string[] = [], lookup = "null") {
+function recordingRunner(failing: readonly string[] = [], lookup = "") {
   const calls = MutableList.make<Call>();
   const run: RunConvex<string, never> = (...call) => {
     MutableList.append(calls, call);

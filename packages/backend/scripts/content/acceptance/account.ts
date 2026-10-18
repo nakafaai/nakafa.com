@@ -1,5 +1,5 @@
 import { JsonTextSchema } from "@repo/utilities/json";
-import { Clock, Crypto, Duration, Effect, Schema } from "effect";
+import { Clock, Crypto, Duration, Effect, Schema, String as Str } from "effect";
 import { Base64Url, Hex } from "effect/encoding";
 
 /** A document the Convex CLI printed after it created a Better Auth row. */
@@ -8,7 +8,10 @@ const CreatedDocument = Schema.fromJsonString(
 );
 /** One Convex function's arguments as the CLI takes them, JSON text. */
 const encodeArguments = Schema.encodeEffect(JsonTextSchema);
-/** What `adapter:findOne` answers for a user: the row, or null when no row matches. */
+/**
+ * What `adapter:findOne` answers for a user: the row, or null when no row matches.
+ * The Convex CLI prints nothing for a null result, so empty output reads as null.
+ */
 const FoundUser = Schema.fromJsonString(
   Schema.NullOr(Schema.Struct({ _id: Schema.String }))
 );
@@ -198,6 +201,9 @@ export const openLearnerAccount = Effect.fn(
         "adapter:findOne",
         args,
       ])
+    ),
+    Effect.map((printed) =>
+      Str.isEmpty(Str.trim(printed)) ? "null" : printed
     ),
     Effect.flatMap(Schema.decodeEffect(FoundUser))
   );
