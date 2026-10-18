@@ -11,7 +11,15 @@ import {
 } from "@repo/backend/confect/privacy/spec";
 import { workflow } from "@repo/backend/confect/workflow";
 import { Duration, Effect, flow } from "effect";
-export const WORKFLOW_RECOVERY_DELAY_MS = 60 * 60 * 1000;
+/**
+ * How long a failed privacy workflow waits before it is restarted, and a failed
+ * journal release before it is tried again: one day. A failure that comes from
+ * configuration repeats on every restart, and each restart runs every step with its
+ * own retries, so an hourly restart kept five failed dev workflows at about 16,700
+ * workpool runs a day (17 Oct). A deletion still finishes within a day of the
+ * failure going away, well inside the month that erasure allows.
+ */
+export const WORKFLOW_RECOVERY_DELAY_MS = Duration.toMillis(Duration.days(1));
 
 /** Restarts an idempotent privacy workflow after a recoverable terminal state. */
 export const retryCleanupWorkflowProgram = Effect.fn(
