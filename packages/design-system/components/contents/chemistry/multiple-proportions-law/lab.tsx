@@ -22,12 +22,13 @@ import {
 } from "@repo/design-system/components/ui/toggle-group";
 import {
   VisualCard,
+  VisualCardActions,
   VisualCardBody,
-  VisualCardControls,
+  VisualCardFacts,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
-  VisualCardScene,
+  VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { Array as Arr } from "effect";
@@ -85,7 +86,7 @@ export function MultipleProportionsLab({
     <VisualCard>
       <VisualCardHeader description={description} title={title} />
 
-      <VisualCardBody className="flex flex-col gap-4">
+      <VisualCardToolbar>
         <ToggleGroup
           aria-label={labels.chooseMode}
           gridColumns="3"
@@ -104,57 +105,54 @@ export function MultipleProportionsLab({
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
+      </VisualCardToolbar>
 
-        <VisualCardScene
-          aria-label={labels.comparisonView}
-          className={threeSceneFrameVariants()}
-          render={<section />}
-        >
-          <ThreeCanvas frameloop="always">
-            <Suspense>
-              <MultipleProportionsCameraControls />
-              <ambientLight intensity={0.68} />
-              <hemisphereLight
-                color={sceneColors.text}
-                groundColor={sceneColors.bond}
-                intensity={0.58}
-              />
-              <directionalLight
-                castShadow
-                intensity={1.25}
-                position={[4, 5, 5]}
-                shadow-bias={-0.0006}
-                shadow-mapSize-height={1024}
-                shadow-mapSize-width={1024}
-                shadow-normalBias={0.02}
-              />
-              <MultipleProportionsScene
-                colors={sceneColors}
-                modeId={selectedModeId}
-              />
-            </Suspense>
-          </ThreeCanvas>
-        </VisualCardScene>
+      <VisualCardBody
+        aria-label={labels.comparisonView}
+        className={threeSceneFrameVariants()}
+        render={<section />}
+      >
+        <ThreeCanvas frameloop="always">
+          <Suspense>
+            <MultipleProportionsCameraControls />
+            <ambientLight intensity={0.68} />
+            <hemisphereLight
+              color={sceneColors.text}
+              groundColor={sceneColors.bond}
+              intensity={0.58}
+            />
+            <directionalLight
+              castShadow
+              intensity={1.25}
+              position={[4, 5, 5]}
+              shadow-bias={-0.0006}
+              shadow-mapSize-height={1024}
+              shadow-mapSize-width={1024}
+              shadow-normalBias={0.02}
+            />
+            <MultipleProportionsScene
+              colors={sceneColors}
+              modeId={selectedModeId}
+            />
+          </Suspense>
+        </ThreeCanvas>
+      </VisualCardBody>
 
+      <VisualCardActions>
+        <VisualCardFullscreen />
+      </VisualCardActions>
+
+      <VisualCardFooter>
         <p className="text-muted-foreground text-sm">
           {selectedLabels.helperCaption}
         </p>
-        <VisualCardControls>
-          <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
-            <VisualFact
-              label={labels.fixedLabel}
-              value={selectedLabels.fixed}
-            />
-            <VisualFact
-              label={labels.changingLabel}
-              value={selectedLabels.changing}
-            />
-          </dl>
-        </VisualCardControls>
-      </VisualCardBody>
-
-      <VisualCardFooter>
-        <VisualCardFullscreen />
+        <VisualCardFacts>
+          <VisualFact label={labels.fixedLabel} value={selectedLabels.fixed} />
+          <VisualFact
+            label={labels.changingLabel}
+            value={selectedLabels.changing}
+          />
+        </VisualCardFacts>
       </VisualCardFooter>
     </VisualCard>
   );

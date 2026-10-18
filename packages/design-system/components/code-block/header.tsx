@@ -138,13 +138,19 @@ export function CodeBlockSelect(props: CodeBlockSelectProps) {
 /** Trigger attributes for the compact language selector. */
 type CodeBlockSelectTriggerProps = ComponentProps<typeof SelectTrigger>;
 
-/** Applies the compact code-block treatment to a select trigger. */
+/**
+ * Applies the compact code-block treatment to a select trigger. The trigger
+ * shows only the chosen language, so it is named after the language control.
+ */
 export function CodeBlockSelectTrigger({
   className,
   ...props
 }: CodeBlockSelectTriggerProps) {
+  const t = useTranslations("Common");
+
   return (
     <SelectTrigger
+      aria-label={t("language")}
       className={cn(
         "w-fit border-none text-muted-foreground text-sm shadow-none",
         className

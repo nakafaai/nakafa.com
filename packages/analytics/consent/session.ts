@@ -174,13 +174,11 @@ export function canCommitAnalyticsConsentRevocation({
 /** Projects transient prompt, runtime, and persistence policy for one visitor. */
 export function resolveAnalyticsConsentSessionPolicy({
   durableConsent,
-  hasLoadError,
   overrides,
   promptIdentity,
   status,
 }: {
   readonly durableConsent: typeof DurableAnalyticsConsentSchema.Type | null;
-  readonly hasLoadError: boolean;
   readonly overrides: AnalyticsConsentSessionOverrides;
   readonly promptIdentity: AnalyticsConsentPromptIdentity | null;
   readonly status: AnalyticsConsentState["status"];
@@ -206,10 +204,12 @@ export function resolveAnalyticsConsentSessionPolicy({
 
   return {
     hasSaveError: override?.persistence === "failed",
+    // A pending choice keeps the prompt on the page. The server renders it in
+    // that state, so the first client render matches, and the prompt leaves
+    // once the choice is known or handled here.
     isPromptOpen:
-      !!promptIdentity &&
       !hasHandledPrompt &&
-      (status === "prompt" || (hasLoadError && status === "pending")),
+      (status === "pending" || (!!promptIdentity && status === "prompt")),
     isRuntimeSuppressed: override !== undefined,
     isSaving: override?.persistence === "pending",
     status: effectiveStatus,

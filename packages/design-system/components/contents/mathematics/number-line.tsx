@@ -1,8 +1,8 @@
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import {
   VisualCard,
+  VisualCardActions,
   VisualCardBody,
-  VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
@@ -168,7 +168,7 @@ export function NumberLine({
     <VisualCard>
       <VisualCardHeader description={description} title={title} />
       <VisualCardBody>
-        <div className="w-full">
+        <div className="w-full p-(--card-spacing)">
           <div className="relative h-20 w-full">
             {Arr.map(processedSegments, (segment) => (
               <div key={`bg-${segment.start}-${segment.end}-${segment.index}`}>
@@ -263,9 +263,9 @@ export function NumberLine({
           </div>
         </div>
       </VisualCardBody>
-      <VisualCardFooter>
+      <VisualCardActions>
         <VisualCardFullscreen />
-      </VisualCardFooter>
+      </VisualCardActions>
     </VisualCard>
   );
 }

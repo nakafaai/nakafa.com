@@ -15,11 +15,10 @@ import {
 } from "@repo/design-system/components/evilcharts/ui/tooltip";
 import {
   VisualCard,
+  VisualCardActions,
   VisualCardBody,
-  VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
-  VisualCardScene,
 } from "@repo/design-system/components/visual/card";
 import { getBarSeriesCue } from "@repo/design-system/lib/charts/series-cue";
 import { Array as Arr, Record as Rec } from "effect";
@@ -81,51 +80,49 @@ export function SalesChart({
   return (
     <VisualCard>
       <VisualCardHeader description={description} title={title} />
-      <VisualCardBody>
-        <VisualCardScene>
-          <EvilBarChart
-            className="aspect-video"
-            config={chartConfig}
-            data={chartData}
-          >
-            <Grid vertical={false} />
-            <XAxis dataKey="year" tickFormatter={formatYear} tickMargin={10} />
-            <YAxis
-              label={{
-                value: yAxisLabel,
-                angle: -90,
-                position: "insideLeft",
-                offset: 10,
-                style: { textAnchor: "middle" },
-              }}
-              tickMargin={10}
-            />
-            <ChartTooltip
-              content={
-                <ChartTooltipContent
-                  labelFormatter={(value) => formatYear(String(value))}
-                />
-              }
-            />
-            <Legend />
-            {Arr.map(Rec.keys(chartConfig), (key, index) => {
-              const cue = getBarSeriesCue(index);
+      <VisualCardBody className="p-(--card-spacing)">
+        <EvilBarChart
+          className="aspect-video"
+          config={chartConfig}
+          data={chartData}
+        >
+          <Grid vertical={false} />
+          <XAxis dataKey="year" tickFormatter={formatYear} tickMargin={10} />
+          <YAxis
+            label={{
+              value: yAxisLabel,
+              angle: -90,
+              position: "insideLeft",
+              offset: 10,
+              style: { textAnchor: "middle" },
+            }}
+            tickMargin={10}
+          />
+          <ChartTooltip
+            content={
+              <ChartTooltipContent
+                labelFormatter={(value) => formatYear(String(value))}
+              />
+            }
+          />
+          <Legend />
+          {Arr.map(Rec.keys(chartConfig), (key, index) => {
+            const cue = getBarSeriesCue(index);
 
-              return (
-                <Bar
-                  dataKey={key}
-                  key={key}
-                  radius={cue.radius}
-                  variant={cue.variant}
-                />
-              );
-            })}
-          </EvilBarChart>
-        </VisualCardScene>
+            return (
+              <Bar
+                dataKey={key}
+                key={key}
+                radius={cue.radius}
+                variant={cue.variant}
+              />
+            );
+          })}
+        </EvilBarChart>
       </VisualCardBody>
-      <VisualCardFooter>
+      <VisualCardActions>
         <VisualCardFullscreen />
-      </VisualCardFooter>
+      </VisualCardActions>
     </VisualCard>
   );
 }

@@ -35,7 +35,7 @@ test("the account menu saves the language of the school host and renders the sch
   // The language changes in place, so a value set on this document survives it.
   await page.evaluate(() => Reflect.set(window, "nakafaSameDocument", true));
 
-  await page.getByRole("button", { name: "Account", exact: true }).click();
+  await page.getByRole("button", { name: "Acceptance Owner" }).click();
   await page.getByRole("menuitem", { name: "Language" }).click();
   await page.getByRole("menuitem", { name: "Indonesia" }).click();
 

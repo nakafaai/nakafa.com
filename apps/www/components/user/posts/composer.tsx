@@ -3,7 +3,7 @@
 import { useMutation } from "@confect/react";
 import { Id } from "@repo/backend/confect/_generated/id";
 import posts from "@repo/backend/confect/_generated/refs/posts";
-import { readPostText } from "@repo/backend/confect/posts/schema";
+import { readLearnerText } from "@repo/backend/confect/writing/text";
 import { Button } from "@repo/design-system/components/ui/button";
 import { InputGroupTextarea } from "@repo/design-system/components/ui/input-group";
 import { toast } from "@repo/design-system/lib/toast/notify";
@@ -22,10 +22,11 @@ import type { PublicProfile } from "@/lib/profile/public";
 /**
  * Writes a new post at the top of the owner's posts, in the first row of the
  * list. Post stays at the end of the row and turns on once the text can be
- * posted. The post shows at once, and the text is locked while the server saves
- * it, so a refused post gives its text back to the composer with a message. The
- * words and the lock live in the draft store, so they survive a Retry of the
- * list.
+ * posted. The post shows at once and the text clears, so the author can write
+ * the next one while the server saves it. A refused post says so and gives its
+ * text back to the composer, ahead of any next post started there. The words
+ * and the posts in flight live in the draft store, so they survive a Retry of
+ * the list.
  */
 export function PostComposer({
   disabled,
@@ -36,13 +37,12 @@ export function PostComposer({
 }) {
   const t = useTranslations("Posts");
   const text = usePostDraft((draft) => draft.text);
-  const saving = usePostDraft((draft) => draft.savingPostId !== null);
   const setText = usePostDraft((draft) => draft.setText);
   const startSaving = usePostDraft((draft) => draft.startSaving);
   const finishSaving = usePostDraft((draft) => draft.finishSaving);
   const refuseSaving = usePostDraft((draft) => draft.refuseSaving);
   const startPost = useMutation(posts.mutations.create);
-  const body = readPostText(text);
+  const body = readLearnerText(text);
   const remaining = remainingToShow(text);
 
   /** Sends the trimmed text, and shows the post in the list while the server saves it. */
@@ -71,25 +71,25 @@ export function PostComposer({
           };
           const save = startPost.withOptimisticUpdate(insertDraftPost(draft));
           return Effect.tryPromise(() => save({ text: posted })).pipe(
-            Effect.flatMap(Effect.fromResult)
+            Effect.flatMap(Effect.fromResult),
+            Effect.matchEffect({
+              onSuccess: () => Effect.sync(() => finishSaving(draftId)),
+              onFailure: (error) =>
+                reportClientException(error, {
+                  source: "components/user/posts/composer",
+                }).pipe(
+                  Effect.andThen(
+                    Effect.sync(() => {
+                      refuseSaving(draftId, posted);
+                      toast.error({
+                        title: "action-error.title",
+                        description: "action-error.description",
+                      });
+                    })
+                  )
+                ),
+            })
           );
-        }),
-        Effect.matchEffect({
-          onSuccess: () => Effect.sync(finishSaving),
-          onFailure: (error) =>
-            reportClientException(error, {
-              source: "components/user/posts/composer",
-            }).pipe(
-              Effect.andThen(
-                Effect.sync(() => {
-                  refuseSaving(posted);
-                  toast.error({
-                    title: "action-error.title",
-                    description: "action-error.description",
-                  });
-                })
-              )
-            ),
         })
       )
     );
@@ -105,7 +105,6 @@ export function PostComposer({
         name="text"
         onChange={(event) => setText(event.target.value)}
         placeholder={t("placeholder")}
-        readOnly={saving}
         value={text}
       />
       <div className="flex shrink-0 items-center gap-3 pt-1">

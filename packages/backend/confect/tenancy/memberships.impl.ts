@@ -4,7 +4,7 @@ import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { requireAuth } from "@repo/backend/confect/auth/session";
 import session from "@repo/backend/confect/middleware/session.impl";
 import spec from "@repo/backend/confect/tenancy/memberships.spec";
-import { tenantProfile } from "@repo/backend/confect/tenancy/schema";
+import { tenantProfile } from "@repo/backend/confect/tenancy/profile";
 import { Effect, Layer, Struct } from "effect";
 
 /** The caller's active member Persons, each tenant read concurrently; operator Persons never appear here. */
@@ -33,9 +33,10 @@ const list = FunctionImpl.make(
           .get(person.tenantId)
           .pipe(
             Effect.orDie,
-            Effect.map((tenant) => ({
+            Effect.flatMap(tenantProfile),
+            Effect.map((profile) => ({
               person: { id: person._id, name: person.name },
-              tenant: tenantProfile(tenant),
+              tenant: profile,
             }))
           ),
       { concurrency: "unbounded" }

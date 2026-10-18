@@ -12,6 +12,7 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 const OLDER = "Kemarin belajar aljabar.";
 const POST = "Hari ini belajar trigonometri.";
 const REFUSED = "Tulisan yang ditolak server.";
+const NEXT = "Tulisan berikutnya.";
 const KEPT = "Post dari server.";
 const VIEWPORTS = [
   { name: "a phone", size: { width: 390, height: 844 } },
@@ -113,7 +114,7 @@ for (const viewport of VIEWPORTS) {
       );
     });
 
-    test("a post the server refuses leaves the list and gives its text back with a message", async ({
+    test("a post the server refuses leaves the list and gives its text back with a message, ahead of the next post", async ({
       baseURL,
       page,
     }) => {
@@ -129,21 +130,24 @@ for (const viewport of VIEWPORTS) {
             });
 
             // The next change never reaches the server, and the server answers
-            // wait until the test releases them. While they wait the post shows
-            // and the text is locked, so nothing the learner types is lost.
+            // wait until the test releases them. While they wait the post shows,
+            // the text clears and the composer stays writable: nothing waits.
             changes.failNext();
             changes.hold();
             await composerOf(page).fill(REFUSED);
             await page.getByRole("button", { name: app.Posts.post }).click();
             await expect(postOf(page, REFUSED)).toBeVisible();
-            await expect(composerOf(page)).toHaveAttribute("readonly", "");
+            await expect(composerOf(page)).toHaveValue("");
+            await expect(composerOf(page)).toBeEditable();
+            await composerOf(page).fill(NEXT);
             changes.release();
             await expect(
               page.getByText(app.Toast["action-error"].title).first()
             ).toBeVisible();
             await expect(postOf(page, REFUSED)).toHaveCount(0);
-            await expect(composerOf(page)).toHaveValue(REFUSED);
-            await expect(composerOf(page)).not.toHaveAttribute("readonly", "");
+            // A refused post comes back to the composer, and the next post the
+            // author started meanwhile stays after it.
+            await expect(composerOf(page)).toHaveValue(`${REFUSED}\n\n${NEXT}`);
           });
         })
       );

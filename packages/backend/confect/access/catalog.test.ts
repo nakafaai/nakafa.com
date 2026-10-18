@@ -135,6 +135,8 @@ describe("access/catalog", () => {
         [
           "tenant.provisioned",
           "tenant.locale.set",
+          "tenant.logo.removed",
+          "tenant.logo.set",
           "tenant.policy.set",
           "unit.created",
           "unit.locale.set",

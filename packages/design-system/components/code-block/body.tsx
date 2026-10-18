@@ -31,7 +31,7 @@ const codeBlockWordHighlightVariants = cva(
 );
 
 const codeBlockVariants = cva(
-  "mt-0 bg-muted/40 text-sm [&_.line]:relative [&_.line]:w-full [&_.line]:px-4 [&_.shiki]:bg-(--shiki-bg)! [&_code]:grid [&_code]:w-full [&_code]:bg-transparent [&_pre]:overflow-x-auto [&_pre]:py-4"
+  "mt-0 bg-muted/40 text-sm [&_.line]:relative [&_.line]:w-full [&_.line]:px-4 [&_.shiki]:bg-transparent! [&_code]:grid [&_code]:w-full [&_code]:bg-transparent [&_pre]:overflow-x-auto [&_pre]:py-4"
 );
 
 /** Render-prop contract for projecting every code source into the body. */

@@ -26,6 +26,9 @@ const BrowserPrivacySignalSchema = Schema.Struct({
   globalPrivacyControl: Schema.Unknown,
 });
 
+/** The browser's current DNT and GPC values, as the page reads them. */
+export type BrowserPrivacySignal = typeof BrowserPrivacySignalSchema.Type;
+
 /** Reads the browser's current DNT and GPC values. */
 type BrowserPrivacySignalSource = () => typeof BrowserPrivacySignalSchema.Type;
 

@@ -66,7 +66,6 @@ describe("explicit consent save actions", () => {
       canGrant: true,
       currentBrowserPrivacySignal: Effect.succeed(false),
       isAuthenticated: false,
-      isSaving: false,
       promptIdentity,
       saveDecision:
         options?.saveDecision ??

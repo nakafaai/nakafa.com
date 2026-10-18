@@ -12,11 +12,10 @@ import {
 import type { ChartConfig } from "@repo/design-system/components/evilcharts/ui/chart-config";
 import {
   VisualCard,
+  VisualCardActions,
   VisualCardBody,
-  VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
-  VisualCardScene,
 } from "@repo/design-system/components/visual/card";
 import { getBarSeriesCue } from "@repo/design-system/lib/charts/series-cue";
 import { Array as Arr } from "effect";
@@ -80,39 +79,33 @@ export function RecruitmentChart({
   return (
     <VisualCard>
       <VisualCardHeader description={description} title={title} />
-      <VisualCardBody>
-        <VisualCardScene>
-          <EvilBarChart
-            className="aspect-video"
-            config={chartConfig}
-            data={data}
-          >
-            <Grid vertical={false} />
-            <XAxis
-              axisLine={false}
-              dataKey="formattedDivision"
-              tickLine={false}
-              tickMargin={10}
-            />
-            <YAxis axisLine={false} tickLine={false} tickMargin={10} />
-            <Tooltip />
-            <Legend />
-            <Bar
-              dataKey="rejected"
-              radius={RECRUITMENT_CUES.rejected.radius}
-              variant={RECRUITMENT_CUES.rejected.variant}
-            />
-            <Bar
-              dataKey="accepted"
-              radius={RECRUITMENT_CUES.accepted.radius}
-              variant={RECRUITMENT_CUES.accepted.variant}
-            />
-          </EvilBarChart>
-        </VisualCardScene>
+      <VisualCardBody className="p-(--card-spacing)">
+        <EvilBarChart className="aspect-video" config={chartConfig} data={data}>
+          <Grid vertical={false} />
+          <XAxis
+            axisLine={false}
+            dataKey="formattedDivision"
+            tickLine={false}
+            tickMargin={10}
+          />
+          <YAxis axisLine={false} tickLine={false} tickMargin={10} />
+          <Tooltip />
+          <Legend />
+          <Bar
+            dataKey="rejected"
+            radius={RECRUITMENT_CUES.rejected.radius}
+            variant={RECRUITMENT_CUES.rejected.variant}
+          />
+          <Bar
+            dataKey="accepted"
+            radius={RECRUITMENT_CUES.accepted.radius}
+            variant={RECRUITMENT_CUES.accepted.variant}
+          />
+        </EvilBarChart>
       </VisualCardBody>
-      <VisualCardFooter>
+      <VisualCardActions>
         <VisualCardFullscreen />
-      </VisualCardFooter>
+      </VisualCardActions>
     </VisualCard>
   );
 }

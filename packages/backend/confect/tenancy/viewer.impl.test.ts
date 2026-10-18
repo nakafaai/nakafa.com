@@ -1,6 +1,8 @@
 import { describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
+import { schoolMascot } from "@repo/backend/confect/tenancy/mascot";
+import { MASCOT } from "@repo/backend/test/mascot";
 import { slugOf, tenancyFixture } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect, Order } from "effect";
 
@@ -19,6 +21,7 @@ describe("tenancy/viewer", () => {
           currency: "IDR",
           id: fixture.tenants.nf,
           kind: "foundation",
+          mascot: schoolMascot(fixture.tenants.nf),
           name: "Yayasan Nakafa",
           policies: { emailDomains: [], nina: false, studentThreads: false },
           slug: "nf",
@@ -159,5 +162,59 @@ describe("tenancy/viewer", () => {
         code: "UNAUTHENTICATED",
       });
     })
+  );
+
+  it.effect(
+    "gives the viewer the account's name and animal, and its username once it has one",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        yield* fixture.run(
+          Effect.flatMap(DatabaseWriter, (writer) =>
+            writer
+              .table("users")
+              .patch(fixture.users.owner.userId, { username: "owner-harapan" })
+          )
+        );
+        const view = yield* fixture.as("owner").query(viewer, { slug: nf });
+        expect(view.account).toEqual({
+          mascot: MASCOT,
+          name: "User owner",
+          username: "owner-harapan",
+        });
+      })
+  );
+
+  it.effect(
+    "shows the account's photo only while the account chooses the photo",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const owner = fixture.as("owner");
+        const photo = "https://example.test/owner.png";
+        yield* fixture.run(
+          Effect.flatMap(DatabaseWriter, (writer) =>
+            writer.table("users").patch(fixture.users.owner.userId, {
+              image: photo,
+              picture: "photo",
+            })
+          )
+        );
+        const shown = yield* owner.query(viewer, { slug: nf });
+        yield* fixture.run(
+          Effect.flatMap(DatabaseWriter, (writer) =>
+            writer
+              .table("users")
+              .patch(fixture.users.owner.userId, { picture: "animal" })
+          )
+        );
+        const hidden = yield* owner.query(viewer, { slug: nf });
+        expect(shown.account).toEqual({
+          image: photo,
+          mascot: MASCOT,
+          name: "User owner",
+        });
+        expect(hidden.account).toEqual({ mascot: MASCOT, name: "User owner" });
+      })
   );
 });

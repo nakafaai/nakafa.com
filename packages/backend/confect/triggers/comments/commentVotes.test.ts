@@ -78,7 +78,7 @@ describe("triggers/comments/commentVotes", () => {
       );
     });
   });
-  it("keeps denormalized vote counts in sync through comment mutations", async () => {
+  it("maps the vote mutation onto likes, and leaves the vote table and the old counters alone", async () => {
     const t = createConvexTestWithBetterAuth();
     const users = await t.mutation(async (ctx) => ({
       author: await seedAuthenticatedUser(ctx, {
@@ -130,37 +130,37 @@ describe("triggers/comments/commentVotes", () => {
         slug: "/en/articles/politics/votes",
       }),
     ]);
-    expect(slugComments.page[0].viewerVote).toBe(1);
-    expect(userComments.page[0].viewerVote).toBe(1);
-    expect(guestComments.page[0].viewerVote).toBeNull();
-    const upvoted = await t.query(async (ctx) =>
-      ctx.db.get("comments", commentId)
-    );
-    expect(upvoted).toMatchObject({
+    expect(slugComments.page[0]).toMatchObject({
+      likeCount: 1,
+      liked: true,
+      viewerVote: 1,
+    });
+    expect(userComments.page[0]).toMatchObject({
+      liked: true,
+      viewerVote: 1,
+    });
+    expect(guestComments.page[0]).toMatchObject({
+      liked: false,
+      viewerVote: null,
+    });
+    expect(
+      await t.query((ctx) => ctx.db.get("comments", commentId))
+    ).toMatchObject({
       downvoteCount: 0,
-      upvoteCount: 1,
+      likeCount: 1,
+      upvoteCount: 0,
     });
     await voter.mutation(api.comments.mutations.voteOnComment, {
       commentId,
       vote: -1,
     });
-    const downvoted = await t.query(async (ctx) =>
-      ctx.db.get("comments", commentId)
-    );
-    expect(downvoted).toMatchObject({
-      downvoteCount: 1,
-      upvoteCount: 0,
+    expect(
+      await t.query((ctx) => ctx.db.get("comments", commentId))
+    ).toMatchObject({
+      likeCount: 0,
     });
-    await voter.mutation(api.comments.mutations.voteOnComment, {
-      commentId,
-      vote: 0,
-    });
-    const removed = await t.query(async (ctx) =>
-      ctx.db.get("comments", commentId)
-    );
-    expect(removed).toMatchObject({
-      downvoteCount: 0,
-      upvoteCount: 0,
-    });
+    expect(
+      await t.query((ctx) => ctx.db.query("commentVotes").collect())
+    ).toEqual([]);
   });
 });

@@ -13,6 +13,7 @@ import chatShares from "./tables/chatShares";
 import chats from "./tables/chats";
 import classTeachers from "./tables/classTeachers";
 import classes from "./tables/classes";
+import commentLikes from "./tables/commentLikes";
 import commentVotes from "./tables/commentVotes";
 import comments from "./tables/comments";
 import contentAnalyticsPartitions from "./tables/contentAnalyticsPartitions";
@@ -122,6 +123,7 @@ export default $defineSchema({
   chats: $Table.tableDefinition(chats),
   classTeachers: $Table.tableDefinition(classTeachers),
   classes: $Table.tableDefinition(classes),
+  commentLikes: $Table.tableDefinition(commentLikes),
   commentVotes: $Table.tableDefinition(commentVotes),
   comments: $Table.tableDefinition(comments),
   contentAnalyticsPartitions: $Table.tableDefinition(contentAnalyticsPartitions),

@@ -3,6 +3,7 @@ import {
   ReasoningTrigger,
 } from "@repo/design-system/components/ai/reasoning";
 import { MarkdownContent } from "@repo/design-system/components/markdown/content";
+import { LearnerText } from "@repo/design-system/components/markdown/learner";
 import {
   Message,
   MessageContent,
@@ -43,7 +44,9 @@ export function NinaSection() {
         </div>
         <div className="grid min-w-0 gap-6">
           <Message align="end">
-            <NinaPrompt text={t("nina-chat-ask")} />
+            <NinaPrompt>
+              <LearnerText>{t("nina-chat-ask")}</LearnerText>
+            </NinaPrompt>
           </Message>
           <Message>
             <MessageContent>
