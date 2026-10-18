@@ -29,7 +29,7 @@ export default function Page() {
   return (
     <>
       <PageHeader />
-      <LayoutContent className="pb-20">
+      <LayoutContent className="w-full pb-20">
         <ContributorGallery contributors={contributors} />
       </LayoutContent>
     </>

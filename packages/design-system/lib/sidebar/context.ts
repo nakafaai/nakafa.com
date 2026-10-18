@@ -35,7 +35,8 @@ function buildSidebarValue(
 /** Responsive state and actions shared by composed sidebar components. */
 export type SidebarContextValue = ReturnType<typeof buildSidebarValue>;
 
-type SidebarControls = Parameters<typeof buildSidebarValue>[1];
+/** One SidebarProvider's actions, lock, and controlled `open` prop. */
+export type SidebarControls = Parameters<typeof buildSidebarValue>[1];
 
 /**
  * Creates one SidebarProvider's store with the state the server renders: the
@@ -50,15 +51,16 @@ export function createSidebarStore(defaultOpen: boolean) {
   }));
 }
 
+/** One SidebarProvider's store. */
+export type SidebarStore = ReturnType<typeof createSidebarStore>;
+
 /**
  * @internal One SidebarProvider's store. The value never changes after
  * mount, because React discards streamed Suspense boundaries that are still
  * pending when an ancestor context changes; opening, closing, and measuring
  * the viewport only update the store.
  */
-export const SidebarStoreContext = createContext<ReturnType<
-  typeof createSidebarStore
-> | null>(null);
+export const SidebarStoreContext = createContext<SidebarStore | null>(null);
 
 /**
  * @internal One SidebarProvider's actions, lock, and controlled `open` prop.
