@@ -259,13 +259,30 @@ function VisualCardActions(props: Omit<ComponentProps<"div">, "className">) {
 
 /**
  * What the visual shows, in words and numbers, in the last band: its readouts
- * (`VisualCardFacts`), a legend, a short note, or a table.
+ * (`VisualCardFacts`), a legend, or a short note. A table of values is its own
+ * band (`VisualCardTable`), so its rows run the card's full width.
  */
 function VisualCardFooter(props: Omit<ComponentProps<"div">, "className">) {
   return (
     <div
       className={visualBandVariants({ kind: "text" })}
       data-slot="visual-card-footer"
+      {...props}
+    />
+  );
+}
+
+/**
+ * A table of the visual's values as its own band, edge to edge like a data table: every
+ * row and its border runs the card's full width, and the first and last cell of a row keep
+ * the card's spacing from its edges. A table never sits inside the padded footer, where
+ * its rows would stop short of the card's edges. A wide table scrolls inside the band.
+ */
+function VisualCardTable(props: Omit<ComponentProps<"div">, "className">) {
+  return (
+    <div
+      className="border-t first:border-t-0 group-data-fullscreen/visual:shrink-0 [&_tr>*:first-child]:ps-(--card-spacing) [&_tr>*:last-child]:pe-(--card-spacing)"
+      data-slot="visual-card-table"
       {...props}
     />
   );
@@ -344,5 +361,6 @@ export {
   VisualCardFullscreen,
   VisualCardGroup,
   VisualCardHeader,
+  VisualCardTable,
   VisualCardToolbar,
 };

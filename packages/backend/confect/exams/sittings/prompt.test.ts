@@ -119,7 +119,7 @@ describe("exams/sittings prompt", () => {
   );
 
   it.effect(
-    "refuses a backlog that one page of steps does not hold, rather than showing older text",
+    "refuses steps that do not reach the head, rather than showing older text",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;

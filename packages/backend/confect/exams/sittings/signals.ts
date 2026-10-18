@@ -35,12 +35,10 @@ export const signals = Effect.fn("exams.sittings.signals")(function* (args: {
       })
     )
     .pipe(Effect.orDie);
-  return {
-    continueCursor: page.continueCursor,
-    isDone: page.isDone,
+  return Struct.assign(page, {
     page: Arr.map(page.page, (signal) => ({
       at: signal.at,
       kind: signal.kind,
     })),
-  };
+  });
 });
