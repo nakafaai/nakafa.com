@@ -5,6 +5,7 @@ import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Schema } from "effect";
 import { createContext, type ReactNode, use, useState } from "react";
 import { useStore } from "zustand";
+import { createExamLive, type ExamLive } from "@/components/tenant/exams/live";
 import type { ExamView } from "@/components/tenant/exams/optimistic";
 import {
   activeQuestion,
@@ -16,14 +17,17 @@ import {
 const ExamValue = Schema.Struct({ exam: ExamViewSchema, slug: TenantSlug });
 
 type SelectionStore = ReturnType<typeof createExamSelection>;
+type LiveStore = ReturnType<typeof createExamLive>;
 
 const ExamContext = createContext<typeof ExamValue.Type | null>(null);
 const SelectionContext = createContext<SelectionStore | null>(null);
+const LiveContext = createContext<LiveStore | null>(null);
 
 /**
- * Gives the editor the exam it shows, as Convex answers, and the question the teacher
- * chose. The selection store is created once for this provider, and the exam is what
- * the query returned, so the strip and the canvas read one copy of each.
+ * Gives the editor the exam it shows, as Convex answers, the question the teacher chose,
+ * and the prompts the canvas holds open. The two stores are created once for this
+ * provider, and the exam is what the query returned, so the strip and the canvas read
+ * one copy of each.
  */
 export function ExamProvider({
   children,
@@ -35,10 +39,13 @@ export function ExamProvider({
   slug: TenantSlug;
 }) {
   const [selection] = useState(createExamSelection);
+  const [live] = useState(createExamLive);
 
   return (
     <ExamContext value={{ exam, slug }}>
-      <SelectionContext value={selection}>{children}</SelectionContext>
+      <SelectionContext value={selection}>
+        <LiveContext value={live}>{children}</LiveContext>
+      </SelectionContext>
     </ExamContext>
   );
 }
@@ -60,6 +67,17 @@ export function useExamSelection<T>(selector: (state: ExamSelection) => T) {
 
   if (store === null) {
     throw new Error("useExamSelection must be used within ExamProvider");
+  }
+
+  return useStore(store, selector);
+}
+
+/** Reads one selected slice of the prompts the canvas holds open. */
+export function useExamLive<T>(selector: (state: ExamLive) => T) {
+  const store = use(LiveContext);
+
+  if (store === null) {
+    throw new Error("useExamLive must be used within ExamProvider");
   }
 
   return useStore(store, selector);

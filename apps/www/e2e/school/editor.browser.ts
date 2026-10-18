@@ -7,7 +7,8 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 const EDITOR_PATH = /\/exams\/[^/]+\/edit$/;
 
 /** The thumbnail of the first question, whose name starts with its number. */
-const FIRST_QUESTION = /^1 /;
+const FIRST_QUESTION = /^Question 1\b/;
+const SECOND_QUESTION = /^Question 2\b/;
 
 /** The four options of the question, each with its letter and its text. The second one is correct. */
 const OPTIONS = [
@@ -70,6 +71,10 @@ test("a teacher creates an exam, adds questions, writes one, and finds it all wh
   await expect(prompt).toBeEditable();
   await prompt.click();
   await page.keyboard.type("Berapa hasil 2 + 3?");
+  // The open question's thumbnail draws what its editor holds, as the teacher types.
+  await expect(
+    strip.getByRole("button", { name: FIRST_QUESTION })
+  ).toContainText("Berapa hasil 2 + 3?");
 
   for (const option of OPTIONS) {
     const field = page.getByRole("textbox", {
@@ -108,10 +113,22 @@ test("a teacher creates an exam, adds questions, writes one, and finds it all wh
   ).toBeChecked({ timeout: readinessTimeoutMilliseconds });
 
   // The two added questions have no key, so each shows its dot, and the first does not.
+  const reopenedStrip = reopened.getByRole("navigation", { name: "Questions" });
   await expect(
-    reopened
-      .getByRole("navigation", { name: "Questions" })
-      .getByText("This question has no answer key yet.")
+    reopenedStrip.getByText("This question has no answer key yet.")
   ).toHaveCount(2);
+
+  // A question the canvas does not show draws its page from what the server holds.
+  await reopenedStrip.getByRole("button", { name: SECOND_QUESTION }).click();
+  await expect(
+    reopened.getByRole("heading", { name: "Question 2" })
+  ).toBeVisible();
+  const firstThumbnail = reopenedStrip.getByRole("button", {
+    name: FIRST_QUESTION,
+  });
+  await expect(firstThumbnail).toContainText("Berapa hasil 2 + 3?", {
+    timeout: readinessTimeoutMilliseconds,
+  });
+  await expect(firstThumbnail.locator("input")).toHaveCount(OPTIONS.length);
   await context.close();
 });

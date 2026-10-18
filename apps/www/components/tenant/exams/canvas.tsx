@@ -4,12 +4,8 @@ import { useMutation } from "@confect/react";
 import { useCallbackRef } from "@mantine/hooks";
 import type { Id } from "@repo/backend/confect/_generated/id";
 import exams from "@repo/backend/confect/_generated/refs/exams";
-import { Card } from "@repo/design-system/components/ui/card";
 import { Input } from "@repo/design-system/components/ui/input";
-import {
-  Radio,
-  RadioGroup,
-} from "@repo/design-system/components/ui/radio-group";
+import { Radio } from "@repo/design-system/components/ui/radio-group";
 import { Array as Arr, Effect, Function as Fn, Option } from "effect";
 import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
@@ -32,6 +28,12 @@ import {
   useExam,
   useExamSelection,
 } from "@/components/tenant/exams/provider";
+import {
+  QuestionSheet,
+  QuestionSheetOption,
+  QuestionSheetOptions,
+  QuestionSheetPrompt,
+} from "@/components/tenant/exams/sheet";
 import { makeQuietSaver } from "@/lib/save/quiet";
 
 /** The prompt loads when the canvas shows a saved question, never with the page. */
@@ -52,7 +54,6 @@ const OPTION_SAVE_QUIET = "500 millis";
  * saved yet shows its options only, and they take no change until the server answers.
  */
 export function ExamCanvas() {
-  const t = useTranslations("Exams");
   const { slug, exam } = useExam();
   const active = useActiveQuestion();
   const pending = useExamSelection((state) => state.pending);
@@ -63,18 +64,15 @@ export function ExamCanvas() {
       const saved = !Arr.contains(pending, question.id);
       return (
         <section className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto bg-muted/40 p-4">
-          <Card className="mx-auto w-full max-w-3xl gap-4 p-8">
-            <h2 className="font-semibold text-lg">
-              {t("question", { number: index + 1 })}
-            </h2>
+          <QuestionSheet number={index + 1}>
             {saved ? (
-              <section className="my-6">
+              <QuestionSheetPrompt>
                 <ExamPrompt
                   key={question.prompt}
                   prompt={question.prompt}
                   slug={slug}
                 />
-              </section>
+              </QuestionSheetPrompt>
             ) : null}
             <QuestionOptions
               examId={exam.id}
@@ -82,7 +80,7 @@ export function ExamCanvas() {
               pending={!saved}
               question={question}
             />
-          </Card>
+          </QuestionSheet>
         </section>
       );
     },
@@ -128,9 +126,8 @@ function QuestionOptions({
   return Option.match(choiceOf(question.answers), {
     onNone: () => null,
     onSome: (choice) => (
-      <RadioGroup
+      <QuestionSheetOptions
         aria-label={t("correct")}
-        className="grid grid-cols-1 gap-2 md:grid-cols-2"
         disabled={pending}
         onValueChange={(optionId: string) =>
           saveAnswers(question.answers, markedKey(question.answers, optionId))
@@ -152,7 +149,7 @@ function QuestionOptions({
             text={labelText(option.label)}
           />
         ))}
-      </RadioGroup>
+      </QuestionSheetOptions>
     ),
   });
 }
@@ -189,13 +186,12 @@ function OptionField({
   );
 
   return (
-    <div className="flex items-center gap-2">
-      <span className="grid size-9 shrink-0 place-items-center rounded-md border border-primary border-dashed">
+    <QuestionSheetOption
+      letter={letter}
+      radio={
         <Radio aria-label={t("correct-option", { letter })} value={optionId} />
-      </span>
-      <span aria-hidden className="w-5 shrink-0 font-medium">
-        {letter}
-      </span>
+      }
+    >
       <Input
         aria-label={t("option", { letter })}
         onBlur={() => {
@@ -210,6 +206,6 @@ function OptionField({
         readOnly={pending}
         value={draft ?? text}
       />
-    </div>
+    </QuestionSheetOption>
   );
 }

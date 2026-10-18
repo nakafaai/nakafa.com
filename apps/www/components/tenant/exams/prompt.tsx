@@ -25,6 +25,7 @@ import { Effect, Fiber, Ref } from "effect";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { type StoreApi, useStore } from "zustand";
+import { useExamLive } from "@/components/tenant/exams/provider";
 import {
   createPromptSync,
   type PromptSync,
@@ -109,6 +110,7 @@ export function ExamPrompt({
   const t = useTranslations("Exams");
   const convex = useConvex();
   const [sync] = useState(createPromptSync);
+  const show = useExamLive((state) => state.show);
   const clientId = useStore(sync, (state) => state.clientId);
   const version = useStore(sync, (state) => state.version);
   const reply = useQuery(
@@ -180,7 +182,12 @@ export function ExamPrompt({
             sync.getState().open(memory.clientId, versionOf(editor.view))
           )
         ),
-        Effect.tap(() => Effect.sync(() => editor.setEditable(true))),
+        Effect.tap(() =>
+          Effect.sync(() => {
+            show(prompt, editor.view.state.doc);
+            editor.setEditable(true);
+          })
+        ),
         Effect.catchTag("EditorClosed", () => Effect.void),
         Effect.catch((error) =>
           reportClientException(error, { source: SOURCE }).pipe(
@@ -199,8 +206,12 @@ export function ExamPrompt({
     );
   };
 
-  /** Schedules a round for a change this editor made. The changes the server brought in schedule none. */
+  /**
+   * Shows every change in the strip's thumbnail, then schedules a round for a change this
+   * editor made. The changes the server brought in schedule none.
+   */
   const change = (transaction: Transaction) => {
+    show(prompt, transaction.doc);
     if (transaction.getMeta("rebased") !== undefined) {
       return;
     }
