@@ -1,16 +1,27 @@
 "use client";
 
+import {
+  formatInterval,
+  type Interval,
+  intervalSeparator,
+} from "@repo/design-system/components/contents/mathematics/interval";
+import { MATH_NUMBER_OPTIONS } from "@repo/design-system/components/contents/mathematics/number";
+import { solutionSetMath } from "@repo/design-system/components/contents/mathematics/solution";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import {
   VisualCard,
   VisualCardActions,
   VisualCardBody,
+  VisualCardFacts,
+  VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
+import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { cva } from "class-variance-authority";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
+import { useFormatter, useLocale, useTranslations } from "next-intl";
 import { createContext, type ReactNode, use } from "react";
 
 const numberLineSegmentVariants = cva("absolute top-1/2 h-8 -translate-y-1/2", {
@@ -35,7 +46,7 @@ const NUMBER_LINE_SEGMENT_EDGE = {
 } as const;
 
 /** One authored segment of a number line. */
-interface NumberLineSegment {
+export interface NumberLineSegment {
   /** The background color of the segment */
   backgroundColor?: string;
   /** The end value of the segment */
@@ -141,18 +152,23 @@ function getFiniteSegmentValues({ end, start }: NumberLineSegment) {
   return [];
 }
 
-/** Draws one number line's scale, its segments, their labels, and its full screen action. */
-export function NumberLineBody() {
-  const { max, min, segments } = useNumberLine();
+/** The interval the scale draws: the range of its segments, with a margin of fifteen percent on each side. */
+function drawnScale({ max, min, segments }: NumberLineConfig): Interval {
   const allValues = Arr.flatMap(segments, getFiniteSegmentValues);
 
   const rangeMin = min ?? (allValues.length > 0 ? Math.min(...allValues) : -10);
   const rangeMax = max ?? (allValues.length > 0 ? Math.max(...allValues) : 10);
-  const range = rangeMax - rangeMin;
+  const padding = (rangeMax - rangeMin) * 0.15;
+  return { max: rangeMax + padding, min: rangeMin - padding };
+}
 
-  const padding = range * 0.15;
-  const paddedMin = rangeMin - padding;
-  const paddedMax = rangeMax + padding;
+/** Draws one number line's scale, its segments, their labels, and its full screen action. */
+function NumberLineBody() {
+  const config = useNumberLine();
+  const { segments } = config;
+  const scale = drawnScale(config);
+  const paddedMin = scale.min;
+  const paddedMax = scale.max;
   const paddedRange = paddedMax - paddedMin;
 
   const getPosition = (value: number) => {
@@ -297,6 +313,51 @@ export function NumberLineBody() {
   );
 }
 
+/** The scale and the solution set of a number line, as the readouts of its footer. */
+function NumberLineFacts() {
+  const t = useTranslations("Common");
+  const format = useFormatter();
+  const locale = useLocale();
+  const config = useNumberLine();
+  const formatNumber = (value: number) =>
+    format.number(value, MATH_NUMBER_OPTIONS);
+  const separator = intervalSeparator(locale);
+
+  return (
+    <VisualCardFacts>
+      <VisualFact
+        label={t("scale")}
+        value={
+          <InlineMath
+            math={formatInterval(drawnScale(config), formatNumber, separator)}
+          />
+        }
+      />
+      <VisualFact
+        label={t("solution-set")}
+        value={
+          <InlineMath
+            math={solutionSetMath(config.segments, formatNumber, separator)}
+          />
+        }
+      />
+    </VisualCardFacts>
+  );
+}
+
+/** The frame of one number-line card: its header, its scale, and its readouts in the footer. */
+export function NumberLineCard({ children }: { children: ReactNode }) {
+  return (
+    <VisualCard>
+      {children}
+      <NumberLineBody />
+      <VisualCardFooter>
+        <NumberLineFacts />
+      </VisualCardFooter>
+    </VisualCard>
+  );
+}
+
 /** Draws one number line card: its header and its scale. */
 export function NumberLine({
   min,
@@ -309,10 +370,9 @@ export function NumberLine({
 
   return (
     <NumberLineProvider config={config}>
-      <VisualCard>
+      <NumberLineCard>
         <VisualCardHeader description={description} title={title} />
-        <NumberLineBody />
-      </VisualCard>
+      </NumberLineCard>
     </NumberLineProvider>
   );
 }

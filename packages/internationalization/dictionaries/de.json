@@ -429,7 +429,19 @@
     "no-country-found": "Kein Land gefunden.",
     "emoji-picker-placeholder": "Emoji auswählen...",
     "no-emoji-found": "Kein Emoji gefunden.",
-    "back": "Zurück"
+    "back": "Zurück",
+    "curves": "Kurven",
+    "scale": "Skala",
+    "solution-set": "Lösungsmenge",
+    "highest": "Höchster Wert",
+    "lowest": "Niedrigster Wert",
+    "total": "Summe",
+    "mean": "Mittelwert",
+    "points": "Punkte",
+    "input": "Eingabe",
+    "output": "Ausgabe",
+    "bacteria": "Bakterien",
+    "time": "Zeit"
   },
   "LearningPrograms": {
     "metadata-title": "Mit Nakafa lernen",

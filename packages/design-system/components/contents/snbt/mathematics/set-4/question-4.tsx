@@ -1,13 +1,9 @@
+import { LineSceneCard } from "@repo/design-system/components/contents/mathematics/line/card";
 import { LineEquationProvider } from "@repo/design-system/components/contents/mathematics/line/context";
-import { DeferredLineScene } from "@repo/design-system/components/contents/mathematics/line/deferred";
 import { resolveLineScene } from "@repo/design-system/components/contents/mathematics/line/resolve";
 import { getMidpoint } from "@repo/design-system/components/contents/snbt/geometry";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
-import { CoordinateControls } from "@repo/design-system/components/three/controls";
-import {
-  VisualCard,
-  VisualCardHeader,
-} from "@repo/design-system/components/visual/card";
+import { VisualCardHeader } from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
 import type { ReactNode } from "react";
 
@@ -200,11 +196,9 @@ export function Graph({ title, description }: GraphProps) {
 
   return (
     <LineEquationProvider config={config}>
-      <VisualCard>
+      <LineSceneCard>
         <VisualCardHeader description={description} title={title} />
-        <DeferredLineScene />
-        <CoordinateControls />
-      </VisualCard>
+      </LineSceneCard>
     </LineEquationProvider>
   );
 }

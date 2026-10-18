@@ -1,13 +1,10 @@
 import {
   type NumberLine,
-  NumberLineBody,
+  NumberLineCard,
   NumberLineProvider,
 } from "@repo/design-system/components/contents/mathematics/number-line";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
-import {
-  VisualCard,
-  VisualCardHeader,
-} from "@repo/design-system/components/visual/card";
+import { VisualCardHeader } from "@repo/design-system/components/visual/card";
 import type { ComponentProps } from "react";
 
 /** Renders the number-line graph for SNBT set 10 question 8. */
@@ -48,10 +45,9 @@ export function Graph({
 
   return (
     <NumberLineProvider config={config}>
-      <VisualCard>
+      <NumberLineCard>
         <VisualCardHeader description={description} title={title} />
-        <NumberLineBody />
-      </VisualCard>
+      </NumberLineCard>
     </NumberLineProvider>
   );
 }

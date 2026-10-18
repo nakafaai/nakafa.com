@@ -1,5 +1,7 @@
 "use client";
 
+import { ChartDataProvider } from "@repo/design-system/components/contents/mathematics/chart/context";
+import { ChartSeriesFacts } from "@repo/design-system/components/contents/mathematics/chart/facts";
 import { Bar } from "@repo/design-system/components/evilcharts/charts/bar/series";
 import {
   EvilBarChart,
@@ -14,6 +16,7 @@ import {
   VisualCard,
   VisualCardActions,
   VisualCardBody,
+  VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
@@ -69,51 +72,83 @@ export function SalesChart({
     [seriesLabels.pants, seriesLabels.shirts, seriesLabels.suits]
   );
 
-  return (
-    <VisualCard>
-      <VisualCardHeader description={description} title={title} />
-      <VisualCardBody className="p-(--card-spacing)">
-        <EvilBarChart
-          className="aspect-video"
-          config={chartConfig}
-          data={chartData}
-        >
-          <Grid vertical={false} />
-          <XAxis
-            axisLine={false}
-            dataKey="year"
-            tickLine={false}
-            tickMargin={10}
-          />
-          <YAxis
-            axisLine={false}
-            label={{
-              value: yAxisLabel,
-              angle: -90,
-              position: "insideLeft",
-            }}
-            tickLine={false}
-            tickMargin={10}
-          />
-          <Tooltip />
-          <Legend />
-          {Arr.map(Rec.keys(chartConfig), (key, index) => {
-            const cue = getBarSeriesCue(index);
+  const chartSummary = useMemo(
+    () => ({
+      categories: Arr.map(chartData, (row) => row.year),
+      series: [
+        {
+          key: "shirts",
+          label: chartConfig.shirts.label,
+          color: chartConfig.shirts.colors.light[0],
+          values: Arr.map(chartData, (row) => row.shirts),
+        },
+        {
+          key: "pants",
+          label: chartConfig.pants.label,
+          color: chartConfig.pants.colors.light[0],
+          values: Arr.map(chartData, (row) => row.pants),
+        },
+        {
+          key: "suits",
+          label: chartConfig.suits.label,
+          color: chartConfig.suits.colors.light[0],
+          values: Arr.map(chartData, (row) => row.suits),
+        },
+      ],
+    }),
+    [chartConfig]
+  );
 
-            return (
-              <Bar
-                dataKey={key}
-                key={key}
-                radius={cue.radius}
-                variant={cue.variant}
-              />
-            );
-          })}
-        </EvilBarChart>
-      </VisualCardBody>
-      <VisualCardActions>
-        <VisualCardFullscreen />
-      </VisualCardActions>
-    </VisualCard>
+  return (
+    <ChartDataProvider data={chartSummary}>
+      <VisualCard>
+        <VisualCardHeader description={description} title={title} />
+        <VisualCardBody className="p-(--card-spacing)">
+          <EvilBarChart
+            className="aspect-video"
+            config={chartConfig}
+            data={chartData}
+          >
+            <Grid vertical={false} />
+            <XAxis
+              axisLine={false}
+              dataKey="year"
+              tickLine={false}
+              tickMargin={10}
+            />
+            <YAxis
+              axisLine={false}
+              label={{
+                value: yAxisLabel,
+                angle: -90,
+                position: "insideLeft",
+              }}
+              tickLine={false}
+              tickMargin={10}
+            />
+            <Tooltip />
+            <Legend />
+            {Arr.map(Rec.keys(chartConfig), (key, index) => {
+              const cue = getBarSeriesCue(index);
+
+              return (
+                <Bar
+                  dataKey={key}
+                  key={key}
+                  radius={cue.radius}
+                  variant={cue.variant}
+                />
+              );
+            })}
+          </EvilBarChart>
+        </VisualCardBody>
+        <VisualCardActions>
+          <VisualCardFullscreen />
+        </VisualCardActions>
+        <VisualCardFooter>
+          <ChartSeriesFacts />
+        </VisualCardFooter>
+      </VisualCard>
+    </ChartDataProvider>
   );
 }

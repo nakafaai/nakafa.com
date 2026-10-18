@@ -1,5 +1,7 @@
 "use client";
 
+import { ChartDataProvider } from "@repo/design-system/components/contents/mathematics/chart/context";
+import { ChartSeriesFacts } from "@repo/design-system/components/contents/mathematics/chart/facts";
 import { Bar } from "@repo/design-system/components/evilcharts/charts/bar/series";
 import {
   EvilBarChart,
@@ -14,6 +16,7 @@ import {
   VisualCard,
   VisualCardActions,
   VisualCardBody,
+  VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
@@ -76,36 +79,66 @@ export function GraduationChart({
     [failedLabel, passedLabel]
   );
 
+  const chartSummary = useMemo(
+    () => ({
+      categories: Arr.map(data, (row) => row.formattedClass),
+      series: [
+        {
+          key: "passed",
+          label: chartConfig.passed.label,
+          color: chartConfig.passed.colors.light[0],
+          values: Arr.map(data, (row) => row.passed),
+        },
+        {
+          key: "failed",
+          label: chartConfig.failed.label,
+          color: chartConfig.failed.colors.light[0],
+          values: Arr.map(data, (row) => row.failed),
+        },
+      ],
+    }),
+    [chartConfig, data]
+  );
+
   return (
-    <VisualCard>
-      <VisualCardHeader description={description} title={title} />
-      <VisualCardBody className="p-(--card-spacing)">
-        <EvilBarChart className="aspect-video" config={chartConfig} data={data}>
-          <Grid vertical={false} />
-          <XAxis
-            axisLine={false}
-            dataKey="formattedClass"
-            tickLine={false}
-            tickMargin={10}
-          />
-          <YAxis axisLine={false} tickLine={false} tickMargin={10} />
-          <Tooltip />
-          <Legend />
-          <Bar
-            dataKey="passed"
-            radius={GRADUATION_CUES.passed.radius}
-            variant={GRADUATION_CUES.passed.variant}
-          />
-          <Bar
-            dataKey="failed"
-            radius={GRADUATION_CUES.failed.radius}
-            variant={GRADUATION_CUES.failed.variant}
-          />
-        </EvilBarChart>
-      </VisualCardBody>
-      <VisualCardActions>
-        <VisualCardFullscreen />
-      </VisualCardActions>
-    </VisualCard>
+    <ChartDataProvider data={chartSummary}>
+      <VisualCard>
+        <VisualCardHeader description={description} title={title} />
+        <VisualCardBody className="p-(--card-spacing)">
+          <EvilBarChart
+            className="aspect-video"
+            config={chartConfig}
+            data={data}
+          >
+            <Grid vertical={false} />
+            <XAxis
+              axisLine={false}
+              dataKey="formattedClass"
+              tickLine={false}
+              tickMargin={10}
+            />
+            <YAxis axisLine={false} tickLine={false} tickMargin={10} />
+            <Tooltip />
+            <Legend />
+            <Bar
+              dataKey="passed"
+              radius={GRADUATION_CUES.passed.radius}
+              variant={GRADUATION_CUES.passed.variant}
+            />
+            <Bar
+              dataKey="failed"
+              radius={GRADUATION_CUES.failed.radius}
+              variant={GRADUATION_CUES.failed.variant}
+            />
+          </EvilBarChart>
+        </VisualCardBody>
+        <VisualCardActions>
+          <VisualCardFullscreen />
+        </VisualCardActions>
+        <VisualCardFooter>
+          <ChartSeriesFacts />
+        </VisualCardFooter>
+      </VisualCard>
+    </ChartDataProvider>
   );
 }

@@ -6,11 +6,15 @@ import {
   createCircleSegmentBoundaryLines,
 } from "@repo/design-system/components/contents/mathematics/circle";
 import { createCuboidLines } from "@repo/design-system/components/contents/mathematics/cuboid";
+import {
+  IntervalSchema,
+  intervalOf,
+} from "@repo/design-system/components/contents/mathematics/interval";
 import type {
   AuthoredLine,
   ResolvedLine,
 } from "@repo/design-system/components/contents/mathematics/line/spec";
-import { Array as Arr } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 
 /** Expands one declarative circle line into the concrete WebGL contract. */
 function resolveLine(line: AuthoredLine): ResolvedLine[] {
@@ -97,3 +101,30 @@ export function resolveLineScene({
 
 /** The scene configuration that one line-equation card shares with its parts. */
 export type LineSceneConfig = ReturnType<typeof resolveLineScene>;
+
+/** What a line scene draws: its number of lines, and the interval its points span on each axis. */
+const LineSummarySchema = Schema.Struct({
+  count: Schema.Int,
+  x: IntervalSchema,
+  y: IntervalSchema,
+  z: IntervalSchema,
+});
+
+/** What a line scene draws. */
+type LineSummary = typeof LineSummarySchema.Type;
+
+/** Summarizes the points of resolved lines, or returns none when the lines have no points. */
+export function summarizeLines(
+  lines: readonly ResolvedLine[]
+): Option.Option<LineSummary> {
+  const points = Arr.flatMap(lines, (line) => line.points);
+  if (!Arr.isReadonlyArrayNonEmpty(points)) {
+    return Option.none();
+  }
+  return Option.some({
+    count: lines.length,
+    x: intervalOf(Arr.map(points, (point) => point.x)),
+    y: intervalOf(Arr.map(points, (point) => point.y)),
+    z: intervalOf(Arr.map(points, (point) => point.z)),
+  });
+}

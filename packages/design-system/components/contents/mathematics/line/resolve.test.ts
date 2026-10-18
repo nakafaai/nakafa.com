@@ -4,8 +4,9 @@ import { describe, expect, it } from "@effect/vitest";
 import {
   resolveAuthoredLines,
   resolveLineScene,
+  summarizeLines,
 } from "@repo/design-system/components/contents/mathematics/line/resolve";
-import { Array as Arr } from "effect";
+import { Array as Arr, Option } from "effect";
 
 const rawLine = {
   color: "blue",
@@ -120,5 +121,33 @@ describe("line scene configuration", () => {
       cameraTarget: [4, 5, 6],
       showZAxis: false,
     });
+  });
+});
+
+describe("line scene summary", () => {
+  it("counts the lines and spans every point on each axis", () => {
+    const summary = summarizeLines([
+      {
+        points: [
+          { x: 0, y: 1, z: 0 },
+          { x: 2, y: -1, z: 3 },
+        ],
+      },
+      { points: [{ x: -1, y: 4, z: 3 }] },
+    ]);
+
+    expect(summary).toEqual(
+      Option.some({
+        count: 2,
+        x: { max: 2, min: -1 },
+        y: { max: 4, min: -1 },
+        z: { max: 3, min: 0 },
+      })
+    );
+  });
+
+  it("has no summary when the lines have no points", () => {
+    expect(summarizeLines([])).toEqual(Option.none());
+    expect(summarizeLines([{ points: [] }])).toEqual(Option.none());
   });
 });

@@ -12,12 +12,16 @@ import {
   BacterialGrowthFrameInputSchema,
   getBacterialGrowthFrame,
 } from "@repo/design-system/components/contents/mathematics/bacterial-growth";
+import { MATH_NUMBER_OPTIONS } from "@repo/design-system/components/contents/mathematics/number";
 import {
   VisualCard,
   VisualCardBody,
+  VisualCardFacts,
+  VisualCardFooter,
   VisualCardHeader,
   VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
+import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { Array as Arr, Effect, Fiber, Schedule, Schema } from "effect";
 import {
   AnimatePresence,
@@ -28,6 +32,7 @@ import {
 } from "motion/react";
 // biome-ignore lint/performance/noNamespaceImport: Motion documents this namespace for the smaller LazyMotion entrypoint.
 import * as m from "motion/react-m";
+import { useFormatter, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 
 const SPEED_INTERVAL = 1000;
@@ -96,6 +101,8 @@ export function BacterialGrowth({
     bacterial: "Bacterial",
   },
 }: BacterialGrowthProps) {
+  const t = useTranslations("Common");
+  const format = useFormatter();
   const [generation, setGeneration] = useState(0);
   const [speed, setSpeed] = useState(1);
   const [isPlaying, setIsPlaying] = useState(true);
@@ -168,14 +175,7 @@ export function BacterialGrowth({
   return (
     <BacterialTimeProvider time={time}>
       <VisualCard ref={ref}>
-        <VisualCardHeader
-          description={
-            // One text node: a count that grows a digit would otherwise move
-            // the label beside it, a layout shift no learner caused.
-            <span aria-live="polite">{`${frame.bacteriaCount} ${labels.bacterial}`}</span>
-          }
-          title={labels.title}
-        />
+        <VisualCardHeader title={labels.title} />
 
         <VisualCardToolbar>
           <BacterialSpeeds onSpeedChange={setSpeed} speed={speed} />
@@ -243,6 +243,25 @@ export function BacterialGrowth({
           onReset={resetAnimation}
           onTogglePlaying={togglePlayPause}
         />
+
+        <VisualCardFooter>
+          <VisualCardFacts>
+            <VisualFact
+              label={t("bacteria")}
+              value={
+                // One text node: a count that grows a digit would otherwise move
+                // the label beside it, a layout shift no learner caused.
+                <span aria-live="polite">
+                  {format.number(frame.bacteriaCount, MATH_NUMBER_OPTIONS)}
+                </span>
+              }
+            />
+            <VisualFact
+              label={t("time")}
+              value={`${format.number(activeGeneration * timeInterval, MATH_NUMBER_OPTIONS)} ${timeUnit}`}
+            />
+          </VisualCardFacts>
+        </VisualCardFooter>
       </VisualCard>
     </BacterialTimeProvider>
   );
