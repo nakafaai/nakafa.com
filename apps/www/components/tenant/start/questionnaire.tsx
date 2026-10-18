@@ -26,7 +26,7 @@ import { toast } from "@repo/design-system/lib/toast/notify";
 import { cn } from "cn";
 import { Array as Arr, Effect, Match, Option, Result, Schema } from "effect";
 import { useTranslations } from "next-intl";
-import { useOptimistic, useState, useTransition } from "react";
+import { useOptimistic, useRef, useState, useTransition } from "react";
 import {
   StartCountryQuestion,
   StartLevelsQuestion,
@@ -79,6 +79,10 @@ export function SchoolStart({ legal }: { legal: Legal }) {
 /** The school that the founder opened, as the screen shows it while it opens. */
 type Opening = Record<"name" | "slug", string>;
 
+/** The control that takes focus when a refused opening returns to the form. */
+const NAME_INPUT = '[data-slot="questionnaire-item"]:not([hidden]) input';
+const FINISH_BUTTON = 'button[type="submit"]';
+
 /**
  * The form of the questionnaire. Finishing shows the school at once and opens
  * its own address once the server answers; a refused address returns to the
@@ -99,6 +103,20 @@ function SchoolStartForm({
   const [opened, setOpened] = useState<Option.Option<Opening>>(Option.none());
   const [shown, showOpening] = useOptimistic(opened);
   const [isOpening, startOpening] = useTransition();
+  const refocus = useRef<Option.Option<string>>(Option.none());
+
+  /**
+   * The form mounts again when a refused opening returns to it, so the focus
+   * that was on Finish would fall to the page. This puts it back once: on the
+   * name when the address was refused, on Finish otherwise.
+   */
+  function focusReturned(form: HTMLFormElement | null) {
+    if (form === null || Option.isNone(refocus.current)) {
+      return;
+    }
+    form.querySelector<HTMLElement>(refocus.current.value)?.focus();
+    refocus.current = Option.none();
+  }
 
   /** Saves the typed name and address when they make a valid answer. */
   function saveName() {
@@ -145,7 +163,8 @@ function SchoolStartForm({
         )
       );
       Result.match(outcome, {
-        onFailure: (error) =>
+        onFailure: (error) => {
+          refocus.current = Option.some(FINISH_BUTTON);
           Match.value(error).pipe(
             Match.tag("FoundingRefused", (refused) =>
               Match.value(refused.code).pipe(
@@ -161,7 +180,10 @@ function SchoolStartForm({
                     title: "school-rate.title",
                   })
                 ),
-                Match.orElse(() => startOpening(() => setItem("name")))
+                Match.orElse(() => {
+                  refocus.current = Option.some(NAME_INPUT);
+                  startOpening(() => setItem("name"));
+                })
               )
             ),
             Match.orElse((failure) => {
@@ -173,7 +195,8 @@ function SchoolStartForm({
                 title: "school-open-error.title",
               });
             })
-          ),
+          );
+        },
         onSuccess: ({ address }) => {
           startOpening(() => setOpened(Option.some(school)));
           window.location.assign(address);
@@ -218,6 +241,7 @@ function SchoolStartForm({
         ]}
         onItemChange={handleItemChange}
         onSubmit={handleSubmit}
+        ref={focusReturned}
         shortcuts="letters"
       >
         <QuestionnaireProgress

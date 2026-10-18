@@ -56,16 +56,23 @@ const openings = new RateLimiter(components.agentRateLimiter, {
   },
 });
 
+/** Every run of white space or control characters, which a Person's one-line name cannot hold. */
+const BREAKS = /[\s\p{Cc}]+/gu;
+
+/** A name cut to one line of at most the 120 characters a Person name holds. */
+const oneLine = (text: string) =>
+  text.replace(BREAKS, " ").trim().slice(0, 120).trim();
+
 /**
- * The name the founder's Person takes: the first line of the account's name,
- * trimmed and cut to the 120 characters a Person name holds. An account whose
- * name holds nothing is named by the part of its email before the `@`.
+ * The name the founder's Person takes: the account's name on one line, with every
+ * run of white space or control characters one space, cut to 120 characters. An
+ * account whose name holds nothing is named by the part of its email before the
+ * `@`, made one line the same way.
  */
 const founderName = (user: UsersDoc) => {
-  const line = Arr.headNonEmpty(Str.split(user.name, "\n"));
-  const trimmed = line.trim().slice(0, 120).trim();
+  const name = oneLine(user.name);
   return Schema.decodeSync(PersonName)(
-    trimmed === "" ? Arr.headNonEmpty(Str.split(user.email, "@")) : trimmed
+    name === "" ? oneLine(Arr.headNonEmpty(Str.split(user.email, "@"))) : name
   );
 };
 
@@ -150,7 +157,8 @@ export const foundSchool = Effect.fn("tenancy.found")(function* (
   yield* checkOpening(user, args.slug);
   // The address is read before any write: a site without a host is a
   // deployment defect, and no school opens that its founder cannot reach.
-  const address = yield* schoolAddress(yield* readSiteUrl(), args.slug).pipe(
+  const address = yield* readSiteUrl().pipe(
+    Effect.flatMap((siteUrl) => schoolAddress(siteUrl, args.slug)),
     Effect.orDie
   );
   const reader = yield* DatabaseReader;

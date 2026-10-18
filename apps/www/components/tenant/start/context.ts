@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, use } from "react";
-import type { StoreApi } from "zustand";
+import { type StoreApi, useStore } from "zustand";
 import type { StartAnswer, StartDraft } from "@/components/tenant/start/state";
 import type { TypedName } from "@/components/tenant/start/typed";
 
@@ -25,4 +25,11 @@ export function useStart() {
     throw new Error("useStart must be used within SchoolStart");
   }
   return start;
+}
+
+/** Reads one part of the name and address the founder types. It throws outside the form. */
+export function useTypedName<Selected>(
+  selector: (state: TypedName) => Selected
+) {
+  return useStore(useStart().typed, selector);
 }

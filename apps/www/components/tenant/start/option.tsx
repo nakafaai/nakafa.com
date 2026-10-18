@@ -35,10 +35,7 @@ export function StartOption({
       <span className="flex min-w-0 flex-col gap-1">
         <span className="truncate font-medium">{title}</span>
         {description === undefined ? null : (
-          <QuestionnaireChoiceDescription
-            className="truncate"
-            title={description}
-          >
+          <QuestionnaireChoiceDescription className="text-pretty">
             {description}
           </QuestionnaireChoiceDescription>
         )}

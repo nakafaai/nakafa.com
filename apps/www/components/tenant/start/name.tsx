@@ -21,8 +21,7 @@ import { MAIN_DOMAIN } from "@repo/next-config/domains";
 import { Option, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { useId } from "react";
-import { useStore } from "zustand";
-import { useStart } from "@/components/tenant/start/context";
+import { useTypedName } from "@/components/tenant/start/context";
 import { START_NAME_LIMIT } from "@/components/tenant/start/state";
 
 /** How long the address waits after the last keystroke before the server checks it. */
@@ -39,11 +38,10 @@ const isSchoolName = Schema.is(TenantName);
  */
 export function StartNameQuestion() {
   const t = useTranslations("SchoolStart");
-  const { typed } = useStart();
-  const name = useStore(typed, (state) => state.name);
-  const slug = useStore(typed, (state) => state.slug);
-  const setName = useStore(typed, (state) => state.setName);
-  const setSlug = useStore(typed, (state) => state.setSlug);
+  const name = useTypedName((state) => state.name);
+  const slug = useTypedName((state) => state.slug);
+  const setName = useTypedName((state) => state.setName);
+  const setSlug = useTypedName((state) => state.setSlug);
   const [asked] = useDebouncedValue(slug, CHECK_DELAY_MILLISECONDS);
   const check = useQuery(
     tenancy.start.address,
@@ -58,17 +56,18 @@ export function StartNameQuestion() {
     asked === slug && QueryResult.isSuccess(check)
       ? Option.some(check.value)
       : Option.none();
-  const nameProblem = name.trim() !== "" && !isSchoolName(name.trim());
+  // Once either field holds something, the name is required, so typing an address
+  // alone never answers the question.
+  const started = name !== "" || slug !== "";
+  const nameProblem = started && !isSchoolName(name.trim());
   const addressProblem =
-    (name.trim() !== "" && slug === "") ||
+    (started && slug === "") ||
     Option.exists(state, (answer) => answer !== "free");
   const message = nameProblem
     ? t("name-error")
     : Option.match(state, {
         onNone: () =>
-          slug === "" && name.trim() !== ""
-            ? t("address-invalid")
-            : t("required-error"),
+          started && slug === "" ? t("address-invalid") : t("required-error"),
         onSome: (answer) =>
           answer === "free" ? t("required-error") : t(`address-${answer}`),
       });
@@ -84,6 +83,7 @@ export function StartNameQuestion() {
         <Field>
           <FieldLabel htmlFor={nameId}>{t("name-label")}</FieldLabel>
           <QuestionnaireInput
+            aria-invalid={nameProblem}
             autoComplete="organization"
             id={nameId}
             maxLength={START_NAME_LIMIT}
@@ -96,6 +96,7 @@ export function StartNameQuestion() {
           <FieldLabel htmlFor={slugId}>{t("address-label")}</FieldLabel>
           <div className="relative">
             <QuestionnaireInput
+              aria-invalid={addressProblem}
               autoCapitalize="none"
               autoComplete="off"
               className="pe-32"

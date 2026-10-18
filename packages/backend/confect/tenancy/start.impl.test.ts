@@ -203,7 +203,7 @@ describe("tenancy/start", () => {
           Effect.gen(function* () {
             yield* (yield* DatabaseWriter)
               .table("users")
-              .patch(founder.userId, { name: " \nSecond line" })
+              .patch(founder.userId, { name: " \t\r\n " })
               .pipe(Effect.orDie);
           })
         );
@@ -238,6 +238,32 @@ describe("tenancy/start", () => {
         });
         expect(Arr.map(view.grants, (grant) => grant.role.key)).toEqual([
           "owner",
+        ]);
+      })
+  );
+
+  it.effect(
+    "names the founder's Person on one line, whatever breaks the account's name holds",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const founder = yield* fixture.account(
+          "lines",
+          "baris@harapan.example.test",
+          true
+        );
+        yield* fixture.run(
+          Effect.gen(function* () {
+            yield* (yield* DatabaseWriter)
+              .table("users")
+              .patch(founder.userId, { name: "Bu\tSari\r\n Wulandari\u0007" })
+              .pipe(Effect.orDie);
+          })
+        );
+        yield* founder.client.mutation(open, harapan("baris"));
+        const rows = yield* fixture.run(foundedRows("baris"));
+        expect(Arr.map(rows.people, (person) => person.name)).toEqual([
+          "Bu Sari Wulandari",
         ]);
       })
   );
@@ -293,10 +319,13 @@ describe("tenancy/start", () => {
         yield* fixture.run(
           Effect.gen(function* () {
             const rows = yield* foundedRows("satu");
-            yield* (yield* DatabaseWriter)
-              .table("tenantPeople")
-              .patch(Arr.headNonEmpty(rows.people)._id, { status: "removed" })
-              .pipe(Effect.orDie);
+            const writer = yield* DatabaseWriter;
+            yield* Effect.forEach(rows.people, (person) =>
+              writer
+                .table("tenantPeople")
+                .patch(person._id, { status: "removed" })
+                .pipe(Effect.orDie)
+            );
           })
         );
         const rated = yield* founder.client
