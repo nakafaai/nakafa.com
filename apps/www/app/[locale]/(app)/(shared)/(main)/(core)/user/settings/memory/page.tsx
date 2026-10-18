@@ -7,9 +7,9 @@ import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import { MEMORY_PAGE } from "@/components/user/settings/memory/list";
 import { UserSettingsMemory } from "@/components/user/settings/memory/view";
+import { admitAccountRoute } from "@/lib/account/server";
 import { httpLayer } from "@/lib/convex/http";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
-import { admitUserSettingsRoute } from "@/lib/settings/server";
 
 export async function generateMetadata({
   params,
@@ -47,7 +47,7 @@ async function AuthenticatedMemory({
 }: {
   params: PageProps<"/[locale]/user/settings/memory">["params"];
 }) {
-  const { token } = await admitUserSettingsRoute((await params).locale);
+  const { token } = await admitAccountRoute((await params).locale);
   const { first, now, state } = await Effect.runPromise(
     HttpClient.HttpClient.pipe(
       Effect.flatMap((client) =>

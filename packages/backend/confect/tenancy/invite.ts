@@ -15,13 +15,15 @@ import { noteInvite } from "@repo/backend/confect/notifications/inbox";
 import { systemActor } from "@repo/backend/confect/tenancy/actor";
 import { personAuthority } from "@repo/backend/confect/tenancy/authority";
 import { claimAfterInvite } from "@repo/backend/confect/tenancy/claims";
+import { ProvisionRejected } from "@repo/backend/confect/tenancy/errors";
+import type { InviteRequest } from "@repo/backend/confect/tenancy/provision.spec";
 import {
   type Email,
   INVITE_TERM,
   type InviteState,
   type PersonReason,
 } from "@repo/backend/confect/tenancy/schema";
-import { Clock, DateTime, Duration, Effect, Struct } from "effect";
+import { Clock, DateTime, Duration, Effect, Option, Struct } from "effect";
 
 /** Writes a new state over one stored invite; every other field of the invite stays as it is. */
 export const replaceInviteState = Effect.fn("tenancy.invite.state")(function* (
@@ -139,4 +141,46 @@ export const writeInvite = Effect.fn("tenancy.invite.write")(function* (
   yield* startInviteEmail(inviteId, locale, requestedAt);
   yield* claimAfterInvite(email);
   return invite;
+});
+
+/**
+ * Invites one new Person into a school that already exists, as the system: the
+ * Person is an active member that no account has claimed, and the pending invite
+ * names the address, so an account that holds the address claims it. The school is
+ * found by its address, and an address that no school uses is refused.
+ */
+export const inviteToSchool = Effect.fn("tenancy.invite.toSchool")(function* (
+  actor: typeof TenantActor.Type,
+  args: typeof InviteRequest.Type
+) {
+  const reader = yield* DatabaseReader;
+  const writer = yield* DatabaseWriter;
+  const school = yield* reader
+    .table("tenants")
+    .index("by_slug", (query) => query.eq("slug", args.slug))
+    .first()
+    .pipe(Effect.orDie);
+  if (Option.isNone(school)) {
+    return yield* new ProvisionRejected({
+      code: "SCHOOL_NOT_FOUND",
+      message: "No school uses this address.",
+    });
+  }
+  const personId = yield* writer
+    .table("tenantPeople")
+    .insert({
+      account: { state: "unclaimed" },
+      kind: "member",
+      name: args.name,
+      status: "active",
+      tenantId: school.value._id,
+    })
+    .pipe(Effect.orDie);
+  const person = yield* reader
+    .table("tenantPeople")
+    .get(personId)
+    .pipe(Effect.orDie);
+  yield* personAuthority.record(actor, person, { type: "person.created" });
+  const invite = yield* writeInvite(actor, person, args.email, args.locale);
+  return { invite: invite._id, person: personId };
 });

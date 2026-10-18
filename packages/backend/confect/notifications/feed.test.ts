@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
+import { INBOX_PAGE_SIZE } from "@repo/backend/client/notifications/list";
 import {
   DatabaseReader,
   DatabaseWriter,
@@ -13,6 +14,7 @@ import {
   type HeldSchool,
   heldSchools,
 } from "@repo/backend/confect/notifications/held";
+import { LIST_PAGE_LIMIT } from "@repo/backend/confect/notifications/inbox.impl";
 import {
   addPerson,
   claim,
@@ -91,6 +93,12 @@ const pageOf = (
     const position = yield* decodeFeedCursor(cursor);
     return yield* fixture.run(feedPage(schools, position, PAGE));
   });
+
+describe("notifications inbox page size", () => {
+  it("asks for no page that one list request would cut short", () => {
+    expect(INBOX_PAGE_SIZE).toBeLessThanOrEqual(LIST_PAGE_LIMIT);
+  });
+});
 
 describe("notifications/feed cursor", () => {
   it.effect(

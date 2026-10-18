@@ -5,14 +5,14 @@ import { isActiveLocale } from "@/lib/i18n/active";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
 /**
- * Resolves the active locale for one private settings route and ends the
+ * Resolves the active locale for one private account route and ends the
  * request when the visitor is not signed in.
  *
- * Every settings page streams its authenticated cards behind one `<Suspense>`
+ * Every account page streams its authenticated content behind one `<Suspense>`
  * boundary, so admission belongs inside that boundary instead of in a layout
  * that also serves public routes.
  */
-export async function admitUserSettingsRoute(rawLocale: string) {
+export async function admitAccountRoute(rawLocale: string) {
   const locale = getLocaleOrThrow(rawLocale);
 
   if (!isActiveLocale(locale)) {
