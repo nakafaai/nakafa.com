@@ -41,7 +41,10 @@ import editorClients from "./tables/editorClients";
 import editorDocuments from "./tables/editorDocuments";
 import editorSnapshots from "./tables/editorSnapshots";
 import editorSteps from "./tables/editorSteps";
+import examAttempts from "./tables/examAttempts";
 import examQuestions from "./tables/examQuestions";
+import examSignals from "./tables/examSignals";
+import examSittings from "./tables/examSittings";
 import exams from "./tables/exams";
 import integrationClients from "./tables/integrationClients";
 import irtCalibrationRuns from "./tables/irtCalibrationRuns";
@@ -147,7 +150,10 @@ export default $defineSchema({
   editorDocuments: $Table.tableDefinition(editorDocuments),
   editorSnapshots: $Table.tableDefinition(editorSnapshots),
   editorSteps: $Table.tableDefinition(editorSteps),
+  examAttempts: $Table.tableDefinition(examAttempts),
   examQuestions: $Table.tableDefinition(examQuestions),
+  examSignals: $Table.tableDefinition(examSignals),
+  examSittings: $Table.tableDefinition(examSittings),
   exams: $Table.tableDefinition(exams),
   integrationClients: $Table.tableDefinition(integrationClients),
   irtCalibrationRuns: $Table.tableDefinition(irtCalibrationRuns),
