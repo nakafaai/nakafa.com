@@ -1,0 +1,29 @@
+import { FunctionSpec, GroupSpec } from "@confect/core";
+import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
+import { Id } from "@repo/backend/confect/_generated/id";
+import { TenantNotFound } from "@repo/backend/confect/tenancy/errors";
+import { Email, PersonName } from "@repo/backend/confect/tenancy/schema";
+import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
+import { Schema } from "effect";
+
+/**
+ * Seeds a Teacher of an open school for an acceptance run. It is internal, so no
+ * browser can call it, and the acceptance command runs it to sign a Teacher in.
+ */
+export default GroupSpec.make().addFunction(
+  FunctionSpec.internalMutation({
+    name: "teacher",
+    args: () => ({
+      email: Email,
+      locale: ActiveAppLocaleCodeSchema,
+      name: PersonName,
+      slug: TenantSlug,
+    }),
+    returns: () =>
+      Schema.Struct({
+        invite: Id("tenantInvites"),
+        person: Id("tenantPeople"),
+      }),
+    error: () => TenantNotFound,
+  })
+);

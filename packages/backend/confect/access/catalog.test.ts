@@ -160,6 +160,7 @@ describe("access/catalog", () => {
           "period.created",
           "period.opened",
           "period.archived",
+          "period.rename",
           "cohort.created",
           "cohort.renamed",
           "cohort.archived",
