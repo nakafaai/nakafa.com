@@ -1,6 +1,7 @@
 "use client";
 
 import { PencilEdit02Icon } from "@hugeicons/core-free-icons";
+import { DeferredLearnerText } from "@repo/design-system/components/markdown/learner.client";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
@@ -41,9 +42,9 @@ export function UserHeader({
         />
       </header>
       {profile.bio ? (
-        <p className="wrap-anywhere whitespace-pre-line text-pretty text-base">
+        <DeferredLearnerText className="text-base">
           {profile.bio}
-        </p>
+        </DeferredLearnerText>
       ) : null}
       <div className="flex items-center gap-2">
         {isOwner && (

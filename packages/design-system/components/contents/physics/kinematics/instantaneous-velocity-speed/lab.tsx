@@ -31,12 +31,13 @@ import {
 } from "@repo/design-system/components/ui/toggle-group";
 import {
   VisualCard,
+  VisualCardActions,
   VisualCardBody,
-  VisualCardControls,
+  VisualCardFacts,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
-  VisualCardScene,
+  VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { getColor } from "@repo/design-system/lib/color";
@@ -101,7 +102,7 @@ export function InstantaneousVelocitySpeedLab({
     <VisualCard>
       <VisualCardHeader description={description} title={title} />
 
-      <VisualCardBody className="flex flex-col gap-4">
+      <VisualCardToolbar>
         <ToggleGroup
           aria-label={labels.chooseMoment}
           gridColumns="2"
@@ -118,57 +119,58 @@ export function InstantaneousVelocitySpeedLab({
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
+      </VisualCardToolbar>
 
-        <VisualCardScene
-          aria-label={labels.viewLabel}
-          className={threeSceneFrameVariants()}
-          render={<section />}
-        >
-          <ThreeCanvas frameloop="always">
-            <Suspense>
-              <ambientLight intensity={0.72} />
-              <hemisphereLight
-                color={getColor("SLATE", 50)}
-                groundColor={getColor("SLATE")}
-                intensity={0.64}
-              />
-              <directionalLight
-                castShadow
-                intensity={1.35}
-                position={[3.4, 5.2, 4.8]}
-                shadow-bias={-0.0006}
-                shadow-mapSize-height={1024}
-                shadow-mapSize-width={1024}
-                shadow-normalBias={0.02}
-              />
-              <CameraControls
-                autoRotate={false}
-                cameraPosition={INSTANTANEOUS_SPEED_CAMERA.cameraPosition}
-                cameraTarget={INSTANTANEOUS_SPEED_CAMERA.cameraTarget}
-                enablePan
-                enableRotate
-                enableZoom
-                fov={INSTANTANEOUS_SPEED_CAMERA.fov}
-              />
-              <InstantaneousVelocitySpeedScene motion={motion} />
-            </Suspense>
-          </ThreeCanvas>
-        </VisualCardScene>
-        <VisualCardControls>
-          <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2">
-            {Arr.map(facts, (fact) => (
-              <VisualFactTabular
-                key={fact.id}
-                label={fact.label}
-                value={<InlineMath math={fact.math} />}
-              />
-            ))}
-          </dl>
-        </VisualCardControls>
+      <VisualCardBody
+        aria-label={labels.viewLabel}
+        className={threeSceneFrameVariants()}
+        render={<section />}
+      >
+        <ThreeCanvas frameloop="always">
+          <Suspense>
+            <ambientLight intensity={0.72} />
+            <hemisphereLight
+              color={getColor("SLATE", 50)}
+              groundColor={getColor("SLATE")}
+              intensity={0.64}
+            />
+            <directionalLight
+              castShadow
+              intensity={1.35}
+              position={[3.4, 5.2, 4.8]}
+              shadow-bias={-0.0006}
+              shadow-mapSize-height={1024}
+              shadow-mapSize-width={1024}
+              shadow-normalBias={0.02}
+            />
+            <CameraControls
+              autoRotate={false}
+              cameraPosition={INSTANTANEOUS_SPEED_CAMERA.cameraPosition}
+              cameraTarget={INSTANTANEOUS_SPEED_CAMERA.cameraTarget}
+              enablePan
+              enableRotate
+              enableZoom
+              fov={INSTANTANEOUS_SPEED_CAMERA.fov}
+            />
+            <InstantaneousVelocitySpeedScene motion={motion} />
+          </Suspense>
+        </ThreeCanvas>
       </VisualCardBody>
 
-      <VisualCardFooter>
+      <VisualCardActions>
         <VisualCardFullscreen />
+      </VisualCardActions>
+
+      <VisualCardFooter>
+        <VisualCardFacts>
+          {Arr.map(facts, (fact) => (
+            <VisualFactTabular
+              key={fact.id}
+              label={fact.label}
+              value={<InlineMath math={fact.math} />}
+            />
+          ))}
+        </VisualCardFacts>
       </VisualCardFooter>
     </VisualCard>
   );

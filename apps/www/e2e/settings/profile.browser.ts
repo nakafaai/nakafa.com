@@ -225,7 +225,9 @@ test("a bio of many lines shows every line on the profile", async ({
         await page.goto(profile);
 
         // The profile shows the whole bio under its header, one line for each line written.
-        const shown = page.locator("main section > p", { hasText: "Line 1" });
+        const shown = page.locator('main section [data-nakafa="paragraph"]', {
+          hasText: "Line 1",
+        });
         await expect(shown).toBeVisible({
           timeout: readinessTimeoutMilliseconds,
         });

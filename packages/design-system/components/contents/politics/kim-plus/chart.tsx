@@ -12,11 +12,11 @@ import {
 import type { ChartConfig } from "@repo/design-system/components/evilcharts/ui/chart-config";
 import {
   VisualCard,
+  VisualCardActions,
   VisualCardBody,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
-  VisualCardScene,
 } from "@repo/design-system/components/visual/card";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
@@ -89,30 +89,30 @@ export function ElectabilityChart({
     <VisualCard>
       <VisualCardHeader description={description} title={title} />
       <VisualCardBody>
-        <VisualCardScene>
-          <EvilBarChart
-            chartProps={{ margin: { right: VALUE_LABEL_MARGIN } }}
-            className="min-h-80"
-            config={chartConfig}
-            data={electabilityData}
-            layout="horizontal"
-          >
-            <Grid horizontal={false} />
-            <YAxis dataKey="name" tickMargin={10} />
-            <XAxis dataKey="value" domain={[0, valueAxisMax]} hide />
-            <Tooltip />
-            <Bar
-              barProps={{ label: { position: "right", fontSize: 12 } }}
-              dataKey="value"
-              radius={8}
-            />
-            <Legend />
-          </EvilBarChart>
-        </VisualCardScene>
+        <EvilBarChart
+          chartProps={{ margin: { right: VALUE_LABEL_MARGIN } }}
+          className="min-h-80 p-(--card-spacing)"
+          config={chartConfig}
+          data={electabilityData}
+          layout="horizontal"
+        >
+          <Grid horizontal={false} />
+          <YAxis dataKey="name" tickMargin={10} />
+          <XAxis dataKey="value" domain={[0, valueAxisMax]} hide />
+          <Tooltip />
+          <Bar
+            barProps={{ label: { position: "right", fontSize: 12 } }}
+            dataKey="value"
+            radius={8}
+          />
+          <Legend />
+        </EvilBarChart>
       </VisualCardBody>
+      <VisualCardActions>
+        <VisualCardFullscreen />
+      </VisualCardActions>
       <VisualCardFooter>
         <p className="text-sm">{footnote}</p>
-        <VisualCardFullscreen />
       </VisualCardFooter>
     </VisualCard>
   );

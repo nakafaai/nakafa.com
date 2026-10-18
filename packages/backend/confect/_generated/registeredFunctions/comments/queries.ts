@@ -8,5 +8,6 @@ const definitions = ConvexFunctionDefinitions.buildForGroup<typeof import("../..
 
 export default {
 ["getCommentsBySlug"]: RegisteredConvexFunction.register({ ...definitions["getCommentsBySlug"], handler: forward(definitions["getCommentsBySlug"].handler) }),
+["getCommentReplies"]: RegisteredConvexFunction.register({ ...definitions["getCommentReplies"], handler: forward(definitions["getCommentReplies"].handler) }),
 ["getCommentsByUserId"]: RegisteredConvexFunction.register({ ...definitions["getCommentsByUserId"], handler: forward(definitions["getCommentsByUserId"].handler) }),
 } as RegisteredFunctions.RegisteredFunctionsForGroupSpec<typeof import("../../../comments/queries.spec")["default"]>;

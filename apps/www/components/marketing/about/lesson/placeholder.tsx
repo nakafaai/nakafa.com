@@ -36,12 +36,13 @@ import {
 } from "@repo/design-system/components/ui/toggle-group";
 import {
   VisualCard,
+  VisualCardActions,
   VisualCardBody,
-  VisualCardControls,
+  VisualCardFacts,
   VisualCardFooter,
   VisualCardFullscreen,
   VisualCardGroup,
-  VisualCardScene,
+  VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
 import {
   VisualFact,
@@ -72,7 +73,7 @@ export function ProjectilePlaceholder({
 
   return (
     <VisualCard>
-      <VisualCardBody className="flex flex-col gap-4">
+      <VisualCardToolbar>
         <ToggleGroup
           aria-label={labels.chooseLaunch}
           gridColumns="3"
@@ -87,25 +88,25 @@ export function ProjectilePlaceholder({
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
-        <VisualCardScene
-          aria-label={labels.viewLabel}
-          className={threeSceneFrameVariants()}
-          render={<section />}
-        />
-        <VisualCardControls>
-          <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
-            {Arr.map(facts, (fact) => (
-              <VisualFactTabular
-                key={fact.id}
-                label={fact.label}
-                value={<InlineMath math={fact.math} />}
-              />
-            ))}
-          </dl>
-        </VisualCardControls>
-      </VisualCardBody>
-      <VisualCardFooter>
+      </VisualCardToolbar>
+      <VisualCardBody
+        aria-label={labels.viewLabel}
+        className={threeSceneFrameVariants()}
+        render={<section />}
+      />
+      <VisualCardActions>
         <VisualCardFullscreen inert />
+      </VisualCardActions>
+      <VisualCardFooter>
+        <VisualCardFacts>
+          {Arr.map(facts, (fact) => (
+            <VisualFactTabular
+              key={fact.id}
+              label={fact.label}
+              value={<InlineMath math={fact.math} />}
+            />
+          ))}
+        </VisualCardFacts>
       </VisualCardFooter>
     </VisualCard>
   );
@@ -141,43 +142,48 @@ export function CirclePlaceholder({
   return (
     <CoordinateProvider>
       <VisualCard>
-        <VisualCardBody>
-          <div aria-hidden="true" className={threeSceneFrameVariants()} />
-          <VisualCardControls>
-            <VisualCardGroup>
-              <Badge variant="outline">
-                <InlineMath math={`\\sin\\theta ${sin}`} />
-              </Badge>
-              <Badge variant="outline">
-                <InlineMath math={`\\cos\\theta ${cos}`} />
-              </Badge>
-              <Badge variant="outline">
-                <InlineMath math={`\\tan\\theta ${tan}`} />
-              </Badge>
-            </VisualCardGroup>
-
-            <Separator />
-
-            <div className="mx-auto flex w-full max-w-md flex-col gap-4">
-              <div className="flex items-center gap-2">
-                <Badge style={{ color: COLORS.VIOLET }} variant="outline">
-                  <InlineMath
-                    math={`\\theta = ${UNIT_CIRCLE_DEFAULT_ANGLE}^\\circ`}
-                  />
-                </Badge>
-                <Badge className="font-mono" variant="outline">
-                  {formatNumber(
-                    getRadians(UNIT_CIRCLE_DEFAULT_ANGLE),
-                    TRIG_NUMBER_OPTIONS
-                  )}{" "}
-                  {labels.radian}
-                </Badge>
-              </div>
-              <div aria-hidden="true" className={stepperVariants()} />
-            </div>
-          </VisualCardControls>
+        <VisualCardToolbar>
+          <div className="mx-auto flex w-full max-w-md flex-col">
+            <div aria-hidden="true" className={stepperVariants()} />
+          </div>
+        </VisualCardToolbar>
+        {/* The unit circle draws its frame inside its body, as this does. */}
+        <VisualCardBody aria-hidden="true">
+          <div className={threeSceneFrameVariants()} />
         </VisualCardBody>
         <CoordinateControls inert />
+        <VisualCardFooter>
+          <VisualCardGroup>
+            <Badge variant="outline">
+              <InlineMath math={`\\sin\\theta ${sin}`} />
+            </Badge>
+            <Badge variant="outline">
+              <InlineMath math={`\\cos\\theta ${cos}`} />
+            </Badge>
+            <Badge variant="outline">
+              <InlineMath math={`\\tan\\theta ${tan}`} />
+            </Badge>
+          </VisualCardGroup>
+
+          <Separator />
+
+          <div className="mx-auto flex w-full max-w-md flex-col">
+            <div className="flex items-center gap-2">
+              <Badge style={{ color: COLORS.VIOLET }} variant="outline">
+                <InlineMath
+                  math={`\\theta = ${UNIT_CIRCLE_DEFAULT_ANGLE}^\\circ`}
+                />
+              </Badge>
+              <Badge className="font-mono" variant="outline">
+                {formatNumber(
+                  getRadians(UNIT_CIRCLE_DEFAULT_ANGLE),
+                  TRIG_NUMBER_OPTIONS
+                )}{" "}
+                {labels.radian}
+              </Badge>
+            </div>
+          </div>
+        </VisualCardFooter>
       </VisualCard>
     </CoordinateProvider>
   );
@@ -206,7 +212,7 @@ export function AtomPlaceholder({
 
   return (
     <VisualCard>
-      <VisualCardBody className="flex flex-col gap-4">
+      <VisualCardToolbar>
         <ToggleGroup
           aria-label={labels.chooseAtom}
           gridColumns="6"
@@ -223,38 +229,38 @@ export function AtomPlaceholder({
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
-        <VisualCardScene
-          aria-label={`${sample.symbol}, ${labels.electronTotal} ${sample.atomicNumber}`}
-          className={threeSceneFrameVariants()}
-          render={<section />}
-        />
-        <VisualCardControls>
-          <dl className="grid w-full grid-cols-1 gap-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
-            <VisualFact
-              label={labels.atomicNumber}
-              value={<InlineMath math={`Z = ${sample.atomicNumber}`} />}
-            />
-            <VisualFact
-              label={labels.configuration}
-              value={<InlineMath math={configurationMath} />}
-            />
-            <VisualFact
-              label={labels.outerShell}
-              value={<InlineMath math={`\\mathrm{${outerShell.key}}`} />}
-            />
-            <VisualFact
-              label={labels.maximumCapacity}
-              value={
-                <InlineMath
-                  math={`2(${outerShell.principalQuantumNumber})^2 = ${outerShell.maximumElectrons}`}
-                />
-              }
-            />
-          </dl>
-        </VisualCardControls>
-      </VisualCardBody>
-      <VisualCardFooter>
+      </VisualCardToolbar>
+      <VisualCardBody
+        aria-label={`${sample.symbol}, ${labels.electronTotal} ${sample.atomicNumber}`}
+        className={threeSceneFrameVariants()}
+        render={<section />}
+      />
+      <VisualCardActions>
         <VisualCardFullscreen inert />
+      </VisualCardActions>
+      <VisualCardFooter>
+        <VisualCardFacts>
+          <VisualFact
+            label={labels.atomicNumber}
+            value={<InlineMath math={`Z = ${sample.atomicNumber}`} />}
+          />
+          <VisualFact
+            label={labels.configuration}
+            value={<InlineMath math={configurationMath} />}
+          />
+          <VisualFact
+            label={labels.outerShell}
+            value={<InlineMath math={`\\mathrm{${outerShell.key}}`} />}
+          />
+          <VisualFact
+            label={labels.maximumCapacity}
+            value={
+              <InlineMath
+                math={`2(${outerShell.principalQuantumNumber})^2 = ${outerShell.maximumElectrons}`}
+              />
+            }
+          />
+        </VisualCardFacts>
       </VisualCardFooter>
     </VisualCard>
   );
@@ -275,7 +281,7 @@ export function CellPlaceholder({
 }) {
   return (
     <VisualCard>
-      <VisualCardBody className="flex flex-col gap-4">
+      <VisualCardToolbar>
         <ToggleGroup
           aria-label={labels.chooseMode}
           gridColumns="auto"
@@ -290,15 +296,15 @@ export function CellPlaceholder({
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
-        <VisualCardScene
-          aria-label={labels.viewLabel}
-          className={threeSceneFrameVariants()}
-          render={<section />}
-        />
-      </VisualCardBody>
-      <VisualCardFooter>
+      </VisualCardToolbar>
+      <VisualCardBody
+        aria-label={labels.viewLabel}
+        className={threeSceneFrameVariants()}
+        render={<section />}
+      />
+      <VisualCardActions>
         <VisualCardFullscreen inert />
-      </VisualCardFooter>
+      </VisualCardActions>
     </VisualCard>
   );
 }
