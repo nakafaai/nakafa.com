@@ -2,8 +2,8 @@ import { expect, test } from "@playwright/test";
 import en from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
-import { SITE_ORIGIN } from "@repo/seo/origin";
 import { Effect } from "effect";
+import { expectSignInParts } from "@/e2e/support/auth";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { activateUntilVisible } from "@/e2e/support/input";
 import { withObservedPageErrors } from "@/e2e/support/observe";
@@ -401,30 +401,7 @@ test("guest reaches authentication only when starting a public tryout", async ({
             })
           ).toBeVisible()
         );
-        yield* Effect.promise(() =>
-          expect(page.locator('svg[width="190"]')).toBeVisible()
-        );
-        yield* Effect.promise(() =>
-          expect(
-            page.getByRole("button", { exact: true, name: "Theme" })
-          ).toBeVisible()
-        );
-        yield* Effect.promise(() =>
-          expect(
-            page.getByRole("link", { exact: true, name: "Terms of Service" })
-          ).toHaveAttribute(
-            "href",
-            new URL("/en/terms-of-service", SITE_ORIGIN).href
-          )
-        );
-        yield* Effect.promise(() =>
-          expect(
-            page.getByRole("link", { exact: true, name: "Privacy Policy" })
-          ).toHaveAttribute(
-            "href",
-            new URL("/en/privacy-policy", SITE_ORIGIN).href
-          )
-        );
+        yield* expectSignInParts(page);
       })
     )
   );
