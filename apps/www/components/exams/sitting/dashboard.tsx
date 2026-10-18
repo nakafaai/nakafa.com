@@ -17,10 +17,11 @@ import { SittingPanel } from "@/components/exams/sitting/panel";
 import { SittingSeats } from "@/components/exams/sitting/seats";
 import { createSittingStore } from "@/components/exams/sitting/store";
 import { SittingToolbar } from "@/components/exams/sitting/toolbar";
+import { SchoolHeader } from "@/components/tenant/header";
 
 /**
- * The proctor's dashboard of one sitting: the room and the token, the filter row, the seats of
- * the students, and the panel of the selected student. A principal or a deputy sees the seats
+ * The proctor's dashboard of one sitting: the page's header with the room and the token, the
+ * filter row, the seats of the students, and the panel of the selected student beside them. A principal or a deputy sees the seats
  * and takes no action, because only a proctor may act (ADR 0013). The page of attempts is
  * read once, the first page, and the proctor's own changes show at once.
  */
@@ -41,21 +42,13 @@ export function SittingDashboard({
   );
 
   if (QueryResult.isFailure(state)) {
-    return (
-      <p className="text-muted-foreground text-sm">
-        {t("sitting-unavailable")}
-      </p>
-    );
+    return <SittingRefusal message={t("sitting-unavailable")} />;
   }
   if (!QueryResult.isSuccess(state)) {
     return null;
   }
   if (state.value.sitting.examId !== examId) {
-    return (
-      <p className="text-muted-foreground text-sm">
-        {t("sitting-not-in-exam")}
-      </p>
-    );
+    return <SittingRefusal message={t("sitting-not-in-exam")} />;
   }
 
   const data: SittingData = {
@@ -67,9 +60,9 @@ export function SittingDashboard({
   return (
     <SittingStoreContext value={store}>
       <SittingDataContext value={data}>
-        <div className="flex min-w-0 flex-1 gap-4">
-          <div className="grid min-w-0 flex-1 content-start gap-4">
-            <SittingHeader />
+        <SittingHeader examId={examId} />
+        <div className="flex min-w-0 flex-1">
+          <div className="grid min-w-0 flex-1 content-start gap-4 p-4 md:p-6">
             <SittingToolbar />
             <SittingSeats />
           </div>
@@ -77,5 +70,17 @@ export function SittingDashboard({
         </div>
       </SittingDataContext>
     </SittingStoreContext>
+  );
+}
+
+/** The page when the dashboard cannot show the sitting: the header with the way back to the exams, and why. */
+function SittingRefusal({ message }: { readonly message: string }) {
+  const t = useTranslations("Exams");
+
+  return (
+    <>
+      <SchoolHeader items={[{ href: "/exams", label: t("title") }]} />
+      <p className="p-4 text-muted-foreground text-sm md:p-6">{message}</p>
+    </>
   );
 }

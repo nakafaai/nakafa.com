@@ -71,7 +71,8 @@ const signalLabels: Record<
 };
 
 /**
- * The panel of the selected student: a side column on a wide screen, and a sheet on a phone.
+ * The panel of the selected student: a pane along the page's right edge on a wide screen, beside
+ * the seats it leaves in view, and a sheet on a phone.
  * It shows the student's state, the latest signal, and the actions that the proctor may take.
  * The panel stays closed until a seat is selected.
  */
@@ -97,7 +98,7 @@ export function SittingPanel() {
     return (
       <aside
         aria-label={t("panel-label")}
-        className="w-80 shrink-0 self-start rounded-xl border bg-card p-4"
+        className="w-80 shrink-0 border-s p-4"
       >
         <StudentPanel attempt={current} onClose={close} />
       </aside>

@@ -6,6 +6,12 @@ import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { SittingView } from "@repo/backend/confect/exams/sittings/contract";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
+import {
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@repo/design-system/components/ui/card";
 import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
 import { Input } from "@repo/design-system/components/ui/input";
 import { Array as Arr, Effect, Option } from "effect";
@@ -14,6 +20,7 @@ import {
   type FormEvent,
   useCallback,
   useEffect,
+  useId,
   useRef,
   useState,
 } from "react";
@@ -24,6 +31,14 @@ import {
 import { readSittingDevice } from "@/components/exams/sitting/device";
 import type { EntryMessage } from "@/components/exams/sitting/entry";
 import { StudentPlayer } from "@/components/exams/sitting/player";
+import {
+  CardSection,
+  CardSectionActions,
+  CardSectionFooter,
+  CardSectionHint,
+} from "@/components/shared/card/section";
+import { LayoutContent } from "@/components/shared/content/layout";
+import { SchoolHeader } from "@/components/tenant/header";
 
 /** An admission that lets the student into the sitting, with the attempt it opened. */
 type Admitted = Extract<Admission, { readonly _tag: "admitted" }>;
@@ -52,6 +67,7 @@ export function StudentSitting({
   const [message, setMessage] = useState<typeof EntryMessage.Type | null>(null);
   const [tokenText, setTokenText] = useState("");
   const resumed = useRef(false);
+  const tokenId = useId();
   const listed = QueryResult.isSuccess(mine)
     ? Option.getOrUndefined(
         Arr.findFirst(mine.value, (row) => row.id === sittingId)
@@ -98,23 +114,14 @@ export function StudentSitting({
     );
   }
   if (QueryResult.isFailure(mine)) {
-    return (
-      <p className="text-muted-foreground text-sm">
-        {t("student-unavailable")}
-      </p>
-    );
+    return <StudentRefusal />;
   }
   if (!QueryResult.isSuccess(mine)) {
     return null;
   }
   if (listed === undefined) {
-    return (
-      <p className="text-muted-foreground text-sm">
-        {t("student-unavailable")}
-      </p>
-    );
+    return <StudentRefusal />;
   }
-
   const sitting = listed;
 
   /** Enters with the token that the student typed. */
@@ -126,32 +133,63 @@ export function StudentSitting({
   }
 
   return (
-    <section className="grid max-w-md gap-4">
-      <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-2 text-sm">
-        <dt className="text-muted-foreground">{t("student-room")}</dt>
-        <dd>{sitting.room}</dd>
-      </dl>
-      <form className="grid gap-3" onSubmit={onSubmit}>
-        <Field>
-          <FieldLabel>{t("token")}</FieldLabel>
-          <Input
-            autoComplete="off"
-            name="token"
-            onChange={(event) => setTokenText(event.currentTarget.value)}
-            placeholder={t("student-token-placeholder")}
-            value={tokenText}
-          />
-        </Field>
-        {message === null ? null : (
-          <p className="text-destructive text-sm" role="alert">
-            {t(message)}
-          </p>
-        )}
-        <Button className="justify-self-start" type="submit">
-          {t("student-enter")}
-        </Button>
-      </form>
-    </section>
+    <>
+      <SchoolHeader
+        items={[{ label: sitting.examTitle }]}
+        title={sitting.examTitle}
+      />
+      <LayoutContent className="w-full py-6">
+        <form onSubmit={onSubmit}>
+          <CardSection>
+            <CardHeader>
+              <CardTitle>{t("student-enter")}</CardTitle>
+              <CardDescription>
+                {t("student-room-line", { room: sitting.room })}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Field>
+                <FieldLabel htmlFor={tokenId}>{t("token")}</FieldLabel>
+                <Input
+                  autoComplete="off"
+                  id={tokenId}
+                  name="token"
+                  onChange={(event) => setTokenText(event.currentTarget.value)}
+                  placeholder={t("student-token-placeholder")}
+                  value={tokenText}
+                />
+              </Field>
+            </CardContent>
+            <CardSectionFooter>
+              {message === null ? null : (
+                <CardSectionHint role="alert" tone="destructive">
+                  {t(message)}
+                </CardSectionHint>
+              )}
+              <CardSectionActions>
+                <Button type="submit">{t("student-enter")}</Button>
+              </CardSectionActions>
+            </CardSectionFooter>
+          </CardSection>
+        </form>
+      </LayoutContent>
+    </>
+  );
+}
+
+/** The page when the sitting is not open to the student: the header, and why. */
+function StudentRefusal() {
+  const t = useTranslations("Exams");
+
+  return (
+    <>
+      <SchoolHeader items={[{ label: t("sitting") }]} title={t("sitting")} />
+      <LayoutContent className="w-full py-6">
+        <p className="text-muted-foreground text-sm">
+          {t("student-unavailable")}
+        </p>
+      </LayoutContent>
+    </>
   );
 }
 
