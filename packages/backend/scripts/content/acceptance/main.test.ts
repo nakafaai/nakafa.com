@@ -8,6 +8,7 @@ import type {
 import { runAcceptanceCommand } from "@repo/backend/scripts/content/acceptance/command";
 import type { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
 import type { importAcceptanceRows } from "@repo/backend/scripts/content/acceptance/import";
+import type { createAcceptanceInvite } from "@repo/backend/scripts/content/acceptance/invite";
 import type { createAcceptanceLearner } from "@repo/backend/scripts/content/acceptance/learner";
 import type { cleanLocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
 import type { createAcceptanceOwner } from "@repo/backend/scripts/content/acceptance/owner";
@@ -24,6 +25,7 @@ type EntryError =
   | Effect.Error<ReturnType<typeof createAcceptanceLearner>>
   | Effect.Error<ReturnType<typeof createAcceptanceSchool>>
   | Effect.Error<ReturnType<typeof createAcceptanceOwner>>
+  | Effect.Error<ReturnType<typeof createAcceptanceInvite>>
   | Effect.Error<ReturnType<typeof importAcceptanceRows>>
   | Effect.Error<ReturnType<typeof updateAcceptanceProfile>>
   | ReturnType<typeof acceptanceRuntimeError>
@@ -38,6 +40,7 @@ const mocks = vi.hoisted(() => {
     learner: vi.fn(),
     school: vi.fn(),
     owner: vi.fn(),
+    invite: vi.fn(),
     profile: vi.fn(),
     rows: vi.fn(),
     getEntry: () => entry,
@@ -64,6 +67,9 @@ vi.mock("@repo/backend/scripts/content/acceptance/school", () => ({
 }));
 vi.mock("@repo/backend/scripts/content/acceptance/owner", () => ({
   createAcceptanceOwner: mocks.owner,
+}));
+vi.mock("@repo/backend/scripts/content/acceptance/invite", () => ({
+  createAcceptanceInvite: mocks.invite,
 }));
 vi.mock("@repo/backend/scripts/content/acceptance/import", () => ({
   importAcceptanceRows: mocks.rows,
@@ -101,6 +107,7 @@ describe("isolated acceptance CLI", () => {
       mocks.learner,
       mocks.school,
       mocks.owner,
+      mocks.invite,
       mocks.profile,
       mocks.rows,
     ]) {
@@ -132,7 +139,7 @@ describe("isolated acceptance CLI", () => {
           stderrPath: outputPath,
         }).pipe(Effect.flip);
         expect(yield* fs.readFileString(outputPath)).toContain(
-          "AcceptanceRuntimeError: Usage: acceptance <prepare|build|start|clean|learner <cookie-file>|school <school-file>|owner <school-slug> <cookie-file>|import <table> <rows-file>|profile <auth-user-id> <profile-json-file>>"
+          "AcceptanceRuntimeError: Usage: acceptance <prepare|build|start|clean|learner <cookie-file>|school <school-file>|owner <school-slug> <cookie-file>|invite <school-slug> <learner-address> <cookie-file>|import <table> <rows-file>|profile <auth-user-id> <profile-json-file>>"
         );
       }).pipe(Effect.provide(nodeServicesLayer))
   );
@@ -307,6 +314,7 @@ finally:
               mocks.learner.mock.calls.length +
               mocks.school.mock.calls.length +
               mocks.owner.mock.calls.length +
+              mocks.invite.mock.calls.length +
               mocks.profile.mock.calls.length +
               mocks.rows.mock.calls.length
           ).toBe(1);
@@ -370,12 +378,34 @@ finally:
     })
   );
 
+  it.live(
+    "invites the learner the invite mode names into the cookie file the mode names",
+    () =>
+      Effect.gen(function* () {
+        yield* execute("invite", [
+          "acc-1a2b3c4d",
+          "learner@acceptance.example.test",
+          "/out/invite.json",
+        ]);
+
+        expect(mocks.invite).toHaveBeenCalledExactlyOnceWith(
+          expect.any(String),
+          "acc-1a2b3c4d",
+          "learner@acceptance.example.test",
+          "/out/invite.json"
+        );
+        expect(mocks.owner).not.toHaveBeenCalled();
+      })
+  );
+
   const rejected: readonly (readonly [string | undefined, string[]])[] = [
     [undefined, []],
     ["unsupported", []],
     ["learner", []],
     ["school", []],
     ["owner", ["acc-1a2b3c4d"]],
+    ["invite", ["acc-1a2b3c4d"]],
+    ["invite", ["acc-1a2b3c4d", "learner@acceptance.example.test"]],
     ["import", []],
     ["import", ["chats"]],
     ["profile", []],
