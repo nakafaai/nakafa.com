@@ -34,6 +34,7 @@ const main = Effect.gen(function* () {
   const first = process.argv[3];
   const second = process.argv[4];
   const third = process.argv[5];
+  const fourth = process.argv[6];
   if (mode === "learner" && first !== undefined) {
     return yield* createAcceptanceLearner(root, first);
   }
@@ -60,7 +61,7 @@ const main = Effect.gen(function* () {
     second !== undefined &&
     third !== undefined
   ) {
-    return yield* createAcceptanceSitting(root, first, second, third);
+    return yield* createAcceptanceSitting(root, first, second, third, fourth);
   }
   if (mode === "import" && first !== undefined && second !== undefined) {
     return yield* importAcceptanceRows(root, first, second);
@@ -69,7 +70,7 @@ const main = Effect.gen(function* () {
     return yield* updateAcceptanceProfile(root, first, second);
   }
   return yield* acceptanceRuntimeError(
-    "Usage: acceptance <prepare|build|start|clean|learner <cookie-file>|school <school-file>|owner <school-slug> <cookie-file>|teacher <school-slug> <cookie-file>|invite <school-slug> <learner-address> <cookie-file>|sitting <school-slug> <learner-email> <sitting-file>|import <table> <rows-file>|profile <auth-user-id> <profile-json-file>>"
+    "Usage: acceptance <prepare|build|start|clean|learner <cookie-file>|school <school-file>|owner <school-slug> <cookie-file>|teacher <school-slug> <cookie-file>|invite <school-slug> <learner-address> <cookie-file>|sitting <school-slug> <learner-email> <sitting-file> [crowd]|import <table> <rows-file>|profile <auth-user-id> <profile-json-file>>"
   );
 });
 
