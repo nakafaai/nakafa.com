@@ -158,12 +158,13 @@ function SchoolCardForm({
   return (
     <CardSection>
       <CardHeader>
-        <CardTitle>{t("card-issue")}</CardTitle>
+        <CardTitle>{t("card-issue-title")}</CardTitle>
         <CardDescription>{t("card-issue-description")}</CardDescription>
       </CardHeader>
       <CardContent>
         <Input
           aria-label={t("card-login-name")}
+          className="w-full max-w-xs"
           onChange={(event) => setLoginName(event.target.value)}
           placeholder={t("card-login-name-placeholder")}
           value={loginName}

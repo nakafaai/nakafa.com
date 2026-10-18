@@ -253,7 +253,7 @@ function SchoolAssignCard({
   return (
     <CardSection>
       <CardHeader>
-        <CardTitle>{t("roles-assign")}</CardTitle>
+        <CardTitle>{t("roles-assign-title")}</CardTitle>
       </CardHeader>
       <CardSectionFooter>
         <CardSectionHint>{t("roles-assign-footer")}</CardSectionHint>

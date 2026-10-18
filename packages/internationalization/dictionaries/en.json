@@ -1,7 +1,7 @@
 {
   "School": {
     "account-settings": "Account settings",
-    "back-to-learning": "Back to Nakafa learning",
+    "back-to-learning": "Back to Nakafa",
     "for-you": "For you",
     "home": "Home",
     "language": "Language",
@@ -256,7 +256,7 @@
     "invite-dialog-title": "Invite a person",
     "invite-dialog-description": "The person gets an invitation at this email address, and signs in with it.",
     "invite-person": "Person",
-    "invite-person-placeholder": "Choose a person without an account",
+    "invite-person-placeholder": "Choose a person",
     "invite-none-left": "Every active person of this school already has an account.",
     "invite-locale": "Language of the email",
     "invite-submit": "Invite",
@@ -293,9 +293,11 @@
     "grant-revoke-confirm": "Revoke",
     "roles-role-placeholder": "Choose a role",
     "roles-assign": "Give role",
+    "roles-assign-title": "Whole-school role",
     "roles-assign-footer": "A role covers the whole school.",
     "students-description": "Choose a person to issue or reissue their login card.",
     "card-issue": "Issue card",
+    "card-issue-title": "Login card",
     "card-issue-description": "A login card lets a student sign in with a login name and a code.",
     "card-login-name": "Login name",
     "card-login-name-placeholder": "Login name",
@@ -516,7 +518,7 @@
   },
   "Notifications": {
     "title": "Notifications",
-    "mark-all-read": "Mark all as read",
+    "mark-all-read": "Mark all read",
     "empty": "You have no notifications yet.",
     "person-invited": "You have been invited to join this school."
   },

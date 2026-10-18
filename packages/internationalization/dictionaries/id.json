@@ -1,7 +1,7 @@
 {
   "School": {
     "account-settings": "Pengaturan akun",
-    "back-to-learning": "Pindah ke Nakafa belajar",
+    "back-to-learning": "Kembali ke Nakafa",
     "for-you": "Untukmu",
     "home": "Beranda",
     "language": "Bahasa",
@@ -256,7 +256,7 @@
     "invite-dialog-title": "Undang orang",
     "invite-dialog-description": "Orang itu menerima undangan ke alamat email ini, dan masuk dengan alamat tersebut.",
     "invite-person": "Orang",
-    "invite-person-placeholder": "Pilih orang yang belum punya akun",
+    "invite-person-placeholder": "Pilih orang",
     "invite-none-left": "Semua orang aktif di sekolah ini sudah punya akun.",
     "invite-locale": "Bahasa email",
     "invite-submit": "Undang",
@@ -293,9 +293,11 @@
     "grant-revoke-confirm": "Cabut",
     "roles-role-placeholder": "Pilih peran",
     "roles-assign": "Berikan peran",
+    "roles-assign-title": "Peran seluruh sekolah",
     "roles-assign-footer": "Peran berlaku untuk seluruh sekolah.",
     "students-description": "Pilih orang untuk menerbitkan atau menerbitkan ulang kartu masuknya.",
     "card-issue": "Terbitkan kartu",
+    "card-issue-title": "Kartu masuk",
     "card-issue-description": "Kartu masuk membuat siswa dapat masuk dengan nama masuk dan kode.",
     "card-login-name": "Nama masuk",
     "card-login-name-placeholder": "Nama masuk",
@@ -516,7 +518,7 @@
   },
   "Notifications": {
     "title": "Notifikasi",
-    "mark-all-read": "Tandai semua sudah dibaca",
+    "mark-all-read": "Tandai semua dibaca",
     "empty": "Belum ada notifikasi.",
     "person-invited": "Kamu diundang bergabung ke sekolah ini."
   },

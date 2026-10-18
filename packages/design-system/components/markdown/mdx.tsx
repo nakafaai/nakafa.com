@@ -122,7 +122,7 @@ export function MdxUnorderedList(props: ListProps) {
 export function MdxListItem(props: ListItemProps) {
   return (
     <li
-      className="text-pretty pl-1 leading-relaxed [&>*+*]:mt-4 [&>p:first-child]:inline"
+      className="max-w-xl text-pretty pl-1 leading-relaxed [&>*+*]:mt-4 [&>p:first-child]:inline"
       {...props}
     />
   );
