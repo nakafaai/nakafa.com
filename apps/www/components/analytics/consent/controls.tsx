@@ -67,7 +67,6 @@ export function AnalyticsConsentControls() {
       canDecline={consent.canDecline}
       canGrant={consent.canGrant}
       decide={consent.decide}
-      isSaving={consent.isSaving}
     />
   );
 
@@ -120,28 +119,20 @@ function ConsentActions({
   canDecline,
   canGrant,
   decide,
-  isSaving,
-}: Pick<
-  AnalyticsConsentContextValue,
-  "canDecline" | "canGrant" | "decide" | "isSaving"
->) {
+}: Pick<AnalyticsConsentContextValue, "canDecline" | "canGrant" | "decide">) {
   const t = useTranslations("AnalyticsConsent");
 
   return (
     <>
       <Button
-        disabled={!canDecline || isSaving}
+        disabled={!canDecline}
         onClick={() => decide(false)}
         type="button"
         variant="outline"
       >
         {t("decline")}
       </Button>
-      <Button
-        disabled={!canGrant || isSaving}
-        onClick={() => decide(true)}
-        type="button"
-      >
+      <Button disabled={!canGrant} onClick={() => decide(true)} type="button">
         {t("allow")}
       </Button>
     </>

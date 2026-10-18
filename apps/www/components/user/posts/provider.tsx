@@ -11,8 +11,8 @@ const DraftContext = createContext<StoreApi<PostDraft> | null>(null);
 
 /**
  * Keeps the words an author writes in the composer above the list, so a Retry,
- * which remounts the list, keeps them, and keeps the lock of a post that is
- * still saving. The store is created once for the provider, and only the
+ * which remounts the list, keeps them, and keeps the posts that are still
+ * saving. The store is created once for the provider, and only the
  * composer's own actions write it, as ADR 0017 asks for state that its own
  * actions write.
  */
