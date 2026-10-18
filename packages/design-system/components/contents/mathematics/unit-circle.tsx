@@ -29,7 +29,7 @@ import { COLORS } from "@repo/design-system/lib/color";
 import { getCos, getRadians, getSin, getTan } from "@repo/math/angles";
 import dynamic from "next/dynamic";
 import { useFormatter, useLocale, useTranslations } from "next-intl";
-import { type ReactNode, useState } from "react";
+import { createContext, type ReactNode, use, useState } from "react";
 import {
   Button,
   Group,
@@ -80,6 +80,56 @@ interface Props {
   trigValues?: CardProps["trigValues"];
 }
 
+/** The configuration of one unit-circle card, shared by its scene, its controls and its values. */
+interface UnitCircleConfig {
+  angle: number;
+  live: boolean;
+  onAngleChange: ((angle: number) => void) | undefined;
+  trigValues: CardProps["trigValues"];
+  viewLabel: string | undefined;
+}
+
+const UnitCircleContext = createContext<UnitCircleConfig | null>(null);
+
+/** Provides one unit-circle card's configuration and its coordinate controls. */
+function UnitCircleProvider({
+  children,
+  config,
+}: {
+  children: ReactNode;
+  config: UnitCircleConfig;
+}) {
+  return (
+    <CoordinateProvider>
+      <UnitCircleContext value={config}>{children}</UnitCircleContext>
+    </CoordinateProvider>
+  );
+}
+
+/** Reads the configuration of the surrounding unit-circle card. */
+function useUnitCircle() {
+  const config = use(UnitCircleContext);
+  if (!config) {
+    // A missing provider is a programmer composition error at this React seam.
+    throw new Error("useUnitCircle must be used within UnitCircleProvider");
+  }
+  return config;
+}
+
+/** The visual card that holds a unit circle's header, its controls, and its values. */
+function UnitCircleFrame({ children }: { children: ReactNode }) {
+  const locale = useLocale();
+
+  return (
+    <VisualCard>
+      {children}
+      <I18nProvider locale={locale}>
+        <Content />
+      </I18nProvider>
+    </VisualCard>
+  );
+}
+
 /**
  * The unit circle as a visual card without a header. The scene, its angle
  * controls and the trigonometric values of the angle are all in the card; the
@@ -93,23 +143,12 @@ export function UnitCircleCard({
   trigValues,
   viewLabel,
 }: CardProps) {
-  const locale = useLocale();
+  const config = { angle, live, onAngleChange, trigValues, viewLabel };
 
   return (
-    <CoordinateProvider>
-      <VisualCard>
-        {header}
-        <I18nProvider locale={locale}>
-          <Content
-            angle={angle}
-            live={live}
-            onAngleChange={onAngleChange}
-            trigValues={trigValues}
-            viewLabel={viewLabel}
-          />
-        </I18nProvider>
-      </VisualCard>
-    </CoordinateProvider>
+    <UnitCircleProvider config={config}>
+      <UnitCircleFrame>{header}</UnitCircleFrame>
+    </UnitCircleProvider>
   );
 }
 
@@ -120,30 +159,27 @@ export function UnitCircle({
   angle = UNIT_CIRCLE_DEFAULT_ANGLE,
   trigValues,
 }: Props) {
+  const config = {
+    angle,
+    live: true,
+    onAngleChange: undefined,
+    trigValues,
+    viewLabel: undefined,
+  };
+
   return (
-    <UnitCircleCard
-      angle={angle}
-      header={<VisualCardHeader description={description} title={title} />}
-      trigValues={trigValues}
-    />
+    <UnitCircleProvider config={config}>
+      <UnitCircleFrame>
+        <VisualCardHeader description={description} title={title} />
+      </UnitCircleFrame>
+    </UnitCircleProvider>
   );
 }
 
-function Content({
-  angle,
-  live,
-  onAngleChange,
-  trigValues,
-  viewLabel,
-}: {
-  angle: number;
-  live: boolean;
-  onAngleChange: ((angle: number) => void) | undefined;
-  trigValues?: CardProps["trigValues"];
-  viewLabel: string | undefined;
-}) {
+function Content() {
   const t = useTranslations("Common");
   const format = useFormatter();
+  const { angle, live, onAngleChange, trigValues, viewLabel } = useUnitCircle();
   const [angleOverride, setAngleOverride] = useState<number | null>(null);
   const angleValue = angleOverride ?? angle;
   const exactValues = angleValue === angle ? trigValues : undefined;
