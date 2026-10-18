@@ -1,74 +1,181 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
-import { Schema } from "effect";
+import { MASCOT } from "@repo/backend/test/mascot";
+import { Array as Arr, Schema } from "effect";
 import {
-  deleteCommentFromPage,
-  updateCommentVote,
+  type CommentAuthor,
+  type CommentRow,
+  changeComment,
+  commentAndReplyIds,
+  countReplies,
+  draftComment,
+  likedComment,
+  removeComments,
+  unlikedComment,
 } from "@/components/comments/state";
 
-const parentId = Schema.decodeUnknownSync(Id("comments"))("parent");
-const replyId = Schema.decodeUnknownSync(Id("comments"))("reply");
-const userId = Schema.decodeUnknownSync(Id("users"))("user");
-const missingId = Schema.decodeUnknownSync(Id("comments"))("missing");
-const parent = {
-  _creationTime: 1,
-  _id: parentId,
-  downvoteCount: 0,
-  replyCount: 1,
-  slug: "lesson",
-  text: "Parent",
-  upvoteCount: 2,
-  userId,
-  viewerVote: 1 as const,
+const commentId = Schema.decodeUnknownSync(Id("comments"));
+const userId = Schema.decodeUnknownSync(Id("users"));
+const user: CommentAuthor = {
+  _id: userId("author"),
+  mascot: MASCOT,
+  name: "Author",
+  picture: "animal",
 };
-const reply = {
-  ...parent,
-  _id: replyId,
-  parentId,
-  replyCount: 0,
-  text: "Reply",
-  viewerVote: null,
-};
+
+/** A comment row as the content page reads it, with the given changes. */
+function row(id: string, change: Partial<CommentRow> = {}): CommentRow {
+  return {
+    _creationTime: 1,
+    _id: commentId(id),
+    downvoteCount: 0,
+    likeCount: 0,
+    liked: false,
+    replyCount: 0,
+    replyToUser: null,
+    slug: "lesson",
+    text: id,
+    upvoteCount: 0,
+    user,
+    userId: user._id,
+    viewerVote: null,
+    ...change,
+  };
+}
 
 describe("comment optimistic state", () => {
-  it("switches an upvote to a downvote", () => {
-    expect(updateCommentVote(parent, -1)).toMatchObject({
-      downvoteCount: 1,
-      upvoteCount: 1,
-      viewerVote: -1,
-    });
-  });
-
-  it("adds and removes a vote without producing negative counts", () => {
-    const added = updateCommentVote(reply, 1);
-    const removed = updateCommentVote(
-      { ...reply, downvoteCount: 0, viewerVote: -1 as const },
-      0
-    );
-
-    expect(added).toMatchObject({ upvoteCount: 3, viewerVote: 1 });
-    expect(removed).toMatchObject({ downvoteCount: 0, viewerVote: null });
-  });
-
-  it("keeps counts stable when the requested vote is unchanged", () => {
-    expect(updateCommentVote(parent, 1)).toMatchObject({
-      upvoteCount: 2,
+  it("shows a like at once: liked, one more like, and an upvote for an open web build", () => {
+    expect(likedComment(row("a", { likeCount: 2 }))).toMatchObject({
+      liked: true,
+      likeCount: 3,
       viewerVote: 1,
     });
   });
 
-  it("deletes a reply and decrements its loaded parent", () => {
-    expect(deleteCommentFromPage([parent, reply], replyId)).toEqual([
-      { ...parent, replyCount: 0 },
+  it("returns a liked comment as it is, so a repeated like counts once", () => {
+    const liked = row("a", { liked: true, likeCount: 2, viewerVote: 1 });
+    expect(likedComment(liked)).toBe(liked);
+  });
+
+  it("takes a like back at once, and returns an unliked comment as it is", () => {
+    expect(
+      unlikedComment(row("a", { liked: true, likeCount: 1, viewerVote: 1 }))
+    ).toMatchObject({ liked: false, likeCount: 0, viewerVote: null });
+    const unliked = row("a");
+    expect(unlikedComment(unliked)).toBe(unliked);
+  });
+
+  it("changes only the comment with the id, and keeps the order of the page", () => {
+    const page = [row("first"), row("second"), row("third")];
+    const changed = changeComment(page, commentId("second"), (comment) => ({
+      ...comment,
+      text: "changed",
+    }));
+    expect(Arr.map(changed, (comment) => comment.text)).toEqual([
+      "first",
+      "changed",
+      "third",
     ]);
   });
 
-  it("deletes a root comment without changing unrelated rows", () => {
-    expect(deleteCommentFromPage([parent, reply], parentId)).toEqual([reply]);
+  it("moves the reply count of the top-level comment by a number of replies", () => {
+    const page = [row("root", { replyCount: 2 }), row("other")];
+    expect(countReplies(page, commentId("root"), 3)).toMatchObject([
+      { replyCount: 5 },
+      { replyCount: 0 },
+    ]);
+    expect(countReplies(page, commentId("root"), -2)).toMatchObject([
+      { replyCount: 0 },
+      { replyCount: 0 },
+    ]);
   });
 
-  it("preserves the original page when the target is not loaded", () => {
-    const page = [parent, reply];
-    expect(deleteCommentFromPage(page, missingId)).toBe(page);
+  it("takes the comments with the given ids off a page, and keeps the rest in order", () => {
+    const page = [row("a"), row("b"), row("c")];
+    expect(
+      Arr.map(
+        removeComments(page, [commentId("a"), commentId("c")]),
+        (comment) => comment.text
+      )
+    ).toEqual(["b"]);
+  });
+
+  it("finds a comment and every reply below it, by parent chain, and leaves the siblings", () => {
+    const replies = [
+      row("first", { parentId: commentId("root") }),
+      row("nested", { parentId: commentId("first") }),
+      row("sibling", { parentId: commentId("root") }),
+      row("deeper", { parentId: commentId("nested") }),
+      row("elsewhere", { parentId: commentId("sibling") }),
+    ];
+    expect(commentAndReplyIds(replies, commentId("first"))).toEqual([
+      commentId("first"),
+      commentId("nested"),
+      commentId("deeper"),
+    ]);
+  });
+
+  it("returns only the comment itself when no loaded reply names it", () => {
+    expect(commentAndReplyIds([row("lonely")], commentId("lonely"))).toEqual([
+      commentId("lonely"),
+    ]);
+  });
+
+  it("drafts a top-level comment that starts its own thread", () => {
+    const draft = draftComment(user, null, {
+      _creationTime: 42,
+      _id: commentId("draft"),
+      slug: "lesson",
+      text: "Halo.",
+    });
+    expect(draft).toMatchObject({
+      _creationTime: 42,
+      _id: commentId("draft"),
+      liked: false,
+      likeCount: 0,
+      replyCount: 0,
+      replyToUser: null,
+      slug: "lesson",
+      text: "Halo.",
+      user,
+      userId: user._id,
+      viewerVote: null,
+    });
+    expect(draft).not.toHaveProperty("parentId");
+    expect(draft).not.toHaveProperty("threadId");
+  });
+
+  it("drafts a reply into the thread of its top-level comment, and a reply to a reply into the same thread", () => {
+    const top = row("top");
+    const first = row("first", {
+      parentId: top._id,
+      replyCount: 0,
+      threadId: top._id,
+      user: { ...user, _id: userId("replier") },
+    });
+    const replyToTop = draftComment(user, top, {
+      _creationTime: 1,
+      _id: commentId("to-top"),
+      slug: "lesson",
+      text: "Balasan.",
+    });
+    const replyToReply = draftComment(user, first, {
+      _creationTime: 2,
+      _id: commentId("to-reply"),
+      slug: "lesson",
+      text: "Balasan lagi.",
+    });
+    expect(replyToTop).toMatchObject({
+      parentId: top._id,
+      replyToUser: top.user,
+      replyToUserId: top.userId,
+      threadId: top._id,
+    });
+    expect(replyToReply).toMatchObject({
+      parentId: first._id,
+      replyToUser: first.user,
+      replyToUserId: first.userId,
+      threadId: top._id,
+    });
   });
 });

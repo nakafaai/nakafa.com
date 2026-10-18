@@ -1,115 +1,215 @@
 "use client";
 
 import type { Ref } from "@confect/core";
-import { useMutation } from "@confect/react";
+import type { OptimisticUpdate } from "@confect/react";
 import type * as OptimisticLocalStore from "@confect/react/OptimisticLocalStore";
 import comments from "@repo/backend/confect/_generated/refs/comments";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Array as Arr, Option } from "effect";
 import {
-  deleteCommentFromPage,
-  updateCommentVote,
+  type CommentRow,
+  changeComment,
+  commentAndReplyIds,
+  countReplies,
+  type ListedComment,
+  likedComment,
+  removeComments,
+  unlikedComment,
 } from "@/components/comments/state";
 
-type SlugComment = Ref.Returns<
-  typeof comments.queries.getCommentsBySlug
->["page"][number];
+/** The queries that list comments: the top-level comments of a slug, the replies of a thread, and a profile's comments. */
+type CommentListRef =
+  | typeof comments.queries.getCommentsBySlug
+  | typeof comments.queries.getCommentReplies
+  | typeof comments.queries.getCommentsByUserId;
 
-/** Apply a comment transform across every loaded content-route feed. */
-function updateSlugFeeds(
+/** The page of a loaded comment list, as the list holds it. */
+type PageOf<Q extends CommentListRef> = Ref.Returns<Q>["page"];
+
+/** Changes the page of every loaded list of one query, so each open list shows the change. */
+function changeLists<Q extends CommentListRef>(
   localStore: OptimisticLocalStore.OptimisticLocalStore,
-  commentId: Id<"comments">,
-  update: (comment: SlugComment) => SlugComment
+  ref: Q,
+  change: (page: PageOf<Q>) => PageOf<Q>
 ) {
-  for (const query of localStore.getAllQueries(
-    comments.queries.getCommentsBySlug
-  )) {
-    if (Option.isNone(query.value)) {
-      continue;
+  for (const query of localStore.getAllQueries(ref)) {
+    if (Option.isSome(query.value)) {
+      localStore.setQuery(
+        ref,
+        query.args,
+        Option.some({
+          ...query.value.value,
+          page: change(query.value.value.page),
+        })
+      );
     }
-    localStore.setQuery(
-      comments.queries.getCommentsBySlug,
-      query.args,
-      Option.some({
-        ...query.value.value,
-        page: Arr.map(query.value.value.page, (comment) =>
-          comment._id === commentId ? update(comment) : comment
-        ),
-      })
-    );
   }
 }
 
-/** Return a vote mutation that updates loaded slug and profile feeds. */
-export function useVoteCommentMutation() {
-  return useMutation(comments.mutations.voteOnComment).withOptimisticUpdate(
-    (localStore, { commentId, vote }) => {
-      updateSlugFeeds(localStore, commentId, (comment) =>
-        updateCommentVote(comment, vote)
-      );
-      for (const query of localStore.getAllQueries(
-        comments.queries.getCommentsByUserId
-      )) {
-        if (Option.isNone(query.value)) {
-          continue;
-        }
+/** Changes the comment on every loaded list that holds it: the comments of a slug, a thread and a profile. */
+function changeEveryList(
+  localStore: OptimisticLocalStore.OptimisticLocalStore,
+  commentId: Id<"comments">,
+  change: <T extends ListedComment>(comment: T) => T
+) {
+  changeLists(localStore, comments.queries.getCommentsBySlug, (page) =>
+    changeComment(page, commentId, change)
+  );
+  changeLists(localStore, comments.queries.getCommentReplies, (page) =>
+    changeComment(page, commentId, change)
+  );
+  changeLists(localStore, comments.queries.getCommentsByUserId, (page) =>
+    changeComment(page, commentId, change)
+  );
+}
+
+/** The change that shows a like on the comment at once, on every loaded list. */
+export const likeInLists: OptimisticUpdate<
+  typeof comments.mutations.likeComment
+> = (localStore, { commentId }) =>
+  changeEveryList(localStore, commentId, likedComment);
+
+/** The change that takes a like off the comment at once, on every loaded list. */
+export const unlikeInLists: OptimisticUpdate<
+  typeof comments.mutations.unlikeComment
+> = (localStore, { commentId }) =>
+  changeEveryList(localStore, commentId, unlikedComment);
+
+/**
+ * The change that shows a new top-level comment first in each loaded list of its
+ * slug, while the server saves it. A list that is still loading its first page
+ * takes no change, and the saved comment comes in with the page.
+ */
+export function insertDraftComment(
+  draft: CommentRow
+): OptimisticUpdate<typeof comments.mutations.addComment> {
+  return (localStore) => {
+    for (const query of localStore.getAllQueries(
+      comments.queries.getCommentsBySlug
+    )) {
+      if (
+        Option.isSome(query.value) &&
+        query.args.slug === draft.slug &&
+        query.args.paginationOpts.cursor === null
+      ) {
         localStore.setQuery(
-          comments.queries.getCommentsByUserId,
+          comments.queries.getCommentsBySlug,
           query.args,
           Option.some({
             ...query.value.value,
-            page: Arr.map(query.value.value.page, (comment) =>
-              comment._id === commentId
-                ? updateCommentVote(comment, vote)
-                : comment
-            ),
+            page: Arr.prepend(query.value.value.page, draft),
           })
         );
       }
     }
-  );
+  };
 }
 
-/** Remove one comment from every loaded content and profile feed. */
-function deleteFromLoadedFeeds(
+/**
+ * The change that shows a new reply at the end of its thread, and raises the reply
+ * count of the top-level comment, while the server saves it. The reply joins the
+ * last loaded page of its thread, once that page is the end of the thread.
+ */
+export function insertDraftReply(
+  draft: CommentRow,
+  threadId: Id<"comments">
+): OptimisticUpdate<typeof comments.mutations.addComment> {
+  return (localStore) => {
+    changeLists(localStore, comments.queries.getCommentsBySlug, (page) =>
+      countReplies(page, threadId, 1)
+    );
+    for (const query of localStore.getAllQueries(
+      comments.queries.getCommentReplies
+    )) {
+      if (
+        Option.isSome(query.value) &&
+        query.args.threadId === threadId &&
+        query.value.value.isDone
+      ) {
+        localStore.setQuery(
+          comments.queries.getCommentReplies,
+          query.args,
+          Option.some({
+            ...query.value.value,
+            page: Arr.append(query.value.value.page, draft),
+          })
+        );
+      }
+    }
+  };
+}
+
+/**
+ * The thread of a comment as the first loaded list that holds it has it: the
+ * thread id of a reply, and none for a top-level comment. None when no loaded list
+ * holds the comment.
+ */
+function loadedThreadOf(
   localStore: OptimisticLocalStore.OptimisticLocalStore,
   commentId: Id<"comments">
-) {
-  for (const query of localStore.getAllQueries(
-    comments.queries.getCommentsBySlug
-  )) {
-    if (Option.isSome(query.value)) {
-      localStore.setQuery(
-        comments.queries.getCommentsBySlug,
-        query.args,
-        Option.some({
-          ...query.value.value,
-          page: deleteCommentFromPage(query.value.value.page, commentId),
-        })
-      );
-    }
-  }
-  for (const query of localStore.getAllQueries(
-    comments.queries.getCommentsByUserId
-  )) {
-    if (Option.isSome(query.value)) {
-      localStore.setQuery(
-        comments.queries.getCommentsByUserId,
-        query.args,
-        Option.some({
-          ...query.value.value,
-          page: deleteCommentFromPage(query.value.value.page, commentId),
-        })
-      );
-    }
-  }
+): Option.Option<Pick<CommentRow, "threadId">> {
+  const found = [
+    ...Arr.flatMap(
+      localStore.getAllQueries(comments.queries.getCommentReplies),
+      (query) => (Option.isSome(query.value) ? query.value.value.page : [])
+    ),
+    ...Arr.flatMap(
+      localStore.getAllQueries(comments.queries.getCommentsBySlug),
+      (query) => (Option.isSome(query.value) ? query.value.value.page : [])
+    ),
+    ...Arr.flatMap(
+      localStore.getAllQueries(comments.queries.getCommentsByUserId),
+      (query) => (Option.isSome(query.value) ? query.value.value.page : [])
+    ),
+  ];
+  return Arr.findFirst(found, (row) => row._id === commentId);
 }
 
-/** Return a delete mutation that removes the comment from every loaded feed. */
-export function useDeleteCommentMutation() {
-  return useMutation(comments.mutations.deleteComment).withOptimisticUpdate(
-    (localStore, { commentId }) => {
-      deleteFromLoadedFeeds(localStore, commentId);
-    }
+/** Every reply of a thread that is loaded, in the order of the loaded pages. */
+function loadedReplies(
+  localStore: OptimisticLocalStore.OptimisticLocalStore,
+  threadId: Id<"comments">
+) {
+  return Arr.flatMap(
+    localStore.getAllQueries(comments.queries.getCommentReplies),
+    (query) =>
+      query.args.threadId === threadId && Option.isSome(query.value)
+        ? query.value.value.page
+        : []
   );
 }
+
+/**
+ * The change that takes a comment off every loaded list at once, as the server
+ * deletes it. A top-level comment leaves with its thread, because no list shows a
+ * thread without its comment. A reply leaves with the loaded replies that name it,
+ * directly or through other replies, and the reply count of its thread goes down
+ * by the same number.
+ */
+export const removeFromLists: OptimisticUpdate<
+  typeof comments.mutations.deleteComment
+> = (localStore, { commentId }) => {
+  const found = loadedThreadOf(localStore, commentId);
+  if (Option.isNone(found)) {
+    return;
+  }
+  const threadId = found.value.threadId;
+  const removed =
+    threadId === undefined
+      ? [commentId]
+      : commentAndReplyIds(loadedReplies(localStore, threadId), commentId);
+  changeLists(localStore, comments.queries.getCommentsBySlug, (page) =>
+    removeComments(page, removed)
+  );
+  changeLists(localStore, comments.queries.getCommentsByUserId, (page) =>
+    removeComments(page, removed)
+  );
+  changeLists(localStore, comments.queries.getCommentReplies, (page) =>
+    removeComments(page, removed)
+  );
+  if (threadId !== undefined) {
+    changeLists(localStore, comments.queries.getCommentsBySlug, (page) =>
+      countReplies(page, threadId, -removed.length)
+    );
+  }
+};
