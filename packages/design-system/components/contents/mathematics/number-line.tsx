@@ -1,3 +1,5 @@
+"use client";
+
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import {
   VisualCard,
@@ -9,7 +11,7 @@ import {
 import { cva } from "class-variance-authority";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
-import type { ReactNode } from "react";
+import { createContext, type ReactNode, use } from "react";
 
 const numberLineSegmentVariants = cva("absolute top-1/2 h-8 -translate-y-1/2", {
   variants: {
@@ -32,33 +34,66 @@ const NUMBER_LINE_SEGMENT_EDGE = {
   startInfinity: "startInfinity",
 } as const;
 
+/** One authored segment of a number line. */
+interface NumberLineSegment {
+  /** The background color of the segment */
+  backgroundColor?: string;
+  /** The end value of the segment */
+  end: number;
+  /** Whether the end value is inclusive */
+  endInclusive?: boolean;
+  /** Custom label for the end point (e.g., fraction in LaTeX) */
+  endLabel?: ReactNode;
+  /** The label of the segment */
+  label?: ReactNode;
+  /** Whether the segment is shaded */
+  shaded?: boolean;
+  /** Whether the segment should show points */
+  showPoints?: boolean;
+  /** The start value of the segment */
+  start: number;
+  /** Whether the start value is inclusive */
+  startInclusive?: boolean;
+  /** Custom label for the start point (e.g., fraction in LaTeX) */
+  startLabel?: ReactNode;
+}
+
 interface NumberLineProps {
   description: ReactNode;
   max?: number;
   min?: number;
-  segments: {
-    /** The background color of the segment */
-    backgroundColor?: string;
-    /** The end value of the segment */
-    end: number;
-    /** Whether the end value is inclusive */
-    endInclusive?: boolean;
-    /** Custom label for the end point (e.g., fraction in LaTeX) */
-    endLabel?: ReactNode;
-    /** The label of the segment */
-    label?: ReactNode;
-    /** Whether the segment is shaded */
-    shaded?: boolean;
-    /** Whether the segment should show points */
-    showPoints?: boolean;
-    /** The start value of the segment */
-    start: number;
-    /** Whether the start value is inclusive */
-    startInclusive?: boolean;
-    /** Custom label for the start point (e.g., fraction in LaTeX) */
-    startLabel?: ReactNode;
-  }[];
+  segments: NumberLineSegment[];
   title: ReactNode;
+}
+
+/** The range and segments of one number line, shared with its body. */
+interface NumberLineConfig {
+  max?: number | undefined;
+  min?: number | undefined;
+  segments: readonly NumberLineSegment[];
+}
+
+const NumberLineContext = createContext<NumberLineConfig | null>(null);
+
+/** Provides one number line's range and segments to its body. */
+export function NumberLineProvider({
+  children,
+  config,
+}: {
+  children: ReactNode;
+  config: NumberLineConfig;
+}) {
+  return <NumberLineContext value={config}>{children}</NumberLineContext>;
+}
+
+/** Reads the range and segments of the surrounding number line. */
+function useNumberLine() {
+  const config = use(NumberLineContext);
+  if (!config) {
+    // A missing provider is a programmer composition error at this React seam.
+    throw new Error("useNumberLine must be used within NumberLineProvider");
+  }
+  return config;
 }
 
 /**
@@ -87,10 +122,7 @@ function getSegmentEdge({
 }
 
 /** Returns the finite bounds that should contribute to the number-line range. */
-function getFiniteSegmentValues({
-  end,
-  start,
-}: NumberLineProps["segments"][number]) {
+function getFiniteSegmentValues({ end, start }: NumberLineSegment) {
   const hasFiniteStart = Number.isFinite(start);
   const hasFiniteEnd = Number.isFinite(end);
 
@@ -109,13 +141,9 @@ function getFiniteSegmentValues({
   return [];
 }
 
-export function NumberLine({
-  min,
-  max,
-  segments,
-  title,
-  description,
-}: NumberLineProps) {
+/** Draws one number line's scale, its segments, their labels, and its full screen action. */
+export function NumberLineBody() {
+  const { max, min, segments } = useNumberLine();
   const allValues = Arr.flatMap(segments, getFiniteSegmentValues);
 
   const rangeMin = min ?? (allValues.length > 0 ? Math.min(...allValues) : -10);
@@ -165,8 +193,7 @@ export function NumberLine({
   });
 
   return (
-    <VisualCard>
-      <VisualCardHeader description={description} title={title} />
+    <>
       <VisualCardBody>
         <div className="w-full p-(--card-spacing)">
           <div className="relative h-20 w-full">
@@ -266,6 +293,26 @@ export function NumberLine({
       <VisualCardActions>
         <VisualCardFullscreen />
       </VisualCardActions>
-    </VisualCard>
+    </>
+  );
+}
+
+/** Draws one number line card: its header and its scale. */
+export function NumberLine({
+  min,
+  max,
+  segments,
+  title,
+  description,
+}: NumberLineProps) {
+  const config = { max, min, segments };
+
+  return (
+    <NumberLineProvider config={config}>
+      <VisualCard>
+        <VisualCardHeader description={description} title={title} />
+        <NumberLineBody />
+      </VisualCard>
+    </NumberLineProvider>
   );
 }
