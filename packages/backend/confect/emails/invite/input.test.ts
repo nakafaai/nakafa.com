@@ -43,7 +43,7 @@ describe("emails/invite/input", () => {
           locale,
           organisation: "Yayasan Nakafa",
           privacyPolicyUrl: `http://localhost:3000/${locale}/privacy-${locale}`,
-          signInUrl: `http://localhost:3000/${locale}/auth`,
+          signInUrl: "http://nf.localhost:3000/",
           termsOfServiceUrl: `http://localhost:3000/${locale}/terms-${locale}`,
         });
       })

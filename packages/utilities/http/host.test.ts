@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import { readHostname } from "@repo/utilities/http/host";
+import { isLoopbackHostname, readHostname } from "@repo/utilities/http/host";
 import { Option } from "effect";
 
 describe("HTTP Host hostnames", () => {
@@ -25,5 +25,19 @@ describe("HTTP Host hostnames", () => {
     "evil.example@harapan.nakafa.com",
   ])("names no host for the Host value %s", (host) => {
     expect(readHostname(host)).toEqual(Option.none());
+  });
+});
+
+describe("loopback hostname", () => {
+  it("names localhost, its subdomains and the loopback addresses", () => {
+    expect(isLoopbackHostname("localhost")).toBe(true);
+    expect(isLoopbackHostname("harapan.localhost")).toBe(true);
+    expect(isLoopbackHostname("127.0.0.1")).toBe(true);
+    expect(isLoopbackHostname("[::1]")).toBe(true);
+  });
+
+  it("does not name a host that merely ends with localhost", () => {
+    expect(isLoopbackHostname("nakafa.com")).toBe(false);
+    expect(isLoopbackHostname("evillocalhost")).toBe(false);
   });
 });

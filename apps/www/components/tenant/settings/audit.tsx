@@ -22,7 +22,11 @@ import {
 } from "@repo/design-system/components/ui/table";
 import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
-import { CardSection } from "@/components/shared/card/section";
+import {
+  CardSection,
+  CardSectionFooter,
+  CardSectionHint,
+} from "@/components/shared/card/section";
 import { SchoolTableHeader } from "@/components/tenant/settings/table";
 import { SchoolDateTime } from "@/components/tenant/settings/time";
 
@@ -86,6 +90,9 @@ export function SchoolAuditSettings({ slug }: { slug: TenantSlug }) {
           <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
         ) : null}
       </CardContent>
+      <CardSectionFooter>
+        <CardSectionHint>{t("audit-footer")}</CardSectionHint>
+      </CardSectionFooter>
     </CardSection>
   );
 }

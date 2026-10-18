@@ -1,20 +1,7 @@
 import { isSchoolLabel } from "@repo/backend/confect/tenancy/slug";
-import { readHostname } from "@repo/utilities/http/host";
+import { isLoopbackHostname, readHostname } from "@repo/utilities/http/host";
 import { getCookies } from "better-auth/cookies";
 import { Array as Arr, Effect, Option } from "effect";
-
-/**
- * Whether a host name is a loopback name, which only this machine can serve: a
- * local run uses `localhost`, a `*.localhost` name, or an IP loopback address.
- */
-export function isLoopbackHostname(hostname: string) {
-  return (
-    hostname === "localhost" ||
-    hostname.endsWith(".localhost") ||
-    hostname === "127.0.0.1" ||
-    hostname === "[::1]"
-  );
-}
 
 /**
  * Whether a host is a school host of the site: `<label>.<site host>`, where the

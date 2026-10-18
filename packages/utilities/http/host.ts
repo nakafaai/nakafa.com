@@ -17,3 +17,16 @@ export function readHostname(host: string): Option.Option<string> {
     ? Option.some(url.hostname)
     : Option.none();
 }
+
+/**
+ * Whether a host name is a loopback name, which only this machine can serve: a
+ * local run uses `localhost`, a `*.localhost` name, or an IP loopback address.
+ */
+export function isLoopbackHostname(hostname: string) {
+  return (
+    hostname === "localhost" ||
+    hostname.endsWith(".localhost") ||
+    hostname === "127.0.0.1" ||
+    hostname === "[::1]"
+  );
+}

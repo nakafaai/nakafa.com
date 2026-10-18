@@ -124,6 +124,7 @@ export default async function Page({
                   options={countryOptions}
                 />
               ) : undefined,
+            homeHref: "/home",
             homeLabel: tCommon("home"),
             items: [{ label: tCommon("try-out") }],
             menuLabel: tCommon("more"),
