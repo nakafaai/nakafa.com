@@ -29,24 +29,19 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
-import { toast } from "@repo/design-system/lib/toast/notify";
-import { isComposingKey } from "@repo/utilities/composition";
-import { Effect } from "effect";
 import { useTranslations } from "next-intl";
 import {
   Activity,
   type PropsWithChildren,
   type ReactNode,
-  useEffect,
-  useRef,
   useState,
 } from "react";
 import { useChat } from "@/components/ai/chat/context";
 import { ChatDeletion } from "@/components/ai/chat/deletion";
-import { useUpdateChatTitleMutation } from "@/components/ai/chat/mutation.client";
+import { handleTitleKeyDown } from "@/components/ai/chat/rename";
+import { useChatRename } from "@/components/ai/chat/rename.client";
 import { ChatSharing } from "@/components/ai/chat/sharing";
 import { BreadcrumbHeaderFrame } from "@/components/shared/breadcrumb/frame";
-import { reportClientException } from "@/lib/analytics/client";
 
 /** Render the current chat header or its stable empty placeholder. */
 export function AiChatHeader() {
@@ -63,65 +58,20 @@ function AiChatHeaderContent({ chat }: { chat: ChatView }) {
   const t = useTranslations("Ai");
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [confirmShare, setConfirmShare] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [chatTitle, setChatTitle] = useState("");
-  const inputRef = useRef<HTMLInputElement>(null);
   const isOwner = useChat((state) => state.owner);
-  const updateChatTitle = useUpdateChatTitleMutation();
-
-  // The box takes the focus when it opens, and again when a refused rename
-  // brings it back.
-  useEffect(() => {
-    if (isEditing) {
-      inputRef.current?.focus();
-    }
-  }, [isEditing]);
-
-  /** Enter title editing with the current title selected for input. */
-  const handleEdit = () => {
-    setChatTitle(chat.title ?? "");
-    setIsEditing(true);
-  };
-
-  /** Persist a non-empty edited chat title, unless the chat already has that title. */
-  const handleSave = () => {
-    const nextTitle = chatTitle.trim();
-    if (!nextTitle) {
-      return;
-    }
-    setIsEditing(false);
-    if (nextTitle === chat.title) {
-      return;
-    }
-    Effect.runFork(
-      Effect.tryPromise(() =>
-        updateChatTitle({
-          chatId: chat._id,
-          title: nextTitle,
-        })
-      ).pipe(
-        Effect.flatMap(Effect.fromResult),
-        Effect.matchEffect({
-          onSuccess: () => Effect.void,
-          onFailure: (error) =>
-            reportClientException(error, {
-              source: "components/ai/chat/header",
-            }).pipe(
-              Effect.andThen(
-                Effect.sync(() => {
-                  // The box comes back with the words the learner wrote.
-                  setIsEditing(true);
-                  toast.error({
-                    description: "action-error.description",
-                    title: "action-error.title",
-                  });
-                })
-              )
-            ),
-        })
-      )
-    );
-  };
+  const {
+    chatTitle,
+    closeEditor,
+    handleEdit,
+    handleSave,
+    inputRef,
+    isEditing,
+    menuFinalFocus,
+    moreActions,
+    onMenuOpenChange,
+    setChatTitle,
+    titleRef,
+  } = useChatRename(chat);
 
   const isPrivate = chat.visibility === "private";
   return (
@@ -133,7 +83,7 @@ function AiChatHeaderContent({ chat }: { chat: ChatView }) {
               <>
                 <Button
                   aria-label={tCommon("cancel")}
-                  onClick={() => setIsEditing(false)}
+                  onClick={closeEditor}
                   size="icon"
                   variant="outline"
                 >
@@ -153,11 +103,12 @@ function AiChatHeaderContent({ chat }: { chat: ChatView }) {
             ) : null}
 
             {isOwner ? (
-              <DropdownMenu>
+              <DropdownMenu onOpenChange={onMenuOpenChange}>
                 <DropdownMenuTrigger
                   render={
                     <Button
                       aria-label={tCommon("more-actions")}
+                      ref={moreActions}
                       size="icon"
                       variant="outline"
                     >
@@ -166,7 +117,11 @@ function AiChatHeaderContent({ chat }: { chat: ChatView }) {
                     </Button>
                   }
                 />
-                <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuContent
+                  align="end"
+                  className="w-56"
+                  finalFocus={menuFinalFocus}
+                >
                   <DropdownMenuGroup>
                     <DropdownMenuItem
                       className="cursor-pointer"
@@ -205,25 +160,22 @@ function AiChatHeaderContent({ chat }: { chat: ChatView }) {
             className="h-8 border-none px-2 py-0 shadow-none focus-visible:ring-0"
             maxLength={MAX_TITLE_LENGTH}
             onChange={(e) => setChatTitle(e.target.value)}
-            onKeyDown={(e) => {
-              // Enter confirms a composition and Escape cancels it, so neither
-              // saves nor closes the title while an input method is composing.
-              if (isComposingKey(e.nativeEvent)) {
-                return;
-              }
-              if (e.key === "Enter") {
-                handleSave();
-              }
-              if (e.key === "Escape") {
-                setIsEditing(false);
-              }
-            }}
+            onKeyDown={(e) =>
+              handleTitleKeyDown(e.nativeEvent, {
+                close: closeEditor,
+                save: handleSave,
+              })
+            }
             ref={inputRef}
             value={chatTitle}
           />
         </Activity>
         <Activity mode={isEditing ? "hidden" : "visible"}>
-          <h1 className="flex items-center gap-2 px-1.5">
+          <h1
+            className="flex items-center gap-2 px-1.5"
+            ref={titleRef}
+            tabIndex={-1}
+          >
             <HugeIcons
               className="size-4 shrink-0"
               icon={isPrivate ? SquareLock01Icon : Globe02Icon}

@@ -1,10 +1,9 @@
 "use client";
 
-import { useCallbackRef } from "@mantine/hooks";
+import { useCallbackRef, useMergedRef } from "@mantine/hooks";
 import { cn } from "cn";
-import { Array as Arr } from "effect";
-import type { CSSProperties } from "react";
-import { useRef, useState } from "react";
+import { Array as Arr, type Option } from "effect";
+import { type CSSProperties, useLayoutEffect, useRef, useState } from "react";
 import {
   type CustomContainerComponentProps,
   type CustomItemComponentProps,
@@ -12,6 +11,14 @@ import {
 } from "virtua";
 import { useMemoryActions } from "@/components/user/settings/memory/actions.client";
 import { MemoryDeleteDialog } from "@/components/user/settings/memory/delete";
+import {
+  focusAfterDelete,
+  focusFirst,
+  MEMORY_LIST_ID,
+  MEMORY_SEARCH_ID,
+  memoryNeighbour,
+  NO_NEIGHBOUR,
+} from "@/components/user/settings/memory/focus";
 import {
   MEMORY_PAGE,
   type Memory,
@@ -44,25 +51,34 @@ export function MemoryWindow({ memories }: { memories: readonly Memory[] }) {
   const { remove } = useMemoryActions();
   // The memory a row asked to delete, until the learner confirms or cancels.
   const [pending, setPending] = useState<Memory | null>(null);
-  const frame = useRef<HTMLDivElement>(null);
+  // The memory after the one confirmed, or before it when it was the last, read
+  // when the learner confirms. It takes the focus once the delete is confirmed.
+  const neighbour = useRef<Option.Option<Memory["id"]>>(NO_NEIGHBOUR);
+  // Set when the learner confirms, so the question gives the focus to the neighbour.
+  const confirmed = useRef(false);
   // One function for every row, so a row renders again only when its memory changes.
-  const askRow = useCallbackRef((memory: Memory) => setPending(memory));
-  // The row the learner deleted leaves the page while the question closes, and
-  // the focus was in the question, so the question hands the focus to the list.
-  const focusList = useCallbackRef(
-    () => frame.current?.querySelector("ul") ?? null
+  const askRow = useCallbackRef((memory: Memory) => {
+    confirmed.current = false;
+    setPending(memory);
+  });
+  // A confirmed delete hands the focus to the neighbour's row. A cancelled question
+  // returns it to the row that asked, as the dialog does on its own.
+  const focusAfterQuestion = useCallbackRef(() =>
+    confirmed.current ? focusAfterDelete(neighbour.current) : true
   );
 
   /** Removes the memory the learner confirmed, and closes the question. */
   function confirmDelete() {
     if (pending !== null) {
+      neighbour.current = memoryNeighbour(memories, pending.id);
+      confirmed.current = true;
       remove(pending);
     }
     setPending(null);
   }
 
   return (
-    <div ref={frame}>
+    <div>
       {Arr.length(memories) < MEMORY_PAGE ? (
         <MemoryItems>
           {Arr.map(memories, (memory, index) => (
@@ -85,7 +101,7 @@ export function MemoryWindow({ memories }: { memories: readonly Memory[] }) {
         </WindowVirtualizer>
       )}
       <MemoryDeleteDialog
-        finalFocus={focusList}
+        finalFocus={focusAfterQuestion}
         onConfirm={confirmDelete}
         onOpenChange={(open) => {
           if (!open) {
@@ -107,15 +123,37 @@ type Placed<Props extends { style: CSSProperties }> = Omit<Props, "style"> &
 
 /**
  * The list the rows stand in. It can take the focus from a row that leaves the
- * page, but no press or Tab stops on it.
+ * page, but no press or Tab stops on it. When the list itself leaves the page
+ * with the focus in it, the focus goes to the search field, which stays, so a
+ * focus that a row handed to the list is not lost. A cancelled delete question
+ * gives the focus back on its own, and a confirmed one moves it to the neighbour.
  */
 function MemoryItems({
   children,
   ref,
   style,
 }: Placed<CustomContainerComponentProps>) {
+  const list = useRef<HTMLUListElement>(null);
+  const listRef = useMergedRef(ref, list);
+
+  // The cleanup runs before the list leaves the page, while the focus is in it.
+  useLayoutEffect(
+    () => () => {
+      if (list.current?.contains(document.activeElement)) {
+        focusFirst([document.getElementById(MEMORY_SEARCH_ID)]);
+      }
+    },
+    []
+  );
+
   return (
-    <ul className="outline-none" ref={ref} style={style} tabIndex={-1}>
+    <ul
+      className="outline-none"
+      id={MEMORY_LIST_ID}
+      ref={listRef}
+      style={style}
+      tabIndex={-1}
+    >
       {children}
     </ul>
   );

@@ -1,6 +1,10 @@
 "use client";
 
 import { MoreVerticalIcon } from "@hugeicons/core-free-icons";
+import {
+  editorBar,
+  editorRow,
+} from "@repo/design-system/components/editor/frame";
 import { RichEditorStyle } from "@repo/design-system/components/editor/style";
 import {
   RichEditorBlocks,
@@ -133,15 +137,8 @@ export function RichEditorToolbar({ labels }: RichEditorToolbarProps) {
   }, []);
 
   return (
-    <div
-      className="flex items-center gap-1.5 border-b px-2 py-1.5"
-      data-slot="editor-toolbar"
-      role="toolbar"
-    >
-      <div
-        className="relative flex h-8 min-w-0 flex-1 flex-wrap content-start items-center gap-x-1.5 overflow-hidden"
-        ref={row}
-      >
+    <div className={editorBar()} data-slot="editor-toolbar" role="toolbar">
+      <div className={editorRow()} ref={row}>
         {Arr.map(GROUPS, ({ name, Tools }) => (
           <RichEditorGroup
             data-group={name}

@@ -94,11 +94,15 @@ export function clearList(store: Store) {
   changePages(store, pageCleared);
 }
 
-/** Sets whether memory is paused, when the browser holds the state. */
+/**
+ * Sets whether memory is paused at once, also before the page has read the
+ * state, so the switch moves on the press. The server's answer that there is no
+ * state is left to the server.
+ */
 export function pauseState(store: Store, paused: boolean) {
   const current = store.getQuery(nina.memory.state, {});
 
-  if (Option.isSome(current) && current.value !== null) {
+  if (Option.isNone(current) || current.value !== null) {
     store.setQuery(nina.memory.state, {}, Option.some({ paused }));
   }
 }

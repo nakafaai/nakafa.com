@@ -1,14 +1,27 @@
 "use client";
 
 import { useCallbackRef } from "@mantine/hooks";
+import { placeCaret } from "@repo/design-system/components/editor/caret";
 import { richOptions } from "@repo/design-system/components/editor/extensions";
+import {
+  editorDocument,
+  editorFrame,
+  editorScroll,
+} from "@repo/design-system/components/editor/frame";
 import { RichEditorToolbar } from "@repo/design-system/components/editor/toolbar";
+import { EditorPreview } from "@repo/design-system/components/editor/words";
 import type { EditorProps } from "@tiptap/pm/view";
 import { EditorContent, EditorContext, useEditor } from "@tiptap/react";
 import type { ComponentProps } from "react";
 import { useMemo, useState } from "react";
 
 interface RichEditorProps {
+  /**
+   * Whether the caret goes to the end of the text once the editor exists. A
+   * closing editor takes no focus, so the focus stays where the closing left it,
+   * and an editor takes no caret from a field the learner is typing in.
+   */
+  autoFocus: boolean;
   /**
    * The Markdown the editor starts with. Once the editor exists it owns the
    * text and reports every edit through `onChange`, so a later change of this
@@ -41,10 +54,13 @@ interface RichEditorProps {
  * sits above the text, and the text fills the space its parent gives, so the
  * parent decides the height. Each block takes the direction of its own words.
  *
- * Load it with `next/dynamic` and `ssr: false`: the editor needs the browser
- * and brings the editing library with it.
+ * Load it with `import()` where the learner opens it, not with the page, because
+ * it brings the editing library with it. Until the editor exists, the saved
+ * words show in its place, drawn the same way, so the words do not move when
+ * the editor takes their place.
  */
 export function RichEditor({
+  autoFocus,
   defaultValue,
   label,
   labels,
@@ -64,7 +80,11 @@ export function RichEditor({
   );
   const editorProps = useMemo<EditorProps>(
     () => ({
-      attributes: { "aria-label": label, "aria-multiline": "true" },
+      attributes: {
+        "aria-label": label,
+        "aria-multiline": "true",
+        class: editorDocument(),
+      },
       handleKeyDown: (_view, event) => {
         if (event.key === "Escape") {
           close();
@@ -77,23 +97,33 @@ export function RichEditor({
   );
   const editor = useEditor({
     ...options,
-    autofocus: "end",
     content,
     contentType: "markdown",
     editorProps,
     immediatelyRender: false,
+    // The editor's own autofocus takes the focus at its mount whatever the
+    // learner has chosen, so the caret is placed here, once the editor exists.
+    onCreate: ({ editor: created }) => {
+      if (autoFocus) {
+        placeCaret(created, document.activeElement);
+      }
+    },
     onUpdate: ({ editor: current }) => change(current.getMarkdown()),
   });
   const context = useMemo(() => ({ editor }), [editor]);
 
+  // The editor is made after the first render, so the saved words stand in for it
+  // until then, drawn the way the editor draws them. The editor replaces them
+  // with the same words, and no frame shows an empty document.
+  if (editor === null) {
+    return <EditorPreview markdown={content} placeholder={placeholder} />;
+  }
+
   return (
     <EditorContext value={context}>
-      <div className="flex min-h-0 flex-1 flex-col" data-slot="editor">
+      <div className={editorFrame()} data-slot="editor">
         <RichEditorToolbar labels={labels} />
-        <EditorContent
-          className="min-h-0 flex-1 overflow-y-auto text-sm/relaxed [&_.ProseMirror>*+*]:mt-2 [&_.ProseMirror]:min-h-full [&_.ProseMirror]:px-4 [&_.ProseMirror]:py-3 [&_.ProseMirror]:outline-none [&_.is-editor-empty]:before:pointer-events-none [&_.is-editor-empty]:before:float-left [&_.is-editor-empty]:before:h-0 [&_.is-editor-empty]:before:text-muted-foreground [&_.is-editor-empty]:before:content-[attr(data-placeholder)] [&_a]:text-primary [&_a]:underline [&_a]:underline-offset-4 [&_blockquote]:border-s-2 [&_blockquote]:ps-3 [&_blockquote]:text-muted-foreground [&_code]:rounded-sm [&_code]:bg-muted [&_code]:px-1 [&_code]:font-mono [&_h1]:font-semibold [&_h1]:text-xl [&_h2]:font-semibold [&_h2]:text-lg [&_h3]:font-semibold [&_h3]:text-base [&_hr]:my-3 [&_li>p]:m-0 [&_mark]:rounded-sm [&_mark]:bg-amber-200 [&_mark]:px-0.5 [&_mark]:text-amber-950 [&_ol]:list-decimal [&_ol]:ps-5 [&_pre]:rounded-md [&_pre]:bg-muted [&_pre]:p-3 [&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_ul:not([data-type=taskList])]:list-disc [&_ul:not([data-type=taskList])]:ps-5 [&_ul[data-type=taskList]_li>div]:min-w-0 [&_ul[data-type=taskList]_li>div]:flex-1 [&_ul[data-type=taskList]_li>label]:mt-0.5 [&_ul[data-type=taskList]_li]:flex [&_ul[data-type=taskList]_li]:items-start [&_ul[data-type=taskList]_li]:gap-2"
-          editor={editor}
-        />
+        <EditorContent className={editorScroll()} editor={editor} />
       </div>
     </EditorContext>
   );
