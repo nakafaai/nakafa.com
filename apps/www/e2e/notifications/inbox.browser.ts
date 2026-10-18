@@ -5,6 +5,8 @@ import { createSchool, inviteLearner } from "@/e2e/support/school";
 
 /** The sentence an invitation row shows in English. */
 const INVITATION = "You have been invited to join this school.";
+/** The name of the learner account that the acceptance invite command creates. */
+const LEARNER_NAME = "Acceptance Learner";
 
 test("pressing an invitation marks it read before the page moves to the school, and a fresh load shows it read", async ({
   browser,
@@ -83,6 +85,33 @@ test("Mark all as read marks both invitations of one learner read", async ({
   await page.getByRole("button", { name: "Mark all as read" }).click();
   await expect(invitations.nth(0)).toHaveCSS("font-weight", "400");
   await expect(invitations.nth(1)).toHaveCSS("font-weight", "400");
+  await context.close();
+});
+
+test("an invited learner who claimed the invitation sees the school in the account menu", async ({
+  browser,
+  baseURL,
+}) => {
+  const origin = await Effect.runPromise(Effect.fromNullishOr(baseURL));
+  const school = await Effect.runPromise(createSchool());
+  const context = await browser.newContext();
+  await Effect.runPromise(
+    inviteLearner({
+      address: `learner-${school.slug}@acceptance.example.test`,
+      baseURL: origin,
+      context,
+      slug: school.slug,
+    })
+  );
+  const page = await context.newPage();
+
+  await page.goto(new URL("/en/notifications", origin).href);
+  await page.getByRole("button", { name: LEARNER_NAME }).click();
+
+  await expect(page.getByText("Your schools", { exact: true })).toBeVisible();
+  await expect(
+    page.getByRole("menuitem", { name: school.name })
+  ).toHaveAttribute("href", `https://${school.slug}.nakafa.com/`);
   await context.close();
 });
 
