@@ -65,6 +65,7 @@ export function SchoolStudentsSettings({ slug }: { slug: TenantSlug }) {
       <SchoolLoginsCard slug={slug} />
       <SchoolPersonCard
         description={t("students-description")}
+        footer={t("students-person-footer")}
         onChoose={setPersonId}
         personId={personId}
         slug={slug}
@@ -114,6 +115,9 @@ function SchoolLoginsCard({ slug }: { slug: TenantSlug }) {
           <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
         ) : null}
       </CardContent>
+      <CardSectionFooter>
+        <CardSectionHint>{t("logins-footer")}</CardSectionHint>
+      </CardSectionFooter>
     </CardSection>
   );
 }

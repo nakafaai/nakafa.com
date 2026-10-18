@@ -76,6 +76,7 @@ export async function MaterialShell({ page }: { page: MaterialPageContent }) {
           <ContentHeader
             breadcrumb={
               <BreadcrumbHeaderPath
+                homeHref="/home"
                 homeLabel={tCommon("home")}
                 items={[]}
                 menuLabel={tCommon("more")}

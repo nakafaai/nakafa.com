@@ -7,7 +7,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
-import { CardSection } from "@/components/shared/card/section";
+import {
+  CardSection,
+  CardSectionFooter,
+  CardSectionHint,
+} from "@/components/shared/card/section";
 import {
   type PersonId,
   SchoolPersonPicker,
@@ -16,12 +20,15 @@ import {
 /** Renders the card that holds the picker of the person whose access a settings page shows. */
 export function SchoolPersonCard({
   description,
+  footer,
   onChoose,
   personId,
   slug,
   title,
 }: {
   description: string;
+  /** The footer's sentence: what choosing a person here leads to. */
+  footer: string;
   onChoose: (personId: PersonId) => void;
   personId: PersonId | undefined;
   slug: TenantSlug;
@@ -40,6 +47,9 @@ export function SchoolPersonCard({
           slug={slug}
         />
       </CardContent>
+      <CardSectionFooter>
+        <CardSectionHint>{footer}</CardSectionHint>
+      </CardSectionFooter>
     </CardSection>
   );
 }

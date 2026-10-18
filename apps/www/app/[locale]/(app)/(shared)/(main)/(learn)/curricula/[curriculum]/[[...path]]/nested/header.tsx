@@ -23,6 +23,7 @@ export default function CurriculumNestedHeader({
   return (
     <BreadcrumbHeader
       value={{
+        homeHref: "/home",
         homeLabel,
         items: [
           {
