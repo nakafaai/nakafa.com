@@ -3,6 +3,7 @@
 import {
   FileValidationIcon,
   LockIcon,
+  Notification01Icon,
   Settings01Icon,
   UserIcon,
 } from "@hugeicons/core-free-icons";
@@ -30,6 +31,7 @@ import { profileHref } from "@/lib/profile/href";
 export function NavUserAccount({ user }: { user: CurrentUser }) {
   const t = useTranslations("Auth");
   const tLegal = useTranslations("Legal");
+  const tNotifications = useTranslations("Notifications");
   const pageNavigation = usePageNavigation((navigation) => navigation);
   const router = useRouter();
   const authNavigation = useCurrentAuthNavigation();
@@ -72,6 +74,13 @@ export function NavUserAccount({ user }: { user: CurrentUser }) {
             {t("profile")}
           </DropdownMenuItem>
         )}
+        <DropdownMenuItem
+          className="cursor-pointer"
+          onClick={() => router.push("/notifications")}
+        >
+          <HugeIcons icon={Notification01Icon} />
+          {tNotifications("title")}
+        </DropdownMenuItem>
         <DropdownMenuItem
           className="cursor-pointer"
           onClick={() => router.push("/user/settings")}

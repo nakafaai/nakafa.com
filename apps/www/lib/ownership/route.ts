@@ -83,7 +83,12 @@ export function isApplicationRoutePath(
     return isProfileTab(segments);
   }
 
-  if (Arr.contains(["contributor", "home", "pricing", "search"], root)) {
+  if (
+    Arr.contains(
+      ["contributor", "home", "notifications", "pricing", "search"],
+      root
+    )
+  ) {
     return segments.length === 0;
   }
 
