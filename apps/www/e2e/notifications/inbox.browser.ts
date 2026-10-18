@@ -5,7 +5,7 @@ import { createSchool, inviteLearner } from "@/e2e/support/school";
 /** The sentence an invitation row shows in English. */
 const INVITATION = "You have been invited to join this school.";
 
-test("pressing an invitation marks it read before the page moves to the school, and the read stays after a reload", async ({
+test("pressing an invitation marks it read before the page moves to the school, and a fresh load shows it read", async ({
   browser,
   baseURL,
 }) => {
@@ -20,11 +20,14 @@ test("pressing an invitation marks it read before the page moves to the school, 
       slug: school.slug,
     })
   );
-  // The local runtime does not serve the school's host. The navigation that the press
-  // starts gets an empty answer, which keeps this page on the screen, so the test
-  // checks where the press goes and never follows the link.
+  // The local runtime does not serve the school's host, so a stand-in page answers it.
+  // The page really leaves, so a read sent too late would be lost with it.
   await context.route(`https://${school.slug}.nakafa.com/**`, (route) =>
-    route.fulfill({ status: 204 })
+    route.fulfill({
+      body: "<!doctype html><title>School</title>",
+      contentType: "text/html",
+      status: 200,
+    })
   );
   const page = await context.newPage();
 
@@ -42,8 +45,9 @@ test("pressing an invitation marks it read before the page moves to the school, 
   );
   await invitation.click();
   await movedToSchool;
-  await expect(invitation).toHaveCSS("font-weight", "400");
-  await page.reload();
+  await page.waitForURL(`https://${school.slug}.nakafa.com/**`);
+  // The press saved the read before the page left: a fresh load shows the row read.
+  await page.goto(new URL("/en/notifications", origin).href);
   await expect(page.getByRole("link", { name: INVITATION })).toHaveCSS(
     "font-weight",
     "400"
