@@ -130,6 +130,9 @@ export function BlockMath({
  * because an `inline-block` with `overflow` takes its bottom edge as its
  * baseline. The padding and the negative margin cancel for layout and leave the
  * ink of a root or an underbrace room, which `overflow` would otherwise clip.
+ * Its widest is the column plus that padding: a box that may only be as wide as
+ * the column would lose the padding's width from its text wherever the column
+ * is as wide as the formula, as a table cell is.
  * The strut KaTeX puts in each piece to hold the formula's height and depth is
  * taken out of flow, so a piece keeps the baseline and the line height of the
  * text around it.
@@ -137,7 +140,7 @@ export function BlockMath({
 export function InlineMath(props: MathComponentProps) {
   return (
     <span
-      className="[&_.katex-html>.katex-base]:inline-flex! [&_.katex-html>.katex-base>.katex-strut]:absolute [&_.katex-html>.katex-base]:-m-1 [&_.katex-html>.katex-base]:max-w-full [&_.katex-html>.katex-base]:items-baseline [&_.katex-html>.katex-base]:overflow-x-auto [&_.katex-html>.katex-base]:overflow-y-hidden [&_.katex-html>.katex-base]:p-1"
+      className="[&_.katex-html>.katex-base]:inline-flex! [&_.katex-html>.katex-base>.katex-strut]:absolute [&_.katex-html>.katex-base]:-m-1 [&_.katex-html>.katex-base]:max-w-[calc(100%+0.5rem)] [&_.katex-html>.katex-base]:items-baseline [&_.katex-html>.katex-base]:overflow-x-auto [&_.katex-html>.katex-base]:overflow-y-hidden [&_.katex-html>.katex-base]:p-1"
       data-markdown-ignore=""
     >
       <KatexMarkup displayMode={false} {...props} />

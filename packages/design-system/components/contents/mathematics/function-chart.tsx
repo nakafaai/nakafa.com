@@ -64,7 +64,8 @@ export async function FunctionChart({
         <VisualCardFullscreen />
       </VisualCardActions>
       <VisualCardFooter>
-        <Table>
+        {/* At its own width, so a narrow card scrolls the values instead of cutting them. */}
+        <Table className="w-max min-w-full">
           <TableCaption className="sr-only">
             <InlineMath math={formula} />
           </TableCaption>
