@@ -124,7 +124,16 @@
     "add-question": "Add question",
     "copy": "Copy question",
     "prompt-label": "Question text",
-    "prompt-placeholder": "Write the question here."
+    "prompt-placeholder": "Write the question here.",
+    "schedule": "Schedule",
+    "schedule-title": "Schedule exam",
+    "schedule-description": "Students of the unit take it in the room from the start, for its length.",
+    "room": "Room",
+    "room-placeholder": "Lab 2",
+    "starts": "Starts",
+    "length": "Length",
+    "schedule-keys": "Mark the correct answer of every question first.",
+    "schedule-past": "The start has passed. Choose a later time."
   },
   "SchoolSettings": {
     "school": "School",
