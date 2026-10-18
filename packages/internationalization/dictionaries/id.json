@@ -96,6 +96,7 @@
     "period-rename": "Ganti nama",
     "period-rename-save": "Simpan",
     "periods-empty": "Belum ada periode.",
+    "periods-search": "Cari periode",
     "invites-description": "Undangan yang menunggu diterima, dan kapan kedaluwarsanya.",
     "invite-name": "Nama",
     "invite-email": "Email",
@@ -123,6 +124,7 @@
     "audit-who": "Siapa",
     "audit-change": "Perubahan",
     "audit-empty": "Belum ada perubahan.",
+    "audit-search": "Cari perubahan",
     "audit-operator": "Staf Nakafa",
     "audit-system": "Sistem",
     "audit-label": {
@@ -263,6 +265,7 @@
     "login-person": "Orang",
     "login-issued": "Diterbitkan",
     "logins-empty": "Belum ada kartu masuk yang diterbitkan.",
+    "logins-search": "Cari nama masuk",
     "invite-action": "Undang",
     "invites-footer": "Undang orang yang belum punya akun.",
     "invite-dialog-title": "Undang orang",
@@ -276,6 +279,7 @@
     "client-add": "Buat klien",
     "client-add-description": "Klien menghubungkan sistem lain ke sekolah ini.",
     "clients-empty": "Belum ada klien yang terhubung.",
+    "clients-search": "Cari klien",
     "client-create": "Buat",
     "client-scope": "Berlaku untuk",
     "client-name-placeholder": "Nama sistem",
@@ -318,7 +322,8 @@
     "card-reissue": "Terbitkan ulang kartu",
     "card-code-title": "Kode kartu masuk",
     "card-code-description": "Berikan kode kepada siswa, karena kode ini tidak akan ditampilkan lagi.",
-    "invites-empty": "Belum ada undangan yang menunggu."
+    "invites-empty": "Belum ada undangan yang menunggu.",
+    "invites-search": "Cari yang diundang"
   },
   "Metadata": {
     "title": "Nakafa: Materi Belajar Gratis dari SD sampai Universitas",
@@ -866,6 +871,7 @@
   "Exams": {
     "title": "Ujian",
     "empty": "Belum ada ujian.",
+    "exams-search": "Cari ujian",
     "untitled": "Ujian tanpa judul",
     "title-label": "Judul ujian",
     "unavailable": "Ujian ini tidak tersedia.",

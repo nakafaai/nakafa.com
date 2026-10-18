@@ -96,6 +96,7 @@
     "period-rename": "Rename",
     "period-rename-save": "Save",
     "periods-empty": "No period yet.",
+    "periods-search": "Find a period",
     "invites-description": "The invites that wait to be accepted, and when they expire.",
     "invite-name": "Name",
     "invite-email": "Email",
@@ -123,6 +124,7 @@
     "audit-who": "Who",
     "audit-change": "Change",
     "audit-empty": "Nothing has changed yet.",
+    "audit-search": "Find a change",
     "audit-operator": "Nakafa staff",
     "audit-system": "System",
     "audit-label": {
@@ -263,6 +265,7 @@
     "login-person": "Person",
     "login-issued": "Issued",
     "logins-empty": "No login card issued yet.",
+    "logins-search": "Find a login name",
     "invite-action": "Invite",
     "invites-footer": "Invite a person who has no account yet.",
     "invite-dialog-title": "Invite a person",
@@ -276,6 +279,7 @@
     "client-add": "Create client",
     "client-add-description": "A client connects another system to this school.",
     "clients-empty": "No client connects yet.",
+    "clients-search": "Find a client",
     "client-create": "Create",
     "client-scope": "Covers",
     "client-name-placeholder": "Name of the system",
@@ -318,7 +322,8 @@
     "card-reissue": "Reissue card",
     "card-code-title": "Login card code",
     "card-code-description": "Give the code to the student, because it will not be shown again.",
-    "invites-empty": "No invite is waiting."
+    "invites-empty": "No invite is waiting.",
+    "invites-search": "Find an invitee"
   },
   "Metadata": {
     "title": "Nakafa: Free Lessons from K-12 to University",
@@ -866,6 +871,7 @@
   "Exams": {
     "title": "Exams",
     "empty": "There are no exams yet.",
+    "exams-search": "Find an exam",
     "untitled": "Untitled exam",
     "title-label": "Exam title",
     "unavailable": "This exam is not available.",

@@ -96,6 +96,7 @@
     "period-rename": "Umbenennen",
     "period-rename-save": "Speichern",
     "periods-empty": "Noch kein Zeitraum.",
+    "periods-search": "Zeitraum suchen",
     "invites-description": "Die Einladungen, die noch angenommen werden müssen, und ihr Ablauf.",
     "invite-name": "Name",
     "invite-email": "E-Mail",
@@ -123,6 +124,7 @@
     "audit-who": "Wer",
     "audit-change": "Änderung",
     "audit-empty": "Noch hat sich nichts geändert.",
+    "audit-search": "Änderung suchen",
     "audit-operator": "Nakafa-Team",
     "audit-system": "System",
     "audit-label": {
@@ -263,6 +265,7 @@
     "login-person": "Person",
     "login-issued": "Ausgestellt",
     "logins-empty": "Noch keine Anmeldekarte ausgegeben.",
+    "logins-search": "Anmeldenamen suchen",
     "invite-action": "Einladen",
     "invites-footer": "Eine Person ohne Konto einladen.",
     "invite-dialog-title": "Person einladen",
@@ -276,6 +279,7 @@
     "client-add": "Client erstellen",
     "client-add-description": "Ein Client verbindet ein anderes System mit dieser Schule.",
     "clients-empty": "Noch ist kein Client verbunden.",
+    "clients-search": "Client suchen",
     "client-create": "Erstellen",
     "client-scope": "Gilt für",
     "client-name-placeholder": "Name des Systems",
@@ -318,7 +322,8 @@
     "card-reissue": "Karte neu ausstellen",
     "card-code-title": "Code der Anmeldekarte",
     "card-code-description": "Geben Sie den Code an den Schüler weiter, denn er wird nicht noch einmal angezeigt.",
-    "invites-empty": "Keine Einladung wartet."
+    "invites-empty": "Keine Einladung wartet.",
+    "invites-search": "Eingeladene suchen"
   },
   "Metadata": {
     "title": "Nakafa: Kostenlose Lerninhalte von der Grundschule bis zur Universität",
@@ -866,6 +871,7 @@
   "Exams": {
     "title": "Prüfungen",
     "empty": "Es gibt noch keine Prüfungen.",
+    "exams-search": "Prüfung suchen",
     "untitled": "Prüfung ohne Titel",
     "title-label": "Prüfungstitel",
     "unavailable": "Diese Prüfung ist nicht verfügbar.",

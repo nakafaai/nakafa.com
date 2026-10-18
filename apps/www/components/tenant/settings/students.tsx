@@ -27,16 +27,15 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableRow,
-} from "@repo/design-system/components/ui/table";
+import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
 import { useId, useState, useTransition } from "react";
-import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
+import {
+  DataTable,
+  type dataTableFeatures,
+} from "@/components/shared/table/data";
+import { TableEmpty } from "@/components/shared/table/frame";
 import { SettingsPage } from "@/components/tenant/settings/page";
 import {
   type PersonId,
@@ -44,7 +43,6 @@ import {
 } from "@/components/tenant/settings/people";
 import { saveSchool } from "@/components/tenant/settings/save.client";
 import { SchoolSecretDialog } from "@/components/tenant/settings/secret";
-import { SchoolTableHeader } from "@/components/tenant/settings/table";
 import { SchoolDateTime } from "@/components/tenant/settings/time";
 
 const SOURCE = "components/tenant/settings/students";
@@ -57,6 +55,9 @@ type IssuedCard = Ref.Returns<typeof identity.cards.issue>;
 
 /** One school login as the logins list shows it. */
 type LoginItem = PaginatedQueryItem<typeof identity.logins.list>;
+
+/** The columns of the logins table. */
+const loginColumns = createColumnHelper<typeof dataTableFeatures, LoginItem>();
 
 /**
  * The student accounts of the school: Issue card in the header opens the form that
@@ -111,7 +112,10 @@ export function SchoolStudentsSettings({ slug }: { slug: TenantSlug }) {
   );
 }
 
-/** The login names in a data table, or the table's empty state when no card is issued. */
+/**
+ * The login names in a data table that filters by login name, person, and expiry, or the
+ * table's empty state when no card is issued.
+ */
 function SchoolLoginTable({
   logins,
   onIssued,
@@ -133,32 +137,53 @@ function SchoolLoginTable({
     );
   }
 
-  return (
-    <TableFrame>
-      <Table>
-        <SchoolTableHeader
-          columns={[t("login-name"), t("login-person"), t("login-issued"), ""]}
+  const columns = loginColumns.columns([
+    loginColumns.accessor((login) => login.loginName, {
+      cell: (info) => <span className="font-medium">{info.getValue()}</span>,
+      filterFn: "includesString",
+      header: t("login-name"),
+      id: "login",
+      sortFn: "text",
+    }),
+    loginColumns.accessor((login) => login.person.name, {
+      filterFn: "includesString",
+      header: t("login-person"),
+      id: "person",
+      sortFn: "text",
+    }),
+    loginColumns.accessor((login) => login.issuedAt, {
+      cell: (info) => <SchoolDateTime at={info.getValue()} slug={slug} />,
+      header: t("login-issued"),
+      id: "issued",
+      sortFn: "basic",
+    }),
+    loginColumns.display({
+      cell: (info) => (
+        <SchoolLoginMenu
+          login={info.row.original}
+          onIssued={onIssued}
+          slug={slug}
         />
-        <TableBody>
-          {Arr.map(logins, (login) => (
-            <SchoolLoginRow
-              key={login.loginName}
-              login={login}
-              onIssued={onIssued}
-              slug={slug}
-            />
-          ))}
-        </TableBody>
-      </Table>
-    </TableFrame>
+      ),
+      id: "actions",
+    }),
+  ]);
+
+  return (
+    <DataTable
+      columns={columns}
+      data={logins}
+      rowId={(login) => login.loginName}
+      search={{ column: "login", placeholder: t("logins-search") }}
+    />
   );
 }
 
 /**
- * One login row: its login name, its person, when its card was issued, and its row menu,
- * which reissues the card of the person. The menu waits while the reissue runs.
+ * A login's row menu, which reissues the card of its person. The menu waits while the
+ * reissue runs, and the new code shows in the section's secret dialog.
  */
-function SchoolLoginRow({
+function SchoolLoginMenu({
   login,
   onIssued,
   slug,
@@ -173,44 +198,37 @@ function SchoolLoginRow({
   const [isPending, startTransition] = useTransition();
 
   return (
-    <TableRow>
-      <TableCell className="font-medium">{login.loginName}</TableCell>
-      <TableCell>{login.person.name}</TableCell>
-      <TableCell>
-        <SchoolDateTime at={login.issuedAt} slug={slug} />
-      </TableCell>
-      <TableCell className="text-right">
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            render={
-              <Button
-                aria-label={common("more-actions")}
-                inert={isPending}
-                size="icon-sm"
-                variant="ghost"
-              >
-                <HugeIcons icon={MoreHorizontalIcon} />
-              </Button>
-            }
-          />
-          <DropdownMenuContent align="end" className="w-44">
-            <DropdownMenuItem
-              onClick={() =>
-                startTransition(() =>
-                  saveSchool(
-                    () => reissue({ personId: login.person.id, slug }),
-                    SOURCE,
-                    onIssued
-                  )
-                )
-              }
+    <div className="flex justify-end">
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          render={
+            <Button
+              aria-label={common("more-actions")}
+              inert={isPending}
+              size="icon-sm"
+              variant="ghost"
             >
-              {t("card-reissue")}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </TableCell>
-    </TableRow>
+              <HugeIcons icon={MoreHorizontalIcon} />
+            </Button>
+          }
+        />
+        <DropdownMenuContent align="end" className="w-44">
+          <DropdownMenuItem
+            onClick={() =>
+              startTransition(() =>
+                saveSchool(
+                  () => reissue({ personId: login.person.id, slug }),
+                  SOURCE,
+                  onIssued
+                )
+              )
+            }
+          >
+            {t("card-reissue")}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
   );
 }
 

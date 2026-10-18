@@ -10,21 +10,18 @@ import { useIntersection } from "@mantine/hooks";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@repo/design-system/components/ui/table";
-import { Array as Arr } from "effect";
+import { createColumnHelper } from "@tanstack/react-table";
+import { Array as Arr, Option } from "effect";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 import { useStore } from "zustand";
 import { LayoutContent } from "@/components/shared/content/layout";
-import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
+import {
+  DataTable,
+  type dataTableFeatures,
+} from "@/components/shared/table/data";
+import { TableEmpty } from "@/components/shared/table/frame";
 import { scopeChoices, unitLanguages } from "@/components/tenant/exams/create";
 import { CreateExam } from "@/components/tenant/exams/dialog";
 import { createExamDrafts } from "@/components/tenant/exams/drafts";
@@ -33,6 +30,9 @@ import { SchoolHeader } from "@/components/tenant/header";
 
 /** How many exams the list asks for each time its end comes into view. */
 const EXAM_PAGE_SIZE = 20;
+
+/** The columns of the exams table. */
+const examColumns = createColumnHelper<typeof dataTableFeatures, ExamSummary>();
 
 /**
  * The exams of the school, newest first, each with its title and its language. An exam that
@@ -100,8 +100,8 @@ export function ExamList({ slug }: { slug: TenantSlug }) {
 }
 
 /**
- * The exams in a data table, the title linking to its editor, or the table's empty
- * state when there is none.
+ * The exams in a data table: the title links to its editor, and the language filters the
+ * list by the languages the rows hold. With no exam, the table's empty state shows instead.
  */
 function ExamTable({
   exams: rows,
@@ -124,60 +124,58 @@ function ExamTable({
     );
   }
 
-  return (
-    <TableFrame>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>{t("title-label")}</TableHead>
-            <TableHead>{t("language")}</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {Arr.map(rows, (exam) => (
-            <ExamRow
-              exam={exam}
-              key={exam.id}
-              names={names}
-              saving={Arr.contains(saving, exam.id)}
-            />
-          ))}
-        </TableBody>
-      </Table>
-    </TableFrame>
+  /** The language of one exam by its name in the reader's language. */
+  const languageLabel = (exam: ExamSummary) => names.of(exam.language);
+  const languages = Arr.dedupe(
+    Arr.getSomes(
+      Arr.map(rows, (exam) => Option.fromNullishOr(languageLabel(exam)))
+    )
   );
-}
+  const columns = examColumns.columns([
+    examColumns.accessor((exam) => exam.title, {
+      cell: (info) => (
+        <span className="font-medium">
+          {Arr.contains(saving, info.row.original.id) ? (
+            <span className="text-muted-foreground">{info.getValue()}</span>
+          ) : (
+            <Link
+              className="underline-offset-4 hover:underline"
+              href={`/exams/${info.row.original.id}/edit`}
+            >
+              {info.getValue()}
+            </Link>
+          )}
+        </span>
+      ),
+      filterFn: "includesString",
+      header: t("title-label"),
+      id: "title",
+      sortFn: "text",
+    }),
+    examColumns.accessor(languageLabel, {
+      cell: (info) => (
+        <span className="text-muted-foreground">{info.getValue()}</span>
+      ),
+      filterFn: "arrIncludesSome",
+      header: t("language"),
+      id: "language",
+      sortFn: "text",
+    }),
+  ]);
 
-/**
- * One exam of the table: its title, which opens its editor, and its language. An exam
- * that the server is still saving shows its title without a link, so it is inert.
- */
-function ExamRow({
-  exam,
-  names,
-  saving,
-}: {
-  exam: ExamSummary;
-  names: Intl.DisplayNames;
-  saving: boolean;
-}) {
   return (
-    <TableRow>
-      <TableCell className="font-medium">
-        {saving ? (
-          <span className="text-muted-foreground">{exam.title}</span>
-        ) : (
-          <Link
-            className="underline-offset-4 hover:underline"
-            href={`/exams/${exam.id}/edit`}
-          >
-            {exam.title}
-          </Link>
-        )}
-      </TableCell>
-      <TableCell className="text-muted-foreground">
-        {names.of(exam.language)}
-      </TableCell>
-    </TableRow>
+    <DataTable
+      columns={columns}
+      data={rows}
+      facets={[
+        {
+          column: "language",
+          options: Arr.map(languages, (label) => ({ label, value: label })),
+          title: t("language"),
+        },
+      ]}
+      rowId={(exam) => exam.id}
+      search={{ column: "title", placeholder: t("exams-search") }}
+    />
   );
 }
