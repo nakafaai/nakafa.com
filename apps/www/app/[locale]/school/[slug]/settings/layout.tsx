@@ -46,7 +46,5 @@ export default async function SchoolSettingsLayout({
     notFound();
   }
 
-  return (
-    <AppProviders pageNavigation={null}>{children}</AppProviders>
-  );
+  return <AppProviders pageNavigation={null}>{children}</AppProviders>;
 }
