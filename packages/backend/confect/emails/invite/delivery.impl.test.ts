@@ -14,7 +14,7 @@ const input = (locale: ActiveAppLocaleCode) => ({
   locale,
   organisation: "Yayasan Harapan Bangsa",
   privacyPolicyUrl: `https://nakafa.com/${locale}/privacy`,
-  signInUrl: `https://nakafa.com/${locale}/auth`,
+  signInUrl: "https://nf.nakafa.com/",
   termsOfServiceUrl: `https://nakafa.com/${locale}/terms`,
 });
 
@@ -28,7 +28,7 @@ describe("emails/invite/delivery", () => {
         expect(message.subject).toContain("Yayasan Harapan Bangsa");
         for (const body of [message.html, message.text]) {
           expect(body).toContain("Yayasan Harapan Bangsa");
-          expect(body).toContain(`https://nakafa.com/${locale}/auth`);
+          expect(body).toContain("https://nf.nakafa.com/");
           expect(body).toContain(`https://nakafa.com/${locale}/privacy`);
           expect(body).toContain(`https://nakafa.com/${locale}/terms`);
         }
