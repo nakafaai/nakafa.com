@@ -16,6 +16,9 @@ import classes from "./tables/classes";
 import commentLikes from "./tables/commentLikes";
 import commentVotes from "./tables/commentVotes";
 import comments from "./tables/comments";
+import connectorConnections from "./tables/connectorConnections";
+import connectorKeys from "./tables/connectorKeys";
+import connectorSecrets from "./tables/connectorSecrets";
 import contentAnalyticsPartitions from "./tables/contentAnalyticsPartitions";
 import contentArtifactFacts from "./tables/contentArtifactFacts";
 import contentArtifacts from "./tables/contentArtifacts";
@@ -129,6 +132,9 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly commentLikes: typeof commentLikes;
   readonly commentVotes: typeof commentVotes;
   readonly comments: typeof comments;
+  readonly connectorConnections: typeof connectorConnections;
+  readonly connectorKeys: typeof connectorKeys;
+  readonly connectorSecrets: typeof connectorSecrets;
   readonly contentAnalyticsPartitions: typeof contentAnalyticsPartitions;
   readonly contentArtifactFacts: typeof contentArtifactFacts;
   readonly contentArtifacts: typeof contentArtifacts;
@@ -241,6 +247,9 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   commentLikes,
   commentVotes,
   comments,
+  connectorConnections,
+  connectorKeys,
+  connectorSecrets,
   contentAnalyticsPartitions,
   contentArtifactFacts,
   contentArtifacts,
