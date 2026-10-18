@@ -1,7 +1,10 @@
 // @vitest-environment node
 
 import { describe, expect, it } from "@effect/vitest";
-import { resolveAuthoredLines } from "@repo/design-system/components/contents/mathematics/line/resolve";
+import {
+  resolveAuthoredLines,
+  resolveLineScene,
+} from "@repo/design-system/components/contents/mathematics/line/resolve";
 import { Array as Arr } from "effect";
 
 const rawLine = {
@@ -91,5 +94,31 @@ describe("authored mathematical lines", () => {
           line.smooth === false
       )
     );
+  });
+});
+
+describe("line scene configuration", () => {
+  it("resolves the authored lines and keeps the default camera and axis", () => {
+    const config = resolveLineScene({ data: [rawLine] });
+
+    expect(config.cameraPosition).toEqual([10, 6, 10]);
+    expect(config).not.toHaveProperty("cameraTarget");
+    expect(config.showZAxis).toBe(true);
+    expect(config.lines).toEqual([rawLine]);
+  });
+
+  it("keeps the camera and the axis the author sets", () => {
+    const config = resolveLineScene({
+      cameraPosition: [1, 2, 3],
+      cameraTarget: [4, 5, 6],
+      data: [rawLine],
+      showZAxis: false,
+    });
+
+    expect(config).toMatchObject({
+      cameraPosition: [1, 2, 3],
+      cameraTarget: [4, 5, 6],
+      showZAxis: false,
+    });
   });
 });

@@ -72,3 +72,28 @@ function resolveLine(line: AuthoredLine): ResolvedLine[] {
 export function resolveAuthoredLines(lines: readonly AuthoredLine[]) {
   return Arr.flatMap(lines, resolveLine);
 }
+
+const DEFAULT_CAMERA_POSITION: [number, number, number] = [10, 6, 10];
+
+/** Resolves one authored line card into the scene configuration its parts read. */
+export function resolveLineScene({
+  cameraPosition = DEFAULT_CAMERA_POSITION,
+  cameraTarget,
+  data,
+  showZAxis = true,
+}: {
+  cameraPosition?: [number, number, number] | undefined;
+  cameraTarget?: [number, number, number] | undefined;
+  data: readonly AuthoredLine[];
+  showZAxis?: boolean | undefined;
+}) {
+  return {
+    cameraPosition,
+    ...(cameraTarget === undefined ? {} : { cameraTarget }),
+    lines: resolveAuthoredLines(data),
+    showZAxis,
+  };
+}
+
+/** The scene configuration that one line-equation card shares with its parts. */
+export type LineSceneConfig = ReturnType<typeof resolveLineScene>;
