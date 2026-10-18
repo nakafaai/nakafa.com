@@ -3,11 +3,16 @@ import { describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import { COHORT_LIMIT } from "@repo/backend/confect/tenancy/cohort";
-import { journal, slugOf, tenancyFixture } from "@repo/backend/test/tenancy";
+import {
+  foreignCohort,
+  journal,
+  slugOf,
+  tenancyFixture,
+} from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect } from "effect";
 
 const nf = slugOf("nf");
-const { activePeriod, create, get, list, members, rename, archive } =
+const { activePeriod, create, get, list, rename, archive } =
   refs.public.tenancy.cohorts;
 const assignments = refs.public.tenancy.assignments;
 const periods = refs.public.tenancy.periods;
@@ -16,7 +21,6 @@ const denied = (reason: "resource" | "role" | "condition") => ({
   code: "ACCESS_DENIED",
   reason,
 });
-const firstPage = { paginationOpts: { cursor: null, numItems: 10 } };
 
 type Fixture = Effect.Success<typeof tenancyFixture>;
 
@@ -179,6 +183,26 @@ describe("tenancy/cohorts active period", () => {
         expect(yield* principal.query(activePeriod, query)).toBeNull();
       })
   );
+
+  it.effect(
+    "refuses the active period of a unit to a student, and of a unit of another school",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const byStudent = yield* fixture
+          .as("student")
+          .query(activePeriod, { slug: nf, unitId: fixture.units.sma })
+          .pipe(Effect.flip);
+        const foreign = yield* fixture
+          .as("admin")
+          .query(activePeriod, { slug: nf, unitId: fixture.units.sd })
+          .pipe(Effect.flip);
+        expect([byStudent, foreign]).toMatchObject([
+          denied("role"),
+          denied("resource"),
+        ]);
+      })
+  );
 });
 
 describe("tenancy/cohorts get", () => {
@@ -210,6 +234,34 @@ describe("tenancy/cohorts get", () => {
         expect(yield* read).toMatchObject({
           homeroom: { id: fixture.people.teacher.personId },
         });
+      })
+  );
+
+  it.effect(
+    "refuses a cohort's detail to a student, to a counselor, and to a cohort of another school",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const period = yield* sma(fixture);
+        const made = yield* cohort(fixture, period.id, "7A", 7);
+        const foreign = yield* foreignCohort(fixture);
+        const byStudent = yield* fixture
+          .as("student")
+          .query(get, { cohortId: made.id, slug: nf })
+          .pipe(Effect.flip);
+        const byCounselor = yield* fixture
+          .as("counselor")
+          .query(get, { cohortId: made.id, slug: nf })
+          .pipe(Effect.flip);
+        const byAdmin = yield* fixture
+          .as("admin")
+          .query(get, { cohortId: foreign.id, slug: nf })
+          .pipe(Effect.flip);
+        expect([byStudent, byCounselor, byAdmin]).toMatchObject([
+          denied("role"),
+          denied("role"),
+          denied("resource"),
+        ]);
       })
   );
 });
@@ -298,67 +350,6 @@ describe("tenancy/cohorts rename and archive", () => {
           { change: { type: "cohort.archived" }, subject: { id: made.id } },
         ]);
       })
-  );
-});
-
-describe("tenancy/cohorts members", () => {
-  it.effect(
-    "lets an Admin read a cohort's members, and refuses a Person placed nowhere in it",
-    () =>
-      Effect.gen(function* () {
-        const fixture = yield* tenancyFixture;
-        const period = yield* sma(fixture);
-        const made = yield* cohort(fixture, period.id, "7A", 7);
-        const outsider = yield* fixture
-          .as("student")
-          .query(members, { ...firstPage, cohortId: made.id, slug: nf })
-          .pipe(Effect.flip);
-        expect(outsider).toMatchObject(denied("role"));
-        const memberList = yield* fixture
-          .as("admin")
-          .query(members, { ...firstPage, cohortId: made.id, slug: nf });
-        expect(memberList.page).toEqual([]);
-      })
-  );
-
-  it.effect(
-    "refuses a cohort's members to a reader who may list people but not view the cohort",
-    () =>
-      Effect.gen(function* () {
-        const fixture = yield* tenancyFixture;
-        const period = yield* sma(fixture);
-        const made = yield* cohort(fixture, period.id, "7A", 7);
-        const refused = yield* fixture
-          .as("counselor")
-          .query(members, { ...firstPage, cohortId: made.id, slug: nf })
-          .pipe(Effect.flip);
-        expect(refused).toMatchObject(denied("role"));
-      })
-  );
-
-  it.effect("refuses the members of a cohort of another school", () =>
-    Effect.gen(function* () {
-      const fixture = yield* tenancyFixture;
-      const other = slugOf("other");
-      const period = yield* fixture.as("otherOwner").mutation(periods.create, {
-        end: "2026-12-19",
-        name: "Ganjil",
-        slug: other,
-        start: "2026-07-13",
-        unitId: fixture.units.sd,
-      });
-      const foreign = yield* fixture.as("otherOwner").mutation(create, {
-        grade: 7,
-        name: "7A",
-        periodId: period.id,
-        slug: other,
-      });
-      const refused = yield* fixture
-        .as("admin")
-        .query(members, { ...firstPage, cohortId: foreign.id, slug: nf })
-        .pipe(Effect.flip);
-      expect(refused).toMatchObject(denied("resource"));
-    })
   );
 });
 

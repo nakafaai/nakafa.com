@@ -1046,6 +1046,34 @@
     },
     "school-logo-refused": { "title": "Logo tidak disimpan." },
     "school-address-copied": { "title": "Alamat disalin." },
+    "school-refusal-not-student": {
+      "title": "Bukan siswa sekolah ini.",
+      "description": "Hanya siswa sekolah ini yang bisa masuk rombel."
+    },
+    "school-refusal-graduated": {
+      "title": "Sudah lulus dari sekolah ini.",
+      "description": "Siswa yang sudah lulus tidak bisa masuk rombel lagi."
+    },
+    "school-refusal-already-placed": {
+      "title": "Sudah masuk rombel periode ini.",
+      "description": "Pindahkan siswa dari rombelnya saat ini."
+    },
+    "school-refusal-placement-limit": {
+      "title": "Batas penempatan sudah tercapai.",
+      "description": "Siswa ini sudah memiliki rombel sebanyak yang diizinkan."
+    },
+    "school-refusal-not-teacher": {
+      "title": "Bukan guru aktif sekolah ini.",
+      "description": "Hanya guru aktif sekolah ini yang bisa menjadi wali kelas."
+    },
+    "school-refusal-teacher-has-homeroom": {
+      "title": "Sudah menjadi wali kelas lain.",
+      "description": "Setiap guru hanya menjadi wali kelas di satu rombel per periode."
+    },
+    "school-refusal-cohort-has-homeroom": {
+      "title": "Rombel ini sudah punya wali kelas.",
+      "description": "Hapus wali kelas yang sekarang untuk memilih yang lain."
+    },
     "action-error": {
       "title": "Tindakan ini belum berhasil.",
       "description": "Silakan coba lagi."

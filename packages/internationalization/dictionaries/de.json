@@ -1046,6 +1046,34 @@
     },
     "school-logo-refused": { "title": "Das Logo wurde nicht gespeichert." },
     "school-address-copied": { "title": "Die Adresse wurde kopiert." },
+    "school-refusal-not-student": {
+      "title": "Kein Schüler dieser Schule.",
+      "description": "Nur Schülerinnen und Schüler dieser Schule kommen in eine Klasse."
+    },
+    "school-refusal-graduated": {
+      "title": "Bereits abgeschlossen.",
+      "description": "Diese Person kann nicht erneut in eine Klasse."
+    },
+    "school-refusal-already-placed": {
+      "title": "Schon einer Klasse zugeordnet.",
+      "description": "Die Schülerin oder der Schüler wechselt stattdessen die Klasse."
+    },
+    "school-refusal-placement-limit": {
+      "title": "Höchstgrenze für Klassen erreicht.",
+      "description": "Diese Person hat bereits die höchstmögliche Zahl an Klassen."
+    },
+    "school-refusal-not-teacher": {
+      "title": "Keine aktive Lehrkraft der Schule.",
+      "description": "Nur aktive Lehrkräfte dieser Schule können Klassenlehrkraft sein."
+    },
+    "school-refusal-teacher-has-homeroom": {
+      "title": "Leitet schon eine andere Klasse.",
+      "description": "Jede Lehrkraft leitet pro Periode nur eine Klasse."
+    },
+    "school-refusal-cohort-has-homeroom": {
+      "title": "Klasse hat schon eine Lehrkraft.",
+      "description": "Die aktuelle Lehrkraft muss zuerst entfernt werden."
+    },
     "action-error": {
       "title": "Aktion nicht abgeschlossen.",
       "description": "Bitte versuche es erneut."

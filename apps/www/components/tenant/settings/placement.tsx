@@ -1,15 +1,23 @@
 "use client";
 
 import { useMutation } from "@confect/react";
+import { MoreHorizontalIcon } from "@hugeicons/core-free-icons";
 import { Id } from "@repo/backend/confect/_generated/id";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@repo/design-system/components/ui/dropdown-menu";
+import {
   Field,
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import {
   Select,
@@ -121,21 +129,17 @@ export function SchoolPlacementAdd({
 }
 
 /**
- * The dialog that moves one student from their cohort to another active cohort of the same
- * period. The row menu of the student opens it, and it closes as the move is sent.
+ * The row menu of one student. Its one action opens the dialog that moves the student to
+ * another active cohort of the same period, and the dialog closes as the move is sent.
  */
 export function SchoolPlacementMove({
   cohortId,
   member,
-  open,
-  setOpen,
   slug,
   targets,
 }: {
   cohortId: CohortId;
   member: Member;
-  open: boolean;
-  setOpen: (open: boolean) => void;
   slug: TenantSlug;
   /** The active cohorts of the period that the student may move to. */
   targets: readonly Cohort[];
@@ -146,6 +150,7 @@ export function SchoolPlacementMove({
   const move = useMutation(tenancy.placements.move).withOptimisticUpdate(
     moveStudentChange(cohortId)
   );
+  const [isMoving, setIsMoving] = useState(false);
   const [target, setTarget] = useState<CohortId | null>(null);
   const items = Arr.map(targets, (cohort) => ({
     label: cohort.name,
@@ -156,7 +161,7 @@ export function SchoolPlacementMove({
     if (target === null) {
       return;
     }
-    setOpen(false);
+    setIsMoving(false);
     startTransition(() =>
       saveSchool(
         () => move({ cohortId: target, personId: member.id, slug }),
@@ -167,58 +172,78 @@ export function SchoolPlacementMove({
   };
 
   return (
-    <ResponsiveDialog
-      description={t("placement-move-footer")}
-      footer={
-        <>
-          <Button
-            onClick={() => setOpen(false)}
-            type="button"
-            variant="outline"
-          >
-            {common("cancel")}
-          </Button>
-          <Button disabled={target === null} onClick={submit} type="button">
-            {t("placement-move-save")}
-          </Button>
-        </>
-      }
-      open={open}
-      setOpen={setOpen}
-      title={t("placement-move")}
-    >
-      <FieldGroup>
-        <Field>
-          <FieldLabel htmlFor={`${id}-target`}>
-            {t("placement-move-to")}
-          </FieldLabel>
-          <Select
-            items={items}
-            onValueChange={(value) =>
-              setTarget(
-                Option.getOrElse(
-                  Schema.decodeUnknownOption(Id("tenantCohorts"))(value),
-                  () => null
+    <div className="flex justify-end">
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          render={
+            <Button
+              aria-label={common("more-actions")}
+              size="icon-sm"
+              variant="ghost"
+            >
+              <HugeIcons icon={MoreHorizontalIcon} />
+            </Button>
+          }
+        />
+        <DropdownMenuContent align="end" className="w-44">
+          <DropdownMenuItem onClick={() => setIsMoving(true)}>
+            {t("placement-move")}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <ResponsiveDialog
+        description={t("placement-move-footer")}
+        footer={
+          <>
+            <Button
+              onClick={() => setIsMoving(false)}
+              type="button"
+              variant="outline"
+            >
+              {common("cancel")}
+            </Button>
+            <Button disabled={target === null} onClick={submit} type="button">
+              {t("placement-move-save")}
+            </Button>
+          </>
+        }
+        open={isMoving}
+        setOpen={setIsMoving}
+        title={t("placement-move")}
+      >
+        <FieldGroup>
+          <Field>
+            <FieldLabel htmlFor={`${id}-target`}>
+              {t("placement-move-to")}
+            </FieldLabel>
+            <Select
+              items={items}
+              onValueChange={(value) =>
+                setTarget(
+                  Option.getOrElse(
+                    Schema.decodeUnknownOption(Id("tenantCohorts"))(value),
+                    () => null
+                  )
                 )
-              )
-            }
-            value={target}
-          >
-            <SelectTrigger className="w-full" id={`${id}-target`}>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                {Arr.map(items, (item) => (
-                  <SelectItem key={item.value} value={item.value}>
-                    {item.label}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-        </Field>
-      </FieldGroup>
-    </ResponsiveDialog>
+              }
+              value={target}
+            >
+              <SelectTrigger className="w-full" id={`${id}-target`}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  {Arr.map(items, (item) => (
+                    <SelectItem key={item.value} value={item.value}>
+                      {item.label}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </Field>
+        </FieldGroup>
+      </ResponsiveDialog>
+    </div>
   );
 }

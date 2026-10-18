@@ -2,6 +2,7 @@ import { expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
 import {
   createSchool,
+  grantStudent,
   hostAddress,
   inviteLearner,
   signInOwner,
@@ -128,16 +129,18 @@ test("an admin places a student in a cohort, then moves the student to another",
   const school = await Effect.runPromise(createSchool());
   const address = (path: string) =>
     hostAddress(baseURL, `${school.slug}.localhost`, path);
+  const learnerAddress = `student-${school.slug}@acceptance.example.test`;
   const learnerContext = await browser.newContext();
   await Effect.runPromise(
     inviteLearner({
-      address: `student-${school.slug}@acceptance.example.test`,
+      address: learnerAddress,
       baseURL: address("/"),
       context: learnerContext,
       slug: school.slug,
     })
   );
   await learnerContext.close();
+  await Effect.runPromise(grantStudent(school.slug, learnerAddress));
   const context = await browser.newContext();
   await Effect.runPromise(signInOwner(context, school.slug, address("/")));
   const page = await context.newPage();

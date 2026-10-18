@@ -1046,6 +1046,34 @@
     },
     "school-logo-refused": { "title": "The logo was not saved." },
     "school-address-copied": { "title": "The address was copied." },
+    "school-refusal-not-student": {
+      "title": "Not a student of this school.",
+      "description": "Only a student of this school can be placed in a cohort."
+    },
+    "school-refusal-graduated": {
+      "title": "Already graduated from this school.",
+      "description": "A graduated student cannot be placed in a cohort again."
+    },
+    "school-refusal-already-placed": {
+      "title": "Already placed in this period.",
+      "description": "Move the student from their current cohort instead."
+    },
+    "school-refusal-placement-limit": {
+      "title": "Placement limit reached.",
+      "description": "This student already holds the most cohort placements."
+    },
+    "school-refusal-not-teacher": {
+      "title": "Not an active teacher.",
+      "description": "Only an active teacher of this school can lead a cohort."
+    },
+    "school-refusal-teacher-has-homeroom": {
+      "title": "Already leads another cohort.",
+      "description": "A teacher leads one cohort in each period."
+    },
+    "school-refusal-cohort-has-homeroom": {
+      "title": "This cohort already has a teacher.",
+      "description": "Remove the current teacher to choose another."
+    },
     "action-error": {
       "title": "We could not complete this action.",
       "description": "Please try again."

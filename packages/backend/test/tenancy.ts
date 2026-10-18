@@ -3,6 +3,7 @@ import { Ref } from "@confect/core";
 import { RegisteredConvexFunction } from "@confect/server";
 import resendTest from "@convex-dev/resend/test";
 import workflowTest from "@convex-dev/workflow/test";
+import refs from "@repo/backend/confect/_generated/refs";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
@@ -325,4 +326,31 @@ export const tenancyFixture = Effect.gen(function* () {
     /** The convex-test instance, for the storage helpers of `logo.ts`. */
     convex: t,
   });
+});
+
+/**
+ * Opens a period of the other school with one cohort in it, as that school's Owner, and
+ * returns the cohort. The school `nf` reads it as a row of another school.
+ */
+export const foreignCohort = Effect.fn("test.tenancy.foreignCohort")(function* (
+  fixture: Effect.Success<typeof tenancyFixture>
+) {
+  const other = slugOf("other");
+  const period = yield* fixture
+    .as("otherOwner")
+    .mutation(refs.public.tenancy.periods.create, {
+      end: "2026-12-19",
+      name: "Ganjil",
+      slug: other,
+      start: "2026-07-13",
+      unitId: fixture.units.sd,
+    });
+  return yield* fixture
+    .as("otherOwner")
+    .mutation(refs.public.tenancy.cohorts.create, {
+      grade: 7,
+      name: "7A",
+      periodId: period.id,
+      slug: other,
+    });
 });
