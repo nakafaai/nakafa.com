@@ -9,7 +9,14 @@ import { IntegrationName } from "@repo/backend/confect/integrations/schema";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Checkbox } from "@repo/design-system/components/ui/checkbox";
-import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
+import {
+  Field,
+  FieldDescription,
+  FieldGroup,
+  FieldLabel,
+  FieldLegend,
+  FieldSet,
+} from "@repo/design-system/components/ui/field";
 import { Input } from "@repo/design-system/components/ui/input";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import {
@@ -22,7 +29,7 @@ import {
 } from "@repo/design-system/components/ui/select";
 import { Array as Arr, Option, Schema } from "effect";
 import { useTranslations } from "next-intl";
-import { useState, useTransition } from "react";
+import { useId, useState, useTransition } from "react";
 import {
   IntegrationAction,
   toggleAction,
@@ -49,8 +56,10 @@ export function SchoolClientCreateDialog({
   slug: TenantSlug;
 }) {
   const t = useTranslations("SchoolSettings");
+  const common = useTranslations("Common");
   const viewer = useQuery(tenancy.viewer.get, { slug });
   const create = useMutation(integrations.clients.create);
+  const id = useId();
   const [isPending, startTransition] = useTransition();
   const [name, setName] = useState("");
   const [scope, setScope] = useState("school");
@@ -95,79 +104,86 @@ export function SchoolClientCreateDialog({
     <ResponsiveDialog
       description={t("client-add-description")}
       footer={
-        <Button
-          disabled={Option.isNone(clientName)}
-          inert={isPending}
-          onClick={submit}
-          type="button"
-        >
-          {t("client-create")}
-        </Button>
+        <>
+          <Button
+            onClick={() => setOpen(false)}
+            type="button"
+            variant="outline"
+          >
+            {common("cancel")}
+          </Button>
+          <Button
+            disabled={Option.isNone(clientName)}
+            inert={isPending}
+            onClick={submit}
+            type="button"
+          >
+            {t("client-create")}
+          </Button>
+        </>
       }
       open={open}
       setOpen={setOpen}
       title={t("client-add")}
     >
-      <Field>
-        <FieldLabel>{t("client-name")}</FieldLabel>
-        <Input
-          onChange={(event) => setName(event.target.value)}
-          placeholder={t("client-name-placeholder")}
-          value={name}
-        />
-      </Field>
-      <Field>
-        <FieldLabel>{t("client-scope")}</FieldLabel>
-        <Select
-          items={scopeItems}
-          onValueChange={(value) => {
-            if (typeof value === "string") {
-              setScope(value);
-            }
-          }}
-          value={scope}
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              {Arr.map(scopeItems, (item) => (
-                <SelectItem key={item.value} value={item.value}>
-                  {item.label}
-                </SelectItem>
-              ))}
-            </SelectGroup>
-          </SelectContent>
-        </Select>
-      </Field>
-      <Field>
-        <FieldLabel>{t("client-actions")}</FieldLabel>
-        {Arr.map(IntegrationAction.literals, (action) => {
-          const checked = Arr.contains(actions, action);
-          return (
-            <div className="flex items-center gap-2" key={action}>
-              <Checkbox
-                checked={checked}
-                disabled={checked && actions.length === 1}
-                id={`client-action-${action}`}
-                onCheckedChange={(next) =>
-                  setActions((current) => toggleAction(current, action, next))
-                }
-              />
-              <label
-                className="cursor-pointer text-sm"
-                htmlFor={`client-action-${action}`}
-              >
-                {t(`client-action.${action}`)}
-              </label>
-            </div>
-          );
-        })}
-        <p className="text-muted-foreground text-sm">
-          {t("client-actions-footer")}
-        </p>
-      </Field>
+      <FieldGroup>
+        <Field>
+          <FieldLabel htmlFor={`${id}-name`}>{t("client-name")}</FieldLabel>
+          <Input
+            id={`${id}-name`}
+            onChange={(event) => setName(event.target.value)}
+            placeholder={t("client-name-placeholder")}
+            value={name}
+          />
+        </Field>
+        <Field>
+          <FieldLabel htmlFor={`${id}-scope`}>{t("client-scope")}</FieldLabel>
+          <Select
+            items={scopeItems}
+            onValueChange={(value) => {
+              if (typeof value === "string") {
+                setScope(value);
+              }
+            }}
+            value={scope}
+          >
+            <SelectTrigger className="w-full" id={`${id}-scope`}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                {Arr.map(scopeItems, (item) => (
+                  <SelectItem key={item.value} value={item.value}>
+                    {item.label}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </Field>
+        <FieldSet>
+          <FieldLegend variant="label">{t("client-scope")}</FieldLegend>
+          {Arr.map(IntegrationAction.literals, (action) => {
+            const checked = Arr.contains(actions, action);
+            return (
+              <Field key={action} orientation="horizontal">
+                <Checkbox
+                  checked={checked}
+                  disabled={checked && actions.length === 1}
+                  id={`${id}-action-${action}`}
+                  onCheckedChange={(next) =>
+                    setActions((current) => toggleAction(current, action, next))
+                  }
+                />
+                <FieldLabel htmlFor={`${id}-action-${action}`}>
+                  {t(`client-action.${action}`)}
+                </FieldLabel>
+              </Field>
+            );
+          })}
+          <FieldDescription>{t("client-actions-footer")}</FieldDescription>
+        </FieldSet>
+      </FieldGroup>
     </ResponsiveDialog>
   );
 }
