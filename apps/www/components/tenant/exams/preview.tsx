@@ -66,10 +66,13 @@ export function QuestionPreview({
       ? "skip"
       : { clientId: PREVIEW_CLIENT, documentId: question.prompt, slug }
   );
+  // A document this build cannot read leaves its thumbnail without a prompt, and the
+  // rest of the strip stays; the editor reports the failure when the question opens.
   const read = QueryResult.isSuccess(reply)
-    ? Option.some(
-        Effect.runSync(
-          foldedDocument(assessmentSchema, reply.value).pipe(Effect.orDie)
+    ? Effect.runSync(
+        foldedDocument(assessmentSchema, reply.value).pipe(
+          Effect.map(Option.some),
+          Effect.catchTag("SyncFailed", () => Effect.succeedNone)
         )
       )
     : Option.none();
