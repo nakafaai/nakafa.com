@@ -165,8 +165,6 @@ export function IonLab({ title, description, labels }: IonLabProps) {
             label={labels.electrons}
             value={<InlineMath math={`e^-: ${electronFlowMath}`} />}
           />
-        </VisualCardFacts>
-        <VisualCardFacts>
           <VisualFact
             label={labels.protons}
             value={<InlineMath math={`${selectedSample.atomicNumber}`} />}
@@ -259,22 +257,10 @@ function ParticleCard({
           <InlineMath math={notation} />
         </div>
         <dl className="grid grid-cols-2 gap-3 text-sm">
-          <IonMiniFact label={labels.electrons} value={electrons} />
-          <IonMiniFact label={labels.charge} value={charge} />
+          <VisualFact label={labels.electrons} value={electrons} />
+          <VisualFact label={labels.charge} value={charge} />
         </dl>
       </div>
     </section>
-  );
-}
-
-/**
- * Renders one compact value inside a particle card.
- */
-function IonMiniFact({ label, value }: { label: string; value: ReactNode }) {
-  return (
-    <div className="flex min-w-0 flex-col gap-1">
-      <dt className="text-muted-foreground">{label}</dt>
-      <dd className="text-foreground">{value}</dd>
-    </div>
   );
 }

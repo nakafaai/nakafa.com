@@ -115,9 +115,10 @@ const expectSceneBands = Effect.fn("NakafaE2E.expectSceneBands")(function* (
 });
 
 /**
- * Opens a 3D scene at 200 percent text and proves its three actions stay inside
- * the card that holds them. The card clips what lies beyond its edge, so an
- * action outside the card is cut off without any error.
+ * Opens a coordinate scene at 200 percent text and proves its four actions, the
+ * grid, play, reset, and full screen, stay inside the card that holds them. The
+ * card clips what lies beyond its edge, so an action outside the card is cut off
+ * without any error.
  */
 const expectSceneActionsInsideCardAtLargeText = Effect.fn(
   "NakafaE2E.expectSceneActionsInsideCardAtLargeText"
@@ -130,7 +131,12 @@ const expectSceneActionsInsideCardAtLargeText = Effect.fn(
   );
   yield* Effect.sync(() => {
     expect(rootSize).toBe("32px");
-    expect(actions).toHaveLength(3);
+    expect(Arr.map(actions, (action) => action.label)).toEqual([
+      en.Common.grid,
+      en.Common.play,
+      en.Common.reset,
+      en.Common.fullscreen,
+    ]);
     for (const action of actions) {
       expect(action.inside).toBe(true);
       expect(action.clipped).toBe(false);
@@ -168,7 +174,7 @@ test.describe("visual card actions on the smallest phone", () => {
     viewport: { height: compactViewport.height, width: compactViewport.width },
   });
 
-  test("keep a 3D scene's three actions inside its card at 200% text", async ({
+  test("keep a 3D scene's actions inside its card at 200% text", async ({
     page,
   }) => {
     await Effect.runPromise(

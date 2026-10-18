@@ -39,7 +39,6 @@ export function ParabolicMovementStage({
         />
         <directionalLight intensity={0.28} position={[-4, 3.2, -3.5]} />
         <CameraControls
-          autoRotate={false}
           cameraPosition={PARABOLIC_SCENE.cameraPosition}
           cameraTarget={PARABOLIC_SCENE.cameraTarget}
           enablePan

@@ -23,16 +23,17 @@ import {
 } from "@repo/design-system/components/ui/toggle-group";
 import {
   VisualCard,
-  VisualCardActions,
   VisualCardBody,
   VisualCardFacts,
   VisualCardFooter,
-  VisualCardFullscreen,
   VisualCardHeader,
   VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
+import { VisualFact } from "@repo/design-system/components/visual/fact";
+import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
 import { Array as Arr } from "effect";
+import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import { type ReactNode, Suspense, useState } from "react";
 
@@ -86,6 +87,7 @@ export function SubatomicParticlesLab({
   const [selectedModeId, setSelectedModeId] =
     useState<SubatomicParticlesModeId>(CATHODE_RAY_MODE_ID);
   const selectedLabels = labels.modes[selectedModeId];
+  const t = useTranslations("Common");
   const sceneColors = getSubatomicSceneColors(resolvedTheme);
   const viewConfig = SUBATOMIC_VIEW_CONFIG[selectedModeId];
   const toggleOrientation = useVerticalToggle ? "vertical" : "horizontal";
@@ -155,30 +157,21 @@ export function SubatomicParticlesLab({
         </ThreeCanvas>
       </VisualCardBody>
 
-      <VisualCardActions>
-        <VisualCardFullscreen />
-      </VisualCardActions>
+      <VisualCardSceneActions />
 
       <VisualCardFooter>
-        <div className="max-w-3xl text-muted-foreground text-sm leading-relaxed">
-          {selectedLabels.description}
-        </div>
         <VisualCardFacts>
+          <VisualFact label={t("note")} value={selectedLabels.description} />
           {Arr.map(selectedLabels.facts, (fact) => (
-            <LabFact fact={fact} key={fact.label} />
+            <VisualFact
+              key={fact.label}
+              label={fact.label}
+              value={fact.value}
+            />
           ))}
         </VisualCardFacts>
       </VisualCardFooter>
     </VisualCard>
-  );
-}
-
-function LabFact({ fact }: { fact: { label: string; value: ReactNode } }) {
-  return (
-    <div className="flex min-h-12 min-w-0 flex-col gap-1">
-      <dt className="text-muted-foreground text-sm">{fact.label}</dt>
-      <dd className="wrap-break-word text-foreground text-sm">{fact.value}</dd>
-    </div>
   );
 }
 
@@ -198,7 +191,6 @@ function SubatomicCameraControls({
 
   return (
     <CameraControls
-      autoRotate={false}
       cameraPosition={cameraPosition}
       cameraTarget={viewConfig.cameraTarget}
       fov={45}

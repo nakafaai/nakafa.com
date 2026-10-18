@@ -185,7 +185,7 @@ export default function TableChairsAnimation({ labels }: TableChairsProps) {
       </VisualCardToolbar>
 
       <VisualCardBody className="p-(--card-spacing)">
-        <div className="relative aspect-square h-full w-full overflow-hidden rounded-lg border border-cyan-100 bg-cyan-50 p-4 sm:aspect-video dark:border-cyan-900 dark:bg-cyan-950">
+        <div className="relative aspect-square h-full w-full overflow-hidden sm:aspect-video">
           <div className="flex h-full flex-col items-center justify-center gap-8">
             {/* Table and chairs visualization */}
             <div className="relative flex w-full items-center justify-center">

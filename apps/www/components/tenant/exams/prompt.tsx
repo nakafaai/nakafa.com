@@ -121,11 +121,12 @@ export function ExamPrompt({
   const opening = useRef<Fiber.Fiber<void> | null>(null);
   const waiting = useRef<Fiber.Fiber<void> | null>(null);
 
+  // A `behind` reply makes the round reopen the document from its snapshot, so it starts one too.
   useEffect(() => {
     if (
       QueryResult.isSuccess(reply) &&
-      reply.value._tag === "steps" &&
-      reply.value.steps.length > 0
+      (reply.value._tag === "behind" ||
+        (reply.value._tag === "steps" && reply.value.steps.length > 0))
     ) {
       Effect.runFork(runRound(session.current, view.current, sync));
     }

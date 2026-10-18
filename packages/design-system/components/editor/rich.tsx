@@ -6,12 +6,14 @@ import { richOptions } from "@repo/design-system/components/editor/extensions";
 import {
   editorDocument,
   editorFrame,
+  editorPlaceholder,
   editorScroll,
 } from "@repo/design-system/components/editor/frame";
 import { RichEditorToolbar } from "@repo/design-system/components/editor/toolbar";
 import { EditorPreview } from "@repo/design-system/components/editor/words";
 import type { EditorProps } from "@tiptap/pm/view";
 import { EditorContent, EditorContext, useEditor } from "@tiptap/react";
+import { cn } from "cn";
 import type { ComponentProps } from "react";
 import { useMemo, useState } from "react";
 
@@ -83,7 +85,7 @@ export function RichEditor({
       attributes: {
         "aria-label": label,
         "aria-multiline": "true",
-        class: editorDocument(),
+        class: cn(editorPlaceholder(), editorDocument()),
       },
       handleKeyDown: (_view, event) => {
         if (event.key === "Escape") {

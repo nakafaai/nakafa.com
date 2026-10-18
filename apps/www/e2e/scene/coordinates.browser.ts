@@ -14,8 +14,8 @@ import { withBrowserContext } from "@/e2e/support/context";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import {
   CARD,
-  COORDINATE_CONTROLS,
   LINE_SCENE,
+  SCENE_ACTIONS,
   VISUAL_CARD_FOOTER,
 } from "@/e2e/support/selector";
 import { revealTimeoutMilliseconds } from "@/e2e/support/timeout";
@@ -154,11 +154,9 @@ const expectStableCoordinateSystem = Effect.fn(
   });
   const scene = card.locator(LINE_SCENE);
   const canvas = scene.locator("canvas");
-  const footer = card.locator(COORDINATE_CONTROLS);
+  const footer = card.locator(SCENE_ACTIONS);
   const gridButton = footer.getByRole("button", { name: "Kisi" });
-  const rotationButton = footer.getByRole("button", {
-    name: "Rotasi otomatis",
-  });
+  const playButton = footer.getByRole("button", { name: "Putar" });
 
   yield* Effect.promise(() =>
     expect(async () => {
@@ -173,7 +171,7 @@ const expectStableCoordinateSystem = Effect.fn(
     expect(gridButton).toHaveAttribute("aria-pressed", "true")
   );
   yield* Effect.promise(() =>
-    expect(rotationButton).toHaveAttribute("aria-pressed", "false")
+    expect(playButton).toHaveAttribute("aria-pressed", "false")
   );
   yield* Effect.promise(() => gridButton.click());
   yield* Effect.promise(() =>
@@ -187,14 +185,14 @@ const expectStableCoordinateSystem = Effect.fn(
   yield* observeDrawingBufferSize(canvas);
 
   const beforePlay = yield* Effect.promise(() => canvas.screenshot());
-  yield* Effect.promise(() => rotationButton.click());
+  yield* Effect.promise(() => playButton.click());
   yield* Effect.promise(() =>
-    expect(rotationButton).toHaveAttribute("aria-pressed", "true")
+    expect(playButton).toHaveAttribute("aria-pressed", "true")
   );
   yield* expectCanvasToMove(canvas, beforePlay);
-  yield* Effect.promise(() => rotationButton.click());
+  yield* Effect.promise(() => playButton.click());
   yield* Effect.promise(() =>
-    expect(rotationButton).toHaveAttribute("aria-pressed", "false")
+    expect(playButton).toHaveAttribute("aria-pressed", "false")
   );
   yield* waitForStableCanvas(canvas);
 
@@ -273,11 +271,18 @@ const verifyUnitCircleEditing = Effect.fn("NakafaE2E.verifyUnitCircleEditing")(
     for (const value of [31.5, -30.5, 390.5]) {
       const formatted = formatter.format(value);
       const radians = (value * Math.PI) / 180;
+      const ratio = (ratioValue: number) =>
+        `\\approx ${ratioFormatter.format(ratioValue).replaceAll(",", "{,}")}`;
+      // Each fact of the footer is a label and a value, in the order the card shows them.
       const expected = [
-        `\\sin\\theta \\approx ${ratioFormatter.format(Math.sin(radians)).replaceAll(",", "{,}")}`,
-        `\\cos\\theta \\approx ${ratioFormatter.format(Math.cos(radians)).replaceAll(",", "{,}")}`,
-        `\\tan\\theta \\approx ${ratioFormatter.format(Math.tan(radians)).replaceAll(",", "{,}")}`,
-        `\\theta = ${value}^\\circ`,
+        "\\theta",
+        `${value}^\\circ`,
+        "\\sin\\theta",
+        ratio(Math.sin(radians)),
+        "\\cos\\theta",
+        ratio(Math.cos(radians)),
+        "\\tan\\theta",
+        ratio(Math.tan(radians)),
       ];
       for (const input of [formatted, ""]) {
         // The client render can still replace the field after the reveal, and
