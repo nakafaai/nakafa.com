@@ -150,6 +150,9 @@ function UnitChoice({
           </SelectContent>
         </Select>
       </CardContent>
+      <CardSectionFooter>
+        <CardSectionHint>{t("unit-choice-footer")}</CardSectionHint>
+      </CardSectionFooter>
     </CardSection>
   );
 }
@@ -202,6 +205,9 @@ function SchoolPeriodList({
           <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
         ) : null}
       </CardContent>
+      <CardSectionFooter>
+        <CardSectionHint>{t("periods-footer")}</CardSectionHint>
+      </CardSectionFooter>
     </CardSection>
   );
 }

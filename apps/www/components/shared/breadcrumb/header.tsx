@@ -15,9 +15,9 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
-import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import { Array as Arr, Schema } from "effect";
 import type { ReactNode } from "react";
+import { BreadcrumbAnchor } from "@/components/shared/breadcrumb/anchor";
 import { BreadcrumbHeaderFrame } from "@/components/shared/breadcrumb/frame";
 
 const BreadcrumbHeaderItemSchema = Schema.Struct({
@@ -35,6 +35,7 @@ interface BreadcrumbHeaderProps {
   /** Complete render value for one sticky, bounded breadcrumb header. */
   value: {
     action?: ReactNode;
+    homeHref: string;
     homeLabel: string;
     items: readonly BreadcrumbHeaderItem[];
     menuLabel: string;
@@ -50,11 +51,12 @@ type BreadcrumbHeaderValue = BreadcrumbHeaderProps["value"];
  * phone, wraps under the path.
  */
 export function BreadcrumbHeader({ value }: BreadcrumbHeaderProps) {
-  const { action, homeLabel, items, menuLabel, title } = value;
+  const { action, homeHref, homeLabel, items, menuLabel, title } = value;
   return (
     <BreadcrumbHeaderFrame contentClassName="flex-wrap sm:flex-nowrap sm:py-0">
       <h1 className="sr-only">{title}</h1>
       <BreadcrumbHeaderPath
+        homeHref={homeHref}
         homeLabel={homeLabel}
         items={Arr.map(items, (item, index) =>
           index === items.length - 1 ? { ...item, href: undefined } : item
@@ -69,11 +71,15 @@ export function BreadcrumbHeader({ value }: BreadcrumbHeaderProps) {
 /** Bounded path navigation with linked parents and one collapsed middle group. */
 export function BreadcrumbHeaderPath({
   children,
+  homeHref,
   homeLabel,
   items,
   menuLabel,
   visibleItemCount = 2,
-}: Pick<BreadcrumbHeaderValue, "homeLabel" | "items" | "menuLabel"> & {
+}: Pick<
+  BreadcrumbHeaderValue,
+  "homeHref" | "homeLabel" | "items" | "menuLabel"
+> & {
   children?: ReactNode;
   visibleItemCount?: 1 | 2;
 }) {
@@ -84,7 +90,9 @@ export function BreadcrumbHeaderPath({
       <BreadcrumbList className="flex-nowrap">
         <BreadcrumbItem className="shrink-0">
           <BreadcrumbLink
-            render={<IntentLink href="/home">{homeLabel}</IntentLink>}
+            render={
+              <BreadcrumbAnchor href={homeHref}>{homeLabel}</BreadcrumbAnchor>
+            }
           />
         </BreadcrumbItem>
         {hiddenItems.length > 0 && (
@@ -153,7 +161,7 @@ function BreadcrumbMenuItem({ item }: { item: BreadcrumbHeaderItem }) {
 
   return (
     <DropdownMenuItem
-      render={<IntentLink href={item.href}>{label}</IntentLink>}
+      render={<BreadcrumbAnchor href={item.href}>{label}</BreadcrumbAnchor>}
     />
   );
 }
@@ -183,7 +191,9 @@ export function BreadcrumbHeaderSegment({
       <BreadcrumbItem className="min-w-0">
         <BreadcrumbLink
           className="truncate"
-          render={<IntentLink href={item.href}>{item.label}</IntentLink>}
+          render={
+            <BreadcrumbAnchor href={item.href}>{item.label}</BreadcrumbAnchor>
+          }
         />
       </BreadcrumbItem>
     </>
