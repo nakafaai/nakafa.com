@@ -27,7 +27,7 @@ const cardSectionFooterVariants = cva(
   }
 );
 
-const cardSectionHintVariants = cva("flex-1 text-sm", {
+const cardSectionHintVariants = cva("max-w-xl flex-1 text-sm", {
   defaultVariants: {
     tone: "muted",
   },

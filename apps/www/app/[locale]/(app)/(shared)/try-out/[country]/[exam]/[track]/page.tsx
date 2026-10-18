@@ -110,6 +110,7 @@ export default async function Page({
                 options={examOptions}
               />
             ),
+            homeHref: "/home",
             homeLabel: tCommon("home"),
             items: [
               {

@@ -7,7 +7,6 @@ import {
   readUsername,
   USERNAME_MAX_LENGTH,
 } from "@repo/backend/confect/users/username";
-import { Button } from "@repo/design-system/components/ui/button";
 import {
   CardContent,
   CardDescription,
@@ -33,11 +32,11 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import {
   CardSection,
-  CardSectionActions,
   CardSectionFooter,
   CardSectionHint,
 } from "@/components/shared/card/section";
 import { useUpdateUsernameMutation } from "@/components/user/mutation.client";
+import { SettingsSave } from "@/components/user/settings/save";
 import { reportClientException } from "@/lib/analytics/client";
 import type { CurrentUser } from "@/lib/identity/client";
 import { profileHref } from "@/lib/profile/href";
@@ -145,11 +144,7 @@ export function UserSettingsUsername({ user }: { user: CurrentUser }) {
         </CardContent>
         <CardSectionFooter>
           <CardSectionHint>{t("username-footer")}</CardSectionHint>
-          <CardSectionActions>
-            <Button disabled={!reply.canSave} size="sm" type="submit">
-              {t("save")}
-            </Button>
-          </CardSectionActions>
+          <SettingsSave disabled={!reply.canSave} />
         </CardSectionFooter>
       </CardSection>
     </form>

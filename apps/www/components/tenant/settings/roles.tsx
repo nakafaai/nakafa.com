@@ -54,6 +54,7 @@ import { saveSchool } from "@/components/tenant/settings/save.client";
 import { scopeNameOf } from "@/components/tenant/settings/scope";
 import { isDraft } from "@/components/tenant/settings/state";
 import { SchoolTableHeader } from "@/components/tenant/settings/table";
+import { SchoolTrailAction } from "@/components/tenant/settings/trail";
 
 const SOURCE = "components/tenant/settings/roles";
 
@@ -78,6 +79,7 @@ export function SchoolRolesSettings({ slug }: { slug: TenantSlug }) {
       <SchoolGrantsCard slug={slug} />
       <SchoolPersonCard
         description={t("roles-description")}
+        footer={t("roles-person-footer")}
         onChoose={setPersonId}
         personId={personId}
         slug={slug}
@@ -117,6 +119,9 @@ function SchoolRolesOverview() {
           </TableBody>
         </Table>
       </CardContent>
+      <CardSectionFooter>
+        <CardSectionHint>{t("roles-overview-footer")}</CardSectionHint>
+      </CardSectionFooter>
     </CardSection>
   );
 }
@@ -159,6 +164,12 @@ function SchoolGrantsCard({ slug }: { slug: TenantSlug }) {
           <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
         ) : null}
       </CardContent>
+      <CardSectionFooter>
+        <CardSectionHint>{t("roles-grants-footer")}</CardSectionHint>
+        <CardSectionActions>
+          <SchoolTrailAction />
+        </CardSectionActions>
+      </CardSectionFooter>
     </CardSection>
   );
 }
@@ -253,7 +264,7 @@ function SchoolAssignCard({
   return (
     <CardSection>
       <CardHeader>
-        <CardTitle>{t("roles-assign")}</CardTitle>
+        <CardTitle>{t("roles-assign-title")}</CardTitle>
       </CardHeader>
       <CardSectionFooter>
         <CardSectionHint>{t("roles-assign-footer")}</CardSectionHint>

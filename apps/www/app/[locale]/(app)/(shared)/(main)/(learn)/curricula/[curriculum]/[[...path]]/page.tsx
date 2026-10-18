@@ -151,6 +151,7 @@ async function CurriculumTrackRoute({
               options={readRuntimeCurriculumOptions(catalog, locale)}
             />
           ),
+          homeHref: "/home",
           homeLabel,
           items: [{ label: tCommon("subject") }],
           menuLabel: tCommon("more"),

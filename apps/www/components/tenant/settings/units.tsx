@@ -104,6 +104,7 @@ function SchoolUnitNpsnCard({ slug, unit }: { slug: TenantSlug; unit: Unit }) {
       <CardContent>
         <Input
           aria-label={t("unit-npsn")}
+          className="w-full max-w-xs"
           disabled={isArchived}
           inputMode="numeric"
           maxLength={8}
@@ -127,6 +128,7 @@ function SchoolUnitNpsnCard({ slug, unit }: { slug: TenantSlug; unit: Unit }) {
             }
             size="sm"
             type="button"
+            variant="secondary"
           >
             {t("unit-npsn-save")}
           </Button>
@@ -212,7 +214,7 @@ function SchoolUnitCard({ slug, unit }: { slug: TenantSlug; unit: Unit }) {
             value={unit.timeZone}
           >
             <SelectTrigger
-              className="w-full"
+              className="w-full max-w-xs"
               disabled={isArchived}
               id={`unit-time-zone-${unit.id}`}
             >
@@ -248,7 +250,7 @@ function SchoolUnitCard({ slug, unit }: { slug: TenantSlug; unit: Unit }) {
             value={unit.contentLanguage}
           >
             <SelectTrigger
-              className="w-full"
+              className="w-full max-w-xs"
               disabled={isArchived}
               id={`unit-language-${unit.id}`}
             >
@@ -272,7 +274,12 @@ function SchoolUnitCard({ slug, unit }: { slug: TenantSlug; unit: Unit }) {
         </CardSectionHint>
         <CardSectionActions>
           {isArchived ? (
-            <Button onClick={restoreUnit} size="sm" type="button">
+            <Button
+              onClick={restoreUnit}
+              size="sm"
+              type="button"
+              variant="outline"
+            >
               {t("unit-restore")}
             </Button>
           ) : (
