@@ -14,6 +14,7 @@ import {
   isPostAuthProviderError,
   PostAuthIntentSchema,
   resolvePostAuthIntent,
+  startsSchool,
 } from "@/lib/auth/admission";
 
 describe("post-auth admission", () => {
@@ -351,5 +352,17 @@ describe("post-auth admission", () => {
     expect(getPostAuthProviderRetryHref(none)).toBe("/auth?error=oauth");
     expect(isPostAuthProviderError("oauth")).toBe(true);
     expect(isPostAuthProviderError("access_denied")).toBe(false);
+  });
+  it("lets the page that opens a school stand in for the learner's first run", () => {
+    expect(startsSchool(resolvePostAuthIntent("/id/school/new", "id"))).toBe(
+      true
+    );
+    expect(
+      startsSchool(resolvePostAuthIntent("/en/school/new?from=pricing", "id"))
+    ).toBe(true);
+    expect(startsSchool(resolvePostAuthIntent("/id/try-out", "id"))).toBe(
+      false
+    );
+    expect(startsSchool(resolvePostAuthIntent(undefined, "id"))).toBe(false);
   });
 });

@@ -8,8 +8,9 @@ import { requireAuth } from "@repo/backend/confect/auth/session";
 import session from "@repo/backend/confect/middleware/session.impl";
 import { readAddress } from "@repo/backend/confect/tenancy/address";
 import { foundSchool } from "@repo/backend/confect/tenancy/found";
+import { answerFields } from "@repo/backend/confect/tenancy/start";
 import spec from "@repo/backend/confect/tenancy/start.spec";
-import { Clock, Effect, Layer, Match, Option, Struct } from "effect";
+import { Clock, Effect, Layer, Option, Struct } from "effect";
 
 /** The account's saved draft row, if it started the questionnaire. */
 const draftRow = Effect.fn("tenancy.start.row")(function* () {
@@ -47,15 +48,7 @@ const save = FunctionImpl.make(
   Effect.fn("tenancy.start.save")(function* ({ answer }) {
     const { appUser, row } = yield* draftRow();
     const updatedAt = yield* Clock.currentTimeMillis;
-    const fields = Match.value(answer).pipe(
-      Match.discriminatorsExhaustive("kind")({
-        country: ({ value }) => ({ country: value }),
-        levels: ({ value }) => ({ levels: value }),
-        name: ({ name, slug }) => ({ name, slug }),
-        role: ({ value }) => ({ role: value }),
-        size: ({ value }) => ({ size: value }),
-      })
-    );
+    const fields = answerFields(answer);
     const writer = yield* DatabaseWriter;
     const next = Option.match(row, {
       onNone: () => ({ ...fields, updatedAt }),

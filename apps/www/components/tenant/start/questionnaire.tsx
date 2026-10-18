@@ -1,0 +1,264 @@
+"use client";
+
+import { QueryResult, useMutation, useQuery } from "@confect/react";
+import {
+  ArrowLeft02Icon,
+  ArrowRight02Icon,
+  School01Icon,
+} from "@hugeicons/core-free-icons";
+import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
+import {
+  SchoolSize,
+  StartAnswer,
+  StartCountry,
+  StartRole,
+} from "@repo/backend/confect/tenancy/start";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import {
+  Questionnaire,
+  QuestionnaireActions,
+  QuestionnaireNext,
+  QuestionnairePrevious,
+  QuestionnaireProgress,
+  QuestionnaireSubmit,
+} from "@repo/design-system/components/ui/questionnaire";
+import { toast } from "@repo/design-system/lib/toast/notify";
+import { cn } from "cn";
+import { Array as Arr, Effect, Match, Option, Result, Schema } from "effect";
+import { useTranslations } from "next-intl";
+import { useOptimistic, useState, useTransition } from "react";
+import {
+  StartCountryQuestion,
+  StartLevelsQuestion,
+  StartRoleQuestion,
+  StartSizeQuestion,
+} from "@/components/tenant/start/choices";
+import { StartContext } from "@/components/tenant/start/context";
+import { useSaveStartAnswer } from "@/components/tenant/start/draft.client";
+import { StartNameQuestion } from "@/components/tenant/start/name";
+import { StartOpening } from "@/components/tenant/start/opening";
+import {
+  levelsOf,
+  resumeItem,
+  START_ITEMS,
+  type StartDraft,
+  type StartItem,
+  startRequest,
+  unitName,
+} from "@/components/tenant/start/state";
+import { createTypedName } from "@/components/tenant/start/typed";
+import { reportClientException } from "@/lib/analytics/client";
+
+/** The policy pages the last question links to, from the page's published navigation. */
+type Legal = Record<"privacy" | "terms", string> | null;
+
+/** Whether an item name the questionnaire reports is one of its questions. */
+const isStartItem = (name: string): name is StartItem =>
+  Arr.contains<string>(START_ITEMS, name);
+
+/** Decodes the typed name and address as the answer of the first question, when they make one. */
+const decodeAnswer = Schema.decodeUnknownOption(StartAnswer);
+
+/**
+ * The questionnaire that opens a school for the signed-in account (K42): five
+ * questions in the entry frame, each answer saved as it is chosen, resumed at
+ * the first question left open. It waits for the saved draft, so it never shows
+ * an answer that the draft would change.
+ */
+export function SchoolStart({ legal }: { legal: Legal }) {
+  const draft = useQuery(tenancy.start.draft, {});
+  if (QueryResult.isFailure(draft)) {
+    throw draft.error;
+  }
+  if (!QueryResult.isSuccess(draft)) {
+    return null;
+  }
+  return <SchoolStartForm draft={draft.value} legal={legal} />;
+}
+
+/** The school that the founder opened, as the screen shows it while it opens. */
+type Opening = Record<"name" | "slug", string>;
+
+/**
+ * The form of the questionnaire. Finishing shows the school at once and opens
+ * its own address once the server answers; a refused address returns to the
+ * first question, where the live check names the reason.
+ */
+function SchoolStartForm({
+  draft,
+  legal,
+}: {
+  draft: StartDraft;
+  legal: Legal;
+}) {
+  const t = useTranslations("SchoolStart");
+  const save = useSaveStartAnswer();
+  const open = useMutation(tenancy.start.open);
+  const [typed] = useState(() => createTypedName(draft));
+  const [item, setItem] = useState<StartItem>(() => resumeItem(draft));
+  const [opened, setOpened] = useState<Option.Option<Opening>>(Option.none());
+  const [shown, showOpening] = useOptimistic(opened);
+  const [isOpening, startOpening] = useTransition();
+
+  /** Saves the typed name and address when they make a valid answer. */
+  function saveName() {
+    const { name, slug } = typed.getState();
+    Option.map(decodeAnswer({ kind: "name", name: name.trim(), slug }), save);
+  }
+
+  function handleItemChange(next: string) {
+    if (!isStartItem(next)) {
+      return;
+    }
+    if (item === "name") {
+      saveName();
+    }
+    setItem(next);
+  }
+
+  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const request = startRequest(
+      draft,
+      Intl.DateTimeFormat().resolvedOptions().timeZone,
+      (level, school) =>
+        unitName(
+          draft?.country ?? "ID",
+          draft?.country === "ID"
+            ? t(`level.${level}.title`)
+            : t(`stage.${level}`),
+          school,
+          (label, name) => t("unit-name", { level: label, name })
+        )
+    );
+    if (Option.isNone(request)) {
+      toast.error({ title: "onboarding-invalid-selection.title" });
+      return;
+    }
+    const school = { name: request.value.name, slug: request.value.slug };
+    startOpening(async () => {
+      showOpening(Option.some(school));
+      const outcome = await Effect.runPromise(
+        Effect.tryPromise(() => open(request.value)).pipe(
+          Effect.flatMap(Effect.fromResult),
+          Effect.result
+        )
+      );
+      Result.match(outcome, {
+        onFailure: (error) =>
+          Match.value(error).pipe(
+            Match.tag("FoundingRefused", (refused) =>
+              Match.value(refused.code).pipe(
+                Match.when("SCHOOL_LIMIT", () =>
+                  toast.error({
+                    description: "school-limit.description",
+                    title: "school-limit.title",
+                  })
+                ),
+                Match.when("RATE_LIMITED", () =>
+                  toast.error({
+                    description: "school-rate.description",
+                    title: "school-rate.title",
+                  })
+                ),
+                Match.orElse(() => startOpening(() => setItem("name")))
+              )
+            ),
+            Match.orElse((failure) => {
+              Effect.runFork(
+                reportClientException(failure, { source: "school-start-open" })
+              );
+              toast.error({
+                description: "school-open-error.description",
+                title: "school-open-error.title",
+              });
+            })
+          ),
+        onSuccess: ({ address }) => {
+          startOpening(() => setOpened(Option.some(school)));
+          window.location.assign(address);
+        },
+      });
+    });
+  }
+
+  if (Option.isSome(shown)) {
+    return <StartOpening name={shown.value.name} slug={shown.value.slug} />;
+  }
+
+  const country = draft?.country ?? "ID";
+
+  return (
+    <StartContext value={{ draft, legal, save, typed }}>
+      <Questionnaire
+        className="w-full max-w-md"
+        item={item}
+        items={[
+          { name: "name", required: true },
+          {
+            choices: Arr.map(StartCountry.literals, (value) => ({ value })),
+            name: "country",
+            required: true,
+          },
+          {
+            choices: Arr.map(levelsOf(country), (value) => ({ value })),
+            name: "levels",
+            required: true,
+          },
+          {
+            choices: Arr.map(StartRole.literals, (value) => ({ value })),
+            name: "role",
+            required: true,
+          },
+          {
+            choices: Arr.map(SchoolSize.literals, (value) => ({ value })),
+            name: "size",
+            required: true,
+          },
+        ]}
+        onItemChange={handleItemChange}
+        onSubmit={handleSubmit}
+        shortcuts="letters"
+      >
+        <QuestionnaireProgress
+          className="flex w-full flex-col gap-2"
+          render={(props, { current, total }) => (
+            <div {...props}>
+              <div aria-hidden="true" className="grid w-full grid-cols-5 gap-2">
+                {Arr.map(START_ITEMS, (name, index) => (
+                  <span
+                    className={cn(
+                      "h-1 rounded-full bg-muted transition-colors",
+                      index < current && "bg-primary"
+                    )}
+                    key={name}
+                  />
+                ))}
+              </div>
+              <span>{t("progress", { current, total })}</span>
+            </div>
+          )}
+        />
+        <StartNameQuestion />
+        <StartCountryQuestion />
+        <StartLevelsQuestion />
+        <StartRoleQuestion />
+        <StartSizeQuestion />
+        <QuestionnaireActions>
+          <QuestionnairePrevious inert={isOpening} variant="ghost">
+            <HugeIcons data-icon="inline-start" icon={ArrowLeft02Icon} />
+            {t("back")}
+          </QuestionnairePrevious>
+          <QuestionnaireNext inert={isOpening}>
+            {t("continue")}
+            <HugeIcons data-icon="inline-end" icon={ArrowRight02Icon} />
+          </QuestionnaireNext>
+          <QuestionnaireSubmit inert={isOpening}>
+            <HugeIcons data-icon="inline-start" icon={School01Icon} />
+            {t("finish")}
+          </QuestionnaireSubmit>
+        </QuestionnaireActions>
+      </Questionnaire>
+    </StartContext>
+  );
+}

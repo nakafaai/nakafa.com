@@ -303,6 +303,7 @@
       },
       "tenant": {
         "provisioned": "Schule eröffnet",
+        "founded": "Schule gegründet",
         "locale": {
           "set": "Land und Währung geändert"
         },
@@ -417,6 +418,122 @@
     "card-code-title": "Code der Anmeldekarte",
     "card-code-description": "Geben Sie den Code an den Schüler weiter, denn er wird nicht noch einmal angezeigt.",
     "invites-empty": "Keine Einladung wartet."
+  },
+  "SchoolStart": {
+    "metadata-title": "Eigene Schule eröffnen",
+    "metadata-description": "Beantworte fünf Fragen, und deine Nakafa School ist bereit.",
+    "progress": "Frage {current} von {total}",
+    "name-title": "Wie heißt deine Schule?",
+    "name-label": "Name der Schule",
+    "name-placeholder": "Harapan Bangsa",
+    "name-error": "Gib einen Namen mit mindestens 2 Zeichen ein.",
+    "address-label": "Adresse",
+    "address-free": "Frei",
+    "address-taken": "Diese Adresse nutzt schon eine andere Schule.",
+    "address-reserved": "Diese Adresse ist reserviert.",
+    "address-invalid": "Nutze 2 bis 63 Kleinbuchstaben, Ziffern oder Bindestriche.",
+    "country-title": "Wo ist deine Schule?",
+    "country-description": "Das legt Währung, Sprache und Schuljahr fest.",
+    "country": {
+      "ID": "Indonesien",
+      "SG": "Singapur",
+      "GB": "Vereinigtes Königreich",
+      "DE": "Deutschland",
+      "US": "Vereinigte Staaten"
+    },
+    "levels-title": "Welche Stufen unterrichtet ihr?",
+    "levels-description": "Jede Stufe wird eine eigene Einheit.",
+    "levels-error": "Wähle mindestens eine Stufe.",
+    "level": {
+      "paud": {
+        "title": "PAUD",
+        "description": "Frühkindliche Bildung"
+      },
+      "sd": {
+        "title": "SD",
+        "description": "Grundschule"
+      },
+      "mi": {
+        "title": "MI",
+        "description": "Islamische Grundschule"
+      },
+      "smp": {
+        "title": "SMP",
+        "description": "Mittelstufe"
+      },
+      "mts": {
+        "title": "MTs",
+        "description": "Islamische Mittelstufe"
+      },
+      "sma": {
+        "title": "SMA",
+        "description": "Oberstufe"
+      },
+      "ma": {
+        "title": "MA",
+        "description": "Islamische Oberstufe"
+      },
+      "smk": {
+        "title": "SMK",
+        "description": "Berufliche Oberstufe"
+      },
+      "slb": {
+        "title": "SLB",
+        "description": "Förderschule"
+      },
+      "other": {
+        "title": "Andere",
+        "description": "Eine andere Schulform"
+      }
+    },
+    "stage": {
+      "paud": "Frühe Bildung",
+      "sd": "Grundschule",
+      "mi": "Grundschule",
+      "smp": "Sekundarstufe I",
+      "mts": "Sekundarstufe I",
+      "sma": "Sekundarstufe II",
+      "ma": "Sekundarstufe II",
+      "smk": "Berufsbildung",
+      "slb": "Förderschule",
+      "other": "Andere"
+    },
+    "unit-name": "{level} {name}",
+    "role-title": "Was ist deine Rolle?",
+    "role-description": "Du bist in jedem Fall Inhaber der Schule.",
+    "role": {
+      "principal": {
+        "title": "Schulleitung",
+        "description": "Leitet die Schule."
+      },
+      "teacher": {
+        "title": "Lehrkraft",
+        "description": "Unterrichtet Klassen."
+      },
+      "admin": {
+        "title": "Verwaltung",
+        "description": "Verwaltet Konten und Daten."
+      },
+      "foundation": {
+        "title": "Träger",
+        "description": "Trägt eine oder mehrere Schulen."
+      }
+    },
+    "size-title": "Wie viele Schüler habt ihr?",
+    "size-description": "Kostenlos starten, egal wie groß.",
+    "size": {
+      "s": "Unter 100",
+      "m": "100 bis 499",
+      "l": "500 bis 999",
+      "xl": "1.000 oder mehr"
+    },
+    "founder-line": "Der Gründer hilft großen Schulen beim Start.",
+    "founder-link": "Mit dem Gründer sprechen",
+    "consent": "Mit der Eröffnung akzeptierst du die <terms>Nutzungsbedingungen</terms> und die <privacy>Datenschutzerklärung</privacy>.",
+    "back": "Zurück",
+    "continue": "Weiter",
+    "finish": "Schule eröffnen",
+    "required-error": "Wähle eine Antwort."
   },
   "Metadata": {
     "title": "Nakafa: Kostenlose Lerninhalte von der Grundschule bis zur Universität",
@@ -996,8 +1113,12 @@
       "title": "Das Logo wurde nicht gespeichert.",
       "description": "Wählen Sie ein PNG- oder SVG-Bild."
     },
-    "school-logo-refused": { "title": "Das Logo wurde nicht gespeichert." },
-    "school-address-copied": { "title": "Die Adresse wurde kopiert." },
+    "school-logo-refused": {
+      "title": "Das Logo wurde nicht gespeichert."
+    },
+    "school-address-copied": {
+      "title": "Die Adresse wurde kopiert."
+    },
     "action-error": {
       "title": "Aktion nicht abgeschlossen.",
       "description": "Bitte versuche es erneut."
@@ -1167,6 +1288,22 @@
     "sign-out-error": {
       "title": "Abmelden ist fehlgeschlagen.",
       "description": "Prüfe deine Verbindung und versuche es erneut."
+    },
+    "school-open-error": {
+      "title": "Die Schule wurde nicht eröffnet.",
+      "description": "Versuch es noch einmal."
+    },
+    "school-limit": {
+      "title": "Du führst schon 3 eigene Schulen.",
+      "description": "Sprich für mehr mit dem Gründer."
+    },
+    "school-rate": {
+      "title": "Heute zu viele Schulen.",
+      "description": "Versuch es morgen noch einmal."
+    },
+    "school-save-error": {
+      "title": "Deine Antwort wurde nicht gespeichert.",
+      "description": "Versuch es noch einmal."
     }
   },
   "Ai": {

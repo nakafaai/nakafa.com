@@ -7,8 +7,8 @@ import {
   MutationCtx,
 } from "@repo/backend/confect/_generated/services";
 import { assignRole } from "@repo/backend/confect/access/grant";
-import { personActor } from "@repo/backend/confect/tenancy/actor";
 import { readSiteUrl } from "@repo/backend/confect/site/config";
+import { personActor } from "@repo/backend/confect/tenancy/actor";
 import {
   readAddress,
   schoolAddress,
@@ -41,7 +41,7 @@ import {
 } from "effect";
 
 /** The schools one account may found and still run as their Owner. */
-export const FOUNDED_SCHOOL_LIMIT = 3;
+const FOUNDED_SCHOOL_LIMIT = 3;
 
 /**
  * A bucket of three openings that refills three a day, so an account that

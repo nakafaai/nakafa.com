@@ -6,7 +6,7 @@ import {
   UnitName,
 } from "@repo/backend/confect/tenancy/schema";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { Array as Arr, Option, Schema } from "effect";
+import { Array as Arr, Match, Option, Schema } from "effect";
 
 /**
  * The countries an account can open a school in by itself. A school in another
@@ -28,11 +28,12 @@ export const StartRole = Schema.Literals([
 /** How many students the school has, which the plan it is offered follows. */
 export const SchoolSize = Schema.Literals(["s", "m", "l", "xl"]);
 
-/** The levels a new school teaches, one unit each, every level at most once. */
-export const StartLevels = Schema.Array(UnitLevel).check(
-  Schema.isMinLength(1),
-  Schema.isUnique()
-);
+/**
+ * The levels a new school teaches, one unit each, every level at most once. A
+ * draft may hold none while the founder changes their mind; the opening needs
+ * at least one unit.
+ */
+const StartLevels = Schema.Array(UnitLevel).check(Schema.isUnique());
 
 /**
  * What a new school takes from its country: the currency of its plan, the
@@ -119,6 +120,18 @@ export const StartAnswer = Schema.Union([
   Schema.Struct({ kind: Schema.Literal("role"), value: StartRole }),
   Schema.Struct({ kind: Schema.Literal("size"), value: SchoolSize }),
 ]);
+
+/** The draft fields one answer sets: the name answer sets the name and its address together. */
+export const answerFields = (answer: typeof StartAnswer.Type) =>
+  Match.value(answer).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      country: ({ value }) => ({ country: value }),
+      levels: ({ value }) => ({ levels: value }),
+      name: ({ name, slug }) => ({ name, slug }),
+      role: ({ value }) => ({ role: value }),
+      size: ({ value }) => ({ size: value }),
+    })
+  );
 
 /** The answers an account has saved so far, so the questionnaire resumes where it stopped. */
 export const StartDraft = Schema.Struct({

@@ -26,7 +26,7 @@ describe("tenancy/viewer", () => {
           currency: "IDR",
           id: fixture.tenants.nf,
           kind: "foundation",
-          mascot: schoolMascot(fixture.tenants.nf),
+          mascot: schoolMascot("nf"),
           name: "Yayasan Nakafa",
           policies: { emailDomains: [], nina: false, studentThreads: false },
           slug: "nf",
