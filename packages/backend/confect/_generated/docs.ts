@@ -42,7 +42,10 @@ export type EditorClientsDoc = Document.Document<typeof schemaDefinition, "edito
 export type EditorDocumentsDoc = Document.Document<typeof schemaDefinition, "editorDocuments">;
 export type EditorSnapshotsDoc = Document.Document<typeof schemaDefinition, "editorSnapshots">;
 export type EditorStepsDoc = Document.Document<typeof schemaDefinition, "editorSteps">;
+export type ExamAttemptsDoc = Document.Document<typeof schemaDefinition, "examAttempts">;
 export type ExamQuestionsDoc = Document.Document<typeof schemaDefinition, "examQuestions">;
+export type ExamSignalsDoc = Document.Document<typeof schemaDefinition, "examSignals">;
+export type ExamSittingsDoc = Document.Document<typeof schemaDefinition, "examSittings">;
 export type ExamsDoc = Document.Document<typeof schemaDefinition, "exams">;
 export type IntegrationClientsDoc = Document.Document<typeof schemaDefinition, "integrationClients">;
 export type IrtCalibrationRunsDoc = Document.Document<typeof schemaDefinition, "irtCalibrationRuns">;
@@ -149,7 +152,10 @@ export interface Docs {
   editorDocuments: EditorDocumentsDoc;
   editorSnapshots: EditorSnapshotsDoc;
   editorSteps: EditorStepsDoc;
+  examAttempts: ExamAttemptsDoc;
   examQuestions: ExamQuestionsDoc;
+  examSignals: ExamSignalsDoc;
+  examSittings: ExamSittingsDoc;
   exams: ExamsDoc;
   integrationClients: IntegrationClientsDoc;
   irtCalibrationRuns: IrtCalibrationRunsDoc;
