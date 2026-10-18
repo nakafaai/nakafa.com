@@ -7,7 +7,7 @@ import { Array as Arr, Effect, Schema } from "effect";
 
 const links = {
   privacyPolicyUrl: "https://nakafa.com/en/privacy-policy",
-  signInUrl: "https://nakafa.com/en/auth",
+  signInUrl: "https://harapan.nakafa.com/",
   termsOfServiceUrl: "https://nakafa.com/en/terms-of-service",
 };
 
@@ -72,6 +72,35 @@ describe("invitation content", () => {
     })
   );
 
+  it.effect(
+    "accepts a plain HTTP sign-in link only on a loopback host, a school's local host included",
+    () =>
+      Effect.gen(function* () {
+        const local = yield* Schema.decodeEffect(InviteEmailInputSchema)({
+          ...links,
+          locale: "en",
+          organisation: "Harapan",
+          signInUrl: "http://harapan.localhost:3000/",
+        });
+        const preview = yield* Schema.decodeEffect(InviteEmailInputSchema)({
+          ...links,
+          locale: "en",
+          organisation: "Harapan",
+          signInUrl: "http://localhost:3000/en/auth",
+        });
+        const lookalike = yield* Schema.decodeEffect(InviteEmailInputSchema)({
+          ...links,
+          locale: "en",
+          organisation: "Harapan",
+          signInUrl: "http://localhost.example.test/",
+        }).pipe(Effect.flip);
+
+        assert.strictEqual(local.signInUrl, "http://harapan.localhost:3000/");
+        assert.strictEqual(preview.signInUrl, "http://localhost:3000/en/auth");
+        assert.ok(lookalike.message.includes("signInUrl"));
+      })
+  );
+
   it.effect("rejects a blank organisation and an insecure sign-in link", () =>
     Effect.gen(function* () {
       const blank = yield* Schema.decodeEffect(InviteEmailInputSchema)({
@@ -83,7 +112,7 @@ describe("invitation content", () => {
         ...links,
         locale: "en",
         organisation: "Harapan",
-        signInUrl: "http://nakafa.com/en/auth",
+        signInUrl: "http://harapan.nakafa.com/",
       }).pipe(Effect.flip);
 
       assert.ok(blank.message.includes("organisation"));

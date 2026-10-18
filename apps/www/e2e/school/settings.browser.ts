@@ -25,6 +25,18 @@ test("an admin opens the profile and the periods of a school", async ({
   await page.getByRole("link", { name: "Periods" }).click();
   await expect(page).toHaveURL(address("/settings/periods"));
   await expect(page.getByRole("button", { name: "Add period" })).toBeVisible();
+
+  // The links of the settings stay on the school host, whose paths carry no
+  // locale: View trail opens the audit trail, and the breadcrumb's Home opens
+  // the school's own home.
+  await page.goto(address("/settings/roles"));
+  await page.getByRole("link", { name: "View trail" }).click();
+  await expect(page).toHaveURL(address("/settings/audit"));
+  await page
+    .getByRole("navigation", { name: "breadcrumb" })
+    .getByRole("link", { name: "Home" })
+    .click();
+  await expect(page).toHaveURL(address("/"));
   await context.close();
 });
 

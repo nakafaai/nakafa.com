@@ -20,6 +20,10 @@ import { useTranslations } from "next-intl";
 import { clearAiDraftText } from "@/components/ai/store/draft";
 import { AnalyticsConsentMenuItem } from "@/components/analytics/consent/actions";
 import { AccountMenu } from "@/components/sidebar/menu/account";
+import {
+  SidebarSchoolMenuItems,
+  useAccountSchools,
+} from "@/components/sidebar/menu/schools";
 import { SidebarUtilityMenuItems } from "@/components/sidebar/menu/utility";
 import { signOutAccountBrowserIdentity } from "@/lib/auth/identity/browser";
 import { useCurrentAuthNavigation } from "@/lib/auth/location.client";
@@ -40,6 +44,8 @@ export function NavUserAccount({ user }: { user: CurrentUser }) {
     free: t("plan-free"),
     pro: t("plan-pro"),
   };
+
+  const memberships = useAccountSchools();
 
   /** Signs the user out and leaves the shared authenticated app subtree on success. */
   async function handleSignOut() {
@@ -64,6 +70,7 @@ export function NavUserAccount({ user }: { user: CurrentUser }) {
       name={user.authUser.name}
       onSignOut={handleSignOut}
     >
+      <SidebarSchoolMenuItems memberships={memberships} />
       <DropdownMenuGroup>
         {username === undefined ? null : (
           <DropdownMenuItem

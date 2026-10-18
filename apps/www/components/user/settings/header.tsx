@@ -19,6 +19,7 @@ export function UserSettingsHeader() {
   return (
     <BreadcrumbHeader
       value={{
+        homeHref: "/home",
         homeLabel: tCommon("home"),
         items: [
           { href: section.group.href, label: t(section.group.key) },

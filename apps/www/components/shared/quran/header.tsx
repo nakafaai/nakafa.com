@@ -42,6 +42,7 @@ export function QuranSurahHeader({
     >
       <div className="col-start-1 row-start-1 min-w-0 md:col-span-1">
         <BreadcrumbHeaderPath
+          homeHref="/home"
           homeLabel={tCommon("home")}
           items={[{ href: "/quran", label: quranLabel }]}
           menuLabel={tCommon("more")}
