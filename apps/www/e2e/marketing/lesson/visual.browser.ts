@@ -95,7 +95,7 @@ const SHARE_TOLERANCE_PX = 0.5;
  */
 function scrollWindowToShare(page: Page, root: Locator, share: number) {
   return Effect.promise(async () => {
-    for (let scroll = 0; scroll < SHARE_SCROLLS; scroll++) {
+    for (let scroll = 0; scroll < SHARE_SCROLLS; scroll += 1) {
       const box = await root.boundingBox();
       expect(box).not.toBeNull();
       const top = desktopViewport.height - share * (box?.height ?? 0);
