@@ -25,7 +25,7 @@ import {
 } from "@/components/shared/card/section";
 import { logoRefusalOf } from "@/components/tenant/logo.client";
 import { SchoolMark } from "@/components/tenant/mark";
-import { useRemoveLogoMutation } from "@/components/tenant/settings/mutation.client";
+import { removeLogoChange } from "@/components/tenant/settings/mutation.client";
 import { saveSchool } from "@/components/tenant/settings/save.client";
 import { storeSchoolLogo } from "@/components/tenant/settings/upload.client";
 import { reportClientException } from "@/lib/analytics/client";
@@ -77,7 +77,9 @@ function SchoolProfileCard({
   const [isRemoving, setIsRemoving] = useState(false);
   const requestUrl = useMutation(tenancy.logo.uploadUrl);
   const setLogo = useMutation(tenancy.logo.set);
-  const removeLogo = useRemoveLogoMutation();
+  const removeLogo = useMutation(tenancy.logo.remove).withOptimisticUpdate(
+    removeLogoChange
+  );
   const address = `${slug}.${MAIN_DOMAIN}`;
 
   const chooseLogo = (file: File) => {

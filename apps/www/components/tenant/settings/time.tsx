@@ -5,7 +5,7 @@ import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Array as Arr, Option } from "effect";
 import { useLocale } from "next-intl";
-import { useMemo } from "react";
+import { schoolDateTimeText } from "@/components/tenant/settings/clock";
 
 /**
  * Renders one moment as the school's clock shows it: the date and time in the time
@@ -20,21 +20,10 @@ export function SchoolDateTime({ at, slug }: { at: number; slug: TenantSlug }) {
         Arr.findFirst(viewer.value.units, (unit) => unit.status === "active")
       )?.timeZone
     : undefined;
-  const formatter = useMemo(
-    () =>
-      timeZone === undefined
-        ? undefined
-        : new Intl.DateTimeFormat(locale, {
-            dateStyle: "medium",
-            timeStyle: "short",
-            timeZone,
-          }),
-    [locale, timeZone]
-  );
 
-  if (formatter === undefined) {
+  if (timeZone === undefined) {
     return null;
   }
 
-  return <>{formatter.format(at)}</>;
+  return <>{schoolDateTimeText({ at, locale, timeZone })}</>;
 }

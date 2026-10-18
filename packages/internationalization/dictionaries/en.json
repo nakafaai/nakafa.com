@@ -107,14 +107,139 @@
     "client-revoke-description": "The app stops working with this school at once.",
     "client-revoke-confirm": "Revoke",
     "client-secret-title": "New secret",
-    "client-secret-description": "Copy it now. It is shown only once.",
+    "client-secret-description": "Copy it now, because it will not be shown again.",
     "audit-description": "Who changed what in this school, and when.",
     "audit-when": "When",
     "audit-who": "Who",
-    "audit-subject": "Subject",
     "audit-change": "Change",
     "audit-operator": "Nakafa staff",
     "audit-system": "System",
+    "audit-label": {
+      "assignment": {
+        "created": "Homeroom teacher assigned",
+        "removed": "Homeroom teacher removed"
+      },
+      "card": {
+        "issued": "Login card issued",
+        "reissued": "Login card reissued",
+        "redeemed": "Login card used"
+      },
+      "class": {
+        "created": "Classroom added",
+        "renamed": "Classroom renamed",
+        "archived": "Classroom archived",
+        "teacherAssigned": "Teacher assigned to classroom",
+        "teacherRemoved": "Teacher removed from classroom"
+      },
+      "cohort": {
+        "created": "Class added",
+        "renamed": "Class renamed",
+        "archived": "Class archived"
+      },
+      "grant": {
+        "created": "Role given",
+        "ended": "Role ended"
+      },
+      "integration": {
+        "created": "Client created",
+        "rotated": "Secret rotated",
+        "revoked": "Client revoked"
+      },
+      "invite": {
+        "expired": "Invite expired",
+        "resent": "Invite sent again",
+        "revoked": "Invite revoked"
+      },
+      "period": {
+        "created": "Period added",
+        "opened": "Period opened",
+        "archived": "Period archived"
+      },
+      "person": {
+        "claimed": "Account joined",
+        "created": "Person added",
+        "graduated": "Student graduated",
+        "invited": "Invite sent",
+        "moved": "Student moved to another class",
+        "placed": "Student placed in a class",
+        "released": "Account released",
+        "removed": "Person removed",
+        "renamed": "Name changed",
+        "reactivated": "Person reactivated",
+        "suspended": "Person suspended"
+      },
+      "promotion": {
+        "applied": "Promotion applied",
+        "approved": "Promotion approved",
+        "cancelled": "Promotion cancelled",
+        "created": "Promotion started",
+        "opened": "Promotion opened",
+        "planned": "Promotion planned",
+        "studentPlanned": "Student promotion planned",
+        "submitted": "Promotion submitted",
+        "returned": "Promotion returned",
+        "undone": "Promotion step undone"
+      },
+      "tenant": {
+        "provisioned": "School opened",
+        "locale": {
+          "set": "Country and currency changed"
+        },
+        "logo": {
+          "removed": "Logo removed",
+          "set": "Logo changed"
+        },
+        "policy": {
+          "set": "Setting changed"
+        },
+        "suspended": "School suspended",
+        "reactivated": "School reactivated"
+      },
+      "unit": {
+        "created": "Unit added",
+        "archived": "Unit archived",
+        "unarchived": "Unit restored",
+        "locale": {
+          "set": "Time zone or language changed"
+        },
+        "npsn": {
+          "set": "NPSN changed"
+        }
+      },
+      "visit": {
+        "requested": "Visit requested",
+        "approved": "Visit approved",
+        "declined": "Visit declined",
+        "ended": "Visit ended"
+      },
+      "unknown": "Another change"
+    },
+    "role-description": {
+      "owner": "Can do everything in this school.",
+      "admin": "Manages the school's settings, people, units, periods, invites, and access.",
+      "principal": "Reads the school's plans and records, and approves promotions.",
+      "deputy": "Reads the school's plans, people, and promotions.",
+      "teacher": "Edits the school's exams and documents.",
+      "counselor": "Reads the school's people.",
+      "staff": "Reads the school's plans, people, and promotions.",
+      "student": "Learns in the school and answers its own exams.",
+      "guardian": "Follows the student it is linked to and records consent for them.",
+      "proctor": "Watches the school's exam sessions.",
+      "auditor": "Reads the school's records and audit trail without changing them.",
+      "integration": "Reads the school's data through the actions its client holds."
+    },
+    "roles-overview": "What each role may do",
+    "roles-overview-description": "Each role of this school, and what it may do.",
+    "secret-copy": "Copy",
+    "unit-npsn": "NPSN",
+    "unit-npsn-placeholder": "Eight digits",
+    "unit-npsn-footer": "The national school number has eight digits and belongs to one unit.",
+    "unit-npsn-save": "Save",
+    "logins": "Login names",
+    "logins-description": "The login names of the school's people, with the time each was issued.",
+    "login-name": "Login name",
+    "login-person": "Person",
+    "login-issued": "Issued",
     "person-placeholder": "Choose a person",
     "roles-description": "Choose a person to see and change the roles they hold.",
     "roles-grants": "Roles",
@@ -138,7 +263,7 @@
     "card-issue-footer": "The code is shown once.",
     "card-reissue": "Reissue card",
     "card-code-title": "Login card code",
-    "card-code-description": "Give the code to the student. It is shown only once."
+    "card-code-description": "Give the code to the student, because it will not be shown again."
   },
   "Metadata": {
     "title": "Nakafa: Free Lessons from K-12 to University",

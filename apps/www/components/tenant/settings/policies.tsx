@@ -1,6 +1,6 @@
 "use client";
 
-import { QueryResult, useQuery } from "@confect/react";
+import { QueryResult, useMutation, useQuery } from "@confect/react";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import {
   type Policy,
@@ -26,7 +26,7 @@ import {
   CardSectionFooter,
   CardSectionHint,
 } from "@/components/shared/card/section";
-import { useSetPolicyMutation } from "@/components/tenant/settings/mutation.client";
+import { setPolicyChange } from "@/components/tenant/settings/mutation.client";
 import { saveSchool } from "@/components/tenant/settings/save.client";
 
 const SOURCE = "components/tenant/settings/policies";
@@ -81,7 +81,9 @@ function SchoolSwitchPolicy({
   title: "policy-nina" | "policy-threads";
 }) {
   const t = useTranslations("SchoolSettings");
-  const setPolicy = useSetPolicyMutation();
+  const setPolicy = useMutation(
+    tenancy.settings.setPolicy
+  ).withOptimisticUpdate(setPolicyChange);
   const id = useId();
 
   return (
@@ -124,7 +126,9 @@ function SchoolDomainsPolicy({
   slug: TenantSlug;
 }) {
   const t = useTranslations("SchoolSettings");
-  const setPolicy = useSetPolicyMutation();
+  const setPolicy = useMutation(
+    tenancy.settings.setPolicy
+  ).withOptimisticUpdate(setPolicyChange);
   const [draft, setDraft] = useState(() =>
     Arr.join(policies.emailDomains, "\n")
   );

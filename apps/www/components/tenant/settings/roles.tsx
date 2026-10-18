@@ -38,6 +38,10 @@ import {
   CardSectionFooter,
   CardSectionHint,
 } from "@/components/shared/card/section";
+import {
+  assignGrantChange,
+  revokeGrantChange,
+} from "@/components/tenant/settings/mutation.client";
 import type { PersonId } from "@/components/tenant/settings/people";
 import { SchoolPersonCard } from "@/components/tenant/settings/person";
 import { saveSchool } from "@/components/tenant/settings/save.client";
@@ -57,6 +61,7 @@ export function SchoolRolesSettings({ slug }: { slug: TenantSlug }) {
 
   return (
     <>
+      <SchoolRolesOverview />
       <SchoolPersonCard
         description={t("roles-description")}
         onChoose={setPersonId}
@@ -68,6 +73,37 @@ export function SchoolRolesSettings({ slug }: { slug: TenantSlug }) {
         <SchoolGrantsCard personId={personId} slug={slug} />
       )}
     </>
+  );
+}
+
+/** Renders every role of the school, each under its name, with what the role may do. */
+function SchoolRolesOverview() {
+  const t = useTranslations("SchoolSettings");
+  const tSchool = useTranslations("School");
+
+  return (
+    <CardSection>
+      <CardHeader>
+        <CardTitle>{t("roles-overview")}</CardTitle>
+        <CardDescription>{t("roles-overview-description")}</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Table>
+          <TableBody>
+            {Arr.map(BuiltinRole.literals, (role) => (
+              <TableRow key={role}>
+                <TableCell>
+                  <p className="font-medium">{tSchool(`role.${role}`)}</p>
+                  <p className="text-muted-foreground text-sm">
+                    {t(`role-description.${role}`)}
+                  </p>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </CardContent>
+    </CardSection>
   );
 }
 
@@ -85,7 +121,9 @@ function SchoolGrantRow({
 }) {
   const t = useTranslations("SchoolSettings");
   const tSchool = useTranslations("School");
-  const revoke = useMutation(access.grants.revoke);
+  const revoke = useMutation(access.grants.revoke).withOptimisticUpdate(
+    revokeGrantChange
+  );
   const [isRevoking, setIsRevoking] = useState(false);
 
   return (
@@ -141,7 +179,9 @@ function SchoolGrantsCard({
   const t = useTranslations("SchoolSettings");
   const tSchool = useTranslations("School");
   const grants = useQuery(access.grants.list, { personId, slug });
-  const assign = useMutation(access.grants.assign);
+  const assign = useMutation(access.grants.assign).withOptimisticUpdate(
+    assignGrantChange
+  );
   const [role, setRole] = useState<BuiltinRole | undefined>(undefined);
 
   if (!QueryResult.isSuccess(grants)) {

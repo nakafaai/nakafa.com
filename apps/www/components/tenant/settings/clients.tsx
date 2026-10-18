@@ -25,9 +25,11 @@ import {
 } from "@repo/design-system/components/ui/table";
 import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
-import { startTransition, useState } from "react";
+import { useState, useTransition } from "react";
 import { CardSection } from "@/components/shared/card/section";
+import { revokeClientChange } from "@/components/tenant/settings/mutation.client";
 import { saveSchool } from "@/components/tenant/settings/save.client";
+import { SchoolSecretDialog } from "@/components/tenant/settings/secret";
 import { SchoolTableHeader } from "@/components/tenant/settings/table";
 
 const SOURCE = "components/tenant/settings/clients";
@@ -88,25 +90,20 @@ export function SchoolClientsSettings({ slug }: { slug: TenantSlug }) {
           <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
         ) : null}
       </CardContent>
-      <ResponsiveDialog
+      <SchoolSecretDialog
         description={t("client-secret-description")}
-        open={issuedSecret !== undefined}
-        setOpen={(open) => {
-          if (!open) {
-            setIssuedSecret(undefined);
-          }
-        }}
+        onClose={() => setIssuedSecret(undefined)}
+        secret={issuedSecret}
         title={t("client-secret-title")}
-      >
-        <code className="break-all rounded-md bg-muted p-3 text-sm">
-          {issuedSecret}
-        </code>
-      </ResponsiveDialog>
+      />
     </CardSection>
   );
 }
 
-/** Renders one client row, with its rotate action and, while it is active, its revoke action. */
+/**
+ * Renders one client row, with its rotate action and, while it is active, its revoke
+ * action. The rotate button stays as it is while its request runs, and is inert then.
+ */
 function SchoolClientRow({
   client,
   onIssued,
@@ -118,7 +115,10 @@ function SchoolClientRow({
 }) {
   const t = useTranslations("SchoolSettings");
   const rotate = useMutation(integrations.clients.rotate);
-  const revoke = useMutation(integrations.clients.revoke);
+  const revoke = useMutation(integrations.clients.revoke).withOptimisticUpdate(
+    revokeClientChange
+  );
+  const [isPending, startTransition] = useTransition();
   const [isRevoking, setIsRevoking] = useState(false);
   const isActive = client.status === "active";
 
@@ -131,6 +131,7 @@ function SchoolClientRow({
         {isActive ? (
           <>
             <Button
+              inert={isPending}
               onClick={() =>
                 startTransition(() =>
                   saveSchool(

@@ -20,7 +20,7 @@ import {
   TableCell,
   TableRow,
 } from "@repo/design-system/components/ui/table";
-import { Array as Arr, Option } from "effect";
+import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
 import { CardSection } from "@/components/shared/card/section";
 import { SchoolTableHeader } from "@/components/tenant/settings/table";
@@ -33,9 +33,9 @@ const PAGE_SIZE = 25;
 type EntryItem = PaginatedQueryItem<typeof journal.audit.list>;
 
 /**
- * Renders the audit log of the school, newest first: when each change was made,
- * who made it, and which subject it touched. The entries hold IDs and reason codes,
- * never a policy value, so the page shows none.
+ * Renders the audit log of the school, newest first: who made each change, the
+ * label of the change, and when it was made. The rows hold no policy value and no
+ * secret, so the page shows none.
  */
 export function SchoolAuditSettings({ slug }: { slug: TenantSlug }) {
   const t = useTranslations("SchoolSettings");
@@ -68,12 +68,7 @@ export function SchoolAuditSettings({ slug }: { slug: TenantSlug }) {
       <CardContent>
         <Table>
           <SchoolTableHeader
-            columns={[
-              t("audit-when"),
-              t("audit-who"),
-              t("audit-subject"),
-              t("audit-change"),
-            ]}
+            columns={[t("audit-when"), t("audit-who"), t("audit-change")]}
           />
           <TableBody>
             {Arr.map(pagination.results, (entry) => (
@@ -82,12 +77,7 @@ export function SchoolAuditSettings({ slug }: { slug: TenantSlug }) {
                   <SchoolDateTime at={entry.at} slug={slug} />
                 </TableCell>
                 <TableCell>{actorLabel(entry)}</TableCell>
-                <TableCell>
-                  {Option.getOrUndefined(entry.subjectName) ?? ""}
-                </TableCell>
-                <TableCell>
-                  <code className="text-xs">{entry.change.type}</code>
-                </TableCell>
+                <TableCell>{t(`audit-label.${entry.change.type}`)}</TableCell>
               </TableRow>
             ))}
           </TableBody>

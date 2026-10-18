@@ -1,7 +1,6 @@
 "use client";
 
-import type { Ref } from "@confect/core";
-import { QueryResult, useQuery } from "@confect/react";
+import { QueryResult, useMutation, useQuery } from "@confect/react";
 import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -13,6 +12,7 @@ import {
   CardTitle,
 } from "@repo/design-system/components/ui/card";
 import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
+import { Input } from "@repo/design-system/components/ui/input";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import {
   Select,
@@ -25,7 +25,7 @@ import {
 import { languages } from "@repo/internationalization/data/lang";
 import { Array as Arr, Option, Schema } from "effect";
 import { useTranslations } from "next-intl";
-import { startTransition, useState } from "react";
+import { Fragment, startTransition, useState } from "react";
 import {
   CardSection,
   CardSectionActions,
@@ -33,16 +33,15 @@ import {
   CardSectionHint,
 } from "@/components/shared/card/section";
 import {
-  useArchiveUnitMutation,
-  useSetUnitLocaleMutation,
-  useUnarchiveUnitMutation,
+  archiveUnitChange,
+  setNpsnChange,
+  setUnitLocaleChange,
+  unarchiveUnitChange,
 } from "@/components/tenant/settings/mutation.client";
 import { saveSchool } from "@/components/tenant/settings/save.client";
+import type { Unit } from "@/components/tenant/settings/state";
 
 const SOURCE = "components/tenant/settings/units";
-
-/** One unit of the school, as the viewer query shows it. */
-type Unit = Ref.Returns<typeof tenancy.viewer.get>["units"][number];
 
 /** Every IANA time zone that the platform knows, as the time zone choices of a unit. */
 const timeZoneItems = Arr.map(Intl.supportedValuesOf("timeZone"), (zone) => ({
@@ -56,29 +55,88 @@ const languageItems = Arr.map(languages, (language) => ({
   value: language.value,
 }));
 
-/** Renders one card per unit of the school, with its time zone and content language. */
+/** Renders one card per unit of the school, with its time zone and content language, and its NPSN card. */
 export function SchoolUnitsSettings({ slug }: { slug: TenantSlug }) {
-  const viewer = useQuery(tenancy.viewer.get, { slug });
+  const units = useQuery(tenancy.units.list, { slug });
 
-  if (!QueryResult.isSuccess(viewer)) {
+  if (!QueryResult.isSuccess(units)) {
     return null;
   }
 
   return (
     <>
-      {Arr.map(viewer.value.units, (unit) => (
-        <SchoolUnitCard key={unit.id} slug={slug} unit={unit} />
+      {Arr.map(units.value, (unit) => (
+        <Fragment key={unit.id}>
+          <SchoolUnitCard slug={slug} unit={unit} />
+          <SchoolUnitNpsnCard slug={slug} unit={unit} />
+        </Fragment>
       ))}
     </>
+  );
+}
+
+/**
+ * Renders the national school number of one unit: its eight digits and the action
+ * that saves them. The number shows at once, and a refused number is undone.
+ */
+function SchoolUnitNpsnCard({ slug, unit }: { slug: TenantSlug; unit: Unit }) {
+  const t = useTranslations("SchoolSettings");
+  const setNpsn = useMutation(tenancy.units.setNpsn).withOptimisticUpdate(
+    setNpsnChange
+  );
+  const [npsn, setValue] = useState(unit.npsn ?? "");
+
+  return (
+    <CardSection>
+      <CardHeader>
+        <CardTitle>{t("unit-npsn")}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Input
+          aria-label={t("unit-npsn")}
+          inputMode="numeric"
+          maxLength={8}
+          onChange={(event) => setValue(event.target.value)}
+          placeholder={t("unit-npsn-placeholder")}
+          value={npsn}
+        />
+      </CardContent>
+      <CardSectionFooter>
+        <CardSectionHint>{t("unit-npsn-footer")}</CardSectionHint>
+        <CardSectionActions>
+          <Button
+            disabled={npsn.trim() === ""}
+            onClick={() =>
+              startTransition(() =>
+                saveSchool(
+                  () => setNpsn({ npsn: npsn.trim(), slug, unitId: unit.id }),
+                  SOURCE
+                )
+              )
+            }
+            size="sm"
+            type="button"
+          >
+            {t("unit-npsn-save")}
+          </Button>
+        </CardSectionActions>
+      </CardSectionFooter>
+    </CardSection>
   );
 }
 
 /** Renders one unit: its level, its time zone and content language, and its archive action. */
 function SchoolUnitCard({ slug, unit }: { slug: TenantSlug; unit: Unit }) {
   const t = useTranslations("SchoolSettings");
-  const setLocale = useSetUnitLocaleMutation();
-  const archive = useArchiveUnitMutation();
-  const restore = useUnarchiveUnitMutation();
+  const setLocale = useMutation(tenancy.units.setLocale).withOptimisticUpdate(
+    setUnitLocaleChange
+  );
+  const archive = useMutation(tenancy.units.archive).withOptimisticUpdate(
+    archiveUnitChange
+  );
+  const restore = useMutation(tenancy.units.unarchive).withOptimisticUpdate(
+    unarchiveUnitChange
+  );
   const [isArchiving, setIsArchiving] = useState(false);
   const isArchived = unit.status === "archived";
   const levelLabel =

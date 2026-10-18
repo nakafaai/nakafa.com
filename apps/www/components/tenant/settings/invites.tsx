@@ -28,6 +28,7 @@ import { Array as Arr, Option, Schema } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { startTransition, useState } from "react";
 import { CardSection } from "@/components/shared/card/section";
+import { revokeInviteChange } from "@/components/tenant/settings/mutation.client";
 import { saveSchool } from "@/components/tenant/settings/save.client";
 import { SchoolTableHeader } from "@/components/tenant/settings/table";
 import { SchoolDateTime } from "@/components/tenant/settings/time";
@@ -108,7 +109,9 @@ function SchoolInviteRow({
 }) {
   const t = useTranslations("SchoolSettings");
   const resend = useMutation(tenancy.invites.resend);
-  const revoke = useMutation(tenancy.invites.revoke);
+  const revoke = useMutation(tenancy.invites.revoke).withOptimisticUpdate(
+    revokeInviteChange
+  );
   const [isRevoking, setIsRevoking] = useState(false);
 
   return (

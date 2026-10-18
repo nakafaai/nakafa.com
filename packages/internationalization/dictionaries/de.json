@@ -107,14 +107,139 @@
     "client-revoke-description": "Die App funktioniert mit dieser Schule sofort nicht mehr.",
     "client-revoke-confirm": "Widerrufen",
     "client-secret-title": "Neues Geheimnis",
-    "client-secret-description": "Kopieren Sie es jetzt. Es wird nur einmal angezeigt.",
+    "client-secret-description": "Kopieren Sie es jetzt, denn es wird nicht noch einmal angezeigt.",
     "audit-description": "Wer in dieser Schule was geändert hat, und wann.",
     "audit-when": "Wann",
     "audit-who": "Wer",
-    "audit-subject": "Objekt",
     "audit-change": "Änderung",
     "audit-operator": "Nakafa-Team",
     "audit-system": "System",
+    "audit-label": {
+      "assignment": {
+        "created": "Klassenlehrer zugewiesen",
+        "removed": "Klassenlehrer entfernt"
+      },
+      "card": {
+        "issued": "Anmeldekarte ausgestellt",
+        "reissued": "Anmeldekarte neu ausgestellt",
+        "redeemed": "Anmeldekarte eingelöst"
+      },
+      "class": {
+        "created": "Lerngruppe angelegt",
+        "renamed": "Lerngruppe umbenannt",
+        "archived": "Lerngruppe archiviert",
+        "teacherAssigned": "Lehrkraft der Lerngruppe zugewiesen",
+        "teacherRemoved": "Lehrkraft aus der Lerngruppe entfernt"
+      },
+      "cohort": {
+        "created": "Klasse angelegt",
+        "renamed": "Klasse umbenannt",
+        "archived": "Klasse archiviert"
+      },
+      "grant": {
+        "created": "Rolle vergeben",
+        "ended": "Rolle beendet"
+      },
+      "integration": {
+        "created": "Client angelegt",
+        "rotated": "Geheimnis erneuert",
+        "revoked": "Client gesperrt"
+      },
+      "invite": {
+        "expired": "Einladung abgelaufen",
+        "resent": "Einladung erneut gesendet",
+        "revoked": "Einladung zurückgezogen"
+      },
+      "period": {
+        "created": "Zeitraum angelegt",
+        "opened": "Zeitraum geöffnet",
+        "archived": "Zeitraum archiviert"
+      },
+      "person": {
+        "claimed": "Konto übernommen",
+        "created": "Person angelegt",
+        "graduated": "Schüler abgeschlossen",
+        "invited": "Einladung gesendet",
+        "moved": "Schüler in andere Klasse verschoben",
+        "placed": "Schüler einer Klasse zugeordnet",
+        "released": "Konto freigegeben",
+        "removed": "Person entfernt",
+        "renamed": "Name geändert",
+        "reactivated": "Person reaktiviert",
+        "suspended": "Person gesperrt"
+      },
+      "promotion": {
+        "applied": "Versetzung angewendet",
+        "approved": "Versetzung genehmigt",
+        "cancelled": "Versetzung abgebrochen",
+        "created": "Versetzung begonnen",
+        "opened": "Versetzung geöffnet",
+        "planned": "Versetzung geplant",
+        "studentPlanned": "Versetzung eines Schülers geplant",
+        "submitted": "Versetzung eingereicht",
+        "returned": "Versetzung zurückgegeben",
+        "undone": "Versetzungsschritt zurückgenommen"
+      },
+      "tenant": {
+        "provisioned": "Schule eröffnet",
+        "locale": {
+          "set": "Land und Währung geändert"
+        },
+        "logo": {
+          "removed": "Logo entfernt",
+          "set": "Logo geändert"
+        },
+        "policy": {
+          "set": "Einstellung geändert"
+        },
+        "suspended": "Schule gesperrt",
+        "reactivated": "Schule reaktiviert"
+      },
+      "unit": {
+        "created": "Einheit angelegt",
+        "archived": "Einheit archiviert",
+        "unarchived": "Einheit wiederhergestellt",
+        "locale": {
+          "set": "Zeitzone oder Sprache geändert"
+        },
+        "npsn": {
+          "set": "NPSN geändert"
+        }
+      },
+      "visit": {
+        "requested": "Besuch angefragt",
+        "approved": "Besuch genehmigt",
+        "declined": "Besuch abgelehnt",
+        "ended": "Besuch beendet"
+      },
+      "unknown": "Andere Änderung"
+    },
+    "role-description": {
+      "owner": "Kann alles in dieser Schule tun.",
+      "admin": "Verwaltet die Einstellungen, Personen, Einheiten, Zeiträume, Einladungen und Zugriffe der Schule.",
+      "principal": "Sieht die Pläne und Unterlagen der Schule und genehmigt Versetzungen.",
+      "deputy": "Sieht die Pläne, Personen und Versetzungen der Schule.",
+      "teacher": "Bearbeitet die Prüfungen und Dokumente der Schule.",
+      "counselor": "Sieht die Personen der Schule.",
+      "staff": "Sieht die Pläne, Personen und Versetzungen der Schule.",
+      "student": "Lernt in der Schule und beantwortet die eigenen Prüfungen.",
+      "guardian": "Folgt dem verknüpften Schüler und erfasst Einwilligungen für ihn.",
+      "proctor": "Beaufsichtigt die Prüfungssitzungen der Schule.",
+      "auditor": "Sieht die Unterlagen und das Prüfprotokoll der Schule, ohne sie zu ändern.",
+      "integration": "Liest die Daten der Schule über die Aktionen seines Clients."
+    },
+    "roles-overview": "Was jede Rolle darf",
+    "roles-overview-description": "Jede Rolle dieser Schule und was sie darf.",
+    "secret-copy": "Kopieren",
+    "unit-npsn": "NPSN",
+    "unit-npsn-placeholder": "Acht Ziffern",
+    "unit-npsn-footer": "Die staatliche Schulnummer hat acht Ziffern und gehört zu genau einer Einheit.",
+    "unit-npsn-save": "Speichern",
+    "logins": "Anmeldenamen",
+    "logins-description": "Die Anmeldenamen der Personen der Schule, mit dem Zeitpunkt ihrer Ausstellung.",
+    "login-name": "Anmeldename",
+    "login-person": "Person",
+    "login-issued": "Ausgestellt",
     "person-placeholder": "Person wählen",
     "roles-description": "Wählen Sie eine Person, um die Rollen zu sehen und zu ändern.",
     "roles-grants": "Rollen",
@@ -138,7 +263,7 @@
     "card-issue-footer": "Der Code wird nur einmal angezeigt.",
     "card-reissue": "Karte neu ausstellen",
     "card-code-title": "Code der Anmeldekarte",
-    "card-code-description": "Geben Sie den Code an den Schüler weiter. Er wird nur einmal angezeigt."
+    "card-code-description": "Geben Sie den Code an den Schüler weiter, denn er wird nicht noch einmal angezeigt."
   },
   "Metadata": {
     "title": "Nakafa: Kostenlose Lerninhalte von der Grundschule bis zur Universität",

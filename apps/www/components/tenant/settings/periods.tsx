@@ -44,6 +44,11 @@ import {
   CardSectionFooter,
   CardSectionHint,
 } from "@/components/shared/card/section";
+import {
+  archivePeriodChange,
+  createPeriodChange,
+  openPeriodChange,
+} from "@/components/tenant/settings/mutation.client";
 import { saveSchool } from "@/components/tenant/settings/save.client";
 import { SchoolTableHeader } from "@/components/tenant/settings/table";
 
@@ -206,8 +211,12 @@ function SchoolPeriodRow({
   slug: TenantSlug;
 }) {
   const t = useTranslations("SchoolSettings");
-  const open = useMutation(tenancy.periods.open);
-  const archive = useMutation(tenancy.periods.archive);
+  const open = useMutation(tenancy.periods.open).withOptimisticUpdate(
+    openPeriodChange
+  );
+  const archive = useMutation(tenancy.periods.archive).withOptimisticUpdate(
+    archivePeriodChange
+  );
 
   return (
     <TableRow>
@@ -257,7 +266,9 @@ function SchoolPeriodForm({
   unitId: UnitId;
 }) {
   const t = useTranslations("SchoolSettings");
-  const create = useMutation(tenancy.periods.create);
+  const create = useMutation(tenancy.periods.create).withOptimisticUpdate(
+    createPeriodChange
+  );
   const [name, setName] = useState("");
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
