@@ -262,6 +262,8 @@ export const tenancyFixture = Effect.gen(function* () {
         });
       }),
     anonymous: client(t),
+    /** Sends one HTTP request to the auth router, as a browser or a client would. */
+    fetch: (path: string, init?: RequestInit) => t.fetch(path, init),
     /** Runs the scheduled functions whose time has come. */
     finishScheduled: () =>
       Effect.promise(() => t.finishAllScheduledFunctions(vi.runAllTimers)),

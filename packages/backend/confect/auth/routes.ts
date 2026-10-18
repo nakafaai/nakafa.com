@@ -16,11 +16,11 @@ export const disabledTokenPaths = [
 ];
 
 /**
- * The routes that sign in with a password: an email and a password, or a school
- * username and a password. The HTTP router answers 404 for them, because they are
- * disabled paths. Only the school host's sign-in opens later (ADR 0009).
+ * The route that signs in with an email and a password. The HTTP router answers 404
+ * for it, because it is a disabled path. A school username and a password sign in on
+ * the school host alone, through `auth/login` (ADR 0009).
  */
-export const disabledSignInPaths = ["/sign-in/email", "/sign-in/username"];
+export const disabledSignInPaths = ["/sign-in/email"];
 
 const tokensNotStoredError = () =>
   APIError.from("NOT_FOUND", {
@@ -50,17 +50,23 @@ export const tokenRoutesDisabled = {
   },
 } satisfies NonNullable<BetterAuthOptions["plugins"]>[number];
 
-const passwordSignInDisabledError = () =>
+/** The answer of a password sign-in that the host does not serve, the same for every caller. */
+export const passwordSignInDisabledError = () =>
   APIError.from("NOT_FOUND", {
     code: "PASSWORD_SIGN_IN_DISABLED",
     message: "Sign-in with a password is not available.",
   });
 
+/** The school username sign-in, which the HTTP router serves on a school host alone (ADR 0009). */
+const USERNAME_SIGN_IN_PATH = "/sign-in/username";
+
 /**
  * Refuses the password sign-in routes for a call from server code. A server call
- * to `auth.api.signInEmail` or `auth.api.signInUsername` runs the endpoint
- * without the router's `disabledPaths` check, so a correct password would open a
- * session. Every host refuses it, so no account signs in with a password here.
+ * to `auth.api.signInEmail` runs the endpoint without the router's `disabledPaths`
+ * check, so a correct password would open a session. Every host refuses it, so no
+ * account signs in with an email and a password here. A server call to the school
+ * username sign-in carries no request, so it names no school host and is refused
+ * too: only the router, which knows the host, serves that sign-in (`auth/login`).
  */
 export const passwordSignInRoutesDisabled = {
   id: "password-sign-in-routes-disabled",
@@ -71,7 +77,9 @@ export const passwordSignInRoutesDisabled = {
           Effect.runPromise(Effect.fail(passwordSignInDisabledError()))
         ),
         matcher: (context) =>
-          Arr.some(disabledSignInPaths, (path) => path === context.path),
+          Arr.some(disabledSignInPaths, (path) => path === context.path) ||
+          (context.path === USERNAME_SIGN_IN_PATH &&
+            context.request === undefined),
       },
     ],
   },

@@ -223,15 +223,18 @@ Workspace account.
 ### As built: login cards and the password store
 
 `confect/identity` builds the login card, the school login, the password store,
-and the placeholder address. The school host, its sign-in endpoint with the
-Workspace domain check, and its card page are not built yet, so the username
-sign-in stays closed on every host.
+and the placeholder address. The school host's username sign-in is built on that
+host alone (`auth/login`), and the card code is typed on the school's entry page
+for now, not yet on the card page of `/kartu`. The Workspace domain check is not
+built yet.
 
 - **Password store.** `emailAndPassword` is enabled only as the store of school
   passwords, with `disableSignUp`, so Better Auth refuses a public sign-up even
-  from server code. Sign-in with a password is closed on every host: the router
-  answers 404 (`disabledPaths`), and server code gets the same refusal from
-  `auth/routes`, because `auth.api` runs an endpoint without the router's check.
+  from server code. Sign-in with an email and a password is closed on every host:
+  the router answers 404 (`disabledPaths`), and server code gets the same refusal
+  from `auth/routes`, because `auth.api` runs an endpoint without the router's
+  check. Sign-in with a school username is served on the school host alone, and a
+  server call to it is refused, because a server call names no host.
   The minimum length is Better Auth's default, 8 (`context/create-context`). A
   password reset ends the sessions it replaces (`revokeSessionsOnPasswordReset`).
 - **Username.** The `username` plugin holds the global username of the account,
@@ -239,9 +242,11 @@ sign-in stays closed on every host.
   `users.username` are one value. A rename changes both in one transaction
   (`auth/username`, which changes only an account that holds a Better Auth
   username). `update-user` refuses a username field (`usernameUpdatesDisabled`),
-  so the app's rename is the only writer. `/sign-in/username` and
-  `/is-username-available` stay closed. The second one would tell any visitor
-  which usernames exist.
+  so the app's rename is the only writer. `/is-username-available` stays closed,
+  because it would tell any visitor which usernames exist. `/sign-in/username`
+  answers on a school host only: the school login name it reads maps to the
+  account's username (`usernameOf`), and a name that is not a login of that school
+  is refused with the same error as a wrong password.
 - **Login name.** A school login name is 3 to 32 characters of lowercase letters,
   digits, dots, underscores, and hyphens, unique within its school. It refuses
   the names that could pass for Nakafa, the one list in `users/reserved.ts` that
@@ -263,8 +268,9 @@ sign-in stays closed on every host.
   for one reads as `invalid`.
 - **Redeem.** `identity/cards:redeem` is one mutation, in this order: it
   refuses a request that carries a signed-in identity as `invalid` before any
-  limit is spent, counts the attempt against the device limit, reads the code,
-  reads the Person and refuses one that is removed or that the card rule
+  limit is spent, counts the attempt against the device limit, reads the code and
+  the typed login name, which must be the card's own (`invalid`, before `used`
+  and `expired`), reads the Person and refuses one that is removed or that the card rule
   refuses (the Owner or Admin role, or an account that a card did not make) as
   `invalid` whatever the card says, opens the card on the school's host (`used`,
   then `expired`), refuses a password outside Better Auth's length before any
