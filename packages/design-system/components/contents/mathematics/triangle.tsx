@@ -2,6 +2,11 @@
 
 import { MinusSignIcon, PlusSignIcon } from "@hugeicons/core-free-icons";
 import {
+  type TriangleLabels,
+  TriangleProvider,
+  useTriangle,
+} from "@repo/design-system/components/contents/mathematics/triangle/context";
+import {
   CoordinateControls,
   CoordinateProvider,
 } from "@repo/design-system/components/three/controls";
@@ -18,7 +23,7 @@ import {
 import { ISOSCELES_RIGHT_TRIANGLE_ANGLE } from "@repo/math/angles";
 import dynamic from "next/dynamic";
 import { useLocale, useTranslations } from "next-intl";
-import type { ComponentProps, ReactNode } from "react";
+import type { ReactNode } from "react";
 import { useState } from "react";
 import {
   Button,
@@ -53,7 +58,7 @@ const TriangleReadout = dynamic(
 interface Props {
   angle?: number;
   description: ReactNode;
-  labels?: ComponentProps<typeof TriangleReadout>["labels"];
+  labels?: TriangleLabels;
   size?: number;
   title: ReactNode;
 }
@@ -70,29 +75,25 @@ export function Triangle({
   },
 }: Props) {
   const locale = useLocale();
+  const config = { angle, labels, size };
 
   return (
     <CoordinateProvider>
-      <VisualCard>
-        <VisualCardHeader description={description} title={title} />
-        <I18nProvider locale={locale}>
-          <Content angle={angle} labels={labels} size={size} />
-        </I18nProvider>
-      </VisualCard>
+      <TriangleProvider config={config}>
+        <VisualCard>
+          <VisualCardHeader description={description} title={title} />
+          <I18nProvider locale={locale}>
+            <Content />
+          </I18nProvider>
+        </VisualCard>
+      </TriangleProvider>
     </CoordinateProvider>
   );
 }
 
-function Content({
-  angle,
-  size,
-  labels,
-}: {
-  angle: number;
-  size: number;
-  labels: NonNullable<Props["labels"]>;
-}) {
+function Content() {
   const t = useTranslations("Common");
+  const { angle } = useTriangle();
   const [angleOverride, setAngleOverride] = useState<number | null>(null);
   const [isNearViewport, setIsNearViewport] = useState(false);
   const angleValue = angleOverride ?? angle;
@@ -143,7 +144,7 @@ function Content({
       </VisualCardToolbar>
       <VisualCardBody className="relative" data-scene="triangle">
         {isNearViewport ? (
-          <TriangleScene angle={angleValue} size={size} />
+          <TriangleScene angle={angleValue} />
         ) : (
           <ScenePlaceholder />
         )}
@@ -158,7 +159,7 @@ function Content({
       <CoordinateControls />
       {isNearViewport ? (
         <VisualCardFooter>
-          <TriangleReadout angle={angleValue} labels={labels} />
+          <TriangleReadout angle={angleValue} />
         </VisualCardFooter>
       ) : null}
     </>

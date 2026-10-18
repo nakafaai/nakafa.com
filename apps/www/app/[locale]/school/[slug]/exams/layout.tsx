@@ -12,10 +12,11 @@ import { httpLayer } from "@/lib/convex/http";
 const notInSchool = () => Effect.succeedNone;
 
 /**
- * The layout of the school exams. Only a viewer who holds a grant whose role is not Student
- * reads these pages: a signed-out viewer, a viewer who is not a member, and a student get not
- * found. The exam pages are client components, so this layout mounts the client providers of
- * the app layout, as the school settings layout does.
+ * The layout of the school exams. Only a viewer who may view exams in the school or in one of
+ * its units reads these pages: a signed-out viewer, a viewer who is not a member, and a viewer
+ * with no exam action, such as a student, get not found. The exam pages are client components,
+ * so this layout mounts the client providers of the app layout, as the school settings layout
+ * does.
  */
 export default async function SchoolExamsLayout({
   children,
@@ -39,7 +40,7 @@ export default async function SchoolExamsLayout({
       Effect.provide(httpLayer({ auth: token }))
     )
   );
-  if (Option.isNone(viewer) || !canOpenExams(viewer.value.grants)) {
+  if (Option.isNone(viewer) || !canOpenExams(viewer.value)) {
     notFound();
   }
 

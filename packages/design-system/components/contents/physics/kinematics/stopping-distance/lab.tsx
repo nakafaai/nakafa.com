@@ -31,15 +31,14 @@ import {
 } from "@repo/design-system/components/ui/toggle-group";
 import {
   VisualCard,
-  VisualCardActions,
   VisualCardBody,
   VisualCardFacts,
   VisualCardFooter,
-  VisualCardFullscreen,
   VisualCardHeader,
   VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
 import { VisualFactIndicator } from "@repo/design-system/components/visual/fact";
+import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { getColor } from "@repo/design-system/lib/color";
 import { Array as Arr } from "effect";
 import type { ReactNode, RefObject } from "react";
@@ -141,9 +140,7 @@ export function StoppingDistanceLab({
         </ThreeCanvas>
       </VisualCardBody>
 
-      <VisualCardActions>
-        <VisualCardFullscreen />
-      </VisualCardActions>
+      <VisualCardSceneActions />
 
       <VisualCardFooter>
         <VisualCardFacts>
@@ -186,7 +183,6 @@ export function StoppingDistanceLab({
 function StoppingDistanceCamera() {
   return (
     <CameraControls
-      autoRotate={false}
       cameraPosition={STOPPING_DISTANCE_CAMERA.cameraPosition}
       cameraTarget={STOPPING_DISTANCE_CAMERA.cameraTarget}
       enablePan

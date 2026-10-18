@@ -5,31 +5,32 @@ import {
   GROUP_ONE_FOCUS_ID,
   getModernPeriodicTableCategoryColor,
   getModernPeriodicTableSceneColors,
+  getPeriodicElementCategoryCount,
   isModernPeriodicTableFocusId,
   MODERN_PERIODIC_TABLE_FOCUS_IDS,
   type ModernPeriodicTableFocusId,
-  type ModernPeriodicTableSceneColors,
   PERIODIC_ELEMENT_CATEGORY_IDS,
   type PeriodicElementCategoryId,
   type PeriodicSeriesRowKey,
 } from "@repo/design-system/components/contents/chemistry/modern-periodic-table/data";
-import { InlineMath } from "@repo/design-system/components/markdown/math";
-import { Badge } from "@repo/design-system/components/ui/badge";
 import {
   ToggleGroup,
   ToggleGroupItem,
 } from "@repo/design-system/components/ui/toggle-group";
 import {
   VisualCard,
-  VisualCardActions,
   VisualCardFacts,
   VisualCardFooter,
-  VisualCardFullscreen,
   VisualCardHeader,
   VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
-import { VisualFact } from "@repo/design-system/components/visual/fact";
+import {
+  VisualFact,
+  VisualFactIndicator,
+} from "@repo/design-system/components/visual/fact";
+import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { Array as Arr } from "effect";
+import { useFormatter, useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import type { ReactNode } from "react";
 import { useState } from "react";
@@ -71,6 +72,8 @@ export function ModernPeriodicTableLab({
     useState<ModernPeriodicTableFocusId>(GROUP_ONE_FOCUS_ID);
   const colors = getModernPeriodicTableSceneColors(resolvedTheme);
   const selectedLabels = labels.focuses[selectedFocusId];
+  const t = useTranslations("Common");
+  const format = useFormatter();
 
   /**
    * Keeps one focus selected when ToggleGroup emits an empty value.
@@ -118,61 +121,28 @@ export function ModernPeriodicTableLab({
         labels={labels}
       />
 
-      <VisualCardActions>
-        <VisualCardFullscreen />
-      </VisualCardActions>
+      <VisualCardSceneActions />
 
       <VisualCardFooter>
-        <p className="mx-auto max-w-3xl text-center text-muted-foreground text-sm leading-relaxed">
-          {selectedLabels.detail}
-        </p>
-
-        <Legend colors={colors} labels={labels} />
         <VisualCardFacts>
           <VisualFact label={labels.focusLabel} value={selectedLabels.name} />
-          <VisualFact label={labels.group} value="1–18" />
-          <VisualFact label={labels.period} value="1–7" />
-          <VisualFact
-            label={labels.atomicNumber}
-            value={<InlineMath math="Z" />}
-          />
+          <VisualFact label={t("note")} value={selectedLabels.detail} />
+          {Arr.map(PERIODIC_ELEMENT_CATEGORY_IDS, (categoryId) => (
+            <VisualFactIndicator
+              indicatorColor={getModernPeriodicTableCategoryColor(
+                colors,
+                categoryId
+              )}
+              key={categoryId}
+              label={labels.categoryNames[categoryId]}
+              value={format.number(
+                getPeriodicElementCategoryCount(categoryId),
+                { useGrouping: false }
+              )}
+            />
+          ))}
         </VisualCardFacts>
       </VisualCardFooter>
     </VisualCard>
-  );
-}
-
-/**
- * Shows the element-category colors used by the 3D blocks.
- */
-function Legend({
-  colors,
-  labels,
-}: {
-  colors: ModernPeriodicTableSceneColors;
-  labels: ModernPeriodicTableLabProps["labels"];
-}) {
-  return (
-    <div className="mx-auto flex max-w-lg flex-wrap justify-center gap-2 text-xs">
-      {Arr.map(PERIODIC_ELEMENT_CATEGORY_IDS, (categoryId) => (
-        <Badge
-          className="min-w-32 max-w-full justify-center gap-2 overflow-visible whitespace-normal px-3 py-1 text-center text-muted-foreground leading-snug sm:min-w-40 sm:whitespace-nowrap"
-          key={categoryId}
-          variant="outline"
-        >
-          <span
-            aria-hidden="true"
-            className="size-2.5 rounded-full"
-            style={{
-              backgroundColor: getModernPeriodicTableCategoryColor(
-                colors,
-                categoryId
-              ),
-            }}
-          />
-          {labels.categoryNames[categoryId]}
-        </Badge>
-      ))}
-    </div>
   );
 }

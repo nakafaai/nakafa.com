@@ -87,7 +87,7 @@ export default async function SchoolLayout({
     <TenantShell
       account={viewer.value.account}
       canManage={canManage}
-      canOpenExams={canOpenExams(viewer.value.grants)}
+      canOpenExams={canOpenExams(viewer.value)}
       personName={viewer.value.person.name}
       profile={profile.value}
       role={role}

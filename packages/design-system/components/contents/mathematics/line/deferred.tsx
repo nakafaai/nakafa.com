@@ -1,6 +1,5 @@
 "use client";
 
-import type { LineSceneProps } from "@repo/design-system/components/contents/mathematics/line/scene";
 import { ScenePlaceholder } from "@repo/design-system/components/three/placeholder";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { VisualCardBody } from "@repo/design-system/components/visual/card";
@@ -19,12 +18,12 @@ const LineScene = dynamic(
 );
 
 /** Loads the WebGL scene shortly before its card enters the viewport. */
-export function DeferredLineScene(props: LineSceneProps) {
+export function DeferredLineScene() {
   const [shouldRender, setShouldRender] = useState(false);
 
   return (
     <VisualCardBody className="relative" data-scene="line">
-      {shouldRender ? <LineScene {...props} /> : <ScenePlaceholder />}
+      {shouldRender ? <LineScene /> : <ScenePlaceholder />}
       {/* Last, so the scene or its stand-in is the body's first child and draws no second divider. */}
       <Intersection
         aria-hidden="true"

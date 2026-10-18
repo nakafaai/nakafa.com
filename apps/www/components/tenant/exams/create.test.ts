@@ -82,6 +82,10 @@ describe("scopeChoices", () => {
       )
     ).toEqual([kelas.id, grade.id]);
   });
+
+  it("offers no whole-school choice when no unit is creatable, since the school takes its language from a unit", () => {
+    expect(scopeChoices([closed, reader], true)).toEqual([]);
+  });
 });
 
 describe("defaultChoice", () => {
@@ -98,12 +102,6 @@ describe("defaultChoice", () => {
     expect(Option.map(defaultChoice(choices), choiceKey)).toEqual(
       Option.some(kelas.id)
     );
-  });
-
-  it("chooses the whole school when the school has no unit the viewer may create in", () => {
-    const choices = scopeChoices([closed, reader], true);
-
-    expect(defaultChoice(choices)).toEqual(Option.some(choices[0]));
   });
 
   it("chooses nothing when the viewer can create nowhere, which hides the create action", () => {

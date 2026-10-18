@@ -6,6 +6,10 @@ import {
   MinusSignIcon,
   PlusSignIcon,
 } from "@hugeicons/core-free-icons";
+import {
+  MATH_NUMBER_OPTIONS,
+  mathNumber,
+} from "@repo/design-system/components/contents/mathematics/number";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { Button as UiButton } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -13,10 +17,14 @@ import {
   VisualCard,
   VisualCardActions,
   VisualCardBody,
+  VisualCardFacts,
+  VisualCardFooter,
   VisualCardFullscreen,
   VisualCardHeader,
   VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
+import { VisualFact } from "@repo/design-system/components/visual/fact";
+import { useFormatter, useTranslations } from "next-intl";
 import { type ReactNode, useState } from "react";
 import {
   Button,
@@ -50,8 +58,12 @@ interface MachineProps {
 
 /** Provides the interactive linear-function input and output controls. */
 function Machine({ inputLabel }: MachineProps) {
+  const t = useTranslations("Common");
+  const format = useFormatter();
   const [input, setInput] = useState<number>(DEFAULT_INPUT);
   const output = 2 * input + 1;
+  const formatNumber = (value: number) =>
+    mathNumber(format.number(value, MATH_NUMBER_OPTIONS));
 
   return (
     <>
@@ -127,6 +139,19 @@ function Machine({ inputLabel }: MachineProps) {
       <VisualCardActions>
         <VisualCardFullscreen />
       </VisualCardActions>
+
+      <VisualCardFooter>
+        <VisualCardFacts>
+          <VisualFact
+            label={t("input")}
+            value={<InlineMath math={formatNumber(input)} />}
+          />
+          <VisualFact
+            label={t("output")}
+            value={<InlineMath math={formatNumber(output)} />}
+          />
+        </VisualCardFacts>
+      </VisualCardFooter>
     </>
   );
 }

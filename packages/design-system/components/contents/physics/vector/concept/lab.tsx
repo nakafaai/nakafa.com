@@ -25,15 +25,14 @@ import {
 import { Slider } from "@repo/design-system/components/ui/slider";
 import {
   VisualCard,
-  VisualCardActions,
   VisualCardBody,
   VisualCardFacts,
   VisualCardFooter,
-  VisualCardFullscreen,
   VisualCardHeader,
   VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
+import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { Effect } from "effect";
 import { useTheme } from "next-themes";
 import type { ReactNode } from "react";
@@ -137,9 +136,7 @@ export function VectorConceptLab({
         </ThreeCanvas>
       </VisualCardBody>
 
-      <VisualCardActions>
-        <VisualCardFullscreen />
-      </VisualCardActions>
+      <VisualCardSceneActions />
 
       <VisualCardFooter>
         <VisualCardFacts>
@@ -160,7 +157,6 @@ function ResponsiveVectorConceptCamera() {
 
   return (
     <CameraControls
-      autoRotate={false}
       cameraPosition={cameraPosition}
       cameraTarget={CAMERA_TARGET}
       fov={44}

@@ -2,9 +2,11 @@ import {
   editorBar,
   editorDocument,
   editorFrame,
+  editorPlaceholder,
   editorRow,
   editorScroll,
 } from "@repo/design-system/components/editor/frame";
+import { cn } from "cn";
 import type { ReactNode } from "react";
 
 /**
@@ -21,7 +23,7 @@ export function EditorPane({ children }: { children: ReactNode }) {
         <div className={editorRow()} />
       </div>
       <div className={editorScroll()}>
-        <div className={editorDocument()} dir="auto">
+        <div className={cn(editorPlaceholder(), editorDocument())} dir="auto">
           {children}
         </div>
       </div>
