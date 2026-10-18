@@ -26,7 +26,6 @@ import { ResponsiveContainer } from "recharts";
 /** Options of the zoom brush, set once by the chart root and read by the brush parts. */
 export interface ChartBrushOptions {
   barRadius?: number | undefined; // corner radius of the bars in the miniature chart
-  connectNulls?: boolean | undefined; // whether the miniature line or area connects null points
   curveType?: EvilBrushCurveType | undefined; // curve of the miniature line or area
   formatLabel?: ((value: unknown, index: number) => string) | undefined; // formats the handle labels
   height?: number | undefined; // pixel height of the brush

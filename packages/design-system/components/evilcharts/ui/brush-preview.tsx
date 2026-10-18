@@ -30,7 +30,7 @@ interface EvilBrushPreviewProps {
 
 /** The look of the preview: the chart's brush options with the brush defaults applied. */
 type EvilBrushLook = {
-  [Key in "connectNulls" | "curveType" | "stacked" | "variant"]-?: NonNullable<
+  [Key in "curveType" | "stacked" | "variant"]-?: NonNullable<
     ChartBrushOptions[Key]
   >;
 } & Pick<ChartBrushOptions, "barRadius">;
@@ -46,7 +46,6 @@ function renderEvilBrushPreview(
     chartId,
     stacked,
     strokeVariant = "solid",
-    connectNulls,
     barRadius,
   }: EvilBrushPreviewProps & EvilBrushLook,
   {
@@ -82,7 +81,6 @@ function renderEvilBrushPreview(
           {Arr.map(keys, (dataKey) => (
             <Line
               activeDot={false}
-              connectNulls={connectNulls}
               dataKey={dataKey}
               dot={false}
               isAnimationActive={false}
@@ -155,7 +153,6 @@ function renderEvilBrushPreview(
         {Arr.map(keys, (dataKey) => (
           <Area
             activeDot={false}
-            connectNulls={connectNulls}
             dataKey={dataKey}
             dot={false}
             fill={`url(#${getChartSeriesId(chartId, "zm-fill", dataKey)})`}
@@ -186,14 +183,13 @@ const EvilBrushPreview = lazy(() =>
     const EvilBrushPreviewWithLook = (props: EvilBrushPreviewProps) => {
       const {
         barRadius,
-        connectNulls = false,
         curveType = "monotone",
         stacked = false,
         variant = "area",
       } = useChart((chart) => chart.brush);
 
       return renderEvilBrushPreview(
-        { ...props, barRadius, connectNulls, curveType, stacked, variant },
+        { ...props, barRadius, curveType, stacked, variant },
         recharts
       );
     };
