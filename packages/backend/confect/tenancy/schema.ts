@@ -53,8 +53,6 @@ export const UnitLevel = Schema.Literals([
 export const UnitStatus = Schema.Literals(["active", "archived"]);
 /** Units one tenant may hold; every unit list reads at most this many. */
 export const UNIT_LIMIT = 24;
-/** Schools one account lists in its account menu; the list reads at most this many memberships. */
-export const SCHOOL_LIMIT = 20;
 /** The national school number (NPSN) of one unit. */
 export const Npsn = Schema.String.check(Schema.isPattern(/^\d{8}$/)).pipe(
   Schema.brand("@Nakafa/Npsn")

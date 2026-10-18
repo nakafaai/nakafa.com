@@ -14,7 +14,6 @@ import { TimeZone } from "@repo/backend/confect/tenancy/locale";
 import {
   PersonKind,
   PersonName,
-  TenantName,
   TenantProfile,
   TenantSettings,
   UnitLevel,
@@ -50,33 +49,14 @@ const ViewerView = Schema.Struct({
   ),
 });
 
-/** One school the account is an active member of: its name, its address, and the mark the account menu draws. */
-const SchoolListItem = Schema.Struct({
-  mark: TenantProfile.mapFields(Struct.pick(["logo", "mascot"])),
-  name: TenantName,
-  slug: TenantSlug,
-});
-
-/**
- * The member's view of one school, and the schools the caller belongs to. The
- * member check belongs to `get` alone, because `schools` names no school.
- */
 export default GroupSpec.make()
   .middleware(Session)
+  .middleware(RequireMember)
   .addFunction(
     FunctionSpec.publicQuery({
       name: "get",
       args: () => ({ slug: TenantSlug }),
       returns: () => ViewerView,
       error: () => Schema.Union([AccountUnavailable, SessionRequired]),
-    })
-      .middleware(RequireMember)
-      .middleware(TenantAccess, { action: "tenant.view" })
-  )
-  .addFunction(
-    FunctionSpec.publicQuery({
-      name: "schools",
-      returns: () => Schema.Array(SchoolListItem),
-      error: () => Schema.Union([AccountUnavailable, SessionRequired]),
-    })
+    }).middleware(TenantAccess, { action: "tenant.view" })
   );

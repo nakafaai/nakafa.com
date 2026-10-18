@@ -11,8 +11,6 @@ import session from "@repo/backend/confect/middleware/session.impl";
 import { tenantAuthority } from "@repo/backend/confect/tenancy/authority";
 import { tenantProfile } from "@repo/backend/confect/tenancy/profile";
 import {
-  SCHOOL_LIMIT,
-  type TenantProfile,
   tenantSettings,
   UNIT_LIMIT,
 } from "@repo/backend/confect/tenancy/schema";
@@ -75,55 +73,8 @@ const get = FunctionImpl.make(
   })
 );
 
-/**
- * The schools the caller is an active member of, newest membership first, at
- * most `SCHOOL_LIMIT`. One indexed read takes the caller's own active member
- * Persons, so suspended and operator Persons and other accounts' Persons never
- * appear. Each school is then one read, with its logo's address in its profile.
- */
-const schools = FunctionImpl.make(
-  databaseSchema,
-  spec,
-  "schools",
-  Effect.fn("tenancy.viewer.schools")(function* () {
-    const { appUser } = yield* requireAuth();
-    const reader = yield* DatabaseReader;
-    const people = yield* reader
-      .table("tenantPeople")
-      .index(
-        "by_account_userId_and_kind_and_status",
-        (query) =>
-          query
-            .eq("account.userId", appUser._id)
-            .eq("kind", "member")
-            .eq("status", "active"),
-        "desc"
-      )
-      .take(SCHOOL_LIMIT)
-      .pipe(Effect.orDie);
-    return yield* Effect.forEach(
-      people,
-      (person) =>
-        reader
-          .table("tenants")
-          .get(person.tenantId)
-          .pipe(
-            Effect.orDie,
-            Effect.flatMap(tenantProfile),
-            Effect.map((profile: typeof TenantProfile.Type) => ({
-              mark: Struct.pick(profile, ["logo", "mascot"]),
-              name: profile.name,
-              slug: profile.slug,
-            }))
-          ),
-      { concurrency: "unbounded" }
-    );
-  })
-);
-
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(get),
-  Layer.provide(schools),
   Layer.provide(session),
   Layer.provide(member),
   Layer.provide(tenantAccess),
