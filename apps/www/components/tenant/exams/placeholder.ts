@@ -26,3 +26,11 @@ export const placeholderPromptId = randomUuid.pipe(
     Schema.decodeUnknownEffect(Id("editorDocuments"))(uuid).pipe(Effect.orDie)
   )
 );
+
+/**
+ * Whether an ID is a placeholder this editor made: a UUID, which the server never issues,
+ * since a Convex ID has no dashes. A question can still show its placeholder for a moment
+ * after its save answered, until the exam's query brings the saved question, so a read
+ * keyed by the question's prompt checks the ID itself.
+ */
+export const isPlaceholderId = Schema.is(Schema.String.check(Schema.isUUID()));

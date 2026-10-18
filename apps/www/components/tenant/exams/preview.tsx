@@ -16,6 +16,7 @@ import {
   optionLetter,
 } from "@/components/tenant/exams/answer";
 import type { Question } from "@/components/tenant/exams/optimistic";
+import { isPlaceholderId } from "@/components/tenant/exams/placeholder";
 import { useExam, useExamLive } from "@/components/tenant/exams/provider";
 import {
   QuestionSheet,
@@ -58,7 +59,10 @@ export function QuestionPreview({
   const live = HashMap.get(docs, question.prompt);
   const reply = useQuery(
     editors.documents.open,
-    !saved || (open && Option.isSome(live)) || !inViewport
+    !saved ||
+      isPlaceholderId(question.prompt) ||
+      (open && Option.isSome(live)) ||
+      !inViewport
       ? "skip"
       : { clientId: PREVIEW_CLIENT, documentId: question.prompt, slug }
   );

@@ -23,6 +23,7 @@ import {
   answerUpdate,
   type Question,
 } from "@/components/tenant/exams/optimistic";
+import { isPlaceholderId } from "@/components/tenant/exams/placeholder";
 import {
   useActiveQuestion,
   useExam,
@@ -61,7 +62,9 @@ export function ExamCanvas() {
   return Option.match(active, {
     onNone: () => null,
     onSome: ({ index, question }) => {
-      const saved = !Arr.contains(pending, question.id);
+      const saved = !(
+        Arr.contains(pending, question.id) || isPlaceholderId(question.prompt)
+      );
       return (
         <section className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto bg-muted/40 p-4">
           <QuestionSheet number={index + 1}>

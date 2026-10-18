@@ -129,6 +129,8 @@ test("a teacher creates an exam, adds questions, writes one, and finds it all wh
   await expect(firstThumbnail).toContainText("Berapa hasil 2 + 3?", {
     timeout: readinessTimeoutMilliseconds,
   });
-  await expect(firstThumbnail.locator("input")).toHaveCount(OPTIONS.length);
+  await expect(firstThumbnail.locator('input[data-slot="input"]')).toHaveCount(
+    OPTIONS.length
+  );
   await context.close();
 });
