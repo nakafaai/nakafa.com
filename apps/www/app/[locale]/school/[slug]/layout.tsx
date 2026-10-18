@@ -1,4 +1,5 @@
 import { HttpClient } from "@confect/js";
+import auth from "@repo/backend/confect/_generated/refs/auth";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Array as Arr, Effect, Option, Schema } from "effect";
@@ -6,6 +7,7 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { TenantEntry } from "@/components/tenant/entry";
 import { canOpenExams } from "@/components/tenant/exams/access";
+import { TenantOutsider } from "@/components/tenant/outsider";
 import { TenantShell } from "@/components/tenant/shell";
 import { getToken } from "@/lib/auth/server";
 import { httpLayer } from "@/lib/convex/http";
@@ -22,17 +24,21 @@ import { getLocaleOrThrow } from "@/lib/i18n/params";
  */
 export const instant = false;
 
-/** A viewer the school does not list gets no school, and the page answers not found. */
-const notInSchool = () => Effect.succeedNone;
+/** A signed-in viewer whom the school does not admit: the page answers not found. */
+const deniedViewer = () => Effect.succeed({ _tag: "denied" as const });
+
+/** A signed-in account that is not a member of the school: the page shows the outsider page. */
+const outsiderViewer = () => Effect.succeed({ _tag: "outsider" as const });
 
 /**
  * The school layout of a school host. The address names the school, so the
  * layout reads its profile without a session and ends the request when no
  * school has the address. A signed-out visitor sees the entry surface with the
- * school's name. A signed-in viewer gets the shell, and a viewer who is not a
- * member of the school, or whom the school does not admit, gets not found,
- * because school pages are private. Any other failure reaches the error
- * boundary, so an outage never looks like a missing school.
+ * school's name. A signed-in viewer gets the shell. A signed-in account that is
+ * not a member of the school gets the outsider page, which names the account, and
+ * a viewer whom the school does not admit gets not found, because school pages are
+ * private. Any other failure reaches the error boundary, so an outage never looks
+ * like a missing school.
  */
 export default async function SchoolLayout({
   children,
@@ -64,35 +70,59 @@ export default async function SchoolLayout({
       <TenantEntry
         logo={profile.value.logo}
         mascot={profile.value.mascot}
+        slug={slug}
         title={t("sign-in-title", { school: profile.value.name })}
       />
     );
   }
 
-  const viewer = await Effect.runPromise(
+  const membership = await Effect.runPromise(
     HttpClient.HttpClient.pipe(
       Effect.flatMap((client) => client.query(tenancy.viewer.get, { slug })),
-      Effect.asSome,
-      Effect.catchTags({ AccessDenied: notInSchool, NotMember: notInSchool }),
+      Effect.map((viewer) => ({ _tag: "member" as const, viewer })),
+      Effect.catchTags({
+        AccessDenied: deniedViewer,
+        NotMember: outsiderViewer,
+      }),
       Effect.provide(httpLayer({ auth: token }))
     )
   );
-  if (Option.isNone(viewer)) {
+  if (membership._tag === "denied") {
     notFound();
   }
+  if (membership._tag === "outsider") {
+    const current = await Effect.runPromise(
+      HttpClient.HttpClient.pipe(
+        Effect.flatMap((client) => client.query(auth.queries.getCurrentUser)),
+        Effect.provide(httpLayer({ auth: token }))
+      )
+    );
+    if (current === null) {
+      notFound();
+    }
+    return (
+      <TenantOutsider
+        account={current.authUser.email}
+        logo={profile.value.logo}
+        mascot={profile.value.mascot}
+        school={profile.value.name}
+      />
+    );
+  }
 
-  const role = Option.match(Arr.head(viewer.value.grants), {
+  const viewer = membership.viewer;
+  const role = Option.match(Arr.head(viewer.grants), {
     onNone: () => null,
     onSome: (grant) => grant.role.key,
   });
-  const canManage = Arr.contains(viewer.value.can, "tenant.manage");
+  const canManage = Arr.contains(viewer.can, "tenant.manage");
 
   return (
     <TenantShell
-      account={viewer.value.account}
+      account={viewer.account}
       canManage={canManage}
-      canOpenExams={canOpenExams(viewer.value)}
-      personName={viewer.value.person.name}
+      canOpenExams={canOpenExams(viewer)}
+      personName={viewer.person.name}
       profile={profile.value}
       role={role}
     >
