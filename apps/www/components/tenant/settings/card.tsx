@@ -1,26 +1,36 @@
 "use client";
 
+import { useMutation } from "@confect/react";
 import { useClipboard } from "@mantine/hooks";
+import { Id } from "@repo/backend/confect/_generated/id";
+import identity from "@repo/backend/confect/_generated/refs/identity";
 import { PersonName } from "@repo/backend/confect/tenancy/schema";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import { cva } from "class-variance-authority";
 import { Schema } from "effect";
 import { useTranslations } from "next-intl";
+import { startTransition } from "react";
 import { createPortal } from "react-dom";
 import { cardQr } from "@/components/tenant/settings/card.client";
+import { saveSchool } from "@/components/tenant/settings/save.client";
 import { SchoolDateTime } from "@/components/tenant/settings/time";
 import { schoolOrigin } from "@/lib/routing/school/host";
 
+const SOURCE = "components/tenant/settings/card";
+
 /**
  * A login card as the page holds it: the code the server answered once, the login
- * name it signs in with, when the code stops working, and the student's name.
+ * name it signs in with, when the code stops working, the student's name, and the
+ * Person the card belongs to.
  */
 const CardView = Schema.Struct({
   code: Schema.String,
   expiresAt: Schema.Finite,
   loginName: Schema.String,
   name: PersonName,
+  personId: Id("tenantPeople"),
 });
 export type CardView = typeof CardView.Type;
 
@@ -32,9 +42,24 @@ const PRINT_ONLY_SHEET =
   "@page { margin: 10mm; } @media print { body > :not([data-school-card-sheet]) { display: none !important; } }";
 
 /**
+ * The value of one card line. A code and a login name stay on one line in the mono
+ * face; a student's name wraps inside the card, so a long name never leaves it.
+ */
+const cardValue = cva("min-w-0 font-medium", {
+  variants: {
+    mono: {
+      false: "break-words",
+      true: "whitespace-nowrap font-mono",
+    },
+  },
+});
+
+/**
  * The login card dialog. It shows the card once, with a copy action and a print
- * action, and closing it leaves no copy of the code on the page. The printed sheet is
- * mounted under the body, hidden on the screen, and shown only when the browser prints.
+ * action, and closing it leaves no copy of the code on the page. Printing records the
+ * print in the school's journal, then opens the browser's print sheet. The printed
+ * sheet is mounted under the body, hidden on the screen, and shown only when the
+ * browser prints.
  */
 export function SchoolCardDialog({
   card,
@@ -47,6 +72,7 @@ export function SchoolCardDialog({
 }) {
   const t = useTranslations("SchoolSettings");
   const clipboard = useClipboard({ timeout: 1500 });
+  const printCard = useMutation(identity.cards.print);
 
   return (
     <ResponsiveDialog
@@ -67,7 +93,18 @@ export function SchoolCardDialog({
           >
             {clipboard.copied ? t("card-copied") : t("card-copy")}
           </Button>
-          <Button onClick={() => window.print()} type="button">
+          <Button
+            onClick={() => {
+              if (card !== undefined) {
+                const { personId } = card;
+                startTransition(() =>
+                  saveSchool(() => printCard({ personId, slug }), SOURCE)
+                );
+              }
+              window.print();
+            }}
+            type="button"
+          >
             {t("card-print")}
           </Button>
         </>
@@ -123,10 +160,10 @@ function SchoolCardFace({ card, slug }: { card: CardView; slug: TenantSlug }) {
     <div className="flex flex-col gap-4 rounded-xl border p-4">
       <p className="font-medium text-sm">{address}</p>
       <div className="flex items-start justify-between gap-4">
-        <dl className="grid gap-3 text-sm">
+        <dl className="grid min-w-0 gap-3 text-sm">
           <CardField label={t("card-student")} value={card.name} />
-          <CardField label={t("card-username")} value={card.loginName} />
-          <CardField label={t("card-code")} value={card.code} />
+          <CardField label={t("card-username")} mono value={card.loginName} />
+          <CardField label={t("card-code")} mono value={card.code} />
           <div>
             <dt className="text-muted-foreground">{t("card-expires")}</dt>
             <dd>
@@ -140,12 +177,20 @@ function SchoolCardFace({ card, slug }: { card: CardView; slug: TenantSlug }) {
   );
 }
 
-/** One labelled line of the card, with a value that never wraps into several lines. */
-function CardField({ label, value }: { label: string; value: string }) {
+/** One labelled line of the card, in the body face unless it is a code or a login name. */
+function CardField({
+  label,
+  mono = false,
+  value,
+}: {
+  label: string;
+  mono?: boolean;
+  value: string;
+}) {
   return (
-    <div>
+    <div className="min-w-0">
       <dt className="text-muted-foreground">{label}</dt>
-      <dd className="whitespace-nowrap font-medium font-mono">{value}</dd>
+      <dd className={cardValue({ mono })}>{value}</dd>
     </div>
   );
 }

@@ -3,6 +3,7 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { TenantAccess } from "@repo/backend/confect/access/tenant";
 import {
+  CardMissing,
   CardRoleRefused,
   LoginExists,
   LoginMissing,
@@ -24,8 +25,9 @@ import { Schema } from "effect";
 
 /**
  * The login cards of one school's Persons. An Admin adds a student with a login
- * name and the first card in one step, and reissues the card later. A student
- * redeems a card on the school's host, which is the one public function here.
+ * name and the first card in one step, reissues the card later, and records each
+ * print of it. A student redeems a card on the school's host, the one function here
+ * that no Admin calls.
  */
 export default GroupSpec.make()
   .addFunction(
@@ -84,6 +86,17 @@ export default GroupSpec.make()
           LoginMissing,
           PersonClaimed,
         ]),
+    })
+      .middleware(Session)
+      .middleware(RequireMember)
+      .middleware(PersonAccess, { action: "card.issue", arg: "personId" })
+  )
+  .addFunction(
+    FunctionSpec.publicMutation({
+      name: "print",
+      args: () => ({ personId: Id("tenantPeople"), slug: TenantSlug }),
+      returns: () => Schema.Null,
+      error: () => Schema.Union([AccessDenied, CardMissing]),
     })
       .middleware(Session)
       .middleware(RequireMember)

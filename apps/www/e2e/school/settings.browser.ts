@@ -106,7 +106,7 @@ test("an admin reads the role guide and finds the owner's grant on Roles", async
   await context.close();
 });
 
-test("an admin sees that no login card is issued yet on Student accounts, and the header offers Issue card", async ({
+test("an admin sees that no login card is issued yet on Student accounts, and the header offers Add student", async ({
   browser,
   baseURL,
 }) => {
@@ -120,9 +120,9 @@ test("an admin sees that no login card is issued yet on Student accounts, and th
   await page.goto(address("/settings/students"));
   const header = page
     .locator("header")
-    .filter({ has: page.getByRole("button", { name: "Issue card" }) });
+    .filter({ has: page.getByRole("button", { name: "Add student" }) });
   await expect(
-    header.getByRole("button", { name: "Issue card" })
+    header.getByRole("button", { name: "Add student" })
   ).toBeVisible();
   await expect(page.getByText("No login card issued yet.")).toBeVisible();
   await context.close();

@@ -240,7 +240,8 @@
       "card": {
         "issued": "Kartu masuk diterbitkan",
         "reissued": "Kartu masuk diterbitkan ulang",
-        "redeemed": "Kartu masuk dipakai"
+        "redeemed": "Kartu masuk dipakai",
+        "printed": "Kartu masuk dicetak"
       },
       "class": {
         "created": "Ruang kelas ditambahkan",
@@ -383,6 +384,10 @@
       "joined": "Bergabung",
       "notInvited": "Belum diundang"
     },
+    "member-remove": "Keluarkan",
+    "member-remove-title": "Keluarkan anggota ini?",
+    "member-remove-description": "Orang ini keluar dari sekolah, dan perannya berakhir.",
+    "member-remove-confirm": "Keluarkan",
     "invite-action": "Undang",
     "invites-footer": "Undang orang yang belum punya akun.",
     "invite-dialog-title": "Undang orang",

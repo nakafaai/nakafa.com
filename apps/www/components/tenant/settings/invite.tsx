@@ -51,8 +51,9 @@ type InvitedRoleValue = typeof InvitedRole.Type;
 /**
  * Renders the dialog that adds a teacher or an Admin: the name, the email, the role,
  * and the language of the email, which starts as the language of the school's first
- * active unit. The Person, its role, and its invite are written in one step, and the
- * row shows in the members and the invitations at once.
+ * active unit. Only an Owner is offered the Admin role. The Person, its role, and its
+ * invite are written in one step, and the row shows in the members and the invitations
+ * at once.
  */
 export function SchoolInviteDialog({
   open,
@@ -79,10 +80,16 @@ export function SchoolInviteDialog({
     typeof ActiveAppLocaleCodeSchema.Type | undefined
   >(undefined);
 
-  const roleItems = Arr.map(InvitedRole.literals, (value) => ({
-    label: tSchool(`role.${value}`),
-    value,
-  }));
+  const canGiveAdmin =
+    QueryResult.isSuccess(viewer) &&
+    Arr.contains(viewer.value.can, "owner.manage");
+  const roleItems = Arr.map(
+    Arr.filter(
+      InvitedRole.literals,
+      (value) => value !== "admin" || canGiveAdmin
+    ),
+    (value) => ({ label: tSchool(`role.${value}`), value })
+  );
   const defaultLocale = QueryResult.isSuccess(viewer)
     ? Option.flatMap(
         Arr.findFirst(viewer.value.units, (unit) => unit.status === "active"),

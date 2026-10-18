@@ -240,7 +240,8 @@
       "card": {
         "issued": "Login card issued",
         "reissued": "Login card reissued",
-        "redeemed": "Login card used"
+        "redeemed": "Login card used",
+        "printed": "Login card printed"
       },
       "class": {
         "created": "Classroom added",
@@ -383,6 +384,10 @@
       "joined": "Joined",
       "notInvited": "Not invited"
     },
+    "member-remove": "Remove",
+    "member-remove-title": "Remove this member?",
+    "member-remove-description": "The person leaves the school, and its roles end.",
+    "member-remove-confirm": "Remove",
     "invite-action": "Invite",
     "invites-footer": "Invite a person who has no account yet.",
     "invite-dialog-title": "Invite a person",

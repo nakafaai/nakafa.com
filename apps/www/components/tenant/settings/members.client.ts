@@ -1,5 +1,6 @@
 "use client";
 
+import type { Ref } from "@confect/core";
 import type { OptimisticLocalStore, OptimisticUpdate } from "@confect/react";
 import { Id } from "@repo/backend/confect/_generated/id";
 import identity from "@repo/backend/confect/_generated/refs/identity";
@@ -14,25 +15,28 @@ import {
   isFirstPage,
   type Login,
   type Member,
+  withoutItem,
 } from "@/components/tenant/settings/state";
 
 /**
  * The optimistic changes of the members and the student accounts. Each one shows a
- * mutation's result on the first page of every loaded list it touches, so the row
- * appears at once. A refused change is undone by Confect when the server answers.
+ * mutation's result on every loaded page it touches, or on the first page where a new
+ * row belongs, so the change appears at once. A refused change is undone by Confect
+ * when the server answers.
  */
 
-/** Changes the first page of every loaded members list of one school. */
+/** Changes the page of every loaded members list of one school that the matches accept. */
 function changeMemberLists(
   localStore: OptimisticLocalStore.OptimisticLocalStore,
   slug: TenantSlug,
+  matches: (args: Ref.Args<typeof tenancy.roster.members>) => boolean,
   change: (page: readonly Member[]) => Member[]
 ) {
   for (const query of localStore.getAllQueries(tenancy.roster.members)) {
     if (
       Option.isSome(query.value) &&
       query.args.slug === slug &&
-      isFirstPage(query.args)
+      matches(query.args)
     ) {
       localStore.setQuery(
         tenancy.roster.members,
@@ -73,7 +77,21 @@ export const addMemberChange: OptimisticUpdate<typeof tenancy.roster.invite> = (
   changeInviteLists(localStore, slug, isFirstPage, (page) =>
     Arr.prepend(page, invite)
   );
-  changeMemberLists(localStore, slug, (page) => Arr.prepend(page, member));
+  changeMemberLists(localStore, slug, isFirstPage, (page) =>
+    Arr.prepend(page, member)
+  );
+};
+
+/** Takes a member off every loaded members list of the school at once. */
+export const removeMemberChange: OptimisticUpdate<
+  typeof tenancy.people.remove
+> = (localStore, { personId, slug }) => {
+  changeMemberLists(
+    localStore,
+    slug,
+    () => true,
+    (page) => withoutItem(page, personId)
+  );
 };
 
 /**

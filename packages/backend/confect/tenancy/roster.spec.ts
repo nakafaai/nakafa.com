@@ -38,8 +38,9 @@ const InvitedPerson = Schema.Struct({
 
 /**
  * The members of one school and the invites that add them. Its Admin lists the
- * members with their roles and status, and adds a teacher or an Admin in one step.
- * The people module keeps the Persons themselves; this capability owns how they join.
+ * members with their roles and status, and adds a teacher in one step; an Owner adds
+ * an Admin the same way. The people module keeps the Persons themselves; this
+ * capability owns how they join.
  */
 export default GroupSpec.make()
   .middleware(Session)

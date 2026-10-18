@@ -1,3 +1,4 @@
+import type { GenericId } from "@confect/core";
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import type { TenantPeopleDoc } from "@repo/backend/confect/_generated/docs";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
@@ -9,6 +10,7 @@ import {
 } from "@repo/backend/confect/access/grant";
 import { activeGrants } from "@repo/backend/confect/access/policy";
 import { cardOf } from "@repo/backend/confect/identity/card";
+import type { TenantActor } from "@repo/backend/confect/journal/schema";
 import member from "@repo/backend/confect/middleware/member.impl";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import session from "@repo/backend/confect/middleware/session.impl";
@@ -24,11 +26,16 @@ import {
 } from "@repo/backend/confect/tenancy/errors";
 import {
   addressInvited,
+  earlierInvitee,
+  expireInvite,
+  pendingInviteOf,
   writeInvite,
 } from "@repo/backend/confect/tenancy/invite";
 import { admitsAddress } from "@repo/backend/confect/tenancy/policy";
+import { renamePerson } from "@repo/backend/confect/tenancy/rename";
 import { memberStatusOf } from "@repo/backend/confect/tenancy/roster";
 import spec from "@repo/backend/confect/tenancy/roster.spec";
+import type { Email, PersonName } from "@repo/backend/confect/tenancy/schema";
 import { Array as Arr, Clock, Effect, Layer, Option, Struct } from "effect";
 
 /**
@@ -38,15 +45,24 @@ import { Array as Arr, Clock, Effect, Layer, Option, Struct } from "effect";
 const waitingOnInvite = Effect.fn("tenancy.roster.waitingOnInvite")(function* (
   person: TenantPeopleDoc
 ) {
-  const pending = yield* (yield* DatabaseReader)
-    .table("tenantInvites")
-    .index("by_personId_and_state_status", (query) =>
-      query.eq("personId", person._id).eq("state.status", "pending")
-    )
-    .first()
-    .pipe(Effect.orDie);
+  const pending = yield* pendingInviteOf(person._id);
   const now = yield* Clock.currentTimeMillis;
   return Option.exists(pending, (invite) => invite.expiresAt > now);
+});
+
+/**
+ * Whether an unclaimed Person holds a login card that still works: one not yet
+ * redeemed and still within its term. A card past its term no longer counts.
+ */
+const holdsLiveCard = Effect.fn("tenancy.roster.liveCard")(function* (
+  person: TenantPeopleDoc
+) {
+  const card = yield* cardOf(person._id);
+  const now = yield* Clock.currentTimeMillis;
+  return Option.exists(
+    card,
+    (stored) => stored.expiresAt > now && stored.redeemedAt === undefined
+  );
 });
 
 /**
@@ -59,7 +75,7 @@ const memberRow = Effect.fn("tenancy.roster.member")(function* (
 ) {
   const claimed = person.account.state === "claimed";
   const invited = claimed ? false : yield* waitingOnInvite(person);
-  const carded = claimed ? false : Option.isSome(yield* cardOf(person._id));
+  const carded = claimed ? false : yield* holdsLiveCard(person);
   const grants = yield* activeGrants(person._id);
   return {
     id: person._id,
@@ -96,10 +112,34 @@ const members = FunctionImpl.make(
 );
 
 /**
+ * The Person that a new invite of this school names. The Person of an address's
+ * earlier invite takes the new one, so the address keeps one row in the members list:
+ * a pending invite whose term has ended is expired first, and the Person takes the
+ * name typed now. Any other address gets a new Person.
+ */
+const inviteePerson = Effect.fn("tenancy.roster.invitee")(function* (
+  by: typeof TenantActor.Type,
+  tenantId: GenericId.GenericId<"tenants">,
+  email: typeof Email.Type,
+  name: typeof PersonName.Type
+) {
+  const earlier = yield* earlierInvitee(tenantId, email);
+  if (Option.isNone(earlier)) {
+    return yield* createPerson(by, tenantId, name);
+  }
+  const pending = yield* pendingInviteOf(earlier.value._id);
+  if (Option.isSome(pending)) {
+    yield* expireInvite(pending.value, earlier.value);
+  }
+  return yield* renamePerson(by, earlier.value, name);
+});
+
+/**
  * Adds a teacher or an Admin in one transaction: the Person, the role over the whole
  * school, and the invite that names the address. An address the school does not admit
  * is refused, and so is one that already holds a pending invite here, so a retried
- * request adds nobody twice. The role follows the Owner rule of `authorizeOwnerRole`.
+ * request adds nobody twice. An address whose earlier invite here has ended gets the
+ * same Person again. The role follows the Owner rule of `authorizeOwnerRole`.
  */
 const invite = FunctionImpl.make(
   databaseSchema,
@@ -116,7 +156,7 @@ const invite = FunctionImpl.make(
     yield* tenantAuthority.check("grant.manage", tenant);
     yield* authorizeOwnerRole(role);
     const by = personActor(actor);
-    const person = yield* createPerson(by, tenant._id, name);
+    const person = yield* inviteePerson(by, tenant._id, email, name);
     yield* personAuthority.check("person.invite", person);
     yield* assignRole(by, person, role, { kind: "tenant" });
     const written = yield* writeInvite(by, person, email, locale);

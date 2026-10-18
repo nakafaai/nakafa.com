@@ -7,6 +7,7 @@ import { Array as Arr, Option, Schema } from "effect";
 import {
   addMemberChange,
   addStudentChange,
+  removeMemberChange,
 } from "@/components/tenant/settings/members.client";
 import {
   isDraft,
@@ -200,5 +201,42 @@ describe("components/tenant/settings/members.client", () => {
       );
     expect(loginsOf(paging, otherSlug)).toEqual(["lain"]);
     expect(loginsOf(later, slug)).toEqual(["nanti"]);
+  });
+
+  it("takes a removed member off every loaded page of its school, and keeps the other school's list", () => {
+    const local = createLocalStore();
+    const lama = member("p-lama", "Lama");
+    local.seed(
+      tenancy.roster.members,
+      { paginationOpts: paging, slug },
+      pageOf([lama, member("p-baru", "Baru")])
+    );
+    local.seed(
+      tenancy.roster.members,
+      { paginationOpts: later, slug },
+      pageOf([lama])
+    );
+    local.seed(
+      tenancy.roster.members,
+      { paginationOpts: paging, slug: otherSlug },
+      pageOf([lama])
+    );
+    removeMemberChange(local.store, { personId: lama.id, slug });
+    const namesOf = (
+      pagination: typeof paging | typeof later,
+      school: typeof slug | typeof otherSlug
+    ) =>
+      Arr.map(
+        Option.getOrThrow(
+          local.store.getQuery(tenancy.roster.members, {
+            paginationOpts: pagination,
+            slug: school,
+          })
+        ).page,
+        (item) => item.name
+      );
+    expect(namesOf(paging, slug)).toEqual(["Baru"]);
+    expect(namesOf(later, slug)).toEqual([]);
+    expect(namesOf(paging, otherSlug)).toEqual(["Lama"]);
   });
 });

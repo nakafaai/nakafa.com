@@ -9,6 +9,7 @@ import {
 } from "@repo/backend/confect/identity/card";
 import spec from "@repo/backend/confect/identity/cards.spec";
 import {
+  CardMissing,
   CardRoleRefused,
   LoginMissing,
   LoginNameRefused,
@@ -75,6 +76,7 @@ const issue = FunctionImpl.make(
       code: card.code,
       expiresAt: card.expiresAt,
       loginName: name.success,
+      personId: person._id,
     };
   })
 );
@@ -108,6 +110,7 @@ const enroll = FunctionImpl.make(
       code: card.code,
       expiresAt: card.expiresAt,
       loginName: login.success,
+      personId: person._id,
     };
   })
 );
@@ -141,7 +144,31 @@ const reissue = FunctionImpl.make(
       code: card.code,
       expiresAt: card.expiresAt,
       loginName: login.value.name,
+      personId: person._id,
     };
+  })
+);
+
+/**
+ * Records that a Person's card was printed, so each print leaves an entry in the
+ * journal. The browser sends it as the card opens for printing.
+ */
+const printCard = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "print",
+  Effect.fn("identity.cards.print")(function* () {
+    const { person: issuer } = yield* Member;
+    const person = yield* Person;
+    const card = yield* cardOf(person._id);
+    if (Option.isNone(card)) {
+      return yield* new CardMissing();
+    }
+    yield* personAuthority.record(personActor(issuer), person, {
+      card: card.value._id,
+      type: "card.printed",
+    });
+    return null;
   })
 );
 
@@ -159,6 +186,7 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(enroll),
   Layer.provide(issue),
   Layer.provide(reissue),
+  Layer.provide(printCard),
   Layer.provide(redeem),
   Layer.provide(session),
   Layer.provide(member),

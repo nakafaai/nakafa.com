@@ -360,6 +360,7 @@ describe("identity/cards enroll", () => {
           code: expect.stringMatching(CODE_PATTERN),
           expiresAt: CARD_NOW + Duration.toMillis(CARD_TERM),
           loginName: "siswa.baru",
+          personId: expect.any(String),
         });
         const entries = yield* fixture.run(journal);
         expect(Arr.map(entries, (entry) => entry.change.type)).toEqual([
@@ -427,6 +428,65 @@ describe("identity/cards enroll", () => {
         .pipe(Effect.flip);
       expect(refused).toMatchObject(denied("role"));
       expect(yield* fixture.run(journal)).toEqual([]);
+    })
+  );
+});
+
+describe("identity/cards print", () => {
+  const { print } = refs.public.identity.cards;
+
+  it.effect("journals each print of a card under that card", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      yield* issueFirst(fixture);
+      yield* fixture
+        .as("admin")
+        .mutation(print, { personId: fixture.invited, slug: nf });
+      yield* fixture
+        .as("admin")
+        .mutation(print, { personId: fixture.invited, slug: nf });
+      const entries = yield* fixture.run(journal);
+      expect(Arr.map(entries, (entry) => entry.change.type)).toEqual([
+        "card.issued",
+        "card.printed",
+        "card.printed",
+      ]);
+      const cardIds = Arr.flatMap(entries, (entry) =>
+        "card" in entry.change ? [entry.change.card] : []
+      );
+      expect(Arr.dedupe(cardIds)).toHaveLength(1);
+    })
+  );
+
+  it.effect(
+    "refuses a print for a Person who holds no card, and writes nothing",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const refused = yield* fixture
+          .as("admin")
+          .mutation(print, { personId: fixture.invited, slug: nf })
+          .pipe(Effect.flip);
+        expect(refused).toMatchObject({
+          _tag: "CardMissing",
+          code: "CARD_MISSING",
+        });
+        expect(yield* fixture.run(journal)).toEqual([]);
+      })
+  );
+
+  it.effect("refuses a print by a teacher, and writes nothing more", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      yield* issueFirst(fixture);
+      const refused = yield* fixture
+        .as("teacher")
+        .mutation(print, { personId: fixture.invited, slug: nf })
+        .pipe(Effect.flip);
+      expect(refused).toMatchObject({ _tag: "AccessDenied", reason: "role" });
+      expect(yield* fixture.run(journal)).toMatchObject([
+        { change: { type: "card.issued" } },
+      ]);
     })
   );
 });

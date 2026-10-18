@@ -75,8 +75,8 @@ export const expireInvite = Effect.fn("tenancy.invite.expire")(function* (
 const INVITE_SWEEP_BATCH_SIZE = 50;
 
 /**
- * The most pending invites of one address that a school reads. An address holds a
- * few invites, one per school that invites it, so the bound is never reached in use.
+ * The most invites of one address that one read takes. A school invites an address
+ * a few times at most, so the bound is never reached in use.
  */
 const ADDRESS_INVITE_LIMIT = 32;
 
@@ -207,3 +207,60 @@ export const addressInvited = Effect.fn("tenancy.invite.address")(function* (
     (invite) => invite.tenantId === tenantId && invite.expiresAt > now
   );
 });
+
+/** The pending invite of one Person, if one waits: one indexed read. */
+export const pendingInviteOf = Effect.fn("tenancy.invite.pendingOf")(function* (
+  personId: GenericId.GenericId<"tenantPeople">
+) {
+  return yield* (yield* DatabaseReader)
+    .table("tenantInvites")
+    .index("by_personId_and_state_status", (query) =>
+      query.eq("personId", personId).eq("state.status", "pending")
+    )
+    .first()
+    .pipe(Effect.orDie);
+});
+
+/**
+ * Whether a Person can take a new invite: an active Person that no account has
+ * claimed, and whose pending invite, if one waits, has ended.
+ */
+const takesInvite = Effect.fn("tenancy.invite.takesInvite")(function* (
+  person: TenantPeopleDoc
+) {
+  if (person.status !== "active" || person.account.state !== "unclaimed") {
+    return false;
+  }
+  const pending = yield* pendingInviteOf(person._id);
+  const now = yield* Clock.currentTimeMillis;
+  return Option.isNone(pending) || pending.value.expiresAt <= now;
+});
+
+/**
+ * The Person that an earlier invite of this address names in this school, when that
+ * Person takes a new invite. A Person that an account claimed, or that left the
+ * school, is never named again, so its address gets a new Person. The address index
+ * also holds the invites of other schools, so the read is scoped to this school.
+ */
+export const earlierInvitee = Effect.fn("tenancy.invite.earlierInvitee")(
+  function* (
+    tenantId: GenericId.GenericId<"tenants">,
+    email: typeof Email.Type
+  ) {
+    const reader = yield* DatabaseReader;
+    const earlier = yield* reader
+      .table("tenantInvites")
+      .index("by_tenantId_and_channel_email", (query) =>
+        query.eq("tenantId", tenantId).eq("channel.email", email)
+      )
+      .take(ADDRESS_INVITE_LIMIT)
+      .pipe(Effect.orDie);
+    const people = yield* Effect.forEach(
+      earlier,
+      (invite) =>
+        reader.table("tenantPeople").get(invite.personId).pipe(Effect.orDie),
+      { concurrency: "unbounded" }
+    );
+    return Arr.head(yield* Effect.filter(people, takesInvite));
+  }
+);

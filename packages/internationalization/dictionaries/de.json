@@ -240,7 +240,8 @@
       "card": {
         "issued": "Anmeldekarte ausgestellt",
         "reissued": "Anmeldekarte neu ausgestellt",
-        "redeemed": "Anmeldekarte eingelöst"
+        "redeemed": "Anmeldekarte eingelöst",
+        "printed": "Anmeldekarte gedruckt"
       },
       "class": {
         "created": "Lerngruppe angelegt",
@@ -383,6 +384,10 @@
       "joined": "Beigetreten",
       "notInvited": "Nicht eingeladen"
     },
+    "member-remove": "Entfernen",
+    "member-remove-title": "Dieses Mitglied entfernen?",
+    "member-remove-description": "Die Person verlässt die Schule, und ihre Rollen enden.",
+    "member-remove-confirm": "Entfernen",
     "invite-action": "Einladen",
     "invites-footer": "Eine Person ohne Konto einladen.",
     "invite-dialog-title": "Person einladen",

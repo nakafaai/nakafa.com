@@ -6,9 +6,10 @@ import {
   invitePerson,
   journal,
   slugOf,
+  TENANCY_NOW,
   tenancyFixture,
 } from "@repo/backend/test/tenancy";
-import { Array as Arr, Effect, Schema } from "effect";
+import { Array as Arr, Clock, Duration, Effect, Schema } from "effect";
 
 const nf = slugOf("nf");
 const other = slugOf("other");
@@ -176,7 +177,7 @@ describe("tenancy/roster invite and members", () => {
   );
 
   it.effect(
-    "lets an address whose earlier invite has ended be invited again",
+    "invites an address whose earlier invite has ended into the same Person, so the address keeps one row",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
@@ -197,9 +198,189 @@ describe("tenancy/roster invite and members", () => {
           .mutation(inviteMember, guruBaru);
         expect(invitedAgain).toEqual({
           invite: expect.any(String),
-          person: expect.any(String),
+          person: earlier.personId,
         });
-        expect(invitedAgain.person).not.toBe(earlier.personId);
+        const listed = yield* fixture
+          .as("admin")
+          .query(members, { ...everyone, slug: nf });
+        expect(
+          Arr.filter(listed.page, (member) => member.name === "Guru Baru")
+        ).toEqual([
+          {
+            id: earlier.personId,
+            name: "Guru Baru",
+            roles: ["teacher"],
+            status: "invited",
+          },
+        ]);
+        expect(
+          Arr.map(yield* fixture.run(journal), (entry) => entry.change.type)
+        ).toEqual([
+          "invite.expired",
+          "person.renamed",
+          "grant.created",
+          "person.invited",
+        ]);
+      })
+  );
+
+  it.effect(
+    "invites an address whose invite was revoked into the same Person, which keeps its name",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const earlier = yield* fixture.run(
+          invitePerson(fixture.tenants.nf, guruBaru.email, {
+            invite: { at: TENANCY_NOW, status: "revoked" },
+          })
+        );
+        const invitedAgain = yield* fixture
+          .as("admin")
+          .mutation(inviteMember, { ...guruBaru, name: "Invited Person" });
+        expect(invitedAgain.person).toBe(earlier.personId);
+        expect(
+          Arr.map(yield* fixture.run(journal), (entry) => entry.change.type)
+        ).toEqual(["grant.created", "person.invited"]);
+      })
+  );
+
+  it.effect(
+    "gives no new invite to a Person that an account has claimed, so the address gets a new Person",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const claimed = yield* fixture.run(
+          invitePerson(fixture.tenants.nf, guruBaru.email, {
+            account: {
+              claimedAt: TENANCY_NOW,
+              method: "invite",
+              state: "claimed",
+              userId: fixture.users.stranger.userId,
+            },
+            invite: {
+              at: TENANCY_NOW,
+              status: "accepted",
+              userId: fixture.users.stranger.userId,
+            },
+          })
+        );
+        const invitedAgain = yield* fixture
+          .as("admin")
+          .mutation(inviteMember, guruBaru);
+        expect(invitedAgain.person).not.toBe(claimed.personId);
+      })
+  );
+
+  it.effect(
+    "gives no new invite to a Person whose invite to another address still waits, so the address gets a new Person",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const waiting = yield* fixture.run(
+          Effect.gen(function* () {
+            const seeded = yield* invitePerson(
+              fixture.tenants.nf,
+              guruBaru.email,
+              { invite: { at: TENANCY_NOW, status: "revoked" } }
+            );
+            const now = yield* Clock.currentTimeMillis;
+            yield* (yield* DatabaseWriter).table("tenantInvites").insert({
+              channel: { email: outsideAddress, kind: "email" },
+              expiresAt: now + Duration.toMillis(Duration.days(1)),
+              personId: seeded.personId,
+              state: { status: "pending" },
+              tenantId: fixture.tenants.nf,
+            });
+            return seeded;
+          })
+        );
+        const invitedAgain = yield* fixture
+          .as("admin")
+          .mutation(inviteMember, guruBaru);
+        expect(invitedAgain.person).not.toBe(waiting.personId);
+      })
+  );
+
+  it.effect(
+    "gives no new invite to a Person that has left the school, so the address gets a new Person",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const left = yield* fixture.run(
+          invitePerson(fixture.tenants.nf, guruBaru.email, {
+            invite: { at: TENANCY_NOW, status: "revoked" },
+            person: "removed",
+          })
+        );
+        const invitedAgain = yield* fixture
+          .as("admin")
+          .mutation(inviteMember, guruBaru);
+        expect(invitedAgain.person).not.toBe(left.personId);
+      })
+  );
+
+  it.effect(
+    "shows a card past its term as not invited, and a card within its term as card issued",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const seeded = yield* fixture.run(
+          Effect.gen(function* () {
+            const writer = yield* DatabaseWriter;
+            const now = yield* Clock.currentTimeMillis;
+            const issuedBy = fixture.people.admin.personId;
+            const lapsed = yield* writer.table("tenantPeople").insert({
+              account: { state: "unclaimed" },
+              kind: "member",
+              name: "Kartu Lewat",
+              status: "active",
+              tenantId: fixture.tenants.nf,
+            });
+            const current = yield* writer.table("tenantPeople").insert({
+              account: { state: "unclaimed" },
+              kind: "member",
+              name: "Kartu Berlaku",
+              status: "active",
+              tenantId: fixture.tenants.nf,
+            });
+            yield* writer.table("loginCards").insert({
+              codeHash: "lapsed",
+              expiresAt: 0,
+              issuedAt: 0,
+              issuedBy,
+              personId: lapsed,
+              tenantId: fixture.tenants.nf,
+            });
+            yield* writer.table("loginCards").insert({
+              codeHash: "current",
+              expiresAt: now + Duration.toMillis(Duration.days(1)),
+              issuedAt: now,
+              issuedBy,
+              personId: current,
+              tenantId: fixture.tenants.nf,
+            });
+            return { current, lapsed };
+          })
+        );
+        const listed = yield* fixture
+          .as("admin")
+          .query(members, { ...everyone, slug: nf });
+        expect(listed.page).toEqual(
+          expect.arrayContaining([
+            {
+              id: seeded.lapsed,
+              name: "Kartu Lewat",
+              roles: [],
+              status: "notInvited",
+            },
+            {
+              id: seeded.current,
+              name: "Kartu Berlaku",
+              roles: [],
+              status: "cardIssued",
+            },
+          ])
+        );
       })
   );
 

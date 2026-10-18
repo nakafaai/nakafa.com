@@ -205,6 +205,10 @@ export const person = Kind.make("person", "tenantPeople", {
       card: Id("loginCards"),
       type: Schema.Literal("card.redeemed"),
     }),
+    Schema.Struct({
+      card: Id("loginCards"),
+      type: Schema.Literal("card.printed"),
+    }),
   ],
   published: [
     "person.created",
