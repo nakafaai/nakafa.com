@@ -128,7 +128,6 @@
     "prompt-label": "Question text",
     "prompt-placeholder": "Write the question here.",
     "results-title": "Results",
-    "results-students": "Students",
     "results-name": "Student",
     "results-status": "Status",
     "results-score": "Score",
@@ -159,7 +158,17 @@
     "student-results-footer": "Your teacher releases the results after the sitting closes.",
     "student-answer": "Your answer: {letters}",
     "student-answers": "Your answers",
-    "student-results-released": "Your teacher released these results."
+    "student-results-released": "Your teacher released these results.",
+    "schedule": "Schedule",
+    "schedule-title": "Schedule exam",
+    "schedule-description": "Students of the unit take it in the room from the start, for its length.",
+    "room": "Room",
+    "room-placeholder": "Lab 2",
+    "starts": "Starts",
+    "length": "Length",
+    "length-minutes": "{count, plural, one {# minute} other {# minutes}}",
+    "schedule-keys": "Mark the correct answer of every question first.",
+    "schedule-past": "The start has passed. Choose a later time."
   },
   "SchoolSettings": {
     "school": "School",

@@ -128,7 +128,6 @@
     "prompt-label": "Fragetext",
     "prompt-placeholder": "Frage hier schreiben.",
     "results-title": "Ergebnisse",
-    "results-students": "Lernende",
     "results-name": "Name",
     "results-status": "Status",
     "results-score": "Punkte",
@@ -159,7 +158,17 @@
     "student-results-footer": "Deine Lehrkraft gibt die Ergebnisse nach Ende der Sitzung frei.",
     "student-answer": "Deine Antwort: {letters}",
     "student-answers": "Deine Antworten",
-    "student-results-released": "Deine Lehrkraft hat diese Ergebnisse freigegeben."
+    "student-results-released": "Deine Lehrkraft hat diese Ergebnisse freigegeben.",
+    "schedule": "Planen",
+    "schedule-title": "Prüfung planen",
+    "schedule-description": "Die Schüler der Einheit schreiben sie im Raum ab dem Beginn, für ihre Dauer.",
+    "room": "Raum",
+    "room-placeholder": "Labor 2",
+    "starts": "Beginnt",
+    "length": "Dauer",
+    "length-minutes": "{count, plural, one {# Minute} other {# Minuten}}",
+    "schedule-keys": "Markiere zuerst die richtige Antwort jeder Frage.",
+    "schedule-past": "Der Beginn ist vorbei. Wähle eine spätere Zeit."
   },
   "SchoolSettings": {
     "school": "Schule",
