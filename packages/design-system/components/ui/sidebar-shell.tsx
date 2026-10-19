@@ -34,6 +34,9 @@ export function Sidebar({
   const state = useSidebar((sidebar) => sidebar.state);
   const openMobile = useSidebar((sidebar) => sidebar.openMobile);
   const setOpenMobile = useSidebar((sidebar) => sidebar.setOpenMobile);
+  // A collapsed off-canvas panel is slid out of view, so its links must leave the tab order.
+  const isOffcanvasCollapsed =
+    state === "collapsed" && collapsible === "offcanvas";
 
   if (collapsible === "none") {
     return (
@@ -101,6 +104,7 @@ export function Sidebar({
             className
           )}
           data-slot="sidebar-container"
+          inert={isOffcanvasCollapsed}
           {...props}
         >
           <div
