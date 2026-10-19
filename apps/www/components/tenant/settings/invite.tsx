@@ -34,6 +34,7 @@ import { Array as Arr, Option, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { useId, useState, useTransition } from "react";
 import { addMemberChange } from "@/components/tenant/settings/members.client";
+import { cardOffered } from "@/components/tenant/settings/offer";
 import { saveSchool } from "@/components/tenant/settings/save.client";
 
 const SOURCE = "components/tenant/settings/invite";
@@ -177,7 +178,11 @@ export function SchoolInviteDialog({
             type="email"
             value={email}
           />
-          <FieldDescription>{t("invite-google-note")}</FieldDescription>
+          <FieldDescription>
+            {cardOffered([role])
+              ? t("invite-google-note")
+              : t("invite-google-admin-note")}
+          </FieldDescription>
         </Field>
         <Field>
           <FieldLabel htmlFor={`${id}-role`}>{t("invite-role")}</FieldLabel>

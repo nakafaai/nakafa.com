@@ -36,6 +36,7 @@ import {
 import { SchoolInviteDialog } from "@/components/tenant/settings/invite";
 import { SchoolIssueCardDialog } from "@/components/tenant/settings/issue";
 import { revokeInviteChange } from "@/components/tenant/settings/mutation.client";
+import { cardOffered } from "@/components/tenant/settings/offer";
 import { SettingsPage } from "@/components/tenant/settings/page";
 import { saveSchool } from "@/components/tenant/settings/save.client";
 import { isDraft } from "@/components/tenant/settings/state";
@@ -187,10 +188,11 @@ function SchoolInviteTable({
 
 /**
  * An invite's row menu. A pending invite is sent again in the viewer's language or revoked
- * behind a confirmation. An expired invite is sent again as a new invite to the same Person
- * and address, because the school never sends an expired invite itself. A draft invite, still
- * on its way to the server, has an inert menu, and a send waits until the viewer's language is
- * known.
+ * behind a confirmation, and a login card is offered only to a Person who may take one (an
+ * Owner or an Admin may not). An expired invite is sent again as a new invite to the same
+ * Person and address, because the school never sends an expired invite itself. A draft invite,
+ * still on its way to the server, has an inert menu, and a send waits until the viewer's
+ * language is known.
  */
 function SchoolInviteMenu({
   invite,
@@ -216,10 +218,7 @@ function SchoolInviteMenu({
   /** Sends a pending invite again, in the viewer's language. */
   const sendPending = (locale: typeof ActiveAppLocaleCodeSchema.Type) =>
     startTransition(() =>
-      saveSchool(
-        () => resend({ inviteId: invite.id, locale, slug }),
-        SOURCE
-      )
+      saveSchool(() => resend({ inviteId: invite.id, locale, slug }), SOURCE)
     );
 
   /** Sends an expired invite's address again, as a new invite to the same Person. */
@@ -265,9 +264,11 @@ function SchoolInviteMenu({
           </DropdownMenuItem>
           {isExpired ? null : (
             <>
-              <DropdownMenuItem onClick={() => setIsIssuing(true)}>
-                {t("invite-card")}
-              </DropdownMenuItem>
+              {cardOffered(invite.roles) ? (
+                <DropdownMenuItem onClick={() => setIsIssuing(true)}>
+                  {t("invite-card")}
+                </DropdownMenuItem>
+              ) : null}
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={() => setIsRevoking(true)}
