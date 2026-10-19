@@ -84,31 +84,9 @@ const addComment = FunctionImpl.make(
               threadId: yield* threadOf(parentComment),
             }),
         likeCount: 0,
-        upvoteCount: 0,
-        downvoteCount: 0,
         replyCount: 0,
       })
       .pipe(Effect.orDie);
-  })
-);
-
-/**
- * Maps an open web build's vote onto a like: 1 likes the comment, and 0 or -1 takes
- * the like back. The vote table is no longer written.
- */
-const voteOnComment = FunctionImpl.make(
-  databaseSchema,
-  spec,
-  "voteOnComment",
-  Effect.fn("comments.mutations.voteOnComment")(function* (args) {
-    const user = yield* requireAuth();
-    const comment = yield* readComment(args.commentId);
-    if (args.vote === 1) {
-      yield* addCommentLike(comment, user.appUser._id);
-    } else {
-      yield* takeBackCommentLike(comment, user.appUser._id);
-    }
-    return null;
   })
 );
 
@@ -167,7 +145,6 @@ const deleteComment = FunctionImpl.make(
 
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(addComment),
-  Layer.provide(voteOnComment),
   Layer.provide(likeComment),
   Layer.provide(unlikeComment),
   Layer.provide(deleteComment),

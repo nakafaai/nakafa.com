@@ -10,12 +10,13 @@ export default Table.make(() =>
     // The top-level comment this reply belongs to. A top-level comment has none.
     threadId: Schema.optionalKey(IdSchema("comments")),
     replyToUserId: Schema.optionalKey(IdSchema("users")),
-    // Denormalized preview of parent comment, kept on old rows until the contract stage.
+    // Left on rows written before likes. The strip pass of comments/migration removes
+    // them, and the next change drops them.
     replyToText: Schema.optionalKey(Schema.String),
     // Kept exact by the like mutations. A row written before the likes table has none.
     likeCount: Schema.optionalKey(Schema.Finite),
-    upvoteCount: Schema.Finite,
-    downvoteCount: Schema.Finite,
+    upvoteCount: Schema.optionalKey(Schema.Finite),
+    downvoteCount: Schema.optionalKey(Schema.Finite),
     // On a top-level comment, the number of comments in its thread.
     replyCount: Schema.Finite,
   })
