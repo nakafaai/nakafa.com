@@ -22,6 +22,7 @@ import {
   useId,
   useRef,
   useState,
+  useTransition,
 } from "react";
 import {
   type Admission,
@@ -41,7 +42,10 @@ import {
   CardSectionFooter,
 } from "@/components/shared/card/section";
 import { LayoutContent } from "@/components/shared/content/layout";
+import { DataFailure } from "@/components/shared/failure";
+import { reloadPage } from "@/components/shared/reload";
 import { SchoolHeader } from "@/components/tenant/header";
+import { isDenied, isLostAccess } from "@/components/tenant/refusal";
 
 /** An admission that lets the student into the sitting, with the attempt it opened. */
 type Admitted = Extract<Admission, { readonly _tag: "admitted" }>;
@@ -75,6 +79,8 @@ export function StudentSitting({
   const [tokenText, setTokenText] = useState("");
   const resumed = useRef(false);
   const tokenId = useId();
+  // The entry waits for the server's answer: a second press would send a second device with the same token.
+  const [entering, startEntering] = useTransition();
   const ready = QueryResult.isSuccess(view);
 
   /** Shows the admission, or the sentence that explains why the entry was refused. */
@@ -106,7 +112,10 @@ export function StudentSitting({
   }, [enter, ready, receive, sittingId, slug]);
 
   if (QueryResult.isFailure(view)) {
-    return <StudentRefusal />;
+    if (isLostAccess(view.error)) {
+      throw view.error;
+    }
+    return isDenied(view.error) ? <StudentRefusal /> : <StudentReadFailure />;
   }
   if (!QueryResult.isSuccess(view)) {
     return null;
@@ -129,7 +138,9 @@ export function StudentSitting({
   /** Enters with the token that the student typed. */
   function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    enter({ sittingId, slug, token: tokenText.trim() }, receive);
+    startEntering(async () => {
+      await enter({ sittingId, slug, token: tokenText.trim() }, receive);
+    });
   }
 
   return (
@@ -165,7 +176,9 @@ export function StudentSitting({
               tone={message === null ? null : "destructive"}
             >
               <CardSectionActions>
-                <Button type="submit">{t("student-enter")}</Button>
+                <Button disabled={entering} type="submit">
+                  {t("student-enter")}
+                </Button>
               </CardSectionActions>
             </CardSectionFooter>
           </CardSection>
@@ -186,6 +199,20 @@ function StudentRefusal() {
         <p className="text-muted-foreground text-sm">
           {t("student-unavailable")}
         </p>
+      </LayoutContent>
+    </>
+  );
+}
+
+/** The page when the sitting could not be read: the header, and Try again, since the read may succeed. */
+function StudentReadFailure() {
+  const t = useTranslations("Exams");
+
+  return (
+    <>
+      <SchoolHeader items={[{ label: t("sitting") }]} title={t("sitting")} />
+      <LayoutContent className="w-full py-6">
+        <DataFailure onRetry={reloadPage} />
       </LayoutContent>
     </>
   );
