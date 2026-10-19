@@ -1589,64 +1589,122 @@
       "title": "Antwort nicht gespeichert.",
       "description": "Versuch es noch einmal."
     },
-    "school-refusal-period-dates.title": "Die Zeitraumdaten sind ungültig.",
-    "school-refusal-period-dates.description": "Wähle zwei Daten, und lege den Beginn vor das Ende.",
-    "school-refusal-period-overlaps.title": "Diese Periode überschneidet sich.",
-    "school-refusal-period-overlaps.description": "Wähle Daten, die keine andere Periode dieser Schule nutzt.",
-    "school-refusal-period-active.title": "Eine andere Periode ist schon aktiv.",
-    "school-refusal-period-active.description": "Archiviere die aktive Periode, bevor du diese öffnest.",
-    "school-refusal-period-not-active.title": "Diese Periode ist nicht aktiv.",
-    "school-refusal-period-not-active.description": "Nur eine aktive Periode kann archiviert werden.",
-    "school-refusal-cohort-name-taken.title": "Diesen Namen gibt es schon.",
-    "school-refusal-cohort-name-taken.description": "Wähle für diese Periode einen anderen Namen.",
-    "school-refusal-cohort-limit.title": "Diese Periode ist voll.",
-    "school-refusal-cohort-limit.description": "Lege die Kohorte stattdessen in einer anderen Periode an.",
-    "school-refusal-address-invited.title": "Diese Adresse ist schon eingeladen.",
-    "school-refusal-address-invited.description": "Sende die offene Einladung auf der Seite Einladungen erneut.",
-    "school-refusal-invite-domain.title": "Diese E-Mail-Domain ist gesperrt.",
-    "school-refusal-invite-domain.description": "Nutze eine Adresse von einer Domain, die diese Schule zulässt.",
-    "school-refusal-invite-pending.title": "Diese Person ist schon eingeladen.",
-    "school-refusal-invite-pending.description": "Sende die offene Einladung erneut, statt eine neue anzulegen.",
-    "school-refusal-invite-expired.title": "Diese Einladung ist abgelaufen.",
-    "school-refusal-invite-expired.description": "Lade die Person erneut ein, um eine neue zu senden.",
-    "school-refusal-invite-not-pending.title": "Diese Einladung wartet nicht mehr.",
-    "school-refusal-invite-not-pending.description": "Lade die Einladungen neu, um den aktuellen Stand zu sehen.",
-    "school-refusal-invite-rate-limited.title": "Die Einladung wurde zu oft gesendet.",
-    "school-refusal-invite-rate-limited.description": "Warte eine Weile und sende diese Einladung dann erneut.",
-    "school-refusal-person-claimed.title": "Diese Person hat schon ein Konto.",
-    "school-refusal-person-claimed.description": "Bitte die Person, sich mit diesem Konto anzumelden.",
-    "school-refusal-last-owner.title": "Der letzte Eigentümer bleibt.",
-    "school-refusal-last-owner.description": "Gib die Rolle Eigentümer zuerst einer anderen Person.",
-    "school-refusal-grant-role.title": "Diese Rolle kann man nicht vergeben.",
-    "school-refusal-grant-role.description": "Wähle für diese Person eine andere Rolle.",
-    "school-refusal-grant-scope.title": "Eigentümer gelten für alles.",
-    "school-refusal-grant-scope.description": "Wähle die ganze Schule als Geltungsbereich dieser Rolle.",
-    "school-refusal-grant-limit.title": "Diese Person hat genug Rollen.",
-    "school-refusal-grant-limit.description": "Entferne zuerst eine Rolle, bevor du eine weitere gibst.",
-    "school-refusal-person-inactive.title": "Diese Person ist nicht mehr aktiv.",
-    "school-refusal-person-inactive.description": "Lade die Person erneut ein, um den Zugang wiederherzustellen.",
-    "school-refusal-person-kind.title": "Diese Rolle passt nicht dazu.",
-    "school-refusal-person-kind.description": "Wähle eine Rolle, die zu dieser Art Person passt.",
-    "school-refusal-temporary-role.title": "Diese Rolle gibt es nur dauerhaft.",
-    "school-refusal-temporary-role.description": "Gib Eigentümern und Admins einen dauerhaften Zugang.",
-    "school-refusal-login-name-refused.title": "Dieser Anmeldename ist ungültig.",
-    "school-refusal-login-name-refused.description": "Nutze 3 bis 32 Zeichen: a bis z, 0 bis 9, Punkt, _ oder -.",
-    "school-refusal-login-name-taken.title": "Diesen Anmeldenamen gibt es schon.",
-    "school-refusal-login-name-taken.description": "Wähle für diese Person einen anderen Anmeldenamen.",
-    "school-refusal-login-exists.title": "Diese Person hat schon einen Login.",
-    "school-refusal-login-exists.description": "Ändere den Namen auf der Seite der Person.",
-    "school-refusal-login-missing.title": "Diese Person hat noch keinen Login.",
-    "school-refusal-login-missing.description": "Vergib zuerst einen Anmeldenamen für diese Person.",
-    "school-refusal-person-not-placed.title": "Nicht in dieser Periode eingeteilt.",
-    "school-refusal-person-not-placed.description": "Teile die Person zuerst in eine Kohorte dieser Periode ein.",
-    "school-refusal-card-missing.title": "Noch keine Karte zum Drucken.",
-    "school-refusal-card-missing.description": "Stelle zuerst eine Anmeldekarte für diese Person aus.",
-    "school-refusal-card-role.title": "Nur Lernende bekommen eine Karte.",
-    "school-refusal-card-role.description": "Karten gibt es nur für Lernende.",
-    "school-refusal-npsn-invalid.title": "Die NPSN ist ungültig.",
-    "school-refusal-npsn-invalid.description": "Eine NPSN hat acht Ziffern.",
-    "school-refusal-npsn-taken.title": "Diese NPSN ist schon vergeben.",
-    "school-refusal-npsn-taken.description": "Eine andere Einheit dieser Schule hat sie schon."
+    "school-refusal-period-dates": {
+      "title": "Die Zeitraumdaten sind ungültig.",
+      "description": "Wähle zwei Daten, und lege den Beginn vor das Ende."
+    },
+    "school-refusal-period-overlaps": {
+      "title": "Diese Periode überschneidet sich.",
+      "description": "Wähle Daten, die keine andere Periode dieser Schule nutzt."
+    },
+    "school-refusal-period-active": {
+      "title": "Eine andere Periode ist schon aktiv.",
+      "description": "Archiviere die aktive Periode, bevor du diese öffnest."
+    },
+    "school-refusal-period-not-active": {
+      "title": "Diese Periode ist nicht aktiv.",
+      "description": "Nur eine aktive Periode kann archiviert werden."
+    },
+    "school-refusal-cohort-name-taken": {
+      "title": "Diesen Namen gibt es schon.",
+      "description": "Wähle für diese Periode einen anderen Namen."
+    },
+    "school-refusal-cohort-limit": {
+      "title": "Diese Periode ist voll.",
+      "description": "Lege die Kohorte stattdessen in einer anderen Periode an."
+    },
+    "school-refusal-address-invited": {
+      "title": "Diese Adresse ist schon eingeladen.",
+      "description": "Sende die offene Einladung auf der Seite Einladungen erneut."
+    },
+    "school-refusal-invite-domain": {
+      "title": "Diese E-Mail-Domain ist gesperrt.",
+      "description": "Nutze eine Adresse von einer Domain, die diese Schule zulässt."
+    },
+    "school-refusal-invite-pending": {
+      "title": "Diese Person ist schon eingeladen.",
+      "description": "Sende die offene Einladung erneut, statt eine neue anzulegen."
+    },
+    "school-refusal-invite-expired": {
+      "title": "Diese Einladung ist abgelaufen.",
+      "description": "Lade die Person erneut ein, um eine neue zu senden."
+    },
+    "school-refusal-invite-not-pending": {
+      "title": "Diese Einladung wartet nicht mehr.",
+      "description": "Lade die Einladungen neu, um den aktuellen Stand zu sehen."
+    },
+    "school-refusal-invite-rate-limited": {
+      "title": "Die Einladung wurde zu oft gesendet.",
+      "description": "Warte eine Weile und sende diese Einladung dann erneut."
+    },
+    "school-refusal-person-claimed": {
+      "title": "Diese Person hat schon ein Konto.",
+      "description": "Bitte die Person, sich mit diesem Konto anzumelden."
+    },
+    "school-refusal-last-owner": {
+      "title": "Der letzte Eigentümer bleibt.",
+      "description": "Gib die Rolle Eigentümer zuerst einer anderen Person."
+    },
+    "school-refusal-grant-role": {
+      "title": "Diese Rolle kann man nicht vergeben.",
+      "description": "Wähle für diese Person eine andere Rolle."
+    },
+    "school-refusal-grant-scope": {
+      "title": "Eigentümer gelten für alles.",
+      "description": "Wähle die ganze Schule als Geltungsbereich dieser Rolle."
+    },
+    "school-refusal-grant-limit": {
+      "title": "Diese Person hat genug Rollen.",
+      "description": "Entferne zuerst eine Rolle, bevor du eine weitere gibst."
+    },
+    "school-refusal-person-inactive": {
+      "title": "Diese Person ist nicht mehr aktiv.",
+      "description": "Lade die Person erneut ein, um den Zugang wiederherzustellen."
+    },
+    "school-refusal-person-kind": {
+      "title": "Diese Rolle passt nicht dazu.",
+      "description": "Wähle eine Rolle, die zu dieser Art Person passt."
+    },
+    "school-refusal-temporary-role": {
+      "title": "Diese Rolle gibt es nur dauerhaft.",
+      "description": "Gib Eigentümern und Admins einen dauerhaften Zugang."
+    },
+    "school-refusal-login-name-refused": {
+      "title": "Dieser Anmeldename ist ungültig.",
+      "description": "Nutze 3 bis 32 Zeichen: a bis z, 0 bis 9, Punkt, _ oder -."
+    },
+    "school-refusal-login-name-taken": {
+      "title": "Diesen Anmeldenamen gibt es schon.",
+      "description": "Wähle für diese Person einen anderen Anmeldenamen."
+    },
+    "school-refusal-login-exists": {
+      "title": "Diese Person hat schon einen Login.",
+      "description": "Ändere den Namen auf der Seite der Person."
+    },
+    "school-refusal-login-missing": {
+      "title": "Diese Person hat noch keinen Login.",
+      "description": "Vergib zuerst einen Anmeldenamen für diese Person."
+    },
+    "school-refusal-person-not-placed": {
+      "title": "Nicht in dieser Periode eingeteilt.",
+      "description": "Teile die Person zuerst in eine Kohorte dieser Periode ein."
+    },
+    "school-refusal-card-missing": {
+      "title": "Noch keine Karte zum Drucken.",
+      "description": "Stelle zuerst eine Anmeldekarte für diese Person aus."
+    },
+    "school-refusal-card-role": {
+      "title": "Nur Lernende bekommen eine Karte.",
+      "description": "Karten gibt es nur für Lernende."
+    },
+    "school-refusal-npsn-invalid": {
+      "title": "Die NPSN ist ungültig.",
+      "description": "Eine NPSN hat acht Ziffern."
+    },
+    "school-refusal-npsn-taken": {
+      "title": "Diese NPSN ist schon vergeben.",
+      "description": "Eine andere Einheit dieser Schule hat sie schon."
+    }
   },
   "Ai": {
     "attachment": "Anhang",

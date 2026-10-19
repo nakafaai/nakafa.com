@@ -1589,64 +1589,122 @@
       "title": "Your answer was not saved.",
       "description": "Try again."
     },
-    "school-refusal-period-dates.title": "The period dates are not valid.",
-    "school-refusal-period-dates.description": "Choose two dates, and make the start come before the end.",
-    "school-refusal-period-overlaps.title": "This period overlaps another period.",
-    "school-refusal-period-overlaps.description": "Choose dates that no other period of this school uses.",
-    "school-refusal-period-active.title": "Another period is already active.",
-    "school-refusal-period-active.description": "Archive the active period before you open this one.",
-    "school-refusal-period-not-active.title": "This period is not active.",
-    "school-refusal-period-not-active.description": "Only an active period can be archived.",
-    "school-refusal-cohort-name-taken.title": "This cohort name is already used.",
-    "school-refusal-cohort-name-taken.description": "Choose another name for this period.",
-    "school-refusal-cohort-limit.title": "No more cohorts fit this period.",
-    "school-refusal-cohort-limit.description": "Add the cohort to another period instead.",
-    "school-refusal-address-invited.title": "This address already has an invite.",
-    "school-refusal-address-invited.description": "Resend the pending invite from the invitations page.",
-    "school-refusal-invite-domain.title": "This email domain is not allowed.",
-    "school-refusal-invite-domain.description": "Use an address from a domain that this school admits.",
-    "school-refusal-invite-pending.title": "This person has a pending invite.",
-    "school-refusal-invite-pending.description": "Resend the pending invite instead.",
-    "school-refusal-invite-expired.title": "This invite has expired.",
-    "school-refusal-invite-expired.description": "Invite the person again to send a new one.",
-    "school-refusal-invite-not-pending.title": "This invite is no longer pending.",
-    "school-refusal-invite-not-pending.description": "Refresh the invitations to see its current state.",
-    "school-refusal-invite-rate-limited.title": "Too many invites were sent.",
-    "school-refusal-invite-rate-limited.description": "Wait a while, then send this invite again.",
-    "school-refusal-person-claimed.title": "This person already has an account.",
-    "school-refusal-person-claimed.description": "Ask the person to sign in with that account.",
-    "school-refusal-last-owner.title": "The last owner cannot be removed.",
-    "school-refusal-last-owner.description": "Give the owner role to another person first.",
-    "school-refusal-grant-role.title": "This role cannot be given here.",
-    "school-refusal-grant-role.description": "Choose another role for this person.",
-    "school-refusal-grant-scope.title": "Owners hold the whole school only.",
-    "school-refusal-grant-scope.description": "Choose the whole school as the scope of this role.",
-    "school-refusal-grant-limit.title": "This person holds enough roles.",
-    "school-refusal-grant-limit.description": "Remove one role before you give another.",
-    "school-refusal-person-inactive.title": "This person is no longer active.",
-    "school-refusal-person-inactive.description": "Invite the person again to restore access.",
-    "school-refusal-person-kind.title": "This role does not fit this person.",
-    "school-refusal-person-kind.description": "Choose a role that fits this kind of person.",
-    "school-refusal-temporary-role.title": "This role cannot be temporary.",
-    "school-refusal-temporary-role.description": "Give owners and admins a permanent grant.",
-    "school-refusal-login-name-refused.title": "This login name is not allowed.",
-    "school-refusal-login-name-refused.description": "Use 3 to 32 characters: a to z, 0 to 9, dot, underscore or hyphen.",
-    "school-refusal-login-name-taken.title": "This login name is already used.",
-    "school-refusal-login-name-taken.description": "Choose another login name for this student.",
-    "school-refusal-login-exists.title": "This person has a login name.",
-    "school-refusal-login-exists.description": "Change the name on the person's page instead.",
-    "school-refusal-login-missing.title": "This person has no login name yet.",
-    "school-refusal-login-missing.description": "Give the person a login name first.",
-    "school-refusal-person-not-placed.title": "This student is not in this period.",
-    "school-refusal-person-not-placed.description": "Place the student in a cohort of this period first.",
-    "school-refusal-card-missing.title": "No card to print yet.",
-    "school-refusal-card-missing.description": "Issue a login card for this student first.",
-    "school-refusal-card-role.title": "Only students get a login card.",
-    "school-refusal-card-role.description": "Cards are issued to students only.",
-    "school-refusal-npsn-invalid.title": "The NPSN is not valid.",
-    "school-refusal-npsn-invalid.description": "A national school number has eight digits.",
-    "school-refusal-npsn-taken.title": "This NPSN is already used.",
-    "school-refusal-npsn-taken.description": "Another unit of this school already has it."
+    "school-refusal-period-dates": {
+      "title": "The period dates are not valid.",
+      "description": "Choose two dates, and make the start come before the end."
+    },
+    "school-refusal-period-overlaps": {
+      "title": "This period overlaps another period.",
+      "description": "Choose dates that no other period of this school uses."
+    },
+    "school-refusal-period-active": {
+      "title": "Another period is already active.",
+      "description": "Archive the active period before you open this one."
+    },
+    "school-refusal-period-not-active": {
+      "title": "This period is not active.",
+      "description": "Only an active period can be archived."
+    },
+    "school-refusal-cohort-name-taken": {
+      "title": "This cohort name is already used.",
+      "description": "Choose another name for this period."
+    },
+    "school-refusal-cohort-limit": {
+      "title": "No more cohorts fit this period.",
+      "description": "Add the cohort to another period instead."
+    },
+    "school-refusal-address-invited": {
+      "title": "This address already has an invite.",
+      "description": "Resend the pending invite from the invitations page."
+    },
+    "school-refusal-invite-domain": {
+      "title": "This email domain is not allowed.",
+      "description": "Use an address from a domain that this school admits."
+    },
+    "school-refusal-invite-pending": {
+      "title": "This person has a pending invite.",
+      "description": "Resend the pending invite instead."
+    },
+    "school-refusal-invite-expired": {
+      "title": "This invite has expired.",
+      "description": "Invite the person again to send a new one."
+    },
+    "school-refusal-invite-not-pending": {
+      "title": "This invite is no longer pending.",
+      "description": "Refresh the invitations to see its current state."
+    },
+    "school-refusal-invite-rate-limited": {
+      "title": "Too many invites were sent.",
+      "description": "Wait a while, then send this invite again."
+    },
+    "school-refusal-person-claimed": {
+      "title": "This person already has an account.",
+      "description": "Ask the person to sign in with that account."
+    },
+    "school-refusal-last-owner": {
+      "title": "The last owner cannot be removed.",
+      "description": "Give the owner role to another person first."
+    },
+    "school-refusal-grant-role": {
+      "title": "This role cannot be given here.",
+      "description": "Choose another role for this person."
+    },
+    "school-refusal-grant-scope": {
+      "title": "Owners hold the whole school only.",
+      "description": "Choose the whole school as the scope of this role."
+    },
+    "school-refusal-grant-limit": {
+      "title": "This person holds enough roles.",
+      "description": "Remove one role before you give another."
+    },
+    "school-refusal-person-inactive": {
+      "title": "This person is no longer active.",
+      "description": "Invite the person again to restore access."
+    },
+    "school-refusal-person-kind": {
+      "title": "This role does not fit this person.",
+      "description": "Choose a role that fits this kind of person."
+    },
+    "school-refusal-temporary-role": {
+      "title": "This role cannot be temporary.",
+      "description": "Give owners and admins a permanent grant."
+    },
+    "school-refusal-login-name-refused": {
+      "title": "This login name is not allowed.",
+      "description": "Use 3 to 32 characters: a to z, 0 to 9, dot, underscore or hyphen."
+    },
+    "school-refusal-login-name-taken": {
+      "title": "This login name is already used.",
+      "description": "Choose another login name for this student."
+    },
+    "school-refusal-login-exists": {
+      "title": "This person has a login name.",
+      "description": "Change the name on the person's page instead."
+    },
+    "school-refusal-login-missing": {
+      "title": "This person has no login name yet.",
+      "description": "Give the person a login name first."
+    },
+    "school-refusal-person-not-placed": {
+      "title": "This student is not in this period.",
+      "description": "Place the student in a cohort of this period first."
+    },
+    "school-refusal-card-missing": {
+      "title": "No card to print yet.",
+      "description": "Issue a login card for this student first."
+    },
+    "school-refusal-card-role": {
+      "title": "Only students get a login card.",
+      "description": "Cards are issued to students only."
+    },
+    "school-refusal-npsn-invalid": {
+      "title": "The NPSN is not valid.",
+      "description": "A national school number has eight digits."
+    },
+    "school-refusal-npsn-taken": {
+      "title": "This NPSN is already used.",
+      "description": "Another unit of this school already has it."
+    }
   },
   "Ai": {
     "attachment": "Attachment",
