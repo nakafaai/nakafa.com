@@ -156,15 +156,13 @@ function SidebarTreeGroup({
   title,
 }: {
   children: ReactNode;
-  title?: string | undefined;
+  title: string;
 }) {
-  const t = useTranslations("Common");
-
   return (
     <SidebarGroup>
       <SidebarGroupLabel className="gap-2">
         <HugeIcons icon={Menu02Icon} />
-        {title ?? t("on-this-page")}
+        {title}
       </SidebarGroupLabel>
       <SidebarGroupContent>{children}</SidebarGroupContent>
     </SidebarGroup>
@@ -176,8 +174,10 @@ function SidebarTreeGroup({
  * @param data - The headings, typically generated from the `getHeadings` function.
  */
 export function SidebarTree({ data, title }: Props) {
+  const t = useTranslations("Common");
+
   return (
-    <SidebarTreeGroup title={title}>
+    <SidebarTreeGroup title={title ?? t("on-this-page")}>
       <SidebarMenu>
         <TocProvider toc={data}>
           {Arr.map(data, (item) => (

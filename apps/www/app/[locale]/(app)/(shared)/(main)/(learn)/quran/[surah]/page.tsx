@@ -11,6 +11,8 @@ import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { type ReactNode, Suspense } from "react";
 import { SheetEntry } from "@/components/ai/sheet/entry";
+import { AiMenuItem } from "@/components/ai/sheet/menu";
+import { OpenContent } from "@/components/shared/content/actions";
 import { LayoutContent } from "@/components/shared/content/layout";
 import { PaginationContent } from "@/components/shared/content/pagination";
 import { FragmentLanding } from "@/components/shared/fragment";
@@ -26,6 +28,7 @@ import { SidebarTree } from "@/components/shared/outline/tree";
 import { QuranBismillah } from "@/components/shared/quran/bismillah";
 import { QuranSurahHeader } from "@/components/shared/quran/header";
 import { QuranInterpretationControls } from "@/components/shared/quran/interpretation/controls";
+import { QuranSurahName } from "@/components/shared/quran/name";
 import { QuranVersesProvider } from "@/components/shared/quran/verses/context";
 import { QuranVerseList } from "@/components/shared/quran/verses/list";
 import { ReferenceButton } from "@/components/sidebar/actions/reference";
@@ -245,28 +248,34 @@ async function CachedSurahShell({
       <SidebarRightProvider>
         <LayoutMaterialContent>
           <QuranSurahHeader
-            arabic={surahData.name.arabic}
-            copySourceUrl={getLlmsMarkdownPath({
-              locale,
-              publicPath: `quran/${surah}`,
-            })}
+            actions={
+              <OpenContent
+                copySourceUrl={getLlmsMarkdownPath({
+                  locale,
+                  publicPath: `quran/${surah}`,
+                })}
+                slug={`/${locale}/quran/${surah}`}
+              >
+                <AiMenuItem contextTitle={title} />
+              </OpenContent>
+            }
             meaning={description}
             meaningLanguage={descriptionLanguage}
+            name={
+              <QuranSurahName arabic={surahData.name.arabic} title={title} />
+            }
             quranLabel={t("quran")}
-            slug={`/${locale}/quran/${surah}`}
             title={title}
           />
           <LayoutContent className="pt-6">
             <QuranVersesProvider
               interpretationLabel={interpretationLabel}
+              surahTitle={title}
               tafsirAccess={tafsirAccess}
               translationNotesLabel={translationNotesLabel}
             >
               {result.preBismillah === null ? null : (
-                <QuranBismillah
-                  bismillah={result.preBismillah}
-                  subjectLabel={title}
-                />
+                <QuranBismillah bismillah={result.preBismillah} />
               )}
               {tafsirAccess.kind === "embedded" ? (
                 <QuranInterpretationControls

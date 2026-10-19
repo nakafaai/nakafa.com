@@ -29,7 +29,7 @@ export function AiChatPage({
       }}
       resetKeys={[shareToken]}
     >
-      <ChatProvider chatId={chatId} shareToken={shareToken}>
+      <ChatProvider chatId={chatId} key={chatId} shareToken={shareToken}>
         <AiChatMain />
       </ChatProvider>
     </ChatBoundary>
