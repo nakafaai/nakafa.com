@@ -85,9 +85,9 @@ export function QuranSurahHeader({
             <TooltipTrigger
               render={
                 <SidebarTrigger
-                  aria-label={tCommon("on-this-page")}
                   className="size-9"
                   icon={Menu02Icon}
+                  label={tCommon("on-this-page")}
                   size="icon"
                   variant="outline"
                 />

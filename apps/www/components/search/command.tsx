@@ -86,6 +86,8 @@ type SearchCommandItem = SearchCommandGroup["items"][number];
  * Renders the global command menu used across the main app shell.
  */
 export function SearchCommand() {
+  const t = useTranslations("Utils");
+  const tCommon = useTranslations("Common");
   const { open, setOpen } = useSearch((state) => ({
     open: state.open,
     setOpen: state.setOpen,
@@ -100,7 +102,10 @@ export function SearchCommand() {
 
   return (
     <CommandDialog onOpenChange={setOpen} open={open}>
-      <CommandDialogPopup>
+      <CommandDialogPopup
+        description={t("search-description")}
+        title={tCommon("search")}
+      >
         <SearchMain />
       </CommandDialogPopup>
     </CommandDialog>
@@ -110,6 +115,7 @@ export function SearchCommand() {
 /** Coordinates debounced Convex content search inside the command dialog. */
 function SearchMain() {
   const t = useTranslations("Utils");
+  const tCommon = useTranslations("Common");
   const query = useSearch((state) => state.query);
   const setQuery = useSearch((state) => state.setQuery);
   const articleNavigation = useArticleNavigation();
@@ -161,7 +167,10 @@ function SearchMain() {
       onValueChange={setQuery}
       value={query}
     >
-      <CommandInput placeholder={t("search-placeholder")} />
+      <CommandInput
+        clearLabel={tCommon("clear-search")}
+        placeholder={t("search-placeholder")}
+      />
       <CommandPanel>
         <SearchEmpty
           error={hasError ? displayError : ""}
@@ -187,7 +196,7 @@ function SearchEmpty({
   const t = useTranslations("Utils");
 
   return (
-    <CommandEmpty className="not-empty:flex not-empty:flex-col not-empty:items-center not-empty:justify-center not-empty:gap-1 not-empty:p-7.5 text-center text-muted-foreground text-sm empty:hidden">
+    <CommandEmpty className="not-empty:flex not-empty:flex-col not-empty:items-center not-empty:justify-center not-empty:gap-1 not-empty:p-7.5 text-center text-muted-foreground text-sm">
       {!!error && (
         <>
           <HugeIcons className="size-4" icon={InformationCircleIcon} />

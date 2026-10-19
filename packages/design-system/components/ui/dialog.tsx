@@ -33,7 +33,7 @@ function DialogOverlay({
   return (
     <DialogPrimitive.Backdrop
       className={cn(
-        "data-closed:fade-out-0 data-open:fade-in-0 fixed inset-0 isolate z-50 bg-black/20 duration-surface ease-out data-closed:animate-out data-open:animate-in supports-backdrop-filter:backdrop-blur-sm",
+        "data-closed:fade-out-0 data-open:fade-in-0 fixed inset-0 isolate z-50 bg-black/20 duration-surface ease-out supports-backdrop-filter:backdrop-blur-sm motion-safe:data-closed:animate-out motion-safe:data-open:animate-in",
         className
       )}
       data-slot="dialog-overlay"
@@ -86,7 +86,7 @@ function DialogContent({
       >
         <DialogPrimitive.Popup
           className={cn(
-            "data-closed:fade-out-0 data-closed:zoom-out-98 data-open:fade-in-0 data-open:zoom-in-98 relative row-start-2 flex max-h-[min(90dvh,900px)] min-h-0 w-full max-w-[calc(100%-2rem)] flex-col overflow-hidden rounded-xl border bg-popover text-popover-foreground text-sm shadow-lg/5 outline-none duration-surface ease-out data-closed:animate-out data-open:animate-in",
+            "data-closed:fade-out-0 data-closed:zoom-out-98 data-open:fade-in-0 data-open:zoom-in-98 relative row-start-2 flex max-h-[min(90dvh,900px)] min-h-0 w-full max-w-[calc(100%-2rem)] flex-col overflow-hidden rounded-xl border bg-popover text-popover-foreground text-sm shadow-lg/5 outline-none duration-surface ease-out motion-safe:data-closed:animate-out motion-safe:data-open:animate-in",
             size === "default" && "sm:max-w-md",
             size === "wide" && "sm:max-w-7xl",
             bottomStickOnMobile &&

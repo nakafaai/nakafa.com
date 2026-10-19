@@ -77,7 +77,16 @@ const toasterStyle: ToasterStyle = {
  * which the line clamps enforce whatever the copy says. The copy is a message
  * node from `lib/toast/message`, which renders the reader's language.
  */
-function Toaster({ ...props }: ToasterProps) {
+function Toaster({
+  closeButtonAriaLabel,
+  containerAriaLabel,
+  ...props
+}: ToasterProps & {
+  /** The name of the close button of each notification, in the reader's language. */
+  closeButtonAriaLabel: string;
+  /** The name of the region that holds the notifications, in the reader's language. */
+  containerAriaLabel: string;
+}) {
   const { resolvedTheme } = useTheme();
   const appearance = getThemeAppearance(resolvedTheme);
 
@@ -85,6 +94,7 @@ function Toaster({ ...props }: ToasterProps) {
     <Sonner
       className="font-sans!"
       closeButton
+      containerAriaLabel={containerAriaLabel}
       icons={{
         success: <HugeIcons className="size-4" icon={Tick01Icon} />,
         info: <HugeIcons className="size-4" icon={InformationCircleIcon} />,
@@ -96,6 +106,7 @@ function Toaster({ ...props }: ToasterProps) {
       style={toasterStyle}
       theme={appearance}
       toastOptions={{
+        closeButtonAriaLabel,
         classNames: {
           actionButton: buttonVariants({ size: "sm" }),
           cancelButton: buttonVariants({ size: "sm", variant: "secondary" }),

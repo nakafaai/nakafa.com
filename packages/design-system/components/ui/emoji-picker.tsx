@@ -44,7 +44,7 @@ function EmojiPickerSearch({
         icon={Search02Icon}
       />
       <EmojiPickerPrimitive.Search
-        className="flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-hidden placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
+        className="flex h-10 w-full rounded-md bg-transparent py-3 text-base outline-hidden placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
         data-slot="emoji-picker-search"
         {...props}
       />
@@ -111,7 +111,7 @@ function EmojiPickerContent({
         className="absolute inset-0 flex items-center justify-center text-muted-foreground"
         data-slot="emoji-picker-loading"
       >
-        <Spinner className="size-4" />
+        <Spinner className="size-4" label={t("loading")} />
       </EmojiPickerPrimitive.Loading>
       <EmojiPickerPrimitive.Empty
         className="absolute inset-0 flex items-center justify-center text-muted-foreground text-sm"

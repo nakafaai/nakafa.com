@@ -9,7 +9,7 @@ import { cn } from "cn";
 import type * as React from "react";
 
 const autocompleteInputVariants = cva(
-  "flex w-full min-w-0 rounded-md border border-input bg-transparent text-sm shadow-xs outline-none transition-[color,box-shadow] placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20",
+  "flex w-full min-w-0 rounded-md border border-input bg-transparent text-base shadow-xs outline-none transition-[color,box-shadow] placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 md:text-sm",
   {
     defaultVariants: {
       size: "default",
@@ -26,10 +26,14 @@ const autocompleteInputVariants = cva(
 
 type AutocompleteInputProps = Omit<AutocompletePrimitive.Input.Props, "size"> &
   VariantProps<typeof autocompleteInputVariants> & {
+    /** The name of the clear button when `showClear` is set, in the reader's language. */
+    clearLabel?: string;
     clearProps?: AutocompletePrimitive.Clear.Props;
     showClear?: boolean;
     showTrigger?: boolean;
     startAddon?: React.ReactNode;
+    /** The name of the trigger button when `showTrigger` is set, in the reader's language. */
+    triggerLabel?: string;
     triggerProps?: AutocompletePrimitive.Trigger.Props;
   };
 
@@ -37,11 +41,13 @@ const Autocomplete = AutocompletePrimitive.Root;
 
 function AutocompleteInput({
   className,
+  clearLabel,
   clearProps,
   showClear = false,
   showTrigger = false,
   size,
   startAddon,
+  triggerLabel,
   triggerProps,
   ...props
 }: AutocompleteInputProps) {
@@ -72,6 +78,7 @@ function AutocompleteInput({
       />
       {!!showTrigger && (
         <AutocompleteTrigger
+          aria-label={triggerLabel}
           className="absolute inset-e-0.5 top-1/2 inline-flex size-8 -translate-y-1/2 cursor-pointer items-center justify-center rounded-md border border-transparent text-muted-foreground opacity-80 outline-none transition-colors pointer-coarse:after:absolute pointer-coarse:after:min-h-11 pointer-coarse:after:min-w-11 hover:opacity-100 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring sm:size-7"
           {...triggerProps}
         >
@@ -82,6 +89,7 @@ function AutocompleteInput({
       )}
       {!!showClear && (
         <AutocompleteClear
+          aria-label={clearLabel}
           className="not-data-visible:pointer-events-none absolute inset-e-0.5 top-1/2 inline-flex size-8 -translate-y-1/2 cursor-pointer items-center justify-center rounded-md border border-transparent text-muted-foreground not-data-visible:opacity-0 opacity-80 outline-none transition-[scale,color,background-color,box-shadow,opacity] pointer-coarse:after:absolute pointer-coarse:after:min-h-11 pointer-coarse:after:min-w-11 hover:opacity-100 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring focus-visible:transition-none data-ending-style:opacity-0 data-starting-style:opacity-0 sm:size-7"
           keepMounted
           {...clearProps}

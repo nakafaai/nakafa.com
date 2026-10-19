@@ -137,7 +137,8 @@ const verifyQuranInterpretationDrawer = Effect.fn(
 
   // The header's folded path holds the index. Back must bring the surah again
   // with that menu closed, or its backdrop would take the next tap.
-  const breadcrumb = page.getByRole("navigation", { name: "breadcrumb" });
+  // The breadcrumb's name is in the page's language, so it is found by its slot.
+  const breadcrumb = page.locator('nav[data-slot="breadcrumb"]');
   yield* Effect.promise(() => breadcrumb.getByRole("button").click());
   const menu = page.getByRole("menu");
   const quranIndexLink = menu.locator(`a[href="${appRoutes.quranId}"]`);
