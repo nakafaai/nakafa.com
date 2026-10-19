@@ -118,6 +118,15 @@ export function OptionRow({
     editor.current?.setEditable(!locked, false);
   }, [locked]);
 
+  // A row that unmounts saves the label it still waits on now. Left to its timer, the save would
+  // call the callback of the row's last render, which may hold a revision the server has moved past.
+  useEffect(
+    () => () => {
+      Effect.runFork(saver.flush);
+    },
+    [saver]
+  );
+
   return (
     <div className="group/option grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
       <PaperOption letter={letter}>
