@@ -46,11 +46,14 @@ function useReleaseResults() {
 
 /**
  * The card that releases a closed sitting's results to its students, with the one primary action of
- * the page. The release asks first, because students see their answers once it is done.
+ * the page. A viewer who may not release them, or a sitting that is not closed yet, sees the card without
+ * the action. The release asks first, because students see their answers once it is done.
  */
 export function ReleaseCard({
+  canRelease,
   releasedAt,
 }: {
+  readonly canRelease: boolean;
   readonly releasedAt: number | null;
 }) {
   const t = useTranslations("Exams");
@@ -65,6 +68,16 @@ export function ReleaseCard({
           <CardTitle>{t("results-title")}</CardTitle>
         </CardHeader>
         <CardSectionFooter hint={t("released-footer")} />
+      </CardSection>
+    );
+  }
+  if (!canRelease) {
+    return (
+      <CardSection>
+        <CardHeader>
+          <CardTitle>{t("results-title")}</CardTitle>
+        </CardHeader>
+        <CardSectionFooter hint={t("release-wait-footer")} />
       </CardSection>
     );
   }

@@ -6,10 +6,15 @@ import { nf } from "@repo/backend/test/editor";
 import { teacherExam } from "@repo/backend/test/exams";
 import {
   attemptRow,
+  CLOSES_AT,
   deviceOf,
   enterOk,
+  keyedExam,
+  keyedSchool,
+  OPENS_AT,
   openedSitting,
   type SittingFixture,
+  scheduleSitting,
   sittingRow,
 } from "@repo/backend/test/sittings";
 import {
@@ -192,6 +197,9 @@ describe("exams/results", () => {
           slug: nf,
         });
         expect(overview.releasedAt).toBeNull();
+        expect(overview.can).toEqual(
+          expect.arrayContaining(["result.release", "result.view"])
+        );
         expect(overview.questions).toEqual([
           {
             id: questionId,
@@ -307,7 +315,14 @@ describe("exams/results", () => {
         ).toHaveLength(1);
         expect(yield* mine()).toEqual({
           points: 0,
-          questions: [{ number: 1, verdict: "incorrect" }],
+          questions: [
+            {
+              number: 1,
+              optionIds: ["option-1", "option-2", "option-3", "option-4"],
+              response: ["option-2"],
+              verdict: "incorrect",
+            },
+          ],
         });
         expect(
           yield* fixture
@@ -350,6 +365,74 @@ describe("exams/results", () => {
             .as("student")
             .query(results.mine, { sittingId: made.id, slug: nf })
         ).toBeNull();
+      })
+  );
+
+  it.effect(
+    "filters the students by state, and reads only the attempts in that state",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const made = yield* openedSitting(fixture, "PTS");
+        yield* enterOk(fixture, {
+          deviceId: DEVICE,
+          sittingId: made.id,
+          token: made.token,
+        });
+        const studentsIn = (state: "inProgress" | "submitted") =>
+          fixture.as("teacher").query(results.byStudent, {
+            paginationOpts: { cursor: null, numItems: 10 },
+            sittingId: made.id,
+            slug: nf,
+            state,
+          });
+        expect((yield* studentsIn("inProgress")).page).toMatchObject([
+          { state: "inProgress" },
+        ]);
+        expect((yield* studentsIn("submitted")).page).toEqual([]);
+      })
+  );
+
+  it.effect(
+    "lets the school's Admin read the results and see the release, which the Admin may make",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const made = yield* openedSitting(fixture, "PTS");
+        const overview = yield* fixture
+          .as("unitAdmin")
+          .query(results.overview, { sittingId: made.id, slug: nf });
+        expect(overview.can).toEqual(
+          expect.arrayContaining(["result.release", "result.view"])
+        );
+      })
+  );
+
+  it.effect(
+    "shows the release only to the exam's author and the Admin, and refuses it to a teacher who did not write the exam",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        yield* keyedSchool(fixture);
+        const examId = yield* keyedExam(fixture, "Admin's", "admin");
+        const made = yield* scheduleSitting(fixture, {
+          actor: "admin",
+          closesAt: CLOSES_AT,
+          examId,
+          group: { kind: "unit", unitId: fixture.units.smp },
+          opensAt: OPENS_AT,
+        });
+        const teacher = fixture.as("teacher");
+        const overview = yield* teacher.query(results.overview, {
+          sittingId: made.id,
+          slug: nf,
+        });
+        expect(overview.can).toEqual(["result.view"]);
+        expect(
+          yield* teacher
+            .mutation(results.release, { sittingId: made.id, slug: nf })
+            .pipe(Effect.flip)
+        ).toMatchObject({ _tag: "AccessDenied" });
       })
   );
 });

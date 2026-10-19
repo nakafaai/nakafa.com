@@ -3,6 +3,7 @@
 import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { StudentRow as StudentRowSchema } from "@repo/backend/confect/exams/results/contract";
+import { AttemptState } from "@repo/backend/confect/exams/sittings/schema";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import {
   Table,
@@ -12,13 +13,16 @@ import {
   TableHeader,
   TableRow,
 } from "@repo/design-system/components/ui/table";
-import { Array as Arr, DateTime } from "effect";
+import { Array as Arr, DateTime, Schema } from "effect";
 import { useFormatter, useTranslations } from "next-intl";
+import { useState } from "react";
 import {
   useResultsScope,
   useSessionSettled,
 } from "@/components/exams/results/context";
+import { TableSearch, TableToggle } from "@/components/shared/table/filter";
 import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
+import { matchesSearch } from "@/components/shared/table/search";
 
 /** The students of one page of the list. The next page loads as the list's end comes into view. */
 const STUDENT_PAGE_SIZE = 50;
@@ -33,6 +37,10 @@ const stateKeys = {
   (typeof StudentRowSchema.Type)["state"],
   "state-closing" | "state-in-progress" | "state-locked" | "state-submitted"
 >;
+
+/** The status that the list shows: every attempt, or only the attempts in one state. */
+const StatusFilter = Schema.Union([Schema.Literal("all"), AttemptState]);
+type StatusFilter = typeof StatusFilter.Type;
 
 /** One student's row: the name, the state, and the scores of a submitted attempt, with the time it was submitted. */
 function StudentRow({
@@ -72,41 +80,60 @@ function StudentRow({
   );
 }
 
-/**
- * The students of a sitting, one row each, with their score, answered and pending counts, and the time
- * they finished. The list reads one page at a time through an intersection sentinel, not a button.
- */
-export function StudentsTable({
+/** The filters of the students' list: the state of the attempt, and the name that the rows must hold. */
+function StudentFilters({
+  onSearch,
+  onStatus,
+  search,
+  status,
+}: {
+  readonly onSearch: (search: string) => void;
+  readonly onStatus: (status: StatusFilter) => void;
+  readonly search: string;
+  readonly status: StatusFilter;
+}) {
+  const t = useTranslations("Exams");
+
+  return (
+    <div className="flex flex-wrap items-center gap-3">
+      <TableToggle
+        choices={[
+          { label: t("filter-all"), value: "all" },
+          { label: t(stateKeys.inProgress), value: "inProgress" },
+          { label: t(stateKeys.closing), value: "closing" },
+          { label: t(stateKeys.locked), value: "locked" },
+          { label: t(stateKeys.submitted), value: "submitted" },
+        ]}
+        label={t("filter-label")}
+        onChange={(next) => {
+          if (Schema.is(StatusFilter)(next)) {
+            onStatus(next);
+          }
+        }}
+        value={status}
+      />
+      <TableSearch
+        label={t("results-search")}
+        onChange={onSearch}
+        placeholder={t("results-search")}
+        value={search}
+      />
+    </div>
+  );
+}
+
+/** The table of the given students, with its head and one row for each. */
+function StudentTable({
+  rows,
   timeZone,
   total,
 }: {
+  readonly rows: readonly (typeof StudentRowSchema.Type)[];
   readonly timeZone: string;
   readonly total: number;
 }) {
   const t = useTranslations("Exams");
-  const { sittingId, slug } = useResultsScope();
-  const settled = useSessionSettled();
-  const students = usePaginatedQuery(
-    exams.results.results.byStudent,
-    settled ? { sittingId, slug } : "skip",
-    { initialNumItems: STUDENT_PAGE_SIZE }
-  );
 
-  if (PaginatedQueryResult.isFailure(students)) {
-    throw students.error;
-  }
-  if (PaginatedQueryResult.isLoadingFirstPage(students)) {
-    return null;
-  }
-  if (students.results.length === 0) {
-    return (
-      <TableEmpty
-        act="reading"
-        description={t("results-empty")}
-        title={t("results-empty-title")}
-      />
-    );
-  }
   return (
     <TableFrame>
       <Table>
@@ -121,7 +148,7 @@ export function StudentsTable({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {Arr.map(students.results, (row) => (
+          {Arr.map(rows, (row) => (
             <StudentRow
               key={row.attemptId}
               row={row}
@@ -131,11 +158,80 @@ export function StudentsTable({
           ))}
         </TableBody>
       </Table>
+    </TableFrame>
+  );
+}
+
+/**
+ * The students of a sitting, one row each, with their score, answered and pending counts, and the time
+ * they finished. A status filter reads only the attempts in that state, and a name search filters the rows
+ * that are loaded. The list reads one page at a time through an intersection sentinel, not a button, so a
+ * search that matches no loaded row keeps reading the next page until one matches or the list ends.
+ */
+export function StudentsTable({
+  timeZone,
+  total,
+}: {
+  readonly timeZone: string;
+  readonly total: number;
+}) {
+  const t = useTranslations("Exams");
+  const { sittingId, slug } = useResultsScope();
+  const settled = useSessionSettled();
+  const [status, setStatus] = useState<StatusFilter>("all");
+  const [search, setSearch] = useState("");
+  const scope =
+    status === "all" ? { sittingId, slug } : { sittingId, slug, state: status };
+  const students = usePaginatedQuery(
+    exams.results.results.byStudent,
+    settled ? scope : "skip",
+    { initialNumItems: STUDENT_PAGE_SIZE }
+  );
+
+  if (PaginatedQueryResult.isFailure(students)) {
+    throw students.error;
+  }
+  const filtering = status !== "all" || search.trim() !== "";
+  const filters = (
+    <StudentFilters
+      onSearch={setSearch}
+      onStatus={setStatus}
+      search={search}
+      status={status}
+    />
+  );
+  if (PaginatedQueryResult.isLoadingFirstPage(students)) {
+    return filtering ? filters : null;
+  }
+  if (students.results.length === 0 && !filtering) {
+    return (
+      <TableEmpty
+        act="reading"
+        description={t("results-empty")}
+        title={t("results-empty-title")}
+      />
+    );
+  }
+  const rows = Arr.filter(students.results, (row) =>
+    matchesSearch(row.name, search)
+  );
+  return (
+    <>
+      {filters}
+      {rows.length === 0 ? (
+        <TableEmpty
+          act="reading"
+          description={t("filter-empty")}
+          title={t("results-no-match")}
+        />
+      ) : (
+        <StudentTable rows={rows} timeZone={timeZone} total={total} />
+      )}
       {PaginatedQueryResult.isCanLoadMore(students) ? (
         <Intersection
           onIntersect={() => students.loadMore(STUDENT_PAGE_SIZE)}
         />
       ) : null}
-    </TableFrame>
+    </>
   );
 }

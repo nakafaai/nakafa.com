@@ -33,11 +33,13 @@ export const ExamTitle = Schema.String.check(
  * One school exam draft: its tenant, the scope that decides who may read and edit
  * it, its title and content language, and its questions in order. The order lives
  * in this one array, so a reorder is one patch. A draft is not a publication:
- * scheduling freezes it in a later lane (ADR 0031).
+ * scheduling its first sitting freezes it, and `frozenAt` records when (ADR 0031).
  */
 export const examValidator = Schema.Struct({
   createdAt: Schema.Finite,
   createdBy: Id("users"),
+  /** When the first sitting of the exam was scheduled. From then on its questions, their order, and their keys cannot change. */
+  frozenAt: Schema.optionalKey(Schema.Finite),
   language: DeliveryLanguageSchema,
   questions: Schema.Array(Id("examQuestions")).check(
     Schema.isMaxLength(MAX_EXAM_QUESTIONS)

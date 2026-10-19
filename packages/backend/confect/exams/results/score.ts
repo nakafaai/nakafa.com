@@ -1,8 +1,13 @@
-import { hasDistinctIds } from "@nakafa/aksara-contracts/assessment/identity";
 import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
 import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
 import type { Verdict } from "@repo/backend/confect/exams/results/schema";
-import { Array as Arr, Option } from "effect";
+import { evaluate } from "@repo/backend/confect/response/evaluation";
+import type {
+  Outcome,
+  ResponseSpec,
+  Selection,
+} from "@repo/backend/confect/response/model";
+import { Array as Arr, Option, Result } from "effect";
 
 /** A choice interaction, which a single-answer or a multiple-choice question holds. */
 type Choice = Extract<Interaction, { readonly kind: "choice" }>;
@@ -36,25 +41,60 @@ const choiceKeyOf = (
   );
 
 /**
- * Whether a saved response names exactly the correct options. The options of a response are
- * distinct, and a key names each correct option once, so equal lengths and mutual membership
- * hold only when the two sets are equal.
+ * The response spec of one choice, with each option marked correct when the key names it. A choice
+ * that takes one option is single-choice, and any other choice takes several, so each shape is scored
+ * by the rule of the try-outs for it. Evaluation reads no label, so each option's ID stands in for it.
  */
-const namesCorrectOptions = (
-  response: readonly string[],
-  correct: readonly string[]
-) =>
-  hasDistinctIds(response) &&
-  response.length === correct.length &&
-  Arr.every(response, (optionId) => Arr.contains(correct, optionId));
+const specOf = (choice: Choice, answer: ChoiceKey): ResponseSpec => {
+  const options = Arr.map(choice.options, (option, order) => ({
+    isCorrect: Arr.contains(answer.correct, option.id),
+    label: option.id,
+    optionKey: option.id,
+    order,
+  }));
+  return choice.maxChoices === 1
+    ? { kind: "single-choice", options }
+    : { kind: "multiple-choice", options };
+};
 
 /**
- * Scores one saved response against its question's key, with the rule of the try-outs for a
- * choice: a single-answer choice is correct when its one option is the correct option, and a
- * multiple-choice question is correct when its selection is exactly the correct options. An
- * unanswered question is `incorrect`, as the sitting closes it. A question that holds another
- * shape, a question without a key, or a key that names no correct option is `pending`, so a person
- * judges it instead of the server (ADR 0031, section 4).
+ * The selection that a saved response makes on its choice. An unanswered question makes none, and a
+ * single-answer choice takes exactly one option, so a response that names more makes none either.
+ */
+const selectionOf = (
+  choice: Choice,
+  response: readonly string[]
+): Option.Option<Selection> => {
+  if (choice.maxChoices !== 1) {
+    return Arr.isReadonlyArrayNonEmpty(response)
+      ? Option.some<Selection>({
+          kind: "multiple-choice",
+          optionKeys: [...response],
+        })
+      : Option.none();
+  }
+  return response.length === 1
+    ? Option.some<Selection>({ kind: "single-choice", optionKey: response[0] })
+    : Option.none();
+};
+
+/**
+ * The verdict of each outcome. A choice is correct or incorrect, and an outcome that a person judges,
+ * which is pending or the partial credit only a rubric earns, is pending.
+ */
+const VERDICT_OF_STATUS = {
+  correct: "correct",
+  incorrect: "incorrect",
+  partial: "pending",
+  pending: "pending",
+} satisfies Record<Outcome["status"], Verdict>;
+
+/**
+ * Scores one saved response against its question's key with the try-outs' evaluation (`evaluate`, ADR
+ * 0031, section 9). An unanswered question, and a response that names no option of its choice, are
+ * `incorrect`, as the sitting closes them. A question that holds another shape, a question without a
+ * key, or a key with no answer for its choice is `pending`, so a person judges it instead of the server
+ * (ADR 0031, section 4).
  */
 export function scoreResponse(
   interactions: readonly Interaction[],
@@ -69,9 +109,14 @@ export function scoreResponse(
   if (Option.isNone(answer)) {
     return "pending";
   }
-  return namesCorrectOptions(response, answer.value.correct)
-    ? "correct"
-    : "incorrect";
+  return Option.match(selectionOf(choice.value, response), {
+    onNone: () => "incorrect",
+    onSome: (selection) =>
+      Result.match(evaluate(specOf(choice.value, answer.value), selection), {
+        onFailure: () => "incorrect",
+        onSuccess: ({ outcome }) => VERDICT_OF_STATUS[outcome.status],
+      }),
+  });
 }
 
 /** The points that one verdict earns: a correct answer earns one point, and no other verdict earns any. */

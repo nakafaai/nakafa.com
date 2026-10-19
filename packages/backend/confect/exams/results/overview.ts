@@ -1,28 +1,14 @@
-import type { ExamQuestionsDoc } from "@repo/backend/confect/_generated/docs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
-import { questionView } from "@repo/backend/confect/exams/question";
 import { ResultSitting } from "@repo/backend/confect/exams/results/access";
-import { optionIdsOf } from "@repo/backend/confect/exams/results/stats";
+import { resultAuthority } from "@repo/backend/confect/exams/results/authority";
+import { questionSummary } from "@repo/backend/confect/exams/results/summary";
 import { sittingView } from "@repo/backend/confect/exams/sittings/view";
 import { Effect } from "effect";
 
-/** One question of the exam, numbered from one, with the option IDs of its choice in order. */
-const questionSummary = Effect.fn("exams.results.overview.question")(function* (
-  questionId: ExamQuestionsDoc["_id"],
-  number: number
-) {
-  const row = yield* (yield* DatabaseReader)
-    .table("examQuestions")
-    .get(questionId)
-    .pipe(Effect.orDie);
-  const view = yield* questionView(row);
-  return { id: questionId, number, optionIds: optionIdsOf(view.answers) };
-});
-
 /**
- * The results screen's first read: the sitting, its questions in their order with the options of each,
- * and when its results were released, or `null` while they are not. The questions are bounded by the
- * exam's own limit.
+ * The results screen's first read: the caller's result actions, the sitting, its questions in their
+ * order with the options of each, and when its results were released, or `null` while they are not.
+ * The questions are bounded by the exam's own limit.
  */
 export const overview = Effect.fn("exams.results.overview")(function* () {
   const sitting = yield* ResultSitting;
@@ -31,6 +17,7 @@ export const overview = Effect.fn("exams.results.overview")(function* () {
     .get(sitting.examId)
     .pipe(Effect.orDie);
   return {
+    can: yield* resultAuthority.allowed(sitting),
     questions: yield* Effect.forEach(
       exam.questions,
       (questionId, index) => questionSummary(questionId, index + 1),

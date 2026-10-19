@@ -14,15 +14,17 @@ import {
   NotInSitting,
   QuestionNotInExam,
 } from "@repo/backend/confect/exams/sittings/errors";
+import { AttemptState } from "@repo/backend/confect/exams/sittings/schema";
 import RequireMember from "@repo/backend/confect/middleware/member.spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Schema } from "effect";
 
 /**
- * The results of school exams. A teacher, a principal, or the exam's author reads the overview, the
- * students' list, and a question's answers and statistics. The author's Admin and the Owner release them.
- * A student reads only the released result of its own attempt (ADR 0031, section 4).
+ * The results of school exams. An Admin, a teacher, a principal, or the exam's author reads the overview,
+ * the students' list, and a question's answers and statistics. The Admin, the exam's author, and the Owner
+ * release them, once the sitting is closed. A student reads only the released result of its own attempt
+ * (ADR 0031, section 4).
  */
 export default GroupSpec.make()
   .middleware(Session)
@@ -38,7 +40,11 @@ export default GroupSpec.make()
   .addFunction(
     FunctionSpec.publicPaginatedQuery({
       name: "byStudent",
-      args: () => ({ sittingId: Id("examSittings"), slug: TenantSlug }),
+      args: () => ({
+        sittingId: Id("examSittings"),
+        slug: TenantSlug,
+        state: Schema.optionalKey(AttemptState),
+      }),
       item: () => StudentRow,
       error: () => AccessDenied,
     }).middleware(ResultAccess, { action: "result.view", arg: "sittingId" })

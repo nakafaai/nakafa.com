@@ -92,6 +92,18 @@ describe("exams/results/score", () => {
     ).toBe("pending");
   });
 
+  it("scores a single-answer choice that names two options incorrect, as it names no one option", () => {
+    expect(
+      scoreResponse(single, keyOf(["option-2"]), ["option-2", "option-3"])
+    ).toBe("incorrect");
+  });
+
+  it("scores an unanswered multiple-choice question incorrect, as the sitting closes it", () => {
+    expect(scoreResponse(multiple, keyOf(["option-1", "option-3"]), [])).toBe(
+      "incorrect"
+    );
+  });
+
   it("earns one point for a correct answer and none for any other verdict", () => {
     expect(pointsOf("correct")).toBe(1);
     expect(pointsOf("incorrect")).toBe(0);

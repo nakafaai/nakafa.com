@@ -4,6 +4,7 @@ import type { GenericId } from "@confect/core";
 import { QueryResult, useQuery } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
+import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
 import { useMemo } from "react";
 import {
@@ -42,10 +43,12 @@ export function SittingResults({
   if (!QueryResult.isSuccess(overview)) {
     return null;
   }
-  const { questions, releasedAt, sitting } = overview.value;
+  const { can, questions, releasedAt, sitting } = overview.value;
   if (sitting.examId !== examId) {
     return <ResultsRefusal />;
   }
+  const canRelease =
+    sitting.state === "closed" && Arr.contains(can, "result.release");
   return (
     <ResultsScopeContext value={scope}>
       <ResultsHeader
@@ -55,7 +58,7 @@ export function SittingResults({
         sittingId={sittingId}
       />
       <div className="grid min-w-0 content-start gap-4 p-4 md:p-6">
-        <ReleaseCard releasedAt={releasedAt} />
+        <ReleaseCard canRelease={canRelease} releasedAt={releasedAt} />
         <StudentsTable timeZone={sitting.timeZone} total={questions.length} />
         <QuestionResults questions={questions} />
       </div>

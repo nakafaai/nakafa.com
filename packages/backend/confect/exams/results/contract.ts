@@ -1,5 +1,7 @@
 import { LocalIdSchema } from "@nakafa/aksara-contracts/assessment/identity";
 import { Id } from "@repo/backend/confect/_generated/id";
+import { entries } from "@repo/backend/confect/access/catalog";
+import { Kind } from "@repo/backend/confect/access/kind";
 import { Verdict } from "@repo/backend/confect/exams/results/schema";
 import { SittingView } from "@repo/backend/confect/exams/sittings/contract";
 import { AttemptState } from "@repo/backend/confect/exams/sittings/schema";
@@ -11,6 +13,9 @@ import { Schema } from "effect";
  * declarations only: no database read and no write.
  */
 
+/** The result actions a caller may take on a sitting: reading its results, and releasing them. */
+const ResultAction = Kind.actions(entries, "result");
+
 /** One question of the exam in its order: its number, and the option IDs of its choice in their order. */
 export const QuestionSummary = Schema.Struct({
   id: Id("examQuestions"),
@@ -19,10 +24,12 @@ export const QuestionSummary = Schema.Struct({
 });
 
 /**
- * The results screen's first read: the sitting, its questions in order, and when its results were
- * released, or `null` while they are not.
+ * The results screen's first read: the caller's result actions, the sitting, its questions in order,
+ * and when its results were released, or `null` while they are not. A release also needs the sitting
+ * to be closed, which the server checks when the release is made.
  */
 export const Overview = Schema.Struct({
+  can: Schema.Array(ResultAction),
   questions: Schema.Array(QuestionSummary),
   releasedAt: Schema.NullOr(Schema.Finite),
   sitting: SittingView,
@@ -68,15 +75,22 @@ export const QuestionStats = Schema.Struct({
 });
 
 /**
- * A student's own released result: the points earned, and the verdict of each question in the
- * exam's order, numbered from one.
+ * One question of a student's released result: its number, the option IDs of its choice in their
+ * order, the option IDs that the student chose, and the verdict. The chosen IDs are empty when the
+ * student left the question unanswered.
+ */
+const StudentAnswer = Schema.Struct({
+  number: Schema.Int.check(Schema.isGreaterThan(0)),
+  optionIds: Schema.Array(LocalIdSchema),
+  response: Schema.Array(LocalIdSchema),
+  verdict: Verdict,
+});
+
+/**
+ * A student's own released result: the points earned, and each question of the exam in its order,
+ * numbered from one.
  */
 export const StudentResult = Schema.Struct({
   points: Schema.Int,
-  questions: Schema.Array(
-    Schema.Struct({
-      number: Schema.Int.check(Schema.isGreaterThan(0)),
-      verdict: Verdict,
-    })
-  ),
+  questions: Schema.Array(StudentAnswer),
 });

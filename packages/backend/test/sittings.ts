@@ -13,7 +13,7 @@ import {
 } from "@repo/backend/confect/exams/sittings/schema";
 import { createTenantKey } from "@repo/backend/confect/vault/keys";
 import { nf } from "@repo/backend/test/editor";
-import { teacherExam } from "@repo/backend/test/exams";
+import { type ExamAuthor, examBy } from "@repo/backend/test/exams";
 import {
   scheduledJobs,
   TENANCY_NOW,
@@ -116,14 +116,15 @@ export const keyedSchool = Effect.fn("test.sittings.keyedSchool")(function* (
 });
 
 /**
- * A teacher's exam with one question whose correct answer is marked, so the exam can
- * be scheduled. Returns the exam's ID.
+ * An exam with one question whose correct answer is marked, so the exam can be scheduled. The
+ * teacher writes it by default. Returns the exam's ID.
  */
 export const keyedExam = Effect.fn("test.sittings.keyedExam")(function* (
   fixture: SittingFixture,
-  title: string
+  title: string,
+  author: ExamAuthor = "teacher"
 ) {
-  const exam = yield* teacherExam(fixture, title);
+  const exam = yield* examBy(fixture, author, title);
   yield* fixture.run(
     Effect.asVoid(
       Effect.forEach(exam.questions, (question) =>

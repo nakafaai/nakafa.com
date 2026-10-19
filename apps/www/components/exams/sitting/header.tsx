@@ -49,7 +49,7 @@ export function SittingHeader({
           {value.token}
         </span>
       )}
-      {value.sitting.state === "closed" ? (
+      {value.sitting.state === "closed" && value.canViewResults ? (
         <NavigationLink
           className={buttonVariants({ variant: "outline" })}
           href={`/exams/${examId}/sittings/${value.sitting.id}/results`}

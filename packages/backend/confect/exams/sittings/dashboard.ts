@@ -4,6 +4,7 @@ import type {
   TenantPeopleDoc,
 } from "@repo/backend/confect/_generated/docs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
+import { resultAuthority } from "@repo/backend/confect/exams/results/authority";
 import { Sitting } from "@repo/backend/confect/exams/sittings/access";
 import { sittingAuthority } from "@repo/backend/confect/exams/sittings/authority";
 import { SittingAction } from "@repo/backend/confect/exams/sittings/contract";
@@ -102,6 +103,7 @@ export const dashboard = Effect.fn("exams.sittings.dashboard")(
   function* (args: { paginationOpts: PaginationOptions }) {
     const sitting = yield* Sitting;
     const actions = yield* sittingAuthority.allowed(sitting);
+    const resultActions = yield* resultAuthority.allowed(sitting);
     const page = yield* (yield* DatabaseReader)
       .table("examAttempts")
       .index("by_sittingId", (query) => query.eq("sitting", sitting._id))
@@ -124,6 +126,7 @@ export const dashboard = Effect.fn("exams.sittings.dashboard")(
         page: rows,
       },
       can: Arr.filter(actions, Schema.is(SittingAction)),
+      canViewResults: Arr.contains(resultActions, "result.view"),
       sitting: yield* sittingView(sitting, sitting.exam),
       token: yield* tokenFor(sitting, actions),
     };

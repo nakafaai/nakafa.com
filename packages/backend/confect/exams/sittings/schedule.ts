@@ -8,6 +8,7 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
+import { freezeExam } from "@repo/backend/confect/exams/freeze";
 import { keyFits } from "@repo/backend/confect/exams/key";
 import { questionView } from "@repo/backend/confect/exams/question";
 import { sittingAuthority } from "@repo/backend/confect/exams/sittings/authority";
@@ -101,7 +102,8 @@ const keysFit = Effect.fn("exams.sittings.schedule.keys")(function* (
  * Writes one sitting of an exam in its place, with a new token, and schedules its opening
  * and its closing. The caller checks the times and the place. The token is hashed and
  * sealed under the school key, and the journal records the schedule under the actor that
- * asked for it: a Person, or the system for acceptance seeds (ADR 0013, ADR 0030).
+ * asked for it: a Person, or the system for acceptance seeds (ADR 0013, ADR 0030). The
+ * exam is frozen in the same transaction, so its questions stay as this sitting holds them.
  */
 export const createSitting = Effect.fn("exams.sittings.create")(
   function* (args: {
@@ -148,6 +150,7 @@ export const createSitting = Effect.fn("exams.sittings.create")(
         tokenSealed: sealed,
       })
       .pipe(Effect.orDie);
+    yield* freezeExam(args.exam);
     const row = yield* (yield* DatabaseReader)
       .table("examSittings")
       .get(id)

@@ -2,8 +2,15 @@ import { Kind } from "@repo/backend/confect/access/kind";
 import type { RuleRole } from "@repo/backend/confect/access/schema";
 import { Schema } from "effect";
 
-/** The school roles that read a sitting's results: its teacher and its principal (the exam's author and the Owner read them too). */
-const resultViewers: (typeof RuleRole.Type)[] = ["teacher", "principal"];
+/**
+ * The school roles that read a sitting's results: its Admin, its teacher, and its principal (the exam's
+ * author and the Owner read them too). An Admin reads the results that an Admin releases.
+ */
+const resultViewers: (typeof RuleRole.Type)[] = [
+  "admin",
+  "teacher",
+  "principal",
+];
 
 /** The school roles that release a sitting's results: the school's Admin (the exam's author and the Owner release them too). */
 const resultReleasers: (typeof RuleRole.Type)[] = ["admin"];

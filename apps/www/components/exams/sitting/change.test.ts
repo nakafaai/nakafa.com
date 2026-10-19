@@ -40,6 +40,7 @@ function dashboard(...attempts: DashboardAttempt[]): DashboardValue {
   return {
     attempts: { continueCursor: "", isDone: true, page: attempts },
     can: ["sitting.proctor", "sitting.view"],
+    canViewResults: true,
     sitting: {
       closesAt: 10_000,
       cohortId: null,

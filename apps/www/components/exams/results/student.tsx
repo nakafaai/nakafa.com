@@ -3,6 +3,7 @@
 import type { GenericId } from "@confect/core";
 import { QueryResult, useQuery } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
+import type { StudentResult } from "@repo/backend/confect/exams/results/contract";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import {
   CardContent,
@@ -12,16 +13,56 @@ import {
 import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
 import { useSessionSettled } from "@/components/exams/results/context";
-import { verdictKeys } from "@/components/exams/results/model";
+import { responseLetters, verdictKeys } from "@/components/exams/results/model";
 import {
   CardSection,
   CardSectionFooter,
 } from "@/components/shared/card/section";
 
+/** The letters of the options that a student chose, or a line that says the question was left unanswered. */
+function AnswerLine({
+  optionIds,
+  response,
+}: {
+  readonly optionIds: readonly string[];
+  readonly response: readonly string[];
+}) {
+  const t = useTranslations("Exams");
+  const letters = responseLetters(optionIds, response);
+  if (letters.length === 0) {
+    return t("student-no-answer");
+  }
+  return t("student-answer", { letters: Arr.join(letters, ", ") });
+}
+
+/** One question of the student's result: its number and verdict, with the answer that the student chose beneath. */
+function AnswerItem({
+  question,
+}: {
+  readonly question: (typeof StudentResult.Type)["questions"][number];
+}) {
+  const t = useTranslations("Exams");
+
+  return (
+    <li className="grid gap-1">
+      <div className="flex justify-between gap-4">
+        <span>{t("question", { number: question.number })}</span>
+        <span>{t(verdictKeys[question.verdict])}</span>
+      </div>
+      <span className="text-muted-foreground">
+        <AnswerLine
+          optionIds={question.optionIds}
+          response={question.response}
+        />
+      </span>
+    </li>
+  );
+}
+
 /**
  * The student's own result under the sentence of a submitted attempt. Until the teacher releases the
- * results, the card says when they come. After the release it shows the score and the verdict of each
- * question, and no key or explanation.
+ * results, the card says when they come. After the release it shows the score, and each question with the
+ * answer that the student chose and its verdict, and no key or explanation.
  */
 export function StudentResults({
   sittingId,
@@ -60,12 +101,9 @@ export function StudentResults({
         <p className="font-medium">
           {t("student-score", { points, total: questions.length })}
         </p>
-        <ul aria-label={t("student-answers")} className="grid gap-2">
+        <ul aria-label={t("student-answers")} className="grid gap-3">
           {Arr.map(questions, (question) => (
-            <li className="flex justify-between gap-4" key={question.number}>
-              <span>{t("question", { number: question.number })}</span>
-              <span>{t(verdictKeys[question.verdict])}</span>
-            </li>
+            <AnswerItem key={question.number} question={question} />
           ))}
         </ul>
       </CardContent>
