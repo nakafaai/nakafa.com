@@ -41,8 +41,10 @@ import {
   type CardView,
   SchoolCardDialog,
 } from "@/components/tenant/settings/card";
-import { addStudentChange } from "@/components/tenant/settings/members.client";
-import { reissueCardChange } from "@/components/tenant/settings/mutation.client";
+import {
+  addStudentChange,
+  reissueCardChange,
+} from "@/components/tenant/settings/members.client";
 import { SettingsPage } from "@/components/tenant/settings/page";
 import { saveSchool } from "@/components/tenant/settings/save.client";
 import { SchoolDateTime } from "@/components/tenant/settings/time";

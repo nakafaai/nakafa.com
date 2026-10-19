@@ -126,3 +126,31 @@ export const addStudentChange: OptimisticUpdate<
     }
   }
 };
+
+/**
+ * Shows a login's card as issued now in every loaded list of the school's logins, while the server
+ * reissues it. The list keeps its order, and a refused reissue is undone when the server answers.
+ */
+export const reissueCardChange: OptimisticUpdate<
+  typeof identity.cards.reissue
+> = (localStore, { personId, slug }) => {
+  for (const query of localStore.getAllQueries(identity.logins.list)) {
+    if (Option.isSome(query.value) && query.args.slug === slug) {
+      localStore.setQuery(
+        identity.logins.list,
+        query.args,
+        Option.some({
+          ...query.value.value,
+          page: Arr.map(query.value.value.page, (login) =>
+            login.person.id === personId
+              ? {
+                  ...login,
+                  issuedAt: DateTime.toEpochMillis(DateTime.nowUnsafe()),
+                }
+              : login
+          ),
+        })
+      );
+    }
+  }
+};
