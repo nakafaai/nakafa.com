@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it } from "@effect/vitest";
 import type { RunConvex } from "@repo/backend/scripts/content/acceptance/account";
 import type { runAcceptanceCommand } from "@repo/backend/scripts/content/acceptance/command";
 import {
+  profileMode,
   updateAcceptanceProfile,
   updateLearnerProfile,
 } from "@repo/backend/scripts/content/acceptance/profile";
@@ -234,5 +235,62 @@ describe("acceptance profile command", () => {
       });
       expect(mocks.command).not.toHaveBeenCalled();
     }).pipe(Effect.provide(nodeServicesLayer))
+  );
+
+  it.effect(
+    "writes the profile that the profile mode names for the auth id it names, ignoring an extra argument",
+    () =>
+      Effect.gen(function* () {
+        yield* TestClock.setTime(NOW);
+        const fs = yield* FileSystem.FileSystem;
+        const root = yield* fs.makeTempDirectoryScoped({
+          prefix: "acceptance-profile-test-",
+        });
+        const file = `${root}/profile.json`;
+        yield* fs.writeFileString(file, '{"name":"Ada"}');
+        mocks.read.mockReturnValue(
+          Effect.succeed({ backend: `${root}/backend` })
+        );
+        const specs = MutableList.make<CommandSpec>();
+        mocks.command.mockImplementation((spec: CommandSpec) =>
+          Effect.gen(function* () {
+            MutableList.append(specs, spec);
+            yield* fs.writeFileString(
+              spec.stdoutPath,
+              answerOf(spec.operation)
+            );
+          })
+        );
+
+        yield* profileMode.run(root, ["user-1", file, "ignored"]);
+
+        const [, write] = yield* Effect.forEach(
+          MutableList.toArray(specs),
+          readCommand
+        );
+        expect(write).toEqual({
+          input: {
+            model: "user",
+            update: { name: "Ada", updatedAt: NOW },
+            where: [{ field: "_id", operator: "eq", value: "user-1" }],
+          },
+        });
+      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+  );
+
+  it.effect(
+    "refuses the profile mode without its profile file before any operation",
+    () =>
+      Effect.gen(function* () {
+        expect(
+          yield* profileMode.run("/root", ["user-1"]).pipe(Effect.flip)
+        ).toMatchObject({
+          _tag: "AcceptanceRuntimeError",
+          message:
+            "Usage: acceptance profile <auth-user-id> <profile-json-file>",
+        });
+        expect(mocks.read).not.toHaveBeenCalled();
+        expect(mocks.command).not.toHaveBeenCalled();
+      }).pipe(Effect.provide(nodeServicesLayer))
   );
 });

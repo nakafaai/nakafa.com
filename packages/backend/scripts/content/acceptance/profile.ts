@@ -2,6 +2,10 @@ import type { RunConvex } from "@repo/backend/scripts/content/acceptance/account
 import { runLocalConvex } from "@repo/backend/scripts/content/acceptance/convex";
 import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
 import { readLocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
+import {
+  type AcceptanceMode,
+  decodeModeArguments,
+} from "@repo/backend/scripts/content/acceptance/mode";
 import { JsonTextSchema } from "@repo/utilities/json";
 import { Clock, Effect, FileSystem, Schema } from "effect";
 
@@ -137,3 +141,27 @@ export const updateAcceptanceProfile = Effect.fn(
     profile
   );
 });
+
+/** The usage of the profile mode: the auth id of the learner, then the JSON file of the profile. */
+const USAGE = "profile <auth-user-id> <profile-json-file>";
+const ProfileArguments = Schema.Tuple([Schema.String, Schema.String]);
+
+/**
+ * The profile mode of the acceptance command line: writes the profile in the file
+ * that the command names for the learner of the auth id that it names.
+ */
+export const profileMode = {
+  mode: "profile",
+  usage: USAGE,
+  run: Effect.fn("contentAcceptance.runProfile")(function* (
+    root: string,
+    args: readonly string[]
+  ) {
+    const [authId, file] = yield* decodeModeArguments(
+      USAGE,
+      ProfileArguments,
+      args
+    );
+    return yield* updateAcceptanceProfile(root, authId, file);
+  }),
+} satisfies AcceptanceMode;
