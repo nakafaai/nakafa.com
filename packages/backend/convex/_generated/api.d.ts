@@ -2870,6 +2870,12 @@ export declare const api: {
       >;
     };
     exams: {
+      cohorts: FunctionReference<
+        "query",
+        "public",
+        { slug: string; unitId: Id<"tenantUnits"> },
+        Array<{ id: Id<"tenantCohorts">; name: string }>
+      >;
       create: FunctionReference<
         "mutation",
         "public",
@@ -2949,6 +2955,7 @@ export declare const api: {
         "public",
         { examId: Id<"exams">; slug: string },
         {
+          archived: boolean;
           frozenAt?: number;
           id: Id<"exams">;
           language: "en" | "id" | "de";
@@ -4361,6 +4368,7 @@ export declare const api: {
           continueCursor: string;
           isDone: boolean;
           page: Array<{
+            canCancel: boolean;
             closesAt: number;
             group: { kind: "cohort" | "unit"; name: string };
             id: Id<"examSittings">;
@@ -4425,6 +4433,12 @@ export declare const api: {
           startedAt: number;
           state: "inProgress" | "locked" | "closing" | "submitted";
         } | null
+      >;
+      cancel: FunctionReference<
+        "mutation",
+        "public",
+        { sittingId: Id<"examSittings">; slug: string },
+        null
       >;
       changeToken: FunctionReference<
         "mutation",
@@ -4513,6 +4527,33 @@ export declare const api: {
             state: "inProgress" | "locked" | "closing" | "submitted";
           }
         | { outcome: "refused"; reason: "TokenRefused" | "TooManyTries" }
+      >;
+      expected: FunctionReference<
+        "query",
+        "public",
+        {
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          sittingId: Id<"examSittings">;
+          slug: string;
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            id: Id<"tenantPeople">;
+            mascot: string | null;
+            name: string;
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
       >;
       finish: FunctionReference<
         "mutation",
@@ -5165,6 +5206,12 @@ export declare const api: {
   };
   journal: {
     audit: {
+      actors: FunctionReference<
+        "query",
+        "public",
+        { slug: string },
+        Array<{ id: Id<"tenantPeople">; name: string }>
+      >;
       list: FunctionReference<
         "query",
         "public",
@@ -5197,6 +5244,7 @@ export declare const api: {
               | { type: "cohort.created" }
               | { type: "cohort.renamed" }
               | { type: "cohort.archived" }
+              | { type: "cohort.restored" }
               | {
                   assignment: "homeroom";
                   person: Id<"tenantPeople">;
@@ -5265,6 +5313,7 @@ export declare const api: {
               | { type: "period.created" }
               | { type: "period.opened" }
               | { type: "period.archived" }
+              | { type: "period.restored" }
               | { type: "period.rename" }
               | { type: "person.created" }
               | {
@@ -5382,6 +5431,7 @@ export declare const api: {
               | { attempt: Id<"examAttempts">; type: "sitting.allowDevice" }
               | { attempt: Id<"examAttempts">; type: "sitting.finish" }
               | { type: "sitting.close" }
+              | { type: "sitting.cancel" }
               | {
                   contract: {
                     contentLicense: string;
@@ -5401,6 +5451,7 @@ export declare const api: {
                   key: "emailDomains" | "nina" | "studentThreads";
                   type: "tenant.policy.set";
                 }
+              | { name: string; type: "tenant.name.set" }
               | { scheme: Id<"gradingSchemes">; type: "scheme.stored" }
               | { type: "tenant.suspended" }
               | { type: "tenant.reactivated" }
@@ -6693,6 +6744,17 @@ export declare const api: {
           status: "active" | "archived";
         }
       >;
+      restore: FunctionReference<
+        "mutation",
+        "public",
+        { cohortId: Id<"tenantCohorts">; slug: string },
+        {
+          grade: number;
+          id: Id<"tenantCohorts">;
+          name: string;
+          status: "active" | "archived";
+        }
+      >;
     };
     invites: {
       invite: FunctionReference<
@@ -6710,6 +6772,21 @@ export declare const api: {
           id: Id<"tenantInvites">;
           name: string;
           personId: Id<"tenantPeople">;
+          roles: Array<
+            | "owner"
+            | "admin"
+            | "principal"
+            | "deputy"
+            | "teacher"
+            | "counselor"
+            | "staff"
+            | "student"
+            | "guardian"
+            | "proctor"
+            | "auditor"
+            | "integration"
+          >;
+          status: "expired" | "pending";
         }
       >;
       list: FunctionReference<
@@ -6735,6 +6812,21 @@ export declare const api: {
             id: Id<"tenantInvites">;
             name: string;
             personId: Id<"tenantPeople">;
+            roles: Array<
+              | "owner"
+              | "admin"
+              | "principal"
+              | "deputy"
+              | "teacher"
+              | "counselor"
+              | "staff"
+              | "student"
+              | "guardian"
+              | "proctor"
+              | "auditor"
+              | "integration"
+            >;
+            status: "expired" | "pending";
           }>;
           pageStatus?: "SplitRecommended" | "SplitRequired" | null;
           splitCursor?: string | null;
@@ -6754,6 +6846,21 @@ export declare const api: {
           id: Id<"tenantInvites">;
           name: string;
           personId: Id<"tenantPeople">;
+          roles: Array<
+            | "owner"
+            | "admin"
+            | "principal"
+            | "deputy"
+            | "teacher"
+            | "counselor"
+            | "staff"
+            | "student"
+            | "guardian"
+            | "proctor"
+            | "auditor"
+            | "integration"
+          >;
+          status: "expired" | "pending";
         }
       >;
       revoke: FunctionReference<
@@ -6883,6 +6990,34 @@ export declare const api: {
           status: "active" | "suspended" | "removed";
         }
       >;
+      students: FunctionReference<
+        "query",
+        "public",
+        {
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          slug: string;
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            account: "claimed" | "unclaimed";
+            id: Id<"tenantPeople">;
+            kind: "member" | "operator";
+            name: string;
+            status: "active" | "suspended" | "removed";
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
     };
     periods: {
       archive: FunctionReference<
@@ -6968,6 +7103,18 @@ export declare const api: {
           status: "planned" | "active" | "archived";
         }
       >;
+      restore: FunctionReference<
+        "mutation",
+        "public",
+        { periodId: Id<"tenantPeriods">; slug: string },
+        {
+          end: string;
+          id: Id<"tenantPeriods">;
+          name: string;
+          start: string;
+          status: "planned" | "active" | "archived";
+        }
+      >;
     };
     placements: {
       move: FunctionReference<
@@ -7013,6 +7160,7 @@ export declare const api: {
           status: "active" | "suspended";
         }
       >;
+      refusal: FunctionReference<"query", "public", { slug: string }, boolean>;
     };
     promotion: {
       apply: {
@@ -7655,6 +7803,12 @@ export declare const api: {
         { country: string; currency: string; slug: string },
         { country: string; currency: string }
       >;
+      setName: FunctionReference<
+        "mutation",
+        "public",
+        { name: string; slug: string },
+        string
+      >;
       setPolicy: FunctionReference<
         "mutation",
         "public",
@@ -7783,6 +7937,46 @@ export declare const api: {
         "public",
         { slug: string; unitId: Id<"tenantUnits"> },
         "active" | "archived"
+      >;
+      create: FunctionReference<
+        "mutation",
+        "public",
+        {
+          contentLanguage: "en" | "id" | "de";
+          level:
+            | "paud"
+            | "sd"
+            | "mi"
+            | "smp"
+            | "mts"
+            | "sma"
+            | "ma"
+            | "smk"
+            | "slb"
+            | "other";
+          name: string;
+          slug: string;
+          timeZone: string;
+        },
+        {
+          contentLanguage: "en" | "id" | "de";
+          id: Id<"tenantUnits">;
+          level:
+            | "paud"
+            | "sd"
+            | "mi"
+            | "smp"
+            | "mts"
+            | "sma"
+            | "ma"
+            | "smk"
+            | "slb"
+            | "other";
+          name: string;
+          npsn: string | null;
+          status: "active" | "archived";
+          timeZone: string;
+        }
       >;
       list: FunctionReference<
         "query",
