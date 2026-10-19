@@ -13,6 +13,9 @@ import auth_queries from "../auth/queries.spec";
 import chats_mutations from "../chats/mutations.spec";
 import chats_queries from "../chats/queries.spec";
 import classroom_classes from "../classroom/classes.spec";
+import classroom_forum_backfill from "../classroom/forum/backfill.spec";
+import classroom_forum_channels from "../classroom/forum/channels.spec";
+import classroom_seed from "../classroom/seed.spec";
 import classroom_teachers from "../classroom/teachers.spec";
 import comments_mutations from "../comments/mutations.spec";
 import comments_queries from "../comments/queries.spec";
@@ -92,13 +95,17 @@ import emails_welcome_delivery from "../emails/welcome/delivery.spec";
 import emails_welcome_internal from "../emails/welcome/internal.spec";
 import emails_welcome_reconciliation from "../emails/welcome/reconciliation.spec";
 import emails_welcome_workflow from "../emails/welcome/workflow.spec";
+import exams_assets from "../exams/assets.spec";
 import exams_exams from "../exams/exams.spec";
 import exams_questions from "../exams/questions.spec";
+import exams_results_results from "../exams/results/results.spec";
+import exams_rooms from "../exams/rooms.spec";
 import exams_seed from "../exams/seed.spec";
 import exams_sittings from "../exams/sittings.spec";
 import exams_sittings_timers from "../exams/sittings/timers.spec";
 import identity_cards from "../identity/cards.spec";
 import identity_logins from "../identity/logins.spec";
+import identity_seed from "../identity/seed.spec";
 import integrations_clients from "../integrations/clients.spec";
 import journal_audit from "../journal/audit.spec";
 import learningPreferences_mutations from "../learningPreferences/mutations.spec";
@@ -147,6 +154,7 @@ import tenancy_claims from "../tenancy/claims.spec";
 import tenancy_cohorts from "../tenancy/cohorts.spec";
 import tenancy_expiry from "../tenancy/expiry.spec";
 import tenancy_holders from "../tenancy/holders.spec";
+import tenancy_home from "../tenancy/home.spec";
 import tenancy_invites from "../tenancy/invites.spec";
 import tenancy_logo from "../tenancy/logo.spec";
 import tenancy_memberships from "../tenancy/memberships.spec";
@@ -161,6 +169,7 @@ import tenancy_promotion_review from "../tenancy/promotion/review.spec";
 import tenancy_promotion_run from "../tenancy/promotion/run.spec";
 import tenancy_promotion_undo from "../tenancy/promotion/undo.spec";
 import tenancy_provision from "../tenancy/provision.spec";
+import tenancy_roster from "../tenancy/roster.spec";
 import tenancy_seed from "../tenancy/seed.spec";
 import tenancy_settings from "../tenancy/settings.spec";
 import tenancy_start from "../tenancy/start.spec";
@@ -191,7 +200,7 @@ const spec: Spec.Spec<{
   readonly analytics: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "analytics", never, GroupSpec.NamedAt<typeof analytics_capture, "capture"> | GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "erasure", never, GroupSpec.NamedAt<typeof analytics_erasure_action, "action"> | GroupSpec.NamedAt<typeof analytics_erasure_workflow, "workflow">>, "erasure">>, "analytics">;
   readonly auth: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "auth", never, GroupSpec.NamedAt<typeof auth_actions, "actions"> | GroupSpec.NamedAt<typeof auth_cleanup, "cleanup"> | GroupSpec.NamedAt<GroupSpec.AddGroups<typeof auth_deletion, GroupSpec.NamedAt<typeof auth_deletion_recovery, "recovery"> | GroupSpec.NamedAt<typeof auth_deletion_verification, "verification">>, "deletion"> | GroupSpec.NamedAt<typeof auth_lifecycle, "lifecycle"> | GroupSpec.NamedAt<typeof auth_queries, "queries">>, "auth">;
   readonly chats: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "chats", never, GroupSpec.NamedAt<typeof chats_mutations, "mutations"> | GroupSpec.NamedAt<typeof chats_queries, "queries">>, "chats">;
-  readonly classroom: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "classroom", never, GroupSpec.NamedAt<typeof classroom_classes, "classes"> | GroupSpec.NamedAt<typeof classroom_teachers, "teachers">>, "classroom">;
+  readonly classroom: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "classroom", never, GroupSpec.NamedAt<typeof classroom_classes, "classes"> | GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "forum", never, GroupSpec.NamedAt<typeof classroom_forum_backfill, "backfill"> | GroupSpec.NamedAt<typeof classroom_forum_channels, "channels">>, "forum"> | GroupSpec.NamedAt<typeof classroom_seed, "seed"> | GroupSpec.NamedAt<typeof classroom_teachers, "teachers">>, "classroom">;
   readonly comments: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "comments", never, GroupSpec.NamedAt<typeof comments_mutations, "mutations"> | GroupSpec.NamedAt<typeof comments_queries, "queries">>, "comments">;
   readonly connectors: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "connectors", never, GroupSpec.NamedAt<typeof connectors_connections, "connections">>, "connectors">;
   readonly consents: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "consents", never, GroupSpec.NamedAt<typeof consents_current, "current">>, "consents">;
@@ -201,8 +210,8 @@ const spec: Spec.Spec<{
   readonly customers: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "customers", never, GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "actions", never, GroupSpec.NamedAt<typeof customers_actions_internal, "internal"> | GroupSpec.NamedAt<typeof customers_actions_sessions, "sessions">>, "actions"> | GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "checkout", never, GroupSpec.NamedAt<typeof customers_checkout_admission, "admission">>, "checkout"> | GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "deletion", never, GroupSpec.NamedAt<typeof customers_deletion_cleanup, "cleanup"> | GroupSpec.NamedAt<typeof customers_deletion_workflow, "workflow">>, "deletion"> | GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "integrity", never, GroupSpec.NamedAt<typeof customers_integrity_internal, "internal">>, "integrity"> | GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "mutations", never, GroupSpec.NamedAt<typeof customers_mutations_internal, "internal">>, "mutations"> | GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "queries", never, GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "internal", never, GroupSpec.NamedAt<typeof customers_queries_internal_customer, "customer">>, "internal">>, "queries">>, "customers">;
   readonly editor: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "editor", never, GroupSpec.NamedAt<typeof editor_deletion, "deletion"> | GroupSpec.NamedAt<typeof editor_documents, "documents"> | GroupSpec.NamedAt<typeof editor_fold, "fold"> | GroupSpec.NamedAt<typeof editor_prune, "prune"> | GroupSpec.NamedAt<typeof editor_steps, "steps">>, "editor">;
   readonly emails: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "emails", never, GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "invite", never, GroupSpec.NamedAt<typeof emails_invite_delivery, "delivery"> | GroupSpec.NamedAt<typeof emails_invite_internal, "internal"> | GroupSpec.NamedAt<typeof emails_invite_workflow, "workflow">>, "invite"> | GroupSpec.NamedAt<typeof emails_retention, "retention"> | GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "welcome", never, GroupSpec.NamedAt<typeof emails_welcome_delivery, "delivery"> | GroupSpec.NamedAt<typeof emails_welcome_internal, "internal"> | GroupSpec.NamedAt<typeof emails_welcome_reconciliation, "reconciliation"> | GroupSpec.NamedAt<typeof emails_welcome_workflow, "workflow">>, "welcome">>, "emails">;
-  readonly exams: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "exams", never, GroupSpec.NamedAt<typeof exams_exams, "exams"> | GroupSpec.NamedAt<typeof exams_questions, "questions"> | GroupSpec.NamedAt<typeof exams_seed, "seed"> | GroupSpec.NamedAt<GroupSpec.AddGroups<typeof exams_sittings, GroupSpec.NamedAt<typeof exams_sittings_timers, "timers">>, "sittings">>, "exams">;
-  readonly identity: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "identity", never, GroupSpec.NamedAt<typeof identity_cards, "cards"> | GroupSpec.NamedAt<typeof identity_logins, "logins">>, "identity">;
+  readonly exams: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "exams", never, GroupSpec.NamedAt<typeof exams_assets, "assets"> | GroupSpec.NamedAt<typeof exams_exams, "exams"> | GroupSpec.NamedAt<typeof exams_questions, "questions"> | GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "results", never, GroupSpec.NamedAt<typeof exams_results_results, "results">>, "results"> | GroupSpec.NamedAt<typeof exams_rooms, "rooms"> | GroupSpec.NamedAt<typeof exams_seed, "seed"> | GroupSpec.NamedAt<GroupSpec.AddGroups<typeof exams_sittings, GroupSpec.NamedAt<typeof exams_sittings_timers, "timers">>, "sittings">>, "exams">;
+  readonly identity: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "identity", never, GroupSpec.NamedAt<typeof identity_cards, "cards"> | GroupSpec.NamedAt<typeof identity_logins, "logins"> | GroupSpec.NamedAt<typeof identity_seed, "seed">>, "identity">;
   readonly integrations: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "integrations", never, GroupSpec.NamedAt<typeof integrations_clients, "clients">>, "integrations">;
   readonly journal: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "journal", never, GroupSpec.NamedAt<typeof journal_audit, "audit">>, "journal">;
   readonly learningPreferences: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "learningPreferences", never, GroupSpec.NamedAt<typeof learningPreferences_mutations, "mutations"> | GroupSpec.NamedAt<typeof learningPreferences_queries, "queries">>, "learningPreferences">;
@@ -216,7 +225,7 @@ const spec: Spec.Spec<{
   readonly routes: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "routes", never, GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "agent", never, GroupSpec.NamedAt<typeof routes_agent_quota, "quota">>, "agent">>, "routes">;
   readonly storage: GroupSpec.NamedAt<typeof storage, "storage">;
   readonly subscriptions: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "subscriptions", never, GroupSpec.NamedAt<typeof subscriptions_mutations, "mutations"> | GroupSpec.NamedAt<typeof subscriptions_queries, "queries">>, "subscriptions">;
-  readonly tenancy: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "tenancy", never, GroupSpec.NamedAt<typeof tenancy_assignments, "assignments"> | GroupSpec.NamedAt<typeof tenancy_claims, "claims"> | GroupSpec.NamedAt<typeof tenancy_cohorts, "cohorts"> | GroupSpec.NamedAt<typeof tenancy_expiry, "expiry"> | GroupSpec.NamedAt<typeof tenancy_holders, "holders"> | GroupSpec.NamedAt<typeof tenancy_invites, "invites"> | GroupSpec.NamedAt<typeof tenancy_logo, "logo"> | GroupSpec.NamedAt<typeof tenancy_memberships, "memberships"> | GroupSpec.NamedAt<typeof tenancy_people, "people"> | GroupSpec.NamedAt<typeof tenancy_periods, "periods"> | GroupSpec.NamedAt<typeof tenancy_placements, "placements"> | GroupSpec.NamedAt<typeof tenancy_profile, "profile"> | GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "promotion", never, GroupSpec.NamedAt<typeof tenancy_promotion_apply, "apply"> | GroupSpec.NamedAt<typeof tenancy_promotion_draft, "draft"> | GroupSpec.NamedAt<typeof tenancy_promotion_moves, "moves"> | GroupSpec.NamedAt<typeof tenancy_promotion_review, "review"> | GroupSpec.NamedAt<typeof tenancy_promotion_run, "run"> | GroupSpec.NamedAt<typeof tenancy_promotion_undo, "undo">>, "promotion"> | GroupSpec.NamedAt<typeof tenancy_provision, "provision"> | GroupSpec.NamedAt<typeof tenancy_seed, "seed"> | GroupSpec.NamedAt<typeof tenancy_settings, "settings"> | GroupSpec.NamedAt<typeof tenancy_start, "start"> | GroupSpec.NamedAt<typeof tenancy_units, "units"> | GroupSpec.NamedAt<typeof tenancy_viewer, "viewer">>, "tenancy">;
+  readonly tenancy: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "tenancy", never, GroupSpec.NamedAt<typeof tenancy_assignments, "assignments"> | GroupSpec.NamedAt<typeof tenancy_claims, "claims"> | GroupSpec.NamedAt<typeof tenancy_cohorts, "cohorts"> | GroupSpec.NamedAt<typeof tenancy_expiry, "expiry"> | GroupSpec.NamedAt<typeof tenancy_holders, "holders"> | GroupSpec.NamedAt<typeof tenancy_home, "home"> | GroupSpec.NamedAt<typeof tenancy_invites, "invites"> | GroupSpec.NamedAt<typeof tenancy_logo, "logo"> | GroupSpec.NamedAt<typeof tenancy_memberships, "memberships"> | GroupSpec.NamedAt<typeof tenancy_people, "people"> | GroupSpec.NamedAt<typeof tenancy_periods, "periods"> | GroupSpec.NamedAt<typeof tenancy_placements, "placements"> | GroupSpec.NamedAt<typeof tenancy_profile, "profile"> | GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "promotion", never, GroupSpec.NamedAt<typeof tenancy_promotion_apply, "apply"> | GroupSpec.NamedAt<typeof tenancy_promotion_draft, "draft"> | GroupSpec.NamedAt<typeof tenancy_promotion_moves, "moves"> | GroupSpec.NamedAt<typeof tenancy_promotion_review, "review"> | GroupSpec.NamedAt<typeof tenancy_promotion_run, "run"> | GroupSpec.NamedAt<typeof tenancy_promotion_undo, "undo">>, "promotion"> | GroupSpec.NamedAt<typeof tenancy_provision, "provision"> | GroupSpec.NamedAt<typeof tenancy_roster, "roster"> | GroupSpec.NamedAt<typeof tenancy_seed, "seed"> | GroupSpec.NamedAt<typeof tenancy_settings, "settings"> | GroupSpec.NamedAt<typeof tenancy_start, "start"> | GroupSpec.NamedAt<typeof tenancy_units, "units"> | GroupSpec.NamedAt<typeof tenancy_viewer, "viewer">>, "tenancy">;
   readonly triggers: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "triggers", never, GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "chats", never, GroupSpec.NamedAt<typeof triggers_chats_cleanup, "cleanup">>, "chats"> | GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "comments", never, GroupSpec.NamedAt<typeof triggers_comments_cleanup, "cleanup">>, "comments">>, "triggers">;
   readonly tryouts: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "tryouts", never, GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "mutations", never, GroupSpec.NamedAt<typeof tryouts_mutations_access, "access"> | GroupSpec.NamedAt<typeof tryouts_mutations_attempts, "attempts"> | GroupSpec.NamedAt<typeof tryouts_mutations_expiry, "expiry"> | GroupSpec.NamedAt<typeof tryouts_mutations_responses, "responses"> | GroupSpec.NamedAt<typeof tryouts_mutations_sections, "sections">>, "mutations"> | GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "queries", never, GroupSpec.NamedAt<typeof tryouts_queries_access, "access"> | GroupSpec.NamedAt<typeof tryouts_queries_attempt, "attempt"> | GroupSpec.NamedAt<typeof tryouts_queries_attemptPage, "attemptPage"> | GroupSpec.NamedAt<typeof tryouts_queries_catalog, "catalog"> | GroupSpec.NamedAt<typeof tryouts_queries_content, "content"> | GroupSpec.NamedAt<typeof tryouts_queries_history, "history"> | GroupSpec.NamedAt<typeof tryouts_queries_runtime, "runtime"> | GroupSpec.NamedAt<typeof tryouts_queries_sets, "sets">>, "queries"> | GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "runtime", never, GroupSpec.NamedAt<typeof tryouts_runtime_signed, "signed">>, "runtime">>, "tryouts">;
   readonly users: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "users", never, GroupSpec.NamedAt<typeof users_mutations, "mutations"> | GroupSpec.NamedAt<typeof users_queries, "queries">>, "users">;
@@ -248,6 +257,11 @@ const spec: Spec.Spec<{
   }),
   ["classroom"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
     ["classes"]: classroom_classes,
+    ["forum"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+      ["backfill"]: classroom_forum_backfill,
+      ["channels"]: classroom_forum_channels,
+    }),
+    ["seed"]: classroom_seed,
     ["teachers"]: classroom_teachers,
   }),
   ["comments"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
@@ -385,8 +399,13 @@ const spec: Spec.Spec<{
     }),
   }),
   ["exams"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+    ["assets"]: exams_assets,
     ["exams"]: exams_exams,
     ["questions"]: exams_questions,
+    ["results"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+      ["results"]: exams_results_results,
+    }),
+    ["rooms"]: exams_rooms,
     ["seed"]: exams_seed,
     ["sittings"]: GroupSpec.addGroupsAt(exams_sittings, {
       ["timers"]: exams_sittings_timers,
@@ -395,6 +414,7 @@ const spec: Spec.Spec<{
   ["identity"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
     ["cards"]: identity_cards,
     ["logins"]: identity_logins,
+    ["seed"]: identity_seed,
   }),
   ["integrations"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
     ["clients"]: integrations_clients,
@@ -472,6 +492,7 @@ const spec: Spec.Spec<{
     ["cohorts"]: tenancy_cohorts,
     ["expiry"]: tenancy_expiry,
     ["holders"]: tenancy_holders,
+    ["home"]: tenancy_home,
     ["invites"]: tenancy_invites,
     ["logo"]: tenancy_logo,
     ["memberships"]: tenancy_memberships,
@@ -488,6 +509,7 @@ const spec: Spec.Spec<{
       ["undo"]: tenancy_promotion_undo,
     }),
     ["provision"]: tenancy_provision,
+    ["roster"]: tenancy_roster,
     ["seed"]: tenancy_seed,
     ["settings"]: tenancy_settings,
     ["start"]: tenancy_start,
