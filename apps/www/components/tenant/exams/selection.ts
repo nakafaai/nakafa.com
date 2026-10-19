@@ -23,6 +23,8 @@ const SelectionState = Schema.Struct({
 interface SelectionActions {
   /** Ends the pending state of a question, once the server answered or refused it. */
   readonly endPending: (id: QuestionId) => void;
+  /** Chooses a question and holds it, so the canvas keeps it chosen while it scrolls to it. */
+  readonly pin: (id: QuestionId) => void;
   /**
    * Replaces a placeholder with the question the server answered for: the saved question
    * when it saved, or the question chosen before when it refused. It acts only while the
@@ -30,8 +32,6 @@ interface SelectionActions {
    * stays chosen.
    */
   readonly replace: (placeholder: QuestionId, next: QuestionId | null) => void;
-  /** Chooses a question and holds it, so the canvas keeps it chosen while it scrolls to it. */
-  readonly pin: (id: QuestionId) => void;
   /** Makes a question the one that the canvas shows. */
   readonly select: (id: QuestionId) => void;
   /** Marks a question as a placeholder that the server has not saved yet. */

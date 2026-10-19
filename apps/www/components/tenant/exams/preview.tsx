@@ -97,13 +97,7 @@ export function usePromptDocument({
  * the same box and spacing as it does once the editor mounts. A text that changes while the teacher
  * types is drawn when the browser has time.
  */
-export function PreviewProse({
-  doc,
-  size,
-}: {
-  doc: Node;
-  size: "line" | "page";
-}) {
+function PreviewProse({ doc, size }: { doc: Node; size: "line" | "page" }) {
   const shown = useDeferredValue(doc);
   // The text is drawn again only when it changes, not on every redraw of the page.
   const draw = useCallback(
@@ -131,7 +125,7 @@ export function PreviewProse({
 }
 
 /** The label of one option drawn without an editor, at the size an option's editor takes. */
-export function OptionSketch({ label }: { label: OptionLabel }) {
+function OptionSketch({ label }: { label: OptionLabel }) {
   const doc = useMemo(() => Node.fromJSON(assessmentSchema, label), [label]);
 
   return <PreviewProse doc={doc} size="line" />;

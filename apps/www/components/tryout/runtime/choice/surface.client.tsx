@@ -3,7 +3,7 @@
 import { Checkbox } from "@repo/design-system/components/ui/checkbox";
 import { Label } from "@repo/design-system/components/ui/label";
 import { Radio } from "@repo/design-system/components/ui/radio-group";
-import { buttonVariants } from "@repo/design-system/lib/button";
+import type { buttonVariants } from "@repo/design-system/lib/button";
 import type { ReactNode } from "react";
 import { choiceFrame } from "@/components/tryout/runtime/choice/frame";
 import type { TryoutPreviewChoiceAppearance } from "@/lib/tryout/appearance";
