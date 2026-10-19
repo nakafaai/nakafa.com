@@ -200,6 +200,15 @@ export class AddressMember extends Schema.TaggedError<AddressMember>()(
   )
 ) {}
 
+/** A school that would make its organisation hold more schools than `UNIT_LIMIT` allows. */
+export class UnitLimit extends Schema.TaggedError<UnitLimit>()(
+  "UnitLimit",
+  refusal(
+    "UNIT_LIMIT",
+    "This organisation already holds the most schools it may."
+  )
+) {}
+
 /** Sending again an invite that is no longer waiting for a claim. */
 export class InviteNotPending extends Schema.TaggedError<InviteNotPending>()(
   "InviteNotPending",

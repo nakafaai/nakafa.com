@@ -5,6 +5,7 @@ import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { Email, Npsn } from "@repo/backend/confect/tenancy/schema";
 import { Array as Arr, Option, Schema } from "effect";
 import {
+  addUnitChange,
   archiveUnitChange,
   assignGrantChange,
   inviteChange,
@@ -81,6 +82,31 @@ describe("components/tenant/settings/mutation.client", () => {
         local.store.getQuery(tenancy.viewer.get, { slug })
       );
       expect(shown.tenant).not.toHaveProperty("logo");
+    });
+
+    it("lists a new school at the end of the units at once", () => {
+      const local = createLocalStore();
+      local.seed(tenancy.units.list, { slug }, [unit(smp), unit(sma)]);
+      addUnitChange(local.store, {
+        contentLanguage: "id",
+        level: "sd",
+        name: "SD Nakafa",
+        slug,
+        timeZone: "Asia/Jakarta",
+      });
+      const shown = Option.getOrThrow(
+        local.store.getQuery(tenancy.units.list, { slug })
+      );
+      expect(shown.map((item) => item.id).slice(0, 2)).toEqual([smp, sma]);
+      expect(shown[2]).toMatchObject({
+        contentLanguage: "id",
+        level: "sd",
+        name: "SD Nakafa",
+        npsn: null,
+        status: "active",
+        timeZone: "Asia/Jakarta",
+      });
+      expect(shown).toHaveLength(3);
     });
 
     it("shows the time zone and content language of a unit in the viewer and the list at once", () => {

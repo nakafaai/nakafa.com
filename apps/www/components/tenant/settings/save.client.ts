@@ -43,6 +43,10 @@ const REFUSAL_COPY: Readonly<Record<string, ToastCopy>> = {
     description: "school-refusal-placement-limit.description",
     title: "school-refusal-placement-limit.title",
   },
+  UnitLimit: {
+    description: "school-refusal-unit-limit.description",
+    title: "school-refusal-unit-limit.title",
+  },
   TeacherHasHomeroom: {
     description: "school-refusal-teacher-has-homeroom.description",
     title: "school-refusal-teacher-has-homeroom.title",

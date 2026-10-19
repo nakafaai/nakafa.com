@@ -288,6 +288,13 @@
     "level-other": "Sonstige",
     "unit-level-line": "Stufe {level}.",
     "unit-archived-description": "Diese Schule ist archiviert und nimmt Änderungen erst wieder an, wenn sie wiederhergestellt wird.",
+    "unit-add": "Schule hinzufügen",
+    "unit-add-title": "Eine Schule hinzufügen",
+    "unit-add-description": "Jede Schule hat ihre eigene Stufe, eigene Zeiträume und eigene Klassen.",
+    "unit-add-name": "Name",
+    "unit-add-level": "Stufe",
+    "unit-add-submit": "Schule hinzufügen",
+    "unit-add-footer": "Eine neue Schule hat noch keinen Zeitraum. Lege einen auf der Seite Zeiträume an.",
     "unit-time-zone": "Zeitzone",
     "unit-content-language": "Inhaltssprache",
     "unit-archive-footer": "Eine archivierte Schule bleibt lesbar.",
@@ -1386,6 +1393,10 @@
     "school-refusal-graduated": {
       "title": "Bereits abgeschlossen.",
       "description": "Diese Person kann nicht erneut in eine Klasse."
+    },
+    "school-refusal-unit-limit": {
+      "title": "Für eine weitere Schule ist kein Platz.",
+      "description": "Eine Organisation hat eine feste Anzahl an Schulen."
     },
     "school-refusal-address-member": {
       "title": "Diese Person gehört schon zur Schule.",

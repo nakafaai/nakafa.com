@@ -1,5 +1,6 @@
 import type { GenericId } from "@confect/core";
 import { FunctionImpl, GroupImpl } from "@confect/server";
+import type { TenantUnitsDoc } from "@repo/backend/confect/_generated/docs";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
@@ -11,14 +12,30 @@ import { Member } from "@repo/backend/confect/middleware/member.spec";
 import session from "@repo/backend/confect/middleware/session.impl";
 import { personActor } from "@repo/backend/confect/tenancy/actor";
 import { unitAuthority } from "@repo/backend/confect/tenancy/authority";
-import { NpsnInvalid, NpsnTaken } from "@repo/backend/confect/tenancy/errors";
+import {
+  NpsnInvalid,
+  NpsnTaken,
+  UnitLimit,
+} from "@repo/backend/confect/tenancy/errors";
 import {
   Npsn,
   UNIT_LIMIT,
   type UnitStatus,
 } from "@repo/backend/confect/tenancy/schema";
 import spec from "@repo/backend/confect/tenancy/units.spec";
+import { createUnit } from "@repo/backend/confect/tenancy/write/unit";
 import { Array as Arr, Effect, Layer, Schema, Struct } from "effect";
+
+/** One unit as the units list and the answer of `create` show it. */
+const viewOf = (unit: TenantUnitsDoc) => ({
+  contentLanguage: unit.contentLanguage,
+  id: unit._id,
+  level: unit.level,
+  name: unit.name,
+  npsn: unit.npsn ?? null,
+  status: unit.status,
+  timeZone: unit.timeZone,
+});
 
 /**
  * Lists every unit of the member's school with its national school number. A
@@ -37,15 +54,45 @@ const list = FunctionImpl.make(
       )
       .take(UNIT_LIMIT)
       .pipe(Effect.orDie);
-    return Arr.map(units, (unit) => ({
-      contentLanguage: unit.contentLanguage,
-      id: unit._id,
-      level: unit.level,
-      name: unit.name,
-      npsn: unit.npsn ?? null,
-      status: unit.status,
-      timeZone: unit.timeZone,
-    }));
+    return Arr.map(units, viewOf);
+  })
+);
+
+/**
+ * Adds one active school to the member's organisation, with its level, its name,
+ * its time zone, and its content language. The school opens with no period, which
+ * its periods page opens. An organisation holds at most `UNIT_LIMIT` schools, so a
+ * school past that limit is refused and nothing is written.
+ */
+const create = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "create",
+  Effect.fn("tenancy.units.create")(function* ({
+    contentLanguage,
+    level,
+    name,
+    timeZone,
+  }) {
+    const { person, tenant } = yield* Member;
+    const units = yield* (yield* DatabaseReader)
+      .table("tenantUnits")
+      .index("by_tenantId_and_status", (query) =>
+        query.eq("tenantId", tenant._id)
+      )
+      .take(UNIT_LIMIT)
+      .pipe(Effect.orDie);
+    if (units.length >= UNIT_LIMIT) {
+      return yield* new UnitLimit();
+    }
+    return viewOf(
+      yield* createUnit(personActor(person), tenant._id, {
+        contentLanguage,
+        level,
+        name,
+        timeZone,
+      })
+    );
   })
 );
 
@@ -189,6 +236,7 @@ const unarchive = FunctionImpl.make(
 
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(list),
+  Layer.provide(create),
   Layer.provide(setNpsn),
   Layer.provide(setLocale),
   Layer.provide(archive),

@@ -288,6 +288,13 @@
     "level-other": "Other",
     "unit-level-line": "Level {level}.",
     "unit-archived-description": "This school is archived and refuses changes until it is restored.",
+    "unit-add": "Add school",
+    "unit-add-title": "Add a school",
+    "unit-add-description": "A school has its own level, periods, and classes.",
+    "unit-add-name": "Name",
+    "unit-add-level": "Level",
+    "unit-add-submit": "Add school",
+    "unit-add-footer": "A new school opens with no period. Add one on the Periods page.",
     "unit-time-zone": "Time zone",
     "unit-content-language": "Content language",
     "unit-archive-footer": "An archived school stays readable.",
@@ -1386,6 +1393,10 @@
     "school-refusal-graduated": {
       "title": "Already graduated from this school.",
       "description": "A graduated student cannot be placed in a cohort again."
+    },
+    "school-refusal-unit-limit": {
+      "title": "No room for another school.",
+      "description": "An organisation holds a set number of schools."
     },
     "school-refusal-address-member": {
       "title": "They already belong to this school.",

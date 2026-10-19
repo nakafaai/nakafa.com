@@ -214,6 +214,23 @@ export const removeLogoChange: OptimisticUpdate<typeof tenancy.logo.remove> = (
   }));
 };
 
+/** Lists a new school at once, at the end of the school's units, as the server adds it last. */
+export const addUnitChange: OptimisticUpdate<typeof tenancy.units.create> = (
+  localStore,
+  { contentLanguage, level, name, slug, timeZone }
+) => {
+  const draft: Unit = {
+    contentLanguage,
+    id: Schema.decodeUnknownSync(Id("tenantUnits"))(draftText()),
+    level,
+    name,
+    npsn: null,
+    status: "active",
+    timeZone,
+  };
+  patchUnitList(localStore, slug, (units) => Arr.append(units, draft));
+};
+
 /** Shows the new time zone and content language of a unit at once. */
 export const setUnitLocaleChange: OptimisticUpdate<
   typeof tenancy.units.setLocale

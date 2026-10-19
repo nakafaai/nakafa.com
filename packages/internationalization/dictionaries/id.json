@@ -288,6 +288,13 @@
     "level-other": "Lainnya",
     "unit-level-line": "Jenjang {level}.",
     "unit-archived-description": "Sekolah ini diarsipkan dan menolak perubahan sampai dipulihkan.",
+    "unit-add": "Tambah sekolah",
+    "unit-add-title": "Tambah sekolah",
+    "unit-add-description": "Setiap sekolah punya jenjang, periode, dan rombel sendiri.",
+    "unit-add-name": "Nama",
+    "unit-add-level": "Jenjang",
+    "unit-add-submit": "Tambah sekolah",
+    "unit-add-footer": "Sekolah baru belum punya periode. Tambahkan satu di halaman Periode.",
     "unit-time-zone": "Zona waktu",
     "unit-content-language": "Bahasa konten",
     "unit-archive-footer": "Sekolah yang diarsipkan tetap dapat dibaca.",
@@ -1386,6 +1393,10 @@
     "school-refusal-graduated": {
       "title": "Sudah lulus dari sekolah ini.",
       "description": "Siswa yang sudah lulus tidak bisa masuk rombel lagi."
+    },
+    "school-refusal-unit-limit": {
+      "title": "Tidak ada ruang untuk sekolah lain.",
+      "description": "Sebuah organisasi memiliki jumlah sekolah yang terbatas."
     },
     "school-refusal-address-member": {
       "title": "Orang ini sudah menjadi anggota sekolah ini.",
