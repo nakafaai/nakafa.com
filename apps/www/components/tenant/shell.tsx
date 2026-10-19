@@ -4,6 +4,7 @@ import type {
   TenantProfile,
   ViewerAccount,
 } from "@repo/backend/confect/tenancy/schema";
+import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import {
   SidebarContent,
   SidebarFooter,
@@ -21,7 +22,6 @@ import {
 } from "@repo/design-system/components/ui/sidebar-shell";
 import { usePathname } from "@repo/internationalization/src/navigation";
 import { Effect } from "effect";
-import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { type ReactNode, useTransition } from "react";
 import { AccountMenu } from "@/components/sidebar/menu/account";
@@ -123,7 +123,7 @@ function TenantFrame({
         <SidebarHeader className="border-b">
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton render={<Link href="/" />} size="lg">
+              <SidebarMenuButton render={<IntentLink href="/" />} size="lg">
                 <SchoolMark logo={profile.logo} mascot={profile.mascot} />
                 <div className="grid min-w-0 flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-medium">{profile.name}</span>

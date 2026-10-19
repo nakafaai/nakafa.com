@@ -13,6 +13,7 @@ import {
   CollapsibleTrigger,
 } from "@repo/design-system/components/ui/collapsible";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import {
   SidebarMenuButton,
   SidebarMenuItem,
@@ -24,7 +25,6 @@ import {
 } from "@repo/design-system/components/ui/sidebar-submenu";
 import { usePathname } from "@repo/internationalization/src/navigation";
 import { Array as Arr } from "effect";
-import Link from "next/link";
 import { useTranslations } from "next-intl";
 import type { ComponentProps } from "react";
 import { TenantSidebarGroup } from "@/components/tenant/group";
@@ -100,7 +100,7 @@ function SchoolSettingsNavGroup({
             <SidebarMenuSubItem key={section.href}>
               <SidebarMenuSubButton
                 isActive={pathname === section.href}
-                render={<Link href={section.href} />}
+                render={<IntentLink href={section.href} />}
               >
                 <span className="truncate">{t(section.labelKey)}</span>
               </SidebarMenuSubButton>

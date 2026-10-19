@@ -2,13 +2,13 @@
 
 import { QueryResult, useQuery } from "@confect/react";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
+import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
 import { usePathname } from "@repo/internationalization/src/navigation";
 import { Array as Arr, String as Str } from "effect";
-import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useConvexAuth } from "@/components/providers/convex";
 import type { TenantValue } from "@/components/tenant/context";
@@ -84,7 +84,10 @@ function TenantClassItem({ name, slug }: { name: string; slug: string }) {
 
   return (
     <SidebarMenuItem>
-      <SidebarMenuButton isActive={isActive} render={<Link href={base} />}>
+      <SidebarMenuButton
+        isActive={isActive}
+        render={<IntentLink href={base} />}
+      >
         {name}
       </SidebarMenuButton>
     </SidebarMenuItem>

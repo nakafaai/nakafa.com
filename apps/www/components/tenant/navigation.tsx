@@ -1,12 +1,12 @@
 "use client";
 
+import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
 import { usePathname } from "@repo/internationalization/src/navigation";
 import { String as Str } from "effect";
-import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { TenantClassesGroup } from "@/components/tenant/classes/nav";
 import { useTenant } from "@/components/tenant/context";
@@ -39,7 +39,7 @@ export function TenantNavigation() {
         <SidebarMenuItem>
           <SidebarMenuButton
             isActive={pathname === "/"}
-            render={<Link href="/" />}
+            render={<IntentLink href="/" />}
           >
             {t("home")}
           </SidebarMenuButton>
@@ -50,7 +50,7 @@ export function TenantNavigation() {
               isActive={
                 pathname === "/exams" || Str.startsWith("/exams/")(pathname)
               }
-              render={<Link href="/exams" />}
+              render={<IntentLink href="/exams" />}
             >
               {tExams("title")}
             </SidebarMenuButton>
@@ -60,7 +60,7 @@ export function TenantNavigation() {
       {canManage ? (
         <TenantSidebarGroup label={tSettings("manage-group")}>
           <SidebarMenuItem>
-            <SidebarMenuButton render={<Link href="/settings/profile" />}>
+            <SidebarMenuButton render={<IntentLink href="/settings/profile" />}>
               {tSettings("manage-settings")}
             </SidebarMenuButton>
           </SidebarMenuItem>
