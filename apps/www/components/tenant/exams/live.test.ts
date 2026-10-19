@@ -31,6 +31,18 @@ describe("tenant/exams/live createExamLive", () => {
     ).toEqual(Option.some("2 + 3"));
   });
 
+  it("keeps the newest document itself, even when an older one reads the same", () => {
+    const live = createExamLive();
+    const older = paragraph("Berapa");
+    const newer = paragraph("Berapa");
+    live.getState().show(first, older);
+    live.getState().show(first, newer);
+
+    expect(
+      Option.getOrUndefined(HashMap.get(live.getState().docs, first))
+    ).toBe(newer);
+  });
+
   it("gives each editor its own documents", () => {
     const one = createExamLive();
     const other = createExamLive();
