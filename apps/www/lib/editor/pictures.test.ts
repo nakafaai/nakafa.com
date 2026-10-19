@@ -50,9 +50,21 @@ describe("pictureIdsPlugin", () => {
     });
     const view = new EditorView(document.createElement("div"), { state });
     view.dispatch(view.state.tr.insert(0, picture("kept")));
-    expect(MutableList.toArray(reported)).toEqual([["kept"]]);
+    expect(MutableList.toArray(reported)).toEqual([[], ["kept"]]);
     view.dispatch(view.state.tr.setMeta("note", "selection only"));
-    expect(MutableList.toArray(reported)).toEqual([["kept"]]);
+    expect(MutableList.toArray(reported)).toEqual([[], ["kept"]]);
+    view.destroy();
+  });
+
+  it("reports the images of the document a view opens with, so a saved question resolves its pictures", () => {
+    const reported = MutableList.make<readonly ExamAssetIdValue[]>();
+    const state = EditorState.create({
+      doc: assessmentSchema.node("doc", null, [picture("saved")]),
+      plugins: [pictureIdsPlugin((ids) => MutableList.append(reported, ids))],
+      schema: assessmentSchema,
+    });
+    const view = new EditorView(document.createElement("div"), { state });
+    expect(MutableList.toArray(reported)).toEqual([["saved"]]);
     view.destroy();
   });
 });
