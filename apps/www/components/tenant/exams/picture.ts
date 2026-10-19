@@ -6,24 +6,19 @@ import { toast } from "@repo/design-system/lib/toast/notify";
 import { Option } from "effect";
 import type { PendingPicture } from "@/components/tenant/exams/editing";
 
-/** The copy of the toast that says why a picture was not added: it is over the byte limit, or it is no PNG, JPEG, WebP, or GIF image. */
-const REFUSAL_TOAST = {
-  size: {
-    description: "image-refused-size.description",
-    title: "image-refused-size.title",
-  },
-  type: {
+/** Tells the teacher why a file was not added as an image: it is over the byte limit, or it is no PNG, JPEG, WebP, or GIF image. */
+export const refuseFile = (refusal: ImageRefusal) => {
+  if (refusal === "size") {
+    toast.error({
+      description: "image-refused-size.description",
+      title: "image-refused-size.title",
+    });
+    return;
+  }
+  toast.error({
     description: "image-refused-type.description",
     title: "image-refused-type.title",
-  },
-} as const satisfies Record<
-  ImageRefusal,
-  { description: string; title: string }
->;
-
-/** Tells the teacher why a file was not added as an image. */
-export const refuseFile = (refusal: ImageRefusal) => {
-  toast.error(REFUSAL_TOAST[refusal]);
+  });
 };
 
 /**
