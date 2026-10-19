@@ -380,16 +380,33 @@ describe("environment reads", () => {
       assert.deepStrictEqual(
         yield* findings(`import { readEnvironment } from "@repo/utilities/env";
 process.env.NODE_ENV === "production";
-process.env.NEXT_RUNTIME === "nodejs";
+import.meta.env.MODE === "production";
 process.env.SITE_URL = "https://nakafa.com";
 process.env.SITE_URL ??= "https://nakafa.com";
 delete process.env.SITE_URL;
 export const env = readEnvironment(fields, {
   PREVIEW: process.env.PREVIEW,
   SITE_URL: process.env.SITE_URL,
+  VITE_URL: import.meta.env.VITE_URL,
 });
 `),
         []
+      );
+    })
+  );
+
+  it.effect("reports every import.meta.env read outside that seam", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* findings(`import { readEnvironment } from "@repo/utilities/env";
+const url = import.meta.env.VITE_URL;
+const all = { ...import.meta.env };
+const record = { VITE_URL: import.meta.env.VITE_URL };
+const local = makeEnv(fields, { VITE_URL: import.meta.env.VITE_URL });
+const name = import.meta.env[key];
+import.meta.env.VITE_URL = "https://nakafa.com";
+`),
+        ["2 env", "3 env", "4 env", "5 env", "6 env"]
       );
     })
   );

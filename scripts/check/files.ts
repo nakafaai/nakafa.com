@@ -24,9 +24,10 @@ export class RepositoryReadError extends Schema.TaggedError<RepositoryReadError>
 /** Directories that hold dependencies, tool output, or caches rather than authored files. */
 const IGNORED_DIRECTORIES = HashSet.make(
   ".git",
-  ".next",
+  ".output",
   ".react-email",
   ".turbo",
+  ".vercel",
   "coverage",
   "dist",
   "node_modules"

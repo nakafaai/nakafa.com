@@ -72,7 +72,7 @@ export function call(value: Shape) {
                 "export const status = (mode: string) => { switch (mode) { default: return 0; } };\n",
             },
             {
-              file: "apps/www/next.config.ts",
+              file: "apps/www/vite.config.ts",
               sourceText:
                 "export const env = (name: string) => { switch (name) { default: return 0; } };\n",
             },
@@ -84,7 +84,7 @@ export function call(value: Shape) {
           ]),
           [
             "apps/www/components/status.tsx:1 switch",
-            "apps/www/next.config.ts:1 switch",
+            "apps/www/vite.config.ts:1 switch",
             "scripts/tool.test.ts:1 switch",
           ]
         );
