@@ -96,7 +96,7 @@ export function SidebarRightProvider({ children }: { children: ReactNode }) {
     <SidebarProvider
       className="min-w-0"
       cookieName="sidebar_state:right"
-      keyboardShortcut="x"
+      keyboardShortcut="shift+x"
       sidebarDesktop={1279.98}
     >
       {children}
