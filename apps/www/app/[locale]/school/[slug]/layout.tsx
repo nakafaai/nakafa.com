@@ -100,9 +100,14 @@ export default async function SchoolLayout({
     if (current === null) {
       notFound();
     }
+    // A card account's address is a placeholder, so the page names the account instead.
+    const account = current.appUser.name || current.appUser.username;
+    if (account === undefined) {
+      notFound();
+    }
     return (
       <TenantOutsider
-        account={current.authUser.email}
+        account={account}
         logo={profile.value.logo}
         mascot={profile.value.mascot}
         school={profile.value.name}

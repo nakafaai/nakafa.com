@@ -1,16 +1,17 @@
 "use client";
 
 import { Button } from "@repo/design-system/components/ui/button";
-import { Effect, Result } from "effect";
+import { Effect } from "effect";
 import { useTranslations } from "next-intl";
-import { signOutAccountBrowserIdentity } from "@/lib/auth/identity/browser";
+import { signOutSchoolAccount } from "@/components/tenant/account.client";
 
-/** Signs the visitor out, then opens the school root at `path`, once the sign-out succeeds. */
+/**
+ * Signs the visitor out, then opens the school root at `path`, once the sign-out succeeds. A
+ * failed sign-out shows its message, and the visitor stays on the page.
+ */
 async function signOutThen(path: string) {
-  const result = await Effect.runPromise(
-    Effect.result(signOutAccountBrowserIdentity())
-  );
-  if (Result.isSuccess(result)) {
+  const destination = await Effect.runPromise(signOutSchoolAccount());
+  if (destination === "home") {
     window.location.assign(path);
   }
 }

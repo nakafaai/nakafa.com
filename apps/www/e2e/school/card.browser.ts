@@ -38,6 +38,9 @@ test("a signed-in learner who is not a member of an existing school sees the out
     page.getByRole("heading", { name: "Not a member" })
   ).toBeVisible();
   await expect(
+    page.getByText(`Acceptance Learner is not a member of ${school.name}.`)
+  ).toBeVisible();
+  await expect(
     page.getByRole("button", { name: "Switch account" })
   ).toBeVisible();
   await expect(
