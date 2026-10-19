@@ -89,14 +89,15 @@ export function ExamList({ slug }: { slug: TenantSlug }) {
   if (QueryResult.isFailure(viewer) && isLostAccess(viewer.error)) {
     throw viewer.error;
   }
+  // The viewer's places to create an exam are null until the viewer's read answers.
   const creation = QueryResult.isSuccess(viewer)
     ? creationOf(viewer.value)
-    : NO_CREATION;
+    : null;
 
   return (
     <>
       <SchoolHeader items={[{ label: t("title") }]} title={t("title")}>
-        {creation.choices.length > 0 ? (
+        {creation !== null && creation.choices.length > 0 ? (
           <CreateExam
             choices={creation.choices}
             drafts={drafts}
@@ -108,21 +109,19 @@ export function ExamList({ slug }: { slug: TenantSlug }) {
       <LayoutContent className="flex w-full flex-col gap-6 py-6">
         <ExamListRows
           canManage={tenant.canManage}
+          creation={creation}
           exams={pagination.results}
           failed={PaginatedQueryResult.isFailure(pagination)}
-          hasUnit={creation.choices.length > 0}
           loadingFirst={pagination._tag === "LoadingFirstPage"}
           names={names}
           saving={saving}
+          viewerFailed={QueryResult.isFailure(viewer)}
         />
         <div aria-hidden ref={ref} />
       </LayoutContent>
     </>
   );
 }
-
-/** The places the viewer may create an exam in, and the languages they take, while the viewer's read has not answered. */
-const NO_CREATION = { choices: [], languages: [] } as const;
 
 /** The places the viewer may create an exam in, and the languages they take. */
 function creationOf(viewer: Viewer) {
@@ -138,20 +137,22 @@ function creationOf(viewer: Viewer) {
  */
 function ExamListRows({
   canManage,
+  creation,
   exams: rows,
   failed,
-  hasUnit,
   loadingFirst,
   names,
   saving,
+  viewerFailed,
 }: {
   canManage: boolean;
+  creation: Creation | null;
   exams: readonly ExamSummary[];
   failed: boolean;
-  hasUnit: boolean;
   loadingFirst: boolean;
   names: Intl.DisplayNames;
   saving: readonly ExamSummary["id"][];
+  viewerFailed: boolean;
 }) {
   if (loadingFirst) {
     return null;
@@ -161,17 +162,20 @@ function ExamListRows({
   }
   return (
     <>
-      {failed ? <DataFailure onRetry={reloadPage} /> : null}
+      {failed || viewerFailed ? <DataFailure onRetry={reloadPage} /> : null}
       <ExamTable
         canManage={canManage}
+        creation={creation}
         exams={rows}
-        hasUnit={hasUnit}
         names={names}
         saving={saving}
       />
     </>
   );
 }
+
+/** The places the viewer may create an exam in, and the languages they take. */
+type Creation = ReturnType<typeof creationOf>;
 
 /**
  * The exams in a data table: the title links to its editor, the language filters the list by
@@ -181,22 +185,29 @@ function ExamListRows({
  */
 function ExamTable({
   canManage,
+  creation,
   exams: rows,
-  hasUnit,
   names,
   saving,
 }: {
   canManage: boolean;
+  /** The viewer's places to create an exam, or null while the viewer's read has not answered. */
+  creation: Creation | null;
   exams: readonly ExamSummary[];
-  /** Whether the viewer may create an exam in a unit, which the empty state explains when it has none. */
-  hasUnit: boolean;
   names: Intl.DisplayNames;
   saving: readonly ExamSummary["id"][];
 }) {
   const t = useTranslations("Exams");
 
   if (Arr.isReadonlyArrayEmpty(rows)) {
-    return <NoExamEmpty canManage={canManage} hasUnit={hasUnit} />;
+    // An empty list says why it is empty only once the viewer's places are known, so it never
+    // says "no unit" while the viewer's read is still in flight.
+    return creation === null ? null : (
+      <NoExamEmpty
+        canManage={canManage}
+        hasUnit={creation.choices.length > 0}
+      />
+    );
   }
 
   /** The language of one exam by its name in the reader's language. */
