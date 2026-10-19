@@ -11,13 +11,13 @@ import {
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
 import { Input } from "@repo/design-system/components/ui/input";
-import { Effect, Option, Result } from "effect";
+import { Effect } from "effect";
 import { useTranslations } from "next-intl";
 import { type FormEvent, useId, useState, useTransition } from "react";
 import {
   pageDeviceIdOf,
-  redeemRefusalKey,
-  redeemRequestOf,
+  RedeemUnanswered,
+  submitLogin,
 } from "@/components/tenant/login.client";
 import { authClient } from "@/lib/auth/client";
 
@@ -37,45 +37,38 @@ export function TenantLogin({ slug }: { slug: TenantSlug }) {
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState<string | undefined>(undefined);
 
-  /** Redeems the card when a code is typed, then signs the student in with the password. */
+  /** Submits the form. `submitLogin` decides the answer, and a signed-in student goes to the school root. */
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     startTransition(async () => {
       setMessage(undefined);
-      if (code.trim() !== "") {
-        const deviceId = await Effect.runPromise(pageDeviceIdOf());
-        const request = redeemRequestOf({
-          code,
-          deviceId,
-          loginName,
-          password,
-          slug,
-        });
-        if (Option.isNone(request)) {
-          setMessage(t("card-invalid"));
-          return;
-        }
-        const redeemed = await Effect.runPromise(
-          Effect.tryPromise(() => redeem(request.value)).pipe(Effect.result)
-        );
-        if (Result.isFailure(redeemed)) {
-          setMessage(t("failed"));
-          return;
-        }
-        if (redeemed.success.outcome === "refused") {
-          setMessage(t(redeemRefusalKey(redeemed.success.reason)));
-          return;
-        }
-      }
-      const signedIn = await authClient.signIn.username({
-        password,
-        username: loginName,
-      });
-      if (signedIn.error) {
-        setMessage(t("sign-in-refused"));
+      const deviceId = await Effect.runPromise(pageDeviceIdOf());
+      const step = await Effect.runPromise(
+        submitLogin(
+          { code, deviceId, loginName, password, slug },
+          {
+            redeem: (request) =>
+              Effect.tryPromise({
+                try: () => redeem(request),
+                catch: () => new RedeemUnanswered(),
+              }),
+            signIn: (credentials) =>
+              Effect.tryPromise(() =>
+                authClient.signIn.username(credentials)
+              ).pipe(
+                Effect.match({
+                  onFailure: () => false,
+                  onSuccess: (result) => !result.error,
+                })
+              ),
+          }
+        )
+      );
+      if (step === "signed-in") {
+        window.location.assign("/");
         return;
       }
-      window.location.assign("/");
+      setMessage(t(step));
     });
   }
 
@@ -108,7 +101,9 @@ export function TenantLogin({ slug }: { slug: TenantSlug }) {
             {t("password-label")}
           </FieldLabel>
           <Input
-            autoComplete="current-password"
+            autoComplete={
+              code.trim() === "" ? "current-password" : "new-password"
+            }
             id={`${id}-password`}
             onChange={(event) => setPassword(event.target.value)}
             type="password"
