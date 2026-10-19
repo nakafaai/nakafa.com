@@ -1,6 +1,5 @@
 "use client";
 
-import type { Ref } from "@confect/core";
 import {
   type PaginatedQueryItem,
   PaginatedQueryResult,
@@ -10,7 +9,6 @@ import {
   useQuery,
 } from "@confect/react";
 import { MoreHorizontalIcon } from "@hugeicons/core-free-icons";
-import { Id } from "@repo/backend/confect/_generated/id";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { PeriodName, PeriodStatus } from "@repo/backend/confect/tenancy/period";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -30,14 +28,6 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@repo/design-system/components/ui/select";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, Option, Schema } from "effect";
 import { useTranslations } from "next-intl";
@@ -54,6 +44,10 @@ import {
 } from "@/components/tenant/settings/periods.client";
 import { saveSchool } from "@/components/tenant/settings/save.client";
 import { isDraft } from "@/components/tenant/settings/state";
+import {
+  SchoolUnitChoice,
+  type UnitId,
+} from "@/components/tenant/settings/unit";
 
 const SOURCE = "components/tenant/settings/periods";
 
@@ -61,7 +55,6 @@ const SOURCE = "components/tenant/settings/periods";
 const PAGE_SIZE = 25;
 
 /** The ID of one unit of the school. */
-type UnitId = Ref.Returns<typeof tenancy.viewer.get>["units"][number]["id"];
 
 /** One period as the periods list shows it. */
 type PeriodItem = PaginatedQueryItem<typeof tenancy.periods.list>;
@@ -104,7 +97,7 @@ export function SchoolPeriodsSettings({ slug }: { slug: TenantSlug }) {
       {unit === undefined ? null : (
         <>
           {units.length > 1 ? (
-            <UnitChoice
+            <SchoolUnitChoice
               onChoose={setChosenUnit}
               unitId={unit.id}
               units={units}
@@ -120,54 +113,6 @@ export function SchoolPeriodsSettings({ slug }: { slug: TenantSlug }) {
         </>
       )}
     </SettingsPage>
-  );
-}
-
-/** Renders the unit whose periods show, as a toolbar row above the periods table. */
-function UnitChoice({
-  onChoose,
-  unitId,
-  units,
-}: {
-  onChoose: (unitId: UnitId) => void;
-  unitId: UnitId;
-  units: readonly { readonly id: UnitId; readonly name: string }[];
-}) {
-  const t = useTranslations("SchoolSettings");
-  const items = Arr.map(units, (unit) => ({
-    label: unit.name,
-    value: unit.id,
-  }));
-
-  return (
-    <div className="flex items-center gap-2">
-      <Select
-        items={items}
-        onValueChange={(value) => {
-          const chosen = Schema.decodeUnknownOption(Id("tenantUnits"))(value);
-          if (Option.isSome(chosen)) {
-            onChoose(chosen.value);
-          }
-        }}
-        value={unitId}
-      >
-        <SelectTrigger
-          aria-label={t("unit-choice")}
-          className="w-full max-w-xs"
-        >
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectGroup>
-            {Arr.map(items, (item) => (
-              <SelectItem key={item.value} value={item.value}>
-                {item.label}
-              </SelectItem>
-            ))}
-          </SelectGroup>
-        </SelectContent>
-      </Select>
-    </div>
   );
 }
 
