@@ -77,19 +77,21 @@ const readArticle = createServerFn({ method: "GET" })
     }
     const { model, published } = publication;
     const filePath = `/${publicPath}`;
-    const seo = await getCachedSEOMetadata(
-      {
-        type: "article",
-        categoryLabel: model.projection.categoryTitle,
-        data: {
-          title: model.projection.metadata.title,
-          description: model.projection.metadata.description,
-          subject: undefined,
+    const [seo, messages] = await Promise.all([
+      getCachedSEOMetadata(
+        {
+          type: "article",
+          categoryLabel: model.projection.categoryTitle,
+          data: {
+            title: model.projection.metadata.title,
+            description: model.projection.metadata.description,
+            subject: undefined,
+          },
         },
-      },
-      locale
-    );
-    const messages = await loadLocaleMessages(locale);
+        locale
+      ),
+      loadLocaleMessages(locale),
+    ]);
     const tCommon = createTranslator({ locale, messages, namespace: "Common" });
     const categoryLabel = published.categoryTitle;
 
