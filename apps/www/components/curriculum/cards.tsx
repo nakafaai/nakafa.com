@@ -6,85 +6,43 @@ import {
   CatalogCard,
   CatalogCardVisual,
 } from "@/components/shared/catalog/card";
-import { resolveCurriculumCatalogArtwork } from "@/lib/curriculum/artwork";
-import { getCurriculumLooks } from "@/lib/curriculum/look";
-import type {
-  CurriculumCatalogEntry,
-  CurriculumViewRoute,
-} from "@/lib/curriculum/model";
-
-/** Renders the public Curriculum index as image cards with explicit actions. */
-export function CurriculumCatalogCards({
-  actionLabel,
-  entries,
-  locale,
-}: {
-  actionLabel: string;
-  entries: readonly CurriculumCatalogEntry[];
-  locale: Locale;
-}) {
-  const routes = Arr.map(entries, ({ route }) => route);
-  const visuals = getCurriculumLooks(routes, (route) =>
-    resolveCurriculumCatalogArtwork(locale, {
-      kind: "program",
-      programKey: route.programKey,
-    })
-  );
-
-  return (
-    <div className="grid grid-cols-1 gap-4 pt-6 pb-24 sm:grid-cols-2">
-      {Arr.map(Arr.zip(routes, visuals), ([route, visual], index) => (
-        <CurriculumCard
-          actionLabel={actionLabel}
-          key={route.publicPath}
-          locale={locale}
-          preload={index === 0}
-          route={route}
-          visual={visual}
-        />
-      ))}
-    </div>
-  );
-}
-
-/** Renders curriculum child routes with reviewed art or an identity tile. */
-export function CurriculumChildCards({
-  actionLabel,
-  locale,
-  routes,
-}: {
-  actionLabel: string;
-  locale: Locale;
-  routes: readonly CurriculumViewRoute[];
-}) {
-  const visuals = getCurriculumLooks(routes, (route) =>
-    resolveCurriculumCatalogArtwork(locale, {
-      kind: "route",
-      nodeKey: route.nodeKey,
-      programKey: route.programKey,
-    })
-  );
-
-  return (
-    <div className="grid grid-cols-1 gap-4 pt-6 pb-24 sm:grid-cols-2">
-      {Arr.map(Arr.zip(routes, visuals), ([route, visual], index) => (
-        <CurriculumCard
-          actionLabel={actionLabel}
-          key={route.publicPath}
-          locale={locale}
-          preload={index === 0}
-          route={route}
-          visual={visual}
-        />
-      ))}
-    </div>
-  );
-}
+import type { CurriculumViewRoute } from "@/lib/curriculum/model";
 
 /**
- * Renders one curriculum card. Its `visual` is the source of its reviewed
- * artwork, or the look that its grid gave to its tile when it has no artwork.
+ * Renders one grid of curriculum cards with explicit actions. Each card carries
+ * its visual: the reviewed artwork of its route, or the look that its list gave
+ * to its tile. The server chooses the visuals, so this module never reads the
+ * server-only look module.
  */
+export function CurriculumCardGrid({
+  actionLabel,
+  cards,
+  locale,
+}: {
+  actionLabel: string;
+  cards: readonly {
+    readonly route: CurriculumViewRoute;
+    readonly visual: TileLook | string;
+  }[];
+  locale: Locale;
+}) {
+  return (
+    <div className="grid grid-cols-1 gap-4 pt-6 pb-24 sm:grid-cols-2">
+      {Arr.map(cards, ({ route, visual }, index) => (
+        <CurriculumCard
+          actionLabel={actionLabel}
+          key={route.publicPath}
+          locale={locale}
+          preload={index === 0}
+          route={route}
+          visual={visual}
+        />
+      ))}
+    </div>
+  );
+}
+
+/** Renders one curriculum card with its visual and its page link. */
 function CurriculumCard({
   actionLabel,
   locale,

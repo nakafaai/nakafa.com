@@ -2,14 +2,11 @@ import { ORGANIZATION } from "@repo/seo/json-ld/constants";
 import { Array as Arr, Schema } from "effect";
 import type { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 
-/** One JSON-LD node as the head seam carries it. */
-type JsonLdNode = Readonly<Record<string, unknown>>;
-
 /** The visible hierarchy of one page, as `createBreadcrumbItems` builds it. */
 type BreadcrumbItems = ReturnType<typeof createBreadcrumbItems>;
 
 /** The breadcrumb node of a page, or none when the hierarchy is empty. */
-export function readBreadcrumbNodes(items: BreadcrumbItems): JsonLdNode[] {
+export function readBreadcrumbNodes(items: BreadcrumbItems) {
   if (items.length === 0) {
     return [];
   }
@@ -22,7 +19,6 @@ export function readBreadcrumbNodes(items: BreadcrumbItems): JsonLdNode[] {
   ];
 }
 
-/** The collection node that lists the pages of one index. */
 const CollectionPageInput = Schema.Struct({
   description: Schema.String,
   items: Schema.Array(
@@ -32,9 +28,8 @@ const CollectionPageInput = Schema.Struct({
   url: Schema.String,
 });
 
-export function makeCollectionPageNode(
-  input: typeof CollectionPageInput.Type
-): JsonLdNode {
+/** The collection node of one index, with each of its pages as a part. */
+export function makeCollectionPageNode(input: typeof CollectionPageInput.Type) {
   return {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
@@ -47,7 +42,6 @@ export function makeCollectionPageNode(
   };
 }
 
-/** The book node of one Quran surah. */
 const BookInput = Schema.Struct({
   author: Schema.Struct({
     "@type": Schema.Literal("Person"),
@@ -61,7 +55,8 @@ const BookInput = Schema.Struct({
   url: Schema.String,
 });
 
-export function makeBookNode(input: typeof BookInput.Type): JsonLdNode {
+/** The book node of one Quran surah. */
+export function makeBookNode(input: typeof BookInput.Type) {
   return {
     "@context": "https://schema.org",
     "@type": "Book",

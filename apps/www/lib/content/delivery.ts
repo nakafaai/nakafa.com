@@ -23,6 +23,15 @@ export function publicContentHeaders(tags: readonly string[]) {
 }
 
 /**
+ * The scopes that every learn document depends on. The learn shell embeds the
+ * article navigation on each of its pages, so an article release purges those
+ * documents through the article tag as well as the article pages.
+ */
+export const LEARN_SHELL_CACHE_SCOPES: readonly ContentCacheScope[] = [
+  "article",
+];
+
+/**
  * The CDN tags of one document: the mutable scope tags it reads, and the
  * immutable artifact tags of the snapshots it was read from. A release purges
  * by scope, and an artifact tag names one signed snapshot for good.

@@ -251,7 +251,7 @@ export async function getPublishedArticleCategory(
     )
   );
   applyContentCache("article");
-  return Option.getOrNull(category);
+  return category;
 }
 
 /**
