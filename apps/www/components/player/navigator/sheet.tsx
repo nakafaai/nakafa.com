@@ -6,6 +6,8 @@ import {
   SheetPopup,
   SheetTitle,
 } from "@repo/design-system/components/ui/sheet";
+import { monospace } from "@repo/design-system/lib/monospace";
+import { cn } from "cn";
 import { useTranslations } from "next-intl";
 import { type ReactNode, useRef } from "react";
 import { usePlayer } from "@/components/player/provider";
@@ -47,7 +49,7 @@ export function PlayerSheet({ children }: { children: ReactNode }) {
         <SheetHeader>
           <SheetTitle>{t("navigator")}</SheetTitle>
         </SheetHeader>
-        <div className="grid gap-4 p-4" ref={body}>
+        <div className={cn(monospace, "grid gap-4 p-4")} ref={body}>
           {children}
         </div>
       </SheetPopup>

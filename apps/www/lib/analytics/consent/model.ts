@@ -49,8 +49,10 @@ const unavailableAnalyticsConsent = {
   isAvailable: false,
   isPromptOpen: false,
   preferences: initialConsentPreferences,
+  preferencesWarm: false,
   setPreferencesOpen: ignoreUnavailableConsentAction,
   status: unavailableAnalyticsConsentStatus,
+  warmPreferences: ignoreUnavailableConsentAction,
 };
 
 /**
@@ -66,8 +68,10 @@ export function useAnalyticsConsentModel(store: AnalyticsConsentStore) {
   const hasRuntimeError = useStore(store, (state) => state.hasRuntimeError);
   const hasStorageError = useStore(store, (state) => state.hasStorageError);
   const preferences = useStore(store, (state) => state.preferences);
+  const preferencesWarm = useStore(store, (state) => state.preferencesWarm);
   const sessionOverrides = useStore(store, (state) => state.sessionOverrides);
   const setPreferences = useStore(store, (state) => state.setPreferences);
+  const warmPreferences = useStore(store, (state) => state.warmPreferences);
   const setSessionOverrides = useStore(
     store,
     (state) => state.setSessionOverrides
@@ -138,6 +142,9 @@ export function useAnalyticsConsentModel(store: AnalyticsConsentStore) {
   });
 
   function setPreferencesOpen(isOpen: boolean) {
+    if (isOpen) {
+      warmPreferences();
+    }
     setPreferences((current) =>
       updateConsentPreferences({
         current,
@@ -172,8 +179,10 @@ export function useAnalyticsConsentModel(store: AnalyticsConsentStore) {
           isAvailable: !isPreviewChild,
           isPromptOpen: sessionPolicy.isPromptOpen,
           preferences,
+          preferencesWarm,
           setPreferencesOpen,
           status: sessionPolicy.status,
+          warmPreferences,
         };
 
   return {

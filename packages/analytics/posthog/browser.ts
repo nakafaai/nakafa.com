@@ -22,7 +22,14 @@ import {
   startPageviewTracking,
 } from "@repo/analytics/posthog/pageview";
 import { postHogPublicKeys } from "@repo/analytics/public";
-import { DateTime, Effect, MutableRef, Option, Schema } from "effect";
+import {
+  Array as Arr,
+  DateTime,
+  Effect,
+  MutableRef,
+  Option,
+  Schema,
+} from "effect";
 import type { PostHog } from "posthog-js";
 
 type BrowserAnalyticsClient = Pick<
@@ -75,6 +82,20 @@ const identityAuthorization = MutableRef.make<AnalyticsIdentityAuthorization>({
 /** Fires the deferred landing view once: the first counted view consumes it. */
 const initialPageviewCaptured = MutableRef.make(false);
 
+/** Sends one handled exception through a client that has loaded. */
+type ExceptionCapture = (client: BrowserAnalyticsClient) => void;
+
+/**
+ * Handled exceptions raised before the baseline client loads, in the order they
+ * happened. The idle wait can run for seconds, so these wait here and reach
+ * PostHog once the client exists. The queue keeps its first entries and stops
+ * there, so a load that never completes cannot grow it without limit.
+ */
+const PENDING_EXCEPTION_LIMIT = 20;
+const pendingExceptionCaptures = MutableRef.make<readonly ExceptionCapture[]>(
+  []
+);
+
 /** Raised when the baseline client cannot initialize or upgrade. */
 export class BrowserAnalyticsLoadFailed extends Schema.TaggedError<BrowserAnalyticsLoadFailed>()(
   "BrowserAnalyticsLoadFailed",
@@ -116,6 +137,14 @@ function captureInitialPageview(client: BrowserAnalyticsClient) {
   }
   client.capture("$pageview");
   MutableRef.set(initialPageviewCaptured, true);
+}
+
+/** Sends the exceptions that waited for the client, then empties the queue. */
+function sendPendingExceptionCaptures(client: BrowserAnalyticsClient) {
+  Arr.forEach(MutableRef.get(pendingExceptionCaptures), (capture) =>
+    capture(client)
+  );
+  MutableRef.set(pendingExceptionCaptures, []);
 }
 
 /**
@@ -202,6 +231,7 @@ export const enableBaselineAnalytics = Effect.fn(
       catch: browserAnalyticsLoadFailure,
     });
     MutableRef.set(analyticsClient, client);
+    yield* Effect.sync(() => sendPendingExceptionCaptures(client));
     // A navigation that lands before the first settled admission counts
     // instead, so the admission must not recount the same destination.
     yield* startPageviewTracking(client, () =>
@@ -363,7 +393,9 @@ export function resetBrowserAnalyticsIdentity(resetDeviceId = false) {
  *
  * The minimized operational payload carries no identity or user content, so
  * scrubbed reliability reporting stays available in every consent state. The
- * baseline before_send gate additionally minimizes event URLs.
+ * baseline before_send gate additionally minimizes event URLs. Before the
+ * baseline client loads, the capture waits in a bounded queue and is sent once
+ * the client loads.
  */
 export function captureException(
   error: unknown,
@@ -373,8 +405,18 @@ export function captureException(
   if (Option.isNone(decodedProperties)) {
     return;
   }
-  MutableRef.get(analyticsClient)?.captureException(
-    createOperationalException(error, decodedProperties.value),
-    decodedProperties.value
-  );
+  const capture: ExceptionCapture = (client) =>
+    client.captureException(
+      createOperationalException(error, decodedProperties.value),
+      decodedProperties.value
+    );
+  const client = MutableRef.get(analyticsClient);
+  if (client) {
+    capture(client);
+    return;
+  }
+  const pending = MutableRef.get(pendingExceptionCaptures);
+  if (pending.length < PENDING_EXCEPTION_LIMIT) {
+    MutableRef.set(pendingExceptionCaptures, Arr.append(pending, capture));
+  }
 }

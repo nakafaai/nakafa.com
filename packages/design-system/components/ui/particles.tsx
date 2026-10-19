@@ -33,6 +33,11 @@ const MIN_MAGNETISM = 0.1;
 const MAX_MAGNETISM = 4.1;
 const REMAP_EDGE_END = 20;
 const ALPHA_FADE_IN_SPEED = 0.02;
+/**
+ * Caps the backing store at two device pixels per CSS pixel. A 3x screen would
+ * otherwise draw 2.25 times the pixels for little visible gain.
+ */
+const MAX_CANVAS_PIXEL_RATIO = 2;
 
 /**
  * One particle. The animation loop updates position and alpha in place, so
@@ -89,14 +94,11 @@ function remapValue({
  */
 function updateAlpha(circle: Circle, width: number, height: number) {
   // Handle the alpha value
-  const edge = [
+  const closestEdge = Math.min(
     circle.x + circle.translateX - circle.size, // distance from left edge
     width - circle.x - circle.translateX - circle.size, // distance from right edge
     circle.y + circle.translateY - circle.size, // distance from top edge
-    height - circle.y - circle.translateY - circle.size, // distance from bottom edge
-  ];
-  const closestEdge = Arr.reduce(edge, Number.POSITIVE_INFINITY, (a, b) =>
-    Math.min(a, b)
+    height - circle.y - circle.translateY - circle.size // distance from bottom edge
   );
   const remapClosestEdge = Number.parseFloat(
     remapValue({
@@ -154,7 +156,10 @@ export function Particles({
   const mouse = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const canvasSize = useRef<{ w: number; h: number }>({ w: 0, h: 0 });
   const animationFrameRef = useRef<number | null>(null);
-  const dpr = typeof window === "undefined" ? 1 : window.devicePixelRatio;
+  const dpr =
+    typeof window === "undefined"
+      ? 1
+      : Math.min(window.devicePixelRatio, MAX_CANVAS_PIXEL_RATIO);
 
   const documentVisibility = useDocumentVisibility();
   const isMobile = useMediaQuery(TAILWIND_MEDIA_QUERIES.belowMd);
@@ -211,6 +216,9 @@ export function Particles({
     };
   }, [rng]);
 
+  // Every circle of a frame shares one colour; each circle sets only its alpha.
+  const fillColor = isThemeDark ? "oklch(0.985 0 0)" : "oklch(0.145 0 0)";
+
   const drawCircle = useCallback(
     (circle: Circle) => {
       if (context.current) {
@@ -218,14 +226,12 @@ export function Particles({
         context.current.translate(translateX, translateY);
         context.current.beginPath();
         context.current.arc(x, y, size, 0, 2 * Math.PI);
-        context.current.fillStyle = isThemeDark
-          ? `oklch(0.985 0 0 / ${alpha})`
-          : `oklch(0.145 0 0 / ${alpha})`;
+        context.current.globalAlpha = alpha;
         context.current.fill();
         context.current.setTransform(dpr, 0, 0, dpr, 0, 0);
       }
     },
-    [dpr, isThemeDark]
+    [dpr]
   );
 
   const clearContext = useCallback(() => {
@@ -236,8 +242,9 @@ export function Particles({
         canvasSize.current.w,
         canvasSize.current.h
       );
+      context.current.fillStyle = fillColor;
     }
-  }, []);
+  }, [fillColor]);
 
   const drawParticles = useCallback(
     (showImmediately: boolean) => {
@@ -273,6 +280,8 @@ export function Particles({
 
   const onMouseMove = useCallback(() => {
     if (canvasRef.current) {
+      // Read per frame: layout can move the canvas without a scroll or resize
+      // event, and the frame writes no DOM, so this read stays cheap.
       const rect = canvasRef.current.getBoundingClientRect();
       const { w, h } = canvasSize.current;
       const x = mousePositionRef.current.x - rect.left - w / 2;
@@ -333,14 +342,7 @@ export function Particles({
         }
       } else {
         MutableList.append(passed, circle);
-        drawCircle({
-          ...circle,
-          x: circle.x,
-          y: circle.y,
-          translateX: circle.translateX,
-          translateY: circle.translateY,
-          alpha: circle.alpha,
-        });
+        drawCircle(circle);
       }
     }
     circles.current = Arr.appendAll(

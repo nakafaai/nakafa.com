@@ -84,7 +84,7 @@ describe("two-tier PostHog browser runtime", () => {
     stubWindow();
   });
 
-  it.effect("drops capture calls until the baseline client loads", () =>
+  it.effect("holds exception captures until the baseline client loads", () =>
     Effect.gen(function* () {
       const analytics = yield* loadBrowserAnalytics();
 
@@ -98,6 +98,39 @@ describe("two-tier PostHog browser runtime", () => {
       expect(client.capture).not.toHaveBeenCalled();
       expect(client.captureException).not.toHaveBeenCalled();
       expect(client.opt_out_capturing).not.toHaveBeenCalled();
+
+      yield* analytics.enableBaselineAnalytics(loadClient);
+
+      expect(client.captureException).toHaveBeenCalledExactlyOnceWith(
+        expect.objectContaining({
+          name: "OperationalError(pre-baseline-test)",
+        }),
+        { source: "pre-baseline-test" }
+      );
+    })
+  );
+
+  it.effect("keeps the first held captures when the wait overflows", () =>
+    Effect.gen(function* () {
+      const analytics = yield* loadBrowserAnalytics();
+
+      for (let index = 0; index < 25; index += 1) {
+        analytics.captureException(new Error("blocked"), {
+          source: `pending-${index}`,
+        });
+      }
+      yield* analytics.enableBaselineAnalytics(loadClient);
+
+      expect(client.captureException).toHaveBeenCalledTimes(20);
+      expect(client.captureException).toHaveBeenNthCalledWith(
+        1,
+        expect.anything(),
+        { source: "pending-0" }
+      );
+      expect(client.captureException).toHaveBeenLastCalledWith(
+        expect.anything(),
+        { source: "pending-19" }
+      );
     })
   );
 
