@@ -4,7 +4,10 @@ import { LOCAL_AUTH_SECRET } from "@repo/backend/scripts/content/acceptance/auth
 import type { runAcceptanceCommand } from "@repo/backend/scripts/content/acceptance/command";
 import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
 import { SessionCookie } from "@repo/backend/scripts/content/acceptance/fixture";
-import { createAcceptanceLearner } from "@repo/backend/scripts/content/acceptance/learner";
+import {
+  createAcceptanceLearner,
+  learnerMode,
+} from "@repo/backend/scripts/content/acceptance/learner";
 import { makeSignature } from "better-auth/crypto";
 import {
   Array as Arr,
@@ -253,5 +256,39 @@ describe("synthetic acceptance learner", () => {
       expect(MutableList.toArray(specs)).toHaveLength(1);
       expect(yield* fs.exists(`${root}/cookie.json`)).toBe(false);
     }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+  );
+
+  it.effect(
+    "writes the cookie to the file that the learner mode names and ignores an extra argument",
+    () =>
+      Effect.gen(function* () {
+        const { fs, root } = yield* fixture;
+        answerCommands();
+
+        yield* learnerMode.run(root, [`${root}/mode.json`, "ignored"]);
+
+        const cookie = yield* fs
+          .readFileString(`${root}/mode.json`)
+          .pipe(Effect.flatMap(Schema.decodeEffect(SessionCookie)));
+        expect(cookie.name).toBe("better-auth.session_token");
+      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+  );
+
+  it.effect(
+    "refuses the learner mode without its cookie file before any operation",
+    () =>
+      Effect.gen(function* () {
+        const { root } = yield* fixture;
+        const specs = answerCommands();
+
+        expect(
+          yield* learnerMode.run(root, []).pipe(Effect.flip)
+        ).toMatchObject({
+          _tag: "AcceptanceRuntimeError",
+          message: "Usage: acceptance learner <cookie-file>",
+        });
+        expect(MutableList.toArray(specs)).toEqual([]);
+        expect(mocks.read).not.toHaveBeenCalled();
+      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
   );
 });

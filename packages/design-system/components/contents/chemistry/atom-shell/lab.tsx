@@ -9,6 +9,7 @@ import {
 } from "@repo/design-system/components/contents/chemistry/atom-shell/data";
 import { getAtomShellReadings } from "@repo/design-system/components/contents/chemistry/atom-shell/readings";
 import { ShellModelCanvas } from "@repo/design-system/components/contents/chemistry/shell-model/canvas";
+import { createShellModelSampleStore } from "@repo/design-system/components/contents/chemistry/shell-model/store";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import {
   ToggleGroup,
@@ -27,6 +28,7 @@ import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { useState } from "react";
+import { useStore } from "zustand";
 
 interface AtomShellLabProps {
   /** The sample the lab opens on. It starts at calcium when none is given. */
@@ -67,8 +69,11 @@ export function AtomShellLab({
   live = true,
   onSampleIdChange,
 }: AtomShellLabProps) {
-  const [selectedSampleId, setSelectedSampleId] =
-    useState<AtomShellSampleId>(defaultSampleId);
+  const [store] = useState(() =>
+    createShellModelSampleStore<AtomShellSampleId>(defaultSampleId)
+  );
+  const selectedSampleId = useStore(store, (state) => state.sampleId);
+  const selectSample = useStore(store, (state) => state.selectSample);
   const selectedSample = ATOM_SHELL_SAMPLES[selectedSampleId];
   const selectedLabels = labels.samples[selectedSampleId];
   const t = useTranslations("Common");
@@ -88,7 +93,7 @@ export function AtomShellLab({
       return;
     }
 
-    setSelectedSampleId(value);
+    selectSample(value);
     onSampleIdChange?.(value);
   }
 

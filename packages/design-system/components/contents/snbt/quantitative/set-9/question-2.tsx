@@ -1,11 +1,13 @@
-import { LineEquation } from "@repo/design-system/components/contents/mathematics/line/equation";
+import { LineEquationCard } from "@repo/design-system/components/contents/mathematics/line/equation";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { VisualCardHeader } from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
-import type { ComponentProps } from "react";
+import type { ComponentProps, ReactNode } from "react";
 
-interface GraphProps
-  extends Pick<ComponentProps<typeof LineEquation>, "title" | "description"> {
+interface GraphProps {
+  description: ReactNode;
   mode?: "question" | "answer";
+  title: ReactNode;
 }
 
 // Coordinates are scaled to one-third of the source diagram for readability.
@@ -42,7 +44,7 @@ const questionData = [
     smooth: false,
     showPoints: false,
   },
-] satisfies ComponentProps<typeof LineEquation>["data"];
+] satisfies ComponentProps<typeof LineEquationCard>["data"];
 
 const answerSegments = [
   {
@@ -66,18 +68,17 @@ const answerSegments = [
     showPoints: true,
     labels: [{ text: <InlineMath math="E" />, at: 0, offset: [-1, 0.5, 0] }],
   },
-] satisfies ComponentProps<typeof LineEquation>["data"];
+] satisfies ComponentProps<typeof LineEquationCard>["data"];
 
 const answerData = [...questionData, ...answerSegments];
 
 /** Renders the quantitative graph for SNBT set 9 question 2. */
 export function Graph({ title, description, mode = "question" }: GraphProps) {
   return (
-    <LineEquation
+    <LineEquationCard
       cameraPosition={[0, 0, 15]}
       data={mode === "answer" ? answerData : questionData}
-      description={description}
-      title={title}
+      header={<VisualCardHeader description={description} title={title} />}
     />
   );
 }

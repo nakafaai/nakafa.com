@@ -1,7 +1,10 @@
 "use client";
 
 import { BiologyCallouts } from "@repo/design-system/components/contents/biology/callouts";
-import type { BiologySceneColors } from "@repo/design-system/components/contents/biology/data";
+import {
+  useBiologyColors,
+  useBiologyItemSelection,
+} from "@repo/design-system/components/contents/biology/context";
 import {
   BiologyLabFrame,
   type BiologyLabProps,
@@ -13,6 +16,7 @@ import {
   VirusTube,
 } from "@repo/design-system/components/contents/biology/virus-parts";
 import type { NarrowCameraPose } from "@repo/design-system/lib/geometry/camera";
+import type { ComponentType } from "react";
 
 const REPLICATION_SCENE_POSITION = [0, 0.06, 0] as const;
 const REPLICATION_VIEW = {
@@ -48,6 +52,13 @@ const LYSOGENIC_LABEL_TARGETS = [
 
 type VirusReplicationMode = "both" | "lytic" | "lysogenic";
 
+/** The scene that each mode of the lab shows. */
+const VIRUS_REPLICATION_SCENES = {
+  both: VirusReplicationScene,
+  lysogenic: LysogenicReplicationScene,
+  lytic: LyticReplicationScene,
+} satisfies Record<VirusReplicationMode, ComponentType<BiologySceneProps>>;
+
 /**
  * Renders the viral replication lab with lytic and lysogenic cycle views.
  */
@@ -55,49 +66,32 @@ export function VirusReplicationLab({
   mode = "both",
   ...props
 }: BiologyLabProps & { mode?: VirusReplicationMode }) {
-  const Scene = getVirusReplicationScene(mode);
+  const Scene = VIRUS_REPLICATION_SCENES[mode];
 
   return <BiologyLabFrame scene={Scene} view={REPLICATION_VIEW} {...props} />;
 }
 
-function getVirusReplicationScene(mode: VirusReplicationMode) {
-  if (mode === "lytic") {
-    return LyticReplicationScene;
-  }
-
-  if (mode === "lysogenic") {
-    return LysogenicReplicationScene;
-  }
-
-  return VirusReplicationScene;
-}
-
-function LyticReplicationScene({ colors, item }: BiologySceneProps) {
+function LyticReplicationScene({ item }: BiologySceneProps) {
   return (
     <group
       position={REPLICATION_SCENE_POSITION}
       scale={REPLICATION_SCENE_SCALE}
     >
-      <LyticCycle colors={colors} />
-      <BiologyCallouts
-        callouts={item.callouts}
-        color={colors.text}
-        targets={LYTIC_LABEL_TARGETS}
-      />
+      <LyticCycle />
+      <BiologyCallouts callouts={item.callouts} targets={LYTIC_LABEL_TARGETS} />
     </group>
   );
 }
 
-function LysogenicReplicationScene({ colors, item }: BiologySceneProps) {
+function LysogenicReplicationScene({ item }: BiologySceneProps) {
   return (
     <group
       position={REPLICATION_SCENE_POSITION}
       scale={REPLICATION_SCENE_SCALE}
     >
-      <LysogenicCycle colors={colors} />
+      <LysogenicCycle />
       <BiologyCallouts
         callouts={item.callouts}
-        color={colors.text}
         targets={LYSOGENIC_LABEL_TARGETS}
       />
     </group>
@@ -107,20 +101,22 @@ function LysogenicReplicationScene({ colors, item }: BiologySceneProps) {
 /**
  * Switches between immediate virion production and genome dormancy.
  */
-function VirusReplicationScene(props: BiologySceneProps) {
-  const { selectedIndex } = props;
+function VirusReplicationScene({ item }: BiologySceneProps) {
+  const selectedIndex = useBiologyItemSelection((state) => state.selectedIndex);
 
   if (selectedIndex === 1) {
-    return <LysogenicReplicationScene {...props} />;
+    return <LysogenicReplicationScene item={item} />;
   }
 
-  return <LyticReplicationScene {...props} />;
+  return <LyticReplicationScene item={item} />;
 }
 
 /**
  * Shows the full lytic cycle at once so students do not need five separate tabs.
  */
-function LyticCycle({ colors }: Pick<BiologySceneProps, "colors">) {
+function LyticCycle() {
+  const colors = useBiologyColors();
+
   return (
     <group>
       <HostCell
@@ -156,8 +152,8 @@ function LyticCycle({ colors }: Pick<BiologySceneProps, "colors">) {
         />
       </group>
 
-      <NewVirionPreview colors={colors} position={[0.78, -0.12, 0.18]} />
-      <NewVirionPreview colors={colors} position={[1.1, 0.18, -0.16]} />
+      <NewVirionPreview position={[0.78, -0.12, 0.18]} />
+      <NewVirionPreview position={[1.1, 0.18, -0.16]} />
     </group>
   );
 }
@@ -165,7 +161,9 @@ function LyticCycle({ colors }: Pick<BiologySceneProps, "colors">) {
 /**
  * Shows a viral genome carried quietly with the host genome before activation.
  */
-function LysogenicCycle({ colors }: Pick<BiologySceneProps, "colors">) {
+function LysogenicCycle() {
+  const colors = useBiologyColors();
+
   return (
     <group>
       <HostCell
@@ -232,12 +230,12 @@ function HostCell({
  * Shows newly assembled phage particles inside the host as a secondary cue.
  */
 function NewVirionPreview({
-  colors,
   position,
 }: {
-  colors: BiologySceneColors;
   position: readonly [number, number, number];
 }) {
+  const colors = useBiologyColors();
+
   return (
     <group position={position} scale={0.34}>
       <BacteriophageModel colors={colors} />

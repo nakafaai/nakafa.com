@@ -1,12 +1,16 @@
-import { LineEquation } from "@repo/design-system/components/contents/mathematics/line/equation";
+import { LineEquationCard } from "@repo/design-system/components/contents/mathematics/line/equation";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { VisualCardHeader } from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
-import type { ComponentProps } from "react";
+import type { ReactNode } from "react";
+
+interface GraphProps {
+  description: ReactNode;
+  title: ReactNode;
+}
 
 /** Renders the quantitative graph for SNBT set 10 question 2. */
-export function Graph(
-  props: Pick<ComponentProps<typeof LineEquation>, "title" | "description">
-) {
+export function Graph({ description, title }: GraphProps) {
   const LENGTH = 5;
   const ANGLE = (40 * Math.PI) / 180; // 40 degrees
 
@@ -35,7 +39,7 @@ export function Graph(
   ];
 
   return (
-    <LineEquation
+    <LineEquationCard
       cameraPosition={[0, 0, 13.5]}
       data={[
         {
@@ -81,7 +85,7 @@ export function Graph(
           ],
         },
       ]}
-      {...props}
+      header={<VisualCardHeader description={description} title={title} />}
     />
   );
 }

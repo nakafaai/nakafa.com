@@ -1,15 +1,18 @@
 "use client";
 
 import { BacillusBacteriumModel } from "@repo/design-system/components/contents/biology/bacteria-parts";
-import type { BiologySceneProps } from "@repo/design-system/components/contents/biology/lab-frame";
+import { useBiologyColors } from "@repo/design-system/components/contents/biology/context";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import type { ReactNode } from "react";
 
 /** Shows a prokaryotic cell without a nucleus but with nucleoid and ribosomes. */
 export function BacterialStructure({
-  colors,
   nucleoidDnaLabel,
-}: Pick<BiologySceneProps, "colors"> & { nucleoidDnaLabel?: ReactNode }) {
+}: {
+  nucleoidDnaLabel?: ReactNode;
+}) {
+  const colors = useBiologyColors();
+
   return (
     <group>
       <group rotation={[0, 0, -0.08]}>

@@ -42,22 +42,8 @@ interface Props {
   title: ReactNode;
 }
 
-/** Renders the interactive function-machine lesson card. */
+/** Renders the interactive function-machine lesson card: its input and output controls, and its values. */
 export function FunctionMachine({ title, description, inputLabel }: Props) {
-  return (
-    <VisualCard>
-      <VisualCardHeader description={description} title={title} />
-      <Machine inputLabel={inputLabel} />
-    </VisualCard>
-  );
-}
-
-interface MachineProps {
-  inputLabel: string;
-}
-
-/** Provides the interactive linear-function input and output controls. */
-function Machine({ inputLabel }: MachineProps) {
   const t = useTranslations("Common");
   const format = useFormatter();
   const [input, setInput] = useState<number>(DEFAULT_INPUT);
@@ -66,7 +52,8 @@ function Machine({ inputLabel }: MachineProps) {
     mathNumber(format.number(value, MATH_NUMBER_OPTIONS));
 
   return (
-    <>
+    <VisualCard>
+      <VisualCardHeader description={description} title={title} />
       <VisualCardToolbar>
         <NumberField
           formatOptions={{
@@ -152,6 +139,6 @@ function Machine({ inputLabel }: MachineProps) {
           />
         </VisualCardFacts>
       </VisualCardFooter>
-    </>
+    </VisualCard>
   );
 }

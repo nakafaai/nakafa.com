@@ -1,10 +1,7 @@
 import { useReducedMotion } from "@mantine/hooks";
 import { useFrame } from "@react-three/fiber";
-import type {
-  ShellModelSample,
-  ShellModelSceneColors,
-  ShellModelShells,
-} from "@repo/design-system/components/contents/chemistry/shell-model/data";
+import { useShellModel } from "@repo/design-system/components/contents/chemistry/shell-model/context";
+import type { ShellModelShells } from "@repo/design-system/components/contents/chemistry/shell-model/data";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
@@ -27,20 +24,12 @@ const NUCLEUS_LABEL_OUTLINE_WIDTH = 0.012;
 /**
  * Renders a neutral atom as animated electron shells.
  */
-export function ShellModelScene({
-  colors,
-  outerShellKey,
-  sample,
-  shells,
-}: {
-  colors: ShellModelSceneColors;
-  outerShellKey: string;
-  sample: ShellModelSample;
-  shells: ShellModelShells;
-}) {
+export function ShellModelScene() {
+  const { outerShellKey, shells } = useShellModel();
+
   return (
     <group rotation={[-0.28, 0, 0]} scale={1.12}>
-      <Nucleus colors={colors} sample={sample} />
+      <Nucleus />
 
       {Arr.map(shells, (shell, shellIndex) => {
         const shellConfig = SHELL_RENDER_CONFIG[shellIndex];
@@ -51,7 +40,6 @@ export function ShellModelScene({
 
         return (
           <ShellRing
-            colors={colors}
             isOuterShell={shell.key === outerShellKey}
             key={shell.key}
             radius={shellConfig.radius}
@@ -69,7 +57,6 @@ export function ShellModelScene({
 
         return (
           <OrbitingShellElectrons
-            colors={colors}
             isOuterShell={shell.key === outerShellKey}
             key={`electrons-${shell.key}`}
             radius={shellConfig.radius}
@@ -86,13 +73,8 @@ export function ShellModelScene({
 /**
  * Shows the nucleus as the visual anchor for the shell model.
  */
-function Nucleus({
-  colors,
-  sample,
-}: {
-  colors: ShellModelSceneColors;
-  sample: ShellModelSample;
-}) {
+function Nucleus() {
+  const { colors } = useShellModel();
   return (
     <group>
       <mesh castShadow>
@@ -103,7 +85,7 @@ function Nucleus({
           roughness={0.42}
         />
       </mesh>
-      <NucleusLabel colors={colors} sample={sample} />
+      <NucleusLabel />
     </group>
   );
 }
@@ -112,13 +94,8 @@ function Nucleus({
  * Pins the element label to the visible side of the nucleus, matching the
  * particle-label pattern used in the subatomic-particles scene.
  */
-function NucleusLabel({
-  colors,
-  sample,
-}: {
-  colors: ShellModelSceneColors;
-  sample: ShellModelSample;
-}) {
+function NucleusLabel() {
+  const { colors, sample } = useShellModel();
   return (
     <ThreeLabel
       color={colors.sphereText}
@@ -138,16 +115,15 @@ function NucleusLabel({
  * Draws one shell ring and its readable shell label.
  */
 function ShellRing({
-  colors,
   isOuterShell,
   radius,
   shellKey,
 }: {
-  colors: ShellModelSceneColors;
   isOuterShell: boolean;
   radius: number;
   shellKey: string;
 }) {
+  const { colors } = useShellModel();
   const shellColor = isOuterShell ? colors.outerShell : colors.shell;
   const opacity = isOuterShell ? 0.95 : 0.42;
 
@@ -179,14 +155,12 @@ function ShellRing({
  * them.
  */
 function OrbitingShellElectrons({
-  colors,
   isOuterShell,
   radius,
   shell,
   shellIndex,
   speed,
 }: {
-  colors: ShellModelSceneColors;
   isOuterShell: boolean;
   radius: number;
   shell: ShellModelShells[number];
@@ -229,7 +203,6 @@ function OrbitingShellElectrons({
 
             return (
               <Electron
-                colors={colors}
                 isOuterShell={isOuterShell}
                 key={`${shell.key}-${electronIndex}`}
                 position={[x, 0, z]}
@@ -247,16 +220,15 @@ function OrbitingShellElectrons({
  * Renders one electron marker on a shell.
  */
 function Electron({
-  colors,
   isOuterShell,
   position,
   radius,
 }: {
-  colors: ShellModelSceneColors;
   isOuterShell: boolean;
   position: readonly [number, number, number];
   radius: number;
 }) {
+  const { colors } = useShellModel();
   return (
     <mesh castShadow position={position}>
       <sphereGeometry args={[radius, 24, 16]} />

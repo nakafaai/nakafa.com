@@ -2,6 +2,7 @@
 
 import { useReducedMotion } from "@mantine/hooks";
 import { useFrame } from "@react-three/fiber";
+import { useParabolicMotion } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement/context";
 import {
   getParabolicLoopSample,
   getProjectilePoint,
@@ -32,22 +33,19 @@ const LAUNCH_COLORS = {
   "high-angle": getColor("VIOLET"),
 } satisfies Record<ParabolicLaunchId, string>;
 
-export function ProjectileBallScene({
-  motion,
-}: {
-  motion: ParabolicMotionState;
-}) {
+export function ProjectileBallScene() {
   return (
     <group>
-      <ProjectileRange motion={motion} />
-      <Trajectory motion={motion} />
-      <GhostBalls motion={motion} />
-      <AnimatedBall motion={motion} />
+      <ProjectileRange />
+      <Trajectory />
+      <GhostBalls />
+      <AnimatedBall />
     </group>
   );
 }
 
-function Trajectory({ motion }: { motion: ParabolicMotionState }) {
+function Trajectory() {
+  const motion = useParabolicMotion();
   const curve = useMemo(() => {
     const points = Array.from(
       { length: PARABOLIC_SCENE.trailSampleCount },
@@ -74,7 +72,8 @@ function Trajectory({ motion }: { motion: ParabolicMotionState }) {
   );
 }
 
-function GhostBalls({ motion }: { motion: ParabolicMotionState }) {
+function GhostBalls() {
+  const motion = useParabolicMotion();
   return (
     <group>
       {Arr.map(motion.ghostTimes, (time) => {
@@ -109,7 +108,8 @@ function GhostBalls({ motion }: { motion: ParabolicMotionState }) {
   );
 }
 
-function AnimatedBall({ motion }: { motion: ParabolicMotionState }) {
+function AnimatedBall() {
+  const motion = useParabolicMotion();
   const ballRef = useRef<Group>(null);
   const startRef = useRef<number | null>(null);
   const scenarioRef = useRef<ParabolicLaunchId | null>(null);

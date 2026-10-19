@@ -2,6 +2,10 @@ import { runLocalConvex } from "@repo/backend/scripts/content/acceptance/convex"
 import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
 import { SchoolFixture } from "@repo/backend/scripts/content/acceptance/fixture";
 import { readLocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
+import {
+  type AcceptanceMode,
+  decodeModeArguments,
+} from "@repo/backend/scripts/content/acceptance/mode";
 import { JsonTextSchema } from "@repo/utilities/json";
 import { Crypto, Effect, FileSystem, Schema } from "effect";
 import { Hex } from "effect/encoding";
@@ -68,3 +72,23 @@ export const createAcceptanceSchool = Effect.fn(
   const fs = yield* FileSystem.FileSystem;
   yield* fs.writeFileString(output, fixture, { flag: "wx", mode: 0o600 });
 });
+
+/** The usage of the school mode, which names the file that the opened school goes to. */
+const USAGE = "school <school-file>";
+const SchoolArguments = Schema.Tuple([Schema.String]);
+
+/**
+ * The school mode of the acceptance command line: opens one school and writes its
+ * address and name to the file that the command names.
+ */
+export const schoolMode = {
+  mode: "school",
+  usage: USAGE,
+  run: Effect.fn("contentAcceptance.runSchool")(function* (
+    root: string,
+    args: readonly string[]
+  ) {
+    const [output] = yield* decodeModeArguments(USAGE, SchoolArguments, args);
+    return yield* createAcceptanceSchool(root, output);
+  }),
+} satisfies AcceptanceMode;

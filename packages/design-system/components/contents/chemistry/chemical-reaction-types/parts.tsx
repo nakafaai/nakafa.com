@@ -1,7 +1,5 @@
-import type {
-  ChemicalReactionTypeSceneColors,
-  ChemicalReactionTypeScenePoint,
-} from "@repo/design-system/components/contents/chemistry/chemical-reaction-types/data";
+import { useChemicalReactionTypeScene } from "@repo/design-system/components/contents/chemistry/chemical-reaction-types/context";
+import type { ChemicalReactionTypeScenePoint } from "@repo/design-system/components/contents/chemistry/chemical-reaction-types/data";
 import {
   CHEMISTRY_PARTICLE_LABEL_CLOSE_SURFACE_OFFSET_RATIO,
   CHEMISTRY_PARTICLE_LABEL_OUTLINE_WIDTH,
@@ -26,13 +24,8 @@ export const BEAKER_CONTENT_BOTTOM_Y =
 const BEAKER_LIQUID_HEIGHT = BEAKER_LIQUID_SURFACE_Y - BEAKER_CONTENT_BOTTOM_Y;
 const BEAKER_LIQUID_Y = BEAKER_CONTENT_BOTTOM_Y + BEAKER_LIQUID_HEIGHT / 2;
 
-export function Beaker({
-  children,
-  colors,
-}: {
-  children: ReactNode;
-  colors: ChemicalReactionTypeSceneColors;
-}) {
+export function Beaker({ children }: { children: ReactNode }) {
+  const { colors } = useChemicalReactionTypeScene();
   return (
     <group>
       <mesh castShadow receiveShadow>

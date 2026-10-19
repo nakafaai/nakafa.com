@@ -30,24 +30,17 @@ export interface BacteriaLabItemProps extends BiologyLabItemProps {
 
 /** Uses distinct scenes for morphology, inner anatomy, and Gram wall logic. */
 export function BacteriaStructureScene({
-  colors,
   item,
 }: BiologySceneProps<BacteriaLabItemProps>) {
   const scene = item.scene;
 
   if (scene.kind === "structure") {
-    return (
-      <BacterialStructure
-        colors={colors}
-        nucleoidDnaLabel={scene.nucleoidDnaLabel}
-      />
-    );
+    return <BacterialStructure nucleoidDnaLabel={scene.nucleoidDnaLabel} />;
   }
 
   if (scene.kind === "wall") {
     return (
       <GramWallComparison
-        colors={colors}
         gramNegativeLabel={scene.gramNegativeLabel}
         gramPositiveLabel={scene.gramPositiveLabel}
       />
@@ -58,7 +51,6 @@ export function BacteriaStructureScene({
     <BacterialShapes
       bacillusLabel={scene.bacillusLabel}
       coccusLabel={scene.coccusLabel}
-      colors={colors}
       spiralLabel={scene.spiralLabel}
     />
   );

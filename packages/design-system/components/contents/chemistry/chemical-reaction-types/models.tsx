@@ -1,7 +1,9 @@
 import { RoundedBox } from "@react-three/drei";
 import {
-  type ChemicalReactionTypeId,
-  type ChemicalReactionTypeSceneColors,
+  useChemicalReactionTypeScene,
+  useChemicalReactionTypeSelection,
+} from "@repo/design-system/components/contents/chemistry/chemical-reaction-types/context";
+import {
   type ChemicalReactionTypeScenePoint,
   COMBUSTION_TYPE_ID,
   GAS_TYPE_ID,
@@ -62,41 +64,29 @@ const PRODUCT_PHOSPHORUS_POINTS = [
 
 type ReactionPhase = "after" | "before";
 
-export function ReactionModel({
-  colors,
-  phase,
-  typeId,
-}: {
-  colors: ChemicalReactionTypeSceneColors;
-  phase: ReactionPhase;
-  typeId: ChemicalReactionTypeId;
-}) {
+export function ReactionModel({ phase }: { phase: ReactionPhase }) {
+  const typeId = useChemicalReactionTypeSelection((state) => state.typeId);
   if (typeId === COMBUSTION_TYPE_ID) {
-    return <CombustionModel colors={colors} phase={phase} />;
+    return <CombustionModel phase={phase} />;
   }
 
   if (typeId === RUST_TYPE_ID) {
-    return <RustModel colors={colors} phase={phase} />;
+    return <RustModel phase={phase} />;
   }
 
   if (typeId === PRECIPITATE_TYPE_ID) {
-    return <PrecipitateModel colors={colors} phase={phase} />;
+    return <PrecipitateModel phase={phase} />;
   }
 
   if (typeId === GAS_TYPE_ID) {
-    return <GasModel colors={colors} phase={phase} />;
+    return <GasModel phase={phase} />;
   }
 
   return null;
 }
 
-function CombustionModel({
-  colors,
-  phase,
-}: {
-  colors: ChemicalReactionTypeSceneColors;
-  phase: ReactionPhase;
-}) {
+function CombustionModel({ phase }: { phase: ReactionPhase }) {
+  const { colors } = useChemicalReactionTypeScene();
   if (phase === "before") {
     return (
       <group>
@@ -145,13 +135,8 @@ function CombustionModel({
   );
 }
 
-function RustModel({
-  colors,
-  phase,
-}: {
-  colors: ChemicalReactionTypeSceneColors;
-  phase: ReactionPhase;
-}) {
+function RustModel({ phase }: { phase: ReactionPhase }) {
+  const { colors } = useChemicalReactionTypeScene();
   return (
     <group rotation={[-0.12, 0.2, 0]}>
       <RoundedBox args={[1.05, 0.18, 0.62]} radius={0.04} smoothness={3}>
@@ -185,33 +170,16 @@ function RustModel({
   );
 }
 
-function PrecipitateModel({
-  colors,
-  phase,
-}: {
-  colors: ChemicalReactionTypeSceneColors;
-  phase: ReactionPhase;
-}) {
+function PrecipitateModel({ phase }: { phase: ReactionPhase }) {
   return (
-    <Beaker colors={colors}>
-      {phase === "before" ? (
-        <FloatingIons colors={colors} />
-      ) : (
-        <SettledSolid colors={colors} />
-      )}
-    </Beaker>
+    <Beaker>{phase === "before" ? <FloatingIons /> : <SettledSolid />}</Beaker>
   );
 }
 
-function GasModel({
-  colors,
-  phase,
-}: {
-  colors: ChemicalReactionTypeSceneColors;
-  phase: ReactionPhase;
-}) {
+function GasModel({ phase }: { phase: ReactionPhase }) {
+  const { colors } = useChemicalReactionTypeScene();
   return (
-    <Beaker colors={colors}>
+    <Beaker>
       {phase === "before" ? (
         <ParticleCluster
           color={colors.carbon}
