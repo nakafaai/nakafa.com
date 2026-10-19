@@ -69,7 +69,9 @@
     "submitting": "Signing in...",
     "username-action": "Sign in with a username",
     "username-footer": "The card code works once, and sets the password you sign in with.",
-    "username-label": "School username"
+    "username-label": "School username",
+    "outsider-hint": "If an admin invited this address, the invite can take a moment to appear. Check again, or ask an admin to send it again. If the invite went to another address, sign in with that one.",
+    "outsider-check-again": "Check again"
   },
   "Exams": {
     "token": "Token",
@@ -763,7 +765,9 @@
     "founder-link": "Talk to the founder",
     "consent": "Opening a school accepts the <terms>Terms</terms> and the <privacy>Privacy Policy</privacy>.",
     "finish": "Open school",
-    "required-error": "Choose an answer."
+    "required-error": "Choose an answer.",
+    "school-limit-line": "Founding more schools needs a conversation first.",
+    "address-check-failed": "We could not check this address. Type it again to check it."
   },
   "Metadata": {
     "title": "Nakafa: Free Lessons from K-12 to University",

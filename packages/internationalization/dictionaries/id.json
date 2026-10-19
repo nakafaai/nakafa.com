@@ -69,7 +69,9 @@
     "submitting": "Sedang masuk...",
     "username-action": "Masuk dengan username",
     "username-footer": "Kode kartu hanya berlaku sekali dan menetapkan kata sandi Anda.",
-    "username-label": "Username sekolah"
+    "username-label": "Username sekolah",
+    "outsider-hint": "Jika admin mengundang alamat ini, undangan mungkin butuh waktu untuk muncul. Periksa lagi, atau minta admin mengirimnya ulang. Jika undangan dikirim ke alamat lain, masuk dengan alamat itu.",
+    "outsider-check-again": "Periksa lagi"
   },
   "Exams": {
     "token": "Token",
@@ -763,7 +765,9 @@
     "founder-link": "Bicara dengan pendiri",
     "consent": "Membuka sekolah berarti menyetujui <terms>Syarat Layanan</terms> dan <privacy>Kebijakan Privasi</privacy>.",
     "finish": "Buka sekolah",
-    "required-error": "Pilih satu jawaban."
+    "required-error": "Pilih satu jawaban.",
+    "school-limit-line": "Mendirikan sekolah lagi perlu berbicara dengan pendiri dulu.",
+    "address-check-failed": "Alamat ini belum bisa diperiksa. Ketik ulang untuk memeriksanya."
   },
   "Metadata": {
     "title": "Nakafa: Materi Belajar Gratis dari SD sampai Universitas",

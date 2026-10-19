@@ -14,6 +14,7 @@ import {
   QuestionnaireProgress,
 } from "@repo/design-system/components/ui/questionnaire";
 import { toast } from "@repo/design-system/lib/toast/notify";
+import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { cn } from "cn";
 import { Array as Arr, Effect, Match, Option, Result, Schema } from "effect";
 import { useTranslations } from "next-intl";
@@ -124,6 +125,7 @@ function SchoolStartForm({
   const [typed] = useState(() => createTypedName(draft));
   const [item, setItem] = useState<StartItem>(() => resumeItem(draft));
   const [opened, setOpened] = useState<Option.Option<Opening>>(Option.none);
+  const [limited, setLimited] = useState(false);
   const [shown, showOpening] = useOptimistic(opened);
   const [isOpening, startOpening] = useTransition();
   const refocus = useRef(NO_REFOCUS);
@@ -191,12 +193,13 @@ function SchoolStartForm({
           Match.value(error).pipe(
             Match.tag("FoundingRefused", (refused) =>
               Match.value(refused.code).pipe(
-                Match.when("SCHOOL_LIMIT", () =>
+                Match.when("SCHOOL_LIMIT", () => {
+                  setLimited(true);
                   toast.error({
                     description: "school-limit.description",
                     title: "school-limit.title",
-                  })
-                ),
+                  });
+                }),
                 Match.when("RATE_LIMITED", () =>
                   toast.error({
                     description: "school-rate.description",
@@ -296,6 +299,18 @@ function SchoolStartForm({
           {t("finish")}
         </QuestionnaireSteps>
       </Questionnaire>
+      {limited ? (
+        <p className="text-pretty text-muted-foreground text-sm">
+          {t("school-limit-line")}{" "}
+          <a
+            className="font-medium text-foreground underline-offset-4 hover:underline"
+            href={`mailto:${COMPANY_IDENTITY.email}`}
+            rel="noopener noreferrer"
+          >
+            {t("founder-link")}
+          </a>
+        </p>
+      ) : null}
     </StartContext>
   );
 }
