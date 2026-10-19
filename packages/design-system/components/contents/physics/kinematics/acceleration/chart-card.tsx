@@ -1,6 +1,10 @@
 "use client";
 
 import {
+  AccelerationLabelsProvider,
+  useAccelerationLabels,
+} from "@repo/design-system/components/contents/physics/kinematics/acceleration/context";
+import {
   ACCELERATION_CASES,
   type AccelerationCaseId,
   type AccelerationLabels,
@@ -48,34 +52,35 @@ export function AccelerationGraphCard({
   }
 
   return (
-    <VisualCard>
-      <VisualCardHeader description={description} title={title} />
-      <VisualCardToolbar>
-        <AccelerationCaseToggle
-          caseId={caseId}
-          labels={labels}
-          onCaseChange={handleCaseChange}
-        />
-      </VisualCardToolbar>
-      <VisualCardBody>
-        <AccelerationGraph labels={labels} selectedCase={selectedCase} />
-      </VisualCardBody>
-      <VisualCardActions>
-        <VisualCardFullscreen />
-      </VisualCardActions>
-    </VisualCard>
+    <AccelerationLabelsProvider labels={labels}>
+      <VisualCard>
+        <VisualCardHeader description={description} title={title} />
+        <VisualCardToolbar>
+          <AccelerationCaseToggle
+            caseId={caseId}
+            onCaseChange={handleCaseChange}
+          />
+        </VisualCardToolbar>
+        <VisualCardBody>
+          <AccelerationGraph selectedCase={selectedCase} />
+        </VisualCardBody>
+        <VisualCardActions>
+          <VisualCardFullscreen />
+        </VisualCardActions>
+      </VisualCard>
+    </AccelerationLabelsProvider>
   );
 }
 
 function AccelerationCaseToggle({
   caseId,
-  labels,
   onCaseChange,
 }: {
   caseId: AccelerationCaseId;
-  labels: AccelerationLabels;
   onCaseChange: (nextCaseId: string) => void;
 }) {
+  const labels = useAccelerationLabels();
+
   return (
     <ToggleGroup
       aria-label={labels.chooseCase}

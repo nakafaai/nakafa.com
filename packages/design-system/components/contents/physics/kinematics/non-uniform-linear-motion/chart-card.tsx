@@ -1,6 +1,10 @@
 "use client";
 
 import {
+  GlbbLabelsProvider,
+  useGlbbLabels,
+} from "@repo/design-system/components/contents/physics/kinematics/non-uniform-linear-motion/context";
+import {
   DEFAULT_GLBB_SCENARIO_ID,
   GLBB_SCENARIOS,
   type GlbbLabels,
@@ -48,34 +52,35 @@ export function NonUniformLinearMotionGraphCard({
   }
 
   return (
-    <VisualCard>
-      <VisualCardHeader description={description} title={title} />
-      <VisualCardToolbar>
-        <GlbbScenarioToggle
-          labels={labels}
-          onScenarioChange={handleScenarioChange}
-          scenarioId={scenarioId}
-        />
-      </VisualCardToolbar>
-      <VisualCardBody>
-        <VelocityTimeGraph labels={labels} scenario={scenario} />
-      </VisualCardBody>
-      <VisualCardActions>
-        <VisualCardFullscreen />
-      </VisualCardActions>
-    </VisualCard>
+    <GlbbLabelsProvider labels={labels}>
+      <VisualCard>
+        <VisualCardHeader description={description} title={title} />
+        <VisualCardToolbar>
+          <GlbbScenarioToggle
+            onScenarioChange={handleScenarioChange}
+            scenarioId={scenarioId}
+          />
+        </VisualCardToolbar>
+        <VisualCardBody>
+          <VelocityTimeGraph scenario={scenario} />
+        </VisualCardBody>
+        <VisualCardActions>
+          <VisualCardFullscreen />
+        </VisualCardActions>
+      </VisualCard>
+    </GlbbLabelsProvider>
   );
 }
 
 function GlbbScenarioToggle({
-  labels,
   onScenarioChange,
   scenarioId,
 }: {
-  labels: GlbbLabels;
   onScenarioChange: (nextScenarioId: string) => void;
   scenarioId: GlbbScenarioId;
 }) {
+  const labels = useGlbbLabels();
+
   return (
     <ToggleGroup
       aria-label={labels.chooseScenario}

@@ -1,6 +1,6 @@
+import { useAccelerationLabels } from "@repo/design-system/components/contents/physics/kinematics/acceleration/context";
 import {
   type AccelerationCase,
-  type AccelerationLabels,
   getMotionPoints,
 } from "@repo/design-system/components/contents/physics/kinematics/acceleration/data";
 import { formatTooltipTime } from "@repo/design-system/components/contents/physics/kinematics/tooltip";
@@ -19,7 +19,6 @@ import {
 import { Array as Arr } from "effect";
 
 interface AccelerationGraphProps {
-  labels: AccelerationLabels;
   selectedCase: AccelerationCase;
 }
 
@@ -37,10 +36,8 @@ const MAX_VELOCITY = getAxisMaximum(MAX_OBSERVED_VELOCITY, VELOCITY_TICK_STEP);
 const TIME_TICKS = getTicks(MAX_TIME, TIME_TICK_STEP);
 const VELOCITY_TICKS = getTicks(MAX_VELOCITY, VELOCITY_TICK_STEP);
 
-export function AccelerationGraph({
-  labels,
-  selectedCase,
-}: AccelerationGraphProps) {
+export function AccelerationGraph({ selectedCase }: AccelerationGraphProps) {
+  const labels = useAccelerationLabels();
   const chartConfig = {
     motion: {
       label: labels.contextLine,
