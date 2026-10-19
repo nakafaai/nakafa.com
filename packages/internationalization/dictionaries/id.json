@@ -125,7 +125,17 @@
     "add-question": "Tambah soal",
     "copy": "Salin soal",
     "prompt-label": "Teks soal",
-    "prompt-placeholder": "Tulis soal di sini."
+    "prompt-placeholder": "Tulis soal di sini.",
+    "schedule": "Jadwalkan",
+    "schedule-title": "Jadwalkan ujian",
+    "schedule-description": "Siswa unit mengerjakannya di ruang itu sejak mulai, selama durasinya.",
+    "room": "Ruang",
+    "room-placeholder": "Lab 2",
+    "starts": "Mulai",
+    "length": "Durasi",
+    "length-minutes": "{count} menit",
+    "schedule-keys": "Tandai dulu jawaban benar setiap soal.",
+    "schedule-past": "Waktu mulai sudah lewat. Pilih waktu yang lebih lambat."
   },
   "SchoolSettings": {
     "school": "Sekolah",
@@ -316,6 +326,7 @@
       },
       "tenant": {
         "provisioned": "Sekolah dibuka",
+        "founded": "Sekolah didirikan",
         "locale": {
           "set": "Negara dan mata uang diubah"
         },
@@ -431,6 +442,120 @@
     "card-code-description": "Berikan kode kepada siswa, karena kode ini tidak akan ditampilkan lagi.",
     "invites-empty": "Belum ada undangan yang menunggu."
   },
+  "SchoolStart": {
+    "metadata-title": "Buka sekolahmu",
+    "metadata-description": "Jawab lima pertanyaan dan Nakafa School-mu siap dipakai.",
+    "progress": "Pertanyaan {current} dari {total}",
+    "name-title": "Apa nama sekolahmu?",
+    "name-label": "Nama sekolah",
+    "name-placeholder": "Harapan Bangsa",
+    "name-error": "Tulis nama minimal 2 karakter.",
+    "address-label": "Alamat",
+    "address-free": "Tersedia",
+    "address-taken": "Alamat ini sudah dipakai sekolah lain.",
+    "address-reserved": "Alamat ini dicadangkan.",
+    "address-invalid": "Pakai 2 sampai 63 huruf kecil, angka, atau tanda hubung.",
+    "country-title": "Di mana sekolahmu?",
+    "country-description": "Ini menentukan mata uang, bahasa, dan tahun ajaran.",
+    "country": {
+      "ID": "Indonesia",
+      "SG": "Singapura",
+      "GB": "Inggris",
+      "DE": "Jerman",
+      "US": "Amerika Serikat"
+    },
+    "levels-title": "Jenjang apa yang diajarkan?",
+    "levels-description": "Setiap jenjang menjadi satu unit.",
+    "levels-error": "Pilih minimal satu jenjang.",
+    "level": {
+      "paud": {
+        "title": "PAUD",
+        "description": "Pendidikan anak usia dini"
+      },
+      "sd": {
+        "title": "SD",
+        "description": "Sekolah dasar"
+      },
+      "mi": {
+        "title": "MI",
+        "description": "Madrasah ibtidaiyah"
+      },
+      "smp": {
+        "title": "SMP",
+        "description": "Sekolah menengah pertama"
+      },
+      "mts": {
+        "title": "MTs",
+        "description": "Madrasah tsanawiyah"
+      },
+      "sma": {
+        "title": "SMA",
+        "description": "Sekolah menengah atas"
+      },
+      "ma": {
+        "title": "MA",
+        "description": "Madrasah aliyah"
+      },
+      "smk": {
+        "title": "SMK",
+        "description": "Sekolah menengah kejuruan"
+      },
+      "slb": {
+        "title": "SLB",
+        "description": "Sekolah luar biasa"
+      },
+      "other": {
+        "title": "Lainnya",
+        "description": "Jenis sekolah lain"
+      }
+    },
+    "stage": {
+      "paud": "Usia dini",
+      "sd": "Dasar",
+      "mi": "Dasar",
+      "smp": "Menengah pertama",
+      "mts": "Menengah pertama",
+      "sma": "Menengah atas",
+      "ma": "Menengah atas",
+      "smk": "Kejuruan",
+      "slb": "Pendidikan khusus",
+      "other": "Lainnya"
+    },
+    "unit-name": "{name} {level}",
+    "role-title": "Apa peranmu?",
+    "role-description": "Kamu tetap menjadi pemilik sekolah.",
+    "role": {
+      "principal": {
+        "title": "Kepala sekolah",
+        "description": "Memimpin sekolah."
+      },
+      "teacher": {
+        "title": "Guru",
+        "description": "Mengajar kelas."
+      },
+      "admin": {
+        "title": "Admin atau operator",
+        "description": "Mengelola akun dan data."
+      },
+      "foundation": {
+        "title": "Pemilik yayasan",
+        "description": "Memiliki satu sekolah atau lebih."
+      }
+    },
+    "size-title": "Berapa siswa di sekolahmu?",
+    "size-description": "Gratis untuk mulai, berapa pun jumlahnya.",
+    "size": {
+      "s": "Di bawah 100",
+      "m": "100 sampai 499",
+      "l": "500 sampai 999",
+      "xl": "1.000 atau lebih"
+    },
+    "founder-line": "Pendiri bisa membantu sekolah besar bersiap.",
+    "founder-link": "Bicara dengan pendiri",
+    "consent": "Membuka sekolah berarti menyetujui <terms>Syarat Layanan</terms> dan <privacy>Kebijakan Privasi</privacy>.",
+    "finish": "Buka sekolah",
+    "required-error": "Pilih satu jawaban."
+  },
   "Metadata": {
     "title": "Nakafa: Materi Belajar Gratis dari SD sampai Universitas",
     "description": "Belajar Matematika, Sains, Komputer, AI, dan persiapan ujian di Nakafa. Materi gratis dari SD sampai universitas dengan latihan dan pembahasan.",
@@ -529,6 +654,7 @@
     "close": "Tutup",
     "community": "Komunitas",
     "your-schools": "Sekolahmu",
+    "open-school": "Buka sekolah",
     "report": "Lapor",
     "copy-content": "Salin Konten",
     "content-actions": "Aksi konten",
@@ -561,6 +687,7 @@
     "emoji-picker-placeholder": "Pilih emoji...",
     "no-emoji-found": "Emoji nggak ketemu.",
     "back": "Kembali",
+    "continue": "Lanjut",
     "lines": "Garis",
     "scale": "Skala",
     "solution-set": "Himpunan penyelesaian",
@@ -633,8 +760,6 @@
           "description": "Simulasi ujian."
         }
       },
-      "back": "Kembali",
-      "continue": "Lanjut",
       "finish": "Selesai",
       "required-error": "Pilih satu jawaban."
     },
@@ -1010,8 +1135,12 @@
       "title": "Logo tidak disimpan.",
       "description": "Pilih gambar PNG atau SVG."
     },
-    "school-logo-refused": { "title": "Logo tidak disimpan." },
-    "school-address-copied": { "title": "Alamat disalin." },
+    "school-logo-refused": {
+      "title": "Logo tidak disimpan."
+    },
+    "school-address-copied": {
+      "title": "Alamat disalin."
+    },
     "action-error": {
       "title": "Tindakan ini belum berhasil.",
       "description": "Silakan coba lagi."
@@ -1181,6 +1310,22 @@
     "sign-out-error": {
       "title": "Kamu belum bisa keluar.",
       "description": "Periksa koneksimu, lalu coba lagi."
+    },
+    "school-open-error": {
+      "title": "Sekolah belum terbuka.",
+      "description": "Coba lagi."
+    },
+    "school-limit": {
+      "title": "Kamu sudah punya 3 sekolah.",
+      "description": "Hubungi pendiri untuk menambah."
+    },
+    "school-rate": {
+      "title": "Terlalu banyak sekolah hari ini.",
+      "description": "Coba lagi besok."
+    },
+    "school-save-error": {
+      "title": "Jawabanmu belum tersimpan.",
+      "description": "Coba lagi."
     }
   },
   "Ai": {

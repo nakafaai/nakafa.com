@@ -1,25 +1,16 @@
 "use client";
 
 import { QueryResult, useMutation, useQuery } from "@confect/react";
-import {
-  ArrowLeft02Icon,
-  ArrowRight02Icon,
-  PartyIcon,
-} from "@hugeicons/core-free-icons";
+import { PartyIcon } from "@hugeicons/core-free-icons";
 import onboarding from "@repo/backend/confect/_generated/refs/onboarding";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Questionnaire,
-  QuestionnaireActions,
   QuestionnaireChoice,
   QuestionnaireChoices,
   QuestionnaireDescription,
   QuestionnaireError,
   QuestionnaireItem,
-  QuestionnaireNext,
-  QuestionnairePrevious,
   QuestionnaireProgress,
-  QuestionnaireSubmit,
   QuestionnaireTitle,
 } from "@repo/design-system/components/ui/questionnaire";
 import { toast } from "@repo/design-system/lib/toast/notify";
@@ -53,6 +44,7 @@ import {
   finishOnboarding,
   saveOnboardingDraft,
 } from "@/components/programs/onboarding/submit";
+import { QuestionnaireSteps } from "@/components/shared/questionnaire";
 import { reportClientException } from "@/lib/analytics/client";
 import {
   getPostAuthDestination,
@@ -292,22 +284,9 @@ export function OnboardingQuestionnaire({
         </QuestionnaireError>
       </QuestionnaireItem>
 
-      <QuestionnaireActions>
-        {/* While the answers save, the actions hold still without a pending
-            look: the page moves on as soon as the server names it. */}
-        <QuestionnairePrevious inert={isFinishing} variant="ghost">
-          <HugeIcons data-icon="inline-start" icon={ArrowLeft02Icon} />
-          {t("onboarding.back")}
-        </QuestionnairePrevious>
-        <QuestionnaireNext inert={isFinishing}>
-          {t("onboarding.continue")}
-          <HugeIcons data-icon="inline-end" icon={ArrowRight02Icon} />
-        </QuestionnaireNext>
-        <QuestionnaireSubmit inert={isFinishing}>
-          <HugeIcons data-icon="inline-start" icon={PartyIcon} />
-          {t("onboarding.finish")}
-        </QuestionnaireSubmit>
-      </QuestionnaireActions>
+      <QuestionnaireSteps finishIcon={PartyIcon} inert={isFinishing}>
+        {t("onboarding.finish")}
+      </QuestionnaireSteps>
     </Questionnaire>
   );
 }

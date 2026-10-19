@@ -16,7 +16,7 @@ describe("tenancy/profile", () => {
         const fixture = yield* tenancyFixture;
         const expected = {
           kind: "school",
-          mascot: schoolMascot(fixture.tenants.other),
+          mascot: schoolMascot("other"),
           name: "Sekolah Lain",
           slug: "other",
           status: "active",
@@ -50,7 +50,7 @@ describe("tenancy/profile", () => {
         expect(shown).toEqual({
           kind: "school",
           logo: yield* storageUrl(fixture.convex, logo),
-          mascot: schoolMascot(fixture.tenants.other),
+          mascot: schoolMascot("other"),
           name: "Sekolah Lain",
           slug: "other",
           status: "active",
