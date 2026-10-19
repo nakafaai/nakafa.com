@@ -266,7 +266,7 @@
     "add-below": "Add question below",
     "add-below-of": "Add question below question {number}",
     "question-text": "Question {number} text",
-    "option-placeholder": "Write the option here.",
+    "option-placeholder": "Option text",
     "key-option": "Mark option {letter} of question {number} as correct",
     "option-remove-of": "Remove option {letter} of question {number}",
     "grid": "Grid view",

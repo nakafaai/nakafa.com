@@ -99,7 +99,9 @@ export function usePromptDocument({
  */
 function PreviewProse({ doc, size }: { doc: Node; size: "line" | "page" }) {
   const shown = useDeferredValue(doc);
-  // The text is drawn again only when it changes, not on every redraw of the page.
+  // The text is drawn again only when it changes, not on every redraw of the page. An option's text
+  // takes the paragraph classes of no paragraph, as its editor does, so its first line keeps the line
+  // box of the letter.
   const draw = useCallback(
     (element: HTMLDivElement | null) => {
       if (element === null) {
@@ -110,16 +112,22 @@ function PreviewProse({ doc, size }: { doc: Node; size: "line" | "page" }) {
           shown.content
         )
       );
+      if (size === "line") {
+        return;
+      }
       Arr.forEach(Arr.fromIterable(element.querySelectorAll("p")), (p) => {
         p.className = paragraphVariants();
       });
     },
-    [shown]
+    [shown, size]
   );
 
   return (
     <div className={editorContent({ size })}>
-      <div className={cn(editorPlaceholder(), editorDocument())} ref={draw} />
+      <div
+        className={cn(editorPlaceholder(), editorDocument({ size }))}
+        ref={draw}
+      />
     </div>
   );
 }

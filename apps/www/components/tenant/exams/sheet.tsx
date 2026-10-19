@@ -27,7 +27,8 @@ export function PaperOptions({ children }: { children: ReactNode }) {
 /**
  * One option of the paper: its letter, then its rich text, framed as the player frames an option. The
  * frame is the player's own choice frame in the unselected variant, and only the teacher's letter is
- * added to it.
+ * added to it. The letter is as tall as one line of the frame's text, so the first line of the text
+ * and the letter share a line box, and a longer text grows the frame below them.
  */
 export function PaperOption({
   children,
@@ -45,7 +46,7 @@ export function PaperOption({
     >
       <span
         aria-hidden
-        className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-md bg-muted font-medium text-sm"
+        className="grid size-6 shrink-0 place-items-center rounded-md bg-muted font-medium text-sm"
       >
         {letter}
       </span>

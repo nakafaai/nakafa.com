@@ -6,7 +6,6 @@ import { MAX_DOCUMENT_DEPTH } from "@nakafa/aksara-contracts/assessment/document
 import { MAX_DOCUMENT_BYTES } from "@repo/backend/confect/editor/size";
 import { depthGuard } from "@repo/design-system/components/editor/depth";
 import type { DocumentEditorInstance } from "@repo/design-system/components/editor/document";
-import { articleParagraphs } from "@repo/design-system/components/editor/paragraph";
 import { documentSizeGuard } from "@repo/design-system/components/editor/size";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
@@ -28,10 +27,13 @@ import { makeQuietSaver } from "@/lib/save/quiet";
 /** The quiet period after the last change of an option, before its label is saved. */
 const OPTION_SAVE_QUIET = "500 millis";
 
-/** The extensions of an option: the assessment document, without a collab session, and the bounds the server holds it to. */
+/**
+ * The extensions of an option: the assessment document, without a collab session, and the bounds the
+ * server holds it to. An option draws no paragraph classes of the article, since its paragraphs take
+ * no margin: the frame around the text gives the spacing.
+ */
 const OPTION_EXTENSIONS = [
   ...RICH_EXTENSIONS,
-  articleParagraphs,
   depthGuard(MAX_DOCUMENT_DEPTH),
   documentSizeGuard(MAX_DOCUMENT_BYTES),
 ];

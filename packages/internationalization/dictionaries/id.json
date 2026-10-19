@@ -266,7 +266,7 @@
     "add-below": "Tambah soal di bawah",
     "add-below-of": "Tambah soal di bawah soal {number}",
     "question-text": "Teks soal {number}",
-    "option-placeholder": "Tulis pilihan di sini.",
+    "option-placeholder": "Teks pilihan",
     "key-option": "Tandai pilihan {letter} soal {number} sebagai kunci",
     "option-remove-of": "Hapus pilihan {letter} soal {number}",
     "grid": "Tampilan kisi",

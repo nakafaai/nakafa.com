@@ -70,7 +70,7 @@ export function DocumentEditor({
       attributes: {
         "aria-label": label,
         "aria-multiline": "true",
-        class: cn(editorPlaceholder(), editorDocument()),
+        class: cn(editorPlaceholder(), editorDocument({ size })),
       },
     },
     extensions: [

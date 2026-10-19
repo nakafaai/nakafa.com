@@ -266,7 +266,7 @@
     "add-below": "Frage darunter hinzufügen",
     "add-below-of": "Frage unter Frage {number} hinzufügen",
     "question-text": "Text von Frage {number}",
-    "option-placeholder": "Option hier schreiben.",
+    "option-placeholder": "Optionstext",
     "key-option": "Option {letter} von Frage {number} als richtig markieren",
     "option-remove-of": "Option {letter} von Frage {number} entfernen",
     "grid": "Rasteransicht",
