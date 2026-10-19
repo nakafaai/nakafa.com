@@ -13,6 +13,12 @@ import { EditorContent, EditorContext, useEditor } from "@tiptap/react";
 import { cn } from "cn";
 import { type ReactNode, useMemo } from "react";
 
+/** The focus callback of an editor that has none, so the editor always calls one. */
+const noFocus = () => undefined;
+
+/** The Tiptap editor of a document, which a caller holds once the editor exists. */
+export type DocumentEditorInstance = Editor;
+
 interface DocumentEditorProps {
   /**
    * Controls and other parts drawn above the text. They read the editor through
@@ -27,6 +33,8 @@ interface DocumentEditorProps {
   onChange: (transaction: Transaction) => void;
   /** Called once with the editor, as soon as it exists. */
   onEditor: (editor: Editor) => void;
+  /** Called with the editor when it takes focus, so a caller can make it the editor its controls act on. */
+  onFocus?: (editor: Editor) => void;
   /** The hint shown while the document is empty. */
   placeholder: string;
 }
@@ -46,10 +54,12 @@ export function DocumentEditor({
   label,
   onChange,
   onEditor,
+  onFocus,
   placeholder,
 }: DocumentEditorProps) {
   const change = useCallbackRef(onChange);
   const ready = useCallbackRef(onEditor);
+  const focused = useCallbackRef(onFocus ?? noFocus);
   const editor = useEditor({
     editable: false,
     editorProps: {
@@ -66,6 +76,7 @@ export function DocumentEditor({
     ],
     immediatelyRender: false,
     onCreate: ({ editor: current }) => ready(current),
+    onFocus: ({ editor: current }) => focused(current),
     onUpdate: ({ transaction }) => change(transaction),
   });
   const context = useMemo(() => ({ editor }), [editor]);

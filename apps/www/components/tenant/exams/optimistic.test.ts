@@ -315,6 +315,24 @@ describe("the optimistic updates of the new questions", () => {
     );
   });
 
+  it("show a question added after another one right after it", () => {
+    const view = viewOf([first, second]);
+    const { localStore, setQuery } = storeHolding(Option.some(view));
+    const added = placeholder("added");
+
+    addQuestionUpdate(added)(localStore, {
+      examId,
+      slug,
+      after: first.id,
+    });
+
+    expect(setQuery).toHaveBeenCalledWith(
+      exams.exams.open,
+      { examId, slug },
+      Option.some({ ...view, questions: [first, added, second] })
+    );
+  });
+
   it("show a new exam first in the first page of each list the store holds", () => {
     const examIdOf = Schema.decodeUnknownSync(Id("exams"));
     const draft: ExamSummary = {

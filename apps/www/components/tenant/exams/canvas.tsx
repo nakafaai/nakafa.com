@@ -1,269 +1,106 @@
 "use client";
 
-import { useMutation } from "@confect/react";
-import { Cancel01Icon } from "@hugeicons/core-free-icons";
-import { useCallbackRef } from "@mantine/hooks";
-import exams from "@repo/backend/confect/_generated/refs/exams";
-import {
-  CHOICE_OPTIONS_MAX,
-  CHOICE_OPTIONS_MIN,
-} from "@repo/backend/confect/exams/question";
+import { Add01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Input } from "@repo/design-system/components/ui/input";
-import { Radio } from "@repo/design-system/components/ui/radio-group";
-import { Array as Arr, Effect, Function as Fn, Option } from "effect";
-import dynamic from "next/dynamic";
+import { Array as Arr, Option } from "effect";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
-import { runExamAction, sentAction } from "@/components/tenant/exams/action";
-import {
-  choiceOf,
-  labelText,
-  markedKey,
-  markedOption,
-  optionLetter,
-  withOptionAdded,
-  withOptionRemoved,
-  withOptionText,
-} from "@/components/tenant/exams/answer";
+import type { RefObject } from "react";
+import { useQuestionActions } from "@/components/tenant/exams/actions";
 import { isLocked } from "@/components/tenant/exams/freeze";
-import {
-  answerUpdate,
-  type Question,
-} from "@/components/tenant/exams/optimistic";
-import { isPlaceholderId } from "@/components/tenant/exams/placeholder";
+import { ExamPage } from "@/components/tenant/exams/page";
+import { pageAt } from "@/components/tenant/exams/pages";
 import {
   useActiveQuestion,
   useExam,
   useExamSelection,
 } from "@/components/tenant/exams/provider";
-import {
-  QuestionSheet,
-  QuestionSheetOption,
-  QuestionSheetOptions,
-  QuestionSheetPrompt,
-} from "@/components/tenant/exams/sheet";
-import { makeQuietSaver } from "@/lib/save/quiet";
-
-/** The prompt loads when the canvas shows a saved question, never with the page. */
-const ExamPrompt = dynamic(
-  () =>
-    import("@/components/tenant/exams/prompt").then(
-      (module) => module.ExamPrompt
-    ),
-  { loading: () => null, ssr: false }
-);
-
-/** The quiet period after the last keystroke of an option, before its text is saved. */
-const OPTION_SAVE_QUIET = "500 millis";
 
 /**
- * The canvas of the selected question: its number, its prompt, then its options, each a
- * text field with a radio that marks the correct answer. A question the server has not
- * saved yet shows its options only, and they take no change until the server answers. A frozen
- * exam shows its prompt and its options read-only.
+ * The distance, in pixels from the top of the canvas, at which a page counts as the one in view:
+ * the page whose top has passed this line is the page the teacher is on.
  */
-export function ExamCanvas() {
+const PAGE_LINE = 96;
+
+/**
+ * The canvas of the exam: every question as a page, stacked in order with one gap between them,
+ * on a muted ground that scrolls. Each page is its paper at the chosen zoom, and an add button
+ * below the last page adds a question at the end. The page the teacher is on follows the scroll,
+ * so the footer's position names it. A frozen exam shows its pages without the add button.
+ */
+export function ExamCanvas({
+  canvas,
+  zoom,
+}: {
+  canvas: RefObject<HTMLElement | null>;
+  zoom: number;
+}) {
+  const t = useTranslations("Exams");
   const { exam } = useExam();
-  const active = useActiveQuestion();
-  const pending = useExamSelection((state) => state.pending);
   const frozen = isLocked(exam);
+  const select = useExamSelection((state) => state.select);
+  const active = useActiveQuestion();
+  const actions = useQuestionActions();
 
-  // The prompt opens again when the exam freezes, so its document is read-only from its first
-  // render.
-  return Option.match(active, {
-    onNone: () => null,
-    onSome: ({ index, question }) => {
-      const saved = !(
-        Arr.contains(pending, question.id) || isPlaceholderId(question.prompt)
-      );
-      return (
-        <section className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto bg-muted/40 p-4">
-          <QuestionSheet number={index + 1}>
-            {saved ? (
-              <QuestionSheetPrompt>
-                <ExamPrompt
-                  key={`${question.prompt}-${frozen}`}
-                  prompt={question.prompt}
-                />
-              </QuestionSheetPrompt>
-            ) : null}
-            <QuestionOptions
-              key={question.id}
-              pending={!saved}
-              question={question}
-            />
-          </QuestionSheet>
-        </section>
-      );
-    },
-  });
-}
-
-/**
- * The options of one question, in the layout of the player, with the teacher's key beside
- * each. A key change saves at once, and each option text saves after its quiet period. The
- * options are locked while the question is not saved yet, and while the exam is frozen.
- */
-function QuestionOptions({
-  pending,
-  question,
-}: {
-  pending: boolean;
-  question: Question;
-}) {
-  const t = useTranslations("Exams");
-  const { exam, slug } = useExam();
-  const examId = exam.id;
-  const locked = pending || isLocked(exam);
-  const answer = useMutation(exams.questions.answer).withOptimisticUpdate(
-    answerUpdate
-  );
-
-  /** Saves the answers and the key of this question as they are now, at the revision the teacher saw. */
-  const saveAnswers = (answers: Question["answers"], key: Question["key"]) => {
-    runExamAction(
-      sentAction(() =>
-        answer({
-          answers,
-          examId,
-          key,
-          questionId: question.id,
-          revision: question.revision,
-          slug,
-        })
-      ),
-      { onFailure: Fn.constVoid, onSuccess: Fn.constVoid }
+  /** Chooses the page at the top of the canvas as the one the teacher is on, when the scroll brings a new one. */
+  const syncPage = () => {
+    const root = canvas.current;
+    if (root === null) {
+      return;
+    }
+    const top = root.getBoundingClientRect().top;
+    const tops = Arr.map(
+      Arr.fromIterable(root.querySelectorAll<HTMLElement>("[data-page]")),
+      (page) => page.getBoundingClientRect().top - top
     );
+    const index = pageAt(tops, PAGE_LINE);
+    Option.match(Arr.get(exam.questions, index), {
+      onNone: () => undefined,
+      onSome: (question) => {
+        if (
+          Option.getOrNull(
+            Option.map(active, (current) => current.question.id)
+          ) !== question.id
+        ) {
+          select(question.id);
+        }
+      },
+    });
   };
-
-  /** Adds an empty option after the last one, and saves the question at once. */
-  const addOption = () => {
-    saveAnswers(withOptionAdded(question.answers), question.key);
-  };
-
-  /** Removes one option, and the key with it when the key marked that option, then saves at once. */
-  const removeOption = (optionId: string) => {
-    const next = withOptionRemoved(question.answers, question.key, optionId);
-    saveAnswers(next.answers, next.key);
-  };
-
-  return Option.match(choiceOf(question.answers), {
-    onNone: () => null,
-    onSome: (choice) => (
-      <>
-        <QuestionSheetOptions
-          aria-label={t("correct")}
-          disabled={locked}
-          onValueChange={(optionId: string) =>
-            saveAnswers(question.answers, markedKey(question.answers, optionId))
-          }
-          value={markedOption(question.key) ?? ""}
-        >
-          {Arr.map(choice.options, (option, index) => (
-            <OptionField
-              index={index}
-              key={option.id}
-              locked={locked}
-              onRemove={
-                choice.options.length > CHOICE_OPTIONS_MIN
-                  ? () => removeOption(option.id)
-                  : null
-              }
-              onSave={(text) =>
-                saveAnswers(
-                  withOptionText(question.answers, option.id, text),
-                  question.key
-                )
-              }
-              optionId={option.id}
-              text={labelText(option.label)}
-            />
-          ))}
-        </QuestionSheetOptions>
-        {choice.options.length < CHOICE_OPTIONS_MAX ? (
-          <Button
-            disabled={locked}
-            onClick={addOption}
-            size="sm"
-            type="button"
-            variant="outline"
-          >
-            {t("option-add")}
-          </Button>
-        ) : null}
-      </>
-    ),
-  });
-}
-
-/**
- * One option: its letter, its text field, and the radio in a dashed outline that marks it
- * correct. The field shows what the teacher typed at once. Its text is saved after the
- * quiet period, or at once when the field loses focus, and the latest save is the one that
- * runs. A locked field shows its text and takes no change.
- */
-function OptionField({
-  index,
-  locked,
-  onRemove,
-  onSave,
-  optionId,
-  text,
-}: {
-  index: number;
-  locked: boolean;
-  onRemove: (() => void) | null;
-  onSave: (text: string) => void;
-  optionId: string;
-  text: string;
-}) {
-  const t = useTranslations("Exams");
-  const letter = optionLetter(index);
-  const [draft, setDraft] = useState<string | null>(null);
-  // The save calls the latest `onSave`, so a save made after a quiet period uses the answers,
-  // the key, and the revision of the render that is on screen when it runs.
-  const save = useCallbackRef(onSave);
-  const [saver] = useState(() =>
-    Effect.runSync(
-      makeQuietSaver((run: () => void) => Effect.sync(run), OPTION_SAVE_QUIET)
-    )
-  );
 
   return (
-    <QuestionSheetOption
-      letter={letter}
-      radio={
-        <Radio aria-label={t("correct-option", { letter })} value={optionId} />
-      }
+    <section
+      aria-label={t("pages-label")}
+      className="relative min-h-0 min-w-0 flex-1 overflow-y-auto bg-muted/40"
+      onScroll={syncPage}
+      ref={canvas}
     >
-      <Input
-        aria-label={t("option", { letter })}
-        onBlur={() => {
-          Effect.runFork(saver.flush);
-          setDraft(null);
-        }}
-        onChange={(event) => {
-          const next = event.target.value;
-          setDraft(next);
-          Effect.runFork(saver.touch(() => save(next)));
-        }}
-        readOnly={locked}
-        value={draft ?? text}
-      />
-      {onRemove === null ? null : (
-        <Button
-          aria-label={t("option-remove", { letter })}
-          disabled={locked}
-          onClick={onRemove}
-          size="icon"
-          type="button"
-          variant="ghost"
-        >
-          <HugeIcons aria-hidden="true" icon={Cancel01Icon} />
-        </Button>
-      )}
-    </QuestionSheetOption>
+      <div
+        className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-4 py-6 md:px-6"
+        style={{ zoom: zoom / 100 }}
+      >
+        {Arr.map(exam.questions, (question, index) => (
+          <ExamPage
+            canvas={canvas}
+            count={exam.questions.length}
+            index={index}
+            key={question.id}
+            question={question}
+          />
+        ))}
+        {frozen ? null : (
+          <div>
+            <Button
+              onClick={() => actions.addQuestion(null)}
+              type="button"
+              variant="outline"
+            >
+              <HugeIcons aria-hidden="true" icon={Add01Icon} />
+              {t("add-question")}
+            </Button>
+          </div>
+        )}
+      </div>
+    </section>
   );
 }

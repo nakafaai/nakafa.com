@@ -19,15 +19,15 @@ import { ScheduleExam } from "@/components/tenant/exams/schedule";
 import { titleToSave } from "@/components/tenant/exams/title";
 
 /**
- * The header of the editor: a link back to the exams, then the exam's title, renamed in
- * place, which an archived unit's exam does not take. The field shows the saved title until the teacher types, so it follows a
- * co-editor's rename. The title is saved when the field loses focus or the teacher presses
- * Enter, and only a trimmed, changed, valid title is sent. The optimistic change restores
- * the saved title when the server refuses the rename. The row ends with the action that
- * tries the exam as a student and the button that schedules it, and the title gives way
- * before them. On a phone the trial action keeps its icon and its name for screen readers,
- * so the title keeps room to read at 375 pixels. A frozen exam says why its questions are
- * fixed in a line under the header (ExamFrozenNote).
+ * The header of the editor: a link back to the exams, then the exam's title, renamed in place,
+ * which an archived unit's exam does not take. The field shows the saved title until the teacher
+ * types, so it follows a co-editor's rename. The title is saved when the field loses focus or the
+ * teacher presses Enter, and only a trimmed, changed, valid title is sent. The optimistic change
+ * restores the saved title when the server refuses the rename. The row ends with the action that
+ * tries the exam as a student and the button that schedules it, and the title takes the room
+ * left between them, truncated while the field is not focused. On a phone the actions keep their
+ * icons and their names for screen readers, so the title keeps room to read at 375 pixels.
+ * A frozen exam says why its questions are fixed in a line under the header (ExamLockedNote).
  */
 export function ExamHeader() {
   const t = useTranslations("Exams");
@@ -63,9 +63,8 @@ export function ExamHeader() {
       </Link>
       <Input
         aria-label={t("title-label")}
-        className="border-0 font-semibold text-lg shadow-none md:text-lg"
+        className="min-w-0 flex-1 truncate border-0 font-semibold text-lg shadow-none md:text-lg"
         onBlur={save}
-        readOnly={exam.archived}
         onChange={(event) => setDraft(event.target.value)}
         onKeyDown={(event) => {
           // While the teacher composes a character, Enter belongs to the keyboard.
@@ -74,13 +73,15 @@ export function ExamHeader() {
           }
         }}
         placeholder={t("untitled")}
+        readOnly={exam.archived}
         value={draft ?? exam.title}
       />
       <Link
+        aria-label={t("try-action")}
         className={buttonVariants({ variant: "outline" })}
         href={`/exams/${exam.id}/try`}
       >
-        <HugeIcons icon={ViewIcon} />
+        <HugeIcons aria-hidden="true" icon={ViewIcon} />
         <span className="max-sm:sr-only">{t("try-action")}</span>
       </Link>
       {exam.archived ? null : <ScheduleExam />}

@@ -1,16 +1,17 @@
+import { ContentDocumentSchema } from "@nakafa/aksara-contracts/assessment/document";
 import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
 import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
 import {
   CHOICE_OPTIONS_MAX,
   CHOICE_OPTIONS_MIN,
 } from "@repo/backend/confect/exams/question";
-import { Array as Arr, Option, String as Str } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 
 /** The choice interaction, the only kind a school exam question holds in this version. */
 type Choice = Extract<Interaction, { kind: "choice" }>;
 
-/** The label of one option: a document of its own, which this editor writes as one paragraph of text. */
-type OptionLabel = Choice["options"][number]["label"];
+/** The label of one option: a rich document of its own, which the option's editor writes. */
+export type OptionLabel = Choice["options"][number]["label"];
 
 /** The character code of the letter A, which names the first option. */
 const LETTER_A = 65;
@@ -33,28 +34,15 @@ export const optionLetter = (index: number): string =>
   String.fromCharCode(LETTER_A + index);
 
 /**
- * The text of an option's label: the text of its paragraphs, in order. This editor
- * writes one paragraph of text, so math and every other node are left out.
+ * The label of an option as its editor holds it: the JSON of its document, read through the
+ * contract. A document the contract refuses is no label, so nothing is saved for it.
  */
-export const labelText = (label: OptionLabel): string =>
-  Arr.join(
-    Arr.flatMap(label.content, (block) =>
-      block.type === "paragraph"
-        ? Arr.flatMap(block.content ?? [], (node) =>
-            node.type === "text" ? [node.text] : []
-          )
-        : []
-    ),
-    ""
-  );
+export const optionLabelOf = (json: unknown): Option.Option<OptionLabel> =>
+  Schema.decodeUnknownOption(ContentDocumentSchema)(json);
 
-/** A label that holds `text` as one paragraph. An empty text is an empty paragraph, which the contract allows in an option. */
-export const textLabel = (text: string): OptionLabel => ({
-  content: [
-    Str.isEmpty(text)
-      ? { type: "paragraph" }
-      : { content: [{ text, type: "text" }], type: "paragraph" },
-  ],
+/** The label of an empty option: one empty paragraph, which the contract allows in an option. */
+export const emptyLabel = (): OptionLabel => ({
+  content: [{ type: "paragraph" }],
   type: "doc",
 });
 
@@ -64,22 +52,20 @@ export const choiceOf = (
 ): Option.Option<Choice> => Arr.findFirst(answers, isChoice);
 
 /**
- * The answers with the text of one option replaced. The other options and the other
- * interactions keep their order, IDs, and content.
+ * The answers with the label of one option replaced by the document its editor holds. The other
+ * options and the other interactions keep their order, IDs, and content.
  */
-export const withOptionText = (
+export const withOptionLabel = (
   answers: Arr.NonEmptyReadonlyArray<Interaction>,
   optionId: string,
-  text: string
+  label: OptionLabel
 ): Arr.NonEmptyArray<Interaction> =>
   Arr.map(answers, (answer) =>
     isChoice(answer)
       ? {
           ...answer,
           options: Arr.map(answer.options, (option) =>
-            option.id === optionId
-              ? { ...option, label: textLabel(text) }
-              : option
+            option.id === optionId ? { ...option, label } : option
           ),
         }
       : answer
@@ -140,7 +126,7 @@ export const withOptionAdded = (
           ...answer,
           options: [
             ...answer.options,
-            { id: nextOptionId(answer.options), label: textLabel("") },
+            { id: nextOptionId(answer.options), label: emptyLabel() },
           ],
         }
       : answer
@@ -156,10 +142,7 @@ export const withOptionRemoved = (
   answers: Arr.NonEmptyReadonlyArray<Interaction>,
   key: Arr.NonEmptyReadonlyArray<InteractionKey> | null,
   optionId: string
-): {
-  readonly answers: Arr.NonEmptyArray<Interaction>;
-  readonly key: Arr.NonEmptyReadonlyArray<InteractionKey> | null;
-} => ({
+) => ({
   answers: Arr.map(answers, (answer) =>
     isChoice(answer) && answer.options.length > CHOICE_OPTIONS_MIN
       ? {

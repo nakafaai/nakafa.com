@@ -2,6 +2,7 @@
 
 import { MoreVerticalIcon } from "@hugeicons/core-free-icons";
 import { DocumentBlocks } from "@repo/design-system/components/editor/block";
+import type { DocumentEditorInstance } from "@repo/design-system/components/editor/document";
 import { DocumentMarks } from "@repo/design-system/components/editor/format";
 import {
   editorBar,
@@ -24,7 +25,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@repo/design-system/components/ui/popover";
-import { useCurrentEditor } from "@tiptap/react";
+import { EditorContext, useCurrentEditor } from "@tiptap/react";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
 import {
@@ -226,6 +227,8 @@ export function RichEditorToolbar({ labels }: RichEditorToolbarProps) {
 }
 
 interface DocumentToolbarProps {
+  /** The editor the controls act on, or none while there is none, so every control waits. */
+  editor: DocumentEditorInstance | null;
   /** The names a writer hears and sees for each control of the document toolbar. */
   labels: ComponentProps<typeof DocumentBlocks>["labels"] &
     ComponentProps<typeof DocumentInsert>["labels"] &
@@ -241,21 +244,23 @@ interface DocumentToolbarProps {
 /**
  * The toolbar of an assessment document, on one line: history, the style of the paragraph,
  * marks, lists, quote and code block, and tables. It offers only the blocks and marks of the
- * contract, and it stays at the top of the editor while the text scrolls beneath it.
+ * contract. It is drawn by its caller, outside the document, and acts on the editor it reads
+ * through `useCurrentEditor`.
  */
-export function DocumentToolbar({ labels }: DocumentToolbarProps) {
+export function DocumentToolbar({ editor, labels }: DocumentToolbarProps) {
   return (
-    <EditorBar
-      className="sticky top-0 z-10 bg-background"
-      groups={[
-        { name: "history", tools: <RichEditorHistory labels={labels} /> },
-        { name: "style", tools: <RichEditorStyle labels={labels} /> },
-        { name: "marks", tools: <DocumentMarks labels={labels} /> },
-        { name: "blocks", tools: <DocumentBlocks labels={labels} /> },
-        { name: "insert", tools: <DocumentInsert labels={labels} /> },
-        { name: "table", tools: <DocumentTable labels={labels} /> },
-      ]}
-      more={labels.more}
-    />
+    <EditorContext value={{ editor }}>
+      <EditorBar
+        groups={[
+          { name: "history", tools: <RichEditorHistory labels={labels} /> },
+          { name: "style", tools: <RichEditorStyle labels={labels} /> },
+          { name: "marks", tools: <DocumentMarks labels={labels} /> },
+          { name: "blocks", tools: <DocumentBlocks labels={labels} /> },
+          { name: "insert", tools: <DocumentInsert labels={labels} /> },
+          { name: "table", tools: <DocumentTable labels={labels} /> },
+        ]}
+        more={labels.more}
+      />
+    </EditorContext>
   );
 }
