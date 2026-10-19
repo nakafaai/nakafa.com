@@ -31,10 +31,11 @@ export async function generateMetadata({
   if (!Schema.is(TenantSlug)(slug)) {
     return {};
   }
-  const name = await readSchoolName(slug);
-  if (name === null) {
+  const school = await readSchoolName(slug);
+  if (Option.isNone(school)) {
     return {};
   }
+  const name = school.value;
   return {
     robots: { follow: false, index: false },
     title: { default: name, template: `%s | ${name}` },

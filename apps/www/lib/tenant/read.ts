@@ -1,7 +1,7 @@
 import { HttpClient } from "@confect/js";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { Effect, Option } from "effect";
+import { Effect, Option, Schema } from "effect";
 import { cacheLife, io } from "next/cache";
 import { cache } from "react";
 import { getToken } from "@/lib/auth/server";
@@ -29,19 +29,33 @@ export const readProfile = cache(async (slug: TenantSlug) => {
 });
 
 /**
- * The name of the school at an address, or null when no school has it, for the
- * titles of its pages. A school renames rarely, so the name comes from the
- * `minutes` cache profile, whose five-minute stale time keeps the metadata off
- * uncached data.
+ * The name of a school as plain data. A cached function may return only plain data, and an
+ * Effect `Option` is a class instance, so the cache holds this form and the reader decodes it.
  */
-export async function readSchoolName(slug: TenantSlug): Promise<string | null> {
+const SchoolNameIso = Schema.toCodecIso(Schema.Option(Schema.String));
+
+/**
+ * The name of the school at an address in the cache's plain form, which the cache can hold.
+ * The `minutes` cache profile's five-minute stale time keeps the metadata off uncached data.
+ */
+async function readCachedSchoolName(slug: TenantSlug) {
   "use cache";
   cacheLife("minutes");
   const profile = await Effect.runPromise(queryProfile(slug));
-  return Option.match(profile, {
-    onNone: () => null,
-    onSome: ({ name }) => name,
-  });
+  return Schema.encodeSync(SchoolNameIso)(
+    Option.map(profile, ({ name }) => name)
+  );
+}
+
+/**
+ * The name of the school at an address, or none when no school has it, for the titles of its
+ * pages. A school renames rarely, so the name comes from the cached `minutes` profile.
+ */
+export async function readSchoolName(
+  slug: TenantSlug
+): Promise<Option.Option<string>> {
+  const name = await readCachedSchoolName(slug);
+  return Effect.runPromise(Schema.decodeEffect(SchoolNameIso)(name));
 }
 
 /**

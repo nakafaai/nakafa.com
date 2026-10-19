@@ -69,14 +69,14 @@ describe("readSchoolName", () => {
   it("reads the name of a school that exists", async () => {
     serve({ profile: answered(PROFILE_VALUE) });
 
-    expect(await readSchoolName(SLUG)).toBe("Harapan");
+    expect(Option.getOrUndefined(await readSchoolName(SLUG))).toBe("Harapan");
     expect(Arr.map(queriesOf(), (query) => query.path)).toEqual([PROFILE]);
   });
 
   it("reads no name for a school that does not exist", async () => {
     serve({ profile: refusedWith(TENANT_NOT_FOUND) });
 
-    expect(await readSchoolName(SLUG)).toBeNull();
+    expect(Option.isNone(await readSchoolName(SLUG))).toBe(true);
   });
 });
 
