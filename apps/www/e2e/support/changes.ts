@@ -398,7 +398,8 @@ export const live = (changes: Changes) =>
  * Waits until the page sent a change after `sentBefore`, and every change the
  * page sent is settled: the server answered it, the page was told of the
  * database as it was once the change was stored, and no refusal of the server
- * still waits for an accepted answer. So a save never passes on a refusal alone.
+ * still waits for an accepted answer, so a save never passes on a server refusal
+ * alone. A refusal the test injects with `failNext` settles at once.
  */
 export const saved = (changes: Changes, sentBefore: number) =>
   expect
