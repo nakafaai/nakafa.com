@@ -242,6 +242,26 @@ test("an admin reads the role guide and finds the owner's grant on Roles", async
   await expect(
     ownerGrant.getByRole("cell", { name: "Owner", exact: true })
   ).toBeVisible();
+
+  // A role chosen in the Role filter stays in its menu while the search hides every
+  // row, so it can be unchosen, and the grant shows again once both are cleared.
+  // The column's sort button is named Role too; the filter is the one that opens a menu.
+  const roleFilter = page
+    .getByRole("button", { name: "Role", exact: true })
+    .and(page.locator('[aria-haspopup="menu"]'));
+  await roleFilter.click();
+  await page.getByRole("menuitemcheckbox", { name: /^Owner/ }).click();
+  await page.keyboard.press("Escape");
+  await page.getByRole("textbox", { name: "Find a person" }).fill("Zygmunt");
+  await expect(ownerGrant).toHaveCount(0);
+  await roleFilter.click();
+  const chosen = page.getByRole("menuitemcheckbox", { name: /^Owner/ });
+  await expect(chosen).toBeChecked();
+  await chosen.click();
+  await expect(chosen).not.toBeChecked();
+  await page.keyboard.press("Escape");
+  await page.getByRole("textbox", { name: "Find a person" }).fill("");
+  await expect(ownerGrant).toHaveCount(1);
   await context.close();
 });
 

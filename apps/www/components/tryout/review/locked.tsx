@@ -129,6 +129,7 @@ export async function TryoutReviewLocked({
       <TryoutReviewOffer
         compare={t("paywall-compare")}
         description={t("paywall-description")}
+        footer={t("paywall-footer")}
         period={tPricing("pro-period")}
         title={t("paywall-title", { count: runtime.questions.length })}
       />
@@ -143,11 +144,14 @@ export async function TryoutReviewLocked({
 function TryoutReviewOffer({
   compare,
   description,
+  footer,
   period,
   title,
 }: {
   readonly compare: string;
   readonly description: string;
+  /** The sentence on the left of the offer's actions. */
+  readonly footer: string;
   readonly period: string;
   readonly title: string;
 }) {
@@ -162,7 +166,7 @@ function TryoutReviewOffer({
       <CardContent>
         <PricingPrice Price={StaticPrice} period={period} plan="pro" />
       </CardContent>
-      <CardSectionFooter bottomSheet>
+      <CardSectionFooter bottomSheet hint={footer}>
         <CardSectionActions share>
           <IntentLink
             className={buttonVariants({ variant: "outline" })}

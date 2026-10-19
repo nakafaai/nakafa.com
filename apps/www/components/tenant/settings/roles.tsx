@@ -8,7 +8,7 @@ import {
   usePaginatedQuery,
   useQuery,
 } from "@confect/react";
-import { MoreHorizontalIcon } from "@hugeicons/core-free-icons";
+import { BookOpen01Icon, MoreHorizontalIcon } from "@hugeicons/core-free-icons";
 import access from "@repo/backend/confect/_generated/refs/access";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { BuiltinRole } from "@repo/backend/confect/access/schema";
@@ -97,12 +97,14 @@ export function SchoolRolesSettings({ slug }: { slug: TenantSlug }) {
     <SettingsPage
       actions={
         <>
+          {/* On a phone the guide keeps its icon, so the page's name keeps its room. */}
           <Button
             onClick={() => setIsGuiding(true)}
             type="button"
             variant="outline"
           >
-            {t("roles-guide")}
+            <HugeIcons icon={BookOpen01Icon} />
+            <span className="max-sm:sr-only">{t("roles-guide")}</span>
           </Button>
           <Button onClick={() => setIsGiving(true)} type="button">
             {t("roles-assign")}

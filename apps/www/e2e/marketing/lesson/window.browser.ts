@@ -50,7 +50,9 @@ test("home lesson window opens the next lesson by itself while it is on screen",
             Effect.gen(function* () {
               yield* openRoute(page, "/id", "denied");
               const lesson = lessonSection(page);
-              const selected = lesson.getByRole("tab", { selected: true });
+              const selected = lesson
+                .locator('[data-slot="button-group"]')
+                .getByRole("button", { pressed: true });
               yield* Effect.promise(() =>
                 lessonWindow(page).scrollIntoViewIfNeeded()
               );
@@ -93,10 +95,12 @@ test("home lesson window stops turning once the reader picks a lesson", async ({
             Effect.gen(function* () {
               yield* openRoute(page, "/id", "denied");
               const lesson = lessonSection(page);
-              const cell = lesson.getByRole("tab", {
-                exact: true,
-                name: CELL_TAB,
-              });
+              const cell = lesson
+                .locator('[data-slot="button-group"]')
+                .getByRole("button", {
+                  exact: true,
+                  name: CELL_TAB,
+                });
               yield* Effect.promise(() => lesson.scrollIntoViewIfNeeded());
               yield* Effect.promise(() => cell.click());
               // The pointer and the focus leave the window, so nothing holds it.
@@ -118,9 +122,11 @@ test("home lesson window stops turning once the reader picks a lesson", async ({
 
               yield* Effect.promise(() => page.waitForTimeout(LESSON_WAIT_MS));
               yield* Effect.promise(() =>
-                expect(lesson.getByRole("tab", { selected: true })).toHaveText(
-                  CELL_TAB
-                )
+                expect(
+                  lesson
+                    .locator('[data-slot="button-group"]')
+                    .getByRole("button", { pressed: true })
+                ).toHaveText(CELL_TAB)
               );
               yield* Effect.promise(() =>
                 expect(
@@ -163,7 +169,9 @@ test("home lesson window keeps the launch the reader picked when the reader retu
             Effect.gen(function* () {
               yield* openRoute(page, "/id", "denied");
               const lesson = lessonSection(page);
-              const tabs = lesson.getByRole("tab");
+              const tabs = lesson
+                .locator('[data-slot="button-group"]')
+                .getByRole("button");
               const launch = lessonPanel(page)
                 .locator('[data-slot="toggle-group-item"]')
                 .nth(HIGH_ANGLE_TOGGLE_INDEX);

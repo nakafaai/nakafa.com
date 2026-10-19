@@ -214,8 +214,8 @@ function DataTableHead<TData extends RowData>({
 
 /**
  * The filter of one column by the values it holds: a menu of the values present in the
- * rows, each with how many rows hold it. Choosing values keeps the rows that hold any
- * of them.
+ * rows, each with how many rows hold it, and of the values already chosen. Choosing
+ * values keeps the rows that hold any of them.
  */
 function DataTableFacet<TData extends RowData>({
   column,
@@ -231,7 +231,12 @@ function DataTableFacet<TData extends RowData>({
     Schema.decodeUnknownOption(FacetValues)(column.getFilterValue()),
     () => []
   );
-  const present = Arr.filter(options, (option) => counts.has(option.value));
+  // A chosen value stays in its menu while other filters hide its rows, so it can be
+  // unchosen; it counts no rows then.
+  const present = Arr.filter(
+    options,
+    (option) => counts.has(option.value) || Arr.contains(chosen, option.value)
+  );
 
   return (
     <DropdownMenu>
@@ -268,7 +273,7 @@ function DataTableFacet<TData extends RowData>({
             >
               {option.label}
               <DropdownMenuShortcut>
-                {counts.get(option.value)}
+                {counts.get(option.value) ?? 0}
               </DropdownMenuShortcut>
             </DropdownMenuCheckboxItem>
           ))}

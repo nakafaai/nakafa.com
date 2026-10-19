@@ -1,9 +1,15 @@
 import { useTranslations } from "next-intl";
 import { MemoryDesk } from "@/components/marketing/about/memory/desk.client";
-import { MarketingSection } from "@/components/marketing/shared/section";
+import {
+  FeatureCard,
+  FeatureLead,
+  FeatureRow,
+  FeatureText,
+  FeatureTitle,
+} from "@/components/marketing/shared/feature";
 
 /**
- * The memory part: no window and no list. Nina writes down five things the
+ * The memory row: its words beside a card where Nina writes down five things the
  * learner says, and the notebooks pile up beside her as the days pass.
  */
 export function Memory() {
@@ -17,18 +23,14 @@ export function Memory() {
   ];
 
   return (
-    <MarketingSection id="memory">
-      <div className="mx-auto grid w-full max-w-3xl justify-items-center gap-10 text-center">
-        <div className="grid justify-items-center gap-3">
-          <h2 className="text-balance text-3xl tracking-tight sm:text-4xl">
-            {t("memory-title")}
-          </h2>
-          <p className="max-w-xl text-pretty text-base text-muted-foreground">
-            {t("memory-lead")}
-          </p>
-        </div>
+    <FeatureRow id="memory">
+      <FeatureText>
+        <FeatureTitle>{t("memory-title")}</FeatureTitle>
+        <FeatureLead>{t("memory-lead")}</FeatureLead>
+      </FeatureText>
+      <FeatureCard>
         <MemoryDesk facts={facts} />
-      </div>
-    </MarketingSection>
+      </FeatureCard>
+    </FeatureRow>
   );
 }

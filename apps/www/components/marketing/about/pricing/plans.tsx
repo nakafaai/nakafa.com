@@ -12,8 +12,7 @@ import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { Nina } from "@repo/design-system/components/ui/nina";
 import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
-import type { ComponentType } from "react";
-import { PricingButton } from "@/components/marketing/about/pricing/button.client";
+import type { ComponentType, ReactNode } from "react";
 import {
   type PriceProps,
   PricingPrice,
@@ -23,6 +22,8 @@ import { freePlanFeatures, proPlanFeatures } from "@/lib/marketing/plan";
 interface PricingPlanCardsProps {
   headingLevel: "h2" | "h3";
   Price: ComponentType<PriceProps>;
+  /** The Pro card's action, which the page gives the emphasis it needs. */
+  proAction: ReactNode;
 }
 
 /** One line of a plan: a tick and its text. */
@@ -42,7 +43,11 @@ function PricingFeature({ text }: { text: string }) {
  * lists start on one line and the two actions sit on one line at the bottom,
  * whichever plan holds more lines. The prices come from the slots of each plan.
  */
-export function PricingCards({ Price, headingLevel }: PricingPlanCardsProps) {
+export function PricingCards({
+  Price,
+  headingLevel,
+  proAction,
+}: PricingPlanCardsProps) {
   const t = useTranslations("Pricing");
   const PlanHeading = headingLevel;
   const credits = getPlanCreditConfig("pro").amount;
@@ -121,9 +126,7 @@ export function PricingCards({ Price, headingLevel }: PricingPlanCardsProps) {
               ))}
             </ul>
           </CardContent>
-          <CardFooter>
-            <PricingButton />
-          </CardFooter>
+          <CardFooter>{proAction}</CardFooter>
         </Card>
       </div>
     </div>
