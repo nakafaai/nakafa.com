@@ -1,25 +1,17 @@
 import {
   Breadcrumb,
-  BreadcrumbEllipsis,
   BreadcrumbItem,
   BreadcrumbLink,
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@repo/design-system/components/ui/breadcrumb";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from "@repo/design-system/components/ui/dropdown-menu";
 import { cn } from "cn";
 import { Array as Arr, Schema } from "effect";
 import type { ReactNode } from "react";
 import { BreadcrumbAnchor } from "@/components/shared/breadcrumb/anchor";
 import { BreadcrumbHeaderFrame } from "@/components/shared/breadcrumb/frame";
+import { BreadcrumbMenu } from "@/components/shared/breadcrumb/menu";
 
 const BreadcrumbHeaderItemSchema = Schema.Struct({
   href: Schema.optional(Schema.String),
@@ -47,14 +39,13 @@ interface BreadcrumbHeaderProps {
 type BreadcrumbHeaderValue = BreadcrumbHeaderProps["value"];
 
 /**
- * Renders at most Home and the two nearest path items. The action shares the
- * path's row, and an action that takes the full width, such as a selector on a
- * phone, wraps under the path.
+ * Renders at most Home and the two nearest path items, with the action on the same
+ * row at every width: the header is one row, so an action stays compact on a phone.
  */
 export function BreadcrumbHeader({ value }: BreadcrumbHeaderProps) {
   const { action, homeHref, homeLabel, items, menuLabel, title } = value;
   return (
-    <BreadcrumbHeaderFrame contentClassName="flex-wrap sm:flex-nowrap sm:py-0">
+    <BreadcrumbHeaderFrame contentClassName="flex-nowrap">
       <h1 className="sr-only">{title}</h1>
       <BreadcrumbHeaderPath
         homeHref={homeHref}
@@ -141,58 +132,34 @@ export function BreadcrumbHeaderPath({
   );
 }
 
-/** Renders folded breadcrumb items inside an ellipsis menu. */
-function BreadcrumbMenu({
+/**
+ * A path folded whole into its ellipsis menu, as Google Drive shows it on a phone: Home
+ * and every item go into the menu, and the page names itself beside it. A header whose
+ * own title is the current page, such as a surah's, shows this on a phone so the title
+ * shares the row.
+ */
+export function BreadcrumbHeaderFold({
   className,
+  homeHref,
+  homeLabel,
   items,
   menuLabel,
-}: {
+}: Pick<
+  BreadcrumbHeaderValue,
+  "homeHref" | "homeLabel" | "items" | "menuLabel"
+> & {
   className: string;
-  items: readonly BreadcrumbHeaderItem[];
-  menuLabel: string;
 }) {
   return (
-    <BreadcrumbItem className={cn("min-w-0", className)}>
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          render={
-            <button
-              aria-label={menuLabel}
-              className="flex size-6 cursor-pointer items-center justify-center rounded-md transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              type="button"
-            >
-              <BreadcrumbEllipsis />
-            </button>
-          }
+    <Breadcrumb className={cn("shrink-0", className)}>
+      <BreadcrumbList className="flex-nowrap">
+        <BreadcrumbMenu
+          className=""
+          items={[{ href: homeHref, label: homeLabel }, ...items]}
+          menuLabel={menuLabel}
         />
-        <DropdownMenuContent align="start" className="w-48">
-          <DropdownMenuGroup>
-            <DropdownMenuLabel>{menuLabel}</DropdownMenuLabel>
-            {Arr.map(items, (item) => (
-              <BreadcrumbMenuItem
-                item={item}
-                key={`${item.label}:${item.href ?? "current"}`}
-              />
-            ))}
-          </DropdownMenuGroup>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </BreadcrumbItem>
-  );
-}
-
-/** Renders one linked or inert collapsed breadcrumb menu item. */
-function BreadcrumbMenuItem({ item }: { item: BreadcrumbHeaderItem }) {
-  const label = item.menuLabel ?? item.label;
-
-  if (!item.href) {
-    return <DropdownMenuItem render={<span>{label}</span>} />;
-  }
-
-  return (
-    <DropdownMenuItem
-      render={<BreadcrumbAnchor href={item.href}>{label}</BreadcrumbAnchor>}
-    />
+      </BreadcrumbList>
+    </Breadcrumb>
   );
 }
 

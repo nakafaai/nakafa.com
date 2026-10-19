@@ -4,11 +4,16 @@ import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { BreadcrumbHeaderFrame } from "@/components/shared/breadcrumb/frame";
 import {
+  BreadcrumbHeaderFold,
   type BreadcrumbHeaderItem,
   BreadcrumbHeaderPath,
 } from "@/components/shared/breadcrumb/header";
 
-/** Keeps navigation, heading, and the primary action in one stable page row. */
+/**
+ * Keeps navigation, heading, and the primary action in one row at every width. On a
+ * phone the path folds whole into its menu, as Google Drive folds it, so the page's
+ * name sits beside it; from md the path, the centred name and the action stand apart.
+ */
 export function TryoutPageHeader({
   action,
   items,
@@ -19,19 +24,29 @@ export function TryoutPageHeader({
   title: string;
 }) {
   const tCommon = useTranslations("Common");
+  const path = [
+    { href: "/try-out", label: tCommon("try-out-short") },
+    ...items,
+  ];
   return (
-    <BreadcrumbHeaderFrame contentClassName="grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-2 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
-      <div className="col-span-2 min-w-0 md:col-span-1">
-        <BreadcrumbHeaderPath
+    <BreadcrumbHeaderFrame contentClassName="grid grid-cols-[auto_minmax(0,1fr)_auto] gap-x-3 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:gap-x-4">
+      <div className="min-w-0">
+        <BreadcrumbHeaderFold
+          className="md:hidden"
           homeHref="/home"
           homeLabel={tCommon("home")}
-          items={[
-            { href: "/try-out", label: tCommon("try-out-short") },
-            ...items,
-          ]}
+          items={path}
           menuLabel={tCommon("more")}
-          visibleItemCount={1}
         />
+        <div className="min-w-0 max-md:hidden">
+          <BreadcrumbHeaderPath
+            homeHref="/home"
+            homeLabel={tCommon("home")}
+            items={path}
+            menuLabel={tCommon("more")}
+            visibleItemCount={1}
+          />
+        </div>
       </div>
       <h1
         className="min-w-0 truncate font-medium text-base md:max-w-xs md:text-center"
@@ -39,9 +54,7 @@ export function TryoutPageHeader({
       >
         {title}
       </h1>
-      <div className="flex min-w-0 justify-end [&_button]:max-w-full [&_button]:whitespace-normal [&_button]:text-start">
-        {action}
-      </div>
+      <div className="flex shrink-0 justify-end">{action}</div>
     </BreadcrumbHeaderFrame>
   );
 }
