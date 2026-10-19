@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@nakafa/aksara-contracts": "0.51.0",
+    "@repo/backend": "workspace:*",
     "@repo/next-config": "workspace:*",
     "@repo/seo": "workspace:*",
     "@repo/utilities": "workspace:*",

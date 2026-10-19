@@ -2,12 +2,12 @@ import { cleanSlug } from "@repo/utilities/slug";
 import type { Metadata } from "next";
 import type { Locale } from "use-intl";
 
-const SOCIAL_IMAGE_SIZE = {
+export const SOCIAL_IMAGE_SIZE = {
   width: 1200,
   height: 630,
 };
-const SOCIAL_SITE_NAME = "Nakafa";
-const SOCIAL_TWITTER_ACCOUNT = "@nabilfatih_";
+export const SOCIAL_SITE_NAME = "Nakafa";
+export const SOCIAL_TWITTER_ACCOUNT = "@nabilfatih_";
 
 type SocialOpenGraphType = Extract<
   NonNullable<Metadata["openGraph"]>,

@@ -1,10 +1,20 @@
 // @vitest-environment node
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { Duration, Effect, MutableHashMap, Option, Schema } from "effect";
 import {
+  Duration,
+  Effect,
+  Fiber,
+  MutableHashMap,
+  Option,
+  Schema,
+} from "effect";
+import { TestClock } from "effect/testing";
+import {
+  ContentStoreLimitError,
   ContentStoreUnavailableError,
   expireStoreTag,
+  invalidateStoreTag,
   readStoreEntry,
   writeStoreEntry,
 } from "@/lib/content/store/entry";
@@ -16,10 +26,16 @@ import {
 
 const getCacheMock = vi.hoisted(() => vi.fn());
 const digestMock = vi.hoisted(() => vi.fn());
+const invalidateByTagMock = vi.hoisted(() =>
+  vi.fn<(tag: string) => Promise<void>>()
+);
 
 vi.mock("@vercel/functions", async () => {
   const { testRuntimeCache: cache } = await import("@/test/store");
-  return { getCache: getCacheMock.mockReturnValue(cache) };
+  return {
+    getCache: getCacheMock.mockReturnValue(cache),
+    invalidateByTag: invalidateByTagMock,
+  };
 });
 
 vi.mock("@repo/utilities/digest", async (importOriginal) => {
@@ -36,7 +52,37 @@ const NullableTextSchema = Schema.NullOr(Schema.String);
 beforeEach(() => {
   resetTestRuntimeCache();
   digestMock.mockClear();
+  invalidateByTagMock.mockReset();
+  invalidateByTagMock.mockResolvedValue();
 });
+
+/** A rate-limit answer from the platform, which names its wait in seconds. */
+const rateLimit = (retryAfter?: string) => ({
+  headers: retryAfter === undefined ? {} : { "retry-after": retryAfter },
+  status: 429,
+});
+
+/** Writes one text entry under one tag, with the given value. */
+const writeText = (value: string, tags: readonly string[] = ["content:x"]) =>
+  writeStoreEntry({
+    name: "content.test",
+    parts: ["limit"],
+    schema: Schema.String,
+    tags,
+    ttl: Duration.days(1),
+    value,
+  });
+
+/**
+ * Runs one purge while the test clock passes the time its waits take, so a
+ * default wait does not block the test.
+ */
+const expireWithin = (elapsed: Duration.Input) =>
+  Effect.gen(function* () {
+    const fiber = yield* Effect.forkChild(expireStoreTag("content:x"));
+    yield* TestClock.adjust(elapsed);
+    return yield* Fiber.join(fiber);
+  });
 
 describe("content store entries", () => {
   it("opens the Runtime Cache under its own namespace with unhashed keys", () => {
@@ -245,6 +291,128 @@ describe("content store entries", () => {
 
       expect(yield* expireStoreTag("content-active").pipe(Effect.flip)).toEqual(
         new ContentStoreUnavailableError({ cause, operation: "expire" })
+      );
+    })
+  );
+});
+
+describe("content store limits", () => {
+  it.effect(
+    "refuses an entry with a tag that holds a comma, and writes nothing",
+    () =>
+      Effect.gen(function* () {
+        yield* writeText("kept", ["content:a,b"]);
+        expect(testRuntimeCache.set).not.toHaveBeenCalled();
+        expect(
+          yield* readStoreEntry({ parts: ["limit"], schema: Schema.String })
+        ).toStrictEqual(Option.none());
+      })
+  );
+
+  it.effect("refuses an entry with more tags than the platform allows", () =>
+    Effect.gen(function* () {
+      const tags = Array.from(
+        { length: 129 },
+        (_, index) => `content:${index}`
+      );
+      yield* writeText("kept", tags);
+      expect(testRuntimeCache.set).not.toHaveBeenCalled();
+    })
+  );
+
+  it.effect("refuses an entry with a tag over 256 bytes", () =>
+    Effect.gen(function* () {
+      yield* writeText("kept", ["t".repeat(257)]);
+      expect(testRuntimeCache.set).not.toHaveBeenCalled();
+    })
+  );
+
+  it.effect("refuses an entry over 2 MB as JSON", () =>
+    Effect.gen(function* () {
+      yield* writeText("x".repeat(2_000_000));
+      expect(testRuntimeCache.set).not.toHaveBeenCalled();
+    })
+  );
+
+  it.effect("stores an entry at each limit", () =>
+    Effect.gen(function* () {
+      const tags = Array.from({ length: 128 }, (_, index) =>
+        `${index}`.padEnd(256, "t")
+      );
+      yield* writeText("kept", tags);
+      expect(testRuntimeCache.set).toHaveBeenCalledOnce();
+      expect(
+        yield* readStoreEntry({ parts: ["limit"], schema: Schema.String })
+      ).toStrictEqual(Option.some("kept"));
+    })
+  );
+
+  it("names each refused limit", () => {
+    expect(new ContentStoreLimitError({ limit: "tag-comma" }).limit).toBe(
+      "tag-comma"
+    );
+  });
+});
+
+describe("content store purges", () => {
+  it.effect("repeats a rate-limited expiry after the wait it names", () =>
+    Effect.gen(function* () {
+      testRuntimeCache.expireTag
+        .mockRejectedValueOnce(rateLimit("0"))
+        .mockResolvedValueOnce();
+      yield* expireStoreTag("content:x");
+      expect(testRuntimeCache.expireTag).toHaveBeenCalledTimes(2);
+    })
+  );
+
+  it.effect(
+    "waits the default second when a rate limit names no usable wait",
+    () =>
+      Effect.gen(function* () {
+        testRuntimeCache.expireTag
+          .mockRejectedValueOnce(rateLimit())
+          .mockRejectedValueOnce(rateLimit("later"))
+          .mockResolvedValue();
+        yield* expireWithin("2 seconds");
+        expect(testRuntimeCache.expireTag).toHaveBeenCalledTimes(3);
+      })
+  );
+
+  it.effect("fails with the last rate limit after three repeats", () =>
+    Effect.gen(function* () {
+      testRuntimeCache.expireTag.mockRejectedValue(rateLimit("0"));
+      const error = yield* expireStoreTag("content:x").pipe(Effect.flip);
+      expect(error).toStrictEqual(
+        new ContentStoreUnavailableError({
+          cause: rateLimit("0"),
+          operation: "expire",
+        })
+      );
+      expect(testRuntimeCache.expireTag).toHaveBeenCalledTimes(4);
+    })
+  );
+
+  it.effect("does not repeat an expiry that fails for another reason", () =>
+    Effect.gen(function* () {
+      testRuntimeCache.expireTag.mockRejectedValueOnce(new Error("offline"));
+      yield* expireStoreTag("content:x").pipe(Effect.flip);
+      expect(testRuntimeCache.expireTag).toHaveBeenCalledTimes(1);
+    })
+  );
+
+  it.effect("invalidates a tag on the CDN once", () =>
+    Effect.gen(function* () {
+      yield* invalidateStoreTag("content:x");
+      expect(invalidateByTagMock).toHaveBeenCalledExactlyOnceWith("content:x");
+    })
+  );
+
+  it.effect("fails an invalidation that the platform refuses", () =>
+    Effect.gen(function* () {
+      const cause = new Error("offline");
+      invalidateByTagMock.mockRejectedValueOnce(cause);
+      expect(yield* invalidateStoreTag("content:x").pipe(Effect.flip)).toEqual(
+        new ContentStoreUnavailableError({ cause, operation: "invalidate" })
       );
     })
   );

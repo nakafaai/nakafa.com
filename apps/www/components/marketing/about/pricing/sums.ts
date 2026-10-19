@@ -3,7 +3,7 @@ import {
   NINA_RESPONSE_CREDITS,
 } from "@repo/backend/confect/credits/constants";
 import { Schema } from "effect";
-import type { getProMonthlyPricing } from "@/components/marketing/about/pricing/display";
+import type { getProMonthlyPricing } from "@/lib/pricing/monthly";
 
 /** The monthly Pro price of one currency, as the Polar catalog gives it. */
 type MonthlyPrice = ReturnType<typeof getProMonthlyPricing>["price"];

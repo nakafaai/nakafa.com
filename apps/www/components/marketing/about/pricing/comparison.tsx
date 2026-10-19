@@ -8,10 +8,10 @@ import { useTranslations } from "use-intl";
 import {
   currencySymbol,
   drinkKey,
-  getProMonthlyPricing,
   pricingCountryHeaderName,
 } from "@/components/marketing/about/pricing/display";
 import { pricingSums } from "@/components/marketing/about/pricing/sums";
+import { getProMonthlyPricing } from "@/lib/pricing/monthly";
 
 /** One comparison: its picture, its sum, and the sentence that says what it means, centred in its column. */
 function Comparison({
