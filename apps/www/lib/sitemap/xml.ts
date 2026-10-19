@@ -1,8 +1,13 @@
-import { Array as Arr } from "effect";
-import type { MetadataRoute } from "next";
+import { Array as Arr, Schema } from "effect";
 import { CONTENT_SITEMAP_CACHE_TAG } from "@/lib/sitemap/cache";
 
-type SitemapEntry = MetadataRoute.Sitemap[number];
+/** One sitemap URL, with the modification date that the XML writes when it is known. */
+const SitemapEntry = Schema.Struct({
+  lastModified: Schema.optionalKey(Schema.Union([Schema.Date, Schema.String])),
+  url: Schema.String,
+});
+
+type SitemapEntry = typeof SitemapEntry.Type;
 
 export const sitemapXmlHeaders = {
   "Cache-Control":

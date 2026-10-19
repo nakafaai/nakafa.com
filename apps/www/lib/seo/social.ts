@@ -1,5 +1,5 @@
 import { cleanSlug } from "@repo/utilities/slug";
-import type { Metadata } from "next";
+import { Schema } from "effect";
 import type { Locale } from "use-intl";
 
 export const SOCIAL_IMAGE_SIZE = {
@@ -9,10 +9,10 @@ export const SOCIAL_IMAGE_SIZE = {
 export const SOCIAL_SITE_NAME = "Nakafa";
 export const SOCIAL_TWITTER_ACCOUNT = "@nabilfatih_";
 
-type SocialOpenGraphType = Extract<
-  NonNullable<Metadata["openGraph"]>,
-  { type: string }
->["type"];
+/** The Open Graph types that a page declares. */
+export const SocialOpenGraphType = Schema.Literals(["article", "website"]);
+
+type SocialOpenGraphType = typeof SocialOpenGraphType.Type;
 
 /**
  * Get the Open Graph URL for a given locale and path.

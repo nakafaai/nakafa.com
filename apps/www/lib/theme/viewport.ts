@@ -1,5 +1,4 @@
 import { THEME_COMPATIBILITY_COLORS } from "@repo/design-system/lib/theme/compatibility";
-import type { Viewport } from "next";
 
 /** Browser viewport and color-scheme metadata shared by every app document. */
 export const appViewport = {
@@ -16,4 +15,4 @@ export const appViewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-} satisfies Viewport;
+} as const;

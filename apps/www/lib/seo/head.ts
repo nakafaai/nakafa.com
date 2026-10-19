@@ -10,6 +10,7 @@ import {
   SOCIAL_IMAGE_SIZE,
   SOCIAL_SITE_NAME,
   SOCIAL_TWITTER_ACCOUNT,
+  SocialOpenGraphType,
 } from "@/lib/seo/social";
 import { createSEOTitle } from "@/lib/seo/titles";
 
@@ -40,7 +41,7 @@ const PageFacts = Schema.Struct({
   jsonLd: Schema.Array(Schema.Record(Schema.String, Schema.Unknown)),
   locale: LocaleSchema,
   parts: Schema.Array(Schema.UndefinedOr(Schema.String)),
-  type: Schema.Literals(["article", "website"]),
+  type: SocialOpenGraphType,
 });
 
 type PageFacts = typeof PageFacts.Type;
