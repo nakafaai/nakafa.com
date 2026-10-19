@@ -372,4 +372,64 @@ describe("createAuthProxy", () => {
       expect(handler.GET).toHaveBeenCalledOnce();
     })
   );
+
+  it.effect(
+    "forwards a session read with the browser host that its host header names",
+    () =>
+      Effect.gen(function* () {
+        const proxy = createAuthProxy(handler);
+        handler.GET.mockResolvedValueOnce(new Response("session"));
+
+        yield* Effect.promise(() =>
+          proxy.GET(
+            new Request("http://localhost:3100/api/auth/get-session", {
+              headers: { ...SESSION_COOKIE, host: "harapan.localhost:3100" },
+            })
+          )
+        );
+
+        const forwarded = handler.GET.mock.calls[0]?.[0];
+        expect(forwarded?.url).toBe(
+          "http://harapan.localhost:3100/api/auth/get-session"
+        );
+        expect(forwarded?.headers.get("cookie")).toBe(SESSION_COOKIE.cookie);
+      })
+  );
+
+  it.effect("forwards a write with the browser host and its body", () =>
+    Effect.gen(function* () {
+      const proxy = createAuthProxy(handler);
+      handler.POST.mockResolvedValueOnce(new Response("signed in"));
+
+      yield* Effect.promise(() =>
+        proxy.POST(
+          new Request("http://localhost:3100/api/auth/sign-in/username", {
+            body: '{"username":"siswa.uji"}',
+            headers: { host: "harapan.localhost:3100" },
+            method: "POST",
+          })
+        )
+      );
+
+      const forwarded = handler.POST.mock.calls[0]?.[0];
+      expect(forwarded?.url).toBe(
+        "http://harapan.localhost:3100/api/auth/sign-in/username"
+      );
+      expect(
+        yield* Effect.promise(() => forwarded?.text() ?? Promise.resolve(""))
+      ).toBe('{"username":"siswa.uji"}');
+    })
+  );
+
+  it.effect("forwards a request that names no host with its own URL", () =>
+    Effect.gen(function* () {
+      const proxy = createAuthProxy(handler);
+      handler.POST.mockResolvedValueOnce(new Response("signed in"));
+      const request = new Request(POST_URL, { method: "POST" });
+
+      yield* Effect.promise(() => proxy.POST(request));
+
+      expect(handler.POST).toHaveBeenCalledWith(request);
+    })
+  );
 });

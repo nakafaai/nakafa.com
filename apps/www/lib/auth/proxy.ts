@@ -11,11 +11,13 @@ import {
   Duration,
   Effect,
   HashSet,
+  Option,
   Schedule,
   Schema,
 } from "effect";
 import { bufferResponse } from "@/lib/auth/body";
 import { SESSION_PATH } from "@/lib/auth/session";
+import { readRequestHost } from "@/lib/routing/school/host";
 
 /** One method of the Better Auth route handler that the proxy forwards to. */
 type AuthHandlerMethod = (request: Request) => Promise<Response>;
@@ -187,10 +189,31 @@ function answerSignedOutSession() {
 }
 
 /**
+ * The request with the host that the browser asked for in its URL. A local
+ * `next start` on its own hostname and port builds each request's URL from that
+ * address, so every school would read as `localhost`, and the Better Auth handler
+ * would forward that name as the browser host. The school of a sign-in would be
+ * lost. The `host` header carries the browser's host, as the school routing reads
+ * it, and on Vercel the URL already names that host, so the rewrite changes nothing
+ * there.
+ */
+function withBrowserHost(request: Request): Request {
+  return Option.match(readRequestHost(request.headers), {
+    onNone: () => request,
+    onSome: (host) => {
+      const url = new URL(request.url);
+      url.host = host;
+      return new Request(url, request);
+    },
+  });
+}
+
+/**
  * Builds the Next.js route methods for the Better Auth handler. A network
  * failure that is not repeated rejects the route, and Next.js answers 500, as it
  * did before the proxy existed. A session read from a visitor without a session
- * cookie is answered here and never reaches Convex.
+ * cookie is answered here and never reaches Convex. Every other request reaches
+ * Better Auth with the browser's host (`withBrowserHost`).
  */
 export function createAuthProxy(handler: AuthRouteHandler) {
   return {
@@ -198,11 +221,15 @@ export function createAuthProxy(handler: AuthRouteHandler) {
       Effect.runPromise(
         isSignedOutSessionRead(request)
           ? Effect.succeed(answerSignedOutSession())
-          : readAuthResponse(handler, request).pipe(answerAuthDeadline)
+          : readAuthResponse(handler, withBrowserHost(request)).pipe(
+              answerAuthDeadline
+            )
       ),
     POST: (request: Request) =>
       Effect.runPromise(
-        writeAuthResponse(handler, request).pipe(answerAuthDeadline)
+        writeAuthResponse(handler, withBrowserHost(request)).pipe(
+          answerAuthDeadline
+        )
       ),
   };
 }
