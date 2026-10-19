@@ -8,7 +8,6 @@ const runTrigger = RegisteredFunction.runHandlerPromise(undefined, {
 
 import { chatsHandler } from "@repo/backend/confect/triggers/chats/chats";
 import { commentsHandler } from "@repo/backend/confect/triggers/comments/comments";
-import { commentVotesHandler } from "@repo/backend/confect/triggers/comments/commentVotes";
 import { learningViewsHandler } from "@repo/backend/confect/triggers/contents/views";
 import { subscriptionsHandler } from "@repo/backend/confect/triggers/subscriptions/subscriptions";
 import { tryoutScoresHandler } from "@repo/backend/confect/triggers/tryouts/scores";
@@ -45,12 +44,6 @@ triggers.register("learningViews", (ctx, change) =>
 );
 triggers.register("comments", (ctx, change) =>
   commentsHandler(change).pipe(
-    Effect.provide(RegisteredConvexFunction.mutationLayer(databaseSchema, ctx)),
-    runTrigger
-  )
-);
-triggers.register("commentVotes", (ctx, change) =>
-  commentVotesHandler(change).pipe(
     Effect.provide(RegisteredConvexFunction.mutationLayer(databaseSchema, ctx)),
     runTrigger
   )
