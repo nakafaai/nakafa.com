@@ -9,6 +9,7 @@ import {
   ANONYMOUS_ANALYTICS_CONSENT_STORAGE_KEY,
   CONSENT_NOTICE_VERSIONS,
 } from "@repo/analytics/consent";
+import { encodeJsonText } from "@repo/utilities/json";
 import { Effect, Option, Schema } from "effect";
 import type { BrowserPrivacySignal } from "@/lib/analytics/consent/signal";
 import { KNOWN_SESSION_KEY } from "@/lib/auth/keys";
@@ -39,11 +40,6 @@ export const ANALYTICS_CONSENT_BOOTSTRAP_VOCABULARY: BootstrapVocabulary = {
   },
   noticeVersions: CONSENT_NOTICE_VERSIONS,
 };
-
-const JsonStringSchema = Schema.fromJsonString(Schema.String);
-
-/** Writes one constant as a JavaScript string literal inside the script. */
-const literal = (value: string) => Schema.encodeSync(JsonStringSchema)(value);
 
 /** Writes the vocabulary as a JavaScript object literal inside the script. */
 const vocabularyLiteral = (vocabulary: BootstrapVocabulary) =>
@@ -161,16 +157,16 @@ export function resolveAnalyticsConsentMark({
 export const ANALYTICS_CONSENT_BOOTSTRAP_SCRIPT = `(function () {
   try {
     var mark = (${resolveAnalyticsConsentMark.toString()})({
-      anonymousRecord: localStorage.getItem(${literal(ANONYMOUS_ANALYTICS_CONSENT_STORAGE_KEY)}),
+      anonymousRecord: localStorage.getItem(${encodeJsonText(ANONYMOUS_ANALYTICS_CONSENT_STORAGE_KEY)}),
       doNotTrack: navigator.doNotTrack,
       globalPrivacyControl: "globalPrivacyControl" in navigator ? navigator.globalPrivacyControl : undefined,
-      knownSession: localStorage.getItem(${literal(KNOWN_SESSION_KEY)}),
-      noticeVersion: ${literal(ANALYTICS_CONSENT_NOTICE_VERSION)},
+      knownSession: localStorage.getItem(${encodeJsonText(KNOWN_SESSION_KEY)}),
+      noticeVersion: ${encodeJsonText(ANALYTICS_CONSENT_NOTICE_VERSION)},
       readRecord: ${READ_RECORD_SCRIPT},
       vocabulary: ${vocabularyLiteral(ANALYTICS_CONSENT_BOOTSTRAP_VOCABULARY)}
     });
     if (mark !== null) {
-      document.documentElement.setAttribute(${literal(ANALYTICS_CONSENT_ROOT_ATTRIBUTE)}, mark);
+      document.documentElement.setAttribute(${encodeJsonText(ANALYTICS_CONSENT_ROOT_ATTRIBUTE)}, mark);
     }
   } catch (error) {
     // Storage that cannot be read keeps the prompt shown.

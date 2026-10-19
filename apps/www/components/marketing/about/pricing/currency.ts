@@ -1,4 +1,5 @@
-import { Array as Arr, Schema } from "effect";
+import { encodeJsonText } from "@repo/utilities/json";
+import { Array as Arr } from "effect";
 import {
   pricingCurrencyCookieName,
   proMonthlyPricings,
@@ -6,16 +7,6 @@ import {
 
 /** The root attribute that the script writes and the price styles read. */
 export const PRICING_CURRENCY_ROOT_ATTRIBUTE = "data-currency";
-
-const StringJsonSchema = Schema.fromJsonString(Schema.String);
-const StringListJsonSchema = Schema.fromJsonString(Schema.Array(Schema.String));
-
-/** Writes one constant as a JavaScript string literal inside the script. */
-const literal = (value: string) => Schema.encodeSync(StringJsonSchema)(value);
-
-/** Writes a list of constants as a JavaScript array literal inside the script. */
-const listLiteral = (values: readonly string[]) =>
-  Schema.encodeSync(StringListJsonSchema)(values);
 
 const PRICING_CURRENCIES = Arr.map(
   proMonthlyPricings,
@@ -34,15 +25,15 @@ const PRICING_CURRENCIES = Arr.map(
  */
 export const PRICING_CURRENCY_SCRIPT = `(function () {
   try {
-    var prefix = ${literal(`${pricingCurrencyCookieName}=`)};
-    var currencies = ${listLiteral(PRICING_CURRENCIES)};
+    var prefix = ${encodeJsonText(`${pricingCurrencyCookieName}=`)};
+    var currencies = ${encodeJsonText(PRICING_CURRENCIES)};
     var pairs = document.cookie.split(";");
     for (var index = 0; index < pairs.length; index++) {
       var entry = pairs[index].trim();
       if (entry.indexOf(prefix) === 0) {
         var currency = entry.slice(prefix.length);
         if (currencies.indexOf(currency) !== -1) {
-          document.documentElement.setAttribute(${literal(PRICING_CURRENCY_ROOT_ATTRIBUTE)}, currency);
+          document.documentElement.setAttribute(${encodeJsonText(PRICING_CURRENCY_ROOT_ATTRIBUTE)}, currency);
         }
         break;
       }
