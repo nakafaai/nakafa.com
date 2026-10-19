@@ -216,7 +216,7 @@ function CommandEmpty({
 }: React.ComponentProps<typeof AutocompleteEmpty>) {
   return (
     <AutocompleteEmpty
-      className={cn("not-empty:py-6 empty:hidden", className)}
+      className={cn("not-empty:py-6", className)}
       data-slot="command-empty"
       {...props}
     />
