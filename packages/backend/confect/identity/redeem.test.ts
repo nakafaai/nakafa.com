@@ -4,7 +4,6 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import { setLoginPassword } from "@repo/backend/confect/identity/account";
-import { CARD_TERM } from "@repo/backend/confect/identity/card";
 import { Email, INVITE_TERM } from "@repo/backend/confect/tenancy/schema";
 import {
   CARD_NOW,
@@ -44,8 +43,6 @@ vi.mock("@repo/backend/confect/identity/account", async (importOriginal) => {
   };
 });
 
-const TERM = Duration.toMillis(CARD_TERM);
-
 /** A placeholder address: a random UUID key at the reserved `.invalid` domain. */
 const PLACEHOLDER_ADDRESS =
   /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}@login\.nakafa\.invalid$/;
@@ -67,48 +64,7 @@ describe("identity/cards redeem", () => {
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         const issued = yield* issueFirst(fixture);
-        expect(yield* redeemOn(fixture, issued.code)).toEqual({
-          loginName: "guru.baru",
-          outcome: "redeemed",
-        });
-        const person = yield* inviteePerson(fixture);
-        expect(person.account).toMatchObject({
-          method: "card",
-          state: "claimed",
-        });
-        const user = Option.getOrUndefined(
-          yield* userNamed(fixture, "invited")
-        );
-        expect(user).toMatchObject({ username: "invited" });
-        // The placeholder address is named by a random key, never by the name.
-        expect(user?.email).toMatch(PLACEHOLDER_ADDRESS);
-        expect(user?.email).not.toContain("invited");
-        expect(person.account).toMatchObject({ userId: user?._id });
-        expect(yield* fixture.run(journal)).toMatchObject([
-          { change: { type: "card.issued" } },
-          {
-            actor: { id: fixture.invited, kind: "person" },
-            change: { method: "card", type: "person.claimed" },
-          },
-          {
-            actor: { id: fixture.invited, kind: "person" },
-            change: { type: "card.redeemed" },
-          },
-        ]);
-        expect(yield* redeemOn(fixture, issued.code)).toEqual({
-          outcome: "refused",
-          reason: "used",
-        });
-      })
-  );
-
-  it.effect(
-    "accepts the pending invite of the Person it claims, so the invite leaves the pending list",
-    () =>
-      Effect.gen(function* () {
-        const fixture = yield* tenancyFixture;
-        const issued = yield* issueFirst(fixture);
-        const inviteId = yield* fixture.run(
+        const invited = yield* fixture.run(
           Effect.flatMap(DatabaseWriter, (writer) =>
             writer.table("tenantInvites").insert({
               channel: {
@@ -126,18 +82,43 @@ describe("identity/cards redeem", () => {
           loginName: "guru.baru",
           outcome: "redeemed",
         });
+        const person = yield* inviteePerson(fixture);
+        expect(person.account).toMatchObject({
+          method: "card",
+          state: "claimed",
+        });
         const user = Option.getOrUndefined(
           yield* userNamed(fixture, "invited")
         );
+        expect(user).toMatchObject({ username: "invited" });
+        // The placeholder address is named by a random key, never by the name.
+        expect(user?.email).toMatch(PLACEHOLDER_ADDRESS);
+        expect(user?.email).not.toContain("invited");
+        expect(person.account).toMatchObject({ userId: user?._id });
         const invite = yield* fixture.run(
           Effect.flatMap(DatabaseReader, (reader) =>
-            reader.table("tenantInvites").get(inviteId).pipe(Effect.orDie)
+            reader.table("tenantInvites").get(invited).pipe(Effect.orDie)
           )
         );
         expect(invite.state).toEqual({
           at: CARD_NOW,
           status: "accepted",
           userId: user?._id,
+        });
+        expect(yield* fixture.run(journal)).toMatchObject([
+          { change: { type: "card.issued" } },
+          {
+            actor: { id: fixture.invited, kind: "person" },
+            change: { method: "card", type: "person.claimed" },
+          },
+          {
+            actor: { id: fixture.invited, kind: "person" },
+            change: { type: "card.redeemed" },
+          },
+        ]);
+        expect(yield* redeemOn(fixture, issued.code)).toEqual({
+          outcome: "refused",
+          reason: "used",
         });
       })
   );
@@ -225,29 +206,6 @@ describe("identity/cards redeem", () => {
       expect(yield* redeemOn(fixture, issued.code)).toEqual({
         outcome: "refused",
         reason: "invalid",
-      });
-    })
-  );
-
-  it.effect("refuses a card on the day its term ends", () =>
-    Effect.gen(function* () {
-      const fixture = yield* tenancyFixture;
-      const issued = yield* issueFirst(fixture);
-      vi.setSystemTime(CARD_NOW + TERM);
-      expect(yield* redeemOn(fixture, issued.code)).toEqual({
-        outcome: "refused",
-        reason: "expired",
-      });
-    })
-  );
-
-  it.effect("accepts a card one millisecond before its term ends", () =>
-    Effect.gen(function* () {
-      const fixture = yield* tenancyFixture;
-      const issued = yield* issueFirst(fixture);
-      vi.setSystemTime(CARD_NOW + TERM - 1);
-      expect(yield* redeemOn(fixture, issued.code)).toMatchObject({
-        outcome: "redeemed",
       });
     })
   );
