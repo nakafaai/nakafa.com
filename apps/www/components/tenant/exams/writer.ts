@@ -31,9 +31,10 @@ export class SaveDropped extends Data.TaggedError("SaveDropped") {}
  * The writer keeps the last draft the server answered. A save that starts from it applies its edit to that
  * draft and sends the revision the server returned, so two saves started together both land, and neither
  * one writes over the other. With no answered draft, a save starts from the draft its caller saw, which
- * holds the revision the server had when the question was read. A refused save clears the answered draft,
- * so the next save starts again from what the caller sees, and every save queued before the refusal is
- * dropped unsent, since each was built on the draft that was refused.
+ * holds the revision the server had when the question was read. A save that fails clears the answered draft,
+ * so the next save starts again from what the caller sees. Every save queued before the failure is dropped
+ * unsent, since each was built on the draft that failed, and a save built on the draft of a refusal could land
+ * a change the server refused.
  */
 export const makeQuestionWriter = <E>(
   send: (draft: QuestionDraft) => Effect.Effect<QuestionDraft, E>
