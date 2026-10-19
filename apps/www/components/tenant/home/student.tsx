@@ -14,13 +14,13 @@ import {
   studentSittingsRead,
   useStudentSittings,
 } from "@/components/tenant/home/query.client";
-import { QuietState } from "@/components/tenant/home/quiet";
 import {
   AllExamsAction,
   HomeTile,
   RowText,
   TILE_ROWS,
 } from "@/components/tenant/home/tile";
+import { HomeFailure, HomeTitle } from "@/components/tenant/home/title";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { schoolDateTimeText } from "@/components/tenant/settings/clock";
 import {
@@ -33,14 +33,17 @@ type Sitting = typeof StudentSittingRow.Type;
 
 /**
  * The home of a student: the sittings that are open or scheduled, then the results of the sittings that closed.
- * A student with neither sees Nina searching and no card. While the list loads, nothing shows below the title,
- * and a failed read shows its own sentence and Try again.
+ * A student with neither sees Nina searching and one sentence under the title, with no card. While the list loads,
+ * only the title shows, and a failed read shows its own sentence and Try again below the title.
  */
 export function StudentHome() {
   const tenant = useTenant();
 
   return (
-    <ReadBoundary read={studentSittingsRead(tenant.slug)}>
+    <ReadBoundary
+      fallback={(failure) => <HomeFailure failure={failure} />}
+      read={studentSittingsRead(tenant.slug)}
+    >
       <StudentTiles />
     </ReadBoundary>
   );
@@ -63,7 +66,7 @@ function StudentTiles() {
     throw listed.error;
   }
   if (!QueryResult.isSuccess(listed)) {
-    return null;
+    return <HomeTitle />;
   }
   const sittings = orderSittings(listed.value);
   const upcoming = Arr.filter(
@@ -110,9 +113,13 @@ function StudentTiles() {
 
   return (
     <>
-      {plan.quiet ? (
-        <QuietState act="searching">{t("sittings-empty")}</QuietState>
-      ) : null}
+      <HomeTitle
+        quiet={
+          plan.quiet
+            ? { act: "searching", sentence: t("sittings-empty") }
+            : undefined
+        }
+      />
       <Bento
         tiles={Arr.map(
           plan.tiles,

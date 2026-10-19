@@ -22,7 +22,7 @@ import {
 } from "@/components/tenant/home/query.client";
 import { StaffTiles } from "@/components/tenant/home/staff";
 import { StudentHome } from "@/components/tenant/home/student";
-import { HomeTitle } from "@/components/tenant/home/title";
+import { HomeFailure } from "@/components/tenant/home/title";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import {
   enterableSitting,
@@ -47,11 +47,13 @@ export function TenantHome() {
 
   return (
     <HomePage action={<HomeAction drafts={drafts} studentView={studentView} />}>
-      <HomeTitle />
       {studentView ? (
         <StudentHome />
       ) : (
-        <ReadBoundary read={homeExamsRead(tenant.slug)}>
+        <ReadBoundary
+          fallback={(failure) => <HomeFailure failure={failure} />}
+          read={homeExamsRead(tenant.slug)}
+        >
           <StaffTiles drafts={drafts} />
         </ReadBoundary>
       )}

@@ -17,15 +17,16 @@ import {
   useHomeSetup,
   useHomeViewer,
 } from "@/components/tenant/home/query.client";
-import { QuietState } from "@/components/tenant/home/quiet";
 import { ResultsTile } from "@/components/tenant/home/results";
 import { SetupTile, useSetupShown } from "@/components/tenant/home/setup";
+import { HomeTitle } from "@/components/tenant/home/title";
 
 /**
- * The quiet state and the tiles of a staff home, in the order and the places the plan gives them. One read brings
- * the rooms, the results, and the drafts, and the setup tile reads the school's setup on its own. Until the reads
- * that its tiles need have answered, nothing shows below the title, and then every tile appears at once, so no
- * tile that is shown moves when another arrives. The home reads these tiles inside the read's boundary.
+ * The title, the quiet line, and the tiles of a staff home, in the order and the places the plan gives them. One
+ * read brings the rooms, the results, and the drafts, and the setup tile reads the school's setup on its own. Until
+ * the reads that its tiles need have answered, only the title shows, and then the quiet line and every tile appear
+ * at once, so no tile that is shown moves when another arrives. The home reads these tiles inside the read's
+ * boundary, and the boundary's failure keeps the title.
  */
 export function StaffTiles({ drafts }: { drafts: StoreApi<ExamDrafts> }) {
   const t = useTranslations("School");
@@ -48,7 +49,7 @@ export function StaffTiles({ drafts }: { drafts: StoreApi<ExamDrafts> }) {
     QueryResult.isSuccess(exams) &&
     (!tenant.canManage || (setupAnswered && viewerAnswered));
   if (!ready) {
-    return null;
+    return <HomeTitle />;
   }
   const { closed, drafts: draftRows, live, next } = exams.value;
   const plan = staffPlan({
@@ -70,9 +71,13 @@ export function StaffTiles({ drafts }: { drafts: StoreApi<ExamDrafts> }) {
 
   return (
     <>
-      {plan.quiet ? (
-        <QuietState act="sleeping">{t("quiet-staff")}</QuietState>
-      ) : null}
+      <HomeTitle
+        quiet={
+          plan.quiet
+            ? { act: "sleeping", sentence: t("quiet-staff") }
+            : undefined
+        }
+      />
       <Bento
         tiles={Arr.map(
           plan.tiles,
