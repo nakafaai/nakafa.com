@@ -45,13 +45,18 @@ const refused = (reason: "TokenRefused" | "TooManyTries"): EnterReply => ({
   reason,
 });
 
-/** An admission to an attempt, with its deadline and state. */
+/**
+ * An admission to an attempt, with its deadline, its state, and the server's clock at the admission.
+ * The screen counts down on that clock, so a device whose own clock is wrong still shows the time left.
+ */
 const admitted = (
-  attempt: Pick<ExamAttemptsDoc, "_id" | "deadline" | "state">
+  attempt: Pick<ExamAttemptsDoc, "_id" | "deadline" | "state">,
+  serverNow: number
 ): EnterReply => ({
   attempt: attempt._id,
   deadline: attempt.deadline,
   outcome: "admitted",
+  serverNow,
   state: attempt.state,
 });
 
@@ -103,11 +108,14 @@ const startAttempt = Effect.fn("exams.sittings.enter.start")(function* (
       tenantId: sitting.tenantId,
     })
     .pipe(Effect.orDie);
-  return admitted({
-    _id: id,
-    deadline: sitting.closesAt,
-    state: "inProgress",
-  });
+  return admitted(
+    {
+      _id: id,
+      deadline: sitting.closesAt,
+      state: "inProgress",
+    },
+    now
+  );
 });
 
 /**
@@ -117,7 +125,8 @@ const startAttempt = Effect.fn("exams.sittings.enter.start")(function* (
  */
 const bindAttempt = Effect.fn("exams.sittings.enter.bind")(function* (
   attempt: ExamAttemptsDoc,
-  deviceId: string
+  deviceId: string,
+  now: number
 ) {
   if (deviceBinding(attempt, deviceId) === "other") {
     return yield* new SecondDevice();
@@ -126,7 +135,7 @@ const bindAttempt = Effect.fn("exams.sittings.enter.bind")(function* (
     .table("examAttempts")
     .patch(attempt._id, { deviceId })
     .pipe(Effect.orDie);
-  return admitted(attempt);
+  return admitted(attempt, now);
 });
 
 /**
@@ -159,7 +168,7 @@ export const enter = Effect.fn("exams.sittings.enter")(function* (args: {
   if (Option.isSome(attempt)) {
     const binding = deviceBinding(attempt.value, args.deviceId);
     if (binding === "bound") {
-      return admitted(attempt.value);
+      return admitted(attempt.value, now);
     }
     if (binding === "retired") {
       return yield* new DeviceRetired();
@@ -184,5 +193,5 @@ export const enter = Effect.fn("exams.sittings.enter")(function* (args: {
   if (Option.isNone(attempt)) {
     return yield* startAttempt(sitting, member.person, args.deviceId, now);
   }
-  return yield* bindAttempt(attempt.value, args.deviceId);
+  return yield* bindAttempt(attempt.value, args.deviceId, now);
 });

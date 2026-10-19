@@ -43,7 +43,8 @@
     "sign-in-title": "Sign in to {school}",
     "tile-student": "Your sittings",
     "sittings-empty": "No sitting is open to you",
-    "sittings-empty-description": "Your teacher schedules a sitting, and it appears here."
+    "sittings-empty-description": "Your teacher schedules a sitting, and it appears here.",
+    "sittings-next": "The next sitting opens {time}."
   },
   "SchoolEntry": {
     "card-code-description": "Only for your first sign-in or after a new card is printed.",
@@ -61,7 +62,7 @@
     "password-label": "Password",
     "password-too-long": "The password is too long.",
     "password-too-short": "The password is too short.",
-    "sign-in-refused": "The username or password is not right.",
+    "sign-in-refused": "The username or password is not right, so check both or ask your teacher if it keeps failing.",
     "submit": "Sign in",
     "submitting": "Signing in...",
     "username-action": "Sign in with a username",
@@ -132,18 +133,18 @@
     "student-enter": "Enter sitting",
     "student-enter-footer": "Your proctor gives you the token.",
     "student-token-placeholder": "Enter the token from your proctor",
-    "student-token-refused": "The token does not match. Check it and try again.",
-    "student-too-many-tries": "Too many tries. Wait a minute and try again.",
-    "student-not-in-sitting": "You are not in this sitting.",
-    "student-not-open": "This sitting has not opened yet.",
-    "student-closed": "This sitting has closed.",
-    "student-locked-school": "This sitting is locked, so it takes no entries and records no signals.",
+    "student-token-refused": "The token does not match, so check it and try again.",
+    "student-too-many-tries": "Too many tries, so wait a minute and try again.",
+    "student-not-in-sitting": "You are not in this sitting, so ask your proctor if you think this is wrong.",
+    "student-not-open": "This sitting has not opened yet, so come back at its opening time.",
+    "student-closed": "This sitting has closed, so ask your teacher about another sitting.",
+    "student-locked-school": "This sitting is locked, so ask your teacher what to do next.",
     "student-no-answer": "No answer",
-    "student-attempt-closed": "This attempt has closed.",
-    "student-second-device": "This attempt belongs to another device. Ask your proctor to allow a second device.",
-    "student-device-retired": "Your proctor retired this device from the attempt.",
-    "student-locked": "Your proctor has locked this sitting, so you cannot answer.",
-    "student-unavailable": "This sitting is not open to you.",
+    "student-attempt-closed": "This attempt has closed, so ask your proctor if you think the time was wrong.",
+    "student-second-device": "This attempt belongs to another device, so ask your proctor to allow a second device.",
+    "student-device-retired": "Your proctor retired this device, so ask your proctor which device you may use.",
+    "student-locked": "Your proctor locked this attempt, so wait until it is unlocked before you answer.",
+    "student-unavailable": "This sitting is not open to you, so ask your teacher if you think this is wrong.",
     "finish-title": "Finish the exam?",
     "finish-description": "You cannot change your answers after you finish.",
     "answers-in": "Your answers are in.",
@@ -232,7 +233,14 @@
     "state-all": "All states",
     "try-action": "Try as student",
     "try-finish": "Finish trying",
-    "try-note": "Answers here are not saved."
+    "try-note": "Answers here are not saved.",
+    "student-retry": "This sitting could not load, so try again in a moment.",
+    "student-opens-at": "This sitting opens {time}.",
+    "student-scheduled-footer": "The token field opens with the sitting.",
+    "student-back-home": "Back to home",
+    "flag-question": "Flag for review",
+    "student-view-results": "View results",
+    "seat-last-activity": "Last activity {time}."
   },
   "SchoolSettings": {
     "school": "School",
@@ -1131,7 +1139,8 @@
     "time-one": "1 minute left",
     "shortcut-step": "Previous or next question",
     "shortcut-pick": "Choose an option",
-    "shortcut-navigator": "Question navigator"
+    "shortcut-navigator": "Question navigator",
+    "cell-flagged": "{state, select, answered {Question {number}, answered, flagged for review} other {Question {number}, unanswered, flagged for review}}"
   },
   "Utils": {
     "clear-search": "Clear search",
@@ -1574,6 +1583,38 @@
     "school-save-error": {
       "title": "Your answer was not saved.",
       "description": "Try again."
+    },
+    "sitting-not-in": {
+      "title": "You are not in this sitting.",
+      "description": "Ask your proctor if you think this is wrong."
+    },
+    "sitting-locked": {
+      "title": "This sitting is locked.",
+      "description": "Ask your teacher what to do next."
+    },
+    "sitting-attempt-closed": {
+      "title": "This attempt has closed.",
+      "description": "Ask your proctor if you think the time was wrong."
+    },
+    "sitting-attempt-locked": {
+      "title": "This attempt is locked.",
+      "description": "Wait until your proctor unlocks it, then try again."
+    },
+    "sitting-second-device": {
+      "title": "Another device holds this attempt.",
+      "description": "Ask your proctor to allow a second device."
+    },
+    "sitting-device-retired": {
+      "title": "This device was retired.",
+      "description": "Ask your proctor which device you may use."
+    },
+    "sitting-response-refused": {
+      "title": "This answer does not fit.",
+      "description": "Choose the options again."
+    },
+    "sitting-question-missing": {
+      "title": "Question not in this exam.",
+      "description": "Reload the sitting to see its questions."
     }
   },
   "Ai": {

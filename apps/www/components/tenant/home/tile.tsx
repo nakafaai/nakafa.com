@@ -25,8 +25,11 @@ export function HomeTile({
   /** The tile's rows or its empty state. A tile whose rows have not arrived has none. */
   children?: ReactNode;
   className?: string | undefined;
-  /** The one concise sentence of the footer, which says what the action does or what stops it. */
-  hint: string;
+  /**
+   * The one concise sentence of the footer, which says what the action does or what stops it. A tile that
+   * has not read its rows yet has none, so its footer shows no sentence rather than a guess.
+   */
+  hint?: string | undefined;
   title: string;
 }) {
   return (
@@ -35,7 +38,7 @@ export function HomeTile({
         <CardTitle>{title}</CardTitle>
       </CardHeader>
       <div className="min-h-19">{children}</div>
-      <CardSectionFooter hint={hint}>
+      <CardSectionFooter hint={hint ?? ""}>
         {action === undefined ? null : (
           <CardSectionActions>{action}</CardSectionActions>
         )}

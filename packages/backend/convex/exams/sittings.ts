@@ -10,6 +10,7 @@ export const dashboard = registeredFunctions.dashboard;
 export const enter = registeredFunctions.enter;
 export const finish = registeredFunctions.finish;
 export const images = registeredFunctions.images;
+export const lastAnswer = registeredFunctions.lastAnswer;
 export const lock = registeredFunctions.lock;
 export const mine = registeredFunctions.mine;
 export const paper = registeredFunctions.paper;

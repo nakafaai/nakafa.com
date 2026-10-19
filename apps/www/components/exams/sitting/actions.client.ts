@@ -4,7 +4,7 @@ import { type OptimisticLocalStore, useMutation } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { toast } from "@repo/design-system/lib/toast/notify";
-import { Clock, Effect, Option, type Result } from "effect";
+import { Array as Arr, Clock, Effect, Option, type Result } from "effect";
 import {
   addMinutesToAttempt,
   closeSitting,
@@ -12,6 +12,10 @@ import {
   lockAttempt,
   unlockAttempt,
 } from "@/components/exams/sitting/change";
+import {
+  failureGroupCopyOf,
+  refusalCopyOf,
+} from "@/components/exams/sitting/entry";
 import { reportClientException } from "@/lib/analytics/client";
 
 /** The milliseconds on the device clock, for the optimistic guess that the server settles. */
@@ -98,8 +102,33 @@ export function useChangeToken() {
 }
 
 /**
- * Runs one server call from a control. A refused call reports the failure and shows the
- * generic message, and the optimistic change of the call rolls back with it.
+ * Tells a student that sitting calls failed, with one toast for the whole group, which the entry module
+ * chooses from its first failure. Every failure that names no refusal is reported, and a group with no
+ * failure shows nothing.
+ */
+export const sittingCallFailures = Effect.fn("exams.sitting.actions.failures")(
+  function* (errors: readonly unknown[]) {
+    yield* Effect.forEach(
+      Arr.filter(errors, (error) => Option.isNone(refusalCopyOf(error))),
+      (error) =>
+        reportClientException(error, {
+          source: "components/exams/sitting/actions",
+        }),
+      { discard: true }
+    );
+    yield* Option.match(failureGroupCopyOf(errors), {
+      onNone: () => Effect.void,
+      onSome: (copy) =>
+        Effect.sync(() => {
+          toast.error(copy);
+        }),
+    });
+  }
+);
+
+/**
+ * Runs one server call from a control. A refused call shows its reason, and the optimistic change of the
+ * call rolls back with it.
  */
 export function runSittingCall<A, E>(
   call: () => Promise<Result.Result<A, E>>,
@@ -109,19 +138,7 @@ export function runSittingCall<A, E>(
     Effect.tryPromise(call).pipe(
       Effect.flatMap(Effect.fromResult),
       Effect.matchEffect({
-        onFailure: (error) =>
-          reportClientException(error, {
-            source: "components/exams/sitting/actions",
-          }).pipe(
-            Effect.andThen(
-              Effect.sync(() => {
-                toast.error({
-                  description: "action-error.description",
-                  title: "action-error.title",
-                });
-              })
-            )
-          ),
+        onFailure: (error) => sittingCallFailures([error]),
         onSuccess: (value) =>
           Effect.sync(() => {
             onSuccess(value);

@@ -9,16 +9,17 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Option } from "effect";
 import { useTranslations } from "next-intl";
+import type { ReactNode } from "react";
 import { readNeighbor, readPosition } from "@/components/player/order";
 import { usePlayer } from "@/components/player/provider";
 
 /**
- * The controls under the questions: previous, the navigator on small screens,
- * and next. It sticks to the bottom of the screen, so a learner moves on
- * without scrolling back. The list measures it through `data-player-footer`,
- * so the end of the list counts as reached once it clears the footer.
+ * The controls under the questions: previous, a middle control such as the navigator opener on small
+ * screens, and next. It sticks to the bottom of the screen, so a learner moves on without scrolling back.
+ * The list measures it through `data-player-footer`, so the end of the list counts as reached once it
+ * clears the footer.
  */
-export function PlayerFooter() {
+export function PlayerFooter({ children }: { children?: ReactNode }) {
   const t = useTranslations("Player");
 
   return (
@@ -29,7 +30,7 @@ export function PlayerFooter() {
       <fieldset className="mx-auto flex h-16 w-full min-w-0 max-w-3xl items-center justify-between gap-2 border-0 px-6 lg:max-w-5xl">
         <legend className="sr-only">{t("controls")}</legend>
         <PlayerPrevious />
-        <PlayerOpener />
+        {children}
         <PlayerNext />
       </fieldset>
     </footer>
@@ -84,8 +85,11 @@ function PlayerNext() {
   );
 }
 
-/** Opens the navigator sheet on the number of the current question; the sidebar replaces it from the large breakpoint. */
-function PlayerOpener() {
+/**
+ * Opens the navigator sheet on the number of the current question; the sidebar replaces it from the large
+ * breakpoint. A screen that puts it in its header passes no footer child.
+ */
+export function PlayerOpener() {
   const t = useTranslations("Player");
   const number = usePlayer((state) => readPosition(state.keys, state.current));
   const open = usePlayer((state) => state.open);

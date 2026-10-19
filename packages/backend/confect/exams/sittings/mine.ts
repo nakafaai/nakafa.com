@@ -1,10 +1,15 @@
+import type {
+  ExamAttemptsDoc,
+  TenantPeopleDoc,
+} from "@repo/backend/confect/_generated/docs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { covers } from "@repo/backend/confect/access/decision";
+import { attemptOf } from "@repo/backend/confect/exams/sittings/attempt";
 import type { SittingState } from "@repo/backend/confect/exams/sittings/schema";
 import { sittingViews } from "@repo/backend/confect/exams/sittings/view";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import { PERSON_PLACEMENT_LIMIT } from "@repo/backend/confect/tenancy/placement";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, HashMap, Option, Tuple } from "effect";
 
 /** The most units a tenant holds (ADR 0011), so the units a student may reach are bounded. */
 export const TENANT_UNIT_LIMIT = 24;
@@ -16,6 +21,17 @@ export const TENANT_UNIT_LIMIT = 24;
  */
 const SITTINGS_PER_STATE = 50;
 
+/**
+ * The most closing attempts and the most submitted attempts of one student that the list reads,
+ * each newest first. Each state has its own index, so the bound counts only attempts of that state,
+ * and it never hides an attempt of a live sitting, which the list reads by its sitting. A closed
+ * sitting beyond the newest of these is not listed.
+ */
+const ATTEMPT_LIMIT = 100;
+
+/** The states of an attempt in a closed sitting, which the list keeps so its results stay reachable. */
+const CLOSED_ATTEMPT_STATES = ["closing", "submitted"] as const;
+
 /** The states of a sitting that a student may still take part in. */
 export const LIVE_STATES: readonly (typeof SittingState.Type)[] = [
   "scheduled",
@@ -23,12 +39,12 @@ export const LIVE_STATES: readonly (typeof SittingState.Type)[] = [
 ];
 
 /**
- * The sittings of a student who may take part in them: the unit sittings of each unit
- * that a student grant covers, and the cohort sittings of each cohort the student is
- * placed in. Every read is bounded, and no sitting holds a token or a token hash.
+ * The live sittings of a student who may take part in them: the unit sittings of each unit that
+ * a student grant covers, and the cohort sittings of each cohort the student is placed in.
  */
-export const mine = Effect.fn("exams.sittings.mine")(function* () {
-  const member = yield* Member;
+const liveSittings = Effect.fn("exams.sittings.mine.live")(function* (
+  member: Member["Service"]
+) {
   const reader = yield* DatabaseReader;
   const units = yield* reader
     .table("tenantUnits")
@@ -70,6 +86,79 @@ export const mine = Effect.fn("exams.sittings.mine")(function* () {
         .pipe(Effect.orDie)
     )
   );
-  const rows = Arr.flatten(Arr.flatten([...unitRows, ...cohortRows]));
-  return yield* sittingViews(rows);
+  return Arr.flatten(Arr.flatten([...unitRows, ...cohortRows]));
+});
+
+/**
+ * The student's closing and submitted attempts, each state newest first. Each state is read on
+ * its own index, so the student's other attempts never push these out of the bound.
+ */
+const closedAttempts = Effect.fn("exams.sittings.mine.attempts")(function* (
+  personId: TenantPeopleDoc["_id"]
+) {
+  const reader = yield* DatabaseReader;
+  const byState = yield* Effect.forEach(CLOSED_ATTEMPT_STATES, (state) =>
+    reader
+      .table("examAttempts")
+      .index(
+        "by_personId_and_state",
+        (query) => query.eq("person", personId).eq("state", state),
+        "desc"
+      )
+      .take(ATTEMPT_LIMIT)
+      .pipe(Effect.orDie)
+  );
+  return Arr.flatten(byState);
+});
+
+/**
+ * The closed sittings whose attempt of the student is closing or submitted. A closed sitting stays
+ * in the student's list, so its results stay reachable once the teacher releases them.
+ */
+const closedSittings = Effect.fn("exams.sittings.mine.closed")(function* (
+  attempts: readonly ExamAttemptsDoc[]
+) {
+  const reader = yield* DatabaseReader;
+  const sittings = yield* Effect.forEach(
+    attempts,
+    (attempt) =>
+      reader.table("examSittings").get(attempt.sitting).pipe(Effect.orDie),
+    { concurrency: "unbounded" }
+  );
+  return Arr.filter(sittings, (sitting) => sitting.state === "closed");
+});
+
+/**
+ * The sittings of a student who may take part in them, each with the student's own attempt, its state,
+ * and whether its results are released. The live sittings come from the units and cohorts that the
+ * student may reach, and each one reads its own attempt, so no window hides it. The closed sittings come
+ * from the student's closing and submitted attempts. Every read is bounded, and no sitting holds a token
+ * or a token hash.
+ */
+export const mine = Effect.fn("exams.sittings.mine")(function* () {
+  const member = yield* Member;
+  const live = yield* liveSittings(member);
+  const liveAttempts = yield* Effect.forEach(
+    live,
+    (sitting) => attemptOf(sitting._id, member.person._id),
+    { concurrency: "unbounded" }
+  );
+  const closing = yield* closedAttempts(member.person._id);
+  const closed = yield* closedSittings(closing);
+  const rows = [...live, ...closed];
+  const held = HashMap.fromIterable(
+    Arr.map([...Arr.getSomes(liveAttempts), ...closing], (attempt) =>
+      Tuple.make(attempt.sitting, attempt)
+    )
+  );
+  const views = yield* sittingViews(rows);
+  return Arr.zipWith(rows, views, (row, view) => {
+    const attempt = Option.getOrNull(HashMap.get(held, row._id));
+    return {
+      ...view,
+      attempt: attempt?.state ?? null,
+      attemptId: attempt?._id ?? null,
+      resultsReleased: row.resultsReleasedAt !== undefined,
+    };
+  });
 });

@@ -6,7 +6,7 @@ import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { PersonAvatar } from "@repo/design-system/components/ui/person";
 import { cva } from "class-variance-authority";
 import { Array as Arr } from "effect";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import {
   type DashboardAttempt,
@@ -18,10 +18,12 @@ import {
 } from "@/components/exams/sitting/context";
 import {
   isDisconnected,
+  lastActivityOf,
   matchesFilter,
   type SeatFrame,
   seatFrame,
 } from "@/components/exams/sitting/seat";
+import { schoolDateTimeText } from "@/components/tenant/settings/clock";
 
 /** The frame of one seat: its colour by state, dashed while the student is disconnected, and a ring when selected. */
 const seatStyles = cva(
@@ -132,7 +134,10 @@ function NextSeats({ cursor }: { readonly cursor: string }) {
   );
 }
 
-/** One student's seat. It opens the student's panel when the proctor selects it. */
+/**
+ * One student's seat. It opens the student's panel when the proctor selects it. The seat reads its own
+ * latest answer, so an answer re-runs this seat's query and not the page that holds it.
+ */
 function SeatButton({
   attempt,
   cursor,
@@ -140,6 +145,14 @@ function SeatButton({
   readonly attempt: DashboardAttempt;
   readonly cursor: string | null;
 }) {
+  const t = useTranslations("Exams");
+  const locale = useLocale();
+  const { sittingId, slug, value } = useSittingData();
+  const answered = useQuery(exams.sittings.lastAnswer, {
+    attemptId: attempt.id,
+    sittingId,
+    slug,
+  });
   const selected = useSittingStore(
     (state) => state.selected?.attemptId === attempt.id
   );
@@ -158,7 +171,22 @@ function SeatButton({
       type="button"
     >
       <PersonAvatar className="size-6" mascot={attempt.mascot ?? undefined} />
-      <span className="min-w-0 truncate">{attempt.name}</span>
+      <span className="grid min-w-0 gap-0.5">
+        <span className="truncate">{attempt.name}</span>
+        <span className="truncate text-muted-foreground text-xs">
+          {t("seat-last-activity", {
+            time:
+              schoolDateTimeText({
+                at: lastActivityOf(
+                  attempt,
+                  QueryResult.isSuccess(answered) ? answered.value : null
+                ),
+                locale,
+                timeZone: value.sitting.timeZone,
+              }) ?? "",
+          })}
+        </span>
+      </span>
     </button>
   );
 }

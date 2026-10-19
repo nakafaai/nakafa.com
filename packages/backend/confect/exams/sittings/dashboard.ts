@@ -1,11 +1,13 @@
 import type {
   ExamAttemptsDoc,
+  ExamSignalsDoc,
   ExamSittingsDoc,
   TenantPeopleDoc,
 } from "@repo/backend/confect/_generated/docs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { resultAuthority } from "@repo/backend/confect/exams/results/authority";
 import { Sitting } from "@repo/backend/confect/exams/sittings/access";
+import { attemptIn } from "@repo/backend/confect/exams/sittings/attempt";
 import { sittingAuthority } from "@repo/backend/confect/exams/sittings/authority";
 import { SittingAction } from "@repo/backend/confect/exams/sittings/contract";
 import { openToken } from "@repo/backend/confect/exams/sittings/token";
@@ -39,6 +41,20 @@ const mascotOf = Effect.fn("exams.sittings.dashboard.mascot")(function* (
 });
 
 /**
+ * The time of the attempt's start or its latest signal, the newer of them. The page reads no answer:
+ * an answer would run the whole page again, so each seat reads its own latest answer through
+ * `lastAnswer` and shows the newer of the two times. Neither needs a heartbeat.
+ */
+const lastSignalTime = (
+  attempt: ExamAttemptsDoc,
+  latest: Option.Option<ExamSignalsDoc>
+) =>
+  Option.match(latest, {
+    onNone: () => attempt.startedAt,
+    onSome: (signal) => Num.max(attempt.startedAt, signal.at),
+  });
+
+/**
  * One attempt as the dashboard shows it. The latest signal decides whether the student is
  * away: an exit or a disconnect with no return after it (ADR 0013).
  */
@@ -67,6 +83,7 @@ const attemptRow = Effect.fn("exams.sittings.dashboard.attempt")(function* (
     ),
     deadline: attempt.deadline,
     id: attempt._id,
+    lastActiveAt: lastSignalTime(attempt, latest),
     latestSignal: Option.match(latest, {
       onNone: () => null,
       onSome: (signal) => ({ at: signal.at, kind: signal.kind }),
@@ -130,5 +147,30 @@ export const dashboard = Effect.fn("exams.sittings.dashboard")(
       sitting: yield* sittingView(sitting, sitting.exam),
       token: yield* tokenFor(sitting, actions),
     };
+  }
+);
+
+/**
+ * The time of the latest answer of one attempt of the sitting, or `null` before the first answer. A seat
+ * subscribes to it on its own, so an answer re-runs that one small query, and not the page of attempts
+ * that holds the seat (ADR 0013). The attempt must belong to the sitting that the caller may view.
+ */
+export const lastAnswer = Effect.fn("exams.sittings.dashboard.lastAnswer")(
+  function* (attemptId: ExamAttemptsDoc["_id"]) {
+    const sitting = yield* Sitting;
+    const attempt = yield* attemptIn(sitting, attemptId, "sitting.view");
+    const answer = yield* (yield* DatabaseReader)
+      .table("examAnswers")
+      .index(
+        "by_attemptId_and_answeredAt",
+        (query) => query.eq("attempt", attempt._id),
+        "desc"
+      )
+      .first()
+      .pipe(Effect.orDie);
+    return Option.match(answer, {
+      onNone: () => null,
+      onSome: (row) => row.answeredAt,
+    });
   }
 );

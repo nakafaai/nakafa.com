@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import { Number as Num, Schema } from "effect";
 import type { DashboardAttempt } from "@/components/exams/sitting/change";
 
 /** The filters of the dashboard, in the order the filter row shows them. */
@@ -31,6 +31,19 @@ export function seatFrame(attempt: DashboardAttempt): SeatFrame {
     return "away";
   }
   return "plain";
+}
+
+/**
+ * The time of a seat's last activity: the newer of the page's time (the start or the latest signal)
+ * and the latest answer, which the seat reads on its own. Until that answer arrives, the page's time shows.
+ */
+export function lastActivityOf(
+  attempt: DashboardAttempt,
+  answeredAt: number | null
+): number {
+  return answeredAt === null
+    ? attempt.lastActiveAt
+    : Num.max(attempt.lastActiveAt, answeredAt);
 }
 
 /** Whether the student's latest signal is a disconnect, which draws the seat's frame dashed. */

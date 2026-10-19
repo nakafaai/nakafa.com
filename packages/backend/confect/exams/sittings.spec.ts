@@ -16,12 +16,13 @@ import {
   PaperView,
   PromptView,
   SignalView,
-  SittingView,
+  StudentSittingRow,
   StudentSittingView,
   TokenResult,
 } from "@repo/backend/confect/exams/sittings/contract";
 import {
   AttemptClosed,
+  AttemptLocked,
   DeviceRetired,
   NotInSitting,
   QuestionNotInExam,
@@ -98,7 +99,7 @@ export default GroupSpec.make()
     FunctionSpec.publicQuery({
       name: "mine",
       args: () => ({ slug: TenantSlug }),
-      returns: () => Schema.Array(SittingView),
+      returns: () => Schema.Array(StudentSittingRow),
       error: () => Schema.Never,
     })
   )
@@ -111,6 +112,18 @@ export default GroupSpec.make()
         slug: TenantSlug,
       }),
       returns: () => DashboardView,
+      error: () => AccessDenied,
+    }).middleware(SittingAccess, { action: "sitting.view", arg: "sittingId" })
+  )
+  .addFunction(
+    FunctionSpec.publicQuery({
+      name: "lastAnswer",
+      args: () => ({
+        attemptId: Id("examAttempts"),
+        sittingId: Id("examSittings"),
+        slug: TenantSlug,
+      }),
+      returns: () => Schema.NullOr(Schema.Finite),
       error: () => AccessDenied,
     }).middleware(SittingAccess, { action: "sitting.view", arg: "sittingId" })
   )
@@ -242,6 +255,7 @@ export default GroupSpec.make()
           NotInSitting,
           SittingLocked,
           AttemptClosed,
+          AttemptLocked,
           SecondDevice,
           DeviceRetired,
         ]),
@@ -262,6 +276,7 @@ export default GroupSpec.make()
           NotInSitting,
           SittingLocked,
           AttemptClosed,
+          AttemptLocked,
           SecondDevice,
           DeviceRetired,
           QuestionNotInExam,
@@ -308,6 +323,7 @@ export default GroupSpec.make()
           NotInSitting,
           SittingLocked,
           AttemptClosed,
+          AttemptLocked,
           SecondDevice,
           DeviceRetired,
           QuestionNotInExam,
@@ -329,6 +345,7 @@ export default GroupSpec.make()
           NotInSitting,
           SittingLocked,
           AttemptClosed,
+          AttemptLocked,
           SecondDevice,
           DeviceRetired,
         ]),

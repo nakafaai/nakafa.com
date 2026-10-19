@@ -43,7 +43,8 @@
     "sign-in-title": "Anmelden bei {school}",
     "tile-student": "Deine Prüfungen",
     "sittings-empty": "Noch keine Prüfung für dich",
-    "sittings-empty-description": "Deine Lehrkraft plant eine Prüfung, und sie erscheint hier."
+    "sittings-empty-description": "Deine Lehrkraft plant eine Prüfung, und sie erscheint hier.",
+    "sittings-next": "Die nächste Sitzung beginnt {time}."
   },
   "SchoolEntry": {
     "card-code-description": "Nur für die erste Anmeldung oder nach dem Druck einer neuen Karte.",
@@ -61,7 +62,7 @@
     "password-label": "Passwort",
     "password-too-long": "Das Passwort ist zu lang.",
     "password-too-short": "Das Passwort ist zu kurz.",
-    "sign-in-refused": "Benutzername oder Passwort stimmen nicht.",
+    "sign-in-refused": "Benutzername oder Passwort stimmen nicht, daher prüfe beides oder frag deine Lehrkraft, wenn es weiter scheitert.",
     "submit": "Anmelden",
     "submitting": "Anmeldung läuft...",
     "username-action": "Mit Benutzername anmelden",
@@ -132,18 +133,18 @@
     "student-enter": "Sitzung betreten",
     "student-enter-footer": "Die Aufsicht gibt dir den Token.",
     "student-token-placeholder": "Token von der Aufsicht eingeben",
-    "student-token-refused": "Das Token passt nicht. Prüfe es und versuche es erneut.",
-    "student-too-many-tries": "Zu viele Versuche. Warte eine Minute und versuche es erneut.",
-    "student-not-in-sitting": "Du bist nicht in dieser Sitzung.",
-    "student-not-open": "Diese Sitzung hat noch nicht begonnen.",
-    "student-closed": "Diese Sitzung ist beendet.",
-    "student-locked-school": "Diese Sitzung ist gesperrt, daher nimmt sie keine Teilnehmer auf und erfasst keine Ereignisse.",
+    "student-token-refused": "Das Token passt nicht, daher prüfe es und versuche es erneut.",
+    "student-too-many-tries": "Zu viele Versuche, daher warte eine Minute und versuche es erneut.",
+    "student-not-in-sitting": "Du bist nicht in dieser Sitzung, daher frag deine Aufsicht, wenn du meinst, dass das falsch ist.",
+    "student-not-open": "Diese Sitzung hat noch nicht begonnen, daher komm zur Startzeit wieder.",
+    "student-closed": "Diese Sitzung ist beendet, daher frag deine Lehrkraft nach einer anderen Sitzung.",
+    "student-locked-school": "Diese Sitzung ist gesperrt, daher frag deine Lehrkraft, was du als Nächstes tun sollst.",
     "student-no-answer": "Nicht beantwortet",
-    "student-attempt-closed": "Dieser Versuch ist beendet.",
-    "student-second-device": "Dieser Versuch gehört zu einem anderen Gerät. Bitte die Aufsicht, ein zweites Gerät zu erlauben.",
-    "student-device-retired": "Die Aufsicht hat dieses Gerät aus dem Versuch entfernt.",
-    "student-locked": "Die Aufsicht hat diese Sitzung gesperrt, daher kannst du nicht antworten.",
-    "student-unavailable": "Diese Sitzung ist für dich nicht geöffnet.",
+    "student-attempt-closed": "Dieser Versuch ist beendet, daher frag deine Aufsicht, wenn du meinst, dass die Zeit falsch war.",
+    "student-second-device": "Dieser Versuch gehört zu einem anderen Gerät, daher bitte die Aufsicht, ein zweites Gerät zu erlauben.",
+    "student-device-retired": "Die Aufsicht hat dieses Gerät entfernt, daher frag die Aufsicht, welches Gerät du nutzen darfst.",
+    "student-locked": "Die Aufsicht hat diesen Versuch gesperrt, daher warte mit deinen Antworten, bis er wieder freigegeben ist.",
+    "student-unavailable": "Diese Sitzung ist für dich nicht geöffnet, daher frag deine Lehrkraft, wenn du meinst, dass das falsch ist.",
     "finish-title": "Prüfung beenden?",
     "finish-description": "Du kannst deine Antworten nach dem Beenden nicht mehr ändern.",
     "answers-in": "Deine Antworten sind gespeichert.",
@@ -232,7 +233,14 @@
     "state-all": "Alle Status",
     "try-action": "Als Schüler testen",
     "try-finish": "Test beenden",
-    "try-note": "Antworten hier werden nicht gespeichert."
+    "try-note": "Antworten hier werden nicht gespeichert.",
+    "student-retry": "Diese Sitzung konnte nicht geladen werden, daher versuche es gleich noch einmal.",
+    "student-opens-at": "Diese Sitzung beginnt {time}.",
+    "student-scheduled-footer": "Das Tokenfeld öffnet mit der Sitzung.",
+    "student-back-home": "Zur Startseite",
+    "flag-question": "Zur Überprüfung markieren",
+    "student-view-results": "Ergebnisse ansehen",
+    "seat-last-activity": "Letzte Aktivität {time}."
   },
   "SchoolSettings": {
     "school": "Schule",
@@ -1131,7 +1139,8 @@
     "time-one": "Noch 1 Minute",
     "shortcut-step": "Vorherige oder nächste Aufgabe",
     "shortcut-pick": "Option wählen",
-    "shortcut-navigator": "Aufgabenübersicht"
+    "shortcut-navigator": "Aufgabenübersicht",
+    "cell-flagged": "{state, select, answered {Aufgabe {number}, beantwortet, zur Überprüfung markiert} other {Aufgabe {number}, offen, zur Überprüfung markiert}}"
   },
   "Utils": {
     "clear-search": "Suche löschen",
@@ -1574,6 +1583,38 @@
     "school-save-error": {
       "title": "Antwort nicht gespeichert.",
       "description": "Versuch es noch einmal."
+    },
+    "sitting-not-in": {
+      "title": "Nicht in dieser Sitzung.",
+      "description": "Frag deine Aufsicht, wenn du meinst, dass das falsch ist."
+    },
+    "sitting-locked": {
+      "title": "Diese Sitzung ist gesperrt.",
+      "description": "Frag deine Lehrkraft, was du als Nächstes tun sollst."
+    },
+    "sitting-attempt-closed": {
+      "title": "Dieser Versuch ist beendet.",
+      "description": "Frag deine Aufsicht, wenn du meinst, dass die Zeit falsch war."
+    },
+    "sitting-attempt-locked": {
+      "title": "Der Versuch ist gesperrt.",
+      "description": "Warte, bis die Aufsicht ihn freigibt, und versuche es dann erneut."
+    },
+    "sitting-second-device": {
+      "title": "Versuch gehört anderem Gerät.",
+      "description": "Bitte die Aufsicht, ein zweites Gerät zu erlauben."
+    },
+    "sitting-device-retired": {
+      "title": "Gerät wurde entfernt.",
+      "description": "Frag die Aufsicht, welches Gerät du nutzen darfst."
+    },
+    "sitting-response-refused": {
+      "title": "Diese Antwort passt nicht.",
+      "description": "Wähle die Optionen erneut."
+    },
+    "sitting-question-missing": {
+      "title": "Aufgabe gehört nicht dazu.",
+      "description": "Lade die Sitzung neu, um die Aufgaben zu sehen."
     }
   },
   "Ai": {

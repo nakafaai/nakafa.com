@@ -9,7 +9,8 @@ import { useState } from "react";
 
 /**
  * The student's one primary action. It asks before the answers close, because a finished attempt
- * takes no answer again. The action stays closed while a proctor holds the sitting.
+ * takes no answer again. The action stays closed while a proctor holds the sitting. On a phone it shows
+ * its icon alone, named for assistive technology, so the header stays one row.
  */
 export function SittingFinish({
   locked,
@@ -33,7 +34,7 @@ export function SittingFinish({
         variant="destructive"
       >
         <HugeIcons icon={StopIcon} />
-        {label}
+        <span className="max-sm:sr-only">{label}</span>
       </Button>
       <ResponsiveDialog
         description={t("finish-description")}

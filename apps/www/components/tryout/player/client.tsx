@@ -4,7 +4,7 @@ import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
 import { Suspense } from "react";
 import { PlayerFinish } from "@/components/player/finish";
-import { PlayerFooter } from "@/components/player/footer";
+import { PlayerFooter, PlayerOpener } from "@/components/player/footer";
 import { PlayerMain } from "@/components/player/frame";
 import {
   PlayerBack,
@@ -101,7 +101,9 @@ export function TryoutPlayer({
           <TryoutArticles content={content} locked={locked} runtime={runtime} />
         </Suspense>
       </PlayerMain>
-      <PlayerFooter />
+      <PlayerFooter>
+        <PlayerOpener />
+      </PlayerFooter>
       <PlayerSheet>
         <PlayerGrid questions={questions} />
         <PlayerModeToggle />

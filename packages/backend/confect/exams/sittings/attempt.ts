@@ -10,6 +10,7 @@ import { deviceBinding } from "@repo/backend/confect/exams/sittings/device";
 import { sittingLocked } from "@repo/backend/confect/exams/sittings/eligibility";
 import {
   AttemptClosed,
+  AttemptLocked,
   DeviceRetired,
   NotInSitting,
   SecondDevice,
@@ -128,12 +129,17 @@ export const boundAttempt = Effect.fn("exams.sittings.attempt.bound")(
 
 /**
  * Refuses a student's paper, answer, or finish once the attempt is not open to it: it must
- * be in progress and before its deadline, as an entry checks it (ADR 0013).
+ * be in progress and before its deadline, as an entry checks it (ADR 0013). A proctor's lock
+ * before the deadline has its own refusal, so the student's screen names the lock and not
+ * a closed attempt.
  */
 export const requireOpen = Effect.fn("exams.sittings.attempt.open")(function* (
   attempt: Pick<ExamAttemptsDoc, "deadline" | "state">,
   now: number
 ) {
+  if (attempt.state === "locked" && now < attempt.deadline) {
+    return yield* new AttemptLocked();
+  }
   if (attempt.state !== "inProgress" || now >= attempt.deadline) {
     return yield* new AttemptClosed();
   }

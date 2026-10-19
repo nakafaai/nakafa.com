@@ -4,6 +4,7 @@ import { Schema } from "effect";
 import type { DashboardAttempt } from "@/components/exams/sitting/change";
 import {
   isDisconnected,
+  lastActivityOf,
   matchesFilter,
   seatFrame,
 } from "@/components/exams/sitting/seat";
@@ -22,6 +23,7 @@ function attempt(
     away: options.away ?? false,
     deadline: 10_000,
     id: attemptId("attempt-a"),
+    lastActiveAt: 1000,
     latestSignal: options.latestSignal ?? null,
     mascot: null,
     name: "Nabila Zahra",
@@ -66,6 +68,17 @@ describe("isDisconnected", () => {
       )
     ).toBe(false);
     expect(isDisconnected(attempt("inProgress"))).toBe(false);
+  });
+});
+
+describe("lastActivityOf", () => {
+  it("shows the page's time until the seat's latest answer arrives", () => {
+    expect(lastActivityOf(attempt("inProgress"), null)).toBe(1000);
+  });
+
+  it("shows the newer of the page's time and the latest answer", () => {
+    expect(lastActivityOf(attempt("inProgress"), 5000)).toBe(5000);
+    expect(lastActivityOf(attempt("inProgress"), 400)).toBe(1000);
   });
 });
 
