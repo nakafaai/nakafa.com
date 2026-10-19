@@ -10,7 +10,6 @@ const EDITOR_PATH = /\/exams\/[^/]+\/edit$/;
 const TRY_PATH = /\/exams\/[^/]+\/try$/;
 
 /** The first question's thumbnail, whose name starts with its number. */
-const FIRST_QUESTION = /^Question 1\b/;
 
 /** The toolbar that the editor draws above the question text. */
 const TOOLBAR = '[data-slot="editor-toolbar"]';
@@ -37,9 +36,7 @@ test("a teacher writes a question with headings, lists, quotes, code and a table
   await page.waitForURL(EDITOR_PATH);
 
   // The first question's prompt is a rich editor, with a toolbar on one line above the text.
-  const strip = page.getByRole("navigation", { name: "Questions" });
-  await strip.getByRole("button", { name: FIRST_QUESTION }).click();
-  const prompt = page.getByRole("textbox", { name: "Question text" });
+  const prompt = page.getByRole("textbox", { name: "Question 1 text" });
   await expect(prompt).toBeEditable();
   const toolbar = page.locator(TOOLBAR);
   await expect(toolbar).toBeVisible();
@@ -141,7 +138,7 @@ test("a teacher writes a question with headings, lists, quotes, code and a table
   const reopened = await context.newPage();
   await reopened.goto(page.url());
   const reopenedPrompt = reopened.getByRole("textbox", {
-    name: "Question text",
+    name: "Question 1 text",
   });
   await expect(reopenedPrompt.locator("strong")).toHaveText("Luas", {
     timeout: readinessTimeoutMilliseconds,
