@@ -8,9 +8,7 @@ import { assignRole } from "@repo/backend/confect/access/grant";
 import type { TenantActor } from "@repo/backend/confect/journal/schema";
 import { systemActor } from "@repo/backend/confect/tenancy/actor";
 import { readAddress } from "@repo/backend/confect/tenancy/address";
-import {
-  tenantAuthority,
-} from "@repo/backend/confect/tenancy/authority";
+import { tenantAuthority } from "@repo/backend/confect/tenancy/authority";
 import { createPerson } from "@repo/backend/confect/tenancy/create";
 import { ProvisionRejected } from "@repo/backend/confect/tenancy/errors";
 import {

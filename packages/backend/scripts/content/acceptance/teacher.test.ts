@@ -5,6 +5,7 @@ import { SessionCookie } from "@repo/backend/scripts/content/acceptance/fixture"
 import {
   createAcceptanceTeacher,
   teacherAddress,
+  teacherMode,
 } from "@repo/backend/scripts/content/acceptance/teacher";
 import {
   Array as Arr,
@@ -151,5 +152,39 @@ describe("acceptance teacher", () => {
       expect(Exit.isFailure(exit)).toBe(true);
       expect(mocks.command).not.toHaveBeenCalled();
     }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+  );
+
+  it.effect(
+    "writes the Teacher's cookie to the file that the teacher mode names and ignores an extra argument",
+    () =>
+      Effect.gen(function* () {
+        const { fs, root } = yield* fixture;
+        answerCommands('[{"_id":"app-user-1","authId":"user-1"}]');
+
+        yield* teacherMode.run(root, [SLUG, `${root}/mode.json`, "ignored"]);
+
+        const cookie = yield* fs
+          .readFileString(`${root}/mode.json`)
+          .pipe(Effect.flatMap(Schema.decodeEffect(SessionCookie)));
+        expect(cookie.name).toBe("better-auth.session_token");
+      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+  );
+
+  it.effect(
+    "refuses the teacher mode without its school and cookie file before any operation",
+    () =>
+      Effect.gen(function* () {
+        const { root } = yield* fixture;
+        const specs = answerCommands("[]");
+
+        expect(
+          yield* teacherMode.run(root, [SLUG]).pipe(Effect.flip)
+        ).toMatchObject({
+          _tag: "AcceptanceRuntimeError",
+          message: "Usage: acceptance teacher <school-slug> <cookie-file>",
+        });
+        expect(MutableList.toArray(specs)).toEqual([]);
+        expect(mocks.read).not.toHaveBeenCalled();
+      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
   );
 });

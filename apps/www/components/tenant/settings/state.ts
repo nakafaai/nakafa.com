@@ -17,7 +17,7 @@ export type Cohort = Ref.Returns<typeof tenancy.cohorts.list>[number];
 export type CohortDetail = Ref.Returns<typeof tenancy.cohorts.get>;
 
 /** One student placed in a cohort, as the cohort's members list shows them. */
-export type Member = Ref.Returns<
+export type CohortMember = Ref.Returns<
   typeof tenancy.cohorts.members
 >["page"][number];
 

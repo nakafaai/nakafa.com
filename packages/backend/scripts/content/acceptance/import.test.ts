@@ -1,7 +1,10 @@
 import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import type { runAcceptanceCommand } from "@repo/backend/scripts/content/acceptance/command";
-import { importAcceptanceRows } from "@repo/backend/scripts/content/acceptance/import";
+import {
+  importAcceptanceRows,
+  importMode,
+} from "@repo/backend/scripts/content/acceptance/import";
 import { Effect, FileSystem, MutableList } from "effect";
 
 const mocks = vi.hoisted(() => ({ command: vi.fn(), read: vi.fn() }));
@@ -78,5 +81,56 @@ describe("acceptance row import", () => {
       });
       expect(mocks.command).not.toHaveBeenCalled();
     }).pipe(Effect.provide(nodeServicesLayer))
+  );
+
+  it.effect(
+    "appends the rows that the import mode names to the table it names, ignoring an extra argument",
+    () =>
+      Effect.gen(function* () {
+        const specs = MutableList.make<CommandSpec>();
+        mocks.read.mockReturnValue(
+          Effect.succeed({ backend: "/runtime/backend" })
+        );
+        mocks.command.mockImplementation((spec: CommandSpec) =>
+          Effect.gen(function* () {
+            MutableList.append(specs, spec);
+            const fs = yield* FileSystem.FileSystem;
+            yield* fs.writeFileString(spec.stdoutPath, "Added 2 documents.");
+          })
+        );
+
+        yield* importMode.run("/root", [
+          "chats",
+          "/rows/chats.jsonl",
+          "ignored",
+        ]);
+
+        const calls = MutableList.toArray(specs);
+        expect(calls).toHaveLength(1);
+        expect(calls[0]?.args).toEqual([
+          "node_modules/convex/bin/main.js",
+          "import",
+          "--table",
+          "chats",
+          "--append",
+          "--yes",
+          "/rows/chats.jsonl",
+        ]);
+      }).pipe(Effect.provide(nodeServicesLayer))
+  );
+
+  it.effect(
+    "refuses the import mode without its rows file before any operation",
+    () =>
+      Effect.gen(function* () {
+        expect(
+          yield* importMode.run("/root", ["chats"]).pipe(Effect.flip)
+        ).toMatchObject({
+          _tag: "AcceptanceRuntimeError",
+          message: "Usage: acceptance import <table> <rows-file>",
+        });
+        expect(mocks.read).not.toHaveBeenCalled();
+        expect(mocks.command).not.toHaveBeenCalled();
+      }).pipe(Effect.provide(nodeServicesLayer))
   );
 });

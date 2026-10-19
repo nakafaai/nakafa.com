@@ -233,7 +233,7 @@ const memberColumns = createColumnHelper<
  * its first page, and shows an empty state while the cohort holds no student. An archived
  * cohort, or one with no other active cohort to move to, shows no row menu.
  */
-export function SchoolCohortMembers({
+function SchoolCohortMembers({
   cohortId,
   isArchived,
   periodId,
@@ -262,8 +262,8 @@ export function SchoolCohortMembers({
     return (
       <TableEmpty
         act="reading"
-        description={t("members-description")}
-        title={t("members-empty")}
+        description={t("cohort-members-description")}
+        title={t("cohort-members-empty")}
       />
     );
   }
@@ -303,7 +303,7 @@ export function SchoolCohortMembers({
         columns={columns}
         data={pagination.results}
         rowId={(member) => member.id}
-        search={{ column: "name", placeholder: t("members-search") }}
+        search={{ column: "name", placeholder: t("cohort-members-search") }}
       />
       {PaginatedQueryResult.isCanLoadMore(pagination) ? (
         <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />

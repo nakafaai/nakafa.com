@@ -6,7 +6,7 @@ import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { Array as Arr, Option } from "effect";
 import {
   type CohortDetail,
-  type Member,
+  type CohortMember,
   withoutItem,
 } from "@/components/tenant/settings/state";
 
@@ -27,7 +27,7 @@ function pageRows<Row>(
 /** The name of the Person with this ID in the loaded lists of the school's people, if one is loaded. */
 function nameOf(
   localStore: OptimisticLocalStore.OptimisticLocalStore,
-  personId: Member["id"]
+  personId: CohortMember["id"]
 ) {
   const people = Arr.flatMap(
     localStore.getAllQueries(tenancy.people.list),
@@ -43,7 +43,7 @@ function nameOf(
 function changeMemberLists(
   localStore: OptimisticLocalStore.OptimisticLocalStore,
   matches: (args: Ref.Args<typeof tenancy.cohorts.members>) => boolean,
-  change: (page: readonly Member[]) => Member[]
+  change: (page: readonly CohortMember[]) => CohortMember[]
 ) {
   for (const query of localStore.getAllQueries(tenancy.cohorts.members)) {
     if (Option.isSome(query.value) && matches(query.args)) {
@@ -69,7 +69,7 @@ const isFirstPageOf = (
 function memberOf(
   localStore: OptimisticLocalStore.OptimisticLocalStore,
   cohortId: CohortDetail["id"],
-  personId: Member["id"]
+  personId: CohortMember["id"]
 ) {
   const members = Arr.flatMap(
     localStore.getAllQueries(tenancy.cohorts.members),

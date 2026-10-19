@@ -5,7 +5,11 @@ import {
   encodeArguments,
   signInInvitedMember,
 } from "@repo/backend/scripts/content/acceptance/member";
-import { Effect } from "effect";
+import {
+  type AcceptanceMode,
+  decodeModeArguments,
+} from "@repo/backend/scripts/content/acceptance/mode";
+import { Effect, Schema } from "effect";
 
 /**
  * The address of the Teacher that `createAcceptanceTeacher` seeds for a school.
@@ -43,3 +47,28 @@ export const createAcceptanceTeacher = Effect.fn(
   ]);
   yield* signInInvitedMember(runtime, teacherAddress(slug), output);
 });
+
+/** The usage of the teacher mode: the school of the Teacher, then the file for the session cookie. */
+const USAGE = "teacher <school-slug> <cookie-file>";
+const TeacherArguments = Schema.Tuple([Schema.String, Schema.String]);
+
+/**
+ * The teacher mode of the acceptance command line: seeds a Teacher of the school
+ * that the command names and writes the Teacher's session cookie to the file that
+ * the command names.
+ */
+export const teacherMode = {
+  mode: "teacher",
+  usage: USAGE,
+  run: Effect.fn("contentAcceptance.runTeacher")(function* (
+    root: string,
+    args: readonly string[]
+  ) {
+    const [slug, output] = yield* decodeModeArguments(
+      USAGE,
+      TeacherArguments,
+      args
+    );
+    return yield* createAcceptanceTeacher(root, slug, output);
+  }),
+} satisfies AcceptanceMode;

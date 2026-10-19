@@ -39,7 +39,7 @@ import {
   SchoolPersonPicker,
 } from "@/components/tenant/settings/people";
 import { saveSchool } from "@/components/tenant/settings/save.client";
-import type { Cohort, Member } from "@/components/tenant/settings/state";
+import type { Cohort, CohortMember } from "@/components/tenant/settings/state";
 
 const SOURCE = "components/tenant/settings/placement";
 
@@ -139,7 +139,7 @@ export function SchoolPlacementMove({
   targets,
 }: {
   cohortId: CohortId;
-  member: Member;
+  member: CohortMember;
   slug: TenantSlug;
   /** The active cohorts of the period that the student may move to. */
   targets: readonly Cohort[];
