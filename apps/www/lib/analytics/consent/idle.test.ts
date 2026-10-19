@@ -31,25 +31,23 @@ describe("untilBrowserIdle", () => {
     "completes at the browser's idle period, bounded by the timeout",
     () =>
       Effect.gen(function* () {
-        const requests: Array<{ callback: () => void; timeout: number }> = [];
+        const requestIdleCallback = vi.fn(
+          (_onIdle: () => void, _options: { timeout: number }) => 1
+        );
         Object.assign(window, {
-          cancelIdleCallback: () => undefined,
-          requestIdleCallback: (
-            callback: () => void,
-            options: { timeout: number }
-          ) => {
-            requests.push({ callback, timeout: options.timeout });
-            return requests.length;
-          },
+          cancelIdleCallback: vi.fn(),
+          requestIdleCallback,
         });
 
         const fiber = yield* Effect.forkChild(untilBrowserIdle);
         yield* TestClock.adjust("1 millis");
-        expect(requests).toHaveLength(1);
-        expect(requests[0]?.timeout).toBe(2000);
+        expect(requestIdleCallback).toHaveBeenCalledWith(expect.any(Function), {
+          timeout: 2000,
+        });
         expect(fiber.pollUnsafe()).toBeUndefined();
 
-        requests[0]?.callback();
+        const [request] = requestIdleCallback.mock.calls;
+        request?.[0]();
         yield* Fiber.join(fiber);
       })
   );
@@ -58,19 +56,17 @@ describe("untilBrowserIdle", () => {
     "cancels the pending idle callback when the wait is interrupted",
     () =>
       Effect.gen(function* () {
-        const cancelled: number[] = [];
+        const cancelIdleCallback = vi.fn();
         Object.assign(window, {
-          cancelIdleCallback: (handle: number) => {
-            cancelled.push(handle);
-          },
-          requestIdleCallback: () => 7,
+          cancelIdleCallback,
+          requestIdleCallback: vi.fn(() => 7),
         });
 
         const fiber = yield* Effect.forkChild(untilBrowserIdle);
         yield* TestClock.adjust("1 millis");
         yield* Fiber.interrupt(fiber);
 
-        expect(cancelled).toEqual([7]);
+        expect(cancelIdleCallback).toHaveBeenCalledWith(7);
       })
   );
 });
