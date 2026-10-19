@@ -63,7 +63,11 @@ function NextRows() {
 /** One room that opens soon, as a row that opens its exam. */
 function NextRow({ locale, room }: { locale: string; room: Room }) {
   return (
-    <CardLink href={`/exams/${room.examId}`} title={room.examTitle}>
+    <CardLink
+      href={`/exams/${room.examId}`}
+      localized={false}
+      title={room.examTitle}
+    >
       <RowText detail={room.room} title={room.examTitle} />
       <span className="shrink-0 text-muted-foreground text-sm">
         {schoolWeekdayTimeText({
