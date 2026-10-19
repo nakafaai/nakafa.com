@@ -2,6 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Option } from "effect";
 import {
   entryRefusalMessage,
+  failureGroupCopyOf,
   isFinalRefusal,
   refusalCopyOf,
   sittingFailureMessage,
@@ -103,6 +104,34 @@ describe("isFinalRefusal", () => {
     expect(isFinalRefusal({ _tag: "SittingClosed" })).toBe(false);
     expect(isFinalRefusal({ _tag: "AccessDenied" })).toBe(false);
     expect(isFinalRefusal(new Error("network"))).toBe(false);
+  });
+});
+
+describe("failureGroupCopyOf", () => {
+  it("shows the refusal copy of the group's first failure, when it names a refusal", () => {
+    expect(
+      failureGroupCopyOf([{ _tag: "AttemptClosed" }, new Error("network")])
+    ).toEqual(
+      Option.some({
+        description: "sitting-attempt-closed.description",
+        title: "sitting-attempt-closed.title",
+      })
+    );
+  });
+
+  it("shows the generic copy when the group's first failure names no refusal", () => {
+    expect(
+      failureGroupCopyOf([new Error("network"), { _tag: "AttemptClosed" }])
+    ).toEqual(
+      Option.some({
+        description: "action-error.description",
+        title: "action-error.title",
+      })
+    );
+  });
+
+  it("has no copy for a group with no failure", () => {
+    expect(failureGroupCopyOf([])).toEqual(Option.none());
   });
 });
 

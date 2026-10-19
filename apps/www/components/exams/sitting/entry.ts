@@ -1,5 +1,5 @@
 import type { ToastCopy } from "@repo/design-system/lib/toast/notify";
-import { Option, Schema } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 
 /**
  * The reasons that a sitting call ends with, as the server names them. An entry, the paper, and an attempt's
@@ -145,6 +145,24 @@ export function sittingFailureMessage(
 export function refusalCopyOf(error: unknown): Option.Option<ToastCopy> {
   return Option.flatMap(reasonOf(error), (copy) =>
     Option.fromNullishOr(copy.toast)
+  );
+}
+
+/** The generic toast of a sitting call that failed without naming a refusal. */
+const GENERIC_FAILURE: ToastCopy = {
+  description: "action-error.description",
+  title: "action-error.title",
+};
+
+/**
+ * The one toast of a group of failed calls, such as the answers of a resent paper: the refusal copy of the
+ * group's first failure when it names a refusal, and the generic copy otherwise. A group with no failure has none.
+ */
+export function failureGroupCopyOf(
+  errors: readonly unknown[]
+): Option.Option<ToastCopy> {
+  return Option.map(Arr.head(errors), (first) =>
+    Option.getOrElse(refusalCopyOf(first), () => GENERIC_FAILURE)
   );
 }
 
