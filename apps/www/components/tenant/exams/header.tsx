@@ -5,10 +5,10 @@ import { ArrowLeft01Icon, ViewIcon } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { isComposingKey } from "@repo/utilities/composition";
 import { Function as Fn, Option } from "effect";
+import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { runExamAction, sentAction } from "@/components/tenant/exams/action";
@@ -51,13 +51,13 @@ export function ExamHeader() {
 
   return (
     <header className="flex h-14 shrink-0 items-center gap-2 border-b px-2">
-      <NavigationLink
+      <Link
         aria-label={t("title")}
         className={buttonVariants({ size: "icon", variant: "ghost" })}
         href="/exams"
       >
         <HugeIcons icon={ArrowLeft01Icon} />
-      </NavigationLink>
+      </Link>
       <Input
         aria-label={t("title-label")}
         className="border-0 font-semibold text-lg shadow-none md:text-lg"
