@@ -86,6 +86,7 @@ describe("access/kind declarations", () => {
       "card.issued",
       "card.reissued",
       "card.redeemed",
+      "card.printed",
       "grant.created",
       "grant.ended",
       "person.reactivated",

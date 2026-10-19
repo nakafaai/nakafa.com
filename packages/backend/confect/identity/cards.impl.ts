@@ -1,5 +1,6 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
+import { tenantAccess } from "@repo/backend/confect/access/authority";
 import {
   type CardRefusal,
   cardOf,
@@ -8,6 +9,7 @@ import {
 } from "@repo/backend/confect/identity/card";
 import spec from "@repo/backend/confect/identity/cards.spec";
 import {
+  CardMissing,
   CardRoleRefused,
   LoginMissing,
   LoginNameRefused,
@@ -27,6 +29,7 @@ import {
   personAccess,
   personAuthority,
 } from "@repo/backend/confect/tenancy/authority";
+import { createPerson } from "@repo/backend/confect/tenancy/create";
 import { PersonClaimed } from "@repo/backend/confect/tenancy/errors";
 import { Effect, Layer, Match, Option, Result } from "effect";
 
@@ -73,6 +76,41 @@ const issue = FunctionImpl.make(
       code: card.code,
       expiresAt: card.expiresAt,
       loginName: name.success,
+      personId: person._id,
+    };
+  })
+);
+
+/**
+ * Adds a student in one transaction: an unclaimed Person, the school login name, and
+ * the first card. A login name the school cannot use refuses the step before anything
+ * is written, and a name taken at the claim refuses the whole transaction, so no Person
+ * is left without its card.
+ */
+const enroll = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "enroll",
+  Effect.fn("identity.cards.enroll")(function* ({ loginName, name }) {
+    const { person: issuer, tenant } = yield* Member;
+    const login = readLoginName(loginName);
+    if (Result.isFailure(login)) {
+      return yield* new LoginNameRefused({ reason: login.failure });
+    }
+    const by = personActor(issuer);
+    const person = yield* createPerson(by, tenant._id, name);
+    yield* personAuthority.check("card.issue", person);
+    yield* claimLoginName(person, login.success);
+    const card = yield* writeCard(person, issuer, Option.none());
+    yield* personAuthority.record(by, person, {
+      card: card.cardId,
+      type: "card.issued",
+    });
+    return {
+      code: card.code,
+      expiresAt: card.expiresAt,
+      loginName: login.success,
+      personId: person._id,
     };
   })
 );
@@ -106,7 +144,31 @@ const reissue = FunctionImpl.make(
       code: card.code,
       expiresAt: card.expiresAt,
       loginName: login.value.name,
+      personId: person._id,
     };
+  })
+);
+
+/**
+ * Records that a Person's card was printed, so each print leaves an entry in the
+ * journal. The browser sends it as the card opens for printing.
+ */
+const printCard = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "print",
+  Effect.fn("identity.cards.print")(function* () {
+    const { person: issuer } = yield* Member;
+    const person = yield* Person;
+    const card = yield* cardOf(person._id);
+    if (Option.isNone(card)) {
+      return yield* new CardMissing();
+    }
+    yield* personAuthority.record(personActor(issuer), person, {
+      card: card.value._id,
+      type: "card.printed",
+    });
+    return null;
   })
 );
 
@@ -121,11 +183,14 @@ const redeem = FunctionImpl.make(
 );
 
 export default GroupImpl.make(databaseSchema, spec).pipe(
+  Layer.provide(enroll),
   Layer.provide(issue),
   Layer.provide(reissue),
+  Layer.provide(printCard),
   Layer.provide(redeem),
   Layer.provide(session),
   Layer.provide(member),
+  Layer.provide(tenantAccess),
   Layer.provide(personAccess),
   GroupImpl.finalize
 );

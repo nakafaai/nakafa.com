@@ -40,11 +40,12 @@ export const loginCardValidator = Schema.Struct({
   tenantId: Id("tenants"),
 });
 
-/** One issued card as the school's Admin sees it: the plain code, shown once, with its login name and expiry. */
+/** One issued card as the school's Admin sees it: the plain code, shown once, with its login name, its expiry, and its Person. */
 export const IssuedCard = Schema.Struct({
   code: Schema.String,
   expiresAt: Schema.Finite,
   loginName: LoginName,
+  personId: Id("tenantPeople"),
 });
 
 /**

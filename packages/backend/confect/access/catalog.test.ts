@@ -162,6 +162,7 @@ describe("access/catalog", () => {
           "card.issued",
           "card.reissued",
           "card.redeemed",
+          "card.printed",
           "period.created",
           "period.opened",
           "period.archived",

@@ -8,6 +8,7 @@ const SchoolSettingsSectionSchema = Schema.Struct({
     "periods",
     "cohorts",
     "units",
+    "members",
     "roles",
     "invites",
     "students",
@@ -49,6 +50,7 @@ export const schoolSettingsGroups: typeof SchoolSettingsGroupsSchema.Type = [
   {
     key: "people",
     sections: [
+      { href: `${schoolSettingsRootHref}/members`, labelKey: "members" },
       { href: `${schoolSettingsRootHref}/roles`, labelKey: "roles" },
       { href: `${schoolSettingsRootHref}/invites`, labelKey: "invites" },
       { href: `${schoolSettingsRootHref}/students`, labelKey: "students" },

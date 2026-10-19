@@ -21,6 +21,7 @@ describe("school settings routes", () => {
       ["/settings/periods", "periods", "school"],
       ["/settings/cohorts", "cohorts", "school"],
       ["/settings/units", "units", "school"],
+      ["/settings/members", "members", "people"],
       ["/settings/roles", "roles", "people"],
       ["/settings/invites", "invites", "people"],
       ["/settings/students", "students", "people"],
@@ -38,7 +39,7 @@ describe("school settings routes", () => {
       ])
     ).toEqual([
       ["school", ["profile", "periods", "cohorts", "units"]],
-      ["people", ["roles", "invites", "students"]],
+      ["people", ["members", "roles", "invites", "students"]],
       ["integrations", ["clients"]],
       ["security", ["policies", "audit"]],
     ]);
@@ -52,9 +53,10 @@ describe("school settings routes", () => {
       "/settings/profile",
       "/settings/profile",
       "/settings/profile",
-      "/settings/roles",
-      "/settings/roles",
-      "/settings/roles",
+      "/settings/members",
+      "/settings/members",
+      "/settings/members",
+      "/settings/members",
       "/settings/clients",
       "/settings/policies",
       "/settings/policies",

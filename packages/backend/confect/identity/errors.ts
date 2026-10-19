@@ -68,6 +68,21 @@ export class LoginMissing extends Schema.TaggedError<LoginMissing>()(
   }
 ) {}
 
+/** Printing a card for a Person who holds no login card, so there is no card to print. */
+export class CardMissing extends Schema.TaggedError<CardMissing>()(
+  "CardMissing",
+  {
+    code: Schema.Literal("CARD_MISSING").pipe(
+      Schema.withConstructorDefault(Effect.succeed("CARD_MISSING"))
+    ),
+    message: Schema.String.pipe(
+      Schema.withConstructorDefault(
+        Effect.succeed("This person has no login card to print.")
+      )
+    ),
+  }
+) {}
+
 /** Issuing or reissuing a card for a Person who holds the Owner or Admin role. No card goes to such a Person (ADR 0009). */
 export class CardRoleRefused extends Schema.TaggedError<CardRoleRefused>()(
   "CardRoleRefused",

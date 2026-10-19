@@ -1,6 +1,7 @@
 import { CountryCodeSchema } from "@nakafa/aksara-contracts/country";
 import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { Id } from "@repo/backend/confect/_generated/id";
+import { BuiltinRole } from "@repo/backend/confect/access/schema";
 import { Currency, TimeZone } from "@repo/backend/confect/tenancy/locale";
 import { TenantPolicies } from "@repo/backend/confect/tenancy/policy";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -83,6 +84,11 @@ export const ClaimMethod = Schema.Literals([
  * `break-glass` removes an unclaimed Owner and invites a replacement.
  */
 export const PersonReason = Schema.Literals(["break-glass"]);
+/**
+ * The roles that one invite gives at once: a teacher, or an Admin, whom only an
+ * Owner may name (`authorizeOwnerRole`).
+ */
+export const InvitedRole = BuiltinRole.pick(["admin", "teacher"]);
 
 /** Binds a Person to at most one Nakafa account. */
 export const Account = Schema.Union([

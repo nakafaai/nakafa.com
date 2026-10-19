@@ -1,7 +1,9 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
+import { TenantAccess } from "@repo/backend/confect/access/tenant";
 import {
+  CardMissing,
   CardRoleRefused,
   LoginExists,
   LoginMissing,
@@ -17,15 +19,38 @@ import RequireMember from "@repo/backend/confect/middleware/member.spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
 import { PersonAccess } from "@repo/backend/confect/tenancy/access";
 import { PersonClaimed } from "@repo/backend/confect/tenancy/errors";
+import { PersonName } from "@repo/backend/confect/tenancy/schema";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Schema } from "effect";
 
 /**
- * The login cards of one school's Persons. An Admin issues a student's first
- * card with a login name and reissues the card later. A student redeems a card
- * on the school's host, which is the one public function here.
+ * The login cards of one school's Persons. An Admin adds a student with a login
+ * name and the first card in one step, reissues the card later, and records each
+ * print of it. A student redeems a card on the school's host, the one function here
+ * that no Admin calls.
  */
 export default GroupSpec.make()
+  .addFunction(
+    FunctionSpec.publicMutation({
+      name: "enroll",
+      args: () => ({
+        loginName: Schema.String,
+        name: PersonName,
+        slug: TenantSlug,
+      }),
+      returns: () => IssuedCard,
+      error: () =>
+        Schema.Union([
+          AccessDenied,
+          LoginExists,
+          LoginNameRefused,
+          LoginNameTaken,
+        ]),
+    })
+      .middleware(Session)
+      .middleware(RequireMember)
+      .middleware(TenantAccess, { action: "person.manage" })
+  )
   .addFunction(
     FunctionSpec.publicMutation({
       name: "issue",
@@ -61,6 +86,17 @@ export default GroupSpec.make()
           LoginMissing,
           PersonClaimed,
         ]),
+    })
+      .middleware(Session)
+      .middleware(RequireMember)
+      .middleware(PersonAccess, { action: "card.issue", arg: "personId" })
+  )
+  .addFunction(
+    FunctionSpec.publicMutation({
+      name: "print",
+      args: () => ({ personId: Id("tenantPeople"), slug: TenantSlug }),
+      returns: () => Schema.Null,
+      error: () => Schema.Union([AccessDenied, CardMissing]),
     })
       .middleware(Session)
       .middleware(RequireMember)

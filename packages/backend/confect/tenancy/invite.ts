@@ -1,3 +1,4 @@
+import type { GenericId } from "@confect/core";
 import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import type {
   TenantInvitesDoc,
@@ -15,6 +16,7 @@ import { noteInvite } from "@repo/backend/confect/notifications/inbox";
 import { systemActor } from "@repo/backend/confect/tenancy/actor";
 import { personAuthority } from "@repo/backend/confect/tenancy/authority";
 import { claimAfterInvite } from "@repo/backend/confect/tenancy/claims";
+import { createPerson } from "@repo/backend/confect/tenancy/create";
 import { ProvisionRejected } from "@repo/backend/confect/tenancy/errors";
 import type { InviteRequest } from "@repo/backend/confect/tenancy/provision.spec";
 import {
@@ -23,7 +25,15 @@ import {
   type InviteState,
   type PersonReason,
 } from "@repo/backend/confect/tenancy/schema";
-import { Clock, DateTime, Duration, Effect, Option, Struct } from "effect";
+import {
+  Array as Arr,
+  Clock,
+  DateTime,
+  Duration,
+  Effect,
+  Option,
+  Struct,
+} from "effect";
 
 /** Writes a new state over one stored invite; every other field of the invite stays as it is. */
 export const replaceInviteState = Effect.fn("tenancy.invite.state")(function* (
@@ -63,6 +73,12 @@ export const expireInvite = Effect.fn("tenancy.invite.expire")(function* (
 
 /** The most invites one sweep run expires. A longer backlog drains over later runs. */
 const INVITE_SWEEP_BATCH_SIZE = 50;
+
+/**
+ * The most invites of one address that one read takes. A school invites an address
+ * a few times at most, so the bound is never reached in use.
+ */
+const ADDRESS_INVITE_LIMIT = 32;
 
 /**
  * Expires the pending invites whose term has passed, as the system. Each invite
@@ -153,9 +169,7 @@ export const inviteToSchool = Effect.fn("tenancy.invite.toSchool")(function* (
   actor: typeof TenantActor.Type,
   args: typeof InviteRequest.Type
 ) {
-  const reader = yield* DatabaseReader;
-  const writer = yield* DatabaseWriter;
-  const school = yield* reader
+  const school = yield* (yield* DatabaseReader)
     .table("tenants")
     .index("by_slug", (query) => query.eq("slug", args.slug))
     .first()
@@ -166,21 +180,87 @@ export const inviteToSchool = Effect.fn("tenancy.invite.toSchool")(function* (
       message: "No school uses this address.",
     });
   }
-  const personId = yield* writer
-    .table("tenantPeople")
-    .insert({
-      account: { state: "unclaimed" },
-      kind: "member",
-      name: args.name,
-      status: "active",
-      tenantId: school.value._id,
-    })
-    .pipe(Effect.orDie);
-  const person = yield* reader
-    .table("tenantPeople")
-    .get(personId)
-    .pipe(Effect.orDie);
-  yield* personAuthority.record(actor, person, { type: "person.created" });
+  const person = yield* createPerson(actor, school.value._id, args.name);
   const invite = yield* writeInvite(actor, person, args.email, args.locale);
-  return { invite: invite._id, person: personId };
+  return { invite: invite._id, person: person._id };
 });
+
+/**
+ * Whether an address already holds a pending invite in this school. An invite whose
+ * term has ended no longer counts, as `invite` decides it. The address index holds
+ * the invites of every school, so the read takes a bounded few.
+ */
+export const addressInvited = Effect.fn("tenancy.invite.address")(function* (
+  tenantId: GenericId.GenericId<"tenants">,
+  email: typeof Email.Type
+) {
+  const now = yield* Clock.currentTimeMillis;
+  const pending = yield* (yield* DatabaseReader)
+    .table("tenantInvites")
+    .index("by_channel_email_and_state_status", (query) =>
+      query.eq("channel.email", email).eq("state.status", "pending")
+    )
+    .take(ADDRESS_INVITE_LIMIT)
+    .pipe(Effect.orDie);
+  return Arr.some(
+    pending,
+    (invite) => invite.tenantId === tenantId && invite.expiresAt > now
+  );
+});
+
+/** The pending invite of one Person, if one waits: one indexed read. */
+export const pendingInviteOf = Effect.fn("tenancy.invite.pendingOf")(function* (
+  personId: GenericId.GenericId<"tenantPeople">
+) {
+  return yield* (yield* DatabaseReader)
+    .table("tenantInvites")
+    .index("by_personId_and_state_status", (query) =>
+      query.eq("personId", personId).eq("state.status", "pending")
+    )
+    .first()
+    .pipe(Effect.orDie);
+});
+
+/**
+ * Whether a Person can take a new invite: an active Person that no account has
+ * claimed, and whose pending invite, if one waits, has ended.
+ */
+const takesInvite = Effect.fn("tenancy.invite.takesInvite")(function* (
+  person: TenantPeopleDoc
+) {
+  if (person.status !== "active" || person.account.state !== "unclaimed") {
+    return false;
+  }
+  const pending = yield* pendingInviteOf(person._id);
+  const now = yield* Clock.currentTimeMillis;
+  return Option.isNone(pending) || pending.value.expiresAt <= now;
+});
+
+/**
+ * The Person that an earlier invite of this address names in this school, when that
+ * Person takes a new invite. A Person that an account claimed, or that left the
+ * school, is never named again, so its address gets a new Person. The address index
+ * also holds the invites of other schools, so the read is scoped to this school.
+ */
+export const earlierInvitee = Effect.fn("tenancy.invite.earlierInvitee")(
+  function* (
+    tenantId: GenericId.GenericId<"tenants">,
+    email: typeof Email.Type
+  ) {
+    const reader = yield* DatabaseReader;
+    const earlier = yield* reader
+      .table("tenantInvites")
+      .index("by_tenantId_and_channel_email", (query) =>
+        query.eq("tenantId", tenantId).eq("channel.email", email)
+      )
+      .take(ADDRESS_INVITE_LIMIT)
+      .pipe(Effect.orDie);
+    const people = yield* Effect.forEach(
+      earlier,
+      (invite) =>
+        reader.table("tenantPeople").get(invite.personId).pipe(Effect.orDie),
+      { concurrency: "unbounded" }
+    );
+    return Arr.head(yield* Effect.filter(people, takesInvite));
+  }
+);

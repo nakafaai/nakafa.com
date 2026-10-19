@@ -1,10 +1,7 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import type { TenantPeopleDoc } from "@repo/backend/confect/_generated/docs";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import {
-  DatabaseReader,
-  DatabaseWriter,
-} from "@repo/backend/confect/_generated/services";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { tenantAccess } from "@repo/backend/confect/access/authority";
 import { revokeGrant } from "@repo/backend/confect/access/grant";
 import member from "@repo/backend/confect/middleware/member.impl";
@@ -12,12 +9,11 @@ import { Member } from "@repo/backend/confect/middleware/member.spec";
 import session from "@repo/backend/confect/middleware/session.impl";
 import { Person } from "@repo/backend/confect/tenancy/access";
 import { personActor } from "@repo/backend/confect/tenancy/actor";
-import {
-  personAccess,
-  personAuthority,
-} from "@repo/backend/confect/tenancy/authority";
+import { personAccess } from "@repo/backend/confect/tenancy/authority";
+import { createPerson } from "@repo/backend/confect/tenancy/create";
 import spec from "@repo/backend/confect/tenancy/people.spec";
 import { removePerson } from "@repo/backend/confect/tenancy/remove";
+import { renamePerson } from "@repo/backend/confect/tenancy/rename";
 import { Array as Arr, Effect, Layer, Struct } from "effect";
 
 /** One Person as the school's list shows them. */
@@ -73,25 +69,7 @@ const create = FunctionImpl.make(
   "create",
   Effect.fn("tenancy.people.create")(function* ({ name }) {
     const { person: actor, tenant } = yield* Member;
-    const reader = yield* DatabaseReader;
-    const personId = yield* (yield* DatabaseWriter)
-      .table("tenantPeople")
-      .insert({
-        account: { state: "unclaimed" },
-        kind: "member",
-        name,
-        status: "active",
-        tenantId: tenant._id,
-      })
-      .pipe(Effect.orDie);
-    const person = yield* reader
-      .table("tenantPeople")
-      .get(personId)
-      .pipe(Effect.orDie);
-    yield* personAuthority.record(personActor(actor), person, {
-      type: "person.created",
-    });
-    return view(person);
+    return view(yield* createPerson(personActor(actor), tenant._id, name));
   })
 );
 
@@ -103,20 +81,7 @@ const rename = FunctionImpl.make(
   Effect.fn("tenancy.people.rename")(function* ({ name }) {
     const { person: actor } = yield* Member;
     const person = yield* Person;
-    if (person.name === name) {
-      return view(person);
-    }
-    yield* (yield* DatabaseWriter)
-      .table("tenantPeople")
-      .replace(
-        person._id,
-        Struct.assign(Struct.omit(person, ["_creationTime", "_id"]), { name })
-      )
-      .pipe(Effect.orDie);
-    yield* personAuthority.record(personActor(actor), person, {
-      type: "person.renamed",
-    });
-    return view(Struct.assign(person, { name }));
+    return view(yield* renamePerson(personActor(actor), person, name));
   })
 );
 

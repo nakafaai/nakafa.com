@@ -1,29 +1,24 @@
 "use client";
 
-import {
-  PaginatedQueryResult,
-  QueryResult,
-  useMutation,
-  usePaginatedQuery,
-  useQuery,
-} from "@confect/react";
+import { QueryResult, useMutation, useQuery } from "@confect/react";
 import {
   ACTIVE_APP_LOCALE_CODES,
   ActiveAppLocaleCodeSchema,
 } from "@nakafa/aksara-contracts/locale";
-import { Id } from "@repo/backend/confect/_generated/id";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
-import { Email } from "@repo/backend/confect/tenancy/schema";
+import {
+  Email,
+  InvitedRole,
+  PersonName,
+} from "@repo/backend/confect/tenancy/schema";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Field,
-  FieldDescription,
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
 import { Input } from "@repo/design-system/components/ui/input";
-import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import {
   Select,
@@ -37,13 +32,10 @@ import { languages } from "@repo/internationalization/data/lang";
 import { Array as Arr, Option, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { useId, useState, useTransition } from "react";
-import { inviteChange } from "@/components/tenant/settings/mutation.client";
+import { addMemberChange } from "@/components/tenant/settings/members.client";
 import { saveSchool } from "@/components/tenant/settings/save.client";
 
 const SOURCE = "components/tenant/settings/invite";
-
-/** How many unclaimed people one page of the invite list loads, and each page after it. */
-const PERSON_PAGE_SIZE = 100;
 
 /** The languages an invite may be written in: the active ones of the app. */
 const localeItems = Arr.map(
@@ -53,10 +45,15 @@ const localeItems = Arr.map(
   (language) => ({ label: language.label, value: language.value })
 );
 
+/** The roles an invite gives, each with the label the school shows for it. */
+type InvitedRoleValue = typeof InvitedRole.Type;
+
 /**
- * Renders the dialog that invites a Person of the school who has no account yet. It
- * takes the Person, the email, and the language of the email, which starts as the
- * language of the school's first active unit. The invite appears in the list at once.
+ * Renders the dialog that adds a teacher or an Admin: the name, the email, the role,
+ * and the language of the email, which starts as the language of the school's first
+ * active unit. Only an Owner is offered the Admin role. The Person, its role, and its
+ * invite are written in one step, and the row shows in the members and the invitations
+ * at once.
  */
 export function SchoolInviteDialog({
   open,
@@ -68,34 +65,31 @@ export function SchoolInviteDialog({
   slug: TenantSlug;
 }) {
   const t = useTranslations("SchoolSettings");
+  const tSchool = useTranslations("School");
   const common = useTranslations("Common");
-  const people = usePaginatedQuery(
-    tenancy.people.list,
-    { account: "unclaimed", slug, status: "active" },
-    { initialNumItems: PERSON_PAGE_SIZE }
-  );
   const viewer = useQuery(tenancy.viewer.get, { slug });
-  const invite = useMutation(tenancy.invites.invite).withOptimisticUpdate(
-    inviteChange
+  const invite = useMutation(tenancy.roster.invite).withOptimisticUpdate(
+    addMemberChange
   );
   const id = useId();
   const [isPending, startTransition] = useTransition();
-  const [personId, setPersonId] = useState<string | undefined>(undefined);
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [role, setRole] = useState<InvitedRoleValue>("teacher");
   const [chosenLocale, setChosenLocale] = useState<
     typeof ActiveAppLocaleCodeSchema.Type | undefined
   >(undefined);
 
-  if (PaginatedQueryResult.isFailure(people)) {
-    throw people.error;
-  }
-
-  const personItems = Arr.map(people.results, (person) => ({
-    label: person.name,
-    value: person.id,
-  }));
-  const noneLeft =
-    PaginatedQueryResult.isExhausted(people) && people.results.length === 0;
+  const canGiveAdmin =
+    QueryResult.isSuccess(viewer) &&
+    Arr.contains(viewer.value.can, "owner.manage");
+  const roleItems = Arr.map(
+    Arr.filter(
+      InvitedRole.literals,
+      (value) => value !== "admin" || canGiveAdmin
+    ),
+    (value) => ({ label: tSchool(`role.${value}`), value })
+  );
   const defaultLocale = QueryResult.isSuccess(viewer)
     ? Option.flatMap(
         Arr.findFirst(viewer.value.units, (unit) => unit.status === "active"),
@@ -103,20 +97,25 @@ export function SchoolInviteDialog({
           Schema.decodeOption(ActiveAppLocaleCodeSchema)(unit.contentLanguage)
       )
     : Option.none();
-  const parsedPerson = Option.flatMap(Option.fromNullishOr(personId), (value) =>
-    Schema.decodeUnknownOption(Id("tenantPeople"))(value)
-  );
+  const parsedName = Schema.decodeOption(PersonName)(name.trim());
   const parsedEmail = Schema.decodeOption(Email)(email.trim());
   const parsedLocale = Option.orElse(
     Option.fromNullishOr(chosenLocale),
     () => defaultLocale
   );
+  const submittable =
+    Option.isSome(parsedName) &&
+    Option.isSome(parsedEmail) &&
+    Option.isSome(parsedLocale);
 
   return (
     <ResponsiveDialog
       description={t("invite-dialog-description")}
       footer={
         <>
+          <p className="mr-auto text-muted-foreground text-sm">
+            {t("invite-footer")}
+          </p>
           <Button
             onClick={() => setOpen(false)}
             type="button"
@@ -125,15 +124,11 @@ export function SchoolInviteDialog({
             {common("cancel")}
           </Button>
           <Button
-            disabled={
-              Option.isNone(parsedPerson) ||
-              Option.isNone(parsedEmail) ||
-              Option.isNone(parsedLocale)
-            }
+            disabled={!submittable}
             inert={isPending}
             onClick={() => {
               if (
-                Option.isNone(parsedPerson) ||
+                Option.isNone(parsedName) ||
                 Option.isNone(parsedEmail) ||
                 Option.isNone(parsedLocale)
               ) {
@@ -146,7 +141,8 @@ export function SchoolInviteDialog({
                     invite({
                       email: parsedEmail.value,
                       locale: parsedLocale.value,
-                      personId: parsedPerson.value,
+                      name: parsedName.value,
+                      role,
                       slug,
                     }),
                   SOURCE
@@ -165,37 +161,12 @@ export function SchoolInviteDialog({
     >
       <FieldGroup>
         <Field>
-          <FieldLabel htmlFor={`${id}-person`}>{t("invite-person")}</FieldLabel>
-          <Select
-            items={personItems}
-            onValueChange={(value) => {
-              if (typeof value === "string") {
-                setPersonId(value);
-              }
-            }}
-            value={personId}
-          >
-            <SelectTrigger className="w-full" id={`${id}-person`}>
-              <SelectValue placeholder={t("invite-person-placeholder")} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                {Arr.map(personItems, (item) => (
-                  <SelectItem key={item.value} value={item.value}>
-                    {item.label}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-              {PaginatedQueryResult.isCanLoadMore(people) ? (
-                <Intersection
-                  onIntersect={() => people.loadMore(PERSON_PAGE_SIZE)}
-                />
-              ) : null}
-            </SelectContent>
-          </Select>
-          {noneLeft ? (
-            <FieldDescription>{t("invite-none-left")}</FieldDescription>
-          ) : null}
+          <FieldLabel htmlFor={`${id}-name`}>{t("invite-name")}</FieldLabel>
+          <Input
+            id={`${id}-name`}
+            onChange={(event) => setName(event.target.value)}
+            value={name}
+          />
         </Field>
         <Field>
           <FieldLabel htmlFor={`${id}-email`}>{t("invite-email")}</FieldLabel>
@@ -205,6 +176,32 @@ export function SchoolInviteDialog({
             type="email"
             value={email}
           />
+        </Field>
+        <Field>
+          <FieldLabel htmlFor={`${id}-role`}>{t("invite-role")}</FieldLabel>
+          <Select
+            items={roleItems}
+            onValueChange={(value) => {
+              const chosen = Schema.decodeUnknownOption(InvitedRole)(value);
+              if (Option.isSome(chosen)) {
+                setRole(chosen.value);
+              }
+            }}
+            value={role}
+          >
+            <SelectTrigger className="w-full" id={`${id}-role`}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                {Arr.map(roleItems, (item) => (
+                  <SelectItem key={item.value} value={item.value}>
+                    {item.label}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
         </Field>
         <Field>
           <FieldLabel htmlFor={`${id}-locale`}>{t("invite-locale")}</FieldLabel>
