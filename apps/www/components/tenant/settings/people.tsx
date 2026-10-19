@@ -78,7 +78,6 @@ function SchoolPersonSelect({
   personId: PersonId | undefined;
   slug: TenantSlug;
 }) {
-  const t = useTranslations("SchoolSettings");
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const pagination = usePaginatedQuery(
     tenancy.people.list,
