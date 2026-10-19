@@ -71,7 +71,11 @@ test("a student's Beranda shows the student's sittings and no action of the page
       slug: school.slug,
     })
   );
+  // The seed records its exam as made by the school's Owner, who must have signed in first.
+  const ownerContext = await browser.newContext();
+  await Effect.runPromise(signInOwner(ownerContext, school.slug, address("/")));
   await Effect.runPromise(seedSitting(school.slug, learner));
+  await ownerContext.close();
   const page = await context.newPage();
 
   await page.goto(address("/"));
@@ -101,17 +105,19 @@ test("a sitting that runs now appears in the owner's In progress tile, and its r
       slug: school.slug,
     })
   );
-  const sitting = await Effect.runPromise(seedSitting(school.slug, learner));
   const context = await browser.newContext();
+  // The seed records its exam as made by the school's Owner, who must have signed in first.
   await Effect.runPromise(signInOwner(context, school.slug, address("/")));
+  const sitting = await Effect.runPromise(seedSitting(school.slug, learner));
   const page = await context.newPage();
 
   await page.goto(address("/"));
 
-  await expect(page.getByText(SEEDED_EXAM, { exact: true })).toBeVisible();
-  await expect(
-    page.getByRole("link", { name: SEEDED_ROOM }).first()
-  ).toHaveAttribute(
+  // The seeded exam is also a draft of its author, so its title shows in the drafts tile too. The
+  // In progress row is the one that names the room, and it opens the room.
+  const row = page.getByRole("link", { name: SEEDED_ROOM }).first();
+  await expect(row).toContainText(SEEDED_EXAM);
+  await expect(row).toHaveAttribute(
     "href",
     `/exams/${sitting.examId}/sittings/${sitting.sittingId}`
   );

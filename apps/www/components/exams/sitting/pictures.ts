@@ -3,10 +3,7 @@ import { Node } from "@tiptap/pm/model";
 import { Array as Arr } from "effect";
 import { createContext } from "react";
 import { assessmentSchema } from "@/lib/editor/assessment";
-import {
-  assetIdsOf,
-  type ExamAssetIdValue,
-} from "@/lib/editor/pictures";
+import { assetIdsOf, type ExamAssetIdValue } from "@/lib/editor/pictures";
 
 /**
  * The addresses of the images that a question draws, by image ID. The question resolves them in

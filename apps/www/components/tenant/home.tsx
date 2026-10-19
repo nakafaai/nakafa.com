@@ -48,7 +48,7 @@ function HomePage({ action, body }: { action?: ReactNode; body: ReactNode }) {
       <SchoolHeader items={[]} title={tCommon("home")}>
         {action}
       </SchoolHeader>
-      <LayoutContent className="py-6">{body}</LayoutContent>
+      <LayoutContent className="w-full py-6">{body}</LayoutContent>
     </>
   );
 }

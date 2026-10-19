@@ -142,7 +142,11 @@ function StudentRows({
 /** One sitting of the student, as a row that opens the sitting and names what the student can do there. */
 function SittingRow({ sitting }: { sitting: Sitting }) {
   return (
-    <CardLink href={`/sittings/${sitting.id}`} title={sitting.examTitle}>
+    <CardLink
+      href={`/sittings/${sitting.id}`}
+      localized={false}
+      title={sitting.examTitle}
+    >
       <RowText detail={sitting.room} title={sitting.examTitle} />
       <span className="shrink-0 text-muted-foreground text-sm">
         <SittingRowAction sitting={sitting} />

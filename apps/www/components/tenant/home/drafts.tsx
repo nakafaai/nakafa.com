@@ -103,7 +103,11 @@ function DraftRow({
     );
   }
   return (
-    <CardLink href={`/exams/${draft.id}/edit`} title={draft.title}>
+    <CardLink
+      href={`/exams/${draft.id}/edit`}
+      localized={false}
+      title={draft.title}
+    >
       <RowText detail={names.of(draft.language)} title={draft.title} />
     </CardLink>
   );

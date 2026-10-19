@@ -1,7 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
-import { MutableList } from "effect";
 import { EditorState } from "@tiptap/pm/state";
 import { EditorView } from "@tiptap/pm/view";
+import { MutableList } from "effect";
 import { assessmentSchema } from "@/lib/editor/assessment";
 import {
   assetIdsOf,
@@ -11,7 +11,12 @@ import {
 
 /** One image node of the assessment schema, which names an asset. */
 const picture = (asset: unknown) =>
-  assessmentSchema.nodes.image.create({ alt: "Segitiga", asset, height: 1, width: 1 });
+  assessmentSchema.nodes.image.create({
+    alt: "Segitiga",
+    asset,
+    height: 1,
+    width: 1,
+  });
 
 describe("assetIdsOf", () => {
   it("reads the images of a document in reading order, once each, and leaves out a name that is no ID", () => {
@@ -45,9 +50,21 @@ describe("pictureIdsPlugin", () => {
     });
     const view = new EditorView(document.createElement("div"), { state });
     view.dispatch(view.state.tr.insert(0, picture("kept")));
-    expect(MutableList.toArray(reported)).toEqual([["kept"]]);
+    expect(MutableList.toArray(reported)).toEqual([[], ["kept"]]);
     view.dispatch(view.state.tr.setMeta("note", "selection only"));
-    expect(MutableList.toArray(reported)).toEqual([["kept"]]);
+    expect(MutableList.toArray(reported)).toEqual([[], ["kept"]]);
+    view.destroy();
+  });
+
+  it("reports the images of the document a view opens with, so a saved question resolves its pictures", () => {
+    const reported = MutableList.make<readonly ExamAssetIdValue[]>();
+    const state = EditorState.create({
+      doc: assessmentSchema.node("doc", null, [picture("saved")]),
+      plugins: [pictureIdsPlugin((ids) => MutableList.append(reported, ids))],
+      schema: assessmentSchema,
+    });
+    const view = new EditorView(document.createElement("div"), { state });
+    expect(MutableList.toArray(reported)).toEqual([["saved"]]);
     view.destroy();
   });
 });

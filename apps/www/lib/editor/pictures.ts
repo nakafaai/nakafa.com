@@ -29,21 +29,25 @@ export function assetIdsOf(doc: Node): readonly ExamAssetIdValue[] {
 }
 
 /**
- * A plugin that reports the images of the document each time the document changes, whatever
- * installs the change. A transaction reports its change to the editor's update handler, but a
- * state that the sync loop installs (the server's document, or a rebase of it) does not, so the
- * plugin reads every new document of the view.
+ * A plugin that reports the images of the document when its view opens and each time the document
+ * changes, whatever installs the change. A transaction reports its change to the editor's update
+ * handler, but a state that the sync loop installs (the server's document, or a rebase of it) does
+ * not, so the plugin reads every new document of the view. A view that opens on a saved document
+ * reports that document's images too, so a reopened question resolves its pictures.
  */
 export function pictureIdsPlugin(
   onChange: (ids: readonly ExamAssetIdValue[]) => void
 ) {
   return new Plugin({
-    view: () => ({
-      update: (view, previous) => {
-        if (view.state.doc !== previous.doc) {
-          onChange(assetIdsOf(view.state.doc));
-        }
-      },
-    }),
+    view: (view) => {
+      onChange(assetIdsOf(view.state.doc));
+      return {
+        update: (updated, previous) => {
+          if (updated.state.doc !== previous.doc) {
+            onChange(assetIdsOf(updated.state.doc));
+          }
+        },
+      };
+    },
   });
 }

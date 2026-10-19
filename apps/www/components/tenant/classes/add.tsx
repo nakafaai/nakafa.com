@@ -52,7 +52,7 @@ export function AddChannel({
   const add = useMutation(classroom.forum.channels.add);
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
-  const [refusal, setRefusal] = useState<Option.Option<string>>(Option.none());
+  const [refusal, setRefusal] = useState<Option.Option<string>>(Option.none);
   const [isPending, startTransition] = useTransition();
   const id = useId();
   const errorId = `${id}-error`;

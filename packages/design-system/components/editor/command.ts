@@ -3,6 +3,7 @@ import {
   type SlashMenuHandle,
   type SlashMenuProps,
 } from "@repo/design-system/components/editor/menu";
+import { menuPlacement } from "@repo/design-system/components/editor/placement";
 import {
   filterSlash,
   runSlash,
@@ -13,17 +14,20 @@ import { Extension } from "@tiptap/core";
 import { ReactRenderer } from "@tiptap/react";
 import { Suggestion, type SuggestionProps } from "@tiptap/suggestion";
 
-/** The space between the line that holds the query and the menu under it, in pixels. */
-const MENU_GAP = 8;
-
-/** Places the menu under the query, when the editor reports where the query is. */
+/**
+ * Places the menu under the query, or over it when the window has no room below, once the editor
+ * reports where the query is.
+ */
 function place(element: HTMLElement, rect: DOMRect | null | undefined) {
   if (!rect) {
     return;
   }
+  const placement = menuPlacement(rect, window.innerHeight);
   element.style.position = "fixed";
   element.style.left = `${rect.left}px`;
-  element.style.top = `${rect.bottom + MENU_GAP}px`;
+  element.style.top = placement.top === null ? "" : `${placement.top}px`;
+  element.style.bottom =
+    placement.bottom === null ? "" : `${placement.bottom}px`;
 }
 
 /** The props of the menu for the suggestion's state: its blocks, and the pick that inserts one. */

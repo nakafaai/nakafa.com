@@ -104,19 +104,25 @@ describe("exams/sittings images", () => {
           sittingId: made.id,
           token: made.token,
         });
-        const refused = yield* fixture.as("student").query(images, {
-          assets: [foreign.id],
-          deviceId: deviceOf(1),
-          sittingId: made.id,
-          slug: nf,
-        }).pipe(Effect.flip);
+        const refused = yield* fixture
+          .as("student")
+          .query(images, {
+            assets: [foreign.id],
+            deviceId: deviceOf(1),
+            sittingId: made.id,
+            slug: nf,
+          })
+          .pipe(Effect.flip);
         expect(refused).toMatchObject({ _tag: "AccessDenied" });
-        const otherDevice = yield* fixture.as("student").query(images, {
-          assets: [foreign.id],
-          deviceId: deviceOf(2),
-          sittingId: made.id,
-          slug: nf,
-        }).pipe(Effect.flip);
+        const otherDevice = yield* fixture
+          .as("student")
+          .query(images, {
+            assets: [foreign.id],
+            deviceId: deviceOf(2),
+            sittingId: made.id,
+            slug: nf,
+          })
+          .pipe(Effect.flip);
         expect(otherDevice).toMatchObject({ _tag: "SecondDevice" });
       })
   );
