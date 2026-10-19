@@ -9,7 +9,8 @@ import { Schema } from "effect";
 
 /**
  * One closed sitting that the school home lists for its results: the sitting, whether its results are
- * released, and whether the viewer may release them. Both flags come from the results authority.
+ * released, and whether the viewer may still release them. A released sitting offers no release, so the
+ * results authority decides the action and the release time decides whether it is still open.
  */
 export const ClosedView = Schema.Struct({
   ...SittingView.fields,

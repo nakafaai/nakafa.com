@@ -42,10 +42,11 @@ describe("exams home results", () => {
 
         const read = yield* homeOf(fixture, "teacher");
 
-        // The teacher wrote the exam, so the teacher may release its results too (the exam's author).
+        // The teacher wrote the exam, so the teacher may release its results too (the exam's author). The
+        // released sitting offers no release, because a second release changes nothing.
         expect(resultsOf(read.closed)).toEqual([
           { canRelease: true, resultsReleased: false, room: "Lab 3" },
-          { canRelease: true, resultsReleased: true, room: "Lab 2" },
+          { canRelease: false, resultsReleased: true, room: "Lab 2" },
         ]);
       })
   );
