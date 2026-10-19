@@ -10,7 +10,7 @@ export const NAKAFA_PUBLIC_API_PATH = "/v1";
 export const NAKAFA_PUBLIC_API_VERSION = "1.0.0";
 
 /** Canonical public Streamable HTTP MCP endpoint. */
-export const NAKAFA_MCP_ENDPOINT = `${MCP_ORIGIN}/mcp`;
+export const NAKAFA_MCP_ENDPOINT = new URL("/mcp", MCP_ORIGIN).href;
 
 /** Canonical values for the public V1 taxonomy endpoint guidance. */
 export const NAKAFA_MCP_GUIDANCE = {
