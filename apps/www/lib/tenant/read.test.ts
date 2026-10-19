@@ -28,7 +28,6 @@ vi.mock("@/lib/auth/server", () => ({ getToken: vi.fn() }));
  * The shared fake backend imports the school gate, which builds its locale middleware when it
  * loads. These reads never reach that middleware, so the library stands in as a plain function.
  */
-vi.mock("next-intl/middleware", () => ({ default: () => () => undefined }));
 /**
  * The `use cache` directive is a build transform, so the test stands in for the cache scope
  * that `cacheLife` needs. The reads keep their real `io`.

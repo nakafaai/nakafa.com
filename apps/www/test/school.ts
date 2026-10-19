@@ -11,7 +11,6 @@ import {
   MutableList,
   Schema,
 } from "effect";
-import { NextRequest } from "next/server";
 import { readSchoolRefusal } from "@/lib/routing/school/refusal";
 
 /**
@@ -193,7 +192,7 @@ export function visit(
   const url = new URL(address);
   const headers = new Headers(init?.headers);
   headers.set("host", url.host);
-  return new NextRequest(url, { headers, method: init?.method ?? "GET" });
+  return new Request(url, { headers, method: init?.method ?? "GET" });
 }
 
 /** The answer of the refusal for one request, with the log messages it wrote. */
