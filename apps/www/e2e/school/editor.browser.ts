@@ -1,10 +1,14 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
+import { saved, trackChanges } from "@/e2e/support/changes";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /** The address of an exam's editor on the school host. */
 const EDITOR_PATH = /\/exams\/[^/]+\/edit$/;
+
+/** The address of a sitting's dashboard on the school host, which a schedule opens. */
+const SITTING_PATH = /\/exams\/[^/]+\/sittings\/[^/]+$/;
 
 /** The thumbnail of the first question, whose name starts with its number. */
 const FIRST_QUESTION = /^Question 1\b/;
@@ -149,6 +153,65 @@ test("a teacher creates an exam, adds questions, writes one, and finds it all wh
   await expect(firstThumbnail.locator('input[data-slot="input"]')).toHaveCount(
     OPTIONS.length
   );
+
+  // A question without a key keeps the exam from being scheduled: the dialog names the keys,
+  // and its submit stays off.
+  await reopened.getByRole("button", { name: "Schedule" }).click();
+  const scheduling = reopened.getByRole("dialog");
+  await expect(
+    scheduling.getByText("Mark the correct answer of every question first.")
+  ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+  await expect(
+    scheduling.getByRole("button", { name: "Schedule" })
+  ).toBeDisabled();
+  await context.close();
+});
+
+test("a teacher schedules a sitting of an exam whose question has its key, and the sitting opens", async ({
+  browser,
+  baseURL,
+}) => {
+  const school = await Effect.runPromise(createSchool());
+  const host = `${school.slug}.localhost`;
+  const context = await browser.newContext();
+  await Effect.runPromise(
+    signInOwner(context, school.slug, hostAddress(baseURL, host, "/"))
+  );
+  const page = await context.newPage();
+  await page.goto(hostAddress(baseURL, host, "/exams"));
+
+  await page.getByRole("button", { name: "Create exam" }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("textbox", { name: "Exam title" }).fill("PTS Biologi");
+  await dialog.getByRole("button", { name: "Create exam" }).click();
+  await page.waitForURL(EDITOR_PATH);
+
+  // The exam starts with one question, which takes the four options and the key of the second.
+  for (const option of OPTIONS) {
+    const field = page.getByRole("textbox", {
+      name: `Option ${option.letter}`,
+    });
+    await field.fill(option.text);
+    await field.press("Tab");
+  }
+  await page.getByRole("radio", { name: "Mark option B as correct" }).click();
+  await expect(
+    page.getByRole("radio", { name: "Mark option B as correct" })
+  ).toBeChecked();
+
+  // The schedule reads the key that the server holds, so the editor opened again waits until
+  // the server shows the key before the teacher schedules the sitting.
+  const reopened = await context.newPage();
+  await reopened.goto(page.url());
+  await expect(
+    reopened.getByRole("radio", { name: "Mark option B as correct" })
+  ).toBeChecked({ timeout: readinessTimeoutMilliseconds });
+
+  await reopened.getByRole("button", { name: "Schedule" }).click();
+  const scheduling = reopened.getByRole("dialog");
+  await scheduling.getByRole("textbox", { name: "Room" }).fill("Lab 2");
+  await scheduling.getByRole("button", { name: "Schedule" }).click();
+  await reopened.waitForURL(SITTING_PATH);
   await context.close();
 });
 
@@ -163,6 +226,7 @@ test("a question typed long enough for a fold keeps its thumbnail once the teach
     signInOwner(context, school.slug, hostAddress(baseURL, host, "/"))
   );
   const page = await context.newPage();
+  const changes = await Effect.runPromise(trackChanges(page, []));
   await page.goto(hostAddress(baseURL, host, "/exams"));
   await page.getByRole("button", { name: "Create exam" }).click();
   const dialog = page.getByRole("dialog");
@@ -179,7 +243,12 @@ test("a question typed long enough for a fold keeps its thumbnail once the teach
     timeout: readinessTimeoutMilliseconds,
   });
   await firstPrompt.click();
+  const sentBefore = changes.sent;
   await page.keyboard.type(LONG_PROMPT);
+  // The page sends its changes one after another, so the server takes the first
+  // question's steps before the teacher moves on, as a teacher typing at a person's pace
+  // leaves it, and the second question is not created behind a queue of saves.
+  await saved(changes, sentBefore);
   await page.getByRole("button", { name: "Add question" }).click();
   await expect(page.getByRole("heading", { name: "Question 2" })).toBeVisible();
   const secondPrompt = page.getByRole("textbox", { name: "Question text" });
