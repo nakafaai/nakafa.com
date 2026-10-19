@@ -184,15 +184,12 @@ test("a proctor lists the rooms of an exam and opens one from the list, and a st
   const student = await studentContext.newPage();
   await student.goto(address("/"));
   await expect(
-    student.getByRole("heading", { name: "Your sittings" })
+    student.getByText("Your sittings", { exact: true })
   ).toBeVisible();
-  const sittings = student.getByRole("table");
-  await expect(sittings.getByRole("link", { name: "Lab 2" })).toHaveAttribute(
-    "href",
-    `/sittings/${sitting.sittingId}`
-  );
-  // The open room comes before the scheduled one, so it is the first row under the head.
-  await expect(sittings.getByRole("row").nth(1)).toContainText("Lab 2");
+  // The open room comes first in the tile, and its row enters the sitting.
+  await expect(
+    student.getByRole("link", { name: OPEN_ROOM_ROW }).first()
+  ).toHaveAttribute("href", `/sittings/${sitting.sittingId}`);
 
   await studentContext.close();
   await proctorContext.close();

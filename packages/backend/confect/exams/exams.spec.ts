@@ -10,6 +10,7 @@ import {
   ExamTitle,
   ExamView,
 } from "@repo/backend/confect/exams/exam";
+import { HomeView } from "@repo/backend/confect/exams/home/contract";
 import { ScheduleResult } from "@repo/backend/confect/exams/sittings/contract";
 import {
   KeysMissing,
@@ -50,6 +51,14 @@ export default GroupSpec.make()
       name: "list",
       args: () => ({ slug: TenantSlug }),
       item: () => ExamSummary,
+    })
+  )
+  .addFunction(
+    FunctionSpec.publicQuery({
+      name: "home",
+      args: () => ({ slug: TenantSlug }),
+      returns: () => HomeView,
+      error: () => Schema.Never,
     })
   )
   .addFunction(
