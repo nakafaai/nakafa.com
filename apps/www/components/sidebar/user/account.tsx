@@ -19,7 +19,7 @@ import { Effect, Result } from "effect";
 import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import { clearAiDraftText } from "@/components/ai/store/draft";
-import { AnalyticsConsentMenuItem } from "@/components/analytics/consent/actions";
+import { AnalyticsConsentMenuItem } from "@/components/analytics/consent/menu";
 import { AccountMenu } from "@/components/sidebar/menu/account";
 import { SidebarUtilityMenuItems } from "@/components/sidebar/menu/utility";
 import { signOutAccountBrowserIdentity } from "@/lib/auth/identity/browser";

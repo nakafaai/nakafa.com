@@ -3,7 +3,7 @@ import {
   SidebarMenuSeparator,
 } from "@repo/design-system/components/ui/sidebar-menu";
 import { useTranslations } from "next-intl";
-import { AnalyticsConsentSidebarItem } from "@/components/analytics/consent/actions";
+import { AnalyticsConsentSidebarItem } from "@/components/analytics/consent/sidebar";
 import { GuestLanguageMenu } from "@/components/sidebar/menu/preference";
 import { PricingItem } from "@/components/sidebar/menu/pricing";
 import { NavUserGuestButton } from "@/components/sidebar/user/guest/action";
