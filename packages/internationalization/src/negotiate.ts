@@ -1,3 +1,4 @@
+import { readCookie } from "@repo/internationalization/src/cookie";
 import {
   DEFAULT_LOCALE,
   decodeLocale,
@@ -68,26 +69,6 @@ function readAcceptedLocale(
   );
 }
 
-/** Splits one cookie pair at its first `=`. The value keeps any `=` that it contains. */
-function splitCookie(pair: string): readonly [string, string] {
-  const [name, ...value] = pair.trim().split("=");
-  return [name, Arr.join(value, "=")];
-}
-
-/** The value of one cookie in a request's `Cookie` header, or none. */
-function readCookieValue(
-  headers: Headers,
-  name: string
-): Option.Option<string> {
-  return Option.fromNullishOr(headers.get("cookie")).pipe(
-    Option.flatMap((header) =>
-      Arr.findFirst(Arr.map(header.split(";"), splitCookie), ([key, value]) =>
-        key === name ? Option.some(value) : Option.none()
-      )
-    )
-  );
-}
-
 /**
  * Chooses the locale of a request: the valid `NAKAFA_LOCALE` cookie first, then
  * the first Accept-Language range that names a public locale, then the default.
@@ -95,7 +76,7 @@ function readCookieValue(
  * change the answer.
  */
 export function negotiateLocale(headers: Headers): Locale {
-  return readCookieValue(headers, LOCALE_COOKIE).pipe(
+  return readCookie(headers, LOCALE_COOKIE).pipe(
     Option.flatMap(decodeLocale),
     Option.orElse(() => readAcceptedLocale(headers.get("accept-language"))),
     Option.getOrElse(() => DEFAULT_LOCALE)
