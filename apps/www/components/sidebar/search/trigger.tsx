@@ -8,6 +8,8 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
+import { monospace } from "@repo/design-system/lib/monospace";
+import { cn } from "cn";
 import { Effect } from "effect";
 import { useTranslations } from "next-intl";
 import { preloadSearchCommand } from "@/components/search/command/module";
@@ -47,7 +49,7 @@ export function SearchMenu() {
             <HugeIcons className="size-4" icon={Search02Icon} />
             <span>{t("search-bar-placeholder")}</span>
           </div>
-          <div className="hidden items-center lg:flex">
+          <div className={cn(monospace, "hidden items-center lg:flex")}>
             <kbd className="rounded">
               <HugeIcons className="size-3.5 shrink-0" icon={CommandIcon} />
               <span className="sr-only">Command/Ctrl</span>
@@ -87,7 +89,7 @@ export function HeaderSearch() {
           {t("search-bar-placeholder")}
         </span>
       </span>
-      <span className="hidden items-center gap-1 lg:flex">
+      <span className={cn(monospace, "hidden items-center gap-1 lg:flex")}>
         <kbd className="rounded border p-0.75">
           <HugeIcons className="size-3 shrink-0" icon={CommandIcon} />
           <span className="sr-only">Command/Ctrl</span>
