@@ -73,23 +73,6 @@ function StudentRows({
           }),
       });
 
-  /** The action text of one row: its results, an entry, or its opening time. */
-  function actionOf(sitting: Sitting) {
-    if (sitting.attempt === "submitted") {
-      return sitting.resultsReleased
-        ? te("student-view-results")
-        : te("answers-in");
-    }
-    if (sitting.state === "open") {
-      return te("student-enter");
-    }
-    return schoolDateTimeText({
-      at: sitting.opensAt,
-      locale,
-      timeZone: sitting.timeZone,
-    });
-  }
-
   return (
     <HomeTile
       action={
@@ -118,12 +101,40 @@ function StudentRows({
             >
               <RowText detail={sitting.room} title={sitting.examTitle} />
               <span className="shrink-0 text-muted-foreground text-sm">
-                {actionOf(sitting)}
+                <SittingRowAction sitting={sitting} />
               </span>
             </CardLink>
           ))}
         </CardLinks>
       )}
     </HomeTile>
+  );
+}
+
+/** The action text of one row of the student's list: its results, its entry, or its opening time. */
+function SittingRowAction({ sitting }: { readonly sitting: Sitting }) {
+  const te = useTranslations("Exams");
+  const locale = useLocale();
+
+  if (sitting.attempt === "submitted") {
+    return (
+      <>
+        {sitting.resultsReleased
+          ? te("student-view-results")
+          : te("answers-in")}
+      </>
+    );
+  }
+  if (sitting.state === "open") {
+    return <>{te("student-enter")}</>;
+  }
+  return (
+    <>
+      {schoolDateTimeText({
+        at: sitting.opensAt,
+        locale,
+        timeZone: sitting.timeZone,
+      })}
+    </>
   );
 }
