@@ -38,7 +38,8 @@ import {
   LockDialog,
   UnlockDialog,
 } from "@/components/exams/sitting/dialogs";
-import { DataFailure, reloadPage } from "@/components/shared/failure";
+import { DataFailure } from "@/components/shared/failure";
+import { reloadPage } from "@/components/shared/reload";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { isLostAccess } from "@/components/tenant/refusal";
 

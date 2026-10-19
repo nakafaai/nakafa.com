@@ -22,7 +22,8 @@ import {
   useSessionSettled,
 } from "@/components/exams/results/context";
 import { TableSearch, TableToggle } from "@/components/exams/results/filter";
-import { DataFailure, reloadPage } from "@/components/shared/failure";
+import { DataFailure } from "@/components/shared/failure";
+import { reloadPage } from "@/components/shared/reload";
 import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
 import { matchesSearch } from "@/components/shared/table/search";
 import { isLostAccess } from "@/components/tenant/refusal";
@@ -156,7 +157,6 @@ function StudentTable({
  * search that matches no loaded row keeps reading the next page until one matches or the list ends.
  */
 export function StudentsTable() {
-  const t = useTranslations("Exams");
   const { sittingId, slug } = useResultsScope();
   const settled = useSessionSettled();
   const [status, setStatus] = useState<StatusFilter>("all");
@@ -175,10 +175,6 @@ export function StudentsTable() {
   ) {
     throw students.error;
   }
-  const failure = PaginatedQueryResult.isFailure(students) ? (
-    <DataFailure onRetry={reloadPage} />
-  ) : null;
-  const filtering = status !== "all" || search.trim() !== "";
   const filters = (
     <StudentFilters
       onSearch={setSearch}
@@ -188,31 +184,64 @@ export function StudentsTable() {
     />
   );
   if (PaginatedQueryResult.isLoadingFirstPage(students)) {
-    return filtering ? filters : null;
+    return status !== "all" || search.trim() !== "" ? filters : null;
   }
-  if (students.results.length === 0 && !filtering) {
-    return (
-      failure ?? (
-        <TableEmpty
-          act="reading"
-          description={t("results-empty")}
-          title={t("results-empty-title")}
-        />
-      )
-    );
-  }
-  const rows = Arr.filter(students.results, (row) =>
-    matchesSearch(row.name, search)
-  );
-  // A page that holds no match is not the end of the search while later pages still load, so
-  // the no-match state waits for the last page, and the table shows nothing in the meantime.
-  const more = PaginatedQueryResult.isCanLoadMore(students) ? (
-    <Intersection onIntersect={() => students.loadMore(STUDENT_PAGE_SIZE)} />
-  ) : null;
   return (
     <>
       {filters}
-      {failure}
+      <StudentRowsSection
+        failed={PaginatedQueryResult.isFailure(students)}
+        filtering={status !== "all" || search.trim() !== ""}
+        loadMore={
+          PaginatedQueryResult.isCanLoadMore(students)
+            ? () => students.loadMore(STUDENT_PAGE_SIZE)
+            : null
+        }
+        rows={students.results}
+        search={search}
+      />
+    </>
+  );
+}
+
+/**
+ * The rows of the students' table below its filters: the failure of its read above the rows it holds,
+ * the rows that match the search, and the empty state once the list is exhausted with no match.
+ */
+function StudentRowsSection({
+  failed,
+  filtering,
+  loadMore,
+  rows: students,
+  search,
+}: {
+  failed: boolean;
+  filtering: boolean;
+  /** Loads the next page of students, or none when the list has no more pages. */
+  loadMore: (() => void) | null;
+  rows: readonly (typeof StudentRowSchema.Type)[];
+  search: string;
+}) {
+  const t = useTranslations("Exams");
+  if (students.length === 0 && !filtering) {
+    return failed ? (
+      <DataFailure onRetry={reloadPage} />
+    ) : (
+      <TableEmpty
+        act="reading"
+        description={t("results-empty")}
+        title={t("results-empty-title")}
+      />
+    );
+  }
+  const rows = Arr.filter(students, (row) => matchesSearch(row.name, search));
+  // A page that holds no match is not the end of the search while later pages still load, so
+  // the no-match state waits for the last page, and the table shows nothing in the meantime.
+  const more =
+    loadMore === null ? null : <Intersection onIntersect={loadMore} />;
+  return (
+    <>
+      {failed ? <DataFailure onRetry={reloadPage} /> : null}
       {rows.length > 0 ? <StudentTable rows={rows} /> : null}
       {rows.length === 0 && more === null ? (
         <TableEmpty

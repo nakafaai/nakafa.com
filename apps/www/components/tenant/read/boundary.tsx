@@ -3,7 +3,8 @@
 import type { Ref } from "@confect/core";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import type { ReactNode } from "react";
-import { DataFailure, reloadPage } from "@/components/shared/failure";
+import { DataFailure } from "@/components/shared/failure";
+import { reloadPage } from "@/components/shared/reload";
 import { isLostAccess } from "@/components/tenant/refusal";
 import { useAnswerRetry } from "@/lib/convex/retry.client";
 
@@ -29,7 +30,7 @@ interface TenantRead<Query extends Ref.AnyPublicQuery> {
  */
 export function ReadBoundary<Query extends Ref.AnyPublicQuery>({
   children,
-  fallback = (failure) => failure,
+  fallback,
   read,
 }: {
   children: ReactNode;
@@ -38,15 +39,15 @@ export function ReadBoundary<Query extends Ref.AnyPublicQuery>({
 }) {
   return (
     <ErrorBoundary
-      fallbackRender={({ error, resetErrorBoundary }) =>
-        fallback(
+      fallbackRender={({ error, resetErrorBoundary }) => {
+        const failure =
           read === undefined ? (
             <PageFailure error={error} />
           ) : (
             <ReadFailure error={error} read={read} reset={resetErrorBoundary} />
-          )
-        )
-      }
+          );
+        return fallback === undefined ? failure : fallback(failure);
+      }}
     >
       {children}
     </ErrorBoundary>

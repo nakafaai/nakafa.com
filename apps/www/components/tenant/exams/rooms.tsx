@@ -32,9 +32,11 @@ import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { useConvexAuth } from "@/components/providers/convex";
 import { LayoutContent } from "@/components/shared/content/layout";
-import { DataFailure, reloadPage } from "@/components/shared/failure";
+import { DataFailure } from "@/components/shared/failure";
+import { reloadPage } from "@/components/shared/reload";
 import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
 import { useTenant } from "@/components/tenant/context";
+import { isPlaceholderId } from "@/components/tenant/exams/placeholder";
 import {
   RoomStateFilter,
   roomsArgs,
@@ -294,12 +296,16 @@ function RoomItem({
   return (
     <TableRow>
       <TableCell className="font-medium">
-        <Link
-          className="underline-offset-4 hover:underline"
-          href={`/exams/${examId}/sittings/${room.id}`}
-        >
-          {room.room}
-        </Link>
+        {isPlaceholderId(room.id) ? (
+          room.room
+        ) : (
+          <Link
+            className="underline-offset-4 hover:underline"
+            href={`/exams/${examId}/sittings/${room.id}`}
+          >
+            {room.room}
+          </Link>
+        )}
       </TableCell>
       <TableCell>{room.group.name}</TableCell>
       <TableCell className="text-muted-foreground">

@@ -1,5 +1,6 @@
 "use client";
 
+import type { Ref } from "@confect/core";
 import {
   PaginatedQueryResult,
   QueryResult,
@@ -19,7 +20,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useStore } from "zustand";
 import { useConvexAuth } from "@/components/providers/convex";
 import { LayoutContent } from "@/components/shared/content/layout";
-import { DataFailure, reloadPage } from "@/components/shared/failure";
+import { DataFailure } from "@/components/shared/failure";
+import { reloadPage } from "@/components/shared/reload";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
@@ -30,6 +32,9 @@ import { createExamDrafts } from "@/components/tenant/exams/drafts";
 import type { ExamSummary } from "@/components/tenant/exams/optimistic";
 import { SchoolHeader } from "@/components/tenant/header";
 import { isLostAccess } from "@/components/tenant/refusal";
+
+/** The viewer of the school, as the exam list reads it. */
+type Viewer = Ref.Returns<typeof tenancy.viewer.get>;
 
 /** How many exams the list asks for each time its end comes into view. */
 const EXAM_PAGE_SIZE = 20;
@@ -84,45 +89,86 @@ export function ExamList({ slug }: { slug: TenantSlug }) {
   if (QueryResult.isFailure(viewer) && isLostAccess(viewer.error)) {
     throw viewer.error;
   }
-  const choices = QueryResult.isSuccess(viewer)
-    ? scopeChoices(
-        viewer.value.units,
-        Arr.contains(viewer.value.can, "exam.edit")
-      )
-    : [];
-  const languages = QueryResult.isSuccess(viewer)
-    ? unitLanguages(viewer.value.units)
-    : [];
+  const creation = QueryResult.isSuccess(viewer)
+    ? creationOf(viewer.value)
+    : NO_CREATION;
 
   return (
     <>
       <SchoolHeader items={[{ label: t("title") }]} title={t("title")}>
-        {choices.length > 0 ? (
+        {creation.choices.length > 0 ? (
           <CreateExam
-            choices={choices}
+            choices={creation.choices}
             drafts={drafts}
-            languages={languages}
+            languages={creation.languages}
             slug={slug}
           />
         ) : null}
       </SchoolHeader>
       <LayoutContent className="flex w-full flex-col gap-6 py-6">
-        {PaginatedQueryResult.isFailure(pagination) ? (
-          <DataFailure onRetry={reloadPage} />
-        ) : null}
-        {pagination._tag === "LoadingFirstPage" ||
-        (PaginatedQueryResult.isFailure(pagination) &&
-          Arr.isReadonlyArrayEmpty(pagination.results)) ? null : (
-          <ExamTable
-            canManage={tenant.canManage}
-            exams={pagination.results}
-            hasUnit={QueryResult.isSuccess(viewer) && choices.length > 0}
-            names={names}
-            saving={saving}
-          />
-        )}
+        <ExamListRows
+          canManage={tenant.canManage}
+          exams={pagination.results}
+          failed={PaginatedQueryResult.isFailure(pagination)}
+          hasUnit={creation.choices.length > 0}
+          loadingFirst={pagination._tag === "LoadingFirstPage"}
+          names={names}
+          saving={saving}
+        />
         <div aria-hidden ref={ref} />
       </LayoutContent>
+    </>
+  );
+}
+
+/** The places the viewer may create an exam in, and the languages they take, while the viewer's read has not answered. */
+const NO_CREATION = { choices: [], languages: [] } as const;
+
+/** The places the viewer may create an exam in, and the languages they take. */
+function creationOf(viewer: Viewer) {
+  return {
+    choices: scopeChoices(viewer.units, Arr.contains(viewer.can, "exam.edit")),
+    languages: unitLanguages(viewer.units),
+  };
+}
+
+/**
+ * The rows of the exam list: the failure of its read above the rows it already holds, and the table,
+ * or nothing while the first page loads. A first page that failed shows the failure alone.
+ */
+function ExamListRows({
+  canManage,
+  exams: rows,
+  failed,
+  hasUnit,
+  loadingFirst,
+  names,
+  saving,
+}: {
+  canManage: boolean;
+  exams: readonly ExamSummary[];
+  failed: boolean;
+  hasUnit: boolean;
+  loadingFirst: boolean;
+  names: Intl.DisplayNames;
+  saving: readonly ExamSummary["id"][];
+}) {
+  if (loadingFirst) {
+    return null;
+  }
+  if (failed && Arr.isReadonlyArrayEmpty(rows)) {
+    return <DataFailure onRetry={reloadPage} />;
+  }
+  return (
+    <>
+      {failed ? <DataFailure onRetry={reloadPage} /> : null}
+      <ExamTable
+        canManage={canManage}
+        exams={rows}
+        hasUnit={hasUnit}
+        names={names}
+        saving={saving}
+      />
     </>
   );
 }
