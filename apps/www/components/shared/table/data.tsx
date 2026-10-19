@@ -44,7 +44,7 @@ import {
   type RowData,
   useTable,
 } from "@tanstack/react-table";
-import { Array as Arr, Option, Schema } from "effect";
+import { Array as Arr, HashSet, Option, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { dataTableFeatures } from "@/components/shared/table/features";
@@ -112,9 +112,10 @@ export function DataTable<TData extends RowData>({
         </InputGroup>
         {Arr.map(facets, (facet) => {
           const column = table.getColumn(facet.column);
-          // The facet's chosen values and counts are read here, where the table
-          // redraws on every change, and handed down as values: the compiled facet
-          // keeps its last output while its props stay the same objects.
+          // The facet's chosen values, the values its rows hold and its counts are read
+          // here, where the table redraws on every change, and handed down as values:
+          // the compiled facet keeps its last output while its props stay the same
+          // objects.
           return column === undefined ? null : (
             <DataTableFacet
               chosen={Option.getOrElse(
@@ -125,6 +126,11 @@ export function DataTable<TData extends RowData>({
               )}
               column={column}
               counts={column.getFacetedUniqueValues()}
+              held={HashSet.fromIterable(
+                Arr.map(table.getCoreRowModel().rows, (row) =>
+                  row.getValue(facet.column)
+                )
+              )}
               key={facet.column}
               options={facet.options}
               title={facet.title}
@@ -223,14 +229,15 @@ function DataTableHead<TData extends RowData>({
 }
 
 /**
- * The filter of one column by the values it holds: a menu of the values present in the
- * rows, each with how many rows hold it, and of the values already chosen. Choosing
- * values keeps the rows that hold any of them.
+ * The filter of one column by the values it holds: a menu of the values some row of the
+ * table holds, each with how many of the rows the other filters keep hold it, and of the
+ * values already chosen. Choosing values keeps the rows that hold any of them.
  */
 function DataTableFacet<TData extends RowData>({
   chosen,
   column,
   counts,
+  held,
   options,
   title,
 }: {
@@ -239,14 +246,17 @@ function DataTableFacet<TData extends RowData>({
   counts: ReturnType<
     Column<typeof dataTableFeatures, TData>["getFacetedUniqueValues"]
   >;
+  /** The values the column holds across every row, before any filter. */
+  held: HashSet.HashSet<unknown>;
   options: readonly { label: string; value: string }[];
   title: string;
 }) {
-  // A chosen value stays in its menu while other filters hide its rows, so it can be
-  // unchosen; it counts no rows then.
+  // A value stays in its menu while other filters hide its rows, so it never vanishes
+  // under the pointer and a chosen one can be unchosen; it counts no rows then.
   const present = Arr.filter(
     options,
-    (option) => counts.has(option.value) || Arr.contains(chosen, option.value)
+    (option) =>
+      HashSet.has(held, option.value) || Arr.contains(chosen, option.value)
   );
 
   return (
