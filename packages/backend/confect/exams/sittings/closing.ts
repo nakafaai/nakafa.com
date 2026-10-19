@@ -8,6 +8,7 @@ import {
   DatabaseWriter,
   Scheduler,
 } from "@repo/backend/confect/_generated/services";
+import { recordResults } from "@repo/backend/confect/exams/results/record";
 import { scheduleSubmit } from "@repo/backend/confect/exams/sittings/timers";
 import { Array as Arr, Clock, Duration, Effect, Number as Num } from "effect";
 
@@ -148,6 +149,11 @@ export const submitAttempt = Effect.fn("exams.sittings.timers.submit")(
         .table("examAttempts")
         .patch(attempt._id, { state: "submitted", submittedAt: now })
         .pipe(Effect.orDie);
+      const sitting = yield* (yield* DatabaseReader)
+        .table("examSittings")
+        .get(attempt.sitting)
+        .pipe(Effect.orDie);
+      yield* recordResults(attempt, sitting);
     }
     return null;
   }

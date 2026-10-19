@@ -73,8 +73,9 @@ const DashboardAttempt = Schema.Struct({
 
 /**
  * One page of a sitting's attempts, with the sitting itself. `can` lists the sitting actions
- * that the caller may take, and `token` is the sitting's token, which only a proctor sees
- * (`null` for a caller who may only view the sitting).
+ * that the caller may take, `canViewResults` tells whether the caller may read the sitting's
+ * results, and `token` is the sitting's token, which only a proctor sees (`null` for a caller
+ * who may only view the sitting).
  */
 export const DashboardView = Schema.Struct({
   attempts: Schema.Struct({
@@ -83,6 +84,7 @@ export const DashboardView = Schema.Struct({
     page: Schema.mutable(Schema.Array(DashboardAttempt)),
   }),
   can: Schema.Array(SittingAction),
+  canViewResults: Schema.Boolean,
   sitting: SittingView,
   token: Schema.NullOr(Schema.String),
 });

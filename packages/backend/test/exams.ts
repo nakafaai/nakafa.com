@@ -27,19 +27,31 @@ type ExamFixture = Effect.Success<typeof tenancyFixture>;
 
 const { create, open } = refs.public.exams.exams;
 
-/** A teacher's exam in the unit the teacher teaches, opened: its ID, and its questions in order. */
-export const teacherExam = Effect.fn("test.exams.teacherExam")(function* (
+/** The accounts that write an exam in the tests: the teacher, or the school's Admin. */
+export type ExamAuthor = "admin" | "teacher";
+
+/** An exam in the SMP unit, written by one account and opened by it: its ID, and its questions in order. */
+export const examBy = Effect.fn("test.exams.examBy")(function* (
   fixture: ExamFixture,
+  author: ExamAuthor,
   title: string
 ) {
-  const teacher = fixture.as("teacher");
-  const made = yield* teacher.mutation(create, {
+  const writer = fixture.as(author);
+  const made = yield* writer.mutation(create, {
     language: LANGUAGE,
     scope: { kind: "unit", unitId: fixture.units.smp },
     slug: nf,
     title,
   });
-  return yield* teacher.query(open, { examId: made.id, slug: nf });
+  return yield* writer.query(open, { examId: made.id, slug: nf });
+});
+
+/** A teacher's exam in the unit the teacher teaches, opened: its ID, and its questions in order. */
+export const teacherExam = Effect.fn("test.exams.teacherExam")(function* (
+  fixture: ExamFixture,
+  title: string
+) {
+  return yield* examBy(fixture, "teacher", title);
 });
 
 /** Archives one unit of the school, which locks the edits of the exams and documents in it. */

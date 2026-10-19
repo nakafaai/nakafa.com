@@ -1,0 +1,26 @@
+import { LocalIdSchema } from "@nakafa/aksara-contracts/assessment/identity";
+import { Id } from "@repo/backend/confect/_generated/id";
+import { Schema } from "effect";
+
+/**
+ * The verdict of one question of one attempt. A choice is `correct` or `incorrect`; an answer
+ * that needs a person to judge it, such as a text or a rubric answer, stays `pending`.
+ */
+export const Verdict = Schema.Literals(["correct", "incorrect", "pending"]);
+export type Verdict = typeof Verdict.Type;
+
+/**
+ * One scored question of one attempt. `response` holds the option IDs that the attempt saved, and
+ * it is empty when the student left the question unanswered. `points` is 1 for a correct answer and
+ * 0 for any other verdict, so the sum of an attempt's points is its score.
+ */
+export const examResultValidator = Schema.Struct({
+  attempt: Id("examAttempts"),
+  person: Id("tenantPeople"),
+  points: Schema.Int.check(Schema.isBetween({ maximum: 1, minimum: 0 })),
+  question: Id("examQuestions"),
+  response: Schema.Array(LocalIdSchema),
+  sitting: Id("examSittings"),
+  tenantId: Id("tenants"),
+  verdict: Verdict,
+});

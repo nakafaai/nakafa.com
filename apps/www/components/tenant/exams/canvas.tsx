@@ -23,6 +23,7 @@ import {
   optionLetter,
   withOptionText,
 } from "@/components/tenant/exams/answer";
+import { isFrozen } from "@/components/tenant/exams/freeze";
 import {
   answerUpdate,
   type Question,
@@ -49,14 +50,18 @@ const OPTION_SAVE_QUIET = "500 millis";
 /**
  * The canvas of the selected question: its number, its prompt, then its options, each a
  * text field with a radio that marks the correct answer. A question the server has not
- * saved yet shows its options only, and they take no change until the server answers.
+ * saved yet shows its options only, and they take no change until the server answers. A frozen
+ * exam shows its prompt and its options read-only.
  */
 export function ExamCanvas() {
   const t = useTranslations("Exams");
   const { slug, exam } = useExam();
   const active = useActiveQuestion();
   const pending = useExamSelection((state) => state.pending);
+  const frozen = isFrozen(exam);
 
+  // The prompt opens again when the exam freezes, so its document is read-only from its first
+  // render.
   return Option.match(active, {
     onNone: () => null,
     onSome: ({ index, question }) => {
@@ -70,7 +75,7 @@ export function ExamCanvas() {
             {saved ? (
               <section className="my-6">
                 <ExamPrompt
-                  key={question.prompt}
+                  key={`${question.prompt}-${frozen}`}
                   prompt={question.prompt}
                   slug={slug}
                 />
@@ -91,7 +96,8 @@ export function ExamCanvas() {
 
 /**
  * The options of one question, in the layout of the player, with the teacher's key beside
- * each. A key change saves at once, and each option text saves after its quiet period.
+ * each. A key change saves at once, and each option text saves after its quiet period. The
+ * options are locked while the question is not saved yet, and while the exam is frozen.
  */
 function QuestionOptions({
   examId,
@@ -103,7 +109,8 @@ function QuestionOptions({
   question: Question;
 }) {
   const t = useTranslations("Exams");
-  const { slug } = useExam();
+  const { exam, slug } = useExam();
+  const locked = pending || isFrozen(exam);
   const answer = useMutation(exams.questions.answer).withOptimisticUpdate(
     answerUpdate
   );
@@ -131,7 +138,7 @@ function QuestionOptions({
       <RadioGroup
         aria-label={t("correct")}
         className="grid grid-cols-1 gap-2 md:grid-cols-2"
-        disabled={pending}
+        disabled={locked}
         onValueChange={(optionId: string) =>
           saveAnswers(question.answers, markedKey(question.answers, optionId))
         }
@@ -141,6 +148,7 @@ function QuestionOptions({
           <OptionField
             index={index}
             key={option.id}
+            locked={locked}
             onSave={(text) =>
               saveAnswers(
                 withOptionText(question.answers, option.id, text),
@@ -148,7 +156,6 @@ function QuestionOptions({
               )
             }
             optionId={option.id}
-            pending={pending}
             text={labelText(option.label)}
           />
         ))}
@@ -161,19 +168,19 @@ function QuestionOptions({
  * One option: its letter, its text field, and the radio in a dashed outline that marks it
  * correct. The field shows what the teacher typed at once. Its text is saved after the
  * quiet period, or at once when the field loses focus, and the latest save is the one that
- * runs.
+ * runs. A locked field shows its text and takes no change.
  */
 function OptionField({
   index,
+  locked,
   onSave,
   optionId,
-  pending,
   text,
 }: {
   index: number;
+  locked: boolean;
   onSave: (text: string) => void;
   optionId: string;
-  pending: boolean;
   text: string;
 }) {
   const t = useTranslations("Exams");
@@ -207,7 +214,7 @@ function OptionField({
           setDraft(next);
           Effect.runFork(saver.touch(() => save(next)));
         }}
-        readOnly={pending}
+        readOnly={locked}
         value={draft ?? text}
       />
     </div>

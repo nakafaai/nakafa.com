@@ -2832,6 +2832,7 @@ export declare const api: {
         "public",
         { examId: Id<"exams">; slug: string },
         {
+          frozenAt?: number;
           id: Id<"exams">;
           language: "en" | "id" | "de";
           questions: Array<{
@@ -4087,45 +4088,134 @@ export declare const api: {
         { questions: Array<Id<"examQuestions">> }
       >;
     };
-    rooms: {
-      exam: FunctionReference<
-        "query",
-        "public",
-        { examId: Id<"exams">; slug: string },
-        { id: Id<"exams">; language: "en" | "id" | "de"; title: string }
-      >;
-      list: FunctionReference<
-        "query",
-        "public",
-        {
-          examId: Id<"exams">;
-          paginationOpts: {
-            cursor: string | null;
-            endCursor?: string | null;
-            id?: number;
-            maximumBytesRead?: number;
-            maximumRowsRead?: number;
-            numItems: number;
-          };
-          slug: string;
-          state?: "scheduled" | "open" | "closed";
-        },
-        {
-          continueCursor: string;
-          isDone: boolean;
-          page: Array<{
-            closesAt: number;
-            group: { kind: "cohort" | "unit"; name: string };
-            id: Id<"examSittings">;
-            opensAt: number;
-            room: string;
-            state: "scheduled" | "open" | "closed";
-            timeZone: string;
-          }>;
-          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
-          splitCursor?: string | null;
-        }
-      >;
+    results: {
+      results: {
+        byQuestion: FunctionReference<
+          "query",
+          "public",
+          {
+            paginationOpts: {
+              cursor: string | null;
+              endCursor?: string | null;
+              id?: number;
+              maximumBytesRead?: number;
+              maximumRowsRead?: number;
+              numItems: number;
+            };
+            questionId: Id<"examQuestions">;
+            sittingId: Id<"examSittings">;
+            slug: string;
+          },
+          {
+            continueCursor: string;
+            isDone: boolean;
+            page: Array<{
+              attemptId: Id<"examAttempts">;
+              name: string;
+              response: Array<string>;
+              verdict: "correct" | "incorrect" | "pending";
+            }>;
+            pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+            splitCursor?: string | null;
+          }
+        >;
+        byStudent: FunctionReference<
+          "query",
+          "public",
+          {
+            paginationOpts: {
+              cursor: string | null;
+              endCursor?: string | null;
+              id?: number;
+              maximumBytesRead?: number;
+              maximumRowsRead?: number;
+              numItems: number;
+            };
+            sittingId: Id<"examSittings">;
+            slug: string;
+            state?: "inProgress" | "locked" | "closing" | "submitted";
+          },
+          {
+            continueCursor: string;
+            isDone: boolean;
+            page: Array<{
+              answered: number | null;
+              attemptId: Id<"examAttempts">;
+              name: string;
+              pending: number | null;
+              points: number | null;
+              state: "inProgress" | "locked" | "closing" | "submitted";
+              submittedAt: number | null;
+            }>;
+            pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+            splitCursor?: string | null;
+          }
+        >;
+        mine: FunctionReference<
+          "query",
+          "public",
+          { sittingId: Id<"examSittings">; slug: string },
+          {
+            points: number;
+            questions: Array<{
+              number: number;
+              optionIds: Array<string>;
+              response: Array<string>;
+              verdict: "correct" | "incorrect" | "pending";
+            }>;
+          } | null
+        >;
+        overview: FunctionReference<
+          "query",
+          "public",
+          { sittingId: Id<"examSittings">; slug: string },
+          {
+            can: Array<"result.release" | "result.view">;
+            questions: Array<{
+              id: Id<"examQuestions">;
+              number: number;
+              optionIds: Array<string>;
+            }>;
+            releasedAt: number | null;
+            sitting: {
+              closesAt: number;
+              cohortId: Id<"tenantCohorts"> | null;
+              examId: Id<"exams">;
+              examTitle: string;
+              id: Id<"examSittings">;
+              opensAt: number;
+              room: string;
+              state: "scheduled" | "open" | "closed";
+              timeZone: string;
+              unitId: Id<"tenantUnits">;
+            };
+          }
+        >;
+        questionStats: FunctionReference<
+          "query",
+          "public",
+          {
+            questionId: Id<"examQuestions">;
+            sittingId: Id<"examSittings">;
+            slug: string;
+          },
+          {
+            answered: number;
+            complete: boolean;
+            correct: number;
+            counted: number;
+            incorrect: number;
+            optionCounts: Array<{ count: number; optionId: string }>;
+            pending: number;
+          }
+        >;
+        release: FunctionReference<
+          "mutation",
+          "public",
+          { sittingId: Id<"examSittings">; slug: string },
+          null
+        >;
+      };
     };
     sittings: {
       addMinutes: FunctionReference<
@@ -4232,6 +4322,7 @@ export declare const api: {
             }>;
           };
           can: Array<"sitting.proctor" | "sitting.view">;
+          canViewResults: boolean;
           sitting: {
             closesAt: number;
             cohortId: Id<"tenantCohorts"> | null;
@@ -4700,10 +4791,11 @@ export declare const api: {
             | "document.edit"
             | "document.view"
             | "exam.edit"
-            | "exam.rooms"
             | "exam.view"
             | "sitting.proctor"
             | "sitting.view"
+            | "result.release"
+            | "result.view"
             | "invite.view"
             | "person.manage"
             | "person.view"
@@ -4726,10 +4818,8 @@ export declare const api: {
             | "document.edit"
             | "document.edit"
             | "exam.edit"
-            | "exam.rooms"
             | "exam.view"
             | "exam.edit"
-            | "exam.rooms"
             | "exam.view"
           >;
           name: string;
@@ -4789,10 +4879,11 @@ export declare const api: {
               | "document.edit"
               | "document.view"
               | "exam.edit"
-              | "exam.rooms"
               | "exam.view"
               | "sitting.proctor"
               | "sitting.view"
+              | "result.release"
+              | "result.view"
               | "invite.view"
               | "person.manage"
               | "person.view"
@@ -4815,10 +4906,8 @@ export declare const api: {
               | "document.edit"
               | "document.edit"
               | "exam.edit"
-              | "exam.rooms"
               | "exam.view"
               | "exam.edit"
-              | "exam.rooms"
               | "exam.view"
             >;
             createdAt: number;
@@ -5026,6 +5115,7 @@ export declare const api: {
                   step: "archive" | "cohorts" | "place" | "homeroom";
                   type: "promotion.undone";
                 }
+              | { type: "exam.results.released" }
               | { type: "sitting.schedule" }
               | {
                   attempt: Id<"examAttempts">;
@@ -5126,6 +5216,7 @@ export declare const api: {
               | { id: Id<"editorDocuments">; kind: "document" }
               | { id: Id<"exams">; kind: "exam" }
               | { id: Id<"examSittings">; kind: "sitting" }
+              | { id: Id<"examSittings">; kind: "result" }
               | { kind: string };
             subjectName: string | null;
           }>;
@@ -5616,6 +5707,7 @@ export declare const api: {
               | { id: Id<"editorDocuments">; kind: "document" }
               | { id: Id<"exams">; kind: "exam" }
               | { id: Id<"examSittings">; kind: "sitting" }
+              | { id: Id<"examSittings">; kind: "result" }
               | { kind: string };
             tenant: {
               kind: "school" | "foundation";
@@ -5655,6 +5747,7 @@ export declare const api: {
             | { id: Id<"editorDocuments">; kind: "document" }
             | { id: Id<"exams">; kind: "exam" }
             | { id: Id<"examSittings">; kind: "sitting" }
+            | { id: Id<"examSittings">; kind: "result" }
             | { kind: string };
           tenant: {
             kind: "school" | "foundation";

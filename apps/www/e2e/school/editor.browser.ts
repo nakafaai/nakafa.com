@@ -191,3 +191,73 @@ test("a teacher schedules a sitting of an exam whose question has its key, and t
   await reopened.waitForURL(ROOMS_PATH);
   await context.close();
 });
+
+test("a teacher schedules an exam, and its editor opens read-only, saying why", async ({
+  browser,
+  baseURL,
+}) => {
+  const school = await Effect.runPromise(createSchool());
+  const host = `${school.slug}.localhost`;
+  const context = await browser.newContext();
+  await Effect.runPromise(
+    signInOwner(context, school.slug, hostAddress(baseURL, host, "/"))
+  );
+  const page = await context.newPage();
+  await page.goto(hostAddress(baseURL, host, "/exams"));
+
+  await page.getByRole("button", { name: "Create exam" }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("textbox", { name: "Exam title" }).fill("PTS Fisika");
+  await dialog.getByRole("button", { name: "Create exam" }).click();
+  await page.waitForURL(EDITOR_PATH);
+  const editorUrl = page.url();
+
+  // The exam starts with one question, which takes the four options and the key of the second.
+  for (const option of OPTIONS) {
+    const field = page.getByRole("textbox", {
+      name: `Option ${option.letter}`,
+    });
+    await field.fill(option.text);
+    await field.press("Tab");
+  }
+  await page.getByRole("radio", { name: "Mark option B as correct" }).click();
+  await expect(
+    page.getByRole("radio", { name: "Mark option B as correct" })
+  ).toBeChecked();
+
+  await page.getByRole("button", { name: "Schedule" }).click();
+  const scheduling = page.getByRole("dialog");
+  await scheduling.getByRole("textbox", { name: "Room" }).fill("Lab 2");
+  await scheduling.getByRole("button", { name: "Schedule" }).click();
+  await page.waitForURL(SITTING_PATH);
+
+  // The editor opened again says why its questions are fixed, and offers no change to them.
+  await page.goto(editorUrl);
+  await expect(
+    page.getByText("This exam is scheduled, so its questions are fixed.")
+  ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+  await expect(page.getByRole("button", { name: "Add question" })).toHaveCount(
+    0
+  );
+  await expect(page.getByRole("button", { name: "More actions" })).toHaveCount(
+    0
+  );
+  await expect(
+    page.getByRole("textbox", { name: "Option A" })
+  ).not.toBeEditable();
+  await expect(
+    page.getByRole("radio", { name: "Mark option A as correct" })
+  ).toBeDisabled();
+  await expect(
+    page.getByRole("textbox", { name: "Question text" })
+  ).toHaveAttribute("aria-readonly", "true", {
+    timeout: readinessTimeoutMilliseconds,
+  });
+
+  // The title can still be renamed, and the exam can still be scheduled again.
+  await expect(
+    page.getByRole("textbox", { name: "Exam title" })
+  ).toBeEditable();
+  await expect(page.getByRole("button", { name: "Schedule" })).toBeVisible();
+  await context.close();
+});

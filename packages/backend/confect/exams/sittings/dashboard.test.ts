@@ -51,6 +51,27 @@ describe("exams/sittings dashboard", () => {
   );
 
   it.effect(
+    "says whether the caller may read the results, so the dashboard links to them only to a viewer who may",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const made = yield* openedSitting(fixture, "PTS");
+        const canViewResults = (account: "deputy" | "teacher" | "unitAdmin") =>
+          fixture
+            .as(account)
+            .query(dashboard, {
+              paginationOpts: { cursor: null, numItems: 10 },
+              sittingId: made.id,
+              slug: nf,
+            })
+            .pipe(Effect.map((page) => page.canViewResults));
+        expect(yield* canViewResults("teacher")).toBe(true);
+        expect(yield* canViewResults("unitAdmin")).toBe(true);
+        expect(yield* canViewResults("deputy")).toBe(false);
+      })
+  );
+
+  it.effect(
     "keeps the latest signal of an attempt and shows the student back",
     () =>
       Effect.gen(function* () {

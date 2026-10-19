@@ -81,6 +81,8 @@ export const examSittingValidator = Schema.Struct({
   examId: Id("exams"),
   jobs: Schema.Array(JobId),
   opensAt: Schema.Finite,
+  resultsReleasedAt: Schema.optionalKey(Schema.Finite),
+  resultsReleasedBy: Schema.optionalKey(Id("tenantPeople")),
   room: RoomName,
   state: SittingState,
   tenantId: Id("tenants"),

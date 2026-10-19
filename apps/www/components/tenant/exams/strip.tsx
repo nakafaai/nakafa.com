@@ -18,6 +18,7 @@ import { Array as Arr, Effect, Function as Fn, Option } from "effect";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { runExamAction, sentAction } from "@/components/tenant/exams/action";
+import { isFrozen } from "@/components/tenant/exams/freeze";
 import {
   addQuestionUpdate,
   copyQuestionUpdate,
@@ -62,11 +63,13 @@ const placeholderDraft = (answers: Question["answers"], key: Question["key"]) =>
  * The questions of the exam in order, one thumbnail each: its number, and a dot when it has
  * no answer key. An add button at the end adds a question. Each thumbnail's menu copies,
  * moves, and removes its question. A question the server has not saved yet is disabled until it
- * answers, and the exam keeps at least one question, so the last one has no remove.
+ * answers, and the exam keeps at least one question, so the last one has no remove. A frozen exam
+ * shows neither the add button nor the menus, so its questions stay as the sitting was scheduled.
  */
 export function ExamStrip() {
   const t = useTranslations("Exams");
   const { exam, slug } = useExam();
+  const frozen = isFrozen(exam);
   const active = useActiveQuestion();
   const selectedId = Option.getOrNull(
     Option.map(active, (current) => current.question.id)
@@ -121,14 +124,16 @@ export function ExamStrip() {
           selected={question.id === selectedId}
         />
       ))}
-      <Button
-        aria-label={t("add-question")}
-        onClick={addQuestion}
-        size="icon-sm"
-        variant="outline"
-      >
-        <HugeIcons icon={Add01Icon} />
-      </Button>
+      {frozen ? null : (
+        <Button
+          aria-label={t("add-question")}
+          onClick={addQuestion}
+          size="icon-sm"
+          variant="outline"
+        >
+          <HugeIcons icon={Add01Icon} />
+        </Button>
+      )}
     </nav>
   );
 }
@@ -150,6 +155,7 @@ function Thumbnail({
   const t = useTranslations("Exams");
   const common = useTranslations("Common");
   const { exam, slug } = useExam();
+  const frozen = isFrozen(exam);
   const chosen = useExamSelection((state) => state.selected);
   const select = useExamSelection((state) => state.select);
   const replace = useExamSelection((state) => state.replace);
@@ -226,7 +232,7 @@ function Thumbnail({
           </>
         ) : null}
       </Button>
-      {pending ? null : (
+      {pending || frozen ? null : (
         <DropdownMenu>
           <DropdownMenuTrigger
             render={

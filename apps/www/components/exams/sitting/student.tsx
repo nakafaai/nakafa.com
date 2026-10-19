@@ -123,7 +123,7 @@ export function StudentSitting({
     );
   }
   if (attempt !== null && !takesAnswers(attempt.state)) {
-    return <StudentOutcome attempt={attempt} sitting={sitting} />;
+    return <StudentOutcome attempt={attempt} sitting={sitting} slug={slug} />;
   }
 
   /** Enters with the token that the student typed. */

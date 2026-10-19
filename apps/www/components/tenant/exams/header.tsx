@@ -12,6 +12,7 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { runExamAction, sentAction } from "@/components/tenant/exams/action";
+import { isFrozen } from "@/components/tenant/exams/freeze";
 import { renameUpdate } from "@/components/tenant/exams/optimistic";
 import { useExam } from "@/components/tenant/exams/provider";
 import { ScheduleExam } from "@/components/tenant/exams/schedule";
@@ -24,7 +25,8 @@ import { titleToSave } from "@/components/tenant/exams/title";
  * Enter, and only a trimmed, changed, valid title is sent. The optimistic change restores
  * the saved title when the server refuses the rename. The row ends with the action that
  * tries the exam as a student and the button that schedules it, and the title gives way
- * before them.
+ * before them. A frozen exam says why its questions are fixed in a line under the header
+ * (ExamFrozenNote).
  */
 export function ExamHeader() {
   const t = useTranslations("Exams");
@@ -81,5 +83,23 @@ export function ExamHeader() {
       </Link>
       <ScheduleExam />
     </header>
+  );
+}
+
+/**
+ * The sentence a scheduled exam's editor shows under its header, across the page, so it
+ * wraps on a phone instead of being cut short beside the title.
+ */
+export function ExamFrozenNote() {
+  const t = useTranslations("Exams");
+  const { exam } = useExam();
+  if (!isFrozen(exam)) {
+    return null;
+  }
+
+  return (
+    <p className="border-b px-4 py-2 text-muted-foreground text-sm">
+      {t("frozen-note")}
+    </p>
   );
 }
