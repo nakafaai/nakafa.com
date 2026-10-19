@@ -26,6 +26,7 @@ import {
   TableHeader,
   TableRow,
 } from "@repo/design-system/components/ui/table";
+import { buttonVariants } from "@repo/design-system/lib/button";
 import { Array as Arr, Option, Schema } from "effect";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
@@ -36,7 +37,6 @@ import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
 import { useTenant } from "@/components/tenant/context";
-import { isPlaceholderId } from "@/components/tenant/exams/placeholder";
 import {
   RoomStateFilter,
   roomsArgs,
@@ -210,6 +210,7 @@ function RoomsTable({
   slug: TenantSlug;
 }) {
   const t = useTranslations("Exams");
+  const tenant = useTenant();
   const pagination = usePaginatedQuery(
     exams.rooms.list,
     isSettled ? roomsArgs({ examId, slug }, filter) : "skip",
@@ -241,6 +242,16 @@ function RoomsTable({
     return filter === "all" ? (
       <TableEmpty
         act="pointing"
+        action={
+          tenant.canOpenExams ? (
+            <Link
+              className={buttonVariants({ variant: "outline" })}
+              href={`/exams/${examId}/edit`}
+            >
+              {t("rooms-empty-action")}
+            </Link>
+          ) : undefined
+        }
         description={t("rooms-empty-description")}
         title={t("rooms-empty")}
       />
@@ -296,16 +307,12 @@ function RoomItem({
   return (
     <TableRow>
       <TableCell className="font-medium">
-        {isPlaceholderId(room.id) ? (
-          room.room
-        ) : (
-          <Link
-            className="underline-offset-4 hover:underline"
-            href={`/exams/${examId}/sittings/${room.id}`}
-          >
-            {room.room}
-          </Link>
-        )}
+        <Link
+          className="underline-offset-4 hover:underline"
+          href={`/exams/${examId}/sittings/${room.id}`}
+        >
+          {room.room}
+        </Link>
       </TableCell>
       <TableCell>{room.group.name}</TableCell>
       <TableCell className="text-muted-foreground">
