@@ -1,5 +1,6 @@
 import { createFileRoute, notFound, Outlet } from "@tanstack/react-router";
 import { canOpenExams, canOpenRooms } from "@/components/tenant/exams/access";
+import { SchoolPageNotFound } from "@/components/tenant/notfound";
 import { TenantSection } from "@/components/tenant/section";
 
 /** The exams of a school, for a viewer who may open exams or the rooms of one. */
@@ -14,6 +15,7 @@ export const Route = createFileRoute("/school/$slug/exams")({
     }
   },
   component: SchoolExamsLayout,
+  notFoundComponent: SchoolPageNotFound,
 });
 
 function SchoolExamsLayout() {

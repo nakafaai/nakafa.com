@@ -2,6 +2,7 @@ import { createFileRoute, notFound } from "@tanstack/react-router";
 import type { ReactElement } from "react";
 import { canOpenExams } from "@/components/tenant/exams/access";
 import { ExamList } from "@/components/tenant/exams/list";
+import { SchoolPageNotFound } from "@/components/tenant/notfound";
 
 /** The exams of the school, newest first. Only a viewer who may open exams sees the list. */
 export const Route = createFileRoute("/school/$slug/exams/")({
@@ -12,6 +13,7 @@ export const Route = createFileRoute("/school/$slug/exams/")({
     }
   },
   component: SchoolExamsPage,
+  notFoundComponent: SchoolPageNotFound,
 });
 
 function SchoolExamsPage(): ReactElement {

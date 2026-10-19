@@ -1,8 +1,5 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
-import type { ReactElement } from "react";
-import { useTranslations } from "use-intl";
-import { SchoolHeader } from "@/components/tenant/header";
-import { TenantMissing } from "@/components/tenant/missing";
+import { SchoolPageNotFound } from "@/components/tenant/notfound";
 
 /**
  * An address below a school that no page of the school answers. Only a member
@@ -17,13 +14,3 @@ export const Route = createFileRoute("/school/$slug/$")({
   },
   notFoundComponent: SchoolPageNotFound,
 });
-
-function SchoolPageNotFound(): ReactElement {
-  const t = useTranslations("NotFound");
-  return (
-    <>
-      <SchoolHeader items={[{ label: t("title") }]} />
-      <TenantMissing homeHref="/" />
-    </>
-  );
-}
