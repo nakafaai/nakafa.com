@@ -16,7 +16,10 @@ test("a new account opens its own school in five questions and lands in it as it
   const name = `Harapan ${tag}`;
   const slug = `harapan-${tag}`;
 
-  await page.goto("/en/school/new");
+  // The home page's school band opens the questionnaire.
+  await page.goto("/en");
+  await page.getByRole("link", { name: "Open a school" }).click();
+  await page.waitForURL("**/en/school/new");
   await expect(page.getByText("Question 1 of 5")).toBeVisible();
 
   // A reserved address keeps the question here, with its reason.
