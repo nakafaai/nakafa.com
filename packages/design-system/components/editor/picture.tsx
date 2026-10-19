@@ -120,10 +120,13 @@ export function PictureAltDialog({
   readonly title: string;
 }) {
   const [text, setText] = useState(alt);
-
-  useEffect(() => {
+  // The text starts again from the picture's alt text whenever the dialog is given another
+  // picture or another alt text. The change is made while rendering, so no effect is needed.
+  const [shown, setShown] = useState({ alt, preview });
+  if (shown.alt !== alt || shown.preview !== preview) {
+    setShown({ alt, preview });
     setText(alt);
-  }, [alt, preview]);
+  }
 
   const next = altText(text);
 
