@@ -62,6 +62,16 @@ export const SittingView = Schema.Struct({
 });
 
 /**
+ * One student the sitting expects, who has not entered it yet: the seat that the proctor sees before
+ * the student's attempt exists.
+ */
+export const ExpectedSeat = Schema.Struct({
+  id: Id("tenantPeople"),
+  mascot: Schema.NullOr(MascotCode),
+  name: PersonName,
+});
+
+/**
  * One attempt on the dashboard: its student, its state and deadline, whether the student is away, and
  * the time of the student's start or latest signal. The latest answer is read per seat, through
  * `lastAnswer`, so the page re-runs for signals only.

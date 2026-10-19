@@ -103,7 +103,7 @@ describe("components/tenant/settings/mutation.client", () => {
           2
         )
       ).toEqual([smp, sma]);
-      expect(shown[2]).toMatchObject({
+      expect(Option.getOrThrow(Arr.get(shown, 2))).toMatchObject({
         contentLanguage: "id",
         level: "sd",
         name: "SD Nakafa",

@@ -15,6 +15,7 @@ import { lazy, type RefObject, Suspense, useEffect, useRef } from "react";
 import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import {
   choiceOf,
+  keyWithoutOption,
   markedKey,
   markedOption,
   type OptionLabel,
@@ -196,14 +197,11 @@ function LivePaper({
                 }}
                 onRemove={
                   choice.options.length > CHOICE_OPTIONS_MIN
-                    ? () => {
-                        const next = withOptionRemoved(
-                          question.answers,
-                          question.key,
-                          option.id
-                        );
-                        saveAnswers(next.answers, next.key);
-                      }
+                    ? () =>
+                        saveAnswers(
+                          withOptionRemoved(question.answers, option.id),
+                          keyWithoutOption(question.key, option.id)
+                        )
                     : null
                 }
                 onSave={(label: OptionLabel) =>

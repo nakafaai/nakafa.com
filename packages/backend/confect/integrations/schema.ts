@@ -6,9 +6,10 @@ import { Schema } from "effect";
 
 /**
  * The name of one integration client, as its school's Admin reads it. A client
- * name follows the one-line rule of a unit's name, which `tenancy/schema` owns.
+ * name follows the one-line rule of a unit's name, which `tenancy/schema` owns,
+ * and keeps the 80 characters a unit name held before school names widened it.
  */
-export const IntegrationName = UnitName;
+export const IntegrationName = UnitName.check(Schema.isMaxLength(80));
 
 /** An active client holds its secret hash; a revoked one holds no secret. */
 export const IntegrationStatus = Schema.Literals(["active", "revoked"]);

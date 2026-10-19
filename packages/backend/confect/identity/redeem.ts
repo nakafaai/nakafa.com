@@ -28,6 +28,10 @@ import type {
 import { personActor } from "@repo/backend/confect/tenancy/actor";
 import { personAuthority } from "@repo/backend/confect/tenancy/authority";
 import { bindPerson } from "@repo/backend/confect/tenancy/claim";
+import {
+  pendingInviteOf,
+  replaceInviteState,
+} from "@repo/backend/confect/tenancy/invite";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Clock, Effect, Option, Result } from "effect";
 
@@ -152,9 +156,11 @@ const findRedeemable = Effect.fn("identity.redeem.find")(function* (
 /**
  * The Better Auth account of a Person, made first when the Person has none. A
  * new account is bound to the Person as a card claim in the same transaction,
- * so a password step that fails later rolls the claim back with it. A Person
- * that already has an account holds one that a card made, because
- * `findRedeemable` refuses any other, so a reissued card reuses that account.
+ * so a password step that fails later rolls the claim back with it. The claim
+ * accepts the Person's pending invite, as a claim by the invited address does,
+ * so the invite leaves the pending list. A Person that already has an account
+ * holds one that a card made, because `findRedeemable` refuses any other, so a
+ * reissued card reuses that account.
  */
 const accountOf = Effect.fn("identity.redeem.account")(function* (
   auth: Auth,
@@ -168,12 +174,21 @@ const accountOf = Effect.fn("identity.redeem.account")(function* (
     return { authId: user.authId };
   }
   const created = yield* createLoginAccount(auth, person.name);
+  const claimedAt = yield* Clock.currentTimeMillis;
   yield* bindPerson(person, {
-    claimedAt: yield* Clock.currentTimeMillis,
+    claimedAt,
     method: "card",
     state: "claimed",
     userId: created.userId,
   });
+  const pending = yield* pendingInviteOf(person._id);
+  if (Option.isSome(pending)) {
+    yield* replaceInviteState(pending.value, {
+      at: claimedAt,
+      status: "accepted",
+      userId: created.userId,
+    });
+  }
   yield* personAuthority.record(personActor(person), person, {
     method: "card",
     type: "person.claimed",
@@ -187,8 +202,9 @@ const accountOf = Effect.fn("identity.redeem.account")(function* (
  * identity before any limit is spent, counts the attempt against its device's bucket
  * (which only slows one browser), reads the code and the typed login name, opens the
  * card on the school's host with that login name, checks the password length,
- * creates the account if the Person has none and claims the Person, stores the
- * password through Better Auth, marks the card used, and journals the redemption.
+ * creates the account if the Person has none, claims the Person and accepts its
+ * pending invite, stores the password through Better Auth, marks the card used,
+ * and journals the redemption.
  * The rate-limit count is written first, on purpose: a refusal is a value, so the
  * attempt it refuses still counts. The account, claim, password, and card writes
  * come after the last refusal, so a refused card changes nothing else.

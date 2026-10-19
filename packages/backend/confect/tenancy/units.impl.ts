@@ -12,18 +12,14 @@ import { Member } from "@repo/backend/confect/middleware/member.spec";
 import session from "@repo/backend/confect/middleware/session.impl";
 import { personActor } from "@repo/backend/confect/tenancy/actor";
 import { unitAuthority } from "@repo/backend/confect/tenancy/authority";
-import {
-  NpsnInvalid,
-  NpsnTaken,
-  UnitLimit,
-} from "@repo/backend/confect/tenancy/errors";
+import { NpsnInvalid, NpsnTaken } from "@repo/backend/confect/tenancy/errors";
 import {
   Npsn,
   UNIT_LIMIT,
   type UnitStatus,
 } from "@repo/backend/confect/tenancy/schema";
 import spec from "@repo/backend/confect/tenancy/units.spec";
-import { createUnit } from "@repo/backend/confect/tenancy/write/unit";
+import { addUnit } from "@repo/backend/confect/tenancy/write/unit";
 import { Array as Arr, Effect, Layer, Schema, Struct } from "effect";
 
 /** One unit as the units list and the answer of `create` show it. */
@@ -75,18 +71,8 @@ const create = FunctionImpl.make(
     timeZone,
   }) {
     const { person, tenant } = yield* Member;
-    const units = yield* (yield* DatabaseReader)
-      .table("tenantUnits")
-      .index("by_tenantId_and_status", (query) =>
-        query.eq("tenantId", tenant._id)
-      )
-      .take(UNIT_LIMIT)
-      .pipe(Effect.orDie);
-    if (units.length >= UNIT_LIMIT) {
-      return yield* new UnitLimit();
-    }
     return viewOf(
-      yield* createUnit(personActor(person), tenant._id, {
+      yield* addUnit(personActor(person), tenant._id, {
         contentLanguage,
         level,
         name,

@@ -27,7 +27,7 @@ import {
 const DASHBOARD_PAGE_SIZE = 100;
 
 /** The animal of a claimed Person, from the account. An unclaimed Person has none. */
-const mascotOf = Effect.fn("exams.sittings.dashboard.mascot")(function* (
+export const mascotOf = Effect.fn("exams.sittings.dashboard.mascot")(function* (
   person: TenantPeopleDoc
 ) {
   if (person.account.state !== "claimed") {

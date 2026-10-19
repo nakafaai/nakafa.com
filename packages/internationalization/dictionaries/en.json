@@ -58,7 +58,7 @@
     "failed": "Signing in failed. Try again.",
     "outsider-card": "Sign in with a card",
     "outsider-description": "{account} is not a member of {school}.",
-    "outsider-card-hint": "Not a Google address? Your school's admin gives you a login card.",
+    "outsider-card-hint": "Not a Google address? Ask your school's admin how you sign in.",
     "outsider-switch": "Switch account",
     "outsider-title": "Not a member",
     "password-description": "At least 8 characters.",
@@ -83,7 +83,8 @@
     "filter-needs-attention": "Needs attention",
     "filter-finished": "Finished",
     "seats-label": "Student seats",
-    "seats-empty": "No student has entered this sitting yet.",
+    "seats-empty": "No student is expected in this sitting.",
+    "seat-waiting": "Not entered yet.",
     "filter-empty": "No student matches this filter.",
     "panel-label": "Student session",
     "state-in-progress": "In progress",
@@ -418,6 +419,7 @@
     "invite-card-description": "The invitee signs in with this login name and the card code, which the school shows once.",
     "invite-card-submit": "Issue card",
     "invite-google-note": "An address without Google signs in with a login card from the admin.",
+    "invite-google-admin-note": "An Admin needs a Google address, because an Admin gets no login card.",
     "invite-revoke": "Revoke",
     "invite-revoke-title": "Revoke this invite?",
     "invite-revoke-description": "The address can no longer accept this invite.",
@@ -468,10 +470,10 @@
         "stored": "Grading scheme version added"
       },
       "cohort": {
-        "created": "Class added",
-        "renamed": "Class renamed",
-        "archived": "Class archived",
-        "restored": "Class restored"
+        "created": "Cohort added",
+        "renamed": "Cohort renamed",
+        "archived": "Cohort archived",
+        "restored": "Cohort restored"
       },
       "connection": {
         "connected": "Connection added",

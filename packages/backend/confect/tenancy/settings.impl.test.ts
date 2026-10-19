@@ -1,6 +1,9 @@
 import { describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
-import { DatabaseReader } from "@repo/backend/confect/_generated/services";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import { EMAIL_DOMAIN_LIMIT } from "@repo/backend/confect/tenancy/policy";
 import {
   journal,
@@ -436,6 +439,21 @@ describe("tenancy/settings setName", () => {
         );
         expect(refusals).toMatchObject([invalid, invalid, invalid]);
         expect(yield* fixture.run(journal)).toEqual([]);
+      })
+  );
+
+  it.effect(
+    "reads a school stored with a two-character name, so the school still opens",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        yield* fixture.run(
+          Effect.flatMap(DatabaseWriter, (writer) =>
+            writer.table("tenants").patch(fixture.tenants.nf, { name: "AB" })
+          )
+        );
+        const view = yield* fixture.as("owner").query(viewer, { slug: nf });
+        expect(view.tenant).toMatchObject({ name: "AB" });
       })
   );
 

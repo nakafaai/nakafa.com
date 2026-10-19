@@ -78,6 +78,7 @@ describe("exams/rooms", () => {
         expect(page.isDone).toBe(true);
         expect(page.page).toEqual([
           {
+            canCancel: true,
             closesAt: CLOSES,
             group: { kind: "unit", name: "SMP Nakafa" },
             id: early.id,
@@ -87,6 +88,7 @@ describe("exams/rooms", () => {
             timeZone: "Asia/Jakarta",
           },
           {
+            canCancel: true,
             closesAt: CLOSES,
             group: { kind: "unit", name: "SMP Nakafa" },
             id: late.id,
@@ -96,6 +98,45 @@ describe("exams/rooms", () => {
             timeZone: "Asia/Jakarta",
           },
         ]);
+      })
+  );
+
+  it.effect(
+    "marks a room the caller may cancel: a room the caller scheduled, or any room to an Admin",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        yield* keyedSchool(fixture);
+        const examId = yield* keyedExam(fixture, "Boleh batal");
+        const byTeacher = yield* scheduleSitting(fixture, {
+          closesAt: CLOSES,
+          examId,
+          group: { kind: "unit", unitId: fixture.units.smp },
+          opensAt: OPENS,
+          room: "Lab 1",
+        });
+        const byAdmin = yield* scheduleSitting(fixture, {
+          actor: "admin",
+          closesAt: CLOSES,
+          examId,
+          group: { kind: "unit", unitId: fixture.units.smp },
+          opensAt: LATER,
+          room: "Lab 2",
+        });
+        const asTeacher = yield* roomsOf(fixture, "teacher", examId);
+        const asAdmin = yield* roomsOf(fixture, "admin", examId);
+        expect(
+          Arr.map(asTeacher.page, (row) => [row.id, row.canCancel])
+        ).toEqual([
+          [byTeacher.id, true],
+          [byAdmin.id, false],
+        ]);
+        expect(Arr.map(asAdmin.page, (row) => [row.id, row.canCancel])).toEqual(
+          [
+            [byTeacher.id, true],
+            [byAdmin.id, true],
+          ]
+        );
       })
   );
 

@@ -8,20 +8,10 @@ import {
   usePaginatedQuery,
   useQuery,
 } from "@confect/react";
-import { MoreHorizontalIcon } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { RoomRow } from "@repo/backend/confect/exams/rooms";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { Button } from "@repo/design-system/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
-import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import {
   Select,
   SelectContent,
@@ -46,6 +36,7 @@ import { useConvexAuth } from "@/components/providers/convex";
 import { LayoutContent } from "@/components/shared/content/layout";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
+import { ConfirmRowMenu } from "@/components/shared/table/confirm";
 import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
 import { useTenant } from "@/components/tenant/context";
 import {
@@ -369,78 +360,33 @@ function RoomItem({
       </TableCell>
       <TableCell>{t(`room-state-${room.state}`)}</TableCell>
       <TableCell>
-        {room.state === "scheduled" ? (
-          <RoomMenu room={room} slug={slug} />
-        ) : null}
+        {room.canCancel ? <RoomMenu room={room} slug={slug} /> : null}
       </TableCell>
     </TableRow>
   );
 }
 
 /**
- * The row menu of a scheduled room, which cancels it behind a confirmation. A room that has
- * opened, or closed, has no menu, because its students sat it.
+ * The row menu of a room that the viewer may cancel, which cancels it behind a confirmation. A
+ * room that has opened, or closed, or that another Person scheduled, has no menu.
  */
 function RoomMenu({ room, slug }: { room: Room; slug: TenantSlug }) {
   const t = useTranslations("Exams");
-  const common = useTranslations("Common");
   const cancel = useMutation(exams.sittings.cancel).withOptimisticUpdate(
     cancelRoomChange
   );
-  const [isCancelling, setIsCancelling] = useState(false);
 
   return (
-    <div className="flex justify-end">
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          render={
-            <Button
-              aria-label={common("more-actions")}
-              size="icon-sm"
-              variant="ghost"
-            >
-              <HugeIcons icon={MoreHorizontalIcon} />
-            </Button>
-          }
-        />
-        <DropdownMenuContent align="end" className="w-44">
-          <DropdownMenuItem
-            onClick={() => setIsCancelling(true)}
-            variant="destructive"
-          >
-            {t("room-cancel")}
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-      <ResponsiveDialog
-        description={t("room-cancel-description")}
-        footer={
-          <>
-            <Button
-              onClick={() => setIsCancelling(false)}
-              type="button"
-              variant="outline"
-            >
-              {common("cancel")}
-            </Button>
-            <Button
-              onClick={() => {
-                setIsCancelling(false);
-                startTransition(() =>
-                  saveSchool(() => cancel({ sittingId: room.id, slug }), SOURCE)
-                );
-              }}
-              type="button"
-              variant="destructive"
-            >
-              {t("room-cancel-confirm")}
-            </Button>
-          </>
-        }
-        open={isCancelling}
-        setOpen={setIsCancelling}
-        title={t("room-cancel-title")}
-      />
-    </div>
+    <ConfirmRowMenu
+      action={t("room-cancel")}
+      confirm={t("room-cancel-confirm")}
+      description={t("room-cancel-description")}
+      onConfirm={() =>
+        startTransition(() =>
+          saveSchool(() => cancel({ sittingId: room.id, slug }), SOURCE)
+        )
+      }
+      title={t("room-cancel-title")}
+    />
   );
 }

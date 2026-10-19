@@ -2,6 +2,7 @@ import { Table } from "@confect/core";
 import { tenantPersonValidator } from "@repo/backend/confect/tenancy/schema";
 export default Table.make(() => tenantPersonValidator)
   .index("by_tenantId_and_account_userId", ["tenantId", "account.userId"])
+  .index("by_tenantId_and_kind", ["tenantId", "kind"])
   .index("by_tenantId_and_status", ["tenantId", "status"])
   .index("by_tenantId_and_status_and_account_state", [
     "tenantId",

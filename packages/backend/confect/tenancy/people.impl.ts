@@ -14,6 +14,7 @@ import { createPerson } from "@repo/backend/confect/tenancy/create";
 import spec from "@repo/backend/confect/tenancy/people.spec";
 import { removePerson } from "@repo/backend/confect/tenancy/remove";
 import { renamePerson } from "@repo/backend/confect/tenancy/rename";
+import { studentsOf } from "@repo/backend/confect/tenancy/students";
 import { Array as Arr, Effect, Layer, Struct } from "effect";
 
 /** One Person as the school's list shows them. */
@@ -63,9 +64,8 @@ const list = FunctionImpl.make(
 );
 
 /**
- * The active members of the school who hold an active student grant, a page at a time. A Person
- * with a grant in more than one unit is on the page once for each grant, so a caller shows each
- * Person once by its ID.
+ * The active members of the school who hold an active student grant, a page at a time; see
+ * `studentsOf`. A Person with a grant in more than one unit is on the page once for each grant.
  */
 const students = FunctionImpl.make(
   databaseSchema,
@@ -73,32 +73,8 @@ const students = FunctionImpl.make(
   "students",
   Effect.fn("tenancy.people.students")(function* ({ paginationOpts }) {
     const { tenant } = yield* Member;
-    const reader = yield* DatabaseReader;
-    const grants = yield* reader
-      .table("tenantGrants")
-      .index("by_tenantId_and_role_key_and_status", (query) =>
-        query
-          .eq("tenantId", tenant._id)
-          .eq("role.key", "student")
-          .eq("status", "active")
-      )
-      .paginate(paginationOpts)
-      .pipe(Effect.orDie);
-    const people = yield* Effect.forEach(
-      grants.page,
-      (grant) =>
-        reader.table("tenantPeople").get(grant.personId).pipe(Effect.orDie),
-      { concurrency: "unbounded" }
-    );
-    return Struct.assign(grants, {
-      page: Arr.map(
-        Arr.filter(
-          people,
-          (person) => person.status === "active" && person.kind === "member"
-        ),
-        view
-      ),
-    });
+    const page = yield* studentsOf(tenant._id, paginationOpts);
+    return Struct.assign(page, { page: Arr.map(page.page, view) });
   })
 );
 

@@ -90,6 +90,7 @@ export default GroupSpec.make()
           InviteExpired,
           InviteNotPending,
           InviteRateLimited,
+          PersonClaimed,
         ]),
     })
   );

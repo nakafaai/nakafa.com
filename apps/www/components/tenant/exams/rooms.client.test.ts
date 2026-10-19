@@ -17,6 +17,7 @@ const input = {
 
 /** One scheduled room of the exam, as the rooms list shows it. */
 const room = (id: string, name: string): typeof RoomRow.Type => ({
+  canCancel: false,
   closesAt: 1_800_000_000_000,
   group: { kind: "unit", name: "SMP Nakafa" },
   id: Schema.decodeUnknownSync(Id("examSittings"))(id),

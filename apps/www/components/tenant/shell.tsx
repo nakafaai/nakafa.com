@@ -38,7 +38,11 @@ import { type ReactNode, useTransition } from "react";
 import { AccountMenu } from "@/components/sidebar/menu/account";
 import { TenantAccountItems } from "@/components/tenant/account";
 import { signOutSchoolAccount } from "@/components/tenant/account.client";
-import { TenantContext, type TenantValue } from "@/components/tenant/context";
+import {
+  TenantContext,
+  type TenantValue,
+  useTenant,
+} from "@/components/tenant/context";
 import { SchoolMark } from "@/components/tenant/mark";
 import { TenantNavigation } from "@/components/tenant/navigation";
 import { isExamEditorPath } from "@/lib/settings/school";
@@ -115,15 +119,10 @@ function TenantAccount({
  * The school switcher at the top of the sidebar: the school's mark and name open the
  * viewer's schools, with the school's home and the way back to Nakafa beneath them.
  */
-function TenantSwitcher({
-  name,
-  profile,
-}: {
-  name: string;
-  profile: typeof TenantProfile.Type;
-}) {
+function TenantSwitcher() {
   const t = useTranslations("School");
   const locale = useLocale();
+  const tenant = useTenant();
 
   return (
     <SidebarMenuItem>
@@ -134,9 +133,9 @@ function TenantSwitcher({
               className="data-popup-open:bg-sidebar-accent data-popup-open:text-sidebar-accent-foreground"
               size="lg"
             >
-              <SchoolMark logo={profile.logo} mascot={profile.mascot} />
+              <SchoolMark logo={tenant.logo} mascot={tenant.mascot} />
               <div className="grid min-w-0 flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{name}</span>
+                <span className="truncate font-medium">{tenant.name}</span>
               </div>
               <HugeIcons className="ml-auto" icon={UnfoldMoreIcon} />
             </SidebarMenuButton>
@@ -145,14 +144,14 @@ function TenantSwitcher({
         <DropdownMenuContent align="start" className="min-w-56" sideOffset={4}>
           <SidebarSchoolMenuItems canOpenSchool={false} />
           <DropdownMenuGroup>
-            <DropdownMenuItem render={<Link href="/" />}>
-              {t("home")}
-            </DropdownMenuItem>
+            <DropdownMenuItem render={<Link href="/">{t("home")}</Link>} />
             <DropdownMenuItem
-              render={<a href={new URL(`/${locale}`, SITE_ORIGIN).href} />}
-            >
-              {t("back-to-learning")}
-            </DropdownMenuItem>
+              render={
+                <a href={new URL(`/${locale}`, SITE_ORIGIN).href}>
+                  {t("back-to-learning")}
+                </a>
+              }
+            />
           </DropdownMenuGroup>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -172,13 +171,11 @@ function TenantFrame({
   account,
   children,
   personName,
-  profile,
   role,
 }: {
   account: typeof ViewerAccount.Type;
   children: ReactNode;
   personName: string;
-  profile: typeof TenantProfile.Type;
   role: TenantValue["role"];
 }) {
   const pathname = usePathname();
@@ -193,7 +190,7 @@ function TenantFrame({
       <Sidebar label={tCommon("sidebar")} side="left">
         <SidebarHeader className="border-b">
           <SidebarMenu>
-            <TenantSwitcher name={profile.name} profile={profile} />
+            <TenantSwitcher />
           </SidebarMenu>
         </SidebarHeader>
         <SidebarContent>
@@ -234,17 +231,14 @@ export function TenantShell({
       value={{
         canManage,
         canOpenExams,
+        logo: profile.logo,
+        mascot: profile.mascot,
         name: profile.name,
         role,
         slug: profile.slug,
       }}
     >
-      <TenantFrame
-        account={account}
-        personName={personName}
-        profile={profile}
-        role={role}
-      >
+      <TenantFrame account={account} personName={personName} role={role}>
         {children}
       </TenantFrame>
     </TenantContext>

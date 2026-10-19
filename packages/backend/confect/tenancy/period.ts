@@ -1,6 +1,7 @@
+import type { TenantPeriodsDoc } from "@repo/backend/confect/_generated/docs";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { isSingleLine } from "@repo/utilities/line";
-import { DateTime, Option, Schema } from "effect";
+import { DateTime, Option, Schema, Struct } from "effect";
 
 /** A period's name, one line, as lists show it. */
 export const PeriodName = Schema.String.check(
@@ -43,3 +44,10 @@ export const tenantPeriodValidator = Schema.Struct({
   tenantId: Id("tenants"),
   unitId: Id("tenantUnits"),
 });
+
+/** One period as the wire shows it. */
+export const periodView = (period: TenantPeriodsDoc) =>
+  Struct.renameKeys(
+    Struct.pick(period, ["_id", "end", "name", "start", "status"]),
+    { _id: "id" }
+  );

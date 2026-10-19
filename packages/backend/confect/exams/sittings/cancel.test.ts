@@ -15,6 +15,7 @@ import {
 import {
   journal,
   slugOf,
+  suspend,
   TENANCY_NOW,
   tenancyFixture,
 } from "@repo/backend/test/tenancy";
@@ -138,6 +139,64 @@ describe("exams/sittings cancel", () => {
           .mutation(cancel, { sittingId: first.id, slug: nf });
         expect(Arr.length(yield* roomsOf(fixture, examId))).toBe(1);
         expect(yield* frozenOf(fixture, examId)).toBe(true);
+      })
+  );
+
+  it.effect(
+    "refuses to cancel a room in a suspended school, as a write, and keeps the room",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        yield* keyedSchool(fixture);
+        const examId = yield* keyedExam(fixture, "Ditangguhkan");
+        const made = yield* scheduleSitting(fixture, {
+          closesAt: CLOSES_AT,
+          examId,
+          group: { kind: "unit", unitId: fixture.units.smp },
+          opensAt: OPENS_AT,
+        });
+        yield* fixture.run(suspend(fixture.tenants.nf));
+        const refused = yield* fixture
+          .as("admin")
+          .mutation(cancel, { sittingId: made.id, slug: nf })
+          .pipe(Effect.flip);
+        expect(refused).toMatchObject({
+          _tag: "AccessDenied",
+          reason: "condition",
+        });
+        expect(Arr.length(yield* roomsOf(fixture, examId))).toBe(1);
+      })
+  );
+
+  it.effect(
+    "refuses to cancel a room of an archived unit, as a write, and keeps the room",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        yield* keyedSchool(fixture);
+        const examId = yield* keyedExam(fixture, "Unit arsip");
+        const made = yield* scheduleSitting(fixture, {
+          closesAt: CLOSES_AT,
+          examId,
+          group: { kind: "unit", unitId: fixture.units.smp },
+          opensAt: OPENS_AT,
+        });
+        yield* fixture.run(
+          Effect.flatMap(DatabaseWriter, (writer) =>
+            writer
+              .table("tenantUnits")
+              .patch(fixture.units.smp, { status: "archived" })
+          )
+        );
+        const refused = yield* fixture
+          .as("admin")
+          .mutation(cancel, { sittingId: made.id, slug: nf })
+          .pipe(Effect.flip);
+        expect(refused).toMatchObject({
+          _tag: "AccessDenied",
+          reason: "condition",
+        });
+        expect(Arr.length(yield* roomsOf(fixture, examId))).toBe(1);
       })
   );
 

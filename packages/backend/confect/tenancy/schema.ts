@@ -22,12 +22,18 @@ export const Email = Schema.String.check(
  * in the subject of its invitation email, where a line break would end the
  * header.
  */
+/**
+ * A school's name as its tenant holds it: one line of two to 120 characters. A school
+ * that holds a two-character name keeps it, so reads never refuse a stored school.
+ */
 export const TenantName = Schema.String.check(
   Schema.isTrimmed(),
   isSingleLine,
-  Schema.isMinLength(3),
+  Schema.isMinLength(2),
   Schema.isMaxLength(120)
 );
+/** A name a school is given or renamed to: at least three characters, on one line. */
+export const SchoolName = TenantName.check(Schema.isMinLength(3));
 export const TenantKind = Schema.Literals(["school", "foundation"]);
 /** A suspended tenant stays readable and refuses every write. */
 export const TenantStatus = Schema.Literals(["active", "suspended"]);

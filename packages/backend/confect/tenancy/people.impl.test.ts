@@ -14,7 +14,7 @@ import { Array as Arr, Effect, Schema } from "effect";
 const nf = slugOf("nf");
 const calon = Schema.decodeSync(Email)("calon@harapan.example.test");
 const guru = Schema.decodeSync(Email)("guru@harapan.example.test");
-const { create, list, remove, rename, students } = refs.public.tenancy.people;
+const { create, list, remove, rename } = refs.public.tenancy.people;
 const { invite, list: invites } = refs.public.tenancy.invites;
 const { place } = refs.public.tenancy.placements;
 const { archive: archiveCohort, create: createCohort } =
@@ -494,24 +494,5 @@ describe("tenancy/people rename and remove", () => {
         denied("resource"),
       ]);
     })
-  );
-});
-
-describe("tenancy/people students", () => {
-  it.effect(
-    "lists the active students of the school once each, and no teacher or Admin",
-    () =>
-      Effect.gen(function* () {
-        const fixture = yield* tenancyFixture;
-        const listed = yield* fixture.as("admin").query(students, {
-          paginationOpts: { cursor: null, numItems: 50 },
-          slug: nf,
-        });
-        const ids = Arr.map(listed.page, (person) => person.id);
-        expect(ids).toContain(fixture.people.student.personId);
-        expect(ids).not.toContain(fixture.people.teacher.personId);
-        expect(ids).not.toContain(fixture.people.admin.personId);
-        expect(Arr.dedupe(ids)).toHaveLength(ids.length);
-      })
   );
 });

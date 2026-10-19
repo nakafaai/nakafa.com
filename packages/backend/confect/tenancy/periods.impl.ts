@@ -1,12 +1,10 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
-import type { TenantPeriodsDoc } from "@repo/backend/confect/_generated/docs";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import { tenantAccess } from "@repo/backend/confect/access/authority";
-import { AccessDenied } from "@repo/backend/confect/access/errors";
 import member from "@repo/backend/confect/middleware/member.impl";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import session from "@repo/backend/confect/middleware/session.impl";
@@ -25,21 +23,13 @@ import {
 import {
   type PeriodStatus,
   parseCivilDate,
+  periodView,
 } from "@repo/backend/confect/tenancy/period";
+import { restore } from "@repo/backend/confect/tenancy/periods.restore";
 import spec from "@repo/backend/confect/tenancy/periods.spec";
 import { openTarget } from "@repo/backend/confect/tenancy/promotion/open";
-import {
-  archivePeriod,
-  reactivatePeriod,
-} from "@repo/backend/confect/tenancy/write/period";
+import { archivePeriod } from "@repo/backend/confect/tenancy/write/period";
 import { Array as Arr, Effect, Layer, Option, Struct } from "effect";
-
-/** One period as the wire shows it. */
-const view = (period: TenantPeriodsDoc) =>
-  Struct.renameKeys(
-    Struct.pick(period, ["_id", "end", "name", "start", "status"]),
-    { _id: "id" }
-  );
 
 /** Lists one school's periods, newest first. The roles that read the plan of a school read them. */
 const list = FunctionImpl.make(
@@ -57,7 +47,7 @@ const list = FunctionImpl.make(
       )
       .paginate(paginationOpts)
       .pipe(Effect.orDie);
-    return Struct.assign(page, { page: Arr.map(page.page, view) });
+    return Struct.assign(page, { page: Arr.map(page.page, periodView) });
   })
 );
 
@@ -114,7 +104,7 @@ const create = FunctionImpl.make(
     yield* periodAuthority.record(personActor(person), period, {
       type: "period.created",
     });
-    return view(period);
+    return periodView(period);
   })
 );
 
@@ -130,7 +120,7 @@ const open = FunctionImpl.make(
     const { person } = yield* Member;
     const period = yield* Period;
     if (period.status === "active") {
-      return view(period);
+      return periodView(period);
     }
     const active = yield* (yield* DatabaseReader)
       .table("tenantPeriods")
@@ -154,7 +144,7 @@ const open = FunctionImpl.make(
     yield* periodAuthority.record(personActor(person), period, {
       type: "period.opened",
     });
-    return view(Struct.assign(period, { status }));
+    return periodView(Struct.assign(period, { status }));
   })
 );
 
@@ -171,7 +161,7 @@ const rename = FunctionImpl.make(
     const { person } = yield* Member;
     const period = yield* Period;
     if (period.name === name) {
-      return view(period);
+      return periodView(period);
     }
     yield* (yield* DatabaseWriter)
       .table("tenantPeriods")
@@ -183,7 +173,7 @@ const rename = FunctionImpl.make(
     yield* periodAuthority.record(personActor(person), period, {
       type: "period.rename",
     });
-    return view(Struct.assign(period, { name }));
+    return periodView(Struct.assign(period, { name }));
   })
 );
 
@@ -195,59 +185,7 @@ const archive = FunctionImpl.make(
   Effect.fn("tenancy.periods.archive")(function* () {
     const { person } = yield* Member;
     const period = yield* Period;
-    return view(yield* archivePeriod(personActor(person), period));
-  })
-);
-
-/**
- * Restores an archived period to active, the inverse of archiving it. An archived period refuses
- * every action on its own row, so the school's Admin restores it at the school level. The period
- * must belong to the school, and its unit must be open. A unit holds at most one active period, so
- * the restore is refused while another period of the unit is active. A period that is not archived
- * changes nothing.
- */
-const restore = FunctionImpl.make(
-  databaseSchema,
-  spec,
-  "restore",
-  Effect.fn("tenancy.periods.restore")(function* ({ periodId }) {
-    const { person, tenant } = yield* Member;
-    const reader = yield* DatabaseReader;
-    const period = yield* reader
-      .table("tenantPeriods")
-      .get(periodId)
-      .pipe(
-        Effect.catchTags({
-          DocumentDecodeError: Effect.die,
-          GetByIdFailure: () =>
-            new AccessDenied({ action: "period.manage", reason: "resource" }),
-        })
-      );
-    if (period.tenantId !== tenant._id) {
-      return yield* new AccessDenied({
-        action: "period.manage",
-        reason: "resource",
-      });
-    }
-    if (period.status !== "archived") {
-      return view(period);
-    }
-    const unit = yield* reader
-      .table("tenantUnits")
-      .get(period.unitId)
-      .pipe(Effect.orDie);
-    if (unit.status === "archived") {
-      return yield* new AccessDenied({
-        action: "period.manage",
-        reason: "condition",
-      });
-    }
-    yield* reactivatePeriod(period);
-    yield* periodAuthority.record(personActor(person), period, {
-      type: "period.restored",
-    });
-    const status: typeof PeriodStatus.Type = "active";
-    return view(Struct.assign(period, { status }));
+    return periodView(yield* archivePeriod(personActor(person), period));
   })
 );
 

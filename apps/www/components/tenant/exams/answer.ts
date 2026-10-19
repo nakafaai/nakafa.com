@@ -103,7 +103,9 @@ export const markedOption = (
 
 /**
  * The ID of a new option: `option-` and the number after the largest one that the choice
- * holds, so an ID that a removed option held is never taken again by a new one.
+ * holds, so a new option never shares an ID with an option the choice still holds. An ID
+ * that a removed option held can come back, which is safe, because options change only
+ * while the exam is unfrozen, and no attempt holds an answer then.
  */
 const nextOptionId = (options: readonly Choice["options"][number][]) => {
   const largest = Arr.reduce(options, 0, (most, option) => {
@@ -133,17 +135,15 @@ export const withOptionAdded = (
   );
 
 /**
- * The answers with one option taken out of each choice, and the key that follows them. The
- * key names its option by ID, so it keeps its option when the others go, and it is cleared when
- * the removed option is the one it marks, because no option of the question would then be correct.
- * A choice that holds the fewest options it may take is left as it is.
+ * The answers with one option taken out of each choice. A choice that holds the fewest options
+ * it may take is left as it is. The key that follows the removal is `keyWithoutOption`.
  */
 export const withOptionRemoved = (
   answers: Arr.NonEmptyReadonlyArray<Interaction>,
-  key: Arr.NonEmptyReadonlyArray<InteractionKey> | null,
   optionId: string
-) => ({
-  answers: Arr.map(answers, (answer) =>
+): Arr.NonEmptyArray<Interaction> =>
+  Arr.map(answers, (answer) =>
+
     isChoice(answer) && answer.options.length > CHOICE_OPTIONS_MIN
       ? {
           ...answer,
@@ -153,6 +153,14 @@ export const withOptionRemoved = (
           ),
         }
       : answer
-  ),
-  key: markedOption(key) === optionId ? null : key,
-});
+  );
+
+/**
+ * The key once one option is taken out: a key that marks another option stays as it is, and it is
+ * cleared when it marked the removed option, since no option of the question would then be correct.
+ */
+export const keyWithoutOption = (
+  key: Arr.NonEmptyReadonlyArray<InteractionKey> | null,
+  optionId: string
+): Arr.NonEmptyReadonlyArray<InteractionKey> | null =>
+  markedOption(key) === optionId ? null : key;

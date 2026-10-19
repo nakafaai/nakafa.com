@@ -12,6 +12,7 @@ import { SittingAccess } from "@repo/backend/confect/exams/sittings/access";
 import {
   DashboardView,
   EnterOutcome,
+  ExpectedSeat,
   HeldAttempt,
   PaperView,
   PromptView,
@@ -129,6 +130,14 @@ export default GroupSpec.make()
     }).middleware(SittingAccess, { action: "sitting.view", arg: "sittingId" })
   )
   .addFunction(
+    FunctionSpec.publicPaginatedQuery({
+      name: "expected",
+      args: () => ({ sittingId: Id("examSittings"), slug: TenantSlug }),
+      item: () => ExpectedSeat,
+      error: () => AccessDenied,
+    }).middleware(SittingAccess, { action: "sitting.view", arg: "sittingId" })
+  )
+  .addFunction(
     FunctionSpec.publicMutation({
       name: "lock",
       args: () => ({
@@ -221,7 +230,7 @@ export default GroupSpec.make()
       returns: () => Schema.Null,
       error: () => Schema.Union([AccessDenied, RoomOpened]),
     }).middleware(SittingAccess, {
-      action: "sitting.view",
+      action: "sitting.proctor",
       arg: "sittingId",
     })
   )

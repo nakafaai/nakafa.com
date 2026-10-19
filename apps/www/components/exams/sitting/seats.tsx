@@ -1,6 +1,12 @@
 "use client";
 
-import { QueryResult, useQuery } from "@confect/react";
+import {
+  type PaginatedQueryItem,
+  PaginatedQueryResult,
+  QueryResult,
+  usePaginatedQuery,
+  useQuery,
+} from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { PersonAvatar } from "@repo/design-system/components/ui/person";
@@ -46,9 +52,16 @@ const seatStyles = cva(
         false: "",
         true: "ring-1 ring-ring",
       },
+      waiting: {
+        false: "",
+        true: "border-border bg-muted/40 text-muted-foreground",
+      },
     },
   }
 );
+
+/** How many expected students one page of the seats loads, and each page after it. */
+const EXPECTED_PAGE = 100;
 
 /**
  * The seats of the students that the filter keeps, a page of attempts at a time: the first
@@ -58,11 +71,21 @@ const seatStyles = cva(
  */
 export function SittingSeats() {
   const t = useTranslations("Exams");
-  const { value } = useSittingData();
+  const { sittingId, slug, value } = useSittingData();
   const filter = useSittingStore((state) => state.filter);
   const first = value.attempts;
+  // The students who have not entered yet hold a seat too, once every attempt is listed, and
+  // only the "all" filter shows them, because they have no state to filter by.
+  const expected = usePaginatedQuery(
+    exams.sittings.expected,
+    { sittingId, slug },
+    { initialNumItems: EXPECTED_PAGE }
+  );
+  const showExpected = filter === "all" && first.isDone;
+  const noExpected =
+    expected._tag === "Exhausted" && Arr.isReadonlyArrayEmpty(expected.results);
 
-  if (first.isDone && Arr.isReadonlyArrayEmpty(first.page)) {
+  if (first.isDone && Arr.isReadonlyArrayEmpty(first.page) && noExpected) {
     return (
       <TableEmpty
         act="sleeping"
@@ -73,7 +96,8 @@ export function SittingSeats() {
   }
   if (
     first.isDone &&
-    !Arr.some(first.page, (attempt) => matchesFilter(filter, attempt))
+    !Arr.some(first.page, (attempt) => matchesFilter(filter, attempt)) &&
+    !(showExpected && !noExpected)
   ) {
     return (
       <TableEmpty
@@ -91,7 +115,48 @@ export function SittingSeats() {
     >
       <SeatPage attempts={first.page} cursor={null} />
       {first.isDone ? null : <NextSeats cursor={first.continueCursor} />}
+      {showExpected
+        ? Arr.map(expected.results, (seat) => (
+            <li key={seat.id}>
+              <ExpectedSeatCard mascot={seat.mascot} name={seat.name} />
+            </li>
+          ))
+        : null}
+      {showExpected && PaginatedQueryResult.isCanLoadMore(expected) ? (
+        <li aria-hidden className="col-span-full">
+          <Intersection onIntersect={() => expected.loadMore(EXPECTED_PAGE)} />
+        </li>
+      ) : null}
     </ul>
+  );
+}
+
+/**
+ * The seat of a student who has not entered the sitting yet: the animal and the name, in a muted
+ * frame, with no action, because the student has no attempt to open.
+ */
+function ExpectedSeatCard({
+  mascot,
+  name,
+}: {
+  readonly mascot: PaginatedQueryItem<typeof exams.sittings.expected>["mascot"];
+  readonly name: string;
+}) {
+  const t = useTranslations("Exams");
+
+  return (
+    <div
+      className={seatStyles({
+        dashed: false,
+        frame: "plain",
+        selected: false,
+        waiting: true,
+      })}
+    >
+      <PersonAvatar className="size-6" mascot={mascot ?? undefined} />
+      <span className="min-w-0 truncate">{name}</span>
+      <span className="sr-only">{t("seat-waiting")}</span>
+    </div>
   );
 }
 

@@ -48,7 +48,8 @@ type Place = Pick<ExamSittingsDoc, "cohortId" | "unitId">;
 /**
  * The unit and the cohort that a sitting holds. A unit sitting holds no cohort. A cohort
  * sitting takes its unit from the cohort. The caller must be allowed to edit the unit, and
- * the cohort must be active.
+ * the cohort must be active in an active period, so a planned or an archived period takes
+ * no sitting.
  */
 const placeOf = Effect.fn("exams.sittings.schedule.place")(function* (
   group: typeof SittingGroup.Type,
@@ -70,7 +71,11 @@ const placeOf = Effect.fn("exams.sittings.schedule.place")(function* (
     kind: "unit",
     unitId: cohort.value.unitId,
   });
-  if (cohort.value.status !== "active") {
+  const period = yield* (yield* DatabaseReader)
+    .table("tenantPeriods")
+    .get(cohort.value.periodId)
+    .pipe(Effect.orDie);
+  if (cohort.value.status !== "active" || period.status !== "active") {
     return yield* new ScheduleInvalid({ reason: "cohort" });
   }
   return { cohortId: cohort.value._id, unitId: cohort.value.unitId };

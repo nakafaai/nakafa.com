@@ -9,6 +9,7 @@ export const changeToken = registeredFunctions.changeToken;
 export const close = registeredFunctions.close;
 export const dashboard = registeredFunctions.dashboard;
 export const enter = registeredFunctions.enter;
+export const expected = registeredFunctions.expected;
 export const finish = registeredFunctions.finish;
 export const images = registeredFunctions.images;
 export const lastAnswer = registeredFunctions.lastAnswer;

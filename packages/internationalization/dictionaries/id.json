@@ -58,7 +58,7 @@
     "failed": "Gagal masuk. Coba lagi.",
     "outsider-card": "Masuk dengan kartu",
     "outsider-description": "{account} bukan anggota {school}.",
-    "outsider-card-hint": "Alamat tanpa Google? Admin sekolah memberimu kartu login.",
+    "outsider-card-hint": "Alamat tanpa Google? Tanyakan kepada admin sekolah cara kamu masuk.",
     "outsider-switch": "Ganti akun",
     "outsider-title": "Bukan anggota",
     "password-description": "Minimal 8 karakter.",
@@ -83,7 +83,8 @@
     "filter-needs-attention": "Perlu dilihat",
     "filter-finished": "Selesai",
     "seats-label": "Kursi siswa",
-    "seats-empty": "Belum ada siswa yang masuk ke sesi ini.",
+    "seats-empty": "Tidak ada siswa yang diharapkan di sesi ini.",
+    "seat-waiting": "Belum masuk.",
     "filter-empty": "Tidak ada siswa yang sesuai dengan saringan ini.",
     "panel-label": "Sesi siswa",
     "state-in-progress": "Sedang dikerjakan",
@@ -415,9 +416,10 @@
     "invite-resend": "Kirim ulang",
     "invite-expired": "Kedaluwarsa",
     "invite-card": "Buat kartu login",
-    "invite-card-description": "Undangan masuk dengan nama login ini dan kode kartu, yang ditampilkan sekolah sekali saja.",
+    "invite-card-description": "Yang diundang masuk dengan nama login dan kode kartu ini, yang ditampilkan sekolah sekali saja.",
     "invite-card-submit": "Buat kartu",
     "invite-google-note": "Alamat tanpa Google masuk dengan kartu login dari admin.",
+    "invite-google-admin-note": "Admin perlu alamat Google, karena Admin tidak mendapat kartu login.",
     "invite-revoke": "Cabut",
     "invite-revoke-title": "Cabut undangan ini?",
     "invite-revoke-description": "Alamat ini tidak dapat lagi menerima undangan ini.",
@@ -468,9 +470,9 @@
         "stored": "Versi skema nilai ditambahkan"
       },
       "cohort": {
-        "created": "Kelas ditambahkan",
-        "renamed": "Kelas diganti nama",
-        "archived": "Kelas diarsipkan",
+        "created": "Rombel ditambahkan",
+        "renamed": "Rombel diganti nama",
+        "archived": "Rombel diarsipkan",
         "restored": "Rombel dipulihkan"
       },
       "connection": {
@@ -1471,7 +1473,7 @@
       "description": "Siswa yang sudah lulus tidak bisa masuk rombel lagi."
     },
     "school-refusal-unit-limit": {
-      "title": "Tidak ada ruang untuk sekolah lain.",
+      "title": "Batas sekolah sudah penuh.",
       "description": "Sebuah organisasi memiliki jumlah sekolah yang terbatas."
     },
     "school-refusal-address-member": {

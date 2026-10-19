@@ -1,5 +1,6 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
+import { Sitting } from "@repo/backend/confect/exams/sittings/access";
 import { answer } from "@repo/backend/confect/exams/sittings/answer";
 import { heldAttempt } from "@repo/backend/confect/exams/sittings/attempt";
 import { sittingAccess } from "@repo/backend/confect/exams/sittings/authority";
@@ -9,6 +10,7 @@ import {
   lastAnswer,
 } from "@repo/backend/confect/exams/sittings/dashboard";
 import { enter } from "@repo/backend/confect/exams/sittings/enter";
+import { expectedSeats } from "@repo/backend/confect/exams/sittings/expected";
 import { finish } from "@repo/backend/confect/exams/sittings/finish";
 import { images } from "@repo/backend/confect/exams/sittings/images";
 import { mine } from "@repo/backend/confect/exams/sittings/mine";
@@ -54,6 +56,16 @@ const mineFunction = FunctionImpl.make(
   "mine",
   Effect.fn("exams.sittings.mine.function")(function* () {
     return yield* mine();
+  })
+);
+
+const expectedFunction = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "expected",
+  Effect.fn("exams.sittings.expected.function")(function* (args) {
+    const sitting = yield* Sitting;
+    return yield* expectedSeats(sitting, args.paginationOpts);
   })
 );
 
@@ -221,6 +233,7 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(dashboardFunction),
   Layer.provide(lastAnswerFunction),
   Layer.provide(cancelFunction),
+  Layer.provide(expectedFunction),
   // The six proctor actions in one step, so the group stays within one pipe.
   Layer.provide(
     Layer.mergeAll(
