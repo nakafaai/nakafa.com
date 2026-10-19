@@ -1,11 +1,12 @@
-import { runLocalConvex } from "@repo/backend/scripts/content/acceptance/convex";
-import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
-import { readLocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
 import {
   encodeArguments,
-  signInInvitedMember,
+  seedMember,
 } from "@repo/backend/scripts/content/acceptance/member";
-import { Effect } from "effect";
+import {
+  type AcceptanceMode,
+  decodeModeArguments,
+} from "@repo/backend/scripts/content/acceptance/mode";
+import { Effect, Schema } from "effect";
 
 /**
  * The address of the Teacher that `createAcceptanceTeacher` seeds for a school.
@@ -13,44 +14,6 @@ import { Effect } from "effect";
  */
 export const teacherAddress = (slug: string) =>
   `teacher-${slug}@acceptance.example.test`;
-
-/**
- * The address of the Teacher that `createAcceptanceClassTeacher` seeds for a
- * school. No account holds it until the teacher is signed in.
- */
-export const classTeacherAddress = (slug: string) =>
-  `class-teacher-${slug}@acceptance.example.test`;
-
-/**
- * Runs the seed function of one Teacher member of an opened school, then signs the
- * account of the address in, so its session cookie goes to `output`. The arguments
- * are the seed's own, encoded as the CLI takes them.
- */
-const seedTeacherMember = Effect.fn("contentAcceptance.seedTeacherMember")(
-  function* (
-    root: string,
-    member: {
-      readonly address: string;
-      readonly args: string;
-      readonly label: string;
-      readonly seed: string;
-    },
-    output: string
-  ) {
-    const runtime = yield* readLocalRuntime(root);
-    if (runtime === undefined) {
-      return yield* acceptanceRuntimeError(
-        `Run pnpm acceptance:prepare and start acceptance before creating a ${member.label}.`
-      );
-    }
-    yield* runLocalConvex(runtime, `${member.label} seed`, [
-      "run",
-      member.seed,
-      member.args,
-    ]);
-    yield* signInInvitedMember(runtime, member.address, output);
-  }
-);
 
 /**
  * Seeds a Teacher member of an opened school, the way `createAcceptanceSchool`
@@ -68,7 +31,7 @@ export const createAcceptanceTeacher = Effect.fn(
     name: "Acceptance Teacher",
     slug,
   });
-  yield* seedTeacherMember(
+  yield* seedMember(
     root,
     {
       address: teacherAddress(slug),
@@ -80,30 +43,27 @@ export const createAcceptanceTeacher = Effect.fn(
   );
 });
 
+/** The usage of the teacher mode: the school of the Teacher, then the file for the session cookie. */
+const USAGE = "teacher <school-slug> <cookie-file>";
+const TeacherArguments = Schema.Tuple([Schema.String, Schema.String]);
+
 /**
- * Seeds a Teacher who teaches one class of an opened school, a class of a new
- * cohort in the school's first active period, and signs the account of the address
- * in, as `createAcceptanceTeacher` does. `classroom/seed:teacher` writes the class
- * and the Teacher's teaching of it.
+ * The teacher mode of the acceptance command line: seeds a Teacher of the school
+ * that the command names and writes the Teacher's session cookie to the file that
+ * the command names.
  */
-export const createAcceptanceClassTeacher = Effect.fn(
-  "contentAcceptance.createClassTeacher"
-)(function* (root: string, slug: string, output: string) {
-  const args = yield* encodeArguments({
-    email: classTeacherAddress(slug),
-    locale: "id",
-    name: "Acceptance Class Teacher",
-    slug,
-    subject: "Fisika",
-  });
-  yield* seedTeacherMember(
-    root,
-    {
-      address: classTeacherAddress(slug),
-      args,
-      label: "class teacher",
-      seed: "classroom/seed:teacher",
-    },
-    output
-  );
-});
+export const teacherMode = {
+  mode: "teacher",
+  usage: USAGE,
+  run: Effect.fn("contentAcceptance.runTeacher")(function* (
+    root: string,
+    args: readonly string[]
+  ) {
+    const [slug, output] = yield* decodeModeArguments(
+      USAGE,
+      TeacherArguments,
+      args
+    );
+    return yield* createAcceptanceTeacher(root, slug, output);
+  }),
+} satisfies AcceptanceMode;

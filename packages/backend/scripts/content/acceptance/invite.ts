@@ -9,6 +9,10 @@ import {
   writeSessionCookie,
 } from "@repo/backend/scripts/content/acceptance/learner";
 import { readLocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
+import {
+  type AcceptanceMode,
+  decodeModeArguments,
+} from "@repo/backend/scripts/content/acceptance/mode";
 import { JsonTextSchema } from "@repo/utilities/json";
 import {
   Array as Arr,
@@ -137,3 +141,32 @@ export const createAcceptanceInvite = Effect.fn("contentAcceptance.invite")(
     yield* writeSessionCookie(output, account.token);
   }
 );
+
+/** The usage of the invite mode: the school, the learner's address, then the file for the session cookie. */
+const USAGE = "invite <school-slug> <learner-address> <cookie-file>";
+const InviteArguments = Schema.Tuple([
+  Schema.String,
+  Schema.String,
+  Schema.String,
+]);
+
+/**
+ * The invite mode of the acceptance command line: invites the learner at the
+ * address into the school that the command names, signs the learner in, and writes
+ * the learner's session cookie to the file that the command names.
+ */
+export const inviteMode = {
+  mode: "invite",
+  usage: USAGE,
+  run: Effect.fn("contentAcceptance.runInvite")(function* (
+    root: string,
+    args: readonly string[]
+  ) {
+    const [slug, address, output] = yield* decodeModeArguments(
+      USAGE,
+      InviteArguments,
+      args
+    );
+    return yield* createAcceptanceInvite(root, slug, address, output);
+  }),
+} satisfies AcceptanceMode;

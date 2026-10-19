@@ -1,98 +1,88 @@
 import { runMain } from "@effect/platform-node/NodeRuntime";
 import { layer } from "@effect/platform-node/NodeServices";
 import {
-  prepareAcceptance,
-  runAcceptance,
+  buildMode,
+  prepareMode,
+  startMode,
 } from "@repo/backend/scripts/content/acceptance/build";
+import { classTeacherMode } from "@repo/backend/scripts/content/acceptance/classes";
 import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
-import { importAcceptanceRows } from "@repo/backend/scripts/content/acceptance/import";
-import { createAcceptanceInvite } from "@repo/backend/scripts/content/acceptance/invite";
-import { createAcceptanceLearner } from "@repo/backend/scripts/content/acceptance/learner";
-import { cleanLocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
-import { createAcceptanceOwner } from "@repo/backend/scripts/content/acceptance/owner";
+import { importMode } from "@repo/backend/scripts/content/acceptance/import";
+import { inviteMode } from "@repo/backend/scripts/content/acceptance/invite";
+import { learnerMode } from "@repo/backend/scripts/content/acceptance/learner";
+import { cleanMode } from "@repo/backend/scripts/content/acceptance/local";
+import type { AcceptanceMode } from "@repo/backend/scripts/content/acceptance/mode";
+import { ownerMode } from "@repo/backend/scripts/content/acceptance/owner";
 import { withTerminal } from "@repo/backend/scripts/content/acceptance/process";
-import { updateAcceptanceProfile } from "@repo/backend/scripts/content/acceptance/profile";
-import { createAcceptanceSchool } from "@repo/backend/scripts/content/acceptance/school";
-import { createAcceptanceSitting } from "@repo/backend/scripts/content/acceptance/sitting";
-import {
-  createAcceptanceClassTeacher,
-  createAcceptanceTeacher,
-} from "@repo/backend/scripts/content/acceptance/teacher";
+import { profileMode } from "@repo/backend/scripts/content/acceptance/profile";
+import { schoolMode } from "@repo/backend/scripts/content/acceptance/school";
+import { sittingMode } from "@repo/backend/scripts/content/acceptance/sitting";
+import { teacherMode } from "@repo/backend/scripts/content/acceptance/teacher";
 import { FetchClient } from "@repo/utilities/http/client";
-import { Array as Arr, Effect, FileSystem, Layer } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  FileSystem,
+  HashMap,
+  Layer,
+  Option,
+} from "effect";
 
-/** The commands that manage the local acceptance runtime, which take no school. */
-const RUNTIME_MODES = ["prepare", "build", "start", "clean"] as const;
-type RuntimeMode = (typeof RUNTIME_MODES)[number];
+/**
+ * Every mode of the command line, in the order that its usage names them. A
+ * command joins the command line by adding its mode here.
+ */
+export const acceptanceModes: readonly AcceptanceMode[] = [
+  prepareMode,
+  buildMode,
+  startMode,
+  cleanMode,
+  learnerMode,
+  schoolMode,
+  ownerMode,
+  teacherMode,
+  classTeacherMode,
+  inviteMode,
+  sittingMode,
+  importMode,
+  profileMode,
+];
 
-const isRuntimeMode = (mode: string | undefined): mode is RuntimeMode =>
-  Arr.some(RUNTIME_MODES, (candidate) => candidate === mode);
+/** The usage line that names every mode with its arguments. */
+const usage = (modes: readonly AcceptanceMode[]) =>
+  `Usage: acceptance <${Arr.join(
+    Arr.map(modes, (mode) => mode.usage),
+    "|"
+  )}>`;
 
-/** Runs one command that manages the local acceptance runtime. */
-const runtimeCommand = Effect.fn("contentAcceptance.runtimeCommand")(function* (
+/**
+ * Runs the mode that the first argument names, with the arguments after it. A
+ * missing or unknown mode refuses with the usage of every mode, and runs none.
+ */
+export const runAcceptanceCli = Effect.fn("contentAcceptance.cli")(function* (
   root: string,
-  mode: RuntimeMode
+  argv: readonly string[],
+  modes: readonly AcceptanceMode[]
 ) {
-  if (mode === "prepare") {
-    return yield* prepareAcceptance(root);
+  const byName = HashMap.fromIterable(
+    Arr.map(modes, (mode): readonly [string, AcceptanceMode] => [
+      mode.mode,
+      mode,
+    ])
+  );
+  const selected = Option.flatMap(Option.fromUndefinedOr(argv[2]), (name) =>
+    HashMap.get(byName, name)
+  );
+  if (Option.isNone(selected)) {
+    return yield* acceptanceRuntimeError(usage(modes));
   }
-  if (mode === "clean") {
-    return yield* cleanLocalRuntime(root);
-  }
-  return yield* runAcceptance(root, mode, Arr.drop(process.argv, 3));
+  return yield* selected.value.run(root, Arr.drop(argv, 3)).pipe(Effect.scoped);
 });
 
 const main = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const root = yield* fs.realPath(`${import.meta.dirname}/../../../../..`);
-  const mode = process.argv[2];
-  if (isRuntimeMode(mode)) {
-    return yield* runtimeCommand(root, mode);
-  }
-  const first = process.argv[3];
-  const second = process.argv[4];
-  const third = process.argv[5];
-  const fourth = process.argv[6];
-  if (mode === "learner" && first !== undefined) {
-    return yield* createAcceptanceLearner(root, first);
-  }
-  if (mode === "school" && first !== undefined) {
-    return yield* createAcceptanceSchool(root, first);
-  }
-  if (mode === "owner" && first !== undefined && second !== undefined) {
-    return yield* createAcceptanceOwner(root, first, second);
-  }
-  if (
-    mode === "invite" &&
-    first !== undefined &&
-    second !== undefined &&
-    third !== undefined
-  ) {
-    return yield* createAcceptanceInvite(root, first, second, third);
-  }
-  if (mode === "teacher" && first !== undefined && second !== undefined) {
-    return yield* createAcceptanceTeacher(root, first, second);
-  }
-  if (mode === "class-teacher" && first !== undefined && second !== undefined) {
-    return yield* createAcceptanceClassTeacher(root, first, second);
-  }
-  if (
-    mode === "sitting" &&
-    first !== undefined &&
-    second !== undefined &&
-    third !== undefined
-  ) {
-    return yield* createAcceptanceSitting(root, first, second, third, fourth);
-  }
-  if (mode === "import" && first !== undefined && second !== undefined) {
-    return yield* importAcceptanceRows(root, first, second);
-  }
-  if (mode === "profile" && first !== undefined && second !== undefined) {
-    return yield* updateAcceptanceProfile(root, first, second);
-  }
-  return yield* acceptanceRuntimeError(
-    "Usage: acceptance <prepare|build|start|clean|learner <cookie-file>|school <school-file>|owner <school-slug> <cookie-file>|teacher <school-slug> <cookie-file>|class-teacher <school-slug> <cookie-file>|invite <school-slug> <learner-address> <cookie-file>|sitting <school-slug> <learner-email> <sitting-file> [crowd]|import <table> <rows-file>|profile <auth-user-id> <profile-json-file>>"
-  );
+  return yield* runAcceptanceCli(root, process.argv, acceptanceModes);
 });
 
 runMain(
