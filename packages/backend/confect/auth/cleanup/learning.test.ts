@@ -13,6 +13,7 @@ import { Effect } from "effect";
 
 const learningTables = [
   "onboardingProfiles",
+  "tenantDrafts",
   "learningPreferences",
   "creditTransactions",
   "learningViews",
@@ -43,6 +44,10 @@ it("drains deleted-user credit history, keeps each batch bounded, and preserves 
       await ctx.db.insert("onboardingProfiles", {
         userId,
         updatedAt: now,
+      });
+      await ctx.db.insert("tenantDrafts", {
+        updatedAt: now,
+        userId,
       });
       await ctx.db.insert("learningPreferences", {
         userId,
@@ -112,7 +117,8 @@ it("drains deleted-user credit history, keeps each batch bounded, and preserves 
       retained,
     };
   });
-  for (let batch = 0; batch < 3; batch += 1) {
+  // Onboarding, the school draft, the preferences, then the first 50 credit rows.
+  for (let batch = 0; batch < 4; batch += 1) {
     expect(
       await t.mutation((ctx) =>
         Effect.runPromise(
