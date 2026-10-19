@@ -1,8 +1,10 @@
 "use client";
 
 import { PaginatedQueryResult, useMutation } from "@confect/react";
+import { CheckmarkCircle02Icon } from "@hugeicons/core-free-icons";
 import notifications from "@repo/backend/confect/_generated/refs/notifications";
 import { Button } from "@repo/design-system/components/ui/button";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Array as Arr, Effect } from "effect";
 import { useTranslations } from "next-intl";
@@ -13,7 +15,8 @@ import { reportClientException } from "@/lib/analytics/client";
 
 /**
  * The sticky breadcrumb header of the inbox, as every account page has it, with the
- * inbox's one action at its end while the inbox has rows. The action marks every loaded row read at once, and
+ * inbox's one action at its end while the inbox has rows: its icon and its words, or
+ * on a phone its icon alone, named for assistive technology, so the header stays one row. The action marks every loaded row read at once, and
  * a refusal by the server rolls the change back and shows the shared error toast.
  */
 export function NotificationsHeader() {
@@ -59,7 +62,8 @@ export function NotificationsHeader() {
       value={{
         action: hasRows ? (
           <Button onClick={markAllRead} size="sm" variant="ghost">
-            {t("mark-all-read")}
+            <HugeIcons icon={CheckmarkCircle02Icon} />
+            <span className="max-sm:sr-only">{t("mark-all-read")}</span>
           </Button>
         ) : undefined,
         homeHref: "/home",

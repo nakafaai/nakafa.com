@@ -1,4 +1,6 @@
+import { cleanupUserConnections } from "@repo/backend/confect/auth/cleanup/connections";
 import { cleanupUserConsents } from "@repo/backend/confect/auth/cleanup/consents";
+import { cleanupUserJournal } from "@repo/backend/confect/auth/cleanup/journal";
 import { cleanupUserLearningData } from "@repo/backend/confect/auth/cleanup/learning";
 import { cleanupUserSocialData } from "@repo/backend/confect/auth/cleanup/social";
 import { cleanupUserTryouts } from "@repo/backend/confect/auth/cleanup/tryouts";
@@ -26,6 +28,12 @@ export const cleanupDeletedUserProgram = Effect.fn(
     return true;
   }
   if (yield* cleanupUserConsents(userId)) {
+    return true;
+  }
+  if (yield* cleanupUserConnections(userId)) {
+    return true;
+  }
+  if (yield* cleanupUserJournal(userId)) {
     return true;
   }
   // The vault key goes after every row it sealed, so nothing is left to open.

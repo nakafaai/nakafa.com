@@ -79,6 +79,53 @@ export function StudentPlayer({
   );
 }
 
+/**
+ * An attempt that takes no answers, shown without an entry: the exam's name and the one
+ * sentence of its state. A reload after a lock, a close, or a finish lands here, so the
+ * student never loses how the attempt ended.
+ */
+export function StudentOutcome({
+  attempt,
+  sitting,
+}: {
+  readonly attempt: AttemptValue;
+  readonly sitting: typeof SittingView.Type;
+}) {
+  return (
+    <>
+      <PlayerHeader>
+        <PlayerTitle>{sitting.examTitle}</PlayerTitle>
+      </PlayerHeader>
+      <PlayerMain navigator={null}>
+        {attempt.state === "inProgress" ? null : (
+          <AttemptSentence state={attempt.state} />
+        )}
+      </PlayerMain>
+    </>
+  );
+}
+
+/** The copy key of each state of an attempt that takes no answers. */
+const sentenceKeys = {
+  closing: "student-attempt-closed",
+  locked: "student-locked",
+  submitted: "answers-in",
+} satisfies Record<
+  Exclude<AttemptValue["state"], "inProgress">,
+  "answers-in" | "student-attempt-closed" | "student-locked"
+>;
+
+/** The one sentence of an attempt that takes no answers: locked, closing, or finished. */
+function AttemptSentence({
+  state,
+}: {
+  readonly state: Exclude<AttemptValue["state"], "inProgress">;
+}) {
+  const t = useTranslations("Exams");
+
+  return <p>{t(sentenceKeys[state])}</p>;
+}
+
 /** The timer of the attempt, counted down on the device clock. */
 function SittingTimer({ deadline }: { readonly deadline: number }) {
   const now = useSittingClock();
@@ -108,14 +155,8 @@ function StudentBody({
     state === "inProgress" ? { deviceId, sittingId, slug } : "skip"
   );
 
-  if (state === "locked") {
-    return <p>{t("student-locked")}</p>;
-  }
-  if (state === "closing") {
-    return <p>{t("student-attempt-closed")}</p>;
-  }
-  if (state === "submitted") {
-    return <p>{t("answers-in")}</p>;
+  if (state !== "inProgress") {
+    return <AttemptSentence state={state} />;
   }
   if (QueryResult.isFailure(paper)) {
     return (

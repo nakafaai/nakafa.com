@@ -1,5 +1,6 @@
 import { NumberFormat } from "@repo/design-system/components/ui/number-flow";
 import { useTranslations } from "next-intl";
+import { PricingButton } from "@/components/marketing/about/pricing/button.client";
 import { PricingCards } from "@/components/marketing/about/pricing/plans";
 import type { PriceProps } from "@/components/marketing/about/pricing/price";
 
@@ -37,7 +38,11 @@ export function Pricing() {
       </div>
 
       <div className="px-6 lg:px-10">
-        <PricingCards headingLevel="h3" Price={AnimatedPrice} />
+        <PricingCards
+          headingLevel="h3"
+          Price={AnimatedPrice}
+          proAction={<PricingButton variant="secondary" />}
+        />
       </div>
     </section>
   );

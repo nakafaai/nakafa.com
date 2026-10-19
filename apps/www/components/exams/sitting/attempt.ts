@@ -23,3 +23,8 @@ export function isActive(state: AttemptValue["state"]): boolean {
 export function finishAttempt(attempt: AttemptValue): AttemptValue {
   return { ...attempt, state: "submitted" };
 }
+
+/** Whether the attempt takes answers now, which is only while it is in progress. */
+export function takesAnswers(state: AttemptValue["state"]): boolean {
+  return state === "inProgress";
+}

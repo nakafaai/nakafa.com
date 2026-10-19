@@ -27,8 +27,8 @@ export function Letter() {
     <MarketingSection id="letter">
       <div className="mx-auto w-full max-w-2xl">
         <LetterSheet>
-          <Card>
-            <CardContent className="grid gap-5 text-pretty p-8 text-base lg:p-10">
+          <Card className="py-8 lg:py-10">
+            <CardContent className="grid gap-5 text-pretty px-8 text-base lg:px-10">
               <p className="text-lg">{t("letter-hello")}</p>
               <p>{t("letter-student")}</p>
               <p>{t("letter-fair")}</p>

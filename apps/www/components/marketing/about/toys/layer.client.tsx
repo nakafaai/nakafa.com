@@ -1,16 +1,17 @@
 "use client";
 
-import { PersonAvatar } from "@repo/design-system/components/ui/person";
-import { Thing } from "@repo/design-system/components/ui/thing";
 import { Scatter, Toy, Toys } from "@repo/design-system/components/ui/toy";
 import type { Place } from "@repo/design-system/lib/toy/scatter";
-import type { ThingName } from "@repo/mascot/thing/name";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { HERO_NINA_ID } from "@/components/marketing/about/hero/id";
 import { LESSON_SECTION_ID } from "@/components/marketing/about/lesson/id";
+import { ToyAnimal } from "@/components/marketing/about/toys/animal";
+import { gap, thing } from "@/components/marketing/about/toys/gap";
 import { TOY_HERD } from "@/components/marketing/about/toys/herd";
+import { NinaToy } from "@/components/marketing/about/toys/nina.client";
 import { within } from "@/components/marketing/about/toys/place";
+import { NINA_SLOT } from "@/components/marketing/about/toys/slot";
 
 /** One toy: its place beside a part of the page, and the picture it is drawn as. */
 export interface ToyPlacement {
@@ -19,27 +20,9 @@ export interface ToyPlacement {
   readonly place: Place;
 }
 
-/** An animal of a herd at its index, drawn round at the size of a toy. */
-export function ToyAnimal({
-  herd,
-  index,
-}: {
-  herd: typeof TOY_HERD;
-  index: number;
-}) {
-  return (
-    <PersonAvatar className="size-14" mascot={Arr.getUnsafe(herd, index)} />
-  );
-}
-
 /** An animal of the home page's toys, at its index in the slice they take. */
 function animal(index: number) {
   return <ToyAnimal herd={TOY_HERD} index={index} />;
-}
-
-/** A thing of Nina's world, drawn at the size of a toy. */
-function thing(name: ThingName) {
-  return <Thing name={name} />;
 }
 
 /**
@@ -64,55 +47,6 @@ function heroAnimals(
       y,
     }),
   }));
-}
-
-/**
- * The small group of toys in the space where the part `part` begins, around
- * `x`, a fraction of the part's width: the animal at the herd's `index` in the
- * middle, and one or two things beside it. Each spot is in the part's top
- * padding, which no text or window reaches. Below 1024 px only the animal
- * stays, and a phone has none.
- */
-function gap(
-  part: string,
-  x: number,
-  index: number,
-  things: readonly [ThingName] | readonly [ThingName, ThingName]
-): ToyPlacement[] {
-  const [before, after] = things;
-  return [
-    {
-      key: `${part}-gap-animal`,
-      picture: animal(index),
-      place: within(part, { dx: -28, dy: 28, minWidth: 768, x, y: 0 }),
-    },
-    {
-      key: `${part}-gap-${before}`,
-      picture: thing(before),
-      place: within(part, {
-        dx: -24,
-        dy: 40,
-        minWidth: 1024,
-        x: x - 0.07,
-        y: 0,
-      }),
-    },
-    ...(after === undefined
-      ? []
-      : [
-          {
-            key: `${part}-gap-${after}`,
-            picture: thing(after),
-            place: within(part, {
-              dx: -24,
-              dy: 20,
-              minWidth: 1024,
-              x: x + 0.07,
-              y: 0,
-            }),
-          },
-        ]),
-  ];
 }
 
 /**
@@ -170,13 +104,13 @@ const PLACEMENTS: readonly ToyPlacement[] = [
     picture: thing("bulb"),
     place: within(HERO_NINA_ID, { minWidth: 768, x: 1.1, y: 0.6 }),
   },
-  // One small group in the space where each part begins: an animal with two
+  // A small herd in the space where each part begins: two animals with the
   // things that say what comes next, in turn in the middle, a little to the
-  // left and a little to the right. A tablet keeps the animal alone.
-  ...gap(LESSON_SECTION_ID, 0.5, 7, ["ruler", "highlighter"]),
-  ...gap("tryout", 0.3, 8, ["stopwatch", "board"]),
-  ...gap("nina", 0.7, 9, ["bubble", "magnifier"]),
-  ...gap("memory", 0.5, 10, ["calendar"]),
+  // left and a little to the right.
+  ...gap(LESSON_SECTION_ID, 0.5, TOY_HERD, [7, 23], ["ruler", "highlighter"]),
+  ...gap("tryout", 0.3, TOY_HERD, [8, 24], ["stopwatch", "board"]),
+  ...gap("nina", 0.7, TOY_HERD, [9, 25], ["bubble", "magnifier"]),
+  ...gap("memory", 0.5, TOY_HERD, [10, 26], ["calendar"]),
   // The dark room of privacy holds its own: a key and a shield beside Nina,
   // and two animals keeping watch.
   {
@@ -192,15 +126,15 @@ const PLACEMENTS: readonly ToyPlacement[] = [
   {
     key: "privacy-left",
     picture: animal(11),
-    place: within("privacy", { minWidth: 1024, x: 0.04, y: 0.2 }),
+    place: within("privacy", { dy: 12, x: 0.06, y: 0 }),
   },
   {
     key: "privacy-right",
     picture: animal(12),
-    place: within("privacy", { minWidth: 1024, x: 0.9, y: 0.8 }),
+    place: within("privacy", { dy: -68, x: 0.86, y: 1 }),
   },
-  ...gap("curricula", 0.3, 13, ["globe", "backpack"]),
-  ...gap("letter", 0.7, 14, ["letter", "plane"]),
+  ...gap("curricula", 0.3, TOY_HERD, [13, 27], ["globe", "backpack"]),
+  ...gap("letter", 0.7, TOY_HERD, [14, 28], ["letter", "plane"]),
   {
     key: "letter-left",
     picture: animal(15),
@@ -211,12 +145,12 @@ const PLACEMENTS: readonly ToyPlacement[] = [
     picture: animal(16),
     place: within("letter", { minWidth: 1100, x: 0.94, y: 0.62 }),
   },
-  ...gap("medals", 0.5, 17, ["cap", "medal"]),
-  ...gap("pricing", 0.3, 18, ["donut", "calculator"]),
-  ...gap("school", 0.7, 19, ["eraser", "flag"]),
-  ...gap("faq", 0.5, 20, ["clip", "hourglass"]),
-  ...gap("community", 0.3, 21, ["headphones", "coffee"]),
-  ...gap("closing", 0.7, 22, ["trophy", "check"]),
+  ...gap("medals", 0.5, TOY_HERD, [17, 29], ["cap", "medal"]),
+  ...gap("pricing", 0.3, TOY_HERD, [18, 30], ["donut", "calculator"]),
+  ...gap("school", 0.7, TOY_HERD, [19, 31], ["eraser", "flag"]),
+  ...gap("faq", 0.5, TOY_HERD, [20, 32], ["clip", "hourglass"]),
+  ...gap("community", 0.3, TOY_HERD, [21, 33], ["headphones", "coffee"]),
+  ...gap("closing", 0.7, TOY_HERD, [22, 34], ["trophy", "check"]),
 ];
 
 /**
@@ -224,27 +158,43 @@ const PLACEMENTS: readonly ToyPlacement[] = [
  * moves when it mounts. It covers the nearest positioned parent, so a toy can be
  * carried from the top of the page to the footer, and `Scatter` puts each toy
  * where its place says at the current width of the page. The layer lets every
- * press through to the page, except on a toy.
+ * press through to the page, except on a toy, and clips a toy at the page's
+ * edges, so a toy placed or carried there never makes the page scroll sideways.
  */
 export function ToyOverlay({
+  children,
   placements,
 }: {
+  /** Toys of the page that place themselves, such as a Nina that can be carried. */
+  children?: ReactNode;
   placements: readonly ToyPlacement[];
 }) {
   return (
-    <Toys className="pointer-events-none absolute inset-0">
+    <Toys className="pointer-events-none absolute inset-0 overflow-clip">
       <Scatter>
         {Arr.map(placements, (toy) => (
           <Toy key={toy.key} place={toy.place}>
             {toy.picture}
           </Toy>
         ))}
+        {children}
       </Scatter>
     </Toys>
   );
 }
 
-/** The layer of toys over the whole home page. */
+/**
+ * The layer of toys over the whole home page: the animals and things, and every
+ * Nina of the page, each of whom can be carried anywhere on it.
+ */
 export function HomeToyLayer() {
-  return <ToyOverlay placements={PLACEMENTS} />;
+  return (
+    <ToyOverlay placements={PLACEMENTS}>
+      <NinaToy act="reading" size={240} slot={HERO_NINA_ID} />
+      <NinaToy act="waving" size={88} slot={NINA_SLOT.lesson} />
+      <NinaToy act="typing" size={88} slot={NINA_SLOT.nina} />
+      <NinaToy act="pointing" size={200} slot={NINA_SLOT.curricula} />
+      <NinaToy act="juggling" size={240} slot={NINA_SLOT.closing} />
+    </ToyOverlay>
+  );
 }

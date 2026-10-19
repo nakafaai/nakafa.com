@@ -17,6 +17,7 @@ import classroom_teachers from "../classroom/teachers.spec";
 import comments_migration from "../comments/migration.spec";
 import comments_mutations from "../comments/mutations.spec";
 import comments_queries from "../comments/queries.spec";
+import connectors_connections from "../connectors/connections.spec";
 import consents_current from "../consents/current.spec";
 import contentRelease_accept from "../contentRelease/accept.spec";
 import contentRelease_activate from "../contentRelease/activate.spec";
@@ -136,6 +137,8 @@ import posts_cleanup from "../posts/cleanup.spec";
 import posts_mutations from "../posts/mutations.spec";
 import posts_queries from "../posts/queries.spec";
 import privacy_recovery from "../privacy/recovery.spec";
+import records_grades from "../records/grades.spec";
+import records_schemes from "../records/schemes.spec";
 import routes_agent_quota from "../routes/agent/quota.spec";
 import storage from "../storage.spec";
 import subscriptions_mutations from "../subscriptions/mutations.spec";
@@ -191,6 +194,7 @@ const spec: Spec.Spec<{
   readonly chats: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "chats", never, GroupSpec.NamedAt<typeof chats_mutations, "mutations"> | GroupSpec.NamedAt<typeof chats_queries, "queries">>, "chats">;
   readonly classroom: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "classroom", never, GroupSpec.NamedAt<typeof classroom_classes, "classes"> | GroupSpec.NamedAt<typeof classroom_teachers, "teachers">>, "classroom">;
   readonly comments: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "comments", never, GroupSpec.NamedAt<typeof comments_migration, "migration"> | GroupSpec.NamedAt<typeof comments_mutations, "mutations"> | GroupSpec.NamedAt<typeof comments_queries, "queries">>, "comments">;
+  readonly connectors: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "connectors", never, GroupSpec.NamedAt<typeof connectors_connections, "connections">>, "connectors">;
   readonly consents: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "consents", never, GroupSpec.NamedAt<typeof consents_current, "current">>, "consents">;
   readonly contentRelease: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "contentRelease", never, GroupSpec.NamedAt<typeof contentRelease_accept, "accept"> | GroupSpec.NamedAt<typeof contentRelease_activate, "activate"> | GroupSpec.NamedAt<GroupSpec.AddGroups<typeof contentRelease_article, GroupSpec.NamedAt<typeof contentRelease_article_internal, "internal">>, "article"> | GroupSpec.NamedAt<typeof contentRelease_artifacts, "artifacts"> | GroupSpec.NamedAt<typeof contentRelease_cleanup, "cleanup"> | GroupSpec.NamedAt<typeof contentRelease_compact, "compact"> | GroupSpec.NamedAt<typeof contentRelease_envelope, "envelope"> | GroupSpec.NamedAt<typeof contentRelease_heads, "heads"> | GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "ingress", never, GroupSpec.NamedAt<typeof contentRelease_ingress_dispatch, "dispatch">>, "ingress"> | GroupSpec.NamedAt<typeof contentRelease_items, "items"> | GroupSpec.NamedAt<typeof contentRelease_manifest, "manifest"> | GroupSpec.NamedAt<typeof contentRelease_material, "material"> | GroupSpec.NamedAt<typeof contentRelease_models, "models"> | GroupSpec.NamedAt<typeof contentRelease_ownership, "ownership"> | GroupSpec.NamedAt<typeof contentRelease_page, "page"> | GroupSpec.NamedAt<typeof contentRelease_program, "program"> | GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "proof", never, GroupSpec.NamedAt<typeof contentRelease_proof_catalog, "catalog"> | GroupSpec.NamedAt<typeof contentRelease_proof_commit, "commit"> | GroupSpec.NamedAt<typeof contentRelease_proof_poll, "poll"> | GroupSpec.NamedAt<typeof contentRelease_proof_read, "read"> | GroupSpec.NamedAt<typeof contentRelease_proof_routes, "routes"> | GroupSpec.NamedAt<typeof contentRelease_proof_verify, "verify"> | GroupSpec.NamedAt<typeof contentRelease_proof_workflow, "workflow">>, "proof"> | GroupSpec.NamedAt<typeof contentRelease_quran, "quran"> | GroupSpec.NamedAt<typeof contentRelease_recovery, "recovery"> | GroupSpec.NamedAt<GroupSpec.AddGroups<typeof contentRelease_reference, GroupSpec.NamedAt<typeof contentRelease_reference_internal, "internal">>, "reference"> | GroupSpec.NamedAt<typeof contentRelease_rollback, "rollback"> | GroupSpec.NamedAt<typeof contentRelease_routes, "routes"> | GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "runtime", never, GroupSpec.NamedAt<typeof contentRelease_runtime_active, "active"> | GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "publication", never, GroupSpec.NamedAt<typeof contentRelease_runtime_publication_internal, "internal">>, "publication"> | GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "tryout", never, GroupSpec.NamedAt<typeof contentRelease_runtime_tryout_dispatch, "dispatch"> | GroupSpec.NamedAt<typeof contentRelease_runtime_tryout_internal, "internal">>, "tryout">>, "runtime"> | GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "snapshot", never, GroupSpec.NamedAt<typeof contentRelease_snapshot_batch, "batch"> | GroupSpec.NamedAt<typeof contentRelease_snapshot_manifest, "manifest"> | GroupSpec.NamedAt<typeof contentRelease_snapshot_read, "read">>, "snapshot"> | GroupSpec.NamedAt<typeof contentRelease_status, "status"> | GroupSpec.NamedAt<typeof contentRelease_tryout, "tryout"> | GroupSpec.NamedAt<typeof contentRelease_verify, "verify">>, "contentRelease">;
   readonly contents: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "contents", never, GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "mutations", never, GroupSpec.NamedAt<typeof contents_mutations_analytics, "analytics"> | GroupSpec.NamedAt<typeof contents_mutations_popularity, "popularity"> | GroupSpec.NamedAt<typeof contents_mutations_views, "views">>, "mutations"> | GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "queries", never, GroupSpec.NamedAt<typeof contents_queries_recent, "recent"> | GroupSpec.NamedAt<typeof contents_queries_search, "search"> | GroupSpec.NamedAt<typeof contents_queries_trending, "trending">>, "queries"> | GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "sections", never, GroupSpec.NamedAt<typeof contents_sections_build, "build"> | GroupSpec.NamedAt<typeof contents_sections_compare, "compare"> | GroupSpec.NamedAt<typeof contents_sections_hits, "hits"> | GroupSpec.NamedAt<typeof contents_sections_rows, "rows"> | GroupSpec.NamedAt<typeof contents_sections_search, "search"> | GroupSpec.NamedAt<typeof contents_sections_state, "state">>, "sections">>, "contents">;
@@ -209,6 +213,7 @@ const spec: Spec.Spec<{
   readonly operators: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "operators", never, GroupSpec.NamedAt<typeof operators_expiry, "expiry"> | GroupSpec.NamedAt<typeof operators_staff, "staff"> | GroupSpec.NamedAt<typeof operators_tenants, "tenants"> | GroupSpec.NamedAt<typeof operators_visits, "visits">>, "operators">;
   readonly posts: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "posts", never, GroupSpec.NamedAt<typeof posts_cleanup, "cleanup"> | GroupSpec.NamedAt<typeof posts_mutations, "mutations"> | GroupSpec.NamedAt<typeof posts_queries, "queries">>, "posts">;
   readonly privacy: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "privacy", never, GroupSpec.NamedAt<typeof privacy_recovery, "recovery">>, "privacy">;
+  readonly records: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "records", never, GroupSpec.NamedAt<typeof records_grades, "grades"> | GroupSpec.NamedAt<typeof records_schemes, "schemes">>, "records">;
   readonly routes: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "routes", never, GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "agent", never, GroupSpec.NamedAt<typeof routes_agent_quota, "quota">>, "agent">>, "routes">;
   readonly storage: GroupSpec.NamedAt<typeof storage, "storage">;
   readonly subscriptions: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "subscriptions", never, GroupSpec.NamedAt<typeof subscriptions_mutations, "mutations"> | GroupSpec.NamedAt<typeof subscriptions_queries, "queries">>, "subscriptions">;
@@ -250,6 +255,9 @@ const spec: Spec.Spec<{
     ["migration"]: comments_migration,
     ["mutations"]: comments_mutations,
     ["queries"]: comments_queries,
+  }),
+  ["connectors"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+    ["connections"]: connectors_connections,
   }),
   ["consents"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
     ["current"]: consents_current,
@@ -445,6 +453,10 @@ const spec: Spec.Spec<{
   }),
   ["privacy"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
     ["recovery"]: privacy_recovery,
+  }),
+  ["records"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
+    ["grades"]: records_grades,
+    ["schemes"]: records_schemes,
   }),
   ["routes"]: GroupSpec.addGroupsAt(GroupSpec.make(), {
     ["agent"]: GroupSpec.addGroupsAt(GroupSpec.make(), {

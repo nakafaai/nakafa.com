@@ -5,5 +5,5 @@ import { Schema } from "effect";
 export const Space = Schema.Union([
   Schema.Struct({ kind: Schema.Literal("personal"), userId: Id("users") }),
   Schema.Struct({ kind: Schema.Literal("tenant"), tenantId: Id("tenants") }),
-]);
+]).pipe(Schema.toTaggedUnion("kind"));
 export type Space = typeof Space.Type;

@@ -15,4 +15,5 @@ export const paper = registeredFunctions.paper;
 export const prompt = registeredFunctions.prompt;
 export const signal = registeredFunctions.signal;
 export const signals = registeredFunctions.signals;
+export const student = registeredFunctions.student;
 export const unlock = registeredFunctions.unlock;
