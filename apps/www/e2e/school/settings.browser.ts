@@ -9,6 +9,9 @@ import {
   signInTeacher,
 } from "@/e2e/support/school";
 
+/** The Owner option of the Role filter, whose name ends with its count. */
+const OWNER_OPTION = /^Owner/;
+
 /** Adds one cohort of grade 7 to the active period, from the cohorts page. */
 async function addCohort(page: Page, name: string) {
   await page
@@ -250,12 +253,12 @@ test("an admin reads the role guide and finds the owner's grant on Roles", async
     .getByRole("button", { name: "Role", exact: true })
     .and(page.locator('[aria-haspopup="menu"]'));
   await roleFilter.click();
-  await page.getByRole("menuitemcheckbox", { name: /^Owner/ }).click();
+  await page.getByRole("menuitemcheckbox", { name: OWNER_OPTION }).click();
   await page.keyboard.press("Escape");
   await page.getByRole("textbox", { name: "Find a person" }).fill("Zygmunt");
   await expect(ownerGrant).toHaveCount(0);
   await roleFilter.click();
-  const chosen = page.getByRole("menuitemcheckbox", { name: /^Owner/ });
+  const chosen = page.getByRole("menuitemcheckbox", { name: OWNER_OPTION });
   await expect(chosen).toBeChecked();
   await chosen.click();
   await expect(chosen).not.toBeChecked();
