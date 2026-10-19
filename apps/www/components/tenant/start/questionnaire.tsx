@@ -228,7 +228,9 @@ function SchoolStartForm({
         },
         onSuccess: ({ address }) => {
           startOpening(() => setOpened(Option.some(school)));
-          window.location.assign(address);
+          // The new school replaces this questionnaire in the history, so Back never
+          // returns to a blank questionnaire of a school that is already open.
+          window.location.replace(address);
         },
       });
     });
