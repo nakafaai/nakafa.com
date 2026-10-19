@@ -16,7 +16,7 @@ test("a wrong card code is refused with one message that does not say whether th
   await page.getByLabel("Password").fill("correct horse battery");
   await page.getByRole("button", { name: "Sign in" }).click();
 
-  await expect(page.getByRole("alert")).toHaveText(
+  await expect(page.locator("form").getByRole("alert")).toHaveText(
     "The username or card code is not right."
   );
 });
