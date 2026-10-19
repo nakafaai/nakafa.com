@@ -27,7 +27,7 @@ export function Missing({ children, description, title }: MissingProps) {
       actions={children}
       description={description}
       figure={<DeferredFigure scene="missing" />}
-      title={title}
+      title={<h1>{title}</h1>}
     />
   );
 }

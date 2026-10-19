@@ -34,6 +34,7 @@ import { Fragment, useLayoutEffect, useTransition } from "react";
 import { getArticleCategoryIcons } from "@/components/articles/category";
 import { SearchExcerpt } from "@/components/search/excerpt";
 import { useSearchSectionLabels } from "@/components/search/labels";
+import { useArticleNavigation } from "@/components/search/navigation.client";
 import { holyMenu } from "@/components/sidebar/data/holy";
 import {
   getSubjectMenuHref,
@@ -84,11 +85,7 @@ type SearchCommandItem = SearchCommandGroup["items"][number];
 /**
  * Renders the global command menu used across the main app shell.
  */
-export function SearchCommand({
-  articleNavigation,
-}: {
-  articleNavigation: readonly ArticleNavigationItem[];
-}) {
+export function SearchCommand() {
   const { open, setOpen } = useSearch((state) => ({
     open: state.open,
     setOpen: state.setOpen,
@@ -104,21 +101,18 @@ export function SearchCommand({
   return (
     <CommandDialog onOpenChange={setOpen} open={open}>
       <CommandDialogPopup>
-        <SearchMain articleNavigation={articleNavigation} />
+        <SearchMain />
       </CommandDialogPopup>
     </CommandDialog>
   );
 }
 
 /** Coordinates debounced Convex content search inside the command dialog. */
-function SearchMain({
-  articleNavigation,
-}: {
-  articleNavigation: readonly ArticleNavigationItem[];
-}) {
+function SearchMain() {
   const t = useTranslations("Utils");
   const query = useSearch((state) => state.query);
   const setQuery = useSearch((state) => state.setQuery);
+  const articleNavigation = useArticleNavigation();
   const defaultGroups = useDefaultSearchGroups(articleNavigation);
   const sectionLabels = useSearchSectionLabels();
   const [debouncedSearch] = useDebouncedValue(query, DEBOUNCE_TIME);

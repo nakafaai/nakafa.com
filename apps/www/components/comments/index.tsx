@@ -5,11 +5,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useTranslations } from "next-intl";
 import { CommentsList } from "@/components/comments/list";
 
-interface Props {
-  slug: string;
-}
-
-export function Comments({ slug }: Props) {
+export function Comments() {
   const t = useTranslations("Common");
 
   return (
@@ -22,7 +18,7 @@ export function Comments({ slug }: Props) {
         {t("comments")}
       </h2>
       <div className="flex flex-col gap-6">
-        <CommentsList slug={slug} />
+        <CommentsList />
       </div>
     </section>
   );

@@ -55,7 +55,7 @@ export function Broken({
       }
       description={description}
       figure={<DeferredFigure scene="broken" />}
-      title={title}
+      title={<h1>{title}</h1>}
     />
   );
 }

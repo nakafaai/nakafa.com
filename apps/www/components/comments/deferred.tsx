@@ -3,6 +3,7 @@
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import dynamic from "next/dynamic";
 import { useState } from "react";
+import { CommentsSlugContext } from "@/components/comments/slug.client";
 
 const LazyComments = dynamic(
   () => import("@/components/comments").then((module) => module.Comments),
@@ -21,7 +22,11 @@ export function DeferredComments({ slug }: { slug: string }) {
   const [isNearViewport, setIsNearViewport] = useState(false);
 
   if (isNearViewport) {
-    return <LazyComments slug={slug} />;
+    return (
+      <CommentsSlugContext value={slug}>
+        <LazyComments />
+      </CommentsSlugContext>
+    );
   }
 
   return (

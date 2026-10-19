@@ -84,7 +84,9 @@ export function TryoutPlayer({
           title={tTryouts("complete-part-title")}
         >
           {Arr.isReadonlyArrayNonEmpty(unanswered) ? (
-            <PlayerUnanswered questions={unanswered} />
+            <PlayerUnanswered>
+              <PlayerGrid questions={unanswered} />
+            </PlayerUnanswered>
           ) : null}
         </PlayerFinish>
       </PlayerHeader>
