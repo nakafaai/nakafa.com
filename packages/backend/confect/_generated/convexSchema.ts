@@ -16,7 +16,6 @@ import classTeachers from "./tables/classTeachers";
 import classes from "./tables/classes";
 import classroomChannels from "./tables/classroomChannels";
 import commentLikes from "./tables/commentLikes";
-import commentVotes from "./tables/commentVotes";
 import comments from "./tables/comments";
 import connectorConnections from "./tables/connectorConnections";
 import connectorKeys from "./tables/connectorKeys";
@@ -136,7 +135,6 @@ export default $defineSchema({
   classes: $Table.tableDefinition(classes),
   classroomChannels: $Table.tableDefinition(classroomChannels),
   commentLikes: $Table.tableDefinition(commentLikes),
-  commentVotes: $Table.tableDefinition(commentVotes),
   comments: $Table.tableDefinition(comments),
   connectorConnections: $Table.tableDefinition(connectorConnections),
   connectorKeys: $Table.tableDefinition(connectorKeys),

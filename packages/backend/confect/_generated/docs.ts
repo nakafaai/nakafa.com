@@ -16,7 +16,6 @@ export type ClassTeachersDoc = Document.Document<typeof schemaDefinition, "class
 export type ClassesDoc = Document.Document<typeof schemaDefinition, "classes">;
 export type ClassroomChannelsDoc = Document.Document<typeof schemaDefinition, "classroomChannels">;
 export type CommentLikesDoc = Document.Document<typeof schemaDefinition, "commentLikes">;
-export type CommentVotesDoc = Document.Document<typeof schemaDefinition, "commentVotes">;
 export type CommentsDoc = Document.Document<typeof schemaDefinition, "comments">;
 export type ConnectorConnectionsDoc = Document.Document<typeof schemaDefinition, "connectorConnections">;
 export type ConnectorKeysDoc = Document.Document<typeof schemaDefinition, "connectorKeys">;
@@ -136,7 +135,6 @@ export interface Docs {
   classes: ClassesDoc;
   classroomChannels: ClassroomChannelsDoc;
   commentLikes: CommentLikesDoc;
-  commentVotes: CommentVotesDoc;
   comments: CommentsDoc;
   connectorConnections: ConnectorConnectionsDoc;
   connectorKeys: ConnectorKeysDoc;

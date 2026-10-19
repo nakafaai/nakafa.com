@@ -15,7 +15,6 @@ import classTeachers from "./tables/classTeachers";
 import classes from "./tables/classes";
 import classroomChannels from "./tables/classroomChannels";
 import commentLikes from "./tables/commentLikes";
-import commentVotes from "./tables/commentVotes";
 import comments from "./tables/comments";
 import connectorConnections from "./tables/connectorConnections";
 import connectorKeys from "./tables/connectorKeys";
@@ -135,7 +134,6 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly classes: typeof classes;
   readonly classroomChannels: typeof classroomChannels;
   readonly commentLikes: typeof commentLikes;
-  readonly commentVotes: typeof commentVotes;
   readonly comments: typeof comments;
   readonly connectorConnections: typeof connectorConnections;
   readonly connectorKeys: typeof connectorKeys;
@@ -254,7 +252,6 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   classes,
   classroomChannels,
   commentLikes,
-  commentVotes,
   comments,
   connectorConnections,
   connectorKeys,

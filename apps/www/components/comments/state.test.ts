@@ -28,39 +28,35 @@ function row(id: string, change: Partial<CommentRow> = {}): CommentRow {
   return {
     _creationTime: 1,
     _id: commentId(id),
-    downvoteCount: 0,
     likeCount: 0,
     liked: false,
     replyCount: 0,
     replyToUser: null,
     slug: "lesson",
     text: id,
-    upvoteCount: 0,
     user,
     userId: user._id,
-    viewerVote: null,
     ...change,
   };
 }
 
 describe("comment optimistic state", () => {
-  it("shows a like at once: liked, one more like, and an upvote for an open web build", () => {
+  it("shows a like at once: liked, and one more like", () => {
     expect(likedComment(row("a", { likeCount: 2 }))).toMatchObject({
       liked: true,
       likeCount: 3,
-      viewerVote: 1,
     });
   });
 
   it("returns a liked comment as it is, so a repeated like counts once", () => {
-    const liked = row("a", { liked: true, likeCount: 2, viewerVote: 1 });
+    const liked = row("a", { liked: true, likeCount: 2 });
     expect(likedComment(liked)).toBe(liked);
   });
 
   it("takes a like back at once, and returns an unliked comment as it is", () => {
     expect(
-      unlikedComment(row("a", { liked: true, likeCount: 1, viewerVote: 1 }))
-    ).toMatchObject({ liked: false, likeCount: 0, viewerVote: null });
+      unlikedComment(row("a", { liked: true, likeCount: 1 }))
+    ).toMatchObject({ liked: false, likeCount: 0 });
     const unliked = row("a");
     expect(unlikedComment(unliked)).toBe(unliked);
   });
@@ -139,7 +135,6 @@ describe("comment optimistic state", () => {
       text: "Halo.",
       user,
       userId: user._id,
-      viewerVote: null,
     });
     expect(draft).not.toHaveProperty("parentId");
     expect(draft).not.toHaveProperty("threadId");
