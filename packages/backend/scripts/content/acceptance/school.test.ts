@@ -2,7 +2,10 @@ import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import type { runAcceptanceCommand } from "@repo/backend/scripts/content/acceptance/command";
 import { SchoolFixture } from "@repo/backend/scripts/content/acceptance/fixture";
-import { createAcceptanceSchool } from "@repo/backend/scripts/content/acceptance/school";
+import {
+  createAcceptanceSchool,
+  schoolMode,
+} from "@repo/backend/scripts/content/acceptance/school";
 import {
   Array as Arr,
   Effect,
@@ -103,5 +106,43 @@ describe("acceptance school", () => {
       expect(Exit.isFailure(exit)).toBe(true);
       expect(mocks.command).not.toHaveBeenCalled();
     }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+  );
+
+  it.effect(
+    "opens a school into the file that the school mode names and ignores an extra argument",
+    () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const root = yield* fs.makeTempDirectoryScoped({
+          prefix: "acceptance-school-test-",
+        });
+        runtimeIn(root);
+        mocks.command.mockImplementation((spec: CommandSpec) =>
+          fs.writeFileString(spec.stdoutPath, "null")
+        );
+
+        yield* schoolMode.run(root, [`${root}/mode.json`, "ignored"]);
+
+        expect(mocks.command).toHaveBeenCalledOnce();
+        const school = yield* fs
+          .readFileString(`${root}/mode.json`)
+          .pipe(Effect.flatMap(Schema.decodeEffect(SchoolFixture)));
+        expect(school.slug).toMatch(SCHOOL_SLUG);
+      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+  );
+
+  it.effect(
+    "refuses the school mode without its file before any operation",
+    () =>
+      Effect.gen(function* () {
+        expect(
+          yield* schoolMode.run("/root", []).pipe(Effect.flip)
+        ).toMatchObject({
+          _tag: "AcceptanceRuntimeError",
+          message: "Usage: acceptance school <school-file>",
+        });
+        expect(mocks.read).not.toHaveBeenCalled();
+        expect(mocks.command).not.toHaveBeenCalled();
+      }).pipe(Effect.provide(nodeServicesLayer))
   );
 });
