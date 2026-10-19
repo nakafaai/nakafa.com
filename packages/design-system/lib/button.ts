@@ -17,7 +17,7 @@ export const buttonVariants = cva(
         "success-outline":
           "border border-success bg-[color-mix(in_oklch,var(--success)_5%,var(--background))] text-foreground shadow-xs hover:bg-[color-mix(in_oklch,var(--success)_8%,var(--background))] hover:shadow-md",
         outline:
-          "border border-border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground",
+          "border border-border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground aria-expanded:bg-muted",
         secondary:
           "bg-secondary text-secondary-foreground shadow-xs hover:bg-[color-mix(in_oklch,var(--secondary)_99%,var(--background))] hover:shadow-md",
         "secondary-outline":
@@ -27,7 +27,7 @@ export const buttonVariants = cva(
         inverse:
           "bg-nina-face text-nina-ink shadow-xs hover:bg-[color-mix(in_oklch,var(--color-nina-face)_90%,var(--color-nina-ink))] hover:shadow-md",
         ghost:
-          "hover:bg-accent hover:text-accent-foreground hover:[&_svg]:text-accent-foreground",
+          "hover:bg-accent hover:text-accent-foreground aria-expanded:bg-muted hover:[&_svg]:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
       },
       size: {
