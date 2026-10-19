@@ -102,6 +102,18 @@ test("a teacher writes a question with headings, lists, quotes, code and a table
   await expect(prompt.locator("tr")).toHaveCount(2);
   await expect(prompt.locator("th")).toHaveCount(2);
 
+  // A formula comes from the slash menu, and its editor opens from the drawn formula. The LaTeX
+  // tab takes x^2, and a press outside the popover closes it and saves the formula.
+  await page.keyboard.press("Enter");
+  await page.keyboard.type("/");
+  await menu.getByRole("option", { name: "Formula" }).click();
+  await prompt.getByRole("button", { name: "Edit formula" }).click();
+  await page.getByRole("tab", { name: "LaTeX" }).click();
+  await page.getByRole("textbox", { name: "LaTeX" }).fill("x^2");
+  await prompt.click();
+  await expect(prompt.locator('[data-formula="inline"] .katex')).toBeVisible();
+  await expect(prompt.locator(".katex-error")).toHaveCount(0);
+
   // The rich text is saved by itself, so the editor opened again shows the same document.
   const reopened = await context.newPage();
   await reopened.goto(page.url());
@@ -115,8 +127,11 @@ test("a teacher writes a question with headings, lists, quotes, code and a table
   await expect(reopenedPrompt.locator("ul li")).toHaveCount(2);
   await expect(reopenedPrompt.locator("blockquote")).toHaveCount(0);
   await expect(reopenedPrompt.locator("th")).toHaveCount(2);
+  await expect(
+    reopenedPrompt.locator('[data-formula="inline"] .katex')
+  ).toBeVisible();
 
-  // The try shows the same document the way a student reads it.
+  // The try shows the same document the way a student reads it, with the formula drawn.
   await reopened.getByRole("link", { name: "Try as student" }).click();
   await reopened.waitForURL(TRY_PATH);
   await expect(reopened.getByText("Rumus")).toBeVisible({
@@ -124,5 +139,8 @@ test("a teacher writes a question with headings, lists, quotes, code and a table
   });
   await expect(reopened.locator("table th")).toHaveCount(2);
   await expect(reopened.locator("ul li")).toHaveCount(2);
+  await expect(
+    reopened.locator('[data-formula="inline"] .katex')
+  ).toBeVisible();
   await context.close();
 });

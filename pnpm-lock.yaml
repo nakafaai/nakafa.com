@@ -911,6 +911,9 @@ importers:
       marked-tiptap:
         specifier: npm:marked@^17.0.1
         version: marked@17.0.6
+      mathlive:
+        specifier: 0.111.1
+        version: 0.111.1
       mermaid:
         specifier: 11.17.2
         version: 11.17.2
@@ -1002,6 +1005,9 @@ importers:
       '@effect/vitest':
         specifier: 'catalog:'
         version: 4.0.5(effect@4.0.5)(vitest@5.0.5)
+      '@repo/editor':
+        specifier: workspace:*
+        version: link:../editor
       '@repo/testing':
         specifier: workspace:*
         version: link:../testing
@@ -5991,6 +5997,9 @@ packages:
     resolution: {integrity: sha512-zEGgrtUG8crk+TrMacJSVABU4DYDDkS8uqgU3ohrn/2fW9C2AEfUrO3m6IhpIpQpl7YcVpiXXC9cSMWDANT3dg==}
     engines: {node: '>= 20'}
     hasBin: true
+
+  mathlive@0.111.1:
+    resolution: {integrity: sha512-RVaC7NO02Lmx3ZNUxOHR2xCRpcvTfBb2BtdgV60cTanAMufaUkWcPPB2VxChcsNeL+0rTQKqOPDYxXLPOXJI+A==}
 
   mdast-util-find-and-replace@3.0.3:
     resolution: {integrity: sha512-xPgpDNl0/OXHsI7TlaIs22lWnH3KlpvZdXG1ET/m/YT2Hhdkx8lJV4kLphE6l9simyM4KPDFBwas08BgEob6Jw==}
@@ -12352,6 +12361,8 @@ snapshots:
   marked@17.0.6: {}
 
   marked@18.1.1: {}
+
+  mathlive@0.111.1: {}
 
   mdast-util-find-and-replace@3.0.3:
     dependencies:

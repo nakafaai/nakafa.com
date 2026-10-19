@@ -2,6 +2,8 @@
 
 import {
   CodeSquareIcon,
+  FunctionIcon,
+  FunctionSquareIcon,
   Heading01Icon,
   Heading02Icon,
   Heading03Icon,
@@ -49,6 +51,8 @@ export interface SlashMenuProps {
 const ICONS: Record<SlashKey, ComponentProps<typeof HugeIcons>["icon"]> = {
   bullets: LeftToRightListBulletIcon,
   "code-block": CodeSquareIcon,
+  equation: FunctionSquareIcon,
+  formula: FunctionIcon,
   "heading-1": Heading01Icon,
   "heading-2": Heading02Icon,
   "heading-3": Heading03Icon,

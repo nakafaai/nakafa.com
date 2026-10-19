@@ -1117,7 +1117,12 @@
     "column-before": "Column left",
     "column-after": "Column right",
     "column-delete": "Delete column",
-    "table-delete": "Delete table"
+    "table-delete": "Delete table",
+    "formula": "Formula",
+    "equation": "Equation",
+    "formula-edit": "Edit formula",
+    "formula-invalid": "This formula cannot be drawn:",
+    "latex": "LaTeX"
   },
   "Memory": {
     "remember": "Let Nina save and use memories",

@@ -54,6 +54,7 @@ update:
     - convex
     - effect
     - marked-tiptap
+    - mathlive
     - next
     - node
     - pnpm

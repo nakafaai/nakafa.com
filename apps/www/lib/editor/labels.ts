@@ -3,14 +3,17 @@ import { useTranslations } from "next-intl";
 import { useMemo } from "react";
 
 /**
- * The names of an exam prompt's toolbar and slash menu, read from the editor's messages. The
- * toolbar and the slash menu name a block with the same words, so each name is read once.
+ * The names of an exam prompt's toolbar, slash menu, and formula editor, read from the editor's
+ * messages. The toolbar and the slash menu name a block with the same words, so each name is
+ * read once.
  */
 export function useDocumentLabels() {
   const t = useTranslations("Editor");
   return useMemo(() => {
     const bullets = t("bullets");
     const codeBlock = t("code-block");
+    const equation = t("equation");
+    const formula = t("formula");
     const heading1 = t("heading-1");
     const heading2 = t("heading-2");
     const heading3 = t("heading-3");
@@ -21,6 +24,8 @@ export function useDocumentLabels() {
     const slash: SlashLabels = {
       bullets,
       "code-block": codeBlock,
+      equation,
+      formula,
       "heading-1": heading1,
       "heading-2": heading2,
       "heading-3": heading3,
@@ -30,6 +35,12 @@ export function useDocumentLabels() {
       text,
     };
     return {
+      formulaEdit: {
+        formula,
+        invalid: t("formula-invalid"),
+        latex: t("latex"),
+        open: t("formula-edit"),
+      },
       insert: t("insert"),
       slash,
       toolbar: {
@@ -40,6 +51,8 @@ export function useDocumentLabels() {
         columnAfter: t("column-after"),
         columnBefore: t("column-before"),
         columnDelete: t("column-delete"),
+        equation,
+        formula,
         heading1,
         heading2,
         heading3,

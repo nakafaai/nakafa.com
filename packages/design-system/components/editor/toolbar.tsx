@@ -7,6 +7,7 @@ import {
   editorBar,
   editorRow,
 } from "@repo/design-system/components/editor/frame";
+import { DocumentInsert } from "@repo/design-system/components/editor/insert";
 import { RichEditorStyle } from "@repo/design-system/components/editor/style";
 import { DocumentTable } from "@repo/design-system/components/editor/table";
 import {
@@ -227,6 +228,7 @@ export function RichEditorToolbar({ labels }: RichEditorToolbarProps) {
 interface DocumentToolbarProps {
   /** The names a writer hears and sees for each control of the document toolbar. */
   labels: ComponentProps<typeof DocumentBlocks>["labels"] &
+    ComponentProps<typeof DocumentInsert>["labels"] &
     ComponentProps<typeof DocumentMarks>["labels"] &
     ComponentProps<typeof DocumentTable>["labels"] &
     ComponentProps<typeof RichEditorHistory>["labels"] &
@@ -250,6 +252,7 @@ export function DocumentToolbar({ labels }: DocumentToolbarProps) {
         { name: "style", tools: <RichEditorStyle labels={labels} /> },
         { name: "marks", tools: <DocumentMarks labels={labels} /> },
         { name: "blocks", tools: <DocumentBlocks labels={labels} /> },
+        { name: "insert", tools: <DocumentInsert labels={labels} /> },
         { name: "table", tools: <DocumentTable labels={labels} /> },
       ]}
       more={labels.more}

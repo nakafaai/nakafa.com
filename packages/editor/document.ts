@@ -1,3 +1,8 @@
+import {
+  type MathViews,
+  mathExtensions,
+  NO_MATH_VIEWS,
+} from "@repo/editor/math";
 import { type AnyExtension, getSchema } from "@tiptap/core";
 import { Bold } from "@tiptap/extension-bold";
 import { Code } from "@tiptap/extension-code";
@@ -143,9 +148,13 @@ type DocumentMark = keyof typeof MARKS;
  * because a document of this kind holds no rule (ADR 0031). Its ordered list is the
  * document's own, and so is its link, so each holds only the attributes the contract names.
  * A table is the contract's table, of rows and cells that hold blocks, with the spans of
- * a cell and no other attribute.
+ * a cell and no other attribute. The formulas are the contract's inline and block math,
+ * drawn by the given views (`NO_MATH_VIEWS` draws them as plain DOM).
  */
-export function documentExtensions(rules: DocumentRules): AnyExtension[] {
+export function documentExtensions(
+  rules: DocumentRules,
+  views: MathViews = NO_MATH_VIEWS
+): AnyExtension[] {
   return [
     StarterKit.configure({
       bold: false,
@@ -163,6 +172,7 @@ export function documentExtensions(rules: DocumentRules): AnyExtension[] {
     DocumentTableRow,
     DocumentTableHeader,
     DocumentTableCell,
+    ...mathExtensions(views),
     ...Arr.map(rules.marks, (mark, index) =>
       MARKS[mark](TOP_PRIORITY - index, rules.isLinkAllowed)
     ),

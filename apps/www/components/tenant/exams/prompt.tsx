@@ -12,6 +12,10 @@ import { Collab } from "@repo/design-system/components/editor/collab";
 import { slashCommand } from "@repo/design-system/components/editor/command";
 import { depthGuard } from "@repo/design-system/components/editor/depth";
 import { DocumentEditor } from "@repo/design-system/components/editor/document";
+import {
+  FORMULA_VIEWS,
+  FormulaLabelsProvider,
+} from "@repo/design-system/components/editor/formula";
 import { articleParagraphs } from "@repo/design-system/components/editor/paragraph";
 import {
   documentSizeGuard,
@@ -27,7 +31,6 @@ import { Effect, Fiber, Ref } from "effect";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { type StoreApi, useStore } from "zustand";
-import { useDocumentLabels } from "@/components/tenant/exams/labels";
 import { useExamLive } from "@/components/tenant/exams/provider";
 import {
   createPromptSync,
@@ -36,6 +39,7 @@ import {
 import { reportClientException } from "@/lib/analytics/client";
 import { closeEditor } from "@/lib/editor/close";
 import { convexTransport } from "@/lib/editor/convex";
+import { useDocumentLabels } from "@/lib/editor/labels";
 import { versionOf, viewPort } from "@/lib/editor/port";
 import { reportDropped } from "@/lib/editor/report";
 import type { SyncSession } from "@/lib/editor/session";
@@ -54,7 +58,7 @@ const SOURCE = "components/tenant/exams/prompt";
  * refuses what the server would refuse.
  */
 const PROMPT_EXTENSIONS = [
-  ...documentExtensions(ASSESSMENT_RULES),
+  ...documentExtensions(ASSESSMENT_RULES, FORMULA_VIEWS),
   Collab.configure({ clientId: "", version: 0 }),
   articleParagraphs,
   depthGuard(MAX_DOCUMENT_DEPTH),
@@ -240,14 +244,16 @@ export function ExamPrompt({
   };
 
   return (
-    <DocumentEditor
-      extensions={extensions}
-      label={t("prompt-label")}
-      onChange={change}
-      onEditor={open}
-      placeholder={t("prompt-placeholder")}
-    >
-      <DocumentToolbar labels={labels.toolbar} />
-    </DocumentEditor>
+    <FormulaLabelsProvider labels={labels.formulaEdit}>
+      <DocumentEditor
+        extensions={extensions}
+        label={t("prompt-label")}
+        onChange={change}
+        onEditor={open}
+        placeholder={t("prompt-placeholder")}
+      >
+        <DocumentToolbar labels={labels.toolbar} />
+      </DocumentEditor>
+    </FormulaLabelsProvider>
   );
 }

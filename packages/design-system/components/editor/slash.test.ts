@@ -3,24 +3,21 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
   filterSlash,
+  NEW_FORMULA,
   runSlash,
   SLASH_KEYS,
   type SlashLabels,
 } from "@repo/design-system/components/editor/slash";
+import { documentExtensions } from "@repo/editor/document";
 import { Editor } from "@tiptap/core";
-import {
-  Table,
-  TableCell,
-  TableHeader,
-  TableRow,
-} from "@tiptap/extension-table";
-import { StarterKit } from "@tiptap/starter-kit";
 import { Array as Arr } from "effect";
 
 /** The names of the blocks in English, as the editor's messages give them. */
 const LABELS: SlashLabels = {
   bullets: "Bulleted list",
   "code-block": "Code block",
+  equation: "Equation",
+  formula: "Formula",
   "heading-1": "Heading 1",
   "heading-2": "Heading 2",
   "heading-3": "Heading 3",
@@ -30,12 +27,16 @@ const LABELS: SlashLabels = {
   text: "Normal text",
 };
 
-/** A headless editor of the blocks the menu inserts, with one paragraph of the given text. */
+/** A headless editor of the document the menu writes, with one paragraph of the given text. */
 function openEditor(text: string) {
   return new Editor({
     content: `<p>${text}</p>`,
-    element: null,
-    extensions: [StarterKit, Table, TableRow, TableHeader, TableCell],
+    element: document.createElement("div"),
+    extensions: documentExtensions({
+      headingLevels: [1, 2, 3],
+      isLinkAllowed: () => false,
+      marks: ["bold"],
+    }),
   });
 }
 
@@ -55,8 +56,10 @@ describe("filterSlash", () => {
 
   it("finds a block by its short name as well", () => {
     expect(filterSlash(LABELS, "h2")).toEqual(["heading-2"]);
-    expect(filterSlash(LABELS, "ul")).toEqual(["bullets"]);
+    expect(filterSlash(LABELS, "ol")).toEqual(["numbers"]);
     expect(filterSlash(LABELS, "pa")).toEqual(["text"]);
+    expect(filterSlash(LABELS, "math")).toEqual(["formula"]);
+    expect(filterSlash(LABELS, "latex")).toEqual(["equation"]);
   });
 
   it("lists every block that shares a word, in the menu's order", () => {
@@ -146,7 +149,32 @@ describe("runSlash", () => {
         level: undefined,
         type: "table",
       },
+      {
+        cell: undefined,
+        count: 1,
+        key: "formula",
+        level: undefined,
+        type: "paragraph",
+      },
+      {
+        cell: undefined,
+        count: 0,
+        key: "equation",
+        level: undefined,
+        type: "mathBlock",
+      },
     ]);
+  });
+
+  it("inserts a formula of the placeholder LaTeX, inline and as a block", () => {
+    const inline = openEditor("/");
+    runSlash("formula", inline, { from: 1, to: 2 });
+    expect(inline.state.doc.firstChild?.firstChild?.attrs).toEqual({
+      latex: NEW_FORMULA,
+    });
+    const block = openEditor("/");
+    runSlash("equation", block, { from: 1, to: 2 });
+    expect(block.state.doc.firstChild?.attrs).toEqual({ latex: NEW_FORMULA });
   });
 
   it("removes the query text, so the slash is gone from the document", () => {

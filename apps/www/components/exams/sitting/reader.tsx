@@ -2,14 +2,19 @@
 
 import { ASSESSMENT_RULES } from "@repo/backend/confect/editor/model";
 import { DocumentEditor } from "@repo/design-system/components/editor/document";
+import {
+  FORMULA_VIEWS,
+  FormulaLabelsProvider,
+} from "@repo/design-system/components/editor/formula";
 import { articleParagraphs } from "@repo/design-system/components/editor/paragraph";
 import { documentExtensions } from "@repo/editor/document";
 import { Node } from "@tiptap/pm/model";
 import { assessmentSchema } from "@/lib/editor/assessment";
+import { useDocumentLabels } from "@/lib/editor/labels";
 
 /** The extensions of a read-only document: the ones the exam canvas edits the same document with. */
 const READER_EXTENSIONS = [
-  ...documentExtensions(ASSESSMENT_RULES),
+  ...documentExtensions(ASSESSMENT_RULES, FORMULA_VIEWS),
   articleParagraphs,
 ];
 
@@ -26,17 +31,20 @@ export function SittingReader({
   /** The accessible name of the document. */
   readonly label: string;
 }) {
+  const labels = useDocumentLabels();
   const content = Node.fromJSON(assessmentSchema, document).toJSON();
 
   return (
-    <DocumentEditor
-      extensions={READER_EXTENSIONS}
-      label={label}
-      onChange={() => undefined}
-      onEditor={(editor) => {
-        editor.commands.setContent(content, { emitUpdate: false });
-      }}
-      placeholder=""
-    />
+    <FormulaLabelsProvider labels={labels.formulaEdit}>
+      <DocumentEditor
+        extensions={READER_EXTENSIONS}
+        label={label}
+        onChange={() => undefined}
+        onEditor={(editor) => {
+          editor.commands.setContent(content, { emitUpdate: false });
+        }}
+        placeholder=""
+      />
+    </FormulaLabelsProvider>
   );
 }

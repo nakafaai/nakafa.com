@@ -1117,7 +1117,12 @@
     "column-before": "Kolom kiri",
     "column-after": "Kolom kanan",
     "column-delete": "Hapus kolom",
-    "table-delete": "Hapus tabel"
+    "table-delete": "Hapus tabel",
+    "formula": "Rumus",
+    "equation": "Persamaan",
+    "formula-edit": "Ubah rumus",
+    "formula-invalid": "Rumus ini tidak dapat digambar:",
+    "latex": "LaTeX"
   },
   "Memory": {
     "remember": "Izinkan Nina menyimpan dan memakai memori",

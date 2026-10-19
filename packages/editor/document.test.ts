@@ -15,10 +15,20 @@ const RULES = {
   isLinkAllowed: (href: string) => href.startsWith("https://"),
 } satisfies Omit<DocumentRules, "marks">;
 
+/**
+ * Pastes text at the caret the way the browser does, as a transaction that the view marks as
+ * a paste, so the paste rules run. jsdom has no clipboard event, so the mark is set directly.
+ */
+function paste(editor: Editor, text: string) {
+  editor.view.dispatch(
+    editor.state.tr.insertText(text).setMeta("uiEvent", "paste")
+  );
+}
+
 /** A headless editor that holds a document of the test rules, with the marks it is given. */
 function openEditor(marks: DocumentRules["marks"]) {
   return new Editor({
-    element: null,
+    element: document.createElement("div"),
     extensions: documentExtensions({ ...RULES, marks }),
   });
 }
@@ -215,5 +225,60 @@ describe("documentSchema blocks and tables", () => {
       { colspan: 2, rowspan: 1 },
       { colspan: 1, rowspan: 1 },
     ]);
+  });
+});
+
+describe("documentSchema math", () => {
+  const schema = documentSchema({ ...RULES, marks: ["bold"] });
+
+  it("round-trips inline and block math as their JSON, with the LaTeX as the one attribute", () => {
+    const paragraph = {
+      content: [
+        { text: "Rumus ", type: "text" },
+        { attrs: { latex: "x^2" }, type: "mathInline" },
+      ],
+      type: "paragraph",
+    };
+    const block = { attrs: { latex: "\\frac{a}{b}" }, type: "mathBlock" };
+    expect(schema.nodeFromJSON(paragraph).toJSON()).toEqual(paragraph);
+    expect(schema.nodeFromJSON(block).toJSON()).toEqual(block);
+  });
+
+  it("reads the LaTeX of a pasted formula from its DOM, and reads a formula with none as blank", () => {
+    const editor = openEditor([]);
+    editor.commands.setContent(
+      '<p><span data-type="math-inline" data-latex="x^2"></span><span data-type="math-inline"></span></p><div data-type="math-block" data-latex="a+b"></div>'
+    );
+    const paragraph = editor.state.doc.child(0);
+    expect(
+      Arr.makeBy(paragraph.childCount, (index) => paragraph.child(index).attrs)
+    ).toEqual([{ latex: "x^2" }, { latex: "" }]);
+    const block = editor.state.doc.child(1);
+    expect(block.type.name).toBe("mathBlock");
+    expect(block.attrs).toEqual({ latex: "a+b" });
+  });
+
+  it("converts the formulas of a pasted text into formula nodes where the paste lands", () => {
+    const editor = openEditor([]);
+    editor.commands.setContent("<p></p>");
+    paste(editor, "Hitung $x^2$ saja");
+    const paragraph = editor.state.doc.child(0);
+    expect(
+      Arr.makeBy(
+        paragraph.childCount,
+        (index) => paragraph.child(index).type.name
+      )
+    ).toEqual(["text", "mathInline", "text"]);
+    expect(paragraph.child(1).attrs).toEqual({ latex: "x^2" });
+  });
+
+  it("converts a pasted block formula into a block of its own", () => {
+    const editor = openEditor([]);
+    editor.commands.setContent("<p></p>");
+    paste(editor, "$$a+b$$");
+    const top = editor.state.doc;
+    expect(
+      Arr.makeBy(top.childCount, (index) => top.child(index).type.name)
+    ).toContain("mathBlock");
   });
 });
