@@ -156,7 +156,7 @@ export const push = Effect.fn("editor.sync.push")(function* (
     Effect.as(true),
     // A refused batch waits for the server's steps, and the next round sends nothing on
     // this version. A failure of the call is not caught here: the batch stays unsent. A
-    // batch that waits for a fold fails with `SyncFolding`, and `tick` runs the round again.
+    // batch that waits for a fold fails with `SyncFolding`, and `tickThroughFold` runs the round again.
     Effect.catchTag("VersionStale", () => Effect.succeed(true)),
     Effect.catchTags({
       DocumentInvalid: refused,

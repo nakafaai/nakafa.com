@@ -23,7 +23,8 @@ export class SyncFailed extends Schema.TaggedError<SyncFailed>()("SyncFailed", {
 /**
  * The server is folding this document's steps into its snapshot, so it takes no batch for
  * a moment (ADR 0028). The batch stays unsent under its id, and the round runs again after a
- * short wait. A round that still meets the fold when its waits end fails with it.
+ * short wait. A round that still meets the fold when its waits end fails with it, and
+ * `tickThroughFold` runs the round again on the cadence of `FOLD_RETRY`.
  */
 export class SyncFolding extends Schema.TaggedError<SyncFolding>()(
   "SyncFolding",

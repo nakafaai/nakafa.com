@@ -93,14 +93,22 @@ const FOLD_WAIT = Schedule.min([
 const FOLD_RETRIES = 6;
 
 /**
+ * How often a round that used up its short waits runs again: every four seconds, under the
+ * same batch id, for as long as the caller keeps `tickThroughFold` running. The fold is still
+ * a scheduled function on the server, so the batch waits unsent meanwhile, and no round fails
+ * for it (ADR 0028).
+ */
+export const FOLD_RETRY = Schedule.spaced("4 seconds");
+
+/**
  * Runs one round of sync for an editor. The caller runs the next round when the server's
  * steps arrive, as the subscription to the document does. The one repeat is for a batch
  * that waits for a fold: the round runs again on `FOLD_WAIT`, up to `FOLD_RETRIES` times,
- * under the same batch id. A fold still due after them fails the round with `SyncFolding`.
- * Rounds of one editor run one at a time: a round that starts while another is in flight
- * waits for it, so the server's reply is applied once. The result says how many steps the
- * editor lost, once, when it had to open again. A round that fails keeps that count for
- * the next round that completes.
+ * under the same batch id. A fold still due after them fails the round with `SyncFolding`,
+ * and `tickThroughFold` runs the round again. Rounds of one editor run one at a time: a
+ * round that starts while another is in flight waits for it, so the server's reply is
+ * applied once. The result says how many steps the editor lost, once, when it had to open
+ * again. A round that fails keeps that count for the next round that completes.
  */
 export const tick = Effect.fn("editor.sync.tick")(function* (
   session: SyncSession
@@ -116,3 +124,28 @@ export const tick = Effect.fn("editor.sync.tick")(function* (
   );
   return yield* takeDropped(session);
 });
+
+/**
+ * Runs `tick` until the server takes the batch, and runs it again on `schedule` while the
+ * fold is due, so a fold never fails the sync (ADR 0028). Each round runs uninterruptibly,
+ * so a caller that interrupts the loop stops it between two rounds and never inside one.
+ * `afterRound` runs at the end of each round that completes, inside the same region. A
+ * round that still meets the fold when `schedule` ends fails with `SyncFolding`, which the
+ * caller reports or ignores.
+ */
+export const tickThroughFold = Effect.fn("editor.sync.tickThroughFold")(
+  function* (
+    session: SyncSession,
+    schedule: Schedule.Schedule<unknown>,
+    afterRound: (dropped: Option.Option<SyncDropped>) => Effect.Effect<void>
+  ) {
+    return yield* tick(session).pipe(
+      Effect.tap(afterRound),
+      Effect.uninterruptible,
+      Effect.retry({
+        schedule,
+        while: (error) => error._tag === "SyncFolding",
+      })
+    );
+  }
+);
