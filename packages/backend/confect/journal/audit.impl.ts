@@ -14,7 +14,6 @@ import {
   HashMap,
   Layer,
   Number as Num,
-  Result,
   Schema,
   Struct,
 } from "effect";
@@ -22,7 +21,7 @@ import {
 /** The largest page one request reads. */
 const PAGE_LIMIT = 100;
 
-/** The most active members the audit filter lists as actors. */
+/** The most members the audit filter lists as actors. */
 const ACTOR_LIMIT = 200;
 
 /**
@@ -124,9 +123,10 @@ const list = FunctionImpl.make(
 );
 
 /**
- * The active members of the member's school, named, so the audit filter offers every one of them
- * as an actor and not only the actors of the pages loaded so far. A school holds at most
- * `ACTOR_LIMIT` such members in this list, which one indexed read holds.
+ * The members of the member's school, named, whatever their status, so the audit filter offers
+ * every one of them as an actor, a removed member included, and not only the actors of the pages
+ * loaded so far. One indexed read takes the first `ACTOR_LIMIT` members in the order they joined,
+ * so a school with more members than that is listed only in part.
  */
 const actors = FunctionImpl.make(
   databaseSchema,
@@ -136,16 +136,12 @@ const actors = FunctionImpl.make(
     const { tenant } = yield* Member;
     const people = yield* (yield* DatabaseReader)
       .table("tenantPeople")
-      .index("by_tenantId_and_status", (query) =>
-        query.eq("tenantId", tenant._id).eq("status", "active")
+      .index("by_tenantId_and_kind", (query) =>
+        query.eq("tenantId", tenant._id).eq("kind", "member")
       )
       .take(ACTOR_LIMIT)
       .pipe(Effect.orDie);
-    return Arr.filterMap(people, (person) =>
-      person.kind === "member"
-        ? Result.succeed({ id: person._id, name: person.name })
-        : Result.failVoid
-    );
+    return Arr.map(people, (person) => ({ id: person._id, name: person.name }));
   })
 );
 
