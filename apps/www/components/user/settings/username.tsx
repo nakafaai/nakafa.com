@@ -30,6 +30,7 @@ import { MAIN_DOMAIN } from "@repo/next-config/domains";
 import { Effect, Option, Result } from "effect";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
+import { useConvexAuth } from "@/components/providers/convex";
 import {
   CardSection,
   CardSectionFooter,
@@ -55,7 +56,12 @@ export function UserSettingsUsername({ user }: { user: CurrentUser }) {
   const current = user.appUser.username;
   const [typed, setTyped] = useState(current ?? "");
   const [asked] = useDebouncedValue(typed, CHECK_DELAY_MILLISECONDS);
-  const check = useQuery(users.queries.checkUsername, { username: asked });
+  // The check needs the session, which Convex learns a moment after the page draws.
+  const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);
+  const check = useQuery(
+    users.queries.checkUsername,
+    isAuthenticated ? { username: asked } : "skip"
+  );
   if (QueryResult.isFailure(check)) {
     throw check.error;
   }
