@@ -15,7 +15,7 @@ import { TenantOutsider } from "@/components/tenant/outsider";
 import { TenantShell } from "@/components/tenant/shell";
 import { httpLayer } from "@/lib/convex/http";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
-import { readProfile, readViewer } from "@/lib/tenant/read";
+import { readProfile, readSchoolName, readViewer } from "@/lib/tenant/read";
 
 /**
  * Names every page of a school host after the school, so its tab and its history
@@ -29,13 +29,14 @@ export async function generateMetadata({
   if (!Schema.is(TenantSlug)(slug)) {
     return {};
   }
-  return Option.match(await readProfile(slug), {
-    onNone: () => ({}),
-    onSome: ({ name }) => ({
-      robots: { follow: false, index: false },
-      title: { default: name, template: `%s | ${name}` },
-    }),
-  });
+  const name = await readSchoolName(slug);
+  if (name === null) {
+    return {};
+  }
+  return {
+    robots: { follow: false, index: false },
+    title: { default: name, template: `%s | ${name}` },
+  };
 }
 
 /**

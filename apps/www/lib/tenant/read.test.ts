@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Array as Arr, Option, Schema } from "effect";
 import { getToken } from "@/lib/auth/server";
-import { readProfile, readViewer } from "@/lib/tenant/read";
+import { readProfile, readSchoolName, readViewer } from "@/lib/tenant/read";
 import {
   ACCESS_DENIED,
   answered,
@@ -29,6 +29,14 @@ vi.mock("@/lib/auth/server", () => ({ getToken: vi.fn() }));
  * loads. These reads never reach that middleware, so the library stands in as a plain function.
  */
 vi.mock("next-intl/middleware", () => ({ default: () => () => undefined }));
+/**
+ * The `use cache` directive is a build transform, so the test stands in for the cache scope
+ * that `cacheLife` needs. The reads keep their real `io`.
+ */
+vi.mock("next/cache", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("next/cache")>()),
+  cacheLife: vi.fn(),
+}));
 
 const SLUG = Schema.decodeSync(TenantSlug)("harapan");
 
@@ -50,6 +58,25 @@ describe("readProfile", () => {
     serve({ profile: refusedWith(TENANT_NOT_FOUND) });
 
     expect(Option.isNone(await readProfile(SLUG))).toBe(true);
+  });
+});
+
+describe("readSchoolName", () => {
+  beforeEach(() => {
+    resetFakeBackend();
+  });
+
+  it("reads the name of a school that exists", async () => {
+    serve({ profile: answered(PROFILE_VALUE) });
+
+    expect(await readSchoolName(SLUG)).toBe("Harapan");
+    expect(Arr.map(queriesOf(), (query) => query.path)).toEqual([PROFILE]);
+  });
+
+  it("reads no name for a school that does not exist", async () => {
+    serve({ profile: refusedWith(TENANT_NOT_FOUND) });
+
+    expect(await readSchoolName(SLUG)).toBeNull();
   });
 });
 
