@@ -87,7 +87,10 @@ function HomeReady() {
           {access?.canWatch === true ? <LiveTile /> : null}
           {access?.canWatch === true ? <NextTile /> : null}
           {access?.canCreate === true ? (
-            <DraftsTile className="md:col-span-2 xl:col-span-2" />
+            <DraftsTile
+              className="md:col-span-2 xl:col-span-2"
+              drafts={drafts}
+            />
           ) : null}
         </div>
       }
