@@ -14,20 +14,37 @@ import { Input } from "@repo/design-system/components/ui/input";
 import { Effect } from "effect";
 import { useTranslations } from "next-intl";
 import { type FormEvent, useId, useState, useTransition } from "react";
+import { ConvexProvider } from "@/components/providers/convex";
 import {
   pageDeviceIdOf,
   RedeemUnanswered,
+  SignInUnanswered,
+  signInAnswerOf,
   submitLogin,
 } from "@/components/tenant/login.client";
+import { clientEnv } from "@/env.client";
 import { authClient } from "@/lib/auth/client";
 
 /**
  * The school login form: the school username and a password, with an optional card code for
  * a first sign-in or a reissued card. A typed card code redeems the card and sets the password
  * first, and both paths then sign the student in on this host (ADR 0009). The answer names the
- * problem without telling whether the username exists.
+ * problem without telling whether the username exists. The signed-out school tree mounts no
+ * Convex provider, so the form mounts one for its redemption.
  */
 export function TenantLogin({ slug }: { slug: TenantSlug }) {
+  return (
+    <ConvexProvider convexUrl={clientEnv.NEXT_PUBLIC_CONVEX_URL}>
+      <TenantLoginForm slug={slug} />
+    </ConvexProvider>
+  );
+}
+
+/**
+ * The form under the provider of `TenantLogin`. Its hooks read that provider, so they cannot run
+ * in the component that renders it.
+ */
+function TenantLoginForm({ slug }: { slug: TenantSlug }) {
   const t = useTranslations("SchoolEntry");
   const id = useId();
   const redeem = useMutation(identity.cards.redeem);
@@ -53,13 +70,11 @@ export function TenantLogin({ slug }: { slug: TenantSlug }) {
                 catch: () => new RedeemUnanswered(),
               }),
             signIn: (credentials) =>
-              Effect.tryPromise(() =>
-                authClient.signIn.username(credentials)
-              ).pipe(
-                Effect.match({
-                  onFailure: () => false,
-                  onSuccess: (result) => !result.error,
-                })
+              Effect.tryPromise({
+                try: () => authClient.signIn.username(credentials),
+                catch: () => new SignInUnanswered(),
+              }).pipe(
+                Effect.flatMap((answer) => signInAnswerOf(answer.error?.status))
               ),
           }
         )

@@ -7,6 +7,8 @@ import {
   RedeemUnanswered,
   redeemRefusalKey,
   redeemRequestOf,
+  SignInUnanswered,
+  signInAnswerOf,
   submitLogin,
 } from "@/components/tenant/login.client";
 
@@ -25,11 +27,12 @@ const valuesWith = (code: string) => ({
 
 /**
  * Ports that answer one redemption and one password sign-in, and count the requests that reach
- * them. A `failure` redemption fails the request itself, not the card.
+ * them. A `failure` redemption fails the request itself, not the card, and a `failure` sign-in
+ * fails the password request, so that it gets no answer.
  */
 const portsOf = (
   redeemed: typeof RedeemOutcome.Type | "failure",
-  signedIn: boolean
+  signedIn: boolean | "failure"
 ) => {
   const requests = { redeems: 0, signIns: 0 };
   return {
@@ -42,7 +45,9 @@ const portsOf = (
       },
       signIn: () => {
         requests.signIns += 1;
-        return Effect.succeed(signedIn);
+        return signedIn === "failure"
+          ? Effect.fail(new SignInUnanswered())
+          : Effect.succeed(signedIn);
       },
     },
     requests,
@@ -188,6 +193,64 @@ describe("submitLogin", () => {
           "card-expired"
         );
         expect(requests).toEqual({ redeems: 1, signIns: 0 });
+      })
+  );
+
+  it.effect(
+    "answers the failure message when the password sign-in gets no answer",
+    () =>
+      Effect.gen(function* () {
+        const { ports, requests } = portsOf("failure", "failure");
+        expect(yield* submitLogin(valuesWith("  "), ports)).toBe("failed");
+        expect(requests).toEqual({ redeems: 0, signIns: 1 });
+      })
+  );
+
+  it.effect(
+    "answers the failure message when a redeemed card's sign-in gets no answer",
+    () =>
+      Effect.gen(function* () {
+        const { ports, requests } = portsOf(redeemed, "failure");
+        expect(yield* submitLogin(valuesWith("ABCDE-FGHJK"), ports)).toBe(
+          "failed"
+        );
+        expect(requests).toEqual({ redeems: 1, signIns: 1 });
+      })
+  );
+
+  it.effect(
+    "answers the failure message, not the card-used message, when a used card's sign-in gets no answer",
+    () =>
+      Effect.gen(function* () {
+        const { ports } = portsOf(used, "failure");
+        expect(yield* submitLogin(valuesWith("ABCDE-FGHJK"), ports)).toBe(
+          "failed"
+        );
+      })
+  );
+});
+
+describe("signInAnswerOf", () => {
+  it.effect("signs the student in when the server accepts the password", () =>
+    Effect.gen(function* () {
+      expect(yield* signInAnswerOf(undefined)).toBe(true);
+    })
+  );
+
+  it.effect(
+    "refuses a password that the server answers with a client error status",
+    () =>
+      Effect.gen(function* () {
+        expect(yield* signInAnswerOf(401)).toBe(false);
+      })
+  );
+
+  it.effect(
+    "leaves a server failure unanswered, so it does not read as a wrong password",
+    () =>
+      Effect.gen(function* () {
+        const error = yield* Effect.flip(signInAnswerOf(503));
+        expect(error).toMatchObject({ _tag: "SignInUnanswered" });
       })
   );
 });

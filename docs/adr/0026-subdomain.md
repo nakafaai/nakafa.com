@@ -83,14 +83,17 @@ finds the right data.
   `lib/routing/school/refusal.ts`, as the profile page already decides its 404 in
   the proxy (`lib/routing/public/profile.ts`). A visitor with no session is refused
   when the school does not exist: `tenancy.profile.get` answers `TenantNotFound`. A
-  signed-in viewer is refused when `tenancy.viewer.get` answers `NotMember`, which
-  it gives for a school that does not exist and for a school the viewer does not
-  belong to alike, or `AccessDenied`. The refused page answers with the app's
-  not-found page and a 404 status, through a rewrite to the not-found route, in
-  the locale that the school page negotiates. The school layout cannot answer 404
-  itself: Next sends the static shell of the route with status 200 first, and a
-  `notFound()` call after that keeps the 200 (the installed docs, `loading.md`,
-  "Status codes").
+  signed-in viewer is refused when `tenancy.viewer.get` answers `AccessDenied`,
+  or answers `NotMember` and `tenancy.profile.get` answers `TenantNotFound`,
+  because `NotMember` alone is given for a school that does not exist and for a
+  school the viewer does not belong to alike. A signed-in non-member of an
+  existing school reaches the layout, which renders the outsider page
+  (`components/tenant/outsider.tsx`) with a 200 status. The refused page answers
+  with the app's not-found page and a 404 status, through a rewrite to the
+  not-found route, in the locale that the school page negotiates. The school
+  layout cannot answer 404 itself: Next sends the static shell of the route with
+  status 200 first, and a `notFound()` call after that keeps the 200 (the
+  installed docs, `loading.md`, "Status codes").
 - A page request is a GET or HEAD document that is not a Flight request. A client
   navigation and a prefetch both carry `rsc: 1`, so they pay no read, and the
   layout still refuses a membership that has ended. A read that fails goes on to

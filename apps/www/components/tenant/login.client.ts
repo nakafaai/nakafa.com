@@ -58,6 +58,34 @@ export class RedeemUnanswered extends Schema.TaggedError<RedeemUnanswered>()(
   {}
 ) {}
 
+/**
+ * A password sign-in whose request got no answer, or whose server failed to answer. It is not a
+ * refusal: a wrong password answers an error status below 500, which the form reads as a refusal.
+ */
+export class SignInUnanswered extends Schema.TaggedError<SignInUnanswered>()(
+  "SignInUnanswered",
+  {}
+) {}
+
+/**
+ * Reads the answer of one password sign-in from the status of its error. No error status means
+ * the server signed the student in, and a status below 500 means it refused the password. A server
+ * failure is unanswered, so an outage never reads as a wrong password.
+ */
+export const signInAnswerOf = Effect.fn("www.tenant.login.signInAnswer")(
+  function* (
+    errorStatus: number | undefined
+  ): Effect.fn.Return<boolean, SignInUnanswered> {
+    if (errorStatus === undefined) {
+      return true;
+    }
+    if (errorStatus >= 500) {
+      return yield* new SignInUnanswered();
+    }
+    return false;
+  }
+);
+
 /** The copy key of a submission that does not sign the student in. */
 type SubmitMessage =
   | "card-invalid"
@@ -80,8 +108,28 @@ interface SubmitPorts {
   readonly signIn: (credentials: {
     readonly password: string;
     readonly username: string;
-  }) => Effect.Effect<boolean>;
+  }) => Effect.Effect<boolean, SignInUnanswered>;
 }
+
+/** The credentials of one password sign-in, as the form sends them. */
+type SignInCredentials = Parameters<SubmitPorts["signIn"]>[0];
+
+/**
+ * The password sign-in of one submission. The student is signed in when the server accepts the
+ * password, and `refusal` is the message for a password that it refuses. A sign-in that got no
+ * answer shows the failure message instead, so a lost request never reads as a wrong password.
+ */
+const passwordSignIn = (
+  ports: SubmitPorts,
+  credentials: SignInCredentials,
+  refusal: SubmitMessage
+): Effect.Effect<SubmitStep> =>
+  ports.signIn(credentials).pipe(
+    Effect.map((signedIn) => (signedIn ? "signed-in" : refusal)),
+    Effect.catchTag("SignInUnanswered", () =>
+      Effect.succeed<SubmitStep>("failed")
+    )
+  );
 
 /**
  * Decides one submission of the login form (ADR 0009). With no card code, the form signs the
@@ -89,7 +137,7 @@ interface SubmitPorts {
  * a redeemed card signs the student in. A card that answers `used` may be the retry of a
  * redemption whose reply was lost, so the password sign-in decides: it signs the student in
  * when the password is right, and otherwise the form shows that the card was used. Any other
- * refusal shows its own message.
+ * refusal shows its own message, and a sign-in that got no answer shows the failure message.
  */
 export const submitLogin = Effect.fn("www.tenant.login.submit")(function* (
   values: typeof LoginFormValues.Type,
@@ -100,7 +148,7 @@ export const submitLogin = Effect.fn("www.tenant.login.submit")(function* (
     username: values.loginName,
   };
   if (values.code.trim() === "") {
-    return (yield* ports.signIn(credentials)) ? "signed-in" : "sign-in-refused";
+    return yield* passwordSignIn(ports, credentials, "sign-in-refused");
   }
   const request = redeemRequestOf(values);
   if (Option.isNone(request)) {
@@ -114,10 +162,11 @@ export const submitLogin = Effect.fn("www.tenant.login.submit")(function* (
   if (outcome.outcome === "refused" && outcome.reason !== "used") {
     return redeemRefusalKey(outcome.reason);
   }
-  if (yield* ports.signIn(credentials)) {
-    return "signed-in";
-  }
-  return outcome.outcome === "redeemed" ? "sign-in-refused" : "card-used";
+  return yield* passwordSignIn(
+    ports,
+    credentials,
+    outcome.outcome === "redeemed" ? "sign-in-refused" : "card-used"
+  );
 });
 
 /** The device id of this page load, which the card's rate limit counts attempts against. */
