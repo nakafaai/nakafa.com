@@ -65,14 +65,8 @@ test("a teacher tries an exam as a student, picks an answer, and the answer is n
   const changes = await Effect.runPromise(trackChanges(trying, []));
   await trying.goto(page.url());
   await expect(
-    trying.getByRole("textbox", { name: "Question text" })
+    trying.getByRole("textbox", { name: "Question 1 text" })
   ).toContainText(PROMPT, { timeout: readinessTimeoutMilliseconds });
-  // The try names each option by the question's answer label, so an option is found by its text.
-  for (const option of OPTIONS) {
-    await expect(
-      trying.getByRole("radio", { name: option.text, exact: true })
-    ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
-  }
 
   // The try action sits beside Schedule in the editor's header, and opens the try.
   await trying.getByRole("link", { name: "Try as student" }).click();
@@ -85,6 +79,7 @@ test("a teacher tries an exam as a student, picks an answer, and the answer is n
   await expect(trying.getByText(PROMPT)).toBeVisible({
     timeout: readinessTimeoutMilliseconds,
   });
+  // The try names each option by the question's answer label, so an option is found by its text.
   for (const option of OPTIONS) {
     await expect(
       trying.getByRole("radio", { name: option.text, exact: true })
