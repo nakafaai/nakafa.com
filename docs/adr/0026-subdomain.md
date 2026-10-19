@@ -65,7 +65,9 @@ finds the right data.
   school is configuration, so a request never reads the database to find its
   school. A request that reads nothing has a target of under 1 ms, which no run has
   measured yet. A page request on a school host makes the one Convex query of the
-  next bullets, and only to decide the page's status.
+  next bullets, and only to decide the page's status. The Convex site trusts
+  `x-forwarded-host` for the school host gate, and credentials and the slug-scoped
+  lookup, not the header, protect sign-in.
 - The proxy's redirects name the host and port that the visitor asked for, read
   from the Host header (`lib/routing/visitor.ts`): the port of the header, or the
   default port of the protocol when the header names none. Only the protocol comes

@@ -33,10 +33,11 @@ import { Clock, Effect, Option, Result } from "effect";
 
 /**
  * Attempts one device may make: five at once, then five more each fifteen
- * minutes. The device is a UUID that the sign-in page keeps, so a device that
- * asks for a new one gets a new bucket. A code holds 50 bits (ADR 0009), so a
- * bucket shared by every device adds no protection against guessing, and it would
- * let one person block another's card.
+ * minutes. The code's 50 bits are the protection against guessing (ADR 0009), and
+ * this bucket only slows one browser: the device is a UUID that the sign-in page
+ * keeps, so a device that asks for a new one gets a new bucket. A bucket shared by
+ * every device would let one person block another's card, so the limit stays per
+ * device.
  */
 const DEVICE_ATTEMPTS = { capacity: 5, period: 15 * MINUTE, rate: 5 };
 
@@ -183,9 +184,9 @@ const accountOf = Effect.fn("identity.redeem.account")(function* (
 /**
  * Redeems one login card: the student's first sign-in, or the new password that
  * a reissued card allows. In order, it refuses a request that carries a signed-in
- * identity before any limit is spent, counts the attempt against the device limit,
- * reads the code and the typed login name, opens the card on the school's host
- * with that login name, checks the password length,
+ * identity before any limit is spent, counts the attempt against its device's bucket
+ * (which only slows one browser), reads the code and the typed login name, opens the
+ * card on the school's host with that login name, checks the password length,
  * creates the account if the Person has none and claims the Person, stores the
  * password through Better Auth, marks the card used, and journals the redemption.
  * The rate-limit count is written first, on purpose: a refusal is a value, so the
