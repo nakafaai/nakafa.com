@@ -12,6 +12,7 @@ import {
   lockAttempt,
   unlockAttempt,
 } from "@/components/exams/sitting/change";
+import { refusalCopyOf } from "@/components/exams/sitting/refusal";
 import { reportClientException } from "@/lib/analytics/client";
 
 /** The milliseconds on the device clock, for the optimistic guess that the server settles. */
@@ -98,8 +99,34 @@ export function useChangeToken() {
 }
 
 /**
- * Runs one server call from a control. A refused call reports the failure and shows the
- * generic message, and the optimistic change of the call rolls back with it.
+ * Tells a student that a sitting call failed. A refusal names its reason and the next step, as its toast
+ * says, and any other failure is reported and shown in the generic message.
+ */
+export function sittingCallFailure(error: unknown) {
+  return Option.match(refusalCopyOf(error), {
+    onNone: () =>
+      reportClientException(error, {
+        source: "components/exams/sitting/actions",
+      }).pipe(
+        Effect.andThen(
+          Effect.sync(() => {
+            toast.error({
+              description: "action-error.description",
+              title: "action-error.title",
+            });
+          })
+        )
+      ),
+    onSome: (copy) =>
+      Effect.sync(() => {
+        toast.error(copy);
+      }),
+  });
+}
+
+/**
+ * Runs one server call from a control. A refused call shows its reason, and the optimistic change of the
+ * call rolls back with it.
  */
 export function runSittingCall<A, E>(
   call: () => Promise<Result.Result<A, E>>,
@@ -109,19 +136,7 @@ export function runSittingCall<A, E>(
     Effect.tryPromise(call).pipe(
       Effect.flatMap(Effect.fromResult),
       Effect.matchEffect({
-        onFailure: (error) =>
-          reportClientException(error, {
-            source: "components/exams/sitting/actions",
-          }).pipe(
-            Effect.andThen(
-              Effect.sync(() => {
-                toast.error({
-                  description: "action-error.description",
-                  title: "action-error.title",
-                });
-              })
-            )
-          ),
+        onFailure: sittingCallFailure,
         onSuccess: (value) =>
           Effect.sync(() => {
             onSuccess(value);

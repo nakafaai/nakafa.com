@@ -22,6 +22,7 @@ function attempt(
     away: options.away ?? false,
     deadline: 10_000,
     id: attemptId("attempt-a"),
+    lastActiveAt: 1000,
     latestSignal: options.latestSignal ?? null,
     mascot: null,
     name: "Nabila Zahra",

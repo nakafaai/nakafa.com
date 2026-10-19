@@ -28,6 +28,7 @@ function attempt(
     away: false,
     deadline,
     id: attemptId(id),
+    lastActiveAt: deadline,
     latestSignal: null,
     mascot: null,
     name: "Nabila Zahra",

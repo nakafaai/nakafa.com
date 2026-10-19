@@ -43,7 +43,8 @@
     "sign-in-title": "Masuk ke {school}",
     "tile-student": "Ujianmu",
     "sittings-empty": "Belum ada ujian untuk Anda",
-    "sittings-empty-description": "Guru Anda menjadwalkan ujian, dan ujian itu muncul di sini."
+    "sittings-empty-description": "Guru Anda menjadwalkan ujian, dan ujian itu muncul di sini.",
+    "sittings-next": "Sesi berikutnya dibuka {time}."
   },
   "SchoolEntry": {
     "card-code-description": "Hanya untuk masuk pertama kali atau setelah kartu baru dicetak.",
@@ -61,7 +62,7 @@
     "password-label": "Kata sandi",
     "password-too-long": "Kata sandi terlalu panjang.",
     "password-too-short": "Kata sandi terlalu pendek.",
-    "sign-in-refused": "Username atau kata sandi tidak cocok.",
+    "sign-in-refused": "Username atau kata sandi tidak cocok, jadi periksa keduanya atau tanya guru jika tetap gagal.",
     "submit": "Masuk",
     "submitting": "Sedang masuk...",
     "username-action": "Masuk dengan username",
@@ -132,18 +133,18 @@
     "student-enter": "Masuk ke sesi",
     "student-enter-footer": "Pengawas memberikan tokennya.",
     "student-token-placeholder": "Masukkan token dari pengawas",
-    "student-token-refused": "Token tidak cocok. Periksa lagi lalu coba kembali.",
-    "student-too-many-tries": "Terlalu banyak percobaan. Tunggu satu menit lalu coba lagi.",
-    "student-not-in-sitting": "Kamu tidak ada di sesi ini.",
-    "student-not-open": "Sesi ini belum dibuka.",
-    "student-closed": "Sesi ini sudah ditutup.",
-    "student-locked-school": "Sesi ini terkunci, sehingga tidak menerima masuk dan tidak mencatat kejadian.",
+    "student-token-refused": "Token tidak cocok, jadi periksa lagi lalu coba kembali.",
+    "student-too-many-tries": "Terlalu banyak percobaan, jadi tunggu satu menit lalu coba lagi.",
+    "student-not-in-sitting": "Kamu tidak ada di sesi ini, jadi tanyakan pengawasmu jika kamu merasa ini keliru.",
+    "student-not-open": "Sesi ini belum dibuka, jadi kembali lagi pada waktu pembukaannya.",
+    "student-closed": "Sesi ini sudah ditutup, jadi tanyakan guru tentang sesi lain.",
+    "student-locked-school": "Sesi ini terkunci, jadi tanyakan guru apa yang harus dilakukan selanjutnya.",
     "student-no-answer": "Belum dijawab",
-    "student-attempt-closed": "Percobaan ini sudah ditutup.",
-    "student-second-device": "Percobaan ini milik perangkat lain. Minta pengawas mengizinkan perangkat kedua.",
-    "student-device-retired": "Pengawas menonaktifkan perangkat ini dari percobaan.",
-    "student-locked": "Pengawas mengunci sesi ini, jadi kamu tidak bisa menjawab.",
-    "student-unavailable": "Sesi ini tidak terbuka untukmu.",
+    "student-attempt-closed": "Percobaan ini sudah ditutup, jadi tanyakan pengawasmu jika kamu merasa waktunya keliru.",
+    "student-second-device": "Percobaan ini milik perangkat lain, jadi minta pengawas mengizinkan perangkat kedua.",
+    "student-device-retired": "Pengawas menonaktifkan perangkat ini, jadi tanyakan pengawas perangkat mana yang boleh kamu pakai.",
+    "student-locked": "Pengawas mengunci percobaan ini, jadi tunggu sampai dibuka kembali sebelum menjawab.",
+    "student-unavailable": "Sesi ini tidak terbuka untukmu, jadi tanyakan guru jika kamu merasa ini keliru.",
     "finish-title": "Selesaikan ujian?",
     "finish-description": "Jawabanmu tidak bisa diubah setelah kamu selesai.",
     "answers-in": "Jawabanmu sudah tersimpan.",
@@ -232,7 +233,14 @@
     "state-all": "Semua status",
     "try-action": "Coba sebagai siswa",
     "try-finish": "Selesai mencoba",
-    "try-note": "Jawaban di sini tidak disimpan."
+    "try-note": "Jawaban di sini tidak disimpan.",
+    "student-retry": "Sesi ini gagal dimuat, jadi coba lagi sebentar lagi.",
+    "student-opens-at": "Sesi ini dibuka {time}.",
+    "student-scheduled-footer": "Kolom token terbuka bersama sesi.",
+    "student-back-home": "Kembali ke beranda",
+    "flag-question": "Tandai untuk ditinjau",
+    "student-view-results": "Lihat hasil",
+    "seat-last-activity": "Aktivitas terakhir {time}."
   },
   "SchoolSettings": {
     "school": "Sekolah",
@@ -1131,7 +1139,8 @@
     "time-one": "Sisa waktu 1 menit",
     "shortcut-step": "Soal sebelumnya atau berikutnya",
     "shortcut-pick": "Pilih opsi",
-    "shortcut-navigator": "Navigasi soal"
+    "shortcut-navigator": "Navigasi soal",
+    "cell-flagged": "{state, select, answered {Soal {number}, terjawab, ditandai untuk ditinjau} other {Soal {number}, belum dijawab, ditandai untuk ditinjau}}"
   },
   "Utils": {
     "clear-search": "Hapus pencarian",
@@ -1541,6 +1550,38 @@
     "school-save-error": {
       "title": "Jawabanmu belum tersimpan.",
       "description": "Coba lagi."
+    },
+    "sitting-not-in": {
+      "title": "Kamu tidak ada di sesi ini.",
+      "description": "Tanyakan pengawasmu jika kamu merasa ini keliru."
+    },
+    "sitting-locked": {
+      "title": "Sesi ini terkunci.",
+      "description": "Tanyakan guru apa yang harus dilakukan selanjutnya."
+    },
+    "sitting-attempt-closed": {
+      "title": "Percobaan ini sudah ditutup.",
+      "description": "Tanyakan pengawasmu jika kamu merasa waktunya keliru."
+    },
+    "sitting-attempt-locked": {
+      "title": "Pengawas mengunci percobaan ini.",
+      "description": "Tunggu sampai pengawas membukanya, lalu coba lagi."
+    },
+    "sitting-second-device": {
+      "title": "Percobaan ini milik perangkat lain.",
+      "description": "Minta pengawas mengizinkan perangkat kedua."
+    },
+    "sitting-device-retired": {
+      "title": "Pengawas menonaktifkan perangkat ini.",
+      "description": "Tanyakan pengawas perangkat mana yang boleh kamu pakai."
+    },
+    "sitting-response-refused": {
+      "title": "Jawaban ini tidak sesuai dengan soal.",
+      "description": "Pilih opsinya lagi."
+    },
+    "sitting-question-missing": {
+      "title": "Soal ini bukan bagian dari ujian ini.",
+      "description": "Muat ulang sesi untuk melihat soalnya."
     }
   },
   "Ai": {

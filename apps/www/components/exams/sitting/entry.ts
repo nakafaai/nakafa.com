@@ -1,8 +1,12 @@
 import { Option, Schema } from "effect";
 
-/** The ways that an entry to a sitting ends without a seat, as the server names them. */
+/**
+ * The ways that a call to a sitting ends without a seat, as the server names them. An entry, the paper,
+ * and an attempt's screen all show the sentence of one of these, so each reason has one sentence.
+ */
 export const EntryFailure = Schema.Literals([
   "AttemptClosed",
+  "AttemptLocked",
   "DeviceRetired",
   "NotInSitting",
   "SecondDevice",
@@ -19,6 +23,7 @@ export const EntryMessage = Schema.Literals([
   "student-attempt-closed",
   "student-closed",
   "student-device-retired",
+  "student-locked",
   "student-locked-school",
   "student-not-in-sitting",
   "student-not-open",
@@ -27,12 +32,13 @@ export const EntryMessage = Schema.Literals([
   "student-too-many-tries",
 ]);
 
-/** The sentence that the screen shows for each failure of an entry. */
+/** The sentence that the screen shows for each failure of a call. */
 const failureMessages: Record<
   typeof EntryFailure.Type,
   typeof EntryMessage.Type
 > = {
   AttemptClosed: "student-attempt-closed",
+  AttemptLocked: "student-locked",
   DeviceRetired: "student-device-retired",
   NotInSitting: "student-not-in-sitting",
   SecondDevice: "student-second-device",
@@ -50,8 +56,8 @@ const refusalMessages: Record<
   TooManyTries: "student-too-many-tries",
 };
 
-/** The sentence for an entry failure, or none when the error is not one that an entry names. */
-export function entryFailureMessage(
+/** The sentence for a failed call, or none when the error is not one that a sitting call names. */
+export function sittingFailureMessage(
   error: unknown
 ): Option.Option<typeof EntryMessage.Type> {
   return Option.map(

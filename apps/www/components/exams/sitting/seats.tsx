@@ -6,7 +6,7 @@ import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { PersonAvatar } from "@repo/design-system/components/ui/person";
 import { cva } from "class-variance-authority";
 import { Array as Arr } from "effect";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import {
   type DashboardAttempt,
@@ -22,6 +22,7 @@ import {
   type SeatFrame,
   seatFrame,
 } from "@/components/exams/sitting/seat";
+import { schoolDateTimeText } from "@/components/tenant/settings/clock";
 
 /** The frame of one seat: its colour by state, dashed while the student is disconnected, and a ring when selected. */
 const seatStyles = cva(
@@ -140,6 +141,9 @@ function SeatButton({
   readonly attempt: DashboardAttempt;
   readonly cursor: string | null;
 }) {
+  const t = useTranslations("Exams");
+  const locale = useLocale();
+  const { value } = useSittingData();
   const selected = useSittingStore(
     (state) => state.selected?.attemptId === attempt.id
   );
@@ -158,7 +162,19 @@ function SeatButton({
       type="button"
     >
       <PersonAvatar className="size-6" mascot={attempt.mascot ?? undefined} />
-      <span className="min-w-0 truncate">{attempt.name}</span>
+      <span className="grid min-w-0 gap-0.5">
+        <span className="truncate">{attempt.name}</span>
+        <span className="truncate text-muted-foreground text-xs">
+          {t("seat-last-activity", {
+            time:
+              schoolDateTimeText({
+                at: attempt.lastActiveAt,
+                locale,
+                timeZone: value.sitting.timeZone,
+              }) ?? "",
+          })}
+        </span>
+      </span>
     </button>
   );
 }
