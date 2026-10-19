@@ -33,7 +33,7 @@ the three surfaces can carry a school's credential.
 
 The HTTP layer is a Confect router. `packages/backend/convex/http.ts`
 re-exports `packages/backend/confect/http.ts`, which calls `HttpRouter.make` of
-`@confect/server` on a merged layer of route layers. `@confect/server` 10.1.0,
+`@confect/server` on a merged layer of route layers. `@confect/server` 10.3.1,
 the version this repository pins, documents in `src/HttpRouter.ts` that the layer
 may be built from `effect/http-api`: `HttpApiBuilder.layer(api)` registers the
 endpoints of an `HttpApi`, and its handlers may require the Confect services.
@@ -74,8 +74,8 @@ written against it.
 The public addresses stay keyless and never accept a school path (ADR 0006,
 ADR 0026). An export is made by a reader behind `decide`, so it holds exactly
 what its caller may read. The XLSX library is the one chosen with the Dapodik
-import, and the Dapodik export itself stays with `confect/connectors`
-(ADR 0015).
+import, and the Dapodik export itself belongs to Records (ADR 0033), and the import
+stays with the connectors (ADR 0015).
 
 ### REST: one `HttpApi`
 
@@ -533,9 +533,9 @@ first. The token endpoint, the bearer middleware, and the routes come later.
 
 ## References
 
-- `@confect/server` 10.1.0, `src/HttpRouter.ts`, and the Confect page on the HTTP
+- `@confect/server` 10.3.1, `src/HttpRouter.ts`, and the Confect page on the HTTP
   API (confect.dev/server/http-api).
-- Effect 4.0.2, `repos/effect/packages/effect/src/http-api`: `HttpApi`,
+- Effect 4.0.5, `repos/effect/packages/effect/src/http-api`: `HttpApi`,
   `HttpApiBuilder`, `HttpApiClient`, `HttpApiMiddleware`, `HttpApiSecurity`,
   `HttpApiTest`, and `OpenApi` (OpenAPI 3.1.0).
 - RFC 6749 (client credentials), RFC 6750 (bearer tokens), RFC 7009

@@ -26,20 +26,39 @@ const NEXT: Record<Step, typeof TimingSchema.Type> = {
 };
 
 /**
- * How the line of words looks at each step: whole, dots falling into the lock
- * Nina holds, or gone into it. The dots fall the height of her head, so they
- * end at her lock.
+ * How the line of words moves at each step: it falls the height of Nina's head
+ * into the lock she holds, it waits unseen a little above its place once it is
+ * locked away, and it comes back down into its place, sharpening as it fades
+ * in. Only the fall and the return move; the wait jumps, unseen.
  */
-const wordsVariants = cva("min-h-8 text-lg", {
+const lineVariants = cva("grid min-h-8 text-lg", {
   variants: {
     step: {
       falling:
         "translate-y-36 scale-75 opacity-0 transition-[translate,scale,opacity] duration-1000 ease-(--ease-in-out)",
-      locked: "opacity-0",
-      words: "",
+      locked: "-translate-y-2 opacity-0 blur-xs transition-none",
+      words:
+        "translate-y-0 scale-100 opacity-100 blur-none transition-[translate,scale,opacity,filter] duration-500 ease-out",
     },
   },
 });
+
+/**
+ * The words and their dots share one place in the line: as the line starts to
+ * fall the words blur away and the dots come in, so the words turn into dots
+ * on the way down instead of all at once.
+ */
+const layerVariants = cva(
+  "col-start-1 row-start-1 transition-[opacity,filter] duration-300 ease-out",
+  {
+    variants: {
+      shown: {
+        false: "opacity-0 blur-xs",
+        true: "opacity-100 blur-none",
+      },
+    },
+  }
+);
 
 /**
  * The dark room of the privacy part. Nina holds a padlock, and a line of words
@@ -75,9 +94,17 @@ export function PrivacyRoom({ words }: { readonly words: string }) {
     <div className="grid w-full justify-items-center gap-4" ref={ref}>
       <p
         aria-hidden={current !== "words"}
-        className={wordsVariants({ step: current })}
+        className={lineVariants({ step: current })}
       >
-        {current === "words" ? words : dots}
+        <span className={layerVariants({ shown: current !== "falling" })}>
+          {words}
+        </span>
+        <span
+          aria-hidden="true"
+          className={layerVariants({ shown: current === "falling" })}
+        >
+          {dots}
+        </span>
       </p>
       <Nina
         act="guarding"

@@ -93,7 +93,7 @@ export function AnalyticsConsentControls() {
             <CardContent className="min-h-0 flex-1 overflow-y-auto">
               <ConsentDetails error={consent.error} />
             </CardContent>
-            <CardSectionFooter>
+            <CardSectionFooter hint={t("prompt-footer")}>
               <CardSectionActions>{actions}</CardSectionActions>
             </CardSectionFooter>
           </CardSection>

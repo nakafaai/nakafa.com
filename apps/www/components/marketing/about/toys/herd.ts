@@ -6,10 +6,10 @@ const HOME_SEED = "nakafa-home";
 
 /**
  * How many animals the toys of the page take: seven around the hero's title,
- * one where each of twelve parts begins, two in the privacy room and two
+ * two where each of twelve parts begins, two in the privacy room and two
  * beside the founder's letter.
  */
-const TOY_COUNT = 23;
+const TOY_COUNT = 35;
 
 /** How many friends stand in the crowd of the community part. */
 const CROWD_COUNT = 18;
@@ -23,16 +23,18 @@ const CLASS_COUNT = 7;
 /** How many animals the home page takes from the start of the cast. */
 const HOME_COUNT = TOY_COUNT + CROWD_COUNT + CLASS_COUNT;
 
-/** How many animals sit in the open space beside the parts of the pricing page. */
-const PRICING_TOY_COUNT = 6;
+/**
+ * How many animals the toys of the pricing page take: two pairs beside each of
+ * three parts, and a herd of two in the middle of each.
+ */
+const PRICING_TOY_COUNT = 12;
 
 /** How many animals sit in the class of the pricing page. */
 const PRICING_CLASS_COUNT = 7;
 
 /**
- * The one cast of the marketing pages. The home page takes its toys, crowd and
- * class as slices of it, in that order, and the pricing page takes the slices
- * after them, so no animal appears twice on a page or on both pages.
+ * The cast of the home page. It takes its toys, crowd and class as slices of
+ * it, in that order, so no animal appears twice on the page.
  */
 export const HOME_CAST = cast(HOME_SEED, HOME_COUNT);
 
@@ -45,11 +47,17 @@ export const CROWD_HERD = Arr.take(Arr.drop(HOME_CAST, TOY_COUNT), CROWD_COUNT);
 /** The animals of the class, at the end of the home cast. */
 export const CLASS_HERD = Arr.drop(HOME_CAST, TOY_COUNT + CROWD_COUNT);
 
-/** The animals of the pricing page, straight after the home cast. */
+/** The seed that names the animals of the pricing page. */
+const PRICING_SEED = "nakafa-pricing";
+
+/**
+ * The cast of the pricing page, its own, so no animal appears twice on it. The
+ * home page holds most of the animals there are, so the pricing page draws from
+ * all of them again rather than from what the home page leaves.
+ */
 const PRICING_CAST = cast(
-  HOME_SEED,
-  PRICING_TOY_COUNT + PRICING_CLASS_COUNT,
-  HOME_COUNT
+  PRICING_SEED,
+  PRICING_TOY_COUNT + PRICING_CLASS_COUNT
 );
 
 /** The animals of the pricing toys, from the start of their slice. */

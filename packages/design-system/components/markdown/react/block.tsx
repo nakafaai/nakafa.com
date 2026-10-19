@@ -9,6 +9,7 @@ import { CodeBlockContent } from "@repo/design-system/components/code-block/cont
 import { codeBlockDarkModeVariants } from "@repo/design-system/components/code-block/variants";
 import { SimpleIcon } from "@repo/design-system/components/icons/simple";
 import { CodeFence } from "@repo/design-system/components/markdown/react/fence";
+import { useFenceSource } from "@repo/design-system/components/markdown/react/source";
 import {
   codeFenceBodyVariants,
   codeFencePreVariants,
@@ -17,18 +18,12 @@ import { DEFAULT_CODE_THEMES } from "@repo/design-system/lib/code-block/highligh
 import { languageIconMap } from "@repo/design-system/lib/code-block/icons";
 import { cn } from "cn";
 
-interface MarkdownCodeBlockProps {
-  readonly className?: string | undefined;
-  readonly code: string;
-  readonly language: string;
-}
-
-/** Renders one fenced response block, highlighted, with the shared code controls. */
-export function MarkdownCodeBlock({
-  className,
-  code,
-  language,
-}: MarkdownCodeBlockProps) {
+/**
+ * Renders one fenced response block, highlighted, with the shared code controls.
+ * It reads its source from the block that loads it, so it takes no props.
+ */
+export function MarkdownCodeBlock() {
+  const { className, code, language } = useFenceSource();
   const icon = languageIconMap[language];
 
   return (

@@ -2,11 +2,12 @@ import { describe, expect, it } from "@effect/vitest";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { Confect, confectLayer } from "@repo/backend/confect/test.setup";
 import {
+  ensureConnectorKeys,
   readLearnerKeys,
   readTenantKeys,
 } from "@repo/backend/confect/vault/keys";
 import { rewrapKeys } from "@repo/backend/confect/vault/rewrap";
-import { openText } from "@repo/backend/confect/vault/text";
+import { blindConnectorText, openText } from "@repo/backend/confect/vault/text";
 import { learnerUnder, memory, schoolUnder } from "@repo/backend/test/owner";
 import { TEST_ROOT_KEYS, withRoots } from "@repo/backend/test/vault";
 import { Array as Arr, Effect } from "effect";
@@ -34,6 +35,19 @@ const keyRoots = Effect.fn("test.vault.rewrap.roots")(function* () {
     schools: Arr.map(schools, (row) => row.root),
   };
 });
+
+/** The root key that the connector key names, or nothing while it does not exist. */
+const connectorRoots = Effect.fn("test.vault.rewrap.connectorRoots")(
+  function* () {
+    const rows = yield* (yield* DatabaseReader)
+      .table("connectorKeys")
+      .index("by_creation_time")
+      .collect();
+    return Arr.map(rows, (row) => row.root);
+  }
+);
+
+const CONNECTOR_BINDING = "nakafa/test/connector/v1";
 
 describe("vault key rewrap", () => {
   it.effect(
@@ -142,6 +156,52 @@ describe("vault key rewrap", () => {
               "configuration"
             );
             expect((yield* keyRoots()).schools).toEqual(["zed"]);
+          }).pipe(Effect.orDie)
+        );
+      }).pipe(Effect.provide(confectLayer))
+  );
+
+  it.effect(
+    "moves the connector key after the learner and school keys, and keeps the blinds it made",
+    () =>
+      Effect.gen(function* () {
+        const t = yield* Confect;
+        yield* t.run(
+          Effect.gen(function* () {
+            yield* ensureConnectorKeys().pipe(withRoots(retired));
+            const before = yield* blindConnectorText(
+              yield* ensureConnectorKeys(),
+              CONNECTOR_BINDING,
+              "google-subject"
+            );
+            expect(yield* rewrapKeys(10)).toBe(1);
+            expect(yield* connectorRoots()).toEqual(["test"]);
+            expect(yield* rewrapKeys(10)).toBe(0);
+            const after = yield* blindConnectorText(
+              yield* ensureConnectorKeys(),
+              CONNECTOR_BINDING,
+              "google-subject"
+            );
+            expect(after).toBe(before);
+          }).pipe(Effect.orDie)
+        );
+      }).pipe(Effect.provide(confectLayer))
+  );
+
+  it.effect(
+    "refuses to report zero while the connector key names an unknown root key, and moves it once the key is in the environment",
+    () =>
+      Effect.gen(function* () {
+        const t = yield* Confect;
+        yield* t.run(
+          Effect.gen(function* () {
+            yield* ensureConnectorKeys().pipe(withRoots(former));
+            expect((yield* Effect.flip(rewrapKeys(10))).reason).toBe(
+              "configuration"
+            );
+            expect(yield* rewrapKeys(10).pipe(withRoots(bothRetired))).toBe(1);
+            expect(yield* rewrapKeys(10).pipe(withRoots(bothRetired))).toBe(0);
+            expect(yield* connectorRoots()).toEqual(["test"]);
           }).pipe(Effect.orDie)
         );
       }).pipe(Effect.provide(confectLayer))

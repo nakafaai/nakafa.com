@@ -1,5 +1,6 @@
 import { blindHash, open, seal } from "@repo/backend/confect/vault/cipher";
 import type {
+  ensureConnectorKeys,
   readLearnerKeys,
   readTenantKeys,
 } from "@repo/backend/confect/vault/keys";
@@ -12,6 +13,8 @@ type LearnerKeys = Effect.Success<ReturnType<typeof readLearnerKeys>>;
 type TenantKeys = Effect.Success<ReturnType<typeof readTenantKeys>>;
 /** The keys of the owner of a sealed text: one learner, or one school. */
 type OwnerKeys = LearnerKeys | TenantKeys;
+/** The connector key, which every owner shares. */
+type ConnectorKeys = Effect.Success<ReturnType<typeof ensureConnectorKeys>>;
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
@@ -83,3 +86,16 @@ export const blindText = Effect.fn("vault.blindText")(function* (
     yield* blindHash(keys, fieldBinding(keys, field), encoder.encode(text))
   );
 });
+
+/**
+ * Blinds a text under the connector key, which every owner shares, so one text
+ * blinds to the same 22 characters for every owner. The `binding` says what the
+ * text is, so one text under two bindings never matches (ADR 0015).
+ */
+export const blindConnectorText = Effect.fn("vault.blindConnectorText")(
+  function* (keys: ConnectorKeys, binding: string, text: string) {
+    return Base64Url.encode(
+      yield* blindHash(keys, binding, encoder.encode(text))
+    );
+  }
+);

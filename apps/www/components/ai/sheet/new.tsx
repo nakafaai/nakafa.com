@@ -1,19 +1,17 @@
 "use client";
 
-import { GeometricShapes01Icon } from "@hugeicons/core-free-icons";
 import {
   Empty,
   EmptyDescription,
   EmptyHeader,
-  EmptyMedia,
   EmptyTitle,
 } from "@repo/design-system/components/ui/empty";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { MessageScrollerItem } from "@repo/design-system/components/ui/scroller";
 import { useTranslations } from "next-intl";
 import { StartPrompt, useStartChat } from "@/components/ai/chat/start";
 import { useAi } from "@/components/ai/context";
 import { NinaInput, NinaSuggestions } from "@/components/ai/input";
+import { EmptyNina } from "@/components/state/empty";
 
 /** Renders Nina's empty state and starts a new study chat. */
 export function SheetNew() {
@@ -40,9 +38,7 @@ export function SheetNew() {
         <MessageScrollerItem className="flex flex-1" messageId="welcome">
           <Empty>
             <EmptyHeader>
-              <EmptyMedia variant="icon">
-                <HugeIcons icon={GeometricShapes01Icon} />
-              </EmptyMedia>
+              <EmptyNina act="cheering" />
               <EmptyTitle className="text-chat">
                 {t("new-chat-title")}
               </EmptyTitle>

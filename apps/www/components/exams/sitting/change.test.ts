@@ -171,13 +171,18 @@ describe("closeSitting", () => {
 });
 
 describe("dashboardArgs", () => {
-  it("reads the first page of a sitting's attempts with the sitting and the school", () => {
+  it("reads the first page of a sitting's attempts at no cursor, and a later page at the cursor before it", () => {
     const slug = Schema.decodeSync(TenantSlug)("harapan");
+    const key = { sittingId: sittingId("sitting-a"), slug };
 
-    expect(dashboardArgs({ sittingId: sittingId("sitting-a"), slug })).toEqual({
+    expect(dashboardArgs(key, null)).toEqual({
       paginationOpts: { cursor: null, numItems: DASHBOARD_PAGE_SIZE },
       sittingId: sittingId("sitting-a"),
       slug,
+    });
+    expect(dashboardArgs(key, "page-2").paginationOpts).toEqual({
+      cursor: "page-2",
+      numItems: DASHBOARD_PAGE_SIZE,
     });
   });
 });

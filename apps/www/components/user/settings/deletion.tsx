@@ -30,7 +30,6 @@ import {
   CardSection,
   CardSectionActions,
   CardSectionFooter,
-  CardSectionHint,
 } from "@/components/shared/card/section";
 import {
   clearAccountDeletionAttempt,
@@ -142,8 +141,7 @@ export function UserSettingsDeleteAccount({ userId }: { userId: Id<"users"> }) {
           <CardTitle>{t("delete-account")}</CardTitle>
           <CardDescription>{t("delete-account-description")}</CardDescription>
         </CardHeader>
-        <CardSectionFooter>
-          <CardSectionHint>{t("delete-account-footer")}</CardSectionHint>
+        <CardSectionFooter hint={t("delete-account-footer")}>
           <CardSectionActions>
             <Button
               onClick={() => setOpen(true)}
