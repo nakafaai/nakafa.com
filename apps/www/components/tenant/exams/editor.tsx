@@ -62,7 +62,6 @@ const zoomStorage = () => KeyValueStore.layerStorage(() => window.localStorage);
 
 /** The editor's shell: the rows and the canvas of one exam, with the zoom the viewer chose. */
 function ExamWorkspace() {
-  const shell = useRef<HTMLElement>(null);
   const canvas = useRef<HTMLElement>(null);
   const [zoom, setZoom] = useState(ZOOM_DEFAULT);
 
@@ -83,17 +82,12 @@ function ExamWorkspace() {
   };
 
   return (
-    <main className="flex h-svh flex-col bg-background" ref={shell}>
+    <main className="flex h-svh flex-col bg-background">
       <ExamHeader />
       <ExamToolbar />
       <ExamLockedNote />
       <ExamCanvas canvas={canvas} zoom={zoom} />
-      <ExamFooter
-        canvas={canvas}
-        onZoom={changeZoom}
-        shell={shell}
-        zoom={zoom}
-      />
+      <ExamFooter canvas={canvas} onZoom={changeZoom} zoom={zoom} />
     </main>
   );
 }

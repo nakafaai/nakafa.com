@@ -53,11 +53,10 @@ class FullscreenRefused extends Data.TaggedError("FullscreenRefused")<{
   readonly cause: unknown;
 }> {}
 
-/** The props of the footer of the editor: the canvas it moves and the shell it makes fullscreen. */
+/** The props of the footer of the editor: the canvas it moves and the zoom it changes. */
 interface ExamFooterProps {
   readonly canvas: RefObject<HTMLElement | null>;
   readonly onZoom: (percent: number) => void;
-  readonly shell: RefObject<HTMLElement | null>;
   readonly zoom: number;
 }
 
@@ -68,7 +67,7 @@ interface ExamFooterProps {
  * browser allows it. The strip and the grid go to a page, and the page they choose becomes the one
  * the teacher is on.
  */
-export function ExamFooter({ canvas, onZoom, shell, zoom }: ExamFooterProps) {
+export function ExamFooter({ canvas, onZoom, zoom }: ExamFooterProps) {
   const t = useTranslations("Exams");
   const { exam } = useExam();
   const active = useActiveQuestion();
@@ -111,9 +110,12 @@ export function ExamFooter({ canvas, onZoom, shell, zoom }: ExamFooterProps) {
     select(question.id);
   };
 
-  /** Toggles the fullscreen of the editor's shell, where the browser allows it. */
+  /**
+   * Toggles the fullscreen of the whole page, where the browser allows it. The page goes fullscreen
+   * rather than the editor alone, because the browser draws only the fullscreen element's own tree,
+   * and the dialogs, sheets, and menus of the editor open at the end of the document.
+   */
   const toggleFullscreen = () => {
-    const element = shell.current;
     if (document.fullscreenElement !== null) {
       Effect.runFork(
         Effect.tryPromise({
@@ -127,18 +129,16 @@ export function ExamFooter({ canvas, onZoom, shell, zoom }: ExamFooterProps) {
       );
       return;
     }
-    if (element !== null) {
-      Effect.runFork(
-        Effect.tryPromise({
-          try: () => element.requestFullscreen(),
-          catch: (cause) => new FullscreenRefused({ cause }),
-        }).pipe(
-          Effect.catchTag("FullscreenRefused", (error) =>
-            reportClientException(error, { source: SOURCE })
-          )
+    Effect.runFork(
+      Effect.tryPromise({
+        try: () => document.documentElement.requestFullscreen(),
+        catch: (cause) => new FullscreenRefused({ cause }),
+      }).pipe(
+        Effect.catchTag("FullscreenRefused", (error) =>
+          reportClientException(error, { source: SOURCE })
         )
-      );
-    }
+      )
+    );
   };
 
   return (
