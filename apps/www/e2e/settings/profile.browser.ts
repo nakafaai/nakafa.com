@@ -5,10 +5,13 @@ import app from "@repo/internationalization/dictionaries/en.json" with {
 };
 import { MAIN_DOMAIN } from "@repo/next-config/domains";
 import { Array as Arr, Effect } from "effect";
-import { animalOf, drawnAnimal, sidebarAvatar } from "@/e2e/support/avatar";
+import { animalMarkup, drawnAnimal, sidebarAvatar } from "@/e2e/support/avatar";
 import { openChatPage, runOnPage } from "@/e2e/support/chat";
 import { appRoutes } from "@/e2e/support/route";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+
+/** The query that tells whether a username can be taken. */
+const CHECK_USERNAME = "users/queries:checkUsername";
 
 /** The username field, which the form labels with the word Username. */
 function usernameField(page: Page) {
@@ -43,16 +46,16 @@ test("a learner shuffles the animal in settings, and the account button and the 
         await expect(shuffle).toBeVisible({
           timeout: readinessTimeoutMilliseconds,
         });
-        const before = await animalOf(sidebarAvatar(page)).innerHTML();
+        const before = await animalMarkup(sidebarAvatar(page));
         await shuffle.click();
 
         // A shuffle shows another animal at once, and never the one that showed.
         await expect
-          .poll(() => animalOf(sidebarAvatar(page)).innerHTML(), {
+          .poll(() => animalMarkup(sidebarAvatar(page)), {
             timeout: readinessTimeoutMilliseconds,
           })
           .not.toBe(before);
-        const shuffled = await animalOf(sidebarAvatar(page)).innerHTML();
+        const shuffled = await animalMarkup(sidebarAvatar(page));
 
         // The shuffle is stored, which a second tab shows once it loads the page. This
         // tab stays where it is: a navigation here would cut the shuffle short on its
@@ -60,9 +63,7 @@ test("a learner shuffles the animal in settings, and the account button and the 
         const stored = await page.context().newPage();
         await expect(async () => {
           await stored.goto(appRoutes.settings);
-          expect(await animalOf(sidebarAvatar(stored)).innerHTML()).toBe(
-            shuffled
-          );
+          expect(await animalMarkup(sidebarAvatar(stored))).toBe(shuffled);
         }).toPass({ timeout: readinessTimeoutMilliseconds });
 
         // The profile draws the same animal.
@@ -83,7 +84,7 @@ test("a learner takes a new username in settings: a taken or invalid name says w
 }) => {
   await runOnPage(page, baseURL, (origin) =>
     Effect.gen(function* () {
-      const { learner } = yield* openChatPage(page, origin);
+      const { changes, learner } = yield* openChatPage(page, origin);
       // The account's id is a unique string of letters and digits, so the name
       // is unique too, and it starts with a letter.
       const renamed = `pelajar${learner.userId.slice(-12)}`;
@@ -97,6 +98,8 @@ test("a learner takes a new username in settings: a taken or invalid name says w
           page.getByText(app.Auth["username-letter-first"], { exact: true })
         ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
         await expect(save).toBeDisabled();
+        // The check needs the session, so the page asks for it once it has signed in.
+        expect(changes.askedSignedOut(CHECK_USERNAME)).toBe(false);
 
         await usernameField(page).fill(renamed);
         await expect(
