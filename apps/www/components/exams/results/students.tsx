@@ -22,8 +22,10 @@ import {
   useSessionSettled,
 } from "@/components/exams/results/context";
 import { TableSearch, TableToggle } from "@/components/exams/results/filter";
+import { DataFailure, reloadPage } from "@/components/shared/failure";
 import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
 import { matchesSearch } from "@/components/shared/table/search";
+import { isLostAccess } from "@/components/tenant/refusal";
 
 /** The students of one page of the list. The next page loads as the list's end comes into view. */
 const STUDENT_PAGE_SIZE = 50;
@@ -167,9 +169,15 @@ export function StudentsTable() {
     { initialNumItems: STUDENT_PAGE_SIZE }
   );
 
-  if (PaginatedQueryResult.isFailure(students)) {
+  if (
+    PaginatedQueryResult.isFailure(students) &&
+    isLostAccess(students.error)
+  ) {
     throw students.error;
   }
+  const failure = PaginatedQueryResult.isFailure(students) ? (
+    <DataFailure onRetry={reloadPage} />
+  ) : null;
   const filtering = status !== "all" || search.trim() !== "";
   const filters = (
     <StudentFilters
@@ -184,33 +192,36 @@ export function StudentsTable() {
   }
   if (students.results.length === 0 && !filtering) {
     return (
-      <TableEmpty
-        act="reading"
-        description={t("results-empty")}
-        title={t("results-empty-title")}
-      />
+      failure ?? (
+        <TableEmpty
+          act="reading"
+          description={t("results-empty")}
+          title={t("results-empty-title")}
+        />
+      )
     );
   }
   const rows = Arr.filter(students.results, (row) =>
     matchesSearch(row.name, search)
   );
+  // A page that holds no match is not the end of the search while later pages still load, so
+  // the no-match state waits for the last page, and the table shows nothing in the meantime.
+  const more = PaginatedQueryResult.isCanLoadMore(students) ? (
+    <Intersection onIntersect={() => students.loadMore(STUDENT_PAGE_SIZE)} />
+  ) : null;
   return (
     <>
       {filters}
-      {rows.length === 0 ? (
+      {failure}
+      {rows.length > 0 ? <StudentTable rows={rows} /> : null}
+      {rows.length === 0 && more === null ? (
         <TableEmpty
           act="reading"
           description={t("filter-empty")}
           title={t("results-no-match")}
         />
-      ) : (
-        <StudentTable rows={rows} />
-      )}
-      {PaginatedQueryResult.isCanLoadMore(students) ? (
-        <Intersection
-          onIntersect={() => students.loadMore(STUDENT_PAGE_SIZE)}
-        />
       ) : null}
+      {more}
     </>
   );
 }

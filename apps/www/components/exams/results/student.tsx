@@ -18,6 +18,7 @@ import {
   CardSection,
   CardSectionFooter,
 } from "@/components/shared/card/section";
+import { ReadBoundary } from "@/components/tenant/read/boundary";
 
 /** The letters of the options that a student chose, or a line that says the question was left unanswered. */
 function AnswerLine({
@@ -72,12 +73,43 @@ export function StudentResults({
   readonly slug: TenantSlug;
 }) {
   const t = useTranslations("Exams");
+
+  return (
+    <ReadBoundary
+      fallback={(failure) => (
+        <CardSection>
+          <CardHeader>
+            <CardTitle>{t("student-results-title")}</CardTitle>
+          </CardHeader>
+          <CardContent>{failure}</CardContent>
+          <CardSectionFooter hint={t("student-results-footer")} />
+        </CardSection>
+      )}
+      read={{ args: { sittingId, slug }, ref: exams.results.results.mine }}
+    >
+      <StudentResultsContent sittingId={sittingId} slug={slug} />
+    </ReadBoundary>
+  );
+}
+
+/** The student's own result once it is in: the card of a submitted attempt, or nothing while it loads. */
+function StudentResultsContent({
+  sittingId,
+  slug,
+}: {
+  readonly sittingId: GenericId.GenericId<"examSittings">;
+  readonly slug: TenantSlug;
+}) {
+  const t = useTranslations("Exams");
   const settled = useSessionSettled();
   const result = useQuery(
     exams.results.results.mine,
     settled ? { sittingId, slug } : "skip"
   );
 
+  if (QueryResult.isFailure(result)) {
+    throw result.error;
+  }
   if (!QueryResult.isSuccess(result)) {
     return null;
   }
