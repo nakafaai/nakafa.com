@@ -13,6 +13,8 @@ describe("school tree paths", () => {
     "/id/%73chool/harapan",
     "/%69d/school/harapan",
     "/%69d/%73chool/harapan",
+    "/id/school/new/extra",
+    "/id/school/harapan/new",
   ])("recognizes %s as a school path", (pathname) => {
     expect(isSchoolTreePath(pathname)).toBe(true);
   });
@@ -28,6 +30,9 @@ describe("school tree paths", () => {
     "/%E0%A4%A/school",
     "/id/%E0%A4%A",
     "/id/%2573chool/harapan",
+    "/school/new",
+    "/id/school/new",
+    "/en/%73chool/ne%77",
   ])("leaves %s to the public routes", (pathname) => {
     expect(isSchoolTreePath(pathname)).toBe(false);
   });

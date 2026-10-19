@@ -284,6 +284,25 @@ export function isPostAuthProviderError(rawError: unknown) {
   return rawError === PROVIDER_ERROR_VALUE;
 }
 
+/** The page where an account opens its own school, without its locale. */
+const SCHOOL_START_PATH = "/school/new";
+
+/**
+ * Whether the intent resumes on the page where an account opens its own school.
+ * That questionnaire is the account's first run, so the learner questionnaire
+ * waits until the account first uses Nakafa for itself (K42).
+ */
+export function startsSchool(resolution: PostAuthIntentResolution) {
+  if (resolution.kind === "none") {
+    return false;
+  }
+  const url = new URL(resolution.intent, URL_PARSE_BASE);
+  return (
+    splitLocalizedPathname(url.pathname, resolution.locale).pathname ===
+    SCHOOL_START_PATH
+  );
+}
+
 /** Returns the requested localized destination, or current-locale Home. */
 export function getPostAuthDestination(
   resolution: PostAuthIntentResolution,
