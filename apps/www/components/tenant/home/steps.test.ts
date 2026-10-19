@@ -21,7 +21,7 @@ describe("missingSteps", () => {
         hasStudent: false,
         hasTeacher: false,
       })
-    ).toEqual(["class", "teacher", "students"]);
+    ).toEqual(["unit", "teacher", "students"]);
   });
 
   it("lists the invites only while one waits to be accepted", () => {
@@ -30,9 +30,9 @@ describe("missingSteps", () => {
     ]);
   });
 
-  it("lists the class and the teacher of a school with a student only", () => {
+  it("lists the unit and the teacher of a school with a student only", () => {
     expect(
       missingSteps({ ...COMPLETE, hasActiveUnit: false, hasTeacher: false })
-    ).toEqual(["class", "teacher"]);
+    ).toEqual(["unit", "teacher"]);
   });
 });

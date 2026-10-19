@@ -11,15 +11,15 @@ import {
   useHomeViewer,
 } from "@/components/tenant/home/query.client";
 import { missingSteps, type SetupStep } from "@/components/tenant/home/steps";
-import { HomeTile, RowText } from "@/components/tenant/home/tile";
+import { HomeTile, RowText, TILE_ROWS } from "@/components/tenant/home/tile";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 
 /** The settings page where each step is completed. */
 const STEP_HREF: Record<SetupStep, string> = {
-  class: "/settings/units",
   invites: "/settings/invites",
   students: "/settings/students",
   teacher: "/settings/invites",
+  unit: "/settings/units",
 };
 
 /**
@@ -62,9 +62,9 @@ export function useSetupShown() {
 }
 
 /**
- * The setup tile: one row for each step that the school still lacks, each opening the settings page that
- * completes it. A failed read shows its own sentence and Try again inside this tile, which keeps its title and
- * footer.
+ * The setup tile: one row for each step that the school still lacks, up to the rows a tile shows, each opening
+ * the settings page that completes it. A failed read shows its own sentence and Try again inside this tile,
+ * which keeps its title and footer.
  */
 export function SetupTile({ className }: { className?: string | undefined }) {
   const t = useTranslations("School");
@@ -107,7 +107,7 @@ function SetupRows({ className }: { className?: string | undefined }) {
       title={t("tile-setup")}
     >
       <CardLinks>
-        {Arr.map(steps, (step) => (
+        {Arr.map(Arr.take(steps, TILE_ROWS), (step) => (
           <SetupRow key={step} step={step} />
         ))}
       </CardLinks>
