@@ -101,18 +101,15 @@ function FileNameParts({ name }: { name: string }) {
   );
 }
 
-/** The name of a file in its chip. */
-function NinaFileName({ name }: { name: string }) {
-  return (
-    <AttachmentTitle className="flex" dir="auto">
-      <FileNameParts name={name} />
-    </AttachmentTitle>
-  );
-}
-
 /** The icon of a document, or a spinner while the document uploads. */
 function NinaFileMedia({ uploading }: { uploading: boolean }) {
-  return uploading ? <Spinner /> : <HugeIcons icon={FileIcon} />;
+  const tCommon = useTranslations("Common");
+
+  return uploading ? (
+    <Spinner label={tCommon("loading")} />
+  ) : (
+    <HugeIcons icon={FileIcon} />
+  );
 }
 
 /**
@@ -166,7 +163,9 @@ export function NinaAttachment({
       </AttachmentMedia>
       {isImage ? null : (
         <AttachmentContent>
-          <NinaFileName name={name} />
+          <AttachmentTitle className="flex" dir="auto">
+            <FileNameParts name={name} />
+          </AttachmentTitle>
           <AttachmentDescription>{file.mediaType}</AttachmentDescription>
         </AttachmentContent>
       )}
@@ -208,7 +207,9 @@ function NinaRefusedAttachment({
         <HugeIcons icon={FileIcon} />
       </AttachmentMedia>
       <AttachmentContent>
-        <NinaFileName name={refusal.name} />
+        <AttachmentTitle className="flex" dir="auto">
+          <FileNameParts name={refusal.name} />
+        </AttachmentTitle>
         <AttachmentDescription>
           {refusalReason(refusal.code, t)}
         </AttachmentDescription>

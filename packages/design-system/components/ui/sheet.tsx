@@ -30,7 +30,7 @@ function SheetClose(props: SheetPrimitive.Close.Props) {
 }
 
 const sheetPopupVariants = cva(
-  "fixed z-50 flex flex-col gap-4 overflow-y-auto bg-popover text-popover-foreground shadow-lg transition-[opacity,translate,width] duration-surface will-change-transform [--sheet-inset:0px] data-ending-style:opacity-0 data-starting-style:opacity-0",
+  "fixed z-50 flex flex-col gap-4 overflow-y-auto bg-popover text-popover-foreground shadow-lg transition-[opacity,translate,width] duration-surface will-change-transform [--sheet-inset:0px] data-ending-style:opacity-0 data-starting-style:opacity-0 motion-reduce:transition-none",
   {
     defaultVariants: {
       inset: false,
@@ -56,7 +56,7 @@ function SheetBackdrop({ className, ...props }: SheetPrimitive.Backdrop.Props) {
   return (
     <SheetPrimitive.Backdrop
       className={cn(
-        "fixed inset-0 z-50 bg-black/32 backdrop-blur-sm transition-opacity duration-surface data-ending-style:opacity-0 data-starting-style:opacity-0",
+        "fixed inset-0 z-50 bg-black/32 backdrop-blur-sm transition-opacity duration-surface data-ending-style:opacity-0 data-starting-style:opacity-0 motion-reduce:transition-none",
         className
       )}
       data-slot="sheet-backdrop"

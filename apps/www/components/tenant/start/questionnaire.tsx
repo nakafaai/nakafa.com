@@ -119,6 +119,7 @@ function SchoolStartForm({
   legal: Legal;
 }) {
   const t = useTranslations("SchoolStart");
+  const tCommon = useTranslations("Common");
   const nina = use(StartNinaContext);
   const save = useSaveStartAnswer();
   const open = useMutation(tenancy.start.open);
@@ -272,9 +273,14 @@ function SchoolStartForm({
         shortcuts="letters"
       >
         <QuestionnaireProgress
+          aria-label={tCommon("questionnaire-progress")}
           className="flex w-full flex-col gap-2"
           render={(props, { current, total }) => (
-            <div {...props}>
+            <div
+              {...props}
+              aria-valuetext={t("progress", { current, total })}
+              role="progressbar"
+            >
               <div aria-hidden="true" className="grid w-full grid-cols-5 gap-2">
                 {Arr.map(START_ITEMS, (name, index) => (
                   <span

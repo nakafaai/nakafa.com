@@ -15,7 +15,7 @@ import {
 
 const WORDS = "Studies after dinner";
 /** The name of the search field on the German page. */
-const SEARCH_LABEL = "Erinnerungen suchen";
+const SEARCH_LABEL = "Erinnerung suchen";
 /** The search field, as a reader of the browser's shadow tree names it. */
 const SEARCH = `input[type="search"][aria-label="${SEARCH_LABEL}"]`;
 /** The card of the list is never narrower than 20rem. */

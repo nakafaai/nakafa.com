@@ -41,7 +41,7 @@ export function TypingLoader({
   className?: string;
   size?: "sm" | "md" | "lg";
 }) {
-  const t = useTranslations("Ai");
+  const t = useTranslations("Common");
   const { entry, ref } = useIntersection({ threshold: 0 });
   const playing = entry?.isIntersecting ?? false;
 

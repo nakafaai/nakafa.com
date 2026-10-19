@@ -110,6 +110,7 @@ function TenantFrame({
   role: TenantValue["role"];
 }) {
   const pathname = usePathname();
+  const tCommon = useTranslations("Common");
 
   if (isExamEditorPath(pathname)) {
     return children;
@@ -117,7 +118,7 @@ function TenantFrame({
 
   return (
     <SidebarProvider>
-      <Sidebar side="left">
+      <Sidebar label={tCommon("sidebar")} side="left">
         <SidebarHeader className="border-b">
           <SidebarMenu>
             <SidebarMenuItem>

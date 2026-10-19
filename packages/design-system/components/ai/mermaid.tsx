@@ -71,6 +71,7 @@ export function Mermaid({
   label,
 }: MermaidProps) {
   const t = useTranslations("Ai");
+  const tCommon = useTranslations("Common");
   const componentId = useId();
   const { resolvedTheme } = useTheme();
   const renderId = createStableId(
@@ -142,7 +143,7 @@ export function Mermaid({
   if (!(hasCurrentRender || renderState.svg)) {
     return (
       <div className={cn("flex", className)}>
-        <Spinner className="m-auto" />
+        <Spinner className="m-auto" label={tCommon("loading")} />
       </div>
     );
   }

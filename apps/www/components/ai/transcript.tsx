@@ -20,6 +20,7 @@ import { AiChatError } from "@/components/ai/chat/error";
 import { useChatFeed } from "@/components/ai/chat/feed.client";
 import { hasFailedReply, hasReply } from "@/components/ai/chat/messages";
 import { AiChatPending } from "@/components/ai/chat/pending";
+import { LastMessageContext } from "@/components/ai/message/last.client";
 import { sameRow } from "@/components/ai/message/row";
 import { AiChatMessage } from "@/components/ai/message/view";
 
@@ -90,14 +91,16 @@ const TranscriptRow = memo(function TranscriptRow({
   message: NinaMessage;
 }) {
   return (
-    <MessageScrollerItem
-      messageId={message.key}
-      scrollAnchor={message.role === "user"}
-    >
-      {loadMore ? <Intersection onIntersect={loadMore} /> : null}
-      <Message align={message.role === "user" ? "end" : "start"}>
-        <AiChatMessage last={last} message={message} />
-      </Message>
-    </MessageScrollerItem>
+    <LastMessageContext value={last}>
+      <MessageScrollerItem
+        messageId={message.key}
+        scrollAnchor={message.role === "user"}
+      >
+        {loadMore ? <Intersection onIntersect={loadMore} /> : null}
+        <Message align={message.role === "user" ? "end" : "start"}>
+          <AiChatMessage message={message} />
+        </Message>
+      </MessageScrollerItem>
+    </LastMessageContext>
   );
 }, sameRow);

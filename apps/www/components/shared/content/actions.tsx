@@ -32,6 +32,7 @@ import {
   readOpenContentCopySource,
   writeOpenContentCopy,
 } from "@/components/shared/content/copy";
+import { OpenTargetContext } from "@/components/shared/content/target.client";
 
 /**
  * Loads the open-in submenu when the actions menu opens. Its brand logos are
@@ -172,7 +173,9 @@ export function OpenContent({
               <HugeIcons icon={ArrowUpRight01Icon} />
               {t("open-in")}
             </DropdownMenuSubTrigger>
-            <OpenInSubmenuContent slug={slug} sourceUrl={sourceUrl} />
+            <OpenTargetContext value={{ slug, sourceUrl }}>
+              <OpenInSubmenuContent />
+            </OpenTargetContext>
           </DropdownMenuSub>
         </DropdownMenuGroup>
       </DropdownMenuContent>

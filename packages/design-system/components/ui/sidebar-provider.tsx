@@ -28,8 +28,12 @@ import {
   useState,
 } from "react";
 
-/** Default modifier-key shortcut used to toggle the sidebar. */
-const SIDEBAR_KEYBOARD_SHORTCUT = "b";
+/**
+ * Default shortcut that toggles the sidebar: Mod with a letter and Shift.
+ * Browsers bind plain Mod+H to history, so the chords here take Shift. The
+ * keys are letters because symbol keys move between keyboard layouts.
+ */
+const SIDEBAR_KEYBOARD_SHORTCUT = "shift+l";
 
 /** Desktop breakpoint that switches the sidebar from sheet to panel. */
 const SIDEBAR_DESKTOP = TAILWIND_BREAKPOINT_PIXELS.lg;
@@ -65,6 +69,7 @@ export function SidebarProvider({
   locked?: boolean;
   open?: boolean;
   sidebarDesktop?: number;
+  /** The key pressed with Mod, such as `"shift+x"`, which toggles the sidebar. */
   keyboardShortcut?: string;
   cookieName?: string;
   onOpenChange?: (open: boolean) => void;
@@ -81,7 +86,12 @@ export function SidebarProvider({
   useEffect(() => {
     const query = window.matchMedia(mobileMediaQuery);
     const follow = () => {
-      store.setState({ isMobile: query.matches });
+      // A sheet still open when the viewport widens would stay a modal over the desktop panel.
+      store.setState(
+        query.matches
+          ? { isMobile: true }
+          : { isMobile: false, openMobile: false }
+      );
     };
     follow();
     query.addEventListener("change", follow);

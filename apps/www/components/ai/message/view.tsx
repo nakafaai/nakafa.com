@@ -20,16 +20,14 @@ import { AiChatMessageLoading } from "@/components/ai/message/loading";
 import { NinaPrompt } from "@/components/ai/message/prompt";
 
 interface Props {
-  /** Whether this is the newest row of the transcript. */
-  last: boolean;
   message: NinaMessage;
 }
 
-export function AiChatMessage({ last, message }: Props) {
+export function AiChatMessage({ message }: Props) {
   const turn = useChat((state) => state.turnAt(message.order));
   if (message.role === "user") {
     return (
-      <MessageProvider last={last} message={message} turn={turn}>
+      <MessageProvider message={message} turn={turn}>
         <NinaPrompt
           actions={<AiChatMessageActions />}
           files={Arr.filter(message.parts, (part) => part.type === "file")}
@@ -40,7 +38,7 @@ export function AiChatMessage({ last, message }: Props) {
     );
   }
   return (
-    <MessageProvider last={last} message={message} turn={turn}>
+    <MessageProvider message={message} turn={turn}>
       <AiChatMessageBody />
     </MessageProvider>
   );

@@ -8,14 +8,13 @@ import { QuranTranslation } from "@/components/shared/quran/verses/translation";
 /** Restores the established Bismillah presentation before numbered verses. */
 export function QuranBismillah({
   bismillah,
-  subjectLabel,
 }: {
   bismillah: QuranViewBismillah;
-  subjectLabel: string;
 }) {
   const translationNotesLabel = useQuranVerses(
     (verses) => verses.translationNotesLabel
   );
+  const subjectLabel = useQuranVerses((verses) => verses.surahTitle);
 
   return (
     <div

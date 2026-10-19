@@ -40,7 +40,14 @@ export function SidebarScope({ children }: { children: ReactNode }) {
  * while the kept sidebar is locked, so a header shared with pages outside the app shell, or
  * with a locked attempt, stays as it is there.
  */
-export function SidebarScopeStart({ className }: { className?: string }) {
+export function SidebarScopeStart({
+  className,
+  label,
+}: {
+  className?: string;
+  /** The name of the sidebar toggle, in the reader's language. */
+  label: string;
+}) {
   const scope = use(ScopeContext);
 
   if (scope === null || scope.controls.isLocked) {
@@ -51,7 +58,7 @@ export function SidebarScopeStart({ className }: { className?: string }) {
     <div className={cn("flex shrink-0 items-center gap-2", className)}>
       <SidebarContext value={scope.controls}>
         <SidebarStoreContext value={scope.store}>
-          <SidebarTrigger className="size-9" />
+          <SidebarTrigger className="size-9" label={label} />
         </SidebarStoreContext>
       </SidebarContext>
       <Separator className="h-4" orientation="vertical" />

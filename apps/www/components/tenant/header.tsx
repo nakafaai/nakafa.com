@@ -47,11 +47,14 @@ export function SchoolHeader({
         className="sticky top-0 z-10 flex h-14 shrink-0 items-center gap-2 border-b bg-background px-4"
         data-slot="page-header"
       >
-        <SidebarTrigger className="-ms-1 shrink-0" />
+        <SidebarTrigger
+          className="-ms-1 shrink-0"
+          label={tCommon("toggle-sidebar")}
+        />
         <Separator className="me-1 h-4" orientation="vertical" />
         {title === undefined ? null : <h1 className="sr-only">{title}</h1>}
         {Arr.isReadonlyArrayEmpty(items) ? (
-          <Breadcrumb className="min-w-0">
+          <Breadcrumb aria-label={tCommon("breadcrumb")} className="min-w-0">
             <BreadcrumbList>
               <BreadcrumbItem>
                 <BreadcrumbPage>{tCommon("home")}</BreadcrumbPage>

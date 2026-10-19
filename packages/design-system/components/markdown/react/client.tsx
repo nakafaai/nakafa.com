@@ -90,13 +90,14 @@ export function MermaidMdx({
   title: string | undefined;
 }) {
   const t = useTranslations("Ai");
+  const tCommon = useTranslations("Common");
   const heading = title ?? t("diagram-title");
 
   return (
     <Suspense
       fallback={
         <DiagramFrame className={props.className} title={heading}>
-          <Spinner className="m-auto" />
+          <Spinner className="m-auto" label={tCommon("loading")} />
         </DiagramFrame>
       }
     >
