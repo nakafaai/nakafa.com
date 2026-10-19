@@ -208,7 +208,7 @@ function watchScripts(page: Page) {
     const { pathname } = new URL(response.url());
     if (
       response.request().resourceType() === "script" &&
-      pathname.startsWith("/_next/static/")
+      pathname.startsWith("/assets/")
     ) {
       const text = response.text();
       // The failure stays on the promise, and reaches the check that awaits it.

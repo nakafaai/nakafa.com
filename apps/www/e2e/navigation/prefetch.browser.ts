@@ -1,21 +1,21 @@
 import { expect, type Page, test } from "@playwright/test";
-import { Array as Arr, Effect, MutableList } from "effect";
+import { Effect } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import {
   openObservedRoute,
   openPrefetched,
-  readPathname,
 } from "@/e2e/support/navigation/prefetch";
+import { settleRouter } from "@/e2e/support/navigation/settle";
 import { withObservedPageErrors } from "@/e2e/support/observe";
-import { NEXT_ROUTER_REQUEST_HEADER } from "@/e2e/support/requests";
+import { recordServerFunctionCalls } from "@/e2e/support/requests";
 import { paginationNavigation } from "@/e2e/support/selector";
 import { desktopViewport, touchViewport } from "@/e2e/support/viewport";
 
 const lessonHref = pinnedRoutes.material.en;
 const articleHref = pinnedRoutes.article.en;
 const articleCategoryHref = articleHref.slice(0, articleHref.lastIndexOf("/"));
-const NEXT_LINK_PATTERN = /^Next/;
+const FORWARD_LINK_PATTERN = /^Next/;
 const PREVIOUS_LINK_PATTERN = /^Previous/;
 
 const viewports = [desktopViewport, touchViewport] as const;
@@ -24,41 +24,31 @@ const paginationLink = (page: Page, name: RegExp) =>
   paginationNavigation(page).getByRole("link", { name });
 
 /**
- * A first visit opens the usage-data prompt. Its privacy link must never
- * prefetch, because a prefetched signed Page makes the client router read
- * every lesson URL as a Page, and the next lesson must still come from the
- * Next link's own prefetch.
+ * A first visit opens the usage-data prompt. Intent over its privacy link must
+ * not preload the page it opens, and the next lesson must still come from its
+ * own intent preload.
  */
 const verifyNextLesson = Effect.fn("NakafaE2E.verifyNextLesson")(function* (
   page: Page,
   hasTouch: boolean
 ) {
-  const requested = MutableList.make<string>();
-  yield* Effect.sync(() =>
-    page.on("request", (request) => {
-      if (request.headers()[NEXT_ROUTER_REQUEST_HEADER] === "1") {
-        MutableList.append(requested, new URL(request.url()).pathname);
-      }
-    })
-  );
   yield* openObservedRoute(page, lessonHref);
   const prompt = page.getByRole("region", { name: "Usage data" });
-  const privacyPathname = yield* readPathname(
-    prompt.getByRole("link", { name: "Privacy Policy" })
+  const privacyLink = prompt.getByRole("link", { name: "Privacy Policy" });
+  const dataCalls = recordServerFunctionCalls(page);
+  yield* settleRouter(
+    page,
+    Effect.promise(() => privacyLink.hover())
   );
+  yield* Effect.sync(() => expect(dataCalls.length).toBe(0));
   yield* Effect.promise(() =>
     prompt.getByRole("button", { name: "Decline" }).click()
   );
   yield* Effect.promise(() => expect(prompt).toBeHidden());
   yield* openPrefetched(
     page,
-    paginationLink(page, NEXT_LINK_PATTERN),
+    paginationLink(page, FORWARD_LINK_PATTERN),
     hasTouch
-  );
-  yield* Effect.sync(() =>
-    expect(Arr.contains(MutableList.toArray(requested), privacyPathname)).toBe(
-      false
-    )
   );
 });
 

@@ -45,7 +45,7 @@ test("the account menu saves the language of the school host and renders the sch
     await page.evaluate(() => Reflect.get(window, "nakafaSameDocument"))
   ).toBe(true);
   expect(await context.cookies(schoolHome)).toContainEqual(
-    expect.objectContaining({ name: "NEXT_LOCALE", value: "id" })
+    expect.objectContaining({ name: "NAKAFA_LOCALE", value: "id" })
   );
   await context.close();
 });

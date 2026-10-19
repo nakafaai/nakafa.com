@@ -13,7 +13,7 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { firstRow, isHydrated } from "@/e2e/support/window";
 
 /** The scripts of the page itself. */
-const SCRIPTS = /\/_next\/static\/.*\.js/;
+const SCRIPTS = /\/assets\/.*\.js/;
 
 /** The title of a memory in its editor. */
 export const titleOf = (page: Page) =>

@@ -189,10 +189,14 @@ const watchConvexTokens = Effect.fn("NakafaE2E.watchConvexTokens")(function* (
   return tokens;
 });
 
+/** React writes a Suspense boundary that is still pending when the shell is sent as this marker. */
+const PENDING_BOUNDARY_MARKER = "<!--$?-->";
+
 /**
- * Opens one page with its reveal held and reports whether the server
- * streamed it cold: rendered on demand from its postponed shell, so the
- * content boundary was still pending when the page hydrated.
+ * Opens one page with its reveal held and reports whether the server streamed
+ * it cold: the shell went out with a pending content boundary, which the server
+ * completes after the shell, so the boundary was still pending when the page
+ * hydrated.
  */
 const openHeldPage = Effect.fn("NakafaE2E.openHeldPage")(function* (
   page: Page,
@@ -201,7 +205,11 @@ const openHeldPage = Effect.fn("NakafaE2E.openHeldPage")(function* (
   const response = yield* Effect.promise(() =>
     page.goto(path, { waitUntil: "load" })
   );
-  return response?.headers()["x-nextjs-postponed"] === "1";
+  if (!response) {
+    return false;
+  }
+  const html = yield* Effect.promise(() => response.text());
+  return html.includes(PENDING_BOUNDARY_MARKER);
 });
 
 /**

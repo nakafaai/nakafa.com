@@ -51,7 +51,7 @@ const COPIES = "nakafaMostCopies";
  * Starts counting, in every animation frame from now on, the elements that
  * match `selector`, hold `text` and that a reader can see. The page keeps the
  * most that any one frame showed. Only a frame counts, because the document
- * can hold a second copy that a reader never sees: the page Next.js hides when
+ * can hold a second copy that a reader never sees: the page the router hides when
  * a learner leaves it keeps its elements until React renders them again. A page
  * that moves on by client navigation keeps the count, and a page that loads
  * again starts without it.

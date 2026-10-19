@@ -40,9 +40,8 @@ export const loadMarketingPage = Effect.fn("NakafaE2E.loadMarketingPage")(
       readinessTimeoutMilliseconds
     );
     /**
-     * Next.js may commit App Router history before React reveals a streamed route.
+     * The router may commit history before React reveals a streamed route.
      * Keep the existing readiness budget attached to the visible route boundary.
-     * @see https://nextjs.org/docs/app/getting-started/linking-and-navigating#streaming
      */
     yield* Effect.promise(() =>
       expect(

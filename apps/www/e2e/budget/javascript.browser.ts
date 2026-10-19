@@ -37,7 +37,6 @@ const routeBudgets = [
     encodedBodySize: HOMEPAGE_MAX_ENCODED_BYTES,
     href: "/en",
     name: "English homepage no-scroll graph",
-    prefetches: true,
     signedIn: false,
   },
   {
@@ -45,7 +44,6 @@ const routeBudgets = [
     encodedBodySize: PRICING_MAX_ENCODED_BYTES,
     href: "/en/pricing",
     name: "English pricing no-scroll graph",
-    prefetches: true,
     signedIn: false,
   },
   {
@@ -53,7 +51,6 @@ const routeBudgets = [
     encodedBodySize: QURAN_MAX_ENCODED_BYTES,
     href: appRoutes.quranSurahId,
     name: "Indonesian Quran normal-prefetch graph",
-    prefetches: true,
     signedIn: false,
   },
   {
@@ -61,7 +58,6 @@ const routeBudgets = [
     encodedBodySize: AUTH_MAX_ENCODED_BYTES,
     href: "/en/auth",
     name: "English sign-in no-scroll graph",
-    prefetches: false,
     signedIn: false,
   },
   {
@@ -69,7 +65,6 @@ const routeBudgets = [
     encodedBodySize: MEMORY_MAX_ENCODED_BYTES,
     href: MEMORY_PATH,
     name: "English Memory signed-in graph",
-    prefetches: true,
     signedIn: true,
   },
 ] as const;
@@ -81,13 +76,9 @@ for (const budget of routeBudgets) {
   }, testInfo) => {
     expect(baseURL).toBeTruthy();
     const measurement = await Effect.runPromise(
-      measureRouteJavascript(
-        browser,
-        baseURL ?? "",
-        budget.href,
-        budget.prefetches,
-        { signedIn: budget.signedIn }
-      )
+      measureRouteJavascript(browser, baseURL ?? "", budget.href, {
+        signedIn: budget.signedIn,
+      })
     );
     const measurementEvidence = encodeJsonText(measurement);
 

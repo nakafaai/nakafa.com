@@ -15,7 +15,7 @@ export const UNAVAILABLE = en.Ai.failures["service-configuration"];
 
 /**
  * The prompt with these words, which a surface shows as a message. Only a
- * bubble a reader can see counts. Next.js keeps the surface a learner left in
+ * bubble a reader can see counts. The router keeps the surface a learner left in
  * the same document, hidden, and it holds the prompt it showed until React
  * renders it again, so a locator that counted hidden bubbles would find the
  * prompt twice for a moment after a chat opens. One match per prompt is also

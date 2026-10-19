@@ -9,7 +9,7 @@ import { createSchool, hostAddress } from "@/e2e/support/school";
  * explains.
  */
 const STANDALONE_ADDRESS = "/_not-found";
-const LOCALE_HEADER = "x-next-intl-locale";
+const LOCALE_HEADER = "x-nakafa-locale";
 
 /** A school address that no school holds, so the school host answers not found. */
 const UNKNOWN_SCHOOL = "zz-unknown";
@@ -102,7 +102,7 @@ test("a school root keeps its address with no locale prefix, even for a visitor 
   await context.close();
 });
 
-test("the NEXT_LOCALE cookie chooses the language of a school host before Accept-Language", async ({
+test("the NAKAFA_LOCALE cookie chooses the language of a school host before Accept-Language", async ({
   browser,
   baseURL,
 }) => {
@@ -110,7 +110,7 @@ test("the NEXT_LOCALE cookie chooses the language of a school host before Accept
   const schoolHome = hostAddress(baseURL, `${school.slug}.localhost`, "/");
   const context = await browser.newContext(INDONESIAN_VISITOR);
   await context.addCookies([
-    { name: "NEXT_LOCALE", url: schoolHome, value: "de" },
+    { name: "NAKAFA_LOCALE", url: schoolHome, value: "de" },
   ]);
   const page = await context.newPage();
 

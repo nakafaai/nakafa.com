@@ -4,24 +4,41 @@ import {
   Effect,
   Equal,
   MutableHashMap,
+  MutableList,
   Option,
   Result,
   Schema,
 } from "effect";
 
-const TrackedRequestKindSchema = Schema.Literals([
-  "javascript",
-  "prefetch",
-  "router",
-]);
+const TrackedRequestKindSchema = Schema.Literals(["data", "javascript"]);
 
-/** Matches the JavaScript chunks Next.js serves for the application. */
-export const APP_SCRIPT_PATTERN = /\/_next\/static\/chunks\/.+\.js$/;
+/** Matches the JavaScript chunks that the Vite build writes under `/assets/`. */
+export const APP_SCRIPT_PATTERN = /\/assets\/.+\.js$/;
 
-/** The header every request of the Next.js client router carries, with the value "1". */
-export const NEXT_ROUTER_REQUEST_HEADER = "rsc";
-export const NEXT_ROUTER_PREFETCH_HEADER = "next-router-prefetch";
-const NEXT_ROUTER_SEGMENT_PREFETCH_HEADER = "next-router-segment-prefetch";
+/**
+ * The header that the TanStack client router sends with every server function
+ * call, with the value "true". The loader data of a navigation and of an intent
+ * preload both travel as server function calls, so a request with this header
+ * is the page's data.
+ */
+export const SERVER_FUNCTION_HEADER = "x-tsr-serverfn";
+
+/** The path that the server function calls of the application start with. */
+export const SERVER_FUNCTION_PATH = "/_serverFn/";
+
+/**
+ * Records the URL of every server function call that a page makes, in order.
+ * A call that started before a point can be counted from the length of the list.
+ */
+export function recordServerFunctionCalls(page: Page) {
+  const calls = MutableList.make<string>();
+  page.on("request", (request) => {
+    if (request.headers()[SERVER_FUNCTION_HEADER] === "true") {
+      MutableList.append(calls, request.url());
+    }
+  });
+  return calls;
+}
 
 export type TrackedRequestKind = typeof TrackedRequestKindSchema.Type;
 
@@ -32,8 +49,6 @@ const RequestOutcomeSchema = Schema.Literals([
 ]);
 
 const TrackedRequestSchema = Schema.Struct({
-  prefetchHeader: Schema.optional(Schema.String),
-  segmentPrefetchHeader: Schema.optional(Schema.String),
   url: Schema.String,
 });
 
@@ -42,8 +57,6 @@ type TrackedRequest = typeof TrackedRequestSchema.Type;
 export const requestFailureFields = {
   errorText: Schema.optional(Schema.String),
   outcome: RequestOutcomeSchema,
-  prefetchHeader: Schema.optional(Schema.String),
-  segmentPrefetchHeader: Schema.optional(Schema.String),
   status: Schema.optional(Schema.Finite),
   url: Schema.String,
 };
@@ -53,19 +66,11 @@ export const RequestFailureSchema = Schema.Struct(requestFailureFields);
 type RequestFailure = typeof RequestFailureSchema.Type;
 
 export const formatRequestFailure = (failure: RequestFailure) => {
-  const prefetchHeader =
-    failure.prefetchHeader === undefined
-      ? ""
-      : ` prefetchHeader=${failure.prefetchHeader}`;
-  const segmentPrefetchHeader =
-    failure.segmentPrefetchHeader === undefined
-      ? ""
-      : ` segmentPrefetchHeader=${failure.segmentPrefetchHeader}`;
   const status =
     failure.status === undefined ? "" : ` status=${failure.status}`;
   const errorText =
     failure.errorText === undefined ? "" : ` errorText=${failure.errorText}`;
-  return `outcome=${failure.outcome} url=${failure.url}${prefetchHeader}${segmentPrefetchHeader}${status}${errorText}`;
+  return `outcome=${failure.outcome} url=${failure.url}${status}${errorText}`;
 };
 
 type RequestClassifier = (request: Request) => TrackedRequestKind | undefined;
@@ -77,17 +82,9 @@ const PendingRequestSchema = Schema.Struct({
 
 type PendingRequest = typeof PendingRequestSchema.Type;
 
-const readTrackedRequest = (request: Request): TrackedRequest => {
-  const headers = request.headers();
-  const prefetchHeader = headers[NEXT_ROUTER_PREFETCH_HEADER];
-  const segmentPrefetchHeader = headers[NEXT_ROUTER_SEGMENT_PREFETCH_HEADER];
-
-  return {
-    ...(prefetchHeader === undefined ? {} : { prefetchHeader }),
-    ...(segmentPrefetchHeader === undefined ? {} : { segmentPrefetchHeader }),
-    url: request.url(),
-  };
-};
+const readTrackedRequest = (request: Request): TrackedRequest => ({
+  url: request.url(),
+});
 
 /**
  * Starts listening to one page's requests and returns the tracker that reads

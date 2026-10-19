@@ -26,7 +26,7 @@ import {
   saved,
 } from "@/e2e/support/changes";
 import { activate, activateUntilVisible } from "@/e2e/support/input";
-import { NEXT_CHUNK_PATH } from "@/e2e/support/route";
+import { APP_CHUNK_PATH } from "@/e2e/support/route";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /**
@@ -249,7 +249,7 @@ const HYDRATION_ERROR = /hydrat|#41[89]|#42[35]/iu;
  * and only the inline bootstrap script and the stylesheet can act.
  */
 export async function stopAppCode(page: Page) {
-  await page.route(NEXT_CHUNK_PATH, (route) => route.abort());
+  await page.route(APP_CHUNK_PATH, (route) => route.abort());
 }
 
 /** Collects the hydration errors that the page reports while it runs. */

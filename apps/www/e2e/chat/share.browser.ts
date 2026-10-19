@@ -103,7 +103,7 @@ const profilesShowOnlyTheOwn = (
   ownerUsername: string
 ) =>
   Effect.promise(async () => {
-    // The proxy answers it as a real 404 before the page renders. `next start`
+    // The proxy answers it as a real 404 before the page renders. The Start server
     // draws the framework's own 404 for a rewritten address, where Vercel
     // draws the app's page, so only the status is the contract here.
     const answer = await member.goto(`/en/@${ownerUsername}/chat`);

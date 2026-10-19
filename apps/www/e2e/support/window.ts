@@ -5,7 +5,7 @@ import { MEMORY_PATH, memoryRow } from "@/e2e/support/memory";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /** The scripts of the page itself. */
-const SCRIPTS = /\/_next\/static\/.*\.js/;
+const SCRIPTS = /\/assets\/.*\.js/;
 
 /** Where one row of the list stands in the document, or none when it is not in the page. */
 const placeOf = (page: Page, text: string) =>

@@ -48,7 +48,7 @@ const HARD_ADDRESS = "quran/999";
  * address itself, with the header that the proxy would set.
  */
 const STANDALONE_ADDRESS = "/_not-found";
-const LOCALE_HEADER = "x-next-intl-locale";
+const LOCALE_HEADER = "x-nakafa-locale";
 
 /**
  * Where a page calls `notFound()` after the proxy let the request in: a
