@@ -13,15 +13,19 @@ export function CardLinks({ children }: { children: ReactNode }) {
  * toward the page it opens. The last row takes the card's bottom spacing, so
  * its highlight reaches the bottom edge, and the first row takes the card's
  * top spacing when the list opens the card. Rows prefetch on intent, since a
- * card can list many pages.
+ * card can list many pages. A school host's paths carry no locale, so its rows
+ * pass `localized={false}`.
  */
 export function CardLink({
   children,
   href,
+  localized,
   title,
 }: {
   children: ReactNode;
   href: string;
+  /** Whether `href` gets the reader's locale prefix. Left out, it does. */
+  localized?: boolean;
   title: string;
 }) {
   return (
@@ -29,6 +33,7 @@ export function CardLink({
       <IntentLink
         className="group flex w-full scroll-mt-28 items-center gap-2 px-6 py-3 transition-colors ease-out hover:bg-accent hover:text-accent-foreground in-[[data-slot=card]>ul:first-child]:group-first/list:pt-(--card-spacing) group-last/list:pb-(--card-spacing)"
         href={href}
+        localized={localized}
         title={title}
       >
         {children}

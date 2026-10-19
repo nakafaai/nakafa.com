@@ -82,6 +82,7 @@ function StudentRows({
             <CardLink
               href={`/sittings/${sitting.id}`}
               key={sitting.id}
+              localized={false}
               title={sitting.examTitle}
             >
               <RowText detail={sitting.room} title={sitting.examTitle} />

@@ -1,4 +1,4 @@
-import { routing } from "@repo/internationalization/src/routing";
+import { routing, schoolRouting } from "@repo/internationalization/src/routing";
 import { createNavigation } from "next-intl/navigation";
 
 // Lightweight wrappers around Next.js' navigation APIs
@@ -9,3 +9,9 @@ export const { Link, redirect, usePathname, useRouter, getPathname } =
     defaultLocale: routing.defaultLocale,
     locales: routing.locales,
   });
+
+/**
+ * The link of a school host, whose addresses carry no locale prefix. The school routing never
+ * writes one, so a link made with it reads the way the school's other links do.
+ */
+export const { Link: SchoolLink } = createNavigation(schoolRouting);

@@ -65,6 +65,7 @@ function LiveRows({ now, rooms }: { now: number; rooms: readonly Room[] }) {
         <CardLink
           href={`/exams/${room.examId}/sittings/${room.id}`}
           key={room.id}
+          localized={false}
           title={room.examTitle}
         >
           <RowText detail={room.room} title={room.examTitle} />

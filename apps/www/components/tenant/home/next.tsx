@@ -64,6 +64,7 @@ function NextRows({ rooms }: { rooms: readonly Room[] }) {
         <CardLink
           href={`/exams/${room.examId}`}
           key={room.id}
+          localized={false}
           title={room.examTitle}
         >
           <RowText detail={room.room} title={room.examTitle} />

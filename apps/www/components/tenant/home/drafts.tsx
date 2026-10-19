@@ -67,6 +67,7 @@ function DraftRows({
         <CardLink
           href={`/exams/${draft.id}/edit`}
           key={draft.id}
+          localized={false}
           title={draft.title}
         >
           <RowText detail={names.of(draft.language)} title={draft.title} />
