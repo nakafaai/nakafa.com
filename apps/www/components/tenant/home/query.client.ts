@@ -8,7 +8,7 @@ import { useConvexAuth } from "@/components/providers/convex";
 import { useTenant } from "@/components/tenant/context";
 
 /**
- * The viewer's view of the school, which the home reads for its header and its welcome. The read waits
+ * The viewer's view of the school, which the home reads for its header and its greeting. The read waits
  * for the session, which Convex learns a moment after the page draws.
  */
 export function useHomeViewer() {
@@ -29,12 +29,30 @@ export function homeExamsRead(slug: TenantSlug) {
   return { args: { slug }, ref: exams.exams.home };
 }
 
-/** The read of the sittings a student may take part in, which the student's tile runs again. */
+/**
+ * What the school still lacks, which the setup tile lists for the owner and the admin only. A viewer who
+ * does not manage the school never asks, because the server refuses the read to them.
+ */
+export function useHomeSetup() {
+  const { canManage, slug } = useTenant();
+  const isSettled = useConvexAuth((auth) => !auth.isLoading);
+  return useQuery(
+    tenancy.home.setup,
+    isSettled && canManage ? { slug } : "skip"
+  );
+}
+
+/** The read of the school's setup, which the setup tile's failure part runs again. */
+export function homeSetupRead(slug: TenantSlug) {
+  return { args: { slug }, ref: tenancy.home.setup };
+}
+
+/** The read of the sittings a student may take part in, which the student's tiles run again. */
 export function studentSittingsRead(slug: TenantSlug) {
   return { args: { slug }, ref: exams.sittings.mine };
 }
 
-/** The sittings a student may take part in, which the student's tile lists. */
+/** The sittings a student may take part in, which the student's tiles list. */
 export function useStudentSittings() {
   const { slug } = useTenant();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);

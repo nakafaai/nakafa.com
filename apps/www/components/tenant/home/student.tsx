@@ -2,19 +2,25 @@
 
 import { QueryResult } from "@confect/react";
 import type { StudentSittingRow } from "@repo/backend/confect/exams/sittings/contract";
-import { buttonVariants } from "@repo/design-system/lib/button";
 import { Array as Arr, Option } from "effect";
-import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
-import { useEffect } from "react";
+import { type ReactNode, useEffect } from "react";
 import { forgetSubmittedKept } from "@/components/exams/sitting/forget.client";
 import { CardLink, CardLinks } from "@/components/shared/card/link";
 import { useTenant } from "@/components/tenant/context";
+import { Bento, type BentoTile } from "@/components/tenant/home/bento";
+import { type StudentTile, studentPlan } from "@/components/tenant/home/layout";
 import {
   studentSittingsRead,
   useStudentSittings,
 } from "@/components/tenant/home/query.client";
-import { HomeTile, RowText, TileEmpty } from "@/components/tenant/home/tile";
+import { QuietState } from "@/components/tenant/home/quiet";
+import {
+  AllExamsAction,
+  HomeTile,
+  RowText,
+  TILE_ROWS,
+} from "@/components/tenant/home/tile";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { schoolDateTimeText } from "@/components/tenant/settings/clock";
 import { orderSittings } from "@/components/tenant/sittings.client";
@@ -23,37 +29,25 @@ import { orderSittings } from "@/components/tenant/sittings.client";
 type Sitting = typeof StudentSittingRow.Type;
 
 /**
- * The sittings a student may take part in, and the results of those that closed: the open ones first, then
- * the scheduled ones, then the finished ones. An open sitting's row enters it, and the footer's action
- * enters the first open sitting that the student has not finished. A finished sitting's row shows its
- * results once the teacher releases them. A student who holds no sitting sees Nina and why. The list's
- * submitted attempts drop the answers that the browser kept for them, which the server now holds. A failed
- * read shows its own sentence and Try again inside this tile, and the tile keeps its title and footer.
+ * The home of a student: the sittings that are open or scheduled, then the results of the sittings that closed.
+ * A student with neither sees Nina searching and no card. While the list loads, the quiet state holds the place
+ * of the tiles, and a failed read shows its own sentence and Try again.
  */
-export function StudentTile({ className }: { className?: string | undefined }) {
-  const t = useTranslations("School");
+export function StudentHome() {
   const tenant = useTenant();
 
   return (
-    <ReadBoundary
-      fallback={(failure) => (
-        <HomeTile className={className} title={t("tile-student")}>
-          {failure}
-        </HomeTile>
-      )}
-      read={studentSittingsRead(tenant.slug)}
-    >
-      <StudentCard className={className} />
+    <ReadBoundary read={studentSittingsRead(tenant.slug)}>
+      <StudentTiles />
     </ReadBoundary>
   );
 }
 
-/**
- * The student's tile once its list is in. While the list loads, the tile keeps its frame with no
- * sentence, so no empty state shows before the answer.
- */
-function StudentCard({ className }: { className?: string | undefined }) {
+/** The student's tiles and quiet state, from the list the student's sittings read returns. */
+function StudentTiles() {
   const t = useTranslations("School");
+  const te = useTranslations("Exams");
+  const locale = useLocale();
   const listed = useStudentSittings();
 
   useEffect(() => {
@@ -66,39 +60,33 @@ function StudentCard({ className }: { className?: string | undefined }) {
     throw listed.error;
   }
   if (!QueryResult.isSuccess(listed)) {
-    return <HomeTile className={className} title={t("tile-student")} />;
+    return <QuietState act="searching">{""}</QuietState>;
   }
-  return (
-    <StudentRows className={className} sittings={orderSittings(listed.value)} />
-  );
-}
-
-/** The student's sittings as rows, with the one action that enters the first sitting still to take. */
-function StudentRows({
-  className,
-  sittings,
-}: {
-  className?: string | undefined;
-  sittings: readonly Sitting[];
-}) {
-  const t = useTranslations("School");
-  const te = useTranslations("Exams");
-  const locale = useLocale();
-  const open = Arr.findFirst(
+  const sittings = orderSittings(listed.value);
+  const upcoming = Arr.filter(
     sittings,
+    (sitting) => sitting.state !== "closed"
+  );
+  const finished = Arr.filter(
+    sittings,
+    (sitting) => sitting.state === "closed"
+  );
+  const plan = studentPlan({
+    results: finished.length,
+    sittings: upcoming.length,
+  });
+  const open = Arr.findFirst(
+    upcoming,
     (sitting) => sitting.state === "open" && sitting.attempt !== "submitted"
   );
   const scheduled = Arr.findFirst(
-    sittings,
+    upcoming,
     (sitting) => sitting.state === "scheduled"
   );
-  const hint = Option.isSome(open)
+  const footer = Option.isSome(open)
     ? te("student-enter-footer")
     : Option.match(scheduled, {
-        onNone: () =>
-          Arr.isReadonlyArrayEmpty(sittings)
-            ? t("sittings-empty-description")
-            : te("student-results-footer"),
+        onNone: () => te("student-results-footer"),
         onSome: (next) =>
           t("sittings-next", {
             time:
@@ -109,37 +97,66 @@ function StudentRows({
               }) ?? "",
           }),
       });
+  const nodes: Record<StudentTile, ReactNode> = {
+    results: <StudentResultsTile className="h-full" sittings={finished} />,
+    sittings: (
+      <StudentSittingsTile
+        className="h-full"
+        footer={footer}
+        sittings={upcoming}
+      />
+    ),
+  };
+
+  return (
+    <>
+      {plan.quiet ? (
+        <QuietState act="searching">{t("sittings-empty")}</QuietState>
+      ) : null}
+      <Bento
+        tiles={Arr.map(
+          plan.tiles,
+          (tile): BentoTile => ({ key: tile, node: nodes[tile] })
+        )}
+      />
+    </>
+  );
+}
+
+/** The sittings the student may still take part in, as rows that open each sitting, with the footer's sentence. */
+function StudentSittingsTile({
+  className,
+  footer,
+  sittings,
+}: {
+  className?: string | undefined;
+  footer: string;
+  sittings: readonly Sitting[];
+}) {
+  const t = useTranslations("School");
+  const tenant = useTenant();
 
   return (
     <HomeTile
       action={
-        Option.isSome(open) ? (
-          <Link
-            className={buttonVariants()}
-            href={`/sittings/${open.value.id}`}
-          >
-            {te("student-enter")}
-          </Link>
+        sittings.length > TILE_ROWS && tenant.canOpenExams ? (
+          <AllExamsAction />
         ) : undefined
       }
       className={className}
-      hint={hint}
+      hint={footer}
       title={t("tile-student")}
     >
-      {Arr.isReadonlyArrayEmpty(sittings) ? (
-        <TileEmpty act="searching">{t("sittings-empty")}</TileEmpty>
-      ) : (
-        <CardLinks>
-          {Arr.map(sittings, (sitting) => (
-            <SittingRow key={sitting.id} sitting={sitting} />
-          ))}
-        </CardLinks>
-      )}
+      <CardLinks>
+        {Arr.map(Arr.take(sittings, TILE_ROWS), (sitting) => (
+          <SittingRow key={sitting.id} sitting={sitting} />
+        ))}
+      </CardLinks>
     </HomeTile>
   );
 }
 
-/** One sitting of the student, as a row that opens the sitting and names what the student can do there. */
+/** One sitting that the student may still take part in, as a row that opens it, with its state or its opening. */
 function SittingRow({ sitting }: { sitting: Sitting }) {
   return (
     <CardLink
@@ -149,28 +166,22 @@ function SittingRow({ sitting }: { sitting: Sitting }) {
     >
       <RowText detail={sitting.room} title={sitting.examTitle} />
       <span className="shrink-0 text-muted-foreground text-sm">
-        <SittingRowAction sitting={sitting} />
+        <SittingAction sitting={sitting} />
       </span>
     </CardLink>
   );
 }
 
-/** The action text of one row of the student's list: its results, its entry, or its opening time. */
-function SittingRowAction({ sitting }: { readonly sitting: Sitting }) {
-  const te = useTranslations("Exams");
+/** The end of a sitting's row: its answers once saved, its state while it is open, or the time it opens. */
+function SittingAction({ sitting }: { sitting: Sitting }) {
+  const t = useTranslations("School");
   const locale = useLocale();
 
   if (sitting.attempt === "submitted") {
-    return (
-      <>
-        {sitting.resultsReleased
-          ? te("student-view-results")
-          : te("answers-in")}
-      </>
-    );
+    return <>{t("answers-saved")}</>;
   }
   if (sitting.state === "open") {
-    return <>{te("student-enter")}</>;
+    return <>{t("sitting-open-now")}</>;
   }
   return (
     <>
@@ -180,5 +191,58 @@ function SittingRowAction({ sitting }: { readonly sitting: Sitting }) {
         timeZone: sitting.timeZone,
       })}
     </>
+  );
+}
+
+/** The results of the sittings that closed, as rows that open each sitting, with whether the results are released. */
+function StudentResultsTile({
+  className,
+  sittings,
+}: {
+  className?: string | undefined;
+  sittings: readonly Sitting[];
+}) {
+  const t = useTranslations("School");
+  const te = useTranslations("Exams");
+  const tenant = useTenant();
+
+  return (
+    <HomeTile
+      action={
+        sittings.length > TILE_ROWS && tenant.canOpenExams ? (
+          <AllExamsAction />
+        ) : undefined
+      }
+      className={className}
+      hint={te("student-results-footer")}
+      title={t("tile-results")}
+    >
+      <CardLinks>
+        {Arr.map(Arr.take(sittings, TILE_ROWS), (sitting) => (
+          <ResultRow key={sitting.id} sitting={sitting} />
+        ))}
+      </CardLinks>
+    </HomeTile>
+  );
+}
+
+/** One closed sitting, as a row that opens it and says whether its results are released. */
+function ResultRow({ sitting }: { sitting: Sitting }) {
+  const t = useTranslations("School");
+  const te = useTranslations("Exams");
+
+  return (
+    <CardLink
+      href={`/sittings/${sitting.id}`}
+      localized={false}
+      title={sitting.examTitle}
+    >
+      <RowText detail={sitting.room} title={sitting.examTitle} />
+      <span className="shrink-0 text-muted-foreground text-sm">
+        {sitting.resultsReleased
+          ? te("student-view-results")
+          : t("answers-saved")}
+      </span>
+    </CardLink>
   );
 }
