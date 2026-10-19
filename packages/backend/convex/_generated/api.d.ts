@@ -4461,6 +4461,7 @@ export declare const api: {
               away: boolean;
               deadline: number;
               id: Id<"examAttempts">;
+              lastActiveAt: number;
               latestSignal: {
                 at: number;
                 kind:
@@ -4508,6 +4509,7 @@ export declare const api: {
             attempt: Id<"examAttempts">;
             deadline: number;
             outcome: "admitted";
+            serverNow: number;
             state: "inProgress" | "locked" | "closing" | "submitted";
           }
         | { outcome: "refused"; reason: "TokenRefused" | "TooManyTries" }
@@ -4528,6 +4530,16 @@ export declare const api: {
           slug: string;
         },
         Array<{ id: Id<"examAssets">; url: string }>
+      >;
+      lastAnswer: FunctionReference<
+        "query",
+        "public",
+        {
+          attemptId: Id<"examAttempts">;
+          sittingId: Id<"examSittings">;
+          slug: string;
+        },
+        number | null
       >;
       lock: FunctionReference<
         "mutation",
@@ -4551,12 +4563,15 @@ export declare const api: {
         "public",
         { slug: string },
         Array<{
+          attempt: "inProgress" | "locked" | "closing" | "submitted" | null;
+          attemptId: Id<"examAttempts"> | null;
           closesAt: number;
           cohortId: Id<"tenantCohorts"> | null;
           examId: Id<"exams">;
           examTitle: string;
           id: Id<"examSittings">;
           opensAt: number;
+          resultsReleased: boolean;
           room: string;
           state: "scheduled" | "open" | "closed";
           timeZone: string;
