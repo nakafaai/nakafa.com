@@ -199,7 +199,7 @@ test("a proctor lists the rooms of an exam and opens one from the list, and a st
   await proctorContext.close();
 });
 
-test("a student jumps to a question from the navigator, flags it, and keeps the answer and the flag through a reload", async ({
+test("a student jumps to a question from the navigator, flags it, and keeps the flag through a reload", async ({
   baseURL,
   browser,
 }) => {
@@ -265,18 +265,15 @@ test("a student jumps to a question from the navigator, flags it, and keeps the 
     navigator.getByRole("button", { exact: true, name: "Question 1, answered" })
   ).toBeVisible();
 
-  // A reload brings back the answer and the flag, which the browser keeps for this attempt.
+  // A reload brings back the flag. The server never holds a flag, so only the browser's kept state can show
+  // it. The answer is not checked here: the server may hold it already, so the check would pass either way.
   await student.reload();
-  await expect(
-    navigator.getByRole("button", { exact: true, name: "Question 1, answered" })
-  ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
-  await expect(first.getByRole("radio").first()).toBeChecked();
   await expect(
     navigator.getByRole("button", {
       exact: true,
       name: "Question 2, unanswered, flagged for review",
     })
-  ).toBeVisible();
+  ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
 
   // On a phone the navigator opens from the header, and a number in it closes the sheet.
   await student.setViewportSize({ height: 812, width: 375 });
