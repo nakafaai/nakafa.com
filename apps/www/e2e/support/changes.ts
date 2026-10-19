@@ -98,6 +98,8 @@ export const trackChanges = Effect.fn("NakafaE2E.trackChanges")(function* (
   }>();
   /** The functions whose queries the server has answered on this page. */
   const answeredPaths = MutableHashSet.empty<string>();
+  /** The functions the page asked for while its connection had not signed in. */
+  const askedSignedOut = MutableHashSet.empty<string>();
   // The frames of the changes on their way, by the id the server answers with.
   const waiting = MutableHashMap.empty<number, string>();
   // The frames of the changes the server took.
@@ -155,6 +157,9 @@ export const trackChanges = Effect.fn("NakafaE2E.trackChanges")(function* (
               for (const query of modifications) {
                 if (query.udfPath) {
                   MutableHashMap.set(queries, query.queryId, query.udfPath);
+                  if (!changes.signedIn) {
+                    MutableHashSet.add(askedSignedOut, query.udfPath);
+                  }
                 }
               }
             },
@@ -275,6 +280,14 @@ export const trackChanges = Effect.fn("NakafaE2E.trackChanges")(function* (
     /** Whether the server has answered a query of the function `udfPath` on this page. */
     hasAnswered(udfPath: string) {
       return MutableHashSet.has(answeredPaths, udfPath);
+    },
+    /**
+     * Whether the page asked for a query of the function `udfPath` before its
+     * connection signed in, on any load. A query that needs the session and is
+     * asked that early is answered as signed out first.
+     */
+    askedSignedOut(udfPath: string) {
+      return MutableHashSet.has(askedSignedOut, udfPath);
     },
     /** Every answer to a query of the function `udfPath` on this page, as JSON text, in order. */
     answersTo(udfPath: string) {
