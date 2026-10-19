@@ -644,7 +644,7 @@
     "name-title": "Wie heißt deine Schule?",
     "name-label": "Name der Schule",
     "name-placeholder": "Harapan Bangsa",
-    "name-error": "Gib einen Namen mit mindestens 2 Zeichen ein.",
+    "name-error": "Gib einen Namen mit mindestens 3 Zeichen ein.",
     "address-label": "Adresse",
     "address-free": "Frei",
     "address-taken": "Diese Adresse nutzt schon eine andere Schule.",

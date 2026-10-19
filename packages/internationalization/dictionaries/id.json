@@ -644,7 +644,7 @@
     "name-title": "Apa nama sekolahmu?",
     "name-label": "Nama sekolah",
     "name-placeholder": "Harapan Bangsa",
-    "name-error": "Tulis nama minimal 2 karakter.",
+    "name-error": "Tulis nama minimal 3 karakter.",
     "address-label": "Alamat",
     "address-free": "Tersedia",
     "address-taken": "Alamat ini sudah dipakai sekolah lain.",
