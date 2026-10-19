@@ -8,31 +8,22 @@ import {
   usePaginatedQuery,
   useQuery,
 } from "@confect/react";
-import { MoreHorizontalIcon } from "@hugeicons/core-free-icons";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
-import { PeriodName, PeriodStatus } from "@repo/backend/confect/tenancy/period";
+import { PeriodStatus } from "@repo/backend/confect/tenancy/period";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@repo/design-system/components/ui/dropdown-menu";
 import {
   Field,
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
-import { toast } from "@repo/design-system/lib/toast/notify";
 import { createColumnHelper } from "@tanstack/react-table";
-import { Array as Arr, Option, Schema } from "effect";
+import { Array as Arr, Option } from "effect";
 import { useTranslations } from "next-intl";
-import { startTransition, useId, useState, useTransition } from "react";
+import { useId, useState, useTransition } from "react";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import { DataTable } from "@/components/shared/table/data";
@@ -41,14 +32,11 @@ import { TableEmpty } from "@/components/shared/table/frame";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { SettingsPage } from "@/components/tenant/settings/page";
 import {
-  archivePeriodChange,
-  createPeriodChange,
-  openPeriodChange,
-  renamePeriodChange,
-  restorePeriodChange,
-} from "@/components/tenant/settings/periods.client";
+  SchoolPeriodMenu,
+  SchoolPeriodRestore,
+} from "@/components/tenant/settings/period";
+import { createPeriodChange } from "@/components/tenant/settings/periods.client";
 import { saveSchool } from "@/components/tenant/settings/save.client";
-import { isDraft } from "@/components/tenant/settings/state";
 import {
   SchoolUnitChoice,
   type UnitId,
@@ -241,186 +229,6 @@ function SchoolPeriodTable({
         <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
       ) : null}
     </>
-  );
-}
-
-/**
- * A period's row menu: it renames the period, then opens a planned period or archives an
- * active one. The rename dialog saves a name that changes the stored one and passes the
- * name schema, then closes. An archived period has no menu, because the server refuses
- * every write to it, so its cell stays empty.
- */
-/**
- * The restore action of an archived period in the archived list. The period shows as active at
- * once, and a refusal, such as another active period of its unit, takes it back.
- */
-function SchoolPeriodRestore({
-  period,
-  slug,
-}: {
-  period: PeriodItem;
-  slug: TenantSlug;
-}) {
-  const t = useTranslations("SchoolSettings");
-  const restore = useMutation(tenancy.periods.restore).withOptimisticUpdate(
-    restorePeriodChange
-  );
-
-  return (
-    <div className="flex justify-end">
-      <Button
-        onClick={() =>
-          startTransition(() =>
-            saveSchool(() => restore({ periodId: period.id, slug }), SOURCE)
-          )
-        }
-        size="sm"
-        type="button"
-        variant="outline"
-      >
-        {t("period-restore")}
-      </Button>
-    </div>
-  );
-}
-
-function SchoolPeriodMenu({
-  period,
-  slug,
-}: {
-  period: PeriodItem;
-  slug: TenantSlug;
-}) {
-  const t = useTranslations("SchoolSettings");
-  const common = useTranslations("Common");
-  const id = useId();
-  const open = useMutation(tenancy.periods.open).withOptimisticUpdate(
-    openPeriodChange
-  );
-  const archive = useMutation(tenancy.periods.archive).withOptimisticUpdate(
-    archivePeriodChange
-  );
-  const restore = useMutation(tenancy.periods.restore).withOptimisticUpdate(
-    restorePeriodChange
-  );
-  const rename = useMutation(tenancy.periods.rename).withOptimisticUpdate(
-    renamePeriodChange
-  );
-  const [isRenaming, setIsRenaming] = useState(false);
-  const [name, setName] = useState(period.name);
-  const next = name.trim();
-  const canSave = next !== period.name && Schema.is(PeriodName)(next);
-
-  return (
-    <div className="flex justify-end">
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          render={
-            <Button
-              aria-label={common("more-actions")}
-              inert={isDraft(period.id)}
-              size="icon-sm"
-              variant="ghost"
-            >
-              <HugeIcons icon={MoreHorizontalIcon} />
-            </Button>
-          }
-        />
-        <DropdownMenuContent align="end" className="w-44">
-          <DropdownMenuItem
-            onClick={() => {
-              setName(period.name);
-              setIsRenaming(true);
-            }}
-          >
-            {t("period-rename")}
-          </DropdownMenuItem>
-          {period.status === "planned" ? (
-            <DropdownMenuItem
-              onClick={() =>
-                startTransition(() =>
-                  saveSchool(() => open({ periodId: period.id, slug }), SOURCE)
-                )
-              }
-            >
-              {t("period-open")}
-            </DropdownMenuItem>
-          ) : null}
-          {period.status === "active" ? (
-            <DropdownMenuItem
-              onClick={() =>
-                startTransition(() =>
-                  saveSchool(
-                    () => archive({ periodId: period.id, slug }),
-                    SOURCE,
-                    () =>
-                      toast.success(
-                        { title: "school-period-archived.title" },
-                        {
-                          action: {
-                            label: "undo.title",
-                            onClick: () =>
-                              startTransition(() =>
-                                saveSchool(
-                                  () => restore({ periodId: period.id, slug }),
-                                  SOURCE
-                                )
-                              ),
-                          },
-                        }
-                      )
-                  )
-                )
-              }
-            >
-              {t("period-archive")}
-            </DropdownMenuItem>
-          ) : null}
-        </DropdownMenuContent>
-      </DropdownMenu>
-      <ResponsiveDialog
-        footer={
-          <>
-            <Button
-              onClick={() => setIsRenaming(false)}
-              type="button"
-              variant="outline"
-            >
-              {common("cancel")}
-            </Button>
-            <Button
-              disabled={!canSave}
-              onClick={() => {
-                setIsRenaming(false);
-                startTransition(() =>
-                  saveSchool(
-                    () => rename({ name: next, periodId: period.id, slug }),
-                    SOURCE
-                  )
-                );
-              }}
-              type="button"
-            >
-              {t("period-rename-save")}
-            </Button>
-          </>
-        }
-        open={isRenaming}
-        setOpen={setIsRenaming}
-        title={t("period-rename")}
-      >
-        <FieldGroup>
-          <Field>
-            <FieldLabel htmlFor={`${id}-name`}>{t("period-name")}</FieldLabel>
-            <Input
-              id={`${id}-name`}
-              onChange={(event) => setName(event.target.value)}
-              value={name}
-            />
-          </Field>
-        </FieldGroup>
-      </ResponsiveDialog>
-    </div>
   );
 }
 
