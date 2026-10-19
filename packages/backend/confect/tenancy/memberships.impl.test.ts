@@ -17,7 +17,7 @@ describe("tenancy/memberships", () => {
           person: { id: fixture.people.owner.personId, name: "Owner" },
           tenant: {
             kind: "foundation",
-            mascot: schoolMascot(fixture.tenants.nf),
+            mascot: schoolMascot("nf"),
             name: "Yayasan Nakafa",
             slug: "nf",
             status: "active",
