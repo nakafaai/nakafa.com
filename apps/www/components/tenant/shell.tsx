@@ -161,7 +161,13 @@ export function TenantShell({
 }) {
   return (
     <TenantContext
-      value={{ canManage, canOpenExams, name: profile.name, role }}
+      value={{
+        canManage,
+        canOpenExams,
+        name: profile.name,
+        role,
+        slug: profile.slug,
+      }}
     >
       <TenantFrame
         account={account}

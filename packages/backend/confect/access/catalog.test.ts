@@ -282,6 +282,7 @@ describe("access/catalog", () => {
       "visit.approve",
       "document.edit",
       "exam.edit",
+      "exam.rooms",
       "exam.view",
     ]);
   });

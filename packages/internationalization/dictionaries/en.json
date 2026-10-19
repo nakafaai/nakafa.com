@@ -25,7 +25,11 @@
     },
     "sign-in-title": "Sign in to {school}",
     "signed-in": "You are signed in.",
-    "signed-in-as": "You are signed in as {role}."
+    "signed-in-as": "You are signed in as {role}.",
+    "sittings-title": "Your sittings",
+    "sittings-empty": "No sitting is open to you",
+    "sittings-empty-description": "Your teacher schedules a sitting, and it appears here.",
+    "sitting-exam": "Exam"
   },
   "Exams": {
     "token": "Token",
@@ -140,6 +144,20 @@
     "length-minutes": "{count, plural, one {# minute} other {# minutes}}",
     "schedule-keys": "Mark the correct answer of every question first.",
     "schedule-past": "The start has passed. Choose a later time.",
+    "rooms-title": "Rooms",
+    "rooms-empty": "No rooms yet",
+    "rooms-empty-description": "Each room appears here once the exam is scheduled.",
+    "rooms-filter-empty": "No room is in this state",
+    "rooms-filter-empty-description": "Choose another state to see the other rooms.",
+    "rooms-unavailable": "You cannot view the rooms of this exam.",
+    "rooms-group": "Group",
+    "rooms-opens": "Opens",
+    "rooms-closes": "Closes",
+    "rooms-state": "State",
+    "room-state-scheduled": "Scheduled",
+    "room-state-open": "Open",
+    "room-state-closed": "Closed",
+    "state-all": "All states",
     "try-action": "Try as student",
     "try-finish": "Finish trying",
     "try-note": "Answers here are not saved."

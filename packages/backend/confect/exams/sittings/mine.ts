@@ -9,8 +9,12 @@ import { Array as Arr, Effect } from "effect";
 /** The most units a tenant holds (ADR 0011), so the units a student may reach are bounded. */
 const TENANT_UNIT_LIMIT = 24;
 
-/** The most sittings of one state that one unit or one cohort lists, so a student's list stays short. */
-const SITTINGS_PER_STATE = 10;
+/**
+ * The most sittings of one state that one unit or one cohort lists. A unit can run more rooms
+ * of one state at once than a short list holds. The state indexes end in the opening time, so
+ * the bound keeps the sittings that open first, and each read stays bounded.
+ */
+const SITTINGS_PER_STATE = 50;
 
 /** The states of a sitting that a student may still take part in. */
 export const LIVE_STATES: readonly (typeof SittingState.Type)[] = [
@@ -43,7 +47,7 @@ export const mine = Effect.fn("exams.sittings.mine")(function* () {
     Effect.forEach(LIVE_STATES, (state) =>
       reader
         .table("examSittings")
-        .index("by_unitId_and_cohortId_and_state", (query) =>
+        .index("by_unitId_and_cohortId_and_state_and_opensAt", (query) =>
           query.eq("unitId", unit._id).eq("cohortId", null).eq("state", state)
         )
         .take(SITTINGS_PER_STATE)
@@ -59,7 +63,7 @@ export const mine = Effect.fn("exams.sittings.mine")(function* () {
     Effect.forEach(LIVE_STATES, (state) =>
       reader
         .table("examSittings")
-        .index("by_cohortId_and_state", (query) =>
+        .index("by_cohortId_and_state_and_opensAt", (query) =>
           query.eq("cohortId", placement.cohortId).eq("state", state)
         )
         .take(SITTINGS_PER_STATE)

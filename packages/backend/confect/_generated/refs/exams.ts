@@ -1,11 +1,12 @@
 import { GroupSpec, Refs, Spec } from "@confect/core";
 import exams_exams from "../../exams/exams.spec";
 import exams_questions from "../../exams/questions.spec";
+import exams_rooms from "../../exams/rooms.spec";
 import exams_sittings from "../../exams/sittings.spec";
 
 const spec: Spec.Spec<{
-  readonly exams: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "exams", never, GroupSpec.NamedAt<typeof exams_exams, "exams"> | GroupSpec.NamedAt<typeof exams_questions, "questions"> | GroupSpec.NamedAt<typeof exams_sittings, "sittings">>, "exams">;
-}> = Spec.fromGroups({ ["exams"]: GroupSpec.addGroupsAt(GroupSpec.make(), { ["exams"]: exams_exams, ["questions"]: exams_questions, ["sittings"]: exams_sittings }) }) as typeof spec;
+  readonly exams: GroupSpec.NamedAt<GroupSpec.GroupSpec<"Convex", "exams", never, GroupSpec.NamedAt<typeof exams_exams, "exams"> | GroupSpec.NamedAt<typeof exams_questions, "questions"> | GroupSpec.NamedAt<typeof exams_rooms, "rooms"> | GroupSpec.NamedAt<typeof exams_sittings, "sittings">>, "exams">;
+}> = Spec.fromGroups({ ["exams"]: GroupSpec.addGroupsAt(GroupSpec.make(), { ["exams"]: exams_exams, ["questions"]: exams_questions, ["rooms"]: exams_rooms, ["sittings"]: exams_sittings }) }) as typeof spec;
 
 const refs: Refs.FromSpec<typeof spec> = Refs.make(spec);
 

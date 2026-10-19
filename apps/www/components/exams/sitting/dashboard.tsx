@@ -18,6 +18,7 @@ import { SittingSeats } from "@/components/exams/sitting/seats";
 import { createSittingStore } from "@/components/exams/sitting/store";
 import { SittingToolbar } from "@/components/exams/sitting/toolbar";
 import { useConvexAuth } from "@/components/providers/convex";
+import { useTenant } from "@/components/tenant/context";
 import { SchoolHeader } from "@/components/tenant/header";
 
 /**
@@ -76,13 +77,20 @@ export function SittingDashboard({
   );
 }
 
-/** The page when the dashboard cannot show the sitting: the header with the way back to the exams, and why. */
+/**
+ * The page when the dashboard cannot show the sitting: the header with the way back to the exams
+ * for a viewer who may open them, and why.
+ */
 function SittingRefusal({ message }: { readonly message: string }) {
   const t = useTranslations("Exams");
+  const tenant = useTenant();
+  const examsItems = tenant.canOpenExams
+    ? [{ href: "/exams", label: t("title") }]
+    : [];
 
   return (
     <>
-      <SchoolHeader items={[{ href: "/exams", label: t("title") }]} />
+      <SchoolHeader items={examsItems} />
       <p className="p-4 text-muted-foreground text-sm md:p-6">{message}</p>
     </>
   );

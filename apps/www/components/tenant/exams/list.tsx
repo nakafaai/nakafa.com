@@ -134,6 +134,7 @@ function ExamTable({
           <TableRow>
             <TableHead>{t("title-label")}</TableHead>
             <TableHead>{t("language")}</TableHead>
+            <TableHead>{t("rooms-title")}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -152,8 +153,8 @@ function ExamTable({
 }
 
 /**
- * One exam of the table: its title, which opens its editor, and its language. An exam
- * that the server is still saving shows its title without a link, so it is inert.
+ * One exam of the table: its title, which opens its editor, its language, and the link to its
+ * rooms. An exam that the server is still saving shows its title without a link, so it is inert.
  */
 function ExamRow({
   exam,
@@ -164,6 +165,8 @@ function ExamRow({
   names: Intl.DisplayNames;
   saving: boolean;
 }) {
+  const t = useTranslations("Exams");
+
   return (
     <TableRow>
       <TableCell className="font-medium">
@@ -180,6 +183,16 @@ function ExamRow({
       </TableCell>
       <TableCell className="text-muted-foreground">
         {names.of(exam.language)}
+      </TableCell>
+      <TableCell>
+        {saving ? null : (
+          <Link
+            className="underline-offset-4 hover:underline"
+            href={`/exams/${exam.id}`}
+          >
+            {t("rooms-title")}
+          </Link>
+        )}
       </TableCell>
     </TableRow>
   );

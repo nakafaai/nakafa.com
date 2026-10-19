@@ -5,10 +5,11 @@ import { LayoutContent } from "@/components/shared/content/layout";
 import { useTenant } from "@/components/tenant/context";
 import { SchoolHeader } from "@/components/tenant/header";
 import { SchoolNextStep } from "@/components/tenant/next";
+import { StudentSittings } from "@/components/tenant/sittings";
 
 /**
- * Beranda of a school: its header, one line with the viewer's role, and the one next
- * step the viewer can take. The school's name is in the sidebar header, so the page
+ * Beranda of a school: its header, one line with the viewer's role, the one next step
+ * the viewer can take, and a student's sittings. The school's name is in the sidebar header, so the page
  * does not repeat it. A viewer without a grant sees a line that states only the
  * sign-in, because the page states nothing that the viewer does not hold.
  */
@@ -27,6 +28,7 @@ export function TenantHome() {
             : t("signed-in-as", { role: t(`role.${tenant.role}`) })}
         </p>
         <SchoolNextStep />
+        <StudentSittings />
       </LayoutContent>
     </>
   );

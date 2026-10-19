@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
+import type { ExamSittingsDoc } from "@repo/backend/confect/_generated/docs";
 import refs from "@repo/backend/confect/_generated/refs";
+import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import { nf } from "@repo/backend/test/editor";
 import {
   CLOSES_AT as CLOSES,
@@ -8,13 +10,51 @@ import {
   mentions,
   OPENS_AT as OPENS,
   openedSitting,
+  type SittingFixture,
   scheduleSitting,
   seedPlacement,
 } from "@repo/backend/test/sittings";
 import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 const { mine } = refs.public.exams.sittings;
+
+/** The opening time of the rooms that open a day after the room that opens soon. */
+const NEXT_DAY = OPENS + 86_400_000;
+
+/**
+ * Writes scheduled rooms of the SMP unit with the scheduler's jobs left out, so one test can seed
+ * more rooms than a list holds. The rooms are written in the order given.
+ */
+const insertRooms = (
+  fixture: SittingFixture,
+  rooms: readonly Pick<
+    ExamSittingsDoc,
+    "cohortId" | "examId" | "opensAt" | "room"
+  >[]
+) =>
+  fixture.run(
+    Effect.asVoid(
+      Effect.forEach(rooms, (room) =>
+        Effect.flatMap(DatabaseWriter, (writer) =>
+          writer.table("examSittings").insert({
+            closesAt: CLOSES,
+            cohortId: room.cohortId,
+            examId: room.examId,
+            jobs: [],
+            opensAt: room.opensAt,
+            room: room.room,
+            state: "scheduled",
+            tenantId: fixture.tenants.nf,
+            tokenHash: "",
+            tokenIssuedAt: TENANCY_NOW,
+            tokenSealed: new ArrayBuffer(0),
+            unitId: fixture.units.smp,
+          })
+        ).pipe(Effect.orDie)
+      )
+    )
+  );
 
 describe("exams/sittings mine", () => {
   beforeEach(() => {
@@ -62,22 +102,56 @@ describe("exams/sittings mine", () => {
   );
 
   it.effect(
-    "lists at most ten sittings of one state for a unit, so a student's list stays short",
+    "lists at most fifty sittings of one state for a unit, and keeps the ones that open first",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         yield* keyedSchool(fixture);
         const examId = yield* keyedExam(fixture, "PTS");
-        for (let index = 0; index < 11; index += 1) {
-          yield* scheduleSitting(fixture, {
-            closesAt: CLOSES,
+        // The fifty later rooms are written before the room that opens soon, so only the
+        // opening order keeps that room in the list.
+        yield* insertRooms(fixture, [
+          ...Arr.makeBy(50, (index) => ({
+            cohortId: null,
             examId,
-            group: { kind: "unit", unitId: fixture.units.smp },
-            opensAt: OPENS,
-          });
-        }
+            opensAt: NEXT_DAY + index,
+            room: `Lab ${index}`,
+          })),
+          { cohortId: null, examId, opensAt: OPENS, room: "Lab soon" },
+        ]);
         const listed = yield* fixture.as("student").query(mine, { slug: nf });
-        expect(listed).toHaveLength(10);
+        expect(Arr.map(listed, (row) => row.room)).toEqual([
+          "Lab soon",
+          ...Arr.makeBy(49, (index) => `Lab ${index}`),
+        ]);
+      })
+  );
+
+  it.effect(
+    "lists at most fifty sittings of one state for a cohort, and keeps the ones that open first",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        yield* keyedSchool(fixture);
+        const examId = yield* keyedExam(fixture, "PTS");
+        const cohortId = yield* seedPlacement(
+          fixture,
+          fixture.people.student.personId
+        );
+        yield* insertRooms(fixture, [
+          ...Arr.makeBy(50, (index) => ({
+            cohortId,
+            examId,
+            opensAt: NEXT_DAY + index,
+            room: `Lab ${index}`,
+          })),
+          { cohortId, examId, opensAt: OPENS, room: "Lab soon" },
+        ]);
+        const listed = yield* fixture.as("student").query(mine, { slug: nf });
+        expect(Arr.map(listed, (row) => row.room)).toEqual([
+          "Lab soon",
+          ...Arr.makeBy(49, (index) => `Lab ${index}`),
+        ]);
       })
   );
 

@@ -25,7 +25,11 @@
     },
     "sign-in-title": "Masuk ke {school}",
     "signed-in": "Kamu sudah masuk.",
-    "signed-in-as": "Kamu masuk sebagai {role}."
+    "signed-in-as": "Kamu masuk sebagai {role}.",
+    "sittings-title": "Ujian Anda",
+    "sittings-empty": "Belum ada ujian untuk Anda",
+    "sittings-empty-description": "Guru Anda menjadwalkan ujian, dan ujian itu muncul di sini.",
+    "sitting-exam": "Ujian"
   },
   "Exams": {
     "token": "Token",
@@ -140,6 +144,20 @@
     "length-minutes": "{count} menit",
     "schedule-keys": "Tandai dulu jawaban benar setiap soal.",
     "schedule-past": "Waktu mulai sudah lewat. Pilih waktu yang lebih lambat.",
+    "rooms-title": "Ruang",
+    "rooms-empty": "Belum ada ruang",
+    "rooms-empty-description": "Setiap ruang muncul di sini setelah ujian dijadwalkan.",
+    "rooms-filter-empty": "Tidak ada ruang dengan status ini",
+    "rooms-filter-empty-description": "Pilih status lain untuk melihat ruang yang lain.",
+    "rooms-unavailable": "Anda tidak dapat melihat ruang ujian ini.",
+    "rooms-group": "Kelompok",
+    "rooms-opens": "Dibuka",
+    "rooms-closes": "Ditutup",
+    "rooms-state": "Status",
+    "room-state-scheduled": "Terjadwal",
+    "room-state-open": "Berlangsung",
+    "room-state-closed": "Selesai",
+    "state-all": "Semua status",
     "try-action": "Coba sebagai siswa",
     "try-finish": "Selesai mencoba",
     "try-note": "Jawaban di sini tidak disimpan."

@@ -6,8 +6,8 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 /** The address of an exam's editor on the school host. */
 const EDITOR_PATH = /\/exams\/[^/]+\/edit$/;
 
-/** The address of a sitting's dashboard on the school host, which a schedule opens. */
-const SITTING_PATH = /\/exams\/[^/]+\/sittings\/[^/]+$/;
+/** The address of an exam's rooms on the school host, where a schedule goes once it is saved. */
+const ROOMS_PATH = /\/exams\/[^/]+$/;
 
 /** The thumbnail of the first question, whose name starts with its number. */
 const FIRST_QUESTION = /^1 /;
@@ -188,6 +188,6 @@ test("a teacher schedules a sitting of an exam whose question has its key, and t
   const scheduling = reopened.getByRole("dialog");
   await scheduling.getByRole("textbox", { name: "Room" }).fill("Lab 2");
   await scheduling.getByRole("button", { name: "Schedule" }).click();
-  await reopened.waitForURL(SITTING_PATH);
+  await reopened.waitForURL(ROOMS_PATH);
   await context.close();
 });
