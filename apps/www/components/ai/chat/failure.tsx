@@ -9,6 +9,7 @@ import {
   EmptyTitle,
 } from "@repo/design-system/components/ui/empty";
 import { useTranslations } from "next-intl";
+import { NuqsAdapter } from "nuqs/adapters/next/app";
 import type { ChatFailureKind } from "@/components/ai/chat/access";
 import { Unauthenticated } from "@/components/auth/gate";
 import { AuthGoogle } from "@/components/auth/google";
@@ -42,7 +43,9 @@ export function ChatFailure({
         </EmptyHeader>
         <Unauthenticated>
           <EmptyContent>
-            <AuthGoogle />
+            <NuqsAdapter>
+              <AuthGoogle />
+            </NuqsAdapter>
           </EmptyContent>
         </Unauthenticated>
       </Empty>
