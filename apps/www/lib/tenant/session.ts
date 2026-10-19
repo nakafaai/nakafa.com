@@ -11,6 +11,10 @@ type RequestSessionRead = Effect.Success<
 /**
  * The session read of each request. The Request object is the identity of one
  * request, so an entry leaves with its request and never reaches another visitor.
+ *
+ * Stopgap: this WeakMap is the school's own per-request memo until the request
+ * session seam of lane L0-6 owns it. Replace it with that seam when it lands, and
+ * delete this module then.
  */
 const reads = new WeakMap<Request, RequestSessionRead>();
 

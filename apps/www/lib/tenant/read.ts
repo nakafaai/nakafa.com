@@ -58,18 +58,24 @@ export class SchoolReads extends Context.Service<
 >()("www/lib/tenant/read/SchoolReads") {}
 
 /** The public profile of a school, or none when no school has the address. A visitor reads it with no token. */
-const readProfile = (slug: TenantSlug) =>
-  HttpClient.HttpClient.pipe(
+const readProfile = Effect.fn("www.tenant.read.profile")(function* (
+  slug: TenantSlug
+) {
+  return yield* HttpClient.HttpClient.pipe(
     Effect.flatMap((client) => client.query(tenancy.profile.get, { slug })),
     Effect.asSome,
     Effect.catchTag("TenantNotFound", () => Effect.succeedNone),
     Effect.provide(httpLayer()),
     Effect.mapError((cause) => new SchoolReadFailed({ cause }))
   );
+});
 
 /** The viewer's view of a school for a signed-in visitor, read with the session token of the request. */
-const readViewer = (slug: TenantSlug, token: string) =>
-  HttpClient.HttpClient.pipe(
+const readViewer = Effect.fn("www.tenant.read.viewer")(function* (
+  slug: TenantSlug,
+  token: string
+) {
+  return yield* HttpClient.HttpClient.pipe(
     Effect.flatMap((client) => client.query(tenancy.viewer.get, { slug })),
     Effect.map((viewer) => Result.succeed<SchoolViewer>(viewer)),
     Effect.catchTags({
@@ -81,10 +87,13 @@ const readViewer = (slug: TenantSlug, token: string) =>
     Effect.provide(httpLayer({ auth: token })),
     Effect.mapError((cause) => new SchoolReadFailed({ cause }))
   );
+});
 
 /** The name that an outsider's page shows for its account, or none when the account has no name. */
-const readAccount = (token: string) =>
-  HttpClient.HttpClient.pipe(
+const readAccount = Effect.fn("www.tenant.read.account")(function* (
+  token: string
+) {
+  return yield* HttpClient.HttpClient.pipe(
     Effect.flatMap((client) => client.query(auth.queries.getCurrentUser)),
     Effect.map((current) =>
       Option.flatMap(Option.fromNullishOr(current), (user) =>
@@ -94,6 +103,7 @@ const readAccount = (token: string) =>
     Effect.provide(httpLayer({ auth: token })),
     Effect.mapError((cause) => new SchoolReadFailed({ cause }))
   );
+});
 
 /** The live reads of the Convex deployment, each one attempt with the request's own token. */
 export const SchoolReadsLive = Layer.succeed(
@@ -114,6 +124,10 @@ const REFUSED: SchoolRead = { _tag: "Refused" };
  * refused too. A visitor gets the entry surface, and an account that is not a
  * member gets the outsider page. Any failed read fails the whole answer, so an
  * outage never looks like a missing school.
+ *
+ * A signed-in viewer reads the viewer first: a member's view carries the school's
+ * profile, so a member makes one read. The profile is read only for the outsider
+ * page, which needs it, and a missing school is refused there too.
  */
 export const readSchoolFrame = Effect.fn("www.tenant.readSchoolFrame")(
   function* (input: {
@@ -121,24 +135,10 @@ export const readSchoolFrame = Effect.fn("www.tenant.readSchoolFrame")(
     readonly locale: Locale;
     readonly token: Option.Option<string>;
   }) {
-    const reads = yield* SchoolReads;
-    const profile = yield* reads.profile(input.slug);
-    if (Option.isNone(profile)) {
-      return REFUSED;
-    }
-    const school = profile.value;
     if (Option.isNone(input.token)) {
-      const title = yield* Effect.promise(() =>
-        readSchoolSignInTitle(input.locale, school.name)
-      );
-      const visitor: SchoolRead = {
-        _tag: "Visitor",
-        locale: input.locale,
-        profile: school,
-        title,
-      };
-      return visitor;
+      return yield* readVisitorFrame(input.slug, input.locale);
     }
+    const reads = yield* SchoolReads;
     const answer = yield* reads.viewer(input.slug, input.token.value);
     if (Result.isSuccess(answer)) {
       const now = yield* DateTime.now;
@@ -147,7 +147,7 @@ export const readSchoolFrame = Effect.fn("www.tenant.readSchoolFrame")(
         greeting: greetingOf(answer.success, now),
         home: homeAccess(answer.success),
         locale: input.locale,
-        profile: school,
+        profile: answer.success.tenant,
         viewer: answer.success,
       };
       return member;
@@ -155,16 +155,57 @@ export const readSchoolFrame = Effect.fn("www.tenant.readSchoolFrame")(
     if (answer.failure === "Denied") {
       return REFUSED;
     }
-    const account = yield* reads.account(input.token.value);
-    if (Option.isNone(account)) {
-      return REFUSED;
-    }
-    const outsider: SchoolRead = {
-      _tag: "Outsider",
-      account: account.value,
-      locale: input.locale,
-      profile: school,
-    };
-    return outsider;
+    return yield* readOutsiderFrame(
+      input.slug,
+      input.locale,
+      input.token.value
+    );
   }
 );
+
+/** The frame of a visitor with no session: the entry surface of a school that has a profile. */
+const readVisitorFrame = Effect.fn("www.tenant.read.visitorFrame")(function* (
+  slug: TenantSlug,
+  locale: Locale
+) {
+  const reads = yield* SchoolReads;
+  const profile = yield* reads.profile(slug);
+  if (Option.isNone(profile)) {
+    return REFUSED;
+  }
+  const title = yield* Effect.tryPromise({
+    catch: (cause) => new SchoolReadFailed({ cause }),
+    try: () => readSchoolSignInTitle(locale, profile.value.name),
+  });
+  const visitor: SchoolRead = {
+    _tag: "Visitor",
+    locale,
+    profile: profile.value,
+    title,
+  };
+  return visitor;
+});
+
+/** The frame of an account that is signed in but is not a member of the school. */
+const readOutsiderFrame = Effect.fn("www.tenant.read.outsiderFrame")(function* (
+  slug: TenantSlug,
+  locale: Locale,
+  token: string
+) {
+  const reads = yield* SchoolReads;
+  const profile = yield* reads.profile(slug);
+  if (Option.isNone(profile)) {
+    return REFUSED;
+  }
+  const account = yield* reads.account(token);
+  if (Option.isNone(account)) {
+    return REFUSED;
+  }
+  const outsider: SchoolRead = {
+    _tag: "Outsider",
+    account: account.value,
+    locale,
+    profile: profile.value,
+  };
+  return outsider;
+});
