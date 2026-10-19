@@ -118,14 +118,20 @@ export function OptionRow({
     editor.current?.setEditable(!locked, false);
   }, [locked]);
 
-  // A row that unmounts saves the label it still waits on now. Left to its timer, the save would
-  // call the callback of the row's last render, which may hold a revision the server has moved past.
-  useEffect(
-    () => () => {
+  // A row saves the label it still waits on when its page is hidden and when the row unmounts. Left to
+  // its timer, the save would call the callback of the row's last render, which may hold a revision the
+  // server has moved past. The browser may end a closing page before the save leaves, so the flush sends
+  // what the page can, and the server answers what it receives.
+  useEffect(() => {
+    const flush = () => {
       Effect.runFork(saver.flush);
-    },
-    [saver]
-  );
+    };
+    window.addEventListener("pagehide", flush);
+    return () => {
+      window.removeEventListener("pagehide", flush);
+      flush();
+    };
+  }, [saver]);
 
   return (
     <div className="group/option grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">

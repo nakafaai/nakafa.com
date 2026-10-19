@@ -2,6 +2,7 @@
 
 import { useMutation } from "@confect/react";
 import { Alert02Icon } from "@hugeicons/core-free-icons";
+import { useCallbackRef } from "@mantine/hooks";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import {
   CHOICE_OPTIONS_MAX,
@@ -9,9 +10,16 @@ import {
 } from "@repo/backend/confect/exams/question";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Array as Arr, Function as Fn, Option } from "effect";
+import { Array as Arr, Effect, Function as Fn, Option } from "effect";
 import { useTranslations } from "next-intl";
-import { lazy, type RefObject, Suspense, useEffect, useRef } from "react";
+import {
+  lazy,
+  type RefObject,
+  Suspense,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import {
   choiceOf,
@@ -39,6 +47,11 @@ import {
 import { useExam, useExamSelection } from "@/components/tenant/exams/provider";
 import { PaperOptions, QuestionPaper } from "@/components/tenant/exams/sheet";
 import { usePageWindow } from "@/components/tenant/exams/window";
+import {
+  makeQuestionWriter,
+  type QuestionDraft,
+  type QuestionWrite,
+} from "@/components/tenant/exams/writer";
 
 /**
  * The prompt loads when a page mounts its editors, never with the page. Until it loads, the page
@@ -151,19 +164,43 @@ function LivePaper({
     answerUpdate
   );
   const choice = Option.getOrNull(choiceOf(question.answers));
+  // The writer sends through the latest mutation. It keeps the saves of this question in order, and each
+  // save sends the revision that the save before it returned, so no save is refused for a revision the
+  // render held before that save landed.
+  const send = useCallbackRef((draft: QuestionDraft) =>
+    sentAction(() =>
+      answer({
+        answers: draft.answers,
+        examId: exam.id,
+        key: draft.key,
+        questionId: question.id,
+        revision: draft.revision,
+        slug,
+      })
+    ).pipe(
+      Effect.map((view) => ({
+        answers: view.answers,
+        key: view.key,
+        revision: view.revision,
+      }))
+    )
+  );
+  const [writer] = useState(() => Effect.runSync(makeQuestionWriter(send)));
 
-  /** Saves the answers and the key of this question as they are now, at the revision the teacher saw. */
-  const saveAnswers = (answers: Question["answers"], key: Question["key"]) => {
+  /**
+   * Saves the answers and the key that `edit` makes of this question. The edit takes the draft the save
+   * before it left, or the question as the teacher sees it when no save is in flight, so the edits of one
+   * question land one after another and none writes over another.
+   */
+  const saveAnswers = (edit: (draft: QuestionDraft) => QuestionWrite) => {
     runExamAction(
-      sentAction(() =>
-        answer({
-          answers,
-          examId: exam.id,
-          key,
-          questionId: question.id,
+      writer.save(
+        {
+          answers: question.answers,
+          key: question.key,
           revision: question.revision,
-          slug,
-        })
+        },
+        edit
       ),
       { onFailure: Fn.constVoid, onSuccess: Fn.constVoid }
     );
@@ -189,26 +226,26 @@ function LivePaper({
                 number={number}
                 onMark={() => {
                   if (markedOption(question.key) !== option.id) {
-                    saveAnswers(
-                      question.answers,
-                      markedKey(question.answers, option.id)
-                    );
+                    saveAnswers((draft) => ({
+                      answers: draft.answers,
+                      key: markedKey(draft.answers, option.id),
+                    }));
                   }
                 }}
                 onRemove={
                   choice.options.length > CHOICE_OPTIONS_MIN
                     ? () =>
-                        saveAnswers(
-                          withOptionRemoved(question.answers, option.id),
-                          keyWithoutOption(question.key, option.id)
-                        )
+                        saveAnswers((draft) => ({
+                          answers: withOptionRemoved(draft.answers, option.id),
+                          key: keyWithoutOption(draft.key, option.id),
+                        }))
                     : null
                 }
                 onSave={(label: OptionLabel) =>
-                  saveAnswers(
-                    withOptionLabel(question.answers, option.id, label),
-                    question.key
-                  )
+                  saveAnswers((draft) => ({
+                    answers: withOptionLabel(draft.answers, option.id, label),
+                    key: draft.key,
+                  }))
                 }
               />
             ))}
@@ -221,7 +258,10 @@ function LivePaper({
         <div>
           <Button
             onClick={() =>
-              saveAnswers(withOptionAdded(question.answers), question.key)
+              saveAnswers((draft) => ({
+                answers: withOptionAdded(draft.answers),
+                key: draft.key,
+              }))
             }
             size="sm"
             type="button"
