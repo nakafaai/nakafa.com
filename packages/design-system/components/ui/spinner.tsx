@@ -30,6 +30,7 @@ function Spinner({
         (isLoading || !icon) && "animate-spin",
         className
       )}
+      data-slot="spinner"
       icon={isLoading || !icon ? Loading03Icon : icon}
       role={label ? "status" : undefined}
       {...props}

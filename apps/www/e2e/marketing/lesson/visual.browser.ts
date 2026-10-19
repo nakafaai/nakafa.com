@@ -323,9 +323,10 @@ test("home lesson placeholder holds still with reduced motion while its scene lo
                   .nth(CIRCLE_TAB_INDEX)
                   .click()
               );
-              // The placeholder sits in an aria-hidden frame, so the role is matched in the markup.
+              // The placeholder sits in an aria-hidden frame, and its spinner is decorative,
+              // so it is found by its slot.
               const spinner = lessonPanel(page)
-                .locator("[aria-hidden='true'] [role='status']")
+                .locator("[aria-hidden='true'] [data-slot='spinner']")
                 .first();
               yield* Effect.promise(() => expect(spinner).toBeVisible());
               const animation = yield* Effect.promise(() =>
