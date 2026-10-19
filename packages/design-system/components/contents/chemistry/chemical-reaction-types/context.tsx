@@ -6,20 +6,23 @@ import type {
 } from "@repo/design-system/components/contents/chemistry/chemical-reaction-types/data";
 import { createContext, type ReactNode, use } from "react";
 
-interface ChemicalReactionTypeSceneValues {
+interface ChemicalReactionTypeSceneProviderProps {
+  children: ReactNode;
   colors: ChemicalReactionTypeSceneColors;
   typeId: ChemicalReactionTypeId;
 }
 
-const ChemicalReactionTypeSceneContext =
-  createContext<ChemicalReactionTypeSceneValues | null>(null);
+const ChemicalReactionTypeSceneContext = createContext<Omit<
+  ChemicalReactionTypeSceneProviderProps,
+  "children"
+> | null>(null);
 
 /** Provides the colors and the selected reaction type of one lab to its scene. */
 export function ChemicalReactionTypeSceneProvider({
   children,
   colors,
   typeId,
-}: ChemicalReactionTypeSceneValues & { children: ReactNode }) {
+}: ChemicalReactionTypeSceneProviderProps) {
   return (
     <ChemicalReactionTypeSceneContext value={{ colors, typeId }}>
       {children}

@@ -84,20 +84,23 @@ interface SubatomicParticlePropertiesSceneProps {
   modeId: SubatomicParticlePropertiesModeId;
 }
 
-interface SubatomicParticlePropertiesSceneValues {
+interface SubatomicParticlePropertiesSceneProviderProps {
+  children: ReactNode;
   colors: SubatomicParticlePropertiesColors;
   labels: SubatomicParticlePropertiesLabProps["labels"]["scene"];
 }
 
-const SubatomicParticlePropertiesSceneContext =
-  createContext<SubatomicParticlePropertiesSceneValues | null>(null);
+const SubatomicParticlePropertiesSceneContext = createContext<Omit<
+  SubatomicParticlePropertiesSceneProviderProps,
+  "children"
+> | null>(null);
 
 /** Provides the colors and labels of one subatomic-properties lab to its scene. */
 export function SubatomicParticlePropertiesSceneProvider({
   children,
   colors,
   labels,
-}: SubatomicParticlePropertiesSceneValues & { children: ReactNode }) {
+}: SubatomicParticlePropertiesSceneProviderProps) {
   return (
     <SubatomicParticlePropertiesSceneContext value={{ colors, labels }}>
       {children}

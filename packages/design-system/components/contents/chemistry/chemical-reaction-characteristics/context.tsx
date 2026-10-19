@@ -6,20 +6,23 @@ import type {
 } from "@repo/design-system/components/contents/chemistry/chemical-reaction-characteristics/data";
 import { createContext, type ReactNode, use } from "react";
 
-interface ReactionCharacteristicsSceneValues {
+interface ReactionCharacteristicsSceneProviderProps {
+  children: ReactNode;
   colors: ReactionSceneColors;
   cueId: ReactionCueId;
 }
 
-const ReactionCharacteristicsSceneContext =
-  createContext<ReactionCharacteristicsSceneValues | null>(null);
+const ReactionCharacteristicsSceneContext = createContext<Omit<
+  ReactionCharacteristicsSceneProviderProps,
+  "children"
+> | null>(null);
 
 /** Provides the colors and the selected cue of one lab to its scene. */
 export function ReactionCharacteristicsSceneProvider({
   children,
   colors,
   cueId,
-}: ReactionCharacteristicsSceneValues & { children: ReactNode }) {
+}: ReactionCharacteristicsSceneProviderProps) {
   return (
     <ReactionCharacteristicsSceneContext value={{ colors, cueId }}>
       {children}
