@@ -17,7 +17,15 @@ import { toast } from "@repo/design-system/lib/toast/notify";
 import { cn } from "cn";
 import { Array as Arr, Effect, Match, Option, Result, Schema } from "effect";
 import { useTranslations } from "next-intl";
-import { useOptimistic, useRef, useState, useTransition } from "react";
+import {
+  createContext,
+  type ReactNode,
+  use,
+  useOptimistic,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import { useConvexAuth } from "@/components/providers/convex";
 import { QuestionnaireSteps } from "@/components/shared/questionnaire";
 import {
@@ -52,13 +60,24 @@ const isStartItem = (name: string): name is StartItem =>
 /** Decodes the typed name and address as the answer of the first question, when they make one. */
 const decodeAnswer = Schema.decodeUnknownOption(StartAnswer);
 
+/** Nina as the page draws her. The form shows her beside its questions, not on the opening card. */
+const StartNinaContext = createContext<ReactNode>(null);
+
 /**
  * The questionnaire that opens a school for the signed-in account (K42): five
  * questions in the entry frame, each answer saved as it is chosen, resumed at
  * the first question left open. It waits for the session and the saved draft, so
- * it never shows an answer that the draft would change.
+ * it never shows an answer that the draft would change. Its children are Nina as
+ * the page draws her; she appears with the questions, so the page does not move
+ * when they arrive.
  */
-export function SchoolStart({ legal }: { legal: Legal }) {
+export function SchoolStart({
+  children,
+  legal,
+}: {
+  children: ReactNode;
+  legal: Legal;
+}) {
   // The server saw the session, but the client's Convex session settles a moment
   // later; the draft is read once it has, so the first read is never anonymous.
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
@@ -69,7 +88,11 @@ export function SchoolStart({ legal }: { legal: Legal }) {
   if (!QueryResult.isSuccess(draft)) {
     return null;
   }
-  return <SchoolStartForm draft={draft.value} legal={legal} />;
+  return (
+    <StartNinaContext value={children}>
+      <SchoolStartForm draft={draft.value} legal={legal} />
+    </StartNinaContext>
+  );
 }
 
 /** The school that the founder opened, as the screen shows it while it opens. */
@@ -95,6 +118,7 @@ function SchoolStartForm({
   legal: Legal;
 }) {
   const t = useTranslations("SchoolStart");
+  const nina = use(StartNinaContext);
   const save = useSaveStartAnswer();
   const open = useMutation(tenancy.start.open);
   const [typed] = useState(() => createTypedName(draft));
@@ -212,6 +236,7 @@ function SchoolStartForm({
 
   return (
     <StartContext value={{ draft, legal, save, typed }}>
+      {nina}
       <Questionnaire
         className="w-full max-w-md"
         item={item}

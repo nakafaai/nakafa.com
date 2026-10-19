@@ -107,6 +107,7 @@ test("a founder types a school name a letter at a time, and the name, the addres
   const context = await browser.newContext();
   await Effect.runPromise(signInLearner(context, String(baseURL)));
   const page = await context.newPage();
+  const changes = await Effect.runPromise(trackChanges(page, []));
   const tag = `${testInfo.testId.slice(0, 6)}${testInfo.repeatEachIndex}${testInfo.retry}`;
   const name = `Tunas ${tag}`;
   const slug = `tunas-${tag}`;
@@ -140,16 +141,20 @@ test("a founder types a school name a letter at a time, and the name, the addres
   await expect(page.getByText("Available")).toBeAttached();
 
   // Continue and Back return to the name as it was typed.
-  await page.getByRole("button", { name: "Continue" }).click();
+  const sentBefore = changes.sent;
+  await proceed.click();
   await expect(page.getByText("Question 2 of 5")).toBeVisible();
   await page.getByRole("button", { name: "Back" }).click();
   await expect(nameField).toHaveValue(name);
   await expect(address).toHaveValue(slug);
 
   // The browser's back and forward return to the questionnaire, which resumes
-  // with the saved name.
-  await page.getByRole("button", { name: "Continue" }).click();
+  // with the saved name. Leaving the page drops a save still on its way, so the
+  // test leaves once the server holds the name, as a person who reads the next
+  // question does.
+  await proceed.click();
   await expect(page.getByText("Question 2 of 5")).toBeVisible();
+  await saved(changes, sentBefore);
   await page.goBack();
   await page.goForward();
   await expect(page.getByText("Question 2 of 5")).toBeVisible();
