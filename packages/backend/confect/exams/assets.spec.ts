@@ -2,13 +2,13 @@ import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { AuthFailure } from "@repo/backend/confect/auth/spec";
+import { ExamAccess } from "@repo/backend/confect/exams/access";
 import {
   AssetAddress,
   AssetSizeRefused,
   AssetTypeRefused,
   MAX_ASSET_READS,
 } from "@repo/backend/confect/exams/asset";
-import { ExamAccess } from "@repo/backend/confect/exams/access";
 import RequireMember from "@repo/backend/confect/middleware/member.spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";

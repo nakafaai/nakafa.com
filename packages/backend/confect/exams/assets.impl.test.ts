@@ -232,7 +232,11 @@ describe("exams/assets", () => {
         expect(foreign).toMatchObject({ _tag: "AccessDenied" });
         const ids = [gone.id, rowGone.id, kept.id];
         expect(
-          yield* teacher.query(urls, { assets: ids, examId: second.id, slug: nf })
+          yield* teacher.query(urls, {
+            assets: ids,
+            examId: second.id,
+            slug: nf,
+          })
         ).toHaveLength(3);
         yield* Effect.promise(() =>
           fixture.convex.run((ctx) => ctx.storage.delete(gone.storageId))
@@ -257,9 +261,9 @@ describe("exams/assets", () => {
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         const storageId = yield* storeFile(fixture.convex, png());
-        expect(
-          yield* fixture.internal.query(stored, { storageId })
-        ).toEqual({ size: PNG_HEAD.length + 4 });
+        expect(yield* fixture.internal.query(stored, { storageId })).toEqual({
+          size: PNG_HEAD.length + 4,
+        });
         yield* Effect.promise(() =>
           fixture.convex.run((ctx) => ctx.storage.delete(storageId))
         );
