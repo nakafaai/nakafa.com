@@ -18,6 +18,13 @@ const SittingReason = Schema.Literals([
   "SittingLocked",
   "SittingNotOpen",
 ]);
+type SittingReason = typeof SittingReason.Type;
+
+/**
+ * The locks that lift later: a proctor's unlock of the attempt, or the school's or the unit's unlock. A
+ * refused answer for a lock keeps the answer the browser holds, because the next visit to the paper sends it.
+ */
+const LockReason = Schema.Literals(["AttemptLocked", "SittingLocked"]);
 
 /** The reasons that the server gives for a refused entry, where the attempt is not an error. */
 const EntryRefusal = Schema.Literals(["TokenRefused", "TooManyTries"]);
@@ -37,83 +44,68 @@ export const EntryMessage = Schema.Literals([
 ]);
 
 /**
- * The copy of each reason, so one table owns the sentence and the toast of every reason: the sentence that an
- * entry or a paper shows, and the toast that an answer or a finish shows when it is refused for the reason.
+ * The sentence that an entry or a paper shows for each reason. Every reason has a line, so a new reason cannot
+ * be left out of the sentences: a reason with no sentence is `undefined`.
  */
-const reasons: Record<
-  typeof SittingReason.Type,
-  {
-    readonly message?: typeof EntryMessage.Type;
-    readonly toast?: ToastCopy;
-    /** A lock that lifts later: a proctor's unlock of the attempt, or the school's or the unit's unlock. */
-    readonly lifts?: true;
-  }
-> = {
-  AttemptClosed: {
-    message: "student-attempt-closed",
-    toast: {
-      description: "sitting-attempt-closed.description",
-      title: "sitting-attempt-closed.title",
-    },
-  },
-  AttemptLocked: {
-    lifts: true,
-    message: "student-locked",
-    toast: {
-      description: "sitting-attempt-locked.description",
-      title: "sitting-attempt-locked.title",
-    },
-  },
-  DeviceRetired: {
-    message: "student-device-retired",
-    toast: {
-      description: "sitting-device-retired.description",
-      title: "sitting-device-retired.title",
-    },
-  },
-  NotInSitting: {
-    message: "student-not-in-sitting",
-    toast: {
-      description: "sitting-not-in.description",
-      title: "sitting-not-in.title",
-    },
-  },
-  QuestionNotInExam: {
-    toast: {
-      description: "sitting-question-missing.description",
-      title: "sitting-question-missing.title",
-    },
-  },
-  ResponseDoesNotFit: {
-    toast: {
-      description: "sitting-response-refused.description",
-      title: "sitting-response-refused.title",
-    },
-  },
-  SecondDevice: {
-    message: "student-second-device",
-    toast: {
-      description: "sitting-second-device.description",
-      title: "sitting-second-device.title",
-    },
-  },
-  SittingClosed: { message: "student-closed" },
-  SittingLocked: {
-    lifts: true,
-    message: "student-locked-school",
-    toast: {
-      description: "sitting-locked.description",
-      title: "sitting-locked.title",
-    },
-  },
-  SittingNotOpen: { message: "student-not-open" },
+const sentences: Record<SittingReason, typeof EntryMessage.Type | undefined> = {
+  AttemptClosed: "student-attempt-closed",
+  AttemptLocked: "student-locked",
+  DeviceRetired: "student-device-retired",
+  NotInSitting: "student-not-in-sitting",
+  QuestionNotInExam: undefined,
+  ResponseDoesNotFit: undefined,
+  SecondDevice: "student-second-device",
+  SittingClosed: "student-closed",
+  SittingLocked: "student-locked-school",
+  SittingNotOpen: "student-not-open",
 };
 
-/** The copy of the reason that a failed call names, or none when the error names no sitting reason. */
+/**
+ * The toast that an answer or a finish shows for each reason it refuses. Every reason has a line, and a reason
+ * that refuses no answer or finish is `undefined`.
+ */
+const toasts: Record<SittingReason, ToastCopy | undefined> = {
+  AttemptClosed: {
+    description: "sitting-attempt-closed.description",
+    title: "sitting-attempt-closed.title",
+  },
+  AttemptLocked: {
+    description: "sitting-attempt-locked.description",
+    title: "sitting-attempt-locked.title",
+  },
+  DeviceRetired: {
+    description: "sitting-device-retired.description",
+    title: "sitting-device-retired.title",
+  },
+  NotInSitting: {
+    description: "sitting-not-in.description",
+    title: "sitting-not-in.title",
+  },
+  QuestionNotInExam: {
+    description: "sitting-question-missing.description",
+    title: "sitting-question-missing.title",
+  },
+  ResponseDoesNotFit: {
+    description: "sitting-response-refused.description",
+    title: "sitting-response-refused.title",
+  },
+  SecondDevice: {
+    description: "sitting-second-device.description",
+    title: "sitting-second-device.title",
+  },
+  SittingClosed: undefined,
+  SittingLocked: {
+    description: "sitting-locked.description",
+    title: "sitting-locked.title",
+  },
+  SittingNotOpen: undefined,
+};
+
+/** The reason that a failed call names, or none when the error names no sitting reason. */
 function reasonOf(error: unknown) {
   return Option.map(
     Schema.decodeUnknownOption(Schema.Struct({ _tag: SittingReason }))(error),
-    (failure) => reasons[failure._tag]
+    (failure) => failure._tag
   );
 }
 
@@ -125,7 +117,7 @@ function reasonOf(error: unknown) {
 export function isFinalRefusal(error: unknown): boolean {
   return Option.exists(
     reasonOf(error),
-    (copy) => copy.toast !== undefined && copy.lifts !== true
+    (reason) => toasts[reason] !== undefined && !Schema.is(LockReason)(reason)
   );
 }
 
@@ -133,8 +125,8 @@ export function isFinalRefusal(error: unknown): boolean {
 export function sittingFailureMessage(
   error: unknown
 ): Option.Option<typeof EntryMessage.Type> {
-  return Option.flatMap(reasonOf(error), (copy) =>
-    Option.fromNullishOr(copy.message)
+  return Option.flatMap(reasonOf(error), (reason) =>
+    Option.fromNullishOr(sentences[reason])
   );
 }
 
@@ -143,8 +135,8 @@ export function sittingFailureMessage(
  * none is a failure that the caller reports, because the server did not name a reason to the student.
  */
 export function refusalCopyOf(error: unknown): Option.Option<ToastCopy> {
-  return Option.flatMap(reasonOf(error), (copy) =>
-    Option.fromNullishOr(copy.toast)
+  return Option.flatMap(reasonOf(error), (reason) =>
+    Option.fromNullishOr(toasts[reason])
   );
 }
 
