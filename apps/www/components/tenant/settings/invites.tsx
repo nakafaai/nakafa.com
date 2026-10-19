@@ -29,7 +29,12 @@ import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { RoleBadge } from "@/components/tenant/role";
+import {
+  type CardView,
+  SchoolCardDialog,
+} from "@/components/tenant/settings/card";
 import { SchoolInviteDialog } from "@/components/tenant/settings/invite";
+import { SchoolIssueCardDialog } from "@/components/tenant/settings/issue";
 import { revokeInviteChange } from "@/components/tenant/settings/mutation.client";
 import { SettingsPage } from "@/components/tenant/settings/page";
 import { saveSchool } from "@/components/tenant/settings/save.client";
@@ -204,6 +209,8 @@ function SchoolInviteMenu({
     revokeInviteChange
   );
   const [isRevoking, setIsRevoking] = useState(false);
+  const [isIssuing, setIsIssuing] = useState(false);
+  const [issued, setIssued] = useState<CardView | undefined>(undefined);
   const isExpired = invite.status === "expired";
 
   /** Sends a pending invite again, in the viewer's language. */
@@ -258,6 +265,9 @@ function SchoolInviteMenu({
           </DropdownMenuItem>
           {isExpired ? null : (
             <>
+              <DropdownMenuItem onClick={() => setIsIssuing(true)}>
+                {t("invite-card")}
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={() => setIsRevoking(true)}
@@ -300,6 +310,19 @@ function SchoolInviteMenu({
         open={isRevoking}
         setOpen={setIsRevoking}
         title={t("invite-revoke-title")}
+      />
+      <SchoolIssueCardDialog
+        name={invite.name}
+        onIssued={setIssued}
+        open={isIssuing}
+        personId={invite.personId}
+        setOpen={setIsIssuing}
+        slug={slug}
+      />
+      <SchoolCardDialog
+        card={issued}
+        onClose={() => setIssued(undefined)}
+        slug={slug}
       />
     </div>
   );

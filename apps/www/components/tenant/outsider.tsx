@@ -46,6 +46,9 @@ export async function TenantOutsider({
             <p className="text-muted-foreground">
               {t("outsider-description", { account, school })}
             </p>
+            <p className="text-muted-foreground text-sm">
+              {t("outsider-card-hint")}
+            </p>
           </div>
 
           <TenantOutsiderActions />
