@@ -40,7 +40,11 @@ class CurriculumPreferenceSaveError extends Schema.TaggedError<CurriculumPrefere
     cause: Schema.Unknown,
   }
 ) {}
-/** Renders the root curriculum selector and navigates to the selected root. */
+/**
+ * Renders the root curriculum selector and navigates to the selected root. It shares
+ * the header's one row: on a phone the trigger shows the curriculum's flag alone, named
+ * for assistive technology, and from the small breakpoint it shows the title too.
+ */
 export function CurriculumSelector({
   currentValue,
   label,
@@ -116,7 +120,7 @@ export function CurriculumSelector({
     >
       <SelectTrigger
         aria-label={label}
-        className="w-full min-w-0 sm:w-auto sm:max-w-[min(32rem,calc(100vw-2rem))]"
+        className="w-auto min-w-0 shrink-0 sm:max-w-[min(32rem,calc(100vw-2rem))]"
         disabled={isLoading}
       >
         <span
@@ -124,7 +128,9 @@ export function CurriculumSelector({
           data-slot="select-value"
         >
           <CountryFlagIcon countryCode={currentOption?.countryCode} />
-          <span className="truncate">{currentOption?.title ?? label}</span>
+          <span className="truncate max-sm:sr-only">
+            {currentOption?.title ?? label}
+          </span>
         </span>
       </SelectTrigger>
       <SelectContent

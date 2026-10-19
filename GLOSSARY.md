@@ -140,7 +140,7 @@ This glossary records stable domain terms used by Nakafa code and PR review. It 
 
 ## Connectors And Integrations
 
-- **Connector**: An adapter in `confect/connectors` that brings one external source into Nakafa, such as Google Drive, Forms, Classroom, Calendar, or Gmail, or a file such as Dapodik XLSX. It writes nothing to Google. Data that leaves Nakafa (webhooks, exports, grades sent to a learning system) is not a Connector, except the Dapodik export, which the Dapodik adapter owns.
+- **Connector**: An adapter in `confect/connectors` that brings one external source into Nakafa, such as Google Drive, Forms, Classroom, Calendar, or Gmail, or a file such as Dapodik XLSX. It writes nothing to Google. Data that leaves Nakafa (webhooks, exports, grades sent to a learning system) is not a Connector. The Dapodik export is one such export, and Records owns it (ADR 0033).
 - **Connection**: One Connector authorized by one owner, a learner for a personal connection or a school for a school connection. Its tokens are sealed in the vault under the owner's key. It enters the reconnect state when Google refuses its token or, for a school connection, when the account of the member who made it is deleted.
 - **Integration client**: An app that calls a school's REST API or MCP server with OAuth 2.0 client credentials. It holds the Integration role over its tenant or one unit, limited to the actions on its list.
 - **Webhook**: A signed HTTP callback of one Integration client, fed from the Journal. It delivers only published changes that the client could read, and one row for each attempt records the delivery.
@@ -188,3 +188,24 @@ This glossary records stable domain terms used by Nakafa code and PR review. It 
 - **Journal cursor**: One consumer's place in the journal for one school and one change type. It passes an entry only once the entry has settled, five seconds behind the clock, so an entry that commits late is still read. It holds the unsettled entries it handled early, at most one page of them with one slot kept free, and skips them when it reads again. A change marks the cursor pending and schedules a run only when none is owed. A run that leaves entries unread schedules the next one, and the minute sweep starts a run for each pending cursor.
 - **Operator**: Nakafa staff who open and suspend schools, and enter a school only on an approved visit. Not the school's Admin, whom Indonesian schools also call operator sekolah.
 - **Operator visit**: An operator's temporary, audited Auditor grant inside one school, requested by the operator and approved by the school's Owner or Admin. It ends when the operator leaves or deletes its account, when the school ends it, or at its term of at most 24 hours.
+
+## School Records
+
+- **Grading scheme**: A dated, versioned set of bands and a KKTP for one school. A grade is judged by the version in force on its entry date, and a changed scheme becomes a new version.
+- **Subject grade**: One final value for one student, one class, and one period. It is a draft until its subject teacher releases it, and a released grade stays on record.
+- **Gradebook**: A class's view of its students' subject grades in one period. It holds one final value per student until tasks exist, and then a grid of tasks and exams.
+- **Report card**: The school's document for one cohort and period, prepared from subject grades, attendance, and notes. The principal's approval locks it, and its PDF carries a hash and a QR code that check it.
+
+## Guardians
+
+- **Guardian consent**: One row in the guardian consent ledger, a `granted` or `withdrawn` decision for one student, with its time, method, policy version, and checker. Signing in is not consent.
+- **Verified guardian**: A guardian linked to a student through a verified parent relation, with a granted consent that has not been withdrawn. The Guardian role alone grants nothing.
+- **Under-age flag**: A roster flag that a student is under the country's age limit. The Dapodik import sets it from the birth date and keeps no date. A roster row with no flag counts as under the limit.
+- **Active grading**: Grading that Nakafa makes of a student's work, such as the automatic scoring of an attempt or a grade suggestion. A grade that a teacher enters and releases is the teacher's judgment, not active grading, and the KKTP status and band that its scheme gives it are arithmetic on that value (ADR 0033). A student under the age limit needs a verified guardian consent before any active grading (ADR 0034).
+
+## School Insight
+
+- **Competency**: A learning outcome key from Aksara's CASE 1.1 mapping of the school's CP and TP. A question carries its competency, so that mastery can count the answer.
+- **Mastery**: A student's rating in one competency. It changes as each answer arrives, from that answer alone, and it never recalculates the history.
+- **Forecast**: The chance that a student reaches the KKTP in a competency, with the observations that drive it as its reasons. Only teachers see it, and it never changes a grade.
+- **DPIA gate**: The access condition that keeps Insight off in a school until its data protection impact assessment is recorded.

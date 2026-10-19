@@ -12,6 +12,9 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 /** The name that the acceptance runtime gives every learner it invites. */
 const LEARNER_NAME = "Acceptance Learner";
 
+/** Students seated before the learner, more than one dashboard page of 100 holds. */
+const CROWD = 101;
+
 test("a student enters a sitting, and the proctor sees the student leave, lock, unlock, and close it", async ({
   baseURL,
   browser,
@@ -34,7 +37,9 @@ test("a student enters a sitting, and the proctor sees the student leave, lock, 
   await Effect.runPromise(
     signInOwner(proctorContext, school.slug, address("/"))
   );
-  const sitting = await Effect.runPromise(seedSitting(school.slug, learner));
+  const sitting = await Effect.runPromise(
+    seedSitting(school.slug, learner, CROWD)
+  );
 
   const student = await studentContext.newPage();
   await student.goto(address(`/sittings/${sitting.sittingId}`));
@@ -60,7 +65,15 @@ test("a student enters a sitting, and the proctor sees the student leave, lock, 
   await proctor.goto(
     address(`/exams/${sitting.examId}/sittings/${sitting.sittingId}`)
   );
+  // The learner entered after the crowd, so the learner's seat is on the second page, which
+  // loads once the end of the seats comes into view.
+  const seats = proctor.getByRole("list", { name: "Student seats" });
   const seat = proctor.getByRole("button", { name: LEARNER_NAME });
+  await expect(async () => {
+    await seats.getByRole("listitem").last().scrollIntoViewIfNeeded();
+    await expect(seat).toBeVisible({ timeout: 1000 });
+  }).toPass({ timeout: readinessTimeoutMilliseconds });
+  await expect(seats.getByRole("listitem")).toHaveCount(CROWD + 1);
   await expect(seat).toHaveAttribute("data-frame", "away");
   await seat.click();
   await expect(proctor.getByText("Left the exam")).toBeVisible();
@@ -94,6 +107,11 @@ test("a student enters a sitting, and the proctor sees the student leave, lock, 
     .click();
   // The close moves the attempt to closing, and the student's screen says so at once; the
   // server submits it 75 seconds after its deadline, past what this test waits for.
+  await expect(student.getByText("This attempt has closed.")).toBeVisible({
+    timeout: readinessTimeoutMilliseconds,
+  });
+  // A reload keeps how the attempt ended, though the closed sitting takes no new entry.
+  await student.reload();
   await expect(student.getByText("This attempt has closed.")).toBeVisible({
     timeout: readinessTimeoutMilliseconds,
   });

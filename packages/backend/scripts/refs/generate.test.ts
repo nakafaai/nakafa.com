@@ -7,6 +7,7 @@ import auth from "@repo/backend/confect/_generated/refs/auth";
 import chats from "@repo/backend/confect/_generated/refs/chats";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import comments from "@repo/backend/confect/_generated/refs/comments";
+import connectors from "@repo/backend/confect/_generated/refs/connectors";
 import consents from "@repo/backend/confect/_generated/refs/consents";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import contents from "@repo/backend/confect/_generated/refs/contents";
@@ -22,6 +23,7 @@ import notifications from "@repo/backend/confect/_generated/refs/notifications";
 import onboarding from "@repo/backend/confect/_generated/refs/onboarding";
 import operators from "@repo/backend/confect/_generated/refs/operators";
 import posts from "@repo/backend/confect/_generated/refs/posts";
+import records from "@repo/backend/confect/_generated/refs/records";
 import subscriptions from "@repo/backend/confect/_generated/refs/subscriptions";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
@@ -98,6 +100,7 @@ const domainModules = {
   chats,
   classroom,
   comments,
+  connectors,
   consents,
   contentRelease,
   contents,
@@ -113,6 +116,7 @@ const domainModules = {
   onboarding,
   operators,
   posts,
+  records,
   subscriptions,
   tenancy,
   tryouts,

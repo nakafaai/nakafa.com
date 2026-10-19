@@ -8,12 +8,14 @@ import { locale as rootLocale } from "next/root-params";
 import { useTranslations } from "next-intl";
 import { getTranslations } from "next-intl/server";
 import { Faq } from "@/components/marketing/about/faq/landing";
+import { PricingButton } from "@/components/marketing/about/pricing/button.client";
 import { PricingComparison } from "@/components/marketing/about/pricing/comparison";
 import { DeferredPricingToys } from "@/components/marketing/about/pricing/deferred.client";
 import { PricingCards } from "@/components/marketing/about/pricing/plans";
 import { StaticPrice } from "@/components/marketing/about/pricing/price";
 import { Schools } from "@/components/marketing/about/schools";
 import { PRICING_CLASS_HERD } from "@/components/marketing/about/toys/herd";
+import { PageField } from "@/components/marketing/shared/field.client";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { type MarketingFaqItem, pricingFaqNumbers } from "@/lib/marketing/faq";
 import { getAppSocialArtwork } from "@/lib/og/app";
@@ -38,7 +40,11 @@ function PricingPagePlans() {
         >
           {t("prices-title")}
         </h1>
-        <PricingCards headingLevel="h2" Price={StaticPrice} />
+        <PricingCards
+          headingLevel="h2"
+          Price={StaticPrice}
+          proAction={<PricingButton variant="default" />}
+        />
       </div>
     </section>
   );
@@ -104,6 +110,7 @@ export default async function Page() {
         }))}
         url={url}
       />
+      <PageField />
       <div className="relative grid">
         <PricingPagePlans />
         <DeferredPricingToys />

@@ -2,9 +2,10 @@
 
 import { Thing } from "@repo/design-system/components/ui/thing";
 import type { ThingName } from "@repo/mascot/thing/name";
+import { ToyAnimal } from "@/components/marketing/about/toys/animal";
+import { gap } from "@/components/marketing/about/toys/gap";
 import { PRICING_TOY_HERD } from "@/components/marketing/about/toys/herd";
 import {
-  ToyAnimal,
   ToyOverlay,
   type ToyPlacement,
 } from "@/components/marketing/about/toys/layer.client";
@@ -38,12 +39,19 @@ function pair(
   ];
 }
 
-/** The toys of the pricing page: two pairs above each part from the price to the questions. */
+/**
+ * The toys of the pricing page: in the middle of each part from the price to the
+ * questions, a herd of two animals with their things at every width, and from
+ * 1024 px two more pairs at its sides.
+ */
 const PLACEMENTS: readonly ToyPlacement[] = [
+  ...gap("comparison", 0.5, PRICING_TOY_HERD, [6, 7], ["ruler", "coffee"]),
   ...pair("comparison", 0.12, 0, "calculator"),
   ...pair("comparison", 0.84, 1, "donut"),
+  ...gap("school", 0.5, PRICING_TOY_HERD, [8, 9], ["eraser", "flag"]),
   ...pair("school", 0.86, 2, "backpack"),
   ...pair("school", 0.1, 3, "cap"),
+  ...gap("faq", 0.5, PRICING_TOY_HERD, [10, 11], ["clip", "hourglass"]),
   ...pair("faq", 0.14, 4, "bubble"),
   ...pair("faq", 0.82, 5, "magnifier"),
 ];
