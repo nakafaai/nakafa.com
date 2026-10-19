@@ -12,6 +12,7 @@ import {
   revokeClientChange,
   revokeGrantChange,
   revokeInviteChange,
+  setNameChange,
   setNpsnChange,
   setPolicyChange,
   setUnitLocaleChange,
@@ -49,6 +50,17 @@ describe("components/tenant/settings/mutation.client", () => {
         local.store.getQuery(tenancy.viewer.get, { slug })
       );
       expect(shown.tenant.policies.nina).toBe(true);
+      expect(local.written()).toHaveLength(1);
+    });
+
+    it("shows the new name of the school at once", () => {
+      const local = createLocalStore();
+      local.seed(tenancy.viewer.get, { slug }, viewer());
+      setNameChange(local.store, { name: "Yayasan Harapan", slug });
+      const shown = Option.getOrThrow(
+        local.store.getQuery(tenancy.viewer.get, { slug })
+      );
+      expect(shown.tenant.name).toBe("Yayasan Harapan");
       expect(local.written()).toHaveLength(1);
     });
 

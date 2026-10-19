@@ -193,6 +193,16 @@ export const setPolicyChange: OptimisticUpdate<
   }));
 };
 
+/** Shows the school's new name at once, in the viewer that the sidebar and every settings page read. */
+export const setNameChange: OptimisticUpdate<
+  typeof tenancy.settings.setName
+> = (localStore, { name, slug }) => {
+  patchViewer(localStore, slug, (viewer) => ({
+    ...viewer,
+    tenant: { ...viewer.tenant, name },
+  }));
+};
+
 /** Takes the school's logo off at once, so the animal shows. */
 export const removeLogoChange: OptimisticUpdate<typeof tenancy.logo.remove> = (
   localStore,

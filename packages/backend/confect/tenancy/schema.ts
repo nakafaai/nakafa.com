@@ -25,7 +25,7 @@ export const Email = Schema.String.check(
 export const TenantName = Schema.String.check(
   Schema.isTrimmed(),
   isSingleLine,
-  Schema.isMinLength(2),
+  Schema.isMinLength(3),
   Schema.isMaxLength(120)
 );
 export const TenantKind = Schema.Literals(["school", "foundation"]);

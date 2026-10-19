@@ -263,6 +263,11 @@
     "logo-remove-title": "Logo entfernen?",
     "logo-remove-description": "Die Schule zeigt wieder ihr Tier, bis ein neues Logo hochgeladen wird.",
     "logo-remove-confirm": "Logo entfernen",
+    "name-title": "Schulname",
+    "name-description": "Jede Seite dieser Schule und ihre Einladungs-E-Mails zeigen diesen Namen.",
+    "name-label": "Name",
+    "name-invalid": "Verwenden Sie 3 bis 120 Zeichen in einer Zeile.",
+    "name-footer": "Jede Änderung des Namens wird im Prüfprotokoll festgehalten.",
     "policy-students": "Schüler",
     "policy-students-description": "Was Schüler in dieser Schule dürfen.",
     "policy-students-footer": "Jede Änderung einer Richtlinie wird im Prüfprotokoll festgehalten.",
@@ -475,6 +480,9 @@
         "logo": {
           "removed": "Logo entfernt",
           "set": "Logo geändert"
+        },
+        "name": {
+          "set": "Schulname geändert"
         },
         "policy": {
           "set": "Einstellung geändert"

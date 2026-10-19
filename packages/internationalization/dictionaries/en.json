@@ -263,6 +263,11 @@
     "logo-remove-title": "Remove the logo?",
     "logo-remove-description": "The school shows its animal again until a new logo is uploaded.",
     "logo-remove-confirm": "Remove logo",
+    "name-title": "School name",
+    "name-description": "Every page of this school and its invitation emails show this name.",
+    "name-label": "Name",
+    "name-invalid": "Use 3 to 120 characters on one line.",
+    "name-footer": "Every name change is recorded in the audit trail.",
     "policy-students": "Students",
     "policy-students-description": "What students may do in this school.",
     "policy-students-footer": "Every policy change is recorded in the audit trail.",
@@ -475,6 +480,9 @@
         "logo": {
           "removed": "Logo removed",
           "set": "Logo changed"
+        },
+        "name": {
+          "set": "School name changed"
         },
         "policy": {
           "set": "Setting changed"

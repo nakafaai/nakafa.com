@@ -26,6 +26,7 @@ import {
 import { logoRefusalOf } from "@/components/tenant/logo.client";
 import { SchoolMark } from "@/components/tenant/mark";
 import { removeLogoChange } from "@/components/tenant/settings/mutation.client";
+import { SchoolNameCard } from "@/components/tenant/settings/name";
 import { SettingsPage } from "@/components/tenant/settings/page";
 import { saveSchool } from "@/components/tenant/settings/save.client";
 import { storeSchoolLogo } from "@/components/tenant/settings/upload.client";
@@ -70,7 +71,7 @@ function SchoolProfileBody({ slug }: { slug: TenantSlug }) {
   return <SchoolProfileCard slug={slug} tenant={viewer.value.tenant} />;
 }
 
-/** Renders the logo card and the address card, each with its action in the footer. */
+/** Renders the name card, the logo card and the address card, each with its action in the footer. */
 function SchoolProfileCard({
   slug,
   tenant,
@@ -79,6 +80,7 @@ function SchoolProfileCard({
   tenant: {
     readonly logo?: string | undefined;
     readonly mascot: Parameters<typeof SchoolMark>[0]["mascot"];
+    readonly name: string;
   };
 }) {
   const t = useTranslations("SchoolSettings");
@@ -138,6 +140,7 @@ function SchoolProfileCard({
 
   return (
     <>
+      <SchoolNameCard name={tenant.name} slug={slug} />
       <CardSection>
         <CardHeader>
           <CardTitle>{t("logo-title")}</CardTitle>

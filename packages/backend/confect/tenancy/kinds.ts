@@ -15,6 +15,7 @@ import {
   ClaimMethod,
   Npsn,
   PersonReason,
+  TenantName,
 } from "@repo/backend/confect/tenancy/schema";
 import { SchoolSize } from "@repo/backend/confect/tenancy/start";
 import { Schema } from "effect";
@@ -88,6 +89,10 @@ export const tenant = Kind.make("tenant", "tenants", {
     Schema.Struct({
       key: PolicyKey,
       type: Schema.Literal("tenant.policy.set"),
+    }),
+    Schema.Struct({
+      name: TenantName,
+      type: Schema.Literal("tenant.name.set"),
     }),
   ],
   published: [],

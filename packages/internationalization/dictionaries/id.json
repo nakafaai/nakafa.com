@@ -263,6 +263,11 @@
     "logo-remove-title": "Hapus logo?",
     "logo-remove-description": "Sekolah kembali menampilkan hewannya sampai logo baru diunggah.",
     "logo-remove-confirm": "Hapus logo",
+    "name-title": "Nama sekolah",
+    "name-description": "Setiap halaman sekolah ini dan email undangannya menampilkan nama ini.",
+    "name-label": "Nama",
+    "name-invalid": "Gunakan 3 sampai 120 karakter dalam satu baris.",
+    "name-footer": "Setiap perubahan nama tercatat di jejak audit.",
     "policy-students": "Siswa",
     "policy-students-description": "Apa yang boleh dilakukan siswa di sekolah ini.",
     "policy-students-footer": "Setiap perubahan kebijakan tercatat di jejak audit.",
@@ -475,6 +480,9 @@
         "logo": {
           "removed": "Logo dihapus",
           "set": "Logo diubah"
+        },
+        "name": {
+          "set": "Nama sekolah diubah"
         },
         "policy": {
           "set": "Pengaturan diubah"
