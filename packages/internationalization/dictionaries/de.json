@@ -155,6 +155,7 @@
     "title-label": "Prüfungstitel",
     "unavailable": "Diese Prüfung ist nicht verfügbar.",
     "frozen-note": "Diese Prüfung ist geplant, darum sind ihre Fragen fest.",
+    "archived-note": "Diese Schule ist archiviert, daher sind ihre Prüfungen nur lesbar, bis sie wiederhergestellt wird.",
     "questions": "Fragen",
     "question": "Frage {number}",
     "option": "Option {letter}",

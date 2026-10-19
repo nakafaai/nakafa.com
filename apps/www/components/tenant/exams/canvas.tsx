@@ -27,7 +27,7 @@ import {
   withOptionRemoved,
   withOptionText,
 } from "@/components/tenant/exams/answer";
-import { isFrozen } from "@/components/tenant/exams/freeze";
+import { isLocked } from "@/components/tenant/exams/freeze";
 import {
   answerUpdate,
   type Question,
@@ -68,7 +68,7 @@ export function ExamCanvas() {
   const { exam } = useExam();
   const active = useActiveQuestion();
   const pending = useExamSelection((state) => state.pending);
-  const frozen = isFrozen(exam);
+  const frozen = isLocked(exam);
 
   // The prompt opens again when the exam freezes, so its document is read-only from its first
   // render.
@@ -116,7 +116,7 @@ function QuestionOptions({
   const t = useTranslations("Exams");
   const { exam, slug } = useExam();
   const examId = exam.id;
-  const locked = pending || isFrozen(exam);
+  const locked = pending || isLocked(exam);
   const answer = useMutation(exams.questions.answer).withOptimisticUpdate(
     answerUpdate
   );

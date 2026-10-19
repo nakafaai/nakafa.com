@@ -155,6 +155,7 @@
     "title-label": "Exam title",
     "unavailable": "This exam is not available.",
     "frozen-note": "This exam is scheduled, so its questions are fixed.",
+    "archived-note": "This school is archived, so its exams are read-only until it is restored.",
     "questions": "Questions",
     "question": "Question {number}",
     "option": "Option {letter}",

@@ -20,7 +20,10 @@ import { scheduleSitting } from "@repo/backend/confect/exams/sittings/schedule";
 import member from "@repo/backend/confect/middleware/member.impl";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import session from "@repo/backend/confect/middleware/session.impl";
-import { authorizeScope } from "@repo/backend/confect/tenancy/authority";
+import {
+  authorizeScope,
+  scopePlace,
+} from "@repo/backend/confect/tenancy/authority";
 import {
   Array as Arr,
   Clock,
@@ -130,7 +133,9 @@ const open = FunctionImpl.make(
     const questions = yield* Effect.forEach(exam.questions, (questionId) =>
       readQuestion(questionId)
     );
+    const place = yield* scopePlace(exam.scope);
     return {
+      archived: place.locked,
       ...(exam.frozenAt === undefined ? {} : { frozenAt: exam.frozenAt }),
       id: exam._id,
       language: exam.language,

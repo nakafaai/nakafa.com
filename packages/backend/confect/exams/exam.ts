@@ -66,8 +66,10 @@ export const examSummary = (row: ExamsDoc) => ({
 /**
  * One exam with its questions in order, as the editor opens it. `frozenAt` is present once a
  * sitting of the exam is scheduled, so the editor shows the exam read-only (ADR 0031).
+ * `archived` is true while the unit that holds the exam is archived, which locks its edits.
  */
 export const ExamView = Schema.Struct({
+  archived: Schema.Boolean,
   frozenAt: examValidator.fields.frozenAt,
   id: Id("exams"),
   language: DeliveryLanguageSchema,

@@ -70,6 +70,7 @@ const third = question("q3");
 
 /** The exam as the editor reads it, with the questions in the given order. */
 const viewOf = (questions: readonly Question[]): ExamView => ({
+  archived: false,
   id: examId,
   language: Schema.decodeSync(DeliveryLanguageSchema)("id"),
   questions,

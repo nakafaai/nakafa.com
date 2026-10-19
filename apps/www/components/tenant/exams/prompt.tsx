@@ -49,7 +49,7 @@ import {
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { type StoreApi, useStore } from "zustand";
-import { isFrozen } from "@/components/tenant/exams/freeze";
+import { isLocked } from "@/components/tenant/exams/freeze";
 import { storeExamImage } from "@/components/tenant/exams/image.client";
 import { useExam, useExamLive } from "@/components/tenant/exams/provider";
 import {
@@ -182,7 +182,7 @@ export function ExamPrompt({ prompt }: { prompt: Id<"editorDocuments"> }) {
   const t = useTranslations("Exams");
   const { exam, slug } = useExam();
   const examId = exam.id;
-  const frozen = isFrozen(exam);
+  const frozen = isLocked(exam);
   const labels = useDocumentLabels();
   // The pictures the teacher chose, in order. The alt-text dialog works through them one at a time.
   const [pending, setPending] = useState<readonly File[]>([]);

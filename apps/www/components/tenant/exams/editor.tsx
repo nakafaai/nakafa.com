@@ -6,7 +6,7 @@ import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { useConvexAuth } from "@/components/providers/convex";
 import { ExamCanvas } from "@/components/tenant/exams/canvas";
-import { ExamFrozenNote, ExamHeader } from "@/components/tenant/exams/header";
+import { ExamHeader, ExamLockedNote } from "@/components/tenant/exams/header";
 import { ExamProvider } from "@/components/tenant/exams/provider";
 import { ExamStrip } from "@/components/tenant/exams/strip";
 import { ExamUnavailable } from "@/components/tenant/exams/unavailable";
@@ -44,7 +44,7 @@ export function ExamEditor({
     <ExamProvider exam={result.value} slug={slug}>
       <main className="flex h-svh flex-col">
         <ExamHeader />
-        <ExamFrozenNote />
+        <ExamLockedNote />
         <div className="flex min-h-0 flex-1 flex-col md:flex-row">
           <ExamStrip />
           <ExamCanvas />

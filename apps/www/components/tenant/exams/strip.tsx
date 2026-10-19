@@ -18,7 +18,7 @@ import { Array as Arr, Effect, Function as Fn, Option } from "effect";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { runExamAction, sentAction } from "@/components/tenant/exams/action";
-import { isFrozen } from "@/components/tenant/exams/freeze";
+import { isLocked } from "@/components/tenant/exams/freeze";
 import {
   addQuestionUpdate,
   copyQuestionUpdate,
@@ -72,7 +72,7 @@ const placeholderDraft = (answers: Question["answers"], key: Question["key"]) =>
 export function ExamStrip() {
   const t = useTranslations("Exams");
   const { exam, slug } = useExam();
-  const frozen = isFrozen(exam);
+  const frozen = isLocked(exam);
   const active = useActiveQuestion();
   const selectedId = Option.getOrNull(
     Option.map(active, (current) => current.question.id)
@@ -161,7 +161,7 @@ function Thumbnail({
   const t = useTranslations("Exams");
   const common = useTranslations("Common");
   const { exam, slug } = useExam();
-  const frozen = isFrozen(exam);
+  const frozen = isLocked(exam);
   const chosen = useExamSelection((state) => state.selected);
   const select = useExamSelection((state) => state.select);
   const replace = useExamSelection((state) => state.replace);

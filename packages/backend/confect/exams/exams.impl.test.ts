@@ -264,6 +264,28 @@ describe("exams/exams", () => {
         expect(archived).toMatchObject(denied("condition"));
       })
   );
+
+  it.effect(
+    "opens an exam of an archived unit as archived, and an exam of a live unit as editable",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const teacher = fixture.as("teacher");
+        const live = yield* teacher.mutation(create, {
+          language: LANGUAGE,
+          scope: { kind: "unit", unitId: fixture.units.smp },
+          slug: nf,
+          title: "Hidup",
+        });
+        expect(
+          yield* teacher.query(open, { examId: live.id, slug: nf })
+        ).toMatchObject({ archived: false });
+        yield* fixture.run(archiveUnit(fixture.units.smp));
+        expect(
+          yield* teacher.query(open, { examId: live.id, slug: nf })
+        ).toMatchObject({ archived: true });
+      })
+  );
 });
 
 describe("exams/exams cohorts", () => {

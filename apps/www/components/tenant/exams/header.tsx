@@ -12,7 +12,7 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { runExamAction, sentAction } from "@/components/tenant/exams/action";
-import { isFrozen } from "@/components/tenant/exams/freeze";
+import { isLocked } from "@/components/tenant/exams/freeze";
 import { renameUpdate } from "@/components/tenant/exams/optimistic";
 import { useExam } from "@/components/tenant/exams/provider";
 import { ScheduleExam } from "@/components/tenant/exams/schedule";
@@ -20,7 +20,7 @@ import { titleToSave } from "@/components/tenant/exams/title";
 
 /**
  * The header of the editor: a link back to the exams, then the exam's title, renamed in
- * place. The field shows the saved title until the teacher types, so it follows a
+ * place, which an archived unit's exam does not take. The field shows the saved title until the teacher types, so it follows a
  * co-editor's rename. The title is saved when the field loses focus or the teacher presses
  * Enter, and only a trimmed, changed, valid title is sent. The optimistic change restores
  * the saved title when the server refuses the rename. The row ends with the action that
@@ -65,6 +65,7 @@ export function ExamHeader() {
         aria-label={t("title-label")}
         className="border-0 font-semibold text-lg shadow-none md:text-lg"
         onBlur={save}
+        readOnly={exam.archived}
         onChange={(event) => setDraft(event.target.value)}
         onKeyDown={(event) => {
           // While the teacher composes a character, Enter belongs to the keyboard.
@@ -82,25 +83,26 @@ export function ExamHeader() {
         <HugeIcons icon={ViewIcon} />
         <span className="max-sm:sr-only">{t("try-action")}</span>
       </Link>
-      <ScheduleExam />
+      {exam.archived ? null : <ScheduleExam />}
     </header>
   );
 }
 
 /**
- * The sentence a scheduled exam's editor shows under its header, across the page, so it
+ * The sentence the editor shows under its header, across the page, when its exam is locked:
+ * why its questions are fixed, because a sitting is scheduled or its school is archived. It
  * wraps on a phone instead of being cut short beside the title.
  */
-export function ExamFrozenNote() {
+export function ExamLockedNote() {
   const t = useTranslations("Exams");
   const { exam } = useExam();
-  if (!isFrozen(exam)) {
+  if (!isLocked(exam)) {
     return null;
   }
 
   return (
     <p className="border-b px-4 py-2 text-muted-foreground text-sm">
-      {t("frozen-note")}
+      {exam.archived ? t("archived-note") : t("frozen-note")}
     </p>
   );
 }
