@@ -1,6 +1,6 @@
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import type { Mascot } from "@repo/mascot/code";
-import { NuqsAdapter } from "nuqs/adapters/next/app";
+import { NuqsAdapter } from "nuqs/adapters/tanstack-router";
 import { SignInScreen } from "@/components/auth/screen";
 import { EntryShellArtwork } from "@/components/entry/artwork.client";
 import {

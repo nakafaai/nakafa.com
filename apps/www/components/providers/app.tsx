@@ -1,4 +1,4 @@
-import { NuqsAdapter } from "nuqs/adapters/next/app";
+import { NuqsAdapter } from "nuqs/adapters/tanstack-router";
 import type { ReactNode } from "react";
 import { AnalyticsConsentBootstrap } from "@/components/analytics/consent/bootstrap";
 import { AnalyticsConsentControls } from "@/components/analytics/consent/controls";
