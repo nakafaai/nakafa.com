@@ -574,6 +574,7 @@
   "Common": {
     "load-error": "We could not load this data. Please try again.",
     "load-error-retry": "We could not load this data.",
+    "loading": "Loading",
     "retry": "Retry",
     "copyright": "Copyright © {year} {companyName}. All rights reserved.",
     "made-with-love": "Made with love",
@@ -1480,7 +1481,6 @@
     "open-diagram": "Open larger diagram",
     "download-file": "Download file",
     "copy-code": "Copy code",
-    "loading": "Loading",
     "new-chat-title": "What do you want to learn?",
     "new-chat-description": "Just ask me, don't hesitate!",
     "suggestion-current-material": "this material",

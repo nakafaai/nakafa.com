@@ -574,6 +574,7 @@
   "Common": {
     "load-error": "Diese Daten konnten nicht geladen werden. Bitte versuche es erneut.",
     "load-error-retry": "Diese Daten konnten nicht geladen werden.",
+    "loading": "Wird geladen",
     "retry": "Erneut versuchen",
     "copyright": "Copyright © {year} {companyName}. Alle Rechte vorbehalten.",
     "made-with-love": "Mit Liebe gemacht",
@@ -1480,7 +1481,6 @@
     "open-diagram": "Größeres Diagramm öffnen",
     "download-file": "Datei herunterladen",
     "copy-code": "Code kopieren",
-    "loading": "Wird geladen",
     "new-chat-title": "Was möchtest du lernen?",
     "new-chat-description": "Frag einfach, was du wissen möchtest.",
     "suggestion-current-material": "dieses Lernmaterial",
