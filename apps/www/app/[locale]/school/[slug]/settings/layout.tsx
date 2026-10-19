@@ -1,15 +1,9 @@
-import { HttpClient } from "@confect/js";
-import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { Array as Arr, Effect, Option, Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 import { notFound } from "next/navigation";
 import { Authenticated } from "@/components/auth/gate";
 import { TenantSection } from "@/components/tenant/section";
-import { getToken } from "@/lib/auth/server";
-import { httpLayer } from "@/lib/convex/http";
-
-/** A viewer the school does not list gets no school, and the settings page answers not found. */
-const notInSchool = () => Effect.succeedNone;
+import { readViewer } from "@/lib/tenant/read";
 
 /**
  * The layout of the school settings. Only a viewer who may manage the school
@@ -31,23 +25,10 @@ export default async function SchoolSettingsLayout({
   if (!Schema.is(TenantSlug)(slugParam)) {
     notFound();
   }
-  const slug = slugParam;
-  const token = await getToken();
-  if (token === undefined) {
-    notFound();
-  }
-
-  const viewer = await Effect.runPromise(
-    HttpClient.HttpClient.pipe(
-      Effect.flatMap((client) => client.query(tenancy.viewer.get, { slug })),
-      Effect.asSome,
-      Effect.catchTags({ AccessDenied: notInSchool, NotMember: notInSchool }),
-      Effect.provide(httpLayer({ auth: token }))
-    )
-  );
+  const viewer = await readViewer(slugParam);
   if (
-    Option.isNone(viewer) ||
-    !Arr.contains(viewer.value.can, "tenant.manage")
+    viewer._tag !== "member" ||
+    !Arr.contains(viewer.viewer.can, "tenant.manage")
   ) {
     notFound();
   }
