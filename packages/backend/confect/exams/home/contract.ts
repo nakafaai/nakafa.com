@@ -8,11 +8,23 @@ import { Schema } from "effect";
  */
 
 /**
+ * One closed sitting that the school home lists for its results: the sitting, whether its results are
+ * released, and whether the viewer may release them. Both flags come from the results authority.
+ */
+export const ClosedView = Schema.Struct({
+  ...SittingView.fields,
+  canRelease: Schema.Boolean,
+  resultsReleased: Schema.Boolean,
+});
+
+/**
  * What the school home shows a viewer about exams: the viewer's own drafts that the viewer may
- * still edit, the rooms the viewer may watch that run now, and the rooms that open within the next
- * fourteen days. A viewer who holds none of those gets three empty lists.
+ * still edit, the rooms the viewer may watch that run now, the rooms that open within the next
+ * fourteen days, and the closed sittings whose results the viewer may view. A viewer who holds none
+ * of those gets four empty lists.
  */
 export const HomeView = Schema.Struct({
+  closed: Schema.Array(ClosedView),
   drafts: Schema.Array(ExamSummary),
   live: Schema.Array(SittingView),
   next: Schema.Array(SittingView),

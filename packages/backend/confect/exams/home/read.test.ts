@@ -3,6 +3,7 @@ import type { ExamSittingsDoc } from "@repo/backend/confect/_generated/docs";
 import refs from "@repo/backend/confect/_generated/refs";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import type { ExamSummary } from "@repo/backend/confect/exams/exam";
+import type { ClosedView } from "@repo/backend/confect/exams/home/contract";
 import type { SittingView } from "@repo/backend/confect/exams/sittings/contract";
 import { nf } from "@repo/backend/test/editor";
 import { archiveUnit, LANGUAGE, teacherExam } from "@repo/backend/test/exams";
@@ -25,7 +26,12 @@ type RoomSeed = Pick<ExamSittingsDoc, "examId" | "opensAt" | "state"> &
   Partial<
     Pick<
       ExamSittingsDoc,
-      "closesAt" | "cohortId" | "room" | "tenantId" | "unitId"
+      | "closesAt"
+      | "cohortId"
+      | "resultsReleasedAt"
+      | "room"
+      | "tenantId"
+      | "unitId"
     >
   >;
 
@@ -46,9 +52,20 @@ const insertRoom = (fixture: SittingFixture, seed: RoomSeed) =>
         tokenIssuedAt: TENANCY_NOW,
         tokenSealed: new ArrayBuffer(0),
         unitId: seed.unitId ?? fixture.units.smp,
+        ...(seed.resultsReleasedAt === undefined
+          ? {}
+          : { resultsReleasedAt: seed.resultsReleasedAt }),
       })
     ).pipe(Effect.orDie)
   );
+
+/** The rooms of a results list with their release flags, in order. */
+const resultsOf = (rows: readonly (typeof ClosedView.Type)[]) =>
+  Arr.map(rows, (row) => ({
+    canRelease: row.canRelease,
+    resultsReleased: row.resultsReleased,
+    room: row.room,
+  }));
 
 /** Reads the school home as one account of the fixture. */
 const homeOf = (
@@ -200,10 +217,128 @@ describe("exams home", () => {
           opensAt: TENANCY_NOW + 2 * DAY,
           state: "scheduled",
         });
+        yield* insertRoom(fixture, {
+          examId: exam.id,
+          opensAt: OPENS_AT - DAY,
+          state: "closed",
+        });
 
         const read = yield* homeOf(fixture, "student");
 
-        expect(read).toEqual({ drafts: [], live: [], next: [] });
+        expect(read).toEqual({ closed: [], drafts: [], live: [], next: [] });
+      })
+  );
+
+  it.effect(
+    "lists the closed sittings a teacher may view results of, newest first, with their release flags",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const exam = yield* teacherExam(fixture, "PTS Biologi");
+        yield* insertRoom(fixture, {
+          examId: exam.id,
+          opensAt: OPENS_AT,
+          resultsReleasedAt: TENANCY_NOW,
+          room: "Lab 2",
+          state: "closed",
+        });
+        yield* insertRoom(fixture, {
+          examId: exam.id,
+          opensAt: OPENS_AT + 1,
+          room: "Lab 3",
+          state: "closed",
+        });
+
+        const read = yield* homeOf(fixture, "teacher");
+
+        // The teacher wrote the exam, so the teacher may release its results too (the exam's author).
+        expect(resultsOf(read.closed)).toEqual([
+          { canRelease: true, resultsReleased: false, room: "Lab 3" },
+          { canRelease: true, resultsReleased: true, room: "Lab 2" },
+        ]);
+      })
+  );
+
+  it.effect(
+    "lets the admin release the results of every unit's closed sittings, and no other role",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const exam = yield* teacherExam(fixture, "PTS");
+        yield* insertRoom(fixture, {
+          examId: exam.id,
+          opensAt: OPENS_AT,
+          room: "Lab 2",
+          state: "closed",
+        });
+        yield* insertRoom(fixture, {
+          examId: exam.id,
+          opensAt: OPENS_AT + 1,
+          room: "Lab SMA",
+          state: "closed",
+          unitId: fixture.units.sma,
+        });
+
+        const admin = yield* homeOf(fixture, "admin");
+        const principal = yield* homeOf(fixture, "principal");
+
+        expect(resultsOf(admin.closed)).toEqual([
+          { canRelease: true, resultsReleased: false, room: "Lab SMA" },
+          { canRelease: true, resultsReleased: false, room: "Lab 2" },
+        ]);
+        expect(resultsOf(principal.closed)).toEqual([
+          { canRelease: false, resultsReleased: false, room: "Lab SMA" },
+        ]);
+      })
+  );
+
+  it.effect(
+    "shows no closed sitting of a unit the viewer does not watch",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const exam = yield* teacherExam(fixture, "PTS");
+        yield* insertRoom(fixture, {
+          examId: exam.id,
+          opensAt: OPENS_AT,
+          room: "Lab SMA",
+          state: "closed",
+          unitId: fixture.units.sma,
+        });
+
+        const read = yield* homeOf(fixture, "teacher");
+
+        expect(read.closed).toEqual([]);
+      })
+  );
+
+  it.effect(
+    "lists at most five closed sittings, the newest ones",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const exam = yield* teacherExam(fixture, "PTS");
+        yield* Effect.forEach(
+          Arr.makeBy(7, (index) => index),
+          (index) =>
+            insertRoom(fixture, {
+              examId: exam.id,
+              opensAt: OPENS_AT + index,
+              room: `Lab ${index}`,
+              state: "closed",
+            }),
+          { discard: true }
+        );
+
+        const read = yield* homeOf(fixture, "teacher");
+
+        expect(roomsOf(read.closed)).toEqual([
+          "Lab 6",
+          "Lab 5",
+          "Lab 4",
+          "Lab 3",
+          "Lab 2",
+        ]);
       })
   );
 
