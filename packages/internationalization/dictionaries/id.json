@@ -1564,23 +1564,23 @@
       "description": "Tanyakan pengawasmu jika kamu merasa waktunya keliru."
     },
     "sitting-attempt-locked": {
-      "title": "Pengawas mengunci percobaan ini.",
+      "title": "Percobaan ini dikunci.",
       "description": "Tunggu sampai pengawas membukanya, lalu coba lagi."
     },
     "sitting-second-device": {
-      "title": "Percobaan ini milik perangkat lain.",
+      "title": "Percobaan milik perangkat lain.",
       "description": "Minta pengawas mengizinkan perangkat kedua."
     },
     "sitting-device-retired": {
-      "title": "Pengawas menonaktifkan perangkat ini.",
+      "title": "Perangkat ini dinonaktifkan.",
       "description": "Tanyakan pengawas perangkat mana yang boleh kamu pakai."
     },
     "sitting-response-refused": {
-      "title": "Jawaban ini tidak sesuai dengan soal.",
+      "title": "Jawaban ini tidak sesuai soal.",
       "description": "Pilih opsinya lagi."
     },
     "sitting-question-missing": {
-      "title": "Soal ini bukan bagian dari ujian ini.",
+      "title": "Soal ini tidak ada di ujian.",
       "description": "Muat ulang sesi untuk melihat soalnya."
     }
   },

@@ -1564,23 +1564,23 @@
       "description": "Ask your proctor if you think the time was wrong."
     },
     "sitting-attempt-locked": {
-      "title": "Your proctor has locked this attempt.",
+      "title": "This attempt is locked.",
       "description": "Wait until your proctor unlocks it, then try again."
     },
     "sitting-second-device": {
-      "title": "This attempt belongs to another device.",
+      "title": "Another device holds this attempt.",
       "description": "Ask your proctor to allow a second device."
     },
     "sitting-device-retired": {
-      "title": "Your proctor retired this device.",
+      "title": "This device was retired.",
       "description": "Ask your proctor which device you may use."
     },
     "sitting-response-refused": {
-      "title": "This answer does not fit the question.",
+      "title": "This answer does not fit.",
       "description": "Choose the options again."
     },
     "sitting-question-missing": {
-      "title": "This question is not part of this exam.",
+      "title": "Question not in this exam.",
       "description": "Reload the sitting to see its questions."
     }
   },

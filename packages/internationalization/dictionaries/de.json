@@ -1552,7 +1552,7 @@
       "description": "Versuch es noch einmal."
     },
     "sitting-not-in": {
-      "title": "Du bist nicht in dieser Sitzung.",
+      "title": "Nicht in dieser Sitzung.",
       "description": "Frag deine Aufsicht, wenn du meinst, dass das falsch ist."
     },
     "sitting-locked": {
@@ -1564,23 +1564,23 @@
       "description": "Frag deine Aufsicht, wenn du meinst, dass die Zeit falsch war."
     },
     "sitting-attempt-locked": {
-      "title": "Die Aufsicht hat diesen Versuch gesperrt.",
+      "title": "Die Aufsicht hat gesperrt.",
       "description": "Warte, bis die Aufsicht ihn freigibt, und versuche es dann erneut."
     },
     "sitting-second-device": {
-      "title": "Dieser Versuch gehört zu einem anderen Gerät.",
+      "title": "Versuch gehört anderem Gerät.",
       "description": "Bitte die Aufsicht, ein zweites Gerät zu erlauben."
     },
     "sitting-device-retired": {
-      "title": "Die Aufsicht hat dieses Gerät entfernt.",
+      "title": "Gerät wurde entfernt.",
       "description": "Frag die Aufsicht, welches Gerät du nutzen darfst."
     },
     "sitting-response-refused": {
-      "title": "Diese Antwort passt nicht zur Aufgabe.",
+      "title": "Diese Antwort passt nicht.",
       "description": "Wähle die Optionen erneut."
     },
     "sitting-question-missing": {
-      "title": "Diese Aufgabe gehört nicht zu dieser Prüfung.",
+      "title": "Aufgabe gehört nicht dazu.",
       "description": "Lade die Sitzung neu, um die Aufgaben zu sehen."
     }
   },
