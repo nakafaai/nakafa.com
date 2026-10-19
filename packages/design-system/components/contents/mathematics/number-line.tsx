@@ -67,11 +67,16 @@ export interface NumberLineSegment {
   startLabel?: ReactNode;
 }
 
-interface NumberLineProps {
-  description: ReactNode;
+interface NumberLineCardProps {
+  /** The card's header. A graph that builds its own title and description passes it here. */
+  header: ReactNode;
   max?: number;
   min?: number;
   segments: NumberLineSegment[];
+}
+
+interface NumberLineProps extends Omit<NumberLineCardProps, "header"> {
+  description: ReactNode;
   title: ReactNode;
 }
 
@@ -319,25 +324,50 @@ function NumberLineFacts({ config }: { config: NumberLineConfig }) {
 }
 
 /**
- * Draws one number line card: its header, its scale, and the readouts of its footer. It
- * holds no client state, so a server card draws it and its math stays on the server.
+ * Draws one number line card under the header its caller builds: its scale, and the readouts
+ * of its footer. It holds no client state, so a server card draws it and its math stays on the
+ * server.
  */
-export function NumberLine({
-  min,
-  max,
-  segments,
-  title,
-  description,
-}: NumberLineProps) {
-  const config = { max, min, segments };
-
+function NumberLineFrame({
+  config,
+  header,
+}: {
+  config: NumberLineConfig;
+  header: ReactNode;
+}) {
   return (
     <VisualCard>
-      <VisualCardHeader description={description} title={title} />
+      {header}
       <NumberLineBody config={config} />
       <VisualCardFooter>
         <NumberLineFacts config={config} />
       </VisualCardFooter>
     </VisualCard>
   );
+}
+
+/** Draws one authored number line card, with the title and description of its lesson. */
+export function NumberLine({
+  description,
+  max,
+  min,
+  segments,
+  title,
+}: NumberLineProps) {
+  return (
+    <NumberLineFrame
+      config={{ max, min, segments }}
+      header={<VisualCardHeader description={description} title={title} />}
+    />
+  );
+}
+
+/** Draws one number line card under a header its caller builds. */
+export function NumberLineCard({
+  header,
+  max,
+  min,
+  segments,
+}: NumberLineCardProps) {
+  return <NumberLineFrame config={{ max, min, segments }} header={header} />;
 }

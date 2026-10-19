@@ -1,5 +1,6 @@
-import { LineEquation } from "@repo/design-system/components/contents/mathematics/line/equation";
+import { LineEquationCard } from "@repo/design-system/components/contents/mathematics/line/equation";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { VisualCardHeader } from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
@@ -82,7 +83,7 @@ export function Graph({ title, description }: GraphProps) {
   ];
 
   return (
-    <LineEquation
+    <LineEquationCard
       cameraPosition={[0.4, 13.5, 17]}
       cameraTarget={[0.4, 0.5, 0]}
       data={[
@@ -183,8 +184,7 @@ export function Graph({ title, description }: GraphProps) {
         },
       ]}
       // Camera looking at center (0,0,0) from slightly above and front
-      description={description}
-      title={title}
+      header={<VisualCardHeader description={description} title={title} />}
     />
   );
 }
