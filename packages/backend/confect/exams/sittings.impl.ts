@@ -210,12 +210,17 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(mineFunction),
   Layer.provide(dashboardFunction),
   Layer.provide(lastAnswerFunction),
-  Layer.provide(lockFunction),
-  Layer.provide(unlockFunction),
-  Layer.provide(addMinutesFunction),
-  Layer.provide(allowDeviceFunction),
-  Layer.provide(changeTokenFunction),
-  Layer.provide(closeFunction),
+  // The six proctor actions in one step, so the group stays within one pipe.
+  Layer.provide(
+    Layer.mergeAll(
+      lockFunction,
+      unlockFunction,
+      addMinutesFunction,
+      allowDeviceFunction,
+      changeTokenFunction,
+      closeFunction
+    )
+  ),
   Layer.provide(attemptFunction),
   Layer.provide(studentFunction),
   Layer.provide(signalsFunction),

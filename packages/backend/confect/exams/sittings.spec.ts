@@ -302,6 +302,7 @@ export default GroupSpec.make()
           NotInSitting,
           SittingLocked,
           AttemptClosed,
+          AttemptLocked,
           SecondDevice,
           DeviceRetired,
         ]),
