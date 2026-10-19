@@ -43,7 +43,7 @@ export function TenantHome() {
           />
         ) : null}
       </SchoolHeader>
-      <LayoutContent className="py-6">
+      <LayoutContent className="w-full py-6">
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           <WelcomeTile className="md:col-span-2" />
           {tenant.role === "student" ? (
