@@ -1,5 +1,6 @@
 import { monospace } from "@repo/design-system/lib/monospace";
-import { createFileRoute, Outlet } from "@tanstack/react-router";
+import { LocaleSchema } from "@repo/internationalization/src/locale";
+import { createFileRoute, notFound, Outlet } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { cn } from "cn";
 import { Schema } from "effect";
@@ -22,7 +23,9 @@ const readShellNavigation = createServerFn({ method: "GET" })
  */
 export const Route = createFileRoute("/$locale/_main")({
   beforeLoad: ({ params }) => {
-    getLocaleOrThrow(params.locale);
+    if (!Schema.is(LocaleSchema)(params.locale)) {
+      throw notFound();
+    }
   },
   loader: ({ params }) =>
     readShellNavigation({ data: { locale: params.locale } }),
