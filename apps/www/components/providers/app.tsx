@@ -5,7 +5,7 @@ import { AnalyticsConsentControls } from "@/components/analytics/consent/control
 import { AnalyticsConsentProvider } from "@/components/analytics/consent/provider";
 import { AnalyticsUnavailableProvider } from "@/components/analytics/consent/unavailable";
 import { ConvexProvider } from "@/components/providers/convex";
-import { clientEnv } from "@/env.client";
+import { clientEnv, isAksaraPreviewChild } from "@/env.client";
 import { PageNavigationProvider } from "@/lib/content/page/context";
 import type { PageNavigation } from "@/lib/content/page/navigation";
 
@@ -35,11 +35,7 @@ export function AppProviders({
       <ConvexProvider convexUrl={clientEnv.NEXT_PUBLIC_CONVEX_URL}>
         <PageNavigationProvider navigation={pageNavigation}>
           {pageNavigation ? (
-            <AnalyticsConsentProvider
-              isPreviewChild={
-                clientEnv.NEXT_PUBLIC_AKSARA_PREVIEW_CHILD === "true"
-              }
-            >
+            <AnalyticsConsentProvider isPreviewChild={isAksaraPreviewChild}>
               {children}
               <AnalyticsConsentBootstrap />
               <AnalyticsConsentControls />

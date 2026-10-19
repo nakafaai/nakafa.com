@@ -7,3 +7,9 @@ import { MAIN_DOMAIN } from "@repo/next-config/domains";
  * for one constant and one string.
  */
 export const SITE_ORIGIN = `https://${MAIN_DOMAIN}` as const;
+
+/** The public REST API origin, on the API subdomain of the production domain. */
+export const API_ORIGIN = `https://api.${MAIN_DOMAIN}` as const;
+
+/** The public Streamable HTTP MCP origin, on the MCP subdomain of the production domain. */
+export const MCP_ORIGIN = `https://mcp.${MAIN_DOMAIN}` as const;

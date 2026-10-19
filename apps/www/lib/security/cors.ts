@@ -1,6 +1,6 @@
+import { MAIN_DOMAIN } from "@repo/next-config/domains";
 import { Config, Effect, HashSet, Option, Schema } from "effect";
 
-const NAKAFA_HOSTNAME = "nakafa.com";
 const DEVELOPMENT_ENVIRONMENT = "development";
 const developmentOrigins = HashSet.make(
   "http://localhost:3000",
@@ -26,8 +26,7 @@ function isAllowedUrl(url: URL, allowDevelopmentOrigins: boolean) {
     return false;
   }
   return (
-    url.hostname === NAKAFA_HOSTNAME ||
-    url.hostname.endsWith(`.${NAKAFA_HOSTNAME}`)
+    url.hostname === MAIN_DOMAIN || url.hostname.endsWith(`.${MAIN_DOMAIN}`)
   );
 }
 

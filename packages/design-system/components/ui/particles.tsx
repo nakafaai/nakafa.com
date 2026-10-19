@@ -11,16 +11,14 @@ import { useMousePosition } from "@repo/design-system/hooks/use-mouse";
 import { useStableMutableValue } from "@repo/design-system/hooks/use-stable-mutable-value";
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
 import { createSeededRandom } from "@repo/design-system/lib/random";
-import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { cn } from "cn";
 import { Array as Arr, MutableList, Schema } from "effect";
-import { useTheme } from "next-themes";
 import {
   useCallback,
   useEffect,
   useLayoutEffect,
-  useMemo,
   useRef,
+  useState,
 } from "react";
 
 const MIN_PARTICLE_SIZE = 1;
@@ -133,6 +131,34 @@ function isOutsideCanvas(circle: Circle, width: number, height: number) {
 }
 
 /**
+ * The dots take the foreground token of the active theme. The token is read when
+ * the field mounts, and again whenever the document's classes change, which is how
+ * the theme applies, so the field keeps no colour of its own.
+ */
+function useForegroundFill() {
+  const [fill, setFill] = useState("");
+
+  useEffect(() => {
+    const readFill = () => {
+      setFill(
+        getComputedStyle(document.documentElement)
+          .getPropertyValue("--foreground")
+          .trim()
+      );
+    };
+    readFill();
+    const observer = new MutationObserver(readFill);
+    observer.observe(document.documentElement, {
+      attributeFilter: ["class"],
+      attributes: true,
+    });
+    return () => observer.disconnect();
+  }, []);
+
+  return fill;
+}
+
+/**
  * Renders the responsive particle canvas used as a subtle interactive backdrop.
  */
 export function Particles({
@@ -142,8 +168,6 @@ export function Particles({
   staticity = 100,
   ease = 100,
 }: ParticlesProps) {
-  const { resolvedTheme } = useTheme();
-
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const canvasContainerRef = useRef<HTMLDivElement>(null);
   // The observer reports the container's size, so the field follows its parent.
@@ -172,11 +196,6 @@ export function Particles({
 
   const rng = useStableMutableValue(() =>
     createSeededRandom(quantity, staticity, ease)
-  );
-
-  const isThemeDark = useMemo(
-    () => getThemeAppearance(resolvedTheme) === "dark",
-    [resolvedTheme]
   );
 
   const resizeCanvas = useCallback(() => {
@@ -220,7 +239,7 @@ export function Particles({
   }, [rng]);
 
   // Every circle of a frame shares one colour; each circle sets only its alpha.
-  const fillColor = isThemeDark ? "oklch(0.985 0 0)" : "oklch(0.145 0 0)";
+  const fillColor = useForegroundFill();
 
   const drawCircle = useCallback(
     (circle: Circle) => {

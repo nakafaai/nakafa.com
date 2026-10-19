@@ -1,5 +1,7 @@
+import { API_ORIGIN, MCP_ORIGIN } from "@repo/seo/origin";
+
 /** Canonical public REST API origin. */
-export const NAKAFA_API_BASE_URL = "https://api.nakafa.com";
+export const NAKAFA_API_BASE_URL = API_ORIGIN;
 
 /** Stable compatibility namespace for the public REST contract. */
 export const NAKAFA_PUBLIC_API_PATH = "/v1";
@@ -8,7 +10,7 @@ export const NAKAFA_PUBLIC_API_PATH = "/v1";
 export const NAKAFA_PUBLIC_API_VERSION = "1.0.0";
 
 /** Canonical public Streamable HTTP MCP endpoint. */
-export const NAKAFA_MCP_ENDPOINT = "https://mcp.nakafa.com/mcp";
+export const NAKAFA_MCP_ENDPOINT = `${MCP_ORIGIN}/mcp`;
 
 /** Canonical values for the public V1 taxonomy endpoint guidance. */
 export const NAKAFA_MCP_GUIDANCE = {

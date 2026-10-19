@@ -21,3 +21,10 @@ export const clientEnv = {
     }
   ),
 };
+
+/**
+ * Whether this page is the preview child of Aksara. The auth session and the
+ * analytics consent both read this one value, so their providers agree.
+ */
+export const isAksaraPreviewChild =
+  clientEnv.NEXT_PUBLIC_AKSARA_PREVIEW_CHILD === "true";
