@@ -1375,11 +1375,11 @@
     },
     "school-logo-size": {
       "title": "Das Logo wurde nicht gespeichert.",
-      "description": "Wählen Sie ein Logo mit höchstens 1 MB."
+      "description": "Wähle ein Logo mit höchstens 1 MB."
     },
     "school-logo-type": {
       "title": "Das Logo wurde nicht gespeichert.",
-      "description": "Wählen Sie ein PNG- oder SVG-Bild."
+      "description": "Wähle ein PNG- oder SVG-Bild."
     },
     "school-logo-refused": {
       "title": "Das Logo wurde nicht gespeichert."
