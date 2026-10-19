@@ -123,34 +123,40 @@ const change = Effect.fn("exams.sitting.keep.change")(function* (
 });
 
 /** Keeps an answer before it is sent, so a reload or a closed tab sends it again. */
-export const keepAnswer = (
-  sittingId: string,
-  attemptId: string,
-  questionId: string,
-  answer: KeptAnswer
-) =>
-  change(sittingId, attemptId, (kept) =>
-    keepAnswerIn(kept, questionId, answer)
-  );
+export const keepAnswer = Effect.fn("exams.sitting.keep.answer")(
+  (
+    sittingId: string,
+    attemptId: string,
+    questionId: string,
+    answer: KeptAnswer
+  ) =>
+    change(sittingId, attemptId, (kept) =>
+      keepAnswerIn(kept, questionId, answer)
+    )
+);
 
 /** Drops an answer once the server has confirmed it, or refused it for good. */
-export const confirmAnswer = (
-  sittingId: string,
-  attemptId: string,
-  questionId: string,
-  answeredAt: number
-) =>
-  change(sittingId, attemptId, (kept) =>
-    confirmAnswerIn(kept, questionId, answeredAt)
-  );
+export const confirmAnswer = Effect.fn("exams.sitting.keep.confirm")(
+  (
+    sittingId: string,
+    attemptId: string,
+    questionId: string,
+    answeredAt: number
+  ) =>
+    change(sittingId, attemptId, (kept) =>
+      confirmAnswerIn(kept, questionId, answeredAt)
+    )
+);
 
 /** Keeps whether a question is flagged for review. */
-export const keepFlag = (
-  sittingId: string,
-  attemptId: string,
-  questionId: string,
-  flagged: boolean
-) => change(sittingId, attemptId, (kept) => flagIn(kept, questionId, flagged));
+export const keepFlag = Effect.fn("exams.sitting.keep.flag")(
+  (
+    sittingId: string,
+    attemptId: string,
+    questionId: string,
+    flagged: boolean
+  ) => change(sittingId, attemptId, (kept) => flagIn(kept, questionId, flagged))
+);
 
 /** Drops everything the browser keeps for an attempt, once the attempt is submitted. */
 export const forgetAttempt = Effect.fn("exams.sitting.keep.forget")(function* (
