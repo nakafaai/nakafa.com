@@ -55,8 +55,14 @@ export function QuestionPreview({
 }) {
   const { slug } = useExam();
   const { inViewport, ref } = useInViewport();
-  const docs = useExamLive((state) => state.docs);
-  const live = HashMap.get(docs, question.prompt);
+  // Each thumbnail follows its own prompt alone: the selector keeps the document's
+  // reference, so typing in one question redraws that question's thumbnail and no
+  // other, and no other thumbnail folds its stored steps again on each keystroke.
+  const live = Option.fromNullishOr(
+    useExamLive((state) =>
+      Option.getOrUndefined(HashMap.get(state.docs, question.prompt))
+    )
+  );
   const reply = useQuery(
     editors.documents.open,
     !saved ||
