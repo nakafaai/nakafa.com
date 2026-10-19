@@ -43,6 +43,10 @@ test("the owner's Beranda shows the page's one action, the quiet state, and the 
   await expect(
     page.getByRole("link", { name: "Invite a teacher" })
   ).toHaveAttribute("href", "/settings/invites");
+  // A setup row has no other text, so its arrow shows without a hover.
+  await expect(
+    page.getByRole("link", { name: "Invite a teacher" }).locator("svg")
+  ).toHaveCSS("opacity", "1");
   await context.close();
 });
 

@@ -115,13 +115,21 @@ function SetupRows({ className }: { className?: string | undefined }) {
   );
 }
 
-/** One missing step, as a row that opens the settings page that completes it. */
+/**
+ * One missing step, as a row that opens the settings page that completes it. Its arrow shows at all times, since the
+ * row has no other text, and without the arrow it would read as plain text.
+ */
 function SetupRow({ step }: { step: SetupStep }) {
   const t = useTranslations("School");
   const title = t(`setup-${step}`);
 
   return (
-    <CardLink href={STEP_HREF[step]} localized={false} title={title}>
+    <CardLink
+      arrow="always"
+      href={STEP_HREF[step]}
+      localized={false}
+      title={title}
+    >
       <RowText title={title} />
     </CardLink>
   );

@@ -20,6 +20,22 @@ const cardRow = cva(
   }
 );
 
+/**
+ * The arrow at the end of a link's row. It shows on hover, which is the default, or always, for a row that has no
+ * other text to say that it opens a page.
+ */
+const cardArrow = cva("size-4 shrink-0 transition-opacity ease-out", {
+  defaultVariants: {
+    arrow: "hover",
+  },
+  variants: {
+    arrow: {
+      always: "",
+      hover: "opacity-0 group-hover:opacity-100",
+    },
+  },
+});
+
 /** Lists a card's page links as rows divided by rules. */
 export function CardLinks({ children }: { children: ReactNode }) {
   return <ul className="divide-y">{children}</ul>;
@@ -34,11 +50,14 @@ export function CardLinks({ children }: { children: ReactNode }) {
  * pass `localized={false}`.
  */
 export function CardLink({
+  arrow,
   children,
   href,
   localized,
   title,
 }: {
+  /** When the arrow shows: on hover, which is the default, or always. */
+  arrow?: "always" | "hover" | undefined;
   children: ReactNode;
   href: string;
   /** Whether `href` gets the reader's locale prefix. Left out, it does. */
@@ -54,10 +73,7 @@ export function CardLink({
         title={title}
       >
         {children}
-        <HugeIcons
-          className="size-4 shrink-0 opacity-0 transition-opacity ease-out group-hover:opacity-100"
-          icon={ArrowRight02Icon}
-        />
+        <HugeIcons className={cardArrow({ arrow })} icon={ArrowRight02Icon} />
       </IntentLink>
     </li>
   );

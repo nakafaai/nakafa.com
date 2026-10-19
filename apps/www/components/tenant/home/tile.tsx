@@ -14,8 +14,9 @@ export const TILE_ROWS = 3;
 
 /**
  * One tile of the school home: a card with its title, its rows, and a footer with one concise sentence and at
- * most one action. The rows fill the body, and the footer stays at the foot of the tile, so the tiles of a row
- * line up. Each row is an action, so a tile holds no primary button.
+ * most one action. The body grows to the height of its row of tiles, so the tiles line up, and its rows sit at its
+ * top. The card's gap separates the footer from the body, so the body's last row takes no card spacing beneath it:
+ * the room a short tile has left goes below the rows. Each row is an action, so a tile holds no primary button.
  */
 export function HomeTile({
   action,
@@ -38,7 +39,7 @@ export function HomeTile({
       <CardHeader>
         <CardTitle>{title}</CardTitle>
       </CardHeader>
-      <div className="flex-1">{children}</div>
+      <div className="flex-1 [--card-spacing:0]">{children}</div>
       <CardSectionFooter hint={hint}>
         {action === undefined ? null : (
           <CardSectionActions>{action}</CardSectionActions>
