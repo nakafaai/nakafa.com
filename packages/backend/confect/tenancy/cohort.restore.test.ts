@@ -56,6 +56,21 @@ describe("tenancy/cohorts restore", () => {
     })
   );
 
+  it.effect("changes nothing when the cohort is already active", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const period = yield* sma(fixture);
+      const made = yield* cohort(fixture, period.id, "7A", 7);
+      const again = yield* fixture
+        .as("admin")
+        .mutation(restore, { cohortId: made.id, slug: nf });
+      expect(again.status).toBe("active");
+      expect(
+        Arr.map(yield* fixture.run(journal), (entry) => entry.change.type)
+      ).not.toContain("cohort.restored");
+    })
+  );
+
   it.effect(
     "refuses a restore of a missing cohort, of another school, and in an archived period",
     () =>

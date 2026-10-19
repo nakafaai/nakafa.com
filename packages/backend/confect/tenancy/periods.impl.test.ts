@@ -272,6 +272,74 @@ describe("tenancy/periods open and archive", () => {
   );
 
   it.effect(
+    "refuses to restore a period of another school, and keeps it archived",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const foreign = yield* fixture.run(
+          Effect.flatMap(DatabaseWriter, (writer) =>
+            writer.table("tenantPeriods").insert({
+              end: "2026-12-19",
+              name: "Ganjil lain",
+              start: "2026-07-13",
+              status: "archived",
+              tenantId: fixture.tenants.other,
+              unitId: fixture.units.sd,
+            })
+          )
+        );
+        const refused = yield* fixture
+          .as("admin")
+          .mutation(restore, { periodId: foreign, slug: nf })
+          .pipe(Effect.flip);
+        expect(refused).toMatchObject(denied("resource"));
+      })
+  );
+
+  it.effect("changes nothing when the period is already active", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const period = yield* admin(fixture, SMA_TERMS);
+      yield* fixture
+        .as("admin")
+        .mutation(open, { periodId: period.id, slug: nf });
+      const entries = Arr.length(yield* fixture.run(journal));
+      const again = yield* fixture
+        .as("admin")
+        .mutation(restore, { periodId: period.id, slug: nf });
+      expect(again.status).toBe("active");
+      expect(Arr.length(yield* fixture.run(journal))).toBe(entries);
+    })
+  );
+
+  it.effect(
+    "refuses to restore a period whose unit is archived, as a condition",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const period = yield* admin(fixture, SMA_TERMS);
+        yield* fixture
+          .as("admin")
+          .mutation(open, { periodId: period.id, slug: nf });
+        yield* fixture
+          .as("admin")
+          .mutation(archive, { periodId: period.id, slug: nf });
+        yield* fixture.run(
+          Effect.flatMap(DatabaseWriter, (writer) =>
+            writer
+              .table("tenantUnits")
+              .patch(fixture.units.sma, { status: "archived" })
+          )
+        );
+        const refused = yield* fixture
+          .as("admin")
+          .mutation(restore, { periodId: period.id, slug: nf })
+          .pipe(Effect.flip);
+        expect(refused).toMatchObject(denied("condition"));
+      })
+  );
+
+  it.effect(
     "opening an active period changes nothing and records nothing",
     () =>
       Effect.gen(function* () {
