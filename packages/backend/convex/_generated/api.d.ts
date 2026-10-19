@@ -4096,6 +4096,46 @@ export declare const api: {
         { questions: Array<Id<"examQuestions">> }
       >;
     };
+    rooms: {
+      exam: FunctionReference<
+        "query",
+        "public",
+        { examId: Id<"exams">; slug: string },
+        { id: Id<"exams">; language: "en" | "id" | "de"; title: string }
+      >;
+      list: FunctionReference<
+        "query",
+        "public",
+        {
+          examId: Id<"exams">;
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          slug: string;
+          state?: "scheduled" | "open" | "closed";
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            closesAt: number;
+            group: { kind: "cohort" | "unit"; name: string };
+            id: Id<"examSittings">;
+            opensAt: number;
+            room: string;
+            state: "scheduled" | "open" | "closed";
+            timeZone: string;
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
+    };
     sittings: {
       addMinutes: FunctionReference<
         "mutation",
@@ -4669,6 +4709,7 @@ export declare const api: {
             | "document.edit"
             | "document.view"
             | "exam.edit"
+            | "exam.rooms"
             | "exam.view"
             | "sitting.proctor"
             | "sitting.view"
@@ -4694,8 +4735,10 @@ export declare const api: {
             | "document.edit"
             | "document.edit"
             | "exam.edit"
+            | "exam.rooms"
             | "exam.view"
             | "exam.edit"
+            | "exam.rooms"
             | "exam.view"
           >;
           name: string;
@@ -4755,6 +4798,7 @@ export declare const api: {
               | "document.edit"
               | "document.view"
               | "exam.edit"
+              | "exam.rooms"
               | "exam.view"
               | "sitting.proctor"
               | "sitting.view"
@@ -4780,8 +4824,10 @@ export declare const api: {
               | "document.edit"
               | "document.edit"
               | "exam.edit"
+              | "exam.rooms"
               | "exam.view"
               | "exam.edit"
+              | "exam.rooms"
               | "exam.view"
             >;
             createdAt: number;

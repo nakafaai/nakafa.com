@@ -11,8 +11,8 @@ const TENANT_UNIT_LIMIT = 24;
 
 /**
  * The most sittings of one state that one unit or one cohort lists. A unit can run more rooms
- * of one state at once than a short list holds, so the bound keeps every room a student may
- * enter in reach, and each read stays bounded.
+ * of one state at once than a short list holds. The state indexes end in the opening time, so
+ * the bound keeps the sittings that open first, and each read stays bounded.
  */
 const SITTINGS_PER_STATE = 50;
 
@@ -47,7 +47,7 @@ export const mine = Effect.fn("exams.sittings.mine")(function* () {
     Effect.forEach(LIVE_STATES, (state) =>
       reader
         .table("examSittings")
-        .index("by_unitId_and_cohortId_and_state", (query) =>
+        .index("by_unitId_and_cohortId_and_state_and_opensAt", (query) =>
           query.eq("unitId", unit._id).eq("cohortId", null).eq("state", state)
         )
         .take(SITTINGS_PER_STATE)
@@ -63,7 +63,7 @@ export const mine = Effect.fn("exams.sittings.mine")(function* () {
     Effect.forEach(LIVE_STATES, (state) =>
       reader
         .table("examSittings")
-        .index("by_cohortId_and_state", (query) =>
+        .index("by_cohortId_and_state_and_opensAt", (query) =>
           query.eq("cohortId", placement.cohortId).eq("state", state)
         )
         .take(SITTINGS_PER_STATE)

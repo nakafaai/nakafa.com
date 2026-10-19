@@ -14,10 +14,10 @@ const notInSchool = () => Effect.succeedNone;
 /**
  * The layout of the school exams. Only a viewer who may view exams, or the rooms of an exam, in the
  * school or in one of its units reads these pages: a signed-out viewer, a viewer who is not a
- * member, and a viewer with neither action, such as a student, get not found. The exam list checks
- * `canOpenExams` on its own page, so a viewer who only reads rooms gets no list. The exam pages are
- * client components, so this layout mounts the client providers of the app layout, as the school
- * settings layout does.
+ * member, and a viewer with neither action, such as a student, get not found. The exam list and the
+ * exam editor check `canOpenExams` on their own pages, so a viewer who only reads rooms gets neither.
+ * The exam pages are client components, so this layout mounts the client providers of the app
+ * layout, as the school settings layout does.
  */
 export default async function SchoolExamsLayout({
   children,

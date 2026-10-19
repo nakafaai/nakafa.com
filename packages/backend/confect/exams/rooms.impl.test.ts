@@ -160,6 +160,43 @@ describe("exams/rooms", () => {
       })
   );
 
+  it.effect(
+    "returns an empty page with more rooms behind it when the page holds only rooms the viewer may not see",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        yield* keyedSchool(fixture);
+        const examId = yield* keyedExam(fixture, "PTS");
+        // The SMA room opens first, and the Deputy holds only the SMP unit. The first page of one
+        // room therefore holds nothing the Deputy may see, and the Deputy's room waits on the next.
+        yield* scheduleSitting(fixture, {
+          actor: "admin",
+          closesAt: CLOSES,
+          examId,
+          group: { kind: "unit", unitId: fixture.units.sma },
+          opensAt: OPENS,
+          room: "Lab 9",
+        });
+        const own = yield* scheduleSitting(fixture, {
+          closesAt: CLOSES,
+          examId,
+          group: { kind: "unit", unitId: fixture.units.smp },
+          opensAt: LATER,
+          room: "Lab 2",
+        });
+        const first = yield* roomsOf(fixture, "deputy", examId, 1);
+        expect(first.page).toEqual([]);
+        expect(first.isDone).toBe(false);
+        const second = yield* fixture.as("deputy").query(list, {
+          examId,
+          paginationOpts: { cursor: first.continueCursor, numItems: 1 },
+          slug: nf,
+        });
+        expect(Arr.map(second.page, (row) => row.id)).toEqual([own.id]);
+        expect(second.isDone).toBe(true);
+      })
+  );
+
   it.effect("narrows the rooms to one state when the caller names it", () =>
     Effect.gen(function* () {
       const fixture = yield* tenancyFixture;

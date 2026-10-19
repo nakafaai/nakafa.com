@@ -151,8 +151,9 @@ function RoomStateSelect({
 
 /**
  * The rooms in a data table that loads more rows as its end comes into view. The table waits for
- * its first page, so no empty state shows before the rows arrive, and an empty table says why it
- * is empty: no room yet, or no room in the chosen state.
+ * its first page, so no empty state shows before the rows arrive. A page can hold no room the
+ * viewer may see, so an empty page keeps the end in view until the list is exhausted, and only
+ * then does an empty table say why it is empty: no room yet, or no room in the chosen state.
  */
 function RoomsTable({
   examId,
@@ -179,7 +180,13 @@ function RoomsTable({
   if (pagination._tag === "LoadingFirstPage") {
     return null;
   }
+  const loadMoreTrigger = PaginatedQueryResult.isCanLoadMore(pagination) ? (
+    <Intersection onIntersect={() => pagination.loadMore(ROOM_PAGE_SIZE)} />
+  ) : null;
   if (Arr.isReadonlyArrayEmpty(pagination.results)) {
+    if (pagination._tag !== "Exhausted") {
+      return loadMoreTrigger;
+    }
     return filter === "all" ? (
       <TableEmpty
         act="pointing"
@@ -220,9 +227,7 @@ function RoomsTable({
           </TableBody>
         </Table>
       </TableFrame>
-      {PaginatedQueryResult.isCanLoadMore(pagination) ? (
-        <Intersection onIntersect={() => pagination.loadMore(ROOM_PAGE_SIZE)} />
-      ) : null}
+      {loadMoreTrigger}
     </>
   );
 }
