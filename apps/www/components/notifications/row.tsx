@@ -42,8 +42,9 @@ function useNotificationsNow() {
  * the school's name and the age, then the sentence that says what happened. An
  * unread row's sentence is in the foreground and bold, and a read row's is muted.
  * Pressing the row marks it read at once. A plain press on a row with a page moves
- * to that page once the read has settled, and any other press leaves the link to the
- * browser, so a modifier click or a middle click opens it in a new tab.
+ * to that page at once, and the read is sent behind it; a refused read rolls back
+ * with its toast. Any other press leaves the link to the browser, so a modifier click
+ * or a middle click opens it in a new tab.
  */
 export function NotificationRow({
   notification,
@@ -66,7 +67,7 @@ export function NotificationRow({
   );
   // The change shows at once. The server's answer, success or refusal, ends the
   // effect, and a refusal is reported with the shared error toast. The effect never
-  // fails, so a page move that waits for it always runs.
+  // fails, and it does not hold a page move: the move starts without waiting for it.
   const markRead =
     readAt === undefined
       ? Effect.tryPromise(() =>
@@ -92,18 +93,15 @@ export function NotificationRow({
         )
       : Effect.void;
 
-  /** A press on the row: a plain press moves to the page once the read has settled. */
+  /** A press on the row: a plain press moves to the page at once, and the read is sent behind it. */
   function press(event: MouseEvent<HTMLElement>) {
     if (href === undefined || navigationOf(event) === "browser") {
       Effect.runPromise(markRead);
       return;
     }
     event.preventDefault();
-    Effect.runPromise(
-      markRead.pipe(
-        Effect.andThen(Effect.sync(() => window.location.assign(href)))
-      )
-    );
+    Effect.runPromise(markRead);
+    window.location.assign(href);
   }
 
   /** A middle click opens the link in a new tab as usual, and marks the row read. */
