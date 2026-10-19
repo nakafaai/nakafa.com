@@ -17,13 +17,23 @@ const publicCommentUserValidator = Schema.Struct({
 
 /**
  * One comment as a list shows it: its stored fields, its count of likes (zero before
- * the count was kept), whether the viewer liked it, and the viewer's vote, which is a
- * like for the open web builds.
+ * the count was kept), and whether the viewer liked it. The two vote counts and the
+ * viewer's vote are no longer stored, but web builds older than this change decode
+ * every row with them for up to the 12-hour skew window, so each row carries them as
+ * those builds wrote them: zero counts, and a like as an up vote. The next change
+ * removes the three, with the stored fields and the `commentVotes` table.
  */
 const commentRowValidator = Schema.Struct({
-  ...Struct.omit(commentsTable.Doc.fields, ["likeCount"]),
+  ...Struct.omit(commentsTable.Doc.fields, [
+    "likeCount",
+    "upvoteCount",
+    "downvoteCount",
+    "replyToText",
+  ]),
   likeCount: Schema.Finite,
   liked: Schema.Boolean,
+  upvoteCount: Schema.Finite,
+  downvoteCount: Schema.Finite,
   viewerVote: Schema.NullOr(commentVoteValidator),
 });
 const commentWithUserValidator = Schema.Struct({
