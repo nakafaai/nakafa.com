@@ -41,21 +41,23 @@ test("a teacher tries an exam as a student, picks an answer, and the answer is n
   await dialog.getByRole("button", { name: "Create exam" }).click();
   await page.waitForURL(EDITOR_PATH);
 
-  const prompt = page.getByRole("textbox", { name: "Question text" });
+  const prompt = page.getByRole("textbox", { name: "Question 1 text" });
   await expect(prompt).toBeEditable();
   await prompt.click();
   await page.keyboard.type(PROMPT);
   for (const option of OPTIONS) {
     const field = page.getByRole("textbox", {
-      name: `Option ${option.letter}`,
+      name: `Question 1, option ${option.letter}`,
     });
     await field.fill(option.text);
     await field.press("Tab");
   }
-  await page.getByRole("radio", { name: "Mark option B as correct" }).click();
+  await page
+    .getByRole("button", { name: "Mark option B of question 1 as correct" })
+    .click();
   await expect(
-    page.getByRole("radio", { name: "Mark option B as correct" })
-  ).toBeChecked();
+    page.getByRole("button", { name: "Mark option B of question 1 as correct" })
+  ).toHaveAttribute("aria-pressed", "true");
 
   // The try page is tracked from its first load. The editor opened there holds what the server
   // holds, so the prompt and the options it shows are the ones the try reads.
@@ -65,10 +67,11 @@ test("a teacher tries an exam as a student, picks an answer, and the answer is n
   await expect(
     trying.getByRole("textbox", { name: "Question text" })
   ).toContainText(PROMPT, { timeout: readinessTimeoutMilliseconds });
+  // The try names each option by the question's answer label, so an option is found by its text.
   for (const option of OPTIONS) {
     await expect(
-      trying.getByRole("textbox", { name: `Option ${option.letter}` })
-    ).toHaveValue(option.text, { timeout: readinessTimeoutMilliseconds });
+      trying.getByRole("radio", { name: option.text, exact: true })
+    ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
   }
 
   // The try action sits beside Schedule in the editor's header, and opens the try.

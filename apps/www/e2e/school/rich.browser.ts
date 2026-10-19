@@ -9,8 +9,6 @@ const EDITOR_PATH = /\/exams\/[^/]+\/edit$/;
 /** The address of an exam's try as a student on the school host. */
 const TRY_PATH = /\/exams\/[^/]+\/try$/;
 
-/** The first question's thumbnail, whose name starts with its number. */
-
 /** The toolbar that the editor draws above the question text. */
 const TOOLBAR = '[data-slot="editor-toolbar"]';
 
