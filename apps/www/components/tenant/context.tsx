@@ -5,6 +5,7 @@ import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import type { BuiltinRole } from "@repo/backend/confect/access/schema";
 import type { TenantProfile } from "@repo/backend/confect/tenancy/schema";
 import { createContext, use } from "react";
+import { useConvexAuth } from "@/components/providers/convex";
 import type { HomeAccess } from "@/components/tenant/home/access";
 import { liveTenant } from "@/components/tenant/live";
 
@@ -41,9 +42,11 @@ export const TenantContext = createContext<TenantValue | null>(null);
  */
 export function useTenant(): TenantValue {
   const tenant = use(TenantContext);
+  // The viewer is read once the session settles, so the first draw never asks for it signed out.
+  const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const viewer = useQuery(
     tenancy.viewer.get,
-    tenant === null ? "skip" : { slug: tenant.slug }
+    tenant === null || !isSettled ? "skip" : { slug: tenant.slug }
   );
   if (tenant === null) {
     throw new Error("useTenant must be used within TenantShell");
