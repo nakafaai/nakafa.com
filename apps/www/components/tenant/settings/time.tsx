@@ -5,6 +5,7 @@ import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Array as Arr, Option } from "effect";
 import { useLocale } from "next-intl";
+import { useConvexAuth } from "@/components/providers/convex";
 import { schoolDateTimeText } from "@/components/tenant/settings/clock";
 
 /**
@@ -14,7 +15,8 @@ import { schoolDateTimeText } from "@/components/tenant/settings/clock";
  */
 export function SchoolDateTime({ at, slug }: { at: number; slug: TenantSlug }) {
   const locale = useLocale();
-  const viewer = useQuery(tenancy.viewer.get, { slug });
+  const isSettled = useConvexAuth((auth) => !auth.isLoading);
+  const viewer = useQuery(tenancy.viewer.get, isSettled ? { slug } : "skip");
   const timeZone = QueryResult.isSuccess(viewer)
     ? Option.getOrUndefined(
         Arr.findFirst(viewer.value.units, (unit) => unit.status === "active")

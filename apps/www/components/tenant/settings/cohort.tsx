@@ -34,6 +34,7 @@ import { Array as Arr, Schema } from "effect";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { type ReactNode, startTransition, useId, useState } from "react";
+import { useConvexAuth } from "@/components/providers/convex";
 import { LayoutContent } from "@/components/shared/content/layout";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
@@ -256,7 +257,11 @@ function SchoolCohortPage({
   slug: TenantSlug;
 }) {
   const t = useTranslations("SchoolSettings");
-  const cohort = useQuery(tenancy.cohorts.get, { cohortId, slug });
+  const isSettled = useConvexAuth((auth) => !auth.isLoading);
+  const cohort = useQuery(
+    tenancy.cohorts.get,
+    isSettled ? { cohortId, slug } : "skip"
+  );
   if (QueryResult.isFailure(cohort)) {
     if (isDenied(cohort.error)) {
       return <CohortUnavailable />;
@@ -329,12 +334,16 @@ function SchoolCohortMembers({
   slug: TenantSlug;
 }) {
   const t = useTranslations("SchoolSettings");
+  const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const pagination = usePaginatedQuery(
     tenancy.cohorts.members,
-    { cohortId, slug },
+    isSettled ? { cohortId, slug } : "skip",
     { initialNumItems: PAGE_SIZE }
   );
-  const cohorts = useQuery(tenancy.cohorts.list, { periodId, slug });
+  const cohorts = useQuery(
+    tenancy.cohorts.list,
+    isSettled ? { periodId, slug } : "skip"
+  );
 
   const failed = PaginatedQueryResult.isFailure(pagination);
   if (pagination._tag === "LoadingFirstPage") {

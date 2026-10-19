@@ -30,6 +30,7 @@ import {
 import { Array as Arr, Option, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { useId, useState, useTransition } from "react";
+import { useConvexAuth } from "@/components/providers/convex";
 import {
   IntegrationAction,
   toggleAction,
@@ -57,7 +58,8 @@ export function SchoolClientCreateDialog({
 }) {
   const t = useTranslations("SchoolSettings");
   const common = useTranslations("Common");
-  const viewer = useQuery(tenancy.viewer.get, { slug });
+  const isSettled = useConvexAuth((auth) => !auth.isLoading);
+  const viewer = useQuery(tenancy.viewer.get, isSettled ? { slug } : "skip");
   const create = useMutation(integrations.clients.create);
   const id = useId();
   const [isPending, startTransition] = useTransition();

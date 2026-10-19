@@ -32,6 +32,7 @@ import { languages } from "@repo/internationalization/data/lang";
 import { Array as Arr, Option, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { useId, useState, useTransition } from "react";
+import { useConvexAuth } from "@/components/providers/convex";
 import { addMemberChange } from "@/components/tenant/settings/members.client";
 import { saveSchool } from "@/components/tenant/settings/save.client";
 
@@ -67,7 +68,8 @@ export function SchoolInviteDialog({
   const t = useTranslations("SchoolSettings");
   const tSchool = useTranslations("School");
   const common = useTranslations("Common");
-  const viewer = useQuery(tenancy.viewer.get, { slug });
+  const isSettled = useConvexAuth((auth) => !auth.isLoading);
+  const viewer = useQuery(tenancy.viewer.get, isSettled ? { slug } : "skip");
   const invite = useMutation(tenancy.roster.invite).withOptimisticUpdate(
     addMemberChange
   );

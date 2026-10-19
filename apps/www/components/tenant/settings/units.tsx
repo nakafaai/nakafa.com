@@ -31,6 +31,7 @@ import { languages } from "@repo/internationalization/data/lang";
 import { Array as Arr, Option, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { Fragment, startTransition, useState } from "react";
+import { useConvexAuth } from "@/components/providers/convex";
 import {
   CardSection,
   CardSectionActions,
@@ -74,7 +75,8 @@ export function SchoolUnitsSettings({ slug }: { slug: TenantSlug }) {
 
 /** Renders one card per unit of the school, with its time zone and content language, and its NPSN card. */
 function SchoolUnitsBody({ slug }: { slug: TenantSlug }) {
-  const units = useQuery(tenancy.units.list, { slug });
+  const isSettled = useConvexAuth((auth) => !auth.isLoading);
+  const units = useQuery(tenancy.units.list, isSettled ? { slug } : "skip");
 
   if (QueryResult.isFailure(units)) {
     throw units.error;

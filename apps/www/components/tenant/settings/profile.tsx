@@ -18,6 +18,7 @@ import { MAIN_DOMAIN } from "@repo/next-config/domains";
 import { Effect, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { startTransition, useRef, useState } from "react";
+import { useConvexAuth } from "@/components/providers/convex";
 import {
   CardSection,
   CardSectionActions,
@@ -64,7 +65,8 @@ export function SchoolProfileSettings({ slug }: { slug: TenantSlug }) {
  * at once.
  */
 function SchoolProfileBody({ slug }: { slug: TenantSlug }) {
-  const viewer = useQuery(tenancy.viewer.get, { slug });
+  const isSettled = useConvexAuth((auth) => !auth.isLoading);
+  const viewer = useQuery(tenancy.viewer.get, isSettled ? { slug } : "skip");
 
   if (QueryResult.isFailure(viewer)) {
     throw viewer.error;

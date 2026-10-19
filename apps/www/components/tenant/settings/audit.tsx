@@ -11,6 +11,7 @@ import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
+import { useConvexAuth } from "@/components/providers/convex";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import { DataTable } from "@/components/shared/table/data";
@@ -49,9 +50,10 @@ export function SchoolAuditSettings({ slug }: { slug: TenantSlug }) {
  */
 function SchoolAuditBody({ slug }: { slug: TenantSlug }) {
   const t = useTranslations("SchoolSettings");
+  const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const pagination = usePaginatedQuery(
     journal.audit.list,
-    { slug },
+    isSettled ? { slug } : "skip",
     { initialNumItems: PAGE_SIZE }
   );
 

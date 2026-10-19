@@ -28,6 +28,7 @@ import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
+import { useConvexAuth } from "@/components/providers/convex";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import { DataTable } from "@/components/shared/table/data";
@@ -108,12 +109,13 @@ function SchoolClientTable({
   slug: TenantSlug;
 }) {
   const t = useTranslations("SchoolSettings");
+  const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const pagination = usePaginatedQuery(
     integrations.clients.list,
-    { slug },
+    isSettled ? { slug } : "skip",
     { initialNumItems: PAGE_SIZE }
   );
-  const viewer = useQuery(tenancy.viewer.get, { slug });
+  const viewer = useQuery(tenancy.viewer.get, isSettled ? { slug } : "skip");
 
   const failed = PaginatedQueryResult.isFailure(pagination);
   if (pagination._tag === "LoadingFirstPage") {

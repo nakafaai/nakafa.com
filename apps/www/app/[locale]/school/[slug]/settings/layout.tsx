@@ -1,7 +1,6 @@
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Array as Arr, Schema } from "effect";
 import { notFound } from "next/navigation";
-import { Authenticated } from "@/components/auth/gate";
 import { TenantSection } from "@/components/tenant/section";
 import { readViewer } from "@/lib/tenant/read";
 
@@ -10,12 +9,12 @@ import { readViewer } from "@/lib/tenant/read";
  * reads these pages: a signed-out viewer, a viewer who is not a member, and a
  * member without `tenant.manage` all get not found. The school shell mounts the
  * client providers that the settings pages need, and this layout keeps the pages
- * behind the session gate.
+ * behind its own check of the viewer.
  *
- * The pages draw once Convex has confirmed the session. The server read the
- * session from the cookie, but a browser that has not signed in on this school's
- * host before learns of it one request after the page loads, and every query of
- * these pages needs it: one sent before would be refused as signed out.
+ * The pages draw at once, and each query of them waits for Convex to settle the
+ * session. The server read the session from the cookie, but a browser that has not
+ * signed in on this school's host before learns of it one request after the page
+ * loads, and a query sent before that would be refused as signed out.
  */
 export default async function SchoolSettingsLayout({
   children,
@@ -33,9 +32,5 @@ export default async function SchoolSettingsLayout({
     notFound();
   }
 
-  return (
-    <Authenticated>
-      <TenantSection section="settings">{children}</TenantSection>
-    </Authenticated>
-  );
+  return <TenantSection section="settings">{children}</TenantSection>;
 }

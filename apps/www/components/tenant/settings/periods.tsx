@@ -32,6 +32,7 @@ import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, Option, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { startTransition, useId, useState, useTransition } from "react";
+import { useConvexAuth } from "@/components/providers/convex";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import { DataTable } from "@/components/shared/table/data";
@@ -91,7 +92,8 @@ export function SchoolPeriodsSettings({ slug }: { slug: TenantSlug }) {
  */
 function SchoolPeriodsContent({ slug }: { slug: TenantSlug }) {
   const t = useTranslations("SchoolSettings");
-  const viewer = useQuery(tenancy.viewer.get, { slug });
+  const isSettled = useConvexAuth((auth) => !auth.isLoading);
+  const viewer = useQuery(tenancy.viewer.get, isSettled ? { slug } : "skip");
   const [chosenUnit, setChosenUnit] = useState<UnitId | undefined>(undefined);
   const [isAdding, setIsAdding] = useState(false);
 
@@ -160,9 +162,10 @@ function SchoolPeriodTable({
   unitId: UnitId;
 }) {
   const t = useTranslations("SchoolSettings");
+  const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const pagination = usePaginatedQuery(
     tenancy.periods.list,
-    { slug, unitId },
+    isSettled ? { slug, unitId } : "skip",
     { initialNumItems: PAGE_SIZE }
   );
 
