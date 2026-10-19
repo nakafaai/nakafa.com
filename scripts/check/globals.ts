@@ -89,8 +89,8 @@ const GLOBALS = HashSet.union(
 /** Global objects whose members are the same platform globals. */
 const GLOBAL_OBJECTS = HashSet.make("global", "globalThis", "self", "window");
 /** Variables bundlers replace at build time, which no runtime Config read can stand in for. */
-const BUILD_CONSTANTS = HashSet.make("NEXT_RUNTIME", "NODE_ENV");
-/** The module and the function that own the environment seam of code that Next.js bundles. */
+const BUILD_CONSTANTS = HashSet.make("NODE_ENV");
+/** The module and the function that own the environment seam of code that Vite bundles. */
 const ENV_SEAM_MODULE = "@repo/utilities/env";
 const ENV_SEAM = "readEnvironment";
 /** The bindings of a seam callee that is not the import of the seam. */

@@ -32,13 +32,11 @@ export function AppProviders({
 }) {
   return (
     <NuqsAdapter>
-      <ConvexProvider convexUrl={clientEnv.NEXT_PUBLIC_CONVEX_URL}>
+      <ConvexProvider convexUrl={clientEnv.VITE_CONVEX_URL}>
         <PageNavigationProvider navigation={pageNavigation}>
           {pageNavigation ? (
             <AnalyticsConsentProvider
-              isPreviewChild={
-                clientEnv.NEXT_PUBLIC_AKSARA_PREVIEW_CHILD === "true"
-              }
+              isPreviewChild={clientEnv.VITE_AKSARA_PREVIEW_CHILD === "true"}
             >
               {children}
               <AnalyticsConsentBootstrap />

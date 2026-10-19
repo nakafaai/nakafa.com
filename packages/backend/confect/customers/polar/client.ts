@@ -30,7 +30,7 @@ export const readPolarClient = Effect.fn("polar.readClient")(function* () {
   );
   const server = yield* Config.schema(
     Schema.Literals(["production", "sandbox"]),
-    "NEXT_PUBLIC_POLAR_SERVER"
+    "VITE_POLAR_SERVER"
   ).pipe(
     Config.withDefault("sandbox"),
     Effect.mapError(

@@ -80,9 +80,9 @@ describe("readEnvironment", () => {
     );
     expect(
       readEnvironment(
-        { NEXT_PUBLIC_ORIGIN: Schema.NonEmptyString },
-        { NEXT_PUBLIC_ORIGIN: "https://nakafa.com" }
+        { VITE_ORIGIN: Schema.NonEmptyString },
+        { VITE_ORIGIN: "https://nakafa.com" }
       )
-    ).toEqual({ NEXT_PUBLIC_ORIGIN: "https://nakafa.com" });
+    ).toEqual({ VITE_ORIGIN: "https://nakafa.com" });
   });
 });

@@ -1,6 +1,6 @@
 vi.mock("@/env.client", () => ({
   clientEnv: {
-    NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud",
+    VITE_CONVEX_URL: "https://test.convex.cloud",
   },
 }));
 const layerMock = vi.hoisted(() => vi.fn());

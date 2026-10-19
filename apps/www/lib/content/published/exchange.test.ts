@@ -30,7 +30,7 @@ const readPublicContentMock = vi.hoisted(() => vi.fn());
 const verifyPublicContentDeliveryMock = vi.hoisted(() => vi.fn());
 const runtimeKeysMock = vi.hoisted(() => vi.fn());
 const runtimeEnv = vi.hoisted(() => ({
-  NEXT_PUBLIC_CONVEX_SITE_URL: "https://production.convex.site",
+  VITE_CONVEX_SITE_URL: "https://production.convex.site",
 }));
 const liveRenderer = vi.hoisted(() => ({
   hash: `sha256:${"e".repeat(64)}`,
@@ -146,7 +146,7 @@ describe("published content exchange", () => {
       });
       expect(readPublicContent).toHaveBeenCalledWith(
         {
-          siteUrl: runtimeEnv.NEXT_PUBLIC_CONVEX_SITE_URL,
+          siteUrl: runtimeEnv.VITE_CONVEX_SITE_URL,
           token: "runtime-token",
         },
         {

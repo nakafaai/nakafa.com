@@ -105,8 +105,8 @@ export const withQueryRetry = <E, R>(
  */
 export function httpSingleAttemptLayer(options?: HttpClientOptions) {
   return options === undefined
-    ? HttpClient.layer(clientEnv.NEXT_PUBLIC_CONVEX_URL)
-    : HttpClient.layer(clientEnv.NEXT_PUBLIC_CONVEX_URL, options);
+    ? HttpClient.layer(clientEnv.VITE_CONVEX_URL)
+    : HttpClient.layer(clientEnv.VITE_CONVEX_URL, options);
 }
 
 /** Provides the Convex HTTP client for this deployment with query retries. */

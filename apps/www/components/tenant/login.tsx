@@ -34,7 +34,7 @@ import { authClient } from "@/lib/auth/client";
  */
 export function TenantLogin({ slug }: { slug: TenantSlug }) {
   return (
-    <ConvexProvider convexUrl={clientEnv.NEXT_PUBLIC_CONVEX_URL}>
+    <ConvexProvider convexUrl={clientEnv.VITE_CONVEX_URL}>
       <TenantLoginForm slug={slug} />
     </ConvexProvider>
   );

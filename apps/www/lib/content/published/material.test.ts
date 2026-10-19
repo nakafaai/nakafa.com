@@ -63,7 +63,7 @@ vi.mock("@repo/next-config/keys", () => ({
   contentRuntimeKeys: () => ({ CONTENT_RUNTIME_TOKEN: "test-runtime-token" }),
 }));
 vi.mock("@/env", () => ({
-  env: { NEXT_PUBLIC_CONVEX_SITE_URL: "https://test.convex.site" },
+  env: { VITE_CONVEX_SITE_URL: "https://test.convex.site" },
 }));
 vi.mock("@/lib/content/renderer/manifest", () => ({
   rendererManifest: Effect.succeed(TEST_PROOF_RENDERER),

@@ -110,11 +110,11 @@ vi.mock("@repo/next-config/keys", () => ({
   contentRuntimeKeys: runtimeKeysMock,
 }));
 vi.mock("@/env.client", () => ({
-  clientEnv: { NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud" },
+  clientEnv: { VITE_CONVEX_URL: "https://test.convex.cloud" },
 }));
 vi.mock("@/env", () => ({
   env: {
-    get NEXT_PUBLIC_CONVEX_SITE_URL() {
+    get VITE_CONVEX_SITE_URL() {
       return runtimeSiteMock();
     },
   },

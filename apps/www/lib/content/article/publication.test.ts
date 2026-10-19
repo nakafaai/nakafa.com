@@ -75,7 +75,7 @@ vi.mock("@confect/js", async (importOriginal) => {
   };
 });
 vi.mock("@/env.client", () => ({
-  clientEnv: { NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud" },
+  clientEnv: { VITE_CONVEX_URL: "https://test.convex.cloud" },
 }));
 vi.mock("@/lib/content/cache", () => ({
   applyContentCache: cacheMock,

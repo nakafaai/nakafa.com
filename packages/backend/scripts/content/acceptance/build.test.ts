@@ -161,7 +161,7 @@ layer(services)("signed acceptance lifecycle", (it) => {
             "/test",
             [...command, "--filter=www"],
             expect.objectContaining({
-              NEXT_PUBLIC_CONVEX_URL: runtime.query,
+              VITE_CONVEX_URL: runtime.query,
               AKSARA_AGENT_SIGNING_PUBLIC_KEY: runtime.signing.publicKeyPem,
               AKSARA_ACCEPTANCE_PRIVATE_KEY: undefined,
               CONVEX_DEPLOY_KEY: undefined,

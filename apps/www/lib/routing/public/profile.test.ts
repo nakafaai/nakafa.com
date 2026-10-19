@@ -83,7 +83,7 @@ describe("retired profile address redirects", () => {
           status: 308,
         });
         expect(mocks.token).toHaveBeenCalledWith(
-          clientEnv.NEXT_PUBLIC_CONVEX_SITE_URL,
+          clientEnv.VITE_CONVEX_SITE_URL,
           headers
         );
         expect(mocks.layerOptions).toHaveBeenCalledWith({ auth: TOKEN });

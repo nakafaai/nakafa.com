@@ -1,6 +1,5 @@
 import { cn } from "cn";
 import type { ComponentProps } from "react";
-import { quranFont } from "@/components/shared/quran/font";
 
 export function QuranText({
   children,
@@ -9,7 +8,7 @@ export function QuranText({
 }: ComponentProps<"p">) {
   return (
     <p
-      className={cn(quranFont.className, "text-4xl leading-loose", className)}
+      className={cn("font-quran text-4xl leading-loose", className)}
       dir="rtl"
       lang="ar"
       {...props}

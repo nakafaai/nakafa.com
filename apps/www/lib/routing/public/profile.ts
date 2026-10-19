@@ -15,7 +15,7 @@ import { permanentRedirect } from "@/lib/routing/public/redirect";
 const readRequestAccount = Effect.fn("www.routing.publicHtml.profileAccount")(
   function* (headers: Headers) {
     const token = yield* readSessionToken(
-      clientEnv.NEXT_PUBLIC_CONVEX_SITE_URL,
+      clientEnv.VITE_CONVEX_SITE_URL,
       headers
     );
     if (token === undefined) {

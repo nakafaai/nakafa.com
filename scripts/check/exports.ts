@@ -37,10 +37,13 @@ const WORD_BREAK_PATTERN = /[^\w$]+/u;
 /**
  * Modules whose exports a framework reads by name, so no module imports them:
  * the Next.js file conventions inside the `app` directory of an app and at its
- * root, and the Vercel project configuration.
+ * root, the TanStack Start entry modules and file routes of the `app` directory,
+ * and the Vercel project configuration.
  */
 const FRAMEWORK_MODULE_PATTERNS = [
   /^apps\/[^/]+\/app\/(?:.+\/)?(?:apple-icon|default|error|forbidden|global-error|global-not-found|icon|layout|loading|manifest|not-found|opengraph-image|page|robots|route|sitemap|template|twitter-image|unauthorized)\.tsx?$/u,
+  /^apps\/[^/]+\/app\/(?:router|server|start)\.tsx?$/u,
+  /^apps\/[^/]+\/app\/routes\/.+\.tsx?$/u,
   /^apps\/[^/]+\/(?:instrumentation|instrumentation-client|mdx-components|proxy|vercel)\.tsx?$/u,
 ];
 /**

@@ -13,7 +13,7 @@ vi.mock("next/cache", () => ({
   cacheLife: cacheLifeMock,
 }));
 vi.mock("@/env.client", () => ({
-  clientEnv: { NEXT_PUBLIC_CONVEX_URL: "https://test.convex.cloud" },
+  clientEnv: { VITE_CONVEX_URL: "https://test.convex.cloud" },
 }));
 vi.mock("@confect/js", async (importOriginal) => {
   const { HttpClient: Client } =

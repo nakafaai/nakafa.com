@@ -380,7 +380,7 @@ describe("environment reads", () => {
       assert.deepStrictEqual(
         yield* findings(`import { readEnvironment } from "@repo/utilities/env";
 process.env.NODE_ENV === "production";
-process.env.NEXT_RUNTIME === "nodejs";
+process.env.VITE_APP_URL === "https://nakafa.com";
 process.env.SITE_URL = "https://nakafa.com";
 process.env.SITE_URL ??= "https://nakafa.com";
 delete process.env.SITE_URL;

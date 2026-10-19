@@ -47,8 +47,7 @@ const agentKey = hasAgentKey
         publicKeyPem: agentEnvironment.AKSARA_AGENT_SIGNING_PUBLIC_KEY,
       },
       target:
-        agentEnvironment.CONVEX_CLOUD_URL ??
-        agentEnvironment.NEXT_PUBLIC_CONVEX_URL,
+        agentEnvironment.CONVEX_CLOUD_URL ?? agentEnvironment.VITE_CONVEX_URL,
       vercel: agentEnvironment.VERCEL_ENV,
     }).key
   : undefined;

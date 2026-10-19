@@ -7,8 +7,8 @@ import { env } from "@/env";
 import { readSessionToken } from "@/lib/auth/token";
 
 const authServer = convexBetterAuthNextJs({
-  convexUrl: env.NEXT_PUBLIC_CONVEX_URL,
-  convexSiteUrl: env.NEXT_PUBLIC_CONVEX_SITE_URL,
+  convexUrl: env.VITE_CONVEX_URL,
+  convexSiteUrl: env.VITE_CONVEX_SITE_URL,
 });
 
 export const { handler } = authServer;
@@ -32,6 +32,6 @@ export const getToken = cache(async () => {
   const requestHeaders = await headers();
   await io();
   return Effect.runPromise(
-    readSessionToken(env.NEXT_PUBLIC_CONVEX_SITE_URL, requestHeaders)
+    readSessionToken(env.VITE_CONVEX_SITE_URL, requestHeaders)
   );
 });

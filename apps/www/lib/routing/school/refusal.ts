@@ -50,7 +50,7 @@ const readRefusal = Effect.fn("www.routing.school.refusal")(function* (
   headers: Headers
 ) {
   const token = yield* readSessionToken(
-    clientEnv.NEXT_PUBLIC_CONVEX_SITE_URL,
+    clientEnv.VITE_CONVEX_SITE_URL,
     headers
   );
   return yield* HttpClient.HttpClient.pipe(

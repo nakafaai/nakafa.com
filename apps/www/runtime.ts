@@ -178,7 +178,7 @@ export function readRuntimeConfig() {
   const env = readEnvironment(
     {
       CONVEX_AGENT_MODE: Schema.UndefinedOr(Schema.Literal("anonymous")),
-      NEXT_PUBLIC_CONVEX_SITE_URL: optionalText,
+      VITE_CONVEX_SITE_URL: optionalText,
       VERCEL: Schema.UndefinedOr(Schema.Literal("1")),
       VERCEL_DEPLOYMENT_ID: optionalText,
       VERCEL_ENV: optionalText,
@@ -192,7 +192,7 @@ export function readRuntimeConfig() {
     },
     {
       CONVEX_AGENT_MODE: process.env.CONVEX_AGENT_MODE,
-      NEXT_PUBLIC_CONVEX_SITE_URL: process.env.NEXT_PUBLIC_CONVEX_SITE_URL,
+      VITE_CONVEX_SITE_URL: process.env.VITE_CONVEX_SITE_URL,
       VERCEL: process.env.VERCEL,
       VERCEL_DEPLOYMENT_ID: process.env.VERCEL_DEPLOYMENT_ID,
       VERCEL_ENV: process.env.VERCEL_ENV,
@@ -207,8 +207,8 @@ export function readRuntimeConfig() {
   );
   const target = {
     agent: env.CONVEX_AGENT_MODE,
-    query: convex.NEXT_PUBLIC_CONVEX_URL,
-    site: env.NEXT_PUBLIC_CONVEX_SITE_URL,
+    query: convex.VITE_CONVEX_URL,
+    site: env.VITE_CONVEX_SITE_URL,
     vercel: {
       deployment: env.VERCEL_DEPLOYMENT_ID,
       environment: env.VERCEL_ENV,

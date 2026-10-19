@@ -6,26 +6,26 @@ afterEach(() => {
 });
 
 describe("server exception reporting runtime", () => {
-  it.each([undefined, "phase-production-server", "unknown-phase"])(
-    "enables deployed production reporting for NEXT_PHASE=%s",
-    (nextPhase) => {
+  it.each([undefined, "false", "unknown-phase"])(
+    "enables deployed production reporting for TSS_PRERENDERING=%s",
+    (prerendering) => {
       vi.stubEnv("VERCEL_ENV", "production");
-      vi.stubEnv("NEXT_PHASE", nextPhase);
+      vi.stubEnv("TSS_PRERENDERING", prerendering);
 
       expect(isServerExceptionReportingEnabled()).toBe(true);
     }
   );
 
   it.each([
-    ["production", "phase-production-build"],
-    ["preview", "phase-production-server"],
-    ["development", "phase-production-server"],
-    [undefined, "phase-production-server"],
+    ["production", "true"],
+    ["preview", "false"],
+    ["development", "false"],
+    [undefined, "false"],
   ])(
-    "fails closed for VERCEL_ENV=%s and NEXT_PHASE=%s",
-    (vercelEnvironment, nextPhase) => {
+    "fails closed for VERCEL_ENV=%s and TSS_PRERENDERING=%s",
+    (vercelEnvironment, prerendering) => {
       vi.stubEnv("VERCEL_ENV", vercelEnvironment);
-      vi.stubEnv("NEXT_PHASE", nextPhase);
+      vi.stubEnv("TSS_PRERENDERING", prerendering);
 
       expect(isServerExceptionReportingEnabled()).toBe(false);
     }

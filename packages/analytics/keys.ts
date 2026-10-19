@@ -31,11 +31,11 @@ export const keys = () => ({
 export const deploymentKeys = () =>
   readEnvironment(
     {
-      NEXT_PHASE: optionalStringSchema,
+      TSS_PRERENDERING: optionalStringSchema,
       VERCEL_ENV: optionalStringSchema,
     },
     {
-      NEXT_PHASE: process.env.NEXT_PHASE,
+      TSS_PRERENDERING: process.env.TSS_PRERENDERING,
       VERCEL_ENV: process.env.VERCEL_ENV,
     }
   );

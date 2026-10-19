@@ -50,7 +50,7 @@ function PreviewSessionProvider({ children }: { children: ReactNode }) {
 
 /** Provides the one live session for every app authentication reader. */
 export function AuthSessionProvider({ children }: { children: ReactNode }) {
-  if (clientEnv.NEXT_PUBLIC_AKSARA_PREVIEW_CHILD === "true") {
+  if (clientEnv.VITE_AKSARA_PREVIEW_CHILD === "true") {
     return <PreviewSessionProvider>{children}</PreviewSessionProvider>;
   }
   return <BetterAuthSessionProvider>{children}</BetterAuthSessionProvider>;

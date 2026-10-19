@@ -1,17 +1,8 @@
 // @vitest-environment node
 
-import { fileURLToPath } from "node:url";
-import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT } from "@repo/backend/content/deployment";
-import {
-  Array as Arr,
-  Effect,
-  Record as Rec,
-  String as Str,
-  Stream,
-} from "effect";
-import { ChildProcess } from "effect/process";
+import { Array as Arr, Effect, Record as Rec, String as Str } from "effect";
 import {
   assertRuntimeTarget,
   readRuntimeConfig,
@@ -20,9 +11,6 @@ import {
 
 type RuntimeTarget = Parameters<typeof assertRuntimeTarget>[0];
 
-const NEXT_CLI = fileURLToPath(
-  new URL("./node_modules/next/dist/bin/next", import.meta.url)
-);
 const TASK_QUERY = "https://helpful-capybara-123.convex.cloud";
 const TASK_SITE = "https://helpful-capybara-123.convex.site";
 const OTHER_SITE = "https://different-capybara-456.convex.site";
@@ -100,39 +88,22 @@ function expectSuccess(target: RuntimeTarget) {
 describe("content runtime target", () => {
   it("accepts an isolated environment at the Next configuration boundary", () => {
     vi.stubEnv("CONVEX_AGENT_MODE", "anonymous");
-    vi.stubEnv("NEXT_PUBLIC_CONVEX_URL", "http://127.0.0.1:3210");
-    vi.stubEnv("NEXT_PUBLIC_CONVEX_SITE_URL", "http://127.0.0.1:3211");
+    vi.stubEnv("VITE_CONVEX_URL", "http://127.0.0.1:3210");
+    vi.stubEnv("VITE_CONVEX_SITE_URL", "http://127.0.0.1:3211");
 
     expect(readRuntimeConfig).not.toThrow();
   });
 
-  it.effect("blocks Preview production while loading Next configuration", () =>
-    Effect.gen(function* () {
-      const command = yield* ChildProcess.make(
-        process.execPath,
-        [NEXT_CLI, "typegen"],
-        {
-          cwd: import.meta.dirname,
-          env: {
-            NEXT_PUBLIC_CONVEX_SITE_URL: productionTarget.site,
-            NEXT_PUBLIC_CONVEX_URL: productionTarget.query,
-            VERCEL: "1",
-            VERCEL_ENV: "preview",
-          },
-          extendEnv: true,
-          stdout: "ignore",
-        }
-      );
-      const [exitCode, stderr] = yield* Effect.all(
-        [command.exitCode, Stream.mkString(Stream.decodeText(command.stderr))],
-        { concurrency: 2 }
-      );
+  it("blocks Preview production while reading the runtime configuration", () => {
+    vi.stubEnv("VERCEL", "1");
+    vi.stubEnv("VERCEL_ENV", "preview");
+    vi.stubEnv("VITE_CONVEX_SITE_URL", productionTarget.site);
+    vi.stubEnv("VITE_CONVEX_URL", productionTarget.query);
 
-      expect(exitCode).toBe(1);
-      expect(stderr).toContain("UnsafeRuntimeError");
-      expect(stderr).toContain("untrusted-production");
-    }).pipe(Effect.provide(nodeServicesLayer))
-  );
+    expect(readRuntimeConfig).toThrow(
+      "Production content is restricted to the protected Vercel production build"
+    );
+  });
 
   it.effect.each([
     {
@@ -310,8 +281,8 @@ describe("content runtime target", () => {
 const LOOPBACK_QUERY = "http://127.0.0.1:3210";
 const LOOPBACK_SITE = "http://127.0.0.1:3211";
 const PROTECTED_ENVIRONMENT = {
-  NEXT_PUBLIC_CONVEX_SITE_URL: productionTarget.site,
-  NEXT_PUBLIC_CONVEX_URL: productionTarget.query,
+  VITE_CONVEX_SITE_URL: productionTarget.site,
+  VITE_CONVEX_URL: productionTarget.query,
   VERCEL: "1",
   VERCEL_DEPLOYMENT_ID: "dpl_CRMGPNJvKacYy5e7i77WkJXLS3FK",
   VERCEL_ENV: "production",
@@ -350,7 +321,7 @@ function stubRuntimeEnvironment(
 
 describe("runtime environment parity", () => {
   it("returns a loopback target from the Convex URL alone", () => {
-    stubRuntimeEnvironment({ NEXT_PUBLIC_CONVEX_URL: LOOPBACK_QUERY });
+    stubRuntimeEnvironment({ VITE_CONVEX_URL: LOOPBACK_QUERY });
 
     expect(readRuntimeConfig()).toStrictEqual({
       agent: undefined,
@@ -367,12 +338,12 @@ describe("runtime environment parity", () => {
   });
 
   it("rejects an empty or unparsable Convex URL as an invalid target", () => {
-    stubRuntimeEnvironment({ NEXT_PUBLIC_CONVEX_URL: "" });
+    stubRuntimeEnvironment({ VITE_CONVEX_URL: "" });
     expect(readRuntimeConfig).toThrow(
       new UnsafeRuntimeError({ reason: "invalid-target" })
     );
 
-    stubRuntimeEnvironment({ NEXT_PUBLIC_CONVEX_URL: "not a url" });
+    stubRuntimeEnvironment({ VITE_CONVEX_URL: "not a url" });
     expect(readRuntimeConfig).toThrow(
       new UnsafeRuntimeError({ reason: "invalid-target" })
     );
@@ -380,22 +351,22 @@ describe("runtime environment parity", () => {
 
   it("keeps the site URL optional but rejects an empty or unparsable one", () => {
     stubRuntimeEnvironment({
-      NEXT_PUBLIC_CONVEX_SITE_URL: LOOPBACK_SITE,
-      NEXT_PUBLIC_CONVEX_URL: LOOPBACK_QUERY,
+      VITE_CONVEX_SITE_URL: LOOPBACK_SITE,
+      VITE_CONVEX_URL: LOOPBACK_QUERY,
     });
     expect(readRuntimeConfig().site).toBe(LOOPBACK_SITE);
 
     stubRuntimeEnvironment({
-      NEXT_PUBLIC_CONVEX_SITE_URL: "",
-      NEXT_PUBLIC_CONVEX_URL: LOOPBACK_QUERY,
+      VITE_CONVEX_SITE_URL: "",
+      VITE_CONVEX_URL: LOOPBACK_QUERY,
     });
     expect(readRuntimeConfig).toThrow(
       new UnsafeRuntimeError({ reason: "invalid-target" })
     );
 
     stubRuntimeEnvironment({
-      NEXT_PUBLIC_CONVEX_SITE_URL: "not a url",
-      NEXT_PUBLIC_CONVEX_URL: LOOPBACK_QUERY,
+      VITE_CONVEX_SITE_URL: "not a url",
+      VITE_CONVEX_URL: LOOPBACK_QUERY,
     });
     expect(readRuntimeConfig).toThrow(
       new UnsafeRuntimeError({ reason: "invalid-target" })
@@ -405,38 +376,38 @@ describe("runtime environment parity", () => {
   it("reads the agent mode literal and rejects an empty or other value", () => {
     stubRuntimeEnvironment({
       CONVEX_AGENT_MODE: "anonymous",
-      NEXT_PUBLIC_CONVEX_URL: LOOPBACK_QUERY,
+      VITE_CONVEX_URL: LOOPBACK_QUERY,
     });
     expect(readRuntimeConfig().agent).toBe("anonymous");
 
     stubRuntimeEnvironment({
       CONVEX_AGENT_MODE: "",
-      NEXT_PUBLIC_CONVEX_URL: LOOPBACK_QUERY,
+      VITE_CONVEX_URL: LOOPBACK_QUERY,
     });
     expect(readRuntimeConfig).toThrow();
 
     stubRuntimeEnvironment({
       CONVEX_AGENT_MODE: "agent",
-      NEXT_PUBLIC_CONVEX_URL: LOOPBACK_QUERY,
+      VITE_CONVEX_URL: LOOPBACK_QUERY,
     });
     expect(readRuntimeConfig).toThrow();
   });
 
   it("reads the Vercel marker literal and rejects an empty or other value", () => {
     stubRuntimeEnvironment({
-      NEXT_PUBLIC_CONVEX_URL: LOOPBACK_QUERY,
+      VITE_CONVEX_URL: LOOPBACK_QUERY,
       VERCEL: "1",
     });
     expect(readRuntimeConfig().vercel).toBe("1");
 
     stubRuntimeEnvironment({
-      NEXT_PUBLIC_CONVEX_URL: LOOPBACK_QUERY,
+      VITE_CONVEX_URL: LOOPBACK_QUERY,
       VERCEL: "",
     });
     expect(readRuntimeConfig).toThrow();
 
     stubRuntimeEnvironment({
-      NEXT_PUBLIC_CONVEX_URL: LOOPBACK_QUERY,
+      VITE_CONVEX_URL: LOOPBACK_QUERY,
       VERCEL: "0",
     });
     expect(readRuntimeConfig).toThrow();

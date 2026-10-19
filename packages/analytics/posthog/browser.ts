@@ -182,7 +182,7 @@ export const enableBaselineAnalytics = Effect.fn(
 
     yield* Effect.try({
       try: () => {
-        client.init(runtimeKeys.NEXT_PUBLIC_POSTHOG_KEY, {
+        client.init(runtimeKeys.VITE_POSTHOG_KEY, {
           advanced_disable_flags: true,
           api_host: POSTHOG_PROXY_PATH,
           autocapture: false,
@@ -225,7 +225,7 @@ export const enableBaselineAnalytics = Effect.fn(
           respect_dnt: true,
           save_campaign_params: true,
           save_referrer: true,
-          ui_host: runtimeKeys.NEXT_PUBLIC_POSTHOG_UI_HOST,
+          ui_host: runtimeKeys.VITE_POSTHOG_UI_HOST,
         });
       },
       catch: browserAnalyticsLoadFailure,

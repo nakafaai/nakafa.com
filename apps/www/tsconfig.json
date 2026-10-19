@@ -1,5 +1,5 @@
 {
-  "extends": "@repo/typescript-config/nextjs.json",
+  "extends": "@repo/typescript-config/react-library.json",
   "compilerOptions": {
     "jsx": "react-jsx",
     "types": [
@@ -12,11 +12,6 @@
       "@repo/*": ["../../packages/*"]
     }
   },
-  "include": [
-    "**/*.ts",
-    "**/*.tsx",
-    "scripts/**/*.mts",
-    "*.mts"
-  ],
+  "include": ["**/*.ts", "**/*.tsx", "scripts/**/*.mts", "*.mts"],
   "exclude": ["node_modules", ".output", ".vercel", "out", "dist", "build"]
 }

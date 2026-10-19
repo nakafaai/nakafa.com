@@ -22,14 +22,14 @@ describe("Polar client configuration", () => {
           {
             env: {
               POLAR_ACCESS_TOKEN: "polar_test",
-              NEXT_PUBLIC_POLAR_SERVER: "production",
+              VITE_POLAR_SERVER: "production",
             },
             origin: "https://api.polar.sh",
           },
           {
             env: {
               POLAR_ACCESS_TOKEN: "polar_test",
-              NEXT_PUBLIC_POLAR_SERVER: "sandbox",
+              VITE_POLAR_SERVER: "sandbox",
             },
             origin: "https://sandbox-api.polar.sh",
           },
@@ -85,7 +85,7 @@ describe("Polar client configuration", () => {
           { POLAR_ACCESS_TOKEN: "" },
           {
             POLAR_ACCESS_TOKEN: "polar_test",
-            NEXT_PUBLIC_POLAR_SERVER: "invalid",
+            VITE_POLAR_SERVER: "invalid",
           },
         ]) {
           const error = yield* readPolarClient().pipe(

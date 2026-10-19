@@ -48,7 +48,7 @@ function getServerAnalytics() {
   }
 
   const runtimeKeys = getAnalyticsKeys();
-  serverAnalytics = new PostHog(runtimeKeys.NEXT_PUBLIC_POSTHOG_KEY, {
+  serverAnalytics = new PostHog(runtimeKeys.VITE_POSTHOG_KEY, {
     disableGeoip: true,
     disableSurveys: true,
     enableExceptionAutocapture: false,

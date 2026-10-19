@@ -1,15 +1,27 @@
 import { readProtectedContent } from "@repo/backend/client/content/protected";
 import { api } from "@repo/backend/convex/_generated/api";
 import { contentRuntimeKeys } from "@repo/next-config/keys";
+import { readEnvironment } from "@repo/utilities/env";
 import { JsonTextSchema } from "@repo/utilities/json";
-import { fetchQuery } from "convex/nextjs";
+import { ConvexHttpClient } from "convex/browser";
 import { Array as Arr, Effect, Option, Order, Schema } from "effect";
 import { makeTryoutRuntimeRequest } from "@/components/tryout/content/request";
-import { env } from "@/env";
 import { rendererManifest } from "@/lib/content/renderer/manifest";
 import { readRuntimeConfig } from "@/runtime";
 
 readRuntimeConfig();
+
+/** The script runs in Node, where only process.env exists, so it reads its two Convex URLs here. */
+const env = readEnvironment(
+  {
+    VITE_CONVEX_SITE_URL: Schema.String,
+    VITE_CONVEX_URL: Schema.String,
+  },
+  {
+    VITE_CONVEX_SITE_URL: process.env.VITE_CONVEX_SITE_URL,
+    VITE_CONVEX_URL: process.env.VITE_CONVEX_URL,
+  }
+);
 
 class FeaturedArtifactError extends Schema.TaggedError<FeaturedArtifactError>()(
   "FeaturedArtifactError",
@@ -20,19 +32,18 @@ const verifyFeaturedRenderer = Effect.fn(
   "NakafaContent.verifyFeaturedRenderer"
 )(function* () {
   const featured = yield* Effect.tryPromise(() =>
-    fetchQuery(
+    new ConvexHttpClient(env.VITE_CONVEX_URL).query(
       api.tryouts.queries.catalog.getFeaturedQuestion,
       {
         appLocale: "en",
-      },
-      { url: env.NEXT_PUBLIC_CONVEX_URL }
+      }
     )
   );
   const manifest = yield* rendererManifest;
   const request = yield* makeTryoutRuntimeRequest([featured.question]);
   const response = yield* readProtectedContent(
     {
-      siteUrl: env.NEXT_PUBLIC_CONVEX_SITE_URL,
+      siteUrl: env.VITE_CONVEX_SITE_URL,
       token: contentRuntimeKeys().CONTENT_RUNTIME_TOKEN,
     },
     request,

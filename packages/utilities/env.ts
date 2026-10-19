@@ -7,8 +7,8 @@ import {
   String as Str,
 } from "effect";
 
-/** The prefix of the variables that Next.js inlines into browser code. */
-const PUBLIC_PREFIX = "NEXT_PUBLIC_";
+/** The prefix of the variables that Vite inlines into browser code. */
+const PUBLIC_PREFIX = "VITE_";
 const formatIssues = SchemaIssue.makeFormatterStandardSchemaV1();
 
 /** One or more environment values failed the Schema of their key. */
@@ -24,11 +24,12 @@ export class InvalidEnvironmentError extends Schema.TaggedError<InvalidEnvironme
 /**
  * Decodes one literal record of environment values with the Schema of each key.
  *
- * This is the seam for code that Next.js bundles. The bundler inlines a public
- * value only where the source reads `process.env.NAME` literally, so each
+ * This is the seam for code that Vite bundles. The bundler inlines a public
+ * value only where the source reads `import.meta.env.NAME` literally, so each
  * caller writes that read as the value of its key. The record type requires a
  * value for every key, and the source check accepts only `NAME:
- * process.env.NAME` in this record.
+ * import.meta.env.NAME` in this record. Server code runs the same record with
+ * `process.env.NAME` reads, because Node and Convex have no `import.meta.env`.
  *
  * An empty string stays a set value: only the Schema of the key decides whether
  * it is valid. Decoding is synchronous. A failure throws while the module

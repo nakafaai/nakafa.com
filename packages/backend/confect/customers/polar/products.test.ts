@@ -33,7 +33,7 @@ afterEach(() => {
 
 describe("customers/polar/products", () => {
   it("uses sandbox product IDs outside production Polar mode", async () => {
-    vi.stubEnv("NEXT_PUBLIC_POLAR_SERVER", "sandbox");
+    vi.stubEnv("VITE_POLAR_SERVER", "sandbox");
 
     const { products } = await loadProducts();
 
@@ -45,7 +45,7 @@ describe("customers/polar/products", () => {
   });
 
   it("uses production product IDs in production Polar mode", async () => {
-    vi.stubEnv("NEXT_PUBLIC_POLAR_SERVER", "production");
+    vi.stubEnv("VITE_POLAR_SERVER", "production");
 
     const { products } = await loadProducts();
 

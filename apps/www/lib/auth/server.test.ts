@@ -88,8 +88,8 @@ const runWithRequestHeaders = Effect.fn(
 
 beforeAll(() => {
   vi.stubEnv("AKSARA_PUBLICATION_TOKEN", "test-publication-token");
-  vi.stubEnv("NEXT_PUBLIC_CONVEX_URL", "https://test.convex.cloud");
-  vi.stubEnv("NEXT_PUBLIC_CONVEX_SITE_URL", CONVEX_SITE_URL);
+  vi.stubEnv("VITE_CONVEX_URL", "https://test.convex.cloud");
+  vi.stubEnv("VITE_CONVEX_SITE_URL", CONVEX_SITE_URL);
   vi.stubEnv("SITE_URL", "https://nakafa.com");
   vi.stubGlobal("fetch", fetcher);
 });

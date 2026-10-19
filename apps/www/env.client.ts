@@ -11,13 +11,12 @@ export const clientEnv = {
   ...convexSiteKeys(),
   ...readEnvironment(
     {
-      NEXT_PUBLIC_AKSARA_PREVIEW_CHILD: Schema.UndefinedOr(
+      VITE_AKSARA_PREVIEW_CHILD: Schema.UndefinedOr(
         Schema.Literals(["true", "false"])
       ),
     },
     {
-      NEXT_PUBLIC_AKSARA_PREVIEW_CHILD:
-        process.env.NEXT_PUBLIC_AKSARA_PREVIEW_CHILD,
+      VITE_AKSARA_PREVIEW_CHILD: import.meta.env.VITE_AKSARA_PREVIEW_CHILD,
     }
   ),
 };

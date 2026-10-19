@@ -3,8 +3,8 @@ import { postHogPublicKeys } from "@repo/analytics/public";
 
 /** Installs the public PostHog values for each assertion. */
 function stubAnalyticsEnvironment() {
-  vi.stubEnv("NEXT_PUBLIC_POSTHOG_KEY", "phc_test");
-  vi.stubEnv("NEXT_PUBLIC_POSTHOG_UI_HOST", "https://eu.posthog.com");
+  vi.stubEnv("VITE_POSTHOG_KEY", "phc_test");
+  vi.stubEnv("VITE_POSTHOG_UI_HOST", "https://eu.posthog.com");
 }
 
 afterEach(() => {
@@ -16,32 +16,32 @@ describe("public PostHog values", () => {
     stubAnalyticsEnvironment();
 
     expect(postHogPublicKeys()).toEqual({
-      NEXT_PUBLIC_POSTHOG_KEY: "phc_test",
-      NEXT_PUBLIC_POSTHOG_UI_HOST: "https://eu.posthog.com",
+      VITE_POSTHOG_KEY: "phc_test",
+      VITE_POSTHOG_UI_HOST: "https://eu.posthog.com",
     });
   });
 
   it("requires a project key with the phc_ prefix", () => {
     stubAnalyticsEnvironment();
-    vi.stubEnv("NEXT_PUBLIC_POSTHOG_KEY", undefined);
+    vi.stubEnv("VITE_POSTHOG_KEY", undefined);
     expect(postHogPublicKeys).toThrow();
 
-    vi.stubEnv("NEXT_PUBLIC_POSTHOG_KEY", "");
+    vi.stubEnv("VITE_POSTHOG_KEY", "");
     expect(postHogPublicKeys).toThrow();
 
-    vi.stubEnv("NEXT_PUBLIC_POSTHOG_KEY", "ph_test");
+    vi.stubEnv("VITE_POSTHOG_KEY", "ph_test");
     expect(postHogPublicKeys).toThrow();
   });
 
   it("requires a URL UI host that is set and parseable", () => {
     stubAnalyticsEnvironment();
-    vi.stubEnv("NEXT_PUBLIC_POSTHOG_UI_HOST", undefined);
+    vi.stubEnv("VITE_POSTHOG_UI_HOST", undefined);
     expect(postHogPublicKeys).toThrow();
 
-    vi.stubEnv("NEXT_PUBLIC_POSTHOG_UI_HOST", "");
+    vi.stubEnv("VITE_POSTHOG_UI_HOST", "");
     expect(postHogPublicKeys).toThrow();
 
-    vi.stubEnv("NEXT_PUBLIC_POSTHOG_UI_HOST", "not a url");
+    vi.stubEnv("VITE_POSTHOG_UI_HOST", "not a url");
     expect(postHogPublicKeys).toThrow();
   });
 });
