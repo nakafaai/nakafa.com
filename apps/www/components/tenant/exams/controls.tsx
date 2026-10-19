@@ -25,8 +25,9 @@ import type { Question } from "@/components/tenant/exams/optimistic";
 
 /**
  * The actions of a page: move up, move down, copy, add a question below, and remove. A page shows
- * the icon buttons from the medium width up, and one More menu on a phone, and each button names
- * its action. Removing a question asks first, and an exam keeps at least one question.
+ * the icon buttons from the medium width up, and one More menu on a phone. Each button names its
+ * action and its question, since every page of the exam has the same actions. Removing a question
+ * asks first, and an exam keeps at least one question.
  */
 export function PageActions({
   count,
@@ -41,6 +42,7 @@ export function PageActions({
   const common = useTranslations("Common");
   const actions = useQuestionActions();
   const [asking, setAsking] = useState(false);
+  const number = index + 1;
 
   const moveUp = () => actions.moveQuestion(question.id, index - 1);
   const moveDown = () => actions.moveQuestion(question.id, index + 1);
@@ -55,7 +57,7 @@ export function PageActions({
     <>
       <div className="hidden items-center gap-0.5 md:flex">
         <Button
-          aria-label={t("move-up")}
+          aria-label={t("move-up-of", { number })}
           disabled={index === 0}
           onClick={moveUp}
           size="icon-sm"
@@ -65,7 +67,7 @@ export function PageActions({
           <HugeIcons aria-hidden="true" icon={ArrowUp01Icon} />
         </Button>
         <Button
-          aria-label={t("move-down")}
+          aria-label={t("move-down-of", { number })}
           disabled={index === count - 1}
           onClick={moveDown}
           size="icon-sm"
@@ -75,7 +77,7 @@ export function PageActions({
           <HugeIcons aria-hidden="true" icon={ArrowDown01Icon} />
         </Button>
         <Button
-          aria-label={t("copy")}
+          aria-label={t("copy-of", { number })}
           onClick={copy}
           size="icon-sm"
           type="button"
@@ -84,7 +86,7 @@ export function PageActions({
           <HugeIcons aria-hidden="true" icon={Copy01Icon} />
         </Button>
         <Button
-          aria-label={t("add-below")}
+          aria-label={t("add-below-of", { number })}
           onClick={addBelow}
           size="icon-sm"
           type="button"
@@ -94,7 +96,7 @@ export function PageActions({
         </Button>
         {count > 1 ? (
           <Button
-            aria-label={t("remove")}
+            aria-label={t("remove-of", { number })}
             onClick={() => setAsking(true)}
             size="icon-sm"
             type="button"
@@ -109,7 +111,7 @@ export function PageActions({
           <DropdownMenuTrigger
             render={
               <Button
-                aria-label={common("more-actions")}
+                aria-label={t("more-actions-of", { number })}
                 size="icon-sm"
                 variant="ghost"
               >
