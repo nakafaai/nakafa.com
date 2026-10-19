@@ -124,13 +124,14 @@ export const StudentSittingView = Schema.Struct({
 });
 
 /**
- * One sitting in a student's list: the sitting as `SittingView` shows it, the student's own attempt state
- * in it (`null` before entry), and whether the teacher has released its results. A closed sitting stays
- * in the list while the student holds a submitted attempt in it, so the results stay reachable.
+ * One sitting in a student's list: the sitting as `SittingView` shows it, the student's own attempt and its
+ * state in it (both `null` before entry), and whether the teacher has released its results. A closed sitting
+ * stays in the list while the student's attempt in it is closing or submitted, so the results stay reachable.
  */
 export const StudentSittingRow = Schema.Struct({
   ...SittingView.fields,
   attempt: Schema.NullOr(AttemptState),
+  attemptId: Schema.NullOr(Id("examAttempts")),
   resultsReleased: Schema.Boolean,
 });
 
