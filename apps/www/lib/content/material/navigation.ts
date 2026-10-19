@@ -1,15 +1,20 @@
-import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
+import {
+  type MaterialLessonProjection,
+  MaterialLessonProjectionSchema,
+} from "@nakafa/aksara-contracts/projection/material";
 import type { ContentPagination } from "@repo/contents/content";
 import { toContextualMaterialHref } from "@repo/contents/route/material/context";
-import { Array as Arr, Option, Order } from "effect";
+import { Array as Arr, Option, Order, Schema } from "effect";
 import type { PublishedMaterialContext } from "@/lib/content/material/projection";
 
 /** The part of one signed material page that its navigation reads: the route, its siblings and whether it is a preview. */
-export interface MaterialNavigationSource {
-  readonly kind: "preview" | "published";
-  readonly route: MaterialLessonProjection;
-  readonly siblings: readonly MaterialLessonProjection[];
-}
+const MaterialNavigationSourceSchema = Schema.Struct({
+  kind: Schema.Literals(["preview", "published"]),
+  route: MaterialLessonProjectionSchema,
+  siblings: Schema.Array(MaterialLessonProjectionSchema),
+});
+
+type MaterialNavigationSource = typeof MaterialNavigationSourceSchema.Type;
 
 /** Route identity that addresses one signed material in navigation. */
 type MaterialNavigationIdentity = Pick<
@@ -23,7 +28,7 @@ type MaterialNavigationRoute = Readonly<
 >;
 
 /** Small public navigation model shared by the static shell and client controls. */
-export type MaterialNavigationPage = Readonly<
+type MaterialNavigationPage = Readonly<
   ReturnType<typeof toMaterialNavigationPage>
 >;
 

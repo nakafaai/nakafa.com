@@ -1,5 +1,5 @@
 import { ORGANIZATION } from "@repo/seo/json-ld/constants";
-import { Array as Arr } from "effect";
+import { Array as Arr, Schema } from "effect";
 import type { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 
 /** One JSON-LD node as the head seam carries it. */
@@ -23,12 +23,18 @@ export function readBreadcrumbNodes(items: BreadcrumbItems): JsonLdNode[] {
 }
 
 /** The collection node that lists the pages of one index. */
-export function makeCollectionPageNode(input: {
-  readonly description: string;
-  readonly items: readonly { readonly name: string; readonly url: string }[];
-  readonly name: string;
-  readonly url: string;
-}): JsonLdNode {
+const CollectionPageInput = Schema.Struct({
+  description: Schema.String,
+  items: Schema.Array(
+    Schema.Struct({ name: Schema.String, url: Schema.String })
+  ),
+  name: Schema.String,
+  url: Schema.String,
+});
+
+export function makeCollectionPageNode(
+  input: typeof CollectionPageInput.Type
+): JsonLdNode {
   return {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
@@ -42,15 +48,20 @@ export function makeCollectionPageNode(input: {
 }
 
 /** The book node of one Quran surah. */
-export function makeBookNode(input: {
-  readonly author: { readonly "@type": "Person"; readonly name: string };
-  readonly description: string;
-  readonly inLanguage: string;
-  readonly name: string;
-  readonly position: number;
-  readonly totalPages: number;
-  readonly url: string;
-}): JsonLdNode {
+const BookInput = Schema.Struct({
+  author: Schema.Struct({
+    "@type": Schema.Literal("Person"),
+    name: Schema.String,
+  }),
+  description: Schema.String,
+  inLanguage: Schema.String,
+  name: Schema.String,
+  position: Schema.Number,
+  totalPages: Schema.Number,
+  url: Schema.String,
+});
+
+export function makeBookNode(input: typeof BookInput.Type): JsonLdNode {
   return {
     "@context": "https://schema.org",
     "@type": "Book",
