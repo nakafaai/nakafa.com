@@ -15,6 +15,8 @@ import { NextTile } from "@/components/tenant/home/next";
 import {
   homeExamsRead,
   useHomeExams,
+  useHomeSetup,
+  useHomeViewer,
 } from "@/components/tenant/home/query.client";
 import { QuietState } from "@/components/tenant/home/quiet";
 import { ResultsTile } from "@/components/tenant/home/results";
@@ -23,8 +25,9 @@ import { ReadBoundary } from "@/components/tenant/read/boundary";
 
 /**
  * The home of a viewer who watches rooms or creates exams. One read brings the rooms, the results, and the drafts,
- * and the setup tile reads the school's setup on its own. While the rooms load, the quiet state holds the place of
- * Live and Next, so the page does not move when they answer.
+ * and the setup tile reads the school's setup on its own. Until the reads that its tiles need have answered, the
+ * quiet state holds the place, and then every tile appears at once, so no tile that is shown moves when another
+ * arrives.
  */
 export function StaffHome({ drafts }: { drafts: StoreApi<ExamDrafts> }) {
   const tenant = useTenant();
@@ -41,12 +44,23 @@ function StaffTiles({ drafts }: { drafts: StoreApi<ExamDrafts> }) {
   const t = useTranslations("School");
   const tenant = useTenant();
   const exams = useHomeExams();
+  const setup = useHomeSetup();
+  const viewer = useHomeViewer();
   const setupShown = useSetupShown();
 
   if (QueryResult.isFailure(exams)) {
     throw exams.error;
   }
-  if (!QueryResult.isSuccess(exams)) {
+  // A failed read counts as an answer, because its tile shows its own failure. The owner's and the admin's setup
+  // also waits for the viewer's units, which decide its first step.
+  const setupAnswered =
+    QueryResult.isSuccess(setup) || QueryResult.isFailure(setup);
+  const viewerAnswered =
+    QueryResult.isSuccess(viewer) || QueryResult.isFailure(viewer);
+  const ready =
+    QueryResult.isSuccess(exams) &&
+    (!tenant.canManage || (setupAnswered && viewerAnswered));
+  if (!ready) {
     return tenant.home.canWatch ? (
       <QuietState act="sleeping">{""}</QuietState>
     ) : null;
