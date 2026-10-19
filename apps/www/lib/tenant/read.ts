@@ -29,7 +29,8 @@ export const readProfile = cache(async (slug: TenantSlug) => {
  * The viewer's view of one school, read with the session token of the request. The
  * school's layout and every page under it ask for the same answer, and React's `cache`
  * shares it, so one request reads the viewer once. A visitor without a session reads
- * nothing, and a failure other than the two refusals reaches the error boundary.
+ * nothing, and a failure other than the two refusals reaches the error boundary. An
+ * outsider keeps the token it was read with, so the layout reads the account with it.
  */
 export const readViewer = cache(async (slug: TenantSlug) => {
   const token = await getToken();
@@ -42,7 +43,7 @@ export const readViewer = cache(async (slug: TenantSlug) => {
       Effect.map((viewer) => ({ _tag: "member" as const, viewer })),
       Effect.catchTags({
         AccessDenied: () => Effect.succeed({ _tag: "denied" as const }),
-        NotMember: () => Effect.succeed({ _tag: "outsider" as const }),
+        NotMember: () => Effect.succeed({ _tag: "outsider" as const, token }),
       }),
       Effect.provide(httpLayer({ auth: token }))
     )

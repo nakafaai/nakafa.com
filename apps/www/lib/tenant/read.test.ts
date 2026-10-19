@@ -90,6 +90,6 @@ describe("readViewer", () => {
     vi.mocked(getToken).mockResolvedValue(TOKEN);
     serve({ viewer: refusedWith(NOT_MEMBER) });
 
-    expect(await readViewer(SLUG)).toEqual({ _tag: "outsider" });
+    expect(await readViewer(SLUG)).toEqual({ _tag: "outsider", token: TOKEN });
   });
 });

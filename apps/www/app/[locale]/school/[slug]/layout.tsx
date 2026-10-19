@@ -13,7 +13,6 @@ import { canOpenExams } from "@/components/tenant/exams/access";
 import { homeAccess } from "@/components/tenant/home/access";
 import { TenantOutsider } from "@/components/tenant/outsider";
 import { TenantShell } from "@/components/tenant/shell";
-import { getToken } from "@/lib/auth/server";
 import { httpLayer } from "@/lib/convex/http";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { readProfile, readViewer } from "@/lib/tenant/read";
@@ -122,14 +121,10 @@ async function SchoolFrame({
     notFound();
   }
   if (viewer._tag === "outsider") {
-    const token = await getToken();
-    if (token === undefined) {
-      notFound();
-    }
     const current = await Effect.runPromise(
       HttpClient.HttpClient.pipe(
         Effect.flatMap((client) => client.query(auth.queries.getCurrentUser)),
-        Effect.provide(httpLayer({ auth: token }))
+        Effect.provide(httpLayer({ auth: viewer.token }))
       )
     );
     if (current === null) {
