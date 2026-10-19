@@ -47,6 +47,14 @@ export default GroupSpec.make()
     }).middleware(TenantAccess, { action: "person.view" })
   )
   .addFunction(
+    FunctionSpec.publicPaginatedQuery({
+      name: "students",
+      args: () => ({ slug: TenantSlug }),
+      item: () => PersonView,
+      error: () => AccessDenied,
+    }).middleware(TenantAccess, { action: "person.view" })
+  )
+  .addFunction(
     FunctionSpec.publicMutation({
       name: "create",
       args: () => ({ name: PersonName, slug: TenantSlug }),
