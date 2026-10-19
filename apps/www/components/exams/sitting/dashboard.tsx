@@ -17,6 +17,7 @@ import { SittingPanel } from "@/components/exams/sitting/panel";
 import { SittingSeats } from "@/components/exams/sitting/seats";
 import { createSittingStore } from "@/components/exams/sitting/store";
 import { SittingToolbar } from "@/components/exams/sitting/toolbar";
+import { useConvexAuth } from "@/components/providers/convex";
 import { SchoolHeader } from "@/components/tenant/header";
 
 /**
@@ -36,9 +37,11 @@ export function SittingDashboard({
 }) {
   const t = useTranslations("Exams");
   const [store] = useState(createSittingStore);
+  // The dashboard needs the session, which Convex learns a moment after the page draws.
+  const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const state = useQuery(
     exams.sittings.dashboard,
-    dashboardArgs({ sittingId, slug }, null)
+    isSettled ? dashboardArgs({ sittingId, slug }, null) : "skip"
   );
 
   if (QueryResult.isFailure(state)) {
