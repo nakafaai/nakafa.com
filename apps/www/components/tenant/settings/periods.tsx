@@ -36,7 +36,6 @@ import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
-import { NoActiveUnit } from "@/components/tenant/settings/no-unit";
 import { SettingsPage } from "@/components/tenant/settings/page";
 import {
   archivePeriodChange,
@@ -50,6 +49,7 @@ import {
   SchoolUnitChoice,
   type UnitId,
 } from "@/components/tenant/settings/unit";
+import { NoActiveUnit } from "@/components/tenant/settings/unitless";
 
 const SOURCE = "components/tenant/settings/periods";
 

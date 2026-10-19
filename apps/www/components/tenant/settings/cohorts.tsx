@@ -38,7 +38,6 @@ import { TableEmpty } from "@/components/shared/table/frame";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { SchoolCohortMenu } from "@/components/tenant/settings/cohort";
 import { createCohortChange } from "@/components/tenant/settings/cohorts.client";
-import { NoActiveUnit } from "@/components/tenant/settings/no-unit";
 import { SettingsPage } from "@/components/tenant/settings/page";
 import { saveSchool } from "@/components/tenant/settings/save.client";
 import type { Cohort, Period } from "@/components/tenant/settings/state";
@@ -46,6 +45,7 @@ import {
   SchoolUnitChoice,
   type UnitId,
 } from "@/components/tenant/settings/unit";
+import { NoActiveUnit } from "@/components/tenant/settings/unitless";
 
 const SOURCE = "components/tenant/settings/cohorts";
 
