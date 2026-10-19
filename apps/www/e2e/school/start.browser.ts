@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, type Frame, test } from "@playwright/test";
 import { Array as Arr, Effect } from "effect";
 import { saved, trackChanges } from "@/e2e/support/changes";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
@@ -58,18 +58,22 @@ test("a new account opens its own school in five questions and lands in it as it
   // serve the site on another port, where that navigation commits the browser's
   // error page, so the test waits for the page's own navigation to commit, on
   // either, before it opens the host at the port this run serves.
-  const opened = new Promise<void>((resolve) => {
-    page.on("framenavigated", (frame) => {
-      const url = new URL(frame.url());
-      if (
-        frame === page.mainFrame() &&
-        (url.hostname === `${slug}.localhost` ||
-          url.protocol === "chrome-error:")
-      ) {
-        resolve();
-      }
-    });
-  });
+  const opened = Effect.runPromise(
+    Effect.callback<void>((resume) => {
+      const committed = (frame: Frame) => {
+        const url = new URL(frame.url());
+        if (
+          frame === page.mainFrame() &&
+          (url.hostname === `${slug}.localhost` ||
+            url.protocol === "chrome-error:")
+        ) {
+          page.off("framenavigated", committed);
+          resume(Effect.void);
+        }
+      };
+      page.on("framenavigated", committed);
+    })
+  );
   await page.getByRole("button", { name: "Open school" }).click();
 
   // The school shows at once, then its own address opens.
