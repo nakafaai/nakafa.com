@@ -2,7 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { Array as Arr, Schema } from "effect";
 import type { ViewerUnit } from "@/components/tenant/exams/create";
-import { homeAccess } from "@/components/tenant/home/access";
+import { homeAccess, showsStudentHome } from "@/components/tenant/home/access";
 
 const unitId = Schema.decodeUnknownSync(Id("tenantUnits"));
 
@@ -64,5 +64,45 @@ describe("homeAccess", () => {
         (choice) => choice.unitId
       )
     ).toEqual([null, smp.id]);
+  });
+});
+
+describe("showsStudentHome", () => {
+  it("shows the student's home to a student", () => {
+    const smp = unit("smp", ["exam.edit", "exam.rooms"]);
+
+    expect(
+      showsStudentHome("student", homeAccess({ can: [], units: [smp] }))
+    ).toBe(true);
+  });
+
+  it("shows the student's home to a member with no grant, who may neither create nor watch", () => {
+    expect(
+      showsStudentHome(null, homeAccess({ can: [], units: [unit("smp", [])] }))
+    ).toBe(true);
+  });
+
+  it("shows the staff home to a teacher who may create and watch", () => {
+    const smp = unit("smp", ["exam.edit", "exam.rooms"]);
+
+    expect(
+      showsStudentHome("teacher", homeAccess({ can: [], units: [smp] }))
+    ).toBe(false);
+  });
+
+  it("shows the staff home to a principal who may watch rooms but not create", () => {
+    const sma = unit("sma", ["exam.rooms"]);
+
+    expect(showsStudentHome(null, homeAccess({ can: [], units: [sma] }))).toBe(
+      false
+    );
+  });
+
+  it("shows the staff home to a viewer who may create but not watch", () => {
+    const smp = unit("smp", ["exam.edit"]);
+
+    expect(showsStudentHome(null, homeAccess({ can: [], units: [smp] }))).toBe(
+      false
+    );
   });
 });

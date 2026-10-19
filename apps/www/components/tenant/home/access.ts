@@ -1,5 +1,6 @@
 import type { Ref } from "@confect/core";
 import type tenancy from "@repo/backend/confect/_generated/refs/tenancy";
+import type { BuiltinRole } from "@repo/backend/confect/access/schema";
 import { Array as Arr } from "effect";
 import { canOpenRooms } from "@/components/tenant/exams/access";
 import { scopeChoices, unitLanguages } from "@/components/tenant/exams/create";
@@ -31,3 +32,13 @@ export const homeAccess = (viewer: Pick<Viewer, "can" | "units">) => {
  * pages draw the actions and the tiles that the viewer may use in their first HTML.
  */
 export type HomeAccess = ReturnType<typeof homeAccess>;
+
+/**
+ * Whether the home shows the student's view, with the student's sittings and results. That is a
+ * student, and also a viewer who may neither create exams nor watch rooms: a member who holds no
+ * grant has no staff tile to show, so the student's quiet state tells them that nothing is open yet.
+ */
+export const showsStudentHome = (
+  role: BuiltinRole | null,
+  access: Pick<HomeAccess, "canCreate" | "canWatch">
+) => role === "student" || !(access.canCreate || access.canWatch);

@@ -15,6 +15,7 @@ import {
   type ExamDrafts,
 } from "@/components/tenant/exams/drafts";
 import { SchoolHeader } from "@/components/tenant/header";
+import { showsStudentHome } from "@/components/tenant/home/access";
 import {
   homeExamsRead,
   useStudentSittings,
@@ -32,20 +33,22 @@ import {
  * The home of a school: one header with the page's one end-goal action for the viewer, a title row with Nina, and
  * the tiles of what the viewer must act on now. A student sees the student's sittings and results. A viewer who
  * watches rooms sees the rooms that run and open soon, the results to view, and the setup while it is open, and a
- * viewer who may create exams also sees the exams they started. The school's context carries the viewer's access
- * and the greeting, which the layout computed on the server, so Create exam and the title are in the first HTML.
- * A student's Enter sitting reads the student's sittings on the client, because a sitting opens or closes while
- * the page is open, so the action appears once that read answers. Each home reads its rows once, and the tiles it
- * shows take their rows from that read.
+ * viewer who may create exams also sees the exams they started. A member with no grant to create or watch sees the
+ * student's view with its quiet state, because the staff tiles have nothing for them. The school's context carries
+ * the viewer's access and the greeting, which the layout computed on the server, so Create exam and the title are
+ * in the first HTML. A student's Enter sitting reads the student's sittings on the client, because a sitting opens
+ * or closes while the page is open, so the action appears once that read answers. Each home reads its rows once,
+ * and the tiles it shows take their rows from that read.
  */
 export function TenantHome() {
   const tenant = useTenant();
   const [drafts] = useState(createExamDrafts);
+  const studentView = showsStudentHome(tenant.role, tenant.home);
 
   return (
-    <HomePage action={<HomeAction drafts={drafts} />}>
+    <HomePage action={<HomeAction drafts={drafts} studentView={studentView} />}>
       <HomeTitle />
-      {tenant.role === "student" ? (
+      {studentView ? (
         <StudentHome />
       ) : (
         <ReadBoundary read={homeExamsRead(tenant.slug)}>
@@ -60,10 +63,16 @@ export function TenantHome() {
  * The one action of the header: Create exam for a viewer who may create, and Enter sitting for a student while a
  * sitting is open. A viewer with neither gets no action.
  */
-function HomeAction({ drafts }: { drafts: StoreApi<ExamDrafts> }) {
+function HomeAction({
+  drafts,
+  studentView,
+}: {
+  drafts: StoreApi<ExamDrafts>;
+  studentView: boolean;
+}) {
   const tenant = useTenant();
 
-  if (tenant.role === "student") {
+  if (studentView) {
     return <StudentAction />;
   }
   if (!tenant.home.canCreate) {

@@ -126,6 +126,9 @@ test("a student with no sitting sees the quiet state and no action", async ({
   await expect(page.getByRole("link", { name: "Enter sitting" })).toHaveCount(
     0
   );
+  await expect(page.getByRole("button", { name: "Create exam" })).toHaveCount(
+    0
+  );
   await expect(page.getByText("Your sittings", { exact: true })).toHaveCount(0);
   await context.close();
 });
