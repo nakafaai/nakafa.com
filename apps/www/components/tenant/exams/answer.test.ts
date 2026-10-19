@@ -4,6 +4,7 @@ import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
 import { Array as Arr, Option } from "effect";
 import {
   choiceOf,
+  keyWithoutOption,
   labelText,
   markedKey,
   markedOption,
@@ -206,35 +207,27 @@ describe("withOptionAdded", () => {
 });
 
 describe("withOptionRemoved", () => {
-  it("takes the option out and keeps the key that marks another option", () => {
-    const key = markedKey([choice], "option-3");
-    const removed = withOptionRemoved([choice], key, "option-2");
-    expect(removed.answers).toEqual([
+  it("takes the option out of each choice and leaves the other answers", () => {
+    expect(withOptionRemoved([choice, entry], "option-2")).toEqual([
       {
         ...choice,
         options: [choice.options[0], choice.options[2], choice.options[3]],
       },
+      entry,
     ]);
-    expect(removed.key).toEqual(key);
   });
 
-  it("clears the key when the removed option is the one it marks", () => {
-    const removed = withOptionRemoved(
-      [choice],
-      markedKey([choice], "option-2"),
-      "option-2"
-    );
-    expect(removed.key).toBeNull();
+  it("keeps the key that marks another option, and clears the key that marks the removed one", () => {
+    const key = markedKey([choice], "option-3");
+    expect(keyWithoutOption(key, "option-2")).toEqual(key);
+    expect(
+      keyWithoutOption(markedKey([choice], "option-2"), "option-2")
+    ).toBeNull();
+    expect(keyWithoutOption(null, "option-2")).toBeNull();
   });
 
-  it("keeps a question with no key without one, and a choice of two options as it is", () => {
-    const pair = {
-      ...choice,
-      options: [choice.options[0], choice.options[1]],
-    };
-    expect(withOptionRemoved([pair, entry], null, "option-2")).toEqual({
-      answers: [pair, entry],
-      key: null,
-    });
+  it("leaves a choice of two options as it is", () => {
+    const pair = { ...choice, options: [choice.options[0], choice.options[1]] };
+    expect(withOptionRemoved([pair, entry], "option-2")).toEqual([pair, entry]);
   });
 });

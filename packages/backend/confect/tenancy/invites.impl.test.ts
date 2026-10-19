@@ -197,47 +197,21 @@ describe("tenancy/invites list and revoke", () => {
     })
   );
 
-  it.effect(
-    "lists the pending invites before the expired ones, each with its status and the roles of its Person",
-    () =>
-      Effect.gen(function* () {
-        const fixture = yield* tenancyFixture;
-        const expired = yield* fixture.run(
-          invitePerson(fixture.tenants.nf, lain, {
-            invite: { at: NOW - 1, status: "expired" },
-          })
-        );
-        yield* fixture.run(
-          Effect.gen(function* () {
-            const writer = yield* DatabaseWriter;
-            yield* writer.table("tenantGrants").insert({
-              grantedBy: { kind: "system" },
-              personId: fixture.invited,
-              role: { key: "teacher", kind: "builtin" },
-              scope: { kind: "tenant" },
-              status: "active",
-              tenantId: fixture.tenants.nf,
-              term: { kind: "standing" },
-            });
-          })
-        );
-        const pending = yield* inviteInvited(fixture);
-        const listed = yield* fixture
-          .as("admin")
-          .query(list, { ...firstPage, slug: nf });
-        expect(listed.page).toEqual([
-          { ...pending, roles: ["teacher"] },
-          {
-            email: lain,
-            expiresAt: TENANCY_NOW + TERM,
-            id: expired.inviteId,
-            name: "Invited Person",
-            personId: expired.personId,
-            roles: [],
-            status: "expired",
-          },
-        ]);
-      })
+  it.effect("lists the pending invites before the expired ones, with each status and roles", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const expired = yield* fixture.run(invitePerson(fixture.tenants.nf, lain, { invite: { at: NOW - 1, status: "expired" } }));
+      yield* fixture.run(Effect.flatMap(DatabaseWriter, (writer) => writer.table("tenantGrants").insert({
+        grantedBy: { kind: "system" }, personId: fixture.invited, role: { key: "teacher", kind: "builtin" },
+        scope: { kind: "tenant" }, status: "active", tenantId: fixture.tenants.nf, term: { kind: "standing" },
+      })));
+      const pending = yield* inviteInvited(fixture);
+      const listed = yield* fixture.as("admin").query(list, { ...firstPage, slug: nf });
+      expect(listed.page).toEqual([
+        { ...pending, roles: ["teacher"] },
+        { email: lain, expiresAt: TENANCY_NOW + TERM, id: expired.inviteId, name: "Invited Person", personId: expired.personId, roles: [], status: "expired" },
+      ]);
+    })
   );
 
   it.effect("refuses to revoke an invite that does not exist", () =>

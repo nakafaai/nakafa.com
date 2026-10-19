@@ -1,4 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
+import { Array as Arr } from "effect";
 import {
   languageItems,
   timeZoneItems,
@@ -16,6 +17,8 @@ describe("components/tenant/settings/choices", () => {
     expect(languageItems).toContainEqual(
       expect.objectContaining({ value: "id" })
     );
-    expect(languageItems.every((item) => item.label.length > 0)).toBe(true);
+    expect(Arr.every(languageItems, (item) => item.label.length > 0)).toBe(
+      true
+    );
   });
 });

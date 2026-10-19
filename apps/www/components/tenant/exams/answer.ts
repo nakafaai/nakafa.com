@@ -154,13 +154,9 @@ export const withOptionAdded = (
  */
 export const withOptionRemoved = (
   answers: Arr.NonEmptyReadonlyArray<Interaction>,
-  key: Arr.NonEmptyReadonlyArray<InteractionKey> | null,
   optionId: string
-): {
-  readonly answers: Arr.NonEmptyArray<Interaction>;
-  readonly key: Arr.NonEmptyReadonlyArray<InteractionKey> | null;
-} => ({
-  answers: Arr.map(answers, (answer) =>
+): Arr.NonEmptyArray<Interaction> =>
+  Arr.map(answers, (answer) =>
     isChoice(answer) && answer.options.length > CHOICE_OPTIONS_MIN
       ? {
           ...answer,
@@ -170,6 +166,14 @@ export const withOptionRemoved = (
           ),
         }
       : answer
-  ),
-  key: markedOption(key) === optionId ? null : key,
-});
+  );
+
+/**
+ * The key once one option is taken out: a key that marks another option stays as it is, and it is
+ * cleared when it marked the removed option, since no option of the question would then be correct.
+ */
+export const keyWithoutOption = (
+  key: Arr.NonEmptyReadonlyArray<InteractionKey> | null,
+  optionId: string
+): Arr.NonEmptyReadonlyArray<InteractionKey> | null =>
+  markedOption(key) === optionId ? null : key;

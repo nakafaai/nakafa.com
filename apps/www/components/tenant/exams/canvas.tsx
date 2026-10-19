@@ -19,6 +19,7 @@ import { useState } from "react";
 import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import {
   choiceOf,
+  keyWithoutOption,
   labelText,
   markedKey,
   markedOption,
@@ -145,8 +146,10 @@ function QuestionOptions({
 
   /** Removes one option, and the key with it when the key marked that option, then saves at once. */
   const removeOption = (optionId: string) => {
-    const next = withOptionRemoved(question.answers, question.key, optionId);
-    saveAnswers(next.answers, next.key);
+    saveAnswers(
+      withOptionRemoved(question.answers, optionId),
+      keyWithoutOption(question.key, optionId)
+    );
   };
 
   return Option.match(choiceOf(question.answers), {

@@ -6,7 +6,6 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import { tenantAccess } from "@repo/backend/confect/access/authority";
-import { AccessDenied } from "@repo/backend/confect/access/errors";
 import member from "@repo/backend/confect/middleware/member.impl";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import session from "@repo/backend/confect/middleware/session.impl";
@@ -24,6 +23,7 @@ import {
   type CohortStatus,
   cohortNameKey,
 } from "@repo/backend/confect/tenancy/cohort";
+import { restoreCohort } from "@repo/backend/confect/tenancy/cohort.restore";
 import spec from "@repo/backend/confect/tenancy/cohorts.spec";
 import { CohortNameTaken } from "@repo/backend/confect/tenancy/errors";
 import { cohortMembers } from "@repo/backend/confect/tenancy/members";
@@ -213,65 +213,16 @@ const archive = FunctionImpl.make(
   })
 );
 
-/**
- * Restores one archived cohort to active, the inverse of archiving it. An archived cohort refuses
- * every action on its own row, so the school's Admin restores it at the school level. The cohort
- * must belong to the school, and its period and unit must be open, because either one being
- * archived locks the cohort again. A cohort keeps its name while it is archived, so no other
- * cohort of the period can hold that name. A cohort that is active changes nothing.
- */
+/** Restores one archived cohort to active at the school level; see `restoreCohort`. */
 const restore = FunctionImpl.make(
   databaseSchema,
   spec,
   "restore",
   Effect.fn("tenancy.cohorts.restore")(function* ({ cohortId }) {
     const { person, tenant } = yield* Member;
-    const reader = yield* DatabaseReader;
-    const cohort = yield* reader
-      .table("tenantCohorts")
-      .get(cohortId)
-      .pipe(
-        Effect.catchTags({
-          DocumentDecodeError: Effect.die,
-          GetByIdFailure: () =>
-            new AccessDenied({ action: "cohort.manage", reason: "resource" }),
-        })
-      );
-    if (cohort.tenantId !== tenant._id) {
-      return yield* new AccessDenied({
-        action: "cohort.manage",
-        reason: "resource",
-      });
-    }
-    if (cohort.status !== "archived") {
-      return view(cohort);
-    }
-    const period = yield* reader
-      .table("tenantPeriods")
-      .get(cohort.periodId)
-      .pipe(Effect.orDie);
-    const unit = yield* reader
-      .table("tenantUnits")
-      .get(cohort.unitId)
-      .pipe(Effect.orDie);
-    if (period.status === "archived" || unit.status === "archived") {
-      return yield* new AccessDenied({
-        action: "cohort.manage",
-        reason: "condition",
-      });
-    }
-    const status: typeof CohortStatus.Type = "active";
-    yield* (yield* DatabaseWriter)
-      .table("tenantCohorts")
-      .replace(
-        cohort._id,
-        Struct.assign(Struct.omit(cohort, ["_creationTime", "_id"]), { status })
-      )
-      .pipe(Effect.orDie);
-    yield* cohortAuthority.record(personActor(person), cohort, {
-      type: "cohort.restored",
-    });
-    return view(Struct.assign(cohort, { status }));
+    return view(
+      yield* restoreCohort(personActor(person), tenant._id, cohortId)
+    );
   })
 );
 

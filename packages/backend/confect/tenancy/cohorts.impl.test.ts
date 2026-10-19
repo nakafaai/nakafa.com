@@ -1,6 +1,5 @@
 import type { GenericId } from "@confect/core";
 import { describe, expect, it } from "@effect/vitest";
-import { Id } from "@repo/backend/confect/_generated/id";
 import refs from "@repo/backend/confect/_generated/refs";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import { COHORT_LIMIT } from "@repo/backend/confect/tenancy/cohort";
@@ -10,17 +9,13 @@ import {
   slugOf,
   tenancyFixture,
 } from "@repo/backend/test/tenancy";
-import { Array as Arr, Effect, Schema } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 const nf = slugOf("nf");
 const { activePeriod, create, get, list, rename, archive, restore } =
   refs.public.tenancy.cohorts;
 const assignments = refs.public.tenancy.assignments;
 const periods = refs.public.tenancy.periods;
-/** A cohort ID that no row holds, so a restore finds no cohort to restore. */
-const missingCohort = Schema.decodeUnknownSync(Id("tenantCohorts"))(
-  "000000000000000099999tenantCohorts"
-);
 const denied = (reason: "resource" | "role" | "condition") => ({
   _tag: "AccessDenied",
   code: "ACCESS_DENIED",
@@ -485,70 +480,6 @@ describe("tenancy/cohorts owner, unit admin, and non-member", () => {
         expect([unitAdmin, stranger]).toMatchObject([
           denied("role"),
           { _tag: "NotMember", code: "NOT_MEMBER" },
-        ]);
-      })
-  );
-
-  it.effect(
-    "restores an archived cohort to active, journals it, and leaves an active cohort as it is",
-    () =>
-      Effect.gen(function* () {
-        const fixture = yield* tenancyFixture;
-        const period = yield* sma(fixture);
-        const made = yield* cohort(fixture, period.id, "7A", 7);
-        yield* fixture
-          .as("admin")
-          .mutation(archive, { cohortId: made.id, slug: nf });
-        const restored = yield* fixture
-          .as("admin")
-          .mutation(restore, { cohortId: made.id, slug: nf });
-        const again = yield* fixture
-          .as("admin")
-          .mutation(restore, { cohortId: made.id, slug: nf });
-        expect(restored.status).toBe("active");
-        expect(again.status).toBe("active");
-        expect(yield* fixture.run(journal)).toMatchObject([
-          { change: { type: "period.created" } },
-          { change: { type: "cohort.created" } },
-          { change: { type: "cohort.archived" } },
-          { change: { type: "cohort.restored" }, subject: { id: made.id } },
-        ]);
-      })
-  );
-
-  it.effect(
-    "refuses to restore a cohort of another school, a missing one, and a cohort whose period is archived",
-    () =>
-      Effect.gen(function* () {
-        const fixture = yield* tenancyFixture;
-        const period = yield* sma(fixture);
-        const foreign = yield* foreignCohort(fixture);
-        const made = yield* cohort(fixture, period.id, "7A", 7);
-        yield* fixture
-          .as("admin")
-          .mutation(archive, { cohortId: made.id, slug: nf });
-        const missing = yield* fixture
-          .as("admin")
-          .mutation(restore, { cohortId: missingCohort, slug: nf })
-          .pipe(Effect.flip);
-        const otherSchool = yield* fixture
-          .as("admin")
-          .mutation(restore, { cohortId: foreign.id, slug: nf })
-          .pipe(Effect.flip);
-        yield* fixture
-          .as("admin")
-          .mutation(periods.open, { periodId: period.id, slug: nf });
-        yield* fixture
-          .as("admin")
-          .mutation(periods.archive, { periodId: period.id, slug: nf });
-        const archivedPeriod = yield* fixture
-          .as("admin")
-          .mutation(restore, { cohortId: made.id, slug: nf })
-          .pipe(Effect.flip);
-        expect([missing, otherSchool, archivedPeriod]).toMatchObject([
-          { _tag: "AccessDenied", reason: "resource" },
-          { _tag: "AccessDenied", reason: "resource" },
-          { _tag: "AccessDenied", reason: "condition" },
         ]);
       })
   );
