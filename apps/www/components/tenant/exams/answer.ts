@@ -117,7 +117,9 @@ export const markedOption = (
 
 /**
  * The ID of a new option: `option-` and the number after the largest one that the choice
- * holds, so an ID that a removed option held is never taken again by a new one.
+ * holds, so a new option never shares an ID with an option the choice still holds. An ID
+ * that a removed option held can come back, which is safe, because options change only
+ * while the exam is unfrozen, and no attempt holds an answer then.
  */
 const nextOptionId = (options: readonly Choice["options"][number][]) => {
   const largest = Arr.reduce(options, 0, (most, option) => {
