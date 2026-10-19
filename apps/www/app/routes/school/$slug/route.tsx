@@ -9,7 +9,7 @@ import {
   Outlet,
 } from "@tanstack/react-router";
 import { cn } from "cn";
-import { Array as Arr, Option, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 import { type ReactElement, useEffect } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { AppProviders } from "@/components/providers/app";
@@ -35,6 +35,15 @@ const SCHOOL_HEADERS = {
   "x-robots-tag": "noindex",
   vary: "Accept-Language, Cookie",
 };
+
+/**
+ * The search params of the school entry. `masuk=username` opens the username form
+ * of the entry surface. A value that does not decode reads as none, so a stale
+ * link still opens the page.
+ */
+const SchoolSearch = Schema.Struct({
+  masuk: Schema.optional(Schema.Literal("username")),
+}).pipe(Schema.catchDecoding(() => Effect.succeedSome({})));
 
 /** The school address of the path, or the not-found page when no school has it. */
 function readSlug(slug: string): TenantSlug {
@@ -63,6 +72,7 @@ export const Route = createFileRoute("/school/$slug")({
   params: {
     parse: ({ slug }) => ({ slug: readSlug(slug) }),
   },
+  validateSearch: Schema.toStandardSchemaV1(SchoolSearch),
   beforeLoad: async ({ params }) => {
     const school = await readSchoolFrameFn({ data: { slug: params.slug } });
     if (school._tag === "Refused") {
@@ -142,12 +152,16 @@ function SchoolError({ error }: ErrorComponentProps): ReactElement {
   const t = useTranslations("Error");
   const tState = useTranslations("State");
   const locale = useLocale();
+  const refused = isLostAccess(error);
 
   useEffect(() => {
+    if (refused) {
+      return;
+    }
     captureException(error, { source: "school-segment-error" });
-  }, [error]);
+  }, [error, refused]);
 
-  if (isLostAccess(error)) {
+  if (refused) {
     return <TenantRefused />;
   }
   return (
