@@ -5,7 +5,13 @@ import {
   freezeExam,
   requireUnfrozen,
 } from "@repo/backend/confect/exams/freeze";
-import { nf } from "@repo/backend/test/editor";
+import {
+  batchText,
+  documentRowOf,
+  newDocument,
+  nf,
+  stepRows,
+} from "@repo/backend/test/editor";
 import { teacherExam } from "@repo/backend/test/exams";
 import {
   CLOSES_AT,
@@ -15,10 +21,11 @@ import {
   scheduleSitting,
 } from "@repo/backend/test/sittings";
 import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 const { open } = refs.public.exams.exams;
 const { add, answer, copy, move, remove } = refs.public.exams.questions;
+const { submit } = refs.public.editor.steps;
 
 describe("exams/freeze", () => {
   beforeEach(() => {
@@ -120,6 +127,136 @@ describe("exams/freeze", () => {
         expect(yield* teacher.query(open, { examId, slug: nf })).toEqual(
           before
         );
+      })
+  );
+
+  it.effect(
+    "returns the time an exam froze, once a sitting of it is scheduled",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const teacher = fixture.as("teacher");
+        yield* keyedSchool(fixture);
+        const examId = yield* keyedExam(fixture, "Ujian");
+        const before = yield* teacher.query(open, { examId, slug: nf });
+        expect(before.frozenAt).toBeUndefined();
+        yield* scheduleSitting(fixture, {
+          closesAt: CLOSES_AT,
+          examId,
+          group: { kind: "unit", unitId: fixture.units.smp },
+          opensAt: OPENS_AT,
+        });
+        const after = yield* teacher.query(open, { examId, slug: nf });
+        expect(after.frozenAt).toBe(TENANCY_NOW);
+      })
+  );
+
+  it.effect(
+    "lets a step push to the prompt of an exam that no sitting has scheduled",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const exam = yield* teacherExam(fixture, "Terbuka");
+        const [first] = exam.questions;
+        yield* fixture.as("teacher").mutation(submit, {
+          batch: yield* batchText(0, "rina", 2),
+          documentId: first.prompt,
+          slug: nf,
+        });
+        expect((yield* fixture.run(documentRowOf(first.prompt))).head).toBe(2);
+      })
+  );
+
+  it.effect(
+    "refuses a step push to the prompt of a frozen exam, and writes nothing",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const teacher = fixture.as("teacher");
+        yield* keyedSchool(fixture);
+        const examId = yield* keyedExam(fixture, "Ujian");
+        const opened = yield* teacher.query(open, { examId, slug: nf });
+        const [first] = opened.questions;
+        yield* scheduleSitting(fixture, {
+          closesAt: CLOSES_AT,
+          examId,
+          group: { kind: "unit", unitId: fixture.units.smp },
+          opensAt: OPENS_AT,
+        });
+        expect(
+          yield* teacher
+            .mutation(submit, {
+              batch: yield* batchText(0, "rina", 2),
+              documentId: first.prompt,
+              slug: nf,
+            })
+            .pipe(Effect.flip)
+        ).toMatchObject({ _tag: "ExamFrozen", code: "EXAM_FROZEN" });
+        expect((yield* fixture.run(documentRowOf(first.prompt))).head).toBe(0);
+        const steps = yield* fixture.run(stepRows);
+        expect(
+          Arr.filter(steps, (step) => step.documentId === first.prompt)
+        ).toEqual([]);
+      })
+  );
+
+  it.effect(
+    "answers a batch the session sent before the freeze with nothing, as a retried batch is answered",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const teacher = fixture.as("teacher");
+        yield* keyedSchool(fixture);
+        const examId = yield* keyedExam(fixture, "Ujian");
+        const opened = yield* teacher.query(open, { examId, slug: nf });
+        const [first] = opened.questions;
+        const text = yield* batchText(0, "rina", 2);
+        yield* teacher.mutation(submit, {
+          batch: text,
+          documentId: first.prompt,
+          slug: nf,
+        });
+        yield* scheduleSitting(fixture, {
+          closesAt: CLOSES_AT,
+          examId,
+          group: { kind: "unit", unitId: fixture.units.smp },
+          opensAt: OPENS_AT,
+        });
+        expect(
+          yield* teacher.mutation(submit, {
+            batch: text,
+            documentId: first.prompt,
+            slug: nf,
+          })
+        ).toBeNull();
+        const steps = yield* fixture.run(stepRows);
+        expect(
+          Arr.filter(steps, (step) => step.documentId === first.prompt)
+        ).toHaveLength(2);
+      })
+  );
+
+  it.effect(
+    "lets a change to a document that is no exam's prompt through, while an exam is frozen",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const teacher = fixture.as("teacher");
+        yield* keyedSchool(fixture);
+        const examId = yield* keyedExam(fixture, "Ujian");
+        yield* scheduleSitting(fixture, {
+          closesAt: CLOSES_AT,
+          examId,
+          group: { kind: "unit", unitId: fixture.units.smp },
+          opensAt: OPENS_AT,
+        });
+        const documentId = yield* newDocument(fixture);
+        yield* teacher.mutation(submit, {
+          batch: yield* batchText(0, "rina", 2),
+          documentId,
+          slug: nf,
+        });
+        expect((yield* fixture.run(documentRowOf(documentId))).head).toBe(2);
       })
   );
 });

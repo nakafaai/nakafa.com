@@ -107,6 +107,7 @@
     "untitled": "Untitled exam",
     "title-label": "Exam title",
     "unavailable": "This exam is not available.",
+    "frozen-note": "This exam is scheduled, so its questions are fixed.",
     "questions": "Questions",
     "question": "Question {number}",
     "option": "Option {letter}",

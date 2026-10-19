@@ -102,7 +102,10 @@ const list = FunctionImpl.make(
   })
 );
 
-/** One exam with its questions in order. Each question is one small row, and the exam holds at most the limit of them. */
+/**
+ * One exam with its questions in order, and its frozen time once a sitting of it is scheduled.
+ * Each question is one small row, and the exam holds at most the limit of them.
+ */
 const open = FunctionImpl.make(
   databaseSchema,
   spec,
@@ -113,6 +116,7 @@ const open = FunctionImpl.make(
       readQuestion(questionId)
     );
     return {
+      ...(exam.frozenAt === undefined ? {} : { frozenAt: exam.frozenAt }),
       id: exam._id,
       language: exam.language,
       questions,

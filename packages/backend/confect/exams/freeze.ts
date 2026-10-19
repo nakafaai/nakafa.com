@@ -1,7 +1,11 @@
+import type { GenericId } from "@confect/core";
 import type { ExamsDoc } from "@repo/backend/confect/_generated/docs";
-import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import { ExamFrozen } from "@repo/backend/confect/exams/errors";
-import { Clock, Effect } from "effect";
+import { Clock, Effect, Option } from "effect";
 
 /**
  * Refuses a change to the questions of an exam that a sitting has scheduled. The freeze keeps the exam
@@ -14,6 +18,29 @@ export const requireUnfrozen = Effect.fn("exams.freeze.require")(function* (
     return yield* new ExamFrozen();
   }
 });
+
+/**
+ * Refuses an edit of the prompt of a question whose exam a sitting has scheduled, so the paper a
+ * student sat cannot change. A document that is no question's prompt belongs to no exam, and it passes.
+ */
+export const requirePromptUnfrozen = Effect.fn("exams.freeze.prompt")(
+  function* (documentId: GenericId.GenericId<"editorDocuments">) {
+    const reader = yield* DatabaseReader;
+    const question = yield* reader
+      .table("examQuestions")
+      .index("by_prompt", (query) => query.eq("prompt", documentId))
+      .first()
+      .pipe(Effect.orDie);
+    if (Option.isNone(question)) {
+      return;
+    }
+    const exam = yield* reader
+      .table("exams")
+      .get(question.value.examId)
+      .pipe(Effect.orDie);
+    yield* requireUnfrozen(exam);
+  }
+);
 
 /**
  * Freezes an exam in the transaction that schedules one of its sittings. The first schedule keeps its

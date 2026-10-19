@@ -107,6 +107,7 @@
     "untitled": "Ujian tanpa judul",
     "title-label": "Judul ujian",
     "unavailable": "Ujian ini tidak tersedia.",
+    "frozen-note": "Ujian ini sudah dijadwalkan, jadi soalnya tidak bisa diubah.",
     "questions": "Soal",
     "question": "Soal {number}",
     "option": "Pilihan {letter}",

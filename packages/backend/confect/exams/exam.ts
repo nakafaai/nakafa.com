@@ -63,8 +63,12 @@ export const examSummary = (row: ExamsDoc) => ({
   title: row.title,
 });
 
-/** One exam with its questions in order, as the editor opens it. */
+/**
+ * One exam with its questions in order, as the editor opens it. `frozenAt` is present once a
+ * sitting of the exam is scheduled, so the editor shows the exam read-only (ADR 0031).
+ */
 export const ExamView = Schema.Struct({
+  frozenAt: examValidator.fields.frozenAt,
   id: Id("exams"),
   language: DeliveryLanguageSchema,
   questions: Schema.Array(QuestionView),

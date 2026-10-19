@@ -25,6 +25,8 @@ import { Effect, Fiber, Ref } from "effect";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { type StoreApi, useStore } from "zustand";
+import { isFrozen } from "@/components/tenant/exams/freeze";
+import { useExam } from "@/components/tenant/exams/provider";
 import {
   createPromptSync,
   type PromptSync,
@@ -94,10 +96,10 @@ const runRound = (
 /**
  * The prompt of one question: the document the teacher writes, edited together with the
  * other editors of the question and synced through the server (ADR 0028). It is read-only
- * until the server opens the document. A local change schedules a round after
- * `SEND_QUIET_PERIOD`, and the server's steps arrive through a subscription, so the editor
- * takes them without polling. When the prompt closes, the round it waits for stops, and the
- * steps the editor holds are sent.
+ * until the server opens the document, and it stays read-only once the exam is frozen. A local
+ * change schedules a round after `SEND_QUIET_PERIOD`, and the server's steps arrive through a
+ * subscription, so the editor takes them without polling. When the prompt closes, the round it
+ * waits for stops, and the steps the editor holds are sent.
  */
 export function ExamPrompt({
   prompt,
@@ -108,6 +110,8 @@ export function ExamPrompt({
 }) {
   const t = useTranslations("Exams");
   const convex = useConvex();
+  const { exam } = useExam();
+  const frozen = isFrozen(exam);
   const [sync] = useState(createPromptSync);
   const clientId = useStore(sync, (state) => state.clientId);
   const version = useStore(sync, (state) => state.version);
@@ -158,7 +162,10 @@ export function ExamPrompt({
     []
   );
 
-  /** Opens the document for the session, then turns editing on once the server answered. */
+  /**
+   * Opens the document for the session, then turns editing on once the server answered, unless
+   * the exam is frozen.
+   */
   const open = (editor: {
     readonly view: EditorView;
     setEditable: (on: boolean) => unknown;
@@ -180,7 +187,7 @@ export function ExamPrompt({
             sync.getState().open(memory.clientId, versionOf(editor.view))
           )
         ),
-        Effect.tap(() => Effect.sync(() => editor.setEditable(true))),
+        Effect.tap(() => Effect.sync(() => editor.setEditable(!frozen))),
         Effect.catchTag("EditorClosed", () => Effect.void),
         Effect.catch((error) =>
           reportClientException(error, { source: SOURCE }).pipe(
