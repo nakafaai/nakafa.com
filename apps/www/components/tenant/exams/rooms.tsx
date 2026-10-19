@@ -277,17 +277,15 @@ function RoomItem({
       </TableCell>
       <TableCell>{t(`room-state-${room.state}`)}</TableCell>
       <TableCell>
-        {room.state === "scheduled" ? (
-          <RoomMenu room={room} slug={slug} />
-        ) : null}
+        {room.canCancel ? <RoomMenu room={room} slug={slug} /> : null}
       </TableCell>
     </TableRow>
   );
 }
 
 /**
- * The row menu of a scheduled room, which cancels it behind a confirmation. A room that has
- * opened, or closed, has no menu, because its students sat it.
+ * The row menu of a room that the viewer may cancel, which cancels it behind a confirmation. A
+ * room that has opened, or closed, or that another Person scheduled, has no menu.
  */
 function RoomMenu({ room, slug }: { room: Room; slug: TenantSlug }) {
   const t = useTranslations("Exams");

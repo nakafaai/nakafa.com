@@ -9,7 +9,9 @@ import { roomRow } from "@repo/backend/confect/exams/rooms";
 import spec from "@repo/backend/confect/exams/rooms.spec";
 import { sittingAuthority } from "@repo/backend/confect/exams/sittings/authority";
 import member from "@repo/backend/confect/middleware/member.impl";
+import { Member } from "@repo/backend/confect/middleware/member.spec";
 import session from "@repo/backend/confect/middleware/session.impl";
+import { tenantAuthority } from "@repo/backend/confect/tenancy/authority";
 import { Array as Arr, Effect, Layer, Number as Num, Struct } from "effect";
 
 /** The most rooms that one page of an exam's list holds. A larger request is clamped to it. */
@@ -19,20 +21,33 @@ const ROOM_PAGE_LIMIT = 50;
  * One stored room as the list shows it. A room of a cohort names the cohort, and any other room
  * names its unit. Both are read in the unit's time zone, which the room's times are read in.
  */
-const roomOf = Effect.fn("exams.rooms.room")(function* (row: ExamSittingsDoc) {
+const roomOf = Effect.fn("exams.rooms.room")(function* (
+  row: ExamSittingsDoc,
+  canCancel: boolean
+) {
   const reader = yield* DatabaseReader;
   const unit = yield* reader
     .table("tenantUnits")
     .get(row.unitId)
     .pipe(Effect.orDie);
   if (row.cohortId === null) {
-    return roomRow(row, { kind: "unit", name: unit.name }, unit.timeZone);
+    return roomRow(
+      row,
+      { kind: "unit", name: unit.name },
+      unit.timeZone,
+      canCancel
+    );
   }
   const cohort = yield* reader
     .table("tenantCohorts")
     .get(row.cohortId)
     .pipe(Effect.orDie);
-  return roomRow(row, { kind: "cohort", name: cohort.name }, unit.timeZone);
+  return roomRow(
+    row,
+    { kind: "cohort", name: cohort.name },
+    unit.timeZone,
+    canCancel
+  );
 });
 
 /**
@@ -40,7 +55,9 @@ const roomOf = Effect.fn("exams.rooms.room")(function* (row: ExamSittingsDoc) {
  * earliest. The index reads the exam's rooms in that order, and an optional state narrows
  * the page in the same read. Each room is kept only if the caller's sitting view allows it,
  * so a Principal or a Deputy sees the rooms of the school and a Teacher sees the rooms of their
- * units. A page asks for at most `ROOM_PAGE_LIMIT` rooms, and a larger request is clamped.
+ * units. A room the caller may cancel is one that is scheduled, that the caller may proctor, and
+ * that the caller scheduled or may cancel as an Admin, which is the check `cancel` makes. A page
+ * asks for at most `ROOM_PAGE_LIMIT` rooms, and a larger request is clamped.
  */
 const list = FunctionImpl.make(
   databaseSchema,
@@ -48,6 +65,11 @@ const list = FunctionImpl.make(
   "list",
   Effect.fn("exams.rooms.list")(function* ({ paginationOpts, state }) {
     const exam = yield* Exam;
+    const member = yield* Member;
+    const isAdmin = Arr.contains(
+      yield* tenantAuthority.allowed(member.tenant),
+      "tenant.manage"
+    );
     const rooms = (yield* DatabaseReader)
       .table("examSittings")
       .index("by_examId_and_opensAt", (query) => query.eq("examId", exam._id));
@@ -64,12 +86,22 @@ const list = FunctionImpl.make(
             filter.eq(filter.field("state"), state)
           )
     ).pipe(Effect.orDie);
-    const viewable = yield* Effect.filter(page.page, (row) =>
+    const allowed = yield* Effect.forEach(page.page, (row) =>
       sittingAuthority
         .allowed({ ...row, exam })
-        .pipe(Effect.map((actions) => Arr.contains(actions, "sitting.view")))
+        .pipe(Effect.map((actions) => ({ actions, row })))
     );
-    const rows = yield* Effect.forEach(viewable, roomOf);
+    const viewable = Arr.filter(allowed, ({ actions }) =>
+      Arr.contains(actions, "sitting.view")
+    );
+    const rows = yield* Effect.forEach(viewable, ({ actions, row }) =>
+      roomOf(
+        row,
+        row.state === "scheduled" &&
+          Arr.contains(actions, "sitting.proctor") &&
+          (row.scheduledBy === member.person._id || isAdmin)
+      )
+    );
     return Struct.assign(page, { page: rows });
   })
 );
