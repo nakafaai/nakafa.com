@@ -25,6 +25,9 @@ export function AnalyticsConsentFooterItem() {
       <Button
         className="-my-0.5 h-6 justify-start p-0 text-foreground no-underline hover:text-primary"
         onClick={() => consent.setPreferencesOpen(true)}
+        onFocus={consent.warmPreferences}
+        onPointerDown={consent.warmPreferences}
+        onPointerEnter={consent.warmPreferences}
         type="button"
         variant="link"
       >
@@ -47,6 +50,8 @@ export function AnalyticsConsentMenuItem() {
     <DropdownMenuItem
       className="cursor-pointer"
       onClick={() => consent.setPreferencesOpen(true)}
+      onFocus={consent.warmPreferences}
+      onPointerEnter={consent.warmPreferences}
     >
       <HugeIcons icon={Analytics01Icon} />
       {t("manage")}
@@ -65,7 +70,12 @@ export function AnalyticsConsentSidebarItem() {
 
   return (
     <SidebarMenuItem>
-      <SidebarMenuButton onClick={() => consent.setPreferencesOpen(true)}>
+      <SidebarMenuButton
+        onClick={() => consent.setPreferencesOpen(true)}
+        onFocus={consent.warmPreferences}
+        onPointerDown={consent.warmPreferences}
+        onPointerEnter={consent.warmPreferences}
+      >
         <HugeIcons icon={Analytics01Icon} />
         {t("manage")}
       </SidebarMenuButton>

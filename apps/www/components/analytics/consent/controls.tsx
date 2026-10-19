@@ -1,28 +1,24 @@
 "use client";
 
-import { Alert02Icon } from "@hugeicons/core-free-icons";
 import { ANALYTICS_CONSENT_ROOT_ATTRIBUTE } from "@repo/analytics/consent";
-import { Button } from "@repo/design-system/components/ui/button";
 import {
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
-import { Link } from "@repo/internationalization/src/navigation";
+import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
+import {
+  ConsentActions,
+  ConsentDetails,
+} from "@/components/analytics/consent/details";
 import {
   CardSection,
   CardSectionActions,
   CardSectionFooter,
 } from "@/components/shared/card/section";
-import {
-  type AnalyticsConsentContextValue,
-  useAnalyticsConsent,
-} from "@/lib/analytics/consent/context";
-import { usePageNavigation } from "@/lib/content/page/context";
+import { useAnalyticsConsent } from "@/lib/analytics/consent/context";
 
 /** Names the prompt section, so the hide rules below can match it. */
 const PROMPT_ATTRIBUTE = "data-analytics-consent-prompt";
@@ -40,6 +36,16 @@ const HIDE_PROMPT_WHILE_MARKED = `:root[${ANALYTICS_CONSENT_ROOT_ATTRIBUTE}] [${
  * so the buttons could never work.
  */
 const HIDE_PROMPT_WITHOUT_SCRIPTS = `[${PROMPT_ATTRIBUTE}]{display:none}`;
+
+/**
+ * The preferences dialog ships as its own chunk. Its footer control warms it on
+ * hover, focus or press, so the root layout never carries the dialog's code.
+ */
+const ConsentPreferences = dynamic(() =>
+  import("@/components/analytics/consent/preferences").then(
+    (module) => module.ConsentPreferences
+  )
+);
 
 /**
  * Renders the non-blocking first decision and permanent preferences dialog.
@@ -100,105 +106,7 @@ export function AnalyticsConsentControls() {
         </section>
       ) : null}
 
-      <ResponsiveDialog
-        description={t(`status-${consent.preferences.statusAtOpen}`)}
-        footer={actions}
-        open={consent.preferences.isOpen}
-        setOpen={consent.setPreferencesOpen}
-        title={t("title")}
-      >
-        <div className="flex flex-col gap-3">
-          <ConsentDetails error={consent.error} />
-        </div>
-      </ResponsiveDialog>
+      {consent.preferencesWarm ? <ConsentPreferences /> : null}
     </>
-  );
-}
-
-function ConsentActions({
-  canDecline,
-  canGrant,
-  decide,
-}: Pick<AnalyticsConsentContextValue, "canDecline" | "canGrant" | "decide">) {
-  const t = useTranslations("AnalyticsConsent");
-
-  return (
-    <>
-      <Button
-        disabled={!canDecline}
-        onClick={() => decide(false)}
-        type="button"
-        variant="outline"
-      >
-        {t("decline")}
-      </Button>
-      <Button disabled={!canGrant} onClick={() => decide(true)} type="button">
-        {t("allow")}
-      </Button>
-    </>
-  );
-}
-
-function ConsentDetails({
-  error,
-}: Pick<AnalyticsConsentContextValue, "error">) {
-  const t = useTranslations("AnalyticsConsent");
-
-  return (
-    <>
-      <p className="text-muted-foreground text-sm">{t("description")}</p>
-      <PrivacyPolicyLink />
-      {error ? <ConsentError error={error} /> : null}
-    </>
-  );
-}
-
-/**
- * Links the privacy policy without prefetching it, as every signed Page link
- * must (see `PageNavigation`). This prompt opens on every first visit.
- *
- * The server renders this link in the root layout, outside every `Suspense`,
- * so it is a plain localized `Link`: `NavigationLink` reads the pathname, which
- * blocks the prerender of a dynamic route such as `/[locale]/chat/[id]`.
- */
-function PrivacyPolicyLink() {
-  const t = useTranslations("AnalyticsConsent");
-  const href = usePageNavigation(
-    (navigation) => navigation?.privacyPolicyHref ?? null
-  );
-
-  if (!href) {
-    return null;
-  }
-
-  return (
-    <p className="text-muted-foreground text-sm">
-      {t.rich("policy", {
-        "privacy-policy": (chunks) => (
-          <Link
-            className="text-foreground underline underline-offset-4"
-            href={href}
-            prefetch={false}
-          >
-            {chunks}
-          </Link>
-        ),
-      })}
-    </p>
-  );
-}
-
-function ConsentError({
-  error,
-}: {
-  error: NonNullable<AnalyticsConsentContextValue["error"]>;
-}) {
-  const t = useTranslations("AnalyticsConsent");
-
-  return (
-    <p className="flex items-start gap-2 text-destructive text-sm" role="alert">
-      <HugeIcons className="mt-0.5 size-4 shrink-0" icon={Alert02Icon} />
-      {t(`${error}-error`)}
-    </p>
   );
 }
