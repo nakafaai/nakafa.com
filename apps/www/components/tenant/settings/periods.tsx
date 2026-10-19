@@ -213,12 +213,6 @@ function SchoolPeriodTable({
 }
 
 /**
- * A period's row menu: it renames the period, then opens a planned period or archives an
- * active one. The rename dialog saves a name that changes the stored one and passes the
- * name schema, then closes. An archived period has no menu, because the server refuses
- * every write to it, so its cell stays empty.
- */
-/**
  * The restore action of an archived period in the archived list. The period shows as active at
  * once, and a refusal, such as another active period of its unit, takes it back.
  */
@@ -252,6 +246,12 @@ function SchoolPeriodRestore({
   );
 }
 
+/**
+ * A period's row menu: it renames the period, then opens a planned period or archives an
+ * active one. The rename dialog saves a name that changes the stored one and passes the
+ * name schema, then closes. An archived period has no menu, because the server refuses
+ * every write to it, so its cell stays empty.
+ */
 function SchoolPeriodMenu({
   period,
   slug,
