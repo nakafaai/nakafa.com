@@ -1,6 +1,7 @@
 "use client";
 
 import { useThree } from "@react-three/fiber";
+import { ChemicalReactionTypeSceneProvider } from "@repo/design-system/components/contents/chemistry/chemical-reaction-types/context";
 import {
   CHEMICAL_REACTION_TYPE_IDS,
   CHEMICAL_REACTION_TYPES_SCENE_VIEW,
@@ -143,11 +144,12 @@ export function ChemicalReactionTypesLab({
               intensity={0.8}
               position={[1.8, 1.2, 1.6]}
             />
-            <ChemicalReactionTypesScene
+            <ChemicalReactionTypeSceneProvider
               colors={sceneColors}
-              labels={labels}
               typeId={selectedTypeId}
-            />
+            >
+              <ChemicalReactionTypesScene labels={labels} />
+            </ChemicalReactionTypeSceneProvider>
           </Suspense>
         </ThreeCanvas>
       </VisualCardBody>

@@ -20,7 +20,7 @@ import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { THREE_FONT_SIZE } from "@repo/design-system/components/three/data/constants";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { Array as Arr } from "effect";
-import type { ReactNode } from "react";
+import { createContext, type ReactNode, use } from "react";
 
 const GROUP_COUNT = 18;
 const PERIOD_COUNT = 7;
@@ -59,26 +59,49 @@ interface ModernPeriodicTableSceneProps {
   labels: ModernPeriodicTableSceneLabels;
 }
 
-/**
- * Renders the 3D periodic-table model and highlights the active reading focus.
- */
-export function ModernPeriodicTableScene({
+const ModernPeriodicTableSceneContext =
+  createContext<ModernPeriodicTableSceneProps | null>(null);
+
+/** Provides the colors, the focus and the labels of one periodic-table lab to its tiles. */
+export function ModernPeriodicTableSceneProvider({
+  children,
   colors,
   focusId,
   labels,
-}: ModernPeriodicTableSceneProps) {
+}: ModernPeriodicTableSceneProps & { children: ReactNode }) {
+  return (
+    <ModernPeriodicTableSceneContext value={{ colors, focusId, labels }}>
+      {children}
+    </ModernPeriodicTableSceneContext>
+  );
+}
+
+/** Reads the colors, the focus and the labels of the surrounding periodic-table lab. */
+function useModernPeriodicTableScene() {
+  const scene = use(ModernPeriodicTableSceneContext);
+  if (!scene) {
+    // A missing provider is a programmer composition error at this React seam.
+    throw new Error(
+      "useModernPeriodicTableScene must be used within ModernPeriodicTableSceneProvider"
+    );
+  }
+  return scene;
+}
+
+/**
+ * Renders the 3D periodic-table model and highlights the active reading focus.
+ */
+export function ModernPeriodicTableScene() {
   const narrow = useThree((state) => state.size.width < 560);
 
   return (
     <group>
-      <GuideLabels colors={colors} labels={labels} />
+      <GuideLabels />
 
       {Arr.map(MAIN_PERIODIC_TABLE_ROWS, (row) =>
         Arr.map(row.entries, (entry) => (
           <MainTableTile
-            colors={colors}
             entry={entry}
-            focusId={focusId}
             key={`${row.period}-${entry.symbol}`}
             narrow={narrow}
             period={row.period}
@@ -89,10 +112,8 @@ export function ModernPeriodicTableScene({
       {Arr.map(PERIODIC_SERIES_ROWS, (row, rowIndex) =>
         Arr.map(row.entries, (entry, entryIndex) => (
           <SeriesTile
-            colors={colors}
             entry={entry}
             entryIndex={entryIndex}
-            focusId={focusId}
             key={`${row.key}-${entry.symbol}`}
             rowIndex={rowIndex}
           />
@@ -105,13 +126,8 @@ export function ModernPeriodicTableScene({
 /**
  * Places the main axis labels so the model can be read without dragging first.
  */
-function GuideLabels({
-  colors,
-  labels,
-}: {
-  colors: ModernPeriodicTableSceneColors;
-  labels: ModernPeriodicTableSceneProps["labels"];
-}) {
+function GuideLabels() {
+  const { colors, labels } = useModernPeriodicTableScene();
   return (
     <>
       <ThreeLabel
@@ -149,18 +165,15 @@ function GuideLabels({
  * Renders one tile in the main table.
  */
 function MainTableTile({
-  colors,
   entry,
-  focusId,
   narrow,
   period,
 }: {
-  colors: ModernPeriodicTableSceneColors;
   entry: PeriodicElementEntry;
-  focusId: ModernPeriodicTableFocusId;
   narrow: boolean;
   period: number;
 }) {
+  const { colors, focusId } = useModernPeriodicTableScene();
   const highlighted = isEntryHighlighted(entry, focusId);
   const height = highlighted ? ACTIVE_TILE_HEIGHT : INACTIVE_TILE_HEIGHT;
   const x = getMainX(entry.group);
@@ -169,7 +182,6 @@ function MainTableTile({
   return (
     <PeriodicTile
       color={getModernPeriodicTableCategoryColor(colors, entry.category)}
-      colors={colors}
       height={height}
       highlighted={highlighted}
       label={getMainTileLabel(entry, focusId, highlighted, narrow)}
@@ -182,25 +194,21 @@ function MainTableTile({
  * Renders one tile from the detached lanthanide or actinide row.
  */
 function SeriesTile({
-  colors,
   entry,
   entryIndex,
-  focusId,
   rowIndex,
 }: {
-  colors: ModernPeriodicTableSceneColors;
   entry: (typeof PERIODIC_SERIES_ROWS)[number]["entries"][number];
   entryIndex: number;
-  focusId: ModernPeriodicTableFocusId;
   rowIndex: number;
 }) {
+  const { colors, focusId } = useModernPeriodicTableScene();
   const highlighted = focusId === INNER_TRANSITION_FOCUS_ID;
   const height = highlighted ? ACTIVE_TILE_HEIGHT : INACTIVE_TILE_HEIGHT;
 
   return (
     <PeriodicTile
       color={colors.innerTransition}
-      colors={colors}
       height={height}
       highlighted={highlighted}
       label={getSeriesTileLabel(entry.symbol, highlighted)}
@@ -214,19 +222,18 @@ function SeriesTile({
  */
 function PeriodicTile({
   color,
-  colors,
   height,
   highlighted,
   label,
   position,
 }: {
   color: string;
-  colors: ModernPeriodicTableSceneColors;
   height: number;
   highlighted: boolean;
   label: string;
   position: readonly [number, number, number];
 }) {
+  const { colors } = useModernPeriodicTableScene();
   const opacity = highlighted ? 0.96 : 0.34;
   const labelColor = highlighted ? colors.tileText : colors.text;
   const labelOutlineColor = highlighted

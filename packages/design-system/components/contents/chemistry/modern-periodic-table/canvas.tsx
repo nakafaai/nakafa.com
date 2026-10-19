@@ -6,7 +6,10 @@ import {
   type ModernPeriodicTableFocusId,
 } from "@repo/design-system/components/contents/chemistry/modern-periodic-table/data";
 import type { ModernPeriodicTableLabProps } from "@repo/design-system/components/contents/chemistry/modern-periodic-table/lab";
-import { ModernPeriodicTableScene } from "@repo/design-system/components/contents/chemistry/modern-periodic-table/scene";
+import {
+  ModernPeriodicTableScene,
+  ModernPeriodicTableSceneProvider,
+} from "@repo/design-system/components/contents/chemistry/modern-periodic-table/scene";
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
 import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import {
@@ -70,11 +73,13 @@ export function ModernPeriodicTableCanvas({
             shadow-mapSize-width={1024}
             shadow-normalBias={0.02}
           />
-          <ModernPeriodicTableScene
+          <ModernPeriodicTableSceneProvider
             colors={colors}
             focusId={focusId}
             labels={labels}
-          />
+          >
+            <ModernPeriodicTableScene />
+          </ModernPeriodicTableSceneProvider>
         </Suspense>
       </ThreeCanvas>
     </VisualCardBody>

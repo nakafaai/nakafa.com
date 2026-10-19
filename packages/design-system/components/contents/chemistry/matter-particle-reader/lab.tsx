@@ -9,7 +9,10 @@ import {
   MATTER_PARTICLE_SCENE_VIEW,
   type MatterParticleModeId,
 } from "@repo/design-system/components/contents/chemistry/matter-particle-reader/data";
-import { MatterParticleReaderScene } from "@repo/design-system/components/contents/chemistry/matter-particle-reader/scene";
+import {
+  MatterParticleReaderScene,
+  MatterParticleSceneColorsProvider,
+} from "@repo/design-system/components/contents/chemistry/matter-particle-reader/scene";
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
 import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import {
@@ -134,10 +137,9 @@ export function MatterParticleReaderLab({
               shadow-mapSize-width={1024}
               shadow-normalBias={0.02}
             />
-            <MatterParticleReaderScene
-              colors={sceneColors}
-              modeId={selectedModeId}
-            />
+            <MatterParticleSceneColorsProvider colors={sceneColors}>
+              <MatterParticleReaderScene modeId={selectedModeId} />
+            </MatterParticleSceneColorsProvider>
           </Suspense>
         </ThreeCanvas>
       </VisualCardBody>

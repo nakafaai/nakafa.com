@@ -17,16 +17,45 @@ import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { getThreeParticleLabelFontSize } from "@repo/design-system/components/three/data/constants";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { Array as Arr, HashMap, Option } from "effect";
+import { createContext, type ReactNode, use } from "react";
 
 const SCENE_SCALE = 1.9;
 const FORMULA_LABEL_Y = 0.62;
 const BOND_LINE_WIDTH = 2.6;
 
-export function MatterParticleReaderScene({
+const MatterParticleSceneColorsContext =
+  createContext<MatterParticleSceneColors | null>(null);
+
+/** Provides the colors of one matter-particle lab to the atoms of its scene. */
+export function MatterParticleSceneColorsProvider({
+  children,
   colors,
+}: {
+  children: ReactNode;
+  colors: MatterParticleSceneColors;
+}) {
+  return (
+    <MatterParticleSceneColorsContext value={colors}>
+      {children}
+    </MatterParticleSceneColorsContext>
+  );
+}
+
+/** Reads the colors of the surrounding matter-particle lab. */
+function useMatterParticleSceneColors() {
+  const colors = use(MatterParticleSceneColorsContext);
+  if (!colors) {
+    // A missing provider is a programmer composition error at this React seam.
+    throw new Error(
+      "useMatterParticleSceneColors must be used within MatterParticleSceneColorsProvider"
+    );
+  }
+  return colors;
+}
+
+export function MatterParticleReaderScene({
   modeId,
 }: {
-  colors: MatterParticleSceneColors;
   modeId: MatterParticleModeId;
 }) {
   const model = MATTER_PARTICLE_MODELS[modeId];
@@ -34,19 +63,14 @@ export function MatterParticleReaderScene({
   return (
     <group position={[0, -0.04, 0]} scale={SCENE_SCALE}>
       {Arr.map(model.molecules, (molecule) => (
-        <MoleculeStage colors={colors} key={molecule.id} molecule={molecule} />
+        <MoleculeStage key={molecule.id} molecule={molecule} />
       ))}
     </group>
   );
 }
 
-function MoleculeStage({
-  colors,
-  molecule,
-}: {
-  colors: MatterParticleSceneColors;
-  molecule: MatterParticleMolecule;
-}) {
+function MoleculeStage({ molecule }: { molecule: MatterParticleMolecule }) {
+  const colors = useMatterParticleSceneColors();
   const atomsById = HashMap.fromIterable(
     Arr.map(molecule.atoms, (atomData) => [atomData.id, atomData])
   );
@@ -80,19 +104,14 @@ function MoleculeStage({
       })}
 
       {Arr.map(molecule.atoms, (atomData) => (
-        <AtomParticle atomData={atomData} colors={colors} key={atomData.id} />
+        <AtomParticle atomData={atomData} key={atomData.id} />
       ))}
     </group>
   );
 }
 
-function AtomParticle({
-  atomData,
-  colors,
-}: {
-  atomData: MatterParticleAtom;
-  colors: MatterParticleSceneColors;
-}) {
+function AtomParticle({ atomData }: { atomData: MatterParticleAtom }) {
+  const colors = useMatterParticleSceneColors();
   const radius = atomRadius(atomData.element);
 
   return (

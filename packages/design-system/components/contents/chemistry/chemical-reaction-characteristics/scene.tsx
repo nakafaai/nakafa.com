@@ -1,4 +1,5 @@
 import { useFrame } from "@react-three/fiber";
+import { useReactionCharacteristicsScene } from "@repo/design-system/components/contents/chemistry/chemical-reaction-characteristics/context";
 import {
   COLOR_CUE_ID,
   ENERGY_CUE_ID,
@@ -134,14 +135,12 @@ type ReactionParticle = typeof ReactionParticleSchema.Type;
  * Renders a paired 3D beaker scene for the selected reaction clue.
  */
 export function ReactionCharacteristicsScene({
-  colors,
-  cueId,
   labels,
 }: {
-  colors: ReactionSceneColors;
-  cueId: ReactionCueId;
   labels: ReactionCharacteristicsLabProps["labels"];
 }) {
+  const { colors } = useReactionCharacteristicsScene();
+
   return (
     <group position={[0, SCENE_Y, 0]} scale={SCENE_SCALE}>
       <ThreeLabel
@@ -158,19 +157,9 @@ export function ReactionCharacteristicsScene({
       >
         {labels.after}
       </ThreeLabel>
-      <ReactionBeaker
-        colors={colors}
-        cueId={cueId}
-        phase="before"
-        x={BEFORE_BEAKER_X}
-      />
+      <ReactionBeaker phase="before" x={BEFORE_BEAKER_X} />
 
-      <ReactionBeaker
-        colors={colors}
-        cueId={cueId}
-        phase="after"
-        x={AFTER_BEAKER_X}
-      />
+      <ReactionBeaker phase="after" x={AFTER_BEAKER_X} />
     </group>
   );
 }
@@ -178,22 +167,14 @@ export function ReactionCharacteristicsScene({
 /**
  * Renders one 3D beaker state.
  */
-function ReactionBeaker({
-  colors,
-  cueId,
-  phase,
-  x,
-}: {
-  colors: ReactionSceneColors;
-  cueId: ReactionCueId;
-  phase: ReactionPhase;
-  x: number;
-}) {
+function ReactionBeaker({ phase, x }: { phase: ReactionPhase; x: number }) {
+  const { colors, cueId } = useReactionCharacteristicsScene();
+
   return (
     <group position={[x, 0, 0]} scale={BEAKER_SCALE}>
-      <BeakerGlass colors={colors} />
+      <BeakerGlass />
       <Liquid color={getLiquidColor({ colors, cueId, phase })} />
-      <ReactionCueVisual colors={colors} cueId={cueId} phase={phase} />
+      <ReactionCueVisual phase={phase} />
     </group>
   );
 }
@@ -201,7 +182,8 @@ function ReactionBeaker({
 /**
  * Draws the glass wall, rim, and base without hiding the reaction cue.
  */
-function BeakerGlass({ colors }: { colors: ReactionSceneColors }) {
+function BeakerGlass() {
+  const { colors } = useReactionCharacteristicsScene();
   return (
     <group>
       <mesh castShadow receiveShadow>
@@ -266,15 +248,8 @@ function Liquid({ color }: { color: string }) {
 /**
  * Chooses the visible 3D cue only after the reaction state.
  */
-function ReactionCueVisual({
-  colors,
-  cueId,
-  phase,
-}: {
-  colors: ReactionSceneColors;
-  cueId: ReactionCueId;
-  phase: ReactionPhase;
-}) {
+function ReactionCueVisual({ phase }: { phase: ReactionPhase }) {
+  const { colors, cueId } = useReactionCharacteristicsScene();
   if (phase === "before") {
     return null;
   }

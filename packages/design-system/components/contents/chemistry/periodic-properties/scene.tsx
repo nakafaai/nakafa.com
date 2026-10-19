@@ -12,7 +12,7 @@ import { ArrowHelper } from "@repo/design-system/components/three/arrow-helper";
 import type { ThreeFontSize } from "@repo/design-system/components/three/data/constants";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { Array as Arr, Option } from "effect";
-import type { ReactNode } from "react";
+import { createContext, type ReactNode, use } from "react";
 
 const PERIOD_Z = -1.18;
 const PERIOD_STEP = 0.78;
@@ -38,6 +38,24 @@ type TrendAxis = "period" | "group";
 /**
  * Renders the active periodic trend as two readable 3D sample tracks.
  */
+const PeriodicPropertiesSceneContext = createContext<{
+  colors: PeriodicPropertiesSceneColors;
+  mode: PeriodicPropertyMode;
+  range: PeriodicPropertyRange;
+} | null>(null);
+
+/** Reads the colors, the mode and the value range of the surrounding periodic-properties scene. */
+function usePeriodicPropertiesScene() {
+  const scene = use(PeriodicPropertiesSceneContext);
+  if (!scene) {
+    // A missing provider is a programmer composition error at this React seam.
+    throw new Error(
+      "usePeriodicPropertiesScene must be used within PeriodicPropertiesScene"
+    );
+  }
+  return scene;
+}
+
 export function PeriodicPropertiesScene({
   colors,
   modeId,
@@ -50,25 +68,21 @@ export function PeriodicPropertiesScene({
   const range = getModeRange(mode);
 
   return (
-    <group position={[0, SCENE_Y_OFFSET, 0]} scale={SCENE_SCALE}>
-      <TrendTrack
-        axis="period"
-        color={modeColor}
-        colors={colors}
-        mode={mode}
-        range={range}
-        samples={mode.periodSamples}
-      />
+    <PeriodicPropertiesSceneContext value={{ colors, mode, range }}>
+      <group position={[0, SCENE_Y_OFFSET, 0]} scale={SCENE_SCALE}>
+        <TrendTrack
+          axis="period"
+          color={modeColor}
+          samples={mode.periodSamples}
+        />
 
-      <TrendTrack
-        axis="group"
-        color={modeColor}
-        colors={colors}
-        mode={mode}
-        range={range}
-        samples={mode.groupSamples}
-      />
-    </group>
+        <TrendTrack
+          axis="group"
+          color={modeColor}
+          samples={mode.groupSamples}
+        />
+      </group>
+    </PeriodicPropertiesSceneContext>
   );
 }
 
@@ -78,18 +92,13 @@ export function PeriodicPropertiesScene({
 function TrendTrack({
   axis,
   color,
-  colors,
-  mode,
-  range,
   samples,
 }: {
   axis: TrendAxis;
   color: string;
-  colors: PeriodicPropertiesSceneColors;
-  mode: PeriodicPropertyMode;
-  range: PeriodicPropertyRange;
   samples: readonly PeriodicPropertySample[];
 }) {
+  const { colors } = usePeriodicPropertiesScene();
   const markerPoints = getTrackPoints(axis, samples.length);
   const railPoints = getRailPoints(axis, markerPoints);
   const [startPoint] = railPoints;
@@ -113,11 +122,8 @@ function TrendTrack({
       {Arr.map(samples, (sample, sampleIndex) => (
         <TrendMarker
           color={color}
-          colors={colors}
           key={`${axis}-${sample.symbol}`}
-          mode={mode}
           position={markerPoints[sampleIndex]}
-          range={range}
           sample={sample}
         />
       ))}
@@ -130,19 +136,14 @@ function TrendTrack({
  */
 function TrendMarker({
   color,
-  colors,
-  mode,
   position,
-  range,
   sample,
 }: {
   color: string;
-  colors: PeriodicPropertiesSceneColors;
-  mode: PeriodicPropertyMode;
   position: ScenePoint;
-  range: PeriodicPropertyRange;
   sample: PeriodicPropertySample;
 }) {
+  const { mode, range } = usePeriodicPropertiesScene();
   if (mode.marker === "sphere") {
     const radius = scaleValue(
       sample.value,
@@ -157,11 +158,7 @@ function TrendMarker({
           <sphereGeometry args={[radius, 36, 24]} />
           <meshStandardMaterial color={color} roughness={0.42} />
         </mesh>
-        <MarkerLabel
-          colors={colors}
-          fontSize="compact"
-          position={[0, radius, 0]}
-        >
+        <MarkerLabel fontSize="compact" position={[0, radius, 0]}>
           <InlineMath math={`\\mathrm{${sample.symbol}}`} />
         </MarkerLabel>
       </group>
@@ -187,7 +184,6 @@ function TrendMarker({
         />
       </mesh>
       <MarkerLabel
-        colors={colors}
         fontSize="annotation"
         position={[0, height + PILLAR_LABEL_OFFSET, 0]}
       >
@@ -202,15 +198,14 @@ function TrendMarker({
  */
 function MarkerLabel({
   children,
-  colors,
   fontSize,
   position,
 }: {
   children: ReactNode;
-  colors: PeriodicPropertiesSceneColors;
   fontSize: ThreeFontSize;
   position: ScenePoint;
 }) {
+  const { colors } = usePeriodicPropertiesScene();
   return (
     <ThreeLabel
       color={colors.markerText}

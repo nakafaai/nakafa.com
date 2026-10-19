@@ -21,7 +21,7 @@ import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { getThreeParticleLabelFontSize } from "@repo/design-system/components/three/data/constants";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { Array as Arr } from "effect";
-import type { ReactNode } from "react";
+import { createContext, type ReactNode, use } from "react";
 import { Vector3 } from "three";
 
 const PATH_POINT_COUNT = 44;
@@ -81,29 +81,58 @@ const ELECTRON_POSITIONS = [
 ];
 
 interface SubatomicParticlePropertiesSceneProps {
+  modeId: SubatomicParticlePropertiesModeId;
+}
+
+interface SubatomicParticlePropertiesSceneValues {
   colors: SubatomicParticlePropertiesColors;
   labels: SubatomicParticlePropertiesLabProps["labels"]["scene"];
-  modeId: SubatomicParticlePropertiesModeId;
+}
+
+const SubatomicParticlePropertiesSceneContext =
+  createContext<SubatomicParticlePropertiesSceneValues | null>(null);
+
+/** Provides the colors and labels of one subatomic-properties lab to its scene. */
+export function SubatomicParticlePropertiesSceneProvider({
+  children,
+  colors,
+  labels,
+}: SubatomicParticlePropertiesSceneValues & { children: ReactNode }) {
+  return (
+    <SubatomicParticlePropertiesSceneContext value={{ colors, labels }}>
+      {children}
+    </SubatomicParticlePropertiesSceneContext>
+  );
+}
+
+/** Reads the colors and labels of the surrounding subatomic-properties lab. */
+function useSubatomicParticlePropertiesScene() {
+  const scene = use(SubatomicParticlePropertiesSceneContext);
+  if (!scene) {
+    // A missing provider is a programmer composition error at this React seam.
+    throw new Error(
+      "useSubatomicParticlePropertiesScene must be used within SubatomicParticlePropertiesSceneProvider"
+    );
+  }
+  return scene;
 }
 
 /**
  * Chooses the active 3D scene without mounting hidden property views.
  */
 export function SubatomicParticlePropertiesScene({
-  colors,
-  labels,
   modeId,
 }: SubatomicParticlePropertiesSceneProps) {
   if (modeId === CHARGE_MODE_ID) {
-    return <ChargeScene colors={colors} labels={labels} />;
+    return <ChargeScene />;
   }
 
   if (modeId === MASS_MODE_ID) {
-    return <MassScene colors={colors} labels={labels} />;
+    return <MassScene />;
   }
 
   if (modeId === LOCATION_MODE_ID) {
-    return <LocationScene colors={colors} labels={labels} />;
+    return <LocationScene />;
   }
 
   return null;
@@ -112,13 +141,8 @@ export function SubatomicParticlePropertiesScene({
 /**
  * Shows how charge sign controls deflection in an electric field.
  */
-function ChargeScene({
-  colors,
-  labels,
-}: {
-  colors: SubatomicParticlePropertiesColors;
-  labels: SubatomicParticlePropertiesLabProps["labels"]["scene"];
-}) {
+function ChargeScene() {
+  const { colors, labels } = useSubatomicParticlePropertiesScene();
   return (
     <group>
       <Plate color={colors.positivePlate} label={labels.positivePlate} y={1} />
@@ -167,13 +191,8 @@ function ChargeScene({
 /**
  * Shows proton and neutron masses as nearly equal, with electron mass far lower.
  */
-function MassScene({
-  colors,
-  labels,
-}: {
-  colors: SubatomicParticlePropertiesColors;
-  labels: SubatomicParticlePropertiesLabProps["labels"]["scene"];
-}) {
+function MassScene() {
+  const { colors, labels } = useSubatomicParticlePropertiesScene();
   return (
     <group position={[0, -0.15, 0]}>
       {Arr.map(MASS_BARS, (bar) => (
@@ -202,13 +221,8 @@ function MassScene({
 /**
  * Shows the compact nucleus and the wider electron region.
  */
-function LocationScene({
-  colors,
-  labels,
-}: {
-  colors: SubatomicParticlePropertiesColors;
-  labels: SubatomicParticlePropertiesLabProps["labels"]["scene"];
-}) {
+function LocationScene() {
+  const { colors, labels } = useSubatomicParticlePropertiesScene();
   return (
     <group>
       <mesh>

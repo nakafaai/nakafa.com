@@ -1,6 +1,7 @@
 "use client";
 
 import { useThree } from "@react-three/fiber";
+import { ReactionCharacteristicsSceneProvider } from "@repo/design-system/components/contents/chemistry/chemical-reaction-characteristics/context";
 import {
   GAS_CUE_ID,
   getReactionSceneColors,
@@ -135,11 +136,12 @@ export function ChemicalReactionCharacteristicsLab({
               shadow-mapSize-width={1024}
               shadow-normalBias={0.02}
             />
-            <ReactionCharacteristicsScene
+            <ReactionCharacteristicsSceneProvider
               colors={sceneColors}
               cueId={selectedCueId}
-              labels={labels}
-            />
+            >
+              <ReactionCharacteristicsScene labels={labels} />
+            </ReactionCharacteristicsSceneProvider>
           </Suspense>
         </ThreeCanvas>
       </VisualCardBody>

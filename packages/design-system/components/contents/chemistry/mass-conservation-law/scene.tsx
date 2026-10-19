@@ -9,7 +9,7 @@ import type { MassConservationLabProps } from "@repo/design-system/components/co
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { Array as Arr, Schema } from "effect";
-import { useRef } from "react";
+import { createContext, use, useRef } from "react";
 import { DoubleSide, type Group, type MeshStandardMaterial } from "three";
 
 const BEFORE_X = -1.08;
@@ -114,6 +114,21 @@ const EscapedGasParticleSchema = Schema.Struct({
 });
 type EscapedGasParticle = typeof EscapedGasParticleSchema.Type;
 
+const MassConservationSceneContext =
+  createContext<MassConservationSceneColors | null>(null);
+
+/** Reads the colors of the surrounding mass-conservation scene. */
+function useMassConservationScene() {
+  const colors = use(MassConservationSceneContext);
+  if (!colors) {
+    // A missing provider is a programmer composition error at this React seam.
+    throw new Error(
+      "useMassConservationScene must be used within MassConservationScene"
+    );
+  }
+  return colors;
+}
+
 export function MassConservationScene({
   colors,
   labels,
@@ -127,44 +142,51 @@ export function MassConservationScene({
   const isOpen = modeId === OPEN_SYSTEM_MODE_ID;
 
   return (
-    <group position={[0, -0.03, 0]} scale={SCENE_SCALE}>
-      <ThreeLabel
-        color={colors.text}
-        fontSize="compact"
-        position={[BEFORE_X, 1.1, 0.16]}
-      >
-        {labels.before}
-      </ThreeLabel>
-      <ThreeLabel
-        color={colors.text}
-        fontSize="compact"
-        position={[AFTER_X, 1.1, 0.16]}
-      >
-        {labels.after}
-      </ThreeLabel>
-      <ThreeLabel
-        color={colors.text}
-        fontSize="compact"
-        position={[BEFORE_X, READOUT_Y, 0.22]}
-      >
-        {modeLabels.readoutBefore}
-      </ThreeLabel>
-      <ThreeLabel
-        color={colors.text}
-        fontSize="compact"
-        position={[AFTER_X, READOUT_Y, 0.22]}
-      >
-        {modeLabels.readoutAfter}
-      </ThreeLabel>
-      <BalanceStage
-        colors={colors}
-        isOpen={isOpen}
-        phase="before"
-        x={BEFORE_X}
-      />
+    <MassConservationSceneContext value={colors}>
+      <group position={[0, -0.03, 0]} scale={SCENE_SCALE}>
+        <ThreeLabel
+          color={colors.text}
+          fontSize="compact"
+          position={[BEFORE_X, 1.1, 0.16]}
+        >
+          {labels.before}
+        </ThreeLabel>
+        <ThreeLabel
+          color={colors.text}
+          fontSize="compact"
+          position={[AFTER_X, 1.1, 0.16]}
+        >
+          {labels.after}
+        </ThreeLabel>
+        <ThreeLabel
+          color={colors.text}
+          fontSize="compact"
+          position={[BEFORE_X, READOUT_Y, 0.22]}
+        >
+          {modeLabels.readoutBefore}
+        </ThreeLabel>
+        <ThreeLabel
+          color={colors.text}
+          fontSize="compact"
+          position={[AFTER_X, READOUT_Y, 0.22]}
+        >
+          {modeLabels.readoutAfter}
+        </ThreeLabel>
+        <BalanceStage
+          colors={colors}
+          isOpen={isOpen}
+          phase="before"
+          x={BEFORE_X}
+        />
 
-      <BalanceStage colors={colors} isOpen={isOpen} phase="after" x={AFTER_X} />
-    </group>
+        <BalanceStage
+          colors={colors}
+          isOpen={isOpen}
+          phase="after"
+          x={AFTER_X}
+        />
+      </group>
+    </MassConservationSceneContext>
   );
 }
 
@@ -184,7 +206,7 @@ function BalanceStage({
   return (
     <group position={[x, 0, 0]}>
       <Vessel closed={!isOpen} colors={colors} />
-      <Particles colors={colors} phase={phase} />
+      <Particles phase={phase} />
       {hasEscapedGas && <EscapedGas colors={colors} />}
       <BalanceBase color={colors.balance} />
     </group>
@@ -245,18 +267,12 @@ function Vessel({
   );
 }
 
-function Particles({
-  colors,
-  phase,
-}: {
-  colors: MassConservationSceneColors;
-  phase: ReactionPhase;
-}) {
+function Particles({ phase }: { phase: ReactionPhase }) {
   if (phase === "before") {
     return (
       <group>
         {Arr.map(BEFORE_PARTICLES, (particle) => (
-          <Particle colors={colors} key={particle.id} particle={particle} />
+          <Particle key={particle.id} particle={particle} />
         ))}
       </group>
     );
@@ -265,29 +281,23 @@ function Particles({
   return (
     <group>
       {Arr.map(AFTER_PRODUCTS, (pair) => (
-        <ProductPair colors={colors} key={pair.id} pair={pair} />
+        <ProductPair key={pair.id} pair={pair} />
       ))}
       {Arr.map(LEFTOVER_ZINC, (particle) => (
-        <Particle colors={colors} key={particle.id} particle={particle} />
+        <Particle key={particle.id} particle={particle} />
       ))}
     </group>
   );
 }
 
-function ProductPair({
-  colors,
-  pair,
-}: {
-  colors: MassConservationSceneColors;
-  pair: ProductPairData;
-}) {
+function ProductPair({ pair }: { pair: ProductPairData }) {
+  const colors = useMassConservationScene();
   const [x, y, z] = pair.position;
   const [sulfurX, sulfurY, sulfurZ] = pair.sulfurOffset;
 
   return (
     <group>
       <Particle
-        colors={colors}
         particle={{
           element: "zinc",
           id: `${pair.id}-zn`,
@@ -295,7 +305,6 @@ function ProductPair({
         }}
       />
       <Particle
-        colors={colors}
         particle={{
           element: "sulfur",
           id: `${pair.id}-s`,
@@ -310,13 +319,8 @@ function ProductPair({
   );
 }
 
-function Particle({
-  colors,
-  particle,
-}: {
-  colors: MassConservationSceneColors;
-  particle: ConservationParticle;
-}) {
+function Particle({ particle }: { particle: ConservationParticle }) {
+  const colors = useMassConservationScene();
   const color = particle.element === "zinc" ? colors.zinc : colors.sulfur;
 
   return (

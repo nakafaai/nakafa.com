@@ -1,11 +1,7 @@
 "use client";
 
 import { useThree } from "@react-three/fiber";
-import type {
-  getShellModelSceneColors,
-  ShellModelSample,
-  ShellModelShells,
-} from "@repo/design-system/components/contents/chemistry/shell-model/data";
+import { useShellModel } from "@repo/design-system/components/contents/chemistry/shell-model/context";
 import { ShellModelScene } from "@repo/design-system/components/contents/chemistry/shell-model/scene";
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
 import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
@@ -25,17 +21,8 @@ const NARROW_CANVAS_ASPECT_RATIO = 1.4;
  * The three-dimensional shell model. It loads apart from the lab's controls, so
  * a lab can hold its frame before the model has loaded.
  */
-export function ShellModelStage({
-  colors,
-  outerShellKey,
-  sample,
-  shells,
-}: {
-  colors: ReturnType<typeof getShellModelSceneColors>;
-  outerShellKey: string;
-  sample: ShellModelSample;
-  shells: ShellModelShells;
-}) {
+export function ShellModelStage() {
+  const { colors } = useShellModel();
   return (
     <ThreeCanvas frameloop="always">
       <Suspense>
@@ -55,12 +42,7 @@ export function ShellModelStage({
           shadow-mapSize-width={1024}
           shadow-normalBias={0.02}
         />
-        <ShellModelScene
-          colors={colors}
-          outerShellKey={outerShellKey}
-          sample={sample}
-          shells={shells}
-        />
+        <ShellModelScene />
       </Suspense>
     </ThreeCanvas>
   );
