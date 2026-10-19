@@ -20,7 +20,6 @@ import {
   CardSection,
   CardSectionActions,
   CardSectionFooter,
-  CardSectionHint,
 } from "@/components/shared/card/section";
 import {
   assignHomeroomChange,
@@ -116,8 +115,7 @@ export function SchoolHomeroomCard({
           </Field>
         </FieldGroup>
       </CardContent>
-      <CardSectionFooter>
-        <CardSectionHint>{t(hintKeyOf(cohort))}</CardSectionHint>
+      <CardSectionFooter hint={t(hintKeyOf(cohort))}>
         {isArchived ? null : (
           <CardSectionActions>
             {cohort.homeroom === null ? (
