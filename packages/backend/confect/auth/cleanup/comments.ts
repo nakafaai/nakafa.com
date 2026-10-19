@@ -10,14 +10,12 @@ import { COMMENT_LIKE_CLEANUP_BATCH_SIZE } from "@repo/backend/confect/triggers/
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Effect, flow, Option } from "effect";
 
-const COMMENT_VOTE_BATCH_SIZE = 50;
 const COMMENT_REFERENCE_BATCH_SIZE = 25;
 
 /** The placement of a comment that stands at the top of its own thread, with no replies counted yet. */
 const TOP_LEVEL = {
   parentId: undefined,
   replyCount: 0,
-  replyToText: undefined,
   replyToUserId: undefined,
   threadId: undefined,
 };
@@ -59,26 +57,15 @@ const rethreadMembers = Effect.fn("auth.cleanup.rethreadMembers")(function* (
 });
 
 /**
- * Deletes one bounded batch of a user's comments and votes, and keeps every reply
- * other learners wrote. The replies of a deleted top-level comment stand as top-level
- * comments, and the rest of its thread joins the thread of the reply it hangs from.
- * The replies of a deleted reply move up to that reply's parent, in the same thread.
+ * Deletes one bounded batch of a user's comments, and keeps every reply other learners
+ * wrote. The replies of a deleted top-level comment stand as top-level comments, and
+ * the rest of its thread joins the thread of the reply it hangs from. The replies of a
+ * deleted reply move up to that reply's parent, in the same thread.
  */
 export const cleanupComments = Effect.fn("auth.cleanup.cleanupComments")(
   function* (userId: Id<"users">) {
     const database = yield* DatabaseReader;
     const writer = yield* DatabaseWriter;
-    const votes = yield* database
-      .table("commentVotes")
-      .index("by_userId", (query) => query.eq("userId", userId))
-      .take(COMMENT_VOTE_BATCH_SIZE)
-      .pipe(Effect.orDie);
-    for (const vote of votes) {
-      yield* writer.table("commentVotes").delete(vote._id);
-    }
-    if (votes.length > 0) {
-      return true;
-    }
     const referencedReplies = yield* database
       .table("comments")
       .index("by_replyToUserId", (query) => query.eq("replyToUserId", userId))
@@ -88,7 +75,6 @@ export const cleanupComments = Effect.fn("auth.cleanup.cleanupComments")(
       yield* writer
         .table("comments")
         .patch(reply._id, {
-          replyToText: undefined,
           replyToUserId: undefined,
         })
         .pipe(Effect.orDie);
@@ -103,19 +89,6 @@ export const cleanupComments = Effect.fn("auth.cleanup.cleanupComments")(
       .pipe(Effect.map(Option.getOrNull), Effect.orDie);
     if (!comment) {
       return false;
-    }
-    const commentVotes = yield* database
-      .table("commentVotes")
-      .index("by_commentId_and_userId", (query) =>
-        query.eq("commentId", comment._id)
-      )
-      .take(COMMENT_VOTE_BATCH_SIZE)
-      .pipe(Effect.orDie);
-    for (const vote of commentVotes) {
-      yield* writer.table("commentVotes").delete(vote._id);
-    }
-    if (commentVotes.length > 0) {
-      return true;
     }
     const replies = yield* database
       .table("comments")
@@ -135,7 +108,6 @@ export const cleanupComments = Effect.fn("auth.cleanup.cleanupComments")(
             ? TOP_LEVEL
             : {
                 parentId: parent._id,
-                replyToText: undefined,
                 replyToUserId: parent.userId,
               }
         )

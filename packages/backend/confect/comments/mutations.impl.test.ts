@@ -167,8 +167,6 @@ describe("comment write and read contracts", () => {
     });
     expect(await t.query((ctx) => ctx.db.get("comments", root))).toMatchObject({
       likeCount: 0,
-      upvoteCount: 0,
-      downvoteCount: 0,
     });
     await t.mutation((ctx) => ctx.db.delete("users", author.userId));
     const after = await t.query(api.comments.queries.getCommentsBySlug, {
@@ -332,50 +330,7 @@ describe("comment write and read contracts", () => {
     expect(await likeRows()).toBe(1);
   });
 
-  it("maps the vote mutation of an open web build onto likes, and writes no vote row", async () => {
-    const { t, author, reader } = await createLearners();
-    const commentId = await author.session.mutation(
-      api.comments.mutations.addComment,
-      { slug: "articles/votes", text: "Voted" }
-    );
-    const state = () =>
-      t
-        .query((ctx) => ctx.db.get("comments", commentId))
-        .then((comment) => ({
-          downvoteCount: comment?.downvoteCount,
-          likeCount: comment?.likeCount,
-          upvoteCount: comment?.upvoteCount,
-        }));
-    await reader.session.mutation(api.comments.mutations.voteOnComment, {
-      commentId,
-      vote: 1,
-    });
-    expect(await state()).toEqual({
-      downvoteCount: 0,
-      likeCount: 1,
-      upvoteCount: 0,
-    });
-    await reader.session.mutation(api.comments.mutations.voteOnComment, {
-      commentId,
-      vote: 1,
-    });
-    expect(await state()).toMatchObject({ likeCount: 1 });
-    await reader.session.mutation(api.comments.mutations.voteOnComment, {
-      commentId,
-      vote: -1,
-    });
-    expect(await state()).toMatchObject({ likeCount: 0 });
-    await reader.session.mutation(api.comments.mutations.voteOnComment, {
-      commentId,
-      vote: 0,
-    });
-    expect(await state()).toMatchObject({ likeCount: 0 });
-    expect(
-      await t.query((ctx) => ctx.db.query("commentVotes").collect())
-    ).toEqual([]);
-  });
-
-  it("refuses a like, an unlike and a vote on a comment that is gone", async () => {
+  it("refuses a like and an unlike on a comment that is gone", async () => {
     const { author, reader } = await createLearners();
     const commentId = await author.session.mutation(
       api.comments.mutations.addComment,
@@ -390,12 +345,6 @@ describe("comment write and read contracts", () => {
     await expect(
       reader.session.mutation(unlikeComment, {
         commentId,
-      })
-    ).rejects.toMatchObject({ data: { code: "COMMENT_NOT_FOUND" } });
-    await expect(
-      reader.session.mutation(api.comments.mutations.voteOnComment, {
-        commentId,
-        vote: 1,
       })
     ).rejects.toMatchObject({ data: { code: "COMMENT_NOT_FOUND" } });
   });
