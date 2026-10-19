@@ -44,7 +44,11 @@ export function SittingChoice({
             id={`${id}-${option.id}`}
             key={option.id}
             label={
-              <SittingDocument document={option.label} label={choice.label} />
+              <SittingDocument
+                document={option.label}
+                label={choice.label}
+                size="line"
+              />
             }
             value={option.id}
           />
@@ -65,7 +69,11 @@ export function SittingChoice({
           id={`${id}-${option.id}`}
           key={option.id}
           label={
-            <SittingDocument document={option.label} label={choice.label} />
+            <SittingDocument
+              document={option.label}
+              label={choice.label}
+              size="line"
+            />
           }
           onCheckedChange={(checked) =>
             onChoose(
