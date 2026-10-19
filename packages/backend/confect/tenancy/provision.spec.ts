@@ -8,8 +8,8 @@ import { NewCurrency, NewTimeZone } from "@repo/backend/confect/tenancy/locale";
 import {
   Email,
   PersonName,
+  SchoolName,
   TenantKind,
-  TenantName,
   unitFields,
 } from "@repo/backend/confect/tenancy/schema";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -27,7 +27,7 @@ export const openArgs = {
   country: CountryCodeSchema,
   currency: NewCurrency,
   kind: TenantKind,
-  name: TenantName,
+  name: SchoolName,
   owner: Schema.Struct({ email: Email, name: PersonName }),
   slug: TenantSlug,
   units: Schema.Array(UnitDraft),

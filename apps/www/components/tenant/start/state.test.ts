@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import { TenantName, UnitName } from "@repo/backend/confect/tenancy/schema";
+import { SchoolName, UnitName } from "@repo/backend/confect/tenancy/schema";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Option, Schema, Struct } from "effect";
 import {
@@ -68,8 +68,8 @@ describe("school start state", () => {
 
   it("takes the longest school name, and a unit named with a level label stays within the unit name", () => {
     const longest = "A".repeat(START_NAME_LIMIT);
-    expect(Schema.is(TenantName)(longest)).toBe(true);
-    expect(Schema.is(TenantName)(`${longest}A`)).toBe(false);
+    expect(Schema.is(SchoolName)(longest)).toBe(true);
+    expect(Schema.is(SchoolName)(`${longest}A`)).toBe(false);
     expect(Schema.is(UnitName)(longest)).toBe(true);
     expect(Schema.is(UnitName)(`${longest} Sekundarstufe II`)).toBe(true);
   });

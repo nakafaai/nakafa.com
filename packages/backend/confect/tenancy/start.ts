@@ -1,6 +1,7 @@
 import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { NewCurrency, NewTimeZone } from "@repo/backend/confect/tenancy/locale";
 import {
+  SchoolName,
   TenantName,
   UnitLevel,
   UnitName,
@@ -112,7 +113,7 @@ export const startZone = (
 export const StartAnswer = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("name"),
-    name: TenantName,
+    name: SchoolName,
     slug: TenantSlug,
   }),
   Schema.Struct({ kind: Schema.Literal("country"), value: StartCountry }),
@@ -150,7 +151,7 @@ export const StartDraft = Schema.Struct({
  */
 export const startArgs = {
   country: StartCountry,
-  name: TenantName,
+  name: SchoolName,
   role: StartRole,
   size: SchoolSize,
   slug: TenantSlug,

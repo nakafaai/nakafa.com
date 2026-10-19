@@ -4,7 +4,7 @@ import { QueryResult, useQuery } from "@confect/react";
 import { CheckmarkCircle02Icon } from "@hugeicons/core-free-icons";
 import { useDebouncedValue } from "@mantine/hooks";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
-import { TenantName } from "@repo/backend/confect/tenancy/schema";
+import { SchoolName } from "@repo/backend/confect/tenancy/schema";
 import {
   Field,
   FieldGroup,
@@ -29,7 +29,7 @@ import { START_NAME_LIMIT } from "@/components/tenant/start/state";
 const CHECK_DELAY_MILLISECONDS = 250;
 
 /** Whether a typed name can name a school once its edges are trimmed. */
-const isSchoolName = Schema.is(TenantName);
+const isSchoolName = Schema.is(SchoolName);
 
 /**
  * The first question: the school's name, and its address, which follows the name

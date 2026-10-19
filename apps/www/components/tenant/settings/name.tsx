@@ -2,7 +2,7 @@
 
 import { useMutation } from "@confect/react";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
-import { TenantName } from "@repo/backend/confect/tenancy/schema";
+import { SchoolName } from "@repo/backend/confect/tenancy/schema";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -31,7 +31,7 @@ import { saveSchool } from "@/components/tenant/settings/save.client";
 const SOURCE = "components/tenant/settings/name";
 
 /** Whether a trimmed name can name the school: three to 120 characters on one line. */
-const isSchoolName = Schema.is(TenantName);
+const isSchoolName = Schema.is(SchoolName);
 
 /**
  * The school's name, which its Owner and its Admin change. A save shows the new
