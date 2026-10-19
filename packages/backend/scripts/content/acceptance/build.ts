@@ -9,6 +9,7 @@ import {
   releaseLocalRuntime,
   reserveLocalRuntime,
 } from "@repo/backend/scripts/content/acceptance/local";
+import type { AcceptanceMode } from "@repo/backend/scripts/content/acceptance/mode";
 import {
   runBuildCommand,
   withLocalBackend,
@@ -83,3 +84,34 @@ export const runAcceptance = Effect.fn("acceptance.run")(function* (
     withLocalBackend(runtime, command)
   );
 }, Effect.scoped);
+
+/** The prepare mode of the acceptance command line: creates the local acceptance database. It takes no argument. */
+export const prepareMode = {
+  mode: "prepare",
+  usage: "prepare",
+  run: prepareAcceptance,
+} satisfies AcceptanceMode;
+
+/** The build mode: builds the app against the owned local backend, with the arguments after its word. */
+export const buildMode = {
+  mode: "build",
+  usage: "build",
+  run: Effect.fn("contentAcceptance.runBuild")(function* (
+    root: string,
+    args: readonly string[]
+  ) {
+    return yield* runAcceptance(root, "build", args);
+  }),
+} satisfies AcceptanceMode;
+
+/** The start mode: starts the app against the owned local backend, with the arguments after its word. */
+export const startMode = {
+  mode: "start",
+  usage: "start",
+  run: Effect.fn("contentAcceptance.runStart")(function* (
+    root: string,
+    args: readonly string[]
+  ) {
+    return yield* runAcceptance(root, "start", args);
+  }),
+} satisfies AcceptanceMode;
