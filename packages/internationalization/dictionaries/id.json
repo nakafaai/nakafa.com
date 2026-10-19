@@ -173,7 +173,10 @@
     "length": "Durasi",
     "length-minutes": "{count} menit",
     "schedule-keys": "Tandai dulu jawaban benar setiap soal.",
-    "schedule-past": "Waktu mulai sudah lewat. Pilih waktu yang lebih lambat."
+    "schedule-past": "Waktu mulai sudah lewat. Pilih waktu yang lebih lambat.",
+    "try-action": "Coba sebagai siswa",
+    "try-finish": "Selesai mencoba",
+    "try-note": "Jawaban di sini tidak disimpan."
   },
   "SchoolSettings": {
     "school": "Sekolah",

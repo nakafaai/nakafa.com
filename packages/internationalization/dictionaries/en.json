@@ -173,7 +173,10 @@
     "length": "Length",
     "length-minutes": "{count, plural, one {# minute} other {# minutes}}",
     "schedule-keys": "Mark the correct answer of every question first.",
-    "schedule-past": "The start has passed. Choose a later time."
+    "schedule-past": "The start has passed. Choose a later time.",
+    "try-action": "Try as student",
+    "try-finish": "Finish trying",
+    "try-note": "Answers here are not saved."
   },
   "SchoolSettings": {
     "school": "School",
