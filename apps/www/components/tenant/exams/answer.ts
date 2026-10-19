@@ -1,15 +1,23 @@
+import { ContentDocumentSchema } from "@nakafa/aksara-contracts/assessment/document";
 import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
 import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
-import { Array as Arr, Option, String as Str } from "effect";
+import {
+  CHOICE_OPTIONS_MAX,
+  CHOICE_OPTIONS_MIN,
+} from "@repo/backend/confect/exams/question";
+import { Array as Arr, Option, Schema } from "effect";
 
 /** The choice interaction, the only kind a school exam question holds in this version. */
 type Choice = Extract<Interaction, { kind: "choice" }>;
 
-/** The label of one option: a document of its own, which this editor writes as one paragraph of text. */
-type OptionLabel = Choice["options"][number]["label"];
+/** The label of one option: a rich document of its own, which the option's editor writes. */
+export type OptionLabel = Choice["options"][number]["label"];
 
 /** The character code of the letter A, which names the first option. */
 const LETTER_A = 65;
+
+/** The number that an option ID holds after `option-`, when it holds one. */
+const OPTION_NUMBER = /^option-(\d+)$/u;
 
 /** Whether an interaction is a choice. */
 const isChoice = (answer: Interaction): answer is Choice =>
@@ -26,28 +34,15 @@ export const optionLetter = (index: number): string =>
   String.fromCharCode(LETTER_A + index);
 
 /**
- * The text of an option's label: the text of its paragraphs, in order. This editor
- * writes one paragraph of text, so math and every other node are left out.
+ * The label of an option as its editor holds it: the JSON of its document, read through the
+ * contract. A document the contract refuses is no label, so nothing is saved for it.
  */
-export const labelText = (label: OptionLabel): string =>
-  Arr.join(
-    Arr.flatMap(label.content, (block) =>
-      block.type === "paragraph"
-        ? Arr.flatMap(block.content ?? [], (node) =>
-            node.type === "text" ? [node.text] : []
-          )
-        : []
-    ),
-    ""
-  );
+export const optionLabelOf = (json: unknown): Option.Option<OptionLabel> =>
+  Schema.decodeUnknownOption(ContentDocumentSchema)(json);
 
-/** A label that holds `text` as one paragraph. An empty text is an empty paragraph, which the contract allows in an option. */
-export const textLabel = (text: string): OptionLabel => ({
-  content: [
-    Str.isEmpty(text)
-      ? { type: "paragraph" }
-      : { content: [{ text, type: "text" }], type: "paragraph" },
-  ],
+/** The label of an empty option: one empty paragraph, which the contract allows in an option. */
+export const emptyLabel = (): OptionLabel => ({
+  content: [{ type: "paragraph" }],
   type: "doc",
 });
 
@@ -57,22 +52,20 @@ export const choiceOf = (
 ): Option.Option<Choice> => Arr.findFirst(answers, isChoice);
 
 /**
- * The answers with the text of one option replaced. The other options and the other
- * interactions keep their order, IDs, and content.
+ * The answers with the label of one option replaced by the document its editor holds. The other
+ * options and the other interactions keep their order, IDs, and content.
  */
-export const withOptionText = (
+export const withOptionLabel = (
   answers: Arr.NonEmptyReadonlyArray<Interaction>,
   optionId: string,
-  text: string
+  label: OptionLabel
 ): Arr.NonEmptyArray<Interaction> =>
   Arr.map(answers, (answer) =>
     isChoice(answer)
       ? {
           ...answer,
           options: Arr.map(answer.options, (option) =>
-            option.id === optionId
-              ? { ...option, label: textLabel(text) }
-              : option
+            option.id === optionId ? { ...option, label } : option
           ),
         }
       : answer
@@ -107,3 +100,59 @@ export const markedOption = (
     onSome: (answer) => Arr.headNonEmpty(answer.correct),
   });
 };
+
+/**
+ * The ID of a new option: `option-` and the number after the largest one that the choice
+ * holds, so an ID that a removed option held is never taken again by a new one.
+ */
+const nextOptionId = (options: readonly Choice["options"][number][]) => {
+  const largest = Arr.reduce(options, 0, (most, option) => {
+    const digits = OPTION_NUMBER.exec(option.id)?.[1];
+    return digits === undefined ? most : Math.max(most, Number(digits));
+  });
+  return `option-${largest + 1}`;
+};
+
+/**
+ * The answers with one empty option added at the end of each choice. A choice that holds
+ * the most options it may take is left as it is, so the teacher cannot add past A to E.
+ */
+export const withOptionAdded = (
+  answers: Arr.NonEmptyReadonlyArray<Interaction>
+): Arr.NonEmptyArray<Interaction> =>
+  Arr.map(answers, (answer) =>
+    isChoice(answer) && answer.options.length < CHOICE_OPTIONS_MAX
+      ? {
+          ...answer,
+          options: [
+            ...answer.options,
+            { id: nextOptionId(answer.options), label: emptyLabel() },
+          ],
+        }
+      : answer
+  );
+
+/**
+ * The answers with one option taken out of each choice, and the key that follows them. The
+ * key names its option by ID, so it keeps its option when the others go, and it is cleared when
+ * the removed option is the one it marks, because no option of the question would then be correct.
+ * A choice that holds the fewest options it may take is left as it is.
+ */
+export const withOptionRemoved = (
+  answers: Arr.NonEmptyReadonlyArray<Interaction>,
+  key: Arr.NonEmptyReadonlyArray<InteractionKey> | null,
+  optionId: string
+) => ({
+  answers: Arr.map(answers, (answer) =>
+    isChoice(answer) && answer.options.length > CHOICE_OPTIONS_MIN
+      ? {
+          ...answer,
+          options: Arr.filter(
+            answer.options,
+            (option) => option.id !== optionId
+          ),
+        }
+      : answer
+  ),
+  key: markedOption(key) === optionId ? null : key,
+});

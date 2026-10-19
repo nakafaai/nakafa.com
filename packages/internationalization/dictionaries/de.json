@@ -58,6 +58,7 @@
     "failed": "Anmeldung fehlgeschlagen. Versuche es erneut.",
     "outsider-card": "Mit Karte anmelden",
     "outsider-description": "{account} ist kein Mitglied von {school}.",
+    "outsider-card-hint": "Keine Google-Adresse? Der Admin deiner Schule gibt dir eine Login-Karte.",
     "outsider-switch": "Konto wechseln",
     "outsider-title": "Kein Mitglied",
     "password-description": "Mindestens 8 Zeichen.",
@@ -159,15 +160,24 @@
     "title-label": "Prüfungstitel",
     "unavailable": "Diese Prüfung ist nicht verfügbar.",
     "frozen-note": "Diese Prüfung ist geplant, darum sind ihre Fragen fest.",
+    "archived-note": "Diese Schule ist archiviert, daher sind ihre Prüfungen nur lesbar, bis sie wiederhergestellt wird.",
+    "room-cancel": "Raum absagen",
+    "room-cancel-title": "Diesen Raum absagen?",
+    "room-cancel-description": "Schüler können ihn nicht betreten. Die Fragen der Prüfung können sich wieder ändern, sobald kein Raum mehr dafür besteht.",
+    "room-cancel-confirm": "Raum absagen",
     "questions": "Fragen",
     "question": "Frage {number}",
     "option": "Option {letter}",
-    "correct": "Richtige Antwort",
-    "correct-option": "Option {letter} als richtige Antwort markieren",
+    "option-of": "Frage {number}, Option {letter}",
+    "option-add": "Option hinzufügen",
     "no-key": "Diese Frage hat noch keinen Lösungsschlüssel.",
     "move-up": "Nach oben verschieben",
+    "move-up-of": "Frage {number} nach oben verschieben",
     "move-down": "Nach unten verschieben",
+    "move-down-of": "Frage {number} nach unten verschieben",
+    "more-actions-of": "Weitere Aktionen für Frage {number}",
     "remove": "Frage entfernen",
+    "remove-of": "Frage {number} entfernen",
     "remove-title": "Diese Frage entfernen?",
     "remove-description": "Die Frage und ihre Antworten werden aus dieser Prüfung entfernt.",
     "create": "Prüfung erstellen",
@@ -177,6 +187,7 @@
     "language": "Sprache",
     "add-question": "Frage hinzufügen",
     "copy": "Frage kopieren",
+    "copy-of": "Frage {number} kopieren",
     "prompt-label": "Fragetext",
     "prompt-placeholder": "Frage hier schreiben.",
     "results-title": "Ergebnisse",
@@ -213,7 +224,9 @@
     "student-results-released": "Deine Lehrkraft hat diese Ergebnisse freigegeben.",
     "schedule": "Planen",
     "schedule-title": "Prüfung planen",
-    "schedule-description": "Die Schüler der Einheit schreiben sie im Raum ab dem Beginn, für ihre Dauer.",
+    "schedule-description": "Die Schüler der Einheit oder der Klasse, die du wählst, schreiben sie im Raum ab dem Beginn, für ihre Dauer.",
+    "audience": "Wer schreibt",
+    "audience-unit": "Die ganze Einheit",
     "room": "Raum",
     "room-placeholder": "Labor 2",
     "starts": "Beginnt",
@@ -239,6 +252,19 @@
     "try-action": "Als Schüler testen",
     "try-finish": "Test beenden",
     "try-note": "Antworten hier werden nicht gespeichert.",
+    "pages": "Seiten",
+    "pages-label": "Seiten der Prüfung",
+    "page-no-key": "Noch ohne Schlüssel",
+    "add-below": "Frage darunter hinzufügen",
+    "add-below-of": "Frage unter Frage {number} hinzufügen",
+    "question-text": "Text von Frage {number}",
+    "option-placeholder": "Option hier schreiben.",
+    "key-option": "Option {letter} von Frage {number} als richtig markieren",
+    "option-remove-of": "Option {letter} von Frage {number} entfernen",
+    "grid": "Rasteransicht",
+    "fullscreen": "Vollbild",
+    "fullscreen-exit": "Vollbild beenden",
+    "zoom": "Zoom",
     "student-retry": "Diese Sitzung konnte nicht geladen werden, daher versuche es gleich noch einmal.",
     "student-opens-at": "Diese Sitzung beginnt {time}.",
     "student-scheduled-footer": "Das Tokenfeld öffnet mit der Sitzung.",
@@ -287,6 +313,11 @@
     "logo-remove-title": "Logo entfernen?",
     "logo-remove-description": "Die Schule zeigt wieder ihr Tier, bis ein neues Logo hochgeladen wird.",
     "logo-remove-confirm": "Logo entfernen",
+    "name-title": "Schulname",
+    "name-description": "Jede Seite dieser Schule und ihre Einladungs-E-Mails zeigen diesen Namen.",
+    "name-label": "Name",
+    "name-invalid": "Verwende 3 bis 120 Zeichen in einer Zeile.",
+    "name-footer": "Jede Änderung des Namens wird im Prüfprotokoll festgehalten.",
     "policy-students": "Schüler",
     "policy-students-description": "Was Schüler in dieser Schule dürfen.",
     "policy-students-footer": "Jede Änderung einer Richtlinie wird im Prüfprotokoll festgehalten.",
@@ -302,6 +333,13 @@
     "level-other": "Sonstige",
     "unit-level-line": "Stufe {level}.",
     "unit-archived-description": "Diese Schule ist archiviert und nimmt Änderungen erst wieder an, wenn sie wiederhergestellt wird.",
+    "unit-add": "Schule hinzufügen",
+    "unit-add-title": "Eine Schule hinzufügen",
+    "unit-add-description": "Jede Schule hat ihre eigene Stufe, eigene Zeiträume und eigene Klassen.",
+    "unit-add-name": "Name",
+    "unit-add-level": "Stufe",
+    "unit-add-submit": "Schule hinzufügen",
+    "unit-add-footer": "Eine neue Schule hat noch keinen Zeitraum. Lege einen auf der Seite Zeiträume an.",
     "unit-time-zone": "Zeitzone",
     "unit-content-language": "Inhaltssprache",
     "unit-archive-footer": "Eine archivierte Schule bleibt lesbar.",
@@ -375,6 +413,11 @@
     "invite-email": "E-Mail",
     "invite-expires": "Läuft ab",
     "invite-resend": "Erneut senden",
+    "invite-expired": "Abgelaufen",
+    "invite-card": "Login-Karte ausstellen",
+    "invite-card-description": "Die eingeladene Person meldet sich mit diesem Anmeldenamen und dem Kartencode an, den die Schule nur einmal zeigt.",
+    "invite-card-submit": "Karte ausstellen",
+    "invite-google-note": "Eine Adresse ohne Google meldet sich mit einer Login-Karte des Admins an.",
     "invite-revoke": "Widerrufen",
     "invite-revoke-title": "Diese Einladung widerrufen?",
     "invite-revoke-description": "Die Adresse kann diese Einladung nicht mehr annehmen.",
@@ -427,7 +470,8 @@
       "cohort": {
         "created": "Klasse angelegt",
         "renamed": "Klasse umbenannt",
-        "archived": "Klasse archiviert"
+        "archived": "Klasse archiviert",
+        "restored": "Klasse wiederhergestellt"
       },
       "connection": {
         "connected": "Verbindung hinzugefügt",
@@ -452,7 +496,8 @@
         "created": "Zeitraum angelegt",
         "opened": "Zeitraum geöffnet",
         "archived": "Zeitraum archiviert",
-        "rename": "Zeitraum umbenannt"
+        "rename": "Zeitraum umbenannt",
+        "restored": "Zeitraum wiederhergestellt"
       },
       "person": {
         "claimed": "Konto übernommen",
@@ -487,7 +532,8 @@
         "changeToken": "Token des Prüfungstermins geändert",
         "allowDevice": "Zweites Gerät für einen Prüfungsversuch erlaubt",
         "finish": "Prüfungsversuch abgegeben",
-        "close": "Prüfungstermin geschlossen"
+        "close": "Prüfungstermin geschlossen",
+        "cancel": "Prüfungsraum abgesagt"
       },
       "exam": {
         "results": {
@@ -503,6 +549,9 @@
         "logo": {
           "removed": "Logo entfernt",
           "set": "Logo geändert"
+        },
+        "name": {
+          "set": "Schulname geändert"
         },
         "policy": {
           "set": "Einstellung geändert"
@@ -641,6 +690,8 @@
     "student-add-submit": "Schüler hinzufügen",
     "invites-empty": "Keine Einladung wartet.",
     "invites-search": "Eingeladene suchen",
+    "cohort-restore": "Wiederherstellen",
+    "period-restore": "Wiederherstellen",
     "no-unit-title": "Noch keine aktive Einheit",
     "no-unit-description": "Perioden und Kohorten gehören zu einer aktiven Einheit. Stelle zuerst eine wieder her oder lege eine an.",
     "no-unit-action": "Einheiten öffnen",
@@ -674,7 +725,7 @@
     "name-title": "Wie heißt deine Schule?",
     "name-label": "Name der Schule",
     "name-placeholder": "Harapan Bangsa",
-    "name-error": "Gib einen Namen mit mindestens 2 Zeichen ein.",
+    "name-error": "Gib einen Namen mit mindestens 3 Zeichen ein.",
     "address-label": "Adresse",
     "address-free": "Frei",
     "address-taken": "Diese Adresse nutzt schon eine andere Schule.",
@@ -1419,6 +1470,14 @@
       "title": "Bereits abgeschlossen.",
       "description": "Diese Person kann nicht erneut in eine Klasse."
     },
+    "school-refusal-unit-limit": {
+      "title": "Für eine weitere Schule ist kein Platz.",
+      "description": "Eine Organisation hat eine feste Anzahl an Schulen."
+    },
+    "school-refusal-address-member": {
+      "title": "Diese Person gehört schon zur Schule.",
+      "description": "Ändere ihre Rolle unter Rollen und Zugriff."
+    },
     "school-refusal-already-placed": {
       "title": "Schon einer Klasse zugeordnet.",
       "description": "Die Schülerin oder der Schüler wechselt stattdessen die Klasse."
@@ -1621,9 +1680,22 @@
       "title": "Heute zu viele Schulen.",
       "description": "Versuch es morgen noch einmal."
     },
+    "school-login-account": {
+      "title": "Ein Schul-Login kann keine Schule eröffnen.",
+      "description": "Melde dich mit einem eigenen Konto an, um eine Schule zu eröffnen."
+    },
     "school-save-error": {
       "title": "Antwort nicht gespeichert.",
       "description": "Versuch es noch einmal."
+    },
+    "undo": {
+      "title": "Rückgängig"
+    },
+    "school-cohort-archived": {
+      "title": "Klasse archiviert."
+    },
+    "school-period-archived": {
+      "title": "Zeitraum archiviert."
     },
     "sitting-not-in": {
       "title": "Nicht in dieser Sitzung.",

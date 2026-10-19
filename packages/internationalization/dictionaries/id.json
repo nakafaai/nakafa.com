@@ -58,6 +58,7 @@
     "failed": "Gagal masuk. Coba lagi.",
     "outsider-card": "Masuk dengan kartu",
     "outsider-description": "{account} bukan anggota {school}.",
+    "outsider-card-hint": "Alamat tanpa Google? Admin sekolah memberimu kartu login.",
     "outsider-switch": "Ganti akun",
     "outsider-title": "Bukan anggota",
     "password-description": "Minimal 8 karakter.",
@@ -159,15 +160,24 @@
     "title-label": "Judul ujian",
     "unavailable": "Ujian ini tidak tersedia.",
     "frozen-note": "Ujian ini sudah dijadwalkan, jadi soalnya tidak bisa diubah.",
+    "archived-note": "Sekolah ini diarsipkan, jadi ujiannya hanya bisa dibaca sampai dipulihkan.",
+    "room-cancel": "Batalkan ruang",
+    "room-cancel-title": "Batalkan ruang ini?",
+    "room-cancel-description": "Siswa tidak bisa masuk. Soal ujian bisa diubah lagi jika tidak ada ruang lain untuknya.",
+    "room-cancel-confirm": "Batalkan ruang",
     "questions": "Soal",
     "question": "Soal {number}",
     "option": "Pilihan {letter}",
-    "correct": "Jawaban benar",
-    "correct-option": "Tandai pilihan {letter} sebagai jawaban benar",
+    "option-of": "Soal {number}, pilihan {letter}",
+    "option-add": "Tambah pilihan",
     "no-key": "Soal ini belum punya kunci jawaban.",
     "move-up": "Pindah ke atas",
+    "move-up-of": "Pindah soal {number} ke atas",
     "move-down": "Pindah ke bawah",
+    "move-down-of": "Pindah soal {number} ke bawah",
+    "more-actions-of": "Aksi lainnya untuk soal {number}",
     "remove": "Hapus soal",
+    "remove-of": "Hapus soal {number}",
     "remove-title": "Hapus soal ini?",
     "remove-description": "Soal dan jawabannya keluar dari ujian ini.",
     "create": "Buat ujian",
@@ -177,6 +187,7 @@
     "language": "Bahasa",
     "add-question": "Tambah soal",
     "copy": "Salin soal",
+    "copy-of": "Salin soal {number}",
     "prompt-label": "Teks soal",
     "prompt-placeholder": "Tulis soal di sini.",
     "results-title": "Hasil",
@@ -213,7 +224,9 @@
     "student-results-released": "Gurumu sudah merilis hasil ini.",
     "schedule": "Jadwalkan",
     "schedule-title": "Jadwalkan ujian",
-    "schedule-description": "Siswa unit mengerjakannya di ruang itu sejak mulai, selama durasinya.",
+    "schedule-description": "Siswa unit, atau siswa kelas yang kamu pilih, mengerjakannya di ruang itu sejak mulai, selama durasinya.",
+    "audience": "Siapa yang mengerjakan",
+    "audience-unit": "Seluruh unit",
     "room": "Ruang",
     "room-placeholder": "Lab 2",
     "starts": "Mulai",
@@ -239,6 +252,19 @@
     "try-action": "Coba sebagai siswa",
     "try-finish": "Selesai mencoba",
     "try-note": "Jawaban di sini tidak disimpan.",
+    "pages": "Halaman",
+    "pages-label": "Halaman ujian",
+    "page-no-key": "Belum ada kunci",
+    "add-below": "Tambah soal di bawah",
+    "add-below-of": "Tambah soal di bawah soal {number}",
+    "question-text": "Teks soal {number}",
+    "option-placeholder": "Tulis pilihan di sini.",
+    "key-option": "Tandai pilihan {letter} soal {number} sebagai kunci",
+    "option-remove-of": "Hapus pilihan {letter} soal {number}",
+    "grid": "Tampilan kisi",
+    "fullscreen": "Layar penuh",
+    "fullscreen-exit": "Keluar layar penuh",
+    "zoom": "Perbesar",
     "student-retry": "Sesi ini gagal dimuat, jadi coba lagi sebentar lagi.",
     "student-opens-at": "Sesi ini dibuka {time}.",
     "student-scheduled-footer": "Kolom token terbuka bersama sesi.",
@@ -287,6 +313,11 @@
     "logo-remove-title": "Hapus logo?",
     "logo-remove-description": "Sekolah kembali menampilkan hewannya sampai logo baru diunggah.",
     "logo-remove-confirm": "Hapus logo",
+    "name-title": "Nama sekolah",
+    "name-description": "Setiap halaman sekolah ini dan email undangannya menampilkan nama ini.",
+    "name-label": "Nama",
+    "name-invalid": "Gunakan 3 sampai 120 karakter dalam satu baris.",
+    "name-footer": "Setiap perubahan nama tercatat di jejak audit.",
     "policy-students": "Siswa",
     "policy-students-description": "Apa yang boleh dilakukan siswa di sekolah ini.",
     "policy-students-footer": "Setiap perubahan kebijakan tercatat di jejak audit.",
@@ -302,6 +333,13 @@
     "level-other": "Lainnya",
     "unit-level-line": "Jenjang {level}.",
     "unit-archived-description": "Sekolah ini diarsipkan dan menolak perubahan sampai dipulihkan.",
+    "unit-add": "Tambah sekolah",
+    "unit-add-title": "Tambah sekolah",
+    "unit-add-description": "Setiap sekolah punya jenjang, periode, dan rombel sendiri.",
+    "unit-add-name": "Nama",
+    "unit-add-level": "Jenjang",
+    "unit-add-submit": "Tambah sekolah",
+    "unit-add-footer": "Sekolah baru belum punya periode. Tambahkan satu di halaman Periode.",
     "unit-time-zone": "Zona waktu",
     "unit-content-language": "Bahasa konten",
     "unit-archive-footer": "Sekolah yang diarsipkan tetap dapat dibaca.",
@@ -375,6 +413,11 @@
     "invite-email": "Email",
     "invite-expires": "Berakhir",
     "invite-resend": "Kirim ulang",
+    "invite-expired": "Kedaluwarsa",
+    "invite-card": "Buat kartu login",
+    "invite-card-description": "Undangan masuk dengan nama login ini dan kode kartu, yang ditampilkan sekolah sekali saja.",
+    "invite-card-submit": "Buat kartu",
+    "invite-google-note": "Alamat tanpa Google masuk dengan kartu login dari admin.",
     "invite-revoke": "Cabut",
     "invite-revoke-title": "Cabut undangan ini?",
     "invite-revoke-description": "Alamat ini tidak dapat lagi menerima undangan ini.",
@@ -427,7 +470,8 @@
       "cohort": {
         "created": "Kelas ditambahkan",
         "renamed": "Kelas diganti nama",
-        "archived": "Kelas diarsipkan"
+        "archived": "Kelas diarsipkan",
+        "restored": "Rombel dipulihkan"
       },
       "connection": {
         "connected": "Koneksi ditambahkan",
@@ -452,7 +496,8 @@
         "created": "Periode ditambahkan",
         "opened": "Periode dibuka",
         "archived": "Periode diarsipkan",
-        "rename": "Periode diganti nama"
+        "rename": "Periode diganti nama",
+        "restored": "Periode dipulihkan"
       },
       "person": {
         "claimed": "Akun bergabung",
@@ -487,7 +532,8 @@
         "changeToken": "Token sesi ujian diganti",
         "allowDevice": "Perangkat kedua diizinkan untuk percobaan ujian",
         "finish": "Percobaan ujian diselesaikan",
-        "close": "Sesi ujian ditutup"
+        "close": "Sesi ujian ditutup",
+        "cancel": "Ruang ujian dibatalkan"
       },
       "exam": {
         "results": {
@@ -503,6 +549,9 @@
         "logo": {
           "removed": "Logo dihapus",
           "set": "Logo diubah"
+        },
+        "name": {
+          "set": "Nama sekolah diubah"
         },
         "policy": {
           "set": "Pengaturan diubah"
@@ -641,6 +690,8 @@
     "student-add-submit": "Tambah siswa",
     "invites-empty": "Belum ada undangan yang menunggu.",
     "invites-search": "Cari yang diundang",
+    "cohort-restore": "Pulihkan",
+    "period-restore": "Pulihkan",
     "no-unit-title": "Belum ada unit aktif",
     "no-unit-description": "Periode dan kelompok milik unit yang aktif. Pulihkan atau tambahkan satu unit dulu.",
     "no-unit-action": "Buka unit",
@@ -674,7 +725,7 @@
     "name-title": "Apa nama sekolahmu?",
     "name-label": "Nama sekolah",
     "name-placeholder": "Harapan Bangsa",
-    "name-error": "Tulis nama minimal 2 karakter.",
+    "name-error": "Tulis nama minimal 3 karakter.",
     "address-label": "Alamat",
     "address-free": "Tersedia",
     "address-taken": "Alamat ini sudah dipakai sekolah lain.",
@@ -1419,6 +1470,14 @@
       "title": "Sudah lulus dari sekolah ini.",
       "description": "Siswa yang sudah lulus tidak bisa masuk rombel lagi."
     },
+    "school-refusal-unit-limit": {
+      "title": "Tidak ada ruang untuk sekolah lain.",
+      "description": "Sebuah organisasi memiliki jumlah sekolah yang terbatas."
+    },
+    "school-refusal-address-member": {
+      "title": "Orang ini sudah menjadi anggota sekolah ini.",
+      "description": "Ubah perannya di Peran dan akses."
+    },
     "school-refusal-already-placed": {
       "title": "Sudah masuk rombel periode ini.",
       "description": "Pindahkan siswa dari rombelnya saat ini."
@@ -1621,9 +1680,22 @@
       "title": "Terlalu banyak sekolah hari ini.",
       "description": "Coba lagi besok."
     },
+    "school-login-account": {
+      "title": "Login sekolah tidak dapat membuka sekolah.",
+      "description": "Masuk dengan akun milikmu sendiri untuk membuka sekolah."
+    },
     "school-save-error": {
       "title": "Jawabanmu belum tersimpan.",
       "description": "Coba lagi."
+    },
+    "undo": {
+      "title": "Batalkan"
+    },
+    "school-cohort-archived": {
+      "title": "Rombel diarsipkan."
+    },
+    "school-period-archived": {
+      "title": "Periode diarsipkan."
     },
     "sitting-not-in": {
       "title": "Kamu tidak ada di sesi ini.",

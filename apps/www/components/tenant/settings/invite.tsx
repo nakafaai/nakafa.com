@@ -15,6 +15,7 @@ import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Field,
+  FieldDescription,
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
@@ -176,6 +177,7 @@ export function SchoolInviteDialog({
             type="email"
             value={email}
           />
+          <FieldDescription>{t("invite-google-note")}</FieldDescription>
         </Field>
         <Field>
           <FieldLabel htmlFor={`${id}-role`}>{t("invite-role")}</FieldLabel>

@@ -2,6 +2,8 @@ import { type Duration, Effect, Fiber, Option, Ref } from "effect";
 
 /** Work that waits until its input has been quiet, or runs at once when it is flushed. */
 interface QuietSaver<A> {
+  /** Drops the waiting input without running it, for an input whose work is no longer wanted. */
+  readonly cancel: Effect.Effect<void>;
   /** Runs the work now for the newest input, when one waits. */
   readonly flush: Effect.Effect<void>;
   /** Takes the newest input and starts the quiet period again. */
@@ -28,6 +30,13 @@ export const makeQuietSaver = <A>(
   Effect.gen(function* () {
     const waiting = yield* Ref.make(Option.none<Waiting<A>>());
 
+    const cancel = Effect.gen(function* () {
+      const current = yield* Ref.getAndSet(waiting, Option.none<Waiting<A>>());
+      if (Option.isSome(current)) {
+        yield* Fiber.interrupt(current.value.fiber);
+      }
+    });
+
     const flush = Effect.gen(function* () {
       const current = yield* Ref.getAndSet(waiting, Option.none<Waiting<A>>());
       if (Option.isSome(current)) {
@@ -53,5 +62,5 @@ export const makeQuietSaver = <A>(
         yield* Ref.set(waiting, Option.some({ fiber, input }));
       });
 
-    return { flush, touch } satisfies QuietSaver<A>;
+    return { cancel, flush, touch } satisfies QuietSaver<A>;
   });

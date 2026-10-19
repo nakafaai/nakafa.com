@@ -58,6 +58,7 @@
     "failed": "Signing in failed. Try again.",
     "outsider-card": "Sign in with a card",
     "outsider-description": "{account} is not a member of {school}.",
+    "outsider-card-hint": "Not a Google address? Your school's admin gives you a login card.",
     "outsider-switch": "Switch account",
     "outsider-title": "Not a member",
     "password-description": "At least 8 characters.",
@@ -159,15 +160,24 @@
     "title-label": "Exam title",
     "unavailable": "This exam is not available.",
     "frozen-note": "This exam is scheduled, so its questions are fixed.",
+    "archived-note": "This school is archived, so its exams are read-only until it is restored.",
+    "room-cancel": "Cancel room",
+    "room-cancel-title": "Cancel this room?",
+    "room-cancel-description": "Students cannot enter it. The exam's questions can change again once no room of it remains.",
+    "room-cancel-confirm": "Cancel room",
     "questions": "Questions",
     "question": "Question {number}",
     "option": "Option {letter}",
-    "correct": "Correct answer",
-    "correct-option": "Mark option {letter} as correct",
+    "option-of": "Question {number}, option {letter}",
+    "option-add": "Add option",
     "no-key": "This question has no answer key yet.",
     "move-up": "Move up",
+    "move-up-of": "Move question {number} up",
     "move-down": "Move down",
+    "move-down-of": "Move question {number} down",
+    "more-actions-of": "More actions for question {number}",
     "remove": "Remove question",
+    "remove-of": "Remove question {number}",
     "remove-title": "Remove this question?",
     "remove-description": "The question and its answers leave this exam.",
     "create": "Create exam",
@@ -177,6 +187,7 @@
     "language": "Language",
     "add-question": "Add question",
     "copy": "Copy question",
+    "copy-of": "Copy question {number}",
     "prompt-label": "Question text",
     "prompt-placeholder": "Write the question here.",
     "results-title": "Results",
@@ -213,7 +224,9 @@
     "student-results-released": "Your teacher released these results.",
     "schedule": "Schedule",
     "schedule-title": "Schedule exam",
-    "schedule-description": "Students of the unit take it in the room from the start, for its length.",
+    "schedule-description": "The students of the unit, or of the class you choose, take it in the room from the start, for its length.",
+    "audience": "Who takes it",
+    "audience-unit": "The whole unit",
     "room": "Room",
     "room-placeholder": "Lab 2",
     "starts": "Starts",
@@ -239,6 +252,19 @@
     "try-action": "Try as student",
     "try-finish": "Finish trying",
     "try-note": "Answers here are not saved.",
+    "pages": "Pages",
+    "pages-label": "Exam pages",
+    "page-no-key": "No key yet",
+    "add-below": "Add question below",
+    "add-below-of": "Add question below question {number}",
+    "question-text": "Question {number} text",
+    "option-placeholder": "Write the option here.",
+    "key-option": "Mark option {letter} of question {number} as correct",
+    "option-remove-of": "Remove option {letter} of question {number}",
+    "grid": "Grid view",
+    "fullscreen": "Full screen",
+    "fullscreen-exit": "Exit full screen",
+    "zoom": "Zoom",
     "student-retry": "This sitting could not load, so try again in a moment.",
     "student-opens-at": "This sitting opens {time}.",
     "student-scheduled-footer": "The token field opens with the sitting.",
@@ -287,6 +313,11 @@
     "logo-remove-title": "Remove the logo?",
     "logo-remove-description": "The school shows its animal again until a new logo is uploaded.",
     "logo-remove-confirm": "Remove logo",
+    "name-title": "School name",
+    "name-description": "Every page of this school and its invitation emails show this name.",
+    "name-label": "Name",
+    "name-invalid": "Use 3 to 120 characters on one line.",
+    "name-footer": "Every name change is recorded in the audit trail.",
     "policy-students": "Students",
     "policy-students-description": "What students may do in this school.",
     "policy-students-footer": "Every policy change is recorded in the audit trail.",
@@ -302,6 +333,13 @@
     "level-other": "Other",
     "unit-level-line": "Level {level}.",
     "unit-archived-description": "This school is archived and refuses changes until it is restored.",
+    "unit-add": "Add school",
+    "unit-add-title": "Add a school",
+    "unit-add-description": "A school has its own level, periods, and classes.",
+    "unit-add-name": "Name",
+    "unit-add-level": "Level",
+    "unit-add-submit": "Add school",
+    "unit-add-footer": "A new school opens with no period. Add one on the Periods page.",
     "unit-time-zone": "Time zone",
     "unit-content-language": "Content language",
     "unit-archive-footer": "An archived school stays readable.",
@@ -375,6 +413,11 @@
     "invite-email": "Email",
     "invite-expires": "Expires",
     "invite-resend": "Send again",
+    "invite-expired": "Expired",
+    "invite-card": "Issue a login card",
+    "invite-card-description": "The invitee signs in with this login name and the card code, which the school shows once.",
+    "invite-card-submit": "Issue card",
+    "invite-google-note": "An address without Google signs in with a login card from the admin.",
     "invite-revoke": "Revoke",
     "invite-revoke-title": "Revoke this invite?",
     "invite-revoke-description": "The address can no longer accept this invite.",
@@ -427,7 +470,8 @@
       "cohort": {
         "created": "Class added",
         "renamed": "Class renamed",
-        "archived": "Class archived"
+        "archived": "Class archived",
+        "restored": "Class restored"
       },
       "connection": {
         "connected": "Connection added",
@@ -452,7 +496,8 @@
         "created": "Period added",
         "opened": "Period opened",
         "archived": "Period archived",
-        "rename": "Period renamed"
+        "rename": "Period renamed",
+        "restored": "Period restored"
       },
       "person": {
         "claimed": "Account joined",
@@ -487,7 +532,8 @@
         "changeToken": "Exam sitting token changed",
         "allowDevice": "Second device allowed for an exam attempt",
         "finish": "Exam attempt finished",
-        "close": "Exam sitting closed"
+        "close": "Exam sitting closed",
+        "cancel": "Exam room cancelled"
       },
       "exam": {
         "results": {
@@ -503,6 +549,9 @@
         "logo": {
           "removed": "Logo removed",
           "set": "Logo changed"
+        },
+        "name": {
+          "set": "School name changed"
         },
         "policy": {
           "set": "Setting changed"
@@ -641,6 +690,8 @@
     "student-add-submit": "Add student",
     "invites-empty": "No invite is waiting.",
     "invites-search": "Find an invitee",
+    "cohort-restore": "Restore",
+    "period-restore": "Restore",
     "no-unit-title": "No active unit yet",
     "no-unit-description": "Periods and cohorts belong to an active unit. Restore or add one first.",
     "no-unit-action": "Open units",
@@ -674,7 +725,7 @@
     "name-title": "What is your school called?",
     "name-label": "School name",
     "name-placeholder": "Harapan Bangsa",
-    "name-error": "Enter a name of at least 2 characters.",
+    "name-error": "Enter a name of at least 3 characters.",
     "address-label": "Address",
     "address-free": "Available",
     "address-taken": "Another school uses this address.",
@@ -1419,6 +1470,14 @@
       "title": "Already graduated from this school.",
       "description": "A graduated student cannot be placed in a cohort again."
     },
+    "school-refusal-unit-limit": {
+      "title": "No room for another school.",
+      "description": "An organisation holds a set number of schools."
+    },
+    "school-refusal-address-member": {
+      "title": "They already belong to this school.",
+      "description": "Change their role under Roles and access."
+    },
     "school-refusal-already-placed": {
       "title": "Already placed in this period.",
       "description": "Move the student from their current cohort instead."
@@ -1621,9 +1680,22 @@
       "title": "Too many schools today.",
       "description": "Try again tomorrow."
     },
+    "school-login-account": {
+      "title": "A school login cannot open a school.",
+      "description": "Sign in with your own account to open one."
+    },
     "school-save-error": {
       "title": "Your answer was not saved.",
       "description": "Try again."
+    },
+    "undo": {
+      "title": "Undo"
+    },
+    "school-cohort-archived": {
+      "title": "Class archived."
+    },
+    "school-period-archived": {
+      "title": "Period archived."
     },
     "sitting-not-in": {
       "title": "You are not in this sitting.",

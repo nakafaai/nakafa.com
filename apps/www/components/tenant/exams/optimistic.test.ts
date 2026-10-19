@@ -70,6 +70,7 @@ const third = question("q3");
 
 /** The exam as the editor reads it, with the questions in the given order. */
 const viewOf = (questions: readonly Question[]): ExamView => ({
+  archived: false,
   id: examId,
   language: Schema.decodeSync(DeliveryLanguageSchema)("id"),
   questions,
@@ -316,6 +317,24 @@ describe("the optimistic updates of the new questions", () => {
       exams.exams.open,
       { examId, slug },
       Option.some({ ...view, questions: [first, copy, second] })
+    );
+  });
+
+  it("show a question added after another one right after it", () => {
+    const view = viewOf([first, second]);
+    const { localStore, setQuery } = storeHolding(Option.some(view));
+    const added = placeholder("added");
+
+    addQuestionUpdate(added)(localStore, {
+      examId,
+      slug,
+      after: first.id,
+    });
+
+    expect(setQuery).toHaveBeenCalledWith(
+      exams.exams.open,
+      { examId, slug },
+      Option.some({ ...view, questions: [first, added, second] })
     );
   });
 

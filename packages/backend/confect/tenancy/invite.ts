@@ -208,6 +208,35 @@ export const addressInvited = Effect.fn("tenancy.invite.address")(function* (
   );
 });
 
+/**
+ * Whether an earlier invite of this address names a Person of this school that an account
+ * has claimed and that is still an active member. The address index also holds the invites
+ * of other schools, so the read is scoped to this school.
+ */
+export const addressJoined = Effect.fn("tenancy.invite.joined")(function* (
+  tenantId: GenericId.GenericId<"tenants">,
+  email: typeof Email.Type
+) {
+  const reader = yield* DatabaseReader;
+  const earlier = yield* reader
+    .table("tenantInvites")
+    .index("by_tenantId_and_channel_email", (query) =>
+      query.eq("tenantId", tenantId).eq("channel.email", email)
+    )
+    .take(ADDRESS_INVITE_LIMIT)
+    .pipe(Effect.orDie);
+  const people = yield* Effect.forEach(
+    earlier,
+    (invite) =>
+      reader.table("tenantPeople").get(invite.personId).pipe(Effect.orDie),
+    { concurrency: "unbounded" }
+  );
+  return Arr.some(
+    people,
+    (person) => person.status === "active" && person.account.state === "claimed"
+  );
+});
+
 /** The pending invite of one Person, if one waits: one indexed read. */
 export const pendingInviteOf = Effect.fn("tenancy.invite.pendingOf")(function* (
   personId: GenericId.GenericId<"tenantPeople">

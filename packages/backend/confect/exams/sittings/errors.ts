@@ -112,6 +112,14 @@ export class ScheduleInvalid extends Schema.TaggedError<ScheduleInvalid>()(
 ) {}
 
 /**
+ * A room that has opened, or closed: its students sat it, so it stays and cannot be cancelled.
+ */
+export class RoomOpened extends Schema.TaggedError<RoomOpened>()(
+  "RoomOpened",
+  refusal("ROOM_OPENED", "This room has opened, so it stays.")
+) {}
+
+/**
  * An exam with questions that have no answer key that fits them. `questions` holds the
  * order number of each such question, counted from one.
  */

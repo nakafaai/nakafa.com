@@ -36,7 +36,7 @@ import {
 } from "@/components/tenant/settings/cohort.client";
 import {
   type PersonId,
-  SchoolPersonPicker,
+  SchoolStudentPicker,
 } from "@/components/tenant/settings/people";
 import { saveSchool } from "@/components/tenant/settings/save.client";
 import type { Cohort, CohortMember } from "@/components/tenant/settings/state";
@@ -118,7 +118,7 @@ export function SchoolPlacementAdd({
             <FieldLabel htmlFor={`${id}-student`}>
               {t("placement-student")}
             </FieldLabel>
-            <SchoolPersonPicker
+            <SchoolStudentPicker
               id={`${id}-student`}
               onChoose={setPersonId}
               personId={personId}

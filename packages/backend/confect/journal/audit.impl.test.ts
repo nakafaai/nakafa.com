@@ -19,6 +19,7 @@ const contract: typeof Contract.Type = {
   plan: "tenant",
 };
 const audit = refs.public.journal.audit.list;
+const actors = refs.public.journal.audit.actors;
 const page = (numItems: number) => ({
   paginationOpts: { cursor: null, numItems },
   slug: nf,
@@ -186,4 +187,21 @@ describe("journal/audit list", () => {
       Schema.decodeUnknownSync(SubjectView)({ id: "id", kind: "invoice" })
     ).toEqual({ kind: "unknown" });
   });
+});
+
+describe("journal/audit actors", () => {
+  it.effect(
+    "lists every active member of the school as an actor, whether or not a page of the journal shows them",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const listed = yield* fixture.as("admin").query(actors, { slug: nf });
+        expect(listed).toEqual(
+          expect.arrayContaining([
+            { id: fixture.people.owner.personId, name: expect.any(String) },
+            { id: fixture.people.teacher.personId, name: expect.any(String) },
+          ])
+        );
+      })
+  );
 });

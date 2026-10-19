@@ -81,6 +81,8 @@ export function invite(id: string): Invite {
     id: Schema.decodeUnknownSync(Id("tenantInvites"))(id),
     name: id,
     personId,
+    roles: [],
+    status: "pending",
   };
 }
 

@@ -14,12 +14,16 @@ import {
   HashMap,
   Layer,
   Number as Num,
+  Result,
   Schema,
   Struct,
 } from "effect";
 
 /** The largest page one request reads. */
 const PAGE_LIMIT = 100;
+
+/** The most active members the audit filter lists as actors. */
+const ACTOR_LIMIT = 200;
 
 /**
  * The member's tenant entries, newest first. Each Person named as an actor or
@@ -119,8 +123,35 @@ const list = FunctionImpl.make(
   })
 );
 
+/**
+ * The active members of the member's school, named, so the audit filter offers every one of them
+ * as an actor and not only the actors of the pages loaded so far. A school holds at most
+ * `ACTOR_LIMIT` such members in this list, which one indexed read holds.
+ */
+const actors = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "actors",
+  Effect.fn("journal.audit.actors")(function* () {
+    const { tenant } = yield* Member;
+    const people = yield* (yield* DatabaseReader)
+      .table("tenantPeople")
+      .index("by_tenantId_and_status", (query) =>
+        query.eq("tenantId", tenant._id).eq("status", "active")
+      )
+      .take(ACTOR_LIMIT)
+      .pipe(Effect.orDie);
+    return Arr.filterMap(people, (person) =>
+      person.kind === "member"
+        ? Result.succeed({ id: person._id, name: person.name })
+        : Result.failVoid
+    );
+  })
+);
+
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(list),
+  Layer.provide(actors),
   Layer.provide(session),
   Layer.provide(member),
   Layer.provide(tenantAccess),

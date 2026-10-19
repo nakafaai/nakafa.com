@@ -12,7 +12,8 @@ const ROOMS_PATH = /\/exams\/[^/]+$/;
 
 /** The thumbnail of the first question, whose name starts with its number. */
 const FIRST_QUESTION = /^Question 1\b/;
-const SECOND_QUESTION = /^Question 2\b/;
+/** The key toggle of each option of the first question, which is pressed for the key. */
+const KEY_OF_FIRST_QUESTION = /^Mark option [A-D] of question 1 as correct$/u;
 /** A prompt with more steps than a fold waits for, so typing it moves the snapshot. */
 const LONG_PROMPT =
   "Sebuah mobil melaju 60 km/jam selama 2 jam. Berapa jarak yang ditempuh?";
@@ -83,34 +84,33 @@ test("a teacher creates an exam, adds questions, writes one, and finds it all wh
   await expect(page.getByRole("link", { name: "Exams" })).toBeVisible();
 
   // A new exam starts with one question, and each added question is selected at once.
-  await page.getByRole("button", { name: "Add question" }).click();
+  await page.getByRole("button", { name: "Add question", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Question 2" })).toBeVisible();
-  await page.getByRole("button", { name: "Add question" }).click();
+  await page.getByRole("button", { name: "Add question", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Question 3" })).toBeVisible();
 
   // The first question gets a prompt, four options, and a correct answer.
-  const strip = page.getByRole("navigation", { name: "Questions" });
-  await strip.getByRole("button", { name: FIRST_QUESTION }).click();
-  const prompt = page.getByRole("textbox", { name: "Question text" });
+  const firstPage = page.getByRole("region", { name: FIRST_QUESTION });
+  const prompt = page.getByRole("textbox", { name: "Question 1 text" });
   await expect(prompt).toBeEditable();
   await prompt.click();
   await page.keyboard.type("Berapa hasil 2 + 3?");
-  // The open question's thumbnail draws what its editor holds, as the teacher types.
-  await expect(
-    strip.getByRole("button", { name: FIRST_QUESTION })
-  ).toContainText("Berapa hasil 2 + 3?");
+  // The question's page shows what its editor holds, as the teacher types.
+  await expect(firstPage).toContainText("Berapa hasil 2 + 3?");
 
   for (const option of OPTIONS) {
     const field = page.getByRole("textbox", {
-      name: `Option ${option.letter}`,
+      name: `Question 1, option ${option.letter}`,
     });
     await field.fill(option.text);
     await field.press("Tab");
   }
-  await page.getByRole("radio", { name: "Mark option B as correct" }).click();
+  await page
+    .getByRole("button", { name: "Mark option B of question 1 as correct" })
+    .click();
   await expect(
-    page.getByRole("radio", { name: "Mark option B as correct" })
-  ).toBeChecked();
+    page.getByRole("button", { name: "Mark option B of question 1 as correct" })
+  ).toHaveAttribute("aria-pressed", "true");
 
   // Everything the teacher wrote reaches the server, so the editor opened again shows it.
   // Its queries are live: a save still on its way shows as soon as it lands, where a reload
@@ -119,7 +119,7 @@ test("a teacher creates an exam, adds questions, writes one, and finds it all wh
   const reopened = await context.newPage();
   await reopened.goto(page.url());
   const reopenedPrompt = reopened.getByRole("textbox", {
-    name: "Question text",
+    name: "Question 1 text",
   });
   await expect(reopenedPrompt).toBeEditable({
     timeout: readinessTimeoutMilliseconds,
@@ -129,33 +129,35 @@ test("a teacher creates an exam, adds questions, writes one, and finds it all wh
   });
   for (const option of OPTIONS) {
     await expect(
-      reopened.getByRole("textbox", { name: `Option ${option.letter}` })
+      reopened.getByRole("textbox", {
+        name: `Question 1, option ${option.letter}`,
+      })
     ).toHaveValue(option.text, { timeout: readinessTimeoutMilliseconds });
   }
   await expect(
-    reopened.getByRole("radio", { name: "Mark option B as correct" })
-  ).toBeChecked({ timeout: readinessTimeoutMilliseconds });
+    reopened.getByRole("button", {
+      name: "Mark option B of question 1 as correct",
+    })
+  ).toHaveAttribute("aria-pressed", "true", {
+    timeout: readinessTimeoutMilliseconds,
+  });
 
-  // The two added questions have no key, so each shows its dot, and the first does not.
-  const reopenedStrip = reopened.getByRole("navigation", { name: "Questions" });
-  await expect(
-    reopenedStrip.getByText("This question has no answer key yet.")
-  ).toHaveCount(2);
+  // The two added questions have no key, so each shows its warning, and the first does not.
+  await expect(reopened.getByText("No key yet")).toHaveCount(2);
 
-  // A question the canvas does not show draws its page from what the server holds.
-  await reopenedStrip.getByRole("button", { name: SECOND_QUESTION }).click();
+  // A page far from the view draws its document from what the server holds.
   await expect(
     reopened.getByRole("heading", { name: "Question 2" })
   ).toBeVisible();
-  const firstThumbnail = reopenedStrip.getByRole("button", {
-    name: FIRST_QUESTION,
-  });
-  await expect(firstThumbnail).toContainText("Berapa hasil 2 + 3?", {
+  const firstReopened = reopened.getByRole("region", { name: FIRST_QUESTION });
+  await expect(firstReopened).toContainText("Berapa hasil 2 + 3?", {
     timeout: readinessTimeoutMilliseconds,
   });
-  await expect(firstThumbnail.locator('input[data-slot="input"]')).toHaveCount(
-    OPTIONS.length
-  );
+  await expect(
+    firstReopened.getByRole("button", {
+      name: KEY_OF_FIRST_QUESTION,
+    })
+  ).toHaveCount(OPTIONS.length);
 
   // A question without a key keeps the exam from being scheduled: the dialog names the keys,
   // and its submit stays off.
@@ -192,23 +194,29 @@ test("a teacher schedules a sitting of an exam whose question has its key, and t
   // The exam starts with one question, which takes the four options and the key of the second.
   for (const option of OPTIONS) {
     const field = page.getByRole("textbox", {
-      name: `Option ${option.letter}`,
+      name: `Question 1, option ${option.letter}`,
     });
     await field.fill(option.text);
     await field.press("Tab");
   }
-  await page.getByRole("radio", { name: "Mark option B as correct" }).click();
+  await page
+    .getByRole("button", { name: "Mark option B of question 1 as correct" })
+    .click();
   await expect(
-    page.getByRole("radio", { name: "Mark option B as correct" })
-  ).toBeChecked();
+    page.getByRole("button", { name: "Mark option B of question 1 as correct" })
+  ).toHaveAttribute("aria-pressed", "true");
 
   // The schedule reads the key that the server holds, so the editor opened again waits until
   // the server shows the key before the teacher schedules the sitting.
   const reopened = await context.newPage();
   await reopened.goto(page.url());
   await expect(
-    reopened.getByRole("radio", { name: "Mark option B as correct" })
-  ).toBeChecked({ timeout: readinessTimeoutMilliseconds });
+    reopened.getByRole("button", {
+      name: "Mark option B of question 1 as correct",
+    })
+  ).toHaveAttribute("aria-pressed", "true", {
+    timeout: readinessTimeoutMilliseconds,
+  });
 
   await reopened.getByRole("button", { name: "Schedule" }).click();
   const scheduling = reopened.getByRole("dialog");
@@ -241,15 +249,17 @@ test("a teacher schedules an exam, and its editor opens read-only, saying why", 
   // The exam starts with one question, which takes the four options and the key of the second.
   for (const option of OPTIONS) {
     const field = page.getByRole("textbox", {
-      name: `Option ${option.letter}`,
+      name: `Question 1, option ${option.letter}`,
     });
     await field.fill(option.text);
     await field.press("Tab");
   }
-  await page.getByRole("radio", { name: "Mark option B as correct" }).click();
+  await page
+    .getByRole("button", { name: "Mark option B of question 1 as correct" })
+    .click();
   await expect(
-    page.getByRole("radio", { name: "Mark option B as correct" })
-  ).toBeChecked();
+    page.getByRole("button", { name: "Mark option B of question 1 as correct" })
+  ).toHaveAttribute("aria-pressed", "true");
 
   await page.getByRole("button", { name: "Schedule" }).click();
   const scheduling = page.getByRole("dialog");
@@ -262,20 +272,20 @@ test("a teacher schedules an exam, and its editor opens read-only, saying why", 
   await expect(
     page.getByText("This exam is scheduled, so its questions are fixed.")
   ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
-  await expect(page.getByRole("button", { name: "Add question" })).toHaveCount(
-    0
-  );
+  await expect(
+    page.getByRole("button", { name: "Add question", exact: true })
+  ).toHaveCount(0);
   await expect(page.getByRole("button", { name: "More actions" })).toHaveCount(
     0
   );
   await expect(
-    page.getByRole("textbox", { name: "Option A" })
+    page.getByRole("textbox", { name: "Question 1, option A" })
   ).not.toBeEditable();
   await expect(
-    page.getByRole("radio", { name: "Mark option A as correct" })
+    page.getByRole("button", { name: "Mark option A of question 1 as correct" })
   ).toBeDisabled();
   await expect(
-    page.getByRole("textbox", { name: "Question text" })
+    page.getByRole("textbox", { name: "Question 1 text" })
   ).toHaveAttribute("aria-readonly", "true", {
     timeout: readinessTimeoutMilliseconds,
   });
@@ -308,10 +318,10 @@ test("a question typed long enough for a fold keeps its thumbnail once the teach
   await page.waitForURL(EDITOR_PATH);
 
   // The first question gets more steps than a fold waits for, then the teacher adds and
-  // writes a second: the first question's thumbnail now reads the server while the fold
+  // writes a second: the first question's page now reads the server while the fold
   // moves its snapshot, and the page keeps drawing.
-  const strip = page.getByRole("navigation", { name: "Questions" });
-  const firstPrompt = page.getByRole("textbox", { name: "Question text" });
+  const firstPage = page.getByRole("region", { name: FIRST_QUESTION });
+  const firstPrompt = page.getByRole("textbox", { name: "Question 1 text" });
   await expect(firstPrompt).toBeEditable({
     timeout: readinessTimeoutMilliseconds,
   });
@@ -322,17 +332,17 @@ test("a question typed long enough for a fold keeps its thumbnail once the teach
   // question's steps before the teacher moves on, as a teacher typing at a person's pace
   // leaves it, and the second question is not created behind a queue of saves.
   await saved(changes, sentBefore);
-  await page.getByRole("button", { name: "Add question" }).click();
+  await page.getByRole("button", { name: "Add question", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Question 2" })).toBeVisible();
-  const secondPrompt = page.getByRole("textbox", { name: "Question text" });
+  const secondPrompt = page.getByRole("textbox", { name: "Question 2 text" });
   await expect(secondPrompt).toBeEditable({
     timeout: readinessTimeoutMilliseconds,
   });
   await secondPrompt.click();
   await page.keyboard.type("Berapa hasil 3 + 4?");
-  await expect(
-    strip.getByRole("button", { name: FIRST_QUESTION })
-  ).toContainText(LONG_PROMPT, { timeout: readinessTimeoutMilliseconds });
+  await expect(firstPage).toContainText(LONG_PROMPT, {
+    timeout: readinessTimeoutMilliseconds,
+  });
   await expect(secondPrompt).toContainText("Berapa hasil 3 + 4?");
   await context.close();
 });

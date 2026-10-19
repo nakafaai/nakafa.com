@@ -13,8 +13,9 @@ import { TenantOutsiderActions } from "@/components/tenant/outsider.client";
 
 /**
  * The page of a signed-in visitor who is not a member of the school. It names the account,
- * says where an invite may still be on its way, and offers the ways out. It reuses the entry
- * frame, so the visitor sees the school's own mark, as a signed-out visitor does.
+ * says where an invite may still be on its way and how an address without Google signs in,
+ * and offers the ways out. It reuses the entry frame, so the visitor sees the school's own
+ * mark, as a signed-out visitor does.
  */
 export async function TenantOutsider({
   account,
@@ -48,6 +49,9 @@ export async function TenantOutsider({
             </p>
             <p className="text-muted-foreground text-sm">
               {t("outsider-hint")}
+            </p>
+            <p className="text-muted-foreground text-sm">
+              {t("outsider-card-hint")}
             </p>
           </div>
 

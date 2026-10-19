@@ -80,6 +80,20 @@ describe("createExamSelection", () => {
     expect(selection.getState().selected).toBe(second.id);
   });
 
+  it("holds a pinned question until it is released, and keeps it chosen after", () => {
+    const selection = createExamSelection();
+
+    selection.getState().pin(second.id);
+
+    expect(selection.getState().selected).toBe(second.id);
+    expect(selection.getState().pinned).toBe(true);
+
+    selection.getState().unpin();
+
+    expect(selection.getState().selected).toBe(second.id);
+    expect(selection.getState().pinned).toBe(false);
+  });
+
   it("lists the questions still being saved until each one ends", () => {
     const selection = createExamSelection();
 

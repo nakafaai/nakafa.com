@@ -5,6 +5,7 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
+import { loginAddress } from "@repo/backend/confect/identity/address";
 import {
   slugOf,
   TENANCY_NOW,
@@ -291,6 +292,36 @@ describe("tenancy/start", () => {
           { _tag: "FoundingRefused", code: "SLUG_TAKEN" },
           { _tag: "FoundingRefused", code: "SLUG_RESERVED" },
         ]);
+      })
+  );
+
+  it.effect(
+    "refuses an opening from a school login account, and opens nothing for its address",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const card = yield* fixture.account(
+          "card",
+          loginAddress("harapan-card"),
+          false
+        );
+        yield* card.client.mutation(save, {
+          answer: {
+            kind: "name",
+            name: "Harapan Bangsa",
+            slug: slugOf("harapan"),
+          },
+        });
+        const refused = yield* card.client
+          .mutation(open, harapan("harapan"))
+          .pipe(Effect.flip);
+        expect(refused).toMatchObject({
+          _tag: "FoundingRefused",
+          code: "LOGIN_ACCOUNT",
+        });
+        expect(yield* card.client.query(address, { slug: "harapan" })).toBe(
+          "free"
+        );
       })
   );
 

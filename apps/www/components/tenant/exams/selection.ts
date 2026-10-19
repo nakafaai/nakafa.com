@@ -14,6 +14,8 @@ import type {
  */
 const SelectionState = Schema.Struct({
   pending: Schema.Array(Id("examQuestions")),
+  /** Whether the chosen question is held, so the scroll that brings it into view does not choose another. */
+  pinned: Schema.Boolean,
   selected: Schema.NullOr(Id("examQuestions")),
 });
 
@@ -21,6 +23,8 @@ const SelectionState = Schema.Struct({
 interface SelectionActions {
   /** Ends the pending state of a question, once the server answered or refused it. */
   readonly endPending: (id: QuestionId) => void;
+  /** Chooses a question and holds it, so the canvas keeps it chosen while it scrolls to it. */
+  readonly pin: (id: QuestionId) => void;
   /**
    * Replaces a placeholder with the question the server answered for: the saved question
    * when it saved, or the question chosen before when it refused. It acts only while the
@@ -32,6 +36,8 @@ interface SelectionActions {
   readonly select: (id: QuestionId) => void;
   /** Marks a question as a placeholder that the server has not saved yet. */
   readonly startPending: (id: QuestionId) => void;
+  /** Releases the held question, so the canvas chooses the page the teacher scrolls to again. */
+  readonly unpin: () => void;
 }
 
 /** The state of one editor's selection, with its actions, as its store holds it. */
@@ -74,6 +80,8 @@ export const createExamSelection = () =>
         pending: Arr.filter(state.pending, (current) => current !== id),
       })),
     pending: [],
+    pin: (id) => set({ pinned: true, selected: id }),
+    pinned: false,
     replace: (placeholder, next) =>
       set((state) =>
         state.selected === placeholder ? { selected: next } : {}
@@ -82,4 +90,5 @@ export const createExamSelection = () =>
     selected: null,
     startPending: (id) =>
       set((state) => ({ pending: Arr.append(state.pending, id) })),
+    unpin: () => set({ pinned: false }),
   }));

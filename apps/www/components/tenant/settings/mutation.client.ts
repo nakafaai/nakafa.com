@@ -193,6 +193,16 @@ export const setPolicyChange: OptimisticUpdate<
   }));
 };
 
+/** Shows the school's new name at once, in the viewer that the sidebar and every settings page read. */
+export const setNameChange: OptimisticUpdate<
+  typeof tenancy.settings.setName
+> = (localStore, { name, slug }) => {
+  patchViewer(localStore, slug, (viewer) => ({
+    ...viewer,
+    tenant: { ...viewer.tenant, name },
+  }));
+};
+
 /** Takes the school's logo off at once, so the animal shows. */
 export const removeLogoChange: OptimisticUpdate<typeof tenancy.logo.remove> = (
   localStore,
@@ -202,6 +212,23 @@ export const removeLogoChange: OptimisticUpdate<typeof tenancy.logo.remove> = (
     ...viewer,
     tenant: Struct.omit(viewer.tenant, ["logo"]),
   }));
+};
+
+/** Lists a new school at once, at the end of the school's units, as the server adds it last. */
+export const addUnitChange: OptimisticUpdate<typeof tenancy.units.create> = (
+  localStore,
+  { contentLanguage, level, name, slug, timeZone }
+) => {
+  const draft: Unit = {
+    contentLanguage,
+    id: Schema.decodeUnknownSync(Id("tenantUnits"))(draftText()),
+    level,
+    name,
+    npsn: null,
+    status: "active",
+    timeZone,
+  };
+  patchUnitList(localStore, slug, (units) => Arr.append(units, draft));
 };
 
 /** Shows the new time zone and content language of a unit at once. */
@@ -317,6 +344,8 @@ export const inviteChange: OptimisticUpdate<typeof tenancy.invites.invite> = (
     id: Schema.decodeUnknownSync(Id("tenantInvites"))(draftText()),
     name: person.value.name,
     personId,
+    roles: [],
+    status: "pending",
   };
   changeInviteLists(localStore, slug, isFirstPage, (page) =>
     Arr.prepend(page, draft)

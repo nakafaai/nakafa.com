@@ -67,6 +67,17 @@ export const renameCohortChange: OptimisticUpdate<
   );
 };
 
+/** Shows a cohort as active again at once, in every loaded list of cohorts. */
+export const restoreCohortChange: OptimisticUpdate<
+  typeof tenancy.cohorts.restore
+> = (localStore, { cohortId }) => {
+  changeCohortLists(
+    localStore,
+    () => true,
+    (cohorts) => setCohortStatus(cohorts, cohortId, "active")
+  );
+};
+
 /** Shows a cohort as archived at once, in every loaded list of cohorts. */
 export const archiveCohortChange: OptimisticUpdate<
   typeof tenancy.cohorts.archive

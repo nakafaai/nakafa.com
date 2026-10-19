@@ -3,6 +3,7 @@ import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { answer } from "@repo/backend/confect/exams/sittings/answer";
 import { heldAttempt } from "@repo/backend/confect/exams/sittings/attempt";
 import { sittingAccess } from "@repo/backend/confect/exams/sittings/authority";
+import { cancelRoom } from "@repo/backend/confect/exams/sittings/cancel";
 import {
   dashboard,
   lastAnswer,
@@ -53,6 +54,15 @@ const mineFunction = FunctionImpl.make(
   "mine",
   Effect.fn("exams.sittings.mine.function")(function* () {
     return yield* mine();
+  })
+);
+
+const cancelFunction = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "cancel",
+  Effect.fn("exams.sittings.cancel.function")(function* () {
+    return yield* cancelRoom();
   })
 );
 
@@ -201,8 +211,8 @@ const finishFunction = FunctionImpl.make(
 );
 
 /**
- * Implements the sittings group of `sittings.spec.ts`: entry, signals, reads, the six proctor
- * actions, and the student's paper, answers, and finish.
+ * Implements the sittings group of `sittings.spec.ts`: entry, signals, reads, a room's cancel,
+ * the six proctor actions, and the student's paper, answers, and finish.
  */
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(enterFunction),
@@ -210,6 +220,7 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(mineFunction),
   Layer.provide(dashboardFunction),
   Layer.provide(lastAnswerFunction),
+  Layer.provide(cancelFunction),
   // The six proctor actions in one step, so the group stays within one pipe.
   Layer.provide(
     Layer.mergeAll(

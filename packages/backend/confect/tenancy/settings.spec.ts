@@ -5,6 +5,7 @@ import RequireMember from "@repo/backend/confect/middleware/member.spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
 import { Currency, NewCurrency } from "@repo/backend/confect/tenancy/locale";
 import { Policy, TenantPolicies } from "@repo/backend/confect/tenancy/policy";
+import { TenantName } from "@repo/backend/confect/tenancy/schema";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Schema } from "effect";
 
@@ -34,5 +35,12 @@ export default GroupSpec.make()
       name: "setPolicy",
       args: () => ({ policy: Policy, slug: TenantSlug }),
       returns: () => TenantPolicies,
+    }).middleware(TenantAccess, { action: "tenant.manage" })
+  )
+  .addFunction(
+    FunctionSpec.publicMutation({
+      name: "setName",
+      args: () => ({ name: TenantName, slug: TenantSlug }),
+      returns: () => TenantName,
     }).middleware(TenantAccess, { action: "tenant.manage" })
   );

@@ -11,6 +11,7 @@ import RequireMember from "@repo/backend/confect/middleware/member.spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
 import {
   AddressInvited,
+  AddressMember,
   InviteDomainRefused,
 } from "@repo/backend/confect/tenancy/errors";
 import { MemberStatus } from "@repo/backend/confect/tenancy/roster";
@@ -68,6 +69,7 @@ export default GroupSpec.make()
         Schema.Union([
           AccessDenied,
           AddressInvited,
+          AddressMember,
           GrantRejected,
           InviteDomainRefused,
         ]),

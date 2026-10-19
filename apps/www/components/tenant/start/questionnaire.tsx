@@ -207,6 +207,12 @@ function SchoolStartForm({
                     title: "school-rate.title",
                   })
                 ),
+                Match.when("LOGIN_ACCOUNT", () =>
+                  toast.error({
+                    description: "school-login-account.description",
+                    title: "school-login-account.title",
+                  })
+                ),
                 Match.orElse(() => {
                   refocus.current = Option.some(NAME_INPUT);
                   startOpening(() => setItem("name"));
@@ -226,7 +232,9 @@ function SchoolStartForm({
         },
         onSuccess: ({ address }) => {
           startOpening(() => setOpened(Option.some(school)));
-          window.location.assign(address);
+          // The new school replaces this questionnaire in the history, so Back never
+          // returns to a blank questionnaire of a school that is already open.
+          window.location.replace(address);
         },
       });
     });

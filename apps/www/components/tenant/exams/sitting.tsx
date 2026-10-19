@@ -1,9 +1,12 @@
 "use client";
 
-import { useMutation } from "@confect/react";
+import { QueryResult, useMutation, useQuery } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { ScheduleInvalid } from "@repo/backend/confect/exams/sittings/errors";
-import { RoomName } from "@repo/backend/confect/exams/sittings/schema";
+import {
+  RoomName,
+  SittingGroup,
+} from "@repo/backend/confect/exams/sittings/schema";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Field,
@@ -43,6 +46,9 @@ const LENGTHS: readonly number[] = [30, 45, 60, 90, 120];
 /** The length that a dialog opens with, in minutes. */
 const DEFAULT_MINUTES = 60;
 
+/** The audience that stands for the whole unit, beside the cohorts of the unit. */
+const UNIT_AUDIENCE = "unit";
+
 /**
  * The refusals that the dialog explains in its body: a question without a key that fits it,
  * and a start that has passed. Any other refusal shows the action-error toast.
@@ -77,6 +83,7 @@ export function ScheduleSitting({
   const [picked, setPicked] = useState<string | null>(null);
   const [room, setRoom] = useState("");
   const [minutes, setMinutes] = useState(DEFAULT_MINUTES);
+  const [audience, setAudience] = useState(UNIT_AUDIENCE);
   const [refusal, setRefusal] = useState<Refusal | null>(null);
   const [pending, startTransition] = useTransition();
   const unitItems = Arr.map(units, (unit) => ({
@@ -91,6 +98,21 @@ export function ScheduleSitting({
     Arr.findFirst(units, (unit) => unit.id === picked),
     () => Arr.head(units)
   );
+  const cohortList = useQuery(
+    exams.exams.cohorts,
+    Option.isSome(choice) ? { slug, unitId: choice.value.id } : "skip"
+  );
+  if (QueryResult.isFailure(cohortList)) {
+    throw cohortList.error;
+  }
+  const cohorts = QueryResult.isSuccess(cohortList) ? cohortList.value : [];
+  const audienceItems = [
+    { label: t("audience-unit"), value: UNIT_AUDIENCE },
+    ...Arr.map(cohorts, (cohort) => ({
+      label: cohort.name,
+      value: cohort.id,
+    })),
+  ];
   const zone = Option.flatMap(choice, (unit) =>
     DateTime.zoneMakeNamed(unit.timeZone)
   );
@@ -138,7 +160,14 @@ export function ScheduleSitting({
       return;
     }
     const { closesAt, opensAt } = times.value;
-    const unit = choice.value;
+    const unitId = choice.value.id;
+    const group: typeof SittingGroup.Type = Option.match(
+      Arr.findFirst(cohorts, (cohort) => cohort.id === audience),
+      {
+        onNone: () => ({ kind: "unit", unitId }),
+        onSome: (cohort) => ({ cohortId: cohort.id, kind: "cohort" }),
+      }
+    );
     setRefusal(null);
     startTransition(async () => {
       await runExamAction(
@@ -146,7 +175,7 @@ export function ScheduleSitting({
           schedule({
             closesAt,
             examId: exam.id,
-            group: { kind: "unit", unitId: unit.id },
+            group,
             opensAt,
             room: roomName,
             slug,
@@ -208,7 +237,10 @@ export function ScheduleSitting({
           <FieldLabel htmlFor={`${id}-unit`}>{t("unit")}</FieldLabel>
           <Select
             items={unitItems}
-            onValueChange={(key) => setPicked(key)}
+            onValueChange={(key) => {
+              setPicked(key);
+              setAudience(UNIT_AUDIENCE);
+            }}
             value={Option.getOrNull(Option.map(choice, (unit) => unit.id))}
           >
             <SelectTrigger className="w-full" id={`${id}-unit`}>
@@ -223,6 +255,27 @@ export function ScheduleSitting({
             </SelectContent>
           </Select>
         </Field>
+        {Arr.isReadonlyArrayNonEmpty(cohorts) ? (
+          <Field>
+            <FieldLabel htmlFor={`${id}-audience`}>{t("audience")}</FieldLabel>
+            <Select
+              items={audienceItems}
+              onValueChange={(key) => setAudience(key ?? UNIT_AUDIENCE)}
+              value={audience}
+            >
+              <SelectTrigger className="w-full" id={`${id}-audience`}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Arr.map(audienceItems, (item) => (
+                  <SelectItem key={item.value} value={item.value}>
+                    {item.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+        ) : null}
         <Field>
           <FieldLabel htmlFor={`${id}-room`}>{t("room")}</FieldLabel>
           <Input

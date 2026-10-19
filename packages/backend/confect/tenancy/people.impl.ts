@@ -62,6 +62,49 @@ const list = FunctionImpl.make(
   })
 );
 
+/**
+ * The active members of the school who hold an active student grant, a page at a time. A Person
+ * with a grant in more than one unit is on the page once for each grant, so a caller shows each
+ * Person once by its ID.
+ */
+const students = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "students",
+  Effect.fn("tenancy.people.students")(function* ({ paginationOpts }) {
+    const { tenant } = yield* Member;
+    const reader = yield* DatabaseReader;
+    const grants = yield* reader
+      .table("tenantGrants")
+      .index("by_tenantId_and_role_key_and_status", (query) =>
+        query
+          .eq("tenantId", tenant._id)
+          .eq("role.key", "student")
+          .eq("status", "active")
+      )
+      .paginate(paginationOpts)
+      .pipe(Effect.orDie);
+    const people = yield* Effect.forEach(
+      grants.page,
+      (grant) =>
+        reader
+          .table("tenantPeople")
+          .get(grant.personId)
+          .pipe(Effect.orDie),
+      { concurrency: "unbounded" }
+    );
+    return Struct.assign(grants, {
+      page: Arr.map(
+        Arr.filter(
+          people,
+          (person) => person.status === "active" && person.kind === "member"
+        ),
+        view
+      ),
+    });
+  })
+);
+
 /** Creates an unclaimed active member Person. An account claims it later, through an invite. */
 const create = FunctionImpl.make(
   databaseSchema,
@@ -107,6 +150,7 @@ const remove = FunctionImpl.make(
 
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(list),
+  Layer.provide(students),
   Layer.provide(create),
   Layer.provide(rename),
   Layer.provide(remove),

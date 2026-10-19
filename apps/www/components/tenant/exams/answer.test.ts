@@ -4,13 +4,35 @@ import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
 import { Array as Arr, Option } from "effect";
 import {
   choiceOf,
-  labelText,
+  emptyLabel,
   markedKey,
   markedOption,
+  type OptionLabel,
+  optionLabelOf,
   optionLetter,
-  textLabel,
-  withOptionText,
+  withOptionAdded,
+  withOptionLabel,
+  withOptionRemoved,
 } from "@/components/tenant/exams/answer";
+
+/** The label of an option that holds `text` as one paragraph, the shape the option editor writes. */
+const textOf = (text: string): OptionLabel => ({
+  content: [{ content: [{ text, type: "text" }], type: "paragraph" }],
+  type: "doc",
+});
+
+/** The text of a label, read from the text of its paragraphs in order. */
+const plainText = (label: OptionLabel) =>
+  Arr.join(
+    Arr.flatMap(label.content, (block) =>
+      block.type === "paragraph"
+        ? Arr.flatMap(block.content ?? [], (node) =>
+            node.type === "text" ? [node.text] : []
+          )
+        : []
+    ),
+    ""
+  );
 
 /** One single-answer choice with four options, the shape a new school question takes. */
 const choice: Interaction = {
@@ -20,10 +42,10 @@ const choice: Interaction = {
   maxChoices: 1,
   minChoices: 1,
   options: [
-    { id: "option-1", label: textLabel("") },
-    { id: "option-2", label: textLabel("Paris") },
-    { id: "option-3", label: textLabel("Rome") },
-    { id: "option-4", label: textLabel("Berlin") },
+    { id: "option-1", label: emptyLabel() },
+    { id: "option-2", label: textOf("Paris") },
+    { id: "option-3", label: textOf("Rome") },
+    { id: "option-4", label: textOf("Berlin") },
   ],
   shuffle: false,
 };
@@ -38,46 +60,25 @@ describe("optionLetter", () => {
   });
 });
 
-describe("labelText and textLabel", () => {
-  it("reads back the text that a label was written with", () => {
-    expect(labelText(textLabel("Paris"))).toBe("Paris");
+describe("optionLabelOf and emptyLabel", () => {
+  it("reads a label the contract accepts as the document it is", () => {
+    expect(optionLabelOf(textOf("Paris"))).toEqual(
+      Option.some(textOf("Paris"))
+    );
   });
 
-  it("writes an empty text as one empty paragraph", () => {
-    expect(textLabel("")).toEqual({
+  it("reads no label from a document the contract refuses", () => {
+    expect(
+      optionLabelOf({ content: [{ type: "unknownBlock" }], type: "doc" })
+    ).toEqual(Option.none());
+  });
+
+  it("writes an empty label as one empty paragraph", () => {
+    expect(emptyLabel()).toEqual({
       content: [{ type: "paragraph" }],
       type: "doc",
     });
-    expect(labelText(textLabel(""))).toBe("");
-  });
-
-  it("reads no text from a block that is not a paragraph", () => {
-    expect(
-      labelText({
-        content: [
-          {
-            attrs: { level: 1 },
-            content: [{ text: "Heading", type: "text" }],
-            type: "heading",
-          },
-        ],
-        type: "doc",
-      })
-    ).toBe("");
-  });
-
-  it("reads no text from an inline node that is not text", () => {
-    expect(
-      labelText({
-        content: [
-          {
-            content: [{ attrs: { latex: "x^2" }, type: "mathInline" }],
-            type: "paragraph",
-          },
-        ],
-        type: "doc",
-      })
-    ).toBe("");
+    expect(plainText(emptyLabel())).toBe("");
   });
 });
 
@@ -95,13 +96,17 @@ describe("choiceOf", () => {
 const optionTexts = (answers: readonly Interaction[]) =>
   Arr.flatMap(answers, (answer) =>
     answer.kind === "choice"
-      ? Arr.map(answer.options, (option) => labelText(option.label))
+      ? Arr.map(answer.options, (option) => plainText(option.label))
       : []
   );
 
-describe("withOptionText", () => {
-  it("replaces the text of the named option and keeps the rest", () => {
-    const answers = withOptionText([choice, entry], "option-2", "Lyon");
+describe("withOptionLabel", () => {
+  it("replaces the label of the named option with the document and keeps the rest", () => {
+    const answers = withOptionLabel(
+      [choice, entry],
+      "option-2",
+      textOf("Lyon")
+    );
     const [first, second] = answers;
 
     expect(second).toBe(entry);
@@ -109,8 +114,29 @@ describe("withOptionText", () => {
     expect(optionTexts(answers)).toEqual(["", "Lyon", "Rome", "Berlin"]);
   });
 
+  it("keeps every formatted node of the document it writes", () => {
+    const bold: OptionLabel = {
+      content: [
+        {
+          content: [
+            { marks: [{ type: "bold" }], text: "Paris", type: "text" },
+            { text: " is the capital", type: "text" },
+          ],
+          type: "paragraph",
+        },
+      ],
+      type: "doc",
+    };
+
+    const [answer] = withOptionLabel([choice], "option-2", bold);
+
+    expect(answer.kind === "choice" ? answer.options[1].label : null).toEqual(
+      bold
+    );
+  });
+
   it("keeps the options in their order and their IDs", () => {
-    const answers = withOptionText([choice], "option-4", "Madrid");
+    const answers = withOptionLabel([choice], "option-4", textOf("Madrid"));
 
     expect(
       Arr.flatMap(answers, (answer) =>
@@ -161,5 +187,78 @@ describe("markedOption", () => {
     ];
 
     expect(markedOption(key)).toBe("option-1");
+  });
+});
+
+describe("withOptionAdded", () => {
+  it("adds an empty option after the last one, numbered after the largest option ID the choice holds", () => {
+    const sparse = {
+      ...choice,
+      options: [choice.options[0], choice.options[2]],
+    };
+    expect(withOptionAdded([sparse])).toEqual([
+      {
+        ...sparse,
+        options: [...sparse.options, { id: "option-4", label: emptyLabel() }],
+      },
+    ]);
+  });
+
+  it("numbers the new option from one when no option ID holds a number", () => {
+    const named = {
+      ...choice,
+      options: [
+        { id: "first", label: emptyLabel() },
+        { id: "second", label: emptyLabel() },
+      ],
+    };
+    expect(withOptionAdded([named])).toEqual([
+      {
+        ...named,
+        options: [...named.options, { id: "option-1", label: emptyLabel() }],
+      },
+    ]);
+  });
+
+  it("leaves a choice of five options and a text entry as they are", () => {
+    const full = {
+      ...choice,
+      options: [...choice.options, { id: "option-5", label: emptyLabel() }],
+    };
+    expect(withOptionAdded([full, entry])).toEqual([full, entry]);
+  });
+});
+
+describe("withOptionRemoved", () => {
+  it("takes the option out and keeps the key that marks another option", () => {
+    const key = markedKey([choice], "option-3");
+    const removed = withOptionRemoved([choice], key, "option-2");
+    expect(removed.answers).toEqual([
+      {
+        ...choice,
+        options: [choice.options[0], choice.options[2], choice.options[3]],
+      },
+    ]);
+    expect(removed.key).toEqual(key);
+  });
+
+  it("clears the key when the removed option is the one it marks", () => {
+    const removed = withOptionRemoved(
+      [choice],
+      markedKey([choice], "option-2"),
+      "option-2"
+    );
+    expect(removed.key).toBeNull();
+  });
+
+  it("keeps a question with no key without one, and a choice of two options as it is", () => {
+    const pair = {
+      ...choice,
+      options: [choice.options[0], choice.options[1]],
+    };
+    expect(withOptionRemoved([pair, entry], null, "option-2")).toEqual({
+      answers: [pair, entry],
+      key: null,
+    });
   });
 });

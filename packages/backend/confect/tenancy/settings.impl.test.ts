@@ -13,7 +13,7 @@ import { Array as Arr, Effect } from "effect";
 const nf = slugOf("nf");
 const other = slugOf("other");
 const viewer = refs.public.tenancy.viewer.get;
-const { setLocale, setPolicy } = refs.public.tenancy.settings;
+const { setLocale, setName, setPolicy } = refs.public.tenancy.settings;
 const denied = {
   _tag: "AccessDenied",
   code: "ACCESS_DENIED",
@@ -372,6 +372,82 @@ describe("tenancy/settings access", () => {
         _tag: "SessionRequired",
         code: "UNAUTHENTICATED",
       });
+    })
+  );
+});
+
+describe("tenancy/settings setName", () => {
+  it.effect(
+    "lets an Owner and an Admin rename the school, and records each rename",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const owner = yield* fixture
+          .as("owner")
+          .mutation(setName, { name: "Yayasan Harapan", slug: nf });
+        const admin = yield* fixture
+          .as("admin")
+          .mutation(setName, { name: "Yayasan Harapan Bangsa", slug: nf });
+        const view = yield* fixture.as("owner").query(viewer, { slug: nf });
+        const entries = yield* fixture.run(journal);
+        expect(owner).toBe("Yayasan Harapan");
+        expect(admin).toBe("Yayasan Harapan Bangsa");
+        expect(view.tenant).toMatchObject({ name: "Yayasan Harapan Bangsa" });
+        expect(entries).toMatchObject([
+          {
+            actor: { id: fixture.people.owner.personId, kind: "person" },
+            change: { name: "Yayasan Harapan", type: "tenant.name.set" },
+            owner: { kind: "tenant", tenantId: fixture.tenants.nf },
+            subject: { id: fixture.tenants.nf, kind: "tenant" },
+          },
+          {
+            actor: { id: fixture.people.admin.personId, kind: "person" },
+            change: {
+              name: "Yayasan Harapan Bangsa",
+              type: "tenant.name.set",
+            },
+            subject: { id: fixture.tenants.nf, kind: "tenant" },
+          },
+        ]);
+      })
+  );
+
+  it.effect("writes and records nothing for the name already stored", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const answer = yield* fixture
+        .as("owner")
+        .mutation(setName, { name: "Yayasan Nakafa", slug: nf });
+      expect(answer).toBe("Yayasan Nakafa");
+      expect(yield* fixture.run(journal)).toEqual([]);
+    })
+  );
+
+  it.effect(
+    "refuses a name under three characters, a name over 120, and a name on two lines",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const owner = fixture.as("owner");
+        const refusals = yield* Effect.forEach(
+          ["AB", "Harapan\nBangsa", "A".repeat(121)],
+          (name) =>
+            owner.mutation(setName, { name, slug: nf }).pipe(Effect.flip)
+        );
+        expect(refusals).toMatchObject([invalid, invalid, invalid]);
+        expect(yield* fixture.run(journal)).toEqual([]);
+      })
+  );
+
+  it.effect("refuses a teacher, who may not rename the school", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const refused = yield* fixture
+        .as("teacher")
+        .mutation(setName, { name: "Yayasan Lain", slug: nf })
+        .pipe(Effect.flip);
+      expect(refused).toMatchObject(denied);
+      expect(yield* fixture.run(journal)).toEqual([]);
     })
   );
 });

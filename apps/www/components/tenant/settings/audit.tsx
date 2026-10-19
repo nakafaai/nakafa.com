@@ -3,7 +3,9 @@
 import {
   type PaginatedQueryItem,
   PaginatedQueryResult,
+  QueryResult,
   usePaginatedQuery,
+  useQuery,
 } from "@confect/react";
 import journal from "@repo/backend/confect/_generated/refs/journal";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -54,6 +56,7 @@ function SchoolAuditBody({ slug }: { slug: TenantSlug }) {
     { slug },
     { initialNumItems: PAGE_SIZE }
   );
+  const people = useQuery(journal.audit.actors, { slug });
 
   const failed = PaginatedQueryResult.isFailure(pagination);
   if (pagination._tag === "LoadingFirstPage") {
@@ -102,7 +105,15 @@ function SchoolAuditBody({ slug }: { slug: TenantSlug }) {
       sortFn: "text",
     }),
   ]);
-  const actors = Arr.dedupe(Arr.map(pagination.results, actorLabel));
+  // The filter lists every active member of the school, so an actor on a later page is offered
+  // before that page loads, beside the staff and the system that the journal also records.
+  const actors = Arr.dedupe([
+    ...(QueryResult.isSuccess(people)
+      ? Arr.map(people.value, (person) => person.name)
+      : []),
+    t("audit-operator"),
+    t("audit-system"),
+  ]);
 
   return (
     <>

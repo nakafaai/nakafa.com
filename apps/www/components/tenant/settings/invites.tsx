@@ -31,7 +31,13 @@ import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
+import { RoleBadge } from "@/components/tenant/role";
+import {
+  type CardView,
+  SchoolCardDialog,
+} from "@/components/tenant/settings/card";
 import { SchoolInviteDialog } from "@/components/tenant/settings/invite";
+import { SchoolIssueCardDialog } from "@/components/tenant/settings/issue";
 import { revokeInviteChange } from "@/components/tenant/settings/mutation.client";
 import { SettingsPage } from "@/components/tenant/settings/page";
 import { saveSchool } from "@/components/tenant/settings/save.client";
@@ -53,10 +59,10 @@ const inviteColumns = createColumnHelper<
 >();
 
 /**
- * The pending invites of the school: Invite in the header, then every invite in a data
- * table with its expiry and its row menu, which sends it again or revokes it. With no
- * invite, the table says what it will hold. The list loads more rows as its end comes
- * into view.
+ * The invites of the school: Invite in the header, then every pending and expired invite in a
+ * data table with its role, its expiry and its row menu. A pending invite sends again or
+ * revokes; an expired one stays listed as expired and is sent again as a new invite. With no
+ * invite, the table says what it will hold. The list loads more rows as its end comes into view.
  */
 export function SchoolInvitesSettings({ slug }: { slug: TenantSlug }) {
   const t = useTranslations("SchoolSettings");
@@ -156,8 +162,24 @@ function SchoolInviteTable({
       id: "email",
       sortFn: "text",
     }),
+    inviteColumns.display({
+      cell: (info) => (
+        <div className="flex flex-wrap gap-1">
+          {Arr.map(info.row.original.roles, (role) => (
+            <RoleBadge key={role} role={role} />
+          ))}
+        </div>
+      ),
+      header: t("invite-role"),
+      id: "role",
+    }),
     inviteColumns.accessor((invite) => invite.expiresAt, {
-      cell: (info) => <SchoolDateTime at={info.getValue()} slug={slug} />,
+      cell: (info) =>
+        info.row.original.status === "expired" ? (
+          t("invite-expired")
+        ) : (
+          <SchoolDateTime at={info.getValue()} slug={slug} />
+        ),
       header: t("invite-expires"),
       id: "expires",
       sortFn: "basic",
@@ -185,9 +207,11 @@ function SchoolInviteTable({
 }
 
 /**
- * An invite's row menu, which sends the invite again in the viewer's language or revokes
- * it behind a confirmation. A draft invite, still on its way to the server, has an inert
- * menu, and a resend waits until the viewer's language is known.
+ * An invite's row menu. A pending invite is sent again in the viewer's language or revoked
+ * behind a confirmation. An expired invite is sent again as a new invite to the same Person
+ * and address, because the school never sends an expired invite itself. A draft invite, still
+ * on its way to the server, has an inert menu, and a send waits until the viewer's language is
+ * known.
  */
 function SchoolInviteMenu({
   invite,
@@ -201,11 +225,45 @@ function SchoolInviteMenu({
   const t = useTranslations("SchoolSettings");
   const common = useTranslations("Common");
   const resend = useMutation(tenancy.invites.resend);
+  const inviteAgain = useMutation(tenancy.invites.invite);
   const revoke = useMutation(tenancy.invites.revoke).withOptimisticUpdate(
     revokeInviteChange
   );
   const [isRevoking, setIsRevoking] = useState(false);
   const [isResending, startResending] = useTransition();
+  const [isIssuing, setIsIssuing] = useState(false);
+  const [issued, setIssued] = useState<CardView | undefined>(undefined);
+  const isExpired = invite.status === "expired";
+
+  /**
+   * Sends a pending invite again, in the viewer's language. Resend stays off until the send
+   * settles, so a second press sends no second invite.
+   */
+  const sendPending = (locale: typeof ActiveAppLocaleCodeSchema.Type) =>
+    startResending(() =>
+      saveSchool(
+        () => resend({ inviteId: invite.id, locale, slug }),
+        SOURCE
+      )
+    );
+
+  /**
+   * Sends an expired invite's address again, as a new invite to the same Person. Resend stays
+   * off until the send settles, so a second press sends no second invite.
+   */
+  const sendExpired = (locale: typeof ActiveAppLocaleCodeSchema.Type) =>
+    startResending(() =>
+      saveSchool(
+        () =>
+          inviteAgain({
+            email: invite.email,
+            locale,
+            personId: invite.personId,
+            slug,
+          }),
+        SOURCE
+      )
+    );
 
   return (
     <div className="flex justify-end">
@@ -227,29 +285,26 @@ function SchoolInviteMenu({
             disabled={sendLocale === undefined || isResending}
             onClick={() => {
               if (sendLocale !== undefined) {
-                startResending(() =>
-                  saveSchool(
-                    () =>
-                      resend({
-                        inviteId: invite.id,
-                        locale: sendLocale,
-                        slug,
-                      }),
-                    SOURCE
-                  )
-                );
+                (isExpired ? sendExpired : sendPending)(sendLocale);
               }
             }}
           >
             {t("invite-resend")}
           </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            onClick={() => setIsRevoking(true)}
-            variant="destructive"
-          >
-            {t("invite-revoke")}
-          </DropdownMenuItem>
+          {isExpired ? null : (
+            <>
+              <DropdownMenuItem onClick={() => setIsIssuing(true)}>
+                {t("invite-card")}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => setIsRevoking(true)}
+                variant="destructive"
+              >
+                {t("invite-revoke")}
+              </DropdownMenuItem>
+            </>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
       <ResponsiveDialog
@@ -283,6 +338,19 @@ function SchoolInviteMenu({
         open={isRevoking}
         setOpen={setIsRevoking}
         title={t("invite-revoke-title")}
+      />
+      <SchoolIssueCardDialog
+        name={invite.name}
+        onIssued={setIssued}
+        open={isIssuing}
+        personId={invite.personId}
+        setOpen={setIsIssuing}
+        slug={slug}
+      />
+      <SchoolCardDialog
+        card={issued}
+        onClose={() => setIssued(undefined)}
+        slug={slug}
       />
     </div>
   );

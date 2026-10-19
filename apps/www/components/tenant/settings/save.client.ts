@@ -36,6 +36,10 @@ const REFUSAL_COPY: Readonly<Record<string, ToastCopy>> = {
     description: "school-refusal-address-invited.description",
     title: "school-refusal-address-invited.title",
   },
+  AddressMember: {
+    description: "school-refusal-address-member.description",
+    title: "school-refusal-address-member.title",
+  },
   CardMissing: {
     description: "school-refusal-card-missing.description",
     title: "school-refusal-card-missing.title",
@@ -155,6 +159,10 @@ const REFUSAL_COPY: Readonly<Record<string, ToastCopy>> = {
   TeacherHasHomeroom: {
     description: "school-refusal-teacher-has-homeroom.description",
     title: "school-refusal-teacher-has-homeroom.title",
+  },
+  UnitLimit: {
+    description: "school-refusal-unit-limit.description",
+    title: "school-refusal-unit-limit.title",
   },
 };
 

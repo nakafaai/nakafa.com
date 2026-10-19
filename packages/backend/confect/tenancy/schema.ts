@@ -25,18 +25,23 @@ export const Email = Schema.String.check(
 export const TenantName = Schema.String.check(
   Schema.isTrimmed(),
   isSingleLine,
-  Schema.isMinLength(2),
+  Schema.isMinLength(3),
   Schema.isMaxLength(120)
 );
 export const TenantKind = Schema.Literals(["school", "foundation"]);
 /** A suspended tenant stays readable and refuses every write. */
 export const TenantStatus = Schema.Literals(["active", "suspended"]);
 
+/**
+ * A unit's name. A school with one level names its unit after the school, which
+ * runs to 120 characters, and a school with more levels adds a level label to
+ * that name, so the limit holds both.
+ */
 export const UnitName = Schema.String.check(
   Schema.isTrimmed(),
   isSingleLine,
   Schema.isMinLength(1),
-  Schema.isMaxLength(80)
+  Schema.isMaxLength(160)
 );
 export const UnitLevel = Schema.Literals([
   "paud",

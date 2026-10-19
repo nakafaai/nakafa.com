@@ -27,7 +27,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@repo/design-system/components/ui/select";
-import { languages } from "@repo/internationalization/data/lang";
 import { Array as Arr, Option, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { Fragment, startTransition, useState } from "react";
@@ -37,6 +36,11 @@ import {
   CardSectionFooter,
 } from "@/components/shared/card/section";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
+import {
+  languageItems,
+  timeZoneItems,
+} from "@/components/tenant/settings/choices";
+import { SchoolUnitCreateDialog } from "@/components/tenant/settings/create";
 import {
   archiveUnitChange,
   setNpsnChange,
@@ -49,25 +53,27 @@ import type { Unit } from "@/components/tenant/settings/state";
 
 const SOURCE = "components/tenant/settings/units";
 
-/** Every IANA time zone that the platform knows, as the time zone choices of a unit. */
-const timeZoneItems = Arr.map(Intl.supportedValuesOf("timeZone"), (zone) => ({
-  label: zone,
-  value: zone,
-}));
-
-/** The content languages a unit may choose, from the platform's list of languages. */
-const languageItems = Arr.map(languages, (language) => ({
-  label: language.label,
-  value: language.value,
-}));
-
 /** The section in the settings page frame, whose header shows while its body loads. */
 export function SchoolUnitsSettings({ slug }: { slug: TenantSlug }) {
+  const t = useTranslations("SchoolSettings");
+  const [isAdding, setIsAdding] = useState(false);
+
   return (
-    <SettingsPage>
+    <SettingsPage
+      actions={
+        <Button onClick={() => setIsAdding(true)} type="button">
+          {t("unit-add")}
+        </Button>
+      }
+    >
       <ReadBoundary read={{ args: { slug }, ref: tenancy.units.list }}>
         <SchoolUnitsBody slug={slug} />
       </ReadBoundary>
+      <SchoolUnitCreateDialog
+        open={isAdding}
+        setOpen={setIsAdding}
+        slug={slug}
+      />
     </SettingsPage>
   );
 }

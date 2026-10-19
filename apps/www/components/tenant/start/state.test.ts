@@ -1,10 +1,12 @@
 import { describe, expect, it } from "@effect/vitest";
+import { TenantName, UnitName } from "@repo/backend/confect/tenancy/schema";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Option, Schema, Struct } from "effect";
 import {
   applyAnswer,
   chosenLevels,
   resumeItem,
+  START_NAME_LIMIT,
   type StartDraft,
   startRequest,
   suggestSlug,
@@ -62,6 +64,14 @@ describe("school start state", () => {
     ).toEqual(["sd"]);
     expect(chosenLevels(Struct.omit(full, ["country"]))).toEqual([]);
     expect(chosenLevels(Struct.omit(full, ["levels"]))).toEqual([]);
+  });
+
+  it("takes the longest school name, and a unit named with a level label stays within the unit name", () => {
+    const longest = "A".repeat(START_NAME_LIMIT);
+    expect(Schema.is(TenantName)(longest)).toBe(true);
+    expect(Schema.is(TenantName)(`${longest}A`)).toBe(false);
+    expect(Schema.is(UnitName)(longest)).toBe(true);
+    expect(Schema.is(UnitName)(`${longest} Sekundarstufe II`)).toBe(true);
   });
 
   it("names units the way the school's country writes them", () => {

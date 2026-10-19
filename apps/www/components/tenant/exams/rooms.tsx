@@ -30,7 +30,18 @@ import { buttonVariants } from "@repo/design-system/lib/button";
 import { Array as Arr, Option, Schema } from "effect";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
-import { useState } from "react";
+import { startTransition, useState } from "react";
+import { useMutation } from "@confect/react";
+import { MoreHorizontalIcon } from "@hugeicons/core-free-icons";
+import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@repo/design-system/components/ui/dropdown-menu";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { Button } from "@repo/design-system/components/ui/button";
 import { useConvexAuth } from "@/components/providers/convex";
 import { LayoutContent } from "@/components/shared/content/layout";
 import { DataFailure } from "@/components/shared/failure";
@@ -38,13 +49,17 @@ import { reloadPage } from "@/components/shared/reload";
 import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
 import { useTenant } from "@/components/tenant/context";
 import {
+  cancelRoomChange,
   RoomStateFilter,
   roomsArgs,
 } from "@/components/tenant/exams/rooms.client";
+import { saveSchool } from "@/components/tenant/settings/save.client";
 import { SchoolHeader } from "@/components/tenant/header";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { isDenied, isLostAccess } from "@/components/tenant/refusal";
 import { schoolDateTimeText } from "@/components/tenant/settings/clock";
+
+const SOURCE = "components/tenant/exams/rooms";
 
 /** One room of the exam as the list holds it. */
 type Room = typeof RoomRow.Type;
@@ -295,11 +310,12 @@ function RoomsTable({
               <TableHead>{t("rooms-opens")}</TableHead>
               <TableHead>{t("rooms-closes")}</TableHead>
               <TableHead>{t("rooms-state")}</TableHead>
+              <TableHead />
             </TableRow>
           </TableHeader>
           <TableBody>
             {Arr.map(pagination.results, (room) => (
-              <RoomItem examId={examId} key={room.id} room={room} />
+              <RoomItem examId={examId} key={room.id} room={room} slug={slug} />
             ))}
           </TableBody>
         </Table>
@@ -311,14 +327,17 @@ function RoomsTable({
 
 /**
  * One room of the table: its name, which opens its proctor dashboard, its group, its opening and
- * closing in the time zone of its unit, and its state.
+ * closing in the time zone of its unit, its state, and the menu that cancels a room that has not
+ * opened yet.
  */
 function RoomItem({
   examId,
   room,
+  slug,
 }: {
   examId: GenericId.GenericId<"exams">;
   room: Room;
+  slug: TenantSlug;
 }) {
   const t = useTranslations("Exams");
   const locale = useLocale();
@@ -349,6 +368,82 @@ function RoomItem({
         })}
       </TableCell>
       <TableCell>{t(`room-state-${room.state}`)}</TableCell>
+      <TableCell>
+        {room.state === "scheduled" ? (
+          <RoomMenu room={room} slug={slug} />
+        ) : null}
+      </TableCell>
     </TableRow>
+  );
+}
+
+/**
+ * The row menu of a scheduled room, which cancels it behind a confirmation. A room that has
+ * opened, or closed, has no menu, because its students sat it.
+ */
+function RoomMenu({ room, slug }: { room: Room; slug: TenantSlug }) {
+  const t = useTranslations("Exams");
+  const common = useTranslations("Common");
+  const cancel = useMutation(exams.sittings.cancel).withOptimisticUpdate(
+    cancelRoomChange
+  );
+  const [isCancelling, setIsCancelling] = useState(false);
+
+  return (
+    <div className="flex justify-end">
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          render={
+            <Button
+              aria-label={common("more-actions")}
+              size="icon-sm"
+              variant="ghost"
+            >
+              <HugeIcons icon={MoreHorizontalIcon} />
+            </Button>
+          }
+        />
+        <DropdownMenuContent align="end" className="w-44">
+          <DropdownMenuItem
+            onClick={() => setIsCancelling(true)}
+            variant="destructive"
+          >
+            {t("room-cancel")}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <ResponsiveDialog
+        description={t("room-cancel-description")}
+        footer={
+          <>
+            <Button
+              onClick={() => setIsCancelling(false)}
+              type="button"
+              variant="outline"
+            >
+              {common("cancel")}
+            </Button>
+            <Button
+              onClick={() => {
+                setIsCancelling(false);
+                startTransition(() =>
+                  saveSchool(
+                    () => cancel({ sittingId: room.id, slug }),
+                    SOURCE
+                  )
+                );
+              }}
+              type="button"
+              variant="destructive"
+            >
+              {t("room-cancel-confirm")}
+            </Button>
+          </>
+        }
+        open={isCancelling}
+        setOpen={setIsCancelling}
+        title={t("room-cancel-title")}
+      />
+    </div>
   );
 }

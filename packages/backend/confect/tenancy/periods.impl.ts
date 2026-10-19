@@ -5,6 +5,8 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
+import { tenantAccess } from "@repo/backend/confect/access/authority";
+import { AccessDenied } from "@repo/backend/confect/access/errors";
 import member from "@repo/backend/confect/middleware/member.impl";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import session from "@repo/backend/confect/middleware/session.impl";
@@ -26,7 +28,10 @@ import {
 } from "@repo/backend/confect/tenancy/period";
 import spec from "@repo/backend/confect/tenancy/periods.spec";
 import { openTarget } from "@repo/backend/confect/tenancy/promotion/open";
-import { archivePeriod } from "@repo/backend/confect/tenancy/write/period";
+import {
+  archivePeriod,
+  reactivatePeriod,
+} from "@repo/backend/confect/tenancy/write/period";
 import { Array as Arr, Effect, Layer, Option, Struct } from "effect";
 
 /** One period as the wire shows it. */
@@ -194,14 +199,68 @@ const archive = FunctionImpl.make(
   })
 );
 
+/**
+ * Restores an archived period to active, the inverse of archiving it. An archived period refuses
+ * every action on its own row, so the school's Admin restores it at the school level. The period
+ * must belong to the school, and its unit must be open. A unit holds at most one active period, so
+ * the restore is refused while another period of the unit is active. A period that is not archived
+ * changes nothing.
+ */
+const restore = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "restore",
+  Effect.fn("tenancy.periods.restore")(function* ({ periodId }) {
+    const { person, tenant } = yield* Member;
+    const reader = yield* DatabaseReader;
+    const period = yield* reader
+      .table("tenantPeriods")
+      .get(periodId)
+      .pipe(
+        Effect.catchTags({
+          DocumentDecodeError: Effect.die,
+          GetByIdFailure: () =>
+            new AccessDenied({ action: "period.manage", reason: "resource" }),
+        })
+      );
+    if (period.tenantId !== tenant._id) {
+      return yield* new AccessDenied({
+        action: "period.manage",
+        reason: "resource",
+      });
+    }
+    if (period.status !== "archived") {
+      return view(period);
+    }
+    const unit = yield* reader
+      .table("tenantUnits")
+      .get(period.unitId)
+      .pipe(Effect.orDie);
+    if (unit.status === "archived") {
+      return yield* new AccessDenied({
+        action: "period.manage",
+        reason: "condition",
+      });
+    }
+    yield* reactivatePeriod(period);
+    yield* periodAuthority.record(personActor(person), period, {
+      type: "period.restored",
+    });
+    const status: typeof PeriodStatus.Type = "active";
+    return view(Struct.assign(period, { status }));
+  })
+);
+
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(list),
   Layer.provide(create),
   Layer.provide(open),
   Layer.provide(archive),
+  Layer.provide(restore),
   Layer.provide(rename),
   Layer.provide(session),
   Layer.provide(member),
+  Layer.provide(tenantAccess),
   Layer.provide(periodAccess),
   GroupImpl.finalize
 );

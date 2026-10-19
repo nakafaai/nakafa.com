@@ -189,12 +189,17 @@ export const insertedAfter = (
     }
   );
 
-/** Shows a new question at the end of the exam while the server adds it. */
+/**
+ * Shows a new question while the server adds it: at the end of the exam, or right after the
+ * question it follows, where the server puts it.
+ */
 export const addQuestionUpdate =
   (question: Question): OptimisticUpdate<typeof exams.questions.add> =>
   (localStore, args) =>
     changeExam(localStore, examQuery(args), (view) =>
-      appendedQuestion(view, question)
+      args.after === null
+        ? appendedQuestion(view, question)
+        : insertedAfter(view, args.after, question)
     );
 
 /** Shows a copy right after its source while the server copies it. */

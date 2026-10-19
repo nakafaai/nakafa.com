@@ -7,3 +7,10 @@ import type { ExamView } from "@/components/tenant/exams/optimistic";
  */
 export const isFrozen = (exam: Pick<ExamView, "frozenAt">) =>
   exam.frozenAt !== undefined;
+
+/**
+ * Whether the editor shows the exam read-only: it is frozen, or its unit is archived, which
+ * locks every edit of its exams. The server refuses each edit of a locked exam.
+ */
+export const isLocked = (exam: Pick<ExamView, "archived" | "frozenAt">) =>
+  isFrozen(exam) || exam.archived;

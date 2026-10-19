@@ -13,6 +13,7 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import { ImageType } from "@repo/editor/image";
+import type { Editor } from "@tiptap/core";
 import { FileHandler } from "@tiptap/extension-file-handler";
 import {
   NodeViewWrapper,
@@ -121,11 +122,15 @@ export function PictureAltDialog({
 }) {
   const [text, setText] = useState(alt);
   // The text starts again from the picture's alt text whenever the dialog is given another
-  // picture or another alt text. The change is made while rendering, so no effect is needed.
+  // picture or another alt text. It changes only while a picture is shown, so a dialog that
+  // closes keeps its text while it animates out. The change is made while rendering, so no
+  // effect is needed.
   const [shown, setShown] = useState({ alt, preview });
   if (shown.alt !== alt || shown.preview !== preview) {
     setShown({ alt, preview });
-    setText(alt);
+    if (preview !== null) {
+      setText(alt);
+    }
   }
 
   const next = altText(text);
@@ -268,19 +273,22 @@ export const PICTURE_VIEW = ReactNodeViewRenderer(PictureNode);
 
 /**
  * The file handler of the editor: a file pasted or dropped into the text starts the alt-text
- * dialog. Only the image types the editor takes are handled, and any other file is left alone.
+ * dialog, which goes into the editor the file arrived in. Only the image types the editor takes
+ * are handled, and any other file is left alone.
  */
-export const pictureFileHandler = (begin: (file: File) => void) =>
+export const pictureFileHandler = (
+  begin: (file: File, editor: Editor) => void
+) =>
   FileHandler.configure({
     allowedMimeTypes: [...ImageType.literals],
-    onDrop: (_editor, files) => {
+    onDrop: (editor, files) => {
       for (const file of files) {
-        begin(file);
+        begin(file, editor);
       }
     },
-    onPaste: (_editor, files) => {
+    onPaste: (editor, files) => {
       for (const file of files) {
-        begin(file);
+        begin(file, editor);
       }
     },
   });

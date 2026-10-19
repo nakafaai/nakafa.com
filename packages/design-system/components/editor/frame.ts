@@ -18,6 +18,19 @@ export const editorRow = cva(
   "relative flex h-8 min-w-0 flex-1 flex-wrap content-start items-center gap-x-1.5 overflow-hidden"
 );
 
+/**
+ * The room the text takes at least: a prompt takes a page of writing, and a short text such as an
+ * option takes one line.
+ */
+export const editorContent = cva("", {
+  variants: {
+    size: {
+      line: "",
+      page: "min-h-32",
+    },
+  },
+});
+
 /** The box that scrolls the text. */
 export const editorScroll = cva(
   "min-h-0 flex-1 overflow-y-auto text-sm/relaxed"

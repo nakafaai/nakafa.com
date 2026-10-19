@@ -4,6 +4,7 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import { entries } from "@repo/backend/confect/access/catalog";
 import { Kind } from "@repo/backend/confect/access/kind";
 import { ExamTitle } from "@repo/backend/confect/exams/exam";
+import { CohortName } from "@repo/backend/confect/tenancy/cohort";
 import {
   AttemptState,
   RoomName,
@@ -94,6 +95,12 @@ export const DashboardView = Schema.Struct({
   canViewResults: Schema.Boolean,
   sitting: SittingView,
   token: Schema.NullOr(Schema.String),
+});
+
+/** One active cohort that a sitting of its unit may run for, as the scheduling dialog lists it. */
+export const ScheduleCohort = Schema.Struct({
+  id: Id("tenantCohorts"),
+  name: CohortName,
 });
 
 /** What scheduling returns: the sitting, and its token, which only the proctor sees. */

@@ -2,7 +2,10 @@ import type { GenericId } from "@confect/core";
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import { HOUR, RateLimiter } from "@convex-dev/rate-limiter";
 import { components } from "@repo/backend/confect/_generated/components";
-import type { TenantInvitesDoc } from "@repo/backend/confect/_generated/docs";
+import type {
+  TenantInvitesDoc,
+  TenantPeopleDoc,
+} from "@repo/backend/confect/_generated/docs";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
@@ -10,6 +13,7 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { tenantAccess } from "@repo/backend/confect/access/authority";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
+import { activeGrants } from "@repo/backend/confect/access/policy";
 import { startInviteEmail } from "@repo/backend/confect/emails/invite/workflow";
 import member from "@repo/backend/confect/middleware/member.impl";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
@@ -37,7 +41,7 @@ import {
 } from "@repo/backend/confect/tenancy/invite";
 import spec from "@repo/backend/confect/tenancy/invites.spec";
 import { admitsAddress } from "@repo/backend/confect/tenancy/policy";
-import { Clock, Effect, Layer, Option, Struct } from "effect";
+import { Array as Arr, Clock, Effect, Layer, Option, Struct } from "effect";
 
 /** Sends one Person's invite again at most this many times in any hour: the school's named rate. */
 const INVITE_RESENDS_PER_HOUR = 3;
@@ -57,13 +61,37 @@ const inviteResends = new RateLimiter(components.agentRateLimiter, {
   },
 });
 
-/** One invite as the wire shows it, with the name of the Person it invites. */
-const viewOf = (invite: TenantInvitesDoc, name: string) => ({
-  email: invite.channel.email,
-  expiresAt: invite.expiresAt,
-  id: invite._id,
-  name,
-  personId: invite.personId,
+/**
+ * Whether a pending invite still waits: one whose term has ended is expired, even before its
+ * scheduled expiry runs. Only the pending and expired invites of a school are shown.
+ */
+const statusOf = (
+  invite: TenantInvitesDoc,
+  now: number
+): "expired" | "pending" =>
+  invite.state.status === "pending" && invite.expiresAt > now
+    ? "pending"
+    : "expired";
+
+/**
+ * One invite as the wire shows it: the Person it invites with the name and the roles that
+ * Person holds, and the status of the invite.
+ */
+const viewOf = Effect.fnUntraced(function* (
+  invite: TenantInvitesDoc,
+  person: TenantPeopleDoc
+) {
+  const now = yield* Clock.currentTimeMillis;
+  const grants = yield* activeGrants(person._id);
+  return {
+    email: invite.channel.email,
+    expiresAt: invite.expiresAt,
+    id: invite._id,
+    name: person.name,
+    personId: invite.personId,
+    roles: Arr.dedupe(Arr.map(grants, (grant) => grant.role.key)),
+    status: statusOf(invite, now),
+  };
 });
 
 /**
@@ -85,7 +113,10 @@ const loadInvite = Effect.fnUntraced(function* (
     );
 });
 
-/** The pending invites of one school, a page at a time, each with the name of its Person. */
+/**
+ * The pending and expired invites of one school, a page at a time, the pending ones first
+ * and each group newest first, with the name and the roles of each Person.
+ */
 const list = FunctionImpl.make(
   databaseSchema,
   spec,
@@ -95,8 +126,14 @@ const list = FunctionImpl.make(
     const reader = yield* DatabaseReader;
     const page = yield* reader
       .table("tenantInvites")
-      .index("by_tenantId_and_state_status", (query) =>
-        query.eq("tenantId", tenant._id).eq("state.status", "pending")
+      .index(
+        "by_tenantId_and_state_status",
+        (query) =>
+          query
+            .eq("tenantId", tenant._id)
+            .gte("state.status", "expired")
+            .lte("state.status", "pending"),
+        "desc"
       )
       .paginate(paginationOpts)
       .pipe(Effect.orDie);
@@ -108,7 +145,7 @@ const list = FunctionImpl.make(
           .get(invite.personId)
           .pipe(
             Effect.orDie,
-            Effect.map((person) => viewOf(invite, person.name))
+            Effect.flatMap((person) => viewOf(invite, person))
           ),
       { concurrency: "unbounded" }
     );
@@ -154,7 +191,7 @@ const invite = FunctionImpl.make(
       email,
       locale
     );
-    return viewOf(written, person.name);
+    return yield* viewOf(written, person);
   })
 );
 
@@ -228,7 +265,7 @@ const resend = FunctionImpl.make(
       type: "person.invited",
     });
     yield* noteInvite(person.tenantId, entryId);
-    return viewOf(stored, person.name);
+    return yield* viewOf(stored, person);
   })
 );
 

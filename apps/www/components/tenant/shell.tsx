@@ -1,9 +1,18 @@
 "use client";
 
+import { UnfoldMoreIcon } from "@hugeicons/core-free-icons";
 import type {
   TenantProfile,
   ViewerAccount,
 } from "@repo/backend/confect/tenancy/schema";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@repo/design-system/components/ui/dropdown-menu";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   SidebarContent,
   SidebarFooter,
@@ -20,9 +29,11 @@ import {
   SidebarInset,
 } from "@repo/design-system/components/ui/sidebar-shell";
 import { usePathname } from "@repo/internationalization/src/navigation";
+import { SITE_ORIGIN } from "@repo/seo/origin";
 import { Effect } from "effect";
+import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { type ReactNode, useTransition } from "react";
 import { AccountMenu } from "@/components/sidebar/menu/account";
 import { TenantAccountItems } from "@/components/tenant/account";
@@ -31,6 +42,18 @@ import { TenantContext, type TenantValue } from "@/components/tenant/context";
 import { SchoolMark } from "@/components/tenant/mark";
 import { TenantNavigation } from "@/components/tenant/navigation";
 import { isExamEditorPath } from "@/lib/settings/school";
+
+/**
+ * The schools of the viewer, which the school switcher lists. The list loads when the
+ * switcher opens, as the account menu of Nakafa loads its own.
+ */
+const SidebarSchoolMenuItems = dynamic(
+  () =>
+    import("@/components/sidebar/menu/schools").then(
+      (module) => module.SidebarSchoolMenuItems
+    ),
+  { loading: () => null, ssr: false }
+);
 
 /**
  * Signs out of the school, then returns to the school address, which shows the
@@ -89,6 +112,55 @@ function TenantAccount({
 }
 
 /**
+ * The school switcher at the top of the sidebar: the school's mark and name open the
+ * viewer's schools, with the school's home and the way back to Nakafa beneath them.
+ */
+function TenantSwitcher({
+  name,
+  profile,
+}: {
+  name: string;
+  profile: typeof TenantProfile.Type;
+}) {
+  const t = useTranslations("School");
+  const locale = useLocale();
+
+  return (
+    <SidebarMenuItem>
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          render={
+            <SidebarMenuButton
+              className="data-popup-open:bg-sidebar-accent data-popup-open:text-sidebar-accent-foreground"
+              size="lg"
+            >
+              <SchoolMark logo={profile.logo} mascot={profile.mascot} />
+              <div className="grid min-w-0 flex-1 text-left text-sm leading-tight">
+                <span className="truncate font-medium">{name}</span>
+              </div>
+              <HugeIcons className="ml-auto" icon={UnfoldMoreIcon} />
+            </SidebarMenuButton>
+          }
+        />
+        <DropdownMenuContent align="start" className="min-w-56" sideOffset={4}>
+          <SidebarSchoolMenuItems canOpenSchool={false} />
+          <DropdownMenuGroup>
+            <DropdownMenuItem render={<Link href="/" />}>
+              {t("home")}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              render={<a href={new URL(`/${locale}`, SITE_ORIGIN).href} />}
+            >
+              {t("back-to-learning")}
+            </DropdownMenuItem>
+          </DropdownMenuGroup>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </SidebarMenuItem>
+  );
+}
+
+/**
  * The frame of a school's pages: the sidebar with the school's mark and name at its
  * top, the sidebar groups of the viewer, and the viewer's account at its foot, beside
  * the pages. Each page draws its one header, with the sidebar's trigger in it
@@ -121,14 +193,7 @@ function TenantFrame({
       <Sidebar label={tCommon("sidebar")} side="left">
         <SidebarHeader className="border-b">
           <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton render={<Link href="/" />} size="lg">
-                <SchoolMark logo={profile.logo} mascot={profile.mascot} />
-                <div className="grid min-w-0 flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">{profile.name}</span>
-                </div>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
+            <TenantSwitcher name={profile.name} profile={profile} />
           </SidebarMenu>
         </SidebarHeader>
         <SidebarContent>

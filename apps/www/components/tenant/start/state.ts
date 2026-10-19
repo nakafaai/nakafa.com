@@ -24,11 +24,10 @@ export const START_ITEMS = [
 export type StartItem = (typeof START_ITEMS)[number];
 
 /**
- * The longest school name the questionnaire takes, so that a unit's name, which
- * adds a level such as "Sekundarstufe II", stays within a unit name's 80
- * characters.
+ * The longest school name the questionnaire takes, which is the longest a school
+ * name may be. A unit with a level label after the name stays within `UnitName`.
  */
-export const START_NAME_LIMIT = 60;
+export const START_NAME_LIMIT = 120;
 
 /**
  * The levels a school in the country chooses from: Indonesia's own levels, or the

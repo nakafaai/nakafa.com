@@ -64,6 +64,7 @@ export class FoundingRefused extends Schema.TaggedError<FoundingRefused>()(
       "SLUG_RESERVED",
       "SCHOOL_LIMIT",
       "RATE_LIMITED",
+      "LOGIN_ACCOUNT",
     ]),
     message: Schema.String,
   }
@@ -183,6 +184,28 @@ export class AddressInvited extends Schema.TaggedError<AddressInvited>()(
   refusal(
     "ADDRESS_INVITED",
     "This address already has a pending invite in this school."
+  )
+) {}
+
+/**
+ * An address that an account of this school already claimed through an invite, while its
+ * Person is still an active member. A second Person for it could never be claimed, so the
+ * school refuses it: the member's role changes in the roles of the school instead.
+ */
+export class AddressMember extends Schema.TaggedError<AddressMember>()(
+  "AddressMember",
+  refusal(
+    "ADDRESS_MEMBER",
+    "This address already belongs to a member of this school."
+  )
+) {}
+
+/** A school that would make its organisation hold more schools than `UNIT_LIMIT` allows. */
+export class UnitLimit extends Schema.TaggedError<UnitLimit>()(
+  "UnitLimit",
+  refusal(
+    "UNIT_LIMIT",
+    "This organisation already holds the most schools it may."
   )
 ) {}
 

@@ -1,8 +1,10 @@
 "use client";
 
 import { QueryResult, useQuery } from "@confect/react";
+import { Calendar03Icon } from "@hugeicons/core-free-icons";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { Button } from "@repo/design-system/components/ui/button";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Array as Arr, DateTime, Effect, Option } from "effect";
 import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
@@ -66,7 +68,10 @@ export function ScheduleExam() {
   return (
     <>
       {Arr.isReadonlyArrayNonEmpty(units) ? (
-        <Button onClick={open}>{t("schedule")}</Button>
+        <Button aria-label={t("schedule")} onClick={open}>
+          <HugeIcons aria-hidden="true" icon={Calendar03Icon} />
+          <span className="max-sm:sr-only">{t("schedule")}</span>
+        </Button>
       ) : null}
       {openings === 0 ? null : (
         <ScheduleSitting

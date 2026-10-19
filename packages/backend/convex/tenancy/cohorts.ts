@@ -7,3 +7,4 @@ export const get = registeredFunctions.get;
 export const list = registeredFunctions.list;
 export const members = registeredFunctions.members;
 export const rename = registeredFunctions.rename;
+export const restore = registeredFunctions.restore;

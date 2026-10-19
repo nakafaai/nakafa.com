@@ -1,5 +1,6 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id } from "@repo/backend/confect/_generated/id";
+import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { TenantAccess } from "@repo/backend/confect/access/tenant";
 import { ChangeView, SubjectView } from "@repo/backend/confect/journal/schema";
 import RequireMember from "@repo/backend/confect/middleware/member.spec";
@@ -22,6 +23,9 @@ const ActorView = Schema.Union([
   Schema.Struct({ kind: Schema.Literal("system") }),
 ]);
 
+/** One Person of the school that the audit filter offers as an actor. */
+const ActorOption = Schema.Struct({ id: Id("tenantPeople"), name: PersonName });
+
 export default GroupSpec.make()
   .middleware(Session)
   .middleware(RequireMember)
@@ -38,5 +42,13 @@ export default GroupSpec.make()
           subject: SubjectView,
           subjectName: Schema.OptionFromNullOr(PersonName),
         }),
+    }).middleware(TenantAccess, { action: "audit.view" })
+  )
+  .addFunction(
+    FunctionSpec.publicQuery({
+      name: "actors",
+      args: () => ({ slug: TenantSlug }),
+      returns: () => Schema.Array(ActorOption),
+      error: () => AccessDenied,
     }).middleware(TenantAccess, { action: "audit.view" })
   );

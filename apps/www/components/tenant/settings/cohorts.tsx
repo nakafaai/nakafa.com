@@ -37,7 +37,10 @@ import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { isDenied } from "@/components/tenant/refusal";
-import { SchoolCohortMenu } from "@/components/tenant/settings/cohort";
+import {
+  SchoolCohortMenu,
+  SchoolCohortRestore,
+} from "@/components/tenant/settings/cohort";
 import { createCohortChange } from "@/components/tenant/settings/cohorts.client";
 import { SettingsPage } from "@/components/tenant/settings/page";
 import { saveSchool } from "@/components/tenant/settings/save.client";
@@ -399,7 +402,9 @@ function SchoolCohortTable({
     }),
     cohortColumns.display({
       cell: (info) =>
-        info.row.original.status === "archived" ? null : (
+        info.row.original.status === "archived" ? (
+          <SchoolCohortRestore cohort={info.row.original} slug={slug} />
+        ) : (
           <SchoolCohortMenu cohort={info.row.original} slug={slug} />
         ),
       id: "actions",

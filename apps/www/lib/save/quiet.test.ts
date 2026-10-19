@@ -64,4 +64,37 @@ describe("makeQuietSaver", () => {
       expect(yield* Ref.get(runs)).toEqual([]);
     })
   );
+
+  it.effect("drops the waiting input without running it when cancelled", () =>
+    Effect.gen(function* () {
+      const { runs, saver } = yield* recordingSaver;
+
+      yield* saver.touch(1);
+      yield* saver.cancel;
+      yield* TestClock.adjust("1 second");
+      yield* saver.flush;
+      expect(yield* Ref.get(runs)).toEqual([]);
+    })
+  );
+
+  it.effect("does nothing when it is cancelled with no input waiting", () =>
+    Effect.gen(function* () {
+      const { runs, saver } = yield* recordingSaver;
+
+      yield* saver.cancel;
+      expect(yield* Ref.get(runs)).toEqual([]);
+    })
+  );
+
+  it.effect("runs only the input that is given after a cancel", () =>
+    Effect.gen(function* () {
+      const { runs, saver } = yield* recordingSaver;
+
+      yield* saver.touch(1);
+      yield* saver.cancel;
+      yield* saver.touch(2);
+      yield* TestClock.adjust("250 millis");
+      expect(yield* Ref.get(runs)).toEqual([2]);
+    })
+  );
 });

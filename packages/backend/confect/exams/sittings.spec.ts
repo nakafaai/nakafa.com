@@ -28,6 +28,7 @@ import {
   QuestionNotInExam,
   ResponseDoesNotFit,
   RetiredDevicesFull,
+  RoomOpened,
   SecondDevice,
   SittingClosed,
   SittingLocked,
@@ -210,6 +211,17 @@ export default GroupSpec.make()
       error: () => AccessDenied,
     }).middleware(SittingAccess, {
       action: "sitting.proctor",
+      arg: "sittingId",
+    })
+  )
+  .addFunction(
+    FunctionSpec.publicMutation({
+      name: "cancel",
+      args: () => ({ sittingId: Id("examSittings"), slug: TenantSlug }),
+      returns: () => Schema.Null,
+      error: () => Schema.Union([AccessDenied, RoomOpened]),
+    }).middleware(SittingAccess, {
+      action: "sitting.view",
       arg: "sittingId",
     })
   )

@@ -67,6 +67,8 @@ export const addMemberChange: OptimisticUpdate<typeof tenancy.roster.invite> = (
     id: Schema.decodeUnknownSync(Id("tenantInvites"))(draftText()),
     name,
     personId,
+    roles: [role],
+    status: "pending",
   };
   const member: Member = {
     id: personId,
