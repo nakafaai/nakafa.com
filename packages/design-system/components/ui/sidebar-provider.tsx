@@ -86,7 +86,12 @@ export function SidebarProvider({
   useEffect(() => {
     const query = window.matchMedia(mobileMediaQuery);
     const follow = () => {
-      store.setState({ isMobile: query.matches });
+      // A sheet still open when the viewport widens would stay a modal over the desktop panel.
+      store.setState(
+        query.matches
+          ? { isMobile: true }
+          : { isMobile: false, openMobile: false }
+      );
     };
     follow();
     query.addEventListener("change", follow);
