@@ -5,13 +5,15 @@ import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import type { BuiltinRole } from "@repo/backend/confect/access/schema";
 import type { TenantProfile } from "@repo/backend/confect/tenancy/schema";
 import { createContext, use } from "react";
+import type { HomeAccess } from "@/components/tenant/home/access";
 import { liveTenant } from "@/components/tenant/live";
 
 /**
  * The school the shell shows, its address, its name and its mark, the viewer's
- * first role in it, or none when the viewer holds no grant, and what the viewer
- * may open: the school's settings and its exams. A type only: the browser bundle
- * never evaluates the schemas it is derived from.
+ * first role in it, or none when the viewer holds no grant, what the viewer may
+ * open: the school's settings and its exams, and the viewer's exam access that the
+ * home and the exam list draw from. A type only: the browser bundle never
+ * evaluates the schemas it is derived from.
  */
 export type TenantValue = Pick<
   typeof TenantProfile.Type,
@@ -19,13 +21,16 @@ export type TenantValue = Pick<
 > &
   Record<"logo", string | undefined> &
   Record<"role", BuiltinRole | null> &
-  Record<"canManage" | "canOpenExams", boolean>;
+  Record<"canManage" | "canOpenExams", boolean> &
+  Record<"home", HomeAccess>;
 
 /**
  * The school of the shell. Its value is fixed for one render of the school
  * layout, so it never changes after hydration and streamed content keeps its
- * context. A school's name and logo change in its settings, so `useTenant` reads
- * them from the viewer's live query.
+ * context. The layout computes the viewer's access on the server, so a card or a
+ * row that depends on it is in the first HTML and never inserts after hydration.
+ * A school's name and logo change in its settings, so `useTenant` reads them from
+ * the viewer's live query.
  */
 export const TenantContext = createContext<TenantValue | null>(null);
 

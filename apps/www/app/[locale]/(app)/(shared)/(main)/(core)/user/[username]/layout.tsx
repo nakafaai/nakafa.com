@@ -24,17 +24,24 @@ export const metadata: Metadata = {
   },
 };
 
+/**
+ * The profile's frame is the page's own container, so it draws at once and holds
+ * the height of the page before the profile's header and tabs arrive. Only the
+ * parts that need the profile wait for it, so the frame never moves when they do.
+ */
 export default function Layout(
   props: LayoutProps<"/[locale]/user/[username]">
 ) {
   return (
-    <Suspense fallback={null}>
-      <UserLayoutContent {...props} />
-    </Suspense>
+    <main className="relative mx-auto flex min-h-[calc(100svh-4rem)] w-full max-w-3xl flex-col px-6 pt-6 pb-24 lg:min-h-svh lg:pt-12">
+      <Suspense fallback={null}>
+        <UserLayoutContent {...props} />
+      </Suspense>
+    </main>
   );
 }
 
-/** Resolves the URL-specific profile shell inside its streaming boundary. */
+/** Resolves the profile's header, tabs, and page inside the frame's streaming boundary. */
 async function UserLayoutContent(
   props: LayoutProps<"/[locale]/user/[username]">
 ) {
@@ -45,11 +52,9 @@ async function UserLayoutContent(
 
   return (
     <ErrorBoundary fallback={null}>
-      <main className="relative mx-auto flex min-h-[calc(100svh-4rem)] w-full max-w-3xl flex-col px-6 pt-6 pb-24 lg:min-h-svh lg:pt-12">
-        <UserHeader isOwner={isOwner} profile={profile} />
-        <UserTabs isOwner={isOwner} username={profile.username} />
-        {children}
-      </main>
+      <UserHeader isOwner={isOwner} profile={profile} />
+      <UserTabs isOwner={isOwner} username={profile.username} />
+      {children}
     </ErrorBoundary>
   );
 }

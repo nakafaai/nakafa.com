@@ -81,14 +81,13 @@ finds the right data.
   that limit applies to a local or self-hosted run only.
 - A school page's status is decided by the proxy before the page streams, in
   `lib/routing/school/refusal.ts`, as the profile page already decides its 404 in
-  the proxy (`lib/routing/public/profile.ts`). A visitor with no session is refused
-  when the school does not exist: `tenancy.profile.get` answers `TenantNotFound`. A
-  signed-in viewer is refused when `tenancy.viewer.get` answers `AccessDenied`,
-  or answers `NotMember` and `tenancy.profile.get` answers `TenantNotFound`,
-  because `NotMember` alone is given for a school that does not exist and for a
-  school the viewer does not belong to alike. A signed-in non-member of an
-  existing school reaches the layout, which renders the outsider page
-  (`components/tenant/outsider.tsx`) with a 200 status. The refused page answers
+  the proxy (`lib/routing/public/profile.ts`). The gate reads one query,
+  `tenancy.profile.refusal` (`packages/backend/confect/tenancy/profile.impl.ts`),
+  which decides the school's existence and the caller's view of it together: a
+  school that no one has the address of is refused for every caller, and a signed-in
+  member whom the school does not admit (`tenant.view` denied) is refused. A visitor,
+  and a signed-in non-member of an existing school, reach the layout, which renders
+  the outsider page (`components/tenant/outsider.tsx`) with a 200 status. The refused page answers
   with the app's not-found page and a 404 status, through a rewrite to the
   not-found route, in the locale that the school page negotiates. The school
   layout cannot answer 404 itself: Next sends the static shell of the route with
@@ -104,10 +103,11 @@ finds the right data.
   one. A 404 for a refused visitor alone would tell the two apart, so the refusal
   does not apply to such a path.
 - A school page request costs two or three Convex query calls. The proxy makes one:
-  `tenancy.profile.get`, which reads one school row by its slug, or
-  `tenancy.viewer.get`, which reads a few indexed rows and at most `UNIT_LIMIT`
-  units. The layout reads its profile and, for a signed-in viewer, its viewer
-  again, because it still renders the name and the role. A signed-in viewer also
+  `tenancy.profile.refusal`, which reads one school row by its slug and, for a
+  signed-in caller, the caller's Person and grants, so a non-member costs the same
+  one call as a member. The layout reads its profile and, for a signed-in viewer,
+  its viewer once per request (`lib/tenant/read.ts`), because it still renders the
+  name and the role. A signed-in viewer also
   reads the session token twice, once in the proxy and once in the layout, because
   React's `cache` does not span the two. Each read of the layout, token or query,
   is retried within the shared network budget, so one read answers or fails

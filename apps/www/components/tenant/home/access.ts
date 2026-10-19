@@ -24,3 +24,10 @@ export const homeAccess = (viewer: Pick<Viewer, "can" | "units">) => {
     languages: unitLanguages(viewer.units),
   };
 };
+
+/**
+ * What the viewer may do with exams in the school, as the school layout computes it from the
+ * viewer it reads on the server. The shell's context carries it to every page of the school, so the
+ * pages draw the actions and the tiles that the viewer may use in their first HTML.
+ */
+export type HomeAccess = ReturnType<typeof homeAccess>;

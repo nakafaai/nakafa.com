@@ -15,7 +15,8 @@ import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr } from "effect";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { startTransition } from "react";
+import { startTransition, useState } from "react";
+import { useConvexAuth } from "@/components/providers/convex";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import { ConfirmRowMenu } from "@/components/shared/table/confirm";
@@ -60,9 +61,10 @@ export function SchoolMembersSettings({ slug }: { slug: TenantSlug }) {
 
 /** The members of the school, read a page at a time, with the table and its end. */
 function SchoolMembersBody({ slug }: { slug: TenantSlug }) {
+  const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const pagination = usePaginatedQuery(
     tenancy.roster.members,
-    { slug },
+    isSettled ? { slug } : "skip",
     { initialNumItems: PAGE_SIZE }
   );
 

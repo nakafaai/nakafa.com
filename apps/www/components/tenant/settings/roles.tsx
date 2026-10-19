@@ -49,6 +49,7 @@ import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, Option, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { startTransition, useId, useState, useTransition } from "react";
+import { useConvexAuth } from "@/components/providers/convex";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import { DataTable } from "@/components/shared/table/data";
@@ -117,9 +118,10 @@ export function SchoolRolesSettings({ slug }: { slug: TenantSlug }) {
 
 /** The grants of the school, read a page at a time, with the table and its end. */
 function SchoolGrantsBody({ slug }: { slug: TenantSlug }) {
+  const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const pagination = usePaginatedQuery(
     access.grants.list,
-    { slug },
+    isSettled ? { slug } : "skip",
     { initialNumItems: PAGE_SIZE }
   );
 
@@ -155,7 +157,8 @@ function SchoolGrantTable({
 }) {
   const t = useTranslations("SchoolSettings");
   const tSchool = useTranslations("School");
-  const viewer = useQuery(tenancy.viewer.get, { slug });
+  const isSettled = useConvexAuth((auth) => !auth.isLoading);
+  const viewer = useQuery(tenancy.viewer.get, isSettled ? { slug } : "skip");
 
   if (Arr.isReadonlyArrayEmpty(grants)) {
     return (

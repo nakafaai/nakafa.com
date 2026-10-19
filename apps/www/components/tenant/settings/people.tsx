@@ -20,6 +20,7 @@ import {
 import { Array as Arr, Option, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
+import { useConvexAuth } from "@/components/providers/convex";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
@@ -77,9 +78,11 @@ function SchoolPersonSelect({
   personId: PersonId | undefined;
   slug: TenantSlug;
 }) {
+  const t = useTranslations("SchoolSettings");
+  const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const pagination = usePaginatedQuery(
     tenancy.people.list,
-    { slug, status: "active" },
+    isSettled ? { slug, status: "active" } : "skip",
     { initialNumItems: PICKER_SIZE }
   );
 

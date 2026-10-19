@@ -31,6 +31,7 @@ import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, Option, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { useId, useState, useTransition } from "react";
+import { useConvexAuth } from "@/components/providers/convex";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import { DataTable } from "@/components/shared/table/data";
@@ -105,9 +106,10 @@ function SchoolLoginsBody({
   onIssued: (card: CardView) => void;
   slug: TenantSlug;
 }) {
+  const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const pagination = usePaginatedQuery(
     identity.logins.list,
-    { slug },
+    isSettled ? { slug } : "skip",
     { initialNumItems: PAGE_SIZE }
   );
 

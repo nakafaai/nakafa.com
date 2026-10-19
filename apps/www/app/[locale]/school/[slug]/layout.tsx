@@ -1,52 +1,21 @@
 import { HttpClient } from "@confect/js";
 import auth from "@repo/backend/confect/_generated/refs/auth";
-import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { connection } from "next/server";
 import { getTranslations } from "next-intl/server";
-import { cache } from "react";
+import { type ReactNode, Suspense } from "react";
 import { AppProviders } from "@/components/providers/app";
 import { TenantEntry } from "@/components/tenant/entry";
 import { canOpenExams } from "@/components/tenant/exams/access";
+import { homeAccess } from "@/components/tenant/home/access";
 import { TenantOutsider } from "@/components/tenant/outsider";
 import { TenantShell } from "@/components/tenant/shell";
-import { getToken } from "@/lib/auth/server";
 import { httpLayer } from "@/lib/convex/http";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
-
-/**
- * The proxy decides the status of a school page before it streams: a missing
- * school, a viewer who is not a member, and one the school does not admit answer
- * 404 there (`lib/routing/school/refusal.ts`, ADR 0026). This layout answers the
- * same viewers with not found as well, for a request the proxy did not check, such
- * as a client navigation. Its not-found call runs after the static shell of the
- * route, which is sent with status 200 first, so that answer shows the not-found
- * page with a 200 status.
- */
-export const instant = false;
-
-/** A signed-in viewer whom the school does not admit: the page answers not found. */
-const deniedViewer = () => Effect.succeed({ _tag: "denied" as const });
-
-/** A signed-in account that is not a member of the school: the page shows the outsider page. */
-const outsiderViewer = () => Effect.succeed({ _tag: "outsider" as const });
-
-/**
- * The public profile of the school at an address, or none when no school has it.
- * The layout and its metadata both read it, once per request.
- */
-const readProfile = cache((slug: TenantSlug) =>
-  Effect.runPromise(
-    HttpClient.HttpClient.pipe(
-      Effect.flatMap((client) => client.query(tenancy.profile.get, { slug })),
-      Effect.asSome,
-      Effect.catchTag("TenantNotFound", () => Effect.succeedNone),
-      Effect.provide(httpLayer())
-    )
-  )
-);
+import { readProfile, readSchoolName, readViewer } from "@/lib/tenant/read";
 
 /**
  * Names every page of a school host after the school, so its tab and its history
@@ -60,16 +29,25 @@ export async function generateMetadata({
   if (!Schema.is(TenantSlug)(slug)) {
     return {};
   }
-  return Option.match(await readProfile(slug), {
-    onNone: () => ({}),
-    onSome: ({ name }) => ({
-      robots: { follow: false, index: false },
-      title: { default: name, template: `%s | ${name}` },
-    }),
-  });
+  const name = await readSchoolName(slug);
+  if (name === null) {
+    return {};
+  }
+  return {
+    robots: { follow: false, index: false },
+    title: { default: name, template: `%s | ${name}` },
+  };
 }
 
 /**
+ * The proxy decides the status of a school page before it streams: a missing
+ * school, a viewer who is not a member, and one the school does not admit answer
+ * 404 there (`lib/routing/school/refusal.ts`, ADR 0026). This layout answers the
+ * same viewers with not found as well, for a request the proxy did not check, such
+ * as a client navigation. Its not-found call runs after the static shell of the
+ * route, which is sent with status 200 first, so that answer shows the not-found
+ * page with a 200 status.
+ *
  * The school layout of a school host. The address names the school, so the
  * layout reads its profile without a session and ends the request when no
  * school has the address. A signed-out visitor sees the entry surface with the
@@ -82,10 +60,34 @@ export async function generateMetadata({
  * its sidebar and every page under it share one Convex session, and the pages
  * mount no providers of their own.
  */
-export default async function SchoolLayout({
+export default function SchoolLayout({
   children,
   params,
 }: LayoutProps<"/[locale]/school/[slug]">) {
+  // The school's reads are request-time work, so they stream inside a boundary. The
+  // route then keeps a static shell, and the frame arrives once its reads answer.
+  return (
+    <Suspense fallback={null}>
+      <SchoolFrame params={params}>{children}</SchoolFrame>
+    </Suspense>
+  );
+}
+
+/**
+ * The school's frame for one request: the profile and the viewer that the layout
+ * reads, and the one of the outcomes that they decide.
+ */
+async function SchoolFrame({
+  children,
+  params,
+}: {
+  children: ReactNode;
+  params: LayoutProps<"/[locale]/school/[slug]">["params"];
+}) {
+  // Every school page is private, so it renders for each request and never
+  // prerenders. `connection()` says so before the reads, which keeps the metadata
+  // and the static shell of the school out of a prerender.
+  await connection();
   const { locale: localeParam, slug: slugParam } = await params;
   if (!Schema.is(TenantSlug)(slugParam)) {
     notFound();
@@ -93,13 +95,17 @@ export default async function SchoolLayout({
   const slug = slugParam;
   const locale = getLocaleOrThrow(localeParam);
 
-  const profile = await readProfile(slug);
+  // The profile and the viewer are independent reads, so they start together. The
+  // viewer reads the session token first, and that token is the only read it waits for.
+  const [profile, viewer] = await Promise.all([
+    readProfile(slug),
+    readViewer(slug),
+  ]);
   if (Option.isNone(profile)) {
     notFound();
   }
 
-  const token = await getToken();
-  if (token === undefined) {
+  if (viewer._tag === "visitor") {
     const t = await getTranslations({ locale, namespace: "School" });
     // The username form mounts its own Convex client inside its lazily loaded chunk,
     // so the signed-out tree mounts none.
@@ -112,26 +118,14 @@ export default async function SchoolLayout({
       />
     );
   }
-
-  const membership = await Effect.runPromise(
-    HttpClient.HttpClient.pipe(
-      Effect.flatMap((client) => client.query(tenancy.viewer.get, { slug })),
-      Effect.map((viewer) => ({ _tag: "member" as const, viewer })),
-      Effect.catchTags({
-        AccessDenied: deniedViewer,
-        NotMember: outsiderViewer,
-      }),
-      Effect.provide(httpLayer({ auth: token }))
-    )
-  );
-  if (membership._tag === "denied") {
+  if (viewer._tag === "denied") {
     notFound();
   }
-  if (membership._tag === "outsider") {
+  if (viewer._tag === "outsider") {
     const current = await Effect.runPromise(
       HttpClient.HttpClient.pipe(
         Effect.flatMap((client) => client.query(auth.queries.getCurrentUser)),
-        Effect.provide(httpLayer({ auth: token }))
+        Effect.provide(httpLayer({ auth: viewer.token }))
       )
     );
     if (current === null) {
@@ -152,20 +146,21 @@ export default async function SchoolLayout({
     );
   }
 
-  const viewer = membership.viewer;
-  const role = Option.match(Arr.head(viewer.grants), {
+  const member = viewer.viewer;
+  const role = Option.match(Arr.head(member.grants), {
     onNone: () => null,
     onSome: (grant) => grant.role.key,
   });
-  const canManage = Arr.contains(viewer.can, "tenant.manage");
+  const canManage = Arr.contains(member.can, "tenant.manage");
 
   return (
     <AppProviders pageNavigation={null}>
       <TenantShell
-        account={viewer.account}
+        account={member.account}
         canManage={canManage}
-        canOpenExams={canOpenExams(viewer)}
-        personName={viewer.person.name}
+        canOpenExams={canOpenExams(member)}
+        home={homeAccess(member)}
+        personName={member.person.name}
         profile={profile.value}
         role={role}
       >

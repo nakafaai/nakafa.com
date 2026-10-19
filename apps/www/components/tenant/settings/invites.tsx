@@ -25,6 +25,7 @@ import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, Option, Schema } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { startTransition, useState, useTransition } from "react";
+import { useConvexAuth } from "@/components/providers/convex";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import { DataTable } from "@/components/shared/table/data";
@@ -101,9 +102,10 @@ function SchoolInvitesBody({
   sendLocale: typeof ActiveAppLocaleCodeSchema.Type | undefined;
   slug: TenantSlug;
 }) {
+  const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const pagination = usePaginatedQuery(
     tenancy.invites.list,
-    { slug },
+    isSettled ? { slug } : "skip",
     { initialNumItems: PAGE_SIZE }
   );
 

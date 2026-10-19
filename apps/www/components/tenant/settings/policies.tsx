@@ -28,6 +28,7 @@ import { Textarea } from "@repo/design-system/components/ui/textarea";
 import { Array as Arr, Option, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { startTransition, useId, useState } from "react";
+import { useConvexAuth } from "@/components/providers/convex";
 import {
   CardSection,
   CardSectionActions,
@@ -60,7 +61,8 @@ export function SchoolPoliciesSettings({ slug }: { slug: TenantSlug }) {
  * switches, and the allowed email domains.
  */
 function SchoolPoliciesBody({ slug }: { slug: TenantSlug }) {
-  const viewer = useQuery(tenancy.viewer.get, { slug });
+  const isSettled = useConvexAuth((auth) => !auth.isLoading);
+  const viewer = useQuery(tenancy.viewer.get, isSettled ? { slug } : "skip");
 
   if (QueryResult.isFailure(viewer)) {
     throw viewer.error;

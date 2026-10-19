@@ -1,15 +1,9 @@
-import { HttpClient } from "@confect/js";
-import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { Effect, Option, Schema } from "effect";
+import { Schema } from "effect";
 import { notFound } from "next/navigation";
 import { canOpenExams, canOpenRooms } from "@/components/tenant/exams/access";
 import { TenantSection } from "@/components/tenant/section";
-import { getToken } from "@/lib/auth/server";
-import { httpLayer } from "@/lib/convex/http";
-
-/** A viewer the school does not list gets no school, and the exam pages answer not found. */
-const notInSchool = () => Effect.succeedNone;
+import { readViewer } from "@/lib/tenant/read";
 
 /**
  * The layout of the school exams. Only a viewer who may view exams, or the rooms of an exam, in the
@@ -26,23 +20,10 @@ export default async function SchoolExamsLayout({
   if (!Schema.is(TenantSlug)(slugParam)) {
     notFound();
   }
-  const slug = slugParam;
-  const token = await getToken();
-  if (token === undefined) {
-    notFound();
-  }
-
-  const viewer = await Effect.runPromise(
-    HttpClient.HttpClient.pipe(
-      Effect.flatMap((client) => client.query(tenancy.viewer.get, { slug })),
-      Effect.asSome,
-      Effect.catchTags({ AccessDenied: notInSchool, NotMember: notInSchool }),
-      Effect.provide(httpLayer({ auth: token }))
-    )
-  );
+  const viewer = await readViewer(slugParam);
   if (
-    Option.isNone(viewer) ||
-    !(canOpenExams(viewer.value) || canOpenRooms(viewer.value))
+    viewer._tag !== "member" ||
+    !(canOpenExams(viewer.viewer) || canOpenRooms(viewer.viewer))
   ) {
     notFound();
   }

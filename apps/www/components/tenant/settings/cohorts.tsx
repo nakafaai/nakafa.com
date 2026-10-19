@@ -32,6 +32,7 @@ import { Array as Arr, Option, Schema } from "effect";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { type ReactNode, useId, useState, useTransition } from "react";
+import { useConvexAuth } from "@/components/providers/convex";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
@@ -84,7 +85,8 @@ export function SchoolCohortsSettings({ slug }: { slug: TenantSlug }) {
 
 /** The cohorts of the school's active unit, once the viewer's units are in. */
 function SchoolCohortsContent({ slug }: { slug: TenantSlug }) {
-  const viewer = useQuery(tenancy.viewer.get, { slug });
+  const isSettled = useConvexAuth((auth) => !auth.isLoading);
+  const viewer = useQuery(tenancy.viewer.get, isSettled ? { slug } : "skip");
   const [chosenUnit, setChosenUnit] = useState<UnitId | undefined>(undefined);
 
   if (QueryResult.isFailure(viewer)) {
@@ -166,7 +168,11 @@ function SchoolCohortsOfPeriod({
   unitId: UnitId;
 }) {
   const t = useTranslations("SchoolSettings");
-  const active = useQuery(tenancy.cohorts.activePeriod, { slug, unitId });
+  const isSettled = useConvexAuth((auth) => !auth.isLoading);
+  const active = useQuery(
+    tenancy.cohorts.activePeriod,
+    isSettled ? { slug, unitId } : "skip"
+  );
   if (QueryResult.isFailure(active)) {
     if (isDenied(active.error)) {
       return (
@@ -355,7 +361,11 @@ function SchoolCohortTable({
   slug: TenantSlug;
 }) {
   const t = useTranslations("SchoolSettings");
-  const cohorts = useQuery(tenancy.cohorts.list, { periodId, slug });
+  const isSettled = useConvexAuth((auth) => !auth.isLoading);
+  const cohorts = useQuery(
+    tenancy.cohorts.list,
+    isSettled ? { periodId, slug } : "skip"
+  );
   if (QueryResult.isFailure(cohorts)) {
     throw cohorts.error;
   }

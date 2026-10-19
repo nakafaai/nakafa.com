@@ -8,32 +8,23 @@ import type { NextRequest } from "next/server";
 import { routeSchoolPage } from "@/lib/routing/school/refusal";
 import { proxy } from "@/proxy";
 import {
-  ACCESS_DENIED,
-  ACCOUNT_UNAVAILABLE,
   answerAndCauses,
   answered,
   answerOf,
   fetcher,
-  NOT_MEMBER,
-  PROFILE,
-  PROFILE_VALUE,
   queriesOf,
-  refusedWith,
+  REFUSAL,
   requestsTo,
   resetFakeBackend,
   SCHOOL_ROOT,
   SESSION_COOKIE,
-  SESSION_REQUIRED,
   serve,
   signedIn,
   silent,
-  TENANT_NOT_FOUND,
   TOKEN,
   TOKEN_PATH,
   tokenRefused,
   unreachable,
-  VIEWER,
-  VIEWER_VALUE,
   visit,
 } from "@/test/school";
 
@@ -98,46 +89,41 @@ describe("school page refusal", () => {
     "refuses a school that does not exist to a visitor with no session",
     () =>
       Effect.gen(function* () {
-        serve({ profile: refusedWith(TENANT_NOT_FOUND) });
+        serve({ refusal: answered(true) });
 
         expect(yield* answerOf(SCHOOL_ROOT)).toEqual(Option.some("en"));
         expect(requestsTo(TOKEN_PATH)).toHaveLength(0);
         expect(queriesOf()).toEqual([
-          { auth: null, path: PROFILE, slug: "harapan" },
+          { auth: null, path: REFUSAL, slug: "harapan" },
         ]);
       })
   );
 
   it.effect("admits a visitor with no session to a school that exists", () =>
     Effect.gen(function* () {
-      serve({ profile: answered(PROFILE_VALUE) });
+      serve({ refusal: answered(false) });
 
       const { answer, count } = yield* answerAndCauses(SCHOOL_ROOT, {});
 
       expect(answer).toEqual(Option.none());
       expect(count).toBe(0);
       expect(queriesOf()).toEqual([
-        { auth: null, path: PROFILE, slug: "harapan" },
+        { auth: null, path: REFUSAL, slug: "harapan" },
       ]);
     })
   );
 
   it.effect(
-    "admits a signed-in viewer who is not a member of a school that exists, so its layout shows the outsider page",
+    "admits a signed-in viewer who is not a member of a school that exists, in one query, so its layout shows the outsider page",
     () =>
       Effect.gen(function* () {
-        serve({
-          profile: answered(PROFILE_VALUE),
-          token: signedIn,
-          viewer: refusedWith(NOT_MEMBER),
-        });
+        serve({ refusal: answered(false), token: signedIn });
 
         expect(
           yield* answerOf(SCHOOL_ROOT, { headers: { cookie: SESSION_COOKIE } })
         ).toEqual(Option.none());
         expect(queriesOf()).toEqual([
-          { auth: `Bearer ${TOKEN}`, path: VIEWER, slug: "harapan" },
-          { auth: null, path: PROFILE, slug: "harapan" },
+          { auth: `Bearer ${TOKEN}`, path: REFUSAL, slug: "harapan" },
         ]);
       })
   );
@@ -146,21 +132,18 @@ describe("school page refusal", () => {
     "refuses a signed-in viewer who is not a member of a school that does not exist",
     () =>
       Effect.gen(function* () {
-        serve({
-          profile: refusedWith(TENANT_NOT_FOUND),
-          token: signedIn,
-          viewer: refusedWith(NOT_MEMBER),
-        });
+        serve({ refusal: answered(true), token: signedIn });
 
         expect(
           yield* answerOf(SCHOOL_ROOT, { headers: { cookie: SESSION_COOKIE } })
         ).toEqual(Option.some("en"));
+        expect(queriesOf()).toHaveLength(1);
       })
   );
 
   it.effect("refuses a signed-in viewer whom the school does not admit", () =>
     Effect.gen(function* () {
-      serve({ token: signedIn, viewer: refusedWith(ACCESS_DENIED) });
+      serve({ refusal: answered(true), token: signedIn });
 
       expect(
         yield* answerOf(SCHOOL_ROOT, { headers: { cookie: SESSION_COOKIE } })
@@ -170,7 +153,7 @@ describe("school page refusal", () => {
 
   it.effect("admits a signed-in member of the school", () =>
     Effect.gen(function* () {
-      serve({ token: signedIn, viewer: answered(VIEWER_VALUE) });
+      serve({ refusal: answered(false), token: signedIn });
 
       const { answer, count } = yield* answerAndCauses(SCHOOL_ROOT, {
         cookie: SESSION_COOKIE,
@@ -179,36 +162,14 @@ describe("school page refusal", () => {
       expect(answer).toEqual(Option.none());
       expect(count).toBe(0);
       expect(queriesOf()).toEqual([
-        { auth: `Bearer ${TOKEN}`, path: VIEWER, slug: "harapan" },
+        { auth: `Bearer ${TOKEN}`, path: REFUSAL, slug: "harapan" },
       ]);
     })
   );
 
-  it.effect(
-    "leaves a session or an account that the app cannot read to the layout",
-    () =>
-      Effect.gen(function* () {
-        serve({
-          token: signedIn,
-          viewer: refusedWith(ACCOUNT_UNAVAILABLE),
-        });
-        expect(
-          yield* answerOf(SCHOOL_ROOT, { headers: { cookie: SESSION_COOKIE } })
-        ).toEqual(Option.none());
-
-        serve({
-          token: signedIn,
-          viewer: refusedWith(SESSION_REQUIRED),
-        });
-        expect(
-          yield* answerOf(SCHOOL_ROOT, { headers: { cookie: SESSION_COOKIE } })
-        ).toEqual(Option.none());
-      })
-  );
-
   it.effect("sends a client navigation and a prefetch on without a read", () =>
     Effect.gen(function* () {
-      serve({ profile: refusedWith(TENANT_NOT_FOUND) });
+      serve({ refusal: answered(true) });
 
       expect(
         yield* answerOf(SCHOOL_ROOT, {
@@ -224,7 +185,7 @@ describe("school page refusal", () => {
 
   it.effect("sends a POST, such as a server action, on without a read", () =>
     Effect.gen(function* () {
-      serve({ profile: refusedWith(TENANT_NOT_FOUND) });
+      serve({ refusal: answered(true) });
 
       expect(yield* answerOf(SCHOOL_ROOT, { method: "POST" })).toEqual(
         Option.none()
@@ -237,7 +198,7 @@ describe("school page refusal", () => {
     "reads nothing for the main host or for a bypass file of a school host",
     () =>
       Effect.gen(function* () {
-        serve({ profile: refusedWith(TENANT_NOT_FOUND) });
+        serve({ refusal: answered(true) });
 
         expect(yield* answerOf("https://nakafa.com/en/classes")).toEqual(
           Option.none()
@@ -253,7 +214,7 @@ describe("school page refusal", () => {
     "answers the locale that the school page negotiates: the cookie, then Accept-Language, then the default",
     () =>
       Effect.gen(function* () {
-        serve({ profile: refusedWith(TENANT_NOT_FOUND) });
+        serve({ refusal: answered(true) });
 
         expect(
           yield* answerOf(SCHOOL_ROOT, {
@@ -290,7 +251,7 @@ describe("school page refusal", () => {
     "goes on to the school tree and logs the cause when the school cannot be read",
     () =>
       Effect.gen(function* () {
-        serve({ profile: unreachable });
+        serve({ refusal: unreachable });
 
         const { answer, count, text } = yield* answerAndCauses(SCHOOL_ROOT, {});
 
@@ -304,7 +265,7 @@ describe("school page refusal", () => {
     "makes one attempt at a school read that the network refuses, and does not repeat it",
     () =>
       Effect.gen(function* () {
-        serve({ profile: unreachable });
+        serve({ refusal: unreachable });
 
         expect(yield* answerOf(SCHOOL_ROOT)).toEqual(Option.none());
         expect(queriesOf()).toHaveLength(1);
@@ -315,7 +276,7 @@ describe("school page refusal", () => {
     "goes on to the school tree and logs the deadline when the school does not answer in time",
     () =>
       Effect.gen(function* () {
-        serve({ profile: silent });
+        serve({ refusal: silent });
 
         const fiber = yield* Effect.forkChild(answerAndCauses(SCHOOL_ROOT, {}));
         yield* TestClock.adjust(NETWORK_ATTEMPT_DEADLINE);
@@ -352,7 +313,7 @@ describe("the route of a school host", () => {
     "answers a refused school page with the not-found page in the locale of the page",
     () =>
       Effect.gen(function* () {
-        serve({ profile: refusedWith(TENANT_NOT_FOUND) });
+        serve({ refusal: answered(true) });
 
         const response = yield* routeSchoolPage(
           visit(SCHOOL_ROOT, { headers: { "accept-language": "de-DE" } })
@@ -375,7 +336,7 @@ describe("the route of a school host", () => {
     "answers a refused school page through the proxy with the not-found page and 404, before the school tree",
     () =>
       Effect.gen(function* () {
-        serve({ profile: refusedWith(TENANT_NOT_FOUND) });
+        serve({ refusal: answered(true) });
 
         const response = yield* Effect.promise(() => proxy(visit(SCHOOL_ROOT)));
 
@@ -391,12 +352,12 @@ describe("the route of a school host", () => {
     "answers a path that next-intl cannot decode the same for a refused school and an admitted one",
     () =>
       Effect.gen(function* () {
-        serve({ profile: refusedWith(TENANT_NOT_FOUND) });
+        serve({ refusal: answered(true) });
         const refused = yield* routeSchoolPage(
           visit("https://harapan.nakafa.com/%")
         );
 
-        serve({ profile: answered(PROFILE_VALUE) });
+        serve({ refusal: answered(false) });
         const admitted = yield* routeSchoolPage(
           visit("https://harapan.nakafa.com/%")
         );
@@ -410,7 +371,7 @@ describe("the route of a school host", () => {
 
   it.effect("routes an admitted school page to its school tree", () =>
     Effect.gen(function* () {
-      serve({ profile: answered(PROFILE_VALUE) });
+      serve({ refusal: answered(false) });
 
       const response = yield* routeSchoolPage(visit(SCHOOL_ROOT));
 
@@ -424,7 +385,7 @@ describe("the route of a school host", () => {
     "rewrites an admitted school page through the proxy before the public routes read it",
     () =>
       Effect.gen(function* () {
-        serve({ profile: answered(PROFILE_VALUE) });
+        serve({ refusal: answered(false) });
 
         const response = yield* Effect.promise(() =>
           proxy(visit("https://harapan.nakafa.com/classes"))

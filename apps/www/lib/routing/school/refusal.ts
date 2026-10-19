@@ -40,48 +40,10 @@ function isPageRequest(request: NextRequest) {
 }
 
 /**
- * A visitor with no session reads the school's profile. The profile names the
- * school to anyone, so only a school that does not exist refuses the page.
- */
-const readVisitorRefusal = Effect.fn("www.routing.school.visitorRefusal")(
-  function* (slug: TenantSlug) {
-    return yield* HttpClient.HttpClient.pipe(
-      Effect.flatMap((client) => client.query(tenancy.profile.get, { slug })),
-      Effect.as(false),
-      Effect.catchTag("TenantNotFound", () => Effect.succeed(true)),
-      Effect.provide(httpSingleAttemptLayer())
-    );
-  }
-);
-
-/**
- * A signed-in visitor reads the school as a member. `NotMember` answers a school
- * that does not exist and a school the visitor does not belong to alike, so the
- * profile decides: a school that does not exist is refused, and a school that does
- * exist admits the visitor to its layout, which shows the outsider page to an
- * account that is not a member. `AccessDenied` refuses the page as the layout does.
- * An account or a session that the app cannot read leaves the page to the layout,
- * as it does today.
- */
-const readMemberRefusal = Effect.fn("www.routing.school.memberRefusal")(
-  function* (slug: TenantSlug, token: string) {
-    return yield* HttpClient.HttpClient.pipe(
-      Effect.flatMap((client) => client.query(tenancy.viewer.get, { slug })),
-      Effect.as(false),
-      Effect.catchTags({
-        AccessDenied: () => Effect.succeed(true),
-        AccountUnavailable: () => Effect.succeed(false),
-        NotMember: () => readVisitorRefusal(slug),
-        SessionRequired: () => Effect.succeed(false),
-      }),
-      Effect.provide(httpSingleAttemptLayer({ auth: token }))
-    );
-  }
-);
-
-/**
- * Reads whether one school refuses a page for these headers: its profile for a
- * visitor with no session, and its viewer for a signed-in one.
+ * Reads whether the school refuses a page for the caller, in one query: the backend
+ * decides the school's existence and the caller's view of it together
+ * (`tenancy.profile.refusal`). A visitor's query carries no session, and a signed-in
+ * caller's carries its token, so the backend reads the same identity the layout reads.
  */
 const readRefusal = Effect.fn("www.routing.school.refusal")(function* (
   slug: TenantSlug,
@@ -91,10 +53,12 @@ const readRefusal = Effect.fn("www.routing.school.refusal")(function* (
     clientEnv.NEXT_PUBLIC_CONVEX_SITE_URL,
     headers
   );
-  if (token === undefined) {
-    return yield* readVisitorRefusal(slug);
-  }
-  return yield* readMemberRefusal(slug, token);
+  return yield* HttpClient.HttpClient.pipe(
+    Effect.flatMap((client) => client.query(tenancy.profile.refusal, { slug })),
+    Effect.provide(
+      httpSingleAttemptLayer(token === undefined ? undefined : { auth: token })
+    )
+  );
 });
 
 /**
