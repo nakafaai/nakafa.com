@@ -70,7 +70,6 @@ function TenantAccount({
         <AccountMenu
           account={{
             mascot: account.mascot,
-            name: account.name,
             photo: account.image,
           }}
           description={role === null ? undefined : t(`role.${role}`)}

@@ -70,7 +70,6 @@ export function NavUserAccount({ user }: { user: CurrentUser }) {
       account={{
         email: user.authUser.email,
         mascot: user.appUser.mascot,
-        name: user.authUser.name,
         photo: photoOf(user.appUser),
       }}
       description={planLabelByPlan[user.appUser.plan]}

@@ -25,7 +25,6 @@
     "tile-minutes-left": "{count, plural, one {# Minute übrig} other {# Minuten übrig}}",
     "next-exam-footer": "Schüler sehen eine Prüfung erst, wenn sie geplant ist.",
     "next-exam-action": "Prüfungen öffnen",
-    "language": "Sprache",
     "role": {
       "admin": "Admin",
       "auditor": "Prüfer:in",
