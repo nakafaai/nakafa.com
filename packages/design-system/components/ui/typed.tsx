@@ -126,7 +126,12 @@ export function TypedText({
       <span className="sr-only">{text}</span>
       <span aria-hidden="true">
         {text.slice(0, shown)}
-        {caret && !shouldReduceMotion ? <Caret blinking={resting} /> : null}
+        {/* While letters are written the caret is a new element at each letter,
+            so the page never counts its step as a layout shift; at rest it stays
+            one element and blinks. */}
+        {caret && !shouldReduceMotion ? (
+          <Caret blinking={resting} key={resting ? "rest" : shown} />
+        ) : null}
         <span className="invisible">{text.slice(shown)}</span>
       </span>
     </span>
