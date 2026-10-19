@@ -1,7 +1,7 @@
 "use client";
 
 import type { StudentSittingRow } from "@repo/backend/confect/exams/sittings/contract";
-import { Array as Arr, Option, Order } from "effect";
+import { Array as Arr, type Option, Order } from "effect";
 
 /** The part of a sitting that its order reads: its state, when it opens, and the student's attempt in it. */
 type Listed = Pick<
