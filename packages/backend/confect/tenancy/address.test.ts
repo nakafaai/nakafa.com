@@ -1,11 +1,11 @@
 import { describe, expect, it } from "@effect/vitest";
-import { schoolAddress } from "@repo/backend/confect/emails/invite/school";
+import { schoolAddress } from "@repo/backend/confect/tenancy/address";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Effect, Schema } from "effect";
 
 const harapan = Schema.decodeSync(TenantSlug)("harapan");
 
-describe("emails/invite/school", () => {
+describe("tenancy/address schoolAddress", () => {
   it.effect("answers the school's own host under the site's domain", () =>
     Effect.gen(function* () {
       expect(yield* schoolAddress(new URL("https://nakafa.com"), harapan)).toBe(
