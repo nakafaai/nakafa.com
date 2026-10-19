@@ -151,6 +151,48 @@ function ExamRoomsContent({
   );
 }
 
+/**
+ * The empty state of the rooms table once the list is exhausted: no room yet, with the way to the
+ * editor for a viewer who may open it, or no room in the chosen state.
+ */
+function RoomsEmpty({
+  examId,
+  filter,
+}: {
+  examId: GenericId.GenericId<"exams">;
+  filter: StateFilter;
+}) {
+  const t = useTranslations("Exams");
+  const tenant = useTenant();
+
+  if (filter !== "all") {
+    return (
+      <TableEmpty
+        act="searching"
+        description={t("rooms-filter-empty-description")}
+        title={t("rooms-filter-empty")}
+      />
+    );
+  }
+  return (
+    <TableEmpty
+      act="pointing"
+      action={
+        tenant.canOpenExams ? (
+          <Link
+            className={buttonVariants({ variant: "outline" })}
+            href={`/exams/${examId}/edit`}
+          >
+            {t("rooms-empty-action")}
+          </Link>
+        ) : undefined
+      }
+      description={t("rooms-empty-description")}
+      title={t("rooms-empty")}
+    />
+  );
+}
+
 /** The state filter of the table: every state, or one sitting state. */
 function RoomStateSelect({
   onValueChange,
@@ -210,7 +252,6 @@ function RoomsTable({
   slug: TenantSlug;
 }) {
   const t = useTranslations("Exams");
-  const tenant = useTenant();
   const pagination = usePaginatedQuery(
     exams.rooms.list,
     isSettled ? roomsArgs({ examId, slug }, filter) : "skip",
@@ -239,29 +280,7 @@ function RoomsTable({
     if (pagination._tag !== "Exhausted") {
       return loadMoreTrigger;
     }
-    return filter === "all" ? (
-      <TableEmpty
-        act="pointing"
-        action={
-          tenant.canOpenExams ? (
-            <Link
-              className={buttonVariants({ variant: "outline" })}
-              href={`/exams/${examId}/edit`}
-            >
-              {t("rooms-empty-action")}
-            </Link>
-          ) : undefined
-        }
-        description={t("rooms-empty-description")}
-        title={t("rooms-empty")}
-      />
-    ) : (
-      <TableEmpty
-        act="searching"
-        description={t("rooms-filter-empty-description")}
-        title={t("rooms-filter-empty")}
-      />
-    );
+    return <RoomsEmpty examId={examId} filter={filter} />;
   }
 
   return (
