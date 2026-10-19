@@ -1,22 +1,13 @@
 "use client";
 
 import { useMutation } from "@confect/react";
-import { Delete02Icon, MoreHorizontalIcon } from "@hugeicons/core-free-icons";
 import posts from "@repo/backend/confect/_generated/refs/posts";
 import { DeferredLearnerText } from "@repo/design-system/components/markdown/learner.client";
-import { Button } from "@repo/design-system/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Effect, HashSet } from "effect";
 import dynamic from "next/dynamic";
-import { useLocale, useTranslations } from "next-intl";
-import { useState } from "react";
+import { useLocale } from "next-intl";
+import { MoreMenu } from "@/components/shared/more";
 import { formatShortAge } from "@/components/user/age";
 import {
   FeedActions,
@@ -74,7 +65,9 @@ export function PostRow({ post }: { post: ListPost }) {
           </FeedAge>
           {isOwner && (
             <FeedEnd>
-              <PostMoreMenu inert={pending} postId={post._id} />
+              <MoreMenu inert={pending}>
+                <PostDeletion postId={post._id} />
+              </MoreMenu>
             </FeedEnd>
           )}
         </FeedHeader>
@@ -128,64 +121,5 @@ function PostLikeButton({ post }: { post: ListPost }) {
       liked={post.liked}
       onToggle={toggle}
     />
-  );
-}
-
-/**
- * The menu of the owner's own post. The delete dialog mounts with the first
- * opening of the menu, so its code is loaded before Delete can be chosen.
- */
-function PostMoreMenu({
-  inert,
-  postId,
-}: {
-  inert: boolean;
-  postId: ListPost["_id"];
-}) {
-  const t = useTranslations("Common");
-  const [menuOpened, setMenuOpened] = useState(false);
-  const [deleting, setDeleting] = useState(false);
-
-  return (
-    <>
-      <DropdownMenu
-        onOpenChange={(open) => {
-          if (open) {
-            setMenuOpened(true);
-          }
-        }}
-      >
-        <DropdownMenuTrigger
-          render={
-            <Button
-              aria-label={t("more")}
-              inert={inert}
-              size="icon-sm"
-              variant="ghost"
-            >
-              <HugeIcons icon={MoreHorizontalIcon} />
-              <span className="sr-only">{t("more")}</span>
-            </Button>
-          }
-        />
-        <DropdownMenuContent align="end" className="w-40">
-          <DropdownMenuItem
-            className="cursor-pointer"
-            onClick={() => setDeleting(true)}
-            variant="destructive"
-          >
-            <HugeIcons icon={Delete02Icon} />
-            {t("delete")}
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-      {menuOpened && (
-        <PostDeletion
-          onOpenChange={setDeleting}
-          open={deleting}
-          postId={postId}
-        />
-      )}
-    </>
   );
 }

@@ -9,6 +9,7 @@ import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-d
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Effect } from "effect";
 import { useTranslations } from "next-intl";
+import { useDeletion } from "@/components/shared/more";
 import { removeFromLists } from "@/components/user/posts/mutation.client";
 import type { ListPost } from "@/components/user/posts/state";
 import { reportClientException } from "@/lib/analytics/client";
@@ -17,15 +18,8 @@ import { reportClientException } from "@/lib/analytics/client";
  * Asks before a post is deleted. The post leaves the list at once when the
  * learner confirms, and it comes back with a message if the server refuses.
  */
-export function PostDeletion({
-  postId,
-  open,
-  onOpenChange,
-}: {
-  postId: ListPost["_id"];
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}) {
+export function PostDeletion({ postId }: { postId: ListPost["_id"] }) {
+  const { onOpenChange, open } = useDeletion();
   const t = useTranslations("Posts");
   const tCommon = useTranslations("Common");
   const removePost = useMutation(posts.mutations.remove).withOptimisticUpdate(
