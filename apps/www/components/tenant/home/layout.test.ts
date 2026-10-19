@@ -79,69 +79,62 @@ describe("studentPlan", () => {
   });
 });
 
-/** The columns of each tile at two columns and at three, as a list of pairs. */
-const spansOf = (count: number) =>
-  Arr.map(tileSpans(count), (span) => [span.two, span.three]);
+/** The columns of each tile at two columns, in order. */
+const twoColumnSpans = (count: number) =>
+  Arr.map(tileSpans(count), (span) => span.two);
 
-describe("tileSpans", () => {
-  it("gives one tile the whole row at every width", () => {
-    expect(spansOf(1)).toEqual([[2, 3]]);
+/** The columns of each tile at three columns, in order. */
+const threeColumnSpans = (count: number) =>
+  Arr.map(tileSpans(count), (span) => span.three);
+
+describe("tileSpans at two columns", () => {
+  it("gives one tile the whole row", () => {
+    expect(twoColumnSpans(1)).toEqual([2]);
+  });
+
+  it("gives the hero and a single after it each a whole row", () => {
+    expect(twoColumnSpans(2)).toEqual([2, 2]);
+  });
+
+  it("stands a lone last tile over its whole row when the singles are odd", () => {
+    expect(twoColumnSpans(4)).toEqual([2, 1, 1, 2]);
+  });
+
+  it("keeps the last row whole when its singles pair up", () => {
+    expect(twoColumnSpans(5)).toEqual([2, 1, 1, 1, 1]);
+  });
+});
+
+describe("tileSpans at three columns", () => {
+  it("gives one tile the whole row", () => {
+    expect(threeColumnSpans(1)).toEqual([3]);
   });
 
   it("gives the hero two columns and the single beside it the last column of its row", () => {
-    expect(spansOf(2)).toEqual([
-      [2, 2],
-      [2, 1],
-    ]);
+    expect(threeColumnSpans(2)).toEqual([2, 1]);
   });
 
-  it("stands a lone last tile over its whole row at three columns", () => {
-    expect(spansOf(3)).toEqual([
-      [2, 2],
-      [1, 1],
-      [1, 3],
-    ]);
+  it("stands a lone last tile over its whole row", () => {
+    expect(threeColumnSpans(3)).toEqual([2, 1, 3]);
   });
 
-  it("stands a lone last tile over its whole row at two columns when the singles are odd", () => {
-    expect(spansOf(4)).toEqual([
-      [2, 2],
-      [1, 1],
-      [1, 1],
-      [2, 1],
-    ]);
+  it("gives the last of two tiles that share the last row two columns, so no column stays empty", () => {
+    expect(threeColumnSpans(4)).toEqual([2, 1, 1, 2]);
   });
 
   it("keeps the last row whole when its tiles fill it", () => {
-    expect(spansOf(5)).toEqual([
-      [2, 2],
-      [1, 1],
-      [1, 1],
-      [1, 1],
-      [1, 1],
-    ]);
+    expect(threeColumnSpans(5)).toEqual([2, 1, 1, 1, 1]);
   });
 
   it("stands a lone last tile over its row again after a full row of three", () => {
-    expect(spansOf(6)).toEqual([
-      [2, 2],
-      [1, 1],
-      [1, 1],
-      [1, 1],
-      [1, 1],
-      [2, 3],
-    ]);
+    expect(threeColumnSpans(6)).toEqual([2, 1, 1, 1, 1, 3]);
   });
 
-  it("leaves two tiles of the last row side by side at three columns", () => {
-    expect(spansOf(7)).toEqual([
-      [2, 2],
-      [1, 1],
-      [1, 1],
-      [1, 1],
-      [1, 1],
-      [1, 1],
-      [1, 1],
-    ]);
+  it("gives the last of two tiles that share the last row two columns again, after a full row of three", () => {
+    expect(threeColumnSpans(7)).toEqual([2, 1, 1, 1, 1, 1, 2]);
+  });
+
+  it("repeats both ends on every later row of three", () => {
+    expect(threeColumnSpans(10)).toEqual([2, 1, 1, 1, 1, 1, 1, 1, 1, 2]);
   });
 });

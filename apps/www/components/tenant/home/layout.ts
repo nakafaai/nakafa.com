@@ -89,6 +89,14 @@ const threeColumnSpan = (index: number, count: number): 1 | 2 | 3 => {
   if (index === 0) {
     return 2;
   }
-  // The hero and the first single share the first row, and the singles after them fill rows of three.
-  return index === count - 1 && count >= 3 && (count - 2) % 3 === 1 ? 3 : 1;
+  if (index < count - 1) {
+    return 1;
+  }
+  // The hero and the first single share the first row, and the singles after them fill rows of three. The last
+  // tile fills the last row: alone, it takes the row, and beside one single it takes the two columns that remain.
+  const singlesInLastRow = (count - 2) % 3;
+  if (singlesInLastRow === 1) {
+    return 3;
+  }
+  return singlesInLastRow === 2 ? 2 : 1;
 };
