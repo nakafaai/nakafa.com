@@ -4,13 +4,13 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import { entries } from "@repo/backend/confect/access/catalog";
 import { Kind } from "@repo/backend/confect/access/kind";
 import { ExamTitle } from "@repo/backend/confect/exams/exam";
-import { CohortName } from "@repo/backend/confect/tenancy/cohort";
 import {
   AttemptState,
   RoomName,
   SignalKind,
   SittingState,
 } from "@repo/backend/confect/exams/sittings/schema";
+import { CohortName } from "@repo/backend/confect/tenancy/cohort";
 import { TimeZone } from "@repo/backend/confect/tenancy/locale";
 import { PersonName } from "@repo/backend/confect/tenancy/schema";
 import { MascotCode } from "@repo/mascot/code";
@@ -57,6 +57,16 @@ export const SittingView = Schema.Struct({
   state: SittingState,
   timeZone: TimeZone,
   unitId: Id("tenantUnits"),
+});
+
+/**
+ * One student the sitting expects, who has not entered it yet: the seat that the proctor sees before
+ * the student's attempt exists.
+ */
+export const ExpectedSeat = Schema.Struct({
+  id: Id("tenantPeople"),
+  mascot: Schema.NullOr(MascotCode),
+  name: PersonName,
 });
 
 /** One attempt on the dashboard: its student, its state and deadline, and whether the student is away. */

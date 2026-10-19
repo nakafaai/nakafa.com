@@ -11,6 +11,7 @@ export default {
 ["signal"]: RegisteredConvexFunction.register({ ...definitions["signal"], handler: forward(definitions["signal"].handler) }),
 ["mine"]: RegisteredConvexFunction.register({ ...definitions["mine"], handler: forward(definitions["mine"].handler) }),
 ["dashboard"]: RegisteredConvexFunction.register({ ...definitions["dashboard"], handler: forward(definitions["dashboard"].handler) }),
+["expected"]: RegisteredConvexFunction.register({ ...definitions["expected"], handler: forward(definitions["expected"].handler) }),
 ["lock"]: RegisteredConvexFunction.register({ ...definitions["lock"], handler: forward(definitions["lock"].handler) }),
 ["unlock"]: RegisteredConvexFunction.register({ ...definitions["unlock"], handler: forward(definitions["unlock"].handler) }),
 ["addMinutes"]: RegisteredConvexFunction.register({ ...definitions["addMinutes"], handler: forward(definitions["addMinutes"].handler) }),
