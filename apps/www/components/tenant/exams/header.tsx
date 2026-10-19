@@ -25,8 +25,9 @@ import { titleToSave } from "@/components/tenant/exams/title";
  * Enter, and only a trimmed, changed, valid title is sent. The optimistic change restores
  * the saved title when the server refuses the rename. The row ends with the action that
  * tries the exam as a student and the button that schedules it, and the title gives way
- * before them. A frozen exam says why its questions are fixed in a line under the header
- * (ExamFrozenNote).
+ * before them. On a phone the trial action keeps its icon and its name for screen readers,
+ * so the title keeps room to read at 375 pixels. A frozen exam says why its questions are
+ * fixed in a line under the header (ExamFrozenNote).
  */
 export function ExamHeader() {
   const t = useTranslations("Exams");
@@ -79,7 +80,7 @@ export function ExamHeader() {
         href={`/exams/${exam.id}/try`}
       >
         <HugeIcons icon={ViewIcon} />
-        {t("try-action")}
+        <span className="max-sm:sr-only">{t("try-action")}</span>
       </Link>
       <ScheduleExam />
     </header>
