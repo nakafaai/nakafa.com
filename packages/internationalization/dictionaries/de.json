@@ -142,7 +142,7 @@
     "schedule-past": "Der Beginn ist vorbei. Wähle eine spätere Zeit.",
     "rooms-title": "Räume",
     "rooms-empty": "Noch keine Räume",
-    "rooms-empty-description": "Plane die Prüfung im Editor, dann erscheint jeder Raum hier.",
+    "rooms-empty-description": "Jeder Raum erscheint hier, sobald die Prüfung geplant ist.",
     "rooms-filter-empty": "Kein Raum hat diesen Status",
     "rooms-filter-empty-description": "Wähle einen anderen Status, um die übrigen Räume zu sehen.",
     "rooms-unavailable": "Du kannst die Räume dieser Prüfung nicht sehen.",

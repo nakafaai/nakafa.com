@@ -167,7 +167,6 @@ function RoomsTable({
   slug: TenantSlug;
 }) {
   const t = useTranslations("Exams");
-  const locale = useLocale();
   const pagination = usePaginatedQuery(
     exams.rooms.list,
     isSettled ? roomsArgs({ examId, slug }, filter) : "skip",
@@ -217,12 +216,7 @@ function RoomsTable({
           </TableHeader>
           <TableBody>
             {Arr.map(pagination.results, (room) => (
-              <RoomItem
-                examId={examId}
-                key={room.id}
-                locale={locale}
-                room={room}
-              />
+              <RoomItem examId={examId} key={room.id} room={room} />
             ))}
           </TableBody>
         </Table>
@@ -238,14 +232,13 @@ function RoomsTable({
  */
 function RoomItem({
   examId,
-  locale,
   room,
 }: {
   examId: GenericId.GenericId<"exams">;
-  locale: string;
   room: Room;
 }) {
   const t = useTranslations("Exams");
+  const locale = useLocale();
 
   return (
     <TableRow>

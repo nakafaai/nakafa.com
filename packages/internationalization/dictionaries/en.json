@@ -142,7 +142,7 @@
     "schedule-past": "The start has passed. Choose a later time.",
     "rooms-title": "Rooms",
     "rooms-empty": "No rooms yet",
-    "rooms-empty-description": "Schedule the exam from its editor, and each room appears here.",
+    "rooms-empty-description": "Each room appears here once the exam is scheduled.",
     "rooms-filter-empty": "No room is in this state",
     "rooms-filter-empty-description": "Choose another state to see the other rooms.",
     "rooms-unavailable": "You cannot view the rooms of this exam.",

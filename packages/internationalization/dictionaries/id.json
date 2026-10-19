@@ -142,7 +142,7 @@
     "schedule-past": "Waktu mulai sudah lewat. Pilih waktu yang lebih lambat.",
     "rooms-title": "Ruang",
     "rooms-empty": "Belum ada ruang",
-    "rooms-empty-description": "Jadwalkan ujian dari editornya, dan setiap ruang muncul di sini.",
+    "rooms-empty-description": "Setiap ruang muncul di sini setelah ujian dijadwalkan.",
     "rooms-filter-empty": "Tidak ada ruang dengan status ini",
     "rooms-filter-empty-description": "Pilih status lain untuk melihat ruang yang lain.",
     "rooms-unavailable": "Anda tidak dapat melihat ruang ujian ini.",

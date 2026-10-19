@@ -44,7 +44,6 @@ export function StudentSittings() {
 function SittingList({ slug }: { slug: TenantSlug }) {
   const t = useTranslations("School");
   const te = useTranslations("Exams");
-  const locale = useLocale();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const listed = useQuery(exams.sittings.mine, isSettled ? { slug } : "skip");
 
@@ -78,11 +77,7 @@ function SittingList({ slug }: { slug: TenantSlug }) {
             </TableHeader>
             <TableBody>
               {Arr.map(rows, (sitting) => (
-                <StudentSittingRow
-                  key={sitting.id}
-                  locale={locale}
-                  sitting={sitting}
-                />
+                <StudentSittingRow key={sitting.id} sitting={sitting} />
               ))}
             </TableBody>
           </Table>
@@ -96,14 +91,9 @@ function SittingList({ slug }: { slug: TenantSlug }) {
  * One sitting of the list: its exam, its room, which links to the student's screen, its opening
  * in the time zone of its unit, and its state.
  */
-function StudentSittingRow({
-  locale,
-  sitting,
-}: {
-  locale: string;
-  sitting: Sitting;
-}) {
+function StudentSittingRow({ sitting }: { sitting: Sitting }) {
   const te = useTranslations("Exams");
+  const locale = useLocale();
 
   return (
     <TableRow>
