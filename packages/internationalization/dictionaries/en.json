@@ -1669,7 +1669,7 @@
     "nina-title": "Nina knows which part you mean",
     "nina-lead": "Ask from the question or lesson you have open.",
     "nina-chat-ask": "Why is 13 wrong?",
-    "nina-chat-answer": "### 13 comes from taking m as 3\n\nThat gives $5(2) + 9/3 = 13$. The trouble is that $m = 3$ does not fit the question.\n\n#### Check it against what you know\n\n$\\triangle(2, 4) = 2(2) + 4/3 \\neq 8$\n\nWith $m = 1$ it fits: $2(2) + 4/1 = 8$. So $m$ must be 1, and the answer is 19.",
+    "nina-chat-answer": "Your \\(13\\) comes from taking \\(m = 3\\). That gives \\(5(2) + 9/3 = 13\\), but \\(m = 3\\) does not fit the question.\n\nCheck it with what you already know:\n\n\\[\\triangle(2, 4) = 2(2) + 4/3 \\neq 8\\]\n\nWith \\(m = 1\\) it fits: \\(2(2) + 4/1 = 8\\). So \\(m\\) must be \\(1\\), and the answer is \\(19\\).",
     "memory-title": "Nina gets to know you",
     "memory-lead": "You can read, change, pause or delete what she remembers at any time.",
     "memory-said-1": "I am in grade 12, science.",

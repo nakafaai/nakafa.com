@@ -5,7 +5,9 @@ import { cva } from "class-variance-authority";
 import { Schema } from "effect";
 import {
   createContext,
+  lazy,
   type ReactNode,
+  Suspense,
   use,
   useEffect,
   useEffectEvent,
@@ -150,7 +152,7 @@ export function TurnAsk({ text }: { text: string }) {
   );
 }
 
-const answerVariants = cva(
+const revealVariants = cva(
   "transition-[opacity,filter,translate] duration-500 ease-out motion-reduce:transition-none",
   {
     variants: {
@@ -163,15 +165,60 @@ const answerVariants = cva(
 );
 
 /**
- * Nina's answer, drawn by the chat's own Markdown parts. It comes in once the
- * question is asked: it rises a little, sharpens and fades in.
+ * Nina's reasoning row and her answer, which come in together once the question
+ * is asked: they rise a little, sharpen and fade in.
  */
-export function TurnAnswer({ children }: { children: ReactNode }) {
+export function TurnReveal({ children }: { children: ReactNode }) {
   const phase = useTurn((state) => state.phase);
 
   return (
-    <div className={answerVariants({ hidden: phase !== "answered" })}>
+    <div className={revealVariants({ hidden: phase !== "answered" })}>
       {children}
+    </div>
+  );
+}
+
+/** The chat's own Response, which draws an answer. Its code loads with the first answer near the screen. */
+const ChatResponse = lazy(() =>
+  import("@repo/design-system/components/ai/response").then((module) => ({
+    default: module.Response,
+  }))
+);
+
+/** How near the screen an answer must be before the chat's Response loads. */
+const LOAD_NEAR = "100% 0px";
+
+/**
+ * Nina's answer, drawn by the chat's own Response once the answer is near the
+ * screen. Until then `children` shows: the page's server copy, drawn with the
+ * same Markdown parts, so both give the same markup and the swap moves nothing.
+ * The Response's code therefore loads only for a reader who comes near the
+ * answer, and the page's first JavaScript stays inside its budget.
+ */
+export function TurnAnswer({
+  children,
+  id,
+  text,
+}: {
+  /** The server's copy of the answer, shown until the Response has loaded. */
+  children: ReactNode;
+  /** The id of the answer's Markdown blocks, the same as the server copy's. */
+  id: string;
+  /** The answer as Markdown, which the Response draws. */
+  text: string;
+}) {
+  const { entry, ref } = useIntersection({ rootMargin: LOAD_NEAR });
+  const near = entry?.isIntersecting ?? false;
+
+  return (
+    <div ref={ref}>
+      {near ? (
+        <Suspense fallback={children}>
+          <ChatResponse id={id}>{text}</ChatResponse>
+        </Suspense>
+      ) : (
+        children
+      )}
     </div>
   );
 }
