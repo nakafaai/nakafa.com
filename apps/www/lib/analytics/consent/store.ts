@@ -49,6 +49,7 @@ export function createAnalyticsConsentStore(mode: AnalyticsConsentMode) {
         latestSave: Option.none<AnalyticsConsentSave>(),
         mode,
         preferences: initialConsentPreferences,
+        preferencesWarm: false,
         sessionOverrides: emptyAnalyticsConsentSessionOverrides,
       },
       (set) => ({
@@ -74,6 +75,7 @@ export function createAnalyticsConsentStore(mode: AnalyticsConsentMode) {
           set((state) => ({
             sessionOverrides: update(state.sessionOverrides),
           })),
+        warmPreferences: () => set({ preferencesWarm: true }),
       })
     )
   );
