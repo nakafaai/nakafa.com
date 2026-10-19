@@ -434,12 +434,6 @@ export declare const api: {
         { commentId: Id<"comments"> },
         null
       >;
-      voteOnComment: FunctionReference<
-        "mutation",
-        "public",
-        { commentId: Id<"comments">; vote: -1 | 0 | 1 },
-        null
-      >;
     };
     queries: {
       getCommentReplies: FunctionReference<
@@ -467,7 +461,6 @@ export declare const api: {
             liked: boolean;
             parentId?: Id<"comments">;
             replyCount: number;
-            replyToText?: string;
             replyToUser: {
               _id: Id<"users">;
               image?: string | null;
@@ -519,7 +512,6 @@ export declare const api: {
             liked: boolean;
             parentId?: Id<"comments">;
             replyCount: number;
-            replyToText?: string;
             replyToUser: {
               _id: Id<"users">;
               image?: string | null;
@@ -571,7 +563,6 @@ export declare const api: {
             liked: boolean;
             parentId?: Id<"comments">;
             replyCount: number;
-            replyToText?: string;
             replyToUserId?: Id<"users">;
             slug: string;
             text: string;
@@ -9603,14 +9594,11 @@ export declare const internal: {
       run: FunctionReference<
         "mutation",
         "internal",
-        { cursor?: string; recount?: boolean },
+        { cursor?: string },
         {
           done: boolean;
-          likesAdded: number;
-          linked: number;
-          orphaned: number;
-          recounted: number;
           scanned: number;
+          stripped: number;
           votesRemoved: number;
         }
       >;
