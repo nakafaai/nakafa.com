@@ -21,6 +21,16 @@ export class SyncFailed extends Schema.TaggedError<SyncFailed>()("SyncFailed", {
 }) {}
 
 /**
+ * The server is folding this document's steps into its snapshot, so it takes no batch for
+ * a moment (ADR 0028). The batch stays unsent under its id, and the round runs again after a
+ * short wait. A round that still meets the fold when its waits end fails with it.
+ */
+export class SyncFolding extends Schema.TaggedError<SyncFolding>()(
+  "SyncFolding",
+  {}
+) {}
+
+/**
  * A step that does not apply to a document: ProseMirror refused it, it threw while
  * it applied the step, such as a position outside the document, or the document it
  * makes nests past the bound of the contract. The reason is the text ProseMirror gave,

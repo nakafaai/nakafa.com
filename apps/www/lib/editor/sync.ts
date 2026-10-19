@@ -1,5 +1,5 @@
 import { randomUuid } from "@repo/utilities/uuid";
-import { Effect, Option, Ref, Semaphore } from "effect";
+import { Effect, Option, Ref, Schedule, Semaphore } from "effect";
 import { pull } from "@/lib/editor/pull";
 import { push } from "@/lib/editor/send";
 import {
@@ -79,16 +79,40 @@ const takeDropped = Effect.fn("editor.sync.takeDropped")(function* (
 });
 
 /**
- * Runs one round of sync for an editor. It never loops. After a refused batch, the
- * caller runs the next round when the server's steps arrive, as the subscription
- * to the document does. Rounds of one editor run one at a time: a round that starts
- * while another is in flight waits for it, so the server's reply is applied once.
- * The result says how many steps the editor lost, once, when it had to open again.
- * A round that fails keeps that count for the next round that completes.
+ * How a round that meets a fold waits before it runs again: a quarter second at first,
+ * doubling, and never more than four seconds. The server folds a backlog in a scheduled
+ * function, which runs after the submit that made the backlog (ADR 0028), so these waits
+ * give that function time to run.
+ */
+const FOLD_WAIT = Schedule.min([
+  Schedule.exponential("250 millis"),
+  Schedule.spaced("4 seconds"),
+]);
+
+/** The most times a round that meets a fold runs again, after its first run. */
+const FOLD_RETRIES = 6;
+
+/**
+ * Runs one round of sync for an editor. The caller runs the next round when the server's
+ * steps arrive, as the subscription to the document does. The one repeat is for a batch
+ * that waits for a fold: the round runs again on `FOLD_WAIT`, up to `FOLD_RETRIES` times,
+ * under the same batch id. A fold still due after them fails the round with `SyncFolding`.
+ * Rounds of one editor run one at a time: a round that starts while another is in flight
+ * waits for it, so the server's reply is applied once. The result says how many steps the
+ * editor lost, once, when it had to open again. A round that fails keeps that count for
+ * the next round that completes.
  */
 export const tick = Effect.fn("editor.sync.tick")(function* (
   session: SyncSession
 ) {
-  yield* session.rounds.withPermits(1)(round(session));
+  yield* session.rounds.withPermits(1)(
+    round(session).pipe(
+      Effect.retry({
+        schedule: FOLD_WAIT,
+        times: FOLD_RETRIES,
+        while: (error) => error._tag === "SyncFolding",
+      })
+    )
+  );
   return yield* takeDropped(session);
 });
