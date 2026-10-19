@@ -312,7 +312,7 @@ A move runs in this order:
 | The routes of the old School and `readSchoolAuthRedirect` in `apps/www/proxy.ts` | Deleted from the web app in #1051 (K11). Its backend stays until the observation of ADR 0011 passes |
 | Host rewrite for school subdomains | Live |
 | Shared sign-in cookie across the school hosts of the `us` cell (ADR 0009) | Live |
-| Shared sign-in cookie on a local run (`SITE_URL` on `localhost`) | Proven on `localhost` alone. Chromium sends a `Domain=localhost` cookie to `localhost` and not to `school.localhost`, so sign-in sharing across school hosts is proven only on a real domain (`nakafa.com`, `local.nakafa.com`) |
+| Shared sign-in cookie on a local run (`SITE_URL` on `localhost`) | Chromium sends a `Domain=localhost` cookie to `localhost` and not to `school.localhost`, so a sign-in on a school host of a local run keeps its cookies on that host alone (`hostOwnSchoolCookies` in `packages/backend/confect/auth/host.ts`), and the auth proxy hands Better Auth the browser's host (`apps/www/lib/auth/proxy.ts`), because a local `next start` builds the request URL from its own address. Sharing one sign-in across school hosts is proven only on a real domain (`nakafa.com`, `local.nakafa.com`) |
 | School URL tree, root (`/`, Beranda) | Live |
 | The proxy decides the 404 of a school page (Hosts) | Live |
 | School URL tree, every other address | Planned |
