@@ -7,7 +7,7 @@ import { PERSON_PLACEMENT_LIMIT } from "@repo/backend/confect/tenancy/placement"
 import { Array as Arr, Effect } from "effect";
 
 /** The most units a tenant holds (ADR 0011), so the units a student may reach are bounded. */
-const TENANT_UNIT_LIMIT = 24;
+export const TENANT_UNIT_LIMIT = 24;
 
 /**
  * The most sittings of one state that one unit or one cohort lists. A unit can run more rooms
