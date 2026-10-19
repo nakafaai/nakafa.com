@@ -8,12 +8,7 @@ import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { CardLink, CardLinks } from "@/components/shared/card/link";
 import { useStudentSittings } from "@/components/tenant/home/query.client";
-import {
-  HomeTile,
-  RowText,
-  TileEmpty,
-  TileWaiting,
-} from "@/components/tenant/home/tile";
+import { HomeTile, RowText, TileEmpty } from "@/components/tenant/home/tile";
 import { schoolDateTimeText } from "@/components/tenant/settings/clock";
 import { orderSittings } from "@/components/tenant/sittings.client";
 
@@ -38,9 +33,7 @@ export function StudentTile({ className }: { className?: string | undefined }) {
         className={className}
         hint={t("sittings-empty-description")}
         title={t("tile-student")}
-      >
-        <TileWaiting />
-      </HomeTile>
+      />
     );
   }
   return (

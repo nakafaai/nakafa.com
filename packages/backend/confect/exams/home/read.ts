@@ -24,8 +24,14 @@ import { Array as Arr, Clock, Duration, Effect, Order } from "effect";
  */
 const HOME_ROWS = 5;
 
-/** The most drafts that the school home lists: the viewer's newest exams, which the viewer may still edit. */
+/** The most drafts that the school home lists: the viewer's newest created exams, which the viewer may still edit. */
 const HOME_DRAFTS = 4;
+
+/**
+ * The most exams of the viewer that the drafts read examines, newest created first. A draft older than
+ * these is not listed, so the read stays bounded when the viewer's newer exams are locked.
+ */
+const HOME_DRAFT_SCAN = 16;
 
 /** How far ahead the school home looks for a scheduled sitting, in milliseconds. */
 const UPCOMING_WINDOW_MS = Duration.toMillis(Duration.days(14));
@@ -108,9 +114,11 @@ const firstViewable = Effect.fn("exams.home.firstViewable")(function* (
 });
 
 /**
- * The exams of one school that the author created and may still edit, newest first. The author is
- * the account that `exams.create` records, so a draft is the author's own exam. The index reads the
- * newest exams of the author in order, so the read never walks every exam of the school.
+ * The exams of one school that the author created and may still edit, newest created first. The author
+ * is the account that `exams.create` records, so a draft is the author's own exam. The index reads the
+ * author's newest `HOME_DRAFT_SCAN` exams and keeps the ones the author may edit. Convex allows one
+ * paginated read per function, so the scan is one bounded read, and an older draft is left out only when
+ * the list is full or more than `HOME_DRAFT_SCAN` of the author's exams come before it.
  */
 const draftsOf = Effect.fn("exams.home.drafts")(function* (
   tenantId: GenericId.GenericId<"tenants">,
@@ -123,14 +131,14 @@ const draftsOf = Effect.fn("exams.home.drafts")(function* (
       (query) => query.eq("tenantId", tenantId).eq("createdBy", author),
       "desc"
     )
-    .take(HOME_DRAFTS)
+    .take(HOME_DRAFT_SCAN)
     .pipe(Effect.orDie);
   const editable = yield* Effect.filter(rows, (row) =>
     examAuthority
       .allowed(row)
       .pipe(Effect.map((actions) => Arr.contains(actions, "exam.edit")))
   );
-  return Arr.map(editable, examSummary);
+  return Arr.map(Arr.take(editable, HOME_DRAFTS), examSummary);
 });
 
 /**

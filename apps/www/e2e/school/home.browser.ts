@@ -138,6 +138,27 @@ test("Beranda keeps its tiles in place while their rows load", async ({
   await context.close();
 });
 
+test("Beranda keeps its tiles in place on a phone while their rows load", async ({
+  baseURL,
+  browser,
+}) => {
+  const school = await Effect.runPromise(createSchool());
+  const address = (path: string) =>
+    hostAddress(baseURL, `${school.slug}.localhost`, path);
+  const context = await browser.newContext({
+    viewport: { height: 844, width: 390 },
+  });
+  await Effect.runPromise(signInTeacher(context, school.slug, address("/")));
+  const page = await context.newPage();
+
+  await page.goto(address("/"));
+  await expect(page.getByText("Keep writing", { exact: true })).toBeVisible();
+  await page.waitForLoadState("load");
+
+  expect(await Effect.runPromise(readCumulativeLayoutShift(page))).toBe(0);
+  await context.close();
+});
+
 test("Beranda fits a 320 px phone without a sideways scroll", async ({
   baseURL,
   browser,

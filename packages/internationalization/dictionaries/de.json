@@ -15,7 +15,7 @@
     "tile-next-footer": "Jeder Raum öffnet zur geplanten Zeit.",
     "tile-drafts": "Weiter schreiben",
     "tile-drafts-empty": "Eine begonnene Prüfung erscheint hier.",
-    "tile-drafts-footer": "Deine Entwürfe bleiben hier, bis du sie planst.",
+    "tile-drafts-footer": "Prüfungen, die du begonnen hast und noch bearbeiten kannst.",
     "tile-all-exams": "Alle Prüfungen",
     "tile-minutes-left": "{count, plural, one {# Minute übrig} other {# Minuten übrig}}",
     "next-exam-footer": "Schüler sehen eine Prüfung erst, wenn sie geplant ist.",

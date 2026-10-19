@@ -419,4 +419,39 @@ describe("exams home", () => {
       expect(read.drafts).toEqual([]);
     })
   );
+
+  it.effect(
+    "lists an older draft that the author may edit, past newer drafts in an archived unit",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        yield* teacherExam(fixture, "PTS lama");
+        yield* Effect.forEach(
+          Arr.makeBy(4, (index) => index + 1),
+          (index) =>
+            Effect.sync(() => vi.setSystemTime(TENANCY_NOW + index)).pipe(
+              Effect.andThen(
+                fixture.run(
+                  Effect.flatMap(DatabaseWriter, (writer) =>
+                    writer.table("exams").insert({
+                      createdAt: TENANCY_NOW + index,
+                      createdBy: fixture.users.teacher.userId,
+                      language: LANGUAGE,
+                      questions: [],
+                      scope: { kind: "unit", unitId: fixture.units.smk },
+                      tenantId: fixture.tenants.nf,
+                      title: `Terkunci ${index}`,
+                    })
+                  ).pipe(Effect.orDie)
+                )
+              )
+            ),
+          { discard: true }
+        );
+
+        const read = yield* homeOf(fixture, "teacher");
+
+        expect(titlesOf(read.drafts)).toEqual(["PTS lama"]);
+      })
+  );
 });

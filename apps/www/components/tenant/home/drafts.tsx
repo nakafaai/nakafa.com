@@ -9,19 +9,14 @@ import { useLocale, useTranslations } from "next-intl";
 import { useMemo } from "react";
 import { CardLink, CardLinks } from "@/components/shared/card/link";
 import { useHomeExams } from "@/components/tenant/home/query.client";
-import {
-  HomeTile,
-  RowText,
-  TileEmpty,
-  TileWaiting,
-} from "@/components/tenant/home/tile";
+import { HomeTile, RowText, TileEmpty } from "@/components/tenant/home/tile";
 
 /** One draft of the viewer, as the school home holds it. */
 type Draft = (typeof HomeView.Type)["drafts"][number];
 
 /**
- * The exams the viewer started and may still edit, newest first, each with its language. A row opens
- * its editor, and the footer's action opens every exam.
+ * The exams the viewer started and may still edit, newest created first, each with its language. A row
+ * opens its editor, and the footer's action opens every exam.
  */
 export function DraftsTile({ className }: { className?: string | undefined }) {
   const t = useTranslations("School");
@@ -48,9 +43,7 @@ export function DraftsTile({ className }: { className?: string | undefined }) {
     >
       {QueryResult.isSuccess(exams) ? (
         <DraftRows drafts={exams.value.drafts} names={names} />
-      ) : (
-        <TileWaiting />
-      )}
+      ) : null}
     </HomeTile>
   );
 }

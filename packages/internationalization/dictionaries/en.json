@@ -15,7 +15,7 @@
     "tile-next-footer": "Each room opens at its scheduled time.",
     "tile-drafts": "Keep writing",
     "tile-drafts-empty": "An exam you start appears here.",
-    "tile-drafts-footer": "Your drafts stay here until you schedule them.",
+    "tile-drafts-footer": "Exams you started that you can still edit.",
     "tile-all-exams": "All exams",
     "tile-minutes-left": "{count, plural, one {# minute left} other {# minutes left}}",
     "next-exam-footer": "Students see an exam only once it is scheduled.",

@@ -8,14 +8,10 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useSittingClock } from "@/components/exams/sitting/clock.client";
 import { CardLink, CardLinks } from "@/components/shared/card/link";
+import { useTenant } from "@/components/tenant/context";
 import { minutesLeft } from "@/components/tenant/home/left";
 import { useHomeExams } from "@/components/tenant/home/query.client";
-import {
-  HomeTile,
-  RowText,
-  TileEmpty,
-  TileWaiting,
-} from "@/components/tenant/home/tile";
+import { HomeTile, RowText, TileEmpty } from "@/components/tenant/home/tile";
 
 /** One room that runs now, as the school home holds it. */
 type Room = (typeof HomeView.Type)["live"][number];
@@ -23,10 +19,11 @@ type Room = (typeof HomeView.Type)["live"][number];
 /**
  * The rooms that run now and that the viewer may watch, each with its exam, its room, and the time
  * left before it closes. The time left keeps up with the device clock. A row opens the room's proctor
- * page, and the footer's action opens every exam.
+ * page. The footer's action opens every exam, and only a viewer who may open the exam list has it.
  */
 export function LiveTile() {
   const t = useTranslations("School");
+  const tenant = useTenant();
   const exams = useHomeExams();
   const now = useSittingClock();
 
@@ -36,18 +33,21 @@ export function LiveTile() {
   return (
     <HomeTile
       action={
-        <Link className={buttonVariants({ variant: "outline" })} href="/exams">
-          {t("tile-all-exams")}
-        </Link>
+        tenant.canOpenExams ? (
+          <Link
+            className={buttonVariants({ variant: "outline" })}
+            href="/exams"
+          >
+            {t("tile-all-exams")}
+          </Link>
+        ) : undefined
       }
       hint={t("tile-live-footer")}
       title={t("tile-live")}
     >
       {QueryResult.isSuccess(exams) ? (
         <LiveRows now={now} rooms={exams.value.live} />
-      ) : (
-        <TileWaiting />
-      )}
+      ) : null}
     </HomeTile>
   );
 }

@@ -11,6 +11,7 @@ import {
 /**
  * One tile of the school home: a card with its title, its body, and a footer with one concise
  * sentence and at most one action. Every tile ends the same way, so the footer is never left out.
+ * Its body is at least one row high, so a tile keeps its height while its rows arrive.
  */
 export function HomeTile({
   action,
@@ -21,7 +22,8 @@ export function HomeTile({
 }: {
   /** The tile's one action, at the end of its footer. */
   action?: ReactNode;
-  children: ReactNode;
+  /** The tile's rows or its empty state. A tile whose rows have not arrived has none. */
+  children?: ReactNode;
   className?: string | undefined;
   /** The one concise sentence of the footer, which says what the action does or what stops it. */
   hint: string;
@@ -32,7 +34,7 @@ export function HomeTile({
       <CardHeader>
         <CardTitle>{title}</CardTitle>
       </CardHeader>
-      {children}
+      <div className="min-h-19">{children}</div>
       <CardSectionFooter hint={hint}>
         {action === undefined ? null : (
           <CardSectionActions>{action}</CardSectionActions>
@@ -54,16 +56,11 @@ export function TileEmpty({
   children: string;
 }) {
   return (
-    <div className="flex min-h-15 items-center gap-3 px-6 py-3">
+    <div className="flex items-center gap-3 px-6 py-3">
       <Nina act={act} label="" size={48} whole />
       <p className="text-muted-foreground text-sm">{children}</p>
     </div>
   );
-}
-
-/** The body of a tile whose rows have not arrived: the height of one row, and no words. */
-export function TileWaiting() {
-  return <div aria-hidden className="min-h-15" />;
 }
 
 /** A row's two lines: its title, and a second line of detail, each on one line that truncates. */
