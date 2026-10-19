@@ -113,14 +113,7 @@ export function StudentSitting({
   }, [enter, ready, receive, sittingId, slug]);
 
   if (QueryResult.isFailure(view)) {
-    if (isLostAccess(view.error)) {
-      throw view.error;
-    }
-    return view.error._tag === "NotInSitting" || isDenied(view.error) ? (
-      <StudentRefusal />
-    ) : (
-      <StudentRetry error={view.error} />
-    );
+    return <StudentFailure error={view.error} />;
   }
   if (!QueryResult.isSuccess(view)) {
     return <SittingBar examTitle={t("sitting")} />;
@@ -230,6 +223,26 @@ function StudentScheduled({
         </CardSection>
       </LayoutContent>
     </>
+  );
+}
+
+/**
+ * The page when the sitting could not be read. A lost membership is thrown, which sends the school to its
+ * refused page. A sitting the student may not enter, or an item the student may not see, shows its refusal,
+ * and any other failure shows the retry, which reports it.
+ */
+function StudentFailure({
+  error,
+}: {
+  readonly error: { readonly _tag: string };
+}) {
+  if (isLostAccess(error)) {
+    throw error;
+  }
+  return error._tag === "NotInSitting" || isDenied(error) ? (
+    <StudentRefusal />
+  ) : (
+    <StudentRetry error={error} />
   );
 }
 

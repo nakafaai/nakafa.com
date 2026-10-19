@@ -202,24 +202,11 @@ export function ScheduleSitting({
       description={t("schedule-description")}
       footer={
         <>
-          {keysMissing || refusal === "keys" ? (
-            <p className="me-auto text-muted-foreground text-sm">
-              {keysMissing
-                ? t("schedule-keys-numbered", {
-                    count: missingKeys.length,
-                    questions: Arr.join(
-                      Arr.map(missingKeys, (number) => `${number}`),
-                      ", "
-                    ),
-                  })
-                : t("schedule-keys")}
-            </p>
-          ) : null}
-          {refusal === "past" ? (
-            <p className="me-auto text-muted-foreground text-sm">
-              {t("schedule-past")}
-            </p>
-          ) : null}
+          <ScheduleNotices
+            keysMissing={keysMissing}
+            missingKeys={missingKeys}
+            refusal={refusal}
+          />
           <Button onClick={() => setOpen(false)} variant="outline">
             {common("cancel")}
           </Button>
@@ -333,5 +320,44 @@ export function ScheduleSitting({
         </div>
       </FieldGroup>
     </ResponsiveDialog>
+  );
+}
+
+/**
+ * The sentences at the foot of the dialog that explain why the schedule is not made yet: the questions that
+ * have no key, the refusal of a key that does not fit a question, and a start that has passed.
+ */
+function ScheduleNotices({
+  keysMissing,
+  missingKeys,
+  refusal,
+}: {
+  readonly keysMissing: boolean;
+  readonly missingKeys: readonly number[];
+  readonly refusal: Refusal | null;
+}) {
+  const t = useTranslations("Exams");
+
+  return (
+    <>
+      {keysMissing || refusal === "keys" ? (
+        <p className="me-auto text-muted-foreground text-sm">
+          {keysMissing
+            ? t("schedule-keys-numbered", {
+                count: missingKeys.length,
+                questions: Arr.join(
+                  Arr.map(missingKeys, (number) => `${number}`),
+                  ", "
+                ),
+              })
+            : t("schedule-keys")}
+        </p>
+      ) : null}
+      {refusal === "past" ? (
+        <p className="me-auto text-muted-foreground text-sm">
+          {t("schedule-past")}
+        </p>
+      ) : null}
+    </>
   );
 }
