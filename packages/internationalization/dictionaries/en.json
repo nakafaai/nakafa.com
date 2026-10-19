@@ -1702,11 +1702,11 @@
       "description": "Ask the person to sign in with that account."
     },
     "school-refusal-access": {
-      "title": "Your access to this school has changed.",
+      "title": "Your school access has changed.",
       "description": "Ask an admin of this school to check your access."
     },
     "school-refusal-action-closed": {
-      "title": "An action is not open to API clients.",
+      "title": "An action is closed to API clients.",
       "description": "Remove it from the client, then create the client again."
     },
     "school-refusal-promotion-state": {

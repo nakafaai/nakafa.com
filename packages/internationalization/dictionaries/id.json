@@ -1706,7 +1706,7 @@
       "description": "Minta admin sekolah ini memeriksa aksesnya."
     },
     "school-refusal-action-closed": {
-      "title": "Ada aksi yang tidak dibuka untuk klien API.",
+      "title": "Aksi ini tertutup untuk klien API.",
       "description": "Hapus aksi itu dari klien, lalu buat klien lagi."
     },
     "school-refusal-promotion-state": {
