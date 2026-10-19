@@ -125,7 +125,17 @@
     "add-question": "Tambah soal",
     "copy": "Salin soal",
     "prompt-label": "Teks soal",
-    "prompt-placeholder": "Tulis soal di sini."
+    "prompt-placeholder": "Tulis soal di sini.",
+    "schedule": "Jadwalkan",
+    "schedule-title": "Jadwalkan ujian",
+    "schedule-description": "Siswa unit mengerjakannya di ruang itu sejak mulai, selama durasinya.",
+    "room": "Ruang",
+    "room-placeholder": "Lab 2",
+    "starts": "Mulai",
+    "length": "Durasi",
+    "length-minutes": "{count} menit",
+    "schedule-keys": "Tandai dulu jawaban benar setiap soal.",
+    "schedule-past": "Waktu mulai sudah lewat. Pilih waktu yang lebih lambat."
   },
   "SchoolSettings": {
     "school": "Sekolah",

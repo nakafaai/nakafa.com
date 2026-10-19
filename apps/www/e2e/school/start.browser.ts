@@ -55,14 +55,21 @@ test("a new account opens its own school in five questions and lands in it as it
   await page.getByRole("radio", { name: "100 to 499" }).click();
   await expect(page.getByRole("link", { name: "Terms" })).toBeVisible();
   // The page opens the school's own host at SITE_URL's port. A verify run may
-  // serve the site on another port, where that navigation ends on the browser's
-  // error page, so the test waits for the page's own navigation to end before it
-  // opens the host at the port this run serves.
-  const opened = page.waitForURL(
-    (url) =>
-      url.hostname === `${slug}.localhost` || url.protocol === "chrome-error:",
-    { waitUntil: "commit" }
-  );
+  // serve the site on another port, where that navigation commits the browser's
+  // error page, so the test waits for the page's own navigation to commit, on
+  // either, before it opens the host at the port this run serves.
+  const opened = new Promise<void>((resolve) => {
+    page.on("framenavigated", (frame) => {
+      const url = new URL(frame.url());
+      if (
+        frame === page.mainFrame() &&
+        (url.hostname === `${slug}.localhost` ||
+          url.protocol === "chrome-error:")
+      ) {
+        resolve();
+      }
+    });
+  });
   await page.getByRole("button", { name: "Open school" }).click();
 
   // The school shows at once, then its own address opens.
