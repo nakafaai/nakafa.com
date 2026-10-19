@@ -12,11 +12,26 @@ const SAVE_ERROR: ToastCopy = {
 };
 
 /**
+ * The copy of a save that the viewer's access to the school no longer allows. A toast cannot
+ * move the viewer to the refused page, so the save says it in the same words, and the refused
+ * page's own copy names the admin to ask.
+ */
+const ACCESS_COPY: ToastCopy = {
+  description: "school-refusal-access.description",
+  title: "school-refusal-access.title",
+};
+
+/**
  * The copy of each typed refusal that a save of the school can meet, by the tag of the error the
  * server returns. Each refusal says what it refused and what fixes it, in one sentence each, so no
  * refusal falls back to the generic error, which a retry could never fix.
  */
 const REFUSAL_COPY: Readonly<Record<string, ToastCopy>> = {
+  AccessDenied: ACCESS_COPY,
+  ActionClosed: {
+    description: "school-refusal-action-closed.description",
+    title: "school-refusal-action-closed.title",
+  },
   AddressInvited: {
     description: "school-refusal-address-invited.description",
     title: "school-refusal-address-invited.title",
@@ -77,6 +92,10 @@ const REFUSAL_COPY: Readonly<Record<string, ToastCopy>> = {
     description: "school-refusal-login-name-taken.description",
     title: "school-refusal-login-name-taken.title",
   },
+  LogoNotSaved: {
+    title: "school-logo-refused.title",
+  },
+  NotMember: ACCESS_COPY,
   NpsnInvalid: {
     description: "school-refusal-npsn-invalid.description",
     title: "school-refusal-npsn-invalid.title",
@@ -128,6 +147,10 @@ const REFUSAL_COPY: Readonly<Record<string, ToastCopy>> = {
   PersonPlacementLimit: {
     description: "school-refusal-placement-limit.description",
     title: "school-refusal-placement-limit.title",
+  },
+  PromotionState: {
+    description: "school-refusal-promotion-state.description",
+    title: "school-refusal-promotion-state.title",
   },
   TeacherHasHomeroom: {
     description: "school-refusal-teacher-has-homeroom.description",

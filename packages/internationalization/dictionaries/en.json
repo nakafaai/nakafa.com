@@ -1653,6 +1653,18 @@
       "title": "This person already has an account.",
       "description": "Ask the person to sign in with that account."
     },
+    "school-refusal-access": {
+      "title": "Your access to this school has changed.",
+      "description": "Ask an admin of this school to check your access."
+    },
+    "school-refusal-action-closed": {
+      "title": "An action is not open to API clients.",
+      "description": "Remove it from the client, then create the client again."
+    },
+    "school-refusal-promotion-state": {
+      "title": "This period cannot open yet.",
+      "description": "Apply the promotion into this period first."
+    },
     "school-refusal-last-owner": {
       "title": "The last owner cannot be removed.",
       "description": "Give the owner role to another person first."

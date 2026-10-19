@@ -1653,6 +1653,18 @@
       "title": "Orang ini sudah punya akun.",
       "description": "Minta orang ini masuk dengan akun tersebut."
     },
+    "school-refusal-access": {
+      "title": "Akses ke sekolah ini sudah berubah.",
+      "description": "Minta admin sekolah ini memeriksa aksesnya."
+    },
+    "school-refusal-action-closed": {
+      "title": "Ada aksi yang tidak dibuka untuk klien API.",
+      "description": "Hapus aksi itu dari klien, lalu buat klien lagi."
+    },
+    "school-refusal-promotion-state": {
+      "title": "Periode ini belum bisa dibuka.",
+      "description": "Terapkan dulu kenaikan kelas ke periode ini."
+    },
     "school-refusal-last-owner": {
       "title": "Pemilik terakhir tidak bisa dihapus.",
       "description": "Berikan peran pemilik kepada orang lain dulu."

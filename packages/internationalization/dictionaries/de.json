@@ -1653,6 +1653,18 @@
       "title": "Diese Person hat schon ein Konto.",
       "description": "Bitte die Person, sich mit diesem Konto anzumelden."
     },
+    "school-refusal-access": {
+      "title": "Der Zugang zu dieser Schule hat sich geändert.",
+      "description": "Frag einen Admin dieser Schule, deinen Zugang zu prüfen."
+    },
+    "school-refusal-action-closed": {
+      "title": "Eine Aktion steht API-Clients nicht offen.",
+      "description": "Entferne sie vom Client und lege ihn dann neu an."
+    },
+    "school-refusal-promotion-state": {
+      "title": "Diese Periode kann noch nicht geöffnet werden.",
+      "description": "Wende zuerst die Versetzung in diese Periode an."
+    },
     "school-refusal-last-owner": {
       "title": "Der letzte Eigentümer bleibt.",
       "description": "Gib die Rolle Eigentümer zuerst einer anderen Person."
