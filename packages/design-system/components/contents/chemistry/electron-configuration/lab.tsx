@@ -10,6 +10,7 @@ import {
   isElectronConfigurationSampleId,
 } from "@repo/design-system/components/contents/chemistry/electron-configuration/data";
 import { ShellModelCanvas } from "@repo/design-system/components/contents/chemistry/shell-model/canvas";
+import { createShellModelSampleStore } from "@repo/design-system/components/contents/chemistry/shell-model/store";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import {
   ToggleGroup,
@@ -28,6 +29,7 @@ import { Array as Arr, Result } from "effect";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { useState } from "react";
+import { useStore } from "zustand";
 
 interface ElectronConfigurationLabProps {
   description: ReactNode;
@@ -56,8 +58,11 @@ export function ElectronConfigurationLab({
   description,
   labels,
 }: ElectronConfigurationLabProps) {
-  const [selectedSampleId, setSelectedSampleId] =
-    useState<ElectronConfigurationSampleId>(HYDROGEN_ID);
+  const [store] = useState(() =>
+    createShellModelSampleStore<ElectronConfigurationSampleId>(HYDROGEN_ID)
+  );
+  const selectedSampleId = useStore(store, (state) => state.sampleId);
+  const selectSample = useStore(store, (state) => state.selectSample);
   const selectedSample = ELECTRON_CONFIGURATION_SAMPLES[selectedSampleId];
   const selectedLabels = labels.samples[selectedSampleId];
   const t = useTranslations("Common");
@@ -86,7 +91,7 @@ export function ElectronConfigurationLab({
       return;
     }
 
-    setSelectedSampleId(value);
+    selectSample(value);
   }
 
   return (

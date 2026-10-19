@@ -18,7 +18,7 @@ import { CameraBounds } from "@repo/design-system/components/three/camera/framin
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
 import { getColor } from "@repo/design-system/lib/color";
 import { Array as Arr, Schema } from "effect";
-import { Suspense, useMemo, useRef } from "react";
+import { type ReactNode, Suspense, useMemo, useRef } from "react";
 import { CatmullRomCurve3, type Group, Vector3 } from "three";
 
 const TRACK_Y = 0.18;
@@ -43,11 +43,8 @@ const PlatformBoundsSchema = Schema.Struct({
 
 type PlatformBounds = typeof PlatformBoundsSchema.Type;
 
-export function AverageMotionStage({
-  motion,
-}: {
-  motion: AverageVelocitySpeedState;
-}) {
+/** The lights and the camera of the average-motion scene. The lab draws its motion as children. */
+export function AverageMotionStage({ children }: { children: ReactNode }) {
   return (
     <Suspense>
       <ambientLight intensity={0.72} />
@@ -74,12 +71,16 @@ export function AverageMotionStage({
         fov={AVERAGE_VELOCITY_SPEED_CAMERA.fov}
         framing="content"
       />
-      <AverageMotionScene motion={motion} />
+      {children}
     </Suspense>
   );
 }
 
-function AverageMotionScene({ motion }: { motion: AverageVelocitySpeedState }) {
+export function AverageMotionScene({
+  motion,
+}: {
+  motion: AverageVelocitySpeedState;
+}) {
   const track = useMemo(() => getTrackGeometry(motion), [motion]);
 
   return (

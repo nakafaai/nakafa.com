@@ -320,10 +320,9 @@ function VisualCardGroup(props: Omit<ComponentProps<"div">, "className">) {
 /**
  * Shows the card across the whole screen, and returns it to the page. It ends
  * the actions band. Its pressed state and a polite status tell assistive
- * technology where the visual is. A static stand-in of the visual passes
- * `inert`, so the button takes no focus until the visual is mounted.
+ * technology where the visual is.
  */
-function VisualCardFullscreen({ inert = false }: { inert?: boolean }) {
+function VisualCardFullscreen() {
   const t = useTranslations("Common");
   const { presented, toggle } = useVisual((state) => ({
     presented: state.presentation !== "inline",
@@ -335,7 +334,6 @@ function VisualCardFullscreen({ inert = false }: { inert?: boolean }) {
       <Button
         aria-pressed={presented}
         className="ms-auto shrink-0"
-        inert={inert}
         onClick={(event) => toggle(event.currentTarget)}
         size="icon"
         variant="secondary"

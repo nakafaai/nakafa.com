@@ -5,21 +5,22 @@ import {
   CoccusClusterModel,
   SpirillumBacteriumModel,
 } from "@repo/design-system/components/contents/biology/bacteria-parts";
-import type { BiologySceneProps } from "@repo/design-system/components/contents/biology/lab-frame";
+import { useBiologyColors } from "@repo/design-system/components/contents/biology/context";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import type { ReactNode } from "react";
 
 /** Shows coccus, bacillus, and spiral bacterial forms together. */
 export function BacterialShapes({
   bacillusLabel,
-  colors,
   coccusLabel,
   spiralLabel,
-}: Pick<BiologySceneProps, "colors"> & {
+}: {
   bacillusLabel?: ReactNode;
   coccusLabel?: ReactNode;
   spiralLabel?: ReactNode;
 }) {
+  const colors = useBiologyColors();
+
   return (
     <group scale={1.22}>
       <group position={[-0.92, 0.34, 0]}>

@@ -1,6 +1,7 @@
-import { LineEquation } from "@repo/design-system/components/contents/mathematics/line/equation";
+import { LineEquationCard } from "@repo/design-system/components/contents/mathematics/line/equation";
 import { getMidpoint } from "@repo/design-system/components/contents/snbt/geometry";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { VisualCardHeader } from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
 import type { ReactNode } from "react";
 
@@ -42,7 +43,7 @@ export function Graph({ title, description }: GraphProps) {
   const H = { x: xMin, y: yMax, z: zMin }; // Back-Left-Top
 
   return (
-    <LineEquation
+    <LineEquationCard
       cameraPosition={[-3.4, 4.5, 6]}
       data={[
         // Bottom Face Edges
@@ -190,8 +191,7 @@ export function Graph({ title, description }: GraphProps) {
           showPoints: false,
         },
       ]}
-      description={description}
-      title={title}
+      header={<VisualCardHeader description={description} title={title} />}
     />
   );
 }

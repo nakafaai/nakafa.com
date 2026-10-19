@@ -1,11 +1,12 @@
-import { LineEquation } from "@repo/design-system/components/contents/mathematics/line/equation";
+import { LineEquationCard } from "@repo/design-system/components/contents/mathematics/line/equation";
+import { VisualCardHeader } from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
-import type { ComponentProps } from "react";
+import type { ReactNode } from "react";
 
-type GraphProps = Pick<
-  ComponentProps<typeof LineEquation>,
-  "title" | "description"
->;
+interface GraphProps {
+  description: ReactNode;
+  title: ReactNode;
+}
 
 /** Renders the quantitative graph for SNBT set 9 question 1. */
 export function Graph({ title, description }: GraphProps) {
@@ -63,11 +64,10 @@ export function Graph({ title, description }: GraphProps) {
   ];
 
   return (
-    <LineEquation
+    <LineEquationCard
       cameraPosition={[0, 0, 20]}
       data={data}
-      description={description}
-      title={title}
+      header={<VisualCardHeader description={description} title={title} />}
     />
   );
 }

@@ -1,9 +1,9 @@
 "use client";
 
+import { createBiologyItemStore } from "@repo/design-system/components/contents/biology/context";
 import {
   BIOLOGY_DEFAULT_ITEM_INDEX,
   BIOLOGY_DEFAULT_VIEW,
-  type BiologySceneColors,
   getBiologySceneColors,
   isBiologyItemIndex,
 } from "@repo/design-system/components/contents/biology/data";
@@ -30,7 +30,8 @@ import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import type { ComponentType, ReactNode } from "react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useStore } from "zustand";
 
 /** The stage loads once the lab asks for it, and its frame holds the place meanwhile. */
 const BiologyStage = dynamic(
@@ -77,16 +78,16 @@ export interface BiologyLabProps<
   title?: ReactNode;
 }
 
+/** The props of a lab scene: the item the reader picked. Colors and the selection come from the lab. */
 export interface BiologySceneProps<
   Item extends BiologyLabItemProps = BiologyLabItemProps,
 > {
-  colors: BiologySceneColors;
   item: Item;
-  selectedIndex: number;
 }
 
 /**
  * Renders the shared card, controls, and camera frame for one biology 3D lab.
+ * The stage provides the lab's colors and item store to the scene it draws.
  */
 export function BiologyLabFrame<Item extends BiologyLabItemProps>({
   defaultItemIndex = BIOLOGY_DEFAULT_ITEM_INDEX,
@@ -102,8 +103,13 @@ export function BiologyLabFrame<Item extends BiologyLabItemProps>({
   view?: NarrowCameraPose;
 }) {
   const { resolvedTheme } = useTheme();
-  const [selectedIndex, setSelectedIndex] = useState(defaultItemIndex);
-  const colors = getBiologySceneColors(resolvedTheme);
+  const [store] = useState(() => createBiologyItemStore(defaultItemIndex));
+  const colors = useMemo(
+    () => getBiologySceneColors(resolvedTheme),
+    [resolvedTheme]
+  );
+  const selectedIndex = useStore(store, (state) => state.selectedIndex);
+  const selectItem = useStore(store, (state) => state.selectItem);
   const t = useTranslations("Common");
   const selectedItem = labels.items[selectedIndex];
   const hasMultipleItems = labels.items.length > 1;
@@ -123,7 +129,7 @@ export function BiologyLabFrame<Item extends BiologyLabItemProps>({
     }
 
     const index = Number(value);
-    setSelectedIndex(index);
+    selectItem(index);
     onItemIndexChange?.(index);
   }
 
@@ -156,16 +162,8 @@ export function BiologyLabFrame<Item extends BiologyLabItemProps>({
         render={<section />}
       >
         {live ? (
-          <BiologyStage
-            colors={colors}
-            selectedIndex={selectedIndex}
-            view={view}
-          >
-            <Scene
-              colors={colors}
-              item={selectedItem}
-              selectedIndex={selectedIndex}
-            />
+          <BiologyStage colors={colors} store={store} view={view}>
+            <Scene item={selectedItem} />
           </BiologyStage>
         ) : null}
       </VisualCardBody>

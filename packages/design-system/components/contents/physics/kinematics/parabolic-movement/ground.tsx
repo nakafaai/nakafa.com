@@ -1,3 +1,4 @@
+import { useParabolicMotion } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement/context";
 import {
   getProjectilePoint,
   getProjectileSceneY,
@@ -17,7 +18,8 @@ const GROUND_COLORS = {
 };
 
 /** The ground the ball flies over, its edges, the landing mat and the launch ramp. */
-export function ProjectileRange({ motion }: { motion: ParabolicMotionState }) {
+export function ProjectileRange() {
+  const motion = useParabolicMotion();
   const groundLength = getGroundLength(motion.rangeWorld);
   const end = getProjectilePoint(motion, motion.flightTime);
 
@@ -42,12 +44,13 @@ export function ProjectileRange({ motion }: { motion: ParabolicMotionState }) {
           roughness={0.78}
         />
       </mesh>
-      <LaunchRamp motion={motion} />
+      <LaunchRamp />
     </group>
   );
 }
 
-function LaunchRamp({ motion }: { motion: ParabolicMotionState }) {
+function LaunchRamp() {
+  const motion = useParabolicMotion();
   const pose = getLaunchRampPose(motion);
 
   return (
