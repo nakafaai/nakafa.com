@@ -2,18 +2,9 @@
 
 import { captureException } from "@repo/analytics/posthog/capture";
 import { SITE_ORIGIN } from "@repo/seo/origin";
-import dynamic from "next/dynamic";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect } from "react";
-
-/** The failure screen loads when a failure reaches it, so the segment's own code stays small. */
-const Failure = dynamic(
-  () =>
-    import("@/components/state/failure.client").then(
-      (module) => module.Failure
-    ),
-  { ssr: true }
-);
+import { DeferredFailure } from "@/components/state/failure.client";
 
 /**
  * Keeps a school failure on the school's own surface, the one its not-found page
@@ -38,7 +29,7 @@ export default function SchoolError({
   }, [error]);
 
   return (
-    <Failure
+    <DeferredFailure
       description={t("description")}
       home={tState("home-button")}
       homeHref={new URL(`/${locale}`, SITE_ORIGIN).href}

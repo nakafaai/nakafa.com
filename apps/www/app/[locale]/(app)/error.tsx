@@ -1,18 +1,9 @@
 "use client"; // Error boundaries must be Client Components
 
 import { captureException } from "@repo/analytics/posthog/capture";
-import dynamic from "next/dynamic";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect } from "react";
-
-/** The failure screen loads when a failure reaches it, so the segment's own code stays small. */
-const Failure = dynamic(
-  () =>
-    import("@/components/state/failure.client").then(
-      (module) => module.Failure
-    ),
-  { ssr: true }
-);
+import { DeferredFailure } from "@/components/state/failure.client";
 
 export default function ErrorPage({
   error,
@@ -31,7 +22,7 @@ export default function ErrorPage({
   }, [error]);
 
   return (
-    <Failure
+    <DeferredFailure
       description={t("description")}
       home={tState("home-button")}
       homeHref={`/${locale}`}

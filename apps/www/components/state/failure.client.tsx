@@ -1,18 +1,14 @@
 "use client";
 
-import type { ComponentProps } from "react";
-import { Broken } from "@/components/state/broken";
-import { Stage } from "@/components/state/stage";
+import dynamic from "next/dynamic";
 
 /**
- * The failure screen that every error root shows: the stage with the broken state
- * in its middle. The error roots load it with next/dynamic, so the code of the
- * stage and of the particles behind it does not sit in every page's first load.
+ * The failure screen, loaded only when a failure reaches it, so each error root
+ * keeps its own code small. The roots of every route belong to the first
+ * JavaScript, so they carry only this reference. `ssr` keeps the screen in the
+ * server HTML of a failure.
  */
-export function Failure(props: ComponentProps<typeof Broken>) {
-  return (
-    <Stage>
-      <Broken {...props} />
-    </Stage>
-  );
-}
+export const DeferredFailure = dynamic(
+  () => import("@/components/state/failure").then((module) => module.Failure),
+  { ssr: true }
+);

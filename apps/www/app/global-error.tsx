@@ -10,20 +10,11 @@ import en from "@repo/internationalization/dictionaries/standalone/en.json";
 import id from "@repo/internationalization/dictionaries/standalone/id.json";
 import { splitLocalePathname } from "@repo/internationalization/src/href";
 import { routing } from "@repo/internationalization/src/routing";
-import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
+import { DeferredFailure } from "@/components/state/failure.client";
 
 const dictionaries = { de, en, id };
-
-/** The failure screen loads when a failure reaches it, so the root's own code stays small. */
-const Failure = dynamic(
-  () =>
-    import("@/components/state/failure.client").then(
-      (module) => module.Failure
-    ),
-  { ssr: true }
-);
 
 /**
  * Replaces the root layout, so it renders its own document with only the
@@ -58,7 +49,7 @@ export default function GlobalError({
     >
       <body>
         <DesignSystemProvider>
-          <Failure
+          <DeferredFailure
             description={messages.Error.description}
             home={messages.State["home-button"]}
             homeHref={`/${language}`}
