@@ -34,7 +34,9 @@ import { useTranslations } from "next-intl";
 import { useId, useState, useTransition } from "react";
 import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import type { ViewerUnit } from "@/components/tenant/exams/create";
+import { placeholderSittingId } from "@/components/tenant/exams/placeholder";
 import { useExam } from "@/components/tenant/exams/provider";
+import { insertPlaceholderRoom } from "@/components/tenant/exams/rooms.client";
 import { sittingTimes } from "@/components/tenant/exams/time";
 
 /** The lengths of a sitting in minutes, which the dialog offers. */
@@ -110,45 +112,66 @@ export function ScheduleSitting({
     !keysMissing &&
     !pending;
 
-  /** The server refused the schedule because a question has no key that fits it. */
-  const refuseKeys = () => Effect.sync(() => setRefusal("keys"));
+  /** The server refused the schedule because a question has no key that fits it: the dialog opens again. */
+  const refuseKeys = () =>
+    Effect.sync(() => {
+      setRefusal("keys");
+      setOpen(true);
+    });
 
   /**
-   * The server refused the start. A start that has passed stays in the body, and any other
-   * refusal of the start fails on, to the action-error toast.
+   * The server refused the start. A start that has passed stays in the body, and the dialog opens
+   * again with it. Any other refusal of the start fails on, to the action-error toast.
    */
   const refuseStart = (error: ScheduleInvalid) =>
     error.reason === "opensAt"
-      ? Effect.sync(() => setRefusal("past"))
+      ? Effect.sync(() => {
+          setRefusal("past");
+          setOpen(true);
+        })
       : Effect.fail(error);
 
   /**
-   * Schedules the sitting, and goes to the exam's rooms once the server saves it, where the new
-   * room is listed. The two refusals
-   * that the body explains stay in the dialog, and any other failure shows the action-error toast.
+   * Schedules the sitting. The dialog closes at once and the room shows in the exam's rooms at once,
+   * with a placeholder until the server answers. The server's answer goes to the exam's rooms, and
+   * the two refusals that the body explains open the dialog again with what the teacher entered.
+   * Any other failure shows the action-error toast, and the placeholder room steps back.
    */
   const submit = () => {
     if (!ready || Option.isNone(choice) || Option.isNone(times)) {
       return;
     }
     const { closesAt, opensAt } = times.value;
-    const unitId = choice.value.id;
+    const unit = choice.value;
     setRefusal(null);
+    setOpen(false);
     startTransition(() =>
       runExamAction(
-        sentAction(() =>
-          schedule({
-            closesAt,
-            examId: exam.id,
-            group: { kind: "unit", unitId },
-            opensAt,
-            room: roomName,
-            slug,
-          })
-        ).pipe(
+        placeholderSittingId.pipe(
+          Effect.flatMap((id) =>
+            sentAction(() =>
+              schedule.withOptimisticUpdate(
+                insertPlaceholderRoom({
+                  closesAt,
+                  group: { kind: "unit", name: unit.name },
+                  id,
+                  opensAt,
+                  room: roomName,
+                  state: "scheduled",
+                  timeZone: unit.timeZone,
+                })
+              )({
+                closesAt,
+                examId: exam.id,
+                group: { kind: "unit", unitId: unit.id },
+                opensAt,
+                room: roomName,
+                slug,
+              })
+            )
+          ),
           Effect.tap(() =>
             Effect.sync(() => {
-              setOpen(false);
               router.push(`/exams/${exam.id}`);
             })
           ),

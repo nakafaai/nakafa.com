@@ -13,6 +13,13 @@ export const placeholderExamId = randomUuid.pipe(
   )
 );
 
+/** The placeholder ID of a room the server has not scheduled yet. */
+export const placeholderSittingId = randomUuid.pipe(
+  Effect.flatMap((uuid) =>
+    Schema.decodeUnknownEffect(Id("examSittings"))(uuid).pipe(Effect.orDie)
+  )
+);
+
 /** The placeholder ID of a question the server has not saved yet. */
 export const placeholderQuestionId = randomUuid.pipe(
   Effect.flatMap((uuid) =>

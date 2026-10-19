@@ -159,7 +159,7 @@ test("a teacher creates an exam, adds questions, writes one, and finds it all wh
   await reopened.getByRole("button", { name: "Schedule" }).click();
   const scheduling = reopened.getByRole("dialog");
   await expect(
-    scheduling.getByText("Mark the correct answer of every question first.")
+    scheduling.getByText(/Mark the correct answer of questions? \d+ first\./u)
   ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
   await expect(
     scheduling.getByRole("button", { name: "Schedule" })
