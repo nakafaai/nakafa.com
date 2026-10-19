@@ -11,7 +11,9 @@ import {
 /**
  * One tile of the school home: a card with its title, its body, and a footer with one concise
  * sentence and at most one action. Every tile ends the same way, so the footer is never left out.
- * Its body is at least one row high, so a tile keeps its height while its rows arrive.
+ * Its body is as tall as the empty state of a one-column tile takes in the longest language, which
+ * is four lines of its sentence beside Nina, so a tile keeps its height while its rows arrive or its
+ * empty state shows.
  */
 export function HomeTile({
   action,
@@ -34,7 +36,7 @@ export function HomeTile({
       <CardHeader>
         <CardTitle>{title}</CardTitle>
       </CardHeader>
-      <div className="min-h-19">{children}</div>
+      <div className="min-h-26">{children}</div>
       <CardSectionFooter hint={hint}>
         {action === undefined ? null : (
           <CardSectionActions>{action}</CardSectionActions>
