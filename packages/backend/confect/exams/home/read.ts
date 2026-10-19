@@ -7,12 +7,12 @@ import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { requireAuth } from "@repo/backend/confect/auth/session";
 import { examAuthority } from "@repo/backend/confect/exams/authority";
 import { examSummary } from "@repo/backend/confect/exams/exam";
+import { closedResults } from "@repo/backend/confect/exams/home/results";
 import {
   sittingAuthority,
   withExam,
 } from "@repo/backend/confect/exams/sittings/authority";
 import { TENANT_UNIT_LIMIT } from "@repo/backend/confect/exams/sittings/mine";
-import { resultAuthority } from "@repo/backend/confect/exams/results/authority";
 import { sittingViews } from "@repo/backend/confect/exams/sittings/view";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import { unitAuthority } from "@repo/backend/confect/tenancy/authority";
@@ -45,9 +45,6 @@ const byOpening = Order.mapInput(
   Order.Number,
   (sitting: Pick<ExamSittingsDoc, "opensAt">) => sitting.opensAt
 );
-
-/** The sittings with the newest opening first, which the results list shows. */
-const byNewestOpening = Order.flip(byOpening);
 
 /**
  * Whether the viewer may open the rooms of a unit, which the viewers of rooms hold. The home reads
@@ -117,48 +114,6 @@ const firstViewable = Effect.fn("exams.home.firstViewable")(function* (
   return Arr.take(Arr.sort(viewable, byOpening), HOME_ROWS);
 });
 
-/** The newest closed sittings of one unit, each one bounded like the rooms of the other tiles. */
-const closedRows = Effect.fn("exams.home.closedRows")(function* (
-  unitId: ExamSittingsDoc["unitId"]
-) {
-  return yield* (yield* DatabaseReader)
-    .table("examSittings")
-    .index(
-      "by_unitId_and_state_and_opensAt",
-      (query) => query.eq("unitId", unitId).eq("state", "closed"),
-      "desc"
-    )
-    .take(HOME_ROWS)
-    .pipe(Effect.orDie);
-});
-
-/**
- * The closed sittings whose results the viewer may view, newest opening first, at most `HOME_ROWS`.
- * Each one carries whether its results are released and whether the viewer may release them, both
- * read from the results authority, so the list never claims an action the viewer does not hold.
- */
-const closedResults = Effect.fn("exams.home.closedResults")(function* (
-  rows: readonly ExamSittingsDoc[]
-) {
-  const decided = yield* Effect.forEach(
-    Arr.sort(rows, byNewestOpening),
-    (row) =>
-      resultAuthority
-        .allowed(row)
-        .pipe(Effect.map((actions) => ({ actions, row })))
-  );
-  const viewable = Arr.take(
-    Arr.filter(decided, ({ actions }) => Arr.contains(actions, "result.view")),
-    HOME_ROWS
-  );
-  const views = yield* sittingViews(Arr.map(viewable, ({ row }) => row));
-  return Arr.zipWith(viewable, views, ({ actions, row }, view) => ({
-    ...view,
-    canRelease: Arr.contains(actions, "result.release"),
-    resultsReleased: row.resultsReleasedAt !== undefined,
-  }));
-});
-
 /**
  * The exams of one school that the author created and may still edit, newest created first. The author
  * is the account that `exams.create` records, so a draft is the author's own exam. The index reads the
@@ -212,15 +167,12 @@ export const readHome = Effect.fn("exams.home.read")(function* () {
   const upcoming = Arr.flatten(
     yield* Effect.forEach(watched, (unit) => upcomingRows(unit._id, now))
   );
-  const closed = Arr.flatten(
-    yield* Effect.forEach(watched, (unit) => closedRows(unit._id))
-  );
   const live = yield* firstViewable(
     Arr.filter(running, (row) => row.closesAt > now)
   );
   const next = yield* firstViewable(upcoming);
   return {
-    closed: yield* closedResults(closed),
+    closed: yield* closedResults(watched),
     drafts: yield* draftsOf(member.tenant._id, appUser._id),
     live: yield* sittingViews(live),
     next: yield* sittingViews(next),

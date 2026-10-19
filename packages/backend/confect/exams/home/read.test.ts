@@ -1,85 +1,22 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import type { ExamSittingsDoc } from "@repo/backend/confect/_generated/docs";
 import refs from "@repo/backend/confect/_generated/refs";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import type { ExamSummary } from "@repo/backend/confect/exams/exam";
-import type { ClosedView } from "@repo/backend/confect/exams/home/contract";
-import type { SittingView } from "@repo/backend/confect/exams/sittings/contract";
 import { nf } from "@repo/backend/test/editor";
 import { archiveUnit, LANGUAGE, teacherExam } from "@repo/backend/test/exams";
-import {
-  CLOSES_AT,
-  OPENS_AT,
-  type SittingFixture,
-  seedPlacement,
-} from "@repo/backend/test/sittings";
+import { homeOf, insertRoom, roomsOf } from "@repo/backend/test/home";
+import { OPENS_AT, seedPlacement } from "@repo/backend/test/sittings";
 import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect } from "effect";
 
-const { create, home } = refs.public.exams.exams;
+const { create } = refs.public.exams.exams;
 
 /** One day, in milliseconds. */
 const DAY = 86_400_000;
 
-/** The fields of one room that a test seeds, as the scheduler would leave it. */
-type RoomSeed = Pick<ExamSittingsDoc, "examId" | "opensAt" | "state"> &
-  Partial<
-    Pick<
-      ExamSittingsDoc,
-      | "closesAt"
-      | "cohortId"
-      | "resultsReleasedAt"
-      | "room"
-      | "tenantId"
-      | "unitId"
-    >
-  >;
-
-/** Writes one room with its token left out, so a test starts from the room's state. */
-const insertRoom = (fixture: SittingFixture, seed: RoomSeed) =>
-  fixture.run(
-    Effect.flatMap(DatabaseWriter, (writer) =>
-      writer.table("examSittings").insert({
-        closesAt: seed.closesAt ?? CLOSES_AT,
-        cohortId: seed.cohortId ?? null,
-        examId: seed.examId,
-        jobs: [],
-        opensAt: seed.opensAt,
-        room: seed.room ?? "Lab 2",
-        state: seed.state,
-        tenantId: seed.tenantId ?? fixture.tenants.nf,
-        tokenHash: "",
-        tokenIssuedAt: TENANCY_NOW,
-        tokenSealed: new ArrayBuffer(0),
-        unitId: seed.unitId ?? fixture.units.smp,
-        ...(seed.resultsReleasedAt === undefined
-          ? {}
-          : { resultsReleasedAt: seed.resultsReleasedAt }),
-      })
-    ).pipe(Effect.orDie)
-  );
-
-/** The rooms of a results list with their release flags, in order. */
-const resultsOf = (rows: readonly (typeof ClosedView.Type)[]) =>
-  Arr.map(rows, (row) => ({
-    canRelease: row.canRelease,
-    resultsReleased: row.resultsReleased,
-    room: row.room,
-  }));
-
-/** Reads the school home as one account of the fixture. */
-const homeOf = (
-  fixture: SittingFixture,
-  account: keyof SittingFixture["users"]
-) => fixture.as(account).query(home, { slug: nf });
-
 /** The titles of a list of exams, in order. */
 const titlesOf = (exams: readonly (typeof ExamSummary.Type)[]) =>
   Arr.map(exams, (exam) => exam.title);
-
-/** The rooms of a list, by their names, in order. */
-const roomsOf = (rooms: readonly (typeof SittingView.Type)[]) =>
-  Arr.map(rooms, (room) => room.room);
 
 describe("exams home", () => {
   beforeEach(() => {
@@ -226,119 +163,6 @@ describe("exams home", () => {
         const read = yield* homeOf(fixture, "student");
 
         expect(read).toEqual({ closed: [], drafts: [], live: [], next: [] });
-      })
-  );
-
-  it.effect(
-    "lists the closed sittings a teacher may view results of, newest first, with their release flags",
-    () =>
-      Effect.gen(function* () {
-        const fixture = yield* tenancyFixture;
-        const exam = yield* teacherExam(fixture, "PTS Biologi");
-        yield* insertRoom(fixture, {
-          examId: exam.id,
-          opensAt: OPENS_AT,
-          resultsReleasedAt: TENANCY_NOW,
-          room: "Lab 2",
-          state: "closed",
-        });
-        yield* insertRoom(fixture, {
-          examId: exam.id,
-          opensAt: OPENS_AT + 1,
-          room: "Lab 3",
-          state: "closed",
-        });
-
-        const read = yield* homeOf(fixture, "teacher");
-
-        // The teacher wrote the exam, so the teacher may release its results too (the exam's author).
-        expect(resultsOf(read.closed)).toEqual([
-          { canRelease: true, resultsReleased: false, room: "Lab 3" },
-          { canRelease: true, resultsReleased: true, room: "Lab 2" },
-        ]);
-      })
-  );
-
-  it.effect(
-    "lets the admin release the results of every unit's closed sittings, and no other role",
-    () =>
-      Effect.gen(function* () {
-        const fixture = yield* tenancyFixture;
-        const exam = yield* teacherExam(fixture, "PTS");
-        yield* insertRoom(fixture, {
-          examId: exam.id,
-          opensAt: OPENS_AT,
-          room: "Lab 2",
-          state: "closed",
-        });
-        yield* insertRoom(fixture, {
-          examId: exam.id,
-          opensAt: OPENS_AT + 1,
-          room: "Lab SMA",
-          state: "closed",
-          unitId: fixture.units.sma,
-        });
-
-        const admin = yield* homeOf(fixture, "admin");
-        const principal = yield* homeOf(fixture, "principal");
-
-        expect(resultsOf(admin.closed)).toEqual([
-          { canRelease: true, resultsReleased: false, room: "Lab SMA" },
-          { canRelease: true, resultsReleased: false, room: "Lab 2" },
-        ]);
-        expect(resultsOf(principal.closed)).toEqual([
-          { canRelease: false, resultsReleased: false, room: "Lab SMA" },
-        ]);
-      })
-  );
-
-  it.effect(
-    "shows no closed sitting of a unit the viewer does not watch",
-    () =>
-      Effect.gen(function* () {
-        const fixture = yield* tenancyFixture;
-        const exam = yield* teacherExam(fixture, "PTS");
-        yield* insertRoom(fixture, {
-          examId: exam.id,
-          opensAt: OPENS_AT,
-          room: "Lab SMA",
-          state: "closed",
-          unitId: fixture.units.sma,
-        });
-
-        const read = yield* homeOf(fixture, "teacher");
-
-        expect(read.closed).toEqual([]);
-      })
-  );
-
-  it.effect(
-    "lists at most five closed sittings, the newest ones",
-    () =>
-      Effect.gen(function* () {
-        const fixture = yield* tenancyFixture;
-        const exam = yield* teacherExam(fixture, "PTS");
-        yield* Effect.forEach(
-          Arr.makeBy(7, (index) => index),
-          (index) =>
-            insertRoom(fixture, {
-              examId: exam.id,
-              opensAt: OPENS_AT + index,
-              room: `Lab ${index}`,
-              state: "closed",
-            }),
-          { discard: true }
-        );
-
-        const read = yield* homeOf(fixture, "teacher");
-
-        expect(roomsOf(read.closed)).toEqual([
-          "Lab 6",
-          "Lab 5",
-          "Lab 4",
-          "Lab 3",
-          "Lab 2",
-        ]);
       })
   );
 

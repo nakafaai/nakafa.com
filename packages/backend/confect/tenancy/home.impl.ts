@@ -21,10 +21,7 @@ const holdsRole = Effect.fn("tenancy.home.holdsRole")(function* (
   const grants = yield* (yield* DatabaseReader)
     .table("tenantGrants")
     .index("by_tenantId_and_role_key_and_status", (query) =>
-      query
-        .eq("tenantId", tenantId)
-        .eq("role.key", role)
-        .eq("status", "active")
+      query.eq("tenantId", tenantId).eq("role.key", role).eq("status", "active")
     )
     .take(1)
     .pipe(Effect.orDie);
