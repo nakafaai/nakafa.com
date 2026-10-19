@@ -1564,7 +1564,7 @@
       "description": "Frag deine Aufsicht, wenn du meinst, dass die Zeit falsch war."
     },
     "sitting-attempt-locked": {
-      "title": "Die Aufsicht hat gesperrt.",
+      "title": "Der Versuch ist gesperrt.",
       "description": "Warte, bis die Aufsicht ihn freigibt, und versuche es dann erneut."
     },
     "sitting-second-device": {
