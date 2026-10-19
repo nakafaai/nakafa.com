@@ -36,6 +36,7 @@ import { readSittingDevice } from "@/components/exams/sitting/device";
 import type { EntryMessage } from "@/components/exams/sitting/entry";
 import { StudentOutcome } from "@/components/exams/sitting/outcome";
 import { StudentPlayer } from "@/components/exams/sitting/player";
+import { SittingRetry } from "@/components/exams/sitting/retry";
 import { useConvexAuth } from "@/components/providers/convex";
 import {
   CardSection,
@@ -44,7 +45,6 @@ import {
 } from "@/components/shared/card/section";
 import { LayoutContent } from "@/components/shared/content/layout";
 import { schoolDateTimeText } from "@/components/tenant/settings/clock";
-import { reportClientException } from "@/lib/analytics/client";
 
 /** An admission that lets the student into the sitting, with the attempt it opened. */
 type Admitted = Extract<Admission, { readonly _tag: "admitted" }>;
@@ -245,33 +245,17 @@ function StudentRefusal() {
 }
 
 /**
- * The page when the sitting could not be read for a reason other than its visibility: the failure is
- * reported, and the student gets a sentence and a retry.
+ * The page when the sitting could not be read for a reason other than its visibility: the header, then the
+ * sentence and the retry of `SittingRetry`, which reports the failure.
  */
 function StudentRetry({ error }: { readonly error: unknown }) {
   const t = useTranslations("Exams");
-  const tCommon = useTranslations("Common");
-
-  useEffect(() => {
-    Effect.runSync(
-      reportClientException(error, {
-        source: "components/exams/sitting/student",
-      })
-    );
-  }, [error]);
 
   return (
     <>
       <SittingBar examTitle={t("sitting")} />
       <LayoutContent className="grid w-full gap-6 py-6">
-        <p>{t("student-retry")}</p>
-        <Button
-          onClick={() => window.location.reload()}
-          type="button"
-          variant="outline"
-        >
-          {tCommon("retry")}
-        </Button>
+        <SittingRetry error={error} />
       </LayoutContent>
     </>
   );

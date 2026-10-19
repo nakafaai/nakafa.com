@@ -29,6 +29,7 @@ import {
 import { SittingNavigator } from "@/components/exams/sitting/navigator";
 import type { PaperValue } from "@/components/exams/sitting/paper";
 import { SittingQuestion } from "@/components/exams/sitting/question";
+import { SittingRetry } from "@/components/exams/sitting/retry";
 import { useSittingSignals } from "@/components/exams/sitting/signals.client";
 import { PlayerFooter, PlayerOpener } from "@/components/player/footer";
 import { PlayerMain } from "@/components/player/frame";
@@ -115,14 +116,12 @@ export function StudentPlayer({
       </SittingBar>
       <PlayerMain navigator={null}>
         {attempt.state === "locked" ? <p>{t("student-locked")}</p> : null}
-        {QueryResult.isFailure(paper) ? (
-          <p>
-            {Option.match(sittingFailureMessage(paper.error), {
-              onNone: () => t("student-retry"),
-              onSome: (message) => t(message),
-            })}
-          </p>
-        ) : null}
+        {QueryResult.isFailure(paper)
+          ? Option.match(sittingFailureMessage(paper.error), {
+              onNone: () => <SittingRetry error={paper.error} />,
+              onSome: (message) => <p>{t(message)}</p>,
+            })
+          : null}
       </PlayerMain>
     </>
   );
