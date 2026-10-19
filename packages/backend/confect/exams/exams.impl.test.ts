@@ -340,14 +340,16 @@ describe("exams/exams cohorts", () => {
       })
   );
 
-  it.effect("refuses the cohorts of a unit the caller may not schedule in", () =>
-    Effect.gen(function* () {
-      const fixture = yield* tenancyFixture;
-      const refused = yield* fixture
-        .as("student")
-        .query(cohorts, { slug: nf, unitId: fixture.units.smp })
-        .pipe(Effect.flip);
-      expect(refused).toMatchObject({ _tag: "AccessDenied" });
-    })
+  it.effect(
+    "refuses the cohorts of a unit the caller may not schedule in",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const refused = yield* fixture
+          .as("student")
+          .query(cohorts, { slug: nf, unitId: fixture.units.smp })
+          .pipe(Effect.flip);
+        expect(refused).toMatchObject({ _tag: "AccessDenied" });
+      })
   );
 });

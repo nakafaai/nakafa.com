@@ -35,8 +35,11 @@ import {
   CardSectionActions,
   CardSectionFooter,
 } from "@/components/shared/card/section";
+import {
+  languageItems,
+  timeZoneItems,
+} from "@/components/tenant/settings/choices";
 import { SchoolUnitCreateDialog } from "@/components/tenant/settings/create";
-import { timeZoneItems, languageItems } from "@/components/tenant/settings/choices";
 import {
   archiveUnitChange,
   setNpsnChange,
@@ -63,7 +66,11 @@ export function SchoolUnitsSettings({ slug }: { slug: TenantSlug }) {
       }
     >
       <SchoolUnitsBody slug={slug} />
-      <SchoolUnitCreateDialog open={isAdding} setOpen={setIsAdding} slug={slug} />
+      <SchoolUnitCreateDialog
+        open={isAdding}
+        setOpen={setIsAdding}
+        slug={slug}
+      />
     </SettingsPage>
   );
 }

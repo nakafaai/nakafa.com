@@ -1,7 +1,7 @@
 "use client";
 
-import type { GenericId, Ref } from "@confect/core";
-import type { OptimisticLocalStore, OptimisticUpdate } from "@confect/react";
+import type { GenericId } from "@confect/core";
+import type { OptimisticUpdate } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Array as Arr, Option, Schema } from "effect";
@@ -48,7 +48,10 @@ export const cancelRoomChange: OptimisticUpdate<
         query.args,
         Option.some({
           ...query.value.value,
-          page: Arr.filter(query.value.value.page, (room) => room.id !== sittingId),
+          page: Arr.filter(
+            query.value.value.page,
+            (room) => room.id !== sittingId
+          ),
         })
       );
     }

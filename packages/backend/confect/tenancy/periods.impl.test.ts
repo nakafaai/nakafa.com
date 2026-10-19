@@ -234,19 +234,41 @@ describe("tenancy/periods open and archive", () => {
       })
   );
 
-  it.effect("restores an archived period to active, and refuses while another is active", () =>
-    Effect.gen(function* () {
-      const fixture = yield* tenancyFixture;
-      const first = yield* admin(fixture, SMA_TERMS);
-      yield* fixture.as("admin").mutation(open, { periodId: first.id, slug: nf });
-      yield* fixture.as("admin").mutation(archive, { periodId: first.id, slug: nf });
-      const second = yield* admin(fixture, { end: "2027-06-30", name: "Genap 2026/2027", start: "2027-01-04" });
-      yield* fixture.as("admin").mutation(open, { periodId: second.id, slug: nf });
-      const blocked = yield* fixture.as("admin").mutation(restore, { periodId: first.id, slug: nf }).pipe(Effect.flip);
-      yield* fixture.as("admin").mutation(archive, { periodId: second.id, slug: nf });
-      const restored = yield* fixture.as("admin").mutation(restore, { periodId: first.id, slug: nf });
-      expect([blocked, restored.status]).toMatchObject([{ _tag: "PeriodActive" }, "active"]);
-    })
+  it.effect(
+    "restores an archived period to active, and refuses while another is active",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const first = yield* admin(fixture, SMA_TERMS);
+        yield* fixture
+          .as("admin")
+          .mutation(open, { periodId: first.id, slug: nf });
+        yield* fixture
+          .as("admin")
+          .mutation(archive, { periodId: first.id, slug: nf });
+        const second = yield* admin(fixture, {
+          end: "2027-06-30",
+          name: "Genap 2026/2027",
+          start: "2027-01-04",
+        });
+        yield* fixture
+          .as("admin")
+          .mutation(open, { periodId: second.id, slug: nf });
+        const blocked = yield* fixture
+          .as("admin")
+          .mutation(restore, { periodId: first.id, slug: nf })
+          .pipe(Effect.flip);
+        yield* fixture
+          .as("admin")
+          .mutation(archive, { periodId: second.id, slug: nf });
+        const restored = yield* fixture
+          .as("admin")
+          .mutation(restore, { periodId: first.id, slug: nf });
+        expect([blocked, restored.status]).toMatchObject([
+          { _tag: "PeriodActive" },
+          "active",
+        ]);
+      })
   );
 
   it.effect(

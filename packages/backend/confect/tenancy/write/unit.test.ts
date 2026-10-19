@@ -66,7 +66,10 @@ describe("tenancy/units create", () => {
             timeZone: "Asia/Jakarta",
           })
           .pipe(Effect.flip);
-        expect(refused).toMatchObject({ _tag: "UnitLimit", code: "UNIT_LIMIT" });
+        expect(refused).toMatchObject({
+          _tag: "UnitLimit",
+          code: "UNIT_LIMIT",
+        });
         const listed = yield* admin.query(list, { slug: nf });
         expect(listed).toHaveLength(24);
       })

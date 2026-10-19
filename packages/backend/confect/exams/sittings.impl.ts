@@ -218,7 +218,9 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(enterFunction),
   Layer.provide(signalFunction),
   Layer.provide(mineFunction),
-  Layer.provide(Layer.mergeAll(dashboardFunction, cancelFunction, expectedFunction)),
+  Layer.provide(
+    Layer.mergeAll(dashboardFunction, cancelFunction, expectedFunction)
+  ),
   Layer.provide(lockFunction),
   Layer.provide(unlockFunction),
   Layer.provide(addMinutesFunction),

@@ -28,7 +28,10 @@ const PICKER_SIZE = 100;
 export type PersonId = PaginatedQueryItem<typeof tenancy.people.list>["id"];
 
 /** One Person as the picker lists it: its ID, which a choice names, and its name. */
-type PersonItem = Pick<PaginatedQueryItem<typeof tenancy.people.list>, "id" | "name">;
+type PersonItem = Pick<
+  PaginatedQueryItem<typeof tenancy.people.list>,
+  "id" | "name"
+>;
 
 /**
  * Renders the picker of an active person of the school. The list loads more people
