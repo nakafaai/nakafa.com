@@ -251,23 +251,28 @@ describe("the first toast", () => {
     );
   });
 
-  it("does not load Sonner for a dismiss before any toast", async () => {
-    const sonnerLoads = vi.fn(() => sonnerModule);
-    vi.doMock("sonner", sonnerLoads);
-    const notify = await loadFreshNotify();
-    const listener = vi.fn();
-    notify.subscribeToastRequests(listener);
+  it.effect("does not load Sonner for a dismiss before any toast", () =>
+    Effect.gen(function* () {
+      const sonnerLoads = vi.fn(() => sonnerModule);
+      vi.doMock("sonner", sonnerLoads);
+      const notify = yield* Effect.promise(() => loadFreshNotify());
+      const listener = vi.fn();
+      notify.subscribeToastRequests(listener);
 
-    notify.toast.dismiss("first");
-    await Effect.runPromise(Effect.yieldNow);
+      notify.toast.dismiss("first");
+      yield* Effect.yieldNow;
 
-    expect(sonnerLoads).not.toHaveBeenCalled();
-    expect(listener).not.toHaveBeenCalled();
-    expect(notify.isToastRequested()).toBe(false);
+      expect(sonnerLoads).not.toHaveBeenCalled();
+      expect(listener).not.toHaveBeenCalled();
+      expect(notify.isToastRequested()).toBe(false);
 
-    notify.toast.info({ title: "action-error.title" });
-    await vi.waitFor(() => expect(sonnerLoads).toHaveBeenCalledOnce());
-  });
+      // A toast request loads the same mock, so the spy above proves the absence.
+      notify.toast.info({ title: "action-error.title" });
+      yield* Effect.promise(() =>
+        vi.waitFor(() => expect(sonnerLoads).toHaveBeenCalledOnce())
+      );
+    })
+  );
 
   it("loads Sonner again on the next toast after a failed load, and shows the held toasts then", async () => {
     vi.doMock("sonner", () =>
