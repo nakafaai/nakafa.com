@@ -13,6 +13,7 @@ import {
 } from "@repo/analytics/posthog/browser";
 import { Effect, Fiber, type Option, Schedule } from "effect";
 import { useEffect } from "react";
+import { untilBrowserIdle } from "@/lib/analytics/consent/idle";
 import {
   type AccountConsentDecision,
   type BrowserAnalyticsUser,
@@ -22,9 +23,10 @@ import {
 /**
  * Owns the baseline-to-granted runtime alignment for one consent state.
  *
- * The baseline warms up on load; the landing view waits for a settled state
- * so returning grants are attributed. Transient failures retry with backoff
- * before surfacing. Preview children skip the SDK; cleanup only suspends
+ * The baseline loads once the browser is idle, so the SDK does not compete with
+ * the page's first render; the landing view waits for a settled state so
+ * returning grants are attributed. Transient failures retry with backoff before
+ * surfacing. Preview children skip the SDK; cleanup only suspends
  * authorization, never SDK consent.
  */
 export function useAnalyticsRuntimeAlignment({
@@ -71,12 +73,16 @@ export function useAnalyticsRuntimeAlignment({
       transition = revokeToBaselineAnalytics();
     }
     const runtimeFiber = Effect.runFork(
-      enableBaselineAnalytics().pipe(
-        Effect.andThen(transition),
-        Effect.retry({
-          schedule: Schedule.exponential("100 millis"),
-          times: 2,
-        }),
+      untilBrowserIdle.pipe(
+        Effect.andThen(
+          enableBaselineAnalytics().pipe(
+            Effect.andThen(transition),
+            Effect.retry({
+              schedule: Schedule.exponential("100 millis"),
+              times: 2,
+            })
+          )
+        ),
         Effect.andThen(Effect.sync(() => setHasRuntimeError(false))),
         Effect.catchTag("BrowserAnalyticsLoadFailed", () =>
           Effect.sync(() => setHasRuntimeError(true))
