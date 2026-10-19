@@ -154,7 +154,7 @@ function LessonButton({
     <Button
       aria-controls={panelId(windowId, lesson)}
       aria-pressed={open}
-      className="flex-1 sm:flex-none"
+      className="flex-1"
       id={buttonId(windowId, lesson)}
       onClick={() => onOpen(lesson)}
       onFocus={() => preloadLessonLab(lesson)}
@@ -244,7 +244,7 @@ export function LessonWindow({
           onPointerEnter={reveal}
           rootMargin="0px"
         >
-          <ButtonGroup aria-label={label} className="w-full sm:w-fit">
+          <ButtonGroup aria-label={label} className="w-full">
             {Arr.map(LessonSchema.literals, (id) => (
               <LessonButton
                 key={id}

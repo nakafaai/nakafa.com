@@ -1669,7 +1669,7 @@
     "nina-title": "Nina tahu bagian mana yang kamu maksud",
     "nina-lead": "Tanya dari soal atau materi yang sedang kamu buka.",
     "nina-chat-ask": "Kenapa jawabanku 13 salah?",
-    "nina-chat-answer": "### 13 muncul kalau m dianggap 3\n\nHitungannya jadi $5(2) + 9/3 = 13$. Masalahnya, $m = 3$ tidak cocok dengan soal.\n\n#### Cek dengan yang diketahui\n\n$\\triangle(2, 4) = 2(2) + 4/3 \\neq 8$\n\nDengan $m = 1$ hasilnya pas: $2(2) + 4/1 = 8$. Jadi $m$ harus 1, dan jawabannya 19.",
+    "nina-chat-answer": "\\(13\\) muncul kalau \\(m\\) dianggap \\(3\\). Hitungannya \\(5(2) + 9/3 = 13\\), tapi \\(m = 3\\) tidak cocok dengan soal.\n\nCek dengan yang diketahui di soal:\n\n\\[\\triangle(2, 4) = 2(2) + 4/3 \\neq 8\\]\n\nDengan \\(m = 1\\) hasilnya pas: \\(2(2) + 4/1 = 8\\). Jadi \\(m\\) harus \\(1\\), dan jawabannya \\(19\\).",
     "memory-title": "Nina makin kenal kamu",
     "memory-lead": "Ingatannya bisa kamu baca, ubah, jeda, atau hapus.",
     "memory-said-1": "Aku kelas 12 IPA.",
