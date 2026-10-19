@@ -1475,7 +1475,7 @@
       "description": "Sebuah organisasi memiliki jumlah sekolah yang terbatas."
     },
     "school-refusal-address-member": {
-      "title": "Orang ini sudah menjadi anggota sekolah ini.",
+      "title": "Orang ini sudah anggota sekolah ini.",
       "description": "Ubah perannya di Peran dan akses."
     },
     "school-refusal-already-placed": {
@@ -1681,7 +1681,7 @@
       "description": "Coba lagi besok."
     },
     "school-login-account": {
-      "title": "Login sekolah tidak dapat membuka sekolah.",
+      "title": "Login sekolah tidak membuka sekolah.",
       "description": "Masuk dengan akun milikmu sendiri untuk membuka sekolah."
     },
     "school-save-error": {
@@ -1689,7 +1689,7 @@
       "description": "Coba lagi."
     },
     "undo": {
-      "title": "Batalkan"
+      "title": "Batalkan pengarsipan"
     },
     "school-cohort-archived": {
       "title": "Rombel diarsipkan."
