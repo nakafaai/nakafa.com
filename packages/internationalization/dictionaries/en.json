@@ -8,6 +8,10 @@
     "back-to-learning": "Back to Nakafa",
     "for-you": "For you",
     "home": "Home",
+    "next-exam-title": "Your school's exams",
+    "next-exam-description": "Write questions, schedule a sitting, and watch it live.",
+    "next-exam-footer": "Students see an exam only once it is scheduled.",
+    "next-exam-action": "Open exams",
     "language": "Language",
     "role": {
       "admin": "Admin",

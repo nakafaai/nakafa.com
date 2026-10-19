@@ -112,9 +112,19 @@ export function DataTable<TData extends RowData>({
         </InputGroup>
         {Arr.map(facets, (facet) => {
           const column = table.getColumn(facet.column);
+          // The facet's chosen values and counts are read here, where the table
+          // redraws on every change, and handed down as values: the compiled facet
+          // keeps its last output while its props stay the same objects.
           return column === undefined ? null : (
             <DataTableFacet
+              chosen={Option.getOrElse(
+                Schema.decodeUnknownOption(FacetValues)(
+                  column.getFilterValue()
+                ),
+                () => []
+              )}
               column={column}
+              counts={column.getFacetedUniqueValues()}
               key={facet.column}
               options={facet.options}
               title={facet.title}
@@ -218,19 +228,20 @@ function DataTableHead<TData extends RowData>({
  * values keeps the rows that hold any of them.
  */
 function DataTableFacet<TData extends RowData>({
+  chosen,
   column,
+  counts,
   options,
   title,
 }: {
+  chosen: readonly string[];
   column: Column<typeof dataTableFeatures, TData>;
+  counts: ReturnType<
+    Column<typeof dataTableFeatures, TData>["getFacetedUniqueValues"]
+  >;
   options: readonly { label: string; value: string }[];
   title: string;
 }) {
-  const counts = column.getFacetedUniqueValues();
-  const chosen = Option.getOrElse(
-    Schema.decodeUnknownOption(FacetValues)(column.getFilterValue()),
-    () => []
-  );
   // A chosen value stays in its menu while other filters hide its rows, so it can be
   // unchosen; it counts no rows then.
   const present = Arr.filter(

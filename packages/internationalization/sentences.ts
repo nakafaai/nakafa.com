@@ -52,6 +52,8 @@ export const SentenceKeySchema = Schema.Literals([
   "Memory.footer",
   "NotFound.description",
   "Posts.delete-description",
+  "School.next-exam-description",
+  "School.next-exam-footer",
   "SchoolSettings.card-code-description",
   "SchoolSettings.card-print-footer",
   "SchoolSettings.invite-dialog-description",
