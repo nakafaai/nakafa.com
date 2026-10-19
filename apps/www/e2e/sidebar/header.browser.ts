@@ -72,12 +72,21 @@ test("a phone shows the app's bar again on a page without a header of its own, a
           expect(header).toBeVisible({ timeout: readinessTimeoutMilliseconds })
         );
 
-        // Home draws no page header, while Next.js keeps the try-out page in the
-        // document, hidden: its header must not hide the app's bar.
-        yield* Effect.promise(() =>
-          header.getByRole("link", { exact: true, name: "Home" }).click()
+        // The Quran draws no page header, while Next.js keeps the try-out page in
+        // the document, hidden: its header must not hide the app's bar. Both pages
+        // are public, so the visit needs no account (Home sends a visitor without
+        // one to sign in).
+        const quran = yield* activateUntilVisible(
+          header.getByRole("button", { name: "Toggle Sidebar" }),
+          page
+            .locator('[data-sidebar="sidebar"]:visible')
+            .getByRole("link", { exact: true, name: "Quran" }),
+          readinessTimeoutMilliseconds
         );
-        yield* Effect.promise(() => page.waitForURL("**/en/home"));
+        yield* Effect.promise(async () => {
+          await quran.click();
+          await page.waitForURL("**/en/quran");
+        });
         yield* Effect.promise(() =>
           expect(
             page.getByRole("button", { name: "Search content..." })

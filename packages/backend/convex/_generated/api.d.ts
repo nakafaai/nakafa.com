@@ -4912,7 +4912,7 @@ export declare const api: {
                   type: "person.invited";
                 }
               | {
-                  method: "card" | "invite" | "operator";
+                  method: "card" | "invite" | "operator" | "founder";
                   type: "person.claimed";
                 }
               | { type: "person.released" }
@@ -5030,6 +5030,7 @@ export declare const api: {
                   };
                   type: "tenant.provisioned";
                 }
+              | { size: "s" | "m" | "l" | "xl"; type: "tenant.founded" }
               | { country: string; currency: string; type: "tenant.locale.set" }
               | { type: "tenant.logo.removed" }
               | { type: "tenant.logo.set" }
@@ -7226,6 +7227,115 @@ export declare const api: {
           slug: string;
         },
         { emailDomains: Array<string>; nina: boolean; studentThreads: boolean }
+      >;
+    };
+    start: {
+      address: FunctionReference<
+        "query",
+        "public",
+        { slug: string },
+        "free" | "taken" | "reserved" | "invalid"
+      >;
+      draft: FunctionReference<
+        "query",
+        "public",
+        {},
+        {
+          country?: "ID" | "SG" | "GB" | "DE" | "US";
+          levels?: Array<
+            | "paud"
+            | "sd"
+            | "mi"
+            | "smp"
+            | "mts"
+            | "sma"
+            | "ma"
+            | "smk"
+            | "slb"
+            | "other"
+          >;
+          name?: string;
+          role?: "principal" | "teacher" | "admin" | "foundation";
+          size?: "s" | "m" | "l" | "xl";
+          slug?: string;
+          updatedAt: number;
+        } | null
+      >;
+      open: FunctionReference<
+        "mutation",
+        "public",
+        {
+          country: "ID" | "SG" | "GB" | "DE" | "US";
+          name: string;
+          role: "principal" | "teacher" | "admin" | "foundation";
+          size: "s" | "m" | "l" | "xl";
+          slug: string;
+          timeZone: string;
+          units: Array<{
+            level:
+              | "paud"
+              | "sd"
+              | "mi"
+              | "smp"
+              | "mts"
+              | "sma"
+              | "ma"
+              | "smk"
+              | "slb"
+              | "other";
+            name: string;
+          }>;
+        },
+        { address: string; slug: string }
+      >;
+      save: FunctionReference<
+        "mutation",
+        "public",
+        {
+          answer:
+            | { kind: "name"; name: string; slug: string }
+            | { kind: "country"; value: "ID" | "SG" | "GB" | "DE" | "US" }
+            | {
+                kind: "levels";
+                value: Array<
+                  | "paud"
+                  | "sd"
+                  | "mi"
+                  | "smp"
+                  | "mts"
+                  | "sma"
+                  | "ma"
+                  | "smk"
+                  | "slb"
+                  | "other"
+                >;
+              }
+            | {
+                kind: "role";
+                value: "principal" | "teacher" | "admin" | "foundation";
+              }
+            | { kind: "size"; value: "s" | "m" | "l" | "xl" };
+        },
+        {
+          country?: "ID" | "SG" | "GB" | "DE" | "US";
+          levels?: Array<
+            | "paud"
+            | "sd"
+            | "mi"
+            | "smp"
+            | "mts"
+            | "sma"
+            | "ma"
+            | "smk"
+            | "slb"
+            | "other"
+          >;
+          name?: string;
+          role?: "principal" | "teacher" | "admin" | "foundation";
+          size?: "s" | "m" | "l" | "xl";
+          slug?: string;
+          updatedAt: number;
+        }
       >;
     };
     units: {

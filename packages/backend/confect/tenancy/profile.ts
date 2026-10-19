@@ -25,7 +25,7 @@ export const tenantProfile = Effect.fn("tenancy.profile.of")(function* (
   tenant: TenantsDoc
 ) {
   const shown = Struct.pick(tenant, ["kind", "name", "slug", "status"]);
-  const mascot = schoolMascot(tenant._id);
+  const mascot = schoolMascot(tenant.slug);
   if (tenant.logo === undefined) {
     return { ...shown, mascot };
   }
