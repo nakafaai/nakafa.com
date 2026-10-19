@@ -6,20 +6,20 @@ import { readMathFonts } from "@/e2e/support/fonts";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { collectUnusedPreloads } from "@/e2e/support/preload";
-import { waitForCachedRoute } from "@/e2e/support/route";
+import { waitForServedRoute } from "@/e2e/support/route";
 import { paginationNavigation, SUBJECT_LINK } from "@/e2e/support/selector";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 const lessonPath = /^\/en\/subjects\//;
 
 /**
- * Most lessons render on demand, and later readers get the page Next cached
- * then, so the check reads that cached page.
+ * Most lessons render on request, and the server answers each reader with the
+ * whole page, so the check reads the page once the server has answered it.
  */
-const verifyCachedLessonFonts = Effect.fn("NakafaE2E.verifyCachedLessonFonts")(
+const verifyServedLessonFonts = Effect.fn("NakafaE2E.verifyServedLessonFonts")(
   function* (page: Page) {
     yield* seedAnalyticsConsent(page, "denied");
-    yield* waitForCachedRoute(page, pinnedRoutes.inverse.en);
+    yield* waitForServedRoute(page, pinnedRoutes.inverse.en);
     const warnings = yield* collectUnusedPreloads(
       page,
       Effect.gen(function* () {
@@ -121,7 +121,7 @@ test.describe("Math fonts", () => {
     page,
   }) => {
     await Effect.runPromise(
-      withObservedPageErrors(page, verifyCachedLessonFonts(page))
+      withObservedPageErrors(page, verifyServedLessonFonts(page))
     );
   });
 

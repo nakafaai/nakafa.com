@@ -12,6 +12,7 @@ import {
   isHeritageClause,
   isIdentifier,
   isImportDeclaration,
+  isMetaProperty,
   isNamedImports,
   isNewExpression,
   isObjectBindingPattern,
@@ -21,6 +22,7 @@ import {
   isStringLiteralLikeNode,
   isVariableDeclaration,
   type Node,
+  type PropertyAccessExpression,
   type SourceFile,
   SyntaxKind,
 } from "typescript/unstable/ast";
@@ -90,7 +92,19 @@ const GLOBALS = HashSet.union(
 const GLOBAL_OBJECTS = HashSet.make("global", "globalThis", "self", "window");
 /** Variables bundlers replace at build time, which no runtime Config read can stand in for. */
 const BUILD_CONSTANTS = HashSet.make("NODE_ENV");
-/** The module and the function that own the environment seam of code that Vite bundles. */
+/** Members of `import.meta.env` that Vite replaces at build time, as NODE_ENV is replaced in `process.env`. */
+const VITE_BUILD_CONSTANTS = HashSet.make(
+  "BASE_URL",
+  "DEV",
+  "MODE",
+  "PROD",
+  "SSR"
+);
+/**
+ * The module and the function that own the environment seam: the literal reads
+ * that the bundler replaces, such as `import.meta.env.VITE_APP_URL` in client
+ * code, or `process.env.SITE_URL` in server code.
+ */
 const ENV_SEAM_MODULE = "@repo/utilities/env";
 const ENV_SEAM = "readEnvironment";
 /** The bindings of a seam callee that is not the import of the seam. */
@@ -153,9 +167,22 @@ function accesses(node: Node, owner: Node) {
 }
 
 /**
- * Whether a `process.env` access stays outside runtime configuration: it only
- * assigns or deletes a variable, as test setup does, or it reads a build
- * constant that the bundler inlines.
+ * Whether `node` is `import.meta.env`, the object that Vite fills with the
+ * public variables of a client bundle and the build constants of every module.
+ */
+function isImportMetaEnv(node: Node): node is PropertyAccessExpression {
+  return (
+    isPropertyAccessExpression(node) &&
+    node.name.text === "env" &&
+    isMetaProperty(node.expression) &&
+    node.expression.keywordToken === SyntaxKind.ImportKeyword
+  );
+}
+
+/**
+ * Whether an environment object access stays outside runtime configuration: it
+ * only assigns or deletes a variable, as test setup does, or it reads a build
+ * constant that the bundler inlines. `env` is `process.env` or `import.meta.env`.
  */
 function bypassesConfig(env: Node) {
   const access = env.parent;
@@ -163,9 +190,12 @@ function bypassesConfig(env: Node) {
     return false;
   }
   const { parent } = access;
+  const constants = isImportMetaEnv(env)
+    ? VITE_BUILD_CONSTANTS
+    : BUILD_CONSTANTS;
   return (
     (isPropertyAccessExpression(access) &&
-      HashSet.has(BUILD_CONSTANTS, access.name.text)) ||
+      HashSet.has(constants, access.name.text)) ||
     isDeleteExpression(parent) ||
     (isBinaryExpression(parent) &&
       parent.left === access &&
@@ -175,18 +205,19 @@ function bypassesConfig(env: Node) {
 
 /**
  * Returns the callee of the `readEnvironment` call whose record holds this
- * `process.env` access as `NAME: process.env.NAME`, in the object literal of its
- * second argument. That is the seam where Next.js inlines public variables, so
- * the read is a plain property access of the bare `process`, and its key is the
- * name of the variable. The read is exempt only while that callee binds as the
- * module's import, which the caller proves with the compiler.
+ * environment access as `NAME: process.env.NAME` or `NAME: import.meta.env.NAME`,
+ * in the object literal of its second argument. That is the seam where the
+ * bundler inlines public variables, so the read is a plain property access of
+ * the bare `process.env` or `import.meta.env`, and its key is the name of the
+ * variable. The read is exempt only while that callee binds as the module's
+ * import, which the caller proves with the compiler.
  */
 function seamCallee(env: Node): Option.Option<Identifier> {
   const access = env.parent;
   if (
     !(
       isPropertyAccessExpression(env) &&
-      isIdentifier(env.expression) &&
+      (isIdentifier(env.expression) || isMetaProperty(env.expression)) &&
       isPropertyAccessExpression(access) &&
       access.expression === env
     )
@@ -353,6 +384,29 @@ function useCandidate(
   });
 }
 
+/**
+ * Returns the candidate of one `import.meta.env` object that a module reads
+ * outside the seam. Vite inlines the literal reads, so the object counts like
+ * `process.env`: a read inside the seam counts only while the callee of its
+ * call is not the module's import of `readEnvironment`.
+ */
+function metaEnvCandidates(
+  sourceFile: SourceFile,
+  env: PropertyAccessExpression,
+  envSeam: boolean
+) {
+  if (bypassesConfig(env)) {
+    return [];
+  }
+  return [
+    Option.match(envSeam ? seamCallee(env) : Option.none<Identifier>(), {
+      onNone: () => candidate("env", sourceFile, env),
+      onSome: (callee) =>
+        candidate("env", sourceFile, env, callee, NOT_IMPORTED),
+    }),
+  ];
+}
+
 /** Returns the platform globals one node uses, directly or through a global object. */
 function referenceCandidates(
   sourceFile: SourceFile,
@@ -373,6 +427,9 @@ function referenceCandidates(
           (reference) => candidate("error-class", sourceFile, node, reference)
         )
       : [];
+  }
+  if (isImportMetaEnv(node)) {
+    return metaEnvCandidates(sourceFile, node, envSeam);
   }
   if (!(isPropertyAccessExpression(node) || isElementAccessExpression(node))) {
     return [];
@@ -395,7 +452,7 @@ function referenceCandidates(
 /**
  * Returns the platform globals among one module's value-position `nodes` that
  * an Effect module replaces, such as `Map`, `JSON`, `fetch`, `process.env`,
- * `Date.now`, timers, `console`, `Array.isArray`, the `Object` helpers, and
+ * `import.meta.env`, `Date.now`, timers, `console`, `Array.isArray`, the `Object` helpers, and
  * classes that extend `Error`. Each counts only while its name binds to the
  * platform global.
  */

@@ -103,7 +103,7 @@ export const RULES = {
   },
   env: {
     message:
-      "read configuration through Config in effect, or in code that Vite bundles through the record of a readEnvironment call from @repo/utilities/env, instead of process.env; only the bundler-inlined NODE_ENV stays direct.",
+      "read configuration through Config in effect, or in code that the bundler inlines through the record of a readEnvironment call from @repo/utilities/env, instead of process.env or import.meta.env; only the bundler-inlined NODE_ENV, and the Vite constants of import.meta.env, stay direct.",
     scope: "code",
   },
   "error-class": {

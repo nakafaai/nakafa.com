@@ -101,7 +101,7 @@ export function other(cause: unknown) {
                 'import { useState } from "react";\nexport const read = () => { throw new Error("hook"); };\n',
             },
             {
-              file: "apps/www/next.config.ts",
+              file: "apps/www/vite.config.ts",
               sourceText:
                 'export const config = () => { throw new Error("config"); };\n',
             },

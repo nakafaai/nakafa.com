@@ -157,12 +157,12 @@ export function read(page: Page) {
         assert.deepStrictEqual(
           yield* fileFindings([
             {
-              file: "apps/www/next.config.ts",
-              sourceText: "export default config as NextConfig;\n",
+              file: "apps/www/vite.config.ts",
+              sourceText: "export default config as UserConfig;\n",
             },
             {
               file: "apps/www/source.config.ts",
-              sourceText: "export default {} satisfies NextConfig;\n",
+              sourceText: "export default {} satisfies UserConfig;\n",
             },
             {
               file: "scripts/tool.test.ts",

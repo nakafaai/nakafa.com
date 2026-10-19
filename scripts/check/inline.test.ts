@@ -99,7 +99,7 @@ let empty: {};
         yield* shapes(`import type { ReactNode } from "react";
 let watch: { readonly onDone: () => void };
 let frame: { readonly children: ReactNode };
-let route: { params: PageProps<"/[locale]">["params"] };
+let route: { readonly response: Response };
 let stop: { readonly signal: AbortSignal; readonly pending: Promise<void> };
 let init: ResponseInit & { readonly url?: string };
 let widen: (Base & { readonly extra: string }) | null;
@@ -216,7 +216,7 @@ class Panel {
         assert.deepStrictEqual(
           yield* shapes(
             'export const settings: { mode: string } = { mode: "a" };\n',
-            "apps/www/next.config.ts"
+            "apps/www/vite.config.ts"
           ),
           []
         );

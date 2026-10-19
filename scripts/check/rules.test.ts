@@ -22,7 +22,7 @@ describe("Effect-native rule scopes", () => {
       assert.deepStrictEqual(
         yield* findings([
           {
-            file: "apps/www/next.config.ts",
+            file: "apps/www/vite.config.ts",
             sourceText:
               "export const config = [JSON.parse(text), Object.keys(value)];\ntry {\n  load();\n} catch {\n  skip();\n}\n",
           },
@@ -32,7 +32,7 @@ describe("Effect-native rule scopes", () => {
               'import { defineConfig } from "vitest/config";\nexport default defineConfig(JSON.parse(text), Object.keys(value));\n',
           },
         ]),
-        ["apps/www/next.config.ts try-catch"]
+        ["apps/www/vite.config.ts try-catch"]
       );
     })
   );

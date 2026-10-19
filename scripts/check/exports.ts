@@ -36,15 +36,12 @@ import { isGenerated, type RepositorySource } from "#scripts/check/source";
 const WORD_BREAK_PATTERN = /[^\w$]+/u;
 /**
  * Modules whose exports a framework reads by name, so no module imports them:
- * the Next.js file conventions inside the `app` directory of an app and at its
- * root, the TanStack Start entry modules and file routes of the `app` directory,
- * and the Vercel project configuration.
+ * the TanStack Start route files and entry modules inside the `app` directory of
+ * an app, and the Vercel project configuration.
  */
 const FRAMEWORK_MODULE_PATTERNS = [
-  /^apps\/[^/]+\/app\/(?:.+\/)?(?:apple-icon|default|error|forbidden|global-error|global-not-found|icon|layout|loading|manifest|not-found|opengraph-image|page|robots|route|sitemap|template|twitter-image|unauthorized)\.tsx?$/u,
-  /^apps\/[^/]+\/app\/(?:router|server|start)\.tsx?$/u,
-  /^apps\/[^/]+\/app\/routes\/.+\.tsx?$/u,
-  /^apps\/[^/]+\/(?:instrumentation|instrumentation-client|mdx-components|proxy|vercel)\.tsx?$/u,
+  /^apps\/[^/]+\/app\/(?:routes\/.+|routeTree\.gen|router|server|start)\.tsx?$/u,
+  /^apps\/[^/]+\/vercel\.tsx?$/u,
 ];
 /**
  * The component sets that a registry ships: shadcn and EvilCharts. Each keeps

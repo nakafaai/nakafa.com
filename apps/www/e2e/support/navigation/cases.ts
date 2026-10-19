@@ -1,15 +1,16 @@
-import { instant } from "@next/playwright";
 import { expect, type Locator, type Page } from "@playwright/test";
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
 import { Duration, Effect, Schedule, Schema } from "effect";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import { activateUntilVisible, press } from "@/e2e/support/input";
+import { pressPreloaded } from "@/e2e/support/navigation/prefetch";
 import { prepareClientNavigation } from "@/e2e/support/navigation/readiness";
 import { appRoutes } from "@/e2e/support/route";
 import {
   MARKETING_PAGE,
   VISIBLE_SIDEBAR_TRIGGER,
 } from "@/e2e/support/selector";
+import { observeShell } from "@/e2e/support/shell";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 const HOMEPAGE_HEADING_PATTERN = /Learn until it clicks/i;
@@ -77,13 +78,7 @@ type NavigationResolve = (
   page: Page
 ) => Effect.Effect<NavigationTarget, NavigationLinkMissing>;
 
-/**
- * Waits for the destination's own marker. Inside an `instant()` scope only the
- * UI that came without dynamic data can show it, so there the check proves the
- * marker is part of the static shell or of the prefetch.
- *
- * @see https://nextjs.org/docs/app/guides/instant-navigation#prevent-regressions-with-e2e-tests
- */
+/** Waits for the destination's own marker: the heading or the title its content brings. */
 function expectMarker(page: Page, marker: NavigationTarget["marker"]) {
   if (marker.kind === "title") {
     return expect(page).toHaveTitle(marker.text, {
@@ -216,51 +211,45 @@ const discoverLinkedHref = Effect.fn("NakafaE2E.discoverLinkedHref")(function* (
 });
 
 /**
- * The installed instant lock withholds dynamic data until its callback returns.
- * The callback therefore verifies the committed route shell and the
- * destination's own marker, which must come without dynamic data, and the
- * Effect program verifies the settled page after release.
- *
- * @see https://github.com/vercel/next.js/blob/v16.4.0/packages/next/src/client/components/segment-cache/navigation-testing-lock.ts
- * @see https://github.com/vercel/next.js/blob/v16.4.0/packages/next-playwright/README.md
+ * Loads the destination by a hard navigation, then checks its settled page.
+ * The shell and the destination's own marker must show on the document.
  */
 const navigateHard = Effect.fn("NakafaE2E.navigateHard")(function* (
   page: Page,
-  baseURL: string,
   target: NavigationTarget
 ) {
-  // @next/playwright requires this callback to return its native Promise.
-  // The surrounding operation remains one Effect run by the test boundary.
   yield* Effect.promise(() =>
-    instant(
-      page,
-      () =>
-        page
-          .goto(target.href, { waitUntil: "domcontentloaded" })
-          .then((response) => {
-            expect(response?.ok()).toBe(true);
-            return page.waitForURL((url) => url.pathname === target.href, {
-              timeout: NAVIGATION_TIMEOUT_MILLISECONDS,
-            });
-          })
-          .then(() => {
-            const shell = page.locator(instantShellSelector[target.shell]);
-            return expect(shell).toBeVisible({
-              timeout: NAVIGATION_TIMEOUT_MILLISECONDS,
-            });
-          })
-          .then(() => expectMarker(page, target.marker)),
-      { baseURL }
-    )
+    page
+      .goto(target.href, { waitUntil: "domcontentloaded" })
+      .then((response) => {
+        expect(response?.ok()).toBe(true);
+        return page.waitForURL((url) => url.pathname === target.href, {
+          timeout: NAVIGATION_TIMEOUT_MILLISECONDS,
+        });
+      })
+      .then(() => {
+        const shell = page.locator(instantShellSelector[target.shell]);
+        return expect(shell).toBeVisible({
+          timeout: NAVIGATION_TIMEOUT_MILLISECONDS,
+        });
+      })
+      .then(() => expectMarker(page, target.marker))
   );
   yield* assertSettledNavigation(page, target);
 });
 
+/**
+ * Opens the destination from a link that the reader showed intent toward, with
+ * the contract of `pressPreloaded`: the press shows the destination's shell and
+ * marker, makes no data request, and keeps the shell on every frame.
+ */
 const navigateClient = Effect.fn("NakafaE2E.navigateClient")(function* (
   page: Page,
   target: NavigationTarget,
   hasTouch: boolean
 ) {
+  // The frame recorder must be in place before the source document loads.
+  yield* observeShell(page);
   const link = yield* prepareClientNavigation(
     page,
     target.sourceHref,
@@ -269,18 +258,21 @@ const navigateClient = Effect.fn("NakafaE2E.navigateClient")(function* (
     () => findVisibleLink(page, target.href, target.sourceHref)
   );
 
-  // @next/playwright owns this native Promise callback while its lock is held.
-  yield* Effect.promise(() =>
-    instant(page, () =>
+  yield* pressPreloaded(
+    page,
+    link,
+    hasTouch,
+    Effect.promise(() =>
       press(link, hasTouch, {
         noWaitAfter: true,
         timeout: NAVIGATION_TIMEOUT_MILLISECONDS,
       })
-        .then(() =>
-          page.waitForURL((url) => url.pathname === target.href, {
-            timeout: NAVIGATION_TIMEOUT_MILLISECONDS,
-          })
-        )
+    ),
+    Effect.promise(() =>
+      page
+        .waitForURL((url) => url.pathname === target.href, {
+          timeout: NAVIGATION_TIMEOUT_MILLISECONDS,
+        })
         .then(() => {
           const shell = page.locator(instantShellSelector[target.shell]);
           return expect(shell).toBeVisible({
@@ -293,15 +285,11 @@ const navigateClient = Effect.fn("NakafaE2E.navigateClient")(function* (
   yield* assertSettledNavigation(page, target);
 });
 
+/** Checks one destination from a hard navigation and from a preloaded client navigation. */
 export const verifyHardAndClientNavigation = Effect.fn(
   "NakafaE2E.verifyHardAndClientNavigation"
-)(function* (
-  page: Page,
-  baseURL: string,
-  target: NavigationTarget,
-  hasTouch: boolean
-) {
-  yield* navigateHard(page, baseURL, target);
+)(function* (page: Page, target: NavigationTarget, hasTouch: boolean) {
+  yield* navigateHard(page, target);
   yield* navigateClient(page, target, hasTouch);
 });
 

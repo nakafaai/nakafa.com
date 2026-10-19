@@ -1,6 +1,10 @@
 {
   "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
-  "extends": ["ultracite/biome/core", "ultracite/biome/react"],
+  "extends": [
+    "ultracite/biome/core",
+    "ultracite/biome/react",
+    "ultracite/biome/tanstack"
+  ],
   "assist": {
     "actions": {
       "source": {
@@ -10,7 +14,7 @@
   },
   "overrides": [
     {
-      // The Vite config compiles these React surfaces with React Compiler.
+      // The Vite build compiles these React surfaces with React Compiler.
       // Preserve compiler-managed callbacks and TanStack server function references.
       "includes": ["apps/www/**/*.tsx", "packages/design-system/**/*.tsx"],
       "linter": {

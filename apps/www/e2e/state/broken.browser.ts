@@ -12,7 +12,7 @@ import { activateUntilVisible } from "@/e2e/support/input";
 import { expectNoOverflow } from "@/e2e/support/layout";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import { withObservedPageErrors } from "@/e2e/support/observe";
-import { NEXT_CHUNK_PATH, openRoute } from "@/e2e/support/route";
+import { APP_CHUNK_PATH, openRoute } from "@/e2e/support/route";
 import { STATE_FIGURE } from "@/e2e/support/selector";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import {
@@ -77,7 +77,7 @@ const verifyBrokenState = Effect.fn("NakafaE2E.verifyBrokenState")(function* (
     name: en.Error.title,
   });
   yield* Effect.promise(() =>
-    page.route(NEXT_CHUNK_PATH, (route) => route.abort("failed"))
+    page.route(APP_CHUNK_PATH, (route) => route.abort("failed"))
   );
   yield* activateUntilVisible(selector, heading, readinessTimeoutMilliseconds);
 
@@ -101,7 +101,7 @@ const verifyBrokenState = Effect.fn("NakafaE2E.verifyBrokenState")(function* (
 
   const retry = page.getByRole("button", { name: en.Error.retry });
   yield* Effect.promise(() => expect(retry).toBeVisible());
-  yield* Effect.promise(() => page.unroute(NEXT_CHUNK_PATH));
+  yield* Effect.promise(() => page.unroute(APP_CHUNK_PATH));
   yield* Effect.promise(() => retry.click());
   yield* Effect.promise(() => expect(heading).toBeHidden());
   yield* Effect.promise(() => expect(selector).toBeVisible());

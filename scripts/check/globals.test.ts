@@ -76,12 +76,7 @@ self.console.info(value);
   it.effect("reads Object and Array members through global objects", () =>
     Effect.gen(function* () {
       assert.deepStrictEqual(
-        yield* findings(`Object.keys(value);
-Object.entries(value);
-Object.values(value);
-Object.fromEntries(value);
-Array.isArray(value);
-globalThis.Object.keys(value);
+        yield* findings(`globalThis.Object.keys(value);
 window.Array.isArray(value);
 self.Object.values(value);
 Object["keys"](value);
@@ -103,31 +98,26 @@ const { "entries": list } = (Object);
 `),
         [
           "1 object-helper",
-          "2 object-helper",
+          "2 array-check",
           "3 object-helper",
           "4 object-helper",
           "5 array-check",
           "6 object-helper",
-          "7 array-check",
+          "7 object-helper",
           "8 object-helper",
           "9 object-helper",
-          "10 array-check",
-          "11 object-helper",
+          "10 assertion",
+          "10 object-helper",
+          "11 array-check",
+          "11 assertion",
           "12 object-helper",
           "13 object-helper",
           "14 object-helper",
-          "15 assertion",
-          "15 object-helper",
-          "16 array-check",
-          "16 assertion",
-          "17 object-helper",
+          "15 array-check",
+          "16 object-helper",
+          "17 array-check",
           "18 object-helper",
           "19 object-helper",
-          "20 array-check",
-          "21 object-helper",
-          "22 array-check",
-          "23 object-helper",
-          "24 object-helper",
         ]
       );
     })
@@ -380,15 +370,42 @@ describe("environment reads", () => {
       assert.deepStrictEqual(
         yield* findings(`import { readEnvironment } from "@repo/utilities/env";
 process.env.NODE_ENV === "production";
+import.meta.env.MODE === "production";
 process.env.SITE_URL = "https://nakafa.com";
 process.env.SITE_URL ??= "https://nakafa.com";
 delete process.env.SITE_URL;
 export const env = readEnvironment(fields, {
   PREVIEW: process.env.PREVIEW,
   SITE_URL: process.env.SITE_URL,
+  VITE_URL: import.meta.env.VITE_URL,
 });
 `),
         []
+      );
+    })
+  );
+
+  it.effect("reports every import.meta.env read outside that seam", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* findings(`import { readEnvironment } from "@repo/utilities/env";
+const url = import.meta.env.VITE_URL;
+const all = { ...import.meta.env };
+const record = { VITE_URL: import.meta.env.VITE_URL };
+const local = makeEnv(fields, { VITE_URL: import.meta.env.VITE_URL });
+const name = import.meta.env[key];
+import.meta.env.VITE_URL = "https://nakafa.com";
+`),
+        ["2 env", "3 env", "4 env", "5 env", "6 env"]
+      );
+    })
+  );
+
+  it.effect("reports an import.meta.env read in a module with no seam", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* findings("const url = import.meta.env.VITE_URL;\n"),
+        ["1 env"]
       );
     })
   );

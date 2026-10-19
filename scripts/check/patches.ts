@@ -20,6 +20,7 @@ const IGNORED_DIRECTORIES = HashSet.make(
   ".output",
   ".turbo",
   ".venv",
+  ".vercel",
   "coverage",
   "dist",
   "node_modules",

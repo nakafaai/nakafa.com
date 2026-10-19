@@ -29,7 +29,7 @@ export const STRICT_PATTERN = /^(?:packages\/backend\/confect|scripts)\//u;
 export const TEST_PATTERN = /(?:\.test\.tsx?|(?:^|\/)test\.[^/]+\.ts)$/u;
 const JSX_PATTERN = /\.tsx$/u;
 const REACT_PATTERN = /^react(?:-dom)?(?:\/|$)/u;
-/** Framework configuration types name what they configure, such as `NextConfig` or Convex's `AuthConfig`. */
+/** Framework configuration types name what they configure, such as Vite's `UserConfig` or Convex's `AuthConfig`. */
 const CONFIGURATION_TYPE_PATTERN = /Config$/u;
 /** Relative paths, app aliases, and workspace packages name repository modules rather than framework packages. */
 const REPOSITORY_SPECIFIER_PATTERN = /^(?:\.|@\/|@repo\/|#)/u;

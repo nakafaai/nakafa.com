@@ -67,7 +67,7 @@ export const arrow = async () => 1;
               sourceText: construct,
             },
             { file: "apps/www/lib/load.test.ts", sourceText: construct },
-            { file: "apps/www/next.config.ts", sourceText: construct },
+            { file: "apps/www/vite.config.ts", sourceText: construct },
           ]),
           [
             "apps/www/components/card.tsx:1 new-promise",

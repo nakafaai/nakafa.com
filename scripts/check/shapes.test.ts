@@ -90,7 +90,7 @@ interface CardValue {
         );
         assert.deepStrictEqual(yield* shapes(source), [1, 4, 5]);
         assert.deepStrictEqual(
-          yield* shapes(source, "apps/www/next.config.ts"),
+          yield* shapes(source, "apps/www/vite.config.ts"),
           []
         );
       })

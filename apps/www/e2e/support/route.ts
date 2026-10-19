@@ -7,7 +7,7 @@ import {
 import type { AnalyticsConsentDecision } from "@repo/analytics/consent";
 import { Deferred, Effect, MutableList } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
-import { cacheTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { servedTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /** The app routes that several suites open by name, in English and Indonesian. */
 export const appRoutes = {
@@ -20,36 +20,29 @@ export const appRoutes = {
 } as const;
 
 /**
- * Waits until Next.js has cached the page at `href`, which the server says with
- * `x-nextjs-cache: HIT`. A page whose params were not prerendered, such as a
- * surah past the first, is answered on its first visit with the shell of its
- * route, and the browser fetches the page itself after it loaded while Next.js
- * renders it in the background; every visit after that gets the cached page
- * whole. A check that reads the page would race that fetch, so it starts once
- * the server answers HIT.
- * @see https://nextjs.org/docs/app/guides/incremental-static-regeneration-cache-components#at-runtime
+ * Waits until the server answers the page at `href` with 200. The Start server
+ * renders every request, so the first answer that succeeds is the whole page, and
+ * a check that reads the page starts once that answer arrives. A cold server that
+ * is still starting answers with an error until then, so the wait polls.
  */
-export const waitForCachedRoute = Effect.fn("NakafaE2E.waitForCachedRoute")(
+export const waitForServedRoute = Effect.fn("NakafaE2E.waitForServedRoute")(
   function* (page: Page, href: string) {
     yield* Effect.promise(() =>
       expect
-        .poll(
-          async () =>
-            (await page.request.get(href)).headers()["x-nextjs-cache"],
-          { timeout: cacheTimeoutMilliseconds }
-        )
-        .toBe("HIT")
+        .poll(async () => (await page.request.get(href)).status(), {
+          timeout: servedTimeoutMilliseconds,
+        })
+        .toBe(200)
     );
   }
 );
 
 /**
- * The JavaScript chunks of the app, as local Next and Vercel-promoted
- * production paths write them. Aborting them after a page has loaded fails
- * whatever that page loads next.
+ * The JavaScript chunks of the app, as the Vite build writes them under
+ * `/assets/`. Aborting them after a page has loaded fails whatever that page
+ * loads next.
  */
-export const NEXT_CHUNK_PATH =
-  /\/_next\/static\/(?:immutable\/)?chunks\/.*\.js(?:\?.*)?$/;
+export const APP_CHUNK_PATH = /\/assets\/.*\.js(?:\?.*)?$/;
 
 /**
  * Routes every chunk the page asks for. A chunk whose code holds `marker` goes
@@ -63,7 +56,7 @@ function routeChunkHolding(
   onMatch: (route: Route, response: APIResponse) => Effect.Effect<void>
 ) {
   return Effect.promise(() =>
-    page.route(NEXT_CHUNK_PATH, (route) =>
+    page.route(APP_CHUNK_PATH, (route) =>
       Effect.runPromise(
         Effect.gen(function* () {
           const response = yield* Effect.promise(() => route.fetch());

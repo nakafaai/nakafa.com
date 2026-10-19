@@ -3,7 +3,7 @@ import { Effect, MutableList, Record as Rec } from "effect";
 import { withBrowserContext } from "@/e2e/support/context";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import { withObservedPageErrors } from "@/e2e/support/observe";
-import { cacheTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { servedTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 const revealChart = Effect.fn("NakafaE2E.revealChart")(function* (
   chart: Locator
@@ -116,15 +116,13 @@ test("chart articles retain server HTML after caching in every locale", async ({
                         }, html);
                         return {
                           ...content,
-                          cache: response.headers()["x-nextjs-cache"],
                           status: response.status(),
                         };
                       },
-                      { timeout: cacheTimeoutMilliseconds }
+                      { timeout: servedTimeoutMilliseconds }
                     )
                     .toEqual({
                       articles: 1,
-                      cache: "HIT",
                       charts: 1,
                       status: 200,
                       tables: 1,

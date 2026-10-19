@@ -29,8 +29,8 @@ const FAILED_COPY = en.Ai["chat-failed-description"];
 const RETRY = en.Ai.retry;
 /** The Google sign-in button a signed-out visitor is offered. */
 const GOOGLE_SIGN_IN = /google/i;
-/** The Next.js code chunks, and the request the new chat page's weather widget makes. */
-const CHUNK = /\/_next\/static\/chunks\/.+\.js$/;
+/** The application's code chunks, and the request the new chat page's weather widget makes. */
+const CHUNK = /\/assets\/.+\.js$/;
 const WEATHER_REQUEST = "/api/weather";
 
 /** The failure card of a chat surface, which is the `Empty` part the card is built from. */

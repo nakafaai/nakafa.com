@@ -72,7 +72,7 @@ test("a phone shows the app's bar again on a page without a header of its own, a
           expect(header).toBeVisible({ timeout: readinessTimeoutMilliseconds })
         );
 
-        // The Quran draws no page header, while Next.js keeps the try-out page in
+        // The Quran draws no page header, while the router keeps the try-out page in
         // the document, hidden: its header must not hide the app's bar. Both pages
         // are public, so the visit needs no account (Home sends a visitor without
         // one to sign in).

@@ -49,7 +49,7 @@ test("the text recorder holds a text that showed only for a moment", async ({
  * when it is gone before the test looks, or a test that waits for a prompt to
  * show once would pass on a page that showed it twice for a moment. It must
  * not count a copy that the document holds and a reader cannot see, which is
- * what Next.js keeps of the page a learner left. A recorder that counted the
+ * what the router keeps of the page a learner left. A recorder that counted the
  * elements of the document would fail the first half of this test.
  */
 test("the copy recorder counts the copies one frame shows, not the ones the document holds", async ({

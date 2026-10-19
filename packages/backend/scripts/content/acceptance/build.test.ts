@@ -19,7 +19,6 @@ import { Effect, Exit, Layer, MutableList } from "effect";
 type AcceptanceError = Effect.Error<ReturnType<typeof runAcceptance>>;
 
 const mocks = vi.hoisted(() => ({
-  discard: vi.fn(),
   initialize: vi.fn(),
   lease: vi.fn(),
   release: vi.fn(),
@@ -37,7 +36,6 @@ vi.mock("@repo/backend/scripts/content/acceptance/local", async (load) => ({
   ...(await load<
     typeof import("@repo/backend/scripts/content/acceptance/local")
   >()),
-  discardSignedResponses: mocks.discard,
   initializeLocalRuntime: mocks.initialize,
   leaseReservedLocalRuntime: mocks.reservedRuntime,
   releaseLocalRuntime: mocks.release,
@@ -89,7 +87,6 @@ layer(services)("signed acceptance lifecycle", (it) => {
     mocks.initialize.mockReturnValue(Effect.succeed(runtime));
     mocks.reservedRuntime.mockReturnValue(Effect.succeedSome(runtime));
     for (const mock of [
-      mocks.discard,
       mocks.lease,
       mocks.release,
       mocks.command,
@@ -150,7 +147,7 @@ layer(services)("signed acceptance lifecycle", (it) => {
 
   for (const [operation, command] of [
     ["build", ["nice", "-n", "10", "pnpm", "exec", "turbo", "run", "build"]],
-    ["start", ["pnpm", "run", "start"]],
+    ["start", ["node", "apps/www/.output/server/index.mjs"]],
   ] as const) {
     it.effect(
       `runs normal ${operation} with the retained local selection and arguments`,
@@ -187,14 +184,11 @@ layer(services)("signed acceptance lifecycle", (it) => {
         mocks.sink.mockImplementation((_origin, program) =>
           record("analytics stand-in").pipe(Effect.andThen(program))
         );
-        mocks.discard.mockReturnValue(record("discard"));
         mocks.command.mockReturnValue(record("command"));
         yield* runAcceptance("/test", "build", []);
-        expect(mocks.discard).toHaveBeenCalledWith("/test");
         expect(mocks.sink).not.toHaveBeenCalled();
         expect(MutableList.toArray(steps)).toEqual([
           "backend ready",
-          "discard",
           "command",
         ]);
         MutableList.clear(steps);
@@ -208,13 +202,6 @@ layer(services)("signed acceptance lifecycle", (it) => {
           "backend ready",
           "command",
         ]);
-        const failure = acceptanceRuntimeError("test cache failure");
-        mocks.discard.mockReturnValue(Effect.fail(failure));
-        MutableList.clear(steps);
-        expect(
-          yield* runAcceptance("/test", "build", []).pipe(Effect.flip)
-        ).toBe(failure);
-        expect(MutableList.toArray(steps)).toEqual(["backend ready"]);
       })
   );
 
@@ -264,8 +251,8 @@ layer(services)("signed acceptance lifecycle", (it) => {
         expect(mocks.command).toHaveBeenNthCalledWith(
           2,
           "/test",
-          ["pnpm", "run", "start", "--filter=www"],
-          expect.anything()
+          ["node", "apps/www/.output/server/index.mjs", "--filter=www"],
+          expect.objectContaining({ NITRO_PORT: undefined, PORT: "3000" })
         );
       })
   );
