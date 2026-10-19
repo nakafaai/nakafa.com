@@ -1,6 +1,11 @@
 "use client";
 
-import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
+import {
+  PaginatedQueryResult,
+  QueryResult,
+  usePaginatedQuery,
+  useQuery,
+} from "@confect/react";
 import { Cancel01Icon } from "@hugeicons/core-free-icons";
 import { useMediaQuery } from "@mantine/hooks";
 import exams from "@repo/backend/confect/_generated/refs/exams";
@@ -18,7 +23,10 @@ import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
 import { Array as Arr, Option } from "effect";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import type { DashboardAttempt } from "@/components/exams/sitting/change";
+import {
+  type DashboardAttempt,
+  dashboardArgs,
+} from "@/components/exams/sitting/change";
 import {
   useMayProctor,
   useSittingData,
@@ -78,12 +86,23 @@ const signalLabels: Record<
  */
 export function SittingPanel() {
   const t = useTranslations("Exams");
-  const { value } = useSittingData();
+  const { sittingId, slug, value } = useSittingData();
   const selected = useSittingStore((state) => state.selected);
   const choose = useSittingStore((state) => state.choose);
   const isDesktop = useMediaQuery(TAILWIND_MEDIA_QUERIES.mdAndUp);
+  // A seat on a later page reads that page, which the seats already subscribe to.
+  const later = useQuery(
+    exams.sittings.dashboard,
+    selected === null || selected.cursor === null
+      ? "skip"
+      : dashboardArgs({ sittingId, slug }, selected.cursor)
+  );
+  const laterPage = QueryResult.isSuccess(later)
+    ? later.value.attempts.page
+    : [];
+  const page = selected?.cursor === null ? value.attempts.page : laterPage;
   const current = Option.getOrUndefined(
-    Arr.findFirst(value.attempts.page, (row) => row.id === selected)
+    Arr.findFirst(page, (row) => row.id === selected?.attemptId)
   );
 
   /** Closes the panel by clearing the selection. */

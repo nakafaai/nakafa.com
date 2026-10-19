@@ -19,6 +19,7 @@ import {
 import { prompt } from "@repo/backend/confect/exams/sittings/prompt";
 import { signal } from "@repo/backend/confect/exams/sittings/signal";
 import { signals } from "@repo/backend/confect/exams/sittings/signals";
+import { studentSitting } from "@repo/backend/confect/exams/sittings/student";
 import spec from "@repo/backend/confect/exams/sittings.spec";
 import member from "@repo/backend/confect/middleware/member.impl";
 import session from "@repo/backend/confect/middleware/session.impl";
@@ -123,6 +124,15 @@ const attemptFunction = FunctionImpl.make(
   })
 );
 
+const studentFunction = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "student",
+  Effect.fn("exams.sittings.student.function")(function* (args) {
+    return yield* studentSitting(args.sittingId);
+  })
+);
+
 const signalsFunction = FunctionImpl.make(
   databaseSchema,
   spec,
@@ -184,13 +194,13 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(changeTokenFunction),
   Layer.provide(closeFunction),
   Layer.provide(attemptFunction),
+  Layer.provide(studentFunction),
   Layer.provide(signalsFunction),
   Layer.provide(paperFunction),
   Layer.provide(promptFunction),
   Layer.provide(answerFunction),
   Layer.provide(finishFunction),
-  Layer.provide(session),
-  Layer.provide(member),
-  Layer.provide(sittingAccess),
+  // The three middlewares in one step, so the group stays within one pipe.
+  Layer.provide(Layer.mergeAll(session, member, sittingAccess)),
   GroupImpl.finalize
 );

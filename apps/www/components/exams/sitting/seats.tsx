@@ -1,10 +1,17 @@
 "use client";
 
+import { QueryResult, useQuery } from "@confect/react";
+import exams from "@repo/backend/confect/_generated/refs/exams";
+import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { PersonAvatar } from "@repo/design-system/components/ui/person";
 import { cva } from "class-variance-authority";
 import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
-import type { DashboardAttempt } from "@/components/exams/sitting/change";
+import { useState } from "react";
+import {
+  type DashboardAttempt,
+  dashboardArgs,
+} from "@/components/exams/sitting/change";
 import {
   useSittingData,
   useSittingStore,
@@ -40,21 +47,24 @@ const seatStyles = cva(
 );
 
 /**
- * The seats of the students on the page that the filter keeps. A seat shows its student's
+ * The seats of the students that the filter keeps, a page of attempts at a time: the first
+ * page comes with the dashboard, and each further page loads once the end of the seats comes
+ * into view, so every student of a large sitting gets a seat. A seat shows its student's
  * animal and name, and its state by colour and line, never by a sentence.
  */
 export function SittingSeats() {
   const t = useTranslations("Exams");
   const { value } = useSittingData();
   const filter = useSittingStore((state) => state.filter);
-  const seats = Arr.filter(value.attempts.page, (attempt) =>
-    matchesFilter(filter, attempt)
-  );
+  const first = value.attempts;
 
-  if (Arr.isReadonlyArrayEmpty(value.attempts.page)) {
+  if (first.isDone && Arr.isReadonlyArrayEmpty(first.page)) {
     return <p className="text-muted-foreground text-sm">{t("seats-empty")}</p>;
   }
-  if (Arr.isReadonlyArrayEmpty(seats)) {
+  if (
+    first.isDone &&
+    !Arr.some(first.page, (attempt) => matchesFilter(filter, attempt))
+  ) {
     return <p className="text-muted-foreground text-sm">{t("filter-empty")}</p>;
   }
 
@@ -63,18 +73,76 @@ export function SittingSeats() {
       aria-label={t("seats-label")}
       className="grid grid-cols-[repeat(auto-fill,minmax(10.5rem,1fr))] gap-2"
     >
-      {Arr.map(seats, (attempt) => (
-        <li key={attempt.id}>
-          <SeatButton attempt={attempt} />
-        </li>
-      ))}
+      <SeatPage attempts={first.page} cursor={null} />
+      {first.isDone ? null : <NextSeats cursor={first.continueCursor} />}
     </ul>
   );
 }
 
+/** The seats of one page of attempts that the filter keeps. */
+function SeatPage({
+  attempts,
+  cursor,
+}: {
+  readonly attempts: readonly DashboardAttempt[];
+  readonly cursor: string | null;
+}) {
+  const filter = useSittingStore((state) => state.filter);
+
+  return Arr.map(
+    Arr.filter(attempts, (attempt) => matchesFilter(filter, attempt)),
+    (attempt) => (
+      <li key={attempt.id}>
+        <SeatButton attempt={attempt} cursor={cursor} />
+      </li>
+    )
+  );
+}
+
+/**
+ * The page of attempts that starts at `cursor`, loaded once the end of the seats comes into
+ * view, then the page after it in the same way, until the sitting has no more attempts.
+ */
+function NextSeats({ cursor }: { readonly cursor: string }) {
+  const { sittingId, slug } = useSittingData();
+  const [reached, setReached] = useState(false);
+  const page = useQuery(
+    exams.sittings.dashboard,
+    reached ? dashboardArgs({ sittingId, slug }, cursor) : "skip"
+  );
+
+  if (!reached) {
+    return (
+      <li aria-hidden className="col-span-full">
+        <Intersection onIntersect={() => setReached(true)} />
+      </li>
+    );
+  }
+  if (!QueryResult.isSuccess(page)) {
+    return null;
+  }
+
+  return (
+    <>
+      <SeatPage attempts={page.value.attempts.page} cursor={cursor} />
+      {page.value.attempts.isDone ? null : (
+        <NextSeats cursor={page.value.attempts.continueCursor} />
+      )}
+    </>
+  );
+}
+
 /** One student's seat. It opens the student's panel when the proctor selects it. */
-function SeatButton({ attempt }: { readonly attempt: DashboardAttempt }) {
-  const selected = useSittingStore((state) => state.selected === attempt.id);
+function SeatButton({
+  attempt,
+  cursor,
+}: {
+  readonly attempt: DashboardAttempt;
+  readonly cursor: string | null;
+}) {
+  const selected = useSittingStore(
+    (state) => state.selected?.attemptId === attempt.id
+  );
   const choose = useSittingStore((state) => state.choose);
 
   return (
@@ -86,7 +154,7 @@ function SeatButton({ attempt }: { readonly attempt: DashboardAttempt }) {
         selected,
       })}
       data-frame={seatFrame(attempt)}
-      onClick={() => choose(attempt.id)}
+      onClick={() => choose({ attemptId: attempt.id, cursor })}
       type="button"
     >
       <PersonAvatar className="size-6" mascot={attempt.mascot ?? undefined} />

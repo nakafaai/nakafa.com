@@ -13,6 +13,7 @@ import {
   PromptView,
   SignalView,
   SittingView,
+  StudentSittingView,
   TokenResult,
 } from "@repo/backend/confect/exams/sittings/contract";
 import {
@@ -201,6 +202,14 @@ export default GroupSpec.make()
       args: () => ({ sittingId: Id("examSittings"), slug: TenantSlug }),
       returns: () => Schema.NullOr(HeldAttempt),
       error: () => Schema.Never,
+    })
+  )
+  .addFunction(
+    FunctionSpec.publicQuery({
+      name: "student",
+      args: () => ({ sittingId: Id("examSittings"), slug: TenantSlug }),
+      returns: () => StudentSittingView,
+      error: () => NotInSitting,
     })
   )
   .addFunction(
