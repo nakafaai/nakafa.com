@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { Array as Arr, Effect } from "effect";
+import { saved, trackChanges } from "@/e2e/support/changes";
 import { signInLearner } from "@/e2e/support/learner";
 import { hostAddress } from "@/e2e/support/school";
 
@@ -10,6 +11,7 @@ test("a new account opens its own school in five questions and lands in it as it
   const context = await browser.newContext();
   await Effect.runPromise(signInLearner(context, String(baseURL)));
   const page = await context.newPage();
+  const changes = await Effect.runPromise(trackChanges(page, []));
   const tag = `${testInfo.testId.slice(0, 6)}${testInfo.repeatEachIndex}${testInfo.retry}`;
   const name = `Harapan ${tag}`;
   const slug = `harapan-${tag}`;
@@ -25,12 +27,16 @@ test("a new account opens its own school in five questions and lands in it as it
   await page.getByLabel("School name").fill(name);
   await expect(page.getByLabel("Address")).toHaveValue(slug);
   await expect(page.getByText("Available")).toBeAttached();
+  const sentBefore = changes.sent;
   await page.getByRole("button", { name: "Continue" }).click();
 
   await page.getByRole("radio", { name: "Indonesia" }).click();
   await page.getByRole("button", { name: "Continue" }).click();
 
-  // A reload resumes at the first open question, with the answers kept.
+  // A reload resumes at the first open question, with the answers kept. It
+  // waits for the server to have both answers: a reload drops a save still on
+  // its way.
+  await saved(changes, sentBefore);
   await page.reload();
   await expect(page.getByText("Question 3 of 5")).toBeVisible();
   await page.getByRole("checkbox", { name: "SD" }).click();
@@ -42,11 +48,17 @@ test("a new account opens its own school in five questions and lands in it as it
 
   await page.getByRole("radio", { name: "100 to 499" }).click();
   await expect(page.getByRole("link", { name: "Terms" })).toBeVisible();
+  // The page opens the school's own host, as SITE_URL names it; a verify run
+  // serves the site on its own port, so the test reads the host it asked for.
+  const opening = page.waitForRequest(
+    (request) => new URL(request.url()).hostname === `${slug}.localhost`
+  );
   await page.getByRole("button", { name: "Open school" }).click();
 
   // The school shows at once, then its own address opens.
   await expect(page.getByText(name, { exact: true })).toBeVisible();
-  await page.waitForURL(hostAddress(baseURL, `${slug}.localhost`, "/"));
+  await opening;
+  await page.goto(hostAddress(baseURL, `${slug}.localhost`, "/"));
 
   // The account's session reaches the school's host as it does in production.
   const schoolHome = hostAddress(baseURL, `${slug}.localhost`, "/");
