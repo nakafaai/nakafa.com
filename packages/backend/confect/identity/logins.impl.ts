@@ -70,7 +70,9 @@ const list = FunctionImpl.make(
  * The Better Auth username of one school login on its school's host, for the password
  * sign-in there (ADR 0009). A name the school cannot hold, an unknown school or name, a
  * Person who is not active, and an account that nobody has claimed all read as `missing`,
- * so the answer never tells a visitor which of them held. Every read is indexed.
+ * so the answer never tells a visitor which of them held. An account that an invite or an
+ * operator claimed reads as `missing` too: only a card sets a password, so only a card
+ * account has one to check. Every read is indexed.
  */
 const usernameOf = FunctionImpl.make(
   databaseSchema,
@@ -107,7 +109,11 @@ const usernameOf = FunctionImpl.make(
       .table("tenantPeople")
       .get(login.value.personId)
       .pipe(Effect.orDie);
-    if (person.status !== "active" || person.account.state !== "claimed") {
+    if (
+      person.status !== "active" ||
+      person.account.state !== "claimed" ||
+      person.account.method !== "card"
+    ) {
       return missing();
     }
     const user = yield* reader

@@ -6,6 +6,7 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import {
   CARD_NOW,
+  claimInviteeByInvite,
   inviteePerson,
   issueFirst,
   nf,
@@ -135,6 +136,27 @@ describe("identity/logins usernameOf", () => {
         outcome: "missing",
       });
     })
+  );
+
+  it.effect(
+    "answers missing for an account that an invite claimed, even when its user holds a username",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        yield* issueFirst(fixture);
+        yield* claimInviteeByInvite(fixture);
+        yield* fixture.run(
+          Effect.flatMap(DatabaseWriter, (writer) =>
+            writer
+              .table("users")
+              .patch(fixture.users.stranger.userId, { username: "stranger" })
+              .pipe(Effect.orDie)
+          )
+        );
+        expect(yield* usernameOf(fixture, "guru.baru")).toEqual({
+          outcome: "missing",
+        });
+      })
   );
 
   it.effect(
