@@ -148,6 +148,13 @@ export function ExamPage({ canvas, count, index, question }: ExamPageProps) {
   const number = index + 1;
   const page = useRef<HTMLElement>(null);
   const { mounted, reached } = usePageWindow(page, canvas);
+  // A question the teacher just added or copied, which the server has not saved yet, comes into view.
+  useEffect(() => {
+    if (selected === question.id && !saved) {
+      page.current?.scrollIntoView({ block: "nearest" });
+    }
+  }, [question.id, saved, selected]);
+
   const live = mounted && saved;
   const doc = usePromptDocument({
     open: selected === question.id,
