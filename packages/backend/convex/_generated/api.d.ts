@@ -456,7 +456,6 @@ export declare const api: {
           page: Array<{
             _creationTime: number;
             _id: Id<"comments">;
-            downvoteCount: number;
             likeCount: number;
             liked: boolean;
             parentId?: Id<"comments">;
@@ -472,7 +471,6 @@ export declare const api: {
             slug: string;
             text: string;
             threadId?: Id<"comments">;
-            upvoteCount: number;
             user: {
               _id: Id<"users">;
               image?: string | null;
@@ -481,7 +479,6 @@ export declare const api: {
               picture?: "animal" | "photo";
             } | null;
             userId: Id<"users">;
-            viewerVote: -1 | 1 | null;
           }>;
           pageStatus?: "SplitRecommended" | "SplitRequired" | null;
           splitCursor?: string | null;
@@ -507,7 +504,6 @@ export declare const api: {
           page: Array<{
             _creationTime: number;
             _id: Id<"comments">;
-            downvoteCount: number;
             likeCount: number;
             liked: boolean;
             parentId?: Id<"comments">;
@@ -523,7 +519,6 @@ export declare const api: {
             slug: string;
             text: string;
             threadId?: Id<"comments">;
-            upvoteCount: number;
             user: {
               _id: Id<"users">;
               image?: string | null;
@@ -532,7 +527,6 @@ export declare const api: {
               picture?: "animal" | "photo";
             } | null;
             userId: Id<"users">;
-            viewerVote: -1 | 1 | null;
           }>;
           pageStatus?: "SplitRecommended" | "SplitRequired" | null;
           splitCursor?: string | null;
@@ -558,7 +552,6 @@ export declare const api: {
           page: Array<{
             _creationTime: number;
             _id: Id<"comments">;
-            downvoteCount: number;
             likeCount: number;
             liked: boolean;
             parentId?: Id<"comments">;
@@ -567,9 +560,7 @@ export declare const api: {
             slug: string;
             text: string;
             threadId?: Id<"comments">;
-            upvoteCount: number;
             userId: Id<"users">;
-            viewerVote: -1 | 1 | null;
           }>;
           pageStatus?: "SplitRecommended" | "SplitRequired" | null;
           splitCursor?: string | null;
@@ -9696,21 +9687,6 @@ export declare const internal: {
         "internal",
         { model: string; newDoc: any; oldDoc: any },
         any
-      >;
-    };
-  };
-  comments: {
-    migration: {
-      run: FunctionReference<
-        "mutation",
-        "internal",
-        { cursor?: string },
-        {
-          done: boolean;
-          scanned: number;
-          stripped: number;
-          votesRemoved: number;
-        }
       >;
     };
   };
