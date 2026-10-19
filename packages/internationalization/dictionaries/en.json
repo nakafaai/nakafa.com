@@ -426,7 +426,8 @@
       "cohort": {
         "created": "Class added",
         "renamed": "Class renamed",
-        "archived": "Class archived"
+        "archived": "Class archived",
+        "restored": "Class restored"
       },
       "connection": {
         "connected": "Connection added",
@@ -451,7 +452,8 @@
         "created": "Period added",
         "opened": "Period opened",
         "archived": "Period archived",
-        "rename": "Period renamed"
+        "rename": "Period renamed",
+        "restored": "Period restored"
       },
       "person": {
         "claimed": "Account joined",
@@ -643,7 +645,9 @@
     "student-add-footer": "Print the card before you close it, because the code is shown once.",
     "student-add-submit": "Add student",
     "invites-empty": "No invite is waiting.",
-    "invites-search": "Find an invitee"
+    "invites-search": "Find an invitee",
+    "cohort-restore": "Restore",
+    "period-restore": "Restore"
   },
   "Classroom": {
     "tabs-home": "Home",
@@ -1617,6 +1621,15 @@
     "school-save-error": {
       "title": "Your answer was not saved.",
       "description": "Try again."
+    },
+    "undo": {
+      "title": "Undo"
+    },
+    "school-cohort-archived": {
+      "title": "Class archived."
+    },
+    "school-period-archived": {
+      "title": "Period archived."
     }
   },
   "Ai": {

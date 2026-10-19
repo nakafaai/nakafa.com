@@ -426,7 +426,8 @@
       "cohort": {
         "created": "Klasse angelegt",
         "renamed": "Klasse umbenannt",
-        "archived": "Klasse archiviert"
+        "archived": "Klasse archiviert",
+        "restored": "Klasse wiederhergestellt"
       },
       "connection": {
         "connected": "Verbindung hinzugefügt",
@@ -451,7 +452,8 @@
         "created": "Zeitraum angelegt",
         "opened": "Zeitraum geöffnet",
         "archived": "Zeitraum archiviert",
-        "rename": "Zeitraum umbenannt"
+        "rename": "Zeitraum umbenannt",
+        "restored": "Zeitraum wiederhergestellt"
       },
       "person": {
         "claimed": "Konto übernommen",
@@ -643,7 +645,9 @@
     "student-add-footer": "Drucken Sie die Karte, bevor Sie schließen, denn der Code wird nur einmal angezeigt.",
     "student-add-submit": "Schüler hinzufügen",
     "invites-empty": "Keine Einladung wartet.",
-    "invites-search": "Eingeladene suchen"
+    "invites-search": "Eingeladene suchen",
+    "cohort-restore": "Wiederherstellen",
+    "period-restore": "Wiederherstellen"
   },
   "Classroom": {
     "tabs-home": "Start",
@@ -1617,6 +1621,15 @@
     "school-save-error": {
       "title": "Antwort nicht gespeichert.",
       "description": "Versuch es noch einmal."
+    },
+    "undo": {
+      "title": "Rückgängig"
+    },
+    "school-cohort-archived": {
+      "title": "Klasse archiviert."
+    },
+    "school-period-archived": {
+      "title": "Zeitraum archiviert."
     }
   },
   "Ai": {

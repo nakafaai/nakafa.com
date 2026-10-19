@@ -28,6 +28,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import { toast } from "@repo/design-system/lib/toast/notify";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, Schema } from "effect";
 import { useTranslations } from "next-intl";
@@ -47,6 +48,7 @@ import {
   SchoolPlacementMove,
 } from "@/components/tenant/settings/placement";
 import { saveSchool } from "@/components/tenant/settings/save.client";
+import { restoreCohortChange } from "@/components/tenant/settings/cohorts.client";
 import {
   type Cohort,
   type CohortDetail,
@@ -56,6 +58,39 @@ import {
 import { getSchoolSettingsSection } from "@/lib/settings/school";
 
 const SOURCE = "components/tenant/settings/cohort";
+
+/**
+ * The restore action of an archived cohort in the archived list. The cohort shows as active at once.
+ */
+export function SchoolCohortRestore({
+  cohort,
+  slug,
+}: {
+  cohort: Cohort;
+  slug: TenantSlug;
+}) {
+  const t = useTranslations("SchoolSettings");
+  const restore = useMutation(tenancy.cohorts.restore).withOptimisticUpdate(
+    restoreCohortChange
+  );
+
+  return (
+    <div className="flex justify-end">
+      <Button
+        onClick={() =>
+          startTransition(() =>
+            saveSchool(() => restore({ cohortId: cohort.id, slug }), SOURCE)
+          )
+        }
+        size="sm"
+        type="button"
+        variant="outline"
+      >
+        {t("cohort-restore")}
+      </Button>
+    </div>
+  );
+}
 
 /**
  * A cohort's row menu: it renames the cohort in a dialog that saves only a name the cohort
@@ -74,6 +109,9 @@ export function SchoolCohortMenu({
   const id = useId();
   const archive = useMutation(tenancy.cohorts.archive).withOptimisticUpdate(
     archiveCohortChange
+  );
+  const restore = useMutation(tenancy.cohorts.restore).withOptimisticUpdate(
+    restoreCohortChange
   );
   const rename = useMutation(tenancy.cohorts.rename).withOptimisticUpdate(
     renameCohortChange
@@ -110,7 +148,26 @@ export function SchoolCohortMenu({
           <DropdownMenuItem
             onClick={() =>
               startTransition(() =>
-                saveSchool(() => archive({ cohortId: cohort.id, slug }), SOURCE)
+                saveSchool(
+                  () => archive({ cohortId: cohort.id, slug }),
+                  SOURCE,
+                  () =>
+                    toast.success(
+                      { title: "school-cohort-archived.title" },
+                      {
+                        action: {
+                          label: "undo.title",
+                          onClick: () =>
+                            startTransition(() =>
+                              saveSchool(
+                                () => restore({ cohortId: cohort.id, slug }),
+                                SOURCE
+                              )
+                            ),
+                        },
+                      }
+                    )
+                )
               )
             }
           >

@@ -1,6 +1,7 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
+import { TenantAccess } from "@repo/backend/confect/access/tenant";
 import RequireMember from "@repo/backend/confect/middleware/member.spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
 import {
@@ -118,4 +119,12 @@ export default GroupSpec.make()
       returns: () => CohortView,
       error: () => AccessDenied,
     }).middleware(CohortAccess, { action: "cohort.manage", arg: "cohortId" })
+  )
+  .addFunction(
+    FunctionSpec.publicMutation({
+      name: "restore",
+      args: () => ({ cohortId: Id("tenantCohorts"), slug: TenantSlug }),
+      returns: () => CohortView,
+      error: () => AccessDenied,
+    }).middleware(TenantAccess, { action: "tenant.manage" })
   );

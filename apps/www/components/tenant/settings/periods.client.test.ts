@@ -6,6 +6,7 @@ import {
   createPeriodChange,
   openPeriodChange,
   renamePeriodChange,
+  restorePeriodChange,
 } from "@/components/tenant/settings/periods.client";
 import { isDraft, type Unit } from "@/components/tenant/settings/state";
 import { createLocalStore } from "@/test/optimistic";
@@ -115,6 +116,20 @@ describe("components/tenant/settings/periods.client", () => {
     archivePeriodChange(local.store, { periodId: june.id, slug });
     expect(Arr.map(periodsOf(local, smp), (item) => item.status)).toEqual([
       "archived",
+    ]);
+  });
+
+  it("shows an archived period as active again at once", () => {
+    const local = createLocalStore();
+    const june = period("june", "2027-06-01", "archived");
+    local.seed(
+      tenancy.periods.list,
+      { paginationOpts: paging, slug, unitId: smp },
+      pageOf([june])
+    );
+    restorePeriodChange(local.store, { periodId: june.id, slug });
+    expect(Arr.map(periodsOf(local, smp), (item) => item.status)).toEqual([
+      "active",
     ]);
   });
 

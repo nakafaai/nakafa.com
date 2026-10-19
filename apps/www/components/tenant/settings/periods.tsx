@@ -28,6 +28,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import { toast } from "@repo/design-system/lib/toast/notify";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, Option, Schema } from "effect";
 import { useTranslations } from "next-intl";
@@ -41,6 +42,7 @@ import {
   createPeriodChange,
   openPeriodChange,
   renamePeriodChange,
+  restorePeriodChange,
 } from "@/components/tenant/settings/periods.client";
 import { saveSchool } from "@/components/tenant/settings/save.client";
 import { isDraft } from "@/components/tenant/settings/state";
@@ -176,7 +178,9 @@ function SchoolPeriodTable({
     }),
     periodColumns.display({
       cell: (info) =>
-        info.row.original.status === "archived" ? null : (
+        info.row.original.status === "archived" ? (
+          <SchoolPeriodRestore period={info.row.original} slug={slug} />
+        ) : (
           <SchoolPeriodMenu period={info.row.original} slug={slug} />
         ),
       id: "actions",
@@ -214,6 +218,40 @@ function SchoolPeriodTable({
  * name schema, then closes. An archived period has no menu, because the server refuses
  * every write to it, so its cell stays empty.
  */
+/**
+ * The restore action of an archived period in the archived list. The period shows as active at
+ * once, and a refusal, such as another active period of its unit, takes it back.
+ */
+function SchoolPeriodRestore({
+  period,
+  slug,
+}: {
+  period: PeriodItem;
+  slug: TenantSlug;
+}) {
+  const t = useTranslations("SchoolSettings");
+  const restore = useMutation(tenancy.periods.restore).withOptimisticUpdate(
+    restorePeriodChange
+  );
+
+  return (
+    <div className="flex justify-end">
+      <Button
+        onClick={() =>
+          startTransition(() =>
+            saveSchool(() => restore({ periodId: period.id, slug }), SOURCE)
+          )
+        }
+        size="sm"
+        type="button"
+        variant="outline"
+      >
+        {t("period-restore")}
+      </Button>
+    </div>
+  );
+}
+
 function SchoolPeriodMenu({
   period,
   slug,
@@ -229,6 +267,9 @@ function SchoolPeriodMenu({
   );
   const archive = useMutation(tenancy.periods.archive).withOptimisticUpdate(
     archivePeriodChange
+  );
+  const restore = useMutation(tenancy.periods.restore).withOptimisticUpdate(
+    restorePeriodChange
   );
   const rename = useMutation(tenancy.periods.rename).withOptimisticUpdate(
     renamePeriodChange
@@ -279,7 +320,23 @@ function SchoolPeriodMenu({
                 startTransition(() =>
                   saveSchool(
                     () => archive({ periodId: period.id, slug }),
-                    SOURCE
+                    SOURCE,
+                    () =>
+                      toast.success(
+                        { title: "school-period-archived.title" },
+                        {
+                          action: {
+                            label: "undo.title",
+                            onClick: () =>
+                              startTransition(() =>
+                                saveSchool(
+                                  () => restore({ periodId: period.id, slug }),
+                                  SOURCE
+                                )
+                              ),
+                          },
+                        }
+                      )
                   )
                 )
               }

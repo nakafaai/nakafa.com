@@ -73,6 +73,17 @@ export const openPeriodChange: OptimisticUpdate<typeof tenancy.periods.open> = (
   );
 };
 
+/** Shows a period as active again at once, in every loaded list of periods. */
+export const restorePeriodChange: OptimisticUpdate<
+  typeof tenancy.periods.restore
+> = (localStore, { periodId }) => {
+  changePeriodLists(
+    localStore,
+    () => true,
+    (page) => setPeriodStatus(page, periodId, "active")
+  );
+};
+
 /** Shows a period as archived at once. */
 export const archivePeriodChange: OptimisticUpdate<
   typeof tenancy.periods.archive

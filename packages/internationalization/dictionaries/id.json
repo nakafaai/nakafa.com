@@ -426,7 +426,8 @@
       "cohort": {
         "created": "Kelas ditambahkan",
         "renamed": "Kelas diganti nama",
-        "archived": "Kelas diarsipkan"
+        "archived": "Kelas diarsipkan",
+        "restored": "Rombel dipulihkan"
       },
       "connection": {
         "connected": "Koneksi ditambahkan",
@@ -451,7 +452,8 @@
         "created": "Periode ditambahkan",
         "opened": "Periode dibuka",
         "archived": "Periode diarsipkan",
-        "rename": "Periode diganti nama"
+        "rename": "Periode diganti nama",
+        "restored": "Periode dipulihkan"
       },
       "person": {
         "claimed": "Akun bergabung",
@@ -643,7 +645,9 @@
     "student-add-footer": "Cetak kartu sebelum menutupnya, karena kode hanya ditampilkan sekali.",
     "student-add-submit": "Tambah siswa",
     "invites-empty": "Belum ada undangan yang menunggu.",
-    "invites-search": "Cari yang diundang"
+    "invites-search": "Cari yang diundang",
+    "cohort-restore": "Pulihkan",
+    "period-restore": "Pulihkan"
   },
   "Classroom": {
     "tabs-home": "Beranda",
@@ -1617,6 +1621,15 @@
     "school-save-error": {
       "title": "Jawabanmu belum tersimpan.",
       "description": "Coba lagi."
+    },
+    "undo": {
+      "title": "Batalkan"
+    },
+    "school-cohort-archived": {
+      "title": "Rombel diarsipkan."
+    },
+    "school-period-archived": {
+      "title": "Periode diarsipkan."
     }
   },
   "Ai": {
