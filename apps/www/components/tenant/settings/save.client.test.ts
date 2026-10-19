@@ -1,4 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
+import { GrantRejected } from "@repo/backend/confect/access/errors";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Result } from "effect";
 import { saveSchool } from "@/components/tenant/settings/save.client";
@@ -32,6 +33,44 @@ describe("saveSchool", () => {
     expect(error).toHaveBeenCalledWith({
       description: "school-refusal-not-student.description",
       title: "school-refusal-not-student.title",
+    });
+    error.mockRestore();
+  });
+
+  it("shows the copy of a grant refusal by its code", async () => {
+    const error = vi.spyOn(toast, "error");
+
+    await saveSchool(
+      () =>
+        Promise.resolve(
+          Result.fail(
+            new GrantRejected({
+              code: "LAST_OWNER",
+              message: "The last owner cannot be removed.",
+            })
+          )
+        ),
+      "test"
+    );
+
+    expect(error).toHaveBeenCalledWith({
+      description: "school-refusal-last-owner.description",
+      title: "school-refusal-last-owner.title",
+    });
+    error.mockRestore();
+  });
+
+  it("shows the copy of a period refusal, not the generic error", async () => {
+    const error = vi.spyOn(toast, "error");
+
+    await saveSchool(
+      () => Promise.resolve(Result.fail({ _tag: "PeriodOverlaps" })),
+      "test"
+    );
+
+    expect(error).toHaveBeenCalledWith({
+      description: "school-refusal-period-overlaps.description",
+      title: "school-refusal-period-overlaps.title",
     });
     error.mockRestore();
   });
