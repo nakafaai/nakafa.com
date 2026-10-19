@@ -1,8 +1,15 @@
 "use client";
 
 import { useMutation } from "@confect/react";
+import { Cancel01Icon } from "@hugeicons/core-free-icons";
 import { useCallbackRef } from "@mantine/hooks";
 import exams from "@repo/backend/confect/_generated/refs/exams";
+import {
+  CHOICE_OPTIONS_MAX,
+  CHOICE_OPTIONS_MIN,
+} from "@repo/backend/confect/exams/question";
+import { Button } from "@repo/design-system/components/ui/button";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import { Radio } from "@repo/design-system/components/ui/radio-group";
 import { Array as Arr, Effect, Function as Fn, Option } from "effect";
@@ -16,6 +23,8 @@ import {
   markedKey,
   markedOption,
   optionLetter,
+  withOptionAdded,
+  withOptionRemoved,
   withOptionText,
 } from "@/components/tenant/exams/answer";
 import { isFrozen } from "@/components/tenant/exams/freeze";
@@ -129,33 +138,62 @@ function QuestionOptions({
     );
   };
 
+  /** Adds an empty option after the last one, and saves the question at once. */
+  const addOption = () => {
+    saveAnswers(withOptionAdded(question.answers), question.key);
+  };
+
+  /** Removes one option, and the key with it when the key marked that option, then saves at once. */
+  const removeOption = (optionId: string) => {
+    const next = withOptionRemoved(question.answers, question.key, optionId);
+    saveAnswers(next.answers, next.key);
+  };
+
   return Option.match(choiceOf(question.answers), {
     onNone: () => null,
     onSome: (choice) => (
-      <QuestionSheetOptions
-        aria-label={t("correct")}
-        disabled={locked}
-        onValueChange={(optionId: string) =>
-          saveAnswers(question.answers, markedKey(question.answers, optionId))
-        }
-        value={markedOption(question.key) ?? ""}
-      >
-        {Arr.map(choice.options, (option, index) => (
-          <OptionField
-            index={index}
-            key={option.id}
-            locked={locked}
-            onSave={(text) =>
-              saveAnswers(
-                withOptionText(question.answers, option.id, text),
-                question.key
-              )
-            }
-            optionId={option.id}
-            text={labelText(option.label)}
-          />
-        ))}
-      </QuestionSheetOptions>
+      <>
+        <QuestionSheetOptions
+          aria-label={t("correct")}
+          disabled={locked}
+          onValueChange={(optionId: string) =>
+            saveAnswers(question.answers, markedKey(question.answers, optionId))
+          }
+          value={markedOption(question.key) ?? ""}
+        >
+          {Arr.map(choice.options, (option, index) => (
+            <OptionField
+              index={index}
+              key={option.id}
+              locked={locked}
+              onRemove={
+                choice.options.length > CHOICE_OPTIONS_MIN
+                  ? () => removeOption(option.id)
+                  : null
+              }
+              onSave={(text) =>
+                saveAnswers(
+                  withOptionText(question.answers, option.id, text),
+                  question.key
+                )
+              }
+              optionId={option.id}
+              text={labelText(option.label)}
+            />
+          ))}
+        </QuestionSheetOptions>
+        {choice.options.length < CHOICE_OPTIONS_MAX ? (
+          <Button
+            disabled={locked}
+            onClick={addOption}
+            size="sm"
+            type="button"
+            variant="outline"
+          >
+            {t("option-add")}
+          </Button>
+        ) : null}
+      </>
     ),
   });
 }
@@ -169,12 +207,14 @@ function QuestionOptions({
 function OptionField({
   index,
   locked,
+  onRemove,
   onSave,
   optionId,
   text,
 }: {
   index: number;
   locked: boolean;
+  onRemove: (() => void) | null;
   onSave: (text: string) => void;
   optionId: string;
   text: string;
@@ -212,6 +252,18 @@ function OptionField({
         readOnly={locked}
         value={draft ?? text}
       />
+      {onRemove === null ? null : (
+        <Button
+          aria-label={t("option-remove", { letter })}
+          disabled={locked}
+          onClick={onRemove}
+          size="icon"
+          type="button"
+          variant="ghost"
+        >
+          <HugeIcons aria-hidden="true" icon={Cancel01Icon} />
+        </Button>
+      )}
     </QuestionSheetOption>
   );
 }

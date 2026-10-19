@@ -159,6 +159,8 @@
     "option": "Option {letter}",
     "correct": "Richtige Antwort",
     "correct-option": "Option {letter} als richtige Antwort markieren",
+    "option-add": "Option hinzufügen",
+    "option-remove": "Option {letter} entfernen",
     "no-key": "Diese Frage hat noch keinen Lösungsschlüssel.",
     "move-up": "Nach oben verschieben",
     "move-down": "Nach unten verschieben",

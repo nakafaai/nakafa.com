@@ -159,6 +159,8 @@
     "option": "Pilihan {letter}",
     "correct": "Jawaban benar",
     "correct-option": "Tandai pilihan {letter} sebagai jawaban benar",
+    "option-add": "Tambah pilihan",
+    "option-remove": "Hapus pilihan {letter}",
     "no-key": "Soal ini belum punya kunci jawaban.",
     "move-up": "Pindah ke atas",
     "move-down": "Pindah ke bawah",

@@ -1,5 +1,9 @@
 import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
 import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
+import {
+  CHOICE_OPTIONS_MAX,
+  CHOICE_OPTIONS_MIN,
+} from "@repo/backend/confect/exams/question";
 import { Array as Arr, Option, String as Str } from "effect";
 
 /** The choice interaction, the only kind a school exam question holds in this version. */
@@ -10,6 +14,9 @@ type OptionLabel = Choice["options"][number]["label"];
 
 /** The character code of the letter A, which names the first option. */
 const LETTER_A = 65;
+
+/** The number that an option ID holds after `option-`, when it holds one. */
+const OPTION_NUMBER = /^option-(\d+)$/u;
 
 /** Whether an interaction is a choice. */
 const isChoice = (answer: Interaction): answer is Choice =>
@@ -107,3 +114,62 @@ export const markedOption = (
     onSome: (answer) => Arr.headNonEmpty(answer.correct),
   });
 };
+
+/**
+ * The ID of a new option: `option-` and the number after the largest one that the choice
+ * holds, so an ID that a removed option held is never taken again by a new one.
+ */
+const nextOptionId = (options: readonly Choice["options"][number][]) => {
+  const largest = Arr.reduce(options, 0, (most, option) => {
+    const digits = OPTION_NUMBER.exec(option.id)?.[1];
+    return digits === undefined ? most : Math.max(most, Number(digits));
+  });
+  return `option-${largest + 1}`;
+};
+
+/**
+ * The answers with one empty option added at the end of each choice. A choice that holds
+ * the most options it may take is left as it is, so the teacher cannot add past A to E.
+ */
+export const withOptionAdded = (
+  answers: Arr.NonEmptyReadonlyArray<Interaction>
+): Arr.NonEmptyArray<Interaction> =>
+  Arr.map(answers, (answer) =>
+    isChoice(answer) && answer.options.length < CHOICE_OPTIONS_MAX
+      ? {
+          ...answer,
+          options: [
+            ...answer.options,
+            { id: nextOptionId(answer.options), label: textLabel("") },
+          ],
+        }
+      : answer
+  );
+
+/**
+ * The answers with one option taken out of each choice, and the key that follows them. The
+ * key names its option by ID, so it keeps its option when the others go, and it is cleared when
+ * the removed option is the one it marks, because no option of the question would then be correct.
+ * A choice that holds the fewest options it may take is left as it is.
+ */
+export const withOptionRemoved = (
+  answers: Arr.NonEmptyReadonlyArray<Interaction>,
+  key: Arr.NonEmptyReadonlyArray<InteractionKey> | null,
+  optionId: string
+): {
+  readonly answers: Arr.NonEmptyArray<Interaction>;
+  readonly key: Arr.NonEmptyReadonlyArray<InteractionKey> | null;
+} => ({
+  answers: Arr.map(answers, (answer) =>
+    isChoice(answer) && answer.options.length > CHOICE_OPTIONS_MIN
+      ? {
+          ...answer,
+          options: Arr.filter(
+            answer.options,
+            (option) => option.id !== optionId
+          ),
+        }
+      : answer
+  ),
+  key: markedOption(key) === optionId ? null : key,
+});

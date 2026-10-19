@@ -9,6 +9,8 @@ import {
   markedOption,
   optionLetter,
   textLabel,
+  withOptionAdded,
+  withOptionRemoved,
   withOptionText,
 } from "@/components/tenant/exams/answer";
 
@@ -161,5 +163,78 @@ describe("markedOption", () => {
     ];
 
     expect(markedOption(key)).toBe("option-1");
+  });
+});
+
+describe("withOptionAdded", () => {
+  it("adds an empty option after the last one, numbered after the largest option ID the choice holds", () => {
+    const sparse = {
+      ...choice,
+      options: [choice.options[0], choice.options[2]],
+    };
+    expect(withOptionAdded([sparse])).toEqual([
+      {
+        ...sparse,
+        options: [...sparse.options, { id: "option-4", label: textLabel("") }],
+      },
+    ]);
+  });
+
+  it("numbers the new option from one when no option ID holds a number", () => {
+    const named = {
+      ...choice,
+      options: [
+        { id: "first", label: textLabel("") },
+        { id: "second", label: textLabel("") },
+      ],
+    };
+    expect(withOptionAdded([named])).toEqual([
+      {
+        ...named,
+        options: [...named.options, { id: "option-1", label: textLabel("") }],
+      },
+    ]);
+  });
+
+  it("leaves a choice of five options and a text entry as they are", () => {
+    const full = {
+      ...choice,
+      options: [...choice.options, { id: "option-5", label: textLabel("") }],
+    };
+    expect(withOptionAdded([full, entry])).toEqual([full, entry]);
+  });
+});
+
+describe("withOptionRemoved", () => {
+  it("takes the option out and keeps the key that marks another option", () => {
+    const key = markedKey([choice], "option-3");
+    const removed = withOptionRemoved([choice], key, "option-2");
+    expect(removed.answers).toEqual([
+      {
+        ...choice,
+        options: [choice.options[0], choice.options[2], choice.options[3]],
+      },
+    ]);
+    expect(removed.key).toEqual(key);
+  });
+
+  it("clears the key when the removed option is the one it marks", () => {
+    const removed = withOptionRemoved(
+      [choice],
+      markedKey([choice], "option-2"),
+      "option-2"
+    );
+    expect(removed.key).toBeNull();
+  });
+
+  it("keeps a question with no key without one, and a choice of two options as it is", () => {
+    const pair = {
+      ...choice,
+      options: [choice.options[0], choice.options[1]],
+    };
+    expect(withOptionRemoved([pair, entry], null, "option-2")).toEqual({
+      answers: [pair, entry],
+      key: null,
+    });
   });
 });

@@ -43,11 +43,18 @@ export const questionValidator = Schema.Struct({
   updatedAt: Schema.Finite,
 });
 
+/** The fewest options a choice holds: a choice of one option asks nothing. */
+export const CHOICE_OPTIONS_MIN = 2;
+
+/** The most options a choice holds, which the letters A to E name. */
+export const CHOICE_OPTIONS_MAX = 5;
+
 /**
  * Whether the interactions of a question are the ones this kind takes: distinct
- * single-answer choices, each with a minimum and a maximum of one option. A question
- * that holds any other interaction, or a choice that may take no option or more than
- * one, is refused.
+ * single-answer choices, each with a minimum and a maximum of one option, and from
+ * two to five options. A question that holds any other interaction, a choice that may
+ * take no option or more than one, or a choice with another number of options, is
+ * refused.
  */
 export const isChoiceAnswers = (answers: readonly Interaction[]) =>
   hasUniqueIds(answers) &&
@@ -56,7 +63,9 @@ export const isChoiceAnswers = (answers: readonly Interaction[]) =>
     (answer) =>
       answer.kind === "choice" &&
       answer.minChoices === 1 &&
-      answer.maxChoices === 1
+      answer.maxChoices === 1 &&
+      answer.options.length >= CHOICE_OPTIONS_MIN &&
+      answer.options.length <= CHOICE_OPTIONS_MAX
   );
 
 /** The interactions of a question as JSON text, decoded with the contract's interaction schema. */
