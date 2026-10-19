@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
+import refs from "@repo/backend/confect/_generated/refs";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import { CARD_TERM } from "@repo/backend/confect/identity/card";
 import { hashCardCode } from "@repo/backend/confect/identity/code";
@@ -328,6 +329,164 @@ describe("identity/cards reissue", () => {
       );
       expect(cardIds).toHaveLength(2);
       expect(cardIds[0]).toBe(cardIds[1]);
+    })
+  );
+});
+
+describe("identity/cards enroll", () => {
+  const { enroll } = refs.public.identity.cards;
+  const { members } = refs.public.tenancy.roster;
+  const everyone = { paginationOpts: { cursor: null, numItems: 100 } };
+  const denied = (reason: "role") => ({
+    _tag: "AccessDenied",
+    code: "ACCESS_DENIED",
+    reason,
+  });
+  const newStudent = {
+    loginName: "siswa.baru",
+    name: "Siswa Baru",
+    slug: nf,
+  } as const;
+
+  it.effect(
+    "adds a student with the first card in one step, and journals the Person and the card",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const enrolled = yield* fixture
+          .as("admin")
+          .mutation(enroll, newStudent);
+        expect(enrolled).toEqual({
+          code: expect.stringMatching(CODE_PATTERN),
+          expiresAt: CARD_NOW + Duration.toMillis(CARD_TERM),
+          loginName: "siswa.baru",
+          personId: expect.any(String),
+        });
+        const entries = yield* fixture.run(journal);
+        expect(Arr.map(entries, (entry) => entry.change.type)).toEqual([
+          "person.created",
+          "card.issued",
+        ]);
+        const listed = yield* fixture
+          .as("admin")
+          .query(members, { ...everyone, slug: nf });
+        expect(listed.page).toContainEqual({
+          id: expect.any(String),
+          name: "Siswa Baru",
+          roles: [],
+          status: "cardIssued",
+        });
+      })
+  );
+
+  it.effect(
+    "refuses a login name the school cannot use, and leaves no Person behind",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        yield* fixture.as("admin").mutation(enroll, newStudent);
+        const taken = yield* fixture
+          .as("admin")
+          .mutation(enroll, { ...newStudent, name: "Siswa Lain" })
+          .pipe(Effect.flip);
+        const malformed = yield* fixture
+          .as("admin")
+          .mutation(enroll, { ...newStudent, loginName: "Siswa Lain!" })
+          .pipe(Effect.flip);
+        expect([taken, malformed]).toMatchObject([
+          { _tag: "LoginNameTaken", code: "LOGIN_NAME_TAKEN" },
+          { _tag: "LoginNameRefused", reason: "characters" },
+        ]);
+        expect(yield* fixture.run(journal)).toHaveLength(2);
+        const listed = yield* fixture
+          .as("admin")
+          .query(members, { ...everyone, slug: nf });
+        expect(
+          Arr.filter(listed.page, (member) => member.name === "Siswa Lain")
+        ).toEqual([]);
+      })
+  );
+
+  it.effect("refuses a student of another school, and writes nothing", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const refused = yield* fixture
+        .as("admin")
+        .mutation(enroll, { ...newStudent, slug: other })
+        .pipe(Effect.flip);
+      expect(refused).toMatchObject({ _tag: "NotMember" });
+      expect(yield* fixture.run(journal)).toEqual([]);
+    })
+  );
+
+  it.effect("refuses a student card by a teacher, and writes nothing", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const refused = yield* fixture
+        .as("teacher")
+        .mutation(enroll, newStudent)
+        .pipe(Effect.flip);
+      expect(refused).toMatchObject(denied("role"));
+      expect(yield* fixture.run(journal)).toEqual([]);
+    })
+  );
+});
+
+describe("identity/cards print", () => {
+  const { print } = refs.public.identity.cards;
+
+  it.effect("journals each print of a card under that card", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      yield* issueFirst(fixture);
+      yield* fixture
+        .as("admin")
+        .mutation(print, { personId: fixture.invited, slug: nf });
+      yield* fixture
+        .as("admin")
+        .mutation(print, { personId: fixture.invited, slug: nf });
+      const entries = yield* fixture.run(journal);
+      expect(Arr.map(entries, (entry) => entry.change.type)).toEqual([
+        "card.issued",
+        "card.printed",
+        "card.printed",
+      ]);
+      const cardIds = Arr.flatMap(entries, (entry) =>
+        "card" in entry.change ? [entry.change.card] : []
+      );
+      expect(Arr.dedupe(cardIds)).toHaveLength(1);
+    })
+  );
+
+  it.effect(
+    "refuses a print for a Person who holds no card, and writes nothing",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const refused = yield* fixture
+          .as("admin")
+          .mutation(print, { personId: fixture.invited, slug: nf })
+          .pipe(Effect.flip);
+        expect(refused).toMatchObject({
+          _tag: "CardMissing",
+          code: "CARD_MISSING",
+        });
+        expect(yield* fixture.run(journal)).toEqual([]);
+      })
+  );
+
+  it.effect("refuses a print by a teacher, and writes nothing more", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      yield* issueFirst(fixture);
+      const refused = yield* fixture
+        .as("teacher")
+        .mutation(print, { personId: fixture.invited, slug: nf })
+        .pipe(Effect.flip);
+      expect(refused).toMatchObject({ _tag: "AccessDenied", reason: "role" });
+      expect(yield* fixture.run(journal)).toMatchObject([
+        { change: { type: "card.issued" } },
+      ]);
     })
   );
 });

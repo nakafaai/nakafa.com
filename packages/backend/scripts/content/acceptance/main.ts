@@ -17,6 +17,7 @@ import { withTerminal } from "@repo/backend/scripts/content/acceptance/process";
 import { profileMode } from "@repo/backend/scripts/content/acceptance/profile";
 import { schoolMode } from "@repo/backend/scripts/content/acceptance/school";
 import { sittingMode } from "@repo/backend/scripts/content/acceptance/sitting";
+import { studentMode } from "@repo/backend/scripts/content/acceptance/student";
 import { teacherMode } from "@repo/backend/scripts/content/acceptance/teacher";
 import { FetchClient } from "@repo/utilities/http/client";
 import {
@@ -44,6 +45,7 @@ export const acceptanceModes: readonly AcceptanceMode[] = [
   inviteMode,
   sittingMode,
   cardMode,
+  studentMode,
   importMode,
   profileMode,
 ];

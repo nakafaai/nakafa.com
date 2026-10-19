@@ -11,6 +11,7 @@ import {
 import { MoreHorizontalIcon } from "@hugeicons/core-free-icons";
 import integrations from "@repo/backend/confect/_generated/refs/integrations";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
+import { IntegrationStatus } from "@repo/backend/confect/integrations/schema";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -23,23 +24,19 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableRow,
-} from "@repo/design-system/components/ui/table";
+import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
-import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
+import { DataTable } from "@/components/shared/table/data";
+import type { dataTableFeatures } from "@/components/shared/table/features";
+import { TableEmpty } from "@/components/shared/table/frame";
 import { SchoolClientCreateDialog } from "@/components/tenant/settings/client";
 import { revokeClientChange } from "@/components/tenant/settings/mutation.client";
 import { SettingsPage } from "@/components/tenant/settings/page";
 import { saveSchool } from "@/components/tenant/settings/save.client";
 import { scopeNameOf } from "@/components/tenant/settings/scope";
 import { SchoolSecretDialog } from "@/components/tenant/settings/secret";
-import { SchoolTableHeader } from "@/components/tenant/settings/table";
 
 const SOURCE = "components/tenant/settings/clients";
 
@@ -48,6 +45,12 @@ const PAGE_SIZE = 25;
 
 /** One integration client as the clients list shows it. */
 type ClientItem = PaginatedQueryItem<typeof integrations.clients.list>;
+
+/** The columns of the clients table. */
+const clientColumns = createColumnHelper<
+  typeof dataTableFeatures,
+  ClientItem
+>();
 
 /**
  * Renders the integration clients of the school, each with the part of the school it
@@ -87,9 +90,10 @@ export function SchoolClientsSettings({ slug }: { slug: TenantSlug }) {
 }
 
 /**
- * Renders the clients of the school in a data table that loads more rows as its end comes
- * into view, or the table's empty state while the school has no client. The table waits
- * for its first page, so no empty state shows before the rows arrive.
+ * Renders the clients of the school in a data table that filters by name, scope, and
+ * status, and loads more rows as its end comes into view, or the table's empty state while
+ * the school has no client. The table waits for its first page, so no empty state shows
+ * before the rows arrive.
  */
 function SchoolClientTable({
   onIssued,
@@ -104,6 +108,7 @@ function SchoolClientTable({
     { slug },
     { initialNumItems: PAGE_SIZE }
   );
+  const viewer = useQuery(tenancy.viewer.get, { slug });
 
   if (PaginatedQueryResult.isFailure(pagination)) {
     throw pagination.error;
@@ -121,30 +126,76 @@ function SchoolClientTable({
     );
   }
 
+  /** What a client covers, by name: the whole school or one unit. */
+  const scopeName = (client: ClientItem) =>
+    QueryResult.isSuccess(viewer)
+      ? scopeNameOf(client.scope, viewer.value.tenant.name, viewer.value.units)
+      : "";
+  const columns = clientColumns.columns([
+    clientColumns.accessor((client) => client.name, {
+      cell: (info) => <span className="font-medium">{info.getValue()}</span>,
+      filterFn: "includesString",
+      header: t("client-name"),
+      id: "name",
+      sortFn: "text",
+    }),
+    clientColumns.accessor(scopeName, {
+      filterFn: "oneOf",
+      header: t("client-scope"),
+      id: "scope",
+      sortFn: "text",
+    }),
+    clientColumns.accessor((client) => client.status, {
+      cell: (info) => t(`client-${info.getValue()}`),
+      enableSorting: false,
+      filterFn: "oneOf",
+      header: t("client-status"),
+      id: "status",
+    }),
+    clientColumns.display({
+      cell: (info) =>
+        info.row.original.status === "active" ? (
+          <SchoolClientMenu
+            client={info.row.original}
+            onIssued={onIssued}
+            slug={slug}
+          />
+        ) : null,
+      id: "actions",
+    }),
+  ]);
+
   return (
     <>
-      <TableFrame>
-        <Table>
-          <SchoolTableHeader
-            columns={[
-              t("client-name"),
-              t("client-scope"),
-              t("client-status"),
-              "",
-            ]}
-          />
-          <TableBody>
-            {Arr.map(pagination.results, (client) => (
-              <SchoolClientRow
-                client={client}
-                key={client.id}
-                onIssued={onIssued}
-                slug={slug}
-              />
-            ))}
-          </TableBody>
-        </Table>
-      </TableFrame>
+      <DataTable
+        columns={columns}
+        data={pagination.results}
+        facets={[
+          {
+            column: "scope",
+            options: Arr.map(
+              Arr.dedupe(
+                Arr.filter(
+                  Arr.map(pagination.results, scopeName),
+                  (name) => name !== ""
+                )
+              ),
+              (name) => ({ label: name, value: name })
+            ),
+            title: t("client-scope"),
+          },
+          {
+            column: "status",
+            options: Arr.map(IntegrationStatus.literals, (status) => ({
+              label: t(`client-${status}`),
+              value: status,
+            })),
+            title: t("client-status"),
+          },
+        ]}
+        rowId={(client) => client.id}
+        search={{ column: "name", placeholder: t("clients-search") }}
+      />
       {PaginatedQueryResult.isCanLoadMore(pagination) ? (
         <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
       ) : null}
@@ -153,12 +204,11 @@ function SchoolClientTable({
 }
 
 /**
- * Renders one client row: its name, the part of the school it covers, and its status.
- * An active client's row menu rotates its secret, which the rotate request answers once,
- * and revokes it behind a confirmation. A revoked client has no menu. The rotate item is
- * disabled while its request runs.
+ * An active client's row menu. Rotating issues a new secret, which the rotate request
+ * answers once, and revoking asks first behind a confirmation. The rotate item is disabled
+ * while its request runs. A revoked client has no menu, so its cell stays empty.
  */
-function SchoolClientRow({
+function SchoolClientMenu({
   client,
   onIssued,
   slug,
@@ -169,102 +219,83 @@ function SchoolClientRow({
 }) {
   const t = useTranslations("SchoolSettings");
   const common = useTranslations("Common");
-  const viewer = useQuery(tenancy.viewer.get, { slug });
   const rotate = useMutation(integrations.clients.rotate);
   const revoke = useMutation(integrations.clients.revoke).withOptimisticUpdate(
     revokeClientChange
   );
   const [isPending, startTransition] = useTransition();
   const [isRevoking, setIsRevoking] = useState(false);
-  const isActive = client.status === "active";
 
   return (
-    <TableRow>
-      <TableCell className="font-medium">{client.name}</TableCell>
-      <TableCell>
-        {QueryResult.isSuccess(viewer)
-          ? scopeNameOf(
-              client.scope,
-              viewer.value.tenant.name,
-              viewer.value.units
-            )
-          : ""}
-      </TableCell>
-      <TableCell>{t(`client-${client.status}`)}</TableCell>
-      <TableCell className="text-right">
-        {isActive ? (
+    <div className="flex justify-end">
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          render={
+            <Button
+              aria-label={common("more-actions")}
+              size="icon-sm"
+              variant="ghost"
+            >
+              <HugeIcons icon={MoreHorizontalIcon} />
+            </Button>
+          }
+        />
+        <DropdownMenuContent align="end" className="w-44">
+          <DropdownMenuItem
+            disabled={isPending}
+            onClick={() =>
+              startTransition(() =>
+                saveSchool(
+                  () => rotate({ clientId: client.id, slug }),
+                  SOURCE,
+                  (issued) => onIssued(issued.secret)
+                )
+              )
+            }
+          >
+            {t("client-rotate")}
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            onClick={() => setIsRevoking(true)}
+            variant="destructive"
+          >
+            {t("client-revoke")}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <ResponsiveDialog
+        description={t("client-revoke-description")}
+        footer={
           <>
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                render={
-                  <Button
-                    aria-label={common("more-actions")}
-                    size="icon-sm"
-                    variant="ghost"
-                  >
-                    <HugeIcons icon={MoreHorizontalIcon} />
-                  </Button>
-                }
-              />
-              <DropdownMenuContent align="end" className="w-44">
-                <DropdownMenuItem
-                  disabled={isPending}
-                  onClick={() =>
-                    startTransition(() =>
-                      saveSchool(
-                        () => rotate({ clientId: client.id, slug }),
-                        SOURCE,
-                        (issued) => onIssued(issued.secret)
-                      )
-                    )
-                  }
-                >
-                  {t("client-rotate")}
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={() => setIsRevoking(true)}
-                  variant="destructive"
-                >
-                  {t("client-revoke")}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <ResponsiveDialog
-              description={t("client-revoke-description")}
-              footer={
-                <>
-                  <Button
-                    onClick={() => setIsRevoking(false)}
-                    type="button"
-                    variant="outline"
-                  >
-                    {common("cancel")}
-                  </Button>
-                  <Button
-                    onClick={() => {
-                      setIsRevoking(false);
-                      startTransition(() =>
-                        saveSchool(
-                          () => revoke({ clientId: client.id, slug }),
-                          SOURCE
-                        )
-                      );
-                    }}
-                    type="button"
-                    variant="destructive"
-                  >
-                    {t("client-revoke-confirm")}
-                  </Button>
-                </>
-              }
-              open={isRevoking}
-              setOpen={setIsRevoking}
-              title={t("client-revoke-title")}
-            />
+            <Button
+              onClick={() => setIsRevoking(false)}
+              type="button"
+              variant="outline"
+            >
+              {common("cancel")}
+            </Button>
+            <Button
+              onClick={() => {
+                setIsRevoking(false);
+                startTransition(() =>
+                  saveSchool(
+                    () => revoke({ clientId: client.id, slug }),
+                    SOURCE
+                  )
+                );
+              }}
+              type="button"
+              variant="destructive"
+            >
+              {t("client-revoke-confirm")}
+            </Button>
           </>
-        ) : null}
-      </TableCell>
-    </TableRow>
+        }
+        open={isRevoking}
+        setOpen={setIsRevoking}
+        title={t("client-revoke-title")}
+      />
+    </div>
   );
 }

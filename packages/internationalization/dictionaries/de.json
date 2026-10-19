@@ -1,4 +1,8 @@
 {
+  "DataTable": {
+    "no-results": "Keine Treffer.",
+    "reset": "Zurücksetzen"
+  },
   "School": {
     "account-settings": "Kontoeinstellungen",
     "back-to-learning": "Zurück zu Nakafa",
@@ -135,6 +139,7 @@
     "answers-in": "Deine Antworten sind gespeichert.",
     "title": "Prüfungen",
     "empty": "Es gibt noch keine Prüfungen.",
+    "exams-search": "Prüfung suchen",
     "untitled": "Prüfung ohne Titel",
     "title-label": "Prüfungstitel",
     "unavailable": "Diese Prüfung ist nicht verfügbar.",
@@ -228,6 +233,7 @@
     "periods": "Perioden",
     "units": "Einheiten",
     "roles": "Rollen und Zugriff",
+    "members": "Mitglieder",
     "invites": "Einladungen",
     "students": "Schülerkonten",
     "clients": "API-Clients",
@@ -289,6 +295,43 @@
     "period-rename": "Umbenennen",
     "period-rename-save": "Speichern",
     "periods-empty": "Noch kein Zeitraum.",
+    "periods-search": "Zeitraum suchen",
+    "cohorts": "Klassen",
+    "cohorts-description": "Die Klassen jeder Periode, in denen Schülerinnen und Schüler gemeinsam lernen.",
+    "cohort-create": "Klasse hinzufügen",
+    "cohort-name": "Name",
+    "cohort-name-placeholder": "7A",
+    "cohort-grade": "Klassenstufe",
+    "cohort-grade-placeholder": "Klassenstufe wählen",
+    "cohort-status": "Status",
+    "cohort-active": "Aktiv",
+    "cohort-archived": "Archiviert",
+    "cohort-rename": "Umbenennen",
+    "cohort-rename-save": "Speichern",
+    "cohort-archive": "Archivieren",
+    "cohort-add-footer": "Eine neue Klasse ist sofort aktiv.",
+    "cohorts-empty": "Noch keine Klasse.",
+    "cohorts-search": "Klasse suchen",
+    "cohorts-no-period-title": "Keine aktive Periode.",
+    "cohorts-no-period": "Öffne zuerst eine Periode, dann erscheinen hier ihre Klassen.",
+    "placement-add": "Schüler hinzufügen",
+    "placement-add-footer": "Eine Schülerin oder ein Schüler gehört pro Periode zu einer Klasse.",
+    "placement-student": "Schüler",
+    "placement-move": "Verschieben",
+    "placement-move-footer": "Die Schülerin oder der Schüler wechselt in die gewählte Klasse.",
+    "placement-move-to": "Wechseln zu",
+    "placement-move-save": "Verschieben",
+    "cohort-members-search": "Schüler suchen",
+    "cohort-members-description": "Hier erscheinen die Schülerinnen und Schüler dieser Klasse.",
+    "cohort-members-empty": "Noch keine Schülerin und kein Schüler.",
+    "homeroom-title": "Klassenlehrkraft",
+    "homeroom-teacher": "Lehrkraft",
+    "homeroom-none": "Noch keine.",
+    "homeroom-footer": "Wähle die Lehrkraft, die diese Klasse leitet.",
+    "homeroom-remove-footer": "Ohne Lehrkraft hat die Klasse keine Leitung.",
+    "homeroom-archived": "Eine archivierte Klasse behält ihre Klassenlehrkraft, wie sie war.",
+    "homeroom-save": "Speichern",
+    "homeroom-remove": "Entfernen",
     "invites-description": "Die Einladungen, die noch angenommen werden müssen, und ihr Ablauf.",
     "invite-name": "Name",
     "invite-email": "E-Mail",
@@ -316,6 +359,7 @@
     "audit-who": "Wer",
     "audit-change": "Änderung",
     "audit-empty": "Noch hat sich nichts geändert.",
+    "audit-search": "Änderung suchen",
     "audit-operator": "Nakafa-Team",
     "audit-system": "System",
     "audit-label": {
@@ -326,7 +370,8 @@
       "card": {
         "issued": "Anmeldekarte ausgestellt",
         "reissued": "Anmeldekarte neu ausgestellt",
-        "redeemed": "Anmeldekarte eingelöst"
+        "redeemed": "Anmeldekarte eingelöst",
+        "printed": "Anmeldekarte gedruckt"
       },
       "class": {
         "created": "Lerngruppe angelegt",
@@ -473,19 +518,36 @@
     "login-person": "Person",
     "login-issued": "Ausgestellt",
     "logins-empty": "Noch keine Anmeldekarte ausgegeben.",
+    "logins-search": "Anmeldenamen suchen",
+    "members-empty": "Noch niemand ist der Schule beigetreten.",
+    "members-empty-description": "Laden Sie auf der Einladungsseite Lehrkräfte oder Administratoren ein, oder legen Sie einen Schüler an.",
+    "members-search": "Name suchen",
+    "member-name": "Name",
+    "member-status": "Status",
+    "member-roles": "Rollen",
+    "member-status-label": {
+      "cardIssued": "Karte ausgestellt",
+      "invited": "Eingeladen",
+      "joined": "Beigetreten",
+      "notInvited": "Nicht eingeladen"
+    },
+    "member-remove": "Entfernen",
+    "member-remove-title": "Dieses Mitglied entfernen?",
+    "member-remove-description": "Die Person verlässt die Schule, und ihre Rollen enden.",
+    "member-remove-confirm": "Entfernen",
     "invite-action": "Einladen",
     "invites-footer": "Eine Person ohne Konto einladen.",
     "invite-dialog-title": "Person einladen",
     "invite-dialog-description": "Die Person erhält die Einladung an diese E-Mail-Adresse und meldet sich mit ihr an.",
-    "invite-person": "Person",
-    "invite-person-placeholder": "Person wählen",
-    "invite-none-left": "Alle aktiven Personen dieser Schule haben bereits ein Konto.",
+    "invite-role": "Rolle",
+    "invite-footer": "Die Einladung wartet an dieser Adresse, bis sie genutzt wird.",
     "invite-locale": "Sprache der E-Mail",
     "invite-submit": "Einladen",
     "grant-person": "Person",
     "client-add": "Client erstellen",
     "client-add-description": "Ein Client verbindet ein anderes System mit dieser Schule.",
     "clients-empty": "Noch ist kein Client verbunden.",
+    "clients-search": "Client suchen",
     "client-create": "Erstellen",
     "client-scope": "Gilt für",
     "client-name-placeholder": "Name des Systems",
@@ -517,17 +579,30 @@
     "roles-guide": "Rollen",
     "roles-assign-dialog": "Rolle vergeben",
     "roles-assign-description": "Die Person hat die Rolle in der ganzen Schule.",
+    "roles-search": "Person suchen",
     "roles-empty": "Noch hat niemand eine Rolle.",
-    "card-issue": "Karte ausstellen",
     "card-issue-title": "Anmeldekarte",
-    "card-issue-description": "Eine Anmeldekarte erlaubt einem Schüler die Anmeldung mit Anmeldename und Code.",
     "card-login-name": "Anmeldename",
     "card-login-name-placeholder": "Anmeldename",
-    "card-issue-footer": "Der Code wird nur einmal angezeigt.",
     "card-reissue": "Karte neu ausstellen",
-    "card-code-title": "Code der Anmeldekarte",
     "card-code-description": "Geben Sie den Code an den Schüler weiter, denn er wird nicht noch einmal angezeigt.",
-    "invites-empty": "Keine Einladung wartet."
+    "card-student": "Schüler",
+    "card-username": "Anmeldename",
+    "card-code": "Code",
+    "card-expires": "Gültig bis",
+    "card-qr-label": "QR-Code mit dem Kartencode",
+    "card-copy": "Code kopieren",
+    "card-copied": "Kopiert",
+    "card-print": "Karte drucken",
+    "card-print-footer": "Drucken sendet die Karte an Ihren Drucker.",
+    "student-add": "Schüler hinzufügen",
+    "student-add-title": "Schüler hinzufügen",
+    "student-add-description": "Der Schüler erhält einen Anmeldenamen und eine erste Anmeldekarte, beides in einem Schritt.",
+    "student-add-name": "Name",
+    "student-add-footer": "Drucken Sie die Karte, bevor Sie schließen, denn der Code wird nur einmal angezeigt.",
+    "student-add-submit": "Schüler hinzufügen",
+    "invites-empty": "Keine Einladung wartet.",
+    "invites-search": "Eingeladene suchen"
   },
   "SchoolStart": {
     "metadata-title": "Eigene Schule eröffnen",
@@ -1227,6 +1302,34 @@
     },
     "school-address-copied": {
       "title": "Die Adresse wurde kopiert."
+    },
+    "school-refusal-not-student": {
+      "title": "Kein Schüler dieser Schule.",
+      "description": "Nur Schülerinnen und Schüler dieser Schule kommen in eine Klasse."
+    },
+    "school-refusal-graduated": {
+      "title": "Bereits abgeschlossen.",
+      "description": "Diese Person kann nicht erneut in eine Klasse."
+    },
+    "school-refusal-already-placed": {
+      "title": "Schon einer Klasse zugeordnet.",
+      "description": "Die Schülerin oder der Schüler wechselt stattdessen die Klasse."
+    },
+    "school-refusal-placement-limit": {
+      "title": "Höchstgrenze für Klassen erreicht.",
+      "description": "Diese Person hat bereits die höchstmögliche Zahl an Klassen."
+    },
+    "school-refusal-not-teacher": {
+      "title": "Keine aktive Lehrkraft der Schule.",
+      "description": "Nur aktive Lehrkräfte dieser Schule können Klassenlehrkraft sein."
+    },
+    "school-refusal-teacher-has-homeroom": {
+      "title": "Leitet schon eine andere Klasse.",
+      "description": "Jede Lehrkraft leitet pro Periode nur eine Klasse."
+    },
+    "school-refusal-cohort-has-homeroom": {
+      "title": "Klasse hat schon eine Lehrkraft.",
+      "description": "Die aktuelle Lehrkraft muss zuerst entfernt werden."
     },
     "action-error": {
       "title": "Aktion nicht abgeschlossen.",

@@ -1,4 +1,8 @@
 {
+  "DataTable": {
+    "no-results": "Tidak ada hasil.",
+    "reset": "Atur ulang"
+  },
   "School": {
     "account-settings": "Pengaturan akun",
     "back-to-learning": "Kembali ke Nakafa",
@@ -135,6 +139,7 @@
     "answers-in": "Jawabanmu sudah tersimpan.",
     "title": "Ujian",
     "empty": "Belum ada ujian.",
+    "exams-search": "Cari ujian",
     "untitled": "Ujian tanpa judul",
     "title-label": "Judul ujian",
     "unavailable": "Ujian ini tidak tersedia.",
@@ -228,6 +233,7 @@
     "periods": "Periode",
     "units": "Unit",
     "roles": "Peran dan akses",
+    "members": "Anggota",
     "invites": "Undangan",
     "students": "Akun siswa",
     "clients": "Klien API",
@@ -289,6 +295,43 @@
     "period-rename": "Ganti nama",
     "period-rename-save": "Simpan",
     "periods-empty": "Belum ada periode.",
+    "periods-search": "Cari periode",
+    "cohorts": "Rombel",
+    "cohorts-description": "Kelompok siswa yang belajar bersama di setiap periode.",
+    "cohort-create": "Tambah rombel",
+    "cohort-name": "Nama",
+    "cohort-name-placeholder": "7A",
+    "cohort-grade": "Tingkat",
+    "cohort-grade-placeholder": "Pilih tingkat",
+    "cohort-status": "Status",
+    "cohort-active": "Aktif",
+    "cohort-archived": "Diarsipkan",
+    "cohort-rename": "Ganti nama",
+    "cohort-rename-save": "Simpan",
+    "cohort-archive": "Arsipkan",
+    "cohort-add-footer": "Rombel baru langsung aktif.",
+    "cohorts-empty": "Belum ada rombel.",
+    "cohorts-search": "Cari rombel",
+    "cohorts-no-period-title": "Belum ada periode aktif.",
+    "cohorts-no-period": "Buka periode dulu, lalu rombelnya muncul di sini.",
+    "placement-add": "Tambah siswa",
+    "placement-add-footer": "Setiap siswa masuk satu rombel dalam setiap periode.",
+    "placement-student": "Siswa",
+    "placement-move": "Pindahkan",
+    "placement-move-footer": "Siswa keluar dari rombel ini dan masuk ke rombel yang dipilih.",
+    "placement-move-to": "Pindah ke",
+    "placement-move-save": "Pindahkan",
+    "cohort-members-search": "Cari siswa",
+    "cohort-members-description": "Siswa yang masuk rombel ini tampil di sini.",
+    "cohort-members-empty": "Belum ada siswa.",
+    "homeroom-title": "Wali kelas",
+    "homeroom-teacher": "Guru",
+    "homeroom-none": "Belum ada.",
+    "homeroom-footer": "Pilih guru yang memimpin rombel ini.",
+    "homeroom-remove-footer": "Tanpa wali kelas, rombel ini belum punya penanggung jawab.",
+    "homeroom-archived": "Rombel yang diarsipkan menyimpan wali kelasnya seperti semula.",
+    "homeroom-save": "Simpan",
+    "homeroom-remove": "Hapus",
     "invites-description": "Undangan yang menunggu diterima, dan kapan kedaluwarsanya.",
     "invite-name": "Nama",
     "invite-email": "Email",
@@ -316,6 +359,7 @@
     "audit-who": "Siapa",
     "audit-change": "Perubahan",
     "audit-empty": "Belum ada perubahan.",
+    "audit-search": "Cari perubahan",
     "audit-operator": "Staf Nakafa",
     "audit-system": "Sistem",
     "audit-label": {
@@ -326,7 +370,8 @@
       "card": {
         "issued": "Kartu masuk diterbitkan",
         "reissued": "Kartu masuk diterbitkan ulang",
-        "redeemed": "Kartu masuk dipakai"
+        "redeemed": "Kartu masuk dipakai",
+        "printed": "Kartu masuk dicetak"
       },
       "class": {
         "created": "Ruang kelas ditambahkan",
@@ -473,19 +518,36 @@
     "login-person": "Orang",
     "login-issued": "Diterbitkan",
     "logins-empty": "Belum ada kartu masuk yang diterbitkan.",
+    "logins-search": "Cari nama masuk",
+    "members-empty": "Belum ada anggota yang bergabung.",
+    "members-empty-description": "Tambahkan guru atau admin di halaman undangan, atau tambahkan siswa.",
+    "members-search": "Cari nama",
+    "member-name": "Nama",
+    "member-status": "Status",
+    "member-roles": "Peran",
+    "member-status-label": {
+      "cardIssued": "Kartu diterbitkan",
+      "invited": "Diundang",
+      "joined": "Bergabung",
+      "notInvited": "Belum diundang"
+    },
+    "member-remove": "Keluarkan",
+    "member-remove-title": "Keluarkan anggota ini?",
+    "member-remove-description": "Orang ini keluar dari sekolah, dan perannya berakhir.",
+    "member-remove-confirm": "Keluarkan",
     "invite-action": "Undang",
     "invites-footer": "Undang orang yang belum punya akun.",
     "invite-dialog-title": "Undang orang",
     "invite-dialog-description": "Orang itu menerima undangan ke alamat email ini, dan masuk dengan alamat tersebut.",
-    "invite-person": "Orang",
-    "invite-person-placeholder": "Pilih orang",
-    "invite-none-left": "Semua orang aktif di sekolah ini sudah punya akun.",
+    "invite-role": "Peran",
+    "invite-footer": "Undangan menunggu di alamat ini sampai dipakai.",
     "invite-locale": "Bahasa email",
     "invite-submit": "Undang",
     "grant-person": "Orang",
     "client-add": "Buat klien",
     "client-add-description": "Klien menghubungkan sistem lain ke sekolah ini.",
     "clients-empty": "Belum ada klien yang terhubung.",
+    "clients-search": "Cari klien",
     "client-create": "Buat",
     "client-scope": "Berlaku untuk",
     "client-name-placeholder": "Nama sistem",
@@ -517,17 +579,30 @@
     "roles-guide": "Panduan peran",
     "roles-assign-dialog": "Beri peran",
     "roles-assign-description": "Orang itu memegang peran di seluruh sekolah.",
+    "roles-search": "Cari orang",
     "roles-empty": "Belum ada yang memegang peran.",
-    "card-issue": "Terbitkan kartu",
     "card-issue-title": "Kartu masuk",
-    "card-issue-description": "Kartu masuk membuat siswa dapat masuk dengan nama masuk dan kode.",
     "card-login-name": "Nama masuk",
     "card-login-name-placeholder": "Nama masuk",
-    "card-issue-footer": "Kode hanya ditampilkan sekali.",
     "card-reissue": "Terbitkan ulang kartu",
-    "card-code-title": "Kode kartu masuk",
     "card-code-description": "Berikan kode kepada siswa, karena kode ini tidak akan ditampilkan lagi.",
-    "invites-empty": "Belum ada undangan yang menunggu."
+    "card-student": "Siswa",
+    "card-username": "Nama masuk",
+    "card-code": "Kode",
+    "card-expires": "Berlaku sampai",
+    "card-qr-label": "Kode QR berisi kode kartu",
+    "card-copy": "Salin kode",
+    "card-copied": "Tersalin",
+    "card-print": "Cetak kartu",
+    "card-print-footer": "Cetak mengirim kartu ke printer Anda.",
+    "student-add": "Tambah siswa",
+    "student-add-title": "Tambah siswa",
+    "student-add-description": "Siswa mendapat nama masuk dan kartu masuk pertama, ditambahkan bersamaan.",
+    "student-add-name": "Nama",
+    "student-add-footer": "Cetak kartu sebelum menutupnya, karena kode hanya ditampilkan sekali.",
+    "student-add-submit": "Tambah siswa",
+    "invites-empty": "Belum ada undangan yang menunggu.",
+    "invites-search": "Cari yang diundang"
   },
   "SchoolStart": {
     "metadata-title": "Buka sekolahmu",
@@ -1227,6 +1302,34 @@
     },
     "school-address-copied": {
       "title": "Alamat disalin."
+    },
+    "school-refusal-not-student": {
+      "title": "Bukan siswa sekolah ini.",
+      "description": "Hanya siswa sekolah ini yang bisa masuk rombel."
+    },
+    "school-refusal-graduated": {
+      "title": "Sudah lulus dari sekolah ini.",
+      "description": "Siswa yang sudah lulus tidak bisa masuk rombel lagi."
+    },
+    "school-refusal-already-placed": {
+      "title": "Sudah masuk rombel periode ini.",
+      "description": "Pindahkan siswa dari rombelnya saat ini."
+    },
+    "school-refusal-placement-limit": {
+      "title": "Batas penempatan sudah tercapai.",
+      "description": "Siswa ini sudah memiliki rombel sebanyak yang diizinkan."
+    },
+    "school-refusal-not-teacher": {
+      "title": "Bukan guru aktif sekolah ini.",
+      "description": "Hanya guru aktif sekolah ini yang bisa menjadi wali kelas."
+    },
+    "school-refusal-teacher-has-homeroom": {
+      "title": "Sudah menjadi wali kelas lain.",
+      "description": "Setiap guru hanya menjadi wali kelas di satu rombel per periode."
+    },
+    "school-refusal-cohort-has-homeroom": {
+      "title": "Rombel ini sudah punya wali kelas.",
+      "description": "Hapus wali kelas yang sekarang untuk memilih yang lain."
     },
     "action-error": {
       "title": "Tindakan ini belum berhasil.",

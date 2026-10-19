@@ -71,8 +71,6 @@ export function ReferenceButton({ references, title }: Props) {
               <SheetDescription>{title}</SheetDescription>
             </SheetHeader>
 
-            <Separator />
-
             <div className="flex flex-1 flex-col overflow-hidden">
               <ScrollArea className="h-full">
                 <ul data-slot="reference-list">

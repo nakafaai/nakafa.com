@@ -95,7 +95,7 @@ function changeUnit(
 }
 
 /** Changes the page of every loaded list of invites of one school that the matches accept. */
-function changeInviteLists(
+export function changeInviteLists(
   localStore: OptimisticLocalStore.OptimisticLocalStore,
   slug: TenantSlug,
   matches: (args: Ref.Args<typeof tenancy.invites.list>) => boolean,

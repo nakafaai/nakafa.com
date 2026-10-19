@@ -4695,11 +4695,33 @@ export declare const api: {
   };
   identity: {
     cards: {
+      enroll: FunctionReference<
+        "mutation",
+        "public",
+        { loginName: string; name: string; slug: string },
+        {
+          code: string;
+          expiresAt: number;
+          loginName: string;
+          personId: Id<"tenantPeople">;
+        }
+      >;
       issue: FunctionReference<
         "mutation",
         "public",
         { loginName: string; personId: Id<"tenantPeople">; slug: string },
-        { code: string; expiresAt: number; loginName: string }
+        {
+          code: string;
+          expiresAt: number;
+          loginName: string;
+          personId: Id<"tenantPeople">;
+        }
+      >;
+      print: FunctionReference<
+        "mutation",
+        "public",
+        { personId: Id<"tenantPeople">; slug: string },
+        null
       >;
       redeem: FunctionReference<
         "mutation",
@@ -4727,7 +4749,12 @@ export declare const api: {
         "mutation",
         "public",
         { personId: Id<"tenantPeople">; slug: string },
-        { code: string; expiresAt: number; loginName: string }
+        {
+          code: string;
+          expiresAt: number;
+          loginName: string;
+          personId: Id<"tenantPeople">;
+        }
       >;
     };
     logins: {
@@ -5072,6 +5099,7 @@ export declare const api: {
               | { card: Id<"loginCards">; type: "card.issued" }
               | { card: Id<"loginCards">; type: "card.reissued" }
               | { card: Id<"loginCards">; type: "card.redeemed" }
+              | { card: Id<"loginCards">; type: "card.printed" }
               | {
                   grant: Id<"tenantGrants">;
                   role: {
@@ -7353,6 +7381,60 @@ export declare const api: {
           }
         >;
       };
+    };
+    roster: {
+      invite: FunctionReference<
+        "mutation",
+        "public",
+        {
+          email: string;
+          locale: "en" | "id" | "de";
+          name: string;
+          role: "admin" | "teacher";
+          slug: string;
+        },
+        { invite: Id<"tenantInvites">; person: Id<"tenantPeople"> }
+      >;
+      members: FunctionReference<
+        "query",
+        "public",
+        {
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          slug: string;
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            id: Id<"tenantPeople">;
+            name: string;
+            roles: Array<
+              | "owner"
+              | "admin"
+              | "principal"
+              | "deputy"
+              | "teacher"
+              | "counselor"
+              | "staff"
+              | "student"
+              | "guardian"
+              | "proctor"
+              | "auditor"
+              | "integration"
+            >;
+            status: "cardIssued" | "invited" | "joined" | "notInvited";
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
     };
     settings: {
       setLocale: FunctionReference<

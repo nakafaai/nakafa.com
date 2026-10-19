@@ -47,7 +47,7 @@ export function PlayerSheet({ children }: { children: ReactNode }) {
         <SheetHeader>
           <SheetTitle>{t("navigator")}</SheetTitle>
         </SheetHeader>
-        <div className="grid gap-4 px-4 pb-4" ref={body}>
+        <div className="grid gap-4 p-4" ref={body}>
           {children}
         </div>
       </SheetPopup>

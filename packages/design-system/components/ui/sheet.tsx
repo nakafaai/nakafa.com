@@ -106,20 +106,22 @@ function SheetPopup({
   );
 }
 
+/** The top of a sheet: its title and description, set off from the body by a line. */
 function SheetHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
-      className={cn("flex flex-col gap-1.5 p-4", className)}
+      className={cn("flex flex-col gap-1.5 border-b p-4", className)}
       data-slot="sheet-header"
       {...props}
     />
   );
 }
 
+/** The end of a sheet: its sentence and actions, set off from the body by a line. */
 function SheetFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
-      className={cn("mt-auto flex flex-col gap-2 p-4", className)}
+      className={cn("mt-auto flex flex-col gap-2 border-t p-4", className)}
       data-slot="sheet-footer"
       {...props}
     />

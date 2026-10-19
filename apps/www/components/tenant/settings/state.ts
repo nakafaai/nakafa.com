@@ -1,12 +1,25 @@
 import type { Ref } from "@confect/core";
 import type access from "@repo/backend/confect/_generated/refs/access";
+import type identity from "@repo/backend/confect/_generated/refs/identity";
 import type integrations from "@repo/backend/confect/_generated/refs/integrations";
 import type tenancy from "@repo/backend/confect/_generated/refs/tenancy";
+import { cohortNameKey } from "@repo/backend/confect/tenancy/cohort";
 import { randomUuid } from "@repo/utilities/uuid";
 import { Array as Arr, Effect, Order } from "effect";
 
 /** One period as the periods list shows it. */
 export type Period = Ref.Returns<typeof tenancy.periods.list>["page"][number];
+
+/** One cohort, a rombel, as the cohorts list of a period shows it. */
+export type Cohort = Ref.Returns<typeof tenancy.cohorts.list>[number];
+
+/** One cohort as its page reads it: its period, and the homeroom teacher it has now. */
+export type CohortDetail = Ref.Returns<typeof tenancy.cohorts.get>;
+
+/** One student placed in a cohort, as the cohort's members list shows them. */
+export type CohortMember = Ref.Returns<
+  typeof tenancy.cohorts.members
+>["page"][number];
 
 /** One pending invite as the invites list shows it. */
 export type Invite = Ref.Returns<typeof tenancy.invites.list>["page"][number];
@@ -21,6 +34,12 @@ export type Grant = Ref.Returns<typeof access.grants.list>["page"][number];
 
 /** One Person of the school as the people list shows them. */
 export type Person = Ref.Returns<typeof tenancy.people.list>["page"][number];
+
+/** One active member of the school, with its roles and how far it has joined. */
+export type Member = Ref.Returns<typeof tenancy.roster.members>["page"][number];
+
+/** One school login as the logins list shows it. */
+export type Login = Ref.Returns<typeof identity.logins.list>["page"][number];
 
 /** One unit of the school with its national school number. */
 export type Unit = Ref.Returns<typeof tenancy.units.list>[number];
@@ -77,6 +96,39 @@ export function setPeriodName(
 /** Puts a planned period on a page, in the order the list shows its periods. */
 export function insertPeriod(page: readonly Period[], period: Period) {
   return Arr.sort(Arr.prepend(page, period), byNewestStart);
+}
+
+/** The cohorts of one period in the order the list shows them: by grade, then by name without case. */
+const byGradeAndName = Order.combine(
+  Order.mapInput(Order.Number, (cohort: Cohort) => cohort.grade),
+  Order.mapInput(Order.String, (cohort: Cohort) => cohortNameKey(cohort.name))
+);
+
+/** Puts a new cohort in the list of its period, in the order the list shows its cohorts. */
+export function insertCohort(cohorts: readonly Cohort[], cohort: Cohort) {
+  return Arr.sort(Arr.prepend(cohorts, cohort), byGradeAndName);
+}
+
+/** Sets the name of one cohort in a list, and keeps every other cohort as it is. */
+export function setCohortName(
+  cohorts: readonly Cohort[],
+  cohortId: Cohort["id"],
+  name: Cohort["name"]
+) {
+  return Arr.map(cohorts, (cohort) =>
+    cohort.id === cohortId ? { ...cohort, name } : cohort
+  );
+}
+
+/** Sets the status of one cohort in a list, and keeps every other cohort as it is. */
+export function setCohortStatus(
+  cohorts: readonly Cohort[],
+  cohortId: Cohort["id"],
+  status: Cohort["status"]
+) {
+  return Arr.map(cohorts, (cohort) =>
+    cohort.id === cohortId ? { ...cohort, status } : cohort
+  );
 }
 
 /** Takes the item with this ID off a page or a list, and keeps every other item as it is. */

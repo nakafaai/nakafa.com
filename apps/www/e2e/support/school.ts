@@ -118,6 +118,18 @@ export const inviteLearner = Effect.fn("NakafaE2E.inviteLearner")(
 );
 
 /**
+ * Gives a learner that `inviteLearner` invited a student grant in the first active unit of a
+ * school, so the school can place the learner in a cohort. An invite gives no grant by itself,
+ * and the learner must already be a member of the school.
+ */
+export const grantStudent = Effect.fn("NakafaE2E.grantStudent")(function* (
+  slug: string,
+  learnerAddress: string
+) {
+  yield* runAcceptanceCommand("student", slug, learnerAddress);
+});
+
+/**
  * Seeds one proctored sitting of a keyed exam in a school that `createSchool` opened, for a
  * learner who is already a member of it, and returns the exam, the sitting, and its token. The
  * sitting opens now and closes an hour later, and the learner gets a student grant in the

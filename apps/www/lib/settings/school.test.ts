@@ -19,7 +19,9 @@ describe("school settings routes", () => {
     ).toEqual([
       ["/settings/profile", "profile", "school"],
       ["/settings/periods", "periods", "school"],
+      ["/settings/cohorts", "cohorts", "school"],
       ["/settings/units", "units", "school"],
+      ["/settings/members", "members", "people"],
       ["/settings/roles", "roles", "people"],
       ["/settings/invites", "invites", "people"],
       ["/settings/students", "students", "people"],
@@ -36,8 +38,8 @@ describe("school settings routes", () => {
         Arr.map(group.sections, (section) => section.labelKey),
       ])
     ).toEqual([
-      ["school", ["profile", "periods", "units"]],
-      ["people", ["roles", "invites", "students"]],
+      ["school", ["profile", "periods", "cohorts", "units"]],
+      ["people", ["members", "roles", "invites", "students"]],
       ["integrations", ["clients"]],
       ["security", ["policies", "audit"]],
     ]);
@@ -50,9 +52,11 @@ describe("school settings routes", () => {
       "/settings/profile",
       "/settings/profile",
       "/settings/profile",
-      "/settings/roles",
-      "/settings/roles",
-      "/settings/roles",
+      "/settings/profile",
+      "/settings/members",
+      "/settings/members",
+      "/settings/members",
+      "/settings/members",
       "/settings/clients",
       "/settings/policies",
       "/settings/policies",

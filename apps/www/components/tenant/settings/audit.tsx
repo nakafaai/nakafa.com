@@ -8,17 +8,13 @@ import {
 import journal from "@repo/backend/confect/_generated/refs/journal";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableRow,
-} from "@repo/design-system/components/ui/table";
+import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
-import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
+import { DataTable } from "@/components/shared/table/data";
+import type { dataTableFeatures } from "@/components/shared/table/features";
+import { TableEmpty } from "@/components/shared/table/frame";
 import { SettingsPage } from "@/components/tenant/settings/page";
-import { SchoolTableHeader } from "@/components/tenant/settings/table";
 import { SchoolDateTime } from "@/components/tenant/settings/time";
 
 /** How many entries one page of the journal loads, and each page after it. */
@@ -26,6 +22,9 @@ const PAGE_SIZE = 25;
 
 /** One journal entry as the audit list shows it. */
 type EntryItem = PaginatedQueryItem<typeof journal.audit.list>;
+
+/** The columns of the audit table. */
+const entryColumns = createColumnHelper<typeof dataTableFeatures, EntryItem>();
 
 /** The section in the settings page frame, whose header shows while its body loads. */
 export function SchoolAuditSettings({ slug }: { slug: TenantSlug }) {
@@ -37,10 +36,11 @@ export function SchoolAuditSettings({ slug }: { slug: TenantSlug }) {
 }
 
 /**
- * Renders the audit log of the school, newest first, in a data table that loads more
- * rows as its end comes into view, with the policy note under it. The rows hold no policy
- * value and no secret, so the page shows none. The body waits for the first page, and an
- * empty school shows the empty state alone.
+ * Renders the audit log of the school, newest first, in a data table that filters by who
+ * made each change and searches the changes, and loads more rows as its end comes into
+ * view, with the policy note under it. The rows hold no policy value and no secret, so the
+ * page shows none. The body waits for the first page, and an empty school shows the empty
+ * state alone.
  */
 function SchoolAuditBody({ slug }: { slug: TenantSlug }) {
   const t = useTranslations("SchoolSettings");
@@ -76,27 +76,47 @@ function SchoolAuditBody({ slug }: { slug: TenantSlug }) {
       : t("audit-system");
   };
 
+  const columns = entryColumns.columns([
+    entryColumns.accessor((entry) => entry.at, {
+      cell: (info) => <SchoolDateTime at={info.getValue()} slug={slug} />,
+      header: t("audit-when"),
+      id: "when",
+      sortFn: "basic",
+    }),
+    entryColumns.accessor(actorLabel, {
+      filterFn: "oneOf",
+      header: t("audit-who"),
+      id: "who",
+      sortFn: "text",
+    }),
+    entryColumns.accessor((entry) => t(`audit-label.${entry.change.type}`), {
+      filterFn: "includesString",
+      header: t("audit-change"),
+      id: "change",
+      sortFn: "text",
+    }),
+  ]);
+  const actors = Arr.dedupe(Arr.map(pagination.results, actorLabel));
+
   return (
     <>
       <div>
-        <TableFrame>
-          <Table>
-            <SchoolTableHeader
-              columns={[t("audit-when"), t("audit-who"), t("audit-change")]}
-            />
-            <TableBody>
-              {Arr.map(pagination.results, (entry) => (
-                <TableRow key={entry.id}>
-                  <TableCell>
-                    <SchoolDateTime at={entry.at} slug={slug} />
-                  </TableCell>
-                  <TableCell>{actorLabel(entry)}</TableCell>
-                  <TableCell>{t(`audit-label.${entry.change.type}`)}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableFrame>
+        <DataTable
+          columns={columns}
+          data={pagination.results}
+          facets={[
+            {
+              column: "who",
+              options: Arr.map(actors, (name) => ({
+                label: name,
+                value: name,
+              })),
+              title: t("audit-who"),
+            },
+          ]}
+          rowId={(entry) => entry.id}
+          search={{ column: "change", placeholder: t("audit-search") }}
+        />
         {PaginatedQueryResult.isCanLoadMore(pagination) ? (
           <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
         ) : null}
