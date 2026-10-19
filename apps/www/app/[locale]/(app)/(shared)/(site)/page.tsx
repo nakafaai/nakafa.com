@@ -19,11 +19,11 @@ import { Memory } from "@/components/marketing/about/memory";
 import { NinaSection } from "@/components/marketing/about/nina/section";
 import { Pricing } from "@/components/marketing/about/pricing/landing";
 import { Privacy } from "@/components/marketing/about/privacy";
-import { ProjectileStage } from "@/components/marketing/about/projectile/stage";
 import { Schools } from "@/components/marketing/about/schools";
 import { CLASS_HERD } from "@/components/marketing/about/toys/herd";
 import { HomeToys } from "@/components/marketing/about/toys/intent.client";
 import { Tryout } from "@/components/marketing/about/tryout";
+import { PageField } from "@/components/marketing/shared/field.client";
 import {
   getSubjectMenuHref,
   subjectMenu,
@@ -167,12 +167,12 @@ async function MarketingHomePageContent({ locale }: { locale: Locale }) {
         }))}
         url={url}
       />
-      <div className="relative grid">
+      <PageField />
+      <div className="relative grid grid-cols-1">
         <Hero />
         <Lesson />
         <Tryout value={featuredTryout} />
         <NinaSection />
-        <ProjectileStage />
         <Memory />
         <Privacy />
         <Curricula locale={locale} />

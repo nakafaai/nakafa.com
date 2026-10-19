@@ -135,7 +135,12 @@ const verifyQuranInterpretationDrawer = Effect.fn(
   yield* Effect.promise(() => page.keyboard.press("Escape"));
   yield* Effect.promise(() => expect(drawer).toHaveCount(0));
 
-  const quranIndexLink = page.locator(`a[href="${appRoutes.quranId}"]`).first();
+  // The header's folded path holds the index. Back must bring the surah again
+  // with that menu closed, or its backdrop would take the next tap.
+  const breadcrumb = page.getByRole("navigation", { name: "breadcrumb" });
+  yield* Effect.promise(() => breadcrumb.getByRole("button").click());
+  const menu = page.getByRole("menu");
+  const quranIndexLink = menu.locator(`a[href="${appRoutes.quranId}"]`);
   yield* Effect.promise(() => expect(quranIndexLink).toBeVisible());
   yield* Effect.promise(() => quranIndexLink.click());
   yield* Effect.promise(() => expect(page).toHaveURL(quranIndexUrlPattern));

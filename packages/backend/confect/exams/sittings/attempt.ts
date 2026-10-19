@@ -139,13 +139,9 @@ export const requireOpen = Effect.fn("exams.sittings.attempt.open")(function* (
   }
 });
 
-/** The caller's own attempt in a sitting, as the student's screen reads it, or `null` when there is none. */
-export const heldAttempt = Effect.fn("exams.sittings.attempt.held")(function* (
-  sittingId: ExamSittingsDoc["_id"]
-) {
-  const member = yield* Member;
-  const held = yield* attemptOf(sittingId, member.person._id);
-  return Option.match(held, {
+/** An attempt as its student's screen reads it, or `null` when the student holds none. */
+export const heldView = (held: Option.Option<ExamAttemptsDoc>) =>
+  Option.match(held, {
     onNone: () => null,
     onSome: (attempt) => ({
       deadline: attempt.deadline,
@@ -154,4 +150,11 @@ export const heldAttempt = Effect.fn("exams.sittings.attempt.held")(function* (
       state: attempt.state,
     }),
   });
+
+/** The caller's own attempt in a sitting, as the student's screen reads it, or `null` when there is none. */
+export const heldAttempt = Effect.fn("exams.sittings.attempt.held")(function* (
+  sittingId: ExamSittingsDoc["_id"]
+) {
+  const member = yield* Member;
+  return heldView(yield* attemptOf(sittingId, member.person._id));
 });

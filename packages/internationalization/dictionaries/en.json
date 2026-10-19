@@ -85,6 +85,7 @@
     "student-room-line": "Room {room}.",
     "sitting": "Sitting",
     "student-enter": "Enter sitting",
+    "student-enter-footer": "Your proctor gives you the token.",
     "student-token-placeholder": "Enter the token from your proctor",
     "student-token-refused": "The token does not match. Check it and try again.",
     "student-too-many-tries": "Too many tries. Wait a minute and try again.",
@@ -153,6 +154,7 @@
     "manage-group": "Management",
     "manage-settings": "Settings",
     "address-copy": "Copy address",
+    "address-footer": "Copy it to share with your school.",
     "logo-title": "School logo",
     "logo-description": "It shows in the sidebar, on the sign-in page, and on report cards.",
     "address-title": "School address",
@@ -251,10 +253,21 @@
         "teacherAssigned": "Teacher assigned to classroom",
         "teacherRemoved": "Teacher removed from classroom"
       },
+      "grade": {
+        "released": "Grade released"
+      },
+      "scheme": {
+        "stored": "Grading scheme version added"
+      },
       "cohort": {
         "created": "Class added",
         "renamed": "Class renamed",
         "archived": "Class archived"
+      },
+      "connection": {
+        "connected": "Connection added",
+        "disconnected": "Connection disconnected",
+        "reconnect": "Connection needs reconnecting"
       },
       "grant": {
         "created": "Role given",
@@ -365,7 +378,7 @@
     "secret-copy": "Copy",
     "unit-npsn": "NPSN",
     "unit-npsn-placeholder": "Eight digits",
-    "unit-npsn-footer": "The national school number has eight digits and belongs to one unit.",
+    "unit-npsn-footer": "Eight digits, one number per unit.",
     "unit-npsn-save": "Save",
     "logins-footer": "A login card holds a login name and a one-time code.",
     "login-name": "Login name",
@@ -745,6 +758,7 @@
     "paywall-title": "{count, plural, one {See the solution to this question} other {See the solutions to all # questions}}",
     "paywall-description": "Learn the steps and reasoning behind every answer, and ask Nina whenever something is unclear.",
     "paywall-compare": "Compare plans",
+    "paywall-footer": "Cancel any time.",
     "ask-nina-prompt": "Help me understand question {number}.",
     "score-label-irt": "IRT score",
     "score-label-standard": "Score",
@@ -1470,11 +1484,9 @@
     "hero-title": "Learn until <mark>it clicks.</mark>",
     "hero-tag": "Read the lesson, try the questions, ask Nina when you get stuck.",
     "hero-start": "Start learning",
-    "hero-tryout": "Try a practice test",
+    "hero-tryout": "Try practice test",
     "lesson-title": "Lessons that are easy to read",
     "lesson-lead": "Short, in order, straight to an example.",
-    "lesson-ask": "How does projectile motion work?",
-    "lesson-answer": "Read this first.",
     "lesson-tabs": "Lessons",
     "lab": {
       "circle": {
@@ -1512,20 +1524,10 @@
     },
     "tryout-title": "Practice tests that score you right away",
     "tryout-lead": "You can repeat them any time.",
-    "tryout-ask": "Do I get it yet?",
-    "tryout-answer": "Try one question first.",
-    "tryout-right": "Right, that is the answer.",
-    "tryout-wrong": "Not yet. Take one more look.",
     "nina-title": "Nina knows which part you mean",
     "nina-lead": "Ask from the question or lesson you have open.",
-    "nina-ask": "This one still confuses me.",
-    "nina-answer": "Come, let us take it apart together.",
     "nina-chat-ask": "Why is 13 wrong?",
     "nina-chat-answer": "### 13 comes from taking m as 3\n\nThat gives $5(2) + 9/3 = 13$. The trouble is that $m = 3$ does not fit the question.\n\n#### Check it against what you know\n\n$\\triangle(2, 4) = 2(2) + 4/3 \\neq 8$\n\nWith $m = 1$ it fits: $2(2) + 4/1 = 8$. So $m$ must be 1, and the answer is 19.",
-    "scene-label": "Three-dimensional scene of a projectile motion, a cannonball",
-    "scene-title": "What is hard to picture, you can see",
-    "scene-lead": "A scene from the Projectile Motion lesson.",
-    "scene-choose": "Choose a trajectory",
     "memory-title": "Nina gets to know you",
     "memory-lead": "You can read, change, pause or delete what she remembers at any time.",
     "memory-said-1": "I am in grade 12, science.",
@@ -1555,7 +1557,7 @@
     "prices-title": "Free really means free",
     "school-title": "Nakafa is for a whole school too",
     "school-lead": "Need an LMS, content integration or a custom class flow? We will find what fits.",
-    "school-cta": "Tell us about your school",
+    "school-cta": "Email us",
     "school-class": "One class of animals",
     "faq-title": "Frequently asked",
     "faq-subjects-question": "Which subjects and grades are covered?",
@@ -1589,17 +1591,6 @@
     "closing-topic-3": "the mole",
     "closing-topic-4": "the cell"
   },
-  "Features": {
-    "projectile-sixty-degree": "Sixty Degrees",
-    "projectile-long-drive": "Long Drive",
-    "projectile-high-arc": "High Arc",
-    "projectile-horizontal-component": "Horizontal component",
-    "projectile-vertical-component": "Vertical component",
-    "projectile-peak-time": "Peak time",
-    "projectile-flight-time": "Flight time",
-    "projectile-range": "Range",
-    "projectile-instantaneous-velocity": "Velocity at two seconds"
-  },
   "About": {
     "company": "Company",
     "community": "Community",
@@ -1614,6 +1605,7 @@
   "AnalyticsConsent": {
     "title": "Usage data",
     "prompt-description": "Sharing details is optional.",
+    "prompt-footer": "You can change it later.",
     "description": "Allow Nakafa to see which features you use and what needs fixing without recording your screen. Nakafa always counts visits, without cookies or accounts, to operate the site. Choose Allow only if you are 18 or older, or 13 to 17 with a parent or legal guardian's approval.",
     "allow": "Allow",
     "decline": "Decline",

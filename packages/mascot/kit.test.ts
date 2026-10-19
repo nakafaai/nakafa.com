@@ -82,14 +82,22 @@ describe("mascot/kit", () => {
 
   describe("eyes", () => {
     it("marks an open eye, and draws a smiling or sleeping eye as a line", () => {
+      // An open eye is its pupil and the shine in it, marked together, so the
+      // shine follows the pointer with the pupil.
       expect(eye("open", 74, 94, 6.4, INK)).toEqual({
-        _tag: "ellipse",
-        cx: 74,
-        cy: 94,
-        fill: INK,
+        _tag: "g",
+        children: [
+          { _tag: "ellipse", cx: 74, cy: 94, fill: INK, rx: 6.4, ry: 7.8 },
+          {
+            _tag: "ellipse",
+            cx: 72.1,
+            cy: 91.3,
+            fill: "#ffffff",
+            rx: 2.4,
+            ry: 2.4,
+          },
+        ],
         mark: Mark.literal,
-        rx: 6.4,
-        ry: 7.8,
       });
       expect(eye("wink", 74, 94, 6.4, INK)).toHaveProperty("mark", "eye");
       expect(eye("smile", 74, 94, 6.4, INK)).toEqual({
@@ -120,29 +128,63 @@ describe("mascot/kit", () => {
       expect(kindAt("open", -1)).toBe("open");
     });
 
-    it("draws two open eyes that the pose shifts to the side", () => {
+    it("draws two open eyes that the pose shifts to the side, each above its cheek", () => {
       const pair = eyes(kitWith("open", 2.6), 26, 94);
-      expect(Arr.map(pair, (shape) => shape._tag)).toEqual([
-        "ellipse",
-        "ellipse",
+      expect(pair).toMatchObject([
+        { _tag: "ellipse", cx: 69.6, cy: 107.4, opacity: 0.45 },
+        { _tag: "g", children: [{ cx: 76.6 }, { cx: 74.7 }], mark: "eye" },
+        { _tag: "ellipse", cx: 135.6, cy: 107.4, opacity: 0.45 },
+        { _tag: "g", children: [{ cx: 128.6 }, { cx: 126.7 }], mark: "eye" },
       ]);
-      expect(Arr.map(pair, (shape) => ("cx" in shape ? shape.cx : 0))).toEqual([
-        76.6, 128.6,
-      ]);
-      expect(Arr.every(pair, (shape) => shape.mark === "eye")).toBe(true);
     });
 
     it("closes both eyes when they smile or sleep, and one when they wink, and marks only the open ones", () => {
+      // Every second shape is an eye; the shapes before them are the cheeks.
       const marks = (open: typeof Eyes.Type) =>
-        Arr.map(eyes(kitWith(open), 26, 94), (shape) => shape.mark);
+        Arr.map(
+          Arr.filter(
+            eyes(kitWith(open), 26, 94),
+            (_, index) => index % 2 === 1
+          ),
+          (shape) => shape.mark
+        );
       expect(marks("smile")).toEqual([undefined, undefined]);
       expect(marks("asleep")).toEqual([undefined, undefined]);
       expect(marks("wink")).toEqual([undefined, "eye"]);
     });
 
-    it("takes its size and its ink from the animal when asked", () => {
-      const [left] = eyes(kitWith("open"), 26, 96, 5, "#f6f4ef");
-      expect(left).toMatchObject({ fill: "#f6f4ef", rx: 5 });
+    it("takes its size and its ink from the animal when asked, and gives pale eyes no shine and no cheeks", () => {
+      const pale = eyes(kitWith("open"), 26, 96, 5, "#f6f4ef");
+      expect(pale).toEqual([
+        {
+          _tag: "g",
+          children: [
+            {
+              _tag: "ellipse",
+              cx: 74,
+              cy: 96,
+              fill: "#f6f4ef",
+              rx: 5,
+              ry: 6.1,
+            },
+          ],
+          mark: "eye",
+        },
+        {
+          _tag: "g",
+          children: [
+            {
+              _tag: "ellipse",
+              cx: 126,
+              cy: 96,
+              fill: "#f6f4ef",
+              rx: 5,
+              ry: 6.1,
+            },
+          ],
+          mark: "eye",
+        },
+      ]);
     });
   });
 

@@ -1,5 +1,6 @@
 import type { GenericId } from "@confect/core";
 import { MiddlewareImpl } from "@confect/server";
+import type { ClassesDoc } from "@repo/backend/confect/_generated/docs";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { Authority } from "@repo/backend/confect/access/policy";
@@ -9,6 +10,7 @@ import {
   teacherAssignment,
   teachesUnit,
 } from "@repo/backend/confect/classroom/teacher";
+import type { Member } from "@repo/backend/confect/middleware/member.spec";
 import {
   cohortLocked,
   placementOf,
@@ -46,6 +48,43 @@ const readUnit = Effect.fnUntraced(function* (
 });
 
 /**
+ * Where a class sits: it is locked once it, its cohort, its period, or its unit
+ * is archived, and its unit's grants cover it. Grades of the class sit in the
+ * same place.
+ */
+export const placeClass = (row: ClassesDoc) =>
+  Effect.all({
+    cohort: readCohort(row.cohortId),
+    period: readPeriod(row.periodId),
+    unit: readUnit(row.unitId),
+  }).pipe(
+    Effect.map(({ cohort, period, unit }) => ({
+      locked: row.status === "archived" || cohortLocked(cohort, period, unit),
+      units: [row.unitId],
+    }))
+  );
+
+/** Whether a Person is a student placed in the cohort of the class, in the class's period. */
+export const classMemberOf = (row: ClassesDoc, member: Member["Service"]) =>
+  placementOf(row.periodId, member.person._id).pipe(
+    Effect.map((placement) =>
+      Option.exists(placement, (found) => found.cohortId === row.cohortId)
+    )
+  );
+
+/**
+ * Whether a Person teaches the class. The assignment counts only while the Person
+ * still holds a teacher grant over the class's unit: revoking the grant ends the
+ * teaching at once.
+ */
+export const subjectTeacherOf = (row: ClassesDoc, member: Member["Service"]) =>
+  teachesUnit(member.grants, row.unitId)
+    ? teacherAssignment(row._id, member.person._id).pipe(
+        Effect.map(Option.isSome)
+      )
+    : Effect.succeed(false);
+
+/**
  * A class is locked once it, its cohort, its period, or its unit is archived,
  * and its unit's grants cover it. `classMember` holds for a student placed in its
  * cohort in its period, and `subjectTeacher` for a Person assigned to teach it
@@ -55,33 +94,10 @@ export const classAuthority = Authority.make(
   classKind,
   Authority.load(classKind),
   {
-    place: (row) =>
-      Effect.all({
-        cohort: readCohort(row.cohortId),
-        period: readPeriod(row.periodId),
-        unit: readUnit(row.unitId),
-      }).pipe(
-        Effect.map(({ cohort, period, unit }) => ({
-          locked:
-            row.status === "archived" || cohortLocked(cohort, period, unit),
-          units: [row.unitId],
-        }))
-      ),
+    place: placeClass,
     relations: {
-      classMember: (row, member) =>
-        placementOf(row.periodId, member.person._id).pipe(
-          Effect.map((placement) =>
-            Option.exists(placement, (found) => found.cohortId === row.cohortId)
-          )
-        ),
-      // The assignment counts only while the Person still holds a teacher grant
-      // over the class's unit: revoking the grant ends the teaching at once.
-      subjectTeacher: (row, member) =>
-        teachesUnit(member.grants, row.unitId)
-          ? teacherAssignment(row._id, member.person._id).pipe(
-              Effect.map(Option.isSome)
-            )
-          : Effect.succeed(false),
+      classMember: classMemberOf,
+      subjectTeacher: subjectTeacherOf,
     },
     tenantOf: (row) => row.tenantId,
   }

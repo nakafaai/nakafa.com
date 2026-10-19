@@ -85,6 +85,7 @@
     "student-room-line": "Raum {room}.",
     "sitting": "Prüfungstermin",
     "student-enter": "Sitzung betreten",
+    "student-enter-footer": "Die Aufsicht gibt dir den Token.",
     "student-token-placeholder": "Token von der Aufsicht eingeben",
     "student-token-refused": "Das Token passt nicht. Prüfe es und versuche es erneut.",
     "student-too-many-tries": "Zu viele Versuche. Warte eine Minute und versuche es erneut.",
@@ -153,6 +154,7 @@
     "manage-group": "Verwaltung",
     "manage-settings": "Einstellungen",
     "address-copy": "Adresse kopieren",
+    "address-footer": "Kopiere sie, um sie mit deiner Schule zu teilen.",
     "logo-title": "Schullogo",
     "logo-description": "Es erscheint in der Seitenleiste, auf der Anmeldeseite und auf Zeugnissen.",
     "address-title": "Schuladresse",
@@ -251,10 +253,21 @@
         "teacherAssigned": "Lehrkraft der Lerngruppe zugewiesen",
         "teacherRemoved": "Lehrkraft aus der Lerngruppe entfernt"
       },
+      "grade": {
+        "released": "Note freigegeben"
+      },
+      "scheme": {
+        "stored": "Notenschema-Version hinzugefügt"
+      },
       "cohort": {
         "created": "Klasse angelegt",
         "renamed": "Klasse umbenannt",
         "archived": "Klasse archiviert"
+      },
+      "connection": {
+        "connected": "Verbindung hinzugefügt",
+        "disconnected": "Verbindung getrennt",
+        "reconnect": "Verbindung muss erneut hergestellt werden"
       },
       "grant": {
         "created": "Rolle vergeben",
@@ -365,7 +378,7 @@
     "secret-copy": "Kopieren",
     "unit-npsn": "NPSN",
     "unit-npsn-placeholder": "Acht Ziffern",
-    "unit-npsn-footer": "Die staatliche Schulnummer hat acht Ziffern und gehört zu genau einer Einheit.",
+    "unit-npsn-footer": "Acht Ziffern, eine Nummer pro Einheit.",
     "unit-npsn-save": "Speichern",
     "logins-footer": "Eine Anmeldekarte enthält einen Anmeldenamen und einen Einmalcode.",
     "login-name": "Anmeldename",
@@ -745,6 +758,7 @@
     "paywall-title": "{count, plural, one {Lösung zu dieser Aufgabe ansehen} other {Lösungen zu allen # Aufgaben ansehen}}",
     "paywall-description": "Verstehe die Schritte und Gründe hinter jeder Antwort und frag Nina, wenn etwas unklar bleibt.",
     "paywall-compare": "Tarife prüfen",
+    "paywall-footer": "Jederzeit kündbar.",
     "ask-nina-prompt": "Hilf mir, Aufgabe {number} zu verstehen.",
     "score-label-irt": "IRT-Punktzahl",
     "score-label-standard": "Punktzahl",
@@ -1473,8 +1487,6 @@
     "hero-tryout": "Probetest starten",
     "lesson-title": "Stoff, der sich gut liest",
     "lesson-lead": "Kurz, der Reihe nach, direkt mit Beispiel.",
-    "lesson-ask": "Wie geht der schiefe Wurf?",
-    "lesson-answer": "Lies erst das hier.",
     "lesson-tabs": "Lektionen",
     "lab": {
       "circle": {
@@ -1512,20 +1524,10 @@
     },
     "tryout-title": "Probetests mit sofortigem Ergebnis",
     "tryout-lead": "Jederzeit wiederholbar.",
-    "tryout-ask": "Hab ich es schon verstanden?",
-    "tryout-answer": "Probier erst eine Aufgabe.",
-    "tryout-right": "Richtig, das ist die Antwort.",
-    "tryout-wrong": "Noch nicht. Schau noch einmal hin.",
     "nina-title": "Nina weiß, welche Stelle du meinst",
     "nina-lead": "Frag direkt aus der Aufgabe oder Lektion, die du offen hast.",
-    "nina-ask": "Die hier verstehe ich noch nicht.",
-    "nina-answer": "Komm, wir nehmen sie zusammen auseinander.",
     "nina-chat-ask": "Warum ist 13 falsch?",
     "nina-chat-answer": "### 13 kommt heraus, wenn m gleich 3 ist\n\nDann rechnest du $5(2) + 9/3 = 13$. Nur passt $m = 3$ nicht zur Aufgabe.\n\n#### Prüf es mit dem, was gegeben ist\n\n$\\triangle(2, 4) = 2(2) + 4/3 \\neq 8$\n\nMit $m = 1$ passt es: $2(2) + 4/1 = 8$. Also ist $m$ gleich 1, und die Antwort ist 19.",
-    "scene-label": "Dreidimensionale Szene zum schiefen Wurf, eine Kanonenkugel",
-    "scene-title": "Was schwer vorstellbar ist, kannst du sehen",
-    "scene-lead": "Eine Szene aus der Lektion zum schiefen Wurf.",
-    "scene-choose": "Flugbahn wählen",
     "memory-title": "Nina lernt dich kennen",
     "memory-lead": "Was sie sich merkt, kannst du jederzeit lesen, ändern, pausieren oder löschen.",
     "memory-said-1": "Ich bin in der 12. Klasse, Naturwissenschaften.",
@@ -1555,7 +1557,7 @@
     "prices-title": "Kostenlos heißt wirklich kostenlos",
     "school-title": "Nakafa gibt es auch für eine ganze Schule",
     "school-lead": "Braucht ihr ein LMS, Inhalte oder einen eigenen Klassenablauf? Wir finden, was passt.",
-    "school-cta": "Erzähl von eurer Schule",
+    "school-cta": "Schreib uns",
     "school-class": "Eine Klasse aus Tieren",
     "faq-title": "Häufig gefragt",
     "faq-subjects-question": "Welche Fächer und Klassen gibt es?",
@@ -1589,17 +1591,6 @@
     "closing-topic-3": "das Mol",
     "closing-topic-4": "die Zelle"
   },
-  "Features": {
-    "projectile-sixty-degree": "Sechzig Grad",
-    "projectile-long-drive": "Weite Flugbahn",
-    "projectile-high-arc": "Hoher Bogen",
-    "projectile-horizontal-component": "Horizontale Komponente",
-    "projectile-vertical-component": "Vertikale Komponente",
-    "projectile-peak-time": "Zeit bis zum höchsten Punkt",
-    "projectile-flight-time": "Flugzeit",
-    "projectile-range": "Reichweite",
-    "projectile-instantaneous-velocity": "Geschwindigkeit nach zwei Sekunden"
-  },
   "About": {
     "company": "Unternehmen",
     "community": "Community",
@@ -1614,6 +1605,7 @@
   "AnalyticsConsent": {
     "title": "Nutzungsdaten",
     "prompt-description": "Details zu teilen ist freiwillig.",
+    "prompt-footer": "Du kannst das später ändern.",
     "description": "Erlaube Nakafa zu sehen, welche Funktionen du nutzt und was verbessert werden muss, ohne deinen Bildschirm aufzuzeichnen. Nakafa zählt Besuche immer ohne Cookies oder Konten, um die Seite zu betreiben. Wähle Erlauben nur, wenn du mindestens 18 bist oder mit 13 bis 17 die Zustimmung eines Elternteils oder Erziehungsberechtigten hast.",
     "allow": "Erlauben",
     "decline": "Ablehnen",

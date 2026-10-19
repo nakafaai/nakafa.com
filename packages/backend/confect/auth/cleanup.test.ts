@@ -260,4 +260,89 @@ describe("auth/cleanup", () => {
         expect(result.referencedComment).not.toHaveProperty("replyToUserId");
       })
   );
+  it("deletes a deleted learner's personal connections, their sealed tokens, and their journal entries, and keeps another learner's", async () => {
+    const t = createConvexTestWithBetterAuth();
+    const seeded = await t.mutation(async (ctx) => {
+      const seedUser = (name: string) =>
+        ctx.db.insert("users", {
+          authId: `connections-${name}`,
+          credits: 10,
+          creditsResetAt: NOW,
+          email: `connections-${name}@example.com`,
+          mascot: MASCOT_CODE,
+          name,
+          plan: "free",
+        });
+      const seedConnection = async (
+        userId: Awaited<ReturnType<typeof seedUser>>,
+        withToken: boolean
+      ) => {
+        const connectionId = await ctx.db.insert("connectorConnections", {
+          connector: "drive",
+          googleAccountKey: null,
+          lastSyncedAt: null,
+          nextSyncAt: null,
+          owner: { kind: "personal", userId },
+          scopes: ["drive.file"],
+          status: "active",
+        });
+        if (withToken) {
+          await ctx.db.insert("connectorSecrets", {
+            connectionId,
+            refreshToken: new ArrayBuffer(61),
+          });
+        }
+        await ctx.db.insert("journalEntries", {
+          actor: { id: userId, kind: "user" },
+          change: {
+            connection: connectionId,
+            connector: "drive",
+            type: "connection.connected",
+          },
+          owner: { kind: "personal", userId },
+          subject: { id: connectionId, kind: "connection" },
+        });
+        return connectionId;
+      };
+      const deleted = await seedUser("deleted");
+      await ctx.db.patch(
+        "users",
+        deleted,
+        createDeletedUserTombstone(deleted, NOW)
+      );
+      await seedConnection(deleted, true);
+      await seedConnection(deleted, false);
+      const retained = await seedUser("retained");
+      return {
+        deleted,
+        retained,
+        retainedConnection: await seedConnection(retained, true),
+      };
+    });
+    let hasMore = true;
+    while (hasMore) {
+      hasMore = await t.mutation(internal.auth.cleanup.cleanupDeletedUser, {
+        userId: seeded.deleted,
+      });
+    }
+    const remaining = await t.query(async (ctx) => ({
+      connections: await ctx.db.query("connectorConnections").collect(),
+      journal: await ctx.db.query("journalEntries").collect(),
+      secrets: await ctx.db.query("connectorSecrets").collect(),
+    }));
+    expect(remaining.connections).toEqual([
+      expect.objectContaining({
+        _id: seeded.retainedConnection,
+        owner: { kind: "personal", userId: seeded.retained },
+      }),
+    ]);
+    expect(remaining.secrets).toEqual([
+      expect.objectContaining({ connectionId: seeded.retainedConnection }),
+    ]);
+    expect(remaining.journal).toEqual([
+      expect.objectContaining({
+        owner: { kind: "personal", userId: seeded.retained },
+      }),
+    ]);
+  });
 });
