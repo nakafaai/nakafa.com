@@ -140,24 +140,25 @@ export function ExamPage({ canvas, count, index, question }: ExamPageProps) {
   const t = useTranslations("Exams");
   const { exam } = useExam();
   const frozen = isLocked(exam);
-  const pending = useExamSelection((state) => state.pending);
-  const selected = useExamSelection((state) => state.selected);
-  const saved = !(
-    Arr.contains(pending, question.id) || isPlaceholderId(question.prompt)
+  // Each page reads a boolean for its own choice, so a change of the choice renders only the two pages it moves between.
+  const awaiting = useExamSelection((state) =>
+    Arr.contains(state.pending, question.id)
   );
+  const chosen = useExamSelection((state) => state.selected === question.id);
+  const saved = !(awaiting || isPlaceholderId(question.prompt));
   const number = index + 1;
   const page = useRef<HTMLElement>(null);
   const { mounted, reached } = usePageWindow(page, canvas);
   // A question the teacher just added or copied, which the server has not saved yet, comes into view.
   useEffect(() => {
-    if (selected === question.id && !saved) {
+    if (chosen && !saved) {
       page.current?.scrollIntoView({ block: "nearest" });
     }
-  }, [question.id, saved, selected]);
+  }, [chosen, saved]);
 
   const live = mounted && saved;
   const doc = usePromptDocument({
-    open: selected === question.id,
+    open: chosen,
     question,
     read: reached && !live,
     saved,

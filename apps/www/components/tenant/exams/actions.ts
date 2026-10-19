@@ -16,7 +16,11 @@ import {
   placeholderPromptId,
   placeholderQuestionId,
 } from "@/components/tenant/exams/placeholder";
-import { useExam, useExamSelection } from "@/components/tenant/exams/provider";
+import {
+  useExam,
+  useExamSelection,
+  useExamSelectionStore,
+} from "@/components/tenant/exams/provider";
 
 /** Runs an action of a page from a browser event, without any handler of its own. */
 const act = <A, E>(action: Effect.Effect<A, E>) =>
@@ -44,11 +48,12 @@ const placeholderDraft = (answers: Question["answers"], key: Question["key"]) =>
  * The actions of a page: a question added after another one or at the end, a copy right after a
  * question, a move to an index, and a removal. Each shows its change at once, and each rolls it
  * back when the server refuses it. A question the server has not saved yet is shown from its
- * placeholder, which the saved question replaces, and the chosen question moves with it.
+ * placeholder, which the saved question replaces, and the chosen question moves with it. The
+ * chosen question is read when an action runs, so no page renders again for a change of the choice.
  */
 export function useQuestionActions() {
   const { exam, slug } = useExam();
-  const chosen = useExamSelection((state) => state.selected);
+  const selection = useExamSelectionStore();
   const select = useExamSelection((state) => state.select);
   const replace = useExamSelection((state) => state.replace);
   const startPending = useExamSelection((state) => state.startPending);
@@ -67,7 +72,7 @@ export function useQuestionActions() {
     draft: Question,
     save: (shown: Question) => Effect.Effect<S, E>
   ) => {
-    const previous = chosen;
+    const previous = selection.getState().selected;
     startPending(draft.id);
     select(draft.id);
     return save(draft).pipe(

@@ -7,15 +7,14 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
 import { Array as Arr, Option } from "effect";
 import { useTranslations } from "next-intl";
-import type { RefObject } from "react";
+import { type RefObject, useEffect } from "react";
 import { useQuestionActions } from "@/components/tenant/exams/actions";
 import { isLocked } from "@/components/tenant/exams/freeze";
 import { ExamPage } from "@/components/tenant/exams/page";
 import { pageAt } from "@/components/tenant/exams/pages";
 import {
-  useActiveQuestion,
   useExam,
-  useExamSelection,
+  useExamSelectionStore,
   useExamZoom,
 } from "@/components/tenant/exams/provider";
 import { ZOOM_DEFAULT } from "@/components/tenant/exams/zoom";
@@ -25,6 +24,12 @@ import { ZOOM_DEFAULT } from "@/components/tenant/exams/zoom";
  * the page whose top has passed this line is the page the teacher is on.
  */
 const PAGE_LINE = 96;
+
+/**
+ * The events that are the teacher's own hand on the canvas: a key, a press, a touch, or a wheel. One
+ * of them ends the hold of a page the footer chose, so the scroll that follows chooses the page in view.
+ */
+const HAND_EVENTS = ["keydown", "pointerdown", "touchstart", "wheel"] as const;
 
 /**
  * The canvas of the exam: every question as a page, stacked in order with one gap between them,
@@ -40,8 +45,8 @@ export function ExamCanvas({
   const t = useTranslations("Exams");
   const { exam } = useExam();
   const frozen = isLocked(exam);
-  const select = useExamSelection((state) => state.select);
-  const active = useActiveQuestion();
+  // The canvas reads the selection from its store when it runs, so a change of the choice draws no page.
+  const selection = useExamSelectionStore();
   const actions = useQuestionActions();
   const percent = useExamZoom((zoom) => zoom.percent);
   // The chosen zoom applies from the medium width up, where the footer shows its slider. A phone
@@ -49,10 +54,31 @@ export function ExamCanvas({
   const wide = useMediaQuery(TAILWIND_MEDIA_QUERIES.mdAndUp);
   const drawnZoom = wide ? percent : ZOOM_DEFAULT;
 
-  /** Chooses the page at the top of the canvas as the one the teacher is on, when the scroll brings a new one. */
-  const syncPage = () => {
+  // The teacher's hand ends the hold of a page the footer chose, so the page in view is chosen again.
+  useEffect(() => {
     const root = canvas.current;
     if (root === null) {
+      return;
+    }
+    const release = () => selection.getState().unpin();
+    Arr.forEach(HAND_EVENTS, (event) =>
+      root.addEventListener(event, release, { passive: true })
+    );
+    return () => {
+      Arr.forEach(HAND_EVENTS, (event) =>
+        root.removeEventListener(event, release)
+      );
+    };
+  }, [canvas, selection]);
+
+  /**
+   * Chooses the page at the top of the canvas as the one the teacher is on, when the scroll brings a
+   * new one. A page the footer holds stays chosen until the teacher's hand releases it.
+   */
+  const syncPage = () => {
+    const root = canvas.current;
+    const { pinned, select, selected } = selection.getState();
+    if (root === null || pinned) {
       return;
     }
     const top = root.getBoundingClientRect().top;
@@ -64,11 +90,7 @@ export function ExamCanvas({
     Option.match(Arr.get(exam.questions, index), {
       onNone: () => undefined,
       onSome: (question) => {
-        if (
-          Option.getOrNull(
-            Option.map(active, (current) => current.question.id)
-          ) !== question.id
-        ) {
+        if (selected !== question.id) {
           select(question.id);
         }
       },

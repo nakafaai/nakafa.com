@@ -71,7 +71,7 @@ export function ExamFooter({ canvas, onZoom }: ExamFooterProps) {
   const t = useTranslations("Exams");
   const { exam } = useExam();
   const active = useActiveQuestion();
-  const select = useExamSelection((state) => state.select);
+  const pin = useExamSelection((state) => state.pin);
   const zoom = useExamZoom((state) => state.percent);
   const reduce = useReducedMotion();
   const [pagesOpen, setPagesOpen] = useState(false);
@@ -95,7 +95,11 @@ export function ExamFooter({ canvas, onZoom }: ExamFooterProps) {
     Option.map(active, (page) => page.question.id)
   );
 
-  /** Scrolls the canvas to a page, and makes the page the one the teacher is on. */
+  /**
+   * Scrolls the canvas to a page, and holds the page as the one the teacher is on until the teacher
+   * scrolls by hand. The hold lets a page at the end of the exam stay chosen, though the scroll cannot
+   * bring it to the top of the canvas.
+   */
   const goTo = (question: Question) => {
     const root = canvas.current;
     const page = document.getElementById(`question-${question.id}`);
@@ -108,7 +112,7 @@ export function ExamFooter({ canvas, onZoom }: ExamFooterProps) {
           root.getBoundingClientRect().top,
       });
     }
-    select(question.id);
+    pin(question.id);
   };
 
   /**

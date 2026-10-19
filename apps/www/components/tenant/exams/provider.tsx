@@ -87,6 +87,20 @@ export function useExamSelection<T>(selector: (state: ExamSelection) => T) {
   return useStore(store, selector);
 }
 
+/**
+ * The store of the teacher's selection itself. An action reads the selection from it when the
+ * action runs, so the component that holds the action does not render on each change of the choice.
+ */
+export function useExamSelectionStore() {
+  const store = use(SelectionContext);
+
+  if (store === null) {
+    throw new Error("useExamSelectionStore must be used within ExamProvider");
+  }
+
+  return store;
+}
+
 /** Reads one selected slice of the prompts the canvas holds open. */
 export function useExamLive<T>(selector: (state: ExamLive) => T) {
   const store = use(LiveContext);
