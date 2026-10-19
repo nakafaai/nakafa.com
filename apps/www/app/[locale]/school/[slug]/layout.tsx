@@ -8,6 +8,7 @@ import { getTranslations } from "next-intl/server";
 import { AppProviders } from "@/components/providers/app";
 import { TenantEntry } from "@/components/tenant/entry";
 import { canOpenExams } from "@/components/tenant/exams/access";
+import { homeAccess } from "@/components/tenant/home/access";
 import { TenantOutsider } from "@/components/tenant/outsider";
 import { TenantShell } from "@/components/tenant/shell";
 import { getToken } from "@/lib/auth/server";
@@ -144,6 +145,7 @@ export default async function SchoolLayout({
         account={member.account}
         canManage={canManage}
         canOpenExams={canOpenExams(member)}
+        home={homeAccess(member)}
         personName={member.person.name}
         profile={profile.value}
         role={role}

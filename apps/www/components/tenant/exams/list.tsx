@@ -1,15 +1,8 @@
 "use client";
 
-import type { Ref } from "@confect/core";
-import {
-  PaginatedQueryResult,
-  QueryResult,
-  usePaginatedQuery,
-  useQuery,
-} from "@confect/react";
+import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
 import { useIntersection } from "@mantine/hooks";
 import exams from "@repo/backend/confect/_generated/refs/exams";
-import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { createColumnHelper } from "@tanstack/react-table";
@@ -26,15 +19,11 @@ import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { useTenant } from "@/components/tenant/context";
-import { scopeChoices, unitLanguages } from "@/components/tenant/exams/create";
 import { CreateExam } from "@/components/tenant/exams/dialog";
 import { createExamDrafts } from "@/components/tenant/exams/drafts";
 import type { ExamSummary } from "@/components/tenant/exams/optimistic";
 import { SchoolHeader } from "@/components/tenant/header";
 import { isLostAccess } from "@/components/tenant/refusal";
-
-/** The viewer of the school, as the exam list reads it. */
-type Viewer = Ref.Returns<typeof tenancy.viewer.get>;
 
 /** How many exams the list asks for each time its end comes into view. */
 const EXAM_PAGE_SIZE = 20;
@@ -54,14 +43,13 @@ export function ExamList({ slug }: { slug: TenantSlug }) {
   const t = useTranslations("Exams");
   const tenant = useTenant();
   const locale = useLocale();
-  // Both reads need the session, which Convex learns a moment after the page draws.
+  // The list needs the session, which Convex learns a moment after the page draws.
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const pagination = usePaginatedQuery(
     exams.exams.list,
     isSettled ? { slug } : "skip",
     { initialNumItems: EXAM_PAGE_SIZE }
   );
-  const viewer = useQuery(tenancy.viewer.get, isSettled ? { slug } : "skip");
   const [drafts] = useState(createExamDrafts);
   const saving = useStore(drafts, (state) => state.ids);
   const { entry, ref } = useIntersection<HTMLDivElement>();
@@ -86,22 +74,14 @@ export function ExamList({ slug }: { slug: TenantSlug }) {
   ) {
     throw pagination.error;
   }
-  if (QueryResult.isFailure(viewer) && isLostAccess(viewer.error)) {
-    throw viewer.error;
-  }
-  // The viewer's places to create an exam are null until the viewer's read answers.
-  const creation = QueryResult.isSuccess(viewer)
-    ? creationOf(viewer.value)
-    : null;
-
   return (
     <>
       <SchoolHeader items={[{ label: t("title") }]} title={t("title")}>
-        {creation !== null && creation.choices.length > 0 ? (
+        {tenant.home.canCreate ? (
           <CreateExam
-            choices={creation.choices}
+            choices={tenant.home.choices}
             drafts={drafts}
-            languages={creation.languages}
+            languages={tenant.home.languages}
             slug={slug}
           />
         ) : null}
@@ -109,26 +89,16 @@ export function ExamList({ slug }: { slug: TenantSlug }) {
       <LayoutContent className="flex w-full flex-col gap-6 py-6">
         <ExamListRows
           canManage={tenant.canManage}
-          creation={creation}
           exams={pagination.results}
           failed={PaginatedQueryResult.isFailure(pagination)}
           loadingFirst={pagination._tag === "LoadingFirstPage"}
           names={names}
           saving={saving}
-          viewerFailed={QueryResult.isFailure(viewer)}
         />
         <div aria-hidden ref={ref} />
       </LayoutContent>
     </>
   );
-}
-
-/** The places the viewer may create an exam in, and the languages they take. */
-function creationOf(viewer: Viewer) {
-  return {
-    choices: scopeChoices(viewer.units, Arr.contains(viewer.can, "exam.edit")),
-    languages: unitLanguages(viewer.units),
-  };
 }
 
 /**
@@ -137,22 +107,18 @@ function creationOf(viewer: Viewer) {
  */
 function ExamListRows({
   canManage,
-  creation,
   exams: rows,
   failed,
   loadingFirst,
   names,
   saving,
-  viewerFailed,
 }: {
   canManage: boolean;
-  creation: Creation | null;
   exams: readonly ExamSummary[];
   failed: boolean;
   loadingFirst: boolean;
   names: Intl.DisplayNames;
   saving: readonly ExamSummary["id"][];
-  viewerFailed: boolean;
 }) {
   if (loadingFirst) {
     return null;
@@ -162,10 +128,9 @@ function ExamListRows({
   }
   return (
     <>
-      {failed || viewerFailed ? <DataFailure onRetry={reloadPage} /> : null}
+      {failed ? <DataFailure onRetry={reloadPage} /> : null}
       <ExamTable
         canManage={canManage}
-        creation={creation}
         exams={rows}
         names={names}
         saving={saving}
@@ -173,9 +138,6 @@ function ExamListRows({
     </>
   );
 }
-
-/** The places the viewer may create an exam in, and the languages they take. */
-type Creation = ReturnType<typeof creationOf>;
 
 /**
  * The exams in a data table: the title links to its editor, the language filters the list by
@@ -185,27 +147,23 @@ type Creation = ReturnType<typeof creationOf>;
  */
 function ExamTable({
   canManage,
-  creation,
   exams: rows,
   names,
   saving,
 }: {
   canManage: boolean;
-  /** The viewer's places to create an exam, or null while the viewer's read has not answered. */
-  creation: Creation | null;
   exams: readonly ExamSummary[];
   names: Intl.DisplayNames;
   saving: readonly ExamSummary["id"][];
 }) {
   const t = useTranslations("Exams");
+  const tenant = useTenant();
 
   if (Arr.isReadonlyArrayEmpty(rows)) {
-    // An empty list says why it is empty only once the viewer's places are known, so it never
-    // says "no unit" while the viewer's read is still in flight.
-    return creation === null ? null : (
+    return (
       <NoExamEmpty
         canManage={canManage}
-        hasUnit={creation.choices.length > 0}
+        hasUnit={tenant.home.choices.length > 0}
       />
     );
   }
