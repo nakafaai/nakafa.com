@@ -20,11 +20,9 @@ it("keeps every reply other learners wrote when an account goes, and rebuilds th
       await seedAuthenticatedUser(ctx, { now, suffix: "stays" })
     ).userId;
     const row = {
-      downvoteCount: 0,
       likeCount: 0,
       replyCount: 0,
       slug: "material/algebra",
-      upvoteCount: 0,
     };
     const top = await ctx.db.insert("comments", {
       ...row,

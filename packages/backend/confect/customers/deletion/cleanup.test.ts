@@ -80,8 +80,6 @@ it("drains all four deletion workflows and their delayed reconciliation before r
         slug: "material/algebra",
         userId: id,
         text: `Comment ${index}`,
-        upvoteCount: 0,
-        downvoteCount: 0,
         replyCount: 0,
       });
     }

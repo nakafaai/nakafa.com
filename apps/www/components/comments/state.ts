@@ -19,17 +19,8 @@ export type CommentAuthor = NonNullable<CommentRow["user"]>;
 /** The fields of a comment that the optimistic changes read, in every list that holds it. */
 export type ListedComment = Pick<
   CommentRow,
-  | "_id"
-  | "liked"
-  | "likeCount"
-  | "parentId"
-  | "replyCount"
-  | "threadId"
-  | "viewerVote"
+  "_id" | "liked" | "likeCount" | "parentId" | "replyCount" | "threadId"
 >;
-
-/** The vote a liked comment reads as, which an open web build also reads. */
-const LIKED_VOTE: ListedComment["viewerVote"] = 1;
 
 /** The comment as its viewer has liked it: one more like, and liked. A liked comment is returned as it is. */
 export function likedComment<T extends ListedComment>(comment: T): T {
@@ -40,7 +31,6 @@ export function likedComment<T extends ListedComment>(comment: T): T {
     ...comment,
     liked: true,
     likeCount: comment.likeCount + 1,
-    viewerVote: LIKED_VOTE,
   };
 }
 
@@ -53,7 +43,6 @@ export function unlikedComment<T extends ListedComment>(comment: T): T {
     ...comment,
     liked: false,
     likeCount: comment.likeCount - 1,
-    viewerVote: null,
   };
 }
 
@@ -130,15 +119,12 @@ export function draftComment(
         };
   return {
     ...comment,
-    downvoteCount: 0,
     likeCount: 0,
     liked: false,
     replyCount: 0,
     replyToUser: parent === null ? null : parent.user,
-    upvoteCount: 0,
     user: author,
     userId: author._id,
-    viewerVote: null,
     ...placement,
   };
 }
