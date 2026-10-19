@@ -27,7 +27,7 @@ import { titleToSave } from "@/components/tenant/exams/title";
  * tries the exam as a student and the button that schedules it, and the title gives way
  * before them. On a phone the trial action keeps its icon and its name for screen readers,
  * so the title keeps room to read at 375 pixels. A frozen exam says why its questions are
- * fixed in a line under the header (ExamFrozenNote).
+ * fixed in a line under the header (ExamLockedNote).
  */
 export function ExamHeader() {
   const t = useTranslations("Exams");
@@ -65,7 +65,6 @@ export function ExamHeader() {
         aria-label={t("title-label")}
         className="border-0 font-semibold text-lg shadow-none md:text-lg"
         onBlur={save}
-        readOnly={exam.archived}
         onChange={(event) => setDraft(event.target.value)}
         onKeyDown={(event) => {
           // While the teacher composes a character, Enter belongs to the keyboard.
@@ -74,6 +73,7 @@ export function ExamHeader() {
           }
         }}
         placeholder={t("untitled")}
+        readOnly={exam.archived}
         value={draft ?? exam.title}
       />
       <Link
