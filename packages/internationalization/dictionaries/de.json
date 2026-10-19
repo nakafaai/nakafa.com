@@ -157,7 +157,10 @@
     "room-state-scheduled": "Geplant",
     "room-state-open": "Offen",
     "room-state-closed": "Geschlossen",
-    "state-all": "Alle Status"
+    "state-all": "Alle Status",
+    "try-action": "Als Schüler testen",
+    "try-finish": "Test beenden",
+    "try-note": "Antworten hier werden nicht gespeichert."
   },
   "SchoolSettings": {
     "school": "Schule",

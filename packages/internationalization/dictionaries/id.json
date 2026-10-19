@@ -157,7 +157,10 @@
     "room-state-scheduled": "Terjadwal",
     "room-state-open": "Berlangsung",
     "room-state-closed": "Selesai",
-    "state-all": "Semua status"
+    "state-all": "Semua status",
+    "try-action": "Coba sebagai siswa",
+    "try-finish": "Selesai mencoba",
+    "try-note": "Jawaban di sini tidak disimpan."
   },
   "SchoolSettings": {
     "school": "Sekolah",

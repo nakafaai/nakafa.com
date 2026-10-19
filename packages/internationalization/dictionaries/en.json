@@ -157,7 +157,10 @@
     "room-state-scheduled": "Scheduled",
     "room-state-open": "Open",
     "room-state-closed": "Closed",
-    "state-all": "All states"
+    "state-all": "All states",
+    "try-action": "Try as student",
+    "try-finish": "Finish trying",
+    "try-note": "Answers here are not saved."
   },
   "SchoolSettings": {
     "school": "School",
