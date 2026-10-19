@@ -3,6 +3,7 @@ import { HttpClient } from "@confect/js";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Effect } from "effect";
+import { io } from "next/cache";
 import { cache } from "react";
 import { getToken } from "@/lib/auth/server";
 import { httpLayer } from "@/lib/convex/http";
@@ -25,16 +26,19 @@ export type SchoolViewer =
  * The public profile of the school at an address, or none when no school has it.
  * The school's layout and its metadata both read it, once per request.
  */
-export const readProfile = cache((slug: TenantSlug) =>
-  Effect.runPromise(
+export const readProfile = cache(async (slug: TenantSlug) => {
+  // `io()` tells Next.js that request-time work follows, so a prerender stops here
+  // and the Effect runtime, which reads the clock when it starts, never runs in one.
+  await io();
+  return Effect.runPromise(
     HttpClient.HttpClient.pipe(
       Effect.flatMap((client) => client.query(tenancy.profile.get, { slug })),
       Effect.asSome,
       Effect.catchTag("TenantNotFound", () => Effect.succeedNone),
       Effect.provide(httpLayer())
     )
-  )
-);
+  );
+});
 
 /**
  * The viewer's view of one school, read with the session token of the request. The
