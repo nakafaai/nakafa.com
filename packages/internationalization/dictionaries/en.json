@@ -43,7 +43,10 @@
     "sign-in-title": "Sign in to {school}",
     "tile-student": "Your sittings",
     "sittings-empty": "No sitting is open to you",
-    "sittings-empty-description": "Your teacher schedules a sitting, and it appears here."
+    "sittings-empty-description": "Your teacher schedules a sitting, and it appears here.",
+    "refused-title": "Your access to this school has changed.",
+    "refused-description": "Ask an admin of this school to check your access, or go back to Nakafa.",
+    "welcome-footer": "The exams you may take or watch are listed on this page."
   },
   "SchoolEntry": {
     "card-code-description": "Only for your first sign-in or after a new card is printed.",
@@ -232,7 +235,17 @@
     "state-all": "All states",
     "try-action": "Try as student",
     "try-finish": "Finish trying",
-    "try-note": "Answers here are not saved."
+    "try-note": "Answers here are not saved.",
+    "title-needed": "The exam needs a title before you can create it.",
+    "no-unit-description": "An exam belongs to a unit. Add or restore one in the settings first.",
+    "no-unit-action": "Open units",
+    "no-unit-member": "An exam belongs to a unit. Ask an admin of this school to add one.",
+    "schedule-keys-numbered": "{count, plural, one {Mark the correct answer of question {questions} first.} other {Mark the correct answer of questions {questions} first.}}",
+    "room-needed": "Give the room a name first.",
+    "starts-needed": "Choose when the sitting starts.",
+    "seats-empty-title": "No seat yet",
+    "seats-filter-title": "No seat matches",
+    "signals-empty-title": "No signal yet"
   },
   "SchoolSettings": {
     "school": "School",
@@ -627,7 +640,8 @@
     "channel-name": "Channel name",
     "channel-name-taken": "Another channel of this class has this name.",
     "channel-limit-reached": "This class holds the most channels it can.",
-    "add-submit": "Add"
+    "add-submit": "Add",
+    "channel-name-needed": "Give the channel a name first."
   },
   "SchoolStart": {
     "metadata-title": "Open your school",

@@ -43,7 +43,10 @@
     "sign-in-title": "Anmelden bei {school}",
     "tile-student": "Deine Prüfungen",
     "sittings-empty": "Noch keine Prüfung für dich",
-    "sittings-empty-description": "Deine Lehrkraft plant eine Prüfung, und sie erscheint hier."
+    "sittings-empty-description": "Deine Lehrkraft plant eine Prüfung, und sie erscheint hier.",
+    "refused-title": "Dein Zugang zu dieser Schule hat sich geändert.",
+    "refused-description": "Frag einen Admin der Schule, deinen Zugang zu prüfen, oder geh zurück zu Nakafa.",
+    "welcome-footer": "Die Prüfungen, die du ablegen oder beobachten darfst, stehen auf dieser Seite."
   },
   "SchoolEntry": {
     "card-code-description": "Nur für die erste Anmeldung oder nach dem Druck einer neuen Karte.",
@@ -232,7 +235,17 @@
     "state-all": "Alle Status",
     "try-action": "Als Schüler testen",
     "try-finish": "Test beenden",
-    "try-note": "Antworten hier werden nicht gespeichert."
+    "try-note": "Antworten hier werden nicht gespeichert.",
+    "title-needed": "Die Prüfung braucht einen Titel, bevor sie angelegt werden kann.",
+    "no-unit-description": "Eine Prüfung gehört zu einer Einheit. Lege zuerst in den Einstellungen eine an oder stelle eine wieder her.",
+    "no-unit-action": "Einheiten öffnen",
+    "no-unit-member": "Eine Prüfung gehört zu einer Einheit. Frag einen Admin der Schule, eine anzulegen.",
+    "schedule-keys-numbered": "{count, plural, one {Markiere zuerst die richtige Antwort bei Frage {questions}.} other {Markiere zuerst die richtigen Antworten bei den Fragen {questions}.}}",
+    "room-needed": "Gib zuerst einen Namen für den Raum an.",
+    "starts-needed": "Wähle, wann die Sitzung beginnt.",
+    "seats-empty-title": "Noch kein Platz belegt",
+    "seats-filter-title": "Kein Platz passt zum Filter",
+    "signals-empty-title": "Noch kein Ereignis"
   },
   "SchoolSettings": {
     "school": "Schule",
@@ -627,7 +640,8 @@
     "channel-name": "Kanalname",
     "channel-name-taken": "Ein anderer Kanal dieser Klasse hat diesen Namen bereits.",
     "channel-limit-reached": "Diese Klasse hat die maximale Anzahl an Kanälen erreicht.",
-    "add-submit": "Hinzufügen"
+    "add-submit": "Hinzufügen",
+    "channel-name-needed": "Gib dem Kanal zuerst einen Namen."
   },
   "SchoolStart": {
     "metadata-title": "Eigene Schule eröffnen",

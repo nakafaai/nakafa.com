@@ -43,7 +43,10 @@
     "sign-in-title": "Masuk ke {school}",
     "tile-student": "Ujianmu",
     "sittings-empty": "Belum ada ujian untuk Anda",
-    "sittings-empty-description": "Guru Anda menjadwalkan ujian, dan ujian itu muncul di sini."
+    "sittings-empty-description": "Guru Anda menjadwalkan ujian, dan ujian itu muncul di sini.",
+    "refused-title": "Akses Anda ke sekolah ini telah berubah.",
+    "refused-description": "Minta admin sekolah ini memeriksa akses Anda, atau kembali ke Nakafa.",
+    "welcome-footer": "Ujian yang boleh kamu ikuti atau pantau ada di halaman ini."
   },
   "SchoolEntry": {
     "card-code-description": "Hanya untuk masuk pertama kali atau setelah kartu baru dicetak.",
@@ -232,7 +235,17 @@
     "state-all": "Semua status",
     "try-action": "Coba sebagai siswa",
     "try-finish": "Selesai mencoba",
-    "try-note": "Jawaban di sini tidak disimpan."
+    "try-note": "Jawaban di sini tidak disimpan.",
+    "title-needed": "Ujian perlu judul sebelum dapat dibuat.",
+    "no-unit-description": "Ujian berada di dalam unit. Tambahkan atau pulihkan unit di pengaturan terlebih dahulu.",
+    "no-unit-action": "Buka unit",
+    "no-unit-member": "Ujian berada di dalam unit. Minta admin sekolah ini menambahkan satu unit.",
+    "schedule-keys-numbered": "Tandai jawaban benar untuk soal {questions} terlebih dahulu.",
+    "room-needed": "Beri nama ruangan terlebih dahulu.",
+    "starts-needed": "Pilih kapan sesi dimulai.",
+    "seats-empty-title": "Belum ada kursi terisi",
+    "seats-filter-title": "Tidak ada kursi yang cocok",
+    "signals-empty-title": "Belum ada peristiwa"
   },
   "SchoolSettings": {
     "school": "Sekolah",
@@ -627,7 +640,8 @@
     "channel-name": "Nama kanal",
     "channel-name-taken": "Kanal lain di kelas ini sudah memakai nama ini.",
     "channel-limit-reached": "Kelas ini sudah mencapai batas jumlah kanal.",
-    "add-submit": "Tambah"
+    "add-submit": "Tambah",
+    "channel-name-needed": "Beri nama kanal terlebih dahulu."
   },
   "SchoolStart": {
     "metadata-title": "Buka sekolahmu",
