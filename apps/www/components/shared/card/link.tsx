@@ -1,7 +1,7 @@
 import { ArrowRight02Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { IntentLink } from "@repo/design-system/components/ui/intent-link";
-import { cva } from "class-variance-authority";
+import { cva, type VariantProps } from "class-variance-authority";
 import type { ReactNode } from "react";
 
 /**
@@ -57,7 +57,7 @@ export function CardLink({
   title,
 }: {
   /** When the arrow shows: on hover, which is the default, or always. */
-  arrow?: "always" | "hover" | undefined;
+  arrow?: VariantProps<typeof cardArrow>["arrow"];
   children: ReactNode;
   href: string;
   /** Whether `href` gets the reader's locale prefix. Left out, it does. */
