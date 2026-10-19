@@ -44,18 +44,24 @@ test("a teacher writes a question with headings, lists, quotes, code and a table
   const toolbar = page.locator(TOOLBAR);
   await expect(toolbar).toBeVisible();
 
-  // A word goes bold through the toolbar, with the selection kept in the text.
+  // A word goes bold through the toolbar: a double click selects the word, and the toolbar shows
+  // the bold control pressed while the caret is in it.
   await prompt.click();
   await page.keyboard.type("Luas persegi panjang");
-  await page.keyboard.press("Home");
-  for (let step = 0; step < 4; step += 1) {
-    await page.keyboard.press("Shift+ArrowRight");
-  }
-  await toolbar.getByRole("button", { name: "Bold" }).click();
+  await prompt
+    .locator("p")
+    .first()
+    .dblclick({ position: { x: 6, y: 6 } });
+  const bold = toolbar.getByRole("button", { name: "Bold" });
+  await bold.click();
   await expect(prompt.locator("strong")).toHaveText("Luas");
+  await expect(bold).toHaveAttribute("aria-pressed", "true");
 
-  // A heading comes from the slash menu, which lists the blocks under the query.
+  // A heading comes from the slash menu, which lists the blocks under the query. The caret leaves
+  // the bold word, and the control is released once the editor has read the new caret, so the
+  // Enter that follows splits the paragraph after the word and not over it.
   await page.keyboard.press("End");
+  await expect(bold).toHaveAttribute("aria-pressed", "false");
   await page.keyboard.press("Enter");
   await page.keyboard.type("/");
   const menu = page.getByRole("listbox", { name: "Insert a block" });
@@ -114,12 +120,11 @@ test("a teacher writes a question with headings, lists, quotes, code and a table
   await expect(prompt.locator('[data-formula="inline"] .katex')).toBeVisible();
   await expect(prompt.locator(".katex-error")).toHaveCount(0);
 
-  // An image comes from the toolbar's image control. The file is a one-pixel PNG, and the alt text
-  // dialog asks for its alt text before the image is added to the document.
+  // An image comes from the toolbar's image control. The file is a one-pixel PNG that a browser
+  // decodes, and the alt text dialog asks for its alt text before the image is added to the document.
   const PIXEL_PNG = Buffer.from(
-    "89504e470d0a1a0a0000000d4948445200000001000000010806000000" +
-      "1f15c4890000000d49444154789c63f8cfc0f01f0005000201a5f6c4c10000000049454e44ae426082",
-    "hex"
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
+    "base64"
   );
   await page.locator('input[type="file"]').setInputFiles({
     buffer: PIXEL_PNG,
@@ -166,7 +171,8 @@ test("a teacher writes a question with headings, lists, quotes, code and a table
     timeout: readinessTimeoutMilliseconds,
   });
   await expect(reopened.locator("table th")).toHaveCount(2);
-  await expect(reopened.locator("ul li")).toHaveCount(2);
+  // The school's sidebar has lists of its own, outside the page's main content.
+  await expect(reopened.getByRole("main").locator("ul li")).toHaveCount(2);
   await expect(
     reopened.locator('[data-formula="inline"] .katex')
   ).toBeVisible();
