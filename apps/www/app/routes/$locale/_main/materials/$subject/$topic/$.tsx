@@ -6,7 +6,7 @@ import { toCanonicalPath } from "@repo/internationalization/src/rewrite";
 import { makeArticleJsonLd } from "@repo/seo/json-ld/article";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
-import { Array as Arr, Schema } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 import { createTranslator } from "use-intl";
 import { SheetEntry } from "@/components/ai/sheet/entry";
 import { AiMenuItem } from "@/components/ai/sheet/menu";
@@ -38,6 +38,7 @@ import { ReportButton } from "@/components/sidebar/actions/report";
 import { ShareButton } from "@/components/sidebar/actions/share";
 import { ContentViewTracker } from "@/components/tracking/tracker";
 import {
+  LEARN_SHELL_CACHE_SCOPES,
   publicContentHeaders,
   readContentCacheTags,
 } from "@/lib/content/delivery";
@@ -60,6 +61,11 @@ const MaterialInput = Schema.Struct({
   locale: Schema.String,
   subject: Schema.String,
   topic: Schema.String,
+});
+
+/** The curriculum context that a learner chose, which the lesson's links carry. */
+const MaterialSearch = Schema.Struct({
+  ctx: Schema.optional(Schema.String),
 });
 
 /**
@@ -85,6 +91,12 @@ const readMaterial = createServerFn({ method: "GET" })
     }
     const { model, published } = publication;
     const route = model.projection;
+    const canonicalPath = Schema.decodeUnknownOption(LocalizedPath)(
+      toCanonicalPath(`/${locale}/${route.publicPath}`)
+    );
+    if (Option.isNone(canonicalPath)) {
+      return { kind: "notFound" as const };
+    }
     const messages = await loadLocaleMessages(locale);
     const tCommon = createTranslator({ locale, messages, namespace: "Common" });
     const navigation = readMaterialNavigation(
@@ -101,7 +113,12 @@ const readMaterial = createServerFn({ method: "GET" })
       breadcrumbs: createBreadcrumbItems(locale, [
         { name: tCommon("home"), path: "" },
       ]),
-      cacheTags: readContentCacheTags(["material"]),
+      cacheTags: readContentCacheTags([
+        ...LEARN_SHELL_CACHE_SCOPES,
+        "material",
+      ]),
+      canonicalPath: canonicalPath.value,
+      content: published.sourceRevision ? undefined : published.rawMdx,
       contentId: route.graph.assetId,
       copySourceUrl: published.sourceRevision
         ? getLlmsMarkdownPath({ locale, publicPath })
@@ -119,6 +136,7 @@ const readMaterial = createServerFn({ method: "GET" })
       route: {
         appLocale: route.appLocale,
         authors: route.metadata.authors,
+        contentKey: route.contentKey,
         href: toMaterialHref(route),
         publicPath: route.publicPath,
       },
@@ -135,6 +153,7 @@ const readMaterial = createServerFn({ method: "GET" })
 export const Route = createFileRoute(
   "/$locale/_main/materials/$subject/$topic/$"
 )({
+  validateSearch: Schema.toStandardSchemaV1(MaterialSearch),
   loader: async ({ params }) => {
     const lesson = Arr.filter(
       (params._splat ?? "").split("/"),
@@ -157,13 +176,11 @@ export const Route = createFileRoute(
     if (loaderData === undefined) {
       return {};
     }
-    const { headMetadata, locale, route } = loaderData;
+    const { canonicalPath, headMetadata, locale, route } = loaderData;
     const metadata = loaderData.metadata;
     return toRouterHead(
       createSeoHead({
-        canonicalPath: Schema.decodeUnknownSync(LocalizedPath)(
-          toCanonicalPath(`/${locale}/${route.publicPath}`)
-        ),
+        canonicalPath,
         description: headMetadata.description,
         image: getOgUrl(route.appLocale, route.publicPath),
         indexable: true,
@@ -219,6 +236,7 @@ function MaterialPage() {
             }
           >
             <OpenContent
+              content={page.content}
               copySourceUrl={page.copySourceUrl}
               slug={route.href}
               sourceUrl={page.sourceUrl}
@@ -238,7 +256,7 @@ function MaterialPage() {
           </LayoutContent>
           <PaginationContent pagination={page.pagination} prefetchNext />
           <FooterContent>
-            <DeferredComments slug={route.publicPath} />
+            <DeferredComments slug={route.contentKey} />
           </FooterContent>
           <SheetEntry contextTitle={metadata.title} />
         </LayoutMaterialContent>

@@ -70,10 +70,11 @@ const readArticleCategory = createServerFn({ method: "GET" })
     if (!Schema.is(ArticleRouteSlugSchema)(data.category)) {
       return { kind: "notFound" as const };
     }
-    const model = await getPublishedArticleCategory(data.category, locale);
-    if (model === null) {
+    const selected = await getPublishedArticleCategory(data.category, locale);
+    if (Option.isNone(selected)) {
       return { kind: "notFound" as const };
     }
+    const model = selected.value;
     const first = await getPublishedCategoryPage(model, FIRST_PAGE);
     if (first.articles.length === 0) {
       return { kind: "notFound" as const };
@@ -85,7 +86,11 @@ const readArticleCategory = createServerFn({ method: "GET" })
     if (shouldResetArticlePublicationCursor(cursor.value)) {
       return { kind: "redirect" as const };
     }
-    const catalog = await getPublishedCategoryPage(model, cursor.value);
+    // The default URL asks for the first page, which the first read holds.
+    const catalog =
+      cursor.value.cursor === null
+        ? first
+        : await getPublishedCategoryPage(model, cursor.value);
     if (catalog.stale) {
       return { kind: "redirect" as const };
     }

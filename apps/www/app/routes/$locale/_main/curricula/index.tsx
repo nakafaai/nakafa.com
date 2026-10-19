@@ -4,7 +4,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { Array as Arr, Schema } from "effect";
 import { createTranslator } from "use-intl";
-import { CurriculumCatalogCards } from "@/components/curriculum/cards";
+import { CurriculumCardGrid } from "@/components/curriculum/cards";
 import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
 import { FooterContent } from "@/components/shared/content/footer";
 import { LayoutContent } from "@/components/shared/content/layout";
@@ -13,11 +13,16 @@ import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/layout";
 import { ComingSoon } from "@/components/shared/upcoming";
 import {
+  LEARN_SHELL_CACHE_SCOPES,
   publicContentHeaders,
   readContentCacheTags,
 } from "@/lib/content/delivery";
 import { getAksaraTreeUrl } from "@/lib/content/repository";
-import { getCurriculumIndexSocialImage } from "@/lib/curriculum/artwork";
+import {
+  getCurriculumIndexSocialImage,
+  resolveCurriculumCatalogArtwork,
+} from "@/lib/curriculum/artwork";
+import { getCurriculumLooks } from "@/lib/curriculum/look";
 import { readRuntimeCurriculumCatalog } from "@/lib/curriculum/model";
 import { getCurriculumIndexHref } from "@/lib/curriculum/routes";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
@@ -26,8 +31,8 @@ import { createSeoHead, toRouterHead } from "@/lib/seo/head";
 import { makeCollectionPageNode, readBreadcrumbNodes } from "@/lib/seo/json-ld";
 
 /**
- * Reads the curriculum chooser of one locale on the server: its entries, its
- * source link and the words of its page and head.
+ * Reads the curriculum chooser of one locale on the server: its cards with their
+ * visuals, its source link and the words of its page and head.
  */
 const readCurriculumIndex = createServerFn({ method: "GET" })
   .validator(
@@ -47,6 +52,13 @@ const readCurriculumIndex = createServerFn({ method: "GET" })
     });
     const title = tLearningPrograms("curriculum-index-title");
     const indexHref = getCurriculumIndexHref(locale);
+    const routes = Arr.map(catalog.entries, ({ route }) => route);
+    const visuals = getCurriculumLooks(routes, (route) =>
+      resolveCurriculumCatalogArtwork(locale, {
+        kind: "program",
+        programKey: route.programKey,
+      })
+    );
 
     return {
       actionLabel: tLearningPrograms("curriculum-index-action"),
@@ -54,9 +66,12 @@ const readCurriculumIndex = createServerFn({ method: "GET" })
         { name: tCommon("home"), path: "" },
         { name: title, path: indexHref },
       ]),
-      cacheTags: readContentCacheTags(["program"]),
+      cacheTags: readContentCacheTags([...LEARN_SHELL_CACHE_SCOPES, "program"]),
+      cards: Arr.zipWith(routes, visuals, (route, visual) => ({
+        route,
+        visual,
+      })),
       description: tLearningPrograms("curriculum-index-metadata-description"),
-      entries: catalog.entries,
       image: getCurriculumIndexSocialImage(locale, indexHref),
       labels: { home: tCommon("home"), more: tCommon("more") },
       locale,
@@ -81,8 +96,8 @@ export const Route = createFileRoute("/$locale/_main/curricula/")({
     }
     const {
       breadcrumbs,
+      cards,
       description,
-      entries,
       image,
       locale,
       metadataTitle,
@@ -99,7 +114,7 @@ export const Route = createFileRoute("/$locale/_main/curricula/")({
           ...readBreadcrumbNodes(breadcrumbs),
           makeCollectionPageNode({
             description,
-            items: Arr.map(entries, ({ route }) => ({
+            items: Arr.map(cards, ({ route }) => ({
               name: route.title,
               url: `${COMPANY_IDENTITY.url}/${locale}/${route.publicPath}`,
             })),
@@ -135,10 +150,10 @@ function CurriculumIndexPage() {
           }}
         />
         <LayoutContent>
-          {page.entries.length > 0 ? (
-            <CurriculumCatalogCards
+          {page.cards.length > 0 ? (
+            <CurriculumCardGrid
               actionLabel={page.actionLabel}
-              entries={page.entries}
+              cards={page.cards}
               locale={page.locale}
             />
           ) : (

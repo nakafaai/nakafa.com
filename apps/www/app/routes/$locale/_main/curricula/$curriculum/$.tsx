@@ -1,11 +1,11 @@
 import { LocalizedPath } from "@repo/internationalization/src/alternates";
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
 import { toCanonicalPath } from "@repo/internationalization/src/rewrite";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, notFound } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
-import { Array as Arr, Schema } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 import { createTranslator } from "use-intl";
-import { CurriculumChildCards } from "@/components/curriculum/cards";
+import { CurriculumCardGrid } from "@/components/curriculum/cards";
 import { CurriculumNestedHeader } from "@/components/curriculum/header";
 import { CurriculumSelector } from "@/components/curriculum/selector";
 import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
@@ -27,12 +27,17 @@ import { GithubButton } from "@/components/sidebar/actions/github";
 import { ReportButton } from "@/components/sidebar/actions/report";
 import { ShareButton } from "@/components/sidebar/actions/share";
 import {
+  LEARN_SHELL_CACHE_SCOPES,
   publicContentHeaders,
   readContentCacheTags,
 } from "@/lib/content/delivery";
 import { getAksaraTreeUrl } from "@/lib/content/repository";
-import { getCurriculumRouteSocialImage } from "@/lib/curriculum/artwork";
+import {
+  getCurriculumRouteSocialImage,
+  resolveCurriculumCatalogArtwork,
+} from "@/lib/curriculum/artwork";
 import { readMaterialCardChapters } from "@/lib/curriculum/chapters";
+import { getCurriculumLooks } from "@/lib/curriculum/look";
 import {
   readRuntimeCurriculumBreadcrumbs,
   readRuntimeCurriculumCatalog,
@@ -68,6 +73,12 @@ const readCurriculumRoute = createServerFn({ method: "GET" })
       path: data.path,
     });
     const { program, route } = model;
+    const canonicalPath = Schema.decodeUnknownOption(LocalizedPath)(
+      toCanonicalPath(`/${locale}/${route.publicPath}`)
+    );
+    if (Option.isNone(canonicalPath)) {
+      return { kind: "notFound" as const };
+    }
     const [catalog, messages, seo] = await Promise.all([
       readRuntimeCurriculumCatalog(locale),
       loadLocaleMessages(locale),
@@ -84,6 +95,13 @@ const readCurriculumRoute = createServerFn({ method: "GET" })
     });
     const homeLabel = tCommon("home");
     const subjectLabel = tCommon("subject");
+    const childVisuals = getCurriculumLooks(model.childRoutes, (child) =>
+      resolveCurriculumCatalogArtwork(locale, {
+        kind: "route",
+        nodeKey: child.nodeKey,
+        programKey: child.programKey,
+      })
+    );
 
     return {
       ancestors: model.ancestors,
@@ -91,9 +109,22 @@ const readCurriculumRoute = createServerFn({ method: "GET" })
         locale,
         readRuntimeCurriculumBreadcrumbs(homeLabel, subjectLabel, model)
       ),
-      cacheTags: readContentCacheTags(["program", "material"]),
+      cacheTags: readContentCacheTags([
+        ...LEARN_SHELL_CACHE_SCOPES,
+        "program",
+        "material",
+      ]),
+      canonicalPath: canonicalPath.value,
       chapters: readMaterialCardChapters(model.materialCards),
-      childRoutes: model.childRoutes,
+      childCards: Arr.zipWith(
+        model.childRoutes,
+        childVisuals,
+        (route, visual) => ({
+          route,
+          visual,
+        })
+      ),
+      kind: "found" as const,
       description: seo.description,
       image: getCurriculumRouteSocialImage(locale, program.key, route),
       labels: {
@@ -120,8 +151,8 @@ const readCurriculumRoute = createServerFn({ method: "GET" })
 
 /** One curriculum node: a track chooser, a nested node or a material list. */
 export const Route = createFileRoute("/$locale/_main/curricula/$curriculum/$")({
-  loader: ({ params }) =>
-    readCurriculumRoute({
+  loader: async ({ params }) => {
+    const page = await readCurriculumRoute({
       data: {
         curriculum: params.curriculum,
         locale: params.locale,
@@ -130,18 +161,21 @@ export const Route = createFileRoute("/$locale/_main/curricula/$curriculum/$")({
           (segment) => segment !== ""
         ),
       },
-    }),
+    });
+    if (page.kind === "notFound") {
+      throw notFound();
+    }
+    return page;
+  },
   head: ({ loaderData }) => {
     if (loaderData === undefined) {
       return {};
     }
-    const { breadcrumbs, description, image, locale, route, title } =
+    const { breadcrumbs, canonicalPath, description, image, locale, title } =
       loaderData;
     return toRouterHead(
       createSeoHead({
-        canonicalPath: Schema.decodeUnknownSync(LocalizedPath)(
-          toCanonicalPath(`/${locale}/${route.publicPath}`)
-        ),
+        canonicalPath,
         description,
         image,
         indexable: true,
@@ -200,14 +234,14 @@ function CurriculumRoutePage() {
               ))}
             </ContainerList>
           ) : null}
-          {page.materialCards.length === 0 && page.childRoutes.length === 0 ? (
+          {page.materialCards.length === 0 && page.childCards.length === 0 ? (
             <ComingSoon />
           ) : null}
-          {page.materialCards.length === 0 && page.childRoutes.length > 0 ? (
-            <CurriculumChildCards
+          {page.materialCards.length === 0 && page.childCards.length > 0 ? (
+            <CurriculumCardGrid
               actionLabel={labels.routeAction}
+              cards={page.childCards}
               locale={page.locale}
-              routes={page.childRoutes}
             />
           ) : null}
         </LayoutContent>

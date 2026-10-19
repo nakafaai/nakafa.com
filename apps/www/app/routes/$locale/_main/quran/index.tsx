@@ -8,8 +8,9 @@ import { createTranslator } from "use-intl";
 import { CardLink, CardLinks } from "@/components/shared/card/link";
 import { HeaderContent } from "@/components/shared/content/header";
 import { LayoutContent } from "@/components/shared/content/layout";
-import { QuranSurahName } from "@/components/shared/quran/name";
+import { QuranSurahRow } from "@/components/shared/quran/surah";
 import {
+  LEARN_SHELL_CACHE_SCOPES,
   publicContentHeaders,
   readContentCacheTags,
 } from "@/lib/content/delivery";
@@ -41,7 +42,7 @@ const readQuranIndex = createServerFn({ method: "GET" })
         { name: tCommon("home"), path: "" },
         { name: title, path: "/quran" },
       ]),
-      cacheTags: readContentCacheTags(["quran"]),
+      cacheTags: readContentCacheTags([...LEARN_SHELL_CACHE_SCOPES, "quran"]),
       description: t("quran-description"),
       image: getAppSocialArtwork({ key: "quran", locale, publicPath: "quran" }),
       locale,
@@ -100,16 +101,11 @@ function QuranIndexPage() {
                 key={surah.number}
                 title={surah.title}
               >
-                <div className="flex min-w-0 flex-1 items-center gap-3">
-                  <div className="flex size-8 shrink-0 items-center justify-center rounded-full border border-primary bg-secondary text-secondary-foreground">
-                    <span className="font-mono text-xs tracking-tighter">
-                      {surah.number}
-                    </span>
-                  </div>
-                  <h2 className="flex min-w-0 items-baseline gap-2">
-                    <QuranSurahName arabic={surah.arabic} title={surah.title} />
-                  </h2>
-                </div>
+                <QuranSurahRow
+                  arabic={surah.arabic}
+                  number={surah.number}
+                  title={surah.title}
+                />
               </CardLink>
             ))}
           </CardLinks>

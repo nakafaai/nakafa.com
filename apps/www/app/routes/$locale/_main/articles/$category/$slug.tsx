@@ -99,6 +99,7 @@ const readArticle = createServerFn({ method: "GET" })
       kind: "found" as const,
       cacheTags: readContentCacheTags(["article"]),
       categoryLabel,
+      content: published.sourceRevision ? undefined : published.rawMdx,
       contentId: published.contentId,
       copySourceUrl: published.sourceRevision
         ? getLlmsMarkdownPath({ locale, publicPath })
@@ -219,6 +220,7 @@ function ArticlePage() {
               }
             >
               <OpenContent
+                content={article.content}
                 copySourceUrl={article.copySourceUrl}
                 slug={`/${locale}${filePath}`}
                 sourceUrl={article.sourceUrl}

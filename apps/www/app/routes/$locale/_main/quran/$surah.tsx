@@ -32,6 +32,7 @@ import { ReferenceButton } from "@/components/sidebar/actions/reference";
 import { ReportButton } from "@/components/sidebar/actions/report";
 import { ShareButton } from "@/components/sidebar/actions/share";
 import {
+  LEARN_SHELL_CACHE_SCOPES,
   publicContentHeaders,
   readContentCacheTags,
 } from "@/lib/content/delivery";
@@ -72,16 +73,17 @@ const readSurah = createServerFn({ method: "GET" })
       return { kind: "notFound" as const };
     }
     const catalog = await getPublishedQuranCatalog();
-    const surahData = Option.getOrNull(
-      Arr.findFirst(catalog.surahs, ({ number }) => number === surahNumber)
+    const surahData = Arr.findFirst(
+      catalog.surahs,
+      ({ number }) => number === surahNumber
     );
-    if (surahData === null) {
+    if (Option.isNone(surahData)) {
       return { kind: "notFound" as const };
     }
     const [view, messages, seo] = await Promise.all([
       getPublishedQuranView(locale, surahNumber),
       loadLocaleMessages(locale),
-      getCachedSEOMetadata({ surah: surahData, type: "quran" }, locale),
+      getCachedSEOMetadata({ surah: surahData.value, type: "quran" }, locale),
     ]);
     const t = createTranslator({ locale, messages, namespace: "Holy" });
     const tCommon = createTranslator({ locale, messages, namespace: "Common" });
@@ -90,6 +92,11 @@ const readSurah = createServerFn({ method: "GET" })
     const verseItems = Arr.map(view.verses, (verse) => {
       const label = t("verse-count", { count: verse.number.inSurah });
       return { id: toAnchorSlug(label), label, verse };
+    });
+
+    const preBismillah = Option.match(Option.fromNullishOr(view.preBismillah), {
+      onNone: () => ({ kind: "hidden" as const }),
+      onSome: (value) => ({ kind: "shown" as const, value }),
     });
 
     return {
@@ -106,7 +113,10 @@ const readSurah = createServerFn({ method: "GET" })
         { name: t("quran"), path: "/quran" },
         { name: title, path: `/quran/${data.surah}` },
       ]),
-      cacheTags: readContentCacheTags(["quran"], [view.snapshotId]),
+      cacheTags: readContentCacheTags(
+        [...LEARN_SHELL_CACHE_SCOPES, "quran"],
+        [view.snapshotId]
+      ),
       copySourceUrl: getLlmsMarkdownPath({
         locale,
         publicPath: `quran/${data.surah}`,
@@ -130,7 +140,7 @@ const readSurah = createServerFn({ method: "GET" })
         nextSurah: view.nextSurah,
         prevSurah: view.previousSurah,
       }),
-      preBismillah: view.preBismillah,
+      preBismillah,
       references: getQuranReferences(view.sources, view.tafsirAccess),
       snapshotId: view.snapshotId,
       surah: data.surah,
@@ -239,9 +249,9 @@ function QuranSurahPage() {
               tafsirAccess={page.tafsirAccess}
               translationNotesLabel={page.translationNotesLabel}
             >
-              {page.preBismillah === null ? null : (
-                <QuranBismillah bismillah={page.preBismillah} />
-              )}
+              {page.preBismillah.kind === "shown" ? (
+                <QuranBismillah bismillah={page.preBismillah.value} />
+              ) : null}
               {page.tafsirAccess.kind === "embedded" ? (
                 <QuranInterpretationControls
                   appLocale={page.tafsirAccess.appLocale}
