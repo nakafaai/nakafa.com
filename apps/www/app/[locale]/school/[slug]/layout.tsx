@@ -3,8 +3,10 @@ import auth from "@repo/backend/confect/_generated/refs/auth";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Array as Arr, Effect, Option, Schema } from "effect";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
+import { cache } from "react";
 import { TenantEntry } from "@/components/tenant/entry";
 import { canOpenExams } from "@/components/tenant/exams/access";
 import { TenantOutsider } from "@/components/tenant/outsider";
@@ -31,6 +33,42 @@ const deniedViewer = () => Effect.succeed({ _tag: "denied" as const });
 const outsiderViewer = () => Effect.succeed({ _tag: "outsider" as const });
 
 /**
+ * The public profile of the school at an address, or none when no school has it.
+ * The layout and its metadata both read it, once per request.
+ */
+const readProfile = cache((slug: TenantSlug) =>
+  Effect.runPromise(
+    HttpClient.HttpClient.pipe(
+      Effect.flatMap((client) => client.query(tenancy.profile.get, { slug })),
+      Effect.asSome,
+      Effect.catchTag("TenantNotFound", () => Effect.succeedNone),
+      Effect.provide(httpLayer())
+    )
+  )
+);
+
+/**
+ * Names every page of a school host after the school, so its tab and its history
+ * entry say which school it is: the school's name alone, or a page's own title
+ * before it. School pages are private, so no search engine indexes them.
+ */
+export async function generateMetadata({
+  params,
+}: LayoutProps<"/[locale]/school/[slug]">): Promise<Metadata> {
+  const { slug } = await params;
+  if (!Schema.is(TenantSlug)(slug)) {
+    return {};
+  }
+  return Option.match(await readProfile(slug), {
+    onNone: () => ({}),
+    onSome: ({ name }) => ({
+      robots: { follow: false, index: false },
+      title: { default: name, template: `%s | ${name}` },
+    }),
+  });
+}
+
+/**
  * The school layout of a school host. The address names the school, so the
  * layout reads its profile without a session and ends the request when no
  * school has the address. A signed-out visitor sees the entry surface with the
@@ -51,14 +89,7 @@ export default async function SchoolLayout({
   const slug = slugParam;
   const locale = getLocaleOrThrow(localeParam);
 
-  const profile = await Effect.runPromise(
-    HttpClient.HttpClient.pipe(
-      Effect.flatMap((client) => client.query(tenancy.profile.get, { slug })),
-      Effect.asSome,
-      Effect.catchTag("TenantNotFound", () => Effect.succeedNone),
-      Effect.provide(httpLayer())
-    )
-  );
+  const profile = await readProfile(slug);
   if (Option.isNone(profile)) {
     notFound();
   }
