@@ -34,6 +34,7 @@ import {
   StudentOutcome,
   StudentPlayer,
 } from "@/components/exams/sitting/player";
+import { useConvexAuth } from "@/components/providers/convex";
 import {
   CardSection,
   CardSectionActions,
@@ -62,7 +63,12 @@ export function StudentSitting({
   readonly slug: TenantSlug;
 }) {
   const t = useTranslations("Exams");
-  const view = useQuery(exams.sittings.student, { sittingId, slug });
+  // The sitting needs the session, which Convex learns a moment after the page draws.
+  const isSettled = useConvexAuth((auth) => !auth.isLoading);
+  const view = useQuery(
+    exams.sittings.student,
+    isSettled ? { sittingId, slug } : "skip"
+  );
   const enter = useEnterSitting();
   const [admitted, setAdmitted] = useState<Admitted | null>(null);
   const [message, setMessage] = useState<typeof EntryMessage.Type | null>(null);
