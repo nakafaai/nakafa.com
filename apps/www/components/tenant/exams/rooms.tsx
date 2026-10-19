@@ -4,6 +4,7 @@ import type { GenericId } from "@confect/core";
 import {
   PaginatedQueryResult,
   QueryResult,
+  useMutation,
   usePaginatedQuery,
   useQuery,
 } from "@confect/react";
@@ -30,19 +31,9 @@ import { Array as Arr, Option, Schema } from "effect";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { startTransition, useState } from "react";
-import { useMutation } from "@confect/react";
-import { MoreHorizontalIcon } from "@hugeicons/core-free-icons";
-import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Button } from "@repo/design-system/components/ui/button";
 import { useConvexAuth } from "@/components/providers/convex";
 import { LayoutContent } from "@/components/shared/content/layout";
+import { ConfirmRowMenu } from "@/components/shared/table/confirm";
 import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
 import { useTenant } from "@/components/tenant/context";
 import {
@@ -50,9 +41,9 @@ import {
   RoomStateFilter,
   roomsArgs,
 } from "@/components/tenant/exams/rooms.client";
-import { saveSchool } from "@/components/tenant/settings/save.client";
 import { SchoolHeader } from "@/components/tenant/header";
 import { schoolDateTimeText } from "@/components/tenant/settings/clock";
+import { saveSchool } from "@/components/tenant/settings/save.client";
 
 const SOURCE = "components/tenant/exams/rooms";
 
@@ -300,67 +291,21 @@ function RoomItem({
  */
 function RoomMenu({ room, slug }: { room: Room; slug: TenantSlug }) {
   const t = useTranslations("Exams");
-  const common = useTranslations("Common");
   const cancel = useMutation(exams.sittings.cancel).withOptimisticUpdate(
     cancelRoomChange
   );
-  const [isCancelling, setIsCancelling] = useState(false);
 
   return (
-    <div className="flex justify-end">
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          render={
-            <Button
-              aria-label={common("more-actions")}
-              size="icon-sm"
-              variant="ghost"
-            >
-              <HugeIcons icon={MoreHorizontalIcon} />
-            </Button>
-          }
-        />
-        <DropdownMenuContent align="end" className="w-44">
-          <DropdownMenuItem
-            onClick={() => setIsCancelling(true)}
-            variant="destructive"
-          >
-            {t("room-cancel")}
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-      <ResponsiveDialog
-        description={t("room-cancel-description")}
-        footer={
-          <>
-            <Button
-              onClick={() => setIsCancelling(false)}
-              type="button"
-              variant="outline"
-            >
-              {common("cancel")}
-            </Button>
-            <Button
-              onClick={() => {
-                setIsCancelling(false);
-                startTransition(() =>
-                  saveSchool(
-                    () => cancel({ sittingId: room.id, slug }),
-                    SOURCE
-                  )
-                );
-              }}
-              type="button"
-              variant="destructive"
-            >
-              {t("room-cancel-confirm")}
-            </Button>
-          </>
-        }
-        open={isCancelling}
-        setOpen={setIsCancelling}
-        title={t("room-cancel-title")}
-      />
-    </div>
+    <ConfirmRowMenu
+      action={t("room-cancel")}
+      confirm={t("room-cancel-confirm")}
+      description={t("room-cancel-description")}
+      onConfirm={() =>
+        startTransition(() =>
+          saveSchool(() => cancel({ sittingId: room.id, slug }), SOURCE)
+        )
+      }
+      title={t("room-cancel-title")}
+    />
   );
 }

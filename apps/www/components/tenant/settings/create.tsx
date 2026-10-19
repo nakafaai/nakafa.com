@@ -103,10 +103,13 @@ function SchoolUnitCreateForm({
   );
   const [name, setName] = useState("");
   const [level, setLevel] = useState<Level>("sma");
-  const [timeZone, setTimeZone] = useState(unit.timeZone);
-  const [contentLanguage, setContentLanguage] = useState(
-    unit.contentLanguage
-  );
+  // The choices start as the first school's, so only a pick the teacher makes is kept.
+  const [zoneChoice, setZoneChoice] = useState<string | null>(null);
+  const [languageChoice, setLanguageChoice] = useState<
+    typeof AppLocaleCodeSchema.Type | null
+  >(null);
+  const timeZone = zoneChoice ?? unit.timeZone;
+  const contentLanguage = languageChoice ?? unit.contentLanguage;
   const trimmed = name.trim();
   const valid = Schema.is(UnitName)(trimmed);
   const levelItems = Arr.map(levelsIn(country), (value) => ({
@@ -203,7 +206,7 @@ function SchoolUnitCreateForm({
             items={timeZoneItems}
             onValueChange={(value) => {
               if (value !== null) {
-                setTimeZone(value);
+                setZoneChoice(value);
               }
             }}
             value={timeZone}
@@ -229,7 +232,7 @@ function SchoolUnitCreateForm({
             onValueChange={(value) => {
               const next = Schema.decodeUnknownOption(AppLocaleCodeSchema)(value);
               if (Option.isSome(next)) {
-                setContentLanguage(next.value);
+                setLanguageChoice(next.value);
               }
             }}
             value={contentLanguage}

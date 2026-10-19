@@ -1406,11 +1406,11 @@
       "description": "Siswa yang sudah lulus tidak bisa masuk rombel lagi."
     },
     "school-refusal-unit-limit": {
-      "title": "Tidak ada ruang untuk sekolah lain.",
+      "title": "Batas sekolah sudah penuh.",
       "description": "Sebuah organisasi memiliki jumlah sekolah yang terbatas."
     },
     "school-refusal-address-member": {
-      "title": "Orang ini sudah menjadi anggota sekolah ini.",
+      "title": "Sudah menjadi anggota sekolah.",
       "description": "Ubah perannya di Peran dan akses."
     },
     "school-refusal-already-placed": {
@@ -1616,7 +1616,7 @@
       "description": "Coba lagi besok."
     },
     "school-login-account": {
-      "title": "Login sekolah tidak dapat membuka sekolah.",
+      "title": "Login kartu tak bisa buka sekolah.",
       "description": "Masuk dengan akun milikmu sendiri untuk membuka sekolah."
     },
     "school-save-error": {
@@ -1624,7 +1624,7 @@
       "description": "Coba lagi."
     },
     "undo": {
-      "title": "Batalkan"
+      "title": "Batalkan arsip"
     },
     "school-cohort-archived": {
       "title": "Rombel diarsipkan."

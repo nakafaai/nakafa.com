@@ -141,14 +141,14 @@ function TenantSwitcher({
         <DropdownMenuContent align="start" className="min-w-56" sideOffset={4}>
           <SidebarSchoolMenuItems canOpenSchool={false} />
           <DropdownMenuGroup>
-            <DropdownMenuItem render={<Link href="/" />}>
-              {t("home")}
-            </DropdownMenuItem>
+            <DropdownMenuItem render={<Link href="/">{t("home")}</Link>} />
             <DropdownMenuItem
-              render={<a href={new URL(`/${locale}`, SITE_ORIGIN).href} />}
-            >
-              {t("back-to-learning")}
-            </DropdownMenuItem>
+              render={
+                <a href={new URL(`/${locale}`, SITE_ORIGIN).href}>
+                  {t("back-to-learning")}
+                </a>
+              }
+            />
           </DropdownMenuGroup>
         </DropdownMenuContent>
       </DropdownMenu>

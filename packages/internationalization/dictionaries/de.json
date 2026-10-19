@@ -1406,11 +1406,11 @@
       "description": "Diese Person kann nicht erneut in eine Klasse."
     },
     "school-refusal-unit-limit": {
-      "title": "Für eine weitere Schule ist kein Platz.",
+      "title": "Keine weitere Schule möglich.",
       "description": "Eine Organisation hat eine feste Anzahl an Schulen."
     },
     "school-refusal-address-member": {
-      "title": "Diese Person gehört schon zur Schule.",
+      "title": "Gehört schon zur Schule.",
       "description": "Ändere ihre Rolle unter Rollen und Zugriff."
     },
     "school-refusal-already-placed": {
@@ -1616,7 +1616,7 @@
       "description": "Versuch es morgen noch einmal."
     },
     "school-login-account": {
-      "title": "Ein Schul-Login kann keine Schule eröffnen.",
+      "title": "Schul-Login öffnet keine Schule.",
       "description": "Melde dich mit einem eigenen Konto an, um eine Schule zu eröffnen."
     },
     "school-save-error": {
@@ -1624,7 +1624,7 @@
       "description": "Versuch es noch einmal."
     },
     "undo": {
-      "title": "Rückgängig"
+      "title": "Archivierung rückgängig machen"
     },
     "school-cohort-archived": {
       "title": "Klasse archiviert."

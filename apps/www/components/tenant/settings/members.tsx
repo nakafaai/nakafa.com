@@ -6,24 +6,15 @@ import {
   useMutation,
   usePaginatedQuery,
 } from "@confect/react";
-import { MoreHorizontalIcon } from "@hugeicons/core-free-icons";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { MemberStatus } from "@repo/backend/confect/tenancy/roster";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { Button } from "@repo/design-system/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
-import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
-import { startTransition, useState } from "react";
+import { startTransition } from "react";
+import { ConfirmRowMenu } from "@/components/shared/table/confirm";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
@@ -163,67 +154,21 @@ function SchoolMemberMenu({
   slug: TenantSlug;
 }) {
   const t = useTranslations("SchoolSettings");
-  const common = useTranslations("Common");
   const remove = useMutation(tenancy.people.remove).withOptimisticUpdate(
     removeMemberChange
   );
-  const [isRemoving, setIsRemoving] = useState(false);
 
   return (
-    <div className="flex justify-end">
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          render={
-            <Button
-              aria-label={common("more-actions")}
-              size="icon-sm"
-              variant="ghost"
-            >
-              <HugeIcons icon={MoreHorizontalIcon} />
-            </Button>
-          }
-        />
-        <DropdownMenuContent align="end" className="w-44">
-          <DropdownMenuItem
-            onClick={() => setIsRemoving(true)}
-            variant="destructive"
-          >
-            {t("member-remove")}
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-      <ResponsiveDialog
-        description={t("member-remove-description")}
-        footer={
-          <>
-            <Button
-              onClick={() => setIsRemoving(false)}
-              type="button"
-              variant="outline"
-            >
-              {common("cancel")}
-            </Button>
-            <Button
-              onClick={() => {
-                setIsRemoving(false);
-                startTransition(() =>
-                  saveSchool(
-                    () => remove({ personId: member.id, slug }),
-                    SOURCE
-                  )
-                );
-              }}
-              type="button"
-              variant="destructive"
-            >
-              {t("member-remove-confirm")}
-            </Button>
-          </>
-        }
-        open={isRemoving}
-        setOpen={setIsRemoving}
-        title={t("member-remove-title")}
-      />
-    </div>
+    <ConfirmRowMenu
+      action={t("member-remove")}
+      confirm={t("member-remove-confirm")}
+      description={t("member-remove-description")}
+      onConfirm={() =>
+        startTransition(() =>
+          saveSchool(() => remove({ personId: member.id, slug }), SOURCE)
+        )
+      }
+      title={t("member-remove-title")}
+    />
   );
 }
