@@ -135,7 +135,10 @@
     "length": "Dauer",
     "length-minutes": "{count, plural, one {# Minute} other {# Minuten}}",
     "schedule-keys": "Markiere zuerst die richtige Antwort jeder Frage.",
-    "schedule-past": "Der Beginn ist vorbei. Wähle eine spätere Zeit."
+    "schedule-past": "Der Beginn ist vorbei. Wähle eine spätere Zeit.",
+    "try-action": "Als Schüler testen",
+    "try-finish": "Test beenden",
+    "try-note": "Antworten hier werden nicht gespeichert."
   },
   "SchoolSettings": {
     "school": "Schule",

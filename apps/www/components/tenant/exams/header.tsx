@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation } from "@confect/react";
-import { ArrowLeft01Icon } from "@hugeicons/core-free-icons";
+import { ArrowLeft01Icon, ViewIcon } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
@@ -22,8 +22,9 @@ import { titleToSave } from "@/components/tenant/exams/title";
  * place. The field shows the saved title until the teacher types, so it follows a
  * co-editor's rename. The title is saved when the field loses focus or the teacher presses
  * Enter, and only a trimmed, changed, valid title is sent. The optimistic change restores
- * the saved title when the server refuses the rename. The row ends with the button that
- * schedules the exam, and the title gives way before that button moves.
+ * the saved title when the server refuses the rename. The row ends with the action that
+ * tries the exam as a student and the button that schedules it, and the title gives way
+ * before them.
  */
 export function ExamHeader() {
   const t = useTranslations("Exams");
@@ -71,6 +72,13 @@ export function ExamHeader() {
         placeholder={t("untitled")}
         value={draft ?? exam.title}
       />
+      <NavigationLink
+        className={buttonVariants({ variant: "outline" })}
+        href={`/exams/${exam.id}/try`}
+      >
+        <HugeIcons icon={ViewIcon} />
+        {t("try-action")}
+      </NavigationLink>
       <ScheduleExam />
     </header>
   );
