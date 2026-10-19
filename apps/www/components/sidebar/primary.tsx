@@ -65,7 +65,7 @@ export function NavForYou() {
                       onFocus={prefetchChat}
                       onPointerEnter={prefetchChat}
                       onTouchStart={prefetchChat}
-                      prefetch={item.id === "askNina" ? false : undefined}
+                      preload={item.id === "askNina" ? false : undefined}
                       title={label}
                     />
                   }

@@ -1,5 +1,5 @@
 import { splitLocalePathname } from "@repo/internationalization/src/href";
-import { routing } from "@repo/internationalization/src/routing";
+import { LOCALES } from "@repo/internationalization/src/locale";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { Array as Arr, Data, Effect, Schema } from "effect";
 import {
@@ -9,7 +9,7 @@ import {
 import { projectLocalizedMappedRoutePathname } from "@/lib/routing/public/pathnames";
 
 /** Locale values accepted by next-intl routing and public route projection. */
-const LocaleSchema = Schema.Literals(routing.locales);
+const LocaleSchema = Schema.Literals(LOCALES);
 
 /** Browser route-localization request accepted by the resolver. */
 const LocalizedHrefInputSchema = Schema.Struct({
@@ -43,10 +43,7 @@ const URL_BASE = COMPANY_IDENTITY.url;
  */
 function parseLocalizedHref(href: string): ParsedLocalizedHref {
   const url = new URL(href, URL_BASE);
-  const { locale, publicSegments } = splitLocalePathname(
-    url.pathname,
-    routing.locales
-  );
+  const { locale, publicSegments } = splitLocalePathname(url.pathname, LOCALES);
 
   return {
     currentLocale: locale,

@@ -1,40 +1,14 @@
-import {
-  APP_LOCALE_CODES,
-  type AppLocaleCode,
-} from "@nakafa/aksara-contracts/locale";
-import {
-  type PublicAppLocale,
-  routing,
-} from "@repo/internationalization/src/routing";
+import { LOCALES, type Locale } from "@repo/internationalization/src/locale";
 import { notFound } from "@tanstack/react-router";
 import { hasLocale } from "use-intl";
-import { hasPreviewConfig } from "@/lib/content/preview/config";
-
-/** The locale param that a parent route passes to the `generateStaticParams` of its child routes. */
-export type LocaleRouteParams = Awaited<LayoutProps<"/[locale]">["params"]>;
-
-/** Narrows one route locale to the product's current public locale set. */
-export function getActiveLocaleOrThrow(locale: string): PublicAppLocale {
-  if (hasLocale(routing.locales, locale)) {
-    return locale;
-  }
-
-  throw notFound();
-}
 
 /**
- * Narrows one route locale segment to the configured application locale union.
- *
- * Route helpers expose locale params as plain strings. This helper centralizes
- * the runtime guard so pages and layouts can use `PageProps` / `LayoutProps`
- * without re-declaring locale-specific param types.
+ * Narrows one route locale segment to the public locale set. The router passes
+ * locale params as plain strings, so this runtime guard is the one place that
+ * turns an unknown locale into a 404 before a page or a loader reads it.
  */
-export function getLocaleOrThrow(locale: string): AppLocaleCode {
-  if (hasLocale(routing.locales, locale)) {
-    return locale;
-  }
-
-  if (hasPreviewConfig() && hasLocale(APP_LOCALE_CODES, locale)) {
+export function getLocaleOrThrow(locale: string): Locale {
+  if (hasLocale(LOCALES, locale)) {
     return locale;
   }
 

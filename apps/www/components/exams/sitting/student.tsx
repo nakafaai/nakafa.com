@@ -15,8 +15,8 @@ import {
 import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
 import { Input } from "@repo/design-system/components/ui/input";
 import { buttonVariants } from "@repo/design-system/lib/button";
+import { Link } from "@repo/internationalization/src/navigation";
 import { Effect, Option } from "effect";
-import Link from "next/link";
 import {
   type FormEvent,
   useCallback,

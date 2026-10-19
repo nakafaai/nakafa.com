@@ -1,4 +1,4 @@
-import { routing } from "@repo/internationalization/src/routing";
+import { LOCALES } from "@repo/internationalization/src/locale";
 import { Array as Arr, Effect, Option } from "effect";
 import { hasLocale, type Locale } from "use-intl";
 import { BASE_URL, type LlmsSection } from "@/lib/llms/constants";
@@ -112,7 +112,7 @@ function parseLlmsIndexSlug(cleanSlug: string) {
   }
 
   const rawLocale = parts[1];
-  if (!hasLocale(routing.locales, rawLocale)) {
+  if (!hasLocale(LOCALES, rawLocale)) {
     return null;
   }
 

@@ -35,7 +35,7 @@ const highSchoolSubjects = Option.getOrElse(
 
 /**
  * Composes the shared marketing footer from product, policy, and social links
- * without owning route generation itself. Signed Page links never prefetch
+ * without owning route generation itself. Signed Page links never preload
  * (see `PageNavigation`).
  */
 export function Footer({
@@ -130,7 +130,7 @@ export function Footer({
                     <LinkItem
                       href={pageNavigation.developerItem.href}
                       label={pageNavigation.developerItem.title}
-                      prefetch={false}
+                      preload={false}
                     />
                   </li>
                 ) : null}
@@ -148,7 +148,7 @@ export function Footer({
                       <LinkItem
                         href={page.href}
                         label={page.title}
-                        prefetch={false}
+                        preload={false}
                       />
                     </li>
                   ))}
@@ -221,13 +221,13 @@ type LinkItemProps =
       href: ComponentProps<typeof NavigationLink>["href"];
       label: string;
       nativeAnchor?: false;
-      prefetch?: ComponentProps<typeof NavigationLink>["prefetch"];
+      preload?: ComponentProps<typeof NavigationLink>["preload"];
     }
   | {
       href: string;
       label: string;
       nativeAnchor: true;
-      prefetch?: never;
+      preload?: never;
     };
 
 /** The text treatment that every footer destination shares. */
@@ -238,7 +238,7 @@ const linkItemVariants = cva(
 /**
  * Renders one locale-aware footer destination with the shared text treatment.
  */
-function LinkItem({ href, label, nativeAnchor, prefetch }: LinkItemProps) {
+function LinkItem({ href, label, nativeAnchor, preload }: LinkItemProps) {
   if (nativeAnchor) {
     return (
       <a className={linkItemVariants()} href={href}>
@@ -251,7 +251,7 @@ function LinkItem({ href, label, nativeAnchor, prefetch }: LinkItemProps) {
     <NavigationLink
       className={linkItemVariants()}
       href={href}
-      prefetch={prefetch}
+      preload={preload}
     >
       {label}
     </NavigationLink>

@@ -73,7 +73,7 @@ function PrivacyPolicyLink() {
           <Link
             className="text-foreground underline underline-offset-4"
             href={href}
-            prefetch={false}
+            preload={false}
           >
             {chunks}
           </Link>

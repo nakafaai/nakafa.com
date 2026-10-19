@@ -1,8 +1,8 @@
-import { routing } from "@repo/internationalization/src/routing";
+import { PATHNAMES } from "@repo/internationalization/src/pathnames";
 import { Array as Arr, Option, Record as Rec } from "effect";
 import type { Locale } from "use-intl";
 
-const mappedPathnames = routing.pathnames;
+const mappedPathnames = PATHNAMES;
 const mappedRoutePathnames = Arr.filter(
   Rec.keys(mappedPathnames),
   isMappedRoutePathname

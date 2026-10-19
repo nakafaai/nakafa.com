@@ -1,5 +1,5 @@
 import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
-import { routing } from "@repo/internationalization/src/routing";
+import { LOCALES } from "@repo/internationalization/src/locale";
 import { Data, Schema } from "effect";
 import { hasLocale, type Locale } from "use-intl";
 
@@ -122,7 +122,7 @@ export function getSitemapPageDescriptor(id: string): SitemapPage | null {
   const segments = id.split("_");
   const [prefix, locale] = segments;
 
-  if (!hasLocale(routing.locales, locale)) {
+  if (!hasLocale(LOCALES, locale)) {
     return null;
   }
 

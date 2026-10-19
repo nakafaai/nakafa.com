@@ -1,7 +1,7 @@
 "use client";
 
 import { IntentLink } from "@repo/design-system/components/ui/intent-link";
-import Link from "next/link";
+import { Link } from "@repo/internationalization/src/navigation";
 import { createContext, type ReactNode, use } from "react";
 
 /**

@@ -3,7 +3,7 @@
 import type { Ref } from "@confect/core";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { lazyComponent } from "@repo/design-system/lib/lazy";
-import { usePathname } from "next/navigation";
+import { usePathname } from "@repo/internationalization/src/navigation";
 import type { PropsWithChildren } from "react";
 import { readChatFailureKind } from "@/components/ai/chat/access";
 import { useAnswerRetry } from "@/lib/convex/retry.client";

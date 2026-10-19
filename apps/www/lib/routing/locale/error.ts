@@ -1,7 +1,5 @@
-import type { routing } from "@repo/internationalization/src/routing";
+import type { Locale } from "@repo/internationalization/src/locale";
 import { Data } from "effect";
-
-type Locale = (typeof routing.locales)[number];
 
 /** Raised when a localized route exists but has no target-locale projection. */
 export class MissingLocalizedRouteProjectionError extends Data.TaggedError(

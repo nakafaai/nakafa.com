@@ -6,6 +6,7 @@ import {
 } from "@confect/core/Ref";
 import { createIsomorphicFn } from "@tanstack/react-start";
 import { Effect, Schema } from "effect";
+import { clientEnv } from "@/env.client";
 import { readConvexClient } from "@/lib/convex/client.client";
 import { runServerEffect } from "@/lib/server/fn";
 
@@ -36,7 +37,7 @@ export async function readServerQuery<Query extends AnyPublicQuery>(
 const readBrowserValue = Effect.fn("www.data.browserQuery")(function* <
   Query extends AnyPublicQuery,
 >(ref: Query, args: Args<Query>) {
-  const client = readConvexClient(import.meta.env.VITE_CONVEX_URL);
+  const client = readConvexClient(clientEnv.VITE_CONVEX_URL);
   const encodedArgs = yield* encodeArgs(ref, args);
   const encoded = yield* Effect.tryPromise({
     catch: (cause) => new BrowserQueryFailed({ cause }),

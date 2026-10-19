@@ -9,8 +9,8 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { toast } from "@repo/design-system/lib/toast/notify";
+import { LOCALES } from "@repo/internationalization/src/locale";
 import { useRouter } from "@repo/internationalization/src/navigation";
-import { routing } from "@repo/internationalization/src/routing";
 import { useConvex } from "convex/react";
 import { Effect, Schema } from "effect";
 import { useTransition } from "react";
@@ -38,7 +38,7 @@ const StartTryoutRequestSchema = Schema.Struct({
   destinationSectionKey: Schema.String,
   entrySectionKey: Schema.optionalKey(Schema.String),
   examKey: Schema.String,
-  locale: Schema.Literals(routing.locales),
+  locale: Schema.Literals(LOCALES),
   setKey: Schema.String,
   successNavigation: Schema.Literals(["destination", "stay"]),
   trackKey: Schema.String,

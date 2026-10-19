@@ -55,7 +55,7 @@ function panelId(windowId: string, lesson: Lesson) {
 }
 
 /** The lesson after each one in the order of the buttons, back to the first after the last. */
-const NEXT_LESSON = {
+const FOLLOWING_LESSON = {
   atom: "cell",
   cell: "projectile",
   circle: "atom",
@@ -210,7 +210,7 @@ export function LessonWindow({
       return;
     }
     const timer = window.setTimeout(() => {
-      setLesson((current) => NEXT_LESSON[current]);
+      setLesson((current) => FOLLOWING_LESSON[current]);
       setRevealed(true);
     }, TURN_EVERY_MS);
     return () => window.clearTimeout(timer);

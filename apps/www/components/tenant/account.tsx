@@ -19,10 +19,9 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useSidebar } from "@repo/design-system/lib/sidebar/context";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { languages } from "@repo/internationalization/data/lang";
+import { Link, useRouter } from "@repo/internationalization/src/navigation";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { Array as Arr, Effect } from "effect";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { startTransition } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { ActiveBadge } from "@/components/shared/active";
@@ -55,10 +54,6 @@ function changeLanguage(
           },
           { position: "bottom-center" }
         );
-        return;
-      }
-      if (render === "reload") {
-        window.location.reload();
         return;
       }
       startTransition(() => {

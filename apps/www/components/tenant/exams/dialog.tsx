@@ -23,6 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@repo/design-system/components/ui/select";
+import { useRouter } from "@repo/internationalization/src/navigation";
 import {
   Array as Arr,
   Effect,
@@ -31,7 +32,6 @@ import {
   Schema,
   String as Str,
 } from "effect";
-import { useRouter } from "next/navigation";
 import { useId, useMemo, useState, useTransition } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import type { StoreApi } from "zustand";

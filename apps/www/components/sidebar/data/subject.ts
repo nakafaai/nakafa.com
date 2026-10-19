@@ -1,8 +1,8 @@
-import { routing } from "@repo/internationalization/src/routing";
+import { PATHNAMES } from "@repo/internationalization/src/pathnames";
 import type { Locale } from "use-intl";
 import { CURRICULUM_NAVIGATION_ICONS } from "@/lib/curriculum/icons";
 
-const curriculaPath = routing.pathnames["/curricula"];
+const curriculaPath = PATHNAMES["/curricula"];
 
 /**
  * The high school grades of the subject menu. Each grade draws the icon of its

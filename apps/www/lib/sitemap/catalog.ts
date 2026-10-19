@@ -1,5 +1,5 @@
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
-import { routing } from "@repo/internationalization/src/routing";
+import { DEFAULT_LOCALE, LOCALES } from "@repo/internationalization/src/locale";
 import { Array as Arr, Effect, MutableList } from "effect";
 import { cache } from "react";
 import { readPublishedArticleBuckets } from "@/lib/content/article/sitemap";
@@ -30,7 +30,7 @@ export const readSitemapPageDescriptors = Effect.fn(
   const descriptors = MutableList.make<SitemapPage>();
   MutableList.append(descriptors, { id: SITEMAP_BASE_ID });
   const identity = {
-    appLocale: AppLocaleSchema.make(routing.defaultLocale),
+    appLocale: AppLocaleSchema.make(DEFAULT_LOCALE),
     publicPath: "sitemap.xml",
   };
   const active = yield* readActiveContentIdentity();
@@ -53,7 +53,7 @@ export const readSitemapPageDescriptors = Effect.fn(
     identity
   );
 
-  for (const locale of routing.locales) {
+  for (const locale of LOCALES) {
     const [articleBuckets, materialBuckets, programBuckets, tryoutCount] =
       yield* Effect.all(
         [

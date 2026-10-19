@@ -1,7 +1,7 @@
 import { HttpClient } from "@confect/js";
 import auth from "@repo/backend/confect/_generated/refs/auth";
 import users from "@repo/backend/confect/_generated/refs/users";
-import { routing } from "@repo/internationalization/src/routing";
+import { LOCALES } from "@repo/internationalization/src/locale";
 import { Array as Arr, Effect, Option } from "effect";
 import { hasLocale } from "use-intl";
 import { clientEnv } from "@/env.client";
@@ -43,11 +43,7 @@ export const readProfileRefusal = Effect.fn(
 )(function* (pathname: string, headers: Headers) {
   const [locale, root, ...tab] = Arr.filter(pathname.split("/"), Boolean);
   if (
-    !(
-      hasLocale(routing.locales, locale) &&
-      root !== undefined &&
-      isProfileTab(tab)
-    )
+    !(hasLocale(LOCALES, locale) && root !== undefined && isProfileTab(tab))
   ) {
     return null;
   }
@@ -92,7 +88,7 @@ export const readProfileRedirect = Effect.fn(
   const [locale, root, id, ...tab] = Arr.filter(pathname.split("/"), Boolean);
   if (
     !(
-      hasLocale(routing.locales, locale) &&
+      hasLocale(LOCALES, locale) &&
       root === "user" &&
       id !== undefined &&
       id !== "settings" &&

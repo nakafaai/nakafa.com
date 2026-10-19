@@ -1,8 +1,8 @@
 "use client";
 
 import { Button } from "@repo/design-system/components/ui/button";
+import { useRouter } from "@repo/internationalization/src/navigation";
 import { Effect } from "effect";
-import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { signOutSchoolAccount } from "@/components/tenant/account.client";

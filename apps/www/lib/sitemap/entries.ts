@@ -1,6 +1,6 @@
 import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
+import { LOCALES } from "@repo/internationalization/src/locale";
 import { getPathname } from "@repo/internationalization/src/navigation";
-import { routing } from "@repo/internationalization/src/routing";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 import { cache } from "react";
@@ -65,8 +65,7 @@ function getUrl(href: string, locale: Locale): string {
   });
 
   return Option.match(mappedPathname, {
-    onNone: () =>
-      SITE_ORIGIN + getPathname({ locale, href, forcePrefix: true }),
+    onNone: () => SITE_ORIGIN + getPathname({ locale, href }),
     onSome: (pathname) => `${SITE_ORIGIN}/${locale}${pathname}`,
   });
 }
@@ -101,7 +100,7 @@ function getSitemapEntryLocales(pageId: string) {
     return [descriptor.locale];
   }
 
-  return routing.locales;
+  return LOCALES;
 }
 
 /**

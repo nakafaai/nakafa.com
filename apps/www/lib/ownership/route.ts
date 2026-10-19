@@ -1,11 +1,11 @@
 import { APPLICATION_ROUTE_ROOTS } from "@repo/contents/route/root";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/route/surface";
-import type { routing } from "@repo/internationalization/src/routing";
+import type { Locale } from "@repo/internationalization/src/locale";
 import { Array as Arr, HashSet, Option } from "effect";
 import { isProfileTab, readProfileRoot } from "@/lib/profile/route";
 import { userSettingsSections } from "@/lib/settings/routes";
 
-type PublicLocale = (typeof routing.locales)[number];
+type PublicLocale = Locale;
 
 function readPublicSurface(locale: PublicLocale, root: string) {
   return Arr.findFirst(

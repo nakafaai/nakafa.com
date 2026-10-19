@@ -3,7 +3,7 @@ import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { ArticleRouteSlugSchema } from "@nakafa/aksara-contracts/projection/article";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/route/surface";
-import { routing } from "@repo/internationalization/src/routing";
+import { DEFAULT_LOCALE, LOCALES } from "@repo/internationalization/src/locale";
 import { Array as Arr, Effect, HashSet, Record as Rec, Schema } from "effect";
 import { hasLocale } from "use-intl";
 import { hasPublishedArticleCategory } from "@/lib/content/article/category";
@@ -45,12 +45,12 @@ export const readSourceBackedHtmlRouteRejection = Effect.fn(
  */
 function readRejectedPublicRouteLocale(pathname: string) {
   if (HashSet.has(REJECTED_PUBLIC_ROOTS, pathname)) {
-    return routing.defaultLocale;
+    return DEFAULT_LOCALE;
   }
 
   const [locale, namespace] = Arr.filter(pathname.split("/"), Boolean);
 
-  if (!(namespace && hasLocale(routing.locales, locale))) {
+  if (!(namespace && hasLocale(LOCALES, locale))) {
     return null;
   }
 
@@ -94,7 +94,7 @@ function readMissingHtmlRouteLocale({
 
   const [locale, root, ...segments] = Arr.filter(pathname.split("/"), Boolean);
 
-  if (!(root && hasLocale(routing.locales, locale))) {
+  if (!(root && hasLocale(LOCALES, locale))) {
     return Effect.succeed(null);
   }
 
@@ -158,7 +158,7 @@ function readMissingArticleHtmlLocale({
   locale,
   segments,
 }: {
-  locale: (typeof routing.locales)[number];
+  locale: (typeof LOCALES)[number];
   segments: readonly string[];
 }) {
   if (segments.length === 0) {
@@ -195,7 +195,7 @@ function readMissingOwnedHtmlLocale({
   publicPath,
 }: {
   family: ContentFamily;
-  locale: (typeof routing.locales)[number];
+  locale: (typeof LOCALES)[number];
   publicPath: string;
 }) {
   return Effect.gen(function* () {

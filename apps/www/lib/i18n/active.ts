@@ -1,10 +1,8 @@
-import {
-  type PublicAppLocale,
-  routing,
-} from "@repo/internationalization/src/routing";
+import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
+import { LOCALES } from "@repo/internationalization/src/locale";
 import { hasLocale } from "use-intl";
 
 /** Narrows one locale to the product's current public route set. */
-export function isActiveLocale(locale: string): locale is PublicAppLocale {
-  return hasLocale(routing.locales, locale);
+export function isActiveLocale(locale: string): locale is ActiveAppLocaleCode {
+  return hasLocale(LOCALES, locale);
 }

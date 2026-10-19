@@ -323,7 +323,7 @@ describe("createAuthProxy", () => {
 
         const read = yield* Effect.promise(() =>
           proxy.GET(
-            new Request(GET_URL, { headers: { cookie: "NEXT_LOCALE=id" } })
+            new Request(GET_URL, { headers: { cookie: "NAKAFA_LOCALE=id" } })
           )
         );
 

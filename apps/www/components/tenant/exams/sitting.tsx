@@ -23,6 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@repo/design-system/components/ui/select";
+import { useRouter } from "@repo/internationalization/src/navigation";
 import {
   Array as Arr,
   DateTime,
@@ -32,7 +33,6 @@ import {
   Schema,
   String as Str,
 } from "effect";
-import { useRouter } from "next/navigation";
 import { useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { runExamAction, sentAction } from "@/components/tenant/exams/action";

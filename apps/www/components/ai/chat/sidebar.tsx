@@ -12,7 +12,6 @@ import {
   CHAT_SEARCH_LENGTH,
 } from "@repo/backend/client/chats/list";
 import chats from "@repo/backend/confect/_generated/refs/chats";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
@@ -35,8 +34,8 @@ import {
 } from "@repo/design-system/components/ui/sidebar-menu";
 import { Sidebar } from "@repo/design-system/components/ui/sidebar-shell";
 import { useSidebar } from "@repo/design-system/lib/sidebar/context";
+import { useParams } from "@tanstack/react-router";
 import { Array as Arr } from "effect";
-import { useParams } from "next/navigation";
 import { type ComponentProps, createContext, use, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useChatList } from "@/components/ai/chat/history.client";
@@ -80,7 +79,7 @@ export function AiChatSidebar({
               render={
                 <NavigationLink
                   href="/chat"
-                  onNavigate={() => setOpenMobile(false)}
+                  onClick={() => setOpenMobile(false)}
                   title={t("new-chat")}
                 >
                   {t("new-chat")}
@@ -136,9 +135,9 @@ function AiChatSidebarChats() {
   const t = useTranslations("Ai");
   const drafts = useAi((state) => state.chatDrafts);
   const setOpenMobile = useSidebar((sidebar) => sidebar.setOpenMobile);
-  const params = useParams<{
-    id: Id<"chats">;
-  }>();
+  const params: Readonly<Record<string, string | undefined>> = useParams({
+    strict: false,
+  });
   const id = params.id;
   const searchQuery = useChatSearch().trim();
   const type = "study" as const;
@@ -178,7 +177,7 @@ function AiChatSidebarChats() {
                 render={
                   <NavigationLink
                     href={`/chat/${chat._id}`}
-                    onNavigate={() => setOpenMobile(false)}
+                    onClick={() => setOpenMobile(false)}
                     title={chat.title}
                   />
                 }

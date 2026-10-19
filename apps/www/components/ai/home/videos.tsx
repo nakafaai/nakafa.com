@@ -1,8 +1,8 @@
 import { YoutubeIcon } from "@hugeicons/core-free-icons";
 import { Image } from "@repo/design-system/components/image";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { Link } from "@repo/internationalization/src/navigation";
 import { COMPANY_SOCIAL_PROFILES } from "@repo/seo/company-profiles";
-import Link from "next/link";
 import { useTranslations } from "use-intl";
 
 export function Videos() {

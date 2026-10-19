@@ -7,7 +7,7 @@ import { readProfile } from "@/lib/profile/server";
 const mocks = vi.hoisted(() => ({
   layerOptions: vi.fn(),
   notFound: vi.fn(() => {
-    throw new Error("NEXT_NOT_FOUND");
+    throw new Error("NOT_FOUND");
   }),
   query: vi.fn(),
   token: vi.fn(),
@@ -128,16 +128,14 @@ describe("profile server", () => {
   it("ends the request as not found for a username nobody holds, with or without a session", async () => {
     mocks.token.mockResolvedValue(undefined);
     answerWith({ profile: Effect.succeed(null) });
-    await expect(readProfile("nobody_visitor")).rejects.toThrow(
-      "NEXT_NOT_FOUND"
-    );
+    await expect(readProfile("nobody_visitor")).rejects.toThrow("NOT_FOUND");
 
     mocks.token.mockResolvedValue(TOKEN);
     answerWith({
       account: accountOf(PROFILE_ID),
       profile: Effect.succeed(null),
     });
-    await expect(readProfile("nobody_owner")).rejects.toThrow("NEXT_NOT_FOUND");
+    await expect(readProfile("nobody_owner")).rejects.toThrow("NOT_FOUND");
     expect(mocks.notFound).toHaveBeenCalledTimes(2);
   });
 });

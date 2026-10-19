@@ -1,7 +1,7 @@
 import { HttpClient } from "@confect/js";
 import "@tanstack/react-start/server-only";
+import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import contents from "@repo/backend/confect/_generated/refs/contents";
-import type { PublicAppLocale } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
 import { httpLayer } from "@/lib/convex/http";
 
@@ -23,7 +23,7 @@ import { httpLayer } from "@/lib/convex/http";
  * @see https://nextjs.org/docs/messages/next-prerender-current-time
  * @see https://confect.dev/v10/clients/js/http
  */
-export async function getHomeTrendingSubjects(locale: PublicAppLocale) {
+export async function getHomeTrendingSubjects(locale: ActiveAppLocaleCode) {
   return await Effect.runPromise(
     Effect.flatMap(HttpClient.HttpClient, (client) =>
       client.query(contents.queries.trending.getTrendingSubjects, {

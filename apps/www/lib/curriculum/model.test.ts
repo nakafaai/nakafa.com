@@ -63,13 +63,11 @@ describe("signed curriculum runtime", () => {
   it("resolves a signed route with published cards and hierarchy", async () => {
     routeMock.mockResolvedValueOnce(publishedRoute());
 
-    const model = await resolveRuntimeCurriculumRoute(
-      Promise.resolve({
-        curriculum: "merdeka",
-        locale: "en",
-        path: ["class-11", "mathematics"],
-      })
-    );
+    const model = await resolveRuntimeCurriculumRoute({
+      curriculum: "merdeka",
+      locale: "en",
+      path: ["class-11", "mathematics"],
+    });
 
     expect(model).toMatchObject({
       ancestors: [
@@ -87,9 +85,7 @@ describe("signed curriculum runtime", () => {
     routeMock.mockResolvedValueOnce(publishedRoute({ route: null }));
 
     await expect(
-      resolveRuntimeCurriculumRoute(
-        Promise.resolve({ curriculum: "missing", locale: "en" })
-      )
+      resolveRuntimeCurriculumRoute({ curriculum: "missing", locale: "en" })
     ).rejects.toThrow();
   });
 
@@ -149,13 +145,11 @@ describe("signed curriculum runtime", () => {
 
   it("builds route presentation from signed ancestors", async () => {
     routeMock.mockResolvedValueOnce(publishedRoute());
-    const model = await resolveRuntimeCurriculumRoute(
-      Promise.resolve({
-        curriculum: "merdeka",
-        locale: "en",
-        path: ["class-11", "mathematics"],
-      })
-    );
+    const model = await resolveRuntimeCurriculumRoute({
+      curriculum: "merdeka",
+      locale: "en",
+      path: ["class-11", "mathematics"],
+    });
 
     expect(readRuntimeCurriculumBreadcrumbs("Home", "Subjects", model)).toEqual(
       [

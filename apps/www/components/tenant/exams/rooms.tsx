@@ -28,8 +28,8 @@ import {
   TableRow,
 } from "@repo/design-system/components/ui/table";
 import { buttonVariants } from "@repo/design-system/lib/button";
+import { Link } from "@repo/internationalization/src/navigation";
 import { Array as Arr, Option, Schema } from "effect";
-import Link from "next/link";
 import { startTransition, useState } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/providers/convex";

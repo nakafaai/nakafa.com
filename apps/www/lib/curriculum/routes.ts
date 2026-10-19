@@ -1,7 +1,7 @@
-import { routing } from "@repo/internationalization/src/routing";
+import { PATHNAMES } from "@repo/internationalization/src/pathnames";
 import type { Locale } from "use-intl";
 
-const curriculumPathnames = routing.pathnames["/curricula"];
+const curriculumPathnames = PATHNAMES["/curricula"];
 
 /** Returns the localized curriculum index href without a locale prefix. */
 export function getCurriculumIndexHref(locale: Locale) {

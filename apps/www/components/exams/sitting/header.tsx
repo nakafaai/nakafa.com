@@ -5,7 +5,7 @@ import { CancelCircleIcon, Key01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import Link from "next/link";
+import { Link } from "@repo/internationalization/src/navigation";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
 import {

@@ -14,7 +14,10 @@ import { Array as Arr, Option, Record as Rec } from "effect";
 const LOCAL_DOMAIN = "localhost";
 
 /** The cell domains of production, then the local domain for development. */
-const SCHOOL_DOMAINS = [...Rec.values(SCHOOL_CELL_DOMAINS), LOCAL_DOMAIN];
+export const SCHOOL_DOMAINS = [
+  ...Rec.values(SCHOOL_CELL_DOMAINS),
+  LOCAL_DOMAIN,
+];
 
 /** The single label in front of a domain, or none when the host is not one label under it. */
 function readLabel(hostname: string, domain: string): Option.Option<string> {

@@ -3,6 +3,7 @@
 import type { Ref } from "@confect/core";
 import type { InvokeReturn } from "@confect/react";
 import { QueryResult, useQuery } from "@confect/react";
+import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import learningPreferences from "@repo/backend/confect/_generated/refs/learningPreferences";
 import {
   CardContent,
@@ -20,7 +21,6 @@ import {
   SelectValue,
 } from "@repo/design-system/components/ui/select";
 import { toast } from "@repo/design-system/lib/toast/notify";
-import type { PublicAppLocale } from "@repo/internationalization/src/routing";
 import { useForm } from "@tanstack/react-form";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 import { useRef } from "react";
@@ -69,7 +69,7 @@ interface UserSettingsCurriculumProps {
   initialPrograms: Ref.Returns<
     typeof learningPreferences.queries.listCurriculumPrograms
   >;
-  locale: PublicAppLocale;
+  locale: ActiveAppLocaleCode;
 }
 /** Renders the settings form that saves the user's preferred curriculum. */
 export function UserSettingsCurriculum({
@@ -250,7 +250,7 @@ function submitCurriculumPreference({
   setPreferredCurriculum,
   value,
 }: {
-  locale: PublicAppLocale;
+  locale: ActiveAppLocaleCode;
   programs: readonly CurriculumProgramOption[];
   setPreferredCurriculum: SavePreferredCurriculum;
   value: unknown;

@@ -1,3 +1,4 @@
+import { DEFAULT_LOCALE } from "@repo/internationalization/src/locale";
 import "@tanstack/react-start/server-only";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import {
@@ -9,7 +10,6 @@ import {
   PublicPageProjectionSchema,
 } from "@nakafa/aksara-contracts/projection/page";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
-import { routing } from "@repo/internationalization/src/routing";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
 import { decodePublishedPageJson } from "@/lib/content/published/projection";
@@ -52,7 +52,7 @@ export const readPublishedPageCatalog = Effect.fn(
   "NakafaContent.readPublishedPageCatalog"
 )(function* () {
   const identity = {
-    appLocale: AppLocaleSchema.make(routing.defaultLocale),
+    appLocale: AppLocaleSchema.make(DEFAULT_LOCALE),
     publicPath: "pages",
   };
   const result = yield* queryContentStore(contentRelease.page.catalog, {});

@@ -5,7 +5,7 @@ import {
 } from "@nakafa/aksara-contracts/locale";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/route/surface";
-import type { routing } from "@repo/internationalization/src/routing";
+import type { Locale } from "@repo/internationalization/src/locale";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 import { hasLocale } from "use-intl";
 import { matchesPreviewRoute } from "@/lib/content/preview/route";
@@ -22,11 +22,7 @@ type ProjectedHtmlRouteInput = typeof ProjectedHtmlRouteInputSchema.Type;
 /** Resolves one material HTML route against a single active release snapshot. */
 const readProjectedMaterialRouteRejection = Effect.fn(
   "www.routing.publicHtml.materialRejection"
-)(function* (
-  locale: (typeof routing.locales)[number],
-  appLocale: AppLocale,
-  publicPath: string
-) {
+)(function* (locale: Locale, appLocale: AppLocale, publicPath: string) {
   const ownership = yield* readActiveContentRoute({
     appLocale,
     family: "material",

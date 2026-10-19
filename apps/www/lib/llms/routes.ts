@@ -1,5 +1,5 @@
 import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
-import { routing } from "@repo/internationalization/src/routing";
+import { DEFAULT_LOCALE, LOCALES } from "@repo/internationalization/src/locale";
 import {
   HttpMediaTypeSchema,
   negotiateMediaType,
@@ -151,7 +151,7 @@ function getLocalizedLlmsRoute(
 ): Option.Option<LocalizedLlmsRoute> {
   if (pathname === "/") {
     return Option.some({
-      locale: routing.defaultLocale,
+      locale: DEFAULT_LOCALE,
       markdownExtension: "",
       route: "",
     });
@@ -180,7 +180,7 @@ function getLocalizedLlmsRoute(
 
 /** Narrows a raw URL segment to the configured locale source of truth. */
 function getSupportedLocale(locale: string | undefined) {
-  for (const supportedLocale of routing.locales) {
+  for (const supportedLocale of LOCALES) {
     if (supportedLocale === locale) {
       return Option.some(supportedLocale);
     }

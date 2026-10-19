@@ -1,4 +1,4 @@
-import { routing } from "@repo/internationalization/src/routing";
+import { DEFAULT_LOCALE, LOCALES } from "@repo/internationalization/src/locale";
 import { Option, Schema } from "effect";
 import { hasLocale } from "use-intl";
 import { withoutShareToken } from "@/lib/share/fragment";
@@ -49,10 +49,10 @@ function isReservedPath(pathname: string) {
 
 function splitLocalizedPathname(pathname: string, fallbackLocale: string) {
   const firstSegment = pathname.slice(1).split("/", 1)[0];
-  if (!hasLocale(routing.locales, firstSegment)) {
-    const locale = hasLocale(routing.locales, fallbackLocale)
+  if (!hasLocale(LOCALES, firstSegment)) {
+    const locale = hasLocale(LOCALES, fallbackLocale)
       ? fallbackLocale
-      : routing.defaultLocale;
+      : DEFAULT_LOCALE;
     return { locale, pathname };
   }
 
@@ -80,13 +80,13 @@ function parseSafePostAuthSource(source: string, fallbackLocale: string) {
 
 /** Returns whether a normalized intent is one canonical localized app href. */
 function isCanonicalPostAuthIntent(source: string) {
-  const parsed = parseSafePostAuthSource(source, routing.defaultLocale);
+  const parsed = parseSafePostAuthSource(source, DEFAULT_LOCALE);
   if (!parsed) {
     return false;
   }
 
   const firstSegment = parsed.url.pathname.slice(1).split("/", 1)[0];
-  if (!hasLocale(routing.locales, firstSegment)) {
+  if (!hasLocale(LOCALES, firstSegment)) {
     return false;
   }
 
@@ -108,7 +108,7 @@ export const PostAuthIntentSchema = Schema.String.pipe(
   Schema.brand("@Nakafa/PostAuthIntent")
 );
 
-const AppLocaleSchema = Schema.Literals(routing.locales);
+const AppLocaleSchema = Schema.Literals(LOCALES);
 
 const PostAuthIntentResolutionSchema = Schema.Union([
   Schema.Struct({
@@ -150,7 +150,7 @@ const decodeString = Schema.decodeUnknownOption(Schema.String);
  */
 export function resolvePostAuthIntent(
   rawIntent: unknown,
-  rawLocale: string = routing.defaultLocale
+  rawLocale: string = DEFAULT_LOCALE
 ): PostAuthIntentResolution {
   if (rawIntent === undefined || rawIntent === null || rawIntent === "") {
     return { kind: "none", reason: "absent" };
@@ -207,9 +207,7 @@ export function getPostAuthOnboardingHref(
   rawIntent: unknown,
   rawLocale: string
 ) {
-  const locale = hasLocale(routing.locales, rawLocale)
-    ? rawLocale
-    : routing.defaultLocale;
+  const locale = hasLocale(LOCALES, rawLocale) ? rawLocale : DEFAULT_LOCALE;
   const onboarding = withIntent(
     ONBOARDING_PATH,
     resolvePostAuthIntent(rawIntent, locale)
@@ -261,9 +259,7 @@ export function getPostAuthProviderErrorHref(
   rawIntent: unknown,
   rawLocale: string
 ) {
-  const locale = hasLocale(routing.locales, rawLocale)
-    ? rawLocale
-    : routing.defaultLocale;
+  const locale = hasLocale(LOCALES, rawLocale) ? rawLocale : DEFAULT_LOCALE;
   const landing = withIntent(
     PROVIDER_ERROR_PATH,
     resolvePostAuthIntent(rawIntent, locale)
@@ -312,9 +308,9 @@ export function getPostAuthDestination(
   if (resolution.kind === "none") {
     return {
       href: HOME_PATH,
-      locale: hasLocale(routing.locales, fallbackLocale)
+      locale: hasLocale(LOCALES, fallbackLocale)
         ? fallbackLocale
-        : routing.defaultLocale,
+        : DEFAULT_LOCALE,
     };
   }
 

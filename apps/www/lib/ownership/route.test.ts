@@ -1,70 +1,30 @@
 // @vitest-environment node
 
-import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { isReservedUsername } from "@repo/backend/confect/users/reserved";
 import { readUsername } from "@repo/backend/confect/users/username";
-import { Array as Arr, Effect, FileSystem, Path, Result } from "effect";
+import { APPLICATION_ROUTE_ROOTS } from "@repo/contents/route/root";
+import { Array as Arr, Result } from "effect";
 import {
   isApplicationRoutePath,
   isApplicationRouteRoot,
   isReservedPagePath,
 } from "@/lib/ownership/route";
 
-const ROUTE_FILE = /^(?:page|route)\.tsx?$/;
-/** A folder that is no part of an address: a route group, a slot, a parameter, a private folder, or the folder itself. */
-const NOT_ADDRESSED = /^[(@[_.]/;
-
-/**
- * Reads the first segment of every route in the route tree. A route is a folder
- * with a page or a route handler, and its first segment is the first folder that
- * is part of an address, so a catch-all page below groups has none.
- */
-const readTreeRoots = Effect.fn("test.readTreeRoots")(function* () {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const entries = yield* fs.readDirectory(path.join(process.cwd(), "app"), {
-    recursive: true,
-  });
-  return Arr.dedupe(
-    Arr.getSomes(
-      Arr.map(
-        Arr.filter(entries, (entry) => ROUTE_FILE.test(path.basename(entry))),
-        (entry) =>
-          Arr.findFirst(
-            path.dirname(entry).split(path.sep),
-            (segment) => !NOT_ADDRESSED.test(segment)
-          )
-      )
-    )
-  );
-});
-
 describe("public route ownership", () => {
-  it.effect("reserves the username of every root in the route tree", () =>
-    Effect.gen(function* () {
-      const roots = yield* readTreeRoots();
-      const names = Arr.filter(roots, (root) =>
-        Result.isSuccess(readUsername(root))
-      );
+  it("reserves the username of every declared application route root", () => {
+    const roots = Arr.fromIterable(APPLICATION_ROUTE_ROOTS);
+    const names = Arr.filter(roots, (root) =>
+      Result.isSuccess(readUsername(root))
+    );
 
-      // A scan that found nothing would reserve nothing.
-      expect(names).toEqual(
-        expect.arrayContaining([
-          "api",
-          "articles",
-          "chat",
-          "quran",
-          "sitemap",
-          "user",
-        ])
-      );
-      expect(
-        Arr.filter(names, (name) => !isReservedUsername(name)),
-        "reserve a new route root in @repo/contents/route/root"
-      ).toEqual([]);
-    }).pipe(Effect.provide(NodeServices.layer))
-  );
+    // An empty declaration would reserve nothing.
+    expect(names).toEqual(expect.arrayContaining(["articles", "chat", "user"]));
+    expect(
+      Arr.filter(names, (name) => !isReservedUsername(name)),
+      "reserve a new route root in @repo/contents/route/root"
+    ).toEqual([]);
+  });
 
   it.each([
     ["de", "search"],

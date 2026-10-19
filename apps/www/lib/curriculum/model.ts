@@ -18,8 +18,12 @@ import { getPublishedProgramRoute } from "@/lib/content/program/route";
 import { getCurriculumIndexHref } from "@/lib/curriculum/routes";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
-type CurriculumParams =
-  PageProps<"/[locale]/curricula/[curriculum]/[[...path]]">["params"];
+/** The params of the curriculum route, as the router decodes them. */
+interface CurriculumParams {
+  readonly curriculum: string;
+  readonly locale: string;
+  readonly path?: readonly string[];
+}
 
 /** Route shape consumed by the shared curriculum presentation. */
 export type CurriculumViewRoute = PublishedCurriculumRoute;
@@ -55,8 +59,9 @@ export function isRenderableCurriculumView(route: CurriculumViewRoute) {
 }
 
 /** Resolves one route through the signed Aksara owner. */
-export async function resolveRuntimeCurriculumRoute(params: CurriculumParams) {
-  const resolved = await params;
+export async function resolveRuntimeCurriculumRoute(
+  resolved: CurriculumParams
+) {
   const locale = getLocaleOrThrow(resolved.locale);
   const publicPath = Arr.join(
     [

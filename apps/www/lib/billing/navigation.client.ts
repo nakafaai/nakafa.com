@@ -1,9 +1,9 @@
 "use client";
 
 import { useAction } from "@confect/react";
+import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import customers from "@repo/backend/confect/_generated/refs/customers";
 import { type ToastCopy, toast } from "@repo/design-system/lib/toast/notify";
-import type { PublicAppLocale } from "@repo/internationalization/src/routing";
 import { useConvex } from "convex/react";
 import { Effect, Schema } from "effect";
 import { useTransition } from "react";
@@ -65,7 +65,7 @@ export function useBillingNavigation() {
     openCheckout: ({
       locale,
       ...failure
-    }: BillingSource & { readonly locale: PublicAppLocale }) =>
+    }: BillingSource & { readonly locale: ActiveAppLocaleCode }) =>
       runBillingRequest(
         Effect.tryPromise(() =>
           createCheckout({

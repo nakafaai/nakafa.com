@@ -12,8 +12,7 @@ const mockReadSitemapRoutePage = vi.hoisted(() => vi.fn());
 const mockGetSitemapPageDescriptor = vi.hoisted(() => vi.fn());
 const mockGetPathname = vi.hoisted(() =>
   vi.fn<typeof getPathname>(({ href, locale }) => {
-    const pathname = typeof href === "string" ? href : href.pathname;
-    const route = pathname.startsWith("/") ? pathname : `/${pathname}`;
+    const route = href.startsWith("/") ? href : `/${href}`;
 
     return `/${locale}${route === "/" ? "" : route}`;
   })

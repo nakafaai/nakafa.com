@@ -29,10 +29,9 @@ import {
   SidebarInset,
 } from "@repo/design-system/components/ui/sidebar-shell";
 import { lazyComponent } from "@repo/design-system/lib/lazy";
-import { usePathname } from "@repo/internationalization/src/navigation";
+import { Link, usePathname } from "@repo/internationalization/src/navigation";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { Effect } from "effect";
-import Link from "next/link";
 import { type ReactNode, useTransition } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { AccountMenu } from "@/components/sidebar/menu/account";

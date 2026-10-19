@@ -3,14 +3,12 @@ import { NETWORK_ATTEMPT_DEADLINE } from "@repo/backend/client/network";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { negotiateLocale } from "@repo/internationalization/src/negotiate";
-import {
-  isSharedPath,
-  readSchoolSlug,
-} from "@repo/internationalization/src/rewrite";
+import { isSharedPath } from "@repo/internationalization/src/rewrite";
 import { Data, Effect, Option } from "effect";
 import { clientEnv } from "@/env.client";
 import { readSessionToken } from "@/lib/auth/token";
 import { httpSingleAttemptLayer } from "@/lib/convex/http";
+import { readSchoolSlug } from "@/lib/routing/school/host";
 
 /**
  * The gate did not answer within NETWORK_ATTEMPT_DEADLINE, the bound that every

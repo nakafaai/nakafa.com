@@ -27,9 +27,9 @@ import {
   SelectValue,
 } from "@repo/design-system/components/ui/select";
 import { buttonVariants } from "@repo/design-system/lib/button";
+import { Link } from "@repo/internationalization/src/navigation";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, Option, Schema } from "effect";
-import Link from "next/link";
 import { type ReactNode, useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/providers/convex";

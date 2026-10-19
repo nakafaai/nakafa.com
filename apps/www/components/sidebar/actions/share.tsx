@@ -8,8 +8,8 @@ import {
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
 import { toast } from "@repo/design-system/lib/toast/notify";
+import { usePathname } from "@repo/internationalization/src/navigation";
 import { getAppUrl } from "@repo/site/app";
-import { usePathname } from "next/navigation";
 import { useTranslations } from "use-intl";
 
 export function ShareButton() {

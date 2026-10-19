@@ -3,7 +3,7 @@ import {
   PUBLIC_ROUTE_SURFACES,
   type PublicRouteSurface,
 } from "@repo/contents/route/surface";
-import { routing } from "@repo/internationalization/src/routing";
+import { LOCALES } from "@repo/internationalization/src/locale";
 import { Array as Arr, Option, Record as Rec, Schema } from "effect";
 import type { Locale } from "use-intl";
 import {
@@ -43,7 +43,7 @@ export function buildRootLlmsIndexText() {
       "",
       "## Indexes",
       "",
-      ...Arr.map(routing.locales, formatLocaleIndexLine),
+      ...Arr.map(LOCALES, formatLocaleIndexLine),
       "",
       "## References",
       "",

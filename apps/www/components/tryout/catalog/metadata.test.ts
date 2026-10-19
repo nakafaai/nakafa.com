@@ -9,7 +9,7 @@ const runtimeMocks = vi.hoisted(() => ({
 }));
 const navigationMocks = vi.hoisted(() => ({
   notFound: vi.fn(() => {
-    throw new Error("NEXT_NOT_FOUND");
+    throw new Error("NOT_FOUND");
   }),
 }));
 const translationMocks = vi.hoisted(() => ({
@@ -239,7 +239,7 @@ describe("try-out route metadata", () => {
         locale: "de",
         publicPath: "try-out/indonesien/snbt",
       })
-    ).rejects.toThrow("NEXT_NOT_FOUND");
+    ).rejects.toThrow("NOT_FOUND");
     expect(navigationMocks.notFound).toHaveBeenCalledOnce();
   });
 
@@ -254,7 +254,7 @@ describe("try-out route metadata", () => {
         locale: "id",
         publicPath: "try-out/missing",
       })
-    ).rejects.toThrow("NEXT_NOT_FOUND");
+    ).rejects.toThrow("NOT_FOUND");
     expect(navigationMocks.notFound).toHaveBeenCalledOnce();
   });
 });

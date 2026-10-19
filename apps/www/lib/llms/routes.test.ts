@@ -42,6 +42,21 @@ describe("llms proxy route resolver", () => {
       )
   );
 
+  it.effect("delegates a write method without reading content catalogs", () =>
+    assertRoute(
+      {
+        acceptHeader: Option.some("text/markdown"),
+        isRscRequest: false,
+        method: "POST",
+        pathname: "/en/subjects/mathematics/integral",
+      },
+      (decision) => {
+        expect(decision).toEqual({ kind: "delegate" });
+        expect(mockHasLlmsMarkdownSource).not.toHaveBeenCalled();
+      }
+    )
+  );
+
   it.effect(
     "rewrites localized content negotiation to the Markdown handler",
     () =>

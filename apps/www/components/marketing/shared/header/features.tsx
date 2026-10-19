@@ -34,14 +34,14 @@ export function HeaderFeaturesLink(
   return (
     <NavigationLink
       {...props}
-      href={{ pathname: "/", hash: LESSON_SECTION_ID }}
+      href={`/#${LESSON_SECTION_ID}`}
       onClick={(event) => {
         props.onClick?.(event);
         if (onHome) {
           scrollToSection();
         }
       }}
-      scroll={onHome ? false : props.scroll}
+      resetScroll={!onHome}
     />
   );
 }
