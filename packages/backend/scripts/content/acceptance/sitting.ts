@@ -12,9 +12,6 @@ import { Effect, FileSystem, Schema } from "effect";
 /** One Convex function's arguments as the CLI takes them, JSON text. */
 const encodeArguments = Schema.encodeEffect(JsonTextSchema);
 
-/** The number of extra students a seed seats, as the command line names it. */
-const decodeCrowd = Schema.decodeEffect(Schema.FiniteFromString);
-
 /**
  * Seeds one proctored sitting of a keyed exam in the running local acceptance backend. The
  * learner with the address gets a student grant in the school's first active unit, and the
@@ -30,7 +27,7 @@ export const createAcceptanceSitting = Effect.fn(
   slug: string,
   email: string,
   output: string,
-  crowd: string | undefined
+  crowd: number | undefined
 ) {
   const runtime = yield* readLocalRuntime(root);
   if (runtime === undefined) {
@@ -39,9 +36,7 @@ export const createAcceptanceSitting = Effect.fn(
     );
   }
   const args = yield* encodeArguments(
-    crowd === undefined
-      ? { email, slug }
-      : { crowd: yield* decodeCrowd(crowd), email, slug }
+    crowd === undefined ? { email, slug } : { crowd, email, slug }
   );
   const printed = yield* runLocalConvex(runtime, "exams/seed:sitting", [
     "run",
@@ -60,7 +55,7 @@ const SittingArguments = Schema.Tuple([
   Schema.String,
   Schema.String,
   Schema.String,
-  Schema.optionalKey(Schema.String),
+  Schema.optionalKey(Schema.FiniteFromString),
 ]);
 
 /**
