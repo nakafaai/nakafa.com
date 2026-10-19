@@ -60,8 +60,8 @@ interface OptionRowProps {
  * One option of a question: its letter and its rich text framed as the player frames it, then the
  * teacher's controls to its right. The key toggle is solid and pressed for the key. Removing is
  * shown when the option may go, on hover or focus, and always on a touch screen. The text saves
- * after its quiet period, and a key change saves at once. An option the server has not saved yet
- * is locked.
+ * after its quiet period, and a key change saves at once. Removing the option drops the pending save
+ * of its text. An option the server has not saved yet is locked.
  */
 export function OptionRow({
   letter,
@@ -83,6 +83,16 @@ export function OptionRow({
       makeQuietSaver((run: () => void) => Effect.sync(run), OPTION_SAVE_QUIET)
     )
   );
+
+  // Removing the option drops the quiet save of its label first. The removal makes that save stale,
+  // since it would send the answers of a revision the server has already moved past.
+  const remove = () => {
+    if (onRemove === null) {
+      return;
+    }
+    Effect.runFork(saver.cancel);
+    onRemove();
+  };
 
   // The editor takes the lock of the option as it changes, not only when it opens.
   useEffect(() => {
@@ -142,9 +152,9 @@ export function OptionRow({
         ) : (
           <Button
             aria-label={t("option-remove-of", { letter, number })}
-            className="opacity-0 pointer-coarse:opacity-100 transition-opacity duration-150 group-focus-within/option:opacity-100 group-hover/option:opacity-100"
+            className="opacity-0 pointer-coarse:opacity-100 group-focus-within/option:opacity-100 group-hover/option:opacity-100"
             disabled={locked}
-            onClick={onRemove}
+            onClick={remove}
             size="icon"
             type="button"
             variant="ghost"
