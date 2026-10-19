@@ -5,7 +5,7 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { Effect } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { useQueryState } from "nuqs";
-import { useState, useTransition } from "react";
+import { type ComponentProps, useState, useTransition } from "react";
 import { reportClientException } from "@/lib/analytics/client";
 import {
   getPostAuthOnboardingHref,
@@ -22,13 +22,15 @@ interface Props {
    * Google returns the visitor to that host, in place of a Nakafa destination.
    */
   returnPath?: string | undefined;
+  /** The button's look. A page that shows another primary action beside it asks for `outline`. */
+  variant?: ComponentProps<typeof Button>["variant"];
 }
 
 /**
  * Renders the Google sign-in button. It returns the visitor to one sanitized
  * internal destination, or to `returnPath` on the host the button is on.
  */
-export function AuthGoogle({ returnPath }: Props) {
+export function AuthGoogle({ returnPath, variant }: Props) {
   const locale = useLocale();
   const t = useTranslations("Auth");
   const tToast = useTranslations("Toast");
@@ -88,6 +90,7 @@ export function AuthGoogle({ returnPath }: Props) {
         aria-busy={isPending || undefined}
         disabled={isPending}
         onClick={handleGoogleSignIn}
+        variant={variant}
       >
         <BrandLogo name="google" />
         {isPending ? t("opening-google") : t("continue-with-google")}
