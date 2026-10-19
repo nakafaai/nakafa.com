@@ -44,13 +44,20 @@ import { useAi } from "@/components/ai/context";
 import { useViewer } from "@/lib/identity/client";
 
 const CHAT_SEARCH_DEBOUNCE_MS = 500;
-export function AiChatSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
+export function AiChatSidebar({
+  ...props
+}: Omit<ComponentProps<typeof Sidebar>, "label">) {
   const t = useTranslations("Ai");
   const setOpenMobile = useSidebar((sidebar) => sidebar.setOpenMobile);
   const [q, setQ] = useState("");
   const [debouncedQ] = useDebouncedValue(q, CHAT_SEARCH_DEBOUNCE_MS);
   return (
-    <Sidebar containerClassName="lg:hidden xl:block" side="right" {...props}>
+    <Sidebar
+      containerClassName="lg:hidden xl:block"
+      label={t("chat-history")}
+      side="right"
+      {...props}
+    >
       <SidebarHeader className="border-b">
         <SidebarMenu>
           <SidebarMenuItem>

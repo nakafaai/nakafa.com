@@ -216,9 +216,9 @@ export function ChatHeader({
           <TooltipTrigger
             render={
               <SidebarTrigger
-                aria-label={t("chat-history")}
                 className="size-9"
                 icon={MessageMultiple02Icon}
+                label={t("chat-history")}
                 size="icon"
                 variant="outline"
               />

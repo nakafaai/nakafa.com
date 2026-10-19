@@ -160,6 +160,7 @@ export default async function Layout({ children }: LayoutProps<"/[locale]">) {
   const direction = textDirection(locale);
 
   const messages = await getMessages();
+  const t = await getTranslations("Common");
 
   return (
     <html
@@ -184,7 +185,10 @@ export default async function Layout({ children }: LayoutProps<"/[locale]">) {
         <NextIntlClientProvider locale={locale} messages={messages}>
           <DesignSystemProvider direction={direction}>
             <div className="isolate">{children}</div>
-            <Toaster />
+            <Toaster
+              closeButtonAriaLabel={t("close-notification")}
+              containerAriaLabel={t("notifications")}
+            />
           </DesignSystemProvider>
           <TailwindIndicator />
         </NextIntlClientProvider>

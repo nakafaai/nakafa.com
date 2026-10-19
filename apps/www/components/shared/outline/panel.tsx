@@ -16,6 +16,7 @@ import {
   Sidebar,
   SidebarTrigger,
 } from "@repo/design-system/components/ui/sidebar-shell";
+import { useTranslations } from "next-intl";
 import type { ComponentProps, ReactNode } from "react";
 
 /** The outline panel: its heading slot, the outline, and the page's actions. */
@@ -23,7 +24,7 @@ type SidebarRightProps = {
   children: ReactNode;
   footer: ReactNode;
   header?: ReactNode;
-} & ComponentProps<typeof Sidebar>;
+} & Omit<ComponentProps<typeof Sidebar>, "label">;
 
 /** Outline heading slot, which can resolve independently from the panel. */
 export function SidebarRightHeader({
@@ -71,12 +72,15 @@ export function SidebarRightFooter({ children }: { children: ReactNode }) {
 
 /** The outline panel with its own provider and floating trigger. */
 export function SidebarRight(props: SidebarRightProps) {
+  const tCommon = useTranslations("Common");
+
   return (
     <div className="shrink-0">
       <SidebarRightProvider>
         <SidebarTrigger
           className="fixed top-20 right-6 z-20 size-9 bg-background/80 backdrop-blur-xs xl:hidden"
           icon={Menu02Icon}
+          label={tCommon("on-this-page")}
           size="icon"
           variant="outline"
         />
@@ -107,9 +111,16 @@ export function SidebarRightPanel({
   header,
   ...props
 }: SidebarRightProps) {
+  const tCommon = useTranslations("Common");
+
   return (
     <aside>
-      <Sidebar containerClassName="lg:hidden xl:block" side="right" {...props}>
+      <Sidebar
+        containerClassName="lg:hidden xl:block"
+        label={tCommon("on-this-page")}
+        side="right"
+        {...props}
+      >
         {header}
         <SidebarContent>{children}</SidebarContent>
         {footer}

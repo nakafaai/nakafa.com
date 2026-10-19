@@ -151,6 +151,7 @@ function CountrySelect({ value, onChange, options }: CountrySelectProps) {
         >
           <AutocompleteInput
             className="h-9 rounded-none border-x-0 border-t-0 border-b shadow-none focus-visible:border-border focus-visible:ring-0"
+            clearLabel={t("clear-search")}
             placeholder={t("search-country-placeholder")}
             showClear
             startAddon={countrySearchIcon}

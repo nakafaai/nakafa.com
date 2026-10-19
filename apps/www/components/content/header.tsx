@@ -28,9 +28,9 @@ export async function ContentHeader({
           <TooltipTrigger
             render={
               <SidebarTrigger
-                aria-label={t("on-this-page")}
                 className="size-9"
                 icon={Menu02Icon}
+                label={t("on-this-page")}
                 size="icon"
                 variant="outline"
               />

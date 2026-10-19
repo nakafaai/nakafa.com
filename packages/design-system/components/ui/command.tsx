@@ -91,14 +91,16 @@ function CommandDialogViewport({
 function CommandDialogPopup({
   children,
   className,
-  description = "Search for a command to run...",
+  description,
   portalProps,
-  title = "Command Palette",
+  title,
   ...props
 }: CommandDialogPrimitive.Popup.Props & {
-  description?: React.ReactNode;
+  /** What a screen reader reads under the title, in the reader's language. */
+  description: React.ReactNode;
   portalProps?: CommandDialogPrimitive.Portal.Props;
-  title?: React.ReactNode;
+  /** The name of the dialog, in the reader's language. */
+  title: React.ReactNode;
 }) {
   return (
     <CommandDialogPortal {...portalProps}>

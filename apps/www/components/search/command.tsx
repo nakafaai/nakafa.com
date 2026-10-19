@@ -89,6 +89,8 @@ export function SearchCommand({
 }: {
   articleNavigation: readonly ArticleNavigationItem[];
 }) {
+  const t = useTranslations("Utils");
+  const tCommon = useTranslations("Common");
   const { open, setOpen } = useSearch((state) => ({
     open: state.open,
     setOpen: state.setOpen,
@@ -103,7 +105,10 @@ export function SearchCommand({
 
   return (
     <CommandDialog onOpenChange={setOpen} open={open}>
-      <CommandDialogPopup>
+      <CommandDialogPopup
+        description={t("search-description")}
+        title={tCommon("search")}
+      >
         <SearchMain articleNavigation={articleNavigation} />
       </CommandDialogPopup>
     </CommandDialog>
@@ -117,6 +122,7 @@ function SearchMain({
   articleNavigation: readonly ArticleNavigationItem[];
 }) {
   const t = useTranslations("Utils");
+  const tCommon = useTranslations("Common");
   const query = useSearch((state) => state.query);
   const setQuery = useSearch((state) => state.setQuery);
   const defaultGroups = useDefaultSearchGroups(articleNavigation);
@@ -167,7 +173,10 @@ function SearchMain({
       onValueChange={setQuery}
       value={query}
     >
-      <CommandInput placeholder={t("search-placeholder")} />
+      <CommandInput
+        clearLabel={tCommon("clear-search")}
+        placeholder={t("search-placeholder")}
+      />
       <CommandPanel>
         <SearchEmpty
           error={hasError ? displayError : ""}
