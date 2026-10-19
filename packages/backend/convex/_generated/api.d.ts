@@ -2837,6 +2837,38 @@ export declare const api: {
     };
   };
   exams: {
+    assets: {
+      canAdd: FunctionReference<
+        "query",
+        "public",
+        { examId: Id<"exams">; slug: string },
+        {}
+      >;
+      register: FunctionReference<
+        "action",
+        "public",
+        {
+          examId: Id<"exams">;
+          height: number;
+          slug: string;
+          storageId: Id<"_storage">;
+          width: number;
+        },
+        { id: Id<"examAssets"> }
+      >;
+      uploadUrl: FunctionReference<
+        "mutation",
+        "public",
+        { examId: Id<"exams">; slug: string },
+        string
+      >;
+      urls: FunctionReference<
+        "query",
+        "public",
+        { assets: Array<Id<"examAssets">>; examId: Id<"exams">; slug: string },
+        Array<{ id: Id<"examAssets">; url: string }>
+      >;
+    };
     exams: {
       create: FunctionReference<
         "mutation",
@@ -4485,6 +4517,17 @@ export declare const api: {
         "public",
         { deviceId: string; sittingId: Id<"examSittings">; slug: string },
         null
+      >;
+      images: FunctionReference<
+        "query",
+        "public",
+        {
+          assets: Array<Id<"examAssets">>;
+          deviceId: string;
+          sittingId: Id<"examSittings">;
+          slug: string;
+        },
+        Array<{ id: Id<"examAssets">; url: string }>
       >;
       lock: FunctionReference<
         "mutation",
@@ -12594,6 +12637,34 @@ export declare const internal: {
     };
   };
   exams: {
+    assets: {
+      commit: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          byteSize: number;
+          contentType: "image/png" | "image/jpeg" | "image/webp" | "image/gif";
+          examId: Id<"exams">;
+          height: number;
+          storageId: Id<"_storage">;
+          userId: Id<"users">;
+          width: number;
+        },
+        { id: Id<"examAssets"> }
+      >;
+      discard: FunctionReference<
+        "mutation",
+        "internal",
+        { storageId: Id<"_storage"> },
+        {}
+      >;
+      stored: FunctionReference<
+        "query",
+        "internal",
+        { storageId: Id<"_storage"> },
+        { size: number }
+      >;
+    };
     seed: {
       sitting: FunctionReference<
         "mutation",
