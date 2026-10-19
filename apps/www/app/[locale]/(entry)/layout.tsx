@@ -1,5 +1,3 @@
-import { monospace } from "@repo/design-system/lib/monospace";
-import { cn } from "cn";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { EntryShellArtwork } from "@/components/entry/artwork.client";
 import { EntryShell, EntryShellPanel } from "@/components/entry/shell";
@@ -22,7 +20,7 @@ export default function Layout({ children }: LayoutProps<"/[locale]">) {
       <EntryShellPanel>
         <NuqsAdapter>
           <ConvexProvider convexUrl={env.NEXT_PUBLIC_CONVEX_URL}>
-            <div className={cn(monospace, "contents")}>{children}</div>
+            {children}
           </ConvexProvider>
         </NuqsAdapter>
       </EntryShellPanel>
