@@ -1,10 +1,12 @@
 import { describe, expect, it } from "@effect/vitest";
+import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
+import { Schema } from "effect";
 import {
   publicContentHeaders,
   readContentCacheTags,
 } from "@/lib/content/delivery";
 
-const HASH = `sha256:${"a".repeat(64)}`;
+const HASH = Schema.decodeSync(Sha256HashSchema)(`sha256:${"a".repeat(64)}`);
 
 describe("publicContentHeaders", () => {
   it("sets the public document cache and joins the CDN tags", () => {

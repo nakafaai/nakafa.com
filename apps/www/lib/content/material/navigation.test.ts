@@ -12,7 +12,6 @@ import {
 } from "@/lib/content/material/navigation";
 import type { PublishedMaterialContext } from "@/lib/content/material/projection";
 import {
-  previewIdProjection,
   previewNextProjection,
   previewProjection,
 } from "@/test/content-preview";
@@ -28,31 +27,29 @@ const context = {
   programKey: "merdeka",
 };
 const publishedPage = {
-  alternates: [previewProjection, previewIdProjection],
   body: "## Function Concept",
   children: createElement("p", null, "Function Concept"),
   copySourceUrl: null,
-  kind: "published",
+  kind: "published" as const,
   appLocale: "en",
   metadata,
   rendererDomain: "mathematics",
   route: previewProjection,
   siblings: [previewProjection, previewNextProjection],
   sourceUrl: null,
-} satisfies MaterialNavigationSource;
+};
 const previewPage = {
-  alternates: [previewProjection],
   body: "## Function Concept",
   children: createElement("p", null, "Function Concept"),
   copySourceUrl: null,
-  kind: "preview",
+  kind: "preview" as const,
   appLocale: "en",
   metadata,
   rendererDomain: "mathematics",
   route: previewProjection,
   siblings: [previewProjection, previewNextProjection],
   sourceUrl: null,
-} satisfies MaterialNavigationSource;
+};
 const emptyItem = { href: "", title: "" };
 
 /** Builds one verified context response for the current signed material. */

@@ -3,6 +3,7 @@ import {
   makeArtifactCacheTag,
   makeContentCacheTag,
 } from "@nakafa/aksara-contracts/cache/content";
+import type { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
 
 /**
  * Cache-Control of a public content document. The CDN keeps the document for an
@@ -27,10 +28,10 @@ export function publicContentHeaders(tags: readonly string[]) {
  */
 export function readContentCacheTags(
   scopes: readonly ContentCacheScope[],
-  artifactHashes: readonly string[] = []
+  artifactHashes: readonly (typeof Sha256HashSchema.Type)[] = []
 ) {
   return [
     ...scopes.map(makeContentCacheTag),
-    ...artifactHashes.map(makeArtifactCacheTag),
+    ...artifactHashes.map((hash) => makeArtifactCacheTag(hash)),
   ];
 }
