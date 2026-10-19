@@ -33,6 +33,11 @@ const MIN_MAGNETISM = 0.1;
 const MAX_MAGNETISM = 4.1;
 const REMAP_EDGE_END = 20;
 const ALPHA_FADE_IN_SPEED = 0.02;
+/**
+ * Caps the backing store at two device pixels per CSS pixel. A 3x screen would
+ * otherwise draw 2.25 times the pixels for little visible gain.
+ */
+const MAX_CANVAS_PIXEL_RATIO = 2;
 
 /**
  * One particle. The animation loop updates position and alpha in place, so
@@ -89,14 +94,11 @@ function remapValue({
  */
 function updateAlpha(circle: Circle, width: number, height: number) {
   // Handle the alpha value
-  const edge = [
+  const closestEdge = Math.min(
     circle.x + circle.translateX - circle.size, // distance from left edge
     width - circle.x - circle.translateX - circle.size, // distance from right edge
     circle.y + circle.translateY - circle.size, // distance from top edge
-    height - circle.y - circle.translateY - circle.size, // distance from bottom edge
-  ];
-  const closestEdge = Arr.reduce(edge, Number.POSITIVE_INFINITY, (a, b) =>
-    Math.min(a, b)
+    height - circle.y - circle.translateY - circle.size // distance from bottom edge
   );
   const remapClosestEdge = Number.parseFloat(
     remapValue({
@@ -152,9 +154,14 @@ export function Particles({
   const circles = useRef<Circle[]>([]);
   const mousePositionRef = useMousePosition();
   const mouse = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  // The canvas box in viewport coordinates, read on resize and scroll.
+  const canvasRect = useRef<DOMRect | null>(null);
   const canvasSize = useRef<{ w: number; h: number }>({ w: 0, h: 0 });
   const animationFrameRef = useRef<number | null>(null);
-  const dpr = typeof window === "undefined" ? 1 : window.devicePixelRatio;
+  const dpr =
+    typeof window === "undefined"
+      ? 1
+      : Math.min(window.devicePixelRatio, MAX_CANVAS_PIXEL_RATIO);
 
   const documentVisibility = useDocumentVisibility();
   const isMobile = useMediaQuery(TAILWIND_MEDIA_QUERIES.belowMd);
@@ -181,6 +188,7 @@ export function Particles({
       canvasRef.current.style.width = `${canvasSize.current.w}px`;
       canvasRef.current.style.height = `${canvasSize.current.h}px`;
       context.current.scale(dpr, dpr);
+      canvasRect.current = canvasRef.current.getBoundingClientRect();
     }
   }, [dpr]);
 
@@ -211,6 +219,9 @@ export function Particles({
     };
   }, [rng]);
 
+  // Every circle of a frame shares one colour; each circle sets only its alpha.
+  const fillColor = isThemeDark ? "oklch(0.985 0 0)" : "oklch(0.145 0 0)";
+
   const drawCircle = useCallback(
     (circle: Circle) => {
       if (context.current) {
@@ -218,14 +229,12 @@ export function Particles({
         context.current.translate(translateX, translateY);
         context.current.beginPath();
         context.current.arc(x, y, size, 0, 2 * Math.PI);
-        context.current.fillStyle = isThemeDark
-          ? `oklch(0.985 0 0 / ${alpha})`
-          : `oklch(0.145 0 0 / ${alpha})`;
+        context.current.globalAlpha = alpha;
         context.current.fill();
         context.current.setTransform(dpr, 0, 0, dpr, 0, 0);
       }
     },
-    [dpr, isThemeDark]
+    [dpr]
   );
 
   const clearContext = useCallback(() => {
@@ -236,8 +245,9 @@ export function Particles({
         canvasSize.current.w,
         canvasSize.current.h
       );
+      context.current.fillStyle = fillColor;
     }
-  }, []);
+  }, [fillColor]);
 
   const drawParticles = useCallback(
     (showImmediately: boolean) => {
@@ -272,8 +282,8 @@ export function Particles({
   );
 
   const onMouseMove = useCallback(() => {
-    if (canvasRef.current) {
-      const rect = canvasRef.current.getBoundingClientRect();
+    const rect = canvasRect.current;
+    if (rect) {
       const { w, h } = canvasSize.current;
       const x = mousePositionRef.current.x - rect.left - w / 2;
       const y = mousePositionRef.current.y - rect.top - h / 2;
@@ -333,14 +343,7 @@ export function Particles({
         }
       } else {
         MutableList.append(passed, circle);
-        drawCircle({
-          ...circle,
-          x: circle.x,
-          y: circle.y,
-          translateX: circle.translateX,
-          translateY: circle.translateY,
-          alpha: circle.alpha,
-        });
+        drawCircle(circle);
       }
     }
     circles.current = Arr.appendAll(
@@ -382,6 +385,21 @@ export function Particles({
 
     return stopAnimation;
   }, [stopAnimation]);
+
+  // Scroll moves the canvas in the viewport, so its box is read again on each
+  // scroll, from any scrolling ancestor, rather than on every frame.
+  useEffect(() => {
+    const readCanvasRect = () => {
+      canvasRect.current = canvasRef.current?.getBoundingClientRect() ?? null;
+    };
+    document.addEventListener("scroll", readCanvasRect, {
+      capture: true,
+      passive: true,
+    });
+    return () => {
+      document.removeEventListener("scroll", readCanvasRect, { capture: true });
+    };
+  }, []);
 
   // The field draws once the observer has measured the container, then again
   // each time the container changes size. A zero box is not laid out yet.
