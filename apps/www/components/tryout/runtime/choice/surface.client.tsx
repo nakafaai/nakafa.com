@@ -4,8 +4,8 @@ import { Checkbox } from "@repo/design-system/components/ui/checkbox";
 import { Label } from "@repo/design-system/components/ui/label";
 import { Radio } from "@repo/design-system/components/ui/radio-group";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { cn } from "cn";
 import type { ReactNode } from "react";
+import { choiceFrame } from "@/components/tryout/runtime/choice/frame";
 import type { TryoutPreviewChoiceAppearance } from "@/lib/tryout/appearance";
 import {
   getTryoutPreviewChoiceVariant,
@@ -130,12 +130,7 @@ function TryoutChoiceFrame({
   const labelId = `${id}-label`;
 
   return (
-    <Label
-      className={cn(
-        buttonVariants({ variant }),
-        "h-auto min-w-0 whitespace-normal text-left font-normal text-base"
-      )}
-    >
+    <Label className={choiceFrame(variant)}>
       {children}
       <div className="min-w-0 flex-1" id={labelId}>
         {label}

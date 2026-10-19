@@ -1,4 +1,7 @@
+import { cn } from "cn";
 import type { ReactNode } from "react";
+import { choiceFrame } from "@/components/tryout/runtime/choice/frame";
+import { getTryoutSelectableChoiceVariant } from "@/lib/tryout/appearance";
 
 /**
  * The paper of one question, as the student reads it in the player: its prompt, then its
@@ -21,7 +24,11 @@ export function PaperOptions({ children }: { children: ReactNode }) {
   );
 }
 
-/** One option of the paper: its letter, then its rich text, framed as the player frames an option. */
+/**
+ * One option of the paper: its letter, then its rich text, framed as the player frames an option. The
+ * frame is the player's own choice frame in the unselected variant, and only the teacher's letter is
+ * added to it.
+ */
 export function PaperOption({
   children,
   letter,
@@ -30,7 +37,12 @@ export function PaperOption({
   letter: string;
 }) {
   return (
-    <div className="flex min-w-0 items-start gap-3 rounded-lg border px-3 py-2.5 text-base">
+    <div
+      className={cn(
+        choiceFrame(getTryoutSelectableChoiceVariant({ checked: false })),
+        "flex items-start gap-3"
+      )}
+    >
       <span
         aria-hidden
         className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-md bg-muted font-medium text-sm"
