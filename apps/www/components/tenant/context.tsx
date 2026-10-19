@@ -5,12 +5,12 @@ import type { TenantProfile } from "@repo/backend/confect/tenancy/schema";
 import { createContext, use } from "react";
 
 /**
- * The school the shell shows, the viewer's first role in it, or none when the
- * viewer holds no grant, and what the viewer may open: the school's settings
- * and its exams. A type only: the browser bundle never evaluates the schemas it
- * is derived from.
+ * The school the shell shows, its address, the viewer's first role in it, or none
+ * when the viewer holds no grant, and what the viewer may open: the school's
+ * settings and its exams. A type only: the browser bundle never evaluates the
+ * schemas it is derived from.
  */
-export type TenantValue = Pick<typeof TenantProfile.Type, "name"> &
+export type TenantValue = Pick<typeof TenantProfile.Type, "name" | "slug"> &
   Record<"role", BuiltinRole | null> &
   Record<"canManage" | "canOpenExams", boolean>;
 

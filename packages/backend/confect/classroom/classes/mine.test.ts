@@ -13,7 +13,7 @@ import {
 import { grantRole, tenancyFixture } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect, Order, pipe } from "effect";
 
-const { archive, get, mine } = refs.public.classroom.classes;
+const { archive, get, mine, resolve } = refs.public.classroom.classes;
 const grants = refs.public.access.grants;
 const periods = refs.public.tenancy.periods;
 const placements = refs.public.tenancy.placements;
@@ -247,6 +247,46 @@ describe("classroom/classes mine", () => {
         expect(Arr.map(listed, (row) => row.id)).toEqual(
           pipe([smpFisika.id, smaFisika.id], Arr.sort(Order.String))
         );
+      })
+  );
+
+  it.effect(
+    "gives each sidebar entry of two classes of one name the address that resolves to its own class",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const { personId } = fixture.people.teacher;
+        const smp = yield* period(fixture, fixture.units.smp);
+        const sma = yield* period(fixture, fixture.units.sma);
+        yield* openPeriod(fixture, smp.id);
+        yield* openPeriod(fixture, sma.id);
+        const smpCohort = yield* cohort(fixture, smp.id, "X-1");
+        const smaCohort = yield* cohort(fixture, sma.id, "X-1");
+        const smpFisika = yield* classOf(fixture, smpCohort.id, "Fisika");
+        const smaFisika = yield* classOf(fixture, smaCohort.id, "Fisika");
+        yield* fixture.run(
+          grantRole(fixture.tenants.nf, personId, "teacher", {
+            kind: "unit",
+            unitId: fixture.units.sma,
+          })
+        );
+        yield* teach(fixture, smpFisika.id, personId);
+        yield* teach(fixture, smaFisika.id, personId);
+        const listed = yield* fixture.as("teacher").query(mine, { slug: nf });
+        const resolved = yield* Effect.forEach(listed, (row) =>
+          fixture
+            .as("teacher")
+            .query(resolve, { classSlug: row.slug, slug: nf })
+        );
+        expect(Arr.map(resolved, (row) => row.id)).toEqual(
+          Arr.map(listed, (row) => row.id)
+        );
+        expect(
+          pipe(
+            Arr.map(listed, (row) => row.slug),
+            Arr.sort(Order.String)
+          )
+        ).toEqual(["fisika-x-1", "fisika-x-1-2"]);
       })
   );
 

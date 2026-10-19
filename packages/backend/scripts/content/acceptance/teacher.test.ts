@@ -3,6 +3,8 @@ import { afterEach, describe, expect, it } from "@effect/vitest";
 import type { runAcceptanceCommand } from "@repo/backend/scripts/content/acceptance/command";
 import { SessionCookie } from "@repo/backend/scripts/content/acceptance/fixture";
 import {
+  classTeacherAddress,
+  createAcceptanceClassTeacher,
   createAcceptanceTeacher,
   teacherAddress,
 } from "@repo/backend/scripts/content/acceptance/teacher";
@@ -41,6 +43,15 @@ const SeedArguments = Schema.fromJsonString(
     slug: Schema.String,
   })
 );
+const ClassSeedArguments = Schema.fromJsonString(
+  Schema.Struct({
+    email: Schema.String,
+    locale: Schema.String,
+    name: Schema.String,
+    slug: Schema.String,
+    subject: Schema.String,
+  })
+);
 const CreatedAccount = Schema.fromJsonString(
   Schema.Struct({
     input: Schema.Struct({
@@ -57,7 +68,8 @@ function answerOf(args: readonly string[], users: string) {
   if (
     Arr.contains(args, "auth/lifecycle:onCreate") ||
     Arr.contains(args, "tenancy/claims:run") ||
-    Arr.contains(args, "tenancy/seed:teacher")
+    Arr.contains(args, "tenancy/seed:teacher") ||
+    Arr.contains(args, "classroom/seed:teacher")
   ) {
     return "null";
   }
@@ -146,6 +158,69 @@ describe("acceptance teacher", () => {
 
       const exit = yield* Effect.exit(
         createAcceptanceTeacher(root, SLUG, `${root}/teacher.json`)
+      );
+
+      expect(Exit.isFailure(exit)).toBe(true);
+      expect(mocks.command).not.toHaveBeenCalled();
+    }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+  );
+
+  it.effect(
+    "seeds a Teacher of a class with the classroom seed, then signs the account of the address in",
+    () =>
+      Effect.gen(function* () {
+        const { fs, root } = yield* fixture;
+        const specs = answerCommands(
+          '[{"_id":"app-user-0","authId":"someone-else"},{"_id":"app-user-1","authId":"user-1"}]'
+        );
+
+        yield* createAcceptanceClassTeacher(
+          root,
+          SLUG,
+          `${root}/class-teacher.json`
+        );
+
+        const calls = MutableList.toArray(specs);
+        const seedCall = Option.getOrThrow(
+          Arr.findFirst(calls, (spec) =>
+            Arr.contains(spec.args, "classroom/seed:teacher")
+          )
+        );
+        expect(
+          yield* Schema.decodeEffect(ClassSeedArguments)(lastArgument(seedCall))
+        ).toEqual({
+          email: classTeacherAddress(SLUG),
+          locale: "id",
+          name: "Acceptance Class Teacher",
+          slug: SLUG,
+          subject: "Fisika",
+        });
+        const accountCall = Option.getOrThrow(
+          Arr.findFirst(calls, (spec) =>
+            Arr.contains(spec.args, "adapter:create")
+          )
+        );
+        const account = yield* Schema.decodeEffect(CreatedAccount)(
+          lastArgument(accountCall)
+        );
+        expect(account.input.data.email).toBe(classTeacherAddress(SLUG));
+        const cookie = yield* fs
+          .readFileString(`${root}/class-teacher.json`)
+          .pipe(Effect.flatMap(Schema.decodeEffect(SessionCookie)));
+        expect(cookie.name).toBe("better-auth.session_token");
+      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+  );
+
+  it.effect("seeds no class Teacher when no local runtime is running", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* fs.makeTempDirectoryScoped({
+        prefix: "acceptance-teacher-test-",
+      });
+      mocks.read.mockReturnValue(Effect.void);
+
+      const exit = yield* Effect.exit(
+        createAcceptanceClassTeacher(root, SLUG, `${root}/class-teacher.json`)
       );
 
       expect(Exit.isFailure(exit)).toBe(true);

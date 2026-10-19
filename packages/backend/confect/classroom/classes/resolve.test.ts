@@ -1,4 +1,3 @@
-import type { GenericId } from "@confect/core";
 import { describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
@@ -9,6 +8,7 @@ import {
   denied,
   nf,
   period,
+  writeClass,
 } from "@repo/backend/test/classroom";
 import { slugOf, tenancyFixture } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect } from "effect";
@@ -16,56 +16,6 @@ import { Array as Arr, Effect } from "effect";
 const { archive, resolve } = refs.public.classroom.classes;
 const periods = refs.public.tenancy.periods;
 const placements = refs.public.tenancy.placements;
-
-type Fixture = Effect.Success<typeof tenancyFixture>;
-
-/**
- * Writes one period, one cohort, and one class of a unit straight to the store, with
- * the statuses given, so a test holds a class in a state its mutations cannot reach.
- */
-const writeClass = (
-  fixture: Fixture,
-  unitId: GenericId.GenericId<"tenantUnits">,
-  slug: string,
-  periodStatus: "planned" | "active" | "archived",
-  classStatus: "active" | "archived"
-) =>
-  fixture.run(
-    Effect.gen(function* () {
-      const writer = yield* DatabaseWriter;
-      const periodId = yield* writer.table("tenantPeriods").insert({
-        end: "2026-12-19",
-        name: "Ganjil 2026/2027",
-        start: "2026-07-13",
-        status: periodStatus,
-        tenantId: fixture.tenants.nf,
-        unitId,
-      });
-      const cohortId = yield* writer.table("tenantCohorts").insert({
-        grade: 10,
-        name: "X-1",
-        nameKey: "x-1",
-        periodId,
-        status: "active",
-        tenantId: fixture.tenants.nf,
-        unitId,
-      });
-      return yield* writer.table("classes").insert({
-        cohortId,
-        createdAt: 0,
-        name: "Fisika X-1",
-        nameKey: "fisika x-1",
-        periodId,
-        slug,
-        status: classStatus,
-        subject: "Fisika",
-        subjectKey: "fisika",
-        tenantId: fixture.tenants.nf,
-        unitId,
-        updatedAt: 0,
-      });
-    })
-  );
 
 describe("classroom/classes resolve", () => {
   it.effect(
@@ -100,22 +50,24 @@ describe("classroom/classes resolve", () => {
   );
 
   it.effect(
-    "refuses an address that two active periods of the school both hold as ambiguous",
+    "refuses an address that two live classes of the school hold as ambiguous",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         const smp = yield* period(fixture, fixture.units.smp);
-        const sma = yield* period(fixture, fixture.units.sma);
         yield* fixture
           .as("admin")
           .mutation(periods.open, { periodId: smp.id, slug: nf });
-        yield* fixture
-          .as("admin")
-          .mutation(periods.open, { periodId: sma.id, slug: nf });
         const smpCohort = yield* cohort(fixture, smp.id, "X-1");
-        const smaCohort = yield* cohort(fixture, sma.id, "X-1");
         yield* classOf(fixture, smpCohort.id, "Fisika");
-        yield* classOf(fixture, smaCohort.id, "Fisika");
+        // `create` never writes a second live holder, so this one is written straight to the store.
+        yield* writeClass(
+          fixture,
+          fixture.units.sma,
+          "fisika-x-1",
+          "active",
+          "active"
+        );
         const refused = yield* fixture
           .as("admin")
           .query(resolve, { classSlug: "fisika-x-1", slug: nf })
@@ -220,16 +172,17 @@ describe("classroom/classes resolve", () => {
         yield* fixture
           .as("admin")
           .mutation(periods.open, { periodId: smp.id, slug: nf });
-        yield* fixture
-          .as("admin")
-          .mutation(periods.open, { periodId: sma.id, slug: nf });
         const smpCohort = yield* cohort(fixture, smp.id, "X-1");
-        const smaCohort = yield* cohort(fixture, sma.id, "X-1");
         const smpClass = yield* classOf(fixture, smpCohort.id, "Fisika");
-        const smaClass = yield* classOf(fixture, smaCohort.id, "Fisika");
         yield* fixture
           .as("admin")
           .mutation(archive, { classId: smpClass.id, slug: nf });
+        // The class of the other unit takes the address once the first one is locked.
+        yield* fixture
+          .as("admin")
+          .mutation(periods.open, { periodId: sma.id, slug: nf });
+        const smaCohort = yield* cohort(fixture, sma.id, "X-1");
+        const smaClass = yield* classOf(fixture, smaCohort.id, "Fisika");
         yield* fixture
           .as("admin")
           .mutation(archive, { classId: smaClass.id, slug: nf });
@@ -255,9 +208,14 @@ describe("classroom/classes resolve", () => {
           .mutation(periods.open, { periodId: term.id, slug: nf });
         const x1 = yield* cohort(fixture, term.id, "X-1");
         const made = yield* classOf(fixture, x1.id, "Fisika");
-        const next = yield* period(fixture, fixture.units.sma);
-        const nextCohort = yield* cohort(fixture, next.id, "X-1");
-        yield* classOf(fixture, nextCohort.id, "Fisika");
+        // `create` gives a planned class of another unit the next number, so this one is written straight to the store.
+        yield* writeClass(
+          fixture,
+          fixture.units.sma,
+          "fisika-x-1",
+          "planned",
+          "active"
+        );
         const found = yield* fixture
           .as("admin")
           .query(resolve, { classSlug: "fisika-x-1", slug: nf });

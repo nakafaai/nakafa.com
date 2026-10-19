@@ -75,10 +75,11 @@ export const classSlugOf = (name: string) =>
     .replace(/^-|-$/g, "");
 
 /**
- * A class's address in its period: the form `classSlugOf` gives a name, with a
- * number after a hyphen when another class of the period holds the address
- * first. The check admits capitals too, so a spelling that the form does not
- * give names no class, and a lookup refuses it as missing.
+ * A class's address in the school: the form `classSlugOf` gives a name, with a
+ * number after a hyphen when a class of its period, or of another unit that no
+ * archive locks, holds the address first. The check admits capitals too, so a
+ * spelling that the form does not give names no class, and a lookup refuses it as
+ * missing.
  */
 export const ClassAddress = Schema.String.check(
   Schema.isPattern(/^[\p{L}\p{N}]+(?:-[\p{L}\p{N}]+)*$/u)

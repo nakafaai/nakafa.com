@@ -330,7 +330,7 @@ export declare const api: {
       mine: FunctionReference<
         "query",
         "public",
-        { periodId: Id<"tenantPeriods">; slug: string },
+        { slug: string },
         Array<{
           cohortId: Id<"tenantCohorts">;
           id: Id<"classes">;
@@ -9636,6 +9636,25 @@ export declare const internal: {
           { continueCursor: string; created: number; done: boolean }
         >;
       };
+    };
+    seed: {
+      teacher: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          email: string;
+          locale: "en" | "id" | "de";
+          name: string;
+          slug: string;
+          subject: string;
+        },
+        {
+          classId: Id<"classes">;
+          invite: Id<"tenantInvites">;
+          periodId: Id<"tenantPeriods">;
+          person: Id<"tenantPeople">;
+        }
+      >;
     };
   };
   comments: {

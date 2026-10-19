@@ -73,6 +73,7 @@ export default GroupSpec.make()
         Schema.Union([
           AccessDenied,
           ClassAddressEmpty,
+          ClassAmbiguous,
           ClassLimit,
           ClassNameTaken,
           ClassSubjectNotAllowed,

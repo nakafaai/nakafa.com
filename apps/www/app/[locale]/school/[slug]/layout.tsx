@@ -4,6 +4,7 @@ import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
+import { AppProviders } from "@/components/providers/app";
 import { TenantEntry } from "@/components/tenant/entry";
 import { canOpenExams } from "@/components/tenant/exams/access";
 import { TenantShell } from "@/components/tenant/shell";
@@ -32,7 +33,10 @@ const notInSchool = () => Effect.succeedNone;
  * school's name. A signed-in viewer gets the shell, and a viewer who is not a
  * member of the school, or whom the school does not admit, gets not found,
  * because school pages are private. Any other failure reaches the error
- * boundary, so an outage never looks like a missing school.
+ * boundary, so an outage never looks like a missing school. The signed-in shell
+ * mounts the client providers once for the whole school, so its sidebar and every
+ * page under it share one Convex session, and the pages mount no providers of
+ * their own.
  */
 export default async function SchoolLayout({
   children,
@@ -88,15 +92,17 @@ export default async function SchoolLayout({
   const canManage = Arr.contains(viewer.value.can, "tenant.manage");
 
   return (
-    <TenantShell
-      account={viewer.value.account}
-      canManage={canManage}
-      canOpenExams={canOpenExams(viewer.value)}
-      personName={viewer.value.person.name}
-      profile={profile.value}
-      role={role}
-    >
-      {children}
-    </TenantShell>
+    <AppProviders pageNavigation={null}>
+      <TenantShell
+        account={viewer.value.account}
+        canManage={canManage}
+        canOpenExams={canOpenExams(viewer.value)}
+        personName={viewer.value.person.name}
+        profile={profile.value}
+        role={role}
+      >
+        {children}
+      </TenantShell>
+    </AppProviders>
   );
 }

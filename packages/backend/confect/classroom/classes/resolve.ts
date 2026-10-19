@@ -1,4 +1,3 @@
-import type { GenericId } from "@confect/core";
 import { FunctionImpl } from "@confect/server";
 import type { ClassesDoc } from "@repo/backend/confect/_generated/docs";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
@@ -8,39 +7,18 @@ import {
   classAuthority,
   placeClass,
 } from "@repo/backend/confect/classroom/authority";
-import {
-  CLASS_ADDRESS_LIMIT,
-  classView,
-} from "@repo/backend/confect/classroom/class";
+import { classView } from "@repo/backend/confect/classroom/class";
+import { holdersOf } from "@repo/backend/confect/classroom/classes/address";
 import spec from "@repo/backend/confect/classroom/classes.spec";
 import { ClassAmbiguous } from "@repo/backend/confect/classroom/errors";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import { Array as Arr, Effect, Option } from "effect";
 
 /**
- * The classes of one school that hold one address, archived ones included, read
- * through the school's address index. A period holds one class at each address,
- * so the school holds one class per period that has used it. The read takes one
- * more than CLASS_ADDRESS_LIMIT, so a larger set is seen and refused, not truncated.
- */
-const holdersOf = Effect.fnUntraced(function* (
-  tenantId: GenericId.GenericId<"tenants">,
-  classSlug: string
-) {
-  return yield* (yield* DatabaseReader)
-    .table("classes")
-    .index("by_tenantId_and_slug", (query) =>
-      query.eq("tenantId", tenantId).eq("slug", classSlug)
-    )
-    .take(CLASS_ADDRESS_LIMIT + 1)
-    .pipe(Effect.orDie);
-});
-
-/**
  * How one holder of an address stands. A class that an archive locks, whatever its
  * period, is archived and stays readable. A class that no archive locks is live
- * when its period is active, and a class of a period that is still planned holds
- * no address yet, so it is left out, as `None`.
+ * when its period is active, and a class of a period that is still planned is not
+ * named yet, so it is left out, as `None`.
  */
 const standingOf = Effect.fnUntraced(function* (row: ClassesDoc) {
   const { locked } = yield* placeClass(row);
@@ -60,12 +38,9 @@ const standingOf = Effect.fnUntraced(function* (row: ClassesDoc) {
 /**
  * The class that an address names among its holders. A live class is named first,
  * and two live classes are ambiguous. With no live class, the archived classes name
- * the address, and two of them are ambiguous too. A set past the limit names no class.
+ * the address, and two of them are ambiguous too.
  */
 const namedBy = Effect.fnUntraced(function* (holders: readonly ClassesDoc[]) {
-  if (holders.length > CLASS_ADDRESS_LIMIT) {
-    return yield* new ClassAmbiguous();
-  }
   const standing = Arr.getSomes(
     yield* Effect.forEach(holders, standingOf, { concurrency: "unbounded" })
   );
@@ -82,8 +57,8 @@ const namedBy = Effect.fnUntraced(function* (holders: readonly ClassesDoc[]) {
  * period that no archive locks, is the class an address names. An archived class,
  * or a class of an archived period, cohort, or unit, stays readable and takes no
  * write, so it names its address when no live class holds it, and the class's read
- * rule decides the read. A class of a period not yet open holds no address until
- * the period opens. An address that names two or more classes is refused as
+ * rule decides the read. A class of a period not yet open is not named until the
+ * period opens. An address that names two or more classes is refused as
  * ambiguous before the access decision, and names no class. An address that no
  * class holds is refused the way a missing object is.
  */
@@ -93,7 +68,8 @@ export const resolve = FunctionImpl.make(
   "resolve",
   Effect.fn("classroom.classes.resolve")(function* ({ classSlug }) {
     const { tenant } = yield* Member;
-    const found = yield* namedBy(yield* holdersOf(tenant._id, classSlug));
+    const holders = yield* holdersOf(tenant._id, classSlug);
+    const found = yield* namedBy(holders);
     if (Option.isNone(found)) {
       return yield* new AccessDenied({
         action: "class.view",

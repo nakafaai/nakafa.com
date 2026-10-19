@@ -14,22 +14,40 @@ import { withTerminal } from "@repo/backend/scripts/content/acceptance/process";
 import { updateAcceptanceProfile } from "@repo/backend/scripts/content/acceptance/profile";
 import { createAcceptanceSchool } from "@repo/backend/scripts/content/acceptance/school";
 import { createAcceptanceSitting } from "@repo/backend/scripts/content/acceptance/sitting";
-import { createAcceptanceTeacher } from "@repo/backend/scripts/content/acceptance/teacher";
+import {
+  createAcceptanceClassTeacher,
+  createAcceptanceTeacher,
+} from "@repo/backend/scripts/content/acceptance/teacher";
 import { FetchClient } from "@repo/utilities/http/client";
 import { Array as Arr, Effect, FileSystem, Layer } from "effect";
+
+/** The commands that manage the local acceptance runtime, which take no school. */
+const RUNTIME_MODES = ["prepare", "build", "start", "clean"] as const;
+type RuntimeMode = (typeof RUNTIME_MODES)[number];
+
+const isRuntimeMode = (mode: string | undefined): mode is RuntimeMode =>
+  Arr.some(RUNTIME_MODES, (candidate) => candidate === mode);
+
+/** Runs one command that manages the local acceptance runtime. */
+const runtimeCommand = Effect.fn("contentAcceptance.runtimeCommand")(function* (
+  root: string,
+  mode: RuntimeMode
+) {
+  if (mode === "prepare") {
+    return yield* prepareAcceptance(root);
+  }
+  if (mode === "clean") {
+    return yield* cleanLocalRuntime(root);
+  }
+  return yield* runAcceptance(root, mode, Arr.drop(process.argv, 3));
+});
 
 const main = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const root = yield* fs.realPath(`${import.meta.dirname}/../../../../..`);
   const mode = process.argv[2];
-  if (mode === "prepare") {
-    return yield* prepareAcceptance(root);
-  }
-  if (mode === "build" || mode === "start") {
-    return yield* runAcceptance(root, mode, Arr.drop(process.argv, 3));
-  }
-  if (mode === "clean") {
-    return yield* cleanLocalRuntime(root);
+  if (isRuntimeMode(mode)) {
+    return yield* runtimeCommand(root, mode);
   }
   const first = process.argv[3];
   const second = process.argv[4];
@@ -54,6 +72,9 @@ const main = Effect.gen(function* () {
   if (mode === "teacher" && first !== undefined && second !== undefined) {
     return yield* createAcceptanceTeacher(root, first, second);
   }
+  if (mode === "class-teacher" && first !== undefined && second !== undefined) {
+    return yield* createAcceptanceClassTeacher(root, first, second);
+  }
   if (
     mode === "sitting" &&
     first !== undefined &&
@@ -69,7 +90,7 @@ const main = Effect.gen(function* () {
     return yield* updateAcceptanceProfile(root, first, second);
   }
   return yield* acceptanceRuntimeError(
-    "Usage: acceptance <prepare|build|start|clean|learner <cookie-file>|school <school-file>|owner <school-slug> <cookie-file>|teacher <school-slug> <cookie-file>|invite <school-slug> <learner-address> <cookie-file>|sitting <school-slug> <learner-email> <sitting-file>|import <table> <rows-file>|profile <auth-user-id> <profile-json-file>>"
+    "Usage: acceptance <prepare|build|start|clean|learner <cookie-file>|school <school-file>|owner <school-slug> <cookie-file>|teacher <school-slug> <cookie-file>|class-teacher <school-slug> <cookie-file>|invite <school-slug> <learner-address> <cookie-file>|sitting <school-slug> <learner-email> <sitting-file>|import <table> <rows-file>|profile <auth-user-id> <profile-json-file>>"
   );
 });
 
