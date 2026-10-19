@@ -5,7 +5,7 @@ import type { HomeView } from "@repo/backend/confect/exams/home/contract";
 import { Array as Arr } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { useMemo } from "react";
-import { useStore } from "zustand";
+import { type StoreApi, useStore } from "zustand";
 import { CardLink, CardLinks } from "@/components/shared/card/link";
 import { useTenant } from "@/components/tenant/context";
 import type { ExamDrafts } from "@/components/tenant/exams/drafts";
@@ -29,7 +29,7 @@ export function DraftsTile({
   drafts,
 }: {
   className?: string | undefined;
-  drafts: ExamDrafts;
+  drafts: StoreApi<ExamDrafts>;
 }) {
   const t = useTranslations("School");
   const tenant = useTenant();
@@ -48,7 +48,7 @@ export function DraftsTile({
 }
 
 /** The drafts as rows, or the tile's empty state while the viewer has none. */
-function DraftRows({ drafts: store }: { drafts: ExamDrafts }) {
+function DraftRows({ drafts: store }: { drafts: StoreApi<ExamDrafts> }) {
   const t = useTranslations("School");
   const locale = useLocale();
   const exams = useHomeExams();
