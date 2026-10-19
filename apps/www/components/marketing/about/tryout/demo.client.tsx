@@ -4,7 +4,7 @@ import { useIntersection, useReducedMotion } from "@mantine/hooks";
 import type { QuestionResponse } from "@nakafa/aksara-contracts/question/response";
 import { Nina } from "@repo/design-system/components/ui/nina";
 import type { MoodSchema } from "@repo/mascot/nina/face";
-import { Array as Arr, Option, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { createContext, type ReactNode, use, useEffect, useState } from "react";
 import { createStore, type StoreApi, useStore } from "zustand";
@@ -12,11 +12,25 @@ import {
   TryoutResponseFields,
   type TryoutResponseFieldsProps,
 } from "@/components/tryout/runtime/response/fields.client";
-import { isPreviewCorrect } from "@/components/tryout/runtime/response/preview";
 import type { TryoutResponseSelection } from "@/components/tryout/runtime/response/state";
 
 /** How long the question waits on screen before it is answered. */
 const ANSWER_AFTER_MS = 2400;
+
+/**
+ * Scores one choice of the demo with the backend evaluator. The evaluator loads
+ * with the first choice, so the home does not carry it for a reader who never
+ * answers. The scoring owner stays in `preview.ts`.
+ */
+const scoreChoice = Effect.fn("TryoutDemo.scoreChoice")(function* (
+  responseSpec: QuestionResponse,
+  selection: TryoutResponseSelection | null
+) {
+  const { isPreviewCorrect } = yield* Effect.tryPromise(
+    () => import("@/components/tryout/runtime/response/preview")
+  );
+  return isPreviewCorrect(responseSpec, selection);
+});
 
 /** Where the demo stands: the question waits, or it holds a right or a wrong answer. */
 const OutcomeSchema = Schema.Literals(["waiting", "right", "wrong"]);
@@ -126,7 +140,11 @@ export function TryoutDemoQuestion({
           id,
           locked: false,
           onChange: (next) =>
-            choose(next, isPreviewCorrect(responseSpec, next)),
+            Effect.runFork(
+              scoreChoice(responseSpec, next).pipe(
+                Effect.map((correct) => choose(next, correct))
+              )
+            ),
           renderLabel: ({
             correctness,
             id: labelId,
