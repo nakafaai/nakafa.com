@@ -138,6 +138,23 @@ const PLACEMENTS: readonly ToyPlacement[] = [
     picture: animal(12),
     place: within("privacy", { dy: -68, x: 0.86, y: 1 }),
   },
+  // More of what keeps a secret, around the room: a padlock and a sealed letter
+  // beside it from 1024 px, and a padlock under it at every width.
+  {
+    key: "privacy-padlock",
+    picture: thing("padlock"),
+    place: within("privacy", { minWidth: 1024, x: 0.2, y: 0.22 }),
+  },
+  {
+    key: "privacy-letter",
+    picture: thing("letter"),
+    place: within("privacy", { minWidth: 1024, x: 0.78, y: 0.78 }),
+  },
+  {
+    key: "privacy-below-padlock",
+    picture: thing("padlock"),
+    place: within("privacy", { dx: -24, dy: -68, x: 0.14, y: 1 }),
+  },
   ...gap("curricula", 0.3, TOY_HERD, [13, 27], ["globe", "backpack"]),
   ...gap("letter", 0.7, TOY_HERD, [14, 28], ["letter", "plane"]),
   {

@@ -1,7 +1,6 @@
 "use client";
 
 import { useReducedMotion } from "@mantine/hooks";
-import { cn } from "cn";
 import { Number as Num } from "effect";
 import { useEffect, useState } from "react";
 
@@ -31,23 +30,26 @@ export function useTypedLetters(
   return shouldReduceMotion ? target : count;
 }
 
-/** The caret: a thin bar that blinks where the next letter goes, and takes no width. */
+/**
+ * The caret: a thin bar that blinks where the next letter goes. It is an empty
+ * inline element, not an inline block, so it takes no width and adds no place
+ * where the line may break.
+ */
 function Caret() {
   return (
-    <span className="relative inline-block w-0">
+    <span className="relative">
       <span className="absolute inset-y-[0.12em] start-0.5 w-[0.08em] rounded-full bg-current motion-safe:animate-[caret-blink_1s_step-end_infinite]" />
     </span>
   );
 }
 
 /**
- * A line of text as it is written. Its whole text is laid out from the start, so
- * the letters written so far take no room that the rest of the line does not
- * already hold, and writing moves nothing while the line wraps greedily. A
- * balanced line re-breaks as letters are added, so a balanced ancestor needs a
- * `text-wrap` class between it and the line. A caret stands after the last
- * letter written while `caret` is set. Screen readers hear the whole text once,
- * and the drawn letters are hidden from them.
+ * A line of text as it is written. The whole text is laid out from the first
+ * frame, with the letters not written yet invisible in place, so the line breaks,
+ * aligns and balances as the finished text does and no letter moves while it is
+ * written. A caret stands after the last letter written while `caret` is set.
+ * Screen readers hear the whole text once, and the drawn letters are hidden from
+ * them.
  */
 export function TypedText({
   caret,
@@ -58,20 +60,18 @@ export function TypedText({
   /** Whether the caret shows where the next letter goes. */
   caret: boolean;
   className?: string;
-  /** The whole text, which the line keeps the size of. */
+  /** The whole text, which the line keeps the layout of. */
   text: string;
   /** How many letters of the text are written so far. */
   typed: number;
 }) {
   return (
-    <span className={cn("relative inline-grid", className)}>
+    <span className={className}>
       <span className="sr-only">{text}</span>
-      <span aria-hidden="true" className="invisible col-start-1 row-start-1">
-        {text}
-      </span>
-      <span aria-hidden="true" className="col-start-1 row-start-1">
+      <span aria-hidden="true">
         {text.slice(0, typed)}
         {caret ? <Caret /> : null}
+        <span className="invisible">{text.slice(typed)}</span>
       </span>
     </span>
   );

@@ -195,7 +195,12 @@ export function TurnAnswer({
   text: string;
 }) {
   const { entry, ref } = useIntersection({ rootMargin: LOAD_NEAR });
-  const near = entry?.isIntersecting ?? false;
+  const [near, setNear] = useState(false);
+  // The first time the answer comes near it stays loaded, so scrolling away never
+  // swaps the Response back for the server copy.
+  if (!near && entry?.isIntersecting) {
+    setNear(true);
+  }
 
   return (
     <div ref={ref}>

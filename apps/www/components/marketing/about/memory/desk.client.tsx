@@ -34,8 +34,8 @@ const noteVariants = cva(
   { variants: { first: { false: "-ms-3", true: "ms-0" } } }
 );
 
-/** The time between two things that Nina writes down. */
-const WRITE_EVERY_MS = 2400;
+/** How long a thing stays whole in the bubble before Nina writes the next one. */
+const READ_MS = 1600;
 
 /** The time between two letters that Nina writes. */
 const LETTER_EVERY_MS = 40;
@@ -69,15 +69,18 @@ export function MemoryDesk({ facts }: MemoryDeskProps) {
   const shown = shouldReduceMotion ? facts.length : written;
   const latest = Option.getOrNull(Arr.get(facts, shown - 1));
 
+  // The next thing waits until the latest one is written in full and read.
+  const writing = (latest?.said.length ?? 0) * LETTER_EVERY_MS;
+
   useEffect(() => {
     if (!playing || written >= facts.length) {
       return;
     }
     const timer = window.setTimeout(() => {
       setWritten((count) => count + 1);
-    }, WRITE_EVERY_MS);
+    }, writing + READ_MS);
     return () => window.clearTimeout(timer);
-  }, [facts.length, playing, written]);
+  }, [facts.length, playing, writing, written]);
 
   return (
     <div className="grid w-full justify-items-center gap-6" ref={ref}>
@@ -90,7 +93,7 @@ export function MemoryDesk({ facts }: MemoryDeskProps) {
             {Arr.map(facts, (fact) => (
               <span
                 aria-hidden="true"
-                className="invisible col-start-1 row-start-1"
+                className="invisible col-start-1 row-start-1 text-balance"
                 key={fact.said}
               >
                 {fact.said}
@@ -146,7 +149,7 @@ function WrittenFact({ fact, playing }: { fact: string; playing: boolean }) {
   return (
     <TypedText
       caret={typed < fact.length}
-      className="col-start-1 row-start-1 self-center"
+      className="col-start-1 row-start-1 self-center text-balance"
       text={fact}
       typed={typed}
     />

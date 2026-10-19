@@ -45,7 +45,7 @@ const ANSWER_ID = "home-nina-answer";
 export function NinaSection() {
   const t = useTranslations("Landing");
   const ask = t("nina-chat-ask");
-  const answer = t.raw("nina-chat-answer");
+  const answer = t("nina-chat-answer");
 
   return (
     <FeatureRow id="nina">

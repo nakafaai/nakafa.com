@@ -50,8 +50,10 @@ function pair(
  * The toys of the pricing page: in the middle of each part from the price to the
  * questions, a herd of two animals with their things at every width, and from
  * 1024 px two more pairs at its sides. The plans, which have no toys of their own
- * otherwise, take a pair in each top corner above the headline and an animal
- * below the cards, from the spare animals of the page.
+ * otherwise, take a pair in each top corner above the headline, an animal below
+ * the cards and, from 1280 px, one at each side of them; the parts below the
+ * plans take one more animal each in their bottom padding. These come from the
+ * spare animals of the page.
  */
 const PLACEMENTS: readonly ToyPlacement[] = [
   ...gap("comparison", 0.5, PRICING_TOY_HERD, [6, 7], ["ruler", "coffee"]),
@@ -69,6 +71,33 @@ const PLACEMENTS: readonly ToyPlacement[] = [
     key: "plans-below-animal",
     picture: <ToyAnimal herd={PRICING_SPARE_HERD} index={2} />,
     place: within("plans", { dx: -28, dy: -68, x: 0.5, y: 1 }),
+  },
+  // From 1280 px the plans also take an animal at each side of the cards, and
+  // the parts below take one in their bottom padding, at every width.
+  {
+    key: "plans-left-animal",
+    picture: <ToyAnimal herd={PRICING_SPARE_HERD} index={3} />,
+    place: within("plans", { dx: -28, minWidth: 1280, x: 0.03, y: 0.62 }),
+  },
+  {
+    key: "plans-right-animal",
+    picture: <ToyAnimal herd={PRICING_SPARE_HERD} index={4} />,
+    place: within("plans", { dx: -28, minWidth: 1280, x: 0.97, y: 0.48 }),
+  },
+  {
+    key: "comparison-below-animal",
+    picture: <ToyAnimal herd={PRICING_SPARE_HERD} index={5} />,
+    place: within("comparison", { dx: -28, dy: -68, x: 0.82, y: 1 }),
+  },
+  {
+    key: "school-below-animal",
+    picture: <ToyAnimal herd={PRICING_SPARE_HERD} index={6} />,
+    place: within("school", { dx: -28, dy: -68, x: 0.2, y: 1 }),
+  },
+  {
+    key: "faq-below-animal",
+    picture: <ToyAnimal herd={PRICING_SPARE_HERD} index={7} />,
+    place: within("faq", { dx: -28, dy: -68, x: 0.76, y: 1 }),
   },
 ];
 
