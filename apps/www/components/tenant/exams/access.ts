@@ -14,3 +14,13 @@ type Viewer = Ref.Returns<typeof tenancy.viewer.get>;
 export const canOpenExams = (viewer: Pick<Viewer, "can" | "units">) =>
   Arr.contains(viewer.can, "exam.view") ||
   Arr.some(viewer.units, (unit) => Arr.contains(unit.can, "exam.view"));
+
+/**
+ * Whether a viewer may open the rooms of an exam: the viewer holds the exam rooms action in the
+ * school or in one of its units, which the editors and the sitting viewers hold. The exam list
+ * stays with `canOpenExams`, so a Principal opens a rooms page and no exam list. The server
+ * still refuses each exam whose rooms the viewer may not read.
+ */
+export const canOpenRooms = (viewer: Pick<Viewer, "can" | "units">) =>
+  Arr.contains(viewer.can, "exam.rooms") ||
+  Arr.some(viewer.units, (unit) => Arr.contains(unit.can, "exam.rooms"));

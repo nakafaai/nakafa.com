@@ -76,6 +76,7 @@ describe("tenancy/viewer", () => {
           "connection.view",
           "document.edit",
           "exam.edit",
+          "exam.rooms",
           "exam.view",
           "grant.manage",
           "integration.manage",
@@ -139,6 +140,7 @@ describe("tenancy/viewer", () => {
       expect(Arr.sort(view.can, Order.String)).toEqual([
         "audit.view",
         "connection.view",
+        "exam.rooms",
         "exam.view",
         "integration.view",
         "invite.view",

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { Schema } from "effect";
-import { canOpenExams } from "@/components/tenant/exams/access";
+import { canOpenExams, canOpenRooms } from "@/components/tenant/exams/access";
 import type { ViewerUnit } from "@/components/tenant/exams/create";
 
 /** The school's view that the exam gate reads: the actions in the school and its units. */
@@ -65,5 +65,23 @@ describe("canOpenExams", () => {
 
   it("keeps the exams from a viewer with no action in the school or its units", () => {
     expect(canOpenExams(viewer([]))).toBe(false);
+  });
+});
+
+describe("canOpenRooms", () => {
+  it("opens the rooms to a principal who holds the rooms action in one unit", () => {
+    expect(
+      canOpenRooms(viewer(["tenant.view"], [unit(["unit.view", "exam.rooms"])]))
+    ).toBe(true);
+  });
+
+  it("opens the rooms to a teacher of the school, through the school's own action", () => {
+    expect(canOpenRooms(viewer(["exam.rooms", "exam.view"]))).toBe(true);
+  });
+
+  it("keeps the rooms from a student, who holds no rooms action", () => {
+    expect(canOpenRooms(viewer(["tenant.view"], [unit(["unit.view"])]))).toBe(
+      false
+    );
   });
 });

@@ -122,7 +122,8 @@ export function ScheduleSitting({
       : Effect.fail(error);
 
   /**
-   * Schedules the sitting, and goes to its dashboard once the server saves it. The two refusals
+   * Schedules the sitting, and goes to the exam's rooms once the server saves it, where the new
+   * room is listed. The two refusals
    * that the body explains stay in the dialog, and any other failure shows the action-error toast.
    */
   const submit = () => {
@@ -144,10 +145,10 @@ export function ScheduleSitting({
             slug,
           })
         ).pipe(
-          Effect.tap((sitting) =>
+          Effect.tap(() =>
             Effect.sync(() => {
               setOpen(false);
-              router.push(`/exams/${exam.id}/sittings/${sitting.id}`);
+              router.push(`/exams/${exam.id}`);
             })
           ),
           Effect.catchTags({

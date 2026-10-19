@@ -12,6 +12,9 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 /** The name that the acceptance runtime gives every learner it invites. */
 const LEARNER_NAME = "Acceptance Learner";
 
+/** The row of the first room of the seeded exam, which is open, in the rooms list. */
+const OPEN_ROOM_ROW = /Lab 2/;
+
 /** Students seated before the learner, more than one dashboard page of 100 holds. */
 const CROWD = 101;
 
@@ -115,6 +118,81 @@ test("a student enters a sitting, and the proctor sees the student leave, lock, 
   await expect(student.getByText("This attempt has closed.")).toBeVisible({
     timeout: readinessTimeoutMilliseconds,
   });
+
+  await studentContext.close();
+  await proctorContext.close();
+});
+
+test("a proctor lists the rooms of an exam and opens one from the list, and a student finds the open room on the school home", async ({
+  baseURL,
+  browser,
+}) => {
+  const school = await Effect.runPromise(createSchool());
+  const address = (path: string) =>
+    hostAddress(baseURL, `${school.slug}.localhost`, path);
+  const learner = `student-${school.slug}@acceptance.example.test`;
+  const studentContext = await browser.newContext();
+  await Effect.runPromise(
+    inviteLearner({
+      address: learner,
+      baseURL: address("/"),
+      context: studentContext,
+      slug: school.slug,
+    })
+  );
+  const proctorContext = await browser.newContext();
+  await Effect.runPromise(
+    signInOwner(proctorContext, school.slug, address("/"))
+  );
+  // The seed opens one room of an exam, and the proctor schedules a second room from its editor.
+  const sitting = await Effect.runPromise(seedSitting(school.slug, learner));
+
+  const proctor = await proctorContext.newPage();
+  await proctor.goto(address(`/exams/${sitting.examId}/edit`));
+  await proctor.getByRole("button", { name: "Schedule" }).click();
+  const scheduling = proctor.getByRole("dialog");
+  await scheduling.getByRole("textbox", { name: "Room" }).fill("Lab 3");
+  await scheduling.getByRole("button", { name: "Schedule" }).click();
+  // Once the server saves the room, the editor goes to the exam's rooms, which list both rooms.
+  await proctor.waitForURL(new RegExp(`/exams/${sitting.examId}$`));
+  await expect(
+    proctor.getByRole("heading", { name: "Ujian Acceptance" })
+  ).toBeVisible();
+  const rooms = proctor.getByRole("table");
+  await expect(rooms.getByRole("link", { name: "Lab 2" })).toHaveAttribute(
+    "href",
+    `/exams/${sitting.examId}/sittings/${sitting.sittingId}`
+  );
+  await expect(rooms.getByRole("link", { name: "Lab 3" })).toBeVisible();
+  await expect(
+    rooms
+      .getByRole("row", { name: OPEN_ROOM_ROW })
+      .getByRole("cell", { exact: true, name: "Open" })
+  ).toBeVisible();
+
+  await rooms.getByRole("link", { name: "Lab 2" }).click();
+  await proctor.waitForURL(
+    new RegExp(`/exams/${sitting.examId}/sittings/${sitting.sittingId}$`)
+  );
+  // The dashboard's header path returns to the exam's rooms.
+  await proctor
+    .locator('[data-slot="page-header"]')
+    .getByRole("link", { name: "Ujian Acceptance" })
+    .click();
+  await proctor.waitForURL(new RegExp(`/exams/${sitting.examId}$`));
+
+  const student = await studentContext.newPage();
+  await student.goto(address("/"));
+  await expect(
+    student.getByRole("heading", { name: "Your sittings" })
+  ).toBeVisible();
+  const sittings = student.getByRole("table");
+  await expect(sittings.getByRole("link", { name: "Lab 2" })).toHaveAttribute(
+    "href",
+    `/sittings/${sitting.sittingId}`
+  );
+  // The open room comes before the scheduled one, so it is the first row under the head.
+  await expect(sittings.getByRole("row").nth(1)).toContainText("Lab 2");
 
   await studentContext.close();
   await proctorContext.close();

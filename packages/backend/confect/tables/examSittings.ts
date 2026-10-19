@@ -8,4 +8,5 @@ import { examSittingValidator } from "@repo/backend/confect/exams/sittings/schem
  */
 export default Table.make(() => examSittingValidator)
   .index("by_unitId_and_cohortId_and_state", ["unitId", "cohortId", "state"])
-  .index("by_cohortId_and_state", ["cohortId", "state"]);
+  .index("by_cohortId_and_state", ["cohortId", "state"])
+  .index("by_examId_and_opensAt", ["examId", "opensAt"]);

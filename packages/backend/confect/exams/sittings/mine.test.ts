@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
+import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import { nf } from "@repo/backend/test/editor";
 import {
   CLOSES_AT as CLOSES,
@@ -12,7 +13,7 @@ import {
   seedPlacement,
 } from "@repo/backend/test/sittings";
 import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 const { mine } = refs.public.exams.sittings;
 
@@ -62,22 +63,38 @@ describe("exams/sittings mine", () => {
   );
 
   it.effect(
-    "lists at most ten sittings of one state for a unit, so a student's list stays short",
+    "lists at most fifty sittings of one state for a unit, so a student's list stays bounded",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         yield* keyedSchool(fixture);
         const examId = yield* keyedExam(fixture, "PTS");
-        for (let index = 0; index < 11; index += 1) {
-          yield* scheduleSitting(fixture, {
-            closesAt: CLOSES,
-            examId,
-            group: { kind: "unit", unitId: fixture.units.smp },
-            opensAt: OPENS,
-          });
-        }
+        yield* fixture.run(
+          Effect.asVoid(
+            Effect.forEach(
+              Arr.makeBy(51, (index) => index),
+              (index) =>
+                Effect.flatMap(DatabaseWriter, (writer) =>
+                  writer.table("examSittings").insert({
+                    closesAt: CLOSES,
+                    cohortId: null,
+                    examId,
+                    jobs: [],
+                    opensAt: OPENS + index,
+                    room: `Lab ${index}`,
+                    state: "scheduled",
+                    tenantId: fixture.tenants.nf,
+                    tokenHash: "",
+                    tokenIssuedAt: TENANCY_NOW,
+                    tokenSealed: new ArrayBuffer(0),
+                    unitId: fixture.units.smp,
+                  })
+                ).pipe(Effect.orDie)
+            )
+          )
+        );
         const listed = yield* fixture.as("student").query(mine, { slug: nf });
-        expect(listed).toHaveLength(10);
+        expect(listed).toHaveLength(50);
       })
   );
 

@@ -9,8 +9,12 @@ import { Array as Arr, Effect } from "effect";
 /** The most units a tenant holds (ADR 0011), so the units a student may reach are bounded. */
 const TENANT_UNIT_LIMIT = 24;
 
-/** The most sittings of one state that one unit or one cohort lists, so a student's list stays short. */
-const SITTINGS_PER_STATE = 10;
+/**
+ * The most sittings of one state that one unit or one cohort lists. A unit can run more rooms
+ * of one state at once than a short list holds, so the bound keeps every room a student may
+ * enter in reach, and each read stays bounded.
+ */
+const SITTINGS_PER_STATE = 50;
 
 /** The states of a sitting that a student may still take part in. */
 export const LIVE_STATES: readonly (typeof SittingState.Type)[] = [

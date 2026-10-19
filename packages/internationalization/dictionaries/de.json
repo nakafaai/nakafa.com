@@ -21,7 +21,11 @@
     },
     "sign-in-title": "Anmelden bei {school}",
     "signed-in": "Du bist angemeldet.",
-    "signed-in-as": "Du bist als {role} angemeldet."
+    "signed-in-as": "Du bist als {role} angemeldet.",
+    "sittings-title": "Deine Prüfungen",
+    "sittings-empty": "Noch keine Prüfung für dich",
+    "sittings-empty-description": "Deine Lehrkraft plant eine Prüfung, und sie erscheint hier.",
+    "sitting-exam": "Prüfung"
   },
   "Exams": {
     "token": "Token",
@@ -135,7 +139,21 @@
     "length": "Dauer",
     "length-minutes": "{count, plural, one {# Minute} other {# Minuten}}",
     "schedule-keys": "Markiere zuerst die richtige Antwort jeder Frage.",
-    "schedule-past": "Der Beginn ist vorbei. Wähle eine spätere Zeit."
+    "schedule-past": "Der Beginn ist vorbei. Wähle eine spätere Zeit.",
+    "rooms-title": "Räume",
+    "rooms-empty": "Noch keine Räume",
+    "rooms-empty-description": "Plane die Prüfung im Editor, dann erscheint jeder Raum hier.",
+    "rooms-filter-empty": "Kein Raum hat diesen Status",
+    "rooms-filter-empty-description": "Wähle einen anderen Status, um die übrigen Räume zu sehen.",
+    "rooms-unavailable": "Du kannst die Räume dieser Prüfung nicht sehen.",
+    "rooms-group": "Gruppe",
+    "rooms-opens": "Beginn",
+    "rooms-closes": "Ende",
+    "rooms-state": "Status",
+    "room-state-scheduled": "Geplant",
+    "room-state-open": "Offen",
+    "room-state-closed": "Geschlossen",
+    "state-all": "Alle Status"
   },
   "SchoolSettings": {
     "school": "Schule",

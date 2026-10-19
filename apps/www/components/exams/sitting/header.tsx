@@ -14,14 +14,16 @@ import {
   ChangeTokenDialog,
   CloseSittingDialog,
 } from "@/components/exams/sitting/dialogs";
+import { useTenant } from "@/components/tenant/context";
 import { SchoolHeader } from "@/components/tenant/header";
 
 /**
  * The one header of the dashboard: the sidebar's trigger, the path from the exams through the
- * exam to the sitting's room, and at its end the token with the action that changes it, then
- * the action that closes the sitting. The page carries the token only for a proctor, and the
- * actions show only when the page lists them. On a phone each action shows its icon alone,
- * named for assistive technology, so the header stays one row beside the folded path.
+ * exam, whose link returns to the exam's rooms, to the sitting's room, and at its end the token
+ * with the action that changes it, then the action that closes the sitting. The exams crumb is
+ * left out for a viewer who may not open the exam list. The page carries the token only for a
+ * proctor, and the actions show only when the page lists them. On a phone each action shows its
+ * icon alone, named for assistive technology, so the header stays one row beside the folded path.
  */
 export function SittingHeader({
   examId,
@@ -29,6 +31,7 @@ export function SittingHeader({
   readonly examId: GenericId.GenericId<"exams">;
 }) {
   const t = useTranslations("Exams");
+  const tenant = useTenant();
   const { value } = useSittingData();
   const mayProctor = useMayProctor();
   const [dialog, setDialog] = useState<"close" | "token" | null>(null);
@@ -36,8 +39,8 @@ export function SittingHeader({
   return (
     <SchoolHeader
       items={[
-        { href: "/exams", label: t("title") },
-        { href: `/exams/${examId}/edit`, label: value.sitting.examTitle },
+        ...(tenant.canOpenExams ? [{ href: "/exams", label: t("title") }] : []),
+        { href: `/exams/${examId}`, label: value.sitting.examTitle },
         { label: value.sitting.room },
       ]}
       title={value.sitting.room}

@@ -4,7 +4,7 @@ import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Effect, Option, Schema } from "effect";
 import { notFound } from "next/navigation";
 import { AppProviders } from "@/components/providers/app";
-import { canOpenExams } from "@/components/tenant/exams/access";
+import { canOpenExams, canOpenRooms } from "@/components/tenant/exams/access";
 import { getToken } from "@/lib/auth/server";
 import { httpLayer } from "@/lib/convex/http";
 
@@ -12,11 +12,12 @@ import { httpLayer } from "@/lib/convex/http";
 const notInSchool = () => Effect.succeedNone;
 
 /**
- * The layout of the school exams. Only a viewer who may view exams in the school or in one of
- * its units reads these pages: a signed-out viewer, a viewer who is not a member, and a viewer
- * with no exam action, such as a student, get not found. The exam pages are client components,
- * so this layout mounts the client providers of the app layout, as the school settings layout
- * does.
+ * The layout of the school exams. Only a viewer who may view exams, or the rooms of an exam, in the
+ * school or in one of its units reads these pages: a signed-out viewer, a viewer who is not a
+ * member, and a viewer with neither action, such as a student, get not found. The exam list checks
+ * `canOpenExams` on its own page, so a viewer who only reads rooms gets no list. The exam pages are
+ * client components, so this layout mounts the client providers of the app layout, as the school
+ * settings layout does.
  */
 export default async function SchoolExamsLayout({
   children,
@@ -40,7 +41,10 @@ export default async function SchoolExamsLayout({
       Effect.provide(httpLayer({ auth: token }))
     )
   );
-  if (Option.isNone(viewer) || !canOpenExams(viewer.value)) {
+  if (
+    Option.isNone(viewer) ||
+    !(canOpenExams(viewer.value) || canOpenRooms(viewer.value))
+  ) {
     notFound();
   }
 
