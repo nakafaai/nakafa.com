@@ -62,7 +62,8 @@ export const SittingView = Schema.Struct({
 
 /**
  * One attempt on the dashboard: its student, its state and deadline, whether the student is away, and
- * the time of the student's latest event (the start, an answer, or a signal).
+ * the time of the student's start or latest signal. The latest answer is read per seat, through
+ * `lastAnswer`, so the page re-runs for signals only.
  */
 const DashboardAttempt = Schema.Struct({
   away: Schema.Boolean,

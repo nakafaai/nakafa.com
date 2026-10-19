@@ -9,13 +9,16 @@ import {
   enterOk,
   OPENS_AT as OPENS,
   openedSitting,
+  scheduleSitting,
   seedAttempt,
   seedSignal,
+  sittingRow,
 } from "@repo/backend/test/sittings";
 import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect } from "effect";
 
-const { changeToken, dashboard, paper } = refs.public.exams.sittings;
+const { changeToken, dashboard, lastAnswer, paper } =
+  refs.public.exams.sittings;
 
 describe("exams/sittings dashboard", () => {
   beforeEach(() => {
@@ -234,7 +237,7 @@ describe("exams/sittings dashboard", () => {
   );
 
   it.effect(
-    "shows each attempt's last activity as the newest of its start, answers, and signals",
+    "shows each attempt's last activity as its start or its latest signal, and reads no answer",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
@@ -271,13 +274,108 @@ describe("exams/sittings dashboard", () => {
             })
           )
         );
-        expect(yield* lastActive).toBe(OPENS + 5000);
+        expect(yield* lastActive).toBe(OPENS + 1000);
         yield* seedSignal(fixture, {
           at: OPENS + 2000,
           attemptId: entered.attempt,
           kind: "return",
         });
-        expect(yield* lastActive).toBe(OPENS + 5000);
+        expect(yield* lastActive).toBe(OPENS + 2000);
+      })
+  );
+
+  it.effect(
+    "gives a seat the time of its attempt's latest answer, and null before the first one",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const made = yield* openedSitting(fixture, "PTS");
+        const entered = yield* enterOk(fixture, {
+          deviceId: deviceOf(1),
+          sittingId: made.id,
+          token: made.token,
+        });
+        const { questions } = yield* fixture.as("student").query(paper, {
+          deviceId: deviceOf(1),
+          sittingId: made.id,
+          slug: nf,
+        });
+        const seatAnswer = fixture.as("teacher").query(lastAnswer, {
+          attemptId: entered.attempt,
+          sittingId: made.id,
+          slug: nf,
+        });
+        expect(yield* seatAnswer).toBeNull();
+        const answer = (answeredAt: number) =>
+          fixture.run(
+            Effect.flatMap(DatabaseWriter, (writer) =>
+              writer.table("examAnswers").insert({
+                answeredAt,
+                attempt: entered.attempt,
+                question: questions[0].id,
+                response: [],
+                tenantId: fixture.tenants.nf,
+              })
+            )
+          );
+        yield* answer(OPENS + 5000);
+        yield* answer(OPENS + 3000);
+        expect(yield* seatAnswer).toBe(OPENS + 5000);
+      })
+  );
+
+  it.effect(
+    "refuses a seat's answer time for an attempt of another sitting, as a missing resource",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const made = yield* openedSitting(fixture, "PTS");
+        const entered = yield* enterOk(fixture, {
+          deviceId: deviceOf(1),
+          sittingId: made.id,
+          token: made.token,
+        });
+        const other = yield* scheduleSitting(fixture, {
+          closesAt: CLOSES,
+          examId: (yield* sittingRow(fixture, made.id)).examId,
+          group: { kind: "unit", unitId: fixture.units.smp },
+          opensAt: OPENS + 60_000,
+        });
+        const failure = yield* fixture
+          .as("teacher")
+          .query(lastAnswer, {
+            attemptId: entered.attempt,
+            sittingId: other.id,
+            slug: nf,
+          })
+          .pipe(Effect.flip);
+        expect(failure).toMatchObject({
+          _tag: "AccessDenied",
+          reason: "resource",
+        });
+      })
+  );
+
+  it.effect(
+    "refuses a seat's answer time to a student, who holds no sitting view",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const made = yield* openedSitting(fixture, "PTS");
+        const entered = yield* enterOk(fixture, {
+          deviceId: deviceOf(1),
+          sittingId: made.id,
+          token: made.token,
+        });
+        const failure = yield* fixture
+          .as("student")
+          .query(lastAnswer, {
+            attemptId: entered.attempt,
+            sittingId: made.id,
+            slug: nf,
+          })
+          .pipe(Effect.flip);
+        expect(failure).toMatchObject({ _tag: "AccessDenied", reason: "role" });
       })
   );
 });

@@ -3,7 +3,10 @@ import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { answer } from "@repo/backend/confect/exams/sittings/answer";
 import { heldAttempt } from "@repo/backend/confect/exams/sittings/attempt";
 import { sittingAccess } from "@repo/backend/confect/exams/sittings/authority";
-import { dashboard } from "@repo/backend/confect/exams/sittings/dashboard";
+import {
+  dashboard,
+  lastAnswer,
+} from "@repo/backend/confect/exams/sittings/dashboard";
 import { enter } from "@repo/backend/confect/exams/sittings/enter";
 import { finish } from "@repo/backend/confect/exams/sittings/finish";
 import { mine } from "@repo/backend/confect/exams/sittings/mine";
@@ -58,6 +61,15 @@ const dashboardFunction = FunctionImpl.make(
   "dashboard",
   Effect.fn("exams.sittings.dashboard.function")(function* (args) {
     return yield* dashboard(args);
+  })
+);
+
+const lastAnswerFunction = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "lastAnswer",
+  Effect.fn("exams.sittings.lastAnswer.function")(function* (args) {
+    return yield* lastAnswer(args.attemptId);
   })
 );
 
@@ -187,6 +199,7 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(signalFunction),
   Layer.provide(mineFunction),
   Layer.provide(dashboardFunction),
+  Layer.provide(lastAnswerFunction),
   Layer.provide(lockFunction),
   Layer.provide(unlockFunction),
   Layer.provide(addMinutesFunction),

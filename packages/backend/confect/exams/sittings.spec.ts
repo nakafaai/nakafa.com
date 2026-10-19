@@ -112,6 +112,18 @@ export default GroupSpec.make()
     }).middleware(SittingAccess, { action: "sitting.view", arg: "sittingId" })
   )
   .addFunction(
+    FunctionSpec.publicQuery({
+      name: "lastAnswer",
+      args: () => ({
+        attemptId: Id("examAttempts"),
+        sittingId: Id("examSittings"),
+        slug: TenantSlug,
+      }),
+      returns: () => Schema.NullOr(Schema.Finite),
+      error: () => AccessDenied,
+    }).middleware(SittingAccess, { action: "sitting.view", arg: "sittingId" })
+  )
+  .addFunction(
     FunctionSpec.publicMutation({
       name: "lock",
       args: () => ({
