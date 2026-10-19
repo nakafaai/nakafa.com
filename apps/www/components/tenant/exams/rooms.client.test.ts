@@ -1,12 +1,16 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
 import exams from "@repo/backend/confect/_generated/refs/exams";
+import type { RoomRow } from "@repo/backend/confect/exams/rooms";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Option, Schema } from "effect";
 import {
   insertPlaceholderRoom,
   roomsArgs,
 } from "@/components/tenant/exams/rooms.client";
+
+/** One room of the rooms list. */
+type Room = typeof RoomRow.Type;
 
 const input = {
   examId: Schema.decodeUnknownSync(Id("exams"))("exam-pts"),
@@ -27,82 +31,73 @@ describe("exams/rooms client", () => {
 
 describe("insertPlaceholderRoom", () => {
   const sittingId = Schema.decodeUnknownSync(Id("examSittings"));
-  const row = (id: string, opensAt: number) => ({
+  const unitId = Schema.decodeUnknownSync(Id("tenantUnits"));
+  const row = (id: string, opensAt: number): Room => ({
     closesAt: opensAt + 60_000,
-    group: { kind: "unit" as const, name: "Kelas 10" },
+    group: { kind: "unit", name: "Kelas 10" },
     id: sittingId(id),
     opensAt,
     room: id,
-    state: "scheduled" as const,
+    state: "scheduled",
     timeZone: "Asia/Jakarta",
   });
-  const first = (queryArgs: object) => ({
+  const page = (state: string | undefined, cursor: string | null) => ({
     args: {
       ...input,
-      ...queryArgs,
-      paginationOpts: { cursor: null, numItems: 20 },
+      ...(state === undefined ? {} : { state }),
+      paginationOpts: { cursor, numItems: 20 },
     },
     value: Option.some({ isDone: true, page: [row("ruang-b", 2_000_000)] }),
   });
-  const insertionRow = {
+  const insertion: Room = {
     closesAt: 1_000_060_000,
-    group: { kind: "unit" as const, name: "Kelas 10" },
+    group: { kind: "unit", name: "Kelas 10" },
     id: sittingId("ruang-baru"),
     opensAt: 1_000_000,
     room: "Ruang baru",
-    state: "scheduled" as const,
+    state: "scheduled",
     timeZone: "Asia/Jakarta",
   };
   const schedule = {
-    closesAt: insertionRow.closesAt,
+    closesAt: insertion.closesAt,
     examId: input.examId,
-    group: { kind: "unit" as const, unitId: "unit" as never },
-    opensAt: insertionRow.opensAt,
-    room: insertionRow.room,
+    group: { kind: "unit", unitId: unitId("unit") },
+    opensAt: insertion.opensAt,
+    room: insertion.room,
     slug: input.slug,
   };
 
   it("shows the room first at its opening in each first page of the exam's rooms", () => {
     const getAllQueries = vi
       .fn()
-      .mockReturnValue([first({}), first({ state: "scheduled" })]);
+      .mockReturnValue([page(undefined, null), page("scheduled", null)]);
     const setQuery = vi.fn();
 
-    insertPlaceholderRoom(insertionRow)(
-      { getAllQueries, getQuery: vi.fn(), setQuery } as never,
-      schedule as never
+    insertPlaceholderRoom(insertion)(
+      { getAllQueries, getQuery: vi.fn(), setQuery },
+      schedule
     );
 
     expect(setQuery).toHaveBeenCalledTimes(2);
     expect(setQuery).toHaveBeenCalledWith(
       exams.rooms.list,
-      first({}).args,
+      page(undefined, null).args,
       Option.some({
         isDone: true,
-        page: [
-          { ...insertionRow, id: sittingId("ruang-baru") },
-          row("ruang-b", 2_000_000),
-        ],
+        page: [insertion, row("ruang-b", 2_000_000)],
       })
     );
   });
 
   it("leaves the filter that names another state, and every later page, as they are", () => {
-    const getAllQueries = vi.fn().mockReturnValue([
-      first({ state: "open" }),
-      {
-        ...first({}),
-        args: {
-          ...first({}).args,
-          paginationOpts: { cursor: "next", numItems: 20 },
-        },
-      },
-    ]);
+    const getAllQueries = vi
+      .fn()
+      .mockReturnValue([page("open", null), page(undefined, "next")]);
     const setQuery = vi.fn();
 
-    insertPlaceholderRoom(insertionRow)(
-      { getAllQueries, getQuery: vi.fn(), setQuery } as never,
-      schedule as never
+    insertPlaceholderRoom(insertion)(
+      { getAllQueries, getQuery: vi.fn(), setQuery },
+      schedule
     );
 
     expect(setQuery).not.toHaveBeenCalled();
