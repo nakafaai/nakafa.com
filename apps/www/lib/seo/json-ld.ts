@@ -56,8 +56,8 @@ const BookInput = Schema.Struct({
   description: Schema.String,
   inLanguage: Schema.String,
   name: Schema.String,
-  position: Schema.Number,
-  totalPages: Schema.Number,
+  position: Schema.Finite,
+  totalPages: Schema.Finite,
   url: Schema.String,
 });
 
