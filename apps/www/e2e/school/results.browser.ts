@@ -78,7 +78,11 @@ test("a student finishes a sitting, the proctor closes it and releases its resul
     .click();
   await proctor.getByRole("link", { name: "Results", exact: true }).click();
 
-  const students = proctor.getByRole("table");
+  // The page holds two tables, the students and the answers of the first question,
+  // so the roster is the one with a Score column.
+  const students = proctor.getByRole("table").filter({
+    has: proctor.getByRole("columnheader", { name: "Score", exact: true }),
+  });
   await expect(students).toContainText(LEARNER_NAME, {
     timeout: readinessTimeoutMilliseconds,
   });
@@ -93,7 +97,9 @@ test("a student finishes a sitting, the proctor closes it and releases its resul
     .getByRole("button", { name: "Release results", exact: true })
     .click();
 
-  await expect(student.getByText("Your result")).toBeVisible({
+  await expect(
+    student.getByText("Your teacher released these results.")
+  ).toBeVisible({
     timeout: readinessTimeoutMilliseconds,
   });
   await expect(student.getByText(SCORE)).toBeVisible();
