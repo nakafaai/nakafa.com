@@ -1105,7 +1105,19 @@
     "divider": "Garis pemisah",
     "more": "Lainnya",
     "style": "Gaya teks",
-    "text": "Teks biasa"
+    "text": "Teks biasa",
+    "insert": "Sisipkan blok",
+    "subscript": "Subskrip",
+    "superscript": "Superskrip",
+    "table": "Tabel",
+    "table-actions": "Aksi tabel",
+    "row-before": "Baris di atas",
+    "row-after": "Baris di bawah",
+    "row-delete": "Hapus baris",
+    "column-before": "Kolom kiri",
+    "column-after": "Kolom kanan",
+    "column-delete": "Hapus kolom",
+    "table-delete": "Hapus tabel"
   },
   "Memory": {
     "remember": "Izinkan Nina menyimpan dan memakai memori",

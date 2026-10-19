@@ -1,11 +1,14 @@
 "use client";
 
 import { MoreVerticalIcon } from "@hugeicons/core-free-icons";
+import { DocumentBlocks } from "@repo/design-system/components/editor/block";
+import { DocumentMarks } from "@repo/design-system/components/editor/format";
 import {
   editorBar,
   editorRow,
 } from "@repo/design-system/components/editor/frame";
 import { RichEditorStyle } from "@repo/design-system/components/editor/style";
+import { DocumentTable } from "@repo/design-system/components/editor/table";
 import {
   RichEditorBlocks,
   RichEditorHistory,
@@ -21,37 +24,22 @@ import {
   PopoverTrigger,
 } from "@repo/design-system/components/ui/popover";
 import { useCurrentEditor } from "@tiptap/react";
+import { cn } from "cn";
 import { Array as Arr } from "effect";
 import {
   type ComponentProps,
+  type ReactNode,
   useEffect,
   useLayoutEffect,
   useRef,
   useState,
 } from "react";
 
-interface RichEditorToolbarProps {
-  /** The names a reader hears and sees for each control. */
-  labels: ComponentProps<typeof RichEditorBlocks>["labels"] &
-    ComponentProps<typeof RichEditorHistory>["labels"] &
-    ComponentProps<typeof RichEditorInline>["labels"] &
-    ComponentProps<typeof RichEditorLists>["labels"] &
-    ComponentProps<typeof RichEditorMarks>["labels"] &
-    ComponentProps<typeof RichEditorStyle>["labels"] & {
-      /** The control that opens the groups the row has no room for. */
-      more: string;
-    };
+/** One group of controls of a bar: its name, which the bar keys it by, and the controls it holds. */
+interface EditorGroup {
+  readonly name: string;
+  readonly tools: ReactNode;
 }
-
-/** The groups of controls, the one a writer needs most first. */
-const GROUPS = [
-  { name: "history", Tools: RichEditorHistory },
-  { name: "style", Tools: RichEditorStyle },
-  { name: "marks", Tools: RichEditorMarks },
-  { name: "lists", Tools: RichEditorLists },
-  { name: "inline", Tools: RichEditorInline },
-  { name: "blocks", Tools: RichEditorBlocks },
-];
 
 /**
  * Reads which groups the row has no room for. The row keeps one line and lets
@@ -71,7 +59,7 @@ function readWrapped(row: HTMLElement) {
  * One group of controls. A line stands before every group but the first, and a
  * group the row has no room for keeps its place out of sight.
  */
-function RichEditorGroup(props: Omit<ComponentProps<"div">, "className">) {
+function BarGroup(props: Omit<ComponentProps<"div">, "className">) {
   return (
     <div
       className="flex shrink-0 items-center gap-0.5 before:me-1 before:h-5 before:w-px before:bg-border first:before:hidden data-wrapped:invisible"
@@ -81,15 +69,24 @@ function RichEditorGroup(props: Omit<ComponentProps<"div">, "className">) {
 }
 
 /**
- * The formatting controls of the editor it sits in, on one line: history, the
- * style of the paragraph, marks, lists, and blocks. The groups that do not fit
- * the width move behind a last control that opens them, so the line never
- * wraps and never scrolls. They close when a control there has acted and the
- * caret is back in the text. A control that opens its own choices, such as the
- * link field, keeps them open until the writer has chosen. Until the editor
- * exists, every control waits.
+ * The one-line bar of controls above an editor, which it reads through `useCurrentEditor`.
+ * The groups that do not fit the width move behind a last control that opens them, so the
+ * line never wraps and never scrolls. They close when a control there has acted and the
+ * caret is back in the text. A control that opens its own choices, such as the link field,
+ * keeps them open until the writer has chosen. Until the editor exists, every control waits.
  */
-export function RichEditorToolbar({ labels }: RichEditorToolbarProps) {
+function EditorBar({
+  className,
+  groups,
+  more,
+}: {
+  /** Extra classes of the bar, such as its place in the page. */
+  className?: string;
+  /** The groups of controls, the one a writer needs most first. */
+  groups: readonly EditorGroup[];
+  /** The name of the control that opens the groups the row has no room for. */
+  more: string;
+}) {
   const { editor } = useCurrentEditor();
   const row = useRef<HTMLDivElement>(null);
   const [wrapped, setWrapped] = useState<readonly string[]>([]);
@@ -137,27 +134,31 @@ export function RichEditorToolbar({ labels }: RichEditorToolbarProps) {
   }, []);
 
   return (
-    <div className={editorBar()} data-slot="editor-toolbar" role="toolbar">
+    <div
+      className={cn(editorBar(), className)}
+      data-slot="editor-toolbar"
+      role="toolbar"
+    >
       <div className={editorRow()} ref={row}>
-        {Arr.map(GROUPS, ({ name, Tools }) => (
-          <RichEditorGroup
+        {Arr.map(groups, ({ name, tools }) => (
+          <BarGroup
             data-group={name}
             data-wrapped={Arr.contains(wrapped, name) ? "" : undefined}
             key={name}
           >
-            <Tools labels={labels} />
-          </RichEditorGroup>
+            {tools}
+          </BarGroup>
         ))}
       </div>
       {Arr.isReadonlyArrayNonEmpty(wrapped) ? (
-        <RichEditorGroup>
+        <BarGroup>
           <Popover onOpenChange={setOpen} open={open}>
             <PopoverTrigger
               render={
                 <Button
-                  aria-label={labels.more}
+                  aria-label={more}
                   size="icon-sm"
-                  title={labels.more}
+                  title={more}
                   type="button"
                   variant="ghost"
                 />
@@ -175,17 +176,83 @@ export function RichEditorToolbar({ labels }: RichEditorToolbarProps) {
               }
             >
               {Arr.map(
-                Arr.filter(GROUPS, ({ name }) => Arr.contains(wrapped, name)),
-                ({ name, Tools }) => (
+                Arr.filter(groups, ({ name }) => Arr.contains(wrapped, name)),
+                ({ name, tools }) => (
                   <div className="flex items-center gap-0.5" key={name}>
-                    <Tools labels={labels} />
+                    {tools}
                   </div>
                 )
               )}
             </PopoverContent>
           </Popover>
-        </RichEditorGroup>
+        </BarGroup>
       ) : null}
     </div>
+  );
+}
+
+interface RichEditorToolbarProps {
+  /** The names a reader hears and sees for each control. */
+  labels: ComponentProps<typeof RichEditorBlocks>["labels"] &
+    ComponentProps<typeof RichEditorHistory>["labels"] &
+    ComponentProps<typeof RichEditorInline>["labels"] &
+    ComponentProps<typeof RichEditorLists>["labels"] &
+    ComponentProps<typeof RichEditorMarks>["labels"] &
+    ComponentProps<typeof RichEditorStyle>["labels"] & {
+      /** The control that opens the groups the row has no room for. */
+      more: string;
+    };
+}
+
+/**
+ * The formatting controls of the Memory editor, on one line: history, the style of the
+ * paragraph, marks, lists, and blocks.
+ */
+export function RichEditorToolbar({ labels }: RichEditorToolbarProps) {
+  return (
+    <EditorBar
+      groups={[
+        { name: "history", tools: <RichEditorHistory labels={labels} /> },
+        { name: "style", tools: <RichEditorStyle labels={labels} /> },
+        { name: "marks", tools: <RichEditorMarks labels={labels} /> },
+        { name: "lists", tools: <RichEditorLists labels={labels} /> },
+        { name: "inline", tools: <RichEditorInline labels={labels} /> },
+        { name: "blocks", tools: <RichEditorBlocks labels={labels} /> },
+      ]}
+      more={labels.more}
+    />
+  );
+}
+
+interface DocumentToolbarProps {
+  /** The names a writer hears and sees for each control of the document toolbar. */
+  labels: ComponentProps<typeof DocumentBlocks>["labels"] &
+    ComponentProps<typeof DocumentMarks>["labels"] &
+    ComponentProps<typeof DocumentTable>["labels"] &
+    ComponentProps<typeof RichEditorHistory>["labels"] &
+    ComponentProps<typeof RichEditorStyle>["labels"] & {
+      /** The control that opens the groups the row has no room for. */
+      more: string;
+    };
+}
+
+/**
+ * The toolbar of an assessment document, on one line: history, the style of the paragraph,
+ * marks, lists, quote and code block, and tables. It offers only the blocks and marks of the
+ * contract, and it stays at the top of the editor while the text scrolls beneath it.
+ */
+export function DocumentToolbar({ labels }: DocumentToolbarProps) {
+  return (
+    <EditorBar
+      className="sticky top-0 z-10 bg-background"
+      groups={[
+        { name: "history", tools: <RichEditorHistory labels={labels} /> },
+        { name: "style", tools: <RichEditorStyle labels={labels} /> },
+        { name: "marks", tools: <DocumentMarks labels={labels} /> },
+        { name: "blocks", tools: <DocumentBlocks labels={labels} /> },
+        { name: "table", tools: <DocumentTable labels={labels} /> },
+      ]}
+      more={labels.more}
+    />
   );
 }

@@ -33,6 +33,7 @@ update:
     - '@tiptap/extension-paragraph'
     - '@tiptap/extension-subscript'
     - '@tiptap/extension-superscript'
+    - '@tiptap/extension-table'
     - '@tiptap/extension-text'
     - '@tiptap/extension-underline'
     - '@tiptap/extensions'
@@ -40,6 +41,7 @@ update:
     - '@tiptap/pm'
     - '@tiptap/react'
     - '@tiptap/starter-kit'
+    - '@tiptap/suggestion'
     - afdocs
     - '@next/third-parties'
     - '@turbo/gen'

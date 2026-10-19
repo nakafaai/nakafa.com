@@ -2,15 +2,23 @@
 
 import { useCallbackRef } from "@mantine/hooks";
 import { editableState } from "@repo/design-system/components/editor/editable";
-import { editorPlaceholder } from "@repo/design-system/components/editor/frame";
+import {
+  editorDocument,
+  editorPlaceholder,
+} from "@repo/design-system/components/editor/frame";
 import type { AnyExtension, Editor } from "@tiptap/core";
 import { Placeholder } from "@tiptap/extensions";
 import type { Transaction } from "@tiptap/pm/state";
-import { EditorContent, useEditor } from "@tiptap/react";
+import { EditorContent, EditorContext, useEditor } from "@tiptap/react";
+import { cn } from "cn";
+import { type ReactNode, useMemo } from "react";
 
 interface DocumentEditorProps {
-  /** The classes of the editing surface, which the caller sets for its typography. */
-  className?: string;
+  /**
+   * Controls and other parts drawn above the text. They read the editor through
+   * `useCurrentEditor`, and they stay out of the document.
+   */
+  children?: ReactNode;
   /** The extensions that make the document the caller holds, built once by the caller. */
   extensions: readonly AnyExtension[];
   /** The accessible name of the editing surface. */
@@ -27,11 +35,13 @@ interface DocumentEditorProps {
  * Edits a document of the given extensions. It keeps no text of its own: the document is
  * the editor's state, and a caller that syncs the document (ADR 0028) reads and changes that
  * state through the editor it receives. The editor starts read-only, and says so to
- * assistive technology, so a caller turns editing on once the document is open. Load it
- * with `next/dynamic` and `ssr: false`, as the editor brings the editing library with it.
+ * assistive technology, so a caller turns editing on once the document is open. The text
+ * takes the same classes whether the caller edits it or only reads it, so a reader sees the
+ * document as the editor draws it. Load it with `next/dynamic` and `ssr: false`, as the
+ * editor brings the editing library with it.
  */
 export function DocumentEditor({
-  className,
+  children,
   extensions,
   label,
   onChange,
@@ -46,7 +56,7 @@ export function DocumentEditor({
       attributes: {
         "aria-label": label,
         "aria-multiline": "true",
-        class: editorPlaceholder(),
+        class: cn(editorPlaceholder(), editorDocument()),
       },
     },
     extensions: [
@@ -58,6 +68,12 @@ export function DocumentEditor({
     onCreate: ({ editor: current }) => ready(current),
     onUpdate: ({ transaction }) => change(transaction),
   });
+  const context = useMemo(() => ({ editor }), [editor]);
 
-  return <EditorContent className={className} editor={editor} />;
+  return (
+    <EditorContext value={context}>
+      {children}
+      <EditorContent className="min-h-32" editor={editor} />
+    </EditorContext>
+  );
 }

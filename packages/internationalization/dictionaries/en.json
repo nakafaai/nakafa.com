@@ -1105,7 +1105,19 @@
     "divider": "Divider",
     "more": "More",
     "style": "Text style",
-    "text": "Normal text"
+    "text": "Normal text",
+    "insert": "Insert a block",
+    "subscript": "Subscript",
+    "superscript": "Superscript",
+    "table": "Table",
+    "table-actions": "Table actions",
+    "row-before": "Row above",
+    "row-after": "Row below",
+    "row-delete": "Delete row",
+    "column-before": "Column left",
+    "column-after": "Column right",
+    "column-delete": "Delete column",
+    "table-delete": "Delete table"
   },
   "Memory": {
     "remember": "Let Nina save and use memories",

@@ -7,7 +7,7 @@ import {
   documentSchema,
 } from "@repo/editor/document";
 import { Editor } from "@tiptap/core";
-import { Record as Rec } from "effect";
+import { Array as Arr, Record as Rec } from "effect";
 
 /** The rules of the tests: headings of levels 1 to 3, and links to https addresses only. */
 const RULES = {
@@ -106,5 +106,114 @@ describe("documentExtensions", () => {
     editor.commands.setTextSelection({ from: 1, to: 7 });
     expect(editor.can().setLink({ href: "http://nakafa.com" })).toBe(false);
     expect(editor.can().setLink({ href: "https://nakafa.com" })).toBe(true);
+  });
+});
+
+describe("documentSchema blocks and tables", () => {
+  const schema = documentSchema({ ...RULES, marks: ["bold", "link"] });
+
+  it("holds the blocks of the contract that the editor writes", () => {
+    expect(Rec.keys(schema.nodes)).toEqual(
+      expect.arrayContaining([
+        "blockquote",
+        "bulletList",
+        "codeBlock",
+        "hardBreak",
+        "heading",
+        "listItem",
+        "orderedList",
+        "paragraph",
+        "table",
+        "tableCell",
+        "tableHeader",
+        "tableRow",
+      ])
+    );
+  });
+
+  it("round-trips the blocks of the contract as their JSON", () => {
+    const blocks = [
+      {
+        attrs: { language: "ts" },
+        content: [{ text: "const a = 1", type: "text" }],
+        type: "codeBlock",
+      },
+      { attrs: { language: null }, type: "codeBlock" },
+      {
+        content: [
+          {
+            content: [{ text: "kutipan", type: "text" }],
+            type: "paragraph",
+          },
+        ],
+        type: "blockquote",
+      },
+      {
+        content: [
+          {
+            content: [
+              { content: [{ text: "satu", type: "text" }], type: "paragraph" },
+              {
+                content: [
+                  {
+                    content: [{ text: "catatan", type: "text" }],
+                    type: "paragraph",
+                  },
+                ],
+                type: "blockquote",
+              },
+            ],
+            type: "listItem",
+          },
+        ],
+        attrs: { start: 3 },
+        type: "orderedList",
+      },
+    ];
+    for (const block of blocks) {
+      expect(schema.nodeFromJSON(block).toJSON()).toEqual(block);
+    }
+  });
+
+  it("round-trips a table of header and body cells, each with its spans", () => {
+    const cell = (type: "tableCell" | "tableHeader", text: string) => ({
+      attrs: { colspan: 1, rowspan: 1 },
+      content: [{ content: [{ text, type: "text" }], type: "paragraph" }],
+      type,
+    });
+    const table = {
+      content: [
+        {
+          content: [cell("tableHeader", "Nama"), cell("tableHeader", "Nilai")],
+          type: "tableRow",
+        },
+        {
+          content: [cell("tableCell", "Budi"), cell("tableCell", "90")],
+          type: "tableRow",
+        },
+      ],
+      type: "table",
+    };
+    expect(schema.nodeFromJSON(table).toJSON()).toEqual(table);
+  });
+
+  it("refuses a row with no cell, as the contract does", () => {
+    expect(() => schema.nodes.tableRow.create(null, []).check()).toThrow();
+  });
+
+  it("holds the spans of a pasted cell, reads a missing span as 1, and drops its column width", () => {
+    const editor = openEditor(["bold"]);
+    editor.commands.setContent(
+      '<table><tbody><tr><td colspan="2" rowspan="0" style="width: 120px">x</td><td>y</td></tr></tbody></table>'
+    );
+    const row = editor.state.doc.firstChild?.firstChild;
+    const spans = Arr.makeBy(
+      row?.childCount ?? 0,
+      (index) => row?.child(index).attrs
+    );
+    expect(spans).toEqual([
+      { colspan: 2, rowspan: 1 },
+      { colspan: 1, rowspan: 1 },
+    ]);
   });
 });

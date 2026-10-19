@@ -6,6 +6,12 @@ import { Link } from "@tiptap/extension-link";
 import { OrderedList } from "@tiptap/extension-list";
 import { Subscript } from "@tiptap/extension-subscript";
 import { Superscript } from "@tiptap/extension-superscript";
+import {
+  Table,
+  TableCell,
+  TableHeader,
+  TableRow,
+} from "@tiptap/extension-table";
 import { Underline } from "@tiptap/extension-underline";
 import type { Schema } from "@tiptap/pm/model";
 import { StarterKit } from "@tiptap/starter-kit";
@@ -44,6 +50,43 @@ const DocumentOrderedList = OrderedList.extend({
       },
     };
   },
+});
+
+/**
+ * A span of a table cell as the page reads it: a positive whole number, and 1 for any
+ * other value, as the contract stores it.
+ */
+function spanOf(element: HTMLElement, name: "colspan" | "rowspan") {
+  const span = Number.parseInt(element.getAttribute(name) ?? "1", 10);
+  return span > 0 ? span : 1;
+}
+
+/**
+ * The attributes of a table cell in the contract: its two spans. Tiptap also keeps the
+ * width of each column in a cell, which the contract does not store, so it is not offered.
+ */
+function spanAttributes() {
+  return {
+    colspan: {
+      default: 1,
+      parseHTML: (element: HTMLElement) => spanOf(element, "colspan"),
+    },
+    rowspan: {
+      default: 1,
+      parseHTML: (element: HTMLElement) => spanOf(element, "rowspan"),
+    },
+  };
+}
+
+/** A cell of a body row, and a cell of a header row, each with the contract's spans. */
+const DocumentTableCell = TableCell.extend({ addAttributes: spanAttributes });
+const DocumentTableHeader = TableHeader.extend({
+  addAttributes: spanAttributes,
+});
+
+/** A row holds one cell or more, as the contract requires, where Tiptap allows none. */
+const DocumentTableRow = TableRow.extend({
+  content: "(tableCell | tableHeader)+",
 });
 
 /** The extension of one mark, given its priority and the rule of the link addresses. */
@@ -99,6 +142,8 @@ type DocumentMark = keyof typeof MARKS;
  * are off, so no strike and no highlight is offered, and its horizontal rule is off,
  * because a document of this kind holds no rule (ADR 0031). Its ordered list is the
  * document's own, and so is its link, so each holds only the attributes the contract names.
+ * A table is the contract's table, of rows and cells that hold blocks, with the spans of
+ * a cell and no other attribute.
  */
 export function documentExtensions(rules: DocumentRules): AnyExtension[] {
   return [
@@ -114,6 +159,10 @@ export function documentExtensions(rules: DocumentRules): AnyExtension[] {
       underline: false,
     }),
     DocumentOrderedList,
+    Table,
+    DocumentTableRow,
+    DocumentTableHeader,
+    DocumentTableCell,
     ...Arr.map(rules.marks, (mark, index) =>
       MARKS[mark](TOP_PRIORITY - index, rules.isLinkAllowed)
     ),

@@ -1105,7 +1105,19 @@
     "divider": "Trennlinie",
     "more": "Mehr",
     "style": "Textstil",
-    "text": "Normaler Text"
+    "text": "Normaler Text",
+    "insert": "Block einfügen",
+    "subscript": "Tiefgestellt",
+    "superscript": "Hochgestellt",
+    "table": "Tabelle",
+    "table-actions": "Tabellenaktionen",
+    "row-before": "Zeile darüber",
+    "row-after": "Zeile darunter",
+    "row-delete": "Zeile löschen",
+    "column-before": "Spalte links",
+    "column-after": "Spalte rechts",
+    "column-delete": "Spalte löschen",
+    "table-delete": "Tabelle löschen"
   },
   "Memory": {
     "remember": "Nina darf Erinnerungen speichern und nutzen",

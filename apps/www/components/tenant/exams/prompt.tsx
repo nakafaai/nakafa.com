@@ -9,6 +9,7 @@ import { ASSESSMENT_RULES } from "@repo/backend/confect/editor/model";
 import { MAX_DOCUMENT_BYTES } from "@repo/backend/confect/editor/size";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Collab } from "@repo/design-system/components/editor/collab";
+import { slashCommand } from "@repo/design-system/components/editor/command";
 import { depthGuard } from "@repo/design-system/components/editor/depth";
 import { DocumentEditor } from "@repo/design-system/components/editor/document";
 import { articleParagraphs } from "@repo/design-system/components/editor/paragraph";
@@ -16,6 +17,7 @@ import {
   documentSizeGuard,
   stepSizeGuard,
 } from "@repo/design-system/components/editor/size";
+import { DocumentToolbar } from "@repo/design-system/components/editor/toolbar";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { documentExtensions } from "@repo/editor/document";
 import type { Transaction } from "@tiptap/pm/state";
@@ -23,8 +25,9 @@ import type { EditorView } from "@tiptap/pm/view";
 import { useConvex } from "convex/react";
 import { Effect, Fiber, Ref } from "effect";
 import { useTranslations } from "next-intl";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { type StoreApi, useStore } from "zustand";
+import { useDocumentLabels } from "@/components/tenant/exams/labels";
 import { useExamLive } from "@/components/tenant/exams/provider";
 import {
   createPromptSync,
@@ -108,6 +111,14 @@ export function ExamPrompt({
   slug: TenantSlug;
 }) {
   const t = useTranslations("Exams");
+  const labels = useDocumentLabels();
+  const extensions = useMemo(
+    () => [
+      ...PROMPT_EXTENSIONS,
+      slashCommand({ label: labels.insert, labels: labels.slash }),
+    ],
+    [labels]
+  );
   const convex = useConvex();
   const [sync] = useState(createPromptSync);
   const show = useExamLive((state) => state.show);
@@ -230,12 +241,13 @@ export function ExamPrompt({
 
   return (
     <DocumentEditor
-      className="min-h-32 outline-none"
-      extensions={PROMPT_EXTENSIONS}
+      extensions={extensions}
       label={t("prompt-label")}
       onChange={change}
       onEditor={open}
       placeholder={t("prompt-placeholder")}
-    />
+    >
+      <DocumentToolbar labels={labels.toolbar} />
+    </DocumentEditor>
   );
 }
