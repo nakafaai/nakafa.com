@@ -13,7 +13,7 @@
     "greeting-afternoon": "Good afternoon, {name}",
     "greeting-evening": "Good evening, {name}",
     "tile-live": "In progress",
-    "tile-live-empty": "No sitting is running now.",
+    "tile-live-empty": "No sitting is running now. Results of finished sittings are in each exam's rooms.",
     "tile-live-footer": "Open a room to watch its students.",
     "tile-next": "Up next",
     "tile-next-empty": "No sitting opens in the next 14 days.",

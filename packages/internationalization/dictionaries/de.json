@@ -13,7 +13,7 @@
     "greeting-afternoon": "Guten Tag, {name}",
     "greeting-evening": "Guten Abend, {name}",
     "tile-live": "Läuft gerade",
-    "tile-live-empty": "Gerade läuft keine Sitzung.",
+    "tile-live-empty": "Gerade läuft keine Sitzung. Ergebnisse beendeter Sitzungen findest du bei den Räumen der Prüfung.",
     "tile-live-footer": "Öffne einen Raum, um die Schüler zu beobachten.",
     "tile-next": "Als Nächstes",
     "tile-next-empty": "In den nächsten 14 Tagen beginnt keine Sitzung.",

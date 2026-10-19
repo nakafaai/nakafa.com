@@ -13,7 +13,7 @@
     "greeting-afternoon": "Selamat siang, {name}",
     "greeting-evening": "Selamat malam, {name}",
     "tile-live": "Sedang berlangsung",
-    "tile-live-empty": "Tidak ada sesi yang sedang berlangsung.",
+    "tile-live-empty": "Tidak ada sesi yang sedang berlangsung. Hasil sesi yang sudah selesai ada di ruang setiap ujian.",
     "tile-live-footer": "Buka ruang untuk memantau siswanya.",
     "tile-next": "Berikutnya",
     "tile-next-empty": "Tidak ada sesi yang dibuka dalam 14 hari ke depan.",

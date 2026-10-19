@@ -23,28 +23,37 @@ import {
 import { useHomeViewer } from "@/components/tenant/home/query.client";
 
 /**
+ * The act of Nina before the school's clock is known: she does nothing in particular, so her pose never
+ * changes after the first draw of a page that loads.
+ */
+const NEUTRAL_ACT = "relaxed";
+
+/**
  * The welcome of the school home: a greeting for the part of the day on the school's clock, with the
  * viewer's first name, and Nina doing what fits that part of the day. The first unit of the school
- * gives the clock, and a school with no unit reads the UTC clock. Its footer holds the one next step
- * for a viewer who may open exams. The greeting keeps its line while the viewer's name loads, so the
- * tile does not move.
+ * gives the clock, and a school with no unit reads the UTC clock. Nina keeps the neutral act until the
+ * viewer loads, because the clock is known only then. Its footer holds the one sentence of the card,
+ * with the one next step for a viewer who may open exams. The greeting keeps its line while the
+ * viewer's name loads, so the tile does not move.
  */
 export function WelcomeTile({ className }: { className?: string }) {
   const t = useTranslations("School");
   const tenant = useTenant();
   const viewer = useHomeViewer();
-  const zone = QueryResult.isSuccess(viewer)
-    ? Option.flatMap(Arr.head(viewer.value.units), (unit) =>
-        DateTime.zoneMakeNamed(unit.timeZone)
+  const part = QueryResult.isSuccess(viewer)
+    ? dayPartAt(
+        DateTime.nowUnsafe(),
+        Option.flatMap(Arr.head(viewer.value.units), (unit) =>
+          DateTime.zoneMakeNamed(unit.timeZone)
+        )
       )
-    : Option.none();
-  const part = dayPartAt(DateTime.nowUnsafe(), zone);
+    : null;
 
   return (
     <CardSection className={className}>
       <CardHeader>
         <CardTitle className="min-h-6">
-          {QueryResult.isSuccess(viewer)
+          {QueryResult.isSuccess(viewer) && part !== null
             ? t(`greeting-${part}`, {
                 name: firstNameOf(viewer.value.person.name),
               })
@@ -52,7 +61,12 @@ export function WelcomeTile({ className }: { className?: string }) {
         </CardTitle>
       </CardHeader>
       <div className="px-6">
-        <Nina act={DAY_PART_ACT[part]} label="" size={96} whole />
+        <Nina
+          act={part === null ? NEUTRAL_ACT : DAY_PART_ACT[part]}
+          label=""
+          size={96}
+          whole
+        />
       </div>
       {tenant.canOpenExams ? (
         <CardSectionFooter hint={t("next-exam-footer")}>
@@ -66,7 +80,9 @@ export function WelcomeTile({ className }: { className?: string }) {
             </Link>
           </CardSectionActions>
         </CardSectionFooter>
-      ) : null}
+      ) : (
+        <CardSectionFooter hint={t("welcome-footer")} />
+      )}
     </CardSection>
   );
 }
