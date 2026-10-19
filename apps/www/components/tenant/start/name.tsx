@@ -53,6 +53,7 @@ export function StartNameQuestion() {
   );
   const nameId = useId();
   const slugId = useId();
+  const slugLabelId = useId();
   if (QueryResult.isFailure(check)) {
     throw check.error;
   }
@@ -97,10 +98,13 @@ export function StartNameQuestion() {
           />
         </Field>
         <Field>
-          <FieldLabel htmlFor={slugId}>{t("address-label")}</FieldLabel>
+          <FieldLabel htmlFor={slugId} id={slugLabelId}>
+            {t("address-label")}
+          </FieldLabel>
           <div className="relative">
             <input
               aria-invalid={addressProblem}
+              aria-labelledby={slugLabelId}
               autoCapitalize="none"
               autoComplete="off"
               className={questionnaireInputVariants({ className: "pe-32" })}
