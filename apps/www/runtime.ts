@@ -2,7 +2,6 @@ import {
   CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT,
   isProtectedProduction,
 } from "@repo/backend/content/deployment";
-import { convexKeys } from "@repo/backend/public";
 import { readEnvironment } from "@repo/utilities/env";
 import { Effect, Schema } from "effect";
 
@@ -174,11 +173,11 @@ const optionalText = Schema.UndefinedOr(Schema.String);
 
 /** Reads and validates the content runtime used by Next configuration. */
 export function readRuntimeConfig() {
-  const convex = convexKeys();
   const env = readEnvironment(
     {
       CONVEX_AGENT_MODE: Schema.UndefinedOr(Schema.Literal("anonymous")),
       VITE_CONVEX_SITE_URL: optionalText,
+      VITE_CONVEX_URL: Schema.String,
       VERCEL: Schema.UndefinedOr(Schema.Literal("1")),
       VERCEL_DEPLOYMENT_ID: optionalText,
       VERCEL_ENV: optionalText,
@@ -193,6 +192,7 @@ export function readRuntimeConfig() {
     {
       CONVEX_AGENT_MODE: process.env.CONVEX_AGENT_MODE,
       VITE_CONVEX_SITE_URL: process.env.VITE_CONVEX_SITE_URL,
+      VITE_CONVEX_URL: process.env.VITE_CONVEX_URL,
       VERCEL: process.env.VERCEL,
       VERCEL_DEPLOYMENT_ID: process.env.VERCEL_DEPLOYMENT_ID,
       VERCEL_ENV: process.env.VERCEL_ENV,
@@ -207,7 +207,7 @@ export function readRuntimeConfig() {
   );
   const target = {
     agent: env.CONVEX_AGENT_MODE,
-    query: convex.VITE_CONVEX_URL,
+    query: env.VITE_CONVEX_URL,
     site: env.VITE_CONVEX_SITE_URL,
     vercel: {
       deployment: env.VERCEL_DEPLOYMENT_ID,
