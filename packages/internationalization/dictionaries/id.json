@@ -372,7 +372,7 @@
     "invite-resend": "Kirim ulang",
     "invite-expired": "Kedaluwarsa",
     "invite-card": "Buat kartu login",
-    "invite-card-description": "Undangan masuk dengan nama login ini dan kode kartu, yang ditampilkan sekolah sekali saja.",
+    "invite-card-description": "Yang diundang masuk dengan nama login dan kode kartu ini, yang ditampilkan sekolah sekali saja.",
     "invite-card-submit": "Buat kartu",
     "invite-google-note": "Alamat tanpa Google masuk dengan kartu login dari admin.",
     "invite-revoke": "Cabut",
@@ -425,9 +425,9 @@
         "stored": "Versi skema nilai ditambahkan"
       },
       "cohort": {
-        "created": "Kelas ditambahkan",
-        "renamed": "Kelas diganti nama",
-        "archived": "Kelas diarsipkan",
+        "created": "Rombel ditambahkan",
+        "renamed": "Rombel diganti nama",
+        "archived": "Rombel diarsipkan",
         "restored": "Rombel dipulihkan"
       },
       "connection": {
