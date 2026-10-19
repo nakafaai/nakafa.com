@@ -70,13 +70,18 @@ function SidebarStartSchoolMenuItem() {
 
 /**
  * The account's schools in its menu, one link each under a heading, and the item
- * that opens a new one. The menu loads this part, and with it the school
+ * that opens a new one when the account may open a school: a school login
+ * account may not. The menu loads this part, and with it the school
  * contracts, when it opens, so no page carries them in its first JavaScript. The
  * item that opens a school shows at once; the schools follow once their first
  * page loads, and a failed read shows one disabled line, so the list is never
  * silently empty. The next page loads as the end of the list comes into view.
  */
-export function SidebarSchoolMenuItems() {
+export function SidebarSchoolMenuItems({
+  canOpenSchool,
+}: {
+  canOpenSchool: boolean;
+}) {
   const t = useTranslations("Common");
   const memberships = usePaginatedQuery(
     tenancy.memberships.list,
@@ -104,7 +109,7 @@ export function SidebarSchoolMenuItems() {
         {PaginatedQueryResult.isCanLoadMore(memberships) ? (
           <Intersection onIntersect={() => memberships.loadMore(SCHOOL_PAGE)} />
         ) : null}
-        <SidebarStartSchoolMenuItem />
+        {canOpenSchool ? <SidebarStartSchoolMenuItem /> : null}
       </DropdownMenuGroup>
       <DropdownMenuSeparator />
     </>

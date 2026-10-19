@@ -64,6 +64,7 @@ export class FoundingRefused extends Schema.TaggedError<FoundingRefused>()(
       "SLUG_RESERVED",
       "SCHOOL_LIMIT",
       "RATE_LIMITED",
+      "LOGIN_ACCOUNT",
     ]),
     message: Schema.String,
   }

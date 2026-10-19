@@ -1579,6 +1579,10 @@
       "title": "Heute zu viele Schulen.",
       "description": "Versuch es morgen noch einmal."
     },
+    "school-login-account": {
+      "title": "Ein Schul-Login kann keine Schule eröffnen.",
+      "description": "Melde dich mit einem eigenen Konto an, um eine Schule zu eröffnen."
+    },
     "school-save-error": {
       "title": "Antwort nicht gespeichert.",
       "description": "Versuch es noch einmal."

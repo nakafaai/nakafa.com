@@ -203,6 +203,12 @@ function SchoolStartForm({
                     title: "school-rate.title",
                   })
                 ),
+                Match.when("LOGIN_ACCOUNT", () =>
+                  toast.error({
+                    description: "school-login-account.description",
+                    title: "school-login-account.title",
+                  })
+                ),
                 Match.orElse(() => {
                   refocus.current = Option.some(NAME_INPUT);
                   startOpening(() => setItem("name"));

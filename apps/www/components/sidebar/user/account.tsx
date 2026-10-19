@@ -22,6 +22,7 @@ import { clearAiDraftText } from "@/components/ai/store/draft";
 import { AnalyticsConsentMenuItem } from "@/components/analytics/consent/actions";
 import { AccountMenu } from "@/components/sidebar/menu/account";
 import { SidebarUtilityMenuItems } from "@/components/sidebar/menu/utility";
+import { isLoginAddress } from "@repo/backend/confect/identity/address";
 import { signOutAccountBrowserIdentity } from "@/lib/auth/identity/browser";
 import { useCurrentAuthNavigation } from "@/lib/auth/location.client";
 import { usePageNavigation } from "@/lib/content/page/context";
@@ -77,7 +78,7 @@ export function NavUserAccount({ user }: { user: CurrentUser }) {
       name={user.authUser.name}
       onSignOut={handleSignOut}
     >
-      <SidebarSchoolMenuItems />
+      <SidebarSchoolMenuItems canOpenSchool={!isLoginAddress(user.authUser.email)} />
       <DropdownMenuGroup>
         {username === undefined ? null : (
           <DropdownMenuItem

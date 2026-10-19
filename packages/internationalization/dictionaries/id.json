@@ -1579,6 +1579,10 @@
       "title": "Terlalu banyak sekolah hari ini.",
       "description": "Coba lagi besok."
     },
+    "school-login-account": {
+      "title": "Login sekolah tidak dapat membuka sekolah.",
+      "description": "Masuk dengan akun milikmu sendiri untuk membuka sekolah."
+    },
     "school-save-error": {
       "title": "Jawabanmu belum tersimpan.",
       "description": "Coba lagi."

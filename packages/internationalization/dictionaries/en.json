@@ -1579,6 +1579,10 @@
       "title": "Too many schools today.",
       "description": "Try again tomorrow."
     },
+    "school-login-account": {
+      "title": "A school login cannot open a school.",
+      "description": "Sign in with your own account to open one."
+    },
     "school-save-error": {
       "title": "Your answer was not saved.",
       "description": "Try again."

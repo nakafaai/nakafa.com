@@ -7,6 +7,7 @@ import {
   MutationCtx,
 } from "@repo/backend/confect/_generated/services";
 import { assignRole } from "@repo/backend/confect/access/grant";
+import { isLoginAddress } from "@repo/backend/confect/identity/address";
 import { readSiteUrl } from "@repo/backend/confect/site/config";
 import { personActor } from "@repo/backend/confect/tenancy/actor";
 import {
@@ -105,11 +106,21 @@ const atSchoolLimit = Effect.fn("tenancy.found.limit")(function* (
   return founded >= FOUNDED_SCHOOL_LIMIT;
 });
 
-/** Refuses an opening that the address, the account's limit, or its rate does not allow. */
+/**
+ * Refuses an opening that the account, the address, the account's limit, or its
+ * rate does not allow. A school login account belongs to the school that issued
+ * its card, so it founds no school of its own.
+ */
 const checkOpening = Effect.fn("tenancy.found.check")(function* (
   user: UsersDoc,
   slug: string
 ) {
+  if (isLoginAddress(user.email)) {
+    return yield* new FoundingRefused({
+      code: "LOGIN_ACCOUNT",
+      message: "A school login account cannot open a school.",
+    });
+  }
   const address = yield* readAddress(slug);
   if (address === "reserved" || address === "invalid") {
     return yield* new FoundingRefused({
