@@ -2,6 +2,7 @@
 
 import { useIntersection, useReducedMotion } from "@mantine/hooks";
 import type { QuestionResponse } from "@nakafa/aksara-contracts/question/response";
+import { captureException } from "@repo/analytics/posthog/capture";
 import { Nina } from "@repo/design-system/components/ui/nina";
 import type { MoodSchema } from "@repo/mascot/nina/face";
 import { Array as Arr, Effect, Option, Schema } from "effect";
@@ -17,6 +18,12 @@ import type { TryoutResponseSelection } from "@/components/tryout/runtime/respon
 /** How long the question waits on screen before it is answered. */
 const ANSWER_AFTER_MS = 2400;
 
+/** Raised when the evaluator chunk cannot load, so the choice stays unscored. */
+class TryoutEvaluatorLoadFailed extends Schema.TaggedError<TryoutEvaluatorLoadFailed>()(
+  "TryoutEvaluatorLoadFailed",
+  { cause: Schema.Unknown }
+) {}
+
 /**
  * Scores one choice of the demo with the backend evaluator. The evaluator loads
  * with the first choice, so the home does not carry it for a reader who never
@@ -26,9 +33,10 @@ const scoreChoice = Effect.fn("TryoutDemo.scoreChoice")(function* (
   responseSpec: QuestionResponse,
   selection: TryoutResponseSelection | null
 ) {
-  const { isPreviewCorrect } = yield* Effect.tryPromise(
-    () => import("@/components/tryout/runtime/response/preview")
-  );
+  const { isPreviewCorrect } = yield* Effect.tryPromise({
+    try: () => import("@/components/tryout/runtime/response/preview"),
+    catch: (cause) => new TryoutEvaluatorLoadFailed({ cause }),
+  });
   return isPreviewCorrect(responseSpec, selection);
 });
 
@@ -54,6 +62,7 @@ interface TryoutDemoState {
     right: boolean
   ) => void;
   readonly outcome: Outcome;
+  readonly select: (selection: TryoutResponseSelection | null) => void;
   readonly selection: TryoutResponseSelection | null;
 }
 
@@ -83,6 +92,7 @@ export function TryoutDemo({ children }: { children: ReactNode }) {
       choose: (selection, right) =>
         set({ outcome: outcomeOf(selection, right), selection }),
       outcome: "waiting",
+      select: (selection) => set({ outcome: "waiting", selection }),
       selection: null,
     }))
   );
@@ -106,6 +116,7 @@ export function TryoutDemoQuestion({
 }) {
   const t = useTranslations("Tryouts");
   const selection = useTryoutDemo((state) => state.selection);
+  const select = useTryoutDemo((state) => state.select);
   const choose = useTryoutDemo((state) => state.choose);
   const shouldReduceMotion = useReducedMotion();
   const { entry, ref } = useIntersection({ threshold: 0.6 });
@@ -139,12 +150,19 @@ export function TryoutDemoQuestion({
         value={{
           id,
           locked: false,
-          onChange: (next) =>
+          onChange: (next) => {
+            select(next);
             Effect.runFork(
               scoreChoice(responseSpec, next).pipe(
-                Effect.map((correct) => choose(next, correct))
+                Effect.map((correct) => choose(next, correct)),
+                Effect.catchTag("TryoutEvaluatorLoadFailed", (error) =>
+                  Effect.sync(() => {
+                    captureException(error.cause, { source: "tryout-demo" });
+                  })
+                )
               )
-            ),
+            );
+          },
           renderLabel: ({
             correctness,
             id: labelId,
