@@ -20,8 +20,15 @@ export const CROWD_TYPING_EVERY = 4;
 /** How many animals sit in the class photo of the school part. */
 const CLASS_COUNT = 7;
 
+/**
+ * How many animals the page keeps for its sparse parts after its class: two
+ * beside the memory desk, one below it, and one each below the school band and
+ * the closing question.
+ */
+const SPARE_COUNT = 5;
+
 /** How many animals the home page takes from the start of the cast. */
-const HOME_COUNT = TOY_COUNT + CROWD_COUNT + CLASS_COUNT;
+const HOME_COUNT = TOY_COUNT + CROWD_COUNT + CLASS_COUNT + SPARE_COUNT;
 
 /**
  * How many animals the toys of the pricing page take: two pairs beside each of
@@ -32,9 +39,12 @@ const PRICING_TOY_COUNT = 12;
 /** How many animals sit in the class of the pricing page. */
 const PRICING_CLASS_COUNT = 7;
 
+/** How many animals the pricing page keeps for its plans and the bottom of its questions. */
+const PRICING_SPARE_COUNT = 6;
+
 /**
- * The cast of the home page. It takes its toys, crowd and class as slices of
- * it, in that order, so no animal appears twice on the page.
+ * The cast of the home page. It takes its toys, crowd, class and spare animals
+ * as slices of it, in that order, so no animal appears twice on the page.
  */
 export const HOME_CAST = cast(HOME_SEED, HOME_COUNT);
 
@@ -44,8 +54,17 @@ export const TOY_HERD = Arr.take(HOME_CAST, TOY_COUNT);
 /** The friends of the crowd, straight after the toys. */
 export const CROWD_HERD = Arr.take(Arr.drop(HOME_CAST, TOY_COUNT), CROWD_COUNT);
 
-/** The animals of the class, at the end of the home cast. */
-export const CLASS_HERD = Arr.drop(HOME_CAST, TOY_COUNT + CROWD_COUNT);
+/** The animals of the class, straight after the crowd. */
+export const CLASS_HERD = Arr.take(
+  Arr.drop(HOME_CAST, TOY_COUNT + CROWD_COUNT),
+  CLASS_COUNT
+);
+
+/** The animals the home page keeps for its sparse parts, at the end of the cast. */
+export const SPARE_HERD = Arr.drop(
+  HOME_CAST,
+  TOY_COUNT + CROWD_COUNT + CLASS_COUNT
+);
 
 /** The seed that names the animals of the pricing page. */
 const PRICING_SEED = "nakafa-pricing";
@@ -57,11 +76,20 @@ const PRICING_SEED = "nakafa-pricing";
  */
 const PRICING_CAST = cast(
   PRICING_SEED,
-  PRICING_TOY_COUNT + PRICING_CLASS_COUNT
+  PRICING_TOY_COUNT + PRICING_CLASS_COUNT + PRICING_SPARE_COUNT
 );
 
 /** The animals of the pricing toys, from the start of their slice. */
 export const PRICING_TOY_HERD = Arr.take(PRICING_CAST, PRICING_TOY_COUNT);
 
-/** The animals of the pricing class, at the end of their slice. */
-export const PRICING_CLASS_HERD = Arr.drop(PRICING_CAST, PRICING_TOY_COUNT);
+/** The animals of the pricing class, straight after the toys. */
+export const PRICING_CLASS_HERD = Arr.take(
+  Arr.drop(PRICING_CAST, PRICING_TOY_COUNT),
+  PRICING_CLASS_COUNT
+);
+
+/** The animals the pricing page keeps for its plans and the bottom of its questions. */
+export const PRICING_SPARE_HERD = Arr.drop(
+  PRICING_CAST,
+  PRICING_TOY_COUNT + PRICING_CLASS_COUNT
+);
