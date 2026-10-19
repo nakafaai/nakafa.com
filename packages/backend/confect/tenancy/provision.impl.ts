@@ -1,4 +1,3 @@
-import type { GenericId } from "@confect/core";
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
@@ -8,9 +7,9 @@ import {
 import { assignRole } from "@repo/backend/confect/access/grant";
 import type { TenantActor } from "@repo/backend/confect/journal/schema";
 import { systemActor } from "@repo/backend/confect/tenancy/actor";
+import { readAddress } from "@repo/backend/confect/tenancy/address";
 import {
   tenantAuthority,
-  unitAuthority,
 } from "@repo/backend/confect/tenancy/authority";
 import { createPerson } from "@repo/backend/confect/tenancy/create";
 import { ProvisionRejected } from "@repo/backend/confect/tenancy/errors";
@@ -21,30 +20,11 @@ import {
 import { NEW_TENANT_POLICIES } from "@repo/backend/confect/tenancy/policy";
 import spec, {
   type OpenRequest,
-  type UnitDraft,
 } from "@repo/backend/confect/tenancy/provision.spec";
 import { UNIT_LIMIT } from "@repo/backend/confect/tenancy/schema";
-import { NewTenantSlug } from "@repo/backend/confect/tenancy/slug";
+import { createUnit } from "@repo/backend/confect/tenancy/write/unit";
 import { createTenantKey } from "@repo/backend/confect/vault/keys";
-import { Array as Arr, Effect, Layer, Option, Schema } from "effect";
-
-/** Adds one active school to the organisation and records it as `actor`. */
-const createUnit = Effect.fn("tenancy.provision.unit")(function* (
-  actor: typeof TenantActor.Type,
-  tenantId: GenericId.GenericId<"tenants">,
-  draft: typeof UnitDraft.Type
-) {
-  const unitId = yield* (yield* DatabaseWriter)
-    .table("tenantUnits")
-    .insert({ ...draft, status: "active", tenantId })
-    .pipe(Effect.orDie);
-  const unit = yield* (yield* DatabaseReader)
-    .table("tenantUnits")
-    .get(unitId)
-    .pipe(Effect.orDie);
-  yield* unitAuthority.record(actor, unit, { type: "unit.created" });
-  return unitId;
-});
+import { Array as Arr, Effect, Layer } from "effect";
 
 /**
  * Opens an organisation in one transaction: the tenant, its schools, its first
@@ -63,18 +43,14 @@ export const openTenant = Effect.fn("tenancy.provision.tenant")(function* (
 ) {
   const reader = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;
-  if (!Schema.is(NewTenantSlug)(args.slug)) {
+  const address = yield* readAddress(args.slug);
+  if (address === "reserved") {
     return yield* new ProvisionRejected({
       code: "SLUG_RESERVED",
       message: "This address is reserved.",
     });
   }
-  const taken = yield* reader
-    .table("tenants")
-    .index("by_slug", (query) => query.eq("slug", args.slug))
-    .first()
-    .pipe(Effect.orDie);
-  if (Option.isSome(taken)) {
+  if (address === "taken") {
     return yield* new ProvisionRejected({
       code: "SLUG_TAKEN",
       message: "Another organisation already uses this address.",
@@ -113,7 +89,7 @@ export const openTenant = Effect.fn("tenancy.provision.tenant")(function* (
     { contract: args.contract, type: "tenant.provisioned" }
   );
   const units = yield* Effect.forEach(args.units, (draft) =>
-    createUnit(actor, tenantId, draft)
+    createUnit(actor, tenantId, draft).pipe(Effect.map((unit) => unit._id))
   );
   const owner = yield* createPerson(actor, tenantId, args.owner.name);
   const invite = yield* writeInvite(

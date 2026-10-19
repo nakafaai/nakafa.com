@@ -137,6 +137,7 @@ describe("access/catalog", () => {
       Arr.sort(
         [
           "tenant.provisioned",
+          "tenant.founded",
           "tenant.locale.set",
           "tenant.logo.removed",
           "tenant.logo.set",

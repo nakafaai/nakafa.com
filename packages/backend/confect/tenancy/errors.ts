@@ -51,6 +51,24 @@ export class ProvisionRejected extends Schema.TaggedError<ProvisionRejected>()(
   }
 ) {}
 
+/**
+ * An account's own school did not open: its address is reserved or taken, the
+ * account already founded as many schools as one account may, or it opened
+ * schools too quickly. The questionnaire returns to the question the code names.
+ */
+export class FoundingRefused extends Schema.TaggedError<FoundingRefused>()(
+  "FoundingRefused",
+  {
+    code: Schema.Literals([
+      "SLUG_TAKEN",
+      "SLUG_RESERVED",
+      "SCHOOL_LIMIT",
+      "RATE_LIMITED",
+    ]),
+    message: Schema.String,
+  }
+) {}
+
 /** A period whose dates are not calendar dates of its school's clock, or whose start is not before its end. */
 export class PeriodDatesInvalid extends Schema.TaggedError<PeriodDatesInvalid>()(
   "PeriodDatesInvalid",
