@@ -16,6 +16,7 @@ import {
   QuestionnaireInput,
   QuestionnaireItem,
   QuestionnaireTitle,
+  questionnaireInputVariants,
 } from "@repo/design-system/components/ui/questionnaire";
 import { MAIN_DOMAIN } from "@repo/next-config/domains";
 import { Option, Schema } from "effect";
@@ -34,7 +35,10 @@ const isSchoolName = Schema.is(TenantName);
  * The first question: the school's name, and its address, which follows the name
  * until the founder types one. The server checks the address while the founder
  * types, and a taken or reserved address keeps the questionnaire here with its
- * reason. A free address shows a check inside the field.
+ * reason. A free address shows a check inside the field. The name is the
+ * question's answer; the address is a plain field that completes it, because a
+ * question that takes one answer hands that answer back and forth between two
+ * answer inputs as both fill.
  */
 export function StartNameQuestion() {
   const t = useTranslations("SchoolStart");
@@ -49,6 +53,7 @@ export function StartNameQuestion() {
   );
   const nameId = useId();
   const slugId = useId();
+  const slugLabelId = useId();
   if (QueryResult.isFailure(check)) {
     throw check.error;
   }
@@ -93,17 +98,21 @@ export function StartNameQuestion() {
           />
         </Field>
         <Field>
-          <FieldLabel htmlFor={slugId}>{t("address-label")}</FieldLabel>
+          <FieldLabel htmlFor={slugId} id={slugLabelId}>
+            {t("address-label")}
+          </FieldLabel>
           <div className="relative">
-            <QuestionnaireInput
+            <input
               aria-invalid={addressProblem}
+              aria-labelledby={slugLabelId}
               autoCapitalize="none"
               autoComplete="off"
-              className="pe-32"
+              className={questionnaireInputVariants({ className: "pe-32" })}
               id={slugId}
               maxLength={63}
               onChange={(event) => setSlug(event.target.value)}
               spellCheck={false}
+              type="text"
               value={slug}
             />
             <span className="pointer-events-none absolute inset-y-0 end-3 flex items-center gap-1.5 text-muted-foreground text-sm">

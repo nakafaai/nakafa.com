@@ -3,8 +3,11 @@ import { afterEach, beforeEach, expect, layer } from "@effect/vitest";
 import { TrustedKeySchema } from "@nakafa/aksara-contracts/signature/trusted";
 import type { withAnalyticsSink } from "@repo/backend/scripts/content/acceptance/analytics";
 import {
+  buildMode,
   prepareAcceptance,
+  prepareMode,
   runAcceptance,
+  startMode,
 } from "@repo/backend/scripts/content/acceptance/build";
 import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
 import type { LocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
@@ -227,5 +230,43 @@ layer(services)("signed acceptance lifecycle", (it) => {
       expect(mocks.command).not.toHaveBeenCalled();
       expect(mocks.lease).not.toHaveBeenCalled();
     })
+  );
+
+  it.effect("runs the prepare mode for the repository root", () =>
+    Effect.gen(function* () {
+      yield* prepareMode.run("/test");
+      expect(mocks.publish).toHaveBeenCalledWith("/test", runtime);
+    })
+  );
+
+  it.effect(
+    "runs the build and start modes with the arguments after their words",
+    () =>
+      Effect.gen(function* () {
+        yield* buildMode.run("/test", ["--filter=www"]);
+        yield* startMode.run("/test", ["--filter=www"]);
+        expect(mocks.command).toHaveBeenNthCalledWith(
+          1,
+          "/test",
+          [
+            "nice",
+            "-n",
+            "10",
+            "pnpm",
+            "exec",
+            "turbo",
+            "run",
+            "build",
+            "--filter=www",
+          ],
+          expect.anything()
+        );
+        expect(mocks.command).toHaveBeenNthCalledWith(
+          2,
+          "/test",
+          ["pnpm", "run", "start", "--filter=www"],
+          expect.anything()
+        );
+      })
   );
 });

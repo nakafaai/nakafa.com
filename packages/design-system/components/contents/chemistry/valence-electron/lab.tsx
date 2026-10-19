@@ -1,6 +1,7 @@
 "use client";
 
 import { ShellModelCanvas } from "@repo/design-system/components/contents/chemistry/shell-model/canvas";
+import { createShellModelSampleStore } from "@repo/design-system/components/contents/chemistry/shell-model/store";
 import {
   CALCIUM_ID,
   getValenceElectronFacts,
@@ -27,6 +28,7 @@ import { Array as Arr, Result } from "effect";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { useState } from "react";
+import { useStore } from "zustand";
 
 interface ValenceElectronLabProps {
   description: ReactNode;
@@ -56,8 +58,11 @@ export function ValenceElectronLab({
   description,
   labels,
 }: ValenceElectronLabProps) {
-  const [selectedSampleId, setSelectedSampleId] =
-    useState<ValenceElectronSampleId>(CALCIUM_ID);
+  const [store] = useState(() =>
+    createShellModelSampleStore<ValenceElectronSampleId>(CALCIUM_ID)
+  );
+  const selectedSampleId = useStore(store, (state) => state.sampleId);
+  const selectSample = useStore(store, (state) => state.selectSample);
   const selectedSample = VALENCE_ELECTRON_SAMPLES[selectedSampleId];
   const selectedLabels = labels.samples[selectedSampleId];
   const t = useTranslations("Common");
@@ -75,7 +80,7 @@ export function ValenceElectronLab({
       return;
     }
 
-    setSelectedSampleId(value);
+    selectSample(value);
   }
 
   return (

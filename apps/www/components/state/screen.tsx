@@ -18,7 +18,8 @@ interface ScreenProps {
   description: string;
   /** Nina in what she does, and what lies beside her. */
   figure: ReactNode;
-  title: string;
+  /** The heading the page composes, which is the page's `h1`. */
+  title: ReactNode;
 }
 
 /**
@@ -47,9 +48,7 @@ export function Screen({ actions, description, figure, title }: ScreenProps) {
         >
           <ErrorBoundary fallback={null}>{figure}</ErrorBoundary>
         </EmptyMedia>
-        <EmptyTitle className="text-2xl sm:text-3xl">
-          <h1>{title}</h1>
-        </EmptyTitle>
+        <EmptyTitle className="text-2xl sm:text-3xl">{title}</EmptyTitle>
         <EmptyDescription className="max-w-[34ch] text-base">
           {description}
         </EmptyDescription>

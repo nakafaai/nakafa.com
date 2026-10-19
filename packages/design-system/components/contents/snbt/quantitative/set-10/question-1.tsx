@@ -1,15 +1,17 @@
-import { LineEquation } from "@repo/design-system/components/contents/mathematics/line/equation";
+import { LineEquationCard } from "@repo/design-system/components/contents/mathematics/line/equation";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { VisualCardHeader } from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
-import type { ComponentProps } from "react";
+import type { ComponentProps, ReactNode } from "react";
 
-interface GraphProps
-  extends Pick<ComponentProps<typeof LineEquation>, "title" | "description"> {
+interface GraphProps {
+  description: ReactNode;
   mode?:
     | "question"
     | "explanation-numbers"
     | "explanation-result"
     | "explanation-final";
+  title: ReactNode;
 }
 
 const T1_CENTER_X = -6;
@@ -70,7 +72,7 @@ const triangleTextByMode = {
 /** Renders the quantitative graph for SNBT set 10 question 1. */
 export function Graph({ title, description, mode = "question" }: GraphProps) {
   const { t1Text, t2Text } = triangleTextByMode[mode];
-  const data: ComponentProps<typeof LineEquation>["data"] = [
+  const data: ComponentProps<typeof LineEquationCard>["data"] = [
     {
       points: t1Points,
       color: getColor("INDIGO"),
@@ -108,12 +110,11 @@ export function Graph({ title, description, mode = "question" }: GraphProps) {
   ];
 
   return (
-    <LineEquation
+    <LineEquationCard
       cameraPosition={[0, 0.5, 24]}
       cameraTarget={[0, 0.5, 0]}
       data={data}
-      description={description}
-      title={title}
+      header={<VisualCardHeader description={description} title={title} />}
     />
   );
 }

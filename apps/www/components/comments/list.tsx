@@ -8,6 +8,7 @@ import { CommentComposer } from "@/components/comments/composer";
 import { usePostComment } from "@/components/comments/posting";
 import { CommentsProvider } from "@/components/comments/provider";
 import { CommentRow, ReplyButton } from "@/components/comments/row";
+import { useCommentsSlug } from "@/components/comments/slug.client";
 import { CommentThread } from "@/components/comments/thread";
 import { DataFailure } from "@/components/shared/failure";
 
@@ -15,20 +16,21 @@ import { DataFailure } from "@/components/shared/failure";
 const PAGE_SIZE = 25;
 
 /**
- * The comments of one slug: the composer of a new comment, then each top-level
- * comment with its thread. Every change shows at once, and a page is read as the
- * list reaches its end.
+ * The comments of the page's slug: the composer of a new comment, then each
+ * top-level comment with its thread. Every change shows at once, and a page is
+ * read as the list reaches its end.
  */
-export function CommentsList({ slug }: { slug: string }) {
+export function CommentsList() {
   return (
     <CommentsProvider>
-      <SlugComments slug={slug} />
+      <SlugComments />
     </CommentsProvider>
   );
 }
 
 /** The composer and the comments of the slug, inside the provider their changes write to. */
-function SlugComments({ slug }: { slug: string }) {
+function SlugComments() {
+  const slug = useCommentsSlug();
   const pagination = usePaginatedQuery(
     comments.queries.getCommentsBySlug,
     { slug },

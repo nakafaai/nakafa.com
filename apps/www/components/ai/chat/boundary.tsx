@@ -5,6 +5,7 @@ import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary"
 import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import type { PropsWithChildren } from "react";
+import { readChatFailureKind } from "@/components/ai/chat/access";
 import { useAnswerRetry } from "@/lib/convex/retry.client";
 
 // The failure card holds the sign-in chain, which only a signed-out visitor who
@@ -57,7 +58,10 @@ export function ChatBoundary<Query extends Ref.AnyPublicQuery>({
               reset={resetErrorBoundary}
             />
           ) : (
-            <ChatFailure error={error} onRetry={resetErrorBoundary} />
+            <ChatFailure
+              kind={readChatFailureKind(error)}
+              onRetry={resetErrorBoundary}
+            />
           )}
         </div>
       )}
@@ -82,5 +86,11 @@ function ChatReadFailure<Query extends Ref.AnyPublicQuery>({
   reset: () => void;
 }) {
   const { retry, waiting } = useAnswerRetry(read.ref, read.args, reset);
-  return <ChatFailure error={error} isPending={waiting} onRetry={retry} />;
+  return (
+    <ChatFailure
+      isPending={waiting}
+      kind={readChatFailureKind(error)}
+      onRetry={retry}
+    />
+  );
 }

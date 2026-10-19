@@ -1,5 +1,6 @@
-import { LineEquation } from "@repo/design-system/components/contents/mathematics/line/equation";
+import { LineEquationCard } from "@repo/design-system/components/contents/mathematics/line/equation";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { VisualCardHeader } from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
 import type { ReactNode } from "react";
 
@@ -69,7 +70,7 @@ export function Graph({ title, description, labels }: GraphProps) {
   const dimensionY_X = -labelOffsetY * 0.8;
 
   return (
-    <LineEquation
+    <LineEquationCard
       cameraPosition={[3.8, 2.7, 12]}
       cameraTarget={[3.8, 2.7, 0]}
       data={[
@@ -201,9 +202,8 @@ export function Graph({ title, description, labels }: GraphProps) {
           ],
         },
       ]}
-      description={description}
+      header={<VisualCardHeader description={description} title={title} />}
       showZAxis={false}
-      title={title}
     />
   );
 }

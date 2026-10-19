@@ -22,7 +22,7 @@ import { CameraBounds } from "@repo/design-system/components/three/camera/framin
 import { getThreeParticleLabelFontSize } from "@repo/design-system/components/three/data/constants";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { Array as Arr, HashMap, Option, Schema } from "effect";
-import { useRef } from "react";
+import { createContext, use, useRef } from "react";
 import { DoubleSide, type Group } from "three";
 
 const REACTANTS_X = -1.05;
@@ -86,6 +86,23 @@ const MOLECULE_SPECS = {
   typeof MoleculeSpecSchema.Type
 >;
 
+const CombiningVolumesSceneContext = createContext<{
+  colors: CombiningVolumesSceneColors;
+  volumeUnit: string;
+} | null>(null);
+
+/** Reads the colors and the volume unit of the surrounding combining-volumes scene. */
+function useCombiningVolumesScene() {
+  const scene = use(CombiningVolumesSceneContext);
+  if (!scene) {
+    // A missing provider is a programmer composition error at this React seam.
+    throw new Error(
+      "useCombiningVolumesScene must be used within CombiningVolumesScene"
+    );
+  }
+  return scene;
+}
+
 export function CombiningVolumesScene({
   colors,
   labels,
@@ -98,47 +115,37 @@ export function CombiningVolumesScene({
   const model = COMBINING_VOLUMES_MODELS[modeId];
 
   return (
-    <group position={[0, 0.12, 0]} scale={SCENE_SCALE}>
-      <ThreeLabel
-        color={colors.text}
-        fontSize="compact"
-        position={[REACTANTS_X, 0.94, 0.16]}
-      >
-        {labels.reactants}
-      </ThreeLabel>
-      <ThreeLabel
-        color={colors.text}
-        fontSize="compact"
-        position={[PRODUCTS_X, 0.94, 0.16]}
-      >
-        {labels.products}
-      </ThreeLabel>
-      <GasSet
-        colors={colors}
-        gases={model.reactants}
-        volumeUnit={labels.volumeUnit}
-        x={REACTANTS_X}
-      />
+    <CombiningVolumesSceneContext
+      value={{ colors, volumeUnit: labels.volumeUnit }}
+    >
+      <group position={[0, 0.12, 0]} scale={SCENE_SCALE}>
+        <ThreeLabel
+          color={colors.text}
+          fontSize="compact"
+          position={[REACTANTS_X, 0.94, 0.16]}
+        >
+          {labels.reactants}
+        </ThreeLabel>
+        <ThreeLabel
+          color={colors.text}
+          fontSize="compact"
+          position={[PRODUCTS_X, 0.94, 0.16]}
+        >
+          {labels.products}
+        </ThreeLabel>
+        <GasSet gases={model.reactants} x={REACTANTS_X} />
 
-      <GasSet
-        colors={colors}
-        gases={model.products}
-        volumeUnit={labels.volumeUnit}
-        x={PRODUCTS_X}
-      />
-    </group>
+        <GasSet gases={model.products} x={PRODUCTS_X} />
+      </group>
+    </CombiningVolumesSceneContext>
   );
 }
 
 function GasSet({
-  colors,
   gases,
-  volumeUnit,
   x,
 }: {
-  colors: CombiningVolumesSceneColors;
   gases: readonly CombiningVolumesGasModel[];
-  volumeUnit: string;
   x: number;
 }) {
   const centerOffset = ((gases.length - 1) * COLUMN_GAP) / 2;
@@ -147,10 +154,8 @@ function GasSet({
     <group position={[x, 0, 0]}>
       {Arr.map(gases, (gas, index) => (
         <GasColumn
-          colors={colors}
           gas={gas}
           key={gas.id}
-          volumeUnit={volumeUnit}
           x={index * COLUMN_GAP - centerOffset}
         />
       ))}
@@ -158,17 +163,8 @@ function GasSet({
   );
 }
 
-function GasColumn({
-  colors,
-  gas,
-  volumeUnit,
-  x,
-}: {
-  colors: CombiningVolumesSceneColors;
-  gas: CombiningVolumesGasModel;
-  volumeUnit: string;
-  x: number;
-}) {
+function GasColumn({ gas, x }: { gas: CombiningVolumesGasModel; x: number }) {
+  const { colors, volumeUnit } = useCombiningVolumesScene();
   const height = gas.volumeUnits * VOLUME_UNIT_HEIGHT;
   const volumeUnits = Array.from(
     { length: gas.volumeUnits },
@@ -186,11 +182,7 @@ function GasColumn({
       {Arr.map(volumeUnits, (unit) => (
         <group key={unit.id} position={[0, unit.y, 0]}>
           <VolumeBand color={colors[gas.fillColor]} />
-          <FloatingMolecule
-            colors={colors}
-            kind={gas.moleculeKind}
-            phase={unit.phase}
-          />
+          <FloatingMolecule kind={gas.moleculeKind} phase={unit.phase} />
         </group>
       ))}
 
@@ -269,11 +261,9 @@ function VolumeBand({ color }: { color: string }) {
 }
 
 function FloatingMolecule({
-  colors,
   kind,
   phase,
 }: {
-  colors: CombiningVolumesSceneColors;
   kind: CombiningVolumesMoleculeKind;
   phase: number;
 }) {
@@ -290,19 +280,14 @@ function FloatingMolecule({
   return (
     <group scale={0.78}>
       <CameraBounds motion={{ rotation: "y" }} objectRef={groupRef}>
-        <Molecule colors={colors} kind={kind} />
+        <Molecule kind={kind} />
       </CameraBounds>
     </group>
   );
 }
 
-function Molecule({
-  colors,
-  kind,
-}: {
-  colors: CombiningVolumesSceneColors;
-  kind: CombiningVolumesMoleculeKind;
-}) {
+function Molecule({ kind }: { kind: CombiningVolumesMoleculeKind }) {
+  const { colors } = useCombiningVolumesScene();
   const { atoms, bonds } = MOLECULE_SPECS[kind];
   const atomsById = HashMap.fromIterable(
     Arr.map(atoms, (atomData) => [atomData.id, atomData])
@@ -329,19 +314,14 @@ function Molecule({
       })}
 
       {Arr.map(atoms, (atomData) => (
-        <AtomParticle atomData={atomData} colors={colors} key={atomData.id} />
+        <AtomParticle atomData={atomData} key={atomData.id} />
       ))}
     </group>
   );
 }
 
-function AtomParticle({
-  atomData,
-  colors,
-}: {
-  atomData: MoleculeAtom;
-  colors: CombiningVolumesSceneColors;
-}) {
+function AtomParticle({ atomData }: { atomData: MoleculeAtom }) {
+  const { colors } = useCombiningVolumesScene();
   const style = ATOM_STYLE[atomData.element];
 
   return (

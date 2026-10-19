@@ -26,14 +26,68 @@ import { VisualCardSceneActions } from "@repo/design-system/components/visual/sc
 import { Array as Arr } from "effect";
 import { useTheme } from "next-themes";
 import type { ReactNode, RefObject } from "react";
-import { Suspense, useMemo, useRef, useState } from "react";
+import { createContext, Suspense, use, useMemo, useRef, useState } from "react";
 import { type Group, SRGBColorSpace } from "three";
+import { createStore, useStore } from "zustand";
+import { combine } from "zustand/middleware";
 
 const DEFAULT_GAS_LEVEL = 3;
 const HEAT_PARTICLE_IDS = Array.from(
   { length: 14 },
   (_, index) => `heat-${index}`
 );
+
+/** Creates the lab's store, which holds the gas level its slider sets. */
+function createGasLevelStore(initialGasLevel: number) {
+  return createStore(
+    combine({ gasLevel: initialGasLevel }, (set) => ({
+      setGasLevel: (gasLevel: number) => set({ gasLevel }),
+    }))
+  );
+}
+
+type GasLevelStore = ReturnType<typeof createGasLevelStore>;
+
+interface GreenhouseProviderProps {
+  children: ReactNode;
+  colors: BiologySceneColors;
+  store: GasLevelStore;
+}
+
+const GreenhouseContext = createContext<Omit<
+  GreenhouseProviderProps,
+  "children"
+> | null>(null);
+
+/**
+ * Provides the colors and the gas-level store of the lab to its scene. The
+ * value changes only with the colors, so the scene does not rerun when the
+ * slider moves.
+ */
+function GreenhouseProvider({
+  children,
+  colors,
+  store,
+}: GreenhouseProviderProps) {
+  const value = useMemo(() => ({ colors, store }), [colors, store]);
+
+  return <GreenhouseContext value={value}>{children}</GreenhouseContext>;
+}
+
+/** Reads the colors and the gas-level store of the surrounding lab. */
+function useGreenhouse() {
+  const greenhouse = use(GreenhouseContext);
+  if (!greenhouse) {
+    // A missing provider is a programmer composition error at this React seam.
+    throw new Error("useGreenhouse must be used within GreenhouseProvider");
+  }
+  return greenhouse;
+}
+
+/** Reads the gas level the slider of the surrounding lab sets. */
+function useGreenhouseGasLevel() {
+  return useStore(useGreenhouse().store, (state) => state.gasLevel);
+}
 
 interface GreenhouseEffectLabProps {
   description: ReactNode;
@@ -50,9 +104,14 @@ interface GreenhouseEffectLabProps {
 
 export function GreenhouseEffectLab(props: GreenhouseEffectLabProps) {
   const { description, labels, title } = props;
-  const [gasLevel, setGasLevel] = useState(DEFAULT_GAS_LEVEL);
+  const [store] = useState(() => createGasLevelStore(DEFAULT_GAS_LEVEL));
+  const gasLevel = useStore(store, (state) => state.gasLevel);
+  const setGasLevel = useStore(store, (state) => state.setGasLevel);
   const { resolvedTheme } = useTheme();
-  const colors = getBiologySceneColors(resolvedTheme);
+  const colors = useMemo(
+    () => getBiologySceneColors(resolvedTheme),
+    [resolvedTheme]
+  );
 
   return (
     <VisualCard>
@@ -93,7 +152,9 @@ export function GreenhouseEffectLab(props: GreenhouseEffectLabProps) {
               intensity={0.72}
             />
             <directionalLight intensity={1.5} position={[-4, 3, 3]} />
-            <GreenhouseScene colors={colors} gasLevel={gasLevel} />
+            <GreenhouseProvider colors={colors} store={store}>
+              <GreenhouseScene />
+            </GreenhouseProvider>
           </Suspense>
         </ThreeCanvas>
       </VisualCardBody>
@@ -110,13 +171,8 @@ export function GreenhouseEffectLab(props: GreenhouseEffectLabProps) {
   );
 }
 
-function GreenhouseScene({
-  colors,
-  gasLevel,
-}: {
-  colors: BiologySceneColors;
-  gasLevel: number;
-}) {
+function GreenhouseScene() {
+  const { colors } = useGreenhouse();
   const earthRef = useRef<Group>(null);
   const heatRef = useRef<Group>(null);
   const calm = useReducedMotion(undefined, { getInitialValueInEffect: false });
@@ -139,24 +195,16 @@ function GreenhouseScene({
     <group position={[0, 0.02, 0]}>
       <SunLight color={colors.grain} />
       <CameraBounds motion={{ rotation: "y" }} objectRef={earthRef}>
-        <EarthModel colors={colors} gasLevel={gasLevel} />
+        <EarthModel />
       </CameraBounds>
-      <HeatParticles
-        color={colors.heat}
-        gasLevel={gasLevel}
-        refObject={heatRef}
-      />
+      <HeatParticles color={colors.heat} refObject={heatRef} />
     </group>
   );
 }
 
-function EarthModel({
-  colors,
-  gasLevel,
-}: {
-  colors: BiologySceneColors;
-  gasLevel: number;
-}) {
+function EarthModel() {
+  const { colors } = useGreenhouse();
+  const gasLevel = useGreenhouseGasLevel();
   const texture = useTexture(BLUE_MARBLE_EARTH_TEXTURE_ASSET.path);
   texture.colorSpace = SRGBColorSpace;
   const particles = useMemo(() => createGasParticles(gasLevel), [gasLevel]);
@@ -212,13 +260,12 @@ function SunLight({ color }: { color: string }) {
 
 function HeatParticles({
   color,
-  gasLevel,
   refObject,
 }: {
   color: string;
-  gasLevel: number;
   refObject: RefObject<Group | null>;
 }) {
+  const gasLevel = useGreenhouseGasLevel();
   const particleCount = 4 + gasLevel * 2;
 
   return (

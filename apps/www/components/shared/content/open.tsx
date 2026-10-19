@@ -12,6 +12,7 @@ import { Link } from "@repo/internationalization/src/navigation";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
+import { useOpenTarget } from "@/components/shared/content/target.client";
 
 /**
  * Lists where a reader can open one content page: its source and three
@@ -20,13 +21,8 @@ import { useTranslations } from "next-intl";
  * The brand logos are one module of about 49 kB, so the content actions load
  * this submenu when their menu opens instead of with the page.
  */
-export function OpenInSubmenuContent({
-  slug,
-  sourceUrl,
-}: {
-  slug: string;
-  sourceUrl: null | string | undefined;
-}) {
+export function OpenInSubmenuContent() {
+  const { slug, sourceUrl } = useOpenTarget();
   const t = useTranslations("Common");
   const markdownUrl = new URL(`${slug}.mdx`, COMPANY_IDENTITY.url);
   const q = `I'm looking at this ${markdownUrl}, help me understand.`;

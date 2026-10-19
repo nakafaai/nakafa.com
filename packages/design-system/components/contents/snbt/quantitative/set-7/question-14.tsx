@@ -1,8 +1,9 @@
-import { LineEquation } from "@repo/design-system/components/contents/mathematics/line/equation";
+import { LineEquationCard } from "@repo/design-system/components/contents/mathematics/line/equation";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { VisualCardHeader } from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
 import { Array as Arr, Option } from "effect";
-import type { ComponentProps } from "react";
+import type { ReactNode } from "react";
 
 const linearPoints = Arr.map([-1, -0.5, 0, 5, 6], (x) => ({
   x,
@@ -15,13 +16,15 @@ const exponentialPoints = Array.from({ length: 181 }, (_, i) => {
   return { x, y: 2 ** x - 1, z: 0 };
 });
 
+interface GraphProps {
+  description: ReactNode;
+  title: ReactNode;
+}
+
 /** Renders the quantitative graph for SNBT set 7 question 14. */
-export function Graph({
-  title,
-  description,
-}: Pick<ComponentProps<typeof LineEquation>, "title" | "description">) {
+export function Graph({ title, description }: GraphProps) {
   return (
-    <LineEquation
+    <LineEquationCard
       cameraPosition={[2.5, 3, 12]}
       cameraTarget={[2.5, 3, 0]}
       data={[
@@ -81,9 +84,8 @@ export function Graph({
           cone: { position: "both", size: 0.5 },
         },
       ]}
-      description={description}
+      header={<VisualCardHeader description={description} title={title} />}
       showZAxis={false}
-      title={title}
     />
   );
 }

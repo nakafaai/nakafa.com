@@ -1,12 +1,13 @@
 "use client";
 
 import { useThree } from "@react-three/fiber";
-import {
-  getModernPeriodicTableSceneColors,
-  type ModernPeriodicTableFocusId,
-} from "@repo/design-system/components/contents/chemistry/modern-periodic-table/data";
+import { getModernPeriodicTableSceneColors } from "@repo/design-system/components/contents/chemistry/modern-periodic-table/data";
 import type { ModernPeriodicTableLabProps } from "@repo/design-system/components/contents/chemistry/modern-periodic-table/lab";
-import { ModernPeriodicTableScene } from "@repo/design-system/components/contents/chemistry/modern-periodic-table/scene";
+import {
+  ModernPeriodicTableScene,
+  ModernPeriodicTableSceneProvider,
+} from "@repo/design-system/components/contents/chemistry/modern-periodic-table/scene";
+import type { ModernPeriodicTableFocusStore } from "@repo/design-system/components/contents/chemistry/modern-periodic-table/store";
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
 import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import {
@@ -15,7 +16,8 @@ import {
 } from "@repo/design-system/components/three/scene-frame";
 import { VisualCardBody } from "@repo/design-system/components/visual/card";
 import { useTheme } from "next-themes";
-import { Suspense, useEffect } from "react";
+import { Suspense, useEffect, useMemo } from "react";
+import { useStore } from "zustand";
 
 const CAMERA_POSITION = [0, 10, 5.75] satisfies readonly [
   number,
@@ -35,15 +37,19 @@ const NARROW_CANVAS_ASPECT_RATIO = 1.15;
  */
 export function ModernPeriodicTableCanvas({
   "aria-label": ariaLabel,
-  focusId,
   labels,
+  store,
 }: {
   "aria-label": string;
-  focusId: ModernPeriodicTableFocusId;
   labels: ModernPeriodicTableLabProps["labels"];
+  store: ModernPeriodicTableFocusStore;
 }) {
   const { resolvedTheme } = useTheme();
-  const colors = getModernPeriodicTableSceneColors(resolvedTheme);
+  const focusId = useStore(store, (state) => state.focusId);
+  const colors = useMemo(
+    () => getModernPeriodicTableSceneColors(resolvedTheme),
+    [resolvedTheme]
+  );
 
   return (
     <VisualCardBody
@@ -70,11 +76,13 @@ export function ModernPeriodicTableCanvas({
             shadow-mapSize-width={1024}
             shadow-normalBias={0.02}
           />
-          <ModernPeriodicTableScene
+          <ModernPeriodicTableSceneProvider
             colors={colors}
-            focusId={focusId}
             labels={labels}
-          />
+            store={store}
+          >
+            <ModernPeriodicTableScene />
+          </ModernPeriodicTableSceneProvider>
         </Suspense>
       </ThreeCanvas>
     </VisualCardBody>

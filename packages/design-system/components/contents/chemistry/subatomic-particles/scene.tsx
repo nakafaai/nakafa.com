@@ -20,7 +20,7 @@ import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { getThreeParticleLabelFontSize } from "@repo/design-system/components/three/data/constants";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { Array as Arr } from "effect";
-import type { ReactNode } from "react";
+import { createContext, type ReactNode, use } from "react";
 import { Vector3 } from "three";
 
 const PATH_POINT_COUNT = 48;
@@ -98,7 +98,7 @@ function smoothStep(edgeStart: number, edgeEnd: number, value: number) {
   return progress * progress * (3 - 2 * progress);
 }
 
-interface SubatomicParticlesSceneProps extends SceneProps {
+interface SubatomicParticlesSceneProps {
   modeId: SubatomicParticlesModeId;
 }
 
@@ -107,24 +107,49 @@ interface SceneProps {
   labels: SubatomicParticlesLabProps["labels"]["scene"];
 }
 
+const SubatomicParticlesSceneContext = createContext<SceneProps | null>(null);
+
+/** Provides the colors and labels of one subatomic-particles lab to its scene. */
+export function SubatomicParticlesSceneProvider({
+  children,
+  colors,
+  labels,
+}: SceneProps & { children: ReactNode }) {
+  return (
+    <SubatomicParticlesSceneContext value={{ colors, labels }}>
+      {children}
+    </SubatomicParticlesSceneContext>
+  );
+}
+
+/** Reads the colors and labels of the surrounding subatomic-particles lab. */
+function useSubatomicParticlesScene() {
+  const scene = use(SubatomicParticlesSceneContext);
+  if (!scene) {
+    // A missing provider is a programmer composition error at this React seam.
+    throw new Error(
+      "useSubatomicParticlesScene must be used within SubatomicParticlesSceneProvider"
+    );
+  }
+  return scene;
+}
+
 /**
  * Chooses the active 3D scene without mounting hidden experiments.
  */
 export function SubatomicParticlesScene({
-  colors,
-  labels,
   modeId,
 }: SubatomicParticlesSceneProps) {
   if (modeId === CATHODE_RAY_MODE_ID) {
-    return <CathodeRayScene colors={colors} labels={labels} />;
+    return <CathodeRayScene />;
   }
 
   if (modeId === GOLD_FOIL_MODE_ID) {
-    return <GoldFoilScene colors={colors} labels={labels} />;
+    return <GoldFoilScene />;
   }
 
   if (modeId === ATOM_MAP_MODE_ID) {
-    return <AtomMapScene colors={colors} labels={labels} />;
+    return <AtomMapScene />;
   }
 
   return null;
@@ -133,7 +158,8 @@ export function SubatomicParticlesScene({
 /**
  * Shows a cathode ray bending toward the positive plate.
  */
-function CathodeRayScene({ colors, labels }: SceneProps) {
+function CathodeRayScene() {
+  const { colors, labels } = useSubatomicParticlesScene();
   return (
     <group scale={1.05}>
       <mesh rotation={[0, 0, Math.PI / 2]}>
@@ -196,7 +222,8 @@ function CathodeRayScene({ colors, labels }: SceneProps) {
 /**
  * Shows the gold foil result: most alpha particles pass through, a few bend.
  */
-function GoldFoilScene({ colors, labels }: SceneProps) {
+function GoldFoilScene() {
+  const { colors, labels } = useSubatomicParticlesScene();
   return (
     <group scale={1.05}>
       <RoundedBox args={[0.16, 2.65, 0.08]} radius={0.03} smoothness={3}>
@@ -257,7 +284,8 @@ function GoldFoilScene({ colors, labels }: SceneProps) {
 /**
  * Shows a compact nucleus surrounded by a much larger electron region.
  */
-function AtomMapScene({ colors, labels }: SceneProps) {
+function AtomMapScene() {
+  const { colors, labels } = useSubatomicParticlesScene();
   return (
     <group>
       <group rotation={[-0.08, -0.25, 0]} scale={ATOM_MAP_SCALE}>

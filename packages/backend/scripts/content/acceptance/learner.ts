@@ -7,6 +7,10 @@ import {
 } from "@repo/backend/scripts/content/acceptance/error";
 import { SessionCookie } from "@repo/backend/scripts/content/acceptance/fixture";
 import { readLocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
+import {
+  type AcceptanceMode,
+  decodeModeArguments,
+} from "@repo/backend/scripts/content/acceptance/mode";
 import { makeSignature } from "better-auth/crypto";
 import { Duration, Effect, FileSystem, Schema } from "effect";
 
@@ -65,3 +69,23 @@ export const createAcceptanceLearner = Effect.fn(
   );
   yield* writeSessionCookie(output, token);
 });
+
+/** The usage of the learner mode, which names the file that the session cookie goes to. */
+const USAGE = "learner <cookie-file>";
+const LearnerArguments = Schema.Tuple([Schema.String]);
+
+/**
+ * The learner mode of the acceptance command line: signs one synthetic learner in
+ * and writes its session cookie to the file that the command names.
+ */
+export const learnerMode = {
+  mode: "learner",
+  usage: USAGE,
+  run: Effect.fn("contentAcceptance.runLearner")(function* (
+    root: string,
+    args: readonly string[]
+  ) {
+    const [output] = yield* decodeModeArguments(USAGE, LearnerArguments, args);
+    return yield* createAcceptanceLearner(root, output);
+  }),
+} satisfies AcceptanceMode;

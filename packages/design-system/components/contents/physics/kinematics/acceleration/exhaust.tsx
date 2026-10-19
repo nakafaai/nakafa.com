@@ -93,22 +93,16 @@ export function AnimatedExhaust({
         </mesh>
       </CameraBounds>
       <CameraBounds exclude>
-        <SmokeTrail exhaustRadius={exhaust.radius} />
+        <group>
+          {Arr.map(SMOKE_PARTICLES, (particle) => (
+            <SmokePuff
+              exhaustRadius={exhaust.radius}
+              index={particle.index}
+              key={particle.id}
+            />
+          ))}
+        </group>
       </CameraBounds>
-    </group>
-  );
-}
-
-function SmokeTrail({ exhaustRadius }: { exhaustRadius: number }) {
-  return (
-    <group>
-      {Arr.map(SMOKE_PARTICLES, (particle) => (
-        <SmokePuff
-          exhaustRadius={exhaustRadius}
-          index={particle.index}
-          key={particle.id}
-        />
-      ))}
     </group>
   );
 }

@@ -9,6 +9,7 @@ import {
 } from "@repo/design-system/components/ai/source";
 import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
+import type { ReactNode } from "react";
 import { Step } from "@/components/ai/message/evidence/step";
 
 interface Props {
@@ -26,7 +27,9 @@ export function WebSearchPart({ message }: Props) {
   if (message.status === "loading") {
     return (
       <Step icon={Search01Icon} label={t("web-search-loading")}>
-        <WebSearchPartQueries queries={message.queries} sites={message.sites} />
+        <WebSearchPartQueries queries={message.queries}>
+          <WebSearchPartSites sites={message.sites} />
+        </WebSearchPartQueries>
       </Step>
     );
   }
@@ -34,14 +37,18 @@ export function WebSearchPart({ message }: Props) {
   if (message.status === "error") {
     return (
       <Step failed icon={AlertCircleIcon} label={t("web-search-error")}>
-        <WebSearchPartQueries queries={message.queries} sites={message.sites} />
+        <WebSearchPartQueries queries={message.queries}>
+          <WebSearchPartSites sites={message.sites} />
+        </WebSearchPartQueries>
       </Step>
     );
   }
 
   return (
     <Step icon={Search01Icon} label={t("web-search")}>
-      <WebSearchPartQueries queries={message.queries} sites={message.sites} />
+      <WebSearchPartQueries queries={message.queries}>
+        <WebSearchPartSites sites={message.sites} />
+      </WebSearchPartQueries>
       <WebSearchPartPreview
         emptyLabel={t("web-search-empty")}
         results={message.sources}
@@ -52,11 +59,11 @@ export function WebSearchPart({ message }: Props) {
 WebSearchPart.displayName = "WebSearchPart";
 
 function WebSearchPartQueries({
+  children,
   queries,
-  sites,
 }: {
+  children: ReactNode;
   queries: string[];
-  sites: DataPart["web-search"]["sites"];
 }) {
   if (queries.length === 0) {
     return null;
@@ -67,7 +74,7 @@ function WebSearchPartQueries({
       {Arr.map(queries, (query) => (
         <WebSearchQueryText key={query} query={query} />
       ))}
-      <WebSearchPartSites sites={sites} />
+      {children}
     </div>
   );
 }

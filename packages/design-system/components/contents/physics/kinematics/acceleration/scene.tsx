@@ -2,7 +2,12 @@
 
 import { useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
-import { SpaceBackground } from "@repo/design-system/components/contents/physics/kinematics/acceleration/background";
+import {
+  SpaceBackground,
+  SpaceRocks,
+  SpeedParticles,
+  StarField,
+} from "@repo/design-system/components/contents/physics/kinematics/acceleration/background";
 import { measureRocketMotionBounds } from "@repo/design-system/components/contents/physics/kinematics/acceleration/bounds";
 import {
   ACCELERATION_LAB_SCENE,
@@ -68,7 +73,11 @@ export function SpaceFlightScene({
 
   return (
     <>
-      <SpaceBackground length={motion.sceneLength} />
+      <SpaceBackground>
+        <StarField length={motion.sceneLength} />
+        <SpaceRocks length={motion.sceneLength} />
+        <SpeedParticles length={motion.sceneLength} />
+      </SpaceBackground>
       <TimeGates motion={motion} />
       <CameraBounds bounds={bounds}>
         <group ref={rocketRef}>

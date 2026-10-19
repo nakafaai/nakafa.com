@@ -9,7 +9,7 @@ import {
   EmptyTitle,
 } from "@repo/design-system/components/ui/empty";
 import { useTranslations } from "next-intl";
-import { readChatFailureKind } from "@/components/ai/chat/access";
+import type { ChatFailureKind } from "@/components/ai/chat/access";
 import { Unauthenticated } from "@/components/auth/gate";
 import { AuthGoogle } from "@/components/auth/google";
 import { EmptyNina } from "@/components/state/empty";
@@ -22,17 +22,17 @@ import { EmptyNina } from "@/components/state/empty";
  * retry button is disabled.
  */
 export function ChatFailure({
-  error,
   isPending = false,
+  kind,
   onRetry,
 }: {
-  error: unknown;
   isPending?: boolean;
+  kind: ChatFailureKind;
   onRetry: () => void;
 }) {
   const t = useTranslations("Ai");
 
-  if (readChatFailureKind(error) === "access") {
+  if (kind === "access") {
     return (
       <Empty>
         <EmptyHeader>

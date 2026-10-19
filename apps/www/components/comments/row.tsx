@@ -4,26 +4,18 @@ import { useMutation } from "@confect/react";
 import {
   ArrowTurnBackwardIcon,
   ArrowTurnForwardIcon,
-  Delete02Icon,
-  MoreHorizontalIcon,
 } from "@hugeicons/core-free-icons";
 import comments from "@repo/backend/confect/_generated/refs/comments";
 import { photoOf } from "@repo/backend/confect/users/picture";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { DeferredLearnerText } from "@repo/design-system/components/markdown/learner.client";
 import { Button } from "@repo/design-system/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Effect, HashSet } from "effect";
 import dynamic from "next/dynamic";
 import { useLocale, useTranslations } from "next-intl";
-import { type MouseEvent, type ReactNode, useState } from "react";
+import type { MouseEvent, ReactNode } from "react";
 import {
   likeInLists,
   unlikeInLists,
@@ -36,6 +28,7 @@ import type {
   CommentAuthor,
   CommentRow as CommentItem,
 } from "@/components/comments/state";
+import { MoreMenu } from "@/components/shared/more";
 import { formatShortAge } from "@/components/user/age";
 import {
   FeedActions,
@@ -113,7 +106,12 @@ export function CommentRow({
             </FeedAge>
             {viewerId === comment.userId && (
               <FeedEnd>
-                <CommentMoreMenu comment={comment} inert={saving} />
+                <MoreMenu inert={saving}>
+                  <CommentDeletion
+                    commentId={comment._id}
+                    isReply={comment.threadId !== undefined}
+                  />
+                </MoreMenu>
               </FeedEnd>
             )}
           </FeedHeader>
@@ -233,64 +231,4 @@ function scrollToComment(
     behavior: "smooth",
     block: "center",
   });
-}
-
-/**
- * The More menu of a comment, for its writer. Delete asks first, in the dialog that
- * says whether the replies go with it.
- */
-function CommentMoreMenu({
-  comment,
-  inert,
-}: {
-  comment: RowComment;
-  inert: boolean;
-}) {
-  const t = useTranslations("Common");
-  const [menuOpened, setMenuOpened] = useState(false);
-  const [deleting, setDeleting] = useState(false);
-
-  return (
-    <>
-      <DropdownMenu
-        onOpenChange={(open) => {
-          if (open) {
-            setMenuOpened(true);
-          }
-        }}
-      >
-        <DropdownMenuTrigger
-          render={
-            <Button
-              aria-label={t("more")}
-              inert={inert}
-              size="icon-sm"
-              variant="ghost"
-            >
-              <HugeIcons icon={MoreHorizontalIcon} />
-              <span className="sr-only">{t("more")}</span>
-            </Button>
-          }
-        />
-        <DropdownMenuContent align="end" className="w-40">
-          <DropdownMenuItem
-            className="cursor-pointer"
-            onClick={() => setDeleting(true)}
-            variant="destructive"
-          >
-            <HugeIcons icon={Delete02Icon} />
-            {t("delete")}
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-      {menuOpened && (
-        <CommentDeletion
-          commentId={comment._id}
-          isReply={comment.threadId !== undefined}
-          onOpenChange={setDeleting}
-          open={deleting}
-        />
-      )}
-    </>
-  );
 }

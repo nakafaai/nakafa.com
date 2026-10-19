@@ -74,7 +74,6 @@ export function CoordinateControls({ inert = false }: { inert?: boolean }) {
     <VisualCardSceneActions inert={inert}>
       <Button
         aria-pressed={showGrid}
-        inert={inert}
         onClick={toggleGrid}
         size="icon"
         variant="secondary"
