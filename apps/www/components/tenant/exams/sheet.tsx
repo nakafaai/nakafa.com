@@ -28,7 +28,9 @@ export function PaperOptions({ children }: { children: ReactNode }) {
  * One option of the paper: its letter, then its rich text, framed as the player frames an option. The
  * frame is the player's own choice frame in the unselected variant, and only the teacher's letter is
  * added to it. The letter is as tall as one line of the frame's text, so the first line of the text
- * and the letter share a line box, and a longer text grows the frame below them.
+ * and the letter share a line box, and a longer text grows the frame below them. The text is edited
+ * here, so the frame takes the text cursor and lets the text be selected, where the button surface
+ * would block both.
  */
 export function PaperOption({
   children,
@@ -41,7 +43,7 @@ export function PaperOption({
     <div
       className={cn(
         choiceFrame(getTryoutSelectableChoiceVariant({ checked: false })),
-        "flex items-start gap-3"
+        "flex cursor-text select-text items-start gap-3"
       )}
     >
       <span
