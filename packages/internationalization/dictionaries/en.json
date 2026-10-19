@@ -426,10 +426,10 @@
         "stored": "Grading scheme version added"
       },
       "cohort": {
-        "created": "Class added",
-        "renamed": "Class renamed",
-        "archived": "Class archived",
-        "restored": "Class restored"
+        "created": "Cohort added",
+        "renamed": "Cohort renamed",
+        "archived": "Cohort archived",
+        "restored": "Cohort restored"
       },
       "connection": {
         "connected": "Connection added",
