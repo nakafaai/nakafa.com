@@ -10,7 +10,7 @@ import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 
 import type { TileLook } from "@repo/design-system/lib/look";
 import { Array as Arr } from "effect";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 import { MaterialRow } from "@/components/home/material";
 
 type RecentlyViewedSubject = Ref.Returns<

@@ -4,7 +4,7 @@ import { Alert02Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Link } from "@repo/internationalization/src/navigation";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 import type { AnalyticsConsentContextValue } from "@/lib/analytics/consent/context";
 import { usePageNavigation } from "@/lib/content/page/context";
 

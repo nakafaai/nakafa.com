@@ -9,7 +9,7 @@ import {
 import { ArticleProjectionSchema } from "@nakafa/aksara-contracts/projection/article";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { Array as Arr, Effect, HashSet, Schema } from "effect";
-import type { Locale } from "next-intl";
+import type { Locale } from "use-intl";
 import {
   decodeArticleJson,
   isArticleCounterpart,

@@ -3,7 +3,7 @@
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { QuestionnaireChoiceDescription } from "@repo/design-system/components/ui/questionnaire";
 import { cn } from "cn";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 import type {
   focusOptions,
   regionOptions,

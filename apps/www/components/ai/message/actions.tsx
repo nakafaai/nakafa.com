@@ -9,7 +9,7 @@ import { useClipboard } from "@mantine/hooks";
 import { Action, Actions } from "@repo/design-system/components/ai/actions";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Array as Arr } from "effect";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 
 import { useChat } from "@/components/ai/chat/context";
 import { ninaResponseFeedback } from "@/components/ai/feedback";

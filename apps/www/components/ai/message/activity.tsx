@@ -18,8 +18,8 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { cn } from "cn";
-import { useTranslations } from "next-intl";
 import { createContext, type ReactNode, use } from "react";
+import { useTranslations } from "use-intl";
 import type { Invocation } from "@/components/ai/message/invocation";
 import { readLimitCopy } from "@/components/ai/message/limit";
 import { isProblem } from "@/components/ai/message/state";

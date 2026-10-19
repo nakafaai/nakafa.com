@@ -3,8 +3,8 @@
 import { QueryResult } from "@confect/react";
 import type { StudentSittingRow } from "@repo/backend/confect/exams/sittings/contract";
 import { Array as Arr, Option } from "effect";
-import { useLocale, useTranslations } from "next-intl";
 import { type ReactNode, useEffect } from "react";
+import { useLocale, useTranslations } from "use-intl";
 import { forgetSubmittedKept } from "@/components/exams/sitting/forget.client";
 import { CardLink, CardLinks } from "@/components/shared/card/link";
 import { useTenant } from "@/components/tenant/context";

@@ -1,7 +1,7 @@
 import { Button } from "@repo/design-system/components/ui/button";
 import { Effect } from "effect";
-import { useTranslations } from "next-intl";
 import { useEffect } from "react";
+import { useTranslations } from "use-intl";
 import { reportClientException } from "@/lib/analytics/client";
 
 /**

@@ -97,6 +97,7 @@ catalog:
   tsx: ^4.23.15
   typescript: 7.0.2
   unified: 11.0.5
+  use-intl: 4.14.9
   virtua: ^0.53.5
   vite: ^8.3.4
   vitest: 5.0.5

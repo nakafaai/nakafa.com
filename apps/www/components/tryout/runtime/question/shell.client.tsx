@@ -10,8 +10,8 @@ import {
 } from "@repo/design-system/components/ui/collapsible";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Separator } from "@repo/design-system/components/ui/separator";
-import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
+import { useTranslations } from "use-intl";
 import { getTryoutQuestionIds } from "@/components/tryout/runtime/question/id";
 
 interface TryoutQuestionShellProps {

@@ -28,8 +28,8 @@ import {
 } from "@repo/design-system/components/ui/popover";
 import { cn } from "cn";
 import { Array as Arr, Option } from "effect";
-import { useTranslations } from "next-intl";
 import { useState } from "react";
+import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/providers/convex";
 import { DataFailure } from "@/components/shared/failure";
 import { TryoutScoreCard } from "@/components/tryout/score/card";

@@ -9,8 +9,8 @@ import {
 } from "@repo/design-system/components/ui/empty";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { Array as Arr } from "effect";
-import { useTranslations } from "next-intl";
 import { useEffect, useEffectEvent } from "react";
+import { useTranslations } from "use-intl";
 import { EmptyNina } from "@/components/state/empty";
 import {
   isSearching,

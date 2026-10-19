@@ -17,7 +17,6 @@ import { toast } from "@repo/design-system/lib/toast/notify";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { cn } from "cn";
 import { Array as Arr, Effect, Match, Option, Result, Schema } from "effect";
-import { useTranslations } from "next-intl";
 import {
   createContext,
   type ReactNode,
@@ -27,6 +26,7 @@ import {
   useState,
   useTransition,
 } from "react";
+import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/providers/convex";
 import { QuestionnaireSteps } from "@/components/shared/questionnaire";
 import {

@@ -1,6 +1,6 @@
 import type { TryoutScoreResult } from "@repo/backend/confect/tryouts/score";
 import { Schema } from "effect";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 import { TryoutScoreMetrics } from "@/components/tryout/score/metrics";
 import { TryoutScoreStatus } from "@/components/tryout/score/status";
 import {

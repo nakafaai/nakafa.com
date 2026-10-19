@@ -10,8 +10,8 @@ import {
 } from "@repo/design-system/components/ui/scroller";
 import { TypingLoader } from "@repo/design-system/components/ui/typing-loader";
 import { MessageScroller as Primitive } from "@shadcn/react/message-scroller";
-import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
+import { useTranslations } from "use-intl";
 import { useChatAdmission } from "@/components/ai/chat/admission";
 import { useAi } from "@/components/ai/context";
 import { NinaPrompt } from "@/components/ai/message/prompt";

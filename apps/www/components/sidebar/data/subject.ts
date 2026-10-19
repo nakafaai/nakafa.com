@@ -1,5 +1,5 @@
 import { routing } from "@repo/internationalization/src/routing";
-import type { Locale } from "next-intl";
+import type { Locale } from "use-intl";
 import { CURRICULUM_NAVIGATION_ICONS } from "@/lib/curriculum/icons";
 
 const curriculaPath = routing.pathnames["/curricula"];

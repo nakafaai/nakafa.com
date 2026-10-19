@@ -8,8 +8,8 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { themeOptions } from "@repo/design-system/lib/theme/options";
 import { Array as Arr } from "effect";
-import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
+import { useTranslations } from "use-intl";
 import { ActiveBadge } from "@/components/shared/active";
 
 const BASE_THEMES_COUNT = 3;

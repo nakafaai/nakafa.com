@@ -1,7 +1,7 @@
 import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { routing } from "@repo/internationalization/src/routing";
 import { Data, Schema } from "effect";
-import { hasLocale, type Locale } from "next-intl";
+import { hasLocale, type Locale } from "use-intl";
 
 /** Stable identity for the sitemap containing application-level routes. */
 export const SITEMAP_BASE_ID = "base";

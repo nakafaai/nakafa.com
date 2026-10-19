@@ -1,6 +1,6 @@
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { Array as Arr, Schema } from "effect";
-import type { Locale } from "next-intl";
+import type { Locale } from "use-intl";
 
 const BreadcrumbEntrySchema = Schema.Struct({
   name: Schema.String,

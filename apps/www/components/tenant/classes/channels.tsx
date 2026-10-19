@@ -15,8 +15,8 @@ import {
   TableRow,
 } from "@repo/design-system/components/ui/table";
 import { Array as Arr } from "effect";
-import { useTranslations } from "next-intl";
 import { useEffect } from "react";
+import { useTranslations } from "use-intl";
 import { type StoreApi, useStore } from "zustand";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";

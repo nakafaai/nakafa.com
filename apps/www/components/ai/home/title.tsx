@@ -1,5 +1,5 @@
 import { cn } from "cn";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 
 interface Props {
   className?: string;

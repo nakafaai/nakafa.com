@@ -9,7 +9,7 @@ import { decodePublishedQuranView } from "@repo/backend/client/quran/view";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { Effect } from "effect";
 import { cacheTag } from "next/cache";
-import type { Locale } from "next-intl";
+import type { Locale } from "use-intl";
 import { applyContentCache } from "@/lib/content/cache";
 import { queryContentStore } from "@/lib/content/store/query";
 import { httpLayer } from "@/lib/convex/http";

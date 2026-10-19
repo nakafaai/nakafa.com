@@ -3,7 +3,7 @@ import type {
   ToastTitleKey,
   ToastValues,
 } from "@repo/internationalization/src/toast";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 
 /**
  * One line of toast copy: a message of the `Toast` namespace in the reader's

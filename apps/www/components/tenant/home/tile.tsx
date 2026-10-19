@@ -1,8 +1,8 @@
 import { CardHeader, CardTitle } from "@repo/design-system/components/ui/card";
 import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
+import { useTranslations } from "use-intl";
 import {
   CardSection,
   CardSectionActions,

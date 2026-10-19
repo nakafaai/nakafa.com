@@ -3,7 +3,7 @@
 import { StarsIcon } from "@hugeicons/core-free-icons";
 import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 import { useAi } from "@/components/ai/context";
 
 /** Opens the existing Nina sheet with the current reading context. */

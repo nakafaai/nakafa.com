@@ -5,7 +5,7 @@ import {
 import { FetchClient } from "@repo/utilities/http/client";
 import { Data, Effect, Option, Schema, String as Str } from "effect";
 import { HttpClient, HttpClientResponse } from "effect/http";
-import type { Locale } from "next-intl";
+import type { Locale } from "use-intl";
 
 /** Raised when the browser language switch cannot resolve a route-owned href. */
 class LocalizedHrefRequestError extends Data.TaggedError(

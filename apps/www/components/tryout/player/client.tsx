@@ -1,8 +1,8 @@
 "use client";
 
 import { Array as Arr } from "effect";
-import { useTranslations } from "next-intl";
 import { Suspense } from "react";
+import { useTranslations } from "use-intl";
 import { PlayerFinish } from "@/components/player/finish";
 import { PlayerFooter, PlayerOpener } from "@/components/player/footer";
 import { PlayerMain } from "@/components/player/frame";

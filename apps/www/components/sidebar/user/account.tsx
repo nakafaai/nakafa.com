@@ -18,7 +18,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { Effect, Result } from "effect";
 import dynamic from "next/dynamic";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 import { clearAiDraftText } from "@/components/ai/store/draft";
 import { AnalyticsConsentMenuItem } from "@/components/analytics/consent/actions";
 import { AccountMenu } from "@/components/sidebar/menu/account";

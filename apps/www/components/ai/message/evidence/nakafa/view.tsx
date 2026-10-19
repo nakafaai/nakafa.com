@@ -3,7 +3,7 @@
 import { AlertCircleIcon } from "@hugeicons/core-free-icons";
 import type { NakafaDataPart } from "@repo/backend/confect/nina/contract/data";
 import { Match } from "effect";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 import { ContentPart } from "@/components/ai/message/evidence/nakafa/content";
 import { nakafaIcons } from "@/components/ai/message/evidence/nakafa/icons";
 import { QuranPart } from "@/components/ai/message/evidence/nakafa/quran";

@@ -22,7 +22,6 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { ISOSCELES_RIGHT_TRIANGLE_ANGLE } from "@repo/math/angles";
 import dynamic from "next/dynamic";
-import { useLocale, useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { useState } from "react";
 import {
@@ -33,6 +32,7 @@ import {
   Label,
   NumberField,
 } from "react-aria-components";
+import { useLocale, useTranslations } from "use-intl";
 
 // Next owns this client-only import boundary so offscreen lessons do not load WebGL.
 const TriangleScene = dynamic(

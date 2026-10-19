@@ -27,10 +27,10 @@ import { VisualCardSceneActions } from "@repo/design-system/components/visual/sc
 import type { NarrowCameraPose } from "@repo/design-system/lib/geometry/camera";
 import { Array as Arr } from "effect";
 import dynamic from "next/dynamic";
-import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import type { ComponentType, ReactNode } from "react";
 import { useMemo, useState } from "react";
+import { useTranslations } from "use-intl";
 import { useStore } from "zustand";
 
 /** The stage loads once the lab asks for it, and its frame holds the place meanwhile. */

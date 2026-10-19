@@ -1,4 +1,4 @@
-import type { Locale } from "next-intl";
+import type { Locale } from "use-intl";
 import { TryoutSectionPageHeader } from "@/components/tryout/section/header";
 import type { TryoutSectionPage } from "@/components/tryout/section/model";
 import { TryoutSectionSummary } from "@/components/tryout/section/summary";

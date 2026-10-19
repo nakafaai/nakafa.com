@@ -15,7 +15,8 @@
     "@repo/utilities": "workspace:*",
     "effect": "catalog:",
     "next": "16.4.2",
-    "next-intl": "catalog:"
+    "next-intl": "catalog:",
+    "use-intl": "catalog:"
   },
   "devDependencies": {
     "@effect/vitest": "catalog:",

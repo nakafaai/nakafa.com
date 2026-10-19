@@ -7,8 +7,8 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Array as Arr, DateTime, Effect, Option } from "effect";
 import dynamic from "next/dynamic";
-import { useTranslations } from "next-intl";
 import { useState } from "react";
+import { useTranslations } from "use-intl";
 import {
   creatableUnits,
   type ViewerUnit,

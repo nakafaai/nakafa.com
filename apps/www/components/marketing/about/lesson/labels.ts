@@ -1,6 +1,6 @@
 import type { BacteriaLabItemProps } from "@repo/design-system/components/contents/biology/bacteria-scene";
 import { ATOM_SHELL_SAMPLES } from "@repo/design-system/components/contents/chemistry/atom-shell/data";
-import type { useTranslations } from "next-intl";
+import type { useTranslations } from "use-intl";
 
 /** A translator of the Landing namespace, which the server and the client both hold. */
 type LandingTranslator = ReturnType<typeof useTranslations<"Landing">>;

@@ -7,7 +7,7 @@ import {
   routing,
 } from "@repo/internationalization/src/routing";
 import { notFound } from "next/navigation";
-import { hasLocale } from "next-intl";
+import { hasLocale } from "use-intl";
 import { hasPreviewConfig } from "@/lib/content/preview/config";
 
 /** The locale param that a parent route passes to the `generateStaticParams` of its child routes. */

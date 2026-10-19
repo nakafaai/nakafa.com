@@ -35,10 +35,10 @@ import {
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { Array as Arr } from "effect";
-import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import type { ReactNode } from "react";
 import { Suspense, useMemo, useState } from "react";
+import { useTranslations } from "use-intl";
 import { useStore } from "zustand";
 
 const NARROW_CANVAS_ASPECT_RATIO = 1.35;

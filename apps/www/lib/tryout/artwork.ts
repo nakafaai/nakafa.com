@@ -6,7 +6,7 @@ import type {
 } from "@nakafa/aksara-contracts/tryout/catalog";
 import { TryoutKeySchema } from "@nakafa/aksara-contracts/tryout/key";
 import { Effect, HashMap, Option, Result, Schema } from "effect";
-import type { Locale } from "next-intl";
+import type { Locale } from "use-intl";
 import {
   type ArtworkIdentity,
   resolveSocialArtwork,

@@ -9,7 +9,7 @@ import {
   MessageFooter,
 } from "@repo/design-system/components/ui/message";
 import { Nina } from "@repo/design-system/components/ui/nina";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 import { NinaPrompt } from "@/components/ai/message/prompt";
 import {
   MessageSection,

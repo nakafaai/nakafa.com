@@ -9,7 +9,7 @@ import {
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
 import { Effect } from "effect";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 import { preloadSearchCommand } from "@/components/search/command/module";
 import { useSearch } from "@/lib/search/context";
 

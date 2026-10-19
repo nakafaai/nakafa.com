@@ -5,7 +5,7 @@ import { ArticleRouteSlugSchema } from "@nakafa/aksara-contracts/projection/arti
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/route/surface";
 import { routing } from "@repo/internationalization/src/routing";
 import { Array as Arr, Effect, HashSet, Record as Rec, Schema } from "effect";
-import { hasLocale } from "next-intl";
+import { hasLocale } from "use-intl";
 import { hasPublishedArticleCategory } from "@/lib/content/article/category";
 import { matchesPreviewRoute } from "@/lib/content/preview/route";
 import { readActiveContentRoute } from "@/lib/content/published/route";

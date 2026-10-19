@@ -1,4 +1,4 @@
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 import type { ContentSearchResultItem } from "@/lib/search/query";
 
 /** Resolves the localized label of each search result section. */

@@ -6,7 +6,7 @@ import {
   PageMetadataSchema,
 } from "@nakafa/aksara-contracts/projection/page";
 import { Array as Arr, Effect, Option, Schema } from "effect";
-import type { Locale } from "next-intl";
+import type { Locale } from "use-intl";
 import { applyContentCache } from "@/lib/content/cache";
 import { readPublishedPageCatalog } from "@/lib/content/page/catalog";
 import { hasPreviewConfig } from "@/lib/content/preview/config";

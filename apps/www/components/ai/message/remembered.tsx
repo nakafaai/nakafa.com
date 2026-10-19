@@ -3,7 +3,7 @@
 import { AiBrain01Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { IntentLink } from "@repo/design-system/components/ui/intent-link";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 import { useMessage } from "@/components/ai/message/context";
 
 /**

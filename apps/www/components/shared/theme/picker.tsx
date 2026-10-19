@@ -8,8 +8,8 @@ import {
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import dynamic from "next/dynamic";
-import { useTranslations } from "next-intl";
 import { type ComponentProps, useState } from "react";
+import { useTranslations } from "use-intl";
 
 /**
  * Loads the theme list on first intent. It carries one icon for each theme,

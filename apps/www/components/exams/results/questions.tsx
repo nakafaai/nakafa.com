@@ -27,8 +27,8 @@ import {
   TableRow,
 } from "@repo/design-system/components/ui/table";
 import { Array as Arr, Option } from "effect";
-import { useTranslations } from "next-intl";
 import { useState } from "react";
+import { useTranslations } from "use-intl";
 import {
   useResultsScope,
   useSessionSettled,

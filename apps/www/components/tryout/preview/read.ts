@@ -3,8 +3,8 @@ import "server-only";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { Effect, Option } from "effect";
 import { io } from "next/cache";
-import type { Locale } from "next-intl";
 import { cache } from "react";
+import type { Locale } from "use-intl";
 import { hasPreviewConfig } from "@/lib/content/preview/config";
 import {
   type QuestionPreviewContent,

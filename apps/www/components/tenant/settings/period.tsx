@@ -22,8 +22,8 @@ import { Input } from "@repo/design-system/components/ui/input";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Schema } from "effect";
-import { useTranslations } from "next-intl";
 import { startTransition, useId, useState } from "react";
+import { useTranslations } from "use-intl";
 import {
   archivePeriodChange,
   openPeriodChange,

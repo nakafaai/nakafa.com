@@ -5,8 +5,8 @@ import { useDisclosure } from "@mantine/hooks";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Array as Arr } from "effect";
-import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
+import { useTranslations } from "use-intl";
 
 /** How many rows of an evidence list show before its button is pressed. */
 const SHOWN_ROWS = 5;

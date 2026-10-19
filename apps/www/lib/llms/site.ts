@@ -2,7 +2,7 @@ import "server-only";
 
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
 import { Effect } from "effect";
-import type { Locale } from "next-intl";
+import type { Locale } from "use-intl";
 import { readPublishedPageCatalog } from "@/lib/content/page/catalog";
 import { buildSiteLlmsEntries } from "@/lib/llms/entries";
 

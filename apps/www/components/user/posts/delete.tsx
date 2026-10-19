@@ -8,7 +8,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Effect } from "effect";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 import { useDeletion } from "@/components/shared/more";
 import { removeFromLists } from "@/components/user/posts/mutation.client";
 import type { ListPost } from "@/components/user/posts/state";

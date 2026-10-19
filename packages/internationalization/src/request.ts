@@ -7,8 +7,8 @@ import {
 import { hasPreviewProvider } from "@repo/next-config/preview";
 import { notFound } from "next/navigation";
 import { locale as getRootLocale } from "next/root-params";
-import { hasLocale } from "next-intl";
 import { getRequestConfig } from "next-intl/server";
+import { hasLocale } from "use-intl";
 
 /** Accepts inactive contract locales only for the authenticated local child. */
 function hasRequestLocale(locale: string | undefined): locale is AppLocaleCode {

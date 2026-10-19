@@ -3,8 +3,8 @@
 import type { Ref } from "@confect/core";
 import { captureException } from "@repo/analytics/posthog/browser";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
-import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
+import { useTranslations } from "use-intl";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import { isDenied, isLostAccess } from "@/components/tenant/refusal";

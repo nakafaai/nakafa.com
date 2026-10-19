@@ -2,7 +2,7 @@ import "server-only";
 
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { Effect } from "effect";
-import type { Locale } from "next-intl";
+import type { Locale } from "use-intl";
 import { readPublishedCategories } from "@/lib/content/article/catalog";
 import { readPublishedCategoryPage } from "@/lib/content/article/category";
 import { PublishedProjectionError } from "@/lib/content/published/errors";

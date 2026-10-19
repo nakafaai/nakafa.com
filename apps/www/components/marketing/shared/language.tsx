@@ -13,7 +13,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { languages } from "@repo/internationalization/data/lang";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
-import { type Locale, useLocale, useTranslations } from "next-intl";
+import { type Locale, useLocale, useTranslations } from "use-intl";
 import { ActiveBadge } from "@/components/shared/active";
 import { CountryFlagIcon } from "@/components/shared/flag";
 import { useLocalizedRouteSwitch } from "@/lib/routing/locale/client";

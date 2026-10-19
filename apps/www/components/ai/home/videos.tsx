@@ -3,7 +3,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { COMPANY_SOCIAL_PROFILES } from "@repo/seo/company-profiles";
 import Image from "next/image";
 import Link from "next/link";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 
 export function Videos() {
   const t = useTranslations("Videos");

@@ -2,7 +2,7 @@
 
 import { Button } from "@repo/design-system/components/ui/button";
 import { type AnyFormApi, useStore } from "@tanstack/react-form";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 import {
   CardSectionActions,
   CardSectionFooter,

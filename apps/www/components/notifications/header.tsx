@@ -7,7 +7,7 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Array as Arr, Effect } from "effect";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 import { markAllReadInLists } from "@/components/notifications/mutation.client";
 import { useInbox } from "@/components/notifications/provider";
 import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";

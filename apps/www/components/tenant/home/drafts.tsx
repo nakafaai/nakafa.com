@@ -2,8 +2,8 @@
 
 import type { HomeView } from "@repo/backend/confect/exams/home/contract";
 import { Array as Arr } from "effect";
-import { useLocale, useTranslations } from "next-intl";
 import { useMemo } from "react";
+import { useLocale, useTranslations } from "use-intl";
 import { type StoreApi, useStore } from "zustand";
 import {
   CardLink,

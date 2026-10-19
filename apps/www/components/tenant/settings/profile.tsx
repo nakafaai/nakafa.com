@@ -16,8 +16,8 @@ import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-d
 import { type ToastCopy, toast } from "@repo/design-system/lib/toast/notify";
 import { MAIN_DOMAIN } from "@repo/next-config/domains";
 import { Effect, Schema } from "effect";
-import { useTranslations } from "next-intl";
 import { startTransition, useRef, useState } from "react";
+import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/providers/convex";
 import {
   CardSection,

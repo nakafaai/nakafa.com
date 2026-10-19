@@ -5,7 +5,7 @@ import { PersonAvatar } from "@repo/design-system/components/ui/person";
 import { TypingLoader } from "@repo/design-system/components/ui/typing-loader";
 import { COMPANY_SOCIAL_PROFILES } from "@repo/seo/company-profiles";
 import { Array as Arr } from "effect";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 import {
   CROWD_HERD,
   CROWD_TYPING_EVERY,

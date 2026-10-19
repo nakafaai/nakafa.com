@@ -4,7 +4,7 @@ import { Flag01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Array as Arr } from "effect";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 import type { PlayerCellModel } from "@/components/player/model";
 import { readPosition } from "@/components/player/order";
 import { usePlayer } from "@/components/player/provider";

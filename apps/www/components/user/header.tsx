@@ -6,7 +6,7 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { PersonAvatar } from "@repo/design-system/components/ui/person";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 import { ShareProfileButton } from "@/components/user/share";
 import type { PublicProfile } from "@/lib/profile/public";
 

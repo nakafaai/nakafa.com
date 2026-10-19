@@ -30,8 +30,8 @@ import {
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { Array as Arr, Option, Schema } from "effect";
 import Link from "next/link";
-import { useLocale, useTranslations } from "next-intl";
 import { startTransition, useState } from "react";
+import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/providers/convex";
 import { LayoutContent } from "@/components/shared/content/layout";
 import { DataFailure } from "@/components/shared/failure";

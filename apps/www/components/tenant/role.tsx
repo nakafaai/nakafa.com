@@ -16,8 +16,8 @@ import type { BuiltinRole } from "@repo/backend/confect/access/schema";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cva } from "class-variance-authority";
-import { useTranslations } from "next-intl";
 import type { ComponentProps } from "react";
+import { useTranslations } from "use-intl";
 
 /**
  * A role's badge takes its family's color from the theme's chart colors, so the roles that

@@ -45,8 +45,8 @@ import {
   useTable,
 } from "@tanstack/react-table";
 import { Array as Arr, HashSet, Option, Schema } from "effect";
-import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
+import { useTranslations } from "use-intl";
 import { dataTableFeatures } from "@/components/shared/table/features";
 import { FacetValues } from "@/components/shared/table/filter";
 import { TableFrame } from "@/components/shared/table/frame";

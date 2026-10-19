@@ -2,7 +2,7 @@
 
 import { usePathname } from "@repo/internationalization/src/navigation";
 import { Array as Arr, Option } from "effect";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 
 import { SharedTabs } from "@/components/user/navigation";
 import { ProfileTab, profileHref } from "@/lib/profile/href";

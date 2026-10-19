@@ -20,8 +20,8 @@ import {
 } from "@repo/design-system/components/ui/sidebar-menu";
 import { useSidebar } from "@repo/design-system/lib/sidebar/context";
 import type { Mascot } from "@repo/mascot/code";
-import { useTranslations } from "next-intl";
 import { type ReactNode, useLayoutEffect } from "react";
+import { useTranslations } from "use-intl";
 
 /**
  * The account menu every sidebar shares: the account button, the account at the

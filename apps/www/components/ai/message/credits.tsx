@@ -16,8 +16,8 @@ import {
   PopoverTrigger,
 } from "@repo/design-system/components/ui/popover";
 import { Array as Arr } from "effect";
-import { useTranslations } from "next-intl";
 import { useState } from "react";
+import { useTranslations } from "use-intl";
 import { useMessage } from "@/components/ai/message/context";
 
 export function AiChatMessageCredits() {

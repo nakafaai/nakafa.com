@@ -2,7 +2,7 @@ import {
   SidebarMenuItem,
   SidebarMenuSeparator,
 } from "@repo/design-system/components/ui/sidebar-menu";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 import { AnalyticsConsentSidebarItem } from "@/components/analytics/consent/actions";
 import { GuestLanguageMenu } from "@/components/sidebar/menu/preference";
 import { PricingItem } from "@/components/sidebar/menu/pricing";

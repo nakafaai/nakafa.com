@@ -26,8 +26,8 @@ import {
 } from "@repo/design-system/components/ui/sidebar-menu";
 import { cleanupUrl, formatUrl } from "@repo/design-system/lib/routing/url";
 import { Array as Arr } from "effect";
-import { useTranslations } from "next-intl";
 import { useLayoutEffect } from "react";
+import { useTranslations } from "use-intl";
 
 interface Props {
   references: Reference[];

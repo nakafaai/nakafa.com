@@ -13,8 +13,8 @@ import {
 import { loadMathFonts } from "@repo/design-system/lib/markdown/fonts";
 import { MessageScroller as Primitive } from "@shadcn/react/message-scroller";
 import { Array as Arr, Effect, Fiber } from "effect";
-import { useTranslations } from "next-intl";
 import { memo, useEffect } from "react";
+import { useTranslations } from "use-intl";
 import { useChat } from "@/components/ai/chat/context";
 import { AiChatError } from "@/components/ai/chat/error";
 import { useChatFeed } from "@/components/ai/chat/feed.client";

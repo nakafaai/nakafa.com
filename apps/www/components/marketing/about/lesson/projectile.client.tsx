@@ -1,7 +1,7 @@
 "use client";
 
 import { ParabolicMovementLab } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement/lab";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 import { getProjectileLabels } from "@/components/marketing/about/lesson/labels";
 import type { LessonLabProps } from "@/components/marketing/about/lesson/labs";
 import { useLessonSelection } from "@/components/marketing/about/lesson/selection";

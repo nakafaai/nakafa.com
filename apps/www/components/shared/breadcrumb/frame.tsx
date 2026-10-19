@@ -1,7 +1,7 @@
 import { SidebarScopeStart } from "@repo/design-system/components/ui/sidebar-scope";
 import { cn } from "cn";
-import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
+import { useTranslations } from "use-intl";
 import { ShellTitle } from "@/components/sidebar/lock";
 
 /**

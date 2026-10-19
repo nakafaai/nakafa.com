@@ -15,7 +15,7 @@ import { Intersection } from "@repo/design-system/components/ui/intersection";
 import type { Mascot } from "@repo/mascot/code";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { Array as Arr } from "effect";
-import { useLocale, useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "use-intl";
 import { SchoolMark } from "@/components/tenant/mark";
 import { schoolOrigin } from "@/lib/routing/school/host";
 

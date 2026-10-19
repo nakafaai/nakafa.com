@@ -7,7 +7,7 @@ import {
   EmptyTitle,
 } from "@repo/design-system/components/ui/empty";
 import { MessageScrollerItem } from "@repo/design-system/components/ui/scroller";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 import { StartPrompt, useStartChat } from "@/components/ai/chat/start";
 import { useAi } from "@/components/ai/context";
 import { NinaInput, NinaSuggestions } from "@/components/ai/input";

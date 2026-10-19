@@ -1,5 +1,5 @@
 import { Array as Arr, Effect, Schema } from "effect";
-import type { Locale } from "next-intl";
+import type { Locale } from "use-intl";
 import { readPublishedArticleBuckets } from "@/lib/content/article/sitemap";
 import {
   BASE_URL,

@@ -4,7 +4,7 @@ import { Login03Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 import { useCurrentAuthNavigation } from "@/lib/auth/location.client";
 
 /** Renders the primary guest login action for a sidebar footer. */

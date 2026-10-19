@@ -11,7 +11,6 @@ import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useControllableState } from "@repo/design-system/hooks/use-controllable-state";
 import { cn } from "cn";
 import { DateTime, Effect, Fiber, Schema } from "effect";
-import { useTranslations } from "next-intl";
 import {
   type ComponentProps,
   createContext,
@@ -22,6 +21,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { useTranslations } from "use-intl";
 
 const ReasoningContextValueSchema = Schema.Struct({
   duration: Schema.Finite,

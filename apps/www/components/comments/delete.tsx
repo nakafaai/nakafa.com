@@ -9,7 +9,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Effect } from "effect";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 import { removeFromLists } from "@/components/comments/mutation.client";
 import { useDeletion } from "@/components/shared/more";
 import { reportClientException } from "@/lib/analytics/client";

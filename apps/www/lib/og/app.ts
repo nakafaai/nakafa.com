@@ -1,4 +1,4 @@
-import type { Locale } from "next-intl";
+import type { Locale } from "use-intl";
 import { type ArtworkIdentity, resolveSocialArtwork } from "@/lib/og/artwork";
 
 const APP_ARTWORK_IDENTITIES = {

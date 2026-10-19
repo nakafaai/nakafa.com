@@ -3,8 +3,8 @@ import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease
 import { resolveReferenceInput } from "@repo/backend/confect/contentRelease/reference/input";
 import { contentSearchSummaryValidator } from "@repo/backend/confect/contents/search/schema";
 import { Array as Arr, Effect, Schema } from "effect";
-import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
+import type { Locale } from "use-intl";
 import { applyContentCache } from "@/lib/content/cache";
 import { queryContentStore } from "@/lib/content/store/query";
 

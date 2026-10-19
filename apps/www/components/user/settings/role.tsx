@@ -20,8 +20,8 @@ import {
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { useForm } from "@tanstack/react-form";
 import { Array as Arr, Effect, Option, Schema } from "effect";
-import { useTranslations } from "next-intl";
 import { useRef } from "react";
+import { useTranslations } from "use-intl";
 import { CardSection } from "@/components/shared/card/section";
 import { useUpdateUserRoleMutation } from "@/components/user/mutation.client";
 import { SettingsFormFooter } from "@/components/user/settings/save";

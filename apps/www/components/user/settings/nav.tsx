@@ -20,8 +20,8 @@ import {
 } from "@repo/design-system/components/ui/sidebar-menu";
 import { usePathname } from "@repo/internationalization/src/navigation";
 import { Array as Arr } from "effect";
-import { useTranslations } from "next-intl";
 import type { ComponentProps } from "react";
+import { useTranslations } from "use-intl";
 import {
   type UserSettingsLabelKey,
   userSettingsGroups,

@@ -4,7 +4,7 @@ import {
 } from "@repo/backend/client/nina/uploads";
 import type { PromptInputFileConstraintError } from "@repo/design-system/lib/prompt-input/files";
 import { Array as Arr, Match } from "effect";
-import type { useTranslations } from "next-intl";
+import type { useTranslations } from "use-intl";
 
 /** Documents are the attachments that are not images. Images reach the model by URL and are not counted. */
 function isDocument(file: Pick<File, "type">) {

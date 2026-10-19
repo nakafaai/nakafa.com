@@ -1,8 +1,8 @@
 "use client";
 
 import { usePathname } from "@repo/internationalization/src/navigation";
-import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
+import { useTranslations } from "use-intl";
 import { SchoolHeader } from "@/components/tenant/header";
 import { getSchoolSettingsSection } from "@/lib/settings/school";
 

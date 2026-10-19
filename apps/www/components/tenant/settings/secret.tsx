@@ -3,7 +3,7 @@
 import { useClipboard } from "@mantine/hooks";
 import { Button } from "@repo/design-system/components/ui/button";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 
 /**
  * Shows one secret that the server answered once, with a copy action. The dialog

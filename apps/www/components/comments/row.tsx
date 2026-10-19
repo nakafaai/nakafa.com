@@ -14,8 +14,8 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Effect, HashSet } from "effect";
 import dynamic from "next/dynamic";
-import { useLocale, useTranslations } from "next-intl";
 import type { MouseEvent, ReactNode } from "react";
+import { useLocale, useTranslations } from "use-intl";
 import {
   likeInLists,
   unlikeInLists,

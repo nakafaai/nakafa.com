@@ -2,7 +2,7 @@ import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import type { CurriculumRoute } from "@nakafa/aksara-contracts/program/curriculum";
 import { ContentSnapshotRowSchema } from "@nakafa/aksara-contracts/release/snapshot/data";
 import { Effect, Schema } from "effect";
-import type { Locale } from "next-intl";
+import type { Locale } from "use-intl";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
 
 /** Maps malformed program bytes to one public projection failure. */

@@ -2,9 +2,9 @@ import { Nina } from "@repo/design-system/components/ui/nina";
 import { Thing } from "@repo/design-system/components/ui/thing";
 import { Array as Arr } from "effect";
 import { headers } from "next/headers";
-import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { Suspense, use } from "react";
+import { useTranslations } from "use-intl";
 import {
   currencySymbol,
   drinkKey,

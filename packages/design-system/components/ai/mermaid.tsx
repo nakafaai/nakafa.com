@@ -19,9 +19,9 @@ import { createStableId } from "@repo/utilities/id";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "cn";
 import { Effect, Fiber } from "effect";
-import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import { useEffect, useId, useRef, useState } from "react";
+import { useTranslations } from "use-intl";
 
 /**
  * How a rendered diagram sits in its box. Auto margins center a smaller

@@ -32,8 +32,8 @@ import {
   formatShortMonthYear,
 } from "@repo/design-system/lib/charts/month";
 import { getLineSeriesCue } from "@repo/design-system/lib/charts/series-cue";
-import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
+import { useTranslations } from "use-intl";
 
 interface ElectabilityChartProps {
   description: ReactNode;

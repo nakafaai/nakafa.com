@@ -12,7 +12,7 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { COMPANY_SOCIAL_PROFILES } from "@repo/seo/company-profiles";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 import { SidebarPreferenceSubmenus } from "@/components/sidebar/menu/preference";
 
 /** Renders the shared utilities inside the account menu. */

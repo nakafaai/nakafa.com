@@ -11,7 +11,7 @@ import {
 } from "@nakafa/aksara-contracts/projection/article";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { Effect, Schema } from "effect";
-import type { Locale } from "next-intl";
+import type { Locale } from "use-intl";
 import type { PublishedArticleSummary } from "@/lib/content/article/catalog";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
 import {

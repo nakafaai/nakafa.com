@@ -3,7 +3,7 @@ import {
   type ActiveAppLocaleCode,
 } from "@nakafa/aksara-contracts/locale";
 import { Array as Arr, DateTime, Duration } from "effect";
-import { hasLocale } from "next-intl";
+import { hasLocale } from "use-intl";
 
 // Dates of content and of the viewer. School times are not written here: they
 // go through `formatSchoolTime` in `@repo/internationalization/src/school/time`,

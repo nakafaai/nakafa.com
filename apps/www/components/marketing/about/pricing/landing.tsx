@@ -1,5 +1,5 @@
 import { NumberFormat } from "@repo/design-system/components/ui/number-flow";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 import { PricingButton } from "@/components/marketing/about/pricing/button.client";
 import { PricingCards } from "@/components/marketing/about/pricing/plans";
 import type { PriceProps } from "@/components/marketing/about/pricing/price";

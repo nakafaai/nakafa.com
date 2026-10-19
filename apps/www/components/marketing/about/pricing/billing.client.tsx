@@ -8,8 +8,8 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Effect } from "effect";
-import { useLocale, useTranslations } from "next-intl";
 import { useTransition } from "react";
+import { useLocale, useTranslations } from "use-intl";
 import type { PricingButtonVariant } from "@/components/marketing/about/pricing/button.client";
 import { reportClientException } from "@/lib/analytics/client";
 import {

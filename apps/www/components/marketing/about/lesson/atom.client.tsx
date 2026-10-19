@@ -1,7 +1,7 @@
 "use client";
 
 import { AtomShellLab } from "@repo/design-system/components/contents/chemistry/atom-shell/lab";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 import { getAtomLabels } from "@/components/marketing/about/lesson/labels";
 import { useLessonSelection } from "@/components/marketing/about/lesson/selection";
 

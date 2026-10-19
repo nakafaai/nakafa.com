@@ -10,8 +10,8 @@ import {
   InputGroupInput,
 } from "@repo/design-system/components/ui/input-group";
 import { cn } from "cn";
-import { useTranslations } from "next-intl";
 import { useQueryStates } from "nuqs";
+import { useTranslations } from "use-intl";
 import { searchParsers } from "@/lib/nuqs/search";
 import { useSearch } from "@/lib/search/context";
 

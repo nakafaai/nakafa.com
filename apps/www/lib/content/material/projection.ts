@@ -6,7 +6,7 @@ import type { MaterialContextIdentity } from "@repo/contents/route/material/refe
 import { toAnchorSlug } from "@repo/utilities/slug";
 
 import { Effect } from "effect";
-import type { Locale } from "next-intl";
+import type { Locale } from "use-intl";
 import { decodeCurriculumJson } from "@/lib/content/program/decode";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
 

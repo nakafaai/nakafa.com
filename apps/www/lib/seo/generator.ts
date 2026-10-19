@@ -1,7 +1,7 @@
 import { getGradeNonNumeric } from "@repo/contents/curriculum/grade";
 import type { Grade, PresentedMaterialDomain } from "@repo/contents/taxonomy";
 import { Effect, Option } from "effect";
-import type { Locale } from "next-intl";
+import type { Locale } from "use-intl";
 import type {
   ContentSEOData,
   SEOContext,

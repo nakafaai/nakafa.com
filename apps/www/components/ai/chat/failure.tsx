@@ -8,7 +8,7 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from "@repo/design-system/components/ui/empty";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 import type { ChatFailureKind } from "@/components/ai/chat/access";
 import { Unauthenticated } from "@/components/auth/gate";
 import { AuthGoogle } from "@/components/auth/google";

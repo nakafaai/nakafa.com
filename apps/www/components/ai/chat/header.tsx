@@ -29,13 +29,13 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
-import { useTranslations } from "next-intl";
 import {
   Activity,
   type PropsWithChildren,
   type ReactNode,
   useState,
 } from "react";
+import { useTranslations } from "use-intl";
 import { useChat } from "@/components/ai/chat/context";
 import { ChatDeletion } from "@/components/ai/chat/deletion";
 import { handleTitleKeyDown } from "@/components/ai/chat/rename";

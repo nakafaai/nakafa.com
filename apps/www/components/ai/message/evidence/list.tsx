@@ -3,7 +3,7 @@
 import type { CapabilityArtifact } from "@repo/backend/confect/nina/capability/progress";
 import { cn } from "cn";
 import { Array as Arr, Match } from "effect";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 import { useActivity } from "@/components/ai/message/activity";
 import { getMathIcon } from "@/components/ai/message/evidence/math/icons";
 import { MathEvidence } from "@/components/ai/message/evidence/math/result";

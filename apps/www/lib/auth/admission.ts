@@ -1,6 +1,6 @@
 import { routing } from "@repo/internationalization/src/routing";
 import { Option, Schema } from "effect";
-import { hasLocale } from "next-intl";
+import { hasLocale } from "use-intl";
 import { withoutShareToken } from "@/lib/share/fragment";
 
 const URL_PARSE_BASE = "https://internal.invalid";

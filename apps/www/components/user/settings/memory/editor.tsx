@@ -10,9 +10,9 @@ import {
 import { useResizable } from "@repo/design-system/hooks/use-resizable";
 import { cn } from "cn";
 import { Function as Fn } from "effect";
-import { useTranslations } from "next-intl";
 import { useLayoutEffect, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
+import { useTranslations } from "use-intl";
 import { MemoryDocument } from "@/components/user/settings/memory/document";
 import {
   MEMORY_ADD_ID,

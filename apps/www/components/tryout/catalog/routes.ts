@@ -1,5 +1,5 @@
 import { Array as Arr, Effect, Predicate, Schema, String as Str } from "effect";
-import type { Locale } from "next-intl";
+import type { Locale } from "use-intl";
 import {
   readTryoutCountryPage,
   readTryoutExamPage,

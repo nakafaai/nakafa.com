@@ -12,8 +12,8 @@ import {
 } from "@repo/design-system/components/ui/field";
 import { Input } from "@repo/design-system/components/ui/input";
 import { Effect } from "effect";
-import { useTranslations } from "next-intl";
 import { type FormEvent, useId, useState, useTransition } from "react";
+import { useTranslations } from "use-intl";
 import { ConvexProvider } from "@/components/providers/convex";
 import {
   pageDeviceIdOf,

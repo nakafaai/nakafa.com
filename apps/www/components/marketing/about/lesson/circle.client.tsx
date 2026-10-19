@@ -1,7 +1,7 @@
 "use client";
 
 import { UnitCircleCard } from "@repo/design-system/components/contents/mathematics/unit-circle";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 import { useLessonSelection } from "@/components/marketing/about/lesson/selection";
 
 /** The circle lesson's lab: the unit circle, with its angle controls. */

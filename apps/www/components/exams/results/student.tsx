@@ -11,7 +11,7 @@ import {
   CardTitle,
 } from "@repo/design-system/components/ui/card";
 import { Array as Arr } from "effect";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 import { useSessionSettled } from "@/components/exams/results/context";
 import { responseLetters, verdictKeys } from "@/components/exams/results/model";
 import {

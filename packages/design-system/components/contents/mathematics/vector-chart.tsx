@@ -25,8 +25,8 @@ import {
 import { VisualFactIndicator } from "@repo/design-system/components/visual/fact";
 import { COLORS } from "@repo/design-system/lib/color";
 import { Array as Arr, Effect } from "effect";
-import { useFormatter } from "next-intl";
 import type { ReactNode } from "react";
+import { useFormatter } from "use-intl";
 
 interface Props {
   description: ReactNode;

@@ -3,8 +3,8 @@
 import { Button } from "@repo/design-system/components/ui/button";
 import { Effect } from "effect";
 import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
 import { useTransition } from "react";
+import { useTranslations } from "use-intl";
 import { signOutSchoolAccount } from "@/components/tenant/account.client";
 
 /**

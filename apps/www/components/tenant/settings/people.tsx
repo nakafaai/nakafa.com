@@ -18,8 +18,8 @@ import {
   SelectValue,
 } from "@repo/design-system/components/ui/select";
 import { Array as Arr, Option, Schema } from "effect";
-import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
+import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/providers/convex";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";

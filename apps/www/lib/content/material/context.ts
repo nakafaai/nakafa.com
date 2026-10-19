@@ -4,7 +4,7 @@ import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import type { MaterialContextIdentity } from "@repo/contents/route/material/reference";
 import { Effect } from "effect";
-import type { Locale } from "next-intl";
+import type { Locale } from "use-intl";
 import {
   decodePublishedMaterialContext,
   type PublishedMaterialIdentity,

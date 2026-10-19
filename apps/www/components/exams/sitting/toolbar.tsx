@@ -5,7 +5,7 @@ import {
   ToggleGroupItem,
 } from "@repo/design-system/components/ui/toggle-group";
 import { Schema } from "effect";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 import { useSittingStore } from "@/components/exams/sitting/context";
 import { SittingFilter } from "@/components/exams/sitting/seat";
 

@@ -22,8 +22,8 @@ import {
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { getBarSeriesCue } from "@repo/design-system/lib/charts/series-cue";
 import { Array as Arr } from "effect";
-import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
+import { useTranslations } from "use-intl";
 
 const VALUE_AXIS_PADDING_RATIO = 0.12;
 const VALUE_LABEL_MARGIN = 16;

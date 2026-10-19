@@ -7,7 +7,7 @@ import {
   LearningProgramKeySchema,
 } from "@nakafa/aksara-contracts/program/spec";
 import { Option, Record as Rec, Schema } from "effect";
-import type { Locale } from "next-intl";
+import type { Locale } from "use-intl";
 import {
   type ArtworkIdentity,
   resolveSocialArtwork,

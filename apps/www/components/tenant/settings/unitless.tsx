@@ -2,7 +2,7 @@
 
 import { buttonVariants } from "@repo/design-system/lib/button";
 import Link from "next/link";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 import { TableEmpty } from "@/components/shared/table/frame";
 
 /**

@@ -20,8 +20,8 @@ import {
   SheetTitle,
 } from "@repo/design-system/components/ui/sheet";
 import dynamic from "next/dynamic";
-import { useTranslations } from "next-intl";
 import { Activity, useState } from "react";
+import { useTranslations } from "use-intl";
 import { useAi } from "@/components/ai/context";
 import { useViewer } from "@/lib/identity/client";
 

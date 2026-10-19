@@ -2,8 +2,8 @@
 
 import type { OpenedDocument } from "@repo/backend/confect/editor/view";
 import { Effect, Option } from "effect";
-import { useTranslations } from "next-intl";
 import { useMemo } from "react";
+import { useTranslations } from "use-intl";
 import { SittingDocument } from "@/components/exams/sitting/document";
 import { tryPrompt } from "@/components/tenant/exams/try/fold";
 

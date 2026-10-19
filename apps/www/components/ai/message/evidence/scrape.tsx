@@ -7,7 +7,7 @@ import {
   SourceContent,
   SourceTrigger,
 } from "@repo/design-system/components/ai/source";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 import { Step } from "@/components/ai/message/evidence/step";
 
 interface Props {

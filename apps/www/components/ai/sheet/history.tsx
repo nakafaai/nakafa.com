@@ -19,7 +19,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 import { useChatList } from "@/components/ai/chat/history.client";
 import { useAi } from "@/components/ai/context";
 import { Authenticated } from "@/components/auth/gate";

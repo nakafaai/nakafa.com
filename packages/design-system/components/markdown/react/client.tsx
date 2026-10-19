@@ -14,8 +14,8 @@ import {
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { cn } from "cn";
 import dynamic from "next/dynamic";
-import { useTranslations } from "next-intl";
 import { type ComponentProps, Suspense } from "react";
+import { useTranslations } from "use-intl";
 
 const LazyMarkdownCodeBlock = dynamic(() =>
   import("@repo/design-system/components/markdown/react/block").then(

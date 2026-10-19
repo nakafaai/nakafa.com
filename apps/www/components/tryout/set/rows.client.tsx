@@ -2,7 +2,7 @@
 
 import { getTileLooks } from "@repo/design-system/lib/look";
 import { Array as Arr, HashSet, Tuple } from "effect";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 import { getTryoutSubjectIcons } from "@/components/tryout/catalog/icons";
 import { TryoutList } from "@/components/tryout/catalog/list";
 import {

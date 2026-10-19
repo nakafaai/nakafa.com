@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "@repo/internationalization/src/navigation";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
 import { getUserSettingsSection } from "@/lib/settings/routes";
 

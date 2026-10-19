@@ -1,6 +1,6 @@
 import { APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import { Array as Arr, Option } from "effect";
-import { hasLocale } from "next-intl";
+import { hasLocale } from "use-intl";
 
 /** The segment of the internal route tree that holds every school page. */
 export const SCHOOL_SEGMENT = "school";

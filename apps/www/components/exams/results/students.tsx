@@ -14,8 +14,8 @@ import {
   TableRow,
 } from "@repo/design-system/components/ui/table";
 import { Array as Arr, DateTime, Schema } from "effect";
-import { useFormatter, useTranslations } from "next-intl";
 import { useState } from "react";
+import { useFormatter, useTranslations } from "use-intl";
 import {
   useResultsPaper,
   useResultsScope,

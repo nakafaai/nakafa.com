@@ -1,7 +1,7 @@
 import type { ContentCacheScope } from "@nakafa/aksara-contracts/cache/content";
 import { routing } from "@repo/internationalization/src/routing";
 import { Array as Arr, Effect, Option } from "effect";
-import { hasLocale, type Locale } from "next-intl";
+import { hasLocale, type Locale } from "use-intl";
 import { BASE_URL, type LlmsSection } from "@/lib/llms/constants";
 import { getContentPageLlmsEntries } from "@/lib/llms/content/entries";
 import { getContentListingLlmsEntries } from "@/lib/llms/content/listing";

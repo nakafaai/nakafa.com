@@ -5,7 +5,7 @@ import {
   publicTryoutExamValidator,
 } from "@repo/backend/confect/tryouts/queries/catalogModel";
 import { Array as Arr, Schema } from "effect";
-import type { Locale } from "next-intl";
+import type { Locale } from "use-intl";
 
 type TryoutHubPage = Ref.Returns<typeof tryouts.queries.catalog.getHubPage>;
 type TryoutCountryPage = NonNullable<

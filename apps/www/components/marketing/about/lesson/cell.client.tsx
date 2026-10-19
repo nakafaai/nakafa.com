@@ -1,7 +1,7 @@
 "use client";
 
 import { BacteriaStructureLab } from "@repo/design-system/components/contents/biology/bacteria";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 import { getCellLabels } from "@/components/marketing/about/lesson/labels";
 import { useLessonSelection } from "@/components/marketing/about/lesson/selection";
 

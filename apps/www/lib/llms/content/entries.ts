@@ -1,5 +1,5 @@
 import { Effect } from "effect";
-import type { Locale } from "next-intl";
+import type { Locale } from "use-intl";
 import { readPublishedArticleBucket } from "@/lib/content/article/discovery";
 import { readPublishedArticleBuckets } from "@/lib/content/article/sitemap";
 import { readPublishedMaterialBucket } from "@/lib/content/material/discovery";

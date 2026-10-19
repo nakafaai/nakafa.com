@@ -14,7 +14,7 @@ vi.mock("@repo/internationalization/src/navigation", () => ({
   usePathname: vi.fn(),
   useRouter: vi.fn(),
 }));
-vi.mock("next-intl", () => ({
+vi.mock("use-intl", () => ({
   /** Keeps registry discovery independent from navigation runtime behavior. */
   useTranslations: () => () => "",
 }));

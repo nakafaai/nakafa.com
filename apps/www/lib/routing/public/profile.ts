@@ -3,7 +3,7 @@ import auth from "@repo/backend/confect/_generated/refs/auth";
 import users from "@repo/backend/confect/_generated/refs/users";
 import { routing } from "@repo/internationalization/src/routing";
 import { Array as Arr, Effect, Option } from "effect";
-import { hasLocale } from "next-intl";
+import { hasLocale } from "use-intl";
 import { clientEnv } from "@/env.client";
 import { readSessionToken } from "@/lib/auth/token";
 import { httpLayer } from "@/lib/convex/http";

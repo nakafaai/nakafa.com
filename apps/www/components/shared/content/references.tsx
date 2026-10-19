@@ -14,7 +14,7 @@ import {
 } from "@repo/design-system/components/ui/tooltip";
 import { COMPANY_SOCIAL_PROFILES } from "@repo/seo/company-profiles";
 import { cn } from "cn";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 
 interface Props {
   className?: string;

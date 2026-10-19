@@ -9,8 +9,8 @@ import {
 import { Separator } from "@repo/design-system/components/ui/separator";
 import { SidebarTrigger } from "@repo/design-system/components/ui/sidebar-shell";
 import { Array as Arr } from "effect";
-import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
+import { useTranslations } from "use-intl";
 import { BreadcrumbHost } from "@/components/shared/breadcrumb/anchor";
 import {
   type BreadcrumbHeaderItem,

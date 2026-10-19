@@ -10,7 +10,7 @@ import {
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { Effect, Schema } from "effect";
-import type { Locale } from "next-intl";
+import type { Locale } from "use-intl";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
 import {
   type ContentReleasePin,

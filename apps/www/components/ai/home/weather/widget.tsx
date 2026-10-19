@@ -15,8 +15,8 @@ import {
 } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Match, Option } from "effect";
-import { useTranslations } from "next-intl";
 import { type ComponentProps, Suspense, use, useState } from "react";
+import { useTranslations } from "use-intl";
 import {
   WeatherCard,
   WeatherCardHeader,

@@ -12,7 +12,7 @@ import {
   SelectValue,
 } from "@repo/design-system/components/ui/select";
 import { Array as Arr, Option, Schema } from "effect";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 
 /** The ID of one unit of the school, as the viewer lists it. */
 export type UnitId = Ref.Returns<

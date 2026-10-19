@@ -8,7 +8,7 @@ import {
   CardTitle,
 } from "@repo/design-system/components/ui/card";
 import dynamic from "next/dynamic";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 import {
   ConsentActions,
   ConsentDetails,

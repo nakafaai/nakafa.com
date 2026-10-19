@@ -17,7 +17,6 @@ import { Input } from "@repo/design-system/components/ui/input";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { Effect, Option } from "effect";
 import Link from "next/link";
-import { useLocale, useTranslations } from "next-intl";
 import {
   type FormEvent,
   useCallback,
@@ -27,6 +26,7 @@ import {
   useState,
   useTransition,
 } from "react";
+import { useLocale, useTranslations } from "use-intl";
 import {
   type Admission,
   useEnterSitting,

@@ -1,4 +1,4 @@
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 import { MemoryDesk } from "@/components/marketing/about/memory/desk.client";
 import { MarketingSection } from "@/components/marketing/shared/section";
 

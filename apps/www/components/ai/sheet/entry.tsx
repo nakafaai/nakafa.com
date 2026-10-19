@@ -3,8 +3,8 @@
 import { ArrowUpRight01Icon, StarsIcon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { useTranslations } from "next-intl";
 import { useEffect } from "react";
+import { useTranslations } from "use-intl";
 import { useAi } from "@/components/ai/context";
 
 const FIRST_INTERACTION = ["keydown", "pointerdown", "scroll"] as const;

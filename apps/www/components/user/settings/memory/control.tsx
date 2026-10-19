@@ -10,8 +10,8 @@ import {
 import { Label } from "@repo/design-system/components/ui/label";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Switch } from "@repo/design-system/components/ui/switch";
-import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
+import { useTranslations } from "use-intl";
 import {
   CardSection,
   CardSectionActions,

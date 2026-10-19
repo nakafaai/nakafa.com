@@ -8,7 +8,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 import { useAnalyticsConsent } from "@/lib/analytics/consent/context";
 
 /** Adds a permanent privacy preference action to the marketing footer. */

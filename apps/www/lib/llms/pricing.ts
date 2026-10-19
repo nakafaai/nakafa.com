@@ -4,7 +4,7 @@ import {
 } from "@repo/backend/confect/credits/constants";
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
 import { Array as Arr, Effect } from "effect";
-import { createTranslator, type Locale } from "next-intl";
+import { createTranslator, type Locale } from "use-intl";
 import { BASE_URL } from "@/lib/llms/constants";
 import { buildHeader } from "@/lib/llms/format";
 import { pricingFaqNumbers } from "@/lib/marketing/faq";

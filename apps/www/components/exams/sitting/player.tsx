@@ -6,8 +6,8 @@ import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { SittingView } from "@repo/backend/confect/exams/sittings/contract";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Array as Arr, Option } from "effect";
-import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
+import { useTranslations } from "use-intl";
 import { runSittingCall } from "@/components/exams/sitting/actions.client";
 import { useFinish } from "@/components/exams/sitting/answer.client";
 import {

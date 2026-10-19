@@ -1,6 +1,6 @@
 import { buttonVariants } from "@repo/design-system/lib/button";
 import Link from "next/link";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 
 /**
  * The action of a settings card that opens the audit trail, where the changes

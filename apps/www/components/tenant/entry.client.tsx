@@ -3,8 +3,8 @@
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
 import dynamic from "next/dynamic";
-import { useTranslations } from "next-intl";
 import { useQueryState } from "nuqs";
+import { useTranslations } from "use-intl";
 import { AuthGoogle } from "@/components/auth/google";
 
 /**

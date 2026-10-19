@@ -47,8 +47,8 @@ import {
 } from "@repo/design-system/components/ui/sheet";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, Option, Schema } from "effect";
-import { useTranslations } from "next-intl";
 import { startTransition, useId, useState, useTransition } from "react";
+import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/providers/convex";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";

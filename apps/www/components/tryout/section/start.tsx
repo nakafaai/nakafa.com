@@ -9,8 +9,8 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { useConvex } from "convex/react";
 import { Effect } from "effect";
-import { useTranslations } from "next-intl";
 import { useTransition } from "react";
+import { useTranslations } from "use-intl";
 import { START_PART_ERROR } from "@/components/tryout/set/copy";
 import { requireConvexOnline } from "@/lib/convex/online";
 

@@ -22,8 +22,8 @@ import {
 import { useSidebar } from "@repo/design-system/lib/sidebar/context";
 import { toAnchorSlug } from "@repo/utilities/slug";
 import { Array as Arr } from "effect";
-import { useTranslations } from "next-intl";
 import type { MouseEvent, ReactElement, ReactNode } from "react";
+import { useTranslations } from "use-intl";
 import { TocProvider, useToc } from "@/components/shared/outline/context";
 
 interface Props {

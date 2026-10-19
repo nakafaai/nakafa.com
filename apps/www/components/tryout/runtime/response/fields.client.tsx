@@ -2,8 +2,8 @@
 
 import { RadioGroup } from "@repo/design-system/components/ui/radio-group";
 import { Array as Arr, HashMap, HashSet, Option } from "effect";
-import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
+import { useTranslations } from "use-intl";
 import {
   TryoutSelectableMultipleChoice,
   TryoutSelectableRadioOption,

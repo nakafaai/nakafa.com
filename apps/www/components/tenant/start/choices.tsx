@@ -21,8 +21,8 @@ import {
 } from "@repo/design-system/components/ui/questionnaire";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { Array as Arr } from "effect";
-import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
+import { useTranslations } from "use-intl";
 import { useStart } from "@/components/tenant/start/context";
 import { StartOption } from "@/components/tenant/start/option";
 import { levelsOf } from "@/components/tenant/start/state";

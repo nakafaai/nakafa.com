@@ -2,7 +2,7 @@ import "server-only";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { Effect } from "effect";
-import type { Locale } from "next-intl";
+import type { Locale } from "use-intl";
 import { queryContentStore } from "@/lib/content/store/query";
 
 /** Reads the active signed try-out sitemap inventory for one locale. */

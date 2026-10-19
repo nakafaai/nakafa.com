@@ -9,7 +9,7 @@ import {
 } from "@repo/design-system/components/ui/sidebar-menu";
 import { usePathname } from "@repo/internationalization/src/navigation";
 import { Array as Arr, String as Str } from "effect";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/providers/convex";
 import type { TenantValue } from "@/components/tenant/context";
 import { useTenant } from "@/components/tenant/context";

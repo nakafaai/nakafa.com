@@ -5,8 +5,8 @@ import type { QuestionResponse } from "@nakafa/aksara-contracts/question/respons
 import { Nina } from "@repo/design-system/components/ui/nina";
 import type { MoodSchema } from "@repo/mascot/nina/face";
 import { Array as Arr, Option, Schema } from "effect";
-import { useTranslations } from "next-intl";
 import { createContext, type ReactNode, use, useEffect, useState } from "react";
+import { useTranslations } from "use-intl";
 import { createStore, type StoreApi, useStore } from "zustand";
 import {
   TryoutResponseFields,

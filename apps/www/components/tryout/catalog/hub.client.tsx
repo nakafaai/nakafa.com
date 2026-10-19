@@ -6,8 +6,8 @@ import type tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import { getTileShifts } from "@repo/design-system/lib/look";
 import { Array as Arr, Effect, Predicate } from "effect";
-import type { Locale } from "next-intl";
-import { useTranslations } from "next-intl";
+import type { Locale } from "use-intl";
+import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/providers/convex";
 import {
   CatalogCard,

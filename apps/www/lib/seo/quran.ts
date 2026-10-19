@@ -3,7 +3,7 @@ import {
   type PublishedQuranSurah,
 } from "@repo/backend/content/quran/contract";
 import { Effect } from "effect";
-import type { Locale } from "next-intl";
+import type { Locale } from "use-intl";
 import { createSEOKeywords } from "@/lib/seo/keywords";
 import { fetchSEOTranslationsNamespace } from "@/lib/seo/translations";
 

@@ -11,7 +11,6 @@ import {
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Array as Arr, Effect, Option } from "effect";
-import { useTranslations } from "next-intl";
 import {
   lazy,
   type RefObject,
@@ -20,6 +19,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { useTranslations } from "use-intl";
 import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import {
   choiceOf,

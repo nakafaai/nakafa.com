@@ -11,7 +11,7 @@ import {
   Record as Rec,
   Schema,
 } from "effect";
-import type { Locale } from "next-intl";
+import type { Locale } from "use-intl";
 import { readActiveContentRoute } from "@/lib/content/published/route";
 import { getCachedLlmsSectionIndexText } from "@/lib/llms/index/cache";
 import {

@@ -93,6 +93,9 @@ catalogs:
     unified:
       specifier: 11.0.5
       version: 11.0.5
+    use-intl:
+      specifier: 4.14.9
+      version: 4.14.9
     virtua:
       specifier: ^0.53.5
       version: 0.53.5
@@ -413,6 +416,9 @@ importers:
       takumi-js:
         specifier: ^2.16.3
         version: 2.16.3(csstype@3.2.3)(preact@10.29.8)(react@19.3.1)
+      use-intl:
+        specifier: 'catalog:'
+        version: 4.14.9(@types/react@19.3.0)(react@19.3.1)
       virtua:
         specifier: 'catalog:'
         version: 0.53.5(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(solid-js@1.9.16)
@@ -1020,6 +1026,9 @@ importers:
       tw-animate-css:
         specifier: ^1.4.0
         version: 1.4.0
+      use-intl:
+        specifier: 'catalog:'
+        version: 4.14.9(@types/react@19.3.0)(react@19.3.1)
       virtua:
         specifier: 'catalog:'
         version: 0.53.5(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(solid-js@1.9.16)
@@ -1197,6 +1206,9 @@ importers:
       next-intl:
         specifier: 'catalog:'
         version: 4.14.9(@swc/helpers@0.5.23)(@types/react@19.3.0)(next@16.4.2(@babel/core@8.0.5)(@playwright/test@1.64.1)(@types/node@24.19.2)(babel-plugin-react-compiler@1.0.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react@19.3.1)
+      use-intl:
+        specifier: 'catalog:'
+        version: 4.14.9(@types/react@19.3.0)(react@19.3.1)
     devDependencies:
       '@effect/vitest':
         specifier: 'catalog:'
@@ -1318,6 +1330,9 @@ importers:
       schema-dts:
         specifier: ^2.1.0
         version: 2.1.0
+      use-intl:
+        specifier: 'catalog:'
+        version: 4.14.9(@types/react@19.3.0)(react@19.3.1)
     devDependencies:
       '@effect/vitest':
         specifier: 'catalog:'

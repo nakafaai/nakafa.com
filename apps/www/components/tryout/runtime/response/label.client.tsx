@@ -1,7 +1,7 @@
 "use client";
 
 import { Response } from "@repo/design-system/components/ai/response";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 
 /** Renders one rich response label with optional accessible correctness. */
 export function TryoutResponseLabel({

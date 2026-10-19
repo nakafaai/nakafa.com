@@ -8,7 +8,7 @@ import {
 import type { TryoutScoreResult } from "@repo/backend/confect/tryouts/score";
 import { Badge } from "@repo/design-system/components/ui/badge";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 
 /** Renders the canonical filled badge for one persisted score snapshot. */
 export function TryoutScoreStatus({

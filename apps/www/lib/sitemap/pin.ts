@@ -1,6 +1,6 @@
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { Effect } from "effect";
-import type { Locale } from "next-intl";
+import type { Locale } from "use-intl";
 import { readActiveContentIdentity } from "@/lib/content/published/active";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
 import { verifyContentReleasePin } from "@/lib/content/published/release";

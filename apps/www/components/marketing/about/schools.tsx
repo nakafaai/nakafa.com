@@ -6,7 +6,7 @@ import { Link } from "@repo/internationalization/src/navigation";
 import type { Mascot } from "@repo/mascot/code";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { Array as Arr } from "effect";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 import { MarketingSection } from "@/components/marketing/shared/section";
 
 /**

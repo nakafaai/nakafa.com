@@ -1,6 +1,6 @@
 import { ArticleRouteSlugSchema } from "@nakafa/aksara-contracts/projection/article";
 import { Array as Arr, Effect, Option, Schema } from "effect";
-import type { Locale } from "next-intl";
+import type { Locale } from "use-intl";
 import { readPublishedArticleCategory } from "@/lib/content/article/category";
 import { readPublishedCategoryArticles } from "@/lib/content/article/discovery";
 import { buildPublishedContentLlmsEntries } from "@/lib/llms/entries";

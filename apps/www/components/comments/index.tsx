@@ -2,7 +2,7 @@
 
 import { MessageMultiple01Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 import { CommentsList } from "@/components/comments/list";
 
 export function Comments() {

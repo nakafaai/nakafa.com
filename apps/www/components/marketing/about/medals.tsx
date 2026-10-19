@@ -6,7 +6,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cva, type VariantProps } from "class-variance-authority";
 import { Array as Arr } from "effect";
 import Image from "next/image";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 import {
   type School,
   schools,

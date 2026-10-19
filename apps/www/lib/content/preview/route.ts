@@ -10,7 +10,7 @@ import { ArticleRouteSlugSchema } from "@nakafa/aksara-contracts/projection/arti
 import { materialPublicNamespace } from "@nakafa/aksara-contracts/projection/material";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/route/surface";
 import { Array as Arr, Effect, Option, Result, Schema } from "effect";
-import { hasLocale } from "next-intl";
+import { hasLocale } from "use-intl";
 import { PreviewIntegrityError } from "@/lib/content/preview/errors";
 import {
   readPreviewManifestForPrerender,

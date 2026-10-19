@@ -3,9 +3,9 @@
 import { BrandLogo } from "@repo/design-system/components/logos/brand";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Effect } from "effect";
-import { useLocale, useTranslations } from "next-intl";
 import { useQueryState } from "nuqs";
 import { type ComponentProps, useState, useTransition } from "react";
+import { useLocale, useTranslations } from "use-intl";
 import { reportClientException } from "@/lib/analytics/client";
 import {
   getPostAuthOnboardingHref,

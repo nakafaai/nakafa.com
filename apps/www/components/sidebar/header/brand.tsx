@@ -8,7 +8,7 @@ import {
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
 import Image from "next/image";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 import { useViewer } from "@/lib/identity/client";
 
 export function HeaderMenu() {

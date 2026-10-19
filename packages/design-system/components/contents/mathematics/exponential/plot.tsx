@@ -17,7 +17,7 @@ import {
 } from "@repo/design-system/components/evilcharts/ui/tooltip";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import type { Effect } from "effect";
-import { useFormatter } from "next-intl";
+import { useFormatter } from "use-intl";
 
 const CHART_CONFIG = {
   y: {

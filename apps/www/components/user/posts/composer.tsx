@@ -9,8 +9,8 @@ import { InputGroupTextarea } from "@repo/design-system/components/ui/input-grou
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { randomUuid } from "@repo/utilities/uuid";
 import { DateTime, Effect, Option, Result, Schema } from "effect";
-import { useTranslations } from "next-intl";
 import type { SubmitEventHandler } from "react";
+import { useTranslations } from "use-intl";
 import { FeedAvatar, FeedForm } from "@/components/user/feed";
 import { insertDraftPost } from "@/components/user/posts/mutation.client";
 import { usePostDraft } from "@/components/user/posts/provider";

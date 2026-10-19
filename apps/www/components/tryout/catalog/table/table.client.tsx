@@ -8,9 +8,9 @@ import {
   TableCell,
   TableRow,
 } from "@repo/design-system/components/ui/table";
-import { useTranslations } from "next-intl";
 import { useQueryStates } from "nuqs";
 import { useState } from "react";
+import { useTranslations } from "use-intl";
 import { useTryoutSetData } from "@/components/tryout/catalog/table/data.client";
 import { TryoutTableHeader } from "@/components/tryout/catalog/table/header";
 import { catalogQuery } from "@/components/tryout/catalog/table/query";

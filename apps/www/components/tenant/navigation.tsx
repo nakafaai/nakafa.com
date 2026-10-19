@@ -7,7 +7,7 @@ import {
 } from "@repo/design-system/components/ui/sidebar-menu";
 import { usePathname } from "@repo/internationalization/src/navigation";
 import { String as Str } from "effect";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 import { TenantClassesGroup } from "@/components/tenant/classes/nav";
 import { useTenant } from "@/components/tenant/context";
 import { TenantSidebarGroup } from "@/components/tenant/group";

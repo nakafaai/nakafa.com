@@ -32,8 +32,8 @@ import {
 } from "motion/react";
 // biome-ignore lint/performance/noNamespaceImport: Motion documents this namespace for the smaller LazyMotion entrypoint.
 import * as m from "motion/react-m";
-import { useFormatter, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
+import { useFormatter, useTranslations } from "use-intl";
 
 const SPEED_INTERVAL = 1000;
 const STAGGER_DELAY = 0.01;

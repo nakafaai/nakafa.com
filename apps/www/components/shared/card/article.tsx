@@ -12,7 +12,7 @@ import {
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
 import { toAnchorSlug } from "@repo/utilities/slug";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 import type { PublishedArticleSummary } from "@/lib/content/article/catalog";
 import { formatPublished } from "@/lib/i18n/date";
 

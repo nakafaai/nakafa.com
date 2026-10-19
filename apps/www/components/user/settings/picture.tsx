@@ -21,7 +21,7 @@ import {
 import { type ToastCopy, toast } from "@repo/design-system/lib/toast/notify";
 import { anotherMascot } from "@repo/mascot/candidates";
 import { Array as Arr, Effect, Option, type Result, Schema } from "effect";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 import {
   CardSection,
   CardSectionActions,

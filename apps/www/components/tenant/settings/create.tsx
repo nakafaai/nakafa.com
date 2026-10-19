@@ -22,8 +22,8 @@ import {
   SelectValue,
 } from "@repo/design-system/components/ui/select";
 import { Array as Arr, Option, Schema } from "effect";
-import { useTranslations } from "next-intl";
 import { startTransition, useId, useState } from "react";
+import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/providers/convex";
 import {
   languageItems,

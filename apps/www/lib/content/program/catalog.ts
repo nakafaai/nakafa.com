@@ -9,7 +9,7 @@ import {
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { PROGRAM_FEATURED_SUBJECT_LIMIT } from "@repo/backend/confect/contentRelease/program/limits";
 import { Array as Arr, Effect, Option, Schema } from "effect";
-import type { Locale } from "next-intl";
+import type { Locale } from "use-intl";
 import { applyContentCache } from "@/lib/content/cache";
 import {
   decodeCurriculumJson,

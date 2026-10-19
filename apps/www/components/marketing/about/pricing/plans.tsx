@@ -11,8 +11,8 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { Nina } from "@repo/design-system/components/ui/nina";
 import { Array as Arr } from "effect";
-import { useTranslations } from "next-intl";
 import type { ComponentType, ReactNode } from "react";
+import { useTranslations } from "use-intl";
 import {
   type PriceProps,
   PricingPrice,

@@ -3,10 +3,10 @@ import { ToastMessage } from "@repo/design-system/lib/toast/message";
 import { type ToastCopy, toast } from "@repo/design-system/lib/toast/notify";
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
 import { Effect } from "effect";
-import { NextIntlClientProvider } from "next-intl";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { toast as sonner } from "sonner";
+import { IntlProvider } from "use-intl";
 
 vi.mock("sonner", () => ({
   toast: Object.assign(
@@ -122,7 +122,7 @@ describe("toast", () => {
       Effect.gen(function* () {
         const messages = yield* Effect.promise(() => loadLocaleMessages("de"));
         const markup = renderToStaticMarkup(
-          createElement(NextIntlClientProvider, {
+          createElement(IntlProvider, {
             // The provider's props type requires its children, so the node goes there.
             // biome-ignore lint/correctness/noChildrenProp: the provider's props type requires children
             children: createElement(ToastMessage, {

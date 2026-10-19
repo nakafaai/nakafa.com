@@ -4,7 +4,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 
 interface Props {
   githubUrl: string;

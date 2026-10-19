@@ -1,7 +1,7 @@
 import { Button } from "@repo/design-system/components/ui/button";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { Nina } from "@repo/design-system/components/ui/nina";
-import { useLocale, useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "use-intl";
 import { HERO_NINA_ID } from "@/components/marketing/about/hero/id";
 import { getCurriculumIndexHref } from "@/lib/curriculum/routes";
 

@@ -18,8 +18,8 @@ import {
 } from "@repo/design-system/components/ui/field";
 import { Input } from "@repo/design-system/components/ui/input";
 import { Schema } from "effect";
-import { useTranslations } from "next-intl";
 import { startTransition, useId, useState } from "react";
+import { useTranslations } from "use-intl";
 import {
   CardSection,
   CardSectionActions,

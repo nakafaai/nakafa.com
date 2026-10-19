@@ -5,7 +5,7 @@ import {
   ArticleCategoryTitleSchema,
 } from "@nakafa/aksara-contracts/projection/article";
 import { Array as Arr, Effect, Schema } from "effect";
-import type { Locale } from "next-intl";
+import type { Locale } from "use-intl";
 import { readPublishedArticleCategories } from "@/lib/content/article/category";
 import { applyContentCache } from "@/lib/content/cache";
 import { hasPreviewConfig } from "@/lib/content/preview/config";

@@ -5,8 +5,8 @@ import { TableCell, TableRow } from "@repo/design-system/components/ui/table";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
-import { useTranslations } from "next-intl";
 import { useState } from "react";
+import { useTranslations } from "use-intl";
 import type { TryoutSetRow } from "@/components/tryout/catalog/table/types";
 import {
   getTryoutAttemptHref,

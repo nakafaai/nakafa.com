@@ -23,7 +23,7 @@ import {
 } from "@repo/design-system/components/ui/table";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 import { catalogQuery } from "@/components/tryout/catalog/table/query";
 import type {
   TryoutSetSort,

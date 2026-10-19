@@ -32,8 +32,8 @@ import {
   String as Str,
 } from "effect";
 import { useRouter } from "next/navigation";
-import { useLocale, useTranslations } from "next-intl";
 import { useId, useMemo, useState, useTransition } from "react";
+import { useLocale, useTranslations } from "use-intl";
 import type { StoreApi } from "zustand";
 import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import {

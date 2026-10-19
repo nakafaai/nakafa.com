@@ -2,8 +2,8 @@
 
 import type { QuestionResponse } from "@nakafa/aksara-contracts/question/response";
 import { Button } from "@repo/design-system/components/ui/button";
-import { useTranslations } from "next-intl";
 import { type ReactNode, useState } from "react";
+import { useTranslations } from "use-intl";
 import {
   TryoutResponseFields,
   type TryoutResponseFieldsProps,

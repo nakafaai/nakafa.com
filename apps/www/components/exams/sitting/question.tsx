@@ -16,8 +16,8 @@ import {
   Record as Rec,
   Schema,
 } from "effect";
-import { useTranslations } from "next-intl";
 import { useId, useMemo } from "react";
+import { useTranslations } from "use-intl";
 import { sittingCallFailures } from "@/components/exams/sitting/actions.client";
 import { useSendAnswer } from "@/components/exams/sitting/answer.client";
 import { SittingChoice } from "@/components/exams/sitting/choice";

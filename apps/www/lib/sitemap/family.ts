@@ -1,7 +1,7 @@
 import { MATERIAL_SITEMAP_BUCKET_LIMIT } from "@repo/backend/confect/contentRelease/material/limits";
 import { compareSitemapPaths } from "@repo/backend/confect/contentRelease/sitemap";
 import { Array as Arr, Effect } from "effect";
-import type { Locale } from "next-intl";
+import type { Locale } from "use-intl";
 import {
   readPublishedArticleBuckets,
   readPublishedArticleSitemap,

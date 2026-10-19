@@ -13,7 +13,6 @@ import { getCodeFileExtension } from "@repo/design-system/lib/code-block/languag
 import { downloadFile } from "@repo/design-system/lib/files/download";
 import { cn } from "cn";
 import { Effect, Schema } from "effect";
-import { useTranslations } from "next-intl";
 import {
   type ComponentProps,
   createContext,
@@ -23,6 +22,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { useTranslations } from "use-intl";
 
 /** One code sample and the language it is written in. */
 const CodeSourceSchema = Schema.Struct({

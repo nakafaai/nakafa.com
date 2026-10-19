@@ -9,7 +9,7 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { MessageScrollerItem } from "@repo/design-system/components/ui/scroller";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 import { readStopFailure } from "@/components/ai/chat/cancel";
 import { useChat } from "@/components/ai/chat/context";
 import { useChatStore } from "@/components/ai/chat/store.client";

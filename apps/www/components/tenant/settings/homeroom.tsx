@@ -14,8 +14,8 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
-import { useTranslations } from "next-intl";
 import { startTransition, useId, useState } from "react";
+import { useTranslations } from "use-intl";
 import {
   CardSection,
   CardSectionActions,

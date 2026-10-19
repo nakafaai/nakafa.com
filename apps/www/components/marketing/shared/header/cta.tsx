@@ -3,7 +3,7 @@
 import { Button } from "@repo/design-system/components/ui/button";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { Link } from "@repo/internationalization/src/navigation";
-import { useLocale, useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "use-intl";
 import { useViewer } from "@/lib/identity/client";
 
 /**

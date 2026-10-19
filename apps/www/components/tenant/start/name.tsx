@@ -20,8 +20,8 @@ import {
 } from "@repo/design-system/components/ui/questionnaire";
 import { MAIN_DOMAIN } from "@repo/next-config/domains";
 import { Option, Schema } from "effect";
-import { useTranslations } from "next-intl";
 import { useId } from "react";
+import { useTranslations } from "use-intl";
 import { useTypedName } from "@/components/tenant/start/context";
 import { START_NAME_LIMIT } from "@/components/tenant/start/state";
 

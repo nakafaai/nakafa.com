@@ -6,7 +6,7 @@ import type learningPreferences from "@repo/backend/confect/_generated/refs/lear
 
 import { type ToastCopy, toast } from "@repo/design-system/lib/toast/notify";
 import { Effect, Schema } from "effect";
-import type { Locale } from "next-intl";
+import type { Locale } from "use-intl";
 import { reportClientException } from "@/lib/analytics/client";
 import { isActiveLocale } from "@/lib/i18n/active";
 

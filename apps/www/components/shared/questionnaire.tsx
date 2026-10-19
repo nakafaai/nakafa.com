@@ -8,8 +8,8 @@ import {
   QuestionnairePrevious,
   QuestionnaireSubmit,
 } from "@repo/design-system/components/ui/questionnaire";
-import { useTranslations } from "next-intl";
 import type { ComponentProps, ReactNode } from "react";
+import { useTranslations } from "use-intl";
 
 /**
  * The row every Nakafa questionnaire ends with: back, continue, and the finish

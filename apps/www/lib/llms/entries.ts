@@ -1,6 +1,6 @@
 import type { PublicPageProjection } from "@nakafa/aksara-contracts/projection/page";
 import { Array as Arr, Option, Order, Record as Rec, Schema } from "effect";
-import type { Locale } from "next-intl";
+import type { Locale } from "use-intl";
 import {
   BASE_URL,
   type LlmsSection,

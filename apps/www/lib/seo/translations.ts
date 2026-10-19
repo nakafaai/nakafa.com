@@ -1,6 +1,6 @@
 import { Effect, Schema } from "effect";
-import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
+import type { Locale } from "use-intl";
 
 /** Expected failure when a localized SEO dictionary cannot be loaded. */
 export class SEOTranslationLoadError extends Schema.TaggedError<SEOTranslationLoadError>()(

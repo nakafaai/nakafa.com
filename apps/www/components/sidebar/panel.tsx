@@ -4,8 +4,8 @@ import {
 } from "@repo/design-system/components/ui/sidebar-content";
 import { Sidebar } from "@repo/design-system/components/ui/sidebar-shell";
 import { cn } from "cn";
-import { useTranslations } from "next-intl";
 import type { ComponentProps, ReactNode } from "react";
+import { useTranslations } from "use-intl";
 import { HeaderMenu } from "@/components/sidebar/header/brand";
 import { SearchMenu } from "@/components/sidebar/search/trigger";
 import { NavUser } from "@/components/sidebar/user/nav";

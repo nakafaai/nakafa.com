@@ -2,8 +2,8 @@
 
 import { QueryResult } from "@confect/react";
 import { Array as Arr } from "effect";
-import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
+import { useTranslations } from "use-intl";
 import type { StoreApi } from "zustand";
 import { useTenant } from "@/components/tenant/context";
 import type { ExamDrafts } from "@/components/tenant/exams/drafts";

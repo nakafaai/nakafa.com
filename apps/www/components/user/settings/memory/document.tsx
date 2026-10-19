@@ -16,8 +16,8 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { isEnterOutsideComposition } from "@repo/design-system/lib/keyboard";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { type Option, String as Str } from "effect";
-import { useTranslations } from "next-intl";
 import { type ComponentProps, Suspense, use, useRef, useState } from "react";
+import { useTranslations } from "use-intl";
 import { useAutosave } from "@/components/user/settings/memory/autosave.client";
 import { MemoryDeleteDialog } from "@/components/user/settings/memory/delete";
 import {

@@ -25,8 +25,8 @@ import {
 } from "@repo/design-system/components/ui/sidebar-submenu";
 import { usePathname } from "@repo/internationalization/src/navigation";
 import { Array as Arr } from "effect";
-import { useTranslations } from "next-intl";
 import type { ComponentProps } from "react";
+import { useTranslations } from "use-intl";
 import { TenantSidebarGroup } from "@/components/tenant/group";
 import { schoolSettingsGroups } from "@/lib/settings/school";
 

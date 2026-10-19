@@ -23,10 +23,10 @@ import { VisualCardSceneActions } from "@repo/design-system/components/visual/sc
 import { getColor } from "@repo/design-system/lib/color";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
 import { Array as Arr, Option } from "effect";
-import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import type { ReactNode } from "react";
 import { Suspense } from "react";
+import { useTranslations } from "use-intl";
 
 type Point = readonly [number, number, number];
 type ElementSymbol = "C" | "H" | "O";

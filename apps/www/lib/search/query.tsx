@@ -5,7 +5,7 @@ import { QueryResult, useQuery } from "@confect/react";
 import contents from "@repo/backend/confect/_generated/refs/contents";
 import { NAKAFA_AGENT_DEFAULT_LIMIT } from "@repo/contents/agent/search";
 
-import { useLocale } from "next-intl";
+import { useLocale } from "use-intl";
 import { isActiveLocale } from "@/lib/i18n/active";
 
 type ContentSearchResponse = Ref.Returns<typeof contents.queries.search.search>;

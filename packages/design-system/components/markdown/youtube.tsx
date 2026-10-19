@@ -8,7 +8,7 @@ import {
   CardTitle,
 } from "@repo/design-system/components/ui/card";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 
 interface Props {
   videoId: string;

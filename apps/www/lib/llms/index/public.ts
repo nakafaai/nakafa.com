@@ -5,7 +5,7 @@ import {
 } from "@repo/contents/route/surface";
 import { routing } from "@repo/internationalization/src/routing";
 import { Array as Arr, Option, Record as Rec, Schema } from "effect";
-import type { Locale } from "next-intl";
+import type { Locale } from "use-intl";
 import {
   BASE_URL,
   type LlmsSection,

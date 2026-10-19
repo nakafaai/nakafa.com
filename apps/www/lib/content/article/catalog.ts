@@ -18,7 +18,7 @@ import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease
 import { PROJECTION_PAGE_LIMIT } from "@repo/backend/confect/contentRelease/paging";
 import { JsonTextSchema } from "@repo/utilities/json";
 import { Effect, Schema } from "effect";
-import type { Locale } from "next-intl";
+import type { Locale } from "use-intl";
 import { applyContentCache } from "@/lib/content/cache";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
 import { decodeSourceRevision } from "@/lib/content/published/origin";

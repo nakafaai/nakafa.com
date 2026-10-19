@@ -1,7 +1,7 @@
 import { Button } from "@repo/design-system/components/ui/button";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { Nina } from "@repo/design-system/components/ui/nina";
-import { useLocale, useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "use-intl";
 import { HeaderCta, LogoCta } from "@/components/marketing/shared/header/cta";
 import { HeaderFeaturesLink } from "@/components/marketing/shared/header/features";
 import { Language } from "@/components/marketing/shared/language";

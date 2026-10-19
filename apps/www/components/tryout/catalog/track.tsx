@@ -1,6 +1,6 @@
 import { Effect } from "effect";
-import type { Locale } from "next-intl";
 import type { SearchParams } from "nuqs/server";
+import type { Locale } from "use-intl";
 import { readTryoutSetList } from "@/components/tryout/catalog/server";
 import { readCatalogQuery } from "@/components/tryout/catalog/table/query";
 import { TryoutSetTable } from "@/components/tryout/catalog/table/table.client";

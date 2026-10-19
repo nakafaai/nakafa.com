@@ -4,7 +4,7 @@ import {
 } from "@nakafa/aksara-contracts/cache/content";
 import { Effect } from "effect";
 import { cacheLife, cacheTag } from "next/cache";
-import type { Locale } from "next-intl";
+import type { Locale } from "use-intl";
 import type { SEOContext, SEOMetadata } from "@/lib/seo/contract";
 import { generateSEOMetadata } from "@/lib/seo/generator";
 

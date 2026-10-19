@@ -9,7 +9,7 @@ import {
   VisualFactIndicator,
 } from "@repo/design-system/components/visual/fact";
 import { Array as Arr, Option } from "effect";
-import { useFormatter, useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "use-intl";
 
 /**
  * The four readings of a chart with one series, in its footer: the category of

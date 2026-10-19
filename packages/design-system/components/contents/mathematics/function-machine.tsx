@@ -24,7 +24,6 @@ import {
   VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
-import { useFormatter, useTranslations } from "next-intl";
 import { type ReactNode, useState } from "react";
 import {
   Button,
@@ -33,6 +32,7 @@ import {
   Label,
   NumberField,
 } from "react-aria-components";
+import { useFormatter, useTranslations } from "use-intl";
 
 const DEFAULT_INPUT = 5;
 

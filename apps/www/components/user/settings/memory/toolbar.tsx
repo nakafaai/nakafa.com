@@ -9,7 +9,7 @@ import {
   InputGroupAddon,
   InputGroupInput,
 } from "@repo/design-system/components/ui/input-group";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 import {
   MEMORY_ADD_ID,
   MEMORY_SEARCH_ID,

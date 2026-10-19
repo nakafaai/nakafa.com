@@ -1,6 +1,6 @@
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { Effect, Schema } from "effect";
-import type { Locale } from "next-intl";
+import type { Locale } from "use-intl";
 import { readPublishedMaterialBuckets } from "@/lib/content/material/sitemap";
 
 /** Bounded signed material inventory for LLMS indexes. */

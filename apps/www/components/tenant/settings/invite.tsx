@@ -31,8 +31,8 @@ import {
 } from "@repo/design-system/components/ui/select";
 import { languages } from "@repo/internationalization/data/lang";
 import { Array as Arr, Option, Schema } from "effect";
-import { useTranslations } from "next-intl";
 import { useId, useState, useTransition } from "react";
+import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/providers/convex";
 import { addMemberChange } from "@/components/tenant/settings/members.client";
 import { cardOffered } from "@/components/tenant/settings/offer";

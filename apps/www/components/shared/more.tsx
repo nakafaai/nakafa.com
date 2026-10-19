@@ -9,8 +9,8 @@ import {
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { useTranslations } from "next-intl";
 import { createContext, type ReactNode, use, useState } from "react";
+import { useTranslations } from "use-intl";
 
 /** Whether the deletion dialog of a More menu is open, and how to open or close it. */
 const DeletionContext = createContext<{

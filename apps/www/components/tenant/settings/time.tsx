@@ -4,7 +4,7 @@ import { QueryResult, useQuery } from "@confect/react";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Array as Arr, Option } from "effect";
-import { useLocale } from "next-intl";
+import { useLocale } from "use-intl";
 import { useConvexAuth } from "@/components/providers/convex";
 import { schoolDateTimeText } from "@/components/tenant/settings/clock";
 

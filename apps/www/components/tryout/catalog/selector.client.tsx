@@ -12,7 +12,7 @@ import {
 } from "@repo/design-system/components/ui/select";
 import { getTileLooks } from "@repo/design-system/lib/look";
 import { Array as Arr, Effect, Option, Tuple } from "effect";
-import { useLocale } from "next-intl";
+import { useLocale } from "use-intl";
 import { useConvexAuth } from "@/components/providers/convex";
 import { CountryFlagIcon } from "@/components/shared/flag";
 import { getTryoutExamIcons } from "@/components/tryout/catalog/icons";

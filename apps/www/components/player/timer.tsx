@@ -5,7 +5,7 @@ import {
   NumberFormatGroup,
 } from "@repo/design-system/components/ui/number-flow";
 import { cn } from "cn";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 import { readTimeNotice, splitTime } from "@/components/player/time";
 
 /** Animates timer digits without changing the width at minute or hour rollover. */

@@ -8,8 +8,8 @@ import {
 } from "@repo/design-system/components/ui/sheet";
 import { monospace } from "@repo/design-system/lib/monospace";
 import { cn } from "cn";
-import { useTranslations } from "next-intl";
 import { type ReactNode, useRef } from "react";
+import { useTranslations } from "use-intl";
 import { usePlayer } from "@/components/player/provider";
 
 /**

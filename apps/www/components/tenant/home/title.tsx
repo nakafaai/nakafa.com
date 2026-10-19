@@ -2,8 +2,8 @@
 
 import { Nina } from "@repo/design-system/components/ui/nina";
 import type { ActSchema } from "@repo/mascot/nina/act";
-import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
+import { useTranslations } from "use-intl";
 import { useTenant } from "@/components/tenant/context";
 import { DAY_PART_ACT } from "@/components/tenant/home/greeting";
 

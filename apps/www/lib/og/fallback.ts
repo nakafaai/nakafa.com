@@ -1,6 +1,6 @@
 import { Effect } from "effect";
-import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
+import type { Locale } from "use-intl";
 import { generateOGImage } from "@/lib/og";
 import { OG_FALLBACK_HEADERS } from "@/lib/og/headers";
 

@@ -13,8 +13,8 @@ import {
   CardTitle,
 } from "@repo/design-system/components/ui/card";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
-import { useLocale, useTranslations } from "next-intl";
 import { Activity } from "react";
+import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/providers/convex";
 import { CardSection } from "@/components/shared/card/section";
 import { useBillingNavigation } from "@/lib/billing/navigation.client";

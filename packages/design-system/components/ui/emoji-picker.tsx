@@ -10,8 +10,8 @@ import {
   type EmojiPickerListRowProps,
   EmojiPicker as EmojiPickerPrimitive,
 } from "frimousse";
-import { useTranslations } from "next-intl";
 import type * as React from "react";
+import { useTranslations } from "use-intl";
 
 function EmojiPicker({
   className,

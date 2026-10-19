@@ -28,8 +28,8 @@ import {
 import { cast, forSeed } from "@repo/mascot/seed";
 import { cva, type VariantProps } from "class-variance-authority";
 import { Array as Arr, Option } from "effect";
-import { useTranslations } from "next-intl";
 import { useState } from "react";
+import { useTranslations } from "use-intl";
 
 const galleryVariants = cva("flex flex-wrap", {
   defaultVariants: {

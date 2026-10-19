@@ -3,8 +3,8 @@
 import { QueryResult, useQuery } from "@confect/react";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { useLocale } from "next-intl";
 import { type ReactNode, Suspense, useState } from "react";
+import { useLocale } from "use-intl";
 import type { PlayerMode } from "@/components/player/mode";
 import { useConvexAuth } from "@/components/providers/convex";
 import { ShellLock } from "@/components/sidebar/lock";

@@ -1,4 +1,4 @@
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 import { PrivacyRoom } from "@/components/marketing/about/privacy/room.client";
 import { MarketingSection } from "@/components/marketing/shared/section";
 

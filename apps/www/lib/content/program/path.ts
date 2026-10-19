@@ -3,7 +3,7 @@ import "server-only";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { Effect } from "effect";
-import type { Locale } from "next-intl";
+import type { Locale } from "use-intl";
 import { decodeCurriculumJson } from "@/lib/content/program/decode";
 import { httpLayer } from "@/lib/convex/http";
 

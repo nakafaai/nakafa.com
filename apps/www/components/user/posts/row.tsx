@@ -6,7 +6,7 @@ import { DeferredLearnerText } from "@repo/design-system/components/markdown/lea
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Effect, HashSet } from "effect";
 import dynamic from "next/dynamic";
-import { useLocale } from "next-intl";
+import { useLocale } from "use-intl";
 import { MoreMenu } from "@/components/shared/more";
 import { formatShortAge } from "@/components/user/age";
 import {

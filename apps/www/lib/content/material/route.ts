@@ -15,7 +15,7 @@ import { MaterialLessonProjectionSchema } from "@nakafa/aksara-contracts/project
 import { RendererDomainSchema } from "@nakafa/aksara-contracts/renderer/domain";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { Array as Arr, Effect, HashSet, Schema } from "effect";
-import type { Locale } from "next-intl";
+import type { Locale } from "use-intl";
 import {
   decodeMaterialJson,
   isMaterialCounterpart,

@@ -32,8 +32,8 @@ import {
   pipe,
   String as Str,
 } from "effect";
-import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
+import { useLocale, useTranslations } from "use-intl";
 import type { StoreApi } from "zustand";
 import { useChatList } from "@/components/ai/chat/history.client";
 import { useDeleteChatMutation } from "@/components/ai/chat/mutation.client";

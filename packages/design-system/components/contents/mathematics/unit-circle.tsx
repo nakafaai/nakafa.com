@@ -34,7 +34,6 @@ import {
 } from "@repo/math/angles";
 import { Option } from "effect";
 import dynamic from "next/dynamic";
-import { useFormatter, useLocale, useTranslations } from "next-intl";
 import { createContext, type ReactNode, use, useState } from "react";
 import {
   Button,
@@ -44,6 +43,7 @@ import {
   Label,
   NumberField,
 } from "react-aria-components";
+import { useFormatter, useLocale, useTranslations } from "use-intl";
 
 /** The scene loads once the card asks for it, and its frame holds the place meanwhile. */
 const UnitCircleStage = dynamic(

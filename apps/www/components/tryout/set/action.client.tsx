@@ -1,6 +1,6 @@
 "use client";
 
-import type { Locale } from "next-intl";
+import type { Locale } from "use-intl";
 import type {
   CurrentAttempt,
   SetEntrySection,

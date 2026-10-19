@@ -4,7 +4,7 @@ import { ArrowRight02Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 
 /** Links one article catalog page to its release-bound continuation. */
 export function ArticleNext({ href }: { readonly href: string }) {

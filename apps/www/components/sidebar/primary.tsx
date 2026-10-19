@@ -17,7 +17,7 @@ import {
   useRouter,
 } from "@repo/internationalization/src/navigation";
 import { Array as Arr } from "effect";
-import { useLocale, useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "use-intl";
 import {
   getForYouNavigationHref,
   getForYouNavigationItems,

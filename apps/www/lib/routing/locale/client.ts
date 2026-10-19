@@ -1,8 +1,8 @@
 "use client";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { Data, Effect } from "effect";
-import type { Locale } from "next-intl";
 import { useTransition } from "react";
+import type { Locale } from "use-intl";
 
 /** Raised when the browser cannot load the language-switch request module. */
 class LocalizedHrefModuleError extends Data.TaggedError(

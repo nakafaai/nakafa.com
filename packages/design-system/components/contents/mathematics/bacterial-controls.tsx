@@ -10,8 +10,8 @@ import {
   VisualCardGroup,
 } from "@repo/design-system/components/visual/card";
 import { Array as Arr, Schema } from "effect";
-import { useTranslations } from "next-intl";
 import { createContext, type ReactNode, use } from "react";
+import { useTranslations } from "use-intl";
 
 const SPEED_STEP = 0.25;
 const SPEED_VALUES = Array.from(

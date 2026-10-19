@@ -9,7 +9,7 @@ import { toast } from "@repo/design-system/lib/toast/notify";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { useConvex } from "convex/react";
 import { Effect } from "effect";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 import { deleteOnPress } from "@/components/ai/chat/deletion.client";
 import { useDeleteChatMutation } from "@/components/ai/chat/mutation.client";
 import { useChatStore } from "@/components/ai/chat/store.client";

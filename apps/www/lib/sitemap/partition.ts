@@ -1,5 +1,5 @@
 import { Array as Arr, Order } from "effect";
-import type { Locale } from "next-intl";
+import type { Locale } from "use-intl";
 import {
   formatArticlePartition,
   formatMaterialPartition,

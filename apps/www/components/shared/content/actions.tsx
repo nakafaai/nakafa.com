@@ -26,8 +26,8 @@ import {
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Effect } from "effect";
 import dynamic from "next/dynamic";
-import { useTranslations } from "next-intl";
 import { type ReactNode, useLayoutEffect, useRef, useTransition } from "react";
+import { useTranslations } from "use-intl";
 import {
   readOpenContentCopySource,
   writeOpenContentCopy,

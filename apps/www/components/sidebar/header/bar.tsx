@@ -1,5 +1,5 @@
 import { SidebarTrigger } from "@repo/design-system/components/ui/sidebar-shell";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 import { HeaderContainer } from "@/components/sidebar/header/frame";
 import { HeaderSearch } from "@/components/sidebar/search/trigger";
 

@@ -2,8 +2,8 @@
 
 import { Kbd, KbdGroup } from "@repo/design-system/components/ui/kbd";
 import { Array as Arr } from "effect";
-import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
+import { useTranslations } from "use-intl";
 
 /** Lists the keys that drive the player, one fact per line. */
 export function PlayerShortcuts() {

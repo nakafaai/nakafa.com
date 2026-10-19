@@ -33,8 +33,8 @@ import {
 import type { ChatStatus } from "ai";
 import { cn } from "cn";
 import { Array as Arr, Effect, Function as Fn, Option } from "effect";
-import { useTranslations } from "next-intl";
 import { type ReactNode, useState } from "react";
+import { useTranslations } from "use-intl";
 import { NinaAttach, NinaAttachments } from "@/components/ai/attachment";
 import { useAi } from "@/components/ai/context";
 import { promptRefusal, reportNinaFailure } from "@/components/ai/feedback";

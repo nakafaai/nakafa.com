@@ -1,7 +1,7 @@
 "use client";
 
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 import {
   ConsentActions,
   ConsentDetails,

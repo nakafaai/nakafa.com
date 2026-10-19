@@ -33,8 +33,8 @@ import {
   String as Str,
 } from "effect";
 import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
 import { useId, useState, useTransition } from "react";
+import { useTranslations } from "use-intl";
 import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import type { ViewerUnit } from "@/components/tenant/exams/create";
 import { useExam } from "@/components/tenant/exams/provider";

@@ -3,7 +3,7 @@ import {
   ENGLISH_APP_LOCALE_CODE,
 } from "@nakafa/aksara-contracts/locale";
 import { Array as Arr, Option, Record as Rec } from "effect";
-import type { Locale } from "next-intl";
+import type { Locale } from "use-intl";
 import { getOgUrl } from "@/lib/seo/social";
 
 const ALL_ARTWORK_LOCALES = ACTIVE_APP_LOCALE_CODES;

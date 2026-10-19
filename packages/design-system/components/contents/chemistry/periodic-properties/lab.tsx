@@ -22,9 +22,9 @@ import {
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { Array as Arr } from "effect";
-import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { useState } from "react";
+import { useTranslations } from "use-intl";
 
 interface PeriodicPropertiesLabProps {
   description: ReactNode;

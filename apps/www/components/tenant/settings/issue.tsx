@@ -11,8 +11,8 @@ import {
 } from "@repo/design-system/components/ui/field";
 import { Input } from "@repo/design-system/components/ui/input";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
-import { useTranslations } from "next-intl";
 import { startTransition, useId, useState } from "react";
+import { useTranslations } from "use-intl";
 import type { CardView } from "@/components/tenant/settings/card";
 import { saveSchool } from "@/components/tenant/settings/save.client";
 

@@ -4,8 +4,8 @@ import { Delete02Icon, Edit02Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Equal, String as Str } from "effect";
-import { useTranslations } from "next-intl";
 import { memo, useLayoutEffect, useRef } from "react";
+import { useTranslations } from "use-intl";
 import {
   MemoryEnds,
   MemoryOrigin,

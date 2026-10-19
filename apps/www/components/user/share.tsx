@@ -6,7 +6,7 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Effect } from "effect";
-import { useLocale, useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "use-intl";
 import { reportClientException } from "@/lib/analytics/client";
 import { isShareCancel, profileUrl } from "@/lib/profile/share";
 

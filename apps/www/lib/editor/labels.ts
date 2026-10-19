@@ -1,6 +1,6 @@
 import type { SlashLabels } from "@repo/design-system/components/editor/slash";
-import { useTranslations } from "next-intl";
 import { useMemo } from "react";
+import { useTranslations } from "use-intl";
 
 /**
  * The names of an exam prompt's toolbar, slash menu, and formula editor, read from the editor's

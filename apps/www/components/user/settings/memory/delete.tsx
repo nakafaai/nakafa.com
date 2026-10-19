@@ -2,8 +2,8 @@
 
 import { Button } from "@repo/design-system/components/ui/button";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
-import { useTranslations } from "next-intl";
 import type { ComponentProps } from "react";
+import { useTranslations } from "use-intl";
 
 /**
  * Asks the learner to confirm that a memory goes. Only the confirmation reaches

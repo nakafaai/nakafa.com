@@ -16,7 +16,8 @@
     "next": "16.4.2",
     "next-intl": "catalog:",
     "react": "19.3.1",
-    "schema-dts": "^2.1.0"
+    "schema-dts": "^2.1.0",
+    "use-intl": "catalog:"
   },
   "devDependencies": {
     "@effect/vitest": "catalog:",

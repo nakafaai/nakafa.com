@@ -11,8 +11,8 @@ import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
 import { Textarea } from "@repo/design-system/components/ui/textarea";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Effect, Result } from "effect";
-import { useTranslations } from "next-intl";
 import { useState } from "react";
+import { useTranslations } from "use-intl";
 import {
   CardSection,
   CardSectionFooter,

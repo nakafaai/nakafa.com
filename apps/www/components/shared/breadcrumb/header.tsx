@@ -8,8 +8,8 @@ import {
 } from "@repo/design-system/components/ui/breadcrumb";
 import { cn } from "cn";
 import { Array as Arr, Schema } from "effect";
-import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
+import { useTranslations } from "use-intl";
 import { BreadcrumbAnchor } from "@/components/shared/breadcrumb/anchor";
 import { BreadcrumbHeaderFrame } from "@/components/shared/breadcrumb/frame";
 import { BreadcrumbMenu } from "@/components/shared/breadcrumb/menu";

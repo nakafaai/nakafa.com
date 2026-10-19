@@ -1,7 +1,7 @@
 import { previewRouting } from "@repo/internationalization/src/routing";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { Array as Arr } from "effect";
-import { hasLocale, type Locale } from "next-intl";
+import { hasLocale, type Locale } from "use-intl";
 
 const ABSOLUTE_URL_REGEX = /^https?:\/\//;
 const HASH_ONLY_REGEX = /^#/;

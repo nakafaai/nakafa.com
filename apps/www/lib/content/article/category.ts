@@ -16,7 +16,7 @@ import {
 } from "@nakafa/aksara-contracts/projection/article";
 import { RendererDomainSchema } from "@nakafa/aksara-contracts/renderer/domain";
 import { Array as Arr, Effect, MutableList, Option, Schema } from "effect";
-import type { Locale } from "next-intl";
+import type { Locale } from "use-intl";
 import {
   type ArticlePageCursor,
   type PublishedArticleCategory,

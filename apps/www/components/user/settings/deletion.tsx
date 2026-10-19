@@ -24,8 +24,8 @@ import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { useConvex } from "convex/react";
 import { Effect, Result } from "effect";
-import { useLocale, useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
+import { useLocale, useTranslations } from "use-intl";
 import {
   CardSection,
   CardSectionActions,

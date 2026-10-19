@@ -5,7 +5,7 @@ import type { TryoutStartAccess } from "@repo/backend/confect/tryouts/start/spec
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 
 interface TryoutStartDialogProps {
   readonly busy: boolean;

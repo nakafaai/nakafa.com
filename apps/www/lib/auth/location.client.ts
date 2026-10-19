@@ -5,8 +5,8 @@ import {
   useRouter,
 } from "@repo/internationalization/src/navigation";
 import { usePathname, useSearchParams } from "next/navigation";
-import { useLocale } from "next-intl";
 import type { MouseEvent, SyntheticEvent } from "react";
+import { useLocale } from "use-intl";
 import {
   getPostAuthIntentSource,
   getPostAuthSignInHrefForLocation,

@@ -11,8 +11,8 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { Array as Arr, HashSet, Option } from "effect";
-import { useLocale, useTranslations } from "next-intl";
 import type { ComponentProps, ReactNode } from "react";
+import { useLocale, useTranslations } from "use-intl";
 import {
   getForYouNavigationHref,
   getForYouNavigationItems,

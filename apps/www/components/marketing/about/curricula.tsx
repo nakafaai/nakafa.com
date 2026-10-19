@@ -1,6 +1,6 @@
 import { Nina } from "@repo/design-system/components/ui/nina";
-import type { Locale } from "next-intl";
 import { getTranslations } from "next-intl/server";
+import type { Locale } from "use-intl";
 import { CurriculumList } from "@/components/marketing/about/curricula/list.client";
 import { NINA_SLOT } from "@/components/marketing/about/toys/slot";
 import { MarketingSection } from "@/components/marketing/shared/section";

@@ -2,7 +2,7 @@
 
 import { buttonVariants } from "@repo/design-system/lib/button";
 import Link from "next/link";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 
 /**
  * What an exam's page shows when the exam cannot be read, for a viewer who may not open it

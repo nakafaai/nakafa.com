@@ -5,7 +5,7 @@ import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { tryoutMetadataArgsValidator } from "@repo/backend/content/tryout/spec";
 import { Effect, Schema } from "effect";
-import type { Locale } from "next-intl";
+import type { Locale } from "use-intl";
 import { loadTryoutQuestion } from "@/components/tryout/content/signed";
 import { applyContentCache } from "@/lib/content/cache";
 import { decodeSourceRevision } from "@/lib/content/published/origin";

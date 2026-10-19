@@ -15,7 +15,7 @@ import {
 } from "@repo/design-system/components/ui/sidebar-menu";
 import { usePathname } from "@repo/internationalization/src/navigation";
 import { Array as Arr } from "effect";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 import { holyMenu } from "@/components/sidebar/data/holy";
 import type { ArticleNavigationItem } from "@/lib/content/article/navigation";
 

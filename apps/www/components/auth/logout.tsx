@@ -4,7 +4,7 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { Effect, Result } from "effect";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 import { clearAiDraftText } from "@/components/ai/store/draft";
 import { signOutAccountBrowserIdentity } from "@/lib/auth/identity/browser";
 export function AuthLogout() {

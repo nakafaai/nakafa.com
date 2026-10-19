@@ -12,7 +12,7 @@ import {
   Option,
   Record as Rec,
 } from "effect";
-import type { Locale } from "next-intl";
+import type { Locale } from "use-intl";
 import { applyContentCache } from "@/lib/content/cache";
 import type { PublishedCurriculumRoute } from "@/lib/content/program/decode";
 import { PublishedProjectionError } from "@/lib/content/published/errors";

@@ -10,7 +10,7 @@ import {
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { getAppUrl } from "@repo/next-config/app";
 import { usePathname } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 
 export function ShareButton() {
   const t = useTranslations("Common");

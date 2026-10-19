@@ -28,8 +28,8 @@ import {
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { MAIN_DOMAIN } from "@repo/next-config/domains";
 import { Effect, Option, Result } from "effect";
-import { useTranslations } from "next-intl";
 import { useState } from "react";
+import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/providers/convex";
 import {
   CardSection,

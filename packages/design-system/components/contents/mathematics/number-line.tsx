@@ -19,8 +19,8 @@ import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { cva } from "class-variance-authority";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
-import { useFormatter, useLocale, useTranslations } from "next-intl";
 import type { ReactNode } from "react";
+import { useFormatter, useLocale, useTranslations } from "use-intl";
 
 const numberLineSegmentVariants = cva("absolute top-1/2 h-8 -translate-y-1/2", {
   variants: {

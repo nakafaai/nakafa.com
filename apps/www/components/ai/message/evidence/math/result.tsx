@@ -7,7 +7,7 @@ import type {
   MathStep,
 } from "@repo/math/schema/shared";
 import { Array as Arr } from "effect";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 import { Expression } from "@/components/ai/message/evidence/math/expression";
 import {
   getItemLabelKey,

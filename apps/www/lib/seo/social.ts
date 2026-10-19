@@ -1,6 +1,6 @@
 import { cleanSlug } from "@repo/utilities/slug";
 import type { Metadata } from "next";
-import type { Locale } from "next-intl";
+import type { Locale } from "use-intl";
 
 const SOCIAL_IMAGE_SIZE = {
   width: 1200,

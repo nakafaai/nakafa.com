@@ -19,8 +19,8 @@ import {
   SelectValue,
 } from "@repo/design-system/components/ui/select";
 import { Array as Arr, Option, Schema } from "effect";
-import { useTranslations } from "next-intl";
 import { useId, useState } from "react";
+import { useTranslations } from "use-intl";
 import {
   runSittingCall,
   useAddMinutes,

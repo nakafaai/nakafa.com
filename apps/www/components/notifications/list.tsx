@@ -4,7 +4,7 @@ import { PaginatedQueryResult } from "@confect/react";
 import { INBOX_PAGE_SIZE } from "@repo/backend/client/notifications/list";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { Array as Arr } from "effect";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 import { useInbox } from "@/components/notifications/provider";
 import { NotificationRow } from "@/components/notifications/row";
 import { FeedEmpty } from "@/components/user/feed";

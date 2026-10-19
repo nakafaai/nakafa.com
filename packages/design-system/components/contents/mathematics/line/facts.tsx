@@ -9,7 +9,7 @@ import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { VisualCardFacts } from "@repo/design-system/components/visual/card";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { Option } from "effect";
-import { useFormatter, useLocale, useTranslations } from "next-intl";
+import { useFormatter, useLocale, useTranslations } from "use-intl";
 
 /**
  * The readouts of a line scene in its footer: the interval that each axis spans,

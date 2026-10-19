@@ -15,7 +15,7 @@ import { Intersection } from "@repo/design-system/components/ui/intersection";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { Array as Arr } from "effect";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 import { CommentsProvider } from "@/components/comments/provider";
 import { CommentRow } from "@/components/comments/row";
 import { DataFailure } from "@/components/shared/failure";

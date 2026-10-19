@@ -31,10 +31,10 @@ import {
 } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { Array as Arr } from "effect";
-import { useFormatter, useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import type { ReactNode } from "react";
 import { useState } from "react";
+import { useFormatter, useTranslations } from "use-intl";
 import { useStore } from "zustand";
 
 export interface ModernPeriodicTableLabProps {

@@ -22,7 +22,6 @@ import {
 } from "@repo/design-system/components/visual/store";
 import { cva } from "class-variance-authority";
 import { cn } from "cn";
-import { useTranslations } from "next-intl";
 import {
   type ComponentProps,
   createContext,
@@ -32,6 +31,7 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
+import { useTranslations } from "use-intl";
 import { useStore } from "zustand";
 import { useShallow } from "zustand/react/shallow";
 

@@ -9,7 +9,7 @@ import { LearningProgramSchema } from "@nakafa/aksara-contracts/program/spec";
 import { MaterialLessonProjectionSchema } from "@nakafa/aksara-contracts/projection/material";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { Array as Arr, Effect, Schema } from "effect";
-import type { Locale } from "next-intl";
+import type { Locale } from "use-intl";
 import { applyContentCache } from "@/lib/content/cache";
 import { decodeMaterialJson } from "@/lib/content/material/decode";
 import {

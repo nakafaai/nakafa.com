@@ -3,8 +3,8 @@
 import type { LearningContextInput } from "@repo/backend/confect/contents/context";
 import type { RecordContentViewArgs } from "@repo/backend/confect/contents/views/spec";
 import type { Locale } from "@repo/backend/confect/lib/validators/contents";
-import type { Locale as RouteLocale } from "next-intl";
 import type { PropsWithChildren } from "react";
+import type { Locale as RouteLocale } from "use-intl";
 import { useRecordContentView } from "@/lib/content/views/record";
 import { isActiveLocale } from "@/lib/i18n/active";
 

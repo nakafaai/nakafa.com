@@ -6,8 +6,8 @@ import {
 } from "@repo/design-system/components/ui/toggle-group";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Effect, Option } from "effect";
-import { useTranslations } from "next-intl";
 import { useTransition } from "react";
+import { useTranslations } from "use-intl";
 import { decodePlayerMode } from "@/components/player/mode";
 import { usePlayer } from "@/components/player/provider";
 import { rememberPlayerMode } from "@/components/player/remember.client";

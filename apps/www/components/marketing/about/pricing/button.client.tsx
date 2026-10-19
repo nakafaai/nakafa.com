@@ -4,8 +4,8 @@ import { Diamond02Icon } from "@hugeicons/core-free-icons";
 import { useMounted } from "@mantine/hooks";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
-import { useTranslations } from "next-intl";
 import { lazy, Suspense } from "react";
+import { useTranslations } from "use-intl";
 
 /** The emphasis of the Pro action: the page's one primary on the pricing page, secondary elsewhere. */
 export type PricingButtonVariant = "default" | "secondary";

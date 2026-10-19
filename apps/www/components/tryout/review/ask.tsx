@@ -4,7 +4,7 @@ import { StarsIcon } from "@hugeicons/core-free-icons";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { useTranslations } from "next-intl";
+import { useTranslations } from "use-intl";
 import { useNinaAsk } from "@/components/ai/ask";
 import { useAi } from "@/components/ai/context";
 
