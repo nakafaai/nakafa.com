@@ -12,12 +12,13 @@ import {
   PaperView,
   PromptView,
   SignalView,
-  SittingView,
+  StudentSittingRow,
   StudentSittingView,
   TokenResult,
 } from "@repo/backend/confect/exams/sittings/contract";
 import {
   AttemptClosed,
+  AttemptLocked,
   DeviceRetired,
   NotInSitting,
   QuestionNotInExam,
@@ -94,7 +95,7 @@ export default GroupSpec.make()
     FunctionSpec.publicQuery({
       name: "mine",
       args: () => ({ slug: TenantSlug }),
-      returns: () => Schema.Array(SittingView),
+      returns: () => Schema.Array(StudentSittingRow),
       error: () => Schema.Never,
     })
   )
@@ -238,6 +239,7 @@ export default GroupSpec.make()
           NotInSitting,
           SittingLocked,
           AttemptClosed,
+          AttemptLocked,
           SecondDevice,
           DeviceRetired,
         ]),
@@ -258,6 +260,7 @@ export default GroupSpec.make()
           NotInSitting,
           SittingLocked,
           AttemptClosed,
+          AttemptLocked,
           SecondDevice,
           DeviceRetired,
           QuestionNotInExam,
@@ -281,6 +284,7 @@ export default GroupSpec.make()
           NotInSitting,
           SittingLocked,
           AttemptClosed,
+          AttemptLocked,
           SecondDevice,
           DeviceRetired,
           QuestionNotInExam,
@@ -302,6 +306,7 @@ export default GroupSpec.make()
           NotInSitting,
           SittingLocked,
           AttemptClosed,
+          AttemptLocked,
           SecondDevice,
           DeviceRetired,
         ]),

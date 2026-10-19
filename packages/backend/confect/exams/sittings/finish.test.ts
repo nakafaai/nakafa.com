@@ -157,7 +157,7 @@ describe("exams/sittings finish", () => {
     })
   );
 
-  it.effect("refuses a Finish of a locked attempt", () =>
+  it.effect("refuses a Finish of a locked attempt with the lock", () =>
     Effect.gen(function* () {
       const fixture = yield* tenancyFixture;
       const made = yield* openedSitting(fixture, "PTS");
@@ -175,7 +175,7 @@ describe("exams/sittings finish", () => {
       const failure = yield* finishAs(fixture, made.id, deviceOf(1)).pipe(
         Effect.flip
       );
-      expect(failure).toMatchObject({ _tag: "AttemptClosed" });
+      expect(failure).toMatchObject({ _tag: "AttemptLocked" });
     })
   );
 

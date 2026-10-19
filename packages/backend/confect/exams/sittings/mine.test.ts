@@ -5,6 +5,8 @@ import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import { nf } from "@repo/backend/test/editor";
 import {
   CLOSES_AT as CLOSES,
+  deviceOf,
+  enterOk,
   keyedExam,
   keyedSchool,
   mentions,
@@ -17,7 +19,7 @@ import {
 import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect } from "effect";
 
-const { mine } = refs.public.exams.sittings;
+const { close, finish, mine } = refs.public.exams.sittings;
 
 /** The opening time of the rooms that open a day after the room that opens soon. */
 const NEXT_DAY = OPENS + 86_400_000;
@@ -170,5 +172,71 @@ describe("exams/sittings mine", () => {
           }),
         ]);
       })
+  );
+
+  it.effect(
+    "shows the state of the student's own attempt in each live sitting",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const made = yield* openedSitting(fixture, "PTS");
+        const before = yield* fixture.as("student").query(mine, { slug: nf });
+        expect(before).toMatchObject([{ attempt: null, id: made.id }]);
+        yield* enterOk(fixture, {
+          deviceId: deviceOf(1),
+          sittingId: made.id,
+          token: made.token,
+        });
+        const entered = yield* fixture.as("student").query(mine, { slug: nf });
+        expect(entered).toMatchObject([
+          { attempt: "inProgress", id: made.id, state: "open" },
+        ]);
+      })
+  );
+
+  it.effect(
+    "keeps a closed sitting in the student's list while the attempt in it is submitted",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const made = yield* openedSitting(fixture, "PTS");
+        yield* enterOk(fixture, {
+          deviceId: deviceOf(1),
+          sittingId: made.id,
+          token: made.token,
+        });
+        yield* fixture.as("student").mutation(finish, {
+          deviceId: deviceOf(1),
+          sittingId: made.id,
+          slug: nf,
+        });
+        yield* fixture.as("teacher").mutation(close, {
+          sittingId: made.id,
+          slug: nf,
+        });
+        const listed = yield* fixture.as("student").query(mine, { slug: nf });
+        expect(listed).toEqual([
+          expect.objectContaining({
+            attempt: "submitted",
+            id: made.id,
+            resultsReleased: false,
+            state: "closed",
+          }),
+        ]);
+      })
+  );
+
+  it.effect("leaves out a closed sitting that the student never entered", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const made = yield* openedSitting(fixture, "PTS");
+      yield* fixture.as("teacher").mutation(close, {
+        sittingId: made.id,
+        slug: nf,
+      });
+      expect(yield* fixture.as("student").query(mine, { slug: nf })).toEqual(
+        []
+      );
+    })
   );
 });

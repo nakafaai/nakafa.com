@@ -1,5 +1,7 @@
 import type {
+  ExamAnswersDoc,
   ExamAttemptsDoc,
+  ExamSignalsDoc,
   ExamSittingsDoc,
   TenantPeopleDoc,
 } from "@repo/backend/confect/_generated/docs";
@@ -39,6 +41,29 @@ const mascotOf = Effect.fn("exams.sittings.dashboard.mascot")(function* (
 });
 
 /**
+ * The time of the attempt's latest event: its start, its latest answer, or its latest signal, the
+ * newest of them. The dashboard shows it as the student's last activity, which needs no heartbeat.
+ */
+const lastActivity = (
+  attempt: ExamAttemptsDoc,
+  answered: Option.Option<ExamAnswersDoc>,
+  latest: Option.Option<ExamSignalsDoc>
+) =>
+  Num.max(
+    attempt.startedAt,
+    Num.max(
+      Option.getOrElse(
+        Option.map(answered, (answer) => answer.answeredAt),
+        () => attempt.startedAt
+      ),
+      Option.getOrElse(
+        Option.map(latest, (signal) => signal.at),
+        () => attempt.startedAt
+      )
+    )
+  );
+
+/**
  * One attempt as the dashboard shows it. The latest signal decides whether the student is
  * away: an exit or a disconnect with no return after it (ADR 0013).
  */
@@ -60,6 +85,15 @@ const attemptRow = Effect.fn("exams.sittings.dashboard.attempt")(function* (
     )
     .first()
     .pipe(Effect.orDie);
+  const answered = yield* reader
+    .table("examAnswers")
+    .index(
+      "by_attemptId_and_answeredAt",
+      (query) => query.eq("attempt", attempt._id),
+      "desc"
+    )
+    .first()
+    .pipe(Effect.orDie);
   return {
     away: Option.exists(
       latest,
@@ -67,6 +101,7 @@ const attemptRow = Effect.fn("exams.sittings.dashboard.attempt")(function* (
     ),
     deadline: attempt.deadline,
     id: attempt._id,
+    lastActiveAt: lastActivity(attempt, answered, latest),
     latestSignal: Option.match(latest, {
       onNone: () => null,
       onSome: (signal) => ({ at: signal.at, kind: signal.kind }),

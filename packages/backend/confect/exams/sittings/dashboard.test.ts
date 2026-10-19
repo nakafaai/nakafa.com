@@ -15,7 +15,7 @@ import {
 import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect } from "effect";
 
-const { changeToken, dashboard } = refs.public.exams.sittings;
+const { changeToken, dashboard, paper } = refs.public.exams.sittings;
 
 describe("exams/sittings dashboard", () => {
   beforeEach(() => {
@@ -230,6 +230,54 @@ describe("exams/sittings dashboard", () => {
           _tag: "AccessDenied",
           reason: "resource",
         });
+      })
+  );
+
+  it.effect(
+    "shows each attempt's last activity as the newest of its start, answers, and signals",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const made = yield* openedSitting(fixture, "PTS");
+        const entered = yield* enterOk(fixture, {
+          deviceId: deviceOf(1),
+          sittingId: made.id,
+          token: made.token,
+        });
+        const { questions } = yield* fixture.as("student").query(paper, {
+          deviceId: deviceOf(1),
+          sittingId: made.id,
+          slug: nf,
+        });
+        const lastActive = Effect.map(
+          dashboardOf(fixture, made.id),
+          (page) => page.attempts.page[0]?.lastActiveAt
+        );
+        expect(yield* lastActive).toBe(OPENS);
+        yield* seedSignal(fixture, {
+          at: OPENS + 1000,
+          attemptId: entered.attempt,
+          kind: "blur",
+        });
+        expect(yield* lastActive).toBe(OPENS + 1000);
+        yield* fixture.run(
+          Effect.flatMap(DatabaseWriter, (writer) =>
+            writer.table("examAnswers").insert({
+              answeredAt: OPENS + 5000,
+              attempt: entered.attempt,
+              question: questions[0].id,
+              response: [],
+              tenantId: fixture.tenants.nf,
+            })
+          )
+        );
+        expect(yield* lastActive).toBe(OPENS + 5000);
+        yield* seedSignal(fixture, {
+          at: OPENS + 2000,
+          attemptId: entered.attempt,
+          kind: "return",
+        });
+        expect(yield* lastActive).toBe(OPENS + 5000);
       })
   );
 });

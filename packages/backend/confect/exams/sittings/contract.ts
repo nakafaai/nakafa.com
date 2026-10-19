@@ -30,6 +30,8 @@ export const EnterOutcome = Schema.Union([
     attempt: Id("examAttempts"),
     deadline: Schema.Finite,
     outcome: Schema.Literal("admitted"),
+    /** The server's clock when it admitted the device, so the screen can count down on server time. */
+    serverNow: Schema.Finite,
     state: AttemptState,
   }),
   Schema.Struct({
@@ -58,11 +60,15 @@ export const SittingView = Schema.Struct({
   unitId: Id("tenantUnits"),
 });
 
-/** One attempt on the dashboard: its student, its state and deadline, and whether the student is away. */
+/**
+ * One attempt on the dashboard: its student, its state and deadline, whether the student is away, and
+ * the time of the student's latest event (the start, an answer, or a signal).
+ */
 const DashboardAttempt = Schema.Struct({
   away: Schema.Boolean,
   deadline: Schema.Finite,
   id: Id("examAttempts"),
+  lastActiveAt: Schema.Finite,
   latestSignal: Schema.NullOr(
     Schema.Struct({ at: Schema.Finite, kind: SignalKind })
   ),
@@ -114,6 +120,17 @@ export const HeldAttempt = Schema.Struct({
 export const StudentSittingView = Schema.Struct({
   attempt: Schema.NullOr(HeldAttempt),
   sitting: SittingView,
+});
+
+/**
+ * One sitting in a student's list: the sitting as `SittingView` shows it, the student's own attempt state
+ * in it (`null` before entry), and whether the teacher has released its results. A closed sitting stays
+ * in the list while the student holds a submitted attempt in it, so the results stay reachable.
+ */
+export const StudentSittingRow = Schema.Struct({
+  ...SittingView.fields,
+  attempt: Schema.NullOr(AttemptState),
+  resultsReleased: Schema.Boolean,
 });
 
 /** One integrity signal of an attempt, as a proctor reads it, newest first in its pages. */
