@@ -1,5 +1,6 @@
-import { describe, expect, it } from "@effect/vitest";
+import { afterEach, describe, expect, it } from "@effect/vitest";
 import access from "@repo/backend/confect/_generated/refs/access";
+import identity from "@repo/backend/confect/_generated/refs/identity";
 import integrations from "@repo/backend/confect/_generated/refs/integrations";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { Email, Npsn } from "@repo/backend/confect/tenancy/schema";
@@ -8,6 +9,7 @@ import {
   archiveUnitChange,
   assignGrantChange,
   inviteChange,
+  reissueCardChange,
   removeLogoChange,
   revokeClientChange,
   revokeGrantChange,
@@ -25,6 +27,7 @@ import {
   grantedPersonId,
   invite,
   later,
+  login,
   otherSlug,
   pageOf,
   paging,
@@ -438,6 +441,72 @@ describe("components/tenant/settings/mutation.client", () => {
         personId: grantedPersonId,
         slug,
       });
+      expect(local.written()).toEqual([]);
+    });
+  });
+
+  describe("the logins of the school", () => {
+    const reissuedId = login("guru.lama").person.id;
+    const reissuedAt = Date.UTC(2026, 9, 19, 8, 0, 0);
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it("shows the card of a reissued login as issued now, on every loaded page of the school's logins", () => {
+      vi.useFakeTimers({ toFake: ["Date"] });
+      vi.setSystemTime(reissuedAt);
+      const local = createLocalStore();
+      local.seed(
+        identity.logins.list,
+        { paginationOpts: paging, slug },
+        pageOf([login("guru.lama", 1), login("siswa.baru", 1)])
+      );
+      local.seed(
+        identity.logins.list,
+        { paginationOpts: later, slug },
+        pageOf([login("guru.lama", 1)])
+      );
+      reissueCardChange(local.store, { personId: reissuedId, slug });
+      const issuedOf = (pagination: typeof paging | typeof later) =>
+        Arr.map(
+          Option.getOrThrow(
+            local.store.getQuery(identity.logins.list, {
+              paginationOpts: pagination,
+              slug,
+            })
+          ).page,
+          (item) => [item.loginName, item.issuedAt]
+        );
+      expect(issuedOf(paging)).toEqual([
+        ["guru.lama", reissuedAt],
+        ["siswa.baru", 1],
+      ]);
+      expect(issuedOf(later)).toEqual([["guru.lama", reissuedAt]]);
+    });
+
+    it("leaves the logins of another school as they are", () => {
+      const local = createLocalStore();
+      local.seed(
+        identity.logins.list,
+        { paginationOpts: paging, slug: otherSlug },
+        pageOf([login("guru.lama", 1)])
+      );
+      reissueCardChange(local.store, { personId: reissuedId, slug });
+      expect(local.written()).toEqual([]);
+      expect(
+        Option.getOrThrow(
+          local.store.getQuery(identity.logins.list, {
+            paginationOpts: paging,
+            slug: otherSlug,
+          })
+        ).page
+      ).toEqual([login("guru.lama", 1)]);
+    });
+
+    it("writes no login while the school's logins are not loaded", () => {
+      const local = createLocalStore();
+      reissueCardChange(local.store, { personId: reissuedId, slug });
       expect(local.written()).toEqual([]);
     });
   });

@@ -10,6 +10,7 @@ import type {
   Cohort,
   Grant,
   Invite,
+  Login,
   Period,
   Person,
   Unit,
@@ -118,6 +119,18 @@ export function person(id: string, name: string): Person {
     kind: "member",
     name,
     status: "active",
+  };
+}
+
+/** One school login as the logins list shows it, issued at the given time. */
+export function login(loginName: string, issuedAt = 1_800_000_000_000): Login {
+  return {
+    issuedAt,
+    loginName,
+    person: {
+      id: Schema.decodeUnknownSync(Id("tenantPeople"))(`p-${loginName}`),
+      name: `Siswa ${loginName}`,
+    },
   };
 }
 

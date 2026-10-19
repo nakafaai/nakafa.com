@@ -9,15 +9,12 @@ import {
   addStudentChange,
   removeMemberChange,
 } from "@/components/tenant/settings/members.client";
-import {
-  isDraft,
-  type Login,
-  type Member,
-} from "@/components/tenant/settings/state";
+import { isDraft, type Member } from "@/components/tenant/settings/state";
 import { createLocalStore } from "@/test/optimistic";
 import {
   invite,
   later,
+  login,
   otherSlug,
   pageOf,
   paging,
@@ -33,18 +30,6 @@ function member(id: string, name: string): Member {
     name,
     roles: ["teacher"],
     status: "joined",
-  };
-}
-
-/** One school login as the logins list shows it. */
-function login(loginName: string): Login {
-  return {
-    issuedAt: 1_800_000_000_000,
-    loginName,
-    person: {
-      id: Schema.decodeUnknownSync(Id("tenantPeople"))(`p-${loginName}`),
-      name: `Siswa ${loginName}`,
-    },
   };
 }
 
