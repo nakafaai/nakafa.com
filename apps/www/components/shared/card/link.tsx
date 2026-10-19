@@ -1,7 +1,24 @@
 import { ArrowRight02Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { IntentLink } from "@repo/design-system/components/ui/intent-link";
+import { cva } from "class-variance-authority";
 import type { ReactNode } from "react";
+
+/**
+ * The frame of a row in a card's list: the row's padding, and the card's spacing on the list's first row when the
+ * list opens the card and on its last row. A linked row also lights up on hover.
+ */
+const cardRow = cva(
+  "group flex w-full items-center gap-2 px-6 py-3 in-[[data-slot=card]>ul:first-child]:group-first/list:pt-(--card-spacing) group-last/list:pb-(--card-spacing)",
+  {
+    variants: {
+      linked: {
+        false: "",
+        true: "scroll-mt-28 transition-colors ease-out hover:bg-accent hover:text-accent-foreground",
+      },
+    },
+  }
+);
 
 /** Lists a card's page links as rows divided by rules. */
 export function CardLinks({ children }: { children: ReactNode }) {
@@ -31,7 +48,7 @@ export function CardLink({
   return (
     <li className="group/list">
       <IntentLink
-        className="group flex w-full scroll-mt-28 items-center gap-2 px-6 py-3 transition-colors ease-out hover:bg-accent hover:text-accent-foreground in-[[data-slot=card]>ul:first-child]:group-first/list:pt-(--card-spacing) group-last/list:pb-(--card-spacing)"
+        className={cardRow({ linked: true })}
         href={href}
         localized={localized}
         title={title}
@@ -42,6 +59,18 @@ export function CardLink({
           icon={ArrowRight02Icon}
         />
       </IntentLink>
+    </li>
+  );
+}
+
+/**
+ * One row of a card's list that opens no page, such as a draft the server is still saving. It takes the frame of a
+ * `CardLink` row, so it keeps the same height as the linked rows, including the card's bottom spacing on the last.
+ */
+export function CardRowText({ children }: { children: ReactNode }) {
+  return (
+    <li className="group/list">
+      <div className={cardRow({ linked: false })}>{children}</div>
     </li>
   );
 }

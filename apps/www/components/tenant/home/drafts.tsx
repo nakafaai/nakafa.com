@@ -5,7 +5,11 @@ import { Array as Arr } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { useMemo } from "react";
 import { type StoreApi, useStore } from "zustand";
-import { CardLink, CardLinks } from "@/components/shared/card/link";
+import {
+  CardLink,
+  CardLinks,
+  CardRowText,
+} from "@/components/shared/card/link";
 import { useTenant } from "@/components/tenant/context";
 import type { ExamDrafts } from "@/components/tenant/exams/drafts";
 import {
@@ -81,9 +85,9 @@ function DraftRow({
 }) {
   if (saving) {
     return (
-      <li className="px-6 py-3">
+      <CardRowText>
         <RowText detail={names.of(draft.language)} title={draft.title} />
-      </li>
+      </CardRowText>
     );
   }
   return (
