@@ -2,6 +2,10 @@ import { runLocalConvex } from "@repo/backend/scripts/content/acceptance/convex"
 import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
 import { SittingFixture } from "@repo/backend/scripts/content/acceptance/fixture";
 import { readLocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
+import {
+  type AcceptanceMode,
+  decodeModeArguments,
+} from "@repo/backend/scripts/content/acceptance/mode";
 import { JsonTextSchema } from "@repo/utilities/json";
 import { Effect, FileSystem, Schema } from "effect";
 
@@ -49,3 +53,33 @@ export const createAcceptanceSitting = Effect.fn(
   const fs = yield* FileSystem.FileSystem;
   yield* fs.writeFileString(output, fixture, { flag: "wx", mode: 0o600 });
 });
+
+/** The usage of the sitting mode: the school, the learner, the file for the sitting, then the optional crowd. */
+const USAGE = "sitting <school-slug> <learner-email> <sitting-file> [crowd]";
+const SittingArguments = Schema.Tuple([
+  Schema.String,
+  Schema.String,
+  Schema.String,
+  Schema.optionalKey(Schema.String),
+]);
+
+/**
+ * The sitting mode of the acceptance command line: seeds one proctored sitting for
+ * the learner that the command names, with the optional number of extra students,
+ * and writes the sitting to the file that the command names.
+ */
+export const sittingMode = {
+  mode: "sitting",
+  usage: USAGE,
+  run: Effect.fn("contentAcceptance.runSitting")(function* (
+    root: string,
+    args: readonly string[]
+  ) {
+    const [slug, email, output, crowd] = yield* decodeModeArguments(
+      USAGE,
+      SittingArguments,
+      args
+    );
+    return yield* createAcceptanceSitting(root, slug, email, output, crowd);
+  }),
+} satisfies AcceptanceMode;
