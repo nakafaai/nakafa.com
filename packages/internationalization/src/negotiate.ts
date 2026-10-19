@@ -58,12 +58,7 @@ function readTagLocale(tag: string): Option.Option<Locale> {
 }
 
 /** The first public locale in an Accept-Language header, by quality, or none. */
-function readAcceptedLocale(
-  acceptLanguage: string | null
-): Option.Option<Locale> {
-  if (acceptLanguage === null) {
-    return Option.none();
-  }
+function readAcceptedLocale(acceptLanguage: string): Option.Option<Locale> {
   return Arr.findFirst(readLanguageRanges(acceptLanguage), (range) =>
     readTagLocale(range.tag)
   );
@@ -78,7 +73,12 @@ function readAcceptedLocale(
 export function negotiateLocale(headers: Headers): Locale {
   return readCookie(headers, LOCALE_COOKIE).pipe(
     Option.flatMap(decodeLocale),
-    Option.orElse(() => readAcceptedLocale(headers.get("accept-language"))),
+    Option.orElse(() =>
+      Option.flatMap(
+        Option.fromNullishOr(headers.get("accept-language")),
+        readAcceptedLocale
+      )
+    ),
     Option.getOrElse(() => DEFAULT_LOCALE)
   );
 }

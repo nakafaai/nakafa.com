@@ -1,13 +1,14 @@
 import "@tanstack/react-start/server-only";
 import { convexBetterAuthReactStart } from "@convex-dev/better-auth/react-start";
-import { Config, Effect } from "effect";
+import { Effect } from "effect";
 import { createAuthProxy } from "@/lib/auth/proxy";
 import { runServerEffect } from "@/lib/server/fn";
+import { CONVEX_SITE_URL, CONVEX_URL } from "@/lib/server/runtime";
 
 /** The Convex deployment and its site, read at runtime by the server. */
 const CONVEX_SITES = Effect.all({
-  convexSiteUrl: Config.NonEmptyString("VITE_CONVEX_SITE_URL"),
-  convexUrl: Config.NonEmptyString("VITE_CONVEX_URL"),
+  convexSiteUrl: CONVEX_SITE_URL,
+  convexUrl: CONVEX_URL,
 });
 
 /**
@@ -18,9 +19,7 @@ const CONVEX_SITES = Effect.all({
  */
 export async function forwardAuthRequest(request: Request): Promise<Response> {
   const sites = await runServerEffect(CONVEX_SITES);
-  const { handler } = {
-    handler: convexBetterAuthReactStart(sites).handler,
-  };
+  const handler = convexBetterAuthReactStart(sites).handler;
   const proxy = createAuthProxy({ GET: handler, POST: handler });
   return request.method === "POST" ? proxy.POST(request) : proxy.GET(request);
 }

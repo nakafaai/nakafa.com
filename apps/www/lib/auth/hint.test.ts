@@ -9,22 +9,31 @@ import {
 } from "@/lib/auth/hint";
 import { ClientSession } from "@/lib/auth/visitor";
 
+const plain = { domain: "nakafa.com", secure: false } as const;
+const secure = { domain: "nakafa.com", secure: true } as const;
+
 describe("sign-in hint cookie", () => {
   it("is readable by the page and lasts the session lifetime", () => {
-    expect(signedInHintCookie(false)).toBe(
-      "nakafa-signed-in=1; Path=/; SameSite=Lax; Max-Age=604800"
+    expect(signedInHintCookie(plain)).toBe(
+      "nakafa-signed-in=1; Domain=nakafa.com; Path=/; SameSite=Lax; Max-Age=604800"
     );
   });
 
   it("is secure on an https site", () => {
-    expect(signedInHintCookie(true)).toBe(
-      "nakafa-signed-in=1; Path=/; SameSite=Lax; Secure; Max-Age=604800"
+    expect(signedInHintCookie(secure)).toBe(
+      "nakafa-signed-in=1; Domain=nakafa.com; Path=/; SameSite=Lax; Secure; Max-Age=604800"
     );
   });
 
-  it("is cleared when the session ends", () => {
-    expect(expiredHintCookie(true)).toBe(
-      "nakafa-signed-in=; Path=/; SameSite=Lax; Secure; Max-Age=0"
+  it("shares the domain of the session cookie with every school host", () => {
+    expect(signedInHintCookie({ domain: "localhost", secure: false })).toBe(
+      "nakafa-signed-in=1; Domain=localhost; Path=/; SameSite=Lax; Max-Age=604800"
+    );
+  });
+
+  it("is cleared on the same domain when the session ends", () => {
+    expect(expiredHintCookie(secure)).toBe(
+      "nakafa-signed-in=; Domain=nakafa.com; Path=/; SameSite=Lax; Secure; Max-Age=0"
     );
   });
 
@@ -34,9 +43,9 @@ describe("sign-in hint cookie", () => {
       sessionId: "session-1",
       userId: "user-1",
     });
-    expect(hintCookieFor(signedIn, false)).toBe(signedInHintCookie(false));
-    expect(hintCookieFor(ClientSession.cases.SignedOut.make({}), false)).toBe(
-      expiredHintCookie(false)
+    expect(hintCookieFor(signedIn, plain)).toBe(signedInHintCookie(plain));
+    expect(hintCookieFor(ClientSession.cases.SignedOut.make({}), plain)).toBe(
+      expiredHintCookie(plain)
     );
   });
 });

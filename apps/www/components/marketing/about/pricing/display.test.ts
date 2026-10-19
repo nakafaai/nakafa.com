@@ -6,10 +6,10 @@ import { createTranslator } from "next-intl";
 import {
   currencySymbol,
   drinkKey,
-  getProMonthlyPricing,
   getProPricingDisplay,
   pricingCountryHeaderName,
 } from "@/components/marketing/about/pricing/display";
+import { getProMonthlyPricing } from "@/lib/pricing/monthly";
 
 describe("marketing/about/pricing-display", () => {
   it("uses the Vercel country header name", () => {

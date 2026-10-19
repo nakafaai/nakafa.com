@@ -86,6 +86,14 @@ describe("currency cookie", () => {
     }
   );
 
+  it("reads the first cookie of the name when a request repeats it", () => {
+    expect(
+      readCurrencyCookie(
+        withCookie("pricing_currency=IDR; pricing_currency=EUR")
+      )
+    ).toStrictEqual(Option.some("IDR"));
+  });
+
   it("has no currency without a Cookie header", () => {
     expect(readCurrencyCookie(new Headers())).toStrictEqual(Option.none());
   });
@@ -108,6 +116,15 @@ describe("pricing currency script", () => {
         intl: timeZoneIntl("Europe/Berlin"),
       })
     ).toBe("EUR");
+  });
+
+  it("keeps the first currency cookie that the browser sends", () => {
+    expect(
+      runPricingScript({
+        cookie: "pricing_currency=IDR; pricing_currency=EUR",
+        intl: timeZoneIntl("America/New_York"),
+      })
+    ).toBe("IDR");
   });
 
   it("shows the dollar price for a time zone that is not mapped", () => {

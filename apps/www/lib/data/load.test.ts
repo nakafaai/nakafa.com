@@ -2,7 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { Effect } from "effect";
 import {
-  loadConfectQuery,
+  BrowserQueryFailed,
   readBrowserQuery,
   readServerQuery,
 } from "@/lib/data/load";
@@ -13,12 +13,17 @@ const browser = vi.hoisted(() => ({
   query: vi.fn<(reference: unknown, args: unknown) => Promise<unknown>>(),
 }));
 
+vi.mock("@confect/core/Ref", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@confect/core/Ref")>()),
+  getFunctionReference: () => "reference",
+}));
+
 const preload = vi.hoisted(() => ({
   read: vi.fn<(...args: unknown[]) => unknown>(),
 }));
 
 vi.mock("@/lib/convex/client.client", () => ({
-  readConvexClient: () => browser,
+  readConvexClient: () => ({ query: browser.query }),
 }));
 
 vi.mock("@/lib/data/preload.server", () => ({
@@ -47,9 +52,21 @@ describe("route loader", () => {
       readBrowserQuery(ref, { locale: "en" })
     ).resolves.toStrictEqual([]);
     expect(browser.query).toHaveBeenCalledTimes(1);
+    expect(browser.query).toHaveBeenCalledWith("reference", { locale: "en" });
   });
 
-  it("is the loader that the build selects for each environment", () => {
-    expect(loadConfectQuery).toBeDefined();
+  it("rejects a browser value that the query's Schema refuses", async () => {
+    browser.query.mockResolvedValueOnce("not a list of rows");
+    await expect(readBrowserQuery(ref, { locale: "en" })).rejects.toMatchObject(
+      { _tag: "SchemaError" }
+    );
+  });
+
+  it("names a refused browser read as a BrowserQueryFailed", async () => {
+    const cause = new Error("offline");
+    browser.query.mockRejectedValueOnce(cause);
+    await expect(readBrowserQuery(ref, { locale: "en" })).rejects.toStrictEqual(
+      new BrowserQueryFailed({ cause })
+    );
   });
 });

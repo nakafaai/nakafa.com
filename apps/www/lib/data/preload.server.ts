@@ -7,16 +7,14 @@ import {
   getFunctionReference,
 } from "@confect/core/Ref";
 import { ConvexHttpClient } from "convex/browser";
-import { Config, Effect, Schema } from "effect";
+import { Effect, Schema } from "effect";
+import { CONVEX_URL } from "@/lib/server/runtime";
 
 /** A Convex read that failed on the server, before its value could be decoded. */
 export class PreloadFailed extends Schema.TaggedError<PreloadFailed>()(
   "PreloadFailed",
   { cause: Schema.Unknown }
 ) {}
-
-/** The address of the Convex deployment, read at runtime by the server. */
-const CONVEX_URL = Config.NonEmptyString("VITE_CONVEX_URL");
 
 /**
  * Reads one Confect query for one request, with the request's token, and

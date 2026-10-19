@@ -24,6 +24,7 @@ describe("shared paths", () => {
     "/sitemap/article-en-0.xml",
     "/robots.txt",
     "/sitemap.xml",
+    "/e22d548f7fd2482a9022e3b84e944901.txt",
   ])("keeps %s on every host", (pathname) => {
     expect(isSharedPath(pathname)).toBe(true);
   });
@@ -184,5 +185,23 @@ describe("school host rewrite of the output", () => {
       "https://harapan.nakafa.com/school/harapan/exams/ujian?x=1"
     );
     expect(schoolRewrite.output({ url: routed }).href).toBe(address.href);
+  });
+
+  it.each([
+    [
+      "https://nakafa.com/school/harapan/exams/ujian?x=1",
+      "https://harapan.nakafa.com/school/harapan/exams/ujian?x=1",
+    ],
+    [
+      "https://nakafa.com/school/harapan",
+      "https://harapan.nakafa.com/school/harapan",
+    ],
+    [
+      "http://harapan.localhost:3000/school/harapan/exams",
+      "http://harapan.localhost:3000/school/harapan/exams",
+    ],
+  ])("routes the school address of %s back to %s", (routed, routedInput) => {
+    const address = schoolRewrite.output({ url: at(routed) });
+    expect(schoolRewrite.input({ url: address }).href).toBe(routedInput);
   });
 });

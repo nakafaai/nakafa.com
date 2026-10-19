@@ -103,9 +103,46 @@ describe("school hosts", () => {
     );
   });
 
+  it("leaves a shared root file on a school host to the router", () => {
+    expect(
+      Option.isNone(
+        decide(
+          "https://harapan.nakafa.com/e22d548f7fd2482a9022e3b84e944901.txt"
+        )
+      )
+    ).toBe(true);
+  });
+
   it("leaves a school path without a trailing slash", () => {
     expect(Option.isNone(decide("https://harapan.nakafa.com/exams"))).toBe(
       true
+    );
+  });
+});
+
+describe("slashes in a path", () => {
+  it.each([
+    ["https://nakafa.com//evil.com/", "/evil.com"],
+    ["https://nakafa.com/en//curriculum", "/en/curriculum"],
+    ["https://nakafa.com/en/curriculum//", "/en/curriculum"],
+  ])("moves %s to the single-slash path %s", (address, location) => {
+    expect(locationOf(address)).toStrictEqual(Option.some(location));
+  });
+
+  it.each([
+    "https://harapan.nakafa.com//evil.com/",
+    "https://harapan.nakafa.com///evil.com",
+  ])("never answers %s with a protocol-relative location", (address) => {
+    expect(locationOf(address)).toStrictEqual(Option.some("/evil.com"));
+  });
+
+  it("answers a path of slashes on the root with the root redirect", () => {
+    expect(decide("https://nakafa.com///", "de-DE")).toStrictEqual(
+      Option.some({
+        location: "/de",
+        status: 307,
+        vary: "Accept-Language, Cookie",
+      })
     );
   });
 });

@@ -4,7 +4,7 @@ import {
   appendResponseHeader,
   setResponseHeader,
 } from "@tanstack/react-start/server";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 import {
   readSessionClient,
   sessionFn,
@@ -20,12 +20,14 @@ vi.mock("@tanstack/react-start/server", () => ({
 }));
 
 vi.mock("@/lib/auth/session.server", () => ({
-  readRequestSession: () =>
-    Effect.succeed({
-      client: { _tag: "SignedOut" },
-      convexToken: null,
-      setCookies: ["better-auth.session_token=; Path=/; Max-Age=0"],
-    }),
+  createRequestSession: () =>
+    Effect.succeed(
+      Effect.succeed({
+        client: { _tag: "SignedOut" },
+        convexToken: Option.none(),
+        setCookies: ["better-auth.session_token=; Path=/; Max-Age=0"],
+      })
+    ),
 }));
 
 describe("session server function", () => {

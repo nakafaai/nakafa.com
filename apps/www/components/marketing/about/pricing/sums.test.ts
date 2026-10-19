@@ -6,8 +6,8 @@ import {
   NINA_RESPONSE_CREDITS,
 } from "@repo/backend/confect/credits/constants";
 import { products } from "@repo/backend/confect/customers/polar/products";
-import { getProMonthlyPricing } from "@/components/marketing/about/pricing/display";
 import { pricingSums } from "@/components/marketing/about/pricing/sums";
+import { getProMonthlyPricing } from "@/lib/pricing/monthly";
 
 describe("marketing/about/pricing-sums", () => {
   it("counts only the whole iced coffees that a Rupiah price buys", () => {

@@ -1,7 +1,23 @@
-import { DEFAULT_LOCALE, LOCALES } from "@repo/internationalization/src/locale";
+import {
+  DEFAULT_LOCALE,
+  LOCALES,
+  LocaleSchema,
+} from "@repo/internationalization/src/locale";
 import { toPublicPath } from "@repo/internationalization/src/rewrite";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { Array as Arr, Schema } from "effect";
+
+/**
+ * A canonical path that names its locale first, such as `/en/curricula`. The
+ * locale is part of the type, so a path without one cannot list its alternates.
+ */
+export const LocalizedPath = Schema.TemplateLiteral([
+  "/",
+  LocaleSchema,
+  Schema.String,
+]);
+
+export type LocalizedPath = typeof LocalizedPath.Type;
 
 /** One `hreflang` link of a page: a public locale, or `x-default` for the default locale's page. */
 const Alternate = Schema.Struct({
@@ -31,7 +47,7 @@ function hrefOf(path: string) {
  * locale with its canonical segments, such as `/en/curricula`, and each
  * locale's link is that page in its own spelling, such as `/de/lehrplaene`.
  */
-export function readAlternates(path: string): readonly Alternate[] {
+export function readAlternates(path: LocalizedPath): readonly Alternate[] {
   const alternates = Arr.map(LOCALES, (locale) =>
     Alternate.make({
       hreflang: locale,

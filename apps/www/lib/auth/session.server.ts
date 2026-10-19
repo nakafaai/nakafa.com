@@ -1,131 +1,228 @@
 import "@tanstack/react-start/server-only";
-import { FetchClient } from "@repo/utilities/http/client";
-import { getSessionCookie } from "better-auth/cookies";
-import { Config, Effect, Option, Record as Rec, Schema } from "effect";
 import {
-  Cookies,
-  HttpClient,
-  HttpClientRequest,
-  HttpClientResponse,
-} from "effect/http";
+  classifyNetworkFailure,
+  RetryableNetworkAttempt,
+  retryNetworkAttempt,
+} from "@repo/backend/client/network";
+import { getSessionCookie } from "better-auth/cookies";
+import { Array as Arr, Effect, Option, Result, Schema } from "effect";
+import { FetchHttpClient } from "effect/http";
+import { SESSION_PATH } from "@/lib/auth/session";
+import { readSessionToken } from "@/lib/auth/token";
 import { ClientSession } from "@/lib/auth/visitor";
+import { CONVEX_SITE_URL } from "@/lib/server/runtime";
 
-/** The session of a request could not be read: a network failure, an error status or an unreadable body. */
+/** The session of one request could not be read: a network failure, an error status, a missed deadline or an unreadable answer. */
 export class SessionUnavailable extends Schema.TaggedError<SessionUnavailable>()(
   "SessionUnavailable",
   {
-    reason: Schema.Literals(["body", "fetch", "status"]),
+    reason: Schema.Literals(["body", "deadline", "fetch", "status"]),
     status: Schema.optionalKey(Schema.Int),
   }
 ) {}
 
-/** The session of one request on the server: what a page may see, the Convex token, and the cookies to send back. */
+/** The session of one request on the server: what a page may see, the Convex token when there is one, and every Set-Cookie value to send back. */
 const RequestSession = Schema.Struct({
   client: ClientSession,
-  convexToken: Schema.NullOr(Schema.String),
+  convexToken: Schema.Option(Schema.String),
   setCookies: Schema.Array(Schema.String),
 });
 
-/** The Better Auth routes of the Convex site that answer for one request's cookies. */
-const SESSION_PATH = "/api/auth/get-session";
-const TOKEN_PATH = "/api/auth/convex/token";
+/** One answer of the Convex site's session route: every Set-Cookie value, in order, and the JSON text of the body. */
+const SessionAnswer = Schema.Struct({
+  setCookies: Schema.Array(Schema.String),
+  text: Schema.String,
+});
+
+type SessionAnswer = typeof SessionAnswer.Type;
+
+/** The Better Auth session of the session route, or null for a visitor. */
+const SessionJson = Schema.fromJsonString(
+  Schema.NullOr(
+    Schema.Struct({
+      session: Schema.Struct({ id: Schema.String }),
+      user: Schema.Struct({ id: Schema.String, name: Schema.String }),
+    })
+  )
+);
 
 /** The cookie that Better Auth's Convex plugin writes beside the session. */
 const CONVEX_JWT_COOKIE = "convex_jwt";
 
-const SessionBody = Schema.NullOr(
-  Schema.Struct({
-    session: Schema.Struct({ id: Schema.String }),
-    user: Schema.Struct({ id: Schema.String, name: Schema.String }),
-  })
-);
+/** The colon that ends the scheme of a URL protocol, such as `https:`. */
+const PROTOCOL_COLON = /:$/u;
 
-const TokenBody = Schema.Struct({ token: Schema.String });
-
-/** The address of the Convex site, read at runtime by the server. */
-const CONVEX_SITE_URL = Config.NonEmptyString("VITE_CONVEX_SITE_URL");
-
-/** The Convex JWT that the answer set, or none. */
-function readConvexJwt(cookies: Cookies.Cookies) {
-  return Option.map(
-    Rec.get(cookies.cookies, CONVEX_JWT_COOKIE),
-    (cookie) => cookie.value
-  );
+/** The session of a visitor, with the Set-Cookie values of the answer that produced it. */
+function signedOut(setCookies: readonly string[]) {
+  return RequestSession.make({
+    client: ClientSession.cases.SignedOut.make({}),
+    convexToken: Option.none(),
+    setCookies: [...setCookies],
+  });
 }
 
-/** Sends one read to the Convex site with the request's own cookies, and reads its answer. */
-const sendRead = Effect.fn("www.auth.session.send")(function* (
+/**
+ * The headers of one request to the Convex site. The host is the site's own, as
+ * the Better Auth helper sets it. The forwarded host and scheme name the address
+ * that the browser asked for, so the site writes its cookies for that host.
+ */
+function siteHeaders(request: Request, site: URL) {
+  const headers = new Headers(request.headers);
+  const address = new URL(request.url);
+  headers.delete("content-length");
+  headers.delete("transfer-encoding");
+  headers.set("host", site.host);
+  headers.set("x-forwarded-host", address.host);
+  headers.set(
+    "x-forwarded-proto",
+    address.protocol.replace(PROTOCOL_COLON, "")
+  );
+  return headers;
+}
+
+/**
+ * Sends one session read and reads its whole answer, so the body is read inside
+ * the attempt's deadline. A 5xx answer may be tried again, and any other error
+ * status fails at once.
+ */
+const sendSessionRead = Effect.fn("www.auth.session.send")(function* (
   url: URL,
   headers: Headers
 ) {
-  const client = (yield* HttpClient.HttpClient).pipe(HttpClient.withScope);
-  const response = yield* client
-    .execute(HttpClientRequest.get(url, { headers }))
-    .pipe(Effect.mapError(() => new SessionUnavailable({ reason: "fetch" })));
+  const fetch = yield* FetchHttpClient.Fetch;
+  const response = yield* Effect.tryPromise({
+    catch: (cause) =>
+      classifyNetworkFailure(
+        cause,
+        new SessionUnavailable({ reason: "fetch" })
+      ),
+    try: () => fetch(url, { headers, redirect: "manual" }),
+  });
+  const text = yield* Effect.tryPromise({
+    catch: (cause) =>
+      classifyNetworkFailure(
+        cause,
+        new SessionUnavailable({ reason: "fetch" })
+      ),
+    try: () => response.text(),
+  });
+  if (response.status >= 500) {
+    return yield* new RetryableNetworkAttempt({
+      failure: new SessionUnavailable({
+        reason: "status",
+        status: response.status,
+      }),
+    });
+  }
   if (response.status >= 400) {
     return yield* new SessionUnavailable({
       reason: "status",
       status: response.status,
     });
   }
-  return response;
-}, Effect.scoped);
+  return SessionAnswer.make({
+    setCookies: response.headers.getSetCookie(),
+    text,
+  });
+});
 
-/** The Convex site with the path of one Better Auth route. */
-function siteRoute(site: string, path: string) {
-  return new URL(path, site);
+/** Reads the session route under the shared deadline and retry schedule. */
+const readSessionAnswer = (url: URL, headers: Headers) =>
+  retryNetworkAttempt(
+    sendSessionRead(url, headers),
+    new SessionUnavailable({ reason: "deadline" })
+  );
+
+/**
+ * The value of the last Set-Cookie of one name, or none when the answer sets no
+ * value for it. A cleared cookie has an empty value, so it counts as none.
+ */
+function readSetCookieValue(
+  setCookies: readonly string[],
+  name: string
+): Option.Option<string> {
+  const values = Arr.filterMap(setCookies, (setCookie) => {
+    const [pair] = setCookie.split(";");
+    const [cookieName, ...value] = pair.split("=");
+    return cookieName.trim() === name
+      ? Result.succeed(Arr.join(value, "=").trim())
+      : Result.failVoid;
+  });
+  return Arr.last(values).pipe(Option.filter((value) => value !== ""));
 }
 
-/** The Convex token from the token route, read from its JSON answer. */
-const readTokenRoute = Effect.fn("www.auth.session.token")(function* (
-  site: string,
-  headers: Headers
+/**
+ * The Convex token of a signed-in answer: its JWT cookie, or else one read of the
+ * token route. Undefined when the token route answers 401, which means that the
+ * session ended.
+ */
+const readConvexToken = Effect.fn("www.auth.session.token")(function* (
+  answer: SessionAnswer,
+  site: URL,
+  request: Request
 ) {
-  const answer = yield* sendRead(siteRoute(site, TOKEN_PATH), headers);
-  const decoded = yield* HttpClientResponse.schemaBodyJson(TokenBody)(
-    answer
-  ).pipe(Effect.mapError(() => new SessionUnavailable({ reason: "body" })));
-  return decoded.token;
+  const jwt = readSetCookieValue(answer.setCookies, CONVEX_JWT_COOKIE);
+  if (Option.isSome(jwt)) {
+    return jwt.value;
+  }
+  return yield* readSessionToken(site.href, request.headers).pipe(
+    Effect.mapError(
+      (error) =>
+        new SessionUnavailable(
+          error.status === undefined
+            ? { reason: error.reason }
+            : { reason: error.reason, status: error.status }
+        )
+    )
+  );
 });
 
 /**
  * Reads the session of one request. A request without a session cookie is a
  * visitor, and it makes no network call. Otherwise one call to the Convex site
- * reads the session, and the JWT cookie of that answer is the Convex token. A
- * session without a JWT cookie reads the token route. A failure is
+ * reads the session. Every Set-Cookie value of that answer reaches the browser,
+ * including a cleared session cookie. Its `convex_jwt` value is the Convex token,
+ * and the token route is read only when that cookie is missing. A failure is
  * `SessionUnavailable`, so an outage never looks like a signed-out visitor.
  */
 export const readRequestSession = Effect.fn("www.auth.session.read")(function* (
-  headers: Headers
+  request: Request
 ) {
-  const signedOut = RequestSession.make({
-    client: ClientSession.cases.SignedOut.make({}),
-    convexToken: null,
-    setCookies: [],
-  });
-  if (getSessionCookie(headers) === null) {
-    return signedOut;
+  if (getSessionCookie(request.headers) === null) {
+    return signedOut([]);
   }
-  const site = yield* CONVEX_SITE_URL;
-  const answer = yield* sendRead(siteRoute(site, SESSION_PATH), headers);
-  const setCookies = Cookies.toSetCookieHeaders(answer.cookies);
-  const body = yield* HttpClientResponse.schemaBodyJson(SessionBody)(
-    answer
-  ).pipe(Effect.mapError(() => new SessionUnavailable({ reason: "body" })));
+  const siteUrl = yield* CONVEX_SITE_URL;
+  const site = new URL(siteUrl);
+  const answer = yield* readSessionAnswer(
+    new URL(SESSION_PATH, site),
+    siteHeaders(request, site)
+  );
+  const body = yield* Schema.decodeEffect(SessionJson)(answer.text).pipe(
+    Effect.mapError(() => new SessionUnavailable({ reason: "body" }))
+  );
   if (body === null) {
-    return signedOut;
+    return signedOut(answer.setCookies);
   }
-  const convexToken = yield* Option.match(readConvexJwt(answer.cookies), {
-    onNone: () => readTokenRoute(site, headers),
-    onSome: (token) => Effect.succeed(token),
-  });
+  const convexToken = yield* readConvexToken(answer, site, request);
+  if (convexToken === undefined) {
+    return signedOut(answer.setCookies);
+  }
   return RequestSession.make({
     client: ClientSession.cases.SignedIn.make({
       name: body.user.name,
       sessionId: body.session.id,
       userId: body.user.id,
     }),
-    convexToken,
-    setCookies,
+    convexToken: Option.some(convexToken),
+    setCookies: [...answer.setCookies],
   });
-}, Effect.provide(FetchClient));
+});
+
+/**
+ * The session of one request, read at most once. The first reader that awaits
+ * the memo runs the read, and every later reader gets the same answer. Create one
+ * memo per request, in the request's own context: a memo kept at module scope
+ * would hand one visitor's session to another request.
+ */
+export const createRequestSession = (request: Request) =>
+  Effect.cached(readRequestSession(request));

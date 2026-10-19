@@ -18,11 +18,16 @@ const RedirectDecision = Schema.Struct({
 
 type RedirectDecision = typeof RedirectDecision.Type;
 
+const SLASH_RUNS = /\/{2,}/gu;
 const TRAILING_SLASHES = /\/+$/u;
 
-/** Removes every trailing slash. The root path stays the root path. */
-function trimTrailingSlashes(pathname: string) {
-  return pathname.replace(TRAILING_SLASHES, "") || "/";
+/**
+ * Collapses every run of slashes and removes the trailing ones. A path that
+ * starts with two slashes would read as a protocol-relative address, so no
+ * redirect target starts with `//`. The root path stays the root path.
+ */
+function normalizePathname(pathname: string) {
+  return pathname.replace(SLASH_RUNS, "/").replace(TRAILING_SLASHES, "") || "/";
 }
 
 /** A permanent redirect to another path of the same host, or none when the path does not change. */
@@ -44,8 +49,8 @@ function redirectToPath(url: URL, pathname: string) {
  *
  * - `/` goes to the negotiated locale with a 307, because the answer depends on
  *   the request.
- * - A trailing slash or a non-public spelling goes to its canonical path with a
- *   308, in one hop.
+ * - A run of slashes, a trailing slash or a non-public spelling goes to its
+ *   canonical path with a 308, in one hop.
  * - A school host has no locale in its path, so only the trailing slash changes.
  * - Anything else passes through, including an unknown locale, which the router
  *   answers with a 404.
@@ -58,7 +63,7 @@ export function decideRedirect(input: {
   if (isSharedPath(url.pathname)) {
     return Option.none();
   }
-  const path = trimTrailingSlashes(url.pathname);
+  const path = normalizePathname(url.pathname);
   if (Option.isSome(readSchoolSlug(url.hostname))) {
     return redirectToPath(url, path);
   }

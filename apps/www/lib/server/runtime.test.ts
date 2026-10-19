@@ -1,7 +1,8 @@
 // @vitest-environment node
 import { HttpClient as ConfectHttpClient } from "@confect/js";
 import { describe, expect, it } from "@effect/vitest";
-import { HttpClient } from "effect/http";
+import { Effect } from "effect";
+import { FetchHttpClient, HttpClient } from "effect/http";
 import { runtime } from "@/lib/server/runtime";
 
 /** The deployment that the runtime reads from its environment. */
@@ -15,8 +16,18 @@ describe("server runtime", () => {
     expect(client.url).toBe(CONVEX_URL);
   });
 
-  it("provides the fetch client with trace headers turned off", async () => {
-    const client = await runtime.runPromise(HttpClient.HttpClient);
-    expect(typeof client.execute).toBe("function");
+  it("sends no trace headers, even from inside a span", async () => {
+    const fetcher = vi.fn<typeof fetch>(() =>
+      Promise.resolve(new Response("{}"))
+    );
+    await runtime.runPromise(
+      HttpClient.get("https://example.com/status").pipe(
+        Effect.withSpan("probe"),
+        Effect.provideService(FetchHttpClient.Fetch, fetcher)
+      )
+    );
+    const headers = new Headers(fetcher.mock.calls[0]?.[1]?.headers);
+    expect(headers.has("traceparent")).toBe(false);
+    expect(headers.has("b3")).toBe(false);
   });
 });

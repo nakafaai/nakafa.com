@@ -59,6 +59,7 @@ const SHARED_FIRST_SEGMENTS = HashSet.fromIterable([
 
 /** The root files that every host answers the same way. */
 const SHARED_ROOT_FILES = HashSet.fromIterable([
+  "/e22d548f7fd2482a9022e3b84e944901.txt",
   "/llms.txt",
   "/logo.svg",
   "/manifest.webmanifest",

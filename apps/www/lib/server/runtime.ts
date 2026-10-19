@@ -8,7 +8,10 @@ import { Config, Effect, Layer, ManagedRuntime } from "effect";
  * browser reads the same public name through `import.meta.env`, so the key keeps
  * the `VITE_` prefix in both places.
  */
-const CONVEX_URL = Config.NonEmptyString("VITE_CONVEX_URL");
+export const CONVEX_URL = Config.NonEmptyString("VITE_CONVEX_URL");
+
+/** The address of the Convex site, which serves Better Auth and its token routes. */
+export const CONVEX_SITE_URL = Config.NonEmptyString("VITE_CONVEX_SITE_URL");
 
 /**
  * The Confect client of the Convex deployment, built from its address. A

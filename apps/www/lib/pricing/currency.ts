@@ -1,11 +1,10 @@
 import { readCookie } from "@repo/internationalization/src/cookie";
 import { Array as Arr, Option, Record as Rec, Schema } from "effect";
-import { getProMonthlyPricing } from "@/components/marketing/about/pricing/display";
-
-/** The currencies that the monthly pro price is shown in, as the Polar catalog names them. */
-const PricingCurrencySchema = Schema.Literals(["EUR", "IDR", "USD"]);
-
-type PricingCurrency = typeof PricingCurrencySchema.Type;
+import {
+  getProMonthlyPricing,
+  type PricingCurrency,
+  PricingCurrencySchema,
+} from "@/lib/pricing/monthly";
 
 /** The cookie that keeps the price currency of a visitor, set from the request country. */
 const PRICING_CURRENCY_COOKIE = "pricing_currency";
@@ -80,13 +79,11 @@ const CURRENCY_BY_TIME_ZONE: Readonly<Record<string, PricingCurrency>> =
     ]),
   ]);
 
-const decodeCurrency = Schema.decodeUnknownSync(PricingCurrencySchema);
-
 /** The currency of a request country, through the same mapping that the checkout uses. */
 export function currencyForCountry(
   countryCode: string | null
 ): PricingCurrency {
-  return decodeCurrency(getProMonthlyPricing(countryCode).price.currency);
+  return getProMonthlyPricing(countryCode).currency;
 }
 
 /** The currency of a browser time zone, or the dollar price for a zone that is not mapped. */
@@ -132,6 +129,7 @@ export function pricingCurrencyScript(): string {
       "    var pair = pairs[index].trim();",
       `    if (pair.indexOf('${cookiePrefix}') === 0) {`,
       `      currency = pair.slice('${cookiePrefix}'.length);`,
+      "      break;",
       "    }",
       "  }",
       "  if (supported.indexOf(currency) === -1) {",

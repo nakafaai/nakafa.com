@@ -195,6 +195,22 @@
           }
         }
       }
+    },
+    {
+      // TanStack Router names a splat route `$`, which no case convention accepts.
+      "includes": ["apps/www/app/routes/**/$.{ts,tsx}"],
+      "linter": {
+        "rules": {
+          "style": {
+            "useFilenamingConvention": {
+              "level": "error",
+              "options": {
+                "match": "[$].tsx?"
+              }
+            }
+          }
+        }
+      }
     }
   ],
   "linter": {

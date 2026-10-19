@@ -5,7 +5,7 @@ import {
   setResponseHeader,
 } from "@tanstack/react-start/server";
 import { Effect } from "effect";
-import { readRequestSession } from "@/lib/auth/session.server";
+import { createRequestSession } from "@/lib/auth/session.server";
 import { serverHandler } from "@/lib/server/fn";
 
 /**
@@ -13,7 +13,8 @@ import { serverHandler } from "@/lib/server/fn";
  * cookies that Better Auth set are appended to the answer, and no cache keeps it.
  */
 export const readSessionClient = Effect.fn("www.auth.session.fn")(function* () {
-  const session = yield* readRequestSession(getRequest().headers);
+  const readSession = yield* createRequestSession(getRequest());
+  const session = yield* readSession;
   yield* Effect.sync(() => {
     setResponseHeader("cache-control", "private, no-store");
     for (const cookie of session.setCookies) {
