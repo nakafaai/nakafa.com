@@ -6,8 +6,8 @@ import {
 import type { TenantActor } from "@repo/backend/confect/journal/schema";
 import { unitAuthority } from "@repo/backend/confect/tenancy/authority";
 import { UnitLimit } from "@repo/backend/confect/tenancy/errors";
-import { UNIT_LIMIT } from "@repo/backend/confect/tenancy/schema";
 import type { UnitDraft } from "@repo/backend/confect/tenancy/provision.spec";
+import { UNIT_LIMIT } from "@repo/backend/confect/tenancy/schema";
 import { Effect } from "effect";
 
 /** Adds one active school to the organisation and records it as `actor`. */

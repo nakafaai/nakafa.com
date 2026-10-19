@@ -143,7 +143,6 @@ export const withOptionRemoved = (
   optionId: string
 ): Arr.NonEmptyArray<Interaction> =>
   Arr.map(answers, (answer) =>
-
     isChoice(answer) && answer.options.length > CHOICE_OPTIONS_MIN
       ? {
           ...answer,

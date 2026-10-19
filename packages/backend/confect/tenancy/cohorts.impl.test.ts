@@ -12,7 +12,7 @@ import {
 import { Array as Arr, Effect } from "effect";
 
 const nf = slugOf("nf");
-const { activePeriod, create, get, list, rename, archive, restore } =
+const { activePeriod, create, get, list, rename, archive } =
   refs.public.tenancy.cohorts;
 const assignments = refs.public.tenancy.assignments;
 const periods = refs.public.tenancy.periods;

@@ -13,7 +13,7 @@ import { Array as Arr, Effect } from "effect";
 const nf = slugOf("nf");
 const other = slugOf("other");
 const viewer = refs.public.tenancy.viewer.get;
-const { archive, create, list, setLocale, setNpsn, unarchive } =
+const { archive, list, setLocale, setNpsn, unarchive } =
   refs.public.tenancy.units;
 const denied = (reason: "resource" | "role" | "condition") => ({
   _tag: "AccessDenied",
