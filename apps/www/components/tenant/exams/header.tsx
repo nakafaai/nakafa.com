@@ -72,13 +72,13 @@ export function ExamHeader() {
         placeholder={t("untitled")}
         value={draft ?? exam.title}
       />
-      <NavigationLink
+      <Link
         className={buttonVariants({ variant: "outline" })}
         href={`/exams/${exam.id}/try`}
       >
         <HugeIcons icon={ViewIcon} />
         {t("try-action")}
-      </NavigationLink>
+      </Link>
       <ScheduleExam />
     </header>
   );
