@@ -1,14 +1,13 @@
 import { Nina } from "@repo/design-system/components/ui/nina";
 import { Thing } from "@repo/design-system/components/ui/thing";
 import { Array as Arr } from "effect";
-import { headers } from "next/headers";
 import type { ReactNode } from "react";
-import { Suspense, use } from "react";
+import { use } from "react";
 import { useTranslations } from "use-intl";
+import { PricingCountryContext } from "@/components/marketing/about/pricing/country";
 import {
   currencySymbol,
   drinkKey,
-  pricingCountryHeaderName,
 } from "@/components/marketing/about/pricing/display";
 import { pricingSums } from "@/components/marketing/about/pricing/sums";
 import { getProMonthlyPricing } from "@/lib/pricing/monthly";
@@ -60,10 +59,7 @@ function PriceCoin({ symbol }: { symbol: string }) {
  */
 function ResolvedComparison() {
   const t = useTranslations("PricingPage");
-  const requestHeaders = use(headers());
-  const { formatter, price } = getProMonthlyPricing(
-    requestHeaders.get(pricingCountryHeaderName)
-  );
+  const { formatter, price } = getProMonthlyPricing(use(PricingCountryContext));
   const sums = pricingSums(price);
   const perDayNote =
     price.currency === "IDR" ? t("per-day-note-idr") : t("per-day-note-other");
@@ -112,7 +108,7 @@ function ResolvedComparison() {
 
 /**
  * The comparison section of the pricing page. Its sums depend on the visitor's
- * region, so it streams in, and nothing is shown until its price is known.
+ * region, which the pricing country context provides.
  */
 export function PricingComparison() {
   return (
@@ -121,9 +117,7 @@ export function PricingComparison() {
       id="comparison"
     >
       <div className="mx-auto grid w-full max-w-7xl gap-12">
-        <Suspense fallback={null}>
-          <ResolvedComparison />
-        </Suspense>
+        <ResolvedComparison />
       </div>
     </section>
   );

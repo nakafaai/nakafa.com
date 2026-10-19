@@ -5,22 +5,24 @@ import {
   PLAYER_MODE_COOKIE,
   PLAYER_MODE_MAX_AGE,
 } from "@/components/player/mode";
-import { savePlayerMode } from "@/components/player/preference";
+import { savePlayerModeHandler } from "@/components/player/preference";
 
-const headers = vi.hoisted(() => ({ cookies: vi.fn(), set: vi.fn() }));
+const cookies = vi.hoisted(() => ({ setCookie: vi.fn() }));
 
-vi.mock("next/headers", () => ({ cookies: headers.cookies }));
+vi.mock("@tanstack/react-start/server", () => ({
+  getRequest: () => new Request("https://nakafa.com/"),
+  setCookie: cookies.setCookie,
+}));
 
-describe("savePlayerMode", () => {
+describe("savePlayerModeHandler", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    headers.cookies.mockResolvedValue({ set: headers.set });
   });
 
   it("remembers the chosen view for a year, for the server only", async () => {
-    await savePlayerMode("single");
+    await savePlayerModeHandler({ data: "single" });
 
-    expect(headers.set).toHaveBeenCalledExactlyOnceWith(
+    expect(cookies.setCookie).toHaveBeenCalledExactlyOnceWith(
       PLAYER_MODE_COOKIE,
       "single",
       {
@@ -32,15 +34,11 @@ describe("savePlayerMode", () => {
     );
   });
 
-  it("refuses a view that arrived from the network and is not one", async () => {
-    await expect(savePlayerMode("grid")).rejects.toThrow();
-
-    expect(headers.set).not.toHaveBeenCalled();
-  });
-
   it("fails when the request has no cookies to write", async () => {
-    headers.cookies.mockRejectedValue(new Error("outside a request"));
+    cookies.setCookie.mockImplementation(() => {
+      throw new Error("outside a request");
+    });
 
-    await expect(savePlayerMode("list")).rejects.toThrow();
+    await expect(savePlayerModeHandler({ data: "list" })).rejects.toThrow();
   });
 });

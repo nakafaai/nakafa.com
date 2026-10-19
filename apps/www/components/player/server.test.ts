@@ -4,16 +4,15 @@ import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { PLAYER_MODE_COOKIE } from "@/components/player/mode";
 import { readPlayerMode } from "@/components/player/server";
 
-const headers = vi.hoisted(() => ({ cookies: vi.fn() }));
+const cookies = vi.hoisted(() => ({ getCookie: vi.fn() }));
 
-vi.mock("next/headers", () => ({ cookies: headers.cookies }));
+vi.mock("@tanstack/react-start/server", () => ({
+  getCookie: cookies.getCookie,
+}));
 
 /** Makes the request carry these cookies, by name and value. */
 function carry(values: Record<string, string>) {
-  headers.cookies.mockResolvedValue({
-    get: (name: string) =>
-      name in values ? { name, value: values[name] } : undefined,
-  });
+  cookies.getCookie.mockImplementation((name: string) => values[name]);
 }
 
 describe("readPlayerMode", () => {
@@ -21,23 +20,23 @@ describe("readPlayerMode", () => {
     vi.clearAllMocks();
   });
 
-  it("lets the address win over the saved view", async () => {
+  it("lets the address win over the saved view", () => {
     carry({ [PLAYER_MODE_COOKIE]: "single" });
 
-    expect(await readPlayerMode({ kind: "valid", mode: "list" })).toBe("list");
+    expect(readPlayerMode({ kind: "valid", mode: "list" })).toBe("list");
   });
 
-  it("uses the saved view when the address names none", async () => {
+  it("uses the saved view when the address names none", () => {
     carry({ [PLAYER_MODE_COOKIE]: "single" });
 
-    expect(await readPlayerMode({ kind: "absent" })).toBe("single");
+    expect(readPlayerMode({ kind: "absent" })).toBe("single");
   });
 
-  it("starts with the list without a saved view or with an unknown one", async () => {
+  it("starts with the list without a saved view or with an unknown one", () => {
     carry({});
-    expect(await readPlayerMode({ kind: "absent" })).toBe("list");
+    expect(readPlayerMode({ kind: "absent" })).toBe("list");
 
     carry({ [PLAYER_MODE_COOKIE]: "grid" });
-    expect(await readPlayerMode({ kind: "absent" })).toBe("list");
+    expect(readPlayerMode({ kind: "absent" })).toBe("list");
   });
 });

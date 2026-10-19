@@ -10,13 +10,13 @@ import {
 const userAgent = "Mozilla/5.0 (compatible; Googlebot/2.1)";
 
 const analyticsMocks = vi.hoisted(() => {
-  const tasks: Array<() => unknown> = [];
+  const tasks: (() => Promise<unknown>)[] = [];
   return {
-    after: vi.fn(),
     captureServerException: vi.fn(),
-    headers: vi.fn(),
+    getRequestHeader: vi.fn(),
     isServerExceptionReportingEnabled: vi.fn(),
     tasks,
+    waitUntil: vi.fn(),
   };
 });
 
@@ -29,17 +29,20 @@ vi.mock("@repo/analytics/server-reporting", () => ({
     analyticsMocks.isServerExceptionReportingEnabled,
 }));
 
-vi.mock("next/headers", () => ({
-  headers: analyticsMocks.headers,
+vi.mock("@tanstack/react-start/server", () => ({
+  getRequestHeader: analyticsMocks.getRequestHeader,
 }));
 
-vi.mock("next/server", () => ({
-  after: analyticsMocks.after,
+vi.mock("@vercel/functions", () => ({
+  waitUntil: analyticsMocks.waitUntil,
 }));
 
-/** Returns the single request-time task registered with Next.js `after`. */
-const getScheduledTask = Effect.fn("www.analytics.test.getScheduledTask")(() =>
-  Effect.fromNullishOr(analyticsMocks.tasks[0])
+/** Waits for the single request-time task registered with the platform `waitUntil`. */
+const settleScheduledTask = Effect.fn("www.analytics.test.settleScheduledTask")(
+  function* () {
+    const task = yield* Effect.fromNullishOr(analyticsMocks.tasks[0]);
+    yield* Effect.promise(() => task());
+  }
 );
 
 describe("request-time server exception reporting", () => {
@@ -47,11 +50,9 @@ describe("request-time server exception reporting", () => {
     vi.clearAllMocks();
     analyticsMocks.tasks.length = 0;
     analyticsMocks.captureServerException.mockReturnValue(Effect.void);
-    analyticsMocks.headers.mockResolvedValue(
-      new Headers({ "user-agent": userAgent })
-    );
-    analyticsMocks.after.mockImplementation((task) => {
-      analyticsMocks.tasks = Arr.append(analyticsMocks.tasks, task);
+    analyticsMocks.getRequestHeader.mockReturnValue(userAgent);
+    analyticsMocks.waitUntil.mockImplementation((task: Promise<unknown>) => {
+      analyticsMocks.tasks = Arr.append(analyticsMocks.tasks, () => task);
     });
     analyticsMocks.isServerExceptionReportingEnabled.mockReturnValue(true);
   });
@@ -70,7 +71,7 @@ describe("request-time server exception reporting", () => {
         source: "disabled-explicit-test",
       });
 
-      expect(analyticsMocks.after).not.toHaveBeenCalled();
+      expect(analyticsMocks.waitUntil).not.toHaveBeenCalled();
     })
   );
 
@@ -85,8 +86,7 @@ describe("request-time server exception reporting", () => {
 
         expect(analyticsMocks.captureServerException).not.toHaveBeenCalled();
 
-        const task = yield* getScheduledTask();
-        yield* Effect.promise(() => Promise.resolve(task()));
+        yield* settleScheduledTask();
 
         expect(analyticsMocks.captureServerException).toHaveBeenCalledWith(
           error,
@@ -98,17 +98,16 @@ describe("request-time server exception reporting", () => {
 
   it.effect("captures without a hint when no request scope is active", () =>
     Effect.gen(function* () {
-      analyticsMocks.headers.mockRejectedValueOnce(
-        new Error("headers unavailable")
-      );
+      analyticsMocks.getRequestHeader.mockImplementationOnce(() => {
+        throw new Error("headers unavailable");
+      });
       const error = new Error("preload failed");
 
       yield* scheduleCurrentServerExceptionCapture(error, {
         source: "settings",
       });
 
-      const task = yield* getScheduledTask();
-      yield* Effect.promise(() => Promise.resolve(task()));
+      yield* settleScheduledTask();
 
       expect(analyticsMocks.captureServerException).toHaveBeenCalledWith(
         error,
@@ -120,15 +119,14 @@ describe("request-time server exception reporting", () => {
 
   it.effect("schedules an explicitly provided operational exception", () =>
     Effect.gen(function* () {
-      analyticsMocks.headers.mockResolvedValueOnce(new Headers());
+      analyticsMocks.getRequestHeader.mockReturnValueOnce(undefined);
       const error = new Error("weather failed");
 
       yield* scheduleServerExceptionCapture(error, {
         source: "weather-api",
       });
 
-      const task = yield* getScheduledTask();
-      yield* Effect.promise(() => Promise.resolve(task()));
+      yield* settleScheduledTask();
       expect(analyticsMocks.captureServerException).toHaveBeenCalledWith(
         error,
         {
@@ -152,14 +150,13 @@ describe("request-time server exception reporting", () => {
         }
       );
 
-      const task = yield* getScheduledTask();
-      yield* Effect.promise(() => expect(task()).resolves.toBeUndefined());
+      yield* settleScheduledTask();
     })
   );
 
   it.effect("contains request scheduling failures", () =>
     Effect.gen(function* () {
-      analyticsMocks.after.mockImplementation(() => {
+      analyticsMocks.waitUntil.mockImplementation(() => {
         throw new Error("request already closed");
       });
 

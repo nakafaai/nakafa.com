@@ -22,7 +22,7 @@ function syncModeParam(mode: PlayerMode) {
 /** Saves the chosen view for the next page; true when it was saved, false when it was not. */
 export const rememberPlayerMode = Effect.fn("player.mode.rememberInBrowser")(
   (mode: PlayerMode) =>
-    Effect.tryPromise(() => savePlayerMode(mode)).pipe(
+    Effect.tryPromise(() => savePlayerMode({ data: mode })).pipe(
       Effect.tap(() => Effect.sync(() => syncModeParam(mode))),
       Effect.as(true),
       Effect.catch((error) =>

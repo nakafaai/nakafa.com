@@ -2,11 +2,17 @@ import "@tanstack/react-start/server-only";
 
 import type { OperationalExceptionProperties } from "@repo/analytics/posthog/exception";
 import { isServerExceptionReportingEnabled } from "@repo/analytics/server-reporting";
+import { getRequestHeader } from "@tanstack/react-start/server";
+import { waitUntil } from "@vercel/functions";
 import { Effect, Schema } from "effect";
-import { headers } from "next/headers";
-import { after } from "next/server";
 
-/** Expected failure while registering request completion work with Next.js. */
+/** The request has no user agent to read, because no request scope is active. */
+class RequestUserAgentUnavailable extends Schema.TaggedError<RequestUserAgentUnavailable>()(
+  "RequestUserAgentUnavailable",
+  { cause: Schema.Unknown }
+) {}
+
+/** Expected failure while registering request completion work with the platform. */
 class ServerExceptionScheduleError extends Schema.TaggedError<ServerExceptionScheduleError>()(
   "ServerExceptionScheduleError",
   {
@@ -19,17 +25,15 @@ class ServerExceptionScheduleError extends Schema.TaggedError<ServerExceptionSch
  * Reads the current request user agent so PostHog classifies the fault's
  * traffic type instead of filing every server capture under automation.
  *
- * The read is best-effort: outside a request scope `headers()` rejects, and the
- * capture then proceeds without the classification hint.
+ * The read is best-effort: outside a request scope `getRequestHeader` throws,
+ * and the capture then proceeds without the classification hint.
  */
 const readRequestUserAgent = Effect.fn("www.analytics.readRequestUserAgent")(
   function* () {
-    return yield* Effect.tryPromise(() => headers()).pipe(
-      Effect.map(
-        (requestHeaders) => requestHeaders.get("user-agent") ?? undefined
-      ),
-      Effect.orElseSucceed(() => undefined)
-    );
+    return yield* Effect.try({
+      catch: (cause) => new RequestUserAgentUnavailable({ cause }),
+      try: () => getRequestHeader("user-agent"),
+    }).pipe(Effect.orElseSucceed(() => undefined));
   }
 );
 
@@ -58,8 +62,7 @@ export const captureServerExceptionSafely = Effect.fn(
 
 /**
  * Schedules handled request-time error reporting after the response completes.
- *
- * https://nextjs.org/docs/app/api-reference/functions/after#with-request-apis
+ * The platform keeps the function alive until the capture settles.
  */
 export const scheduleCurrentServerExceptionCapture = Effect.fn(
   "www.analytics.scheduleCurrentServerExceptionCapture"
@@ -88,6 +91,8 @@ export const scheduleServerExceptionCapture = Effect.fn(
         message: "Failed to schedule server exception reporting.",
       }),
     try: () =>
-      after(() => runPromise(captureServerExceptionSafely(error, properties))),
+      waitUntil(
+        captureServerExceptionSafely(error, properties).pipe(runPromise)
+      ),
   }).pipe(Effect.ignore);
 });

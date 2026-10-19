@@ -29,7 +29,7 @@ describe("rememberPlayerMode", () => {
       const saved = yield* rememberPlayerMode("single");
 
       expect(saved).toBe(true);
-      expect(mocks.save).toHaveBeenCalledExactlyOnceWith("single");
+      expect(mocks.save).toHaveBeenCalledExactlyOnceWith({ data: "single" });
       expect(mocks.report).not.toHaveBeenCalled();
     })
   );

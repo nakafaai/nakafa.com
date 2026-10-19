@@ -24,5 +24,8 @@ export const DEFAULT_LOCALE = ACTIVE_APP_LOCALE_CODES[0];
  */
 export const LOCALE_COOKIE = "NAKAFA_LOCALE";
 
+/** The attributes of the locale cookie: every path reads it, and same-site navigations send it. */
+export const LOCALE_COOKIE_ATTRIBUTES = { path: "/", sameSite: "lax" } as const;
+
 /** Decodes an unknown value into a public locale, or none. */
 export const decodeLocale = Schema.decodeUnknownOption(LocaleSchema);

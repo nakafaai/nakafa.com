@@ -1,5 +1,6 @@
 "use client";
 
+import { LocaleSchema } from "@repo/internationalization/src/locale";
 import { Effect, Schema } from "effect";
 import { unstable_isUnrecognizedActionError } from "next/navigation";
 import { saveSchoolLanguage } from "@/components/tenant/language";
@@ -35,10 +36,13 @@ type SchoolLanguageRender = typeof SchoolLanguageRender.Type;
  * `failed`, so the menu can tell the viewer and offer to try again.
  */
 export const changeSchoolLanguage = Effect.fn("tenant.language.change")(
-  function* (locale: string) {
+  function* (value: string) {
+    const locale = yield* Schema.decodeUnknownEffect(LocaleSchema)(value).pipe(
+      Effect.mapError((reason) => new LanguageSaveFailed({ reason }))
+    );
     return yield* Effect.tryPromise({
       catch: (reason) => new LanguageSaveFailed({ reason }),
-      try: () => saveSchoolLanguage(locale),
+      try: () => saveSchoolLanguage({ data: locale }),
     }).pipe(
       Effect.as<SchoolLanguageRender>("refresh"),
       Effect.catch(({ reason }) =>

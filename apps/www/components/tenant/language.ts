@@ -1,37 +1,37 @@
-"use server";
-
-import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
-import { schoolLocaleCookie } from "@repo/internationalization/src/routing";
+import {
+  LOCALE_COOKIE,
+  LOCALE_COOKIE_ATTRIBUTES,
+  type Locale,
+  LocaleSchema,
+} from "@repo/internationalization/src/locale";
+import { createServerFn } from "@tanstack/react-start";
+import { setCookie } from "@tanstack/react-start/server";
 import { Effect, Schema } from "effect";
-import { cookies } from "next/headers";
-
-/** The languages a school host renders, which the language cookie may hold. */
-const SchoolLocale = Schema.Literals(ACTIVE_APP_LOCALE_CODES);
+import { serverHandler } from "@/lib/server/fn";
 
 /** How long the language cookie lasts, in seconds: one year. */
 const LOCALE_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
 
 /**
- * Writes the language that a school host renders. The proxy reads the cookie
+ * Writes the language that a school host renders. The request reads the cookie
  * before it renders a page, so the next page comes back in that language. A
- * cookie can only be written here, on the server, which is the framework
- * boundary for it.
+ * cookie can only be written on the server, which is the framework boundary.
  */
-const remember = Effect.fn("tenant.language.remember")(function* (
-  value: unknown
+const rememberSchoolLanguage = Effect.fn("tenant.language.remember")(function* (
+  locale: Locale
 ) {
-  const locale = yield* Schema.decodeUnknownEffect(SchoolLocale)(value);
-  const store = yield* Effect.tryPromise(() => cookies());
   yield* Effect.sync(() => {
-    store.set(schoolLocaleCookie.name, locale, {
+    setCookie(LOCALE_COOKIE, locale, {
+      ...LOCALE_COOKIE_ATTRIBUTES,
       maxAge: LOCALE_COOKIE_MAX_AGE,
-      path: schoolLocaleCookie.path,
-      sameSite: schoolLocaleCookie.sameSite,
     });
   });
 });
 
+/** The handler of the language server function, which the tests call directly. */
+export const saveSchoolLanguageHandler = serverHandler(rememberSchoolLanguage);
+
 /** Saves the language of a school host from the account menu. */
-export async function saveSchoolLanguage(locale: unknown) {
-  await Effect.runPromise(remember(locale));
-}
+export const saveSchoolLanguage = createServerFn({ method: "POST" })
+  .validator(Schema.toStandardSchemaV1(LocaleSchema))
+  .handler(saveSchoolLanguageHandler);
