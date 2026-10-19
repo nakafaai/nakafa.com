@@ -35,9 +35,7 @@ const SCENE_Y_OFFSET = 0.62;
 type ScenePoint = [number, number, number];
 type TrendAxis = "period" | "group";
 
-/**
- * Renders the active periodic trend as two readable 3D sample tracks.
- */
+/** The colors, the mode and the value range that the parts of a periodic-properties scene read. */
 const PeriodicPropertiesSceneContext = createContext<{
   colors: PeriodicPropertiesSceneColors;
   mode: PeriodicPropertyMode;
@@ -56,6 +54,9 @@ function usePeriodicPropertiesScene() {
   return scene;
 }
 
+/**
+ * Renders the active periodic trend as two readable 3D sample tracks.
+ */
 export function PeriodicPropertiesScene({
   colors,
   modeId,

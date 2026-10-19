@@ -1,10 +1,7 @@
 import { LineEquationProvider } from "@repo/design-system/components/contents/mathematics/line/context";
 import { DeferredLineScene } from "@repo/design-system/components/contents/mathematics/line/deferred";
 import { LineFacts } from "@repo/design-system/components/contents/mathematics/line/facts";
-import {
-  type LineSceneConfig,
-  resolveLineScene,
-} from "@repo/design-system/components/contents/mathematics/line/resolve";
+import { resolveLineScene } from "@repo/design-system/components/contents/mathematics/line/resolve";
 import type {
   AuthoredLine,
   CircleArcFields,
@@ -44,32 +41,6 @@ interface CardProps extends SceneProps {
   header: ReactNode;
 }
 
-/**
- * The line-equation card under the header its caller builds: the scene with its actions, and
- * the readouts of the scene in the footer. The footer is drawn on the server, so its math
- * never reaches the browser; the scene parts read the scene from `LineEquationProvider`.
- */
-function LineEquationFrame({
-  config,
-  header,
-}: {
-  config: LineSceneConfig;
-  header: ReactNode;
-}) {
-  return (
-    <LineEquationProvider config={config}>
-      <VisualCard>
-        {header}
-        <DeferredLineScene />
-        <CoordinateControls />
-        <VisualCardFooter>
-          <LineFacts lines={config.lines} />
-        </VisualCardFooter>
-      </VisualCard>
-    </LineEquationProvider>
-  );
-}
-
 /** The line-equation card of authored content, with the title and description of its lesson. */
 export function LineEquation({
   cameraPosition,
@@ -79,22 +50,23 @@ export function LineEquation({
   showZAxis,
   title,
 }: Props) {
-  const config = resolveLineScene({
-    cameraPosition,
-    cameraTarget,
-    data,
-    showZAxis,
-  });
-
   return (
-    <LineEquationFrame
-      config={config}
+    <LineEquationCard
+      cameraPosition={cameraPosition}
+      cameraTarget={cameraTarget}
+      data={data}
       header={<VisualCardHeader description={description} title={title} />}
+      showZAxis={showZAxis}
     />
   );
 }
 
-/** The line-equation card under a header its caller builds, as the unit-circle card takes one. */
+/**
+ * The line-equation card under a header its caller builds, as the unit-circle card takes one:
+ * the scene with its actions, and the readouts of the scene in the footer. The footer is drawn
+ * on the server, so its math never reaches the browser; the scene parts read the scene from
+ * `LineEquationProvider`.
+ */
 export function LineEquationCard({
   cameraPosition,
   cameraTarget,
@@ -109,5 +81,16 @@ export function LineEquationCard({
     showZAxis,
   });
 
-  return <LineEquationFrame config={config} header={header} />;
+  return (
+    <LineEquationProvider config={config}>
+      <VisualCard>
+        {header}
+        <DeferredLineScene />
+        <CoordinateControls />
+        <VisualCardFooter>
+          <LineFacts lines={config.lines} />
+        </VisualCardFooter>
+      </VisualCard>
+    </LineEquationProvider>
+  );
 }
