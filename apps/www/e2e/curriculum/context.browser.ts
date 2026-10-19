@@ -76,7 +76,7 @@ test("material sidebar preserves verified curriculum context", async ({
                 expect(
                   page
                     .getByRole("navigation", {
-                      name: "breadcrumb",
+                      name: "Breadcrumb",
                       exact: true,
                     })
                     .getByRole("link", { name: "Home", exact: true })
