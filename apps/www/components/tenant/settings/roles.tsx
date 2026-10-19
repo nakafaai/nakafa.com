@@ -48,7 +48,7 @@ import {
 import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, Option, Schema } from "effect";
 import { useTranslations } from "next-intl";
-import { startTransition, useId, useState } from "react";
+import { startTransition, useId, useState, useTransition } from "react";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
@@ -375,6 +375,8 @@ function SchoolGrantDialog({
   );
   const [personId, setPersonId] = useState<PersonId | undefined>(undefined);
   const [role, setRole] = useState<BuiltinRole | undefined>(undefined);
+  // The grant's person and role stay selected until the server accepts it, and the submit waits for it.
+  const [isPending, startAssigning] = useTransition();
 
   const roleItems = Arr.map(BuiltinRole.literals, (value) => ({
     label: tSchool(`role.${value}`),
@@ -394,12 +396,14 @@ function SchoolGrantDialog({
             {common("cancel")}
           </Button>
           <Button
-            disabled={personId === undefined || role === undefined}
+            disabled={personId === undefined || role === undefined || isPending}
+            inert={isPending}
             onClick={() => {
               if (personId === undefined || role === undefined) {
                 return;
               }
-              startTransition(() =>
+              setOpen(false);
+              startAssigning(() =>
                 saveSchool(
                   () =>
                     assign({
@@ -408,10 +412,13 @@ function SchoolGrantDialog({
                       scope: { kind: "tenant" },
                       slug,
                     }),
-                  SOURCE
+                  SOURCE,
+                  () => {
+                    setPersonId(undefined);
+                    setRole(undefined);
+                  }
                 )
               );
-              setOpen(false);
             }}
             type="button"
           >

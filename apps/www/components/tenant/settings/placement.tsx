@@ -29,7 +29,7 @@ import {
 } from "@repo/design-system/components/ui/select";
 import { Array as Arr, Option, Schema } from "effect";
 import { useTranslations } from "next-intl";
-import { startTransition, useId, useState } from "react";
+import { startTransition, useId, useState, useTransition } from "react";
 import {
   moveStudentChange,
   placeStudentChange,
@@ -66,13 +66,15 @@ export function SchoolPlacementAdd({
   );
   const [isOpen, setIsOpen] = useState(false);
   const [personId, setPersonId] = useState<PersonId | undefined>(undefined);
+  // The student stays selected until the server accepts the placement, and the submit waits for it.
+  const [isPending, startPlacing] = useTransition();
 
   const submit = () => {
     if (personId === undefined) {
       return;
     }
     setIsOpen(false);
-    startTransition(() =>
+    startPlacing(() =>
       saveSchool(
         () => place({ cohortId, personId, slug }),
         SOURCE,
@@ -98,7 +100,8 @@ export function SchoolPlacementAdd({
               {common("cancel")}
             </Button>
             <Button
-              disabled={personId === undefined}
+              disabled={personId === undefined || isPending}
+              inert={isPending}
               onClick={submit}
               type="button"
             >
