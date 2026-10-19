@@ -8,7 +8,7 @@ import { Radio } from "@repo/design-system/components/ui/radio-group";
 import { paragraphVariants } from "@repo/design-system/lib/paragraph";
 import { DOMSerializer, type Node } from "@tiptap/pm/model";
 import { Array as Arr, Effect, HashMap, Option } from "effect";
-import { useDeferredValue } from "react";
+import { useCallback, useDeferredValue, useMemo } from "react";
 import {
   choiceOf,
   labelText,
@@ -74,14 +74,20 @@ export function QuestionPreview({
   );
   // A document this build cannot read leaves its thumbnail without a prompt, and the
   // rest of the strip stays; the editor reports the failure when the question opens.
-  const read = QueryResult.isSuccess(reply)
-    ? Effect.runSync(
-        foldedDocument(assessmentSchema, reply.value).pipe(
-          Effect.asSome,
-          Effect.catchTag("SyncFailed", () => Effect.succeedNone)
-        )
-      )
-    : Option.none();
+  // The stored steps are folded once per answer of the server: the strip redraws every
+  // thumbnail whenever the exam changes, and a long prompt's fold costs one step each.
+  const read = useMemo(
+    () =>
+      QueryResult.isSuccess(reply)
+        ? Effect.runSync(
+            foldedDocument(assessmentSchema, reply.value).pipe(
+              Effect.asSome,
+              Effect.catchTag("SyncFailed", () => Effect.succeedNone)
+            )
+          )
+        : Option.none(),
+    [reply]
+  );
   // The open question shows what its editor holds; any other shows what the server holds,
   // and what its editor last held until the server answers.
   const doc = open
@@ -129,23 +135,23 @@ export function QuestionPreview({
  */
 function PreviewProse({ doc }: { doc: Node }) {
   const shown = useDeferredValue(doc);
-
-  return (
-    <div
-      className="wrap-break-word whitespace-pre-wrap"
-      ref={(element) => {
-        if (element === null) {
-          return;
-        }
-        element.replaceChildren(
-          DOMSerializer.fromSchema(shown.type.schema).serializeFragment(
-            shown.content
-          )
-        );
-        Arr.forEach(Arr.fromIterable(element.querySelectorAll("p")), (p) => {
-          p.className = paragraphVariants();
-        });
-      }}
-    />
+  // The page is drawn again only when the prompt changes, not on every redraw of the strip.
+  const draw = useCallback(
+    (element: HTMLDivElement | null) => {
+      if (element === null) {
+        return;
+      }
+      element.replaceChildren(
+        DOMSerializer.fromSchema(shown.type.schema).serializeFragment(
+          shown.content
+        )
+      );
+      Arr.forEach(Arr.fromIterable(element.querySelectorAll("p")), (p) => {
+        p.className = paragraphVariants();
+      });
+    },
+    [shown]
   );
+
+  return <div className="wrap-break-word whitespace-pre-wrap" ref={draw} />;
 }
