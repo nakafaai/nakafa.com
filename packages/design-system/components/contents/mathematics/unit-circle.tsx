@@ -25,7 +25,6 @@ import {
   VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
-import { monospace } from "@repo/design-system/lib/monospace";
 import {
   getCos,
   getQuadrant,
@@ -33,7 +32,6 @@ import {
   getSin,
   getTan,
 } from "@repo/math/angles";
-import { cn } from "cn";
 import { Option } from "effect";
 import dynamic from "next/dynamic";
 import { useFormatter, useLocale, useTranslations } from "next-intl";
@@ -229,10 +227,7 @@ function Content() {
               </Button>
               <Input
                 aria-roledescription={t("number-field")}
-                className={cn(
-                  monospace,
-                  "w-full grow bg-background px-3 py-2 text-center font-mono text-foreground tabular-nums"
-                )}
+                className="w-full grow bg-background px-3 py-2 text-center font-mono text-foreground tabular-nums"
               />
               <Button
                 className="flex aspect-square h-full cursor-pointer items-center justify-center border-input border-s bg-background text-muted-foreground text-sm transition-[color,box-shadow] hover:bg-accent hover:text-accent-foreground disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"

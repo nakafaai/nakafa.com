@@ -206,8 +206,9 @@
    * inlines --default-mono-font-family into preflight's bare code, keyboard keys
    * and preformatted text, so each one resolves Geist Mono from its own scope
    * rather than from :root. */
-  --system-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
-    "Liberation Mono", "Courier New", monospace;
+  --system-mono:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    "Courier New", monospace;
   --font-mono: var(--font-geist-mono, var(--system-mono));
   --default-mono-font-family: var(--font-geist-mono, var(--system-mono));
   --color-background: var(--background);
