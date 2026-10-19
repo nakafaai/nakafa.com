@@ -51,6 +51,27 @@ export function visibleLink(page: Page, href: string, scope: string) {
     .first();
 }
 
+/**
+ * Activates the breadcrumb's link to an ancestor of the path. A narrow screen folds the
+ * ancestors into the breadcrumb's More menu, which opens outside the page's main region,
+ * so there the link is pressed in the menu once it opens.
+ */
+export const activateAncestor = Effect.fn("NakafaE2E.activateAncestor")(
+  function* (page: Page, href: string, hasTouch: boolean) {
+    const more = page
+      .getByRole("navigation", { name: "breadcrumb" })
+      .getByRole("button", { name: "More" });
+    if ((yield* Effect.promise(() => more.count())) === 0) {
+      return yield* activate(visibleLink(page, href, "main"), hasTouch);
+    }
+    yield* activate(more, hasTouch);
+    yield* activate(
+      page.getByRole("menu").locator(`a[href="${href}"]`),
+      hasTouch
+    );
+  }
+);
+
 /** Repeats a real activation until its client-owned surface becomes visible. */
 export const activateUntilVisible = Effect.fn("NakafaE2E.activateUntilVisible")(
   function* (trigger: Locator, surface: Locator, timeoutMilliseconds: number) {
