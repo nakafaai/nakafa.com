@@ -5,7 +5,6 @@ import {
   placeholderExamId,
   placeholderPromptId,
   placeholderQuestionId,
-  placeholderSittingId,
 } from "@/components/tenant/exams/placeholder";
 
 describe("placeholder ids", () => {
@@ -15,15 +14,6 @@ describe("placeholder ids", () => {
       const second = yield* placeholderExamId;
 
       expect(first).not.toBe(second);
-    })
-  );
-
-  it.effect("give a room identifier of its own, which is a placeholder", () =>
-    Effect.gen(function* () {
-      const room = yield* placeholderSittingId;
-
-      expect(isPlaceholderId(room)).toBe(true);
-      expect(room).not.toBe(yield* placeholderSittingId);
     })
   );
 
