@@ -108,6 +108,12 @@ export function isApplicationRoutePath(
     return isOnboardingPath(segments);
   }
 
+  // The main host serves one school page, where an account opens its own
+  // school; every other school page lives on the school's own host.
+  if (root === "school") {
+    return Arr.join(segments, "/") === "new";
+  }
+
   if (root === "user") {
     return isUserPath(segments);
   }

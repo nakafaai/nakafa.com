@@ -17,24 +17,31 @@ function readSegment(segments: readonly string[], index: number) {
 }
 
 /**
+ * The page under `school` where an account opens a school of its own (K42). It
+ * is served on the main host, as `nakafa.com/id/school/new`, and `new` is a
+ * reserved address, so no school host reaches it.
+ */
+const SCHOOL_START_SEGMENT = "new";
+
+/**
  * Whether a path points into the school tree of the internal routes, with or
  * without a locale in front. Only a school host may reach that tree, so every
  * other host answers such a path with 404, and `nakafa.com/id/school/...` stays
- * gone. The segments are decoded first, because next-intl decodes the path
- * before it rewrites it: `/id/%73chool/harapan` reaches the same page as
- * `/id/school/harapan`.
+ * gone, except the page where an account opens its own school. The segments are
+ * decoded first, because next-intl decodes the path before it rewrites it:
+ * `/id/%73chool/harapan` reaches the same page as `/id/school/harapan`.
  */
 export function isSchoolTreePath(pathname: string) {
   const segments = Arr.filter(pathname.split("/"), Boolean);
-  const first = readSegment(segments, 0);
-  if (Option.contains(first, SCHOOL_SEGMENT)) {
-    return true;
-  }
-  const startsWithLocale = Option.exists(first, (segment) =>
+  const startsWithLocale = Option.exists(readSegment(segments, 0), (segment) =>
     hasLocale(APP_LOCALE_CODES, segment)
   );
-  return (
-    startsWithLocale &&
-    Option.contains(readSegment(segments, 1), SCHOOL_SEGMENT)
+  const school = startsWithLocale ? 1 : 0;
+  if (!Option.contains(readSegment(segments, school), SCHOOL_SEGMENT)) {
+    return false;
+  }
+  return !(
+    segments.length === school + 2 &&
+    Option.contains(readSegment(segments, school + 1), SCHOOL_START_SEGMENT)
   );
 }

@@ -90,6 +90,7 @@ import subscriptions from "./tables/subscriptions";
 import tenantAssignments from "./tables/tenantAssignments";
 import tenantCohortMembers from "./tables/tenantCohortMembers";
 import tenantCohorts from "./tables/tenantCohorts";
+import tenantDrafts from "./tables/tenantDrafts";
 import tenantGraduates from "./tables/tenantGraduates";
 import tenantGrants from "./tables/tenantGrants";
 import tenantInvites from "./tables/tenantInvites";
@@ -206,6 +207,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly tenantAssignments: typeof tenantAssignments;
   readonly tenantCohortMembers: typeof tenantCohortMembers;
   readonly tenantCohorts: typeof tenantCohorts;
+  readonly tenantDrafts: typeof tenantDrafts;
   readonly tenantGraduates: typeof tenantGraduates;
   readonly tenantGrants: typeof tenantGrants;
   readonly tenantInvites: typeof tenantInvites;
@@ -321,6 +323,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   tenantAssignments,
   tenantCohortMembers,
   tenantCohorts,
+  tenantDrafts,
   tenantGraduates,
   tenantGrants,
   tenantInvites,
