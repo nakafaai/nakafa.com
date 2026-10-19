@@ -10,9 +10,11 @@ import { DAY_PART_ACT } from "@/components/tenant/home/greeting";
 /**
  * The greeting of the school home as a title row, not a card: Nina at 40 pixels beside "Good evening, {name}" at
  * 24 pixels. The school layout computes the greeting on the server, so the name and Nina's greeting act are in the
- * first HTML and nothing inserts after hydration. The title line keeps its height, so the row holds its place.
+ * first HTML, and the title line keeps its height, so the row holds its place.
  * A quiet home passes its one sentence, which sits under the row as plain muted text, and Nina takes the act of
  * the quiet state instead of her greeting. That is the home's one figure, so a quiet home shows no second one.
+ * The sentence depends on the reads, so it arrives with them, under the title. Until then the title is the only
+ * thing on screen, so nothing that is shown moves when the sentence arrives.
  */
 export function HomeTitle({
   quiet,
