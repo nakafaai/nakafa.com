@@ -15,10 +15,6 @@ import { resetTestRuntimeCache } from "@/test/store";
 const routeMocks = vi.hoisted(() => ({
   read: vi.fn(),
 }));
-const cacheMocks = vi.hoisted(() => ({
-  life: vi.fn(),
-  tag: vi.fn(),
-}));
 const mockGetTranslations = vi.hoisted(() => vi.fn());
 vi.mock("@confect/js", async (importOriginal) => {
   const { HttpClient } = await importOriginal<typeof import("@confect/js")>();
@@ -42,10 +38,6 @@ vi.mock("@confect/js", async (importOriginal) => {
 vi.mock("next-intl/server", () => ({
   getTranslations: mockGetTranslations,
 }));
-vi.mock("next/cache", () => ({
-  cacheLife: cacheMocks.life,
-  cacheTag: cacheMocks.tag,
-}));
 vi.mock(
   "@/lib/content/published/active",
   async () => (await import("@/test/active")).testActiveModule
@@ -68,8 +60,6 @@ beforeEach(() => {
   resetTestRuntimeCache();
   activateTestRelease("release-metadata");
   routeMocks.read.mockReset();
-  cacheMocks.life.mockClear();
-  cacheMocks.tag.mockClear();
   mockGetTranslations.mockReset();
   routeMocks.read.mockReturnValue(
     Effect.succeed({
@@ -189,32 +179,6 @@ describe("current content reference metadata", () => {
       });
     })
   );
-  it.effect("applies the content cache at the route-handler boundary", () =>
-    Effect.gen(function* () {
-      const metadata = yield* Effect.promise(() =>
-        getCachedMetadataFromSlug("en", ["quran", "1"])
-      );
-      expect(metadata).toMatchObject({
-        title: "Runtime title",
-      });
-      expect(cacheMocks.tag).toHaveBeenCalledExactlyOnceWith(
-        "content-scope:quran"
-      );
-      expect(cacheMocks.life).toHaveBeenCalledWith("contentRuntime");
-    })
-  );
-  it.effect.each([
-    ["articles", "content-scope:article"],
-    ["subjects", "content-scope:material"],
-    ["try-out", "content-scope:tryout"],
-  ])("tags %s metadata with its current reference owner", ([namespace, tag]) =>
-    Effect.gen(function* () {
-      yield* Effect.promise(() =>
-        getCachedMetadataFromSlug("en", [namespace, "entry"])
-      );
-      expect(cacheMocks.tag).toHaveBeenCalledExactlyOnceWith(tag);
-    })
-  );
   it.effect(
     "keeps a translation-only route independent of content publication",
     () =>
@@ -225,7 +189,6 @@ describe("current content reference metadata", () => {
             getCachedMetadataFromSlug("en", ["pricing"])
           )
         ).toEqual(translatedDefaults);
-        expect(cacheMocks.tag).not.toHaveBeenCalled();
       })
   );
 });

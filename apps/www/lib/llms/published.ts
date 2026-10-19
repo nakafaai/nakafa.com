@@ -17,7 +17,6 @@ import { ContentProjectionSchema } from "@nakafa/aksara-contracts/projection/spe
 import { PublicContentRuntimeFoundSchema } from "@nakafa/aksara-contracts/runtime/spec";
 import { projectMdxForAgentMarkdown } from "@repo/contents/llms/mdx";
 import { Array as Arr, Effect, Schema } from "effect";
-import { applyReleaseContentCache } from "@/lib/content/cache";
 import { decodeMaterialProjection } from "@/lib/content/material/decode";
 import { readPublishedContent } from "@/lib/content/published/exchange";
 import {
@@ -157,10 +156,7 @@ const readPublishedText = Effect.fn("www.llms.published.read")(function* (
  * no timer.
  */
 export async function getCachedPublishedText(input: PublishedMarkdownInput) {
-  "use cache";
-
   const text = await Effect.runPromise(readPublishedText(input));
-  applyReleaseContentCache(input.family);
 
   return text;
 }

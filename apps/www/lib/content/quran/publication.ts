@@ -1,6 +1,5 @@
 import { HttpClient } from "@confect/js";
 import "@tanstack/react-start/server-only";
-import { makeArtifactCacheTag } from "@nakafa/aksara-contracts/cache/content";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { decodePublishedQuranCatalog } from "@repo/backend/client/quran/catalog";
 import { decodePublishedQuranMarkdown } from "@repo/backend/client/quran/markdown";
@@ -8,9 +7,7 @@ import { decodePublishedQuranSource } from "@repo/backend/client/quran/publicati
 import { decodePublishedQuranView } from "@repo/backend/client/quran/view";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { Effect } from "effect";
-import { cacheTag } from "next/cache";
 import type { Locale } from "use-intl";
-import { applyContentCache } from "@/lib/content/cache";
 import { queryContentStore } from "@/lib/content/store/query";
 import { httpLayer } from "@/lib/convex/http";
 
@@ -91,33 +88,23 @@ const readPublishedQuranView = Effect.fn("NakafaQuran.readPublishedView")(
  * still expires them.
  */
 export async function getPublishedQuranCatalog() {
-  "use cache";
-
   const catalog = await Effect.runPromise(
     readPublishedQuranCatalog().pipe(Effect.withTracerTiming(false))
   );
-  applyContentCache("quran");
-  cacheTag(makeArtifactCacheTag(catalog.snapshotId));
   return catalog;
 }
 
 /**
- * Caches one narrow signed Quran web projection by locale and active release.
- * The `use cache` boundary stays so that the Quran pages prerender and the
- * Quran tag still expires them.
+ * Reads one narrow signed Quran web projection by locale and active release.
  */
 export async function getPublishedQuranView(
   locale: Locale,
   surahNumber: number
 ) {
-  "use cache";
-
   const view = await Effect.runPromise(
     readPublishedQuranView(locale, surahNumber).pipe(
       Effect.withTracerTiming(false)
     )
   );
-  applyContentCache("quran");
-  cacheTag(makeArtifactCacheTag(view.snapshotId));
   return view;
 }

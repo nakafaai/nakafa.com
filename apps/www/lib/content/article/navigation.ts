@@ -7,7 +7,6 @@ import {
 import { Array as Arr, Effect, Schema } from "effect";
 import type { Locale } from "use-intl";
 import { readPublishedArticleCategories } from "@/lib/content/article/category";
-import { applyContentCache } from "@/lib/content/cache";
 import { hasPreviewConfig } from "@/lib/content/preview/config";
 
 const ArticleNavigationItemSchema = Schema.Struct({
@@ -37,12 +36,9 @@ export const readArticleNavigation = Effect.fn("www.articles.readNavigation")(
  * still expires them; behind it the category list comes from the content store.
  */
 async function getArticleNavigation(locale: Locale) {
-  "use cache";
-
   const navigation = await Effect.runPromise(
     readArticleNavigation(locale).pipe(Effect.withTracerTiming(false))
   );
-  applyContentCache("article");
   return navigation;
 }
 

@@ -10,7 +10,6 @@ import { MaterialLessonProjectionSchema } from "@nakafa/aksara-contracts/project
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { Array as Arr, Effect, Schema } from "effect";
 import type { Locale } from "use-intl";
-import { applyContentCache } from "@/lib/content/cache";
 import { decodeMaterialJson } from "@/lib/content/material/decode";
 import {
   decodeCurriculumJson,
@@ -156,21 +155,16 @@ const PublishedProgramRouteSchema = Schema.Struct({
 type PublishedProgramRoute = typeof PublishedProgramRouteSchema.Type;
 
 /**
- * Caches one complete curriculum route under program publication invalidation.
- * The `use cache` boundary stays so that the curriculum pages prerender and the
- * program and material tags still expire them.
+ * Reads one complete curriculum route for the active release.
  */
 export async function getPublishedProgramRoute(
   locale: Locale,
   publicPath: string
 ) {
-  "use cache";
-
   const result = await Effect.runPromise(
     readPublishedProgramRoute(locale, publicPath).pipe(
       Effect.withTracerTiming(false)
     )
   );
-  applyContentCache("program", "material");
   return result;
 }

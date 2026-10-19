@@ -7,17 +7,13 @@ import {
 } from "@nakafa/aksara-contracts/ids";
 import { Effect } from "effect";
 import {
-  applySitemapCache,
   CONTENT_SITEMAP_CACHE_TAG,
   invalidateSitemapCache,
   SitemapCacheInvalidationError,
 } from "@/lib/sitemap/cache";
-import { resetTestRuntimeCache } from "@/test/store";
+import { resetTestRuntimeCache, testRuntimeCache } from "@/test/store";
 
 const invalidateByTagMock = vi.hoisted(() => vi.fn());
-const cacheLifeMock = vi.hoisted(() => vi.fn());
-const cacheTagMock = vi.hoisted(() => vi.fn());
-const revalidateTagMock = vi.hoisted(() => vi.fn());
 const activeMocks = vi.hoisted(() => ({
   expire: vi.fn(),
   load: vi.fn(),
@@ -32,15 +28,6 @@ vi.mock("@vercel/functions", async () => {
     invalidateByTag: invalidateByTagMock,
   };
 });
-
-vi.mock("next/cache", () => ({
-  /** Records cache profile usage without touching Next internals. */
-  cacheLife: cacheLifeMock,
-  /** Records cache tag usage without touching Next internals. */
-  cacheTag: cacheTagMock,
-  /** Records cache invalidation calls without touching Next internals. */
-  revalidateTag: revalidateTagMock,
-}));
 
 vi.mock("@/lib/content/published/active", () => ({
   expireActiveContentIdentity: activeMocks.expire,
@@ -61,9 +48,6 @@ const identityOf = (id: typeof releaseId) => ({
 describe("sitemap cache invalidation", () => {
   beforeEach(() => {
     invalidateByTagMock.mockReset().mockResolvedValue(undefined);
-    cacheLifeMock.mockReset();
-    cacheTagMock.mockReset();
-    revalidateTagMock.mockReset();
     activeMocks.load
       .mockReset()
       .mockReturnValue(Effect.succeed(identityOf(releaseId)));
@@ -73,22 +57,12 @@ describe("sitemap cache invalidation", () => {
     resetTestRuntimeCache();
   });
 
-  it("tags origin reads with only the shared sitemap tag", () => {
-    applySitemapCache();
-
-    expect(cacheTagMock).toHaveBeenCalledExactlyOnceWith(
-      CONTENT_SITEMAP_CACHE_TAG
-    );
-    expect(cacheLifeMock).toHaveBeenCalledExactlyOnceWith("max");
-  });
-
   it.effect("marks every bounded sitemap response stale", () =>
     Effect.gen(function* () {
       yield* invalidateSitemapCache(releaseId);
 
-      expect(revalidateTagMock).toHaveBeenCalledExactlyOnceWith(
-        CONTENT_SITEMAP_CACHE_TAG,
-        { expire: 0 }
+      expect(testRuntimeCache.expireTag).toHaveBeenCalledExactlyOnceWith(
+        CONTENT_SITEMAP_CACHE_TAG
       );
       expect(invalidateByTagMock).toHaveBeenCalledExactlyOnceWith(
         "content-sitemap"
@@ -104,7 +78,7 @@ describe("sitemap cache invalidation", () => {
         yield* invalidateSitemapCache(releaseId);
         yield* invalidateSitemapCache(releaseId);
 
-        expect(revalidateTagMock).toHaveBeenCalledTimes(1);
+        expect(testRuntimeCache.expireTag).toHaveBeenCalledTimes(1);
         expect(invalidateByTagMock).toHaveBeenCalledTimes(1);
       })
   );
@@ -119,7 +93,7 @@ describe("sitemap cache invalidation", () => {
       yield* invalidateSitemapCache(nextReleaseId);
       yield* invalidateSitemapCache(nextReleaseId);
 
-      expect(revalidateTagMock).toHaveBeenCalledTimes(2);
+      expect(testRuntimeCache.expireTag).toHaveBeenCalledTimes(2);
       expect(invalidateByTagMock).toHaveBeenCalledTimes(2);
     })
   );
@@ -139,10 +113,10 @@ describe("sitemap cache invalidation", () => {
   );
 
   it.effect(
-    "keeps a failed origin invalidation in the typed error channel",
+    "keeps a failed store invalidation in the typed error channel",
     () =>
       Effect.gen(function* () {
-        revalidateTagMock.mockImplementationOnce(() => {
+        testRuntimeCache.expireTag.mockImplementationOnce(() => {
           throw new Error("offline");
         });
 

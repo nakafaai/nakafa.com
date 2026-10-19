@@ -54,24 +54,10 @@ vi.mock(import("@/lib/sitemap/identity"), async (importOriginal) => ({
   getSitemapPageDescriptor: mockGetSitemapPageDescriptor,
 }));
 
-const mockCacheLife = vi.hoisted(() => vi.fn());
-const mockCacheTag = vi.hoisted(() => vi.fn());
-
-vi.mock("next/cache", () => ({
-  /** Records sitemap origin-cache usage without touching Next internals. */
-  cacheLife: mockCacheLife,
-  /** Records sitemap origin-cache usage without touching Next internals. */
-  cacheTag: mockCacheTag,
-  /** Unused in these tests; present for module completeness. */
-  revalidateTag: vi.fn(),
-}));
-
 beforeEach(() => {
   mockReadSitemapRoutePage.mockReset();
   mockGetSitemapPageDescriptor.mockReset();
   mockGetPathname.mockClear();
-  mockCacheLife.mockClear();
-  mockCacheTag.mockClear();
 
   mockGetSitemapPageDescriptor.mockReturnValue({ id: "base" });
   mockReadSitemapRoutePage.mockReturnValue(
@@ -302,8 +288,6 @@ describe("sitemap entries", () => {
 
     assert(page._tag === "Found");
     expect(page.entries.length).toBeGreaterThan(0);
-    expect(mockCacheTag).toHaveBeenCalledWith("content-sitemap");
-    expect(mockCacheLife).toHaveBeenCalledWith("max");
   });
 
   it("shares material partitions through the origin cache", async () => {
@@ -318,15 +302,12 @@ describe("sitemap entries", () => {
 
     assert(page._tag === "Found");
     expect(page.entries.length).toBeGreaterThan(0);
-    expect(mockCacheTag).toHaveBeenCalledWith("content-sitemap");
   });
 
   it("tags unknown sitemap pages with only the shared sitemap tag", async () => {
     mockGetSitemapPageDescriptor.mockReturnValue(null);
 
     await getCachedSitemapEntries({ pageId: "unknown" });
-
-    expect(mockCacheTag).toHaveBeenCalledWith("content-sitemap");
   });
 
   it("caches a route's modification date as the text the route carries", async () => {

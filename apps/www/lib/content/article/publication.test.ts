@@ -21,7 +21,6 @@ import {
 } from "@/test/content-article";
 
 const queryMock = vi.hoisted(() => vi.fn());
-const cacheMock = vi.hoisted(() => vi.fn());
 const deliveryMock = vi.hoisted(() => vi.fn());
 const renderMock = vi.hoisted(() => vi.fn());
 const activeReleaseId = ReleaseIdSchema.make("release-article");
@@ -77,9 +76,7 @@ vi.mock("@confect/js", async (importOriginal) => {
 vi.mock("@/env.client", () => ({
   clientEnv: { VITE_CONVEX_URL: "https://test.convex.cloud" },
 }));
-vi.mock("@/lib/content/cache", () => ({
-  applyContentCache: cacheMock,
-}));
+vi.mock("@/lib/content/cache", () => ({}));
 vi.mock("@/lib/content/published/exchange", () => ({
   decodePublishedDelivery: deliveryMock,
 }));
@@ -94,7 +91,6 @@ beforeEach(() => {
       runtimeJson: "signed-envelope",
     })
   );
-  cacheMock.mockReset();
   deliveryMock.mockReset().mockReturnValue(Effect.succeed(data));
   renderMock.mockReset().mockReturnValue(Effect.succeed(published));
 });
@@ -124,7 +120,6 @@ describe("coherent article publication", () => {
       },
       "signed-envelope"
     );
-    expect(cacheMock).toHaveBeenCalledExactlyOnceWith("article");
     expect(renderMock).toHaveBeenCalledOnce();
   });
   it("caches an authenticated withdrawal without rendering", async () => {
@@ -141,7 +136,6 @@ describe("coherent article publication", () => {
     await expect(
       getArticlePublication("en", projection.publicPath)
     ).resolves.toBeNull();
-    expect(cacheMock).toHaveBeenCalledWith("article");
     expect(deliveryMock).not.toHaveBeenCalled();
     expect(renderMock).not.toHaveBeenCalled();
   });
@@ -210,7 +204,6 @@ describe("verified article metadata", () => {
       },
     });
     expect(renderMock).not.toHaveBeenCalled();
-    expect(cacheMock).toHaveBeenCalledWith("article");
   });
   it("returns null for a withdrawn release without rendering", async () => {
     queryMock.mockReturnValueOnce(

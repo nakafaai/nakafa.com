@@ -24,7 +24,6 @@ import { testPageProjection } from "@/test/content-page";
 
 const catalogMock = vi.hoisted(() => vi.fn());
 const previewMock = vi.hoisted(() => vi.fn());
-const cacheMock = vi.hoisted(() => vi.fn());
 
 function makeGermanPage({
   pageKey,
@@ -93,12 +92,9 @@ vi.mock("@/lib/content/preview/config", () => ({
   hasPreviewConfig: previewMock,
 }));
 
-vi.mock("@/lib/content/cache", () => ({
-  applyContentCache: cacheMock,
-}));
+vi.mock("@/lib/content/cache", () => ({}));
 
 beforeEach(() => {
-  cacheMock.mockReset();
   previewMock.mockReset().mockReturnValue(false);
   catalogMock.mockReset().mockReturnValue(
     Effect.succeed({
@@ -229,7 +225,6 @@ describe("signed Page navigation", () => {
           privacyPolicyHref: "/privacy-policy",
           termsOfServiceHref: "/terms-of-service",
         });
-        expect(cacheMock).toHaveBeenCalledWith("page");
       })
   );
 });

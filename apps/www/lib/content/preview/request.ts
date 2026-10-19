@@ -137,12 +137,8 @@ export const fetchPreviewJson = Effect.fn("NakafaContent.fetchPreviewJson")(
   Effect.provide(PreviewHttpClient)
 );
 /**
- * Fetches one bounded result as a Promise for React `cache` and
- * `generateStaticParams`, which cannot yield an Effect.
- *
- * A render that reads it awaits `io()` first, and Next.js does not track the
- * current time in `generateStaticParams`, so the request may start a fiber:
- * https://nextjs.org/docs/app/api-reference/functions/io
+ * Fetches one bounded result as a Promise for callers that cannot yield an
+ * Effect.
  */
 export function fetchPreviewJsonForPrerender(
   config: PreviewConfig,

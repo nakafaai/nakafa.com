@@ -23,7 +23,6 @@ import {
 import { resetTestRuntimeCache } from "@/test/store";
 
 const queryMock = vi.hoisted(() => vi.fn());
-const cacheMock = vi.hoisted(() => vi.fn());
 const deliveryMock = vi.hoisted(() => vi.fn());
 const renderMock = vi.hoisted(() => vi.fn());
 const activeReleaseId = ReleaseIdSchema.make("release-material");
@@ -79,12 +78,7 @@ vi.mock("@confect/js", async (importOriginal) => {
     },
   };
 });
-vi.mock("next/cache", () => ({
-  cacheLife: vi.fn(),
-}));
-vi.mock("@/lib/content/cache", () => ({
-  applyContentCache: cacheMock,
-}));
+vi.mock("@/lib/content/cache", () => ({}));
 vi.mock(
   "@/lib/content/published/active",
   async () => (await import("@/test/active")).testActiveModule
@@ -121,7 +115,6 @@ beforeEach(() => {
           }
     )
   );
-  cacheMock.mockReset();
   deliveryMock.mockReset().mockReturnValue(Effect.succeed(data));
   renderMock.mockReset().mockReturnValue(Effect.succeed(published));
 });
@@ -310,7 +303,6 @@ describe("coherent material publication", () => {
       },
       "signed-envelope"
     );
-    expect(cacheMock).toHaveBeenCalledWith("material");
     expect(renderMock).toHaveBeenCalledOnce();
   });
   it("caches an authenticated withdrawal without rendering", async () => {
@@ -328,7 +320,6 @@ describe("coherent material publication", () => {
     await expect(
       getMaterialPublication("en", projection.publicPath)
     ).resolves.toBeNull();
-    expect(cacheMock).toHaveBeenCalledWith("material");
     expect(deliveryMock).not.toHaveBeenCalled();
     expect(renderMock).not.toHaveBeenCalled();
   });
@@ -469,7 +460,6 @@ describe("verified material metadata", () => {
       },
     });
     expect(renderMock).not.toHaveBeenCalled();
-    expect(cacheMock).toHaveBeenCalledWith("material");
   });
   it("returns null for a withdrawn release without rendering", async () => {
     queryMock.mockReturnValueOnce(

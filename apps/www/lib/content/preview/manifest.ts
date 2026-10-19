@@ -70,8 +70,7 @@ export const readPreviewSnapshot = Effect.fn(
   return Option.some(snapshot.success);
 });
 /**
- * Reads one manifest as a Promise for `generateStaticParams` and for a render
- * that has already awaited `io()`.
+ * Reads one manifest as a Promise for callers that cannot yield an Effect.
  */
 export function readPreviewManifestForPrerender() {
   return readSnapshotForRender().then((snapshot) => {

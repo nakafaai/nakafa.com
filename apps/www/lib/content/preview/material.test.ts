@@ -58,10 +58,6 @@ vi.mock("use-intl", () => ({
   /** Keeps route rendering independent from navigation runtime behavior. */
   useTranslations: () => () => "",
 }));
-vi.mock("next/navigation", () => ({
-  usePathname: vi.fn(),
-  useRouter: vi.fn(),
-}));
 vi.mock("@/lib/content/preview/config", async (importOriginal) => ({
   ...(await importOriginal()),
   decodePreviewEnvironment: vi.fn(),

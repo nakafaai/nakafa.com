@@ -32,7 +32,6 @@ import {
   testArticleProjection,
 } from "@/test/content-article";
 
-const cacheMock = vi.hoisted(() => vi.fn());
 const runtimeQueryMock = vi.hoisted(() => vi.fn());
 const initialCursor = {
   cursor: null,
@@ -42,9 +41,7 @@ const initialCursor = {
 };
 const staleManifestHash = Sha256HashSchema.make(`sha256:${"c".repeat(64)}`);
 const staleReleaseId = ReleaseIdSchema.make("release-old");
-vi.mock("@/lib/content/cache", () => ({
-  applyContentCache: cacheMock,
-}));
+vi.mock("@/lib/content/cache", () => ({}));
 vi.mock("@confect/js", async (importOriginal) => {
   const { HttpClient } = await importOriginal<typeof import("@confect/js")>();
   return {
@@ -106,7 +103,6 @@ describe("published article catalog", () => {
     })
   );
   beforeEach(() => {
-    cacheMock.mockReset();
     runtimeQueryMock.mockReset();
   });
   it.effect(
@@ -169,7 +165,6 @@ describe("published article catalog", () => {
             numItems: PROJECTION_PAGE_LIMIT,
           },
         });
-        expect(cacheMock).toHaveBeenCalledWith("article");
       })
   );
   it.effect("decodes source-owned category titles without UI fallbacks", () =>
@@ -193,7 +188,6 @@ describe("published article catalog", () => {
         nextCursor: null,
         sourceRevision: revision,
       });
-      expect(cacheMock).toHaveBeenCalledWith("article");
     })
   );
   it.effect(

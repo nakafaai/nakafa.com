@@ -2,8 +2,9 @@ import "@tanstack/react-start/server-only";
 import { makeArtifactCacheTag } from "@nakafa/aksara-contracts/cache/content";
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
 import { Effect, Schema } from "effect";
-import { refresh, updateTag } from "next/cache";
 import { readPublishedQuranIdentity } from "@/lib/content/quran/publication";
+import { expireStoreTag } from "@/lib/content/store/entry";
+
 /** One stale Quran snapshot could not be safely recovered. */
 export class QuranSnapshotRecoveryError extends Schema.TaggedError<QuranSnapshotRecoveryError>()(
   "QuranSnapshotRecoveryError",
@@ -13,23 +14,13 @@ export class QuranSnapshotRecoveryError extends Schema.TaggedError<QuranSnapshot
       "active-identity",
       "cache-invalidation",
       "invalid-input",
-      "route-refresh",
     ]),
   }
 ) {}
-/** Refreshes the current route without expiring any server cache entry. */
-const refreshQuranRoute = Effect.fn("www.quran.refreshStaleRoute")(
-  function* () {
-    yield* Effect.try({
-      catch: (cause) =>
-        new QuranSnapshotRecoveryError({ cause, reason: "route-refresh" }),
-      try: refresh,
-    });
-    return false;
-  }
-);
+
 /**
  * Expires one server-captured stale Quran snapshot without touching other content.
+ * The active snapshot is never expired: the route that asked for it reads it again.
  */
 export const recoverStalePublishedQuranSnapshot = Effect.fn(
   "www.quran.recoverStaleSnapshot"
@@ -49,12 +40,13 @@ export const recoverStalePublishedQuranSnapshot = Effect.fn(
     )
   );
   if (activeIdentity.snapshotId === staleSnapshotId) {
-    return yield* refreshQuranRoute();
+    return false;
   }
-  yield* Effect.try({
-    catch: (cause) =>
-      new QuranSnapshotRecoveryError({ cause, reason: "cache-invalidation" }),
-    try: () => updateTag(makeArtifactCacheTag(staleSnapshotId)),
-  });
+  yield* expireStoreTag(makeArtifactCacheTag(staleSnapshotId)).pipe(
+    Effect.mapError(
+      (cause) =>
+        new QuranSnapshotRecoveryError({ cause, reason: "cache-invalidation" })
+    )
+  );
   return true;
 });

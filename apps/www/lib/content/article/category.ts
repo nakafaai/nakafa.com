@@ -24,10 +24,6 @@ import {
   readPublishedArticlePage,
   readPublishedCategories,
 } from "@/lib/content/article/catalog";
-import {
-  applyContentCache,
-  applyReleaseContentCache,
-} from "@/lib/content/cache";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
 import { readContentStore } from "@/lib/content/store/read";
 
@@ -243,35 +239,27 @@ export async function getPublishedArticleCategory(
   route: string,
   locale: Locale
 ) {
-  "use cache";
-
   const category = await Effect.runPromise(
     readPublishedArticleCategory(route, locale).pipe(
       Effect.withTracerTiming(false)
     )
   );
-  applyContentCache("article");
   return Option.getOrNull(category);
 }
 
 /**
- * Caches reciprocal localized category routes under article release tags. The
- * `use cache` boundary stays for prerendering and the article tag; behind it
- * the category lists come from the store. The key holds the category with the
- * release it was read under, so a release that the category list reports is a
- * new key and the entry needs no timer of its own.
+ * Reads the reciprocal localized category routes. The category lists come from
+ * the store, and the key holds the category with the release it was read under,
+ * so a release that the category list reports is a new key.
  */
 export async function getPublishedCategoryAlternates(
   current: PublishedArticleCategoryModel
 ) {
-  "use cache";
-
   const alternates = await Effect.runPromise(
     readPublishedCategoryAlternates(current).pipe(
       Effect.withTracerTiming(false)
     )
   );
-  applyReleaseContentCache("article");
   return alternates;
 }
 
@@ -285,13 +273,10 @@ export async function getPublishedCategoryPage(
   current: PublishedArticleCategoryModel,
   cursor: ArticlePageCursor
 ) {
-  "use cache";
-
   const page = await Effect.runPromise(
     readPublishedCategoryPage(current, cursor).pipe(
       Effect.withTracerTiming(false)
     )
   );
-  applyReleaseContentCache("article");
   return page;
 }

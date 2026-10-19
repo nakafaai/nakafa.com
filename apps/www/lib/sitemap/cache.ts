@@ -2,8 +2,8 @@ import "@tanstack/react-start/server-only";
 
 import { invalidateByTag } from "@vercel/functions";
 import { Effect, Schema } from "effect";
-import { cacheLife, cacheTag, revalidateTag } from "next/cache";
 import type { ActiveContentReleaseId } from "@/lib/content/published/active";
+import { expireStoreTag } from "@/lib/content/store/entry";
 import { purgeOncePerRelease } from "@/lib/content/store/purge";
 
 /** One CDN-only tag shared by every bounded sitemap response. */
@@ -15,42 +15,23 @@ export class SitemapCacheInvalidationError extends Schema.TaggedError<SitemapCac
   {}
 ) {}
 
-/** Applies the sitemap origin-cache dependency inside a `use cache` boundary.
- *
- * Entries carry only the shared sitemap tag, so every release purges
- * every sitemap entry through the single invalidation below. Family tags
- * would not narrow that scope, and mixing them with the hard expiry below
- * would leave stale-versus-expired semantics ambiguous. Entries keep the
- * long built-in profile on purpose because only a release purges them.
- *
- * That purge hard-expires the entries in the instance that runs the
- * activation, and the CDN purge clears the responses. The memory of another
- * instance keeps its copy until that instance ends, because the key is a page
- * id and does not name the release. This is the one kind of entry that the
- * rule in `lib/content/profile.ts` does not cover. */
-export function applySitemapCache() {
-  cacheTag(CONTENT_SITEMAP_CACHE_TAG);
-  cacheLife("max");
-}
-
 /**
- * Expires every sitemap origin entry, then purges every sitemap CDN response.
- * The order matters: expiring the origin first guarantees the next edge miss
- * regenerates from the content store instead of re-caching a stale origin
- * value under the long CDN lifetime the responses advertise.
+ * Expires every sitemap store entry, then purges every sitemap CDN response.
+ * The order matters: expiring the store first guarantees the next edge miss
+ * regenerates from the content store instead of re-caching a stale value
+ * under the long CDN lifetime the responses advertise.
  *
- * Origin entries hard-expire on purpose instead of stale-marking. A
- * stale-marked origin would serve the previous sitemap to the first edge
- * miss after invalidation, and the edge would then cache that stale value
- * for another day with no second purge when the background refresh lands.
- * One blocking regeneration per sitemap document per release is the
- * cheaper price for always serving the current index.
+ * Store entries hard-expire on purpose instead of stale-marking. A
+ * stale-marked entry would serve the previous sitemap to the first edge miss
+ * after invalidation, and the edge would then cache that stale value for
+ * another day with no second purge when the background refresh lands. One
+ * blocking regeneration per sitemap document per release is the cheaper price
+ * for always serving the current index.
  */
 const purgeSitemapCache = Effect.fn("www.sitemap.cache.purge")(function* () {
-  yield* Effect.try({
-    catch: () => new SitemapCacheInvalidationError(),
-    try: () => revalidateTag(CONTENT_SITEMAP_CACHE_TAG, { expire: 0 }),
-  });
+  yield* expireStoreTag(CONTENT_SITEMAP_CACHE_TAG).pipe(
+    Effect.mapError(() => new SitemapCacheInvalidationError())
+  );
   yield* Effect.tryPromise({
     catch: () => new SitemapCacheInvalidationError(),
     try: () => invalidateByTag(CONTENT_SITEMAP_CACHE_TAG),

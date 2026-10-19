@@ -35,7 +35,6 @@ import { testPageProjection } from "@/test/content-page";
 import { resetTestRuntimeCache } from "@/test/store";
 
 const runtimeQueryMock = vi.hoisted(() => vi.fn());
-const cacheMock = vi.hoisted(() => vi.fn());
 const activeReleaseId = ReleaseIdSchema.make("release-pages");
 const idPageProjection = {
   ...testPageProjection,
@@ -71,9 +70,7 @@ vi.mock("@confect/js", async (importOriginal) => {
     },
   };
 });
-vi.mock("@/lib/content/cache", () => ({
-  applyContentCache: cacheMock,
-}));
+vi.mock("@/lib/content/cache", () => ({}));
 vi.mock(
   "@/lib/content/published/active",
   async () => (await import("@/test/active")).testActiveModule
@@ -86,7 +83,6 @@ describe("published Page catalog", () => {
   beforeEach(() => {
     resetTestRuntimeCache();
     activateTestRelease("release-pages");
-    cacheMock.mockReset();
     runtimeQueryMock.mockReset().mockReturnValue(
       Effect.succeed({
         activeReleaseId,
@@ -162,7 +158,6 @@ describe("published Page catalog", () => {
         activeReleaseId,
         projections: [testPageProjection],
       });
-      expect(cacheMock).toHaveBeenCalledWith("page");
     })
   );
   it.effect.each([

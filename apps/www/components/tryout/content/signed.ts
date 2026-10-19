@@ -1,6 +1,5 @@
 import { HttpClient } from "@confect/js";
 import "@tanstack/react-start/server-only";
-import { makeArtifactCacheTag } from "@nakafa/aksara-contracts/cache/content";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import { verifyAttemptContent } from "@repo/backend/client/content/attempt";
 import { ContentRuntimeVerificationError } from "@repo/backend/client/content/errors";
@@ -11,7 +10,6 @@ import { contentKeyResolver } from "@repo/backend/content/trust";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { contentRuntimeKeys } from "@repo/next-config/keys";
 import { Array as Arr, Effect } from "effect";
-import { cacheLife, cacheTag } from "next/cache";
 import { renderLiveItem } from "@/components/tryout/content/artifact";
 import {
   planTryoutContentBatches,
@@ -140,8 +138,6 @@ async function renderAttemptBatch(
   selectors: readonly TryoutSelector[],
   row: TryoutBodyBatch | null
 ) {
-  "use cache";
-
   const content = await Effect.runPromise(
     Effect.gen(function* () {
       const request = yield* makeTryoutRuntimeRequest(selectors);
@@ -159,26 +155,12 @@ async function renderAttemptBatch(
       return yield* renderFoundItems(selectors, found.items);
     })
   );
-  cacheLife("max");
-  cacheTag(
-    ...Arr.map(content, ({ artifactHash }) =>
-      makeArtifactCacheTag(artifactHash)
-    )
-  );
   return content;
 }
 
 /** Caches one verified batch by immutable selector identity. */
 async function renderBatch(selectors: readonly TryoutSelector[]) {
-  "use cache";
-
   const content = await Effect.runPromise(readBatch(selectors));
-  cacheLife("max");
-  cacheTag(
-    ...Arr.map(content, ({ artifactHash }) =>
-      makeArtifactCacheTag(artifactHash)
-    )
-  );
   return content;
 }
 

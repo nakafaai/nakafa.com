@@ -32,13 +32,7 @@ import {
 import { resetTestRuntimeCache } from "@/test/store";
 
 const runtimeQueryMock = vi.hoisted(() => vi.fn());
-const cacheMock = vi.hoisted(() => vi.fn());
-vi.mock("@/lib/content/cache", () => ({
-  applyContentCache: cacheMock,
-}));
-vi.mock("next/cache", () => ({
-  cacheTag: vi.fn(),
-}));
+vi.mock("@/lib/content/cache", () => ({}));
 vi.mock(
   "@/lib/content/published/active",
   async () => (await import("@/test/active")).testActiveModule
@@ -69,7 +63,6 @@ vi.mock("@confect/js", async (importOriginal) => {
 beforeEach(() => {
   resetTestRuntimeCache();
   activateTestRelease("quran-release");
-  cacheMock.mockReset();
   runtimeQueryMock.mockReset();
 });
 /** Each malformed signed catalog, derived from the complete 114-surah catalog rows. */
@@ -113,7 +106,6 @@ describe("published Quran content", () => {
         surahs: expect.any(Array),
       });
       expect(runtimeQueryMock).toHaveBeenCalledWith(expect.anything(), {});
-      expect(cacheMock).toHaveBeenCalledWith("quran");
     })
   );
   it.effect.each(MALFORMED_CATALOGS)(
@@ -249,7 +241,6 @@ describe("published Quran content", () => {
         appLocale: "id",
         surahNumber: 1,
       });
-      expect(cacheMock).toHaveBeenCalledWith("quran");
       expect(runtimeQueryMock).toHaveBeenCalledTimes(1);
     })
   );
@@ -338,7 +329,6 @@ describe("immutable Quran application reads", () => {
             )
           );
           expect(cached).toEqual(catalog);
-          expect(cacheMock).toHaveBeenCalledWith("quran");
         })
     );
     test.effect.each(APP_LOCALE_CODES)(

@@ -2,7 +2,6 @@ import "@tanstack/react-start/server-only";
 
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { Effect, Option } from "effect";
-import { io } from "next/cache";
 import { cache } from "react";
 import type { Locale } from "use-intl";
 import { hasPreviewConfig } from "@/lib/content/preview/config";
@@ -18,7 +17,6 @@ export const readTryoutQuestionPreview = cache(
       return Option.none<QuestionPreviewContent>();
     }
 
-    await io();
     return await Effect.runPromise(
       readQuestionPreview({
         appLocale: AppLocaleSchema.make(locale),

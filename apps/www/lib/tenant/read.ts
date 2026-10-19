@@ -2,7 +2,6 @@ import { HttpClient } from "@confect/js";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Effect, Option, Schema } from "effect";
-import { cacheLife, io } from "next/cache";
 import { cache } from "react";
 import { getToken } from "@/lib/auth/server";
 import { httpLayer } from "@/lib/convex/http";
@@ -21,12 +20,9 @@ const queryProfile = (slug: TenantSlug) =>
  * The school's layout reads it once per request, so its logo and mascot follow
  * each save.
  */
-export const readProfile = cache(async (slug: TenantSlug) => {
-  // `io()` tells Next.js that request-time work follows, so a prerender stops here
-  // and the Effect runtime, which reads the clock when it starts, never runs in one.
-  await io();
-  return Effect.runPromise(queryProfile(slug));
-});
+export const readProfile = cache((slug: TenantSlug) =>
+  Effect.runPromise(queryProfile(slug))
+);
 
 /**
  * The name of a school as plain data. A cached function may return only plain data, and an
@@ -39,8 +35,6 @@ const SchoolNameIso = Schema.toCodecIso(Schema.Option(Schema.String));
  * The `minutes` cache profile's five-minute stale time keeps the metadata off uncached data.
  */
 async function readCachedSchoolName(slug: TenantSlug) {
-  "use cache";
-  cacheLife("minutes");
   const profile = await Effect.runPromise(queryProfile(slug));
   return Schema.encodeSync(SchoolNameIso)(
     Option.map(profile, ({ name }) => name)

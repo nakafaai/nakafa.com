@@ -1,6 +1,5 @@
 import { NodeFileSystem, NodePath } from "@effect/platform-node";
 import { Effect, FileSystem, Layer, Path, Schema } from "effect";
-import { cacheLife } from "next/cache";
 import type { CSSProperties } from "react";
 import { ImageResponse } from "takumi-js/response";
 import { OG_IMAGE_HEADERS } from "@/lib/og/headers";
@@ -25,10 +24,6 @@ type GenerateOGImageOptions = OgImageProps & typeof OgImageResponseSchema.Type;
 
 /** Loads the shared logo asset as a serializable data URL for OG rendering. */
 async function getLogoDataUrl() {
-  "use cache";
-
-  cacheLife("max");
-
   return await Effect.runPromise(
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;

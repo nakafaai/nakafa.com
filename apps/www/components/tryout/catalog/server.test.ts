@@ -85,13 +85,7 @@ vi.mock("@repo/internationalization/src/navigation", () => ({
   usePathname: vi.fn(),
   useRouter: vi.fn(),
 }));
-vi.mock("@/lib/content/cache", () => ({
-  applyContentCache: vi.fn(),
-}));
-vi.mock("next/cache", () => ({
-  cacheLife: vi.fn(),
-  cacheTag: vi.fn(),
-}));
+vi.mock("@/lib/content/cache", () => ({}));
 vi.mock("@/env.client", () => ({
   clientEnv: { VITE_CONVEX_URL: "https://test.convex.cloud" },
 }));

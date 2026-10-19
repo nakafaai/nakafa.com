@@ -4,7 +4,6 @@ import { GitCommitShaSchema } from "@nakafa/aksara-contracts/ids";
 import { PublicPageProjectionSchema } from "@nakafa/aksara-contracts/projection/page";
 import { PublicContentRuntimeFoundSchema } from "@nakafa/aksara-contracts/runtime/spec";
 import { Effect, Option, Schema } from "effect";
-import { applyContentCache } from "@/lib/content/cache";
 import { readRenderedBody } from "@/lib/content/published/body";
 import {
   type PublishedContentData,
@@ -71,8 +70,6 @@ const renderPageArtifact = Effect.fn("NakafaContent.renderPageArtifact")(
 export async function getCurrentPublishedPage(
   input: CurrentPublishedPageInput
 ) {
-  "use cache";
-
   const result = await Effect.runPromise(
     readCurrentPublishedPage(input).pipe(
       Effect.asSome,
@@ -80,10 +77,8 @@ export async function getCurrentPublishedPage(
     )
   );
   if (Option.isNone(result)) {
-    applyContentCache("page");
     return null;
   }
-  applyContentCache("page");
   return result.value;
 }
 
@@ -91,14 +86,10 @@ export async function getCurrentPublishedPage(
 export async function renderCurrentPublishedPage(
   input: CurrentPublishedPageInput
 ) {
-  "use cache";
-
   const data = await getCurrentPublishedPage(input);
   if (!data) {
-    applyContentCache("page");
     return null;
   }
   const rendered = await Effect.runPromise(renderPageArtifact(data));
-  applyContentCache("page");
   return rendered;
 }

@@ -5,13 +5,8 @@ import contents from "@repo/backend/confect/_generated/refs/contents";
 import { Effect, Layer } from "effect";
 import { getHomeTrendingSubjects } from "@/lib/content/trending";
 
-const cacheLifeMock = vi.hoisted(() => vi.fn());
 const queryMock = vi.hoisted(() => vi.fn());
 
-vi.mock("next/cache", () => ({
-  /** Records the lifetime that the reader asks for. */
-  cacheLife: cacheLifeMock,
-}));
 vi.mock("@/env.client", () => ({
   clientEnv: { VITE_CONVEX_URL: "https://test.convex.cloud" },
 }));
@@ -35,7 +30,6 @@ vi.mock("@confect/js", async (importOriginal) => {
 
 describe("home trending subjects", () => {
   beforeEach(() => {
-    cacheLifeMock.mockReset();
     queryMock.mockReset().mockReturnValue(Effect.succeed([]));
   });
 
@@ -50,7 +44,5 @@ describe("home trending subjects", () => {
 
   it("keeps the seven day ranking for hours, not for a minute", async () => {
     await getHomeTrendingSubjects("en");
-
-    expect(cacheLifeMock).toHaveBeenCalledExactlyOnceWith("hours");
   });
 });

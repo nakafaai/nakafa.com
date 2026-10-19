@@ -22,7 +22,6 @@ import {
 } from "@/test/content-program";
 import { resetTestRuntimeCache } from "@/test/store";
 
-const cacheMock = vi.hoisted(() => vi.fn());
 const runtimeQueryMock = vi.hoisted(() => vi.fn());
 const revision = "a".repeat(40);
 
@@ -46,9 +45,7 @@ function catalogResponse(overrides?: {
         : overrides.sourceRevision,
   };
 }
-vi.mock("@/lib/content/cache", () => ({
-  applyContentCache: cacheMock,
-}));
+vi.mock("@/lib/content/cache", () => ({}));
 vi.mock("@confect/js", async (importOriginal) => {
   const { HttpClient } = await importOriginal<typeof import("@confect/js")>();
   return {
@@ -80,7 +77,6 @@ describe("published program catalog", () => {
   beforeEach(() => {
     resetTestRuntimeCache();
     activateTestRelease("program-release");
-    cacheMock.mockReset();
     runtimeQueryMock.mockReset();
   });
   it.effect(
@@ -202,7 +198,6 @@ describe("published program catalog", () => {
         ],
         sourceRevision: revision,
       });
-      expect(cacheMock).toHaveBeenCalledOnce();
     })
   );
   it.effect("rejects an unmanaged catalog", () =>
@@ -272,7 +267,6 @@ describe("published program catalog", () => {
           appLocale: "en",
         }
       );
-      expect(cacheMock).toHaveBeenCalledOnce();
     })
   );
   it.effect("rejects subject reads before Aksara owns the program family", () =>

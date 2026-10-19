@@ -7,7 +7,6 @@ import { tryoutMetadataArgsValidator } from "@repo/backend/content/tryout/spec";
 import { Effect, Schema } from "effect";
 import type { Locale } from "use-intl";
 import { loadTryoutQuestion } from "@/components/tryout/content/signed";
-import { applyContentCache } from "@/lib/content/cache";
 import { decodeSourceRevision } from "@/lib/content/published/origin";
 import { queryContentStore } from "@/lib/content/store/query";
 import {
@@ -34,13 +33,9 @@ class TryoutCatalogReadError extends Schema.TaggedError<TryoutCatalogReadError>(
 /**
  * Reads and renders the signed question selected for the marketing page. The
  * selection is the same for every request of one release, so the content store
- * holds it once for each release and locale; the `use cache` boundary stays so
- * that the landing page prerenders and the try-out tag still expires it.
+ * holds it once for each release and locale.
  */
 export async function readFeaturedTryout(locale: Locale) {
-  "use cache";
-
-  applyContentCache("tryout");
   const featured = await Effect.runPromise(
     queryContentStore(tryouts.queries.catalog.getFeaturedQuestion, {
       appLocale: AppLocaleSchema.make(locale),
@@ -63,9 +58,6 @@ export async function readFeaturedTryout(locale: Locale) {
  * still expires them; behind it the content store answers for the release.
  */
 export async function readTryoutMetadata(args: TryoutMetadataArgs) {
-  "use cache";
-
-  applyContentCache("tryout");
   return await Effect.runPromise(
     queryContentStore(tryouts.queries.catalog.getMetadata, args).pipe(
       Effect.withTracerTiming(false)
@@ -74,14 +66,10 @@ export async function readTryoutMetadata(args: TryoutMetadataArgs) {
 }
 
 /**
- * Reads the public country-first try-out catalog from the tagged content cache.
- * The `use cache` boundary stays for prerendering and the try-out tag; behind it
- * the content store answers for the release.
+ * Reads the public country-first try-out catalog. The content store answers for
+ * the release.
  */
 export async function readTryoutHubPage(locale: Locale) {
-  "use cache";
-
-  applyContentCache("tryout");
   const appLocale = AppLocaleSchema.make(locale);
   return await Effect.runPromise(
     queryContentStore(tryouts.queries.catalog.getHubPage, {
@@ -114,9 +102,6 @@ export async function readTryoutCountryPage(
   locale: Locale,
   publicPath: string
 ) {
-  "use cache";
-
-  applyContentCache("tryout");
   const appLocale = AppLocaleSchema.make(locale);
   return await Effect.runPromise(
     Effect.flatMap(HttpClient.HttpClient, (client) =>
@@ -153,9 +138,6 @@ export async function readTryoutCountryPage(
 
 /** Reads one public exam page from the tagged content cache. */
 export async function readTryoutExamPage(locale: Locale, publicPath: string) {
-  "use cache";
-
-  applyContentCache("tryout");
   return await Effect.runPromise(
     readPublishedTryoutExamPage({
       appLocale: AppLocaleSchema.make(locale),
@@ -165,14 +147,9 @@ export async function readTryoutExamPage(locale: Locale, publicPath: string) {
 }
 
 /**
- * Reads one public track shell from the tagged content cache. The `use cache`
- * boundary stays for prerendering and the try-out tag; behind it the content
- * store answers for the release.
+ * Reads one public track shell. The content store answers for the release.
  */
 export async function readTryoutTrackPage(locale: Locale, publicPath: string) {
-  "use cache";
-
-  applyContentCache("tryout");
   return await Effect.runPromise(
     queryContentStore(tryouts.queries.catalog.getTrackPage, {
       appLocale: AppLocaleSchema.make(locale),
@@ -212,9 +189,6 @@ export const readTryoutSetList = Effect.fn("www.tryout.catalog.readSetList")(
 
 /** Reads one public set page from the tagged content cache. */
 export async function readTryoutSetPage(locale: Locale, publicPath: string) {
-  "use cache";
-
-  applyContentCache("tryout");
   return await Effect.runPromise(
     Effect.flatMap(HttpClient.HttpClient, (client) =>
       client.query(tryouts.queries.catalog.getSetPage, {
@@ -257,9 +231,6 @@ export async function readTryoutSectionPage(
   locale: Locale,
   publicPath: string
 ) {
-  "use cache";
-
-  applyContentCache("tryout");
   return await Effect.runPromise(
     readPublishedTryoutSectionPage({
       appLocale: AppLocaleSchema.make(locale),

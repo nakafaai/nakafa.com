@@ -19,7 +19,6 @@ import { PROJECTION_PAGE_LIMIT } from "@repo/backend/confect/contentRelease/pagi
 import { JsonTextSchema } from "@repo/utilities/json";
 import { Effect, Schema } from "effect";
 import type { Locale } from "use-intl";
-import { applyContentCache } from "@/lib/content/cache";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
 import { decodeSourceRevision } from "@/lib/content/published/origin";
 import { httpLayer } from "@/lib/convex/http";
@@ -279,12 +278,9 @@ export async function getPublishedArticlePage(
     readonly locale: Locale;
   }
 ) {
-  "use cache";
-
   const page = await Effect.runPromise(
     readPublishedArticlePage(input).pipe(Effect.withTracerTiming(false))
   );
-  applyContentCache("article");
   return page;
 }
 /** Caches one bounded category page under exact article release tags. */
@@ -293,11 +289,8 @@ export async function getPublishedCategories(
     readonly locale: Locale;
   }
 ) {
-  "use cache";
-
   const page = await Effect.runPromise(
     readPublishedCategories(input).pipe(Effect.withTracerTiming(false))
   );
-  applyContentCache("article");
   return page;
 }

@@ -10,7 +10,6 @@ import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease
 import { PROGRAM_FEATURED_SUBJECT_LIMIT } from "@repo/backend/confect/contentRelease/program/limits";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 import type { Locale } from "use-intl";
-import { applyContentCache } from "@/lib/content/cache";
 import {
   decodeCurriculumJson,
   decodeProgramJson,
@@ -154,31 +153,21 @@ export const readPublishedProgramSubjects = Effect.fn(
 });
 
 /**
- * Caches the featured subjects, one per subject, under current publication
- * invalidation. The `use cache` boundary stays so that the About page
- * prerenders and the program tag still expires it.
+ * Reads the featured subjects, one per subject, for the active release.
  */
 export async function getPublishedProgramSubjects(locale: Locale) {
-  "use cache";
-
   const subjects = await Effect.runPromise(
     readPublishedProgramSubjects(locale).pipe(Effect.withTracerTiming(false))
   );
-  applyContentCache("program");
   return subjects;
 }
 
 /**
- * Caches the bounded program catalog under program publication invalidation.
- * The `use cache` boundary stays so that the curriculum pages prerender and the
- * program tag still expires them.
+ * Reads the bounded program catalog for the active release.
  */
 export async function getPublishedProgramCatalog(locale: Locale) {
-  "use cache";
-
   const result = await Effect.runPromise(
     readPublishedProgramCatalog(locale).pipe(Effect.withTracerTiming(false))
   );
-  applyContentCache("program");
   return result;
 }

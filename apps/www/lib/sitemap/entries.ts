@@ -6,7 +6,6 @@ import { Array as Arr, Effect, Option, Schema } from "effect";
 import { cache } from "react";
 import type { Locale } from "use-intl";
 import { getLocalizedMappedRoutePathname } from "@/lib/routing/public/pathnames";
-import { applySitemapCache } from "@/lib/sitemap/cache";
 import { getSitemapPageDescriptor } from "@/lib/sitemap/identity";
 import { readSitemapRoutePage } from "@/lib/sitemap/routes";
 
@@ -105,25 +104,17 @@ function getSitemapEntryLocales(pageId: string) {
   return routing.locales;
 }
 
-/** Reads one bounded sitemap page inside the sitemap origin cache.
- *
- * The cache key is the page id, which already encodes family, locale, and
- * partition. The `use cache` boundary stays so that the route still prerenders
- * and the sitemap tag still expires it, and entries keep the long built-in
- * profile on purpose because only a release purges them through that tag;
- * `applySitemapCache` says what that purge reaches. Every Convex read behind
- * the boundary goes through the content store, so a page is built from Convex
- * only once for each release. The page itself, with its URLs, is derived on
- * every fill, so a deploy that changes the routing or the origin takes effect
- * at once, and the release check at the end of the route read runs on every
- * fill. The outcome is built through `SitemapPageRead`, so only plain,
- * serializable data is cached. */
+/**
+ * Reads one bounded sitemap page. The page id names the family, the locale and
+ * the partition. Every Convex read behind the page goes through the content
+ * store, so a page is built from Convex only once for each release. The page
+ * itself, with its URLs, is derived on every read, so a deploy that changes the
+ * routing or the origin takes effect at once. The outcome is built through
+ * `SitemapPageRead`, so only plain, serializable data is returned.
+ */
 async function readCachedSitemapEntries(
   options: SitemapPageEntryOptions
 ): Promise<typeof SitemapPageRead.Type> {
-  "use cache";
-
-  applySitemapCache();
   return await Effect.runPromise(
     getSitemapEntries(options).pipe(
       Effect.flatMap((entries) => SitemapPageFound.makeEffect({ entries })),

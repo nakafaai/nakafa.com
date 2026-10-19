@@ -35,10 +35,6 @@ const quranMocks = vi.hoisted(() => ({
 const tryoutMocks = vi.hoisted(() => ({
   readPublishedTryoutSitemapCount: vi.fn(),
 }));
-const nextCacheMocks = vi.hoisted(() => ({
-  cacheLife: vi.fn(),
-  cacheTag: vi.fn(),
-}));
 
 vi.mock("@/lib/content/article/sitemap", () => ({
   readPublishedArticleBuckets: articleMocks.readPublishedArticleBuckets,
@@ -57,13 +53,6 @@ vi.mock("@/lib/content/tryout/sitemap", () => tryoutMocks);
 
 vi.mock("@/lib/content/published/active", () => activeMocks);
 
-vi.mock("next/cache", () => ({
-  /** Records sitemap origin-cache usage without touching Next internals. */
-  cacheLife: nextCacheMocks.cacheLife,
-  /** Records sitemap origin-cache usage without touching Next internals. */
-  cacheTag: nextCacheMocks.cacheTag,
-}));
-
 vi.mock("@repo/internationalization/src/routing", async () => {
   const { ACTIVE_APP_LOCALE_CODES } = await import(
     "@nakafa/aksara-contracts/locale"
@@ -77,8 +66,6 @@ vi.mock("@repo/internationalization/src/routing", async () => {
 });
 
 beforeEach(() => {
-  nextCacheMocks.cacheLife.mockClear();
-  nextCacheMocks.cacheTag.mockClear();
   activeMocks.expireActiveContentIdentity
     .mockReset()
     .mockReturnValue(Effect.void);
@@ -366,8 +353,6 @@ describe("sitemap page catalog", () => {
     const descriptors = await getCachedSitemapDescriptors();
 
     expect(descriptors).toContainEqual({ id: "base" });
-    expect(nextCacheMocks.cacheTag).toHaveBeenCalledWith("content-sitemap");
-    expect(nextCacheMocks.cacheLife).toHaveBeenCalledWith("max");
   });
 
   it("checks the release with Convex on every fill and never caches a stale index", async () => {

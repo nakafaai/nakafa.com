@@ -26,8 +26,6 @@ import {
   it,
 } from "@effect/vitest";
 import { compile } from "@mdx-js/mdx";
-import { makeArtifactCacheTag } from "@nakafa/aksara-contracts/cache/content";
-import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import {
@@ -56,7 +54,6 @@ import { ContentRuntimeConfigurationError } from "@/lib/content/published/errors
 
 const runtimeKeysMock = vi.hoisted(() => vi.fn());
 const runtimeSiteMock = vi.hoisted(() => vi.fn());
-const cacheMock = vi.hoisted(() => vi.fn());
 const fetchMock = vi.hoisted(() => vi.fn<typeof fetch>());
 const tokenMock = vi.hoisted(() => vi.fn());
 const queryMock = vi.hoisted(() =>
@@ -101,10 +98,6 @@ vi.mock("@confect/js", async (importOriginal) => {
 });
 vi.mock("@/lib/auth/server", () => ({
   getToken: tokenMock,
-}));
-vi.mock("next/cache", () => ({
-  cacheLife: vi.fn(),
-  cacheTag: cacheMock,
 }));
 vi.mock("@repo/next-config/keys", () => ({
   contentRuntimeKeys: runtimeKeysMock,
@@ -200,7 +193,6 @@ const loadFailure = (
 
 beforeEach(() => {
   vi.setSystemTime(TRYOUT_TEST_NOW);
-  cacheMock.mockReset();
   fetchMock.mockReset();
   queryMock.mockReset();
   tokenMock.mockReset().mockResolvedValue("technical-session-token");
@@ -269,14 +261,6 @@ describe("signed try-out execution", () => {
         expect(queryMock).toHaveBeenCalledOnce();
         expect(runtimeKeysMock).not.toHaveBeenCalled();
         expect(fetchMock).not.toHaveBeenCalled();
-        expect(cacheMock).toHaveBeenCalledWith(
-          makeArtifactCacheTag(
-            Sha256HashSchema.make(fixture.question.artifactHash)
-          ),
-          makeArtifactCacheTag(
-            Sha256HashSchema.make(fixture.answer.artifactHash)
-          )
-        );
       })
   );
   it.effect(
@@ -320,11 +304,6 @@ describe("signed try-out execution", () => {
         );
         expect(fetchMock).toHaveBeenCalledOnce();
         expect(runtimeKeysMock).toHaveBeenCalledOnce();
-        expect(cacheMock).toHaveBeenCalledWith(
-          makeArtifactCacheTag(
-            Sha256HashSchema.make(fixture.question.artifactHash)
-          )
-        );
       })
   );
   it.effect(
@@ -358,7 +337,6 @@ describe("signed try-out execution", () => {
           },
         });
         expect(queryMock).toHaveBeenCalledOnce();
-        expect(cacheMock).not.toHaveBeenCalled();
       })
   );
   it.effect(
@@ -378,7 +356,6 @@ describe("signed try-out execution", () => {
           cause: "Protected content batch is empty.",
         });
         expect(queryMock).not.toHaveBeenCalled();
-        expect(cacheMock).not.toHaveBeenCalled();
       })
   );
   it.effect(
@@ -396,7 +373,6 @@ describe("signed try-out execution", () => {
           },
         });
         expect(fetchMock).not.toHaveBeenCalled();
-        expect(cacheMock).not.toHaveBeenCalled();
       })
   );
   it.effect(
@@ -419,7 +395,6 @@ describe("signed try-out execution", () => {
             contentKey: fixture.answer.contentKey,
           },
         });
-        expect(cacheMock).not.toHaveBeenCalled();
       })
   );
   it.effect("rechecks attempt access on every load after rendering", () =>
@@ -429,11 +404,7 @@ describe("signed try-out execution", () => {
           'return { default: function Content() { return "Complete retained body"; } };',
       });
       yield* loadSignedTryoutContent(fixture.attemptId, fixture.access);
-      expect(cacheMock).toHaveBeenCalledOnce();
-      expect(queryMock.mock.invocationCallOrder[0]).toBeLessThan(
-        cacheMock.mock.invocationCallOrder[0] ?? 0
-      );
-      // A cached render never outlives the account's access to the attempt.
+      // Access is read again for every load, so a revoked attempt never renders.
       yield* Effect.promise(() =>
         fixture.t.mutation((ctx) =>
           ctx.db.patch("users", fixture.seed.identity.userId, {
@@ -448,7 +419,6 @@ describe("signed try-out execution", () => {
         },
       });
       expect(queryMock).toHaveBeenCalledTimes(2);
-      expect(cacheMock).toHaveBeenCalledOnce();
     })
   );
   it.effect(
@@ -468,7 +438,6 @@ describe("signed try-out execution", () => {
           cause,
         });
         expect(queryMock).not.toHaveBeenCalled();
-        expect(cacheMock).not.toHaveBeenCalled();
       })
   );
   it.effect(
@@ -484,7 +453,6 @@ describe("signed try-out execution", () => {
           _tag: "ContentRuntimeVerificationError",
           cause,
         });
-        expect(cacheMock).not.toHaveBeenCalled();
       })
   );
 });

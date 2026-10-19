@@ -16,7 +16,6 @@ import { activateTestRelease } from "@/test/active";
 import { resetTestRuntimeCache } from "@/test/store";
 
 const categoryReaderMock = vi.hoisted(() => vi.fn());
-const cacheMock = vi.hoisted(() => vi.fn());
 const previewConfigMock = vi.hoisted(() => vi.fn(() => false));
 const manifestHash = `sha256:${"a".repeat(64)}`;
 const releaseId = "release-article";
@@ -24,9 +23,7 @@ const releaseId = "release-article";
 vi.mock("@/lib/content/article/catalog", () => ({
   readPublishedCategories: categoryReaderMock,
 }));
-vi.mock("@/lib/content/cache", () => ({
-  applyContentCache: cacheMock,
-}));
+vi.mock("@/lib/content/cache", () => ({}));
 vi.mock("@/lib/content/preview/config", () => ({
   hasPreviewConfig: previewConfigMock,
 }));
@@ -76,7 +73,6 @@ describe("article navigation", () => {
     resetTestRuntimeCache();
     activateTestRelease(releaseId);
     categoryReaderMock.mockReset();
-    cacheMock.mockReset();
     previewConfigMock.mockReset();
     previewConfigMock.mockReturnValue(false);
   });
@@ -147,7 +143,6 @@ describe("article navigation", () => {
         expectedReleaseId: releaseId,
         locale: "en",
       });
-      expect(cacheMock).toHaveBeenCalledWith("article");
     })
   );
 
@@ -209,7 +204,6 @@ describe("article navigation", () => {
 
         expect(navigation).toEqual([]);
         expect(categoryReaderMock).not.toHaveBeenCalled();
-        expect(cacheMock).not.toHaveBeenCalled();
       })
   );
 });

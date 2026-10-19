@@ -6,28 +6,30 @@ import {
   QuranSnapshotRecoveryError,
   recoverStalePublishedQuranSnapshot,
 } from "@/lib/content/quran/recovery";
+import { resetTestRuntimeCache, testRuntimeCache } from "@/test/store";
 
 const activeSnapshotId = Sha256HashSchema.make(`sha256:${"a".repeat(64)}`);
 const staleSnapshotId = Sha256HashSchema.make(`sha256:${"b".repeat(64)}`);
 const readIdentityMock = vi.hoisted(() => vi.fn());
-const refreshMock = vi.hoisted(() => vi.fn());
-const updateTagMock = vi.hoisted(() => vi.fn());
+
 vi.mock("@/lib/content/quran/publication", () => ({
   readPublishedQuranIdentity: readIdentityMock,
 }));
-vi.mock("next/cache", () => ({
-  refresh: refreshMock,
-  updateTag: updateTagMock,
-}));
+
+vi.mock("@vercel/functions", async () => {
+  const { testRuntimeCache: cache } = await import("@/test/store");
+  return { getCache: () => cache };
+});
+
 beforeEach(() => {
   readIdentityMock.mockReset().mockReturnValue(
     Effect.succeed({
       snapshotId: activeSnapshotId,
     })
   );
-  refreshMock.mockReset();
-  updateTagMock.mockReset();
+  resetTestRuntimeCache();
 });
+
 describe("stale published Quran snapshot recovery", () => {
   it.effect("rejects invalid input before reading active state", () =>
     Effect.gen(function* () {
@@ -43,19 +45,17 @@ describe("stale published Quran snapshot recovery", () => {
         });
       }
       expect(readIdentityMock).not.toHaveBeenCalled();
-      expect(refreshMock).not.toHaveBeenCalled();
-      expect(updateTagMock).not.toHaveBeenCalled();
+      expect(testRuntimeCache.expireTag).not.toHaveBeenCalled();
     })
   );
 
-  it.effect("refreshes without expiring the active snapshot", () =>
+  it.effect("keeps the active snapshot without expiring any entry", () =>
     Effect.gen(function* () {
       const recovered =
         yield* recoverStalePublishedQuranSnapshot(activeSnapshotId);
 
       expect(recovered).toBe(false);
-      expect(refreshMock).toHaveBeenCalledOnce();
-      expect(updateTagMock).not.toHaveBeenCalled();
+      expect(testRuntimeCache.expireTag).not.toHaveBeenCalled();
     })
   );
 
@@ -65,8 +65,7 @@ describe("stale published Quran snapshot recovery", () => {
         yield* recoverStalePublishedQuranSnapshot(staleSnapshotId);
 
       expect(recovered).toBe(true);
-      expect(refreshMock).not.toHaveBeenCalled();
-      expect(updateTagMock).toHaveBeenCalledWith(
+      expect(testRuntimeCache.expireTag).toHaveBeenCalledExactlyOnceWith(
         `content-artifact:${staleSnapshotId}`
       );
     })
@@ -94,31 +93,11 @@ describe("stale published Quran snapshot recovery", () => {
       })
   );
 
-  it.effect("keeps route refresh failures in the typed error channel", () =>
-    Effect.gen(function* () {
-      refreshMock.mockImplementationOnce(() => {
-        throw new Error("refresh unavailable");
-      });
-
-      const result = yield* recoverStalePublishedQuranSnapshot(
-        activeSnapshotId
-      ).pipe(Effect.result);
-
-      expect(Result.isFailure(result)).toBe(true);
-      if (Result.isFailure(result)) {
-        expect(result.failure).toMatchObject({
-          _tag: "QuranSnapshotRecoveryError",
-          reason: "route-refresh",
-        });
-      }
-    })
-  );
-
   it.effect(
     "keeps cache invalidation failures in the typed error channel",
     () =>
       Effect.gen(function* () {
-        updateTagMock.mockImplementationOnce(() => {
+        testRuntimeCache.expireTag.mockImplementationOnce(() => {
           throw new Error("cache unavailable");
         });
 

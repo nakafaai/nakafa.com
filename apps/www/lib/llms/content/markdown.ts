@@ -13,7 +13,7 @@ import {
 } from "effect";
 import type { Locale } from "use-intl";
 import { readActiveContentRoute } from "@/lib/content/published/route";
-import { getCachedLlmsSectionIndexText } from "@/lib/llms/index/cache";
+import { getLlmsSectionIndexText } from "@/lib/llms/index/generate";
 import {
   isPublicLlmsLocaleIndexRoute,
   resolvePublicLlmsSectionIndex,
@@ -55,17 +55,11 @@ const readCachedMarkdown = Effect.fn("www.llms.markdown.owner")(function* (
   });
 });
 /** Reads the derived index fallback after concrete Markdown owners miss. */
-const readCachedSectionIndex = Effect.fn("www.llms.markdown.index")(function* ({
+const readSectionIndex = Effect.fn("www.llms.markdown.index")(function* ({
   cleanSlug,
   locale,
 }: LlmsMarkdownInput) {
-  return yield* Effect.tryPromise({
-    try: () =>
-      getCachedLlmsSectionIndexText({
-        cleanSlug: `llms/${locale}/${cleanSlug}`,
-      }),
-    catch: (cause) => new CacheFailure({ cause, owner: "index" }),
-  });
+  return yield* getLlmsSectionIndexText(`llms/${locale}/${cleanSlug}`);
 });
 /**
  * Resolves cached markdown for one agent-facing route.
@@ -88,7 +82,7 @@ export const getLlmsMarkdownText = Effect.fn("www.llms.markdown.cached")(
     if (published) {
       return yield* readCachedMarkdown(published, locale);
     }
-    return yield* readCachedSectionIndex({ cleanSlug, locale });
+    return yield* readSectionIndex({ cleanSlug, locale });
   }
 );
 /** Checks the exact route owners used by the public Markdown handler. */
@@ -115,7 +109,7 @@ export const hasLlmsMarkdownSource = Effect.fn("www.llms.markdown.hasSource")(
       return true;
     }
 
-    const indexText = yield* readCachedSectionIndex(input);
+    const indexText = yield* readSectionIndex(input);
     return Boolean(indexText);
   }
 );

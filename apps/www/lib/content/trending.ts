@@ -3,7 +3,6 @@ import "@tanstack/react-start/server-only";
 import contents from "@repo/backend/confect/_generated/refs/contents";
 import type { PublicAppLocale } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";
-import { cacheLife } from "next/cache";
 import { httpLayer } from "@/lib/convex/http";
 
 /**
@@ -25,9 +24,6 @@ import { httpLayer } from "@/lib/convex/http";
  * @see https://confect.dev/v10/clients/js/http
  */
 export async function getHomeTrendingSubjects(locale: PublicAppLocale) {
-  "use cache";
-
-  cacheLife("hours");
   return await Effect.runPromise(
     Effect.flatMap(HttpClient.HttpClient, (client) =>
       client.query(contents.queries.trending.getTrendingSubjects, {

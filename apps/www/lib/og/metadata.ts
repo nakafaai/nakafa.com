@@ -1,11 +1,9 @@
 import { ContentAuthorSchema } from "@nakafa/aksara-contracts/content";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
-import { resolveReferenceInput } from "@repo/backend/confect/contentRelease/reference/input";
 import { contentSearchSummaryValidator } from "@repo/backend/confect/contents/search/schema";
 import { Array as Arr, Effect, Schema } from "effect";
 import { getTranslations } from "next-intl/server";
 import type { Locale } from "use-intl";
-import { applyContentCache } from "@/lib/content/cache";
 import { queryContentStore } from "@/lib/content/store/query";
 
 /** Expected failure raised when route metadata translations cannot be loaded. */
@@ -95,27 +93,10 @@ export const getMetadataFromSlug = Effect.fn("www.metadata.readFromSlug")(
   }
 );
 
-/**
- * Resolves metadata inside a Cache Components-safe helper for OG routes. The
- * `use cache` boundary stays so that the family tag still expires the copy.
- */
+/** Resolves the metadata of one OG route from its slug. */
 export async function getCachedMetadataFromSlug(
   locale: Locale,
   slug: string[]
 ) {
-  "use cache";
-
-  return await Effect.runPromise(
-    Effect.gen(function* () {
-      const reference = yield* resolveReferenceInput({
-        appLocale: locale,
-        kind: "route",
-        publicPath: Arr.join(slug, "/"),
-      });
-      if (reference) {
-        yield* Effect.sync(() => applyContentCache(reference.family));
-      }
-      return yield* getMetadataFromSlug(locale, slug);
-    })
-  );
+  return await Effect.runPromise(getMetadataFromSlug(locale, slug));
 }

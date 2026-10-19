@@ -8,13 +8,9 @@ export const OG_CACHE_TAG = "content-og";
  * purges this tag. A deployment has its own CDN cache key, so it needs no
  * purge.
  *
- * The hour is the lifetime of the content entries the image is rendered from
- * (`CONTENT_CACHE_PROFILE`). The purge reaches the CDN, but the instance that
- * renders the next image may still hold the previous release in its memory for
- * up to that hour, so a longer lifetime here would keep such a render at the
- * CDN long after its source was fresh again. With the hour, the first request
- * after it gets the stale image at once and starts a new render. The browser
- * always asks again, as it does for the sitemap. A page outside the content
+ * The hour is the longest that a CDN copy of an image may outlive its source
+ * without a purge. The first request after it gets the stale image at once and
+ * starts a new render. The browser always asks again, as it does for the sitemap. A page outside the content
  * namespaces has no signed owner and shows the generic copy of the site, so
  * its image carries these headers too.
  */

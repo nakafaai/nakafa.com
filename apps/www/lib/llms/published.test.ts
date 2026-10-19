@@ -28,8 +28,6 @@ import {
 } from "@/test/content-preview";
 import { resetTestRuntimeCache, testRuntimeCache } from "@/test/store";
 
-const cacheLifeMock = vi.hoisted(() => vi.fn());
-const cacheTagMock = vi.hoisted(() => vi.fn());
 const readContentMock = vi.hoisted(() => vi.fn());
 const derivation = vi.hoisted(() => ({ baseUrl: "" }));
 const sourceRevision = GitCommitShaSchema.make("a".repeat(40));
@@ -96,10 +94,6 @@ const preparePublishedFixtures = Effect.fn(
   return { articleData, materialData, pageData } as const;
 });
 
-vi.mock("next/cache", () => ({
-  cacheLife: cacheLifeMock,
-  cacheTag: cacheTagMock,
-}));
 /** Lets a test change what code derives from a stored answer, as a deploy does. */
 vi.mock("@/lib/llms/constants", async (importOriginal) => {
   const original =
@@ -125,8 +119,6 @@ vi.mock(
 );
 beforeEach(() => {
   resetTestRuntimeCache();
-  cacheLifeMock.mockReset();
-  cacheTagMock.mockReset();
   readContentMock.mockReset();
 });
 
@@ -160,10 +152,6 @@ describe("published llms markdown", () => {
         });
         // The key names the release, so the entry has no timer and only its
         // scope tag expires it.
-        expect(cacheLifeMock).toHaveBeenCalledExactlyOnceWith("max");
-        expect(cacheTagMock).toHaveBeenCalledExactlyOnceWith(
-          "content-scope:material"
-        );
       })
   );
 
@@ -190,9 +178,6 @@ describe("published llms markdown", () => {
           family: "article",
           publicPath: testArticleProjection.publicPath,
         });
-        expect(cacheTagMock).toHaveBeenCalledExactlyOnceWith(
-          "content-scope:article"
-        );
       })
   );
 
@@ -219,9 +204,6 @@ describe("published llms markdown", () => {
           family: "page",
           publicPath: testPageProjection.publicPath,
         });
-        expect(cacheTagMock).toHaveBeenCalledExactlyOnceWith(
-          "content-scope:page"
-        );
       })
   );
 

@@ -33,10 +33,6 @@ vi.mock("next-intl/middleware", () => ({ default: () => () => undefined }));
  * The `use cache` directive is a build transform, so the test stands in for the cache scope
  * that `cacheLife` needs. The reads keep their real `io`.
  */
-vi.mock("next/cache", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("next/cache")>()),
-  cacheLife: vi.fn(),
-}));
 
 const SLUG = Schema.decodeSync(TenantSlug)("harapan");
 

@@ -22,7 +22,6 @@ import {
 } from "@/test/content-program";
 import { resetTestRuntimeCache } from "@/test/store";
 
-const cacheMock = vi.hoisted(() => vi.fn());
 const runtimeQueryMock = vi.hoisted(() => vi.fn());
 const revision = "a".repeat(40);
 
@@ -68,9 +67,7 @@ function routeResponse(overrides?: {
     sourceRevision: revision,
   };
 }
-vi.mock("@/lib/content/cache", () => ({
-  applyContentCache: cacheMock,
-}));
+vi.mock("@/lib/content/cache", () => ({}));
 vi.mock("@confect/js", async (importOriginal) => {
   const { HttpClient } = await importOriginal<typeof import("@confect/js")>();
   return {
@@ -102,7 +99,6 @@ describe("published program route", () => {
   beforeEach(() => {
     resetTestRuntimeCache();
     activateTestRelease("program-release");
-    cacheMock.mockReset();
     runtimeQueryMock.mockReset();
   });
   it.effect("reaches Convex once for each route of each release", () =>
@@ -204,7 +200,6 @@ describe("published program route", () => {
         },
         sourceRevision: revision,
       });
-      expect(cacheMock).toHaveBeenCalledOnce();
     })
   );
   it.effect("rejects an unmanaged family", () =>

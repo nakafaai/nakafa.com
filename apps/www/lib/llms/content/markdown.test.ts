@@ -14,7 +14,7 @@ const PUBLISHED_PAGE_PATH = "terms-of-service";
 const PUBLISHED_NESTED_PAGE_PATH = "legal/terms-of-service";
 const NEW_PATH = "subjects/mathematics/new-topic/new-lesson";
 const SOURCE_PUBLIC_PATH = "subjects/chemistry/green-chemistry/definition";
-const mockGetCachedLlmsSectionIndexText = vi.hoisted(() => vi.fn());
+const mockGetLlmsSectionIndexText = vi.hoisted(() => vi.fn());
 const mockGetCachedPublishedText = vi.hoisted(() => vi.fn());
 const mockClassifyQuranLlmsRoute = vi.hoisted(() => vi.fn());
 const mockGetQuranLlmsText = vi.hoisted(() => vi.fn());
@@ -27,8 +27,8 @@ vi.mock("@/lib/content/published/route", () => ({
   readActiveContentRoute: mockReadActiveContentRoute,
 }));
 
-vi.mock("@/lib/llms/index/cache", () => ({
-  getCachedLlmsSectionIndexText: mockGetCachedLlmsSectionIndexText,
+vi.mock("@/lib/llms/index/generate", () => ({
+  getLlmsSectionIndexText: mockGetLlmsSectionIndexText,
 }));
 
 vi.mock("@/lib/llms/published", () => ({
@@ -60,6 +60,17 @@ function expectCacheFailure(cleanSlug: string, cause: Error, owner: string) {
   });
 }
 
+/** Asserts one section-index failure reaches the caller as it was raised. */
+function expectSectionIndexFailure(cleanSlug: string, cause: Error) {
+  return Effect.gen(function* () {
+    const failure = yield* getLlmsMarkdownText({
+      cleanSlug,
+      locale: "en",
+    }).pipe(Effect.flip);
+    expect(failure).toBe(cause);
+  });
+}
+
 /** Resolves one markdown route inside the Effect test runtime. */
 function readMarkdown(cleanSlug: string, locale: Locale = "en") {
   return getLlmsMarkdownText({ cleanSlug, locale });
@@ -75,7 +86,9 @@ function expectNoPublishedMarkdown(cleanSlug: string) {
 
 describe("llms markdown content resolver", () => {
   beforeEach(() => {
-    mockGetCachedLlmsSectionIndexText.mockReset().mockResolvedValue(null);
+    mockGetLlmsSectionIndexText
+      .mockReset()
+      .mockReturnValue(Effect.succeed(null));
     mockGetCachedPublishedText
       .mockReset()
       .mockResolvedValue("Published markdown");
@@ -117,7 +130,7 @@ describe("llms markdown content resolver", () => {
       mockGetCachedPublishedText.mockRejectedValue(error);
 
       yield* expectCacheFailure(PUBLISHED_PATH, error, "published");
-      expect(mockGetCachedLlmsSectionIndexText).not.toHaveBeenCalled();
+      expect(mockGetLlmsSectionIndexText).not.toHaveBeenCalled();
     })
   );
 
@@ -223,7 +236,7 @@ describe("llms markdown content resolver", () => {
 
       expect(yield* readMarkdown("quran/1")).toBe("Quran markdown");
       expect(mockGetCachedPublishedText).not.toHaveBeenCalled();
-      expect(mockGetCachedLlmsSectionIndexText).not.toHaveBeenCalled();
+      expect(mockGetLlmsSectionIndexText).not.toHaveBeenCalled();
     })
   );
 
@@ -238,7 +251,7 @@ describe("llms markdown content resolver", () => {
       ).toBe(true);
       expect(mockGetQuranLlmsText).not.toHaveBeenCalled();
       expect(mockReadActiveContentRoute).not.toHaveBeenCalled();
-      expect(mockGetCachedLlmsSectionIndexText).not.toHaveBeenCalled();
+      expect(mockGetLlmsSectionIndexText).not.toHaveBeenCalled();
     })
   );
 
@@ -275,7 +288,7 @@ describe("llms markdown content resolver", () => {
           family: "page",
           publicPath: PUBLISHED_PAGE_PATH,
         });
-        expect(mockGetCachedLlmsSectionIndexText).not.toHaveBeenCalled();
+        expect(mockGetLlmsSectionIndexText).not.toHaveBeenCalled();
       })
   );
 
@@ -303,12 +316,14 @@ describe("llms markdown content resolver", () => {
     "returns sitemap-derived route indexes when page markdown is absent",
     () =>
       Effect.gen(function* () {
-        mockGetCachedLlmsSectionIndexText.mockResolvedValue("Index markdown");
+        mockGetLlmsSectionIndexText.mockReturnValue(
+          Effect.succeed("Index markdown")
+        );
 
         expect(yield* readMarkdown("articles/politics")).toBe("Index markdown");
-        expect(mockGetCachedLlmsSectionIndexText).toHaveBeenCalledWith({
-          cleanSlug: "llms/en/articles/politics",
-        });
+        expect(mockGetLlmsSectionIndexText).toHaveBeenCalledWith(
+          "llms/en/articles/politics"
+        );
       })
   );
 
@@ -354,7 +369,7 @@ describe("llms markdown content resolver", () => {
         expect(mockGetQuranLlmsText).not.toHaveBeenCalled();
         expect(mockReadActiveContentRoute).not.toHaveBeenCalled();
         expect(mockGetCachedPublishedText).not.toHaveBeenCalled();
-        expect(mockGetCachedLlmsSectionIndexText).not.toHaveBeenCalled();
+        expect(mockGetLlmsSectionIndexText).not.toHaveBeenCalled();
       })
   );
 
@@ -371,7 +386,7 @@ describe("llms markdown content resolver", () => {
       expect(mockGetQuranLlmsText).not.toHaveBeenCalled();
       expect(mockReadActiveContentRoute).not.toHaveBeenCalled();
       expect(mockGetCachedPublishedText).not.toHaveBeenCalled();
-      expect(mockGetCachedLlmsSectionIndexText).not.toHaveBeenCalled();
+      expect(mockGetLlmsSectionIndexText).not.toHaveBeenCalled();
     })
   );
 
@@ -393,7 +408,7 @@ describe("llms markdown content resolver", () => {
         });
         expect(mockGetQuranLlmsText).not.toHaveBeenCalled();
         expect(mockGetCachedPublishedText).not.toHaveBeenCalled();
-        expect(mockGetCachedLlmsSectionIndexText).not.toHaveBeenCalled();
+        expect(mockGetLlmsSectionIndexText).not.toHaveBeenCalled();
       })
   );
 
@@ -401,9 +416,9 @@ describe("llms markdown content resolver", () => {
     "reports availability only when the real source chain returns text",
     () =>
       Effect.gen(function* () {
-        mockGetCachedLlmsSectionIndexText
-          .mockResolvedValueOnce("Index markdown")
-          .mockResolvedValueOnce(null);
+        mockGetLlmsSectionIndexText
+          .mockReturnValueOnce(Effect.succeed("Index markdown"))
+          .mockReturnValueOnce(Effect.succeed(null));
 
         expect(
           yield* hasLlmsMarkdownSource({
@@ -438,17 +453,15 @@ describe("llms markdown content resolver", () => {
     () =>
       Effect.gen(function* () {
         expect(yield* readMarkdown("")).toBeNull();
-        expect(mockGetCachedLlmsSectionIndexText).toHaveBeenCalledWith({
-          cleanSlug: "llms/en/",
-        });
+        expect(mockGetLlmsSectionIndexText).toHaveBeenCalledWith("llms/en/");
       })
   );
 
-  it.effect("types cached section-index failures", () => {
+  it.effect("passes the section-index failure through unchanged", () => {
     const error = new Error("index failed");
-    mockGetCachedLlmsSectionIndexText.mockRejectedValue(error);
+    mockGetLlmsSectionIndexText.mockReturnValue(Effect.fail(error));
 
-    return expectCacheFailure("articles/missing", error, "index");
+    return expectSectionIndexFailure("articles/missing", error);
   });
 
   it.effect("surfaces active material-route lookup failures", () =>

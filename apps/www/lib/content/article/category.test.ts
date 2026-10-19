@@ -26,8 +26,6 @@ import { resetTestRuntimeCache } from "@/test/store";
 
 const categoryReaderMock = vi.hoisted(() => vi.fn());
 const articleReaderMock = vi.hoisted(() => vi.fn());
-const cacheMock = vi.hoisted(() => vi.fn());
-const releaseCacheMock = vi.hoisted(() => vi.fn());
 const manifestHash = Sha256HashSchema.make(`sha256:${"a".repeat(64)}`);
 const releaseId = ReleaseIdSchema.make("release-article");
 
@@ -39,10 +37,7 @@ vi.mock("@/lib/content/article/catalog", () => ({
   readPublishedArticlePage: articleReaderMock,
   readPublishedCategories: categoryReaderMock,
 }));
-vi.mock("@/lib/content/cache", () => ({
-  applyContentCache: cacheMock,
-  applyReleaseContentCache: releaseCacheMock,
-}));
+vi.mock("@/lib/content/cache", () => ({}));
 vi.mock(
   "@/lib/content/published/active",
   async () => (await import("@/test/active")).testActiveModule
@@ -111,8 +106,6 @@ describe("published article category", () => {
     activateTestRelease(releaseId);
     categoryReaderMock.mockReset();
     articleReaderMock.mockReset();
-    cacheMock.mockReset();
-    releaseCacheMock.mockReset();
   });
 
   it.effect(
@@ -153,7 +146,6 @@ describe("published article category", () => {
           route: "politik",
         });
         expect(yield* hasPublishedArticleCategory("politik", "de")).toBe(true);
-        expect(cacheMock).toHaveBeenCalledWith("article");
       })
   );
 
@@ -213,8 +205,6 @@ describe("published article category", () => {
         { appLocale: "id", publicPath: "articles/politics" },
         { appLocale: "de", publicPath: "articles/politik" },
       ]);
-      expect(releaseCacheMock).toHaveBeenCalledWith("article");
-      expect(cacheMock).not.toHaveBeenCalled();
     })
   );
 
@@ -362,8 +352,6 @@ describe("published article category", () => {
           })
         );
         expect(category).toEqual(page);
-        expect(releaseCacheMock).toHaveBeenCalledWith("article");
-        expect(cacheMock).not.toHaveBeenCalled();
 
         const stalePage = { ...page, stale: true };
         articleReaderMock.mockReturnValueOnce(Effect.succeed(stalePage));

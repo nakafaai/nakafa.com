@@ -16,9 +16,6 @@ vi.mock("@/components/tenant/language", () => ({
 vi.mock("@/lib/analytics/client", () => ({
   reportClientException: doubles.report,
 }));
-vi.mock("next/navigation", () => ({
-  unstable_isUnrecognizedActionError: doubles.isStaleAction,
-}));
 
 describe("changeSchoolLanguage", () => {
   beforeEach(() => {

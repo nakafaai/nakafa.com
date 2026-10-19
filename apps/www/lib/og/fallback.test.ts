@@ -29,7 +29,6 @@ const mocks = vi.hoisted(() => {
   }
 
   return {
-    cacheLife: vi.fn(),
     FakeImageResponse,
     getTranslations: vi.fn(),
     get imageCalls() {
@@ -40,7 +39,6 @@ const mocks = vi.hoisted(() => {
 });
 
 vi.mock("node:fs/promises", () => ({ readFile: mocks.readFile }));
-vi.mock("next/cache", () => ({ cacheLife: mocks.cacheLife }));
 vi.mock("next-intl/server", () => ({
   getTranslations: mocks.getTranslations,
 }));

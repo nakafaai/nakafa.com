@@ -11,7 +11,6 @@ import {
   verifyArticlePublication,
 } from "@/lib/content/article/decode";
 import { decodePublishedArticleRoute } from "@/lib/content/article/route";
-import { applyContentCache } from "@/lib/content/cache";
 import {
   decodeArticleData,
   renderArticleArtifact,
@@ -94,9 +93,6 @@ async function fetchArticleSource(locale: Locale, publicPath: string) {
 
 /** Reads and verifies one signed article delivery inside the content cache. */
 async function readArticleDelivery(locale: Locale, publicPath: string) {
-  "use cache";
-
-  applyContentCache("article");
   // The Confect request disables trace timing before static rendering suspends.
   // https://nextjs.org/docs/messages/next-prerender-current-time
   const source = await fetchArticleSource(locale, publicPath);
@@ -116,9 +112,6 @@ export const getArticlePublication = cache(readArticleDelivery);
  * Social images resolve copy through this seam so a missing release falls
  * back to brand artwork instead of rendering the application shell. */
 async function readArticleModel(locale: Locale, publicPath: string) {
-  "use cache";
-
-  applyContentCache("article");
   const source = await fetchArticleSource(locale, publicPath);
   return await Effect.runPromise(
     decodeArticleModel(source, locale, publicPath)

@@ -5,7 +5,6 @@ import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease
 import { Effect, Schema } from "effect";
 import { cache } from "react";
 import type { Locale } from "use-intl";
-import { applyContentCache } from "@/lib/content/cache";
 import {
   decodeMaterialJson,
   makeMaterialProjectionError,
@@ -215,13 +214,8 @@ const readMaterialSource = Effect.fn("NakafaMaterial.readSource")(function* (
   );
 });
 
-/** Reads and verifies one signed material delivery inside the content cache.
- * The `use cache` boundary stays so that lessons prerender and the material tag
- * still expires them, and it holds the rendered body that the store cannot. */
+/** Reads and verifies one signed material delivery. */
 async function readMaterialDelivery(locale: Locale, publicPath: string) {
-  "use cache";
-
-  applyContentCache("material");
   // The Confect request disables trace timing before static rendering suspends.
   // https://nextjs.org/docs/messages/next-prerender-current-time
   const source = await fetchMaterialLesson(locale, publicPath);
@@ -247,9 +241,6 @@ export const getMaterialPublication = cache(readMaterialDelivery);
  * cache` boundary stays so that the material tag still expires the verified
  * model; the lesson behind it is the one that the page already stored. */
 async function readMaterialModel(locale: Locale, publicPath: string) {
-  "use cache";
-
-  applyContentCache("material");
   const source = await fetchMaterialLesson(locale, publicPath);
   return await Effect.runPromise(
     readMaterialSource(source, locale, publicPath).pipe(

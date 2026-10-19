@@ -13,7 +13,6 @@ import {
   Record as Rec,
 } from "effect";
 import type { Locale } from "use-intl";
-import { applyContentCache } from "@/lib/content/cache";
 import type { PublishedCurriculumRoute } from "@/lib/content/program/decode";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
 
@@ -185,11 +184,8 @@ export const readPublishedMaterialCards = Effect.fn(
 export async function getPublishedMaterialCards(
   input: Parameters<typeof readPublishedMaterialCards>[0]
 ) {
-  "use cache";
-
   const cards = await Effect.runPromise(
     readPublishedMaterialCards(input).pipe(Effect.withTracerTiming(false))
   );
-  applyContentCache("program", "material");
   return cards;
 }

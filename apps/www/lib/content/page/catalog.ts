@@ -11,7 +11,6 @@ import {
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { routing } from "@repo/internationalization/src/routing";
 import { Array as Arr, Effect, Option, Schema } from "effect";
-import { applyContentCache } from "@/lib/content/cache";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
 import { decodePublishedPageJson } from "@/lib/content/published/projection";
 import { decodeContentReleasePin } from "@/lib/content/published/release";
@@ -89,12 +88,9 @@ export const readPublishedPageCatalog = Effect.fn(
  * still expires them.
  */
 export async function getPublishedPageCatalog() {
-  "use cache";
-
   const catalog = await Effect.runPromise(
     readPublishedPageCatalog().pipe(Effect.withTracerTiming(false))
   );
-  applyContentCache("page");
   return catalog;
 }
 
