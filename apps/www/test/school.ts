@@ -34,6 +34,7 @@ export const TOKEN = "session-token";
 export const TOKEN_PATH = "/api/auth/convex/token";
 export const PROFILE = getConvexFunctionName(tenancy.profile.get);
 export const VIEWER = getConvexFunctionName(tenancy.viewer.get);
+export const REFUSAL = getConvexFunctionName(tenancy.profile.refusal);
 
 /**
  * The typed failures that the school queries refuse with, encoded as the
@@ -62,8 +63,8 @@ export const SESSION_REQUIRED = Schema.encodeSync(SessionRequired)(
 /** One answer of the fake backend. It is a function, so a request can wait or fail. */
 type Route = () => Promise<Response>;
 
-/** The reads that a test answers: the token route and the two school queries. */
-type ReadName = "profile" | "token" | "viewer";
+/** The reads that a test answers: the token route and the school queries. */
+type ReadName = "profile" | "refusal" | "token" | "viewer";
 
 /** One request that the fake backend served: a token read, with no slug, or a school query. */
 const ServedRequest = Schema.Struct({
@@ -126,6 +127,7 @@ export const tokenRefused: Route = () =>
 /** A route that the test does not name never answers, so a read it did not expect hangs and fails. */
 const ABSENT: Record<ReadName, Route> = {
   profile: silent,
+  refusal: silent,
   token: silent,
   viewer: silent,
 };
@@ -177,7 +179,10 @@ export function serve(routes: Partial<Record<ReadName, Route>>) {
         slug: args[0].slug,
       },
     ];
-    return path === PROFILE ? named.profile() : named.viewer();
+    if (path === PROFILE) {
+      return named.profile();
+    }
+    return path === REFUSAL ? named.refusal() : named.viewer();
   });
 }
 
