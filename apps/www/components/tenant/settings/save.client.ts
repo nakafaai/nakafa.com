@@ -15,6 +15,10 @@ const SAVE_ERROR: ToastCopy = {
  * the error the server returns. A refusal with no copy here shows the generic save error.
  */
 const REFUSAL_COPY: Readonly<Record<string, ToastCopy>> = {
+  AddressMember: {
+    description: "school-refusal-address-member.description",
+    title: "school-refusal-address-member.title",
+  },
   CohortHasHomeroom: {
     description: "school-refusal-cohort-has-homeroom.description",
     title: "school-refusal-cohort-has-homeroom.title",

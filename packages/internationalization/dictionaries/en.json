@@ -1382,6 +1382,10 @@
       "title": "Already graduated from this school.",
       "description": "A graduated student cannot be placed in a cohort again."
     },
+    "school-refusal-address-member": {
+      "title": "They already belong to this school.",
+      "description": "Change their role under Roles and access."
+    },
     "school-refusal-already-placed": {
       "title": "Already placed in this period.",
       "description": "Move the student from their current cohort instead."

@@ -1382,6 +1382,10 @@
       "title": "Bereits abgeschlossen.",
       "description": "Diese Person kann nicht erneut in eine Klasse."
     },
+    "school-refusal-address-member": {
+      "title": "Diese Person gehört schon zur Schule.",
+      "description": "Ändere ihre Rolle unter Rollen und Zugriff."
+    },
     "school-refusal-already-placed": {
       "title": "Schon einer Klasse zugeordnet.",
       "description": "Die Schülerin oder der Schüler wechselt stattdessen die Klasse."

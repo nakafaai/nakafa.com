@@ -187,6 +187,19 @@ export class AddressInvited extends Schema.TaggedError<AddressInvited>()(
   )
 ) {}
 
+/**
+ * An address that an account of this school already claimed through an invite, while its
+ * Person is still an active member. A second Person for it could never be claimed, so the
+ * school refuses it: the member's role changes in the roles of the school instead.
+ */
+export class AddressMember extends Schema.TaggedError<AddressMember>()(
+  "AddressMember",
+  refusal(
+    "ADDRESS_MEMBER",
+    "This address already belongs to a member of this school."
+  )
+) {}
+
 /** Sending again an invite that is no longer waiting for a claim. */
 export class InviteNotPending extends Schema.TaggedError<InviteNotPending>()(
   "InviteNotPending",

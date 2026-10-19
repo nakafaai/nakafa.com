@@ -245,11 +245,11 @@ describe("tenancy/roster invite and members", () => {
   );
 
   it.effect(
-    "gives no new invite to a Person that an account has claimed, so the address gets a new Person",
+    "refuses an address whose invited Person an account has claimed, since that member already belongs to the school, and adds no second Person",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
-        const claimed = yield* fixture.run(
+        yield* fixture.run(
           invitePerson(fixture.tenants.nf, guruBaru.email, {
             account: {
               claimedAt: TENANCY_NOW,
@@ -264,10 +264,20 @@ describe("tenancy/roster invite and members", () => {
             },
           })
         );
-        const invitedAgain = yield* fixture
+        const refused = yield* fixture
           .as("admin")
-          .mutation(inviteMember, guruBaru);
-        expect(invitedAgain.person).not.toBe(claimed.personId);
+          .mutation(inviteMember, guruBaru)
+          .pipe(Effect.flip);
+        expect(refused).toMatchObject({
+          _tag: "AddressMember",
+          code: "ADDRESS_MEMBER",
+        });
+        const listed = yield* fixture
+          .as("admin")
+          .query(members, { ...everyone, slug: nf });
+        expect(
+          Arr.filter(listed.page, (member) => member.name === guruBaru.name)
+        ).toEqual([]);
       })
   );
 

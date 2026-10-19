@@ -1382,6 +1382,10 @@
       "title": "Sudah lulus dari sekolah ini.",
       "description": "Siswa yang sudah lulus tidak bisa masuk rombel lagi."
     },
+    "school-refusal-address-member": {
+      "title": "Orang ini sudah menjadi anggota sekolah ini.",
+      "description": "Ubah perannya di Peran dan akses."
+    },
     "school-refusal-already-placed": {
       "title": "Sudah masuk rombel periode ini.",
       "description": "Pindahkan siswa dari rombelnya saat ini."

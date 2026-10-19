@@ -22,10 +22,12 @@ import {
 import { createPerson } from "@repo/backend/confect/tenancy/create";
 import {
   AddressInvited,
+  AddressMember,
   InviteDomainRefused,
 } from "@repo/backend/confect/tenancy/errors";
 import {
   addressInvited,
+  addressJoined,
   earlierInvitee,
   expireInvite,
   pendingInviteOf,
@@ -152,6 +154,9 @@ const invite = FunctionImpl.make(
     }
     if (yield* addressInvited(tenant._id, email)) {
       return yield* new AddressInvited();
+    }
+    if (yield* addressJoined(tenant._id, email)) {
+      return yield* new AddressMember();
     }
     yield* tenantAuthority.check("grant.manage", tenant);
     yield* authorizeOwnerRole(role);
