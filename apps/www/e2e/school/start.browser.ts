@@ -27,20 +27,20 @@ test("a new account opens its own school in five questions and lands in it as it
   await expect(page.getByText("Available")).toBeAttached();
   await page.getByRole("button", { name: "Continue" }).click();
 
-  await page.getByText("Indonesia", { exact: true }).click();
+  await page.getByRole("radio", { name: "Indonesia" }).click();
   await page.getByRole("button", { name: "Continue" }).click();
 
   // A reload resumes at the first open question, with the answers kept.
   await page.reload();
   await expect(page.getByText("Question 3 of 5")).toBeVisible();
-  await page.getByText("SD", { exact: true }).click();
-  await page.getByText("SMP", { exact: true }).click();
+  await page.getByRole("checkbox", { name: "SD" }).click();
+  await page.getByRole("checkbox", { name: "SMP" }).click();
   await page.getByRole("button", { name: "Continue" }).click();
 
-  await page.getByText("Teacher", { exact: true }).click();
+  await page.getByRole("radio", { name: "Teacher" }).click();
   await page.getByRole("button", { name: "Continue" }).click();
 
-  await page.getByText("100 to 499", { exact: true }).click();
+  await page.getByRole("radio", { name: "100 to 499" }).click();
   await expect(page.getByRole("link", { name: "Terms" })).toBeVisible();
   await page.getByRole("button", { name: "Open school" }).click();
 
