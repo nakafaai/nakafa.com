@@ -143,7 +143,7 @@ const PLACEMENTS: readonly ToyPlacement[] = [
   {
     key: "privacy-padlock",
     picture: thing("padlock"),
-    place: within("privacy", { minWidth: 1024, x: 0.2, y: 0.22 }),
+    place: within("privacy", { minWidth: 1024, x: 0.12, y: 0.22 }),
   },
   {
     key: "privacy-letter",

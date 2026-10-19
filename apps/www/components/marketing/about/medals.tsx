@@ -1,7 +1,7 @@
 "use client";
 
 import { FavouriteIcon } from "@hugeicons/core-free-icons";
-import { useIntersection, useReducedMotion } from "@mantine/hooks";
+import { useIntersection } from "@mantine/hooks";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cva, type VariantProps } from "class-variance-authority";
 import { Array as Arr } from "effect";
@@ -30,17 +30,13 @@ const ribbonFill = cva("", {
 /** The name of one ribbon fill. */
 type RibbonTone = NonNullable<VariantProps<typeof ribbonFill>["tone"]>;
 
-/** The swing of a medal. A medal hangs still unless the reader allows motion. */
+/**
+ * The swing of a medal. The media query decides it in CSS, so a reader who asks
+ * for less motion gets still medals from the server's first paint, before any
+ * script runs.
+ */
 const medalSwing = cva(
-  "transform-fill grid origin-top justify-items-center will-change-transform",
-  {
-    variants: {
-      swinging: {
-        false: "",
-        true: "animate-thing-sway",
-      },
-    },
-  }
+  "transform-fill grid origin-top justify-items-center will-change-transform motion-safe:animate-thing-sway"
 );
 
 /** The fill of each ribbon, in turn. */
@@ -82,20 +78,18 @@ function Medal({
   index,
   paused,
   school,
-  swinging,
   tone,
 }: {
   index: number;
   paused: boolean;
   school: School;
-  swinging: boolean;
   tone: RibbonTone;
 }) {
   return (
     <li className="grid content-start justify-items-center gap-3 border-t">
       <span
         aria-hidden="true"
-        className={medalSwing({ swinging })}
+        className={medalSwing()}
         style={{
           animationDelay: `${-index * SWING_STEP}s`,
           animationPlayState: paused ? "paused" : "running",
@@ -129,7 +123,6 @@ function Medal({
 export function Medals() {
   const t = useTranslations("Landing");
   const { entry, ref } = useIntersection({ threshold: 0 });
-  const shouldReduceMotion = useReducedMotion();
   const paused = !(entry?.isIntersecting ?? false);
 
   return (
@@ -149,7 +142,6 @@ export function Medals() {
               key={school.name}
               paused={paused}
               school={school}
-              swinging={!shouldReduceMotion}
               tone={Arr.getUnsafe(RIBBON_TONES, index % RIBBON_TONES.length)}
             />
           ))}

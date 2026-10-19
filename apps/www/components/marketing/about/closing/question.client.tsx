@@ -88,12 +88,13 @@ export function ClosingQuestion({ template, topics }: ClosingQuestionProps) {
             text={current}
           />
           {/* The words after the topic show while it is whole, so the question
-              mark never waits at the end of letters not typed yet. */}
+              mark never waits at the end of letters not typed yet. They only
+              fade, so screen readers always hear the whole question. */}
           <span
             className={
               stage === "holding" || shouldReduceMotion
                 ? undefined
-                : "invisible"
+                : "opacity-0"
             }
           >
             {after}

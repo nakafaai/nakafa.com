@@ -35,7 +35,7 @@ describe("the animals of the pricing page", () => {
 
     expect(PRICING_TOY_HERD).toHaveLength(12);
     expect(PRICING_CLASS_HERD).toHaveLength(7);
-    expect(PRICING_SPARE_HERD).toHaveLength(8);
+    expect(PRICING_SPARE_HERD).toHaveLength(6);
     expect(HashSet.size(HashSet.fromIterable(names))).toBe(names.length);
   });
 });

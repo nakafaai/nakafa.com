@@ -28,12 +28,20 @@ const swapVariants = cva(
 
 /** A notebook that drops onto the pile when Nina writes it, each a little over the one before. */
 const noteVariants = cva(
-  "starting:-translate-y-8 starting:opacity-0 transition-[opacity,translate] duration-500 ease-out motion-reduce:transition-none",
-  { variants: { first: { false: "-ms-3", true: "ms-0" } } }
+  "transition-[opacity,translate] duration-500 ease-out motion-reduce:transition-none",
+  {
+    variants: {
+      first: { false: "-ms-3", true: "ms-0" },
+      landed: {
+        false: "-translate-y-8 opacity-0",
+        true: "translate-y-0 opacity-100",
+      },
+    },
+  }
 );
 
 /** How long a thing stays whole in the bubble before Nina writes the next one. */
-const READ_MS = 1600;
+const READ_MS = 2400;
 
 /** The time between two letters that Nina writes. */
 const LETTER_EVERY_MS = 40;
@@ -67,8 +75,15 @@ export function MemoryDesk({ facts }: MemoryDeskProps) {
   const shown = shouldReduceMotion ? facts.length : written;
   const latest = Option.getOrNull(Arr.get(facts, shown - 1));
 
-  // The thing whose last letter Nina has written; the next one waits until it is read.
-  const [finished, setFinished] = useState("");
+  // The thing whose last letter Nina has written; the next one waits until it is
+  // read. The first thing is written before the desk opens, so the server draws it
+  // whole and the bubble never shows empty.
+  const [finished, setFinished] = useState(() =>
+    Option.match(Arr.head(facts), {
+      onNone: () => "",
+      onSome: (fact) => fact.said,
+    })
+  );
 
   useEffect(() => {
     if (!playing || written >= facts.length || finished !== latest?.said) {
@@ -100,6 +115,7 @@ export function MemoryDesk({ facts }: MemoryDeskProps) {
               <TypedText
                 caret={finished !== latest.said}
                 className="col-start-1 row-start-1 self-center text-balance"
+                initial={finished === latest.said ? "written" : "erased"}
                 key={latest.said}
                 onDone={() => setFinished(latest.said)}
                 playing={playing}
@@ -111,10 +127,15 @@ export function MemoryDesk({ facts }: MemoryDeskProps) {
         </Bubble>
         <Nina act="writing" label="" size={260} whole />
       </div>
+      {/* Every notebook has its place from the start, so the row keeps its width
+          and a notebook that drops in never moves the ones before it. */}
       <div className="flex h-16 items-end justify-center">
-        {Arr.map(Arr.take(facts, shown), (fact, index) => (
+        {Arr.map(facts, (fact, index) => (
           <Thing
-            className={noteVariants({ first: index === 0 })}
+            className={noteVariants({
+              first: index === 0,
+              landed: index < shown,
+            })}
             key={fact.said}
             name="note"
             size={48}

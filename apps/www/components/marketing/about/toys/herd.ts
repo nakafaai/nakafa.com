@@ -39,8 +39,8 @@ const PRICING_TOY_COUNT = 12;
 /** How many animals sit in the class of the pricing page. */
 const PRICING_CLASS_COUNT = 7;
 
-/** How many animals the pricing page keeps for its plans and the bottoms of the parts below them. */
-const PRICING_SPARE_COUNT = 8;
+/** How many animals the pricing page keeps for its plans and the bottom of its questions. */
+const PRICING_SPARE_COUNT = 6;
 
 /**
  * The cast of the home page. It takes its toys, crowd, class and spare animals
@@ -88,7 +88,7 @@ export const PRICING_CLASS_HERD = Arr.take(
   PRICING_CLASS_COUNT
 );
 
-/** The animals the pricing page keeps for its plans and the bottoms of the parts below them. */
+/** The animals the pricing page keeps for its plans and the bottom of its questions. */
 export const PRICING_SPARE_HERD = Arr.drop(
   PRICING_CAST,
   PRICING_TOY_COUNT + PRICING_CLASS_COUNT

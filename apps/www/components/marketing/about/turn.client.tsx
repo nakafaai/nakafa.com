@@ -1,6 +1,7 @@
 "use client";
 
 import { useIntersection, useReducedMotion } from "@mantine/hooks";
+import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { TypedText } from "@repo/design-system/components/ui/typed";
 import { cva } from "class-variance-authority";
 import { Schema } from "effect";
@@ -39,6 +40,8 @@ interface TurnState {
   readonly phase: Phase;
   /** Whether the turn has played: its question was typed and answered. */
   readonly played: boolean;
+  /** Marks a turn that the reader has seen answered, so it never plays again. */
+  readonly see: () => void;
   readonly wait: () => void;
 }
 
@@ -49,6 +52,7 @@ function createTurnStore() {
     ask: () => set({ phase: "asking" }),
     phase: "answered",
     played: false,
+    see: () => set({ played: true }),
     wait: () => set({ phase: "waiting" }),
   }));
 }
@@ -78,6 +82,10 @@ export function TurnPlayer({ children }: { children: ReactNode }) {
   const seen = entry?.isIntersecting ?? false;
   const settle = useEffectEvent((visible: boolean) => {
     const { phase, played } = store.getState();
+    if (phase === "answered" && !played && visible) {
+      store.getState().see();
+      return;
+    }
     if (phase === "answered" && !played && !visible) {
       if (!shouldReduceMotion) {
         store.getState().wait();
@@ -214,9 +222,13 @@ export function TurnAnswer({
   return (
     <div ref={ref}>
       {near ? (
-        <Suspense fallback={children}>
-          <ChatResponse id={id}>{text}</ChatResponse>
-        </Suspense>
+        // A Response that fails to load keeps the server copy instead of
+        // taking the page down with it.
+        <ErrorBoundary fallback={children}>
+          <Suspense fallback={children}>
+            <ChatResponse id={id}>{text}</ChatResponse>
+          </Suspense>
+        </ErrorBoundary>
       ) : (
         children
       )}

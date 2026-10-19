@@ -1,11 +1,8 @@
 "use client";
 
+import { useReducedMotion } from "@mantine/hooks";
 import { animate } from "motion";
-import {
-  useMotionValue,
-  useMotionValueEvent,
-  useReducedMotion,
-} from "motion/react";
+import { useMotionValue, useMotionValueEvent } from "motion/react";
 import { useEffect, useEffectEvent, useRef, useState } from "react";
 
 /** Where a typed line goes, or starts: every letter written, or none. */
@@ -48,7 +45,7 @@ function Caret({ blinking }: { blinking: boolean }) {
   return (
     <span className="relative">
       <span
-        className="absolute inset-y-[0.12em] start-0.5 w-[0.08em] rounded-full bg-current"
+        className="absolute inset-y-[0.12em] start-0.5 w-[0.08em] rounded-full bg-current motion-reduce:hidden"
         ref={ref}
       />
     </span>
@@ -63,9 +60,10 @@ function Caret({ blinking }: { blinking: boolean }) {
  * written yet invisible in place, so the line breaks, aligns and balances as the
  * finished text does and no letter moves while it is written. A caret stands
  * after the last letter while `caret` is set. `onDone` runs when the line reaches
- * its target. With reduced motion the whole text shows at once, with no caret.
- * Screen readers hear the whole text once, and the drawn letters are hidden from
- * them.
+ * its target. With reduced motion the whole text shows once the page has
+ * read the preference, with no caret: the first render matches the server's, so
+ * hydration never differs, and CSS hides the caret from the first paint. Screen
+ * readers hear the whole text once, and the drawn letters are hidden from them.
  */
 export function TypedText({
   caret,
