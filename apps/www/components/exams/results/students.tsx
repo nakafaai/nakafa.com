@@ -21,7 +21,7 @@ import {
   useResultsScope,
   useSessionSettled,
 } from "@/components/exams/results/context";
-import { TableSearch, TableToggle } from "@/components/shared/table/filter";
+import { TableSearch, TableToggle } from "@/components/exams/results/filter";
 import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
 import { matchesSearch } from "@/components/shared/table/search";
 

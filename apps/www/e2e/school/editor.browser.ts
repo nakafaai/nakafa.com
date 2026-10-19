@@ -252,7 +252,7 @@ test("a teacher schedules an exam, and its editor opens read-only, saying why", 
   const scheduling = page.getByRole("dialog");
   await scheduling.getByRole("textbox", { name: "Room" }).fill("Lab 2");
   await scheduling.getByRole("button", { name: "Schedule" }).click();
-  await page.waitForURL(SITTING_PATH);
+  await page.waitForURL(ROOMS_PATH);
 
   // The editor opened again says why its questions are fixed, and offers no change to them.
   await page.goto(editorUrl);
