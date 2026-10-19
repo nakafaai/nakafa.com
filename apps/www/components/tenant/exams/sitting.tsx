@@ -98,10 +98,11 @@ export function ScheduleSitting({
     sittingTimes(starts, minutes, named)
   );
   const roomName = Str.trim(room);
-  const keysMissing = Arr.some(
-    exam.questions,
-    (question) => question.key === null
+  // The numbers of the questions that have no correct answer yet, in the order of the exam.
+  const missingKeys = Arr.flatMap(exam.questions, (question, index) =>
+    question.key === null ? [index + 1] : []
   );
+  const keysMissing = !Arr.isReadonlyArrayEmpty(missingKeys);
   const ready =
     Option.isSome(choice) &&
     Option.isSome(times) &&
@@ -168,7 +169,15 @@ export function ScheduleSitting({
         <>
           {keysMissing || refusal === "keys" ? (
             <p className="me-auto text-muted-foreground text-sm">
-              {t("schedule-keys")}
+              {keysMissing
+                ? t("schedule-keys-numbered", {
+                    count: missingKeys.length,
+                    questions: Arr.join(
+                      Arr.map(missingKeys, (number) => `${number}`),
+                      ", "
+                    ),
+                  })
+                : t("schedule-keys")}
             </p>
           ) : null}
           {refusal === "past" ? (
@@ -216,6 +225,9 @@ export function ScheduleSitting({
             placeholder={t("room-placeholder")}
             value={room}
           />
+          {roomName === "" ? (
+            <FieldDescription>{t("room-needed")}</FieldDescription>
+          ) : null}
         </Field>
         <div className="grid grid-cols-1 gap-7 sm:grid-cols-2 sm:gap-4">
           <Field>
@@ -226,9 +238,11 @@ export function ScheduleSitting({
               type="datetime-local"
               value={starts}
             />
-            {Option.isSome(choice) ? (
+            {Option.isSome(choice) && Option.isSome(times) ? (
               <FieldDescription>{choice.value.timeZone}</FieldDescription>
-            ) : null}
+            ) : (
+              <FieldDescription>{t("starts-needed")}</FieldDescription>
+            )}
           </Field>
           <Field>
             <FieldLabel htmlFor={`${id}-length`}>{t("length")}</FieldLabel>
