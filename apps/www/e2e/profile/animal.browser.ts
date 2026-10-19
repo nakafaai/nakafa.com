@@ -7,6 +7,7 @@ import { encodeJsonText } from "@repo/utilities/json";
 import { Effect, FileSystem } from "effect";
 import { runAcceptanceCommand } from "@/e2e/support/acceptance";
 import {
+  animalMarkup,
   animalOf,
   drawnAnimal,
   pictureChoice,
@@ -212,7 +213,7 @@ for (const { label, name } of NAME_CASES) {
           expect(after?.width).toBe(before.box?.width);
           expect(after?.height).toBe(before.box?.height);
           // The animal belongs to the account, so a new name keeps it.
-          expect(await animalOf(avatar).innerHTML()).toBe(before.markup);
+          expect(await animalMarkup(avatar)).toBe(before.markup);
         });
       })
     );
