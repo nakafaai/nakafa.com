@@ -1,8 +1,5 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
-import {
-  hasPreviewProvider,
-  hasPreviewRenderer,
-} from "@repo/next-config/preview";
+import { hasPreviewProvider, hasPreviewRenderer } from "@repo/site/preview";
 
 const PROVIDER_NAMES = [
   "AKSARA_PREVIEW_EVENTS_PATH",

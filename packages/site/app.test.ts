@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
-import { getAppUrl } from "@repo/next-config/app";
+import { getAppUrl } from "@repo/site/app";
 
 afterEach(() => {
   vi.unstubAllEnvs();

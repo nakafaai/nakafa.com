@@ -99,7 +99,7 @@ vi.mock("@confect/js", async (importOriginal) => {
 vi.mock("@/lib/auth/server", () => ({
   getToken: tokenMock,
 }));
-vi.mock("@repo/next-config/keys", () => ({
+vi.mock("@repo/site/keys", () => ({
   contentRuntimeKeys: runtimeKeysMock,
 }));
 vi.mock("@/env.client", () => ({

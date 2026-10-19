@@ -58,7 +58,7 @@ const input = {
 vi.mock("@repo/backend/client/content/public", () => ({
   readPublicContent: readMock,
 }));
-vi.mock("@repo/next-config/keys", () => ({
+vi.mock("@repo/site/keys", () => ({
   contentRuntimeKeys: () => ({ CONTENT_RUNTIME_TOKEN: "test-runtime-token" }),
 }));
 vi.mock("@/env", () => ({

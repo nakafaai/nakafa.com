@@ -1,6 +1,6 @@
 import { shareTokenValidator } from "@repo/backend/confect/chats/schema";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { getAppUrl } from "@repo/next-config/app";
+import { getAppUrl } from "@repo/site/app";
 import { Option, Schema, String as Str } from "effect";
 import { SHARE_ENTRY } from "@/lib/share/fragment";
 

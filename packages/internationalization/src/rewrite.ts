@@ -11,7 +11,7 @@ import {
   readCanonicalName,
   readCanonicalSpelling,
 } from "@repo/internationalization/src/pathnames";
-import { SCHOOL_CELL_DOMAINS } from "@repo/next-config/domains";
+import { SCHOOL_CELL_DOMAINS } from "@repo/site/domains";
 import { Array as Arr, HashSet, Option, Record as Rec } from "effect";
 
 /**

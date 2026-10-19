@@ -1,6 +1,6 @@
 import { readProtectedContent } from "@repo/backend/client/content/protected";
 import { api } from "@repo/backend/convex/_generated/api";
-import { contentRuntimeKeys } from "@repo/next-config/keys";
+import { contentRuntimeKeys } from "@repo/site/keys";
 import { readEnvironment } from "@repo/utilities/env";
 import { JsonTextSchema } from "@repo/utilities/json";
 import { ConvexHttpClient } from "convex/browser";

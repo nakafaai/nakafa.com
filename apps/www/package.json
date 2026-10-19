@@ -41,7 +41,7 @@
     "@repo/internationalization": "workspace:*",
     "@repo/mascot": "workspace:*",
     "@repo/math": "workspace:*",
-    "@repo/next-config": "workspace:*",
+    "@repo/site": "workspace:*",
     "@repo/seo": "workspace:*",
     "@repo/utilities": "workspace:*",
     "@shadcn/react": "catalog:",

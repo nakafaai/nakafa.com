@@ -11,7 +11,7 @@ import {
   ContentRuntimeVerificationError,
 } from "@repo/backend/client/content/errors";
 import { readPublicContent } from "@repo/backend/client/content/public";
-import { contentRuntimeKeys } from "@repo/next-config/keys";
+import { contentRuntimeKeys } from "@repo/site/keys";
 import { JsonTextSchema } from "@repo/utilities/json";
 import { Effect, Schema } from "effect";
 import type { PublishedContentInput } from "@/lib/content/published/exchange";
@@ -70,7 +70,7 @@ vi.mock("@repo/backend/client/content/public", () => ({
   readPublicContent: readPublicContentMock,
   verifyPublicContentDelivery: verifyPublicContentDeliveryMock,
 }));
-vi.mock("@repo/next-config/keys", () => ({
+vi.mock("@repo/site/keys", () => ({
   contentRuntimeKeys: runtimeKeysMock,
 }));
 vi.mock("@/env", () => ({

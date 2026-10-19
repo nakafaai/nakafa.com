@@ -1,4 +1,4 @@
-import { previewKeys } from "@repo/next-config/keys";
+import { previewKeys } from "@repo/site/keys";
 
 /** Returns the ephemeral provider fields owned by the Aksara child. */
 export function readPreviewEnvironment() {

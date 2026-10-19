@@ -1,5 +1,5 @@
 import "@tanstack/react-start/server-only";
-import { publicationKeys, siteUrlKeys } from "@repo/next-config/keys";
+import { publicationKeys, siteUrlKeys } from "@repo/site/keys";
 import { clientEnv } from "@/env.client";
 
 /**

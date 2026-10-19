@@ -1,10 +1,7 @@
 import "@tanstack/react-start/server-only";
 import { SigningKeyIdSchema } from "@nakafa/aksara-contracts/ids";
 import { PreviewRendererSecretSchema } from "@nakafa/aksara-contracts/preview/auth";
-import {
-  hasPreviewProvider,
-  hasPreviewRenderer,
-} from "@repo/next-config/preview";
+import { hasPreviewProvider, hasPreviewRenderer } from "@repo/site/preview";
 import { Effect, Option, Redacted, Result, Schema } from "effect";
 import {
   readPreviewEnvironment,

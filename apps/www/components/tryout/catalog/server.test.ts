@@ -95,7 +95,7 @@ vi.mock("@/env", () => ({
     VITE_CONVEX_URL: "https://test.convex.cloud",
   },
 }));
-vi.mock("@repo/next-config/keys", () => ({
+vi.mock("@repo/site/keys", () => ({
   contentRuntimeKeys: () => ({
     CONTENT_RUNTIME_TOKEN: "technical-test-token",
   }),

@@ -8,7 +8,7 @@ import {
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
 import { toast } from "@repo/design-system/lib/toast/notify";
-import { getAppUrl } from "@repo/next-config/app";
+import { getAppUrl } from "@repo/site/app";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "use-intl";
 

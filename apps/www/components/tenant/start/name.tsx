@@ -18,7 +18,7 @@ import {
   QuestionnaireTitle,
   questionnaireInputVariants,
 } from "@repo/design-system/components/ui/questionnaire";
-import { MAIN_DOMAIN } from "@repo/next-config/domains";
+import { MAIN_DOMAIN } from "@repo/site/domains";
 import { Option, Schema } from "effect";
 import { useId } from "react";
 import { useTranslations } from "use-intl";

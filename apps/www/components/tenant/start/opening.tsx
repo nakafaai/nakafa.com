@@ -1,5 +1,5 @@
 import { schoolMascot } from "@repo/backend/confect/tenancy/mascot";
-import { MAIN_DOMAIN } from "@repo/next-config/domains";
+import { MAIN_DOMAIN } from "@repo/site/domains";
 import { SchoolMark } from "@/components/tenant/mark";
 
 /**

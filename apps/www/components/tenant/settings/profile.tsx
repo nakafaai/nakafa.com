@@ -14,7 +14,7 @@ import {
 import { Input } from "@repo/design-system/components/ui/input";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { type ToastCopy, toast } from "@repo/design-system/lib/toast/notify";
-import { MAIN_DOMAIN } from "@repo/next-config/domains";
+import { MAIN_DOMAIN } from "@repo/site/domains";
 import { Effect, Schema } from "effect";
 import { startTransition, useRef, useState } from "react";
 import { useTranslations } from "use-intl";

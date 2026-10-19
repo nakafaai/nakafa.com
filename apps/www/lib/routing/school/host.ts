@@ -2,7 +2,7 @@ import {
   isSchoolLabel,
   type TenantSlug,
 } from "@repo/backend/confect/tenancy/slug";
-import { SCHOOL_CELL_DOMAINS } from "@repo/next-config/domains";
+import { SCHOOL_CELL_DOMAINS } from "@repo/site/domains";
 import { readHostname } from "@repo/utilities/http/host";
 import { Array as Arr, Option, Record as Rec } from "effect";
 

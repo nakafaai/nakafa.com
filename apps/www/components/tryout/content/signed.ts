@@ -8,7 +8,7 @@ import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import type { TryoutBodyBatch } from "@repo/backend/confect/tryouts/runtime/body";
 import { contentKeyResolver } from "@repo/backend/content/trust";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { contentRuntimeKeys } from "@repo/next-config/keys";
+import { contentRuntimeKeys } from "@repo/site/keys";
 import { Array as Arr, Effect } from "effect";
 import { renderLiveItem } from "@/components/tryout/content/artifact";
 import {

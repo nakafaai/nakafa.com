@@ -1,10 +1,9 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
-  config,
   createLoopbackConnectSources,
   createSecurityHeaders,
   securityHeaders,
-} from "@repo/next-config";
+} from "@repo/site";
 import { Array as Arr, Option } from "effect";
 
 describe("createLoopbackConnectSources", () => {
@@ -82,22 +81,5 @@ describe("createSecurityHeaders", () => {
     expect(csp?.value).not.toContain("ws://127.0.0.1:3212");
     expect(createSecurityHeaders()).toEqual(securityHeaders);
     expect(securityHeaders[0]?.value).not.toContain("127.0.0.1");
-  });
-
-  it("exposes shared headers through the Next config", () => {
-    const headers = config.headers;
-
-    if (!headers) {
-      throw new Error("Expected shared Next config headers.");
-    }
-
-    const headerConfig = headers();
-
-    expect(headerConfig).toStrictEqual([
-      {
-        headers: securityHeaders,
-        source: "/:path*",
-      },
-    ]);
   });
 });

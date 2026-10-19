@@ -1,5 +1,5 @@
 {
-  "name": "@repo/next-config",
+  "name": "@repo/site",
   "version": "2.0.0",
   "private": true,
   "scripts": {
@@ -16,7 +16,6 @@
     "@repo/testing": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@vitest/coverage-istanbul": "catalog:",
-    "next": "16.4.2",
     "vitest": "catalog:"
   }
 }

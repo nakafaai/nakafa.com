@@ -1,4 +1,4 @@
-import { getAppUrl } from "@repo/next-config/app";
+import { getAppUrl } from "@repo/site/app";
 
 export const BASE_URL = getAppUrl();
 export const LLMS_CACHE_CONTROL =

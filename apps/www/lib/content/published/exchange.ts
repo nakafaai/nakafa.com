@@ -15,7 +15,7 @@ import {
   readPublicContent,
   verifyPublicContentDelivery,
 } from "@repo/backend/client/content/public";
-import { contentRuntimeKeys } from "@repo/next-config/keys";
+import { contentRuntimeKeys } from "@repo/site/keys";
 import { Effect, Schema } from "effect";
 import { env } from "@/env";
 import {

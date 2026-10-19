@@ -4,7 +4,7 @@ import {
   previewKeys,
   publicationKeys,
   siteUrlKeys,
-} from "@repo/next-config/keys";
+} from "@repo/site/keys";
 
 /** Installs one complete, valid shared Next environment for each test. */
 function stubValidEnvironment() {

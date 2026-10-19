@@ -1,6 +1,5 @@
-import { MAIN_DOMAIN } from "@repo/next-config/domains";
+import { MAIN_DOMAIN } from "@repo/site/domains";
 import { Array as Arr } from "effect";
-import type { NextConfig } from "next";
 
 const BASE_CONTENT_SECURITY_POLICY = {
   connectSrc: [
@@ -137,46 +136,5 @@ export function createSecurityHeaders({
 /**
  * Security headers configuration
  * Implements best practices for web security
- * @see https://nextjs.org/docs/app/api-reference/config/next-config-js/headers
  */
 export const securityHeaders = createSecurityHeaders();
-
-export const config = {
-  // The monorepo root owns the canonical agent guidance. Prevent each Next.js
-  // app from generating a redundant nested AGENTS.md and CLAUDE.md pair.
-  agentRules: false,
-  typedRoutes: true,
-  logging: {
-    fetches: {
-      fullUrl: true,
-    },
-  },
-  reactCompiler: true,
-  serverExternalPackages: ["shiki"],
-  experimental: {
-    optimizePackageImports: ["three"],
-  },
-  images: {
-    contentDispositionType: "inline",
-    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
-    remotePatterns: [
-      {
-        hostname: "www.google.com",
-      },
-      {
-        hostname: "lh3.googleusercontent.com",
-      },
-      {
-        hostname: "*.convex.cloud",
-      },
-    ],
-  },
-  headers() {
-    return [
-      {
-        source: "/:path*",
-        headers: securityHeaders,
-      },
-    ];
-  },
-} satisfies NextConfig;

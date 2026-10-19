@@ -1,7 +1,7 @@
 // apps/www/next.config.ts loads this module through Next's config transpiler,
 // which emits `@repo/*` imports relative to apps/www. Keep this file directly
-// under packages/next-config, the depth at which those paths still resolve.
-import { previewKeys } from "@repo/next-config/keys";
+// under packages/site, the depth at which those paths still resolve.
+import { previewKeys } from "@repo/site/keys";
 import { Array as Arr } from "effect";
 
 /**

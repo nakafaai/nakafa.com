@@ -26,7 +26,7 @@ import {
   InputGroupText,
 } from "@repo/design-system/components/ui/input-group";
 import { toast } from "@repo/design-system/lib/toast/notify";
-import { MAIN_DOMAIN } from "@repo/next-config/domains";
+import { MAIN_DOMAIN } from "@repo/site/domains";
 import { Effect, Option, Result } from "effect";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
