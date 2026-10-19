@@ -11846,6 +11846,25 @@ export declare const internal: {
       };
     };
   };
+  identity: {
+    logins: {
+      usernameOf: FunctionReference<
+        "query",
+        "internal",
+        { loginName: string; slug: string },
+        | { outcome: "found"; username: string }
+        | { outcome: "missing" }
+      >;
+    };
+    seed: {
+      card: FunctionReference<
+        "mutation",
+        "internal",
+        { slug: string },
+        { code: string; loginName: string }
+      >;
+    };
+  };
   nina: {
     brief: {
       read: FunctionReference<

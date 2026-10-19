@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { signInLearner } from "@/e2e/support/learner";
-import { createSchool, hostAddress } from "@/e2e/support/school";
+import { createSchool, hostAddress, seedCard } from "@/e2e/support/school";
 
 test("a wrong card code is refused with one message that does not say whether the username exists", async ({
   page,
@@ -19,6 +19,26 @@ test("a wrong card code is refused with one message that does not say whether th
   await expect(page.getByRole("alert")).toHaveText(
     "The username or card code is not right."
   );
+});
+
+test("a student whose card an Admin printed signs in with the school username, the code, and a new password", async ({
+  page,
+  baseURL,
+}) => {
+  const school = await Effect.runPromise(createSchool());
+  const card = await Effect.runPromise(seedCard(school.slug));
+  await page.goto(hostAddress(baseURL, `${school.slug}.localhost`, "/"));
+
+  await page.getByRole("button", { name: "Sign in with a username" }).click();
+  await page.getByLabel("School username").fill(card.loginName);
+  await page.getByLabel("Card code").fill(card.code);
+  await page.getByLabel("Password").fill("correct horse battery");
+  await page.getByRole("button", { name: "Sign in" }).click();
+
+  await expect(page.getByText("Siswa Uji").first()).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Sign in with a username" })
+  ).toHaveCount(0);
 });
 
 test("a signed-in learner who is not a member of an existing school sees the outsider page", async ({

@@ -1,6 +1,7 @@
 import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import type { BrowserContext } from "@playwright/test";
 import {
+  CardFixture,
   SchoolFixture,
   SessionCookie,
   SittingFixture,
@@ -133,6 +134,27 @@ export const seedSitting = Effect.fn("NakafaE2E.seedSitting")(
     return yield* fs
       .readFileString(output)
       .pipe(Effect.flatMap(Schema.decodeEffect(SittingFixture)));
+  },
+  Effect.scoped,
+  Effect.provide(nodeServicesLayer)
+);
+
+/**
+ * Seeds one new student in a school that `createSchool` opened, with a student grant and a login card,
+ * and returns the school login name that the student types and the card's plain code. The card is
+ * not redeemed yet, so a browser test redeems it through the school's own form.
+ */
+export const seedCard = Effect.fn("NakafaE2E.seedCard")(
+  function* (slug: string) {
+    const fs = yield* FileSystem.FileSystem;
+    const directory = yield* fs.makeTempDirectoryScoped({
+      prefix: "nakafa-card-",
+    });
+    const output = `${directory}/card.json`;
+    yield* runAcceptanceCommand("card", slug, output);
+    return yield* fs
+      .readFileString(output)
+      .pipe(Effect.flatMap(Schema.decodeEffect(CardFixture)));
   },
   Effect.scoped,
   Effect.provide(nodeServicesLayer)

@@ -8,6 +8,11 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
+import {
+  firstActiveUnit,
+  required,
+  tenantOf,
+} from "@repo/backend/confect/acceptance/lookup";
 import { requireAcceptanceSeed } from "@repo/backend/confect/acceptance/seed";
 import { activeOwners, assignRole } from "@repo/backend/confect/access/grant";
 import type { GrantScope } from "@repo/backend/confect/access/schema";
@@ -22,7 +27,7 @@ import { placeQuestion } from "@repo/backend/confect/exams/questions/place";
 import { openSitting } from "@repo/backend/confect/exams/sittings/closing";
 import { createSitting } from "@repo/backend/confect/exams/sittings/schedule";
 import { systemActor } from "@repo/backend/confect/tenancy/actor";
-import { Array as Arr, Clock, Effect, Option, Schema } from "effect";
+import { Array as Arr, Clock, Effect, Schema } from "effect";
 
 /** The title of the seeded exam. */
 const EXAM_TITLE = "Ujian Acceptance";
@@ -41,37 +46,6 @@ const FIRST_OPTION_KEY: Arr.NonEmptyReadonlyArray<InteractionKey> = [
 /** A prompt of one paragraph with the text, in the stored form that the editor writes. */
 const promptText = (text: string) =>
   `{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"${text}"}]}]}`;
-
-/** The value of a lookup that must find one row. A missing row ends the seed with a defect that names it. */
-const required = <A>(lookup: Option.Option<A>, missing: string) =>
-  Option.match(lookup, {
-    onNone: () => Effect.die(missing),
-    onSome: Effect.succeed,
-  });
-
-/** The school with the slug. */
-const tenantOf = Effect.fn("exams.seed.tenant")(function* (slug: string) {
-  const found = yield* (yield* DatabaseReader)
-    .table("tenants")
-    .index("by_slug", (query) => query.eq("slug", slug))
-    .first()
-    .pipe(Effect.orDie);
-  return yield* required(found, "No school has this slug.");
-});
-
-/** The first active unit of the school, which the seeded grant and sitting use. */
-const firstActiveUnit = Effect.fn("exams.seed.unit")(function* (
-  tenantId: ExamsDoc["tenantId"]
-) {
-  const found = yield* (yield* DatabaseReader)
-    .table("tenantUnits")
-    .index("by_tenantId_and_status", (query) =>
-      query.eq("tenantId", tenantId).eq("status", "active")
-    )
-    .first()
-    .pipe(Effect.orDie);
-  return yield* required(found, "The school has no active unit.");
-});
 
 /**
  * The user of the Owner who signed in first, as the author of the seeded exam. An Owner who

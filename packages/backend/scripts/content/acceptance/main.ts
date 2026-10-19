@@ -4,6 +4,7 @@ import {
   prepareAcceptance,
   runAcceptance,
 } from "@repo/backend/scripts/content/acceptance/build";
+import { createAcceptanceCard } from "@repo/backend/scripts/content/acceptance/card";
 import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
 import { importAcceptanceRows } from "@repo/backend/scripts/content/acceptance/import";
 import { createAcceptanceInvite } from "@repo/backend/scripts/content/acceptance/invite";
@@ -18,19 +19,14 @@ import { createAcceptanceTeacher } from "@repo/backend/scripts/content/acceptanc
 import { FetchClient } from "@repo/utilities/http/client";
 import { Array as Arr, Effect, FileSystem, Layer } from "effect";
 
-const main = Effect.gen(function* () {
-  const fs = yield* FileSystem.FileSystem;
-  const root = yield* fs.realPath(`${import.meta.dirname}/../../../../..`);
-  const mode = process.argv[2];
-  if (mode === "prepare") {
-    return yield* prepareAcceptance(root);
-  }
-  if (mode === "build" || mode === "start") {
-    return yield* runAcceptance(root, mode, Arr.drop(process.argv, 3));
-  }
-  if (mode === "clean") {
-    return yield* cleanLocalRuntime(root);
-  }
+/**
+ * The commands that take their arguments from the command line, after the mode. A mode that no
+ * command takes with these arguments answers the usage.
+ */
+const argumentCommand = Effect.fn("contentAcceptance.cli.arguments")(function* (
+  root: string,
+  mode: string | undefined
+) {
   const first = process.argv[3];
   const second = process.argv[4];
   const third = process.argv[5];
@@ -62,6 +58,9 @@ const main = Effect.gen(function* () {
   ) {
     return yield* createAcceptanceSitting(root, first, second, third);
   }
+  if (mode === "card" && first !== undefined && second !== undefined) {
+    return yield* createAcceptanceCard(root, first, second);
+  }
   if (mode === "import" && first !== undefined && second !== undefined) {
     return yield* importAcceptanceRows(root, first, second);
   }
@@ -69,8 +68,24 @@ const main = Effect.gen(function* () {
     return yield* updateAcceptanceProfile(root, first, second);
   }
   return yield* acceptanceRuntimeError(
-    "Usage: acceptance <prepare|build|start|clean|learner <cookie-file>|school <school-file>|owner <school-slug> <cookie-file>|teacher <school-slug> <cookie-file>|invite <school-slug> <learner-address> <cookie-file>|sitting <school-slug> <learner-email> <sitting-file>|import <table> <rows-file>|profile <auth-user-id> <profile-json-file>>"
+    "Usage: acceptance <prepare|build|start|clean|learner <cookie-file>|school <school-file>|owner <school-slug> <cookie-file>|teacher <school-slug> <cookie-file>|invite <school-slug> <learner-address> <cookie-file>|sitting <school-slug> <learner-email> <sitting-file>|card <school-slug> <card-file>|import <table> <rows-file>|profile <auth-user-id> <profile-json-file>>"
   );
+});
+
+const main = Effect.gen(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  const root = yield* fs.realPath(`${import.meta.dirname}/../../../../..`);
+  const mode = process.argv[2];
+  if (mode === "prepare") {
+    return yield* prepareAcceptance(root);
+  }
+  if (mode === "build" || mode === "start") {
+    return yield* runAcceptance(root, mode, Arr.drop(process.argv, 3));
+  }
+  if (mode === "clean") {
+    return yield* cleanLocalRuntime(root);
+  }
+  return yield* argumentCommand(root, mode);
 });
 
 runMain(
