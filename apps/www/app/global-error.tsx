@@ -2,7 +2,7 @@
 
 import "@/styles/globals.css";
 
-import { captureException } from "@repo/analytics/posthog/browser";
+import { captureException } from "@repo/analytics/posthog/capture";
 import { DesignSystemProvider } from "@repo/design-system";
 import { fonts } from "@repo/design-system/lib/fonts";
 import de from "@repo/internationalization/dictionaries/standalone/de.json";
@@ -10,12 +10,20 @@ import en from "@repo/internationalization/dictionaries/standalone/en.json";
 import id from "@repo/internationalization/dictionaries/standalone/id.json";
 import { splitLocalePathname } from "@repo/internationalization/src/href";
 import { routing } from "@repo/internationalization/src/routing";
+import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
-import { Broken } from "@/components/state/broken";
-import { Stage } from "@/components/state/stage";
 
 const dictionaries = { de, en, id };
+
+/** The failure screen loads when a failure reaches it, so the root's own code stays small. */
+const Failure = dynamic(
+  () =>
+    import("@/components/state/failure.client").then(
+      (module) => module.Failure
+    ),
+  { ssr: true }
+);
 
 /**
  * Replaces the root layout, so it renders its own document with only the
@@ -50,15 +58,13 @@ export default function GlobalError({
     >
       <body>
         <DesignSystemProvider>
-          <Stage>
-            <Broken
-              description={messages.Error.description}
-              home={messages.State["home-button"]}
-              homeHref={`/${language}`}
-              retry={messages.Error.retry}
-              title={messages.Error.title}
-            />
-          </Stage>
+          <Failure
+            description={messages.Error.description}
+            home={messages.State["home-button"]}
+            homeHref={`/${language}`}
+            retry={messages.Error.retry}
+            title={messages.Error.title}
+          />
         </DesignSystemProvider>
       </body>
     </html>

@@ -1,11 +1,19 @@
 "use client"; // Error boundaries must be Client Components
 
-import { captureException } from "@repo/analytics/posthog/browser";
+import { captureException } from "@repo/analytics/posthog/capture";
 import { SITE_ORIGIN } from "@repo/seo/origin";
+import dynamic from "next/dynamic";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect } from "react";
-import { Broken } from "@/components/state/broken";
-import { Stage } from "@/components/state/stage";
+
+/** The failure screen loads when a failure reaches it, so the segment's own code stays small. */
+const Failure = dynamic(
+  () =>
+    import("@/components/state/failure.client").then(
+      (module) => module.Failure
+    ),
+  { ssr: true }
+);
 
 /**
  * Keeps a school failure on the school's own surface, the one its not-found page
@@ -30,14 +38,12 @@ export default function SchoolError({
   }, [error]);
 
   return (
-    <Stage>
-      <Broken
-        description={t("description")}
-        home={tState("home-button")}
-        homeHref={new URL(`/${locale}`, SITE_ORIGIN).href}
-        retry={t("retry")}
-        title={t("title")}
-      />
-    </Stage>
+    <Failure
+      description={t("description")}
+      home={tState("home-button")}
+      homeHref={new URL(`/${locale}`, SITE_ORIGIN).href}
+      retry={t("retry")}
+      title={t("title")}
+    />
   );
 }

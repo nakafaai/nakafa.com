@@ -1,6 +1,6 @@
 "use client";
 
-import { captureException } from "@repo/analytics/posthog/browser";
+import { captureException } from "@repo/analytics/posthog/capture";
 import { CodeBlockText } from "@repo/design-system/components/code-block/text";
 import {
   type CodeHighlightOptions,

@@ -1,11 +1,17 @@
 "use client";
 
-import { captureException } from "@repo/analytics/posthog/browser";
+import { captureException } from "@repo/analytics/posthog/capture";
+import dynamic from "next/dynamic";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect } from "react";
 import { EntryShellBody, EntryShellHeader } from "@/components/entry/shell";
 import { ThemePicker } from "@/components/shared/theme/picker";
-import { Broken } from "@/components/state/broken";
+
+/** The failure screen loads when a failure reaches it, so the segment's own code stays small. */
+const Broken = dynamic(
+  () => import("@/components/state/broken").then((module) => module.Broken),
+  { ssr: true }
+);
 
 /** Keeps entry failures on a localized, recoverable Nakafa surface. */
 export default function EntryError({

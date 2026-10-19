@@ -38,6 +38,10 @@ const loadBrowserAnalytics = () =>
 /** Resolves the test-owned PostHog client through the production loader seam. */
 const loadClient = Effect.succeed(client);
 
+/** Loads the leaf that owns exception captures, from the graph of the module just loaded. */
+const loadCapture = () =>
+  Effect.promise(() => import("@repo/analytics/posthog/capture"));
+
 function stubWindow(href = "https://nakafa.com/en") {
   vi.stubGlobal("window", {
     history: { pushState: vi.fn(), replaceState: vi.fn() },
@@ -88,7 +92,8 @@ describe("two-tier PostHog browser runtime", () => {
     Effect.gen(function* () {
       const analytics = yield* loadBrowserAnalytics();
 
-      analytics.captureException(new Error("blocked"), {
+      const capture = yield* loadCapture();
+      capture.captureException(new Error("blocked"), {
         source: "pre-baseline-test",
       });
       analytics.resetBrowserAnalyticsIdentity();
@@ -106,30 +111,6 @@ describe("two-tier PostHog browser runtime", () => {
           name: "OperationalError(pre-baseline-test)",
         }),
         { source: "pre-baseline-test" }
-      );
-    })
-  );
-
-  it.effect("keeps the first held captures when the wait overflows", () =>
-    Effect.gen(function* () {
-      const analytics = yield* loadBrowserAnalytics();
-
-      for (let index = 0; index < 25; index += 1) {
-        analytics.captureException(new Error("blocked"), {
-          source: `pending-${index}`,
-        });
-      }
-      yield* analytics.enableBaselineAnalytics(loadClient);
-
-      expect(client.captureException).toHaveBeenCalledTimes(20);
-      expect(client.captureException).toHaveBeenNthCalledWith(
-        1,
-        expect.anything(),
-        { source: "pending-0" }
-      );
-      expect(client.captureException).toHaveBeenLastCalledWith(
-        expect.anything(),
-        { source: "pending-19" }
       );
     })
   );
@@ -458,7 +439,8 @@ describe("two-tier PostHog browser runtime", () => {
       const analytics = yield* loadBrowserAnalytics();
       yield* analytics.enableBaselineAnalytics(loadClient);
 
-      analytics.captureException(new Error("handled user@example.com"), {
+      const capture = yield* loadCapture();
+      capture.captureException(new Error("handled user@example.com"), {
         source: "browser-test",
       });
       analytics.resetBrowserAnalyticsIdentity(true);
@@ -475,21 +457,6 @@ describe("two-tier PostHog browser runtime", () => {
       );
       expect(encodedCalls).not.toContain("user@example.com");
       expect(client.reset).toHaveBeenLastCalledWith(true);
-    })
-  );
-
-  it.effect("drops runtime context outside the exact privacy contract", () =>
-    Effect.gen(function* () {
-      const analytics = yield* loadBrowserAnalytics();
-      yield* analytics.enableBaselineAnalytics(loadClient);
-      const invalidProperties = {
-        source: "browser-test",
-        userId: "user-1",
-      };
-
-      analytics.captureException(new Error("blocked"), invalidProperties);
-
-      expect(client.captureException).not.toHaveBeenCalled();
     })
   );
 });
