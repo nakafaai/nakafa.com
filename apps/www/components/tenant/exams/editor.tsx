@@ -7,6 +7,7 @@ import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { useTranslations } from "next-intl";
+import { useConvexAuth } from "@/components/providers/convex";
 import { ExamCanvas } from "@/components/tenant/exams/canvas";
 import { ExamHeader } from "@/components/tenant/exams/header";
 import { ExamProvider } from "@/components/tenant/exams/provider";
@@ -27,7 +28,12 @@ export function ExamEditor({
   slug: TenantSlug;
 }) {
   const t = useTranslations("Exams");
-  const result = useQuery(exams.exams.open, { examId, slug });
+  // The exam needs the session, which Convex learns a moment after the page draws.
+  const isSettled = useConvexAuth((auth) => !auth.isLoading);
+  const result = useQuery(
+    exams.exams.open,
+    isSettled ? { examId, slug } : "skip"
+  );
 
   if (QueryResult.isFailure(result)) {
     return (
