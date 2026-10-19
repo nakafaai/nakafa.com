@@ -90,7 +90,7 @@ export function MemoryDesk({ facts }: MemoryDeskProps) {
             {Arr.map(facts, (fact) => (
               <span
                 aria-hidden="true"
-                className="invisible col-start-1 row-start-1 text-balance"
+                className="invisible col-start-1 row-start-1"
                 key={fact.said}
               >
                 {fact.said}
@@ -146,7 +146,7 @@ function WrittenFact({ fact, playing }: { fact: string; playing: boolean }) {
   return (
     <TypedText
       caret={typed < fact.length}
-      className="col-start-1 row-start-1 self-center text-balance"
+      className="col-start-1 row-start-1 self-center"
       text={fact}
       typed={typed}
     />

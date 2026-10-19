@@ -43,9 +43,11 @@ function Caret() {
 /**
  * A line of text as it is written. Its whole text is laid out from the start, so
  * the letters written so far take no room that the rest of the line does not
- * already hold, and writing moves nothing. A caret stands after the last letter
- * written while `caret` is set. Screen readers hear the whole text once, and
- * the drawn letters are hidden from them.
+ * already hold, and writing moves nothing while the line wraps greedily. A
+ * balanced line re-breaks as letters are added, so a balanced ancestor needs a
+ * `text-wrap` class between it and the line. A caret stands after the last
+ * letter written while `caret` is set. Screen readers hear the whole text once,
+ * and the drawn letters are hidden from them.
  */
 export function TypedText({
   caret,

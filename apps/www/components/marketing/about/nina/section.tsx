@@ -6,6 +6,7 @@ import { MarkdownContent } from "@repo/design-system/components/markdown/content
 import {
   Message,
   MessageContent,
+  MessageFooter,
 } from "@repo/design-system/components/ui/message";
 import { Nina } from "@repo/design-system/components/ui/nina";
 import { useTranslations } from "next-intl";
@@ -86,6 +87,10 @@ export function NinaSection() {
                     </MessageSection>
                   </MessageSections>
                 </TurnReveal>
+                {/* The row that a finished chat turn keeps under its answer, so
+                    this card has the same height. Its actions are the owner's
+                    and never show here. */}
+                <MessageFooter className="min-h-9 justify-between gap-4" />
               </div>
             </MessageContent>
           </Message>

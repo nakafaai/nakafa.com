@@ -74,7 +74,8 @@ export function ClosingQuestion({ template, topics }: ClosingQuestionProps) {
       ref={ref}
     >
       {before.trim()}
-      <span className="grid">
+      {/* The topic wraps greedily: balanced lines would re-break as it is typed. */}
+      <span className="grid text-wrap">
         <span aria-hidden="true" className="invisible col-start-1 row-start-1">
           {longest}
           {after}
