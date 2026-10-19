@@ -26,8 +26,8 @@ import { orderSittings } from "@/components/tenant/sittings.client";
  * the tiles of what the viewer must act on now. A student sees the student's sittings and results. A viewer who
  * watches rooms sees the rooms that run and open soon, the results to view, and the setup while it is open, and a
  * viewer who may create exams also sees the exams they started. The school's context carries the viewer's access,
- * which the layout computed on the server, so the header's action is in the first HTML. Each tile takes its rows
- * from one read, and the page passes no data down.
+ * which the layout computed on the server, so the header's action is in the first HTML. Each home reads its rows
+ * once, and the tiles it shows take their rows from that read.
  */
 export function TenantHome() {
   const tenant = useTenant();

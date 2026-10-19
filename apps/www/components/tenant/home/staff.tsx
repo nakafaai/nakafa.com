@@ -22,9 +22,9 @@ import { SetupTile, useSetupShown } from "@/components/tenant/home/setup";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 
 /**
- * The home of a viewer who watches rooms or creates exams. The rooms, results, and drafts load into their tiles,
- * and the setup tile reads the school's setup. While the rooms load, the quiet state holds the place of Live and
- * Next, so the page does not move when they answer.
+ * The home of a viewer who watches rooms or creates exams. One read brings the rooms, the results, and the drafts,
+ * and the setup tile reads the school's setup on its own. While the rooms load, the quiet state holds the place of
+ * Live and Next, so the page does not move when they answer.
  */
 export function StaffHome({ drafts }: { drafts: StoreApi<ExamDrafts> }) {
   const tenant = useTenant();
