@@ -15,6 +15,7 @@ import { Effect, Option } from "effect";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import {
+  holdsLabel,
   type OptionEdit,
   type OptionLabel,
   optionEditOf,
@@ -55,8 +56,10 @@ interface OptionRowProps {
   readonly onMark: () => void;
   /** Removes the option, or none while the question holds the fewest options it may take. */
   readonly onRemove: (() => void) | null;
-  /** Saves the label the option's editor holds, after its quiet period. */
-  readonly onSave: (label: OptionLabel) => void;
+  /**
+   * Saves the label the option's editor holds, after its quiet period. Calls `unstored` when the server does not store it.
+   */
+  readonly onSave: (label: OptionLabel, unstored: () => void) => void;
 }
 
 /**
@@ -65,7 +68,8 @@ interface OptionRowProps {
  * shown when the option may go, on hover or focus, and always on a touch screen. The text saves
  * after its quiet period once the teacher types in it, and a key change saves at once. A change
  * that edits no text, such as the editor taking its lock, saves nothing. Removing the option drops
- * the pending save of its text. An option the server has not saved yet is locked.
+ * the pending save of its text. A label the server does not store, because its save was refused or dropped,
+ * goes back into the editor, unless the teacher has typed on since. An option the server has not saved yet is locked.
  */
 export function OptionRow({
   letter,
@@ -82,6 +86,18 @@ export function OptionRow({
   // The save calls the latest `onSave`, so a save after the quiet period uses the answers and the
   // revision of the render that is on screen when it runs.
   const save = useCallbackRef(onSave);
+  // The editor remounts with the label the server holds when a label the server did not store goes back into it.
+  const [editorRound, setEditorRound] = useState(0);
+  // A label the server did not store goes back into the editor, unless the teacher has typed on since: the editor
+  // then holds other text, which the next quiet save sends.
+  const restoreUnstored = useCallbackRef((label: OptionLabel) => {
+    if (
+      editor.current !== null &&
+      holdsLabel(editor.current.getJSON(), label)
+    ) {
+      setEditorRound((round) => round + 1);
+    }
+  });
   // The quiet save takes the edit the teacher made last: a label to save, or a refusal to report.
   const [saver] = useState(() =>
     Effect.runSync(
@@ -95,7 +111,7 @@ export function OptionRow({
               });
               return;
             }
-            save(edit.label);
+            save(edit.label, () => restoreUnstored(edit.label));
           }),
         OPTION_SAVE_QUIET
       )
@@ -138,6 +154,7 @@ export function OptionRow({
       <PaperOption letter={letter}>
         <ExamDocument
           extensions={OPTION_EXTENSIONS}
+          key={editorRound}
           label={t("option-of", { letter, number })}
           onChange={(transaction) => {
             const current = editor.current;

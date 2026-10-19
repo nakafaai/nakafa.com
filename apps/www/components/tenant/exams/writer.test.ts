@@ -108,15 +108,18 @@ describe("makeQuestionWriter", () => {
     () =>
       Effect.gen(function* () {
         const server = yield* serverHolding(draftAt(3), true);
-        const writer = yield* makeQuestionWriter(server.send);
+        const writer = yield* makeQuestionWriter(
+          server.send,
+          Effect.succeed(draftAt(3))
+        );
 
         const first = yield* Effect.forkChild(
-          writer.save(draftAt(3), typeOption("option-2", "Lyon"))
+          writer.save(typeOption("option-2", "Lyon"))
         );
         yield* Deferred.await(server.arrived);
-        // The second save sees the same draft the first one saw, as two option editors do in one render.
+        // The second save starts from the same render as the first, as two option editors do in one render.
         const second = yield* Effect.forkChild(
-          writer.save(draftAt(3), typeOption("option-3", "Milan"))
+          writer.save(typeOption("option-3", "Milan"))
         );
         yield* Deferred.succeed(server.release, undefined);
         yield* Fiber.join(first);
@@ -132,7 +135,28 @@ describe("makeQuestionWriter", () => {
   );
 
   it.effect(
-    "refuses a save that another editor overtook, writes nothing, and starts the next save from what the caller sees",
+    "starts a save from the render when another editor saved the question after this writer's last answer",
+    () =>
+      Effect.gen(function* () {
+        const render = yield* Ref.make(draftAt(3));
+        const server = yield* serverHolding(draftAt(3), false);
+        const writer = yield* makeQuestionWriter(server.send, Ref.get(render));
+
+        yield* writer.save(typeOption("option-2", "Lyon"));
+        // Another editor saved the question at revision 5, so the server and the render hold its text.
+        const foreign = draftAt(5, ["", "Lyon", "Rome", "Madrid"]);
+        yield* Ref.set(server.stored, foreign);
+        yield* Ref.set(render, foreign);
+
+        yield* writer.save(typeOption("option-3", "Milan"));
+        const stored = yield* Ref.get(server.stored);
+        expect(stored.revision).toBe(6);
+        expect(textsOf(stored)).toEqual(["", "Lyon", "Milan", "Madrid"]);
+      })
+  );
+
+  it.effect(
+    "refuses a save that another editor overtook, writes nothing, and starts the next save from the render",
     () =>
       Effect.gen(function* () {
         // Another editor saved the question once more, so the server holds revision 4 with its own text.
@@ -140,10 +164,11 @@ describe("makeQuestionWriter", () => {
           draftAt(4, ["", "Paris", "Rome", "Madrid"]),
           false
         );
-        const writer = yield* makeQuestionWriter(server.send);
+        const render = yield* Ref.make(draftAt(3));
+        const writer = yield* makeQuestionWriter(server.send, Ref.get(render));
 
         const refused = yield* Effect.flip(
-          writer.save(draftAt(3), typeOption("option-2", "Lyon"))
+          writer.save(typeOption("option-2", "Lyon"))
         );
         expect(refused).toMatchObject({ _tag: "RevisionStale", current: 4 });
         expect(yield* Ref.get(server.stored)).toMatchObject({ revision: 4 });
@@ -154,10 +179,9 @@ describe("makeQuestionWriter", () => {
           "Madrid",
         ]);
 
-        yield* writer.save(
-          draftAt(4, ["", "Paris", "Rome", "Madrid"]),
-          typeOption("option-2", "Lyon")
-        );
+        // The render catches up with the other editor's save, and the next save starts from it.
+        yield* Ref.set(render, draftAt(4, ["", "Paris", "Rome", "Madrid"]));
+        yield* writer.save(typeOption("option-2", "Lyon"));
         const stored = yield* Ref.get(server.stored);
         expect(stored.revision).toBe(5);
         expect(textsOf(stored)).toEqual(["", "Lyon", "Rome", "Madrid"]);
@@ -172,14 +196,15 @@ describe("makeQuestionWriter", () => {
           draftAt(4, ["", "Paris", "Rome", "Madrid"]),
           true
         );
-        const writer = yield* makeQuestionWriter(server.send);
+        const render = yield* Ref.make(draftAt(3));
+        const writer = yield* makeQuestionWriter(server.send, Ref.get(render));
 
         const refused = yield* Effect.forkChild(
-          Effect.flip(writer.save(draftAt(3), typeOption("option-2", "Lyon")))
+          Effect.flip(writer.save(typeOption("option-2", "Lyon")))
         );
         yield* Deferred.await(server.arrived);
         const dropped = yield* Effect.forkChild(
-          Effect.flip(writer.save(draftAt(3), typeOption("option-3", "Milan")))
+          Effect.flip(writer.save(typeOption("option-3", "Milan")))
         );
         // Let the second save reach the writer's queue before the server answers the first.
         yield* Effect.yieldNow;
@@ -192,10 +217,8 @@ describe("makeQuestionWriter", () => {
         expect(yield* Ref.get(server.sent)).toHaveLength(1);
         expect(yield* Ref.get(server.stored)).toMatchObject({ revision: 4 });
 
-        yield* writer.save(
-          draftAt(4, ["", "Paris", "Rome", "Madrid"]),
-          typeOption("option-4", "Bern")
-        );
+        yield* Ref.set(render, draftAt(4, ["", "Paris", "Rome", "Madrid"]));
+        yield* writer.save(typeOption("option-4", "Bern"));
         const stored = yield* Ref.get(server.stored);
         expect(stored.revision).toBe(5);
         expect(textsOf(stored)).toEqual(["", "Paris", "Rome", "Bern"]);

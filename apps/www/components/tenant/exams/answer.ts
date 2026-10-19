@@ -76,6 +76,18 @@ export const optionEditOf = (change: {
   );
 };
 
+const sameLabel = Schema.toEquivalence(ContentDocumentSchema);
+
+/**
+ * Whether an option's editor holds the label, read through the contract. A document the contract refuses is no
+ * label, so an editor that holds one holds no label.
+ */
+export const holdsLabel = (json: unknown, label: OptionLabel): boolean =>
+  Option.match(optionLabelOf(json), {
+    onNone: () => false,
+    onSome: (held) => sameLabel(held, label),
+  });
+
 /** The label of an empty option: one empty paragraph, which the contract allows in an option. */
 export const emptyLabel = (): OptionLabel => ({
   content: [{ type: "paragraph" }],

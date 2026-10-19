@@ -27,17 +27,33 @@ export type QuestionDraft = typeof QuestionDraftSchema.Type;
 export class SaveDropped extends Data.TaggedError("SaveDropped") {}
 
 /**
- * The saves of one question, in order, so that each save is built on the draft the save before it left.
- * The writer keeps the last draft the server answered. A save that starts from it applies its edit to that
- * draft and sends the revision the server returned, so two saves started together both land, and neither
- * one writes over the other. With no answered draft, a save starts from the draft its caller saw, which
- * holds the revision the server had when the question was read. A save that fails clears the answered draft,
- * so the next save starts again from what the caller sees. Every save queued before the failure is dropped
- * unsent, since each was built on the draft that failed, and a save built on the draft of a refusal could land
- * a change the server refused.
+ * The draft a save starts from: the draft the server answered this writer last, or the draft the render
+ * holds when no save of this writer has been answered. The render wins only with a higher revision, which
+ * means another editor saved the question after this writer's last answer. A tie keeps the answered draft,
+ * the one the server returned for this writer's own save.
+ */
+const startingDraft = (
+  answered: Option.Option<QuestionDraft>,
+  rendered: QuestionDraft
+): QuestionDraft =>
+  Option.match(answered, {
+    onNone: () => rendered,
+    onSome: (draft) => (rendered.revision > draft.revision ? rendered : draft),
+  });
+
+/**
+ * The saves of one question, in order, so that each save is built on the newest draft the writer knows.
+ * Each save reads `rendered` when it starts, applies its edit to `startingDraft`, and sends the revision of
+ * that draft. A save that the server answers becomes the answered draft, so two saves started together both
+ * land, one after the other. A save built on a stale render is refused with nothing written. A save that
+ * fails clears the answered draft, and every save queued before the failure is dropped unsent. The render can
+ * still show the failed save's optimistic answers until React renders the rollback, so a save built on that
+ * render could land the very change the server refused. A save queued after the failure starts from the render,
+ * which may still lag the rollback for a moment, since the drop covers only the saves queued before the failure.
  */
 export const makeQuestionWriter = <E>(
-  send: (draft: QuestionDraft) => Effect.Effect<QuestionDraft, E>
+  send: (draft: QuestionDraft) => Effect.Effect<QuestionDraft, E>,
+  rendered: Effect.Effect<QuestionDraft>
 ) =>
   Effect.gen(function* () {
     const lane = yield* Semaphore.make(1);
@@ -45,7 +61,6 @@ export const makeQuestionWriter = <E>(
     const refusals = yield* Ref.make(0);
 
     const save = Effect.fn("exams.question.save")(function* (
-      seen: QuestionDraft,
       edit: (draft: QuestionDraft) => QuestionWrite
     ) {
       const queuedAt = yield* Ref.get(refusals);
@@ -54,7 +69,7 @@ export const makeQuestionWriter = <E>(
           if ((yield* Ref.get(refusals)) !== queuedAt) {
             return yield* new SaveDropped();
           }
-          const base = Option.getOrElse(yield* Ref.get(answered), () => seen);
+          const base = startingDraft(yield* Ref.get(answered), yield* rendered);
           const next = edit(base);
           const saved = yield* send({ ...next, revision: base.revision }).pipe(
             Effect.tapError(() =>

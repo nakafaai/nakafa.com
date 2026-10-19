@@ -5,6 +5,7 @@ import { Array as Arr, Option } from "effect";
 import {
   choiceOf,
   emptyLabel,
+  holdsLabel,
   keyWithoutOption,
   markedKey,
   markedOption,
@@ -81,6 +82,25 @@ describe("optionLabelOf and emptyLabel", () => {
       type: "doc",
     });
     expect(plainText(emptyLabel())).toBe("");
+  });
+});
+
+describe("holdsLabel", () => {
+  it("holds the label that the editor's document reads as", () => {
+    expect(holdsLabel(textOf("Paris"), textOf("Paris"))).toBe(true);
+  });
+
+  it("holds no label that the editor has typed past", () => {
+    expect(holdsLabel(textOf("Lyon"), textOf("Paris"))).toBe(false);
+  });
+
+  it("holds no label in a document the contract refuses", () => {
+    expect(
+      holdsLabel(
+        { content: [{ type: "unknownBlock" }], type: "doc" },
+        textOf("Paris")
+      )
+    ).toBe(false);
   });
 });
 

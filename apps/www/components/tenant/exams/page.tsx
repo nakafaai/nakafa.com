@@ -10,7 +10,7 @@ import {
 } from "@repo/backend/confect/exams/question";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Array as Arr, Effect, Function as Fn, Option } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 import { useTranslations } from "next-intl";
 import {
   lazy,
@@ -163,10 +163,8 @@ function LivePaper({
   const answer = useMutation(exams.questions.answer).withOptimisticUpdate(
     answerUpdate
   );
-  const choice = Option.getOrNull(choiceOf(question.answers));
   // The writer sends through the latest mutation. It keeps the saves of this question in order, and each
-  // save sends the revision that the save before it returned, so no save is refused for a revision the
-  // render held before that save landed.
+  // save starts from the newer of the draft its last answer returned and the question the render holds.
   const send = useCallbackRef((draft: QuestionDraft) =>
     sentAction(() =>
       answer({
@@ -185,26 +183,78 @@ function LivePaper({
       }))
     )
   );
-  const [writer] = useState(() => Effect.runSync(makeQuestionWriter(send)));
+  // The question as the render holds it, which the writer reads each time a save starts.
+  const rendered = useCallbackRef(
+    (): QuestionDraft => ({
+      answers: question.answers,
+      key: question.key,
+      revision: question.revision,
+    })
+  );
+  // The writer lives with this mounted paper. A paper that unmounts with a save in flight leaves that save to
+  // finish, and a paper that mounts again starts a new writer.
+  const [writer] = useState(() =>
+    Effect.runSync(makeQuestionWriter(send, Effect.sync(rendered)))
+  );
+
+  // A save shows its change at once, even while an earlier save of this question is still in flight. Each click
+  // applies its edit to the draft the last click left on screen, and the render shows again once every save of
+  // this paper has settled.
+  const [shown, setShown] = useState<QuestionDraft | null>(null);
+  const shownRef = useRef<QuestionDraft | null>(null);
+  const unsettled = useRef(0);
+  const current = () => shownRef.current ?? rendered();
 
   /**
-   * Saves the answers and the key that `edit` makes of this question. The edit takes the draft the save
-   * before it left, or the question as the teacher sees it when no save is in flight, so the edits of one
-   * question land one after another and none writes over another.
+   * Saves the answers and the key that `edit` makes of this question, and shows them at once. The edit runs on
+   * the draft the writer starts from, so the edits of one question land in the order they were made. `unstored`
+   * runs when the server does not store the change, so the option that asked can take its text back.
    */
-  const saveAnswers = (edit: (draft: QuestionDraft) => QuestionWrite) => {
-    runExamAction(
-      writer.save(
-        {
-          answers: question.answers,
-          key: question.key,
-          revision: question.revision,
-        },
-        edit
-      ),
-      { onFailure: Fn.constVoid, onSuccess: Fn.constVoid }
-    );
+  const saveAnswers = (
+    edit: (draft: QuestionDraft) => QuestionWrite,
+    unstored?: () => void
+  ) => {
+    const base = current();
+    const next: QuestionDraft = { ...edit(base), revision: base.revision };
+    shownRef.current = next;
+    setShown(next);
+    unsettled.current += 1;
+    const settle = () => {
+      unsettled.current -= 1;
+      if (unsettled.current === 0) {
+        shownRef.current = null;
+        setShown(null);
+      }
+    };
+    runExamAction(writer.save(edit), {
+      onFailure: () => {
+        settle();
+        unstored?.();
+      },
+      onSuccess: settle,
+    });
   };
+
+  const displayed = shown ?? question;
+  const choice = Option.getOrNull(choiceOf(displayed.answers));
+  // The label the server holds for an option. Its editor starts from that label, and a label the server does not
+  // store goes back to it, so the editor never keeps text that is not saved. An option the server does not hold
+  // yet has the label the paper shows.
+  const savedLabel = (option: {
+    readonly id: string;
+    readonly label: OptionLabel;
+  }): OptionLabel =>
+    Option.match(choiceOf(question.answers), {
+      onNone: () => option.label,
+      onSome: (saved) =>
+        Option.match(
+          Arr.findFirst(saved.options, (item) => item.id === option.id),
+          {
+            onNone: () => option.label,
+            onSome: (item) => item.label,
+          }
+        ),
+    });
 
   return (
     <>
@@ -219,13 +269,13 @@ function LivePaper({
             {Arr.map(choice.options, (option, index) => (
               <OptionRow
                 key={option.id}
-                label={option.label}
+                label={savedLabel(option)}
                 letter={optionLetter(index)}
                 locked={frozen}
-                marked={markedOption(question.key) === option.id}
+                marked={markedOption(displayed.key) === option.id}
                 number={number}
                 onMark={() => {
-                  if (markedOption(question.key) !== option.id) {
+                  if (markedOption(current().key) !== option.id) {
                     saveAnswers((draft) => ({
                       answers: draft.answers,
                       key: markedKey(draft.answers, option.id),
@@ -241,11 +291,14 @@ function LivePaper({
                         }))
                     : null
                 }
-                onSave={(label: OptionLabel) =>
-                  saveAnswers((draft) => ({
-                    answers: withOptionLabel(draft.answers, option.id, label),
-                    key: draft.key,
-                  }))
+                onSave={(label: OptionLabel, unstored: () => void) =>
+                  saveAnswers(
+                    (draft) => ({
+                      answers: withOptionLabel(draft.answers, option.id, label),
+                      key: draft.key,
+                    }),
+                    unstored
+                  )
                 }
               />
             ))}
