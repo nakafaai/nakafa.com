@@ -32,7 +32,7 @@ backup, and in the dashboard. The threat model below states the limits.
 
 ## Decision
 
-### Three key owners
+### Key owners
 
 Each key has one owner, and the key above it wraps it.
 
@@ -41,7 +41,8 @@ Each key has one owner, and the key above it wraps it.
 | Root | `VAULT_ROOT_KEYS` in the Convex environment | Nothing. A rotation rewraps the keys it wrapped. | The environment | Live |
 | Learner | 32 random bytes for each learner | A root key | `vaultKeys` | Live |
 | School | 32 random bytes for each tenant | A root key | `tenantKeys` | Built, wave B |
-| Connection | The secret of a connector | The learner's key for a personal connection, the school's key for a school connection | `connectorSecrets` | Planned |
+| Connector | 32 random bytes, one for the platform. It blinds each Google account under every owner, so no owner's key is needed to find an account's connections | A root key | `connectorKeys` | Built, CN1 |
+| Connection | The secret of a connector | The learner's key for a personal connection, the school's key for a school connection | `connectorSecrets` | Built, CN1 |
 
 The vault is one module for all of them. A connection has no vault of its own.
 The memories of Nina stay in their own tables (ADR 0022), sealed with the
@@ -83,7 +84,7 @@ nonce, and an HMAC key that blinds a word.
 | `cipher.ts` | Seals, opens, and blinds with the keys that any 32-byte key derives | No change |
 | `ring.ts` | Reads the root keys from `VAULT_ROOT_KEYS` | No change |
 | `keys.ts` | Learner keys: `ensureLearnerKeys`, `readLearnerKeys`, `shredLearnerKeys`, and `rewrapLearnerKeys` | The learner keys stay as they are. Gains the reader and the creation of a school key (`readTenantKeys`, and `createTenantKey`, which provisioning calls). The wrapped key is bound to the school and its generation with a label of its own, so a wrapped learner key never opens as a school key. Shredding a school key is planned with the school deletion (Implementation Status). |
-| `rewrap.ts` | Does not exist. The rewrap is `rewrapLearnerKeys` in `keys.ts`. | New. `rewrapKeys` moves one page a call: the learner keys still on a retired root key, then the school keys. It returns zero only when both tables use the current root key, and it fails while a stored key names a root key that the environment lacks. `vault/keys:rewrap` runs it. |
+| `rewrap.ts` | Does not exist. The rewrap is `rewrapLearnerKeys` in `keys.ts`. | New. `rewrapKeys` moves one page a call: the learner keys still on a retired root key, then the school keys, then the connector key. It returns zero only when every key table uses the current root key, and it fails while a stored key names a root key that the environment lacks. `vault/keys:rewrap` runs it. |
 | `text.ts` | `sealText`, `openText`, and `blindText` bind a text to a learner, a table, and a field | They take the keys of an owner, a learner or a school, and bind a text to that owner, the table, and the field. A school's text opens only for that school, its generation, and that field. |
 | `schema.ts` | `VaultKey`, `VaultField`, and `VaultError` | Gains the row of `tenantKeys` (the tenant, the generation, the root key, the wrapped key, and the time of creation) |
 
@@ -177,11 +178,13 @@ run `vault/keys:rewrap` until it returns zero, remove the old root key, and
 destroy every copy of it (`vault/keys.spec.ts`). Sealed values do not change,
 only the wrapping of the keys. `rewrapKeys` in `vault/rewrap.ts` moves one page
 a call: first the learner keys still on a retired root key, then the school
-keys. Removing a retired root key while it still wraps a school key would lose
-that school's text, so the rewrap reports zero only when both tables use the
-current root key and no stored key names a root key that the environment lacks.
-Its test: with a retired root key, the rewrap reports a count until it has moved
-both tables.
+keys, then the connector key. Removing a retired root key while it still wraps a
+school key would lose that school's text, and removing one that wraps the
+connector key would strand every blind of a Google account, so the rewrap
+reports zero only when every key table uses the current root key and no stored
+key names a root key that the environment lacks. The connector key never changes
+its bytes, so its blinds stay the same across a rotation. Its test: with a
+retired root key, the rewrap reports a count until it has moved every table.
 
 The school key itself is replaced only when a leak is suspected. A replacement
 is a migration, run the way ADR 0024 runs the migration of old messages.
@@ -276,4 +279,5 @@ does another job.
 | Shredding a school key, with the deletion of its school | Planned, with the school deletion lane |
 | Replacing a school key by a new generation, on a suspected leak | Planned, as a migration (Rotation and replacement) |
 | `examSittings.tokenSealed`, sealed by `schedule` and `changeToken` and opened for a proctor by the dashboard | In code, with version 1 of the sittings. The school-key rotation that reseals it is planned with the rotation. |
-| `connectorSecrets` | Planned (ADR 0015) |
+| The connector key: `connectorKeys`, created on first use, wrapped by the current root key, moved by `rewrap`, and never shredded. It blinds each Google account under every owner (`blindGoogleAccount`) | Built, CN1 |
+| `connectorSecrets` | Built, CN1 (ADR 0015) |

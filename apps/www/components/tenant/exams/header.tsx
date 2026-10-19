@@ -14,6 +14,7 @@ import { useState } from "react";
 import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import { renameUpdate } from "@/components/tenant/exams/optimistic";
 import { useExam } from "@/components/tenant/exams/provider";
+import { ScheduleExam } from "@/components/tenant/exams/schedule";
 import { titleToSave } from "@/components/tenant/exams/title";
 
 /**
@@ -21,7 +22,8 @@ import { titleToSave } from "@/components/tenant/exams/title";
  * place. The field shows the saved title until the teacher types, so it follows a
  * co-editor's rename. The title is saved when the field loses focus or the teacher presses
  * Enter, and only a trimmed, changed, valid title is sent. The optimistic change restores
- * the saved title when the server refuses the rename.
+ * the saved title when the server refuses the rename. The row ends with the button that
+ * schedules the exam, and the title gives way before that button moves.
  */
 export function ExamHeader() {
   const t = useTranslations("Exams");
@@ -69,6 +71,7 @@ export function ExamHeader() {
         placeholder={t("untitled")}
         value={draft ?? exam.title}
       />
+      <ScheduleExam />
     </header>
   );
 }

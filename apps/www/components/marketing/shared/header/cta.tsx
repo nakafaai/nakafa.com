@@ -39,6 +39,7 @@ export function HeaderCta() {
     <Button
       nativeButton={false}
       render={<NavigationLink href={href}>{t("try-nakafa")}</NavigationLink>}
+      variant="secondary"
     />
   );
 }

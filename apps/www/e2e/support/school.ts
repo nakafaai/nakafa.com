@@ -121,16 +121,24 @@ export const inviteLearner = Effect.fn("NakafaE2E.inviteLearner")(
  * Seeds one proctored sitting of a keyed exam in a school that `createSchool` opened, for a
  * learner who is already a member of it, and returns the exam, the sitting, and its token. The
  * sitting opens now and closes an hour later, and the learner gets a student grant in the
- * school's first active unit. Each call seeds a new exam and sitting.
+ * school's first active unit. A `crowd` seats that many extra students with attempts in
+ * progress first, so the learner's own attempt lands on a later dashboard page. Each call
+ * seeds a new exam and sitting.
  */
 export const seedSitting = Effect.fn("NakafaE2E.seedSitting")(
-  function* (slug: string, learnerAddress: string) {
+  function* (slug: string, learnerAddress: string, crowd = 0) {
     const fs = yield* FileSystem.FileSystem;
     const directory = yield* fs.makeTempDirectoryScoped({
       prefix: "nakafa-sitting-",
     });
     const output = `${directory}/sitting.json`;
-    yield* runAcceptanceCommand("sitting", slug, learnerAddress, output);
+    yield* runAcceptanceCommand(
+      "sitting",
+      slug,
+      learnerAddress,
+      output,
+      String(crowd)
+    );
     return yield* fs
       .readFileString(output)
       .pipe(Effect.flatMap(Schema.decodeEffect(SittingFixture)));

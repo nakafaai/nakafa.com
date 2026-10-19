@@ -15,15 +15,19 @@ export type DashboardValue = typeof DashboardView.Type;
 export type DashboardAttempt = DashboardValue["attempts"]["page"][number];
 
 /**
- * The arguments of the dashboard query of one sitting. The query reads the first page only,
- * so every change and every read of it names the same page.
+ * The arguments of the dashboard query of one page of a sitting's attempts: the first page at
+ * `null`, and each later page at the cursor the page before it ended on. The seats and the
+ * panel name a page the same way, so they share its subscription.
  */
-export function dashboardArgs(input: {
-  readonly sittingId: DashboardValue["sitting"]["id"];
-  readonly slug: TenantSlug;
-}) {
+export function dashboardArgs(
+  input: {
+    readonly sittingId: DashboardValue["sitting"]["id"];
+    readonly slug: TenantSlug;
+  },
+  cursor: string | null
+) {
   return {
-    paginationOpts: { cursor: null, numItems: DASHBOARD_PAGE_SIZE },
+    paginationOpts: { cursor, numItems: DASHBOARD_PAGE_SIZE },
     sittingId: input.sittingId,
     slug: input.slug,
   };

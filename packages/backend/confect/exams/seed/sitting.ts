@@ -2,6 +2,7 @@ import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
 import { DeliveryLanguageSchema } from "@nakafa/aksara-contracts/locale";
 import type {
   ExamQuestionsDoc,
+  ExamSittingsDoc,
   ExamsDoc,
 } from "@repo/backend/confect/_generated/docs";
 import {
@@ -46,6 +47,50 @@ const FIRST_OPTION_KEY: Arr.NonEmptyReadonlyArray<InteractionKey> = [
 /** A prompt of one paragraph with the text, in the stored form that the editor writes. */
 const promptText = (text: string) =>
   `{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"${text}"}]}]}`;
+
+/**
+ * Seats a crowd of extra students in a sitting, each an unclaimed Person named by their
+ * number with an attempt in progress, so a browser test reads a dashboard of more than one
+ * page.
+ */
+const seatCrowd = Effect.fn("exams.seed.crowd")(function* (crowd: {
+  readonly count: number;
+  readonly deadline: number;
+  readonly now: number;
+  readonly sittingId: ExamSittingsDoc["_id"];
+  readonly tenantId: ExamsDoc["tenantId"];
+}) {
+  const writer = yield* DatabaseWriter;
+  yield* Effect.forEach(
+    Arr.makeBy(crowd.count, (index) => index + 1),
+    (seat) =>
+      writer
+        .table("tenantPeople")
+        .insert({
+          account: { state: "unclaimed" },
+          kind: "member",
+          name: `Seat ${String(seat).padStart(3, "0")}`,
+          status: "active",
+          tenantId: crowd.tenantId,
+        })
+        .pipe(
+          Effect.flatMap((person) =>
+            writer.table("examAttempts").insert({
+              deadline: crowd.deadline,
+              deviceId: null,
+              person,
+              retiredDeviceIds: [],
+              sitting: crowd.sittingId,
+              startedAt: crowd.now,
+              state: "inProgress",
+              tenantId: crowd.tenantId,
+            })
+          ),
+          Effect.orDie
+        ),
+    { discard: true }
+  );
+});
 
 /**
  * The user of the Owner who signed in first, as the author of the seeded exam. An Owner who
@@ -96,6 +141,7 @@ const seedQuestion = Effect.fn("exams.seed.question")(function* (
  * happens when the account signs in. The journal records the schedule as the system (ADR 0013).
  */
 export const seedSitting = Effect.fn("exams.seed.sitting")(function* (args: {
+  readonly crowd?: number;
   readonly email: string;
   readonly slug: string;
 }) {
@@ -163,5 +209,12 @@ export const seedSitting = Effect.fn("exams.seed.sitting")(function* (args: {
     tenantId: tenant._id,
   }).pipe(Effect.orDie);
   yield* openSitting(made.id);
+  yield* seatCrowd({
+    count: args.crowd ?? 0,
+    deadline: now + SITTING_LENGTH_MS,
+    now,
+    sittingId: made.id,
+    tenantId: tenant._id,
+  });
   return { examId, sittingId: made.id, token: made.token };
 });

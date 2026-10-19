@@ -2,8 +2,11 @@
 
 ## Status
 
-Accepted. Amended on 13 October 2026 for the homeroom and guardian relations, the
-actions of the school roles, and the 24-hour limit on operator visits. Amended on
+Accepted. Amended on 18 October 2026: the verified parent relation is named
+`verifiedParent` (ADR 0034), and a class member reads only the student's own
+released grade, never a classmate's (ADR 0033). Amended on 13 October 2026 for
+the homeroom and guardian relations, the actions of the school roles, and the
+24-hour limit on operator visits. Amended on
 14 October 2026 for the cohort member and homeroom relations, which are live, for
 the period, cohort, people, invite, assignment, and promotion actions, and for
 the operator visits and their transition access, which are live. Amended the same
@@ -220,9 +223,9 @@ are:
 | Holder | A person and a role they hold | Their own role | Live |
 | Homeroom teacher (wali kelas) | A teacher and one class group in one period, from the teacher's assignment to that class group | The cohort and its members (`cohort.view`); its report cards, attendance, and insight are not built yet | Live |
 | Subject teacher | A teacher and one class | The grades, tasks, and posts of that class | Planned |
-| Class member | A student and one class | The posts, tasks, and grades of that class | Planned |
+| Class member | A student and one class | The posts and tasks of that class, and the student's own released grade (ADR 0033) | Planned |
 | Cohort member (`cohortMember`) | A student and the cohort they are placed in, in one period (ADR 0011) | The cohort and its members (`cohort.view`); its announcements are not built yet | Live |
-| Verified parent | A guardian and a student, once the parent relation is verified | The student's tasks, grades, report cards, and announcements, and the Insight narratives that the student shared and a teacher approved | Planned |
+| Verified parent | A guardian and a student, once the parent relation is verified and consent is granted (ADR 0034) | The student's tasks, released grades, approved report cards, and announcements, and the Insight narratives that the student shared and a teacher approved | Planned |
 | Session proctor | A proctor and one exam sitting | Every proctor action of that sitting (ADR 0013): the token and the participant dashboard, lock and unlock, add minutes, change the token, allow a second device, close the sitting, and accept or reject a late record of an attempt in it | Planned |
 | Exam author | A teacher and their exam | Changing and grading that exam, every proctor action of its sittings, and accepting or rejecting the late records of its attempts | Planned |
 | Shared practice | A student and a practice the student shared | School Insight, per topic, revocable by the student | Planned |

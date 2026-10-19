@@ -30,6 +30,7 @@ const argumentCommand = Effect.fn("contentAcceptance.cli.arguments")(function* (
   const first = process.argv[3];
   const second = process.argv[4];
   const third = process.argv[5];
+  const fourth = process.argv[6];
   if (mode === "learner" && first !== undefined) {
     return yield* createAcceptanceLearner(root, first);
   }
@@ -56,7 +57,7 @@ const argumentCommand = Effect.fn("contentAcceptance.cli.arguments")(function* (
     second !== undefined &&
     third !== undefined
   ) {
-    return yield* createAcceptanceSitting(root, first, second, third);
+    return yield* createAcceptanceSitting(root, first, second, third, fourth);
   }
   if (mode === "card" && first !== undefined && second !== undefined) {
     return yield* createAcceptanceCard(root, first, second);
@@ -68,7 +69,7 @@ const argumentCommand = Effect.fn("contentAcceptance.cli.arguments")(function* (
     return yield* updateAcceptanceProfile(root, first, second);
   }
   return yield* acceptanceRuntimeError(
-    "Usage: acceptance <prepare|build|start|clean|learner <cookie-file>|school <school-file>|owner <school-slug> <cookie-file>|teacher <school-slug> <cookie-file>|invite <school-slug> <learner-address> <cookie-file>|sitting <school-slug> <learner-email> <sitting-file>|card <school-slug> <card-file>|import <table> <rows-file>|profile <auth-user-id> <profile-json-file>>"
+    "Usage: acceptance <prepare|build|start|clean|learner <cookie-file>|school <school-file>|owner <school-slug> <cookie-file>|teacher <school-slug> <cookie-file>|invite <school-slug> <learner-address> <cookie-file>|sitting <school-slug> <learner-email> <sitting-file> [crowd]|card <school-slug> <card-file>|import <table> <rows-file>|profile <auth-user-id> <profile-json-file>>"
   );
 });
 

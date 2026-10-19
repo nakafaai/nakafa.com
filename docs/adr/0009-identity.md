@@ -201,9 +201,9 @@ only, each at its own address (ADR 0026).
   and I or L as 1, as Crockford base32 does, and U is refused.
 - **Parent.** A parent signs in with an email code: six digits, valid for five
   minutes, void after three wrong tries, and stored as a keyed hash (an HMAC
-  under a server secret, like the login-card code), because six digits have
-  only a million values and a plain digest would give the code to anyone who
-  reads the row. Better Auth's `emailOTP` plugin keeps codes in plain text by
+  under a server secret, like the login-card code, with its own purpose label,
+  `guardian-code`, ADR 0034), because six digits have only a million values and
+  a plain digest would give the code to anyone who reads the row. Better Auth's `emailOTP` plugin keeps codes in plain text by
   default, so Nakafa stores its own keyed hash. `confect/emails` sends the code.
   The parent enters it on the code entry page of the school host
   (`/orang-tua`, ADR 0026), the only page that accepts it. It is the one code
