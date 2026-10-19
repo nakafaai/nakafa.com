@@ -21,7 +21,7 @@ import {
   sittingRow,
 } from "@repo/backend/test/sittings";
 import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 const { close, finish, mine } = refs.public.exams.sittings;
 
@@ -344,7 +344,9 @@ describe("exams/sittings mine", () => {
         });
         const listed = yield* fixture.as("student").query(mine, { slug: nf });
         expect(listed).toHaveLength(101);
-        expect(listed.find((row) => row.id === made.id)).toMatchObject({
+        expect(
+          Option.getOrNull(Arr.findFirst(listed, (row) => row.id === made.id))
+        ).toMatchObject({
           attempt: "inProgress",
           attemptId: entered.attempt,
         });
