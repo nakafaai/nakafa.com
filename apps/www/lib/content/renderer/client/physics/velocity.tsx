@@ -1,10 +1,10 @@
 "use client";
 
-import dynamic from "next/dynamic";
+import { lazyComponent } from "@repo/design-system/lib/lazy";
 import { withHydrationBoundary } from "@/lib/content/renderer/client/boundary";
 
 export const AverageVelocitySpeedLab = withHydrationBoundary(
-  dynamic(() =>
+  lazyComponent(() =>
     import(
       "@repo/design-system/components/contents/physics/kinematics/average-velocity-speed/lab"
     ).then(({ AverageVelocitySpeedLab }) => AverageVelocitySpeedLab)
@@ -12,7 +12,7 @@ export const AverageVelocitySpeedLab = withHydrationBoundary(
 );
 
 export const InstantaneousVelocitySpeedLab = withHydrationBoundary(
-  dynamic(() =>
+  lazyComponent(() =>
     import(
       "@repo/design-system/components/contents/physics/kinematics/instantaneous-velocity-speed/lab"
     ).then(({ InstantaneousVelocitySpeedLab }) => InstantaneousVelocitySpeedLab)
@@ -20,7 +20,7 @@ export const InstantaneousVelocitySpeedLab = withHydrationBoundary(
 );
 
 export const VelocitySpeedLab = withHydrationBoundary(
-  dynamic(() =>
+  lazyComponent(() =>
     import(
       "@repo/design-system/components/contents/physics/kinematics/velocity-speed/lab"
     ).then(({ VelocitySpeedLab }) => VelocitySpeedLab)

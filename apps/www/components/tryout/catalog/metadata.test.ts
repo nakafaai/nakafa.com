@@ -17,7 +17,7 @@ const translationMocks = vi.hoisted(() => ({
 }));
 
 vi.mock("@/components/tryout/catalog/server", () => runtimeMocks);
-vi.mock("next/navigation", () => navigationMocks);
+vi.mock("@tanstack/react-router", () => navigationMocks);
 vi.mock("next-intl/server", () => translationMocks);
 
 beforeEach(() => {

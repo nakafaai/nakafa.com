@@ -1,10 +1,10 @@
 "use client";
 
-import dynamic from "next/dynamic";
+import { lazyComponent } from "@repo/design-system/lib/lazy";
 import { withHydrationBoundary } from "@/lib/content/renderer/client/boundary";
 
 export const BarChart = withHydrationBoundary(
-  dynamic(() =>
+  lazyComponent(() =>
     import(
       "@repo/design-system/components/contents/mathematics/bar-chart"
     ).then(({ BarChart }) => BarChart)
@@ -12,7 +12,7 @@ export const BarChart = withHydrationBoundary(
 );
 
 export const HistogramChart = withHydrationBoundary(
-  dynamic(() =>
+  lazyComponent(() =>
     import(
       "@repo/design-system/components/contents/mathematics/bar-chart"
     ).then(({ HistogramChart }) => HistogramChart)
@@ -20,7 +20,7 @@ export const HistogramChart = withHydrationBoundary(
 );
 
 export const ScatterDiagram = withHydrationBoundary(
-  dynamic(() =>
+  lazyComponent(() =>
     import(
       "@repo/design-system/components/contents/mathematics/scatter-diagram"
     ).then(({ ScatterDiagram }) => ScatterDiagram)
@@ -28,7 +28,7 @@ export const ScatterDiagram = withHydrationBoundary(
 );
 
 export const VectorChart = withHydrationBoundary(
-  dynamic(() =>
+  lazyComponent(() =>
     import(
       "@repo/design-system/components/contents/mathematics/vector-chart"
     ).then(({ VectorChart }) => VectorChart)

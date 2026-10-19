@@ -1,8 +1,8 @@
+import { Image } from "@repo/design-system/components/image";
 import { PersonAvatar } from "@repo/design-system/components/ui/person";
 import type { Mascot } from "@repo/mascot/code";
 import { cva } from "class-variance-authority";
 import { cn } from "cn";
-import Image from "next/image";
 
 /** The two sizes of a school's mark: beside its name in the sidebar, and large on the sign-in page and in the logo settings. */
 const markVariants = cva("", {

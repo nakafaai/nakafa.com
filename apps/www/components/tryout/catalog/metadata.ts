@@ -5,9 +5,9 @@ import {
   AppLocaleSchema,
 } from "@nakafa/aksara-contracts/locale";
 import { tryoutMetadataArgsValidator } from "@repo/backend/content/tryout/spec";
+import { notFound } from "@tanstack/react-router";
 import { Effect, Schema } from "effect";
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { readTryoutMetadata } from "@/components/tryout/catalog/server";
 import { createResolvedRouteAlternates } from "@/lib/seo/alternates";
@@ -56,7 +56,7 @@ export async function generateTryoutRouteMetadata(
   const source = published.route;
 
   if (!source) {
-    notFound();
+    throw notFound();
   }
 
   const path = `/${input.locale}/${source.publicPath}`;
@@ -64,7 +64,7 @@ export async function generateTryoutRouteMetadata(
   let image: string;
   if (input.kind === "exam") {
     if (!source.socialImageIdentity) {
-      notFound();
+      throw notFound();
     }
     image = Effect.runSync(
       resolveTryoutExamArtwork({

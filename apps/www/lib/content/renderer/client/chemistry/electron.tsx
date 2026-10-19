@@ -1,10 +1,10 @@
 "use client";
 
-import dynamic from "next/dynamic";
+import { lazyComponent } from "@repo/design-system/lib/lazy";
 import { withHydrationBoundary } from "@/lib/content/renderer/client/boundary";
 
 export const ElectronConfigurationLab = withHydrationBoundary(
-  dynamic(() =>
+  lazyComponent(() =>
     import(
       "@repo/design-system/components/contents/chemistry/electron-configuration/lab"
     ).then(({ ElectronConfigurationLab }) => ElectronConfigurationLab)
@@ -12,7 +12,7 @@ export const ElectronConfigurationLab = withHydrationBoundary(
 );
 
 export const ValenceElectronLab = withHydrationBoundary(
-  dynamic(() =>
+  lazyComponent(() =>
     import(
       "@repo/design-system/components/contents/chemistry/valence-electron/lab"
     ).then(({ ValenceElectronLab }) => ValenceElectronLab)

@@ -20,13 +20,13 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
+import { lazyComponent } from "@repo/design-system/lib/lazy";
 import {
   type SidebarContextValue,
   useSidebar,
 } from "@repo/design-system/lib/sidebar/context";
 import { languages } from "@repo/internationalization/data/lang";
 import { Array as Arr } from "effect";
-import dynamic from "next/dynamic";
 import { type Locale, useLocale, useTranslations } from "use-intl";
 import { ActiveBadge } from "@/components/shared/active";
 import { CountryFlagIcon } from "@/components/shared/flag";
@@ -36,7 +36,7 @@ import { useLocalizedRouteSwitch } from "@/lib/routing/locale/client";
  * Loads the theme submenu when the account menu opens. Its list carries one
  * icon for each theme, which no page needs before that.
  */
-const ThemeSubmenuContent = dynamic(
+const ThemeSubmenuContent = lazyComponent(
   () =>
     import("@/components/sidebar/menu/theme").then(
       (module) => module.ThemeSubmenuContent

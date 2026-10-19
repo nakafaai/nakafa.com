@@ -1,6 +1,7 @@
 "use client";
 
 import { Link01Icon } from "@hugeicons/core-free-icons";
+import { Image } from "@repo/design-system/components/image";
 import {
   HoverCard,
   HoverCardContent,
@@ -9,7 +10,6 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn } from "cn";
 import { Array as Arr, Option, Schema } from "effect";
-import Image from "next/image";
 import { createContext, use, useMemo, useState } from "react";
 
 /** One cited link and the domain it is shown under. */
@@ -209,7 +209,6 @@ function SourceIcon({ src }: { src: string }) {
           height={16}
           onError={() => setFailedSrc(src)}
           src={src}
-          unoptimized
           width={16}
         />
       )}

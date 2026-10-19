@@ -2,7 +2,7 @@
 
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
-import dynamic from "next/dynamic";
+import { lazyComponent } from "@repo/design-system/lib/lazy";
 import { useQueryState } from "nuqs";
 import { useTranslations } from "use-intl";
 import { AuthGoogle } from "@/components/auth/google";
@@ -11,7 +11,7 @@ import { AuthGoogle } from "@/components/auth/google";
  * The school username form. It loads when the visitor opens it, so the card code it needs stays
  * out of the entry's first JavaScript.
  */
-const TenantLogin = dynamic(
+const TenantLogin = lazyComponent(
   () =>
     import("@/components/tenant/login").then((module) => module.TenantLogin),
   { loading: () => null }

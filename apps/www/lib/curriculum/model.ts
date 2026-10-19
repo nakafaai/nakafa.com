@@ -9,8 +9,8 @@ import {
   LearningProgramSchema,
   ProgramTranslationSchema,
 } from "@nakafa/aksara-contracts/program/spec";
+import { notFound } from "@tanstack/react-router";
 import { Array as Arr, Option, Schema } from "effect";
-import { notFound } from "next/navigation";
 import type { Locale } from "use-intl";
 import { getPublishedMaterialCards } from "@/lib/content/program/cards";
 import { getPublishedProgramCatalog } from "@/lib/content/program/catalog";
@@ -69,7 +69,7 @@ export async function resolveRuntimeCurriculumRoute(params: CurriculumParams) {
   const published = await getPublishedProgramRoute(locale, publicPath);
   const { program, route } = published;
   if (!(program && route && isRenderableCurriculumView(route))) {
-    notFound();
+    throw notFound();
   }
 
   const childRoutes = Arr.filter(

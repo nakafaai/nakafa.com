@@ -1,5 +1,6 @@
 "use client";
 
+import { Image } from "@repo/design-system/components/image";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import {
   SidebarMenu,
@@ -7,7 +8,6 @@ import {
   SidebarMenuDescription,
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
-import Image from "next/image";
 import { useTranslations } from "use-intl";
 import { useViewer } from "@/lib/identity/client";
 

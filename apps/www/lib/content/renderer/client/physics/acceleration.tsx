@@ -1,10 +1,10 @@
 "use client";
 
-import dynamic from "next/dynamic";
+import { lazyComponent } from "@repo/design-system/lib/lazy";
 import { withHydrationBoundary } from "@/lib/content/renderer/client/boundary";
 
 export const AccelerationGraphCard = withHydrationBoundary(
-  dynamic(() =>
+  lazyComponent(() =>
     import(
       "@repo/design-system/components/contents/physics/kinematics/acceleration/chart-card"
     ).then(({ AccelerationGraphCard }) => AccelerationGraphCard)
@@ -12,7 +12,7 @@ export const AccelerationGraphCard = withHydrationBoundary(
 );
 
 export const AccelerationLab = withHydrationBoundary(
-  dynamic(() =>
+  lazyComponent(() =>
     import(
       "@repo/design-system/components/contents/physics/kinematics/acceleration/lab"
     ).then(({ AccelerationLab }) => AccelerationLab)

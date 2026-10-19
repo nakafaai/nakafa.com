@@ -2,13 +2,13 @@
 
 import { SidebarFooter } from "@repo/design-system/components/ui/sidebar-content";
 import { SidebarMenu } from "@repo/design-system/components/ui/sidebar-menu";
-import dynamic from "next/dynamic";
+import { lazyComponent } from "@repo/design-system/lib/lazy";
 import { AccountPricing } from "@/components/sidebar/menu/pricing";
 import { NavUserGuest } from "@/components/sidebar/user/guest/card";
 import { NavUserAccountSkeleton } from "@/components/sidebar/user/skeleton";
 import { useViewer } from "@/lib/identity/client";
 
-const NavUserAccount = dynamic(
+const NavUserAccount = lazyComponent(
   () =>
     import("@/components/sidebar/user/account").then(
       (module) => module.NavUserAccount

@@ -1,10 +1,10 @@
 "use client";
 
-import dynamic from "next/dynamic";
+import { lazyComponent } from "@repo/design-system/lib/lazy";
 import { withHydrationBoundary } from "@/lib/content/renderer/client/boundary";
 
 export const AncientAtomLab = withHydrationBoundary(
-  dynamic(() =>
+  lazyComponent(() =>
     import(
       "@repo/design-system/components/contents/chemistry/ancient-atom/lab"
     ).then(({ AncientAtomLab }) => AncientAtomLab)
@@ -12,7 +12,7 @@ export const AncientAtomLab = withHydrationBoundary(
 );
 
 export const AtomShellLab = withHydrationBoundary(
-  dynamic(() =>
+  lazyComponent(() =>
     import(
       "@repo/design-system/components/contents/chemistry/atom-shell/lab"
     ).then(({ AtomShellLab }) => AtomShellLab)
@@ -20,7 +20,7 @@ export const AtomShellLab = withHydrationBoundary(
 );
 
 export const AtomSymbolLab = withHydrationBoundary(
-  dynamic(() =>
+  lazyComponent(() =>
     import(
       "@repo/design-system/components/contents/chemistry/atom-symbol/lab"
     ).then(({ AtomSymbolLab }) => AtomSymbolLab)
@@ -28,7 +28,7 @@ export const AtomSymbolLab = withHydrationBoundary(
 );
 
 export const DaltonEvidenceLab = withHydrationBoundary(
-  dynamic(() =>
+  lazyComponent(() =>
     import(
       "@repo/design-system/components/contents/chemistry/dalton-evidence/lab"
     ).then(({ DaltonEvidenceLab }) => DaltonEvidenceLab)

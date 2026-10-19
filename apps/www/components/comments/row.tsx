@@ -11,9 +11,9 @@ import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { DeferredLearnerText } from "@repo/design-system/components/markdown/learner.client";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { lazyComponent } from "@repo/design-system/lib/lazy";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Effect, HashSet } from "effect";
-import dynamic from "next/dynamic";
 import type { MouseEvent, ReactNode } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import {
@@ -46,7 +46,7 @@ import { reportClientException } from "@/lib/analytics/client";
 import { useViewer } from "@/lib/identity/client";
 
 /** The delete dialog loads when the learner opens the More menu of a comment, before they can choose Delete. */
-const CommentDeletion = dynamic(
+const CommentDeletion = lazyComponent(
   () =>
     import("@/components/comments/delete").then(
       (module) => module.CommentDeletion

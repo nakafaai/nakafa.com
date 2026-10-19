@@ -1,5 +1,5 @@
 import { redirect } from "@repo/internationalization/src/navigation";
-import { notFound } from "next/navigation";
+import { notFound } from "@tanstack/react-router";
 import { getToken } from "@/lib/auth/server";
 import { isActiveLocale } from "@/lib/i18n/active";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
@@ -16,7 +16,7 @@ export async function admitAccountRoute(rawLocale: string) {
   const locale = getLocaleOrThrow(rawLocale);
 
   if (!isActiveLocale(locale)) {
-    notFound();
+    throw notFound();
   }
 
   const token = await getToken();

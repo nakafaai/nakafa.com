@@ -23,9 +23,9 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
+import { lazyComponent } from "@repo/design-system/lib/lazy";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Effect } from "effect";
-import dynamic from "next/dynamic";
 import { type ReactNode, useLayoutEffect, useRef, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import {
@@ -38,7 +38,7 @@ import { OpenTargetContext } from "@/components/shared/content/target.client";
  * Loads the open-in submenu when the actions menu opens. Its brand logos are
  * one module that no content page needs before that.
  */
-const OpenInSubmenuContent = dynamic(
+const OpenInSubmenuContent = lazyComponent(
   () =>
     import("@/components/shared/content/open").then(
       (module) => module.OpenInSubmenuContent

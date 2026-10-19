@@ -1,10 +1,10 @@
 "use client";
 
-import dynamic from "next/dynamic";
+import { lazyComponent } from "@repo/design-system/lib/lazy";
 import { withHydrationBoundary } from "@/lib/content/renderer/client/boundary";
 
 export const ParabolicMovementLab = withHydrationBoundary(
-  dynamic(() =>
+  lazyComponent(() =>
     import(
       "@repo/design-system/components/contents/physics/kinematics/parabolic-movement/lab"
     ).then(({ ParabolicMovementLab }) => ParabolicMovementLab)
@@ -12,7 +12,7 @@ export const ParabolicMovementLab = withHydrationBoundary(
 );
 
 export const ParabolicMovementAnalysisLab = withHydrationBoundary(
-  dynamic(() =>
+  lazyComponent(() =>
     import(
       "@repo/design-system/components/contents/physics/kinematics/parabolic-movement-analysis/lab"
     ).then(({ ParabolicMovementAnalysisLab }) => ParabolicMovementAnalysisLab)

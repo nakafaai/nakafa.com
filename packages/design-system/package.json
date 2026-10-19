@@ -25,7 +25,6 @@
     "@repo/utilities": "workspace:*",
     "@shadcn/react": "catalog:",
     "@shikijs/transformers": "^4.5.0",
-    "@tailwindcss/postcss": "catalog:",
     "@tiptap/core": "3.32.0",
     "@tiptap/extension-document": "3.32.0",
     "@tiptap/extension-file-handler": "3.32.0",

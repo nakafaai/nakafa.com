@@ -12,7 +12,7 @@ const mocks = vi.hoisted(() => ({
   query: vi.fn(),
   token: vi.fn(),
 }));
-vi.mock("next/navigation", () => ({ notFound: mocks.notFound }));
+vi.mock("@tanstack/react-router", () => ({ notFound: mocks.notFound }));
 vi.mock("@/lib/auth/server", () => ({ getToken: mocks.token }));
 vi.mock("@confect/js", async (importOriginal) => {
   const { HttpClient } = await importOriginal<typeof import("@confect/js")>();

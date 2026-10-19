@@ -20,8 +20,8 @@ import {
   VisualCardHeader,
   VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
+import { lazyComponent } from "@repo/design-system/lib/lazy";
 import { ISOSCELES_RIGHT_TRIANGLE_ANGLE } from "@repo/math/angles";
-import dynamic from "next/dynamic";
 import type { ReactNode } from "react";
 import { useState } from "react";
 import {
@@ -35,7 +35,7 @@ import {
 import { useLocale, useTranslations } from "use-intl";
 
 // Next owns this client-only import boundary so offscreen lessons do not load WebGL.
-const TriangleScene = dynamic(
+const TriangleScene = lazyComponent(
   () =>
     import(
       "@repo/design-system/components/contents/mathematics/triangle/scene"
@@ -47,7 +47,7 @@ const TriangleScene = dynamic(
 );
 
 // Keep KaTeX outside the page's initial component graph until the scene is visible.
-const TriangleReadout = dynamic(
+const TriangleReadout = lazyComponent(
   () =>
     import(
       "@repo/design-system/components/contents/mathematics/triangle/readout"

@@ -1,11 +1,11 @@
 "use client";
 
 import { Intersection } from "@repo/design-system/components/ui/intersection";
-import dynamic from "next/dynamic";
+import { lazyComponent } from "@repo/design-system/lib/lazy";
 import { useState } from "react";
 import { CommentsSlugContext } from "@/components/comments/slug.client";
 
-const LazyComments = dynamic(
+const LazyComments = lazyComponent(
   () => import("@/components/comments").then((module) => module.Comments),
   {
     ssr: false,

@@ -2,8 +2,8 @@ import "@tanstack/react-start/server-only";
 import { HttpClient } from "@confect/js";
 import auth from "@repo/backend/confect/_generated/refs/auth";
 import users from "@repo/backend/confect/_generated/refs/users";
+import { notFound } from "@tanstack/react-router";
 import { Effect, String as Str } from "effect";
-import { notFound } from "next/navigation";
 import { cache } from "react";
 import { getToken } from "@/lib/auth/server";
 import { httpLayer } from "@/lib/convex/http";
@@ -42,7 +42,7 @@ export const readProfile = cache(async (address: string) => {
       : Promise.resolve(null),
   ]);
   if (profile === null) {
-    notFound();
+    throw notFound();
   }
   return {
     isOwner: account !== null && account.appUser._id === profile._id,

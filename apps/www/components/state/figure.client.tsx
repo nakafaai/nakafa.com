@@ -1,6 +1,6 @@
 "use client";
 
-import dynamic from "next/dynamic";
+import { lazyComponent } from "@repo/design-system/lib/lazy";
 
 /**
  * Nina and her two things, loaded only for the page that shows them. Next.js
@@ -10,7 +10,7 @@ import dynamic from "next/dynamic";
  * picture for the page that needs it, and her place keeps its height until the
  * code arrives (`Screen`).
  */
-export const DeferredFigure = dynamic(
+export const DeferredFigure = lazyComponent(
   () => import("@/components/state/figure").then((module) => module.Figure),
   { loading: () => null }
 );

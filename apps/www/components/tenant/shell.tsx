@@ -28,10 +28,10 @@ import {
   Sidebar,
   SidebarInset,
 } from "@repo/design-system/components/ui/sidebar-shell";
+import { lazyComponent } from "@repo/design-system/lib/lazy";
 import { usePathname } from "@repo/internationalization/src/navigation";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { Effect } from "effect";
-import dynamic from "next/dynamic";
 import Link from "next/link";
 import { type ReactNode, useTransition } from "react";
 import { useLocale, useTranslations } from "use-intl";
@@ -53,7 +53,7 @@ import { isExamEditorPath } from "@/lib/settings/school";
  * The schools of the viewer, which the school switcher lists. The list loads when the
  * switcher opens, as the account menu of Nakafa loads its own.
  */
-const SidebarSchoolMenuItems = dynamic(
+const SidebarSchoolMenuItems = lazyComponent(
   () =>
     import("@/components/sidebar/menu/schools").then(
       (module) => module.SidebarSchoolMenuItems

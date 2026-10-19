@@ -7,6 +7,16 @@ import {
   String as Str,
 } from "effect";
 
+declare global {
+  /** Vite inlines every `VITE_` variable into browser code, so each one reads as a string or nothing. */
+  interface ImportMetaEnv {
+    readonly [name: `VITE_${string}`]: string | undefined;
+  }
+  interface ImportMeta {
+    readonly env: ImportMetaEnv;
+  }
+}
+
 /** The prefix of the variables that Vite inlines into browser code. */
 const PUBLIC_PREFIX = "VITE_";
 const formatIssues = SchemaIssue.makeFormatterStandardSchemaV1();

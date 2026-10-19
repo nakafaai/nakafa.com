@@ -28,12 +28,12 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
+import { lazyComponent } from "@repo/design-system/lib/lazy";
 import { Array as Arr } from "effect";
-import dynamic from "next/dynamic";
 import { type ReactNode, useMemo, useState } from "react";
 
 /** The scene loads once the lab asks for it, and its frame holds the place meanwhile. */
-const ParabolicMovementStage = dynamic(
+const ParabolicMovementStage = lazyComponent(
   () =>
     import(
       "@repo/design-system/components/contents/physics/kinematics/parabolic-movement/stage"

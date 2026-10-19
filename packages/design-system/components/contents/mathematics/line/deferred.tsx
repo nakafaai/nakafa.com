@@ -3,10 +3,10 @@
 import { ScenePlaceholder } from "@repo/design-system/components/three/placeholder";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { VisualCardBody } from "@repo/design-system/components/visual/card";
-import dynamic from "next/dynamic";
+import { lazyComponent } from "@repo/design-system/lib/lazy";
 import { useState } from "react";
 
-const LineScene = dynamic(
+const LineScene = lazyComponent(
   () =>
     import(
       "@repo/design-system/components/contents/mathematics/line/scene"

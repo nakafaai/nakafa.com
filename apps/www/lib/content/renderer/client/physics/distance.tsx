@@ -1,10 +1,10 @@
 "use client";
 
-import dynamic from "next/dynamic";
+import { lazyComponent } from "@repo/design-system/lib/lazy";
 import { withHydrationBoundary } from "@/lib/content/renderer/client/boundary";
 
 export const DisplacementDistanceLab = withHydrationBoundary(
-  dynamic(() =>
+  lazyComponent(() =>
     import(
       "@repo/design-system/components/contents/physics/kinematics/displacement-distance/lab"
     ).then(({ DisplacementDistanceLab }) => DisplacementDistanceLab)
@@ -12,7 +12,7 @@ export const DisplacementDistanceLab = withHydrationBoundary(
 );
 
 export const StoppingDistanceLab = withHydrationBoundary(
-  dynamic(() =>
+  lazyComponent(() =>
     import(
       "@repo/design-system/components/contents/physics/kinematics/stopping-distance/lab"
     ).then(({ StoppingDistanceLab }) => StoppingDistanceLab)

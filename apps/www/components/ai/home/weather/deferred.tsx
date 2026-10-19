@@ -1,6 +1,6 @@
 "use client";
 
-import dynamic from "next/dynamic";
+import { lazyComponent } from "@repo/design-system/lib/lazy";
 import { WeatherSkeleton } from "@/components/ai/home/weather/card";
 
 /**
@@ -8,7 +8,7 @@ import { WeatherSkeleton } from "@/components/ai/home/weather/card";
  * chunk arrives, the same square skeleton holds the grid cell, as the server
  * render does.
  */
-export const DeferredWeather = dynamic(
+export const DeferredWeather = lazyComponent(
   () =>
     import("@/components/ai/home/weather/widget").then(
       (module) => module.WeatherWidget

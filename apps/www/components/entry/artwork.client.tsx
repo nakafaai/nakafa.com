@@ -3,13 +3,13 @@
 import { useMediaQuery } from "@mantine/hooks";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
-import dynamic from "next/dynamic";
+import { lazyComponent } from "@repo/design-system/lib/lazy";
 
 /**
  * Loads the animal pool only when the entry page shows it. Its code stays out of
  * the entry routes' first JavaScript, and nothing stands in while it loads.
  */
-const DeferredPool = dynamic(
+const DeferredPool = lazyComponent(
   () =>
     import("@repo/design-system/components/pool/pool.client").then(
       (module) => module.Pool

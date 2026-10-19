@@ -19,14 +19,14 @@ import {
   SheetHeader as SheetHeaderPrimitive,
   SheetTitle,
 } from "@repo/design-system/components/ui/sheet";
-import dynamic from "next/dynamic";
+import { lazyComponent } from "@repo/design-system/lib/lazy";
 import { Activity, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useAi } from "@/components/ai/context";
 import { useViewer } from "@/lib/identity/client";
 
 /** The recent chats and their query load when the learner shows intent on the history button. */
-const SheetHistory = dynamic(
+const SheetHistory = lazyComponent(
   () =>
     import("@/components/ai/sheet/history").then(
       (module) => module.SheetHistory

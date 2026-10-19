@@ -2,7 +2,7 @@
 
 import type { Ref } from "@confect/core";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
-import dynamic from "next/dynamic";
+import { lazyComponent } from "@repo/design-system/lib/lazy";
 import { usePathname } from "next/navigation";
 import type { PropsWithChildren } from "react";
 import { readChatFailureKind } from "@/components/ai/chat/access";
@@ -11,7 +11,7 @@ import { useAnswerRetry } from "@/lib/convex/retry.client";
 // The failure card holds the sign-in chain, which only a signed-out visitor who
 // cannot read a chat needs. It loads when a card is needed, so the first
 // JavaScript of every chat route does not carry it.
-const ChatFailure = dynamic(
+const ChatFailure = lazyComponent(
   () =>
     import("@/components/ai/chat/failure").then((module) => module.ChatFailure),
   { loading: () => null, ssr: false }

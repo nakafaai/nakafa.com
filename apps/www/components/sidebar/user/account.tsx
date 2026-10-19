@@ -15,9 +15,9 @@ import {
   DropdownMenuSeparator,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { lazyComponent } from "@repo/design-system/lib/lazy";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { Effect, Result } from "effect";
-import dynamic from "next/dynamic";
 import { useTranslations } from "use-intl";
 import { clearAiDraftText } from "@/components/ai/store/draft";
 import { AnalyticsConsentMenuItem } from "@/components/analytics/consent/actions";
@@ -33,7 +33,7 @@ import { profileHref } from "@/lib/profile/href";
  * The account's schools, loaded when the menu opens: the list brings the school
  * contracts with it, which no page needs at first paint.
  */
-const SidebarSchoolMenuItems = dynamic(
+const SidebarSchoolMenuItems = lazyComponent(
   () =>
     import("@/components/sidebar/menu/schools").then(
       (module) => module.SidebarSchoolMenuItems

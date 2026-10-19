@@ -4,11 +4,11 @@ import { useMediaQuery } from "@mantine/hooks";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
-import dynamic from "next/dynamic";
+import { lazyComponent } from "@repo/design-system/lib/lazy";
 import { Suspense, useState } from "react";
 
 /** The toys of the pricing page. Their code loads only when the page reaches them. */
-const PricingToys = dynamic(() =>
+const PricingToys = lazyComponent(() =>
   import("@/components/marketing/about/pricing/toys.client").then(
     (module) => module.PricingToys
   )

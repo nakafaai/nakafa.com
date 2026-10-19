@@ -3,9 +3,9 @@
 import { useMutation } from "@confect/react";
 import posts from "@repo/backend/confect/_generated/refs/posts";
 import { DeferredLearnerText } from "@repo/design-system/components/markdown/learner.client";
+import { lazyComponent } from "@repo/design-system/lib/lazy";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Effect, HashSet } from "effect";
-import dynamic from "next/dynamic";
 import { useLocale } from "use-intl";
 import { MoreMenu } from "@/components/shared/more";
 import { formatShortAge } from "@/components/user/age";
@@ -33,7 +33,7 @@ import type { ListPost } from "@/components/user/posts/state";
 import { reportClientException } from "@/lib/analytics/client";
 
 /** The delete dialog loads when the learner opens the More menu of a post, before they can choose Delete. */
-const PostDeletion = dynamic(
+const PostDeletion = lazyComponent(
   () =>
     import("@/components/user/posts/delete").then(
       (module) => module.PostDeletion

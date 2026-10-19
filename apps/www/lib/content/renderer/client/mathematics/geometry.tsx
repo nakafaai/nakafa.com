@@ -1,10 +1,10 @@
 "use client";
 
-import dynamic from "next/dynamic";
+import { lazyComponent } from "@repo/design-system/lib/lazy";
 import { withHydrationBoundary } from "@/lib/content/renderer/client/boundary";
 
 export const Triangle = withHydrationBoundary(
-  dynamic(() =>
+  lazyComponent(() =>
     import("@repo/design-system/components/contents/mathematics/triangle").then(
       ({ Triangle }) => Triangle
     )
@@ -12,7 +12,7 @@ export const Triangle = withHydrationBoundary(
 );
 
 export const UnitCircle = withHydrationBoundary(
-  dynamic(() =>
+  lazyComponent(() =>
     import(
       "@repo/design-system/components/contents/mathematics/unit-circle"
     ).then(({ UnitCircle }) => UnitCircle)

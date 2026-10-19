@@ -1,7 +1,7 @@
 import { YoutubeIcon } from "@hugeicons/core-free-icons";
+import { Image } from "@repo/design-system/components/image";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { COMPANY_SOCIAL_PROFILES } from "@repo/seo/company-profiles";
-import Image from "next/image";
 import Link from "next/link";
 import { useTranslations } from "use-intl";
 

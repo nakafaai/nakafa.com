@@ -25,8 +25,8 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { getPowerPreference } from "@repo/design-system/lib/device";
+import { lazyComponent } from "@repo/design-system/lib/lazy";
 import { cn } from "cn";
-import dynamic from "next/dynamic";
 import {
   type ReactNode,
   useLayoutEffect,
@@ -250,7 +250,7 @@ function ThreeCanvasComponent({
   );
 }
 
-export const ThreeCanvas = dynamic(
+export const ThreeCanvas = lazyComponent(
   () => Promise.resolve(ThreeCanvasComponent),
   {
     ssr: false,

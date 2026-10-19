@@ -2,12 +2,12 @@
 
 import { ScenePlaceholder } from "@repo/design-system/components/three/placeholder";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
-import dynamic from "next/dynamic";
+import { lazyComponent } from "@repo/design-system/lib/lazy";
 import { useState } from "react";
 
 import type { MathSceneProps } from "@/lib/content/renderer/client/base/visual/render";
 
-const MathScene = dynamic(
+const MathScene = lazyComponent(
   () =>
     import("@/lib/content/renderer/client/base/visual/render").then(
       ({ MathScene: Scene }) => Scene

@@ -1,10 +1,10 @@
 "use client";
 
-import dynamic from "next/dynamic";
+import { lazyComponent } from "@repo/design-system/lib/lazy";
 import { withHydrationBoundary } from "@/lib/content/renderer/client/boundary";
 
 export const Inequality = withHydrationBoundary(
-  dynamic(() =>
+  lazyComponent(() =>
     import(
       "@repo/design-system/components/contents/mathematics/inequality"
     ).then(({ Inequality: Component }) => Component)
@@ -12,7 +12,7 @@ export const Inequality = withHydrationBoundary(
 );
 
 export const LineEquation = withHydrationBoundary(
-  dynamic(() =>
+  lazyComponent(() =>
     import(
       "@repo/design-system/components/contents/mathematics/line/equation"
     ).then(({ LineEquation: Component }) => Component)
@@ -20,7 +20,7 @@ export const LineEquation = withHydrationBoundary(
 );
 
 export const QuadraticEquationReadingRoomProblem = withHydrationBoundary(
-  dynamic(() =>
+  lazyComponent(() =>
     import(
       "@repo/design-system/components/contents/mathematics/quadratic/reading-room"
     ).then(({ ReadingRoomProblem }) => ReadingRoomProblem)

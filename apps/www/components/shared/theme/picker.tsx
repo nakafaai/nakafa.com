@@ -7,7 +7,7 @@ import {
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import dynamic from "next/dynamic";
+import { lazyComponent } from "@repo/design-system/lib/lazy";
 import { type ComponentProps, useState } from "react";
 import { useTranslations } from "use-intl";
 
@@ -15,7 +15,7 @@ import { useTranslations } from "use-intl";
  * Loads the theme list on first intent. It carries one icon for each theme,
  * which no page needs before a visitor reaches for the selector.
  */
-const ThemeMenuContent = dynamic(
+const ThemeMenuContent = lazyComponent(
   () =>
     import("@/components/shared/theme/menu").then(
       (module) => module.ThemeMenuContent

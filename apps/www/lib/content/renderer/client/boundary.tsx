@@ -6,7 +6,7 @@ import { Activity, type ComponentType } from "react";
  * Gives a lesson renderer whose code loads on demand its own hydration
  * boundary.
  *
- * `next/dynamic` renders through `React.lazy`, which suspends on its first
+ * `lazyComponent` renders through `React.lazy`, which suspends on its first
  * render even once its chunk has loaded. Without a boundary of its own, that
  * suspension holds the hydration of the whole lesson, and a press that lands
  * meanwhile cannot hydrate it synchronously: React client-renders the lesson

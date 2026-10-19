@@ -251,7 +251,7 @@ describe("post-auth admission", () => {
     "/\\evil.example/search",
     "/search\nmalformed",
     "/api/internal",
-    "/_next/static/chunk.js",
+    "/assets/index-chunk.js",
     `/${"a".repeat(4096)}`,
   ])("rejects unsafe intent %s", (source) => {
     expect(resolvePostAuthIntent(source)).toEqual({

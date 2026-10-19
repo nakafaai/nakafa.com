@@ -1,10 +1,10 @@
 "use client";
 
-import dynamic from "next/dynamic";
+import { lazyComponent } from "@repo/design-system/lib/lazy";
 import { withHydrationBoundary } from "@/lib/content/renderer/client/boundary";
 
 export const LineEquation = withHydrationBoundary(
-  dynamic(() =>
+  lazyComponent(() =>
     import(
       "@repo/design-system/components/contents/mathematics/line/equation"
     ).then(({ LineEquation: Component }) => Component)
@@ -12,7 +12,7 @@ export const LineEquation = withHydrationBoundary(
 );
 
 export const NumberLine = withHydrationBoundary(
-  dynamic(() =>
+  lazyComponent(() =>
     import(
       "@repo/design-system/components/contents/mathematics/number-line"
     ).then(({ NumberLine: Component }) => Component)
@@ -20,7 +20,7 @@ export const NumberLine = withHydrationBoundary(
 );
 
 export const HistogramChart = withHydrationBoundary(
-  dynamic(() =>
+  lazyComponent(() =>
     import(
       "@repo/design-system/components/contents/mathematics/bar-chart"
     ).then(({ HistogramChart }) => HistogramChart)

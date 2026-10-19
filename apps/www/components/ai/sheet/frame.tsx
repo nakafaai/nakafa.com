@@ -3,9 +3,9 @@
 import nina from "@repo/backend/confect/_generated/refs/nina";
 import { Sheet, SheetContent } from "@repo/design-system/components/ui/sheet";
 import { useResizable } from "@repo/design-system/hooks/use-resizable";
+import { lazyComponent } from "@repo/design-system/lib/lazy";
 import { cn } from "cn";
 import { Array as Arr, Option } from "effect";
-import dynamic from "next/dynamic";
 import { Activity, useRef, useState } from "react";
 import { useTranslations } from "use-intl";
 import { readChatArgs } from "@/components/ai/chat/access";
@@ -16,12 +16,12 @@ import { Authenticated, Unauthenticated } from "@/components/auth/gate";
 const MIN_WIDTH = 384;
 const MAX_WIDTH = 672;
 
-const SheetNew = dynamic(
+const SheetNew = lazyComponent(
   () => import("@/components/ai/sheet/new").then((module) => module.SheetNew),
   { loading: () => null, ssr: false }
 );
 
-const SheetConversation = dynamic(
+const SheetConversation = lazyComponent(
   () =>
     import("@/components/ai/sheet/conversation").then(
       (module) => module.SheetConversation
@@ -32,7 +32,7 @@ const SheetConversation = dynamic(
 // The boundary holds the failure card, whose sign-in chain only a signed-out
 // visitor who cannot read a chat needs. It loads with the body, so the shell's
 // first JavaScript does not carry it on every page.
-const ChatBoundary = dynamic(
+const ChatBoundary = lazyComponent(
   () =>
     import("@/components/ai/chat/boundary").then(
       (module) => module.ChatBoundary

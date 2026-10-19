@@ -5,8 +5,8 @@ import { Calendar03Icon } from "@hugeicons/core-free-icons";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { lazyComponent } from "@repo/design-system/lib/lazy";
 import { Array as Arr, DateTime, Effect, Option } from "effect";
-import dynamic from "next/dynamic";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
 import {
@@ -20,7 +20,7 @@ import { nextQuarter } from "@/components/tenant/exams/time";
  * The dialog that schedules a sitting. It loads on the first opening, so the editor's first page
  * does not carry the scheduling code.
  */
-const ScheduleSitting = dynamic(
+const ScheduleSitting = lazyComponent(
   () =>
     import("@/components/tenant/exams/sitting").then(
       (module) => module.ScheduleSitting

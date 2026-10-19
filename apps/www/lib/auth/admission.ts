@@ -38,9 +38,10 @@ function isEntryPath(pathname: string) {
 /** Returns whether a pathname belongs to framework or non-page routing. */
 function isReservedPath(pathname: string) {
   return (
-    pathname === "/_next" ||
-    pathname.startsWith("/_next/") ||
-    pathname === "/_not-found" ||
+    pathname === "/assets" ||
+    pathname.startsWith("/assets/") ||
+    pathname === "/_serverFn" ||
+    pathname.startsWith("/_serverFn/") ||
     pathname === "/api" ||
     pathname.startsWith("/api/")
   );

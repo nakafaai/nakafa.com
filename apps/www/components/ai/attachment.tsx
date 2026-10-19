@@ -7,6 +7,7 @@ import {
   FileIcon,
 } from "@hugeicons/core-free-icons";
 import nina from "@repo/backend/confect/_generated/refs/nina";
+import { Image } from "@repo/design-system/components/image";
 import {
   Attachment,
   AttachmentAction,
@@ -29,7 +30,6 @@ import type {
 import type { FileUIPart } from "ai";
 import { cva, type VariantProps } from "class-variance-authority";
 import { Array as Arr, Effect, HashSet } from "effect";
-import Image from "next/image";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import { refusalReason, splitFileName } from "@/components/ai/attachments";
@@ -155,7 +155,6 @@ export function NinaAttachment({
             fill
             sizes={variant === "preview" ? "96px" : "192px"}
             src={file.url}
-            unoptimized
           />
         ) : (
           <NinaFileMedia uploading={state === "uploading"} />

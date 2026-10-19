@@ -7,7 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
-import dynamic from "next/dynamic";
+import { lazyComponent } from "@repo/design-system/lib/lazy";
 import { useTranslations } from "use-intl";
 import {
   ConsentActions,
@@ -41,7 +41,7 @@ const HIDE_PROMPT_WITHOUT_SCRIPTS = `[${PROMPT_ATTRIBUTE}]{display:none}`;
  * The preferences dialog ships as its own chunk. Its footer control warms it on
  * hover, focus or press, so the root layout never carries the dialog's code.
  */
-const ConsentPreferences = dynamic(() =>
+const ConsentPreferences = lazyComponent(() =>
   import("@/components/analytics/consent/preferences").then(
     (module) => module.ConsentPreferences
   )

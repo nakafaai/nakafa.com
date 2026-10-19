@@ -1,10 +1,10 @@
 "use client";
 
-import dynamic from "next/dynamic";
+import { lazyComponent } from "@repo/design-system/lib/lazy";
 import { withHydrationBoundary } from "@/lib/content/renderer/client/boundary";
 
 export const MermaidMdx = withHydrationBoundary(
-  dynamic(() =>
+  lazyComponent(() =>
     import("@repo/design-system/components/markdown/mermaid").then(
       ({ MermaidMdx: Component }) => Component
     )
@@ -12,7 +12,7 @@ export const MermaidMdx = withHydrationBoundary(
 );
 
 export const Youtube = withHydrationBoundary(
-  dynamic(() =>
+  lazyComponent(() =>
     import("@repo/design-system/components/markdown/youtube").then(
       ({ Youtube: Component }) => Component
     )

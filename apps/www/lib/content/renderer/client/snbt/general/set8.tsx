@@ -1,10 +1,10 @@
 "use client";
 
-import dynamic from "next/dynamic";
+import { lazyComponent } from "@repo/design-system/lib/lazy";
 import { withHydrationBoundary } from "@/lib/content/renderer/client/boundary";
 
 export const Set8Question17ProfitChart = withHydrationBoundary(
-  dynamic(() =>
+  lazyComponent(() =>
     import(
       "@repo/design-system/components/contents/snbt/general/set-8/question-17"
     ).then(({ ProfitChart }) => ProfitChart)
@@ -12,7 +12,7 @@ export const Set8Question17ProfitChart = withHydrationBoundary(
 );
 
 export const Set8Question1SalesChart = withHydrationBoundary(
-  dynamic(() =>
+  lazyComponent(() =>
     import(
       "@repo/design-system/components/contents/snbt/general/set-8/question-1"
     ).then(({ SalesChart }) => SalesChart)

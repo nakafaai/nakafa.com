@@ -1,10 +1,10 @@
 "use client";
 
-import dynamic from "next/dynamic";
+import { lazyComponent } from "@repo/design-system/lib/lazy";
 import { withHydrationBoundary } from "@/lib/content/renderer/client/boundary";
 
 export const PorkBarrelBudgetChart = withHydrationBoundary(
-  dynamic(() =>
+  lazyComponent(() =>
     import(
       "@repo/design-system/components/contents/politics/pork-barrel/budget"
     ).then(({ BudgetChart }) => BudgetChart)
@@ -12,7 +12,7 @@ export const PorkBarrelBudgetChart = withHydrationBoundary(
 );
 
 export const PorkBarrelFundChart = withHydrationBoundary(
-  dynamic(() =>
+  lazyComponent(() =>
     import(
       "@repo/design-system/components/contents/politics/pork-barrel/fund"
     ).then(({ FundChart }) => FundChart)

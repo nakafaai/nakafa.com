@@ -1,3 +1,4 @@
+import { Image } from "@repo/design-system/components/image";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Card,
@@ -8,7 +9,6 @@ import {
 import { Tile, TileIcon } from "@repo/design-system/components/ui/tile";
 import type { TileLook } from "@repo/design-system/lib/look";
 import { Predicate } from "effect";
-import Image from "next/image";
 import type { ReactElement, ReactNode } from "react";
 
 interface CatalogCardProps {

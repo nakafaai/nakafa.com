@@ -6,7 +6,7 @@ import {
   type PublicAppLocale,
   routing,
 } from "@repo/internationalization/src/routing";
-import { notFound } from "next/navigation";
+import { notFound } from "@tanstack/react-router";
 import { hasLocale } from "use-intl";
 import { hasPreviewConfig } from "@/lib/content/preview/config";
 
@@ -19,7 +19,7 @@ export function getActiveLocaleOrThrow(locale: string): PublicAppLocale {
     return locale;
   }
 
-  notFound();
+  throw notFound();
 }
 
 /**
@@ -38,5 +38,5 @@ export function getLocaleOrThrow(locale: string): AppLocaleCode {
     return locale;
   }
 
-  notFound();
+  throw notFound();
 }

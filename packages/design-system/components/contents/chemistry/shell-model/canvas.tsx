@@ -9,11 +9,11 @@ import {
 import { SceneSpinner } from "@repo/design-system/components/three/placeholder";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
 import { VisualCardBody } from "@repo/design-system/components/visual/card";
-import dynamic from "next/dynamic";
+import { lazyComponent } from "@repo/design-system/lib/lazy";
 import { useTheme } from "next-themes";
 
 /** The model loads once the lab asks for it, and its frame holds the place meanwhile. */
-const ShellModelStage = dynamic(
+const ShellModelStage = lazyComponent(
   () =>
     import(
       "@repo/design-system/components/contents/chemistry/shell-model/stage"

@@ -25,8 +25,8 @@ import {
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import type { NarrowCameraPose } from "@repo/design-system/lib/geometry/camera";
+import { lazyComponent } from "@repo/design-system/lib/lazy";
 import { Array as Arr } from "effect";
-import dynamic from "next/dynamic";
 import { useTheme } from "next-themes";
 import type { ComponentType, ReactNode } from "react";
 import { useMemo, useState } from "react";
@@ -34,7 +34,7 @@ import { useTranslations } from "use-intl";
 import { useStore } from "zustand";
 
 /** The stage loads once the lab asks for it, and its frame holds the place meanwhile. */
-const BiologyStage = dynamic(
+const BiologyStage = lazyComponent(
   () =>
     import("@repo/design-system/components/contents/biology/stage").then(
       ({ BiologyStage }) => BiologyStage

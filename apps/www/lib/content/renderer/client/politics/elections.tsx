@@ -1,10 +1,10 @@
 "use client";
 
-import dynamic from "next/dynamic";
+import { lazyComponent } from "@repo/design-system/lib/lazy";
 import { withHydrationBoundary } from "@/lib/content/renderer/client/boundary";
 
 export const KimPlusElectabilityChart = withHydrationBoundary(
-  dynamic(() =>
+  lazyComponent(() =>
     import(
       "@repo/design-system/components/contents/politics/kim-plus/chart"
     ).then(({ ElectabilityChart }) => ElectabilityChart)
@@ -12,7 +12,7 @@ export const KimPlusElectabilityChart = withHydrationBoundary(
 );
 
 export const PorkBarrelElectabilityChart = withHydrationBoundary(
-  dynamic(() =>
+  lazyComponent(() =>
     import(
       "@repo/design-system/components/contents/politics/pork-barrel/electability"
     ).then(({ ElectabilityChart }) => ElectabilityChart)

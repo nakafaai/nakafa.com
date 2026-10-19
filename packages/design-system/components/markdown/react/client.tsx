@@ -12,18 +12,18 @@ import {
   codeFencePreVariants,
 } from "@repo/design-system/components/markdown/react/variants";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
+import { lazyComponent } from "@repo/design-system/lib/lazy";
 import { cn } from "cn";
-import dynamic from "next/dynamic";
 import { type ComponentProps, Suspense } from "react";
 import { useTranslations } from "use-intl";
 
-const LazyMarkdownCodeBlock = dynamic(() =>
+const LazyMarkdownCodeBlock = lazyComponent(() =>
   import("@repo/design-system/components/markdown/react/block").then(
     ({ MarkdownCodeBlock }) => MarkdownCodeBlock
   )
 );
 
-const LazyMermaidMdx = dynamic(() =>
+const LazyMermaidMdx = lazyComponent(() =>
   import("@repo/design-system/components/markdown/mermaid").then(
     ({ MermaidMdx }) => MermaidMdx
   )
