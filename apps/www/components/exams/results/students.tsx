@@ -190,6 +190,7 @@ export function StudentsTable() {
     <>
       {filters}
       <StudentRowsSection
+        exhausted={PaginatedQueryResult.isExhausted(students)}
         failed={PaginatedQueryResult.isFailure(students)}
         filtering={status !== "all" || search.trim() !== ""}
         loadMore={
@@ -206,15 +207,19 @@ export function StudentsTable() {
 
 /**
  * The rows of the students' table below its filters: the failure of its read above the rows it holds,
- * the rows that match the search, and the empty state once the list is exhausted with no match.
+ * the rows that match the search, and the empty state once the list is exhausted with no match, or
+ * with no student at all. A list that still loads, or that failed, shows no empty state.
  */
 function StudentRowsSection({
+  exhausted,
   failed,
   filtering,
   loadMore,
   rows: students,
   search,
 }: {
+  /** Whether the list has no more pages, so an empty table is the end of the list and not a wait. */
+  exhausted: boolean;
   failed: boolean;
   filtering: boolean;
   /** Loads the next page of students, or none when the list has no more pages. */
@@ -223,33 +228,29 @@ function StudentRowsSection({
   search: string;
 }) {
   const t = useTranslations("Exams");
-  if (students.length === 0 && !filtering) {
-    return failed ? (
-      <DataFailure onRetry={reloadPage} />
-    ) : (
-      <TableEmpty
-        act="reading"
-        description={t("results-empty")}
-        title={t("results-empty-title")}
-      />
-    );
-  }
   const rows = Arr.filter(students, (row) => matchesSearch(row.name, search));
   // A page that holds no match is not the end of the search while later pages still load, so
-  // the no-match state waits for the last page, and the table shows nothing in the meantime.
+  // the empty state waits for the last page, and the table shows nothing in the meantime.
   const more =
     loadMore === null ? null : <Intersection onIntersect={loadMore} />;
+  const empty = filtering ? (
+    <TableEmpty
+      act="reading"
+      description={t("filter-empty")}
+      title={t("results-no-match")}
+    />
+  ) : (
+    <TableEmpty
+      act="reading"
+      description={t("results-empty")}
+      title={t("results-empty-title")}
+    />
+  );
   return (
     <>
       {failed ? <DataFailure onRetry={reloadPage} /> : null}
       {rows.length > 0 ? <StudentTable rows={rows} /> : null}
-      {rows.length === 0 && more === null ? (
-        <TableEmpty
-          act="reading"
-          description={t("filter-empty")}
-          title={t("results-no-match")}
-        />
-      ) : null}
+      {exhausted && rows.length === 0 ? empty : null}
       {more}
     </>
   );
