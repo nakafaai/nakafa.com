@@ -12,7 +12,11 @@ const withPicture = (asset: string) => ({
 describe("pictureIdsOfDocuments", () => {
   it("names the images of every document of a question once each, in reading order", () => {
     expect(
-      pictureIdsOfDocuments([withPicture("first"), withPicture("second"), withPicture("first")])
+      pictureIdsOfDocuments([
+        withPicture("first"),
+        withPicture("second"),
+        withPicture("first"),
+      ])
     ).toEqual(["first", "second"]);
   });
 

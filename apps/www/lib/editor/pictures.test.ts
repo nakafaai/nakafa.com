@@ -1,7 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
-import { MutableList } from "effect";
 import { EditorState } from "@tiptap/pm/state";
 import { EditorView } from "@tiptap/pm/view";
+import { MutableList } from "effect";
 import { assessmentSchema } from "@/lib/editor/assessment";
 import {
   assetIdsOf,
@@ -11,7 +11,12 @@ import {
 
 /** One image node of the assessment schema, which names an asset. */
 const picture = (asset: unknown) =>
-  assessmentSchema.nodes.image.create({ alt: "Segitiga", asset, height: 1, width: 1 });
+  assessmentSchema.nodes.image.create({
+    alt: "Segitiga",
+    asset,
+    height: 1,
+    width: 1,
+  });
 
 describe("assetIdsOf", () => {
   it("reads the images of a document in reading order, once each, and leaves out a name that is no ID", () => {

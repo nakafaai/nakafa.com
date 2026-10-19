@@ -12,8 +12,7 @@ const ASSET = Schema.decodeUnknownSync(Id("examAssets"))("asset-1");
 const registered = () => Promise.resolve(Result.succeed({ id: ASSET }));
 
 /** A PNG file the teacher chose, whose bytes the browser decodes. */
-const chosen = () =>
-  new File(["png"], "segitiga.png", { type: "image/png" });
+const chosen = () => new File(["png"], "segitiga.png", { type: "image/png" });
 
 /** The address that `exams.assets.uploadUrl` answers with. */
 const requestUrl = () =>
