@@ -132,7 +132,7 @@ test("a teacher creates an exam, adds questions, writes one, and finds it all wh
       reopened.getByRole("textbox", {
         name: `Question 1, option ${option.letter}`,
       })
-    ).toHaveValue(option.text, { timeout: readinessTimeoutMilliseconds });
+    ).toHaveText(option.text, { timeout: readinessTimeoutMilliseconds });
   }
   await expect(
     reopened.getByRole("button", {
