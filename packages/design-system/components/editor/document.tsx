@@ -3,6 +3,7 @@
 import { useCallbackRef } from "@mantine/hooks";
 import { editableState } from "@repo/design-system/components/editor/editable";
 import {
+  editorContent,
   editorDocument,
   editorPlaceholder,
 } from "@repo/design-system/components/editor/frame";
@@ -37,6 +38,8 @@ interface DocumentEditorProps {
   onFocus?: (editor: Editor) => void;
   /** The hint shown while the document is empty. */
   placeholder: string;
+  /** The room the text takes at least, so a short text such as an option takes one line. */
+  size?: "line" | "page";
 }
 
 /**
@@ -56,6 +59,7 @@ export function DocumentEditor({
   onEditor,
   onFocus,
   placeholder,
+  size = "page",
 }: DocumentEditorProps) {
   const change = useCallbackRef(onChange);
   const ready = useCallbackRef(onEditor);
@@ -84,7 +88,7 @@ export function DocumentEditor({
   return (
     <EditorContext value={context}>
       {children}
-      <EditorContent className="min-h-32" editor={editor} />
+      <EditorContent className={editorContent({ size })} editor={editor} />
     </EditorContext>
   );
 }

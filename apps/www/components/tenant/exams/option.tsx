@@ -122,6 +122,7 @@ export function OptionRow({
             next.setEditable(!locked);
           }}
           placeholder={t("option-placeholder")}
+          size="line"
         />
       </PaperOption>
       <div className="flex items-center gap-1">

@@ -41,6 +41,8 @@ interface ExamDocumentProps {
   readonly onEditor: (editor: DocumentEditorInstance) => void;
   /** The hint shown while the text is empty. */
   readonly placeholder: string;
+  /** The room the text takes at least: an option takes one line, and a prompt a page of writing. */
+  readonly size?: "line" | "page";
 }
 
 /**
@@ -56,6 +58,7 @@ export function ExamDocument({
   onChange,
   onEditor,
   placeholder,
+  size = "page",
 }: ExamDocumentProps) {
   const { exam, slug } = useExam();
   const labels = useDocumentLabels();
@@ -123,6 +126,7 @@ export function ExamDocument({
           }}
           onFocus={activate}
           placeholder={placeholder}
+          size={size}
         />
       </PicturesProvider>
     </FormulaLabelsProvider>
