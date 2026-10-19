@@ -249,11 +249,15 @@ export function ExamPrompt({
 
   /**
    * Shows every change in the strip's thumbnail, then schedules a round for a change this
-   * editor made. The changes the server brought in schedule none.
+   * editor made. The changes the server brought in schedule none, and so does a change that
+   * edits no text, such as the editor taking its lock.
    */
   const change = (transaction: Transaction) => {
     show(prompt, transaction.doc);
-    if (transaction.getMeta("rebased") !== undefined) {
+    if (
+      !transaction.docChanged ||
+      transaction.getMeta("rebased") !== undefined
+    ) {
       return;
     }
     replaceWaiting(

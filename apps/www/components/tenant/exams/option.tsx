@@ -15,8 +15,9 @@ import { Effect, Option } from "effect";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import {
+  type OptionEdit,
   type OptionLabel,
-  optionLabelOf,
+  optionEditOf,
 } from "@/components/tenant/exams/answer";
 import { RICH_EXTENSIONS } from "@/components/tenant/exams/extensions";
 import { ExamDocument } from "@/components/tenant/exams/rich";
@@ -62,8 +63,9 @@ interface OptionRowProps {
  * One option of a question: its letter and its rich text framed as the player frames it, then the
  * teacher's controls to its right. The key toggle is solid and pressed for the key. Removing is
  * shown when the option may go, on hover or focus, and always on a touch screen. The text saves
- * after its quiet period, and a key change saves at once. Removing the option drops the pending save
- * of its text. An option the server has not saved yet is locked.
+ * after its quiet period once the teacher types in it, and a key change saves at once. A change
+ * that edits no text, such as the editor taking its lock, saves nothing. Removing the option drops
+ * the pending save of its text. An option the server has not saved yet is locked.
  */
 export function OptionRow({
   letter,
@@ -80,9 +82,23 @@ export function OptionRow({
   // The save calls the latest `onSave`, so a save after the quiet period uses the answers and the
   // revision of the render that is on screen when it runs.
   const save = useCallbackRef(onSave);
+  // The quiet save takes the edit the teacher made last: a label to save, or a refusal to report.
   const [saver] = useState(() =>
     Effect.runSync(
-      makeQuietSaver((run: () => void) => Effect.sync(run), OPTION_SAVE_QUIET)
+      makeQuietSaver(
+        (edit: OptionEdit) =>
+          Effect.sync(() => {
+            if (edit.kind === "refused") {
+              toast.error({
+                description: "action-error.description",
+                title: "action-error.title",
+              });
+              return;
+            }
+            save(edit.label);
+          }),
+        OPTION_SAVE_QUIET
+      )
     )
   );
 
@@ -97,8 +113,9 @@ export function OptionRow({
   };
 
   // The editor takes the lock of the option as it changes, not only when it opens.
+  // A lock is not an edit, so the editor emits no change for it, and no label is saved.
   useEffect(() => {
-    editor.current?.setEditable(!locked);
+    editor.current?.setEditable(!locked, false);
   }, [locked]);
 
   return (
@@ -107,23 +124,19 @@ export function OptionRow({
         <ExamDocument
           extensions={OPTION_EXTENSIONS}
           label={t("option-of", { letter, number })}
-          onChange={() => {
-            Effect.runFork(
-              saver.touch(() => {
-                const current = editor.current;
-                if (current === null) {
-                  return;
-                }
-                Option.match(optionLabelOf(current.getJSON()), {
-                  onNone: () =>
-                    toast.error({
-                      description: "action-error.description",
-                      title: "action-error.title",
-                    }),
-                  onSome: (next) => save(next),
-                });
-              })
-            );
+          onChange={(transaction) => {
+            const current = editor.current;
+            if (current === null) {
+              return;
+            }
+            const edit = optionEditOf({
+              docChanged: transaction.docChanged,
+              json: current.getJSON(),
+            });
+            if (Option.isNone(edit)) {
+              return;
+            }
+            Effect.runFork(saver.touch(edit.value));
           }}
           onEditor={(next) => {
             editor.current = next;
@@ -131,7 +144,7 @@ export function OptionRow({
               Node.fromJSON(assessmentSchema, label).toJSON(),
               { emitUpdate: false }
             );
-            next.setEditable(!locked);
+            next.setEditable(!locked, false);
           }}
           placeholder={t("option-placeholder")}
           size="line"

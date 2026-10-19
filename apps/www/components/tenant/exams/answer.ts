@@ -40,6 +40,42 @@ export const optionLetter = (index: number): string =>
 export const optionLabelOf = (json: unknown): Option.Option<OptionLabel> =>
   Schema.decodeUnknownOption(ContentDocumentSchema)(json);
 
+/**
+ * What a change of an option's text asks for: the label the teacher typed, which is saved, or a text
+ * the contract refuses, which is reported.
+ */
+const OptionEditSchema = Schema.Union([
+  Schema.Struct({ kind: Schema.Literal("refused") }),
+  Schema.Struct({
+    kind: Schema.Literal("typed"),
+    label: ContentDocumentSchema,
+  }),
+]);
+
+/** What a change of an option's text asks for, as `OptionEditSchema` describes it. */
+export type OptionEdit = typeof OptionEditSchema.Type;
+
+/**
+ * The edit that one change of an option's editor makes, or none when the change edits no text. Tiptap
+ * emits an update when the editor's lock is set, and that update edits nothing, so it neither saves
+ * the label nor reports a failure. A change of the text is typed when the contract takes its label,
+ * and refused when it does not.
+ */
+export const optionEditOf = (change: {
+  readonly docChanged: boolean;
+  readonly json: unknown;
+}): Option.Option<OptionEdit> => {
+  if (!change.docChanged) {
+    return Option.none();
+  }
+  return Option.some(
+    Option.match(optionLabelOf(change.json), {
+      onNone: (): OptionEdit => ({ kind: "refused" }),
+      onSome: (label): OptionEdit => ({ kind: "typed", label }),
+    })
+  );
+};
+
 /** The label of an empty option: one empty paragraph, which the contract allows in an option. */
 export const emptyLabel = (): OptionLabel => ({
   content: [{ type: "paragraph" }],

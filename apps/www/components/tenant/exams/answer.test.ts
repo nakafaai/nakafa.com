@@ -9,6 +9,7 @@ import {
   markedKey,
   markedOption,
   type OptionLabel,
+  optionEditOf,
   optionLabelOf,
   optionLetter,
   withOptionAdded,
@@ -80,6 +81,34 @@ describe("optionLabelOf and emptyLabel", () => {
       type: "doc",
     });
     expect(plainText(emptyLabel())).toBe("");
+  });
+});
+
+describe("optionEditOf", () => {
+  const refused = { content: [{ type: "unknownBlock" }], type: "doc" };
+
+  it("reads no edit from a change that edits no text, such as the editor's lock", () => {
+    expect(optionEditOf({ docChanged: false, json: textOf("Paris") })).toEqual(
+      Option.none()
+    );
+  });
+
+  it("reads no refusal from a change that edits no text, even when its document is refused", () => {
+    expect(optionEditOf({ docChanged: false, json: refused })).toEqual(
+      Option.none()
+    );
+  });
+
+  it("reads the label the teacher typed when the contract takes it", () => {
+    expect(optionEditOf({ docChanged: true, json: textOf("Paris") })).toEqual(
+      Option.some({ kind: "typed", label: textOf("Paris") })
+    );
+  });
+
+  it("reads a refusal when the typed text is one the contract refuses", () => {
+    expect(optionEditOf({ docChanged: true, json: refused })).toEqual(
+      Option.some({ kind: "refused" })
+    );
   });
 });
 
