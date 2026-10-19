@@ -25,7 +25,8 @@ import { type ReactNode, useLayoutEffect } from "react";
 
 /**
  * The account menu every sidebar shares: the account button, the account at the
- * top of the menu and sign-out at its bottom. Each sidebar gives the name and the
+ * top of the menu (its name over its email, or over its role in a school) and
+ * sign-out at its bottom. Each sidebar gives the name and the
  * second line of its button, the account it shows, and its own sign-out, and
  * composes its own sections between them.
  */
@@ -37,12 +38,10 @@ export function AccountMenu({
   onSignOut,
 }: {
   account: {
-    /** The account's email, shown under its name at the top of the menu. A school's account has none. */
+    /** The account's email, shown under its name at the top of the menu. A school's account has none, and its role shows there instead. */
     email?: string | undefined;
     /** The animal that draws the account when it shows no photo. */
     mascot: typeof Mascot.Type;
-    /** The account's name, shown at the top of the menu. */
-    name: string;
     /** The photo the account shows, or none. */
     photo?: string | undefined;
   };
@@ -90,13 +89,13 @@ export function AccountMenu({
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <PersonAvatar mascot={account.mascot} photo={account.photo} />
-                <div className="grid flex-1 text-left text-sm leading-tight">
+                <div className="grid min-w-0 flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-medium text-foreground">
-                    {account.name}
+                    {name}
                   </span>
-                  {account.email === undefined ? null : (
+                  {(account.email ?? description) === undefined ? null : (
                     <span className="truncate text-muted-foreground text-xs">
-                      {account.email}
+                      {account.email ?? description}
                     </span>
                   )}
                 </div>

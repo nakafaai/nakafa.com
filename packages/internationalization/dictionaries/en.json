@@ -25,7 +25,6 @@
     "tile-minutes-left": "{count, plural, one {# minute left} other {# minutes left}}",
     "next-exam-footer": "Students see an exam only once it is scheduled.",
     "next-exam-action": "Open exams",
-    "language": "Language",
     "role": {
       "admin": "Admin",
       "auditor": "Auditor",
