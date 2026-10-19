@@ -2,7 +2,7 @@
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { Option, Schema } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 import { getToken } from "@/lib/auth/server";
 import { readProfile, readViewer } from "@/lib/tenant/read";
 import {
@@ -43,7 +43,7 @@ describe("readProfile", () => {
     const profile = await readProfile(SLUG);
 
     expect(Option.getOrUndefined(profile)?.name).toBe("Harapan");
-    expect(queriesOf().map((query) => query.path)).toEqual([PROFILE]);
+    expect(Arr.map(queriesOf(), (query) => query.path)).toEqual([PROFILE]);
   });
 
   it("reads no profile for a school that does not exist", async () => {
@@ -76,7 +76,7 @@ describe("readViewer", () => {
       _tag: "member",
       viewer: { person: { name: "Ayu" } },
     });
-    expect(queriesOf().map((query) => query.path)).toEqual([VIEWER]);
+    expect(Arr.map(queriesOf(), (query) => query.path)).toEqual([VIEWER]);
   });
 
   it("answers denied for a viewer whom the school does not admit", async () => {

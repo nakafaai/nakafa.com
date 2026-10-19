@@ -1,10 +1,6 @@
 import { getConvexFunctionName } from "@confect/core/Ref";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
-import {
-  AccountUnavailable,
-  SessionRequired,
-} from "@repo/backend/confect/auth/spec";
 import { NotMember } from "@repo/backend/confect/middleware/member.spec";
 import { TenantNotFound } from "@repo/backend/confect/tenancy/errors";
 import {
@@ -47,19 +43,6 @@ export const NOT_MEMBER = Schema.encodeSync(NotMember)(new NotMember());
 export const ACCESS_DENIED = Schema.encodeSync(AccessDenied)(
   new AccessDenied({ action: "tenant.view", reason: "role" })
 );
-export const ACCOUNT_UNAVAILABLE = Schema.encodeSync(AccountUnavailable)(
-  new AccountUnavailable({
-    code: "UNAUTHORIZED",
-    message: "User not found.",
-  })
-);
-export const SESSION_REQUIRED = Schema.encodeSync(SessionRequired)(
-  new SessionRequired({
-    code: "UNAUTHENTICATED",
-    message: "Unauthenticated",
-  })
-);
-
 /** One answer of the fake backend. It is a function, so a request can wait or fail. */
 type Route = () => Promise<Response>;
 
