@@ -1,6 +1,9 @@
 import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import { afterEach, describe, expect, it } from "@effect/vitest";
-import { createAcceptanceCard } from "@repo/backend/scripts/content/acceptance/card";
+import {
+  cardMode,
+  createAcceptanceCard,
+} from "@repo/backend/scripts/content/acceptance/card";
 import type { runAcceptanceCommand } from "@repo/backend/scripts/content/acceptance/command";
 import { CardFixture } from "@repo/backend/scripts/content/acceptance/fixture";
 import {
@@ -98,5 +101,52 @@ describe("acceptance card", () => {
       expect(Exit.isFailure(exit)).toBe(true);
       expect(mocks.command).not.toHaveBeenCalled();
     }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+  );
+
+  it.effect(
+    "seeds the card the card mode names and writes it to the file it names",
+    () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const root = yield* fs.makeTempDirectoryScoped({
+          prefix: "acceptance-card-test-",
+        });
+        runtimeIn(root);
+        mocks.command.mockImplementation((spec: CommandSpec) =>
+          fs.writeFileString(
+            spec.stdoutPath,
+            '{"code":"ABCDE-FGHJK","loginName":"siswa.uji"}'
+          )
+        );
+
+        yield* cardMode.run(root, [
+          "acc-1234abcd",
+          `${root}/mode.json`,
+          "ignored",
+        ]);
+
+        const seeded = yield* fs
+          .readFileString(`${root}/mode.json`)
+          .pipe(Effect.flatMap(Schema.decodeEffect(CardFixture)));
+        expect(seeded).toEqual({
+          code: "ABCDE-FGHJK",
+          loginName: "siswa.uji",
+        });
+      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+  );
+
+  it.effect(
+    "refuses the card mode without its card file before any operation",
+    () =>
+      Effect.gen(function* () {
+        expect(
+          yield* cardMode.run("/root", ["acc-1234abcd"]).pipe(Effect.flip)
+        ).toMatchObject({
+          _tag: "AcceptanceRuntimeError",
+          message: "Usage: acceptance card <school-slug> <card-file>",
+        });
+        expect(mocks.read).not.toHaveBeenCalled();
+        expect(mocks.command).not.toHaveBeenCalled();
+      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
   );
 });

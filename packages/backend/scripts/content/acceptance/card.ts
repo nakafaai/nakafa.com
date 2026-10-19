@@ -2,6 +2,10 @@ import { runLocalConvex } from "@repo/backend/scripts/content/acceptance/convex"
 import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
 import { CardFixture } from "@repo/backend/scripts/content/acceptance/fixture";
 import { readLocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
+import {
+  type AcceptanceMode,
+  decodeModeArguments,
+} from "@repo/backend/scripts/content/acceptance/mode";
 import { JsonTextSchema } from "@repo/utilities/json";
 import { Effect, FileSystem, Schema } from "effect";
 
@@ -33,3 +37,28 @@ export const createAcceptanceCard = Effect.fn("contentAcceptance.card")(
     yield* fs.writeFileString(output, fixture, { flag: "wx", mode: 0o600 });
   }
 );
+
+/** The usage of the card mode: the school of the new student, then the file for the login card. */
+const USAGE = "card <school-slug> <card-file>";
+const CardArguments = Schema.Tuple([Schema.String, Schema.String]);
+
+/**
+ * The card mode of the acceptance command line: seeds one new student of the
+ * school that the command names, with a login card, and writes the login name and
+ * the plain code to the file that the command names.
+ */
+export const cardMode = {
+  mode: "card",
+  usage: USAGE,
+  run: Effect.fn("contentAcceptance.runCard")(function* (
+    root: string,
+    args: readonly string[]
+  ) {
+    const [slug, output] = yield* decodeModeArguments(
+      USAGE,
+      CardArguments,
+      args
+    );
+    return yield* createAcceptanceCard(root, slug, output);
+  }),
+} satisfies AcceptanceMode;

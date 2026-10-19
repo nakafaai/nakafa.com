@@ -4,6 +4,7 @@ import type { runAcceptanceCommand } from "@repo/backend/scripts/content/accepta
 import { SessionCookie } from "@repo/backend/scripts/content/acceptance/fixture";
 import {
   createAcceptanceInvite,
+  inviteMode,
   waitForInboxRow,
 } from "@repo/backend/scripts/content/acceptance/invite";
 import {
@@ -270,5 +271,45 @@ describe("acceptance invite", () => {
 
       expect(Exit.isFailure(exit)).toBe(true);
     })
+  );
+
+  it.effect(
+    "invites the learner the invite mode names and writes the cookie to the file it names",
+    () =>
+      Effect.gen(function* () {
+        const { fs, root } = yield* fixture;
+        answerCommands(APP_USERS);
+
+        yield* inviteMode.run(root, [
+          SLUG,
+          ADDRESS,
+          `${root}/mode.json`,
+          "ignored",
+        ]);
+
+        const cookie = yield* fs
+          .readFileString(`${root}/mode.json`)
+          .pipe(Effect.flatMap(Schema.decodeEffect(SessionCookie)));
+        expect(cookie.name).toBe("better-auth.session_token");
+      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+  );
+
+  it.effect(
+    "refuses the invite mode without its address and cookie file before any operation",
+    () =>
+      Effect.gen(function* () {
+        const { root } = yield* fixture;
+        const specs = answerCommands(APP_USERS);
+
+        expect(
+          yield* inviteMode.run(root, [SLUG, ADDRESS]).pipe(Effect.flip)
+        ).toMatchObject({
+          _tag: "AcceptanceRuntimeError",
+          message:
+            "Usage: acceptance invite <school-slug> <learner-address> <cookie-file>",
+        });
+        expect(MutableList.toArray(specs)).toEqual([]);
+        expect(mocks.read).not.toHaveBeenCalled();
+      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
   );
 });
