@@ -4,6 +4,8 @@ import type { GenericId } from "@confect/core";
 import { CancelCircleIcon, Key01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import NavigationLink from "@repo/design-system/components/ui/navigation-link";
+import { buttonVariants } from "@repo/design-system/lib/button";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import {
@@ -47,6 +49,14 @@ export function SittingHeader({
           {value.token}
         </span>
       )}
+      {value.sitting.state === "closed" ? (
+        <NavigationLink
+          className={buttonVariants({ variant: "outline" })}
+          href={`/exams/${examId}/sittings/${value.sitting.id}/results`}
+        >
+          {t("results-title")}
+        </NavigationLink>
+      ) : null}
       {mayProctor ? (
         <>
           <Button

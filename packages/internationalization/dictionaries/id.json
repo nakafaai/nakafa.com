@@ -125,7 +125,36 @@
     "add-question": "Tambah soal",
     "copy": "Salin soal",
     "prompt-label": "Teks soal",
-    "prompt-placeholder": "Tulis soal di sini."
+    "prompt-placeholder": "Tulis soal di sini.",
+    "results-title": "Hasil",
+    "results-students": "Siswa",
+    "results-name": "Nama",
+    "results-status": "Status",
+    "results-score": "Skor",
+    "results-answered": "Dijawab",
+    "results-pending": "Menunggu",
+    "results-finished": "Selesai",
+    "results-empty-title": "Belum ada hasil",
+    "results-empty": "Hasil muncul di sini setelah siswa menyelesaikan sesi.",
+    "results-unavailable": "Kamu tidak dapat melihat hasil ini.",
+    "results-share": "{share}% benar",
+    "results-counted": "Berdasarkan {counted} jawaban.",
+    "results-incomplete": "Hanya {counted} jawaban pertama yang dihitung.",
+    "results-answers": "Jawaban",
+    "results-no-answers": "Belum ada siswa yang menjawab soal ini.",
+    "verdict-correct": "Benar",
+    "verdict-incorrect": "Salah",
+    "verdict-pending": "Menunggu penilaian",
+    "release-title": "Rilis hasil kepada siswa?",
+    "release-description": "Setiap siswa melihat skor dan jawabannya sendiri setelah kamu merilisnya.",
+    "release-action": "Rilis hasil",
+    "release-footer": "Siswa melihat hasilnya setelah kamu merilisnya.",
+    "released-footer": "Siswa sudah dapat melihat hasilnya.",
+    "student-results-title": "Hasilmu",
+    "student-score": "{points} dari {total} benar",
+    "student-results-footer": "Gurumu merilis hasil setelah sesi ditutup.",
+    "student-answers": "Jawabanmu",
+    "student-results-released": "Gurumu sudah merilis hasil ini."
   },
   "SchoolSettings": {
     "school": "Sekolah",
@@ -313,6 +342,11 @@
         "allowDevice": "Perangkat kedua diizinkan untuk percobaan ujian",
         "finish": "Percobaan ujian diselesaikan",
         "close": "Sesi ujian ditutup"
+      },
+      "exam": {
+        "results": {
+          "released": "Hasil ujian dirilis"
+        }
       },
       "tenant": {
         "provisioned": "Sekolah dibuka",

@@ -46,7 +46,7 @@ interface AttemptDialogProps {
 }
 
 /** The cancel and confirm buttons that close every dialog, in its one footer row. */
-function ConfirmActions({
+export function ConfirmActions({
   confirm,
   destructive = false,
   disabled = false,

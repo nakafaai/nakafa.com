@@ -125,7 +125,36 @@
     "add-question": "Frage hinzufügen",
     "copy": "Frage kopieren",
     "prompt-label": "Fragetext",
-    "prompt-placeholder": "Frage hier schreiben."
+    "prompt-placeholder": "Frage hier schreiben.",
+    "results-title": "Ergebnisse",
+    "results-students": "Lernende",
+    "results-name": "Name",
+    "results-status": "Status",
+    "results-score": "Punkte",
+    "results-answered": "Beantwortet",
+    "results-pending": "Offen",
+    "results-finished": "Abgegeben",
+    "results-empty-title": "Noch keine Ergebnisse",
+    "results-empty": "Ergebnisse erscheinen hier, sobald Lernende die Sitzung abgeben.",
+    "results-unavailable": "Du kannst diese Ergebnisse nicht ansehen.",
+    "results-share": "{share} % richtig",
+    "results-counted": "Grundlage sind {counted} Antworten.",
+    "results-incomplete": "Nur die ersten {counted} Antworten werden gezählt.",
+    "results-answers": "Antworten",
+    "results-no-answers": "Bisher hat niemand diese Frage beantwortet.",
+    "verdict-correct": "Richtig",
+    "verdict-incorrect": "Falsch",
+    "verdict-pending": "Wartet auf Bewertung",
+    "release-title": "Ergebnisse den Lernenden freigeben?",
+    "release-description": "Jede Lernende und jeder Lernende sieht nach der Freigabe die eigene Punktzahl und die eigenen Antworten.",
+    "release-action": "Ergebnisse freigeben",
+    "release-footer": "Lernende sehen ihre Ergebnisse nach der Freigabe.",
+    "released-footer": "Die Lernenden können ihre Ergebnisse sehen.",
+    "student-results-title": "Dein Ergebnis",
+    "student-score": "{points} von {total} richtig",
+    "student-results-footer": "Deine Lehrkraft gibt die Ergebnisse nach Ende der Sitzung frei.",
+    "student-answers": "Deine Antworten",
+    "student-results-released": "Deine Lehrkraft hat diese Ergebnisse freigegeben."
   },
   "SchoolSettings": {
     "school": "Schule",
@@ -313,6 +342,11 @@
         "allowDevice": "Zweites Gerät für einen Prüfungsversuch erlaubt",
         "finish": "Prüfungsversuch abgegeben",
         "close": "Prüfungstermin geschlossen"
+      },
+      "exam": {
+        "results": {
+          "released": "Prüfungsergebnisse freigegeben"
+        }
       },
       "tenant": {
         "provisioned": "Schule eröffnet",

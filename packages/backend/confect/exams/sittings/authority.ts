@@ -20,7 +20,7 @@ import { Effect, Option } from "effect";
  * Whether the Person is the account that created the sitting's exam. Only a claimed
  * Person has an account, so an unclaimed Person is never the author.
  */
-const isExamAuthor = (exam: ExamsDoc, member: Member["Service"]) => {
+export const isExamAuthor = (exam: ExamsDoc, member: Member["Service"]) => {
   const { account } = member.person;
   return account.state === "claimed" && exam.createdBy === account.userId;
 };

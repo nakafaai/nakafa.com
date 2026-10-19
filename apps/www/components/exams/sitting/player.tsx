@@ -7,6 +7,7 @@ import type { SittingView } from "@repo/backend/confect/exams/sittings/contract"
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Array as Arr, Option } from "effect";
 import { useTranslations } from "next-intl";
+import { StudentResults } from "@/components/exams/results/student";
 import { runSittingCall } from "@/components/exams/sitting/actions.client";
 import { useFinish } from "@/components/exams/sitting/answer.client";
 import {
@@ -87,9 +88,11 @@ export function StudentPlayer({
 export function StudentOutcome({
   attempt,
   sitting,
+  slug,
 }: {
   readonly attempt: AttemptValue;
   readonly sitting: typeof SittingView.Type;
+  readonly slug: TenantSlug;
 }) {
   return (
     <>
@@ -100,6 +103,9 @@ export function StudentOutcome({
         {attempt.state === "inProgress" ? null : (
           <AttemptSentence state={attempt.state} />
         )}
+        {attempt.state === "submitted" ? (
+          <StudentResults sittingId={sitting.id} slug={slug} />
+        ) : null}
       </PlayerMain>
     </>
   );
@@ -156,7 +162,14 @@ function StudentBody({
   );
 
   if (state !== "inProgress") {
-    return <AttemptSentence state={state} />;
+    return (
+      <>
+        <AttemptSentence state={state} />
+        {state === "submitted" ? (
+          <StudentResults sittingId={sittingId} slug={slug} />
+        ) : null}
+      </>
+    );
   }
   if (QueryResult.isFailure(paper)) {
     return (
