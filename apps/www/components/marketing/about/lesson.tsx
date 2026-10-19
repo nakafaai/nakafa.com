@@ -1,7 +1,7 @@
 import { Nina } from "@repo/design-system/components/ui/nina";
 import { readServerTranslator } from "@repo/internationalization/src/translator";
 import type { ReactNode } from "react";
-import { createFormatter, useLocale } from "use-intl";
+import { useLocale } from "use-intl";
 import {
   LESSON_SECTION_ID,
   LESSON_SUBJECTS,
@@ -36,7 +36,6 @@ import { decimalSeparators } from "@/lib/marketing/decimal";
  */
 export async function Lesson() {
   const locale = getLocaleOrThrow(useLocale());
-  const format = createFormatter({ locale });
   const [t, tCommon, tSubject] = await Promise.all([
     readServerTranslator({ locale, namespace: "Landing" }),
     readServerTranslator({ locale, namespace: "Common" }),
@@ -49,7 +48,9 @@ export async function Lesson() {
     cell: <CellPlaceholder labels={getCellLabels(t)} />,
     circle: (
       <CirclePlaceholder
-        formatNumber={(value, options) => format.number(value, options)}
+        formatNumber={(value, options) =>
+          new Intl.NumberFormat(locale, options).format(value)
+        }
         labels={{
           onAxis: tCommon("on-axis"),
           quadrant: tCommon("quadrant"),
