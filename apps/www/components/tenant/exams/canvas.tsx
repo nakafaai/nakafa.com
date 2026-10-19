@@ -71,6 +71,7 @@ export function ExamCanvas() {
             {saved ? (
               <QuestionSheetPrompt>
                 <ExamPrompt
+                  examId={exam.id}
                   key={question.prompt}
                   prompt={question.prompt}
                   slug={slug}

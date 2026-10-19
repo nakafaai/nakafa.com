@@ -1,13 +1,23 @@
 "use client";
 
-import { FunctionIcon, FunctionSquareIcon } from "@hugeicons/core-free-icons";
+import {
+  FunctionIcon,
+  FunctionSquareIcon,
+  ImageUploadIcon,
+} from "@hugeicons/core-free-icons";
+import { IMAGE_MEDIA_TYPES } from "@repo/design-system/components/editor/image";
+import { usePictures } from "@repo/design-system/components/editor/picture";
 import { NEW_FORMULA } from "@repo/design-system/components/editor/slash";
 import { RichEditorControl } from "@repo/design-system/components/editor/tools";
 import { useCurrentEditor } from "@tiptap/react";
+import { Array as Arr } from "effect";
+import { useRef } from "react";
 
 /**
- * The controls that insert a formula: inline math inside the line, and block math on a line of
- * its own. Each inserts a placeholder formula, and its editor opens from the drawn formula.
+ * The controls that insert the content of an assessment document that is not text: a formula,
+ * inline or on a line of its own, and an image, which the teacher picks from the device. A
+ * formula inserts a placeholder that its editor changes, and a picked image starts its alt-text
+ * dialog.
  */
 export function DocumentInsert({
   labels,
@@ -15,9 +25,12 @@ export function DocumentInsert({
   labels: {
     equation: string;
     formula: string;
+    image: string;
   };
 }) {
   const { editor } = useCurrentEditor();
+  const { begin } = usePictures();
+  const picker = useRef<HTMLInputElement>(null);
 
   return (
     <>
@@ -42,9 +55,32 @@ export function DocumentInsert({
           editor
             ?.chain()
             .focus()
-            .insertContent({ attrs: { latex: NEW_FORMULA }, type: "mathBlock" })
+            .insertContent({
+              attrs: { latex: NEW_FORMULA },
+              type: "mathBlock",
+            })
             .run()
         }
+      />
+      <RichEditorControl
+        icon={ImageUploadIcon}
+        label={labels.image}
+        onClick={() => picker.current?.click()}
+      />
+      <input
+        accept={Arr.join(IMAGE_MEDIA_TYPES, ",")}
+        aria-hidden
+        className="hidden"
+        onChange={(event) => {
+          const file = event.target.files?.[0];
+          event.target.value = "";
+          if (file) {
+            begin(file);
+          }
+        }}
+        ref={picker}
+        tabIndex={-1}
+        type="file"
       />
     </>
   );

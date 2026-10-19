@@ -1122,7 +1122,14 @@
     "equation": "Gleichung",
     "formula-edit": "Formel bearbeiten",
     "formula-invalid": "Diese Formel kann nicht gezeichnet werden:",
-    "latex": "LaTeX"
+    "latex": "LaTeX",
+    "image": "Bild",
+    "image-add": "Bild hinzufügen",
+    "image-alt": "Alternativtext",
+    "image-alt-hint": "Was ein Schüler wissen muss, der das Bild nicht sehen kann",
+    "image-cancel": "Abbrechen",
+    "image-delete": "Bild löschen",
+    "image-edit": "Alternativtext ändern"
   },
   "Memory": {
     "remember": "Nina darf Erinnerungen speichern und nutzen",
@@ -1151,6 +1158,14 @@
     "count": "{count, number} / {limit, number}"
   },
   "Toast": {
+    "image-refused-size": {
+      "title": "Das Bild wurde nicht hinzugefügt.",
+      "description": "Wähle ein Bild von höchstens 2 MB."
+    },
+    "image-refused-type": {
+      "title": "Das Bild wurde nicht hinzugefügt.",
+      "description": "Wähle ein PNG-, JPEG-, WebP- oder GIF-Bild."
+    },
     "school-logo-size": {
       "title": "Das Logo wurde nicht gespeichert.",
       "description": "Wählen Sie ein Logo mit höchstens 1 MB."

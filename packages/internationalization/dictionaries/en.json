@@ -1122,7 +1122,14 @@
     "equation": "Equation",
     "formula-edit": "Edit formula",
     "formula-invalid": "This formula cannot be drawn:",
-    "latex": "LaTeX"
+    "latex": "LaTeX",
+    "image": "Image",
+    "image-add": "Add image",
+    "image-alt": "Alt text",
+    "image-alt-hint": "What a student who cannot see the image needs to know",
+    "image-cancel": "Cancel",
+    "image-delete": "Delete image",
+    "image-edit": "Edit alt text"
   },
   "Memory": {
     "remember": "Let Nina save and use memories",
@@ -1151,6 +1158,14 @@
     "count": "{count, number} / {limit, number}"
   },
   "Toast": {
+    "image-refused-size": {
+      "title": "The image was not added.",
+      "description": "Choose an image of at most 2 MB."
+    },
+    "image-refused-type": {
+      "title": "The image was not added.",
+      "description": "Choose a PNG, JPEG, WebP, or GIF image."
+    },
     "school-logo-size": {
       "title": "The logo was not saved.",
       "description": "Choose a logo of at most 1 MB."

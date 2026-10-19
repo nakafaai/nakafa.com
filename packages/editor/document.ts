@@ -1,9 +1,14 @@
+import { imageExtensions } from "@repo/editor/image";
 import {
   type MathViews,
   mathExtensions,
   NO_MATH_VIEWS,
 } from "@repo/editor/math";
-import { type AnyExtension, getSchema } from "@tiptap/core";
+import {
+  type AnyExtension,
+  getSchema,
+  type NodeViewRenderer,
+} from "@tiptap/core";
 import { Bold } from "@tiptap/extension-bold";
 import { Code } from "@tiptap/extension-code";
 import { Italic } from "@tiptap/extension-italic";
@@ -142,6 +147,16 @@ const MARKS = {
 type DocumentMark = keyof typeof MARKS;
 
 /**
+ * The views that draw the formula and image nodes, which the caller gives. A node with no
+ * view is drawn as plain DOM, so an editor that shows none still holds the document.
+ */
+/** The views of an editor that draws no node of the document with a view. */
+const NO_DOCUMENT_VIEWS = {
+  ...NO_MATH_VIEWS,
+  image: null,
+};
+
+/**
  * The extensions of an editor that holds a document of the given rules. StarterKit
  * supplies the blocks and the text, with the heading levels of the rules. Its own marks
  * are off, so no strike and no highlight is offered, and its horizontal rule is off,
@@ -149,11 +164,14 @@ type DocumentMark = keyof typeof MARKS;
  * document's own, and so is its link, so each holds only the attributes the contract names.
  * A table is the contract's table, of rows and cells that hold blocks, with the spans of
  * a cell and no other attribute. The formulas are the contract's inline and block math,
- * drawn by the given views (`NO_MATH_VIEWS` draws them as plain DOM).
+ * drawn by the given views, and the image is drawn by its view (`NO_DOCUMENT_VIEWS` draws every
+ * one as plain DOM).
  */
 export function documentExtensions(
   rules: DocumentRules,
-  views: MathViews = NO_MATH_VIEWS
+  views: MathViews & {
+    readonly image: NodeViewRenderer | null;
+  } = NO_DOCUMENT_VIEWS
 ): AnyExtension[] {
   return [
     StarterKit.configure({
@@ -173,6 +191,7 @@ export function documentExtensions(
     DocumentTableHeader,
     DocumentTableCell,
     ...mathExtensions(views),
+    ...imageExtensions(views.image),
     ...Arr.map(rules.marks, (mark, index) =>
       MARKS[mark](TOP_PRIORITY - index, rules.isLinkAllowed)
     ),

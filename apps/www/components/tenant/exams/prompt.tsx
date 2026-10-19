@@ -1,9 +1,10 @@
 "use client";
 
-import { QueryResult, useQuery } from "@confect/react";
+import { QueryResult, useAction, useMutation, useQuery } from "@confect/react";
 import { MAX_DOCUMENT_DEPTH } from "@nakafa/aksara-contracts/assessment/document";
 import type { Id } from "@repo/backend/confect/_generated/id";
 import editors from "@repo/backend/confect/_generated/refs/editor";
+import exams from "@repo/backend/confect/_generated/refs/exams";
 import { MAX_STEP_BYTES } from "@repo/backend/confect/editor/batch";
 import { ASSESSMENT_RULES } from "@repo/backend/confect/editor/model";
 import { MAX_DOCUMENT_BYTES } from "@repo/backend/confect/editor/size";
@@ -18,6 +19,12 @@ import {
 } from "@repo/design-system/components/editor/formula";
 import { articleParagraphs } from "@repo/design-system/components/editor/paragraph";
 import {
+  PICTURE_VIEW,
+  PictureAltDialog,
+  PicturesProvider,
+  pictureFileHandler,
+} from "@repo/design-system/components/editor/picture";
+import {
   documentSizeGuard,
   stepSizeGuard,
 } from "@repo/design-system/components/editor/size";
@@ -27,10 +34,14 @@ import { documentExtensions } from "@repo/editor/document";
 import type { Transaction } from "@tiptap/pm/state";
 import type { EditorView } from "@tiptap/pm/view";
 import { useConvex } from "convex/react";
-import { Effect, Fiber, Ref } from "effect";
+import { Array as Arr, Effect, Fiber, Record as Rec, Ref } from "effect";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { type StoreApi, useStore } from "zustand";
+import {
+  assetIdsOf,
+  storeExamImage,
+} from "@/components/tenant/exams/image.client";
 import { useExamLive } from "@/components/tenant/exams/provider";
 import {
   createPromptSync,
@@ -51,6 +62,24 @@ const SEND_QUIET_PERIOD = "250 millis";
 /** Where the prompt reports its failures and the steps it lost. */
 const SOURCE = "components/tenant/exams/prompt";
 
+/** Tells the teacher that an image of more than the byte limit was not added. */
+const refuseLargePicture = () =>
+  Effect.sync(() =>
+    toast.error({
+      description: "image-refused-size.description",
+      title: "image-refused-size.title",
+    })
+  );
+
+/** Tells the teacher that a file that is no PNG, JPEG, WebP, or GIF image was not added. */
+const refuseOtherPicture = () =>
+  Effect.sync(() =>
+    toast.error({
+      description: "image-refused-type.description",
+      title: "image-refused-type.title",
+    })
+  );
+
 /**
  * The extensions of a question's prompt: the assessment document of the contract, its
  * collab plugin (the session's client ID comes with the document when it opens), the classes
@@ -58,7 +87,10 @@ const SOURCE = "components/tenant/exams/prompt";
  * refuses what the server would refuse.
  */
 const PROMPT_EXTENSIONS = [
-  ...documentExtensions(ASSESSMENT_RULES, FORMULA_VIEWS),
+  ...documentExtensions(ASSESSMENT_RULES, {
+    ...FORMULA_VIEWS,
+    image: PICTURE_VIEW,
+  }),
   Collab.configure({ clientId: "", version: 0 }),
   articleParagraphs,
   depthGuard(MAX_DOCUMENT_DEPTH),
@@ -108,17 +140,42 @@ const runRound = (
  * steps the editor holds are sent.
  */
 export function ExamPrompt({
+  examId,
   prompt,
   slug,
 }: {
+  examId: Id<"exams">;
   prompt: Id<"editorDocuments">;
   slug: TenantSlug;
 }) {
   const t = useTranslations("Exams");
   const labels = useDocumentLabels();
+  // The picture the teacher chose, which its alt-text dialog holds until the teacher confirms it.
+  const [pending, setPending] = useState<File | null>(null);
+  // The images the document holds, which the page resolves to addresses in one read.
+  const [pictureIds, setPictureIds] = useState<readonly Id<"examAssets">[]>([]);
+  const pictureUrls = useQuery(
+    exams.assets.urls,
+    pictureIds.length === 0 ? "skip" : { assets: pictureIds, examId, slug }
+  );
+  const pictureAddresses = useMemo(
+    () =>
+      QueryResult.isSuccess(pictureUrls)
+        ? Rec.fromEntries(
+            Arr.map(
+              pictureUrls.value,
+              (asset) => [asset.id, asset.url] as const
+            )
+          )
+        : {},
+    [pictureUrls]
+  );
+  const requestUrl = useMutation(exams.assets.uploadUrl);
+  const register = useAction(exams.assets.register);
   const extensions = useMemo(
     () => [
       ...PROMPT_EXTENSIONS,
+      pictureFileHandler(setPending),
       slashCommand({ label: labels.insert, labels: labels.slash }),
     ],
     [labels]
@@ -227,6 +284,9 @@ export function ExamPrompt({
    */
   const change = (transaction: Transaction) => {
     show(prompt, transaction.doc);
+    if (transaction.docChanged) {
+      setPictureIds(assetIdsOf(transaction.doc));
+    }
     if (transaction.getMeta("rebased") !== undefined) {
       return;
     }
@@ -243,17 +303,77 @@ export function ExamPrompt({
     }
   };
 
+  /**
+   * Stores the chosen file as an image of this exam, then places it in the document at the caret.
+   * A refused file leaves the document as it was, and says why in the toast.
+   */
+  const addPicture = (file: File, alt: string) =>
+    Effect.runFork(
+      storeExamImage({
+        file,
+        register: (args) => register({ examId, slug, ...args }),
+        requestUrl: () => requestUrl({ examId, slug }),
+      }).pipe(
+        Effect.tap((stored) =>
+          Effect.sync(() => {
+            const current = view.current;
+            if (current !== null) {
+              current.dispatch(
+                current.state.tr.replaceSelectionWith(
+                  current.state.schema.nodes.image.create({
+                    alt,
+                    asset: stored.id,
+                    height: stored.height,
+                    width: stored.width,
+                  })
+                )
+              );
+            }
+          })
+        ),
+        Effect.catchTags({
+          AssetSizeRefused: refuseLargePicture,
+          AssetTypeRefused: refuseOtherPicture,
+        }),
+        Effect.catch(() =>
+          Effect.sync(() =>
+            toast.error({
+              description: "action-error.description",
+              title: "action-error.title",
+            })
+          )
+        )
+      )
+    );
+
   return (
     <FormulaLabelsProvider labels={labels.formulaEdit}>
-      <DocumentEditor
-        extensions={extensions}
-        label={t("prompt-label")}
-        onChange={change}
-        onEditor={open}
-        placeholder={t("prompt-placeholder")}
+      <PicturesProvider
+        begin={setPending}
+        labels={labels.pictures}
+        urls={pictureAddresses}
       >
-        <DocumentToolbar labels={labels.toolbar} />
-      </DocumentEditor>
+        <PictureAltDialog
+          file={pending}
+          labels={labels.pictures}
+          onCancel={() => setPending(null)}
+          onConfirm={(alt) => {
+            if (pending !== null) {
+              addPicture(pending, alt);
+            }
+            setPending(null);
+          }}
+        />
+        <DocumentEditor
+          extensions={extensions}
+          label={t("prompt-label")}
+          onChange={change}
+          onEditor={open}
+          placeholder={t("prompt-placeholder")}
+        >
+          <DocumentToolbar labels={labels.toolbar} />
+        </DocumentEditor>
+      </PicturesProvider>
     </FormulaLabelsProvider>
   );
 }

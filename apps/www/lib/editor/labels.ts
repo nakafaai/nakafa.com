@@ -35,6 +35,14 @@ export function useDocumentLabels() {
       text,
     };
     return {
+      pictures: {
+        add: t("image-add"),
+        alt: t("image-alt"),
+        altHint: t("image-alt-hint"),
+        cancel: t("image-cancel"),
+        delete: t("image-delete"),
+        edit: t("image-edit"),
+      },
       formulaEdit: {
         formula,
         invalid: t("formula-invalid"),
@@ -56,6 +64,7 @@ export function useDocumentLabels() {
         heading1,
         heading2,
         heading3,
+        image: t("image"),
         italic: t("italic"),
         link: t("link"),
         linkPlaceholder: t("link-placeholder"),

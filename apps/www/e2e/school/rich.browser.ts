@@ -114,6 +114,29 @@ test("a teacher writes a question with headings, lists, quotes, code and a table
   await expect(prompt.locator('[data-formula="inline"] .katex')).toBeVisible();
   await expect(prompt.locator(".katex-error")).toHaveCount(0);
 
+  // An image comes from the toolbar's image control. The file is a one-pixel PNG, and the alt text
+  // dialog asks for its alt text before the image is added to the document.
+  const PIXEL_PNG = Buffer.from(
+    "89504e470d0a1a0a0000000d4948445200000001000000010806000000" +
+      "1f15c4890000000d49444154789c63f8cfc0f01f0005000201a5f6c4c10000000049454e44ae426082",
+    "hex"
+  );
+  await page.locator('input[type="file"]').setInputFiles({
+    buffer: PIXEL_PNG,
+    mimeType: "image/png",
+    name: "segitiga.png",
+  });
+  const picture = page.getByRole("dialog");
+  await picture
+    .getByRole("textbox", { name: "Alt text" })
+    .fill("Segitiga siku-siku");
+  await picture.getByRole("button", { name: "Add image" }).click();
+  await expect(prompt.locator("[data-picture] img")).toHaveAttribute(
+    "alt",
+    "Segitiga siku-siku",
+    { timeout: readinessTimeoutMilliseconds }
+  );
+
   // The rich text is saved by itself, so the editor opened again shows the same document.
   const reopened = await context.newPage();
   await reopened.goto(page.url());
@@ -130,6 +153,11 @@ test("a teacher writes a question with headings, lists, quotes, code and a table
   await expect(
     reopenedPrompt.locator('[data-formula="inline"] .katex')
   ).toBeVisible();
+  await expect(reopenedPrompt.locator("[data-picture] img")).toHaveAttribute(
+    "alt",
+    "Segitiga siku-siku",
+    { timeout: readinessTimeoutMilliseconds }
+  );
 
   // The try shows the same document the way a student reads it, with the formula drawn.
   await reopened.getByRole("link", { name: "Try as student" }).click();

@@ -7,6 +7,10 @@ import {
   FormulaLabelsProvider,
 } from "@repo/design-system/components/editor/formula";
 import { articleParagraphs } from "@repo/design-system/components/editor/paragraph";
+import {
+  PICTURE_VIEW,
+  PicturesProvider,
+} from "@repo/design-system/components/editor/picture";
 import { documentExtensions } from "@repo/editor/document";
 import { Node } from "@tiptap/pm/model";
 import { assessmentSchema } from "@/lib/editor/assessment";
@@ -14,9 +18,15 @@ import { useDocumentLabels } from "@/lib/editor/labels";
 
 /** The extensions of a read-only document: the ones the exam canvas edits the same document with. */
 const READER_EXTENSIONS = [
-  ...documentExtensions(ASSESSMENT_RULES, FORMULA_VIEWS),
+  ...documentExtensions(ASSESSMENT_RULES, {
+    ...FORMULA_VIEWS,
+    image: PICTURE_VIEW,
+  }),
   articleParagraphs,
 ];
+
+/** Nothing begins on a reader: a read-only document takes no file. */
+const noBegin = () => undefined;
 
 /**
  * One assessment document, read-only. The editor starts read-only and nothing turns editing on, so
@@ -36,15 +46,17 @@ export function SittingReader({
 
   return (
     <FormulaLabelsProvider labels={labels.formulaEdit}>
-      <DocumentEditor
-        extensions={READER_EXTENSIONS}
-        label={label}
-        onChange={() => undefined}
-        onEditor={(editor) => {
-          editor.commands.setContent(content, { emitUpdate: false });
-        }}
-        placeholder=""
-      />
+      <PicturesProvider begin={noBegin} labels={labels.pictures} urls={{}}>
+        <DocumentEditor
+          extensions={READER_EXTENSIONS}
+          label={label}
+          onChange={() => undefined}
+          onEditor={(editor) => {
+            editor.commands.setContent(content, { emitUpdate: false });
+          }}
+          placeholder=""
+        />
+      </PicturesProvider>
     </FormulaLabelsProvider>
   );
 }

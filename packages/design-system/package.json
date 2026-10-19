@@ -28,6 +28,7 @@
     "@tailwindcss/postcss": "catalog:",
     "@tiptap/core": "3.32.0",
     "@tiptap/extension-document": "3.32.0",
+    "@tiptap/extension-file-handler": "3.32.0",
     "@tiptap/extension-highlight": "3.32.0",
     "@tiptap/extension-list": "3.32.0",
     "@tiptap/extension-paragraph": "3.32.0",

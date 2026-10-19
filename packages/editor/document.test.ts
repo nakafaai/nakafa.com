@@ -282,3 +282,46 @@ describe("documentSchema math", () => {
     ).toContain("mathBlock");
   });
 });
+
+describe("documentSchema image", () => {
+  const schema = documentSchema({ ...RULES, marks: ["bold"] });
+
+  it("round-trips an image block as its JSON, with its alt text, asset, and size", () => {
+    const image = {
+      attrs: {
+        alt: "Segitiga siku-siku",
+        asset: "gambar-1",
+        height: 120,
+        width: 200,
+      },
+      type: "image",
+    };
+    expect(schema.nodeFromJSON(image).toJSON()).toEqual(image);
+  });
+
+  it("reads the attributes of an image this editor wrote, and reads a size it cannot read as 1", () => {
+    const editor = openEditor([]);
+    editor.commands.setContent(
+      '<div data-type="image" data-alt="Denah" data-asset="gambar-2" data-height="90" data-width="x"></div><div data-type="image"></div>'
+    );
+    const blocks = Arr.take(
+      Arr.makeBy(
+        editor.state.doc.childCount,
+        (index) => editor.state.doc.child(index).attrs
+      ),
+      2
+    );
+    expect(blocks).toEqual([
+      { alt: "Denah", asset: "gambar-2", height: 90, width: 1 },
+      { alt: "", asset: "", height: 1, width: 1 },
+    ]);
+  });
+
+  it("reads no picture pasted from another page as an image of the document", () => {
+    const editor = openEditor([]);
+    editor.commands.setContent(
+      '<p><img src="https://example.com/a.png" alt="a"></p>'
+    );
+    expect(editor.state.doc.firstChild?.childCount).toBe(0);
+  });
+});
