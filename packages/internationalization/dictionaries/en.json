@@ -8,6 +8,10 @@
     "back-to-learning": "Back to Nakafa",
     "for-you": "For you",
     "home": "Home",
+    "next-exam-title": "Your school's exams",
+    "next-exam-description": "Write questions, schedule a sitting, and watch it live.",
+    "next-exam-footer": "Students see an exam only once it is scheduled.",
+    "next-exam-action": "Open exams",
     "language": "Language",
     "role": {
       "admin": "Admin",
@@ -370,6 +374,7 @@
       },
       "tenant": {
         "provisioned": "School opened",
+        "founded": "School founded",
         "locale": {
           "set": "Country and currency changed"
         },
@@ -489,6 +494,120 @@
     "invites-empty": "No invite is waiting.",
     "invites-search": "Find an invitee"
   },
+  "SchoolStart": {
+    "metadata-title": "Open your school",
+    "metadata-description": "Answer five questions and your Nakafa School is ready to use.",
+    "progress": "Question {current} of {total}",
+    "name-title": "What is your school called?",
+    "name-label": "School name",
+    "name-placeholder": "Harapan Bangsa",
+    "name-error": "Enter a name of at least 2 characters.",
+    "address-label": "Address",
+    "address-free": "Available",
+    "address-taken": "Another school uses this address.",
+    "address-reserved": "This address is reserved.",
+    "address-invalid": "Use 2 to 63 lowercase letters, numbers, or hyphens.",
+    "country-title": "Where is your school?",
+    "country-description": "This sets the currency, language, and school year.",
+    "country": {
+      "ID": "Indonesia",
+      "SG": "Singapore",
+      "GB": "United Kingdom",
+      "DE": "Germany",
+      "US": "United States"
+    },
+    "levels-title": "Which levels do you teach?",
+    "levels-description": "Each level becomes its own unit.",
+    "levels-error": "Choose at least one level.",
+    "level": {
+      "paud": {
+        "title": "PAUD",
+        "description": "Early childhood"
+      },
+      "sd": {
+        "title": "SD",
+        "description": "Primary school"
+      },
+      "mi": {
+        "title": "MI",
+        "description": "Islamic primary school"
+      },
+      "smp": {
+        "title": "SMP",
+        "description": "Junior high school"
+      },
+      "mts": {
+        "title": "MTs",
+        "description": "Islamic junior high school"
+      },
+      "sma": {
+        "title": "SMA",
+        "description": "Senior high school"
+      },
+      "ma": {
+        "title": "MA",
+        "description": "Islamic senior high school"
+      },
+      "smk": {
+        "title": "SMK",
+        "description": "Vocational high school"
+      },
+      "slb": {
+        "title": "SLB",
+        "description": "Special needs school"
+      },
+      "other": {
+        "title": "Other",
+        "description": "Another kind of school"
+      }
+    },
+    "stage": {
+      "paud": "Early years",
+      "sd": "Primary",
+      "mi": "Primary",
+      "smp": "Lower secondary",
+      "mts": "Lower secondary",
+      "sma": "Upper secondary",
+      "ma": "Upper secondary",
+      "smk": "Vocational",
+      "slb": "Special needs",
+      "other": "Other"
+    },
+    "unit-name": "{name} {level}",
+    "role-title": "What is your role?",
+    "role-description": "You own the school either way.",
+    "role": {
+      "principal": {
+        "title": "Principal",
+        "description": "Lead the school."
+      },
+      "teacher": {
+        "title": "Teacher",
+        "description": "Teach classes."
+      },
+      "admin": {
+        "title": "Administrator",
+        "description": "Run accounts and data."
+      },
+      "foundation": {
+        "title": "Foundation owner",
+        "description": "Own one or more schools."
+      }
+    },
+    "size-title": "How many students do you have?",
+    "size-description": "Free to start, whatever the size.",
+    "size": {
+      "s": "Under 100",
+      "m": "100 to 499",
+      "l": "500 to 999",
+      "xl": "1,000 or more"
+    },
+    "founder-line": "The founder can help a large school set up.",
+    "founder-link": "Talk to the founder",
+    "consent": "Opening a school accepts the <terms>Terms</terms> and the <privacy>Privacy Policy</privacy>.",
+    "finish": "Open school",
+    "required-error": "Choose an answer."
+  },
   "Metadata": {
     "title": "Nakafa: Free Lessons from K-12 to University",
     "description": "Study math, science, computer science, AI, and exam prep on Nakafa. Free lessons from K-12 to university with practice questions and explanations.",
@@ -587,6 +706,7 @@
     "close": "Close",
     "community": "Community",
     "your-schools": "Your schools",
+    "open-school": "Open a school",
     "report": "Report",
     "copy-content": "Copy Content",
     "content-actions": "Content actions",
@@ -619,6 +739,7 @@
     "emoji-picker-placeholder": "Select an emoji...",
     "no-emoji-found": "No emoji found.",
     "back": "Back",
+    "continue": "Continue",
     "lines": "Lines",
     "scale": "Scale",
     "solution-set": "Solution set",
@@ -691,8 +812,6 @@
           "description": "Practise for exams."
         }
       },
-      "back": "Back",
-      "continue": "Continue",
       "finish": "Finish",
       "required-error": "Choose one answer."
     },
@@ -1068,8 +1187,12 @@
       "title": "The logo was not saved.",
       "description": "Choose a PNG or SVG image."
     },
-    "school-logo-refused": { "title": "The logo was not saved." },
-    "school-address-copied": { "title": "The address was copied." },
+    "school-logo-refused": {
+      "title": "The logo was not saved."
+    },
+    "school-address-copied": {
+      "title": "The address was copied."
+    },
     "school-refusal-not-student": {
       "title": "Not a student of this school.",
       "description": "Only a student of this school can be placed in a cohort."
@@ -1267,6 +1390,22 @@
     "sign-out-error": {
       "title": "We could not sign you out.",
       "description": "Check your connection, then try again."
+    },
+    "school-open-error": {
+      "title": "The school did not open.",
+      "description": "Try again."
+    },
+    "school-limit": {
+      "title": "You run 3 schools already.",
+      "description": "Talk to the founder for more."
+    },
+    "school-rate": {
+      "title": "Too many schools today.",
+      "description": "Try again tomorrow."
+    },
+    "school-save-error": {
+      "title": "Your answer was not saved.",
+      "description": "Try again."
     }
   },
   "Ai": {
