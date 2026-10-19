@@ -1,5 +1,5 @@
 import { Array as Arr, Record as Rec } from "effect";
-import "server-only";
+import "@tanstack/react-start/server-only";
 
 import {
   RENDERER_DOMAINS,

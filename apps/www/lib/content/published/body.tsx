@@ -1,4 +1,4 @@
-import "server-only";
+import "@tanstack/react-start/server-only";
 import { makeArtifactCacheTag } from "@nakafa/aksara-contracts/cache/content";
 import type { SignedContentArtifact } from "@nakafa/aksara-contracts/content";
 

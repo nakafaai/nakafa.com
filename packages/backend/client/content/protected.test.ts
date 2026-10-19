@@ -112,7 +112,6 @@ const protectedFixture = Effect.fn("test.client.protectedFixture")(
 const fetchMock = vi.hoisted(() => vi.fn<typeof fetch>());
 const verifyMock = vi.hoisted(() => vi.fn());
 
-vi.mock("server-only", () => ({}));
 vi.mock("@repo/backend/content/trust", async () => {
   const { TEST_KEY_RESOLVER } = await import(
     "@repo/backend/test/content/proof"

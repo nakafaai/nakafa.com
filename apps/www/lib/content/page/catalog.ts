@@ -1,4 +1,4 @@
-import "server-only";
+import "@tanstack/react-start/server-only";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import {
   type ActiveAppLocaleCode,

@@ -1,4 +1,3 @@
-import path from "node:path";
 import config from "@repo/testing/react";
 import { configDefaults, mergeConfig } from "vitest/config";
 
@@ -15,8 +14,6 @@ export default mergeConfig(config, {
     alias: {
       /** Match the app's `@/` import alias inside tests. */
       "@": import.meta.dirname,
-      /** Replace Next's import guard with one shared server-test boundary. */
-      "server-only": path.resolve(import.meta.dirname, "./test/server-only.ts"),
     },
   },
   test: {

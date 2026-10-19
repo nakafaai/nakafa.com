@@ -1,6 +1,6 @@
 import type { Ref } from "@confect/core";
 import { HttpClient } from "@confect/js";
-import "server-only";
+import "@tanstack/react-start/server-only";
 import { PublicationDatesSchema } from "@nakafa/aksara-contracts/date";
 import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";

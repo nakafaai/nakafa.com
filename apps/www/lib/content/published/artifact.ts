@@ -1,4 +1,4 @@
-import "server-only";
+import "@tanstack/react-start/server-only";
 
 // Only Aksara artifacts that pass exact schema, hash, source, Ed25519 signature,
 // and renderer compatibility verification reach `run()` below.

@@ -1,4 +1,4 @@
-import "server-only";
+import "@tanstack/react-start/server-only";
 
 import { semanticMdxComponents } from "@repo/design-system/lib/markdown/semantic";
 import type { MDXComponents } from "@repo/design-system/types/markdown";

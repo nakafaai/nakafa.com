@@ -1,5 +1,5 @@
 import { HttpClient } from "@confect/js";
-import "server-only";
+import "@tanstack/react-start/server-only";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { Effect } from "effect";

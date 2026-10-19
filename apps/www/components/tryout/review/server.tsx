@@ -1,4 +1,4 @@
-import "server-only";
+import "@tanstack/react-start/server-only";
 
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Array as Arr, Effect } from "effect";

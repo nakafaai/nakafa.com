@@ -1,5 +1,5 @@
 import { Array as Arr, Record as Rec } from "effect";
-import "server-only";
+import "@tanstack/react-start/server-only";
 
 import type { QuestionResponse } from "@nakafa/aksara-contracts/question/response";
 import { MarkdownContent } from "@repo/design-system/components/markdown/content";

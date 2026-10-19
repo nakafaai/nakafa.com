@@ -1,4 +1,4 @@
-import "server-only";
+import "@tanstack/react-start/server-only";
 
 import { encodeJsonText } from "@repo/utilities/json";
 import {

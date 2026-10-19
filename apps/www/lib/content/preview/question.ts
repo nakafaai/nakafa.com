@@ -1,4 +1,4 @@
-import "server-only";
+import "@tanstack/react-start/server-only";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import type { PreviewArtifact } from "@nakafa/aksara-contracts/preview/artifact";
 import {

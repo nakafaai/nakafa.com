@@ -1,4 +1,4 @@
-import "server-only";
+import "@tanstack/react-start/server-only";
 import { LocalPreviewManifestSchema } from "@nakafa/aksara-contracts/preview/spec";
 import { Effect, Option, Result, Schema } from "effect";
 import { cache } from "react";

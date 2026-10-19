@@ -1,4 +1,4 @@
-import "server-only";
+import "@tanstack/react-start/server-only";
 
 import type { PageKey } from "@nakafa/aksara-contracts/projection/page";
 import {

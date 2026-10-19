@@ -1,6 +1,6 @@
 import type { Ref } from "@confect/core";
 import { HttpClient } from "@confect/js";
-import "server-only";
+import "@tanstack/react-start/server-only";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { Effect } from "effect";
 import { httpLayer } from "@/lib/convex/http";

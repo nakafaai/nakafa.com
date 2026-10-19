@@ -22,7 +22,6 @@ import { TRYOUT_TEST_NOW } from "@repo/backend/test/tryouts";
 import { JsonTextSchema } from "@repo/utilities/json";
 import { Array as Arr, Effect, Schema } from "effect";
 
-vi.mock("server-only", () => ({}));
 async function setup(historical = false) {
   const t = createConvexTestWithBetterAuth();
   const seed = await t.mutation((ctx) => insertHistoryAttempt(ctx, historical));

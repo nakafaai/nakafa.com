@@ -1,4 +1,4 @@
-import "server-only";
+import "@tanstack/react-start/server-only";
 import type { TrendingSubject } from "@repo/backend/confect/lib/validators/trending";
 import { getLessonIcons } from "@repo/contents/curriculum/lesson";
 import { getTileLooks, type TileLook } from "@repo/design-system/lib/look";

@@ -1,4 +1,4 @@
-import "server-only";
+import "@tanstack/react-start/server-only";
 
 import { invalidateByTag } from "@vercel/functions";
 import { Effect, Schema } from "effect";

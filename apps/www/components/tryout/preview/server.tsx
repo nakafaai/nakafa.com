@@ -1,4 +1,4 @@
-import "server-only";
+import "@tanstack/react-start/server-only";
 
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";

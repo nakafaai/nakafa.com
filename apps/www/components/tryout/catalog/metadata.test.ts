@@ -16,7 +16,6 @@ const translationMocks = vi.hoisted(() => ({
   getTranslations: vi.fn(),
 }));
 
-vi.mock("server-only", () => ({}));
 vi.mock("@/components/tryout/catalog/server", () => runtimeMocks);
 vi.mock("next/navigation", () => navigationMocks);
 vi.mock("next-intl/server", () => translationMocks);

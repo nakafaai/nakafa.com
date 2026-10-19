@@ -1,4 +1,4 @@
-import "server-only";
+import "@tanstack/react-start/server-only";
 
 import { GitCommitShaSchema } from "@nakafa/aksara-contracts/ids";
 import { PublicPageProjectionSchema } from "@nakafa/aksara-contracts/projection/page";

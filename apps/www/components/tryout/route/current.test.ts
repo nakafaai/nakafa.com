@@ -10,7 +10,6 @@ const catalogMocks = vi.hoisted(() => ({
   readTryoutSetAttemptPage: vi.fn(),
 }));
 
-vi.mock("server-only", () => ({}));
 vi.mock("@/components/tryout/catalog/server", () => catalogMocks);
 
 const keys = {

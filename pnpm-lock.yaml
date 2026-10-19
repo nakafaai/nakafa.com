@@ -78,9 +78,6 @@ catalogs:
     remark-parse:
       specifier: 11.0.0
       version: 11.0.0
-    server-only:
-      specifier: 0.0.1
-      version: 0.0.1
     sonner:
       specifier: ^2.0.8
       version: 2.0.8
@@ -495,6 +492,9 @@ importers:
       '@repo/utilities':
         specifier: workspace:*
         version: link:../utilities
+      '@tanstack/react-start':
+        specifier: 1.169.3
+        version: 1.169.3(@vitejs/plugin-rsc@0.5.38(react-dom@19.3.1(react@19.3.1))(react-server-dom-webpack@19.3.1(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(webpack@5.112.0(@swc/core@1.16.13(@swc/helpers@0.5.23))(esbuild@0.28.2)(lightningcss@1.33.0)(postcss@8.5.30)(sharp@0.35.5(@types/node@24.19.2))))(react@19.3.1)(vite@8.3.4(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1)))(esbuild@0.28.2)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(rolldown@1.2.13)(supports-color@8.1.1)(vite@8.3.4(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))(webpack@5.112.0(@swc/core@1.16.13(@swc/helpers@0.5.23))(esbuild@0.28.2)(lightningcss@1.33.0)(postcss@8.5.30)(sharp@0.35.5(@types/node@24.19.2)))
       effect:
         specifier: 'catalog:'
         version: 4.0.5
@@ -504,9 +504,6 @@ importers:
       posthog-node:
         specifier: ^5.56.2
         version: 5.56.2
-      server-only:
-        specifier: 'catalog:'
-        version: 0.0.1
     devDependencies:
       '@effect/vitest':
         specifier: 'catalog:'
@@ -676,9 +673,6 @@ importers:
       remark-parse:
         specifier: 'catalog:'
         version: 11.0.0(supports-color@8.1.1)
-      server-only:
-        specifier: 'catalog:'
-        version: 0.0.1
       strip-ansi:
         specifier: ^7.2.0
         version: 7.2.0
@@ -7603,9 +7597,6 @@ packages:
   seroval@1.6.8:
     resolution: {integrity: sha512-HlSgSAkTk4EqHcje1ptJjfZi1YDv5KbhVJ/d3P7T/nAXua2VmDu+AKDX5VTdFfZf48nDkWB2TKYt0DrCSa+3wg==}
     engines: {node: '>=10'}
-
-  server-only@0.0.1:
-    resolution: {integrity: sha512-qepMx2JxAa5jjfzxG79yPPq+8BuFToHd1hm7kI+Z4zAq1ftQiP7HcxMhDDItrbtwVeLg/cY2JnKnrcFkmiswNA==}
 
   set-cookie-parser@3.1.2:
     resolution: {integrity: sha512-5/r/lTwbJ3zQ+qwdUFZYeRNqda7P5HD8zQKqlSjdGt1/S0cjLAphHusj4Y58ahDtWn/g32xrIS58/ikOvwl0Lw==}
@@ -14856,8 +14847,6 @@ snapshots:
       seroval: 1.6.8
 
   seroval@1.6.8: {}
-
-  server-only@0.0.1: {}
 
   set-cookie-parser@3.1.2: {}
 

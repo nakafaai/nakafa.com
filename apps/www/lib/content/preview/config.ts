@@ -1,4 +1,4 @@
-import "server-only";
+import "@tanstack/react-start/server-only";
 import { SigningKeyIdSchema } from "@nakafa/aksara-contracts/ids";
 import { PreviewRendererSecretSchema } from "@nakafa/aksara-contracts/preview/auth";
 import {

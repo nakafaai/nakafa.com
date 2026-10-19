@@ -1,4 +1,4 @@
-import "server-only";
+import "@tanstack/react-start/server-only";
 
 import { Effect, Schema } from "effect";
 import type { ActiveContentReleaseId } from "@/lib/content/published/active";

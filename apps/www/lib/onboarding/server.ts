@@ -1,4 +1,4 @@
-import "server-only";
+import "@tanstack/react-start/server-only";
 
 import { HttpClient } from "@confect/js";
 import { NETWORK_ATTEMPT_DEADLINE } from "@repo/backend/client/network";

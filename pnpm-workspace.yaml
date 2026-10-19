@@ -92,7 +92,6 @@ catalog:
   react-email: 6.11.3
   remark-mdx: 3.1.1
   remark-parse: 11.0.0
-  server-only: 0.0.1
   sonner: ^2.0.8
   tsx: ^4.23.15
   typescript: 7.0.2

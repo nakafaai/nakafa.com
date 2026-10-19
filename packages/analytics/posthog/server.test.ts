@@ -26,8 +26,6 @@ vi.mock("posthog-node", () => ({
   },
 }));
 
-vi.mock("server-only", () => ({}));
-
 /** Time for one cold import of the module graph on a slow CI runner. */
 const COLD_IMPORT_TIMEOUT_MS = 60_000;
 

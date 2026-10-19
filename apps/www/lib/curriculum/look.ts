@@ -1,4 +1,4 @@
-import "server-only";
+import "@tanstack/react-start/server-only";
 import { ProgramNavigationIconKeySchema } from "@nakafa/aksara-contracts/program/spec";
 import { getLessonIcons } from "@repo/contents/curriculum/lesson";
 import { getMaterialIcons } from "@repo/contents/curriculum/material";

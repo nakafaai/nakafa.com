@@ -1,5 +1,5 @@
 import type { Ref } from "@confect/core";
-import "server-only";
+import "@tanstack/react-start/server-only";
 import type { ContentFamily } from "@nakafa/aksara-contracts/content";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import {

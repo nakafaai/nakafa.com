@@ -12,7 +12,6 @@ const mocks = vi.hoisted(() => ({
   query: vi.fn(),
   token: vi.fn(),
 }));
-vi.mock("server-only", () => ({}));
 vi.mock("next/navigation", () => ({ notFound: mocks.notFound }));
 vi.mock("@/lib/auth/server", () => ({ getToken: mocks.token }));
 vi.mock("@confect/js", async (importOriginal) => {

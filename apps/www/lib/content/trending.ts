@@ -1,5 +1,5 @@
 import { HttpClient } from "@confect/js";
-import "server-only";
+import "@tanstack/react-start/server-only";
 import contents from "@repo/backend/confect/_generated/refs/contents";
 import type { PublicAppLocale } from "@repo/internationalization/src/routing";
 import { Effect } from "effect";

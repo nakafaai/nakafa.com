@@ -1,4 +1,4 @@
-import "server-only";
+import "@tanstack/react-start/server-only";
 
 import { sha256Hex } from "@repo/utilities/digest";
 import { encodeJsonText } from "@repo/utilities/json";

@@ -1,4 +1,4 @@
-import "server-only";
+import "@tanstack/react-start/server-only";
 import {
   APP_LOCALE_CODES,
   type AppLocale,

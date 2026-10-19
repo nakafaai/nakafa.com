@@ -1,4 +1,4 @@
-import "server-only";
+import "@tanstack/react-start/server-only";
 import type { MaterialPreviewDocument } from "@nakafa/aksara-contracts/preview/document";
 import type { PreviewReadySchema } from "@nakafa/aksara-contracts/preview/spec";
 import { MaterialLessonProjectionSchema } from "@nakafa/aksara-contracts/projection/material";

@@ -1,5 +1,5 @@
 import { HttpClient } from "@confect/js";
-import "server-only";
+import "@tanstack/react-start/server-only";
 import { makeArtifactCacheTag } from "@nakafa/aksara-contracts/cache/content";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { decodePublishedQuranCatalog } from "@repo/backend/client/quran/catalog";

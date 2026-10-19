@@ -79,7 +79,6 @@
     "react-email": "catalog:",
     "remark-mdx": "catalog:",
     "remark-parse": "catalog:",
-    "server-only": "catalog:",
     "strip-ansi": "^7.2.0",
     "unified": "catalog:"
   },

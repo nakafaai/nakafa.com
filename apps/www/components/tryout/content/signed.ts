@@ -1,5 +1,5 @@
 import { HttpClient } from "@confect/js";
-import "server-only";
+import "@tanstack/react-start/server-only";
 import { makeArtifactCacheTag } from "@nakafa/aksara-contracts/cache/content";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import { verifyAttemptContent } from "@repo/backend/client/content/attempt";

@@ -1,4 +1,4 @@
-import "server-only";
+import "@tanstack/react-start/server-only";
 import { publicationKeys, siteUrlKeys } from "@repo/next-config/keys";
 import { clientEnv } from "@/env.client";
 

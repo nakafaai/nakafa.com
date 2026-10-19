@@ -1,5 +1,5 @@
 import type { Ref } from "@confect/core";
-import "server-only";
+import "@tanstack/react-start/server-only";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { Effect, Schema } from "effect";

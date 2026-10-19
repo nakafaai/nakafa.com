@@ -8,7 +8,6 @@ const catalogMocks = vi.hoisted(() => ({
   readTryoutHubPage: vi.fn(),
 }));
 
-vi.mock("server-only", () => ({}));
 vi.mock("@/components/tryout/catalog/server", () => catalogMocks);
 
 const country = "try-out/indonesia";
