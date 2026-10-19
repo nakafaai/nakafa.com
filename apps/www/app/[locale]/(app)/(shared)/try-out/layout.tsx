@@ -1,3 +1,5 @@
+import { monospace } from "@repo/design-system/lib/monospace";
+import { cn } from "cn";
 import { locale as rootLocale } from "next/root-params";
 import { AppShell } from "@/components/sidebar/shell";
 import { getShellArticleNavigation } from "@/lib/content/article/navigation";
@@ -19,5 +21,9 @@ export default async function Layout({
   const locale = getLocaleOrThrow(await rootLocale());
   const articleNavigation = await getShellArticleNavigation(locale);
 
-  return <AppShell articleNavigation={articleNavigation}>{children}</AppShell>;
+  return (
+    <AppShell articleNavigation={articleNavigation}>
+      <div className={cn(monospace, "contents")}>{children}</div>
+    </AppShell>
+  );
 }

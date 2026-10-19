@@ -1,6 +1,8 @@
 import { HttpClient } from "@confect/js";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
+import { monospace } from "@repo/design-system/lib/monospace";
+import { cn } from "cn";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -127,7 +129,7 @@ export default async function SchoolLayout({
       profile={profile.value}
       role={role}
     >
-      {children}
+      <div className={cn(monospace, "contents")}>{children}</div>
     </TenantShell>
   );
 }
