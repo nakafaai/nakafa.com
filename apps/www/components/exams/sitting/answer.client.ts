@@ -8,12 +8,12 @@ import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Effect, Option, Schema } from "effect";
 import { sittingCallFailure } from "@/components/exams/sitting/actions.client";
 import { finishAttempt } from "@/components/exams/sitting/attempt";
+import { refusalCopyOf } from "@/components/exams/sitting/entry";
 import { confirmAnswer } from "@/components/exams/sitting/keep";
 import {
   type PaperValue,
   setPaperResponse,
 } from "@/components/exams/sitting/paper";
-import { refusalCopyOf } from "@/components/exams/sitting/refusal";
 import { sittingStorage } from "@/components/exams/sitting/storage.client";
 import { reportClientException } from "@/lib/analytics/client";
 

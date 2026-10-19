@@ -12,7 +12,7 @@ import {
   lockAttempt,
   unlockAttempt,
 } from "@/components/exams/sitting/change";
-import { refusalCopyOf } from "@/components/exams/sitting/refusal";
+import { refusalCopyOf } from "@/components/exams/sitting/entry";
 import { reportClientException } from "@/lib/analytics/client";
 
 /** The milliseconds on the device clock, for the optimistic guess that the server settles. */

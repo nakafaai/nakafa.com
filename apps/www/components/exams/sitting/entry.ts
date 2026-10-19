@@ -1,14 +1,18 @@
+import type { ToastCopy } from "@repo/design-system/lib/toast/notify";
 import { Option, Schema } from "effect";
 
 /**
- * The ways that a call to a sitting ends without a seat, as the server names them. An entry, the paper,
- * and an attempt's screen all show the sentence of one of these, so each reason has one sentence.
+ * The reasons that a sitting call ends with, as the server names them. An entry, the paper, and an attempt's
+ * screen show the sentence of a reason that has one, and an answer or a finish shows the toast of a reason
+ * that refuses one. A reason with neither is one that the screen does not name, so the generic failure stands in.
  */
-export const EntryFailure = Schema.Literals([
+const SittingReason = Schema.Literals([
   "AttemptClosed",
   "AttemptLocked",
   "DeviceRetired",
   "NotInSitting",
+  "QuestionNotInExam",
+  "ResponseDoesNotFit",
   "SecondDevice",
   "SittingClosed",
   "SittingLocked",
@@ -32,20 +36,101 @@ export const EntryMessage = Schema.Literals([
   "student-too-many-tries",
 ]);
 
-/** The sentence that the screen shows for each failure of a call. */
-const failureMessages: Record<
-  typeof EntryFailure.Type,
-  typeof EntryMessage.Type
+/**
+ * The copy of each reason, so one table owns the sentence and the toast of every reason: the sentence that an
+ * entry or a paper shows, and the toast that an answer or a finish shows when it is refused for the reason.
+ */
+const reasons: Record<
+  typeof SittingReason.Type,
+  {
+    readonly message?: typeof EntryMessage.Type;
+    readonly toast?: ToastCopy;
+  }
 > = {
-  AttemptClosed: "student-attempt-closed",
-  AttemptLocked: "student-locked",
-  DeviceRetired: "student-device-retired",
-  NotInSitting: "student-not-in-sitting",
-  SecondDevice: "student-second-device",
-  SittingClosed: "student-closed",
-  SittingLocked: "student-locked-school",
-  SittingNotOpen: "student-not-open",
+  AttemptClosed: {
+    message: "student-attempt-closed",
+    toast: {
+      description: "sitting-attempt-closed.description",
+      title: "sitting-attempt-closed.title",
+    },
+  },
+  AttemptLocked: {
+    message: "student-locked",
+    toast: {
+      description: "sitting-attempt-locked.description",
+      title: "sitting-attempt-locked.title",
+    },
+  },
+  DeviceRetired: {
+    message: "student-device-retired",
+    toast: {
+      description: "sitting-device-retired.description",
+      title: "sitting-device-retired.title",
+    },
+  },
+  NotInSitting: {
+    message: "student-not-in-sitting",
+    toast: {
+      description: "sitting-not-in.description",
+      title: "sitting-not-in.title",
+    },
+  },
+  QuestionNotInExam: {
+    toast: {
+      description: "sitting-question-missing.description",
+      title: "sitting-question-missing.title",
+    },
+  },
+  ResponseDoesNotFit: {
+    toast: {
+      description: "sitting-response-refused.description",
+      title: "sitting-response-refused.title",
+    },
+  },
+  SecondDevice: {
+    message: "student-second-device",
+    toast: {
+      description: "sitting-second-device.description",
+      title: "sitting-second-device.title",
+    },
+  },
+  SittingClosed: { message: "student-closed" },
+  SittingLocked: {
+    message: "student-locked-school",
+    toast: {
+      description: "sitting-locked.description",
+      title: "sitting-locked.title",
+    },
+  },
+  SittingNotOpen: { message: "student-not-open" },
 };
+
+/** The copy of the reason that a failed call names, or none when the error names no sitting reason. */
+function reasonOf(error: unknown) {
+  return Option.map(
+    Schema.decodeUnknownOption(Schema.Struct({ _tag: SittingReason }))(error),
+    (failure) => reasons[failure._tag]
+  );
+}
+
+/** The sentence for a failed call, or none when the error names no sentence. */
+export function sittingFailureMessage(
+  error: unknown
+): Option.Option<typeof EntryMessage.Type> {
+  return Option.flatMap(reasonOf(error), (copy) =>
+    Option.fromNullishOr(copy.message)
+  );
+}
+
+/**
+ * The toast for a refused answer or finish, or none when the error is not one of those refusals. A
+ * none is a failure that the caller reports, because the server did not name a reason to the student.
+ */
+export function refusalCopyOf(error: unknown): Option.Option<ToastCopy> {
+  return Option.flatMap(reasonOf(error), (copy) =>
+    Option.fromNullishOr(copy.toast)
+  );
+}
 
 /** The sentence that the screen shows for each refused reason of an entry. */
 const refusalMessages: Record<
@@ -55,16 +140,6 @@ const refusalMessages: Record<
   TokenRefused: "student-token-refused",
   TooManyTries: "student-too-many-tries",
 };
-
-/** The sentence for a failed call, or none when the error is not one that a sitting call names. */
-export function sittingFailureMessage(
-  error: unknown
-): Option.Option<typeof EntryMessage.Type> {
-  return Option.map(
-    Schema.decodeUnknownOption(Schema.Struct({ _tag: EntryFailure }))(error),
-    (failure) => failureMessages[failure._tag]
-  );
-}
 
 /** The sentence for a refused entry, which names the token or the tries. */
 export function entryRefusalMessage(
