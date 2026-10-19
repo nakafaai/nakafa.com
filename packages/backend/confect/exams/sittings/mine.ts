@@ -13,7 +13,7 @@ const TENANT_UNIT_LIMIT = 24;
 const SITTINGS_PER_STATE = 10;
 
 /** The states of a sitting that a student may still take part in. */
-const LIVE_STATES: readonly (typeof SittingState.Type)[] = [
+export const LIVE_STATES: readonly (typeof SittingState.Type)[] = [
   "scheduled",
   "open",
 ];

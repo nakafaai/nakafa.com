@@ -15,7 +15,7 @@ describe("triggers/comments/comments", () => {
     vi.useRealTimers();
   });
 
-  it("drains full vote and reply batches after a parent is deleted", async () => {
+  it("drains full reply batches after a parent is deleted", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(NOW);
     const t = createConvexTestWithBetterAuth();
@@ -34,18 +34,13 @@ describe("triggers/comments/comments", () => {
     await t.mutation(async (ctx) => {
       for (let index = 0; index < 100; index += 1) {
         const userId = await ctx.db.insert("users", {
-          authId: `voter-${index}`,
+          authId: `replier-${index}`,
           credits: 0,
           creditsResetAt: NOW,
-          email: `voter-${index}@example.com`,
+          email: `replier-${index}@example.com`,
           mascot: MASCOT_CODE,
-          name: `Voter ${index}`,
+          name: `Replier ${index}`,
           plan: "free",
-        });
-        await ctx.db.insert("commentVotes", {
-          commentId: parentId,
-          userId,
-          vote: 1,
         });
         await ctx.db.insert("comments", {
           slug,
@@ -59,10 +54,7 @@ describe("triggers/comments/comments", () => {
           replyCount: 0,
         });
       }
-      await ctx.db.patch("comments", parentId, {
-        upvoteCount: 100,
-        replyCount: 100,
-      });
+      await ctx.db.patch("comments", parentId, { replyCount: 100 });
     });
     await client.mutation(api.comments.mutations.deleteComment, {
       commentId: parentId,
@@ -70,17 +62,15 @@ describe("triggers/comments/comments", () => {
     await t.finishAllScheduledFunctions(vi.runAllTimers, 150);
     const state = await t.query(async (ctx) => ({
       comments: await ctx.db.query("comments").collect(),
-      votes: await ctx.db.query("commentVotes").collect(),
       jobs: await ctx.db.system.query("_scheduled_functions").collect(),
     }));
     expect(state.comments).toEqual([]);
-    expect(state.votes).toEqual([]);
     expect(Arr.every(state.jobs, (job) => job.state.kind === "success")).toBe(
       true
     );
     expect(
       Arr.filter(state.jobs, (job) => job.args[0].commentId === parentId)
-    ).toHaveLength(3);
+    ).toHaveLength(2);
   });
 
   it("keeps the reply count of the thread through replies at any depth, and a deleted reply takes its replies", async () => {

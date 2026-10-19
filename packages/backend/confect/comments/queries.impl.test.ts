@@ -275,7 +275,13 @@ describe("comments/queries", () => {
     });
 
     expect(page.page).toMatchObject([
-      { likeCount: 0, liked: false, viewerVote: null },
+      {
+        downvoteCount: 0,
+        likeCount: 0,
+        liked: false,
+        upvoteCount: 0,
+        viewerVote: null,
+      },
     ]);
   });
 });

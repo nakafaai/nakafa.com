@@ -5,6 +5,12 @@ import { Email } from "@repo/backend/confect/tenancy/schema";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Schema } from "effect";
 
+/**
+ * The most extra students a seed seats in its sitting: more than one dashboard page of 100,
+ * so a browser test reaches the second page, and few enough for one transaction.
+ */
+const CROWD_MAX = 150;
+
 /** What the acceptance seed answers: the exam, its sitting, and the sitting's token. */
 const SittingSeed = Schema.Struct({
   examId: Id("exams"),
@@ -19,7 +25,13 @@ const SittingSeed = Schema.Struct({
 export default GroupSpec.make().addFunction(
   FunctionSpec.internalMutation({
     name: "sitting",
-    args: () => ({ email: Email, slug: TenantSlug }),
+    args: () => ({
+      crowd: Schema.optionalKey(
+        Schema.Int.check(Schema.isBetween({ maximum: CROWD_MAX, minimum: 0 }))
+      ),
+      email: Email,
+      slug: TenantSlug,
+    }),
     returns: () => SittingSeed,
     error: () => SeedRefused,
   })

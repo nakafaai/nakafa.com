@@ -16,8 +16,13 @@ describe("createSittingStore", () => {
   it("keeps the selected seat until another is chosen or the selection is cleared", () => {
     const store = createSittingStore();
 
-    store.getState().choose(attemptId("attempt-a"));
-    expect(store.getState().selected).toBe(attemptId("attempt-a"));
+    store
+      .getState()
+      .choose({ attemptId: attemptId("attempt-a"), cursor: "page-2" });
+    expect(store.getState().selected).toEqual({
+      attemptId: attemptId("attempt-a"),
+      cursor: "page-2",
+    });
 
     store.getState().choose(null);
     expect(store.getState().selected).toBeNull();
@@ -25,12 +30,17 @@ describe("createSittingStore", () => {
 
   it("changes the filter and keeps the selection", () => {
     const store = createSittingStore();
-    store.getState().choose(attemptId("attempt-a"));
+    store
+      .getState()
+      .choose({ attemptId: attemptId("attempt-a"), cursor: null });
 
     store.getState().chooseFilter("needsAttention");
 
     expect(store.getState().filter).toBe("needsAttention");
-    expect(store.getState().selected).toBe(attemptId("attempt-a"));
+    expect(store.getState().selected).toEqual({
+      attemptId: attemptId("attempt-a"),
+      cursor: null,
+    });
   });
 
   it("gives every dashboard instance its own state", () => {
