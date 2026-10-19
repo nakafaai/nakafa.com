@@ -23,6 +23,7 @@ import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 import { useStore } from "zustand";
+import { useConvexAuth } from "@/components/providers/convex";
 import { LayoutContent } from "@/components/shared/content/layout";
 import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
 import { scopeChoices, unitLanguages } from "@/components/tenant/exams/create";
@@ -43,12 +44,14 @@ const EXAM_PAGE_SIZE = 20;
 export function ExamList({ slug }: { slug: TenantSlug }) {
   const t = useTranslations("Exams");
   const locale = useLocale();
+  // Both reads need the session, which Convex learns a moment after the page draws.
+  const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const pagination = usePaginatedQuery(
     exams.exams.list,
-    { slug },
+    isSettled ? { slug } : "skip",
     { initialNumItems: EXAM_PAGE_SIZE }
   );
-  const viewer = useQuery(tenancy.viewer.get, { slug });
+  const viewer = useQuery(tenancy.viewer.get, isSettled ? { slug } : "skip");
   const [drafts] = useState(createExamDrafts);
   const saving = useStore(drafts, (state) => state.ids);
   const { entry, ref } = useIntersection<HTMLDivElement>();

@@ -48,6 +48,7 @@ export const SentenceKeySchema = Schema.Literals([
   "Classroom.channels-empty-description",
   "Comments.delete-description",
   "Error.description",
+  "Exams.try-note",
   "Memory.clear-description",
   "Memory.delete-description",
   "Memory.empty-description",
