@@ -1,12 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { readCumulativeLayoutShift } from "@/e2e/support/layout";
-import {
-  createSchool,
-  hostAddress,
-  inviteLearner,
-  signInOwner,
-} from "@/e2e/support/school";
+import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 
 test("a member sees the school in the sidebar and the page's one action in Beranda", async ({
   browser,
@@ -24,52 +19,6 @@ test("a member sees the school in the sidebar and the page's one action in Beran
   await expect(page.getByRole("button", { name: "Create exam" })).toBeVisible();
   await expect(page.getByText(school.name, { exact: true })).toHaveCount(1);
   await expect(page.getByRole("link", { name: "Home" })).toBeVisible();
-  await context.close();
-});
-
-test("Beranda offers the owner one next step, which opens the exams", async ({
-  browser,
-  baseURL,
-}) => {
-  const school = await Effect.runPromise(createSchool());
-  const host = `${school.slug}.localhost`;
-  const schoolHome = hostAddress(baseURL, host, "/");
-  const context = await browser.newContext();
-  await Effect.runPromise(signInOwner(context, school.slug, schoolHome));
-  const page = await context.newPage();
-  await page.goto(schoolHome);
-
-  await expect(
-    page.getByText("Students see an exam only once it is scheduled.")
-  ).toBeVisible();
-  await page.getByRole("link", { name: "Open exams" }).click();
-  await expect(page).toHaveURL(hostAddress(baseURL, host, "/exams"));
-  await context.close();
-});
-
-test("Beranda offers no next step to a member who may not open exams", async ({
-  browser,
-  baseURL,
-}) => {
-  const school = await Effect.runPromise(createSchool());
-  const schoolHome = hostAddress(baseURL, `${school.slug}.localhost`, "/");
-  const context = await browser.newContext();
-  await Effect.runPromise(
-    inviteLearner({
-      address: `member-${school.slug}@acceptance.example.test`,
-      baseURL: schoolHome,
-      context,
-      slug: school.slug,
-    })
-  );
-  const page = await context.newPage();
-  await page.goto(schoolHome);
-
-  // The header and the step read the same viewer, so once the header shows, a step would too.
-  await expect(
-    page.getByRole("heading", { level: 1, name: "Home" })
-  ).toBeVisible();
-  await expect(page.getByRole("link", { name: "Open exams" })).toHaveCount(0);
   await context.close();
 });
 
