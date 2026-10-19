@@ -93,3 +93,57 @@ test("a new account opens its own school in five questions and lands in it as it
   await expect(page).toHaveTitle(new RegExp(name));
   await context.close();
 });
+
+test("a founder types a school name a letter at a time, and the name, the address, Back and the browser's history all keep it", async ({
+  baseURL,
+  browser,
+}, testInfo) => {
+  const context = await browser.newContext();
+  await Effect.runPromise(signInLearner(context, String(baseURL)));
+  const page = await context.newPage();
+  const tag = `${testInfo.testId.slice(0, 6)}${testInfo.repeatEachIndex}${testInfo.retry}`;
+  const name = `Tunas ${tag}`;
+  const slug = `tunas-${tag}`;
+
+  await page.goto("/en/school/new");
+  await expect(page.getByText("Question 1 of 5")).toBeVisible();
+  const nameField = page.getByLabel("School name");
+  const address = page.getByLabel("Address");
+
+  // A person types with pauses, so the address follows each letter and the server
+  // checks it between them; both fields stay on the page through every letter.
+  await nameField.click();
+  await Effect.runPromise(
+    Effect.forEach(
+      Arr.fromIterable(name),
+      (letter, index) =>
+        Effect.promise(async () => {
+          await page.keyboard.type(letter, { delay: 120 });
+          await expect(nameField).toBeVisible();
+          await expect(address).toBeVisible();
+          await expect(nameField).toHaveValue(name.slice(0, index + 1));
+        }),
+      { discard: true }
+    )
+  );
+  await expect(address).toHaveValue(slug);
+  await expect(page.getByText("Available")).toBeAttached();
+
+  // Continue and Back return to the name as it was typed.
+  await page.getByRole("button", { name: "Continue" }).click();
+  await expect(page.getByText("Question 2 of 5")).toBeVisible();
+  await page.getByRole("button", { name: "Back" }).click();
+  await expect(nameField).toHaveValue(name);
+  await expect(address).toHaveValue(slug);
+
+  // The browser's back and forward return to the questionnaire, which resumes
+  // with the saved name.
+  await page.getByRole("button", { name: "Continue" }).click();
+  await expect(page.getByText("Question 2 of 5")).toBeVisible();
+  await page.goBack();
+  await page.goForward();
+  await expect(page.getByText("Question 2 of 5")).toBeVisible();
+  await page.getByRole("button", { name: "Back" }).click();
+  await expect(nameField).toHaveValue(name);
+  await context.close();
+});
