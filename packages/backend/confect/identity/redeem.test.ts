@@ -1,7 +1,11 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import { setLoginPassword } from "@repo/backend/confect/identity/account";
 import { CARD_TERM } from "@repo/backend/confect/identity/card";
+import { Email, INVITE_TERM } from "@repo/backend/confect/tenancy/schema";
 import {
   CARD_NOW,
   cardRowOf,
@@ -25,7 +29,7 @@ import {
   slugOf,
   tenancyFixture,
 } from "@repo/backend/test/tenancy";
-import { Array as Arr, Duration, Effect, Exit, Option } from "effect";
+import { Array as Arr, Duration, Effect, Exit, Option, Schema } from "effect";
 
 // The password step is the one Better Auth call in a redemption. A test makes it
 // fail once to prove that the card and the account roll back together.
@@ -94,6 +98,46 @@ describe("identity/cards redeem", () => {
         expect(yield* redeemOn(fixture, issued.code)).toEqual({
           outcome: "refused",
           reason: "used",
+        });
+      })
+  );
+
+  it.effect(
+    "accepts the pending invite of the Person it claims, so the invite leaves the pending list",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const issued = yield* issueFirst(fixture);
+        const inviteId = yield* fixture.run(
+          Effect.flatMap(DatabaseWriter, (writer) =>
+            writer.table("tenantInvites").insert({
+              channel: {
+                email: Schema.decodeSync(Email)("guru@harapan.example.test"),
+                kind: "email",
+              },
+              expiresAt: CARD_NOW + Duration.toMillis(INVITE_TERM),
+              personId: fixture.invited,
+              state: { status: "pending" },
+              tenantId: fixture.tenants.nf,
+            })
+          )
+        );
+        expect(yield* redeemOn(fixture, issued.code)).toEqual({
+          loginName: "guru.baru",
+          outcome: "redeemed",
+        });
+        const user = Option.getOrUndefined(
+          yield* userNamed(fixture, "invited")
+        );
+        const invite = yield* fixture.run(
+          Effect.flatMap(DatabaseReader, (reader) =>
+            reader.table("tenantInvites").get(inviteId).pipe(Effect.orDie)
+          )
+        );
+        expect(invite.state).toEqual({
+          at: CARD_NOW,
+          status: "accepted",
+          userId: user?._id,
         });
       })
   );

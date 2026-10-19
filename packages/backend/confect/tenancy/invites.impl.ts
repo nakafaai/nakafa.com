@@ -238,6 +238,9 @@ const resend = FunctionImpl.make(
       "person.invite",
       stored.personId
     );
+    if (person.account.state === "claimed") {
+      return yield* new PersonClaimed();
+    }
     const now = yield* Clock.currentTimeMillis;
     if (
       stored.state.status === "expired" ||
