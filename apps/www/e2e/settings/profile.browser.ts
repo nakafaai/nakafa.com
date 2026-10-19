@@ -10,6 +10,9 @@ import { openChatPage, runOnPage } from "@/e2e/support/chat";
 import { appRoutes } from "@/e2e/support/route";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
+/** The query that tells whether a username can be taken. */
+const CHECK_USERNAME = "users/queries:checkUsername";
+
 /** The username field, which the form labels with the word Username. */
 function usernameField(page: Page) {
   return page.getByRole("textbox", { name: app.Auth.username });
@@ -81,7 +84,7 @@ test("a learner takes a new username in settings: a taken or invalid name says w
 }) => {
   await runOnPage(page, baseURL, (origin) =>
     Effect.gen(function* () {
-      const { learner } = yield* openChatPage(page, origin);
+      const { changes, learner } = yield* openChatPage(page, origin);
       // The account's id is a unique string of letters and digits, so the name
       // is unique too, and it starts with a letter.
       const renamed = `pelajar${learner.userId.slice(-12)}`;
@@ -95,6 +98,8 @@ test("a learner takes a new username in settings: a taken or invalid name says w
           page.getByText(app.Auth["username-letter-first"], { exact: true })
         ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
         await expect(save).toBeDisabled();
+        // The check needs the session, so the page asks for it once it has signed in.
+        expect(changes.askedSignedOut(CHECK_USERNAME)).toBe(false);
 
         await usernameField(page).fill(renamed);
         await expect(
