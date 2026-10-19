@@ -191,10 +191,71 @@ export function expireHostOnlySessionCookie(
   });
 }
 
+/** The Domain attribute of a Set-Cookie value, which names the domain that the cookie reaches. */
+const DOMAIN_ATTRIBUTE = /^domain=/i;
+
 /**
- * Wraps Better Auth's request handler with `expireHostOnlySessionCookie`. A
- * plugin's response hook receives the auth context and not the request, so the
- * host that answered is read here, from the request.
+ * A Set-Cookie value without its Domain attribute, so the browser keeps the cookie
+ * for the host that set it.
+ */
+function withoutDomainAttribute(setCookie: string) {
+  return Arr.join(
+    Arr.filter(
+      setCookie.split("; "),
+      (attribute) => !DOMAIN_ATTRIBUTE.test(attribute)
+    ),
+    "; "
+  );
+}
+
+/**
+ * Gives the cookies of a response from a school host of a local site no Domain
+ * attribute. The shared cookie names the site's domain, `localhost` on a local
+ * run, and a browser sends a `Domain=localhost` cookie to `localhost` alone, so
+ * the school host would never get its session back, and a sign-in there would
+ * leave the learner signed out. Without the attribute, the browser keeps each
+ * cookie for the school host that answered. A host that the shared cookie reaches,
+ * and a host that is not a school host, keep their cookies.
+ *
+ * Returns `undefined` when the response is left alone.
+ */
+function hostOwnSchoolCookies(
+  response: Response,
+  {
+    cookieDomain,
+    hostname,
+  }: {
+    readonly cookieDomain: string;
+    readonly hostname: string;
+  }
+) {
+  if (
+    sharedCookieReaches(hostname, cookieDomain) ||
+    !isSchoolHostname(hostname, cookieDomain)
+  ) {
+    return;
+  }
+  const setCookies = response.headers.getSetCookie();
+  if (setCookies.length === 0) {
+    return;
+  }
+  const headers = new Headers(response.headers);
+  headers.delete("set-cookie");
+  for (const cookie of setCookies) {
+    headers.append("set-cookie", withoutDomainAttribute(cookie));
+  }
+  return new Response(response.body, {
+    headers,
+    status: response.status,
+    statusText: response.statusText,
+  });
+}
+
+/**
+ * Wraps Better Auth's request handler with the cookie rules of the host that
+ * answered: `expireHostOnlySessionCookie`, and `hostOwnSchoolCookies` for a school
+ * host of a local site. A plugin's response hook receives the auth context and not
+ * the request, so the host that answered is read here, from the request.
  */
 export function hostOnlySessionCookieHandler(
   handler: (request: Request) => Promise<Response>,
@@ -208,12 +269,14 @@ export function hostOnlySessionCookieHandler(
         if (Option.isNone(hostname)) {
           return response;
         }
+        const host = {
+          cookieDomain: siteUrl.hostname,
+          hostname: hostname.value,
+        };
         return (
-          expireHostOnlySessionCookie(response, {
-            cookieDomain: siteUrl.hostname,
-            hostname: hostname.value,
-            name,
-          }) ?? response
+          expireHostOnlySessionCookie(response, { ...host, name }) ??
+          hostOwnSchoolCookies(response, host) ??
+          response
         );
       }),
       Effect.runPromise

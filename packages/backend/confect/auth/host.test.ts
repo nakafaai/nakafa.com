@@ -386,6 +386,49 @@ describe("host-only session handler", () => {
     expect(response).toBe(answered);
   });
 
+  it("keeps the cookies of a school host of a local site on that host alone", async () => {
+    const handler = hostOnlySessionCookieHandler(
+      () =>
+        Promise.resolve(
+          new Response(null, {
+            headers: {
+              "set-cookie": `${PLAIN_NAME}=token; Domain=localhost; Path=/`,
+            },
+          })
+        ),
+      new URL("http://localhost:3000")
+    );
+
+    const response = await handler(
+      new Request("http://harapan.localhost:3000/api/auth/get-session", {
+        headers: { "x-forwarded-host": "harapan.localhost:3000" },
+      })
+    );
+
+    expect(response.headers.getSetCookie()).toEqual([
+      `${PLAIN_NAME}=token; Path=/`,
+    ]);
+  });
+
+  it.each([
+    ["harapan.localhost:3000", "http://localhost:3000"],
+    ["harapan.nakafa.com", "https://nakafa.com"],
+  ])("leaves an answer that sets no cookie alone on %s", async (host, site) => {
+    const answered = new Response(null);
+    const handler = hostOnlySessionCookieHandler(
+      () => Promise.resolve(answered),
+      new URL(site)
+    );
+
+    const response = await handler(
+      new Request(`${site}/api/auth/get-session`, {
+        headers: { "x-forwarded-host": host },
+      })
+    );
+
+    expect(response).toBe(answered);
+  });
+
   it.each([
     "not a host",
     "harapan.nakafa.com/classes",

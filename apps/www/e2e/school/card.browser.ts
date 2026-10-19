@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { signInLearner } from "@/e2e/support/learner";
 import { createSchool, hostAddress, seedCard } from "@/e2e/support/school";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 test("a wrong card code is refused with one message that does not say whether the username exists", async ({
   page,
@@ -35,10 +36,12 @@ test("a student whose card an Admin printed signs in with the school username, t
   await page.getByLabel("Password").fill("correct horse battery");
   await page.getByRole("button", { name: "Sign in" }).click();
 
-  await expect(page.getByText("Siswa Uji").first()).toBeVisible();
+  await expect(page.getByText("Siswa Uji").first()).toBeVisible({
+    timeout: readinessTimeoutMilliseconds,
+  });
   await expect(
     page.getByRole("button", { name: "Sign in with a username" })
-  ).toHaveCount(0);
+  ).toHaveCount(0, { timeout: readinessTimeoutMilliseconds });
 });
 
 test("a signed-in learner who is not a member of an existing school sees the outsider page", async ({
