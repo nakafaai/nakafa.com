@@ -9,9 +9,10 @@ import {
 import { useAnalyticsConsent } from "@/lib/analytics/consent/context";
 
 /**
- * The permanent preferences dialog. The first intent to open it mounts this
- * component, and it stays mounted afterwards, so the first open shows no
- * loading frame.
+ * The permanent preferences dialog. The first intent to open it (hover, focus,
+ * or press) mounts this component, and it stays mounted afterwards. A quick
+ * touch tap can open the dialog before its chunk arrives, so on a slow
+ * connection that first open waits for the chunk instead of appearing at once.
  */
 export function ConsentPreferences() {
   const t = useTranslations("AnalyticsConsent");
