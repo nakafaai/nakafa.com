@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
-import { trackChanges } from "@/e2e/support/changes";
+import { saved, trackChanges } from "@/e2e/support/changes";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
@@ -32,6 +32,7 @@ test("a teacher tries an exam as a student, picks an answer, and the answer is n
     signInOwner(context, school.slug, hostAddress(baseURL, host, "/"))
   );
   const page = await context.newPage();
+  const ownerChanges = await Effect.runPromise(trackChanges(page, []));
   await page.goto(hostAddress(baseURL, host, "/exams"));
 
   // The exam starts with one question, which the editor selects, and the teacher writes it.
@@ -43,6 +44,7 @@ test("a teacher tries an exam as a student, picks an answer, and the answer is n
 
   const prompt = page.getByRole("textbox", { name: "Question 1 text" });
   await expect(prompt).toBeEditable();
+  const sentBefore = ownerChanges.sent;
   await prompt.click();
   await page.keyboard.type(PROMPT);
   for (const option of OPTIONS) {
@@ -58,6 +60,10 @@ test("a teacher tries an exam as a student, picks an answer, and the answer is n
   await expect(
     page.getByRole("button", { name: "Mark option B of question 1 as correct" })
   ).toHaveAttribute("aria-pressed", "true");
+
+  // The page shows a change before the server holds it, so the try page opens once the server has
+  // the prompt, the options and the key that it reads.
+  await saved(ownerChanges, sentBefore);
 
   // The try page is tracked from its first load. The editor opened there holds what the server
   // holds, so the prompt and the options it shows are the ones the try reads.
