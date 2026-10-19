@@ -45,6 +45,8 @@ const reasons: Record<
   {
     readonly message?: typeof EntryMessage.Type;
     readonly toast?: ToastCopy;
+    /** A lock that lifts later: a proctor's unlock of the attempt, or the school's or the unit's unlock. */
+    readonly lifts?: true;
   }
 > = {
   AttemptClosed: {
@@ -55,6 +57,7 @@ const reasons: Record<
     },
   },
   AttemptLocked: {
+    lifts: true,
     message: "student-locked",
     toast: {
       description: "sitting-attempt-locked.description",
@@ -96,6 +99,7 @@ const reasons: Record<
   },
   SittingClosed: { message: "student-closed" },
   SittingLocked: {
+    lifts: true,
     message: "student-locked-school",
     toast: {
       description: "sitting-locked.description",
@@ -110,6 +114,18 @@ function reasonOf(error: unknown) {
   return Option.map(
     Schema.decodeUnknownOption(Schema.Struct({ _tag: SittingReason }))(error),
     (failure) => reasons[failure._tag]
+  );
+}
+
+/**
+ * Whether a refused answer or finish is final, so the browser drops the answer that it keeps for it. The server
+ * will not take such an answer later. A refusal for a lock is not final, because the lock lifts, and the next
+ * visit to the paper sends the kept answer again. Any error that is not a refusal is not final either.
+ */
+export function isFinalRefusal(error: unknown): boolean {
+  return Option.exists(
+    reasonOf(error),
+    (copy) => copy.toast !== undefined && copy.lifts !== true
   );
 }
 

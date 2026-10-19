@@ -2,6 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Option } from "effect";
 import {
   entryRefusalMessage,
+  isFinalRefusal,
   refusalCopyOf,
   sittingFailureMessage,
 } from "@/components/exams/sitting/entry";
@@ -82,6 +83,26 @@ describe("refusalCopyOf", () => {
   it("names no copy for a sentence that is not a refusal of an answer or a finish", () => {
     expect(refusalCopyOf({ _tag: "SittingClosed" })).toEqual(Option.none());
     expect(refusalCopyOf({ _tag: "SittingNotOpen" })).toEqual(Option.none());
+  });
+});
+
+describe("isFinalRefusal", () => {
+  it("is final for a refusal that the server will not take later", () => {
+    expect(isFinalRefusal({ _tag: "AttemptClosed" })).toBe(true);
+    expect(isFinalRefusal({ _tag: "ResponseDoesNotFit" })).toBe(true);
+    expect(isFinalRefusal({ _tag: "SecondDevice" })).toBe(true);
+    expect(isFinalRefusal({ _tag: "NotInSitting" })).toBe(true);
+  });
+
+  it("is not final for a lock, which lifts and lets the kept answer go through", () => {
+    expect(isFinalRefusal({ _tag: "AttemptLocked" })).toBe(false);
+    expect(isFinalRefusal({ _tag: "SittingLocked" })).toBe(false);
+  });
+
+  it("is not final for an error that is not a refusal", () => {
+    expect(isFinalRefusal({ _tag: "SittingClosed" })).toBe(false);
+    expect(isFinalRefusal({ _tag: "AccessDenied" })).toBe(false);
+    expect(isFinalRefusal(new Error("network"))).toBe(false);
   });
 });
 

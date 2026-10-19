@@ -8,7 +8,7 @@ import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Effect, Option, Schema } from "effect";
 import { sittingCallFailure } from "@/components/exams/sitting/actions.client";
 import { finishAttempt } from "@/components/exams/sitting/attempt";
-import { refusalCopyOf } from "@/components/exams/sitting/entry";
+import { isFinalRefusal } from "@/components/exams/sitting/entry";
 import { confirmAnswer } from "@/components/exams/sitting/keep";
 import {
   type PaperValue,
@@ -93,10 +93,10 @@ const SentAnswer = Schema.Struct({
 type SentAnswer = typeof SentAnswer.Type;
 
 /**
- * Sends one answer, and drops the answer that the browser keeps for it once the server settles it. A
- * success is confirmed, and so is a refusal, because the server will not take that answer later either, and
- * the refusal's reason is shown. Any other failure keeps the answer for the next visit to send again, and
- * shows the generic message.
+ * Sends one answer, and settles the answer that the browser keeps for it once the server answers. A success
+ * is confirmed, and so is a final refusal, because the server will not take that answer later either, and
+ * the refusal's reason is shown. A refusal for a lock, and any other failure, keeps the answer for the next
+ * visit to the paper to send again, and shows its reason or the generic message.
  */
 export function useSendAnswer() {
   const answer = useAnswer();
@@ -115,11 +115,10 @@ export function useSendAnswer() {
       Effect.matchEffect({
         onSuccess: () => confirmKept(input, answeredAt),
         onFailure: (error) =>
-          Option.isSome(refusalCopyOf(error))
-            ? confirmKept(input, answeredAt).pipe(
-                Effect.andThen(sittingCallFailure(error))
-              )
-            : sittingCallFailure(error),
+          (isFinalRefusal(error)
+            ? confirmKept(input, answeredAt)
+            : Effect.void
+          ).pipe(Effect.andThen(sittingCallFailure(error))),
       })
     );
 }
