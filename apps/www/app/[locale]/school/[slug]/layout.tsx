@@ -1,7 +1,7 @@
 import { HttpClient } from "@confect/js";
 import auth from "@repo/backend/confect/_generated/refs/auth";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { Array as Arr, Effect, Option, Schema } from "effect";
+import { Array as Arr, DateTime, Effect, Option, Schema } from "effect";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
@@ -11,6 +11,7 @@ import { AppProviders } from "@/components/providers/app";
 import { TenantEntry } from "@/components/tenant/entry";
 import { canOpenExams } from "@/components/tenant/exams/access";
 import { homeAccess } from "@/components/tenant/home/access";
+import { greetingOf } from "@/components/tenant/home/greeting";
 import { TenantOutsider } from "@/components/tenant/outsider";
 import { TenantShell } from "@/components/tenant/shell";
 import { httpLayer } from "@/lib/convex/http";
@@ -152,6 +153,9 @@ async function SchoolFrame({
     onSome: (grant) => grant.role.key,
   });
   const canManage = Arr.contains(member.can, "tenant.manage");
+  // The greeting names the viewer and the part of the day on the school's clock, so the title row is in the
+  // first HTML. The clock is read after `connection()`, which marks this request as dynamic.
+  const now = await Effect.runPromise(DateTime.now);
 
   return (
     <AppProviders pageNavigation={null}>
@@ -159,6 +163,7 @@ async function SchoolFrame({
         account={member.account}
         canManage={canManage}
         canOpenExams={canOpenExams(member)}
+        greeting={greetingOf(member, now)}
         home={homeAccess(member)}
         personName={member.person.name}
         profile={profile.value}
