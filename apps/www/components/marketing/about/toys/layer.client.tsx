@@ -138,22 +138,12 @@ const PLACEMENTS: readonly ToyPlacement[] = [
     picture: animal(12),
     place: within("privacy", { dy: -68, x: 0.86, y: 1 }),
   },
-  // More of what keeps a secret, around the room: a padlock and a sealed letter
-  // beside it from 1024 px, and a padlock under it at every width.
+  // A padlock beside the room from 1024 px; every other thing of Nina's world
+  // already stands somewhere on the page, and none appears twice.
   {
     key: "privacy-padlock",
     picture: thing("padlock"),
     place: within("privacy", { minWidth: 1024, x: 0.12, y: 0.22 }),
-  },
-  {
-    key: "privacy-letter",
-    picture: thing("letter"),
-    place: within("privacy", { minWidth: 1024, x: 0.78, y: 0.78 }),
-  },
-  {
-    key: "privacy-below-padlock",
-    picture: thing("padlock"),
-    place: within("privacy", { dx: -24, dy: -68, x: 0.14, y: 1 }),
   },
   ...gap("curricula", 0.3, TOY_HERD, [13, 27], ["globe", "backpack"]),
   ...gap("letter", 0.7, TOY_HERD, [14, 28], ["letter", "plane"]),
@@ -173,10 +163,10 @@ const PLACEMENTS: readonly ToyPlacement[] = [
   ...gap("faq", 0.5, TOY_HERD, [20, 32], ["clip", "hourglass"]),
   ...gap("community", 0.3, TOY_HERD, [21, 33], ["headphones", "coffee"]),
   ...gap("closing", 0.7, TOY_HERD, [22, 34], ["trophy", "check"]),
-  // The sparse parts take the spare animals and more of Nina's things: the
-  // memory desk at its sides from 1024 px and below it, the school band and the
-  // closing question below them. Each stands in the part's padding or beside
-  // its column, where no text or control reaches.
+  // The sparse parts take the spare animals and a note on the memory desk: the
+  // desk at its sides from 1024 px and below it, the school band and the closing
+  // question below them. Each stands in the part's padding or beside its column,
+  // where no text or control reaches, and no thing appears twice on the page.
   {
     key: "memory-left-animal",
     picture: spare(0),
@@ -211,17 +201,6 @@ const PLACEMENTS: readonly ToyPlacement[] = [
     }),
   },
   {
-    key: "memory-right-pencil",
-    picture: thing("pencil"),
-    place: within("memory", {
-      dx: -24,
-      dy: -24,
-      minWidth: 1024,
-      x: 0.86,
-      y: 0.6,
-    }),
-  },
-  {
     key: "memory-below-animal",
     picture: spare(2),
     place: within("memory", { dx: -28, dy: -68, x: 0.5, y: 1 }),
@@ -232,25 +211,9 @@ const PLACEMENTS: readonly ToyPlacement[] = [
     place: within("school", { dx: -28, dy: -68, x: 0.3, y: 1 }),
   },
   {
-    key: "school-below-book",
-    picture: thing("book"),
-    place: within("school", { dx: -24, dy: -68, x: 0.78, y: 1 }),
-  },
-  {
     key: "closing-below-animal",
     picture: spare(4),
     place: within("closing", { dx: -28, dy: -68, x: 0.18, y: 1 }),
-  },
-  {
-    key: "closing-stopwatch",
-    picture: thing("stopwatch"),
-    place: within("closing", {
-      dx: -24,
-      dy: -24,
-      minWidth: 1280,
-      x: 0.92,
-      y: 0.4,
-    }),
   },
 ];
 
