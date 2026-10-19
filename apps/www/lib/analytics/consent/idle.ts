@@ -2,12 +2,17 @@ import { Duration, Effect } from "effect";
 
 /**
  * The longest the baseline waits for an idle browser turn. A page that never
- * goes idle still starts the baseline once this has passed.
+ * goes idle still starts the baseline once this has passed. Half a second is
+ * past the first paint, so the analytics SDK stays off the paint's critical
+ * path, and only a visit shorter than that goes uncounted.
  */
-const IDLE_TIMEOUT = Duration.seconds(2);
+const IDLE_TIMEOUT = Duration.millis(500);
 
-/** Where the browser has no idle callback, the baseline starts after this delay. */
-const FALLBACK_DELAY = Duration.seconds(2);
+/**
+ * Where the browser has no idle callback (Safari on iPhone and iPad), the
+ * baseline starts after the same half second.
+ */
+const FALLBACK_DELAY = IDLE_TIMEOUT;
 
 /**
  * Completes at the browser's next idle period, or at the timeout, whichever

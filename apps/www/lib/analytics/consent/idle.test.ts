@@ -19,10 +19,10 @@ describe("untilBrowserIdle", () => {
         restoreIdleCallbacks();
 
         const fiber = yield* Effect.forkChild(untilBrowserIdle);
-        yield* TestClock.adjust("1 second");
+        yield* TestClock.adjust("499 millis");
         expect(fiber.pollUnsafe()).toBeUndefined();
 
-        yield* TestClock.adjust("1 second");
+        yield* TestClock.adjust("1 millis");
         yield* Fiber.join(fiber);
       })
   );
@@ -42,7 +42,7 @@ describe("untilBrowserIdle", () => {
         const fiber = yield* Effect.forkChild(untilBrowserIdle);
         yield* TestClock.adjust("1 millis");
         expect(requestIdleCallback).toHaveBeenCalledWith(expect.any(Function), {
-          timeout: 2000,
+          timeout: 500,
         });
         expect(fiber.pollUnsafe()).toBeUndefined();
 
