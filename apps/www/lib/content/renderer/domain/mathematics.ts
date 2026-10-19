@@ -1,5 +1,4 @@
 import { FunctionChart } from "@repo/design-system/components/contents/mathematics/function-chart";
-import { Triangle } from "@repo/design-system/components/contents/mathematics/triangle";
 import { mathematicsComponentNames } from "@repo/design-system/lib/markdown/names";
 import {
   BarChart,
@@ -18,7 +17,10 @@ import {
   FunctionMachine,
   InverseFunctionIllustration,
 } from "@/lib/content/renderer/client/mathematics/function";
-import { UnitCircle } from "@/lib/content/renderer/client/mathematics/geometry";
+import {
+  Triangle,
+  UnitCircle,
+} from "@/lib/content/renderer/client/mathematics/geometry";
 import {
   BacterialGrowth,
   FunctionExplorationVirusChart,
