@@ -67,9 +67,9 @@ function StudentTiles() {
     sittings,
     (sitting) => sitting.state !== "closed"
   );
-  const finished = Arr.filter(
-    sittings,
-    (sitting) => sitting.state === "closed"
+  // The closed sittings come oldest first in the order of the list, so the results read newest first.
+  const finished = Arr.reverse(
+    Arr.filter(sittings, (sitting) => sitting.state === "closed")
   );
   const plan = studentPlan({
     results: finished.length,
