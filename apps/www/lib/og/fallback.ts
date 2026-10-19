@@ -1,5 +1,5 @@
+import { readServerTranslator } from "@repo/internationalization/src/translator";
 import { Effect } from "effect";
-import { getTranslations } from "next-intl/server";
 import type { Locale } from "use-intl";
 import { generateOGImage } from "@/lib/og";
 import { OG_FALLBACK_HEADERS } from "@/lib/og/headers";
@@ -12,8 +12,8 @@ import { OG_FALLBACK_HEADERS } from "@/lib/og/headers";
 export function generateFallbackImage(locale: Locale) {
   return Effect.runPromise(
     Effect.gen(function* () {
-      const t = yield* Effect.tryPromise(() =>
-        getTranslations({ locale, namespace: "NotFound" })
+      const t = yield* Effect.promise(() =>
+        readServerTranslator({ locale, namespace: "NotFound" })
       );
       const response = yield* Effect.tryPromise(() =>
         generateOGImage({

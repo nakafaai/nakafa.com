@@ -23,8 +23,8 @@ import {
   VisualCardTable,
 } from "@repo/design-system/components/visual/card";
 import { Array as Arr, Effect } from "effect";
-import { getFormatter } from "next-intl/server";
 import type { ReactNode } from "react";
+import { useFormatter } from "use-intl";
 
 const DECIMAL_OR_GROUP_SEPARATOR = /[,.]/gu;
 
@@ -35,7 +35,7 @@ function numberMath(value: number, format: (value: number) => string) {
 }
 
 /** Composes an exact model curve, discrete observations, and accessible values. */
-export async function FunctionChart({
+export function FunctionChart({
   a,
   p,
   n,
@@ -43,7 +43,7 @@ export async function FunctionChart({
   title,
   description,
 }: Exponential & { title: ReactNode; description: ReactNode }) {
-  const formatter = await getFormatter();
+  const formatter = useFormatter();
   const formatNumber = (value: number) =>
     formatter.number(value, {
       maximumSignificantDigits: 10,

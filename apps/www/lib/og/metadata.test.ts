@@ -35,8 +35,8 @@ vi.mock("@confect/js", async (importOriginal) => {
     },
   };
 });
-vi.mock("next-intl/server", () => ({
-  getTranslations: mockGetTranslations,
+vi.mock("@repo/internationalization/src/translator", () => ({
+  readServerTranslator: mockGetTranslations,
 }));
 vi.mock(
   "@/lib/content/published/active",

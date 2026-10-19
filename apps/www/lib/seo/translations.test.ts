@@ -8,8 +8,8 @@ import {
 const { mockGetTranslations } = vi.hoisted(() => ({
   mockGetTranslations: vi.fn(),
 }));
-vi.mock("next-intl/server", () => ({
-  getTranslations: mockGetTranslations,
+vi.mock("@repo/internationalization/src/translator", () => ({
+  readServerTranslator: mockGetTranslations,
 }));
 describe("fetchSEOTranslationsNamespace", () => {
   beforeEach(() => {

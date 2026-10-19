@@ -5,10 +5,9 @@ import {
   AppLocaleSchema,
 } from "@nakafa/aksara-contracts/locale";
 import { tryoutMetadataArgsValidator } from "@repo/backend/content/tryout/spec";
+import { readServerTranslator } from "@repo/internationalization/src/translator";
 import { notFound } from "@tanstack/react-router";
 import { Effect, Schema } from "effect";
-import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
 import { readTryoutMetadata } from "@/components/tryout/catalog/server";
 import { createResolvedRouteAlternates } from "@/lib/seo/alternates";
 import { getOgUrl, getSocialMetadata } from "@/lib/seo/social";
@@ -31,7 +30,7 @@ type RetainedTryoutMetadataSource =
 /** Creates private metadata for one authenticated retained attempt route. */
 export function createRetainedTryoutMetadata(
   source: RetainedTryoutMetadataSource
-): Metadata {
+) {
   return {
     description: source.description,
     robots: { follow: false, index: false },
@@ -42,7 +41,7 @@ export function createRetainedTryoutMetadata(
 /** Generates exact canonical metadata for one public try-out hierarchy route. */
 export async function generateTryoutRouteMetadata(
   input: TryoutMetadataQueryInput
-): Promise<Metadata> {
+) {
   const appLocale = AppLocaleSchema.make(input.locale);
   const queryInput = {
     appLocale,
@@ -51,7 +50,7 @@ export async function generateTryoutRouteMetadata(
   };
   const [published, tTryouts] = await Promise.all([
     readTryoutMetadata(queryInput),
-    getTranslations({ locale: input.locale, namespace: "Tryouts" }),
+    readServerTranslator({ locale: input.locale, namespace: "Tryouts" }),
   ]);
   const source = published.route;
 

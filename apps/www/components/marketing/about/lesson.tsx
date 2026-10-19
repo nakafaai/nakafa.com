@@ -1,6 +1,7 @@
 import { Nina } from "@repo/design-system/components/ui/nina";
-import { getFormatter, getLocale, getTranslations } from "next-intl/server";
+import { readServerTranslator } from "@repo/internationalization/src/translator";
 import type { ReactNode } from "react";
+import { createFormatter, useLocale } from "use-intl";
 import {
   LESSON_SECTION_ID,
   LESSON_SUBJECTS,
@@ -34,12 +35,12 @@ import { decimalSeparators } from "@/lib/marketing/decimal";
  * the lesson window on the other, with one lesson of each subject on its tab.
  */
 export async function Lesson() {
-  const locale = getLocaleOrThrow(await getLocale());
-  const [t, tCommon, tSubject, format] = await Promise.all([
-    getTranslations({ locale, namespace: "Landing" }),
-    getTranslations({ locale, namespace: "Common" }),
-    getTranslations({ locale, namespace: "Subject" }),
-    getFormatter({ locale }),
+  const locale = getLocaleOrThrow(useLocale());
+  const format = createFormatter({ locale });
+  const [t, tCommon, tSubject] = await Promise.all([
+    readServerTranslator({ locale, namespace: "Landing" }),
+    readServerTranslator({ locale, namespace: "Common" }),
+    readServerTranslator({ locale, namespace: "Subject" }),
   ]);
   const decimalSeparator = decimalSeparators[locale];
   // Each card and its lab read their labels from the same builder, so the card and the lab agree.

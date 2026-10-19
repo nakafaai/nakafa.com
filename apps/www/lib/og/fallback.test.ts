@@ -30,7 +30,7 @@ const mocks = vi.hoisted(() => {
 
   return {
     FakeImageResponse,
-    getTranslations: vi.fn(),
+    readServerTranslator: vi.fn(),
     get imageCalls() {
       return imageCalls;
     },
@@ -39,8 +39,8 @@ const mocks = vi.hoisted(() => {
 });
 
 vi.mock("node:fs/promises", () => ({ readFile: mocks.readFile }));
-vi.mock("next-intl/server", () => ({
-  getTranslations: mocks.getTranslations,
+vi.mock("@repo/internationalization/src/translator", () => ({
+  readServerTranslator: mocks.readServerTranslator,
 }));
 vi.mock("takumi-js/response", () => ({
   ImageResponse: mocks.FakeImageResponse,
@@ -51,7 +51,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   mocks.imageCalls.length = 0;
   mocks.readFile.mockResolvedValue("<svg/>");
-  mocks.getTranslations.mockImplementation(() =>
+  mocks.readServerTranslator.mockImplementation(() =>
     Promise.resolve((key: string) => `NotFound.${key}`)
   );
 });
@@ -60,7 +60,7 @@ describe("fallback social image", () => {
   it("answers unknown slugs with translated brand artwork", async () => {
     const response = await generateFallbackImage("de");
 
-    expect(mocks.getTranslations).toHaveBeenCalledWith({
+    expect(mocks.readServerTranslator).toHaveBeenCalledWith({
       locale: "de",
       namespace: "NotFound",
     });

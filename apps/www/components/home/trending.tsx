@@ -3,7 +3,7 @@ import "@tanstack/react-start/server-only";
 import { ArrowDown02Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import type { TileLook } from "@repo/design-system/lib/look";
-import { getTranslations } from "next-intl/server";
+import { readServerTranslator } from "@repo/internationalization/src/translator";
 import type { Locale } from "use-intl";
 import { getMaterialLooks } from "@/components/home/look";
 import { MaterialRow } from "@/components/home/material";
@@ -26,7 +26,7 @@ export async function HomeTrending({
     return null;
   }
   const [t, data] = await Promise.all([
-    getTranslations({
+    readServerTranslator({
       locale,
       namespace: "Home",
     }),

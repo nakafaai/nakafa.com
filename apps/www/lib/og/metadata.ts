@@ -1,8 +1,8 @@
 import { ContentAuthorSchema } from "@nakafa/aksara-contracts/content";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { contentSearchSummaryValidator } from "@repo/backend/confect/contents/search/schema";
+import { readServerTranslator } from "@repo/internationalization/src/translator";
 import { Array as Arr, Effect, Schema } from "effect";
-import { getTranslations } from "next-intl/server";
 import type { Locale } from "use-intl";
 import { queryContentStore } from "@/lib/content/store/query";
 
@@ -32,37 +32,14 @@ type SystemMetadata = typeof SystemMetadataSchema.Type;
  */
 export const getMetadataFromSlug = Effect.fn("www.metadata.readFromSlug")(
   function* (locale: Locale, slug: string[]) {
-    const [tCommon, tMetadata] = yield* Effect.all(
-      [
-        Effect.tryPromise({
-          try: () =>
-            getTranslations({
-              locale,
-              namespace: "Common",
-            }),
-          catch: () =>
-            new TranslationLoadError({
-              namespace: "Common",
-              locale,
-            }),
-        }),
-        Effect.tryPromise({
-          try: () =>
-            getTranslations({
-              locale,
-              namespace: "Metadata",
-            }),
-          catch: () =>
-            new TranslationLoadError({
-              namespace: "Metadata",
-              locale,
-            }),
-        }),
-      ],
-      {
-        concurrency: "unbounded",
-      }
-    );
+    const tCommon = yield* Effect.tryPromise({
+      try: () => readServerTranslator({ locale, namespace: "Common" }),
+      catch: () => new TranslationLoadError({ namespace: "Common", locale }),
+    });
+    const tMetadata = yield* Effect.tryPromise({
+      try: () => readServerTranslator({ locale, namespace: "Metadata" }),
+      catch: () => new TranslationLoadError({ namespace: "Metadata", locale }),
+    });
     const defaultTitle = tCommon("made-with-love");
     const shortDescription = tMetadata("short-description");
     const defaultMetadata: SystemMetadata = {

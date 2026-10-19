@@ -1,5 +1,5 @@
+import { readServerTranslator } from "@repo/internationalization/src/translator";
 import { Effect, Schema } from "effect";
-import { getTranslations } from "next-intl/server";
 import type { Locale } from "use-intl";
 
 /** Expected failure when a localized SEO dictionary cannot be loaded. */
@@ -21,13 +21,13 @@ function getErrorMessage(error: unknown) {
   return "Unknown translation loading error";
 }
 
-/** Fetches translations for a dictionary namespace used by SEO metadata. */
+/** Reads the translator of one dictionary namespace used by SEO metadata. */
 export function fetchSEOTranslationsNamespace(
   locale: Locale,
   namespace: "Metadata" | "SEO" | "Subject"
 ) {
   return Effect.tryPromise({
-    try: () => getTranslations({ locale, namespace }),
+    try: () => readServerTranslator({ locale, namespace }),
     catch: (error: unknown) =>
       new SEOTranslationLoadError({
         locale,

@@ -1,5 +1,5 @@
-import { getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
+import { useTranslations } from "use-intl";
 import { AuthLegal } from "@/components/auth/legal";
 import { EntryShellBody } from "@/components/entry/shell";
 
@@ -12,7 +12,7 @@ import { EntryShellBody } from "@/components/entry/shell";
  * adds the sentence that says why signing in keeps progress saved, and the privacy
  * and terms sentence.
  */
-export async function SignInScreen({
+export function SignInScreen({
   action,
   children,
   figure,
@@ -22,7 +22,7 @@ export async function SignInScreen({
   /** What stands above the title: Nina on the main site, the school's mark on a school host. */
   figure: ReactNode;
 }) {
-  const t = await getTranslations("Auth");
+  const t = useTranslations("Auth");
 
   return (
     <EntryShellBody>

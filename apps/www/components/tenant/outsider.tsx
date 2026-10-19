@@ -1,5 +1,5 @@
 import type { Mascot } from "@repo/mascot/code";
-import { getTranslations } from "next-intl/server";
+import { useTranslations } from "use-intl";
 import { EntryShellArtwork } from "@/components/entry/artwork.client";
 import {
   EntryShell,
@@ -17,7 +17,7 @@ import { TenantOutsiderActions } from "@/components/tenant/outsider.client";
  * and offers the ways out. It reuses the entry frame, so the visitor sees the school's own
  * mark, as a signed-out visitor does.
  */
-export async function TenantOutsider({
+export function TenantOutsider({
   account,
   logo,
   mascot,
@@ -28,7 +28,7 @@ export async function TenantOutsider({
   mascot: typeof Mascot.Type;
   school: string;
 }) {
-  const t = await getTranslations("SchoolEntry");
+  const t = useTranslations("SchoolEntry");
 
   return (
     <EntryShell>

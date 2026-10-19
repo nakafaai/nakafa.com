@@ -1,8 +1,8 @@
-import { getTranslations } from "next-intl/server";
+import { useTranslations } from "use-intl";
 
-/** Renders the request's greeting on the server, including its first paint. */
-export async function HomeHeader({ name }: { name: string | null }) {
-  const t = await getTranslations("Home");
+/** Renders the greeting of the signed-in visitor, including its first paint. */
+export function HomeHeader({ name }: { name: string | null }) {
+  const t = useTranslations("Home");
 
   return (
     <div className="flex flex-col gap-2">

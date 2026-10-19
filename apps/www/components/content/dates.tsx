@@ -1,16 +1,14 @@
 import type { PublicationDates } from "@nakafa/aksara-contracts/date";
 import { DateTime } from "effect";
-import { getFormatter, getTranslations } from "next-intl/server";
+import { useFormatter, useTranslations } from "use-intl";
 
 /** Provides truthful publication semantics without changing visual layout. */
-export async function ContentDates({
+export function ContentDates({
   dateModified,
   datePublished,
 }: PublicationDates) {
-  const [formatter, tCommon] = await Promise.all([
-    getFormatter(),
-    getTranslations("Common"),
-  ]);
+  const formatter = useFormatter();
+  const tCommon = useTranslations("Common");
   const formatDate = (date: string) =>
     formatter.dateTime(
       DateTime.toDateUtc(DateTime.makeUnsafe(`${date}T00:00:00.000Z`)),

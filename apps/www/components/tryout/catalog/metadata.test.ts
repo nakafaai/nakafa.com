@@ -13,18 +13,18 @@ const navigationMocks = vi.hoisted(() => ({
   }),
 }));
 const translationMocks = vi.hoisted(() => ({
-  getTranslations: vi.fn(),
+  readServerTranslator: vi.fn(),
 }));
 
 vi.mock("@/components/tryout/catalog/server", () => runtimeMocks);
 vi.mock("@tanstack/react-router", () => navigationMocks);
-vi.mock("next-intl/server", () => translationMocks);
+vi.mock("@repo/internationalization/src/translator", () => translationMocks);
 
 beforeEach(() => {
   runtimeMocks.readTryoutMetadata.mockReset();
   navigationMocks.notFound.mockClear();
-  translationMocks.getTranslations.mockReset();
-  translationMocks.getTranslations.mockResolvedValue(
+  translationMocks.readServerTranslator.mockReset();
+  translationMocks.readServerTranslator.mockResolvedValue(
     (key: string) => `translated:${key}`
   );
 });

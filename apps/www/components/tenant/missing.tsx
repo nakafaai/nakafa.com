@@ -1,4 +1,4 @@
-import { getTranslations } from "next-intl/server";
+import { useTranslations } from "use-intl";
 import { ActionLink } from "@/components/state/action";
 import { Missing } from "@/components/state/missing";
 
@@ -6,11 +6,9 @@ import { Missing } from "@/components/state/missing";
  * The state of a school address that no page answers, with one way on to
  * `homeHref`. A school has no search page, so the state offers no search.
  */
-export async function TenantMissing({ homeHref }: { homeHref: string }) {
-  const [t, tState] = await Promise.all([
-    getTranslations("NotFound"),
-    getTranslations("State"),
-  ]);
+export function TenantMissing({ homeHref }: { homeHref: string }) {
+  const t = useTranslations("NotFound");
+  const tState = useTranslations("State");
 
   return (
     <Missing description={t("description")} title={t("title")}>

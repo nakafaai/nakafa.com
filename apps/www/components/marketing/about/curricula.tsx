@@ -1,5 +1,5 @@
 import { Nina } from "@repo/design-system/components/ui/nina";
-import { getTranslations } from "next-intl/server";
+import { readServerTranslator } from "@repo/internationalization/src/translator";
 import type { Locale } from "use-intl";
 import { CurriculumList } from "@/components/marketing/about/curricula/list.client";
 import { NINA_SLOT } from "@/components/marketing/about/toys/slot";
@@ -17,7 +17,7 @@ import {
  */
 export async function Curricula({ locale }: { locale: Locale }) {
   const [t, catalog] = await Promise.all([
-    getTranslations({ locale, namespace: "Landing" }),
+    readServerTranslator({ locale, namespace: "Landing" }),
     readRuntimeCurriculumCatalog(locale),
   ]);
   const curricula = readRuntimeCurriculumOptions(catalog, locale);

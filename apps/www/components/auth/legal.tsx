@@ -1,6 +1,7 @@
+import { readServerTranslator } from "@repo/internationalization/src/translator";
 import { SITE_ORIGIN } from "@repo/seo/origin";
-import { getLocale, getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
+import { useLocale } from "use-intl";
 import { getShellPageNavigation } from "@/lib/content/page/navigation";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
@@ -10,13 +11,13 @@ import { getLocaleOrThrow } from "@/lib/i18n/params";
  * origin: a relative link on a school host would reach the school instead.
  */
 export async function AuthLegal() {
-  const locale = getLocaleOrThrow(await getLocale());
+  const locale = getLocaleOrThrow(useLocale());
   const pageNavigation = await getShellPageNavigation(locale);
   if (!pageNavigation) {
     return null;
   }
 
-  const t = await getTranslations("Legal");
+  const t = await readServerTranslator({ locale, namespace: "Legal" });
   const termsHref = new URL(
     `/${locale}${pageNavigation.termsOfServiceHref}`,
     SITE_ORIGIN
