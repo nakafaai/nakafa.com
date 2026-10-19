@@ -6,11 +6,10 @@ import { documentAccess } from "@repo/backend/confect/editor/authority";
 import { createDocument } from "@repo/backend/confect/editor/create";
 import { storedDocument } from "@repo/backend/confect/editor/document";
 import spec from "@repo/backend/confect/editor/documents.spec";
-import { STEP_PAGE_STEPS } from "@repo/backend/confect/editor/size";
 import {
   clientRecordOf,
   snapshotOf,
-  stepsAfter,
+  stepsThrough,
 } from "@repo/backend/confect/editor/store";
 import { clientView, stepView } from "@repo/backend/confect/editor/view";
 import member from "@repo/backend/confect/middleware/member.impl";
@@ -43,10 +42,14 @@ const create = FunctionImpl.make(
 );
 
 /**
- * Reads a document for its editor: its snapshot, the steps after the snapshot, one
- * read's worth, and the editor session's own record. The editor reads on with
- * `steps:since` from the last version it received, so a long document takes more
- * than one read. The record answers only the session's own author.
+ * Reads a document for its editor and its previews: its snapshot, every step after the
+ * snapshot up to the head, and the editor session's own record. A submit leaves at most
+ * one read and one batch after the snapshot before a fold takes them in (`pendingRows`),
+ * so the steps come with `take`, as the fold reads them. A page would not do: a client
+ * that subscribes to this query has each run replay the end of its first page, which
+ * belongs to another range once a fold moves the snapshot, and the run fails. The
+ * editor reads on with `steps:since` from the last version it received. The record
+ * answers only the session's own author.
  */
 const open = FunctionImpl.make(
   databaseSchema,
@@ -56,10 +59,10 @@ const open = FunctionImpl.make(
     const document = yield* Document;
     const { appUser } = yield* requireAuth().pipe(Effect.orDie);
     const snapshot = yield* snapshotOf(document._id);
-    const steps = yield* stepsAfter(
+    const steps = yield* stepsThrough(
       document._id,
       snapshot.version,
-      STEP_PAGE_STEPS
+      document.head
     );
     const record = yield* clientRecordOf(document._id, clientId);
     return {

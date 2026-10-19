@@ -31,6 +31,7 @@ import {
   placeholderPromptId,
   placeholderQuestionId,
 } from "@/components/tenant/exams/placeholder";
+import { QuestionPreview } from "@/components/tenant/exams/preview";
 import {
   useActiveQuestion,
   useExam,
@@ -60,11 +61,13 @@ const placeholderDraft = (answers: Question["answers"], key: Question["key"]) =>
   );
 
 /**
- * The questions of the exam in order, one thumbnail each: its number, and a dot when it has
- * no answer key. An add button at the end adds a question. Each thumbnail's menu copies,
- * moves, and removes its question. A question the server has not saved yet is disabled until it
- * answers, and the exam keeps at least one question, so the last one has no remove. A frozen exam
- * shows neither the add button nor the menus, so its questions stay as the sitting was scheduled.
+ * The questions of the exam in order, like the pages of a design: each thumbnail is its
+ * question's page drawn small, beside its number and a dot when it has no answer key. The
+ * strip is a column beside the canvas, and a row above it on a phone. An add button at the
+ * end adds a question. Each thumbnail's menu copies, moves, and removes its question. A question the server has not saved yet is disabled until it
+ * answers, and the exam keeps at least one question, so the last one has no remove.
+ * A frozen exam shows neither the add button nor the menus, so its questions stay as the
+ * sitting was scheduled.
  */
 export function ExamStrip() {
   const t = useTranslations("Exams");
@@ -112,7 +115,7 @@ export function ExamStrip() {
   return (
     <nav
       aria-label={t("questions")}
-      className="flex shrink-0 items-center gap-2 overflow-x-auto border-b bg-sidebar p-2 md:w-60 md:flex-col md:overflow-y-auto md:border-r md:border-b-0"
+      className="flex shrink-0 gap-3 overflow-x-auto border-b bg-sidebar p-3 md:w-64 md:flex-col md:overflow-y-auto md:overflow-x-hidden md:border-r md:border-b-0"
     >
       {Arr.map(exam.questions, (question, index) => (
         <Thumbnail
@@ -125,14 +128,17 @@ export function ExamStrip() {
         />
       ))}
       {frozen ? null : (
-        <Button
-          aria-label={t("add-question")}
-          onClick={addQuestion}
-          size="icon-sm"
-          variant="outline"
-        >
-          <HugeIcons icon={Add01Icon} />
-        </Button>
+        <div className="flex shrink-0 gap-2 md:w-full">
+          <span aria-hidden className="w-5 shrink-0" />
+          <Button
+            className="h-auto self-stretch border-dashed md:h-9 md:flex-1"
+            onClick={addQuestion}
+            variant="outline"
+          >
+            <HugeIcons icon={Add01Icon} />
+            {t("add-question")}
+          </Button>
+        </div>
       )}
     </nav>
   );
@@ -216,66 +222,80 @@ function Thumbnail({
   };
 
   return (
-    <div className="flex shrink-0 items-center gap-1 md:w-full">
-      <Button
-        aria-current={selected ? "true" : undefined}
-        className="h-auto flex-1 justify-start gap-2"
-        disabled={pending}
-        onClick={() => select(question.id)}
-        variant={selected ? "secondary" : "ghost"}
-      >
-        <span className="tabular-nums">{index + 1}</span>
+    <div className="group/thumb flex shrink-0 gap-2 md:w-full">
+      <div className="flex w-5 shrink-0 flex-col items-end gap-1.5 pt-0.5">
+        <span className="text-muted-foreground text-xs tabular-nums">
+          {index + 1}
+        </span>
         {question.key === null ? (
-          <>
-            <span aria-hidden className="size-1.5 rounded-full bg-primary" />
-            <span className="sr-only">{t("no-key")}</span>
-          </>
+          <span aria-hidden className="size-1.5 rounded-full bg-primary" />
         ) : null}
-      </Button>
-      {pending || frozen ? null : (
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            render={
-              <Button
-                aria-label={common("more-actions")}
-                size="icon-sm"
-                variant="ghost"
-              >
-                <HugeIcons icon={MoreHorizontalIcon} />
-              </Button>
-            }
+      </div>
+      <div className="relative w-32 md:w-auto md:flex-1">
+        <button
+          aria-current={selected ? "true" : undefined}
+          className="relative block aspect-4/3 w-full overflow-hidden rounded-lg border bg-muted/40 outline-none transition-[scale,box-shadow,border-color] duration-150 ease-out hover:border-foreground/20 focus-visible:ring-3 focus-visible:ring-ring/50 active:scale-96 disabled:opacity-60 aria-[current=true]:border-primary aria-[current=true]:ring-2 aria-[current=true]:ring-primary"
+          disabled={pending}
+          onClick={() => select(question.id)}
+          type="button"
+        >
+          <span className="sr-only">
+            {t("question", { number: index + 1 })}
+            {question.key === null ? ` ${t("no-key")}` : null}
+          </span>
+          <QuestionPreview
+            number={index + 1}
+            open={selected}
+            question={question}
+            saved={!pending}
           />
-          <DropdownMenuContent align="start" className="w-44">
-            <DropdownMenuItem onClick={copyQuestion}>
-              {t("copy")}
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              disabled={index === 0}
-              onClick={() => moveTo(index - 1)}
-            >
-              {t("move-up")}
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              disabled={index === count - 1}
-              onClick={() => moveTo(index + 1)}
-            >
-              {t("move-down")}
-            </DropdownMenuItem>
-            {count > 1 ? (
-              <>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={() => setAsking(true)}
-                  variant="destructive"
+        </button>
+        {pending || frozen ? null : (
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <Button
+                  aria-label={common("more-actions")}
+                  className="absolute end-1.5 top-1.5 opacity-0 pointer-coarse:opacity-100 transition-opacity duration-150 focus-visible:opacity-100 group-focus-within/thumb:opacity-100 group-hover/thumb:opacity-100 data-popup-open:opacity-100"
+                  size="icon-sm"
+                  variant="secondary"
                 >
-                  {t("remove")}
-                </DropdownMenuItem>
-              </>
-            ) : null}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      )}
+                  <HugeIcons icon={MoreHorizontalIcon} />
+                </Button>
+              }
+            />
+            <DropdownMenuContent align="start" className="w-44">
+              <DropdownMenuItem onClick={copyQuestion}>
+                {t("copy")}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                disabled={index === 0}
+                onClick={() => moveTo(index - 1)}
+              >
+                {t("move-up")}
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                disabled={index === count - 1}
+                onClick={() => moveTo(index + 1)}
+              >
+                {t("move-down")}
+              </DropdownMenuItem>
+              {count > 1 ? (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={() => setAsking(true)}
+                    variant="destructive"
+                  >
+                    {t("remove")}
+                  </DropdownMenuItem>
+                </>
+              ) : null}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+      </div>
       <ResponsiveDialog
         description={t("remove-description")}
         footer={

@@ -5,15 +5,22 @@ import {
   MAX_BATCH_STEPS,
 } from "@repo/backend/confect/editor/size";
 import { encodeJsonText } from "@repo/utilities/json";
-import { Array as Arr, Effect, Option, Ref } from "effect";
+import { Array as Arr, Effect, Fiber, Option, Ref } from "effect";
+import { TestClock } from "effect/testing";
 import { getVersion, sendableSteps } from "prosemirror-collab";
 import {
   SyncFailed,
   type SyncSession,
   type SyncTransport,
 } from "@/lib/editor/session";
-import { startSync, tick } from "@/lib/editor/sync";
 import {
+  FOLD_RETRY,
+  startSync,
+  tick,
+  tickThroughFold,
+} from "@/lib/editor/sync";
+import {
+  foldingServer,
   makePort,
   makeServer,
   nestedQuote,
@@ -332,6 +339,116 @@ describe("editor/sync failures", () => {
         const failure = yield* startSync(port, racing).pipe(Effect.flip);
         expect(failure).toMatchObject({ _tag: "SyncFailed" });
         expect(textOf((yield* Ref.get(state)).doc)).toBe("a");
+      })
+  );
+});
+
+describe("editor/sync waits for a fold", () => {
+  it.effect(
+    "runs the round again after a fold refusal, with no failure, and sends the same batch under the same id",
+    () =>
+      Effect.gen(function* () {
+        const { ids, server } = yield* foldingServer(2);
+        const editor = yield* openEditor(server.transport);
+        yield* typeText(editor.state, "b");
+        const round = yield* tick(editor.session).pipe(Effect.forkChild);
+        // The first wait is a quarter second, and the wait after it is twice as long.
+        yield* TestClock.adjust("249 millis");
+        expect(yield* server.counts).toMatchObject({
+          submitAttempts: 1,
+          submits: 0,
+        });
+        yield* TestClock.adjust("1 millis");
+        expect(yield* server.counts).toMatchObject({
+          submitAttempts: 2,
+          submits: 0,
+        });
+        yield* TestClock.adjust("500 millis");
+        expect(yield* server.counts).toMatchObject({
+          head: 1,
+          submitAttempts: 3,
+          submits: 1,
+        });
+        // The round completes with no step lost, so the caller shows no failure.
+        expect(Option.isNone(yield* Fiber.join(round))).toBe(true);
+        const seen = yield* Ref.get(ids);
+        expect(seen).toHaveLength(3);
+        expect(seen[0]).toBe(seen[1]);
+        expect(seen[1]).toBe(seen[2]);
+        expect(textOf((yield* Ref.get(editor.state)).doc)).toBe("b");
+      })
+  );
+
+  it.effect(
+    "fails the round with SyncFolding when the fold outlasts its waits, and sends the batch once the fold ends",
+    () =>
+      Effect.gen(function* () {
+        const { folding, server } = yield* foldingServer(
+          Number.POSITIVE_INFINITY
+        );
+        const editor = yield* openEditor(server.transport);
+        yield* typeText(editor.state, "b");
+        const round = yield* tick(editor.session).pipe(
+          Effect.flip,
+          Effect.forkChild
+        );
+        yield* TestClock.adjust("20 seconds");
+        expect(yield* Fiber.join(round)).toMatchObject({ _tag: "SyncFolding" });
+        // The first attempt, and one more after each of the six waits.
+        expect(yield* server.counts).toMatchObject({
+          head: 0,
+          submitAttempts: 7,
+          submits: 0,
+        });
+        // The batch waited unsent, so the next round sends it once the fold has ended.
+        yield* Ref.set(folding, 0);
+        yield* tick(editor.session);
+        expect(yield* server.counts).toMatchObject({
+          head: 1,
+          submitAttempts: 8,
+          submits: 1,
+        });
+        expect(textOf((yield* Ref.get(editor.state)).doc)).toBe("b");
+      })
+  );
+
+  it.effect(
+    "keeps the batch unsent on the cadence after the short waits, and sends it under the same id once the fold ends",
+    () =>
+      Effect.gen(function* () {
+        const { ids, server } = yield* foldingServer(14);
+        const editor = yield* openEditor(server.transport);
+        yield* typeText(editor.state, "b");
+        const landed = yield* Ref.make(0);
+        const round = yield* tickThroughFold(editor.session, FOLD_RETRY, () =>
+          Ref.update(landed, (count) => count + 1)
+        ).pipe(Effect.forkChild);
+        // The first run ends its short waits at 11.75 seconds, and the batch is still unsent.
+        yield* TestClock.adjust("11750 millis");
+        expect(yield* server.counts).toMatchObject({
+          submitAttempts: 7,
+          submits: 0,
+        });
+        // The cadence runs the round again four seconds later, and that run meets the fold too.
+        yield* TestClock.adjust("4 seconds");
+        expect(yield* server.counts).toMatchObject({
+          submitAttempts: 8,
+          submits: 0,
+        });
+        // That run ends its waits at 27.5 seconds, and the run four seconds later takes the batch.
+        yield* TestClock.adjust("16 seconds");
+        expect(yield* server.counts).toMatchObject({
+          head: 1,
+          submitAttempts: 15,
+          submits: 1,
+        });
+        // A failure would have ended the round before the batch landed, so the join shows none.
+        expect(Option.isNone(yield* Fiber.join(round))).toBe(true);
+        expect(yield* Ref.get(landed)).toBe(1);
+        const seen = yield* Ref.get(ids);
+        expect(seen).toHaveLength(15);
+        expect(Arr.dedupe(seen)).toHaveLength(1);
+        expect(textOf((yield* Ref.get(editor.state)).doc)).toBe("b");
       })
   );
 });

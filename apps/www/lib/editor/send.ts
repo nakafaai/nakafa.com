@@ -17,6 +17,7 @@ import { dropUnsendable } from "@/lib/editor/replay";
 import {
   type EditorClosed,
   SyncFailed,
+  SyncFolding,
   type SyncSession,
 } from "@/lib/editor/session";
 
@@ -85,15 +86,19 @@ const fittingBatch = Effect.fn("editor.sync.batch")(function* (
  * whose call reached the server, or was refused, waits for the server's steps: the
  * next round sends nothing on that version. A batch whose call failed keeps its id
  * and its steps, and the next round sends the same batch, so the server answers a
- * repeat of a batch it has taken without writing it again. A batch on a version the
- * editor has moved past is replaced by a new one with a new id. A first step that no
- * call can carry, because it is too large or the contract refuses it, is dropped and
- * counted, and the steps after it are sent in the same round, so one such step never
- * blocks the later batches.
+ * repeat of a batch it has taken without writing it again. A batch that waits for a
+ * fold fails with `SyncFolding` and keeps its id and its steps, so the round that runs
+ * again sends the same batch. A batch on a version the editor has moved past is replaced
+ * by a new one with a new id. A first step that no call can carry, because it is too
+ * large or the contract refuses it, is dropped and counted, and the steps after it are
+ * sent in the same round, so one such step never blocks the later batches.
  */
 export const push = Effect.fn("editor.sync.push")(function* (
   session: SyncSession
-): Effect.fn.Return<void, SyncFailed | ClientTaken | EditorClosed> {
+): Effect.fn.Return<
+  void,
+  SyncFailed | SyncFolding | ClientTaken | EditorClosed
+> {
   const state = yield* session.port.state;
   const sendable = sendableSteps(state);
   if (sendable === null) {
@@ -150,19 +155,13 @@ export const push = Effect.fn("editor.sync.push")(function* (
   const accepted = yield* session.transport.submit(fitted.text).pipe(
     Effect.as(true),
     // A refused batch waits for the server's steps, and the next round sends nothing on
-    // this version. A failure of the call is not caught here: the batch stays unsent, and
-    // a batch that waits for a fold fails the round, so the next round sends it again.
+    // this version. A failure of the call is not caught here: the batch stays unsent. A
+    // batch that waits for a fold fails with `SyncFolding`, and `tickThroughFold` runs the round again.
     Effect.catchTag("VersionStale", () => Effect.succeed(true)),
     Effect.catchTags({
       DocumentInvalid: refused,
       DocumentTooLarge: refused,
-      FoldPending: () =>
-        Effect.fail(
-          new SyncFailed({
-            reason:
-              "The server is folding this document. The steps are sent again shortly.",
-          })
-        ),
+      FoldPending: () => Effect.fail(new SyncFolding()),
     })
   );
   if (!accepted) {

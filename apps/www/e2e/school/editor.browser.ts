@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
+import { saved, trackChanges } from "@/e2e/support/changes";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
@@ -10,7 +11,11 @@ const EDITOR_PATH = /\/exams\/[^/]+\/edit$/;
 const ROOMS_PATH = /\/exams\/[^/]+$/;
 
 /** The thumbnail of the first question, whose name starts with its number. */
-const FIRST_QUESTION = /^1 /;
+const FIRST_QUESTION = /^Question 1\b/;
+const SECOND_QUESTION = /^Question 2\b/;
+/** A prompt with more steps than a fold waits for, so typing it moves the snapshot. */
+const LONG_PROMPT =
+  "Sebuah mobil melaju 60 km/jam selama 2 jam. Berapa jarak yang ditempuh?";
 
 /** The four options of the question, each with its letter and its text. The second one is correct. */
 const OPTIONS = [
@@ -87,6 +92,10 @@ test("a teacher creates an exam, adds questions, writes one, and finds it all wh
   await expect(prompt).toBeEditable();
   await prompt.click();
   await page.keyboard.type("Berapa hasil 2 + 3?");
+  // The open question's thumbnail draws what its editor holds, as the teacher types.
+  await expect(
+    strip.getByRole("button", { name: FIRST_QUESTION })
+  ).toContainText("Berapa hasil 2 + 3?");
 
   for (const option of OPTIONS) {
     const field = page.getByRole("textbox", {
@@ -125,11 +134,25 @@ test("a teacher creates an exam, adds questions, writes one, and finds it all wh
   ).toBeChecked({ timeout: readinessTimeoutMilliseconds });
 
   // The two added questions have no key, so each shows its dot, and the first does not.
+  const reopenedStrip = reopened.getByRole("navigation", { name: "Questions" });
   await expect(
-    reopened
-      .getByRole("navigation", { name: "Questions" })
-      .getByText("This question has no answer key yet.")
+    reopenedStrip.getByText("This question has no answer key yet.")
   ).toHaveCount(2);
+
+  // A question the canvas does not show draws its page from what the server holds.
+  await reopenedStrip.getByRole("button", { name: SECOND_QUESTION }).click();
+  await expect(
+    reopened.getByRole("heading", { name: "Question 2" })
+  ).toBeVisible();
+  const firstThumbnail = reopenedStrip.getByRole("button", {
+    name: FIRST_QUESTION,
+  });
+  await expect(firstThumbnail).toContainText("Berapa hasil 2 + 3?", {
+    timeout: readinessTimeoutMilliseconds,
+  });
+  await expect(firstThumbnail.locator('input[data-slot="input"]')).toHaveCount(
+    OPTIONS.length
+  );
 
   // A question without a key keeps the exam from being scheduled: the dialog names the keys,
   // and its submit stays off.
@@ -259,5 +282,54 @@ test("a teacher schedules an exam, and its editor opens read-only, saying why", 
     page.getByRole("textbox", { name: "Exam title" })
   ).toBeEditable();
   await expect(page.getByRole("button", { name: "Schedule" })).toBeVisible();
+  await context.close();
+});
+
+test("a question typed long enough for a fold keeps its thumbnail once the teacher moves on", async ({
+  browser,
+  baseURL,
+}) => {
+  const school = await Effect.runPromise(createSchool());
+  const host = `${school.slug}.localhost`;
+  const context = await browser.newContext();
+  await Effect.runPromise(
+    signInOwner(context, school.slug, hostAddress(baseURL, host, "/"))
+  );
+  const page = await context.newPage();
+  const changes = await Effect.runPromise(trackChanges(page, []));
+  await page.goto(hostAddress(baseURL, host, "/exams"));
+  await page.getByRole("button", { name: "Create exam" }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("textbox", { name: "Exam title" }).fill("PTS Fisika");
+  await dialog.getByRole("button", { name: "Create exam" }).click();
+  await page.waitForURL(EDITOR_PATH);
+
+  // The first question gets more steps than a fold waits for, then the teacher adds and
+  // writes a second: the first question's thumbnail now reads the server while the fold
+  // moves its snapshot, and the page keeps drawing.
+  const strip = page.getByRole("navigation", { name: "Questions" });
+  const firstPrompt = page.getByRole("textbox", { name: "Question text" });
+  await expect(firstPrompt).toBeEditable({
+    timeout: readinessTimeoutMilliseconds,
+  });
+  await firstPrompt.click();
+  const sentBefore = changes.sent;
+  await page.keyboard.type(LONG_PROMPT);
+  // The page sends its changes one after another, so the server takes the first
+  // question's steps before the teacher moves on, as a teacher typing at a person's pace
+  // leaves it, and the second question is not created behind a queue of saves.
+  await saved(changes, sentBefore);
+  await page.getByRole("button", { name: "Add question" }).click();
+  await expect(page.getByRole("heading", { name: "Question 2" })).toBeVisible();
+  const secondPrompt = page.getByRole("textbox", { name: "Question text" });
+  await expect(secondPrompt).toBeEditable({
+    timeout: readinessTimeoutMilliseconds,
+  });
+  await secondPrompt.click();
+  await page.keyboard.type("Berapa hasil 3 + 4?");
+  await expect(
+    strip.getByRole("button", { name: FIRST_QUESTION })
+  ).toContainText(LONG_PROMPT, { timeout: readinessTimeoutMilliseconds });
+  await expect(secondPrompt).toContainText("Berapa hasil 3 + 4?");
   await context.close();
 });

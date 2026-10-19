@@ -26,7 +26,7 @@ import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 import { type StoreApi, useStore } from "zustand";
 import { isFrozen } from "@/components/tenant/exams/freeze";
-import { useExam } from "@/components/tenant/exams/provider";
+import { useExam, useExamLive } from "@/components/tenant/exams/provider";
 import {
   createPromptSync,
   type PromptSync,
@@ -37,7 +37,7 @@ import { convexTransport } from "@/lib/editor/convex";
 import { versionOf, viewPort } from "@/lib/editor/port";
 import { reportDropped } from "@/lib/editor/report";
 import type { SyncSession } from "@/lib/editor/session";
-import { startSync, tick } from "@/lib/editor/sync";
+import { FOLD_RETRY, startSync, tickThroughFold } from "@/lib/editor/sync";
 
 /** The quiet period after a local change, before the editor sends its own steps. */
 const SEND_QUIET_PERIOD = "250 millis";
@@ -61,9 +61,27 @@ const PROMPT_EXTENSIONS = [
 ];
 
 /**
- * One sync round of the prompt, which runs to its end even when the prompt closes, so the
- * loop is never left half done. The steps it lost are reported, and a failure shows the
- * action-error toast. A round that meets a closed editor has nothing left to tell.
+ * Replaces the round that the editor waits for with `round`, and interrupts the one it
+ * replaces. An editor waits for one round at a time, so the retries of a fold never multiply.
+ */
+const replaceWaiting = (
+  waiting: { current: Fiber.Fiber<void> | null },
+  round: Effect.Effect<void>
+) => {
+  const previous = waiting.current;
+  waiting.current = Effect.runFork(round);
+  if (previous !== null) {
+    Effect.runFork(Fiber.interrupt(previous));
+  }
+};
+
+/**
+ * One sync round of the prompt. A round that meets a fold waits for it: the batch stays unsent
+ * under its id, and `tickThroughFold` runs the round again, so the editor shows no failure
+ * while the fold runs (ADR 0028). The waiting ends when the server takes the batch, when the
+ * round is replaced, or when the prompt closes, and the closing flush takes over the steps that
+ * are left. The steps it lost are reported, and a failure shows the action-error toast. A round
+ * that meets a closed editor has nothing left to tell.
  */
 const runRound = (
   session: SyncSession | null,
@@ -73,10 +91,19 @@ const runRound = (
   if (session === null || view === null) {
     return Effect.void;
   }
-  return tick(session).pipe(
-    Effect.tap((dropped) => reportDropped(dropped, SOURCE)),
-    Effect.andThen(Effect.sync(() => sync.getState().advance(versionOf(view)))),
-    Effect.catchTag("EditorClosed", () => Effect.void),
+  return tickThroughFold(session, FOLD_RETRY, (dropped) =>
+    reportDropped(dropped, SOURCE).pipe(
+      Effect.andThen(
+        Effect.sync(() => sync.getState().advance(versionOf(view)))
+      )
+    )
+  ).pipe(
+    // The retries of FOLD_RETRY end only when the batch lands or the fiber is interrupted, so this
+    // handler keeps the round's error type exact and never shows a fold as a failure.
+    Effect.catchTags({
+      EditorClosed: () => Effect.void,
+      SyncFolding: () => Effect.void,
+    }),
     Effect.catch((error) =>
       reportClientException(error, { source: SOURCE }).pipe(
         Effect.andThen(
@@ -88,8 +115,7 @@ const runRound = (
           )
         )
       )
-    ),
-    Effect.uninterruptible
+    )
   );
 };
 
@@ -113,6 +139,7 @@ export function ExamPrompt({
   const { exam } = useExam();
   const frozen = isFrozen(exam);
   const [sync] = useState(createPromptSync);
+  const show = useExamLive((state) => state.show);
   const clientId = useStore(sync, (state) => state.clientId);
   const version = useStore(sync, (state) => state.version);
   const reply = useQuery(
@@ -121,7 +148,8 @@ export function ExamPrompt({
   );
   const session = useRef<SyncSession | null>(null);
   const view = useRef<EditorView | null>(null);
-  // The fiber that opens the document, and the fiber of the round that waits for the quiet period.
+  // The fiber that opens the document, and the fiber of the round that the editor waits for: the
+  // quiet period after a change, or the next try of a round that met a fold.
   const opening = useRef<Fiber.Fiber<void> | null>(null);
   const waiting = useRef<Fiber.Fiber<void> | null>(null);
 
@@ -132,7 +160,7 @@ export function ExamPrompt({
       (reply.value._tag === "behind" ||
         (reply.value._tag === "steps" && reply.value.steps.length > 0))
     ) {
-      Effect.runFork(runRound(session.current, view.current, sync));
+      replaceWaiting(waiting, runRound(session.current, view.current, sync));
     }
   }, [reply, sync]);
 
@@ -187,7 +215,12 @@ export function ExamPrompt({
             sync.getState().open(memory.clientId, versionOf(editor.view))
           )
         ),
-        Effect.tap(() => Effect.sync(() => editor.setEditable(!frozen))),
+        Effect.tap(() =>
+          Effect.sync(() => {
+            show(prompt, editor.view.state.doc);
+            editor.setEditable(!frozen);
+          })
+        ),
         Effect.catchTag("EditorClosed", () => Effect.void),
         Effect.catch((error) =>
           reportClientException(error, { source: SOURCE }).pipe(
@@ -206,22 +239,23 @@ export function ExamPrompt({
     );
   };
 
-  /** Schedules a round for a change this editor made. The changes the server brought in schedule none. */
+  /**
+   * Shows every change in the strip's thumbnail, then schedules a round for a change this
+   * editor made. The changes the server brought in schedule none.
+   */
   const change = (transaction: Transaction) => {
+    show(prompt, transaction.doc);
     if (transaction.getMeta("rebased") !== undefined) {
       return;
     }
-    const previous = waiting.current;
-    waiting.current = Effect.runFork(
+    replaceWaiting(
+      waiting,
       Effect.sleep(SEND_QUIET_PERIOD).pipe(
         Effect.andThen(
           Effect.suspend(() => runRound(session.current, view.current, sync))
         )
       )
     );
-    if (previous !== null) {
-      Effect.runFork(Fiber.interrupt(previous));
-    }
   };
 
   return (

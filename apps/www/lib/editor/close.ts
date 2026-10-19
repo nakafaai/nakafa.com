@@ -1,11 +1,12 @@
+import { PRUNE_INTERVAL } from "@repo/backend/confect/editor/prune";
 import type { EditorState } from "@tiptap/pm/state";
-import { Effect } from "effect";
+import { Effect, Schedule } from "effect";
 import { sendableSteps } from "prosemirror-collab";
 import { reportClientException } from "@/lib/analytics/client";
 import { statePort } from "@/lib/editor/port";
 import { reportDropped } from "@/lib/editor/report";
 import type { SyncSession } from "@/lib/editor/session";
-import { tick } from "@/lib/editor/sync";
+import { FOLD_RETRY, tickThroughFold } from "@/lib/editor/sync";
 
 /**
  * The most rounds a closed editor runs. One round sends the steps the editor holds, and the
@@ -14,8 +15,19 @@ import { tick } from "@/lib/editor/sync";
 const CLOSE_ROUNDS = 3;
 
 /**
- * Runs up to `rounds` rounds over the port. A round stops the flush when it fails, after the
- * failure is reported. A round reports the steps it lost, once.
+ * How long a round of a closed editor keeps trying while the server folds. The sweep of the
+ * step log schedules a fold that did not run within one interval (ADR 0028), so the steps
+ * wait at most that long for the fold to take them.
+ */
+const CLOSE_RETRY = FOLD_RETRY.pipe(
+  Schedule.upTo({ duration: PRUNE_INTERVAL })
+);
+
+/**
+ * Runs up to `rounds` rounds over the port. A round that meets a fold keeps trying on
+ * `CLOSE_RETRY`. A round that fails, or that still meets the fold when the budget ends, stops
+ * the flush after the failure is reported, and the steps it holds stay unsent. A round reports
+ * the steps it lost, once.
  */
 const sendLeft = Effect.fn("editor.sync.close.rounds")(function* (
   session: SyncSession,
@@ -26,8 +38,9 @@ const sendLeft = Effect.fn("editor.sync.close.rounds")(function* (
   if (rounds === 0 || sendableSteps(state) === null) {
     return;
   }
-  const finished = yield* tick(session).pipe(
-    Effect.tap((dropped) => reportDropped(dropped, source)),
+  const finished = yield* tickThroughFold(session, CLOSE_RETRY, (dropped) =>
+    reportDropped(dropped, source)
+  ).pipe(
     Effect.as(true),
     Effect.catch((error) =>
       reportClientException(error, { source }).pipe(Effect.as(false))

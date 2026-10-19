@@ -46,6 +46,11 @@ export const ANSWER_MILLISECONDS = 15_000;
  * the optimistic result for the stored one. `stored` is the latest moment a
  * change was stored at, and `told` the latest the page was told of.
  *
+ * A refusal the server sends holds a save open until an accepted answer follows it
+ * (`refusalOpen`), because the page sends a refused batch again when the server is
+ * folding its steps. A refusal the test injects with `failNext` is the answer the test
+ * asks for, so it settles the change at once.
+ *
  * Every frame passes through this route, so a step can also hold the server's
  * answers back: after `hold` the page gets nothing from the server until
  * `release`, and what it shows meanwhile is what it showed on its own. A step
@@ -82,6 +87,11 @@ export const trackChanges = Effect.fn("NakafaE2E.trackChanges")(function* (
     listed: false,
     /** The HTTP origin of the backend the page talks to; empty until its connection opened. */
     origin: "",
+    /**
+     * Whether the server refused a change and no accepted answer has followed it yet.
+     * A save waits for that answer. An injected refusal does not set it.
+     */
+    refusalOpen: false,
     /** The query whose answers are changed, and how. */
     rewriting: Option.none<{
       change: (value: unknown) => unknown;
@@ -170,11 +180,13 @@ export const trackChanges = Effect.fn("NakafaE2E.trackChanges")(function* (
       const noticeGiven = (frame: typeof GivenSchema.Type) =>
         Match.value(frame).pipe(
           Match.discriminators("type")({
-            ActionResponse: () => {
+            ActionResponse: ({ success }) => {
               changes.answered += 1;
+              changes.refusalOpen = success === false;
             },
             MutationResponse: ({ requestId, success, ts }) => {
               changes.answered += 1;
+              changes.refusalOpen = !success;
               if (ts) {
                 changes.stored = later(changes.stored, momentOf(ts));
               }
@@ -384,8 +396,10 @@ export const live = (changes: Changes) =>
 
 /**
  * Waits until the page sent a change after `sentBefore`, and every change the
- * page sent is settled: the server answered it, and the page was told of the
- * database as it was once the change was stored.
+ * page sent is settled: the server answered it, the page was told of the
+ * database as it was once the change was stored, and no refusal of the server
+ * still waits for an accepted answer, so a save never passes on a server refusal
+ * alone. A refusal the test injects with `failNext` settles at once.
  */
 export const saved = (changes: Changes, sentBefore: number) =>
   expect
@@ -393,7 +407,8 @@ export const saved = (changes: Changes, sentBefore: number) =>
       () =>
         changes.sent > sentBefore &&
         changes.answered === changes.sent &&
-        changes.told >= changes.stored,
+        changes.told >= changes.stored &&
+        !changes.refusalOpen,
       { timeout: ANSWER_MILLISECONDS }
     )
     .toBe(true);

@@ -14,6 +14,7 @@ import { utf8Bytes } from "@repo/utilities/text";
 import { EditorState } from "@tiptap/pm/state";
 import { Array as Arr, Effect, Option, Ref, Schema } from "effect";
 import { assessmentSchema } from "@/lib/editor/assessment";
+import { push } from "@/lib/editor/send";
 import { startSync, tick } from "@/lib/editor/sync";
 import {
   makePort,
@@ -146,13 +147,17 @@ describe("editor/send steps the server refuses", () => {
   );
 
   it.effect(
-    "keeps a batch that waits for a fold unsent, and sends the same batch again on the next round",
+    "keeps a batch that waits for a fold unsent under its id, and sends the same batch on the next round",
     () =>
       Effect.gen(function* () {
         const waiting = yield* Ref.make(true);
-        const refuseOnce: Refusal = () =>
-          Effect.flatMap(Ref.getAndSet(waiting, false), (first) =>
-            first ? Effect.fail(new FoldPending()) : Effect.void
+        const ids = yield* Ref.make<readonly string[]>([]);
+        const refuseOnce: Refusal = (batch) =>
+          Ref.update(ids, (seen) => [...seen, batch.batch]).pipe(
+            Effect.andThen(Ref.getAndSet(waiting, false)),
+            Effect.flatMap((first) =>
+              first ? Effect.fail(new FoldPending()) : Effect.void
+            )
           );
         const server = yield* makeServer(undefined, refuseOnce);
         const { port, state } = yield* makePort(
@@ -163,11 +168,19 @@ describe("editor/send steps the server refuses", () => {
         );
         const session = yield* startSync(port, server.transport);
         yield* typeText(state, "b");
-        const failed = yield* tick(session).pipe(Effect.flip);
-        expect(failed).toMatchObject({ _tag: "SyncFailed" });
+        // The push fails with the fold, and the server writes nothing.
+        const folding = yield* push(session).pipe(Effect.flip);
+        expect(folding).toMatchObject({ _tag: "SyncFolding" });
         expect(yield* server.counts).toMatchObject({ head: 0, submits: 0 });
         yield* tick(session);
-        expect(yield* server.counts).toMatchObject({ head: 1, submits: 1 });
+        expect(yield* server.counts).toMatchObject({
+          head: 1,
+          submitAttempts: 2,
+          submits: 1,
+        });
+        const seen = yield* Ref.get(ids);
+        expect(seen).toHaveLength(2);
+        expect(seen[0]).toBe(seen[1]);
         expect(textOf((yield* Ref.get(state)).doc)).toBe("b");
       })
   );

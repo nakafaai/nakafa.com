@@ -1,6 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import {
+  isPlaceholderId,
   placeholderExamId,
   placeholderPromptId,
   placeholderQuestionId,
@@ -27,5 +28,14 @@ describe("placeholder ids", () => {
         expect(prompt).toEqual(expect.any(String));
         expect(question).not.toBe(prompt);
       })
+  );
+
+  it.effect("tell a placeholder apart from an ID the server issues", () =>
+    Effect.gen(function* () {
+      const prompt = yield* placeholderPromptId;
+
+      expect(isPlaceholderId(prompt)).toBe(true);
+      expect(isPlaceholderId("k57b3h0e8s7a0z1x2c3v4b5n6m7q8w9e")).toBe(false);
+    })
   );
 });

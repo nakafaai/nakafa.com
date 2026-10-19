@@ -1,11 +1,13 @@
 import { describe, expect, it } from "@effect/vitest";
 import { DocumentInvalid } from "@repo/backend/confect/editor/document";
-import { Effect, Ref } from "effect";
+import { Effect, Fiber, Ref } from "effect";
+import { TestClock } from "effect/testing";
 import { reportClientException } from "@/lib/analytics/client";
 import { closeEditor } from "@/lib/editor/close";
 import { SyncFailed, type SyncTransport } from "@/lib/editor/session";
 import { startSync } from "@/lib/editor/sync";
 import {
+  foldingServer,
   makePort,
   makeServer,
   type Refusal,
@@ -132,6 +134,55 @@ describe("closeEditor", () => {
         expect(reportClientException).toHaveBeenCalledTimes(1);
         expect(reportClientException).toHaveBeenCalledWith(
           expect.objectContaining({ _tag: "SyncDropped", count: 1 }),
+          { source: SOURCE }
+        );
+      })
+  );
+
+  it.effect(
+    "keeps the steps through a fold on the cadence, and reports nothing once the server takes them",
+    () =>
+      Effect.gen(function* () {
+        vi.mocked(reportClientException).mockClear();
+        const { server } = yield* foldingServer(7);
+        const { port, state } = yield* makePort();
+        const session = yield* startSync(port, server.transport);
+        yield* typeText(state, "abc");
+
+        // The first round ends its short waits at 11.75 seconds. The cadence runs it again four
+        // seconds later, when the fold has ended, so the server takes the batch.
+        const flush = yield* closeEditor(session, Ref.get(state), SOURCE).pipe(
+          Effect.forkChild
+        );
+        yield* TestClock.adjust("16 seconds");
+        yield* Fiber.join(flush);
+
+        expect(yield* server.counts).toMatchObject({ head: 1, submits: 1 });
+        expect(reportClientException).not.toHaveBeenCalled();
+      })
+  );
+
+  it.effect(
+    "reports the fold once when the close budget ends, and leaves the steps unsent",
+    () =>
+      Effect.gen(function* () {
+        vi.mocked(reportClientException).mockClear();
+        const { server } = yield* foldingServer(Number.POSITIVE_INFINITY);
+        const { port, state } = yield* makePort();
+        const session = yield* startSync(port, server.transport);
+        yield* typeText(state, "abc");
+
+        // The budget is ten minutes, and the last round of the flush ends within a minute of it.
+        const flush = yield* closeEditor(session, Ref.get(state), SOURCE).pipe(
+          Effect.forkChild
+        );
+        yield* TestClock.adjust("11 minutes");
+        yield* Fiber.join(flush);
+
+        expect(yield* server.counts).toMatchObject({ head: 0, submits: 0 });
+        expect(reportClientException).toHaveBeenCalledTimes(1);
+        expect(reportClientException).toHaveBeenCalledWith(
+          expect.objectContaining({ _tag: "SyncFolding" }),
           { source: SOURCE }
         );
       })

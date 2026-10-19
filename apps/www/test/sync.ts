@@ -4,7 +4,7 @@ import {
   VersionStale,
 } from "@repo/backend/confect/editor/batch";
 import type { DocumentInvalid } from "@repo/backend/confect/editor/document";
-import type { FoldPending } from "@repo/backend/confect/editor/errors";
+import { FoldPending } from "@repo/backend/confect/editor/errors";
 import { foldSteps, snapshotNode } from "@repo/backend/confect/editor/fold";
 import { decodeStep, encodeStep } from "@repo/backend/confect/editor/step";
 import type { SinceReply } from "@repo/backend/confect/editor/view";
@@ -334,4 +334,27 @@ export const silentEditor = (
         steps: [],
       } satisfies typeof SinceReply.Type),
   },
+});
+
+/**
+ * A server that folds for `folds` batches: it refuses each batch with `FoldPending` until
+ * the folds are used up, and it keeps the id of every batch it is given. `folding` holds the
+ * folds still to come, so a test can end the fold.
+ */
+export const foldingServer = Effect.fn("test.sync.folding")(function* (
+  folds: number
+) {
+  const folding = yield* Ref.make(folds);
+  const ids = yield* Ref.make<readonly string[]>([]);
+  const refuse: Refusal = (batch) =>
+    Ref.update(ids, (seen) => [...seen, batch.batch]).pipe(
+      Effect.andThen(
+        Ref.getAndUpdate(folding, (left) => Math.max(left - 1, 0))
+      ),
+      Effect.flatMap((left) =>
+        left > 0 ? Effect.fail(new FoldPending()) : Effect.void
+      )
+    );
+  const server = yield* makeServer(undefined, refuse);
+  return { folding, ids, server };
 });

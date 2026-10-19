@@ -7,13 +7,11 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { cache } from "react";
-import { ConvexProvider } from "@/components/providers/convex";
 import { AppProviders } from "@/components/providers/app";
 import { TenantEntry } from "@/components/tenant/entry";
 import { canOpenExams } from "@/components/tenant/exams/access";
 import { TenantOutsider } from "@/components/tenant/outsider";
 import { TenantShell } from "@/components/tenant/shell";
-import { env } from "@/env";
 import { getToken } from "@/lib/auth/server";
 import { httpLayer } from "@/lib/convex/http";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
@@ -103,17 +101,15 @@ export default async function SchoolLayout({
   const token = await getToken();
   if (token === undefined) {
     const t = await getTranslations({ locale, namespace: "School" });
-    // The username form redeems a card through Convex, so the entry mounts the
-    // Convex client the way the entry pages of the main site do.
+    // The username form mounts its own Convex client inside its lazily loaded chunk,
+    // so the signed-out tree mounts none.
     return (
-      <ConvexProvider convexUrl={env.NEXT_PUBLIC_CONVEX_URL}>
-        <TenantEntry
-          logo={profile.value.logo}
-          mascot={profile.value.mascot}
-          slug={slug}
-          title={t("sign-in-title", { school: profile.value.name })}
-        />
-      </ConvexProvider>
+      <TenantEntry
+        logo={profile.value.logo}
+        mascot={profile.value.mascot}
+        slug={slug}
+        title={t("sign-in-title", { school: profile.value.name })}
+      />
     );
   }
 
