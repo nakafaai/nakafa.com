@@ -82,16 +82,21 @@ const TransitionSchema = Schema.Struct({
 
 /**
  * The frames the server sends that a step waits on. A `ts` is a moment of the
- * database, which the protocol writes as eight bytes in Base64.
+ * database, which the protocol writes as eight bytes in Base64. A refused mutation
+ * stored nothing, so its `ts` is null. An action's answer may carry `success`, and
+ * it is false when the server refused the action.
  */
 export const GivenSchema = Schema.Union([
   Schema.Struct({
     requestId: Schema.Finite,
     success: Schema.Boolean,
-    ts: Schema.optionalKey(Schema.Uint8ArrayFromBase64),
+    ts: Schema.optionalKey(Schema.NullOr(Schema.Uint8ArrayFromBase64)),
     type: Schema.Literal("MutationResponse"),
   }),
-  Schema.Struct({ type: Schema.Literal("ActionResponse") }),
+  Schema.Struct({
+    success: Schema.optionalKey(Schema.Boolean),
+    type: Schema.Literal("ActionResponse"),
+  }),
   Schema.Struct({
     ...TransitionSchema.fields,
     endVersion: Schema.Struct({ ts: Schema.Uint8ArrayFromBase64 }),

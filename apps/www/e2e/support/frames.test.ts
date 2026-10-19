@@ -397,4 +397,49 @@ describe("the frames of the realtime connection", () => {
       "errorData"
     );
   });
+
+  it("decodes the FoldPending frame as a refused MutationResponse that stored no moment", () => {
+    // The frame the server sends when a batch waits for a fold: nothing was written, so the
+    // `ts` is null, and the typed failure is the one the editor decides on.
+    const folding = decodeGiven(
+      encodeJsonText({
+        errorData: {
+          _tag: "FoldPending",
+          code: "FOLD_PENDING",
+          message:
+            "The steps of this document are being folded. Send the batch again shortly.",
+        },
+        logLines: [],
+        requestId: 12,
+        result: "Uncaught ConvexError",
+        success: false,
+        ts: null,
+        type: "MutationResponse",
+      })
+    );
+
+    expect(Option.getOrUndefined(folding)).toEqual({
+      requestId: 12,
+      success: false,
+      ts: null,
+      type: "MutationResponse",
+    });
+  });
+
+  it("reads the success of an action's answer, so a refused action is a refusal", () => {
+    const refused = decodeGiven(
+      encodeJsonText({
+        logLines: [],
+        requestId: 3,
+        result: "Refused by the server",
+        success: false,
+        type: "ActionResponse",
+      })
+    );
+
+    expect(Option.getOrUndefined(refused)).toEqual({
+      success: false,
+      type: "ActionResponse",
+    });
+  });
 });
