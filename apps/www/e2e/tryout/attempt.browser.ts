@@ -2,7 +2,7 @@ import { expect, type Page, test } from "@playwright/test";
 import { Effect, MutableList } from "effect";
 import { pressDecline, seedAnalyticsConsent } from "@/e2e/support/consent";
 import { loadMathFonts } from "@/e2e/support/fonts";
-import { activate, visibleLink } from "@/e2e/support/input";
+import { activate, activateAncestor, visibleLink } from "@/e2e/support/input";
 import { signInLearner } from "@/e2e/support/learner";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { finishSection } from "@/e2e/support/player";
@@ -156,7 +156,7 @@ const verifyAttemptShell = Effect.fn("NakafaE2E.verifyAttemptShell")(function* (
     page,
     [true, false],
     Effect.gen(function* () {
-      yield* activate(visibleLink(page, trackHref, "main"), hasTouch);
+      yield* activateAncestor(page, trackHref, hasTouch);
       yield* arrive(page, onPath(trackHref), runningRow);
     })
   );

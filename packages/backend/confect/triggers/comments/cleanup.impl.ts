@@ -12,7 +12,6 @@ import atomic from "@repo/backend/confect/middleware/atomic.impl";
 import {
   COMMENT_LIKE_CLEANUP_BATCH_SIZE,
   COMMENT_REPLY_CLEANUP_BATCH_SIZE,
-  COMMENT_VOTE_CLEANUP_BATCH_SIZE,
 } from "@repo/backend/confect/triggers/comments/cleanup";
 import spec from "@repo/backend/confect/triggers/comments/cleanup.spec";
 import { Duration, Effect, Layer } from "effect";
@@ -32,10 +31,9 @@ const scheduleNextPass = Effect.fn(
 
 /**
  * Removes what a deleted comment leaves behind, one bounded batch at a time: its
- * likes, the votes left from before the likes, then its replies. A deleted top-level
- * comment takes its whole thread, every reply at any depth. A deleted reply takes the
- * replies that name it as their parent, and each of those takes its own. A batch that
- * fills up schedules the next pass.
+ * likes, then its replies. A deleted top-level comment takes its whole thread, every
+ * reply at any depth. A deleted reply takes the replies that name it as their parent,
+ * and each of those takes its own. A batch that fills up schedules the next pass.
  */
 const cleanupDeletedComment = FunctionImpl.make(
   databaseSchema,
@@ -47,19 +45,6 @@ const cleanupDeletedComment = FunctionImpl.make(
       const writer = yield* DatabaseWriter;
       const removedLikes = yield* removeCommentLikeBatch(args.commentId);
       if (removedLikes === COMMENT_LIKE_CLEANUP_BATCH_SIZE) {
-        return yield* scheduleNextPass(args.commentId);
-      }
-      const votes = yield* database
-        .table("commentVotes")
-        .index("by_commentId_and_userId", (q) =>
-          q.eq("commentId", args.commentId)
-        )
-        .take(COMMENT_VOTE_CLEANUP_BATCH_SIZE)
-        .pipe(Effect.orDie);
-      for (const vote of votes) {
-        yield* writer.table("commentVotes").delete(vote._id);
-      }
-      if (votes.length === COMMENT_VOTE_CLEANUP_BATCH_SIZE) {
         return yield* scheduleNextPass(args.commentId);
       }
       const members = yield* database
