@@ -42,21 +42,11 @@ interface CardProps extends SceneProps {
 }
 
 /** The line-equation card of authored content, with the title and description of its lesson. */
-export function LineEquation({
-  cameraPosition,
-  cameraTarget,
-  data,
-  description,
-  showZAxis,
-  title,
-}: Props) {
+export function LineEquation({ description, title, ...scene }: Props) {
   return (
     <LineEquationCard
-      cameraPosition={cameraPosition}
-      cameraTarget={cameraTarget}
-      data={data}
+      {...scene}
       header={<VisualCardHeader description={description} title={title} />}
-      showZAxis={showZAxis}
     />
   );
 }
