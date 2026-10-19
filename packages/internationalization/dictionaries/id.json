@@ -240,6 +240,7 @@
     "try-finish": "Selesai mencoba",
     "try-note": "Jawaban di sini tidak disimpan.",
     "title-needed": "Ujian perlu judul sebelum dapat dibuat.",
+    "title-too-long": "Judul paling banyak {count} karakter.",
     "no-unit-description": "Ujian berada di dalam unit. Tambahkan atau pulihkan unit di pengaturan terlebih dahulu.",
     "no-unit-action": "Buka unit",
     "no-unit-member": "Ujian berada di dalam unit. Minta admin sekolah ini menambahkan satu unit.",
@@ -652,7 +653,8 @@
     "channel-name-taken": "Kanal lain di kelas ini sudah memakai nama ini.",
     "channel-limit-reached": "Kelas ini sudah mencapai batas jumlah kanal.",
     "add-submit": "Tambah",
-    "channel-name-needed": "Beri nama kanal terlebih dahulu."
+    "channel-name-needed": "Beri nama kanal terlebih dahulu.",
+    "channel-name-too-long": "Nama paling banyak {count} karakter."
   },
   "SchoolStart": {
     "metadata-title": "Buka sekolahmu",

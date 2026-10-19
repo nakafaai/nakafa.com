@@ -11,7 +11,7 @@ import { Schema } from "effect";
 export const CHANNEL_LIMIT = 48;
 
 /** The most characters a topic channel's name may have. */
-const CHANNEL_NAME_MAX_LENGTH = 40;
+export const CHANNEL_NAME_MAX_LENGTH = 40;
 
 /**
  * The stored name of every general channel. The class page shows the translated

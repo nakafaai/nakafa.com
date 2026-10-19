@@ -3,7 +3,10 @@
 import { useMutation } from "@confect/react";
 import type { Id } from "@repo/backend/confect/_generated/id";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
-import { ChannelName } from "@repo/backend/confect/classroom/forum/channel";
+import {
+  CHANNEL_NAME_MAX_LENGTH,
+  ChannelName,
+} from "@repo/backend/confect/classroom/forum/channel";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -54,6 +57,8 @@ export function AddChannel({
   const id = useId();
   const errorId = `${id}-error`;
   const name = Str.trim(title);
+  // A name the schema refuses is either empty or too long: the input is one line, and it is trimmed.
+  const nameTooLong = name !== "" && !Schema.is(ChannelName)(name);
   const ready = Schema.is(ChannelName)(name) && !isPending;
 
   /** Reopens the dialog with the reason the server refused the channel. */
@@ -153,6 +158,13 @@ export function AddChannel({
             ) : null}
             {name === "" ? (
               <FieldDescription>{t("channel-name-needed")}</FieldDescription>
+            ) : null}
+            {nameTooLong ? (
+              <FieldDescription>
+                {t("channel-name-too-long", {
+                  count: CHANNEL_NAME_MAX_LENGTH,
+                })}
+              </FieldDescription>
             ) : null}
           </Field>
         </FieldGroup>

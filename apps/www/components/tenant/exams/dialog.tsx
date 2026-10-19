@@ -2,7 +2,10 @@
 
 import { useMutation } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
-import { ExamTitle } from "@repo/backend/confect/exams/exam";
+import {
+  EXAM_TITLE_MAX_LENGTH,
+  ExamTitle,
+} from "@repo/backend/confect/exams/exam";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -99,6 +102,8 @@ export function CreateExam({
       )
   );
   const name = Str.trim(title);
+  // A title the schema refuses is either empty or too long: the input is one line, and it is trimmed.
+  const titleTooLong = name !== "" && !Schema.is(ExamTitle)(name);
   const ready =
     Option.isSome(choice) &&
     Option.isSome(language) &&
@@ -174,6 +179,11 @@ export function CreateExam({
             />
             {name === "" ? (
               <FieldDescription>{t("title-needed")}</FieldDescription>
+            ) : null}
+            {titleTooLong ? (
+              <FieldDescription>
+                {t("title-too-long", { count: EXAM_TITLE_MAX_LENGTH })}
+              </FieldDescription>
             ) : null}
           </Field>
           <Field>

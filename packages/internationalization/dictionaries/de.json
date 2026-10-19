@@ -240,6 +240,7 @@
     "try-finish": "Test beenden",
     "try-note": "Antworten hier werden nicht gespeichert.",
     "title-needed": "Die Prüfung braucht einen Titel, bevor sie angelegt werden kann.",
+    "title-too-long": "Der Titel darf höchstens {count} Zeichen lang sein.",
     "no-unit-description": "Eine Prüfung gehört zu einer Einheit. Lege zuerst in den Einstellungen eine an oder stelle eine wieder her.",
     "no-unit-action": "Einheiten öffnen",
     "no-unit-member": "Eine Prüfung gehört zu einer Einheit. Frag einen Admin der Schule, eine anzulegen.",
@@ -652,7 +653,8 @@
     "channel-name-taken": "Ein anderer Kanal dieser Klasse hat diesen Namen bereits.",
     "channel-limit-reached": "Diese Klasse hat die maximale Anzahl an Kanälen erreicht.",
     "add-submit": "Hinzufügen",
-    "channel-name-needed": "Gib dem Kanal zuerst einen Namen."
+    "channel-name-needed": "Gib dem Kanal zuerst einen Namen.",
+    "channel-name-too-long": "Der Name darf höchstens {count} Zeichen lang sein."
   },
   "SchoolStart": {
     "metadata-title": "Eigene Schule eröffnen",

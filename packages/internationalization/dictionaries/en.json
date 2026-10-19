@@ -240,6 +240,7 @@
     "try-finish": "Finish trying",
     "try-note": "Answers here are not saved.",
     "title-needed": "The exam needs a title before you can create it.",
+    "title-too-long": "The title can have at most {count} characters.",
     "no-unit-description": "An exam belongs to a unit. Add or restore one in the settings first.",
     "no-unit-action": "Open units",
     "no-unit-member": "An exam belongs to a unit. Ask an admin of this school to add one.",
@@ -652,7 +653,8 @@
     "channel-name-taken": "Another channel of this class has this name.",
     "channel-limit-reached": "This class holds the most channels it can.",
     "add-submit": "Add",
-    "channel-name-needed": "Give the channel a name first."
+    "channel-name-needed": "Give the channel a name first.",
+    "channel-name-too-long": "The name can have at most {count} characters."
   },
   "SchoolStart": {
     "metadata-title": "Open your school",
