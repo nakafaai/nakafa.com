@@ -198,7 +198,7 @@ export const tenantSettings = (tenant: typeof tenantValidator.Type) =>
 /**
  * The fields of a unit that its school sets: the language of its content and
  * the time zone of its clocks. The language of the interface is not stored; it
- * follows the learner's `NEXT_LOCALE` cookie (ADR 0032).
+ * follows the learner's `NAKAFA_LOCALE` cookie (ADR 0032).
  */
 export const unitFields = {
   contentLanguage: AppLocaleCodeSchema,

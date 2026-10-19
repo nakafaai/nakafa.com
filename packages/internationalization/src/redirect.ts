@@ -1,7 +1,6 @@
 import { negotiateLocale } from "@repo/internationalization/src/negotiate";
 import {
   isSharedPath,
-  readSchoolSlug,
   toPublicPath,
 } from "@repo/internationalization/src/rewrite";
 import { Option, Schema } from "effect";
@@ -58,13 +57,15 @@ function redirectToPath(url: URL, pathname: string) {
 export function decideRedirect(input: {
   readonly headers: Headers;
   readonly url: URL;
+  /** Whether the host names a school. The caller reads the school address, so this seam stays free of tenant rules. */
+  readonly isSchoolHost: boolean;
 }): Option.Option<RedirectDecision> {
   const { url } = input;
   if (isSharedPath(url.pathname)) {
     return Option.none();
   }
   const path = normalizePathname(url.pathname);
-  if (Option.isSome(readSchoolSlug(url.hostname))) {
+  if (input.isSchoolHost) {
     return redirectToPath(url, path);
   }
   if (path === "/") {

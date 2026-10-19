@@ -43,7 +43,6 @@ update:
     - '@tiptap/starter-kit'
     - '@tiptap/suggestion'
     - afdocs
-    - '@next/third-parties'
     - '@turbo/gen'
     - '@types/node'
     - '@vitest/coverage-istanbul'
@@ -55,7 +54,6 @@ update:
     - effect
     - marked-tiptap
     - mathlive
-    - next
     - node
     - pnpm
     - prosemirror-collab
@@ -86,7 +84,6 @@ catalog:
   cn: 0.5.0
   effect: 4.0.5
   motion: ^14.3.0
-  next-intl: ^4.14.9
   next-themes: ^0.4.6
   react-email: 6.11.3
   remark-mdx: 3.1.1
@@ -114,7 +111,6 @@ overrides:
   # installed. Convex cannot bundle the PostHog component with it, so the
   # component keeps the release it bundles with: 5.55.1, as on main.
   "@posthog/convex@2.1.5>posthog-node": "5.55.1"
-  "@react-email/ui@6.11.3>next": "16.4.2"
   "@vercel/routing-utils@6.6.0>path-to-regexp": "6.3.0"
   "auth@1.6.33>@babel/core": "7.29.7"
   "axios": "1.20.0"
@@ -130,7 +126,6 @@ overrides:
   "mermaid@11.17.2>dompurify": "^3.4.16"
   "mermaid@11.17.2>katex": "0.19.0"
   "micromark-extension-math@3.1.0>katex": "0.19.0"
-  "next@16.4.2>postcss": "8.5.29"
   "source-map-js": "1.2.2"
 
 # The tested test-utils-only exception is recorded in scripts/dependencies/policy.ts.

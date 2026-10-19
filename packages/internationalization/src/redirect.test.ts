@@ -3,17 +3,27 @@ import { decideRedirect } from "@repo/internationalization/src/redirect";
 import { Option } from "effect";
 
 /** The redirect decided for one address and its request headers. */
-const decide = (address: string, acceptLanguage?: string) => {
+const decide = (
+  address: string,
+  acceptLanguage?: string,
+  isSchoolHost = false
+) => {
   const headers = new Headers();
   if (acceptLanguage !== undefined) {
     headers.set("accept-language", acceptLanguage);
   }
-  return decideRedirect({ headers, url: new URL(address) });
+  return decideRedirect({ headers, isSchoolHost, url: new URL(address) });
 };
 
 /** The location of a redirect that the request answers, or none. */
-const locationOf = (address: string, acceptLanguage?: string) =>
-  decide(address, acceptLanguage).pipe(Option.map((d) => d.location));
+const locationOf = (
+  address: string,
+  acceptLanguage?: string,
+  isSchoolHost = false
+) =>
+  decide(address, acceptLanguage, isSchoolHost).pipe(
+    Option.map((d) => d.location)
+  );
 
 describe("root redirect", () => {
   it("answers the root with the default locale and a 307 that varies", () => {
@@ -58,6 +68,7 @@ describe("root redirect", () => {
     });
     const decision = decideRedirect({
       headers,
+      isSchoolHost: false,
       url: new URL("https://nakafa.com/"),
     });
     expect(decision.pipe(Option.map((d) => d.location))).toStrictEqual(
@@ -94,29 +105,33 @@ describe("permanent redirects", () => {
 
 describe("school hosts", () => {
   it("keeps the school home without a locale redirect", () => {
-    expect(Option.isNone(decide("https://harapan.nakafa.com/"))).toBe(true);
+    expect(
+      Option.isNone(decide("https://harapan.nakafa.com/", undefined, true))
+    ).toBe(true);
   });
 
   it("removes a trailing slash with a 308 and keeps the host", () => {
-    expect(decide("https://harapan.nakafa.com/exams/?x=1")).toStrictEqual(
-      Option.some({ location: "/exams?x=1", status: 308 })
-    );
+    expect(
+      decide("https://harapan.nakafa.com/exams/?x=1", undefined, true)
+    ).toStrictEqual(Option.some({ location: "/exams?x=1", status: 308 }));
   });
 
   it("leaves a shared root file on a school host to the router", () => {
     expect(
       Option.isNone(
         decide(
-          "https://harapan.nakafa.com/e22d548f7fd2482a9022e3b84e944901.txt"
+          "https://harapan.nakafa.com/e22d548f7fd2482a9022e3b84e944901.txt",
+          undefined,
+          true
         )
       )
     ).toBe(true);
   });
 
   it("leaves a school path without a trailing slash", () => {
-    expect(Option.isNone(decide("https://harapan.nakafa.com/exams"))).toBe(
-      true
-    );
+    expect(
+      Option.isNone(decide("https://harapan.nakafa.com/exams", undefined, true))
+    ).toBe(true);
   });
 });
 
@@ -133,7 +148,9 @@ describe("slashes in a path", () => {
     "https://harapan.nakafa.com//evil.com/",
     "https://harapan.nakafa.com///evil.com",
   ])("never answers %s with a protocol-relative location", (address) => {
-    expect(locationOf(address)).toStrictEqual(Option.some("/evil.com"));
+    expect(locationOf(address, undefined, true)).toStrictEqual(
+      Option.some("/evil.com")
+    );
   });
 
   it("answers a path of slashes on the root with the root redirect", () => {

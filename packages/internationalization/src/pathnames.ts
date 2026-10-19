@@ -16,6 +16,31 @@ type CanonicalSegment = keyof typeof LOCALIZED_SEGMENTS;
 const CANONICAL_SEGMENTS: readonly CanonicalSegment[] =
   Rec.keys(LOCALIZED_SEGMENTS);
 
+/** The localized template of a route: the segment spelling in each locale, then the rest of the template. */
+function localizedTemplate(canonical: CanonicalSegment, rest: string) {
+  return Rec.map(
+    LOCALIZED_SEGMENTS[canonical],
+    (spelling) => `/${spelling}${rest}`
+  );
+}
+
+/**
+ * The localized templates of the routes that the sitemap, the llms index and
+ * the subject menu name, keyed by the canonical route template. Each template is
+ * built from the segment spellings above, so every spelling lives in one place.
+ */
+export const PATHNAMES = {
+  "/curricula": localizedTemplate("curricula", ""),
+  "/curricula/[curriculum]/[[...path]]": localizedTemplate(
+    "curricula",
+    "/[curriculum]/[[...path]]"
+  ),
+  "/materials/[subject]/[topic]/[[...lesson]]": localizedTemplate(
+    "materials",
+    "/[subject]/[topic]/[[...lesson]]"
+  ),
+};
+
 /** The spelling of one canonical segment in one locale. */
 export function publicSegment(canonical: CanonicalSegment, locale: Locale) {
   return LOCALIZED_SEGMENTS[canonical][locale];

@@ -9,7 +9,7 @@ import { readNakafaContentRefFixture } from "@repo/contents/test/fixture";
 import { Array as Arr } from "effect";
 
 const MORE_SECTIONS = /- \d+ more sections$/;
-const NEXT_SECTION = /\(section: ([^)]+)\)/;
+const FOLLOWING_SECTION = /\(section: ([^)]+)\)/;
 const DIGITS = /^\d+$/;
 const SUMMARY_PART = /\n\n(?:Kalimat|tanpa|jeda) /;
 const subjectRoute =
@@ -111,7 +111,7 @@ describe("Nakafa sectioned reads", () => {
       ),
       title: "Bukti",
     };
-    const next = (read: string) => NEXT_SECTION.exec(read)?.[1];
+    const next = (read: string) => FOLLOWING_SECTION.exec(read)?.[1];
     const steps = (read: string) => read.split(step).length - 1;
     let read = formatRead(content);
     let seen = steps(read);
@@ -142,11 +142,11 @@ describe("Nakafa sectioned reads", () => {
       Arr.filter(read.split("\n\n"), (block) => DIGITS.test(block));
     let read = formatRead(content);
     let blocks = body(read);
-    for (let slug = NEXT_SECTION.exec(read)?.[1]; slug; ) {
+    for (let slug = FOLLOWING_SECTION.exec(read)?.[1]; slug; ) {
       read = formatRead(content, { section: slug });
       expect(countTextTokens(read)).toBeLessThanOrEqual(NINA_BUDGET.evidence);
       blocks = Arr.appendAll(blocks, body(read));
-      const following = NEXT_SECTION.exec(read)?.[1];
+      const following = FOLLOWING_SECTION.exec(read)?.[1];
       slug = following === "data" ? undefined : following;
     }
     expect(blocks.length).toBeGreaterThan(1);

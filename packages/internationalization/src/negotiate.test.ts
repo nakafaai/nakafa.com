@@ -38,7 +38,6 @@ describe("locale negotiation", () => {
   it.each([
     "NAKAFA_LOCALE=fr",
     "NAKAFA_LOCALE=",
-    "NEXT_LOCALE=de",
     "XNAKAFA_LOCALE=de",
     "NAKAFA_LOCALE",
   ])("skips the cookie %s, which names no public locale", (cookie) => {

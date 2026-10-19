@@ -175,12 +175,6 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
     dependency: "typescript",
     minimumDeclarations: 1,
   },
-  { approved: "16.4.2", dependency: "next", minimumDeclarations: 1 },
-  {
-    approved: "16.4.2",
-    dependency: "@next/third-parties",
-    minimumDeclarations: 1,
-  },
   { approved: "1.47.0", dependency: "convex", minimumDeclarations: 1 },
   { approved: "catalog:", dependency: "ai", minimumDeclarations: 1 },
   {
@@ -371,11 +365,6 @@ export const REGISTRY_REVIEWS = [
     "Signed content contracts move with the exact Effect peer cohort.",
   ],
   ["typescript@latest", "7.0.2", "The native compiler is pinned exactly."],
-  [
-    "next@latest",
-    "16.4.2",
-    "Next.js 16.4 recommends Cache Components with partial prefetching for every app, which Nakafa already runs, adds `ensureStatic` and the `navigation()` and `prefetch()` deferral APIs, and ships one shared Turbopack runtime chunk with export mangling. It follows the 16.3.8 security release. 16.4.1 fixes three advisories that affect 16.4.0: GHSA-673q-mjm6-r5xr (typed arrays returned from `use cache` functions, critical, with no workaround), GHSA-2464-fhr4-w9xw (Image Optimization with SVG inputs, critical, fixed by sharp 0.35.5 or later, which the lock resolves), and GHSA-p3m5-59mp-jv5r (Server Actions in the App Router, high). 16.4.2 fixes Turbopack and Pages Router issues, and its release notes name no App Router, caching, prefetching or config change.",
-  ],
   [
     "convex@latest",
     "1.47.0",

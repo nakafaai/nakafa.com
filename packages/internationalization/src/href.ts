@@ -1,36 +1,21 @@
-import { previewRouting } from "@repo/internationalization/src/routing";
+import { APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { Array as Arr } from "effect";
 import { hasLocale, type Locale } from "use-intl";
 
 const ABSOLUTE_URL_REGEX = /^https?:\/\//;
-const HASH_ONLY_REGEX = /^#/;
-const MAIL_OR_TEL_REGEX = /^(mailto:|tel:)/;
-const PROTOCOL_RELATIVE_REGEX = /^\/\//;
+const NOT_INTERNAL_REGEX = /^(#|mailto:|tel:|\/\/)/;
 
-/** Returns whether one href should bypass internal locale normalization. */
-function shouldBypassInternalHrefNormalization(href: string) {
-  if (!href) {
-    return true;
-  }
-
-  if (HASH_ONLY_REGEX.test(href)) {
-    return true;
-  }
-
-  if (MAIL_OR_TEL_REGEX.test(href)) {
-    return true;
-  }
-
-  if (PROTOCOL_RELATIVE_REGEX.test(href)) {
-    return true;
-  }
-
-  if (ABSOLUTE_URL_REGEX.test(href)) {
-    return true;
-  }
-
-  return false;
+/**
+ * Whether an href leads inside the app. A hash, mail or telephone link, a
+ * protocol-relative address and an absolute URL leave the router.
+ */
+export function isInternalHref(href: string) {
+  return (
+    href.length > 0 &&
+    !NOT_INTERNAL_REGEX.test(href) &&
+    !ABSOLUTE_URL_REGEX.test(href)
+  );
 }
 
 /**
@@ -42,14 +27,14 @@ function shouldBypassInternalHrefNormalization(href: string) {
  * before activation, so this boundary recognizes every supported app locale.
  */
 export function normalizeLocalizedInternalHref(href: string) {
-  if (shouldBypassInternalHrefNormalization(href)) {
+  if (!isInternalHref(href)) {
     return href;
   }
 
   const url = new URL(href, SITE_ORIGIN);
   const { locale, publicSegments } = splitLocalePathname(
     url.pathname,
-    previewRouting.locales
+    APP_LOCALE_CODES
   );
 
   if (locale) {

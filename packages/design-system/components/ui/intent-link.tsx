@@ -2,14 +2,12 @@
 
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import {
+  type NavigationLinkProps,
   SchoolLink,
   usePathname,
 } from "@repo/internationalization/src/navigation";
-import type { ComponentProps, FocusEvent, MouseEvent, TouchEvent } from "react";
-import { useState } from "react";
 
-type LinkProps = ComponentProps<typeof NavigationLink>;
-type IntentLinkProps = Omit<LinkProps, "href" | "prefetch"> & {
+type IntentLinkProps = Omit<NavigationLinkProps, "href" | "preload"> & {
   href: string;
   intentActive?: boolean;
   /**
@@ -39,30 +37,10 @@ export function IntentLink({
   href,
   intentActive = false,
   localized = true,
-  onFocus,
-  onMouseEnter,
-  onTouchStart,
   ...props
 }: IntentLinkProps) {
-  const [prefetchHref, setPrefetchHref] = useState<string | null>(null);
   const pathname = usePathname();
-
-  function handleFocus(event: FocusEvent<HTMLAnchorElement>) {
-    setPrefetchHref(href);
-    onFocus?.(event);
-  }
-
-  function handleMouseEnter(event: MouseEvent<HTMLAnchorElement>) {
-    setPrefetchHref(href);
-    onMouseEnter?.(event);
-  }
-
-  function handleTouchStart(event: TouchEvent<HTMLAnchorElement>) {
-    setPrefetchHref(href);
-    onTouchStart?.(event);
-  }
-
-  const prefetch = intentActive || prefetchHref === href ? true : "auto";
+  const preload = intentActive ? "render" : "intent";
 
   if (!localized) {
     return (
@@ -70,22 +48,10 @@ export function IntentLink({
         aria-current={href === pathname ? "page" : undefined}
         {...props}
         href={href}
-        onFocus={handleFocus}
-        onMouseEnter={handleMouseEnter}
-        onTouchStart={handleTouchStart}
-        prefetch={prefetch}
+        preload={preload}
       />
     );
   }
 
-  return (
-    <NavigationLink
-      {...props}
-      href={href}
-      onFocus={handleFocus}
-      onMouseEnter={handleMouseEnter}
-      onTouchStart={handleTouchStart}
-      prefetch={prefetch}
-    />
-  );
+  return <NavigationLink {...props} href={href} preload={preload} />;
 }

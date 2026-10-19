@@ -10,19 +10,19 @@
   },
   "dependencies": {
     "@nakafa/aksara-contracts": "0.51.0",
-    "@repo/backend": "workspace:*",
-    "@repo/site": "workspace:*",
     "@repo/seo": "workspace:*",
+    "@repo/site": "workspace:*",
     "@repo/utilities": "workspace:*",
+    "@tanstack/react-router": "1.170.45",
     "effect": "catalog:",
-    "next": "16.4.2",
-    "next-intl": "catalog:",
+    "react": "19.3.1",
     "use-intl": "catalog:"
   },
   "devDependencies": {
     "@effect/vitest": "catalog:",
     "@repo/testing": "workspace:*",
     "@repo/typescript-config": "workspace:*",
+    "@types/react": "19.3.0",
     "@vitest/coverage-istanbul": "catalog:",
     "vitest": "catalog:"
   }

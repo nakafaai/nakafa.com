@@ -26,7 +26,7 @@ import { Array as Arr, Effect, Option } from "effect";
 const { close, finish, mine } = refs.public.exams.sittings;
 
 /** The opening time of the rooms that open a day after the room that opens soon. */
-const NEXT_DAY = OPENS + 86_400_000;
+const FOLLOWING_DAY = OPENS + 86_400_000;
 
 /**
  * Writes scheduled rooms of the SMP unit with the scheduler's jobs left out, so one test can seed
@@ -174,7 +174,7 @@ describe("exams/sittings mine", () => {
           ...Arr.makeBy(50, (index) => ({
             cohortId: null,
             examId,
-            opensAt: NEXT_DAY + index,
+            opensAt: FOLLOWING_DAY + index,
             room: `Lab ${index}`,
           })),
           { cohortId: null, examId, opensAt: OPENS, room: "Lab soon" },
@@ -202,7 +202,7 @@ describe("exams/sittings mine", () => {
           ...Arr.makeBy(50, (index) => ({
             cohortId,
             examId,
-            opensAt: NEXT_DAY + index,
+            opensAt: FOLLOWING_DAY + index,
             room: `Lab ${index}`,
           })),
           { cohortId, examId, opensAt: OPENS, room: "Lab soon" },
