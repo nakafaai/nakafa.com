@@ -100,7 +100,7 @@ function SchoolSettingsNavGroup({
             <SidebarMenuSubItem key={section.href}>
               <SidebarMenuSubButton
                 isActive={pathname === section.href}
-                render={<IntentLink href={section.href} />}
+                render={<IntentLink href={section.href} localized={false} />}
               >
                 <span className="truncate">{t(section.labelKey)}</span>
               </SidebarMenuSubButton>

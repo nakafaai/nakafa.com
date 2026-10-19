@@ -86,7 +86,7 @@ function TenantClassItem({ name, slug }: { name: string; slug: string }) {
     <SidebarMenuItem>
       <SidebarMenuButton
         isActive={isActive}
-        render={<IntentLink href={base} />}
+        render={<IntentLink href={base} localized={false} />}
       >
         {name}
       </SidebarMenuButton>

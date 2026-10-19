@@ -123,7 +123,10 @@ function TenantFrame({
         <SidebarHeader className="border-b">
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton render={<IntentLink href="/" />} size="lg">
+              <SidebarMenuButton
+                render={<IntentLink href="/" localized={false} />}
+                size="lg"
+              >
                 <SchoolMark logo={profile.logo} mascot={profile.mascot} />
                 <div className="grid min-w-0 flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-medium">{profile.name}</span>

@@ -39,7 +39,7 @@ export function TenantNavigation() {
         <SidebarMenuItem>
           <SidebarMenuButton
             isActive={pathname === "/"}
-            render={<IntentLink href="/" />}
+            render={<IntentLink href="/" localized={false} />}
           >
             {t("home")}
           </SidebarMenuButton>
@@ -50,7 +50,7 @@ export function TenantNavigation() {
               isActive={
                 pathname === "/exams" || Str.startsWith("/exams/")(pathname)
               }
-              render={<IntentLink href="/exams" />}
+              render={<IntentLink href="/exams" localized={false} />}
             >
               {tExams("title")}
             </SidebarMenuButton>
@@ -60,7 +60,9 @@ export function TenantNavigation() {
       {canManage ? (
         <TenantSidebarGroup label={tSettings("manage-group")}>
           <SidebarMenuItem>
-            <SidebarMenuButton render={<IntentLink href="/settings/profile" />}>
+            <SidebarMenuButton
+              render={<IntentLink href="/settings/profile" localized={false} />}
+            >
               {tSettings("manage-settings")}
             </SidebarMenuButton>
           </SidebarMenuItem>
