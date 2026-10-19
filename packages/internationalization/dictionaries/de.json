@@ -156,6 +156,10 @@
     "unavailable": "Diese Prüfung ist nicht verfügbar.",
     "frozen-note": "Diese Prüfung ist geplant, darum sind ihre Fragen fest.",
     "archived-note": "Diese Schule ist archiviert, daher sind ihre Prüfungen nur lesbar, bis sie wiederhergestellt wird.",
+    "room-cancel": "Raum absagen",
+    "room-cancel-title": "Diesen Raum absagen?",
+    "room-cancel-description": "Schüler können ihn nicht betreten. Die Fragen der Prüfung können sich wieder ändern, sobald kein Raum mehr dafür besteht.",
+    "room-cancel-confirm": "Raum absagen",
     "questions": "Fragen",
     "question": "Frage {number}",
     "option": "Option {letter}",
@@ -482,7 +486,8 @@
         "changeToken": "Token des Prüfungstermins geändert",
         "allowDevice": "Zweites Gerät für einen Prüfungsversuch erlaubt",
         "finish": "Prüfungsversuch abgegeben",
-        "close": "Prüfungstermin geschlossen"
+        "close": "Prüfungstermin geschlossen",
+        "cancel": "Prüfungsraum abgesagt"
       },
       "exam": {
         "results": {

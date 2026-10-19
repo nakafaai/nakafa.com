@@ -156,6 +156,10 @@
     "unavailable": "Ujian ini tidak tersedia.",
     "frozen-note": "Ujian ini sudah dijadwalkan, jadi soalnya tidak bisa diubah.",
     "archived-note": "Sekolah ini diarsipkan, jadi ujiannya hanya bisa dibaca sampai dipulihkan.",
+    "room-cancel": "Batalkan ruang",
+    "room-cancel-title": "Batalkan ruang ini?",
+    "room-cancel-description": "Siswa tidak bisa masuk. Soal ujian bisa diubah lagi jika tidak ada ruang lain untuknya.",
+    "room-cancel-confirm": "Batalkan ruang",
     "questions": "Soal",
     "question": "Soal {number}",
     "option": "Pilihan {letter}",
@@ -482,7 +486,8 @@
         "changeToken": "Token sesi ujian diganti",
         "allowDevice": "Perangkat kedua diizinkan untuk percobaan ujian",
         "finish": "Percobaan ujian diselesaikan",
-        "close": "Sesi ujian ditutup"
+        "close": "Sesi ujian ditutup",
+        "cancel": "Ruang ujian dibatalkan"
       },
       "exam": {
         "results": {

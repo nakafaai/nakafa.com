@@ -3,6 +3,7 @@ import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { answer } from "@repo/backend/confect/exams/sittings/answer";
 import { heldAttempt } from "@repo/backend/confect/exams/sittings/attempt";
 import { sittingAccess } from "@repo/backend/confect/exams/sittings/authority";
+import { cancelRoom } from "@repo/backend/confect/exams/sittings/cancel";
 import { dashboard } from "@repo/backend/confect/exams/sittings/dashboard";
 import { enter } from "@repo/backend/confect/exams/sittings/enter";
 import { finish } from "@repo/backend/confect/exams/sittings/finish";
@@ -50,6 +51,15 @@ const mineFunction = FunctionImpl.make(
   "mine",
   Effect.fn("exams.sittings.mine.function")(function* () {
     return yield* mine();
+  })
+);
+
+const cancelFunction = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "cancel",
+  Effect.fn("exams.sittings.cancel.function")(function* () {
+    return yield* cancelRoom();
   })
 );
 
@@ -196,7 +206,7 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(enterFunction),
   Layer.provide(signalFunction),
   Layer.provide(mineFunction),
-  Layer.provide(dashboardFunction),
+  Layer.provide(Layer.mergeAll(dashboardFunction, cancelFunction)),
   Layer.provide(lockFunction),
   Layer.provide(unlockFunction),
   Layer.provide(addMinutesFunction),
