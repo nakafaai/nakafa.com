@@ -117,8 +117,11 @@ test("a founder types a school name a letter at a time, and the name, the addres
   const address = page.getByLabel("Address");
 
   // A person types with pauses, so the address follows each letter and the server
-  // checks it between them; both fields stay on the page through every letter.
+  // checks it between them; both fields stay on the page through every letter, and
+  // the error that comes and goes on the way never moves the button below.
+  const proceed = page.getByRole("button", { name: "Continue" });
   await nameField.click();
+  const before = await proceed.boundingBox();
   await Effect.runPromise(
     Effect.forEach(
       Arr.fromIterable(name),
@@ -128,6 +131,7 @@ test("a founder types a school name a letter at a time, and the name, the addres
           await expect(nameField).toBeVisible();
           await expect(address).toBeVisible();
           await expect(nameField).toHaveValue(name.slice(0, index + 1));
+          expect(await proceed.boundingBox()).toEqual(before);
         }),
       { discard: true }
     )

@@ -77,18 +77,13 @@ const fieldVariants = cva(
   }
 );
 
-/**
- * One field: its label, its control and its description. It is a plain element: a
- * questionnaire item is a fieldset already, and Chrome stopped laying out field
- * fieldsets nested in it once their inputs changed attributes while typing.
- */
 function Field({
   className,
   orientation = "vertical",
   ...props
-}: React.ComponentProps<"div"> & VariantProps<typeof fieldVariants>) {
+}: React.ComponentProps<"fieldset"> & VariantProps<typeof fieldVariants>) {
   return (
-    <div
+    <fieldset
       className={cn(fieldVariants({ orientation }), className)}
       data-orientation={orientation}
       data-slot="field"

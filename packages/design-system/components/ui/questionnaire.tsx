@@ -187,16 +187,25 @@ function QuestionnaireInput({
   );
 }
 
+/**
+ * A question's error, on a line the question keeps for it under the answer, so an
+ * error that appears or clears while someone types never moves the buttons below.
+ * The line also keeps the message, which the primitive hides and shows, out of the
+ * item's own children: Chrome stops laying out a size container in a fieldset,
+ * such as a FieldGroup in a question, once a child of that fieldset toggles hidden.
+ */
 function QuestionnaireError({
   className,
   ...props
 }: React.ComponentProps<typeof QuestionnairePrimitive.Error>) {
   return (
-    <QuestionnairePrimitive.Error
-      className={cn("text-destructive text-sm", className)}
-      data-slot="questionnaire-error"
-      {...props}
-    />
+    <div className="-mt-2 min-h-5" data-slot="questionnaire-error-line">
+      <QuestionnairePrimitive.Error
+        className={cn("text-destructive text-sm", className)}
+        data-slot="questionnaire-error"
+        {...props}
+      />
+    </div>
   );
 }
 
