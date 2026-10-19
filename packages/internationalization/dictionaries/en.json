@@ -780,6 +780,7 @@
   "Common": {
     "load-error": "We could not load this data. Please try again.",
     "load-error-retry": "We could not load this data.",
+    "part-denied": "This part of the school is not open to you.",
     "retry": "Retry",
     "copyright": "Copyright © {year} {companyName}. All rights reserved.",
     "made-with-love": "Made with love",

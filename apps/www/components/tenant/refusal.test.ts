@@ -8,10 +8,10 @@ describe("isLostAccess", () => {
     expect(isLostAccess(new NotMember())).toBe(true);
   });
 
-  it("names a viewer who lost the role that the page needs", () => {
+  it("leaves a role refusal of one item to the item's own sentence", () => {
     expect(
       isLostAccess(new AccessDenied({ action: "exam.rooms", reason: "role" }))
-    ).toBe(true);
+    ).toBe(false);
   });
 
   it("leaves a refusal of one item to the page that shows it", () => {
@@ -32,6 +32,9 @@ describe("isDenied", () => {
   it("names a refusal of any item, whatever its reason", () => {
     expect(
       isDenied(new AccessDenied({ action: "exam.rooms", reason: "resource" }))
+    ).toBe(true);
+    expect(
+      isDenied(new AccessDenied({ action: "exam.rooms", reason: "role" }))
     ).toBe(true);
   });
 

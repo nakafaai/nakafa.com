@@ -1,6 +1,7 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { SITE_ORIGIN } from "@repo/seo/origin";
+import { useLocale, useTranslations } from "next-intl";
 import { ActionLink } from "@/components/state/action";
 import { DeferredFigure } from "@/components/state/figure.client";
 import { Screen } from "@/components/state/screen";
@@ -10,8 +11,10 @@ import { Screen } from "@/components/state/screen";
  * member. Nina keeps something safe, one sentence says whom to ask, and the way
  * back leads to Nakafa, because no school page can show the viewer's pages now.
  */
-export function TenantRefused({ homeHref }: { homeHref: string }) {
+export function TenantRefused() {
   const t = useTranslations("School");
+  const locale = useLocale();
+  const homeHref = new URL(`/${locale}`, SITE_ORIGIN).href;
 
   return (
     <Screen

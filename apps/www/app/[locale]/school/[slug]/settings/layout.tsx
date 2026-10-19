@@ -4,6 +4,7 @@ import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 import { notFound } from "next/navigation";
 import { Authenticated } from "@/components/auth/gate";
+import { TenantSection } from "@/components/tenant/section";
 import { getToken } from "@/lib/auth/server";
 import { httpLayer } from "@/lib/convex/http";
 
@@ -51,5 +52,9 @@ export default async function SchoolSettingsLayout({
     notFound();
   }
 
-  return <Authenticated>{children}</Authenticated>;
+  return (
+    <Authenticated>
+      <TenantSection section="settings">{children}</TenantSection>
+    </Authenticated>
+  );
 }

@@ -3,15 +3,13 @@ import { NotMember } from "@repo/backend/confect/middleware/member.spec";
 import { Schema } from "effect";
 
 /**
- * Whether a failed read says the viewer has lost the school's access: the viewer
- * is no longer a member of the school, or the viewer no longer holds the role that
- * the page needs. The school pages answer it with the refused page, and no other
- * failure of a read does. A refusal of one item, such as an exam the viewer may not
- * open, is not a lost access, and a page shows it in its own place.
+ * Whether a failed read says the viewer is no longer a member of the school. Only that
+ * answer sends the whole school to the refused page, because no page of the school can
+ * show anything to a viewer who is not a member. A refusal of one item is not a lost
+ * access, even when its reason is the viewer's role: the item shows its own sentence,
+ * and a page whose own action the viewer lost is answered by its section's gate.
  */
-export const isLostAccess = (error: unknown): boolean =>
-  Schema.is(NotMember)(error) ||
-  (Schema.is(AccessDenied)(error) && error.reason === "role");
+export const isLostAccess = Schema.is(NotMember);
 
 /** Whether a failed read refuses the viewer one item, which the page explains in its own place. */
 export const isDenied = Schema.is(AccessDenied);

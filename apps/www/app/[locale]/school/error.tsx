@@ -42,7 +42,7 @@ export default function SchoolError({
   if (refused) {
     return (
       <Stage>
-        <TenantRefused homeHref={homeHref} />
+        <TenantRefused />
       </Stage>
     );
   }

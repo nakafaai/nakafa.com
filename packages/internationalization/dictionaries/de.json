@@ -780,6 +780,7 @@
   "Common": {
     "load-error": "Diese Daten konnten nicht geladen werden. Bitte versuche es erneut.",
     "load-error-retry": "Diese Daten konnten nicht geladen werden.",
+    "part-denied": "Dieser Teil der Schule ist nicht offen.",
     "retry": "Erneut versuchen",
     "copyright": "Copyright © {year} {companyName}. Alle Rechte vorbehalten.",
     "made-with-love": "Mit Liebe gemacht",

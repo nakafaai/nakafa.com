@@ -780,6 +780,7 @@
   "Common": {
     "load-error": "Data ini belum dapat dimuat. Silakan coba lagi.",
     "load-error-retry": "Data ini belum dapat dimuat.",
+    "part-denied": "Bagian sekolah ini tidak dibuka.",
     "retry": "Coba lagi",
     "copyright": "Hak Cipta © {year} {companyName}. Seluruh hak dilindungi.",
     "made-with-love": "Dibuat dengan cinta",
