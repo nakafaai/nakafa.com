@@ -4,6 +4,7 @@ import { useHotkeys } from "@mantine/hooks";
 import dynamic from "next/dynamic";
 
 import { loadSearchCommandModule } from "@/components/search/command/module";
+import { ArticleNavigationContext } from "@/components/search/navigation.client";
 import type { ArticleNavigationItem } from "@/lib/content/article/navigation";
 import { useSearch } from "@/lib/search/context";
 
@@ -33,5 +34,9 @@ export function DeferredSearchCommand({
     return null;
   }
 
-  return <LazySearchCommand articleNavigation={articleNavigation} />;
+  return (
+    <ArticleNavigationContext value={articleNavigation}>
+      <LazySearchCommand />
+    </ArticleNavigationContext>
+  );
 }

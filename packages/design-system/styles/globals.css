@@ -259,6 +259,7 @@
   --animate-accordion-up: accordion-up var(--transition-duration-ui)
     var(--ease-out);
   --animate-marquee: marquee 60s linear infinite;
+  --animate-skeleton: skeleton-shimmer 1.6s linear infinite;
 
   @keyframes marquee {
     from {
@@ -267,6 +268,18 @@
 
     to {
       transform: translateX(-50%);
+    }
+  }
+
+  /* The highlight of a skeleton sweeps across it, and the placeholder stays
+   * still under reduced motion (see ui/skeleton.tsx). */
+  @keyframes skeleton-shimmer {
+    from {
+      background-position: 100% 0;
+    }
+
+    to {
+      background-position: -100% 0;
     }
   }
 

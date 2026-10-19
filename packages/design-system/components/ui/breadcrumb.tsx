@@ -8,15 +8,14 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn } from "cn";
 import type * as React from "react";
 
-function Breadcrumb({ className, ...props }: React.ComponentProps<"nav">) {
-  return (
-    <nav
-      aria-label="breadcrumb"
-      className={cn(className)}
-      data-slot="breadcrumb"
-      {...props}
-    />
-  );
+function Breadcrumb({
+  className,
+  ...props
+}: React.ComponentProps<"nav"> & {
+  /** The name of the navigation landmark, in the reader's language. */
+  "aria-label": string;
+}) {
+  return <nav className={cn(className)} data-slot="breadcrumb" {...props} />;
 }
 
 function BreadcrumbList({ className, ...props }: React.ComponentProps<"ol">) {

@@ -62,6 +62,7 @@ export function OnboardingQuestionnaire({
   intent: PostAuthIntentResolution;
 }) {
   const t = useTranslations("LearningPrograms");
+  const tCommon = useTranslations("Common");
   const locale = useLocale();
   const router = useRouter();
   const reactiveStatus = useQuery(onboarding.queries.getStatus, {});
@@ -188,9 +189,14 @@ export function OnboardingQuestionnaire({
       shortcuts="letters"
     >
       <QuestionnaireProgress
+        aria-label={tCommon("questionnaire-progress")}
         className="flex w-full flex-col gap-2"
         render={(props, { current, total }) => (
-          <div {...props}>
+          <div
+            {...props}
+            aria-valuetext={t("onboarding.progress", { current, total })}
+            role="progressbar"
+          >
             <div aria-hidden="true" className="grid w-full grid-cols-3 gap-2">
               {Arr.map(onboardingItems, (item, index) => (
                 <span

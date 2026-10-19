@@ -9,37 +9,34 @@ import {
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
 import { useTranslations } from "next-intl";
-import { AiMenuItem } from "@/components/ai/sheet/menu";
+import type { ReactNode } from "react";
 import { BreadcrumbHeaderFrame } from "@/components/shared/breadcrumb/frame";
 import {
   BreadcrumbHeaderFold,
   BreadcrumbHeaderPath,
 } from "@/components/shared/breadcrumb/header";
-import { OpenContent } from "@/components/shared/content/actions";
-import { QuranSurahName } from "@/components/shared/quran/name";
 
 /**
  * Keeps surah navigation, name, and outline actions in one row at every width. On a
  * phone the path folds into its menu, as Google Drive folds it, and the surah's name
  * sits beside it without its Arabic, which the page shows; from md the path, the name
- * and the actions stand apart.
+ * and the actions stand apart. The page composes the name and the actions, and the row
+ * places them.
  */
 export function QuranSurahHeader({
-  arabic,
-  copySourceUrl,
+  actions,
   meaning,
   meaningLanguage,
+  name,
   quranLabel,
-  slug,
   title,
 }: {
-  arabic: string;
-  copySourceUrl: string;
+  actions: ReactNode;
   meaning: string;
   /** BCP 47 language of the meaning when it differs from the page. */
   meaningLanguage?: string;
+  name: ReactNode;
   quranLabel: string;
-  slug: string;
   title: string;
 }) {
   const tCommon = useTranslations("Common");
@@ -76,23 +73,21 @@ export function QuranSurahHeader({
         >
           {meaning}
         </span>
-        <QuranSurahName arabic={arabic} title={title} />
+        {name}
       </h1>
       <div
         className="col-start-3 row-start-1 flex justify-end"
         data-slot="surah-header-actions"
       >
         <ButtonGroup aria-label={tCommon("content-actions")}>
-          <OpenContent copySourceUrl={copySourceUrl} slug={slug}>
-            <AiMenuItem contextTitle={title} />
-          </OpenContent>
+          {actions}
           <Tooltip>
             <TooltipTrigger
               render={
                 <SidebarTrigger
-                  aria-label={tCommon("on-this-page")}
                   className="size-9"
                   icon={Menu02Icon}
+                  label={tCommon("on-this-page")}
                   size="icon"
                   variant="outline"
                 />
