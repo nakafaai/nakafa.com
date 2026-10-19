@@ -3,6 +3,15 @@ import { Array as Arr, Effect, Option, Record as Rec, Schema } from "effect";
 import { KeyValueStore } from "effect/persistence";
 
 /**
+ * The browser's kept state of a sitting attempt, which holds the answers and flags until the server holds them.
+ * An entry leaves the browser in one of two ways. The student's finish drops it once the server confirms the
+ * finish, and the student's home drops the entries of the attempts that its list shows as submitted, because
+ * the list comes from the server. An entry for an attempt that no list shows as submitted stays until the
+ * browser clears its storage. Dropping it sooner could lose answers that the server has not confirmed, and
+ * the storage cannot list its keys to find the entries of the sittings that a list no longer shows.
+ */
+
+/**
  * One answer that the browser keeps until the server confirms it: the response the student chose, and the
  * device time it was chosen at, which names the answer when the server confirms it.
  */
@@ -166,3 +175,23 @@ export const forgetAttempt = Effect.fn("exams.sitting.keep.forget")(function* (
   const store = yield* KeyValueStore.KeyValueStore;
   yield* store.remove(keyOf(sittingId, attemptId));
 });
+
+/**
+ * The sitting and the attempt of each row of a student's list that shows its attempt as submitted, which
+ * name the kept state that the browser may drop. A row with no attempt, or with one still open, names none.
+ */
+export function submittedKeysOf<Sitting, Attempt>(
+  rows: readonly {
+    readonly attempt: string | null;
+    readonly attemptId: Attempt | null;
+    readonly id: Sitting;
+  }[]
+) {
+  return Arr.getSomes(
+    Arr.map(rows, (row) =>
+      row.attempt === "submitted" && row.attemptId !== null
+        ? Option.some({ attemptId: row.attemptId, sittingId: row.id })
+        : Option.none()
+    )
+  );
+}

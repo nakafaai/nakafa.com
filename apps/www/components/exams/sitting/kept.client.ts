@@ -6,11 +6,7 @@ import { Array as Arr, Effect } from "effect";
 import { useEffect, useRef } from "react";
 import { sittingCallFailures } from "@/components/exams/sitting/actions.client";
 import { useSendAnswer } from "@/components/exams/sitting/answer.client";
-import {
-  forgetAttempt,
-  keptAnswersFor,
-  readKept,
-} from "@/components/exams/sitting/keep";
+import { keptAnswersFor, readKept } from "@/components/exams/sitting/keep";
 import type { PaperValue } from "@/components/exams/sitting/paper";
 import { sittingStorage } from "@/components/exams/sitting/storage.client";
 import { reportClientException } from "@/lib/analytics/client";
@@ -76,21 +72,4 @@ export function useResendKeptAnswers({
       )
     );
   }, [attemptId, deviceId, paper, send, sittingId, slug]);
-}
-
-/** Drops what the browser kept for a submitted attempt. A browser that refuses storage reports it. */
-export function forgetKeptAttempt(
-  sittingId: GenericId.GenericId<"examSittings">,
-  attemptId: GenericId.GenericId<"examAttempts">
-) {
-  Effect.runSync(
-    forgetAttempt(sittingId, attemptId).pipe(
-      Effect.provide(sittingStorage),
-      Effect.catchTag("KeyValueStoreError", (error) =>
-        reportClientException(error, {
-          source: "components/exams/sitting/kept",
-        })
-      )
-    )
-  );
 }

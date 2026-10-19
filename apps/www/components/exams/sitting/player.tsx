@@ -22,10 +22,8 @@ import { useSittingClock } from "@/components/exams/sitting/clock.client";
 import { sittingFailureMessage } from "@/components/exams/sitting/entry";
 import { SittingFinish } from "@/components/exams/sitting/finish";
 import { SittingFlagProvider } from "@/components/exams/sitting/flags.client";
-import {
-  forgetKeptAttempt,
-  useResendKeptAnswers,
-} from "@/components/exams/sitting/kept.client";
+import { forgetKeptAttempt } from "@/components/exams/sitting/forget.client";
+import { useResendKeptAnswers } from "@/components/exams/sitting/kept.client";
 import { SittingNavigator } from "@/components/exams/sitting/navigator";
 import type { PaperValue } from "@/components/exams/sitting/paper";
 import { SittingQuestion } from "@/components/exams/sitting/question";

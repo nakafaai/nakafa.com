@@ -6,6 +6,8 @@ import { buttonVariants } from "@repo/design-system/lib/button";
 import { Array as Arr, Option } from "effect";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
+import { useEffect } from "react";
+import { forgetSubmittedKept } from "@/components/exams/sitting/forget.client";
 import { CardLink, CardLinks } from "@/components/shared/card/link";
 import { useStudentSittings } from "@/components/tenant/home/query.client";
 import { HomeTile, RowText, TileEmpty } from "@/components/tenant/home/tile";
@@ -19,11 +21,18 @@ type Sitting = typeof StudentSittingRow.Type;
  * The sittings a student may take part in, and the results of those that closed: the open ones first, then
  * the scheduled ones, then the finished ones. An open sitting's row enters it, and the footer's action
  * enters the first open sitting that the student has not finished. A finished sitting's row shows its
- * results once the teacher releases them. A student who holds no sitting sees Nina and why.
+ * results once the teacher releases them. A student who holds no sitting sees Nina and why. The list's
+ * submitted attempts drop the answers that the browser kept for them, which the server now holds.
  */
 export function StudentTile({ className }: { className?: string | undefined }) {
   const t = useTranslations("School");
   const listed = useStudentSittings();
+
+  useEffect(() => {
+    if (QueryResult.isSuccess(listed)) {
+      forgetSubmittedKept(listed.value);
+    }
+  }, [listed]);
 
   if (QueryResult.isFailure(listed)) {
     throw listed.error;

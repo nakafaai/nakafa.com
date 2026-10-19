@@ -12,6 +12,7 @@ import {
   keepFlag,
   keptAnswersFor,
   readKept,
+  submittedKeysOf,
 } from "@/components/exams/sitting/keep";
 
 const SITTING = "sitting-a";
@@ -65,6 +66,19 @@ describe("keptAnswersFor", () => {
 
   it("gives back nothing for a paper with no kept answer", () => {
     expect(keptAnswersFor(NOTHING, [QUESTION])).toEqual([]);
+  });
+});
+
+describe("submittedKeysOf", () => {
+  it("names the sitting and the attempt of each row that shows its attempt as submitted", () => {
+    expect(
+      submittedKeysOf([
+        { attempt: "submitted", attemptId: "attempt-a", id: "sitting-a" },
+        { attempt: "inProgress", attemptId: "attempt-b", id: "sitting-b" },
+        { attempt: null, attemptId: null, id: "sitting-c" },
+        { attempt: "closing", attemptId: "attempt-d", id: "sitting-d" },
+      ])
+    ).toEqual([{ attemptId: "attempt-a", sittingId: "sitting-a" }]);
   });
 });
 
