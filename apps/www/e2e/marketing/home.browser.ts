@@ -76,10 +76,10 @@ const SIZED_ELEMENTS = "section[id], [data-slot='lesson-panel']";
 const SHIFT_TOLERANCE_MILLISECONDS = 50;
 
 /**
- * The start of a dot colour that only the particle field's code holds: the dark
- * theme paints its dots with it. The field loads while the hero hydrates.
+ * A dot colour that only the particle field's code holds: the dark theme paints
+ * its dots with it. The field loads while the hero hydrates.
  */
-const PARTICLES_MARKER = "oklch(0.985 0 0 / ";
+const PARTICLES_MARKER = "oklch(0.985 0 0)";
 
 /** Collects the console errors and warnings a page writes, hydration warnings included. */
 function observeConsole(page: Page) {

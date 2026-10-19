@@ -1,5 +1,4 @@
 import { cn } from "cn";
-import { GeistMono } from "geist/font/mono";
 import { Inter } from "next/font/google";
 
 const inter = Inter({
@@ -10,6 +9,5 @@ const inter = Inter({
 
 export const fonts = cn(
   inter.variable,
-  GeistMono.variable,
   "touch-manipulation font-sans antialiased"
 );

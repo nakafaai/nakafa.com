@@ -1,3 +1,5 @@
+import { monospace } from "@repo/design-system/lib/monospace";
+import { cn } from "cn";
 import { locale as rootLocale } from "next/root-params";
 import { Suspense } from "react";
 import { AppShell } from "@/components/sidebar/shell";
@@ -19,7 +21,9 @@ export default async function Layout(props: LayoutProps<"/[locale]">) {
 
   return (
     <AppShell articleNavigation={articleNavigation}>
-      <Suspense fallback={null}>{children}</Suspense>
+      <div className={cn(monospace, "contents")}>
+        <Suspense fallback={null}>{children}</Suspense>
+      </div>
     </AppShell>
   );
 }
