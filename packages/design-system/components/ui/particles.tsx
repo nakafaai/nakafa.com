@@ -154,8 +154,6 @@ export function Particles({
   const circles = useRef<Circle[]>([]);
   const mousePositionRef = useMousePosition();
   const mouse = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
-  // The canvas box in viewport coordinates, read on resize and scroll.
-  const canvasRect = useRef<DOMRect | null>(null);
   const canvasSize = useRef<{ w: number; h: number }>({ w: 0, h: 0 });
   const animationFrameRef = useRef<number | null>(null);
   const dpr =
@@ -188,7 +186,6 @@ export function Particles({
       canvasRef.current.style.width = `${canvasSize.current.w}px`;
       canvasRef.current.style.height = `${canvasSize.current.h}px`;
       context.current.scale(dpr, dpr);
-      canvasRect.current = canvasRef.current.getBoundingClientRect();
     }
   }, [dpr]);
 
@@ -282,8 +279,10 @@ export function Particles({
   );
 
   const onMouseMove = useCallback(() => {
-    const rect = canvasRect.current;
-    if (rect) {
+    if (canvasRef.current) {
+      // Read per frame: layout can move the canvas without a scroll or resize
+      // event, and the frame writes no DOM, so this read stays cheap.
+      const rect = canvasRef.current.getBoundingClientRect();
       const { w, h } = canvasSize.current;
       const x = mousePositionRef.current.x - rect.left - w / 2;
       const y = mousePositionRef.current.y - rect.top - h / 2;
@@ -385,21 +384,6 @@ export function Particles({
 
     return stopAnimation;
   }, [stopAnimation]);
-
-  // Scroll moves the canvas in the viewport, so its box is read again on each
-  // scroll, from any scrolling ancestor, rather than on every frame.
-  useEffect(() => {
-    const readCanvasRect = () => {
-      canvasRect.current = canvasRef.current?.getBoundingClientRect() ?? null;
-    };
-    document.addEventListener("scroll", readCanvasRect, {
-      capture: true,
-      passive: true,
-    });
-    return () => {
-      document.removeEventListener("scroll", readCanvasRect, { capture: true });
-    };
-  }, []);
 
   // The field draws once the observer has measured the container, then again
   // each time the container changes size. A zero box is not laid out yet.
