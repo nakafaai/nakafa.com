@@ -5,6 +5,7 @@ import {
   dayPartAt,
   dayPartOf,
   firstNameOf,
+  greetingOf,
 } from "@/components/tenant/home/greeting";
 
 const jakarta = DateTime.zoneMakeNamedUnsafe("Asia/Jakarta");
@@ -63,5 +64,28 @@ describe("firstNameOf", () => {
 
   it("keeps a single word as it is, and ignores the spaces at its ends", () => {
     expect(firstNameOf("  Sari ")).toBe("Sari");
+  });
+});
+
+describe("greetingOf", () => {
+  it("names the viewer and the part of the day on the clock of the school's first unit", () => {
+    expect(
+      greetingOf(
+        {
+          person: { name: "Hendra Saputra" },
+          units: [{ timeZone: "Asia/Jakarta" }],
+        },
+        at("2026-10-18T12:30:00Z")
+      )
+    ).toEqual({ firstName: "Hendra", part: "evening" });
+  });
+
+  it("reads the UTC clock for a school with no unit", () => {
+    expect(
+      greetingOf(
+        { person: { name: "Sari" }, units: [] },
+        at("2026-10-18T13:00:00Z")
+      )
+    ).toEqual({ firstName: "Sari", part: "afternoon" });
   });
 });

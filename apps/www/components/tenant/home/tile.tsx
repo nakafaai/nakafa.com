@@ -1,6 +1,7 @@
 import { CardHeader, CardTitle } from "@repo/design-system/components/ui/card";
-import { Nina } from "@repo/design-system/components/ui/nina";
-import type { ActSchema } from "@repo/mascot/nina/act";
+import { IntentLink } from "@repo/design-system/components/ui/intent-link";
+import { buttonVariants } from "@repo/design-system/lib/button";
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import {
   CardSection,
@@ -8,12 +9,13 @@ import {
   CardSectionFooter,
 } from "@/components/shared/card/section";
 
+/** The most rows one tile lists. A tile with more rows ends with All exams, when the viewer may open the exams. */
+export const TILE_ROWS = 3;
+
 /**
- * One tile of the school home: a card with its title, its body, and a footer with one concise
- * sentence and at most one action. Every tile ends the same way, so the footer is never left out.
- * Its body is as tall as the empty state of a one-column tile takes in the longest language, which
- * is four lines of its sentence beside Nina, so a tile keeps its height while its rows arrive or its
- * empty state shows.
+ * One tile of the school home: a card with its title, its rows, and a footer with one concise sentence and at
+ * most one action. The rows fill the body, and the footer stays at the foot of the tile, so the tiles of a row
+ * line up. Each row is an action, so a tile holds no primary button.
  */
 export function HomeTile({
   action,
@@ -22,16 +24,13 @@ export function HomeTile({
   hint,
   title,
 }: {
-  /** The tile's one action, at the end of its footer. */
+  /** The footer's action, which a tile with more rows than it shows offers as All exams. */
   action?: ReactNode;
-  /** The tile's rows or its empty state. A tile whose rows have not arrived has none. */
-  children?: ReactNode;
+  /** The tile's rows, each of which opens a page. */
+  children: ReactNode;
   className?: string | undefined;
-  /**
-   * The one concise sentence of the footer, which says what the action does or what stops it. A tile that
-   * has not read its rows yet has none, so its footer shows no sentence rather than a guess.
-   */
-  hint?: string | undefined;
+  /** The one concise sentence of the footer, which says what the rows are for. */
+  hint: string;
   title: string;
 }) {
   return (
@@ -39,8 +38,8 @@ export function HomeTile({
       <CardHeader>
         <CardTitle>{title}</CardTitle>
       </CardHeader>
-      <div className="min-h-26">{children}</div>
-      <CardSectionFooter hint={hint ?? ""}>
+      <div className="flex-1">{children}</div>
+      <CardSectionFooter hint={hint}>
         {action === undefined ? null : (
           <CardSectionActions>{action}</CardSectionActions>
         )}
@@ -49,38 +48,35 @@ export function HomeTile({
   );
 }
 
-/**
- * The body of a tile with nothing to show: Nina doing what fits the list, and one sentence. The
- * sentence stops at the four lines the tile's body reserves, so a narrow tile keeps its height
- * when its sentence wraps further.
- */
-export function TileEmpty({
-  act,
-  children,
-}: {
-  act: typeof ActSchema.Type;
-  children: string;
-}) {
+/** The footer's All exams, which opens the list of exams for the rows that a tile does not show. */
+export function AllExamsAction() {
+  const t = useTranslations("School");
+
   return (
-    <div className="flex items-center gap-3 px-6 py-3">
-      <Nina act={act} label="" size={48} whole />
-      <p className="line-clamp-4 text-muted-foreground text-sm">{children}</p>
-    </div>
+    <IntentLink
+      className={buttonVariants({ variant: "outline" })}
+      href="/exams"
+      localized={false}
+    >
+      {t("tile-all-exams")}
+    </IntentLink>
   );
 }
 
-/** A row's two lines: its title, and a second line of detail, each on one line that truncates. */
+/** A row's two lines: its title, and an optional second line of detail, each on one line that truncates. */
 export function RowText({
   detail,
   title,
 }: {
-  detail: ReactNode;
+  detail?: string | undefined;
   title: string;
 }) {
   return (
     <span className="grid min-w-0 flex-1 gap-0.5">
       <span className="truncate font-medium">{title}</span>
-      <span className="truncate text-muted-foreground text-xs">{detail}</span>
+      {detail === undefined ? null : (
+        <span className="truncate text-muted-foreground text-xs">{detail}</span>
+      )}
     </span>
   );
 }

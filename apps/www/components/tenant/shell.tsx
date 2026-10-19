@@ -44,6 +44,7 @@ import {
   useTenant,
 } from "@/components/tenant/context";
 import type { HomeAccess } from "@/components/tenant/home/access";
+import type { Greeting } from "@/components/tenant/home/greeting";
 import { SchoolMark } from "@/components/tenant/mark";
 import { TenantNavigation } from "@/components/tenant/navigation";
 import { isExamEditorPath } from "@/lib/settings/school";
@@ -215,6 +216,7 @@ export function TenantShell({
   canManage,
   canOpenExams,
   children,
+  greeting,
   home,
   personName,
   profile,
@@ -224,6 +226,7 @@ export function TenantShell({
   canManage: boolean;
   canOpenExams: boolean;
   children: ReactNode;
+  greeting: Greeting;
   home: HomeAccess;
   personName: string;
   profile: typeof TenantProfile.Type;
@@ -234,6 +237,7 @@ export function TenantShell({
       value={{
         canManage,
         canOpenExams,
+        greeting,
         logo: profile.logo,
         mascot: profile.mascot,
         home,

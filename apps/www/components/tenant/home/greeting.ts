@@ -1,5 +1,10 @@
+import type { Ref } from "@confect/core";
+import type tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import type { ActSchema } from "@repo/mascot/nina/act";
 import { Array as Arr, DateTime, Option, Schema, String as Str } from "effect";
+
+/** The viewer of a school, as the viewer read answers it. */
+type Viewer = Ref.Returns<typeof tenancy.viewer.get>;
 
 /** The parts of the day that a greeting names. */
 const DayPartSchema = Schema.Literals(["afternoon", "evening", "morning"]);
@@ -61,3 +66,27 @@ const WORD_GAP = /\s+/u;
 /** The first name of a person, which is the first word of the name the school holds for them. */
 export const firstNameOf = (name: string) =>
   Arr.headNonEmpty(Str.split(WORD_GAP)(Str.trim(name)));
+
+/**
+ * The greeting of the school home for one viewer at an instant: the viewer's first name, and the part of the
+ * day on the clock of the school's first unit. The school layout computes it on the server, so the first HTML
+ * names the viewer and Nina's act.
+ */
+export const greetingOf = (
+  viewer: {
+    readonly person: Pick<Viewer["person"], "name">;
+    readonly units: readonly Pick<Viewer["units"][number], "timeZone">[];
+  },
+  now: DateTime.Utc
+) => ({
+  firstName: firstNameOf(viewer.person.name),
+  part: dayPartAt(
+    now,
+    Option.flatMap(Arr.head(viewer.units), (unit) =>
+      DateTime.zoneMakeNamed(unit.timeZone)
+    )
+  ),
+});
+
+/** The greeting of the school home, as the school layout computes it and the shell carries it. */
+export type Greeting = ReturnType<typeof greetingOf>;

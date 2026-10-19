@@ -1,68 +1,22 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import type { ExamSittingsDoc } from "@repo/backend/confect/_generated/docs";
 import refs from "@repo/backend/confect/_generated/refs";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import type { ExamSummary } from "@repo/backend/confect/exams/exam";
-import type { SittingView } from "@repo/backend/confect/exams/sittings/contract";
 import { nf } from "@repo/backend/test/editor";
 import { archiveUnit, LANGUAGE, teacherExam } from "@repo/backend/test/exams";
-import {
-  CLOSES_AT,
-  OPENS_AT,
-  type SittingFixture,
-  seedPlacement,
-} from "@repo/backend/test/sittings";
+import { homeOf, insertRoom, roomsOf } from "@repo/backend/test/home";
+import { OPENS_AT, seedPlacement } from "@repo/backend/test/sittings";
 import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect } from "effect";
 
-const { create, home } = refs.public.exams.exams;
+const { create } = refs.public.exams.exams;
 
 /** One day, in milliseconds. */
 const DAY = 86_400_000;
 
-/** The fields of one room that a test seeds, as the scheduler would leave it. */
-type RoomSeed = Pick<ExamSittingsDoc, "examId" | "opensAt" | "state"> &
-  Partial<
-    Pick<
-      ExamSittingsDoc,
-      "closesAt" | "cohortId" | "room" | "tenantId" | "unitId"
-    >
-  >;
-
-/** Writes one room with its token left out, so a test starts from the room's state. */
-const insertRoom = (fixture: SittingFixture, seed: RoomSeed) =>
-  fixture.run(
-    Effect.flatMap(DatabaseWriter, (writer) =>
-      writer.table("examSittings").insert({
-        closesAt: seed.closesAt ?? CLOSES_AT,
-        cohortId: seed.cohortId ?? null,
-        examId: seed.examId,
-        jobs: [],
-        opensAt: seed.opensAt,
-        room: seed.room ?? "Lab 2",
-        state: seed.state,
-        tenantId: seed.tenantId ?? fixture.tenants.nf,
-        tokenHash: "",
-        tokenIssuedAt: TENANCY_NOW,
-        tokenSealed: new ArrayBuffer(0),
-        unitId: seed.unitId ?? fixture.units.smp,
-      })
-    ).pipe(Effect.orDie)
-  );
-
-/** Reads the school home as one account of the fixture. */
-const homeOf = (
-  fixture: SittingFixture,
-  account: keyof SittingFixture["users"]
-) => fixture.as(account).query(home, { slug: nf });
-
 /** The titles of a list of exams, in order. */
 const titlesOf = (exams: readonly (typeof ExamSummary.Type)[]) =>
   Arr.map(exams, (exam) => exam.title);
-
-/** The rooms of a list, by their names, in order. */
-const roomsOf = (rooms: readonly (typeof SittingView.Type)[]) =>
-  Arr.map(rooms, (room) => room.room);
 
 describe("exams home", () => {
   beforeEach(() => {
@@ -200,10 +154,15 @@ describe("exams home", () => {
           opensAt: TENANCY_NOW + 2 * DAY,
           state: "scheduled",
         });
+        yield* insertRoom(fixture, {
+          examId: exam.id,
+          opensAt: OPENS_AT - DAY,
+          state: "closed",
+        });
 
         const read = yield* homeOf(fixture, "student");
 
-        expect(read).toEqual({ drafts: [], live: [], next: [] });
+        expect(read).toEqual({ closed: [], drafts: [], live: [], next: [] });
       })
   );
 

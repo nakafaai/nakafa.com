@@ -7,6 +7,7 @@ import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { requireAuth } from "@repo/backend/confect/auth/session";
 import { examAuthority } from "@repo/backend/confect/exams/authority";
 import { examSummary } from "@repo/backend/confect/exams/exam";
+import { closedResults } from "@repo/backend/confect/exams/home/results";
 import {
   sittingAuthority,
   withExam,
@@ -143,8 +144,9 @@ const draftsOf = Effect.fn("exams.home.drafts")(function* (
 
 /**
  * The school home's exam reads for the caller, in one bounded call. Every read is an index read
- * with a small limit over the school's active units, and each room and draft is decided by its own
- * authority before it is returned. A caller who holds no room or exam action gets three empty lists.
+ * with a small limit over the school's active units, and each room, result, and draft is decided by
+ * its own authority before it is returned. A caller who holds no room, result, or exam action gets
+ * four empty lists.
  */
 export const readHome = Effect.fn("exams.home.read")(function* () {
   const member = yield* Member;
@@ -170,6 +172,7 @@ export const readHome = Effect.fn("exams.home.read")(function* () {
   );
   const next = yield* firstViewable(upcoming);
   return {
+    closed: yield* closedResults(watched),
     drafts: yield* draftsOf(member.tenant._id, appUser._id),
     live: yield* sittingViews(live),
     next: yield* sittingViews(next),

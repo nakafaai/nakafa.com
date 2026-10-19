@@ -1,7 +1,7 @@
 "use client";
 
 import type { StudentSittingRow } from "@repo/backend/confect/exams/sittings/contract";
-import { Array as Arr, Order } from "effect";
+import { Array as Arr, type Option, Order } from "effect";
 
 /** The part of a sitting that its order reads: its state, when it opens, and the student's attempt in it. */
 type Listed = Pick<
@@ -35,4 +35,17 @@ export function orderSittings<A extends Listed>(
   sittings: readonly A[]
 ): readonly A[] {
   return Arr.sort(sittings, Order.combine(byGroup, byOpening));
+}
+
+/**
+ * The first sitting that the student may enter now: an open sitting whose attempt is not submitted. The school
+ * home's header and its student tile both name this sitting, so they never disagree about which one to enter.
+ */
+export function enterableSitting<A extends Listed>(
+  sittings: readonly A[]
+): Option.Option<A> {
+  return Arr.findFirst(
+    sittings,
+    (sitting) => sitting.state === "open" && sitting.attempt !== "submitted"
+  );
 }

@@ -14,7 +14,14 @@ import {
 const SEEDED_EXAM = "Ujian Acceptance";
 const SEEDED_ROOM = /Lab 2/u;
 
-test("the owner's Beranda shows the page's one action and the tiles of a proctor", async ({
+/** The one sentence of the quiet state of a staff home, while no room runs and none opens soon. */
+const QUIET_STAFF =
+  "No sitting is running, and none opens in the next 14 days.";
+
+/** The one sentence of the quiet state of a student's home, while the teacher has scheduled no sitting. */
+const QUIET_STUDENT = "Your teacher has not scheduled a sitting yet.";
+
+test("the owner's Beranda shows the page's one action, the quiet state, and the setup", async ({
   baseURL,
   browser,
 }) => {
@@ -28,14 +35,18 @@ test("the owner's Beranda shows the page's one action and the tiles of a proctor
   await page.goto(address("/"));
 
   await expect(page.getByRole("button", { name: "Create exam" })).toBeVisible();
-  await expect(page.getByText("In progress", { exact: true })).toBeVisible();
-  await expect(page.getByText("Up next", { exact: true })).toBeVisible();
-  await expect(page.getByText("Keep writing", { exact: true })).toBeVisible();
+  await expect(page.getByText(QUIET_STAFF, { exact: true })).toBeVisible();
+  await expect(page.getByText("In progress", { exact: true })).toHaveCount(0);
   await expect(page.getByText("Your sittings", { exact: true })).toHaveCount(0);
+  // A new school has no teacher, so the owner's setup links the step that completes it.
+  await expect(page.getByText("Setup", { exact: true })).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Invite a teacher" })
+  ).toHaveAttribute("href", "/settings/invites");
   await context.close();
 });
 
-test("a teacher's Beranda shows the teacher's tiles and the same one action", async ({
+test("a teacher's Beranda shows the same one action and no setup", async ({
   baseURL,
   browser,
 }) => {
@@ -49,8 +60,8 @@ test("a teacher's Beranda shows the teacher's tiles and the same one action", as
   await page.goto(address("/"));
 
   await expect(page.getByRole("button", { name: "Create exam" })).toBeVisible();
-  await expect(page.getByText("Keep writing", { exact: true })).toBeVisible();
-  await expect(page.getByText("In progress", { exact: true })).toBeVisible();
+  await expect(page.getByText(QUIET_STAFF, { exact: true })).toBeVisible();
+  await expect(page.getByText("Setup", { exact: true })).toHaveCount(0);
   await context.close();
 });
 
@@ -81,10 +92,41 @@ test("a student's Beranda shows the student's sittings and no action of the page
   await page.goto(address("/"));
 
   await expect(page.getByText("Your sittings", { exact: true })).toBeVisible();
+  // The one action of a student's page is Enter sitting, while the seeded sitting is open.
+  await expect(page.getByRole("link", { name: "Enter sitting" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Create exam" })).toHaveCount(
     0
   );
   await expect(page.getByText("In progress", { exact: true })).toHaveCount(0);
+  await context.close();
+});
+
+test("a student with no sitting sees the quiet state and no action", async ({
+  baseURL,
+  browser,
+}) => {
+  const school = await Effect.runPromise(createSchool());
+  const address = (path: string) =>
+    hostAddress(baseURL, `${school.slug}.localhost`, path);
+  const learner = `home-quiet-${school.slug}@acceptance.example.test`;
+  const context = await browser.newContext();
+  await Effect.runPromise(
+    inviteLearner({
+      address: learner,
+      baseURL: address("/"),
+      context,
+      slug: school.slug,
+    })
+  );
+  const page = await context.newPage();
+
+  await page.goto(address("/"));
+
+  await expect(page.getByText(QUIET_STUDENT, { exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Enter sitting" })).toHaveCount(
+    0
+  );
+  await expect(page.getByText("Your sittings", { exact: true })).toHaveCount(0);
   await context.close();
 });
 
@@ -125,7 +167,7 @@ test("a sitting that runs now appears in the owner's In progress tile, and its r
   await learnerContext.close();
 });
 
-test("Beranda keeps its tiles in place while their rows load", async ({
+test("Beranda keeps its place while its rows load", async ({
   baseURL,
   browser,
 }) => {
@@ -137,14 +179,14 @@ test("Beranda keeps its tiles in place while their rows load", async ({
   const page = await context.newPage();
 
   await page.goto(address("/"));
-  await expect(page.getByText("Keep writing", { exact: true })).toBeVisible();
+  await expect(page.getByText(QUIET_STAFF, { exact: true })).toBeVisible();
   await page.waitForLoadState("load");
 
   expect(await Effect.runPromise(readCumulativeLayoutShift(page))).toBe(0);
   await context.close();
 });
 
-test("Beranda keeps its tiles in place on a phone while their rows load", async ({
+test("Beranda keeps its place on a phone while its rows load", async ({
   baseURL,
   browser,
 }) => {
@@ -158,7 +200,7 @@ test("Beranda keeps its tiles in place on a phone while their rows load", async 
   const page = await context.newPage();
 
   await page.goto(address("/"));
-  await expect(page.getByText("Keep writing", { exact: true })).toBeVisible();
+  await expect(page.getByText(QUIET_STAFF, { exact: true })).toBeVisible();
   await page.waitForLoadState("load");
 
   expect(await Effect.runPromise(readCumulativeLayoutShift(page))).toBe(0);
@@ -179,7 +221,7 @@ test("Beranda fits a 320 px phone without a sideways scroll", async ({
   const page = await context.newPage();
 
   await page.goto(address("/"));
-  await expect(page.getByText("Keep writing", { exact: true })).toBeVisible();
+  await expect(page.getByText(QUIET_STAFF, { exact: true })).toBeVisible();
 
   const overflow = await page.evaluate(
     () => document.documentElement.scrollWidth - window.innerWidth
