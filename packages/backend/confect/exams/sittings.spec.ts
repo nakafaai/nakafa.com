@@ -217,7 +217,7 @@ export default GroupSpec.make()
       returns: () => Schema.Null,
       error: () => Schema.Union([AccessDenied, RoomOpened]),
     }).middleware(SittingAccess, {
-      action: "sitting.view",
+      action: "sitting.proctor",
       arg: "sittingId",
     })
   )
