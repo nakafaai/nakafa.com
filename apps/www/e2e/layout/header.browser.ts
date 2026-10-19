@@ -94,24 +94,14 @@ const twoFrames = (page: Page) =>
   );
 
 /**
- * Reads the header rows at a width. React draws a streamed page's boundaries on a timer after
- * their markup arrives, so a narrow window waits until its page draws a header row, and a
- * heading that is only attached to the document does not count as drawn.
+ * Narrows the window through every width and checks that each header stays one row. React draws
+ * a streamed page's boundaries on a timer after their markup arrives, and a boundary that has not
+ * drawn yet hides its header, so the first heading must be visible before the window narrows.
  */
-async function readHeadersOnceDrawn(page: Page, width: number) {
-  if (width < DESKTOP_PX) {
-    await expect
-      .poll(() => page.evaluate(readHeaders), { timeout: 15_000 })
-      .not.toHaveLength(0);
-  }
-  return page.evaluate(readHeaders);
-}
-
-/** Narrows the window through every width and checks that each header stays one row. */
 const expectOneRowHeaders = Effect.fn("NakafaE2E.expectOneRowHeaders")(
   function* (page: Page, label: string) {
     yield* Effect.promise(() =>
-      expect(page.locator("h1").first()).toBeAttached({ timeout: 30_000 })
+      expect(page.locator("h1").first()).toBeVisible({ timeout: 30_000 })
     );
     yield* Effect.forEach(
       widths,
@@ -122,7 +112,7 @@ const expectOneRowHeaders = Effect.fn("NakafaE2E.expectOneRowHeaders")(
           );
           yield* Effect.promise(() => twoFrames(page));
           const headers = yield* Effect.promise(() =>
-            readHeadersOnceDrawn(page, width)
+            page.evaluate(readHeaders)
           );
           yield* Effect.sync(() => {
             if (width < DESKTOP_PX) {
