@@ -39,8 +39,9 @@ Preparation publishes a fixed, independently signed corpus into a new native
 local database. Build and start reopen that owned database. After stopping its
 services, `pnpm acceptance:clean` removes the exact task-owned reservation.
 Each runtime signs with a new key. The Start build keeps no fetch cache on disk:
-outside Vercel the Runtime Cache is in memory, so a response that one runtime
-signed is never read by another.
+without the Runtime Cache endpoint and headers that Vercel sets, the Runtime
+Cache is in memory, so a response that one runtime signed is never read by
+another.
 These commands never read production tables or use production credentials.
 
 ## Customer verification
