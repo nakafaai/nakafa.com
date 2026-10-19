@@ -91,6 +91,7 @@ import subscriptions from "./tables/subscriptions";
 import tenantAssignments from "./tables/tenantAssignments";
 import tenantCohortMembers from "./tables/tenantCohortMembers";
 import tenantCohorts from "./tables/tenantCohorts";
+import tenantDrafts from "./tables/tenantDrafts";
 import tenantGraduates from "./tables/tenantGraduates";
 import tenantGrants from "./tables/tenantGrants";
 import tenantInvites from "./tables/tenantInvites";
@@ -207,6 +208,7 @@ export default $defineSchema({
   tenantAssignments: $Table.tableDefinition(tenantAssignments),
   tenantCohortMembers: $Table.tableDefinition(tenantCohortMembers),
   tenantCohorts: $Table.tableDefinition(tenantCohorts),
+  tenantDrafts: $Table.tableDefinition(tenantDrafts),
   tenantGraduates: $Table.tableDefinition(tenantGraduates),
   tenantGrants: $Table.tableDefinition(tenantGrants),
   tenantInvites: $Table.tableDefinition(tenantInvites),

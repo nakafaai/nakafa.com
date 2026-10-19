@@ -13,6 +13,7 @@ import {
   getPostAuthDestination,
   getPostAuthSignInHref,
   resolvePostAuthIntent,
+  startsSchool,
 } from "@/lib/auth/admission";
 import { getToken } from "@/lib/auth/server";
 import { isActiveLocale } from "@/lib/i18n/active";
@@ -79,7 +80,7 @@ async function AuthenticatedOnboarding({
     redirect({ href: getPostAuthSignInHref(intent), locale });
     return null;
   }
-  if (!status.isRequired) {
+  if (!status.isRequired || startsSchool(intent)) {
     redirect(getPostAuthDestination(intent, locale));
     return null;
   }
