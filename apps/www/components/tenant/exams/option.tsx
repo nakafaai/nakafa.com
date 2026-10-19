@@ -137,7 +137,9 @@ export function OptionRow({
         >
           <HugeIcons aria-hidden="true" icon={Tick02Icon} />
         </Button>
-        {onRemove === null ? null : (
+        {onRemove === null ? (
+          <span aria-hidden className="size-8 shrink-0" />
+        ) : (
           <Button
             aria-label={t("option-remove-of", { letter, number })}
             className="opacity-0 pointer-coarse:opacity-100 transition-opacity duration-150 group-focus-within/option:opacity-100 group-hover/option:opacity-100"

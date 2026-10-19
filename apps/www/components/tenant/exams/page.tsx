@@ -316,9 +316,19 @@ function StaticPaper({
       {choice === null ? null : (
         <PaperOptions>
           {Arr.map(choice.options, (option, index) => (
-            <PaperOption key={option.id} letter={optionLetter(index)}>
-              <OptionSketch label={option.label} />
-            </PaperOption>
+            // The room of the teacher's controls is kept, so an option is as wide as it is when editable.
+            <div
+              className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2"
+              key={option.id}
+            >
+              <PaperOption letter={optionLetter(index)}>
+                <OptionSketch label={option.label} />
+              </PaperOption>
+              <div aria-hidden className="flex items-center gap-1">
+                <span className="size-8" />
+                <span className="size-8" />
+              </div>
+            </div>
           ))}
         </PaperOptions>
       )}
