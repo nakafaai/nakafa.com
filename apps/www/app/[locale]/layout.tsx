@@ -1,8 +1,8 @@
 import "@/styles/globals.css";
 
 import { DesignSystemProvider } from "@repo/design-system";
-import { Toaster } from "@repo/design-system/components/ui/sonner";
 import { TailwindIndicator } from "@repo/design-system/components/ui/tailwind-indicator";
+import { ToasterHost } from "@repo/design-system/components/ui/toaster.client";
 import { fonts } from "@repo/design-system/lib/fonts";
 import { textDirection } from "@repo/internationalization/src/direction";
 import { routing } from "@repo/internationalization/src/routing";
@@ -191,7 +191,7 @@ export default async function Layout({ children }: LayoutProps<"/[locale]">) {
         <NextIntlClientProvider locale={locale} messages={messages}>
           <DesignSystemProvider direction={direction}>
             <div className="isolate">{children}</div>
-            <Toaster
+            <ToasterHost
               closeButtonAriaLabel={t("close-notification")}
               containerAriaLabel={t("notifications")}
             />

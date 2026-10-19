@@ -1,8 +1,15 @@
-import { afterEach, describe, expect, expectTypeOf, it } from "@effect/vitest";
+import {
+  afterEach,
+  beforeAll,
+  describe,
+  expect,
+  expectTypeOf,
+  it,
+} from "@effect/vitest";
 import { ToastMessage } from "@repo/design-system/lib/toast/message";
 import { type ToastCopy, toast } from "@repo/design-system/lib/toast/notify";
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import { NextIntlClientProvider } from "next-intl";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -23,6 +30,14 @@ vi.mock("sonner", () => ({
 afterEach(() => vi.clearAllMocks());
 
 describe("toast", () => {
+  // The first toast starts loading Sonner, and the calls made before it run once it
+  // has loaded. Waiting for that once keeps every later toast synchronous.
+  beforeAll(async () => {
+    toast.dismiss();
+    await vi.waitFor(() => expect(sonner.dismiss).toHaveBeenCalled());
+    vi.clearAllMocks();
+  });
+
   it("hands Sonner the keys of the title and the description, with the place and id it is given", () => {
     toast.error(
       { title: "action-error.title", description: "action-error.description" },
@@ -145,5 +160,79 @@ describe("toast", () => {
 
     expect(sonner.dismiss).toHaveBeenNthCalledWith(1, "shown");
     expect(sonner.dismiss).toHaveBeenNthCalledWith(2, undefined);
+  });
+});
+
+describe("the first toast", () => {
+  /** Loads a fresh helper, so the test starts before any toast was shown. */
+  function loadFreshNotify() {
+    vi.resetModules();
+    return import("@repo/design-system/lib/toast/notify");
+  }
+
+  it("asks for the Toaster once, on the first toast, and tells each listener", async () => {
+    const notify = await loadFreshNotify();
+    const listener = vi.fn();
+    notify.subscribeToastRequests(listener);
+
+    expect(notify.isToastRequested()).toBe(false);
+    notify.toast.dismiss("first");
+    notify.toast.dismiss("second");
+
+    expect(notify.isToastRequested()).toBe(true);
+    expect(listener).toHaveBeenCalledOnce();
+  });
+
+  it("stops telling a listener that unsubscribed", async () => {
+    const notify = await loadFreshNotify();
+    const listener = vi.fn();
+    notify.subscribeToastRequests(listener)();
+
+    notify.toast.dismiss("first");
+
+    expect(listener).not.toHaveBeenCalled();
+  });
+
+  it("holds the toasts made before Sonner loads, and shows them in the order they were made", async () => {
+    const notify = await loadFreshNotify();
+    const { toast: sonnerToast } = await import("sonner");
+    notify.toast.success({ title: "action-error.title" });
+    notify.toast.error({ title: "action-error.title" });
+
+    expect(sonnerToast.success).not.toHaveBeenCalled();
+    await vi.waitFor(() => expect(sonnerToast.error).toHaveBeenCalledOnce());
+    expect(sonnerToast.success).toHaveBeenCalledOnce();
+    expect(
+      vi.mocked(sonnerToast.success).mock.invocationCallOrder[0]
+    ).toBeLessThan(
+      vi.mocked(sonnerToast.error).mock.invocationCallOrder[0] ??
+        Number.POSITIVE_INFINITY
+    );
+  });
+
+  it("shows a toast at once once Sonner has loaded", async () => {
+    const notify = await loadFreshNotify();
+    const { toast: sonnerToast } = await import("sonner");
+    notify.toast.info({ title: "action-error.title" });
+    await vi.waitFor(() => expect(sonnerToast.info).toHaveBeenCalledOnce());
+
+    notify.toast.info({ title: "action-error.title" });
+
+    expect(sonnerToast.info).toHaveBeenCalledTimes(2);
+  });
+
+  it("keeps the first held toasts when the wait overflows", async () => {
+    const notify = await loadFreshNotify();
+    const { toast: sonnerToast } = await import("sonner");
+    Arr.forEach(
+      Arr.makeBy(25, (index) => index),
+      (index) => notify.toast.dismiss(`id-${index}`)
+    );
+
+    await vi.waitFor(() =>
+      expect(sonnerToast.dismiss).toHaveBeenCalledTimes(20)
+    );
+    expect(sonnerToast.dismiss).toHaveBeenNthCalledWith(1, "id-0");
+    expect(sonnerToast.dismiss).toHaveBeenLastCalledWith("id-19");
   });
 });
