@@ -83,7 +83,7 @@ export function Sidebar({
       >
         <div
           className={cn(
-            "relative w-64 bg-transparent transition-[width] duration-surface",
+            "relative w-64 bg-transparent transition-[width] duration-surface motion-reduce:transition-none",
             "group-data-[collapsible=offcanvas]:w-0",
             "group-data-[side=right]:rotate-180",
             variant === "floating" || variant === "inset"
@@ -94,7 +94,7 @@ export function Sidebar({
         />
         <div
           className={cn(
-            "fixed inset-y-0 z-10 hidden h-svh w-64 transition-[left,right,width] duration-surface md:flex",
+            "fixed inset-y-0 z-10 hidden h-svh w-64 transition-[left,right,width] duration-surface motion-reduce:transition-none md:flex",
             side === "left"
               ? "left-0 group-data-[collapsible=offcanvas]:-left-64"
               : "right-0 group-data-[collapsible=offcanvas]:-right-64",
