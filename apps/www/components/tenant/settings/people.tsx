@@ -19,6 +19,7 @@ import {
 } from "@repo/design-system/components/ui/select";
 import { Array as Arr, Option, Schema } from "effect";
 import { useTranslations } from "next-intl";
+import { ReadBoundary } from "@/components/tenant/read/boundary";
 
 /** How many people one page of the picker loads, and each page after it. */
 const PICKER_SIZE = 100;
@@ -38,6 +39,30 @@ export function SchoolPersonPicker({
   slug,
 }: {
   /** The ID of the trigger, which the label of the field names. */
+  id: string;
+  onChoose: (personId: PersonId) => void;
+  personId: PersonId | undefined;
+  slug: TenantSlug;
+}) {
+  return (
+    <ReadBoundary>
+      <SchoolPersonSelect
+        id={id}
+        onChoose={onChoose}
+        personId={personId}
+        slug={slug}
+      />
+    </ReadBoundary>
+  );
+}
+
+/** The picker's list of active people, read a page at a time. */
+function SchoolPersonSelect({
+  id,
+  onChoose,
+  personId,
+  slug,
+}: {
   id: string;
   onChoose: (personId: PersonId) => void;
   personId: PersonId | undefined;

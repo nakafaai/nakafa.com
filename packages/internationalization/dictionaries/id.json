@@ -625,7 +625,15 @@
     "student-add-footer": "Cetak kartu sebelum menutupnya, karena kode hanya ditampilkan sekali.",
     "student-add-submit": "Tambah siswa",
     "invites-empty": "Belum ada undangan yang menunggu.",
-    "invites-search": "Cari yang diundang"
+    "invites-search": "Cari yang diundang",
+    "no-unit-title": "Belum ada unit aktif",
+    "no-unit-description": "Periode dan kelompok milik unit yang aktif. Pulihkan atau tambahkan satu unit dulu.",
+    "no-unit-action": "Buka unit",
+    "cohorts-no-period-action": "Buka periode",
+    "members-empty-action": "Buka undangan",
+    "student-login-rule": "Pakai 3 sampai 32 karakter: a-z, 0-9, titik, garis bawah, strip.",
+    "policy-domains-invalid": "Periksa domain ini: {domains}. Tulis satu domain di setiap baris.",
+    "policy-domains-limit": "Gunakan paling banyak {limit} domain berbeda, masing-masing di baris sendiri."
   },
   "Classroom": {
     "tabs-home": "Beranda",

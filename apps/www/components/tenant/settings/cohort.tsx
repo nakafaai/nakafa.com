@@ -31,12 +31,13 @@ import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-d
 import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, Schema } from "effect";
 import { useTranslations } from "next-intl";
-import { startTransition, useId, useState } from "react";
+import { type ReactNode, startTransition, useId, useState } from "react";
 import { LayoutContent } from "@/components/shared/content/layout";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { SchoolHeader } from "@/components/tenant/header";
+import { ReadBoundary } from "@/components/tenant/read/boundary";
 import {
   archiveCohortChange,
   renameCohortChange,
@@ -176,6 +177,43 @@ export function SchoolCohortSettings({
   cohortId: CohortDetail["id"];
   slug: TenantSlug;
 }) {
+  return (
+    <ReadBoundary
+      fallback={(failure) => <CohortFailure>{failure}</CohortFailure>}
+      read={{ args: { cohortId, slug }, ref: tenancy.cohorts.get }}
+    >
+      <SchoolCohortPage cohortId={cohortId} slug={slug} />
+    </ReadBoundary>
+  );
+}
+
+/** The header of a cohort page whose read failed: the path to the cohorts, and the failure in the body. */
+function CohortFailure({ children }: { children: ReactNode }) {
+  const t = useTranslations("SchoolSettings");
+  const section = getSchoolSettingsSection("/settings/cohorts");
+
+  return (
+    <>
+      <SchoolHeader
+        items={[
+          { href: section.group.href, label: t(section.group.key) },
+          { label: t(section.labelKey) },
+        ]}
+        title={t(section.labelKey)}
+      />
+      <LayoutContent className="py-6">{children}</LayoutContent>
+    </>
+  );
+}
+
+/** One cohort's page once the cohort is read. */
+function SchoolCohortPage({
+  cohortId,
+  slug,
+}: {
+  cohortId: CohortDetail["id"];
+  slug: TenantSlug;
+}) {
   const t = useTranslations("SchoolSettings");
   const cohort = useQuery(tenancy.cohorts.get, { cohortId, slug });
   if (QueryResult.isFailure(cohort)) {
@@ -204,12 +242,14 @@ export function SchoolCohortSettings({
       </SchoolHeader>
       <LayoutContent className="flex w-full flex-col gap-6 py-6">
         <SchoolHomeroomCard cohort={detail} slug={slug} />
-        <SchoolCohortMembers
-          cohortId={cohortId}
-          isArchived={isArchived}
-          periodId={detail.periodId}
-          slug={slug}
-        />
+        <ReadBoundary>
+          <SchoolCohortMembers
+            cohortId={cohortId}
+            isArchived={isArchived}
+            periodId={detail.periodId}
+            slug={slug}
+          />
+        </ReadBoundary>
       </LayoutContent>
     </>
   );

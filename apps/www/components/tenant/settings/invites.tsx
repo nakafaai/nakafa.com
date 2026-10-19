@@ -24,10 +24,11 @@ import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-d
 import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, Option, Schema } from "effect";
 import { useLocale, useTranslations } from "next-intl";
-import { startTransition, useState } from "react";
+import { startTransition, useState, useTransition } from "react";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { SchoolInviteDialog } from "@/components/tenant/settings/invite";
 import { revokeInviteChange } from "@/components/tenant/settings/mutation.client";
 import { SettingsPage } from "@/components/tenant/settings/page";
@@ -58,19 +59,10 @@ const inviteColumns = createColumnHelper<
 export function SchoolInvitesSettings({ slug }: { slug: TenantSlug }) {
   const t = useTranslations("SchoolSettings");
   const locale = useLocale();
-  const pagination = usePaginatedQuery(
-    tenancy.invites.list,
-    { slug },
-    { initialNumItems: PAGE_SIZE }
-  );
   const sendLocale = Option.getOrUndefined(
     Schema.decodeOption(ActiveAppLocaleCodeSchema)(locale)
   );
   const [isInviting, setIsInviting] = useState(false);
-
-  if (PaginatedQueryResult.isFailure(pagination)) {
-    throw pagination.error;
-  }
 
   return (
     <SettingsPage
@@ -80,6 +72,38 @@ export function SchoolInvitesSettings({ slug }: { slug: TenantSlug }) {
         </Button>
       }
     >
+      <ReadBoundary>
+        <SchoolInvitesBody sendLocale={sendLocale} slug={slug} />
+      </ReadBoundary>
+      <SchoolInviteDialog
+        open={isInviting}
+        setOpen={setIsInviting}
+        slug={slug}
+      />
+    </SettingsPage>
+  );
+}
+
+/** The invites of the school, read a page at a time, with the table and its end. */
+function SchoolInvitesBody({
+  sendLocale,
+  slug,
+}: {
+  sendLocale: typeof ActiveAppLocaleCodeSchema.Type | undefined;
+  slug: TenantSlug;
+}) {
+  const pagination = usePaginatedQuery(
+    tenancy.invites.list,
+    { slug },
+    { initialNumItems: PAGE_SIZE }
+  );
+
+  if (PaginatedQueryResult.isFailure(pagination)) {
+    throw pagination.error;
+  }
+
+  return (
+    <>
       {pagination._tag === "LoadingFirstPage" ? null : (
         <SchoolInviteTable
           invites={pagination.results}
@@ -90,12 +114,7 @@ export function SchoolInvitesSettings({ slug }: { slug: TenantSlug }) {
       {PaginatedQueryResult.isCanLoadMore(pagination) ? (
         <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
       ) : null}
-      <SchoolInviteDialog
-        open={isInviting}
-        setOpen={setIsInviting}
-        slug={slug}
-      />
-    </SettingsPage>
+    </>
   );
 }
 
@@ -184,6 +203,7 @@ function SchoolInviteMenu({
     revokeInviteChange
   );
   const [isRevoking, setIsRevoking] = useState(false);
+  const [isResending, startResending] = useTransition();
 
   return (
     <div className="flex justify-end">
@@ -202,10 +222,10 @@ function SchoolInviteMenu({
         />
         <DropdownMenuContent align="end" className="w-44">
           <DropdownMenuItem
-            disabled={sendLocale === undefined}
+            disabled={sendLocale === undefined || isResending}
             onClick={() => {
               if (sendLocale !== undefined) {
-                startTransition(() =>
+                startResending(() =>
                   saveSchool(
                     () =>
                       resend({

@@ -19,6 +19,7 @@ import {
 } from "@repo/design-system/components/ui/dropdown-menu";
 import {
   Field,
+  FieldDescription,
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
@@ -33,11 +34,13 @@ import { useId, useState, useTransition } from "react";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { ReadBoundary } from "@/components/tenant/read/boundary";
 import {
   type CardView,
   SchoolCardDialog,
 } from "@/components/tenant/settings/card";
 import { addStudentChange } from "@/components/tenant/settings/members.client";
+import { reissueCardChange } from "@/components/tenant/settings/mutation.client";
 import { SettingsPage } from "@/components/tenant/settings/page";
 import { saveSchool } from "@/components/tenant/settings/save.client";
 import { SchoolDateTime } from "@/components/tenant/settings/time";
@@ -61,17 +64,8 @@ const loginColumns = createColumnHelper<typeof dataTableFeatures, LoginItem>();
  */
 export function SchoolStudentsSettings({ slug }: { slug: TenantSlug }) {
   const t = useTranslations("SchoolSettings");
-  const pagination = usePaginatedQuery(
-    identity.logins.list,
-    { slug },
-    { initialNumItems: PAGE_SIZE }
-  );
   const [isAdding, setIsAdding] = useState(false);
   const [issued, setIssued] = useState<CardView | undefined>(undefined);
-
-  if (PaginatedQueryResult.isFailure(pagination)) {
-    throw pagination.error;
-  }
 
   return (
     <SettingsPage
@@ -81,16 +75,9 @@ export function SchoolStudentsSettings({ slug }: { slug: TenantSlug }) {
         </Button>
       }
     >
-      {pagination._tag === "LoadingFirstPage" ? null : (
-        <SchoolLoginTable
-          logins={pagination.results}
-          onIssued={setIssued}
-          slug={slug}
-        />
-      )}
-      {PaginatedQueryResult.isCanLoadMore(pagination) ? (
-        <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
-      ) : null}
+      <ReadBoundary>
+        <SchoolLoginsBody onIssued={setIssued} slug={slug} />
+      </ReadBoundary>
       <SchoolStudentDialog
         onAdded={setIssued}
         open={isAdding}
@@ -103,6 +90,40 @@ export function SchoolStudentsSettings({ slug }: { slug: TenantSlug }) {
         slug={slug}
       />
     </SettingsPage>
+  );
+}
+
+/** The school's logins, read a page at a time, with the table and its end. */
+function SchoolLoginsBody({
+  onIssued,
+  slug,
+}: {
+  onIssued: (card: CardView) => void;
+  slug: TenantSlug;
+}) {
+  const pagination = usePaginatedQuery(
+    identity.logins.list,
+    { slug },
+    { initialNumItems: PAGE_SIZE }
+  );
+
+  if (PaginatedQueryResult.isFailure(pagination)) {
+    throw pagination.error;
+  }
+
+  return (
+    <>
+      {pagination._tag === "LoadingFirstPage" ? null : (
+        <SchoolLoginTable
+          logins={pagination.results}
+          onIssued={onIssued}
+          slug={slug}
+        />
+      )}
+      {PaginatedQueryResult.isCanLoadMore(pagination) ? (
+        <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
+      ) : null}
+    </>
   );
 }
 
@@ -188,7 +209,9 @@ function SchoolLoginMenu({
 }) {
   const t = useTranslations("SchoolSettings");
   const common = useTranslations("Common");
-  const reissue = useMutation(identity.cards.reissue);
+  const reissue = useMutation(identity.cards.reissue).withOptimisticUpdate(
+    reissueCardChange
+  );
   const [isPending, startTransition] = useTransition();
 
   return (
@@ -318,6 +341,7 @@ function SchoolStudentDialog({
             placeholder={t("card-login-name-placeholder")}
             value={loginName}
           />
+          <FieldDescription>{t("student-login-rule")}</FieldDescription>
         </Field>
       </FieldGroup>
     </ResponsiveDialog>

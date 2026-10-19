@@ -31,10 +31,12 @@ import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-d
 import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, Option, Schema } from "effect";
 import { useTranslations } from "next-intl";
-import { startTransition, useId, useState } from "react";
+import { startTransition, useId, useState, useTransition } from "react";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { ReadBoundary } from "@/components/tenant/read/boundary";
+import { NoActiveUnit } from "@/components/tenant/settings/no-unit";
 import { SettingsPage } from "@/components/tenant/settings/page";
 import {
   archivePeriodChange,
@@ -71,11 +73,33 @@ const periodColumns = createColumnHelper<
  * the periods in a data table with their row menus.
  */
 export function SchoolPeriodsSettings({ slug }: { slug: TenantSlug }) {
+  return (
+    <ReadBoundary
+      fallback={(failure) => <SettingsPage>{failure}</SettingsPage>}
+      read={{ args: { slug }, ref: tenancy.viewer.get }}
+    >
+      <SchoolPeriodsContent slug={slug} />
+    </ReadBoundary>
+  );
+}
+
+/**
+ * The periods of the school's active unit, with the unit choice when the school has more than one unit.
+ * A school with no active unit says so and links to the units, because a period belongs to a unit.
+ */
+function SchoolPeriodsContent({ slug }: { slug: TenantSlug }) {
   const t = useTranslations("SchoolSettings");
   const viewer = useQuery(tenancy.viewer.get, { slug });
   const [chosenUnit, setChosenUnit] = useState<UnitId | undefined>(undefined);
   const [isAdding, setIsAdding] = useState(false);
-  const units = QueryResult.isSuccess(viewer) ? viewer.value.units : [];
+
+  if (QueryResult.isFailure(viewer)) {
+    throw viewer.error;
+  }
+  if (!QueryResult.isSuccess(viewer)) {
+    return <SettingsPage>{null}</SettingsPage>;
+  }
+  const units = viewer.value.units;
   const unit = Option.getOrUndefined(
     Arr.findFirst(units, (candidate) =>
       chosenUnit === undefined
@@ -94,7 +118,9 @@ export function SchoolPeriodsSettings({ slug }: { slug: TenantSlug }) {
         )
       }
     >
-      {unit === undefined ? null : (
+      {unit === undefined ? (
+        <NoActiveUnit />
+      ) : (
         <>
           {units.length > 1 ? (
             <SchoolUnitChoice
@@ -103,7 +129,9 @@ export function SchoolPeriodsSettings({ slug }: { slug: TenantSlug }) {
               units={units}
             />
           ) : null}
-          <SchoolPeriodTable slug={slug} unitId={unit.id} />
+          <ReadBoundary>
+            <SchoolPeriodTable slug={slug} unitId={unit.id} />
+          </ReadBoundary>
           <SchoolPeriodAddDialog
             open={isAdding}
             setOpen={setIsAdding}
@@ -360,11 +388,14 @@ function SchoolPeriodAddDialog({
   const [name, setName] = useState("");
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
+  const [isPending, startSaving] = useTransition();
   const isComplete = name.trim() !== "" && start !== "" && end !== "";
 
+  // The dialog closes as the add is sent, and the add stays inert until the save settles,
+  // so a second press cannot add the same period twice.
   const submit = () => {
     setOpen(false);
-    startTransition(() =>
+    startSaving(() =>
       saveSchool(
         () =>
           create({
@@ -396,7 +427,12 @@ function SchoolPeriodAddDialog({
           >
             {common("cancel")}
           </Button>
-          <Button disabled={!isComplete} onClick={submit} type="button">
+          <Button
+            disabled={!isComplete || isPending}
+            inert={isPending}
+            onClick={submit}
+            type="button"
+          >
             {t("period-add")}
           </Button>
         </>

@@ -52,6 +52,7 @@ import { startTransition, useId, useState } from "react";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { RoleBadge } from "@/components/tenant/role";
 import {
   assignGrantChange,
@@ -81,17 +82,8 @@ type GrantItem = PaginatedQueryItem<typeof access.grants.list>;
  */
 export function SchoolRolesSettings({ slug }: { slug: TenantSlug }) {
   const t = useTranslations("SchoolSettings");
-  const pagination = usePaginatedQuery(
-    access.grants.list,
-    { slug },
-    { initialNumItems: PAGE_SIZE }
-  );
   const [isGuiding, setIsGuiding] = useState(false);
   const [isGiving, setIsGiving] = useState(false);
-
-  if (PaginatedQueryResult.isFailure(pagination)) {
-    throw pagination.error;
-  }
 
   return (
     <SettingsPage
@@ -112,15 +104,36 @@ export function SchoolRolesSettings({ slug }: { slug: TenantSlug }) {
         </>
       }
     >
+      <ReadBoundary>
+        <SchoolGrantsBody slug={slug} />
+      </ReadBoundary>
+      <SchoolRoleGuide open={isGuiding} setOpen={setIsGuiding} />
+      <SchoolGrantDialog open={isGiving} setOpen={setIsGiving} slug={slug} />
+    </SettingsPage>
+  );
+}
+
+/** The grants of the school, read a page at a time, with the table and its end. */
+function SchoolGrantsBody({ slug }: { slug: TenantSlug }) {
+  const pagination = usePaginatedQuery(
+    access.grants.list,
+    { slug },
+    { initialNumItems: PAGE_SIZE }
+  );
+
+  if (PaginatedQueryResult.isFailure(pagination)) {
+    throw pagination.error;
+  }
+
+  return (
+    <>
       {pagination._tag === "LoadingFirstPage" ? null : (
         <SchoolGrantTable grants={pagination.results} slug={slug} />
       )}
       {PaginatedQueryResult.isCanLoadMore(pagination) ? (
         <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
       ) : null}
-      <SchoolRoleGuide open={isGuiding} setOpen={setIsGuiding} />
-      <SchoolGrantDialog open={isGiving} setOpen={setIsGiving} slug={slug} />
-    </SettingsPage>
+    </>
   );
 }
 

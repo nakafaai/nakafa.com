@@ -36,6 +36,7 @@ import {
   CardSectionActions,
   CardSectionFooter,
 } from "@/components/shared/card/section";
+import { ReadBoundary } from "@/components/tenant/read/boundary";
 import {
   archiveUnitChange,
   setNpsnChange,
@@ -64,7 +65,9 @@ const languageItems = Arr.map(languages, (language) => ({
 export function SchoolUnitsSettings({ slug }: { slug: TenantSlug }) {
   return (
     <SettingsPage>
-      <SchoolUnitsBody slug={slug} />
+      <ReadBoundary read={{ args: { slug }, ref: tenancy.units.list }}>
+        <SchoolUnitsBody slug={slug} />
+      </ReadBoundary>
     </SettingsPage>
   );
 }
@@ -73,6 +76,9 @@ export function SchoolUnitsSettings({ slug }: { slug: TenantSlug }) {
 function SchoolUnitsBody({ slug }: { slug: TenantSlug }) {
   const units = useQuery(tenancy.units.list, { slug });
 
+  if (QueryResult.isFailure(units)) {
+    throw units.error;
+  }
   if (!QueryResult.isSuccess(units)) {
     return null;
   }

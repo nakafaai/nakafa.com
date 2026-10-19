@@ -20,13 +20,16 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import { buttonVariants } from "@repo/design-system/lib/button";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr } from "effect";
+import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { startTransition, useState } from "react";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { RoleBadge } from "@/components/tenant/role";
 import { removeMemberChange } from "@/components/tenant/settings/members.client";
 import { SettingsPage } from "@/components/tenant/settings/page";
@@ -53,6 +56,17 @@ const memberColumns = createColumnHelper<
  * view. Invitations are sent on the invitations page.
  */
 export function SchoolMembersSettings({ slug }: { slug: TenantSlug }) {
+  return (
+    <SettingsPage>
+      <ReadBoundary>
+        <SchoolMembersBody slug={slug} />
+      </ReadBoundary>
+    </SettingsPage>
+  );
+}
+
+/** The members of the school, read a page at a time, with the table and its end. */
+function SchoolMembersBody({ slug }: { slug: TenantSlug }) {
   const pagination = usePaginatedQuery(
     tenancy.roster.members,
     { slug },
@@ -64,14 +78,14 @@ export function SchoolMembersSettings({ slug }: { slug: TenantSlug }) {
   }
 
   return (
-    <SettingsPage>
+    <>
       {pagination._tag === "LoadingFirstPage" ? null : (
         <SchoolMemberTable members={pagination.results} slug={slug} />
       )}
       {PaginatedQueryResult.isCanLoadMore(pagination) ? (
         <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
       ) : null}
-    </SettingsPage>
+    </>
   );
 }
 
@@ -89,6 +103,14 @@ function SchoolMemberTable({
     return (
       <TableEmpty
         act="waving"
+        action={
+          <Link
+            className={buttonVariants({ variant: "outline" })}
+            href="/settings/invites"
+          >
+            {t("members-empty-action")}
+          </Link>
+        }
         description={t("members-empty-description")}
         title={t("members-empty")}
       />

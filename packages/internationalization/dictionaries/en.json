@@ -625,7 +625,15 @@
     "student-add-footer": "Print the card before you close it, because the code is shown once.",
     "student-add-submit": "Add student",
     "invites-empty": "No invite is waiting.",
-    "invites-search": "Find an invitee"
+    "invites-search": "Find an invitee",
+    "no-unit-title": "No active unit yet",
+    "no-unit-description": "Periods and cohorts belong to an active unit. Restore or add one first.",
+    "no-unit-action": "Open units",
+    "cohorts-no-period-action": "Open periods",
+    "members-empty-action": "Open invitations",
+    "student-login-rule": "Use 3 to 32 characters: a to z, 0 to 9, dot, underscore or hyphen.",
+    "policy-domains-invalid": "Check these domains: {domains}. Write one domain on each line.",
+    "policy-domains-limit": "Use up to {limit} different domains, each on its own line."
   },
   "Classroom": {
     "tabs-home": "Home",

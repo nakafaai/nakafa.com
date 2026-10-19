@@ -14,6 +14,7 @@ import { useTranslations } from "next-intl";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { SettingsPage } from "@/components/tenant/settings/page";
 import { SchoolDateTime } from "@/components/tenant/settings/time";
 
@@ -30,7 +31,9 @@ const entryColumns = createColumnHelper<typeof dataTableFeatures, EntryItem>();
 export function SchoolAuditSettings({ slug }: { slug: TenantSlug }) {
   return (
     <SettingsPage>
-      <SchoolAuditBody slug={slug} />
+      <ReadBoundary>
+        <SchoolAuditBody slug={slug} />
+      </ReadBoundary>
     </SettingsPage>
   );
 }

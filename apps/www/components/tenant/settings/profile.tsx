@@ -25,6 +25,7 @@ import {
 } from "@/components/shared/card/section";
 import { logoRefusalOf } from "@/components/tenant/logo.client";
 import { SchoolMark } from "@/components/tenant/mark";
+import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { removeLogoChange } from "@/components/tenant/settings/mutation.client";
 import { SettingsPage } from "@/components/tenant/settings/page";
 import { saveSchool } from "@/components/tenant/settings/save.client";
@@ -50,7 +51,9 @@ const ADDRESS_COPIED: ToastCopy = {
 export function SchoolProfileSettings({ slug }: { slug: TenantSlug }) {
   return (
     <SettingsPage>
-      <SchoolProfileBody slug={slug} />
+      <ReadBoundary read={{ args: { slug }, ref: tenancy.viewer.get }}>
+        <SchoolProfileBody slug={slug} />
+      </ReadBoundary>
     </SettingsPage>
   );
 }
@@ -63,6 +66,9 @@ export function SchoolProfileSettings({ slug }: { slug: TenantSlug }) {
 function SchoolProfileBody({ slug }: { slug: TenantSlug }) {
   const viewer = useQuery(tenancy.viewer.get, { slug });
 
+  if (QueryResult.isFailure(viewer)) {
+    throw viewer.error;
+  }
   if (!QueryResult.isSuccess(viewer)) {
     return null;
   }

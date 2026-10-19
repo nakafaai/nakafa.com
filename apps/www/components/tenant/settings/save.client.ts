@@ -136,7 +136,7 @@ const REFUSAL_COPY: Readonly<Record<string, ToastCopy>> = {
 };
 
 /** Each code that a refused grant names, which tells the grant refusals apart. */
-type GrantCode = (typeof GrantRejected.Type)["code"];
+type GrantCode = GrantRejected["code"];
 
 /**
  * The copy of each code of a grant the tenant refuses. The grant refusal names several

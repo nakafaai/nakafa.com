@@ -26,16 +26,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@repo/design-system/components/ui/select";
+import { buttonVariants } from "@repo/design-system/lib/button";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, Option, Schema } from "effect";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { startTransition, useId, useState } from "react";
+import { type ReactNode, useId, useState, useTransition } from "react";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { SchoolCohortMenu } from "@/components/tenant/settings/cohort";
 import { createCohortChange } from "@/components/tenant/settings/cohorts.client";
+import { NoActiveUnit } from "@/components/tenant/settings/no-unit";
 import { SettingsPage } from "@/components/tenant/settings/page";
 import { saveSchool } from "@/components/tenant/settings/save.client";
 import type { Cohort, Period } from "@/components/tenant/settings/state";
@@ -59,14 +62,34 @@ const gradeItems = Arr.makeBy(
 const cohortColumns = createColumnHelper<typeof dataTableFeatures, Cohort>();
 
 /**
- * Renders the cohorts of the school's unit, which belong to the unit's active period: the
- * unit choice above the table when the school has more than one unit, and the page's one
- * action, Add cohort, in the header once the unit has an active period.
+ * Renders the cohorts of the school's unit, which belong to the unit's active period: the unit
+ * choice above the table when the school has more than one unit, and the page's one action, Add
+ * cohort, in the header once the unit has an active period. A school with no active unit says
+ * so and links to the units, because a cohort belongs to a period of a unit.
  */
 export function SchoolCohortsSettings({ slug }: { slug: TenantSlug }) {
+  return (
+    <ReadBoundary
+      fallback={(failure) => <SettingsPage>{failure}</SettingsPage>}
+      read={{ args: { slug }, ref: tenancy.viewer.get }}
+    >
+      <SchoolCohortsContent slug={slug} />
+    </ReadBoundary>
+  );
+}
+
+/** The cohorts of the school's active unit, once the viewer's units are in. */
+function SchoolCohortsContent({ slug }: { slug: TenantSlug }) {
   const viewer = useQuery(tenancy.viewer.get, { slug });
   const [chosenUnit, setChosenUnit] = useState<UnitId | undefined>(undefined);
-  const units = QueryResult.isSuccess(viewer) ? viewer.value.units : [];
+
+  if (QueryResult.isFailure(viewer)) {
+    throw viewer.error;
+  }
+  if (!QueryResult.isSuccess(viewer)) {
+    return <SettingsPage>{null}</SettingsPage>;
+  }
+  const units = viewer.value.units;
   const unit = Option.getOrUndefined(
     Arr.findFirst(units, (candidate) =>
       chosenUnit === undefined
@@ -76,7 +99,11 @@ export function SchoolCohortsSettings({ slug }: { slug: TenantSlug }) {
   );
 
   if (unit === undefined) {
-    return <SettingsPage>{null}</SettingsPage>;
+    return (
+      <SettingsPage>
+        <NoActiveUnit />
+      </SettingsPage>
+    );
   }
   return (
     <SchoolCohortsOfUnit
@@ -89,8 +116,9 @@ export function SchoolCohortsSettings({ slug }: { slug: TenantSlug }) {
 }
 
 /**
- * Renders the cohorts of one unit's active period. A unit with no active period shows
- * an empty state and no add action, because a cohort belongs to a period.
+ * Renders the cohorts of one unit's active period. A unit with no active period shows an empty
+ * state, which links to the periods, and no add action, because a cohort belongs to a period.
+ * A failed read of the active period shows its own sentence and Try again.
  */
 function SchoolCohortsOfUnit({
   onChoose,
@@ -103,16 +131,42 @@ function SchoolCohortsOfUnit({
   unitId: UnitId;
   units: readonly { readonly id: UnitId; readonly name: string }[];
 }) {
+  const choice =
+    units.length > 1 ? (
+      <SchoolUnitChoice onChoose={onChoose} unitId={unitId} units={units} />
+    ) : null;
+
+  return (
+    <ReadBoundary
+      fallback={(failure) => (
+        <SettingsPage>
+          {choice}
+          {failure}
+        </SettingsPage>
+      )}
+      read={{ args: { slug, unitId }, ref: tenancy.cohorts.activePeriod }}
+    >
+      <SchoolCohortsOfPeriod choice={choice} slug={slug} unitId={unitId} />
+    </ReadBoundary>
+  );
+}
+
+/** The table of the unit's active period, or the state of a unit that has none, once the period is read. */
+function SchoolCohortsOfPeriod({
+  choice,
+  slug,
+  unitId,
+}: {
+  choice: ReactNode;
+  slug: TenantSlug;
+  unitId: UnitId;
+}) {
   const t = useTranslations("SchoolSettings");
   const active = useQuery(tenancy.cohorts.activePeriod, { slug, unitId });
   if (QueryResult.isFailure(active)) {
     throw active.error;
   }
   const periodId = QueryResult.isSuccess(active) ? active.value : undefined;
-  const choice =
-    units.length > 1 ? (
-      <SchoolUnitChoice onChoose={onChoose} unitId={unitId} units={units} />
-    ) : null;
 
   if (periodId === undefined) {
     return <SettingsPage>{choice}</SettingsPage>;
@@ -123,6 +177,14 @@ function SchoolCohortsOfUnit({
         {choice}
         <TableEmpty
           act="pointing"
+          action={
+            <Link
+              className={buttonVariants({ variant: "outline" })}
+              href="/settings/periods"
+            >
+              {t("cohorts-no-period-action")}
+            </Link>
+          }
           description={t("cohorts-no-period")}
           title={t("cohorts-no-period-title")}
         />
@@ -132,7 +194,11 @@ function SchoolCohortsOfUnit({
   return (
     <SettingsPage actions={<SchoolCohortAdd periodId={periodId} slug={slug} />}>
       {choice}
-      <SchoolCohortTable periodId={periodId} slug={slug} />
+      <ReadBoundary
+        read={{ args: { periodId, slug }, ref: tenancy.cohorts.list }}
+      >
+        <SchoolCohortTable periodId={periodId} slug={slug} />
+      </ReadBoundary>
     </SettingsPage>
   );
 }
@@ -163,6 +229,7 @@ function SchoolCohortAdd({
     createCohortChange
   );
   const [isOpen, setIsOpen] = useState(false);
+  const [isPending, startSaving] = useTransition();
   const [name, setName] = useState("");
   const [gradeValue, setGradeValue] = useState<string | null>(null);
   const next = name.trim();
@@ -174,7 +241,7 @@ function SchoolCohortAdd({
       return;
     }
     setIsOpen(false);
-    startTransition(() =>
+    startSaving(() =>
       saveSchool(
         () =>
           create({
@@ -208,7 +275,12 @@ function SchoolCohortAdd({
             >
               {common("cancel")}
             </Button>
-            <Button disabled={!isComplete} onClick={submit} type="button">
+            <Button
+              disabled={!isComplete || isPending}
+              inert={isPending}
+              onClick={submit}
+              type="button"
+            >
               {t("cohort-create")}
             </Button>
           </>

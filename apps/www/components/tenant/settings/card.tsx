@@ -11,7 +11,7 @@ import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-d
 import { cva } from "class-variance-authority";
 import { Schema } from "effect";
 import { useTranslations } from "next-intl";
-import { startTransition } from "react";
+import { useTransition } from "react";
 import { createPortal } from "react-dom";
 import { cardQr } from "@/components/tenant/settings/card.client";
 import { saveSchool } from "@/components/tenant/settings/save.client";
@@ -73,6 +73,7 @@ export function SchoolCardDialog({
   const t = useTranslations("SchoolSettings");
   const clipboard = useClipboard({ timeout: 1500 });
   const printCard = useMutation(identity.cards.print);
+  const [isPrinting, startPrinting] = useTransition();
 
   return (
     <ResponsiveDialog
@@ -94,14 +95,20 @@ export function SchoolCardDialog({
             {clipboard.copied ? t("card-copied") : t("card-copy")}
           </Button>
           <Button
+            disabled={isPrinting}
+            inert={isPrinting}
             onClick={() => {
               if (card !== undefined) {
                 const { personId } = card;
-                startTransition(() =>
-                  saveSchool(() => printCard({ personId, slug }), SOURCE)
+                // The sheet opens once the journal holds the print, so a refused print never prints.
+                startPrinting(() =>
+                  saveSchool(
+                    () => printCard({ personId, slug }),
+                    SOURCE,
+                    () => window.print()
+                  )
                 );
               }
-              window.print();
             }}
             type="button"
           >

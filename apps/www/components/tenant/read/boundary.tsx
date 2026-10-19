@@ -3,7 +3,7 @@
 import type { Ref } from "@confect/core";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import type { ReactNode } from "react";
-import { DataFailure } from "@/components/shared/failure";
+import { DataFailure, reloadPage } from "@/components/shared/failure";
 import { isLostAccess } from "@/components/tenant/refusal";
 import { useAnswerRetry } from "@/lib/convex/retry.client";
 
@@ -21,10 +21,11 @@ interface TenantRead<Query extends Ref.AnyPublicQuery> {
  * boundary must all unmount on a failure, because a query with a mounted reader
  * is not asked again.
  *
- * A refusal that the viewer has lost the school's access is not this part's to
- * show. The boundary rethrows it to the school's own boundary, which shows the
- * refused page. `fallback` lays the failure out inside the page's own frame, so a
- * page keeps its header while its read fails.
+ * A paginated read has no such retry, so a boundary without `read` retries by
+ * loading the page again. A refusal that the viewer has lost the school's access
+ * is not this part's to show: the boundary rethrows it to the school's own
+ * boundary, which shows the refused page. `fallback` lays the failure out inside
+ * the page's own frame, so a page keeps its header while its read fails.
  */
 export function ReadBoundary<Query extends Ref.AnyPublicQuery>({
   children,
@@ -33,13 +34,17 @@ export function ReadBoundary<Query extends Ref.AnyPublicQuery>({
 }: {
   children: ReactNode;
   fallback?: (failure: ReactNode) => ReactNode;
-  read: TenantRead<Query>;
+  read?: TenantRead<Query> | undefined;
 }) {
   return (
     <ErrorBoundary
       fallbackRender={({ error, resetErrorBoundary }) =>
         fallback(
-          <ReadFailure error={error} read={read} reset={resetErrorBoundary} />
+          read === undefined ? (
+            <PageFailure error={error} />
+          ) : (
+            <ReadFailure error={error} read={read} reset={resetErrorBoundary} />
+          )
         )
       }
     >
@@ -66,4 +71,12 @@ function ReadFailure<Query extends Ref.AnyPublicQuery>({
     throw error;
   }
   return <DataFailure isPending={waiting} onRetry={retry} />;
+}
+
+/** The failure part of a paginated read, whose Try again loads the page again. */
+function PageFailure({ error }: { error: unknown }) {
+  if (isLostAccess(error)) {
+    throw error;
+  }
+  return <DataFailure onRetry={reloadPage} />;
 }

@@ -4,6 +4,7 @@ import type { Ref } from "@confect/core";
 import type { OptimisticLocalStore, OptimisticUpdate } from "@confect/react";
 import { Id } from "@repo/backend/confect/_generated/id";
 import access from "@repo/backend/confect/_generated/refs/access";
+import identity from "@repo/backend/confect/_generated/refs/identity";
 import integrations from "@repo/backend/confect/_generated/refs/integrations";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { applyPolicy } from "@repo/backend/confect/tenancy/policy";
@@ -202,6 +203,34 @@ export const removeLogoChange: OptimisticUpdate<typeof tenancy.logo.remove> = (
     ...viewer,
     tenant: Struct.omit(viewer.tenant, ["logo"]),
   }));
+};
+
+/**
+ * Shows a login's card as issued now in every loaded list of the school's logins, while the server
+ * reissues it. The list keeps its order, and a refused reissue is undone when the server answers.
+ */
+export const reissueCardChange: OptimisticUpdate<
+  typeof identity.cards.reissue
+> = (localStore, { personId, slug }) => {
+  for (const query of localStore.getAllQueries(identity.logins.list)) {
+    if (Option.isSome(query.value) && query.args.slug === slug) {
+      localStore.setQuery(
+        identity.logins.list,
+        query.args,
+        Option.some({
+          ...query.value.value,
+          page: Arr.map(query.value.value.page, (login) =>
+            login.person.id === personId
+              ? {
+                  ...login,
+                  issuedAt: DateTime.toEpochMillis(DateTime.nowUnsafe()),
+                }
+              : login
+          ),
+        })
+      );
+    }
+  }
 };
 
 /** Shows the new time zone and content language of a unit at once. */

@@ -31,6 +31,7 @@ import { useState, useTransition } from "react";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { SchoolClientCreateDialog } from "@/components/tenant/settings/client";
 import { revokeClientChange } from "@/components/tenant/settings/mutation.client";
 import { SettingsPage } from "@/components/tenant/settings/page";
@@ -72,7 +73,9 @@ export function SchoolClientsSettings({ slug }: { slug: TenantSlug }) {
         </Button>
       }
     >
-      <SchoolClientTable onIssued={setIssuedSecret} slug={slug} />
+      <ReadBoundary>
+        <SchoolClientTable onIssued={setIssuedSecret} slug={slug} />
+      </ReadBoundary>
       <SchoolClientCreateDialog
         onIssued={setIssuedSecret}
         open={isCreating}

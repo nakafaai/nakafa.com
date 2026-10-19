@@ -625,7 +625,15 @@
     "student-add-footer": "Drucken Sie die Karte, bevor Sie schließen, denn der Code wird nur einmal angezeigt.",
     "student-add-submit": "Schüler hinzufügen",
     "invites-empty": "Keine Einladung wartet.",
-    "invites-search": "Eingeladene suchen"
+    "invites-search": "Eingeladene suchen",
+    "no-unit-title": "Noch keine aktive Einheit",
+    "no-unit-description": "Perioden und Kohorten gehören zu einer aktiven Einheit. Stelle zuerst eine wieder her oder lege eine an.",
+    "no-unit-action": "Einheiten öffnen",
+    "cohorts-no-period-action": "Perioden öffnen",
+    "members-empty-action": "Einladungen öffnen",
+    "student-login-rule": "Nutze 3 bis 32 Zeichen: a bis z, 0 bis 9, Punkt, Unterstrich, Bindestrich.",
+    "policy-domains-invalid": "Prüfe diese Domains: {domains}. Schreibe jede Domain in eine eigene Zeile.",
+    "policy-domains-limit": "Verwende höchstens {limit} verschiedene Domains, jede in einer eigenen Zeile."
   },
   "Classroom": {
     "tabs-home": "Start",
