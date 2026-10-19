@@ -1,3 +1,4 @@
+import { captureException } from "@repo/analytics/posthog/capture";
 import { ToastMessage } from "@repo/design-system/lib/toast/message";
 import type {
   ToastDescriptionKey,
@@ -5,7 +6,7 @@ import type {
   ToastValueKey,
   ToastValues,
 } from "@repo/internationalization/src/toast";
-import { Array as Arr, Effect, MutableRef } from "effect";
+import { Array as Arr, Effect, MutableRef, Schema } from "effect";
 import { createElement } from "react";
 import type { ExternalToast, toast as SonnerToast } from "sonner";
 
@@ -60,7 +61,14 @@ type ToastSend = (sonner: typeof SonnerToast) => void;
 /** Calls held before the library loads. A load that never completes stops the queue here. */
 const PENDING_TOAST_LIMIT = 20;
 
+/** Raised when the Sonner library cannot load. The held calls wait for the next toast to load it again. */
+class ToastLoadFailed extends Schema.TaggedError<ToastLoadFailed>()(
+  "ToastLoadFailed",
+  { cause: Schema.Unknown }
+) {}
+
 const toastRequested = MutableRef.make(false);
+const sonnerLoading = MutableRef.make(false);
 const toastListeners = MutableRef.make<readonly (() => void)[]>([]);
 const loadedToast = MutableRef.make<typeof SonnerToast | undefined>(undefined);
 const pendingSends = MutableRef.make<readonly ToastSend[]>([]);
@@ -91,7 +99,8 @@ export function subscribeToastRequests(listener: () => void) {
  * Runs one toast call. The first call asks for the Toaster to mount and loads
  * Sonner, and every call made before Sonner has loaded runs once it has, in the
  * order it was made. Sonner keeps the toasts it receives until a Toaster
- * subscribes, so a toast shown before the mount is not lost.
+ * subscribes, so a toast shown before the mount is not lost. A failed load keeps
+ * the held calls, and the next call starts the load again.
  */
 function requestToast(send: ToastSend) {
   const loaded = MutableRef.get(loadedToast);
@@ -104,12 +113,14 @@ function requestToast(send: ToastSend) {
   if (pending.length < PENDING_TOAST_LIMIT) {
     MutableRef.set(pendingSends, Arr.append(pending, send));
   }
-  if (MutableRef.get(toastRequested)) {
-    return;
+  if (!MutableRef.get(toastRequested)) {
+    MutableRef.set(toastRequested, true);
+    Arr.forEach(MutableRef.get(toastListeners), (listener) => listener());
   }
-  MutableRef.set(toastRequested, true);
-  Arr.forEach(MutableRef.get(toastListeners), (listener) => listener());
-  Effect.runFork(loadSonner);
+  if (!MutableRef.get(sonnerLoading)) {
+    MutableRef.set(sonnerLoading, true);
+    Effect.runFork(loadSonner);
+  }
 }
 
 /** Hands the loaded toast function to every held call, then empties the queue. */
@@ -119,9 +130,19 @@ function publishToast(toast: typeof SonnerToast) {
   MutableRef.set(pendingSends, []);
 }
 
-const loadSonner = Effect.tryPromise(() => import("sonner")).pipe(
+/** Loads Sonner. A failed load is reported, and the next toast loads it again. */
+const loadSonner = Effect.tryPromise({
+  try: () => import("sonner"),
+  catch: (cause) => new ToastLoadFailed({ cause }),
+}).pipe(
   Effect.map((module) => module.toast),
-  Effect.tap((toast) => Effect.sync(() => publishToast(toast)))
+  Effect.tap((toast) => Effect.sync(() => publishToast(toast))),
+  Effect.catchTag("ToastLoadFailed", (error) =>
+    Effect.sync(() => {
+      MutableRef.set(sonnerLoading, false);
+      captureException(error.cause, { source: "toast-load" });
+    })
+  )
 );
 
 /**
@@ -146,11 +167,18 @@ export const toast = {
     requestToast((sonner) => {
       sonner.success(titleNode(copy), dataOf(copy, options));
     }),
-  /** Closes the toast with this id, or every toast when no id is given. */
-  dismiss: (id?: string | number) =>
+  /**
+   * Closes the toast with this id, or every toast when no id is given. Before any
+   * toast was requested there is nothing to close, so no library loads for it.
+   */
+  dismiss: (id?: string | number) => {
+    if (!isToastRequested()) {
+      return;
+    }
     requestToast((sonner) => {
       sonner.dismiss(id);
-    }),
+    });
+  },
 };
 
 /**

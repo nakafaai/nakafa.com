@@ -15,7 +15,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { toast as sonner } from "sonner";
 
-vi.mock("sonner", () => ({
+const sonnerModule = vi.hoisted(() => ({
   toast: Object.assign(
     vi.fn(() => "shown"),
     {
@@ -27,14 +27,20 @@ vi.mock("sonner", () => ({
   ),
 }));
 
+vi.mock("@repo/analytics/posthog/capture", () => ({
+  captureException: vi.fn(),
+}));
+
+vi.mock("sonner", () => sonnerModule);
+
 afterEach(() => vi.clearAllMocks());
 
 describe("toast", () => {
   // The first toast starts loading Sonner, and the calls made before it run once it
   // has loaded. Waiting for that once keeps every later toast synchronous.
   beforeAll(async () => {
-    toast.dismiss();
-    await vi.waitFor(() => expect(sonner.dismiss).toHaveBeenCalled());
+    toast.info({ title: "action-error.title" });
+    await vi.waitFor(() => expect(sonner.info).toHaveBeenCalled());
     vi.clearAllMocks();
   });
 
@@ -176,8 +182,8 @@ describe("the first toast", () => {
     notify.subscribeToastRequests(listener);
 
     expect(notify.isToastRequested()).toBe(false);
-    notify.toast.dismiss("first");
-    notify.toast.dismiss("second");
+    notify.toast.info({ title: "action-error.title" });
+    notify.toast.info({ title: "action-error.title" });
 
     expect(notify.isToastRequested()).toBe(true);
     expect(listener).toHaveBeenCalledOnce();
@@ -188,7 +194,7 @@ describe("the first toast", () => {
     const listener = vi.fn();
     notify.subscribeToastRequests(listener)();
 
-    notify.toast.dismiss("first");
+    notify.toast.info({ title: "action-error.title" });
 
     expect(listener).not.toHaveBeenCalled();
   });
@@ -226,13 +232,67 @@ describe("the first toast", () => {
     const { toast: sonnerToast } = await import("sonner");
     Arr.forEach(
       Arr.makeBy(25, (index) => index),
-      (index) => notify.toast.dismiss(`id-${index}`)
+      (index) =>
+        notify.toast.info(
+          { title: "action-error.title" },
+          { id: `id-${index}` }
+        )
     );
 
-    await vi.waitFor(() =>
-      expect(sonnerToast.dismiss).toHaveBeenCalledTimes(20)
+    await vi.waitFor(() => expect(sonnerToast.info).toHaveBeenCalledTimes(20));
+    expect(sonnerToast.info).toHaveBeenNthCalledWith(
+      1,
+      expect.anything(),
+      expect.objectContaining({ id: "id-0" })
     );
-    expect(sonnerToast.dismiss).toHaveBeenNthCalledWith(1, "id-0");
-    expect(sonnerToast.dismiss).toHaveBeenLastCalledWith("id-19");
+    expect(sonnerToast.info).toHaveBeenLastCalledWith(
+      expect.anything(),
+      expect.objectContaining({ id: "id-19" })
+    );
+  });
+
+  it("does not load Sonner for a dismiss before any toast", async () => {
+    const sonnerLoads = vi.fn(() => sonnerModule);
+    vi.doMock("sonner", sonnerLoads);
+    const notify = await loadFreshNotify();
+    const listener = vi.fn();
+    notify.subscribeToastRequests(listener);
+
+    notify.toast.dismiss("first");
+    await Effect.runPromise(Effect.yieldNow);
+
+    expect(sonnerLoads).not.toHaveBeenCalled();
+    expect(listener).not.toHaveBeenCalled();
+    expect(notify.isToastRequested()).toBe(false);
+
+    notify.toast.info({ title: "action-error.title" });
+    await vi.waitFor(() => expect(sonnerLoads).toHaveBeenCalledOnce());
+  });
+
+  it("loads Sonner again on the next toast after a failed load, and shows the held toasts then", async () => {
+    vi.doMock("sonner", () =>
+      Promise.reject(new Error("The Sonner chunk failed to load."))
+    );
+    const notify = await loadFreshNotify();
+    const { captureException } = await import(
+      "@repo/analytics/posthog/capture"
+    );
+    const listener = vi.fn();
+    notify.subscribeToastRequests(listener);
+
+    notify.toast.info({ title: "action-error.title" });
+    await vi.waitFor(() => expect(captureException).toHaveBeenCalledOnce());
+
+    vi.doMock("sonner", () => sonnerModule);
+    notify.toast.info({ title: "copy-success.title" });
+
+    await vi.waitFor(() =>
+      expect(sonnerModule.toast.info).toHaveBeenCalledTimes(2)
+    );
+    expect(captureException).toHaveBeenCalledExactlyOnceWith(
+      expect.anything(),
+      { source: "toast-load" }
+    );
+    expect(listener).toHaveBeenCalledOnce();
   });
 });
