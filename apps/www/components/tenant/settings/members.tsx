@@ -15,7 +15,7 @@ import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr } from "effect";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { startTransition, useState } from "react";
+import { startTransition } from "react";
 import { useConvexAuth } from "@/components/providers/convex";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";

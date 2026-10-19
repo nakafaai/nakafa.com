@@ -23,7 +23,7 @@ import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-d
 import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, Option } from "effect";
 import { useTranslations } from "next-intl";
-import { startTransition, useId, useState, useTransition } from "react";
+import { useId, useState, useTransition } from "react";
 import { useConvexAuth } from "@/components/providers/convex";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
