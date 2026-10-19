@@ -241,10 +241,7 @@ function SchoolInviteMenu({
    */
   const sendPending = (locale: typeof ActiveAppLocaleCodeSchema.Type) =>
     startResending(() =>
-      saveSchool(
-        () => resend({ inviteId: invite.id, locale, slug }),
-        SOURCE
-      )
+      saveSchool(() => resend({ inviteId: invite.id, locale, slug }), SOURCE)
     );
 
   /**

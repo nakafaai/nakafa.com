@@ -13,7 +13,9 @@ describe("isFrozen", () => {
 
 describe("isLocked", () => {
   it("locks an exam that is frozen or whose unit is archived, and no other", () => {
-    expect(isLocked({ archived: false, frozenAt: 1_760_000_000_000 })).toBe(true);
+    expect(isLocked({ archived: false, frozenAt: 1_760_000_000_000 })).toBe(
+      true
+    );
     expect(isLocked({ archived: true })).toBe(true);
     expect(isLocked({ archived: false })).toBe(false);
   });

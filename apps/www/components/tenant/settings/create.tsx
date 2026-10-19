@@ -4,8 +4,8 @@ import { QueryResult, useMutation, useQuery } from "@confect/react";
 import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { UnitLevel, UnitName } from "@repo/backend/confect/tenancy/schema";
-import { StartCountry } from "@repo/backend/confect/tenancy/start";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
+import { StartCountry } from "@repo/backend/confect/tenancy/start";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Field,
@@ -61,7 +61,7 @@ export function SchoolUnitCreateDialog({
 }) {
   const units = useQuery(tenancy.units.list, { slug });
   const viewer = useQuery(tenancy.viewer.get, { slug });
-  if (!QueryResult.isSuccess(units) || !QueryResult.isSuccess(viewer)) {
+  if (!(QueryResult.isSuccess(units) && QueryResult.isSuccess(viewer))) {
     return null;
   }
   const first = Arr.head(units.value);
@@ -104,9 +104,7 @@ function SchoolUnitCreateForm({
   const [name, setName] = useState("");
   const [level, setLevel] = useState<Level>("sma");
   const [timeZone, setTimeZone] = useState(unit.timeZone);
-  const [contentLanguage, setContentLanguage] = useState(
-    unit.contentLanguage
-  );
+  const [contentLanguage, setContentLanguage] = useState(unit.contentLanguage);
   const trimmed = name.trim();
   const valid = Schema.is(UnitName)(trimmed);
   const levelItems = Arr.map(levelsIn(country), (value) => ({
@@ -227,7 +225,8 @@ function SchoolUnitCreateForm({
           <Select
             items={languageItems}
             onValueChange={(value) => {
-              const next = Schema.decodeUnknownOption(AppLocaleCodeSchema)(value);
+              const next =
+                Schema.decodeUnknownOption(AppLocaleCodeSchema)(value);
               if (Option.isSome(next)) {
                 setContentLanguage(next.value);
               }

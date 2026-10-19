@@ -128,9 +128,7 @@ export const createSitting = Effect.fn("exams.sittings.create")(
         jobs: [],
         opensAt: args.opensAt,
         room: args.room,
-        ...(args.actor.kind === "person"
-          ? { scheduledBy: args.actor.id }
-          : {}),
+        ...(args.actor.kind === "person" ? { scheduledBy: args.actor.id } : {}),
         state: "scheduled",
         tenantId: args.tenantId,
         tokenHash: "",

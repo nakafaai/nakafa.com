@@ -87,10 +87,7 @@ const students = FunctionImpl.make(
     const people = yield* Effect.forEach(
       grants.page,
       (grant) =>
-        reader
-          .table("tenantPeople")
-          .get(grant.personId)
-          .pipe(Effect.orDie),
+        reader.table("tenantPeople").get(grant.personId).pipe(Effect.orDie),
       { concurrency: "unbounded" }
     );
     return Struct.assign(grants, {

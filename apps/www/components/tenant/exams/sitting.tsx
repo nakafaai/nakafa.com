@@ -5,7 +5,7 @@ import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { ScheduleInvalid } from "@repo/backend/confect/exams/sittings/errors";
 import {
   RoomName,
-  SittingGroup,
+  type SittingGroup,
 } from "@repo/backend/confect/exams/sittings/schema";
 import { Button } from "@repo/design-system/components/ui/button";
 import {

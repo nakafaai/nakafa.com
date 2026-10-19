@@ -1,8 +1,8 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { Id } from "@repo/backend/confect/_generated/id";
-import { BuiltinRole } from "@repo/backend/confect/access/schema";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
+import { BuiltinRole } from "@repo/backend/confect/access/schema";
 import { TenantAccess } from "@repo/backend/confect/access/tenant";
 import RequireMember from "@repo/backend/confect/middleware/member.spec";
 import Session from "@repo/backend/confect/middleware/session.spec";

@@ -4,13 +4,24 @@ import type { GenericId } from "@confect/core";
 import {
   PaginatedQueryResult,
   QueryResult,
+  useMutation,
   usePaginatedQuery,
   useQuery,
 } from "@confect/react";
+import { MoreHorizontalIcon } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { RoomRow } from "@repo/backend/confect/exams/rooms";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
+import { Button } from "@repo/design-system/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@repo/design-system/components/ui/dropdown-menu";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
+import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import {
   Select,
   SelectContent,
@@ -31,17 +42,6 @@ import { Array as Arr, Option, Schema } from "effect";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { startTransition, useState } from "react";
-import { useMutation } from "@confect/react";
-import { MoreHorizontalIcon } from "@hugeicons/core-free-icons";
-import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@repo/design-system/components/ui/dropdown-menu";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Button } from "@repo/design-system/components/ui/button";
 import { useConvexAuth } from "@/components/providers/convex";
 import { LayoutContent } from "@/components/shared/content/layout";
 import { DataFailure } from "@/components/shared/failure";
@@ -53,11 +53,11 @@ import {
   RoomStateFilter,
   roomsArgs,
 } from "@/components/tenant/exams/rooms.client";
-import { saveSchool } from "@/components/tenant/settings/save.client";
 import { SchoolHeader } from "@/components/tenant/header";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { isDenied, isLostAccess } from "@/components/tenant/refusal";
 import { schoolDateTimeText } from "@/components/tenant/settings/clock";
+import { saveSchool } from "@/components/tenant/settings/save.client";
 
 const SOURCE = "components/tenant/exams/rooms";
 
@@ -427,10 +427,7 @@ function RoomMenu({ room, slug }: { room: Room; slug: TenantSlug }) {
               onClick={() => {
                 setIsCancelling(false);
                 startTransition(() =>
-                  saveSchool(
-                    () => cancel({ sittingId: room.id, slug }),
-                    SOURCE
-                  )
+                  saveSchool(() => cancel({ sittingId: room.id, slug }), SOURCE)
                 );
               }}
               type="button"

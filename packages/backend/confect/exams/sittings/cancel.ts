@@ -1,9 +1,12 @@
-import { DatabaseReader, DatabaseWriter } from "@repo/backend/confect/_generated/services";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
+import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { Sitting } from "@repo/backend/confect/exams/sittings/access";
 import { sittingAuthority } from "@repo/backend/confect/exams/sittings/authority";
 import { RoomOpened } from "@repo/backend/confect/exams/sittings/errors";
 import { cancelPending } from "@repo/backend/confect/exams/sittings/timers";
-import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import { personActor } from "@repo/backend/confect/tenancy/actor";
 import { tenantAuthority } from "@repo/backend/confect/tenancy/authority";
@@ -24,7 +27,10 @@ export const cancelRoom = Effect.fn("exams.sittings.cancel")(function* () {
     "tenant.manage"
   );
   if (!(isScheduler || isAdmin)) {
-    return yield* new AccessDenied({ action: "sitting.proctor", reason: "role" });
+    return yield* new AccessDenied({
+      action: "sitting.proctor",
+      reason: "role",
+    });
   }
   if (sitting.state !== "scheduled") {
     return yield* new RoomOpened();
