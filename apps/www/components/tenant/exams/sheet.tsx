@@ -41,3 +41,11 @@ export function PaperOption({
     </div>
   );
 }
+
+/**
+ * The room that one control of an option takes beside its text. The paper keeps it on its static copy,
+ * where the control stands when the editor mounts, so an option is as wide in both.
+ */
+export function ControlRoom() {
+  return <span aria-hidden className="size-9 shrink-0" />;
+}

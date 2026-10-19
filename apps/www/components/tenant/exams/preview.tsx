@@ -3,8 +3,14 @@
 import { QueryResult, useQuery } from "@confect/react";
 import { useInViewport } from "@mantine/hooks";
 import editors from "@repo/backend/confect/_generated/refs/editor";
+import {
+  editorContent,
+  editorDocument,
+  editorPlaceholder,
+} from "@repo/design-system/components/editor/frame";
 import { paragraphVariants } from "@repo/design-system/lib/paragraph";
 import { DOMSerializer, Node } from "@tiptap/pm/model";
+import { cn } from "cn";
 import { Array as Arr, Effect, HashMap, Option } from "effect";
 import { useCallback, useDeferredValue, useMemo } from "react";
 import {
@@ -16,6 +22,7 @@ import type { Question } from "@/components/tenant/exams/optimistic";
 import { isPlaceholderId } from "@/components/tenant/exams/placeholder";
 import { useExam, useExamLive } from "@/components/tenant/exams/provider";
 import {
+  ControlRoom,
   PaperOption,
   PaperOptions,
   QuestionPaper,
@@ -86,10 +93,17 @@ export function usePromptDocument({
 
 /**
  * A rich text drawn without an editor: the schema's own rendering of each node, which is what the
- * editor draws, with the paragraph classes the editor decorates its paragraphs with. A text that
- * changes while the teacher types is drawn when the browser has time.
+ * editor draws, in the wrapper and the document classes the editor gives its text, so the text takes
+ * the same box and spacing as it does once the editor mounts. A text that changes while the teacher
+ * types is drawn when the browser has time.
  */
-export function PreviewProse({ doc }: { doc: Node }) {
+export function PreviewProse({
+  doc,
+  size,
+}: {
+  doc: Node;
+  size: "line" | "page";
+}) {
   const shown = useDeferredValue(doc);
   // The text is drawn again only when it changes, not on every redraw of the page.
   const draw = useCallback(
@@ -109,39 +123,83 @@ export function PreviewProse({ doc }: { doc: Node }) {
     [shown]
   );
 
-  return <div className="wrap-break-word whitespace-pre-wrap" ref={draw} />;
+  return (
+    <div className={editorContent({ size })}>
+      <div className={cn(editorPlaceholder(), editorDocument())} ref={draw} />
+    </div>
+  );
 }
 
-/** The label of one option drawn without an editor. */
+/** The label of one option drawn without an editor, at the size an option's editor takes. */
 export function OptionSketch({ label }: { label: OptionLabel }) {
   const doc = useMemo(() => Node.fromJSON(assessmentSchema, label), [label]);
 
-  return <PreviewProse doc={doc} />;
+  return <PreviewProse doc={doc} size="line" />;
+}
+
+/**
+ * One option of a paper drawn without editors: its letter and its text. A page with controls keeps
+ * the room of its option controls beside the text, as the editor's page does.
+ */
+function PaperChoice({
+  label,
+  letter,
+  withControls,
+}: {
+  label: OptionLabel;
+  letter: string;
+  withControls: boolean;
+}) {
+  const option = (
+    <PaperOption letter={letter}>
+      <OptionSketch label={label} />
+    </PaperOption>
+  );
+
+  if (!withControls) {
+    return option;
+  }
+
+  return (
+    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
+      {option}
+      <div aria-hidden className="flex items-center gap-1">
+        <ControlRoom />
+        <ControlRoom />
+      </div>
+    </div>
+  );
 }
 
 /**
  * The paper of one question drawn without editors: its prompt and its options as the student reads
  * them. The page draws it when its editors are not mounted, and the thumbnails draw it small, so a
- * page and its thumbnail look alike.
+ * page and its thumbnail look alike. A page passes `withControls`, which keeps the room of its option
+ * controls, so an option is as wide on the paper as it is when the editor mounts.
  */
-function PaperSketch({
+export function PaperSketch({
   doc,
   question,
+  withControls = false,
 }: {
   doc: Option.Option<Node>;
   question: Question;
+  withControls?: boolean;
 }) {
   const choice = choiceOf(question.answers);
 
   return (
     <QuestionPaper>
-      {Option.isSome(doc) ? <PreviewProse doc={doc.value} /> : null}
+      {Option.isSome(doc) ? <PreviewProse doc={doc.value} size="page" /> : null}
       {Option.isSome(choice) ? (
         <PaperOptions>
           {Arr.map(choice.value.options, (option, index) => (
-            <PaperOption key={option.id} letter={optionLetter(index)}>
-              <OptionSketch label={option.label} />
-            </PaperOption>
+            <PaperChoice
+              key={option.id}
+              label={option.label}
+              letter={optionLetter(index)}
+              withControls={withControls}
+            />
           ))}
         </PaperOptions>
       ) : null}

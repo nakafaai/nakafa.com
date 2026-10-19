@@ -9,11 +9,9 @@ import {
 } from "@repo/backend/confect/exams/question";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import type { Node } from "@tiptap/pm/model";
 import { Array as Arr, Function as Fn, Option } from "effect";
-import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
-import { type RefObject, useEffect, useRef, useState } from "react";
+import { lazy, type RefObject, Suspense, useEffect, useRef } from "react";
 import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import {
   choiceOf,
@@ -34,88 +32,22 @@ import {
 import { OptionRow } from "@/components/tenant/exams/option";
 import { isPlaceholderId } from "@/components/tenant/exams/placeholder";
 import {
-  OptionSketch,
-  PreviewProse,
+  PaperSketch,
   usePromptDocument,
 } from "@/components/tenant/exams/preview";
 import { useExam, useExamSelection } from "@/components/tenant/exams/provider";
-import {
-  PaperOption,
-  PaperOptions,
-  QuestionPaper,
-} from "@/components/tenant/exams/sheet";
-
-/** The prompt loads when a page mounts its editors, never with the page. */
-const ExamPrompt = dynamic(
-  () =>
-    import("@/components/tenant/exams/prompt").then(
-      (module) => module.ExamPrompt
-    ),
-  { loading: () => null, ssr: false }
-);
-
-/** The margin that mounts a page's editors: one viewport of the canvas above and below it. */
-const NEAR_MARGIN = "100% 0px";
-
-/** The margin that unmounts a page's editors: three viewports, so a page near the edge keeps them. */
-const FAR_MARGIN = "300% 0px";
-
-/** Whether the last report of an observer has the page inside its margin. */
-const isInside = (entries: readonly IntersectionObserverEntry[]) =>
-  Option.match(Arr.last(entries), {
-    onNone: () => false,
-    onSome: (entry) => entry.isIntersecting,
-  });
+import { PaperOptions, QuestionPaper } from "@/components/tenant/exams/sheet";
+import { usePageWindow } from "@/components/tenant/exams/window";
 
 /**
- * Where a page sits against the canvas. `mounted` turns on when the page comes within a viewport
- * of the canvas, and turns off only when it leaves the three-viewport margin, so a page at the edge
- * keeps its editors. `reached` tells whether the page is within the three-viewport margin, where its
- * text may be read. The observers report each change, and the state changes only in their callbacks.
+ * The prompt loads when a page mounts its editors, never with the page. Until it loads, the page
+ * keeps its paper on the screen, since the live paper of the page suspends until the prompt loads.
  */
-function usePageWindow(
-  page: RefObject<HTMLElement | null>,
-  canvas: RefObject<HTMLElement | null>
-) {
-  const [mounted, setMounted] = useState(false);
-  const [reached, setReached] = useState(false);
-
-  useEffect(() => {
-    const element = page.current;
-    const root = canvas.current;
-    if (element === null || root === null) {
-      return;
-    }
-
-    const near = new IntersectionObserver(
-      (entries) => {
-        if (isInside(entries)) {
-          setMounted(true);
-        }
-      },
-      { root, rootMargin: NEAR_MARGIN }
-    );
-    const far = new IntersectionObserver(
-      (entries) => {
-        const inside = isInside(entries);
-        setReached(inside);
-        if (!inside) {
-          setMounted(false);
-        }
-      },
-      { root, rootMargin: FAR_MARGIN }
-    );
-    near.observe(element);
-    far.observe(element);
-
-    return () => {
-      near.disconnect();
-      far.disconnect();
-    };
-  }, [canvas, page]);
-
-  return { mounted, reached };
-}
+const ExamPrompt = lazy(() =>
+  import("@/components/tenant/exams/prompt").then((module) => ({
+    default: module.ExamPrompt,
+  }))
+);
 
 /** The props of one page of the canvas. */
 interface ExamPageProps {
@@ -133,8 +65,9 @@ interface ExamPageProps {
  * One question as a page of the canvas: a row above the paper names the question and holds its
  * actions, and the paper below it is what the student reads. A page mounts its editors while it is
  * within a viewport of the canvas and unmounts them past three viewports. Until then, and while it
- * is far away, the paper shows the same document as drawn text, so the page keeps its shape. A page
- * the server has not saved yet shows its options only, and they take no change until it answers.
+ * is far away, the paper shows the same document as drawn text, so the page keeps its shape. The
+ * drawn paper stays until the prompt's editor loads. A page the server has not saved yet shows its
+ * options only, and they take no change until it answers.
  */
 export function ExamPage({ canvas, count, index, question }: ExamPageProps) {
   const t = useTranslations("Exams");
@@ -163,6 +96,7 @@ export function ExamPage({ canvas, count, index, question }: ExamPageProps) {
     read: reached && !live,
     saved,
   });
+  const paper = <PaperSketch doc={doc} question={question} withControls />;
 
   return (
     <section
@@ -191,9 +125,11 @@ export function ExamPage({ canvas, count, index, question }: ExamPageProps) {
         ) : null}
       </div>
       {live ? (
-        <LivePaper number={number} question={question} />
+        <Suspense fallback={paper}>
+          <LivePaper number={number} question={question} />
+        </Suspense>
       ) : (
-        <StaticPaper doc={doc} question={question} />
+        paper
       )}
     </section>
   );
@@ -298,41 +234,5 @@ function LivePaper({
         </div>
       ) : null}
     </>
-  );
-}
-
-/** The paper of a page without editors: the same document and options, drawn as text. */
-function StaticPaper({
-  doc,
-  question,
-}: {
-  doc: Option.Option<Node>;
-  question: Question;
-}) {
-  const choice = Option.getOrNull(choiceOf(question.answers));
-
-  return (
-    <QuestionPaper>
-      {Option.isSome(doc) ? <PreviewProse doc={doc.value} /> : null}
-      {choice === null ? null : (
-        <PaperOptions>
-          {Arr.map(choice.options, (option, index) => (
-            // The room of the teacher's controls is kept, so an option is as wide as it is when editable.
-            <div
-              className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2"
-              key={option.id}
-            >
-              <PaperOption letter={optionLetter(index)}>
-                <OptionSketch label={option.label} />
-              </PaperOption>
-              <div aria-hidden className="flex items-center gap-1">
-                <span className="size-8" />
-                <span className="size-8" />
-              </div>
-            </div>
-          ))}
-        </PaperOptions>
-      )}
-    </QuestionPaper>
   );
 }

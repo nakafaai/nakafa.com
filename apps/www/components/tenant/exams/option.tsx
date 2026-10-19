@@ -21,7 +21,7 @@ import {
 } from "@/components/tenant/exams/answer";
 import { RICH_EXTENSIONS } from "@/components/tenant/exams/extensions";
 import { ExamDocument } from "@/components/tenant/exams/rich";
-import { PaperOption } from "@/components/tenant/exams/sheet";
+import { ControlRoom, PaperOption } from "@/components/tenant/exams/sheet";
 import { assessmentSchema } from "@/lib/editor/assessment";
 import { makeQuietSaver } from "@/lib/save/quiet";
 
@@ -138,7 +138,7 @@ export function OptionRow({
           <HugeIcons aria-hidden="true" icon={Tick02Icon} />
         </Button>
         {onRemove === null ? (
-          <span aria-hidden className="size-8 shrink-0" />
+          <ControlRoom />
         ) : (
           <Button
             aria-label={t("option-remove-of", { letter, number })}
