@@ -67,13 +67,16 @@ interface ParticlesProps {
   staticity?: number;
 }
 
-interface RemapValueProps {
-  end1: number;
-  end2: number;
-  start1: number;
-  start2: number;
-  value: number;
-}
+/** A value, and the two ranges that it maps from and onto. */
+const RemapValueSchema = Schema.Struct({
+  end1: Schema.Finite,
+  end2: Schema.Finite,
+  start1: Schema.Finite,
+  start2: Schema.Finite,
+  value: Schema.Finite,
+});
+
+type RemapValueProps = typeof RemapValueSchema.Type;
 
 /** Maps a value from one range onto another, never below zero. */
 function remapValue({
