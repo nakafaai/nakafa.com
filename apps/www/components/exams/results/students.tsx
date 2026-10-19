@@ -22,8 +22,11 @@ import {
   useSessionSettled,
 } from "@/components/exams/results/context";
 import { TableSearch, TableToggle } from "@/components/exams/results/filter";
+import { DataFailure } from "@/components/shared/failure";
+import { reloadPage } from "@/components/shared/reload";
 import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
 import { matchesSearch } from "@/components/shared/table/search";
+import { isLostAccess } from "@/components/tenant/refusal";
 
 /** The students of one page of the list. The next page loads as the list's end comes into view. */
 const STUDENT_PAGE_SIZE = 50;
@@ -154,7 +157,6 @@ function StudentTable({
  * search that matches no loaded row keeps reading the next page until one matches or the list ends.
  */
 export function StudentsTable() {
-  const t = useTranslations("Exams");
   const { sittingId, slug } = useResultsScope();
   const settled = useSessionSettled();
   const [status, setStatus] = useState<StatusFilter>("all");
@@ -167,10 +169,12 @@ export function StudentsTable() {
     { initialNumItems: STUDENT_PAGE_SIZE }
   );
 
-  if (PaginatedQueryResult.isFailure(students)) {
+  if (
+    PaginatedQueryResult.isFailure(students) &&
+    isLostAccess(students.error)
+  ) {
     throw students.error;
   }
-  const filtering = status !== "all" || search.trim() !== "";
   const filters = (
     <StudentFilters
       onSearch={setSearch}
@@ -180,37 +184,74 @@ export function StudentsTable() {
     />
   );
   if (PaginatedQueryResult.isLoadingFirstPage(students)) {
-    return filtering ? filters : null;
+    return status !== "all" || search.trim() !== "" ? filters : null;
   }
-  if (students.results.length === 0 && !filtering) {
-    return (
-      <TableEmpty
-        act="reading"
-        description={t("results-empty")}
-        title={t("results-empty-title")}
-      />
-    );
-  }
-  const rows = Arr.filter(students.results, (row) =>
-    matchesSearch(row.name, search)
-  );
   return (
     <>
       {filters}
-      {rows.length === 0 ? (
-        <TableEmpty
-          act="reading"
-          description={t("filter-empty")}
-          title={t("results-no-match")}
-        />
-      ) : (
-        <StudentTable rows={rows} />
-      )}
-      {PaginatedQueryResult.isCanLoadMore(students) ? (
-        <Intersection
-          onIntersect={() => students.loadMore(STUDENT_PAGE_SIZE)}
-        />
-      ) : null}
+      <StudentRowsSection
+        exhausted={PaginatedQueryResult.isExhausted(students)}
+        failed={PaginatedQueryResult.isFailure(students)}
+        filtering={status !== "all" || search.trim() !== ""}
+        loadMore={
+          PaginatedQueryResult.isCanLoadMore(students)
+            ? () => students.loadMore(STUDENT_PAGE_SIZE)
+            : null
+        }
+        rows={students.results}
+        search={search}
+      />
+    </>
+  );
+}
+
+/**
+ * The rows of the students' table below its filters: the failure of its read above the rows it holds,
+ * the rows that match the search, and the empty state once the list is exhausted with no match, or
+ * with no student at all. A list that still loads, or that failed, shows no empty state.
+ */
+function StudentRowsSection({
+  exhausted,
+  failed,
+  filtering,
+  loadMore,
+  rows: students,
+  search,
+}: {
+  /** Whether the list has no more pages, so an empty table is the end of the list and not a wait. */
+  exhausted: boolean;
+  failed: boolean;
+  filtering: boolean;
+  /** Loads the next page of students, or none when the list has no more pages. */
+  loadMore: (() => void) | null;
+  rows: readonly (typeof StudentRowSchema.Type)[];
+  search: string;
+}) {
+  const t = useTranslations("Exams");
+  const rows = Arr.filter(students, (row) => matchesSearch(row.name, search));
+  // A page that holds no match is not the end of the search while later pages still load, so
+  // the empty state waits for the last page, and the table shows nothing in the meantime.
+  const more =
+    loadMore === null ? null : <Intersection onIntersect={loadMore} />;
+  const empty = filtering ? (
+    <TableEmpty
+      act="reading"
+      description={t("filter-empty")}
+      title={t("results-no-match")}
+    />
+  ) : (
+    <TableEmpty
+      act="reading"
+      description={t("results-empty")}
+      title={t("results-empty-title")}
+    />
+  );
+  return (
+    <>
+      {failed ? <DataFailure onRetry={reloadPage} /> : null}
+      {rows.length > 0 ? <StudentTable rows={rows} /> : null}
+      {exhausted && rows.length === 0 ? empty : null}
+      {more}
     </>
   );
 }

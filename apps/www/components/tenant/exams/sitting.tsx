@@ -98,10 +98,11 @@ export function ScheduleSitting({
     sittingTimes(starts, minutes, named)
   );
   const roomName = Str.trim(room);
-  const keysMissing = Arr.some(
-    exam.questions,
-    (question) => question.key === null
+  // The numbers of the questions that have no correct answer yet, in the order of the exam.
+  const missingKeys = Arr.flatMap(exam.questions, (question, index) =>
+    question.key === null ? [index + 1] : []
   );
+  const keysMissing = !Arr.isReadonlyArrayEmpty(missingKeys);
   const ready =
     Option.isSome(choice) &&
     Option.isSome(times) &&
@@ -109,37 +110,43 @@ export function ScheduleSitting({
     !keysMissing &&
     !pending;
 
-  /** The server refused the schedule because a question has no key that fits it. */
-  const refuseKeys = () => Effect.sync(() => setRefusal("keys"));
+  /** The server refused the schedule because a question has no key that fits it: the body says so. */
+  const refuseKeys = () =>
+    Effect.sync(() => {
+      setRefusal("keys");
+    });
 
   /**
-   * The server refused the start. A start that has passed stays in the body, and any other
-   * refusal of the start fails on, to the action-error toast.
+   * The server refused the start. A start that has passed stays in the body. Any other refusal of
+   * the start fails on, to the action-error toast.
    */
   const refuseStart = (error: ScheduleInvalid) =>
     error.reason === "opensAt"
-      ? Effect.sync(() => setRefusal("past"))
+      ? Effect.sync(() => {
+          setRefusal("past");
+        })
       : Effect.fail(error);
 
   /**
-   * Schedules the sitting, and goes to the exam's rooms once the server saves it, where the new
-   * room is listed. The two refusals
-   * that the body explains stay in the dialog, and any other failure shows the action-error toast.
+   * Schedules the sitting. The dialog stays open, with its Schedule button off, until the server
+   * answers: a saved sitting closes the dialog and opens the exam's rooms, where the room shows,
+   * and a refused one keeps what the teacher entered and says why. Any other failure shows the
+   * action-error toast.
    */
   const submit = () => {
     if (!ready || Option.isNone(choice) || Option.isNone(times)) {
       return;
     }
     const { closesAt, opensAt } = times.value;
-    const unitId = choice.value.id;
+    const unit = choice.value;
     setRefusal(null);
-    startTransition(() =>
-      runExamAction(
+    startTransition(async () => {
+      await runExamAction(
         sentAction(() =>
           schedule({
             closesAt,
             examId: exam.id,
-            group: { kind: "unit", unitId },
+            group: { kind: "unit", unitId: unit.id },
             opensAt,
             room: roomName,
             slug,
@@ -157,8 +164,8 @@ export function ScheduleSitting({
           })
         ),
         { onFailure: Fn.constVoid, onSuccess: Fn.constVoid }
-      )
-    );
+      );
+    });
   };
 
   return (
@@ -168,7 +175,15 @@ export function ScheduleSitting({
         <>
           {keysMissing || refusal === "keys" ? (
             <p className="me-auto text-muted-foreground text-sm">
-              {t("schedule-keys")}
+              {keysMissing
+                ? t("schedule-keys-numbered", {
+                    count: missingKeys.length,
+                    questions: Arr.join(
+                      Arr.map(missingKeys, (number) => `${number}`),
+                      ", "
+                    ),
+                  })
+                : t("schedule-keys")}
             </p>
           ) : null}
           {refusal === "past" ? (
@@ -216,6 +231,9 @@ export function ScheduleSitting({
             placeholder={t("room-placeholder")}
             value={room}
           />
+          {roomName === "" ? (
+            <FieldDescription>{t("room-needed")}</FieldDescription>
+          ) : null}
         </Field>
         <div className="grid grid-cols-1 gap-7 sm:grid-cols-2 sm:gap-4">
           <Field>
@@ -226,9 +244,11 @@ export function ScheduleSitting({
               type="datetime-local"
               value={starts}
             />
-            {Option.isSome(choice) ? (
+            {Option.isSome(choice) && Option.isSome(times) ? (
               <FieldDescription>{choice.value.timeZone}</FieldDescription>
-            ) : null}
+            ) : (
+              <FieldDescription>{t("starts-needed")}</FieldDescription>
+            )}
           </Field>
           <Field>
             <FieldLabel htmlFor={`${id}-length`}>{t("length")}</FieldLabel>

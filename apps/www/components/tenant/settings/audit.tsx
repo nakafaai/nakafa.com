@@ -11,9 +11,12 @@ import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
+import { DataFailure } from "@/components/shared/failure";
+import { reloadPage } from "@/components/shared/reload";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { SettingsPage } from "@/components/tenant/settings/page";
 import { SchoolDateTime } from "@/components/tenant/settings/time";
 
@@ -30,7 +33,9 @@ const entryColumns = createColumnHelper<typeof dataTableFeatures, EntryItem>();
 export function SchoolAuditSettings({ slug }: { slug: TenantSlug }) {
   return (
     <SettingsPage>
-      <SchoolAuditBody slug={slug} />
+      <ReadBoundary>
+        <SchoolAuditBody slug={slug} />
+      </ReadBoundary>
     </SettingsPage>
   );
 }
@@ -50,13 +55,14 @@ function SchoolAuditBody({ slug }: { slug: TenantSlug }) {
     { initialNumItems: PAGE_SIZE }
   );
 
-  if (PaginatedQueryResult.isFailure(pagination)) {
-    throw pagination.error;
-  }
+  const failed = PaginatedQueryResult.isFailure(pagination);
   if (pagination._tag === "LoadingFirstPage") {
     return null;
   }
   if (Arr.isReadonlyArrayEmpty(pagination.results)) {
+    if (failed) {
+      return <DataFailure onRetry={reloadPage} />;
+    }
     return (
       <TableEmpty
         act="reading"
@@ -100,6 +106,7 @@ function SchoolAuditBody({ slug }: { slug: TenantSlug }) {
 
   return (
     <>
+      {failed ? <DataFailure onRetry={reloadPage} /> : null}
       <div>
         <DataTable
           columns={columns}

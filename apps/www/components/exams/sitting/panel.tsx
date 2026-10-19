@@ -38,6 +38,10 @@ import {
   LockDialog,
   UnlockDialog,
 } from "@/components/exams/sitting/dialogs";
+import { DataFailure } from "@/components/shared/failure";
+import { reloadPage } from "@/components/shared/reload";
+import { TableEmpty } from "@/components/shared/table/frame";
+import { isLostAccess } from "@/components/tenant/refusal";
 
 /** The dialog of a panel action that is open, or none. */
 type PanelDialog = "add-minutes" | "allow-device" | "lock" | "unlock";
@@ -278,21 +282,25 @@ function SignalList({
     { initialNumItems: SIGNAL_PAGE_SIZE }
   );
 
-  if (PaginatedQueryResult.isFailure(signals)) {
-    return (
-      <p className="text-muted-foreground text-sm">
-        {t("sitting-unavailable")}
-      </p>
-    );
+  if (PaginatedQueryResult.isFailure(signals) && isLostAccess(signals.error)) {
+    throw signals.error;
   }
   if (PaginatedQueryResult.isLoadingFirstPage(signals)) {
     return null;
   }
+  const failure = PaginatedQueryResult.isFailure(signals) ? (
+    <DataFailure onRetry={reloadPage} />
+  ) : null;
 
   return (
     <div className="grid gap-2 text-sm">
-      {signals.results.length === 0 ? (
-        <p className="text-muted-foreground">{t("signals-empty")}</p>
+      {failure}
+      {Arr.isReadonlyArrayEmpty(signals.results) && failure === null ? (
+        <TableEmpty
+          act="reading"
+          description={t("signals-empty")}
+          title={t("signals-empty-title")}
+        />
       ) : null}
       {Arr.map(signals.results, (signal) => (
         <p key={`${signal.at}-${signal.kind}`}>

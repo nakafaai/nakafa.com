@@ -206,12 +206,13 @@ export const copyQuestionUpdate =
     );
 
 /**
- * Shows a new exam at the top of the first page of each open list while the server
- * saves it. A list past its first page keeps its pages, as the server's answer shows.
+ * Shows a new exam while the server saves it: at the top of the first page of each open list,
+ * and at the top of the drafts of the school home when the home is open. A list past its first
+ * page keeps its pages, as the server's answer shows.
  */
 export const insertDraftExam =
   (draft: ExamSummary): OptimisticUpdate<typeof exams.exams.create> =>
-  (localStore) => {
+  (localStore, args) => {
     for (const query of localStore.getAllQueries(exams.exams.list)) {
       if (
         Option.isSome(query.value) &&
@@ -226,5 +227,16 @@ export const insertDraftExam =
           })
         );
       }
+    }
+    const home = localStore.getQuery(exams.exams.home, { slug: args.slug });
+    if (Option.isSome(home)) {
+      localStore.setQuery(
+        exams.exams.home,
+        { slug: args.slug },
+        Option.some({
+          ...home.value,
+          drafts: [draft, ...home.value.drafts],
+        })
+      );
     }
   };

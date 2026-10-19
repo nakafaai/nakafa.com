@@ -3,6 +3,7 @@
 import { QueryResult, useMutation, useQuery } from "@confect/react";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import {
+  EMAIL_DOMAIN_LIMIT,
   type Policy,
   TenantPolicies,
 } from "@repo/backend/confect/tenancy/policy";
@@ -18,6 +19,7 @@ import {
   Field,
   FieldContent,
   FieldDescription,
+  FieldError,
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
@@ -31,6 +33,7 @@ import {
   CardSectionActions,
   CardSectionFooter,
 } from "@/components/shared/card/section";
+import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { setPolicyChange } from "@/components/tenant/settings/mutation.client";
 import { SettingsPage } from "@/components/tenant/settings/page";
 import { saveSchool } from "@/components/tenant/settings/save.client";
@@ -45,7 +48,9 @@ type SchoolPolicies = typeof TenantPolicies.Type;
 export function SchoolPoliciesSettings({ slug }: { slug: TenantSlug }) {
   return (
     <SettingsPage>
-      <SchoolPoliciesBody slug={slug} />
+      <ReadBoundary read={{ args: { slug }, ref: tenancy.viewer.get }}>
+        <SchoolPoliciesBody slug={slug} />
+      </ReadBoundary>
     </SettingsPage>
   );
 }
@@ -57,6 +62,9 @@ export function SchoolPoliciesSettings({ slug }: { slug: TenantSlug }) {
 function SchoolPoliciesBody({ slug }: { slug: TenantSlug }) {
   const viewer = useQuery(tenancy.viewer.get, { slug });
 
+  if (QueryResult.isFailure(viewer)) {
+    throw viewer.error;
+  }
   if (!QueryResult.isSuccess(viewer)) {
     return null;
   }
@@ -185,9 +193,19 @@ function SchoolDomainsPolicy({
   const [draft, setDraft] = useState(() =>
     Arr.join(policies.emailDomains, "\n")
   );
+  const errorId = useId();
   const domains = parseDomains(draft);
   const isChanged =
     Arr.join(domains, "\n") !== Arr.join(policies.emailDomains, "\n");
+  const invalid = Arr.filter(domains, (domain) =>
+    Option.isNone(parsedDomains([domain]))
+  );
+  let problem: string | null = null;
+  if (Arr.isReadonlyArrayNonEmpty(invalid)) {
+    problem = t("policy-domains-invalid", { domains: Arr.join(invalid, ", ") });
+  } else if (Option.isNone(parsedDomains(domains))) {
+    problem = t("policy-domains-limit", { limit: EMAIL_DOMAIN_LIMIT });
+  }
 
   return (
     <CardSection>
@@ -197,17 +215,24 @@ function SchoolDomainsPolicy({
       </CardHeader>
       <CardContent>
         <Textarea
+          aria-describedby={problem === null ? undefined : errorId}
+          aria-invalid={problem !== null}
           aria-label={t("policy-domains")}
           className="max-w-md"
           onChange={(event) => setDraft(event.target.value)}
           placeholder={t("policy-domains-placeholder")}
           value={draft}
         />
+        {problem === null ? null : (
+          <FieldError className="max-w-md" id={errorId}>
+            {problem}
+          </FieldError>
+        )}
       </CardContent>
       <CardSectionFooter hint={t("policy-domains-footer")}>
         <CardSectionActions>
           <Button
-            disabled={!isChanged || Option.isNone(parsedDomains(domains))}
+            disabled={!isChanged || problem !== null}
             onClick={() => {
               const value = parsedDomains(domains);
               if (Option.isSome(value)) {

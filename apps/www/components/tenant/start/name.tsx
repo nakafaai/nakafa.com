@@ -54,9 +54,9 @@ export function StartNameQuestion() {
   const nameId = useId();
   const slugId = useId();
   const slugLabelId = useId();
-  if (QueryResult.isFailure(check)) {
-    throw check.error;
-  }
+  // A failed check keeps the typed name and address in place, and says so beside the field, so
+  // the founder types the address again to check it, and nothing is lost.
+  const checkFailed = QueryResult.isFailure(check);
   const state =
     asked === slug && QueryResult.isSuccess(check)
       ? Option.some(check.value)
@@ -68,14 +68,16 @@ export function StartNameQuestion() {
   const addressProblem =
     (started && slug === "") ||
     Option.exists(state, (answer) => answer !== "free");
-  const message = nameProblem
-    ? t("name-error")
-    : Option.match(state, {
-        onNone: () =>
-          started && slug === "" ? t("address-invalid") : t("required-error"),
-        onSome: (answer) =>
-          answer === "free" ? t("required-error") : t(`address-${answer}`),
-      });
+  const addressMessage =
+    checkFailed && asked === slug
+      ? t("address-check-failed")
+      : Option.match(state, {
+          onNone: () =>
+            started && slug === "" ? t("address-invalid") : t("required-error"),
+          onSome: (answer) =>
+            answer === "free" ? t("required-error") : t(`address-${answer}`),
+        });
+  const message = nameProblem ? t("name-error") : addressMessage;
 
   return (
     <QuestionnaireItem

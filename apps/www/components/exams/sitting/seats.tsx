@@ -23,6 +23,8 @@ import {
   type SeatFrame,
   seatFrame,
 } from "@/components/exams/sitting/seat";
+import { TableEmpty } from "@/components/shared/table/frame";
+import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { schoolDateTimeText } from "@/components/tenant/settings/clock";
 
 /** The frame of one seat: its colour by state, dashed while the student is disconnected, and a ring when selected. */
@@ -61,13 +63,25 @@ export function SittingSeats() {
   const first = value.attempts;
 
   if (first.isDone && Arr.isReadonlyArrayEmpty(first.page)) {
-    return <p className="text-muted-foreground text-sm">{t("seats-empty")}</p>;
+    return (
+      <TableEmpty
+        act="sleeping"
+        description={t("seats-empty")}
+        title={t("seats-empty-title")}
+      />
+    );
   }
   if (
     first.isDone &&
     !Arr.some(first.page, (attempt) => matchesFilter(filter, attempt))
   ) {
-    return <p className="text-muted-foreground text-sm">{t("filter-empty")}</p>;
+    return (
+      <TableEmpty
+        act="searching"
+        description={t("filter-empty")}
+        title={t("seats-filter-title")}
+      />
+    );
   }
 
   return (
@@ -106,12 +120,7 @@ function SeatPage({
  * view, then the page after it in the same way, until the sitting has no more attempts.
  */
 function NextSeats({ cursor }: { readonly cursor: string }) {
-  const { sittingId, slug } = useSittingData();
   const [reached, setReached] = useState(false);
-  const page = useQuery(
-    exams.sittings.dashboard,
-    reached ? dashboardArgs({ sittingId, slug }, cursor) : "skip"
-  );
 
   if (!reached) {
     return (
@@ -119,6 +128,37 @@ function NextSeats({ cursor }: { readonly cursor: string }) {
         <Intersection onIntersect={() => setReached(true)} />
       </li>
     );
+  }
+  return <NextSeatsPage cursor={cursor} />;
+}
+
+/** One page of seats after the first, which a failed read shows as its own sentence with Try again. */
+function NextSeatsPage({ cursor }: { readonly cursor: string }) {
+  const { sittingId, slug } = useSittingData();
+
+  return (
+    <ReadBoundary
+      fallback={(failure) => <li className="col-span-full">{failure}</li>}
+      read={{
+        args: dashboardArgs({ sittingId, slug }, cursor),
+        ref: exams.sittings.dashboard,
+      }}
+    >
+      <NextSeatsReady cursor={cursor} />
+    </ReadBoundary>
+  );
+}
+
+/** The page of seats after the first once its read is in, with the page after it. */
+function NextSeatsReady({ cursor }: { readonly cursor: string }) {
+  const { sittingId, slug } = useSittingData();
+  const page = useQuery(
+    exams.sittings.dashboard,
+    dashboardArgs({ sittingId, slug }, cursor)
+  );
+
+  if (QueryResult.isFailure(page)) {
+    throw page.error;
   }
   if (!QueryResult.isSuccess(page)) {
     return null;

@@ -23,7 +23,7 @@ import { usePathname } from "@repo/internationalization/src/navigation";
 import { Effect } from "effect";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import type { ReactNode } from "react";
+import { type ReactNode, useTransition } from "react";
 import { AccountMenu } from "@/components/sidebar/menu/account";
 import { TenantAccountItems } from "@/components/tenant/account";
 import { signOutSchoolAccount } from "@/components/tenant/account.client";
@@ -34,10 +34,11 @@ import { isExamEditorPath } from "@/lib/settings/school";
 
 /**
  * Signs out of the school, then returns to the school address, which shows the
- * sign-in surface. A failed sign-out shows its message and keeps the page.
+ * sign-in surface. A failed sign-out shows its message and keeps the page. The
+ * promise settles when the sign-out does, so the account waits for it.
  */
 function signOutOfSchool() {
-  Effect.runFork(
+  return Effect.runPromise(
     Effect.gen(function* () {
       const destination = yield* signOutSchoolAccount();
       if (destination === "home") {
@@ -51,7 +52,8 @@ function signOutOfSchool() {
  * The account button at the foot of the school's sidebar: the viewer's round
  * avatar, the viewer's name in the school, and the role, with the account menu.
  * The school layout reads the account on the server, so the footer has no pending
- * state. The role line is left out for a viewer with no grant.
+ * state of its own. A sign-out makes the account inert until it settles, so a
+ * second press signs out once. The role line is left out for a viewer with no grant.
  */
 function TenantAccount({
   account,
@@ -63,23 +65,26 @@ function TenantAccount({
   role: TenantValue["role"];
 }) {
   const t = useTranslations("School");
+  const [isSigningOut, startSigningOut] = useTransition();
 
   return (
     <SidebarFooter className="border-t">
-      <SidebarMenu>
-        <AccountMenu
-          account={{
-            mascot: account.mascot,
-            name: account.name,
-            photo: account.image,
-          }}
-          description={role === null ? undefined : t(`role.${role}`)}
-          name={name}
-          onSignOut={signOutOfSchool}
-        >
-          <TenantAccountItems username={account.username} />
-        </AccountMenu>
-      </SidebarMenu>
+      <div inert={isSigningOut}>
+        <SidebarMenu>
+          <AccountMenu
+            account={{
+              mascot: account.mascot,
+              name: account.name,
+              photo: account.image,
+            }}
+            description={role === null ? undefined : t(`role.${role}`)}
+            name={name}
+            onSignOut={() => startSigningOut(() => signOutOfSchool())}
+          >
+            <TenantAccountItems username={account.username} />
+          </AccountMenu>
+        </SidebarMenu>
+      </div>
     </SidebarFooter>
   );
 }

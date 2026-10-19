@@ -2,7 +2,9 @@
 
 import { Button } from "@repo/design-system/components/ui/button";
 import { Effect } from "effect";
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { useTransition } from "react";
 import { signOutSchoolAccount } from "@/components/tenant/account.client";
 
 /**
@@ -17,19 +19,35 @@ async function signOutThen(path: string) {
 }
 
 /**
- * The two ways out of a school a signed-in visitor is not a member of: switch the account,
- * or sign in with a card. Both sign the account out first, because a card is redeemed only
- * from a signed-out device, and the card form opens from the address `?masuk=username`.
+ * The ways out of a school a signed-in visitor is not a member of: check again, switch the account,
+ * or sign in with a card. Checking again reads the membership once more, because an invite that an
+ * admin just sent may take a moment to appear. Both sign-outs sign the account out first, because a
+ * card is redeemed only from a signed-out device, and the card form opens from the address
+ * `?masuk=username`. Each way out is inert until its sign-out settles, so a second press signs out once.
  */
 export function TenantOutsiderActions() {
   const t = useTranslations("SchoolEntry");
+  const router = useRouter();
+  const [isSigningOut, startSigningOut] = useTransition();
 
   return (
     <div className="flex flex-wrap justify-center gap-2">
-      <Button onClick={() => signOutThen("/")} variant="outline">
+      <Button onClick={() => router.refresh()} variant="outline">
+        {t("outsider-check-again")}
+      </Button>
+      <Button
+        disabled={isSigningOut}
+        inert={isSigningOut}
+        onClick={() => startSigningOut(() => signOutThen("/"))}
+        variant="outline"
+      >
         {t("outsider-switch")}
       </Button>
-      <Button onClick={() => signOutThen("/?masuk=username")}>
+      <Button
+        disabled={isSigningOut}
+        inert={isSigningOut}
+        onClick={() => startSigningOut(() => signOutThen("/?masuk=username"))}
+      >
         {t("outsider-card")}
       </Button>
     </div>

@@ -48,10 +48,13 @@ import {
 import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, Option, Schema } from "effect";
 import { useTranslations } from "next-intl";
-import { startTransition, useId, useState } from "react";
+import { startTransition, useId, useState, useTransition } from "react";
+import { DataFailure } from "@/components/shared/failure";
+import { reloadPage } from "@/components/shared/reload";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { RoleBadge } from "@/components/tenant/role";
 import {
   assignGrantChange,
@@ -81,17 +84,8 @@ type GrantItem = PaginatedQueryItem<typeof access.grants.list>;
  */
 export function SchoolRolesSettings({ slug }: { slug: TenantSlug }) {
   const t = useTranslations("SchoolSettings");
-  const pagination = usePaginatedQuery(
-    access.grants.list,
-    { slug },
-    { initialNumItems: PAGE_SIZE }
-  );
   const [isGuiding, setIsGuiding] = useState(false);
   const [isGiving, setIsGiving] = useState(false);
-
-  if (PaginatedQueryResult.isFailure(pagination)) {
-    throw pagination.error;
-  }
 
   return (
     <SettingsPage
@@ -112,15 +106,36 @@ export function SchoolRolesSettings({ slug }: { slug: TenantSlug }) {
         </>
       }
     >
-      {pagination._tag === "LoadingFirstPage" ? null : (
+      <ReadBoundary>
+        <SchoolGrantsBody slug={slug} />
+      </ReadBoundary>
+      <SchoolRoleGuide open={isGuiding} setOpen={setIsGuiding} />
+      <SchoolGrantDialog open={isGiving} setOpen={setIsGiving} slug={slug} />
+    </SettingsPage>
+  );
+}
+
+/** The grants of the school, read a page at a time, with the table and its end. */
+function SchoolGrantsBody({ slug }: { slug: TenantSlug }) {
+  const pagination = usePaginatedQuery(
+    access.grants.list,
+    { slug },
+    { initialNumItems: PAGE_SIZE }
+  );
+
+  const failed = PaginatedQueryResult.isFailure(pagination);
+
+  return (
+    <>
+      {failed ? <DataFailure onRetry={reloadPage} /> : null}
+      {pagination._tag === "LoadingFirstPage" ||
+      (failed && Arr.isReadonlyArrayEmpty(pagination.results)) ? null : (
         <SchoolGrantTable grants={pagination.results} slug={slug} />
       )}
       {PaginatedQueryResult.isCanLoadMore(pagination) ? (
         <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
       ) : null}
-      <SchoolRoleGuide open={isGuiding} setOpen={setIsGuiding} />
-      <SchoolGrantDialog open={isGiving} setOpen={setIsGiving} slug={slug} />
-    </SettingsPage>
+    </>
   );
 }
 
@@ -362,6 +377,8 @@ function SchoolGrantDialog({
   );
   const [personId, setPersonId] = useState<PersonId | undefined>(undefined);
   const [role, setRole] = useState<BuiltinRole | undefined>(undefined);
+  // The grant's person and role stay selected until the server accepts it, and the submit waits for it.
+  const [isPending, startAssigning] = useTransition();
 
   const roleItems = Arr.map(BuiltinRole.literals, (value) => ({
     label: tSchool(`role.${value}`),
@@ -381,12 +398,14 @@ function SchoolGrantDialog({
             {common("cancel")}
           </Button>
           <Button
-            disabled={personId === undefined || role === undefined}
+            disabled={personId === undefined || role === undefined || isPending}
+            inert={isPending}
             onClick={() => {
               if (personId === undefined || role === undefined) {
                 return;
               }
-              startTransition(() =>
+              setOpen(false);
+              startAssigning(() =>
                 saveSchool(
                   () =>
                     assign({
@@ -395,10 +414,13 @@ function SchoolGrantDialog({
                       scope: { kind: "tenant" },
                       slug,
                     }),
-                  SOURCE
+                  SOURCE,
+                  () => {
+                    setPersonId(undefined);
+                    setRole(undefined);
+                  }
                 )
               );
-              setOpen(false);
             }}
             type="button"
           >

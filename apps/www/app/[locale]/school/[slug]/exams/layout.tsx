@@ -4,6 +4,7 @@ import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Effect, Option, Schema } from "effect";
 import { notFound } from "next/navigation";
 import { canOpenExams, canOpenRooms } from "@/components/tenant/exams/access";
+import { TenantSection } from "@/components/tenant/section";
 import { getToken } from "@/lib/auth/server";
 import { httpLayer } from "@/lib/convex/http";
 
@@ -46,5 +47,5 @@ export default async function SchoolExamsLayout({
     notFound();
   }
 
-  return children;
+  return <TenantSection section="exams">{children}</TenantSection>;
 }

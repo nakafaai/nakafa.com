@@ -2,11 +2,15 @@
 
 import { useMutation } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
-import { ExamTitle } from "@repo/backend/confect/exams/exam";
+import {
+  EXAM_TITLE_MAX_LENGTH,
+  ExamTitle,
+} from "@repo/backend/confect/exams/exam";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Field,
+  FieldDescription,
   FieldGroup,
   FieldLabel,
 } from "@repo/design-system/components/ui/field";
@@ -29,7 +33,7 @@ import {
 } from "effect";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { useId, useMemo, useState } from "react";
+import { useId, useMemo, useState, useTransition } from "react";
 import type { StoreApi } from "zustand";
 import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import {
@@ -72,6 +76,7 @@ export function CreateExam({
   const [picked, setPicked] = useState<string | null>(null);
   const [schoolLanguage, setSchoolLanguage] = useState<Language | null>(null);
   const id = useId();
+  const [isPending, startTransition] = useTransition();
   const names = useMemo(
     () => new Intl.DisplayNames([locale], { type: "language" }),
     [locale]
@@ -97,6 +102,8 @@ export function CreateExam({
       )
   );
   const name = Str.trim(title);
+  // A title the schema refuses is either empty or too long: the input is one line, and it is trimmed.
+  const titleTooLong = name !== "" && !Schema.is(ExamTitle)(name);
   const ready =
     Option.isSome(choice) &&
     Option.isSome(language) &&
@@ -104,7 +111,11 @@ export function CreateExam({
   const isUnitLanguage =
     Option.isSome(choice) && choice.value.language !== null;
 
-  /** Creates the exam, shows it at once, and goes to its editor once the server saves it. */
+  /**
+   * Creates the exam, shows it at once, and goes to its editor once the server saves it. The
+   * dialog closes at once, and the create button stays inert until the save settles, so a second
+   * press during the close cannot save a second exam.
+   */
   const submit = () => {
     if (!ready || Option.isNone(choice) || Option.isNone(language)) {
       return;
@@ -112,23 +123,25 @@ export function CreateExam({
     const { scope } = choice.value;
     const chosen = language.value;
     setOpen(false);
-    runExamAction(
-      placeholderExamId.pipe(
-        Effect.flatMap((draftId) => {
-          drafts.getState().start(draftId);
-          return sentAction(() =>
-            create.withOptimisticUpdate(
-              insertDraftExam({ id: draftId, language: chosen, title: name })
-            )({ language: chosen, scope, slug, title: name })
-          ).pipe(
-            Effect.ensuring(Effect.sync(() => drafts.getState().end(draftId)))
-          );
-        }),
-        Effect.tap((saved) =>
-          Effect.sync(() => router.push(`/exams/${saved.id}/edit`))
-        )
-      ),
-      { onFailure: Fn.constVoid, onSuccess: Fn.constVoid }
+    startTransition(() =>
+      runExamAction(
+        placeholderExamId.pipe(
+          Effect.flatMap((draftId) => {
+            drafts.getState().start(draftId);
+            return sentAction(() =>
+              create.withOptimisticUpdate(
+                insertDraftExam({ id: draftId, language: chosen, title: name })
+              )({ language: chosen, scope, slug, title: name })
+            ).pipe(
+              Effect.ensuring(Effect.sync(() => drafts.getState().end(draftId)))
+            );
+          }),
+          Effect.tap((saved) =>
+            Effect.sync(() => router.push(`/exams/${saved.id}/edit`))
+          )
+        ),
+        { onFailure: Fn.constVoid, onSuccess: Fn.constVoid }
+      )
     );
   };
 
@@ -142,7 +155,11 @@ export function CreateExam({
             <Button onClick={() => setOpen(false)} variant="outline">
               {common("cancel")}
             </Button>
-            <Button disabled={!ready} onClick={submit}>
+            <Button
+              disabled={!ready || isPending}
+              inert={isPending}
+              onClick={submit}
+            >
               {t("create")}
             </Button>
           </>
@@ -160,6 +177,14 @@ export function CreateExam({
               placeholder={t("untitled")}
               value={title}
             />
+            {name === "" ? (
+              <FieldDescription>{t("title-needed")}</FieldDescription>
+            ) : null}
+            {titleTooLong ? (
+              <FieldDescription>
+                {t("title-too-long", { count: EXAM_TITLE_MAX_LENGTH })}
+              </FieldDescription>
+            ) : null}
           </Field>
           <Field>
             <FieldLabel htmlFor={`${id}-unit`}>{t("unit")}</FieldLabel>

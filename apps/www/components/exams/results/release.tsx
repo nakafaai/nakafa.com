@@ -3,11 +3,7 @@
 import { useMutation } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import { Button } from "@repo/design-system/components/ui/button";
-import {
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@repo/design-system/components/ui/card";
+import { CardHeader, CardTitle } from "@repo/design-system/components/ui/card";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Clock, Effect, Option } from "effect";
 import { useTranslations } from "next-intl";
@@ -86,7 +82,6 @@ export function ReleaseCard({
       <CardSection>
         <CardHeader>
           <CardTitle>{t("results-title")}</CardTitle>
-          <CardDescription>{t("release-description")}</CardDescription>
         </CardHeader>
         <CardSectionFooter hint={t("release-footer")}>
           <CardSectionActions>

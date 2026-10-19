@@ -26,12 +26,15 @@ import {
   TableHeader,
   TableRow,
 } from "@repo/design-system/components/ui/table";
+import { buttonVariants } from "@repo/design-system/lib/button";
 import { Array as Arr, Option, Schema } from "effect";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { useState } from "react";
 import { useConvexAuth } from "@/components/providers/convex";
 import { LayoutContent } from "@/components/shared/content/layout";
+import { DataFailure } from "@/components/shared/failure";
+import { reloadPage } from "@/components/shared/reload";
 import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
 import { useTenant } from "@/components/tenant/context";
 import {
@@ -39,6 +42,8 @@ import {
   roomsArgs,
 } from "@/components/tenant/exams/rooms.client";
 import { SchoolHeader } from "@/components/tenant/header";
+import { ReadBoundary } from "@/components/tenant/read/boundary";
+import { isDenied, isLostAccess } from "@/components/tenant/refusal";
 import { schoolDateTimeText } from "@/components/tenant/settings/clock";
 
 /** One room of the exam as the list holds it. */
@@ -53,9 +58,44 @@ const ROOM_PAGE_SIZE = 20;
 /**
  * The rooms of one exam: its title in the header, the state filter, and a table of its rooms in
  * their opening order. Each room links to its proctor dashboard. A viewer the exam refuses sees
- * the header and why, so the page never shows another school's rooms or a part of them.
+ * the header and why, so the page never shows another school's rooms or a part of them. A failed
+ * read keeps the header, and offers Try again in place of the page, and a viewer who lost the
+ * school's access is sent to the refused page.
  */
 export function ExamRooms({
+  examId,
+  slug,
+}: {
+  examId: GenericId.GenericId<"exams">;
+  slug: TenantSlug;
+}) {
+  const tenant = useTenant();
+  // The exam list is for the exam editors only, so a viewer who reads rooms alone gets no link to it.
+  const examsItems = useExamsItems(tenant.canOpenExams);
+
+  return (
+    <ReadBoundary
+      fallback={(failure) => (
+        <>
+          <SchoolHeader items={examsItems} />
+          <LayoutContent className="py-6">{failure}</LayoutContent>
+        </>
+      )}
+      read={{ args: { examId, slug }, ref: exams.rooms.exam }}
+    >
+      <ExamRoomsContent examId={examId} slug={slug} />
+    </ReadBoundary>
+  );
+}
+
+/** The exam list's crumb of the rooms page, which only a viewer who may open the list has. */
+function useExamsItems(canOpenExams: boolean) {
+  const t = useTranslations("Exams");
+  return canOpenExams ? [{ href: "/exams", label: t("title") }] : [];
+}
+
+/** The rooms page once the exam's summary is in: the header with the exam's title, and the table. */
+function ExamRoomsContent({
   examId,
   slug,
 }: {
@@ -70,20 +110,23 @@ export function ExamRooms({
     exams.rooms.exam,
     isSettled ? { examId, slug } : "skip"
   );
-  // The exam list is for the exam editors only, so a viewer who reads rooms alone gets no link to it.
-  const examsItems = tenant.canOpenExams
-    ? [{ href: "/exams", label: t("title") }]
-    : [];
+  const examsItems = useExamsItems(tenant.canOpenExams);
 
   if (QueryResult.isFailure(summary)) {
-    return (
-      <>
-        <SchoolHeader items={examsItems} />
-        <p className="p-4 text-muted-foreground text-sm md:p-6">
-          {t("rooms-unavailable")}
-        </p>
-      </>
-    );
+    if (isLostAccess(summary.error)) {
+      throw summary.error;
+    }
+    if (isDenied(summary.error)) {
+      return (
+        <>
+          <SchoolHeader items={examsItems} />
+          <p className="p-4 text-muted-foreground text-sm md:p-6">
+            {t("rooms-unavailable")}
+          </p>
+        </>
+      );
+    }
+    throw summary.error;
   }
   if (!QueryResult.isSuccess(summary)) {
     return null;
@@ -105,6 +148,48 @@ export function ExamRooms({
         />
       </LayoutContent>
     </>
+  );
+}
+
+/**
+ * The empty state of the rooms table once the list is exhausted: no room yet, with the way to the
+ * editor for a viewer who may open it, or no room in the chosen state.
+ */
+function RoomsEmpty({
+  examId,
+  filter,
+}: {
+  examId: GenericId.GenericId<"exams">;
+  filter: StateFilter;
+}) {
+  const t = useTranslations("Exams");
+  const tenant = useTenant();
+
+  if (filter !== "all") {
+    return (
+      <TableEmpty
+        act="searching"
+        description={t("rooms-filter-empty-description")}
+        title={t("rooms-filter-empty")}
+      />
+    );
+  }
+  return (
+    <TableEmpty
+      act="pointing"
+      action={
+        tenant.canOpenExams ? (
+          <Link
+            className={buttonVariants({ variant: "outline" })}
+            href={`/exams/${examId}/edit`}
+          >
+            {t("rooms-empty-action")}
+          </Link>
+        ) : undefined
+      }
+      description={t("rooms-empty-description")}
+      title={t("rooms-empty")}
+    />
   );
 }
 
@@ -173,36 +258,34 @@ function RoomsTable({
     { initialNumItems: ROOM_PAGE_SIZE }
   );
 
-  if (PaginatedQueryResult.isFailure(pagination)) {
+  if (
+    PaginatedQueryResult.isFailure(pagination) &&
+    isLostAccess(pagination.error)
+  ) {
     throw pagination.error;
   }
   if (pagination._tag === "LoadingFirstPage") {
     return null;
   }
+  const failure = PaginatedQueryResult.isFailure(pagination) ? (
+    <DataFailure onRetry={reloadPage} />
+  ) : null;
   const loadMoreTrigger = PaginatedQueryResult.isCanLoadMore(pagination) ? (
     <Intersection onIntersect={() => pagination.loadMore(ROOM_PAGE_SIZE)} />
   ) : null;
   if (Arr.isReadonlyArrayEmpty(pagination.results)) {
+    if (failure !== null) {
+      return failure;
+    }
     if (pagination._tag !== "Exhausted") {
       return loadMoreTrigger;
     }
-    return filter === "all" ? (
-      <TableEmpty
-        act="pointing"
-        description={t("rooms-empty-description")}
-        title={t("rooms-empty")}
-      />
-    ) : (
-      <TableEmpty
-        act="searching"
-        description={t("rooms-filter-empty-description")}
-        title={t("rooms-filter-empty")}
-      />
-    );
+    return <RoomsEmpty examId={examId} filter={filter} />;
   }
 
   return (
     <>
+      {failure}
       <TableFrame>
         <Table>
           <TableHeader>

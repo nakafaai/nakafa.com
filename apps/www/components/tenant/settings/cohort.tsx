@@ -28,15 +28,21 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import { buttonVariants } from "@repo/design-system/lib/button";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, Schema } from "effect";
+import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { startTransition, useId, useState } from "react";
+import { type ReactNode, startTransition, useId, useState } from "react";
 import { LayoutContent } from "@/components/shared/content/layout";
+import { DataFailure } from "@/components/shared/failure";
+import { reloadPage } from "@/components/shared/reload";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { SchoolHeader } from "@/components/tenant/header";
+import { ReadBoundary } from "@/components/tenant/read/boundary";
+import { isDenied } from "@/components/tenant/refusal";
 import {
   archiveCohortChange,
   renameCohortChange,
@@ -176,9 +182,85 @@ export function SchoolCohortSettings({
   cohortId: CohortDetail["id"];
   slug: TenantSlug;
 }) {
+  return (
+    <ReadBoundary
+      fallback={(failure) => <CohortFailure>{failure}</CohortFailure>}
+      read={{ args: { cohortId, slug }, ref: tenancy.cohorts.get }}
+    >
+      <SchoolCohortPage cohortId={cohortId} slug={slug} />
+    </ReadBoundary>
+  );
+}
+
+/** The header of a cohort page whose read failed: the path to the cohorts, and the failure in the body. */
+function CohortFailure({ children }: { children: ReactNode }) {
+  const t = useTranslations("SchoolSettings");
+  const section = getSchoolSettingsSection("/settings/cohorts");
+
+  return (
+    <>
+      <SchoolHeader
+        items={[
+          { href: section.group.href, label: t(section.group.key) },
+          { label: t(section.labelKey) },
+        ]}
+        title={t(section.labelKey)}
+      />
+      <LayoutContent className="py-6">{children}</LayoutContent>
+    </>
+  );
+}
+
+/**
+ * The page of a cohort this school does not hold, a missing or a foreign one: its header, one sentence
+ * on why, and the way back to the cohorts list. Trying again cannot change that answer, so there is none.
+ */
+function CohortUnavailable() {
+  const t = useTranslations("SchoolSettings");
+  const section = getSchoolSettingsSection("/settings/cohorts");
+
+  return (
+    <>
+      <SchoolHeader
+        items={[
+          { href: section.group.href, label: t(section.group.key) },
+          { label: t(section.labelKey) },
+        ]}
+        title={t(section.labelKey)}
+      />
+      <LayoutContent className="flex w-full flex-col gap-6 py-6">
+        <TableEmpty
+          act="pointing"
+          action={
+            <Link
+              className={buttonVariants({ variant: "outline" })}
+              href={section.href}
+            >
+              {t(section.labelKey)}
+            </Link>
+          }
+          description={t("cohort-unavailable-description")}
+          title={t("cohort-unavailable")}
+        />
+      </LayoutContent>
+    </>
+  );
+}
+
+/** One cohort's page once the cohort is read. */
+function SchoolCohortPage({
+  cohortId,
+  slug,
+}: {
+  cohortId: CohortDetail["id"];
+  slug: TenantSlug;
+}) {
   const t = useTranslations("SchoolSettings");
   const cohort = useQuery(tenancy.cohorts.get, { cohortId, slug });
   if (QueryResult.isFailure(cohort)) {
+    if (isDenied(cohort.error)) {
+      return <CohortUnavailable />;
+    }
     throw cohort.error;
   }
   if (!QueryResult.isSuccess(cohort)) {
@@ -204,12 +286,14 @@ export function SchoolCohortSettings({
       </SchoolHeader>
       <LayoutContent className="flex w-full flex-col gap-6 py-6">
         <SchoolHomeroomCard cohort={detail} slug={slug} />
-        <SchoolCohortMembers
-          cohortId={cohortId}
-          isArchived={isArchived}
-          periodId={detail.periodId}
-          slug={slug}
-        />
+        <ReadBoundary>
+          <SchoolCohortMembers
+            cohortId={cohortId}
+            isArchived={isArchived}
+            periodId={detail.periodId}
+            slug={slug}
+          />
+        </ReadBoundary>
       </LayoutContent>
     </>
   );
@@ -252,13 +336,14 @@ function SchoolCohortMembers({
   );
   const cohorts = useQuery(tenancy.cohorts.list, { periodId, slug });
 
-  if (PaginatedQueryResult.isFailure(pagination)) {
-    throw pagination.error;
-  }
+  const failed = PaginatedQueryResult.isFailure(pagination);
   if (pagination._tag === "LoadingFirstPage") {
     return null;
   }
   if (Arr.isReadonlyArrayEmpty(pagination.results)) {
+    if (failed) {
+      return <DataFailure onRetry={reloadPage} />;
+    }
     return (
       <TableEmpty
         act="reading"
@@ -299,6 +384,7 @@ function SchoolCohortMembers({
 
   return (
     <>
+      {failed ? <DataFailure onRetry={reloadPage} /> : null}
       <DataTable
         columns={columns}
         data={pagination.results}

@@ -12,9 +12,16 @@ import { useTranslations } from "next-intl";
 /**
  * Keeps already loaded content visible when its next read fails. A list that
  * can ask the server again passes `onRetry`, and the failure offers that Retry,
- * so its sentence does not ask for a second try.
+ * so its sentence does not ask for a second try. `isPending` holds Retry
+ * disabled while the server's answer is awaited, with the same label.
  */
-export function DataFailure({ onRetry }: { onRetry?: () => void }) {
+export function DataFailure({
+  isPending = false,
+  onRetry,
+}: {
+  isPending?: boolean;
+  onRetry?: () => void;
+}) {
   const t = useTranslations("Common");
   return (
     <Alert variant="destructive">
@@ -22,7 +29,12 @@ export function DataFailure({ onRetry }: { onRetry?: () => void }) {
       <AlertDescription>
         {onRetry ? t("load-error-retry") : t("load-error")}
         {onRetry && (
-          <Button onClick={onRetry} size="sm" variant="outline">
+          <Button
+            disabled={isPending}
+            onClick={onRetry}
+            size="sm"
+            variant="outline"
+          >
             <HugeIcons icon={Refresh03Icon} />
             {t("retry")}
           </Button>

@@ -1,5 +1,6 @@
 import {
   Empty,
+  EmptyContent,
   EmptyDescription,
   EmptyHeader,
   EmptyTitle,
@@ -30,11 +31,14 @@ export function TableFrame({ children }: { children: ReactNode }) {
  */
 export function TableEmpty({
   act,
+  action,
   description,
   title,
 }: {
   /** What Nina does in the empty state, chosen for the list. */
   act: typeof ActSchema.Type;
+  /** The way on that fixes the empty state, when the list has one, such as a link to the page that adds the first record. */
+  action?: ReactNode;
   description: string;
   title: string;
 }) {
@@ -46,6 +50,7 @@ export function TableEmpty({
           <EmptyTitle className="text-base">{title}</EmptyTitle>
           <EmptyDescription>{description}</EmptyDescription>
         </EmptyHeader>
+        {action === undefined ? null : <EmptyContent>{action}</EmptyContent>}
       </Empty>
     </TableFrame>
   );

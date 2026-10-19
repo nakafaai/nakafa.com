@@ -1,5 +1,6 @@
 "use client";
 
+import type { Ref } from "@confect/core";
 import {
   PaginatedQueryResult,
   QueryResult,
@@ -10,6 +11,7 @@ import { useIntersection } from "@mantine/hooks";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
+import { buttonVariants } from "@repo/design-system/lib/button";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, Option } from "effect";
 import Link from "next/link";
@@ -18,14 +20,21 @@ import { useEffect, useMemo, useState } from "react";
 import { useStore } from "zustand";
 import { useConvexAuth } from "@/components/providers/convex";
 import { LayoutContent } from "@/components/shared/content/layout";
+import { DataFailure } from "@/components/shared/failure";
+import { reloadPage } from "@/components/shared/reload";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { useTenant } from "@/components/tenant/context";
 import { scopeChoices, unitLanguages } from "@/components/tenant/exams/create";
 import { CreateExam } from "@/components/tenant/exams/dialog";
 import { createExamDrafts } from "@/components/tenant/exams/drafts";
 import type { ExamSummary } from "@/components/tenant/exams/optimistic";
 import { SchoolHeader } from "@/components/tenant/header";
+import { isLostAccess } from "@/components/tenant/refusal";
+
+/** The viewer of the school, as the exam list reads it. */
+type Viewer = Ref.Returns<typeof tenancy.viewer.get>;
 
 /** How many exams the list asks for each time its end comes into view. */
 const EXAM_PAGE_SIZE = 20;
@@ -37,10 +46,13 @@ const examColumns = createColumnHelper<typeof dataTableFeatures, ExamSummary>();
  * The exams of the school, newest first, each with its title and its language. An exam that
  * the server has not saved yet is disabled until it answers. The next page loads when the end of
  * the list comes into view, so the list has no button. The create action sits in the school's
- * one header, and shows when the viewer can create an exam in at least one place.
+ * one header, and shows when the viewer can create an exam in at least one place. A failed read
+ * of the list shows its own sentence and a retry, and a viewer who lost the school's access is
+ * sent to the refused page.
  */
 export function ExamList({ slug }: { slug: TenantSlug }) {
   const t = useTranslations("Exams");
+  const tenant = useTenant();
   const locale = useLocale();
   // Both reads need the session, which Convex learns a moment after the page draws.
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
@@ -68,37 +80,102 @@ export function ExamList({ slug }: { slug: TenantSlug }) {
     () => new Intl.DisplayNames([locale], { type: "language" }),
     [locale]
   );
-  const choices = QueryResult.isSuccess(viewer)
-    ? scopeChoices(
-        viewer.value.units,
-        Arr.contains(viewer.value.can, "exam.edit")
-      )
-    : [];
-  const languages = QueryResult.isSuccess(viewer)
-    ? unitLanguages(viewer.value.units)
-    : [];
+  if (
+    PaginatedQueryResult.isFailure(pagination) &&
+    isLostAccess(pagination.error)
+  ) {
+    throw pagination.error;
+  }
+  if (QueryResult.isFailure(viewer) && isLostAccess(viewer.error)) {
+    throw viewer.error;
+  }
+  // The viewer's places to create an exam are null until the viewer's read answers.
+  const creation = QueryResult.isSuccess(viewer)
+    ? creationOf(viewer.value)
+    : null;
 
   return (
     <>
       <SchoolHeader items={[{ label: t("title") }]} title={t("title")}>
-        {choices.length > 0 ? (
+        {creation !== null && creation.choices.length > 0 ? (
           <CreateExam
-            choices={choices}
+            choices={creation.choices}
             drafts={drafts}
-            languages={languages}
+            languages={creation.languages}
             slug={slug}
           />
         ) : null}
       </SchoolHeader>
       <LayoutContent className="flex w-full flex-col gap-6 py-6">
-        {pagination._tag === "LoadingFirstPage" ? null : (
-          <ExamTable exams={pagination.results} names={names} saving={saving} />
-        )}
+        <ExamListRows
+          canManage={tenant.canManage}
+          creation={creation}
+          exams={pagination.results}
+          failed={PaginatedQueryResult.isFailure(pagination)}
+          loadingFirst={pagination._tag === "LoadingFirstPage"}
+          names={names}
+          saving={saving}
+          viewerFailed={QueryResult.isFailure(viewer)}
+        />
         <div aria-hidden ref={ref} />
       </LayoutContent>
     </>
   );
 }
+
+/** The places the viewer may create an exam in, and the languages they take. */
+function creationOf(viewer: Viewer) {
+  return {
+    choices: scopeChoices(viewer.units, Arr.contains(viewer.can, "exam.edit")),
+    languages: unitLanguages(viewer.units),
+  };
+}
+
+/**
+ * The rows of the exam list: the failure of its read above the rows it already holds, and the table,
+ * or nothing while the first page loads. A first page that failed shows the failure alone.
+ */
+function ExamListRows({
+  canManage,
+  creation,
+  exams: rows,
+  failed,
+  loadingFirst,
+  names,
+  saving,
+  viewerFailed,
+}: {
+  canManage: boolean;
+  creation: Creation | null;
+  exams: readonly ExamSummary[];
+  failed: boolean;
+  loadingFirst: boolean;
+  names: Intl.DisplayNames;
+  saving: readonly ExamSummary["id"][];
+  viewerFailed: boolean;
+}) {
+  if (loadingFirst) {
+    return null;
+  }
+  if (failed && Arr.isReadonlyArrayEmpty(rows)) {
+    return <DataFailure onRetry={reloadPage} />;
+  }
+  return (
+    <>
+      {failed || viewerFailed ? <DataFailure onRetry={reloadPage} /> : null}
+      <ExamTable
+        canManage={canManage}
+        creation={creation}
+        exams={rows}
+        names={names}
+        saving={saving}
+      />
+    </>
+  );
+}
+
+/** The places the viewer may create an exam in, and the languages they take. */
+type Creation = ReturnType<typeof creationOf>;
 
 /**
  * The exams in a data table: the title links to its editor, the language filters the list by
@@ -107,10 +184,15 @@ export function ExamList({ slug }: { slug: TenantSlug }) {
  * no exam, the table's empty state shows instead.
  */
 function ExamTable({
+  canManage,
+  creation,
   exams: rows,
   names,
   saving,
 }: {
+  canManage: boolean;
+  /** The viewer's places to create an exam, or null while the viewer's read has not answered. */
+  creation: Creation | null;
   exams: readonly ExamSummary[];
   names: Intl.DisplayNames;
   saving: readonly ExamSummary["id"][];
@@ -118,11 +200,12 @@ function ExamTable({
   const t = useTranslations("Exams");
 
   if (Arr.isReadonlyArrayEmpty(rows)) {
-    return (
-      <TableEmpty
-        act="writing"
-        description={t("create-description")}
-        title={t("empty")}
+    // An empty list says why it is empty only once the viewer's places are known, so it never
+    // says "no unit" while the viewer's read is still in flight.
+    return creation === null ? null : (
+      <NoExamEmpty
+        canManage={canManage}
+        hasUnit={creation.choices.length > 0}
       />
     );
   }
@@ -192,6 +275,47 @@ function ExamTable({
       ]}
       rowId={(exam) => exam.id}
       search={{ column: "title", placeholder: t("exams-search") }}
+    />
+  );
+}
+
+/**
+ * The empty state of the exam list. A viewer with no unit to create an exam in is told why and
+ * where it is fixed: a manager goes to the units, and anyone else is told to ask an admin.
+ */
+function NoExamEmpty({
+  canManage,
+  hasUnit,
+}: {
+  canManage: boolean;
+  hasUnit: boolean;
+}) {
+  const t = useTranslations("Exams");
+
+  if (hasUnit) {
+    return (
+      <TableEmpty
+        act="writing"
+        description={t("create-description")}
+        title={t("empty")}
+      />
+    );
+  }
+  return (
+    <TableEmpty
+      act="pointing"
+      action={
+        canManage ? (
+          <Link
+            className={buttonVariants({ variant: "outline" })}
+            href="/settings/units"
+          >
+            {t("no-unit-action")}
+          </Link>
+        ) : undefined
+      }
+      description={canManage ? t("no-unit-description") : t("no-unit-member")}
+      title={t("empty")}
     />
   );
 }

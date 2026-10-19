@@ -12,9 +12,9 @@ import { SchoolMark } from "@/components/tenant/mark";
 import { TenantOutsiderActions } from "@/components/tenant/outsider.client";
 
 /**
- * The page of a signed-in visitor who is not a member of the school. It names the account
- * in one sentence and offers the two ways out. It reuses the entry frame, so the visitor
- * sees the school's own mark, as a signed-out visitor does.
+ * The page of a signed-in visitor who is not a member of the school. It names the account,
+ * says where an invite may still be on its way, and offers the ways out. It reuses the entry
+ * frame, so the visitor sees the school's own mark, as a signed-out visitor does.
  */
 export async function TenantOutsider({
   account,
@@ -45,6 +45,9 @@ export async function TenantOutsider({
             <h1 className="font-semibold text-2xl">{t("outsider-title")}</h1>
             <p className="text-muted-foreground">
               {t("outsider-description", { account, school })}
+            </p>
+            <p className="text-muted-foreground text-sm">
+              {t("outsider-hint")}
             </p>
           </div>
 

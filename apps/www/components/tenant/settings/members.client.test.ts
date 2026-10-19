@@ -1,4 +1,4 @@
-import { describe, expect, it } from "@effect/vitest";
+import { afterEach, describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
 import identity from "@repo/backend/confect/_generated/refs/identity";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
@@ -7,17 +7,15 @@ import { Array as Arr, Option, Schema } from "effect";
 import {
   addMemberChange,
   addStudentChange,
+  reissueCardChange,
   removeMemberChange,
 } from "@/components/tenant/settings/members.client";
-import {
-  isDraft,
-  type Login,
-  type Member,
-} from "@/components/tenant/settings/state";
+import { isDraft, type Member } from "@/components/tenant/settings/state";
 import { createLocalStore } from "@/test/optimistic";
 import {
   invite,
   later,
+  login,
   otherSlug,
   pageOf,
   paging,
@@ -33,18 +31,6 @@ function member(id: string, name: string): Member {
     name,
     roles: ["teacher"],
     status: "joined",
-  };
-}
-
-/** One school login as the logins list shows it. */
-function login(loginName: string): Login {
-  return {
-    issuedAt: 1_800_000_000_000,
-    loginName,
-    person: {
-      id: Schema.decodeUnknownSync(Id("tenantPeople"))(`p-${loginName}`),
-      name: `Siswa ${loginName}`,
-    },
   };
 }
 
@@ -238,5 +224,71 @@ describe("components/tenant/settings/members.client", () => {
     expect(namesOf(paging, slug)).toEqual(["Baru"]);
     expect(namesOf(later, slug)).toEqual([]);
     expect(namesOf(paging, otherSlug)).toEqual(["Lama"]);
+  });
+
+  describe("the logins of the school", () => {
+    const reissuedId = login("guru.lama").person.id;
+    const reissuedAt = Date.UTC(2026, 9, 19, 8, 0, 0);
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it("shows the card of a reissued login as issued now, on every loaded page of the school's logins", () => {
+      vi.useFakeTimers({ toFake: ["Date"] });
+      vi.setSystemTime(reissuedAt);
+      const local = createLocalStore();
+      local.seed(
+        identity.logins.list,
+        { paginationOpts: paging, slug },
+        pageOf([login("guru.lama", 1), login("siswa.baru", 1)])
+      );
+      local.seed(
+        identity.logins.list,
+        { paginationOpts: later, slug },
+        pageOf([login("guru.lama", 1)])
+      );
+      reissueCardChange(local.store, { personId: reissuedId, slug });
+      const issuedOf = (pagination: typeof paging | typeof later) =>
+        Arr.map(
+          Option.getOrThrow(
+            local.store.getQuery(identity.logins.list, {
+              paginationOpts: pagination,
+              slug,
+            })
+          ).page,
+          (item) => [item.loginName, item.issuedAt]
+        );
+      expect(issuedOf(paging)).toEqual([
+        ["guru.lama", reissuedAt],
+        ["siswa.baru", 1],
+      ]);
+      expect(issuedOf(later)).toEqual([["guru.lama", reissuedAt]]);
+    });
+
+    it("leaves the logins of another school as they are", () => {
+      const local = createLocalStore();
+      local.seed(
+        identity.logins.list,
+        { paginationOpts: paging, slug: otherSlug },
+        pageOf([login("guru.lama", 1)])
+      );
+      reissueCardChange(local.store, { personId: reissuedId, slug });
+      expect(local.written()).toEqual([]);
+      expect(
+        Option.getOrThrow(
+          local.store.getQuery(identity.logins.list, {
+            paginationOpts: paging,
+            slug: otherSlug,
+          })
+        ).page
+      ).toEqual([login("guru.lama", 1)]);
+    });
+
+    it("writes no login while the school's logins are not loaded", () => {
+      const local = createLocalStore();
+      reissueCardChange(local.store, { personId: reissuedId, slug });
+      expect(local.written()).toEqual([]);
+    });
   });
 });

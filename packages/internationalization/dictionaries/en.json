@@ -13,7 +13,7 @@
     "greeting-afternoon": "Good afternoon, {name}",
     "greeting-evening": "Good evening, {name}",
     "tile-live": "In progress",
-    "tile-live-empty": "No sitting is running now.",
+    "tile-live-empty": "No sitting is running now. Results of finished sittings are in each exam's rooms.",
     "tile-live-footer": "Open a room to watch its students.",
     "tile-next": "Up next",
     "tile-next-empty": "No sitting opens in the next 14 days.",
@@ -44,7 +44,10 @@
     "tile-student": "Your sittings",
     "sittings-empty": "No sitting is open to you",
     "sittings-empty-description": "Your teacher schedules a sitting, and it appears here.",
-    "sittings-next": "The next sitting opens {time}."
+    "sittings-next": "The next sitting opens {time}.",
+    "refused-title": "Your access to this school has changed.",
+    "refused-description": "Ask an admin of this school to check your access, or go back to Nakafa.",
+    "welcome-footer": "The exams you may take or watch are listed on this page."
   },
   "SchoolEntry": {
     "card-code-description": "Only for your first sign-in or after a new card is printed.",
@@ -67,7 +70,9 @@
     "submitting": "Signing in...",
     "username-action": "Sign in with a username",
     "username-footer": "The card code works once, and sets the password you sign in with.",
-    "username-label": "School username"
+    "username-label": "School username",
+    "outsider-hint": "If an admin invited this address, the invite can take a moment to appear. Check again, or ask an admin to send it again. If the invite went to another address, sign in with that one.",
+    "outsider-check-again": "Check again"
   },
   "Exams": {
     "token": "Token",
@@ -220,6 +225,7 @@
     "rooms-title": "Rooms",
     "rooms-empty": "No rooms yet",
     "rooms-empty-description": "Each room appears here once the exam is scheduled.",
+    "rooms-empty-action": "Open the exam",
     "rooms-filter-empty": "No room is in this state",
     "rooms-filter-empty-description": "Choose another state to see the other rooms.",
     "rooms-unavailable": "You cannot view the rooms of this exam.",
@@ -240,7 +246,18 @@
     "student-back-home": "Back to home",
     "flag-question": "Flag for review",
     "student-view-results": "View results",
-    "seat-last-activity": "Last activity {time}."
+    "seat-last-activity": "Last activity {time}.",
+    "title-needed": "The exam needs a title before you can create it.",
+    "title-too-long": "The title can have at most {count} characters.",
+    "no-unit-description": "An exam belongs to a unit. Add or restore one in the settings first.",
+    "no-unit-action": "Open units",
+    "no-unit-member": "An exam belongs to a unit. Ask an admin of this school to add one.",
+    "schedule-keys-numbered": "{count, plural, one {Mark the correct answer of question {questions} first.} other {Mark the correct answer of questions {questions} first.}}",
+    "room-needed": "Give the room a name first.",
+    "starts-needed": "Choose when the sitting starts.",
+    "seats-empty-title": "No seat yet",
+    "seats-filter-title": "No seat matches",
+    "signals-empty-title": "No signal yet"
   },
   "SchoolSettings": {
     "school": "School",
@@ -332,6 +349,10 @@
     "cohorts-search": "Find a cohort",
     "cohorts-no-period-title": "No active period.",
     "cohorts-no-period": "Open a period first, and its cohorts appear here.",
+    "cohorts-unavailable": "The cohorts of this unit cannot be shown.",
+    "cohorts-unavailable-description": "Choose another unit to see its cohorts.",
+    "cohort-unavailable": "This cohort cannot be opened here.",
+    "cohort-unavailable-description": "This cohort may belong to another school or no longer exist. Choose a cohort from the cohorts list.",
     "placement-add": "Add student",
     "placement-add-footer": "A student belongs to one cohort in each period.",
     "placement-student": "Student",
@@ -620,7 +641,15 @@
     "student-add-footer": "Print the card before you close it, because the code is shown once.",
     "student-add-submit": "Add student",
     "invites-empty": "No invite is waiting.",
-    "invites-search": "Find an invitee"
+    "invites-search": "Find an invitee",
+    "no-unit-title": "No active unit yet",
+    "no-unit-description": "Periods and cohorts belong to an active unit. Restore or add one first.",
+    "no-unit-action": "Open units",
+    "cohorts-no-period-action": "Open periods",
+    "members-empty-action": "Open invitations",
+    "student-login-rule": "Use 3 to 32 characters: a to z, 0 to 9, dot, underscore or hyphen.",
+    "policy-domains-invalid": "Check these domains: {domains}. Write one domain on each line.",
+    "policy-domains-limit": "Use up to {limit} different domains, each on its own line."
   },
   "Classroom": {
     "tabs-home": "Home",
@@ -635,7 +664,9 @@
     "channel-name": "Channel name",
     "channel-name-taken": "Another channel of this class has this name.",
     "channel-limit-reached": "This class holds the most channels it can.",
-    "add-submit": "Add"
+    "add-submit": "Add",
+    "channel-name-needed": "Give the channel a name first.",
+    "channel-name-too-long": "The name can have at most {count} characters."
   },
   "SchoolStart": {
     "metadata-title": "Open your school",
@@ -749,7 +780,9 @@
     "founder-link": "Talk to the founder",
     "consent": "Opening a school accepts the <terms>Terms</terms> and the <privacy>Privacy Policy</privacy>.",
     "finish": "Open school",
-    "required-error": "Choose an answer."
+    "required-error": "Choose an answer.",
+    "school-limit-line": "Founding more schools needs a conversation first.",
+    "address-check-failed": "We could not check this address. Type it again to check it."
   },
   "Metadata": {
     "title": "Nakafa: Free Lessons from K-12 to University",
@@ -762,6 +795,7 @@
   "Common": {
     "load-error": "We could not load this data. Please try again.",
     "load-error-retry": "We could not load this data.",
+    "part-denied": "This part of the school is not open to you.",
     "retry": "Retry",
     "copyright": "Copyright © {year} {companyName}. All rights reserved.",
     "made-with-love": "Made with love",
@@ -1615,6 +1649,134 @@
     "sitting-question-missing": {
       "title": "Question not in this exam.",
       "description": "Reload the sitting to see its questions."
+    },
+    "school-refusal-period-dates": {
+      "title": "The period dates are not valid.",
+      "description": "Choose two dates, and make the start come before the end."
+    },
+    "school-refusal-period-overlaps": {
+      "title": "This period overlaps another period.",
+      "description": "Choose dates that no other period of this school uses."
+    },
+    "school-refusal-period-active": {
+      "title": "Another period is already active.",
+      "description": "Archive the active period before you open this one."
+    },
+    "school-refusal-period-not-active": {
+      "title": "This period is not active.",
+      "description": "Only an active period can be archived."
+    },
+    "school-refusal-cohort-name-taken": {
+      "title": "This cohort name is already used.",
+      "description": "Choose another name for this period."
+    },
+    "school-refusal-cohort-limit": {
+      "title": "No more cohorts fit this period.",
+      "description": "Add the cohort to another period instead."
+    },
+    "school-refusal-address-invited": {
+      "title": "This address already has an invite.",
+      "description": "Resend the pending invite from the invitations page."
+    },
+    "school-refusal-invite-domain": {
+      "title": "This email domain is not allowed.",
+      "description": "Use an address from a domain that this school admits."
+    },
+    "school-refusal-invite-pending": {
+      "title": "This person has a pending invite.",
+      "description": "Resend the pending invite instead."
+    },
+    "school-refusal-invite-expired": {
+      "title": "This invite has expired.",
+      "description": "Invite the person again to send a new one."
+    },
+    "school-refusal-invite-not-pending": {
+      "title": "This invite is no longer pending.",
+      "description": "Refresh the invitations to see its current state."
+    },
+    "school-refusal-invite-rate-limited": {
+      "title": "Too many invites were sent.",
+      "description": "Wait a while, then send this invite again."
+    },
+    "school-refusal-person-claimed": {
+      "title": "This person already has an account.",
+      "description": "Ask the person to sign in with that account."
+    },
+    "school-refusal-access": {
+      "title": "Your access to this school has changed.",
+      "description": "Ask an admin of this school to check your access."
+    },
+    "school-refusal-action-closed": {
+      "title": "An action is not open to API clients.",
+      "description": "Remove it from the client, then create the client again."
+    },
+    "school-refusal-promotion-state": {
+      "title": "This period cannot open yet.",
+      "description": "Apply the promotion into this period first."
+    },
+    "school-refusal-last-owner": {
+      "title": "The last owner cannot be removed.",
+      "description": "Give the owner role to another person first."
+    },
+    "school-refusal-grant-role": {
+      "title": "This role cannot be given here.",
+      "description": "Choose another role for this person."
+    },
+    "school-refusal-grant-scope": {
+      "title": "Owners hold the whole school only.",
+      "description": "Choose the whole school as the scope of this role."
+    },
+    "school-refusal-grant-limit": {
+      "title": "This person holds enough roles.",
+      "description": "Remove one role before you give another."
+    },
+    "school-refusal-person-inactive": {
+      "title": "This person is no longer active.",
+      "description": "Invite the person again to restore access."
+    },
+    "school-refusal-person-kind": {
+      "title": "This role does not fit this person.",
+      "description": "Choose a role that fits this kind of person."
+    },
+    "school-refusal-temporary-role": {
+      "title": "This role cannot be temporary.",
+      "description": "Give owners and admins a permanent grant."
+    },
+    "school-refusal-login-name-refused": {
+      "title": "This login name is not allowed.",
+      "description": "Use 3 to 32 characters: a to z, 0 to 9, dot, underscore or hyphen."
+    },
+    "school-refusal-login-name-taken": {
+      "title": "This login name is already used.",
+      "description": "Choose another login name for this student."
+    },
+    "school-refusal-login-exists": {
+      "title": "This person has a login name.",
+      "description": "Change the name on the person's page instead."
+    },
+    "school-refusal-login-missing": {
+      "title": "This person has no login name yet.",
+      "description": "Give the person a login name first."
+    },
+    "school-refusal-person-not-placed": {
+      "title": "This student is not in this period.",
+      "description": "Place the student in a cohort of this period first."
+    },
+    "school-refusal-card-missing": {
+      "title": "No card to print yet.",
+      "description": "Issue a login card for this student first."
+    },
+    "school-refusal-card-role": {
+      "title": "Only students get a login card.",
+      "description": "Cards are issued to students only."
+    },
+    "school-refusal-npsn-invalid": {
+      "title": "The NPSN is not valid.",
+      "description": "A national school number has eight digits."
+    },
+    "school-refusal-npsn-taken": {
+      "title": "This NPSN is already used.",
+      "description": "Another unit of this school already has it."
     }
   },
   "Ai": {

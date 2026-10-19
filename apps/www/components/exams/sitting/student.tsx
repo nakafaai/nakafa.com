@@ -25,6 +25,7 @@ import {
   useId,
   useRef,
   useState,
+  useTransition,
 } from "react";
 import {
   type Admission,
@@ -44,6 +45,7 @@ import {
   CardSectionFooter,
 } from "@/components/shared/card/section";
 import { LayoutContent } from "@/components/shared/content/layout";
+import { isDenied, isLostAccess } from "@/components/tenant/refusal";
 import { schoolDateTimeText } from "@/components/tenant/settings/clock";
 
 /** An admission that lets the student into the sitting, with the attempt it opened. */
@@ -76,14 +78,14 @@ export function StudentSitting({
   const [admitted, setAdmitted] = useState<Admitted | null>(null);
   const [message, setMessage] = useState<typeof EntryMessage.Type | null>(null);
   const [tokenText, setTokenText] = useState("");
-  const [entering, setEntering] = useState(false);
   const resumed = useRef(false);
   const tokenId = useId();
+  // The entry waits for the server's answer: a second press would send a second device with the same token.
+  const [entering, startEntering] = useTransition();
   const ready = QueryResult.isSuccess(view);
 
   /** Shows the admission, or the sentence that explains why the entry was refused. */
   const receive = useCallback((next: Admission) => {
-    setEntering(false);
     if (next._tag === "admitted") {
       setAdmitted(next);
       setMessage(null);
@@ -111,7 +113,10 @@ export function StudentSitting({
   }, [enter, ready, receive, sittingId, slug]);
 
   if (QueryResult.isFailure(view)) {
-    return view.error._tag === "NotInSitting" ? (
+    if (isLostAccess(view.error)) {
+      throw view.error;
+    }
+    return view.error._tag === "NotInSitting" || isDenied(view.error) ? (
       <StudentRefusal />
     ) : (
       <StudentRetry error={view.error} />
@@ -142,8 +147,9 @@ export function StudentSitting({
   /** Enters with the token that the student typed. */
   function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setEntering(true);
-    enter({ sittingId, slug, token: tokenText.trim() }, receive);
+    startEntering(async () => {
+      await enter({ sittingId, slug, token: tokenText.trim() }, receive);
+    });
   }
 
   return (
