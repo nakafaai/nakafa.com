@@ -36,6 +36,7 @@ import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
+import { isDenied } from "@/components/tenant/refusal";
 import { SchoolCohortMenu } from "@/components/tenant/settings/cohort";
 import { createCohortChange } from "@/components/tenant/settings/cohorts.client";
 import { SettingsPage } from "@/components/tenant/settings/page";
@@ -164,6 +165,18 @@ function SchoolCohortsOfPeriod({
   const t = useTranslations("SchoolSettings");
   const active = useQuery(tenancy.cohorts.activePeriod, { slug, unitId });
   if (QueryResult.isFailure(active)) {
+    if (isDenied(active.error)) {
+      return (
+        <SettingsPage>
+          {choice}
+          <TableEmpty
+            act="pointing"
+            description={t("cohorts-unavailable-description")}
+            title={t("cohorts-unavailable")}
+          />
+        </SettingsPage>
+      );
+    }
     throw active.error;
   }
   const periodId = QueryResult.isSuccess(active) ? active.value : undefined;

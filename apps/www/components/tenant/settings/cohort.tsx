@@ -28,8 +28,10 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import { buttonVariants } from "@repo/design-system/lib/button";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, Schema } from "effect";
+import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { type ReactNode, startTransition, useId, useState } from "react";
 import { LayoutContent } from "@/components/shared/content/layout";
@@ -38,6 +40,7 @@ import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { SchoolHeader } from "@/components/tenant/header";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
+import { isDenied } from "@/components/tenant/refusal";
 import {
   archiveCohortChange,
   renameCohortChange,
@@ -206,6 +209,42 @@ function CohortFailure({ children }: { children: ReactNode }) {
   );
 }
 
+/**
+ * The page of a cohort this school does not hold, a missing or a foreign one: its header, one sentence
+ * on why, and the way back to the cohorts list. Trying again cannot change that answer, so there is none.
+ */
+function CohortUnavailable() {
+  const t = useTranslations("SchoolSettings");
+  const section = getSchoolSettingsSection("/settings/cohorts");
+
+  return (
+    <>
+      <SchoolHeader
+        items={[
+          { href: section.group.href, label: t(section.group.key) },
+          { label: t(section.labelKey) },
+        ]}
+        title={t(section.labelKey)}
+      />
+      <LayoutContent className="flex w-full flex-col gap-6 py-6">
+        <TableEmpty
+          act="pointing"
+          action={
+            <Link
+              className={buttonVariants({ variant: "outline" })}
+              href={section.href}
+            >
+              {t(section.labelKey)}
+            </Link>
+          }
+          description={t("cohort-unavailable-description")}
+          title={t("cohort-unavailable")}
+        />
+      </LayoutContent>
+    </>
+  );
+}
+
 /** One cohort's page once the cohort is read. */
 function SchoolCohortPage({
   cohortId,
@@ -217,6 +256,9 @@ function SchoolCohortPage({
   const t = useTranslations("SchoolSettings");
   const cohort = useQuery(tenancy.cohorts.get, { cohortId, slug });
   if (QueryResult.isFailure(cohort)) {
+    if (isDenied(cohort.error)) {
+      return <CohortUnavailable />;
+    }
     throw cohort.error;
   }
   if (!QueryResult.isSuccess(cohort)) {
