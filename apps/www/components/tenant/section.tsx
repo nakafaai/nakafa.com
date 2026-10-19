@@ -15,7 +15,7 @@ import { TenantRefused } from "@/components/tenant/refused";
 type Viewer = Ref.Returns<typeof tenancy.viewer.get>;
 
 /** The school sections whose layouts check the viewer's grant on the server. */
-export type TenantSectionName = "exams" | "settings";
+type TenantSectionName = "exams" | "settings";
 
 /** The grant that each section's layout checks, so a change made while the page is open answers the same way. */
 const SECTION_GRANTS: Readonly<
