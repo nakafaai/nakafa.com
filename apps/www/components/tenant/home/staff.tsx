@@ -25,8 +25,8 @@ import { ReadBoundary } from "@/components/tenant/read/boundary";
 
 /**
  * The home of a viewer who watches rooms or creates exams. One read brings the rooms, the results, and the drafts,
- * and the setup tile reads the school's setup on its own. Until the reads that its tiles need have answered, the
- * quiet state holds the place, and then every tile appears at once, so no tile that is shown moves when another
+ * and the setup tile reads the school's setup on its own. Until the reads that its tiles need have answered,
+ * nothing shows below the title, and then every tile appears at once, so no tile that is shown moves when another
  * arrives.
  */
 export function StaffHome({ drafts }: { drafts: StoreApi<ExamDrafts> }) {
@@ -61,9 +61,7 @@ function StaffTiles({ drafts }: { drafts: StoreApi<ExamDrafts> }) {
     QueryResult.isSuccess(exams) &&
     (!tenant.canManage || (setupAnswered && viewerAnswered));
   if (!ready) {
-    return tenant.home.canWatch ? (
-      <QuietState act="sleeping">{""}</QuietState>
-    ) : null;
+    return null;
   }
   const { closed, drafts: draftRows, live, next } = exams.value;
   const plan = staffPlan({

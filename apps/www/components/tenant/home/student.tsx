@@ -30,8 +30,8 @@ type Sitting = typeof StudentSittingRow.Type;
 
 /**
  * The home of a student: the sittings that are open or scheduled, then the results of the sittings that closed.
- * A student with neither sees Nina searching and no card. While the list loads, the quiet state holds the place
- * of the tiles, and a failed read shows its own sentence and Try again.
+ * A student with neither sees Nina searching and no card. While the list loads, nothing shows below the title,
+ * and a failed read shows its own sentence and Try again.
  */
 export function StudentHome() {
   const tenant = useTenant();
@@ -60,7 +60,7 @@ function StudentTiles() {
     throw listed.error;
   }
   if (!QueryResult.isSuccess(listed)) {
-    return <QuietState act="searching">{""}</QuietState>;
+    return null;
   }
   const sittings = orderSittings(listed.value);
   const upcoming = Arr.filter(
