@@ -6,7 +6,6 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Effect, Option, Schema } from "effect";
-import { sittingCallFailure } from "@/components/exams/sitting/actions.client";
 import { finishAttempt } from "@/components/exams/sitting/attempt";
 import { isFinalRefusal } from "@/components/exams/sitting/entry";
 import { confirmAnswer } from "@/components/exams/sitting/keep";
@@ -94,9 +93,10 @@ type SentAnswer = typeof SentAnswer.Type;
 
 /**
  * Sends one answer, and settles the answer that the browser keeps for it once the server answers. A success
- * is confirmed, and so is a final refusal, because the server will not take that answer later either, and
- * the refusal's reason is shown. A refusal for a lock, and any other failure, keeps the answer for the next
- * visit to the paper to send again, and shows its reason or the generic message.
+ * is confirmed, and so is a final refusal, because the server will not take that answer later either. A
+ * refusal for a lock, and any other failure, keeps the answer for the next visit to the paper to send again.
+ * The send resolves to the failure that the caller tells the student about, or to none when the server took
+ * the answer, so each caller shows its failures with one toast.
  */
 export function useSendAnswer() {
   const answer = useAnswer();
@@ -113,12 +113,13 @@ export function useSendAnswer() {
     ).pipe(
       Effect.flatMap(Effect.fromResult),
       Effect.matchEffect({
-        onSuccess: () => confirmKept(input, answeredAt),
+        onSuccess: () =>
+          confirmKept(input, answeredAt).pipe(Effect.as(Option.none())),
         onFailure: (error) =>
           (isFinalRefusal(error)
             ? confirmKept(input, answeredAt)
             : Effect.void
-          ).pipe(Effect.andThen(sittingCallFailure(error))),
+          ).pipe(Effect.as(Option.some(error))),
       })
     );
 }

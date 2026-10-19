@@ -17,6 +17,8 @@ import { serverClockOffset } from "@/components/exams/sitting/clock";
 import {
   readSittingDevice,
   rememberSittingDevice,
+  reusedDeviceOf,
+  type SittingFlight,
 } from "@/components/exams/sitting/device";
 import {
   EntryMessage,
@@ -42,13 +44,6 @@ const Admission = Schema.Union([
 ]);
 export type Admission = typeof Admission.Type;
 
-/** The device that one entry sends, while the entry is in flight and before the browser keeps it. */
-const Flight = Schema.Struct({
-  deviceId: DeviceId,
-  sittingId: Id("examSittings"),
-});
-type Flight = typeof Flight.Type;
-
 /**
  * The device of one entry: the one the browser keeps, else the one that an entry in flight already
  * sent, else a new one. A second press while the first entry is in flight reuses its device, so the
@@ -56,14 +51,15 @@ type Flight = typeof Flight.Type;
  */
 const deviceFor = Effect.fn("exams.sitting.admit.device")(function* (
   sittingId: GenericId.GenericId<"examSittings">,
-  flight: Flight | null
+  flight: SittingFlight | null
 ) {
-  const stored = yield* readSittingDevice(sittingId);
-  if (Option.isSome(stored)) {
-    return stored.value;
-  }
-  if (flight !== null && flight.sittingId === sittingId) {
-    return flight.deviceId;
+  const reused = reusedDeviceOf(
+    yield* readSittingDevice(sittingId),
+    flight,
+    sittingId
+  );
+  if (Option.isSome(reused)) {
+    return reused.value;
   }
   const uuid = yield* randomUuid;
   return yield* Schema.decodeEffect(DeviceId)(uuid).pipe(Effect.orDie);
@@ -107,7 +103,7 @@ function failureOf(
  */
 export function useEnterSitting() {
   const enter = useMutation(exams.sittings.enter);
-  const flight = useRef<Flight | null>(null);
+  const flight = useRef<SittingFlight | null>(null);
 
   /** Sends one entry from one device, and hands the outcome to the screen once the server answers. */
   function send(

@@ -1,3 +1,4 @@
+import { Id } from "@repo/backend/confect/_generated/id";
 import { DeviceId } from "@repo/backend/confect/exams/sittings/schema";
 import { Effect, Option, Schema } from "effect";
 
@@ -54,6 +55,32 @@ export const readSittingDevice = Effect.fn("exams.sitting.device.read")(
     );
   }
 );
+
+/** The device of an entry in flight: the device that the entry sends before the browser keeps one. */
+export const SittingFlight = Schema.Struct({
+  deviceId: DeviceId,
+  sittingId: Id("examSittings"),
+});
+export type SittingFlight = typeof SittingFlight.Type;
+
+/**
+ * The device that one entry reuses: the one the browser keeps for the sitting, else the one that an entry in
+ * flight for the same sitting sends, so a second press admits the same attempt. None means the entry needs a
+ * new device.
+ */
+export function reusedDeviceOf(
+  stored: Option.Option<typeof DeviceId.Type>,
+  flight: SittingFlight | null,
+  sittingId: string
+): Option.Option<typeof DeviceId.Type> {
+  if (Option.isSome(stored)) {
+    return stored;
+  }
+  if (flight !== null && flight.sittingId === sittingId) {
+    return Option.some(flight.deviceId);
+  }
+  return Option.none();
+}
 
 /**
  * Keeps the device of a sitting in this browser, so a reload enters without the token. The

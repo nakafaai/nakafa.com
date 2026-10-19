@@ -2,10 +2,15 @@
 
 import type { GenericId } from "@confect/core";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { Effect, Option, Record as Rec } from "effect";
+import { Array as Arr, Effect } from "effect";
 import { useEffect, useRef } from "react";
+import { sittingCallFailures } from "@/components/exams/sitting/actions.client";
 import { useSendAnswer } from "@/components/exams/sitting/answer.client";
-import { forgetAttempt, readKept } from "@/components/exams/sitting/keep";
+import {
+  forgetAttempt,
+  keptAnswersFor,
+  readKept,
+} from "@/components/exams/sitting/keep";
 import type { PaperValue } from "@/components/exams/sitting/paper";
 import { sittingStorage } from "@/components/exams/sitting/storage.client";
 import { reportClientException } from "@/lib/analytics/client";
@@ -13,7 +18,8 @@ import { reportClientException } from "@/lib/analytics/client";
 /**
  * Sends again the answers that the browser kept for an attempt, once its paper is on the screen. The
  * answers that were sent and never confirmed, because the page closed first, are the ones that the browser
- * still holds. The paper's questions come from the server, so each kept answer goes to its own question.
+ * still holds. The paper's questions come from the server, so each kept answer goes to its own question. The
+ * failures of the pass show one toast, not one toast for each kept answer that the server refuses.
  */
 export function useResendKeptAnswers({
   attemptId,
@@ -40,23 +46,27 @@ export function useResendKeptAnswers({
       readKept(sittingId, attemptId).pipe(
         Effect.provide(sittingStorage),
         Effect.flatMap((kept) =>
-          Effect.forEach(paper.questions, (question) =>
-            Option.match(Rec.get(question.id)(kept.answers), {
-              onNone: () => Effect.void,
-              onSome: (answer) =>
-                send(
-                  {
-                    attemptId,
-                    deviceId,
-                    questionId: question.id,
-                    response: answer.response,
-                    sittingId,
-                    slug,
-                  },
-                  answer.answeredAt
-                ),
-            })
+          Effect.forEach(
+            keptAnswersFor(
+              kept,
+              Arr.map(paper.questions, (question) => question.id)
+            ),
+            ({ answer, questionId }) =>
+              send(
+                {
+                  attemptId,
+                  deviceId,
+                  questionId,
+                  response: answer.response,
+                  sittingId,
+                  slug,
+                },
+                answer.answeredAt
+              )
           )
+        ),
+        Effect.flatMap((failures) =>
+          sittingCallFailures(Arr.getSomes(failures))
         ),
         Effect.catchTag("KeyValueStoreError", (error) =>
           reportClientException(error, {

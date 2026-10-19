@@ -11,6 +11,7 @@ import { JsonTextSchema } from "@repo/utilities/json";
 import { Array as Arr, Clock, Effect, Option, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { useId } from "react";
+import { sittingCallFailures } from "@/components/exams/sitting/actions.client";
 import { useSendAnswer } from "@/components/exams/sitting/answer.client";
 import { SittingChoice } from "@/components/exams/sitting/choice";
 import { SittingDocument } from "@/components/exams/sitting/document";
@@ -82,6 +83,10 @@ export function SittingQuestion({
           slug,
         },
         answeredAt
+      ).pipe(
+        Effect.flatMap((failure) =>
+          sittingCallFailures(Option.toArray(failure))
+        )
       )
     );
   }

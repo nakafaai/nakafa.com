@@ -59,6 +59,24 @@ export function confirmAnswerIn(
   });
 }
 
+/**
+ * The kept answers of one paper, in the paper's question order. Only a question that the paper holds gets its
+ * kept answer back, so an answer kept for another paper is never sent.
+ */
+export function keptAnswersFor<Question extends string>(
+  kept: KeptAttempt,
+  questionIds: readonly Question[]
+) {
+  return Arr.getSomes(
+    Arr.map(questionIds, (questionId) =>
+      Option.map(Rec.get(questionId)(kept.answers), (answer) => ({
+        answer,
+        questionId,
+      }))
+    )
+  );
+}
+
 /** Marks a question flagged or unflagged, with each flagged question listed once. */
 export function flagIn(
   kept: KeptAttempt,

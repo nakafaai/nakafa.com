@@ -3,8 +3,8 @@
 import { type OptimisticLocalStore, useMutation } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { toast } from "@repo/design-system/lib/toast/notify";
-import { Clock, Effect, Option, type Result } from "effect";
+import { type ToastCopy, toast } from "@repo/design-system/lib/toast/notify";
+import { Array as Arr, Clock, Effect, Option, type Result } from "effect";
 import {
   addMinutesToAttempt,
   closeSitting,
@@ -98,31 +98,40 @@ export function useChangeToken() {
   return useMutation(exams.sittings.changeToken);
 }
 
+/** The generic toast of a sitting call that failed without naming a refusal. */
+const GENERIC_FAILURE: ToastCopy = {
+  description: "action-error.description",
+  title: "action-error.title",
+};
+
 /**
- * Tells a student that a sitting call failed. A refusal names its reason and the next step, as its toast
- * says, and any other failure is reported and shown in the generic message.
+ * Tells a student that sitting calls failed, with one toast for the whole group: the copy of the first
+ * failure when it names a refusal, which says its reason and the next step, and the generic copy otherwise.
+ * Every failure that names no refusal is reported, and a group with no failure shows nothing.
  */
-export function sittingCallFailure(error: unknown) {
-  return Option.match(refusalCopyOf(error), {
-    onNone: () =>
-      reportClientException(error, {
-        source: "components/exams/sitting/actions",
-      }).pipe(
-        Effect.andThen(
-          Effect.sync(() => {
-            toast.error({
-              description: "action-error.description",
-              title: "action-error.title",
-            });
-          })
-        )
-      ),
-    onSome: (copy) =>
-      Effect.sync(() => {
-        toast.error(copy);
-      }),
-  });
-}
+export const sittingCallFailures = Effect.fn("exams.sitting.actions.failures")(
+  function* (errors: readonly unknown[]) {
+    yield* Effect.forEach(
+      Arr.filter(errors, (error) => Option.isNone(refusalCopyOf(error))),
+      (error) =>
+        reportClientException(error, {
+          source: "components/exams/sitting/actions",
+        }),
+      { discard: true }
+    );
+    const first = Arr.head(errors);
+    if (Option.isNone(first)) {
+      return;
+    }
+    const copy = Option.getOrElse(
+      refusalCopyOf(first.value),
+      () => GENERIC_FAILURE
+    );
+    yield* Effect.sync(() => {
+      toast.error(copy);
+    });
+  }
+);
 
 /**
  * Runs one server call from a control. A refused call shows its reason, and the optimistic change of the
@@ -136,7 +145,7 @@ export function runSittingCall<A, E>(
     Effect.tryPromise(call).pipe(
       Effect.flatMap(Effect.fromResult),
       Effect.matchEffect({
-        onFailure: sittingCallFailure,
+        onFailure: (error) => sittingCallFailures([error]),
         onSuccess: (value) =>
           Effect.sync(() => {
             onSuccess(value);

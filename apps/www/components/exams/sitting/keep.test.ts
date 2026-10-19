@@ -10,6 +10,7 @@ import {
   keepAnswer,
   keepAnswerIn,
   keepFlag,
+  keptAnswersFor,
   readKept,
 } from "@/components/exams/sitting/keep";
 
@@ -41,6 +42,29 @@ describe("confirmAnswerIn", () => {
 
   it("changes nothing for a question with no kept answer", () => {
     expect(confirmAnswerIn(NOTHING, QUESTION, 5)).toBe(NOTHING);
+  });
+});
+
+describe("keptAnswersFor", () => {
+  it("gives back the kept answers of the paper's questions, in the paper's order", () => {
+    const kept: KeptAttempt = {
+      answers: {
+        [QUESTION]: answerAt(1),
+        "question-b": answerAt(2),
+        "question-other-paper": answerAt(3),
+      },
+      flagged: [],
+    };
+    expect(
+      keptAnswersFor(kept, ["question-b", QUESTION, "question-c"])
+    ).toEqual([
+      { answer: answerAt(2), questionId: "question-b" },
+      { answer: answerAt(1), questionId: QUESTION },
+    ]);
+  });
+
+  it("gives back nothing for a paper with no kept answer", () => {
+    expect(keptAnswersFor(NOTHING, [QUESTION])).toEqual([]);
   });
 });
 
