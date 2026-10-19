@@ -267,12 +267,17 @@ describe("insertedAfter", () => {
 });
 
 /** A store that holds the given list pages, each with its arguments, and records what is written. */
-const listStore = (pages: unknown[]) => {
+const listStore = (
+  pages: unknown[],
+  home: Option.Option<unknown> = Option.none()
+) => {
   const getAllQueries = vi.fn();
   getAllQueries.mockReturnValue(pages);
+  const getQuery = vi.fn();
+  getQuery.mockReturnValue(home);
   const setQuery = vi.fn();
   return {
-    localStore: { getAllQueries, getQuery: vi.fn(), setQuery },
+    localStore: { getAllQueries, getQuery, setQuery },
     setQuery,
   };
 };
@@ -350,5 +355,54 @@ describe("the optimistic updates of the new questions", () => {
       firstArgs,
       Option.some({ isDone: false, page: [draft, existing] })
     );
+  });
+
+  it("show a new exam first among the drafts of the school home the store holds", () => {
+    const examIdOf = Schema.decodeUnknownSync(Id("exams"));
+    const draft: ExamSummary = {
+      id: examIdOf("draft-exam"),
+      language: Schema.decodeSync(DeliveryLanguageSchema)("id"),
+      title: "Draf",
+    };
+    const existing: ExamSummary = {
+      id: examIdOf("exam-old"),
+      language: Schema.decodeSync(DeliveryLanguageSchema)("en"),
+      title: "Lama",
+    };
+    const home = { drafts: [existing], live: [], next: [] };
+    const { localStore, setQuery } = listStore([], Option.some(home));
+
+    insertDraftExam(draft)(localStore, {
+      language: draft.language,
+      scope: { kind: "tenant" },
+      slug,
+      title: draft.title,
+    });
+
+    expect(setQuery).toHaveBeenCalledTimes(1);
+    expect(setQuery).toHaveBeenCalledWith(
+      exams.exams.home,
+      { slug },
+      Option.some({ ...home, drafts: [draft, existing] })
+    );
+  });
+
+  it("write nothing to the school home the store does not hold", () => {
+    const examIdOf = Schema.decodeUnknownSync(Id("exams"));
+    const draft: ExamSummary = {
+      id: examIdOf("draft-exam"),
+      language: Schema.decodeSync(DeliveryLanguageSchema)("id"),
+      title: "Draf",
+    };
+    const { localStore, setQuery } = listStore([]);
+
+    insertDraftExam(draft)(localStore, {
+      language: draft.language,
+      scope: { kind: "tenant" },
+      slug,
+      title: draft.title,
+    });
+
+    expect(setQuery).not.toHaveBeenCalled();
   });
 });
