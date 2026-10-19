@@ -292,6 +292,14 @@ built yet.
   average. That figure is computed from the alphabet, not measured. A bucket shared
   by every device would add no protection against that guessing, and it would let
   one person block another's card, so there is no limit per code prefix.
+- **Username attempts.** Per school login, on the school host: ten sign-in attempts
+  at once, then ten more every 15 minutes. The count belongs to the account that the
+  login names, so one login's attempts never refuse another login. An attempt takes
+  one before the password is checked, so parallel guesses cannot all pass a limit
+  that none of them has reached. A successful sign-in clears the count, so a success
+  never counts against the login. A refused attempt answers the same 401 as a wrong
+  password, whether or not the limit refused it, so the answer reveals nothing about
+  a login name. These are design choices, not measurements.
 - **Placeholder address.** An account made from a school login holds
   `<random key>@login.nakafa.invalid`, where the key is a random UUID drawn for that
   account, so the address names no one. The Convex adapter writes the Better Auth
