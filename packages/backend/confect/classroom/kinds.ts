@@ -11,8 +11,12 @@ const classReaders: (typeof RuleRole.Type)[] = ["admin", "principal", "deputy"];
  * One class: one subject taught to one cohort in one period. The Admin creates,
  * renames, archives, and assigns its subject teachers. The leaders of the school
  * read it, a subject teacher reads it through `subjectTeacher`, and a student
- * placed in its cohort reads it through `classMember`. An archived cohort,
- * period, or unit locks the class.
+ * placed in its cohort, who holds a student grant over its unit, reads it through
+ * `classMember`. An archived cohort, period, or unit locks the class.
+ *
+ * Its forum reads follow the class's readers. A topic channel is added by an
+ * Admin or by a subject teacher of the class, and a locked class refuses it, so an
+ * archived class keeps its channels readable and takes no new one.
  */
 export const classKind = Kind.make("class", "classes", {
   actions: {
@@ -23,6 +27,18 @@ export const classKind = Kind.make("class", "classes", {
       roles: ["admin"],
     },
     "class.view": {
+      access: "read",
+      grantedBy: "roles",
+      relations: ["classMember", "subjectTeacher"],
+      roles: classReaders,
+    },
+    "forum.manage": {
+      access: "write",
+      grantedBy: "roles",
+      relations: ["subjectTeacher"],
+      roles: ["admin"],
+    },
+    "forum.read": {
       access: "read",
       grantedBy: "roles",
       relations: ["classMember", "subjectTeacher"],

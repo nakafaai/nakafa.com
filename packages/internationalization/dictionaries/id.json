@@ -6,6 +6,7 @@
   "School": {
     "account-settings": "Pengaturan akun",
     "back-to-learning": "Kembali ke Nakafa",
+    "classes": "Kelas",
     "for-you": "Untukmu",
     "home": "Beranda",
     "next-exam-title": "Ujian sekolahmu",
@@ -603,6 +604,21 @@
     "student-add-submit": "Tambah siswa",
     "invites-empty": "Belum ada undangan yang menunggu.",
     "invites-search": "Cari yang diundang"
+  },
+  "Classroom": {
+    "tabs-home": "Beranda",
+    "tabs-forum": "Forum",
+    "general-channel": "Umum",
+    "channels-title": "Kanal",
+    "channels-empty": "Belum ada kanal",
+    "channels-empty-description": "Kelas ini belum memiliki kanal.",
+    "add-channel": "Tambah kanal",
+    "add-channel-title": "Tambah kanal topik",
+    "add-channel-description": "Semua anggota kelas membaca kanal topik, dan namanya tampil di daftar.",
+    "channel-name": "Nama kanal",
+    "channel-name-taken": "Kanal lain di kelas ini sudah memakai nama ini.",
+    "channel-limit-reached": "Kelas ini sudah mencapai batas jumlah kanal.",
+    "add-submit": "Tambah"
   },
   "SchoolStart": {
     "metadata-title": "Buka sekolahmu",

@@ -1,6 +1,8 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id } from "@repo/backend/confect/_generated/id";
+import { entries } from "@repo/backend/confect/access/catalog";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
+import { Kind } from "@repo/backend/confect/access/kind";
 import { ClassAccess } from "@repo/backend/confect/classroom/access";
 import {
   ClassAddress,
@@ -41,6 +43,15 @@ const ClassView = Schema.Struct({
 });
 
 /**
+ * A class as `resolve` returns it: the class, and the class actions the caller
+ * holds on it, so a page offers only the actions the caller may take.
+ */
+const ClassResolved = Schema.Struct({
+  ...ClassView.fields,
+  can: Schema.Array(Kind.actions(entries, "class")),
+});
+
+/**
  * The classes of a school. The Admin creates, renames, and archives them. The
  * roles that lead the school read a period's classes and each class, and a
  * subject teacher or a student placed in the cohort reads its own classes. A
@@ -62,6 +73,7 @@ export default GroupSpec.make()
         Schema.Union([
           AccessDenied,
           ClassAddressEmpty,
+          ClassAmbiguous,
           ClassLimit,
           ClassNameTaken,
           ClassSubjectNotAllowed,
@@ -109,16 +121,16 @@ export default GroupSpec.make()
   .addFunction(
     FunctionSpec.publicQuery({
       name: "mine",
-      args: () => ({ periodId: Id("tenantPeriods"), slug: TenantSlug }),
+      args: () => ({ slug: TenantSlug }),
       returns: () => Schema.Array(ClassView),
-      error: () => AccessDenied,
+      error: () => Schema.Never,
     })
   )
   .addFunction(
     FunctionSpec.publicQuery({
       name: "resolve",
       args: () => ({ classSlug: ClassAddress, slug: TenantSlug }),
-      returns: () => ClassView,
+      returns: () => ClassResolved,
       error: () => Schema.Union([AccessDenied, ClassAmbiguous]),
     })
   );

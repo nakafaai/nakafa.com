@@ -44,6 +44,8 @@ export const SentenceKeySchema = Schema.Literals([
   "Auth.subscriptions-description",
   "Auth.username-description",
   "Auth.username-footer",
+  "Classroom.add-channel-description",
+  "Classroom.channels-empty-description",
   "Comments.delete-description",
   "Error.description",
   "Exams.release-description",

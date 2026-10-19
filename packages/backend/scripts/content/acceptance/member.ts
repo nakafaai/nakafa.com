@@ -5,7 +5,10 @@ import {
   SESSION_LIFETIME,
   writeSessionCookie,
 } from "@repo/backend/scripts/content/acceptance/learner";
-import type { LocalRuntime } from "@repo/backend/scripts/content/acceptance/local";
+import {
+  type LocalRuntime,
+  readLocalRuntime,
+} from "@repo/backend/scripts/content/acceptance/local";
 import { JsonTextSchema } from "@repo/utilities/json";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 
@@ -56,3 +59,33 @@ export const signInInvitedMember = Effect.fn("contentAcceptance.signInMember")(
     yield* writeSessionCookie(output, account.token);
   }
 );
+
+/**
+ * Runs the seed function of one member of an opened school, then signs the account
+ * of the member's address in, so its session cookie goes to `output`. The arguments
+ * are the seed's own, encoded as the CLI takes them, and no seed runs without a
+ * local runtime.
+ */
+export const seedMember = Effect.fn("contentAcceptance.seedMember")(function* (
+  root: string,
+  member: {
+    readonly address: string;
+    readonly args: string;
+    readonly label: string;
+    readonly seed: string;
+  },
+  output: string
+) {
+  const runtime = yield* readLocalRuntime(root);
+  if (runtime === undefined) {
+    return yield* acceptanceRuntimeError(
+      `Run pnpm acceptance:prepare and start acceptance before creating a ${member.label}.`
+    );
+  }
+  yield* runLocalConvex(runtime, `${member.label} seed`, [
+    "run",
+    member.seed,
+    member.args,
+  ]);
+  yield* signInInvitedMember(runtime, member.address, output);
+});

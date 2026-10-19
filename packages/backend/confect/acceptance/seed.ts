@@ -10,6 +10,12 @@ export class SeedRefused extends Schema.TaggedError<SeedRefused>()(
   refusal("SEED_REFUSED", "Seeds run only in the acceptance runtime.")
 ) {}
 
+/** A seed that needs an active unit of its school, and the school has none. */
+export class SeedUnitMissing extends Schema.TaggedError<SeedUnitMissing>()(
+  "SeedUnitMissing",
+  refusal("SEED_UNIT_MISSING", "The school has no active unit to seed into.")
+) {}
+
 /**
  * Refuses the seed unless the Convex environment sets `ACCEPTANCE_SEED` to true. The acceptance
  * runtime writes that value into its deployment, and production and development never set it,

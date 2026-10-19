@@ -44,7 +44,7 @@ export const createSchool = Effect.fn("NakafaE2E.createSchool")(
  * command runs once per school: a second run would open the same account again.
  */
 const createMemberCookie = Effect.fn("NakafaE2E.createMemberCookie")(
-  function* (kind: "owner" | "teacher", slug: string) {
+  function* (kind: "owner" | "teacher" | "class-teacher", slug: string) {
     const fs = yield* FileSystem.FileSystem;
     const directory = yield* fs.makeTempDirectoryScoped({
       prefix: `nakafa-${kind}-`,
@@ -82,6 +82,19 @@ export const signInTeacher = Effect.fn("NakafaE2E.signInTeacher")(function* (
   const cookie = yield* createMemberCookie("teacher", slug);
   yield* addSessionCookie(context, cookie, address);
 });
+
+/**
+ * Signs the Teacher of one class into one browser context, for the school host at `address`.
+ * The acceptance runtime opens the school's active period, creates the class `Fisika X-1` in
+ * it, and makes the Teacher teach that class, so the Teacher sees the class in the sidebar.
+ * The command runs once per school, because a second run would add another class.
+ */
+export const signInClassTeacher = Effect.fn("NakafaE2E.signInClassTeacher")(
+  function* (context: BrowserContext, slug: string, address: string) {
+    const cookie = yield* createMemberCookie("class-teacher", slug);
+    yield* addSessionCookie(context, cookie, address);
+  }
+);
 
 /**
  * Invites a learner into a school that `createSchool` opened, and signs the learner into

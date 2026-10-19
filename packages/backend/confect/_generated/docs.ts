@@ -14,6 +14,7 @@ export type ChatsDoc = Document.Document<typeof schemaDefinition, "chats">;
 export type ClassGradesDoc = Document.Document<typeof schemaDefinition, "classGrades">;
 export type ClassTeachersDoc = Document.Document<typeof schemaDefinition, "classTeachers">;
 export type ClassesDoc = Document.Document<typeof schemaDefinition, "classes">;
+export type ClassroomChannelsDoc = Document.Document<typeof schemaDefinition, "classroomChannels">;
 export type CommentLikesDoc = Document.Document<typeof schemaDefinition, "commentLikes">;
 export type CommentVotesDoc = Document.Document<typeof schemaDefinition, "commentVotes">;
 export type CommentsDoc = Document.Document<typeof schemaDefinition, "comments">;
@@ -132,6 +133,7 @@ export interface Docs {
   classGrades: ClassGradesDoc;
   classTeachers: ClassTeachersDoc;
   classes: ClassesDoc;
+  classroomChannels: ClassroomChannelsDoc;
   commentLikes: CommentLikesDoc;
   commentVotes: CommentVotesDoc;
   comments: CommentsDoc;

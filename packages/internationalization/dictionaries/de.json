@@ -6,6 +6,7 @@
   "School": {
     "account-settings": "Kontoeinstellungen",
     "back-to-learning": "Zurück zu Nakafa",
+    "classes": "Klassen",
     "for-you": "Für dich",
     "home": "Startseite",
     "next-exam-title": "Prüfungen deiner Schule",
@@ -603,6 +604,21 @@
     "student-add-submit": "Schüler hinzufügen",
     "invites-empty": "Keine Einladung wartet.",
     "invites-search": "Eingeladene suchen"
+  },
+  "Classroom": {
+    "tabs-home": "Start",
+    "tabs-forum": "Forum",
+    "general-channel": "Allgemein",
+    "channels-title": "Kanal",
+    "channels-empty": "Noch kein Kanal",
+    "channels-empty-description": "Diese Klasse hat noch keinen Kanal.",
+    "add-channel": "Kanal hinzufügen",
+    "add-channel-title": "Themenkanal hinzufügen",
+    "add-channel-description": "Alle in der Klasse lesen einen Themenkanal, und sein Name steht in der Liste.",
+    "channel-name": "Kanalname",
+    "channel-name-taken": "Ein anderer Kanal dieser Klasse hat diesen Namen bereits.",
+    "channel-limit-reached": "Diese Klasse hat die maximale Anzahl an Kanälen erreicht.",
+    "add-submit": "Hinzufügen"
   },
   "SchoolStart": {
     "metadata-title": "Eigene Schule eröffnen",

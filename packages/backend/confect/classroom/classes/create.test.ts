@@ -6,6 +6,7 @@ import {
   classOf,
   cohort,
   denied,
+  firstPage,
   nf,
   period,
   sdUnit,
@@ -14,10 +15,28 @@ import { journal, slugOf, tenancyFixture } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect } from "effect";
 
 const { archive, create, rename } = refs.public.classroom.classes;
+const channels = refs.public.classroom.forum.channels;
 const periods = refs.public.tenancy.periods;
 const cohorts = refs.public.tenancy.cohorts;
 
 describe("classroom/classes create", () => {
+  it.effect(
+    "writes the general channel with the class, so it is listed first",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const term = yield* period(fixture, fixture.units.smp);
+        const x1 = yield* cohort(fixture, term.id, "X-1");
+        const made = yield* classOf(fixture, x1.id, "Fisika");
+        const listed = yield* fixture
+          .as("admin")
+          .query(channels.list, { ...firstPage, classId: made.id, slug: nf });
+        expect(listed.page).toEqual([
+          { id: expect.any(String), kind: "general", name: "general" },
+        ]);
+      })
+  );
+
   it.effect(
     "creates an active class named for its subject, and records it",
     () =>

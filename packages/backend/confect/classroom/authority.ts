@@ -6,6 +6,7 @@ import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { Authority } from "@repo/backend/confect/access/policy";
 import { Class, ClassAccess } from "@repo/backend/confect/classroom/access";
 import { classKind } from "@repo/backend/confect/classroom/kinds";
+import { attendsUnit } from "@repo/backend/confect/classroom/student";
 import {
   teacherAssignment,
   teachesUnit,
@@ -64,13 +65,19 @@ export const placeClass = (row: ClassesDoc) =>
     }))
   );
 
-/** Whether a Person is a student placed in the cohort of the class, in the class's period. */
+/**
+ * Whether a Person is a student placed in the cohort of the class, in the class's
+ * period. The placement counts only while the Person still holds a student grant
+ * over the class's unit: revoking the grant ends the class at once.
+ */
 export const classMemberOf = (row: ClassesDoc, member: Member["Service"]) =>
-  placementOf(row.periodId, member.person._id).pipe(
-    Effect.map((placement) =>
-      Option.exists(placement, (found) => found.cohortId === row.cohortId)
-    )
-  );
+  attendsUnit(member.grants, row.unitId)
+    ? placementOf(row.periodId, member.person._id).pipe(
+        Effect.map((placement) =>
+          Option.exists(placement, (found) => found.cohortId === row.cohortId)
+        )
+      )
+    : Effect.succeed(false);
 
 /**
  * Whether a Person teaches the class. The assignment counts only while the Person
@@ -87,8 +94,9 @@ export const subjectTeacherOf = (row: ClassesDoc, member: Member["Service"]) =>
 /**
  * A class is locked once it, its cohort, its period, or its unit is archived,
  * and its unit's grants cover it. `classMember` holds for a student placed in its
- * cohort in its period, and `subjectTeacher` for a Person assigned to teach it
- * who still holds a teacher grant over its unit.
+ * cohort in its period who still holds a student grant over its unit, and
+ * `subjectTeacher` for a Person assigned to teach it who still holds a teacher
+ * grant over its unit. A revoked grant ends either relation at once.
  */
 export const classAuthority = Authority.make(
   classKind,

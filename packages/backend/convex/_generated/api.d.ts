@@ -330,7 +330,7 @@ export declare const api: {
       mine: FunctionReference<
         "query",
         "public",
-        { periodId: Id<"tenantPeriods">; slug: string },
+        { slug: string },
         Array<{
           cohortId: Id<"tenantCohorts">;
           id: Id<"classes">;
@@ -360,6 +360,14 @@ export declare const api: {
         "public",
         { classSlug: string; slug: string },
         {
+          can: Array<
+            | "class.manage"
+            | "class.view"
+            | "forum.manage"
+            | "forum.read"
+            | "grade.enter"
+            | "grade.list"
+          >;
           cohortId: Id<"tenantCohorts">;
           id: Id<"classes">;
           name: string;
@@ -369,6 +377,47 @@ export declare const api: {
           subject?: string;
         }
       >;
+    };
+    forum: {
+      channels: {
+        add: FunctionReference<
+          "mutation",
+          "public",
+          { classId: Id<"classes">; name: string; slug: string },
+          {
+            id: Id<"classroomChannels">;
+            kind: "general" | "topic";
+            name: string;
+          }
+        >;
+        list: FunctionReference<
+          "query",
+          "public",
+          {
+            classId: Id<"classes">;
+            paginationOpts: {
+              cursor: string | null;
+              endCursor?: string | null;
+              id?: number;
+              maximumBytesRead?: number;
+              maximumRowsRead?: number;
+              numItems: number;
+            };
+            slug: string;
+          },
+          {
+            continueCursor: string;
+            isDone: boolean;
+            page: Array<{
+              id: Id<"classroomChannels">;
+              kind: "general" | "topic";
+              name: string;
+            }>;
+            pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+            splitCursor?: string | null;
+          }
+        >;
+      };
     };
     teachers: {
       assign: FunctionReference<
@@ -4818,6 +4867,8 @@ export declare const api: {
             | "connection.view"
             | "class.manage"
             | "class.view"
+            | "forum.manage"
+            | "forum.read"
             | "grade.release"
             | "grade.view"
             | "visit.end"
@@ -4906,6 +4957,8 @@ export declare const api: {
               | "connection.view"
               | "class.manage"
               | "class.view"
+              | "forum.manage"
+              | "forum.read"
               | "grade.release"
               | "grade.view"
               | "visit.end"
@@ -9923,6 +9976,37 @@ export declare const internal: {
         "internal",
         { model: string; newDoc: any; oldDoc: any },
         any
+      >;
+    };
+  };
+  classroom: {
+    forum: {
+      backfill: {
+        general: FunctionReference<
+          "mutation",
+          "internal",
+          { cursor?: string },
+          { continueCursor: string; created: number; done: boolean }
+        >;
+      };
+    };
+    seed: {
+      teacher: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          email: string;
+          locale: "en" | "id" | "de";
+          name: string;
+          slug: string;
+          subject: string;
+        },
+        {
+          classId: Id<"classes">;
+          invite: Id<"tenantInvites">;
+          periodId: Id<"tenantPeriods">;
+          person: Id<"tenantPeople">;
+        }
       >;
     };
   };
