@@ -4,6 +4,10 @@
     "back-to-learning": "Zurück zu Nakafa",
     "for-you": "Für dich",
     "home": "Startseite",
+    "next-exam-title": "Prüfungen deiner Schule",
+    "next-exam-description": "Schreib Fragen, plane eine Sitzung und verfolge sie live.",
+    "next-exam-footer": "Schüler sehen eine Prüfung erst, wenn sie geplant ist.",
+    "next-exam-action": "Prüfungen öffnen",
     "language": "Sprache",
     "role": {
       "admin": "Admin",
@@ -135,7 +139,10 @@
     "length": "Dauer",
     "length-minutes": "{count, plural, one {# Minute} other {# Minuten}}",
     "schedule-keys": "Markiere zuerst die richtige Antwort jeder Frage.",
-    "schedule-past": "Der Beginn ist vorbei. Wähle eine spätere Zeit."
+    "schedule-past": "Der Beginn ist vorbei. Wähle eine spätere Zeit.",
+    "try-action": "Als Schüler testen",
+    "try-finish": "Test beenden",
+    "try-note": "Antworten hier werden nicht gespeichert."
   },
   "SchoolSettings": {
     "school": "Schule",
@@ -1691,8 +1698,7 @@
     "medals-label": "Schulen und Hochschulen",
     "prices-title": "Kostenlos heißt wirklich kostenlos",
     "school-title": "Nakafa gibt es auch für eine ganze Schule",
-    "school-lead": "Braucht ihr ein LMS, Inhalte oder einen eigenen Klassenablauf? Wir finden, was passt.",
-    "school-cta": "Schreib uns",
+    "school-lead": "Prüfungen, Aufsicht und Nina für jede Klasse. Eröffne deine Schule kostenlos in wenigen Minuten.",
     "school-class": "Eine Klasse aus Tieren",
     "faq-title": "Häufig gefragt",
     "faq-subjects-question": "Welche Fächer und Klassen gibt es?",

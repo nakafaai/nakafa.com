@@ -17,9 +17,32 @@ export function animalOf(avatar: Locator) {
 }
 
 /**
- * The animal that an avatar draws, as the markup inside its picture, and the box
- * the avatar takes on the page. The same animal has the same markup wherever it
- * is drawn, so two avatars of one learner must give equal markup.
+ * The animal an avatar draws, as its shapes with each shape's attributes in name
+ * order. React redraws a shuffled animal on the shapes of the one before, and an
+ * attribute that a reused shape gains is written last, so the same animal can list
+ * its attributes in another order than a fresh page draws them. The drawing is the
+ * same, so the comparison sets the order aside. The function runs in the page.
+ */
+export function animalMarkup(avatar: Locator) {
+  return animalOf(avatar).evaluate((svg) => {
+    const canonical = (node: Element): string => {
+      const attributes = Array.from(
+        node.attributes,
+        (attribute) => `${attribute.name}="${attribute.value}"`
+      )
+        .sort()
+        .join(" ");
+      const children = Array.from(node.children, canonical).join("");
+      return `<${node.tagName} ${attributes}>${children}</${node.tagName}>`;
+    };
+    return Array.from(svg.children, canonical).join("");
+  });
+}
+
+/**
+ * The animal that an avatar draws, as its markup (animalMarkup), and the box the
+ * avatar takes on the page. The same animal has the same markup wherever it is
+ * drawn, so two avatars of one learner must give equal markup.
  */
 export async function drawnAnimal(avatar: Locator) {
   await expect(animalOf(avatar)).toBeVisible({
@@ -27,6 +50,6 @@ export async function drawnAnimal(avatar: Locator) {
   });
   return {
     box: await avatar.boundingBox(),
-    markup: await animalOf(avatar).innerHTML(),
+    markup: await animalMarkup(avatar),
   };
 }

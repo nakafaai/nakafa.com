@@ -1,14 +1,17 @@
-import { LineEquation } from "@repo/design-system/components/contents/mathematics/line/equation";
+import { LineEquationCard } from "@repo/design-system/components/contents/mathematics/line/equation";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { VisualCardHeader } from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
 import { Array as Arr, Option, Order } from "effect";
-import type { ComponentProps } from "react";
+import type { ReactNode } from "react";
+
+interface GraphProps {
+  description: ReactNode;
+  title: ReactNode;
+}
 
 /** Renders the quantitative graph for SNBT set 6 question 19. */
-export function Graph({
-  title,
-  description,
-}: Pick<ComponentProps<typeof LineEquation>, "title" | "description">) {
+export function Graph({ title, description }: GraphProps) {
   // Solves (1/2)^x - 3 = 2x + 6 and is included in the sampled curve.
   const intersectionX = -2.201_003_972_920_786_6;
   const lineLabelX = -1;
@@ -32,7 +35,7 @@ export function Graph({
   }));
 
   return (
-    <LineEquation
+    <LineEquationCard
       cameraPosition={[-0.5, 2, 14]}
       cameraTarget={[-0.5, 2, 0]}
       data={[
@@ -101,9 +104,8 @@ export function Graph({
           labels: [{ text: <InlineMath math="D" />, offset: [0.4, 0.4, 0] }],
         },
       ]}
-      description={description}
+      header={<VisualCardHeader description={description} title={title} />}
       showZAxis={false}
-      title={title}
     />
   );
 }

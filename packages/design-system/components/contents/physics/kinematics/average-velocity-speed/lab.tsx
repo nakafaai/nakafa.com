@@ -7,7 +7,10 @@ import {
   getAverageVelocitySpeedState,
   isAverageVelocitySpeedCaseId,
 } from "@repo/design-system/components/contents/physics/kinematics/average-velocity-speed/data";
-import { AverageMotionStage } from "@repo/design-system/components/contents/physics/kinematics/average-velocity-speed/scene";
+import {
+  AverageMotionScene,
+  AverageMotionStage,
+} from "@repo/design-system/components/contents/physics/kinematics/average-velocity-speed/scene";
 import {
   formatTrimmedMeterMath,
   formatTrimmedSecondMath,
@@ -137,7 +140,9 @@ export function AverageVelocitySpeedLab({
         render={<section />}
       >
         <ThreeCanvas frameloop="always">
-          <AverageMotionStage motion={motion} />
+          <AverageMotionStage>
+            <AverageMotionScene motion={motion} />
+          </AverageMotionStage>
         </ThreeCanvas>
       </VisualCardBody>
 

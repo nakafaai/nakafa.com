@@ -18,38 +18,66 @@ import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { getThreeParticleLabelFontSize } from "@repo/design-system/components/three/data/constants";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { Array as Arr, HashMap, Option } from "effect";
+import { createContext, type ReactNode, use } from "react";
 
 const FIRST_X = -0.78;
 const SECOND_X = 0.78;
 const SCENE_SCALE = 1.95;
 const BOND_LINE_WIDTH = 2.4;
 
-export function MultipleProportionsScene({
+const MultipleProportionsSceneColorsContext =
+  createContext<MultipleProportionsSceneColors | null>(null);
+
+/** Provides the colors of one multiple-proportions lab to the parts of its scene. */
+export function MultipleProportionsSceneColorsProvider({
+  children,
   colors,
+}: {
+  children: ReactNode;
+  colors: MultipleProportionsSceneColors;
+}) {
+  return (
+    <MultipleProportionsSceneColorsContext value={colors}>
+      {children}
+    </MultipleProportionsSceneColorsContext>
+  );
+}
+
+/** Reads the colors of the surrounding multiple-proportions lab. */
+function useMultipleProportionsSceneColors() {
+  const colors = use(MultipleProportionsSceneColorsContext);
+  if (!colors) {
+    // A missing provider is a programmer composition error at this React seam.
+    throw new Error(
+      "useMultipleProportionsSceneColors must be used within MultipleProportionsSceneColorsProvider"
+    );
+  }
+  return colors;
+}
+
+export function MultipleProportionsScene({
   modeId,
 }: {
-  colors: MultipleProportionsSceneColors;
   modeId: MultipleProportionsModeId;
 }) {
   const model = MULTIPLE_PROPORTIONS_MODELS[modeId];
 
   return (
     <group position={[0, -0.02, 0]} scale={SCENE_SCALE}>
-      <CompoundStage colors={colors} model={model.first} x={FIRST_X} />
-      <CompoundStage colors={colors} model={model.second} x={SECOND_X} />
+      <CompoundStage model={model.first} x={FIRST_X} />
+      <CompoundStage model={model.second} x={SECOND_X} />
     </group>
   );
 }
 
 function CompoundStage({
-  colors,
   model,
   x,
 }: {
-  colors: MultipleProportionsSceneColors;
   model: MultipleProportionsCompoundModel;
   x: number;
 }) {
+  const colors = useMultipleProportionsSceneColors();
   return (
     <group position={[x, 0, 0]}>
       <ThreeLabel
@@ -61,20 +89,15 @@ function CompoundStage({
       </ThreeLabel>
       <group position={[0, 0.02, 0]}>
         {Arr.map(model.molecules, (molecule) => (
-          <Molecule colors={colors} key={molecule.id} molecule={molecule} />
+          <Molecule key={molecule.id} molecule={molecule} />
         ))}
       </group>
     </group>
   );
 }
 
-function Molecule({
-  colors,
-  molecule,
-}: {
-  colors: MultipleProportionsSceneColors;
-  molecule: MultipleProportionsMolecule;
-}) {
+function Molecule({ molecule }: { molecule: MultipleProportionsMolecule }) {
+  const colors = useMultipleProportionsSceneColors();
   const atomsById = HashMap.fromIterable(
     Arr.map(molecule.atoms, (atomData) => [atomData.id, atomData])
   );
@@ -100,19 +123,14 @@ function Molecule({
       })}
 
       {Arr.map(molecule.atoms, (atomData) => (
-        <AtomParticle atomData={atomData} colors={colors} key={atomData.id} />
+        <AtomParticle atomData={atomData} key={atomData.id} />
       ))}
     </group>
   );
 }
 
-function AtomParticle({
-  atomData,
-  colors,
-}: {
-  atomData: MultipleProportionsAtom;
-  colors: MultipleProportionsSceneColors;
-}) {
+function AtomParticle({ atomData }: { atomData: MultipleProportionsAtom }) {
+  const colors = useMultipleProportionsSceneColors();
   const radius = atomRadius(atomData.element);
 
   return (

@@ -13,6 +13,7 @@ import {
   retryVersionServiceStart,
 } from "@repo/backend/scripts/content/acceptance/error";
 import { leaseLocalRuntime } from "@repo/backend/scripts/content/acceptance/lease";
+import type { AcceptanceMode } from "@repo/backend/scripts/content/acceptance/mode";
 import {
   assertLocalPortsFree,
   localConvexEnvironment,
@@ -397,3 +398,10 @@ export const cleanLocalRuntime = Effect.fn(
   yield* discardSignedResponses(root);
   yield* releaseLocalRuntime(runtime);
 });
+
+/** The clean mode of the acceptance command line: removes a stopped local runtime. It takes no argument. */
+export const cleanMode = {
+  mode: "clean",
+  usage: "clean",
+  run: cleanLocalRuntime,
+} satisfies AcceptanceMode;

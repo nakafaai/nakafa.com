@@ -1,5 +1,6 @@
-import { LineEquation } from "@repo/design-system/components/contents/mathematics/line/equation";
+import { LineEquationCard } from "@repo/design-system/components/contents/mathematics/line/equation";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { VisualCardHeader } from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
 import type { ReactNode } from "react";
 
@@ -47,7 +48,7 @@ function generateArc(
 /** Renders the coordinate graph for SNBT set 2 question 19. */
 export function Graph({ title, description }: GraphProps) {
   return (
-    <LineEquation
+    <LineEquationCard
       cameraPosition={[3.3, 2.1, 12]}
       cameraTarget={[3.3, 2.1, 0]}
       data={[
@@ -147,9 +148,8 @@ export function Graph({ title, description }: GraphProps) {
           showPoints: false,
         },
       ]}
-      description={description}
+      header={<VisualCardHeader description={description} title={title} />}
       showZAxis={false}
-      title={title}
     />
   );
 }

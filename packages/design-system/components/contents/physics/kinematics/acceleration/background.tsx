@@ -3,7 +3,7 @@
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { getColor } from "@repo/design-system/lib/color";
 import { Array as Arr } from "effect";
-import { useMemo } from "react";
+import { type ReactNode, useMemo } from "react";
 
 const SPACE_COLORS = {
   atmosphere: getColor("SKY", 400),
@@ -16,16 +16,17 @@ const SPACE_ROCK_COUNT = 18;
 const SPEED_PARTICLE_COUNT = 56;
 const STAR_COUNT = 90;
 
-/** Scenic depth stays outside the finite lesson content used to fit the camera. */
-export function SpaceBackground({ length }: { length: number }) {
+/**
+ * Scenic depth stays outside the finite lesson content used to fit the camera. The scene
+ * passes its layers, which draw over the same length, as its children.
+ */
+export function SpaceBackground({ children }: { children: ReactNode }) {
   return (
     <>
       <color args={[SPACE_COLORS.space]} attach="background" />
       <CameraBounds exclude>
         <DistantPlanet />
-        <StarField length={length} />
-        <SpaceRocks length={length} />
-        <SpeedParticles length={length} />
+        {children}
       </CameraBounds>
     </>
   );
@@ -50,7 +51,7 @@ function DistantPlanet() {
   );
 }
 
-function StarField({ length }: { length: number }) {
+export function StarField({ length }: { length: number }) {
   const stars = useMemo(
     () =>
       Array.from({ length: STAR_COUNT }, (_, index) => {
@@ -80,7 +81,7 @@ function StarField({ length }: { length: number }) {
   );
 }
 
-function SpaceRocks({ length }: { length: number }) {
+export function SpaceRocks({ length }: { length: number }) {
   const rocks = useMemo(
     () =>
       Array.from({ length: SPACE_ROCK_COUNT }, (_, index) => {
@@ -119,7 +120,7 @@ function SpaceRocks({ length }: { length: number }) {
   );
 }
 
-function SpeedParticles({ length }: { length: number }) {
+export function SpeedParticles({ length }: { length: number }) {
   const particles = useMemo(
     () =>
       Array.from({ length: SPEED_PARTICLE_COUNT }, (_, index) => {

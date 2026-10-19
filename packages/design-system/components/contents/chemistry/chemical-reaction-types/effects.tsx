@@ -1,6 +1,6 @@
 import { useFrame } from "@react-three/fiber";
+import { useChemicalReactionTypeScene } from "@repo/design-system/components/contents/chemistry/chemical-reaction-types/context";
 import {
-  type ChemicalReactionTypeSceneColors,
   type ChemicalReactionTypeScenePoint,
   ChemicalReactionTypeScenePointSchema,
 } from "@repo/design-system/components/contents/chemistry/chemical-reaction-types/data";
@@ -115,11 +115,8 @@ export function RustPatches({ color }: { color: string }) {
   );
 }
 
-export function FloatingIons({
-  colors,
-}: {
-  colors: ChemicalReactionTypeSceneColors;
-}) {
+export function FloatingIons() {
+  const { colors } = useChemicalReactionTypeScene();
   const groupRef = useRef<Group>(null);
 
   useFrame((_, delta) => {
@@ -147,11 +144,8 @@ export function FloatingIons({
   );
 }
 
-export function SettledSolid({
-  colors,
-}: {
-  colors: ChemicalReactionTypeSceneColors;
-}) {
+export function SettledSolid() {
+  const { colors } = useChemicalReactionTypeScene();
   return (
     <group>
       {Arr.map(SETTLED_SOLID_POINTS, (point) => (

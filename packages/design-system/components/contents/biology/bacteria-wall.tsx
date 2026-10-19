@@ -1,18 +1,19 @@
 "use client";
 
 import { BacterialWallStack } from "@repo/design-system/components/contents/biology/bacteria-wall-stack";
-import type { BiologySceneProps } from "@repo/design-system/components/contents/biology/lab-frame";
+import { useBiologyColors } from "@repo/design-system/components/contents/biology/context";
 import type { ReactNode } from "react";
 
 /** Compares thick peptidoglycan and outer-membrane wall arrangements. */
 export function GramWallComparison({
-  colors,
   gramNegativeLabel,
   gramPositiveLabel,
-}: Pick<BiologySceneProps, "colors"> & {
+}: {
   gramNegativeLabel?: ReactNode;
   gramPositiveLabel?: ReactNode;
 }) {
+  const colors = useBiologyColors();
+
   return (
     <group position={[0, 0.32, 0]}>
       <BacterialWallStack

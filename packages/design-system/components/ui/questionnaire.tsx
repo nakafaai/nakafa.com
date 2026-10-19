@@ -5,6 +5,7 @@ import type { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { Questionnaire as QuestionnairePrimitive } from "@shadcn/react/questionnaire";
+import { cva } from "class-variance-authority";
 import { cn } from "cn";
 import type * as React from "react";
 
@@ -158,6 +159,16 @@ function QuestionnaireChoiceDescription({
   );
 }
 
+/**
+ * The look of a questionnaire's text field. A question's answer uses it through
+ * QuestionnaireInput; a field that only completes the answer, such as an address
+ * that follows a name, renders a plain input with it, so it looks the same without
+ * becoming a second answer of a question that takes one.
+ */
+const questionnaireInputVariants = cva(
+  "h-9 min-h-11 w-full min-w-0 rounded-md border border-input bg-transparent px-2.5 py-1 text-base shadow-xs outline-none transition-[color,box-shadow,background-color] selection:bg-primary selection:text-primary-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 sm:min-h-0 md:text-sm dark:bg-input/30 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40"
+);
+
 function QuestionnaireInput({
   className,
   ...props
@@ -168,10 +179,7 @@ function QuestionnaireInput({
       data-slot="questionnaire-input-wrapper"
     >
       <QuestionnairePrimitive.Input
-        className={cn(
-          "h-9 min-h-11 w-full min-w-0 rounded-md border border-input bg-transparent px-2.5 py-1 text-base shadow-xs outline-none transition-[color,box-shadow,background-color] selection:bg-primary selection:text-primary-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 sm:min-h-0 md:text-sm dark:bg-input/30 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40",
-          className
-        )}
+        className={cn(questionnaireInputVariants(), className)}
         data-slot="questionnaire-input"
         {...props}
       />
@@ -179,16 +187,25 @@ function QuestionnaireInput({
   );
 }
 
+/**
+ * A question's error, on a line the question keeps for it under the answer, so an
+ * error that appears or clears while someone types never moves the buttons below.
+ * The line also keeps the message, which the primitive hides and shows, out of the
+ * item's own children: Chrome stops laying out a size container in a fieldset,
+ * such as a FieldGroup in a question, once a child of that fieldset toggles hidden.
+ */
 function QuestionnaireError({
   className,
   ...props
 }: React.ComponentProps<typeof QuestionnairePrimitive.Error>) {
   return (
-    <QuestionnairePrimitive.Error
-      className={cn("text-destructive text-sm", className)}
-      data-slot="questionnaire-error"
-      {...props}
-    />
+    <div className="-mt-2 min-h-5" data-slot="questionnaire-error-line">
+      <QuestionnairePrimitive.Error
+        className={cn("text-destructive text-sm", className)}
+        data-slot="questionnaire-error"
+        {...props}
+      />
+    </div>
   );
 }
 
@@ -324,4 +341,5 @@ export {
   QuestionnaireSkip,
   QuestionnaireSubmit,
   QuestionnaireTitle,
+  questionnaireInputVariants,
 };
