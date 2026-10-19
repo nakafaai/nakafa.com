@@ -1,9 +1,10 @@
-import { LineEquation } from "@repo/design-system/components/contents/mathematics/line/equation";
+import { LineEquationCard } from "@repo/design-system/components/contents/mathematics/line/equation";
 import {
   getArcPoints,
   getMidpoint,
 } from "@repo/design-system/components/contents/snbt/geometry";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { VisualCardHeader } from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
 import type { ReactNode } from "react";
 
@@ -44,7 +45,7 @@ const arcLabelIndex = Math.floor(arcPoints.length / 2);
 /** Renders the coordinate graph for SNBT set 4 question 19. */
 export function Graph({ title, description }: GraphProps) {
   return (
-    <LineEquation
+    <LineEquationCard
       cameraPosition={[1, 2.3, 8.4]}
       cameraTarget={[1, 2.3, 0]}
       data={[
@@ -90,9 +91,8 @@ export function Graph({ title, description }: GraphProps) {
           ],
         },
       ]}
-      description={description}
+      header={<VisualCardHeader description={description} title={title} />}
       showZAxis={false}
-      title={title}
     />
   );
 }

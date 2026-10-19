@@ -1,6 +1,7 @@
 "use client";
 
 import type { DecimalSeparator } from "@repo/design-system/components/contents/physics/kinematics/number";
+import { ParabolicMotionProvider } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement/context";
 import {
   DEFAULT_PARABOLIC_LAUNCH_ID,
   formatAngleMath,
@@ -115,7 +116,11 @@ export function ParabolicMovementLab({
         className={threeSceneFrameVariants()}
         render={<section />}
       >
-        {live ? <ParabolicMovementStage motion={motion} /> : null}
+        {live ? (
+          <ParabolicMotionProvider motion={motion}>
+            <ParabolicMovementStage />
+          </ParabolicMotionProvider>
+        ) : null}
       </VisualCardBody>
 
       <VisualCardSceneActions />

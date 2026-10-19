@@ -1,5 +1,6 @@
-import { LineEquation } from "@repo/design-system/components/contents/mathematics/line/equation";
+import { LineEquationCard } from "@repo/design-system/components/contents/mathematics/line/equation";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { VisualCardHeader } from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
@@ -54,7 +55,7 @@ const diagonals = [
 /** Renders the coordinate graph for SNBT set 7 question 4. */
 export function Graph({ title, description }: GraphProps) {
   return (
-    <LineEquation
+    <LineEquationCard
       cameraPosition={[-8, 5, 10]}
       data={[
         // Cube Edges
@@ -197,8 +198,7 @@ export function Graph({ title, description }: GraphProps) {
           ],
         },
       ]}
-      description={description}
-      title={title}
+      header={<VisualCardHeader description={description} title={title} />}
     />
   );
 }

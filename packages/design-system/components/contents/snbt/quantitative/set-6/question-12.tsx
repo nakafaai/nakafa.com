@@ -1,7 +1,8 @@
-import { LineEquation } from "@repo/design-system/components/contents/mathematics/line/equation";
+import { LineEquationCard } from "@repo/design-system/components/contents/mathematics/line/equation";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { VisualCardHeader } from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
-import type { ComponentProps } from "react";
+import type { ReactNode } from "react";
 
 // The outer base angles are 80 degrees; the inner base angles are 40 degrees.
 const A = { x: 0, y: -5 + 2 * Math.tan((80 * Math.PI) / 180), z: 0 };
@@ -9,13 +10,15 @@ const B = { x: -2, y: -5, z: 0 };
 const C = { x: 2, y: -5, z: 0 };
 const D = { x: 0, y: -5 + 2 * Math.tan((40 * Math.PI) / 180), z: 0 };
 
+interface GraphProps {
+  description: ReactNode;
+  title: ReactNode;
+}
+
 /** Renders the quantitative graph for SNBT set 6 question 12. */
-export function Graph({
-  title,
-  description,
-}: Pick<ComponentProps<typeof LineEquation>, "title" | "description">) {
+export function Graph({ title, description }: GraphProps) {
   return (
-    <LineEquation
+    <LineEquationCard
       cameraPosition={[0, 0, 15]}
       data={[
         // Outer Triangle ABC
@@ -67,8 +70,7 @@ export function Graph({
           ],
         },
       ]}
-      description={description}
-      title={title}
+      header={<VisualCardHeader description={description} title={title} />}
     />
   );
 }

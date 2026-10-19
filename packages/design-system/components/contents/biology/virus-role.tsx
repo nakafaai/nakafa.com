@@ -2,9 +2,12 @@
 
 import { BacillusBacteriumModel } from "@repo/design-system/components/contents/biology/bacteria-parts";
 import {
+  useBiologyColors,
+  useBiologyItemSelection,
+} from "@repo/design-system/components/contents/biology/context";
+import {
   BiologyLabFrame,
   type BiologyLabProps,
-  type BiologySceneProps,
 } from "@repo/design-system/components/contents/biology/lab-frame";
 import {
   BacteriophageModel,
@@ -49,11 +52,13 @@ export function VirusRoleLab(props: BiologyLabProps) {
 /**
  * Changes the whole scene so students do not read all virus roles as disease.
  */
-function VirusRoleScene({ colors, selectedIndex }: BiologySceneProps) {
+function VirusRoleScene() {
+  const selectedIndex = useBiologyItemSelection((state) => state.selectedIndex);
+
   if (selectedIndex === 1) {
     return (
       <group scale={0.86}>
-        <EcologyRole colors={colors} />
+        <EcologyRole />
       </group>
     );
   }
@@ -61,14 +66,14 @@ function VirusRoleScene({ colors, selectedIndex }: BiologySceneProps) {
   if (selectedIndex === 2) {
     return (
       <group scale={0.86}>
-        <BiotechRole colors={colors} />
+        <BiotechRole />
       </group>
     );
   }
 
   return (
     <group scale={0.86}>
-      <PathogenRole colors={colors} />
+      <PathogenRole />
     </group>
   );
 }
@@ -76,7 +81,9 @@ function VirusRoleScene({ colors, selectedIndex }: BiologySceneProps) {
 /**
  * Shows virus damage as a host cell with many pathogen particles.
  */
-function PathogenRole({ colors }: Pick<BiologySceneProps, "colors">) {
+function PathogenRole() {
+  const colors = useBiologyColors();
+
   return (
     <group>
       <mesh scale={[1.2, 0.78, 0.78]}>
@@ -98,7 +105,9 @@ function PathogenRole({ colors }: Pick<BiologySceneProps, "colors">) {
 /**
  * Shows bacteriophages linking viruses to microbial population control.
  */
-function EcologyRole({ colors }: Pick<BiologySceneProps, "colors">) {
+function EcologyRole() {
+  const colors = useBiologyColors();
+
   return (
     <group>
       {Arr.map(TARGET_BACTERIA, (bacterium) => (
@@ -126,7 +135,9 @@ function EcologyRole({ colors }: Pick<BiologySceneProps, "colors">) {
 /**
  * Shows a viral vector carrying a gene into a target cell.
  */
-function BiotechRole({ colors }: Pick<BiologySceneProps, "colors">) {
+function BiotechRole() {
+  const colors = useBiologyColors();
+
   return (
     <group>
       <mesh position={[0.9, 0, 0]} scale={[0.82, 0.62, 0.62]}>

@@ -17,7 +17,7 @@ import {
   TIME_TOOL_ID,
   TOOL_VIEW_CONFIG,
 } from "@repo/design-system/components/contents/physics/measurement/tools/data";
-import { MeasurementScene } from "@repo/design-system/components/contents/physics/measurement/tools/scene";
+import { TOOL_SCENES } from "@repo/design-system/components/contents/physics/measurement/tools/scene";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
 import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
@@ -82,6 +82,7 @@ export function MeasurementToolsLab({
   );
   const sceneColors = getSceneColors(resolvedTheme);
   const viewConfig = TOOL_VIEW_CONFIG[selectedToolId];
+  const ActiveScene = TOOL_SCENES[selectedToolId];
 
   /**
    * Keeps one instrument selected when ToggleGroup emits an empty value.
@@ -170,11 +171,10 @@ export function MeasurementToolsLab({
               shadow-mapSize-width={1024}
               shadow-normalBias={0.02}
             />
-            <MeasurementScene
+            <ActiveScene
               colors={sceneColors}
               measurement={selectedMeasurement}
               reading={<InlineMath math={selectedReadingMath} />}
-              selectedToolId={selectedToolId}
             />
           </Suspense>
         </ThreeCanvas>

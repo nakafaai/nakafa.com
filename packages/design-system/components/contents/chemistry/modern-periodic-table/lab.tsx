@@ -13,6 +13,7 @@ import {
   type PeriodicElementCategoryId,
   type PeriodicSeriesRowKey,
 } from "@repo/design-system/components/contents/chemistry/modern-periodic-table/data";
+import { createModernPeriodicTableFocusStore } from "@repo/design-system/components/contents/chemistry/modern-periodic-table/store";
 import {
   ToggleGroup,
   ToggleGroupItem,
@@ -34,6 +35,7 @@ import { useFormatter, useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import type { ReactNode } from "react";
 import { useState } from "react";
+import { useStore } from "zustand";
 
 export interface ModernPeriodicTableLabProps {
   description: ReactNode;
@@ -68,8 +70,11 @@ export function ModernPeriodicTableLab({
   labels,
 }: ModernPeriodicTableLabProps) {
   const { resolvedTheme } = useTheme();
-  const [selectedFocusId, setSelectedFocusId] =
-    useState<ModernPeriodicTableFocusId>(GROUP_ONE_FOCUS_ID);
+  const [store] = useState(() =>
+    createModernPeriodicTableFocusStore(GROUP_ONE_FOCUS_ID)
+  );
+  const selectedFocusId = useStore(store, (state) => state.focusId);
+  const selectFocus = useStore(store, (state) => state.selectFocus);
   const colors = getModernPeriodicTableSceneColors(resolvedTheme);
   const selectedLabels = labels.focuses[selectedFocusId];
   const t = useTranslations("Common");
@@ -87,7 +92,7 @@ export function ModernPeriodicTableLab({
       return;
     }
 
-    setSelectedFocusId(value);
+    selectFocus(value);
   }
 
   return (
@@ -117,8 +122,8 @@ export function ModernPeriodicTableLab({
 
       <ModernPeriodicTableCanvas
         aria-label={labels.tableLabel}
-        focusId={selectedFocusId}
         labels={labels}
+        store={store}
       />
 
       <VisualCardSceneActions />

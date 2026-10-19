@@ -2,6 +2,10 @@
 
 import { useThree } from "@react-three/fiber";
 import {
+  createReactionCueStore,
+  ReactionCharacteristicsSceneProvider,
+} from "@repo/design-system/components/contents/chemistry/chemical-reaction-characteristics/context";
+import {
   GAS_CUE_ID,
   getReactionSceneColors,
   isReactionCueId,
@@ -34,7 +38,8 @@ import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import type { ReactNode } from "react";
-import { Suspense, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
+import { useStore } from "zustand";
 
 const NARROW_CANVAS_ASPECT_RATIO = 1.35;
 
@@ -71,10 +76,15 @@ export function ChemicalReactionCharacteristicsLab({
   labels,
 }: ReactionCharacteristicsLabProps) {
   const { resolvedTheme } = useTheme();
-  const [selectedCueId, setSelectedCueId] = useState<ReactionCueId>(GAS_CUE_ID);
+  const [store] = useState(() => createReactionCueStore(GAS_CUE_ID));
+  const selectedCueId = useStore(store, (state) => state.cueId);
+  const selectCue = useStore(store, (state) => state.selectCue);
   const selectedLabels = labels.cues[selectedCueId];
   const t = useTranslations("Common");
-  const sceneColors = getReactionSceneColors(resolvedTheme);
+  const sceneColors = useMemo(
+    () => getReactionSceneColors(resolvedTheme),
+    [resolvedTheme]
+  );
 
   /**
    * Keeps one clue selected when ToggleGroup emits an empty value.
@@ -88,7 +98,7 @@ export function ChemicalReactionCharacteristicsLab({
       return;
     }
 
-    setSelectedCueId(value);
+    selectCue(value);
   }
 
   return (
@@ -135,11 +145,12 @@ export function ChemicalReactionCharacteristicsLab({
               shadow-mapSize-width={1024}
               shadow-normalBias={0.02}
             />
-            <ReactionCharacteristicsScene
+            <ReactionCharacteristicsSceneProvider
               colors={sceneColors}
-              cueId={selectedCueId}
-              labels={labels}
-            />
+              store={store}
+            >
+              <ReactionCharacteristicsScene labels={labels} />
+            </ReactionCharacteristicsSceneProvider>
           </Suspense>
         </ThreeCanvas>
       </VisualCardBody>

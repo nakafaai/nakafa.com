@@ -1,5 +1,6 @@
 "use client";
 
+import { useBiologyColors } from "@repo/design-system/components/contents/biology/context";
 import {
   type BiologyScenePoint,
   BiologyScenePointSchema,
@@ -39,11 +40,9 @@ type BiologyCalloutTarget = typeof BiologyCalloutTargetSchema.Type;
  */
 export function BiologyCallouts({
   callouts,
-  color,
   targets,
 }: {
   callouts?: readonly BiologyLabCalloutProps[] | undefined;
-  color: string;
   targets: readonly BiologyCalloutTarget[];
 }) {
   if (!callouts?.length) {
@@ -64,7 +63,6 @@ export function BiologyCallouts({
 
         return (
           <BiologyCallout
-            color={color}
             fontSize={target.fontSize}
             key={target.id}
             label={callout.value.label}
@@ -82,18 +80,18 @@ export function BiologyCallouts({
  * ambiguity. Broad labels can stay as plain scene labels.
  */
 function BiologyCallout({
-  color,
   fontSize = "compact",
   label,
   labelPosition,
   target,
 }: {
-  color: string;
   fontSize?: ThreeFontSize | number | undefined;
   label: ReactNode;
   labelPosition: BiologyScenePoint;
   target?: BiologyScenePoint | undefined;
 }) {
+  const color = useBiologyColors().text;
+
   if (!target) {
     return (
       <ThreeLabel color={color} fontSize={fontSize} position={labelPosition}>

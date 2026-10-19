@@ -1,5 +1,6 @@
 "use client";
 
+import { ShellModelProvider } from "@repo/design-system/components/contents/chemistry/shell-model/context";
 import {
   getShellModelSceneColors,
   type ShellModelSample,
@@ -47,12 +48,14 @@ export function ShellModelCanvas({
       render={<section />}
     >
       {live ? (
-        <ShellModelStage
+        <ShellModelProvider
           colors={sceneColors}
           outerShellKey={outerShellKey}
           sample={sample}
           shells={shells}
-        />
+        >
+          <ShellModelStage />
+        </ShellModelProvider>
       ) : null}
     </VisualCardBody>
   );
