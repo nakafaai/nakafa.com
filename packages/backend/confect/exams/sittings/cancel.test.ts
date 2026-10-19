@@ -1,3 +1,4 @@
+import type { GenericId } from "@confect/core";
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import {
@@ -25,15 +26,13 @@ const nf = slugOf("nf");
 /** The rooms that one exam still holds, in the order the index reads them. */
 const roomsOf = (
   fixture: Effect.Success<typeof tenancyFixture>,
-  examId: string
+  examId: GenericId.GenericId<"exams">
 ) =>
   fixture.run(
     Effect.flatMap(DatabaseReader, (reader) =>
       reader
         .table("examSittings")
-        .index("by_examId_and_opensAt", (query) =>
-          query.eq("examId", examId as never)
-        )
+        .index("by_examId_and_opensAt", (query) => query.eq("examId", examId))
         .take(10)
         .pipe(Effect.orDie)
     )
@@ -42,13 +41,13 @@ const roomsOf = (
 /** Whether a sitting of one exam has frozen it, which a scheduled room does. */
 const frozenOf = (
   fixture: Effect.Success<typeof tenancyFixture>,
-  examId: string
+  examId: GenericId.GenericId<"exams">
 ) =>
   fixture.run(
     Effect.flatMap(DatabaseReader, (reader) =>
       reader
         .table("exams")
-        .get(examId as never)
+        .get(examId)
         .pipe(
           Effect.map((exam) => exam.frozenAt !== undefined),
           Effect.orDie

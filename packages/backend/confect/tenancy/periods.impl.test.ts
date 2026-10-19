@@ -270,7 +270,10 @@ describe("tenancy/periods open and archive", () => {
         ]);
         const entries = yield* fixture.run(journal);
         expect(
-          entries.filter((entry) => entry.change.type === "period.restored")
+          Arr.filter(
+            entries,
+            (entry) => entry.change.type === "period.restored"
+          )
         ).toMatchObject([{ subject: { id: first.id } }]);
       })
   );

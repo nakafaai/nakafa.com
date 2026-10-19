@@ -97,7 +97,12 @@ describe("components/tenant/settings/mutation.client", () => {
       const shown = Option.getOrThrow(
         local.store.getQuery(tenancy.units.list, { slug })
       );
-      expect(shown.map((item) => item.id).slice(0, 2)).toEqual([smp, sma]);
+      expect(
+        Arr.take(
+          Arr.map(shown, (item) => item.id),
+          2
+        )
+      ).toEqual([smp, sma]);
       expect(shown[2]).toMatchObject({
         contentLanguage: "id",
         level: "sd",

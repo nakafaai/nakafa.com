@@ -511,7 +511,7 @@ describe("tenancy/people students", () => {
         expect(ids).toContain(fixture.people.student.personId);
         expect(ids).not.toContain(fixture.people.teacher.personId);
         expect(ids).not.toContain(fixture.people.admin.personId);
-        expect(new Set(ids).size).toBe(ids.length);
+        expect(Arr.dedupe(ids)).toHaveLength(ids.length);
       })
   );
 });
