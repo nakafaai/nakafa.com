@@ -59,6 +59,7 @@ describe("tenancy/slug", () => {
           "verify",
           "school",
           "parent",
+          "new",
         ],
         (label) => !HashSet.has(reservedSlugs, label)
       )

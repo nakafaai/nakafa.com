@@ -1,19 +1,20 @@
 "use client";
 
 import { useMutation } from "@confect/react";
-import { ArrowLeft01Icon } from "@hugeicons/core-free-icons";
+import { ArrowLeft01Icon, ViewIcon } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { isComposingKey } from "@repo/utilities/composition";
 import { Function as Fn, Option } from "effect";
+import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import { renameUpdate } from "@/components/tenant/exams/optimistic";
 import { useExam } from "@/components/tenant/exams/provider";
+import { ScheduleExam } from "@/components/tenant/exams/schedule";
 import { titleToSave } from "@/components/tenant/exams/title";
 
 /**
@@ -21,7 +22,9 @@ import { titleToSave } from "@/components/tenant/exams/title";
  * place. The field shows the saved title until the teacher types, so it follows a
  * co-editor's rename. The title is saved when the field loses focus or the teacher presses
  * Enter, and only a trimmed, changed, valid title is sent. The optimistic change restores
- * the saved title when the server refuses the rename.
+ * the saved title when the server refuses the rename. The row ends with the action that
+ * tries the exam as a student and the button that schedules it, and the title gives way
+ * before them.
  */
 export function ExamHeader() {
   const t = useTranslations("Exams");
@@ -48,13 +51,13 @@ export function ExamHeader() {
 
   return (
     <header className="flex h-14 shrink-0 items-center gap-2 border-b px-2">
-      <NavigationLink
+      <Link
         aria-label={t("title")}
         className={buttonVariants({ size: "icon", variant: "ghost" })}
         href="/exams"
       >
         <HugeIcons icon={ArrowLeft01Icon} />
-      </NavigationLink>
+      </Link>
       <Input
         aria-label={t("title-label")}
         className="border-0 font-semibold text-lg shadow-none md:text-lg"
@@ -69,6 +72,14 @@ export function ExamHeader() {
         placeholder={t("untitled")}
         value={draft ?? exam.title}
       />
+      <Link
+        className={buttonVariants({ variant: "outline" })}
+        href={`/exams/${exam.id}/try`}
+      >
+        <HugeIcons icon={ViewIcon} />
+        {t("try-action")}
+      </Link>
+      <ScheduleExam />
     </header>
   );
 }

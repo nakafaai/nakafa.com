@@ -16,6 +16,7 @@ import {
   Npsn,
   PersonReason,
 } from "@repo/backend/confect/tenancy/schema";
+import { SchoolSize } from "@repo/backend/confect/tenancy/start";
 import { Schema } from "effect";
 
 /**
@@ -72,6 +73,10 @@ export const tenant = Kind.make("tenant", "tenants", {
     Schema.Struct({
       contract: Contract,
       type: Schema.Literal("tenant.provisioned"),
+    }),
+    Schema.Struct({
+      size: SchoolSize,
+      type: Schema.Literal("tenant.founded"),
     }),
     Schema.Struct({
       country: CountryCodeSchema,

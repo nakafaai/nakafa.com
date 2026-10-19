@@ -10,7 +10,7 @@ import { Effect, flow } from "effect";
 const SMALL_BATCH_SIZE = 25;
 const HISTORY_BATCH_SIZE = 50;
 
-/** Deletes one bounded batch of account preferences and credit history. */
+/** Deletes one bounded batch of account preferences, unfinished school answers and credit history. */
 const cleanupAccountHistory = Effect.fn("auth.cleanup.cleanupAccountHistory")(
   function* (userId: Id<"users">) {
     const database = yield* DatabaseReader;
@@ -24,6 +24,18 @@ const cleanupAccountHistory = Effect.fn("auth.cleanup.cleanupAccountHistory")(
       yield* writer.table("onboardingProfiles").delete(profile._id);
     }
     if (onboardingProfiles.length > 0) {
+      return true;
+    }
+    // An unfinished school questionnaire is the account's own, like its onboarding.
+    const schoolDrafts = yield* database
+      .table("tenantDrafts")
+      .index("by_userId", (query) => query.eq("userId", userId))
+      .take(SMALL_BATCH_SIZE)
+      .pipe(Effect.orDie);
+    for (const draft of schoolDrafts) {
+      yield* writer.table("tenantDrafts").delete(draft._id);
+    }
+    if (schoolDrafts.length > 0) {
       return true;
     }
     const preferences = yield* database

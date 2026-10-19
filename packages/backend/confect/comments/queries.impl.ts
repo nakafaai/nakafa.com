@@ -29,18 +29,21 @@ function publicAuthor(user: typeof userDataValidator.Type) {
   };
 }
 
-/** The vote that an open web build reads for a liked comment: a like counts as an upvote. */
+/** The vote that a web build older than this change reads for a liked comment. */
 const LIKED_VOTE: typeof commentVoteValidator.Type = 1;
 
 /**
- * A comment as the lists show it. Its count is zero before the count was kept, and
- * its viewer vote is a like for the open web builds.
+ * A comment as the lists show it. Its count is zero before the count was kept. The
+ * stored vote counts and reply preview never reach the client; the row carries the
+ * counts and the viewer's vote that older web builds decode (`queries.spec.ts`).
  */
 function likedRow(comment: CommentDoc, liked: boolean) {
   return {
-    ...comment,
+    ...Struct.omit(comment, ["upvoteCount", "downvoteCount", "replyToText"]),
+    downvoteCount: 0,
     likeCount: likeCountOf(comment),
     liked,
+    upvoteCount: 0,
     viewerVote: liked ? LIKED_VOTE : null,
   };
 }

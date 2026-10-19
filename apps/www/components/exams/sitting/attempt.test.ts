@@ -6,6 +6,7 @@ import {
   finishAttempt,
   isActive,
   secondsLeft,
+  takesAnswers,
 } from "@/components/exams/sitting/attempt";
 
 const attemptId = Schema.decodeUnknownSync(Id("examAttempts"));
@@ -54,5 +55,14 @@ describe("finishAttempt", () => {
     expect(finished.state).toBe("submitted");
     expect(finished.deadline).toBe(10_000);
     expect(finished.id).toBe(attemptId("attempt-a"));
+  });
+});
+
+describe("takesAnswers", () => {
+  it("is true only while the attempt is in progress, so any other state shows its sentence", () => {
+    expect(takesAnswers("inProgress")).toBe(true);
+    expect(takesAnswers("locked")).toBe(false);
+    expect(takesAnswers("closing")).toBe(false);
+    expect(takesAnswers("submitted")).toBe(false);
   });
 });

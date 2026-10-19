@@ -1,7 +1,9 @@
 "use client";
 
 import type { GenericId } from "@confect/core";
+import { CancelCircleIcon, Key01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import {
@@ -18,7 +20,8 @@ import { SchoolHeader } from "@/components/tenant/header";
  * The one header of the dashboard: the sidebar's trigger, the path from the exams through the
  * exam to the sitting's room, and at its end the token with the action that changes it, then
  * the action that closes the sitting. The page carries the token only for a proctor, and the
- * actions show only when the page lists them.
+ * actions show only when the page lists them. On a phone each action shows its icon alone,
+ * named for assistive technology, so the header stays one row beside the folded path.
  */
 export function SittingHeader({
   examId,
@@ -51,14 +54,16 @@ export function SittingHeader({
             type="button"
             variant="outline"
           >
-            {t("change-token")}
+            <HugeIcons icon={Key01Icon} />
+            <span className="max-sm:sr-only">{t("change-token")}</span>
           </Button>
           <Button
             onClick={() => setDialog("close")}
             type="button"
             variant="destructive"
           >
-            {t("close-sitting")}
+            <HugeIcons icon={CancelCircleIcon} />
+            <span className="max-sm:sr-only">{t("close-sitting")}</span>
           </Button>
         </>
       ) : null}

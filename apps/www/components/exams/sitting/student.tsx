@@ -3,7 +3,6 @@
 import type { GenericId } from "@confect/core";
 import { QueryResult, useQuery } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
-import type { SittingView } from "@repo/backend/confect/exams/sittings/contract";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -14,7 +13,7 @@ import {
 } from "@repo/design-system/components/ui/card";
 import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
 import { Input } from "@repo/design-system/components/ui/input";
-import { Array as Arr, Effect, Option } from "effect";
+import { Effect, Option } from "effect";
 import { useTranslations } from "next-intl";
 import {
   type FormEvent,
@@ -28,9 +27,14 @@ import {
   type Admission,
   useEnterSitting,
 } from "@/components/exams/sitting/admit.client";
+import { takesAnswers } from "@/components/exams/sitting/attempt";
 import { readSittingDevice } from "@/components/exams/sitting/device";
 import type { EntryMessage } from "@/components/exams/sitting/entry";
-import { StudentPlayer } from "@/components/exams/sitting/player";
+import {
+  StudentOutcome,
+  StudentPlayer,
+} from "@/components/exams/sitting/player";
+import { useConvexAuth } from "@/components/providers/convex";
 import {
   CardSection,
   CardSectionActions,
@@ -43,11 +47,13 @@ import { SchoolHeader } from "@/components/tenant/header";
 type Admitted = Extract<Admission, { readonly _tag: "admitted" }>;
 
 /**
- * The student's screen of one sitting. Before the student is admitted it shows the room and
- * the token field. A device that the browser keeps enters without the token, because it
- * already owns the attempt, once the sitting is listed. An admitted student sees the paper in
- * the shared player while the attempt is open, and one sentence for a lock, a closing, or a
- * finished attempt, also after the proctor closes the sitting.
+ * The student's screen of one sitting, read from the sitting and the attempt the student
+ * holds in it. Before the student is admitted it shows the room and the token field. A device
+ * that the browser keeps enters without the token, because it already owns the attempt. An
+ * admitted student sees the paper in the shared player while the attempt is open, and one
+ * sentence for a lock, a closing, or a finished attempt. An attempt that no longer takes
+ * answers shows its sentence without an entry, so a reload after a close or a finish still
+ * shows how it ended.
  */
 export function StudentSitting({
   sittingId,
@@ -57,38 +63,32 @@ export function StudentSitting({
   readonly slug: TenantSlug;
 }) {
   const t = useTranslations("Exams");
-  const mine = useQuery(exams.sittings.mine, { slug });
+  // The sitting needs the session, which Convex learns a moment after the page draws.
+  const isSettled = useConvexAuth((auth) => !auth.isLoading);
+  const view = useQuery(
+    exams.sittings.student,
+    isSettled ? { sittingId, slug } : "skip"
+  );
   const enter = useEnterSitting();
   const [admitted, setAdmitted] = useState<Admitted | null>(null);
-  // The sitting as it was listed when the student entered: a closed sitting leaves the
-  // student's list of live sittings, and the student still reads the attempt's last state.
-  const [entered, setEntered] = useState<typeof SittingView.Type | null>(null);
   const [message, setMessage] = useState<typeof EntryMessage.Type | null>(null);
   const [tokenText, setTokenText] = useState("");
   const resumed = useRef(false);
   const tokenId = useId();
-  const listed = QueryResult.isSuccess(mine)
-    ? Option.getOrUndefined(
-        Arr.findFirst(mine.value, (row) => row.id === sittingId)
-      )
-    : undefined;
+  const ready = QueryResult.isSuccess(view);
 
-  /** Shows the admission into this sitting, or the sentence that explains why the entry was refused. */
-  const receive = useCallback(
-    (next: Admission, sitting: typeof SittingView.Type) => {
-      if (next._tag === "admitted") {
-        setAdmitted(next);
-        setEntered(sitting);
-        setMessage(null);
-        return;
-      }
-      setMessage(next._tag === "refused" ? next.message : null);
-    },
-    []
-  );
+  /** Shows the admission, or the sentence that explains why the entry was refused. */
+  const receive = useCallback((next: Admission) => {
+    if (next._tag === "admitted") {
+      setAdmitted(next);
+      setMessage(null);
+      return;
+    }
+    setMessage(next._tag === "refused" ? next.message : null);
+  }, []);
 
   useEffect(() => {
-    if (resumed.current || listed === undefined) {
+    if (resumed.current || !ready) {
       return;
     }
     resumed.current = true;
@@ -97,38 +97,39 @@ export function StudentSitting({
         Effect.flatMap((stored) =>
           Option.isSome(stored)
             ? Effect.sync(() => {
-                enter({ sittingId, slug, token: "" }, (next) =>
-                  receive(next, listed)
-                );
+                enter({ sittingId, slug, token: "" }, receive);
               })
             : Effect.void
         )
       )
     );
-  }, [enter, listed, receive, sittingId, slug]);
+  }, [enter, ready, receive, sittingId, slug]);
 
-  if (admitted !== null && entered !== null) {
-    return (
-      <AdmittedSitting admitted={admitted} sitting={entered} slug={slug} />
-    );
-  }
-  if (QueryResult.isFailure(mine)) {
+  if (QueryResult.isFailure(view)) {
     return <StudentRefusal />;
   }
-  if (!QueryResult.isSuccess(mine)) {
+  if (!QueryResult.isSuccess(view)) {
     return null;
   }
-  if (listed === undefined) {
-    return <StudentRefusal />;
+  const { attempt, sitting } = view.value;
+  if (attempt !== null && admitted !== null) {
+    return (
+      <StudentPlayer
+        attempt={attempt}
+        deviceId={admitted.deviceId}
+        sitting={sitting}
+        slug={slug}
+      />
+    );
   }
-  const sitting = listed;
+  if (attempt !== null && !takesAnswers(attempt.state)) {
+    return <StudentOutcome attempt={attempt} sitting={sitting} />;
+  }
 
   /** Enters with the token that the student typed. */
   function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    enter({ sittingId, slug, token: tokenText.trim() }, (next) =>
-      receive(next, sitting)
-    );
+    enter({ sittingId, slug, token: tokenText.trim() }, receive);
   }
 
   return (
@@ -187,37 +188,5 @@ function StudentRefusal() {
         </p>
       </LayoutContent>
     </>
-  );
-}
-
-/**
- * The admitted student's view, read from the attempt the server holds. The player shows while
- * the attempt is open, and its state decides the rest of the screen.
- */
-function AdmittedSitting({
-  admitted,
-  sitting,
-  slug,
-}: {
-  readonly admitted: Admitted;
-  readonly sitting: typeof SittingView.Type;
-  readonly slug: TenantSlug;
-}) {
-  const attempt = useQuery(exams.sittings.attempt, {
-    sittingId: sitting.id,
-    slug,
-  });
-
-  if (!QueryResult.isSuccess(attempt) || attempt.value === null) {
-    return null;
-  }
-
-  return (
-    <StudentPlayer
-      attempt={attempt.value}
-      deviceId={admitted.deviceId}
-      sitting={sitting}
-      slug={slug}
-    />
   );
 }

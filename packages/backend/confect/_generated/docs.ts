@@ -92,6 +92,7 @@ export type SubscriptionsDoc = Document.Document<typeof schemaDefinition, "subsc
 export type TenantAssignmentsDoc = Document.Document<typeof schemaDefinition, "tenantAssignments">;
 export type TenantCohortMembersDoc = Document.Document<typeof schemaDefinition, "tenantCohortMembers">;
 export type TenantCohortsDoc = Document.Document<typeof schemaDefinition, "tenantCohorts">;
+export type TenantDraftsDoc = Document.Document<typeof schemaDefinition, "tenantDrafts">;
 export type TenantGraduatesDoc = Document.Document<typeof schemaDefinition, "tenantGraduates">;
 export type TenantGrantsDoc = Document.Document<typeof schemaDefinition, "tenantGrants">;
 export type TenantInvitesDoc = Document.Document<typeof schemaDefinition, "tenantInvites">;
@@ -209,6 +210,7 @@ export interface Docs {
   tenantAssignments: TenantAssignmentsDoc;
   tenantCohortMembers: TenantCohortMembersDoc;
   tenantCohorts: TenantCohortsDoc;
+  tenantDrafts: TenantDraftsDoc;
   tenantGraduates: TenantGraduatesDoc;
   tenantGrants: TenantGrantsDoc;
   tenantInvites: TenantInvitesDoc;
