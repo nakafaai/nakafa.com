@@ -1,8 +1,9 @@
 import { describe, expect, it } from "@effect/vitest";
+import { Id } from "@repo/backend/confect/_generated/id";
 import refs from "@repo/backend/confect/_generated/refs";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import { journal, slugOf, tenancyFixture } from "@repo/backend/test/tenancy";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 
 const nf = slugOf("nf");
 const { archive, create, open, restore } = refs.public.tenancy.periods;
@@ -11,6 +12,9 @@ const denied = (reason: "resource" | "role" | "condition") => ({
   code: "ACCESS_DENIED",
   reason,
 });
+const missingPeriod = Schema.decodeUnknownSync(Id("tenantPeriods"))(
+  "000000000000000099999tenantPeriods"
+);
 const SMA_TERMS = {
   end: "2026-12-19",
   name: "Ganjil 2026/2027",
@@ -86,6 +90,19 @@ describe("tenancy/periods restore", () => {
         const refused = yield* fixture
           .as("admin")
           .mutation(restore, { periodId: foreign, slug: nf })
+          .pipe(Effect.flip);
+        expect(refused).toMatchObject(denied("resource"));
+      })
+  );
+
+  it.effect(
+    "refuses to restore a period that does not exist, as a resource",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const refused = yield* fixture
+          .as("admin")
+          .mutation(restore, { periodId: missingPeriod, slug: nf })
           .pipe(Effect.flip);
         expect(refused).toMatchObject(denied("resource"));
       })
