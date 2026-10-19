@@ -58,10 +58,10 @@ describe("insertPlaceholderRoom", () => {
     state: "scheduled",
     timeZone: "Asia/Jakarta",
   };
-  const schedule = {
+  // The schedule's arguments are written at each call, so the group keeps its literal kind.
+  const scheduleArgs = {
     closesAt: insertion.closesAt,
     examId: input.examId,
-    group: { kind: "unit", unitId: unitId("unit") },
     opensAt: insertion.opensAt,
     room: insertion.room,
     slug: input.slug,
@@ -75,7 +75,7 @@ describe("insertPlaceholderRoom", () => {
 
     insertPlaceholderRoom(insertion)(
       { getAllQueries, getQuery: vi.fn(), setQuery },
-      schedule
+      { ...scheduleArgs, group: { kind: "unit", unitId: unitId("unit") } }
     );
 
     expect(setQuery).toHaveBeenCalledTimes(2);
@@ -97,7 +97,7 @@ describe("insertPlaceholderRoom", () => {
 
     insertPlaceholderRoom(insertion)(
       { getAllQueries, getQuery: vi.fn(), setQuery },
-      schedule
+      { ...scheduleArgs, group: { kind: "unit", unitId: unitId("unit") } }
     );
 
     expect(setQuery).not.toHaveBeenCalled();
