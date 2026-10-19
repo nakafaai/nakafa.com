@@ -28,6 +28,8 @@ import {
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { useState } from "react";
+import { createStore, useStore } from "zustand";
+import { combine } from "zustand/middleware";
 
 interface NonUniformLinearMotionGraphCardProps {
   description: ReactNode;
@@ -35,19 +37,30 @@ interface NonUniformLinearMotionGraphCardProps {
   title: ReactNode;
 }
 
+/** Creates one card's store, which holds the scenario its reader picked. */
+function createGlbbScenarioStore(initialScenarioId: GlbbScenarioId) {
+  return createStore(
+    combine({ scenarioId: initialScenarioId }, (set) => ({
+      selectScenario: (scenarioId: GlbbScenarioId) => set({ scenarioId }),
+    }))
+  );
+}
+
 export function NonUniformLinearMotionGraphCard({
   title,
   description,
   labels,
 }: NonUniformLinearMotionGraphCardProps) {
-  const [scenarioId, setScenarioId] = useState<GlbbScenarioId>(
-    DEFAULT_GLBB_SCENARIO_ID
+  const [store] = useState(() =>
+    createGlbbScenarioStore(DEFAULT_GLBB_SCENARIO_ID)
   );
+  const scenarioId = useStore(store, (state) => state.scenarioId);
+  const selectScenario = useStore(store, (state) => state.selectScenario);
   const scenario = getGlbbScenarioById(scenarioId);
 
   function handleScenarioChange(nextScenarioId: string) {
     if (nextScenarioId && isGlbbScenarioId(nextScenarioId)) {
-      setScenarioId(nextScenarioId);
+      selectScenario(nextScenarioId);
     }
   }
 

@@ -5,11 +5,11 @@ import {
   BLUE_MARBLE_EARTH_TEXTURE_ASSET,
   TERRA_SATELLITE_ASSET,
 } from "@repo/design-system/components/contents/biology/assets";
+import { useBiologyColors } from "@repo/design-system/components/contents/biology/context";
 import type { BiologySceneColors } from "@repo/design-system/components/contents/biology/data";
 import {
   BiologyLabFrame,
   type BiologyLabProps,
-  type BiologySceneProps,
 } from "@repo/design-system/components/contents/biology/lab-frame";
 import { FloatingGroup } from "@repo/design-system/components/contents/biology/motion";
 import { BiologyLine } from "@repo/design-system/components/contents/biology/parts";
@@ -42,7 +42,9 @@ export function ClimateObservationLab(props: BiologyLabProps) {
   );
 }
 
-function ClimateObservationScene({ colors }: BiologySceneProps) {
+function ClimateObservationScene() {
+  const colors = useBiologyColors();
+
   return (
     <group position={[0, -0.04, 0]} rotation={[-0.08, -0.3, 0.02]} scale={1.2}>
       <EarthIndicators />

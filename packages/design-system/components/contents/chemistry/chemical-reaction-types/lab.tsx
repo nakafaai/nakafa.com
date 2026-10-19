@@ -1,7 +1,10 @@
 "use client";
 
 import { useThree } from "@react-three/fiber";
-import { ChemicalReactionTypeSceneProvider } from "@repo/design-system/components/contents/chemistry/chemical-reaction-types/context";
+import {
+  ChemicalReactionTypeSceneProvider,
+  createChemicalReactionTypeStore,
+} from "@repo/design-system/components/contents/chemistry/chemical-reaction-types/context";
 import {
   CHEMICAL_REACTION_TYPE_IDS,
   CHEMICAL_REACTION_TYPES_SCENE_VIEW,
@@ -35,7 +38,8 @@ import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import type { ReactNode } from "react";
-import { Suspense, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
+import { useStore } from "zustand";
 
 const NARROW_CANVAS_ASPECT_RATIO = 1.25;
 
@@ -74,11 +78,17 @@ export function ChemicalReactionTypesLab({
   labels,
 }: ChemicalReactionTypesLabProps) {
   const { resolvedTheme } = useTheme();
-  const [selectedTypeId, setSelectedTypeId] =
-    useState<ChemicalReactionTypeId>(COMBUSTION_TYPE_ID);
+  const [store] = useState(() =>
+    createChemicalReactionTypeStore(COMBUSTION_TYPE_ID)
+  );
+  const selectedTypeId = useStore(store, (state) => state.typeId);
+  const selectType = useStore(store, (state) => state.selectType);
   const selectedLabels = labels.types[selectedTypeId];
   const t = useTranslations("Common");
-  const sceneColors = getChemicalReactionTypeSceneColors(resolvedTheme);
+  const sceneColors = useMemo(
+    () => getChemicalReactionTypeSceneColors(resolvedTheme),
+    [resolvedTheme]
+  );
 
   /**
    * Keeps one reaction type selected when ToggleGroup emits an empty value.
@@ -92,7 +102,7 @@ export function ChemicalReactionTypesLab({
       return;
     }
 
-    setSelectedTypeId(value);
+    selectType(value);
   }
 
   return (
@@ -146,7 +156,7 @@ export function ChemicalReactionTypesLab({
             />
             <ChemicalReactionTypeSceneProvider
               colors={sceneColors}
-              typeId={selectedTypeId}
+              store={store}
             >
               <ChemicalReactionTypesScene labels={labels} />
             </ChemicalReactionTypeSceneProvider>

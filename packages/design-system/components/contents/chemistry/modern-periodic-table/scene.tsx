@@ -16,11 +16,16 @@ import {
   SERIES_MARKER_CATEGORY_ID,
   TRANSITION_FOCUS_ID,
 } from "@repo/design-system/components/contents/chemistry/modern-periodic-table/data";
+import type {
+  ModernPeriodicTableFocusState,
+  ModernPeriodicTableFocusStore,
+} from "@repo/design-system/components/contents/chemistry/modern-periodic-table/store";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { THREE_FONT_SIZE } from "@repo/design-system/components/three/data/constants";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { Array as Arr } from "effect";
-import { createContext, type ReactNode, use } from "react";
+import { createContext, type ReactNode, use, useMemo } from "react";
+import { useStore } from "zustand";
 
 const GROUP_COUNT = 18;
 const PERIOD_COUNT = 7;
@@ -55,28 +60,37 @@ const NARROW_LABEL_SYMBOLS = {
 
 interface ModernPeriodicTableSceneProps {
   colors: ModernPeriodicTableSceneColors;
-  focusId: ModernPeriodicTableFocusId;
   labels: ModernPeriodicTableSceneLabels;
+  store: ModernPeriodicTableFocusStore;
 }
 
 const ModernPeriodicTableSceneContext =
   createContext<ModernPeriodicTableSceneProps | null>(null);
 
-/** Provides the colors, the focus and the labels of one periodic-table lab to its tiles. */
+/**
+ * Provides the colors, the labels, and the focus store of one periodic-table
+ * lab to its tiles. The value changes only with the colors or the labels, so a
+ * tile that reads only colors never reruns when the reader picks another focus.
+ */
 export function ModernPeriodicTableSceneProvider({
   children,
   colors,
-  focusId,
   labels,
+  store,
 }: ModernPeriodicTableSceneProps & { children: ReactNode }) {
+  const value = useMemo(
+    () => ({ colors, labels, store }),
+    [colors, labels, store]
+  );
+
   return (
-    <ModernPeriodicTableSceneContext value={{ colors, focusId, labels }}>
+    <ModernPeriodicTableSceneContext value={value}>
       {children}
     </ModernPeriodicTableSceneContext>
   );
 }
 
-/** Reads the colors, the focus and the labels of the surrounding periodic-table lab. */
+/** Reads the colors and the labels of the surrounding periodic-table lab. */
 function useModernPeriodicTableScene() {
   const scene = use(ModernPeriodicTableSceneContext);
   if (!scene) {
@@ -86,6 +100,13 @@ function useModernPeriodicTableScene() {
     );
   }
   return scene;
+}
+
+/** Selects one part of the surrounding lab's focus, so a tile reruns only for it. */
+function useModernPeriodicTableFocus<T>(
+  selector: (state: ModernPeriodicTableFocusState) => T
+) {
+  return useStore(useModernPeriodicTableScene().store, selector);
 }
 
 /**
@@ -173,7 +194,8 @@ function MainTableTile({
   narrow: boolean;
   period: number;
 }) {
-  const { colors, focusId } = useModernPeriodicTableScene();
+  const { colors } = useModernPeriodicTableScene();
+  const focusId = useModernPeriodicTableFocus((state) => state.focusId);
   const highlighted = isEntryHighlighted(entry, focusId);
   const height = highlighted ? ACTIVE_TILE_HEIGHT : INACTIVE_TILE_HEIGHT;
   const x = getMainX(entry.group);
@@ -202,7 +224,8 @@ function SeriesTile({
   entryIndex: number;
   rowIndex: number;
 }) {
-  const { colors, focusId } = useModernPeriodicTableScene();
+  const { colors } = useModernPeriodicTableScene();
+  const focusId = useModernPeriodicTableFocus((state) => state.focusId);
   const highlighted = focusId === INNER_TRANSITION_FOCUS_ID;
   const height = highlighted ? ACTIVE_TILE_HEIGHT : INACTIVE_TILE_HEIGHT;
 

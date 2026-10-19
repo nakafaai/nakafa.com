@@ -1,5 +1,8 @@
 import { useFrame } from "@react-three/fiber";
-import { useReactionCharacteristicsScene } from "@repo/design-system/components/contents/chemistry/chemical-reaction-characteristics/context";
+import {
+  useReactionCharacteristicsColors,
+  useReactionCharacteristicsCue,
+} from "@repo/design-system/components/contents/chemistry/chemical-reaction-characteristics/context";
 import {
   COLOR_CUE_ID,
   ENERGY_CUE_ID,
@@ -139,7 +142,7 @@ export function ReactionCharacteristicsScene({
 }: {
   labels: ReactionCharacteristicsLabProps["labels"];
 }) {
-  const { colors } = useReactionCharacteristicsScene();
+  const colors = useReactionCharacteristicsColors();
 
   return (
     <group position={[0, SCENE_Y, 0]} scale={SCENE_SCALE}>
@@ -168,7 +171,8 @@ export function ReactionCharacteristicsScene({
  * Renders one 3D beaker state.
  */
 function ReactionBeaker({ phase, x }: { phase: ReactionPhase; x: number }) {
-  const { colors, cueId } = useReactionCharacteristicsScene();
+  const colors = useReactionCharacteristicsColors();
+  const cueId = useReactionCharacteristicsCue((state) => state.cueId);
 
   return (
     <group position={[x, 0, 0]} scale={BEAKER_SCALE}>
@@ -183,7 +187,7 @@ function ReactionBeaker({ phase, x }: { phase: ReactionPhase; x: number }) {
  * Draws the glass wall, rim, and base without hiding the reaction cue.
  */
 function BeakerGlass() {
-  const { colors } = useReactionCharacteristicsScene();
+  const colors = useReactionCharacteristicsColors();
   return (
     <group>
       <mesh castShadow receiveShadow>
@@ -249,7 +253,8 @@ function Liquid({ color }: { color: string }) {
  * Chooses the visible 3D cue only after the reaction state.
  */
 function ReactionCueVisual({ phase }: { phase: ReactionPhase }) {
-  const { colors, cueId } = useReactionCharacteristicsScene();
+  const colors = useReactionCharacteristicsColors();
+  const cueId = useReactionCharacteristicsCue((state) => state.cueId);
   if (phase === "before") {
     return null;
   }

@@ -28,6 +28,8 @@ import {
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { useState } from "react";
+import { createStore, useStore } from "zustand";
+import { combine } from "zustand/middleware";
 
 interface AccelerationGraphCardProps {
   description: ReactNode;
@@ -35,19 +37,30 @@ interface AccelerationGraphCardProps {
   title: ReactNode;
 }
 
+/** Creates one card's store, which holds the case its reader picked. */
+function createAccelerationCaseStore(initialCaseId: AccelerationCaseId) {
+  return createStore(
+    combine({ caseId: initialCaseId }, (set) => ({
+      selectCase: (caseId: AccelerationCaseId) => set({ caseId }),
+    }))
+  );
+}
+
 export function AccelerationGraphCard({
   title,
   description,
   labels,
 }: AccelerationGraphCardProps) {
-  const [caseId, setCaseId] = useState<AccelerationCaseId>(
-    DEFAULT_ACCELERATION_CASE_ID
+  const [store] = useState(() =>
+    createAccelerationCaseStore(DEFAULT_ACCELERATION_CASE_ID)
   );
+  const caseId = useStore(store, (state) => state.caseId);
+  const selectCase = useStore(store, (state) => state.selectCase);
   const selectedCase = getAccelerationCaseById(caseId);
 
   function handleCaseChange(nextCaseId: string) {
     if (nextCaseId && isAccelerationCaseId(nextCaseId)) {
-      setCaseId(nextCaseId);
+      selectCase(nextCaseId);
     }
   }
 

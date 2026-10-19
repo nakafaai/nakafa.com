@@ -1,5 +1,8 @@
 import { RoundedBox } from "@react-three/drei";
-import { useChemicalReactionTypeScene } from "@repo/design-system/components/contents/chemistry/chemical-reaction-types/context";
+import {
+  useChemicalReactionTypeScene,
+  useChemicalReactionTypeSelection,
+} from "@repo/design-system/components/contents/chemistry/chemical-reaction-types/context";
 import {
   type ChemicalReactionTypeScenePoint,
   COMBUSTION_TYPE_ID,
@@ -62,7 +65,7 @@ const PRODUCT_PHOSPHORUS_POINTS = [
 type ReactionPhase = "after" | "before";
 
 export function ReactionModel({ phase }: { phase: ReactionPhase }) {
-  const { typeId } = useChemicalReactionTypeScene();
+  const typeId = useChemicalReactionTypeSelection((state) => state.typeId);
   if (typeId === COMBUSTION_TYPE_ID) {
     return <CombustionModel phase={phase} />;
   }

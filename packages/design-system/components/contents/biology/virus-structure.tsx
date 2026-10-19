@@ -2,6 +2,10 @@
 
 import { BiologyCallouts } from "@repo/design-system/components/contents/biology/callouts";
 import {
+  useBiologyColors,
+  useBiologyItemSelection,
+} from "@repo/design-system/components/contents/biology/context";
+import {
   BIOLOGY_RING_POINT_COUNT,
   createBiologySpherePoints,
 } from "@repo/design-system/components/contents/biology/data";
@@ -80,7 +84,9 @@ export function VirusMorphologyLab(props: BiologyLabProps) {
 /**
  * Shows that a virion is genetic material packaged in protein, sometimes with an envelope.
  */
-function VirusStructureScene({ colors, selectedIndex }: BiologySceneProps) {
+function VirusStructureScene() {
+  const colors = useBiologyColors();
+  const selectedIndex = useBiologyItemSelection((state) => state.selectedIndex);
   const isCapsidFocus = selectedIndex === 0;
   const isGenomeFocus = selectedIndex === 1;
   const isEnvelopeFocus = selectedIndex === 2;
@@ -142,7 +148,9 @@ function VirusStructureScene({ colors, selectedIndex }: BiologySceneProps) {
 /**
  * Compares the four viral morphologies in two rows, including on narrow screens.
  */
-function VirusMorphologyScene({ colors, item }: BiologySceneProps) {
+function VirusMorphologyScene({ item }: BiologySceneProps) {
+  const colors = useBiologyColors();
+
   return (
     <group>
       <group position={[-1.1, 0.95, 0]} rotation={[0.08, -0.24, 0.08]}>
@@ -159,7 +167,6 @@ function VirusMorphologyScene({ colors, item }: BiologySceneProps) {
       </group>
       <BiologyCallouts
         callouts={item.callouts}
-        color={colors.text}
         targets={MORPHOLOGY_LABEL_TARGETS}
       />
     </group>

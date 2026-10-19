@@ -1,6 +1,7 @@
 "use client";
 
 import { BiologyCallouts } from "@repo/design-system/components/contents/biology/callouts";
+import { useBiologyColors } from "@repo/design-system/components/contents/biology/context";
 import type { BiologyScenePoint } from "@repo/design-system/components/contents/biology/data";
 import {
   BiologyLabFrame,
@@ -114,18 +115,16 @@ export function FungiMyceliumLab(props: BiologyLabProps) {
   );
 }
 
-function FungiMyceliumScene({ colors, item }: BiologySceneProps) {
+function FungiMyceliumScene({ item }: BiologySceneProps) {
+  const colors = useBiologyColors();
+
   return (
     <group rotation={[-0.1, -0.34, 0.04]} scale={1.25}>
       <Substrate color={colors.grain} />
       <EnzymeDroplets color={colors.decomposer} />
       <HyphaNetwork coreColor={colors.decomposer} wallColor={colors.skyLight} />
       <SporeHead color={colors.spore} stemColor={colors.decomposer} />
-      <BiologyCallouts
-        callouts={item.callouts}
-        color={colors.text}
-        targets={CALLOUT_TARGETS}
-      />
+      <BiologyCallouts callouts={item.callouts} targets={CALLOUT_TARGETS} />
     </group>
   );
 }
