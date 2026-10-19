@@ -55,7 +55,9 @@ export function ExamTryQuestion({
       <h2 className="font-medium" id={titleId}>
         {t("question", { number })}
       </h2>
-      {QueryResult.isSuccess(reply) ? <TryPrompt opened={reply.value} /> : null}
+      {QueryResult.isSuccess(reply) ? (
+        <TryPrompt key={question.prompt} opened={reply.value} />
+      ) : null}
       {Option.isSome(choice) ? (
         <SittingChoice
           choice={choice.value}
