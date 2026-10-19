@@ -50,8 +50,9 @@ export function HomeTile({
 }
 
 /**
- * The body of a tile with nothing to show: Nina doing what fits the list, and one sentence, in the
- * height of one row, so the tile is as tall as it is when it holds a row.
+ * The body of a tile with nothing to show: Nina doing what fits the list, and one sentence. The
+ * sentence stops at the four lines the tile's body reserves, so a narrow tile keeps its height
+ * when its sentence wraps further.
  */
 export function TileEmpty({
   act,
@@ -63,7 +64,7 @@ export function TileEmpty({
   return (
     <div className="flex items-center gap-3 px-6 py-3">
       <Nina act={act} label="" size={48} whole />
-      <p className="text-muted-foreground text-sm">{children}</p>
+      <p className="line-clamp-4 text-muted-foreground text-sm">{children}</p>
     </div>
   );
 }
