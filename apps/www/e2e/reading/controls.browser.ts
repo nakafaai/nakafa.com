@@ -15,7 +15,7 @@ const INTER_FONT = /Inter/;
 const routes = [pinnedRoutes.material.en, pinnedRoutes.article.en];
 // The lesson's pagination, breadcrumb and outline header, as the server sends them.
 const readingControls =
-  'nav[aria-label="Pagination navigation"] a, nav[aria-label="breadcrumb"] li, aside [data-sidebar="header"] a';
+  'nav[aria-label="Pagination navigation"] a, nav[data-slot="breadcrumb"] li, aside [data-sidebar="header"] a';
 
 /** Reads the first rendered section heading ink and its underline accent. */
 const readSectionHeadingInk = (span: HTMLElement) => {

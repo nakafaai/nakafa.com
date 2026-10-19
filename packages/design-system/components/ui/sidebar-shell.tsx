@@ -6,7 +6,6 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import {
   Sheet,
   SheetContent,
-  SheetDescription,
   SheetHeader,
   SheetTitle,
 } from "@repo/design-system/components/ui/sheet";
@@ -22,16 +21,22 @@ export function Sidebar({
   className,
   containerClassName,
   children,
+  label,
   ...props
 }: ComponentProps<"div"> & {
   side?: "left" | "right";
   variant?: "sidebar" | "floating" | "inset";
   collapsible?: "offcanvas" | "icon" | "none";
   containerClassName?: string;
+  /** The name of the sidebar on small screens, in the reader's language. */
+  label: string;
 }) {
   const state = useSidebar((sidebar) => sidebar.state);
   const openMobile = useSidebar((sidebar) => sidebar.openMobile);
   const setOpenMobile = useSidebar((sidebar) => sidebar.setOpenMobile);
+  // A collapsed off-canvas panel is slid out of view, so its links must leave the tab order.
+  const isOffcanvasCollapsed =
+    state === "collapsed" && collapsible === "offcanvas";
 
   if (collapsible === "none") {
     return (
@@ -59,8 +64,7 @@ export function Sidebar({
           side={side}
         >
           <SheetHeader className="sr-only">
-            <SheetTitle>Sidebar</SheetTitle>
-            <SheetDescription>Displays the mobile sidebar.</SheetDescription>
+            <SheetTitle>{label}</SheetTitle>
           </SheetHeader>
           <div className="flex h-full w-full flex-col">{children}</div>
         </SheetContent>
@@ -79,7 +83,7 @@ export function Sidebar({
       >
         <div
           className={cn(
-            "relative w-64 bg-transparent transition-[width] duration-surface",
+            "relative w-64 bg-transparent transition-[width] duration-surface motion-reduce:transition-none",
             "group-data-[collapsible=offcanvas]:w-0",
             "group-data-[side=right]:rotate-180",
             variant === "floating" || variant === "inset"
@@ -90,7 +94,7 @@ export function Sidebar({
         />
         <div
           className={cn(
-            "fixed inset-y-0 z-10 hidden h-svh w-64 transition-[left,right,width] duration-surface md:flex",
+            "fixed inset-y-0 z-10 hidden h-svh w-64 transition-[left,right,width] duration-surface motion-reduce:transition-none md:flex",
             side === "left"
               ? "left-0 group-data-[collapsible=offcanvas]:-left-64"
               : "right-0 group-data-[collapsible=offcanvas]:-right-64",
@@ -100,6 +104,7 @@ export function Sidebar({
             className
           )}
           data-slot="sidebar-container"
+          inert={isOffcanvasCollapsed}
           {...props}
         >
           <div
@@ -120,9 +125,12 @@ export function SidebarTrigger({
   className,
   onClick,
   icon,
+  label,
   ...props
 }: ComponentProps<typeof Button> & {
   icon?: ComponentProps<typeof HugeIcons>["icon"];
+  /** The name of the toggle, in the reader's language. */
+  label: string;
 }) {
   const isLocked = useSidebar((sidebar) => sidebar.isLocked);
   const isMobile = useSidebar((sidebar) => sidebar.isMobile);
@@ -137,7 +145,7 @@ export function SidebarTrigger({
   return (
     <Button
       aria-expanded={isMobile ? openMobile : open}
-      aria-label="Toggle Sidebar"
+      aria-label={label}
       className={cn("size-7", className)}
       data-sidebar="trigger"
       data-slot="sidebar-trigger"
@@ -150,13 +158,19 @@ export function SidebarTrigger({
       {...props}
     >
       <HugeIcons icon={icon ?? PanelLeftIcon} />
-      <span className="sr-only">Toggle Sidebar</span>
     </Button>
   );
 }
 
 /** Renders the narrow sidebar toggle rail for pointer gestures. */
-export function SidebarRail({ className, ...props }: ComponentProps<"button">) {
+export function SidebarRail({
+  className,
+  label,
+  ...props
+}: ComponentProps<"button"> & {
+  /** The name of the toggle, in the reader's language. */
+  label: string;
+}) {
   const isLocked = useSidebar((sidebar) => sidebar.isLocked);
   const toggleSidebar = useSidebar((sidebar) => sidebar.toggleSidebar);
 
@@ -166,7 +180,7 @@ export function SidebarRail({ className, ...props }: ComponentProps<"button">) {
 
   return (
     <button
-      aria-label="Toggle Sidebar"
+      aria-label={label}
       className={cn(
         "absolute inset-y-0 z-20 hidden w-4 -translate-x-1/2 transition-[translate,left,right,background-color] duration-surface after:absolute after:inset-y-0 after:left-1/2 after:w-0.5 hover:after:bg-sidebar-border group-data-[side=left]:-right-4 group-data-[side=right]:left-0 sm:flex",
         "in-data-[side=left]:cursor-w-resize in-data-[side=right]:cursor-e-resize",
@@ -180,7 +194,7 @@ export function SidebarRail({ className, ...props }: ComponentProps<"button">) {
       data-slot="sidebar-rail"
       onClick={toggleSidebar}
       tabIndex={-1}
-      title="Toggle Sidebar"
+      title={label}
       type="button"
       {...props}
     />

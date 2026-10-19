@@ -23,10 +23,18 @@ function Questionnaire({
   );
 }
 
+/**
+ * The learner's place in the questionnaire. The primitive names the meter and
+ * its value in English, so the caller passes `aria-label` and sets
+ * `aria-valuetext` on the element its `render` returns.
+ */
 function QuestionnaireProgress({
   className,
   ...props
-}: React.ComponentProps<typeof QuestionnairePrimitive.Progress>) {
+}: React.ComponentProps<typeof QuestionnairePrimitive.Progress> & {
+  /** The name of the progress meter, in the reader's language. */
+  "aria-label": string;
+}) {
   return (
     <QuestionnairePrimitive.Progress
       className={cn(

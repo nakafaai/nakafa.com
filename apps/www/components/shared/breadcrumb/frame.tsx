@@ -1,5 +1,6 @@
 import { SidebarScopeStart } from "@repo/design-system/components/ui/sidebar-scope";
 import { cn } from "cn";
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { ShellTitle } from "@/components/sidebar/lock";
 
@@ -20,6 +21,8 @@ export function BreadcrumbHeaderFrame({
   className?: string;
   contentClassName?: string;
 }) {
+  const tCommon = useTranslations("Common");
+
   return (
     <header
       className={cn(
@@ -29,7 +32,10 @@ export function BreadcrumbHeaderFrame({
       data-slot="page-header"
     >
       <ShellTitle />
-      <SidebarScopeStart className="ps-4 group-has-[[data-shell-lock]]/sidebar-wrapper:hidden group-data-locked/sidebar-wrapper:hidden lg:hidden" />
+      <SidebarScopeStart
+        className="ps-4 group-has-[[data-shell-lock]]/sidebar-wrapper:hidden group-data-locked/sidebar-wrapper:hidden lg:hidden"
+        label={tCommon("toggle-sidebar")}
+      />
       <div
         className={cn(
           "mx-auto flex w-full min-w-0 max-w-3xl items-center justify-between gap-3 px-4 py-3 sm:px-6",

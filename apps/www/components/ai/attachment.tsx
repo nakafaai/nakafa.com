@@ -103,7 +103,13 @@ function FileNameParts({ name }: { name: string }) {
 
 /** The icon of a document, or a spinner while the document uploads. */
 function NinaFileMedia({ uploading }: { uploading: boolean }) {
-  return uploading ? <Spinner /> : <HugeIcons icon={FileIcon} />;
+  const tCommon = useTranslations("Common");
+
+  return uploading ? (
+    <Spinner label={tCommon("loading")} />
+  ) : (
+    <HugeIcons icon={FileIcon} />
+  );
 }
 
 /**

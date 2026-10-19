@@ -106,6 +106,7 @@ interface TryoutAttemptHistoryProps {
 /** Renders the prior production attempt-history picker styling. */
 function TryoutAttemptHistory({ value }: TryoutAttemptHistoryProps) {
   const tTryouts = useTranslations("Tryouts");
+  const tCommon = useTranslations("Common");
   const firstAttempt = Arr.head(value.attempts);
 
   if (Option.isNone(firstAttempt) || value.attempts.length < 2) {
@@ -168,6 +169,7 @@ function TryoutAttemptHistory({ value }: TryoutAttemptHistoryProps) {
         >
           <AutocompleteInput
             className="h-9 rounded-none border-x-0 border-t-0 border-b shadow-none focus-visible:border-border focus-visible:ring-0"
+            clearLabel={tCommon("clear-search")}
             placeholder={tTryouts("attempt-menu-search-placeholder")}
             showClear
             startAddon={<HugeIcons className="size-4" icon={Search02Icon} />}

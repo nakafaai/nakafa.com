@@ -8,6 +8,7 @@ import {
 } from "@repo/design-system/components/ui/breadcrumb";
 import { cn } from "cn";
 import { Array as Arr, Schema } from "effect";
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { BreadcrumbAnchor } from "@/components/shared/breadcrumb/anchor";
 import { BreadcrumbHeaderFrame } from "@/components/shared/breadcrumb/frame";
@@ -82,11 +83,12 @@ export function BreadcrumbHeaderPath({
   children?: ReactNode;
   visibleItemCount?: 1 | 2;
 }) {
+  const tCommon = useTranslations("Common");
   const hiddenItems = Arr.dropRight(items, visibleItemCount);
   const visibleItems = Arr.takeRight(items, visibleItemCount);
   const foldsOnPhone = items.length > 1;
   return (
-    <Breadcrumb className="min-w-0">
+    <Breadcrumb aria-label={tCommon("breadcrumb")} className="min-w-0">
       <BreadcrumbList className="flex-nowrap">
         {foldsOnPhone ? (
           <BreadcrumbMenu
@@ -150,8 +152,13 @@ export function BreadcrumbHeaderFold({
 > & {
   className: string;
 }) {
+  const tCommon = useTranslations("Common");
+
   return (
-    <Breadcrumb className={cn("shrink-0", className)}>
+    <Breadcrumb
+      aria-label={tCommon("breadcrumb")}
+      className={cn("shrink-0", className)}
+    >
       <BreadcrumbList className="flex-nowrap">
         <BreadcrumbMenu
           className=""

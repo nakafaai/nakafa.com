@@ -42,7 +42,7 @@ function AccordionTrigger({
       >
         {children}
         <HugeIcons
-          className="pointer-events-none size-4 shrink-0 translate-y-0.5 text-muted-foreground transition-transform group-aria-expanded/accordion-trigger:rotate-180"
+          className="pointer-events-none size-4 shrink-0 translate-y-0.5 text-muted-foreground transition-transform group-aria-expanded/accordion-trigger:rotate-180 motion-reduce:transition-none"
           icon={ArrowDown01Icon}
         />
       </AccordionPrimitive.Trigger>
@@ -57,7 +57,7 @@ function AccordionContent({
 }: AccordionPrimitive.Panel.Props) {
   return (
     <AccordionPrimitive.Panel
-      className="overflow-hidden text-sm data-closed:animate-accordion-up data-open:animate-accordion-down"
+      className="overflow-hidden text-sm motion-safe:data-closed:animate-accordion-up motion-safe:data-open:animate-accordion-down"
       data-slot="accordion-content"
       {...props}
     >
