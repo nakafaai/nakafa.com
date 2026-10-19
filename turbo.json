@@ -4,12 +4,12 @@
   "globalDependencies": ["**/.env.*local"],
   "ui": "tui",
   "envMode": "loose",
-  "globalEnv": ["NEXT_RUNTIME", "NODE_ENV"],
+  "globalEnv": ["NODE_ENV"],
   "globalPassThroughEnv": [
     "BING_WEBMASTER_API_KEY",
     "FIRECRAWL_API_KEY",
     "MATH_CAS_API_KEY",
-    "NEXT_PUBLIC_CAS_URL",
+    "VITE_CAS_URL",
     "OPENWEATHER_API_KEY",
     "VERCEL_ENV",
     "SITE_URL",
@@ -105,8 +105,8 @@
       "dependsOn": ["^build"],
       "env": ["AKSARA_PUBLICATION_TOKEN"],
       "outputs": [
-        ".next/**",
-        "!.next/cache/**",
+        ".output/**",
+        ".vercel/output/**",
         "**/generated/**",
         "dist/**",
         "storybook-static/**"
