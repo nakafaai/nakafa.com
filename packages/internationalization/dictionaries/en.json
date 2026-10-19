@@ -356,6 +356,7 @@
     "invite-email": "Email",
     "invite-expires": "Expires",
     "invite-resend": "Send again",
+    "invite-expired": "Expired",
     "invite-revoke": "Revoke",
     "invite-revoke-title": "Revoke this invite?",
     "invite-revoke-description": "The address can no longer accept this invite.",

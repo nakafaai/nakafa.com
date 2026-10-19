@@ -327,6 +327,8 @@ export const inviteChange: OptimisticUpdate<typeof tenancy.invites.invite> = (
     id: Schema.decodeUnknownSync(Id("tenantInvites"))(draftText()),
     name: person.value.name,
     personId,
+    roles: [],
+    status: "pending",
   };
   changeInviteLists(localStore, slug, isFirstPage, (page) =>
     Arr.prepend(page, draft)

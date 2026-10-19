@@ -356,6 +356,7 @@
     "invite-email": "Email",
     "invite-expires": "Berakhir",
     "invite-resend": "Kirim ulang",
+    "invite-expired": "Kedaluwarsa",
     "invite-revoke": "Cabut",
     "invite-revoke-title": "Cabut undangan ini?",
     "invite-revoke-description": "Alamat ini tidak dapat lagi menerima undangan ini.",
