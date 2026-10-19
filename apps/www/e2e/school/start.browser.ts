@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { Array as Arr, Effect } from "effect";
 import { saved, trackChanges } from "@/e2e/support/changes";
+import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { signInLearner } from "@/e2e/support/learner";
 import { hostAddress } from "@/e2e/support/school";
 
@@ -16,7 +17,9 @@ test("a new account opens its own school in five questions and lands in it as it
   const name = `Harapan ${tag}`;
   const slug = `harapan-${tag}`;
 
-  // The home page's school band opens the questionnaire.
+  // The home page's school band opens the questionnaire. The usage data prompt is
+  // decided first, so it does not cover the band.
+  await Effect.runPromise(seedAnalyticsConsent(page, "denied"));
   await page.goto("/en");
   await page.getByRole("link", { name: "Open a school" }).click();
   await page.waitForURL("**/en/school/new");

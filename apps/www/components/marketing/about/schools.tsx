@@ -1,7 +1,7 @@
 import { School01Icon } from "@hugeicons/core-free-icons";
-import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { PersonAvatar } from "@repo/design-system/components/ui/person";
+import { buttonVariants } from "@repo/design-system/lib/button";
 import { Link } from "@repo/internationalization/src/navigation";
 import type { Mascot } from "@repo/mascot/code";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
@@ -17,6 +17,8 @@ import { MarketingSection } from "@/components/marketing/shared/section";
  */
 export function Schools({ herd }: { herd: readonly (typeof Mascot.Type)[] }) {
   const t = useTranslations("Landing");
+  const tCommon = useTranslations("Common");
+  const tStart = useTranslations("SchoolStart");
 
   return (
     <MarketingSection id="school">
@@ -32,24 +34,20 @@ export function Schools({ herd }: { herd: readonly (typeof Mascot.Type)[] }) {
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
-              <Button
-                className="w-fit"
-                nativeButton={false}
-                render={
-                  <Link href="/school/new">
-                    <HugeIcons icon={School01Icon} />
-                    {t("school-cta")}
-                  </Link>
-                }
-                variant="inverse"
-              />
+              <Link
+                className={buttonVariants({ variant: "inverse" })}
+                href="/school/new"
+              >
+                <HugeIcons icon={School01Icon} />
+                {tCommon("open-school")}
+              </Link>
               <a
                 className="font-medium text-sm underline-offset-4 hover:underline"
                 href={`mailto:${COMPANY_IDENTITY.email}`}
                 rel="noopener noreferrer"
                 target="_blank"
               >
-                {t("school-founder")}
+                {tStart("founder-link")}
               </a>
             </div>
           </div>
