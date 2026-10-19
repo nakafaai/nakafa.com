@@ -3,7 +3,7 @@
 import { QueryResult } from "@confect/react";
 import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { Array as Arr, Option } from "effect";
+import { Option } from "effect";
 import { useTranslations } from "next-intl";
 import { type ReactNode, useState } from "react";
 import type { StoreApi } from "zustand";
@@ -19,15 +19,17 @@ import { useStudentSittings } from "@/components/tenant/home/query.client";
 import { StaffHome } from "@/components/tenant/home/staff";
 import { StudentHome } from "@/components/tenant/home/student";
 import { HomeTitle } from "@/components/tenant/home/title";
-import { orderSittings } from "@/components/tenant/sittings.client";
+import { enterableSitting, orderSittings } from "@/components/tenant/sittings.client";
 
 /**
- * Beranda of a school: one header with the page's one end-goal action for the viewer, a title row with Nina, and
+ * The home of a school: one header with the page's one end-goal action for the viewer, a title row with Nina, and
  * the tiles of what the viewer must act on now. A student sees the student's sittings and results. A viewer who
  * watches rooms sees the rooms that run and open soon, the results to view, and the setup while it is open, and a
- * viewer who may create exams also sees the exams they started. The school's context carries the viewer's access,
- * which the layout computed on the server, so the header's action is in the first HTML. Each home reads its rows
- * once, and the tiles it shows take their rows from that read.
+ * viewer who may create exams also sees the exams they started. The school's context carries the viewer's access
+ * and the greeting, which the layout computed on the server, so Create exam and the title are in the first HTML.
+ * A student's Enter sitting reads the student's sittings on the client, because a sitting opens or closes while
+ * the page is open, so the action appears once that read answers. Each home reads its rows once, and the tiles it
+ * shows take their rows from that read.
  */
 export function TenantHome() {
   const tenant = useTenant();
@@ -73,10 +75,7 @@ function StudentAction() {
   const te = useTranslations("Exams");
   const listed = useStudentSittings();
   const open = QueryResult.isSuccess(listed)
-    ? Arr.findFirst(
-        orderSittings(listed.value),
-        (sitting) => sitting.state === "open" && sitting.attempt !== "submitted"
-      )
+    ? enterableSitting(orderSittings(listed.value))
     : Option.none();
 
   if (Option.isNone(open)) {

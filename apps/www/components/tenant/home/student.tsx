@@ -23,7 +23,10 @@ import {
 } from "@/components/tenant/home/tile";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { schoolDateTimeText } from "@/components/tenant/settings/clock";
-import { orderSittings } from "@/components/tenant/sittings.client";
+import {
+  enterableSitting,
+  orderSittings,
+} from "@/components/tenant/sittings.client";
 
 /** One sitting of the student, as the student's list holds it. */
 type Sitting = typeof StudentSittingRow.Type;
@@ -75,10 +78,7 @@ function StudentTiles() {
     results: finished.length,
     sittings: upcoming.length,
   });
-  const open = Arr.findFirst(
-    upcoming,
-    (sitting) => sitting.state === "open" && sitting.attempt !== "submitted"
-  );
+  const open = enterableSitting(sittings);
   const scheduled = Arr.findFirst(
     upcoming,
     (sitting) => sitting.state === "scheduled"
