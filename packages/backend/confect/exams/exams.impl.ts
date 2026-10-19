@@ -15,6 +15,7 @@ import spec from "@repo/backend/confect/exams/exams.spec";
 import { readHome } from "@repo/backend/confect/exams/home/read";
 import { addQuestion } from "@repo/backend/confect/exams/questions/place";
 import { readQuestion } from "@repo/backend/confect/exams/questions/read";
+import { scheduleCohortsOf } from "@repo/backend/confect/exams/sittings/audience";
 import { scheduleSitting } from "@repo/backend/confect/exams/sittings/schedule";
 import member from "@repo/backend/confect/middleware/member.impl";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
@@ -168,7 +169,20 @@ const schedule = FunctionImpl.make(
   })
 );
 
-/** Implements the exams group of `exams.spec.ts`: create, list, home, open, rename, and schedule. */
+/**
+ * Lists the cohorts of a unit that a sitting may run for, so the scheduling dialog can offer
+ * them beside the whole unit. The unit must be one the caller may edit the exams of.
+ */
+const cohorts = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "cohorts",
+  Effect.fn("exams.cohorts")(function* ({ unitId }) {
+    return yield* scheduleCohortsOf(unitId);
+  })
+);
+
+/** Implements the exams group of `exams.spec.ts`: create, list, home, open, rename, schedule, and cohorts. */
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(create),
   Layer.provide(list),
@@ -176,6 +190,7 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(open),
   Layer.provide(rename),
   Layer.provide(schedule),
+  Layer.provide(cohorts),
   Layer.provide(session),
   Layer.provide(member),
   Layer.provide(examAccess),
