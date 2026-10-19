@@ -1,3 +1,4 @@
+import { Nina } from "@repo/design-system/components/ui/nina";
 import { redirect } from "@repo/internationalization/src/navigation";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import type { Metadata } from "next";
@@ -96,6 +97,7 @@ async function SignedInStart({
               }
             : null
         }
+        nina={<Nina act="waving" label="" size={120} whole />}
       />
     </EntryShellBody>
   );

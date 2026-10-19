@@ -46,7 +46,7 @@ export function StartCountryQuestion() {
       <QuestionnaireDescription>
         {t("country-description")}
       </QuestionnaireDescription>
-      <QuestionnaireChoices>
+      <QuestionnaireChoices className="sm:grid-cols-2">
         {Arr.map(StartCountry.literals, (country) => (
           <QuestionnaireChoice
             checked={draft?.country === country}
@@ -128,7 +128,7 @@ export function StartRoleQuestion() {
       <QuestionnaireDescription>
         {t("role-description")}
       </QuestionnaireDescription>
-      <QuestionnaireChoices>
+      <QuestionnaireChoices className="sm:grid-cols-2">
         {Arr.map(StartRole.literals, (role) => (
           <QuestionnaireChoice
             checked={draft?.role === role}
@@ -171,7 +171,7 @@ export function StartSizeQuestion() {
       <QuestionnaireDescription>
         {t("size-description")}
       </QuestionnaireDescription>
-      <QuestionnaireChoices>
+      <QuestionnaireChoices className="sm:grid-cols-2">
         {Arr.map(SchoolSize.literals, (size) => (
           <QuestionnaireChoice
             checked={draft?.size === size}

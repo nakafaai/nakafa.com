@@ -17,7 +17,13 @@ import { toast } from "@repo/design-system/lib/toast/notify";
 import { cn } from "cn";
 import { Array as Arr, Effect, Match, Option, Result, Schema } from "effect";
 import { useTranslations } from "next-intl";
-import { useOptimistic, useRef, useState, useTransition } from "react";
+import {
+  type ReactNode,
+  useOptimistic,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import { useConvexAuth } from "@/components/providers/convex";
 import { QuestionnaireSteps } from "@/components/shared/questionnaire";
 import {
@@ -56,9 +62,17 @@ const decodeAnswer = Schema.decodeUnknownOption(StartAnswer);
  * The questionnaire that opens a school for the signed-in account (K42): five
  * questions in the entry frame, each answer saved as it is chosen, resumed at
  * the first question left open. It waits for the session and the saved draft, so
- * it never shows an answer that the draft would change.
+ * it never shows an answer that the draft would change. `nina` is Nina as the page
+ * draws her; she appears with the questions, so the page does not move when they
+ * arrive.
  */
-export function SchoolStart({ legal }: { legal: Legal }) {
+export function SchoolStart({
+  legal,
+  nina,
+}: {
+  legal: Legal;
+  nina: ReactNode;
+}) {
   // The server saw the session, but the client's Convex session settles a moment
   // later; the draft is read once it has, so the first read is never anonymous.
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
@@ -69,7 +83,7 @@ export function SchoolStart({ legal }: { legal: Legal }) {
   if (!QueryResult.isSuccess(draft)) {
     return null;
   }
-  return <SchoolStartForm draft={draft.value} legal={legal} />;
+  return <SchoolStartForm draft={draft.value} legal={legal} nina={nina} />;
 }
 
 /** The school that the founder opened, as the screen shows it while it opens. */
@@ -90,9 +104,11 @@ const NO_REFOCUS: Option.Option<string> = Option.none();
 function SchoolStartForm({
   draft,
   legal,
+  nina,
 }: {
   draft: StartDraft;
   legal: Legal;
+  nina: ReactNode;
 }) {
   const t = useTranslations("SchoolStart");
   const save = useSaveStartAnswer();
@@ -212,6 +228,7 @@ function SchoolStartForm({
 
   return (
     <StartContext value={{ draft, legal, save, typed }}>
+      {nina}
       <Questionnaire
         className="w-full max-w-md"
         item={item}
