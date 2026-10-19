@@ -56,7 +56,6 @@ export function TenantNavigation() {
           </SidebarMenuItem>
         ) : null}
       </TenantSidebarGroup>
-      <TenantClassesGroup />
       {canManage ? (
         <TenantSidebarGroup label={tSettings("manage-group")}>
           <SidebarMenuItem>
@@ -66,6 +65,7 @@ export function TenantNavigation() {
           </SidebarMenuItem>
         </TenantSidebarGroup>
       ) : null}
+      <TenantClassesGroup />
     </>
   );
 }

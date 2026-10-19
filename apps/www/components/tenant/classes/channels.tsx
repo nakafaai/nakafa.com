@@ -18,8 +18,10 @@ import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
 import { useEffect } from "react";
 import { type StoreApi, useStore } from "zustand";
+import { DataFailure, reloadPage } from "@/components/shared/failure";
 import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
 import type { ChannelDrafts } from "@/components/tenant/classes/drafts";
+import { isLostAccess } from "@/components/tenant/refusal";
 
 /** How many channels the list asks for each time its end comes into view. */
 const CHANNEL_PAGE_SIZE = 20;
@@ -31,7 +33,9 @@ type Channel = typeof ChannelView.Type;
  * The channels of a class in position order, the general channel first, in a data table.
  * A channel that the server is still saving shows its name without the rest of its row, so
  * it is inert. The next page loads when the end of the list comes into view, so the list has
- * no button. When the class holds no channel, the table shows its empty state.
+ * no button. When the class holds no channel, the table shows its empty state. A failed read
+ * shows its own sentence and a retry, never the empty state, and a viewer who lost the
+ * school's access is sent to the refused page.
  */
 export function ChannelList({
   classId,
@@ -49,6 +53,12 @@ export function ChannelList({
   );
   const saving = useStore(drafts, (state) => state.names);
   const { entry, ref } = useIntersection<HTMLDivElement>();
+  if (
+    PaginatedQueryResult.isFailure(pagination) &&
+    isLostAccess(pagination.error)
+  ) {
+    throw pagination.error;
+  }
   const loadMore = PaginatedQueryResult.isCanLoadMore(pagination)
     ? pagination.loadMore
     : null;
@@ -60,9 +70,16 @@ export function ChannelList({
     }
   }, [atEnd, loadMore]);
 
+  const failure = PaginatedQueryResult.isFailure(pagination) ? (
+    <DataFailure onRetry={reloadPage} />
+  ) : null;
+
   return (
     <>
-      {pagination._tag === "LoadingFirstPage" ? null : (
+      {failure}
+      {pagination._tag === "LoadingFirstPage" ||
+      (failure !== null &&
+        Arr.isReadonlyArrayEmpty(pagination.results)) ? null : (
         <ChannelTable channels={pagination.results} saving={saving} />
       )}
       <div aria-hidden ref={ref} />

@@ -8,6 +8,7 @@ import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   Field,
+  FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel,
@@ -17,7 +18,7 @@ import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-d
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Data, Effect, Option, Schema, String as Str } from "effect";
 import { useTranslations } from "next-intl";
-import { useId, useState } from "react";
+import { useId, useState, useTransition } from "react";
 import type { StoreApi } from "zustand";
 import type { ChannelDrafts } from "@/components/tenant/classes/drafts";
 import { reportClientException } from "@/lib/analytics/client";
@@ -49,10 +50,11 @@ export function AddChannel({
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [refusal, setRefusal] = useState<Option.Option<string>>(Option.none());
+  const [isPending, startTransition] = useTransition();
   const id = useId();
   const errorId = `${id}-error`;
   const name = Str.trim(title);
-  const ready = Schema.is(ChannelName)(name);
+  const ready = Schema.is(ChannelName)(name) && !isPending;
 
   /** Reopens the dialog with the reason the server refused the channel. */
   const reopenWith = (message: string) => {
@@ -64,7 +66,11 @@ export function AddChannel({
   const refuseLimit = () =>
     Effect.sync(() => reopenWith(t("channel-limit-reached")));
 
-  /** Shows the channel as saving, sends it, and removes the row once the server settles the call. */
+  /**
+   * Shows the channel as saving, sends it, and removes the row once the server settles the call. The
+   * dialog closes on submit, and the add button stays inert until the call settles, so a second press
+   * cannot send the same name twice.
+   */
   const submit = () => {
     if (!ready) {
       return;
@@ -72,40 +78,42 @@ export function AddChannel({
     setOpen(false);
     setRefusal(Option.none());
     drafts.getState().start(name);
-    Effect.runPromise(
-      Effect.tryPromise({
-        catch: (cause) => new ChannelCallFailed({ cause }),
-        try: () => add({ classId, name, slug }),
-      }).pipe(
-        Effect.flatMap(Effect.fromResult),
-        Effect.andThen(
-          Effect.sync(() =>
-            setTitle((current) => (Str.trim(current) === name ? "" : current))
-          )
-        ),
-        Effect.catchTags({
-          ChannelLimit: refuseLimit,
-          ChannelNameTaken: refuseName,
-        }),
-        Effect.matchEffect({
-          onFailure: (error) =>
-            reportClientException(error, {
-              source: "components/tenant/classes/add",
-            }).pipe(
-              Effect.andThen(
-                Effect.sync(() =>
-                  toast.error({
-                    description: "action-error.description",
-                    title: "action-error.title",
-                  })
+    startTransition(async () => {
+      await Effect.runPromise(
+        Effect.tryPromise({
+          catch: (cause) => new ChannelCallFailed({ cause }),
+          try: () => add({ classId, name, slug }),
+        }).pipe(
+          Effect.flatMap(Effect.fromResult),
+          Effect.andThen(
+            Effect.sync(() =>
+              setTitle((current) => (Str.trim(current) === name ? "" : current))
+            )
+          ),
+          Effect.catchTags({
+            ChannelLimit: refuseLimit,
+            ChannelNameTaken: refuseName,
+          }),
+          Effect.matchEffect({
+            onFailure: (error) =>
+              reportClientException(error, {
+                source: "components/tenant/classes/add",
+              }).pipe(
+                Effect.andThen(
+                  Effect.sync(() =>
+                    toast.error({
+                      description: "action-error.description",
+                      title: "action-error.title",
+                    })
+                  )
                 )
-              )
-            ),
-          onSuccess: () => Effect.void,
-        }),
-        Effect.ensuring(Effect.sync(() => drafts.getState().end(name)))
-      )
-    );
+              ),
+            onSuccess: () => Effect.void,
+          }),
+          Effect.ensuring(Effect.sync(() => drafts.getState().end(name)))
+        )
+      );
+    });
   };
 
   return (
@@ -118,7 +126,7 @@ export function AddChannel({
             <Button onClick={() => setOpen(false)} variant="outline">
               {common("cancel")}
             </Button>
-            <Button disabled={!ready} onClick={submit}>
+            <Button disabled={!ready} inert={isPending} onClick={submit}>
               {t("add-submit")}
             </Button>
           </>
@@ -142,6 +150,9 @@ export function AddChannel({
             />
             {Option.isSome(refusal) ? (
               <FieldError id={errorId}>{refusal.value}</FieldError>
+            ) : null}
+            {name === "" ? (
+              <FieldDescription>{t("channel-name-needed")}</FieldDescription>
             ) : null}
           </Field>
         </FieldGroup>
