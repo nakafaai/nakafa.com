@@ -5,6 +5,7 @@ import {
   useElementSize,
   useMediaQuery,
   useMergedRef,
+  useMutationObserverTarget,
   useReducedMotion,
 } from "@mantine/hooks";
 import { useMousePosition } from "@repo/design-system/hooks/use-mouse";
@@ -130,30 +131,43 @@ function isOutsideCanvas(circle: Circle, width: number, height: number) {
   );
 }
 
+/** Reads the foreground token of the active theme, the colour that the dots take. */
+function readForegroundFill() {
+  return getComputedStyle(document.documentElement)
+    .getPropertyValue("--foreground")
+    .trim();
+}
+
+/** The theme applies through the document's classes, so only their changes recolour the dots. */
+const THEME_CLASS_OBSERVER_OPTIONS: MutationObserverInit = {
+  attributeFilter: ["class"],
+  attributes: true,
+};
+
+/** The element whose classes carry the theme. */
+function readDocumentElement() {
+  return document.documentElement;
+}
+
 /**
- * The dots take the foreground token of the active theme. The token is read when
- * the field mounts, and again whenever the document's classes change, which is how
- * the theme applies, so the field keeps no colour of its own.
+ * The dots take the foreground token of the active theme. The token is read
+ * before the first paint and again whenever the document's classes change, which
+ * is how the theme applies, so the field keeps no colour of its own.
  */
 function useForegroundFill() {
   const [fill, setFill] = useState("");
-
-  useEffect(() => {
-    const readFill = () => {
-      setFill(
-        getComputedStyle(document.documentElement)
-          .getPropertyValue("--foreground")
-          .trim()
-      );
-    };
-    readFill();
-    const observer = new MutationObserver(readFill);
-    observer.observe(document.documentElement, {
-      attributeFilter: ["class"],
-      attributes: true,
-    });
-    return () => observer.disconnect();
+  const syncFill = useCallback(() => {
+    setFill(readForegroundFill());
   }, []);
+
+  useLayoutEffect(() => {
+    syncFill();
+  }, [syncFill]);
+  useMutationObserverTarget(
+    syncFill,
+    THEME_CLASS_OBSERVER_OPTIONS,
+    readDocumentElement
+  );
 
   return fill;
 }
