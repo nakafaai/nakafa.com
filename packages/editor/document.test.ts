@@ -7,7 +7,7 @@ import {
   documentSchema,
 } from "@repo/editor/document";
 import { Editor } from "@tiptap/core";
-import { Record as Rec } from "effect";
+import { Array as Arr, Record as Rec } from "effect";
 
 /** The rules of the tests: headings of levels 1 to 3, and links to https addresses only. */
 const RULES = {
@@ -15,10 +15,20 @@ const RULES = {
   isLinkAllowed: (href: string) => href.startsWith("https://"),
 } satisfies Omit<DocumentRules, "marks">;
 
+/**
+ * Pastes text at the caret the way the browser does, as a transaction that the view marks as
+ * a paste, so the paste rules run. jsdom has no clipboard event, so the mark is set directly.
+ */
+function paste(editor: Editor, text: string) {
+  editor.view.dispatch(
+    editor.state.tr.insertText(text).setMeta("uiEvent", "paste")
+  );
+}
+
 /** A headless editor that holds a document of the test rules, with the marks it is given. */
 function openEditor(marks: DocumentRules["marks"]) {
   return new Editor({
-    element: null,
+    element: document.createElement("div"),
     extensions: documentExtensions({ ...RULES, marks }),
   });
 }
@@ -106,5 +116,212 @@ describe("documentExtensions", () => {
     editor.commands.setTextSelection({ from: 1, to: 7 });
     expect(editor.can().setLink({ href: "http://nakafa.com" })).toBe(false);
     expect(editor.can().setLink({ href: "https://nakafa.com" })).toBe(true);
+  });
+});
+
+describe("documentSchema blocks and tables", () => {
+  const schema = documentSchema({ ...RULES, marks: ["bold", "link"] });
+
+  it("holds the blocks of the contract that the editor writes", () => {
+    expect(Rec.keys(schema.nodes)).toEqual(
+      expect.arrayContaining([
+        "blockquote",
+        "bulletList",
+        "codeBlock",
+        "hardBreak",
+        "heading",
+        "listItem",
+        "orderedList",
+        "paragraph",
+        "table",
+        "tableCell",
+        "tableHeader",
+        "tableRow",
+      ])
+    );
+  });
+
+  it("round-trips the blocks of the contract as their JSON", () => {
+    const blocks = [
+      {
+        attrs: { language: "ts" },
+        content: [{ text: "const a = 1", type: "text" }],
+        type: "codeBlock",
+      },
+      { attrs: { language: null }, type: "codeBlock" },
+      {
+        content: [
+          {
+            content: [{ text: "kutipan", type: "text" }],
+            type: "paragraph",
+          },
+        ],
+        type: "blockquote",
+      },
+      {
+        content: [
+          {
+            content: [
+              { content: [{ text: "satu", type: "text" }], type: "paragraph" },
+              {
+                content: [
+                  {
+                    content: [{ text: "catatan", type: "text" }],
+                    type: "paragraph",
+                  },
+                ],
+                type: "blockquote",
+              },
+            ],
+            type: "listItem",
+          },
+        ],
+        attrs: { start: 3 },
+        type: "orderedList",
+      },
+    ];
+    for (const block of blocks) {
+      expect(schema.nodeFromJSON(block).toJSON()).toEqual(block);
+    }
+  });
+
+  it("round-trips a table of header and body cells, each with its spans", () => {
+    const cell = (type: "tableCell" | "tableHeader", text: string) => ({
+      attrs: { colspan: 1, rowspan: 1 },
+      content: [{ content: [{ text, type: "text" }], type: "paragraph" }],
+      type,
+    });
+    const table = {
+      content: [
+        {
+          content: [cell("tableHeader", "Nama"), cell("tableHeader", "Nilai")],
+          type: "tableRow",
+        },
+        {
+          content: [cell("tableCell", "Budi"), cell("tableCell", "90")],
+          type: "tableRow",
+        },
+      ],
+      type: "table",
+    };
+    expect(schema.nodeFromJSON(table).toJSON()).toEqual(table);
+  });
+
+  it("refuses a row with no cell, as the contract does", () => {
+    expect(() => schema.nodes.tableRow.create(null, []).check()).toThrow();
+  });
+
+  it("holds the spans of a pasted cell, reads a missing span as 1, and drops its column width", () => {
+    const editor = openEditor(["bold"]);
+    editor.commands.setContent(
+      '<table><tbody><tr><td colspan="2" rowspan="0" style="width: 120px">x</td><td>y</td></tr></tbody></table>'
+    );
+    const row = editor.state.doc.firstChild?.firstChild;
+    const spans = Arr.makeBy(
+      row?.childCount ?? 0,
+      (index) => row?.child(index).attrs
+    );
+    expect(spans).toEqual([
+      { colspan: 2, rowspan: 1 },
+      { colspan: 1, rowspan: 1 },
+    ]);
+  });
+});
+
+describe("documentSchema math", () => {
+  const schema = documentSchema({ ...RULES, marks: ["bold"] });
+
+  it("round-trips inline and block math as their JSON, with the LaTeX as the one attribute", () => {
+    const paragraph = {
+      content: [
+        { text: "Rumus ", type: "text" },
+        { attrs: { latex: "x^2" }, type: "mathInline" },
+      ],
+      type: "paragraph",
+    };
+    const block = { attrs: { latex: "\\frac{a}{b}" }, type: "mathBlock" };
+    expect(schema.nodeFromJSON(paragraph).toJSON()).toEqual(paragraph);
+    expect(schema.nodeFromJSON(block).toJSON()).toEqual(block);
+  });
+
+  it("reads the LaTeX of a pasted formula from its DOM, and reads a formula with none as blank", () => {
+    const editor = openEditor([]);
+    editor.commands.setContent(
+      '<p><span data-type="math-inline" data-latex="x^2"></span><span data-type="math-inline"></span></p><div data-type="math-block" data-latex="a+b"></div>'
+    );
+    const paragraph = editor.state.doc.child(0);
+    expect(
+      Arr.makeBy(paragraph.childCount, (index) => paragraph.child(index).attrs)
+    ).toEqual([{ latex: "x^2" }, { latex: "" }]);
+    const block = editor.state.doc.child(1);
+    expect(block.type.name).toBe("mathBlock");
+    expect(block.attrs).toEqual({ latex: "a+b" });
+  });
+
+  it("converts the formulas of a pasted text into formula nodes where the paste lands", () => {
+    const editor = openEditor([]);
+    editor.commands.setContent("<p></p>");
+    paste(editor, "Hitung $x^2$ saja");
+    const paragraph = editor.state.doc.child(0);
+    expect(
+      Arr.makeBy(
+        paragraph.childCount,
+        (index) => paragraph.child(index).type.name
+      )
+    ).toEqual(["text", "mathInline", "text"]);
+    expect(paragraph.child(1).attrs).toEqual({ latex: "x^2" });
+  });
+
+  it("converts a pasted block formula into a block of its own", () => {
+    const editor = openEditor([]);
+    editor.commands.setContent("<p></p>");
+    paste(editor, "$$a+b$$");
+    const top = editor.state.doc;
+    expect(
+      Arr.makeBy(top.childCount, (index) => top.child(index).type.name)
+    ).toContain("mathBlock");
+  });
+});
+
+describe("documentSchema image", () => {
+  const schema = documentSchema({ ...RULES, marks: ["bold"] });
+
+  it("round-trips an image block as its JSON, with its alt text, asset, and size", () => {
+    const image = {
+      attrs: {
+        alt: "Segitiga siku-siku",
+        asset: "gambar-1",
+        height: 120,
+        width: 200,
+      },
+      type: "image",
+    };
+    expect(schema.nodeFromJSON(image).toJSON()).toEqual(image);
+  });
+
+  it("reads the attributes of an image this editor wrote, and reads a size it cannot read as 1", () => {
+    const editor = openEditor([]);
+    editor.commands.setContent(
+      '<div data-type="image" data-alt="Denah" data-asset="gambar-2" data-height="90" data-width="x"></div><div data-type="image"></div>'
+    );
+    const blocks = Arr.take(
+      Arr.makeBy(
+        editor.state.doc.childCount,
+        (index) => editor.state.doc.child(index).attrs
+      ),
+      2
+    );
+    expect(blocks).toEqual([
+      { alt: "Denah", asset: "gambar-2", height: 90, width: 1 },
+      { alt: "", asset: "", height: 1, width: 1 },
+    ]);
+  });
+
+  it("reads no picture pasted from another page as an image of the document", () => {
+    const editor = openEditor([]);
+    editor.commands.setContent(
+      '<p><img src="https://example.com/a.png" alt="a"></p>'
+    );
+    expect(editor.state.doc.firstChild?.childCount).toBe(0);
   });
 });

@@ -1285,7 +1285,32 @@
     "divider": "Trennlinie",
     "more": "Mehr",
     "style": "Textstil",
-    "text": "Normaler Text"
+    "text": "Normaler Text",
+    "insert": "Block einfügen",
+    "subscript": "Tiefgestellt",
+    "superscript": "Hochgestellt",
+    "table": "Tabelle",
+    "table-actions": "Tabellenaktionen",
+    "row-before": "Zeile darüber",
+    "row-after": "Zeile darunter",
+    "row-delete": "Zeile löschen",
+    "column-before": "Spalte links",
+    "column-after": "Spalte rechts",
+    "column-delete": "Spalte löschen",
+    "table-delete": "Tabelle löschen",
+    "formula": "Formel",
+    "equation": "Gleichung",
+    "formula-edit": "Formel bearbeiten",
+    "formula-invalid": "Diese Formel kann nicht gezeichnet werden:",
+    "latex": "LaTeX",
+    "image": "Bild",
+    "image-add": "Bild hinzufügen",
+    "image-alt": "Alternativtext",
+    "image-alt-hint": "Was ein Schüler wissen muss, der das Bild nicht sehen kann",
+    "image-cancel": "Abbrechen",
+    "image-delete": "Bild löschen",
+    "image-edit": "Alternativtext ändern",
+    "image-save": "Speichern"
   },
   "Memory": {
     "remember": "Nina darf Erinnerungen speichern und nutzen",
@@ -1314,6 +1339,14 @@
     "count": "{count, number} / {limit, number}"
   },
   "Toast": {
+    "image-refused-size": {
+      "title": "Das Bild wurde nicht hinzugefügt.",
+      "description": "Wähle ein Bild von höchstens 2 MB."
+    },
+    "image-refused-type": {
+      "title": "Das Bild wurde nicht hinzugefügt.",
+      "description": "Wähle ein PNG-, JPEG-, WebP- oder GIF-Bild."
+    },
     "school-logo-size": {
       "title": "Das Logo wurde nicht gespeichert.",
       "description": "Wählen Sie ein Logo mit höchstens 1 MB."

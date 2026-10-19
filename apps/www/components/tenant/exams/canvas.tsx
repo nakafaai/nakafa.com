@@ -2,7 +2,6 @@
 
 import { useMutation } from "@confect/react";
 import { useCallbackRef } from "@mantine/hooks";
-import type { Id } from "@repo/backend/confect/_generated/id";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import { Input } from "@repo/design-system/components/ui/input";
 import { Radio } from "@repo/design-system/components/ui/radio-group";
@@ -57,7 +56,7 @@ const OPTION_SAVE_QUIET = "500 millis";
  * exam shows its prompt and its options read-only.
  */
 export function ExamCanvas() {
-  const { slug, exam } = useExam();
+  const { exam } = useExam();
   const active = useActiveQuestion();
   const pending = useExamSelection((state) => state.pending);
   const frozen = isFrozen(exam);
@@ -78,12 +77,10 @@ export function ExamCanvas() {
                 <ExamPrompt
                   key={`${question.prompt}-${frozen}`}
                   prompt={question.prompt}
-                  slug={slug}
                 />
               </QuestionSheetPrompt>
             ) : null}
             <QuestionOptions
-              examId={exam.id}
               key={question.id}
               pending={!saved}
               question={question}
@@ -101,16 +98,15 @@ export function ExamCanvas() {
  * options are locked while the question is not saved yet, and while the exam is frozen.
  */
 function QuestionOptions({
-  examId,
   pending,
   question,
 }: {
-  examId: Id<"exams">;
   pending: boolean;
   question: Question;
 }) {
   const t = useTranslations("Exams");
   const { exam, slug } = useExam();
+  const examId = exam.id;
   const locked = pending || isFrozen(exam);
   const answer = useMutation(exams.questions.answer).withOptimisticUpdate(
     answerUpdate

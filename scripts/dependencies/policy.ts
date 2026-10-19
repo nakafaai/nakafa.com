@@ -81,6 +81,7 @@ const TIPTAP_DECLARATIONS: readonly (readonly [string, readonly string[]])[] = [
       "@tiptap/extension-list",
       "@tiptap/extension-subscript",
       "@tiptap/extension-superscript",
+      "@tiptap/extension-table",
       "@tiptap/extension-underline",
       "@tiptap/starter-kit",
     ],
@@ -93,6 +94,7 @@ const TIPTAP_DECLARATIONS: readonly (readonly [string, readonly string[]])[] = [
       "@tiptap/extension-highlight",
       "@tiptap/extension-list",
       "@tiptap/extension-paragraph",
+      "@tiptap/extension-table",
       "@tiptap/extension-text",
       "@tiptap/extension-underline",
       "@tiptap/extensions",
@@ -100,6 +102,7 @@ const TIPTAP_DECLARATIONS: readonly (readonly [string, readonly string[]])[] = [
       "@tiptap/pm",
       "@tiptap/react",
       "@tiptap/starter-kit",
+      "@tiptap/suggestion",
     ],
   ],
   [
@@ -113,6 +116,7 @@ const TIPTAP_DECLARATIONS: readonly (readonly [string, readonly string[]])[] = [
       "@tiptap/extension-list",
       "@tiptap/extension-subscript",
       "@tiptap/extension-superscript",
+      "@tiptap/extension-table",
       "@tiptap/extension-underline",
       "@tiptap/pm",
       "@tiptap/starter-kit",
@@ -263,6 +267,14 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
     approved: "1.12.2",
     declarationPaths: ["packages/backend/package.json"],
     dependency: "prosemirror-transform",
+  },
+  // The math input of the exam editor. It is MIT, and it loads only when a formula
+  // popover opens, so no page's first JavaScript holds it. Its version moves only when
+  // a reviewed release is adopted.
+  {
+    approved: "0.111.1",
+    declarationPaths: ["packages/design-system/package.json"],
+    dependency: "mathlive",
   },
   ...Arr.map(TIPTAP_PACKAGES, (dependency) => ({
     approved: TIPTAP_COHORT_VERSION,

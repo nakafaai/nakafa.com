@@ -1285,7 +1285,32 @@
     "divider": "Garis pemisah",
     "more": "Lainnya",
     "style": "Gaya teks",
-    "text": "Teks biasa"
+    "text": "Teks biasa",
+    "insert": "Sisipkan blok",
+    "subscript": "Subskrip",
+    "superscript": "Superskrip",
+    "table": "Tabel",
+    "table-actions": "Aksi tabel",
+    "row-before": "Baris di atas",
+    "row-after": "Baris di bawah",
+    "row-delete": "Hapus baris",
+    "column-before": "Kolom kiri",
+    "column-after": "Kolom kanan",
+    "column-delete": "Hapus kolom",
+    "table-delete": "Hapus tabel",
+    "formula": "Rumus",
+    "equation": "Persamaan",
+    "formula-edit": "Ubah rumus",
+    "formula-invalid": "Rumus ini tidak dapat digambar:",
+    "latex": "LaTeX",
+    "image": "Gambar",
+    "image-add": "Tambah gambar",
+    "image-alt": "Teks alternatif",
+    "image-alt-hint": "Yang perlu diketahui siswa yang tidak dapat melihat gambar",
+    "image-cancel": "Batal",
+    "image-delete": "Hapus gambar",
+    "image-edit": "Ubah teks alternatif",
+    "image-save": "Simpan"
   },
   "Memory": {
     "remember": "Izinkan Nina menyimpan dan memakai memori",
@@ -1314,6 +1339,14 @@
     "count": "{count, number} / {limit, number}"
   },
   "Toast": {
+    "image-refused-size": {
+      "title": "Gambar tidak ditambahkan.",
+      "description": "Pilih gambar dengan ukuran paling besar 2 MB."
+    },
+    "image-refused-type": {
+      "title": "Gambar tidak ditambahkan.",
+      "description": "Pilih gambar PNG, JPEG, WebP, atau GIF."
+    },
     "school-logo-size": {
       "title": "Logo tidak disimpan.",
       "description": "Pilih logo yang paling besar 1 MB."

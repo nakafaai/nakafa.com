@@ -23,7 +23,7 @@ import { useCurrentEditor, useEditorState } from "@tiptap/react";
 import type { ComponentProps } from "react";
 
 /** One control of the toolbar. It shows as pressed while the caret sits in its format. */
-function RichEditorControl({
+export function RichEditorControl({
   active = false,
   disabled = false,
   icon,

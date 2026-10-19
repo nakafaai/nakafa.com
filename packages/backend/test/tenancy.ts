@@ -213,6 +213,16 @@ const inMutation =
 const client = (
   convex: ReturnType<TestConvex<typeof schema>["withIdentity"]>
 ) => ({
+  action: <R extends Ref.AnyPublic & Ref.AnyAction>(
+    ref: R,
+    args: Ref.Args<R>
+  ) =>
+    Ref.runWithCodec(
+      ref,
+      args,
+      (reference: FunctionReference<"action", "public">, encoded) =>
+        convex.action(reference, encoded)
+    ),
   mutation: <R extends Ref.AnyPublicMutation>(ref: R, args: Ref.Args<R>) =>
     Ref.runWithCodec(
       ref,

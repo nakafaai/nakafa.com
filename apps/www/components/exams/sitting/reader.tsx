@@ -2,16 +2,33 @@
 
 import { ASSESSMENT_RULES } from "@repo/backend/confect/editor/model";
 import { DocumentEditor } from "@repo/design-system/components/editor/document";
+import {
+  FORMULA_VIEWS,
+  FormulaLabelsProvider,
+} from "@repo/design-system/components/editor/formula";
 import { articleParagraphs } from "@repo/design-system/components/editor/paragraph";
+import {
+  PICTURE_VIEW,
+  PicturesProvider,
+} from "@repo/design-system/components/editor/picture";
 import { documentExtensions } from "@repo/editor/document";
 import { Node } from "@tiptap/pm/model";
+import { use } from "react";
+import { SittingPictures } from "@/components/exams/sitting/pictures";
 import { assessmentSchema } from "@/lib/editor/assessment";
+import { useDocumentLabels } from "@/lib/editor/labels";
 
 /** The extensions of a read-only document: the ones the exam canvas edits the same document with. */
 const READER_EXTENSIONS = [
-  ...documentExtensions(ASSESSMENT_RULES),
+  ...documentExtensions(ASSESSMENT_RULES, {
+    ...FORMULA_VIEWS,
+    image: PICTURE_VIEW,
+  }),
   articleParagraphs,
 ];
+
+/** Nothing begins on a reader: a read-only document takes no file. */
+const noBegin = () => undefined;
 
 /**
  * One assessment document, read-only. The editor starts read-only and nothing turns editing on, so
@@ -26,17 +43,23 @@ export function SittingReader({
   /** The accessible name of the document. */
   readonly label: string;
 }) {
+  const labels = useDocumentLabels();
+  const urls = use(SittingPictures);
   const content = Node.fromJSON(assessmentSchema, document).toJSON();
 
   return (
-    <DocumentEditor
-      extensions={READER_EXTENSIONS}
-      label={label}
-      onChange={() => undefined}
-      onEditor={(editor) => {
-        editor.commands.setContent(content, { emitUpdate: false });
-      }}
-      placeholder=""
-    />
+    <FormulaLabelsProvider labels={labels.formulaEdit}>
+      <PicturesProvider begin={noBegin} labels={labels.pictures} urls={urls}>
+        <DocumentEditor
+          extensions={READER_EXTENSIONS}
+          label={label}
+          onChange={() => undefined}
+          onEditor={(editor) => {
+            editor.commands.setContent(content, { emitUpdate: false });
+          }}
+          placeholder=""
+        />
+      </PicturesProvider>
+    </FormulaLabelsProvider>
   );
 }

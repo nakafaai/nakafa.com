@@ -6,6 +6,7 @@ import { sittingAccess } from "@repo/backend/confect/exams/sittings/authority";
 import { dashboard } from "@repo/backend/confect/exams/sittings/dashboard";
 import { enter } from "@repo/backend/confect/exams/sittings/enter";
 import { finish } from "@repo/backend/confect/exams/sittings/finish";
+import { images } from "@repo/backend/confect/exams/sittings/images";
 import { mine } from "@repo/backend/confect/exams/sittings/mine";
 import { paper } from "@repo/backend/confect/exams/sittings/paper";
 import {
@@ -160,6 +161,15 @@ const promptFunction = FunctionImpl.make(
   })
 );
 
+const imagesFunction = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "images",
+  Effect.fn("exams.sittings.images.function")(function* (args) {
+    return yield* images(args);
+  })
+);
+
 const answerFunction = FunctionImpl.make(
   databaseSchema,
   spec,
@@ -198,6 +208,7 @@ export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(signalsFunction),
   Layer.provide(paperFunction),
   Layer.provide(promptFunction),
+  Layer.provide(imagesFunction),
   Layer.provide(answerFunction),
   Layer.provide(finishFunction),
   // The three middlewares in one step, so the group stays within one pipe.
