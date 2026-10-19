@@ -2,7 +2,9 @@ import {
   HttpRouter as ConfectHttpRouter,
   ConvexConfigProvider,
 } from "@confect/server";
+import { isActionCtx } from "@convex-dev/better-auth/utils";
 import { authComponent } from "@repo/backend/confect/auth/client";
+import { schoolUsernameSignIn } from "@repo/backend/confect/auth/login";
 import { authDiscoveryRoutes } from "@repo/backend/confect/auth/route";
 import { createAuth } from "@repo/backend/confect/auth/runtime";
 import { batchRuntimeRoutes } from "@repo/backend/confect/contentRelease/http/runtime/batch";
@@ -33,10 +35,13 @@ const http = ConfectHttpRouter.make(
   )
 );
 
-// SDK-owned routes use Confect's documented plain component boundary.
+// SDK-owned routes use Confect's documented plain component boundary. The router alone
+// adds the school username sign-in, because only a request names the school host of it.
 authComponent.registerRoutesLazy(http, (ctx) =>
   Effect.runSync(
-    createAuth(ctx).pipe(Effect.provide(ConvexConfigProvider.layer))
+    createAuth(ctx, isActionCtx(ctx) ? [schoolUsernameSignIn(ctx)] : []).pipe(
+      Effect.provide(ConvexConfigProvider.layer)
+    )
   )
 );
 registerResendRoutes(http);

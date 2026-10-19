@@ -4704,7 +4704,13 @@ export declare const api: {
       redeem: FunctionReference<
         "mutation",
         "public",
-        { code: string; deviceId: string; password: string; slug: string },
+        {
+          code: string;
+          deviceId: string;
+          loginName: string;
+          password: string;
+          slug: string;
+        },
         | { loginName: string; outcome: "redeemed" }
         | {
             outcome: "refused";
@@ -12356,6 +12362,24 @@ export declare const internal: {
           null
         >;
       };
+    };
+  };
+  identity: {
+    logins: {
+      usernameOf: FunctionReference<
+        "query",
+        "internal",
+        { loginName: string; slug: string },
+        { outcome: "found"; username: string } | { outcome: "missing" }
+      >;
+    };
+    seed: {
+      card: FunctionReference<
+        "mutation",
+        "internal",
+        { slug: string },
+        { code: string; loginName: string }
+      >;
     };
   };
   nina: {

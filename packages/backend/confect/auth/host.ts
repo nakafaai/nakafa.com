@@ -1,7 +1,10 @@
-import { isSchoolLabel } from "@repo/backend/confect/tenancy/slug";
+import {
+  isSchoolLabel,
+  NewTenantSlug,
+} from "@repo/backend/confect/tenancy/slug";
 import { isLoopbackHostname, readHostname } from "@repo/utilities/http/host";
 import { getCookies } from "better-auth/cookies";
-import { Array as Arr, Effect, Option } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 
 /**
  * Whether a host is a school host of the site: `<label>.<site host>`, where the
@@ -120,6 +123,20 @@ function readBrowserHostname(request: Request) {
   return Option.flatMap(
     Option.fromNullOr(request.headers.get("x-forwarded-host")),
     readHostname
+  );
+}
+
+/**
+ * The school that a request's browser host names, when that host is a school host of
+ * the site (ADR 0026). A request without a browser host, a site host, and a host that is
+ * not a school label of the site name no school, so the caller refuses the request.
+ */
+export function readSchoolSlug(request: Request, siteHostname: string) {
+  const suffix = `.${siteHostname}`;
+  return Option.flatMap(readBrowserHostname(request), (hostname) =>
+    hostname.endsWith(suffix)
+      ? Schema.decodeOption(NewTenantSlug)(hostname.slice(0, -suffix.length))
+      : Option.none()
   );
 }
 

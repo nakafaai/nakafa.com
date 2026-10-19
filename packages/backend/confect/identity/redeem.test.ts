@@ -9,6 +9,7 @@ import {
   DEVICE,
   inviteePerson,
   issueFirst,
+  LOGIN_NAME,
   nf,
   PASSWORD,
   redeem,
@@ -291,6 +292,7 @@ describe("identity/cards redeem", () => {
             fixture.as("admin").mutation(redeem, {
               code,
               deviceId: DEVICE,
+              loginName: LOGIN_NAME,
               password: PASSWORD,
               slug: nf,
             })
@@ -451,6 +453,46 @@ describe("identity/cards redeem", () => {
           loginName: "guru.baru",
           outcome: "redeemed",
         });
+      })
+  );
+
+  it.effect(
+    "refuses a card under another or a malformed login name as invalid, fresh or used, and a right name still reports a used card",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const issued = yield* issueFirst(fixture);
+        const invalid = { outcome: "refused", reason: "invalid" };
+        expect(
+          yield* redeemOn(
+            fixture,
+            issued.code,
+            PASSWORD,
+            DEVICE,
+            nf,
+            "guru.lain"
+          )
+        ).toEqual(invalid);
+        expect(
+          yield* redeemOn(fixture, issued.code, PASSWORD, DEVICE, nf, "x")
+        ).toEqual(invalid);
+        expect(yield* redeemOn(fixture, issued.code)).toEqual({
+          loginName: "guru.baru",
+          outcome: "redeemed",
+        });
+        expect(
+          yield* redeemOn(
+            fixture,
+            issued.code,
+            PASSWORD,
+            deviceAt(1),
+            nf,
+            "guru.lain"
+          )
+        ).toEqual(invalid);
+        expect(
+          yield* redeemOn(fixture, issued.code, PASSWORD, deviceAt(2))
+        ).toEqual({ outcome: "refused", reason: "used" });
       })
   );
 });

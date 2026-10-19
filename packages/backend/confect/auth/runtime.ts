@@ -40,10 +40,10 @@ import { Config, Effect, Layer, Option, Redacted, Result } from "effect";
 
 /**
  * Better Auth's paths for password accounts. Each one stays closed on every
- * host: sign-in with a school username opens later, on the school host alone
- * (ADR 0009). The sign-in paths are in `disabledSignInPaths`, which also closes
- * them for server code. `/is-username-available` is closed too, because it would
- * tell any visitor which school usernames exist.
+ * host. Sign-in with a school username is served on the school host alone
+ * (`auth/login`, ADR 0009), and the email sign-in path is in `disabledSignInPaths`,
+ * which also closes it for server code. `/is-username-available` is closed too,
+ * because it would tell any visitor which school usernames exist.
  */
 const disabledCredentialPaths = [
   "/change-password",
@@ -80,11 +80,19 @@ const credentialSurfaceDisabled = {
     });
   },
 } satisfies NonNullable<BetterAuthOptions["plugins"]>[number];
+/** The plugins of one Better Auth instance, as Better Auth types them. */
+type AuthPlugins = NonNullable<BetterAuthOptions["plugins"]>;
+
 /**
  * Supplies Better Auth's synchronous schema and adapter callback.
  * The component calls this during registration without request credentials.
+ * `routerPlugins` holds what only the HTTP router adds, such as the school username
+ * sign-in, which needs the request's host (`auth/login`).
  */
-export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
+export const createAuthOptions = (
+  ctx: GenericCtx<DataModel>,
+  routerPlugins: AuthPlugins = []
+) => {
   const jwks = Effect.runSync(
     Config.option(Config.String("JWKS")).parse(ConvexConfigProvider.make())
   );
@@ -139,6 +147,7 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
       tokenRoutesDisabled,
       passwordSignInRoutesDisabled,
       usernameUpdatesDisabled,
+      ...routerPlugins,
       openAPI(),
       // The plugin holds the global username of the account (ADR 0009), which is
       // the same value as `users.username`. A school login name lives in
@@ -157,14 +166,18 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>) => {
     ],
   } satisfies BetterAuthOptions;
 };
-/** Validates request configuration before creating a Better Auth instance. */
+/**
+ * Validates request configuration before creating a Better Auth instance. Only the
+ * HTTP router passes `routerPlugins`; every other caller builds the instance without them.
+ */
 export const createAuth = Effect.fn("auth.createAuth")(function* (
-  ctx: GenericCtx<DataModel>
+  ctx: GenericCtx<DataModel>,
+  routerPlugins: AuthPlugins = []
 ) {
   const siteUrl = yield* readSiteUrl();
   const google = yield* readGoogleAuthConfig();
   return yield* Effect.sync(() => {
-    const options = createAuthOptions(ctx);
+    const options = createAuthOptions(ctx, routerPlugins);
     const auth = betterAuth({
       ...options,
       advanced: {

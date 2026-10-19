@@ -5,6 +5,7 @@ import {
   prepareMode,
   startMode,
 } from "@repo/backend/scripts/content/acceptance/build";
+import { cardMode } from "@repo/backend/scripts/content/acceptance/card";
 import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
 import { importMode } from "@repo/backend/scripts/content/acceptance/import";
 import { inviteMode } from "@repo/backend/scripts/content/acceptance/invite";
@@ -42,6 +43,7 @@ export const acceptanceModes: readonly AcceptanceMode[] = [
   teacherMode,
   inviteMode,
   sittingMode,
+  cardMode,
   importMode,
   profileMode,
 ];

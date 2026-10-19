@@ -57,9 +57,11 @@ const readVisitorRefusal = Effect.fn("www.routing.school.visitorRefusal")(
 /**
  * A signed-in visitor reads the school as a member. `NotMember` answers a school
  * that does not exist and a school the visitor does not belong to alike, so the
- * answer never tells the two apart. `AccessDenied` refuses the page as the layout
- * does. An account or a session that the app cannot read leaves the page to the
- * layout, as it does today.
+ * profile decides: a school that does not exist is refused, and a school that does
+ * exist admits the visitor to its layout, which shows the outsider page to an
+ * account that is not a member. `AccessDenied` refuses the page as the layout does.
+ * An account or a session that the app cannot read leaves the page to the layout,
+ * as it does today.
  */
 const readMemberRefusal = Effect.fn("www.routing.school.memberRefusal")(
   function* (slug: TenantSlug, token: string) {
@@ -69,7 +71,7 @@ const readMemberRefusal = Effect.fn("www.routing.school.memberRefusal")(
       Effect.catchTags({
         AccessDenied: () => Effect.succeed(true),
         AccountUnavailable: () => Effect.succeed(false),
-        NotMember: () => Effect.succeed(true),
+        NotMember: () => readVisitorRefusal(slug),
         SessionRequired: () => Effect.succeed(false),
       }),
       Effect.provide(httpSingleAttemptLayer({ auth: token }))

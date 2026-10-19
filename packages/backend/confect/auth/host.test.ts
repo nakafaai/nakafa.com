@@ -3,9 +3,11 @@ import {
   expireHostOnlySessionCookie,
   hostOnlySessionCookieHandler,
   readHostOnlySessionCookieName,
+  readSchoolSlug,
   readSchoolTrustedOrigins,
   sharedCookieReaches,
 } from "@repo/backend/confect/auth/host";
+import { Option } from "effect";
 
 const SECURE_NAME = "__Secure-better-auth.session_token";
 const PLAIN_NAME = "better-auth.session_token";
@@ -408,4 +410,40 @@ describe("host-only session handler", () => {
       expect(response).toBe(answered);
     }
   );
+});
+
+describe("school of a request", () => {
+  /** A username sign-in POST that the browser sent to `host` through the proxy. */
+  const requestTo = (host?: string) =>
+    new Request("https://nakafa.com/api/auth/sign-in/username", {
+      headers: host === undefined ? {} : { "x-forwarded-host": host },
+      method: "POST",
+    });
+
+  it("names the school of a school host of the site", () => {
+    expect(
+      readSchoolSlug(requestTo("harapan.nakafa.com"), "nakafa.com")
+    ).toEqual(Option.some("harapan"));
+  });
+
+  it("names the school of a local school host, whatever its port", () => {
+    expect(
+      readSchoolSlug(requestTo("harapan.localhost:3000"), "localhost")
+    ).toEqual(Option.some("harapan"));
+  });
+
+  it.each([
+    "nakafa.com",
+    "cas.nakafa.com",
+    "harapan.sma.nakafa.com",
+    "harapan.example.com",
+  ])("names no school for the host %s", (host) => {
+    expect(readSchoolSlug(requestTo(host), "nakafa.com")).toEqual(
+      Option.none()
+    );
+  });
+
+  it("names no school for a request without a browser host", () => {
+    expect(readSchoolSlug(requestTo(), "nakafa.com")).toEqual(Option.none());
+  });
 });

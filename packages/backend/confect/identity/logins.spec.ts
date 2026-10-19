@@ -2,7 +2,10 @@ import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { TenantAccess } from "@repo/backend/confect/access/tenant";
-import { LoginName } from "@repo/backend/confect/identity/schema";
+import {
+  LoginName,
+  LoginUsername,
+} from "@repo/backend/confect/identity/schema";
 import RequireMember from "@repo/backend/confect/middleware/member.spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
 import { PersonName } from "@repo/backend/confect/tenancy/schema";
@@ -20,15 +23,27 @@ const LoginView = Schema.Struct({
   person: Schema.Struct({ id: Id("tenantPeople"), name: PersonName }),
 });
 
-/** The school logins of one school, read by its Admin. */
+/**
+ * The school logins of one school, read by its Admin, and the username that a school
+ * login signs in with on the school's host. `usernameOf` is internal: the host's sign-in
+ * calls it with no session, because its visitor is signed out (ADR 0009).
+ */
 export default GroupSpec.make()
-  .middleware(Session)
-  .middleware(RequireMember)
   .addFunction(
     FunctionSpec.publicPaginatedQuery({
       name: "list",
       args: () => ({ slug: TenantSlug }),
       item: () => LoginView,
       error: () => AccessDenied,
-    }).middleware(TenantAccess, { action: "tenant.manage" })
+    })
+      .middleware(Session)
+      .middleware(RequireMember)
+      .middleware(TenantAccess, { action: "tenant.manage" })
+  )
+  .addFunction(
+    FunctionSpec.internalQuery({
+      name: "usernameOf",
+      args: () => ({ loginName: Schema.String, slug: TenantSlug }),
+      returns: () => LoginUsername,
+    })
   );

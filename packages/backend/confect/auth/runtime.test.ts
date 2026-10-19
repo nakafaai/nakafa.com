@@ -329,7 +329,6 @@ describe("auth/runtime", () => {
     ["GET", "/api/auth/reset-password/legacy-token?callbackURL=%2Fen"],
     ["POST", "/api/auth/set-password"],
     ["POST", "/api/auth/sign-in/email"],
-    ["POST", "/api/auth/sign-in/username"],
     ["POST", "/api/auth/sign-up/email"],
     ["POST", "/api/auth/verify-password"],
   ] as const)(

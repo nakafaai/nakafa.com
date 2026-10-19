@@ -123,10 +123,31 @@ describe("school page refusal", () => {
   );
 
   it.effect(
-    "refuses a signed-in viewer who is not a member of the school",
+    "admits a signed-in viewer who is not a member of a school that exists, so its layout shows the outsider page",
     () =>
       Effect.gen(function* () {
         serve({
+          profile: answered(PROFILE_VALUE),
+          token: signedIn,
+          viewer: refusedWith(NOT_MEMBER),
+        });
+
+        expect(
+          yield* answerOf(SCHOOL_ROOT, { headers: { cookie: SESSION_COOKIE } })
+        ).toEqual(Option.none());
+        expect(queriesOf()).toEqual([
+          { auth: `Bearer ${TOKEN}`, path: VIEWER, slug: "harapan" },
+          { auth: null, path: PROFILE, slug: "harapan" },
+        ]);
+      })
+  );
+
+  it.effect(
+    "refuses a signed-in viewer who is not a member of a school that does not exist",
+    () =>
+      Effect.gen(function* () {
+        serve({
+          profile: refusedWith(TENANT_NOT_FOUND),
           token: signedIn,
           viewer: refusedWith(NOT_MEMBER),
         });
@@ -134,9 +155,6 @@ describe("school page refusal", () => {
         expect(
           yield* answerOf(SCHOOL_ROOT, { headers: { cookie: SESSION_COOKIE } })
         ).toEqual(Option.some("en"));
-        expect(queriesOf()).toEqual([
-          { auth: `Bearer ${TOKEN}`, path: VIEWER, slug: "harapan" },
-        ]);
       })
   );
 

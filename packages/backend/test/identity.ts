@@ -17,6 +17,8 @@ export const DEVICE = "0f8fad5b-d9cb-4691-a165-8c45a5d2a1e1";
 export const PASSWORD = "correct horse battery";
 /** A code no card holds, with the dash the page sends. */
 export const UNKNOWN_CODE = "ABCDE-FGHJK";
+/** The school login name that the fixture's card is issued with, and that a student types. */
+export const LOGIN_NAME = "guru.baru";
 export const { issue, redeem, reissue } = refs.public.identity.cards;
 export const nf = slugOf("nf");
 export const other = slugOf("other");
@@ -24,21 +26,32 @@ export const other = slugOf("other");
 type CardFixture = Effect.Success<typeof tenancyFixture>;
 
 /** Issues the first card of the fixture's unclaimed Person, as its school's Admin. */
-export const issueFirst = (fixture: CardFixture, loginName = "guru.baru") =>
+export const issueFirst = (fixture: CardFixture, loginName = LOGIN_NAME) =>
   fixture.as("admin").mutation(issue, {
     loginName,
     personId: fixture.invited,
     slug: nf,
   });
 
-/** Redeems one code on a school's host, from one device, as a visitor who has no account. */
+/**
+ * Redeems one code on a school's host, from one device, as a visitor who has no account. The
+ * student types the login name of the card, which is `LOGIN_NAME` unless a test says another.
+ */
 export const redeemOn = (
   fixture: CardFixture,
   code: string,
   password = PASSWORD,
   deviceId = DEVICE,
-  slug = nf
-) => fixture.anonymous.mutation(redeem, { code, deviceId, password, slug });
+  slug = nf,
+  loginName = LOGIN_NAME
+) =>
+  fixture.anonymous.mutation(redeem, {
+    code,
+    deviceId,
+    loginName,
+    password,
+    slug,
+  });
 
 /** The Person of the fixture's unclaimed invitee, as stored. */
 export const inviteePerson = (fixture: CardFixture) =>

@@ -19,7 +19,7 @@ import {
   hashCardCode,
   readCardCode,
 } from "@repo/backend/confect/identity/code";
-import { loginOf } from "@repo/backend/confect/identity/logins";
+import { loginOf, readLoginName } from "@repo/backend/confect/identity/logins";
 import type {
   RedeemOutcome,
   RedeemRefusal,
@@ -33,10 +33,11 @@ import { Clock, Effect, Option, Result } from "effect";
 
 /**
  * Attempts one device may make: five at once, then five more each fifteen
- * minutes. The device is a UUID that the sign-in page keeps, so a device that
- * asks for a new one gets a new bucket. A code holds 50 bits (ADR 0009), so a
- * bucket shared by every device adds no protection against guessing, and it would
- * let one person block another's card.
+ * minutes. The code's 50 bits are the protection against guessing (ADR 0009), and
+ * this bucket only slows one browser: the device is a UUID that the sign-in page
+ * keeps, so a device that asks for a new one gets a new bucket. A bucket shared by
+ * every device would let one person block another's card, so the limit stays per
+ * device.
  */
 const DEVICE_ATTEMPTS = { capacity: 5, period: 15 * MINUTE, rate: 5 };
 
@@ -88,10 +89,13 @@ const isSignedIn = Effect.fn("identity.redeem.signedIn")(function* () {
  * refuses, so the answer tells a guesser nothing about which part was right. The
  * Person is read before the card's state, so a used or expired card of such a
  * Person reads as `invalid` too. A used card and an expired one are told apart.
+ * A login name that is not the card's own also reads as `invalid`, and it is
+ * checked before the card's state, so a wrong name learns nothing about the card.
  */
 const findRedeemable = Effect.fn("identity.redeem.find")(function* (
   slug: TenantSlug,
-  code: string
+  code: string,
+  loginName: string
 ) {
   const reader = yield* DatabaseReader;
   const tenant = yield* reader
@@ -128,13 +132,21 @@ const findRedeemable = Effect.fn("identity.redeem.find")(function* (
   ) {
     return reject("invalid");
   }
+  // Issuing writes the login before the card, and nothing deletes a login, so a
+  // card without one is a broken row: the defect rolls the redemption back.
+  const login = yield* Effect.fromOption(yield* loginOf(person._id)).pipe(
+    Effect.orDie
+  );
+  if (login.name !== loginName) {
+    return reject("invalid");
+  }
   if (card.value.redeemedAt !== undefined) {
     return reject("used");
   }
   if (card.value.expiresAt <= (yield* Clock.currentTimeMillis)) {
     return reject("expired");
   }
-  return Result.succeed({ card: card.value, person });
+  return Result.succeed({ card: card.value, login, person });
 });
 
 /**
@@ -172,8 +184,9 @@ const accountOf = Effect.fn("identity.redeem.account")(function* (
 /**
  * Redeems one login card: the student's first sign-in, or the new password that
  * a reissued card allows. In order, it refuses a request that carries a signed-in
- * identity before any limit is spent, counts the attempt against the device limit,
- * reads the code, opens the card on the school's host, checks the password length,
+ * identity before any limit is spent, counts the attempt against its device's bucket
+ * (which only slows one browser), reads the code and the typed login name, opens the
+ * card on the school's host with that login name, checks the password length,
  * creates the account if the Person has none and claims the Person, stores the
  * password through Better Auth, marks the card used, and journals the redemption.
  * The rate-limit count is written first, on purpose: a refusal is a value, so the
@@ -191,19 +204,19 @@ export const redeemCard = Effect.fn("identity.redeem.card")(function* (
     return refused("rateLimited");
   }
   const code = readCardCode(input.code);
-  if (Option.isNone(code)) {
+  const loginName = readLoginName(input.loginName);
+  if (Option.isNone(code) || Result.isFailure(loginName)) {
     return refused("invalid");
   }
-  const found = yield* findRedeemable(input.slug, code.value);
+  const found = yield* findRedeemable(
+    input.slug,
+    code.value,
+    loginName.success
+  );
   if (Result.isFailure(found)) {
     return refused(found.failure);
   }
-  const { card, person } = found.success;
-  // Issuing writes the login before the card, and nothing deletes a login, so a
-  // card without one is a broken row: the defect rolls the redemption back.
-  const login = yield* Effect.fromOption(yield* loginOf(person._id)).pipe(
-    Effect.orDie
-  );
+  const { card, login, person } = found.success;
   // A missing site or Google setting is a deployment defect, not a refusal.
   const auth = yield* createAuth(ctx).pipe(Effect.orDie);
   const context = yield* Effect.promise(() => auth.$context);
