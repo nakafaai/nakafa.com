@@ -3,11 +3,9 @@
 import type { SittingView } from "@repo/backend/confect/exams/sittings/contract";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { useTranslations } from "next-intl";
-import { useEffect } from "react";
 import { StudentResults } from "@/components/exams/results/student";
 import type { AttemptValue } from "@/components/exams/sitting/attempt";
 import { SittingBar } from "@/components/exams/sitting/bar";
-import { forgetKeptAttempt } from "@/components/exams/sitting/kept.client";
 import { LayoutContent } from "@/components/shared/content/layout";
 
 /** The copy key of each state of an attempt that takes no answers. */
@@ -22,8 +20,9 @@ const sentenceKeys = {
 
 /**
  * An attempt that takes no answers, shown without an entry: the exam's name, the one sentence of its state,
- * and the student's own results once the teacher releases them. A submitted attempt no longer keeps any
- * answer in the browser, because the server holds them all, so the kept state is dropped here.
+ * and the student's own results once the teacher releases them. This screen forgets nothing: the finish
+ * forgets the kept state once the server confirms it, and this screen shows the finish before that, so a
+ * refused finish that rolls back would otherwise lose the answers that the student has not sent yet.
  */
 export function StudentOutcome({
   attempt,
@@ -35,12 +34,6 @@ export function StudentOutcome({
   readonly slug: TenantSlug;
 }) {
   const t = useTranslations("Exams");
-
-  useEffect(() => {
-    if (attempt.state === "submitted") {
-      forgetKeptAttempt(sitting.id, attempt.id);
-    }
-  }, [attempt.id, attempt.state, sitting.id]);
 
   return (
     <>
