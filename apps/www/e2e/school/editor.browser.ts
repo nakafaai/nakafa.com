@@ -25,6 +25,10 @@ const OPTIONS = [
   { letter: "D", text: "7" },
 ];
 
+/** The schedule dialog's message for the questions that have no correct answer yet, naming their numbers. */
+const MISSING_KEYS_MESSAGE =
+  /Mark the correct answer of questions? \d+ first\./u;
+
 test("a teacher creates an exam, adds questions, writes one, and finds it all when the editor opens again, with the dot on a question without a key", async ({
   browser,
   baseURL,
@@ -158,9 +162,9 @@ test("a teacher creates an exam, adds questions, writes one, and finds it all wh
   // and its submit stays off.
   await reopened.getByRole("button", { name: "Schedule" }).click();
   const scheduling = reopened.getByRole("dialog");
-  await expect(
-    scheduling.getByText(/Mark the correct answer of questions? \d+ first\./u)
-  ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
+  await expect(scheduling.getByText(MISSING_KEYS_MESSAGE)).toBeVisible({
+    timeout: readinessTimeoutMilliseconds,
+  });
   await expect(
     scheduling.getByRole("button", { name: "Schedule" })
   ).toBeDisabled();
