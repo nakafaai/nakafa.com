@@ -1,5 +1,5 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
-import { Clock, Effect } from "effect";
+import { Array as Arr, Clock, Effect } from "effect";
 import { loadMathFonts } from "@/e2e/support/fonts";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
 import { settleRouter } from "@/e2e/support/navigation/settle";
@@ -29,7 +29,7 @@ export const openObservedRoute = Effect.fn("NakafaE2E.openObservedRoute")(
 );
 
 /** Reads the path a link opens. */
-export const readPathname = Effect.fn("NakafaE2E.readLinkPathname")(function* (
+const readPathname = Effect.fn("NakafaE2E.readLinkPathname")(function* (
   link: Locator
 ) {
   const href = yield* Effect.promise(() => link.getAttribute("href")).pipe(
@@ -48,12 +48,13 @@ const articleText = (page: Page) =>
  */
 const recordClickToContent = Effect.fn("NakafaE2E.recordClickToContent")(
   function* (milliseconds: number) {
-    yield* Effect.sync(() =>
-      test.info().annotations.push({
+    yield* Effect.sync(() => {
+      const info = test.info();
+      info.annotations = Arr.append(info.annotations, {
         description: `${Math.round(milliseconds)} ms`,
         type: "click-to-content",
-      })
-    );
+      });
+    });
   }
 );
 

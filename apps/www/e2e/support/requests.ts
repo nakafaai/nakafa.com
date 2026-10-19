@@ -61,7 +61,7 @@ export const requestFailureFields = {
   url: Schema.String,
 };
 
-export const RequestFailureSchema = Schema.Struct(requestFailureFields);
+const RequestFailureSchema = Schema.Struct(requestFailureFields);
 
 type RequestFailure = typeof RequestFailureSchema.Type;
 

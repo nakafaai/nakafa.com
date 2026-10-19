@@ -158,11 +158,11 @@ export function read(page: Page) {
           yield* fileFindings([
             {
               file: "apps/www/vite.config.ts",
-              sourceText: "export default config as NextConfig;\n",
+              sourceText: "export default config as UserConfig;\n",
             },
             {
               file: "apps/www/source.config.ts",
-              sourceText: "export default {} satisfies NextConfig;\n",
+              sourceText: "export default {} satisfies UserConfig;\n",
             },
             {
               file: "scripts/tool.test.ts",
