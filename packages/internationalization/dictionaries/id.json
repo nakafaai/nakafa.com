@@ -162,7 +162,10 @@
     "length": "Durasi",
     "length-minutes": "{count} menit",
     "schedule-keys": "Tandai dulu jawaban benar setiap soal.",
-    "schedule-past": "Waktu mulai sudah lewat. Pilih waktu yang lebih lambat."
+    "schedule-past": "Waktu mulai sudah lewat. Pilih waktu yang lebih lambat.",
+    "try-action": "Coba sebagai siswa",
+    "try-finish": "Selesai mencoba",
+    "try-note": "Jawaban di sini tidak disimpan."
   },
   "SchoolSettings": {
     "school": "Sekolah",
@@ -1718,8 +1721,7 @@
     "medals-label": "Sekolah dan kampus",
     "prices-title": "Gratis itu beneran gratis",
     "school-title": "Nakafa juga buat satu sekolah",
-    "school-lead": "Butuh LMS, integrasi konten, atau alur kelas khusus? Kita cari yang cocok.",
-    "school-cta": "Hubungi kami",
+    "school-lead": "Ujian, pengawasan, dan Nina untuk setiap kelas. Buka sekolahmu gratis dalam beberapa menit.",
     "school-class": "Satu kelas hewan",
     "faq-title": "Yang sering ditanyakan",
     "faq-subjects-question": "Mata pelajaran dan kelas apa yang tercakup?",
