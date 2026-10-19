@@ -91,6 +91,7 @@ function SchoolProfileCard({
   const common = useTranslations("Common");
   const fileInput = useRef<HTMLInputElement>(null);
   const [isRemoving, setIsRemoving] = useState(false);
+  const [preview, setPreview] = useState<string | undefined>(undefined);
   const requestUrl = useMutation(tenancy.logo.uploadUrl);
   const setLogo = useMutation(tenancy.logo.set);
   const removeLogo = useMutation(tenancy.logo.remove).withOptimisticUpdate(
@@ -109,8 +110,12 @@ function SchoolProfileCard({
       toast.error(LOGO_TYPE_REFUSED);
       return;
     }
-    startTransition(() =>
-      saveSchool(
+    // The chosen image shows at once while it uploads. When the server answers, saved or refused,
+    // the preview steps back, and the logo the server holds shows instead.
+    const url = URL.createObjectURL(file);
+    setPreview(url);
+    startTransition(async () => {
+      await saveSchool(
         () =>
           storeSchoolLogo({
             file,
@@ -118,8 +123,10 @@ function SchoolProfileCard({
             save: (storageId) => setLogo({ contentType, slug, storageId }),
           }),
         SOURCE
-      )
-    );
+      );
+      setPreview(undefined);
+      URL.revokeObjectURL(url);
+    });
   };
 
   const takeLogoOff = () => {
@@ -150,7 +157,11 @@ function SchoolProfileCard({
           <CardDescription>{t("logo-description")}</CardDescription>
         </CardHeader>
         <CardContent>
-          <SchoolMark logo={tenant.logo} mascot={tenant.mascot} size="lg" />
+          <SchoolMark
+            logo={preview ?? tenant.logo}
+            mascot={tenant.mascot}
+            size="lg"
+          />
         </CardContent>
         <CardSectionFooter hint={t("logo-footer")}>
           <CardSectionActions>
