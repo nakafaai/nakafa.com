@@ -2850,6 +2850,42 @@ export declare const api: {
         },
         { id: Id<"exams"> }
       >;
+      home: FunctionReference<
+        "query",
+        "public",
+        { slug: string },
+        {
+          drafts: Array<{
+            id: Id<"exams">;
+            language: "en" | "id" | "de";
+            title: string;
+          }>;
+          live: Array<{
+            closesAt: number;
+            cohortId: Id<"tenantCohorts"> | null;
+            examId: Id<"exams">;
+            examTitle: string;
+            id: Id<"examSittings">;
+            opensAt: number;
+            room: string;
+            state: "scheduled" | "open" | "closed";
+            timeZone: string;
+            unitId: Id<"tenantUnits">;
+          }>;
+          next: Array<{
+            closesAt: number;
+            cohortId: Id<"tenantCohorts"> | null;
+            examId: Id<"exams">;
+            examTitle: string;
+            id: Id<"examSittings">;
+            opensAt: number;
+            room: string;
+            state: "scheduled" | "open" | "closed";
+            timeZone: string;
+            unitId: Id<"tenantUnits">;
+          }>;
+        }
+      >;
       list: FunctionReference<
         "query",
         "public",
