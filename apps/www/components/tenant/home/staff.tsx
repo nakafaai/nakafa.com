@@ -13,7 +13,6 @@ import { type StaffTile, staffPlan } from "@/components/tenant/home/layout";
 import { LiveTile } from "@/components/tenant/home/live";
 import { NextTile } from "@/components/tenant/home/next";
 import {
-  homeExamsRead,
   useHomeExams,
   useHomeSetup,
   useHomeViewer,
@@ -21,26 +20,14 @@ import {
 import { QuietState } from "@/components/tenant/home/quiet";
 import { ResultsTile } from "@/components/tenant/home/results";
 import { SetupTile, useSetupShown } from "@/components/tenant/home/setup";
-import { ReadBoundary } from "@/components/tenant/read/boundary";
 
 /**
- * The home of a viewer who watches rooms or creates exams. One read brings the rooms, the results, and the drafts,
- * and the setup tile reads the school's setup on its own. Until the reads that its tiles need have answered,
- * nothing shows below the title, and then every tile appears at once, so no tile that is shown moves when another
- * arrives.
+ * The quiet state and the tiles of a staff home, in the order and the places the plan gives them. One read brings
+ * the rooms, the results, and the drafts, and the setup tile reads the school's setup on its own. Until the reads
+ * that its tiles need have answered, nothing shows below the title, and then every tile appears at once, so no
+ * tile that is shown moves when another arrives. The home reads these tiles inside the read's boundary.
  */
-export function StaffHome({ drafts }: { drafts: StoreApi<ExamDrafts> }) {
-  const tenant = useTenant();
-
-  return (
-    <ReadBoundary read={homeExamsRead(tenant.slug)}>
-      <StaffTiles drafts={drafts} />
-    </ReadBoundary>
-  );
-}
-
-/** The quiet state and the tiles of a staff home, in the order and the places the plan gives them. */
-function StaffTiles({ drafts }: { drafts: StoreApi<ExamDrafts> }) {
+export function StaffTiles({ drafts }: { drafts: StoreApi<ExamDrafts> }) {
   const t = useTranslations("School");
   const tenant = useTenant();
   const exams = useHomeExams();

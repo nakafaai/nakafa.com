@@ -15,11 +15,18 @@ import {
   type ExamDrafts,
 } from "@/components/tenant/exams/drafts";
 import { SchoolHeader } from "@/components/tenant/header";
-import { useStudentSittings } from "@/components/tenant/home/query.client";
-import { StaffHome } from "@/components/tenant/home/staff";
+import {
+  homeExamsRead,
+  useStudentSittings,
+} from "@/components/tenant/home/query.client";
+import { StaffTiles } from "@/components/tenant/home/staff";
 import { StudentHome } from "@/components/tenant/home/student";
 import { HomeTitle } from "@/components/tenant/home/title";
-import { enterableSitting, orderSittings } from "@/components/tenant/sittings.client";
+import { ReadBoundary } from "@/components/tenant/read/boundary";
+import {
+  enterableSitting,
+  orderSittings,
+} from "@/components/tenant/sittings.client";
 
 /**
  * The home of a school: one header with the page's one end-goal action for the viewer, a title row with Nina, and
@@ -41,7 +48,9 @@ export function TenantHome() {
       {tenant.role === "student" ? (
         <StudentHome />
       ) : (
-        <StaffHome drafts={drafts} />
+        <ReadBoundary read={homeExamsRead(tenant.slug)}>
+          <StaffTiles drafts={drafts} />
+        </ReadBoundary>
       )}
     </HomePage>
   );
