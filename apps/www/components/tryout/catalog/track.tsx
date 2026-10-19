@@ -1,5 +1,6 @@
 import { Effect } from "effect";
 import type { Locale } from "next-intl";
+import { NuqsAdapter } from "nuqs/adapters/next/app";
 import type { SearchParams } from "nuqs/server";
 import { readTryoutSetList } from "@/components/tryout/catalog/server";
 import { readCatalogQuery } from "@/components/tryout/catalog/table/query";
@@ -34,10 +35,12 @@ export async function TryoutTrackTable({
   // getToken reads request headers before this Effect runtime can access the clock.
   const result = await Effect.runPromise(readTryoutSetList(token, args));
   return (
-    <TryoutSetTable
-      bootstrap={{ args, result }}
-      key={`${locale}:${page.track.publicPath}`}
-      title={page.track.title}
-    />
+    <NuqsAdapter>
+      <TryoutSetTable
+        bootstrap={{ args, result }}
+        key={`${locale}:${page.track.publicPath}`}
+        title={page.track.title}
+      />
+    </NuqsAdapter>
   );
 }

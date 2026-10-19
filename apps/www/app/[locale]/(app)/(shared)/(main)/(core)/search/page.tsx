@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
+import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { Suspense } from "react";
 import { HomeHeader } from "@/components/home/header";
 import { InputSearch } from "@/components/search/input";
@@ -41,15 +42,17 @@ export default function Page() {
               variant="link"
             />
 
-            <div className="grid gap-6">
-              <Suspense>
-                <InputSearch />
-              </Suspense>
+            <NuqsAdapter>
+              <div className="grid gap-6">
+                <Suspense>
+                  <InputSearch />
+                </Suspense>
 
-              <Suspense>
-                <SearchListItems />
-              </Suspense>
-            </div>
+                <Suspense>
+                  <SearchListItems />
+                </Suspense>
+              </div>
+            </NuqsAdapter>
           </div>
         </div>
       </div>

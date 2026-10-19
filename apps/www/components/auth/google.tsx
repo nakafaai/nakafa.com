@@ -5,6 +5,7 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { Effect } from "effect";
 import { useLocale, useTranslations } from "next-intl";
 import { useQueryState } from "nuqs";
+import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { useState, useTransition } from "react";
 import { reportClientException } from "@/lib/analytics/client";
 import {
@@ -27,8 +28,21 @@ interface Props {
 /**
  * Renders the Google sign-in button. It returns the visitor to one sanitized
  * internal destination, or to `returnPath` on the host the button is on.
+ *
+ * The button reads the sign-in query state itself, so it mounts the nuqs adapter
+ * it needs wherever it appears, such as the chat's failure notice, which mounts
+ * no adapter of its own.
  */
 export function AuthGoogle({ returnPath }: Props) {
+  return (
+    <NuqsAdapter>
+      <GoogleSignIn returnPath={returnPath} />
+    </NuqsAdapter>
+  );
+}
+
+/** The sign-in button and the sign-in state it reads from the query. */
+function GoogleSignIn({ returnPath }: Props) {
   const locale = useLocale();
   const t = useTranslations("Auth");
   const tToast = useTranslations("Toast");
