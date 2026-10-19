@@ -65,7 +65,7 @@ const LAYOUT_SHIFTS_KEY = "nakafaHomeLayoutShifts";
 const SIZE_CHANGES_KEY = "nakafaHomeSizeChanges";
 
 /** The sections of the page and the panels of the lesson window, whose sizes a failure names. */
-const SIZED_ELEMENTS = "section[id], [role='tabpanel']";
+const SIZED_ELEMENTS = "section[id], [data-slot='lesson-panel']";
 
 /**
  * How far apart a resize and a layout shift may be and still be named together
@@ -228,7 +228,9 @@ test("home page keeps the hero when the particle field fails to load", async ({
                 ).toBeVisible()
               );
               yield* Effect.promise(() =>
-                expect(page.locator("#hero canvas")).toHaveCount(0)
+                expect(
+                  page.locator('[data-slot="page-field"] canvas')
+                ).toHaveCount(0)
               );
             })
           );

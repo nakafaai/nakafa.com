@@ -7,11 +7,14 @@ import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useTranslations } from "next-intl";
 import { lazy, Suspense } from "react";
 
-function LoadingButton() {
+/** The emphasis of the Pro action: the page's one primary on the pricing page, secondary elsewhere. */
+export type PricingButtonVariant = "default" | "secondary";
+
+function LoadingButton({ variant }: { variant: PricingButtonVariant }) {
   const t = useTranslations("Pricing");
 
   return (
-    <Button className="w-full" disabled>
+    <Button className="w-full" disabled variant={variant}>
       <Spinner icon={Diamond02Icon} isLoading />
       {t("pro-cta")}
     </Button>
@@ -25,16 +28,16 @@ const BillingButton = lazy(() =>
 );
 
 /** Defers browser billing code until the pricing surface has mounted. */
-export function PricingButton() {
+export function PricingButton({ variant }: { variant: PricingButtonVariant }) {
   const mounted = useMounted();
 
   if (!mounted) {
-    return <LoadingButton />;
+    return <LoadingButton variant={variant} />;
   }
 
   return (
-    <Suspense fallback={<LoadingButton />}>
-      <BillingButton />
+    <Suspense fallback={<LoadingButton variant={variant} />}>
+      <BillingButton variant={variant} />
     </Suspense>
   );
 }

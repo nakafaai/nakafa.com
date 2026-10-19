@@ -6,10 +6,11 @@ Accepted on 13 October 2026 with owner decisions K2, K3, and K13. The owner
 approved decisions K1 to K20 on that day. Planned for program wave B, after the
 Google verification (risk R3 of the plan) for the scopes that need it.
 
-No connector exists in the code today: `git grep` on main at `f8a5610808` finds
-no connector module, table, or route, and no connector scope. The rule that
-matches Classroom members stands only after its gate passes (see Gates).
-Implementation Status lists each part.
+No connector adapter exists in the code. Since the connections slice (CN1), the
+code holds the connection tables, the sealed token table, and the `connection`
+kind in `confect/connectors`, but no connector route, page, or Google scope. The
+rule that matches Classroom members stands only after its gate passes (see
+Gates). Implementation Status lists each part.
 
 ## Context
 
@@ -21,14 +22,14 @@ at any time, and a strict split between a learner's own data and a school's
 data, the split that K3 makes for memory.
 
 Today Google is a sign-in provider only.
-`packages/backend/confect/auth/runtime.ts` asks Google for offline access with a
-forced consent prompt (`accessType: "offline"`,
-`prompt: "select_account consent"`), asks for no scope beyond Better Auth's
-defaults (`email`, `profile`, and `openid`), and Better Auth stores the tokens it
-gets on the account row. ADR 0009 plans to stop storing them and says that a
-connector token never sits there. Better Auth's Google provider also adds
-`include_granted_scopes=true` to every sign-in request (`@better-auth/core`
-1.6.33, `dist/social-providers/google.mjs`).
+`packages/backend/confect/auth/tokens.ts` sends Google the prompt
+`select_account` and no `access_type`, so Google issues no refresh token. It
+also turns off ID token sign-in. Better Auth's account hooks keep every provider
+token out of the `account` table (#1052 and #1069). Sign-in asks for no scope
+beyond Better Auth's defaults (`email`, `profile`, and `openid`). Better Auth's
+Google provider still adds `include_granted_scopes=true` to every sign-in request
+(`@better-auth/core` 1.6.33, `dist/social-providers/google.mjs`), so connectors
+keep a Google Cloud project of their own (see Decision).
 
 These rules of Google shape the design. Each was read on its own page on 13
 October 2026, and References lists the pages.
@@ -64,7 +65,7 @@ scope below is a read scope except `drive.file`, which Google also lets change
 the files that the user opened with the app. So the Drive adapter has no write
 operation. Data that leaves Nakafa (webhooks, exports, grades sent to a learning
 system) is not a connector, and ADR 0029 owns it. The one exception is the
-Dapodik XLSX export, which stays with the adapter that owns the format (see
+Dapodik XLSX export, which Records owns (ADR 0033, see
 below).
 
 | Source | What it brings | Who connects | Status |
@@ -81,12 +82,13 @@ below).
   requests to the Ministry, one to become a partner for sign-in and one for the
   official data API. Until the Ministry signs and opens the API, the uploaded
   XLSX is the only path. When the API runs, the XLSX path is replaced in the same
-  release. `confect/connectors` owns both directions of the format, so it also
-  writes the XLSX export of report data for Dapodik and e-Ijazah.
+  release. `confect/connectors` owns the import of the format, and Records owns
+  the XLSX export of report data for Dapodik and e-Ijazah (ADR 0033).
 - The Dapodik import reads a student's name, NISN, level, and class group name,
-  and the date of birth only as a mark of age, which is not stored. It reads no
-  NIK, no address, and no other column. The columns of each Dapodik version are
-  recorded from a pilot school's export.
+  and the date of birth only to set the student's under-age flag on the roster.
+  The date is not kept (ADR 0034). It reads no NIK, no address, and no other
+  column. The columns of each Dapodik version are recorded from a pilot school's
+  export.
 - A file import (the Dapodik XLSX, and the OneRoster CSV of ADR 0029) reads in an
   action, checks the file, shows a preview before it applies anything, and
   deletes the file once the import is applied or cancelled. For an XLSX file the
@@ -357,9 +359,11 @@ granted to the project and invalidates the tokens of every client in it. A blind
 revoke would end the other connections of the same Google account, so Nakafa
 revokes only with the last one. Until then the grant stays in the user's Google
 account, and the connector page says where to remove it. The count spans the
-personal and the school connections of one Google account. The connector change
-decides how it finds them, and it must not show one owner's connection to
-another owner.
+personal and the school connections of one Google account. Connect blinds the
+account's subject under the connector key (ADR 0030), not under an owner's key,
+so every owner's connection to one account stores the same blind. The count
+reads the active connections that hold that blind and returns only a number, so
+it never shows one owner's connection to another owner.
 
 ### Nina and Google data
 
@@ -443,10 +447,11 @@ Two kinds of connection decides.
 
 | Part | Status |
 | --- | --- |
-| Google sign-in with offline access and a forced consent prompt (`packages/backend/confect/auth/runtime.ts`) | Live. ADR 0009 plans to stop storing its tokens. |
+| Google sign-in with `select_account` and no `access_type` (`packages/backend/confect/auth/tokens.ts`), storing no provider tokens (#1052, #1069) | Live |
 | Learner key in `confect/vault` (`vaultKeys`) | Live |
 | School key (`tenantKeys`, ADR 0030) | Built, program wave B |
-| `confect/connectors`, `connectorLinks`, `connectorSecrets` | Planned, program wave B |
+| `confect/connectors`: the `connectorConnections` and `connectorSecrets` tables, the `connection` kind, and its journal changes | Built in CN1. A token is sealed under the owner's key, and a disconnect destroys it. Connect blinds the Google account under the connector key (ADR 0030). A learner's deletion deletes the connections, their tokens, and their journal entries (`auth/cleanup/connections.ts`, `auth/cleanup/journal.ts`). Revoking each grant at Google waits for the adapter. No adapter yet. |
+| `connectorLinks`, one row for each Google class that links it to a Nakafa class | Planned, with the Classroom slices |
 | The Drive, Forms, Classroom, Calendar, and Gmail adapters | Planned, program wave B. Each reaches production as Google verification says. |
 | The connector pages: connect, disconnect, reconnect, sync by hand, and the Admin's switch for each role (ADR 0026 has the school address) | Planned, program wave B |
 | A Google Cloud project for connectors, and its verification request | Planned, program wave A step |

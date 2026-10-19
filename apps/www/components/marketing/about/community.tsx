@@ -43,6 +43,7 @@ export function Community() {
                 {t("community-cta")}
               </a>
             }
+            variant="outline"
           />
         </div>
         <div
