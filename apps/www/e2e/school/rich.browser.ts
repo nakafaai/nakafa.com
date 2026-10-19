@@ -55,7 +55,11 @@ test("a teacher writes a question with headings, lists, quotes, code and a table
   // A heading comes from the slash menu, which lists the blocks under the query. The caret leaves
   // the bold word, and the control is released once the editor has read the new caret, so the
   // Enter that follows splits the paragraph after the word and not over it.
-  await page.keyboard.press("End");
+  // End left the caret in the bold word, so a press past the text places it at the end instead.
+  await prompt
+    .locator("p")
+    .first()
+    .click({ position: { x: 300, y: 6 } });
   await expect(bold).toHaveAttribute("aria-pressed", "false");
   await page.keyboard.press("Enter");
   await page.keyboard.type("/");
