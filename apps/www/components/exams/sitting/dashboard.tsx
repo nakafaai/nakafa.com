@@ -38,7 +38,7 @@ export function SittingDashboard({
   const [store] = useState(createSittingStore);
   const state = useQuery(
     exams.sittings.dashboard,
-    dashboardArgs({ sittingId, slug })
+    dashboardArgs({ sittingId, slug }, null)
   );
 
   if (QueryResult.isFailure(state)) {

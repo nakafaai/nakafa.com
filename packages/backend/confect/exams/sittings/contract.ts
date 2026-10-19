@@ -104,6 +104,16 @@ export const HeldAttempt = Schema.Struct({
   state: AttemptState,
 });
 
+/**
+ * One sitting as its student sees it: the sitting, and the attempt the student holds in it,
+ * whatever the attempt's state, so a reload after a close or a finish still shows how the
+ * attempt ended. A student who holds no attempt yet gets `null`.
+ */
+export const StudentSittingView = Schema.Struct({
+  attempt: Schema.NullOr(HeldAttempt),
+  sitting: SittingView,
+});
+
 /** One integrity signal of an attempt, as a proctor reads it, newest first in its pages. */
 export const SignalView = Schema.Struct({
   at: Schema.Finite,

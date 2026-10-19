@@ -54,13 +54,13 @@ function changeAttempt(
 ) {
   const args = { sittingId: key.sittingId, slug: key.slug };
   const current = Option.getOrNull(
-    localStore.getQuery(exams.sittings.attempt, args)
+    localStore.getQuery(exams.sittings.student, args)
   );
-  if (current !== null) {
+  if (current !== null && current.attempt !== null) {
     localStore.setQuery(
-      exams.sittings.attempt,
+      exams.sittings.student,
       args,
-      Option.some(finishAttempt(current))
+      Option.some({ ...current, attempt: finishAttempt(current.attempt) })
     );
   }
 }

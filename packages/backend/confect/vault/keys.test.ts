@@ -6,12 +6,17 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import {
   createTenantKey,
+  ensureConnectorKeys,
   ensureLearnerKeys,
   readLearnerKeys,
   readTenantKeys,
   shredLearnerKeys,
 } from "@repo/backend/confect/vault/keys";
-import { openText, sealText } from "@repo/backend/confect/vault/text";
+import {
+  blindConnectorText,
+  openText,
+  sealText,
+} from "@repo/backend/confect/vault/text";
 import {
   fact,
   learner,
@@ -325,6 +330,34 @@ describe("vault school keys", () => {
           expect(
             (yield* Effect.flip(readLearnerKeys(otherLearner))).reason
           ).toBe("key");
+        })
+      )
+  );
+});
+
+describe("vault connector key", () => {
+  it.effect(
+    "creates one connector key on first use, and every later call reads that same key",
+    () =>
+      scenario(
+        Effect.gen(function* () {
+          const binding = "nakafa/test/connector/v1";
+          const first = yield* blindConnectorText(
+            yield* ensureConnectorKeys(),
+            binding,
+            "google-subject"
+          );
+          const second = yield* blindConnectorText(
+            yield* ensureConnectorKeys(),
+            binding,
+            "google-subject"
+          );
+          const rows = yield* (yield* DatabaseReader)
+            .table("connectorKeys")
+            .index("by_key", (query) => query.eq("key", "primary"))
+            .collect();
+          expect(second).toBe(first);
+          expect(Arr.map(rows, (row) => row.root)).toEqual(["test"]);
         })
       )
   );

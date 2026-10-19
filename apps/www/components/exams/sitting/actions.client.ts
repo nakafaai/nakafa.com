@@ -9,7 +9,6 @@ import {
   addMinutesToAttempt,
   closeSitting,
   type DashboardValue,
-  dashboardArgs,
   lockAttempt,
   unlockAttempt,
 } from "@/components/exams/sitting/change";
@@ -21,9 +20,10 @@ function nowMillis() {
 }
 
 /**
- * Applies one change to the dashboard page of a sitting in the local store. The sitting and
- * the school name the page, which every proctor action carries. The server's answer replaces
- * the guess, and a refused action rolls it back.
+ * Applies one change to every loaded dashboard page of a sitting in the local store, since
+ * the attempt it changes sits on one of them and every page carries the sitting. The sitting
+ * and the school name the pages, which every proctor action carries. The server's answer
+ * replaces the guess, and a refused action rolls it back.
  */
 function changeDashboard(
   localStore: OptimisticLocalStore.OptimisticLocalStore,
@@ -33,16 +33,20 @@ function changeDashboard(
   },
   change: (value: DashboardValue) => DashboardValue
 ) {
-  const args = dashboardArgs(key);
-  const current = Option.getOrUndefined(
-    localStore.getQuery(exams.sittings.dashboard, args)
-  );
-  if (current !== undefined) {
-    localStore.setQuery(
-      exams.sittings.dashboard,
-      args,
-      Option.some(change(current))
-    );
+  for (const { args, value } of localStore.getAllQueries(
+    exams.sittings.dashboard
+  )) {
+    if (
+      args.sittingId === key.sittingId &&
+      args.slug === key.slug &&
+      Option.isSome(value)
+    ) {
+      localStore.setQuery(
+        exams.sittings.dashboard,
+        args,
+        Option.some(change(value.value))
+      );
+    }
   }
 }
 

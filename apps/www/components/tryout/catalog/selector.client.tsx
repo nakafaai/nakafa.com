@@ -90,7 +90,7 @@ export function TryoutCountrySelector({
     >
       <SelectTrigger
         aria-label={label}
-        className="w-full min-w-0 sm:w-auto sm:max-w-[min(32rem,calc(100vw-2rem))]"
+        className="w-auto min-w-0 shrink-0 sm:max-w-[min(32rem,calc(100vw-2rem))]"
         disabled={isLoading}
       >
         <span
@@ -102,7 +102,7 @@ export function TryoutCountrySelector({
               Option.map(currentOption, (option) => option.countryCode)
             )}
           />
-          <span className="truncate">
+          <span className="truncate max-sm:sr-only">
             {Option.getOrElse(
               Option.map(currentOption, (option) => option.title),
               () => label
@@ -167,7 +167,7 @@ export function TryoutExamSelector({
     <Select items={items} value={currentValue}>
       <SelectTrigger
         aria-label={label}
-        className="w-full min-w-0 sm:w-auto sm:max-w-[min(32rem,calc(100vw-2rem))]"
+        className="w-auto min-w-0 shrink-0 sm:max-w-[min(32rem,calc(100vw-2rem))]"
       >
         <span
           className="flex min-w-0 items-center gap-2"
@@ -178,7 +178,7 @@ export function TryoutExamSelector({
             onSome: ({ icon, option }) => (
               <>
                 <HugeIcons className="size-4 shrink-0" icon={icon} />
-                <span className="truncate">{option.title}</span>
+                <span className="truncate max-sm:sr-only">{option.title}</span>
               </>
             ),
           })}

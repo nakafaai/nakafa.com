@@ -8,22 +8,37 @@ import { Effect, FileSystem, Schema } from "effect";
 /** One Convex function's arguments as the CLI takes them, JSON text. */
 const encodeArguments = Schema.encodeEffect(JsonTextSchema);
 
+/** The number of extra students a seed seats, as the command line names it. */
+const decodeCrowd = Schema.decodeEffect(Schema.FiniteFromString);
+
 /**
  * Seeds one proctored sitting of a keyed exam in the running local acceptance backend. The
  * learner with the address gets a student grant in the school's first active unit, and the
- * sitting opens now and closes an hour later. The exam, the sitting, and its token go to
- * `output` for a browser test to read back. Each call seeds a new exam and sitting.
+ * sitting opens now and closes an hour later. A `crowd` seats that many extra students with
+ * attempts in progress, so a test reads a dashboard of more than one page. The exam, the
+ * sitting, and its token go to `output` for a browser test to read back. Each call seeds a
+ * new exam and sitting.
  */
 export const createAcceptanceSitting = Effect.fn(
   "contentAcceptance.createSitting"
-)(function* (root: string, slug: string, email: string, output: string) {
+)(function* (
+  root: string,
+  slug: string,
+  email: string,
+  output: string,
+  crowd: string | undefined
+) {
   const runtime = yield* readLocalRuntime(root);
   if (runtime === undefined) {
     return yield* acceptanceRuntimeError(
       "Run pnpm acceptance:prepare and start acceptance before creating a sitting."
     );
   }
-  const args = yield* encodeArguments({ email, slug });
+  const args = yield* encodeArguments(
+    crowd === undefined
+      ? { email, slug }
+      : { crowd: yield* decodeCrowd(crowd), email, slug }
+  );
   const printed = yield* runLocalConvex(runtime, "exams/seed:sitting", [
     "run",
     "exams/seed:sitting",

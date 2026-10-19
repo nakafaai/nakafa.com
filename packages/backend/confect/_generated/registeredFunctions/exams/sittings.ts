@@ -18,6 +18,7 @@ export default {
 ["changeToken"]: RegisteredConvexFunction.register({ ...definitions["changeToken"], handler: forward(definitions["changeToken"].handler) }),
 ["close"]: RegisteredConvexFunction.register({ ...definitions["close"], handler: forward(definitions["close"].handler) }),
 ["attempt"]: RegisteredConvexFunction.register({ ...definitions["attempt"], handler: forward(definitions["attempt"].handler) }),
+["student"]: RegisteredConvexFunction.register({ ...definitions["student"], handler: forward(definitions["student"].handler) }),
 ["signals"]: RegisteredConvexFunction.register({ ...definitions["signals"], handler: forward(definitions["signals"].handler) }),
 ["paper"]: RegisteredConvexFunction.register({ ...definitions["paper"], handler: forward(definitions["paper"].handler) }),
 ["prompt"]: RegisteredConvexFunction.register({ ...definitions["prompt"], handler: forward(definitions["prompt"].handler) }),
