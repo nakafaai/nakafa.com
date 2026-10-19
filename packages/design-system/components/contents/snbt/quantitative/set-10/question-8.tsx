@@ -1,15 +1,18 @@
-import { NumberLine } from "@repo/design-system/components/contents/mathematics/number-line";
+import { NumberLineCard } from "@repo/design-system/components/contents/mathematics/number-line";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
-import type { ComponentProps } from "react";
+import { VisualCardHeader } from "@repo/design-system/components/visual/card";
+import type { ReactNode } from "react";
+
+interface GraphProps {
+  description: ReactNode;
+  title: ReactNode;
+}
 
 /** Renders the number-line graph for SNBT set 10 question 8. */
-export function Graph({
-  title,
-  description,
-}: Pick<ComponentProps<typeof NumberLine>, "title" | "description">) {
+export function Graph({ title, description }: GraphProps) {
   return (
-    <NumberLine
-      description={description}
+    <NumberLineCard
+      header={<VisualCardHeader description={description} title={title} />}
       max={4}
       min={-5}
       segments={[
@@ -38,7 +41,6 @@ export function Graph({
           label: <InlineMath math="+++" />,
         },
       ]}
-      title={title}
     />
   );
 }

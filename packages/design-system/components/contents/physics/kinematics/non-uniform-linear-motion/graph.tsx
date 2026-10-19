@@ -1,6 +1,6 @@
+import { useGlbbLabels } from "@repo/design-system/components/contents/physics/kinematics/non-uniform-linear-motion/context";
 import {
   GLBB_SCENARIOS,
-  type GlbbLabels,
   type GlbbScenario,
   getFinalVelocity,
 } from "@repo/design-system/components/contents/physics/kinematics/non-uniform-linear-motion/data";
@@ -39,13 +39,8 @@ const SCENARIO_CHART_COLORS = {
   brake: "var(--chart-3)",
 } satisfies Record<GlbbScenario["id"], string>;
 
-export function VelocityTimeGraph({
-  labels,
-  scenario,
-}: {
-  labels: GlbbLabels;
-  scenario: GlbbScenario;
-}) {
+export function VelocityTimeGraph({ scenario }: { scenario: GlbbScenario }) {
+  const labels = useGlbbLabels();
   const finalVelocity = getFinalVelocity(scenario);
   const scenarioChartColor = SCENARIO_CHART_COLORS[scenario.id];
   const chartConfig = {

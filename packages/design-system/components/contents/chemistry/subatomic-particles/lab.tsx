@@ -10,7 +10,10 @@ import {
   SUBATOMIC_VIEW_CONFIG,
   type SubatomicParticlesModeId,
 } from "@repo/design-system/components/contents/chemistry/subatomic-particles/data";
-import { SubatomicParticlesScene } from "@repo/design-system/components/contents/chemistry/subatomic-particles/scene";
+import {
+  SubatomicParticlesScene,
+  SubatomicParticlesSceneProvider,
+} from "@repo/design-system/components/contents/chemistry/subatomic-particles/scene";
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
 import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import {
@@ -148,11 +151,12 @@ export function SubatomicParticlesLab({
               shadow-mapSize-width={1024}
               shadow-normalBias={0.02}
             />
-            <SubatomicParticlesScene
+            <SubatomicParticlesSceneProvider
               colors={sceneColors}
               labels={labels.scene}
-              modeId={selectedModeId}
-            />
+            >
+              <SubatomicParticlesScene modeId={selectedModeId} />
+            </SubatomicParticlesSceneProvider>
           </Suspense>
         </ThreeCanvas>
       </VisualCardBody>

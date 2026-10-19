@@ -1,6 +1,10 @@
 "use client";
 
 import {
+  AccelerationLabelsProvider,
+  useAccelerationLabels,
+} from "@repo/design-system/components/contents/physics/kinematics/acceleration/context";
+import {
   ACCELERATION_CASES,
   type AccelerationCaseId,
   type AccelerationLabels,
@@ -24,6 +28,8 @@ import {
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { useState } from "react";
+import { createStore, useStore } from "zustand";
+import { combine } from "zustand/middleware";
 
 interface AccelerationGraphCardProps {
   description: ReactNode;
@@ -31,51 +37,63 @@ interface AccelerationGraphCardProps {
   title: ReactNode;
 }
 
+/** Creates one card's store, which holds the case its reader picked. */
+function createAccelerationCaseStore(initialCaseId: AccelerationCaseId) {
+  return createStore(
+    combine({ caseId: initialCaseId }, (set) => ({
+      selectCase: (caseId: AccelerationCaseId) => set({ caseId }),
+    }))
+  );
+}
+
 export function AccelerationGraphCard({
   title,
   description,
   labels,
 }: AccelerationGraphCardProps) {
-  const [caseId, setCaseId] = useState<AccelerationCaseId>(
-    DEFAULT_ACCELERATION_CASE_ID
+  const [store] = useState(() =>
+    createAccelerationCaseStore(DEFAULT_ACCELERATION_CASE_ID)
   );
+  const caseId = useStore(store, (state) => state.caseId);
+  const selectCase = useStore(store, (state) => state.selectCase);
   const selectedCase = getAccelerationCaseById(caseId);
 
   function handleCaseChange(nextCaseId: string) {
     if (nextCaseId && isAccelerationCaseId(nextCaseId)) {
-      setCaseId(nextCaseId);
+      selectCase(nextCaseId);
     }
   }
 
   return (
-    <VisualCard>
-      <VisualCardHeader description={description} title={title} />
-      <VisualCardToolbar>
-        <AccelerationCaseToggle
-          caseId={caseId}
-          labels={labels}
-          onCaseChange={handleCaseChange}
-        />
-      </VisualCardToolbar>
-      <VisualCardBody>
-        <AccelerationGraph labels={labels} selectedCase={selectedCase} />
-      </VisualCardBody>
-      <VisualCardActions>
-        <VisualCardFullscreen />
-      </VisualCardActions>
-    </VisualCard>
+    <AccelerationLabelsProvider labels={labels}>
+      <VisualCard>
+        <VisualCardHeader description={description} title={title} />
+        <VisualCardToolbar>
+          <AccelerationCaseToggle
+            caseId={caseId}
+            onCaseChange={handleCaseChange}
+          />
+        </VisualCardToolbar>
+        <VisualCardBody>
+          <AccelerationGraph selectedCase={selectedCase} />
+        </VisualCardBody>
+        <VisualCardActions>
+          <VisualCardFullscreen />
+        </VisualCardActions>
+      </VisualCard>
+    </AccelerationLabelsProvider>
   );
 }
 
 function AccelerationCaseToggle({
   caseId,
-  labels,
   onCaseChange,
 }: {
   caseId: AccelerationCaseId;
-  labels: AccelerationLabels;
   onCaseChange: (nextCaseId: string) => void;
 }) {
+  const labels = useAccelerationLabels();
+
   return (
     <ToggleGroup
       aria-label={labels.chooseCase}

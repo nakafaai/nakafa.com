@@ -1,6 +1,7 @@
-import { LineEquation } from "@repo/design-system/components/contents/mathematics/line/equation";
+import { LineEquationCard } from "@repo/design-system/components/contents/mathematics/line/equation";
 import { getMidpoint } from "@repo/design-system/components/contents/snbt/geometry";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
+import { VisualCardHeader } from "@repo/design-system/components/visual/card";
 import { getColor } from "@repo/design-system/lib/color";
 import type { ReactNode } from "react";
 
@@ -29,7 +30,7 @@ interface GraphProps {
 /** Renders the coordinate graph for SNBT set 2 question 6. */
 export function Graph({ description, title }: GraphProps) {
   return (
-    <LineEquation
+    <LineEquationCard
       cameraPosition={[8, -6, 9]}
       cameraTarget={[2, 2, 2]}
       data={[
@@ -185,8 +186,7 @@ export function Graph({ description, title }: GraphProps) {
           ],
         },
       ]}
-      description={description}
-      title={title}
+      header={<VisualCardHeader description={description} title={title} />}
     />
   );
 }

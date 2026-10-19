@@ -9,7 +9,10 @@ import {
   type MultipleProportionsModeId,
   WATER_PEROXIDE_MODE_ID,
 } from "@repo/design-system/components/contents/chemistry/multiple-proportions-law/data";
-import { MultipleProportionsScene } from "@repo/design-system/components/contents/chemistry/multiple-proportions-law/scene";
+import {
+  MultipleProportionsScene,
+  MultipleProportionsSceneColorsProvider,
+} from "@repo/design-system/components/contents/chemistry/multiple-proportions-law/scene";
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
 import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import {
@@ -131,10 +134,9 @@ export function MultipleProportionsLab({
               shadow-mapSize-width={1024}
               shadow-normalBias={0.02}
             />
-            <MultipleProportionsScene
-              colors={sceneColors}
-              modeId={selectedModeId}
-            />
+            <MultipleProportionsSceneColorsProvider colors={sceneColors}>
+              <MultipleProportionsScene modeId={selectedModeId} />
+            </MultipleProportionsSceneColorsProvider>
           </Suspense>
         </ThreeCanvas>
       </VisualCardBody>

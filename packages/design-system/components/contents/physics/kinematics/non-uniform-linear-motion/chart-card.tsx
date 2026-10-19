@@ -1,6 +1,10 @@
 "use client";
 
 import {
+  GlbbLabelsProvider,
+  useGlbbLabels,
+} from "@repo/design-system/components/contents/physics/kinematics/non-uniform-linear-motion/context";
+import {
   DEFAULT_GLBB_SCENARIO_ID,
   GLBB_SCENARIOS,
   type GlbbLabels,
@@ -24,6 +28,8 @@ import {
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { useState } from "react";
+import { createStore, useStore } from "zustand";
+import { combine } from "zustand/middleware";
 
 interface NonUniformLinearMotionGraphCardProps {
   description: ReactNode;
@@ -31,51 +37,63 @@ interface NonUniformLinearMotionGraphCardProps {
   title: ReactNode;
 }
 
+/** Creates one card's store, which holds the scenario its reader picked. */
+function createGlbbScenarioStore(initialScenarioId: GlbbScenarioId) {
+  return createStore(
+    combine({ scenarioId: initialScenarioId }, (set) => ({
+      selectScenario: (scenarioId: GlbbScenarioId) => set({ scenarioId }),
+    }))
+  );
+}
+
 export function NonUniformLinearMotionGraphCard({
   title,
   description,
   labels,
 }: NonUniformLinearMotionGraphCardProps) {
-  const [scenarioId, setScenarioId] = useState<GlbbScenarioId>(
-    DEFAULT_GLBB_SCENARIO_ID
+  const [store] = useState(() =>
+    createGlbbScenarioStore(DEFAULT_GLBB_SCENARIO_ID)
   );
+  const scenarioId = useStore(store, (state) => state.scenarioId);
+  const selectScenario = useStore(store, (state) => state.selectScenario);
   const scenario = getGlbbScenarioById(scenarioId);
 
   function handleScenarioChange(nextScenarioId: string) {
     if (nextScenarioId && isGlbbScenarioId(nextScenarioId)) {
-      setScenarioId(nextScenarioId);
+      selectScenario(nextScenarioId);
     }
   }
 
   return (
-    <VisualCard>
-      <VisualCardHeader description={description} title={title} />
-      <VisualCardToolbar>
-        <GlbbScenarioToggle
-          labels={labels}
-          onScenarioChange={handleScenarioChange}
-          scenarioId={scenarioId}
-        />
-      </VisualCardToolbar>
-      <VisualCardBody>
-        <VelocityTimeGraph labels={labels} scenario={scenario} />
-      </VisualCardBody>
-      <VisualCardActions>
-        <VisualCardFullscreen />
-      </VisualCardActions>
-    </VisualCard>
+    <GlbbLabelsProvider labels={labels}>
+      <VisualCard>
+        <VisualCardHeader description={description} title={title} />
+        <VisualCardToolbar>
+          <GlbbScenarioToggle
+            onScenarioChange={handleScenarioChange}
+            scenarioId={scenarioId}
+          />
+        </VisualCardToolbar>
+        <VisualCardBody>
+          <VelocityTimeGraph scenario={scenario} />
+        </VisualCardBody>
+        <VisualCardActions>
+          <VisualCardFullscreen />
+        </VisualCardActions>
+      </VisualCard>
+    </GlbbLabelsProvider>
   );
 }
 
 function GlbbScenarioToggle({
-  labels,
   onScenarioChange,
   scenarioId,
 }: {
-  labels: GlbbLabels;
   onScenarioChange: (nextScenarioId: string) => void;
   scenarioId: GlbbScenarioId;
 }) {
+  const labels = useGlbbLabels();
+
   return (
     <ToggleGroup
       aria-label={labels.chooseScenario}

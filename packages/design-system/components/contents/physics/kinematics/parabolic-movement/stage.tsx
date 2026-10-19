@@ -1,9 +1,6 @@
 "use client";
 
-import {
-  type getParabolicMotionState,
-  PARABOLIC_SCENE,
-} from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement/data";
+import { PARABOLIC_SCENE } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement/data";
 import { ProjectileBallScene } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement/scene";
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";
 import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
@@ -12,13 +9,10 @@ import { Suspense } from "react";
 
 /**
  * The three-dimensional scene of the parabolic lab. It loads apart from the lab's
- * controls, so a lab can hold its frame before its scene has loaded.
+ * controls, so a lab can hold its frame before its scene has loaded. The scene reads
+ * the lab's motion from `ParabolicMotionProvider`.
  */
-export function ParabolicMovementStage({
-  motion,
-}: {
-  motion: ReturnType<typeof getParabolicMotionState>;
-}) {
+export function ParabolicMovementStage() {
   return (
     <ThreeCanvas frameloop="always">
       <Suspense>
@@ -46,7 +40,7 @@ export function ParabolicMovementStage({
           enableZoom
           fov={PARABOLIC_SCENE.cameraFov}
         />
-        <ProjectileBallScene motion={motion} />
+        <ProjectileBallScene />
       </Suspense>
     </ThreeCanvas>
   );
