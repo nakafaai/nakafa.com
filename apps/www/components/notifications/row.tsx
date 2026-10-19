@@ -42,9 +42,10 @@ function useNotificationsNow() {
  * the school's name and the age, then the sentence that says what happened. An
  * unread row's sentence is in the foreground and bold, and a read row's is muted.
  * Pressing the row marks it read at once. A plain press on a row with a page moves
- * to that page at once, and the read is sent behind it; a refused read rolls back
- * with its toast. Any other press leaves the link to the browser, so a modifier click
- * or a middle click opens it in a new tab.
+ * to that page once the server has taken the read, because a full move would cut off
+ * a read that is still on its way; a refused read stays on the inbox, rolled back, with
+ * its toast. Any other press leaves the link to the browser, so a modifier click or a
+ * middle click opens it in a new tab.
  */
 export function NotificationRow({
   notification,
@@ -65,9 +66,9 @@ export function NotificationRow({
     Match.when("person.invited", () => t("person-invited")),
     Match.exhaustive
   );
-  // The change shows at once. The server's answer, success or refusal, ends the
-  // effect, and a refusal is reported with the shared error toast. The effect never
-  // fails, and it does not hold a page move: the move starts without waiting for it.
+  // The change shows at once. The server's answer ends the effect: a refusal is reported
+  // with the shared error toast, and the effect resolves to whether the server took the
+  // read. The effect never fails.
   const markRead =
     readAt === undefined
       ? Effect.tryPromise(() =>
@@ -75,7 +76,7 @@ export function NotificationRow({
         ).pipe(
           Effect.flatMap(Effect.fromResult),
           Effect.matchEffect({
-            onSuccess: () => Effect.void,
+            onSuccess: () => Effect.succeed(true),
             onFailure: (error) =>
               reportClientException(error, {
                 source: "components/notifications/row",
@@ -87,21 +88,35 @@ export function NotificationRow({
                       description: "action-error.description",
                     });
                   })
-                )
+                ),
+                Effect.as(false)
               ),
           })
         )
-      : Effect.void;
+      : Effect.succeed(true);
 
-  /** A press on the row: a plain press moves to the page at once, and the read is sent behind it. */
+  /**
+   * A press on the row. A plain press on a row with a page waits for the read to settle,
+   * then moves to the page, so the browser never leaves before the read is taken. A
+   * refused read keeps the learner on the inbox, where the rollback and the toast show.
+   */
   function press(event: MouseEvent<HTMLElement>) {
     if (href === undefined || navigationOf(event) === "browser") {
       Effect.runPromise(markRead);
       return;
     }
     event.preventDefault();
-    Effect.runPromise(markRead);
-    window.location.assign(href);
+    Effect.runPromise(
+      markRead.pipe(
+        Effect.flatMap((taken) =>
+          Effect.sync(() => {
+            if (taken) {
+              window.location.assign(href);
+            }
+          })
+        )
+      )
+    );
   }
 
   /** A middle click opens the link in a new tab as usual, and marks the row read. */
