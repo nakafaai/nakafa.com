@@ -10,7 +10,7 @@ export default function Layout(props: LayoutProps<"/[locale]/chat">) {
         className="h-full min-h-0"
         cookieName="sidebar_state:ai-chat"
         keyboardShortcut="shift+u"
-        sidebarDesktop={1279}
+        sidebarDesktop={1279.98}
       >
         <div className="relative min-w-0 flex-1 overflow-hidden [--app-header-top:0px]">
           <ChatBoundary>{children}</ChatBoundary>
