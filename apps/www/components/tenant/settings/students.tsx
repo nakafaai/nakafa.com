@@ -31,6 +31,8 @@ import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, Option, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { useId, useState, useTransition } from "react";
+import { DataFailure } from "@/components/shared/failure";
+import { reloadPage } from "@/components/shared/reload";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
@@ -107,13 +109,13 @@ function SchoolLoginsBody({
     { initialNumItems: PAGE_SIZE }
   );
 
-  if (PaginatedQueryResult.isFailure(pagination)) {
-    throw pagination.error;
-  }
+  const failed = PaginatedQueryResult.isFailure(pagination);
 
   return (
     <>
-      {pagination._tag === "LoadingFirstPage" ? null : (
+      {failed ? <DataFailure onRetry={reloadPage} /> : null}
+      {pagination._tag === "LoadingFirstPage" ||
+      (failed && Arr.isReadonlyArrayEmpty(pagination.results)) ? null : (
         <SchoolLoginTable
           logins={pagination.results}
           onIssued={onIssued}

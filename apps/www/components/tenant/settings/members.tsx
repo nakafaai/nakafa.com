@@ -26,6 +26,8 @@ import { Array as Arr } from "effect";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { startTransition, useState } from "react";
+import { DataFailure } from "@/components/shared/failure";
+import { reloadPage } from "@/components/shared/reload";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
@@ -73,13 +75,13 @@ function SchoolMembersBody({ slug }: { slug: TenantSlug }) {
     { initialNumItems: PAGE_SIZE }
   );
 
-  if (PaginatedQueryResult.isFailure(pagination)) {
-    throw pagination.error;
-  }
+  const failed = PaginatedQueryResult.isFailure(pagination);
 
   return (
     <>
-      {pagination._tag === "LoadingFirstPage" ? null : (
+      {failed ? <DataFailure onRetry={reloadPage} /> : null}
+      {pagination._tag === "LoadingFirstPage" ||
+      (failed && Arr.isReadonlyArrayEmpty(pagination.results)) ? null : (
         <SchoolMemberTable members={pagination.results} slug={slug} />
       )}
       {PaginatedQueryResult.isCanLoadMore(pagination) ? (

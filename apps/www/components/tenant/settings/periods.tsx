@@ -32,6 +32,8 @@ import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, Option, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import { startTransition, useId, useState, useTransition } from "react";
+import { DataFailure } from "@/components/shared/failure";
+import { reloadPage } from "@/components/shared/reload";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
@@ -164,13 +166,14 @@ function SchoolPeriodTable({
     { initialNumItems: PAGE_SIZE }
   );
 
-  if (PaginatedQueryResult.isFailure(pagination)) {
-    throw pagination.error;
-  }
+  const failed = PaginatedQueryResult.isFailure(pagination);
   if (pagination._tag === "LoadingFirstPage") {
     return null;
   }
   if (Arr.isReadonlyArrayEmpty(pagination.results)) {
+    if (failed) {
+      return <DataFailure onRetry={reloadPage} />;
+    }
     return (
       <TableEmpty
         act="thinking"
@@ -213,6 +216,7 @@ function SchoolPeriodTable({
 
   return (
     <>
+      {failed ? <DataFailure onRetry={reloadPage} /> : null}
       <DataTable
         columns={columns}
         data={pagination.results}

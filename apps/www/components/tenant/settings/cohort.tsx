@@ -35,6 +35,8 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { type ReactNode, startTransition, useId, useState } from "react";
 import { LayoutContent } from "@/components/shared/content/layout";
+import { DataFailure } from "@/components/shared/failure";
+import { reloadPage } from "@/components/shared/reload";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
@@ -334,13 +336,14 @@ function SchoolCohortMembers({
   );
   const cohorts = useQuery(tenancy.cohorts.list, { periodId, slug });
 
-  if (PaginatedQueryResult.isFailure(pagination)) {
-    throw pagination.error;
-  }
+  const failed = PaginatedQueryResult.isFailure(pagination);
   if (pagination._tag === "LoadingFirstPage") {
     return null;
   }
   if (Arr.isReadonlyArrayEmpty(pagination.results)) {
+    if (failed) {
+      return <DataFailure onRetry={reloadPage} />;
+    }
     return (
       <TableEmpty
         act="reading"
@@ -381,6 +384,7 @@ function SchoolCohortMembers({
 
   return (
     <>
+      {failed ? <DataFailure onRetry={reloadPage} /> : null}
       <DataTable
         columns={columns}
         data={pagination.results}
