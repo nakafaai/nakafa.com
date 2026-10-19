@@ -17,6 +17,7 @@ import { Array as Arr, DateTime, Schema } from "effect";
 import { useFormatter, useTranslations } from "next-intl";
 import { useState } from "react";
 import {
+  useResultsPaper,
   useResultsScope,
   useSessionSettled,
 } from "@/components/exams/results/context";
@@ -43,16 +44,9 @@ const StatusFilter = Schema.Union([Schema.Literal("all"), AttemptState]);
 type StatusFilter = typeof StatusFilter.Type;
 
 /** One student's row: the name, the state, and the scores of a submitted attempt, with the time it was submitted. */
-function StudentRow({
-  row,
-  timeZone,
-  total,
-}: {
-  readonly row: typeof StudentRowSchema.Type;
-  readonly timeZone: string;
-  readonly total: number;
-}) {
+function StudentRow({ row }: { readonly row: typeof StudentRowSchema.Type }) {
   const t = useTranslations("Exams");
+  const { timeZone, total } = useResultsPaper();
   const format = useFormatter();
 
   return (
@@ -125,12 +119,8 @@ function StudentFilters({
 /** The table of the given students, with its head and one row for each. */
 function StudentTable({
   rows,
-  timeZone,
-  total,
 }: {
   readonly rows: readonly (typeof StudentRowSchema.Type)[];
-  readonly timeZone: string;
-  readonly total: number;
 }) {
   const t = useTranslations("Exams");
 
@@ -149,12 +139,7 @@ function StudentTable({
         </TableHeader>
         <TableBody>
           {Arr.map(rows, (row) => (
-            <StudentRow
-              key={row.attemptId}
-              row={row}
-              timeZone={timeZone}
-              total={total}
-            />
+            <StudentRow key={row.attemptId} row={row} />
           ))}
         </TableBody>
       </Table>
@@ -168,13 +153,7 @@ function StudentTable({
  * that are loaded. The list reads one page at a time through an intersection sentinel, not a button, so a
  * search that matches no loaded row keeps reading the next page until one matches or the list ends.
  */
-export function StudentsTable({
-  timeZone,
-  total,
-}: {
-  readonly timeZone: string;
-  readonly total: number;
-}) {
+export function StudentsTable() {
   const t = useTranslations("Exams");
   const { sittingId, slug } = useResultsScope();
   const settled = useSessionSettled();
@@ -225,7 +204,7 @@ export function StudentsTable({
           title={t("results-no-match")}
         />
       ) : (
-        <StudentTable rows={rows} timeZone={timeZone} total={total} />
+        <StudentTable rows={rows} />
       )}
       {PaginatedQueryResult.isCanLoadMore(students) ? (
         <Intersection

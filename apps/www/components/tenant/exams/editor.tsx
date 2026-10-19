@@ -8,7 +8,7 @@ import { buttonVariants } from "@repo/design-system/lib/button";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { ExamCanvas } from "@/components/tenant/exams/canvas";
-import { ExamHeader } from "@/components/tenant/exams/header";
+import { ExamFrozenNote, ExamHeader } from "@/components/tenant/exams/header";
 import { ExamProvider } from "@/components/tenant/exams/provider";
 import { ExamStrip } from "@/components/tenant/exams/strip";
 
@@ -51,6 +51,7 @@ export function ExamEditor({
     <ExamProvider exam={result.value} slug={slug}>
       <main className="flex h-svh flex-col">
         <ExamHeader />
+        <ExamFrozenNote />
         <div className="flex min-h-0 flex-1 flex-col md:flex-row">
           <ExamStrip />
           <ExamCanvas />

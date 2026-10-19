@@ -59,28 +59,39 @@ export function ExamHeader() {
       >
         <HugeIcons icon={ArrowLeft01Icon} />
       </Link>
-      <div className="flex min-w-0 flex-1 flex-col">
-        <Input
-          aria-label={t("title-label")}
-          className="border-0 font-semibold text-lg shadow-none md:text-lg"
-          onBlur={save}
-          onChange={(event) => setDraft(event.target.value)}
-          onKeyDown={(event) => {
-            // While the teacher composes a character, Enter belongs to the keyboard.
-            if (event.key === "Enter" && !isComposingKey(event.nativeEvent)) {
-              event.currentTarget.blur();
-            }
-          }}
-          placeholder={t("untitled")}
-          value={draft ?? exam.title}
-        />
-        {isFrozen(exam) ? (
-          <p className="truncate text-muted-foreground text-xs">
-            {t("frozen-note")}
-          </p>
-        ) : null}
-      </div>
+      <Input
+        aria-label={t("title-label")}
+        className="border-0 font-semibold text-lg shadow-none md:text-lg"
+        onBlur={save}
+        onChange={(event) => setDraft(event.target.value)}
+        onKeyDown={(event) => {
+          // While the teacher composes a character, Enter belongs to the keyboard.
+          if (event.key === "Enter" && !isComposingKey(event.nativeEvent)) {
+            event.currentTarget.blur();
+          }
+        }}
+        placeholder={t("untitled")}
+        value={draft ?? exam.title}
+      />
       <ScheduleExam />
     </header>
+  );
+}
+
+/**
+ * The sentence a scheduled exam's editor shows under its header, across the page, so it
+ * wraps on a phone instead of being cut short beside the title.
+ */
+export function ExamFrozenNote() {
+  const t = useTranslations("Exams");
+  const { exam } = useExam();
+  if (!isFrozen(exam)) {
+    return null;
+  }
+
+  return (
+    <p className="border-b px-4 py-2 text-muted-foreground text-sm">
+      {t("frozen-note")}
+    </p>
   );
 }

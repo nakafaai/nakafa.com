@@ -8,6 +8,7 @@ import { Array as Arr } from "effect";
 import { useTranslations } from "next-intl";
 import { useMemo } from "react";
 import {
+  ResultsPaperContext,
   ResultsScopeContext,
   useSessionSettled,
 } from "@/components/exams/results/context";
@@ -36,6 +37,13 @@ export function SittingResults({
     exams.results.results.overview,
     settled ? scope : "skip"
   );
+  const timeZone = QueryResult.isSuccess(overview)
+    ? overview.value.sitting.timeZone
+    : "";
+  const total = QueryResult.isSuccess(overview)
+    ? overview.value.questions.length
+    : 0;
+  const paper = useMemo(() => ({ timeZone, total }), [timeZone, total]);
 
   if (QueryResult.isFailure(overview)) {
     return <ResultsRefusal />;
@@ -59,7 +67,9 @@ export function SittingResults({
       />
       <div className="grid min-w-0 content-start gap-4 p-4 md:p-6">
         <ReleaseCard canRelease={canRelease} releasedAt={releasedAt} />
-        <StudentsTable timeZone={sitting.timeZone} total={questions.length} />
+        <ResultsPaperContext value={paper}>
+          <StudentsTable />
+        </ResultsPaperContext>
         <QuestionResults questions={questions} />
       </div>
     </ResultsScopeContext>

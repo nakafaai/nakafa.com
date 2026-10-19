@@ -22,9 +22,36 @@ export const ResultsScopeContext = createContext<
 export function useResultsScope() {
   const scope = use(ResultsScopeContext);
   if (scope === null) {
-    throw new Error("useResultsScope must be used within the results screen");
+    throw new TypeError(
+      "useResultsScope must be used within the results screen"
+    );
   }
   return scope;
+}
+
+/** What every student's row reads from the sitting: its unit's time zone and its number of questions. */
+const ResultsPaper = Schema.Struct({
+  timeZone: Schema.String,
+  total: Schema.Finite,
+});
+
+/**
+ * The sitting's time zone and question count, which the screen reads once with the overview and every
+ * student's row shows, so no table passes them down.
+ */
+export const ResultsPaperContext = createContext<
+  typeof ResultsPaper.Type | null
+>(null);
+
+/** The time zone and the question count of the results screen that renders the component. */
+export function useResultsPaper() {
+  const paper = use(ResultsPaperContext);
+  if (paper === null) {
+    throw new TypeError(
+      "useResultsPaper must be used within the results screen"
+    );
+  }
+  return paper;
 }
 
 /**
