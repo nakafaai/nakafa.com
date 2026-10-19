@@ -97,8 +97,9 @@ async function SignedInStart({
               }
             : null
         }
-        nina={<Nina act="waving" label="" size={120} whole />}
-      />
+      >
+        <Nina act="waving" label="" size={120} whole />
+      </SchoolStart>
     </EntryShellBody>
   );
 }

@@ -18,7 +18,9 @@ import { cn } from "cn";
 import { Array as Arr, Effect, Match, Option, Result, Schema } from "effect";
 import { useTranslations } from "next-intl";
 import {
+  createContext,
   type ReactNode,
+  use,
   useOptimistic,
   useRef,
   useState,
@@ -58,20 +60,23 @@ const isStartItem = (name: string): name is StartItem =>
 /** Decodes the typed name and address as the answer of the first question, when they make one. */
 const decodeAnswer = Schema.decodeUnknownOption(StartAnswer);
 
+/** Nina as the page draws her. The form shows her beside its questions, not on the opening card. */
+const StartNinaContext = createContext<ReactNode>(null);
+
 /**
  * The questionnaire that opens a school for the signed-in account (K42): five
  * questions in the entry frame, each answer saved as it is chosen, resumed at
  * the first question left open. It waits for the session and the saved draft, so
- * it never shows an answer that the draft would change. `nina` is Nina as the page
- * draws her; she appears with the questions, so the page does not move when they
- * arrive.
+ * it never shows an answer that the draft would change. Its children are Nina as
+ * the page draws her; she appears with the questions, so the page does not move
+ * when they arrive.
  */
 export function SchoolStart({
+  children,
   legal,
-  nina,
 }: {
+  children: ReactNode;
   legal: Legal;
-  nina: ReactNode;
 }) {
   // The server saw the session, but the client's Convex session settles a moment
   // later; the draft is read once it has, so the first read is never anonymous.
@@ -83,7 +88,11 @@ export function SchoolStart({
   if (!QueryResult.isSuccess(draft)) {
     return null;
   }
-  return <SchoolStartForm draft={draft.value} legal={legal} nina={nina} />;
+  return (
+    <StartNinaContext value={children}>
+      <SchoolStartForm draft={draft.value} legal={legal} />
+    </StartNinaContext>
+  );
 }
 
 /** The school that the founder opened, as the screen shows it while it opens. */
@@ -104,13 +113,12 @@ const NO_REFOCUS: Option.Option<string> = Option.none();
 function SchoolStartForm({
   draft,
   legal,
-  nina,
 }: {
   draft: StartDraft;
   legal: Legal;
-  nina: ReactNode;
 }) {
   const t = useTranslations("SchoolStart");
+  const nina = use(StartNinaContext);
   const save = useSaveStartAnswer();
   const open = useMutation(tenancy.start.open);
   const [typed] = useState(() => createTypedName(draft));
