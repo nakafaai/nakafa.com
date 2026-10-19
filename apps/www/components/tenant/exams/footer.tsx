@@ -9,6 +9,7 @@ import { useReducedMotion } from "@mantine/hooks";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
+import { cva } from "class-variance-authority";
 import { Array as Arr, Data, Effect, Option } from "effect";
 import { useTranslations } from "next-intl";
 import { type RefObject, useState, useSyncExternalStore } from "react";
@@ -152,6 +153,7 @@ export function ExamFooter({ canvas, onZoom, shell, zoom }: ExamFooterProps) {
               key={question.id}
               number={index + 1}
               onPick={() => goTo(question)}
+              place="strip"
               question={question}
               selected={selectedId === question.id}
             />
@@ -221,6 +223,7 @@ export function ExamFooter({ canvas, onZoom, shell, zoom }: ExamFooterProps) {
                 setGridOpen(false);
                 goTo(question);
               }}
+              place="grid"
               question={question}
               selected={selectedId === question.id}
             />
@@ -231,15 +234,33 @@ export function ExamFooter({ canvas, onZoom, shell, zoom }: ExamFooterProps) {
   );
 }
 
+/**
+ * The frame of a page thumbnail. The strip keeps each thumbnail at one width at every screen width,
+ * and the grid's thumbnail fills its cell.
+ */
+const pageThumb = cva(
+  "relative block aspect-4/3 overflow-hidden rounded-lg border bg-muted/40 outline-none hover:border-foreground/20 focus-visible:ring-3 focus-visible:ring-ring/50 aria-[current=true]:border-primary aria-[current=true]:ring-2 aria-[current=true]:ring-primary",
+  {
+    variants: {
+      place: {
+        grid: "w-full",
+        strip: "w-32 shrink-0",
+      },
+    },
+  }
+);
+
 /** One page as a thumbnail, which a click goes to. It names its page for assistive technology. */
 function PageThumb({
   number,
   onPick,
+  place,
   question,
   selected,
 }: {
   number: number;
   onPick: () => void;
+  place: "grid" | "strip";
   question: Question;
   selected: boolean;
 }) {
@@ -249,7 +270,7 @@ function PageThumb({
   return (
     <button
       aria-current={selected ? "true" : undefined}
-      className="relative block aspect-4/3 w-32 shrink-0 overflow-hidden rounded-lg border bg-muted/40 outline-none transition-[border-color,box-shadow] duration-150 hover:border-foreground/20 focus-visible:ring-3 focus-visible:ring-ring/50 aria-[current=true]:border-primary aria-[current=true]:ring-2 aria-[current=true]:ring-primary md:w-full"
+      className={pageThumb({ place })}
       onClick={onPick}
       type="button"
     >
