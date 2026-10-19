@@ -5,7 +5,8 @@ import {
   defaultStreamHandler,
   handleStartError,
 } from "@tanstack/react-start/server";
-import { Effect, Schema } from "effect";
+import { Effect, Option, Schema } from "effect";
+import { answerSchoolGate, withPageHeaders } from "@/lib/tenant/gate";
 
 const startHandler = createStartHandler(defaultStreamHandler);
 
@@ -16,14 +17,20 @@ class UncaughtRequestError extends Schema.TaggedError<UncaughtRequestError>()(
 ) {}
 
 /**
- * Start's server entry. Route errors are handled by the router. Only an error
- * that escapes the handler reaches the catch, which reports it and answers with
- * Start's error response.
+ * Start's server entry. A school tree path on a main host answers not found
+ * before the router sees it, and every school page and not-found answer carries
+ * the page headers (ADR 0026). Route errors are handled by the router. Only an
+ * error that escapes the handler reaches the catch, which reports it and answers
+ * with Start's error response.
  *
  * https://tanstack.com/start/latest/docs/framework/react/guide/server-entry-point
  */
 export default createServerEntry({
   fetch(request, opts) {
+    const gated = answerSchoolGate(request);
+    if (Option.isSome(gated)) {
+      return Promise.resolve(gated.value);
+    }
     return Effect.runPromise(
       Effect.tryPromise({
         try: async () => startHandler(request, opts),
@@ -35,6 +42,6 @@ export default createServerEntry({
           )
         )
       )
-    );
+    ).then((response) => withPageHeaders(request, response));
   },
 });
