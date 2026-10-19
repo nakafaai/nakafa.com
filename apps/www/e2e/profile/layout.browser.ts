@@ -31,7 +31,7 @@ for (const viewport of VIEWPORTS) {
 
           for (const label of TABS) {
             yield* Effect.promise(() =>
-              page.getByRole("link", { name: label, exact: true }).click()
+              page.getByRole("tab", { name: label, exact: true }).click()
             );
             yield* Effect.promise(() => page.waitForLoadState("networkidle"));
             expect(yield* readCumulativeLayoutShift(page)).toBe(0);
