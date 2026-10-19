@@ -1,9 +1,9 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
   altText,
-  IMAGE_BYTE_LIMIT,
   imageRefusal,
 } from "@repo/design-system/components/editor/image";
+import { IMAGE_BYTE_LIMIT } from "@repo/editor/image";
 import { Option } from "effect";
 
 describe("imageRefusal", () => {

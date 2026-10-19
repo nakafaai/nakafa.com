@@ -17,12 +17,17 @@ import {
   FORMULA_VIEWS,
   FormulaLabelsProvider,
 } from "@repo/design-system/components/editor/formula";
+import {
+  type ImageRefusal,
+  imageRefusal,
+} from "@repo/design-system/components/editor/image";
 import { articleParagraphs } from "@repo/design-system/components/editor/paragraph";
 import {
   PICTURE_VIEW,
   PictureAltDialog,
   PicturesProvider,
   pictureFileHandler,
+  useObjectUrl,
 } from "@repo/design-system/components/editor/picture";
 import {
   documentSizeGuard,
@@ -31,17 +36,21 @@ import {
 import { DocumentToolbar } from "@repo/design-system/components/editor/toolbar";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { documentExtensions } from "@repo/editor/document";
-import type { Transaction } from "@tiptap/pm/state";
+import type { Plugin, Transaction } from "@tiptap/pm/state";
 import type { EditorView } from "@tiptap/pm/view";
 import { useConvex } from "convex/react";
-import { Array as Arr, Effect, Fiber, Record as Rec, Ref } from "effect";
-import { useTranslations } from "next-intl";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { type StoreApi, useStore } from "zustand";
 import {
-  assetIdsOf,
-  storeExamImage,
-} from "@/components/tenant/exams/image.client";
+  Array as Arr,
+  Effect,
+  Fiber,
+  Option,
+  Record as Rec,
+  Ref,
+} from "effect";
+import { useTranslations } from "next-intl";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { type StoreApi, useStore } from "zustand";
+import { storeExamImage } from "@/components/tenant/exams/image.client";
 import { useExamLive } from "@/components/tenant/exams/provider";
 import {
   createPromptSync,
@@ -51,6 +60,7 @@ import { reportClientException } from "@/lib/analytics/client";
 import { closeEditor } from "@/lib/editor/close";
 import { convexTransport } from "@/lib/editor/convex";
 import { useDocumentLabels } from "@/lib/editor/labels";
+import { pictureIdsPlugin } from "@/lib/editor/pictures";
 import { versionOf, viewPort } from "@/lib/editor/port";
 import { reportDropped } from "@/lib/editor/report";
 import type { SyncSession } from "@/lib/editor/session";
@@ -62,23 +72,26 @@ const SEND_QUIET_PERIOD = "250 millis";
 /** Where the prompt reports its failures and the steps it lost. */
 const SOURCE = "components/tenant/exams/prompt";
 
-/** Tells the teacher that an image of more than the byte limit was not added. */
-const refuseLargePicture = () =>
-  Effect.sync(() =>
+/** Tells the teacher why a file was not added as an image: it is over the byte limit, or no PNG, JPEG, WebP, or GIF image. */
+const refuseFile = (refusal: ImageRefusal) => {
+  if (refusal === "size") {
     toast.error({
       description: "image-refused-size.description",
       title: "image-refused-size.title",
-    })
-  );
+    });
+    return;
+  }
+  toast.error({
+    description: "image-refused-type.description",
+    title: "image-refused-type.title",
+  });
+};
+
+/** Tells the teacher that an image of more than the byte limit was not added. */
+const refuseLargePicture = () => Effect.sync(() => refuseFile("size"));
 
 /** Tells the teacher that a file that is no PNG, JPEG, WebP, or GIF image was not added. */
-const refuseOtherPicture = () =>
-  Effect.sync(() =>
-    toast.error({
-      description: "image-refused-type.description",
-      title: "image-refused-type.title",
-    })
-  );
+const refuseOtherPicture = () => Effect.sync(() => refuseFile("type"));
 
 /**
  * The extensions of a question's prompt: the assessment document of the contract, its
@@ -150,8 +163,10 @@ export function ExamPrompt({
 }) {
   const t = useTranslations("Exams");
   const labels = useDocumentLabels();
-  // The picture the teacher chose, which its alt-text dialog holds until the teacher confirms it.
-  const [pending, setPending] = useState<File | null>(null);
+  // The pictures the teacher chose, in order. The alt-text dialog works through them one at a time.
+  const [pending, setPending] = useState<readonly File[]>([]);
+  const chosen = Option.getOrNull(Arr.head(pending));
+  const preview = useObjectUrl(chosen);
   // The images the document holds, which the page resolves to addresses in one read.
   const [pictureIds, setPictureIds] = useState<readonly Id<"examAssets">[]>([]);
   const pictureUrls = useQuery(
@@ -172,13 +187,22 @@ export function ExamPrompt({
   );
   const requestUrl = useMutation(exams.assets.uploadUrl);
   const register = useAction(exams.assets.register);
+  /** A file the teacher chose is refused at once when the editor cannot take it, and otherwise waits in the queue. */
+  const beginPicture = useCallback((file: File) => {
+    const refusal = imageRefusal(file);
+    if (Option.isSome(refusal)) {
+      refuseFile(refusal.value);
+      return;
+    }
+    setPending((queue) => [...queue, file]);
+  }, []);
   const extensions = useMemo(
     () => [
       ...PROMPT_EXTENSIONS,
-      pictureFileHandler(setPending),
+      pictureFileHandler(beginPicture),
       slashCommand({ label: labels.insert, labels: labels.slash }),
     ],
-    [labels]
+    [beginPicture, labels]
   );
   const convex = useConvex();
   const [sync] = useState(createPromptSync);
@@ -235,9 +259,12 @@ export function ExamPrompt({
   /** Opens the document for the session, then turns editing on once the server answered. */
   const open = (editor: {
     readonly view: EditorView;
+    registerPlugin: (plugin: Plugin) => unknown;
     setEditable: (on: boolean) => unknown;
   }) => {
     view.current = editor.view;
+    // Every document the view installs, the server's included, reports its images to the page.
+    editor.registerPlugin(pictureIdsPlugin(setPictureIds));
     opening.current = Effect.runFork(
       startSync(
         viewPort(editor.view),
@@ -284,9 +311,6 @@ export function ExamPrompt({
    */
   const change = (transaction: Transaction) => {
     show(prompt, transaction.doc);
-    if (transaction.docChanged) {
-      setPictureIds(assetIdsOf(transaction.doc));
-    }
     if (transaction.getMeta("rebased") !== undefined) {
       return;
     }
@@ -334,6 +358,7 @@ export function ExamPrompt({
         Effect.catchTags({
           AssetSizeRefused: refuseLargePicture,
           AssetTypeRefused: refuseOtherPicture,
+          ImageUnreadable: refuseOtherPicture,
         }),
         Effect.catch(() =>
           Effect.sync(() =>
@@ -349,20 +374,23 @@ export function ExamPrompt({
   return (
     <FormulaLabelsProvider labels={labels.formulaEdit}>
       <PicturesProvider
-        begin={setPending}
+        begin={beginPicture}
         labels={labels.pictures}
         urls={pictureAddresses}
       >
         <PictureAltDialog
-          file={pending}
+          alt=""
           labels={labels.pictures}
-          onCancel={() => setPending(null)}
+          onCancel={() => setPending((queue) => Arr.drop(queue, 1))}
           onConfirm={(alt) => {
-            if (pending !== null) {
-              addPicture(pending, alt);
+            if (chosen !== null) {
+              addPicture(chosen, alt);
             }
-            setPending(null);
+            setPending((queue) => Arr.drop(queue, 1));
           }}
+          preview={preview}
+          submit={labels.pictures.add}
+          title={labels.pictures.add}
         />
         <DocumentEditor
           extensions={extensions}

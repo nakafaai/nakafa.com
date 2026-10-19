@@ -13,6 +13,8 @@ import {
 } from "@repo/design-system/components/editor/picture";
 import { documentExtensions } from "@repo/editor/document";
 import { Node } from "@tiptap/pm/model";
+import { use } from "react";
+import { SittingPictures } from "@/components/exams/sitting/pictures";
 import { assessmentSchema } from "@/lib/editor/assessment";
 import { useDocumentLabels } from "@/lib/editor/labels";
 
@@ -42,11 +44,12 @@ export function SittingReader({
   readonly label: string;
 }) {
   const labels = useDocumentLabels();
+  const urls = use(SittingPictures);
   const content = Node.fromJSON(assessmentSchema, document).toJSON();
 
   return (
     <FormulaLabelsProvider labels={labels.formulaEdit}>
-      <PicturesProvider begin={noBegin} labels={labels.pictures} urls={{}}>
+      <PicturesProvider begin={noBegin} labels={labels.pictures} urls={urls}>
         <DocumentEditor
           extensions={READER_EXTENSIONS}
           label={label}

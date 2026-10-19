@@ -5,10 +5,10 @@ import {
   FunctionSquareIcon,
   ImageUploadIcon,
 } from "@hugeicons/core-free-icons";
-import { IMAGE_MEDIA_TYPES } from "@repo/design-system/components/editor/image";
 import { usePictures } from "@repo/design-system/components/editor/picture";
 import { NEW_FORMULA } from "@repo/design-system/components/editor/slash";
 import { RichEditorControl } from "@repo/design-system/components/editor/tools";
+import { ImageType } from "@repo/editor/image";
 import { useCurrentEditor } from "@tiptap/react";
 import { Array as Arr } from "effect";
 import { useRef } from "react";
@@ -68,7 +68,7 @@ export function DocumentInsert({
         onClick={() => picker.current?.click()}
       />
       <input
-        accept={Arr.join(IMAGE_MEDIA_TYPES, ",")}
+        accept={Arr.join(ImageType.literals, ",")}
         aria-hidden
         className="hidden"
         onChange={(event) => {

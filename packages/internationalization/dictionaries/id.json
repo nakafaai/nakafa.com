@@ -1129,7 +1129,8 @@
     "image-alt-hint": "Yang perlu diketahui siswa yang tidak dapat melihat gambar",
     "image-cancel": "Batal",
     "image-delete": "Hapus gambar",
-    "image-edit": "Ubah teks alternatif"
+    "image-edit": "Ubah teks alternatif",
+    "image-save": "Simpan"
   },
   "Memory": {
     "remember": "Izinkan Nina menyimpan dan memakai memori",

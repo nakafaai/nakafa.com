@@ -13,5 +13,5 @@ export default {
 ["urls"]: RegisteredConvexFunction.register({ ...definitions["urls"], handler: forward(definitions["urls"].handler) }),
 ["commit"]: RegisteredConvexFunction.register({ ...definitions["commit"], handler: forward(definitions["commit"].handler) }),
 ["discard"]: RegisteredConvexFunction.register({ ...definitions["discard"], handler: forward(definitions["discard"].handler) }),
-["removeForExam"]: RegisteredConvexFunction.register({ ...definitions["removeForExam"], handler: forward(definitions["removeForExam"].handler) }),
+["stored"]: RegisteredConvexFunction.register({ ...definitions["stored"], handler: forward(definitions["stored"].handler) }),
 } as RegisteredFunctions.RegisteredFunctionsForGroupSpec<typeof import("../../../exams/assets.spec")["default"]>;

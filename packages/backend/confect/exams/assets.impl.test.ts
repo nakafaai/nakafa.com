@@ -1,16 +1,19 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
-import { DatabaseReader } from "@repo/backend/confect/_generated/services";
-import { ASSET_BYTE_LIMIT } from "@repo/backend/confect/exams/asset";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import { nf, otherSchoolTeacher } from "@repo/backend/test/editor";
 import { LANGUAGE } from "@repo/backend/test/exams";
 import { storeFile } from "@repo/backend/test/logo";
 import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
-import { Effect } from "effect";
+import { IMAGE_BYTE_LIMIT } from "@repo/editor/image";
+import { Array as Arr, Effect, Exit } from "effect";
 
 const { create } = refs.public.exams.exams;
 const { canAdd, register, uploadUrl, urls } = refs.public.exams.assets;
-const { discard, removeForExam } = refs.internal.exams.assets;
+const { discard, stored } = refs.internal.exams.assets;
 
 /** The leading bytes of a PNG file, which the server reads as an image. */
 const PNG_HEAD = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
@@ -130,7 +133,7 @@ describe("exams/assets", () => {
         });
         const storageId = yield* storeFile(
           fixture.convex,
-          new Blob([new Uint8Array(ASSET_BYTE_LIMIT + 1)], {
+          new Blob([new Uint8Array(IMAGE_BYTE_LIMIT + 1)], {
             type: "image/png",
           })
         );
@@ -190,7 +193,7 @@ describe("exams/assets", () => {
   );
 
   it.effect(
-    "refuses to read the address of an image of another exam, and leaves out an image that is gone",
+    "refuses to read the address of an image of another exam, and leaves out an image whose row or file is gone",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
@@ -208,57 +211,62 @@ describe("exams/assets", () => {
           slug: nf,
           title: "PTS Biologi",
         });
-        const storageId = yield* storeFile(fixture.convex, png());
-        const image = yield* teacher.action(register, {
-          examId: second.id,
-          height: 1,
-          slug: nf,
-          storageId,
-          width: 1,
-        });
+        const registerIn = (examId: typeof second.id) =>
+          Effect.gen(function* () {
+            const storageId = yield* storeFile(fixture.convex, png());
+            const registered = yield* teacher.action(register, {
+              examId,
+              height: 1,
+              slug: nf,
+              storageId,
+              width: 1,
+            });
+            return { id: registered.id, storageId };
+          });
+        const gone = yield* registerIn(second.id);
+        const rowGone = yield* registerIn(second.id);
+        const kept = yield* registerIn(second.id);
         const foreign = yield* teacher
-          .query(urls, { assets: [image.id], examId: first.id, slug: nf })
+          .query(urls, { assets: [kept.id], examId: first.id, slug: nf })
           .pipe(Effect.flip);
         expect(foreign).toMatchObject({ _tag: "AccessDenied" });
-        yield* fixture.internal.mutation(removeForExam, { examId: second.id });
+        const ids = [gone.id, rowGone.id, kept.id];
         expect(
-          yield* teacher.query(urls, {
-            assets: [image.id],
-            examId: second.id,
-            slug: nf,
-          })
-        ).toEqual([]);
+          yield* teacher.query(urls, { assets: ids, examId: second.id, slug: nf })
+        ).toHaveLength(3);
+        yield* Effect.promise(() =>
+          fixture.convex.run((ctx) => ctx.storage.delete(gone.storageId))
+        );
+        yield* fixture.run(
+          Effect.flatMap(DatabaseWriter, (writer) =>
+            writer.table("examAssets").delete(rowGone.id).pipe(Effect.orDie)
+          )
+        );
+        const read = yield* teacher.query(urls, {
+          assets: ids,
+          examId: second.id,
+          slug: nf,
+        });
+        expect(Arr.map(read, (address) => address.id)).toEqual([kept.id]);
       })
   );
 
   it.effect(
-    "deletes the images of an exam with their files, and reports the batch that is left",
+    "reads the size of a stored file, and fails as a defect for a file the storage no longer holds",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
-        const teacher = fixture.as("teacher");
-        const made = yield* teacher.mutation(create, {
-          language: LANGUAGE,
-          scope: { kind: "unit", unitId: fixture.units.smp },
-          slug: nf,
-          title: "PTS Matematika",
-        });
-        for (let index = 0; index < 2; index += 1) {
-          const storageId = yield* storeFile(fixture.convex, png());
-          yield* teacher.action(register, {
-            examId: made.id,
-            height: 1,
-            slug: nf,
-            storageId,
-            width: 1,
-          });
-        }
-        expect(yield* fixture.run(assetRows)).toHaveLength(2);
-        const removed = yield* fixture.internal.mutation(removeForExam, {
-          examId: made.id,
-        });
-        expect(removed).toEqual({ done: true });
-        expect(yield* fixture.run(assetRows)).toHaveLength(0);
+        const storageId = yield* storeFile(fixture.convex, png());
+        expect(
+          yield* fixture.internal.query(stored, { storageId })
+        ).toEqual({ size: PNG_HEAD.length + 4 });
+        yield* Effect.promise(() =>
+          fixture.convex.run((ctx) => ctx.storage.delete(storageId))
+        );
+        const exit = yield* fixture.internal
+          .query(stored, { storageId })
+          .pipe(Effect.exit);
+        expect(Exit.isFailure(exit)).toBe(true);
       })
   );
 

@@ -1129,7 +1129,8 @@
     "image-alt-hint": "What a student who cannot see the image needs to know",
     "image-cancel": "Cancel",
     "image-delete": "Delete image",
-    "image-edit": "Edit alt text"
+    "image-edit": "Edit alt text",
+    "image-save": "Save"
   },
   "Memory": {
     "remember": "Let Nina save and use memories",

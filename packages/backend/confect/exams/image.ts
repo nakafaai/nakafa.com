@@ -1,4 +1,4 @@
-import type { ImageType } from "@repo/backend/confect/exams/asset";
+import type { ImageType } from "@repo/editor/image";
 import { Array as Arr, Option, Schema } from "effect";
 
 /** The kind of image the editor accepts, which a file's leading bytes name. */

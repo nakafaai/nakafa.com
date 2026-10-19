@@ -1,5 +1,16 @@
 import { type AnyExtension, Node, type NodeViewRenderer } from "@tiptap/core";
-import { Array as Arr } from "effect";
+import { Array as Arr, Schema } from "effect";
+
+/** The most bytes one image of an exam may hold: 2 MB. The editor refuses a larger file, and the server checks it again. */
+export const IMAGE_BYTE_LIMIT = 2 * 1024 * 1024;
+
+/** The kinds of image an exam holds, which a file's leading bytes name and the editor accepts. */
+export const ImageType = Schema.Literals([
+  "image/png",
+  "image/jpeg",
+  "image/webp",
+  "image/gif",
+]);
 
 /** The DOM attribute that keeps one attribute of an image node, such as `data-alt`. */
 const DATA = (name: string) => `data-${name}`;

@@ -42,6 +42,7 @@ export function useDocumentLabels() {
         cancel: t("image-cancel"),
         delete: t("image-delete"),
         edit: t("image-edit"),
+        save: t("image-save"),
       },
       formulaEdit: {
         formula,

@@ -2,29 +2,25 @@ import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { AuthFailure } from "@repo/backend/confect/auth/spec";
-import { ExamAccess } from "@repo/backend/confect/exams/access";
 import {
+  AssetAddress,
   AssetSizeRefused,
   AssetTypeRefused,
   MAX_ASSET_READS,
 } from "@repo/backend/confect/exams/asset";
+import { ExamAccess } from "@repo/backend/confect/exams/access";
 import RequireMember from "@repo/backend/confect/middleware/member.spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
+import { ImageType } from "@repo/editor/image";
 import { Schema } from "effect";
-
-/** The address of one image of an exam, which a prompt draws. */
-const AssetUrl = Schema.Struct({
-  id: Id("examAssets"),
-  url: Schema.String,
-});
 
 /**
  * The images of an exam. A teacher who may edit the exam gets the address to upload a file
- * to, then registers the stored file: the server reads its leading bytes, accepts only the
- * images the editor draws, and stores the image as the exam's. A reader who may view the exam
- * reads the addresses of its images, a prompt's images in one call. `commit`, `discard`, and
- * `removeForExam` are internal: only the registration and the exam's removal call them.
+ * to, then registers the stored file: the server reads its size and leading bytes, accepts only
+ * the images the editor draws, and stores the image as the exam's. A reader who may view the
+ * exam reads the addresses of a prompt's images in one call. `commit`, `discard`, and `stored`
+ * are internal: only the registration calls them.
  */
 export default GroupSpec.make()
   .addFunction(
@@ -79,7 +75,7 @@ export default GroupSpec.make()
         examId: Id("exams"),
         slug: TenantSlug,
       }),
-      returns: () => Schema.Array(AssetUrl),
+      returns: () => Schema.Array(AssetAddress),
       error: () => AccessDenied,
     })
       .middleware(Session)
@@ -91,12 +87,7 @@ export default GroupSpec.make()
       name: "commit",
       args: () => ({
         byteSize: Schema.Int.check(Schema.isGreaterThan(0)),
-        contentType: Schema.Literals([
-          "image/png",
-          "image/jpeg",
-          "image/webp",
-          "image/gif",
-        ]),
+        contentType: ImageType,
         examId: Id("exams"),
         height: Schema.Int.check(Schema.isGreaterThan(0)),
         storageId: Id("_storage"),
@@ -114,9 +105,9 @@ export default GroupSpec.make()
     })
   )
   .addFunction(
-    FunctionSpec.internalMutation({
-      name: "removeForExam",
-      args: () => ({ examId: Id("exams") }),
-      returns: () => Schema.Struct({ done: Schema.Boolean }),
+    FunctionSpec.internalQuery({
+      name: "stored",
+      args: () => ({ storageId: Id("_storage") }),
+      returns: () => Schema.Struct({ size: Schema.Int }),
     })
   );

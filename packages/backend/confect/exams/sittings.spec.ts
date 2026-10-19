@@ -3,6 +3,10 @@ import { PaginationOptions as PaginationOptionsSchema } from "@confect/core/Pagi
 import { LocalIdSchema } from "@nakafa/aksara-contracts/assessment/identity";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
+import {
+  AssetAddress,
+  MAX_ASSET_READS,
+} from "@repo/backend/confect/exams/asset";
 import { FoldPending } from "@repo/backend/confect/editor/errors";
 import { SittingAccess } from "@repo/backend/confect/exams/sittings/access";
 import {
@@ -262,6 +266,29 @@ export default GroupSpec.make()
           DeviceRetired,
           QuestionNotInExam,
           FoldPending,
+        ]),
+    })
+  )
+  .addFunction(
+    FunctionSpec.publicQuery({
+      name: "images",
+      args: () => ({
+        assets: Schema.Array(Id("examAssets")).check(
+          Schema.isMaxLength(MAX_ASSET_READS)
+        ),
+        deviceId: DeviceId,
+        sittingId: Id("examSittings"),
+        slug: TenantSlug,
+      }),
+      returns: () => Schema.Array(AssetAddress),
+      error: () =>
+        Schema.Union([
+          AccessDenied,
+          NotInSitting,
+          SittingLocked,
+          AttemptClosed,
+          SecondDevice,
+          DeviceRetired,
         ]),
     })
   )
