@@ -382,9 +382,7 @@ describe("classroom/classes members", () => {
           slug: nf,
         });
         const made = yield* classOf(fixture, x1.id, "Fisika");
-        const before = yield* fixture
-          .as("student")
-          .query(mine, { periodId: term.id, slug: nf });
+        const before = yield* fixture.as("student").query(mine, { slug: nf });
         yield* fixture
           .as("owner")
           .mutation(grants.revoke, { grantId, slug: nf });
@@ -392,9 +390,7 @@ describe("classroom/classes members", () => {
           .as("student")
           .query(get, { classId: made.id, slug: nf })
           .pipe(Effect.flip);
-        const listed = yield* fixture
-          .as("student")
-          .query(mine, { periodId: term.id, slug: nf });
+        const listed = yield* fixture.as("student").query(mine, { slug: nf });
         const resolved = yield* fixture
           .as("student")
           .query(resolve, { classSlug: made.slug, slug: nf })

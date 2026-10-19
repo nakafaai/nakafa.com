@@ -39,6 +39,16 @@ export const period = Effect.fn("test.classroom.period")(function* (
   });
 });
 
+/** Opens a planned period as the school's Admin, so its classes count as active. */
+export const openPeriod = Effect.fn("test.classroom.openPeriod")(function* (
+  fixture: Fixture,
+  periodId: GenericId.GenericId<"tenantPeriods">
+) {
+  return yield* fixture
+    .as("admin")
+    .mutation(periods.open, { periodId, slug: nf });
+});
+
 /**
  * Adds an SD unit to the school. The fixture seeds its SD unit in the other
  * school only, so a test that makes a homeroom class adds this one.

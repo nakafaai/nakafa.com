@@ -1,16 +1,17 @@
 import { describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
-import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import {
   classOf,
   cohort,
   denied,
   nf,
+  openPeriod,
   period,
+  sdUnit,
   teach,
 } from "@repo/backend/test/classroom";
-import { grantRole, slugOf, tenancyFixture } from "@repo/backend/test/tenancy";
-import { Array as Arr, Effect } from "effect";
+import { grantRole, tenancyFixture } from "@repo/backend/test/tenancy";
+import { Array as Arr, Effect, Order, pipe } from "effect";
 
 const { archive, get, mine } = refs.public.classroom.classes;
 const grants = refs.public.access.grants;
@@ -19,11 +20,12 @@ const placements = refs.public.tenancy.placements;
 
 describe("classroom/classes mine", () => {
   it.effect(
-    "lists a student's own active classes of the period, and nothing to a leader with no class",
+    "lists a student's own active classes of the active period, and nothing to a leader with no class",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         const term = yield* period(fixture, fixture.units.smp);
+        yield* openPeriod(fixture, term.id);
         const x1 = yield* cohort(fixture, term.id, "X-1");
         const x2 = yield* cohort(fixture, term.id, "X-2");
         yield* fixture.as("admin").mutation(placements.place, {
@@ -39,48 +41,53 @@ describe("classroom/classes mine", () => {
           .mutation(archive, { classId: kimia.id, slug: nf });
         const studentView = yield* fixture
           .as("student")
-          .query(mine, { periodId: term.id, slug: nf });
-        const adminView = yield* fixture
-          .as("admin")
-          .query(mine, { periodId: term.id, slug: nf });
+          .query(mine, { slug: nf });
+        const adminView = yield* fixture.as("admin").query(mine, { slug: nf });
         expect(Arr.map(studentView, (row) => row.id)).toEqual([own.id]);
         expect(adminView).toEqual([]);
       })
   );
 
   it.effect(
-    "refuses a period of another school to mine, and a period that no longer exists",
+    "lists a class only while its period is active: not while it is planned, and not once it is archived",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
-        const foreign = yield* fixture
-          .as("otherOwner")
-          .mutation(periods.create, {
-            end: "2026-12-19",
-            name: "Ganjil",
-            slug: slugOf("other"),
-            start: "2026-07-13",
-            unitId: fixture.units.sd,
-          });
         const term = yield* period(fixture, fixture.units.smp);
-        yield* fixture.run(
-          Effect.gen(function* () {
-            const writer = yield* DatabaseWriter;
-            yield* writer.table("tenantPeriods").delete(term.id);
-          })
-        );
-        const otherSchool = yield* fixture
-          .as("student")
-          .query(mine, { periodId: foreign.id, slug: nf })
+        const x1 = yield* cohort(fixture, term.id, "X-1");
+        yield* fixture.as("admin").mutation(placements.place, {
+          cohortId: x1.id,
+          personId: fixture.people.student.personId,
+          slug: nf,
+        });
+        const fisika = yield* classOf(fixture, x1.id, "Fisika");
+        const planned = yield* fixture.as("student").query(mine, { slug: nf });
+        yield* openPeriod(fixture, term.id);
+        const open = yield* fixture.as("student").query(mine, { slug: nf });
+        yield* fixture
+          .as("admin")
+          .mutation(periods.archive, { periodId: term.id, slug: nf });
+        const archived = yield* fixture.as("student").query(mine, { slug: nf });
+        expect(planned).toEqual([]);
+        expect(Arr.map(open, (row) => row.id)).toEqual([fisika.id]);
+        expect(archived).toEqual([]);
+      })
+  );
+
+  it.effect(
+    "answers a member of another school with not member, and lists nothing to it",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const term = yield* period(fixture, fixture.units.smp);
+        yield* openPeriod(fixture, term.id);
+        const x1 = yield* cohort(fixture, term.id, "X-1");
+        yield* classOf(fixture, x1.id, "Fisika");
+        const outsider = yield* fixture
+          .as("otherOwner")
+          .query(mine, { slug: nf })
           .pipe(Effect.flip);
-        const missing = yield* fixture
-          .as("student")
-          .query(mine, { periodId: term.id, slug: nf })
-          .pipe(Effect.flip);
-        expect([otherSchool, missing]).toMatchObject([
-          denied("resource"),
-          denied("resource"),
-        ]);
+        expect(outsider).toMatchObject({ _tag: "NotMember" });
       })
   );
 
@@ -90,6 +97,7 @@ describe("classroom/classes mine", () => {
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         const term = yield* period(fixture, fixture.units.smp);
+        yield* openPeriod(fixture, term.id);
         const x1 = yield* cohort(fixture, term.id, "X-1");
         const fisika = yield* classOf(fixture, x1.id, "Fisika");
         const kimia = yield* classOf(fixture, x1.id, "Kimia");
@@ -98,9 +106,7 @@ describe("classroom/classes mine", () => {
         yield* fixture
           .as("admin")
           .mutation(archive, { classId: kimia.id, slug: nf });
-        const taught = yield* fixture
-          .as("teacher")
-          .query(mine, { periodId: term.id, slug: nf });
+        const taught = yield* fixture.as("teacher").query(mine, { slug: nf });
         expect(Arr.map(taught, (row) => row.name)).toEqual(["Fisika X-1"]);
       })
   );
@@ -111,6 +117,7 @@ describe("classroom/classes mine", () => {
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         const term = yield* period(fixture, fixture.units.smp);
+        yield* openPeriod(fixture, term.id);
         const x1 = yield* cohort(fixture, term.id, "X-1");
         const subjects = [
           "Matematika",
@@ -130,9 +137,7 @@ describe("classroom/classes mine", () => {
             ),
           { discard: true }
         );
-        const taught = yield* fixture
-          .as("teacher")
-          .query(mine, { periodId: term.id, slug: nf });
+        const taught = yield* fixture.as("teacher").query(mine, { slug: nf });
         expect(Arr.map(taught, (row) => row.name)).toEqual([
           "Biologi X-1",
           "Ekonomi X-1",
@@ -145,11 +150,113 @@ describe("classroom/classes mine", () => {
   );
 
   it.effect(
+    "lists the homeroom class of a cohort first, then the classes by name",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const { personId } = fixture.people.student;
+        const sd = yield* sdUnit(fixture);
+        const sdTerm = yield* period(fixture, sd);
+        yield* openPeriod(fixture, sdTerm.id);
+        const sdCohort = yield* cohort(fixture, sdTerm.id, "X-1");
+        yield* classOf(fixture, sdCohort.id);
+        yield* fixture.run(
+          grantRole(fixture.tenants.nf, personId, "student", {
+            kind: "unit",
+            unitId: sd,
+          })
+        );
+        yield* fixture.as("admin").mutation(placements.place, {
+          cohortId: sdCohort.id,
+          personId,
+          slug: nf,
+        });
+        const smpTerm = yield* period(fixture, fixture.units.smp);
+        yield* openPeriod(fixture, smpTerm.id);
+        const smpCohort = yield* cohort(fixture, smpTerm.id, "X-1");
+        yield* classOf(fixture, smpCohort.id, "Fisika");
+        yield* fixture.as("admin").mutation(placements.place, {
+          cohortId: smpCohort.id,
+          personId,
+          slug: nf,
+        });
+        const listed = yield* fixture.as("student").query(mine, { slug: nf });
+        expect(Arr.map(listed, (row) => row.name)).toEqual([
+          "X-1",
+          "Fisika X-1",
+        ]);
+      })
+  );
+
+  it.effect(
+    "lists the classes of the active period of every active unit, and not a unit whose period is planned",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const { personId } = fixture.people.teacher;
+        const smp = yield* period(fixture, fixture.units.smp);
+        yield* openPeriod(fixture, smp.id);
+        const sma = yield* period(fixture, fixture.units.sma);
+        const smpCohort = yield* cohort(fixture, smp.id, "X-1");
+        const smaCohort = yield* cohort(fixture, sma.id, "XI-1");
+        const fisika = yield* classOf(fixture, smpCohort.id, "Fisika");
+        const kimia = yield* classOf(fixture, smaCohort.id, "Kimia");
+        yield* fixture.run(
+          grantRole(fixture.tenants.nf, personId, "teacher", {
+            kind: "unit",
+            unitId: fixture.units.sma,
+          })
+        );
+        yield* teach(fixture, fisika.id, personId);
+        yield* teach(fixture, kimia.id, personId);
+        const planned = yield* fixture.as("teacher").query(mine, { slug: nf });
+        yield* openPeriod(fixture, sma.id);
+        const both = yield* fixture.as("teacher").query(mine, { slug: nf });
+        expect(Arr.map(planned, (row) => row.id)).toEqual([fisika.id]);
+        expect(Arr.map(both, (row) => row.id)).toEqual([fisika.id, kimia.id]);
+      })
+  );
+
+  it.effect(
+    "lists two classes of one name from two units in one fixed order, by identity",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const { personId } = fixture.people.teacher;
+        const smp = yield* period(fixture, fixture.units.smp);
+        const sma = yield* period(fixture, fixture.units.sma);
+        yield* openPeriod(fixture, smp.id);
+        yield* openPeriod(fixture, sma.id);
+        const smpCohort = yield* cohort(fixture, smp.id, "X-1");
+        const smaCohort = yield* cohort(fixture, sma.id, "X-1");
+        const smpFisika = yield* classOf(fixture, smpCohort.id, "Fisika");
+        const smaFisika = yield* classOf(fixture, smaCohort.id, "Fisika");
+        yield* fixture.run(
+          grantRole(fixture.tenants.nf, personId, "teacher", {
+            kind: "unit",
+            unitId: fixture.units.sma,
+          })
+        );
+        yield* teach(fixture, smpFisika.id, personId);
+        yield* teach(fixture, smaFisika.id, personId);
+        const listed = yield* fixture.as("teacher").query(mine, { slug: nf });
+        expect(Arr.map(listed, (row) => row.name)).toEqual([
+          "Fisika X-1",
+          "Fisika X-1",
+        ]);
+        expect(Arr.map(listed, (row) => row.id)).toEqual(
+          pipe([smpFisika.id, smaFisika.id], Arr.sort(Order.String))
+        );
+      })
+  );
+
+  it.effect(
     "lists a class once when its teacher is also placed in its cohort",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         const term = yield* period(fixture, fixture.units.smp);
+        yield* openPeriod(fixture, term.id);
         const x1 = yield* cohort(fixture, term.id, "X-1");
         const fisika = yield* classOf(fixture, x1.id, "Fisika");
         yield* fixture.run(
@@ -166,9 +273,7 @@ describe("classroom/classes mine", () => {
           slug: nf,
         });
         yield* teach(fixture, fisika.id, fixture.people.teacher.personId);
-        const listed = yield* fixture
-          .as("teacher")
-          .query(mine, { periodId: term.id, slug: nf });
+        const listed = yield* fixture.as("teacher").query(mine, { slug: nf });
         expect(Arr.map(listed, (row) => row.id)).toEqual([fisika.id]);
       })
   );
@@ -179,19 +284,16 @@ describe("classroom/classes mine", () => {
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         const term = yield* period(fixture, fixture.units.smp);
+        yield* openPeriod(fixture, term.id);
         const x1 = yield* cohort(fixture, term.id, "X-1");
         const fisika = yield* classOf(fixture, x1.id, "Fisika");
         const { grantId, personId } = fixture.people.teacher;
         yield* teach(fixture, fisika.id, personId);
-        const before = yield* fixture
-          .as("teacher")
-          .query(mine, { periodId: term.id, slug: nf });
+        const before = yield* fixture.as("teacher").query(mine, { slug: nf });
         yield* fixture
           .as("owner")
           .mutation(grants.revoke, { grantId, slug: nf });
-        const revoked = yield* fixture
-          .as("teacher")
-          .query(mine, { periodId: term.id, slug: nf });
+        const revoked = yield* fixture.as("teacher").query(mine, { slug: nf });
         const refused = yield* fixture
           .as("teacher")
           .query(get, { classId: fisika.id, slug: nf })
@@ -202,9 +304,7 @@ describe("classroom/classes mine", () => {
           scope: { kind: "unit", unitId: fixture.units.smp },
           slug: nf,
         });
-        const restored = yield* fixture
-          .as("teacher")
-          .query(mine, { periodId: term.id, slug: nf });
+        const restored = yield* fixture.as("teacher").query(mine, { slug: nf });
         expect(Arr.map(before, (row) => row.id)).toEqual([fisika.id]);
         expect(revoked).toEqual([]);
         expect(refused).toMatchObject(denied("role"));

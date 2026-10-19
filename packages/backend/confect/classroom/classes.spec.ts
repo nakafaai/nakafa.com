@@ -120,9 +120,9 @@ export default GroupSpec.make()
   .addFunction(
     FunctionSpec.publicQuery({
       name: "mine",
-      args: () => ({ periodId: Id("tenantPeriods"), slug: TenantSlug }),
+      args: () => ({ slug: TenantSlug }),
       returns: () => Schema.Array(ClassView),
-      error: () => AccessDenied,
+      error: () => Schema.Never,
     })
   )
   .addFunction(
