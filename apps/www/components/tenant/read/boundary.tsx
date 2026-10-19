@@ -1,6 +1,7 @@
 "use client";
 
 import type { Ref } from "@confect/core";
+import { captureException } from "@repo/analytics/posthog/browser";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
@@ -50,6 +51,17 @@ export function ReadBoundary<Query extends Ref.AnyPublicQuery>({
           );
         return fallback === undefined ? failure : fallback(failure);
       }}
+      onError={(error, info) => {
+        // A refusal is an answer that the part shows, not a failure, so it is not reported.
+        if (isLostAccess(error) || isDenied(error)) {
+          return;
+        }
+        captureException(error, {
+          component_stack: info.componentStack,
+          source: "react-error-boundary",
+        });
+      }}
+      report={false}
     >
       {children}
     </ErrorBoundary>
