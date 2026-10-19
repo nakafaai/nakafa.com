@@ -2,13 +2,13 @@ import { type BrowserContext, expect, type Page, test } from "@playwright/test";
 import { Array as Arr, Effect } from "effect";
 import { LESSON_PATH } from "@/e2e/support/chat";
 import { withBrowserContext } from "@/e2e/support/context";
+import { activateUntilVisible } from "@/e2e/support/input";
 import { signInLearner } from "@/e2e/support/learner";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { appRoutes, openRoute } from "@/e2e/support/route";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { desktopViewport, viewportSize } from "@/e2e/support/viewport";
-import { isHydrated } from "@/e2e/support/window";
 
 /**
  * The owner's rule (18 Oct): every page header is one row at every width. A header
@@ -241,16 +241,15 @@ test("a phone opens a folded ancestor of the path with a tap", async ({
     )
   );
   const breadcrumb = page.getByRole("navigation", { name: "breadcrumb" });
-  const more = breadcrumb.getByRole("button");
   // The page answers before its scripts run, and a tap before React has taken the
-  // button over opens nothing, so the tap waits for it.
-  await expect
-    .poll(() => isHydrated(more), { timeout: readinessTimeoutMilliseconds })
-    .toBe(true);
-  await more.click();
-  await page
-    .getByRole("menu")
-    .locator('a[href="/en/try-out/indonesia/snbt"]')
-    .click();
+  // button over opens nothing, so the tap repeats until the menu shows.
+  const ancestor = await Effect.runPromise(
+    activateUntilVisible(
+      breadcrumb.getByRole("button"),
+      page.getByRole("menu").locator('a[href="/en/try-out/indonesia/snbt"]'),
+      readinessTimeoutMilliseconds
+    )
+  );
+  await ancestor.click();
   await expect(page).toHaveURL(EXAM_PAGE);
 });
