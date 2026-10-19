@@ -1,84 +1,170 @@
 import { HttpClient } from "@confect/js";
+import auth from "@repo/backend/confect/_generated/refs/auth";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { Effect, Option, Schema } from "effect";
-import { cacheLife, io } from "next/cache";
-import { cache } from "react";
-import { getToken } from "@/lib/auth/server";
+import type { Locale } from "@repo/internationalization/src/locale";
+import {
+  Context,
+  DateTime,
+  Effect,
+  Layer,
+  Option,
+  Result,
+  Schema,
+} from "effect";
+import { homeAccess } from "@/components/tenant/home/access";
+import { greetingOf } from "@/components/tenant/home/greeting";
 import { httpLayer } from "@/lib/convex/http";
+import { readSchoolSignInTitle } from "@/lib/tenant/copy";
+import {
+  readAccountName,
+  type SchoolProfile,
+  type SchoolRead,
+  type SchoolViewer,
+} from "@/lib/tenant/frame";
 
-/** The public profile of the school at an address, or none when no school has it. */
-const queryProfile = (slug: TenantSlug) =>
+/** A school read that the backend did not answer: a network failure, or an answer that did not decode. */
+export class SchoolReadFailed extends Schema.TaggedError<SchoolReadFailed>()(
+  "SchoolReadFailed",
+  { cause: Schema.Unknown }
+) {}
+
+/**
+ * Why a signed-in visitor's view of a school refuses it: the school denies the
+ * viewer, or the account is not a member of the school.
+ */
+const ViewerRefusal = Schema.Literals(["Denied", "Outsider"]);
+/** The kind of a signed-in visitor's refusal, as the schema decodes it. */
+type ViewerRefusalKind = typeof ViewerRefusal.Type;
+
+/** The three backend reads that decide a school page, each with its own refusals already answered. */
+export class SchoolReads extends Context.Service<
+  SchoolReads,
+  {
+    readonly profile: (
+      slug: TenantSlug
+    ) => Effect.Effect<Option.Option<SchoolProfile>, SchoolReadFailed>;
+    readonly viewer: (
+      slug: TenantSlug,
+      token: string
+    ) => Effect.Effect<
+      Result.Result<SchoolViewer, ViewerRefusalKind>,
+      SchoolReadFailed
+    >;
+    readonly account: (
+      token: string
+    ) => Effect.Effect<Option.Option<string>, SchoolReadFailed>;
+  }
+>()("www/lib/tenant/read/SchoolReads") {}
+
+/** The public profile of a school, or none when no school has the address. A visitor reads it with no token. */
+const readProfile = (slug: TenantSlug) =>
   HttpClient.HttpClient.pipe(
     Effect.flatMap((client) => client.query(tenancy.profile.get, { slug })),
     Effect.asSome,
     Effect.catchTag("TenantNotFound", () => Effect.succeedNone),
-    Effect.provide(httpLayer())
+    Effect.provide(httpLayer()),
+    Effect.mapError((cause) => new SchoolReadFailed({ cause }))
   );
 
-/**
- * The public profile of the school at an address, or none when no school has it.
- * The school's layout reads it once per request, so its logo and mascot follow
- * each save.
- */
-export const readProfile = cache(async (slug: TenantSlug) => {
-  // `io()` tells Next.js that request-time work follows, so a prerender stops here
-  // and the Effect runtime, which reads the clock when it starts, never runs in one.
-  await io();
-  return Effect.runPromise(queryProfile(slug));
-});
-
-/**
- * The name of a school as plain data. A cached function may return only plain data, and an
- * Effect `Option` is a class instance, so the cache holds this form and the reader decodes it.
- */
-const SchoolNameIso = Schema.toCodecIso(Schema.Option(Schema.String));
-
-/**
- * The name of the school at an address in the cache's plain form, which the cache can hold.
- * The `minutes` cache profile's five-minute stale time keeps the metadata off uncached data.
- */
-async function readCachedSchoolName(slug: TenantSlug) {
-  "use cache";
-  cacheLife("minutes");
-  const profile = await Effect.runPromise(queryProfile(slug));
-  return Schema.encodeSync(SchoolNameIso)(
-    Option.map(profile, ({ name }) => name)
+/** The viewer's view of a school for a signed-in visitor, read with the session token of the request. */
+const readViewer = (slug: TenantSlug, token: string) =>
+  HttpClient.HttpClient.pipe(
+    Effect.flatMap((client) => client.query(tenancy.viewer.get, { slug })),
+    Effect.map((viewer) => Result.succeed<SchoolViewer>(viewer)),
+    Effect.catchTags({
+      AccessDenied: () =>
+        Effect.succeed(Result.fail<ViewerRefusalKind>("Denied")),
+      NotMember: () =>
+        Effect.succeed(Result.fail<ViewerRefusalKind>("Outsider")),
+    }),
+    Effect.provide(httpLayer({ auth: token })),
+    Effect.mapError((cause) => new SchoolReadFailed({ cause }))
   );
-}
+
+/** The name that an outsider's page shows for its account, or none when the account has no name. */
+const readAccount = (token: string) =>
+  HttpClient.HttpClient.pipe(
+    Effect.flatMap((client) => client.query(auth.queries.getCurrentUser)),
+    Effect.map((current) =>
+      Option.flatMap(Option.fromNullishOr(current), (user) =>
+        readAccountName(user.appUser.name, user.appUser.username)
+      )
+    ),
+    Effect.provide(httpLayer({ auth: token })),
+    Effect.mapError((cause) => new SchoolReadFailed({ cause }))
+  );
+
+/** The live reads of the Convex deployment, each one attempt with the request's own token. */
+export const SchoolReadsLive = Layer.succeed(
+  SchoolReads,
+  SchoolReads.of({
+    account: readAccount,
+    profile: readProfile,
+    viewer: readViewer,
+  })
+);
+
+/** The refusal that answers a school page with not found. */
+const REFUSED: SchoolRead = { _tag: "Refused" };
 
 /**
- * The name of the school at an address, or none when no school has it, for the titles of its
- * pages. A school renames rarely, so the name comes from the cached `minutes` profile.
+ * Decides what the school of one request shows. A school with no profile is
+ * refused for every visitor, and a signed-in viewer whom the school denies is
+ * refused too. A visitor gets the entry surface, and an account that is not a
+ * member gets the outsider page. Any failed read fails the whole answer, so an
+ * outage never looks like a missing school.
  */
-export async function readSchoolName(
-  slug: TenantSlug
-): Promise<Option.Option<string>> {
-  const name = await readCachedSchoolName(slug);
-  return Effect.runPromise(Schema.decodeEffect(SchoolNameIso)(name));
-}
-
-/**
- * The viewer's view of one school, read with the session token of the request. The
- * school's layout and every page under it ask for the same answer, and React's `cache`
- * shares it, so one request reads the viewer once. A visitor without a session reads
- * nothing, and a failure other than the two refusals reaches the error boundary. An
- * outsider keeps the token it was read with, so the layout reads the account with it.
- */
-export const readViewer = cache(async (slug: TenantSlug) => {
-  const token = await getToken();
-  if (token === undefined) {
-    return { _tag: "visitor" as const };
+export const readSchoolFrame = Effect.fn("www.tenant.readSchoolFrame")(
+  function* (input: {
+    readonly slug: TenantSlug;
+    readonly locale: Locale;
+    readonly token: Option.Option<string>;
+  }) {
+    const reads = yield* SchoolReads;
+    const profile = yield* reads.profile(input.slug);
+    if (Option.isNone(profile)) {
+      return REFUSED;
+    }
+    const school = profile.value;
+    if (Option.isNone(input.token)) {
+      const title = yield* Effect.promise(() =>
+        readSchoolSignInTitle(input.locale, school.name)
+      );
+      const visitor: SchoolRead = {
+        _tag: "Visitor",
+        locale: input.locale,
+        profile: school,
+        title,
+      };
+      return visitor;
+    }
+    const answer = yield* reads.viewer(input.slug, input.token.value);
+    if (Result.isSuccess(answer)) {
+      const now = yield* DateTime.now;
+      const member: SchoolRead = {
+        _tag: "Member",
+        greeting: greetingOf(answer.success, now),
+        home: homeAccess(answer.success),
+        locale: input.locale,
+        profile: school,
+        viewer: answer.success,
+      };
+      return member;
+    }
+    if (answer.failure === "Denied") {
+      return REFUSED;
+    }
+    const account = yield* reads.account(input.token.value);
+    if (Option.isNone(account)) {
+      return REFUSED;
+    }
+    const outsider: SchoolRead = {
+      _tag: "Outsider",
+      account: account.value,
+      locale: input.locale,
+      profile: school,
+    };
+    return outsider;
   }
-  return Effect.runPromise(
-    HttpClient.HttpClient.pipe(
-      Effect.flatMap((client) => client.query(tenancy.viewer.get, { slug })),
-      Effect.map((viewer) => ({ _tag: "member" as const, viewer })),
-      Effect.catchTags({
-        AccessDenied: () => Effect.succeed({ _tag: "denied" as const }),
-        NotMember: () => Effect.succeed({ _tag: "outsider" as const, token }),
-      }),
-      Effect.provide(httpLayer({ auth: token }))
-    )
-  );
-});
+);

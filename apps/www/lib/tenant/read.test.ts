@@ -1,122 +1,218 @@
 // @vitest-environment node
 
-import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { Array as Arr, Option, Schema } from "effect";
-import { getToken } from "@/lib/auth/server";
-import { readProfile, readSchoolName, readViewer } from "@/lib/tenant/read";
+import { describe, expect, it } from "@effect/vitest";
+import { Id } from "@repo/backend/confect/_generated/id";
 import {
-  ACCESS_DENIED,
-  answered,
-  NOT_MEMBER,
-  PROFILE,
-  PROFILE_VALUE,
-  queriesOf,
-  refusedWith,
-  resetFakeBackend,
-  serve,
-  TENANT_NOT_FOUND,
-  TOKEN,
-  VIEWER,
-  VIEWER_VALUE,
-} from "@/test/school";
-
-/** The server environment is a stand-in here: the reads take the token from the mocked session helper. */
-vi.mock("@/env", () => ({ env: {} }));
-vi.mock("@/lib/auth/server", () => ({ getToken: vi.fn() }));
-/**
- * The shared fake backend imports the school gate, which builds its locale middleware when it
- * loads. These reads never reach that middleware, so the library stands in as a plain function.
- */
-vi.mock("next-intl/middleware", () => ({ default: () => () => undefined }));
-/**
- * The `use cache` directive is a build transform, so the test stands in for the cache scope
- * that `cacheLife` needs. The reads keep their real `io`.
- */
-vi.mock("next/cache", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("next/cache")>()),
-  cacheLife: vi.fn(),
-}));
+  TenantProfile,
+  TenantSettings,
+  ViewerAccount,
+} from "@repo/backend/confect/tenancy/schema";
+import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
+import { Effect, Layer, Option, Result, Schema } from "effect";
+import type { SchoolViewer } from "@/lib/tenant/frame";
+import {
+  readSchoolFrame,
+  SchoolReadFailed,
+  SchoolReads,
+} from "@/lib/tenant/read";
 
 const SLUG = Schema.decodeSync(TenantSlug)("harapan");
 
-describe("readProfile", () => {
-  beforeEach(() => {
-    resetFakeBackend();
-  });
-
-  it("reads the profile of a school that exists", async () => {
-    serve({ profile: answered(PROFILE_VALUE) });
-
-    const profile = await readProfile(SLUG);
-
-    expect(Option.getOrUndefined(profile)?.name).toBe("Harapan");
-    expect(Arr.map(queriesOf(), (query) => query.path)).toEqual([PROFILE]);
-  });
-
-  it("reads no profile for a school that does not exist", async () => {
-    serve({ profile: refusedWith(TENANT_NOT_FOUND) });
-
-    expect(Option.isNone(await readProfile(SLUG))).toBe(true);
-  });
+const PROFILE = Schema.decodeSync(TenantProfile)({
+  kind: "school",
+  mascot: "cat.0.243e66.right.open",
+  name: "Harapan",
+  slug: "harapan",
+  status: "active",
 });
 
-describe("readSchoolName", () => {
-  beforeEach(() => {
-    resetFakeBackend();
-  });
+const MASCOT = "cat.0.243e66.right.open";
 
-  it("reads the name of a school that exists", async () => {
-    serve({ profile: answered(PROFILE_VALUE) });
-
-    expect(Option.getOrUndefined(await readSchoolName(SLUG))).toBe("Harapan");
-    expect(Arr.map(queriesOf(), (query) => query.path)).toEqual([PROFILE]);
-  });
-
-  it("reads no name for a school that does not exist", async () => {
-    serve({ profile: refusedWith(TENANT_NOT_FOUND) });
-
-    expect(Option.isNone(await readSchoolName(SLUG))).toBe(true);
-  });
+/** The tenant of the viewer: the school profile with its id and its settings. */
+const TenantView = Schema.Struct({
+  ...TenantProfile.fields,
+  id: Id("tenants"),
+  ...TenantSettings.fields,
 });
 
-describe("readViewer", () => {
-  beforeEach(() => {
-    resetFakeBackend();
-    vi.mocked(getToken).mockReset();
-  });
+/** The viewer of a member of the school, with no grant and no unit, decoded with the backend schemas. */
+const VIEWER: SchoolViewer = {
+  account: Schema.decodeSync(ViewerAccount)({ mascot: MASCOT, name: "Ayu" }),
+  can: [],
+  grants: [],
+  person: {
+    id: Schema.decodeUnknownSync(Id("tenantPeople"))("person-1"),
+    kind: "member",
+    name: "Ayu",
+  },
+  tenant: Schema.decodeUnknownSync(TenantView)({
+    country: "ID",
+    currency: "IDR",
+    id: "tenant-1",
+    kind: "school",
+    mascot: MASCOT,
+    name: "Harapan",
+    policies: { emailDomains: [], nina: false, studentThreads: false },
+    slug: "harapan",
+    status: "active",
+  }),
+  units: [],
+};
 
-  it("reads nothing for a visitor without a session", async () => {
-    vi.mocked(getToken).mockResolvedValue(undefined);
+/** A school read set whose answers the test chooses; any read it does not set dies the test. */
+function reads(answers: {
+  readonly profile?: Effect.Effect<
+    Option.Option<typeof PROFILE>,
+    SchoolReadFailed
+  >;
+  readonly viewer?: Effect.Effect<
+    Result.Result<SchoolViewer, "Denied" | "Outsider">,
+    SchoolReadFailed
+  >;
+  readonly account?: Effect.Effect<Option.Option<string>, SchoolReadFailed>;
+}) {
+  return Layer.succeed(
+    SchoolReads,
+    SchoolReads.of({
+      account: () => answers.account ?? Effect.die("account not expected"),
+      profile: () => answers.profile ?? Effect.die("profile not expected"),
+      viewer: () => answers.viewer ?? Effect.die("viewer not expected"),
+    })
+  );
+}
 
-    expect(await readViewer(SLUG)).toEqual({ _tag: "visitor" });
-    expect(queriesOf()).toEqual([]);
-  });
+const READ = { locale: "en", slug: SLUG } as const;
 
-  it("reads the viewer of a member with the session token", async () => {
-    vi.mocked(getToken).mockResolvedValue(TOKEN);
-    serve({ viewer: answered(VIEWER_VALUE) });
+describe("readSchoolFrame", () => {
+  it.effect("refuses every visitor when no school has the address", () =>
+    Effect.gen(function* () {
+      const read = yield* readSchoolFrame({
+        ...READ,
+        token: Option.none(),
+      }).pipe(Effect.provide(reads({ profile: Effect.succeedNone })));
+      expect(read).toEqual({ _tag: "Refused" });
+    })
+  );
 
-    const viewer = await readViewer(SLUG);
+  it.effect(
+    "shows a visitor the entry surface with the school's sign-in line",
+    () =>
+      Effect.gen(function* () {
+        const read = yield* readSchoolFrame({
+          ...READ,
+          token: Option.none(),
+        }).pipe(
+          Effect.provide(reads({ profile: Effect.succeedSome(PROFILE) }))
+        );
+        expect(read).toEqual({
+          _tag: "Visitor",
+          locale: "en",
+          profile: PROFILE,
+          title: "Sign in to Harapan",
+        });
+      })
+  );
 
-    expect(viewer).toMatchObject({
-      _tag: "member",
-      viewer: { person: { name: "Ayu" } },
-    });
-    expect(Arr.map(queriesOf(), (query) => query.path)).toEqual([VIEWER]);
-  });
+  it.effect(
+    "shows a member the shell with the viewer, its greeting and its home access",
+    () =>
+      Effect.gen(function* () {
+        const read = yield* readSchoolFrame({
+          ...READ,
+          token: Option.some("token"),
+        }).pipe(
+          Effect.provide(
+            reads({
+              profile: Effect.succeedSome(PROFILE),
+              viewer: Effect.succeed(Result.succeed(VIEWER)),
+            })
+          )
+        );
+        expect(read).toMatchObject({
+          _tag: "Member",
+          locale: "en",
+          profile: PROFILE,
+          viewer: VIEWER,
+        });
+      })
+  );
 
-  it("answers denied for a viewer whom the school does not admit", async () => {
-    vi.mocked(getToken).mockResolvedValue(TOKEN);
-    serve({ viewer: refusedWith(ACCESS_DENIED) });
+  it.effect("refuses a signed-in viewer whom the school denies", () =>
+    Effect.gen(function* () {
+      const read = yield* readSchoolFrame({
+        ...READ,
+        token: Option.some("token"),
+      }).pipe(
+        Effect.provide(
+          reads({
+            profile: Effect.succeedSome(PROFILE),
+            viewer: Effect.succeed(Result.fail("Denied")),
+          })
+        )
+      );
+      expect(read).toEqual({ _tag: "Refused" });
+    })
+  );
 
-    expect(await readViewer(SLUG)).toEqual({ _tag: "denied" });
-  });
+  it.effect(
+    "shows an account that is not a member the outsider page with its name",
+    () =>
+      Effect.gen(function* () {
+        const read = yield* readSchoolFrame({
+          ...READ,
+          token: Option.some("token"),
+        }).pipe(
+          Effect.provide(
+            reads({
+              account: Effect.succeedSome("Ayu"),
+              profile: Effect.succeedSome(PROFILE),
+              viewer: Effect.succeed(Result.fail("Outsider")),
+            })
+          )
+        );
+        expect(read).toEqual({
+          _tag: "Outsider",
+          account: "Ayu",
+          locale: "en",
+          profile: PROFILE,
+        });
+      })
+  );
 
-  it("answers outsider for a signed-in account that is not a member", async () => {
-    vi.mocked(getToken).mockResolvedValue(TOKEN);
-    serve({ viewer: refusedWith(NOT_MEMBER) });
+  it.effect("refuses an outsider whose account names nothing", () =>
+    Effect.gen(function* () {
+      const read = yield* readSchoolFrame({
+        ...READ,
+        token: Option.some("token"),
+      }).pipe(
+        Effect.provide(
+          reads({
+            account: Effect.succeedNone,
+            profile: Effect.succeedSome(PROFILE),
+            viewer: Effect.succeed(Result.fail("Outsider")),
+          })
+        )
+      );
+      expect(read).toEqual({ _tag: "Refused" });
+    })
+  );
 
-    expect(await readViewer(SLUG)).toEqual({ _tag: "outsider", token: TOKEN });
-  });
+  it.effect(
+    "fails the whole answer when a read fails, so an outage is not a missing school",
+    () =>
+      Effect.gen(function* () {
+        const failure = yield* readSchoolFrame({
+          ...READ,
+          token: Option.none(),
+        }).pipe(
+          Effect.provide(
+            reads({
+              profile: Effect.fail(new SchoolReadFailed({ cause: "offline" })),
+            })
+          ),
+          Effect.flip
+        );
+        expect(failure._tag).toBe("SchoolReadFailed");
+      })
+  );
 });
