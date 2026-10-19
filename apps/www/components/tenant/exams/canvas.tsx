@@ -1,8 +1,10 @@
 "use client";
 
 import { Add01Icon } from "@hugeicons/core-free-icons";
+import { useMediaQuery } from "@mantine/hooks";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
 import { Array as Arr, Option } from "effect";
 import { useTranslations } from "next-intl";
 import type { RefObject } from "react";
@@ -14,7 +16,9 @@ import {
   useActiveQuestion,
   useExam,
   useExamSelection,
+  useExamZoom,
 } from "@/components/tenant/exams/provider";
+import { ZOOM_DEFAULT } from "@/components/tenant/exams/zoom";
 
 /**
  * The distance, in pixels from the top of the canvas, at which a page counts as the one in view:
@@ -30,10 +34,8 @@ const PAGE_LINE = 96;
  */
 export function ExamCanvas({
   canvas,
-  zoom,
 }: {
   canvas: RefObject<HTMLElement | null>;
-  zoom: number;
 }) {
   const t = useTranslations("Exams");
   const { exam } = useExam();
@@ -41,6 +43,11 @@ export function ExamCanvas({
   const select = useExamSelection((state) => state.select);
   const active = useActiveQuestion();
   const actions = useQuestionActions();
+  const percent = useExamZoom((zoom) => zoom.percent);
+  // The chosen zoom applies from the medium width up, where the footer shows its slider. A phone
+  // keeps the default, since it pinches to zoom and has no slider to undo a stored zoom.
+  const wide = useMediaQuery(TAILWIND_MEDIA_QUERIES.mdAndUp);
+  const drawnZoom = wide ? percent : ZOOM_DEFAULT;
 
   /** Chooses the page at the top of the canvas as the one the teacher is on, when the scroll brings a new one. */
   const syncPage = () => {
@@ -77,7 +84,7 @@ export function ExamCanvas({
     >
       <div
         className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-4 py-6 md:px-6"
-        style={{ zoom: zoom / 100 }}
+        style={{ zoom: drawnZoom / 100 }}
       >
         {Arr.map(exam.questions, (question, index) => (
           <ExamPage

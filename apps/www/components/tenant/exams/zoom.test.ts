@@ -2,6 +2,7 @@ import { expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import { KeyValueStore } from "effect/persistence";
 import {
+  createExamZoom,
   readZoom,
   sliderPosition,
   writeZoom,
@@ -47,6 +48,14 @@ it("maps a zoom to a slider position and back to the same zoom", () => {
   }
 });
 
+it("starts the pages at the default zoom, and takes a new zoom at once", () => {
+  const zoom = createExamZoom();
+  expect(zoom.getState().percent).toBe(ZOOM_DEFAULT);
+
+  zoom.getState().set(150);
+  expect(zoom.getState().percent).toBe(150);
+});
+
 it("spaces the zoom on a logarithmic scale, so each step scales the pages alike", () => {
   expect(zoomAt(ZOOM_STEPS / 2)).toBe(
     Math.round(Math.sqrt(ZOOM_MIN * ZOOM_MAX))
@@ -55,7 +64,7 @@ it("spaces the zoom on a logarithmic scale, so each step scales the pages alike"
 
 it.effect("reads the default when no zoom is stored", () =>
   Effect.gen(function* () {
-    const zoom = yield* readZoom;
+    const zoom = yield* readZoom();
 
     expect(zoom).toBe(ZOOM_DEFAULT);
   }).pipe(Effect.provide(KeyValueStore.layerMemory))
@@ -64,7 +73,7 @@ it.effect("reads the default when no zoom is stored", () =>
 it.effect("reads back the zoom that was written", () =>
   Effect.gen(function* () {
     yield* writeZoom(150);
-    const zoom = yield* readZoom;
+    const zoom = yield* readZoom();
 
     expect(zoom).toBe(150);
   }).pipe(Effect.provide(KeyValueStore.layerMemory))
@@ -74,7 +83,7 @@ it.effect("reads the default when the stored zoom is out of range", () =>
   Effect.gen(function* () {
     const store = yield* KeyValueStore.KeyValueStore;
     yield* store.set(ZOOM_KEY, "999");
-    const zoom = yield* readZoom;
+    const zoom = yield* readZoom();
 
     expect(zoom).toBe(ZOOM_DEFAULT);
   }).pipe(Effect.provide(KeyValueStore.layerMemory))
@@ -84,7 +93,7 @@ it.effect("reads the default when the stored value is not JSON", () =>
   Effect.gen(function* () {
     const store = yield* KeyValueStore.KeyValueStore;
     yield* store.set(ZOOM_KEY, "not json");
-    const zoom = yield* readZoom;
+    const zoom = yield* readZoom();
 
     expect(zoom).toBe(ZOOM_DEFAULT);
   }).pipe(Effect.provide(KeyValueStore.layerMemory))
@@ -92,7 +101,7 @@ it.effect("reads the default when the stored value is not JSON", () =>
 
 it.effect("reads the default when the store cannot be read", () =>
   Effect.gen(function* () {
-    const zoom = yield* readZoom;
+    const zoom = yield* readZoom();
 
     expect(zoom).toBe(ZOOM_DEFAULT);
   }).pipe(

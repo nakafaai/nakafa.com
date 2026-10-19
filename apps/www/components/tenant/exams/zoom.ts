@@ -1,5 +1,6 @@
 import { Effect, Option, Schema } from "effect";
 import { KeyValueStore } from "effect/persistence";
+import { createStore } from "zustand";
 
 /** The smallest zoom of the pages, in percent of their size. */
 export const ZOOM_MIN = 50;
@@ -43,7 +44,7 @@ export const zoomAt = (position: number): number => {
  * Reads the zoom the viewer chose. A zoom that is not stored, or stored as something that is not a
  * zoom in range, reads as the default, so the pages always draw a zoom the editor allows.
  */
-export const readZoom = Effect.gen(function* () {
+export const readZoom = Effect.fn("exams.zoom.read")(function* () {
   const store = KeyValueStore.toSchemaStore(
     yield* KeyValueStore.KeyValueStore,
     ZoomPercent
@@ -58,11 +59,31 @@ export const readZoom = Effect.gen(function* () {
  * Remembers the zoom the viewer chose. A store that refuses the write keeps the zoom for this
  * visit only, and the editor draws the zoom the viewer chose either way.
  */
-export const writeZoom = (percent: number) =>
-  Effect.gen(function* () {
-    const store = KeyValueStore.toSchemaStore(
-      yield* KeyValueStore.KeyValueStore,
-      ZoomPercent
-    );
-    yield* store.set(ZOOM_KEY, percent).pipe(Effect.ignore);
-  });
+export const writeZoom = Effect.fn("exams.zoom.write")(function* (
+  percent: number
+) {
+  const store = KeyValueStore.toSchemaStore(
+    yield* KeyValueStore.KeyValueStore,
+    ZoomPercent
+  );
+  yield* store.set(ZOOM_KEY, percent).pipe(Effect.ignore);
+});
+
+/** The zoom of one editor's pages, as the viewer chose it on this visit, with the action that changes it. */
+const ZoomState = Schema.Struct({ percent: ZoomPercent });
+
+/** The state of one editor's zoom, with its action. */
+export type ExamZoom = typeof ZoomState.Type & {
+  /** Shows a new zoom at once. The caller remembers it, so the store only holds it. */
+  readonly set: (percent: typeof ZoomPercent.Type) => void;
+};
+
+/**
+ * Creates the zoom of one editor. It starts at the default, and the stored zoom replaces it once
+ * the browser answers. Each provider creates its own, once.
+ */
+export const createExamZoom = () =>
+  createStore<ExamZoom>()((set) => ({
+    percent: ZOOM_DEFAULT,
+    set: (percent) => set({ percent }),
+  }));

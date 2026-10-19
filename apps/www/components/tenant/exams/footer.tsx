@@ -20,6 +20,7 @@ import {
   useActiveQuestion,
   useExam,
   useExamSelection,
+  useExamZoom,
 } from "@/components/tenant/exams/provider";
 import {
   sliderPosition,
@@ -53,11 +54,10 @@ class FullscreenRefused extends Data.TaggedError("FullscreenRefused")<{
   readonly cause: unknown;
 }> {}
 
-/** The props of the footer of the editor: the canvas it moves and the zoom it changes. */
+/** The props of the footer of the editor: the canvas it moves, and the zoom change it hands to the editor. */
 interface ExamFooterProps {
   readonly canvas: RefObject<HTMLElement | null>;
   readonly onZoom: (percent: number) => void;
-  readonly zoom: number;
 }
 
 /**
@@ -67,11 +67,12 @@ interface ExamFooterProps {
  * browser allows it. The strip and the grid go to a page, and the page they choose becomes the one
  * the teacher is on.
  */
-export function ExamFooter({ canvas, onZoom, zoom }: ExamFooterProps) {
+export function ExamFooter({ canvas, onZoom }: ExamFooterProps) {
   const t = useTranslations("Exams");
   const { exam } = useExam();
   const active = useActiveQuestion();
   const select = useExamSelection((state) => state.select);
+  const zoom = useExamZoom((state) => state.percent);
   const reduce = useReducedMotion();
   const [pagesOpen, setPagesOpen] = useState(false);
   const [gridOpen, setGridOpen] = useState(false);

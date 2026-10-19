@@ -6,19 +6,15 @@ import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Effect } from "effect";
 import { KeyValueStore } from "effect/persistence";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { useConvexAuth } from "@/components/providers/convex";
 import { ExamCanvas } from "@/components/tenant/exams/canvas";
 import { ExamFooter } from "@/components/tenant/exams/footer";
 import { ExamHeader, ExamLockedNote } from "@/components/tenant/exams/header";
-import { ExamProvider } from "@/components/tenant/exams/provider";
+import { ExamProvider, useExamZoom } from "@/components/tenant/exams/provider";
 import { ExamToolbar } from "@/components/tenant/exams/toolbar";
 import { ExamUnavailable } from "@/components/tenant/exams/unavailable";
-import {
-  readZoom,
-  writeZoom,
-  ZOOM_DEFAULT,
-} from "@/components/tenant/exams/zoom";
+import { readZoom, writeZoom } from "@/components/tenant/exams/zoom";
 
 /**
  * The editor of one exam, as a design tool lays out its document: a header with the title and the
@@ -60,20 +56,23 @@ export function ExamEditor({
 /** The layer that keeps the zoom in this browser's local storage, read where the editor runs. */
 const zoomStorage = () => KeyValueStore.layerStorage(() => window.localStorage);
 
-/** The editor's shell: the rows and the canvas of one exam, with the zoom the viewer chose. */
+/**
+ * The editor's shell: the rows, the canvas, and the footer of one exam. This is the one place that
+ * reads the stored zoom and writes it, so the canvas and the footer only read the zoom in the store.
+ */
 function ExamWorkspace() {
   const canvas = useRef<HTMLElement>(null);
-  const [zoom, setZoom] = useState(ZOOM_DEFAULT);
+  const setZoom = useExamZoom((zoom) => zoom.set);
 
   // The zoom the viewer chose on another visit is read once the browser can answer.
   useEffect(() => {
     Effect.runFork(
-      readZoom.pipe(
+      readZoom().pipe(
         Effect.provide(zoomStorage()),
         Effect.flatMap((percent) => Effect.sync(() => setZoom(percent)))
       )
     );
-  }, []);
+  }, [setZoom]);
 
   /** Shows a new zoom at once, and remembers it for this viewer. */
   const changeZoom = (percent: number) => {
@@ -86,8 +85,8 @@ function ExamWorkspace() {
       <ExamHeader />
       <ExamToolbar />
       <ExamLockedNote />
-      <ExamCanvas canvas={canvas} zoom={zoom} />
-      <ExamFooter canvas={canvas} onZoom={changeZoom} zoom={zoom} />
+      <ExamCanvas canvas={canvas} />
+      <ExamFooter canvas={canvas} onZoom={changeZoom} />
     </main>
   );
 }
