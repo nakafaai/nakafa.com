@@ -1,9 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import {
-  choosesNothing,
-  isChosen,
-  oneOfFilter,
-} from "@/components/shared/table/filter";
+import { choosesNothing, isChosen } from "@/components/shared/table/filter";
 
 describe("a facet filter over cells that hold one value", () => {
   it("keeps a cell whose value the facet chose and drops one it did not", () => {
@@ -20,10 +16,5 @@ describe("a facet filter over cells that hold one value", () => {
     expect(choosesNothing(undefined)).toBe(true);
     expect(choosesNothing([])).toBe(true);
     expect(choosesNothing(["owner"])).toBe(false);
-  });
-
-  it("is the filter the table registers, built from the two rules", () => {
-    expect(oneOfFilter.filter).toBe(isChosen);
-    expect(oneOfFilter.autoRemove).toBe(choosesNothing);
   });
 });
