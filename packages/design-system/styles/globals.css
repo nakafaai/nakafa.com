@@ -468,18 +468,6 @@
   }
 }
 
-/* The caret of a line that is being written: on, then off, as a text field's caret blinks. */
-@keyframes caret-blink {
-  0%,
-  100% {
-    opacity: 1;
-  }
-
-  50% {
-    opacity: 0;
-  }
-}
-
 .katex .katex-html > .newline {
   margin-block: 1rem;
 }

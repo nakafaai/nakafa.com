@@ -1,11 +1,9 @@
 "use client";
 
 import { useIntersection, useReducedMotion } from "@mantine/hooks";
-import {
-  TypedText,
-  useTypedLetters,
-} from "@repo/design-system/components/ui/typed";
-import { Array as Arr } from "effect";
+import { TypedText } from "@repo/design-system/components/ui/typed";
+import { Array as Arr, Schema } from "effect";
+import { delay } from "motion";
 import { useEffect, useState } from "react";
 
 /** The time between two letters of the topic that is being typed. */
@@ -16,6 +14,11 @@ const HOLD_MS = 2400;
 
 /** The time between two letters of the topic that is being deleted. */
 const DELETE_EVERY_MS = 45;
+
+/** Where the topic is in its turn: being written, held whole, or being deleted. */
+const StageSchema = Schema.Literals(["deleting", "holding", "writing"]);
+
+type Stage = typeof StageSchema.Type;
 
 interface ClosingQuestionProps {
   /** The question as the locale words it, with `{topic}` where the topic goes. */
@@ -39,34 +42,22 @@ export function ClosingQuestion({ template, topics }: ClosingQuestionProps) {
   const { entry, ref } = useIntersection({ threshold: 0.5 });
   const shouldReduceMotion = useReducedMotion();
   const [topic, setTopic] = useState(0);
-  const [deleting, setDeleting] = useState(false);
+  const [stage, setStage] = useState<Stage>("writing");
   const playing = (entry?.isIntersecting ?? false) && !shouldReduceMotion;
   const current = shouldReduceMotion
     ? topics[0]
     : topics[topic % topics.length];
-  // The letters written so far move toward the topic, or toward none while it is deleted.
-  const target = deleting ? 0 : current.length;
-  const typed = useTypedLetters(target, {
-    playing,
-    step: deleting ? DELETE_EVERY_MS : TYPE_EVERY_MS,
-  });
   const longest = Arr.reduce(topics, "", (best, text) =>
     text.length > best.length ? text : best
   );
   const [before = "", after = ""] = template.split("{topic}");
 
   useEffect(() => {
-    if (!playing || typed !== target) {
+    if (!playing || stage !== "holding") {
       return;
     }
-    if (deleting) {
-      setDeleting(false);
-      setTopic((index) => (index + 1) % topics.length);
-      return;
-    }
-    const timer = window.setTimeout(() => setDeleting(true), HOLD_MS);
-    return () => window.clearTimeout(timer);
-  }, [deleting, playing, target, topics.length, typed]);
+    return delay(() => setStage("deleting"), HOLD_MS / 1000);
+  }, [playing, stage]);
 
   return (
     <h2
@@ -81,14 +72,30 @@ export function ClosingQuestion({ template, topics }: ClosingQuestionProps) {
         </span>
         <span className="col-start-1 row-start-1" key={current}>
           <TypedText
-            caret={!shouldReduceMotion}
+            caret
             className="text-primary"
+            onDone={() => {
+              if (stage === "deleting") {
+                setTopic((index) => (index + 1) % topics.length);
+                setStage("writing");
+                return;
+              }
+              setStage("holding");
+            }}
+            playing={playing}
+            step={stage === "deleting" ? DELETE_EVERY_MS : TYPE_EVERY_MS}
+            target={stage === "deleting" ? "erased" : "written"}
             text={current}
-            typed={typed}
           />
-          {/* The words after the topic show once it is typed, so the question
+          {/* The words after the topic show while it is whole, so the question
               mark never waits at the end of letters not typed yet. */}
-          <span className={typed < current.length ? "invisible" : undefined}>
+          <span
+            className={
+              stage === "holding" || shouldReduceMotion
+                ? undefined
+                : "invisible"
+            }
+          >
             {after}
           </span>
         </span>

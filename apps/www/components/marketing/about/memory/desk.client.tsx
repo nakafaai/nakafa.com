@@ -7,12 +7,10 @@ import {
 } from "@repo/design-system/components/ui/bubble";
 import { Nina } from "@repo/design-system/components/ui/nina";
 import { Thing } from "@repo/design-system/components/ui/thing";
-import {
-  TypedText,
-  useTypedLetters,
-} from "@repo/design-system/components/ui/typed";
+import { TypedText } from "@repo/design-system/components/ui/typed";
 import { cva } from "class-variance-authority";
 import { Array as Arr, Option, Schema } from "effect";
+import { delay } from "motion";
 import { useEffect, useState } from "react";
 
 /** A time that takes the place of the one before it. */
@@ -69,18 +67,15 @@ export function MemoryDesk({ facts }: MemoryDeskProps) {
   const shown = shouldReduceMotion ? facts.length : written;
   const latest = Option.getOrNull(Arr.get(facts, shown - 1));
 
-  // The next thing waits until the latest one is written in full and read.
-  const writing = (latest?.said.length ?? 0) * LETTER_EVERY_MS;
+  // The thing whose last letter Nina has written; the next one waits until it is read.
+  const [finished, setFinished] = useState("");
 
   useEffect(() => {
-    if (!playing || written >= facts.length) {
+    if (!playing || written >= facts.length || finished !== latest?.said) {
       return;
     }
-    const timer = window.setTimeout(() => {
-      setWritten((count) => count + 1);
-    }, writing + READ_MS);
-    return () => window.clearTimeout(timer);
-  }, [facts.length, playing, writing, written]);
+    return delay(() => setWritten((count) => count + 1), READ_MS / 1000);
+  }, [facts.length, finished, latest?.said, playing, written]);
 
   return (
     <div className="grid w-full justify-items-center gap-6" ref={ref}>
@@ -99,11 +94,17 @@ export function MemoryDesk({ facts }: MemoryDeskProps) {
                 {fact.said}
               </span>
             ))}
+            {/* Each thing is a new line keyed by its words, written from its
+                first letter, with the caret where the next one goes. */}
             {latest === null ? null : (
-              <WrittenFact
-                fact={latest.said}
+              <TypedText
+                caret={finished !== latest.said}
+                className="col-start-1 row-start-1 self-center text-balance"
                 key={latest.said}
+                onDone={() => setFinished(latest.said)}
                 playing={playing}
+                step={LETTER_EVERY_MS}
+                text={latest.said}
               />
             )}
           </BubbleContent>
@@ -132,26 +133,5 @@ export function MemoryDesk({ facts }: MemoryDeskProps) {
         ))}
       </p>
     </div>
-  );
-}
-
-/**
- * One thing that Nina writes, letter by letter from its first letter, with the
- * caret where the next one goes. It is keyed by the thing, so each thing starts
- * from no letters.
- */
-function WrittenFact({ fact, playing }: { fact: string; playing: boolean }) {
-  const typed = useTypedLetters(fact.length, {
-    playing,
-    step: LETTER_EVERY_MS,
-  });
-
-  return (
-    <TypedText
-      caret={typed < fact.length}
-      className="col-start-1 row-start-1 self-center text-balance"
-      text={fact}
-      typed={typed}
-    />
   );
 }

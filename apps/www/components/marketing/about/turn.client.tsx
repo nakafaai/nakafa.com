@@ -1,12 +1,10 @@
 "use client";
 
 import { useIntersection, useReducedMotion } from "@mantine/hooks";
-import {
-  TypedText,
-  useTypedLetters,
-} from "@repo/design-system/components/ui/typed";
+import { TypedText } from "@repo/design-system/components/ui/typed";
 import { cva } from "class-variance-authority";
 import { Schema } from "effect";
+import { delay } from "motion";
 import {
   createContext,
   lazy,
@@ -110,31 +108,42 @@ export function TurnPlayer({ children }: { children: ReactNode }) {
  * The learner's question, typed letter by letter into the chat's own bubble while
  * the turn asks, with the caret where the next letter goes. Nina answers a short
  * pause after the last letter. The whole question holds the bubble at its final
- * size from the start, so typing moves nothing. `text` is the question.
+ * size from the start, so typing moves nothing. A turn that rests answered shows
+ * the whole question. `text` is the question.
  */
 export function TurnAsk({ text }: { text: string }) {
   const phase = useTurn((state) => state.phase);
   const answer = useTurn((state) => state.answer);
-  const typed = useTypedLetters(text.length, {
-    playing: phase === "asking",
-    step: TYPE_EVERY_MS,
-  });
-  const written = typed >= text.length;
+  const [written, setWritten] = useState(false);
 
   useEffect(() => {
     if (phase !== "asking" || !written) {
       return;
     }
-    const timer = window.setTimeout(answer, ANSWER_AFTER_MS);
-    return () => window.clearTimeout(timer);
+    return delay(answer, ANSWER_AFTER_MS / 1000);
   }, [answer, phase, written]);
 
-  return (
+  // The answered question is its own line, so a turn that rests answered never
+  // types, and one that has just played keeps every letter in place.
+  return phase === "answered" ? (
+    <TypedText
+      caret={false}
+      className="grid"
+      initial="written"
+      key="answered"
+      playing={false}
+      step={TYPE_EVERY_MS}
+      text={text}
+    />
+  ) : (
     <TypedText
       caret={phase === "asking" && !written}
       className="grid"
+      key="asking"
+      onDone={() => setWritten(true)}
+      playing={phase === "asking"}
+      step={TYPE_EVERY_MS}
       text={text}
-      typed={phase === "answered" ? text.length : typed}
     />
   );
 }

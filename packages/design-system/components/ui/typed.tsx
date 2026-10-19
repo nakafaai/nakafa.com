@@ -1,77 +1,135 @@
 "use client";
 
-import { useReducedMotion } from "@mantine/hooks";
-import { Number as Num } from "effect";
-import { useEffect, useState } from "react";
+import { animate } from "motion";
+import {
+  useMotionValue,
+  useMotionValueEvent,
+  useReducedMotion,
+} from "motion/react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
+
+/** Where a typed line goes, or starts: every letter written, or none. */
+type TypedEnd = "erased" | "written";
+
+/** One blink of the caret: on for half a second, then off for half a second. */
+const CARET_BLINK = {
+  keyframes: [1, 1, 0, 0],
+  times: [0, 0.5, 0.5, 1],
+};
 
 /**
- * Counts the letters written so far toward `target`. While `playing`, one more
- * letter is written every `step` milliseconds, or one fewer when `target` is
- * lower, as a text is deleted; the count holds once it reaches `target`. With
- * reduced motion the count is `target` from the start.
+ * The caret: a thin bar where the next letter goes. It is an empty inline
+ * element, not an inline block, so it takes no width and adds no place where
+ * the line may break. Like a text field's caret it stays on while letters are
+ * written and blinks, through Motion, while the line rests.
  */
-export function useTypedLetters(
-  target: number,
-  { playing, step }: { playing: boolean; step: number }
-) {
-  const shouldReduceMotion = useReducedMotion();
-  const [count, setCount] = useState(0);
+function Caret({ blinking }: { blinking: boolean }) {
+  const ref = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
-    if (!playing || shouldReduceMotion || count === target) {
+    const bar = ref.current;
+    if (bar === null || !blinking) {
       return;
     }
-    const timer = window.setTimeout(() => {
-      setCount((current) => current + Num.sign(target - current));
-    }, step);
-    return () => window.clearTimeout(timer);
-  }, [count, playing, shouldReduceMotion, step, target]);
+    const controls = animate(
+      bar,
+      { opacity: CARET_BLINK.keyframes },
+      {
+        duration: 1,
+        ease: "linear",
+        repeat: Number.POSITIVE_INFINITY,
+        times: CARET_BLINK.times,
+      }
+    );
+    // Cancelling takes the blink off, so the caret is on again while letters are written.
+    return () => controls.cancel();
+  }, [blinking]);
 
-  return shouldReduceMotion ? target : count;
-}
-
-/**
- * The caret: a thin bar that blinks where the next letter goes. It is an empty
- * inline element, not an inline block, so it takes no width and adds no place
- * where the line may break.
- */
-function Caret() {
   return (
     <span className="relative">
-      <span className="absolute inset-y-[0.12em] start-0.5 w-[0.08em] rounded-full bg-current motion-safe:animate-[caret-blink_1s_step-end_infinite]" />
+      <span
+        className="absolute inset-y-[0.12em] start-0.5 w-[0.08em] rounded-full bg-current"
+        ref={ref}
+      />
     </span>
   );
 }
 
 /**
- * A line of text as it is written. The whole text is laid out from the first
- * frame, with the letters not written yet invisible in place, so the line breaks,
- * aligns and balances as the finished text does and no letter moves while it is
- * written. A caret stands after the last letter written while `caret` is set.
+ * A line of text that Motion writes letter by letter, `step` milliseconds a
+ * letter, while `playing`, toward `target`: every letter written, or none left
+ * as it is deleted. It starts at `initial` and holds where it is while it is not
+ * playing. The whole text is laid out from the first frame, with the letters not
+ * written yet invisible in place, so the line breaks, aligns and balances as the
+ * finished text does and no letter moves while it is written. A caret stands
+ * after the last letter while `caret` is set. `onDone` runs when the line reaches
+ * its target. With reduced motion the whole text shows at once, with no caret.
  * Screen readers hear the whole text once, and the drawn letters are hidden from
  * them.
  */
 export function TypedText({
   caret,
   className,
+  initial = "erased",
+  onDone,
+  playing,
+  step,
+  target = "written",
   text,
-  typed,
 }: {
   /** Whether the caret shows where the next letter goes. */
   caret: boolean;
   className?: string;
+  /** Where the line starts: with no letter written, or with every letter. */
+  initial?: TypedEnd;
+  /** Runs when the line reaches its target. */
+  onDone?: () => void;
+  /** Whether the line moves toward its target now. */
+  playing: boolean;
+  /** The time each letter takes, in milliseconds. */
+  step: number;
+  /** Where the line goes: every letter written, or every letter deleted. */
+  target?: TypedEnd;
   /** The whole text, which the line keeps the layout of. */
   text: string;
-  /** How many letters of the text are written so far. */
-  typed: number;
 }) {
+  const shouldReduceMotion = useReducedMotion();
+  const letters = useMotionValue(initial === "written" ? text.length : 0);
+  const [written, setWritten] = useState(() => letters.get());
+  const finish = useEffectEvent(() => onDone?.());
+  const end = target === "written" ? text.length : 0;
+
+  useMotionValueEvent(letters, "change", (latest) => {
+    setWritten(Math.round(latest));
+  });
+
+  useEffect(() => {
+    if (!playing || shouldReduceMotion) {
+      return;
+    }
+    const start = letters.get();
+    if (start === end) {
+      return;
+    }
+    const controls = animate(letters, end, {
+      duration: (Math.abs(end - start) * step) / 1000,
+      ease: "linear",
+      onComplete: finish,
+    });
+    return () => controls.stop();
+  }, [end, letters, playing, shouldReduceMotion, step]);
+
+  const shown = shouldReduceMotion ? text.length : written;
+  // The line rests when it is not playing or has reached its target; the caret blinks then.
+  const resting = !playing || shown === end;
+
   return (
     <span className={className}>
       <span className="sr-only">{text}</span>
       <span aria-hidden="true">
-        {text.slice(0, typed)}
-        {caret ? <Caret /> : null}
-        <span className="invisible">{text.slice(typed)}</span>
+        {text.slice(0, shown)}
+        {caret && !shouldReduceMotion ? <Caret blinking={resting} /> : null}
+        <span className="invisible">{text.slice(shown)}</span>
       </span>
     </span>
   );
