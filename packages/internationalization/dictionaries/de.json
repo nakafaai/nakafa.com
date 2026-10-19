@@ -1676,7 +1676,7 @@
     "nina-title": "Nina weiß, welche Stelle du meinst",
     "nina-lead": "Frag direkt aus der Aufgabe oder Lektion, die du offen hast.",
     "nina-chat-ask": "Warum ist 13 falsch?",
-    "nina-chat-answer": "### 13 kommt heraus, wenn m gleich 3 ist\n\nDann rechnest du $5(2) + 9/3 = 13$. Nur passt $m = 3$ nicht zur Aufgabe.\n\n#### Prüf es mit dem, was gegeben ist\n\n$\\triangle(2, 4) = 2(2) + 4/3 \\neq 8$\n\nMit $m = 1$ passt es: $2(2) + 4/1 = 8$. Also ist $m$ gleich 1, und die Antwort ist 19.",
+    "nina-chat-answer": "Deine \\(13\\) kommt heraus, wenn \\(m\\) gleich \\(3\\) ist. Dann rechnest du \\(5(2) + 9/3 = 13\\). Aber \\(m = 3\\) passt nicht zur Aufgabe.\n\nPrüf es mit dem, was gegeben ist:\n\n\\[\\triangle(2, 4) = 2(2) + 4/3 \\neq 8\\]\n\nMit \\(m = 1\\) passt es: \\(2(2) + 4/1 = 8\\). Also ist \\(m\\) gleich \\(1\\), und die Antwort ist \\(19\\).",
     "memory-title": "Nina lernt dich kennen",
     "memory-lead": "Was sie sich merkt, kannst du jederzeit lesen, ändern, pausieren oder löschen.",
     "memory-said-1": "Ich bin in der 12. Klasse, Naturwissenschaften.",

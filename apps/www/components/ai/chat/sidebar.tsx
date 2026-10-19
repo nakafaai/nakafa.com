@@ -38,12 +38,25 @@ import { useSidebar } from "@repo/design-system/lib/sidebar/context";
 import { Array as Arr } from "effect";
 import { useParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { type ComponentProps, useState } from "react";
+import { type ComponentProps, createContext, use, useState } from "react";
 import { useChatList } from "@/components/ai/chat/history.client";
 import { useAi } from "@/components/ai/context";
 import { useViewer } from "@/lib/identity/client";
 
 const CHAT_SEARCH_DEBOUNCE_MS = 500;
+
+/** The chat search the sidebar applies, once the learner stops typing. */
+const ChatSearchContext = createContext<string | null>(null);
+
+/** Reads the chat search that the sidebar applies. */
+function useChatSearch() {
+  const search = use(ChatSearchContext);
+  if (search === null) {
+    throw new Error("useChatSearch must be used within AiChatSidebar");
+  }
+  return search;
+}
+
 export function AiChatSidebar({
   ...props
 }: Omit<ComponentProps<typeof Sidebar>, "label">) {
@@ -98,12 +111,14 @@ export function AiChatSidebar({
       </SidebarHeader>
 
       <SidebarContent>
-        <AiChatSidebarHistory q={debouncedQ} />
+        <ChatSearchContext value={debouncedQ}>
+          <AiChatSidebarHistory />
+        </ChatSearchContext>
       </SidebarContent>
     </Sidebar>
   );
 }
-function AiChatSidebarHistory({ q }: { q?: string }) {
+function AiChatSidebarHistory() {
   const isPending = useViewer((state) => state.isPending);
   const viewer = useViewer((state) => state.viewer);
   if (isPending || viewer === null) {
@@ -112,12 +127,12 @@ function AiChatSidebarHistory({ q }: { q?: string }) {
   return (
     <SidebarGroup>
       <SidebarGroupContent>
-        <AiChatSidebarChats q={q} />
+        <AiChatSidebarChats />
       </SidebarGroupContent>
     </SidebarGroup>
   );
 }
-function AiChatSidebarChats({ q }: { q?: string | undefined }) {
+function AiChatSidebarChats() {
   const t = useTranslations("Ai");
   const drafts = useAi((state) => state.chatDrafts);
   const setOpenMobile = useSidebar((sidebar) => sidebar.setOpenMobile);
@@ -125,7 +140,7 @@ function AiChatSidebarChats({ q }: { q?: string | undefined }) {
     id: Id<"chats">;
   }>();
   const id = params.id;
-  const searchQuery = q?.trim();
+  const searchQuery = useChatSearch().trim();
   const type = "study" as const;
   const queryArgs = searchQuery
     ? {

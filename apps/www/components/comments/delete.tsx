@@ -11,6 +11,7 @@ import { toast } from "@repo/design-system/lib/toast/notify";
 import { Effect } from "effect";
 import { useTranslations } from "next-intl";
 import { removeFromLists } from "@/components/comments/mutation.client";
+import { useDeletion } from "@/components/shared/more";
 import { reportClientException } from "@/lib/analytics/client";
 
 /**
@@ -22,14 +23,11 @@ import { reportClientException } from "@/lib/analytics/client";
 export function CommentDeletion({
   commentId,
   isReply,
-  onOpenChange,
-  open,
 }: {
   commentId: Id<"comments">;
   isReply: boolean;
-  onOpenChange: (open: boolean) => void;
-  open: boolean;
 }) {
+  const { onOpenChange, open } = useDeletion();
   const t = useTranslations("Comments");
   const tCommon = useTranslations("Common");
   const removeComment = useMutation(
