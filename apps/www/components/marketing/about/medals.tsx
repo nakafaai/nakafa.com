@@ -53,7 +53,13 @@ const RIBBON_TONES: readonly RibbonTone[] = [
   "yellow",
 ];
 
-/** How far each medal's swing starts after the one before it, in seconds. */
+/**
+ * How far each medal's swing is ahead of the one before it, in seconds. The delay
+ * is negative on purpose: a positive delay holds the medal at rest, outside its
+ * animation, and then snaps it to the first frame of its swing, which read as a
+ * shake on the first open. A negative delay starts each swing part way along its
+ * path, so every medal moves from the first frame.
+ */
 const SWING_STEP = 0.35;
 
 /** Two strips that cross over the medal, as a ribbon hangs. */
@@ -91,7 +97,7 @@ function Medal({
         aria-hidden="true"
         className={medalSwing({ swinging })}
         style={{
-          animationDelay: `${index * SWING_STEP}s`,
+          animationDelay: `${-index * SWING_STEP}s`,
           animationPlayState: paused ? "paused" : "running",
         }}
       >

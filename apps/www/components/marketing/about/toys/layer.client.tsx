@@ -8,7 +8,7 @@ import { HERO_NINA_ID } from "@/components/marketing/about/hero/id";
 import { LESSON_SECTION_ID } from "@/components/marketing/about/lesson/id";
 import { ToyAnimal } from "@/components/marketing/about/toys/animal";
 import { gap, thing } from "@/components/marketing/about/toys/gap";
-import { TOY_HERD } from "@/components/marketing/about/toys/herd";
+import { SPARE_HERD, TOY_HERD } from "@/components/marketing/about/toys/herd";
 import { NinaToy } from "@/components/marketing/about/toys/nina.client";
 import { within } from "@/components/marketing/about/toys/place";
 import { NINA_SLOT } from "@/components/marketing/about/toys/slot";
@@ -23,6 +23,11 @@ export interface ToyPlacement {
 /** An animal of the home page's toys, at its index in the slice they take. */
 function animal(index: number) {
   return <ToyAnimal herd={TOY_HERD} index={index} />;
+}
+
+/** An animal the page keeps for its sparse parts, at its index in that slice. */
+function spare(index: number) {
+  return <ToyAnimal herd={SPARE_HERD} index={index} />;
 }
 
 /**
@@ -151,6 +156,85 @@ const PLACEMENTS: readonly ToyPlacement[] = [
   ...gap("faq", 0.5, TOY_HERD, [20, 32], ["clip", "hourglass"]),
   ...gap("community", 0.3, TOY_HERD, [21, 33], ["headphones", "coffee"]),
   ...gap("closing", 0.7, TOY_HERD, [22, 34], ["trophy", "check"]),
+  // The sparse parts take the spare animals and more of Nina's things: the
+  // memory desk at its sides from 1024 px and below it, the school band and the
+  // closing question below them. Each stands in the part's padding or beside
+  // its column, where no text or control reaches.
+  {
+    key: "memory-left-animal",
+    picture: spare(0),
+    place: within("memory", {
+      dx: -28,
+      dy: -28,
+      minWidth: 1024,
+      x: 0.08,
+      y: 0.42,
+    }),
+  },
+  {
+    key: "memory-left-note",
+    picture: thing("note"),
+    place: within("memory", {
+      dx: -24,
+      dy: -24,
+      minWidth: 1024,
+      x: 0.14,
+      y: 0.68,
+    }),
+  },
+  {
+    key: "memory-right-animal",
+    picture: spare(1),
+    place: within("memory", {
+      dx: -28,
+      dy: -28,
+      minWidth: 1024,
+      x: 0.92,
+      y: 0.3,
+    }),
+  },
+  {
+    key: "memory-right-pencil",
+    picture: thing("pencil"),
+    place: within("memory", {
+      dx: -24,
+      dy: -24,
+      minWidth: 1024,
+      x: 0.86,
+      y: 0.6,
+    }),
+  },
+  {
+    key: "memory-below-animal",
+    picture: spare(2),
+    place: within("memory", { dx: -28, dy: -68, x: 0.5, y: 1 }),
+  },
+  {
+    key: "school-below-animal",
+    picture: spare(3),
+    place: within("school", { dx: -28, dy: -68, x: 0.3, y: 1 }),
+  },
+  {
+    key: "school-below-book",
+    picture: thing("book"),
+    place: within("school", { dx: -24, dy: -68, x: 0.78, y: 1 }),
+  },
+  {
+    key: "closing-below-animal",
+    picture: spare(4),
+    place: within("closing", { dx: -28, dy: -68, x: 0.18, y: 1 }),
+  },
+  {
+    key: "closing-stopwatch",
+    picture: thing("stopwatch"),
+    place: within("closing", {
+      dx: -24,
+      dy: -24,
+      minWidth: 1280,
+      x: 0.92,
+      y: 0.4,
+    }),
+  },
 ];
 
 /**

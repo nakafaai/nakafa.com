@@ -56,7 +56,7 @@ export function NinaSection() {
         <FeatureLead>{t("nina-lead")}</FeatureLead>
       </FeatureText>
       <FeatureCard>
-        <TurnPlayer ask={ask}>
+        <TurnPlayer>
           <Message align="end">
             <NinaPrompt>
               <TurnAsk text={ask} />

@@ -1,6 +1,10 @@
 "use client";
 
 import { useIntersection, useReducedMotion } from "@mantine/hooks";
+import {
+  TypedText,
+  useTypedLetters,
+} from "@repo/design-system/components/ui/typed";
 import { cva } from "class-variance-authority";
 import { Schema } from "effect";
 import {
@@ -35,19 +39,18 @@ interface TurnState {
   readonly answer: () => void;
   readonly ask: () => void;
   readonly phase: Phase;
-  readonly type: () => void;
-  readonly typed: number;
+  /** Whether the turn has played: its question was typed and answered. */
+  readonly played: boolean;
   readonly wait: () => void;
 }
 
 /** Creates the state of one turn. It lives as long as its row. */
 function createTurnStore() {
   return createStore<TurnState>()((set) => ({
-    answer: () => set({ phase: "answered" }),
-    ask: () => set({ phase: "asking", typed: 0 }),
+    answer: () => set({ phase: "answered", played: true }),
+    ask: () => set({ phase: "asking" }),
     phase: "answered",
-    type: () => set((state) => ({ typed: state.typed + 1 })),
-    typed: 0,
+    played: false,
     wait: () => set({ phase: "waiting" }),
   }));
 }
@@ -70,29 +73,20 @@ function useTurn<Selected>(selector: (state: TurnState) => Selected) {
  * answer comes in. With reduced motion, or when the row is already on screen,
  * the turn shows answered from the start.
  */
-export function TurnPlayer({
-  ask,
-  children,
-}: {
-  /** What the learner asks, typed in when the row comes on screen. */
-  ask: string;
-  children: ReactNode;
-}) {
+export function TurnPlayer({ children }: { children: ReactNode }) {
   const [store] = useState(() => createTurnStore());
   const { entry, ref } = useIntersection({ threshold: 0.6 });
   const shouldReduceMotion = useReducedMotion();
-  const phase = useStore(store, (state) => state.phase);
-  const typed = useStore(store, (state) => state.typed);
   const seen = entry?.isIntersecting ?? false;
   const settle = useEffectEvent((visible: boolean) => {
-    const current = store.getState().phase;
-    if (current === "answered" && typed === 0 && !visible) {
+    const { phase, played } = store.getState();
+    if (phase === "answered" && !played && !visible) {
       if (!shouldReduceMotion) {
         store.getState().wait();
       }
       return;
     }
-    if (current === "waiting" && visible) {
+    if (phase === "waiting" && visible) {
       store.getState().ask();
     }
   });
@@ -102,24 +96,6 @@ export function TurnPlayer({
       settle(seen);
     }
   }, [entry, seen]);
-
-  useEffect(() => {
-    if (phase !== "asking") {
-      return;
-    }
-    const done = typed >= ask.length;
-    const timer = window.setTimeout(
-      () => {
-        if (done) {
-          store.getState().answer();
-          return;
-        }
-        store.getState().type();
-      },
-      done ? ANSWER_AFTER_MS : TYPE_EVERY_MS
-    );
-    return () => window.clearTimeout(timer);
-  }, [ask.length, phase, store, typed]);
 
   return (
     <TurnContext value={store}>
@@ -131,24 +107,35 @@ export function TurnPlayer({
 }
 
 /**
- * The learner's question, typed into the chat's own bubble. The whole question
- * holds the bubble at its final size from the start, so typing moves nothing.
- * `text` is the question that the turn's player types in.
+ * The learner's question, typed letter by letter into the chat's own bubble while
+ * the turn asks, with the caret where the next letter goes. Nina answers a short
+ * pause after the last letter. The whole question holds the bubble at its final
+ * size from the start, so typing moves nothing. `text` is the question.
  */
 export function TurnAsk({ text }: { text: string }) {
   const phase = useTurn((state) => state.phase);
-  const typed = useTurn((state) => state.typed);
-  const hidden = phase !== "answered";
+  const answer = useTurn((state) => state.answer);
+  const typed = useTypedLetters(text.length, {
+    playing: phase === "asking",
+    step: TYPE_EVERY_MS,
+  });
+  const written = typed >= text.length;
+
+  useEffect(() => {
+    if (phase !== "asking" || !written) {
+      return;
+    }
+    const timer = window.setTimeout(answer, ANSWER_AFTER_MS);
+    return () => window.clearTimeout(timer);
+  }, [answer, phase, written]);
 
   return (
-    <span className="relative block">
-      <span className={hidden ? "invisible" : undefined}>{text}</span>
-      {phase === "asking" ? (
-        <span aria-hidden="true" className="absolute inset-0">
-          {text.slice(0, typed)}
-        </span>
-      ) : null}
-    </span>
+    <TypedText
+      caret={phase === "asking" && !written}
+      className="grid"
+      text={text}
+      typed={phase === "answered" ? text.length : typed}
+    />
   );
 }
 
