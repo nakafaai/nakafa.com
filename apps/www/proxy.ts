@@ -39,6 +39,7 @@ import {
   MISSING_LOCALE_VARY_FIELDS,
   readMissingLocale,
 } from "@/lib/routing/missing";
+import { writePricingCurrencyCookie } from "@/lib/routing/pricing";
 import { readPublicUrlMigrationRedirect } from "@/lib/routing/public/migration";
 import { readProfileRefusal } from "@/lib/routing/public/profile";
 import { readRetiredPublicRoute } from "@/lib/routing/public/retired";
@@ -240,6 +241,7 @@ function routeLocalizedRequest(
   response.headers.append("Link", AGENT_DISCOVERY_LINK_HEADER);
   response.headers.set("X-Llms-Txt", LLMS_TEXT_PATH);
   mergeRepresentationVary(response);
+  writePricingCurrencyCookie(request, response);
 
   return response;
 }

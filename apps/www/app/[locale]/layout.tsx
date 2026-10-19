@@ -17,6 +17,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages, getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import { DeferredPreviewRefresh } from "@/components/dev/deferred";
+import { PRICING_CURRENCY_SCRIPT } from "@/components/marketing/about/pricing/currency";
 import { hasPreviewConfig } from "@/lib/content/preview/config";
 import { readPreviewManifestForPrerender } from "@/lib/content/preview/manifest";
 import { readPreviewStaticLocaleParams } from "@/lib/content/preview/route";
@@ -171,6 +172,11 @@ export default async function Layout({ children }: LayoutProps<"/[locale]">) {
       suppressHydrationWarning
     >
       <body className="relative">
+        {/* The currency mark is set before the prices are parsed, so the first paint shows the visitor's price. */}
+        <script
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: the script text is built from constants only.
+          dangerouslySetInnerHTML={{ __html: PRICING_CURRENCY_SCRIPT }}
+        />
         {hasPreviewConfig() ? (
           <Suspense fallback={null}>
             <PreviewUpdates />

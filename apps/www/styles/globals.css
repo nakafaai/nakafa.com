@@ -64,3 +64,19 @@
   inherits: false;
   initial-value: 0rem;
 }
+
+/*
+ * Each Pro price and comparison is in the HTML once for each currency. The root
+ * script marks the root with the visitor's currency before the prices are parsed,
+ * and with no mark USD shows. Only the matching currency stays on the screen.
+ */
+:root:not([data-currency])
+[data-price-currency]:not([data-price-currency="USD"]),
+:root[data-currency="EUR"]
+  [data-price-currency]:not([data-price-currency="EUR"]),
+:root[data-currency="IDR"]
+  [data-price-currency]:not([data-price-currency="IDR"]),
+:root[data-currency="USD"]
+  [data-price-currency]:not([data-price-currency="USD"]) {
+  display: none;
+}

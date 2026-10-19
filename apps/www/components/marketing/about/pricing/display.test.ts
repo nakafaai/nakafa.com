@@ -2,6 +2,7 @@
 
 import { describe, expect, it } from "@effect/vitest";
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
+import { Array as Arr } from "effect";
 import { createTranslator } from "next-intl";
 import {
   currencySymbol,
@@ -9,6 +10,7 @@ import {
   getProMonthlyPricing,
   getProPricingDisplay,
   pricingCountryHeaderName,
+  proMonthlyPricings,
 } from "@/components/marketing/about/pricing/display";
 
 describe("marketing/about/pricing-display", () => {
@@ -20,6 +22,17 @@ describe("marketing/about/pricing-display", () => {
     expect(currencySymbol(getProMonthlyPricing("DE").formatter)).toBe("€");
     expect(currencySymbol(getProMonthlyPricing("ID").formatter)).toBe("Rp");
     expect(currencySymbol(getProMonthlyPricing(null).formatter)).toBe("$");
+  });
+
+  it("lists every currency that the country mapping can select", () => {
+    const countries = ["ID", "DE", "AX", "PL", null];
+
+    for (const country of countries) {
+      expect(proMonthlyPricings).toContain(getProMonthlyPricing(country));
+    }
+    expect(
+      Arr.map(proMonthlyPricings, (pricing) => pricing.price.currency)
+    ).toEqual(["IDR", "EUR", "USD"]);
   });
 
   it("gives each English drink the form that agrees with its count", async () => {
@@ -52,7 +65,7 @@ describe("marketing/about/pricing-display", () => {
   });
 
   it("formats Indonesian pricing from the country code", () => {
-    const price = getProPricingDisplay("ID");
+    const price = getProPricingDisplay(getProMonthlyPricing("ID"));
 
     expect(price.pro).toMatchObject({
       locales: "id-ID",
@@ -63,15 +76,15 @@ describe("marketing/about/pricing-display", () => {
   });
 
   it("normalizes lowercase country codes", () => {
-    const price = getProPricingDisplay("id");
+    const price = getProPricingDisplay(getProMonthlyPricing("id"));
 
     expect(price.pro.text.replace(/\s+/g, " ")).toBe("Rp 69.000");
   });
 
   it("formats euro pricing for Polar EUR countries and territories", () => {
-    const countryPrice = getProPricingDisplay("DE");
-    const lowercasePrice = getProPricingDisplay("de");
-    const territoryPrice = getProPricingDisplay("AX");
+    const countryPrice = getProPricingDisplay(getProMonthlyPricing("DE"));
+    const lowercasePrice = getProPricingDisplay(getProMonthlyPricing("de"));
+    const territoryPrice = getProPricingDisplay(getProMonthlyPricing("AX"));
 
     expect(countryPrice.pro).toMatchObject({
       locales: "de-DE",
@@ -84,8 +97,8 @@ describe("marketing/about/pricing-display", () => {
   });
 
   it("falls back to USD pricing when Polar has no matching price", () => {
-    const countryPrice = getProPricingDisplay("PL");
-    const fallbackPrice = getProPricingDisplay(null);
+    const countryPrice = getProPricingDisplay(getProMonthlyPricing("PL"));
+    const fallbackPrice = getProPricingDisplay(getProMonthlyPricing(null));
 
     expect(countryPrice.pro).toMatchObject({
       locales: "en-US",

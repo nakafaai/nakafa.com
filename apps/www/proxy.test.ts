@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Array as Arr, Effect, Layer } from "effect";
 import { unstable_doesMiddlewareMatch } from "next/experimental/testing/server.js";
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import type { hasLlmsMarkdownSource } from "@/lib/llms/content/markdown";
 import { config, proxy } from "@/proxy";
 import { activateTestRelease } from "@/test/active";
@@ -67,11 +67,11 @@ function expectMigrationAsked(source: string, hasAttemptCapability = false) {
   });
 }
 const mockLocaleRouting = vi.hoisted(() => ({
-  activeMiddleware: vi.fn(
-    () => new Response(null, { headers: { "x-locale-proxy": "1" } })
+  activeMiddleware: vi.fn(() =>
+    NextResponse.next({ headers: { "x-locale-proxy": "1" } })
   ),
-  previewMiddleware: vi.fn(
-    () => new Response(null, { headers: { "x-locale-proxy": "preview" } })
+  previewMiddleware: vi.fn(() =>
+    NextResponse.next({ headers: { "x-locale-proxy": "preview" } })
   ),
 }));
 const runtimeMocks = vi.hoisted(() => ({
@@ -266,11 +266,7 @@ describe("proxy", () => {
     "answers an unsupported system resource %s in the locale that the routing negotiates",
     async (path) => {
       mockLocaleRouting.activeMiddleware.mockReturnValueOnce(
-        new Response(null, {
-          headers: {
-            "x-middleware-rewrite": `http://localhost:3000/de${path}`,
-          },
-        })
+        NextResponse.rewrite(new URL(`http://localhost:3000/de${path}`))
       );
       const response = await requestProxy(path);
       expectNotFoundPage(response, "de", NEGOTIATED_VARY);
@@ -290,6 +286,15 @@ describe("proxy", () => {
       expect(response.headers.get("vary")).toBe("Accept, Accept-Encoding, RSC");
     }
   );
+  it("sets the visitor's price currency cookie on a localized page", async () => {
+    const response = await requestProxy("/en/search", {
+      headers: { "x-vercel-ip-country": "ID" },
+    });
+
+    expect(response.headers.get("set-cookie")).toContain(
+      "pricing_currency=IDR"
+    );
+  });
   it("uses full contract locale routing only in the configured local child", async () => {
     previewMocks.configured.mockReturnValue(true);
     previewMocks.pathname.mockReturnValueOnce(Effect.succeed(true));

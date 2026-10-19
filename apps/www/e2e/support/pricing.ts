@@ -37,7 +37,11 @@ function countOccurrences(value: string, pattern: string) {
   return value.split(pattern).length - 1;
 }
 
-/** Proves the streamed HTML keeps both plans around price-only fallbacks. */
+/**
+ * Proves the static HTML carries every currency of both plans and of the
+ * comparisons, so no price waits on a request. Each currency is marked once per
+ * plan slot and once in the comparisons.
+ */
 export const expectStablePricingAppShell = Effect.fn(
   "NakafaE2E.expectStablePricingAppShell"
 )(function* (page: Page) {
@@ -52,13 +56,19 @@ export const expectStablePricingAppShell = Effect.fn(
     expect(response.ok()).toBe(true);
     expect(countOccurrences(html, "data-pricing-plan=")).toBe(2);
     expect(countOccurrences(html, "data-pricing-price-slot=")).toBe(2);
-    expect(countOccurrences(html, 'data-pricing-price-fallback="true"')).toBe(
-      2
-    );
+    for (const currency of ["IDR", "EUR", "USD"]) {
+      expect(countOccurrences(html, `data-price-currency="${currency}"`)).toBe(
+        3
+      );
+    }
   });
 });
 
-/** Installs an observer before a cold document load begins parsing. */
+/**
+ * Records the plan geometry on the first paint of the document and after the
+ * page has loaded, and sums the layout shifts between the two. The currency
+ * mark is set before the prices are parsed, so the two geometries must agree.
+ */
 const installPricingTransitionObserver = Effect.fn(
   "NakafaE2E.installPricingTransitionObserver"
 )(function* (page: Page) {
@@ -109,80 +119,29 @@ const installPricingTransitionObserver = Effect.fn(
         addLayoutShifts(list.getEntries())
       );
       layoutShiftObserver.observe({ buffered: true, type: "layout-shift" });
-      let finishing = false;
 
-      const finish = () => {
-        if (finishing) {
-          return;
-        }
-        finishing = true;
-
-        requestAnimationFrame(() =>
+      document.addEventListener(
+        "DOMContentLoaded",
+        () => {
           requestAnimationFrame(() => {
-            const fallbackCount = document.querySelectorAll(
-              "[data-pricing-price-fallback]"
-            ).length;
-            if (fallbackCount > 0) {
-              finishing = false;
-              return;
-            }
-
-            addLayoutShifts(layoutShiftObserver.takeRecords());
-            layoutShiftObserver.disconnect();
-            mutationObserver.disconnect();
-            observation.after = readGeometry();
-          })
-        );
-      };
-
-      const recordFallbackBaseline = () => {
-        if (observation.before) {
-          return;
-        }
-
-        const fallbacks = [
-          ...document.querySelectorAll("[data-pricing-price-fallback]"),
-        ];
-        if (fallbacks.length !== 2) {
-          return;
-        }
-        const fallbackRects = fallbacks.map(readRect);
-        if (
-          fallbackRects.some((rect) => rect.height === 0 || rect.width === 0)
-        ) {
-          return;
-        }
-
-        const geometry = readGeometry();
-        const renderedPlans = Object.values(geometry.plans);
-
-        if (
-          renderedPlans.length !== 2 ||
-          renderedPlans.some((rect) => rect.height === 0 || rect.width === 0)
-        ) {
-          return;
-        }
-
-        observation.before = geometry;
-      };
-
-      const mutationObserver = new MutationObserver(() => {
-        const fallbackCount = document.querySelectorAll(
-          "[data-pricing-price-fallback]"
-        ).length;
-        const planCount = document.querySelectorAll(
-          "[data-pricing-plan]"
-        ).length;
-
-        if (planCount === 2 && fallbackCount === 2) {
-          recordFallbackBaseline();
-        }
-        if (planCount === 2 && fallbackCount === 0) {
-          finish();
-        }
-      });
-
-      mutationObserver.observe(document, { childList: true, subtree: true });
+            observation.before = readGeometry();
+          });
+        },
+        { once: true }
+      );
+      window.addEventListener(
+        "load",
+        () => {
+          requestAnimationFrame(() =>
+            requestAnimationFrame(() => {
+              addLayoutShifts(layoutShiftObserver.takeRecords());
+              layoutShiftObserver.disconnect();
+              observation.after = readGeometry();
+            })
+          );
+        },
+        { once: true }
+      );
     })
   );
 });
@@ -210,7 +169,7 @@ export const observeStablePricingReload = Effect.fn(
   return observation;
 });
 
-/** Asserts that localized price resolution preserved all plan geometry. */
+/** Asserts that the first paint and the settled page place every plan in the same box. */
 export function expectStablePricingTransition(
   observation: PricingTransitionObservation | undefined
 ) {
@@ -219,12 +178,9 @@ export function expectStablePricingTransition(
     return;
   }
 
+  expect(observation.before).not.toBeNull();
   expect(observation.after).not.toBeNull();
   expect(observation.layoutShift).toBe(0);
-
-  // A fast streamed response can replace both fallbacks before either receives
-  // a painted layout box. The HTML-shell assertion still proves the fallbacks
-  // exist, while the layout-shift observer covers the rendered transition.
   if (!(observation.after && observation.before)) {
     return;
   }

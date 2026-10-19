@@ -1,15 +1,13 @@
 import { Nina } from "@repo/design-system/components/ui/nina";
 import { Thing } from "@repo/design-system/components/ui/thing";
 import { Array as Arr } from "effect";
-import { headers } from "next/headers";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
-import { Suspense, use } from "react";
 import {
   currencySymbol,
   drinkKey,
-  getProMonthlyPricing,
-  pricingCountryHeaderName,
+  type ProMonthlyPricing,
+  proMonthlyPricings,
 } from "@/components/marketing/about/pricing/display";
 import { pricingSums } from "@/components/marketing/about/pricing/sums";
 
@@ -36,12 +34,12 @@ function Comparison({
   );
 }
 
-/** The coin of a price: its currency symbol in a round yellow badge as tall as the other pictures. */
 /** One name for each cup the comparison draws, in order: its place in the row. */
 function cupsOf(count: number) {
   return Arr.makeBy(count, (place) => `cup-${place + 1}`);
 }
 
+/** The coin of a price: its currency symbol in a round yellow badge as tall as the other pictures. */
 function PriceCoin({ symbol }: { symbol: string }) {
   return (
     <span
@@ -54,26 +52,19 @@ function PriceCoin({ symbol }: { symbol: string }) {
 }
 
 /**
- * The comparisons under the price of the visitor's region. Each sum comes from
- * that price and from the credits of the plans, and each sentence has an
- * estimating word of its own.
+ * The comparisons under one currency's price. Each sum comes from that price and
+ * from the credits of the plans, and each sentence has an estimating word of its own.
  */
-function ResolvedComparison() {
+function CurrencyComparison({ pricing }: { pricing: ProMonthlyPricing }) {
   const t = useTranslations("PricingPage");
-  const requestHeaders = use(headers());
-  const { formatter, price } = getProMonthlyPricing(
-    requestHeaders.get(pricingCountryHeaderName)
-  );
+  const { formatter, price } = pricing;
   const sums = pricingSums(price);
   const perDayNote =
     price.currency === "IDR" ? t("per-day-note-idr") : t("per-day-note-other");
 
   return (
-    <>
-      <h2
-        className="text-balance text-center text-3xl tracking-tight sm:text-4xl"
-        id="comparison-heading"
-      >
+    <div className="grid gap-12" data-price-currency={price.currency}>
+      <h2 className="text-balance text-center text-3xl tracking-tight sm:text-4xl">
         {t("comparison-title", { price: formatter.format(price.amount) })}
       </h2>
       <div className="mx-auto grid w-full max-w-5xl gap-10 md:grid-cols-3">
@@ -106,13 +97,14 @@ function ResolvedComparison() {
           title={t("answers-title", { answers: sums.answersPerMonth })}
         />
       </div>
-    </>
+    </div>
   );
 }
 
 /**
  * The comparison section of the pricing page. Its sums depend on the visitor's
- * region, so it streams in, and nothing is shown until its price is known.
+ * currency, so every currency's comparison is in the HTML, and the page shows
+ * the visitor's one from the first paint.
  */
 export function PricingComparison() {
   return (
@@ -121,9 +113,9 @@ export function PricingComparison() {
       id="comparison"
     >
       <div className="mx-auto grid w-full max-w-7xl gap-12">
-        <Suspense fallback={null}>
-          <ResolvedComparison />
-        </Suspense>
+        {Arr.map(proMonthlyPricings, (pricing) => (
+          <CurrencyComparison key={pricing.price.currency} pricing={pricing} />
+        ))}
       </div>
     </section>
   );

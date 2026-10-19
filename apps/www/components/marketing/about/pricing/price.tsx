@@ -1,10 +1,9 @@
-import { Skeleton } from "@repo/design-system/components/ui/skeleton";
-import { headers } from "next/headers";
+import { Array as Arr } from "effect";
 import type { ComponentType } from "react";
-import { Suspense, use } from "react";
 import {
   getProPricingDisplay,
-  pricingCountryHeaderName,
+  type ProMonthlyPricing,
+  proMonthlyPricings,
 } from "@/components/marketing/about/pricing/display";
 
 type PricingDisplay = ReturnType<typeof getProPricingDisplay>;
@@ -20,50 +19,50 @@ interface PricingPriceProps {
   plan: PricingPlan;
 }
 
-/** Resolves only the request-localized amount inside its price slot. */
-function ResolvedPrice({ period, Price, plan }: PricingPriceProps) {
-  const requestHeaders = use(headers());
-  const pricingDisplay = getProPricingDisplay(
-    requestHeaders.get(pricingCountryHeaderName)
-  );
+interface CurrencyPriceProps extends PricingPriceProps {
+  pricing: ProMonthlyPricing;
+}
 
+/** One plan's price in one currency, marked with that currency for the page's script. */
+function CurrencyPrice({ period, Price, plan, pricing }: CurrencyPriceProps) {
   return (
-    <span className="flex h-10 items-baseline gap-2 whitespace-nowrap">
-      <Price price={pricingDisplay[plan]} />
+    <span
+      className="flex h-10 items-baseline gap-2 whitespace-nowrap"
+      data-price-currency={pricing.price.currency}
+    >
+      <Price price={getProPricingDisplay(pricing)[plan]} />
       {period ? <span className="text-muted-foreground">{period}</span> : null}
     </span>
   );
 }
 
-/** Renders a request-localized price without the landing animation. */
+/** Renders a price without the landing animation. */
 export function StaticPrice({ price }: PriceProps) {
   return (
     <span className="font-semibold text-4xl tracking-tight">{price.text}</span>
   );
 }
 
-function PriceFallback() {
-  return (
-    <div className="flex h-10 items-center">
-      <Skeleton
-        aria-hidden="true"
-        className="h-10 w-28"
-        data-pricing-price-fallback
-      />
-    </div>
-  );
-}
-
-/** Keeps plan geometry stable while the request-localized amount streams. */
+/**
+ * Renders the plan's price in every currency, and the page shows the visitor's
+ * one from the first paint. The slot takes the width of the shown price, so
+ * nothing moves once the page is painted.
+ */
 export function PricingPrice({ period, Price, plan }: PricingPriceProps) {
   return (
     <div
       className="flex h-10 w-fit min-w-28 items-baseline"
       data-pricing-price-slot={plan}
     >
-      <Suspense fallback={<PriceFallback />}>
-        <ResolvedPrice Price={Price} period={period} plan={plan} />
-      </Suspense>
+      {Arr.map(proMonthlyPricings, (pricing) => (
+        <CurrencyPrice
+          key={pricing.price.currency}
+          Price={Price}
+          period={period}
+          plan={plan}
+          pricing={pricing}
+        />
+      ))}
     </div>
   );
 }

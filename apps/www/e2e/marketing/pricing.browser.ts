@@ -16,6 +16,10 @@ const EURO_PER_DAY_PATTERN = /0,30\s€ am Tag/;
 const RUPIAH_TITLE_PATTERN = /Rp\s69\.000 itu segini/;
 const RUPIAH_PER_DAY_PATTERN = /Rp\s2\.300 sehari/;
 
+/** The comparison of the visitor's currency: the only one that is on the screen. */
+const visibleComparison = (page: Page) =>
+  page.locator("#comparison [data-price-currency]:visible");
+
 const verifyPricingPage = Effect.fn("NakafaE2E.verifyPricingPage")(function* (
   page: Page
 ) {
@@ -44,13 +48,13 @@ const verifyPricingPage = Effect.fn("NakafaE2E.verifyPricingPage")(function* (
     ).toBeVisible()
   );
   yield* Effect.promise(() =>
-    expect(page.locator("#comparison")).toContainText("About 2 lattes")
+    expect(visibleComparison(page)).toContainText("About 2 lattes")
   );
   yield* Effect.promise(() =>
-    expect(page.locator("#comparison")).toContainText("$0.30 a day")
+    expect(visibleComparison(page)).toContainText("$0.30 a day")
   );
   yield* Effect.promise(() =>
-    expect(page.locator("#comparison")).toContainText("600 answers from Nina")
+    expect(visibleComparison(page)).toContainText("600 answers from Nina")
   );
   yield* Effect.promise(() =>
     expect(page.getByRole("button", { name: "Get Pro" })).toBeEnabled()
@@ -66,9 +70,6 @@ const verifyPricingPage = Effect.fn("NakafaE2E.verifyPricingPage")(function* (
   );
   yield* Effect.promise(() =>
     expect(page.locator("[data-pricing-price-slot]")).toHaveCount(2)
-  );
-  yield* Effect.promise(() =>
-    expect(page.locator("[data-pricing-price-fallback]")).toHaveCount(0)
   );
 
   const pricingQuestions = page.locator('#faq [data-slot="accordion-trigger"]');
@@ -149,15 +150,12 @@ const verifyPricingNavigation = Effect.fn("NakafaE2E.verifyPricingNavigation")(
       expect(page.locator("[data-pricing-plan]:visible")).toHaveCount(2)
     );
     yield* Effect.promise(() =>
-      expect(page.locator("[data-pricing-price-fallback]")).toHaveCount(0)
-    );
-    yield* Effect.promise(() =>
       expect(
         page.getByRole("heading", { level: 2, name: "$8.99 itu segini" })
       ).toBeVisible()
     );
     yield* Effect.promise(() =>
-      expect(page.locator("#comparison")).toContainText("Kira-kira 2 latte")
+      expect(visibleComparison(page)).toContainText("Kira-kira 2 latte")
     );
 
     const observation = yield* observeStablePricingReload(
@@ -168,13 +166,18 @@ const verifyPricingNavigation = Effect.fn("NakafaE2E.verifyPricingNavigation")(
   }
 );
 
-/** Opens a pricing page the way the edge reports a visitor from one country. */
+/**
+ * Opens a pricing page the way the edge reports a visitor from one country. The
+ * first response sets the currency cookie, and the page shows that currency on
+ * the next load, so the page is loaded again once the cookie is set.
+ */
 const loadPricingPageFrom = Effect.fn("NakafaE2E.loadPricingPageFrom")(
   function* (page: Page, href: string, country: string) {
     yield* Effect.promise(() =>
       page.setExtraHTTPHeaders({ "x-vercel-ip-country": country })
     );
     yield* loadMarketingPage(page, href);
+    yield* Effect.promise(() => page.reload({ waitUntil: "domcontentloaded" }));
   }
 );
 
@@ -189,13 +192,13 @@ const verifyGermanPricingComparisons = Effect.fn(
     ).toBeVisible()
   );
   yield* Effect.promise(() =>
-    expect(page.locator("#comparison")).toContainText("Etwa 2 Lattes")
+    expect(visibleComparison(page)).toContainText("Etwa 2 Lattes")
   );
   yield* Effect.promise(() =>
-    expect(page.locator("#comparison")).toContainText("$0.30 am Tag")
+    expect(visibleComparison(page)).toContainText("$0.30 am Tag")
   );
   yield* Effect.promise(() =>
-    expect(page.locator("#comparison")).toContainText("600 Antworten von Nina")
+    expect(visibleComparison(page)).toContainText("600 Antworten von Nina")
   );
 });
 
@@ -210,12 +213,10 @@ const verifyEuroPricingComparisons = Effect.fn(
     ).toBeVisible()
   );
   yield* Effect.promise(() =>
-    expect(page.locator("#comparison")).toContainText(
-      "Etwa 3 Kaffee zum Mitnehmen"
-    )
+    expect(visibleComparison(page)).toContainText("Etwa 3 Kaffee zum Mitnehmen")
   );
   yield* Effect.promise(() =>
-    expect(page.locator("#comparison")).toContainText(EURO_PER_DAY_PATTERN)
+    expect(visibleComparison(page)).toContainText(EURO_PER_DAY_PATTERN)
   );
 });
 
@@ -230,15 +231,13 @@ const verifyRupiahPricingComparisons = Effect.fn(
     ).toBeVisible()
   );
   yield* Effect.promise(() =>
-    expect(page.locator("#comparison")).toContainText(
-      "Kira-kira 3 es kopi susu"
-    )
+    expect(visibleComparison(page)).toContainText("Kira-kira 3 es kopi susu")
   );
   yield* Effect.promise(() =>
-    expect(page.locator("#comparison")).toContainText(RUPIAH_PER_DAY_PATTERN)
+    expect(visibleComparison(page)).toContainText(RUPIAH_PER_DAY_PATTERN)
   );
   yield* Effect.promise(() =>
-    expect(page.locator("#comparison")).toContainText("600 jawaban Nina")
+    expect(visibleComparison(page)).toContainText("600 jawaban Nina")
   );
 });
 
@@ -253,9 +252,7 @@ const verifyPricingToysWaitForTheirPart = Effect.fn(
   yield* loadMarketingPage(page, "/en/pricing");
   const toys = page.locator('[class*="group/toy"]');
   yield* Effect.promise(() => expect(toys).toHaveCount(0));
-  yield* Effect.promise(() =>
-    page.locator("#comparison").scrollIntoViewIfNeeded()
-  );
+  yield* Effect.promise(() => visibleComparison(page).scrollIntoViewIfNeeded());
   const scrolled = yield* Effect.promise(() =>
     page.evaluate(() => window.scrollY)
   );
@@ -263,9 +260,7 @@ const verifyPricingToysWaitForTheirPart = Effect.fn(
   yield* Effect.promise(() =>
     expect.poll(() => page.evaluate(() => window.scrollY)).toBe(scrolled)
   );
-  yield* Effect.promise(() =>
-    expect(page.locator("#comparison")).toBeInViewport()
-  );
+  yield* Effect.promise(() => expect(visibleComparison(page)).toBeInViewport());
 });
 
 const verifyPricingReducedMotion = Effect.fn(
@@ -273,9 +268,7 @@ const verifyPricingReducedMotion = Effect.fn(
 )(function* (page: Page) {
   yield* loadMarketingPage(page, "/en/pricing");
   // The toys load when the comparison comes on screen, so the page reaches it first.
-  yield* Effect.promise(() =>
-    page.locator("#comparison").scrollIntoViewIfNeeded()
-  );
+  yield* Effect.promise(() => visibleComparison(page).scrollIntoViewIfNeeded());
   // A thing moves only through a motion that is on for people who allow it.
   const thing = page.locator('[class*="animate-thing-"]').first();
   yield* Effect.promise(() =>

@@ -3,6 +3,12 @@ import { Array as Arr, HashSet } from "effect";
 
 export const pricingCountryHeaderName = "x-vercel-ip-country";
 
+/** The first-party cookie that carries the visitor's price currency to the page. */
+export const pricingCurrencyCookieName = "pricing_currency";
+
+/** The cookie follows the visitor's country for one day, then the proxy checks it again. */
+export const pricingCurrencyMaxAge = 60 * 60 * 24;
+
 /**
  * Territory codes that Polar currently maps to EUR through Babel's territory
  * currency data. Keeping the same mapping prevents the marketing price from
@@ -91,6 +97,15 @@ const usdPricing = {
   price: usdPrice,
 };
 
+/** One Pro monthly price, in the form the price text and the comparisons read. */
+export type ProMonthlyPricing = (typeof proMonthlyPricings)[number];
+
+/**
+ * Every Pro monthly price the marketing pages render. Each page renders all of
+ * them, and the visitor's currency decides which one is shown.
+ */
+export const proMonthlyPricings = [idrPricing, eurPricing, usdPricing] as const;
+
 /** Selects the Polar catalog price for the request country. */
 export function getProMonthlyPricing(countryCode: string | null) {
   const normalizedCountryCode = countryCode?.toUpperCase();
@@ -138,15 +153,14 @@ export function currencySymbol(formatter: Intl.NumberFormat) {
 }
 
 /**
- * Prepares animated and static price display from Vercel country geolocation.
+ * Prepares the animated and static price text of each plan in one currency.
  *
  * References:
- * - https://examples.vercel.com/kb/guide/geo-ip-headers-geolocation-vercel-functions
  * - https://polar.sh/docs/features/products#multiple-payment-currencies
  * - https://number-flow.barvian.me/
  */
-export function getProPricingDisplay(countryCode: string | null) {
-  const { format, formatter, price } = getProMonthlyPricing(countryCode);
+export function getProPricingDisplay(pricing: ProMonthlyPricing) {
+  const { format, formatter, price } = pricing;
 
   return {
     free: {
