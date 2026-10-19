@@ -68,17 +68,25 @@ describe("homeAccess", () => {
 });
 
 describe("showsStudentHome", () => {
+  const noGrant = { canManage: false, role: null } as const;
+
   it("shows the student's home to a student", () => {
     const smp = unit("smp", ["exam.edit", "exam.rooms"]);
 
     expect(
-      showsStudentHome("student", homeAccess({ can: [], units: [smp] }))
+      showsStudentHome(
+        { canManage: false, role: "student" },
+        homeAccess({ can: [], units: [smp] })
+      )
     ).toBe(true);
   });
 
   it("shows the student's home to a member with no grant, who may neither create nor watch", () => {
     expect(
-      showsStudentHome(null, homeAccess({ can: [], units: [unit("smp", [])] }))
+      showsStudentHome(
+        noGrant,
+        homeAccess({ can: [], units: [unit("smp", [])] })
+      )
     ).toBe(true);
   });
 
@@ -86,23 +94,44 @@ describe("showsStudentHome", () => {
     const smp = unit("smp", ["exam.edit", "exam.rooms"]);
 
     expect(
-      showsStudentHome("teacher", homeAccess({ can: [], units: [smp] }))
+      showsStudentHome(
+        { canManage: false, role: "teacher" },
+        homeAccess({ can: [], units: [smp] })
+      )
     ).toBe(false);
   });
 
-  it("shows the staff home to a principal who may watch rooms but not create", () => {
+  it("shows the staff home to a member with no grant who may watch rooms", () => {
     const sma = unit("sma", ["exam.rooms"]);
 
-    expect(showsStudentHome(null, homeAccess({ can: [], units: [sma] }))).toBe(
-      false
-    );
+    expect(
+      showsStudentHome(noGrant, homeAccess({ can: [], units: [sma] }))
+    ).toBe(false);
   });
 
-  it("shows the staff home to a viewer who may create but not watch", () => {
+  it("shows the staff home to a member with no grant who may create but not watch", () => {
     const smp = unit("smp", ["exam.edit"]);
 
-    expect(showsStudentHome(null, homeAccess({ can: [], units: [smp] }))).toBe(
-      false
-    );
+    expect(
+      showsStudentHome(noGrant, homeAccess({ can: [], units: [smp] }))
+    ).toBe(false);
+  });
+
+  it("shows the staff home, not the student's sentence, to a counselor with no exam action", () => {
+    expect(
+      showsStudentHome(
+        { canManage: false, role: "counselor" },
+        homeAccess({ can: [], units: [unit("smp", [])] })
+      )
+    ).toBe(false);
+  });
+
+  it("keeps a manager on the staff home with no exam action, so its setup stays", () => {
+    expect(
+      showsStudentHome(
+        { canManage: true, role: "admin" },
+        homeAccess({ can: [], units: [unit("smp", [])] })
+      )
+    ).toBe(false);
   });
 });

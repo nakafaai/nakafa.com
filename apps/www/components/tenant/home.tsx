@@ -33,9 +33,11 @@ import {
  * The home of a school: one header with the page's one end-goal action for the viewer, a title row with Nina, and
  * the tiles of what the viewer must act on now. A student sees the student's sittings and results. A viewer who
  * watches rooms sees the rooms that run and open soon, the results to view, and the setup while it is open, and a
- * viewer who may create exams also sees the exams they started. A member with no grant to create or watch sees the
- * student's view with its quiet state, because the staff tiles have nothing for them. The school's context carries
- * the viewer's access and the greeting, which the layout computed on the server, so Create exam and the title are
+ * viewer who may create exams also sees the exams they started. A member with no grant, who may neither create nor
+ * watch, sees the student's view with its quiet state, because the staff tiles have nothing for them. Staff with a
+ * role see the staff home, which holds only the tiles their actions allow. The school's context carries the viewer's
+ * access and the greeting,
+ * which the layout computed on the server, so Create exam and the title are
  * in the first HTML. A student's Enter sitting reads the student's sittings on the client, because a sitting opens
  * or closes while the page is open, so the action appears once that read answers. Each home reads its rows once,
  * and the tiles it shows take their rows from that read.
@@ -43,7 +45,7 @@ import {
 export function TenantHome() {
   const tenant = useTenant();
   const [drafts] = useState(createExamDrafts);
-  const studentView = showsStudentHome(tenant.role, tenant.home);
+  const studentView = showsStudentHome(tenant, tenant.home);
 
   return (
     <HomePage action={<HomeAction drafts={drafts} studentView={studentView} />}>

@@ -35,10 +35,16 @@ export type HomeAccess = ReturnType<typeof homeAccess>;
 
 /**
  * Whether the home shows the student's view, with the student's sittings and results. That is a
- * student, and also a viewer who may neither create exams nor watch rooms: a member who holds no
- * grant has no staff tile to show, so the student's quiet state tells them that nothing is open yet.
+ * student, and also a member with no grant, which the layout reads as no role, who may neither create exams nor watch
+ * rooms and does not manage the school. Such a member has no staff tile to show, so the student's quiet state tells
+ * them that nothing is open yet. Staff with a role keep the staff home, which holds only the tiles their actions allow,
+ * since the student's sentence is not theirs.
  */
 export const showsStudentHome = (
-  role: BuiltinRole | null,
+  viewer: { readonly canManage: boolean; readonly role: BuiltinRole | null },
   access: Pick<HomeAccess, "canCreate" | "canWatch">
-) => role === "student" || !(access.canCreate || access.canWatch);
+) =>
+  viewer.role === "student" ||
+  (viewer.role === null &&
+    !viewer.canManage &&
+    !(access.canCreate || access.canWatch));
