@@ -5,29 +5,33 @@ import { MEMORY_PATH } from "@/e2e/support/memory";
 import { measureRouteJavascript } from "@/e2e/support/resources";
 import { appRoutes } from "@/e2e/support/route";
 
-// Remeasured at 1,048,575 encoded / 3,092,340 decoded bytes.
-// Limits keep the ~6% margin.
+// Measured before the Start migration at 1,048,575 encoded / 3,092,340 decoded
+// bytes. The Start build is not measured yet. Limits keep the ~6% margin.
 const HOMEPAGE_MAX_ENCODED_BYTES = 1_112_000;
 const HOMEPAGE_MAX_DECODED_BYTES = 3_278_000;
 
 // The pricing page loads no toys before its comparison comes on screen, so its
-// no-scroll graph is its own: remeasured at 929,111 encoded / 2,755,522 decoded
-// bytes. Limits keep the ~6% margin.
+// no-scroll graph is its own: measured before the Start migration at 929,111
+// encoded / 2,755,522 decoded bytes. The Start build is not measured yet.
+// Limits keep the ~6% margin.
 const PRICING_MAX_ENCODED_BYTES = 985_000;
 const PRICING_MAX_DECODED_BYTES = 2_921_000;
 
-// The always-on baseline loads the SDK on every visit: remeasured at
-// 1,081,541 encoded / 3,189,166 decoded bytes. Limits keep the ~6% margin.
+// The always-on baseline loads the SDK on every visit: measured before the
+// Start migration at 1,081,541 encoded / 3,189,166 decoded bytes. The Start
+// build is not measured yet. Limits keep the ~6% margin.
 const QURAN_MAX_ENCODED_BYTES = 1_147_000;
 const QURAN_MAX_DECODED_BYTES = 3_381_000;
 
-// The sign-in page, with the animal pool that a wide screen loads: measured at
-// 515,493 encoded / 1,546,566 decoded bytes. Limits keep the ~6% margin.
+// The sign-in page, with the animal pool that a wide screen loads: measured
+// before the Start migration at 515,493 encoded / 1,546,566 decoded bytes. The
+// Start build is not measured yet. Limits keep the ~6% margin.
 const AUTH_MAX_ENCODED_BYTES = 547_000;
 const AUTH_MAX_DECODED_BYTES = 1_638_000;
 
-// The Memory page, signed in: measured at 954,412 encoded / 2,810,521 decoded
-// bytes. Limits keep the ~6% margin.
+// The Memory page, signed in: measured before the Start migration at 954,412
+// encoded / 2,810,521 decoded bytes. The Start build is not measured yet.
+// Limits keep the ~6% margin.
 const MEMORY_MAX_ENCODED_BYTES = 1_012_000;
 const MEMORY_MAX_DECODED_BYTES = 2_980_000;
 

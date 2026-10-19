@@ -3,9 +3,10 @@ import { Effect } from "effect";
 
 /**
  * The image route answers from the served build and its headers. The Start
- * server reads the logo from disk on each request, so the response proves the
- * logo ships with the function. The Vercel build output's file list is not
- * checked here.
+ * server reads the logo from disk on each request, so the response shows only
+ * that the served process finds the logo. No check here reads the Vercel
+ * function's files, so the response does not prove that the deployed function
+ * ships the logo.
  */
 test("the image routes render and ship the logo they read", async ({
   request,

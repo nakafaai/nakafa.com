@@ -3,7 +3,7 @@ import { BIO_MAX_LENGTH } from "@repo/backend/confect/users/bio";
 import app from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
-import { MAIN_DOMAIN } from "@repo/site/domains";
+import { MAIN_DOMAIN } from "@repo/next-config/domains";
 import { Array as Arr, Effect } from "effect";
 import { animalMarkup, drawnAnimal, sidebarAvatar } from "@/e2e/support/avatar";
 import { openChatPage, runOnPage } from "@/e2e/support/chat";

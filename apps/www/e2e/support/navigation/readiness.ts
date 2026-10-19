@@ -61,9 +61,10 @@ const loadSourceRoute = Effect.fn("NakafaE2E.loadNavigationSource")(function* (
 });
 
 /**
- * Waits until the router has hydrated the page. TanStack's history writes its
- * route key into the state of the current entry when the client router starts,
- * so the key marks a page that a reader can navigate.
+ * Waits until the client router has started on the page. TanStack's history
+ * writes its route key into the state of the current entry when the router is
+ * created, which can happen before hydration finishes, so the key does not
+ * prove hydration. `waitForHydratedLink` checks the Link itself.
  */
 export const waitForCommittedAppRouter = Effect.fn(
   "NakafaE2E.waitForCommittedAppRouter"
@@ -109,6 +110,41 @@ export const waitForCommittedAppRouter = Effect.fn(
       }),
   });
 });
+
+/**
+ * Waits until React has attached its props to the Link. React writes them when
+ * it hydrates an element, and a Link without them has no event handlers yet,
+ * so a press before then is not handled by the router.
+ */
+const waitForHydratedLink = Effect.fn("NakafaE2E.waitForHydratedLink")(
+  function* (
+    link: Locator,
+    sourceHref: string,
+    targetHref: string,
+    timeoutMilliseconds: number
+  ) {
+    yield* Effect.tryPromise({
+      try: () =>
+        expect
+          .poll(
+            () =>
+              link.evaluate((node) =>
+                Object.keys(node).some((key) => key.startsWith("__reactProps$"))
+              ),
+            { timeout: timeoutMilliseconds }
+          )
+          .toBe(true),
+      catch: (error) =>
+        new NavigationReadinessTimeout({
+          errorText: readErrorText(error),
+          href: targetHref,
+          phase: "hydration",
+          sourceHref,
+          timeoutMilliseconds,
+        }),
+    });
+  }
+);
 
 const ensureLinkInViewport = Effect.fn("NakafaE2E.ensureLinkInViewport")(
   function* (
@@ -165,9 +201,9 @@ const ensureLinkInViewport = Effect.fn("NakafaE2E.ensureLinkInViewport")(
 );
 
 /**
- * Loads one source route, waits until its router has hydrated, and returns the
- * target Link in the viewport. The caller shows intent toward the Link and
- * settles the router before it presses.
+ * Loads one source route, waits until its router has started and the target
+ * Link has been hydrated, and returns the Link in the viewport. The caller
+ * shows intent toward the Link and settles the router before it presses.
  */
 export const prepareClientNavigation = Effect.fn(
   "NakafaE2E.prepareClientNavigation"
@@ -186,6 +222,7 @@ export const prepareClientNavigation = Effect.fn(
     timeoutMilliseconds
   );
   const link = yield* findLink();
+  yield* waitForHydratedLink(link, sourceHref, targetHref, timeoutMilliseconds);
   yield* ensureLinkInViewport(
     link,
     sourceHref,
