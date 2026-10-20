@@ -56,7 +56,7 @@ export const Route = createFileRoute("/$locale/_marketing")({
 function MarketingLayout() {
   const { locale } = Route.useParams();
   const { articleNavigation, messages, pageNavigation } = Route.useLoaderData();
-  const shellMessages = localeRoute.useLoaderData();
+  const { messages: shellMessages } = localeRoute.useLoaderData();
   return (
     <IntlProvider locale={locale} messages={{ ...shellMessages, ...messages }}>
       <AppProviders pageNavigation={pageNavigation}>
