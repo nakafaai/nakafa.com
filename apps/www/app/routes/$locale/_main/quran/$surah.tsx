@@ -1,12 +1,5 @@
-import { parseQuranSurahNumber } from "@repo/backend/client/quran/route";
-import { selectQuranMeaning } from "@repo/backend/content/quran/contract";
-import { loadLocaleMessages } from "@repo/internationalization/src/messages";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
-import { toAnchorSlug } from "@repo/utilities/slug";
 import { createFileRoute, notFound } from "@tanstack/react-router";
-import { createServerFn } from "@tanstack/react-start";
-import { Array as Arr, Effect, Option, Schema } from "effect";
-import { createTranslator } from "use-intl";
 import { SheetEntry } from "@/components/ai/sheet/entry";
 import { AiMenuItem } from "@/components/ai/sheet/menu";
 import { OpenContent } from "@/components/shared/content/actions";
@@ -31,145 +24,19 @@ import { QuranVerseList } from "@/components/shared/quran/verses/list";
 import { ReferenceButton } from "@/components/sidebar/actions/reference";
 import { ReportButton } from "@/components/sidebar/actions/report";
 import { ShareButton } from "@/components/sidebar/actions/share";
+import { publicContentHeaders } from "@/lib/content/delivery";
 import {
-  LEARN_SHELL_CACHE_SCOPES,
-  publicContentHeaders,
-  readContentCacheTags,
-} from "@/lib/content/delivery";
-import {
-  getQuranPagination,
-  getQuranSurahName,
-} from "@/lib/content/quran/navigation";
-import {
-  getPublishedQuranCatalog,
-  getPublishedQuranView,
-} from "@/lib/content/quran/publication";
-import { recoverStalePublishedQuranSnapshot } from "@/lib/content/quran/recovery";
-import { getQuranReferences } from "@/lib/content/quran/references";
-import { getLocaleOrThrow } from "@/lib/i18n/params";
-import { getLlmsMarkdownPath } from "@/lib/llms/format";
+  readSurahFn,
+  recoverQuranSnapshotFn,
+} from "@/lib/content/quran/surah.fn";
 import { getAppSocialArtwork } from "@/lib/og/app";
-import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
-import { generateSEOMetadata } from "@/lib/seo/generator";
 import { createSeoHead, toRouterHead } from "@/lib/seo/head";
 import { makeBookNode, readBreadcrumbNodes } from "@/lib/seo/json-ld";
-import { runServerEffect } from "@/lib/server/fn";
-
-const SurahInput = Schema.Struct({
-  locale: Schema.String,
-  surah: Schema.String,
-});
-
-/**
- * Reads one surah with its verses, pagination and sources on the server. A
- * route that does not name a surah of the catalog is a 404.
- */
-const readSurah = createServerFn({ method: "GET" })
-  .validator(Schema.toStandardSchemaV1(SurahInput))
-  .handler(async ({ data }) => {
-    const locale = getLocaleOrThrow(data.locale);
-    const surahNumber = parseQuranSurahNumber(data.surah);
-    if (surahNumber === null) {
-      return { kind: "notFound" as const };
-    }
-    const catalog = await getPublishedQuranCatalog();
-    const surahData = Arr.findFirst(
-      catalog.surahs,
-      ({ number }) => number === surahNumber
-    );
-    if (Option.isNone(surahData)) {
-      return { kind: "notFound" as const };
-    }
-    const [view, messages, seo] = await Promise.all([
-      getPublishedQuranView(locale, surahNumber),
-      loadLocaleMessages(locale),
-      Effect.runPromise(
-        generateSEOMetadata({ surah: surahData.value, type: "quran" }, locale)
-      ),
-    ]);
-    const t = createTranslator({ locale, messages, namespace: "Holy" });
-    const tCommon = createTranslator({ locale, messages, namespace: "Common" });
-    const title = getQuranSurahName(view.surah.name);
-    const meaning = selectQuranMeaning(view.surah.name.meaning, locale);
-    const verseItems = Arr.map(view.verses, (verse) => {
-      const label = t("verse-count", { count: verse.number.inSurah });
-      return { id: toAnchorSlug(label), label, verse };
-    });
-
-    const preBismillah = Option.match(Option.fromNullishOr(view.preBismillah), {
-      onNone: () => ({ kind: "hidden" as const }),
-      onSome: (value) => ({ kind: "shown" as const, value }),
-    });
-
-    return {
-      kind: "found" as const,
-      arabic: view.surah.name.arabic,
-      book: {
-        description: meaning.text,
-        name: title,
-        numberOfVerses: view.surah.numberOfVerses,
-        position: surahNumber,
-      },
-      breadcrumbs: createBreadcrumbItems(locale, [
-        { name: tCommon("home"), path: "" },
-        { name: t("quran"), path: "/quran" },
-        { name: title, path: `/quran/${data.surah}` },
-      ]),
-      cacheTags: readContentCacheTags(
-        [...LEARN_SHELL_CACHE_SCOPES, "quran"],
-        [view.snapshotId]
-      ),
-      copySourceUrl: getLlmsMarkdownPath({
-        locale,
-        publicPath: `quran/${data.surah}`,
-      }),
-      description: seo.description,
-      headings: Arr.map(verseItems, ({ id, label }) => ({
-        children: [],
-        href: `#${id}`,
-        label,
-      })),
-      labels: {
-        home: tCommon("home"),
-        more: tCommon("more"),
-        quran: t("quran"),
-        verse: t("verse"),
-      },
-      interpretationLabel: t("interpretation"),
-      locale,
-      meaning: { appLocale: meaning.appLocale, text: meaning.text },
-      pagination: getQuranPagination({
-        nextSurah: view.nextSurah,
-        prevSurah: view.previousSurah,
-      }),
-      preBismillah,
-      references: getQuranReferences(view.sources, view.tafsirAccess),
-      snapshotId: view.snapshotId,
-      surah: data.surah,
-      surahNumber,
-      tafsirAccess: view.tafsirAccess,
-      title,
-      translationNotesLabel: t("translation-notes"),
-      verseItems,
-    };
-  });
-
-/**
- * Recovers a stale interpretation snapshot. The reader that served it asks once,
- * and the recovery decides, so the answer never names another snapshot.
- */
-const recoverQuranSnapshot = createServerFn({ method: "POST" })
-  .validator(
-    Schema.toStandardSchemaV1(Schema.Struct({ snapshotId: Schema.String }))
-  )
-  .handler(({ data }) =>
-    runServerEffect(recoverStalePublishedQuranSnapshot(data.snapshotId))
-  );
 
 /** One surah: its verses, its interpretation controls and its outline. */
 export const Route = createFileRoute("/$locale/_main/quran/$surah")({
   loader: async ({ params }) => {
-    const surah = await readSurah({
+    const surah = await readSurahFn({
       data: { locale: params.locale, surah: params.surah },
     });
     if (surah.kind === "notFound") {
@@ -222,7 +89,7 @@ function QuranSurahPage() {
   const { labels } = page;
 
   async function recoverSnapshot() {
-    await recoverQuranSnapshot({ data: { snapshotId: page.snapshotId } });
+    await recoverQuranSnapshotFn({ data: { snapshotId: page.snapshotId } });
   }
 
   return (

@@ -2,7 +2,7 @@
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { LOCALE_COOKIE } from "@repo/internationalization/src/locale";
-import { saveSchoolLanguageHandler } from "@/components/tenant/language";
+import { saveSchoolLanguageHandler } from "@/components/tenant/language.server";
 
 const ONE_YEAR_IN_SECONDS = 365 * 24 * 60 * 60;
 

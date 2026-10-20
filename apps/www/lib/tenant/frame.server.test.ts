@@ -10,7 +10,7 @@ import {
 import { Effect, Option, Schema } from "effect";
 import { readSessionMemo } from "@/lib/auth/session.server";
 import { ClientSession } from "@/lib/auth/visitor";
-import { frameHandler } from "@/lib/tenant/frame.fn";
+import { frameHandler } from "@/lib/tenant/frame.server";
 import { readSchoolFrame } from "@/lib/tenant/read";
 
 vi.mock("@tanstack/react-start/server", () => ({

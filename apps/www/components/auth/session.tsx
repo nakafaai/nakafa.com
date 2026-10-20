@@ -2,7 +2,7 @@
 
 import { createContext, type ReactNode, use, useEffect, useState } from "react";
 import { createStore, type StoreApi, useStore } from "zustand";
-import { clientEnv } from "@/env.client";
+import { clientEnv } from "@/env.public";
 import { authClient } from "@/lib/auth/client";
 import {
   type AuthSession,

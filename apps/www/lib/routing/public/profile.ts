@@ -4,7 +4,7 @@ import users from "@repo/backend/confect/_generated/refs/users";
 import { LOCALES } from "@repo/internationalization/src/locale";
 import { Array as Arr, Effect, Option } from "effect";
 import { hasLocale } from "use-intl";
-import { clientEnv } from "@/env.client";
+import { clientEnv } from "@/env.public";
 import { readSessionToken } from "@/lib/auth/token";
 import { httpLayer } from "@/lib/convex/http";
 import { profileHref } from "@/lib/profile/href";

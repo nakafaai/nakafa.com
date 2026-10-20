@@ -19,16 +19,16 @@ import { Pricing } from "@/components/marketing/about/pricing/landing";
 import { Privacy } from "@/components/marketing/about/privacy";
 import { Schools } from "@/components/marketing/about/schools";
 import { CLASS_HERD } from "@/components/marketing/about/toys/herd";
-import { HomeToys } from "@/components/marketing/about/toys/intent.client";
+import { HomeToys } from "@/components/marketing/about/toys/intent";
 import { Tryout } from "@/components/marketing/about/tryout";
-import { PageField } from "@/components/marketing/shared/field.client";
+import { PageField } from "@/components/marketing/shared/field";
 import {
   getSubjectMenuHref,
   subjectMenu,
 } from "@/components/sidebar/data/subject";
 import { readRouteMessages } from "@/lib/i18n/messages.fn";
 import type { MarketingFaqItem } from "@/lib/marketing/faq";
-import { readHomeTryout } from "@/lib/marketing/home.fn";
+import { readHomeCurriculaFn, readHomeTryout } from "@/lib/marketing/home.fn";
 import { getAppSocialArtwork } from "@/lib/og/app";
 import { pricingCurrencyScript } from "@/lib/pricing/currency";
 import { createSeoHead, toRouterHead } from "@/lib/seo/head";
@@ -40,7 +40,8 @@ import { createSeoHead, toRouterHead } from "@/lib/seo/head";
  */
 export const Route = createFileRoute("/$locale/_marketing/")({
   loader: async ({ params }) => {
-    const [featuredTryout, messages] = await Promise.all([
+    const [curricula, featuredTryout, messages] = await Promise.all([
+      readHomeCurriculaFn({ data: { locale: params.locale } }),
       readHomeTryout({ data: { locale: params.locale } }),
       readRouteMessages({
         data: { locale: params.locale, namespaces: ["Metadata"] },
@@ -52,6 +53,7 @@ export const Route = createFileRoute("/$locale/_marketing/")({
       namespace: "Metadata",
     });
     return {
+      curricula,
       description: t("description"),
       featuredTryout,
       title: t("title"),
@@ -86,7 +88,7 @@ export const Route = createFileRoute("/$locale/_marketing/")({
 /** The marketing home: the sections of the landing page, with its structured data. */
 function HomePage() {
   const { locale } = Route.useParams();
-  const { featuredTryout } = Route.useLoaderData();
+  const { curricula, featuredTryout } = Route.useLoaderData();
   const tMetadata = useTranslations("Metadata");
   const tSubject = useTranslations("Subject");
   const tHome = useTranslations("Landing");
@@ -154,7 +156,7 @@ function HomePage() {
         <NinaSection />
         <Memory />
         <Privacy />
-        <Curricula locale={locale} />
+        <Curricula curricula={curricula} />
         <Letter />
         <Medals />
         <Pricing />

@@ -1,33 +1,15 @@
 import "@tanstack/react-start/server-only";
 import auth from "@repo/backend/confect/_generated/refs/auth";
 import users from "@repo/backend/confect/_generated/refs/users";
-import {
-  type Locale,
-  LocaleSchema,
-} from "@repo/internationalization/src/locale";
+import type { Locale } from "@repo/internationalization/src/locale";
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
 import { notFound, redirect } from "@tanstack/react-router";
 import { getRequest, setResponseHeader } from "@tanstack/react-start/server";
-import { Effect, Option, Schema, String as Str } from "effect";
+import { Effect, Option, String as Str } from "effect";
 import { readSessionMemo } from "@/lib/auth/session.server";
 import { preloadConfectQuery } from "@/lib/data/preload.server";
 import { serverHandler } from "@/lib/server/fn";
 import type { ServerServices } from "@/lib/server/runtime";
-
-/** The route input of a locale-scoped screen. */
-export const LocaleInput = Schema.Struct({ locale: LocaleSchema });
-
-/** The route input of a screen under one profile: the locale and the username in the URL. */
-export const ProfileInput = Schema.Struct({
-  locale: LocaleSchema,
-  username: Schema.String,
-});
-
-/** The route input of a saved chat: the locale and the chat id in the URL. */
-export const ChatInput = Schema.Struct({
-  id: Schema.String,
-  locale: LocaleSchema,
-});
 
 /** The Convex token of this request, or undefined for a visitor, which makes no network call. */
 export const readToken = Effect.fn("www.account.token")(function* () {

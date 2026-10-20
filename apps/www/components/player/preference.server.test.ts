@@ -5,7 +5,7 @@ import {
   PLAYER_MODE_COOKIE,
   PLAYER_MODE_MAX_AGE,
 } from "@/components/player/mode";
-import { savePlayerModeHandler } from "@/components/player/preference";
+import { savePlayerModeHandler } from "@/components/player/preference.server";
 
 const cookies = vi.hoisted(() => ({ setCookie: vi.fn() }));
 

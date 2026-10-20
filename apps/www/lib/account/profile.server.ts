@@ -8,11 +8,11 @@ import { createTranslator } from "use-intl";
 import {
   accountHandler,
   messagesFor,
-  type ProfileInput,
   readProfileOrNotFound,
   readToken,
 } from "@/lib/account/access.server";
 import type { ScreenSeo } from "@/lib/account/head";
+import type { ProfileInput } from "@/lib/account/input";
 import { preloadConfectQuery } from "@/lib/data/preload.server";
 import { profileHref } from "@/lib/profile/href";
 

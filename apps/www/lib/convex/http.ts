@@ -7,7 +7,7 @@ import {
   retryNetworkAttempt,
 } from "@repo/backend/client/network";
 import { Data, Effect, Layer, Result, Schema } from "effect";
-import { clientEnv } from "@/env.client";
+import { clientEnv } from "@/env.public";
 
 type HttpClientOptions = Parameters<typeof HttpClient.layer>[1];
 

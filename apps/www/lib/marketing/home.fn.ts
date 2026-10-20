@@ -19,3 +19,13 @@ export const readHomeTryout = createServerFn({ method: "GET" })
     );
     return readHomeTryoutHandler({ data });
   });
+
+/** Reads the curricula that the home page lists on the server. */
+export const readHomeCurriculaFn = createServerFn({ method: "GET" })
+  .validator(Schema.toStandardSchemaV1(HomeInput))
+  .handler(async ({ data }) => {
+    const { readHomeCurriculaHandler } = await import(
+      "@/lib/marketing/home.server"
+    );
+    return readHomeCurriculaHandler({ data });
+  });

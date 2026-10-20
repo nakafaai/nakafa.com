@@ -7,7 +7,7 @@ import { getHomeTrendingSubjects } from "@/lib/content/trending";
 
 const queryMock = vi.hoisted(() => vi.fn());
 
-vi.mock("@/env.client", () => ({
+vi.mock("@/env.public", () => ({
   clientEnv: { VITE_CONVEX_URL: "https://test.convex.cloud" },
 }));
 vi.mock("@confect/js", async (importOriginal) => {

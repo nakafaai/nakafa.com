@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from "@effect/vitest";
 import auth from "@repo/backend/confect/_generated/refs/auth";
 import users from "@repo/backend/confect/_generated/refs/users";
 import { Effect, Layer } from "effect";
-import { clientEnv } from "@/env.client";
+import { clientEnv } from "@/env.public";
 import { readPublicUrlMigrationRedirect } from "@/lib/routing/public/migration";
 import {
   readProfileRedirect,

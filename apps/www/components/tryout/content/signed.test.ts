@@ -102,7 +102,7 @@ vi.mock("@/lib/auth/server", () => ({
 vi.mock("@repo/site/keys", () => ({
   contentRuntimeKeys: runtimeKeysMock,
 }));
-vi.mock("@/env.client", () => ({
+vi.mock("@/env.public", () => ({
   clientEnv: { VITE_CONVEX_URL: "https://test.convex.cloud" },
 }));
 vi.mock("@/env", () => ({

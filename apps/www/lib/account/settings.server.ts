@@ -11,10 +11,10 @@ import { MEMORY_PAGE } from "@/components/user/settings/memory/list";
 import {
   accountHandler,
   admitAccount,
-  type LocaleInput,
   messagesFor,
 } from "@/lib/account/access.server";
 import type { ScreenSeo } from "@/lib/account/head";
+import type { LocaleInput } from "@/lib/account/input";
 import { preloadConfectQuery } from "@/lib/data/preload.server";
 
 /** Settings: the account, or not found when the account is gone. */
