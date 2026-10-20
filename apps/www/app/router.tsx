@@ -26,5 +26,3 @@ export function getRouter() {
     scrollRestoration: true,
   });
 }
-
-declare module "@tanstack/react-router" {}

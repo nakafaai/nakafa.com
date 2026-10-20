@@ -19,11 +19,12 @@ import { getCurriculumIndexHref } from "@/lib/curriculum/routes";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
 /** The params of the curriculum route, as the router decodes them. */
-interface CurriculumParams {
-  readonly curriculum: string;
-  readonly locale: string;
-  readonly path?: readonly string[];
-}
+const CurriculumParams = Schema.Struct({
+  curriculum: Schema.String,
+  locale: Schema.String,
+  path: Schema.optional(Schema.Array(Schema.String)),
+});
+type CurriculumParams = typeof CurriculumParams.Type;
 
 /** Route shape consumed by the shared curriculum presentation. */
 export type CurriculumViewRoute = PublishedCurriculumRoute;
