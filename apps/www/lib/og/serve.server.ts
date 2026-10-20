@@ -7,6 +7,7 @@ import {
 } from "@repo/internationalization/src/locale";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 import { generateOGImage } from "@/lib/og";
+import { isUnservedLocaleShape, readImageSuffix } from "@/lib/og/alias";
 import { readOgCopy } from "@/lib/og/copy.server";
 import { generateFallbackImage } from "@/lib/og/fallback";
 
@@ -56,13 +57,23 @@ const LocaleOgImageParamsSchema = Schema.Struct({
   lang: Schema.String,
 });
 
-/** Serves the social image of a route whose locale prefix is optional. */
+/**
+ * Serves the social image of a route whose locale prefix is optional. An image
+ * address under a locale shape that no locale is served by answers the brand
+ * fallback, as its public alias does, because that shape names no route.
+ */
 export function serveOgImage({
   params,
 }: {
   readonly params: typeof OgImageParamsSchema.Type;
 }) {
   const segments = readSegments(params._splat);
+  if (
+    isUnservedLocaleShape(segments[0]) &&
+    Option.isSome(readImageSuffix(params._splat ?? ""))
+  ) {
+    return Effect.runPromise(generateFallbackImage(DEFAULT_LOCALE));
+  }
   const prefix = decodeLocale(segments[0]);
   const locale = Option.getOrElse(prefix, () => DEFAULT_LOCALE);
   const slug = Option.isSome(prefix) ? Arr.drop(segments, 1) : segments;

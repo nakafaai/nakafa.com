@@ -69,6 +69,22 @@ describe("og image route", () => {
 
     expect(readOgCopyMock).toHaveBeenCalledWith("en", []);
   });
+
+  it("answers the brand fallback for an image address under an unserved locale shape", async () => {
+    const response = await serveOgImage({
+      params: { _splat: "fr/articles/aljabar/image.png" },
+    });
+
+    expect(response.status).toBe(404);
+    expect(generateFallbackImageMock).toHaveBeenCalledWith("en");
+    expect(readOgCopyMock).not.toHaveBeenCalled();
+  });
+
+  it("renders the default locale for a path under an unserved locale shape without an image suffix", async () => {
+    await serveOgImage({ params: { _splat: "fr/articles" } });
+
+    expect(readOgCopyMock).toHaveBeenCalledWith("en", ["fr", "articles"]);
+  });
 });
 
 describe("localized og image route", () => {
