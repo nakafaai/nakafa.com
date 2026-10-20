@@ -65,7 +65,7 @@ describe("getRouteMessages", () => {
   it("returns only the namespaces that a route names", async () => {
     const messages = await getRouteMessages("en", ["Common"]);
 
-    expect(Object.keys(messages)).toEqual(["Common"]);
+    expect(Rec.keys(messages)).toEqual(["Common"]);
     expect(messages.Common).toEqual(appEn.Common);
   });
 });
