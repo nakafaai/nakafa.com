@@ -3,9 +3,12 @@
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
 import { lazyComponent } from "@repo/design-system/lib/lazy";
-import { useQueryState } from "nuqs";
+import { getRouteApi } from "@tanstack/react-router";
 import { useTranslations } from "use-intl";
 import { AuthGoogle } from "@/components/auth/google";
+
+/** The school layout's route, whose validated search holds the `masuk` address. */
+const schoolRoute = getRouteApi("/school/$slug");
 
 /**
  * The school username form. It loads when the visitor opens it, so the card code it needs stays
@@ -25,7 +28,8 @@ const TenantLogin = lazyComponent(
  */
 export function TenantEntryActions({ slug }: { slug: TenantSlug }) {
   const t = useTranslations("SchoolEntry");
-  const [masuk, setMasuk] = useQueryState("masuk");
+  const navigate = schoolRoute.useNavigate();
+  const { masuk } = schoolRoute.useSearch();
   const isOpen = masuk === "username";
 
   return (
@@ -34,7 +38,10 @@ export function TenantEntryActions({ slug }: { slug: TenantSlug }) {
       {isOpen ? (
         <TenantLogin slug={slug} />
       ) : (
-        <Button onClick={() => setMasuk("username")} variant="outline">
+        <Button
+          onClick={() => navigate({ search: { masuk: "username" } })}
+          variant="outline"
+        >
           {t("username-action")}
         </Button>
       )}

@@ -1,6 +1,7 @@
 "use client";
 
-import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
+import type { Ref } from "@confect/core";
+import { PaginatedQueryResult } from "@confect/react";
 import { useIntersection } from "@mantine/hooks";
 import type { Id } from "@repo/backend/confect/_generated/id";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
@@ -23,9 +24,16 @@ import { reloadPage } from "@/components/shared/reload";
 import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
 import type { ChannelDrafts } from "@/components/tenant/classes/drafts";
 import { isLostAccess } from "@/components/tenant/refusal";
+import { usePaginatedPreloaded } from "@/lib/data/paginated";
 
 /** How many channels the list asks for each time its end comes into view. */
-const CHANNEL_PAGE_SIZE = 20;
+export const CHANNEL_PAGE_SIZE = 20;
+
+/** The first page of a class's channels, which its forum loader read on the server. */
+type ChannelsFirstPage = Pick<
+  Ref.Returns<typeof classroom.forum.channels.list>,
+  "isDone" | "page"
+>;
 
 /** One channel of a class, as the list shows it. */
 type Channel = typeof ChannelView.Type;
@@ -41,16 +49,19 @@ type Channel = typeof ChannelView.Type;
 export function ChannelList({
   classId,
   drafts,
+  first,
   slug,
 }: {
   classId: Id<"classes">;
   drafts: StoreApi<ChannelDrafts>;
+  first: ChannelsFirstPage | undefined;
   slug: TenantSlug;
 }) {
-  const pagination = usePaginatedQuery(
+  const pagination = usePaginatedPreloaded(
     classroom.forum.channels.list,
     { classId, slug },
-    { initialNumItems: CHANNEL_PAGE_SIZE }
+    { initialNumItems: CHANNEL_PAGE_SIZE },
+    first
   );
   const saving = useStore(drafts, (state) => state.names);
   const { entry, ref } = useIntersection<HTMLDivElement>();

@@ -1,6 +1,7 @@
 "use client";
 
-import { QueryResult, useQuery } from "@confect/react";
+import type { Ref } from "@confect/core";
+import { QueryResult } from "@confect/react";
 import type { Id } from "@repo/backend/confect/_generated/id";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -21,6 +22,7 @@ import {
 import { ExamTryQuestion } from "@/components/tenant/exams/try/question";
 import { createExamTry } from "@/components/tenant/exams/try/store";
 import { ExamUnavailable } from "@/components/tenant/exams/unavailable";
+import { usePreloadedQueryResult } from "@/lib/data/preloaded";
 
 /**
  * One exam as its students will meet it, for its teacher to try: the same player and the same
@@ -31,17 +33,20 @@ import { ExamUnavailable } from "@/components/tenant/exams/unavailable";
  */
 export function ExamTryPaper({
   examId,
+  preload,
   slug,
 }: {
   examId: Id<"exams">;
+  preload: Ref.Returns<typeof exams.exams.open> | undefined;
   slug: TenantSlug;
 }) {
   const t = useTranslations("Exams");
   // The server draws this page before the browser's connection signs in, so the exam waits for it.
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const result = useQuery(
+  const result = usePreloadedQueryResult(
     exams.exams.open,
-    isSettled ? { examId, slug } : "skip"
+    isSettled ? { examId, slug } : "skip",
+    preload
   );
   const [store] = useState(createExamTry);
 

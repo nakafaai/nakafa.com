@@ -1,14 +1,17 @@
 "use client";
 
-import { QueryResult, useQuery } from "@confect/react";
+import { QueryResult } from "@confect/react";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import type { BuiltinRole } from "@repo/backend/confect/access/schema";
 import type { TenantProfile } from "@repo/backend/confect/tenancy/schema";
+import type { Option } from "effect";
 import { createContext, use } from "react";
 import { useConvexAuth } from "@/components/providers/convex";
 import type { HomeAccess } from "@/components/tenant/home/access";
 import type { Greeting } from "@/components/tenant/home/greeting";
 import { liveTenant } from "@/components/tenant/live";
+import { usePreloadedQueryResult } from "@/lib/data/preloaded";
+import type { SchoolViewer } from "@/lib/tenant/frame";
 
 /**
  * The school the shell shows, its address, its name and its mark, the viewer's
@@ -22,7 +25,7 @@ export type TenantValue = Pick<
   "mascot" | "name" | "slug"
 > &
   Record<"logo", string | undefined> &
-  Record<"role", BuiltinRole | null> &
+  Record<"role", Option.Option<BuiltinRole>> &
   Record<"canManage" | "canOpenExams", boolean> &
   Record<"greeting", Greeting> &
   Record<"home", HomeAccess>;
@@ -44,17 +47,32 @@ export const TenantContext = createContext<TenantValue | null>(null);
  */
 export function useTenant(): TenantValue {
   const tenant = use(TenantContext);
-  // The viewer is read once the session settles, so the first draw never asks for it signed out.
-  const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const viewer = useQuery(
-    tenancy.viewer.get,
-    tenant === null || !isSettled ? "skip" : { slug: tenant.slug }
-  );
+  const viewer = useViewerQuery();
   if (tenant === null) {
     throw new Error("useTenant must be used within TenantShell");
   }
   return liveTenant(
     tenant,
     QueryResult.isSuccess(viewer) ? viewer.value.tenant : undefined
+  );
+}
+
+/**
+ * The viewer's view of the school that the layout read on the server, which the shell provides. The live
+ * read replaces it once the session settles, so the first draw never asks for the viewer signed out.
+ */
+export const ViewerPreloadContext = createContext<SchoolViewer | undefined>(
+  undefined
+);
+
+/** The viewer's live view of the school, which shows the layout's view until the live read answers. */
+export function useViewerQuery() {
+  const tenant = use(TenantContext);
+  const isSettled = useConvexAuth((auth) => !auth.isLoading);
+  const preload = use(ViewerPreloadContext);
+  return usePreloadedQueryResult(
+    tenancy.viewer.get,
+    tenant === null || !isSettled ? "skip" : { slug: tenant.slug },
+    preload
   );
 }

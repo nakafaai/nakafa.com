@@ -1,7 +1,7 @@
 "use client";
 
-import type { GenericId } from "@confect/core";
-import { QueryResult, useQuery } from "@confect/react";
+import type { GenericId, Ref } from "@confect/core";
+import { QueryResult } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { SittingView } from "@repo/backend/confect/exams/sittings/contract";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -47,6 +47,7 @@ import {
 import { LayoutContent } from "@/components/shared/content/layout";
 import { isDenied, isLostAccess } from "@/components/tenant/refusal";
 import { schoolDateTimeText } from "@/components/tenant/settings/clock";
+import { usePreloadedQueryResult } from "@/lib/data/preloaded";
 
 /** An admission that lets the student into the sitting, with the attempt it opened. */
 type Admitted = Extract<Admission, { readonly _tag: "admitted" }>;
@@ -61,18 +62,21 @@ type Admitted = Extract<Admission, { readonly _tag: "admitted" }>;
  * to the school home.
  */
 export function StudentSitting({
+  preload,
   sittingId,
   slug,
 }: {
+  readonly preload: Ref.Returns<typeof exams.sittings.student> | undefined;
   readonly sittingId: GenericId.GenericId<"examSittings">;
   readonly slug: TenantSlug;
 }) {
   const t = useTranslations("Exams");
   // The sitting needs the session, which Convex learns a moment after the page draws.
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const view = useQuery(
+  const view = usePreloadedQueryResult(
     exams.sittings.student,
-    isSettled ? { sittingId, slug } : "skip"
+    isSettled ? { sittingId, slug } : "skip",
+    preload
   );
   const enter = useEnterSitting();
   const [admitted, setAdmitted] = useState<Admitted | null>(null);

@@ -1,27 +1,46 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { Option } from "effect";
 import type { ReactElement } from "react";
+import { CHANNEL_PAGE_SIZE } from "@/components/tenant/classes/channels";
 import { ClassShell } from "@/components/tenant/classes/shell";
 import { SchoolPageNotFound } from "@/components/tenant/notfound";
+import { readClassForumFn } from "@/lib/tenant/classes.fn";
 import { readClassAddress } from "@/lib/tenant/params";
 
-/** The forum of one class of the school. */
+/** The forum of one class of the school. A failed address to a class is not found for every viewer. */
 export const Route = createFileRoute("/school/$slug/classes/$classSlug/forum")({
-  beforeLoad: ({ context, params }) => {
+  beforeLoad: ({ params }) => {
     const classAddress = readClassAddress(params.classSlug);
-    if (context.school._tag === "Member" && Option.isNone(classAddress)) {
+    if (Option.isNone(classAddress)) {
       throw notFound();
     }
-    return { classAddress: Option.getOrNull(classAddress) };
+    return { classAddress: classAddress.value };
+  },
+  loader: ({ context }) => {
+    if (context.school._tag !== "Member") {
+      return;
+    }
+    return readClassForumFn({
+      data: {
+        classSlug: context.classAddress,
+        numItems: CHANNEL_PAGE_SIZE,
+        slug: context.slug,
+      },
+    });
   },
   component: SchoolClassForumPage,
   notFoundComponent: SchoolPageNotFound,
 });
 
-function SchoolClassForumPage(): ReactElement | null {
+function SchoolClassForumPage(): ReactElement {
   const { classAddress, slug } = Route.useRouteContext();
-  if (classAddress === null) {
-    return null;
-  }
-  return <ClassShell classSlug={classAddress} slug={slug} tab="forum" />;
+  const preload = Route.useLoaderData();
+  return (
+    <ClassShell
+      classSlug={classAddress}
+      preload={preload}
+      slug={slug}
+      tab="forum"
+    />
+  );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { QueryResult, useMutation, useQuery } from "@confect/react";
+import { QueryResult, useMutation } from "@confect/react";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import {
   EMAIL_DOMAIN_LIMIT,
@@ -28,12 +28,12 @@ import { Textarea } from "@repo/design-system/components/ui/textarea";
 import { Array as Arr, Option, Schema } from "effect";
 import { startTransition, useId, useState } from "react";
 import { useTranslations } from "use-intl";
-import { useConvexAuth } from "@/components/providers/convex";
 import {
   CardSection,
   CardSectionActions,
   CardSectionFooter,
 } from "@/components/shared/card/section";
+import { useViewerQuery } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { setPolicyChange } from "@/components/tenant/settings/mutation.client";
 import { SettingsPage } from "@/components/tenant/settings/page";
@@ -61,8 +61,7 @@ export function SchoolPoliciesSettings({ slug }: { slug: TenantSlug }) {
  * switches, and the allowed email domains.
  */
 function SchoolPoliciesBody({ slug }: { slug: TenantSlug }) {
-  const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const viewer = useQuery(tenancy.viewer.get, isSettled ? { slug } : "skip");
+  const viewer = useViewerQuery();
 
   if (QueryResult.isFailure(viewer)) {
     throw viewer.error;

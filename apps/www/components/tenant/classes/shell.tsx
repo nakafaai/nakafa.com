@@ -1,6 +1,6 @@
 "use client";
 
-import { QueryResult, useQuery } from "@confect/react";
+import { QueryResult } from "@confect/react";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { ClassAmbiguous } from "@repo/backend/confect/classroom/errors";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -8,7 +8,7 @@ import { Link } from "@repo/internationalization/src/navigation";
 import { cn } from "cn";
 import { Array as Arr, Schema } from "effect";
 import type { ReactNode } from "react";
-import { useState } from "react";
+import { createContext, use, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/providers/convex";
 import { LayoutContent } from "@/components/shared/content/layout";
@@ -20,10 +20,15 @@ import { createChannelDrafts } from "@/components/tenant/classes/drafts";
 import { SchoolHeader } from "@/components/tenant/header";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { isDenied, isLostAccess } from "@/components/tenant/refusal";
+import { usePreloadedQueryResult } from "@/lib/data/preloaded";
+import type { readClassForumFn } from "@/lib/tenant/classes.fn";
 
 /** The tabs of a class that have a page. The other tabs join with the slices that build them. */
 const ClassTab = Schema.Literals(["home", "forum"]);
 type ClassTab = typeof ClassTab.Type;
+
+/** The first screen of a class page, which the page's loader read on the server. */
+const ClassPreloadContext = createContext<ClassPreload | undefined>(undefined);
 
 /**
  * The shell of one class page: the school header with the class's name, the class's tabs, and the
@@ -35,10 +40,12 @@ type ClassTab = typeof ClassTab.Type;
  */
 export function ClassShell({
   classSlug,
+  preload,
   slug,
   tab,
 }: {
   classSlug: string;
+  preload: ClassPreload | undefined;
   slug: TenantSlug;
   tab: ClassTab;
 }) {
@@ -52,10 +59,18 @@ export function ClassShell({
       )}
       read={{ args: { classSlug, slug }, ref: classroom.classes.resolve }}
     >
-      <ClassPage classSlug={classSlug} slug={slug} tab={tab} />
+      <ClassPreloadContext value={preload}>
+        <ClassPage classSlug={classSlug} slug={slug} tab={tab} />
+      </ClassPreloadContext>
     </ReadBoundary>
   );
 }
+
+/** The first screen of a class page, which its loader read on the server: the class and its first channels. */
+type ClassPreload = Pick<
+  Awaited<ReturnType<typeof readClassForumFn>>,
+  "channels" | "resolved"
+>;
 
 /** The class page once the class is resolved: its header, its tabs, and the body of the tab. */
 function ClassPage({
@@ -67,12 +82,14 @@ function ClassPage({
   slug: TenantSlug;
   tab: ClassTab;
 }) {
+  const preload = use(ClassPreloadContext);
   const t = useTranslations("Classroom");
   // The class is read once the session settles, so the first draw never asks for it signed out.
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const resolved = useQuery(
+  const resolved = usePreloadedQueryResult(
     classroom.classes.resolve,
-    isSettled ? { classSlug, slug } : "skip"
+    isSettled ? { classSlug, slug } : "skip",
+    preload?.resolved
   );
   const [drafts] = useState(createChannelDrafts);
 
@@ -106,7 +123,12 @@ function ClassPage({
       </SchoolHeader>
       <LayoutContent className="flex w-full flex-col gap-6 py-6">
         <ClassTabs classSlug={classSlug} tab={tab} />
-        <ChannelList classId={klass.id} drafts={drafts} slug={slug} />
+        <ChannelList
+          classId={klass.id}
+          drafts={drafts}
+          first={preload?.channels}
+          slug={slug}
+        />
       </LayoutContent>
     </>
   );

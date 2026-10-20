@@ -1,12 +1,11 @@
 "use client";
 
 import type { Ref } from "@confect/core";
-import { QueryResult, useQuery } from "@confect/react";
-import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
+import { QueryResult } from "@confect/react";
+import type tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
-import { useConvexAuth } from "@/components/providers/convex";
-import { useTenant } from "@/components/tenant/context";
+import { useViewerQuery } from "@/components/tenant/context";
 import { canOpenExams, canOpenRooms } from "@/components/tenant/exams/access";
 import { isLostAccess } from "@/components/tenant/refusal";
 import { TenantRefused } from "@/components/tenant/refused";
@@ -38,13 +37,7 @@ export function TenantSection({
   children: ReactNode;
   section: TenantSectionName;
 }) {
-  const tenant = useTenant();
-  // The viewer is read once the session settles, so the first draw never asks for it signed out.
-  const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const viewer = useQuery(
-    tenancy.viewer.get,
-    isSettled ? { slug: tenant.slug } : "skip"
-  );
+  const viewer = useViewerQuery();
 
   if (QueryResult.isFailure(viewer) && isLostAccess(viewer.error)) {
     return <TenantRefused />;

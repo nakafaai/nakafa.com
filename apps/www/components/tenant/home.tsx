@@ -17,6 +17,10 @@ import {
 import { SchoolHeader } from "@/components/tenant/header";
 import { showsStudentHome } from "@/components/tenant/home/access";
 import {
+  type HomePreload,
+  HomePreloadContext,
+} from "@/components/tenant/home/data";
+import {
   homeExamsRead,
   useStudentSittings,
 } from "@/components/tenant/home/query.client";
@@ -42,24 +46,28 @@ import {
  * or closes while the page is open, so the action appears once that read answers. Each home reads its rows once,
  * and the tiles it shows take their rows from that read.
  */
-export function TenantHome() {
+export function TenantHome({ preload }: { preload: HomePreload }) {
   const tenant = useTenant();
   const [drafts] = useState(createExamDrafts);
   const studentView = showsStudentHome(tenant, tenant.home);
 
   return (
-    <HomePage action={<HomeAction drafts={drafts} studentView={studentView} />}>
-      {studentView ? (
-        <StudentHome />
-      ) : (
-        <ReadBoundary
-          fallback={(failure) => <HomeFailure failure={failure} />}
-          read={homeExamsRead(tenant.slug)}
-        >
-          <StaffTiles drafts={drafts} />
-        </ReadBoundary>
-      )}
-    </HomePage>
+    <HomePreloadContext value={preload}>
+      <HomePage
+        action={<HomeAction drafts={drafts} studentView={studentView} />}
+      >
+        {studentView ? (
+          <StudentHome />
+        ) : (
+          <ReadBoundary
+            fallback={(failure) => <HomeFailure failure={failure} />}
+            read={homeExamsRead(tenant.slug)}
+          >
+            <StaffTiles drafts={drafts} />
+          </ReadBoundary>
+        )}
+      </HomePage>
+    </HomePreloadContext>
   );
 }
 

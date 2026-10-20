@@ -37,3 +37,33 @@ export function usePreloadedQuery<Query extends Ref.AnyPublicQuery>(
     (error) => error
   );
 }
+
+/**
+ * Chooses what a page shows for one query as a query result, so a page that
+ * branches on the result keeps its branches. The loader's value is a success until
+ * the live result arrives. A page with no loader value keeps the live result, which
+ * is loading until Confect has one.
+ */
+export function readPreloadedResult<A, E>(
+  live: QueryResult.QueryResult<A, E>,
+  preloaded: A | undefined
+): QueryResult.QueryResult<A, E> {
+  if (preloaded === undefined || !QueryResult.isLoading(live)) {
+    return live;
+  }
+  return QueryResult.succeed(preloaded);
+}
+
+/**
+ * A Confect query whose first value is the loader's, returned as a query result.
+ * It is the hook of a page that reads its query result, such as the school home,
+ * and its branches stay as they are.
+ */
+export function usePreloadedQueryResult<Query extends Ref.AnyPublicQuery>(
+  ref: Query,
+  args: Ref.Args<Query> | "skip",
+  preloaded: Ref.Returns<Query> | undefined
+): QueryResult.QueryResult<Ref.Returns<Query>, Ref.Error<Query>> {
+  const live = useQuery(ref, args);
+  return readPreloadedResult(live, preloaded);
+}

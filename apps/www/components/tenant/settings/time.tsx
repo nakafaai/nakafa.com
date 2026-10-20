@@ -1,11 +1,9 @@
 "use client";
 
-import { QueryResult, useQuery } from "@confect/react";
-import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
-import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
+import { QueryResult } from "@confect/react";
 import { Array as Arr, Option } from "effect";
 import { useLocale } from "use-intl";
-import { useConvexAuth } from "@/components/providers/convex";
+import { useViewerQuery } from "@/components/tenant/context";
 import { schoolDateTimeText } from "@/components/tenant/settings/clock";
 
 /**
@@ -13,10 +11,9 @@ import { schoolDateTimeText } from "@/components/tenant/settings/clock";
  * zone of the school's first active unit, in the reader's language. It renders
  * nothing until the school is read, so the time never shows in another zone first.
  */
-export function SchoolDateTime({ at, slug }: { at: number; slug: TenantSlug }) {
+export function SchoolDateTime({ at }: { at: number }) {
   const locale = useLocale();
-  const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const viewer = useQuery(tenancy.viewer.get, isSettled ? { slug } : "skip");
+  const viewer = useViewerQuery();
   const timeZone = QueryResult.isSuccess(viewer)
     ? Option.getOrUndefined(
         Arr.findFirst(viewer.value.units, (unit) => unit.status === "active")

@@ -1,6 +1,6 @@
 "use client";
 
-import { QueryResult, useMutation, useQuery } from "@confect/react";
+import { QueryResult, useMutation } from "@confect/react";
 import {
   ACTIVE_APP_LOCALE_CODES,
   ActiveAppLocaleCodeSchema,
@@ -33,7 +33,7 @@ import { languages } from "@repo/internationalization/data/lang";
 import { Array as Arr, Option, Schema } from "effect";
 import { useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
-import { useConvexAuth } from "@/components/providers/convex";
+import { useViewerQuery } from "@/components/tenant/context";
 import { addMemberChange } from "@/components/tenant/settings/members.client";
 import { cardOffered } from "@/components/tenant/settings/offer";
 import { saveSchool } from "@/components/tenant/settings/save.client";
@@ -70,8 +70,7 @@ export function SchoolInviteDialog({
   const t = useTranslations("SchoolSettings");
   const tSchool = useTranslations("School");
   const common = useTranslations("Common");
-  const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const viewer = useQuery(tenancy.viewer.get, isSettled ? { slug } : "skip");
+  const viewer = useViewerQuery();
   const invite = useMutation(tenancy.roster.invite).withOptimisticUpdate(
     addMemberChange
   );

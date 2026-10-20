@@ -1,6 +1,6 @@
 "use client";
 
-import { QueryResult, useQuery } from "@confect/react";
+import { QueryResult } from "@confect/react";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import {
@@ -9,12 +9,15 @@ import {
 } from "@repo/design-system/components/ui/sidebar-menu";
 import { usePathname } from "@repo/internationalization/src/navigation";
 import { Array as Arr, String as Str } from "effect";
+import { use } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/providers/convex";
+import { ClassesPreloadContext } from "@/components/tenant/classes/preload";
 import type { TenantValue } from "@/components/tenant/context";
 import { useTenant } from "@/components/tenant/context";
 import { TenantSidebarGroup } from "@/components/tenant/group";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
+import { usePreloadedQueryResult } from "@/lib/data/preloaded";
 
 /**
  * The Classes group of the school sidebar: one entry per class the viewer teaches or
@@ -70,7 +73,12 @@ function TenantClassesRows() {
  */
 function useClassesQuery(slug: TenantValue["slug"]) {
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  return useQuery(classroom.classes.mine, isSettled ? { slug } : "skip");
+  const classes = use(ClassesPreloadContext);
+  return usePreloadedQueryResult(
+    classroom.classes.mine,
+    isSettled ? { slug } : "skip",
+    classes
+  );
 }
 
 /**

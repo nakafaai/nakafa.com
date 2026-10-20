@@ -5,12 +5,9 @@ import {
   PaginatedQueryResult,
   QueryResult,
   useMutation,
-  usePaginatedQuery,
-  useQuery,
 } from "@confect/react";
 import { MoreHorizontalIcon } from "@hugeicons/core-free-icons";
 import integrations from "@repo/backend/confect/_generated/refs/integrations";
-import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { IntegrationStatus } from "@repo/backend/confect/integrations/schema";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -26,7 +23,7 @@ import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr } from "effect";
-import { useState, useTransition } from "react";
+import { createContext, use, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/providers/convex";
 import { DataFailure } from "@/components/shared/failure";
@@ -34,6 +31,7 @@ import { reloadPage } from "@/components/shared/reload";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { useViewerQuery } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { SchoolClientCreateDialog } from "@/components/tenant/settings/client";
 import { revokeClientChange } from "@/components/tenant/settings/mutation.client";
@@ -41,11 +39,20 @@ import { SettingsPage } from "@/components/tenant/settings/page";
 import { saveSchool } from "@/components/tenant/settings/save.client";
 import { scopeNameOf } from "@/components/tenant/settings/scope";
 import { SchoolSecretDialog } from "@/components/tenant/settings/secret";
+import {
+  type PreloadedPage,
+  usePaginatedPreloaded,
+} from "@/lib/data/paginated";
 
 const SOURCE = "components/tenant/settings/clients";
 
 /** How many clients one page of the list loads, and each page after it. */
-const PAGE_SIZE = 25;
+export const PAGE_SIZE = 25;
+
+/** The first page of the list, which its loader read on the server. */
+type ClientsFirstPage = PreloadedPage<
+  PaginatedQueryItem<typeof integrations.clients.list>
+>;
 
 /** One integration client as the clients list shows it. */
 type ClientItem = PaginatedQueryItem<typeof integrations.clients.list>;
@@ -56,12 +63,23 @@ const clientColumns = createColumnHelper<
   ClientItem
 >();
 
+/** The first page of the clients, which the page's loader read on the server. */
+const ClientsFirstPageContext = createContext<ClientsFirstPage | undefined>(
+  undefined
+);
+
 /**
  * Renders the integration clients of the school, each with the part of the school it
  * covers, in a data table with Create client in the header. A client is created, rotated
  * (which issues a new secret that is shown once), or revoked.
  */
-export function SchoolClientsSettings({ slug }: { slug: TenantSlug }) {
+export function SchoolClientsSettings({
+  first,
+  slug,
+}: {
+  first: ClientsFirstPage | undefined;
+  slug: TenantSlug;
+}) {
   const t = useTranslations("SchoolSettings");
   const [issuedSecret, setIssuedSecret] = useState<string | undefined>(
     undefined
@@ -77,7 +95,9 @@ export function SchoolClientsSettings({ slug }: { slug: TenantSlug }) {
       }
     >
       <ReadBoundary>
-        <SchoolClientTable onIssued={setIssuedSecret} slug={slug} />
+        <ClientsFirstPageContext value={first}>
+          <SchoolClientTable onIssued={setIssuedSecret} slug={slug} />
+        </ClientsFirstPageContext>
       </ReadBoundary>
       <SchoolClientCreateDialog
         onIssued={setIssuedSecret}
@@ -108,14 +128,16 @@ function SchoolClientTable({
   onIssued: (secret: string) => void;
   slug: TenantSlug;
 }) {
+  const first = use(ClientsFirstPageContext);
   const t = useTranslations("SchoolSettings");
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const pagination = usePaginatedQuery(
+  const pagination = usePaginatedPreloaded(
     integrations.clients.list,
     isSettled ? { slug } : "skip",
-    { initialNumItems: PAGE_SIZE }
+    { initialNumItems: PAGE_SIZE },
+    first
   );
-  const viewer = useQuery(tenancy.viewer.get, isSettled ? { slug } : "skip");
+  const viewer = useViewerQuery();
 
   const failed = PaginatedQueryResult.isFailure(pagination);
   if (pagination._tag === "LoadingFirstPage") {

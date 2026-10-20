@@ -32,12 +32,9 @@ import { changeSchoolLanguage } from "@/components/tenant/language.client";
 import { profileHref } from "@/lib/profile/href";
 
 /**
- * Saves the language that the account menu chose, then shows it. The page stays
- * in its language until the server answers, so the change is not shown before it
- * is saved. No transition waits for the answer: a saved language refreshes the
- * route in a transition that starts at once. A failed save keeps the page as it
- * is and shows one message, and the viewer chooses the language again from the
- * same menu.
+ * Changes the language that the account menu chose at once, and saves it. The page shows the new language
+ * before the server answers, and a save that fails returns the page to its language and says so, so the
+ * viewer can choose again from the same menu.
  */
 function changeLanguage(
   language: string,
@@ -45,8 +42,12 @@ function changeLanguage(
 ) {
   Effect.runFork(
     Effect.gen(function* () {
-      const render = yield* changeSchoolLanguage(language);
-      if (render === "failed") {
+      const outcome = yield* changeSchoolLanguage(language, () => {
+        startTransition(() => {
+          router.refresh();
+        });
+      });
+      if (outcome === "rolledBack") {
         toast.error(
           {
             description: "school-language-error.description",
@@ -54,11 +55,7 @@ function changeLanguage(
           },
           { position: "bottom-center" }
         );
-        return;
       }
-      startTransition(() => {
-        router.refresh();
-      });
     })
   );
 }

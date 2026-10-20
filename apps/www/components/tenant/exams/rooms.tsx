@@ -1,13 +1,7 @@
 "use client";
 
 import type { GenericId } from "@confect/core";
-import {
-  PaginatedQueryResult,
-  QueryResult,
-  useMutation,
-  usePaginatedQuery,
-  useQuery,
-} from "@confect/react";
+import { PaginatedQueryResult, QueryResult, useMutation } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { RoomRow } from "@repo/backend/confect/exams/rooms";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -30,7 +24,7 @@ import {
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { Link } from "@repo/internationalization/src/navigation";
 import { Array as Arr, Option, Schema } from "effect";
-import { startTransition, useState } from "react";
+import { createContext, startTransition, use, useState } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/providers/convex";
 import { LayoutContent } from "@/components/shared/content/layout";
@@ -49,6 +43,9 @@ import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { isDenied, isLostAccess } from "@/components/tenant/refusal";
 import { schoolDateTimeText } from "@/components/tenant/settings/clock";
 import { saveSchool } from "@/components/tenant/settings/save.client";
+import { usePaginatedPreloaded } from "@/lib/data/paginated";
+import { usePreloadedQueryResult } from "@/lib/data/preloaded";
+import type { readExamRoomsFn } from "@/lib/tenant/exams.fn";
 
 const SOURCE = "components/tenant/exams/rooms";
 
@@ -59,7 +56,18 @@ type Room = typeof RoomRow.Type;
 type StateFilter = typeof RoomStateFilter.Type;
 
 /** How many rooms each page asks for. The next page loads when the end of the table comes into view. */
-const ROOM_PAGE_SIZE = 20;
+export const ROOM_PAGE_SIZE = 20;
+
+/** The first screen of the rooms page, which its loader read on the server: the exam and the first page of its rooms. */
+type ExamRoomsPreload = Pick<
+  Awaited<ReturnType<typeof readExamRoomsFn>>,
+  "rooms" | "summary"
+>;
+
+/** The first screen of the rooms page, which the page's loader read on the server. */
+const ExamRoomsPreloadContext = createContext<ExamRoomsPreload | undefined>(
+  undefined
+);
 
 /**
  * The rooms of one exam: its title in the header, the state filter, and a table of its rooms in
@@ -70,9 +78,11 @@ const ROOM_PAGE_SIZE = 20;
  */
 export function ExamRooms({
   examId,
+  preload,
   slug,
 }: {
   examId: GenericId.GenericId<"exams">;
+  preload: ExamRoomsPreload | undefined;
   slug: TenantSlug;
 }) {
   const tenant = useTenant();
@@ -89,7 +99,9 @@ export function ExamRooms({
       )}
       read={{ args: { examId, slug }, ref: exams.rooms.exam }}
     >
-      <ExamRoomsContent examId={examId} slug={slug} />
+      <ExamRoomsPreloadContext value={preload}>
+        <ExamRoomsContent examId={examId} slug={slug} />
+      </ExamRoomsPreloadContext>
     </ReadBoundary>
   );
 }
@@ -108,13 +120,15 @@ function ExamRoomsContent({
   examId: GenericId.GenericId<"exams">;
   slug: TenantSlug;
 }) {
+  const preload = use(ExamRoomsPreloadContext);
   const t = useTranslations("Exams");
   const tenant = useTenant();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const [filter, setFilter] = useState<StateFilter>("all");
-  const summary = useQuery(
+  const summary = usePreloadedQueryResult(
     exams.rooms.exam,
-    isSettled ? { examId, slug } : "skip"
+    isSettled ? { examId, slug } : "skip",
+    preload?.summary
   );
   const examsItems = useExamsItems(tenant.canOpenExams);
 
@@ -149,6 +163,7 @@ function ExamRoomsContent({
         <RoomsTable
           examId={examId}
           filter={filter}
+          first={preload?.rooms}
           isSettled={isSettled}
           slug={slug}
         />
@@ -249,19 +264,23 @@ function RoomStateSelect({
 function RoomsTable({
   examId,
   filter,
+  first,
   isSettled,
   slug,
 }: {
   examId: GenericId.GenericId<"exams">;
   filter: StateFilter;
+  first: ExamRoomsPreload["rooms"] | undefined;
   isSettled: boolean;
   slug: TenantSlug;
 }) {
   const t = useTranslations("Exams");
-  const pagination = usePaginatedQuery(
+  // The loader's first page is the page of the default filter, so a filtered table waits for its own first page.
+  const pagination = usePaginatedPreloaded(
     exams.rooms.list,
     isSettled ? roomsArgs({ examId, slug }, filter) : "skip",
-    { initialNumItems: ROOM_PAGE_SIZE }
+    { initialNumItems: ROOM_PAGE_SIZE },
+    filter === "all" ? first : undefined
   );
 
   if (
