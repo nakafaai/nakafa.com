@@ -66,10 +66,12 @@ type PageFacts = typeof PageFacts.Type;
 
 /**
  * Builds the head of one page from its facts. The title is the site's title
- * budget, the canonical address and the alternates come from the one route map,
- * and an unindexable page says so in its robots rule. The social card carries
- * one image, its alt text and its size, for Open Graph and Twitter alike, and
- * the Twitter entries name the site account as both site and creator.
+ * budget unless the page names an absolute one. The canonical address comes from
+ * the route map, and the alternates are the page's own counterparts when it names
+ * them, or else the route map's. An unindexable page says so in its robots and
+ * googlebot rules. The social card carries one image, its alt text and its size,
+ * for Open Graph and Twitter alike, and the Twitter entries name the site account
+ * as both site and creator.
  */
 export function createSeoHead(facts: PageFacts): SeoHead {
   const title =
