@@ -54,4 +54,14 @@ describe("readRedirectResponse", () => {
       )
     ).toBe(true);
   });
+  it("answers an address that moved with its successor before the locale rules", () => {
+    const found = Option.getOrThrow(
+      readRedirectResponse(request("https://nakafa.com/community?ref=app"))
+    );
+
+    expect(found.status).toBe(307);
+    expect(found.headers.get("location")).toBe(
+      "https://discord.gg/CPCSfKhvfQ?ref=app"
+    );
+  });
 });
