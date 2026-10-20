@@ -1,5 +1,5 @@
-import { existsSync } from "node:fs";
-import { join } from "node:path";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { basename, join } from "node:path";
 import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import { POSTHOG_PROXY_PATH } from "@repo/analytics/posthog/config";
 import { securityHeaders } from "@repo/site";
@@ -38,19 +38,43 @@ const PRERENDERED_PAGES = ACTIVE_APP_LOCALE_CODES.flatMap((locale) => [
 ]);
 
 /**
+ * The marker that React writes where a Suspense boundary failed on the server, so
+ * the browser renders that part. A page that carries it is a server failure.
+ */
+const SERVER_FAILURE_MARKER = "<!--$!-->";
+
+/**
  * TanStack runs each prerender task in a queue whose failures nobody awaits: a
  * page that fails only logs an unhandled rejection, and the build still exits 0.
- * This check throws when a listed page is missing from the client output
- * directory, the client environment's own output that Nitro's preset sets and
- * TanStack prerenders into.
+ * This check throws unless the client output directory, the output that Nitro's
+ * preset sets and TanStack prerenders into, holds exactly the listed pages and
+ * none of them carries a server failure marker.
  */
 function assertPrerenderedPages(clientOutputDirectory: string) {
-  const missing = PRERENDERED_PAGES.map(({ path }) => path).filter(
-    (path) => !existsSync(join(clientOutputDirectory, path, "index.html"))
+  const expected = PRERENDERED_PAGES.map(({ path }) =>
+    join(clientOutputDirectory, path, "index.html")
   );
-  if (missing.length > 0) {
+  const written = readdirSync(clientOutputDirectory, { recursive: true })
+    .filter((entry) => basename(entry) === "index.html")
+    .map((entry) => join(clientOutputDirectory, entry));
+  const problems = [
+    ...expected
+      .filter((file) => !existsSync(file))
+      .map((file) => `no page at ${file}`),
+    ...written
+      .filter((file) => !expected.includes(file))
+      .map((file) => `unlisted page at ${file}`),
+    ...expected
+      .filter(
+        (file) =>
+          existsSync(file) &&
+          readFileSync(file, "utf8").includes(SERVER_FAILURE_MARKER)
+      )
+      .map((file) => `server failure in ${file}`),
+  ];
+  if (problems.length > 0) {
     throw new Error(
-      `Prerendering wrote no page for: ${missing.join(", ")} (${clientOutputDirectory})`
+      `The prerendered pages are not the listed set:\n${problems.join("\n")}`
     );
   }
 }
