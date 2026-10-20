@@ -30,18 +30,15 @@ describe("paginated first page", () => {
     expect(page.results).toStrictEqual(["loader"]);
   });
 
-  it("shows the loader's first page and waits for the subscription to load more", () => {
+  it("shows the loader's first page as loading more, with no load more until the subscription has its page", () => {
     const page = readFirstPage(
       PaginatedQueryResult.loadingFirstPage({ skipped: false }),
       { isDone: false, page: ["loader"] }
     );
     expect(page.results).toStrictEqual(["loader"]);
     expect(PaginatedQueryResult.isLoadingFirstPage(page)).toBe(false);
-    expect(PaginatedQueryResult.isLoadingMore(page)).toBe(false);
-    expect(PaginatedQueryResult.isCanLoadMore(page)).toBe(true);
-    if (PaginatedQueryResult.isCanLoadMore(page)) {
-      expect(page.loadMore(10)).toBeUndefined();
-    }
+    expect(PaginatedQueryResult.isLoadingMore(page)).toBe(true);
+    expect(PaginatedQueryResult.isCanLoadMore(page)).toBe(false);
   });
 });
 

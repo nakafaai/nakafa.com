@@ -15,10 +15,11 @@ export interface PreloadedPage<Item> {
 
 /**
  * Chooses what a paginated list shows. Until the live subscription has its
- * first page, the loader's page stands in. Its `loadMore` does nothing until
- * the live subscription can load the next page, so an infinite list waits for
- * the subscription and never asks for a page twice. A list with no loader page,
- * such as a filtered list, keeps the live result.
+ * first page, the loader's page stands in as rows that are still loading more.
+ * The list offers no `loadMore` until the live subscription can load the next
+ * page, so an infinite list's end trigger mounts only with a working `loadMore`,
+ * and a trigger that is already in view cannot ask for a page that never loads.
+ * A list with no loader page, such as a filtered list, keeps the live result.
  */
 export function readFirstPage<Item, E>(
   live: PaginatedQueryResult.PaginatedQueryResult<Item, E>,
@@ -33,10 +34,7 @@ export function readFirstPage<Item, E>(
   if (preloaded.isDone) {
     return PaginatedQueryResult.exhausted({ results: preloaded.page });
   }
-  return PaginatedQueryResult.canLoadMore({
-    loadMore: () => undefined,
-    results: preloaded.page,
-  });
+  return PaginatedQueryResult.loadingMore({ results: preloaded.page });
 }
 
 /** A paginated Confect query whose first page is the loader's. */
