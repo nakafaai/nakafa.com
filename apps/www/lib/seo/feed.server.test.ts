@@ -136,7 +136,7 @@ describe("rss feed route", () => {
   });
 
   it("refuses to build a feed without an active release", async () => {
-    loadActiveContentIdentityMock.mockReturnValue(Effect.succeed(undefined));
+    loadActiveContentIdentityMock.mockReturnValue(Effect.void);
 
     await expect(serveRssFeed()).rejects.toThrow();
   });
@@ -150,7 +150,7 @@ describe("rss feed route", () => {
           sequence: 1,
         })
       )
-      .mockReturnValueOnce(Effect.succeed(undefined));
+      .mockReturnValueOnce(Effect.void);
 
     await expect(serveRssFeed()).rejects.toThrow();
   });

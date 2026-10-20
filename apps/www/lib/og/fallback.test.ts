@@ -83,7 +83,7 @@ describe("fallback social image", () => {
   });
 
   it("gives the image of a known route the CDN headers unless the caller names others", async () => {
-    await generateOGImage({ description: "Lesson", title: "Function" });
+    generateOGImage({ description: "Lesson", title: "Function" });
 
     const [{ options }] = mocks.imageCalls;
     expect(options).toMatchObject({ headers: OG_IMAGE_HEADERS });

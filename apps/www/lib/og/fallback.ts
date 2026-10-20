@@ -15,13 +15,11 @@ export function generateFallbackImage(locale: Locale) {
       const t = yield* Effect.promise(() =>
         readServerTranslator({ locale, namespace: "NotFound" })
       );
-      const response = yield* Effect.tryPromise(() =>
-        generateOGImage({
-          description: t("description"),
-          headers: OG_FALLBACK_HEADERS,
-          title: t("title"),
-        })
-      );
+      const response = generateOGImage({
+        description: t("description"),
+        headers: OG_FALLBACK_HEADERS,
+        title: t("title"),
+      });
       const body = yield* Effect.promise(() => response.arrayBuffer());
       return new Response(body, {
         headers: response.headers,
