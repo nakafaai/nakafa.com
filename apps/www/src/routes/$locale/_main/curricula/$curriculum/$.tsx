@@ -50,7 +50,7 @@ import { readCurriculumSeoContext } from "@/lib/curriculum/seo";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { createResolvedRouteAlternates } from "@/lib/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
-import { generateSEOMetadata } from "@/lib/seo/generator";
+import { resolveSEOMetadata } from "@/lib/seo/generator";
 import { createSeoHead, toHeadAlternates, toRouterHead } from "@/lib/seo/head";
 
 const CurriculumInput = Schema.Struct({
@@ -84,7 +84,7 @@ const readCurriculumRoute = createServerFn({ method: "GET" })
       readRuntimeCurriculumCatalog(locale),
       loadLocaleMessages(locale),
       Effect.runPromise(
-        generateSEOMetadata(
+        resolveSEOMetadata(
           readCurriculumSeoContext(route, model.ancestors),
           locale
         )

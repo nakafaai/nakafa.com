@@ -22,7 +22,7 @@ import type { SurahRouteInput } from "@/lib/content/quran/surah.functions";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getLlmsMarkdownPath } from "@/lib/llms/format";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
-import { generateSEOMetadata } from "@/lib/seo/generator";
+import { resolveSEOMetadata } from "@/lib/seo/generator";
 import { serverHandler } from "@/lib/server/fn";
 
 /**
@@ -50,7 +50,7 @@ const readSurahPage = Effect.fn("www.content.quran.readSurah")(function* (
     [
       Effect.promise(() => getPublishedQuranView(locale, surahNumber)),
       Effect.promise(() => loadLocaleMessages(locale)),
-      generateSEOMetadata({ surah: surahData.value, type: "quran" }, locale),
+      resolveSEOMetadata({ surah: surahData.value, type: "quran" }, locale),
     ],
     { concurrency: "unbounded" }
   );

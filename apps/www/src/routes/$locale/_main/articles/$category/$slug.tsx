@@ -42,7 +42,7 @@ import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getLlmsMarkdownPath } from "@/lib/llms/format";
 import { createResolvedRouteAlternates } from "@/lib/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
-import { generateSEOMetadata } from "@/lib/seo/generator";
+import { resolveSEOMetadata } from "@/lib/seo/generator";
 import { createSeoHead, toHeadAlternates, toRouterHead } from "@/lib/seo/head";
 import { getOgUrl } from "@/lib/seo/social";
 
@@ -80,7 +80,7 @@ const readArticle = createServerFn({ method: "GET" })
     const filePath = `/${publicPath}`;
     const [seo, messages] = await Promise.all([
       Effect.runPromise(
-        generateSEOMetadata(
+        resolveSEOMetadata(
           {
             type: "article",
             categoryLabel: model.projection.categoryTitle,
