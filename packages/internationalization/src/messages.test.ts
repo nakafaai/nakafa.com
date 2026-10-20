@@ -18,7 +18,10 @@ import en from "@repo/internationalization/dictionaries/standalone/en.json" with
 import id from "@repo/internationalization/dictionaries/standalone/id.json" with {
   type: "json",
 };
-import { loadLocaleMessages } from "@repo/internationalization/src/messages";
+import {
+  getRouteMessages,
+  loadLocaleMessages,
+} from "@repo/internationalization/src/messages";
 import { Array as Arr, Record as Rec } from "effect";
 
 const app = { de: appDe, en: appEn, id: appId };
@@ -56,6 +59,15 @@ describe("loadLocaleMessages", () => {
       expect(messages.Landing["community-crowd"]).toMatch(NON_BLANK);
     }
   );
+});
+
+describe("getRouteMessages", () => {
+  it("returns only the namespaces that a route names", async () => {
+    const messages = await getRouteMessages("en", ["Common"]);
+
+    expect(Object.keys(messages)).toEqual(["Common"]);
+    expect(messages.Common).toEqual(appEn.Common);
+  });
 });
 
 describe("the standalone dictionaries", () => {
