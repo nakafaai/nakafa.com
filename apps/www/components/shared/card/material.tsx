@@ -40,8 +40,7 @@ interface Props {
  * `open` is reset to `true`.
  *
  * References:
- * - Next.js preserving UI state with Cache Components:
- *   `apps/www/node_modules/next/dist/docs/01-app/02-guides/preserving-ui-state.md`
+ * - The framework's guide to preserving UI state with cached components.
  * - Base UI collapsible component docs:
  *   https://base-ui.com/react/components/collapsible
  * - Installed Base UI panel measurement logic:

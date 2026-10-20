@@ -6,7 +6,7 @@ import {
   useSyncExternalStore,
 } from "react";
 
-/** The options of a deferred component, named as in `next/dynamic`. */
+/** The options of a deferred component, named after the framework's dynamic import. */
 interface DeferredOptions {
   /** Renders in place of the component until its module has loaded. */
   readonly loading?: () => ReactNode;
