@@ -12,7 +12,7 @@ interface DesignSystemProviderProps {
  * Applies the user's reduced-motion policy and the reading direction of the
  * locale to the app. Base UI's parts follow the direction. A document with no
  * locale, such as the global error page, keeps Base UI's default of left to
- * right. The theme is mounted once at the root, from providers/theme.
+ * right. The root document mounts the theme once, from providers/theme.
  */
 export function DesignSystemProvider({
   children,

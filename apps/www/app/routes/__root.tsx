@@ -11,7 +11,6 @@ import {
   createRootRoute,
   type ErrorComponentProps,
   HeadContent,
-  Outlet,
   Scripts,
   useMatch,
   useParams,
@@ -19,6 +18,7 @@ import {
 import { cn } from "cn";
 import { Option } from "effect";
 import { NuqsAdapter } from "nuqs/adapters/tanstack-router";
+import type { ReactNode } from "react";
 import { Announcer } from "@/components/navigation/announcer";
 import {
   LocalizedError,
@@ -54,20 +54,21 @@ export const Route = createRootRoute({
       { href: "/logo.svg", rel: "apple-touch-icon" },
     ],
   }),
-  component: RootDocument,
+  shellComponent: RootDocument,
   errorComponent: RootError,
   notFoundComponent: RootNotFound,
 });
 
 /**
- * The document of every route. Its language and direction follow the locale
- * param of the route on screen, or the locale of the standalone not-found page,
- * and the default locale answers a path without one. The pre-paint scripts set
- * the theme, the pricing currency and the signed-in hint before the first frame,
- * so nothing changes after paint. The URL-state adapter is mounted here once, for
- * every route below.
+ * The document of every route, and of the error and not-found states, which the
+ * router renders inside it. Its language and direction follow the locale param
+ * of the route on screen, or the locale of the standalone not-found page, and
+ * the default locale answers a path without one. The pre-paint scripts set the
+ * theme, the pricing currency and the signed-in hint before the first frame, so
+ * nothing changes after paint. The theme and the URL-state adapter are mounted
+ * here once, for every route below.
  */
-function RootDocument() {
+function RootDocument({ children }: { children: ReactNode }) {
   const params: Readonly<Record<string, string | undefined>> = useParams({
     strict: false,
   });
@@ -99,9 +100,7 @@ function RootDocument() {
       <body className={cn("relative touch-manipulation font-sans antialiased")}>
         <ThemeProvider>
           <Announcer />
-          <NuqsAdapter>
-            <Outlet />
-          </NuqsAdapter>
+          <NuqsAdapter>{children}</NuqsAdapter>
         </ThemeProvider>
         <Scripts />
       </body>
@@ -110,30 +109,23 @@ function RootDocument() {
 }
 
 /**
- * A path outside every locale answers the not-found state in the default locale.
- * The router replaces the whole document with it, so it mounts the theme too.
+ * A path outside every locale answers the not-found state in the default locale,
+ * inside the document of RootDocument.
  */
 function RootNotFound() {
-  return (
-    <ThemeProvider>
-      <LocalizedNotFound locale={DEFAULT_LOCALE} />
-    </ThemeProvider>
-  );
+  return <LocalizedNotFound locale={DEFAULT_LOCALE} />;
 }
 
 /**
  * A root failure answers the error state in the default locale, without the
- * locale's providers. The router replaces the whole document with it, so the
- * theme is mounted here as well, because the error state draws themed parts.
+ * locale's providers, inside the document of RootDocument.
  */
 function RootError({ error }: ErrorComponentProps) {
   return (
-    <ThemeProvider>
-      <LocalizedError
-        error={error}
-        locale={DEFAULT_LOCALE}
-        source="start-root-error"
-      />
-    </ThemeProvider>
+    <LocalizedError
+      error={error}
+      locale={DEFAULT_LOCALE}
+      source="start-root-error"
+    />
   );
 }
