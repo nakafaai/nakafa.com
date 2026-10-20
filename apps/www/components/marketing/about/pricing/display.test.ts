@@ -7,15 +7,10 @@ import {
   currencySymbol,
   drinkKey,
   getProPricingDisplay,
-  pricingCountryHeaderName,
 } from "@/components/marketing/about/pricing/display";
 import { getProMonthlyPricing } from "@/lib/pricing/monthly";
 
 describe("marketing/about/pricing-display", () => {
-  it("uses the Vercel country header name", () => {
-    expect(pricingCountryHeaderName).toBe("x-vercel-ip-country");
-  });
-
   it("names each price by the currency symbol of its own locale", () => {
     expect(currencySymbol(getProMonthlyPricing("DE").formatter)).toBe("€");
     expect(currencySymbol(getProMonthlyPricing("ID").formatter)).toBe("Rp");

@@ -5,6 +5,7 @@ import {
   currencyForCountry,
   currencyForTimeZone,
   PRICING_CURRENCY_ATTRIBUTE,
+  pricingCurrencyCookieFor,
   pricingCurrencyScript,
   readCurrencyCookie,
 } from "@/lib/pricing/currency";
@@ -159,5 +160,42 @@ describe("pricing currency script", () => {
     const script = pricingCurrencyScript();
     expect(script).toContain('"Asia/Jakarta":"IDR"');
     expect(script).not.toContain("</script");
+  });
+});
+
+describe("pricing currency cookie", () => {
+  it("sets the currency of the request country when no cookie is set yet", () => {
+    const cookie = pricingCurrencyCookieFor(
+      new Headers({ "x-vercel-ip-country": "ID" })
+    );
+    expect(Option.getOrUndefined(cookie)).toBe(
+      "pricing_currency=IDR; Path=/; SameSite=Lax; Max-Age=31536000"
+    );
+  });
+
+  it("keeps a currency cookie that is already set", () => {
+    const cookie = pricingCurrencyCookieFor(
+      new Headers({
+        cookie: "pricing_currency=EUR",
+        "x-vercel-ip-country": "ID",
+      })
+    );
+    expect(Option.isNone(cookie)).toBe(true);
+  });
+
+  it("replaces a cookie that holds no known currency", () => {
+    const cookie = pricingCurrencyCookieFor(
+      new Headers({
+        cookie: "pricing_currency=XYZ",
+        "x-vercel-ip-country": "DE",
+      })
+    );
+    expect(Option.getOrUndefined(cookie)).toContain(
+      "pricing_currency=EUR; Path=/"
+    );
+  });
+
+  it("sets nothing for a request that names no country", () => {
+    expect(Option.isNone(pricingCurrencyCookieFor(new Headers()))).toBe(true);
   });
 });

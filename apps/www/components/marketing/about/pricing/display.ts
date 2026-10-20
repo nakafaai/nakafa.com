@@ -1,8 +1,6 @@
 import { Array as Arr } from "effect";
 import { getProMonthlyPricing } from "@/lib/pricing/monthly";
 
-export const pricingCountryHeaderName = "x-vercel-ip-country";
-
 /** The key of the drink that a monthly price buys in its own currency. */
 export function drinkKey(
   currency: string

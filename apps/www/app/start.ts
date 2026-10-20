@@ -3,6 +3,8 @@ import {
   createMiddleware,
   createStart,
 } from "@tanstack/react-start";
+import { Option } from "effect";
+import { pricingCurrencyCookieFor } from "@/lib/pricing/currency";
 
 /**
  * Creates the request's session memo before any reader runs. The memo reads
@@ -19,10 +21,28 @@ const requestSession = createMiddleware({ type: "request" }).server(
   }
 );
 
+/**
+ * Keeps the visitor's price currency in its cookie, set from the country of the
+ * request while the cookie is unset, so the first paint shows the visitor's price.
+ */
+const pricingCurrency = createMiddleware({ type: "request" }).server(
+  async ({ next, request }) => {
+    const cookie = pricingCurrencyCookieFor(request.headers);
+    if (Option.isSome(cookie)) {
+      const { appendResponseHeader } = await import(
+        "@tanstack/react-start/server"
+      );
+      appendResponseHeader("set-cookie", cookie.value);
+    }
+    return next();
+  }
+);
+
 export const startInstance = createStart(() => ({
   defaultSsr: true,
   requestMiddleware: [
     requestSession,
+    pricingCurrency,
     createCsrfMiddleware({ filter: (ctx) => ctx.handlerType === "serverFn" }),
   ],
 }));
