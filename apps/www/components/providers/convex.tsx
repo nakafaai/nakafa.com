@@ -2,26 +2,23 @@
 
 import {
   ConvexProvider as ConvexClientProvider,
-  ConvexReactClient,
+  type ConvexReactClient,
 } from "convex/react";
 import { Effect, Exit, Function as Fn, Option, Scope } from "effect";
 import {
-  createContext,
   type ReactNode,
   use,
   useEffect,
   useState,
   useSyncExternalStore,
 } from "react";
-import {
-  AuthSessionProvider,
-  useAuthSession,
-  useAuthSessionStore,
-} from "@/components/auth/session";
+import { AuthSessionProvider } from "@/components/auth/follow.client";
+import { useAuthSession, useAuthSessionStore } from "@/components/auth/session";
 import { readAuthClient } from "@/lib/auth/client";
 import {
   authenticateConvex,
   type ConvexAuth,
+  ConvexAuthContext,
   type ConvexAuthStore,
   ConvexTokenReadError,
   createConvexAuthStore,
@@ -29,17 +26,7 @@ import {
   readConvexSessionId,
 } from "@/lib/auth/convex";
 import { loadKnownSession, saveKnownSession } from "@/lib/auth/known";
-
-let sharedConvexClient: ConvexReactClient | undefined;
-
-/** Returns the one page-lifetime Convex client recommended by the React API. */
-function getSharedConvexClient(convexUrl: string) {
-  sharedConvexClient ??= new ConvexReactClient(convexUrl, {
-    initialAuthTokenReuse: true,
-    logger: false,
-  });
-  return sharedConvexClient;
-}
+import { readConvexClient } from "@/lib/convex/client.client";
 
 /**
  * Reads a fresh Convex JWT through the installed Better Auth client plugin.
@@ -68,8 +55,6 @@ const readConvexToken = Effect.tryPromise({
         )
   )
 );
-
-const ConvexAuthContext = createContext<ConvexAuthStore | null>(null);
 
 /** What the browser knows about its session never changes under a mounted page, so nothing notifies. */
 function subscribeKnownSession() {
@@ -106,7 +91,7 @@ function useConvexSessionId() {
  * `ConvexProviderWithAuth` does. It also keeps what each settled session says
  * for the next page load.
  */
-function ConvexSessionCredentials({
+export function ConvexSessionCredentials({
   client,
   store,
 }: {
@@ -150,7 +135,11 @@ function ConvexSessionCredentials({
  * cleanup runs after theirs and readers that unmount with the session release
  * their queries before the credentials go.
  */
-function ConvexSessionRelease({ client }: { client: ConvexReactClient }) {
+export function ConvexSessionRelease({
+  client,
+}: {
+  client: ConvexReactClient;
+}) {
   const sessionId = useConvexSessionId();
 
   useEffect(() => {
@@ -204,7 +193,7 @@ export function ConvexProvider({
   children: ReactNode;
   convexUrl: string;
 }) {
-  const convex = getSharedConvexClient(convexUrl);
+  const convex = readConvexClient(convexUrl);
 
   return (
     <AuthSessionProvider>

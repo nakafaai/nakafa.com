@@ -8,7 +8,7 @@ import { toast } from "@repo/design-system/lib/toast/notify";
 import { Effect } from "effect";
 import { lazy, Suspense, useTransition } from "react";
 import { useLocale, useTranslations } from "use-intl";
-import { useLiveSession } from "@/components/providers/marketing";
+import { useLiveSession } from "@/components/providers/live";
 import { reportClientException } from "@/lib/analytics/client";
 import {
   getPostAuthOnboardingHref,
@@ -30,6 +30,7 @@ function LoadingButton({ variant }: { variant: PricingButtonVariant }) {
   );
 }
 
+/** The billing action loads with its Convex island, so a visitor's page never loads it. */
 const BillingButton = lazy(() =>
   import("@/components/marketing/about/pricing/billing.client").then(
     ({ BillingButton: Component }) => ({ default: Component })
@@ -107,24 +108,25 @@ function VisitorButton({ variant }: { variant: PricingButtonVariant }) {
 }
 
 /**
- * The Pro action. The billing code of a signed-in account loads after the page
- * has mounted, and a visitor gets the sign-in action instead.
+ * The Pro action. A visitor gets the sign-in action. Once the page holds its
+ * Convex client, the billing action mounts on that client, after the page has
+ * mounted, so the first HTML and the hydration both render the visitor's action.
  */
 export function PricingButton({ variant }: { variant: PricingButtonVariant }) {
   const mounted = useMounted();
-  const live = useLiveSession();
+  const client = useLiveSession((state) => state.client);
 
   if (!mounted) {
     return <LoadingButton variant={variant} />;
   }
 
-  if (!live) {
+  if (client === null) {
     return <VisitorButton variant={variant} />;
   }
 
   return (
     <Suspense fallback={<LoadingButton variant={variant} />}>
-      <BillingButton variant={variant} />
+      <BillingButton client={client} variant={variant} />
     </Suspense>
   );
 }

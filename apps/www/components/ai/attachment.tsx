@@ -1,12 +1,10 @@
 "use client";
 
-import { useMutation } from "@confect/react";
 import {
   AttachmentIcon,
   Cancel01Icon,
   FileIcon,
 } from "@hugeicons/core-free-icons";
-import nina from "@repo/backend/confect/_generated/refs/nina";
 import { Image } from "@repo/design-system/components/image";
 import {
   Attachment,
@@ -14,7 +12,6 @@ import {
   AttachmentActions,
   AttachmentContent,
   AttachmentDescription,
-  AttachmentGroup,
   AttachmentMedia,
   AttachmentTitle,
   AttachmentTrigger,
@@ -29,12 +26,10 @@ import type {
 } from "@repo/design-system/lib/prompt-input/files";
 import type { FileUIPart } from "ai";
 import { cva, type VariantProps } from "class-variance-authority";
-import { Array as Arr, Effect, HashSet } from "effect";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import { refusalReason, splitFileName } from "@/components/ai/attachments";
 import { useAi } from "@/components/ai/context";
-import { releaseUploads } from "@/components/ai/uploads";
 
 // A chip in the composer sits inside the composer's own border, so it draws no
 // frame: no border and no background of its own. The `preview` variant keeps
@@ -189,7 +184,7 @@ export function NinaAttachment({
  * and the reason in the text under it. It never uploads, and its own remove
  * button takes it out of the tray.
  */
-function NinaRefusedAttachment({
+export function NinaRefusedAttachment({
   onRemove,
   refusal,
 }: {
@@ -224,76 +219,6 @@ function NinaRefusedAttachment({
         </AttachmentAction>
       </AttachmentActions>
     </Attachment>
-  );
-}
-
-/**
- * The files of a composer's tray: the files it attached, which upload and stay
- * until the message goes, and the files the last pick refused.
- */
-export function NinaAttachments({
-  submittedFiles,
-}: {
-  submittedFiles: readonly string[];
-}) {
-  const attachedFiles = usePromptInputAttachments(
-    (attachments) => attachments.files
-  );
-  const refusals = usePromptInputAttachments(
-    (attachments) => attachments.refusals
-  );
-  const removeAttachment = usePromptInputAttachments(
-    (attachments) => attachments.remove
-  );
-  const clearUpload = useAi((state) => state.clearUpload);
-  const forgetUploads = useAi((state) => state.forgetUploads);
-  const readUploads = useAi((state) => state.readUploads);
-  const release = useMutation(nina.uploads.release);
-  const t = useTranslations("Ai");
-  const submitted = HashSet.fromIterable(submittedFiles);
-  const files = Arr.filter(
-    attachedFiles,
-    (file) => !HashSet.has(submitted, file.id)
-  );
-  if (files.length === 0 && refusals.length === 0) {
-    return null;
-  }
-  return (
-    <AttachmentGroup className="w-full justify-start px-3 pt-3">
-      {Arr.map(files, (file) => (
-        <NinaAttachment file={file} key={file.id} variant="preview">
-          <AttachmentActions>
-            <AttachmentAction
-              aria-label={t("remove-attachment", { filename: file.file.name })}
-              onClick={() => {
-                removeAttachment(file.id);
-                clearUpload(file.id);
-                // The upload the file holds goes back at once, not at expiry,
-                // and its hold is forgotten once the server gave its place back.
-                Effect.runFork(
-                  releaseUploads(readUploads([file.id]), release).pipe(
-                    Effect.tap((given) =>
-                      Effect.sync(() => forgetUploads(given))
-                    )
-                  )
-                );
-              }}
-              type="button"
-              variant="secondary"
-            >
-              <HugeIcons icon={Cancel01Icon} />
-            </AttachmentAction>
-          </AttachmentActions>
-        </NinaAttachment>
-      ))}
-      {Arr.map(refusals, (refusal) => (
-        <NinaRefusedAttachment
-          key={refusal.id}
-          onRemove={() => removeAttachment(refusal.id)}
-          refusal={refusal}
-        />
-      ))}
-    </AttachmentGroup>
   );
 }
 

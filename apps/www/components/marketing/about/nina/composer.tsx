@@ -14,12 +14,18 @@ type ComposerSubmit = ComponentProps<typeof NinaInput>["onSubmit"];
 /** The prompt that is on its way, then the input that sends the next one. */
 export function Composer({
   attachments,
+  autoFocus,
   disabled,
+  onAttachRequest,
+  onEngage,
   onSubmit,
   prompt,
 }: {
   attachments: boolean;
+  autoFocus?: boolean | undefined;
   disabled: boolean;
+  onAttachRequest?: (() => void) | undefined;
+  onEngage?: (() => void) | undefined;
   onSubmit: ComposerSubmit;
   prompt: ComposerPrompt;
 }) {
@@ -40,7 +46,10 @@ export function Composer({
       ) : null}
       <NinaInput
         attachments={attachments}
+        autoFocus={autoFocus}
         disabled={disabled}
+        onAttachRequest={onAttachRequest}
+        onEngage={onEngage}
         onSubmit={onSubmit}
       />
     </div>

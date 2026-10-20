@@ -3,6 +3,7 @@
 import {
   ArrowRight02Icon,
   ArrowUp02Icon,
+  AttachmentIcon,
   BookOpenTextIcon,
   LeftToRightListBulletIcon,
   Quiz03Icon,
@@ -33,19 +34,34 @@ import {
 import type { ChatStatus } from "ai";
 import { cn } from "cn";
 import { Array as Arr, Effect, Function as Fn, Option } from "effect";
-import { type ReactNode, useState } from "react";
+import { lazy, type ReactNode, Suspense, useState } from "react";
 import { useTranslations } from "use-intl";
-import { NinaAttach, NinaAttachments } from "@/components/ai/attachment";
+import { NinaAttach } from "@/components/ai/attachment";
 import { useAi } from "@/components/ai/context";
 import { promptRefusal, reportNinaFailure } from "@/components/ai/feedback";
+
+/**
+ * The file tray and the attach button load with their upload code, which
+ * reaches Convex. A composer that takes no files, such as a visitor's or a
+ * page's first composer before its focus, never loads them.
+ */
+const NinaAttachments = lazy(() =>
+  import("@/components/ai/tray").then((loaded) => ({
+    default: loaded.NinaAttachments,
+  }))
+);
 
 interface Props {
   /** Whether the composer takes files. Uploads belong to a signed-in account, so a visitor's composer takes none. */
   attachments?: boolean;
-  autoFocus?: boolean;
+  autoFocus?: boolean | undefined;
   children?: ReactNode;
   className?: string;
   disabled?: boolean;
+  /** The attach button of a composer that takes no files: a visitor's press asks for sign-in. */
+  onAttachRequest?: (() => void) | undefined;
+  /** Runs on the first focus or input, so a composer can load what sending needs. */
+  onEngage?: (() => void) | undefined;
   onStop?: () => void;
   onSubmit: (message: PromptInputMessage) => boolean | Promise<boolean>;
   status?: ChatStatus;
@@ -62,6 +78,8 @@ export function NinaInput({
   children,
   className,
   disabled,
+  onAttachRequest,
+  onEngage,
   onStop,
   onSubmit,
   status,
@@ -119,15 +137,21 @@ export function NinaInput({
         )}
       >
         {attachments ? (
-          <NinaAttachments submittedFiles={submittedFiles} />
+          <Suspense fallback={null}>
+            <NinaAttachments submittedFiles={submittedFiles} />
+          </Suspense>
         ) : null}
         <PromptInputTextarea
           aria-label={t("text-placeholder")}
           autoFocus={autoFocus}
           className="text-(length:--text-chat) md:text-(length:--text-chat) max-h-[min(12rem,35dvh)] px-3 py-3"
           dir="auto"
-          onChange={(event) => setText(event.target.value)}
-          onFocus={() =>
+          onChange={(event) => {
+            setText(event.target.value);
+            onEngage?.();
+          }}
+          onFocus={() => {
+            onEngage?.();
             // Load the stylesheet's math faces before streamed formulas arrive.
             Effect.runPromise(
               Effect.tryPromise(() =>
@@ -136,8 +160,8 @@ export function NinaInput({
                   document.fonts.load("italic 16px KaTeX_Math"),
                 ])
               ).pipe(Effect.ignore)
-            )
-          }
+            );
+          }}
           placeholder={t("text-placeholder")}
           value={text}
         />
@@ -145,7 +169,23 @@ export function NinaInput({
           align="block-end"
           className="justify-between gap-2 group-has-[>[data-slot=input-group-control]]/input-group:pb-3"
         >
-          {attachments ? <NinaAttach /> : null}
+          {attachments ? (
+            <Suspense fallback={null}>
+              <NinaAttach />
+            </Suspense>
+          ) : null}
+          {attachments || onAttachRequest === undefined ? null : (
+            <InputGroupButton
+              aria-label={t("attach-files")}
+              className="rounded-full"
+              onClick={onAttachRequest}
+              size="icon"
+              type="button"
+              variant="outline"
+            >
+              <HugeIcons icon={AttachmentIcon} />
+            </InputGroupButton>
+          )}
           <div className="flex items-center gap-1">
             <InputGroupButton
               aria-label={stopping ? t("stop-response") : t("send-message")}
