@@ -11,15 +11,6 @@ export default {
         rules: ["deslop/unused-file"],
       },
       {
-        // AI SDK 7 appends text, reasoning, and data parts and mutates active
-        // parts in place. Text and reasoning parts expose no stable public id.
-        // https://github.com/vercel/ai/blob/ai%407.0.58/packages/ai/src/ui/process-ui-message-stream.ts#L415-L495
-        // React's index-key warning applies when list order can change.
-        // https://react.dev/learn/rendering-lists#rules-of-keys
-        files: ["src/components/ai/message-parts.tsx"],
-        rules: ["react-doctor/no-array-index-as-key"],
-      },
-      {
         // Convex's public type mandates a React hook for the useAuth prop, so
         // every ConvexProviderWithAuth consumer passes a hook as a value.
         // Convex calls it unconditionally at the provider top level, which
