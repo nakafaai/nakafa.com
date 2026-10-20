@@ -38,6 +38,7 @@ import { useTranslations } from "use-intl";
 import { type ChatFirstPage, useChatList } from "@/components/ai/chat/chats";
 import { useAi } from "@/components/ai/context";
 import { useConvexAuth } from "@/components/providers/convex";
+import { ConvexIsland } from "@/components/providers/island";
 import { usePaginatedPreloaded } from "@/lib/data/paginated";
 import { useViewer } from "@/lib/identity/client";
 
@@ -119,7 +120,9 @@ export function AiChatSidebar({
       <SidebarContent>
         <ChatFirstPageContext value={first}>
           <ChatSearchContext value={debouncedQ}>
-            <AiChatSidebarHistory />
+            <ConvexIsland>
+              <AiChatSidebarHistory />
+            </ConvexIsland>
           </ChatSearchContext>
         </ChatFirstPageContext>
       </SidebarContent>

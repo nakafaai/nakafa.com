@@ -1,12 +1,19 @@
 import { Particles } from "@repo/design-system/components/ui/particles";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { cn } from "cn";
-import type { ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import { ChatHeader } from "@/components/ai/chat/header";
 import { StartPrompt, useStartChat } from "@/components/ai/chat/start";
-import { NinaInput } from "@/components/ai/input";
+import { NinaInput, NinaSuggestions } from "@/components/ai/input";
+import { ConvexIsland } from "@/components/providers/island";
+import { useLiveSession } from "@/components/providers/live";
+import { useCurrentAuthNavigation } from "@/lib/auth/location";
 
-/** Moves directly from the welcome screen into the final conversation layout. */
+/**
+ * Moves directly from the welcome screen into the final conversation layout. Only
+ * a signed-in learner\x27s composer reads Convex, so a visitor\x27s composer loads no
+ * admission code and opens no client. A visitor\x27s composer sends to sign-in.
+ */
 export function ChatNew({
   children,
   title,
@@ -14,11 +21,34 @@ export function ChatNew({
   children: ReactNode;
   title: ReactNode;
 }) {
-  const router = useRouter();
-  const { disabled, prompt, submit } = useStartChat({
-    onComplete: (chatId) => router.push(`/chat/${chatId}`),
-  });
+  const isSessionPending = useLiveSession((state) => state.isPending);
+  return (
+    <ConvexIsland
+      fallback={
+        isSessionPending ? (
+          <PendingChatNew title={title}>{children}</PendingChatNew>
+        ) : (
+          <VisitorChatNew title={title}>{children}</VisitorChatNew>
+        )
+      }
+    >
+      <SignedInChatNew title={title}>{children}</SignedInChatNew>
+    </ConvexIsland>
+  );
+}
 
+/** The welcome layout of a new chat, which every variant of the page shares. */
+function NewChatLayout({
+  children,
+  composer,
+  prompt,
+  title,
+}: {
+  children: ReactNode;
+  composer: ReactNode;
+  prompt: ComponentProps<typeof StartPrompt>["prompt"];
+  title: ReactNode;
+}) {
   return (
     <div
       className={cn(
@@ -48,11 +78,91 @@ export function ChatNew({
         )}
         key="composer"
       >
-        <NinaInput disabled={disabled} onSubmit={submit} />
+        {composer}
       </div>
       {prompt ? null : (
         <div className="relative mx-auto w-full max-w-xl px-6">{children}</div>
       )}
     </div>
+  );
+}
+
+/** A learner\x27s composer, whose admission and submission run on the page\x27s client. */
+function SignedInChatNew({
+  children,
+  title,
+}: {
+  children: ReactNode;
+  title: ReactNode;
+}) {
+  const router = useRouter();
+  const { disabled, prompt, submit } = useStartChat({
+    onComplete: (chatId) => router.push(`/chat/${chatId}`),
+  });
+
+  return (
+    <NewChatLayout
+      composer={<NinaInput disabled={disabled} onSubmit={submit} />}
+      prompt={prompt}
+      title={title}
+    >
+      {children}
+    </NewChatLayout>
+  );
+}
+
+/** A visitor\x27s composer: its attach button and its send both ask for sign-in. */
+function VisitorChatNew({
+  children,
+  title,
+}: {
+  children: ReactNode;
+  title: ReactNode;
+}) {
+  const router = useRouter();
+  const authNavigation = useCurrentAuthNavigation();
+
+  function signIn() {
+    router.push(authNavigation.readHref());
+    return false;
+  }
+
+  return (
+    <NewChatLayout
+      composer={
+        <NinaInput
+          attachments={false}
+          onAttachRequest={signIn}
+          onSubmit={signIn}
+        >
+          <NinaSuggestions onSubmit={signIn} />
+        </NinaInput>
+      }
+      prompt={null}
+      title={title}
+    >
+      {children}
+    </NewChatLayout>
+  );
+}
+
+/** A composer while the session loads: its send waits for the session, so it offers neither sign-in nor a send. */
+function PendingChatNew({
+  children,
+  title,
+}: {
+  children: ReactNode;
+  title: ReactNode;
+}) {
+  return (
+    <NewChatLayout
+      composer={
+        <NinaInput attachments={false} disabled onSubmit={() => false} />
+      }
+      prompt={null}
+      title={title}
+    >
+      {children}
+    </NewChatLayout>
   );
 }
