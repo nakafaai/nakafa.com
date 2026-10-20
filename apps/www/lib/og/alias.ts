@@ -31,25 +31,50 @@ export function isUnservedLocaleShape(segment: string | undefined) {
 
 /**
  * Reads the `/og` address that a public social image alias serves. The alias
- * drops its suffix, so the image route answers the route that it names. An
- * alias under a locale shape that the site does not serve is not rewritten, so
- * the router answers it with not found.
+ * drops its suffix, so the image route answers the route that it names. A PNG
+ * alias needs a served locale in front: the public folder holds PNG files that
+ * the site serves as they are, such as `/og.png` and `/open-graph/app/x.png`,
+ * and the server entry answers before the static files. An alias under a locale
+ * shape that the site does not serve is not rewritten, so the router answers it
+ * with not found. A path that already names the OG route, bare or under a served
+ * locale, is not rewritten either.
  */
 export function readOgAliasUrl(url: URL): Option.Option<URL> {
   const { pathname } = url;
-  if (pathname === "/og" || pathname.startsWith("/og/")) {
-    return Option.none();
-  }
-  const [firstSegment] = Arr.filter(
+  const [firstSegment, secondSegment] = Arr.filter(
     pathname.split("/"),
     (segment) => segment !== ""
   );
+  if (
+    firstSegment === "og" ||
+    (secondSegment === "og" && Option.isSome(decodeLocale(firstSegment)))
+  ) {
+    return Option.none();
+  }
   return Option.flatMap(readImageSuffix(pathname), (suffix) => {
     if (isUnservedLocaleShape(firstSegment)) {
+      return Option.none();
+    }
+    if (suffix !== ".og" && Option.isNone(decodeLocale(firstSegment))) {
       return Option.none();
     }
     const alias = new URL(url);
     alias.pathname = `/og/${pathname.slice(1, -suffix.length)}`;
     return Option.some(alias);
   });
+}
+
+/**
+ * The request that a social image alias serves, as the OG route receives it: the
+ * same method, headers and query on the route's address. Only a read of the
+ * image is an alias, so any other method reaches the router unchanged.
+ */
+export function readOgAliasRequest(request: Request): Option.Option<Request> {
+  if (request.method !== "GET" && request.method !== "HEAD") {
+    return Option.none();
+  }
+  return Option.map(
+    readOgAliasUrl(new URL(request.url)),
+    (alias) => new Request(alias, request)
+  );
 }

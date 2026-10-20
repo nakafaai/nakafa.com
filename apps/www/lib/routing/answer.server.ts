@@ -5,6 +5,7 @@ import type { Locale } from "@repo/internationalization/src/locale";
 import { handleStartError } from "@tanstack/react-start/server";
 import { Effect, Option, Schema } from "effect";
 import { negotiateDocument } from "@/lib/llms/negotiate.server";
+import { readOgAliasRequest } from "@/lib/og/alias";
 import { readProfileGate } from "@/lib/profile/gate";
 import {
   createNotFoundRequest,
@@ -82,13 +83,13 @@ const answerRouter = Effect.fn("www.routing.answer.router")(function* (
 /**
  * Answers one request before the router runs. The address and the headers alone
  * decide each answer, in this order: a host under the production domain that
- * names no school moves to the main site, a non-canonical slash spelling moves
- * to its canonical address, a removed address answers not found, a migrated or
- * moved address moves to its successor, a school tree path or a raw user address
- * answers not found, and a refused school page answers not found (ADR 0026). The
- * negotiation then answers Markdown or 406, and the router answers the rest after
- * the locale redirects. Each not-found answer is the app's own page, in the
- * locale of the address.
+ * names no school moves to the main site, a social image alias reaches the OG
+ * route, a non-canonical slash spelling moves to its canonical address, a removed
+ * address answers not found, a migrated or moved address moves to its successor,
+ * a school tree path or a raw user address answers not found, and a refused
+ * school page answers not found (ADR 0026). The negotiation then answers Markdown
+ * or 406, and the router answers the rest after the locale redirects. Each
+ * not-found answer is the app's own page, in the locale of the address.
  */
 export const answerRequest = Effect.fn("www.routing.answer.request")(function* (
   request: Request,
@@ -97,6 +98,11 @@ export const answerRequest = Effect.fn("www.routing.answer.request")(function* (
   const mainSite = readMainSiteRedirect(request);
   if (Option.isSome(mainSite)) {
     return mainSite.value;
+  }
+
+  const image = readOgAliasRequest(request);
+  if (Option.isSome(image)) {
+    return yield* answerRouted(image.value, route);
   }
 
   const slash = readSlashRedirectResponse(request);
