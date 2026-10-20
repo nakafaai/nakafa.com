@@ -72,6 +72,28 @@ describe("sitemap index route", () => {
       source: "sitemap-index",
     });
   });
+
+  it("reports a defect in the index and answers 500 without details", async () => {
+    readSitemapPageDescriptorsMock.mockReturnValue(
+      Effect.die(new Error("convex"))
+    );
+
+    const response = await serveSitemapIndex();
+
+    expect(response.status).toBe(500);
+    await expect(response.text()).resolves.toBe("Internal Server Error");
+    expect(captureMock).toHaveBeenCalledTimes(1);
+    expect(captureMock).toHaveBeenCalledWith(expect.any(Error), {
+      source: "sitemap-index",
+    });
+  });
+
+  it("lets an interrupt through the index without reporting it", async () => {
+    readSitemapPageDescriptorsMock.mockReturnValue(Effect.interrupt);
+
+    await expect(serveSitemapIndex()).rejects.toBeDefined();
+    expect(captureMock).not.toHaveBeenCalled();
+  });
 });
 
 describe("sitemap page route", () => {
@@ -108,6 +130,7 @@ describe("sitemap page route", () => {
 
     expect(response.status).toBe(404);
     await expect(response.text()).resolves.toBe("Not found");
+    expect(readSitemapPageDescriptorsMock).not.toHaveBeenCalled();
     expect(getSitemapEntriesMock).not.toHaveBeenCalled();
   });
 
@@ -144,6 +167,21 @@ describe("sitemap page route", () => {
     });
 
     expect(response.status).toBe(500);
+    expect(captureMock).toHaveBeenCalledWith(expect.any(Error), {
+      source: "sitemap-page",
+    });
+  });
+
+  it("reports a defect in a page and answers 500 without details", async () => {
+    getSitemapEntriesMock.mockReturnValue(Effect.die(new Error("store")));
+
+    const response = await serveSitemapPage({
+      params: { id: "article_en_p0.xml" },
+    });
+
+    expect(response.status).toBe(500);
+    await expect(response.text()).resolves.toBe("Internal Server Error");
+    expect(captureMock).toHaveBeenCalledTimes(1);
     expect(captureMock).toHaveBeenCalledWith(expect.any(Error), {
       source: "sitemap-page",
     });

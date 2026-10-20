@@ -52,6 +52,7 @@ import { createResolvedRouteAlternates } from "@/lib/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { resolveSEOMetadata } from "@/lib/seo/generator";
 import { createSeoHead, toHeadAlternates, toRouterHead } from "@/lib/seo/head";
+import { serverHandler } from "@/lib/server/fn";
 
 const CurriculumInput = Schema.Struct({
   curriculum: Schema.String,
@@ -66,94 +67,107 @@ const CurriculumInput = Schema.Struct({
  */
 const readCurriculumRoute = createServerFn({ method: "GET" })
   .validator(Schema.toStandardSchemaV1(CurriculumInput))
-  .handler(async ({ data }) => {
-    const locale = getLocaleOrThrow(data.locale);
-    const model = await resolveRuntimeCurriculumRoute({
-      curriculum: data.curriculum,
-      locale,
-      path: data.path,
-    });
-    const { program, route } = model;
-    const canonicalPath = Schema.decodeUnknownOption(LocalizedPath)(
-      toCanonicalPath(`/${locale}/${route.publicPath}`)
-    );
-    if (Option.isNone(canonicalPath)) {
-      return { kind: "notFound" as const };
-    }
-    const [catalog, messages, seo] = await Promise.all([
-      readRuntimeCurriculumCatalog(locale),
-      loadLocaleMessages(locale),
-      Effect.runPromise(
-        resolveSEOMetadata(
-          readCurriculumSeoContext(route, model.ancestors),
-          locale
-        )
-      ),
-    ]);
-    const tCommon = createTranslator({ locale, messages, namespace: "Common" });
-    const tLearningPrograms = createTranslator({
-      locale,
-      messages,
-      namespace: "LearningPrograms",
-    });
-    const homeLabel = tCommon("home");
-    const subjectLabel = tCommon("subject");
-    const childVisuals = getCurriculumLooks(model.childRoutes, (child) =>
-      resolveCurriculumCatalogArtwork(locale, {
-        kind: "route",
-        nodeKey: child.nodeKey,
-        programKey: child.programKey,
-      })
-    );
-
-    return {
-      alternates: toHeadAlternates(
-        createResolvedRouteAlternates(route, model.alternates)
-      ),
-      ancestors: model.ancestors,
-      breadcrumbs: createBreadcrumbItems(
-        locale,
-        readRuntimeCurriculumBreadcrumbs(homeLabel, subjectLabel, model)
-      ),
-      cacheTags: readContentCacheTags([
-        ...LEARN_SHELL_CACHE_SCOPES,
-        "program",
-        "material",
-      ]),
-      canonicalPath: canonicalPath.value,
-      chapters: readMaterialCardChapters(model.materialCards),
-      childCards: Arr.zipWith(
-        model.childRoutes,
-        childVisuals,
-        (route, visual) => ({
-          route,
-          visual,
-        })
-      ),
-      kind: "found" as const,
-      description: seo.description,
-      image: getCurriculumRouteSocialImage(locale, program.key, route),
-      labels: {
-        home: homeLabel,
-        more: tCommon("more"),
-        routeAction: tLearningPrograms("curriculum-route-action"),
-        selector: tLearningPrograms("kind.school-curriculum"),
-        subject: subjectLabel,
-      },
-      locale,
-      materialCards: model.materialCards,
-      options: readRuntimeCurriculumOptions(catalog, locale),
-      route,
-      sourceUrl: model.sourceRevision
-        ? getAksaraTreeUrl({
-            path: model.sourcePath,
-            revision: model.sourceRevision,
+  .handler(
+    serverHandler(
+      Effect.fn("www.curricula.route.read")(function* (
+        data: typeof CurriculumInput.Type
+      ) {
+        const locale = getLocaleOrThrow(data.locale);
+        const model = yield* Effect.promise(() =>
+          resolveRuntimeCurriculumRoute({
+            curriculum: data.curriculum,
+            locale,
+            path: data.path,
           })
-        : null,
-      title: seo.title,
-      toc: readRuntimeCurriculumToc(model),
-    };
-  });
+        );
+        const { program, route } = model;
+        const canonicalPath = Schema.decodeUnknownOption(LocalizedPath)(
+          toCanonicalPath(`/${locale}/${route.publicPath}`)
+        );
+        if (Option.isNone(canonicalPath)) {
+          return { kind: "notFound" as const };
+        }
+        const [catalog, messages, seo] = yield* Effect.all(
+          [
+            Effect.promise(() => readRuntimeCurriculumCatalog(locale)),
+            Effect.promise(() => loadLocaleMessages(locale)),
+            resolveSEOMetadata(
+              readCurriculumSeoContext(route, model.ancestors),
+              locale
+            ),
+          ],
+          { concurrency: "unbounded" }
+        );
+        const tCommon = createTranslator({
+          locale,
+          messages,
+          namespace: "Common",
+        });
+        const tLearningPrograms = createTranslator({
+          locale,
+          messages,
+          namespace: "LearningPrograms",
+        });
+        const homeLabel = tCommon("home");
+        const subjectLabel = tCommon("subject");
+        const childVisuals = getCurriculumLooks(model.childRoutes, (child) =>
+          resolveCurriculumCatalogArtwork(locale, {
+            kind: "route",
+            nodeKey: child.nodeKey,
+            programKey: child.programKey,
+          })
+        );
+
+        return {
+          alternates: toHeadAlternates(
+            createResolvedRouteAlternates(route, model.alternates)
+          ),
+          ancestors: model.ancestors,
+          breadcrumbs: createBreadcrumbItems(
+            locale,
+            readRuntimeCurriculumBreadcrumbs(homeLabel, subjectLabel, model)
+          ),
+          cacheTags: readContentCacheTags([
+            ...LEARN_SHELL_CACHE_SCOPES,
+            "program",
+            "material",
+          ]),
+          canonicalPath: canonicalPath.value,
+          chapters: readMaterialCardChapters(model.materialCards),
+          childCards: Arr.zipWith(
+            model.childRoutes,
+            childVisuals,
+            (route, visual) => ({
+              route,
+              visual,
+            })
+          ),
+          kind: "found" as const,
+          description: seo.description,
+          image: getCurriculumRouteSocialImage(locale, program.key, route),
+          labels: {
+            home: homeLabel,
+            more: tCommon("more"),
+            routeAction: tLearningPrograms("curriculum-route-action"),
+            selector: tLearningPrograms("kind.school-curriculum"),
+            subject: subjectLabel,
+          },
+          locale,
+          materialCards: model.materialCards,
+          options: readRuntimeCurriculumOptions(catalog, locale),
+          route,
+          sourceUrl: model.sourceRevision
+            ? getAksaraTreeUrl({
+                path: model.sourcePath,
+                revision: model.sourceRevision,
+              })
+            : null,
+          title: seo.title,
+          toc: readRuntimeCurriculumToc(model),
+        };
+      })
+    )
+  );
 
 /** One curriculum node: a track chooser, a nested node or a material list. */
 export const Route = createFileRoute("/$locale/_main/curricula/$curriculum/$")({

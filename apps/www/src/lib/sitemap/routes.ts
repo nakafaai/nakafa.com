@@ -34,10 +34,9 @@ export const baseRoutes: readonly string[] = [
 /** Reads the bounded routes and shared metadata for one sitemap page. */
 export const readSitemapRoutePage = Effect.fn("www.sitemap.routePage")(
   function* (pageId: string) {
-    const page = getSitemapPageDescriptor(pageId);
-    if (!page) {
-      return yield* new SitemapPageNotFoundError({ pageId });
-    }
+    const page = yield* Effect.fromOption(
+      getSitemapPageDescriptor(pageId)
+    ).pipe(Effect.mapError(() => new SitemapPageNotFoundError({ pageId })));
 
     if (
       isArticleSitemapPage(page) ||

@@ -240,9 +240,7 @@ export async function getPublishedArticleCategory(
   locale: Locale
 ) {
   const category = await Effect.runPromise(
-    readPublishedArticleCategory(route, locale).pipe(
-      Effect.withTracerTiming(false)
-    )
+    readPublishedArticleCategory(route, locale)
   );
   return category;
 }
@@ -256,9 +254,7 @@ export async function getPublishedCategoryAlternates(
   current: PublishedArticleCategoryModel
 ) {
   const alternates = await Effect.runPromise(
-    readPublishedCategoryAlternates(current).pipe(
-      Effect.withTracerTiming(false)
-    )
+    readPublishedCategoryAlternates(current)
   );
   return alternates;
 }
@@ -274,9 +270,7 @@ export async function getPublishedCategoryPage(
   cursor: ArticlePageCursor
 ) {
   const page = await Effect.runPromise(
-    readPublishedCategoryPage(current, cursor).pipe(
-      Effect.withTracerTiming(false)
-    )
+    readPublishedCategoryPage(current, cursor)
   );
   return page;
 }

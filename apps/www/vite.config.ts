@@ -13,10 +13,22 @@ import { nitro } from "nitro/vite";
 import { defineConfig, type Plugin } from "vite";
 
 /**
- * The PostHog proxy origin that the build names. Without one, no proxy route is
- * installed, so analytics requests never leave the app for an unset provider.
+ * The origin of the PostHog proxy that the build names. An unset host installs no
+ * proxy route, so analytics requests never leave the app for an unset provider.
+ * A set host must parse as a URL, which fails the config load otherwise, and the
+ * proxy routes to its origin. The dev Aksara preview child installs no proxy.
+ * This file does not import the analytics keys module, because that module imports
+ * its own package by name, and the config loader cannot resolve that name.
  */
-const POSTHOG_PROXY_ORIGIN = process.env.POSTHOG_PROXY_HOST;
+function readPostHogProxyOrigin(): string | undefined {
+  const host = process.env.POSTHOG_PROXY_HOST;
+  if (process.env.VITE_AKSARA_PREVIEW_CHILD === "true" || host === undefined) {
+    return undefined;
+  }
+  return new URL(host).origin;
+}
+
+const POSTHOG_PROXY_ORIGIN = readPostHogProxyOrigin();
 
 /** Every response carries the security headers and the agent discovery links. */
 const SHARED_HEADERS = Object.fromEntries(

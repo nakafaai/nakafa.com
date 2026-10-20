@@ -40,7 +40,7 @@ export async function readFeaturedTryout(locale: Locale) {
   const featured = await Effect.runPromise(
     queryContentStore(tryouts.queries.catalog.getFeaturedQuestion, {
       appLocale: AppLocaleSchema.make(locale),
-    }).pipe(Effect.withTracerTiming(false))
+    })
   );
   return await Effect.runPromise(
     Effect.gen(function* () {
@@ -64,10 +64,7 @@ export async function readFeaturedTryout(locale: Locale) {
  */
 export const readTryoutMetadata = Effect.fn("www.tryout.catalog.readMetadata")(
   function* (args: TryoutMetadataArgs) {
-    return yield* queryContentStore(
-      tryouts.queries.catalog.getMetadata,
-      args
-    ).pipe(Effect.withTracerTiming(false));
+    return yield* queryContentStore(tryouts.queries.catalog.getMetadata, args);
   }
 );
 
@@ -80,10 +77,7 @@ export const readTryoutHubPage = Effect.fn("www.tryout.catalog.readHubPage")(
     const appLocale = AppLocaleSchema.make(locale);
     const page = yield* queryContentStore(tryouts.queries.catalog.getHubPage, {
       appLocale,
-    }).pipe(
-      Effect.withTracerTiming(false),
-      Effect.mapError((cause) => new TryoutCatalogReadError({ cause }))
-    );
+    }).pipe(Effect.mapError((cause) => new TryoutCatalogReadError({ cause })));
     const sourceRevision = yield* decodeSourceRevision(page.sourceRevision, {
       appLocale,
       publicPath: "try-out",
@@ -106,10 +100,7 @@ export const readTryoutCountryPage = Effect.fn(
       appLocale,
       publicPath,
     }
-  ).pipe(
-    Effect.withTracerTiming(false),
-    Effect.mapError((cause) => new TryoutCatalogReadError({ cause }))
-  );
+  ).pipe(Effect.mapError((cause) => new TryoutCatalogReadError({ cause })));
   if (!page) {
     return Option.none();
   }
@@ -126,7 +117,7 @@ export const readTryoutExamPage = Effect.fn("www.tryout.catalog.readExamPage")(
     return yield* readPublishedTryoutExamPage({
       appLocale: AppLocaleSchema.make(locale),
       publicPath,
-    }).pipe(Effect.withTracerTiming(false));
+    });
   }
 );
 
@@ -139,7 +130,7 @@ export const readTryoutTrackPage = Effect.fn(
   return yield* queryContentStore(tryouts.queries.catalog.getTrackPage, {
     appLocale: AppLocaleSchema.make(locale),
     publicPath,
-  }).pipe(Effect.withTracerTiming(false));
+  });
 });
 
 /** Reads the first personalized catalog result after the framework resolves the session. */
@@ -159,7 +150,6 @@ export const readTryoutSetList = Effect.fn("www.tryout.catalog.readSetList")(
           })
         )
       ),
-      Effect.withTracerTiming(false),
       Effect.mapError(
         (cause) =>
           new TryoutCatalogReadError({
@@ -176,7 +166,7 @@ export const readTryoutSetPage = Effect.fn("www.tryout.catalog.readSetPage")(
     return yield* queryContentStore(tryouts.queries.catalog.getSetPage, {
       appLocale: AppLocaleSchema.make(locale),
       publicPath,
-    }).pipe(Effect.withTracerTiming(false));
+    });
   }
 );
 
@@ -197,7 +187,6 @@ export const readTryoutSetAttemptPage = Effect.fn(
         auth: token,
       })
     ),
-    Effect.withTracerTiming(false),
     Effect.mapError(
       (cause) =>
         new TryoutCatalogReadError({
@@ -214,7 +203,7 @@ export const readTryoutSectionPage = Effect.fn(
   return yield* readPublishedTryoutSectionPage({
     appLocale: AppLocaleSchema.make(locale),
     publicPath,
-  }).pipe(Effect.withTracerTiming(false));
+  });
 });
 
 /** Fetches one authenticated section bootstrap without subscribing. */
@@ -234,7 +223,6 @@ export const readTryoutSectionAttemptPage = Effect.fn(
         auth: token,
       })
     ),
-    Effect.withTracerTiming(false),
     Effect.mapError(
       (cause) =>
         new TryoutCatalogReadError({

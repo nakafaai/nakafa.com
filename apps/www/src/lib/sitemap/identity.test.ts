@@ -1,4 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
+import { Option } from "effect";
 import {
   formatArticlePartition,
   formatMaterialPartition,
@@ -8,44 +9,58 @@ import {
 
 describe("sitemap page identity", () => {
   it("parses every canonical page kind", () => {
-    expect(getSitemapPageDescriptor("base")).toEqual({ id: "base" });
-    expect(getSitemapPageDescriptor("quran_en")).toEqual({
-      id: "quran_en",
-      kind: "quran",
-      locale: "en",
-    });
-    expect(getSitemapPageDescriptor("material_en_p0")).toEqual({
-      id: "material_en_p0",
-      kind: "material",
-      locale: "en",
-      partition: 0,
-    });
-    expect(getSitemapPageDescriptor("page_de")).toEqual({
-      id: "page_de",
-      kind: "page",
-      locale: "de",
-    });
-    expect(getSitemapPageDescriptor("tryout_id_0")).toEqual({
-      id: "tryout_id_0",
-      kind: "tryout",
-      locale: "id",
-      page: 0,
-    });
+    expect(getSitemapPageDescriptor("base")).toEqual(
+      Option.some({ id: "base" })
+    );
+    expect(getSitemapPageDescriptor("quran_en")).toEqual(
+      Option.some({
+        id: "quran_en",
+        kind: "quran",
+        locale: "en",
+      })
+    );
+    expect(getSitemapPageDescriptor("material_en_p0")).toEqual(
+      Option.some({
+        id: "material_en_p0",
+        kind: "material",
+        locale: "en",
+        partition: 0,
+      })
+    );
+    expect(getSitemapPageDescriptor("page_de")).toEqual(
+      Option.some({
+        id: "page_de",
+        kind: "page",
+        locale: "de",
+      })
+    );
+    expect(getSitemapPageDescriptor("tryout_id_0")).toEqual(
+      Option.some({
+        id: "tryout_id_0",
+        kind: "tryout",
+        locale: "id",
+        page: 0,
+      })
+    );
   });
 
   it("parses capacity-owned partition pages", () => {
-    expect(getSitemapPageDescriptor("article_id_p12")).toEqual({
-      id: "article_id_p12",
-      kind: "article",
-      locale: "id",
-      partition: 12,
-    });
-    expect(getSitemapPageDescriptor("program_de_p3")).toEqual({
-      id: "program_de_p3",
-      kind: "program",
-      locale: "de",
-      partition: 3,
-    });
+    expect(getSitemapPageDescriptor("article_id_p12")).toEqual(
+      Option.some({
+        id: "article_id_p12",
+        kind: "article",
+        locale: "id",
+        partition: 12,
+      })
+    );
+    expect(getSitemapPageDescriptor("program_de_p3")).toEqual(
+      Option.some({
+        id: "program_de_p3",
+        kind: "program",
+        locale: "de",
+        partition: 3,
+      })
+    );
     expect(formatMaterialPartition("en", 0)).toBe("material_en_p0");
     expect(formatArticlePartition("id", 12)).toBe("article_id_p12");
     expect(formatProgramPartition("de", 3)).toBe("program_de_p3");
@@ -81,6 +96,6 @@ describe("sitemap page identity", () => {
     "program_id_012",
     "",
   ])("rejects malformed id %s", (id) => {
-    expect(getSitemapPageDescriptor(id)).toBeNull();
+    expect(Option.isNone(getSitemapPageDescriptor(id))).toBe(true);
   });
 });

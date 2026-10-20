@@ -1,7 +1,8 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it } from "@effect/vitest";
+import { LOCALES } from "@repo/internationalization/src/locale";
 import type { getPathname } from "@repo/internationalization/src/navigation";
-import { Array as Arr, Effect, HashSet } from "effect";
+import { Array as Arr, Effect, HashSet, Option } from "effect";
 import { getSitemapEntries } from "@/lib/sitemap/entries";
 import { SitemapPageNotFoundError } from "@/lib/sitemap/identity";
 
@@ -55,7 +56,7 @@ beforeEach(() => {
   mockGetSitemapPageDescriptor.mockReset();
   mockGetPathname.mockClear();
 
-  mockGetSitemapPageDescriptor.mockReturnValue({ id: "base" });
+  mockGetSitemapPageDescriptor.mockReturnValue(Option.some({ id: "base" }));
   mockReadSitemapRoutePage.mockReturnValue(
     Effect.succeed({
       routes: [
@@ -116,13 +117,15 @@ describe("sitemap entries", () => {
 
   it.effect("keeps English content sitemap pages scoped to English URLs", () =>
     Effect.gen(function* () {
-      mockGetSitemapPageDescriptor.mockReturnValueOnce({
-        id: "content_en_articles_0",
-        kind: "content",
-        locale: "en",
-        page: 0,
-        section: "articles",
-      });
+      mockGetSitemapPageDescriptor.mockReturnValueOnce(
+        Option.some({
+          id: "content_en_articles_0",
+          kind: "content",
+          locale: "en",
+          page: 0,
+          section: "articles",
+        })
+      );
       mockReadSitemapRoutePage.mockReturnValueOnce(
         Effect.succeed({
           routes: [
@@ -153,13 +156,15 @@ describe("sitemap entries", () => {
     "keeps Indonesian content sitemap pages scoped to Indonesian URLs",
     () =>
       Effect.gen(function* () {
-        mockGetSitemapPageDescriptor.mockReturnValueOnce({
-          id: "content_id_articles_0",
-          kind: "content",
-          locale: "id",
-          page: 0,
-          section: "articles",
-        });
+        mockGetSitemapPageDescriptor.mockReturnValueOnce(
+          Option.some({
+            id: "content_id_articles_0",
+            kind: "content",
+            locale: "id",
+            page: 0,
+            section: "articles",
+          })
+        );
         mockReadSitemapRoutePage.mockReturnValueOnce(
           Effect.succeed({
             routes: [
@@ -188,7 +193,9 @@ describe("sitemap entries", () => {
 
   it.effect("keeps base sitemap pages localized across supported locales", () =>
     Effect.gen(function* () {
-      mockGetSitemapPageDescriptor.mockReturnValueOnce({ id: "base" });
+      mockGetSitemapPageDescriptor.mockReturnValueOnce(
+        Option.some({ id: "base" })
+      );
       mockReadSitemapRoutePage.mockReturnValueOnce(
         Effect.succeed({ routes: [{ path: "/search" }] })
       );
@@ -210,7 +217,9 @@ describe("sitemap entries", () => {
     "localizes the curriculum index route in base sitemap entries",
     () =>
       Effect.gen(function* () {
-        mockGetSitemapPageDescriptor.mockReturnValueOnce({ id: "base" });
+        mockGetSitemapPageDescriptor.mockReturnValueOnce(
+          Option.some({ id: "base" })
+        );
         mockReadSitemapRoutePage.mockReturnValueOnce(
           Effect.succeed({ routes: [{ path: "/curricula" }] })
         );
@@ -229,11 +238,13 @@ describe("sitemap entries", () => {
     "publishes signed Page paths with only their source-owned date",
     () =>
       Effect.gen(function* () {
-        mockGetSitemapPageDescriptor.mockReturnValueOnce({
-          id: "page_de",
-          kind: "page",
-          locale: "de",
-        });
+        mockGetSitemapPageDescriptor.mockReturnValueOnce(
+          Option.some({
+            id: "page_de",
+            kind: "page",
+            locale: "de",
+          })
+        );
         mockReadSitemapRoutePage.mockReturnValueOnce(
           Effect.succeed({
             routes: [
@@ -258,11 +269,13 @@ describe("sitemap entries", () => {
 
   it.effect("does not invent dates for undated routes", () =>
     Effect.gen(function* () {
-      mockGetSitemapPageDescriptor.mockReturnValueOnce({
-        id: "page_de",
-        kind: "page",
-        locale: "de",
-      });
+      mockGetSitemapPageDescriptor.mockReturnValueOnce(
+        Option.some({
+          id: "page_de",
+          kind: "page",
+          locale: "de",
+        })
+      );
       mockReadSitemapRoutePage.mockReturnValueOnce(
         Effect.succeed({
           routes: [
@@ -289,12 +302,14 @@ describe("sitemap entries", () => {
 
   it.effect("reads material partitions", () =>
     Effect.gen(function* () {
-      mockGetSitemapPageDescriptor.mockReturnValue({
-        id: "material_en_p0",
-        kind: "material",
-        locale: "en",
-        partition: 0,
-      });
+      mockGetSitemapPageDescriptor.mockReturnValue(
+        Option.some({
+          id: "material_en_p0",
+          kind: "material",
+          locale: "en",
+          partition: 0,
+        })
+      );
 
       const entries = yield* getSitemapEntries({ pageId: "material_en_p0" });
 
@@ -304,9 +319,17 @@ describe("sitemap entries", () => {
 
   it.effect("reads unknown sitemap pages without a locale filter", () =>
     Effect.gen(function* () {
-      mockGetSitemapPageDescriptor.mockReturnValue(null);
+      mockGetSitemapPageDescriptor.mockReturnValue(Option.none());
 
-      yield* getSitemapEntries({ pageId: "unknown" });
+      const entries = yield* getSitemapEntries({ pageId: "unknown" });
+
+      const searchUrls = Arr.filter(
+        Arr.map(entries, ({ url }) => url),
+        (url) => url.endsWith("/search")
+      );
+      expect(searchUrls).toEqual(
+        Arr.map(LOCALES, (locale) => `https://nakafa.com/${locale}/search`)
+      );
     })
   );
 
@@ -314,7 +337,9 @@ describe("sitemap entries", () => {
     "keeps a route's modification date as the text the route carries",
     () =>
       Effect.gen(function* () {
-        mockGetSitemapPageDescriptor.mockReturnValue({ id: "base" });
+        mockGetSitemapPageDescriptor.mockReturnValue(
+          Option.some({ id: "base" })
+        );
         mockReadSitemapRoutePage.mockReturnValueOnce(
           Effect.succeed({
             routes: [

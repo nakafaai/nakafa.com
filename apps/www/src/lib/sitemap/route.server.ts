@@ -1,5 +1,5 @@
 import { SITE_ORIGIN } from "@repo/seo/origin";
-import { Array as Arr, Effect, Option, Schema } from "effect";
+import { Array as Arr, Cause, Effect, Option, Schema } from "effect";
 import { captureServerExceptionSafely } from "@/lib/analytics/exception.server";
 import { readSitemapPageDescriptors } from "@/lib/sitemap/catalog";
 import { getSitemapEntries } from "@/lib/sitemap/entries";
@@ -14,12 +14,19 @@ const SITEMAP_ERROR = "Internal Server Error";
 const SITEMAP_PAGE_EXTENSION = ".xml";
 const PLAIN_TEXT = { "Content-Type": "text/plain; charset=utf-8" };
 
-/** Reports one failed sitemap, then answers the plain-text 500 without its details. */
-function reportSitemapFailure(
+/**
+ * Reports one failed sitemap, then answers the plain-text 500 without its
+ * details. Defects are reported too, and an interrupt keeps propagating because
+ * it is not a failed sitemap.
+ */
+function reportSitemapFailure<E>(
   source: string,
-  cause: unknown
-): Effect.Effect<Response> {
-  return captureServerExceptionSafely(cause, { source }).pipe(
+  cause: Cause.Cause<E>
+): Effect.Effect<Response, E> {
+  if (Cause.hasInterruptsOnly(cause)) {
+    return Effect.failCause(cause);
+  }
+  return captureServerExceptionSafely(Cause.squash(cause), { source }).pipe(
     Effect.as(new Response(SITEMAP_ERROR, { headers: PLAIN_TEXT, status: 500 }))
   );
 }
@@ -48,7 +55,7 @@ const buildSitemapIndexResponse = Effect.fn("www.sitemap.index.response")(
 export function serveSitemapIndex() {
   return Effect.runPromise(
     buildSitemapIndexResponse().pipe(
-      Effect.catch((error) => reportSitemapFailure("sitemap-index", error))
+      Effect.catchCause((cause) => reportSitemapFailure("sitemap-index", cause))
     )
   );
 }
@@ -68,8 +75,8 @@ function parseSitemapPageId(segment: string): Option.Option<string> {
  *
  * The id comes from the request and its format admits any page number, so it is
  * checked against the pages that the release lists in its sitemap index before
- * anything is read, stored or cached for it. An id outside the list is a plain
- * 404 that costs no Convex read and leaves no entry behind.
+ * any entries are read for it. An id outside the list is answered with a plain
+ * 404, and its page entries are never read.
  */
 const buildSitemapPageResponse = Effect.fn("www.sitemap.page.response")(
   function* (pageId: string) {
@@ -101,13 +108,16 @@ export function serveSitemapPage({
   readonly params: typeof SitemapPageParamsSchema.Type;
 }) {
   const pageId = parseSitemapPageId(params.id);
-  if (Option.isNone(pageId) || !getSitemapPageDescriptor(pageId.value)) {
+  if (
+    Option.isNone(pageId) ||
+    Option.isNone(getSitemapPageDescriptor(pageId.value))
+  ) {
     return Promise.resolve(createNotFoundResponse());
   }
 
   return Effect.runPromise(
     buildSitemapPageResponse(pageId.value).pipe(
-      Effect.catch((error) => reportSitemapFailure("sitemap-page", error))
+      Effect.catchCause((cause) => reportSitemapFailure("sitemap-page", cause))
     )
   );
 }

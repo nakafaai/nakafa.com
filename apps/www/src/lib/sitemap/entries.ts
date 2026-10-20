@@ -8,13 +8,13 @@ import { getLocalizedMappedRoutePathname } from "@/lib/routing/public/pathnames"
 import { getSitemapPageDescriptor } from "@/lib/sitemap/identity";
 import { readSitemapRoutePage } from "@/lib/sitemap/routes";
 
-/** One sitemap URL as the origin cache stores it, with its date as text. */
+/** One canonical sitemap URL, with its optional date as text. */
 const SitemapPageUrl = Schema.Struct({
   lastModified: Schema.optionalKey(Schema.String),
   url: Schema.String,
 });
 
-/** Optional settings shared by the Next route and standalone indexing scripts. */
+/** Optional settings of one route's canonical sitemap entries. */
 const SitemapEntryOptions = Schema.Struct({
   lastModified: Schema.optionalKey(Schema.String),
   locales: Schema.Array(ActiveAppLocaleCodeSchema),
@@ -79,11 +79,9 @@ export const getSitemapEntries = Effect.fn("www.sitemap.entries.page")(
 
 /** Selects all locales for base pages and one locale for content pages. */
 function getSitemapEntryLocales(pageId: string) {
-  const descriptor = getSitemapPageDescriptor(pageId);
-
-  if (descriptor && "kind" in descriptor) {
-    return [descriptor.locale];
-  }
-
-  return LOCALES;
+  return Option.match(getSitemapPageDescriptor(pageId), {
+    onNone: () => LOCALES,
+    onSome: (descriptor) =>
+      "kind" in descriptor ? [descriptor.locale] : LOCALES,
+  });
 }

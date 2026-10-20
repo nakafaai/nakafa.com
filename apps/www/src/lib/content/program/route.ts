@@ -162,9 +162,7 @@ export async function getPublishedProgramRoute(
   publicPath: string
 ) {
   const result = await Effect.runPromise(
-    readPublishedProgramRoute(locale, publicPath).pipe(
-      Effect.withTracerTiming(false)
-    )
+    readPublishedProgramRoute(locale, publicPath)
   );
   return result;
 }

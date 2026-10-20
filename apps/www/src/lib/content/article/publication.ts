@@ -4,7 +4,6 @@ import "@tanstack/react-start/server-only";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { Effect } from "effect";
-import { cache } from "react";
 import type { Locale } from "use-intl";
 import {
   makeArticleProjectionError,
@@ -87,34 +86,28 @@ async function fetchArticleSource(locale: Locale, publicPath: string) {
         appLocale: AppLocaleSchema.make(locale),
         publicPath,
       })
-    ).pipe(Effect.provide(httpLayer()), Effect.withTracerTiming(false))
+    ).pipe(Effect.provide(httpLayer()))
   );
 }
 
-/** Reads and verifies one signed article delivery inside the content cache. */
-async function readArticleDelivery(locale: Locale, publicPath: string) {
-  // The Confect request disables trace timing before static rendering suspends.
-  // https://nextjs.org/docs/messages/next-prerender-current-time
+/** Reads and verifies one signed article delivery for the article page. */
+export async function getArticlePublication(
+  locale: Locale,
+  publicPath: string
+) {
   const source = await fetchArticleSource(locale, publicPath);
   return await Effect.runPromise(
     decodeArticleDelivery(source, locale, publicPath)
   );
 }
 
-/**
- * Shares one verified delivery between the article metadata and body in a
- * single render pass. https://react.dev/reference/react/cache
- */
-export const getArticlePublication = cache(readArticleDelivery);
-
 /** Reads and verifies signed release metadata without rendering its body.
  *
  * Social images resolve copy through this seam so a missing release falls
  * back to brand artwork instead of rendering the application shell. */
-async function readArticleModel(locale: Locale, publicPath: string) {
+export async function getArticleModel(locale: Locale, publicPath: string) {
   const source = await fetchArticleSource(locale, publicPath);
   return await Effect.runPromise(
     decodeArticleModel(source, locale, publicPath)
   );
 }
-export const getArticleModel = cache(readArticleModel);

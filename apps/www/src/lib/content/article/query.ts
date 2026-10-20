@@ -16,8 +16,8 @@ const articlePageQueryFields = {
   release: ReleaseIdSchema,
 };
 const ArticlePageQuerySchema = Schema.Struct(articlePageQueryFields);
-/** The search values of one article catalog page as the route validates them. */
-const ArticlePageSearchSchema = Schema.Struct({
+/** The search values of one article catalog page, as the article routes validate them. */
+export const ArticlePageSearchSchema = Schema.Struct({
   cursor: Schema.optional(Schema.String),
   manifest: Schema.optional(Schema.String),
   release: Schema.optional(Schema.String),
@@ -74,18 +74,21 @@ export function shouldResetArticlePublicationCursor(page: ArticlePageCursor) {
   );
 }
 /** Builds the next release-bound catalog URL when another page exists. */
-export function getArticleNextHref(path: string, page: ArticleNextPage) {
+export function getArticleNextHref(
+  path: string,
+  page: ArticleNextPage
+): Option.Option<string> {
   if (
     page.nextCursor === null ||
     page.activeManifestHash === null ||
     page.activeReleaseId === null
   ) {
-    return null;
+    return Option.none();
   }
   const query = new URLSearchParams({
     cursor: page.nextCursor,
     manifest: page.activeManifestHash,
     release: page.activeReleaseId,
   });
-  return `${path}?${query}`;
+  return Option.some(`${path}?${query}`);
 }

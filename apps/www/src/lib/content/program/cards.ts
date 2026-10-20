@@ -184,8 +184,6 @@ export const readPublishedMaterialCards = Effect.fn(
 export async function getPublishedMaterialCards(
   input: Parameters<typeof readPublishedMaterialCards>[0]
 ) {
-  const cards = await Effect.runPromise(
-    readPublishedMaterialCards(input).pipe(Effect.withTracerTiming(false))
-  );
+  const cards = await Effect.runPromise(readPublishedMaterialCards(input));
   return cards;
 }

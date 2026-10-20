@@ -297,7 +297,7 @@ A move runs in this order:
   identity of a person in the `eu` cell inside the `us` cell, which is what a
   cell exists to prevent.
 - One `www` project for every cell, with a resolver that picks the deployment by
-  host. The auth handler (`apps/www/src/lib/auth/handler.server.ts`) takes both
+  host. The auth handler (`apps/www/src/lib/auth/forward.server.ts`) takes both
   `NEXT_PUBLIC_CONVEX_URL` and `NEXT_PUBLIC_CONVEX_SITE_URL`, the session token
   read in the same file takes the site URL, and the Convex provider
   (`apps/www/src/components/providers/app.tsx`) takes the query URL, besides the

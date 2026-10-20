@@ -115,9 +115,7 @@ export const readPageNavigation = Effect.fn("www.pages.readNavigation")(
  * for the active release.
  */
 async function getPageNavigation(locale: Locale) {
-  const navigation = await Effect.runPromise(
-    readPageNavigation(locale).pipe(Effect.withTracerTiming(false))
-  );
+  const navigation = await Effect.runPromise(readPageNavigation(locale));
   return navigation;
 }
 

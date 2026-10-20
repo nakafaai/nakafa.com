@@ -22,6 +22,8 @@ const startHandler = createStartHandler(defaultStreamHandler);
  */
 export default createServerEntry({
   fetch(request, opts) {
+    // The default runtime runs this answer because it requires no services from
+    // its caller: every layer that the answer uses is provided where it is used.
     return Effect.runPromise(
       answerRequest(request, async (routed) => startHandler(routed, opts)).pipe(
         Effect.catchTag("UncaughtRequestError", (error) =>

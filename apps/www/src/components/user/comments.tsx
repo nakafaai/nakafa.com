@@ -9,6 +9,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { buttonVariants } from "@repo/design-system/lib/button";
+import { withLeadingSlash } from "@repo/utilities/path";
 import { Array as Arr, type Option } from "effect";
 import { useTranslations } from "use-intl";
 import { CommentsProvider } from "@/components/comments/provider";
@@ -76,11 +77,7 @@ export function UserComments({
               <NavigationLink
                 aria-label={tCommon("reply")}
                 className={buttonVariants({ size: "sm", variant: "ghost" })}
-                href={
-                  comment.slug.startsWith("/")
-                    ? comment.slug
-                    : `/${comment.slug}`
-                }
+                href={withLeadingSlash(comment.slug)}
               >
                 <HugeIcons icon={ArrowTurnBackwardIcon} />
                 <FeedCount value={comment.replyCount} />

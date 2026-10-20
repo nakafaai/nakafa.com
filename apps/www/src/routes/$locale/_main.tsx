@@ -44,10 +44,9 @@ const readShellNavigation = createServerFn({ method: "GET" })
 const localeRoute = getRouteApi("/$locale");
 
 /**
- * The student shell that every learn page and signed-in screen shares, as the
- * (main) layout of the reference app. An unknown locale stops before any page
- * loads. The shell's messages load with the layout, so no part of it renders a
- * raw message key.
+ * The student shell that every learn page and signed-in screen shares. An
+ * unknown locale stops before any page loads. The shell's messages load with the
+ * layout, so no part of it renders a raw message key.
  */
 export const Route = createFileRoute("/$locale/_main")({
   loader: async ({ params }) => {
@@ -63,8 +62,8 @@ export const Route = createFileRoute("/$locale/_main")({
 });
 
 /**
- * Renders the student shell inside the app and shared providers, which the
- * reference app mounts above the (main) group.
+ * Renders the student shell around the learn pages and signed-in screens of
+ * this route group, inside the locale route's providers.
  */
 function MainLayout() {
   const { locale } = Route.useParams();

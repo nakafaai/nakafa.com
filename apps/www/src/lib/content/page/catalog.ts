@@ -88,9 +88,7 @@ export const readPublishedPageCatalog = Effect.fn(
  * still expires them.
  */
 export async function getPublishedPageCatalog() {
-  const catalog = await Effect.runPromise(
-    readPublishedPageCatalog().pipe(Effect.withTracerTiming(false))
-  );
+  const catalog = await Effect.runPromise(readPublishedPageCatalog());
   return catalog;
 }
 

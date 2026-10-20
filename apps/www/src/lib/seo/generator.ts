@@ -223,8 +223,13 @@ export const resolveSEOMetadata = Effect.fn("SEO.resolve")(
         article: (article) => generateArticleMetadata(article, locale),
         quran: (quran) => generateQuranMetadata(quran.surah, locale),
       }),
-      Effect.catchTag("SEOTranslationLoadError", () =>
-        Effect.sync(() => generateFallbackMetadata(context))
+      Effect.catchTag("SEOTranslationLoadError", (error) =>
+        Effect.logWarning(
+          "The SEO dictionary could not load, so fallback metadata answers.",
+          error
+        ).pipe(
+          Effect.andThen(Effect.sync(() => generateFallbackMetadata(context)))
+        )
       )
     )
 );

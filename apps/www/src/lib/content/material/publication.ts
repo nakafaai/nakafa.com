@@ -3,7 +3,6 @@ import "@tanstack/react-start/server-only";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { Effect, Schema } from "effect";
-import { cache } from "react";
 import type { Locale } from "use-intl";
 import {
   decodeMaterialJson,
@@ -135,7 +134,7 @@ async function readMaterialNavigation(
       appLocale: AppLocaleSchema.make(locale),
       expectedActiveReleaseId,
       materialKey,
-    }).pipe(Effect.withTracerTiming(false))
+    })
   );
 }
 class MaterialReadError extends Schema.TaggedError<MaterialReadError>()(
@@ -154,7 +153,7 @@ async function fetchMaterialLesson(locale: Locale, publicPath: string) {
     queryContentStore(contentRelease.material.lesson, {
       appLocale: AppLocaleSchema.make(locale),
       publicPath,
-    }).pipe(Effect.withTracerTiming(false))
+    })
   );
 }
 const completeMaterialSource = Effect.fn("NakafaMaterial.completeSource")(
@@ -214,10 +213,11 @@ const readMaterialSource = Effect.fn("NakafaMaterial.readSource")(function* (
   );
 });
 
-/** Reads and verifies one signed material delivery. */
-async function readMaterialDelivery(locale: Locale, publicPath: string) {
-  // The Confect request disables trace timing before static rendering suspends.
-  // https://nextjs.org/docs/messages/next-prerender-current-time
+/** Reads and verifies one signed material delivery for the lesson page. */
+export async function getMaterialPublication(
+  locale: Locale,
+  publicPath: string
+) {
   const source = await fetchMaterialLesson(locale, publicPath);
   return await Effect.runPromise(
     readMaterialSource(source, locale, publicPath).pipe(
@@ -228,19 +228,11 @@ async function readMaterialDelivery(locale: Locale, publicPath: string) {
   );
 }
 
-/**
- * Shares one verified delivery between the material metadata and body in a
- * single render pass. https://react.dev/reference/react/cache
- */
-export const getMaterialPublication = cache(readMaterialDelivery);
-
 /** Reads and verifies signed release metadata without rendering its body.
  *
  * Social images resolve copy through this seam so a missing release falls
- * back to brand artwork instead of rendering the application shell. The `use
- * cache` boundary stays so that the material tag still expires the verified
- * model; the lesson behind it is the one that the page already stored. */
-async function readMaterialModel(locale: Locale, publicPath: string) {
+ * back to brand artwork instead of rendering the application shell. */
+export async function getMaterialModel(locale: Locale, publicPath: string) {
   const source = await fetchMaterialLesson(locale, publicPath);
   return await Effect.runPromise(
     readMaterialSource(source, locale, publicPath).pipe(
@@ -250,4 +242,3 @@ async function readMaterialModel(locale: Locale, publicPath: string) {
     )
   );
 }
-export const getMaterialModel = cache(readMaterialModel);

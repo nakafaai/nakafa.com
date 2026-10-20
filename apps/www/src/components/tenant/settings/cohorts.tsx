@@ -47,7 +47,7 @@ import { isDenied } from "@/components/tenant/refusal";
 import {
   SchoolCohortMenu,
   SchoolCohortRestore,
-} from "@/components/tenant/settings/cohort";
+} from "@/components/tenant/settings/cohort/menu";
 import { createCohortChange } from "@/components/tenant/settings/groups";
 import { saveSchool } from "@/components/tenant/settings/save";
 import { SettingsPage } from "@/components/tenant/settings/section";

@@ -157,7 +157,7 @@ export const readPublishedProgramSubjects = Effect.fn(
  */
 export async function getPublishedProgramSubjects(locale: Locale) {
   const subjects = await Effect.runPromise(
-    readPublishedProgramSubjects(locale).pipe(Effect.withTracerTiming(false))
+    readPublishedProgramSubjects(locale)
   );
   return subjects;
 }
@@ -166,8 +166,6 @@ export async function getPublishedProgramSubjects(locale: Locale) {
  * Reads the bounded program catalog for the active release.
  */
 export async function getPublishedProgramCatalog(locale: Locale) {
-  const result = await Effect.runPromise(
-    readPublishedProgramCatalog(locale).pipe(Effect.withTracerTiming(false))
-  );
+  const result = await Effect.runPromise(readPublishedProgramCatalog(locale));
   return result;
 }

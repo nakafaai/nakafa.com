@@ -36,9 +36,7 @@ export const readArticleNavigation = Effect.fn("www.articles.readNavigation")(
  * still expires them; behind it the category list comes from the content store.
  */
 async function getArticleNavigation(locale: Locale) {
-  const navigation = await Effect.runPromise(
-    readArticleNavigation(locale).pipe(Effect.withTracerTiming(false))
-  );
+  const navigation = await Effect.runPromise(readArticleNavigation(locale));
   return navigation;
 }
 

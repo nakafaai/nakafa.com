@@ -31,10 +31,10 @@ const requestSession = createMiddleware({ type: "request" }).server(
       Option.isSome(session) &&
       !isHintCurrent(session.value.client, request.headers)
     ) {
-      const { appendResponseHeader } = await import(
-        "@tanstack/react-start/server"
-      );
-      const { env } = await import("@/env");
+      const [{ appendResponseHeader }, { env }] = await Promise.all([
+        import("@tanstack/react-start/server"),
+        import("@/env"),
+      ]);
       appendResponseHeader(
         "set-cookie",
         hintCookieFor(session.value.client, hintScopeFor(new URL(env.SITE_URL)))
