@@ -3,7 +3,7 @@ import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { UserHeader } from "@/components/user/header";
 import { UserTabs } from "@/components/user/tabs";
 import { signedInHead } from "@/lib/account/head";
-import { profileScreenFn } from "@/lib/account/screens.fn";
+import { profileScreenFn } from "@/lib/account/profile.fn";
 
 export const Route = createFileRoute("/$locale/_app/user/$username")({
   loader: ({ params }) =>

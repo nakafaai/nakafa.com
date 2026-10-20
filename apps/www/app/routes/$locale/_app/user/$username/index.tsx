@@ -1,6 +1,6 @@
 import { createFileRoute, getRouteApi } from "@tanstack/react-router";
 import { UserPosts } from "@/components/user/posts/list";
-import { profilePostsFn } from "@/lib/account/screens.fn";
+import { profilePostsFn } from "@/lib/account/profile.fn";
 
 export const Route = createFileRoute("/$locale/_app/user/$username/")({
   loader: ({ params }) =>

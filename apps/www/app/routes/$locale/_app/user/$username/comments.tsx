@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { UserComments } from "@/components/user/comments";
 import { signedInHead } from "@/lib/account/head";
-import { profileCommentsScreenFn } from "@/lib/account/screens.fn";
+import { profileCommentsScreenFn } from "@/lib/account/profile.fn";
 
 export const Route = createFileRoute("/$locale/_app/user/$username/comments")({
   loader: ({ params }) =>

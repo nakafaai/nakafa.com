@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { UserSettingsCurriculum } from "@/components/user/settings/curriculum";
 import { UserSettingsLearningPage } from "@/components/user/settings/learning";
 import { signedInHead } from "@/lib/account/head";
-import { learningScreenFn } from "@/lib/account/screens.fn";
+import { learningScreenFn } from "@/lib/account/settings.fn";
 
 export const Route = createFileRoute(
   "/$locale/_app/_account/user/settings/learning"

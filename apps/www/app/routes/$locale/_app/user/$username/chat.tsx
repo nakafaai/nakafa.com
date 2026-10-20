@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { UserChats } from "@/components/user/chats";
 import { signedInHead } from "@/lib/account/head";
-import { profileChatScreenFn } from "@/lib/account/screens.fn";
+import { profileChatScreenFn } from "@/lib/account/profile.fn";
 
 export const Route = createFileRoute("/$locale/_app/user/$username/chat")({
   loader: ({ params }) =>

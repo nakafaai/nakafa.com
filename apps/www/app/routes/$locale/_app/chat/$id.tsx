@@ -3,7 +3,7 @@ import { useSyncExternalStore } from "react";
 import { ChatHeader } from "@/components/ai/chat/header";
 import { readShareToken } from "@/components/ai/chat/link";
 import { AiChatPage } from "@/components/ai/chat/page";
-import { chatScreenFn } from "@/lib/account/screens.fn";
+import { chatScreenFn } from "@/lib/account/home.fn";
 
 export const Route = createFileRoute("/$locale/_app/chat/$id")({
   loader: ({ params }) =>

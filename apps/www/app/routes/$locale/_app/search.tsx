@@ -4,7 +4,7 @@ import { InputSearch } from "@/components/search/input";
 import { SearchListItems } from "@/components/search/results";
 import { BackButton } from "@/components/shared/back";
 import { signedInHead } from "@/lib/account/head";
-import { searchScreenFn } from "@/lib/account/screens.fn";
+import { searchScreenFn } from "@/lib/account/home.fn";
 
 export const Route = createFileRoute("/$locale/_app/search")({
   loader: ({ params }) => searchScreenFn({ data: { locale: params.locale } }),
