@@ -40,12 +40,9 @@ const PRERENDERED_PAGES = ACTIVE_APP_LOCALE_CODES.flatMap((locale) => [
 /**
  * TanStack runs each prerender task in a queue whose failures nobody awaits: a
  * page that fails only logs an unhandled rejection, and the build still exits 0.
- * This check fails the build when a listed page did not reach the client output.
- */
-/**
- * Throws when a listed page is missing from the client output directory. The
- * directory is the client environment's own output, which Nitro's preset sets
- * and TanStack prerenders into.
+ * This check throws when a listed page is missing from the client output
+ * directory, the client environment's own output that Nitro's preset sets and
+ * TanStack prerenders into.
  */
 function assertPrerenderedPages(clientOutputDirectory: string) {
   const missing = PRERENDERED_PAGES.map(({ path }) => path).filter(
