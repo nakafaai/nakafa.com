@@ -1,7 +1,7 @@
 // @vitest-environment node
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { Array as Arr, Data, Effect } from "effect";
+import { Data, Effect } from "effect";
 import { answerRequest, type RouterHandler } from "@/lib/routing/answer.server";
 
 /** A failure that one of the readers of the server entry reports. */
@@ -14,50 +14,51 @@ vi.hoisted(() => {
 
 const markdown = vi.hoisted(() => ({ hasSource: vi.fn(), text: vi.fn() }));
 const migration = vi.hoisted(() => ({ read: vi.fn() }));
-const retired = vi.hoisted(() => ({ read: vi.fn() }));
+const projected = vi.hoisted(() => ({ read: vi.fn() }));
 const refusal = vi.hoisted(() => ({ read: vi.fn() }));
 const reporting = vi.hoisted(() => ({ report: vi.fn() }));
+const retired = vi.hoisted(() => ({ read: vi.fn() }));
+const source = vi.hoisted(() => ({ read: vi.fn() }));
 
 vi.mock("@/lib/llms/content/markdown", () => ({
-  /** Controls whether a route has a Markdown source. */
   hasLlmsMarkdownSource: markdown.hasSource,
-  /** Answers the Markdown body of a route with a source. */
   getLlmsMarkdownText: markdown.text,
 }));
 
 vi.mock("@/lib/llms/index/generate", () => ({
-  /** Answers the English locale index, which is the Markdown of the root address. */
   getLlmsSectionIndexText: (key: string) =>
     Effect.succeed(key === "llms/en" ? "# Locale index" : null),
 }));
 
 vi.mock("@/lib/routing/public/migration", () => ({
-  /** Controls the successor of a retired address. */
   readPublicUrlMigrationRedirect: migration.read,
 }));
 
+vi.mock("@/lib/routing/public/projected", () => ({
+  readProjectedHtmlRouteRejection: projected.read,
+}));
+
 vi.mock("@/lib/routing/public/retired", () => ({
-  /** Controls whether an address is removed for good. */
   readRetiredPublicRoute: retired.read,
 }));
 
+vi.mock("@/lib/routing/public/source", () => ({
+  readSourceBackedHtmlRouteRejection: source.read,
+}));
+
 vi.mock("@/lib/routing/school/refusal", () => ({
-  /** Controls whether a school refuses the page of its address. */
   readSchoolRefusal: refusal.read,
 }));
 
 vi.mock("@repo/analytics/server-reporting", () => ({
-  /** Records each failure that the router leaves unanswered. */
   reportUncaughtRequestError: reporting.report,
 }));
 
 vi.mock("@tanstack/react-start/server", () => ({
-  /** Answers the error response that Start gives a failure that escapes. */
   handleStartError: () => new Response("Start error", { status: 500 }),
 }));
 
 const ORIGIN = "https://nakafa.com";
-const LLMS_LINK = '</llms.txt>; rel="llms-txt"';
 
 /** A router that answers the HTML page, and records each request it receives. */
 function router() {
@@ -120,9 +121,11 @@ beforeEach(() => {
     .mockReset()
     .mockReturnValue(Effect.succeed("# Source markdown"));
   migration.read.mockReset().mockReturnValue(Effect.succeed(null));
-  retired.read.mockReset().mockReturnValue(Effect.succeed(false));
+  projected.read.mockReset().mockReturnValue(Effect.succeed(null));
   refusal.read.mockReset().mockReturnValue(Effect.succeedNone);
   reporting.report.mockReset().mockReturnValue(Effect.void);
+  retired.read.mockReset().mockReturnValue(Effect.succeed(false));
+  source.read.mockReset().mockReturnValue(Effect.succeed(null));
 });
 
 describe("negotiated representation", () => {
@@ -137,8 +140,6 @@ describe("negotiated representation", () => {
         "text/markdown; charset=utf-8"
       );
       expect(response.headers.get("vary")).toBe("Accept, Accept-Encoding");
-      expect(response.headers.get("link")).toBe(LLMS_LINK);
-      expect(response.headers.get("x-llms-txt")).toBe("/llms.txt");
       expect(yield* Effect.promise(() => response.text())).toBe(
         "# Source markdown"
       );
@@ -146,93 +147,17 @@ describe("negotiated representation", () => {
     })
   );
 
-  it.effect("answers the router's HTML for an HTML request", () =>
+  it.effect("answers the router's HTML for a request that accepts all", () =>
     Effect.gen(function* () {
       const { handle, response } = yield* served("/en/articles/belajar", {
-        accept: "text/html",
+        accept: "*/*",
       });
 
       expect(response.status).toBe(200);
-      expect(yield* Effect.promise(() => response.text())).toBe(
-        "<html>page</html>"
+      expect(response.headers.get("content-type")).toBe(
+        "text/html; charset=utf-8"
       );
-      expect(response.headers.get("vary")).toBe("Accept, Accept-Encoding");
-      expect(response.headers.get("link")).toBe(LLMS_LINK);
-      expect(response.headers.get("x-llms-txt")).toBe("/llms.txt");
       expect(routedRequest(handle).url).toBe(`${ORIGIN}/en/articles/belajar`);
-      expect(markdown.hasSource).not.toHaveBeenCalled();
-    })
-  );
-
-  it.effect(
-    "answers the router's HTML for a request that accepts anything",
-    () =>
-      Effect.gen(function* () {
-        const { handle, response } = yield* served("/en/articles/belajar", {
-          accept: "*/*",
-        });
-
-        expect(response.status).toBe(200);
-        expect(response.headers.get("content-type")).toBe(
-          "text/html; charset=utf-8"
-        );
-        expect(response.headers.get("link")).toBe(LLMS_LINK);
-        expect(routedRequest(handle).url).toBe(`${ORIGIN}/en/articles/belajar`);
-      })
-  );
-
-  it.effect("answers the Markdown when the agent prefers it", () =>
-    Effect.gen(function* () {
-      const { handle, response } = yield* served("/id/articles/belajar", {
-        accept: "text/markdown, text/html;q=0.8",
-      });
-
-      expect(response.headers.get("content-type")).toBe(
-        "text/markdown; charset=utf-8"
-      );
-      expect(response.headers.get("vary")).toBe("Accept, Accept-Encoding");
-      expect(response.headers.get("link")).toBe(LLMS_LINK);
-      expect(handle).not.toHaveBeenCalled();
-    })
-  );
-
-  it.effect("answers the Markdown of a .md address", () =>
-    Effect.gen(function* () {
-      const { handle, response } = yield* served("/en/articles/belajar.md", {
-        accept: "text/html",
-      });
-
-      expect(response.status).toBe(200);
-      expect(response.headers.get("content-type")).toBe(
-        "text/markdown; charset=utf-8"
-      );
-      expect(response.headers.get("link")).toBe(LLMS_LINK);
-      expect(handle).not.toHaveBeenCalled();
-    })
-  );
-
-  it.effect("answers 406 to a representation the site cannot send", () =>
-    Effect.gen(function* () {
-      const { handle, response } = yield* served("/en/articles/belajar", {
-        accept: "application/json",
-      });
-
-      expect(response.status).toBe(406);
-      expect(response.headers.get("vary")).toBe("Accept, Accept-Encoding");
-      expect(response.headers.get("link")).toBeNull();
-      expect(handle).not.toHaveBeenCalled();
-    })
-  );
-
-  it.effect("answers 406 to Markdown alone with no Markdown source", () =>
-    Effect.gen(function* () {
-      markdown.hasSource.mockReturnValue(Effect.succeed(false));
-
-      const response = yield* answer("/en/articles/belajar", {
-        accept: "text/markdown",
-      });
-
-      expect(response.status).toBe(406);
     })
   );
 
@@ -264,6 +189,18 @@ describe("decisions before the negotiation", () => {
     })
   );
 
+  it.effect("moves a non-public spelling before the negotiation", () =>
+    Effect.gen(function* () {
+      const { handle, response } = yield* served("/en/curricula/x", {
+        accept: "text/markdown",
+      });
+
+      expect(response.status).toBe(308);
+      expect(response.headers.get("location")).toBe("/en/curriculum/x");
+      expect(handle).not.toHaveBeenCalled();
+    })
+  );
+
   it.effect("moves a migrated address before the negotiation", () =>
     Effect.gen(function* () {
       migration.read.mockReturnValue(
@@ -289,7 +226,7 @@ describe("decisions before the negotiation", () => {
     })
   );
 
-  it.effect("answers a removed address with its locale's not-found page", () =>
+  it.effect("answers a removed address with its not-found page", () =>
     Effect.gen(function* () {
       retired.read.mockReturnValue(Effect.succeed(true));
 
@@ -304,24 +241,48 @@ describe("decisions before the negotiation", () => {
     })
   );
 
-  it.effect("answers a school tree path with the not-found page", () =>
+  it.effect("answers an unowned Markdown route with not found", () =>
     Effect.gen(function* () {
-      const { handle } = yield* served("/en/school/harapan", {
-        accept: "text/html",
+      source.read.mockReturnValue(Effect.succeed("en"));
+
+      const { handle, response } = yield* served("/en/nonexistent-page", {
+        accept: "text/markdown",
       });
 
+      expect(response.headers.get("content-language")).toBe("en");
       expect(routedRequest(handle).url).toBe(`${ORIGIN}/_not-found`);
+      expect(routedRequest(handle).headers.get("x-nakafa-locale")).toBe("en");
+      expect(markdown.hasSource).not.toHaveBeenCalled();
     })
   );
 
-  it.effect("answers a raw user address that is no profile", () =>
+  it.effect("answers an unowned HTML route with not found", () =>
     Effect.gen(function* () {
-      const { handle } = yield* served("/en/user/abc123", {
+      projected.read.mockReturnValue(Effect.succeed("en"));
+
+      const { handle, response } = yield* served("/en/subjects/missing", {
         accept: "text/html",
       });
 
+      expect(response.headers.get("content-language")).toBe("en");
       expect(routedRequest(handle).url).toBe(`${ORIGIN}/_not-found`);
+      expect(projected.read).toHaveBeenCalledWith({
+        hasAttemptCapability: false,
+        pathname: "/en/subjects/missing",
+      });
     })
+  );
+
+  it.effect(
+    "answers a school tree path and a raw user address with not found",
+    () =>
+      Effect.gen(function* () {
+        for (const address of ["/en/school/harapan", "/en/user/abc123"]) {
+          const { handle } = yield* served(address, { accept: "text/html" });
+
+          expect(routedRequest(handle).url).toBe(`${ORIGIN}/_not-found`);
+        }
+      })
   );
 
   it.effect("answers a refused school page with the not-found page", () =>
@@ -337,6 +298,29 @@ describe("decisions before the negotiation", () => {
     })
   );
 
+  it.effect("answers a refused school page before its migration", () =>
+    Effect.gen(function* () {
+      refusal.read.mockReturnValue(Effect.succeedSome("id"));
+      migration.read.mockReturnValue(
+        Effect.succeed({ destination: "/en/@nabil/chat", status: 308 })
+      );
+      const handle = router();
+
+      const response = yield* answerRequest(
+        new Request("https://harapan.nakafa.com/en/user/abc123/chat", {
+          headers: { accept: "text/html" },
+        }),
+        handle
+      );
+
+      expect(routedRequest(handle).url).toBe(
+        "https://harapan.nakafa.com/_not-found"
+      );
+      expect(response.headers.get("content-language")).toBe("id");
+      expect(migration.read).not.toHaveBeenCalled();
+    })
+  );
+
   it.effect("moves a host that names no school to the main site", () =>
     Effect.gen(function* () {
       const { handle, response } = yield* served(
@@ -349,6 +333,18 @@ describe("decisions before the negotiation", () => {
         `${ORIGIN}/en/articles/belajar?ref=app`
       );
       expect(handle).not.toHaveBeenCalled();
+    })
+  );
+
+  it.effect("serves a shared root file on a host that names no school", () =>
+    Effect.gen(function* () {
+      const { handle, response } = yield* served("/robots.txt", {
+        accept: "*/*",
+        headers: { host: "www.nakafa.com" },
+      });
+
+      expect(response.status).toBe(200);
+      expect(routedRequest(handle).url).toBe(`${ORIGIN}/robots.txt`);
     })
   );
 });
@@ -406,24 +402,6 @@ describe("social image aliases", () => {
     })
   );
 
-  it.effect("leaves the public social images to the router", () =>
-    Effect.gen(function* () {
-      const handle = router();
-
-      yield* answer(
-        "/open-graph/app/de-pricing.png",
-        { accept: "image/png" },
-        handle
-      );
-      yield* answer("/og.png", { accept: "image/png" }, handle);
-
-      expect(Arr.map(handle.mock.calls, ([request]) => request.url)).toEqual([
-        `${ORIGIN}/open-graph/app/de-pricing.png`,
-        `${ORIGIN}/og.png`,
-      ]);
-    })
-  );
-
   it.effect("answers a localized OG image without negotiating it", () =>
     Effect.gen(function* () {
       const { handle } = yield* served("/en/og/articles/aljabar/image.png", {
@@ -439,7 +417,7 @@ describe("social image aliases", () => {
 });
 
 describe("failures", () => {
-  it.effect("reports a router failure and answers Start's error response", () =>
+  it.effect("reports a router failure with Start's error response", () =>
     Effect.gen(function* () {
       const handle = vi.fn<RouterHandler>(() =>
         Promise.reject(new Error("router failed"))
@@ -475,6 +453,43 @@ describe("failures", () => {
       migration.read.mockReturnValue(Effect.fail(new ReaderFailure()));
 
       const error = yield* Effect.flip(answer("/en/user/abc123"));
+
+      expect(error._tag).toBe("UncaughtRequestError");
+    })
+  );
+
+  it.effect("fails when the source cannot own a route", () =>
+    Effect.gen(function* () {
+      source.read.mockReturnValue(Effect.fail(new ReaderFailure()));
+
+      const error = yield* Effect.flip(answer("/en/nonexistent-page"));
+
+      expect(error._tag).toBe("UncaughtRequestError");
+    })
+  );
+
+  it.effect("fails when the Markdown source cannot be read", () =>
+    Effect.gen(function* () {
+      markdown.hasSource.mockReturnValue(Effect.fail(new ReaderFailure()));
+
+      const error = yield* Effect.flip(
+        answer("/en/articles/belajar", { accept: "text/markdown" })
+      );
+
+      expect(error).toMatchObject({
+        _tag: "UncaughtRequestError",
+        cause: expect.any(ReaderFailure),
+      });
+    })
+  );
+
+  it.effect("fails when the projection cannot be read", () =>
+    Effect.gen(function* () {
+      projected.read.mockReturnValue(Effect.fail(new ReaderFailure()));
+
+      const error = yield* Effect.flip(
+        answer("/en/subjects/missing", { accept: "text/html" })
+      );
 
       expect(error._tag).toBe("UncaughtRequestError");
     })

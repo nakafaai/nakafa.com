@@ -4,7 +4,6 @@ import {
   encodeArgs,
   getFunctionReference,
 } from "@confect/core/Ref";
-import { createIsomorphicFn } from "@tanstack/react-start";
 import { Effect, Schema } from "effect";
 import { clientEnv } from "@/env.client";
 import { readConvexClient } from "@/lib/convex/client.client";
@@ -56,11 +55,3 @@ export function readBrowserQuery<Query extends AnyPublicQuery>(
 ): Promise<Returns<Query>> {
   return Effect.runPromise(readBrowserValue(ref, args));
 }
-
-/**
- * Reads one Confect query for a route loader. The build keeps each branch to its
- * own environment, so the browser never bundles the server's read.
- */
-export const loadConfectQuery = createIsomorphicFn()
-  .server(readServerQuery)
-  .client(readBrowserQuery);

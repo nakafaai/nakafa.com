@@ -2,10 +2,10 @@ import { decodeLocale } from "@repo/internationalization/src/locale";
 import { Array as Arr, Option } from "effect";
 
 /**
- * The suffixes that address one social image, longest first: the `image.png`
- * file of a route, and the `.png` or `.og` extension of a public alias.
+ * The suffixes that address one social image through a public alias: the `.png`
+ * extension and the `.og` extension of a route.
  */
-const IMAGE_SUFFIXES = ["/image.png", ".png", ".og"] as const;
+const IMAGE_SUFFIXES = [".png", ".og"] as const;
 
 /** Two ASCII letters, the shape of every locale code. */
 const LOCALE_SHAPE = /^[A-Za-z]{2}$/;
@@ -31,13 +31,12 @@ export function isUnservedLocaleShape(segment: string | undefined) {
 
 /**
  * Reads the `/og` address that a public social image alias serves. The alias
- * drops its suffix, so the image route answers the route that it names. A PNG
- * alias needs a served locale in front: the public folder holds PNG files that
- * the site serves as they are, such as `/og.png` and `/open-graph/app/x.png`,
- * and the server entry answers before the static files. An alias under a locale
- * shape that the site does not serve is not rewritten, so the router answers it
- * with not found. A path that already names the OG route, bare or under a served
- * locale, is not rewritten either.
+ * drops its suffix, so the image route answers the route that it names. A path
+ * that the public folder serves, such as `/og.png`, is answered by Nitro before
+ * the server entry runs, so the alias never sees it. An alias under a locale shape
+ * that the site does not serve is not rewritten, so the router answers it with not
+ * found. A path that already names the OG route, bare or under a served locale, is
+ * not rewritten either.
  */
 export function readOgAliasUrl(url: URL): Option.Option<URL> {
   const { pathname } = url;
@@ -53,9 +52,6 @@ export function readOgAliasUrl(url: URL): Option.Option<URL> {
   }
   return Option.flatMap(readImageSuffix(pathname), (suffix) => {
     if (isUnservedLocaleShape(firstSegment)) {
-      return Option.none();
-    }
-    if (suffix !== ".og" && Option.isNone(decodeLocale(firstSegment))) {
       return Option.none();
     }
     const alias = new URL(url);

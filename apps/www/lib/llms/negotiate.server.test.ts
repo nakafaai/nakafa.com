@@ -1,8 +1,11 @@
 // @vitest-environment node
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { Data, Effect } from "effect";
 import { negotiateDocument } from "@/lib/llms/negotiate.server";
+
+/** A failure that the router reports in one case. */
+class RouterFailure extends Data.TaggedError("RouterFailure") {}
 
 const hasLlmsMarkdownSourceMock = vi.hoisted(() => vi.fn());
 const getLlmsMarkdownTextMock = vi.hoisted(() => vi.fn());
@@ -33,7 +36,7 @@ function router(vary?: string) {
 function negotiate(
   url: string,
   init: { readonly accept?: string; readonly method?: string } = {},
-  routed = router()
+  routed: Effect.Effect<Response, RouterFailure> = router()
 ) {
   const headers: Record<string, string> = {};
   if (init.accept !== undefined) {
@@ -112,6 +115,20 @@ describe("document negotiation", () => {
     })
   );
 
+  it.effect("passes a failure of the router to the caller", () =>
+    Effect.gen(function* () {
+      const error = yield* Effect.flip(
+        negotiate(
+          "/en/articles/belajar",
+          { accept: "text/html" },
+          Effect.fail(new RouterFailure())
+        )
+      );
+
+      expect(error._tag).toBe("RouterFailure");
+    })
+  );
+
   it.effect(
     "answers 406 when the agent names no representation the site sends",
     () =>
@@ -164,57 +181,6 @@ describe("document negotiation", () => {
 
         expect(response.status).toBe(200);
         expect(hasLlmsMarkdownSourceMock).not.toHaveBeenCalled();
-      })
-  );
-
-  it.effect("adds the discovery links to a document answer", () =>
-    Effect.gen(function* () {
-      const response = yield* negotiate("/en/articles/belajar", {
-        accept: "text/html",
-      });
-
-      expect(response.headers.get("link")).toBe('</llms.txt>; rel="llms-txt"');
-      expect(response.headers.get("x-llms-txt")).toBe("/llms.txt");
-    })
-  );
-
-  it.effect("keeps one discovery link on an answer that already names it", () =>
-    Effect.gen(function* () {
-      const response = yield* negotiate(
-        "/en/articles/belajar",
-        { accept: "text/html" },
-        Effect.succeed(
-          new Response("<html>page</html>", {
-            headers: {
-              Link: '</llms.txt>; rel="llms-txt"',
-              "X-Llms-Txt": "/llms.txt",
-            },
-          })
-        )
-      );
-
-      expect(response.headers.get("link")).toBe('</llms.txt>; rel="llms-txt"');
-      expect(response.headers.get("x-llms-txt")).toBe("/llms.txt");
-    })
-  );
-
-  it.effect(
-    "joins the discovery link to the Link values that an answer has",
-    () =>
-      Effect.gen(function* () {
-        const response = yield* negotiate(
-          "/en/articles/belajar",
-          { accept: "text/html" },
-          Effect.succeed(
-            new Response("<html>page</html>", {
-              headers: { Link: "</fonts/inter.woff2>; rel=preload" },
-            })
-          )
-        );
-
-        expect(response.headers.get("link")).toBe(
-          '</fonts/inter.woff2>; rel=preload, </llms.txt>; rel="llms-txt"'
-        );
       })
   );
 });

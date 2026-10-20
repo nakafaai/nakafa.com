@@ -55,39 +55,40 @@ export function decideSlashRedirect(url: URL): Option.Option<RedirectDecision> {
 }
 
 /**
- * Decides the redirect of one request before routing, from the URL, the
- * `Accept-Language` header and the locale cookie. Shared paths never redirect.
- *
- * - `/` goes to the negotiated locale with a 307, because the answer depends on
- *   the request.
- * - A run of slashes, a trailing slash or a non-public spelling goes to its
- *   canonical path with a 308, in one hop.
- * - A school host has no locale in its path, so only the trailing slash changes.
- * - Anything else passes through, including an unknown locale, which the router
- *   answers with a 404.
+ * The 308 to the public spelling of a locale-prefixed path, such as `/en/curricula`
+ * to `/en/curriculum`. The server entry asks this before the negotiation, so a
+ * Markdown request for a non-public spelling moves too. A school host has no
+ * locale in its path, so it has no answer here.
  */
-export function decideRedirect(input: {
-  readonly headers: Headers;
-  readonly url: URL;
-  /** Whether the host names a school. The caller reads the school address, so this seam stays free of tenant rules. */
+export function decideSpellingRedirect(input: {
   readonly isSchoolHost: boolean;
+  readonly url: URL;
 }): Option.Option<RedirectDecision> {
-  const { url } = input;
-  if (isSharedPath(url.pathname)) {
+  if (input.isSchoolHost) {
     return Option.none();
   }
-  const path = normalizePathname(url.pathname);
-  if (input.isSchoolHost) {
-    return redirectToPath(url, path);
+  return redirectToPath(input.url, toPublicPath(input.url.pathname));
+}
+
+/**
+ * The 307 to the negotiated locale for the root path, which the router answers
+ * after the negotiation, so a Markdown request for the root never waits for a
+ * locale. A school host keeps its own home at the root, so it has no answer.
+ */
+export function decideRootRedirect(input: {
+  readonly headers: Headers;
+  /** Whether the host names a school. The caller reads the school address, so this seam stays free of tenant rules. */
+  readonly isSchoolHost: boolean;
+  readonly url: URL;
+}): Option.Option<RedirectDecision> {
+  if (input.isSchoolHost || input.url.pathname !== "/") {
+    return Option.none();
   }
-  if (path === "/") {
-    return Option.some(
-      RedirectDecision.make({
-        location: `/${negotiateLocale(input.headers)}${url.search}`,
-        status: 307,
-        vary: LOCALE_VARY,
-      })
-    );
-  }
-  return redirectToPath(url, toPublicPath(path));
+  return Option.some(
+    RedirectDecision.make({
+      location: `/${negotiateLocale(input.headers)}${input.url.search}`,
+      status: 307,
+      vary: LOCALE_VARY,
+    })
+  );
 }
