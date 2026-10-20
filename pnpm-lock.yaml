@@ -60,9 +60,6 @@ catalogs:
     motion:
       specifier: ^14.3.0
       version: 14.3.0
-    next-themes:
-      specifier: ^0.4.6
-      version: 0.4.6
     react-email:
       specifier: 6.11.3
       version: 6.11.3
@@ -375,9 +372,6 @@ importers:
       motion:
         specifier: 'catalog:'
         version: 14.3.0(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
-      next-themes:
-        specifier: 'catalog:'
-        version: 0.4.6(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       nitro:
         specifier: 3.0.260903-beta
         version: 3.0.260903-beta
@@ -934,9 +928,6 @@ importers:
       motion:
         specifier: 'catalog:'
         version: 14.3.0(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
-      next-themes:
-        specifier: 'catalog:'
-        version: 0.4.6(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       postcss:
         specifier: ^8.5.30
         version: 8.5.30
@@ -6614,12 +6605,6 @@ packages:
 
   neo-async@2.6.2:
     resolution: {integrity: sha512-Yd3UES5mWCSqR+qNT93S3UoYUkqAZ9lLg8a7g9rimsWmYGK8cVToA4/sF3RrshdyV3sAGMXVUmpMYOw+dLpOuw==}
-
-  next-themes@0.4.6:
-    resolution: {integrity: sha512-pZvgD5L0IEvX5/9GWyHMf3m8BKiVQwsCMHfoFosXtXBMnaS0ZnIJ9ST4b4NqLVKDEm8QBxoNNGNaBv2JNF6XNA==}
-    peerDependencies:
-      react: 19.3.1
-      react-dom: 19.3.1
 
   next@16.4.2:
     resolution: {integrity: sha512-r+oBJojfefUjOiWkBhXgLS+igxX/7BWyK59uHnyOyplMSLtBZ+QLP3okrdYTbrfrbrmNTVWLBPaHDX9KRaIt3w==}
@@ -13748,11 +13733,6 @@ snapshots:
 
   neo-async@2.6.2:
     optional: true
-
-  next-themes@0.4.6(react-dom@19.3.1(react@19.3.1))(react@19.3.1):
-    dependencies:
-      react: 19.3.1
-      react-dom: 19.3.1(react@19.3.1)
 
   next@16.4.2(@babel/core@7.29.7(supports-color@8.1.1))(@playwright/test@1.64.1)(@types/node@24.19.2)(babel-plugin-react-compiler@1.0.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1):
     dependencies:
