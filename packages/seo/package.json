@@ -21,6 +21,7 @@
     "@effect/vitest": "catalog:",
     "@repo/testing": "workspace:*",
     "@repo/typescript-config": "workspace:*",
+    "@types/react": "19.3.0",
     "@vitest/coverage-istanbul": "catalog:",
     "vitest": "catalog:"
   }
