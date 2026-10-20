@@ -4,7 +4,7 @@ import "@tanstack/react-start/server-only";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { tryoutMetadataArgsValidator } from "@repo/backend/content/tryout/spec";
-import { Effect, Schema } from "effect";
+import { Effect, Option, Schema } from "effect";
 import type { Locale } from "use-intl";
 import { loadTryoutQuestion } from "@/components/tryout/content/signed";
 import { decodeSourceRevision } from "@/lib/content/published/origin";
@@ -57,106 +57,82 @@ export async function readFeaturedTryout(locale: Locale) {
  * cache` boundary stays so that the try-out pages prerender and the try-out tag
  * still expires them; behind it the content store answers for the release.
  */
-export async function readTryoutMetadata(args: TryoutMetadataArgs) {
-  return await Effect.runPromise(
-    queryContentStore(tryouts.queries.catalog.getMetadata, args).pipe(
-      Effect.withTracerTiming(false)
-    )
-  );
-}
+export const readTryoutMetadata = Effect.fn("www.tryout.catalog.readMetadata")(
+  function* (args: TryoutMetadataArgs) {
+    return yield* queryContentStore(
+      tryouts.queries.catalog.getMetadata,
+      args
+    ).pipe(Effect.withTracerTiming(false));
+  }
+);
 
 /**
  * Reads the public country-first try-out catalog. The content store answers for
  * the release.
  */
-export async function readTryoutHubPage(locale: Locale) {
-  const appLocale = AppLocaleSchema.make(locale);
-  return await Effect.runPromise(
-    queryContentStore(tryouts.queries.catalog.getHubPage, {
+export const readTryoutHubPage = Effect.fn("www.tryout.catalog.readHubPage")(
+  function* (locale: Locale) {
+    const appLocale = AppLocaleSchema.make(locale);
+    const page = yield* queryContentStore(tryouts.queries.catalog.getHubPage, {
       appLocale,
     }).pipe(
       Effect.withTracerTiming(false),
-      Effect.mapError(
-        (cause) =>
-          new TryoutCatalogReadError({
-            cause,
-          })
-      ),
-      Effect.flatMap((page) =>
-        decodeSourceRevision(page.sourceRevision, {
-          appLocale,
-          publicPath: "try-out",
-        }).pipe(
-          Effect.map((sourceRevision) => ({
-            ...page,
-            sourceRevision,
-          }))
-        )
-      )
-    )
-  );
-}
+      Effect.mapError((cause) => new TryoutCatalogReadError({ cause }))
+    );
+    const sourceRevision = yield* decodeSourceRevision(page.sourceRevision, {
+      appLocale,
+      publicPath: "try-out",
+    });
+    return { ...page, sourceRevision };
+  }
+);
 
 /** Reads one public country page from the tagged content cache. */
-export async function readTryoutCountryPage(
-  locale: Locale,
-  publicPath: string
-) {
+export const readTryoutCountryPage = Effect.fn(
+  "www.tryout.catalog.readCountryPage"
+)(function* (locale: Locale, publicPath: string) {
   const appLocale = AppLocaleSchema.make(locale);
-  return await Effect.runPromise(
-    Effect.flatMap(HttpClient.HttpClient, (client) =>
-      client.query(tryouts.queries.catalog.getCountryPage, {
-        appLocale,
-        publicPath,
-      })
-    ).pipe(
-      Effect.provide(httpLayer()),
-      Effect.withTracerTiming(false),
-      Effect.mapError(
-        (cause) =>
-          new TryoutCatalogReadError({
-            cause,
-          })
-      ),
-      Effect.flatMap((page) => {
-        if (!page) {
-          return Effect.succeed(null);
-        }
-        return decodeSourceRevision(page.sourceRevision, {
-          appLocale,
-          publicPath,
-        }).pipe(
-          Effect.map((sourceRevision) => ({
-            ...page,
-            sourceRevision,
-          }))
-        );
-      })
-    )
+  const page = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
+    client.query(tryouts.queries.catalog.getCountryPage, {
+      appLocale,
+      publicPath,
+    })
+  ).pipe(
+    Effect.provide(httpLayer()),
+    Effect.withTracerTiming(false),
+    Effect.mapError((cause) => new TryoutCatalogReadError({ cause }))
   );
-}
+  if (!page) {
+    return Option.none();
+  }
+  const sourceRevision = yield* decodeSourceRevision(page.sourceRevision, {
+    appLocale,
+    publicPath,
+  });
+  return Option.some({ ...page, sourceRevision });
+});
 
 /** Reads one public exam page from the tagged content cache. */
-export async function readTryoutExamPage(locale: Locale, publicPath: string) {
-  return await Effect.runPromise(
-    readPublishedTryoutExamPage({
+export const readTryoutExamPage = Effect.fn("www.tryout.catalog.readExamPage")(
+  function* (locale: Locale, publicPath: string) {
+    return yield* readPublishedTryoutExamPage({
       appLocale: AppLocaleSchema.make(locale),
       publicPath,
-    }).pipe(Effect.withTracerTiming(false))
-  );
-}
+    }).pipe(Effect.withTracerTiming(false));
+  }
+);
 
 /**
  * Reads one public track shell. The content store answers for the release.
  */
-export async function readTryoutTrackPage(locale: Locale, publicPath: string) {
-  return await Effect.runPromise(
-    queryContentStore(tryouts.queries.catalog.getTrackPage, {
-      appLocale: AppLocaleSchema.make(locale),
-      publicPath,
-    }).pipe(Effect.withTracerTiming(false))
-  );
-}
+export const readTryoutTrackPage = Effect.fn(
+  "www.tryout.catalog.readTrackPage"
+)(function* (locale: Locale, publicPath: string) {
+  return yield* queryContentStore(tryouts.queries.catalog.getTrackPage, {
+    appLocale: AppLocaleSchema.make(locale),
+    publicPath,
+  }).pipe(Effect.withTracerTiming(false));
+});
 
 /** Reads the first personalized catalog result after the framework resolves the session. */
 export const readTryoutSetList = Effect.fn("www.tryout.catalog.readSetList")(
@@ -188,16 +164,16 @@ export const readTryoutSetList = Effect.fn("www.tryout.catalog.readSetList")(
 );
 
 /** Reads one public set page from the tagged content cache. */
-export async function readTryoutSetPage(locale: Locale, publicPath: string) {
-  return await Effect.runPromise(
-    Effect.flatMap(HttpClient.HttpClient, (client) =>
+export const readTryoutSetPage = Effect.fn("www.tryout.catalog.readSetPage")(
+  function* (locale: Locale, publicPath: string) {
+    return yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
       client.query(tryouts.queries.catalog.getSetPage, {
         appLocale: AppLocaleSchema.make(locale),
         publicPath,
       })
-    ).pipe(Effect.provide(httpLayer()), Effect.withTracerTiming(false))
-  );
-}
+    ).pipe(Effect.provide(httpLayer()), Effect.withTracerTiming(false));
+  }
+);
 
 /** Fetches one authenticated set bootstrap without subscribing. */
 export const readTryoutSetAttemptPage = Effect.fn(
@@ -227,17 +203,14 @@ export const readTryoutSetAttemptPage = Effect.fn(
 });
 
 /** Reads one public section page from the tagged content cache. */
-export async function readTryoutSectionPage(
-  locale: Locale,
-  publicPath: string
-) {
-  return await Effect.runPromise(
-    readPublishedTryoutSectionPage({
-      appLocale: AppLocaleSchema.make(locale),
-      publicPath,
-    }).pipe(Effect.withTracerTiming(false))
-  );
-}
+export const readTryoutSectionPage = Effect.fn(
+  "www.tryout.catalog.readSectionPage"
+)(function* (locale: Locale, publicPath: string) {
+  return yield* readPublishedTryoutSectionPage({
+    appLocale: AppLocaleSchema.make(locale),
+    publicPath,
+  }).pipe(Effect.withTracerTiming(false));
+});
 
 /** Fetches one authenticated section bootstrap without subscribing. */
 export const readTryoutSectionAttemptPage = Effect.fn(

@@ -34,7 +34,7 @@ import {
 import { makeLandingSource } from "@repo/backend/test/tryout/landing";
 import { makeTryoutRuntimeSource } from "@repo/backend/test/tryout/serving";
 import { JsonTextSchema } from "@repo/utilities/json";
-import { Array as Arr, Effect, Layer, Schema } from "effect";
+import { Array as Arr, Effect, Layer, Option, Schema } from "effect";
 import { renderToStaticMarkup } from "react-dom/server";
 import {
   readFeaturedTryout,
@@ -190,12 +190,13 @@ describe("immutable try-out application catalog", () => {
           publicPath: TRACK,
         } as const;
         const readAll = () =>
-          Effect.promise(() =>
-            Promise.all([
+          Effect.all(
+            [
               readTryoutHubPage("en"),
               readTryoutTrackPage("en", TRACK),
               readTryoutMetadata(metadataArgs),
-            ])
+            ],
+            { concurrency: "unbounded" }
           );
 
         const first = yield* readAll();
@@ -223,15 +224,16 @@ describe("immutable try-out application catalog", () => {
         const fixture = yield* makeTryoutRuntimeSource();
         const context = yield* createTestPublication(fixture.source);
         fetchQueryMock.mockImplementation(context.query);
-        const pages = yield* Effect.promise(() =>
-          Promise.all([
+        const pages = yield* Effect.all(
+          [
             readTryoutHubPage(locale),
             readTryoutCountryPage(locale, COUNTRY),
             readTryoutExamPage(locale, EXAM),
             readTryoutTrackPage(locale, TRACK),
             readTryoutSetPage(locale, SET),
             readTryoutSectionPage(locale, SECTION),
-          ])
+          ],
+          { concurrency: "unbounded" }
         );
         expect(pages[0]).toMatchObject({
           countries: [
@@ -241,7 +243,7 @@ describe("immutable try-out application catalog", () => {
           ],
           sourceRevision: "a".repeat(40),
         });
-        expect(pages[1]).toMatchObject({
+        expect(Option.getOrThrow(pages[1])).toMatchObject({
           country: {
             publicPath: COUNTRY,
           },
@@ -284,13 +286,11 @@ describe("immutable try-out application catalog", () => {
             publicPath: SET,
           },
         });
-        const metadata = yield* Effect.promise(() =>
-          readTryoutMetadata({
-            appLocale: AppLocaleSchema.make(locale),
-            kind: "track",
-            publicPath: TRACK,
-          })
-        );
+        const metadata = yield* readTryoutMetadata({
+          appLocale: AppLocaleSchema.make(locale),
+          kind: "track",
+          publicPath: TRACK,
+        });
         expect(metadata.route).toMatchObject({
           publicPath: TRACK,
           title: {
@@ -304,10 +304,8 @@ describe("immutable try-out application catalog", () => {
           })),
         });
         expect(
-          yield* Effect.promise(() =>
-            readTryoutCountryPage(locale, "try-out/missing")
-          )
-        ).toBeNull();
+          Option.isNone(yield* readTryoutCountryPage(locale, "try-out/missing"))
+        ).toBe(true);
       })
   );
   it.effect(
@@ -407,23 +405,21 @@ describe("immutable try-out application catalog", () => {
     })
   );
   it.effect(
-    "preserves unavailable publication failures at Promise page boundaries",
+    "preserves unavailable publication failures as typed catalog errors",
     () =>
       Effect.gen(function* () {
         const context = yield* createTestPublication(
           (yield* makeRuntimeSource()).source
         );
         fetchQueryMock.mockImplementation(context.query);
-        yield* Effect.promise(() =>
-          expect(readTryoutHubPage("en")).rejects.toMatchObject({
-            _tag: "TryoutCatalogReadError",
-          })
+        const hubFailure = yield* readTryoutHubPage("en").pipe(Effect.flip);
+        expect(hubFailure).toMatchObject({ _tag: "TryoutCatalogReadError" });
+        const countryFailure = yield* readTryoutCountryPage("en", COUNTRY).pipe(
+          Effect.flip
         );
-        yield* Effect.promise(() =>
-          expect(readTryoutCountryPage("en", COUNTRY)).rejects.toMatchObject({
-            _tag: "TryoutCatalogReadError",
-          })
-        );
+        expect(countryFailure).toMatchObject({
+          _tag: "TryoutCatalogReadError",
+        });
       })
   );
   it.effect(

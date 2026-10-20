@@ -67,7 +67,12 @@ const decodeTryoutExamArtworkIdentity = Schema.decodeUnknownResult(
  * framework runner boundary.
  * https://nextjs.org/docs/messages/next-prerender-current-time
  */
-export function resolveTryoutExamArtwork(input: unknown) {
+export function resolveTryoutExamArtwork(
+  input: unknown
+): Effect.Effect<
+  typeof TryoutExamArtworkSchema.Type,
+  InvalidTryoutExamArtworkIdentityError
+> {
   const decodedIdentity = decodeTryoutExamArtworkIdentity(input);
   if (Result.isFailure(decodedIdentity)) {
     return Effect.fail(
