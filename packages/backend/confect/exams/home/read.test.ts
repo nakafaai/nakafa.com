@@ -187,6 +187,24 @@ describe("exams home", () => {
   );
 
   it.effect(
+    "gives the owner the school's setup with the home, and gives a student none",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+
+        const owner = yield* homeOf(fixture, "owner");
+        const student = yield* homeOf(fixture, "student");
+
+        expect(owner.setup).toEqual({
+          hasPendingInvite: false,
+          hasStudent: true,
+          hasTeacher: true,
+        });
+        expect(student.setup).toBeUndefined();
+      })
+  );
+
+  it.effect(
     "lists the rooms that open within fourteen days, earliest first, and no other",
     () =>
       Effect.gen(function* () {
