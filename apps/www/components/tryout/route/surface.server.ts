@@ -4,10 +4,10 @@ import type { Locale } from "@repo/internationalization/src/locale";
 import { readServerTranslator } from "@repo/internationalization/src/translator";
 import { Effect, Option } from "effect";
 import { loadSignedTryoutContent } from "@/components/tryout/content/signed";
+import { renderTryoutQuestionBody } from "@/components/tryout/route/body.server";
 import type { readCurrentTryoutSet } from "@/components/tryout/route/current";
 import {
   renderTryoutPreview,
-  renderTryoutQuestionBody,
   renderTryoutReview,
 } from "@/components/tryout/route/rendered.server";
 import type { QuestionPreviewContent } from "@/lib/content/preview/question";

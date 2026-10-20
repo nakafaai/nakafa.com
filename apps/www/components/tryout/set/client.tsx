@@ -209,7 +209,7 @@ function ResolvedTryoutSetPage({
   const startEntrySection = activeAttempt
     ? entrySection
     : (restartTarget?.entrySection ?? null);
-  const links = selectTryoutSetLinks(restartTarget);
+  const links = selectTryoutSetLinks(Option.fromNullishOr(restartTarget));
   const destination = getStartDestination({
     activeAttempt,
     page,

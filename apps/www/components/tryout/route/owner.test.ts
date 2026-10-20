@@ -29,18 +29,20 @@ describe("try-out route ownership", () => {
 
   it("links the active set and its parent track or the try-out root", () => {
     expect(
-      selectTryoutSetLinks({
-        setPublicPath: "try-out/indonesia/tka/2027/renamed-set",
-      })
+      selectTryoutSetLinks(
+        Option.some({ setPublicPath: "try-out/indonesia/tka/2027/renamed-set" })
+      )
     ).toEqual({
       currentHref: "/try-out/indonesia/tka/2027/renamed-set",
       returnHref: "/try-out/indonesia/tka/2027",
     });
-    expect(selectTryoutSetLinks(null)).toEqual({
+    expect(selectTryoutSetLinks(Option.none())).toEqual({
       currentHref: "/try-out",
       returnHref: "/try-out",
     });
-    expect(selectTryoutSetLinks({ setPublicPath: "malformed" })).toEqual({
+    expect(
+      selectTryoutSetLinks(Option.some({ setPublicPath: "malformed" }))
+    ).toEqual({
       currentHref: "/malformed",
       returnHref: "/try-out",
     });

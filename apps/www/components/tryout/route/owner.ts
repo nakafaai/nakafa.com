@@ -29,23 +29,22 @@ export function createTryoutSetRestartTarget<EntrySection>(page: {
  * retained set, or the try-out root when the set is no longer active.
  */
 export function selectTryoutSetLinks(
-  restartTarget: Pick<TryoutSetRestartTarget, "setPublicPath"> | null
+  restartTarget: Option.Option<Pick<TryoutSetRestartTarget, "setPublicPath">>
 ) {
-  if (!restartTarget) {
+  if (Option.isNone(restartTarget)) {
     return { currentHref: getTryoutHref(), returnHref: getTryoutHref() };
   }
 
-  const currentHref = getTryoutPublicPathHref(restartTarget.setPublicPath);
-  const separator = restartTarget.setPublicPath.lastIndexOf("/");
+  const { setPublicPath } = restartTarget.value;
+  const currentHref = getTryoutPublicPathHref(setPublicPath);
+  const separator = setPublicPath.lastIndexOf("/");
   if (separator <= 0) {
     return { currentHref, returnHref: getTryoutHref() };
   }
 
   return {
     currentHref,
-    returnHref: getTryoutPublicPathHref(
-      restartTarget.setPublicPath.slice(0, separator)
-    ),
+    returnHref: getTryoutPublicPathHref(setPublicPath.slice(0, separator)),
   };
 }
 

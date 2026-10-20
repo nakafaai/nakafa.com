@@ -48,9 +48,11 @@ vi.mock("@/components/tryout/route/current", () => ({
   readCurrentTryoutSection: mocks.readCurrentTryoutSection,
   readCurrentTryoutSet: mocks.readCurrentTryoutSet,
 }));
+vi.mock("@/components/tryout/route/body.server", () => ({
+  renderTryoutQuestionBody: mocks.renderTryoutQuestionBody,
+}));
 vi.mock("@/components/tryout/route/rendered.server", () => ({
   renderTryoutPreview: mocks.renderTryoutPreview,
-  renderTryoutQuestionBody: mocks.renderTryoutQuestionBody,
   renderTryoutReview: mocks.renderTryoutReview,
 }));
 vi.mock("@/components/tryout/route/token.server", () => ({
