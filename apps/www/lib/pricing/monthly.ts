@@ -1,4 +1,4 @@
-import { products } from "@repo/backend/confect/customers/polar/products";
+import { monthlyPrices } from "@repo/backend/confect/customers/polar/catalog";
 import { HashSet, Schema } from "effect";
 
 /** The currencies that the monthly pro price is shown in, as the Polar catalog names them. */
@@ -57,8 +57,7 @@ const polarEuroTerritoryCodes = HashSet.fromIterable([
   "YT",
 ]);
 
-type MonthlyPrice =
-  (typeof products.pro.monthlyPrices)[keyof typeof products.pro.monthlyPrices];
+type MonthlyPrice = (typeof monthlyPrices)[keyof typeof monthlyPrices];
 
 /** Builds the shared formatting contract for one catalog price. */
 function getPriceFormat(price: MonthlyPrice) {
@@ -84,9 +83,9 @@ function makePricing<Currency extends PricingCurrency>(
   };
 }
 
-const eurPricing = makePricing("EUR", products.pro.monthlyPrices.EUR);
-const idrPricing = makePricing("IDR", products.pro.monthlyPrices.IDR);
-const usdPricing = makePricing("USD", products.pro.monthlyPrices.USD);
+const eurPricing = makePricing("EUR", monthlyPrices.EUR);
+const idrPricing = makePricing("IDR", monthlyPrices.IDR);
+const usdPricing = makePricing("USD", monthlyPrices.USD);
 
 /** The monthly pro price of every currency, which the static page carries in full. */
 const pricingByCurrency = {

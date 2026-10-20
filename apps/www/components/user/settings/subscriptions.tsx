@@ -4,7 +4,8 @@ import type { Ref } from "@confect/core";
 import { QueryResult, useQuery } from "@confect/react";
 import { PartyIcon, Settings01Icon } from "@hugeicons/core-free-icons";
 import subscriptions from "@repo/backend/confect/_generated/refs/subscriptions";
-import { products } from "@repo/backend/confect/customers/polar/products";
+import { proProductIdFor } from "@repo/backend/confect/customers/polar/catalog";
+import { polarPublicKeys } from "@repo/backend/public";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   CardContent,
@@ -42,7 +43,9 @@ export function UserSettingsSubscriptions({
   const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);
   const subscription = useQuery(
     subscriptions.queries.hasActiveSubscription,
-    isAuthenticated ? { productId: products.pro.id } : "skip"
+    isAuthenticated
+      ? { productId: proProductIdFor(polarPublicKeys().VITE_POLAR_SERVER) }
+      : "skip"
   );
   if (QueryResult.isFailure(subscription)) {
     throw subscription.error;
