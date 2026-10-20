@@ -140,7 +140,7 @@ export function makeBookNode(input: typeof BookInput.Type) {
  */
 export function makeEducationalOrganizationNode(
   input: typeof EducationalOrganizationInput.Type
-) {
+): Record<string, unknown> {
   return {
     ...ORGANIZATION,
     "@context": "https://schema.org",

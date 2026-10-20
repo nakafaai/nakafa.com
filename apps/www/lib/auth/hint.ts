@@ -69,12 +69,21 @@ export function isHintCurrent(
   headers: Headers
 ): boolean {
   const signedIn = Option.fromNullishOr(headers.get("cookie")).pipe(
-    Option.map((cookie) =>
-      Arr.some(cookie.split(";"), (pair) => pair.trim() === SIGNED_IN_HINT_PAIR)
-    ),
+    Option.map(hasSignedInHint),
     Option.getOrElse(() => false)
   );
   return signedIn === (session._tag === "SignedIn");
+}
+
+/**
+ * Whether a cookie header carries the signed-in hint, as the browser's document
+ * cookie or a request's cookie header spells it.
+ */
+export function hasSignedInHint(cookie: string): boolean {
+  return Arr.some(
+    cookie.split(";"),
+    (pair) => pair.trim() === SIGNED_IN_HINT_PAIR
+  );
 }
 
 /** The inline script that sets the sign-in attribute of the root element before the first paint. */

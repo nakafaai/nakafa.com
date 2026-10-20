@@ -57,21 +57,14 @@ export const Route = createFileRoute("/$locale")({
     return {
       messages,
       now,
-      organization: { alternateName: t("title"), description: t("description") },
+      organization: {
+        alternateName: t("title"),
+        description: t("description"),
+      },
     };
   },
   head: ({ loaderData }) =>
-    loaderData === undefined
-      ? {}
-      : {
-          meta: [
-            {
-              "script:ld+json": makeEducationalOrganizationNode(
-                loaderData.organization
-              ),
-            },
-          ],
-        },
+    loaderData === undefined ? {} : toOrganizationHead(loaderData.organization),
   component: LocaleRoot,
   errorComponent: LocaleError,
   notFoundComponent: LocaleNotFound,
@@ -122,6 +115,19 @@ function LocaleError({ error }: ErrorComponentProps) {
   return (
     <LocalizedError error={error} locale={locale} source="start-locale-error" />
   );
+}
+
+/**
+ * The head of a locale page: the educational organization of the site as its
+ * JSON-LD script. The router serializes the script, so it is named in the meta.
+ */
+function toOrganizationHead(organization: {
+  readonly alternateName: string;
+  readonly description: string;
+}) {
+  return {
+    meta: [{ "script:ld+json": makeEducationalOrganizationNode(organization) }],
+  };
 }
 
 /** Shows the not-found page of a locale inside the app, so its links keep the app loaded. */

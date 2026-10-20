@@ -17,7 +17,6 @@ import { readRouteMessages } from "@/lib/i18n/messages.fn";
 import { type MarketingFaqItem, pricingFaqNumbers } from "@/lib/marketing/faq";
 import { getAppSocialArtwork } from "@/lib/og/app";
 import { pricingCurrencyScript } from "@/lib/pricing/currency";
-import { getProMonthlyPriceTexts } from "@/lib/pricing/monthly";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { createSeoHead, toRouterHead } from "@/lib/seo/head";
 
@@ -54,7 +53,6 @@ export const Route = createFileRoute("/$locale/_marketing/pricing")({
           question: t(`q${number}`),
         })
       ),
-      prices: getProMonthlyPriceTexts(),
       title: t("metadata-title"),
     };
   },

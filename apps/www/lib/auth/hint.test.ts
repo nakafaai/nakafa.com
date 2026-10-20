@@ -2,6 +2,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
   expiredHintCookie,
+  hasSignedInHint,
   hintCookieFor,
   hintScopeFor,
   isHintCurrent,
@@ -110,5 +111,18 @@ describe("sign-in hint script", () => {
   it("marks a page for a visitor without the hint", () => {
     expect(run("a=1")).toBe("no");
     expect(run("nakafa-signed-in=0")).toBe("no");
+  });
+});
+
+describe("hasSignedInHint", () => {
+  it("reads the signed-in pair among the other cookies", () => {
+    expect(hasSignedInHint("theme=dark; nakafa-signed-in=1")).toBe(true);
+    expect(hasSignedInHint("nakafa-signed-in=1")).toBe(true);
+  });
+
+  it("ignores a cleared hint and a cookie that only names it", () => {
+    expect(hasSignedInHint("nakafa-signed-in=0")).toBe(false);
+    expect(hasSignedInHint("nakafa-signed-in=")).toBe(false);
+    expect(hasSignedInHint("")).toBe(false);
   });
 });
