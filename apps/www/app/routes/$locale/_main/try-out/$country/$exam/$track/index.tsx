@@ -13,6 +13,7 @@ import { TryoutSetTable } from "@/components/tryout/catalog/table/table.client";
 import {
   readTryoutTrackFn,
   readTryoutTrackListFn,
+  type TryoutTrackListResult,
 } from "@/components/tryout/route/catalog.fn";
 import { createTryoutHead } from "@/components/tryout/route/head";
 import { readTryoutPersonalHeaders } from "@/components/tryout/route/headers";
@@ -102,7 +103,7 @@ function TryoutTrackPage() {
             title: route.page.track.title,
           }}
         />
-        <Await fallback={null} promise={route.list}>
+        <Await<TryoutTrackListResult> fallback={null} promise={route.list}>
           {(list) => (
             <TryoutSetTable
               bootstrap={list}

@@ -67,7 +67,7 @@ function TryoutCountryPage() {
           />
         </LayoutContent>
         <FooterContent>
-          <RefContent githubUrl={route.sourceUrl ?? undefined} />
+          <RefContent githubUrl={route.sourceUrl} />
         </FooterContent>
       </LayoutMaterialContent>
     </LayoutMaterial>

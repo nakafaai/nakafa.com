@@ -6,7 +6,7 @@ import {
   readTryoutSetRoute,
 } from "@/components/tryout/route/attempt.server";
 import { TryoutAttemptSearch } from "@/components/tryout/route/search";
-import { runServerEffect } from "@/lib/server/fn";
+import { serverHandler } from "@/lib/server/fn";
 
 /** The address segments of a set page, with its attempt search. */
 const SetInput = Schema.Struct({
@@ -30,11 +30,9 @@ const SectionInput = Schema.Struct({
 });
 
 /** One set page for its learner: the catalog view, or the attempt bound to the URL. */
-const readTryoutSetHandler = ({
-  data,
-}: {
-  readonly data: typeof SetInput.Type;
-}) => runServerEffect(readTryoutSetRoute(data));
+export const readTryoutSetHandler = serverHandler(
+  (data: typeof SetInput.Type) => readTryoutSetRoute(data)
+);
 
 /** One set page, read on the server for its loader. */
 export const readTryoutSetFn = createServerFn({ method: "GET" })
@@ -42,11 +40,9 @@ export const readTryoutSetFn = createServerFn({ method: "GET" })
   .handler(readTryoutSetHandler);
 
 /** One section page for its learner: the catalog view, or the attempt bound to the URL. */
-const readTryoutSectionHandler = ({
-  data,
-}: {
-  readonly data: typeof SectionInput.Type;
-}) => runServerEffect(readTryoutSectionRoute(data));
+export const readTryoutSectionHandler = serverHandler(
+  (data: typeof SectionInput.Type) => readTryoutSectionRoute(data)
+);
 
 /** One section page, read on the server for its loader. */
 export const readTryoutSectionFn = createServerFn({ method: "GET" })

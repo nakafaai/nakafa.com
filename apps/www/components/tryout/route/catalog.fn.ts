@@ -10,7 +10,7 @@ import {
   readTryoutTrackSetList,
 } from "@/components/tryout/route/catalog.server";
 import { TrackListRequestSchema } from "@/components/tryout/route/search";
-import { runServerEffect } from "@/lib/server/fn";
+import { serverHandler } from "@/lib/server/fn";
 
 /** The locale of every catalog request, already decoded by the locale route. */
 const LocaleInput = Schema.Struct({ locale: LocaleSchema });
@@ -36,24 +36,24 @@ const TrackInput = Schema.Struct({
   track: Schema.String,
 });
 
-/** The hub page of one locale. */
-const readTryoutHubHandler = ({
-  data,
-}: {
-  readonly data: typeof LocaleInput.Type;
-}) => runServerEffect(readTryoutHubRoute(data.locale));
+/** The learner's set list of one track: its arguments and the page of rows. */
+export type TryoutTrackListResult = Effect.Success<
+  ReturnType<typeof readTryoutTrackSetList>
+>;
 
 /** The hub page of one locale, read on the server for a loader. */
+export const readTryoutHubHandler = serverHandler(
+  (data: typeof LocaleInput.Type) => readTryoutHubRoute(data.locale)
+);
+
 export const readTryoutHubFn = createServerFn({ method: "GET" })
   .validator(Schema.toStandardSchemaV1(LocaleInput))
   .handler(readTryoutHubHandler);
 
 /** One country page, or the not-found decision when the catalog has none. */
-const readTryoutCountryHandler = ({
-  data,
-}: {
-  readonly data: typeof CountryInput.Type;
-}) => runServerEffect(readTryoutCountryRoute(data));
+export const readTryoutCountryHandler = serverHandler(
+  (data: typeof CountryInput.Type) => readTryoutCountryRoute(data)
+);
 
 /** One country page, read on the server for a loader. */
 export const readTryoutCountryFn = createServerFn({ method: "GET" })
@@ -61,11 +61,9 @@ export const readTryoutCountryFn = createServerFn({ method: "GET" })
   .handler(readTryoutCountryHandler);
 
 /** One exam page, or the not-found decision when the catalog has none. */
-const readTryoutExamHandler = ({
-  data,
-}: {
-  readonly data: typeof ExamInput.Type;
-}) => runServerEffect(readTryoutExamRoute(data));
+export const readTryoutExamHandler = serverHandler(
+  (data: typeof ExamInput.Type) => readTryoutExamRoute(data)
+);
 
 /** One exam page, read on the server for a loader. */
 export const readTryoutExamFn = createServerFn({ method: "GET" })
@@ -73,29 +71,19 @@ export const readTryoutExamFn = createServerFn({ method: "GET" })
   .handler(readTryoutExamHandler);
 
 /** One track page, or the not-found decision when the catalog has none. */
-const readTryoutTrackHandler = ({
-  data,
-}: {
-  readonly data: typeof TrackInput.Type;
-}) => runServerEffect(readTryoutTrackRoute(data));
+export const readTryoutTrackHandler = serverHandler(
+  (data: typeof TrackInput.Type) => readTryoutTrackRoute(data)
+);
 
 /** One track page, read on the server for a loader. */
 export const readTryoutTrackFn = createServerFn({ method: "GET" })
   .validator(Schema.toStandardSchemaV1(TrackInput))
   .handler(readTryoutTrackHandler);
 
-/** The learner's set list of one track: its arguments and the page of rows. */
-type TryoutTrackListResult = Effect.Success<
-  ReturnType<typeof readTryoutTrackSetList>
->;
-
-/** The learner's set list of one track, read per request. */
-const readTryoutTrackListHandler = ({
-  data,
-}: {
-  readonly data: typeof TrackListRequestSchema.Type;
-}): Promise<TryoutTrackListResult> =>
-  runServerEffect(readTryoutTrackSetList(data));
+/** The learner's set list of one track, read per request and never cached. */
+export const readTryoutTrackListHandler = serverHandler(
+  (data: typeof TrackListRequestSchema.Type) => readTryoutTrackSetList(data)
+);
 
 /** The learner's set list of one track, read on the server for a loader. */
 export const readTryoutTrackListFn = createServerFn({ method: "GET" })

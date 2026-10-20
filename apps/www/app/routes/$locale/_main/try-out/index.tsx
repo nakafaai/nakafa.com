@@ -49,7 +49,7 @@ function TryoutHubPage() {
           <TryoutHubClient locale={locale} page={page} />
         </LayoutContent>
         <FooterContent>
-          <RefContent githubUrl={sourceUrl ?? undefined} />
+          <RefContent githubUrl={sourceUrl} />
         </FooterContent>
       </LayoutMaterialContent>
     </LayoutMaterial>
