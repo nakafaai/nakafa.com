@@ -3,20 +3,22 @@ import {
   type Locale,
 } from "@repo/internationalization/src/locale";
 import { COMPANY_SOCIAL_PROFILES } from "@repo/seo/company-profiles";
-import { Array as Arr, Option } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 
 /** One address that moved. A `:locale` in the destination stands for the locale of the request. */
-interface MovedAddress {
-  readonly destination: string;
-  readonly permanent: boolean;
-  readonly source: string;
-}
+const MovedAddressSchema = Schema.Struct({
+  destination: Schema.String,
+  permanent: Schema.Boolean,
+  source: Schema.String,
+});
+type MovedAddress = typeof MovedAddressSchema.Type;
 
 /** The answer to a request for an address that moved: its location and its status. */
-export interface MovedRedirect {
-  readonly location: string;
-  readonly status: 307 | 308;
-}
+const MovedRedirectSchema = Schema.Struct({
+  location: Schema.String,
+  status: Schema.Literals([307, 308]),
+});
+type MovedRedirect = typeof MovedRedirectSchema.Type;
 
 /** The addresses that moved without a locale, as the reference site answered them. */
 const BARE_ADDRESSES: readonly MovedAddress[] = [
@@ -104,7 +106,7 @@ export function readMovedRedirect(url: URL): Option.Option<MovedRedirect> {
   if (Option.isNone(locale)) {
     return Option.none();
   }
-  const path = `/${rest.join("/")}`;
+  const path = `/${Arr.join(rest, "/")}`;
   return Option.map(
     Arr.findFirst(LOCALIZED_ADDRESSES, ({ source }) => source === path),
     (address) => toRedirect(address, locale.value, url.search)

@@ -54,72 +54,81 @@ describe("server exception reporting runtime", () => {
 });
 
 describe("uncaught request error reporting", () => {
-  it("captures the error with its method and user agent in production", async () => {
-    vi.stubEnv("VERCEL_ENV", "production");
-    vi.stubEnv("TSS_PRERENDERING", undefined);
-    mockProvider();
-    const error = new Error("render failed");
-    const request = new Request("https://nakafa.com/curricula", {
-      headers: { "user-agent": "reviewer-agent" },
-      method: "POST",
-    });
+  it.effect(
+    "captures the error with its method and user agent in production",
+    () =>
+      Effect.gen(function* () {
+        vi.stubEnv("VERCEL_ENV", "production");
+        vi.stubEnv("TSS_PRERENDERING", undefined);
+        mockProvider();
+        const error = new Error("render failed");
+        const request = new Request("https://nakafa.com/curricula", {
+          headers: { "user-agent": "reviewer-agent" },
+          method: "POST",
+        });
 
-    await Effect.runPromise(reportUncaughtRequestError(error, request));
+        yield* reportUncaughtRequestError(error, request);
 
-    expect(captureServerException).toHaveBeenCalledWith(
-      error,
-      { method: "POST", source: "start-uncaught-request" },
-      "reviewer-agent"
-    );
-  });
+        expect(captureServerException).toHaveBeenCalledWith(
+          error,
+          { method: "POST", source: "start-uncaught-request" },
+          "reviewer-agent"
+        );
+      })
+  );
 
-  it("captures without a user agent when the request has none", async () => {
-    vi.stubEnv("VERCEL_ENV", "production");
-    vi.stubEnv("TSS_PRERENDERING", undefined);
-    mockProvider();
-    const error = new Error("render failed");
+  it.effect("captures without a user agent when the request has none", () =>
+    Effect.gen(function* () {
+      vi.stubEnv("VERCEL_ENV", "production");
+      vi.stubEnv("TSS_PRERENDERING", undefined);
+      mockProvider();
+      const error = new Error("render failed");
 
-    await Effect.runPromise(
-      reportUncaughtRequestError(error, new Request("https://nakafa.com/"))
-    );
+      yield* reportUncaughtRequestError(
+        error,
+        new Request("https://nakafa.com/")
+      );
 
-    expect(captureServerException).toHaveBeenCalledWith(
-      error,
-      { method: "GET", source: "start-uncaught-request" },
-      undefined
-    );
-  });
+      expect(captureServerException).toHaveBeenCalledWith(
+        error,
+        { method: "GET", source: "start-uncaught-request" },
+        undefined
+      );
+    })
+  );
 
-  it("skips the provider outside production", async () => {
-    vi.stubEnv("VERCEL_ENV", "preview");
-    vi.stubEnv("TSS_PRERENDERING", undefined);
-    mockProvider();
+  it.effect("skips the provider outside production", () =>
+    Effect.gen(function* () {
+      vi.stubEnv("VERCEL_ENV", "preview");
+      vi.stubEnv("TSS_PRERENDERING", undefined);
+      mockProvider();
 
-    await Effect.runPromise(
-      reportUncaughtRequestError(
+      yield* reportUncaughtRequestError(
         new Error("render failed"),
         new Request("https://nakafa.com/")
-      )
-    );
+      );
 
-    expect(captureServerException).not.toHaveBeenCalled();
-  });
+      expect(captureServerException).not.toHaveBeenCalled();
+    })
+  );
 
-  it("ignores a failed capture so the error response still answers", async () => {
-    vi.stubEnv("VERCEL_ENV", "production");
-    vi.stubEnv("TSS_PRERENDERING", undefined);
-    mockProvider();
-    captureServerException.mockReturnValueOnce(
-      Effect.fail(new Error("provider unavailable"))
-    );
+  it.effect(
+    "ignores a failed capture so the error response still answers",
+    () =>
+      Effect.gen(function* () {
+        vi.stubEnv("VERCEL_ENV", "production");
+        vi.stubEnv("TSS_PRERENDERING", undefined);
+        mockProvider();
+        captureServerException.mockReturnValueOnce(
+          Effect.fail(new Error("provider unavailable"))
+        );
 
-    await expect(
-      Effect.runPromise(
-        reportUncaughtRequestError(
+        const answered = yield* reportUncaughtRequestError(
           new Error("render failed"),
           new Request("https://nakafa.com/")
-        )
-      )
-    ).resolves.toBeUndefined();
-  });
+        );
+
+        expect(answered).toBeUndefined();
+      })
+  );
 });
