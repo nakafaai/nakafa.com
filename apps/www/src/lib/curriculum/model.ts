@@ -35,7 +35,6 @@ const CurriculumCatalogEntrySchema = Schema.Struct({
   route: CurriculumRouteSchema,
   translation: ProgramTranslationSchema,
 });
-export type CurriculumCatalogEntry = typeof CurriculumCatalogEntrySchema.Type;
 
 /** Complete signed curriculum catalog selected for one locale. */
 const CurriculumCatalogModelSchema = Schema.Struct({
