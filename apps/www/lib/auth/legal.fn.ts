@@ -1,7 +1,5 @@
 import { LocaleSchema } from "@repo/internationalization/src/locale";
-import { negotiateLocale } from "@repo/internationalization/src/negotiate";
 import { createServerFn } from "@tanstack/react-start";
-import { getRequestHeaders } from "@tanstack/react-start/server";
 import { Schema } from "effect";
 
 /** The absolute privacy and terms addresses of the sign-in sentence. */
@@ -23,9 +21,7 @@ export const readAuthLegalFn = createServerFn({ method: "GET" })
       Schema.Struct({ locale: Schema.optionalKey(LocaleSchema) })
     )
   )
-  .handler(async ({ data }) => {
-    const { readAuthLegalAnswer } = await import("@/lib/auth/legal.server");
-    return readAuthLegalAnswer(
-      data.locale ?? negotiateLocale(getRequestHeaders())
-    );
+  .handler(async (options) => {
+    const { readAuthLegalHandler } = await import("@/lib/auth/legal.server");
+    return readAuthLegalHandler(options);
   });

@@ -2,7 +2,7 @@
 
 import { describe, expect, it } from "@effect/vitest";
 import { getRequestHeaders } from "@tanstack/react-start/server";
-import { readNotFoundLocaleHandler } from "@/lib/routing/not-found.fn";
+import { readNotFoundLocaleHandler } from "@/lib/routing/not-found.server";
 
 vi.mock("@tanstack/react-start/server", () => ({
   getRequestHeaders: vi.fn(),
