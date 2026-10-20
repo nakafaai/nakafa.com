@@ -216,5 +216,10 @@ export const seedSitting = Effect.fn("exams.seed.sitting")(function* (args: {
     sittingId: made.id,
     tenantId: tenant._id,
   });
-  return { examId, sittingId: made.id, token: made.token };
+  return {
+    examId,
+    sittingId: made.id,
+    title: EXAM_TITLE,
+    token: made.token,
+  };
 });

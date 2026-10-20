@@ -87,6 +87,7 @@ describe("exams seed sitting", () => {
           )
         );
         expect(exam).toMatchObject({ title: "Ujian Acceptance" });
+        expect(made.title).toBe(exam.title);
         expect(exam.questions).toHaveLength(2);
         const listed = yield* fixture.as("student").query(mine, { slug: nf });
         expect(Arr.map(listed, (row) => row.id)).toContain(made.sittingId);
