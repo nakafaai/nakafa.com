@@ -11,7 +11,6 @@ import {
 import { FetchHttpClient } from "effect/http";
 import { TestClock } from "effect/testing";
 import {
-  createRequestSession,
   readRequestSession,
   SessionUnavailable,
 } from "@/lib/auth/session.server";
@@ -304,45 +303,5 @@ describe("request session", () => {
         const error = yield* Effect.flip(read(signedInRequest()));
         expect(error).toStrictEqual(new SessionUnavailable({ reason: "body" }));
       })
-  );
-});
-
-describe("request session memo", () => {
-  it.effect("reads the session once for every reader of one request", () =>
-    Effect.gen(function* () {
-      fetcher.mockResolvedValueOnce(
-        answer(ada, ["convex_jwt=token-ada; Path=/"])
-      );
-      const readSession = yield* createRequestSession(signedInRequest());
-      const first = yield* readSession;
-      const second = yield* readSession;
-      expect(second).toStrictEqual(first);
-      expect(fetcher).toHaveBeenCalledTimes(1);
-    }).pipe(Effect.provideService(FetchHttpClient.Fetch, fetcher))
-  );
-
-  it.effect("gives each request its own session", () =>
-    Effect.gen(function* () {
-      fetcher
-        .mockResolvedValueOnce(answer(ada, ["convex_jwt=token-ada; Path=/"]))
-        .mockResolvedValueOnce(
-          answer(
-            {
-              session: { id: "session-2" },
-              user: { id: "user-2", name: "Bob" },
-            },
-            ["convex_jwt=token-bob; Path=/"]
-          )
-        );
-      const adaRead = yield* createRequestSession(signedInRequest());
-      const bobRead = yield* createRequestSession(signedInRequest());
-      expect((yield* adaRead).convexToken).toStrictEqual(
-        Option.some("token-ada")
-      );
-      expect((yield* bobRead).convexToken).toStrictEqual(
-        Option.some("token-bob")
-      );
-      expect(fetcher).toHaveBeenCalledTimes(2);
-    }).pipe(Effect.provideService(FetchHttpClient.Fetch, fetcher))
   );
 });

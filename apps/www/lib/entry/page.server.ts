@@ -1,7 +1,7 @@
 import "@tanstack/react-start/server-only";
 
 import { SITE_ORIGIN } from "@repo/seo/origin";
-import { appendResponseHeader, getRequest } from "@tanstack/react-start/server";
+import { getRequest } from "@tanstack/react-start/server";
 import { Effect, Option } from "effect";
 import {
   getPostAuthDestination,
@@ -9,7 +9,7 @@ import {
   resolvePostAuthIntent,
   startsSchool,
 } from "@/lib/auth/admission";
-import { createRequestSession } from "@/lib/auth/session.server";
+import { readSessionMemo } from "@/lib/auth/session.server";
 import { getShellPageNavigation } from "@/lib/content/page/navigation";
 import type {
   OnboardingPageInput,
@@ -32,13 +32,8 @@ const redirectTo = (href: string) => ({ _tag: "Redirect" as const, href });
  * refreshes the session cookies, so its Set-Cookie values reach the browser.
  */
 const readRequestToken = Effect.fn("www.entry.readToken")(function* () {
-  const readSession = yield* createRequestSession(getRequest());
+  const readSession = yield* readSessionMemo(getRequest());
   const session = yield* readSession;
-  yield* Effect.sync(() => {
-    for (const cookie of session.setCookies) {
-      appendResponseHeader("set-cookie", cookie);
-    }
-  });
   return session.convexToken;
 });
 

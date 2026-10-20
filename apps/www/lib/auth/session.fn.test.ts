@@ -4,57 +4,106 @@ import {
   appendResponseHeader,
   setResponseHeader,
 } from "@tanstack/react-start/server";
-import { Effect, Option } from "effect";
+import { Effect } from "effect";
+import { FetchHttpClient } from "effect/http";
 import {
   readSessionClient,
-  sessionFn,
+  readSessionMemo,
   sessionHandler,
-} from "@/lib/auth/session.fn";
+} from "@/lib/auth/session.server";
+import { ClientSession } from "@/lib/auth/visitor";
 
-process.env.VITE_CONVEX_URL = "https://example.convex.cloud";
+process.env.VITE_CONVEX_SITE_URL = "https://example.convex.site";
+
+/** The request that the server is handling, which the mocked server helpers read. */
+const current = vi.hoisted(() => ({
+  request: new Request("https://nakafa.com/"),
+}));
 
 vi.mock("@tanstack/react-start/server", () => ({
   appendResponseHeader: vi.fn(),
-  getRequest: () => new Request("https://nakafa.com/"),
+  getRequest: () => current.request,
   setResponseHeader: vi.fn(),
 }));
 
-vi.mock("@/lib/auth/session.server", () => ({
-  createRequestSession: () =>
-    Effect.succeed(
-      Effect.succeed({
-        client: { _tag: "SignedOut" },
-        convexToken: Option.none(),
-        setCookies: ["better-auth.session_token=; Path=/; Max-Age=0"],
-      })
-    ),
-}));
+/** The Convex site answers every session read through this one fetch double. */
+const fetcher = vi.fn<typeof fetch>();
 
-describe("session server function", () => {
-  it.effect(
-    "answers the visitor without a token, and keeps the answer uncached",
-    () =>
-      Effect.gen(function* () {
-        const client = yield* readSessionClient();
-        expect(client).toStrictEqual({ _tag: "SignedOut" });
-        expect(setResponseHeader).toHaveBeenCalledWith(
-          "cache-control",
-          "private, no-store"
-        );
-        expect(appendResponseHeader).toHaveBeenCalledWith(
-          "set-cookie",
-          "better-auth.session_token=; Path=/; Max-Age=0"
-        );
-      })
+/** A request from a signed-in visitor on the main host. */
+const signedInRequest = () =>
+  new Request("https://nakafa.com/", {
+    headers: { cookie: "better-auth.session_token=abc" },
+  });
+
+/** The session route's answer for one account, with its Set-Cookie values. */
+const answer = (cookies: readonly string[] = []) =>
+  new Response(
+    JSON.stringify({
+      session: { id: "session-1" },
+      user: { id: "user-1", name: "Ada" },
+    }),
+    {
+      headers: [
+        ["content-type", "application/json"],
+        ...cookies.map((cookie): [string, string] => ["set-cookie", cookie]),
+      ],
+    }
   );
 
-  it("exposes the session as a server function", () => {
-    expect(typeof sessionFn).toBe("function");
-  });
+describe("session client answer", () => {
+  it.effect("answers a visitor without a cookie with no network call", () =>
+    Effect.gen(function* () {
+      vi.clearAllMocks();
+      current.request = new Request("https://nakafa.com/");
+      const client = yield* readSessionClient();
+      expect(client._tag).toBe("SignedOut");
+      expect(setResponseHeader).toHaveBeenCalledWith(
+        "cache-control",
+        "private, no-store"
+      );
+      expect(fetcher).not.toHaveBeenCalled();
+    }).pipe(Effect.provideService(FetchHttpClient.Fetch, fetcher))
+  );
 
-  it("answers the same session through the server handler", async () => {
-    await expect(sessionHandler({ data: undefined })).resolves.toStrictEqual({
-      _tag: "SignedOut",
-    });
+  it("answers the server function handler with the same visitor session", async () => {
+    vi.clearAllMocks();
+    current.request = new Request("https://nakafa.com/");
+    const client = await sessionHandler({ data: undefined });
+    expect(client).toStrictEqual(ClientSession.cases.SignedOut.make({}));
   });
+});
+
+describe("request session memo", () => {
+  it.effect("reads the session once for every reader of one request", () =>
+    Effect.gen(function* () {
+      vi.clearAllMocks();
+      const request = signedInRequest();
+      current.request = request;
+      fetcher.mockResolvedValueOnce(answer(["convex_jwt=token-ada; Path=/"]));
+      const first = yield* readSessionMemo(request);
+      const second = yield* readSessionMemo(request);
+      yield* first;
+      const client = yield* readSessionClient();
+      yield* second;
+      expect(client._tag).toBe("SignedIn");
+      expect(fetcher).toHaveBeenCalledTimes(1);
+      expect(appendResponseHeader).toHaveBeenCalledTimes(1);
+      expect(appendResponseHeader).toHaveBeenCalledWith(
+        "set-cookie",
+        "convex_jwt=token-ada; Path=/"
+      );
+    }).pipe(Effect.provideService(FetchHttpClient.Fetch, fetcher))
+  );
+
+  it.effect("gives each request its own session", () =>
+    Effect.gen(function* () {
+      vi.clearAllMocks();
+      fetcher
+        .mockResolvedValueOnce(answer(["convex_jwt=token-1; Path=/"]))
+        .mockResolvedValueOnce(answer(["convex_jwt=token-2; Path=/"]));
+      yield* yield* readSessionMemo(signedInRequest());
+      yield* yield* readSessionMemo(signedInRequest());
+      expect(fetcher).toHaveBeenCalledTimes(2);
+    }).pipe(Effect.provideService(FetchHttpClient.Fetch, fetcher))
+  );
 });

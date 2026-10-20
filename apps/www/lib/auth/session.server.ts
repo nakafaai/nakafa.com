@@ -4,12 +4,18 @@ import {
   RetryableNetworkAttempt,
   retryNetworkAttempt,
 } from "@repo/backend/client/network";
+import {
+  appendResponseHeader,
+  getRequest,
+  setResponseHeader,
+} from "@tanstack/react-start/server";
 import { getSessionCookie } from "better-auth/cookies";
 import { Array as Arr, Effect, Option, Result, Schema } from "effect";
 import { FetchHttpClient } from "effect/http";
 import { SESSION_PATH } from "@/lib/auth/session";
 import { readSessionToken } from "@/lib/auth/token";
 import { ClientSession } from "@/lib/auth/visitor";
+import { serverHandler } from "@/lib/server/fn";
 import { CONVEX_SITE_URL } from "@/lib/server/runtime";
 
 /** The session of one request could not be read: a network failure, an error status, a missed deadline or an unreadable answer. */
@@ -218,11 +224,63 @@ export const readRequestSession = Effect.fn("www.auth.session.read")(function* (
   });
 });
 
+/** The session of one request, as the type of the value read once and answered to every reader. */
+type RequestSession = typeof RequestSession.Type;
+
+/** Creates the memo of one request: an effect that reads the session once and answers the same value after it. */
+const createSessionMemo = (request: Request) =>
+  Effect.cached(readRequestSession(request).pipe(Effect.tap(appendSetCookies)));
+
+/** The memo of one request, as `createSessionMemo` makes it. */
+type RequestSessionMemo = Effect.Success<ReturnType<typeof createSessionMemo>>;
+
 /**
- * The session of one request, read at most once. The first reader that awaits
- * the memo runs the read, and every later reader gets the same answer. Create one
- * memo per request, in the request's own context: a memo kept at module scope
- * would hand one visitor's session to another request.
+ * The memo of each request, keyed by its Request object. A WeakMap lets a memo
+ * leave with its request, so one visitor's session never answers another request.
  */
-export const createRequestSession = (request: Request) =>
-  Effect.cached(readRequestSession(request));
+const sessionMemos = new WeakMap<Request, RequestSessionMemo>();
+
+/** Sends the Set-Cookie values of one session answer to the browser, in their order. */
+const appendSetCookies = (session: RequestSession) =>
+  Effect.sync(() => {
+    for (const cookie of session.setCookies) {
+      appendResponseHeader("set-cookie", cookie);
+    }
+  });
+
+/**
+ * The session memo of one request. The request middleware creates it before any
+ * reader runs, and every reader of the same request gets the same memo. The first
+ * reader that awaits it makes the read and sends the Set-Cookie values, so a
+ * sliding refresh reaches the browser once and one document reads the session
+ * once, however many readers run.
+ */
+export const readSessionMemo = (request: Request) =>
+  Effect.suspend(() => {
+    const existing = sessionMemos.get(request);
+    if (existing !== undefined) {
+      return Effect.succeed(existing);
+    }
+    return createSessionMemo(request).pipe(
+      Effect.tap((memo) => Effect.sync(() => sessionMemos.set(request, memo)))
+    );
+  });
+
+/**
+ * The visitor's session, answered to the browser without any credential. The
+ * session memo appends the cookies that Better Auth set, and no cache keeps the
+ * answer.
+ */
+export const readSessionClient = Effect.fn("www.auth.session.client")(
+  function* () {
+    const memo = yield* readSessionMemo(getRequest());
+    const session = yield* memo;
+    yield* Effect.sync(() =>
+      setResponseHeader("cache-control", "private, no-store")
+    );
+    return session.client;
+  }
+);
+
+/** The handler of the session server function, which the server wiring calls. */
+export const sessionHandler = serverHandler(() => readSessionClient());

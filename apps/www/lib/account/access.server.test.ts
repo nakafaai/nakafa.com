@@ -24,8 +24,12 @@ const mocks = vi.hoisted(() => ({
         token: unknown
       ) => Effect.Effect<unknown, unknown>
     >(),
-  readRequestSession:
-    vi.fn<(request: Request) => Effect.Effect<unknown, unknown>>(),
+  readSessionMemo:
+    vi.fn<
+      (
+        request: Request
+      ) => Effect.Effect<Effect.Effect<unknown, unknown>, unknown>
+    >(),
   setResponseHeader: vi.fn<(name: string, value: string) => void>(),
 }));
 
@@ -35,7 +39,7 @@ vi.mock("@tanstack/react-start/server", () => ({
 }));
 
 vi.mock("@/lib/auth/session.server", () => ({
-  readRequestSession: mocks.readRequestSession,
+  readSessionMemo: mocks.readSessionMemo,
 }));
 
 vi.mock("@/lib/data/preload.server", () => ({
@@ -77,8 +81,8 @@ function failureOf(run: Promise<unknown>) {
 
 /** A session read that answers with the given Convex token. */
 function sessionWith(token: Option.Option<string>) {
-  mocks.readRequestSession.mockReturnValue(
-    Effect.succeed({ convexToken: token })
+  mocks.readSessionMemo.mockReturnValue(
+    Effect.succeed(Effect.succeed({ convexToken: token }))
   );
 }
 

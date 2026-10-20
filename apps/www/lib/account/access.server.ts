@@ -9,7 +9,7 @@ import { loadLocaleMessages } from "@repo/internationalization/src/messages";
 import { notFound, redirect } from "@tanstack/react-router";
 import { getRequest, setResponseHeader } from "@tanstack/react-start/server";
 import { Effect, Option, Schema, String as Str } from "effect";
-import { readRequestSession } from "@/lib/auth/session.server";
+import { readSessionMemo } from "@/lib/auth/session.server";
 import { preloadConfectQuery } from "@/lib/data/preload.server";
 import { serverHandler } from "@/lib/server/fn";
 import type { ServerServices } from "@/lib/server/runtime";
@@ -31,7 +31,8 @@ export const ChatInput = Schema.Struct({
 
 /** The Convex token of this request, or undefined for a visitor, which makes no network call. */
 export const readToken = Effect.fn("www.account.token")(function* () {
-  const session = yield* readRequestSession(getRequest());
+  const readSession = yield* readSessionMemo(getRequest());
+  const session = yield* readSession;
   return Option.getOrUndefined(session.convexToken);
 });
 

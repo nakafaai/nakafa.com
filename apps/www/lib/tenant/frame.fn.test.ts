@@ -8,10 +8,10 @@ import {
   setResponseHeader,
 } from "@tanstack/react-start/server";
 import { Effect, Option, Schema } from "effect";
+import { readSessionMemo } from "@/lib/auth/session.server";
 import { ClientSession } from "@/lib/auth/visitor";
 import { frameHandler } from "@/lib/tenant/frame.fn";
 import { readSchoolFrame } from "@/lib/tenant/read";
-import { readCurrentSession } from "@/lib/tenant/session";
 
 vi.mock("@tanstack/react-start/server", () => ({
   getRequest: vi.fn(),
@@ -19,8 +19,8 @@ vi.mock("@tanstack/react-start/server", () => ({
   setResponseHeader: vi.fn(),
 }));
 
-vi.mock("@/lib/tenant/session", () => ({
-  readCurrentSession: vi.fn(),
+vi.mock("@/lib/auth/session.server", () => ({
+  readSessionMemo: vi.fn(),
 }));
 
 vi.mock("@/lib/tenant/read", async () => {
@@ -38,12 +38,14 @@ describe("school frame server function", () => {
     vi.mocked(getRequestHeaders).mockReturnValue(
       new Headers({ "accept-language": "id-ID,en;q=0.5" })
     );
-    vi.mocked(readCurrentSession).mockReturnValue(
-      Effect.succeed({
-        client: ClientSession.cases.SignedOut.make({}),
-        convexToken: Option.some("token"),
-        setCookies: [],
-      })
+    vi.mocked(readSessionMemo).mockReturnValue(
+      Effect.succeed(
+        Effect.succeed({
+          client: ClientSession.cases.SignedOut.make({}),
+          convexToken: Option.some("token"),
+          setCookies: [],
+        })
+      )
     );
     vi.mocked(readSchoolFrame).mockReturnValue(
       Effect.succeed({ _tag: "Refused" })

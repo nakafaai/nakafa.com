@@ -2,13 +2,14 @@ import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { negotiateLocale } from "@repo/internationalization/src/negotiate";
 import { createServerFn } from "@tanstack/react-start";
 import {
+  getRequest,
   getRequestHeaders,
   setResponseHeader,
 } from "@tanstack/react-start/server";
 import { Effect, Schema } from "effect";
+import { readSessionMemo } from "@/lib/auth/session.server";
 import { serverHandler } from "@/lib/server/fn";
 import { readSchoolFrame, SchoolReadsLive } from "@/lib/tenant/read";
-import { readCurrentSession } from "@/lib/tenant/session";
 
 /** The school whose frame the browser asks for. */
 const SchoolFrameInput = Schema.Struct({ slug: TenantSlug });
@@ -24,7 +25,8 @@ const readFrame = Effect.fn("www.tenant.frame")(function* (
   yield* Effect.sync(() =>
     setResponseHeader("cache-control", "private, no-store")
   );
-  const session = yield* readCurrentSession();
+  const readSession = yield* readSessionMemo(getRequest());
+  const session = yield* readSession;
   return yield* readSchoolFrame({
     locale: negotiateLocale(getRequestHeaders()),
     slug: input.slug,

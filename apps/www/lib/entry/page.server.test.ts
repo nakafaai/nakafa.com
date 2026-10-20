@@ -1,6 +1,5 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { appendResponseHeader } from "@tanstack/react-start/server";
 import { Array as Arr, Effect, Option } from "effect";
 import type { PageNavigation } from "@/lib/content/page/navigation";
 import { getShellPageNavigation } from "@/lib/content/page/navigation";
@@ -30,12 +29,11 @@ let pages: Pick<
 > | null = null;
 
 vi.mock("@tanstack/react-start/server", () => ({
-  appendResponseHeader: vi.fn(),
   getRequest: () => new Request("https://nakafa.com/en/onboarding"),
 }));
 
 vi.mock("@/lib/auth/session.server", () => ({
-  createRequestSession: () => Effect.succeed(Effect.succeed(session)),
+  readSessionMemo: () => Effect.succeed(Effect.succeed(session)),
 }));
 
 vi.mock("@/lib/onboarding/server", () => ({
@@ -112,10 +110,6 @@ describe("onboarding page", () => {
       intent: { kind: "none", reason: "absent" },
       profile: { role: "teacher" },
     });
-    expect(appendResponseHeader).toHaveBeenCalledWith(
-      "set-cookie",
-      "refreshed=1"
-    );
     expect(readOnboardingStatus).toHaveBeenCalledWith("convex-token");
   });
 
