@@ -20,7 +20,7 @@ import { PlayerSidebar } from "@/components/player/navigator/sidebar";
 import { PlayerModeToggle } from "@/components/player/navigator/toggle";
 import { PlayerProvider } from "@/components/player/provider";
 import { PlayerUnanswered } from "@/components/player/unanswered";
-import type { TryoutRuntimeContent } from "@/components/tryout/content/model";
+import type { TryoutRunningContent } from "@/components/tryout/content/model";
 import { TryoutArticles } from "@/components/tryout/player/articles";
 import type { TryoutFinish } from "@/components/tryout/player/finish.client";
 import { projectTryoutQuestions } from "@/components/tryout/player/model";
@@ -41,8 +41,8 @@ export function TryoutPlayer({
   runtime,
   title,
 }: {
-  /** The signed content of the section, still loading on the server. */
-  content: Promise<TryoutRuntimeContent> | null;
+  /** The signed questions of the section, rendered on the server. */
+  content: TryoutRunningContent | null;
   finish: TryoutFinish;
   /** Answers and finishing are closed because time ran out. */
   locked: boolean;

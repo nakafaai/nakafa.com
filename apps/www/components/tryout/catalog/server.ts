@@ -34,7 +34,8 @@ class TryoutCatalogReadError extends Schema.TaggedError<TryoutCatalogReadError>(
 /**
  * Reads and renders the signed question selected for the marketing page. The
  * selection is the same for every request of one release, so the content store
- * holds it once for each release and locale.
+ * holds it once for each release and locale. The signed body is verified and
+ * rendered again on each call, because nothing caches the rendered tree.
  */
 export async function readFeaturedTryout(locale: Locale) {
   const featured = await Effect.runPromise(
@@ -92,18 +93,21 @@ export const readTryoutHubPage = Effect.fn("www.tryout.catalog.readHubPage")(
   }
 );
 
-/** Reads one public country page from the tagged content cache. */
+/**
+ * Reads one public country page. The content store answers for the release, so
+ * Convex is asked once for each release, locale and path.
+ */
 export const readTryoutCountryPage = Effect.fn(
   "www.tryout.catalog.readCountryPage"
 )(function* (locale: Locale, publicPath: string) {
   const appLocale = AppLocaleSchema.make(locale);
-  const page = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
-    client.query(tryouts.queries.catalog.getCountryPage, {
+  const page = yield* queryContentStore(
+    tryouts.queries.catalog.getCountryPage,
+    {
       appLocale,
       publicPath,
-    })
+    }
   ).pipe(
-    Effect.provide(httpLayer()),
     Effect.withTracerTiming(false),
     Effect.mapError((cause) => new TryoutCatalogReadError({ cause }))
   );
@@ -117,7 +121,7 @@ export const readTryoutCountryPage = Effect.fn(
   return Option.some({ ...page, sourceRevision });
 });
 
-/** Reads one public exam page from the tagged content cache. */
+/** Reads one public exam page. The content store answers for the release. */
 export const readTryoutExamPage = Effect.fn("www.tryout.catalog.readExamPage")(
   function* (locale: Locale, publicPath: string) {
     return yield* readPublishedTryoutExamPage({
@@ -142,7 +146,7 @@ export const readTryoutTrackPage = Effect.fn(
 /** Reads the first personalized catalog result after the framework resolves the session. */
 export const readTryoutSetList = Effect.fn("www.tryout.catalog.readSetList")(
   function* (
-    token: string | undefined,
+    token: Option.Option<string>,
     args: Ref.Args<typeof tryouts.queries.sets.list>
   ) {
     return yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
@@ -150,11 +154,10 @@ export const readTryoutSetList = Effect.fn("www.tryout.catalog.readSetList")(
     ).pipe(
       Effect.provide(
         httpLayer(
-          token
-            ? {
-                auth: token,
-              }
-            : {}
+          Option.match(token, {
+            onNone: () => ({}),
+            onSome: (auth) => ({ auth }),
+          })
         )
       ),
       Effect.withTracerTiming(false),
@@ -168,15 +171,13 @@ export const readTryoutSetList = Effect.fn("www.tryout.catalog.readSetList")(
   }
 );
 
-/** Reads one public set page from the tagged content cache. */
+/** Reads one public set page. The content store answers for the release. */
 export const readTryoutSetPage = Effect.fn("www.tryout.catalog.readSetPage")(
   function* (locale: Locale, publicPath: string) {
-    return yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
-      client.query(tryouts.queries.catalog.getSetPage, {
-        appLocale: AppLocaleSchema.make(locale),
-        publicPath,
-      })
-    ).pipe(Effect.provide(httpLayer()), Effect.withTracerTiming(false));
+    return yield* queryContentStore(tryouts.queries.catalog.getSetPage, {
+      appLocale: AppLocaleSchema.make(locale),
+      publicPath,
+    }).pipe(Effect.withTracerTiming(false));
   }
 );
 
@@ -207,7 +208,7 @@ export const readTryoutSetAttemptPage = Effect.fn(
   );
 });
 
-/** Reads one public section page from the tagged content cache. */
+/** Reads one public section page. The content store answers for the release. */
 export const readTryoutSectionPage = Effect.fn(
   "www.tryout.catalog.readSectionPage"
 )(function* (locale: Locale, publicPath: string) {

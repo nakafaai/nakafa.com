@@ -9,7 +9,7 @@ import { useLocale } from "use-intl";
 import type { PlayerMode } from "@/components/player/mode";
 import { useConvexAuth } from "@/components/providers/convex";
 import { ShellLock } from "@/components/sidebar/lock";
-import type { TryoutRuntimeContent } from "@/components/tryout/content/model";
+import type { TryoutRunningContent } from "@/components/tryout/content/model";
 import {
   type TryoutFinish,
   useTryoutFinish,
@@ -51,7 +51,8 @@ interface TryoutSetPageClientProps {
     sectionRoutes: readonly SetPage["sections"][number][];
   } | null;
   children: ReactNode;
-  content: Promise<TryoutRuntimeContent> | null;
+  /** The signed questions of a running attempt, rendered on the server. */
+  content: TryoutRunningContent | null;
   page: SetPage;
   restartTarget: TryoutSetRestartTarget | null;
   route: TryoutSetRoute;
@@ -208,7 +209,7 @@ function ResolvedTryoutSetPage({
   const startEntrySection = activeAttempt
     ? entrySection
     : (restartTarget?.entrySection ?? null);
-  const links = selectTryoutSetLinks(restartTarget);
+  const links = selectTryoutSetLinks(Option.fromNullishOr(restartTarget));
   const destination = getStartDestination({
     activeAttempt,
     page,
@@ -263,7 +264,7 @@ function TryoutInternalSet({
 }: {
   children: ReactNode;
   value: {
-    content: Promise<TryoutRuntimeContent> | null;
+    content: TryoutRunningContent | null;
     entrySection: SetEntrySection;
     now: number;
     player: { finish: TryoutFinish; mode: PlayerMode } | null;

@@ -26,7 +26,11 @@ const ShellInput = Schema.Struct({ locale: Schema.String });
  * The messages of the student shell and of the learn pages that the locale route
  * does not carry. The Common, State and Toast messages come from the locale route.
  */
-const MAIN_NAMESPACES = [...SHELL_MESSAGE_NAMESPACES, "Tryouts"] as const;
+const MAIN_NAMESPACES = [
+  ...SHELL_MESSAGE_NAMESPACES,
+  "Player",
+  "Tryouts",
+] as const;
 
 /** The navigation of the shell, read on the server for every learn page. */
 const readShellNavigation = createServerFn({ method: "GET" })

@@ -24,6 +24,7 @@ import {
 } from "@/components/tryout/route/path";
 import { keepPersonalResponse } from "@/components/tryout/route/response.server";
 import {
+  readAttemptContent,
   readAttemptReview,
   readPreviewRoute,
   readRetainedHead,
@@ -32,8 +33,8 @@ import { readRequestToken } from "@/components/tryout/route/token.server";
 import { serverHandler } from "@/lib/server/fn";
 
 /** The learner's current or retained section attempt, as the section reader holds it. */
-type SectionAttemptPage = Effect.Success<
-  ReturnType<typeof readCurrentTryoutSection>
+type SectionAttempt = Option.Option.Value<
+  Effect.Success<ReturnType<typeof readCurrentTryoutSection>>
 >;
 
 /**
@@ -41,14 +42,15 @@ type SectionAttemptPage = Effect.Success<
  * the start link of the section the attempt is on, when it has one.
  */
 const readSectionBinding = Effect.fn("www.tryout.route.readSectionBinding")(
-  function* (attempt: NonNullable<SectionAttemptPage>, view: PlayerModeParam) {
+  function* (attempt: SectionAttempt, view: PlayerModeParam) {
+    const startHref = Option.fromNullishOr(
+      attempt.activeSectionPublicPath
+    ).pipe(Option.map(getTryoutPublicPathHref));
     return {
       attemptId: attempt.attemptId,
       initialState: attempt.initialState,
       mode: yield* Effect.sync(() => readPlayerMode(view)),
-      startHref: attempt.activeSectionPublicPath
-        ? getTryoutPublicPathHref(attempt.activeSectionPublicPath)
-        : null,
+      startHref: Option.getOrNull(startHref),
     };
   }
 );
@@ -125,33 +127,38 @@ export const readTryoutSectionRoute = Effect.fn("www.tryout.route.readSection")(
     if (Option.isNone(head)) {
       return { kind: "notFound" as const };
     }
-    const attempt = token
-      ? yield* readCurrentTryoutSection(token, {
+    const attempt = Option.isNone(token)
+      ? Option.none<SectionAttempt>()
+      : yield* readCurrentTryoutSection(token.value, {
           countryKey: page.set.countryKey,
           examKey: page.set.examKey,
           locale,
           sectionKey: page.section.sectionKey,
           setKey: page.set.setKey,
           trackKey: page.set.trackKey,
-        })
-      : null;
+        });
+    const binding = yield* Effect.transposeOption(
+      Option.map(attempt, (value) =>
+        readSectionBinding(value, intent.value.view)
+      )
+    );
+    const content = Option.isSome(attempt)
+      ? yield* readAttemptContent({ attempt: attempt.value })
+      : Option.none();
+    const review = Option.isSome(attempt)
+      ? yield* readAttemptReview({ attempt: attempt.value, locale })
+      : Option.none();
     return {
-      binding: attempt
-        ? yield* readSectionBinding(attempt, intent.value.view)
-        : null,
+      binding: Option.getOrNull(binding),
+      content: Option.getOrNull(content),
       head: head.value,
       kind: "catalog" as const,
       now: yield* Clock.currentTimeMillis,
-      page: attempt ? attempt.page : page,
-      review: attempt
-        ? Option.getOrUndefined(
-            yield* readAttemptReview({
-              attempt,
-              locale,
-              publicPath: sectionPath,
-            })
-          )
-        : undefined,
+      page: Option.match(attempt, {
+        onNone: () => page,
+        onSome: (value) => value.page,
+      }),
+      review: Option.getOrUndefined(review),
       route,
       setHref: selectTryoutSectionReturnHref({
         attemptPage: attempt,
@@ -179,7 +186,7 @@ const RetainedSectionRequestSchema = Schema.Struct({
   publicPath: Schema.String,
   route: SectionRouteSchema,
   setHref: Schema.String,
-  token: Schema.UndefinedOr(Schema.String),
+  token: Schema.Option(Schema.String),
 });
 
 const readRetainedSectionRoute = Effect.fn(
@@ -188,7 +195,7 @@ const readRetainedSectionRoute = Effect.fn(
   input: typeof RetainedSectionRequestSchema.Type,
   view: PlayerModeParam
 ) {
-  if (input.token === undefined) {
+  if (Option.isNone(input.token)) {
     return {
       href: getTryoutAttemptAuthHref(
         input.locale,
@@ -198,7 +205,7 @@ const readRetainedSectionRoute = Effect.fn(
       kind: "signIn" as const,
     };
   }
-  const attempt = yield* readTryoutSectionAttemptPage(input.token, {
+  const attempt = yield* readTryoutSectionAttemptPage(input.token.value, {
     attemptId: input.attemptId,
     kind: "retained",
     locale: input.locale,
@@ -209,6 +216,7 @@ const readRetainedSectionRoute = Effect.fn(
   }
   return {
     binding: yield* readSectionBinding(attempt, view),
+    content: Option.getOrNull(yield* readAttemptContent({ attempt })),
     head: yield* readRetainedHead({
       description: attempt.page.section.description,
       locale: input.locale,
@@ -222,12 +230,11 @@ const readRetainedSectionRoute = Effect.fn(
       yield* readAttemptReview({
         attempt,
         locale: input.locale,
-        publicPath: input.publicPath,
       })
     ),
     route: input.route,
     setHref: selectTryoutSectionReturnHref({
-      attemptPage: attempt,
+      attemptPage: Option.some(attempt),
       publicHref: input.setHref,
     }),
     view,

@@ -1,7 +1,7 @@
 // @vitest-environment node
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 import {
   readTryoutCountryHandler,
   readTryoutExamHandler,
@@ -65,7 +65,7 @@ const track = { countryKey: "id", examKey: "snbt", trackKey: "2027" };
 
 beforeEach(() => {
   vi.clearAllMocks();
-  catalog.readRequestToken.mockReturnValue(Effect.succeed("token-1"));
+  catalog.readRequestToken.mockReturnValue(Effect.succeedSome("token-1"));
   catalog.readServerTranslator.mockImplementation(() =>
     Promise.resolve((key: string) => key)
   );
@@ -137,7 +137,7 @@ describe("try-out catalog server functions", () => {
       trackKey: "2027",
     });
     expect(catalog.readTryoutSetList).toHaveBeenCalledExactlyOnceWith(
-      "token-1",
+      Option.some("token-1"),
       answer.args
     );
   });

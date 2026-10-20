@@ -9,7 +9,8 @@ import type { TryoutBodyBatch } from "@repo/backend/confect/tryouts/runtime/body
 import { contentKeyResolver } from "@repo/backend/content/trust";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { contentRuntimeKeys } from "@repo/site/keys";
-import { Array as Arr, Effect } from "effect";
+import { getRequest } from "@tanstack/react-start/server";
+import { Array as Arr, Effect, Option } from "effect";
 import { renderLiveItem } from "@/components/tryout/content/artifact";
 import {
   planTryoutContentBatches,
@@ -25,7 +26,7 @@ import {
 } from "@/components/tryout/content/model";
 import { makeTryoutRuntimeRequest } from "@/components/tryout/content/request";
 import { env } from "@/env";
-import { getToken } from "@/lib/auth/server";
+import { readSessionMemo } from "@/lib/auth/session.server";
 import { ContentRuntimeConfigurationError } from "@/lib/content/published/errors";
 import { rendererManifest } from "@/lib/content/renderer/manifest";
 import { httpLayer } from "@/lib/convex/http";
@@ -36,21 +37,16 @@ const SIGNED_RENDER_CONCURRENCY = 4;
 export const loadSignedTryoutContent = Effect.fn(
   "NakafaContent.loadSignedTryout"
 )(function* (attemptId: Id<"tryoutAttempts">, access: SignedContentAccess) {
-  const token = yield* Effect.tryPromise({
-    catch: (cause) =>
-      new ContentRuntimeVerificationError({
-        cause,
-      }),
-    try: () => getToken(),
-  });
-  if (!token) {
+  const session = yield* Effect.flatten(readSessionMemo(getRequest()));
+  const token = session.convexToken;
+  if (Option.isNone(token)) {
     return yield* new ContentRuntimeVerificationError({
       cause: "Try-out content requires an active session.",
     });
   }
   const plan = planTryoutContentBatches(access.questions, access.answers);
   return yield* renderContentPlan(plan, (selectors) =>
-    readAttemptBatch(attemptId, token, selectors)
+    readAttemptBatch(attemptId, token.value, selectors)
   );
 });
 
@@ -99,7 +95,7 @@ const renderContentPlan = Effect.fn("NakafaContent.renderTryoutContentPlan")(
   }
 );
 
-/** Rechecks session and attempt entitlement before entering any shared cache. */
+/** Authorizes one attempt batch on every request: getBatch checks the session and the attempt. */
 const readAttemptBatch = Effect.fn("NakafaContent.readAttemptBatch")(function* (
   attemptId: Id<"tryoutAttempts">,
   token: string,
@@ -133,7 +129,10 @@ const readAttemptBatch = Effect.fn("NakafaContent.readAttemptBatch")(function* (
   });
 });
 
-/** Caches verified immutable bytes after fresh authorization, without session data. */
+/**
+ * Verifies and renders one attempt batch on every request. Nothing caches the
+ * result, so each load verifies the signed bodies and evaluates them again.
+ */
 async function renderAttemptBatch(
   selectors: readonly TryoutSelector[],
   row: TryoutBodyBatch | null
@@ -158,7 +157,11 @@ async function renderAttemptBatch(
   return content;
 }
 
-/** Caches one verified batch by immutable selector identity. */
+/**
+ * Reads, verifies and renders one public batch on every call. Nothing caches the
+ * result: the rendered tree is React, which the content store cannot hold, so
+ * each call reads the runtime again.
+ */
 async function renderBatch(selectors: readonly TryoutSelector[]) {
   const content = await Effect.runPromise(readBatch(selectors));
   return content;
