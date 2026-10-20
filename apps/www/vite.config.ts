@@ -1,12 +1,12 @@
 import { POSTHOG_PROXY_PATH } from "@repo/analytics/posthog/config";
 import { securityHeaders } from "@repo/site";
+import { AGENT_DISCOVERY_HEADERS } from "@repo/site/discovery";
 import babel from "@rolldown/plugin-babel";
 import tailwindcss from "@tailwindcss/vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import react, { reactCompilerPreset } from "@vitejs/plugin-react";
 import { nitro } from "nitro/vite";
 import { defineConfig } from "vite";
-import { AGENT_DISCOVERY_HEADERS } from "@/lib/discovery";
 
 /**
  * The PostHog proxy origin that the build names. Without one, no proxy route is

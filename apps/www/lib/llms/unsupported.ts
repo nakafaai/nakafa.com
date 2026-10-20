@@ -1,5 +1,5 @@
+import { LLMS_TEXT_PATH } from "@repo/site/discovery";
 import { Array as Arr } from "effect";
-import { LLMS_TEXT_PATH } from "@/lib/discovery";
 import { BASE_URL } from "@/lib/llms/constants";
 
 const ROOT_ROUTE_PATTERN = /^\/$/;

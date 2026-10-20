@@ -1,5 +1,5 @@
 export const LLMS_TEXT_PATH = "/llms.txt";
-export const AGENT_DISCOVERY_LINK_HEADER = `<${LLMS_TEXT_PATH}>; rel="llms-txt"`;
+const AGENT_DISCOVERY_LINK_HEADER = `<${LLMS_TEXT_PATH}>; rel="llms-txt"`;
 
 export const AGENT_DISCOVERY_HEADERS = [
   {

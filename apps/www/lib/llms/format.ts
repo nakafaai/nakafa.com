@@ -1,6 +1,6 @@
+import { LLMS_TEXT_PATH } from "@repo/site/discovery";
 import { cleanSlug } from "@repo/utilities/slug";
 import { Array as Arr, Option, pipe } from "effect";
-import { LLMS_TEXT_PATH } from "@/lib/discovery";
 import {
   BASE_URL,
   ENGLISH_LANGUAGE_NAMES,
