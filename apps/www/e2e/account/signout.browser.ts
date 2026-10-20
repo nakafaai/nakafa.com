@@ -2,7 +2,7 @@ import { type BrowserContextOptions, expect, test } from "@playwright/test";
 import app from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
-import { Effect, MutableList } from "effect";
+import { Array as Arr, Effect, MutableList } from "effect";
 import { LESSON_PATH } from "@/e2e/support/chat";
 import { withBrowserContext } from "@/e2e/support/context";
 import { signInLearner } from "@/e2e/support/learner";
@@ -57,7 +57,7 @@ test("sign-out lands on the locale home with no socket", async ({
             );
             yield* Effect.sync(() => {
               expect(
-                MutableList.toArray(sockets).slice(socketsBeforeSignOut)
+                Arr.drop(MutableList.toArray(sockets), socketsBeforeSignOut)
               ).toStrictEqual([]);
             });
           })
