@@ -1,26 +1,10 @@
 "use client";
 
 import { DateTime, MutableHashSet } from "effect";
-import {
-  createContext,
-  type ReactNode,
-  use,
-  useSyncExternalStore,
-} from "react";
+import { createContext, use, useSyncExternalStore } from "react";
 import { notifyTickListeners } from "@/components/tryout/runtime/tick";
 
 const InitialClock = createContext<number | null>(null);
-
-/** Transfers the request timestamp unchanged through server rendering and hydration. */
-export function TryoutClockProvider({
-  children,
-  initialNow,
-}: {
-  children: ReactNode;
-  initialNow: number;
-}) {
-  return <InitialClock value={initialNow}>{children}</InitialClock>;
-}
 
 const TICK_MS = 1000;
 
