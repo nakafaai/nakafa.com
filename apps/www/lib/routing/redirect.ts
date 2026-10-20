@@ -9,6 +9,7 @@ import { readLlmsMarkdownPathname } from "@/lib/llms/routes";
 import { readProfileRoot } from "@/lib/profile/route";
 import { readMovedRedirect } from "@/lib/routing/moved";
 import { readPublicUrlMigrationRedirect } from "@/lib/routing/public/migration";
+import { readRetiredPublicRoute } from "@/lib/routing/public/retired";
 import { readSchoolSlug } from "@/lib/routing/school/host";
 
 /**
@@ -44,6 +45,25 @@ export const readMigrationResponse = Effect.fn("www.routing.migrationResponse")(
     );
   }
 );
+
+/**
+ * The locale of the not-found page that answers a public address which is removed
+ * for good, or none for an address that stays. The server entry asks this before
+ * the migrations, so a removed address never moves to a successor.
+ */
+export const readRemovedAddressNotFound = Effect.fn(
+  "www.routing.removedAddressNotFound"
+)(function* (request: Request) {
+  const url = new URL(request.url);
+  const { pathname } = readLlmsMarkdownPathname(url.pathname);
+  const removed = yield* readRetiredPublicRoute({
+    hasAttemptCapability: hasTryoutAttemptCapability(url.searchParams),
+    pathname,
+  });
+  return removed
+    ? Option.some(negotiateLocale(request.headers))
+    : Option.none();
+});
 
 /**
  * The redirect of a profile address that names no locale, such as `/@username`

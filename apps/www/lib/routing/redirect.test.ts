@@ -5,6 +5,7 @@ import { Effect, Option } from "effect";
 import {
   readMigrationResponse,
   readRedirectResponse,
+  readRemovedAddressNotFound,
 } from "@/lib/routing/redirect";
 
 vi.hoisted(() => {
@@ -210,5 +211,35 @@ describe("readMigrationResponse", () => {
         )
       ).toBe(true);
     })
+  );
+});
+
+describe("readRemovedAddressNotFound", () => {
+  it.effect(
+    "answers a removed feature route with not found in the locale it negotiates",
+    () =>
+      Effect.gen(function* () {
+        const locale = Option.getOrThrow(
+          yield* readRemovedAddressNotFound(
+            request("https://nakafa.com/api/chat/finance", "id-ID")
+          )
+        );
+
+        expect(locale).toBe("id");
+      })
+  );
+
+  it.effect(
+    "leaves an address that stays to the migrations and the router",
+    () =>
+      Effect.gen(function* () {
+        expect(
+          Option.isNone(
+            yield* readRemovedAddressNotFound(
+              request("https://nakafa.com/en/curriculum")
+            )
+          )
+        ).toBe(true);
+      })
   );
 });

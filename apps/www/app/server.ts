@@ -15,6 +15,7 @@ import {
 import {
   readMigrationResponse,
   readRedirectResponse,
+  readRemovedAddressNotFound,
 } from "@/lib/routing/redirect";
 import { readSchoolRefusal } from "@/lib/routing/school/refusal";
 import { readSchoolTreeGate, withPageHeaders } from "@/lib/tenant/gate";
@@ -53,6 +54,12 @@ export default createServerEntry({
 
     return Effect.runPromise(
       Effect.gen(function* () {
+        const removed = yield* readRemovedAddressNotFound(request).pipe(
+          Effect.mapError((cause) => new UncaughtRequestError({ cause }))
+        );
+        if (Option.isSome(removed)) {
+          return yield* answerNotFound(removed.value);
+        }
         const migrated = yield* readMigrationResponse(request).pipe(
           Effect.mapError((cause) => new UncaughtRequestError({ cause }))
         );
