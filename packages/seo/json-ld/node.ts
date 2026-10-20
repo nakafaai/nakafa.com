@@ -1,7 +1,16 @@
 import { COMPANY_IDENTITY } from "@repo/seo/company";
-import { FOUNDER, ORGANIZATION } from "@repo/seo/json-ld/constants";
+import {
+  FOUNDER,
+  ORGANIZATION,
+  ORGANIZATION_REFERENCE,
+} from "@repo/seo/json-ld/constants";
 import { Array as Arr, Schema } from "effect";
-import type { ListItem } from "schema-dts";
+import type {
+  EducationalOrganization,
+  ListItem,
+  WebSite,
+  WithContext,
+} from "schema-dts";
 
 /** The names of the site's own organization, in the locale of the page that carries it. */
 const EducationalOrganizationInput = Schema.Struct({
@@ -140,7 +149,7 @@ export function makeBookNode(input: typeof BookInput.Type) {
  */
 export function makeEducationalOrganizationNode(
   input: typeof EducationalOrganizationInput.Type
-): Record<string, unknown> {
+): WithContext<EducationalOrganization> {
   return {
     ...ORGANIZATION,
     "@context": "https://schema.org",
@@ -152,5 +161,47 @@ export function makeEducationalOrganizationNode(
     founder: FOUNDER,
     image: COMPANY_IDENTITY.logoUrl,
     knowsAbout: EDUCATIONAL_SUBJECTS,
+  };
+}
+
+/** The locale of the site's WebSite node, which names the site in the locale's words. */
+const WebsiteInput = Schema.Struct({
+  alternateName: Schema.String,
+  description: Schema.String,
+  locale: Schema.String,
+});
+
+/** The search action of the site: its search page answers the query that the template names. */
+const searchAction = {
+  "@type": "SearchAction",
+  target: {
+    "@type": "EntryPoint",
+    urlTemplate: `${COMPANY_IDENTITY.url}/search?q={search_term_string}`,
+  },
+  "query-input": "required name=search_term_string",
+} as const;
+
+/**
+ * The WebSite node of the site, with the search action that the site's search
+ * page answers. Every locale page carries it, as the reference app's locale
+ * layout does, so search engines can offer the sitelinks search box.
+ *
+ * @see https://schema.org/WebSite
+ */
+export function makeWebsiteNode(
+  input: typeof WebsiteInput.Type
+): WithContext<WebSite> {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "@id": new URL("#website", COMPANY_IDENTITY.url).href,
+    url: COMPANY_IDENTITY.url,
+    name: COMPANY_IDENTITY.brandName,
+    alternateName: input.alternateName,
+    description: input.description,
+    publisher: ORGANIZATION_REFERENCE,
+    maintainer: ORGANIZATION_REFERENCE,
+    inLanguage: input.locale,
+    potentialAction: searchAction,
   };
 }

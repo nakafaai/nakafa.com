@@ -7,6 +7,7 @@ import {
   makeCollectionPageNode,
   makeEducationalOrganizationNode,
   makeFaqPageNode,
+  makeWebsiteNode,
 } from "@repo/seo/json-ld/node";
 
 describe("makeEducationalOrganizationNode", () => {
@@ -26,7 +27,9 @@ describe("makeEducationalOrganizationNode", () => {
       founder: FOUNDER,
       image: COMPANY_IDENTITY.logoUrl,
     });
-    expect(node.knowsAbout).toContain("Mathematics");
+    expect(node).toMatchObject({
+      knowsAbout: expect.arrayContaining(["Mathematics"]),
+    });
   });
 });
 
@@ -145,6 +148,36 @@ describe("makeFaqPageNode", () => {
         },
       ],
       url: "https://nakafa.com/en",
+    });
+  });
+});
+
+describe("makeWebsiteNode", () => {
+  it("describes the site with the search action of its search page, in the locale of the page", () => {
+    const node = makeWebsiteNode({
+      alternateName: "Nakafa: Free Lessons",
+      description: "Free learning for every student",
+      locale: "en",
+    });
+
+    expect(node).toMatchObject({
+      "@context": "https://schema.org",
+      "@id": new URL("#website", COMPANY_IDENTITY.url).href,
+      "@type": "WebSite",
+      alternateName: "Nakafa: Free Lessons",
+      description: "Free learning for every student",
+      inLanguage: "en",
+      maintainer: { "@id": ORGANIZATION_ID },
+      potentialAction: {
+        "@type": "SearchAction",
+        target: {
+          "@type": "EntryPoint",
+          urlTemplate: `${COMPANY_IDENTITY.url}/search?q={search_term_string}`,
+        },
+        "query-input": "required name=search_term_string",
+      },
+      publisher: { "@id": ORGANIZATION_ID },
+      url: COMPANY_IDENTITY.url,
     });
   });
 });

@@ -7,7 +7,10 @@ import {
   localeTimeZone,
 } from "@repo/internationalization/src/locale";
 import { readRequestNow } from "@repo/internationalization/src/translator";
-import { makeEducationalOrganizationNode } from "@repo/seo/json-ld/node";
+import {
+  makeEducationalOrganizationNode,
+  makeWebsiteNode,
+} from "@repo/seo/json-ld/node";
 import {
   createFileRoute,
   type ErrorComponentProps,
@@ -63,8 +66,10 @@ export const Route = createFileRoute("/$locale")({
       },
     };
   },
-  head: ({ loaderData }) =>
-    loaderData === undefined ? {} : toOrganizationHead(loaderData.organization),
+  head: ({ loaderData, params }) =>
+    loaderData === undefined
+      ? {}
+      : toLocaleHead({ ...loaderData.organization, locale: params.locale }),
   component: LocaleRoot,
   errorComponent: LocaleError,
   notFoundComponent: LocaleNotFound,
@@ -84,6 +89,10 @@ function LocaleRoot() {
       now={now}
       timeZone={localeTimeZone(locale)}
     >
+      <p className="sr-only">
+        For AI agents: use <a href="/llms.txt">/llms.txt</a> for the Nakafa
+        content index.
+      </p>
       <DesignSystemProvider direction={textDirection(locale)}>
         <div className="isolate">
           <Outlet />
@@ -118,15 +127,33 @@ function LocaleError({ error }: ErrorComponentProps) {
 }
 
 /**
- * The head of a locale page: the educational organization of the site as its
- * JSON-LD script. The router serializes the script, so it is named in the meta.
+ * The head of a locale page: the title and description that a page without its
+ * own names, and the site's educational organization and website as JSON-LD
+ * scripts. The router serializes each script, so it is named in the meta.
  */
-function toOrganizationHead(organization: {
+function toLocaleHead({
+  alternateName,
+  description,
+  locale,
+}: {
   readonly alternateName: string;
   readonly description: string;
+  readonly locale: string;
 }) {
   return {
-    meta: [{ "script:ld+json": makeEducationalOrganizationNode(organization) }],
+    meta: [
+      { title: alternateName },
+      { content: description, name: "description" },
+      {
+        "script:ld+json": makeEducationalOrganizationNode({
+          alternateName,
+          description,
+        }),
+      },
+      {
+        "script:ld+json": makeWebsiteNode({ alternateName, description, locale }),
+      },
+    ],
   };
 }
 
