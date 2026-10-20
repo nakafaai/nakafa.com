@@ -27,7 +27,9 @@ import { type BundledTheme, bundledThemes } from "shiki/themes";
  * is judged on that background instead.
  */
 /** One theme of a code block: a bundled name, or a registration that Shiki loads as given. */
-type CodeTheme = NonNullable<CodeOptionsMultipleThemes["themes"]>[string];
+type CodeTheme = NonNullable<
+  NonNullable<CodeOptionsMultipleThemes["themes"]>[string]
+>;
 
 export const DEFAULT_CODE_THEMES = {
   light: "github-light-high-contrast",
