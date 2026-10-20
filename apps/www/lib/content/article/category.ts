@@ -244,7 +244,7 @@ export async function getPublishedArticleCategory(
       Effect.withTracerTiming(false)
     )
   );
-  return Option.getOrNull(category);
+  return category;
 }
 
 /**

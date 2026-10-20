@@ -11,7 +11,7 @@ import {
   ArticleRouteSlugSchema,
 } from "@nakafa/aksara-contracts/projection/article";
 import { RendererDomainSchema } from "@nakafa/aksara-contracts/renderer/domain";
-import { Data, Effect, Schema } from "effect";
+import { Data, Effect, Option, Schema } from "effect";
 import {
   getPublishedArticleCategory,
   getPublishedCategoryAlternates,
@@ -142,8 +142,8 @@ describe("published article category", () => {
           getPublishedArticleCategory("politik", "de")
         );
         expect(category).toMatchObject({
-          category: "politics",
-          route: "politik",
+          _tag: "Some",
+          value: { category: "politics", route: "politik" },
         });
         expect(yield* hasPublishedArticleCategory("politik", "de")).toBe(true);
       })
@@ -182,7 +182,7 @@ describe("published article category", () => {
       const category = yield* Effect.tryPromise(() =>
         getPublishedArticleCategory("politik", "de")
       );
-      expect(category).toBeNull();
+      expect(Option.isNone(category)).toBe(true);
       expect(yield* hasPublishedArticleCategory("politik", "de")).toBe(false);
     })
   );
