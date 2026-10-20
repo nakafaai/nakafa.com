@@ -1,20 +1,20 @@
 "use client";
 
-import { lazyComponent } from "@repo/design-system/lib/lazy";
+import { lazy } from "react";
 import { withHydrationBoundary } from "@/lib/content/renderer/client/boundary";
 
 export const AccelerationGraphCard = withHydrationBoundary(
-  lazyComponent(() =>
+  lazy(() =>
     import(
       "@repo/design-system/components/contents/physics/kinematics/acceleration/chart-card"
-    ).then(({ AccelerationGraphCard }) => AccelerationGraphCard)
+    ).then((module) => ({ default: module.AccelerationGraphCard }))
   )
 );
 
 export const AccelerationLab = withHydrationBoundary(
-  lazyComponent(() =>
+  lazy(() =>
     import(
       "@repo/design-system/components/contents/physics/kinematics/acceleration/lab"
-    ).then(({ AccelerationLab }) => AccelerationLab)
+    ).then((module) => ({ default: module.AccelerationLab }))
   )
 );

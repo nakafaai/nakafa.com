@@ -1,7 +1,12 @@
 import { Button } from "@repo/design-system/components/ui/button";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { Nina } from "@repo/design-system/components/ui/nina";
-import { useLocale, useTranslations } from "use-intl";
+import {
+  EXACT_ACTIVE_OPTIONS,
+  HrefLink,
+  Link,
+  useCurrentLocale,
+} from "@repo/internationalization/src/link";
+import { useTranslations } from "use-intl";
 import { HERO_NINA_ID } from "@/components/marketing/about/hero/id";
 import { getCurriculumIndexHref } from "@/lib/curriculum/routes";
 
@@ -14,7 +19,7 @@ import { getCurriculumIndexHref } from "@/lib/curriculum/routes";
  */
 export function Hero() {
   const t = useTranslations("Landing");
-  const locale = useLocale();
+  const locale = useCurrentLocale();
 
   return (
     <section
@@ -34,18 +39,25 @@ export function Hero() {
           <Button
             nativeButton={false}
             render={
-              <NavigationLink href={getCurriculumIndexHref(locale)}>
+              <HrefLink
+                activeOptions={EXACT_ACTIVE_OPTIONS}
+                href={getCurriculumIndexHref(locale)}
+              >
                 {t("hero-start")}
-              </NavigationLink>
+              </HrefLink>
             }
             size="lg"
           />
           <Button
             nativeButton={false}
             render={
-              <NavigationLink href="/try-out">
+              <Link
+                activeOptions={EXACT_ACTIVE_OPTIONS}
+                params={{ locale }}
+                to="/$locale/try-out"
+              >
                 {t("hero-tryout")}
-              </NavigationLink>
+              </Link>
             }
             size="lg"
             variant="outline"

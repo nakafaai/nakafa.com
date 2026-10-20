@@ -9,10 +9,11 @@ import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { DeferredLearnerText } from "@repo/design-system/components/markdown/deferred";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { lazyComponent } from "@repo/design-system/lib/lazy";
 import { toast } from "@repo/design-system/lib/toast/notify";
+import { ClientOnly } from "@tanstack/react-router";
 import { Effect, HashSet } from "effect";
 import type { MouseEvent, ReactNode } from "react";
+import { lazy, Suspense } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { likeInLists, unlikeInLists } from "@/components/comments/mutation";
 import {
@@ -41,12 +42,10 @@ import { reportClientException } from "@/lib/analytics/client";
 import { useViewer } from "@/lib/identity/client";
 
 /** The delete dialog loads when the learner opens the More menu of a comment, before they can choose Delete. */
-const CommentDeletion = lazyComponent(
-  () =>
-    import("@/components/comments/delete").then(
-      (module) => module.CommentDeletion
-    ),
-  { loading: () => null, ssr: false }
+const CommentDeletion = lazy(() =>
+  import("@/components/comments/delete").then((module) => ({
+    default: module.CommentDeletion,
+  }))
 );
 
 /** The fields of a comment that a row shows and acts on: a top-level comment, a reply, and a profile's comment all carry them. */
@@ -102,10 +101,14 @@ export function CommentRow({
             {viewerId === comment.userId && (
               <FeedEnd>
                 <MoreMenu inert={saving}>
-                  <CommentDeletion
-                    commentId={comment._id}
-                    isReply={comment.threadId !== undefined}
-                  />
+                  <Suspense fallback={null}>
+                    <ClientOnly fallback={null}>
+                      <CommentDeletion
+                        commentId={comment._id}
+                        isReply={comment.threadId !== undefined}
+                      />
+                    </ClientOnly>
+                  </Suspense>
                 </MoreMenu>
               </FeedEnd>
             )}

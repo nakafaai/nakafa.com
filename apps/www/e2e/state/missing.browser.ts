@@ -47,7 +47,7 @@ const HARD_ADDRESS = "quran/999";
  * same when this was measured on 13 October 2026. So the tests ask for the
  * address itself, with the header that the proxy would set.
  */
-const STANDALONE_ADDRESS = "/_not-found";
+const STANDALONE_ADDRESS = "/_missing";
 const LOCALE_HEADER = "x-nakafa-locale";
 
 /**

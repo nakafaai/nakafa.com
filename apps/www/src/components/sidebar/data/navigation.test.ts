@@ -1,9 +1,11 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Array as Arr } from "effect";
 import {
-  getForYouNavigationHref,
   getForYouNavigationItems,
+  getForYouNavigationTarget,
 } from "@/components/sidebar/data/navigation";
+import { getTryoutCountryTarget } from "@/components/tryout/route/path";
+import { getCurriculumProgramTarget } from "@/lib/curriculum/routes";
 
 describe("sidebar navigation", () => {
   it("returns the shared primary actions in display order", () => {
@@ -14,24 +16,54 @@ describe("sidebar navigation", () => {
     ]);
   });
 
-  it("uses localized hrefs only when a navigation item owns them", () => {
+  it("routes each primary action to its own route on the locale", () => {
     const [subject, tryOut, askNina] = getForYouNavigationItems();
 
     expect(subject).toBeDefined();
     expect(tryOut).toBeDefined();
     expect(askNina).toBeDefined();
-    expect(getForYouNavigationHref(subject, "id")).toBe("/kurikulum");
-    expect(getForYouNavigationHref(subject, "en")).toBe("/curriculum");
+    expect(getForYouNavigationTarget(subject, "id")).toEqual({
+      params: { locale: "id" },
+      to: "/$locale/curricula",
+    });
+    expect(getForYouNavigationTarget(tryOut, "en")).toEqual({
+      params: { locale: "en" },
+      to: "/$locale/try-out",
+    });
+    expect(getForYouNavigationTarget(askNina, "id")).toEqual({
+      params: { locale: "id" },
+      to: "/$locale/chat",
+    });
+  });
+
+  it("uses a learner's stored target only for the row that it names", () => {
+    const [subject, tryOut, askNina] = getForYouNavigationItems();
+    const curriculumTarget = getCurriculumProgramTarget({
+      locale: "id",
+      publicSlug: "amerika-serikat",
+    });
+    const tryoutTarget = getTryoutCountryTarget("id", "try-out/indonesia");
+
     expect(
-      getForYouNavigationHref(subject, "id", {
-        preferredCurriculumHref: "/kurikulum/amerika-serikat",
+      getForYouNavigationTarget(subject, "id", {
+        preferredCurriculumTarget: curriculumTarget,
       })
-    ).toBe("/kurikulum/amerika-serikat");
+    ).toEqual({
+      params: { _splat: "", curriculum: "amerika-serikat", locale: "id" },
+      to: "/$locale/curricula/$curriculum/$",
+    });
     expect(
-      getForYouNavigationHref(tryOut, "id", {
-        preferredTryoutHref: "/try-out/indonesia",
+      getForYouNavigationTarget(tryOut, "id", {
+        preferredTryoutTarget: tryoutTarget,
       })
-    ).toBe("/try-out/indonesia");
-    expect(getForYouNavigationHref(askNina, "id")).toBe("/chat");
+    ).toEqual({
+      params: { country: "indonesia", locale: "id" },
+      to: "/$locale/try-out/$country",
+    });
+    expect(
+      getForYouNavigationTarget(askNina, "id", {
+        preferredCurriculumTarget: curriculumTarget,
+      })
+    ).toEqual({ params: { locale: "id" }, to: "/$locale/chat" });
   });
 });

@@ -1,9 +1,9 @@
 import type { Ref } from "@confect/core";
 
 import type contents from "@repo/backend/confect/_generated/refs/contents";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { Tile, TileIcon } from "@repo/design-system/components/ui/tile";
 import type { TileLook } from "@repo/design-system/lib/look";
+import { HrefLink } from "@repo/internationalization/src/link";
 
 /**
  * The fields one home list row renders.
@@ -37,7 +37,7 @@ export function MaterialRow({
   material: HomeMaterial;
 }) {
   return (
-    <NavigationLink
+    <HrefLink
       className="group grid gap-3 p-4 transition-colors ease-out hover:bg-accent hover:text-accent-foreground"
       href={material.href}
     >
@@ -52,6 +52,6 @@ export function MaterialRow({
           </span>
         </div>
       </div>
-    </NavigationLink>
+    </HrefLink>
   );
 }

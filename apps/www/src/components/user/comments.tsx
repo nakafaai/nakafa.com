@@ -7,8 +7,11 @@ import comments from "@repo/backend/confect/_generated/refs/comments";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { buttonVariants } from "@repo/design-system/lib/button";
+import {
+  EXACT_ACTIVE_OPTIONS,
+  HrefLink,
+} from "@repo/internationalization/src/link";
 import { withLeadingSlash } from "@repo/utilities/path";
 import { Array as Arr, type Option } from "effect";
 import { useTranslations } from "use-intl";
@@ -74,14 +77,15 @@ export function UserComments({
             comment={comment}
             key={comment._id}
             replyAction={
-              <NavigationLink
+              <HrefLink
+                activeOptions={EXACT_ACTIVE_OPTIONS}
                 aria-label={tCommon("reply")}
                 className={buttonVariants({ size: "sm", variant: "ghost" })}
                 href={withLeadingSlash(comment.slug)}
               >
                 <HugeIcons icon={ArrowTurnBackwardIcon} />
                 <FeedCount value={comment.replyCount} />
-              </NavigationLink>
+              </HrefLink>
             }
           />
         ))}

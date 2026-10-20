@@ -1,4 +1,10 @@
-import { DEFAULT_LOCALE, LOCALES } from "@repo/internationalization/src/locale";
+import type { LinkTarget } from "@repo/internationalization/src/link";
+import {
+  DEFAULT_LOCALE,
+  LOCALES,
+  type Locale,
+} from "@repo/internationalization/src/locale";
+import { linkOptions } from "@tanstack/react-router";
 import { Option, Schema } from "effect";
 import { hasLocale } from "use-intl";
 import { withoutShareToken } from "@/lib/share/fragment";
@@ -241,6 +247,25 @@ export function getPostAuthSignInHrefForLocation(
     location.hash
   );
   return getPostAuthSignInHref(resolvePostAuthIntent(source, rawLocale));
+}
+
+/**
+ * The sign-in route of one locale, resuming the intent that a browser source
+ * (path, search and hash) names. A source that names no intent opens the bare route.
+ */
+export function getPostAuthSignInTarget(
+  source: string,
+  locale: Locale
+): LinkTarget {
+  const resolution = resolvePostAuthIntent(source, locale);
+  if (resolution.kind === "none") {
+    return linkOptions({ params: { locale }, to: "/$locale/auth" });
+  }
+  return linkOptions({
+    params: { locale },
+    search: { [REDIRECT_PARAM]: resolution.intent },
+    to: "/$locale/auth",
+  });
 }
 
 /** Returns the localized-auth input needed when continuation has no session. */

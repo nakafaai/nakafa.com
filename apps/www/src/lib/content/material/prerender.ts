@@ -13,7 +13,7 @@ import { PublishedProjectionError } from "@/lib/content/published/errors";
 import { decodeSourceRevision } from "@/lib/content/published/origin";
 import { httpLayer } from "@/lib/convex/http";
 
-/** Reads one authenticated lesson to validate its Cache Components route. */
+/** Reads one authenticated lesson to validate its route before the page renders. */
 export const readPublishedMaterialPrerenderRoute = Effect.fn(
   "NakafaMaterial.readPrerenderRoute"
 )(function* (locale: Locale) {

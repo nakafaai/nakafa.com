@@ -7,7 +7,10 @@ import {
   useReducedMotion,
 } from "@mantine/hooks";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
+import {
+  EXACT_ACTIVE_OPTIONS,
+  HrefLink,
+} from "@repo/internationalization/src/link";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
 import { animate } from "motion";
@@ -78,7 +81,8 @@ export function CurriculumList({ curricula, label }: CurriculumListProps) {
   return (
     <nav aria-label={label} className="grid gap-4" ref={ref}>
       {Arr.map(curricula, (curriculum, position) => (
-        <NavigationLink
+        <HrefLink
+          activeOptions={EXACT_ACTIVE_OPTIONS}
           className={cn(
             "flex w-fit items-center gap-4 text-xl tracking-tight transition-opacity duration-300 sm:text-3xl",
             position === bright ? "opacity-100" : "opacity-60"
@@ -96,7 +100,7 @@ export function CurriculumList({ curricula, label }: CurriculumListProps) {
             }
           />
           {curriculum.title}
-        </NavigationLink>
+        </HrefLink>
       ))}
     </nav>
   );

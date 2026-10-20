@@ -1,12 +1,13 @@
 import { QueryResult, useQuery } from "@confect/react";
 import learningPreferences from "@repo/backend/confect/_generated/refs/learningPreferences";
+import type { LinkTarget } from "@repo/internationalization/src/link";
 import type { Locale } from "use-intl";
 import { useConvexAuth } from "@/components/providers/convex";
-import { getTryoutPublicPathHref } from "@/components/tryout/route/path";
+import { getTryoutCountryTarget } from "@/components/tryout/route/path";
 import { isActiveLocale } from "@/lib/i18n/active";
 
-/** Reads the current user's preferred try-out country href for client navigation. */
-export function usePreferredTryoutHref(locale: Locale) {
+/** Reads the current user's preferred try-out country as a typed link target. */
+export function usePreferredTryoutTarget(locale: Locale): LinkTarget | null {
   const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);
   const isLoading = useConvexAuth((auth) => auth.isLoading);
   const activeLocale = isActiveLocale(locale);
@@ -27,5 +28,5 @@ export function usePreferredTryoutHref(locale: Locale) {
     return null;
   }
 
-  return getTryoutPublicPathHref(preference.value.country.publicPath);
+  return getTryoutCountryTarget(locale, preference.value.country.publicPath);
 }

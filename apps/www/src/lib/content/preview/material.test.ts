@@ -47,13 +47,6 @@ import {
 } from "@/test/content-preview";
 import { articlePendingManifest } from "@/test/preview-article";
 
-vi.mock("@repo/internationalization/src/navigation", () => ({
-  getPathname: vi.fn(),
-  Link: vi.fn(),
-  redirect: vi.fn(),
-  usePathname: vi.fn(),
-  useRouter: vi.fn(),
-}));
 vi.mock("use-intl", () => ({
   /** Keeps route rendering independent from navigation runtime behavior. */
   useTranslations: () => () => "",

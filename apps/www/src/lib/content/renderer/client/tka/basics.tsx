@@ -1,28 +1,28 @@
 "use client";
 
-import { lazyComponent } from "@repo/design-system/lib/lazy";
+import { lazy } from "react";
 import { withHydrationBoundary } from "@/lib/content/renderer/client/boundary";
 
 export const LineEquation = withHydrationBoundary(
-  lazyComponent(() =>
+  lazy(() =>
     import(
       "@repo/design-system/components/contents/mathematics/line/equation"
-    ).then(({ LineEquation: Component }) => Component)
+    ).then((module) => ({ default: module.LineEquation }))
   )
 );
 
 export const NumberLine = withHydrationBoundary(
-  lazyComponent(() =>
+  lazy(() =>
     import(
       "@repo/design-system/components/contents/mathematics/number-line"
-    ).then(({ NumberLine: Component }) => Component)
+    ).then((module) => ({ default: module.NumberLine }))
   )
 );
 
 export const HistogramChart = withHydrationBoundary(
-  lazyComponent(() =>
+  lazy(() =>
     import(
       "@repo/design-system/components/contents/mathematics/bar-chart"
-    ).then(({ HistogramChart }) => HistogramChart)
+    ).then((module) => ({ default: module.HistogramChart }))
   )
 );

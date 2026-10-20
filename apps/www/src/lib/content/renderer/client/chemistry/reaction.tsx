@@ -1,31 +1,28 @@
 "use client";
 
-import { lazyComponent } from "@repo/design-system/lib/lazy";
+import { lazy } from "react";
 import { withHydrationBoundary } from "@/lib/content/renderer/client/boundary";
 
 export const ChemicalReactionCharacteristicsLab = withHydrationBoundary(
-  lazyComponent(() =>
+  lazy(() =>
     import(
       "@repo/design-system/components/contents/chemistry/chemical-reaction-characteristics/lab"
-    ).then(
-      ({ ChemicalReactionCharacteristicsLab }) =>
-        ChemicalReactionCharacteristicsLab
-    )
+    ).then((module) => ({ default: module.ChemicalReactionCharacteristicsLab }))
   )
 );
 
 export const ChemicalReactionTypesLab = withHydrationBoundary(
-  lazyComponent(() =>
+  lazy(() =>
     import(
       "@repo/design-system/components/contents/chemistry/chemical-reaction-types/lab"
-    ).then(({ ChemicalReactionTypesLab }) => ChemicalReactionTypesLab)
+    ).then((module) => ({ default: module.ChemicalReactionTypesLab }))
   )
 );
 
 export const MethaneCombustionEquationLab = withHydrationBoundary(
-  lazyComponent(() =>
+  lazy(() =>
     import(
       "@repo/design-system/components/contents/chemistry/methane-combustion-equation/lab"
-    ).then(({ MethaneCombustionEquationLab }) => MethaneCombustionEquationLab)
+    ).then((module) => ({ default: module.MethaneCombustionEquationLab }))
   )
 );

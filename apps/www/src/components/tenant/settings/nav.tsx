@@ -11,7 +11,6 @@ import {
   CollapsibleTrigger,
 } from "@repo/design-system/components/ui/collapsible";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import {
   SidebarMenuButton,
   SidebarMenuItem,
@@ -21,11 +20,13 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "@repo/design-system/components/ui/sidebar-submenu";
-import { usePathname } from "@repo/internationalization/src/navigation";
+import { useMatchRoute } from "@tanstack/react-router";
 import { Array as Arr } from "effect";
 import type { ComponentProps } from "react";
 import { useTranslations } from "use-intl";
+import { useTenant } from "@/components/tenant/context";
 import { TenantSidebarGroup } from "@/components/tenant/group";
+import { SchoolHrefLink } from "@/lib/routing/school/link";
 import { schoolSettingsGroups } from "@/lib/settings/school";
 
 /** The icon of each group. A group added without one does not compile. */
@@ -46,7 +47,7 @@ const groupIcons: Record<
  * submenus. The group that holds the current section opens, also when the current
  * section moves into it, as after the settings root sends the viewer to its first
  * section, or a link opens a section of another group. A school host
- * has no locale in its paths, so the links are plain Next.js links, as in the
+ * has no locale in its paths, so the links are school links, as in the
  * school's own navigation.
  */
 export function SchoolSettingsNav() {
@@ -67,13 +68,16 @@ function SchoolSettingsNavGroup({
 }: {
   group: (typeof schoolSettingsGroups)[number];
 }) {
-  const pathname = usePathname();
+  const matchRoute = useMatchRoute();
+  const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
   const label = t(group.key);
-  const holdsCurrent = Arr.some(
-    group.sections,
-    (section) => section.href === pathname
-  );
+  const isSectionActive = (section: (typeof group.sections)[number]) =>
+    matchRoute({
+      params: { slug },
+      to: `/school/$slug/settings/${section.labelKey}` as const,
+    }) !== false;
+  const holdsCurrent = Arr.some(group.sections, isSectionActive);
 
   // A new key starts the group again from its default when the current section
   // moves in or out of it, and leaves a group the viewer folded alone otherwise.
@@ -97,8 +101,8 @@ function SchoolSettingsNavGroup({
           {Arr.map(group.sections, (section) => (
             <SidebarMenuSubItem key={section.href}>
               <SidebarMenuSubButton
-                isActive={pathname === section.href}
-                render={<IntentLink href={section.href} localized={false} />}
+                isActive={isSectionActive(section)}
+                render={<SchoolHrefLink href={section.href} />}
               >
                 <span className="truncate">{t(section.labelKey)}</span>
               </SidebarMenuSubButton>

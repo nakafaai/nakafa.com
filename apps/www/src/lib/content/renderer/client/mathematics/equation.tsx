@@ -1,28 +1,28 @@
 "use client";
 
-import { lazyComponent } from "@repo/design-system/lib/lazy";
+import { lazy } from "react";
 import { withHydrationBoundary } from "@/lib/content/renderer/client/boundary";
 
 export const Inequality = withHydrationBoundary(
-  lazyComponent(() =>
+  lazy(() =>
     import(
       "@repo/design-system/components/contents/mathematics/inequality"
-    ).then(({ Inequality: Component }) => Component)
+    ).then((module) => ({ default: module.Inequality }))
   )
 );
 
 export const LineEquation = withHydrationBoundary(
-  lazyComponent(() =>
+  lazy(() =>
     import(
       "@repo/design-system/components/contents/mathematics/line/equation"
-    ).then(({ LineEquation: Component }) => Component)
+    ).then((module) => ({ default: module.LineEquation }))
   )
 );
 
 export const QuadraticEquationReadingRoomProblem = withHydrationBoundary(
-  lazyComponent(() =>
+  lazy(() =>
     import(
       "@repo/design-system/components/contents/mathematics/quadratic/reading-room"
-    ).then(({ ReadingRoomProblem }) => ReadingRoomProblem)
+    ).then((module) => ({ default: module.ReadingRoomProblem }))
   )
 );

@@ -1,8 +1,8 @@
 import type { Ref } from "@confect/core";
 
 import type tryouts from "@repo/backend/confect/_generated/refs/tryouts";
-import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import { getTileLooks } from "@repo/design-system/lib/look";
+import { HrefLink } from "@repo/internationalization/src/link";
 import { Array as Arr, Schema, Tuple } from "effect";
 
 import {
@@ -49,9 +49,7 @@ export function TryoutCountryPageClient({
     <div className="grid grid-cols-1 gap-4 pt-6 pb-24 sm:grid-cols-2">
       {Arr.map(Arr.zip(page.exams, visuals), ([exam, visual], index) => (
         <CatalogCard
-          action={
-            <IntentLink href={getTryoutPublicPathHref(exam.publicPath)} />
-          }
+          action={<HrefLink href={getTryoutPublicPathHref(exam.publicPath)} />}
           actionLabel={actionLabel}
           key={exam.examKey}
           title={exam.title}

@@ -1,12 +1,12 @@
 "use client";
 
-import { lazyComponent } from "@repo/design-system/lib/lazy";
+import { lazy } from "react";
 import { withHydrationBoundary } from "@/lib/content/renderer/client/boundary";
 
 export const NumberLine = withHydrationBoundary(
-  lazyComponent(() =>
+  lazy(() =>
     import(
       "@repo/design-system/components/contents/mathematics/number-line"
-    ).then(({ NumberLine: Component }) => Component)
+    ).then((module) => ({ default: module.NumberLine }))
   )
 );

@@ -5,23 +5,18 @@ import {
   DropdownMenuTrigger,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { lazyComponent } from "@repo/design-system/lib/lazy";
-import { type ComponentProps, useState } from "react";
+import { ClientOnly } from "@tanstack/react-router";
+import { type ComponentProps, lazy, Suspense, useState } from "react";
 import { useTranslations } from "use-intl";
 
 /**
  * Loads the theme list on first intent. It carries one icon for each theme,
  * which no page needs before a visitor reaches for the selector.
  */
-const ThemeMenuContent = lazyComponent(
-  () =>
-    import("@/components/shared/theme/menu").then(
-      (module) => module.ThemeMenuContent
-    ),
-  {
-    loading: () => null,
-    ssr: false,
-  }
+const ThemeMenuContent = lazy(() =>
+  import("@/components/shared/theme/menu").then((module) => ({
+    default: module.ThemeMenuContent,
+  }))
 );
 
 /** Renders the theme selector. The selected theme lives in the theme store. */
@@ -60,7 +55,13 @@ export function ThemePicker({
         }
       />
 
-      {isRequested ? <ThemeMenuContent /> : null}
+      {isRequested ? (
+        <Suspense fallback={null}>
+          <ClientOnly fallback={null}>
+            <ThemeMenuContent />
+          </ClientOnly>
+        </Suspense>
+      ) : null}
     </DropdownMenu>
   );
 }

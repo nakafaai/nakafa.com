@@ -5,7 +5,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
-import { lazyComponent } from "@repo/design-system/lib/lazy";
+import { lazy, Suspense } from "react";
 import { useTranslations } from "use-intl";
 import {
   ConsentActions,
@@ -39,10 +39,10 @@ const HIDE_PROMPT_WITHOUT_SCRIPTS = `[${PROMPT_ATTRIBUTE}]{display:none}`;
  * The preferences dialog ships as its own chunk. Its footer control warms it on
  * hover, focus or press, so the root layout never carries the dialog's code.
  */
-const ConsentPreferences = lazyComponent(() =>
-  import("@/components/analytics/consent/preferences").then(
-    (module) => module.ConsentPreferences
-  )
+const ConsentPreferences = lazy(() =>
+  import("@/components/analytics/consent/preferences").then((module) => ({
+    default: module.ConsentPreferences,
+  }))
 );
 
 /**
@@ -108,7 +108,9 @@ export function AnalyticsConsentControls({
       ) : null}
 
       {consent.preferencesWarm ? (
-        <ConsentPreferences consent={consent} />
+        <Suspense fallback={null}>
+          <ConsentPreferences consent={consent} />
+        </Suspense>
       ) : null}
     </>
   );

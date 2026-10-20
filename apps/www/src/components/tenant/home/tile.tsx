@@ -1,6 +1,6 @@
 import { CardHeader, CardTitle } from "@repo/design-system/components/ui/card";
-import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import { buttonVariants } from "@repo/design-system/lib/button";
+import { Link } from "@repo/internationalization/src/link";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import {
@@ -8,6 +8,7 @@ import {
   CardSectionActions,
   CardSectionFooter,
 } from "@/components/shared/card/section";
+import { useTenant } from "@/components/tenant/context";
 
 /** The most rows one tile lists. A tile with more rows ends with All exams, when the viewer may open the exams. */
 export const TILE_ROWS = 3;
@@ -52,15 +53,16 @@ export function HomeTile({
 /** The footer's All exams, which opens the list of exams for the rows that a tile does not show. */
 export function AllExamsAction() {
   const t = useTranslations("School");
+  const { slug } = useTenant();
 
   return (
-    <IntentLink
+    <Link
       className={buttonVariants({ variant: "outline" })}
-      href="/exams"
-      localized={false}
+      params={{ slug }}
+      to="/school/$slug/exams"
     >
       {t("tile-all-exams")}
-    </IntentLink>
+    </Link>
   );
 }
 

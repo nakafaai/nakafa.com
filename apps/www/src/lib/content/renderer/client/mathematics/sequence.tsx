@@ -1,12 +1,12 @@
 "use client";
 
-import { lazyComponent } from "@repo/design-system/lib/lazy";
+import { lazy } from "react";
 import { withHydrationBoundary } from "@/lib/content/renderer/client/boundary";
 
 export const SequenceConceptTableChairsAnimation = withHydrationBoundary(
-  lazyComponent(() =>
+  lazy(() =>
     import(
       "@repo/design-system/components/contents/mathematics/sequence/animation"
-    ).then(({ default: Animation }) => Animation)
+    ).then((module) => ({ default: module.default }))
   )
 );

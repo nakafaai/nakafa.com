@@ -1,14 +1,6 @@
 // @vitest-environment node
 
 // Node tests isolate Next navigation imports while real semantic renderers execute.
-vi.mock("@repo/internationalization/src/navigation", () => ({
-  getPathname: vi.fn(),
-  Link: vi.fn(),
-  redirect: vi.fn(),
-  usePathname: vi.fn(),
-  useRouter: vi.fn(),
-}));
-
 import { describe, expect, it } from "@effect/vitest";
 import { compile } from "@mdx-js/mdx";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";

@@ -2,6 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import {
   getCurriculumIndexHref,
   getCurriculumProgramHref,
+  getCurriculumProgramTarget,
 } from "@/lib/curriculum/routes";
 
 describe("curriculum route helpers", () => {
@@ -17,5 +18,21 @@ describe("curriculum route helpers", () => {
         publicSlug: "amerika-serikat",
       })
     ).toBe("/kurikulum/amerika-serikat");
+  });
+
+  it("types a curriculum program root as its route target", () => {
+    expect(
+      getCurriculumProgramTarget({
+        locale: "de",
+        publicSlug: "vereinigte-staaten",
+      })
+    ).toEqual({
+      params: {
+        _splat: "",
+        curriculum: "vereinigte-staaten",
+        locale: "de",
+      },
+      to: "/$locale/curricula/$curriculum/$",
+    });
   });
 });

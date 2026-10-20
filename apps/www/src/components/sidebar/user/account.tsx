@@ -13,10 +13,15 @@ import {
   DropdownMenuSeparator,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { lazyComponent } from "@repo/design-system/lib/lazy";
-import { useRouter } from "@repo/internationalization/src/navigation";
+import { localizeInternalHref } from "@repo/internationalization/src/href";
+import {
+  useCurrentLocale,
+  useHrefNavigate,
+} from "@repo/internationalization/src/link";
+import { ClientOnly, useNavigate } from "@tanstack/react-router";
 import { Effect, Result } from "effect";
-import { useLocale, useTranslations } from "use-intl";
+import { lazy, Suspense } from "react";
+import { useTranslations } from "use-intl";
 import { clearAiDraftText } from "@/components/ai/store/draft";
 import { AnalyticsConsentMenuItem } from "@/components/analytics/consent/menu";
 import { AccountMenu } from "@/components/sidebar/menu/account";
@@ -24,18 +29,16 @@ import { SidebarUtilityMenuItems } from "@/components/sidebar/menu/utility";
 import { signOutAccountBrowserIdentity } from "@/lib/auth/identity/browser";
 import { usePageNavigation } from "@/lib/content/page/context";
 import type { CurrentUser } from "@/lib/identity/client";
-import { profileHref } from "@/lib/profile/href";
+import { profileTarget } from "@/lib/profile/href";
 
 /**
  * The account's schools, loaded when the menu opens: the list brings the school
  * contracts with it, which no page needs at first paint.
  */
-const SidebarSchoolMenuItems = lazyComponent(
-  () =>
-    import("@/components/sidebar/menu/schools").then(
-      (module) => module.SidebarSchoolMenuItems
-    ),
-  { loading: () => null, ssr: false }
+const SidebarSchoolMenuItems = lazy(() =>
+  import("@/components/sidebar/menu/schools").then((module) => ({
+    default: module.SidebarSchoolMenuItems,
+  }))
 );
 
 /** Renders the app account menu, with the account and legal pages, once authentication is confirmed. */
@@ -44,8 +47,9 @@ export function NavUserAccount({ user }: { user: CurrentUser }) {
   const tLegal = useTranslations("Legal");
   const tNotifications = useTranslations("Notifications");
   const pageNavigation = usePageNavigation((navigation) => navigation);
-  const router = useRouter();
-  const locale = useLocale();
+  const navigate = useNavigate();
+  const locale = useCurrentLocale();
+  const navigateToHref = useHrefNavigate();
   const { username } = user.appUser;
   const planLabelByPlan = {
     free: t("plan-free"),
@@ -59,7 +63,7 @@ export function NavUserAccount({ user }: { user: CurrentUser }) {
     );
     if (Result.isSuccess(result)) {
       Effect.runSync(clearAiDraftText);
-      window.location.assign(`/${locale}`);
+      window.location.replace(localizeInternalHref("/", locale));
     }
   }
 
@@ -74,14 +78,18 @@ export function NavUserAccount({ user }: { user: CurrentUser }) {
       name={user.authUser.name}
       onSignOut={handleSignOut}
     >
-      <SidebarSchoolMenuItems
-        canOpenSchool={!isLoginAddress(user.authUser.email)}
-      />
+      <Suspense fallback={null}>
+        <ClientOnly fallback={null}>
+          <SidebarSchoolMenuItems
+            canOpenSchool={!isLoginAddress(user.authUser.email)}
+          />
+        </ClientOnly>
+      </Suspense>
       <DropdownMenuGroup>
         {username === undefined ? null : (
           <DropdownMenuItem
             className="cursor-pointer"
-            onClick={() => router.push(profileHref(username))}
+            onClick={() => navigate(profileTarget(username, locale))}
           >
             <HugeIcons icon={UserIcon} />
             {t("profile")}
@@ -89,14 +97,18 @@ export function NavUserAccount({ user }: { user: CurrentUser }) {
         )}
         <DropdownMenuItem
           className="cursor-pointer"
-          onClick={() => router.push("/notifications")}
+          onClick={() =>
+            navigate({ params: { locale }, to: "/$locale/notifications" })
+          }
         >
           <HugeIcons icon={Notification01Icon} />
           {tNotifications("title")}
         </DropdownMenuItem>
         <DropdownMenuItem
           className="cursor-pointer"
-          onClick={() => router.push("/user/settings")}
+          onClick={() =>
+            navigate({ params: { locale }, to: "/$locale/user/settings" })
+          }
         >
           <HugeIcons icon={Settings01Icon} />
           {t("settings")}
@@ -110,14 +122,14 @@ export function NavUserAccount({ user }: { user: CurrentUser }) {
           <>
             <DropdownMenuItem
               className="cursor-pointer"
-              onClick={() => router.push(pageNavigation.termsOfServiceHref)}
+              onClick={() => navigateToHref(pageNavigation.termsOfServiceHref)}
             >
               <HugeIcons icon={FileValidationIcon} />
               {tLegal("terms-of-service")}
             </DropdownMenuItem>
             <DropdownMenuItem
               className="cursor-pointer"
-              onClick={() => router.push(pageNavigation.privacyPolicyHref)}
+              onClick={() => navigateToHref(pageNavigation.privacyPolicyHref)}
             >
               <HugeIcons icon={LockIcon} />
               {tLegal("privacy-policy")}

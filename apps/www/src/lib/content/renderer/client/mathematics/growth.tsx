@@ -1,20 +1,20 @@
 "use client";
 
-import { lazyComponent } from "@repo/design-system/lib/lazy";
+import { lazy } from "react";
 import { withHydrationBoundary } from "@/lib/content/renderer/client/boundary";
 
 export const BacterialGrowth = withHydrationBoundary(
-  lazyComponent(() =>
+  lazy(() =>
     import(
       "@repo/design-system/components/contents/mathematics/animation-bacterial"
-    ).then(({ BacterialGrowth }) => BacterialGrowth)
+    ).then((module) => ({ default: module.BacterialGrowth }))
   )
 );
 
 export const FunctionExplorationVirusChart = withHydrationBoundary(
-  lazyComponent(() =>
+  lazy(() =>
     import(
       "@repo/design-system/components/contents/mathematics/exponential/virus-chart"
-    ).then(({ VirusChart }) => VirusChart)
+    ).then((module) => ({ default: module.VirusChart }))
   )
 );

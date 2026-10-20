@@ -1,12 +1,12 @@
 "use client";
 
-import { lazyComponent } from "@repo/design-system/lib/lazy";
+import { lazy } from "react";
 import { withHydrationBoundary } from "@/lib/content/renderer/client/boundary";
 
 export const Set3Question14SpiceSalesChart = withHydrationBoundary(
-  lazyComponent(() =>
+  lazy(() =>
     import(
       "@repo/design-system/components/contents/snbt/general/set-3/question-14"
-    ).then(({ SpiceSalesChart }) => SpiceSalesChart)
+    ).then((module) => ({ default: module.SpiceSalesChart }))
   )
 );

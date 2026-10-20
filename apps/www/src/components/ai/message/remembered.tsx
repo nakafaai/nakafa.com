@@ -1,6 +1,6 @@
 import { AiBrain01Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { IntentLink } from "@repo/design-system/components/ui/intent-link";
+import { Link, useCurrentLocale } from "@repo/internationalization/src/link";
 import { useTranslations } from "use-intl";
 import { useMessage } from "@/components/ai/message/context";
 
@@ -11,6 +11,7 @@ import { useMessage } from "@/components/ai/message/context";
  */
 export function AiChatMessageRemembered() {
   const t = useTranslations("Ai");
+  const locale = useCurrentLocale();
   const remembered = useMessage(
     ({ message, turn }) =>
       message.role === "assistant" && turn?.remembered !== undefined
@@ -21,14 +22,15 @@ export function AiChatMessageRemembered() {
   }
 
   return (
-    <IntentLink
+    <Link
       className="inline-flex items-center gap-1 rounded-md text-muted-foreground text-xs outline-none transition-colors ease-out hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
-      href="/user/settings/memory"
+      params={{ locale }}
       title={t("remembered-title")}
+      to="/$locale/user/settings/memory"
     >
       <HugeIcons className="size-3.5" icon={AiBrain01Icon} />
       {t("remembered")}
-    </IntentLink>
+    </Link>
   );
 }
 AiChatMessageRemembered.displayName = "AiChatMessageRemembered";

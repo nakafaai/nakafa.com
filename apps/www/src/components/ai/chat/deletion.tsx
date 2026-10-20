@@ -4,7 +4,8 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { toast } from "@repo/design-system/lib/toast/notify";
-import { useRouter } from "@repo/internationalization/src/navigation";
+import { useCurrentLocale } from "@repo/internationalization/src/link";
+import { useNavigate, useRouter } from "@tanstack/react-router";
 import { useConvex } from "convex/react";
 import { Effect } from "effect";
 import { useTranslations } from "use-intl";
@@ -12,7 +13,7 @@ import { useDeleteChatMutation } from "@/components/ai/chat/mutation";
 import { deleteOnPress } from "@/components/ai/chat/press";
 import { useChatStore } from "@/components/ai/chat/store";
 import { useViewer } from "@/lib/identity/client";
-import { ownChatsHref } from "@/lib/profile/href";
+import { ownChatsTarget } from "@/lib/profile/href";
 
 /**
  * Owns destructive confirmation and routes away only after confirmed deletion.
@@ -31,6 +32,8 @@ export function ChatDeletion({
 }) {
   const t = useTranslations("Ai");
   const router = useRouter();
+  const navigate = useNavigate();
+  const locale = useCurrentLocale();
   const user = useViewer((s) => s.account);
   const deleteChat = useDeleteChatMutation();
   const leaving = useChatStore((state) => state.leaving);
@@ -46,14 +49,15 @@ export function ChatDeletion({
     const { username } = user.appUser;
     // The page the learner pressed Delete on. If they open another page while the
     // delete waits for the socket, the redirect after the delete leaves that page alone.
-    const { pathname } = window.location;
+    const { pathname } = router.state.location;
     Effect.runFork(
       deleteOnPress({
         chatId: chat._id,
         close: () => onOpenChange(false),
         convex,
         deleteChat,
-        deleted: () => router.replace(ownChatsHref(username)),
+        deleted: () =>
+          navigate({ ...ownChatsTarget(username, locale), replace: true }),
         leave,
         refused: () => {
           stay();
@@ -62,7 +66,7 @@ export function ChatDeletion({
             title: "action-error.title",
           });
         },
-        stillOnChat: () => window.location.pathname === pathname,
+        stillOnChat: () => router.state.location.pathname === pathname,
       })
     );
   };

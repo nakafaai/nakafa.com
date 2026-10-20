@@ -2,10 +2,12 @@ import { QueryResult } from "@confect/react";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { ClassAmbiguous } from "@repo/backend/confect/classroom/errors";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { Link } from "@repo/internationalization/src/navigation";
-import { cn } from "cn";
+import {
+  EXACT_ACTIVE_OPTIONS,
+  Link,
+} from "@repo/internationalization/src/link";
+import { cva } from "class-variance-authority";
 import { Array as Arr, Option, Schema } from "effect";
-import type { ReactNode } from "react";
 import { createContext, use, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/providers/convex";
@@ -15,6 +17,7 @@ import { Missing } from "@/components/state/missing";
 import { AddChannel } from "@/components/tenant/classes/add";
 import { ChannelList } from "@/components/tenant/classes/channels";
 import { createChannelDrafts } from "@/components/tenant/classes/drafts";
+import { useTenant } from "@/components/tenant/context";
 import { SchoolHeader } from "@/components/tenant/header";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { isDenied, isLostAccess } from "@/components/tenant/refusal";
@@ -135,45 +138,40 @@ function ClassPage({
 /** The tab bar of a class: its home and its forum, the current one marked as the page. */
 function ClassTabs({ classSlug, tab }: { classSlug: string; tab: ClassTab }) {
   const t = useTranslations("Classroom");
-  const base = `/classes/${classSlug}`;
+  const { slug } = useTenant();
+  const params = { classSlug, slug };
 
   return (
     <nav className="flex gap-1 border-b">
-      <ClassTabLink active={tab === "home"} href={base}>
+      <Link
+        activeOptions={EXACT_ACTIVE_OPTIONS}
+        className={classTab({ active: tab === "home" })}
+        params={params}
+        to="/school/$slug/classes/$classSlug"
+      >
         {t("tabs-home")}
-      </ClassTabLink>
-      <ClassTabLink active={tab === "forum"} href={`${base}/forum`}>
+      </Link>
+      <Link
+        activeOptions={EXACT_ACTIVE_OPTIONS}
+        className={classTab({ active: tab === "forum" })}
+        params={params}
+        to="/school/$slug/classes/$classSlug/forum"
+      >
         {t("tabs-forum")}
-      </ClassTabLink>
+      </Link>
     </nav>
   );
 }
 
 /** One tab of a class. The current tab is marked as the page, and its underline marks it too. */
-function ClassTabLink({
-  active,
-  children,
-  href,
-}: {
-  active: boolean;
-  children: ReactNode;
-  href: string;
-}) {
-  return (
-    <Link
-      aria-current={active ? "page" : undefined}
-      className={cn(
-        "-mb-px border-b-2 px-3 pb-2 font-medium text-sm",
-        active
-          ? "border-foreground text-foreground"
-          : "border-transparent text-muted-foreground hover:text-foreground"
-      )}
-      href={href}
-    >
-      {children}
-    </Link>
-  );
-}
+const classTab = cva("-mb-px border-b-2 px-3 pb-2 font-medium text-sm", {
+  variants: {
+    active: {
+      false: "border-transparent text-muted-foreground hover:text-foreground",
+      true: "border-foreground text-foreground",
+    },
+  },
+});
 
 /** The state of a class that the viewer may not read, with one way back to the school's home. */
 function ClassMissing() {

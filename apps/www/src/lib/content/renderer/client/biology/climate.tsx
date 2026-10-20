@@ -1,20 +1,20 @@
 "use client";
 
-import { lazyComponent } from "@repo/design-system/lib/lazy";
+import { lazy } from "react";
 import { withHydrationBoundary } from "@/lib/content/renderer/client/boundary";
 
 export const GreenhouseEffectLab = withHydrationBoundary(
-  lazyComponent(() =>
+  lazy(() =>
     import(
       "@repo/design-system/components/contents/biology/climate-greenhouse"
-    ).then(({ GreenhouseEffectLab }) => GreenhouseEffectLab)
+    ).then((module) => ({ default: module.GreenhouseEffectLab }))
   )
 );
 
 export const ClimateObservationLab = withHydrationBoundary(
-  lazyComponent(() =>
+  lazy(() =>
     import(
       "@repo/design-system/components/contents/biology/climate-observation"
-    ).then(({ ClimateObservationLab }) => ClimateObservationLab)
+    ).then((module) => ({ default: module.ClimateObservationLab }))
   )
 );

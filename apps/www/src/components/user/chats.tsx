@@ -17,12 +17,16 @@ import {
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { toast } from "@repo/design-system/lib/toast/notify";
+import {
+  EXACT_ACTIVE_OPTIONS,
+  Link,
+  useCurrentLocale,
+} from "@repo/internationalization/src/link";
 import { Array as Arr, Effect, Option, pipe, String as Str } from "effect";
 import { useState } from "react";
-import { useLocale, useTranslations } from "use-intl";
+import { useTranslations } from "use-intl";
 import type { StoreApi } from "zustand";
 import { type ChatFirstPage, useChatList } from "@/components/ai/chat/chats";
 import { useDeleteChatMutation } from "@/components/ai/chat/mutation";
@@ -106,7 +110,7 @@ function ChatRow({
   profile: PublicProfile;
 }) {
   const tAi = useTranslations("Ai");
-  const locale = useLocale();
+  const locale = useCurrentLocale();
   const now = useAgeNow(clock);
   const isPrivate = chat.visibility === "private";
   // A chat Nina has not named yet reads as a new chat, so its link has a name.
@@ -134,13 +138,15 @@ function ChatRow({
             <UserChatsListActions chat={chat} />
           </FeedEnd>
         </FeedHeader>
-        <NavigationLink
+        <Link
+          activeOptions={EXACT_ACTIVE_OPTIONS}
           className="wrap-anywhere rounded-sm outline-none after:absolute after:inset-0 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
           dir="auto"
-          href={`/chat/${chat._id}`}
+          params={{ id: chat._id, locale }}
+          to="/$locale/chat/$id"
         >
           {title}
-        </NavigationLink>
+        </Link>
       </FeedBody>
     </FeedRow>
   );

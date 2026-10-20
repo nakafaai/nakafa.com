@@ -1,6 +1,7 @@
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { Link } from "@repo/internationalization/src/navigation";
+import { Link } from "@repo/internationalization/src/link";
 import { useTranslations } from "use-intl";
+import { useTenant } from "@/components/tenant/context";
 
 /**
  * What an exam's page shows when the exam cannot be read, for a viewer who may not open it
@@ -8,6 +9,7 @@ import { useTranslations } from "use-intl";
  * try both show it, so it has one owner.
  */
 export function ExamUnavailable() {
+  const { slug } = useTenant();
   const t = useTranslations("Exams");
 
   return (
@@ -15,7 +17,8 @@ export function ExamUnavailable() {
       <p className="max-w-xs text-center text-sm">{t("unavailable")}</p>
       <Link
         className={buttonVariants({ size: "sm", variant: "outline" })}
-        href="/exams"
+        params={{ slug }}
+        to="/school/$slug/exams"
       >
         {t("title")}
       </Link>

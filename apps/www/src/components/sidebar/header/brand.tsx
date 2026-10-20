@@ -1,13 +1,17 @@
 "use client";
 
 import { Image } from "@repo/design-system/components/image";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuDescription,
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
+import {
+  EXACT_ACTIVE_OPTIONS,
+  Link,
+  useCurrentLocale,
+} from "@repo/internationalization/src/link";
 import { useTranslations } from "use-intl";
 import { useLiveSession } from "@/components/providers/live";
 
@@ -16,6 +20,7 @@ import { useLiveSession } from "@/components/providers/live";
  * so a visitor's page reads no account and opens no Convex socket for the link.
  */
 export function HeaderMenu() {
+  const locale = useCurrentLocale();
   const t = useTranslations("Metadata");
   const isSignedIn = useLiveSession((state) => state.sessionId !== null);
 
@@ -24,7 +29,12 @@ export function HeaderMenu() {
       <SidebarMenuItem>
         <SidebarMenuButton
           render={
-            <NavigationLink href={isSignedIn ? "/home" : "/"} title="Nakafa" />
+            <Link
+              activeOptions={EXACT_ACTIVE_OPTIONS}
+              params={{ locale }}
+              title="Nakafa"
+              to={isSignedIn ? "/$locale/home" : "/$locale"}
+            />
           }
           size="lg"
         >

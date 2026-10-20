@@ -1,6 +1,6 @@
 import { QueryResult } from "@confect/react";
-import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import { buttonVariants } from "@repo/design-system/lib/button";
+import { Link } from "@repo/internationalization/src/link";
 import { Option } from "effect";
 import { type ReactNode, useState } from "react";
 import { useTranslations } from "use-intl";
@@ -98,6 +98,7 @@ function HomeAction({
 /** Enter sitting, which opens the first sitting that the student may still take, and shows only while one is open. */
 function StudentAction() {
   const te = useTranslations("Exams");
+  const { slug } = useTenant();
   const listed = useStudentSittings();
   const open = QueryResult.isSuccess(listed)
     ? enterableSitting(orderSittings(listed.value))
@@ -107,13 +108,13 @@ function StudentAction() {
     return null;
   }
   return (
-    <IntentLink
+    <Link
       className={buttonVariants()}
-      href={`/sittings/${open.value.id}`}
-      localized={false}
+      params={{ sitting: open.value.id, slug }}
+      to="/school/$slug/sittings/$sitting"
     >
       {te("student-enter")}
-    </IntentLink>
+    </Link>
   );
 }
 

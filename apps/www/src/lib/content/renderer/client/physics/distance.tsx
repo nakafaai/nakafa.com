@@ -1,20 +1,20 @@
 "use client";
 
-import { lazyComponent } from "@repo/design-system/lib/lazy";
+import { lazy } from "react";
 import { withHydrationBoundary } from "@/lib/content/renderer/client/boundary";
 
 export const DisplacementDistanceLab = withHydrationBoundary(
-  lazyComponent(() =>
+  lazy(() =>
     import(
       "@repo/design-system/components/contents/physics/kinematics/displacement-distance/lab"
-    ).then(({ DisplacementDistanceLab }) => DisplacementDistanceLab)
+    ).then((module) => ({ default: module.DisplacementDistanceLab }))
   )
 );
 
 export const StoppingDistanceLab = withHydrationBoundary(
-  lazyComponent(() =>
+  lazy(() =>
     import(
       "@repo/design-system/components/contents/physics/kinematics/stopping-distance/lab"
-    ).then(({ StoppingDistanceLab }) => StoppingDistanceLab)
+    ).then((module) => ({ default: module.StoppingDistanceLab }))
   )
 );

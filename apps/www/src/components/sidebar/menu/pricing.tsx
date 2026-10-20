@@ -1,23 +1,35 @@
 import { Diamond02Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarMenuSeparator,
 } from "@repo/design-system/components/ui/sidebar-menu";
+import {
+  EXACT_ACTIVE_OPTIONS,
+  Link,
+  useCurrentLocale,
+} from "@repo/internationalization/src/link";
 import { useTranslations } from "use-intl";
 import type { CurrentUser } from "@/lib/identity/client";
 
 /** Links a sidebar footer to the localized pricing page. */
 export function PricingItem() {
+  const locale = useCurrentLocale();
   const t = useTranslations("Auth");
   const label = t("pricing-cta");
 
   return (
     <SidebarMenuItem>
       <SidebarMenuButton
-        render={<NavigationLink href="/pricing" title={label} />}
+        render={
+          <Link
+            activeOptions={EXACT_ACTIVE_OPTIONS}
+            params={{ locale }}
+            title={label}
+            to="/$locale/pricing"
+          />
+        }
       >
         <HugeIcons icon={Diamond02Icon} />
         <span>{label}</span>

@@ -20,7 +20,7 @@ import {
   TableRow,
 } from "@repo/design-system/components/ui/table";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { Link } from "@repo/internationalization/src/navigation";
+import { Link } from "@repo/internationalization/src/link";
 import { Array as Arr, Option, Schema } from "effect";
 import { createContext, startTransition, use, useState } from "react";
 import { useLocale, useTranslations } from "use-intl";
@@ -200,7 +200,8 @@ function RoomsEmpty({
         tenant.canOpenExams ? (
           <Link
             className={buttonVariants({ variant: "outline" })}
-            href={`/exams/${examId}/edit`}
+            params={{ exam: examId, slug: tenant.slug }}
+            to="/school/$slug/exams/$exam/edit"
           >
             {t("rooms-empty-action")}
           </Link>
@@ -355,7 +356,8 @@ function RoomItem({
       <TableCell className="font-medium">
         <Link
           className="underline-offset-4 hover:underline"
-          href={`/exams/${examId}/sittings/${room.id}`}
+          params={{ exam: examId, slug, sitting: room.id }}
+          to="/school/$slug/exams/$exam/sittings/$sitting"
         >
           {room.room}
         </Link>

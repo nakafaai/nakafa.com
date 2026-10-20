@@ -1,8 +1,8 @@
 import type { Ref } from "@confect/core";
 
 import type tryouts from "@repo/backend/confect/_generated/refs/tryouts";
-import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import { getTileLooks } from "@repo/design-system/lib/look";
+import { HrefLink } from "@repo/internationalization/src/link";
 
 import { Array as Arr, Tuple } from "effect";
 import type { Locale } from "use-intl";
@@ -55,7 +55,7 @@ export function TryoutExamPageClient({
         {Arr.map(Arr.zip(page.tracks, visuals), ([track, visual], index) => (
           <CatalogCard
             action={
-              <IntentLink href={getTryoutPublicPathHref(track.publicPath)} />
+              <HrefLink href={getTryoutPublicPathHref(track.publicPath)} />
             }
             actionLabel={tTryouts("open-set-cta")}
             key={track.trackKey}

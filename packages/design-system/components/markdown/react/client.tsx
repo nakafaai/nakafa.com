@@ -12,21 +12,20 @@ import {
   codeFencePreVariants,
 } from "@repo/design-system/components/markdown/react/variants";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
-import { lazyComponent } from "@repo/design-system/lib/lazy";
 import { cn } from "cn";
-import { type ComponentProps, Suspense } from "react";
+import { type ComponentProps, lazy, Suspense } from "react";
 import { useTranslations } from "use-intl";
 
-const LazyMarkdownCodeBlock = lazyComponent(() =>
+const LazyMarkdownCodeBlock = lazy(() =>
   import("@repo/design-system/components/markdown/react/block").then(
-    ({ MarkdownCodeBlock }) => MarkdownCodeBlock
+    (module) => ({ default: module.MarkdownCodeBlock })
   )
 );
 
-const LazyMermaidMdx = lazyComponent(() =>
-  import("@repo/design-system/components/markdown/mermaid").then(
-    ({ MermaidMdx }) => MermaidMdx
-  )
+const LazyMermaidMdx = lazy(() =>
+  import("@repo/design-system/components/markdown/mermaid").then((module) => ({
+    default: module.MermaidMdx,
+  }))
 );
 
 interface MarkdownCodeBlockProps {
@@ -68,7 +67,9 @@ export function MarkdownCodeBlock({
   return (
     <FenceSourceContext value={{ className, code, language }}>
       <Suspense fallback={<CodeBlockPlaceholder />}>
-        <LazyMarkdownCodeBlock />
+        <Suspense fallback={null}>
+          <LazyMarkdownCodeBlock />
+        </Suspense>
       </Suspense>
     </FenceSourceContext>
   );
@@ -101,11 +102,13 @@ export function MermaidMdx({
         </DiagramFrame>
       }
     >
-      <LazyMermaidMdx
-        {...props}
-        description={description ?? t("diagram-description")}
-        title={heading}
-      />
+      <Suspense fallback={null}>
+        <LazyMermaidMdx
+          {...props}
+          description={description ?? t("diagram-description")}
+          title={heading}
+        />
+      </Suspense>
     </Suspense>
   );
 }

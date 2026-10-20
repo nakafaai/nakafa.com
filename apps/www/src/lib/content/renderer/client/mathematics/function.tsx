@@ -1,36 +1,36 @@
 "use client";
 
-import { lazyComponent } from "@repo/design-system/lib/lazy";
+import { lazy } from "react";
 import { withHydrationBoundary } from "@/lib/content/renderer/client/boundary";
 
 export const InverseFunctionIllustration = withHydrationBoundary(
-  lazyComponent(() =>
+  lazy(() =>
     import(
       "@repo/design-system/components/contents/mathematics/function/illustration"
-    ).then(({ FunctionIllustration }) => FunctionIllustration)
+    ).then((module) => ({ default: module.FunctionIllustration }))
   )
 );
 
 export const FunctionAndNonFunctionDiagram = withHydrationBoundary(
-  lazyComponent(() =>
+  lazy(() =>
     import(
       "@repo/design-system/components/contents/mathematics/function/diagram"
-    ).then(({ Diagram }) => Diagram)
+    ).then((module) => ({ default: module.Diagram }))
   )
 );
 
 export const FunctionAndNonFunctionRelationVisualizer = withHydrationBoundary(
-  lazyComponent(() =>
+  lazy(() =>
     import(
       "@repo/design-system/components/contents/mathematics/function/diagram"
-    ).then(({ RelationVisualizer }) => RelationVisualizer)
+    ).then((module) => ({ default: module.RelationVisualizer }))
   )
 );
 
 export const FunctionMachine = withHydrationBoundary(
-  lazyComponent(() =>
+  lazy(() =>
     import(
       "@repo/design-system/components/contents/mathematics/function-machine"
-    ).then(({ FunctionMachine }) => FunctionMachine)
+    ).then((module) => ({ default: module.FunctionMachine }))
   )
 );

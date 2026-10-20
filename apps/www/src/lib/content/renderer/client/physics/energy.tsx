@@ -1,12 +1,12 @@
 "use client";
 
-import { lazyComponent } from "@repo/design-system/lib/lazy";
+import { lazy } from "react";
 import { withHydrationBoundary } from "@/lib/content/renderer/client/boundary";
 
 export const WindEnergyConversionLab = withHydrationBoundary(
-  lazyComponent(() =>
+  lazy(() =>
     import(
       "@repo/design-system/components/contents/physics/renewable-energy/wind-conversion/lab"
-    ).then(({ WindEnergyConversionLab }) => WindEnergyConversionLab)
+    ).then((module) => ({ default: module.WindEnergyConversionLab }))
   )
 );

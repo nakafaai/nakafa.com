@@ -1,6 +1,6 @@
 import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
+import { publicInternalHref } from "@repo/internationalization/src/href";
 import { LOCALES } from "@repo/internationalization/src/locale";
-import { getPathname } from "@repo/internationalization/src/navigation";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 import type { Locale } from "use-intl";
@@ -50,7 +50,7 @@ function getUrl(href: string, locale: Locale): string {
   });
 
   return Option.match(mappedPathname, {
-    onNone: () => SITE_ORIGIN + getPathname({ locale, href }),
+    onNone: () => SITE_ORIGIN + publicInternalHref(href, locale),
     onSome: (pathname) => `${SITE_ORIGIN}/${locale}${pathname}`,
   });
 }

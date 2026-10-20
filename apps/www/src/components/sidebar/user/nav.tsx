@@ -2,19 +2,16 @@
 
 import { SidebarFooter } from "@repo/design-system/components/ui/sidebar-content";
 import { SidebarMenu } from "@repo/design-system/components/ui/sidebar-menu";
-import { lazyComponent } from "@repo/design-system/lib/lazy";
+import { lazy, Suspense } from "react";
 import { SignedInIsland } from "@/components/providers/island";
 import { AccountPricing } from "@/components/sidebar/menu/pricing";
 import { NavUserGuest } from "@/components/sidebar/user/guest/card";
-import { NavUserAccountSkeleton } from "@/components/sidebar/user/skeleton";
 import { useViewer } from "@/lib/identity/client";
 
-const NavUserAccount = lazyComponent(
-  () =>
-    import("@/components/sidebar/user/account").then(
-      (module) => module.NavUserAccount
-    ),
-  { loading: () => <NavUserAccountSkeleton /> }
+const NavUserAccount = lazy(() =>
+  import("@/components/sidebar/user/account").then((module) => ({
+    default: module.NavUserAccount,
+  }))
 );
 
 /**
@@ -60,7 +57,9 @@ function NavUserMember() {
   return (
     <>
       <AccountPricing plan={user.appUser.plan} />
-      <NavUserAccount user={user} />
+      <Suspense fallback={null}>
+        <NavUserAccount user={user} />
+      </Suspense>
     </>
   );
 }

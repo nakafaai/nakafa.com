@@ -25,18 +25,10 @@ const PageNavigationSchema = Schema.Struct({
   termsOfServiceHref: Schema.String,
 });
 /**
- * Verified developer and legal destinations for one locale.
- *
- * Links to these destinations never prefetch. Every signed Page shares the
- * root `[...page]` route, and the client router learns that route from the
- * first Page it fetches. Its optimistic routing then reads each lesson and
- * curriculum URL that the locale seam rewrites, such as `/en/subjects/...` for
- * `/[locale]/materials/...`, as a Page. A prefetch teaches the router at
- * hydration, before any lesson link is scheduled, so each lesson prefetch that
- * follows is predicted as a Page and loads nothing, and opening a lesson shows
- * the marketing layout until the server corrects the route. Opening a Page by
- * navigation teaches the same route later, and Next.js then corrects it on the
- * first runtime prefetch whose route the server contradicts.
+ * Verified developer and legal destinations for one locale. The router matches
+ * each of them from its own route tree. Their links never preload: the route's
+ * loader reads the signed Page through a server function, and a preload on hover
+ * would run that read before the reader chooses the link.
  */
 export type PageNavigation = typeof PageNavigationSchema.Type;
 

@@ -26,11 +26,14 @@ import {
   Sidebar,
   SidebarInset,
 } from "@repo/design-system/components/ui/sidebar-shell";
-import { lazyComponent } from "@repo/design-system/lib/lazy";
-import { Link, usePathname } from "@repo/internationalization/src/navigation";
+import {
+  EXACT_ACTIVE_OPTIONS,
+  Link,
+} from "@repo/internationalization/src/link";
 import { SITE_ORIGIN } from "@repo/seo/origin";
+import { ClientOnly } from "@tanstack/react-router";
 import { Effect, Option } from "effect";
-import { type ReactNode, useTransition } from "react";
+import { lazy, type ReactNode, Suspense, useTransition } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { AccountMenu } from "@/components/sidebar/menu/account";
 import { TenantAccountItems } from "@/components/tenant/account";
@@ -49,6 +52,7 @@ import type { Greeting } from "@/components/tenant/home/greeting";
 import { SchoolMark } from "@/components/tenant/mark";
 import { TenantNavigation } from "@/components/tenant/navigation";
 import { signOutSchoolAccount } from "@/components/tenant/signout";
+import { useSchoolPath } from "@/lib/routing/school/link";
 import { isExamEditorPath } from "@/lib/settings/school";
 import type { SchoolViewer } from "@/lib/tenant/frame";
 
@@ -56,12 +60,10 @@ import type { SchoolViewer } from "@/lib/tenant/frame";
  * The schools of the viewer, which the school switcher lists. The list loads when the
  * switcher opens, as the account menu of Nakafa loads its own.
  */
-const SidebarSchoolMenuItems = lazyComponent(
-  () =>
-    import("@/components/sidebar/menu/schools").then(
-      (module) => module.SidebarSchoolMenuItems
-    ),
-  { loading: () => null, ssr: false }
+const SidebarSchoolMenuItems = lazy(() =>
+  import("@/components/sidebar/menu/schools").then((module) => ({
+    default: module.SidebarSchoolMenuItems,
+  }))
 );
 
 /**
@@ -150,9 +152,23 @@ function TenantSwitcher() {
           }
         />
         <DropdownMenuContent align="start" className="min-w-56" sideOffset={4}>
-          <SidebarSchoolMenuItems canOpenSchool={false} />
+          <Suspense fallback={null}>
+            <ClientOnly fallback={null}>
+              <SidebarSchoolMenuItems canOpenSchool={false} />
+            </ClientOnly>
+          </Suspense>
           <DropdownMenuGroup>
-            <DropdownMenuItem render={<Link href="/">{t("home")}</Link>} />
+            <DropdownMenuItem
+              render={
+                <Link
+                  activeOptions={EXACT_ACTIVE_OPTIONS}
+                  params={{ slug: tenant.slug }}
+                  to="/school/$slug"
+                >
+                  {t("home")}
+                </Link>
+              }
+            />
             <DropdownMenuItem
               render={
                 <a href={new URL(`/${locale}`, SITE_ORIGIN).href}>
@@ -186,7 +202,7 @@ function TenantFrame({
   personName: string;
   role: TenantValue["role"];
 }) {
-  const pathname = usePathname();
+  const pathname = useSchoolPath();
   const tCommon = useTranslations("Common");
 
   if (isExamEditorPath(pathname)) {

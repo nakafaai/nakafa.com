@@ -1,7 +1,10 @@
 import { Button } from "@repo/design-system/components/ui/button";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
-import { Link } from "@repo/internationalization/src/navigation";
-import { useLocale, useTranslations } from "use-intl";
+import {
+  EXACT_ACTIVE_OPTIONS,
+  Link,
+  useCurrentLocale,
+} from "@repo/internationalization/src/link";
+import { useTranslations } from "use-intl";
 
 /**
  * The name of the header, written as text: the identity's Header card keeps the
@@ -10,17 +13,27 @@ import { useLocale, useTranslations } from "use-intl";
  * root picks the one that shows, so the first paint needs no account state.
  */
 export function LogoCta() {
-  const locale = useLocale();
+  const locale = useCurrentLocale();
 
   return (
     <>
       <span className="contents" data-account="visitor">
-        <a className="font-medium" href={`/${locale}`}>
+        <Link
+          activeOptions={EXACT_ACTIVE_OPTIONS}
+          className="font-medium"
+          params={{ locale }}
+          to="/$locale"
+        >
           Nakafa
-        </a>
+        </Link>
       </span>
       <span className="contents" data-account="member">
-        <Link className="font-medium" href="/home">
+        <Link
+          activeOptions={EXACT_ACTIVE_OPTIONS}
+          className="font-medium"
+          params={{ locale }}
+          to="/$locale/home"
+        >
           Nakafa
         </Link>
       </span>
@@ -34,6 +47,7 @@ export function LogoCta() {
  */
 export function HeaderCta() {
   const t = useTranslations("Marketing");
+  const locale = useCurrentLocale();
 
   return (
     <>
@@ -41,7 +55,13 @@ export function HeaderCta() {
         <Button
           nativeButton={false}
           render={
-            <NavigationLink href="/auth">{t("try-nakafa")}</NavigationLink>
+            <Link
+              activeOptions={EXACT_ACTIVE_OPTIONS}
+              params={{ locale }}
+              to="/$locale/auth"
+            >
+              {t("try-nakafa")}
+            </Link>
           }
           variant="secondary"
         />
@@ -50,7 +70,13 @@ export function HeaderCta() {
         <Button
           nativeButton={false}
           render={
-            <NavigationLink href="/home">{t("try-nakafa")}</NavigationLink>
+            <Link
+              activeOptions={EXACT_ACTIVE_OPTIONS}
+              params={{ locale }}
+              to="/$locale/home"
+            >
+              {t("try-nakafa")}
+            </Link>
           }
           variant="secondary"
         />

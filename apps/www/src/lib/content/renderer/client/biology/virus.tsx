@@ -1,36 +1,36 @@
 "use client";
 
-import { lazyComponent } from "@repo/design-system/lib/lazy";
+import { lazy } from "react";
 import { withHydrationBoundary } from "@/lib/content/renderer/client/boundary";
 
 export const VirusReplicationLab = withHydrationBoundary(
-  lazyComponent(() =>
+  lazy(() =>
     import(
       "@repo/design-system/components/contents/biology/virus-replication"
-    ).then(({ VirusReplicationLab }) => VirusReplicationLab)
+    ).then((module) => ({ default: module.VirusReplicationLab }))
   )
 );
 
 export const VirusRoleLab = withHydrationBoundary(
-  lazyComponent(() =>
+  lazy(() =>
     import("@repo/design-system/components/contents/biology/virus-role").then(
-      ({ VirusRoleLab }) => VirusRoleLab
+      (module) => ({ default: module.VirusRoleLab })
     )
   )
 );
 
 export const VirusMorphologyLab = withHydrationBoundary(
-  lazyComponent(() =>
+  lazy(() =>
     import(
       "@repo/design-system/components/contents/biology/virus-structure"
-    ).then(({ VirusMorphologyLab }) => VirusMorphologyLab)
+    ).then((module) => ({ default: module.VirusMorphologyLab }))
   )
 );
 
 export const VirusStructureLab = withHydrationBoundary(
-  lazyComponent(() =>
+  lazy(() =>
     import(
       "@repo/design-system/components/contents/biology/virus-structure"
-    ).then(({ VirusStructureLab }) => VirusStructureLab)
+    ).then((module) => ({ default: module.VirusStructureLab }))
   )
 );

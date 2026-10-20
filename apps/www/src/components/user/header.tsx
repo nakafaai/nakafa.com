@@ -2,8 +2,12 @@ import { PencilEdit02Icon } from "@hugeicons/core-free-icons";
 import { DeferredLearnerText } from "@repo/design-system/components/markdown/deferred";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { PersonAvatar } from "@repo/design-system/components/ui/person";
+import {
+  EXACT_ACTIVE_OPTIONS,
+  Link,
+  useCurrentLocale,
+} from "@repo/internationalization/src/link";
 import { useTranslations } from "use-intl";
 import { ShareProfileButton } from "@/components/user/share";
 import type { PublicProfile } from "@/lib/profile/public";
@@ -20,6 +24,7 @@ export function UserHeader({
   isOwner: boolean;
   profile: PublicProfile;
 }) {
+  const locale = useCurrentLocale();
   const t = useTranslations("Auth");
 
   return (
@@ -50,10 +55,14 @@ export function UserHeader({
             className="flex-1"
             nativeButton={false}
             render={
-              <NavigationLink href="/user/settings">
+              <Link
+                activeOptions={EXACT_ACTIVE_OPTIONS}
+                params={{ locale }}
+                to="/$locale/user/settings"
+              >
                 <HugeIcons icon={PencilEdit02Icon} />
                 {t("edit-profile")}
-              </NavigationLink>
+              </Link>
             }
             variant="outline"
           />

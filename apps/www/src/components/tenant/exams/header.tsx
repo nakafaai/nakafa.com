@@ -4,7 +4,7 @@ import exams from "@repo/backend/confect/_generated/refs/exams";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { Link } from "@repo/internationalization/src/navigation";
+import { Link } from "@repo/internationalization/src/link";
 import { isComposingKey } from "@repo/utilities/composition";
 import { Function as Fn, Option } from "effect";
 import { useState } from "react";
@@ -55,7 +55,8 @@ export function ExamHeader() {
       <Link
         aria-label={t("title")}
         className={buttonVariants({ size: "icon", variant: "ghost" })}
-        href="/exams"
+        params={{ slug }}
+        to="/school/$slug/exams"
       >
         <HugeIcons icon={ArrowLeft01Icon} />
       </Link>
@@ -77,7 +78,8 @@ export function ExamHeader() {
       <Link
         aria-label={t("try-action")}
         className={buttonVariants({ variant: "outline" })}
-        href={`/exams/${exam.id}/try`}
+        params={{ exam: exam.id, slug }}
+        to="/school/$slug/exams/$exam/try"
       >
         <HugeIcons aria-hidden="true" icon={ViewIcon} />
         <span className="max-sm:sr-only">{t("try-action")}</span>

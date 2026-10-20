@@ -1,20 +1,20 @@
 "use client";
 
-import { lazyComponent } from "@repo/design-system/lib/lazy";
+import { lazy } from "react";
 import { withHydrationBoundary } from "@/lib/content/renderer/client/boundary";
 
 export const MerahPutihCabinetChart = withHydrationBoundary(
-  lazyComponent(() =>
+  lazy(() =>
     import(
       "@repo/design-system/components/contents/politics/merah-putih/chart"
-    ).then(({ CabinetChart }) => CabinetChart)
+    ).then((module) => ({ default: module.CabinetChart }))
   )
 );
 
 export const MerahPutihCompositionChart = withHydrationBoundary(
-  lazyComponent(() =>
+  lazy(() =>
     import(
       "@repo/design-system/components/contents/politics/merah-putih/chart"
-    ).then(({ CompositionChart }) => CompositionChart)
+    ).then((module) => ({ default: module.CompositionChart }))
   )
 );

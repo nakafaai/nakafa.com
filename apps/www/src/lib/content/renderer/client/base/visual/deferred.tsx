@@ -1,16 +1,13 @@
 import { ScenePlaceholder } from "@repo/design-system/components/three/placeholder";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
-import { lazyComponent } from "@repo/design-system/lib/lazy";
-import { useState } from "react";
-
+import { ClientOnly } from "@tanstack/react-router";
+import { lazy, Suspense, useState } from "react";
 import type { MathSceneProps } from "@/lib/content/renderer/client/base/visual/render";
 
-const MathScene = lazyComponent(
-  () =>
-    import("@/lib/content/renderer/client/base/visual/render").then(
-      ({ MathScene: Scene }) => Scene
-    ),
-  { loading: ScenePlaceholder, ssr: false }
+const MathScene = lazy(() =>
+  import("@/lib/content/renderer/client/base/visual/render").then((module) => ({
+    default: module.MathScene,
+  }))
 );
 
 /**
@@ -28,7 +25,15 @@ export function DeferredMathScene(props: MathSceneProps) {
         once
         onIntersect={() => setShouldRender(true)}
       />
-      {shouldRender ? <MathScene {...props} /> : <ScenePlaceholder />}
+      {shouldRender ? (
+        <Suspense fallback={<ScenePlaceholder />}>
+          <ClientOnly fallback={<ScenePlaceholder />}>
+            <MathScene {...props} />
+          </ClientOnly>
+        </Suspense>
+      ) : (
+        <ScenePlaceholder />
+      )}
     </>
   );
 }

@@ -2,7 +2,6 @@ import { QueryResult } from "@confect/react";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { Link } from "@repo/internationalization/src/navigation";
 import { createContext, type ReactNode, use } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/providers/convex";
@@ -16,6 +15,7 @@ import { SchoolHomeroomCard } from "@/components/tenant/settings/homeroom";
 import { SchoolPlacementAdd } from "@/components/tenant/settings/placement";
 import type { CohortDetail } from "@/components/tenant/settings/state";
 import { usePreloadedQueryResult } from "@/lib/data/preloaded";
+import { SchoolHrefLink } from "@/lib/routing/school/link";
 import { getSchoolSettingsSection } from "@/lib/settings/school";
 import type { readCohortFn } from "@/lib/tenant/settings.functions";
 
@@ -99,12 +99,12 @@ function CohortUnavailable() {
         <TableEmpty
           act="pointing"
           action={
-            <Link
+            <SchoolHrefLink
               className={buttonVariants({ variant: "outline" })}
               href={section.href}
             >
               {t(section.labelKey)}
-            </Link>
+            </SchoolHrefLink>
           }
           description={t("cohort-unavailable-description")}
           title={t("cohort-unavailable")}

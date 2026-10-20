@@ -3,6 +3,7 @@
 import { SidebarProvider } from "@repo/design-system/components/ui/sidebar-provider";
 import { SidebarScope } from "@repo/design-system/components/ui/sidebar-scope";
 import { SidebarInset } from "@repo/design-system/components/ui/sidebar-shell";
+import { useHydrated } from "@tanstack/react-router";
 import {
   createContext,
   type Dispatch,
@@ -11,7 +12,6 @@ import {
   use,
   useLayoutEffect,
   useState,
-  useSyncExternalStore,
 } from "react";
 
 /** Changes the count of visible pages that hold the nearest shell locked. */
@@ -103,54 +103,39 @@ function useShellLocks() {
   return setLocks;
 }
 
-/** Whether React is hydrating never changes once it is known. */
-function subscribeNever() {
-  return () => undefined;
-}
-
 /**
- * Locks the shell while this element is mounted and visible. The lock applies
- * in a layout effect, so it lands before the browser paints the page that
- * rendered it, and it releases when that page unmounts or Next.js hides it on
- * navigation.
+ * Locks the shell while this element is mounted. The lock applies in a layout
+ * effect, so it lands before the browser paints the page that rendered it, and
+ * it releases when that page unmounts on navigation.
  *
  * The server markup and the hydrating page carry the lock as a marker instead,
- * so a running attempt paints locked before any script runs. The marker exists
- * only until this page hydrates: Next.js keeps a page it navigates away from
- * in the document, hidden, and a marker there would still lock the shell.
+ * so a running attempt paints locked before any script runs. The marker is
+ * rendered only until the page hydrates, so the lock it carries is the one
+ * the layout effect holds from then on.
  */
 export function ShellLock() {
   const setLocks = useShellLocks();
-  const hydrating = useSyncExternalStore(
-    subscribeNever,
-    () => false,
-    () => true
-  );
+  const hydrated = useHydrated();
 
   useLayoutEffect(() => {
     setLocks((count) => count + 1);
     return () => setLocks((count) => count - 1);
   }, [setLocks]);
 
-  return hydrating ? <span data-shell-lock="" hidden /> : null;
+  return hydrated ? null : <span data-shell-lock="" hidden />;
 }
 
 /**
- * Titles the shell while this element is mounted and visible: a page that draws its own
- * header row takes the place of the shell's bar on a phone. The title applies in a layout
- * effect, so it lands before the browser paints the page, and it goes when the page
- * unmounts or Next.js hides it on navigation; a header that stays in the document, hidden,
- * titles nothing. The server markup and the hydrating page carry the title as a marker
- * instead, so the page paints titled before any script runs. Outside a shell it does
- * nothing.
+ * Titles the shell while this element is mounted: a page that draws its own
+ * header row takes the place of the shell's bar on a phone. The title applies in a
+ * layout effect, so it lands before the browser paints the page, and it goes when
+ * the page unmounts. The server markup and the hydrating page carry the title as a
+ * marker instead, so the page paints titled before any script runs. Outside a shell
+ * it does nothing.
  */
 export function ShellTitle() {
   const setTitles = use(ShellTitlesContext);
-  const hydrating = useSyncExternalStore(
-    subscribeNever,
-    () => false,
-    () => true
-  );
+  const hydrated = useHydrated();
 
   useLayoutEffect(() => {
     if (setTitles === null) {
@@ -160,5 +145,5 @@ export function ShellTitle() {
     return () => setTitles((count) => count - 1);
   }, [setTitles]);
 
-  return hydrating ? <span data-shell-title="" hidden /> : null;
+  return hydrated ? null : <span data-shell-title="" hidden />;
 }

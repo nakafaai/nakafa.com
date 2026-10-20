@@ -1,7 +1,7 @@
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
-import { lazyComponent } from "@repo/design-system/lib/lazy";
 import { getRouteApi } from "@tanstack/react-router";
+import { lazy, Suspense } from "react";
 import { useTranslations } from "use-intl";
 import { AuthGoogle } from "@/components/auth/google";
 
@@ -12,10 +12,10 @@ const schoolRoute = getRouteApi("/school/$slug");
  * The school username form. It loads when the visitor opens it, so the card code it needs stays
  * out of the entry's first JavaScript.
  */
-const TenantLogin = lazyComponent(
-  () =>
-    import("@/components/tenant/login").then((module) => module.TenantLogin),
-  { loading: () => null }
+const TenantLogin = lazy(() =>
+  import("@/components/tenant/login").then((module) => ({
+    default: module.TenantLogin,
+  }))
 );
 
 /**
@@ -34,7 +34,9 @@ export function TenantEntryActions({ slug }: { slug: TenantSlug }) {
     <div className="flex w-full flex-col items-center gap-6">
       <AuthGoogle returnPath="/" variant={isOpen ? "outline" : "default"} />
       {isOpen ? (
-        <TenantLogin slug={slug} />
+        <Suspense fallback={null}>
+          <TenantLogin slug={slug} />
+        </Suspense>
       ) : (
         <Button
           onClick={() => navigate({ search: { masuk: "username" } })}

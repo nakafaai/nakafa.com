@@ -14,7 +14,7 @@ import {
   type MaterialPreviewRouteInput,
   matchesMaterialPreviewRoute,
 } from "@/lib/content/preview/route";
-/** Exact material route identity requested by one Next server boundary. */
+/** Exact material route identity requested by one server boundary. */
 export type MaterialPreviewInput = MaterialPreviewRouteInput;
 /** Authenticates and executes the exact ready material artifact. */
 const readReadyContent = Effect.fn("NakafaContent.readReadyPreview")(function* (

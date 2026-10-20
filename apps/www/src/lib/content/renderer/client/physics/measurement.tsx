@@ -1,20 +1,20 @@
 "use client";
 
-import { lazyComponent } from "@repo/design-system/lib/lazy";
+import { lazy } from "react";
 import { withHydrationBoundary } from "@/lib/content/renderer/client/boundary";
 
 export const DimensionLab = withHydrationBoundary(
-  lazyComponent(() =>
+  lazy(() =>
     import(
       "@repo/design-system/components/contents/physics/measurement/dimension/lab"
-    ).then(({ DimensionLab }) => DimensionLab)
+    ).then((module) => ({ default: module.DimensionLab }))
   )
 );
 
 export const MeasurementToolsLab = withHydrationBoundary(
-  lazyComponent(() =>
+  lazy(() =>
     import(
       "@repo/design-system/components/contents/physics/measurement/tools/lab"
-    ).then(({ MeasurementToolsLab }) => MeasurementToolsLab)
+    ).then((module) => ({ default: module.MeasurementToolsLab }))
   )
 );

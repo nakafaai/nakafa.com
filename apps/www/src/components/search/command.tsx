@@ -23,7 +23,7 @@ import {
 } from "@repo/design-system/components/ui/command";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
-import { useRouter } from "@repo/internationalization/src/navigation";
+import { useHrefNavigate } from "@repo/internationalization/src/link";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
 import type { ComponentProps, ReactElement, ReactNode } from "react";
@@ -219,14 +219,14 @@ function SearchEmpty({
 }
 
 function SearchList({ groups }: SearchListProps) {
-  const router = useRouter();
+  const navigateToHref = useHrefNavigate();
   const setOpen = useSearch((state) => state.setOpen);
   const [isPending, startTransition] = useTransition();
 
   function navigate(href: string) {
     startTransition(() => {
       setOpen(false);
-      router.push(href);
+      navigateToHref(href);
     });
   }
 

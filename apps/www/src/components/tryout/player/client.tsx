@@ -77,7 +77,6 @@ export function TryoutPlayer({
               sectionKey: runtime.section.sectionKey,
             })
           }
-          onIntent={finish.prepare}
           pending={finish.pending}
           title={tTryouts("complete-part-title")}
         >

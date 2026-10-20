@@ -20,10 +20,13 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
+import { localizeInternalHref } from "@repo/internationalization/src/href";
+import { useCurrentLocale } from "@repo/internationalization/src/link";
+import { useRouter } from "@tanstack/react-router";
 import { useConvex } from "convex/react";
 import { Effect, Result } from "effect";
 import { useState, useTransition } from "react";
-import { useLocale, useTranslations } from "use-intl";
+import { useTranslations } from "use-intl";
 import {
   CardSection,
   CardSectionActions,
@@ -52,7 +55,8 @@ type DialogError = (typeof dialogError)[keyof typeof dialogError] | null;
 export function UserSettingsDeleteAccount({ userId }: { userId: Id<"users"> }) {
   const t = useTranslations("Auth");
   const common = useTranslations("Common");
-  const locale = useLocale();
+  const locale = useCurrentLocale();
+  const router = useRouter();
   const authNavigation = useCurrentAuthNavigation();
   const cancelAccountDeletion = useMutation(
     auth.deletion.cancelAccountDeletionAttempt
@@ -102,7 +106,7 @@ export function UserSettingsDeleteAccount({ userId }: { userId: Id<"users"> }) {
         )
       );
       if (Result.isSuccess(result)) {
-        window.location.replace(`/${locale}`);
+        window.location.replace(localizeInternalHref("/", locale));
         return;
       }
 
@@ -121,7 +125,9 @@ export function UserSettingsDeleteAccount({ userId }: { userId: Id<"users"> }) {
         Effect.result(signOutAccountBrowserIdentity())
       );
       if (Result.isSuccess(result)) {
-        window.location.assign(authNavigation.readHref());
+        window.location.replace(
+          router.buildLocation(authNavigation.readTarget()).publicHref
+        );
         return;
       }
       startTransition(() => setError(dialogError.generic));

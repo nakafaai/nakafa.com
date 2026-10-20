@@ -1,20 +1,20 @@
 "use client";
 
-import { lazyComponent } from "@repo/design-system/lib/lazy";
+import { lazy } from "react";
 import { withHydrationBoundary } from "@/lib/content/renderer/client/boundary";
 
 export const PorkBarrelBudgetChart = withHydrationBoundary(
-  lazyComponent(() =>
+  lazy(() =>
     import(
       "@repo/design-system/components/contents/politics/pork-barrel/budget"
-    ).then(({ BudgetChart }) => BudgetChart)
+    ).then((module) => ({ default: module.BudgetChart }))
   )
 );
 
 export const PorkBarrelFundChart = withHydrationBoundary(
-  lazyComponent(() =>
+  lazy(() =>
     import(
       "@repo/design-system/components/contents/politics/pork-barrel/fund"
-    ).then(({ FundChart }) => FundChart)
+    ).then((module) => ({ default: module.FundChart }))
   )
 );

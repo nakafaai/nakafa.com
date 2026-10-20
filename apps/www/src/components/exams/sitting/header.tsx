@@ -3,7 +3,7 @@ import { CancelCircleIcon, Key01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { Link } from "@repo/internationalization/src/navigation";
+import { Link } from "@repo/internationalization/src/link";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
 import {
@@ -53,7 +53,12 @@ export function SittingHeader({
       {value.sitting.state === "closed" && value.canViewResults ? (
         <Link
           className={buttonVariants({ variant: "outline" })}
-          href={`/exams/${examId}/sittings/${value.sitting.id}/results`}
+          params={{
+            exam: examId,
+            sitting: value.sitting.id,
+            slug: tenant.slug,
+          }}
+          to="/school/$slug/exams/$exam/sittings/$sitting/results"
         >
           {t("results-title")}
         </Link>

@@ -1,36 +1,36 @@
 "use client";
 
-import { lazyComponent } from "@repo/design-system/lib/lazy";
+import { lazy } from "react";
 import { withHydrationBoundary } from "@/lib/content/renderer/client/boundary";
 
 export const CombiningVolumesLab = withHydrationBoundary(
-  lazyComponent(() =>
+  lazy(() =>
     import(
       "@repo/design-system/components/contents/chemistry/combining-volumes-law/lab"
-    ).then(({ CombiningVolumesLab }) => CombiningVolumesLab)
+    ).then((module) => ({ default: module.CombiningVolumesLab }))
   )
 );
 
 export const ConstantCompositionLab = withHydrationBoundary(
-  lazyComponent(() =>
+  lazy(() =>
     import(
       "@repo/design-system/components/contents/chemistry/constant-composition-law/lab"
-    ).then(({ ConstantCompositionLab }) => ConstantCompositionLab)
+    ).then((module) => ({ default: module.ConstantCompositionLab }))
   )
 );
 
 export const MassConservationLab = withHydrationBoundary(
-  lazyComponent(() =>
+  lazy(() =>
     import(
       "@repo/design-system/components/contents/chemistry/mass-conservation-law/lab"
-    ).then(({ MassConservationLab }) => MassConservationLab)
+    ).then((module) => ({ default: module.MassConservationLab }))
   )
 );
 
 export const MultipleProportionsLab = withHydrationBoundary(
-  lazyComponent(() =>
+  lazy(() =>
     import(
       "@repo/design-system/components/contents/chemistry/multiple-proportions-law/lab"
-    ).then(({ MultipleProportionsLab }) => MultipleProportionsLab)
+    ).then((module) => ({ default: module.MultipleProportionsLab }))
   )
 );

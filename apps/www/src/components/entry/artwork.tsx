@@ -1,21 +1,17 @@
 import { useMediaQuery } from "@mantine/hooks";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
-import { lazyComponent } from "@repo/design-system/lib/lazy";
+import { ClientOnly } from "@tanstack/react-router";
+import { lazy, Suspense } from "react";
 
 /**
  * Loads the animal pool only when the entry page shows it. Its code stays out of
  * the entry routes' first JavaScript, and nothing stands in while it loads.
  */
-const DeferredPool = lazyComponent(
-  () =>
-    import("@repo/design-system/components/pool/pool").then(
-      (module) => module.Pool
-    ),
-  {
-    loading: () => null,
-    ssr: false,
-  }
+const DeferredPool = lazy(() =>
+  import("@repo/design-system/components/pool/pool").then((module) => ({
+    default: module.Pool,
+  }))
 );
 
 /**
@@ -34,7 +30,11 @@ export function EntryShellArtwork() {
     >
       {isLargeScreen ? (
         <ErrorBoundary fallback={null}>
-          <DeferredPool />
+          <Suspense fallback={null}>
+            <ClientOnly fallback={null}>
+              <DeferredPool />
+            </ClientOnly>
+          </Suspense>
         </ErrorBoundary>
       ) : null}
     </div>

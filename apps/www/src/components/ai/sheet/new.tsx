@@ -5,7 +5,7 @@ import {
   EmptyTitle,
 } from "@repo/design-system/components/ui/empty";
 import { MessageScrollerItem } from "@repo/design-system/components/ui/scroller";
-import { useRouter } from "@repo/internationalization/src/navigation";
+import { useNavigate } from "@tanstack/react-router";
 import type { ComponentProps, ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import { StartPrompt, useStartChat } from "@/components/ai/chat/start";
@@ -72,13 +72,13 @@ function NewChatWelcome() {
  * the admission gate does for a signed-out learner, so no chat code loads.
  */
 function VisitorSheetNew() {
-  const router = useRouter();
+  const navigate = useNavigate();
   const authNavigation = useCurrentAuthNavigation();
   const setOpen = useAi((state) => state.setOpen);
 
   function signIn() {
     setOpen(false);
-    router.push(authNavigation.readHref());
+    navigate(authNavigation.readTarget());
     return false;
   }
 

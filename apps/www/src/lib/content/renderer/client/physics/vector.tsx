@@ -1,12 +1,12 @@
 "use client";
 
-import { lazyComponent } from "@repo/design-system/lib/lazy";
+import { lazy } from "react";
 import { withHydrationBoundary } from "@/lib/content/renderer/client/boundary";
 
 export const VectorConceptLab = withHydrationBoundary(
-  lazyComponent(() =>
+  lazy(() =>
     import(
       "@repo/design-system/components/contents/physics/vector/concept/lab"
-    ).then(({ VectorConceptLab }) => VectorConceptLab)
+    ).then((module) => ({ default: module.VectorConceptLab }))
   )
 );

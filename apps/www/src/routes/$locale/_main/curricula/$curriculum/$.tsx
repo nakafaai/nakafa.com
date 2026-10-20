@@ -269,7 +269,6 @@ function CurriculumRoutePage() {
             <CurriculumCardGrid
               actionLabel={labels.routeAction}
               cards={page.childCards}
-              locale={page.locale}
             />
           ) : null}
         </LayoutContent>

@@ -1,8 +1,8 @@
 import { QueryResult, useQuery } from "@confect/react";
 import editors from "@repo/backend/confect/_generated/refs/editor";
-import { lazyComponent } from "@repo/design-system/lib/lazy";
+import { ClientOnly } from "@tanstack/react-router";
 import { Option } from "effect";
-import { useId } from "react";
+import { lazy, Suspense, useId } from "react";
 import { useTranslations } from "use-intl";
 import { SittingChoice } from "@/components/exams/sitting/choice";
 import { choiceOf } from "@/components/exams/sitting/response";
@@ -16,12 +16,10 @@ const TRY_CLIENT = "try";
  * The prompt loads once its document has opened, with the editor's schema and the fold that
  * applies the steps, so the try's first page carries neither (the editor's prompt does the same).
  */
-const TryPrompt = lazyComponent(
-  () =>
-    import("@/components/tenant/exams/try/prompt").then(
-      (module) => module.TryPrompt
-    ),
-  { loading: () => null, ssr: false }
+const TryPrompt = lazy(() =>
+  import("@/components/tenant/exams/try/prompt").then((module) => ({
+    default: module.TryPrompt,
+  }))
 );
 
 /**
@@ -54,7 +52,11 @@ export function ExamTryQuestion({
         {t("question", { number })}
       </h2>
       {QueryResult.isSuccess(reply) ? (
-        <TryPrompt key={question.prompt} opened={reply.value} />
+        <Suspense fallback={null}>
+          <ClientOnly fallback={null}>
+            <TryPrompt key={question.prompt} opened={reply.value} />
+          </ClientOnly>
+        </Suspense>
       ) : null}
       {Option.isSome(choice) ? (
         <SittingChoice

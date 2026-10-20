@@ -1,7 +1,7 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { PromptInputMessage } from "@repo/design-system/lib/prompt-input/submission";
 import { toast } from "@repo/design-system/lib/toast/notify";
-import { useRouter } from "@repo/internationalization/src/navigation";
+import { useNavigate } from "@tanstack/react-router";
 import { Array as Arr } from "effect";
 import {
   type ComponentProps,
@@ -21,7 +21,7 @@ import { useViewer } from "@/lib/identity/client";
 
 /** Admission waits for identity and sends signed-out learners to sign in. */
 export function useAdmissionGate(onSignIn?: () => void) {
-  const router = useRouter();
+  const navigate = useNavigate();
   const authNavigation = useCurrentAuthNavigation();
   const pending = useViewer((state) => state.isPending);
   const viewer = useViewer((state) => state.viewer);
@@ -33,7 +33,7 @@ export function useAdmissionGate(onSignIn?: () => void) {
     }
     if (viewer === null) {
       onSignIn?.();
-      router.push(authNavigation.readHref());
+      navigate(authNavigation.readTarget());
       return false;
     }
     return true;

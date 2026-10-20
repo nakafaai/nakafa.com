@@ -39,7 +39,7 @@ const LlmsMarkdownInputSchema = Schema.Struct({
   locale: ActiveAppLocaleCodeSchema,
 });
 type LlmsMarkdownInput = typeof LlmsMarkdownInputSchema.Type;
-/** One rejected Next cache read with its exact content owner preserved. */
+/** One rejected cached read with its exact content owner preserved. */
 class CacheFailure extends Schema.TaggedError<CacheFailure>()("CacheFailure", {
   cause: Schema.Unknown,
   owner: Schema.Literals(["index", "published"]),

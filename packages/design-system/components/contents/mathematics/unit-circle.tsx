@@ -23,7 +23,6 @@ import {
   VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
-import { lazyComponent } from "@repo/design-system/lib/lazy";
 import {
   getCos,
   getQuadrant,
@@ -32,7 +31,14 @@ import {
   getTan,
 } from "@repo/math/angles";
 import { Option } from "effect";
-import { createContext, type ReactNode, use, useState } from "react";
+import {
+  createContext,
+  lazy,
+  type ReactNode,
+  Suspense,
+  use,
+  useState,
+} from "react";
 import {
   Button,
   Group,
@@ -44,12 +50,10 @@ import {
 import { useFormatter, useLocale, useTranslations } from "use-intl";
 
 /** The scene loads once the card asks for it, and its frame holds the place meanwhile. */
-const UnitCircleStage = lazyComponent(
-  () =>
-    import("@repo/design-system/components/three/unit-circle").then(
-      ({ UnitCircleStage }) => UnitCircleStage
-    ),
-  { loading: ScenePlaceholder }
+const UnitCircleStage = lazy(() =>
+  import("@repo/design-system/components/three/unit-circle").then((module) => ({
+    default: module.UnitCircleStage,
+  }))
 );
 
 interface CardProps {
@@ -245,7 +249,9 @@ function Content() {
       {/* The loading frame and the stage share this band, so nothing moves when the stage mounts. */}
       <VisualCardBody className="group-data-fullscreen/visual:justify-center">
         {live ? (
-          <UnitCircleStage angle={angleValue} viewLabel={viewLabel} />
+          <Suspense fallback={<ScenePlaceholder />}>
+            <UnitCircleStage angle={angleValue} viewLabel={viewLabel} />
+          </Suspense>
         ) : (
           <div aria-hidden="true" className={threeSceneFrameVariants()} />
         )}

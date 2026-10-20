@@ -1,8 +1,11 @@
 "use client";
 
-import { IntentLink } from "@repo/design-system/components/ui/intent-link";
-import { Link } from "@repo/internationalization/src/navigation";
+import {
+  EXACT_ACTIVE_OPTIONS,
+  HrefLink,
+} from "@repo/internationalization/src/link";
 import { createContext, type ReactNode, use } from "react";
+import { SchoolHrefLink } from "@/lib/routing/school/link";
 
 /**
  * The host a breadcrumb sits on. The app's paths start with a locale, which its
@@ -38,12 +41,16 @@ export function BreadcrumbAnchor({
   const host = use(BreadcrumbHostContext);
   const classes = className === undefined ? {} : { className };
   return host === "school" ? (
-    <Link href={href} {...classes}>
+    <SchoolHrefLink
+      activeOptions={EXACT_ACTIVE_OPTIONS}
+      href={href}
+      {...classes}
+    >
       {children}
-    </Link>
+    </SchoolHrefLink>
   ) : (
-    <IntentLink href={href} {...classes}>
+    <HrefLink activeOptions={EXACT_ACTIVE_OPTIONS} href={href} {...classes}>
       {children}
-    </IntentLink>
+    </HrefLink>
   );
 }

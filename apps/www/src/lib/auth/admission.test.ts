@@ -11,11 +11,29 @@ import {
   getPostAuthProviderRetrySearch,
   getPostAuthSignInHref,
   getPostAuthSignInHrefForLocation,
+  getPostAuthSignInTarget,
   isPostAuthProviderError,
   PostAuthIntentSchema,
   resolvePostAuthIntent,
   startsSchool,
 } from "@/lib/auth/admission";
+
+describe("post-auth sign-in target", () => {
+  it("routes the sign-in of a locale and resumes the intent of the source as its redirect", () => {
+    expect(getPostAuthSignInTarget("/chat/chat-id", "en")).toEqual({
+      params: { locale: "en" },
+      search: { redirect: "/en/chat/chat-id" },
+      to: "/$locale/auth",
+    });
+  });
+
+  it("opens the bare sign-in of a locale when the source names no intent", () => {
+    expect(getPostAuthSignInTarget("/", "id")).toEqual({
+      params: { locale: "id" },
+      to: "/$locale/auth",
+    });
+  });
+});
 
 describe("post-auth admission", () => {
   it("uses localized onboarding without inventing an intent", () => {

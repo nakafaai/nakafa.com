@@ -1,46 +1,44 @@
 "use client";
 
-import { lazyComponent } from "@repo/design-system/lib/lazy";
+import { lazy } from "react";
 import { withHydrationBoundary } from "@/lib/content/renderer/client/boundary";
 
 export const IonLab = withHydrationBoundary(
-  lazyComponent(() =>
+  lazy(() =>
     import("@repo/design-system/components/contents/chemistry/ion/lab").then(
-      ({ IonLab }) => IonLab
+      (module) => ({ default: module.IonLab })
     )
   )
 );
 
 export const IsotopeLab = withHydrationBoundary(
-  lazyComponent(() =>
+  lazy(() =>
     import(
       "@repo/design-system/components/contents/chemistry/isotope/lab"
-    ).then(({ IsotopeLab }) => IsotopeLab)
+    ).then((module) => ({ default: module.IsotopeLab }))
   )
 );
 
 export const MatterParticleReaderLab = withHydrationBoundary(
-  lazyComponent(() =>
+  lazy(() =>
     import(
       "@repo/design-system/components/contents/chemistry/matter-particle-reader/lab"
-    ).then(({ MatterParticleReaderLab }) => MatterParticleReaderLab)
+    ).then((module) => ({ default: module.MatterParticleReaderLab }))
   )
 );
 
 export const SubatomicParticlePropertiesLab = withHydrationBoundary(
-  lazyComponent(() =>
+  lazy(() =>
     import(
       "@repo/design-system/components/contents/chemistry/subatomic-particles-properties/lab"
-    ).then(
-      ({ SubatomicParticlePropertiesLab }) => SubatomicParticlePropertiesLab
-    )
+    ).then((module) => ({ default: module.SubatomicParticlePropertiesLab }))
   )
 );
 
 export const SubatomicParticlesLab = withHydrationBoundary(
-  lazyComponent(() =>
+  lazy(() =>
     import(
       "@repo/design-system/components/contents/chemistry/subatomic-particles/lab"
-    ).then(({ SubatomicParticlesLab }) => SubatomicParticlesLab)
+    ).then((module) => ({ default: module.SubatomicParticlesLab }))
   )
 );

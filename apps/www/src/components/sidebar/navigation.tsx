@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname } from "@repo/internationalization/src/navigation";
+import { useCanonicalPath } from "@repo/internationalization/src/link";
 import type { ReactNode } from "react";
 import { UserSettingsNav } from "@/components/user/settings/nav";
 import { isUserSettingsPath } from "@/lib/settings/routes";
@@ -14,7 +14,7 @@ import { isUserSettingsPath } from "@/lib/settings/routes";
  * so this chooser never carries data it does not render itself.
  */
 export function SidebarNavigation({ browse }: { browse: ReactNode }) {
-  const pathname = usePathname();
+  const pathname = useCanonicalPath();
 
   if (isUserSettingsPath(pathname)) {
     return <UserSettingsNav />;

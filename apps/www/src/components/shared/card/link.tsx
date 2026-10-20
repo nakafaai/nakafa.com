@@ -1,8 +1,9 @@
 import { ArrowRight02Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { IntentLink } from "@repo/design-system/components/ui/intent-link";
+import { HrefLink } from "@repo/internationalization/src/link";
 import { cva, type VariantProps } from "class-variance-authority";
 import type { ReactNode } from "react";
+import { SchoolHrefLink } from "@/lib/routing/school/link";
 
 /**
  * The frame of a row in a card's list: the row's padding, and the card's spacing on the list's first row when the
@@ -66,15 +67,25 @@ export function CardLink({
 }) {
   return (
     <li className="group/list">
-      <IntentLink
-        className={cardRow({ linked: true })}
-        href={href}
-        localized={localized}
-        title={title}
-      >
-        {children}
-        <HugeIcons className={cardArrow({ arrow })} icon={ArrowRight02Icon} />
-      </IntentLink>
+      {localized === false ? (
+        <SchoolHrefLink
+          className={cardRow({ linked: true })}
+          href={href}
+          title={title}
+        >
+          {children}
+          <HugeIcons className={cardArrow({ arrow })} icon={ArrowRight02Icon} />
+        </SchoolHrefLink>
+      ) : (
+        <HrefLink
+          className={cardRow({ linked: true })}
+          href={href}
+          title={title}
+        >
+          {children}
+          <HugeIcons className={cardArrow({ arrow })} icon={ArrowRight02Icon} />
+        </HrefLink>
+      )}
     </li>
   );
 }

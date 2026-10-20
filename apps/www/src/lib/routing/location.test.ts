@@ -1,77 +1,61 @@
 // @vitest-environment node
-import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
+import { describe, expect, it } from "@effect/vitest";
 import { MATERIAL_CONTEXT_HINT_LENGTH } from "@repo/contents/route/material/context";
-import {
-  getLocale,
-  getMaterialContextHint,
-  getPathname,
-} from "@/lib/routing/location";
+import { readRouterPage } from "@/lib/routing/location";
 
-describe("browser utilities", () => {
-  beforeEach(() => {
-    vi.stubGlobal("window", {
-      location: { pathname: "", search: "" },
+describe("router page", () => {
+  it("reads a supported locale from the first path segment", () => {
+    expect(
+      readRouterPage({ pathname: "/id/materi/matematika", searchStr: "" })
+    ).toEqual({ locale: "id", slug: "/materi/matematika" });
+  });
+
+  it("falls back to the default locale when the path has no supported locale", () => {
+    expect(readRouterPage({ pathname: "/fr/articles", searchStr: "" })).toEqual(
+      { locale: "en", slug: "/fr/articles" }
+    );
+  });
+
+  it("spells the router's canonical segment as the public path of the locale", () => {
+    expect(
+      readRouterPage({ pathname: "/id/curricula/merdeka", searchStr: "" })
+    ).toEqual({ locale: "id", slug: "/kurikulum/merdeka" });
+  });
+
+  it("names the root for a locale-only pathname", () => {
+    expect(readRouterPage({ pathname: "/en", searchStr: "" })).toEqual({
+      locale: "en",
+      slug: "/",
     });
   });
 
-  afterEach(() => {
-    vi.unstubAllGlobals();
-  });
-
-  it("reads a supported locale from the first path segment", () => {
-    window.location.pathname = "/id/materi/matematika";
-
-    expect(getLocale()).toBe("id");
-  });
-
-  it("falls back when the path has no supported locale", () => {
-    window.location.pathname = "/fr/articles";
-
-    expect(getLocale()).toBe("en");
-  });
-
-  it("removes the locale prefix from a nested pathname", () => {
-    window.location.pathname = "/en/articles/education";
-
-    expect(getPathname()).toBe("/articles/education");
-  });
-
-  it("returns root for a locale-only pathname", () => {
-    window.location.pathname = "/en";
-
-    expect(getPathname()).toBe("/");
-  });
-
-  it("preserves a pathname without a locale prefix", () => {
-    window.location.pathname = "/articles/education";
-
-    expect(getPathname()).toBe("/articles/education");
-  });
-
-  it("returns root for an empty pathname", () => {
-    expect(getPathname()).toBe("/");
-  });
-
   it("reads the material context hint", () => {
-    window.location.search = "?ctx=program.node";
-
-    expect(getMaterialContextHint()).toBe("program.node");
+    expect(
+      readRouterPage({
+        pathname: "/en/articles/education",
+        searchStr: "?ctx=program.node",
+      })
+    ).toEqual({
+      locale: "en",
+      materialContextHint: "program.node",
+      slug: "/articles/education",
+    });
   });
 
-  it("returns undefined without a material context hint", () => {
-    window.location.search = "?other=value";
-
-    expect(getMaterialContextHint()).toBeUndefined();
+  it("leaves out a missing material context hint", () => {
+    expect(
+      readRouterPage({ pathname: "/en/articles", searchStr: "?other=value" })
+    ).toEqual({ locale: "en", slug: "/articles" });
   });
 
   it("reads a hint of the longest length the server takes and leaves out a longer one", () => {
     const longest = "h".repeat(MATERIAL_CONTEXT_HINT_LENGTH);
-    window.location.search = `?ctx=${longest}`;
 
-    expect(getMaterialContextHint()).toBe(longest);
-
-    window.location.search = `?ctx=${longest}h`;
-
-    expect(getMaterialContextHint()).toBeUndefined();
+    expect(
+      readRouterPage({ pathname: "/en", searchStr: `?ctx=${longest}` })
+    ).toEqual({ locale: "en", materialContextHint: longest, slug: "/" });
+    expect(
+      readRouterPage({ pathname: "/en", searchStr: `?ctx=${longest}h` })
+    ).toEqual({ locale: "en", slug: "/" });
   });
 });

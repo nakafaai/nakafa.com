@@ -7,8 +7,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
-import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import { buttonVariants } from "@repo/design-system/lib/button";
+import { Link, useCurrentLocale } from "@repo/internationalization/src/link";
 import type { Locale } from "@repo/internationalization/src/locale";
 import { readServerTranslator } from "@repo/internationalization/src/translator";
 import { Array as Arr, Effect } from "effect";
@@ -158,6 +158,7 @@ function TryoutReviewOffer({
   readonly period: string;
   readonly title: string;
 }) {
+  const locale = useCurrentLocale();
   return (
     <CardSection className="relative w-full shadow-lg/5 max-md:rounded-t-2xl max-md:rounded-b-none max-md:border-t max-md:ring-0 md:max-w-md">
       <CardHeader>
@@ -171,12 +172,13 @@ function TryoutReviewOffer({
       </CardContent>
       <CardSectionFooter bottomSheet hint={footer}>
         <CardSectionActions share>
-          <IntentLink
+          <Link
             className={buttonVariants({ variant: "outline" })}
-            href="/pricing"
+            params={{ locale }}
+            to="/$locale/pricing"
           >
             {compare}
-          </IntentLink>
+          </Link>
           <TryoutReviewCheckout />
         </CardSectionActions>
       </CardSectionFooter>

@@ -2,7 +2,7 @@ import { useMutation } from "@confect/react";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { toast } from "@repo/design-system/lib/toast/notify";
-import { useRouter } from "@repo/internationalization/src/navigation";
+import { useHrefNavigate } from "@repo/internationalization/src/link";
 import { useConvex } from "convex/react";
 import { Effect } from "effect";
 import { useOptimistic, useTransition } from "react";
@@ -12,8 +12,6 @@ import { requireConvexOnline } from "@/lib/convex/online";
 export interface TryoutFinish {
   /** A finish is on its way to the server or to the page that follows it. */
   readonly pending: boolean;
-  /** Warms the page that follows a finish. */
-  readonly prepare: () => void;
   /** The page a finish leads to, which back leads to as well. */
   readonly returnHref: string;
   /** Finishes one section, once; a second call while it runs does nothing. */
@@ -36,13 +34,12 @@ export function useTryoutFinish<State>(input: {
 }): TryoutFinish & { readonly shown: State } {
   const [shown, hold] = useOptimistic(input.state);
   const [pending, startTransition] = useTransition();
-  const router = useRouter();
+  const navigateToHref = useHrefNavigate();
   const convex = useConvex();
   const completeSection = useMutation(tryouts.mutations.sections.complete);
 
   return {
     pending,
-    prepare: () => router.prefetch(input.returnHref),
     returnHref: input.returnHref,
     run: (target) => {
       if (pending) {
@@ -60,7 +57,7 @@ export function useTryoutFinish<State>(input: {
                 Effect.tap(() =>
                   Effect.sync(() => {
                     startTransition(() => {
-                      router.push(input.returnHref);
+                      navigateToHref(input.returnHref);
                     });
                   })
                 )

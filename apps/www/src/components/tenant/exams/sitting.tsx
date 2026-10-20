@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@repo/design-system/components/ui/select";
-import { useRouter } from "@repo/internationalization/src/navigation";
+import { useNavigate } from "@tanstack/react-router";
 import {
   Array as Arr,
   DateTime,
@@ -74,7 +74,7 @@ export function ScheduleSitting({
   const t = useTranslations("Exams");
   const id = useId();
   const common = useTranslations("Common");
-  const router = useRouter();
+  const navigate = useNavigate();
   const { exam, slug } = useExam();
   const schedule = useMutation(exams.exams.schedule);
   const [open, setOpen] = useState(true);
@@ -182,7 +182,10 @@ export function ScheduleSitting({
           Effect.tap(() =>
             Effect.sync(() => {
               setOpen(false);
-              router.push(`/exams/${exam.id}`);
+              navigate({
+                params: { exam: exam.id, slug },
+                to: "/school/$slug/exams/$exam",
+              });
             })
           ),
           Effect.catchTags({

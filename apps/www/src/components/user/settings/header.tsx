@@ -1,4 +1,4 @@
-import { usePathname } from "@repo/internationalization/src/navigation";
+import { useCanonicalPath } from "@repo/internationalization/src/link";
 import { useTranslations } from "use-intl";
 import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
 import { getUserSettingsSection } from "@/lib/settings/routes";
@@ -8,7 +8,7 @@ import { getUserSettingsSection } from "@/lib/settings/routes";
  * current pathname, under the group that holds it.
  */
 export function UserSettingsHeader() {
-  const pathname = usePathname();
+  const pathname = useCanonicalPath();
   const t = useTranslations("Auth");
   const tCommon = useTranslations("Common");
   const section = getUserSettingsSection(pathname);

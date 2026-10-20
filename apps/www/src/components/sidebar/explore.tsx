@@ -2,7 +2,6 @@
 
 import type { IconSvgElement } from "@hugeicons/react";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -13,7 +12,11 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
-import { usePathname } from "@repo/internationalization/src/navigation";
+import {
+  EXACT_ACTIVE_OPTIONS,
+  HrefLink,
+  useCanonicalPath,
+} from "@repo/internationalization/src/link";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import { holyMenu } from "@/components/sidebar/data/holy";
@@ -34,7 +37,7 @@ export function NavExplore({
   articleIcons: readonly IconSvgElement[];
   articleNavigation: readonly ArticleNavigationItem[];
 }) {
-  const pathname = usePathname();
+  const pathname = useCanonicalPath();
   const tCommon = useTranslations("Common");
   const tHoly = useTranslations("Holy");
   const items = [
@@ -59,7 +62,13 @@ export function NavExplore({
             <SidebarMenuItem key={item.href}>
               <SidebarMenuButton
                 isActive={pathname.includes(item.href)}
-                render={<NavigationLink href={item.href} title={item.label} />}
+                render={
+                  <HrefLink
+                    activeOptions={EXACT_ACTIVE_OPTIONS}
+                    href={item.href}
+                    title={item.label}
+                  />
+                }
                 tooltip={item.label}
               >
                 <HugeIcons icon={item.icon} />

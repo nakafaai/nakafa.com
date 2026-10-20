@@ -2,8 +2,8 @@ import { ArrowLeft02Icon, ArrowRight02Icon } from "@hugeicons/core-free-icons";
 import type { IconSvgElement } from "@hugeicons/react";
 import type { ContentPagination } from "@repo/contents/content";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import { buttonVariants } from "@repo/design-system/lib/button";
+import { HrefLink } from "@repo/internationalization/src/link";
 import { cn } from "cn";
 import { useTranslations } from "use-intl";
 
@@ -11,9 +11,9 @@ interface Props {
   className?: string;
   pagination: ContentPagination;
   /**
-   * Whether the Next link prefetches its page as the link nears the viewport.
-   * A page that cannot name its final destination yet turns it off, so only
-   * that destination is prefetched.
+   * Whether the link preloads its page as soon as it renders. A page that cannot
+   * name its final destination yet preloads on intent instead, so only the
+   * destination that the reader chooses is preloaded.
    */
   prefetchNext?: boolean;
 }
@@ -88,21 +88,21 @@ function PaginationItem({
   }
 
   return (
-    <IntentLink
+    <HrefLink
       className={itemClassName}
       href={href}
-      intentActive={prefetch}
+      preload={prefetch ? "render" : "intent"}
       title={title}
     >
       {content}
-    </IntentLink>
+    </HrefLink>
   );
 }
 
 /**
  * Links the previous and next page. A reader who reaches the end of a page is
- * likely to continue, and a phone gives no hover to prefetch on, so the Next
- * link prefetches its page in view. Previous waits for intent, which spares a
+ * likely to continue, and a phone gives no hover to prefetch on, so the next
+ * link preloads its page in view. Previous waits for intent, which spares a
  * reader who only moves forward the second server render.
  */
 export function PaginationContent({

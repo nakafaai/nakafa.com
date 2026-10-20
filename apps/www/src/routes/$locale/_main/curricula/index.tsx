@@ -158,7 +158,6 @@ function CurriculumIndexPage() {
             <CurriculumCardGrid
               actionLabel={page.actionLabel}
               cards={page.cards}
-              locale={page.locale}
             />
           ) : (
             <ComingSoon />

@@ -1,5 +1,5 @@
-import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import type { AnchorProps } from "@repo/design-system/types/markdown";
+import { HrefLink } from "@repo/internationalization/src/link";
 import { cn } from "cn";
 
 export function Anchor({
@@ -20,14 +20,9 @@ export function Anchor({
 
   if (href.startsWith("/")) {
     return (
-      <IntentLink
-        className={anchorClassName}
-        href={href}
-        title={href}
-        {...props}
-      >
+      <HrefLink className={anchorClassName} href={href} title={href} {...props}>
         {children}
-      </IntentLink>
+      </HrefLink>
     );
   }
 

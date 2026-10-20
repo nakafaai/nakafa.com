@@ -1,14 +1,24 @@
-import { lazyComponent } from "@repo/design-system/lib/lazy";
+import { type ComponentProps, lazy, Suspense } from "react";
 
 /**
- * Nina and her two things, loaded only for the page that shows them. Next.js
- * puts the not-found page of a segment into the payload of every page in it,
- * and an error page into the first JavaScript of every route, so both carry
- * only this reference instead of a whole figure. The server still draws the
+ * Nina and her two things, loaded only for the page that shows them. The
+ * not-found and error states carry only this reference instead of a whole
+ * figure, so their first JavaScript stays small. The server still draws the
  * picture for the page that needs it, and her place keeps its height until the
  * code arrives (`Screen`).
  */
-export const DeferredFigure = lazyComponent(
-  () => import("@/components/state/figure").then((module) => module.Figure),
-  { loading: () => null }
+const LazyDeferredFigure = lazy(() =>
+  import("@/components/state/figure").then((module) => ({
+    default: module.Figure,
+  }))
 );
+
+export function DeferredFigure(
+  props: ComponentProps<typeof LazyDeferredFigure>
+) {
+  return (
+    <Suspense fallback={null}>
+      <LazyDeferredFigure {...props} />
+    </Suspense>
+  );
+}

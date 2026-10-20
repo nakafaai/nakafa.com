@@ -1,7 +1,6 @@
 "use client";
 
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -13,18 +12,21 @@ import {
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
 import {
-  usePathname,
-  useRouter,
-} from "@repo/internationalization/src/navigation";
+  DestinationLink,
+  EXACT_ACTIVE_OPTIONS,
+  type LinkTarget,
+  useCurrentLocale,
+} from "@repo/internationalization/src/link";
+import { useMatchRoute, useRouter } from "@tanstack/react-router";
 import { Array as Arr } from "effect";
-import { useLocale, useTranslations } from "use-intl";
+import { useTranslations } from "use-intl";
 import { ConvexIsland } from "@/components/providers/island";
 import {
-  getForYouNavigationHref,
   getForYouNavigationItems,
+  getForYouNavigationTarget,
 } from "@/components/sidebar/data/navigation";
-import { usePreferredCurriculumHref } from "@/lib/curriculum/preferences";
-import { usePreferredTryoutHref } from "@/lib/tryout/preferences";
+import { usePreferredCurriculumTarget } from "@/lib/curriculum/preferences";
+import { usePreferredTryoutTarget } from "@/lib/tryout/preferences";
 
 type ForYouItem = ReturnType<typeof getForYouNavigationItems>[number];
 
@@ -52,12 +54,15 @@ export function NavForYou() {
 
 /** One shortcut, whose destination reads the learner's preferences on the page's Convex island. */
 function ForYouMenuItem({ item }: { item: ForYouItem }) {
-  const locale = useLocale();
+  const locale = useCurrentLocale();
 
   return (
     <ConvexIsland
       fallback={
-        <ForYouLink href={getForYouNavigationHref(item, locale)} item={item} />
+        <ForYouLink
+          destination={getForYouNavigationTarget(item, locale)}
+          item={item}
+        />
       }
     >
       <LearnerForYouMenuItem item={item} />
@@ -67,49 +72,55 @@ function ForYouMenuItem({ item }: { item: ForYouItem }) {
 
 /** Reads the learner's preferences on the page's Convex island. */
 function LearnerForYouMenuItem({ item }: { item: ForYouItem }) {
-  const locale = useLocale();
-  const preferredCurriculumHref = usePreferredCurriculumHref(locale);
-  const preferredTryoutHref = usePreferredTryoutHref(locale);
+  const locale = useCurrentLocale();
+  const preferredCurriculumTarget = usePreferredCurriculumTarget(locale);
+  const preferredTryoutTarget = usePreferredTryoutTarget(locale);
 
   return (
     <ForYouLink
-      href={getForYouNavigationHref(item, locale, {
-        preferredCurriculumHref,
-        preferredTryoutHref,
+      destination={getForYouNavigationTarget(item, locale, {
+        preferredCurriculumTarget,
+        preferredTryoutTarget,
       })}
       item={item}
     />
   );
 }
 
-/** One shortcut row, which prefetches the chat that the Ask Nina shortcut leads to. */
+/** One shortcut row, which preloads the chat that the Ask Nina shortcut leads to on intent. */
 function ForYouLink({
-  href,
+  destination,
   item,
 }: {
-  href: ReturnType<typeof getForYouNavigationHref>;
+  destination: LinkTarget;
   item: ForYouItem;
 }) {
-  const pathname = usePathname();
   const router = useRouter();
+  const matchRoute = useMatchRoute();
   const tAi = useTranslations("Ai");
   const tCommon = useTranslations("Common");
   const label =
     item.labelNamespace === "Ai" ? tAi(item.labelKey) : tCommon(item.labelKey);
-  const prefetchChat =
-    item.id === "askNina" ? () => router.prefetch(href) : undefined;
+  const isAskNina = item.id === "askNina";
+  // Every other row preloads on intent through its link; the chat route also
+  // warms on focus and pointer, because its link does not.
+  const prefetchAskNina = isAskNina
+    ? () => router.preloadRoute(destination)
+    : undefined;
+  const isActive = matchRoute({ ...destination, fuzzy: true }) !== false;
 
   return (
     <SidebarMenuItem>
       <SidebarMenuButton
-        isActive={pathname.includes(href)}
+        isActive={isActive}
         render={
-          <NavigationLink
-            href={href}
-            onFocus={prefetchChat}
-            onPointerEnter={prefetchChat}
-            onTouchStart={prefetchChat}
-            preload={item.id === "askNina" ? false : undefined}
+          <DestinationLink
+            activeOptions={EXACT_ACTIVE_OPTIONS}
+            destination={destination}
+            onFocus={prefetchAskNina}
+            onPointerEnter={prefetchAskNina}
+            onTouchStart={prefetchAskNina}
+            preload={isAskNina ? false : undefined}
             title={label}
           />
         }

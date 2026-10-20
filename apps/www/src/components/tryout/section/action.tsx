@@ -1,7 +1,7 @@
 import { ArrowLeft02Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import { buttonVariants } from "@repo/design-system/lib/button";
+import { HrefLink } from "@repo/internationalization/src/link";
 import { cn } from "cn";
 import type { Locale } from "use-intl";
 import { useTranslations } from "use-intl";
@@ -111,13 +111,13 @@ function TryoutReturnAction({
 }) {
   const tTryouts = useTranslations("Tryouts");
   return (
-    <IntentLink
+    <HrefLink
       className={cn(buttonVariants(), "w-full sm:w-auto")}
       href={value.returnHref}
     >
       <HugeIcons className="size-4" icon={ArrowLeft02Icon} />
       {tTryouts("back-to-set-cta")}
-    </IntentLink>
+    </HrefLink>
   );
 }
 
@@ -128,12 +128,12 @@ function StartOrResumeSectionCta({ value }: StartOrResumeSectionCtaProps) {
   const resumeSectionKey = value.activeAttempt.resumeSectionKey;
   if (resumeHref && resumeSectionKey) {
     return (
-      <IntentLink
+      <HrefLink
         className={cn(buttonVariants(), "w-full sm:w-auto")}
         href={resumeHref}
       >
         {tTryouts("continue-cta")}
-      </IntentLink>
+      </HrefLink>
     );
   }
   return (

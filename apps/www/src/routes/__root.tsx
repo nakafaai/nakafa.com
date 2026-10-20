@@ -81,7 +81,7 @@ function RootDocument({ children }: { children: ReactNode }) {
   const params: Readonly<Record<string, string | undefined>> = useParams({
     strict: false,
   });
-  const notFoundMatch = useMatch({ from: "/_not-found", shouldThrow: false });
+  const notFoundMatch = useMatch({ from: "/_missing", shouldThrow: false });
   const preview = useMatch({
     from: "__root__",
     shouldThrow: false,

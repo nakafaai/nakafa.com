@@ -1,6 +1,9 @@
 import type { IconSvgElement } from "@hugeicons/react";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
+import {
+  EXACT_ACTIVE_OPTIONS,
+  HrefLink,
+} from "@repo/internationalization/src/link";
 
 interface Props {
   /** The description of the content */
@@ -31,14 +34,15 @@ export function HeaderContent({
       <div className="z-10 mx-auto max-w-3xl space-y-6 px-6">
         <div className="flex flex-col gap-3">
           {!!link && (
-            <NavigationLink
+            <HrefLink
+              activeOptions={EXACT_ACTIVE_OPTIONS}
               aria-label={link.label}
               className="w-fit font-medium text-primary text-sm underline-offset-4 hover:underline"
               href={link.href}
               title={link.label}
             >
               {link.label}
-            </NavigationLink>
+            </HrefLink>
           )}
           <div className="flex items-start gap-2">
             {!!Icon && (

@@ -17,7 +17,7 @@ import { readNotFoundLocaleFn } from "@/lib/routing/not-found.functions";
  * host has no home of its own, so the page links to the main site, and no search
  * engine indexes it.
  */
-export const Route = createFileRoute("/_not-found")({
+export const Route = createFileRoute("/_missing")({
   loader: async () => {
     throw notFound({ data: { locale: await readNotFoundLocaleFn() } });
   },

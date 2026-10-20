@@ -8,14 +8,16 @@ import {
   DropdownMenuItem,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { useRouter } from "@repo/internationalization/src/navigation";
+import { useCurrentLocale } from "@repo/internationalization/src/link";
 import { COMPANY_SOCIAL_PROFILES } from "@repo/seo/company-profiles";
+import { useNavigate } from "@tanstack/react-router";
 import { useTranslations } from "use-intl";
 import { SidebarPreferenceSubmenus } from "@/components/sidebar/menu/preference";
 
 /** Renders the shared utilities inside the account menu. */
 export function SidebarUtilityMenuItems() {
-  const router = useRouter();
+  const navigate = useNavigate();
+  const locale = useCurrentLocale();
   const t = useTranslations("Common");
 
   return (
@@ -39,7 +41,7 @@ export function SidebarUtilityMenuItems() {
         />
         <DropdownMenuItem
           className="cursor-pointer"
-          onClick={() => router.push("/")}
+          onClick={() => navigate({ params: { locale }, to: "/$locale" })}
         >
           <HugeIcons icon={FavouriteIcon} />
           {t("about")}

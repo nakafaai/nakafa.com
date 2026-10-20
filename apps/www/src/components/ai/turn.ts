@@ -4,9 +4,8 @@ import type {
   NinaPrompt,
 } from "@repo/backend/confect/nina/turns.spec";
 import {
-  getLocale,
-  getMaterialContextHint,
-  getPathname,
+  type RouterPageLocation,
+  readRouterPage,
 } from "@/lib/routing/location";
 
 /**
@@ -19,37 +18,35 @@ import {
  * context its link carries there, because a prompt never names a page the
  * learner has left.
  */
-export function readNinaPage() {
-  const hint = getMaterialContextHint();
-  return {
-    locale: getLocale(),
-    slug: getPathname(),
-    ...(hint ? { materialContextHint: hint } : {}),
-  } satisfies typeof NinaPageInput.Type;
+/** The page of a router location as a Nina turn names it. */
+export function readNinaPage(location: RouterPageLocation) {
+  return readRouterPage(location) satisfies typeof NinaPageInput.Type;
 }
 
 /** The input of a new message, asked from the page the learner is on now. */
 export function messageInput({
   focus,
+  location,
   text,
   uploadIds,
 }: {
   focus: typeof NinaPageInput.Type.focus;
+  location: RouterPageLocation;
   text: typeof NinaPrompt.Type.text;
   uploadIds: NonNullable<typeof NinaPrompt.Type.uploadIds>;
 }) {
   return {
     kind: "message",
-    page: { ...readNinaPage(), ...(focus ? { focus } : {}) },
+    page: { ...readNinaPage(location), ...(focus ? { focus } : {}) },
     prompt: { text, uploadIds },
   } satisfies typeof NinaInput.Type;
 }
 
 /** The input that sends the prompt of the turn at `order` again, from the page the learner is on now. */
-export function retryInput(order: number) {
+export function retryInput(order: number, location: RouterPageLocation) {
   return {
     kind: "retry",
     order,
-    page: readNinaPage(),
+    page: readNinaPage(location),
   } satisfies typeof NinaInput.Type;
 }

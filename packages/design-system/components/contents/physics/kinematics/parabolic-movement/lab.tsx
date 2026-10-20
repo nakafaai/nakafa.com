@@ -26,17 +26,14 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
-import { lazyComponent } from "@repo/design-system/lib/lazy";
 import { Array as Arr } from "effect";
-import { type ReactNode, useMemo, useState } from "react";
+import { lazy, type ReactNode, Suspense, useMemo, useState } from "react";
 
 /** The scene loads once the lab asks for it, and its frame holds the place meanwhile. */
-const ParabolicMovementStage = lazyComponent(
-  () =>
-    import(
-      "@repo/design-system/components/contents/physics/kinematics/parabolic-movement/stage"
-    ).then(({ ParabolicMovementStage }) => ParabolicMovementStage),
-  { loading: SceneSpinner }
+const ParabolicMovementStage = lazy(() =>
+  import(
+    "@repo/design-system/components/contents/physics/kinematics/parabolic-movement/stage"
+  ).then((module) => ({ default: module.ParabolicMovementStage }))
 );
 
 interface ParabolicMovementLabProps {
@@ -116,7 +113,9 @@ export function ParabolicMovementLab({
       >
         {live ? (
           <ParabolicMotionProvider motion={motion}>
-            <ParabolicMovementStage />
+            <Suspense fallback={<SceneSpinner />}>
+              <ParabolicMovementStage />
+            </Suspense>
           </ParabolicMotionProvider>
         ) : null}
       </VisualCardBody>

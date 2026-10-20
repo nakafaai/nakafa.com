@@ -5,7 +5,7 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { InputGroupTextarea } from "@repo/design-system/components/ui/input-group";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { Link } from "@repo/internationalization/src/navigation";
+import { Link } from "@repo/internationalization/src/link";
 import { cn } from "cn";
 import { Effect, Option, Result } from "effect";
 import type { FocusEvent, FormEvent, KeyboardEvent } from "react";

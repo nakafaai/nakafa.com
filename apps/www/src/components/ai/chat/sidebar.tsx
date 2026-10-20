@@ -17,7 +17,6 @@ import {
   InputGroupInput,
 } from "@repo/design-system/components/ui/input-group";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import {
   SidebarContent,
   SidebarGroup,
@@ -31,6 +30,11 @@ import {
 } from "@repo/design-system/components/ui/sidebar-menu";
 import { Sidebar } from "@repo/design-system/components/ui/sidebar-shell";
 import { useSidebar } from "@repo/design-system/lib/sidebar/context";
+import {
+  EXACT_ACTIVE_OPTIONS,
+  Link,
+  useCurrentLocale,
+} from "@repo/internationalization/src/link";
 import { useParams } from "@tanstack/react-router";
 import { Array as Arr, Option } from "effect";
 import { type ComponentProps, createContext, use, useState } from "react";
@@ -67,6 +71,7 @@ export function AiChatSidebar({
   first: Option.Option<ChatFirstPage>;
 }) {
   const t = useTranslations("Ai");
+  const locale = useCurrentLocale();
   const setOpenMobile = useSidebar((sidebar) => sidebar.setOpenMobile);
   const [q, setQ] = useState("");
   const [debouncedQ] = useDebouncedValue(q, CHAT_SEARCH_DEBOUNCE_MS);
@@ -84,13 +89,15 @@ export function AiChatSidebar({
               className="w-full border border-sidebar-border shadow-none focus-visible:border-sidebar-ring focus-visible:ring-sidebar-ring/50"
               nativeButton={false}
               render={
-                <NavigationLink
-                  href="/chat"
+                <Link
+                  activeOptions={EXACT_ACTIVE_OPTIONS}
                   onClick={() => setOpenMobile(false)}
+                  params={{ locale }}
                   title={t("new-chat")}
+                  to="/$locale/chat"
                 >
                   {t("new-chat")}
-                </NavigationLink>
+                </Link>
               }
               size="sm"
               variant="secondary"
@@ -144,6 +151,7 @@ function AiChatSidebarHistory() {
 }
 function AiChatSidebarChats() {
   const t = useTranslations("Ai");
+  const locale = useCurrentLocale();
   const drafts = useAi((state) => state.chatDrafts);
   const setOpenMobile = useSidebar((sidebar) => sidebar.setOpenMobile);
   const params: Readonly<Record<string, string | undefined>> = useParams({
@@ -193,10 +201,12 @@ function AiChatSidebarChats() {
               <SidebarMenuButton
                 isActive={id === chat._id}
                 render={
-                  <NavigationLink
-                    href={`/chat/${chat._id}`}
+                  <Link
+                    activeOptions={EXACT_ACTIVE_OPTIONS}
                     onClick={() => setOpenMobile(false)}
+                    params={{ id: chat._id, locale }}
                     title={chat.title}
+                    to="/$locale/chat/$id"
                   />
                 }
               >

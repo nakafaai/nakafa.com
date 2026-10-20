@@ -17,20 +17,18 @@ import {
   SheetHeader as SheetHeaderPrimitive,
   SheetTitle,
 } from "@repo/design-system/components/ui/sheet";
-import { lazyComponent } from "@repo/design-system/lib/lazy";
-import { Activity, useState } from "react";
+import { ClientOnly } from "@tanstack/react-router";
+import { Activity, lazy, Suspense, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useAi } from "@/components/ai/context";
 import { ConvexIsland } from "@/components/providers/island";
 import { useLiveSession } from "@/components/providers/live";
 
 /** The recent chats and their query load when the learner shows intent on the history button. */
-const SheetHistory = lazyComponent(
-  () =>
-    import("@/components/ai/sheet/history").then(
-      (module) => module.SheetHistory
-    ),
-  { loading: () => null, ssr: false }
+const SheetHistory = lazy(() =>
+  import("@/components/ai/sheet/history").then((module) => ({
+    default: module.SheetHistory,
+  }))
 );
 
 interface Props {
@@ -126,7 +124,13 @@ function HistorySlot() {
               </Button>
             }
           />
-          {warmed ? <SheetHistory /> : null}
+          {warmed ? (
+            <Suspense fallback={null}>
+              <ClientOnly fallback={null}>
+                <SheetHistory />
+              </ClientOnly>
+            </Suspense>
+          ) : null}
         </DropdownMenu>
       </ConvexIsland>
     </span>

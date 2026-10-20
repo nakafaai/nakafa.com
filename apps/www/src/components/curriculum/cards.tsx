@@ -1,7 +1,6 @@
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import type { TileLook } from "@repo/design-system/lib/look";
+import { HrefLink } from "@repo/internationalization/src/link";
 import { Array as Arr } from "effect";
-import type { Locale } from "use-intl";
 import {
   CatalogCard,
   CatalogCardVisual,
@@ -17,14 +16,12 @@ import type { CurriculumViewRoute } from "@/lib/curriculum/model";
 export function CurriculumCardGrid({
   actionLabel,
   cards,
-  locale,
 }: {
   actionLabel: string;
   cards: readonly {
     readonly route: CurriculumViewRoute;
     readonly visual: TileLook | string;
   }[];
-  locale: Locale;
 }) {
   return (
     <div className="grid grid-cols-1 gap-4 pt-6 pb-24 sm:grid-cols-2">
@@ -32,7 +29,6 @@ export function CurriculumCardGrid({
         <CurriculumCard
           actionLabel={actionLabel}
           key={route.publicPath}
-          locale={locale}
           preload={index === 0}
           route={route}
           visual={visual}
@@ -45,20 +41,18 @@ export function CurriculumCardGrid({
 /** Renders one curriculum card with its visual and its page link. */
 function CurriculumCard({
   actionLabel,
-  locale,
   preload,
   route,
   visual,
 }: {
   actionLabel: string;
-  locale: Locale;
   preload: boolean;
   route: CurriculumViewRoute;
   visual: TileLook | string;
 }) {
   return (
     <CatalogCard
-      action={<NavigationLink href={`/${locale}/${route.publicPath}`} />}
+      action={<HrefLink href={`/${route.publicPath}`} />}
       actionLabel={actionLabel}
       title={route.title}
     >

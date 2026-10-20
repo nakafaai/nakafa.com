@@ -78,13 +78,6 @@ vi.mock(
   "@vercel/functions",
   async () => (await import("@/test/store")).testRuntimeCacheModule
 );
-vi.mock("@repo/internationalization/src/navigation", () => ({
-  getPathname: vi.fn(),
-  Link: vi.fn(),
-  redirect: vi.fn(),
-  usePathname: vi.fn(),
-  useRouter: vi.fn(),
-}));
 vi.mock("@/lib/content/cache", () => ({}));
 vi.mock("@tanstack/react-start/rsc", () => ({
   renderServerComponent: (node: unknown) => Promise.resolve(node),

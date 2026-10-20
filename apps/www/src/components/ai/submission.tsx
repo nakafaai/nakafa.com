@@ -9,6 +9,7 @@ import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { PromptInputMessage } from "@repo/design-system/lib/prompt-input/submission";
 import { encodeJsonText } from "@repo/utilities/json";
 import { randomUuid } from "@repo/utilities/uuid";
+import { useRouter } from "@tanstack/react-router";
 import type { FileUIPart } from "ai";
 import { useConvex } from "convex/react";
 import {
@@ -47,6 +48,7 @@ export type NinaDraft = PromptInputMessage &
 export function useNinaSubmission(
   onFailure?: (failure: NinaFailure | null) => void
 ) {
+  const router = useRouter();
   const upload = useAction(nina.uploads.save);
   const [previews] = useState(() =>
     MutableHashMap.empty<Id<"ninaUploads">, FileUIPart>()
@@ -215,7 +217,12 @@ export function useNinaSubmission(
         uploadOf,
       }).pipe(
         Effect.map((uploadIds) =>
-          messageInput({ focus: prompt.focus, text: prompt.text, uploadIds })
+          messageInput({
+            focus: prompt.focus,
+            location: router.state.location,
+            text: prompt.text,
+            uploadIds,
+          })
         )
       ),
       Arr.map(files, (attachment) => attachment.id),
@@ -224,7 +231,7 @@ export function useNinaSubmission(
   }
   function retry(order: number, chatId: Id<"chats">) {
     return perform(
-      Effect.sync(() => retryInput(order)),
+      Effect.sync(() => retryInput(order, router.state.location)),
       [],
       chatId
     );

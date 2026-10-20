@@ -12,12 +12,14 @@ import {
   QuestionnaireTitle,
 } from "@repo/design-system/components/ui/questionnaire";
 import { toast } from "@repo/design-system/lib/toast/notify";
-import { redirect, useRouter } from "@repo/internationalization/src/navigation";
+import { localizeInternalHref } from "@repo/internationalization/src/href";
+import { useCurrentLocale } from "@repo/internationalization/src/link";
+import { redirect, useNavigate } from "@tanstack/react-router";
 import { cn } from "cn";
 import { useConvex } from "convex/react";
 import { Array as Arr, Effect } from "effect";
 import { useState, useTransition } from "react";
-import { useLocale, useTranslations } from "use-intl";
+import { useTranslations } from "use-intl";
 import { OnboardingOption } from "@/components/programs/onboarding/choice";
 import { getOnboardingDestination } from "@/components/programs/onboarding/destination";
 import { useSaveOnboardingAnswerMutation } from "@/components/programs/onboarding/mutation";
@@ -61,8 +63,8 @@ export function OnboardingQuestionnaire({
 }) {
   const t = useTranslations("LearningPrograms");
   const tCommon = useTranslations("Common");
-  const locale = useLocale();
-  const router = useRouter();
+  const locale = useCurrentLocale();
+  const navigate = useNavigate();
   const reactiveStatus = useQuery(onboarding.queries.getStatus, {});
   const profile = QueryResult.isSuccess(reactiveStatus)
     ? reactiveStatus.value.profile
@@ -90,7 +92,10 @@ export function OnboardingQuestionnaire({
     reactiveStatus.value.isAuthenticated === false &&
     !isFinishing
   ) {
-    redirect({ href: getPostAuthSignInHref(intent), locale });
+    throw redirect({
+      href: localizeInternalHref(getPostAuthSignInHref(intent), locale),
+      statusCode: 307,
+    });
   }
   if (
     QueryResult.isSuccess(reactiveStatus) &&
@@ -98,7 +103,11 @@ export function OnboardingQuestionnaire({
     reactiveStatus.value.isRequired === false &&
     !isFinishing
   ) {
-    redirect(getPostAuthDestination(intent, locale));
+    const destination = getPostAuthDestination(intent, locale);
+    throw redirect({
+      href: localizeInternalHref(destination.href, destination.locale),
+      statusCode: 307,
+    });
   }
 
   function persistDraft(item: OnboardingItemName) {
@@ -172,7 +181,10 @@ export function OnboardingQuestionnaire({
 
       const destination = getOnboardingDestination(outcome.result, intent);
       startFinishTransition(() =>
-        router.replace(destination.href, { locale: destination.locale })
+        navigate({
+          href: localizeInternalHref(destination.href, destination.locale),
+          replace: true,
+        })
       );
     });
   }

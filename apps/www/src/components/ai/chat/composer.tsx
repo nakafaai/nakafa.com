@@ -1,5 +1,5 @@
 import type { PromptInputMessage } from "@repo/design-system/lib/prompt-input/submission";
-import { useRouter } from "@repo/internationalization/src/navigation";
+import { useNavigate } from "@tanstack/react-router";
 import { cn } from "cn";
 import type { ComponentProps } from "react";
 import { useChat } from "@/components/ai/chat/context";
@@ -19,7 +19,7 @@ export function ChatComposer({
 }: Pick<ComponentProps<typeof NinaInput>, "autoFocus"> & {
   className?: string;
 }) {
-  const router = useRouter();
+  const navigate = useNavigate();
   const authNavigation = useCurrentAuthNavigation();
 
   const isUserPending = useViewer((state) => state.isPending);
@@ -43,7 +43,7 @@ export function ChatComposer({
       userPending: isUserPending,
     });
     if (action === "sign-in") {
-      router.push(authNavigation.readHref());
+      navigate(authNavigation.readTarget());
       return false;
     }
     if (action === "keep") {

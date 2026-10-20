@@ -1,20 +1,20 @@
 "use client";
 
-import { lazyComponent } from "@repo/design-system/lib/lazy";
+import { lazy } from "react";
 import { withHydrationBoundary } from "@/lib/content/renderer/client/boundary";
 
 export const MermaidMdx = withHydrationBoundary(
-  lazyComponent(() =>
+  lazy(() =>
     import("@repo/design-system/components/markdown/mermaid").then(
-      ({ MermaidMdx: Component }) => Component
+      (module) => ({ default: module.MermaidMdx })
     )
   )
 );
 
 export const Youtube = withHydrationBoundary(
-  lazyComponent(() =>
+  lazy(() =>
     import("@repo/design-system/components/markdown/youtube").then(
-      ({ Youtube: Component }) => Component
+      (module) => ({ default: module.Youtube })
     )
   )
 );

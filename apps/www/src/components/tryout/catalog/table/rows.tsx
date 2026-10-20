@@ -1,8 +1,7 @@
 import { CheckmarkCircle02Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import { TableCell, TableRow } from "@repo/design-system/components/ui/table";
-import { useRouter } from "@repo/internationalization/src/navigation";
+import { HrefLink, useHrefNavigate } from "@repo/internationalization/src/link";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
 import { useState } from "react";
@@ -54,7 +53,7 @@ function getTryoutSetRowHref(row: TryoutSetRow) {
 
 /** Preserves the existing row-wide navigation and intent prefetch. */
 function TryoutSetRowContent({ row }: { row: TryoutSetRow }) {
-  const router = useRouter();
+  const navigateToHref = useHrefNavigate();
   const [intentActive, setIntentActive] = useState(false);
   const href = getTryoutSetRowHref(row);
   return (
@@ -65,7 +64,7 @@ function TryoutSetRowContent({ row }: { row: TryoutSetRow }) {
           return;
         }
         setIntentActive(true);
-        router.push(href);
+        navigateToHref(href);
       }}
       onFocusCapture={() => setIntentActive(true)}
       onMouseEnter={() => setIntentActive(true)}
@@ -101,10 +100,10 @@ function TryoutSetName({
   intentActive: boolean;
 }) {
   return (
-    <IntentLink
+    <HrefLink
       className="flex min-w-0 items-center gap-2 underline-offset-4 hover:underline"
       href={href}
-      intentActive={intentActive}
+      preload={intentActive ? "render" : "intent"}
     >
       <span
         aria-hidden="true"
@@ -122,7 +121,7 @@ function TryoutSetName({
       <span className="truncate" title={row.title}>
         {row.title}
       </span>
-    </IntentLink>
+    </HrefLink>
   );
 }
 

@@ -1,30 +1,28 @@
 "use client";
 
-import { lazyComponent } from "@repo/design-system/lib/lazy";
+import { lazy } from "react";
 import { withHydrationBoundary } from "@/lib/content/renderer/client/boundary";
 
 export const NonUniformLinearMotionGraphCard = withHydrationBoundary(
-  lazyComponent(() =>
+  lazy(() =>
     import(
       "@repo/design-system/components/contents/physics/kinematics/non-uniform-linear-motion/chart-card"
-    ).then(
-      ({ NonUniformLinearMotionGraphCard }) => NonUniformLinearMotionGraphCard
-    )
+    ).then((module) => ({ default: module.NonUniformLinearMotionGraphCard }))
   )
 );
 
 export const NonUniformLinearMotionLab = withHydrationBoundary(
-  lazyComponent(() =>
+  lazy(() =>
     import(
       "@repo/design-system/components/contents/physics/kinematics/non-uniform-linear-motion/lab"
-    ).then(({ NonUniformLinearMotionLab }) => NonUniformLinearMotionLab)
+    ).then((module) => ({ default: module.NonUniformLinearMotionLab }))
   )
 );
 
 export const UniformLinearMotionLab = withHydrationBoundary(
-  lazyComponent(() =>
+  lazy(() =>
     import(
       "@repo/design-system/components/contents/physics/kinematics/uniform-linear-motion/lab"
-    ).then(({ UniformLinearMotionLab }) => UniformLinearMotionLab)
+    ).then((module) => ({ default: module.UniformLinearMotionLab }))
   )
 );

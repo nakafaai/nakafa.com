@@ -1,7 +1,6 @@
 import { YoutubeIcon } from "@hugeicons/core-free-icons";
 import { Image } from "@repo/design-system/components/image";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Link } from "@repo/internationalization/src/navigation";
 import { COMPANY_SOCIAL_PROFILES } from "@repo/seo/company-profiles";
 import { useTranslations } from "use-intl";
 
@@ -24,7 +23,7 @@ export function Videos() {
 
 function VideoCard({ children }: { children: React.ReactNode }) {
   return (
-    <Link
+    <a
       className="group relative flex aspect-square overflow-hidden rounded-md border p-3 text-card-foreground shadow-xs"
       href={COMPANY_SOCIAL_PROFILES.youtube}
       rel="noopener noreferrer"
@@ -41,6 +40,6 @@ function VideoCard({ children }: { children: React.ReactNode }) {
       <div className="relative z-1 flex flex-1 flex-col justify-between">
         {children}
       </div>
-    </Link>
+    </a>
   );
 }
