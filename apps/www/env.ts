@@ -1,10 +1,10 @@
 import "@tanstack/react-start/server-only";
 import { publicationKeys, siteUrlKeys } from "@repo/site/keys";
-import { clientEnv } from "@/env.public";
+import { clientEnv } from "@/env.client";
 
 /**
  * Validates environment values consumed by `www` server modules. The browser
- * imports `@/env.public`, which holds only public values, and the build rejects
+ * imports `@/env.client`, which holds only public values, and the build rejects
  * a Client Component that imports this module.
  *
  * Package-specific integrations such as AI clients, CAS, Polar, and Convex

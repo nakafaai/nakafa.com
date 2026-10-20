@@ -8,7 +8,7 @@ import {
 } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { IntlProvider } from "use-intl";
-import { EntryShellArtwork } from "@/components/entry/artwork";
+import { EntryShellArtwork } from "@/components/entry/artwork.client";
 import {
   EntryShell,
   EntryShellBody,
@@ -18,7 +18,7 @@ import {
 import { ConvexProvider } from "@/components/providers/convex";
 import { ThemePicker } from "@/components/shared/theme/picker";
 import { Broken } from "@/components/state/broken";
-import { clientEnv } from "@/env.public";
+import { clientEnv } from "@/env.client";
 import { readRouteMessages } from "@/lib/i18n/messages.fn";
 import { readStandaloneMessages } from "@/lib/i18n/standalone";
 

@@ -5,7 +5,7 @@ import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { negotiateLocale } from "@repo/internationalization/src/negotiate";
 import { isSharedPath } from "@repo/internationalization/src/rewrite";
 import { Data, Effect, Option } from "effect";
-import { clientEnv } from "@/env.public";
+import { clientEnv } from "@/env.client";
 import { readSessionToken } from "@/lib/auth/token";
 import { httpSingleAttemptLayer } from "@/lib/convex/http";
 import { readSchoolSlug } from "@/lib/routing/school/host";

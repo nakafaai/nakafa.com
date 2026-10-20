@@ -18,7 +18,7 @@ describe("browser environment", () => {
     stubPublicConvex();
     vi.stubEnv("VITE_AKSARA_PREVIEW_CHILD", undefined);
 
-    const { clientEnv } = await import("@/env.public");
+    const { clientEnv } = await import("@/env.client");
 
     expect(clientEnv).toStrictEqual({
       VITE_AKSARA_PREVIEW_CHILD: undefined,
@@ -32,14 +32,14 @@ describe("browser environment", () => {
     for (const flag of ["true", "false"]) {
       vi.resetModules();
       vi.stubEnv("VITE_AKSARA_PREVIEW_CHILD", flag);
-      const { clientEnv } = await import("@/env.public");
+      const { clientEnv } = await import("@/env.client");
       expect(clientEnv.VITE_AKSARA_PREVIEW_CHILD).toBe(flag);
     }
 
     for (const flag of ["yes", ""]) {
       vi.resetModules();
       vi.stubEnv("VITE_AKSARA_PREVIEW_CHILD", flag);
-      await expect(import("@/env.public")).rejects.toThrow(
+      await expect(import("@/env.client")).rejects.toThrow(
         "VITE_AKSARA_PREVIEW_CHILD"
       );
     }

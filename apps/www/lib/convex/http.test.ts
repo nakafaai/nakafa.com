@@ -20,7 +20,7 @@ import { httpLayer, withQueryRetry } from "@/lib/convex/http";
 
 const DEPLOYMENT_URL = "https://example.convex.cloud";
 
-vi.mock("@/env.public", () => ({
+vi.mock("@/env.client", () => ({
   clientEnv: { VITE_CONVEX_URL: "https://example.convex.cloud" },
 }));
 

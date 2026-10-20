@@ -6,7 +6,7 @@ import {
 } from "@confect/core/Ref";
 import { createIsomorphicFn } from "@tanstack/react-start";
 import { Effect, Schema } from "effect";
-import { clientEnv } from "@/env.public";
+import { clientEnv } from "@/env.client";
 import { readConvexClient } from "@/lib/convex/client.client";
 import { runServerEffect } from "@/lib/server/fn";
 

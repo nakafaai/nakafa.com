@@ -1,7 +1,7 @@
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import type { Mascot } from "@repo/mascot/code";
 import { SignInScreen } from "@/components/auth/screen";
-import { EntryShellArtwork } from "@/components/entry/artwork";
+import { EntryShellArtwork } from "@/components/entry/artwork.client";
 import {
   EntryShell,
   EntryShellHeader,

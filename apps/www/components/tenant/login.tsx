@@ -22,7 +22,7 @@ import {
   signInAnswerOf,
   submitLogin,
 } from "@/components/tenant/login.client";
-import { clientEnv } from "@/env.public";
+import { clientEnv } from "@/env.client";
 import { authClient } from "@/lib/auth/client";
 
 /**

@@ -10,7 +10,7 @@ import { toast } from "@repo/design-system/lib/toast/notify";
 import { Effect } from "effect";
 import { useTransition } from "react";
 import { useLocale, useTranslations } from "use-intl";
-import type { PricingButtonVariant } from "@/components/marketing/about/pricing/button";
+import type { PricingButtonVariant } from "@/components/marketing/about/pricing/button.client";
 import { reportClientException } from "@/lib/analytics/client";
 import {
   getPostAuthOnboardingHref,

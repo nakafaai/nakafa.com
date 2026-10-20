@@ -1,6 +1,6 @@
 import type { Mascot } from "@repo/mascot/code";
 import { useTranslations } from "use-intl";
-import { EntryShellArtwork } from "@/components/entry/artwork";
+import { EntryShellArtwork } from "@/components/entry/artwork.client";
 import {
   EntryShell,
   EntryShellBody,
