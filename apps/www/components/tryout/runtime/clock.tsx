@@ -1,12 +1,31 @@
 "use client";
 
 import { DateTime, MutableHashSet } from "effect";
-import { createContext, use, useSyncExternalStore } from "react";
+import {
+  createContext,
+  type ReactNode,
+  use,
+  useSyncExternalStore,
+} from "react";
 import { notifyTickListeners } from "@/components/tryout/runtime/tick";
 
 const InitialClock = createContext<number | null>(null);
 
 const TICK_MS = 1000;
+
+/**
+ * Gives every timer of one try-out page the time that the page loaded at. The
+ * value is fixed for the page's life, so streamed content never sees it change.
+ */
+export function TryoutClockProvider({
+  children,
+  initialNow,
+}: {
+  readonly children: ReactNode;
+  readonly initialNow: number;
+}) {
+  return <InitialClock value={initialNow}>{children}</InitialClock>;
+}
 
 let currentNow = 0;
 let timer: number | null = null;
