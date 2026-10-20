@@ -26,92 +26,98 @@ import {
 import { usePreferredCurriculumHref } from "@/lib/curriculum/preferences";
 import { usePreferredTryoutHref } from "@/lib/tryout/preferences";
 
+type ForYouItem = ReturnType<typeof getForYouNavigationItems>[number];
+
 /**
- * Renders the primary app navigation shared by every audience.
+ * Renders the primary app navigation shared by every audience. Each shortcut is
+ * its own island, so the group never remounts when the page's client arrives: a
+ * shortcut shows its shared destination until the learner's preference is read.
  */
 export function NavForYou() {
-  return (
-    <ConvexIsland
-      fallback={
-        <NavForYouGroup
-          preferredCurriculumHref={null}
-          preferredTryoutHref={null}
-        />
-      }
-    >
-      <LearnerNavForYou />
-    </ConvexIsland>
-  );
-}
-
-/** Reads the learner's preferences on the page's Convex island. */
-function LearnerNavForYou() {
-  const locale = useLocale();
-  const preferredCurriculumHref = usePreferredCurriculumHref(locale);
-  const preferredTryoutHref = usePreferredTryoutHref(locale);
-  return (
-    <NavForYouGroup
-      preferredCurriculumHref={preferredCurriculumHref ?? null}
-      preferredTryoutHref={preferredTryoutHref ?? null}
-    />
-  );
-}
-
-function NavForYouGroup({
-  preferredCurriculumHref,
-  preferredTryoutHref,
-}: {
-  preferredCurriculumHref: string | null;
-  preferredTryoutHref: string | null;
-}) {
-  const pathname = usePathname();
-  const router = useRouter();
-  const tAi = useTranslations("Ai");
   const tCommon = useTranslations("Common");
-  const locale = useLocale();
-  const items = getForYouNavigationItems();
 
   return (
     <SidebarGroup>
       <SidebarGroupLabel>{tCommon("for-you")}</SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu>
-          {Arr.map(items, (item) => {
-            const label =
-              item.labelNamespace === "Ai"
-                ? tAi(item.labelKey)
-                : tCommon(item.labelKey);
-            const href = getForYouNavigationHref(item, locale, {
-              preferredCurriculumHref,
-              preferredTryoutHref,
-            });
-            const prefetchChat =
-              item.id === "askNina" ? () => router.prefetch(href) : undefined;
-
-            return (
-              <SidebarMenuItem key={item.id}>
-                <SidebarMenuButton
-                  isActive={pathname.includes(href)}
-                  render={
-                    <NavigationLink
-                      href={href}
-                      onFocus={prefetchChat}
-                      onPointerEnter={prefetchChat}
-                      onTouchStart={prefetchChat}
-                      preload={item.id === "askNina" ? false : undefined}
-                      title={label}
-                    />
-                  }
-                  tooltip={label}
-                >
-                  <HugeIcons icon={item.icon} />
-                  <span className="truncate">{label}</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            );
-          })}
+          {Arr.map(getForYouNavigationItems(), (item) => (
+            <ForYouMenuItem item={item} key={item.id} />
+          ))}
         </SidebarMenu>
       </SidebarGroupContent>
     </SidebarGroup>
+  );
+}
+
+/** One shortcut, whose destination reads the learner's preferences on the page's Convex island. */
+function ForYouMenuItem({ item }: { item: ForYouItem }) {
+  const locale = useLocale();
+
+  return (
+    <ConvexIsland
+      fallback={
+        <ForYouLink href={getForYouNavigationHref(item, locale)} item={item} />
+      }
+    >
+      <LearnerForYouMenuItem item={item} />
+    </ConvexIsland>
+  );
+}
+
+/** Reads the learner's preferences on the page's Convex island. */
+function LearnerForYouMenuItem({ item }: { item: ForYouItem }) {
+  const locale = useLocale();
+  const preferredCurriculumHref = usePreferredCurriculumHref(locale);
+  const preferredTryoutHref = usePreferredTryoutHref(locale);
+
+  return (
+    <ForYouLink
+      href={getForYouNavigationHref(item, locale, {
+        preferredCurriculumHref,
+        preferredTryoutHref,
+      })}
+      item={item}
+    />
+  );
+}
+
+/** One shortcut row, which prefetches the chat that the Ask Nina shortcut leads to. */
+function ForYouLink({
+  href,
+  item,
+}: {
+  href: ReturnType<typeof getForYouNavigationHref>;
+  item: ForYouItem;
+}) {
+  const pathname = usePathname();
+  const router = useRouter();
+  const tAi = useTranslations("Ai");
+  const tCommon = useTranslations("Common");
+  const label =
+    item.labelNamespace === "Ai" ? tAi(item.labelKey) : tCommon(item.labelKey);
+  const prefetchChat =
+    item.id === "askNina" ? () => router.prefetch(href) : undefined;
+
+  return (
+    <SidebarMenuItem>
+      <SidebarMenuButton
+        isActive={pathname.includes(href)}
+        render={
+          <NavigationLink
+            href={href}
+            onFocus={prefetchChat}
+            onPointerEnter={prefetchChat}
+            onTouchStart={prefetchChat}
+            preload={item.id === "askNina" ? false : undefined}
+            title={label}
+          />
+        }
+        tooltip={label}
+      >
+        <HugeIcons icon={item.icon} />
+        <span className="truncate">{label}</span>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
   );
 }

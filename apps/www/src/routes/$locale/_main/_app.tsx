@@ -39,11 +39,11 @@ const mainRoute = getRouteApi("/$locale/_main");
  * profiles stay open to visitors, as the reference keeps them.
  */
 export const Route = createFileRoute("/$locale/_main/_app")({
-  headers: () => ({ "Cache-Control": "private, no-store" }),
   loader: ({ params }) =>
     readRouteMessages({
       data: { locale: params.locale, namespaces: APP_NAMESPACES },
     }),
+  headers: () => ({ "Cache-Control": "private, no-store" }),
   component: AppLayout,
   errorComponent: AppError,
 });

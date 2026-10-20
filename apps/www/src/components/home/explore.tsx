@@ -11,7 +11,6 @@ import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { Array as Arr, HashSet, Option } from "effect";
 import type { ComponentProps, ReactNode } from "react";
 import { useLocale, useTranslations } from "use-intl";
-import { ConvexIsland } from "@/components/providers/island";
 import {
   getForYouNavigationHref,
   getForYouNavigationItems,
@@ -94,32 +93,18 @@ function NinaIcon() {
 
 /**
  * Renders the home exploration shortcuts from the same canonical route helpers
- * used by sidebar and sitemap navigation.
+ * used by sidebar and sitemap navigation. Only the signed-in home mounts it, behind
+ * the account gate and under the app's Convex provider, so it reads the learner's
+ * preferences directly.
  */
 export function HomeExplore() {
-  return (
-    <ConvexIsland
-      fallback={
-        <HomeExploreGroup
-          preferredCurriculumHref={null}
-          preferredTryoutHref={null}
-        />
-      }
-    >
-      <LearnerHomeExplore />
-    </ConvexIsland>
-  );
-}
-
-/** Reads the learner's preferences on the page's Convex island. */
-function LearnerHomeExplore() {
   const locale = useLocale();
   const preferredCurriculumHref = usePreferredCurriculumHref(locale);
   const preferredTryoutHref = usePreferredTryoutHref(locale);
   return (
     <HomeExploreGroup
-      preferredCurriculumHref={preferredCurriculumHref ?? null}
-      preferredTryoutHref={preferredTryoutHref ?? null}
+      preferredCurriculumHref={preferredCurriculumHref}
+      preferredTryoutHref={preferredTryoutHref}
     />
   );
 }
