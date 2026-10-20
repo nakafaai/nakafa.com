@@ -70,7 +70,16 @@ const verifyPrerenderedPages: Plugin = {
   name: "www:verify-prerendered-pages",
 };
 
+/** The font files that the font-src policy must load from this origin, never inline. */
+const FONT_FILE_PATTERN = /\.woff2?$/;
+
 export default defineConfig({
+  build: {
+    // The font-src policy allows only this origin, so a font file stays a file
+    // even when it is smaller than the inline limit. Other assets keep the limit.
+    assetsInlineLimit: (filePath) =>
+      FONT_FILE_PATTERN.test(filePath) ? false : undefined,
+  },
   resolve: {
     tsconfigPaths: true,
   },
