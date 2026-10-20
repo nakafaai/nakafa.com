@@ -14,8 +14,10 @@ export const SurahRouteInput = Schema.Struct({
 export const readSurahFn = createServerFn({ method: "GET" })
   .validator(Schema.toStandardSchemaV1(SurahRouteInput))
   .handler(async ({ data }) => {
-    const { readSurahPage } = await import("@/lib/content/quran/surah.server");
-    return readSurahPage(data);
+    const { readSurahHandler } = await import(
+      "@/lib/content/quran/surah.server"
+    );
+    return readSurahHandler({ data });
   });
 
 /**
@@ -27,8 +29,8 @@ export const recoverQuranSnapshotFn = createServerFn({ method: "POST" })
     Schema.toStandardSchemaV1(Schema.Struct({ snapshotId: Schema.String }))
   )
   .handler(async ({ data }) => {
-    const { recoverQuranSnapshotPage } = await import(
+    const { recoverQuranSnapshotHandler } = await import(
       "@/lib/content/quran/surah.server"
     );
-    return recoverQuranSnapshotPage(data.snapshotId);
+    return recoverQuranSnapshotHandler({ data });
   });
