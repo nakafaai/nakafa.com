@@ -1,7 +1,7 @@
 // @vitest-environment node
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { Schema } from "effect";
+import { Effect, Schema } from "effect";
 import { generateOGImage } from "@/lib/og";
 import { generateFallbackImage } from "@/lib/og/fallback";
 import { OG_FALLBACK_HEADERS, OG_IMAGE_HEADERS } from "@/lib/og/headers";
@@ -58,7 +58,7 @@ beforeEach(() => {
 
 describe("fallback social image", () => {
   it("answers unknown slugs with translated brand artwork", async () => {
-    const response = await generateFallbackImage("de");
+    const response = await Effect.runPromise(generateFallbackImage("de"));
 
     expect(mocks.readServerTranslator).toHaveBeenCalledWith({
       locale: "de",

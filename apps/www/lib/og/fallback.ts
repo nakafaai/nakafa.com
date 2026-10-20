@@ -4,27 +4,27 @@ import type { Locale } from "use-intl";
 import { generateOGImage } from "@/lib/og";
 import { OG_FALLBACK_HEADERS } from "@/lib/og/headers";
 
-/** Generates the brand fallback image for unknown slugs.
+/**
+ * Generates the brand fallback image for unknown slugs.
  *
  * Unknown social-image URLs answer 404 with brand artwork instead of
  * rendering the application shell, whose client modules cannot resolve in
- * an image route. */
-export function generateFallbackImage(locale: Locale) {
-  return Effect.runPromise(
-    Effect.gen(function* () {
-      const t = yield* Effect.promise(() =>
-        readServerTranslator({ locale, namespace: "NotFound" })
-      );
-      const response = generateOGImage({
-        description: t("description"),
-        headers: OG_FALLBACK_HEADERS,
-        title: t("title"),
-      });
-      const body = yield* Effect.promise(() => response.arrayBuffer());
-      return new Response(body, {
-        headers: response.headers,
-        status: 404,
-      });
-    })
+ * an image route.
+ */
+export const generateFallbackImage = Effect.fn("www.og.fallback")(function* (
+  locale: Locale
+) {
+  const t = yield* Effect.promise(() =>
+    readServerTranslator({ locale, namespace: "NotFound" })
   );
-}
+  const response = generateOGImage({
+    description: t("description"),
+    headers: OG_FALLBACK_HEADERS,
+    title: t("title"),
+  });
+  const body = yield* Effect.promise(() => response.arrayBuffer());
+  return new Response(body, {
+    headers: response.headers,
+    status: 404,
+  });
+});

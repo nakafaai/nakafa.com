@@ -35,7 +35,7 @@ const renderOgImage = Effect.fn("www.og.render")(function* (
 ) {
   const copy = yield* readOgCopy(locale, slug);
   if (Option.isNone(copy)) {
-    return yield* Effect.promise(() => generateFallbackImage(locale));
+    return yield* generateFallbackImage(locale);
   }
   return yield* Effect.sync(() =>
     generateOGImage({
@@ -81,7 +81,7 @@ export function serveLocaleOgImage({
 }) {
   const locale = decodeLocale(params.lang);
   if (Option.isNone(locale)) {
-    return generateFallbackImage(DEFAULT_LOCALE);
+    return Effect.runPromise(generateFallbackImage(DEFAULT_LOCALE));
   }
   return Effect.runPromise(
     renderOgImage(locale.value, readContentSlug(readSegments(params._splat)))

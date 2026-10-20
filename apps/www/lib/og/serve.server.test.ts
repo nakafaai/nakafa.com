@@ -32,7 +32,7 @@ beforeEach(() => {
     .mockReturnValue(new Response("image", { status: 200 }));
   generateFallbackImageMock
     .mockReset()
-    .mockResolvedValue(new Response("brand", { status: 404 }));
+    .mockReturnValue(Effect.succeed(new Response("brand", { status: 404 })));
 });
 
 describe("og image route", () => {
