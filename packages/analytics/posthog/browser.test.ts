@@ -401,4 +401,31 @@ describe("two-tier PostHog browser runtime", () => {
       expect(client.capture).toHaveBeenCalledExactlyOnceWith("$pageview");
     })
   );
+  it.effect(
+    "revokes to the baseline before any client loads, without loading the SDK",
+    () =>
+      Effect.gen(function* () {
+        const analytics = yield* loadBrowserAnalytics();
+
+        analytics.resetBrowserAnalyticsIdentity();
+        yield* analytics.revokeToBaselineAnalytics();
+
+        expect(client.init).not.toHaveBeenCalled();
+        expect(client.opt_out_capturing).not.toHaveBeenCalled();
+        expect(client.reset).not.toHaveBeenCalled();
+      })
+  );
+
+  it.effect("clears the signed-out identity of a loaded client", () =>
+    Effect.gen(function* () {
+      const analytics = yield* loadBrowserAnalytics();
+      yield* analytics.enableBaselineAnalytics(loadClient);
+
+      analytics.resetBrowserAnalyticsIdentity();
+      expect(client.reset).toHaveBeenLastCalledWith(false);
+
+      analytics.resetBrowserAnalyticsIdentity(true);
+      expect(client.reset).toHaveBeenLastCalledWith(true);
+    })
+  );
 });
