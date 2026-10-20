@@ -11,6 +11,7 @@ import { readServerTranslator } from "@repo/internationalization/src/translator"
 import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { Array as Arr, DateTime, Effect, Order, Schema } from "effect";
 import { Feed, type Item } from "feed";
+import { captureServerExceptionSafely } from "@/lib/analytics/server";
 import { readPublishedLatestArticles } from "@/lib/content/article/discovery";
 import { readPublishedLatestMaterials } from "@/lib/content/material/discovery";
 import { loadActiveContentIdentity } from "@/lib/content/published/active";
@@ -21,6 +22,8 @@ import {
 } from "@/lib/content/published/release";
 
 const baseUrl = COMPANY_IDENTITY.url;
+const FEED_ERROR = "Internal Server Error";
+const PLAIN_TEXT = { "Content-Type": "text/plain; charset=utf-8" };
 const RSS_CONTENT_ROUTE_LIMIT = 100;
 
 /**
@@ -49,10 +52,20 @@ const FeedContentRouteSchema = Schema.Struct({
 });
 type FeedContentRoute = typeof FeedContentRouteSchema.Type;
 
+/** Reports one failed feed, then answers the plain-text 500 without its details. */
+function reportFeedFailure(cause: unknown) {
+  return captureServerExceptionSafely(cause, { source: "rss-feed" }).pipe(
+    Effect.as(new Response(FEED_ERROR, { headers: PLAIN_TEXT, status: 500 }))
+  );
+}
+
 /** Serves the RSS feed of the latest signed articles and materials. */
 export function serveRssFeed() {
   return Effect.runPromise(
-    Effect.map(readFeed(), (xml) => new Response(xml, { headers: RSS_HEADERS }))
+    readFeed().pipe(
+      Effect.map((xml) => new Response(xml, { headers: RSS_HEADERS })),
+      Effect.catch(reportFeedFailure)
+    )
   );
 }
 

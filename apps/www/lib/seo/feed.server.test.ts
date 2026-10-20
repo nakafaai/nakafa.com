@@ -9,6 +9,7 @@ const readPublishedLatestArticlesMock = vi.hoisted(() => vi.fn());
 const readPublishedLatestMaterialsMock = vi.hoisted(() => vi.fn());
 const loadActiveContentIdentityMock = vi.hoisted(() => vi.fn());
 const readServerTranslatorMock = vi.hoisted(() => vi.fn());
+const captureMock = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/content/article/discovery", () => ({
   /** Controls the latest signed articles of one locale. */
@@ -30,6 +31,11 @@ vi.mock("@repo/internationalization/src/translator", () => ({
   readServerTranslator: readServerTranslatorMock,
 }));
 
+vi.mock("@/lib/analytics/server", () => ({
+  /** Records every feed failure that the route reports. */
+  captureServerExceptionSafely: captureMock,
+}));
+
 const RELEASE = "release-feed";
 const BASE = COMPANY_IDENTITY.url;
 
@@ -49,6 +55,7 @@ beforeEach(() => {
       sequence: 1,
     })
   );
+  captureMock.mockReset().mockReturnValue(Effect.void);
   readServerTranslatorMock.mockReset().mockImplementation(
     async ({ namespace }: { readonly namespace: string }) =>
       (key: string) =>
@@ -132,13 +139,22 @@ describe("rss feed route", () => {
     expect(titles(xml)).toEqual([]);
   });
 
-  it("refuses to build a feed without an active release", async () => {
+  it("reports a feed without an active release and answers 500 without details", async () => {
     loadActiveContentIdentityMock.mockReturnValue(Effect.void);
 
-    await expect(serveRssFeed()).rejects.toThrow();
+    const response = await serveRssFeed();
+
+    expect(response.status).toBe(500);
+    expect(response.headers.get("content-type")).toBe(
+      "text/plain; charset=utf-8"
+    );
+    await expect(response.text()).resolves.toBe("Internal Server Error");
+    expect(captureMock).toHaveBeenCalledWith(expect.any(Error), {
+      source: "rss-feed",
+    });
   });
 
-  it("refuses to build a feed when the release changes during the read", async () => {
+  it("reports a feed whose release changes during the read and answers 500", async () => {
     loadActiveContentIdentityMock
       .mockReturnValueOnce(
         Effect.succeed({
@@ -149,6 +165,9 @@ describe("rss feed route", () => {
       )
       .mockReturnValueOnce(Effect.void);
 
-    await expect(serveRssFeed()).rejects.toThrow();
+    const response = await serveRssFeed();
+
+    expect(response.status).toBe(500);
+    expect(captureMock).toHaveBeenCalledTimes(1);
   });
 });
