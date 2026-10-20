@@ -17,6 +17,14 @@ describe("TryoutTrackSearch", () => {
   });
 });
 
+describe("fallback of a value that does not decode", () => {
+  it("reads a value that does not decode as none, so the track still opens", () => {
+    expect(
+      Schema.decodeUnknownSync(TryoutTrackSearch)({ status: ["a", "b"] })
+    ).toEqual({});
+  });
+});
+
 describe("TryoutAttemptSearch", () => {
   it("keeps a single or repeated attempt value raw for the attempt readers", () => {
     expect(
