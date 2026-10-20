@@ -13,7 +13,7 @@ import { isActiveLocale } from "@/lib/i18n/active";
 interface Props {
   contentId?: string | null | undefined;
   context?: LearningContextInput | undefined;
-  delay?: number;
+  delay?: number | undefined;
   enabled?: boolean;
   locale: RouteLocale;
   publicPath: string;
@@ -67,7 +67,7 @@ function ActiveContentViewTracker({
   section,
   children,
   delay,
-}: PropsWithChildren<Omit<Props, "locale"> & { locale: Locale }>) {
+}: PropsWithChildren<RecorderProps>) {
   return (
     <>
       <SignedInIsland>
@@ -86,14 +86,7 @@ function ActiveContentViewTracker({
 }
 
 /** The inputs that the view recorder reads, with the route locale narrowed. */
-interface RecorderProps {
-  contentId?: string | null | undefined;
-  context?: LearningContextInput | undefined;
-  delay?: number | undefined;
-  locale: Locale;
-  publicPath: string;
-  section: RecordContentViewArgs["section"];
-}
+type RecorderProps = Omit<Props, "enabled" | "locale"> & { locale: Locale };
 
 /** Records one view of the page on the page's Convex client. */
 function ContentViewRecorder({
