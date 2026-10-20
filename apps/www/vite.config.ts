@@ -54,7 +54,10 @@ function assertPrerenderedPages(clientOutputDirectory: string) {
   const expected = PRERENDERED_PAGES.map(({ path }) =>
     join(clientOutputDirectory, path, "index.html")
   );
-  const written = readdirSync(clientOutputDirectory, { recursive: true })
+  const written = readdirSync(clientOutputDirectory, {
+    encoding: "utf8",
+    recursive: true,
+  })
     .filter((entry) => basename(entry) === "index.html")
     .map((entry) => join(clientOutputDirectory, entry));
   const problems = [
