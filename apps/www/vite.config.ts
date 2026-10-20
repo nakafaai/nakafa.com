@@ -38,25 +38,22 @@ const PRERENDERED_PAGES = ACTIVE_APP_LOCALE_CODES.flatMap((locale) => [
 ]);
 
 /**
- * The client output that Nitro's preset writes: Vercel's static directory on
- * Vercel, and the public directory of the Node preset elsewhere.
- */
-const CLIENT_OUTPUT_DIRECTORY =
-  process.env.VERCEL === "1" ? ".vercel/output/static" : ".output/public";
-
-/**
  * TanStack runs each prerender task in a queue whose failures nobody awaits: a
  * page that fails only logs an unhandled rejection, and the build still exits 0.
  * This check fails the build when a listed page did not reach the client output.
  */
-/** Throws when a listed page is missing from the client output. */
-function assertPrerenderedPages() {
+/**
+ * Throws when a listed page is missing from the client output directory. The
+ * directory is the client environment's own output, which Nitro's preset sets
+ * and TanStack prerenders into.
+ */
+function assertPrerenderedPages(clientOutputDirectory: string) {
   const missing = PRERENDERED_PAGES.map(({ path }) => path).filter(
-    (path) => !existsSync(join(CLIENT_OUTPUT_DIRECTORY, path, "index.html"))
+    (path) => !existsSync(join(clientOutputDirectory, path, "index.html"))
   );
   if (missing.length > 0) {
     throw new Error(
-      `Prerendering wrote no page for: ${missing.join(", ")} (${CLIENT_OUTPUT_DIRECTORY})`
+      `Prerendering wrote no page for: ${missing.join(", ")} (${clientOutputDirectory})`
     );
   }
 }
@@ -68,7 +65,8 @@ const verifyPrerenderedPages: Plugin = {
   // After every environment is built and TanStack has prerendered the pages.
   buildApp: {
     order: "post",
-    handler: () => Promise.resolve(assertPrerenderedPages()),
+    handler: (builder) =>
+      assertPrerenderedPages(builder.environments.client.config.build.outDir),
   },
   name: "www:verify-prerendered-pages",
 };
