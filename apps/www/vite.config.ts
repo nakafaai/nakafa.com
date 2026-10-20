@@ -125,6 +125,9 @@ export default defineConfig({
       // rule against `.server` modules; the server pass has no `.client` rule.
       importProtection: {
         behavior: { dev: "error", build: "error" },
+        // Node built-ins have no browser build. The default client specifiers
+        // stay, and this one adds every `node:` specifier, subpaths included.
+        client: { specifiers: [/^node:/] },
         server: { files: [] },
       },
       pages: PRERENDERED_PAGES,
