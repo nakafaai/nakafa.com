@@ -42,7 +42,7 @@ import { makeTryoutRuntimeSource } from "@repo/backend/test/tryout/serving";
 import { TRYOUT_TEST_NOW } from "@repo/backend/test/tryouts";
 import { JsonTextSchema } from "@repo/utilities/json";
 import type { FunctionReference } from "convex/server";
-import { Array as Arr, Effect, Layer, Predicate, Schema } from "effect";
+import { Array as Arr, Effect, Layer, Option, Predicate, Schema } from "effect";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { SignedContentAccess } from "@/components/tryout/content/model";
 import { makeTryoutRuntimeRequest } from "@/components/tryout/content/request";
@@ -55,7 +55,7 @@ import { ContentRuntimeConfigurationError } from "@/lib/content/published/errors
 const runtimeKeysMock = vi.hoisted(() => vi.fn());
 const runtimeSiteMock = vi.hoisted(() => vi.fn());
 const fetchMock = vi.hoisted(() => vi.fn<typeof fetch>());
-const tokenMock = vi.hoisted(() => vi.fn());
+const sessionMock = vi.hoisted(() => vi.fn());
 const queryMock = vi.hoisted(() =>
   vi.fn<
     (
@@ -96,8 +96,11 @@ vi.mock("@confect/js", async (importOriginal) => {
     },
   };
 });
-vi.mock("@/lib/auth/server", () => ({
-  getToken: tokenMock,
+vi.mock("@tanstack/react-start/server", () => ({
+  getRequest: () => new Request("https://nakafa.test/en/try-out"),
+}));
+vi.mock("@/lib/auth/session.server", () => ({
+  readSessionMemo: sessionMock,
 }));
 vi.mock("@repo/site/keys", () => ({
   contentRuntimeKeys: runtimeKeysMock,
@@ -195,7 +198,13 @@ beforeEach(() => {
   vi.setSystemTime(TRYOUT_TEST_NOW);
   fetchMock.mockReset();
   queryMock.mockReset();
-  tokenMock.mockReset().mockResolvedValue("technical-session-token");
+  sessionMock
+    .mockReset()
+    .mockReturnValue(
+      Effect.succeed(
+        Effect.succeed({ convexToken: Option.some("technical-session-token") })
+      )
+    );
   runtimeSiteMock.mockReset().mockReturnValue(siteUrl);
   runtimeKeysMock.mockReset().mockImplementation(() => {
     throw new ContentRuntimeConfigurationError({
@@ -426,17 +435,16 @@ describe("signed try-out execution", () => {
     () =>
       Effect.gen(function* () {
         const fixture = yield* readOwnedFixture();
-        tokenMock.mockResolvedValueOnce(null);
+        sessionMock.mockReturnValueOnce(
+          Effect.succeed(Effect.succeed({ convexToken: Option.none() }))
+        );
         expect(yield* loadFailure(fixture)).toMatchObject({
           _tag: "ContentRuntimeVerificationError",
           cause: "Try-out content requires an active session.",
         });
         const cause = new TypeError("Session transport unavailable.");
-        tokenMock.mockRejectedValueOnce(cause);
-        expect(yield* loadFailure(fixture)).toMatchObject({
-          _tag: "ContentRuntimeVerificationError",
-          cause,
-        });
+        sessionMock.mockReturnValueOnce(Effect.fail(cause));
+        expect(yield* loadFailure(fixture)).toBe(cause);
         expect(queryMock).not.toHaveBeenCalled();
       })
   );

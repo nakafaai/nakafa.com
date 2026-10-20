@@ -49,7 +49,7 @@ const NOT_FOUND = { kind: "notFound" };
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mocks.readRequestToken.mockReturnValue(Effect.succeed("token-1"));
+  mocks.readRequestToken.mockReturnValue(Effect.succeedSome("token-1"));
   mocks.readTryoutQuestionPreview.mockResolvedValue(Option.none());
 });
 

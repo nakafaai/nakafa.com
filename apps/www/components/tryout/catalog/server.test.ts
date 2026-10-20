@@ -347,7 +347,7 @@ describe("immutable try-out application catalog", () => {
         };
         fetchQueryMock.mockReturnValue(Effect.succeed(page));
         expect(
-          yield* readTryoutSetList("technical-token", args)
+          yield* readTryoutSetList(Option.some("technical-token"), args)
         ).toBe(page);
         expect(fetchQueryMock).toHaveBeenCalledWith(
           refs.public.tryouts.queries.sets.list,
@@ -364,7 +364,7 @@ describe("immutable try-out application catalog", () => {
           )
         );
         expect(
-          yield* readTryoutSetList(undefined, args).pipe(Effect.flip)
+          yield* readTryoutSetList(Option.none(), args).pipe(Effect.flip)
         ).toMatchObject({
           _tag: "TryoutCatalogReadError",
           cause: {

@@ -138,7 +138,7 @@ function attemptOf(kind: "current" | "retained", overrides: object = {}) {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mocks.readRequestToken.mockReturnValue(Effect.succeed("token-1"));
+  mocks.readRequestToken.mockReturnValue(Effect.succeedSome("token-1"));
   mocks.readPlayerMode.mockReturnValue("list");
   mocks.readServerTranslator.mockImplementation(() =>
     Promise.resolve((key: string) => key)
@@ -175,7 +175,7 @@ describe("readTryoutSectionRoute", () => {
     "sends an attempt section URL to sign-in when there is no session",
     () =>
       Effect.gen(function* () {
-        mocks.readRequestToken.mockReturnValue(Effect.void);
+        mocks.readRequestToken.mockReturnValue(Effect.succeedNone);
 
         expect(yield* readSection(attemptSearch)).toMatchObject({
           kind: "signIn",
@@ -284,7 +284,7 @@ describe("readTryoutSectionRoute", () => {
     "shows the catalog section without an attempt when the learner has no session",
     () =>
       Effect.gen(function* () {
-        mocks.readRequestToken.mockReturnValue(Effect.void);
+        mocks.readRequestToken.mockReturnValue(Effect.succeedNone);
 
         const route = yield* readSection();
 

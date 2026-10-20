@@ -146,7 +146,7 @@ export const readTryoutTrackPage = Effect.fn(
 /** Reads the first personalized catalog result after the framework resolves the session. */
 export const readTryoutSetList = Effect.fn("www.tryout.catalog.readSetList")(
   function* (
-    token: string | undefined,
+    token: Option.Option<string>,
     args: Ref.Args<typeof tryouts.queries.sets.list>
   ) {
     return yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
@@ -154,11 +154,10 @@ export const readTryoutSetList = Effect.fn("www.tryout.catalog.readSetList")(
     ).pipe(
       Effect.provide(
         httpLayer(
-          token
-            ? {
-                auth: token,
-              }
-            : {}
+          Option.match(token, {
+            onNone: () => ({}),
+            onSome: (auth) => ({ auth }),
+          })
         )
       ),
       Effect.withTracerTiming(false),

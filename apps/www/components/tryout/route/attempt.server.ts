@@ -116,16 +116,15 @@ export const readTryoutSetRoute = Effect.fn("www.tryout.route.readSet")(
     if (Option.isNone(head)) {
       return { kind: "notFound" as const };
     }
-    const attempt =
-      token === undefined
-        ? Option.none<SetAttempt>()
-        : yield* readCurrentTryoutSet(token, {
-            countryKey: page.set.countryKey,
-            examKey: page.set.examKey,
-            locale,
-            setKey: page.set.setKey,
-            trackKey: page.set.trackKey,
-          });
+    const attempt = Option.isNone(token)
+      ? Option.none<SetAttempt>()
+      : yield* readCurrentTryoutSet(token.value, {
+          countryKey: page.set.countryKey,
+          examKey: page.set.examKey,
+          locale,
+          setKey: page.set.setKey,
+          trackKey: page.set.trackKey,
+        });
     const running = Option.filter(
       attempt,
       (value) => value.kind === "retained"
@@ -176,7 +175,7 @@ const RetainedSetRequestSchema = Schema.Struct({
   locale: LocaleSchema,
   publicPath: Schema.String,
   route: SetRouteSchema,
-  token: Schema.UndefinedOr(Schema.String),
+  token: Schema.Option(Schema.String),
 });
 
 const readRetainedSetRoute = Effect.fn("www.tryout.route.readRetainedSet")(
@@ -184,7 +183,7 @@ const readRetainedSetRoute = Effect.fn("www.tryout.route.readRetainedSet")(
     input: typeof RetainedSetRequestSchema.Type,
     view: PlayerModeParam
   ) {
-    if (input.token === undefined) {
+    if (Option.isNone(input.token)) {
       return {
         href: getTryoutAttemptAuthHref(
           input.locale,
@@ -194,7 +193,7 @@ const readRetainedSetRoute = Effect.fn("www.tryout.route.readRetainedSet")(
         kind: "signIn" as const,
       };
     }
-    const attempt = yield* readTryoutSetAttemptPage(input.token, {
+    const attempt = yield* readTryoutSetAttemptPage(input.token.value, {
       attemptId: input.attemptId,
       kind: "retained",
       locale: input.locale,

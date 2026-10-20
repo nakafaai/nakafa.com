@@ -138,7 +138,7 @@ function attemptOf(kind: "current" | "retained", overrides: object = {}) {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mocks.readRequestToken.mockReturnValue(Effect.succeed("token-1"));
+  mocks.readRequestToken.mockReturnValue(Effect.succeedSome("token-1"));
   mocks.readPlayerMode.mockReturnValue("list");
   mocks.readServerTranslator.mockImplementation(() =>
     Promise.resolve((key: string) => key)
@@ -174,7 +174,7 @@ describe("readTryoutSetRoute", () => {
 
   it.effect("sends an attempt URL to sign-in when there is no session", () =>
     Effect.gen(function* () {
-      mocks.readRequestToken.mockReturnValue(Effect.void);
+      mocks.readRequestToken.mockReturnValue(Effect.succeedNone);
 
       const route = yield* readSet(attemptSearch);
 
@@ -313,7 +313,7 @@ describe("readTryoutSetRoute", () => {
     "shows the catalog set with the start target when the learner has no session",
     () =>
       Effect.gen(function* () {
-        mocks.readRequestToken.mockReturnValue(Effect.void);
+        mocks.readRequestToken.mockReturnValue(Effect.succeedNone);
 
         const route = yield* readSet();
 

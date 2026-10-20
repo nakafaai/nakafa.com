@@ -127,17 +127,16 @@ export const readTryoutSectionRoute = Effect.fn("www.tryout.route.readSection")(
     if (Option.isNone(head)) {
       return { kind: "notFound" as const };
     }
-    const attempt =
-      token === undefined
-        ? Option.none<SectionAttempt>()
-        : yield* readCurrentTryoutSection(token, {
-            countryKey: page.set.countryKey,
-            examKey: page.set.examKey,
-            locale,
-            sectionKey: page.section.sectionKey,
-            setKey: page.set.setKey,
-            trackKey: page.set.trackKey,
-          });
+    const attempt = Option.isNone(token)
+      ? Option.none<SectionAttempt>()
+      : yield* readCurrentTryoutSection(token.value, {
+          countryKey: page.set.countryKey,
+          examKey: page.set.examKey,
+          locale,
+          sectionKey: page.section.sectionKey,
+          setKey: page.set.setKey,
+          trackKey: page.set.trackKey,
+        });
     const binding = yield* Effect.transposeOption(
       Option.map(attempt, (value) =>
         readSectionBinding(value, intent.value.view)
@@ -187,7 +186,7 @@ const RetainedSectionRequestSchema = Schema.Struct({
   publicPath: Schema.String,
   route: SectionRouteSchema,
   setHref: Schema.String,
-  token: Schema.UndefinedOr(Schema.String),
+  token: Schema.Option(Schema.String),
 });
 
 const readRetainedSectionRoute = Effect.fn(
@@ -196,7 +195,7 @@ const readRetainedSectionRoute = Effect.fn(
   input: typeof RetainedSectionRequestSchema.Type,
   view: PlayerModeParam
 ) {
-  if (input.token === undefined) {
+  if (Option.isNone(input.token)) {
     return {
       href: getTryoutAttemptAuthHref(
         input.locale,
@@ -206,7 +205,7 @@ const readRetainedSectionRoute = Effect.fn(
       kind: "signIn" as const,
     };
   }
-  const attempt = yield* readTryoutSectionAttemptPage(input.token, {
+  const attempt = yield* readTryoutSectionAttemptPage(input.token.value, {
     attemptId: input.attemptId,
     kind: "retained",
     locale: input.locale,
