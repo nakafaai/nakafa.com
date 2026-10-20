@@ -21,7 +21,8 @@ import {
  * The answer to a retired public address, as a Response, or none. The
  * successor keeps the Markdown suffix and the query string of the request. A
  * retired profile address depends on the session cookie, so the answer says so
- * with `Vary`. The server entry asks this before any other redirect.
+ * with `Vary`. The server entry asks this after the main-site and removed-address
+ * answers, and before any other redirect.
  */
 export const readMigrationResponse = Effect.fn("www.routing.migrationResponse")(
   function* (request: Request) {
@@ -126,9 +127,9 @@ function readBareProfileRedirect(
 
 /**
  * The redirect that answers a request before the router runs, as a Response,
- * or none. The server entry calls it first, so a canonical address never reaches
- * route matching. An address that moved answers first, then the bare profile
- * address, then the locale rules.
+ * or none. The server entry calls it after the migrations, so a canonical address
+ * never reaches route matching. An address that moved answers first, then the
+ * bare profile address, then the locale rules.
  */
 export function readRedirectResponse(
   request: Request

@@ -37,8 +37,9 @@ export function readNotFoundLocale(headers: Headers): Locale {
 
 /**
  * The request that renders the standalone not-found page in one locale. It keeps
- * the host, the cookies and the language of the visitor's request, and drops its
- * path and query, so the page answers the way the address of the visitor does not.
+ * the host, the cookies and the language of the visitor's request, and replaces
+ * its path and query with the page's address, so the page answers in the locale
+ * that the server names.
  */
 export function createNotFoundRequest(
   request: Request,

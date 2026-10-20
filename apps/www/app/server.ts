@@ -31,10 +31,12 @@ class UncaughtRequestError extends Schema.TaggedError<UncaughtRequestError>()(
 
 /**
  * Start's server entry. The address alone decides each answer, in this order: a
- * retired public address moves to its successor, a redirect of the locale or
- * the path answers, and a gate answers a school tree path of a main host and a
- * raw user address that is no profile with not found. A school page that its
- * school refuses answers not found before it streams (ADR 0026). Every not-found
+ * host under the production domain that names no school moves to the main site,
+ * a removed public address answers not found, a retired public address moves to
+ * its successor, a redirect of the locale or the path answers, and a gate answers
+ * a school tree path of a main host and a raw user address that is no profile
+ * with not found. A school page that its school refuses answers not found before
+ * it streams (ADR 0026). Every not-found
  * answer is the app's own not-found page, rendered in the locale of the address
  * through the standalone page. Only then does the router see the request, and
  * every page and not-found answer carries the page headers. Route errors are
