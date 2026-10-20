@@ -13,10 +13,11 @@ import { getMaterialModel } from "@/lib/content/material/publication";
 import { getCachedMetadataFromSlug } from "@/lib/og/metadata";
 
 /** The title and description that one social image shows. */
-export interface OgCopy {
-  readonly description: string;
-  readonly title: string;
-}
+const OgCopySchema = Schema.Struct({
+  description: Schema.String,
+  title: Schema.String,
+});
+type OgCopy = typeof OgCopySchema.Type;
 
 /** A material route names its subject, topic and lesson after the namespace. */
 const MATERIAL_SEGMENTS = 4;

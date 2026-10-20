@@ -1,7 +1,7 @@
 import "@tanstack/react-start/server-only";
 
 import { SITE_ORIGIN } from "@repo/seo/origin";
-import { Array as Arr, Effect, Match, Option } from "effect";
+import { Array as Arr, Effect, Match, Option, Schema } from "effect";
 import { captureServerExceptionSafely } from "@/lib/analytics/server";
 import { getCachedSitemapDescriptors } from "@/lib/sitemap/catalog";
 import { getCachedSitemapEntries } from "@/lib/sitemap/entries";
@@ -99,11 +99,14 @@ const buildSitemapPageResponse = Effect.fn("www.sitemap.page.response")(
   }
 );
 
+/** The name of one sitemap page, as the route segment spells it. */
+const SitemapPageParamsSchema = Schema.Struct({ id: Schema.String });
+
 /** Serves one bounded sitemap page from materialized Convex route rows. */
 export function serveSitemapPage({
   params,
 }: {
-  readonly params: { readonly id: string };
+  readonly params: typeof SitemapPageParamsSchema.Type;
 }) {
   const pageId = parseSitemapPageId(params.id);
   if (Option.isNone(pageId) || !getSitemapPageDescriptor(pageId.value)) {

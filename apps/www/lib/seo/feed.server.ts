@@ -9,7 +9,7 @@ import {
 } from "@repo/internationalization/src/locale";
 import { readServerTranslator } from "@repo/internationalization/src/translator";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
-import { Array as Arr, DateTime, Effect, Order } from "effect";
+import { Array as Arr, DateTime, Effect, Order, Schema } from "effect";
 import { Feed, type Item } from "feed";
 import { readPublishedLatestArticles } from "@/lib/content/article/discovery";
 import { readPublishedLatestMaterials } from "@/lib/content/material/discovery";
@@ -38,15 +38,16 @@ export const RSS_HEADERS = {
 };
 
 /** One feed entry, read from a signed article or material of one locale. */
-interface FeedContentRoute {
-  readonly appLocale: typeof AppLocaleSchema.Type;
-  readonly authors: readonly { readonly name: string }[];
-  readonly dateModified: number;
-  readonly datePublished: number;
-  readonly description: string | undefined;
-  readonly route: string;
-  readonly title: string;
-}
+const FeedContentRouteSchema = Schema.Struct({
+  appLocale: AppLocaleSchema,
+  authors: Schema.Array(Schema.Struct({ name: Schema.String })),
+  dateModified: Schema.Finite,
+  datePublished: Schema.Finite,
+  description: Schema.UndefinedOr(Schema.String),
+  route: Schema.String,
+  title: Schema.String,
+});
+type FeedContentRoute = typeof FeedContentRouteSchema.Type;
 
 /** Serves the RSS feed of the latest signed articles and materials. */
 export function serveRssFeed() {

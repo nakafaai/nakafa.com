@@ -39,16 +39,17 @@ function negotiate(
   if (init.accept !== undefined) {
     headers.Accept = init.accept;
   }
-  return Effect.runPromise(
-    negotiateDocument(
-      new Request(`https://nakafa.com${url}`, {
-        headers,
-        method: init.method ?? "GET",
-      }),
-      routed
-    )
+  return negotiateDocument(
+    new Request(`https://nakafa.com${url}`, {
+      headers,
+      method: init.method ?? "GET",
+    }),
+    routed
   );
 }
+
+/** Reads the body of one answer. */
+const bodyOf = (response: Response) => Effect.promise(() => response.text());
 
 beforeEach(() => {
   hasLlmsMarkdownSourceMock.mockReset().mockReturnValue(Effect.succeed(true));
@@ -58,87 +59,111 @@ beforeEach(() => {
 });
 
 describe("document negotiation", () => {
-  it("answers the Markdown of a suffixed localized route", async () => {
-    const response = await negotiate("/en/articles/belajar.md");
+  it.effect("answers the Markdown of a suffixed localized route", () =>
+    Effect.gen(function* () {
+      const response = yield* negotiate("/en/articles/belajar.md");
 
-    expect(response.status).toBe(200);
-    expect(response.headers.get("content-type")).toBe(
-      "text/markdown; charset=utf-8"
-    );
-    expect(response.headers.get("vary")).toBe("Accept, Accept-Encoding");
-    await expect(response.text()).resolves.toBe("# Source markdown");
-  });
+      expect(response.status).toBe(200);
+      expect(response.headers.get("content-type")).toBe(
+        "text/markdown; charset=utf-8"
+      );
+      expect(response.headers.get("vary")).toBe("Accept, Accept-Encoding");
+      expect(yield* bodyOf(response)).toBe("# Source markdown");
+    })
+  );
 
-  it("answers the Markdown of a route that the agent prefers", async () => {
-    const response = await negotiate("/id/articles/belajar", {
-      accept: "text/markdown, text/html;q=0.8",
-    });
+  it.effect("answers the Markdown of a route that the agent prefers", () =>
+    Effect.gen(function* () {
+      const response = yield* negotiate("/id/articles/belajar", {
+        accept: "text/markdown, text/html;q=0.8",
+      });
 
-    await expect(response.text()).resolves.toBe("# Source markdown");
-  });
+      expect(yield* bodyOf(response)).toBe("# Source markdown");
+    })
+  );
 
-  it("delegates an HTML request to the router and varies the answer", async () => {
-    const response = await negotiate(
-      "/en/articles/belajar",
-      { accept: "text/html" },
-      router("Accept-Language")
-    );
+  it.effect(
+    "delegates an HTML request to the router and varies the answer",
+    () =>
+      Effect.gen(function* () {
+        const response = yield* negotiate(
+          "/en/articles/belajar",
+          { accept: "text/html" },
+          router("Accept-Language")
+        );
 
-    await expect(response.text()).resolves.toBe("<html>page</html>");
-    expect(response.headers.get("vary")).toBe(
-      "Accept-Language, Accept, Accept-Encoding"
-    );
-  });
+        expect(yield* bodyOf(response)).toBe("<html>page</html>");
+        expect(response.headers.get("vary")).toBe(
+          "Accept-Language, Accept, Accept-Encoding"
+        );
+      })
+  );
 
-  it("keeps the status of the router answer", async () => {
-    const response = await negotiate(
-      "/en/articles/belajar",
-      { accept: "text/html" },
-      Effect.succeed(new Response("moved", { status: 307 }))
-    );
+  it.effect("keeps the status of the router answer", () =>
+    Effect.gen(function* () {
+      const response = yield* negotiate(
+        "/en/articles/belajar",
+        { accept: "text/html" },
+        Effect.succeed(new Response("moved", { status: 307 }))
+      );
 
-    expect(response.status).toBe(307);
-    expect(response.headers.get("vary")).toBe("Accept, Accept-Encoding");
-  });
+      expect(response.status).toBe(307);
+      expect(response.headers.get("vary")).toBe("Accept, Accept-Encoding");
+    })
+  );
 
-  it("answers 406 when the agent names no representation the site sends", async () => {
-    const response = await negotiate("/en/articles/belajar", {
-      accept: "application/json",
-    });
+  it.effect(
+    "answers 406 when the agent names no representation the site sends",
+    () =>
+      Effect.gen(function* () {
+        const response = yield* negotiate("/en/articles/belajar", {
+          accept: "application/json",
+        });
 
-    expect(response.status).toBe(406);
-    expect(response.headers.get("vary")).toBe("Accept, Accept-Encoding");
-    await expect(response.text()).resolves.toBe("Not Acceptable\n");
-  });
+        expect(response.status).toBe(406);
+        expect(response.headers.get("vary")).toBe("Accept, Accept-Encoding");
+        expect(yield* bodyOf(response)).toBe("Not Acceptable\n");
+      })
+  );
 
-  it("answers 406 for Markdown alone on a route with no Markdown source", async () => {
-    hasLlmsMarkdownSourceMock.mockReturnValue(Effect.succeed(false));
+  it.effect(
+    "answers 406 for Markdown alone on a route with no Markdown source",
+    () =>
+      Effect.gen(function* () {
+        hasLlmsMarkdownSourceMock.mockReturnValue(Effect.succeed(false));
 
-    const response = await negotiate("/en/articles/unknown", {
-      accept: "text/markdown",
-    });
+        const response = yield* negotiate("/en/articles/unknown", {
+          accept: "text/markdown",
+        });
 
-    expect(response.status).toBe(406);
-  });
+        expect(response.status).toBe(406);
+      })
+  );
 
-  it("delegates an unlocalized path without a Vary field", async () => {
-    const response = await negotiate("/api/weather", {
-      accept: "application/json",
-    });
+  it.effect("delegates an unlocalized path without a Vary field", () =>
+    Effect.gen(function* () {
+      const response = yield* negotiate("/api/weather", {
+        accept: "application/json",
+      });
 
-    expect(response.status).toBe(200);
-    expect(response.headers.get("vary")).toBeNull();
-    expect(hasLlmsMarkdownSourceMock).not.toHaveBeenCalled();
-  });
+      expect(response.status).toBe(200);
+      expect(response.headers.get("vary")).toBeNull();
+      expect(hasLlmsMarkdownSourceMock).not.toHaveBeenCalled();
+    })
+  );
 
-  it("delegates a write request without reading the Markdown source", async () => {
-    const response = await negotiate(
-      "/en/articles/belajar",
-      { accept: "text/markdown", method: "POST" },
-      router()
-    );
+  it.effect(
+    "delegates a write request without reading the Markdown source",
+    () =>
+      Effect.gen(function* () {
+        const response = yield* negotiate(
+          "/en/articles/belajar",
+          { accept: "text/markdown", method: "POST" },
+          router()
+        );
 
-    expect(response.status).toBe(200);
-    expect(hasLlmsMarkdownSourceMock).not.toHaveBeenCalled();
-  });
+        expect(response.status).toBe(200);
+        expect(hasLlmsMarkdownSourceMock).not.toHaveBeenCalled();
+      })
+  );
 });

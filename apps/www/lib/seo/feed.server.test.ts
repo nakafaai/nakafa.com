@@ -2,7 +2,7 @@
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import { RSS_HEADERS, serveRssFeed } from "@/lib/seo/feed.server";
 
 const readPublishedLatestArticlesMock = vi.hoisted(() => vi.fn());
@@ -35,7 +35,8 @@ const BASE = COMPANY_IDENTITY.url;
 
 /** Lists the item titles of a feed document in document order, without CDATA. */
 function titles(xml: string) {
-  return [...xml.matchAll(/<item>[\s\S]*?<title>(.*?)<\/title>/gu)].map(
+  return Arr.map(
+    [...xml.matchAll(/<item>[\s\S]*?<title>(.*?)<\/title>/gu)],
     (match) => match[1].replace(/^<!\[CDATA\[|\]\]>$/gu, "")
   );
 }
@@ -102,9 +103,7 @@ beforeEach(() => {
 
 describe("rss feed route", () => {
   it("answers the feed of every signed route, newest first, with its cache scopes", async () => {
-    const response = await Effect.runPromise(
-      Effect.promise(() => serveRssFeed())
-    );
+    const response = await serveRssFeed();
 
     expect(response.status).toBe(200);
     expect(response.headers.get("content-type")).toBe(
@@ -128,9 +127,7 @@ describe("rss feed route", () => {
       Effect.succeed({ materials: [] })
     );
 
-    const xml = await Effect.runPromise(
-      Effect.promise(async () => (await serveRssFeed()).text())
-    );
+    const xml = await (await serveRssFeed()).text();
 
     expect(titles(xml)).toEqual([]);
   });

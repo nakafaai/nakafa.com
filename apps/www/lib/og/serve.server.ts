@@ -5,7 +5,7 @@ import {
   decodeLocale,
   type Locale,
 } from "@repo/internationalization/src/locale";
-import { Array as Arr, Effect, Option } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 import { generateOGImage } from "@/lib/og";
 import { readOgCopy } from "@/lib/og/copy.server";
 import { generateFallbackImage } from "@/lib/og/fallback";
@@ -45,11 +45,22 @@ const renderOgImage = Effect.fn("www.og.render")(function* (
   );
 });
 
+/** The splat of an `/og/...` path. */
+const OgImageParamsSchema = Schema.Struct({
+  _splat: Schema.optionalKey(Schema.String),
+});
+
+/** The splat of a localized `/<locale>/og/...` path. */
+const LocaleOgImageParamsSchema = Schema.Struct({
+  _splat: Schema.optionalKey(Schema.String),
+  lang: Schema.String,
+});
+
 /** Serves the social image of a route whose locale prefix is optional. */
 export function serveOgImage({
   params,
 }: {
-  readonly params: { readonly _splat?: string };
+  readonly params: typeof OgImageParamsSchema.Type;
 }) {
   const segments = readSegments(params._splat);
   const prefix = decodeLocale(segments[0]);
@@ -66,7 +77,7 @@ export function serveOgImage({
 export function serveLocaleOgImage({
   params,
 }: {
-  readonly params: { readonly lang: string; readonly _splat?: string };
+  readonly params: typeof LocaleOgImageParamsSchema.Type;
 }) {
   const locale = decodeLocale(params.lang);
   if (Option.isNone(locale)) {

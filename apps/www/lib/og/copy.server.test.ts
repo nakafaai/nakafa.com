@@ -59,140 +59,174 @@ beforeEach(() => {
 });
 
 describe("og copy of articles", () => {
-  it("names the articles index with the common and article copy", async () => {
-    const copy = await Effect.runPromise(readOgCopy("en", ["articles"]));
+  it.effect("names the articles index with the common and article copy", () =>
+    Effect.gen(function* () {
+      const copy = yield* readOgCopy("en", ["articles"]);
 
-    expect(copy).toEqual(
-      Option.some({
+      expect(copy).toEqual(
+        Option.some({
+          description: "Articles.description",
+          title: "Common.articles",
+        })
+      );
+    })
+  );
+
+  it.effect("names one published category with its title", () =>
+    Effect.gen(function* () {
+      const copy = yield* readOgCopy("en", ["articles", CATEGORY]);
+
+      expect(Option.getOrThrow(copy)).toEqual({
         description: "Articles.description",
-        title: "Common.articles",
-      })
-    );
-  });
+        title: "Belajar",
+      });
+    })
+  );
 
-  it("names one published category with its title", async () => {
-    const copy = await Effect.runPromise(
-      readOgCopy("en", ["articles", CATEGORY])
-    );
+  it.effect("answers none for an unpublished category", () =>
+    Effect.gen(function* () {
+      getPublishedArticleCategoryMock.mockResolvedValue(Option.none());
 
-    expect(Option.getOrThrow(copy)).toEqual({
-      description: "Articles.description",
-      title: "Belajar",
-    });
-  });
+      const copy = yield* readOgCopy("en", ["articles", CATEGORY]);
 
-  it("answers none for an unpublished category", async () => {
-    getPublishedArticleCategoryMock.mockResolvedValue(Option.none());
-
-    const copy = await Effect.runPromise(
-      readOgCopy("en", ["articles", CATEGORY])
-    );
-
-    expect(Option.isNone(copy)).toBe(true);
-  });
-
-  it("names one published article with its description, or its title", async () => {
-    const withDescription = await Effect.runPromise(
-      readOgCopy("en", ["articles", CATEGORY, ARTICLE])
-    );
-    getArticleModelMock.mockResolvedValue(projection("Aljabar"));
-    const titleOnly = await Effect.runPromise(
-      readOgCopy("en", ["articles", CATEGORY, ARTICLE])
-    );
-
-    expect(Option.getOrThrow(withDescription)).toEqual({
-      description: "Dasar",
-      title: "Aljabar",
-    });
-    expect(Option.getOrThrow(titleOnly)).toEqual({
-      description: "Aljabar",
-      title: "Aljabar",
-    });
-  });
-
-  it("answers none for a missing article or a malformed path", async () => {
-    getArticleModelMock.mockResolvedValue(null);
-    const missing = await Effect.runPromise(
-      readOgCopy("en", ["articles", CATEGORY, ARTICLE])
-    );
-    const deeper = await Effect.runPromise(
-      readOgCopy("en", ["articles", CATEGORY, ARTICLE, "extra"])
-    );
-    const badCategory = await Effect.runPromise(
-      readOgCopy("en", ["articles", "BAD CATEGORY!", ARTICLE])
-    );
-    const badArticle = await Effect.runPromise(
-      readOgCopy("en", ["articles", CATEGORY, "BAD ARTICLE!"])
-    );
-    const badIndexCategory = await Effect.runPromise(
-      readOgCopy("en", ["articles", "BAD CATEGORY!"])
-    );
-
-    for (const copy of [
-      missing,
-      deeper,
-      badCategory,
-      badArticle,
-      badIndexCategory,
-    ]) {
       expect(Option.isNone(copy)).toBe(true);
-    }
-  });
+    })
+  );
+
+  it.effect(
+    "names one published article with its description, or its title",
+    () =>
+      Effect.gen(function* () {
+        const withDescription = yield* readOgCopy("en", [
+          "articles",
+          CATEGORY,
+          ARTICLE,
+        ]);
+        getArticleModelMock.mockResolvedValue(projection("Aljabar"));
+        const titleOnly = yield* readOgCopy("en", [
+          "articles",
+          CATEGORY,
+          ARTICLE,
+        ]);
+
+        expect(Option.getOrThrow(withDescription)).toEqual({
+          description: "Dasar",
+          title: "Aljabar",
+        });
+        expect(Option.getOrThrow(titleOnly)).toEqual({
+          description: "Aljabar",
+          title: "Aljabar",
+        });
+      })
+  );
+
+  it.effect("answers none for a missing article or a malformed path", () =>
+    Effect.gen(function* () {
+      getArticleModelMock.mockResolvedValue(null);
+      const missing = yield* readOgCopy("en", ["articles", CATEGORY, ARTICLE]);
+      const deeper = yield* readOgCopy("en", [
+        "articles",
+        CATEGORY,
+        ARTICLE,
+        "extra",
+      ]);
+      const badCategory = yield* readOgCopy("en", [
+        "articles",
+        "BAD CATEGORY!",
+        ARTICLE,
+      ]);
+      const badArticle = yield* readOgCopy("en", [
+        "articles",
+        CATEGORY,
+        "BAD ARTICLE!",
+      ]);
+      const badIndexCategory = yield* readOgCopy("en", [
+        "articles",
+        "BAD CATEGORY!",
+      ]);
+
+      for (const copy of [
+        missing,
+        deeper,
+        badCategory,
+        badArticle,
+        badIndexCategory,
+      ]) {
+        expect(Option.isNone(copy)).toBe(true);
+      }
+    })
+  );
 });
 
 describe("og copy of materials", () => {
-  it("names one published lesson with its search title", async () => {
-    const copy = await Effect.runPromise(
-      readOgCopy("en", [SUBJECT, "math", "calculus", "integral"])
-    );
+  it.effect("names one published lesson with its search title", () =>
+    Effect.gen(function* () {
+      const copy = yield* readOgCopy("en", [
+        SUBJECT,
+        "math",
+        "calculus",
+        "integral",
+      ]);
 
-    expect(Option.getOrThrow(copy)).toEqual({
-      description: "Integral",
-      title: "Integral",
-    });
-    expect(getMaterialModelMock).toHaveBeenCalledWith(
-      "en",
-      `${SUBJECT}/math/calculus/integral`
-    );
-  });
+      expect(Option.getOrThrow(copy)).toEqual({
+        description: "Integral",
+        title: "Integral",
+      });
+      expect(getMaterialModelMock).toHaveBeenCalledWith(
+        "en",
+        `${SUBJECT}/math/calculus/integral`
+      );
+    })
+  );
 
-  it("answers none for an unpublished lesson", async () => {
-    getMaterialModelMock.mockResolvedValue(null);
+  it.effect("answers none for an unpublished lesson", () =>
+    Effect.gen(function* () {
+      getMaterialModelMock.mockResolvedValue(null);
 
-    const copy = await Effect.runPromise(
-      readOgCopy("en", [SUBJECT, "math", "calculus", "integral"])
-    );
+      const copy = yield* readOgCopy("en", [
+        SUBJECT,
+        "math",
+        "calculus",
+        "integral",
+      ]);
 
-    expect(Option.isNone(copy)).toBe(true);
-  });
+      expect(Option.isNone(copy)).toBe(true);
+    })
+  );
 
-  it("answers the default copy for a material path without a lesson", async () => {
-    const copy = await Effect.runPromise(readOgCopy("en", [SUBJECT, "math"]));
+  it.effect(
+    "answers the default copy for a material path without a lesson",
+    () =>
+      Effect.gen(function* () {
+        const copy = yield* readOgCopy("en", [SUBJECT, "math"]);
 
-    expect(Option.getOrThrow(copy)).toEqual({
-      description: "Default",
-      title: "Default",
-    });
-    expect(getMaterialModelMock).not.toHaveBeenCalled();
-  });
+        expect(Option.getOrThrow(copy)).toEqual({
+          description: "Default",
+          title: "Default",
+        });
+        expect(getMaterialModelMock).not.toHaveBeenCalled();
+      })
+  );
 });
 
 describe("og copy of other routes", () => {
-  it("answers the default copy of the site's own routes", async () => {
-    getCachedMetadataFromSlugMock.mockResolvedValue({
-      description: "Quran",
-      title: "Al-Quran",
-    });
+  it.effect("answers the default copy of the site's own routes", () =>
+    Effect.gen(function* () {
+      getCachedMetadataFromSlugMock.mockResolvedValue({
+        description: "Quran",
+        title: "Al-Quran",
+      });
 
-    const copy = await Effect.runPromise(readOgCopy("id", ["quran", "1"]));
+      const copy = yield* readOgCopy("id", ["quran", "1"]);
 
-    expect(Option.getOrThrow(copy)).toEqual({
-      description: "Quran",
-      title: "Al-Quran",
-    });
-    expect(getCachedMetadataFromSlugMock).toHaveBeenCalledWith("id", [
-      "quran",
-      "1",
-    ]);
-  });
+      expect(Option.getOrThrow(copy)).toEqual({
+        description: "Quran",
+        title: "Al-Quran",
+      });
+      expect(getCachedMetadataFromSlugMock).toHaveBeenCalledWith("id", [
+        "quran",
+        "1",
+      ]);
+    })
+  );
 });

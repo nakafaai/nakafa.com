@@ -4,9 +4,10 @@ import {
   DEFAULT_LOCALE,
   LOCALES,
   type Locale,
+  LocaleSchema,
 } from "@repo/internationalization/src/locale";
 import { AGENT_DISCOVERY_HEADERS } from "@repo/site/discovery";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Record as Rec, Schema } from "effect";
 import { hasLocale } from "use-intl";
 import { LLMS_CACHE_CONTROL } from "@/lib/llms/constants";
 import { getLlmsMarkdownText } from "@/lib/llms/content/markdown";
@@ -27,8 +28,8 @@ import { buildUnsupportedMarkdownRouteText } from "@/lib/llms/unsupported";
 const VARY = Arr.join(LLMS_REPRESENTATION_VARY_FIELDS, ", ");
 
 /** The agent discovery headers, keyed by their field name. */
-const AGENT_HEADERS = Object.fromEntries(
-  AGENT_DISCOVERY_HEADERS.map(({ key, value }) => [key, value])
+const AGENT_HEADERS = Rec.fromEntries(
+  Arr.map(AGENT_DISCOVERY_HEADERS, ({ key, value }) => [key, value] as const)
 );
 
 const MARKDOWN_HEADERS = {
@@ -50,11 +51,12 @@ const MARKDOWN_NOT_FOUND_HEADERS = {
 };
 
 /** One Markdown request: the route without its locale and extension, and its locale. */
-export interface LlmsMarkdownTarget {
-  readonly cleanSlug: string;
-  readonly hasLocalePrefix: boolean;
-  readonly locale: Locale;
-}
+const LlmsMarkdownTargetSchema = Schema.Struct({
+  cleanSlug: Schema.String,
+  hasLocalePrefix: Schema.Boolean,
+  locale: LocaleSchema,
+});
+type LlmsMarkdownTarget = typeof LlmsMarkdownTargetSchema.Type;
 
 /** Answers one Markdown body with the representation headers. */
 function markdownResponse(text: string | null) {

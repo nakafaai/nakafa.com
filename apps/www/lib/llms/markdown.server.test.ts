@@ -24,6 +24,9 @@ vi.mock("@/lib/llms/index/generate", () => ({
 
 const VARY = "Accept, Accept-Encoding";
 
+/** Reads the body of one answer. */
+const bodyOf = (response: Response) => Effect.promise(() => response.text());
+
 beforeEach(() => {
   getLlmsMarkdownTextMock.mockReset().mockReturnValue(Effect.succeed(null));
   getLlmsSectionIndexTextMock.mockReset().mockReturnValue(Effect.succeed(null));
@@ -48,141 +51,152 @@ describe("llms markdown target", () => {
 });
 
 describe("llms markdown answer", () => {
-  it("answers the root index for the llms route", async () => {
-    const response = await Effect.runPromise(
-      answerLlmsMarkdown({
+  it.effect("answers the root index for the llms route", () =>
+    Effect.gen(function* () {
+      const response = yield* answerLlmsMarkdown({
         cleanSlug: "llms",
         hasLocalePrefix: false,
         locale: "en",
-      })
-    );
+      });
 
-    expect(response.status).toBe(200);
-    expect(response.headers.get("content-type")).toBe(
-      "text/markdown; charset=utf-8"
-    );
-    expect(response.headers.get("vary")).toBe(VARY);
-    await expect(response.text()).resolves.toBe(buildRootLlmsIndexText());
-  });
+      expect(response.status).toBe(200);
+      expect(response.headers.get("content-type")).toBe(
+        "text/markdown; charset=utf-8"
+      );
+      expect(response.headers.get("vary")).toBe(VARY);
+      expect(yield* bodyOf(response)).toBe(buildRootLlmsIndexText());
+    })
+  );
 
-  it("answers the locale index of a localized root", async () => {
-    getLlmsSectionIndexTextMock.mockReturnValue(
-      Effect.succeed("# Locale index")
-    );
+  it.effect("answers the locale index of a localized root", () =>
+    Effect.gen(function* () {
+      getLlmsSectionIndexTextMock.mockReturnValue(
+        Effect.succeed("# Locale index")
+      );
 
-    const response = await Effect.runPromise(
-      answerLlmsMarkdown({
+      const response = yield* answerLlmsMarkdown({
         cleanSlug: "",
         hasLocalePrefix: true,
         locale: "en",
-      })
-    );
+      });
 
-    await expect(response.text()).resolves.toBe("# Locale index");
-    expect(getLlmsSectionIndexTextMock).toHaveBeenCalledWith("llms/en");
-  });
+      expect(yield* bodyOf(response)).toBe("# Locale index");
+      expect(getLlmsSectionIndexTextMock).toHaveBeenCalledWith("llms/en");
+    })
+  );
 
-  it("answers an application section index without a page source", async () => {
-    const appSurface = Option.getOrThrow(
-      Arr.findFirst(
-        PUBLIC_ROUTE_SURFACES,
-        (surface) => surface.key !== "subject" && surface.key !== "curriculum"
-      )
-    );
-    const response = await Effect.runPromise(
-      answerLlmsMarkdown({
+  it.effect("answers an application section index without a page source", () =>
+    Effect.gen(function* () {
+      const appSurface = Option.getOrThrow(
+        Arr.findFirst(
+          PUBLIC_ROUTE_SURFACES,
+          (surface) => surface.key !== "subject" && surface.key !== "curriculum"
+        )
+      );
+
+      const response = yield* answerLlmsMarkdown({
         cleanSlug: `${appSurface.routeSlugs.en}/llms.txt`,
         hasLocalePrefix: true,
         locale: "en",
+      });
+
+      expect(response.status).toBe(200);
+      expect(yield* bodyOf(response)).toContain("learner-facing");
+      expect(getLlmsMarkdownTextMock).not.toHaveBeenCalled();
+    })
+  );
+
+  it.effect(
+    "answers the section index of a public section with its own index",
+    () =>
+      Effect.gen(function* () {
+        getLlmsSectionIndexTextMock.mockReturnValue(
+          Effect.succeed("# Quran index")
+        );
+
+        const response = yield* answerLlmsMarkdown({
+          cleanSlug: "quran/llms.txt",
+          hasLocalePrefix: true,
+          locale: "en",
+        });
+
+        expect(yield* bodyOf(response)).toBe("# Quran index");
+        expect(getLlmsSectionIndexTextMock).toHaveBeenCalledWith(
+          "llms/en/quran"
+        );
       })
-    );
+  );
 
-    expect(response.status).toBe(200);
-    await expect(response.text()).resolves.toContain("learner-facing");
-    expect(getLlmsMarkdownTextMock).not.toHaveBeenCalled();
-  });
+  it.effect("answers a page source with its markdown", () =>
+    Effect.gen(function* () {
+      getLlmsMarkdownTextMock.mockReturnValue(
+        Effect.succeed("# Article title")
+      );
 
-  it("answers the section index of a public section with its own index", async () => {
-    getLlmsSectionIndexTextMock.mockReturnValue(
-      Effect.succeed("# Quran index")
-    );
-
-    const response = await Effect.runPromise(
-      answerLlmsMarkdown({
-        cleanSlug: "quran/llms.txt",
-        hasLocalePrefix: true,
-        locale: "en",
-      })
-    );
-
-    await expect(response.text()).resolves.toBe("# Quran index");
-    expect(getLlmsSectionIndexTextMock).toHaveBeenCalledWith("llms/en/quran");
-  });
-
-  it("answers a page source with its markdown", async () => {
-    getLlmsMarkdownTextMock.mockReturnValue(Effect.succeed("# Article title"));
-
-    const response = await Effect.runPromise(
-      answerLlmsMarkdown({
+      const response = yield* answerLlmsMarkdown({
         cleanSlug: "articles/belajar",
         hasLocalePrefix: true,
         locale: "en",
-      })
-    );
+      });
 
-    expect(response.status).toBe(200);
-    await expect(response.text()).resolves.toBe("# Article title");
-    expect(response.headers.get("vary")).toBe(VARY);
-  });
+      expect(response.status).toBe(200);
+      expect(yield* bodyOf(response)).toBe("# Article title");
+      expect(response.headers.get("vary")).toBe(VARY);
+    })
+  );
 
-  it("answers the section index of a route with an index", async () => {
-    getLlmsSectionIndexTextMock.mockImplementation((slug: string) =>
-      Effect.succeed(slug === "articles" ? "# Articles" : null)
-    );
+  it.effect("answers the section index of a route with an index", () =>
+    Effect.gen(function* () {
+      getLlmsSectionIndexTextMock.mockImplementation((slug: string) =>
+        Effect.succeed(slug === "articles" ? "# Articles" : null)
+      );
 
-    const response = await Effect.runPromise(
-      answerLlmsMarkdown({
+      const response = yield* answerLlmsMarkdown({
         cleanSlug: "articles",
         hasLocalePrefix: false,
         locale: "en",
-      })
-    );
+      });
 
-    await expect(response.text()).resolves.toBe("# Articles");
-  });
+      expect(yield* bodyOf(response)).toBe("# Articles");
+    })
+  );
 
-  it("answers a missing llms index as plain not found", async () => {
-    const response = await Effect.runPromise(
-      answerLlmsMarkdown({
+  it.effect("answers a missing llms index as plain not found", () =>
+    Effect.gen(function* () {
+      const response = yield* answerLlmsMarkdown({
         cleanSlug: "llms/en/missing",
         hasLocalePrefix: false,
         locale: "en",
+      });
+
+      expect(response.status).toBe(404);
+      expect(response.headers.get("content-type")).toBe(
+        "text/plain; charset=utf-8"
+      );
+      expect(yield* bodyOf(response)).toBe("Not found");
+    })
+  );
+
+  it.effect(
+    "answers a known route without source as markdown not found with discovery headers",
+    () =>
+      Effect.gen(function* () {
+        const response = yield* answerLlmsMarkdown({
+          cleanSlug: "articles/unknown",
+          hasLocalePrefix: true,
+          locale: "en",
+        });
+
+        expect(response.status).toBe(404);
+        expect(response.headers.get("x-robots-tag")).toBe("noindex");
+        expect(response.headers.get("x-llms-txt")).toBe("/llms.txt");
+        expect(response.headers.get("link")).toBe(
+          '</llms.txt>; rel="llms-txt"'
+        );
+        expect(response.headers.get("content-type")).toBe(
+          "text/markdown; charset=utf-8"
+        );
+        expect(yield* bodyOf(response)).toContain("/articles/unknown");
       })
-    );
-
-    expect(response.status).toBe(404);
-    expect(response.headers.get("content-type")).toBe(
-      "text/plain; charset=utf-8"
-    );
-    await expect(response.text()).resolves.toBe("Not found");
-  });
-
-  it("answers a known route without source as markdown not found with discovery headers", async () => {
-    const response = await Effect.runPromise(
-      answerLlmsMarkdown({
-        cleanSlug: "articles/unknown",
-        hasLocalePrefix: true,
-        locale: "en",
-      })
-    );
-
-    expect(response.status).toBe(404);
-    expect(response.headers.get("x-robots-tag")).toBe("noindex");
-    expect(response.headers.get("x-llms-txt")).toBe("/llms.txt");
-    expect(response.headers.get("link")).toBe('</llms.txt>; rel="llms-txt"');
-    expect(response.headers.get("content-type")).toBe(
-      "text/markdown; charset=utf-8"
-    );
-    await expect(response.text()).resolves.toContain("/articles/unknown");
-  });
+  );
 });

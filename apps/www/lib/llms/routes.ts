@@ -12,16 +12,16 @@ const LocalizedLlmsRouteSchema = Schema.Struct({
   markdownExtension: Schema.Literals(["", ".md", ".mdx"]),
   route: Schema.String,
 });
-export type LocalizedLlmsRoute = typeof LocalizedLlmsRouteSchema.Type;
+type LocalizedLlmsRoute = typeof LocalizedLlmsRouteSchema.Type;
 
-export const LlmsProxyRouteRequestSchema = Schema.Struct({
+const LlmsProxyRouteRequestSchema = Schema.Struct({
   acceptHeader: Schema.Option(Schema.String),
   method: Schema.String,
   pathname: Schema.String,
 });
 export type LlmsProxyRouteRequest = typeof LlmsProxyRouteRequestSchema.Type;
 
-export const LlmsProxyRouteDecisionSchema = Schema.Union([
+const LlmsProxyRouteDecisionSchema = Schema.Union([
   Schema.Struct({ kind: Schema.Literal("delegate") }),
   Schema.Struct({ kind: Schema.Literal("not-acceptable") }),
   Schema.Struct({
@@ -118,7 +118,7 @@ function isReadMethod(method: string) {
 }
 
 /** Removes one explicit Markdown suffix while preserving its exact spelling. */
-export function readLlmsMarkdownPathname(pathname: string) {
+function readLlmsMarkdownPathname(pathname: string) {
   const markdownExtension = readLlmsMarkdownExtension(pathname);
 
   return {

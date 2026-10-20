@@ -1,6 +1,6 @@
 import "@tanstack/react-start/server-only";
 
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 import { LLMS_CACHE_CONTROL } from "@/lib/llms/constants";
 import { buildRootLlmsIndexText } from "@/lib/llms/index/public";
 import {
@@ -43,11 +43,16 @@ export function serveAgentSkills() {
   );
 }
 
+/** The splat of a `/llms.mdx/...` path. */
+const LlmsMarkdownParamsSchema = Schema.Struct({
+  _splat: Schema.optionalKey(Schema.String),
+});
+
 /** Serves the Markdown of one `/llms.mdx/...` path, with the splat as its segments. */
 export function serveLlmsMarkdown({
   params,
 }: {
-  readonly params: { readonly _splat?: string };
+  readonly params: typeof LlmsMarkdownParamsSchema.Type;
 }) {
   const segments = Arr.filter(
     (params._splat ?? "").split("/"),
