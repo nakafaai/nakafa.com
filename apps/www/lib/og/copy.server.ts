@@ -2,6 +2,8 @@ import "@tanstack/react-start/server-only";
 
 import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
 import { ArticleRouteSlugSchema } from "@nakafa/aksara-contracts/projection/article";
+import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
+import { resolveReferenceInput } from "@repo/backend/confect/contentRelease/reference/input";
 import { readNamespaceSegment } from "@repo/contents/route/surface";
 import type { Locale } from "@repo/internationalization/src/locale";
 import { readServerTranslator } from "@repo/internationalization/src/translator";
@@ -10,6 +12,7 @@ import { getPublishedArticleCategory } from "@/lib/content/article/category";
 import { getArticleModel } from "@/lib/content/article/publication";
 import { toMaterialMetadataCopy } from "@/lib/content/material/metadata";
 import { getMaterialModel } from "@/lib/content/material/publication";
+import { queryContentStore } from "@/lib/content/store/query";
 import { getCachedMetadataFromSlug } from "@/lib/og/metadata";
 
 /** The title and description that one social image shows. */
@@ -105,7 +108,7 @@ const readMaterialCopy = Effect.fn("www.og.copy.material")(function* (
   );
 });
 
-/** Reads the site's default copy for one route, which every route without content has. */
+/** Reads the site's default copy for one route. */
 const readDefaultCopy = Effect.fn("www.og.copy.default")(function* (
   locale: Locale,
   slug: readonly string[]
@@ -113,15 +116,43 @@ const readDefaultCopy = Effect.fn("www.og.copy.default")(function* (
   const fallback = yield* Effect.promise(() =>
     getCachedMetadataFromSlug(locale, [...slug])
   );
-  return Option.some({
+  return {
     description: fallback.description ?? fallback.title,
     title: fallback.title,
-  });
+  };
 });
 
 /**
- * Reads the copy of one social image from the content it names: an article,
- * a material lesson, or the site's default copy for every other route. A
+ * Reads the copy of a route that names no article or lesson. The release
+ * decides first, through the same reference that the page reads: a route
+ * that the reference resolves answers the site's copy only when the release
+ * lists it, and a route outside the content namespaces answers the site's
+ * copy at once.
+ */
+const readRouteCopy = Effect.fn("www.og.copy.route")(function* (
+  locale: Locale,
+  slug: readonly string[]
+) {
+  const publicPath = Arr.join(slug, "/");
+  const input = yield* resolveReferenceInput({
+    appLocale: locale,
+    kind: "route",
+    publicPath,
+  });
+  if (input) {
+    const reference = yield* queryContentStore(contentRelease.reference.read, {
+      input: { appLocale: locale, kind: "route", publicPath },
+    });
+    if (!reference) {
+      return Option.none<OgCopy>();
+    }
+  }
+  return Option.some(yield* readDefaultCopy(locale, slug));
+});
+
+/**
+ * Reads the copy of one social image from the content it names: an article or
+ * a material lesson, or the site's copy for a route that the release lists. A
  * route that names content with no published release answers none, so the
  * image falls back to the brand artwork instead of rendering the shell.
  */
@@ -138,5 +169,5 @@ export const readOgCopy = Effect.fn("www.og.copy.read")(function* (
   ) {
     return yield* readMaterialCopy(locale, slug);
   }
-  return yield* readDefaultCopy(locale, slug);
+  return yield* readRouteCopy(locale, slug);
 });

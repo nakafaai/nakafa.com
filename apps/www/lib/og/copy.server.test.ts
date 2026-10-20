@@ -9,6 +9,7 @@ const getPublishedArticleCategoryMock = vi.hoisted(() => vi.fn());
 const getArticleModelMock = vi.hoisted(() => vi.fn());
 const getMaterialModelMock = vi.hoisted(() => vi.fn());
 const getCachedMetadataFromSlugMock = vi.hoisted(() => vi.fn());
+const queryContentStoreMock = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/content/article/category", () => ({
   /** Controls which article category is published. */
@@ -28,6 +29,11 @@ vi.mock("@/lib/content/material/publication", () => ({
 vi.mock("@/lib/og/metadata", () => ({
   /** Answers the default copy of a route. */
   getCachedMetadataFromSlug: getCachedMetadataFromSlugMock,
+}));
+
+vi.mock("@/lib/content/store/query", () => ({
+  /** Controls whether the release lists one route. */
+  queryContentStore: queryContentStoreMock,
 }));
 
 vi.mock("@repo/internationalization/src/translator", () => ({
@@ -56,6 +62,9 @@ beforeEach(() => {
   getCachedMetadataFromSlugMock
     .mockReset()
     .mockResolvedValue({ description: undefined, title: "Default" });
+  queryContentStoreMock
+    .mockReset()
+    .mockReturnValue(Effect.succeed({ title: "Listed" }));
 });
 
 describe("og copy of articles", () => {
@@ -207,10 +216,23 @@ describe("og copy of materials", () => {
         expect(getMaterialModelMock).not.toHaveBeenCalled();
       })
   );
+
+  it.effect(
+    "answers none for a material route that the release does not list",
+    () =>
+      Effect.gen(function* () {
+        queryContentStoreMock.mockReturnValue(Effect.succeed(null));
+
+        const copy = yield* readOgCopy("en", [SUBJECT, "math"]);
+
+        expect(Option.isNone(copy)).toBe(true);
+        expect(getCachedMetadataFromSlugMock).not.toHaveBeenCalled();
+      })
+  );
 });
 
 describe("og copy of other routes", () => {
-  it.effect("answers the default copy of the site's own routes", () =>
+  it.effect("answers the default copy of a route that the release lists", () =>
     Effect.gen(function* () {
       getCachedMetadataFromSlugMock.mockResolvedValue({
         description: "Quran",
@@ -223,10 +245,40 @@ describe("og copy of other routes", () => {
         description: "Quran",
         title: "Al-Quran",
       });
+      expect(queryContentStoreMock).toHaveBeenCalledWith(expect.anything(), {
+        input: { appLocale: "id", kind: "route", publicPath: "quran/1" },
+      });
       expect(getCachedMetadataFromSlugMock).toHaveBeenCalledWith("id", [
         "quran",
         "1",
       ]);
     })
+  );
+
+  it.effect(
+    "answers none for a content route that the release does not list",
+    () =>
+      Effect.gen(function* () {
+        queryContentStoreMock.mockReturnValue(Effect.succeed(null));
+
+        const copy = yield* readOgCopy("id", ["quran", "1000"]);
+
+        expect(Option.isNone(copy)).toBe(true);
+        expect(getCachedMetadataFromSlugMock).not.toHaveBeenCalled();
+      })
+  );
+
+  it.effect(
+    "answers the default copy of a route outside the content namespaces without reading the release",
+    () =>
+      Effect.gen(function* () {
+        const copy = yield* readOgCopy("en", ["about"]);
+
+        expect(Option.getOrThrow(copy)).toEqual({
+          description: "Default",
+          title: "Default",
+        });
+        expect(queryContentStoreMock).not.toHaveBeenCalled();
+      })
   );
 });
