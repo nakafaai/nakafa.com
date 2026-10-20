@@ -11,6 +11,7 @@ import {
   readMigrationResponse,
   readRedirectResponse,
 } from "@/lib/routing/redirect";
+import { answerSchoolRefusal } from "@/lib/routing/school/refusal";
 import { answerSchoolGate, withPageHeaders } from "@/lib/tenant/gate";
 
 const startHandler = createStartHandler(defaultStreamHandler);
@@ -25,11 +26,12 @@ class UncaughtRequestError extends Schema.TaggedError<UncaughtRequestError>()(
  * Start's server entry. The address alone decides each answer, in this order: a
  * retired public address moves to its successor, a redirect of the locale or
  * the path answers, and a gate answers a school tree path of a main host and a
- * raw user address that is no profile with not found. Only then does the router
- * see the request, and every page and not-found answer carries the page headers
- * (ADR 0026). Route errors are handled by the router. Only an error that escapes
- * the handler or a migration reaches the catch, which reports it and answers with
- * Start's error response.
+ * raw user address that is no profile with not found. A school page that its
+ * school refuses answers not found before it streams (ADR 0026). Only then does
+ * the router see the request, and every page and not-found answer carries the
+ * page headers. Route errors are handled by the router. Only an error that
+ * escapes the handler or a migration reaches the catch, which reports it and
+ * answers with Start's error response.
  *
  * https://tanstack.com/start/latest/docs/framework/react/guide/server-entry-point
  */
@@ -52,6 +54,10 @@ export default createServerEntry({
         );
         if (Option.isSome(gated)) {
           return gated.value;
+        }
+        const refusal = yield* answerSchoolRefusal(request);
+        if (Option.isSome(refusal)) {
+          return refusal.value;
         }
         return yield* Effect.tryPromise({
           try: async () => startHandler(request, opts),

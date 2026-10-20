@@ -9,6 +9,7 @@ import { clientEnv } from "@/env.client";
 import { readSessionToken } from "@/lib/auth/token";
 import { httpSingleAttemptLayer } from "@/lib/convex/http";
 import { readSchoolSlug } from "@/lib/routing/school/host";
+import { notFoundAnswer } from "@/lib/tenant/gate";
 
 /**
  * The gate did not answer within NETWORK_ATTEMPT_DEADLINE, the bound that every
@@ -74,3 +75,18 @@ export const readSchoolRefusal = Effect.fn("www.routing.school.pageRefusal")(
       : Option.none();
   }
 );
+
+/**
+ * Answers a refused school page with not found before the page streams (ADR
+ * 0026). The answer names no page, is in the locale that the page negotiates, and
+ * carries the page headers. An admitted page, a request whose host names no
+ * school, and a failed read answer none, so the school tree decides.
+ */
+export const answerSchoolRefusal = Effect.fn(
+  "www.routing.school.refusalAnswer"
+)(function* (request: Request) {
+  const refused = yield* readSchoolRefusal(request);
+  return Option.map(refused, (locale) =>
+    notFoundAnswer(request, { "content-language": locale })
+  );
+});

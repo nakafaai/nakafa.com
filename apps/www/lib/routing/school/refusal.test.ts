@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { NETWORK_ATTEMPT_DEADLINE } from "@repo/backend/client/network";
 import { Effect, Fiber, Option } from "effect";
 import { TestClock } from "effect/testing";
+import { answerSchoolRefusal } from "@/lib/routing/school/refusal";
 import {
   answerAndCauses,
   answered,
@@ -224,5 +225,37 @@ describe("school page refusal", () => {
         expect(count).toBe(1);
         expect(text).toContain("SchoolReadDeadline");
       })
+  );
+});
+
+describe("school page refusal answer", () => {
+  it.effect(
+    "answers a refused school page with not found, in the locale it negotiates",
+    () =>
+      Effect.gen(function* () {
+        serve({ refusal: answered(true) });
+
+        const answer = Option.getOrThrow(
+          yield* answerSchoolRefusal(
+            new Request(SCHOOL_ROOT, {
+              headers: { "accept-language": "id-ID,id;q=0.9" },
+            })
+          )
+        );
+
+        expect(answer.status).toBe(404);
+        expect(answer.headers.get("content-language")).toBe("id");
+        expect(answer.headers.get("x-robots-tag")).toBe("noindex");
+      })
+  );
+
+  it.effect("answers none for a school page that the school admits", () =>
+    Effect.gen(function* () {
+      serve({ refusal: answered(false) });
+
+      expect(
+        Option.isNone(yield* answerSchoolRefusal(new Request(SCHOOL_ROOT)))
+      ).toBe(true);
+    })
   );
 });

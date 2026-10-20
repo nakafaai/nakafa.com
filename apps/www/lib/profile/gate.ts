@@ -22,5 +22,5 @@ export function answerProfileGate(request: Request): Option.Option<Response> {
   ) {
     return Option.none();
   }
-  return Option.some(notFoundAnswer(request));
+  return Option.some(notFoundAnswer(request, {}));
 }

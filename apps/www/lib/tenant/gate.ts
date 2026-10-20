@@ -63,11 +63,14 @@ function readRequestSchool(headers: Headers) {
  * address. A gate of the server entry answers with it before the router sees
  * the address.
  */
-export function notFoundAnswer(request: Request): Response {
+export function notFoundAnswer(
+  request: Request,
+  headers: Readonly<Record<string, string>>
+): Response {
   return withPageHeaders(
     request,
     new Response("Not Found", {
-      headers: { "content-type": "text/plain; charset=utf-8" },
+      headers: { ...headers, "content-type": "text/plain; charset=utf-8" },
       status: 404,
     })
   );
@@ -84,7 +87,7 @@ export function answerSchoolGate(request: Request): Option.Option<Response> {
   if (!isSchoolTreePath(new URL(request.url).pathname)) {
     return Option.none();
   }
-  return Option.some(notFoundAnswer(request));
+  return Option.some(notFoundAnswer(request, {}));
 }
 
 /**
