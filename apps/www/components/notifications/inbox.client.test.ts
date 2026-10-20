@@ -23,9 +23,10 @@ describe("useInbox", () => {
     mocks.settled.isLoading = false;
     const first = Option.some({ isDone: true, page: [] });
 
-    expect(useInbox(first)).toBe(
-      mocks.usePaginatedPreloaded.mock.results.at(-1)?.value
-    );
+    const page = { results: [] };
+    mocks.usePaginatedPreloaded.mockReturnValue(page);
+
+    expect(useInbox(first)).toBe(page);
     expect(mocks.usePaginatedPreloaded).toHaveBeenLastCalledWith(
       expect.anything(),
       {},
