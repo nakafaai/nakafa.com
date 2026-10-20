@@ -3,6 +3,7 @@ import {
   decideRedirect,
   LOCALE_VARY,
 } from "@repo/internationalization/src/redirect";
+import { SITE_ORIGIN } from "@repo/seo/origin";
 import { Effect, Option } from "effect";
 import { hasTryoutAttemptCapability } from "@/components/tryout/route/path";
 import { readLlmsMarkdownPathname } from "@/lib/llms/routes";
@@ -10,7 +11,11 @@ import { readProfileRoot } from "@/lib/profile/route";
 import { readMovedRedirect } from "@/lib/routing/moved";
 import { readPublicUrlMigrationRedirect } from "@/lib/routing/public/migration";
 import { readRetiredPublicRoute } from "@/lib/routing/public/retired";
-import { readSchoolSlug } from "@/lib/routing/school/host";
+import {
+  isRefusedSchoolHost,
+  readRequestHostname,
+  readSchoolSlug,
+} from "@/lib/routing/school/host";
 
 /**
  * The answer to a retired public address, as a Response, or none. The
@@ -45,6 +50,31 @@ export const readMigrationResponse = Effect.fn("www.routing.migrationResponse")(
     );
   }
 );
+
+/**
+ * The redirect of a host that sits under the production domain but names no
+ * school, such as `www`: the same path and query open on the main site, with a
+ * 307 (ADR 0026). Only the path and query move, so a path that starts with two
+ * slashes stays on the main site.
+ */
+export function readMainSiteRedirect(
+  request: Request
+): Option.Option<Response> {
+  const hostname = readRequestHostname(request.headers);
+  if (Option.isNone(hostname) || !isRefusedSchoolHost(hostname.value)) {
+    return Option.none();
+  }
+  const url = new URL(request.url);
+  const target = new URL(SITE_ORIGIN);
+  target.pathname = url.pathname;
+  target.search = url.search;
+  return Option.some(
+    new Response(null, {
+      headers: { location: target.href },
+      status: 307,
+    })
+  );
+}
 
 /**
  * The locale of the not-found page that answers a public address which is removed

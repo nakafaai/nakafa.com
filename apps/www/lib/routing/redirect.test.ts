@@ -3,6 +3,7 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Effect, Option } from "effect";
 import {
+  readMainSiteRedirect,
   readMigrationResponse,
   readRedirectResponse,
   readRemovedAddressNotFound,
@@ -242,4 +243,48 @@ describe("readRemovedAddressNotFound", () => {
         ).toBe(true);
       })
   );
+});
+
+describe("readMainSiteRedirect", () => {
+  it("sends a host under the production domain that names no school to the main site, with its path and query, as a 307", () => {
+    const found = Option.getOrThrow(
+      readMainSiteRedirect(
+        new Request("https://www.nakafa.com/en/curriculum?page=2", {
+          headers: { host: "www.nakafa.com" },
+        })
+      )
+    );
+
+    expect(found.status).toBe(307);
+    expect(found.headers.get("location")).toBe(
+      "https://nakafa.com/en/curriculum?page=2"
+    );
+  });
+
+  it("keeps a path that starts with two slashes on the main site", () => {
+    const found = Option.getOrThrow(
+      readMainSiteRedirect(
+        new Request("https://www.nakafa.com//evil.com/", {
+          headers: { host: "www.nakafa.com" },
+        })
+      )
+    );
+
+    expect(found.headers.get("location")).toBe("https://nakafa.com//evil.com/");
+  });
+
+  it("leaves a school host, the main host and a request without a host to the router", () => {
+    for (const host of ["harapan.nakafa.com", "nakafa.com", undefined]) {
+      expect(
+        Option.isNone(
+          readMainSiteRedirect(
+            new Request("https://nakafa.com/en", {
+              headers: host === undefined ? {} : { host },
+            })
+          )
+        ),
+        String(host)
+      ).toBe(true);
+    }
+  });
 });

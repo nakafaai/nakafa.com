@@ -13,6 +13,7 @@ import {
   withContentLanguage,
 } from "@/lib/routing/not-found";
 import {
+  readMainSiteRedirect,
   readMigrationResponse,
   readRedirectResponse,
   readRemovedAddressNotFound,
@@ -54,6 +55,10 @@ export default createServerEntry({
 
     return Effect.runPromise(
       Effect.gen(function* () {
+        const mainSite = readMainSiteRedirect(request);
+        if (Option.isSome(mainSite)) {
+          return mainSite.value;
+        }
         const removed = yield* readRemovedAddressNotFound(request).pipe(
           Effect.mapError((cause) => new UncaughtRequestError({ cause }))
         );
