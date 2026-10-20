@@ -35,8 +35,8 @@ import {
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
+import { useTheme } from "@repo/design-system/providers/theme";
 import { Array as Arr } from "effect";
-import { useTheme } from "next-themes";
 import type { ReactNode } from "react";
 import { Suspense, useState } from "react";
 import { useTranslations } from "use-intl";
@@ -83,7 +83,7 @@ export function SubatomicParticlePropertiesLab({
   description,
   labels,
 }: SubatomicParticlePropertiesLabProps) {
-  const { resolvedTheme } = useTheme();
+  const resolvedTheme = useTheme((state) => state.resolvedTheme);
   const useVerticalToggle = useMediaQuery(
     TAILWIND_MEDIA_QUERIES.belowSm,
     false

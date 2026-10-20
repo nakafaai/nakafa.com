@@ -33,8 +33,8 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
+import { useTheme } from "@repo/design-system/providers/theme";
 import { Array as Arr } from "effect";
-import { useTheme } from "next-themes";
 import type { ReactNode } from "react";
 import { Suspense, useState } from "react";
 import { useTranslations } from "use-intl";
@@ -70,7 +70,7 @@ export function MatterParticleReaderLab({
   description,
   labels,
 }: MatterParticleReaderLabProps) {
-  const { resolvedTheme } = useTheme();
+  const resolvedTheme = useTheme((state) => state.resolvedTheme);
   const [selectedModeId, setSelectedModeId] =
     useState<MatterParticleModeId>(ATOM_MODE_ID);
   const selectedLabels = labels.modes[selectedModeId];

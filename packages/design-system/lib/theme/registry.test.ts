@@ -7,6 +7,8 @@ import {
   getThemeAppearance,
   getThemeShaderAlphaColor,
   getThemeShaderColor,
+  parseThemeChoice,
+  resolveThemeChoice,
   themes,
 } from "@repo/design-system/lib/theme/registry";
 import {
@@ -16,7 +18,7 @@ import {
   readThemeStyleSources,
   toRgbProjection,
 } from "@repo/design-system/test/contract";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 
 const readSources = readThemeStyleSources().pipe(
   Effect.provide(NodeFileSystem.layer)
@@ -129,5 +131,28 @@ describe("getThemeShaderAlphaColor", () => {
     expect(getThemeShaderAlphaColor(color, 0.32)).toBe(
       "rgba(57, 199, 244, 0.32)"
     );
+  });
+});
+
+describe("parseThemeChoice", () => {
+  it("reads a stored theme or the system choice as itself", () => {
+    expect(parseThemeChoice(Option.some("dark"))).toBe("dark");
+    expect(parseThemeChoice(Option.some("system"))).toBe("system");
+  });
+
+  it("resolves a missing value and a value that names no theme to the default choice", () => {
+    expect(parseThemeChoice(Option.none())).toBe(DEFAULT_THEME);
+    expect(parseThemeChoice(Option.some("unknown"))).toBe(DEFAULT_THEME);
+  });
+});
+
+describe("resolveThemeChoice", () => {
+  it("shows the system appearance for the system choice", () => {
+    expect(resolveThemeChoice("system", "dark")).toBe("dark");
+    expect(resolveThemeChoice("system", "light")).toBe("light");
+  });
+
+  it("shows a named theme as itself, whatever the system appearance", () => {
+    expect(resolveThemeChoice("bean", "dark")).toBe("bean");
   });
 });

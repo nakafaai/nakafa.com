@@ -23,8 +23,8 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
+import { useTheme } from "@repo/design-system/providers/theme";
 import { Array as Arr } from "effect";
-import { useTheme } from "next-themes";
 import type { ReactNode, RefObject } from "react";
 import { createContext, Suspense, use, useMemo, useRef, useState } from "react";
 import { type Group, SRGBColorSpace } from "three";
@@ -107,7 +107,7 @@ export function GreenhouseEffectLab(props: GreenhouseEffectLabProps) {
   const [store] = useState(() => createGasLevelStore(DEFAULT_GAS_LEVEL));
   const gasLevel = useStore(store, (state) => state.gasLevel);
   const setGasLevel = useStore(store, (state) => state.setGasLevel);
-  const { resolvedTheme } = useTheme();
+  const resolvedTheme = useTheme((state) => state.resolvedTheme);
   const colors = useMemo(
     () => getBiologySceneColors(resolvedTheme),
     [resolvedTheme]
