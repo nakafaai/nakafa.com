@@ -4,6 +4,15 @@ import { Schema } from "effect";
 export const PROFILE_SIGN = "@";
 
 /**
+ * The router's segment that holds every profile, `/{locale}/user/{username}`. A
+ * browser never asks for this address: the profile rewrite maps `@username` to it.
+ */
+export const PROFILE_ROUTE_SEGMENT = "user";
+
+/** The one fixed page below the profile segment, which names no profile. */
+export const SETTINGS_SEGMENT = "settings";
+
+/**
  * The tabs a profile adds below its address, each as one segment after the
  * username. Posts is the address itself. The route check, the rewrites and the
  * tabs all read this one list, so a tab added here is routed and shown alike.

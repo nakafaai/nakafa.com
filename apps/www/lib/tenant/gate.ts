@@ -59,9 +59,23 @@ function readRequestSchool(headers: Headers) {
 }
 
 /**
+ * The not-found answer that names no page, so no search engine indexes the
+ * address. A gate of the server entry answers with it before the router sees
+ * the address.
+ */
+export function notFoundAnswer(request: Request): Response {
+  return withPageHeaders(
+    request,
+    new Response("Not Found", {
+      headers: { "content-type": "text/plain; charset=utf-8" },
+      status: 404,
+    })
+  );
+}
+
+/**
  * Answers a school tree path of a main host with not found before the router
- * sees it, and returns none for every other request. The answer names no page,
- * so no search engine indexes the address.
+ * sees it, and returns none for every other request.
  */
 export function answerSchoolGate(request: Request): Option.Option<Response> {
   if (Option.isSome(readRequestSchool(request.headers))) {
@@ -70,15 +84,7 @@ export function answerSchoolGate(request: Request): Option.Option<Response> {
   if (!isSchoolTreePath(new URL(request.url).pathname)) {
     return Option.none();
   }
-  return Option.some(
-    withPageHeaders(
-      request,
-      new Response("Not Found", {
-        headers: { "content-type": "text/plain; charset=utf-8" },
-        status: 404,
-      })
-    )
-  );
+  return Option.some(notFoundAnswer(request));
 }
 
 /**

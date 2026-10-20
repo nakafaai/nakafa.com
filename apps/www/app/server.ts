@@ -6,6 +6,7 @@ import {
   handleStartError,
 } from "@tanstack/react-start/server";
 import { Effect, Option, Schema } from "effect";
+import { answerProfileGate } from "@/lib/profile/gate";
 import { readRedirectResponse } from "@/lib/routing/redirect";
 import { answerSchoolGate, withPageHeaders } from "@/lib/tenant/gate";
 
@@ -19,11 +20,11 @@ class UncaughtRequestError extends Schema.TaggedError<UncaughtRequestError>()(
 
 /**
  * Start's server entry. A redirect that the address alone decides answers
- * first. A school tree path on a main host then answers not found before the
- * router sees it, and every school page and not-found answer carries the page
- * headers (ADR 0026). Route errors are handled by the router. Only an error
- * that escapes the handler reaches the catch, which reports it and answers with
- * Start's error response.
+ * first. A school tree path on a main host, and a raw user address that is no
+ * profile, then answer not found before the router sees them, and every school
+ * page and not-found answer carries the page headers (ADR 0026). Route errors
+ * are handled by the router. Only an error that escapes the handler reaches the
+ * catch, which reports it and answers with Start's error response.
  *
  * https://tanstack.com/start/latest/docs/framework/react/guide/server-entry-point
  */
@@ -33,7 +34,9 @@ export default createServerEntry({
     if (Option.isSome(redirect)) {
       return Promise.resolve(redirect.value);
     }
-    const gated = answerSchoolGate(request);
+    const gated = Option.orElse(answerSchoolGate(request), () =>
+      answerProfileGate(request)
+    );
     if (Option.isSome(gated)) {
       return Promise.resolve(gated.value);
     }
