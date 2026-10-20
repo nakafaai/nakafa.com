@@ -1,6 +1,12 @@
 "use client";
 
-import { createContext, type ReactNode, use, useState } from "react";
+import { Function as Fn } from "effect";
+import {
+  createContext,
+  type ReactNode,
+  use,
+  useSyncExternalStore,
+} from "react";
 import { AnalyticsUnavailableProvider } from "@/components/analytics/consent/unavailable";
 import { SignedOutSessionProvider } from "@/components/auth/session";
 import { AppProviders } from "@/components/providers/app";
@@ -18,16 +24,18 @@ export function useLiveSession() {
   return use(LiveSessionContext);
 }
 
-/**
- * Reads the signed-in hint of the browser. The server renders a page as a
- * visitor's page, and the browser of a signed-in account chooses the live
- * session before its first render, so the hydrated tree matches the server's
- * markup: providers render no markup of their own.
- */
+/** The cookie does not change while the page is open, so no store notifies its readers. */
+function subscribeNothing() {
+  return Fn.constVoid;
+}
+
+/** The server renders the visitor's page, which the browser keeps unless its hint says otherwise. */
+function readServerSignedInHint() {
+  return false;
+}
+
+/** The browser reads the signed-in hint of its cookies. */
 function readBrowserSignedInHint() {
-  if (typeof document === "undefined") {
-    return false;
-  }
   return hasSignedInHint(document.cookie);
 }
 
@@ -60,7 +68,11 @@ export function MarketingProviders({
   children: ReactNode;
   pageNavigation: PageNavigation | null;
 }) {
-  const [signedIn] = useState(readBrowserSignedInHint);
+  const signedIn = useSyncExternalStore(
+    subscribeNothing,
+    readBrowserSignedInHint,
+    readServerSignedInHint
+  );
 
   return (
     <LiveSessionContext value={signedIn}>

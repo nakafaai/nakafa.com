@@ -37,6 +37,36 @@ const BillingButton = lazy(() =>
 );
 
 /**
+ * Starts Google sign-in for a visitor. The sign-in modules load here, on the click,
+ * and the result says whether the provider began the sign-in.
+ */
+async function startVisitorSignIn(
+  callbackURL: string,
+  errorCallbackURL: string
+) {
+  const [social, socialClient] = await Promise.all([
+    import("@/lib/auth/social"),
+    import("@/lib/auth/social.client"),
+  ]);
+  return Effect.runPromise(
+    social
+      .startGoogleSignIn(
+        { callbackURL, errorCallbackURL },
+        socialClient.requestGoogleSignIn
+      )
+      .pipe(
+        Effect.tapError((error) =>
+          reportClientException(error, { source: "pricing-google-sign-in" })
+        ),
+        Effect.match({
+          onFailure: () => false,
+          onSuccess: () => true,
+        })
+      )
+  );
+}
+
+/**
  * A visitor's Pro action starts Google sign-in. The sign-in code loads on the
  * click, so the page itself carries no Better Auth client.
  */
@@ -50,29 +80,9 @@ function VisitorButton({ variant }: { variant: PricingButtonVariant }) {
       return;
     }
     startTransition(async () => {
-      const [{ startGoogleSignIn }, { requestGoogleSignIn }] =
-        await Promise.all([
-          import("@/lib/auth/social"),
-          import("@/lib/auth/social.client"),
-        ]);
-      const started = await Effect.runPromise(
-        startGoogleSignIn(
-          {
-            callbackURL: getPostAuthOnboardingHref("/pricing", locale),
-            errorCallbackURL: getPostAuthProviderErrorHref("/pricing", locale),
-          },
-          requestGoogleSignIn
-        ).pipe(
-          Effect.tapError((error) =>
-            reportClientException(error, {
-              source: "pricing-google-sign-in",
-            })
-          ),
-          Effect.match({
-            onFailure: () => false,
-            onSuccess: () => true,
-          })
-        )
+      const started = await startVisitorSignIn(
+        getPostAuthOnboardingHref("/pricing", locale),
+        getPostAuthProviderErrorHref("/pricing", locale)
       );
       if (!started) {
         toast.error({

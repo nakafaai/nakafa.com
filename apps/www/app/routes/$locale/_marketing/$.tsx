@@ -23,10 +23,6 @@ export const Route = createFileRoute("/$locale/_marketing/$")({
     }
     return { ...facts, cacheTags: readContentCacheTags(["page"]) };
   },
-  headers: ({ loaderData }) =>
-    loaderData === undefined
-      ? undefined
-      : publicContentHeaders(loaderData.cacheTags),
   head: ({ loaderData, params }) => {
     if (loaderData === undefined) {
       return {};
@@ -46,6 +42,10 @@ export const Route = createFileRoute("/$locale/_marketing/$")({
       })
     );
   },
+  headers: ({ loaderData }) =>
+    loaderData === undefined
+      ? undefined
+      : publicContentHeaders(loaderData.cacheTags),
   component: LegalPage,
 });
 
