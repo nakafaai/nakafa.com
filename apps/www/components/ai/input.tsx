@@ -40,6 +40,8 @@ import { useAi } from "@/components/ai/context";
 import { promptRefusal, reportNinaFailure } from "@/components/ai/feedback";
 
 interface Props {
+  /** Whether the composer takes files. Uploads belong to a signed-in account, so a visitor's composer takes none. */
+  attachments?: boolean;
   autoFocus?: boolean;
   children?: ReactNode;
   className?: string;
@@ -55,6 +57,7 @@ interface Props {
  * so a key press in the text field cannot stop it.
  */
 export function NinaInput({
+  attachments = true,
   autoFocus,
   children,
   className,
@@ -115,7 +118,9 @@ export function NinaInput({
           className
         )}
       >
-        <NinaAttachments submittedFiles={submittedFiles} />
+        {attachments ? (
+          <NinaAttachments submittedFiles={submittedFiles} />
+        ) : null}
         <PromptInputTextarea
           aria-label={t("text-placeholder")}
           autoFocus={autoFocus}
@@ -140,7 +145,7 @@ export function NinaInput({
           align="block-end"
           className="justify-between gap-2 group-has-[>[data-slot=input-group-control]]/input-group:pb-3"
         >
-          <NinaAttach />
+          {attachments ? <NinaAttach /> : null}
           <div className="flex items-center gap-1">
             <InputGroupButton
               aria-label={stopping ? t("stop-response") : t("send-message")}

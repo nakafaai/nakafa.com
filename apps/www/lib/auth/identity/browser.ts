@@ -9,12 +9,14 @@ import {
 } from "@repo/analytics/posthog/browser";
 import { Clock, Effect, Schema } from "effect";
 import { saveAnonymousAnalyticsConsent } from "@/lib/analytics/consent/storage";
-import { authClient } from "@/lib/auth/client";
+import { readAuthClient } from "@/lib/auth/client";
 
 const accountSignOutFailedCode = "ACCOUNT_SIGN_OUT_FAILED";
 const accountStorageKeyPrefix = "nakafa-";
 
-type SignOutResult = Awaited<ReturnType<typeof authClient.signOut>>;
+type SignOutResult = Awaited<
+  ReturnType<ReturnType<typeof readAuthClient>["signOut"]>
+>;
 type SignOutRequest = () => Promise<SignOutResult>;
 
 const denyAnonymousAnalytics = Clock.currentTimeMillis.pipe(
@@ -97,7 +99,9 @@ export const clearDeletedAccountBrowserIdentity = Effect.fn(
 /** Clears account-scoped browser identity after the auth session ends. */
 export const signOutAccountBrowserIdentity = Effect.fn(
   "www.auth.signOutAccountBrowserIdentity"
-)(function* (request: SignOutRequest = async () => await authClient.signOut()) {
+)(function* (
+  request: SignOutRequest = async () => await readAuthClient().signOut()
+) {
   const result = yield* Effect.tryPromise({
     try: request,
     catch: () =>

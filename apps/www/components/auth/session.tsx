@@ -3,7 +3,7 @@
 import { createContext, type ReactNode, use, useEffect, useState } from "react";
 import { createStore, type StoreApi, useStore } from "zustand";
 import { clientEnv } from "@/env.client";
-import { authClient } from "@/lib/auth/client";
+import { readAuthClient } from "@/lib/auth/client";
 import {
   type AuthSession,
   followAuthSession,
@@ -25,7 +25,7 @@ const AuthSessionContext = createContext<StoreApi<AuthSession> | null>(null);
  * https://react.dev/reference/react/useSyncExternalStore#adding-support-for-server-rendering
  */
 function BetterAuthSessionProvider({ children }: { children: ReactNode }) {
-  const session = authClient.$store.atoms.session;
+  const session = readAuthClient().$store.atoms.session;
   const [store] = useState(() =>
     createStore(() => readAuthSession(session.value))
   );

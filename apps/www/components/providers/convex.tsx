@@ -18,7 +18,7 @@ import {
   useAuthSession,
   useAuthSessionStore,
 } from "@/components/auth/session";
-import { authClient } from "@/lib/auth/client";
+import { readAuthClient } from "@/lib/auth/client";
 import {
   authenticateConvex,
   type ConvexAuth,
@@ -50,7 +50,7 @@ const readConvexToken = Effect.tryPromise({
     new ConvexTokenReadError({
       detail: "Better Auth could not read a Convex access token.",
     }),
-  try: () => authClient.convex.token({ fetchOptions: { throw: false } }),
+  try: () => readAuthClient().convex.token({ fetchOptions: { throw: false } }),
 }).pipe(
   Effect.flatMap((response) =>
     response.error

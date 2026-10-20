@@ -7,7 +7,6 @@ import {
 } from "@repo/analytics/posthog/browser";
 import { Effect } from "effect";
 import { AnalyticsConsentStorageFailed } from "@/lib/analytics/consent/storage";
-import { authClient } from "@/lib/auth/client";
 import {
   AccountSignOutFailed,
   clearAccountBrowserIdentity,
@@ -15,9 +14,8 @@ import {
   signOutAccountBrowserIdentity,
 } from "@/lib/auth/identity/browser";
 
-vi.mock("@/lib/auth/client", () => ({
-  authClient: { signOut: vi.fn() },
-}));
+const authClient = vi.hoisted(() => ({ signOut: vi.fn() }));
+vi.mock("@/lib/auth/client", () => ({ readAuthClient: () => authClient }));
 
 vi.mock(import("@repo/analytics/posthog/browser"), async (importOriginal) => ({
   ...(await importOriginal()),

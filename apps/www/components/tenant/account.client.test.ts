@@ -9,7 +9,7 @@ const doubles = vi.hoisted(() => ({
 }));
 
 vi.mock("@/lib/auth/client", () => ({
-  authClient: { signOut: vi.fn() },
+  readAuthClient: () => ({ signOut: vi.fn() }),
 }));
 vi.mock("@/lib/auth/identity/browser", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/auth/identity/browser")>()),
