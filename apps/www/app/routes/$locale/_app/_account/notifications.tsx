@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { DateTime, Option } from "effect";
+import { Option } from "effect";
 import { NotificationsClockContext } from "@/components/notifications/clock";
 import { NotificationsHeader } from "@/components/notifications/header";
 import { NotificationsList } from "@/components/notifications/list";
@@ -24,9 +24,9 @@ export const Route = createFileRoute("/$locale/_app/_account/notifications")({
  * read the loader's first page until the live inbox answers.
  */
 function NotificationsPage() {
-  const { first } = Route.useLoaderData();
+  const { first, now } = Route.useLoaderData();
   const page = Option.fromUndefinedOr(first);
-  const clock = useAgeClock(DateTime.toEpochMillis(DateTime.nowUnsafe()));
+  const clock = useAgeClock(now);
   return (
     <LayoutMaterial>
       <LayoutMaterialContent>
