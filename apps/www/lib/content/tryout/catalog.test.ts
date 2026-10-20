@@ -13,8 +13,13 @@ import {
   readPublishedTryoutExamPage,
   readPublishedTryoutSectionPage,
 } from "@/lib/content/tryout/catalog";
+import { resetTestRuntimeCache } from "@/test/store";
 
 const runtimeQueryMock = vi.hoisted(() => vi.fn());
+vi.mock(
+  "@vercel/functions",
+  async () => (await import("@/test/store")).testRuntimeCacheModule
+);
 vi.mock("@confect/js", async (importOriginal) => {
   const { HttpClient } = await importOriginal<typeof import("@confect/js")>();
   return {
@@ -40,6 +45,7 @@ const SUBJECT_SECTION_PATH =
 
 describe("published try-out pages for routing", () => {
   beforeEach(() => {
+    resetTestRuntimeCache();
     runtimeQueryMock.mockReset();
   });
 

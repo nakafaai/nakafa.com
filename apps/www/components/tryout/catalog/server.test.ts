@@ -181,7 +181,7 @@ const serveFeaturedQuestion = Effect.fn("www.tryout.test.featured")(
 
 describe("immutable try-out application catalog", () => {
   it.effect(
-    "reaches Convex once for the hub, track and metadata of each release",
+    "reaches Convex once for each catalog page and its metadata in a release",
     () =>
       Effect.gen(function* () {
         const fixture = yield* makeTryoutRuntimeSource();
@@ -196,7 +196,11 @@ describe("immutable try-out application catalog", () => {
           Effect.all(
             [
               readTryoutHubPage("en"),
+              readTryoutCountryPage("en", COUNTRY),
+              readTryoutExamPage("en", EXAM),
               readTryoutTrackPage("en", TRACK),
+              readTryoutSetPage("en", SET),
+              readTryoutSectionPage("en", SECTION),
               readTryoutMetadata(metadataArgs),
             ],
             { concurrency: "unbounded" }
@@ -208,7 +212,11 @@ describe("immutable try-out application catalog", () => {
         expect(second).toEqual(first);
         for (const ref of [
           refs.public.tryouts.queries.catalog.getHubPage,
+          refs.public.tryouts.queries.catalog.getCountryPage,
+          refs.public.tryouts.queries.catalog.getExamPage,
           refs.public.tryouts.queries.catalog.getTrackPage,
+          refs.public.tryouts.queries.catalog.getSetPage,
+          refs.public.tryouts.queries.catalog.getSectionPage,
           refs.public.tryouts.queries.catalog.getMetadata,
         ]) {
           expect(
@@ -338,7 +346,9 @@ describe("immutable try-out application catalog", () => {
           viewerId: "viewer",
         };
         fetchQueryMock.mockReturnValue(Effect.succeed(page));
-        expect(yield* readTryoutSetList("technical-token", args)).toBe(page);
+        expect(
+          yield* readTryoutSetList("technical-token", args)
+        ).toBe(page);
         expect(fetchQueryMock).toHaveBeenCalledWith(
           refs.public.tryouts.queries.sets.list,
           args
