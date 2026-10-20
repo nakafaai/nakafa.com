@@ -48,9 +48,10 @@ import {
 } from "@/lib/curriculum/model";
 import { readCurriculumSeoContext } from "@/lib/curriculum/seo";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
+import { createResolvedRouteAlternates } from "@/lib/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { generateSEOMetadata } from "@/lib/seo/generator";
-import { createSeoHead, toRouterHead } from "@/lib/seo/head";
+import { createSeoHead, toHeadAlternates, toRouterHead } from "@/lib/seo/head";
 
 const CurriculumInput = Schema.Struct({
   curriculum: Schema.String,
@@ -106,6 +107,9 @@ const readCurriculumRoute = createServerFn({ method: "GET" })
     );
 
     return {
+      alternates: toHeadAlternates(
+        createResolvedRouteAlternates(route, model.alternates)
+      ),
       ancestors: model.ancestors,
       breadcrumbs: createBreadcrumbItems(
         locale,
@@ -173,10 +177,18 @@ export const Route = createFileRoute("/$locale/_main/curricula/$curriculum/$")({
     if (loaderData === undefined) {
       return {};
     }
-    const { breadcrumbs, canonicalPath, description, image, locale, title } =
-      loaderData;
+    const {
+      alternates,
+      breadcrumbs,
+      canonicalPath,
+      description,
+      image,
+      locale,
+      title,
+    } = loaderData;
     return toRouterHead(
       createSeoHead({
+        alternates,
         canonicalPath,
         description,
         image,

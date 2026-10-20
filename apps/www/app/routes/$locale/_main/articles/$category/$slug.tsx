@@ -40,9 +40,10 @@ import {
 import { getAksaraUrl } from "@/lib/content/repository";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getLlmsMarkdownPath } from "@/lib/llms/format";
+import { createResolvedRouteAlternates } from "@/lib/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { generateSEOMetadata } from "@/lib/seo/generator";
-import { createSeoHead, toRouterHead } from "@/lib/seo/head";
+import { createSeoHead, toHeadAlternates, toRouterHead } from "@/lib/seo/head";
 import { getOgUrl } from "@/lib/seo/social";
 
 const ArticleInput = Schema.Struct({
@@ -98,6 +99,9 @@ const readArticle = createServerFn({ method: "GET" })
     const categoryLabel = published.categoryTitle;
 
     return {
+      alternates: toHeadAlternates(
+        createResolvedRouteAlternates(model.projection, model.alternates)
+      ),
       kind: "found" as const,
       cacheTags: readContentCacheTags(["article"]),
       categoryLabel,
@@ -151,6 +155,7 @@ export const Route = createFileRoute("/$locale/_main/articles/$category/$slug")(
       const { filePath, locale, metadata, title, description } = loaderData;
       return toRouterHead(
         createSeoHead({
+          alternates: loaderData.alternates,
           canonicalPath: `/${locale}${filePath}`,
           description,
           image: getOgUrl(locale, filePath),
