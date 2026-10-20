@@ -10,7 +10,7 @@ import { CameraControls } from "@repo/design-system/components/three/camera-cont
 import { ThreeCanvas } from "@repo/design-system/components/three/canvas";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
 import { VisualCardBody } from "@repo/design-system/components/visual/card";
-import { useTheme } from "next-themes";
+import { useTheme } from "@repo/design-system/providers/theme";
 import { Suspense, useEffect } from "react";
 
 const CAMERA_POSITION = [0, 10, 3] satisfies [number, number, number];
@@ -25,7 +25,7 @@ export function PeriodicPropertiesCanvas({
   "aria-label": string;
   modeId: PeriodicPropertyModeId;
 }) {
-  const { resolvedTheme } = useTheme();
+  const resolvedTheme = useTheme((state) => state.resolvedTheme);
   const colors = getPeriodicPropertiesSceneColors(resolvedTheme);
 
   return (

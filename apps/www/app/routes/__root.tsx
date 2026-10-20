@@ -1,6 +1,7 @@
 import "@fontsource-variable/inter";
 import "@fontsource/amiri/arabic-400.css";
 import "@fontsource/amiri/latin-400.css";
+import { ThemeProvider } from "@repo/design-system/providers/theme";
 import { textDirection } from "@repo/internationalization/src/direction";
 import {
   DEFAULT_LOCALE,
@@ -96,28 +97,43 @@ function RootDocument() {
         <HeadContent />
       </head>
       <body className={cn("relative touch-manipulation font-sans antialiased")}>
-        <Announcer />
-        <NuqsAdapter>
-          <Outlet />
-        </NuqsAdapter>
+        <ThemeProvider>
+          <Announcer />
+          <NuqsAdapter>
+            <Outlet />
+          </NuqsAdapter>
+        </ThemeProvider>
         <Scripts />
       </body>
     </html>
   );
 }
 
-/** A path outside every locale answers the not-found state in the default locale. */
+/**
+ * A path outside every locale answers the not-found state in the default locale.
+ * The router replaces the whole document with it, so it mounts the theme too.
+ */
 function RootNotFound() {
-  return <LocalizedNotFound locale={DEFAULT_LOCALE} />;
+  return (
+    <ThemeProvider>
+      <LocalizedNotFound locale={DEFAULT_LOCALE} />
+    </ThemeProvider>
+  );
 }
 
-/** A root failure answers the error state in the default locale, without the app's providers. */
+/**
+ * A root failure answers the error state in the default locale, without the
+ * locale's providers. The router replaces the whole document with it, so the
+ * theme is mounted here as well, because the error state draws themed parts.
+ */
 function RootError({ error }: ErrorComponentProps) {
   return (
-    <LocalizedError
-      error={error}
-      locale={DEFAULT_LOCALE}
-      source="start-root-error"
-    />
+    <ThemeProvider>
+      <LocalizedError
+        error={error}
+        locale={DEFAULT_LOCALE}
+        source="start-root-error"
+      />
+    </ThemeProvider>
   );
 }

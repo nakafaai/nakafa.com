@@ -26,7 +26,7 @@ const configJson = Schema.encodeSync(Schema.fromJsonString(PrepaintConfig))({
 
 /**
  * Applies the visitor's stored theme before the first paint. A concrete theme
- * names the class on the root element, as next-themes does once it mounts; a
+ * names the class on the root element, as the theme store does once it mounts; a
  * missing, system or unknown value resolves to the system appearance.
  */
 export const THEME_PREPAINT_SCRIPT = `(function () {

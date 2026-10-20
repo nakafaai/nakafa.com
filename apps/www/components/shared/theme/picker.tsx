@@ -26,7 +26,7 @@ const ThemeMenuContent = lazyComponent(
   }
 );
 
-/** Renders the theme selector while leaving the selected theme in next-themes. */
+/** Renders the theme selector. The selected theme lives in the theme store. */
 export function ThemePicker({
   variant = "outline",
 }: {

@@ -7,16 +7,17 @@ import {
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { themeOptions } from "@repo/design-system/lib/theme/options";
+import { useTheme } from "@repo/design-system/providers/theme";
 import { Array as Arr } from "effect";
-import { useTheme } from "next-themes";
 import { useTranslations } from "use-intl";
 import { ActiveBadge } from "@/components/shared/active";
 
 const BASE_THEMES_COUNT = 3;
 
-/** Renders one group of themes while leaving the selected theme in next-themes. */
+/** Renders one group of themes. The selected theme lives in the theme store. */
 function ThemeGroup({ options }: { options: typeof themeOptions }) {
-  const { theme: currentTheme, setTheme } = useTheme();
+  const currentTheme = useTheme((state) => state.theme);
+  const setTheme = useTheme((state) => state.setTheme);
   const t = useTranslations("Common");
 
   return (

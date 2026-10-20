@@ -30,8 +30,8 @@ import {
   VisualFactIndicator,
 } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
+import { useTheme } from "@repo/design-system/providers/theme";
 import { Array as Arr } from "effect";
-import { useTheme } from "next-themes";
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
@@ -69,7 +69,7 @@ export function ModernPeriodicTableLab({
   description,
   labels,
 }: ModernPeriodicTableLabProps) {
-  const { resolvedTheme } = useTheme();
+  const resolvedTheme = useTheme((state) => state.resolvedTheme);
   const [store] = useState(() =>
     createModernPeriodicTableFocusStore(GROUP_ONE_FOCUS_ID)
   );

@@ -10,7 +10,7 @@ import { SceneSpinner } from "@repo/design-system/components/three/placeholder";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
 import { VisualCardBody } from "@repo/design-system/components/visual/card";
 import { lazyComponent } from "@repo/design-system/lib/lazy";
-import { useTheme } from "next-themes";
+import { useTheme } from "@repo/design-system/providers/theme";
 
 /** The model loads once the lab asks for it, and its frame holds the place meanwhile. */
 const ShellModelStage = lazyComponent(
@@ -38,7 +38,7 @@ export function ShellModelCanvas({
   sample: ShellModelSample;
   shells: ShellModelShells;
 }) {
-  const { resolvedTheme } = useTheme();
+  const resolvedTheme = useTheme((state) => state.resolvedTheme);
   const sceneColors = getShellModelSceneColors(resolvedTheme);
 
   return (

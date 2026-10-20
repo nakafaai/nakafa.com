@@ -40,7 +40,7 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
-import { useTheme } from "next-themes";
+import { useTheme } from "@repo/design-system/providers/theme";
 import type { ReactNode } from "react";
 import { Suspense, useState } from "react";
 
@@ -68,7 +68,7 @@ export function MeasurementToolsLab({
   description,
   labels,
 }: MeasurementToolsLabProps) {
-  const { resolvedTheme } = useTheme();
+  const resolvedTheme = useTheme((state) => state.resolvedTheme);
   const [selectedToolId, setSelectedToolId] =
     useState<MeasurementToolId>(LENGTH_TOOL_ID);
   const [measurements, setMeasurements] = useState(createInitialMeasurements);

@@ -1,5 +1,10 @@
 import { describe, expect, it } from "@effect/vitest";
-import { Schema } from "effect";
+import {
+  getThemeAppearance,
+  parseThemeChoice,
+  resolveThemeChoice,
+} from "@repo/design-system/lib/theme/registry";
+import { Option, Schema } from "effect";
 import { THEME_PREPAINT_SCRIPT } from "@/lib/theme/prepaint";
 
 const PaintCase = Schema.Struct({
@@ -82,4 +87,29 @@ describe("THEME_PREPAINT_SCRIPT", () => {
       colorScheme: "dark",
     });
   });
+});
+
+/** The root class and color scheme that the theme store writes for a stored value. */
+function storeResolution({ prefersDark, stored }: typeof PaintCase.Type) {
+  const choice = parseThemeChoice(Option.fromNullishOr(stored));
+  const resolved = resolveThemeChoice(choice, prefersDark ? "dark" : "light");
+  return { classes: [resolved], colorScheme: getThemeAppearance(resolved) };
+}
+
+describe("THEME_PREPAINT_SCRIPT and the theme store", () => {
+  it.each([
+    { prefersDark: false, stored: null },
+    { prefersDark: true, stored: null },
+    { prefersDark: false, stored: "system" },
+    { prefersDark: true, stored: "system" },
+    { prefersDark: true, stored: "dark" },
+    { prefersDark: false, stored: "darkmatter" },
+    { prefersDark: true, stored: "bean" },
+    { prefersDark: true, stored: "unknown" },
+  ])(
+    "applies what the store applies for $stored when the system prefers dark is $prefersDark",
+    (paintCase) => {
+      expect(runPrepaint(paintCase)).toEqual(storeResolution(paintCase));
+    }
+  );
 });
