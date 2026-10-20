@@ -12,22 +12,23 @@ import {
   codeFencePreVariants,
 } from "@repo/design-system/components/markdown/react/variants";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
-import { lazyComponent } from "@repo/design-system/lib/lazy";
 import { cn } from "cn";
-import { type ComponentProps, Suspense } from "react";
+import { type ComponentProps, lazy, Suspense } from "react";
 import { useTranslations } from "use-intl";
 
-const LazyMarkdownCodeBlock = lazyComponent(() =>
-  import("@repo/design-system/components/markdown/react/block").then(
-    ({ MarkdownCodeBlock }) => MarkdownCodeBlock
-  )
-);
+const LazyMarkdownCodeBlock = lazy(async () => ({
+  default: await (() =>
+    import("@repo/design-system/components/markdown/react/block").then(
+      ({ MarkdownCodeBlock }) => MarkdownCodeBlock
+    ))(),
+}));
 
-const LazyMermaidMdx = lazyComponent(() =>
-  import("@repo/design-system/components/markdown/mermaid").then(
-    ({ MermaidMdx }) => MermaidMdx
-  )
-);
+const LazyMermaidMdx = lazy(async () => ({
+  default: await (() =>
+    import("@repo/design-system/components/markdown/mermaid").then(
+      ({ MermaidMdx }) => MermaidMdx
+    ))(),
+}));
 
 interface MarkdownCodeBlockProps {
   readonly className?: string | undefined;
@@ -68,7 +69,9 @@ export function MarkdownCodeBlock({
   return (
     <FenceSourceContext value={{ className, code, language }}>
       <Suspense fallback={<CodeBlockPlaceholder />}>
-        <LazyMarkdownCodeBlock />
+        <Suspense fallback={null}>
+          <LazyMarkdownCodeBlock />
+        </Suspense>
       </Suspense>
     </FenceSourceContext>
   );
@@ -101,11 +104,13 @@ export function MermaidMdx({
         </DiagramFrame>
       }
     >
-      <LazyMermaidMdx
-        {...props}
-        description={description ?? t("diagram-description")}
-        title={heading}
-      />
+      <Suspense fallback={null}>
+        <LazyMermaidMdx
+          {...props}
+          description={description ?? t("diagram-description")}
+          title={heading}
+        />
+      </Suspense>
     </Suspense>
   );
 }

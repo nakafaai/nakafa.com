@@ -1,4 +1,5 @@
-import { lazyComponent } from "@repo/design-system/lib/lazy";
+import { ClientOnly } from "@tanstack/react-router";
+import { lazy, Suspense } from "react";
 import { WeatherFrame } from "@/components/ai/home/weather/card";
 
 /**
@@ -6,13 +7,18 @@ import { WeatherFrame } from "@/components/ai/home/weather/card";
  * chunk arrives, the widget's frame at its final size holds the grid cell, as the
  * server render does.
  */
-export const DeferredWeather = lazyComponent(
-  () =>
-    import("@/components/ai/home/weather/widget").then(
-      (module) => module.WeatherWidget
-    ),
-  {
-    loading: () => <WeatherFrame />,
-    ssr: false,
-  }
+const LazyDeferredWeather = lazy(() =>
+  import("@/components/ai/home/weather/widget").then((module) => ({
+    default: module.WeatherWidget,
+  }))
 );
+
+export function DeferredWeather() {
+  return (
+    <Suspense fallback={<WeatherFrame />}>
+      <ClientOnly fallback={<WeatherFrame />}>
+        <LazyDeferredWeather />
+      </ClientOnly>
+    </Suspense>
+  );
+}

@@ -70,7 +70,7 @@ export function QuranInterpretationControls({
   const requestSequence = useRef(0);
   const pendingRequestId = useRef<number | null>(null);
   const toastId = `quran-interpretation-${snapshotId}-${surahNumber}`;
-  // Cached routes use React Activity, which runs layout cleanup while hidden.
+  // Leaving the page, or hiding the panel, cancels the request and clears its toast.
   useLayoutEffect(
     () => () => {
       requestSequence.current += 1;

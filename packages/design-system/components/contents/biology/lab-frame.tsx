@@ -23,22 +23,20 @@ import {
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import type { NarrowCameraPose } from "@repo/design-system/lib/geometry/camera";
-import { lazyComponent } from "@repo/design-system/lib/lazy";
 import { useTheme } from "@repo/design-system/providers/theme";
 import { Array as Arr } from "effect";
 import type { ComponentType, ReactNode } from "react";
-import { useMemo, useState } from "react";
+import { lazy, Suspense, useMemo, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useStore } from "zustand";
 
 /** The stage loads once the lab asks for it, and its frame holds the place meanwhile. */
-const BiologyStage = lazyComponent(
-  () =>
+const BiologyStage = lazy(async () => ({
+  default: await (() =>
     import("@repo/design-system/components/contents/biology/stage").then(
       ({ BiologyStage }) => BiologyStage
-    ),
-  { loading: SceneSpinner }
-);
+    ))(),
+}));
 
 export interface BiologyLabCalloutProps {
   id: string;
@@ -160,9 +158,11 @@ export function BiologyLabFrame<Item extends BiologyLabItemProps>({
         render={<section />}
       >
         {live ? (
-          <BiologyStage colors={colors} store={store} view={view}>
-            <Scene item={selectedItem} />
-          </BiologyStage>
+          <Suspense fallback={SceneSpinner()}>
+            <BiologyStage colors={colors} store={store} view={view}>
+              <Scene item={selectedItem} />
+            </BiologyStage>
+          </Suspense>
         ) : null}
       </VisualCardBody>
 

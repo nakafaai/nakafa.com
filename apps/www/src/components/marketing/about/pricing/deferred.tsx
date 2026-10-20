@@ -2,15 +2,15 @@ import { useMediaQuery } from "@mantine/hooks";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
-import { lazyComponent } from "@repo/design-system/lib/lazy";
-import { Suspense, useState } from "react";
+import { lazy, Suspense, useState } from "react";
 
 /** The toys of the pricing page. Their code loads only when the page reaches them. */
-const PricingToys = lazyComponent(() =>
-  import("@/components/marketing/about/pricing/toys").then(
-    (module) => module.PricingToys
-  )
-);
+const PricingToys = lazy(async () => ({
+  default: await (() =>
+    import("@/components/marketing/about/pricing/toys").then(
+      (module) => module.PricingToys
+    ))(),
+}));
 
 /**
  * The toys of the pricing page, loaded when the sentinel between the plans and
@@ -37,7 +37,9 @@ export function DeferredPricingToys() {
       {reached && wide ? (
         <ErrorBoundary fallback={null}>
           <Suspense fallback={null}>
-            <PricingToys />
+            <Suspense fallback={null}>
+              <PricingToys />
+            </Suspense>
           </Suspense>
         </ErrorBoundary>
       ) : null}

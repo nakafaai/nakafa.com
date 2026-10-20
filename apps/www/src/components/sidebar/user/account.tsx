@@ -13,13 +13,13 @@ import {
   DropdownMenuSeparator,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { lazyComponent } from "@repo/design-system/lib/lazy";
 import {
   useCurrentLocale,
   useHrefNavigate,
 } from "@repo/internationalization/src/link";
-import { useNavigate } from "@tanstack/react-router";
+import { ClientOnly, useNavigate } from "@tanstack/react-router";
 import { Effect, Result } from "effect";
+import { lazy, Suspense } from "react";
 import { useTranslations } from "use-intl";
 import { clearAiDraftText } from "@/components/ai/store/draft";
 import { AnalyticsConsentMenuItem } from "@/components/analytics/consent/menu";
@@ -35,13 +35,12 @@ import { profileTarget } from "@/lib/profile/href";
  * The account's schools, loaded when the menu opens: the list brings the school
  * contracts with it, which no page needs at first paint.
  */
-const SidebarSchoolMenuItems = lazyComponent(
-  () =>
+const SidebarSchoolMenuItems = lazy(async () => ({
+  default: await (() =>
     import("@/components/sidebar/menu/schools").then(
       (module) => module.SidebarSchoolMenuItems
-    ),
-  { loading: () => null, ssr: false }
-);
+    ))(),
+}));
 
 /** Renders the app account menu, with the account and legal pages, once authentication is confirmed. */
 export function NavUserAccount({ user }: { user: CurrentUser }) {
@@ -81,9 +80,13 @@ export function NavUserAccount({ user }: { user: CurrentUser }) {
       name={user.authUser.name}
       onSignOut={handleSignOut}
     >
-      <SidebarSchoolMenuItems
-        canOpenSchool={!isLoginAddress(user.authUser.email)}
-      />
+      <Suspense fallback={null}>
+        <ClientOnly fallback={null}>
+          <SidebarSchoolMenuItems
+            canOpenSchool={!isLoginAddress(user.authUser.email)}
+          />
+        </ClientOnly>
+      </Suspense>
       <DropdownMenuGroup>
         {username === undefined ? null : (
           <DropdownMenuItem

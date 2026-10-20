@@ -1,19 +1,20 @@
 import type { Ref } from "@confect/core";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
-import { lazyComponent } from "@repo/design-system/lib/lazy";
-import { useLocation } from "@tanstack/react-router";
+import { ClientOnly, useLocation } from "@tanstack/react-router";
 import type { PropsWithChildren } from "react";
+import { lazy, Suspense } from "react";
 import { readChatFailureKind } from "@/components/ai/chat/access";
 import { useAnswerRetry } from "@/lib/convex/requery";
 
 // The failure card holds the sign-in chain, which only a signed-out visitor who
 // cannot read a chat needs. It loads when a card is needed, so the first
 // JavaScript of every chat route does not carry it.
-const ChatFailure = lazyComponent(
-  () =>
-    import("@/components/ai/chat/failure").then((module) => module.ChatFailure),
-  { loading: () => null, ssr: false }
-);
+const ChatFailure = lazy(async () => ({
+  default: await (() =>
+    import("@/components/ai/chat/failure").then(
+      (module) => module.ChatFailure
+    ))(),
+}));
 
 /** The query whose failure a boundary shows, and the args that read it. */
 interface ChatRead<Query extends Ref.AnyPublicQuery> {
@@ -56,10 +57,14 @@ export function ChatBoundary<Query extends Ref.AnyPublicQuery>({
               reset={resetErrorBoundary}
             />
           ) : (
-            <ChatFailure
-              kind={readChatFailureKind(error)}
-              onRetry={resetErrorBoundary}
-            />
+            <Suspense fallback={null}>
+              <ClientOnly fallback={null}>
+                <ChatFailure
+                  kind={readChatFailureKind(error)}
+                  onRetry={resetErrorBoundary}
+                />
+              </ClientOnly>
+            </Suspense>
           )}
         </div>
       )}
@@ -85,10 +90,14 @@ function ChatReadFailure<Query extends Ref.AnyPublicQuery>({
 }) {
   const { retry, waiting } = useAnswerRetry(read.ref, read.args, reset);
   return (
-    <ChatFailure
-      isPending={waiting}
-      kind={readChatFailureKind(error)}
-      onRetry={retry}
-    />
+    <Suspense fallback={null}>
+      <ClientOnly fallback={null}>
+        <ChatFailure
+          isPending={waiting}
+          kind={readChatFailureKind(error)}
+          onRetry={retry}
+        />
+      </ClientOnly>
+    </Suspense>
   );
 }

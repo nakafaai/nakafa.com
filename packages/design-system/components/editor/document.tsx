@@ -46,8 +46,8 @@ interface DocumentEditorProps {
  * state through the editor it receives. The editor starts read-only, and says so to
  * assistive technology, so a caller turns editing on once the document is open. The text
  * takes the same classes whether the caller edits it or only reads it, so a reader sees the
- * document as the editor draws it. Load it with `lazyComponent` and `ssr: false`, as the
- * editor brings the editing library with it.
+ * document as the editor draws it. A caller loads it with `React.lazy` and renders it
+ * after the client mounts, because the editor brings the editing library with it.
  */
 export function DocumentEditor({
   children,

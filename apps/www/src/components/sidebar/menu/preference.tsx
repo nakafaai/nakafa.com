@@ -18,13 +18,14 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
-import { lazyComponent } from "@repo/design-system/lib/lazy";
 import {
   type SidebarContextValue,
   useSidebar,
 } from "@repo/design-system/lib/sidebar/context";
 import { languages } from "@repo/internationalization/data/lang";
+import { ClientOnly } from "@tanstack/react-router";
 import { Array as Arr } from "effect";
+import { lazy, Suspense } from "react";
 import { type Locale, useLocale, useTranslations } from "use-intl";
 import { ActiveBadge } from "@/components/shared/active";
 import { CountryFlagIcon } from "@/components/shared/flag";
@@ -34,16 +35,12 @@ import { useLocalizedRouteSwitch } from "@/lib/routing/locale/client";
  * Loads the theme submenu when the account menu opens. Its list carries one
  * icon for each theme, which no page needs before that.
  */
-const ThemeSubmenuContent = lazyComponent(
-  () =>
+const ThemeSubmenuContent = lazy(async () => ({
+  default: await (() =>
     import("@/components/sidebar/menu/theme").then(
       (module) => module.ThemeSubmenuContent
-    ),
-  {
-    loading: () => null,
-    ssr: false,
-  }
-);
+    ))(),
+}));
 
 /** Opens menus beside the sidebar, or above their trigger on phones, where the sidebar fills the screen. */
 function selectMenuSide(sidebar: SidebarContextValue) {
@@ -152,7 +149,11 @@ export function SidebarThemeSubmenu() {
         <HugeIcons icon={PaintBoardIcon} />
         <span className="truncate">{t("theme")}</span>
       </DropdownMenuSubTrigger>
-      <ThemeSubmenuContent side={side} />
+      <Suspense fallback={null}>
+        <ClientOnly fallback={null}>
+          <ThemeSubmenuContent side={side} />
+        </ClientOnly>
+      </Suspense>
     </DropdownMenuSub>
   );
 }

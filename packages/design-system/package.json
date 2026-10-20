@@ -26,6 +26,7 @@
     "@shadcn/react": "catalog:",
     "@shikijs/core": "4.5.0",
     "@shikijs/transformers": "^4.5.0",
+    "@tanstack/react-router": "1.170.45",
     "@tiptap/core": "3.32.0",
     "@tiptap/extension-document": "3.32.0",
     "@tiptap/extension-file-handler": "3.32.0",

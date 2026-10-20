@@ -24,7 +24,6 @@ import {
 } from "@repo/design-system/components/ui/sidebar-menu";
 import { cleanupUrl, formatUrl } from "@repo/design-system/lib/routing/url";
 import { Array as Arr } from "effect";
-import { useLayoutEffect } from "react";
 import { useTranslations } from "use-intl";
 
 interface Props {
@@ -35,19 +34,16 @@ interface Props {
 /**
  * Renders the bibliography action inside the sidebar.
  *
- * The sheet is transient UI, so it resets closed when Next hides the page
- * through Cache Components state preservation.
+ * The sheet is transient UI: the router unmounts it with its page, so every visit
+ * starts closed.
  *
  * References:
- * - The framework's guide to preserving UI state with cached components.
  * - Mantine `useDisclosure`:
  *   https://mantine.dev/hooks/use-disclosure/
  */
 export function ReferenceButton({ references, title }: Props) {
   const t = useTranslations("Common");
-  const [open, { close, set, toggle }] = useDisclosure(false);
-
-  useLayoutEffect(() => close, [close]);
+  const [open, { set, toggle }] = useDisclosure(false);
 
   return (
     <>

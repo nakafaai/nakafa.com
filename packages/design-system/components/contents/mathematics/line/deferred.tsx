@@ -3,19 +3,15 @@
 import { ScenePlaceholder } from "@repo/design-system/components/three/placeholder";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { VisualCardBody } from "@repo/design-system/components/visual/card";
-import { lazyComponent } from "@repo/design-system/lib/lazy";
-import { useState } from "react";
+import { ClientOnly } from "@tanstack/react-router";
+import { lazy, Suspense, useState } from "react";
 
-const LineScene = lazyComponent(
-  () =>
+const LineScene = lazy(async () => ({
+  default: await (() =>
     import(
       "@repo/design-system/components/contents/mathematics/line/scene"
-    ).then((module) => module.LineScene),
-  {
-    loading: ScenePlaceholder,
-    ssr: false,
-  }
-);
+    ).then((module) => module.LineScene))(),
+}));
 
 /** Loads the WebGL scene shortly before its card enters the viewport. */
 export function DeferredLineScene() {
@@ -23,7 +19,15 @@ export function DeferredLineScene() {
 
   return (
     <VisualCardBody className="relative" data-scene="line">
-      {shouldRender ? <LineScene /> : <ScenePlaceholder />}
+      {shouldRender ? (
+        <Suspense fallback={ScenePlaceholder()}>
+          <ClientOnly fallback={ScenePlaceholder()}>
+            <LineScene />
+          </ClientOnly>
+        </Suspense>
+      ) : (
+        <ScenePlaceholder />
+      )}
       {/* Last, so the scene or its stand-in is the body's first child and draws no second divider. */}
       <Intersection
         aria-hidden="true"

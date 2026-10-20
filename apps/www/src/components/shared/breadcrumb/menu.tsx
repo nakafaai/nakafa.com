@@ -14,16 +14,15 @@ import {
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { BreadcrumbAnchor } from "@/components/shared/breadcrumb/anchor";
 import type { BreadcrumbHeaderItem } from "@/components/shared/breadcrumb/header";
 
 /**
  * Renders folded breadcrumb items inside an ellipsis menu. The menu keeps its size, so
  * a long current title truncates instead of squeezing the button under the separator.
- * It closes when an item is chosen and when its page is hidden: Next.js keeps a page it
- * leaves in the document and shows it again on Back, and a menu still open there would
- * cover that page with its modal backdrop and take the next tap.
+ * It closes when an item is chosen. The router unmounts the page on navigation, which
+ * takes an open menu with it.
  */
 export function BreadcrumbMenu({
   className,
@@ -35,8 +34,6 @@ export function BreadcrumbMenu({
   menuLabel: string;
 }) {
   const [open, setOpen] = useState(false);
-  // React runs this cleanup when Next.js hides the page, not only when it unmounts it.
-  useEffect(() => () => setOpen(false), []);
   return (
     <BreadcrumbItem className={cn("shrink-0", className)}>
       <DropdownMenu onOpenChange={setOpen} open={open}>

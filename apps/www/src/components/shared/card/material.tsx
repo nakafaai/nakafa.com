@@ -19,7 +19,6 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { toAnchorSlug } from "@repo/utilities/slug";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
-import { useLayoutEffect, useState } from "react";
 import { CardLink, CardLinks } from "@/components/shared/card/link";
 
 interface Props {
@@ -29,34 +28,12 @@ interface Props {
 /**
  * Renders one expandable material card on the material lesson index page.
  *
- * The card defaults to open, and resets back to open when Next.js hides the
- * page through Cache Components state preservation. This keeps the material list
- * behaving like a transient disclosure instead of persisting a collapsed state
- * across route transitions.
- *
- * We also remount the Base UI collapsible root on hide. Its panel measures and
- * caches `scrollHeight` for height transitions, and under preserved hidden DOM a
- * stale zero-height measurement can survive the route transition even after
- * `open` is reset to `true`.
- *
- * References:
- * - The framework's guide to preserving UI state with cached components.
- * - Base UI collapsible component docs:
- *   https://base-ui.com/react/components/collapsible
- * - Installed Base UI panel measurement logic:
- *   `packages/design-system/node_modules/@base-ui/react/esm/collapsible/panel/useCollapsiblePanel.js`
+ * The card defaults to open, and a visit to the page starts it open again: the
+ * route unmounts the card on navigation, so the material list never keeps a
+ * collapsed state across route transitions.
  */
 export function CardMaterial({ material }: Props) {
-  const [isOpen, { open, set, toggle }] = useDisclosure(true);
-  const [panelKey, setPanelKey] = useState(0);
-
-  useLayoutEffect(
-    () => () => {
-      open();
-      setPanelKey((key) => key + 1);
-    },
-    [open]
-  );
+  const [isOpen, { set, toggle }] = useDisclosure(true);
 
   const id = toAnchorSlug(material.title);
 
@@ -106,7 +83,7 @@ export function CardMaterial({ material }: Props) {
           </Button>
         </div>
       </CardHeader>
-      <Collapsible key={panelKey} onOpenChange={set} open={isOpen}>
+      <Collapsible onOpenChange={set} open={isOpen}>
         <CollapsibleContent>
           <CardContent className="border-t px-0">
             <CardLinks>

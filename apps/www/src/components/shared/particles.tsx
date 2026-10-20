@@ -1,17 +1,26 @@
-import { lazyComponent } from "@repo/design-system/lib/lazy";
+import { ClientOnly } from "@tanstack/react-router";
+import { type ComponentProps, lazy, Suspense } from "react";
 
 /**
  * Loads the decorative particle field after the page it decorates has
  * rendered. Error boundaries are part of every route's first JavaScript, and
  * the field is only drawn once one of them shows.
  */
-export const DeferredParticles = lazyComponent(
-  () =>
+const LazyDeferredParticles = lazy(async () => ({
+  default: await (() =>
     import("@repo/design-system/components/ui/particles").then(
       (module) => module.Particles
-    ),
-  {
-    loading: () => null,
-    ssr: false,
-  }
-);
+    ))(),
+}));
+
+export function DeferredParticles(
+  props: ComponentProps<typeof LazyDeferredParticles>
+) {
+  return (
+    <Suspense fallback={null}>
+      <ClientOnly fallback={null}>
+        <LazyDeferredParticles {...props} />
+      </ClientOnly>
+    </Suspense>
+  );
+}

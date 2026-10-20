@@ -235,7 +235,7 @@ describe("decisions before the negotiation", () => {
       });
 
       expect(response.headers.get("content-language")).toBe("en");
-      expect(routedRequest(handle).url).toBe(`${ORIGIN}/_not-found`);
+      expect(routedRequest(handle).url).toBe(`${ORIGIN}/_missing`);
       expect(routedRequest(handle).headers.get("x-nakafa-locale")).toBe("en");
       expect(markdown.hasSource).not.toHaveBeenCalled();
     })
@@ -250,7 +250,7 @@ describe("decisions before the negotiation", () => {
       });
 
       expect(response.headers.get("content-language")).toBe("en");
-      expect(routedRequest(handle).url).toBe(`${ORIGIN}/_not-found`);
+      expect(routedRequest(handle).url).toBe(`${ORIGIN}/_missing`);
       expect(routedRequest(handle).headers.get("x-nakafa-locale")).toBe("en");
       expect(markdown.hasSource).not.toHaveBeenCalled();
     })
@@ -265,7 +265,7 @@ describe("decisions before the negotiation", () => {
       });
 
       expect(response.headers.get("content-language")).toBe("en");
-      expect(routedRequest(handle).url).toBe(`${ORIGIN}/_not-found`);
+      expect(routedRequest(handle).url).toBe(`${ORIGIN}/_missing`);
       expect(projected.read).toHaveBeenCalledWith({
         hasAttemptCapability: false,
         pathname: "/en/subjects/missing",
@@ -280,7 +280,7 @@ describe("decisions before the negotiation", () => {
         for (const address of ["/en/school/harapan", "/en/user/abc123"]) {
           const { handle } = yield* served(address, { accept: "text/html" });
 
-          expect(routedRequest(handle).url).toBe(`${ORIGIN}/_not-found`);
+          expect(routedRequest(handle).url).toBe(`${ORIGIN}/_missing`);
         }
       })
   );
@@ -293,7 +293,7 @@ describe("decisions before the negotiation", () => {
         accept: "text/html",
       });
 
-      expect(routedRequest(handle).url).toBe(`${ORIGIN}/_not-found`);
+      expect(routedRequest(handle).url).toBe(`${ORIGIN}/_missing`);
       expect(routedRequest(handle).headers.get("x-nakafa-locale")).toBe("id");
     })
   );
@@ -314,7 +314,7 @@ describe("decisions before the negotiation", () => {
       );
 
       expect(routedRequest(handle).url).toBe(
-        "https://harapan.nakafa.com/_not-found"
+        "https://harapan.nakafa.com/_missing"
       );
       expect(response.headers.get("content-language")).toBe("id");
       expect(migration.read).not.toHaveBeenCalled();

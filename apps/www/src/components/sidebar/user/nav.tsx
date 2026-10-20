@@ -2,19 +2,18 @@
 
 import { SidebarFooter } from "@repo/design-system/components/ui/sidebar-content";
 import { SidebarMenu } from "@repo/design-system/components/ui/sidebar-menu";
-import { lazyComponent } from "@repo/design-system/lib/lazy";
+import { lazy, Suspense } from "react";
 import { AccountPricing } from "@/components/sidebar/menu/pricing";
 import { NavUserGuest } from "@/components/sidebar/user/guest/card";
 import { NavUserAccountSkeleton } from "@/components/sidebar/user/skeleton";
 import { useViewer } from "@/lib/identity/client";
 
-const NavUserAccount = lazyComponent(
-  () =>
+const NavUserAccount = lazy(async () => ({
+  default: await (() =>
     import("@/components/sidebar/user/account").then(
       (module) => module.NavUserAccount
-    ),
-  { loading: () => <NavUserAccountSkeleton /> }
-);
+    ))(),
+}));
 
 /**
  * Renders the guest or account footer once authentication settles. Guest,
@@ -34,7 +33,9 @@ export function NavUser() {
         {user ? (
           <>
             <AccountPricing plan={user.appUser.plan} />
-            <NavUserAccount user={user} />
+            <Suspense fallback={<NavUserAccountSkeleton />}>
+              <NavUserAccount user={user} />
+            </Suspense>
           </>
         ) : (
           <NavUserGuest />

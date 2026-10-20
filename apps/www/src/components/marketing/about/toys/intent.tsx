@@ -1,17 +1,17 @@
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
-import { lazyComponent } from "@repo/design-system/lib/lazy";
-import { Suspense } from "react";
+import { lazy, Suspense } from "react";
 import { useReachedPage } from "@/components/marketing/about/toys/reach";
 
 /**
  * The toy layer's code. Its import starts only when the layer is first rendered,
  * which happens once the reader has acted on the page.
  */
-const HomeToyLayer = lazyComponent(() =>
-  import("@/components/marketing/about/toys/layer").then(
-    (module) => module.HomeToyLayer
-  )
-);
+const HomeToyLayer = lazy(async () => ({
+  default: await (() =>
+    import("@/components/marketing/about/toys/layer").then(
+      (module) => module.HomeToyLayer
+    ))(),
+}));
 
 /**
  * Mounts the toys once the reader has scrolled, moved the pointer or touched the
@@ -29,7 +29,9 @@ export function HomeToys() {
   return (
     <ErrorBoundary fallback={null}>
       <Suspense fallback={null}>
-        <HomeToyLayer />
+        <Suspense fallback={null}>
+          <HomeToyLayer />
+        </Suspense>
       </Suspense>
     </ErrorBoundary>
   );

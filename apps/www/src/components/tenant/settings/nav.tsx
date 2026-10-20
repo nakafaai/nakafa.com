@@ -45,7 +45,7 @@ const groupIcons: Record<
  * submenus. The group that holds the current section opens, also when the current
  * section moves into it, as after the settings root sends the viewer to its first
  * section, or a link opens a section of another group. A school host
- * has no locale in its paths, so the links are plain Next.js links, as in the
+ * has no locale in its paths, so the links are school links, as in the
  * school's own navigation.
  */
 export function SchoolSettingsNav() {

@@ -17,7 +17,7 @@ const SCHOOL_TREE_PATTERN = /^\/school\/[^/]+(\/.*)?$/;
  * The school of the page on screen, which its path names. A page outside the
  * school tree reads none.
  */
-export function useSchoolSlug() {
+function useSchoolSlug() {
   return useParams({ select: (params) => params.slug, strict: false });
 }
 

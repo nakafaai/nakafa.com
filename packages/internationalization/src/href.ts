@@ -23,12 +23,12 @@ export function isInternalHref(href: string) {
 }
 
 /**
- * Normalize one internal href for locale-aware Next.js navigation.
+ * Normalize one internal href for locale-aware navigation.
  *
- * `the locale seam` navigation helpers already prepend the request locale. When a
- * localized internal href like `/id/kurikulum/...` is pushed directly, the locale
- * can be duplicated. Candidate preview locales need the same normalization even
- * before activation, so this boundary recognizes every supported app locale.
+ * The locale helpers already prepend the request locale. When a localized
+ * internal href like `/id/kurikulum/...` is passed directly, the locale would be
+ * duplicated. Candidate preview locales need the same normalization even before
+ * activation, so this boundary recognizes every supported app locale.
  */
 export function normalizeLocalizedInternalHref(href: string) {
   if (!isInternalHref(href)) {

@@ -47,12 +47,10 @@ export function ConsentDetails({
 }
 
 /**
- * Links the privacy policy without prefetching it, as every signed Page link
- * must (see `PageNavigation`). This prompt opens on every first visit.
+ * Links the privacy policy. This prompt opens on every first visit.
  *
  * The server renders this link in the root layout, outside every `Suspense`,
- * so it is a plain localized link that reads no route state, which keeps the
- * prerender of a dynamic route such as `/[locale]/chat/[id]` free of the pathname.
+ * so the link must render on the server with the locale of the route.
  */
 function PrivacyPolicyLink() {
   const t = useTranslations("AnalyticsConsent");
@@ -71,7 +69,6 @@ function PrivacyPolicyLink() {
           <HrefLink
             className="text-foreground underline underline-offset-4"
             href={href}
-            preload={false}
           >
             {chunks}
           </HrefLink>

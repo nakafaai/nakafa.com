@@ -23,10 +23,17 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
-import { lazyComponent } from "@repo/design-system/lib/lazy";
 import { toast } from "@repo/design-system/lib/toast/notify";
+import { ClientOnly } from "@tanstack/react-router";
 import { Effect } from "effect";
-import { type ReactNode, useLayoutEffect, useRef, useTransition } from "react";
+import {
+  lazy,
+  type ReactNode,
+  Suspense,
+  useLayoutEffect,
+  useRef,
+  useTransition,
+} from "react";
 import { useTranslations } from "use-intl";
 import {
   readOpenContentCopySource,
@@ -38,25 +45,20 @@ import { OpenTargetContext } from "@/components/shared/content/target";
  * Loads the open-in submenu when the actions menu opens. Its brand logos are
  * one module that no content page needs before that.
  */
-const OpenInSubmenuContent = lazyComponent(
-  () =>
+const OpenInSubmenuContent = lazy(async () => ({
+  default: await (() =>
     import("@/components/shared/content/open").then(
       (module) => module.OpenInSubmenuContent
-    ),
-  {
-    loading: () => null,
-    ssr: false,
-  }
-);
+    ))(),
+}));
 
 /**
  * Renders open/share actions for one content page.
  *
- * Copy feedback and the dropdown are transient UI, so they reset when Next
- * hides the page through Cache Components state preservation.
+ * Copy feedback and the dropdown are transient UI: the router unmounts them with
+ * the page, so every visit starts closed.
  *
  * References:
- * - The framework's guide to preserving UI state with cached components.
  * - Mantine `useDisclosure`:
  *   https://mantine.dev/hooks/use-disclosure/
  */
@@ -173,7 +175,11 @@ export function OpenContent({
               {t("open-in")}
             </DropdownMenuSubTrigger>
             <OpenTargetContext value={{ slug, sourceUrl }}>
-              <OpenInSubmenuContent />
+              <Suspense fallback={null}>
+                <ClientOnly fallback={null}>
+                  <OpenInSubmenuContent />
+                </ClientOnly>
+              </Suspense>
             </OpenTargetContext>
           </DropdownMenuSub>
         </DropdownMenuGroup>

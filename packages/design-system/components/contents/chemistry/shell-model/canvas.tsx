@@ -7,17 +7,16 @@ import {
 import { SceneSpinner } from "@repo/design-system/components/three/placeholder";
 import { threeSceneFrameVariants } from "@repo/design-system/components/three/scene-frame";
 import { VisualCardBody } from "@repo/design-system/components/visual/card";
-import { lazyComponent } from "@repo/design-system/lib/lazy";
 import { useTheme } from "@repo/design-system/providers/theme";
+import { lazy, Suspense } from "react";
 
 /** The model loads once the lab asks for it, and its frame holds the place meanwhile. */
-const ShellModelStage = lazyComponent(
-  () =>
+const ShellModelStage = lazy(async () => ({
+  default: await (() =>
     import(
       "@repo/design-system/components/contents/chemistry/shell-model/stage"
-    ).then(({ ShellModelStage }) => ShellModelStage),
-  { loading: SceneSpinner }
-);
+    ).then(({ ShellModelStage }) => ShellModelStage))(),
+}));
 
 /**
  * Renders the shared responsive 3D shell model used by chemistry shell labs.
@@ -52,7 +51,9 @@ export function ShellModelCanvas({
           sample={sample}
           shells={shells}
         >
-          <ShellModelStage />
+          <Suspense fallback={SceneSpinner()}>
+            <ShellModelStage />
+          </Suspense>
         </ShellModelProvider>
       ) : null}
     </VisualCardBody>

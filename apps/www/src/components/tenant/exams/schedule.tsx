@@ -2,9 +2,9 @@ import { QueryResult } from "@confect/react";
 import { Calendar03Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { lazyComponent } from "@repo/design-system/lib/lazy";
+import { ClientOnly } from "@tanstack/react-router";
 import { Array as Arr, DateTime, Effect, Option } from "effect";
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useViewerQuery } from "@/components/tenant/context";
 import {
@@ -17,13 +17,12 @@ import { nextQuarter } from "@/components/tenant/exams/time";
  * The dialog that schedules a sitting. It loads on the first opening, so the editor's first page
  * does not carry the scheduling code.
  */
-const ScheduleSitting = lazyComponent(
-  () =>
+const ScheduleSitting = lazy(async () => ({
+  default: await (() =>
     import("@/components/tenant/exams/sitting").then(
       (module) => module.ScheduleSitting
-    ),
-  { loading: () => null, ssr: false }
-);
+    ))(),
+}));
 
 /**
  * The next whole quarter hour on the clock of a unit, as a `datetime-local` value. None when the
@@ -70,12 +69,16 @@ export function ScheduleExam() {
         </Button>
       ) : null}
       {openings === 0 ? null : (
-        <ScheduleSitting
-          key={openings}
-          onStartsChange={setStarts}
-          starts={starts}
-          units={units}
-        />
+        <Suspense fallback={null}>
+          <ClientOnly fallback={null}>
+            <ScheduleSitting
+              key={openings}
+              onStartsChange={setStarts}
+              starts={starts}
+              units={units}
+            />
+          </ClientOnly>
+        </Suspense>
       )}
     </>
   );

@@ -21,7 +21,7 @@ import {
   useNavigate,
   useParams,
 } from "@tanstack/react-router";
-import { Option } from "effect";
+import { Array as Arr, Option } from "effect";
 import type { ComponentProps, ComponentPropsWithoutRef } from "react";
 
 /**
@@ -122,7 +122,9 @@ export function useCanonicalPath() {
         location.pathname,
         LOCALES
       );
-      return publicSegments.length === 0 ? "/" : `/${publicSegments.join("/")}`;
+      return Arr.isReadonlyArrayNonEmpty(publicSegments)
+        ? `/${Arr.join(publicSegments, "/")}`
+        : "/";
     },
   });
 }

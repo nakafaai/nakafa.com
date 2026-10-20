@@ -1,17 +1,14 @@
 "use client";
 
 import { Intersection } from "@repo/design-system/components/ui/intersection";
-import { lazyComponent } from "@repo/design-system/lib/lazy";
-import { useState } from "react";
+import { ClientOnly } from "@tanstack/react-router";
+import { lazy, Suspense, useState } from "react";
 import { CommentsSlugContext } from "@/components/comments/slug";
 
-const LazyComments = lazyComponent(
-  () => import("@/components/comments").then((module) => module.Comments),
-  {
-    ssr: false,
-    loading: () => null,
-  }
-);
+const LazyComments = lazy(async () => ({
+  default: await (() =>
+    import("@/components/comments").then((module) => module.Comments))(),
+}));
 
 /**
  * Defers the comments bundle and live Convex page until the footer is nearby.
@@ -24,7 +21,11 @@ export function DeferredComments({ slug }: { slug: string }) {
   if (isNearViewport) {
     return (
       <CommentsSlugContext value={slug}>
-        <LazyComments />
+        <Suspense fallback={null}>
+          <ClientOnly fallback={null}>
+            <LazyComments />
+          </ClientOnly>
+        </Suspense>
       </CommentsSlugContext>
     );
   }

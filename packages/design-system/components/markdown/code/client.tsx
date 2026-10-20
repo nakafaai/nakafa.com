@@ -1,10 +1,19 @@
 "use client";
 
-import { lazyComponent } from "@repo/design-system/lib/lazy";
+import { type ComponentProps, lazy, Suspense } from "react";
 
 /** Defers the interactive highlighter until an authored code block renders. */
-export const CodeBlockMdx = lazyComponent(() =>
-  import("@repo/design-system/components/markdown/code/block").then(
-    ({ CodeBlockMdx }) => CodeBlockMdx
-  )
-);
+const LazyCodeBlockMdx = lazy(async () => ({
+  default: await (() =>
+    import("@repo/design-system/components/markdown/code/block").then(
+      ({ CodeBlockMdx }) => CodeBlockMdx
+    ))(),
+}));
+
+export function CodeBlockMdx(props: ComponentProps<typeof LazyCodeBlockMdx>) {
+  return (
+    <Suspense fallback={null}>
+      <LazyCodeBlockMdx {...props} />
+    </Suspense>
+  );
+}

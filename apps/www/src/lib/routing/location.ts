@@ -3,48 +3,51 @@ import {
   MATERIAL_CONTEXT_QUERY_PARAM,
 } from "@repo/contents/route/material/context";
 import { splitLocalePathname } from "@repo/internationalization/src/href";
-import { DEFAULT_LOCALE, LOCALES } from "@repo/internationalization/src/locale";
-import { Array as Arr } from "effect";
+import {
+  DEFAULT_LOCALE,
+  LOCALES,
+  LocaleSchema,
+} from "@repo/internationalization/src/locale";
+import { toPublicPath } from "@repo/internationalization/src/rewrite";
+import { Array as Arr, Schema } from "effect";
+
+/** The router location that a page reads: its pathname in the router's spelling, and its search string. */
+export const RouterPageLocation = Schema.Struct({
+  pathname: Schema.String,
+  searchStr: Schema.String,
+});
+export type RouterPageLocation = typeof RouterPageLocation.Type;
+
+/** The page that a router location shows, as a Nina turn names it. */
+const RouterPage = Schema.Struct({
+  locale: LocaleSchema,
+  /** The public path of the page without its locale, such as `/articles/education`. */
+  slug: Schema.String,
+  /** The material context hint of the link, when it is one the server takes. */
+  materialContextHint: Schema.optionalKey(Schema.String),
+});
 
 /**
- * Get current locale from the URL pathname
- * Assumes locale is the first segment of the pathname, such as /en, /id, or /de.
+ * Reads the locale, the public path and the material context hint of a router
+ * location. The hint is left out when it is longer than the server accepts,
+ * as the material page leaves it out.
  */
-export function getLocale() {
-  const { locale } = splitLocalePathname(window.location.pathname, LOCALES);
-
-  // Fallback to default locale when the path starts with no configured locale
-  return locale ?? DEFAULT_LOCALE;
-}
-
-/**
- * Get current pathname without the locale prefix
- * This matches what usePathname() from the locale seam returns
- */
-export function getPathname() {
-  const pathname = window.location.pathname;
-  const { locale, publicSegments } = splitLocalePathname(pathname, LOCALES);
-
-  // Remove the first segment (locale) and reconstruct the path
-  if (locale) {
-    const pathWithoutLocale = Arr.join(publicSegments, "/");
-    return pathWithoutLocale ? `/${pathWithoutLocale}` : "/";
-  }
-
-  // If no locale in path, return the full pathname
-  return pathname || "/";
-}
-
-/**
- * Reads the raw material context hint for server-side Nina validation. A hint
- * longer than the server accepts is left out, as the material page leaves it
- * out.
- */
-export function getMaterialContextHint() {
-  const hint = new URLSearchParams(window.location.search).get(
+export function readRouterPage(
+  location: RouterPageLocation
+): typeof RouterPage.Type {
+  const { locale, publicSegments } = splitLocalePathname(
+    toPublicPath(location.pathname),
+    LOCALES
+  );
+  const hint = new URLSearchParams(location.searchStr).get(
     MATERIAL_CONTEXT_QUERY_PARAM
   );
-  return hint !== null && hint.length <= MATERIAL_CONTEXT_HINT_LENGTH
-    ? hint
-    : undefined;
+  const slug = Arr.join(publicSegments, "/");
+  return {
+    locale: locale ?? DEFAULT_LOCALE,
+    slug: slug === "" ? "/" : `/${slug}`,
+    ...(hint !== null && hint.length <= MATERIAL_CONTEXT_HINT_LENGTH
+      ? { materialContextHint: hint }
+      : {}),
+  };
 }

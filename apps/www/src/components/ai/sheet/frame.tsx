@@ -3,10 +3,10 @@
 import nina from "@repo/backend/confect/_generated/refs/nina";
 import { Sheet, SheetContent } from "@repo/design-system/components/ui/sheet";
 import { useResizable } from "@repo/design-system/hooks/use-resizable";
-import { lazyComponent } from "@repo/design-system/lib/lazy";
+import { ClientOnly } from "@tanstack/react-router";
 import { cn } from "cn";
 import { Array as Arr, Option } from "effect";
-import { Activity, useRef, useState } from "react";
+import { Activity, lazy, Suspense, useRef, useState } from "react";
 import { useTranslations } from "use-intl";
 import { readChatArgs } from "@/components/ai/chat/access";
 import { useAi } from "@/components/ai/context";
@@ -16,29 +16,27 @@ import { Authenticated, Unauthenticated } from "@/components/auth/gate";
 const MIN_WIDTH = 384;
 const MAX_WIDTH = 672;
 
-const SheetNew = lazyComponent(
-  () => import("@/components/ai/sheet/new").then((module) => module.SheetNew),
-  { loading: () => null, ssr: false }
-);
+const SheetNew = lazy(async () => ({
+  default: await (() =>
+    import("@/components/ai/sheet/new").then((module) => module.SheetNew))(),
+}));
 
-const SheetConversation = lazyComponent(
-  () =>
+const SheetConversation = lazy(async () => ({
+  default: await (() =>
     import("@/components/ai/sheet/conversation").then(
       (module) => module.SheetConversation
-    ),
-  { loading: () => null, ssr: false }
-);
+    ))(),
+}));
 
 // The boundary holds the failure card, whose sign-in chain only a signed-out
 // visitor who cannot read a chat needs. It loads with the body, so the shell's
 // first JavaScript does not carry it on every page.
-const ChatBoundary = lazyComponent(
-  () =>
+const ChatBoundary = lazy(async () => ({
+  default: await (() =>
     import("@/components/ai/chat/boundary").then(
       (module) => module.ChatBoundary
-    ),
-  { loading: () => null, ssr: false }
-);
+    ))(),
+}));
 
 /**
  * Nina's resizable side sheet. The frame is part of the app shell and stays
@@ -148,15 +146,29 @@ function SheetBody() {
   return (
     <>
       <Activity mode={activeChatId ? "hidden" : "visible"}>
-        <SheetNew />
+        <Suspense fallback={null}>
+          <ClientOnly fallback={null}>
+            <SheetNew />
+          </ClientOnly>
+        </Suspense>
       </Activity>
       <Activity mode={activeChatId ? "visible" : "hidden"}>
         <ChatBoundary key={activeChatId} read={read}>
           <Authenticated>
-            {!!activeChatId && <SheetConversation chatId={activeChatId} />}
+            {!!activeChatId && (
+              <Suspense fallback={null}>
+                <ClientOnly fallback={null}>
+                  <SheetConversation chatId={activeChatId} />
+                </ClientOnly>
+              </Suspense>
+            )}
           </Authenticated>
           <Unauthenticated>
-            <SheetNew />
+            <Suspense fallback={null}>
+              <ClientOnly fallback={null}>
+                <SheetNew />
+              </ClientOnly>
+            </Suspense>
           </Unauthenticated>
         </ChatBoundary>
       </Activity>

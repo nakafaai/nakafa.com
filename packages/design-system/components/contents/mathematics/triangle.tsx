@@ -18,10 +18,10 @@ import {
   VisualCardHeader,
   VisualCardToolbar,
 } from "@repo/design-system/components/visual/card";
-import { lazyComponent } from "@repo/design-system/lib/lazy";
 import { ISOSCELES_RIGHT_TRIANGLE_ANGLE } from "@repo/math/angles";
+import { ClientOnly } from "@tanstack/react-router";
 import type { ReactNode } from "react";
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import {
   Button,
   Group,
@@ -33,25 +33,20 @@ import {
 import { useLocale, useTranslations } from "use-intl";
 
 // Next owns this client-only import boundary so offscreen lessons do not load WebGL.
-const TriangleScene = lazyComponent(
-  () =>
+const TriangleScene = lazy(async () => ({
+  default: await (() =>
     import(
       "@repo/design-system/components/contents/mathematics/triangle/scene"
-    ).then((module) => module.TriangleScene),
-  {
-    loading: ScenePlaceholder,
-    ssr: false,
-  }
-);
+    ).then((module) => module.TriangleScene))(),
+}));
 
 // Keep KaTeX outside the page's initial component graph until the scene is visible.
-const TriangleReadout = lazyComponent(
-  () =>
+const TriangleReadout = lazy(async () => ({
+  default: await (() =>
     import(
       "@repo/design-system/components/contents/mathematics/triangle/readout"
-    ).then((module) => module.TriangleReadout),
-  { ssr: false }
-);
+    ).then((module) => module.TriangleReadout))(),
+}));
 
 interface Props {
   angle?: number;
@@ -142,7 +137,11 @@ function Content() {
       </VisualCardToolbar>
       <VisualCardBody className="relative" data-scene="triangle">
         {isNearViewport ? (
-          <TriangleScene angle={angleValue} />
+          <Suspense fallback={ScenePlaceholder()}>
+            <ClientOnly fallback={ScenePlaceholder()}>
+              <TriangleScene angle={angleValue} />
+            </ClientOnly>
+          </Suspense>
         ) : (
           <ScenePlaceholder />
         )}
@@ -157,7 +156,11 @@ function Content() {
       <CoordinateControls />
       {isNearViewport ? (
         <VisualCardFooter>
-          <TriangleReadout angle={angleValue} />
+          <Suspense fallback={null}>
+            <ClientOnly fallback={null}>
+              <TriangleReadout angle={angleValue} />
+            </ClientOnly>
+          </Suspense>
         </VisualCardFooter>
       ) : null}
     </>

@@ -8,7 +8,7 @@ import { createSchool, hostAddress } from "@/e2e/support/school";
  * request header in which the proxy names its language, as e2e/state/missing
  * explains.
  */
-const STANDALONE_ADDRESS = "/_not-found";
+const STANDALONE_ADDRESS = "/_missing";
 const LOCALE_HEADER = "x-nakafa-locale";
 
 /** A school address that no school holds, so the school host answers not found. */

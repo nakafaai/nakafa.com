@@ -11,7 +11,7 @@ import { Option, Schema } from "effect";
 export const NOT_FOUND_LOCALE_HEADER = "x-nakafa-locale";
 
 /** The address of the standalone not-found page, which the server renders for a refused or missing address. */
-export const NOT_FOUND_PATH = "/_not-found";
+export const NOT_FOUND_PATH = "/_missing";
 
 /** The data that the standalone page's not-found error carries: the locale that the page renders in. */
 export const NotFoundPageData = Schema.Struct({ locale: LocaleSchema });

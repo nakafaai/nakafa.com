@@ -1,9 +1,10 @@
 import { useMutation } from "@confect/react";
 import posts from "@repo/backend/confect/_generated/refs/posts";
 import { DeferredLearnerText } from "@repo/design-system/components/markdown/deferred";
-import { lazyComponent } from "@repo/design-system/lib/lazy";
 import { toast } from "@repo/design-system/lib/toast/notify";
+import { ClientOnly } from "@tanstack/react-router";
 import { Effect, HashSet } from "effect";
+import { lazy, Suspense } from "react";
 import { useLocale } from "use-intl";
 import { MoreMenu } from "@/components/shared/more";
 import { formatShortAge } from "@/components/user/age";
@@ -28,13 +29,12 @@ import type { ListPost } from "@/components/user/posts/state";
 import { reportClientException } from "@/lib/analytics/client";
 
 /** The delete dialog loads when the learner opens the More menu of a post, before they can choose Delete. */
-const PostDeletion = lazyComponent(
-  () =>
+const PostDeletion = lazy(async () => ({
+  default: await (() =>
     import("@/components/user/posts/delete").then(
       (module) => module.PostDeletion
-    ),
-  { loading: () => null, ssr: false }
-);
+    ))(),
+}));
 
 /**
  * One post of the list, in the anatomy every row of the profile shares: the
@@ -61,7 +61,11 @@ export function PostRow({ post }: { post: ListPost }) {
           {isOwner && (
             <FeedEnd>
               <MoreMenu inert={pending}>
-                <PostDeletion postId={post._id} />
+                <Suspense fallback={null}>
+                  <ClientOnly fallback={null}>
+                    <PostDeletion postId={post._id} />
+                  </ClientOnly>
+                </Suspense>
               </MoreMenu>
             </FeedEnd>
           )}

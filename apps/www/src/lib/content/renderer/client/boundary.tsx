@@ -1,11 +1,11 @@
-import { Activity, type ComponentType } from "react";
+import { Activity, type ComponentType, Suspense } from "react";
 
 /**
  * Gives a lesson renderer whose code loads on demand its own hydration
  * boundary.
  *
- * `lazyComponent` renders through `React.lazy`, which suspends on its first
- * render even once its chunk has loaded. Without a boundary of its own, that
+ * A `React.lazy` renderer suspends on its first render even once its chunk has
+ * loaded. Without a boundary of its own, that
  * suspension holds the hydration of the whole lesson, and a press that lands
  * meanwhile cannot hydrate it synchronously: React client-renders the lesson
  * and the press is lost. A visible `Activity` lets React hydrate the lesson
@@ -20,7 +20,9 @@ export function withHydrationBoundary<P extends object>(
   function HydrationBoundary(props: P) {
     return (
       <Activity mode="visible">
-        <Renderer {...props} />
+        <Suspense fallback={null}>
+          <Renderer {...props} />
+        </Suspense>
       </Activity>
     );
   }

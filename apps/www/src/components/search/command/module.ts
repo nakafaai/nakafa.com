@@ -8,7 +8,7 @@ class SearchCommandPreloadError extends Data.TaggedError(
   message: string;
 }> {}
 
-/** Loads command search at the Next.js dynamic-component boundary. */
+/** Loads command search when the learner opens it. */
 export function loadSearchCommandModule() {
   return import("@/components/search/command");
 }
