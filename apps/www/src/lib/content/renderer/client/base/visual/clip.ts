@@ -86,12 +86,7 @@ function clipParameters(
     Option.some(unclipped),
     (bounds, range, index) =>
       Option.flatMap(bounds, (current) =>
-        clipAxis(
-          current,
-          range,
-          origin[index] ?? ZERO,
-          direction[index] ?? ZERO
-        )
+        clipAxis(current, range, origin[index], direction[index])
       )
   );
   return Option.getOrUndefined(
@@ -108,7 +103,7 @@ function endpoint(
     BigDecimal.toNumberUnsafe(
       BigDecimal.sum(
         coordinate,
-        BigDecimal.multiply(direction[index] ?? ZERO, parameter)
+        BigDecimal.multiply(direction[index], parameter)
       )
     )
   );
@@ -143,8 +138,8 @@ function clipPlaneEndpoints(
   const first = endpoint(origin, direction, interval[0]);
   const second = endpoint(origin, direction, interval[1]);
   return [
-    { x: first[0] ?? 0, y: first[1] ?? 0 },
-    { x: second[0] ?? 0, y: second[1] ?? 0 },
+    { x: first[0], y: first[1] },
+    { x: second[0], y: second[1] },
   ];
 }
 
@@ -179,8 +174,8 @@ function clipSpaceEndpoints(
   const first = endpoint(origin, direction, interval[0]);
   const second = endpoint(origin, direction, interval[1]);
   return [
-    { x: first[0] ?? 0, y: first[1] ?? 0, z: first[2] ?? 0 },
-    { x: second[0] ?? 0, y: second[1] ?? 0, z: second[2] ?? 0 },
+    { x: first[0], y: first[1], z: first[2] },
+    { x: second[0], y: second[1], z: second[2] },
   ];
 }
 
@@ -249,12 +244,7 @@ export function clipPlanePath(
   const run = MutableList.make<PlanePoint>();
   let last: PlanePoint | undefined;
 
-  for (let index = 1; index < source.length; index += 1) {
-    const from = source[index - 1];
-    const to = source[index];
-    if (!(from && to)) {
-      continue;
-    }
+  for (const [from, to] of Arr.zip(source, Arr.drop(source, 1))) {
     const segment = clipPlaneEndpoints(frame, from, to, 0, 1);
     if (!segment) {
       endRun(paths, run);
@@ -287,12 +277,7 @@ export function clipSpacePath(
   const run = MutableList.make<SpacePoint>();
   let last: SpacePoint | undefined;
 
-  for (let index = 1; index < source.length; index += 1) {
-    const from = source[index - 1];
-    const to = source[index];
-    if (!(from && to)) {
-      continue;
-    }
+  for (const [from, to] of Arr.zip(source, Arr.drop(source, 1))) {
     const segment = clipSpaceEndpoints(frame, from, to, 0, 1);
     if (!segment) {
       endRun(paths, run);
