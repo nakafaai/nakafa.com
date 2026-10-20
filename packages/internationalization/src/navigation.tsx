@@ -19,6 +19,7 @@ import {
   useNavigate,
   useRouter as useRouterInstance,
 } from "@tanstack/react-router";
+import { Array as Arr } from "effect";
 import type { ComponentProps } from "react";
 import { useMemo } from "react";
 
@@ -40,7 +41,7 @@ export function useCurrentLocale(): Locale {
  */
 export function usePathname(): string {
   const { publicSegments } = splitLocalePathname(useRouterPathname(), LOCALES);
-  const rest = publicSegments.join("/");
+  const rest = Arr.join(publicSegments, "/");
   return rest === "" ? "/" : `/${rest}`;
 }
 

@@ -5,6 +5,7 @@ import {
 import type { Locale } from "@repo/internationalization/src/locale";
 import { toCanonicalPath } from "@repo/internationalization/src/rewrite";
 import { SITE_ORIGIN } from "@repo/seo/origin";
+import { Array as Arr } from "effect";
 
 /**
  * The router path of an internal href on one locale, such as `/id/materials/x`
@@ -41,6 +42,6 @@ export function schoolTarget(href: string, pathname: string) {
  */
 export function canonicalPathOf(href: string, locale: Locale) {
   const { pathname } = new URL(localizedTarget(href, locale), SITE_ORIGIN);
-  const rest = pathname.split("/").slice(2).join("/");
+  const rest = Arr.join(Arr.drop(pathname.split("/"), 2), "/");
   return rest === "" ? "/" : `/${rest}`;
 }
