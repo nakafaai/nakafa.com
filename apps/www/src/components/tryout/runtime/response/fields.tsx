@@ -1,5 +1,3 @@
-"use client";
-
 import { RadioGroup } from "@repo/design-system/components/ui/radio-group";
 import { Array as Arr, HashMap, HashSet, Option } from "effect";
 import type { ReactNode } from "react";
