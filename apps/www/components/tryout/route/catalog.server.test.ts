@@ -5,6 +5,7 @@ import { Effect, Option } from "effect";
 import {
   readTryoutCountryRoute,
   readTryoutExamRoute,
+  readTryoutHubHandler,
   readTryoutHubRoute,
   readTryoutRouteHead,
   readTryoutTrackRoute,
@@ -31,6 +32,7 @@ const catalog = vi.hoisted(() => ({
 }));
 
 vi.mock("@tanstack/react-start/server", () => ({
+  getRequest: () => new Request("https://nakafa.com/en/try-out"),
   setResponseHeader: catalog.setResponseHeader,
 }));
 vi.mock("@/components/tryout/catalog/options", () => ({
@@ -238,6 +240,11 @@ describe("readTryoutHubRoute", () => {
         expect(linked.image).toBe("og-app");
       })
   );
+  it("answers the hub through its server handler", async () => {
+    const route = await readTryoutHubHandler({ data: { locale: "en" } });
+
+    expect(route.sourceUrl).toBeUndefined();
+  });
 });
 
 describe("readTryoutCountryRoute", () => {

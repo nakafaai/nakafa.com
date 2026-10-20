@@ -1,20 +1,9 @@
 import "@tanstack/react-start/server-only";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
-import { ClassAddress } from "@repo/backend/confect/classroom/class";
-import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { Effect, Schema } from "effect";
+import { Effect } from "effect";
 import { readOptional, readRequired } from "@/lib/data/read.server";
+import type { ClassForumInput, ShellInput } from "@/lib/tenant/classes";
 import { memberHandler } from "@/lib/tenant/member.server";
-
-/** The first page of a class's forum channels, the forum tab's rows. */
-export const ClassForumInput = Schema.Struct({
-  classSlug: ClassAddress,
-  numItems: Schema.Int.check(Schema.isBetween({ maximum: 100, minimum: 1 })),
-  slug: TenantSlug,
-});
-
-/** The school whose classes the sidebar lists. */
-export const ShellInput = Schema.Struct({ slug: TenantSlug });
 
 /**
  * The class and the first page of its forum channels, in order: the channels

@@ -1,27 +1,60 @@
 import { monospace } from "@repo/design-system/lib/monospace";
 import { LocaleSchema } from "@repo/internationalization/src/locale";
-import { createFileRoute, notFound, Outlet } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  getRouteApi,
+  notFound,
+  Outlet,
+} from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { cn } from "cn";
 import { Schema } from "effect";
+import { IntlProvider } from "use-intl";
+import { AppProviders } from "@/components/providers/app";
+import { SharedProviders } from "@/components/providers/shared";
 import { AppShell } from "@/components/sidebar/shell";
+import { readRouteMessages } from "@/lib/i18n/messages.fn";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
 const ShellInput = Schema.Struct({ locale: Schema.String });
 
-/** The article navigation of the shell, read on the server for every learn page. */
+/**
+ * The messages of the student shell and of the learn pages that the locale route
+ * does not carry. The Common, State and Toast messages come from the locale route.
+ */
+const MAIN_NAMESPACES = [
+  "AnalyticsConsent",
+  "Ai",
+  "Articles",
+  "Holy",
+  "Metadata",
+  "Tryouts",
+  "Utils",
+] as const;
+
+/** The navigation of the shell, read on the server for every learn page. */
 const readShellNavigation = createServerFn({ method: "GET" })
   .validator(Schema.toStandardSchemaV1(ShellInput))
   .handler(async ({ data }) => {
-    const { getShellArticleNavigation } = await import(
-      "@/lib/content/article/navigation"
-    );
-    return getShellArticleNavigation(getLocaleOrThrow(data.locale));
+    const locale = getLocaleOrThrow(data.locale);
+    const [{ getShellArticleNavigation }, { getShellPageNavigation }] =
+      await Promise.all([
+        import("@/lib/content/article/navigation"),
+        import("@/lib/content/page/navigation"),
+      ]);
+    const [articleNavigation, pageNavigation] = await Promise.all([
+      getShellArticleNavigation(locale),
+      getShellPageNavigation(locale),
+    ]);
+    return { articleNavigation, pageNavigation };
   });
 
+const localeRoute = getRouteApi("/$locale");
+
 /**
- * The student shell that every learn page shares, as the (main) layout of the
- * reference app. An unknown locale stops before any page loads.
+ * The student shell that every learn page and signed-in screen shares, as the
+ * (main) layout of the reference app. An unknown locale stops before any page
+ * loads.
  */
 export const Route = createFileRoute("/$locale/_main")({
   beforeLoad: ({ params }) => {
@@ -29,18 +62,37 @@ export const Route = createFileRoute("/$locale/_main")({
       throw notFound();
     }
   },
-  loader: ({ params }) =>
-    readShellNavigation({ data: { locale: params.locale } }),
+  loader: async ({ params }) => {
+    const [messages, shell] = await Promise.all([
+      readRouteMessages({
+        data: { locale: params.locale, namespaces: MAIN_NAMESPACES },
+      }),
+      readShellNavigation({ data: { locale: params.locale } }),
+    ]);
+    return { ...shell, messages };
+  },
   component: MainLayout,
 });
 
+/**
+ * Renders the student shell inside the app and shared providers, which the
+ * reference app mounts above the (main) group.
+ */
 function MainLayout() {
-  const articleNavigation = Route.useLoaderData();
+  const { locale } = Route.useParams();
+  const { articleNavigation, messages, pageNavigation } = Route.useLoaderData();
+  const { messages: shellMessages } = localeRoute.useLoaderData();
   return (
-    <AppShell articleNavigation={articleNavigation}>
-      <div className={cn(monospace, "contents")}>
-        <Outlet />
-      </div>
-    </AppShell>
+    <IntlProvider locale={locale} messages={{ ...shellMessages, ...messages }}>
+      <AppProviders pageNavigation={pageNavigation}>
+        <SharedProviders>
+          <AppShell articleNavigation={articleNavigation}>
+            <div className={cn(monospace, "contents")}>
+              <Outlet />
+            </div>
+          </AppShell>
+        </SharedProviders>
+      </AppProviders>
+    </IntlProvider>
   );
 }

@@ -4,7 +4,7 @@ import { UserPosts } from "@/components/user/posts/list";
 import { profileHead } from "@/lib/account/head";
 import { profilePostsFn } from "@/lib/account/profile.fn";
 
-export const Route = createFileRoute("/$locale/_app/user/$username/")({
+export const Route = createFileRoute("/$locale/_main/_app/user/$username/")({
   loader: ({ params }) =>
     profilePostsFn({
       data: { locale: params.locale, username: params.username },
@@ -14,7 +14,7 @@ export const Route = createFileRoute("/$locale/_app/user/$username/")({
   component: UserPostsPage,
 });
 
-const profileRoute = getRouteApi("/$locale/_app/user/$username");
+const profileRoute = getRouteApi("/$locale/_main/_app/user/$username");
 
 function UserPostsPage() {
   const { first, now } = Route.useLoaderData();

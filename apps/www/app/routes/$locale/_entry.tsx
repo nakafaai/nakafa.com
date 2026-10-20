@@ -50,7 +50,7 @@ export const Route = createFileRoute("/$locale/_entry")({
 function EntryLayout() {
   const { locale } = Route.useParams();
   const messages = Route.useLoaderData();
-  const shellMessages = localeRoute.useLoaderData();
+  const { messages: shellMessages } = localeRoute.useLoaderData();
   return (
     <IntlProvider locale={locale} messages={{ ...shellMessages, ...messages }}>
       <EntryShell>

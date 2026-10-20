@@ -5,106 +5,140 @@ import { Effect } from "effect";
 import {
   readTryoutCountryHandler,
   readTryoutExamHandler,
-  readTryoutHubHandler,
   readTryoutTrackHandler,
   readTryoutTrackListHandler,
-} from "@/components/tryout/route/catalog.fn";
+} from "@/components/tryout/route/catalog.server";
 
-const readers = vi.hoisted(() => ({
-  readTryoutCountryRoute: vi.fn(),
-  readTryoutExamRoute: vi.fn(),
-  readTryoutHubRoute: vi.fn(),
-  readTryoutTrackRoute: vi.fn(),
-  readTryoutTrackSetList: vi.fn(),
+const catalog = vi.hoisted(() => ({
+  getAksaraTreeUrl: vi.fn(),
+  getAppSocialArtwork: vi.fn(),
+  getOgUrl: vi.fn(),
+  readCatalogQuery: vi.fn(),
+  readRequestToken: vi.fn(),
+  readServerTranslator: vi.fn(),
+  readTryoutCountryPage: vi.fn(),
+  readTryoutExamPage: vi.fn(),
+  readTryoutHubPage: vi.fn(),
+  readTryoutMetadata: vi.fn(),
+  readTryoutSetList: vi.fn(),
+  readTryoutTrackPage: vi.fn(),
+  setResponseHeader: vi.fn(),
 }));
 
-vi.mock("@/components/tryout/route/catalog.server", () => readers);
 vi.mock("@tanstack/react-start/server", () => ({
-  getRequest: () => new Request("https://nakafa.test/en/try-out"),
+  getRequest: () => new Request("https://nakafa.com/en/try-out"),
+  setResponseHeader: catalog.setResponseHeader,
+}));
+vi.mock("@/components/tryout/catalog/server", () => ({
+  readTryoutCountryPage: catalog.readTryoutCountryPage,
+  readTryoutExamPage: catalog.readTryoutExamPage,
+  readTryoutHubPage: catalog.readTryoutHubPage,
+  readTryoutMetadata: catalog.readTryoutMetadata,
+  readTryoutSetList: catalog.readTryoutSetList,
+  readTryoutTrackPage: catalog.readTryoutTrackPage,
+}));
+vi.mock("@/components/tryout/catalog/table/query", () => ({
+  readCatalogQuery: catalog.readCatalogQuery,
+}));
+vi.mock("@/components/tryout/route/token.server", () => ({
+  readRequestToken: catalog.readRequestToken,
+}));
+vi.mock("@/lib/content/repository", () => ({
+  getAksaraTreeUrl: catalog.getAksaraTreeUrl,
+}));
+vi.mock("@/lib/og/app", () => ({
+  getAppSocialArtwork: catalog.getAppSocialArtwork,
+}));
+vi.mock("@/lib/seo/social", () => ({ getOgUrl: catalog.getOgUrl }));
+vi.mock("@repo/internationalization/src/translator", () => ({
+  readServerTranslator: catalog.readServerTranslator,
 }));
 
+const COUNTRY = "try-out/id";
+const EXAM = "try-out/id/snbt";
+const TRACK = "try-out/id/snbt/2027";
+
+const countryPage = { country: { countryKey: "id" }, exams: [] };
+const hub = { countries: [], sourceRevision: undefined };
+const search = { direction: "asc", sort: "title", status: "all" };
 const track = { countryKey: "id", examKey: "snbt", trackKey: "2027" };
 
+beforeEach(() => {
+  vi.clearAllMocks();
+  catalog.readRequestToken.mockReturnValue(Effect.succeed("token-1"));
+  catalog.readServerTranslator.mockImplementation(() =>
+    Promise.resolve((key: string) => key)
+  );
+  catalog.readTryoutMetadata.mockReturnValue(
+    Effect.succeed({ route: undefined })
+  );
+  catalog.readTryoutHubPage.mockReturnValue(Effect.succeed(hub));
+  catalog.readTryoutCountryPage.mockReturnValue(
+    Effect.succeedSome(countryPage)
+  );
+  catalog.readTryoutExamPage.mockReturnValue(Effect.void);
+  catalog.readTryoutTrackPage.mockReturnValue(Effect.void);
+});
+
 describe("try-out catalog server functions", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it("answers the hub of the locale it was asked for", async () => {
-    readers.readTryoutHubRoute.mockReturnValueOnce(
-      Effect.succeed({ kind: "hub" })
-    );
+  it("answers one country through its server handler", async () => {
+    catalog.readTryoutCountryPage.mockReturnValueOnce(Effect.succeedNone);
 
     await expect(
-      readTryoutHubHandler({ data: { locale: "en" } })
-    ).resolves.toEqual({ kind: "hub" });
-    expect(readers.readTryoutHubRoute).toHaveBeenCalledExactlyOnceWith("en");
-  });
-
-  it("answers one country with its address segments", async () => {
-    readers.readTryoutCountryRoute.mockReturnValueOnce(
-      Effect.succeed({ kind: "notFound" })
-    );
-
-    await expect(
-      readTryoutCountryHandler({ data: { country: "id", locale: "id" } })
+      readTryoutCountryHandler({ data: { country: "id", locale: "en" } })
     ).resolves.toEqual({ kind: "notFound" });
-    expect(readers.readTryoutCountryRoute).toHaveBeenCalledExactlyOnceWith({
-      country: "id",
-      locale: "id",
-    });
+    expect(catalog.readTryoutCountryPage).toHaveBeenCalledExactlyOnceWith(
+      "en",
+      COUNTRY
+    );
   });
 
-  it("answers one exam with its address segments", async () => {
-    readers.readTryoutExamRoute.mockReturnValueOnce(
-      Effect.succeed({ kind: "found" })
-    );
-
+  it("answers one exam through its server handler", async () => {
     await expect(
       readTryoutExamHandler({
         data: { country: "id", exam: "snbt", locale: "en" },
       })
-    ).resolves.toEqual({ kind: "found" });
-    expect(readers.readTryoutExamRoute).toHaveBeenCalledExactlyOnceWith({
-      country: "id",
-      exam: "snbt",
-      locale: "en",
-    });
+    ).resolves.toEqual({ kind: "notFound" });
+    expect(catalog.readTryoutExamPage).toHaveBeenCalledExactlyOnceWith(
+      "en",
+      EXAM
+    );
   });
 
-  it("answers one track with its address segments", async () => {
-    readers.readTryoutTrackRoute.mockReturnValueOnce(
-      Effect.succeed({ kind: "found" })
-    );
-
+  it("answers one track through its server handler", async () => {
     await expect(
       readTryoutTrackHandler({
         data: { country: "id", exam: "snbt", locale: "en", track: "2027" },
       })
-    ).resolves.toEqual({ kind: "found" });
-    expect(readers.readTryoutTrackRoute).toHaveBeenCalledExactlyOnceWith({
-      country: "id",
-      exam: "snbt",
-      locale: "en",
-      track: "2027",
-    });
+    ).resolves.toEqual({ kind: "notFound" });
+    expect(catalog.readTryoutTrackPage).toHaveBeenCalledExactlyOnceWith(
+      "en",
+      TRACK
+    );
   });
 
   it("answers the learner's set list of one track with its query", async () => {
-    const search = { sort: "title" };
-    readers.readTryoutTrackSetList.mockReturnValueOnce(
-      Effect.succeed({ args: {}, result: {} })
+    catalog.readCatalogQuery.mockReturnValue(search);
+    catalog.readTryoutSetList.mockReturnValue(
+      Effect.succeed({ page: [], isDone: true })
     );
 
-    await expect(
-      readTryoutTrackListHandler({
-        data: { locale: "en", search, track },
-      })
-    ).resolves.toEqual({ args: {}, result: {} });
-    expect(readers.readTryoutTrackSetList).toHaveBeenCalledExactlyOnceWith({
-      locale: "en",
-      search,
-      track,
+    const answer = await readTryoutTrackListHandler({
+      data: { locale: "en", search, track },
     });
+
+    expect(answer.result).toEqual({ page: [], isDone: true });
+    expect(answer.args).toMatchObject({
+      countryKey: "id",
+      examKey: "snbt",
+      filter: "all",
+      locale: "en",
+      sort: { direction: "asc", field: "title" },
+      trackKey: "2027",
+    });
+    expect(catalog.readTryoutSetList).toHaveBeenCalledExactlyOnceWith(
+      "token-1",
+      answer.args
+    );
   });
 });

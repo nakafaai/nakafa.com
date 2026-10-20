@@ -3,6 +3,7 @@ import { Toaster } from "@repo/design-system/components/ui/sonner";
 import { TailwindIndicator } from "@repo/design-system/components/ui/tailwind-indicator";
 import { textDirection } from "@repo/internationalization/src/direction";
 import {
+  DEFAULT_LOCALE,
   decodeLocale,
   localeTimeZone,
 } from "@repo/internationalization/src/locale";
@@ -158,8 +159,16 @@ function toLocaleHead({
   };
 }
 
-/** Shows the not-found page of a locale inside the app, so its links keep the app loaded. */
+/**
+ * Shows the not-found page of a locale inside the app, so its links keep the app
+ * loaded. The parse refuses a first segment that is not a locale and keeps it raw,
+ * so this page falls back to the default locale for that segment.
+ */
 function LocaleNotFound() {
   const { locale } = useParams({ from: "/$locale" });
-  return <AppNotFound locale={locale} />;
+  return (
+    <AppNotFound
+      locale={Option.getOrElse(decodeLocale(locale), () => DEFAULT_LOCALE)}
+    />
+  );
 }

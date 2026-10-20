@@ -8,7 +8,7 @@ import { signedInHead } from "@/lib/account/head";
 import { searchScreenFn } from "@/lib/account/home.fn";
 import { SearchInput } from "@/lib/nuqs/search";
 
-export const Route = createFileRoute("/$locale/_app/search")({
+export const Route = createFileRoute("/$locale/_main/_app/search")({
   validateSearch: Schema.toStandardSchemaV1(SearchInput),
   loader: ({ params }) => searchScreenFn({ data: { locale: params.locale } }),
   head: ({ loaderData }) =>

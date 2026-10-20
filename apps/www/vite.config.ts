@@ -1,5 +1,5 @@
-import { existsSync } from "node:fs";
-import { join } from "node:path";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { basename, join } from "node:path";
 import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import { POSTHOG_PROXY_PATH } from "@repo/analytics/posthog/config";
 import { securityHeaders } from "@repo/site";
@@ -38,40 +38,75 @@ const PRERENDERED_PAGES = ACTIVE_APP_LOCALE_CODES.flatMap((locale) => [
 ]);
 
 /**
- * The client output that Nitro's preset writes: Vercel's static directory on
- * Vercel, and the public directory of the Node preset elsewhere.
+ * The marker that React writes where a Suspense boundary failed on the server, so
+ * the browser renders that part. A page that carries it is a server failure.
  */
-const CLIENT_OUTPUT_DIRECTORY =
-  process.env.VERCEL === "1" ? ".vercel/output/static" : ".output/public";
+const SERVER_FAILURE_MARKER = "<!--$!-->";
 
 /**
  * TanStack runs each prerender task in a queue whose failures nobody awaits: a
  * page that fails only logs an unhandled rejection, and the build still exits 0.
- * This check fails the build when a listed page did not reach the client output.
+ * This check throws unless the client output directory, the output that Nitro's
+ * preset sets and TanStack prerenders into, holds exactly the listed pages and
+ * none of them carries a server failure marker.
  */
-/** Throws when a listed page is missing from the client output. */
-function assertPrerenderedPages() {
-  const missing = PRERENDERED_PAGES.map(({ path }) => path).filter(
-    (path) => !existsSync(join(CLIENT_OUTPUT_DIRECTORY, path, "index.html"))
+function assertPrerenderedPages(clientOutputDirectory: string) {
+  const expected = PRERENDERED_PAGES.map(({ path }) =>
+    join(clientOutputDirectory, path, "index.html")
   );
-  if (missing.length > 0) {
+  const written = readdirSync(clientOutputDirectory, {
+    encoding: "utf8",
+    recursive: true,
+  })
+    .filter((entry) => basename(entry) === "index.html")
+    .map((entry) => join(clientOutputDirectory, entry));
+  const problems = [
+    ...expected
+      .filter((file) => !existsSync(file))
+      .map((file) => `no page at ${file}`),
+    ...written
+      .filter((file) => !expected.includes(file))
+      .map((file) => `unlisted page at ${file}`),
+    ...expected
+      .filter(
+        (file) =>
+          existsSync(file) &&
+          readFileSync(file, "utf8").includes(SERVER_FAILURE_MARKER)
+      )
+      .map((file) => `server failure in ${file}`),
+  ];
+  if (problems.length > 0) {
     throw new Error(
-      `Prerendering wrote no page for: ${missing.join(", ")} (${CLIENT_OUTPUT_DIRECTORY})`
+      `The prerendered pages are not the listed set:\n${problems.join("\n")}`
     );
   }
 }
 
 const verifyPrerenderedPages: Plugin = {
   apply: "build",
+  // TanStack's prerender is a post plugin too; this check must run after it.
+  enforce: "post",
   // After every environment is built and TanStack has prerendered the pages.
   buildApp: {
     order: "post",
-    handler: () => Promise.resolve(assertPrerenderedPages()),
+    handler: (builder) =>
+      Promise.resolve(
+        assertPrerenderedPages(builder.environments.client.config.build.outDir)
+      ),
   },
   name: "www:verify-prerendered-pages",
 };
 
+/** The font files that the font-src policy must load from this origin, never inline. */
+const FONT_FILE_PATTERN = /\.woff2?$/;
+
 export default defineConfig({
+  build: {
+    // The font-src policy allows only this origin, so a font file stays a file
+    // even when it is smaller than the inline limit. Other assets keep the limit.
+    assetsInlineLimit: (filePath) =>
+      FONT_FILE_PATTERN.test(filePath) ? false : undefined,
+  },
   define: {
     "import.meta.env.VITE_VERCEL_DEPLOYMENT_ID": JSON.stringify(
       process.env.VERCEL_DEPLOYMENT_ID ?? ""
@@ -80,10 +115,27 @@ export default defineConfig({
   resolve: {
     tsconfigPaths: true,
   },
+  // takumi-js loads its native `@takumi-rs/core` addon at runtime. A bundled copy
+  // cannot find its platform binary, so the server pass keeps the package external.
+  environments: {
+    ssr: {
+      resolve: { external: ["@takumi-rs/core"] },
+    },
+  },
   plugins: [
     tanstackStart({
       srcDirectory: "app",
-      importProtection: { behavior: { dev: "error", build: "error" } },
+      // Client components render on the server during the RSC pass, so their
+      // `.client` modules belong to the server bundle. The browser keeps its
+      // rule against `.server` modules; the server pass has no `.client` rule.
+      // docs/adr/0036-boundary.md records this exception.
+      importProtection: {
+        behavior: { dev: "error", build: "error" },
+        // Node built-ins have no browser build. The default client specifiers
+        // stay, and this one adds every `node:` specifier, subpaths included.
+        client: { specifiers: [/^node:/] },
+        server: { files: [] },
+      },
       pages: PRERENDERED_PAGES,
       // Server Components: content bodies render on the server, and only "use
       // client" islands ship JavaScript. An island's heavy module loads on
@@ -112,6 +164,11 @@ export default defineConfig({
             }),
         "/**": { headers: SHARED_HEADERS },
       },
+      // The server bundle has no WebAssembly module. Nitro's wasm support adds
+      // the `unwasm` export condition, which selects takumi-js's wasm backend,
+      // since its `#backend` map lists `unwasm` before `node`. Without it,
+      // takumi-js loads its native Node backend, as Next did before.
+      wasm: false,
       vercel: { skewProtection: false },
     }),
     rsc(),

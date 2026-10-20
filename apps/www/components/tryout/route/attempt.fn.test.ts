@@ -1,63 +1,75 @@
 // @vitest-environment node
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 import {
   readTryoutSectionHandler,
   readTryoutSetHandler,
-} from "@/components/tryout/route/attempt.fn";
+} from "@/components/tryout/route/attempt.server";
 
-const readers = vi.hoisted(() => ({
-  readTryoutSectionRoute: vi.fn(),
-  readTryoutSetRoute: vi.fn(),
+const mocks = vi.hoisted(() => ({
+  readRequestToken: vi.fn(),
+  readTryoutQuestionPreview: vi.fn(),
+  readTryoutSectionPage: vi.fn(),
+  readTryoutSetPage: vi.fn(),
+  setResponseHeader: vi.fn(),
 }));
 
-vi.mock("@/components/tryout/route/attempt.server", () => readers);
 vi.mock("@tanstack/react-start/server", () => ({
-  getRequest: () => new Request("https://nakafa.test/en/try-out"),
+  getRequest: () => new Request("https://nakafa.com/en/try-out"),
+  setResponseHeader: mocks.setResponseHeader,
+}));
+vi.mock("@/components/tryout/catalog/server", () => ({
+  readTryoutSectionPage: mocks.readTryoutSectionPage,
+  readTryoutSetPage: mocks.readTryoutSetPage,
+}));
+vi.mock("@/components/tryout/preview/read", () => ({
+  readTryoutQuestionPreview: mocks.readTryoutQuestionPreview,
+}));
+vi.mock("@/components/tryout/route/token.server", () => ({
+  readRequestToken: mocks.readRequestToken,
 }));
 
 const address = {
   country: "id",
   exam: "snbt",
   locale: "en",
-  search: { attemptId: "attempt-1", view: "single" },
+  search: {},
   track: "2027",
 } as const;
 
-describe("try-out attempt server functions", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
+const NOT_FOUND = { kind: "notFound" };
 
-  it("answers one set page for its learner with the attempt search", async () => {
-    readers.readTryoutSetRoute.mockReturnValueOnce(
-      Effect.succeed({ kind: "catalog" })
-    );
+beforeEach(() => {
+  vi.clearAllMocks();
+  mocks.readRequestToken.mockReturnValue(Effect.succeed("token-1"));
+  mocks.readTryoutQuestionPreview.mockResolvedValue(Option.none());
+});
+
+describe("try-out attempt server functions", () => {
+  it("answers one set page for its learner at the set's address", async () => {
+    mocks.readTryoutSetPage.mockReturnValueOnce(Effect.void);
 
     await expect(
       readTryoutSetHandler({ data: { ...address, set: "set-1" } })
-    ).resolves.toEqual({ kind: "catalog" });
-    expect(readers.readTryoutSetRoute).toHaveBeenCalledExactlyOnceWith({
-      ...address,
-      set: "set-1",
-    });
+    ).resolves.toEqual(NOT_FOUND);
+    expect(mocks.readTryoutSetPage).toHaveBeenCalledExactlyOnceWith(
+      "en",
+      "try-out/id/snbt/2027/set-1"
+    );
   });
 
-  it("answers one section page for its learner with the attempt search", async () => {
-    readers.readTryoutSectionRoute.mockReturnValueOnce(
-      Effect.succeed({ kind: "attempt" })
-    );
+  it("answers one section page for its learner at the section's address", async () => {
+    mocks.readTryoutSectionPage.mockReturnValueOnce(Effect.void);
 
     await expect(
       readTryoutSectionHandler({
         data: { ...address, section: "section-1", set: "set-1" },
       })
-    ).resolves.toEqual({ kind: "attempt" });
-    expect(readers.readTryoutSectionRoute).toHaveBeenCalledExactlyOnceWith({
-      ...address,
-      section: "section-1",
-      set: "set-1",
-    });
+    ).resolves.toEqual(NOT_FOUND);
+    expect(mocks.readTryoutSectionPage).toHaveBeenCalledExactlyOnceWith(
+      "en",
+      "try-out/id/snbt/2027/set-1/section-1"
+    );
   });
 });

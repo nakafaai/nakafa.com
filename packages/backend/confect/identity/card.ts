@@ -8,11 +8,11 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import { activeGrants } from "@repo/backend/confect/access/policy";
 import { OwnerRole } from "@repo/backend/confect/access/schema";
+import { formatCardCode } from "@repo/backend/confect/identity/code";
 import {
   drawCardCode,
-  formatCardCode,
   hashCardCode,
-} from "@repo/backend/confect/identity/code";
+} from "@repo/backend/confect/identity/secret";
 import {
   Array as Arr,
   Clock,
