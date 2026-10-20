@@ -7,6 +7,7 @@ import { Array as Arr, Effect, Predicate } from "effect";
 import type { Locale } from "use-intl";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/providers/convex";
+import { ConvexIsland } from "@/components/providers/island";
 import {
   CatalogCard,
   CatalogCardImage,
@@ -28,17 +29,16 @@ interface TryoutHubClientProps {
   };
 }
 
-type HubCountry = Ref.Returns<
-  typeof tryouts.queries.catalog.getHubPage
->["countries"][number];
+type HubCountries = TryoutHubClientProps["page"]["countries"];
 
-/** Renders the realtime country-first try-out hub from Convex. */
+type HubCountry = HubCountries[number];
+
+/**
+ * Renders the country-first try-out hub. A visitor's country cards only link. A
+ * learner's cards also save the chosen country through the page's live client,
+ * which mounts only once the page holds one.
+ */
 export function TryoutHubClient({ locale, page }: TryoutHubClientProps) {
-  const tTryouts = useTranslations("Tryouts");
-  const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);
-  const isLoading = useConvexAuth((auth) => auth.isLoading);
-  const setPreferredTryout = useSetPreferredTryoutMutation(page.countries);
-
   if (!page) {
     return null;
   }
@@ -46,6 +46,29 @@ export function TryoutHubClient({ locale, page }: TryoutHubClientProps) {
   if (page.countries.length === 0) {
     return <ComingSoon />;
   }
+
+  return (
+    <ConvexIsland
+      fallback={
+        <TryoutHubCountries countries={page.countries} locale={locale} />
+      }
+    >
+      <TryoutHubSignedCountries countries={page.countries} locale={locale} />
+    </ConvexIsland>
+  );
+}
+
+/** A learner's country cards: a click saves the country as the learner's choice, once the learner is signed in. */
+function TryoutHubSignedCountries({
+  countries,
+  locale,
+}: {
+  countries: HubCountries;
+  locale: Locale;
+}) {
+  const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);
+  const isLoading = useConvexAuth((auth) => auth.isLoading);
+  const setPreferredTryout = useSetPreferredTryoutMutation(countries);
 
   /** Persist an authenticated viewer's selected country in the background. */
   function handleCountryClick(country: HubCountry) {
@@ -66,8 +89,28 @@ export function TryoutHubClient({ locale, page }: TryoutHubClientProps) {
     ).then(() => undefined);
   }
 
+  return (
+    <TryoutHubCountries
+      countries={countries}
+      locale={locale}
+      onPick={handleCountryClick}
+    />
+  );
+}
+
+/** The country cards of the hub. A card reports its pick only when the page passes `onPick`. */
+function TryoutHubCountries({
+  countries,
+  locale,
+  onPick,
+}: {
+  countries: HubCountries;
+  locale: Locale;
+  onPick?: (country: HubCountry) => void;
+}) {
+  const tTryouts = useTranslations("Tryouts");
   const visuals = getTileShifts(
-    Arr.map(page.countries, (country) => {
+    Arr.map(countries, (country) => {
       const imageSrc = getTryoutCountryCatalogArtwork(locale, {
         countryKey: country.countryKey,
       });
@@ -78,12 +121,12 @@ export function TryoutHubClient({ locale, page }: TryoutHubClientProps) {
 
   return (
     <div className="grid grid-cols-1 gap-4 pt-6 pb-24 sm:grid-cols-2">
-      {Arr.map(Arr.zip(page.countries, visuals), ([country, visual], index) => (
+      {Arr.map(Arr.zip(countries, visuals), ([country, visual], index) => (
         <CatalogCard
           action={
             <IntentLink
               href={getTryoutPublicPathHref(country.publicPath)}
-              onClick={() => handleCountryClick(country)}
+              onClick={onPick === undefined ? undefined : () => onPick(country)}
             />
           }
           actionLabel={tTryouts("open-country-cta")}

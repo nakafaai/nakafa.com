@@ -1,5 +1,7 @@
+import { TRYOUT_CATALOG_LIMIT } from "@repo/backend/confect/contentRelease/tryout/limits";
 import { LocaleSchema } from "@repo/internationalization/src/locale";
 import { Effect, Schema, SchemaTransformation } from "effect";
+import { TRYOUT_SET_PAGE_SIZE } from "@/components/tryout/catalog/table/types";
 
 /**
  * TanStack reads a query value that starts like JSON as its JSON value, so
@@ -45,9 +47,21 @@ const TrackKeysSchema = Schema.Struct({
   trackKey: Schema.String,
 });
 
-/** The set list request of one track: its locale, its catalog query and its keys. */
+/**
+ * The set list request of one track: its locale, its catalog query, its keys and
+ * the number of rows to read. A visitor grows that number by loading more, and the
+ * loader omits it for the first page.
+ */
 export const TrackListRequestSchema = Schema.Struct({
   locale: LocaleSchema,
+  numItems: Schema.optionalKey(
+    Schema.Int.check(
+      Schema.isBetween({
+        maximum: TRYOUT_CATALOG_LIMIT,
+        minimum: TRYOUT_SET_PAGE_SIZE,
+      })
+    )
+  ),
   search: TryoutTrackSearch,
   track: TrackKeysSchema,
 });

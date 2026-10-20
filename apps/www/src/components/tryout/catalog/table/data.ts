@@ -6,9 +6,14 @@ import { useConvexConnectionState } from "convex/react";
 import { useState } from "react";
 import { useAuthSession } from "@/components/auth/session";
 import { useConvexAuth } from "@/components/providers/convex";
+import {
+  requestKey,
+  selectionKey,
+} from "@/components/tryout/catalog/table/keys";
 import type { TryoutSetTableProps } from "@/components/tryout/catalog/table/table";
 import type {
-  TryoutSetListArgs,
+  TryoutSetData,
+  TryoutSetRequest,
   TryoutSetRow,
 } from "@/components/tryout/catalog/table/types";
 import { TRYOUT_SET_PAGE_SIZE } from "@/components/tryout/catalog/table/types";
@@ -16,10 +21,7 @@ import { isConvexOffline } from "@/lib/convex/online";
 
 const EMPTY_ROWS: TryoutSetRow[] = [];
 
-function scope(
-  args: Omit<TryoutSetListArgs, "paginationOpts">,
-  viewer: string | null
-) {
+function scope(args: TryoutSetRequest, viewer: string | null) {
   return encodeJsonText([
     viewer,
     args.countryKey,
@@ -27,14 +29,6 @@ function scope(
     args.locale,
     args.trackKey,
   ]);
-}
-
-function selectionKey(args: Omit<TryoutSetListArgs, "paginationOpts">) {
-  return encodeJsonText([args.filter, args.sort.field, args.sort.direction]);
-}
-
-function requestKey(args: TryoutSetListArgs) {
-  return encodeJsonText([selectionKey(args), args.paginationOpts.numItems]);
 }
 
 /** Retention is scoped to one principal and track, including while requests change. */
@@ -117,8 +111,8 @@ export function useTryoutSetData({
   request,
 }: {
   bootstrap: TryoutSetTableProps["bootstrap"];
-  request: Omit<TryoutSetListArgs, "paginationOpts">;
-}) {
+  request: TryoutSetRequest;
+}): TryoutSetData {
   const { id: activeViewer, ready } = useViewer(bootstrap.result.viewerId);
   const connection = useConvexConnectionState();
   const activeScope = scope(request, activeViewer);

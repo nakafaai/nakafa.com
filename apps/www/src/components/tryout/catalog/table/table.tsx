@@ -1,25 +1,32 @@
-import { Intersection } from "@repo/design-system/components/ui/intersection";
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableRow,
-} from "@repo/design-system/components/ui/table";
+import { Effect } from "effect";
 import { useQueryStates } from "nuqs";
 import { NuqsAdapter } from "nuqs/adapters/tanstack-router";
 import { useState } from "react";
-import { useTranslations } from "use-intl";
+import { ConvexIsland } from "@/components/providers/island";
 import { useTryoutSetData } from "@/components/tryout/catalog/table/data";
-import { TryoutTableHeader } from "@/components/tryout/catalog/table/header";
+import { TryoutSetFrame } from "@/components/tryout/catalog/table/frame";
 import { catalogQuery } from "@/components/tryout/catalog/table/query";
-import { TryoutTableRows } from "@/components/tryout/catalog/table/rows";
 import type {
   TryoutSetListArgs,
   TryoutSetPage,
+  TryoutSetRequest,
+  TryoutSetSelectionChange,
 } from "@/components/tryout/catalog/table/types";
+import { TRYOUT_SET_PAGE_SIZE } from "@/components/tryout/catalog/table/types";
+import {
+  failVisitorSets,
+  requestVisitorSets,
+  settleVisitorSets,
+  startVisitorSets,
+  syncVisitorSets,
+  VisitorSetReadError,
+  visitorReadInput,
+  visitorSetView,
+  visitorWindowKey,
+} from "@/components/tryout/catalog/table/visitor";
+import { readTryoutTrackListFn } from "@/components/tryout/route/catalog.functions";
 
-/** Props of the signed discovery table: its server payload and its title. */
+/** Props of the discovery table: its server payload and its title. */
 export interface TryoutSetTableProps {
   /** Server-to-client payload: the list request and the result it resolved to. */
   bootstrap: {
@@ -30,9 +37,11 @@ export interface TryoutSetTableProps {
 }
 
 /**
- * Displays one complete signed discovery result with independent URL controls.
- * The catalog table reads its filters from the URL, so it mounts the adapter it
- * reads through.
+ * Displays one complete discovery result with independent URL controls. A learner's
+ * table reads the page's live query once its client exists. A visitor's table reads
+ * the loader's first page, and each further window through the server function, so
+ * no visitor opens a socket. The catalog table reads its filters from the URL, so
+ * it mounts the adapter it reads through.
  */
 export function TryoutSetTable(props: TryoutSetTableProps) {
   return (
@@ -42,104 +51,155 @@ export function TryoutSetTable(props: TryoutSetTableProps) {
   );
 }
 
+/** The props of both variants: the server payload, the request on screen, the selection setter and the title. */
+interface VariantProps {
+  bootstrap: TryoutSetTableProps["bootstrap"];
+  request: TryoutSetRequest;
+  select: (change: TryoutSetSelectionChange) => void;
+  title: string;
+}
+
 function TryoutSetCatalog({ bootstrap, title }: TryoutSetTableProps) {
-  const t = useTranslations("Tryouts");
-  const [scrollRoot, setScrollRoot] = useState<HTMLDivElement | null>(null);
   const [selection, setSelection] = useQueryStates(catalogQuery, {
     history: "push",
     shallow: true,
     scroll: false,
   });
-  const sort = { field: selection.sort, direction: selection.direction };
-  const { countryKey, examKey, locale, trackKey } = bootstrap.args;
-  const data = useTryoutSetData({
-    bootstrap,
-    request: {
-      countryKey,
-      examKey,
-      locale,
-      trackKey,
-      filter: selection.status,
-      sort,
-    },
-  });
-  let status = "";
-  let emptyLabel = t("list-empty");
-  if (data.busy) {
-    status = t("set-updating");
-    emptyLabel = status;
+  const request: TryoutSetRequest = {
+    countryKey: bootstrap.args.countryKey,
+    examKey: bootstrap.args.examKey,
+    filter: selection.status,
+    locale: bootstrap.args.locale,
+    sort: { direction: selection.direction, field: selection.sort },
+    trackKey: bootstrap.args.trackKey,
+  };
+  const select = (change: TryoutSetSelectionChange) => setSelection(change);
+  return (
+    <ConvexIsland
+      fallback={
+        <TryoutSetVisitorCatalog
+          bootstrap={bootstrap}
+          request={request}
+          select={select}
+          title={title}
+        />
+      }
+    >
+      <TryoutSetSignedCatalog
+        bootstrap={bootstrap}
+        request={request}
+        select={select}
+        title={title}
+      />
+    </ConvexIsland>
+  );
+}
+
+/** A learner's table: the page's live query, which starts from the loader's first page. */
+function TryoutSetSignedCatalog({
+  bootstrap,
+  request,
+  select,
+  title,
+}: VariantProps) {
+  const data = useTryoutSetData({ bootstrap, request });
+  return (
+    <TryoutSetFrame
+      data={data}
+      filter={request.filter}
+      onFilter={(filter) => select({ status: filter })}
+      onSort={(sort) => select({ direction: sort.direction, sort: sort.field })}
+      sort={request.sort}
+      title={title}
+    />
+  );
+}
+
+/** Reads one window of a track for a visitor through the server function, at the server boundary. */
+const readVisitorWindow = Effect.fn("www.tryout.catalog.readVisitorWindow")(
+  function* (request: TryoutSetRequest, numItems: number) {
+    return yield* Effect.tryPromise({
+      try: () =>
+        readTryoutTrackListFn({ data: visitorReadInput(request, numItems) }),
+      catch: (cause) => new VisitorSetReadError({ cause }),
+    });
   }
-  if (data.offline) {
-    status = t("set-offline");
-  }
-  if (data.error) {
-    status = t("set-update-error");
-    emptyLabel = status;
+);
+
+/**
+ * A visitor's table. The loader's first page is the first rows, and a change of
+ * filter, sort or window reads its own window. The pure state in `visitor.ts`
+ * decides which response may commit.
+ */
+function TryoutSetVisitorCatalog({
+  bootstrap,
+  request,
+  select,
+  title,
+}: VariantProps) {
+  const [stored, setStored] = useState(() => startVisitorSets(bootstrap));
+  const state = syncVisitorSets(stored, bootstrap);
+  if (state !== stored) {
+    setStored(state);
   }
 
-  const canLoadMore =
-    data.hasMore && !data.busy && !data.error && !data.offline;
+  function load(next: TryoutSetRequest, numItems: number) {
+    const key = visitorWindowKey(next, numItems);
+    setStored((previous) =>
+      requestVisitorSets(syncVisitorSets(previous, bootstrap), next, numItems)
+    );
+    Effect.runFork(
+      readVisitorWindow(next, numItems).pipe(
+        Effect.matchEffect({
+          onFailure: () =>
+            Effect.sync(() => {
+              setStored((previous) => failVisitorSets(previous, key));
+            }),
+          onSuccess: (loaded) =>
+            Effect.sync(() => {
+              setStored((previous) =>
+                settleVisitorSets(previous, key, loaded.result)
+              );
+            }),
+        })
+      )
+    );
+  }
+
+  function changeSelection(change: TryoutSetSelectionChange) {
+    select(change);
+    load(
+      {
+        ...request,
+        filter: change.status ?? request.filter,
+        sort: {
+          direction: change.direction ?? request.sort.direction,
+          field: change.sort ?? request.sort.field,
+        },
+      },
+      TRYOUT_SET_PAGE_SIZE
+    );
+  }
+
+  const view = visitorSetView(state, request);
   return (
-    <div className="mx-auto flex min-h-0 w-full min-w-0 max-w-3xl flex-1 flex-col px-6 py-4">
-      <div
-        aria-busy={data.busy}
-        className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-md border"
-        data-catalog-snapshot={data.snapshotId}
-      >
-        <div
-          className="min-h-0 min-w-0 flex-1 overflow-auto"
-          ref={setScrollRoot}
-        >
-          <Table
-            className="min-w-176 table-fixed"
-            containerClassName="overflow-visible"
-          >
-            <TableCaption className="sr-only">{title}</TableCaption>
-            <colgroup>
-              <col />
-              <col className="w-40" />
-              <col className="w-32" />
-              <col className="w-28" />
-              <col className="w-28" />
-            </colgroup>
-            <TryoutTableHeader
-              filter={selection.status}
-              onFilter={async (status) => {
-                await setSelection({ status });
-              }}
-              onSort={async ({ field, direction }) => {
-                await setSelection({ sort: field, direction });
-              }}
-              sort={sort}
-            />
-            <TableBody>
-              <TryoutTableRows emptyLabel={emptyLabel} rows={data.rows} />
-              {canLoadMore && (
-                <TableRow
-                  aria-hidden="true"
-                  className="h-px hover:bg-transparent"
-                >
-                  <TableCell className="p-0" colSpan={5}>
-                    <Intersection
-                      className="h-px"
-                      key={`${selection.status}:${selection.sort}:${selection.direction}:${data.rows.length}`}
-                      onIntersect={data.loadMore}
-                      root={scrollRoot}
-                    />
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-        <span
-          aria-live="polite"
-          className="pointer-events-none absolute inset-x-4 bottom-3 text-muted-foreground text-xs empty:hidden"
-          role="status"
-        >
-          {status}
-        </span>
-      </div>
-    </div>
+    <TryoutSetFrame
+      data={{
+        busy: view.busy,
+        error: view.error,
+        hasMore: view.hasMore,
+        loadMore: () => load(request, view.nextSize),
+        offline: view.offline,
+        rows: view.rows,
+        snapshotId: view.snapshotId,
+      }}
+      filter={request.filter}
+      onFilter={(filter) => changeSelection({ status: filter })}
+      onSort={(sort) =>
+        changeSelection({ direction: sort.direction, sort: sort.field })
+      }
+      sort={request.sort}
+      title={title}
+    />
   );
 }
