@@ -5,10 +5,12 @@ import { getRequestHeaders } from "@tanstack/react-start/server";
 import { Schema } from "effect";
 
 /** The absolute privacy and terms addresses of the sign-in sentence. */
-export interface AuthLegalLinks {
-  readonly privacy: string;
-  readonly terms: string;
-}
+const AuthLegalLinksSchema = Schema.Struct({
+  privacy: Schema.String,
+  terms: Schema.String,
+});
+
+export type AuthLegalLinks = typeof AuthLegalLinksSchema.Type;
 
 /**
  * Reads the privacy and terms addresses of one locale on the server. A school

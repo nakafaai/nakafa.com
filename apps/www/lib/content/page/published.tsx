@@ -67,9 +67,7 @@ const renderPageArtifact = Effect.fn("NakafaContent.renderPageArtifact")(
 );
 
 /** Caches one current Page while preserving a truthful signed absence. */
-export async function getCurrentPublishedPage(
-  input: CurrentPublishedPageInput
-) {
+async function getCurrentPublishedPage(input: CurrentPublishedPageInput) {
   const result = await Effect.runPromise(
     readCurrentPublishedPage(input).pipe(
       Effect.asSome,
