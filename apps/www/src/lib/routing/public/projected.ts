@@ -1,13 +1,14 @@
 import {
-  APP_LOCALE_CODES,
   type AppLocale,
   AppLocaleSchema,
 } from "@nakafa/aksara-contracts/locale";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/route/surface";
-import type { Locale } from "@repo/internationalization/src/locale";
+import {
+  decodeLocale,
+  type Locale,
+} from "@repo/internationalization/src/locale";
 import { Array as Arr, Effect, Option, Schema } from "effect";
-import { hasLocale } from "use-intl";
 import { matchesPreviewRoute } from "@/lib/content/preview/route";
 import { readPublishedProgramPath } from "@/lib/content/program/path";
 import { readActiveContentRoute } from "@/lib/content/published/route";
@@ -50,10 +51,11 @@ export const readProjectedHtmlRouteRejection = Effect.fn(
     pathname.split("/"),
     Boolean
   );
-  if (!(namespace && hasLocale(APP_LOCALE_CODES, rawLocale))) {
+  const decodedLocale = decodeLocale(rawLocale);
+  if (!(namespace && Option.isSome(decodedLocale))) {
     return null;
   }
-  const locale = rawLocale;
+  const locale = decodedLocale.value;
   const surface = Arr.findFirst(
     PUBLIC_ROUTE_SURFACES,
     (item) => item.routeSlugs[locale] === namespace

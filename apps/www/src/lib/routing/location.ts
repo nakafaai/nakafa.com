@@ -3,7 +3,7 @@ import {
   MATERIAL_CONTEXT_QUERY_PARAM,
 } from "@repo/contents/route/material/context";
 import { splitLocalePathname } from "@repo/internationalization/src/href";
-import { DEFAULT_LOCALE, LOCALES } from "@repo/internationalization/src/locale";
+import { DEFAULT_LOCALE } from "@repo/internationalization/src/locale";
 import { Array as Arr } from "effect";
 
 /**
@@ -11,7 +11,7 @@ import { Array as Arr } from "effect";
  * Assumes locale is the first segment of the pathname, such as /en, /id, or /de.
  */
 export function getLocale() {
-  const { locale } = splitLocalePathname(window.location.pathname, LOCALES);
+  const { locale } = splitLocalePathname(window.location.pathname);
 
   // Fallback to default locale when the path starts with no configured locale
   return locale ?? DEFAULT_LOCALE;
@@ -23,7 +23,7 @@ export function getLocale() {
  */
 export function getPathname() {
   const pathname = window.location.pathname;
-  const { locale, publicSegments } = splitLocalePathname(pathname, LOCALES);
+  const { locale, publicSegments } = splitLocalePathname(pathname);
 
   // Remove the first segment (locale) and reconstruct the path
   if (locale) {

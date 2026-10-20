@@ -1,7 +1,6 @@
-import { APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
+import { decodeLocale } from "@repo/internationalization/src/locale";
 import { SITE_ORIGIN } from "@repo/seo/origin";
-import { Array as Arr } from "effect";
-import { hasLocale, type Locale } from "use-intl";
+import { Array as Arr, Option } from "effect";
 
 const ABSOLUTE_URL_REGEX = /^https?:\/\//;
 const NOT_INTERNAL_REGEX = /^(#|mailto:|tel:|\/\/)/;
@@ -32,10 +31,7 @@ export function normalizeLocalizedInternalHref(href: string) {
   }
 
   const url = new URL(href, SITE_ORIGIN);
-  const { locale, publicSegments } = splitLocalePathname(
-    url.pathname,
-    APP_LOCALE_CODES
-  );
+  const { locale, publicSegments } = splitLocalePathname(url.pathname);
 
   if (locale) {
     const localizedPath = Arr.join(publicSegments, "/");
@@ -46,18 +42,13 @@ export function normalizeLocalizedInternalHref(href: string) {
 }
 
 /**
- * Splits a pathname at the locale that leads it, when one of `locales` does.
+ * Splits a pathname at the locale that leads it, when one of the public locales does.
  * The public segments are the non-empty segments after that locale, or every
  * non-empty segment when the pathname has no leading locale.
  */
-export function splitLocalePathname<LocaleType extends Locale>(
-  pathname: string,
-  locales: readonly LocaleType[]
-) {
+export function splitLocalePathname(pathname: string) {
   const segments = Arr.filter(pathname.split("/"), Boolean);
-  const firstSegment = segments[0];
-  const locale =
-    firstSegment && hasLocale(locales, firstSegment) ? firstSegment : undefined;
+  const locale = Option.getOrUndefined(decodeLocale(segments[0]));
 
   return {
     locale,

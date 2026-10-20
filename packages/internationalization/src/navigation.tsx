@@ -4,7 +4,6 @@ import {
 } from "@repo/internationalization/src/href";
 import {
   DEFAULT_LOCALE,
-  LOCALES,
   type Locale,
 } from "@repo/internationalization/src/locale";
 import { toPublicPath } from "@repo/internationalization/src/rewrite";
@@ -30,9 +29,7 @@ function useRouterPathname() {
 
 /** The locale of the page on screen, or the default locale when its path names none. */
 export function useCurrentLocale(): Locale {
-  return (
-    splitLocalePathname(useRouterPathname(), LOCALES).locale ?? DEFAULT_LOCALE
-  );
+  return splitLocalePathname(useRouterPathname()).locale ?? DEFAULT_LOCALE;
 }
 
 /**
@@ -40,7 +37,7 @@ export function useCurrentLocale(): Locale {
  * spelling, such as `/curricula/merdeka`. Links and this value compare directly.
  */
 export function usePathname(): string {
-  const { publicSegments } = splitLocalePathname(useRouterPathname(), LOCALES);
+  const { publicSegments } = splitLocalePathname(useRouterPathname());
   const rest = Arr.join(publicSegments, "/");
   return rest === "" ? "/" : `/${rest}`;
 }
