@@ -1,5 +1,3 @@
-"use client";
-
 import { readCookie } from "@repo/internationalization/src/cookie";
 import {
   LOCALE_COOKIE,

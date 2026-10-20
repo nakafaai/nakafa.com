@@ -1,5 +1,3 @@
-"use client";
-
 import { lazyComponent } from "@repo/design-system/lib/lazy";
 import { WeatherFrame } from "@/components/ai/home/weather/card";
 

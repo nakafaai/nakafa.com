@@ -1,5 +1,3 @@
-"use client";
-
 import {
   Add01Icon,
   ArrowExpand01Icon,

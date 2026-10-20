@@ -1,5 +1,3 @@
-"use client";
-
 import type { ReactNode } from "react";
 import { UserSettingsRole } from "@/components/user/settings/role";
 import { type CurrentUser, useViewer } from "@/lib/identity/client";

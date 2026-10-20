@@ -1,5 +1,3 @@
-"use client";
-
 import { QueryResult, useMutation } from "@confect/react";
 import {
   ACTIVE_APP_LOCALE_CODES,

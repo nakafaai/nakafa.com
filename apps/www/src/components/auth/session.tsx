@@ -1,5 +1,3 @@
-"use client";
-
 import { type ReactNode, use, useState } from "react";
 import { createStore, useStore } from "zustand";
 import { AuthSessionContext } from "@/components/auth/context";

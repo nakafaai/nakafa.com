@@ -1,5 +1,3 @@
-"use client";
-
 import type { ParsedHeading } from "@repo/contents/toc";
 import { extractAllHeadingIds } from "@repo/contents/toc";
 import {

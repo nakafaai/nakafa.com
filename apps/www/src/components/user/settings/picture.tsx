@@ -1,5 +1,3 @@
-"use client";
-
 import { photoOf, UserPicture } from "@repo/backend/confect/users/picture";
 import { Button } from "@repo/design-system/components/ui/button";
 import {

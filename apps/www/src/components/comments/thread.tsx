@@ -1,5 +1,3 @@
-"use client";
-
 import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
 import comments from "@repo/backend/confect/_generated/refs/comments";
 import { Intersection } from "@repo/design-system/components/ui/intersection";

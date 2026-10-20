@@ -1,5 +1,3 @@
-"use client";
-
 import { useChartData } from "@repo/design-system/components/contents/mathematics/chart/context";
 import { summarizeSeries } from "@repo/design-system/components/contents/mathematics/chart/summary";
 import { MATH_NUMBER_OPTIONS } from "@repo/design-system/components/contents/mathematics/number";

@@ -1,5 +1,3 @@
-"use client";
-
 import { useLineScene } from "@repo/design-system/components/contents/mathematics/line/context";
 import { CoordinateSystem } from "@repo/design-system/components/three/coordinate-system";
 import { LineEquation } from "@repo/design-system/components/three/line-equation";

@@ -1,5 +1,3 @@
-"use client";
-
 import { useReducedMotion } from "@mantine/hooks";
 import { Array as Arr } from "effect";
 import { m } from "motion/react";

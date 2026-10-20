@@ -1,5 +1,3 @@
-"use client";
-
 import { useGLTF } from "@react-three/drei";
 import {
   ACCELERATION_ROCKET_MODEL_PATH,

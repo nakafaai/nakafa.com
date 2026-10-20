@@ -1,5 +1,3 @@
-"use client";
-
 import { Add01Icon } from "@hugeicons/core-free-icons";
 import { useMediaQuery } from "@mantine/hooks";
 import { Button } from "@repo/design-system/components/ui/button";

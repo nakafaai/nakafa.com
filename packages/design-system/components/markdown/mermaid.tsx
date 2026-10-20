@@ -1,5 +1,3 @@
-"use client";
-
 import { Maximize02Icon } from "@hugeicons/core-free-icons";
 import {
   CodeBlockCopyButton,

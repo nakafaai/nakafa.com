@@ -1,5 +1,3 @@
-"use client";
-
 import { focusIsLost } from "@repo/design-system/lib/focus";
 import { useLayoutEffect, useRef } from "react";
 import {

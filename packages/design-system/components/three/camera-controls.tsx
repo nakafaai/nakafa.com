@@ -1,5 +1,3 @@
-"use client";
-
 import { useTimeout } from "@mantine/hooks";
 import {
   OrbitControls,

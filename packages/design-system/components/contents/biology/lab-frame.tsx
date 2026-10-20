@@ -1,5 +1,3 @@
-"use client";
-
 import { createBiologyItemStore } from "@repo/design-system/components/contents/biology/context";
 import {
   BIOLOGY_DEFAULT_ITEM_INDEX,

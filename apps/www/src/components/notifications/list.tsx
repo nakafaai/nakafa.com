@@ -1,5 +1,3 @@
-"use client";
-
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { Array as Arr, type Option } from "effect";
 import { useTranslations } from "use-intl";

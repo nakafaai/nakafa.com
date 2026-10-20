@@ -1,5 +1,3 @@
-"use client";
-
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { useTranslations } from "use-intl";
 import {

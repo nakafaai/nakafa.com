@@ -1,5 +1,3 @@
-"use client";
-
 import { BacteriaStructureLab } from "@repo/design-system/components/contents/biology/bacteria";
 import { useTranslations } from "use-intl";
 import { getCellLabels } from "@/components/marketing/about/lesson/labels";

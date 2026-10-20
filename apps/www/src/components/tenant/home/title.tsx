@@ -1,5 +1,3 @@
-"use client";
-
 import { Nina } from "@repo/design-system/components/ui/nina";
 import type { ActSchema } from "@repo/mascot/nina/act";
 import type { ReactNode } from "react";

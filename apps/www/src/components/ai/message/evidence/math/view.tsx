@@ -1,5 +1,3 @@
-"use client";
-
 import { AlertCircleIcon, ArrowDown01Icon } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
 import type { DataPart } from "@repo/backend/confect/nina/contract/data";

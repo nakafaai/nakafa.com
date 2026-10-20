@@ -1,5 +1,3 @@
-"use client";
-
 import { QueryResult, useMutation, useQuery } from "@confect/react";
 import { Rocket01Icon } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";

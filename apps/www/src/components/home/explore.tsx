@@ -1,5 +1,3 @@
-"use client";
-
 import {
   AiChat02Icon,
   AiMagicIcon,

@@ -1,5 +1,3 @@
-"use client";
-
 import type { OptimisticUpdate } from "@confect/react";
 import type * as OptimisticLocalStore from "@confect/react/OptimisticLocalStore";
 import posts from "@repo/backend/confect/_generated/refs/posts";

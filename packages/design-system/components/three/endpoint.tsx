@@ -1,5 +1,3 @@
-"use client";
-
 import { Line } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import {

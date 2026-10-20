@@ -1,5 +1,3 @@
-"use client";
-
 import { AlertCircleIcon } from "@hugeicons/core-free-icons";
 import type { NakafaDataPart } from "@repo/backend/confect/nina/contract/data";
 import { Match } from "effect";

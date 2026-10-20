@@ -1,5 +1,3 @@
-"use client";
-
 import { Clock, Effect } from "effect";
 import { useSyncExternalStore } from "react";
 

@@ -1,5 +1,3 @@
-"use client";
-
 import type { TryoutScoreResult } from "@repo/backend/confect/tryouts/score";
 import type { TryoutStatus as TryoutStatusValue } from "@repo/backend/confect/tryouts/status";
 import type { ReactNode } from "react";

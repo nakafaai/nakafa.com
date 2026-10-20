@@ -1,5 +1,3 @@
-"use client";
-
 import { useClipboard } from "@mantine/hooks";
 import { Button } from "@repo/design-system/components/ui/button";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";

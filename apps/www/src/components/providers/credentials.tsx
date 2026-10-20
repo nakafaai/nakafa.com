@@ -1,5 +1,3 @@
-"use client";
-
 import type { ConvexReactClient } from "convex/react";
 import { use } from "react";
 import {

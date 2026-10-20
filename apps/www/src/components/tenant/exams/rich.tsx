@@ -1,5 +1,3 @@
-"use client";
-
 import { QueryResult, useQuery } from "@confect/react";
 import type { Id } from "@repo/backend/confect/_generated/id";
 import exams from "@repo/backend/confect/_generated/refs/exams";

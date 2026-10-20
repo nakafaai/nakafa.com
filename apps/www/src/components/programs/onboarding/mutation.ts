@@ -1,5 +1,3 @@
-"use client";
-
 import { useMutation } from "@confect/react";
 import onboarding from "@repo/backend/confect/_generated/refs/onboarding";
 import { Option } from "effect";

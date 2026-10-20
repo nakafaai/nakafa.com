@@ -1,5 +1,3 @@
-"use client";
-
 import { Option } from "effect";
 import { useEffect } from "react";
 

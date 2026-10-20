@@ -1,5 +1,3 @@
-"use client";
-
 import { type ReactNode, useEffect, useRef } from "react";
 import { useTranslations } from "use-intl";
 import { keepVisible } from "@/components/player/navigator/scroll";

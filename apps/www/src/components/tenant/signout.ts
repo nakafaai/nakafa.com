@@ -1,5 +1,3 @@
-"use client";
-
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Effect, Schema } from "effect";
 import { signOutAccountBrowserIdentity } from "@/lib/auth/identity/browser";

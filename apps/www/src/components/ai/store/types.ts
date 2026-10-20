@@ -1,5 +1,3 @@
-"use client";
-
 import type { Ref } from "@confect/core";
 import { NinaReceipt } from "@repo/backend/client/nina/receipt";
 import { Id } from "@repo/backend/confect/_generated/id";

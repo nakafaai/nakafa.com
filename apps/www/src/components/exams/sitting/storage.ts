@@ -1,5 +1,3 @@
-"use client";
-
 import { Effect, Layer } from "effect";
 import { KeyValueStore } from "effect/persistence";
 

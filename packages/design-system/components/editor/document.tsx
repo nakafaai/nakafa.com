@@ -1,5 +1,3 @@
-"use client";
-
 import { useCallbackRef } from "@mantine/hooks";
 import { editableState } from "@repo/design-system/components/editor/editable";
 import {

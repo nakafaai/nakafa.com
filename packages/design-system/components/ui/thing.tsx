@@ -1,5 +1,3 @@
-"use client";
-
 import { useIntersection } from "@mantine/hooks";
 import type { MarkAttributes } from "@repo/design-system/components/ui/drawing";
 import { Picture } from "@repo/design-system/components/ui/picture";

@@ -1,5 +1,3 @@
-"use client";
-
 import { ParabolicMovementLab } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement/lab";
 import { useTranslations } from "use-intl";
 import { getProjectileLabels } from "@/components/marketing/about/lesson/labels";

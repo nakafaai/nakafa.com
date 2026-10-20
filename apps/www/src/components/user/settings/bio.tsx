@@ -1,5 +1,3 @@
-"use client";
-
 import { readBio, tidyBio } from "@repo/backend/confect/users/bio";
 import {
   CardContent,

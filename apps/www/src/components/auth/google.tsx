@@ -1,5 +1,3 @@
-"use client";
-
 import { BrandLogo } from "@repo/design-system/components/logos/brand";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Effect } from "effect";
@@ -13,9 +11,9 @@ import {
   getPostAuthProviderErrorHref,
   isPostAuthProviderError,
 } from "@/lib/auth/admission";
+import { requestGoogleSignIn } from "@/lib/auth/google";
 import { useCurrentAuthNavigation } from "@/lib/auth/location";
 import { startGoogleSignIn } from "@/lib/auth/social";
-import { requestGoogleSignIn } from "@/lib/auth/google";
 
 interface Props {
   /**

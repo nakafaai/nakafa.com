@@ -1,5 +1,3 @@
-"use client";
-
 import {
   type PaginatedQueryItem,
   PaginatedQueryResult,
@@ -35,8 +33,8 @@ import {
   SchoolPeriodMenu,
   SchoolPeriodRestore,
 } from "@/components/tenant/settings/period";
-import { createPeriodChange } from "@/components/tenant/settings/terms";
 import { saveSchool } from "@/components/tenant/settings/save";
+import { createPeriodChange } from "@/components/tenant/settings/terms";
 import {
   SchoolUnitChoice,
   type UnitId,

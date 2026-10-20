@@ -1,4 +1,3 @@
-"use client";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Data, Effect, Option, Schema } from "effect";
 

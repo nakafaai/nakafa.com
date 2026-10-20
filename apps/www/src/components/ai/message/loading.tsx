@@ -1,5 +1,3 @@
-"use client";
-
 import { TypingLoader } from "@repo/design-system/components/ui/typing-loader";
 
 import { useLastMessage, useMessage } from "@/components/ai/message/context";

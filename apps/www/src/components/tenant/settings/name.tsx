@@ -1,5 +1,3 @@
-"use client";
-
 import { useMutation } from "@confect/react";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { SchoolName } from "@repo/backend/confect/tenancy/schema";

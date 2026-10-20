@@ -1,5 +1,3 @@
-"use client";
-
 import { QueryResult } from "@confect/react";
 import { Array as Arr, Option } from "effect";
 import { useLocale } from "use-intl";

@@ -1,5 +1,3 @@
-"use client";
-
 import { useMutation } from "@confect/react";
 import { Alert02Icon } from "@hugeicons/core-free-icons";
 import { useCallbackRef } from "@mantine/hooks";

@@ -1,5 +1,3 @@
-"use client";
-
 import { useCallback, useState } from "react";
 
 type SetState<T> = (value: T) => void;

@@ -1,5 +1,3 @@
-"use client";
-
 import { useMutation } from "@confect/react";
 import { Delete02Icon } from "@hugeicons/core-free-icons";
 import comments from "@repo/backend/confect/_generated/refs/comments";

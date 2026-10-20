@@ -1,5 +1,3 @@
-"use client";
-
 import { type ReactNode, Suspense } from "react";
 import type { PlayerMode } from "@/components/player/mode";
 import type { TryoutRuntimeContent } from "@/components/tryout/content/model";

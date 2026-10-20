@@ -1,5 +1,3 @@
-"use client";
-
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { ChatComposer } from "@/components/ai/chat/composer";
 import { ChatProvider } from "@/components/ai/chat/context";

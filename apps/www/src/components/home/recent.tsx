@@ -1,5 +1,3 @@
-"use client";
-
 import type { Ref } from "@confect/core";
 
 import { Progress03Icon, Search02Icon } from "@hugeicons/core-free-icons";

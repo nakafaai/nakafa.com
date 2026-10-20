@@ -1,5 +1,3 @@
-"use client";
-
 import { Autocomplete as AutocompletePrimitive } from "@base-ui/react/autocomplete";
 import { ArrowDown01Icon, Cancel01Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";

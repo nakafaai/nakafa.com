@@ -1,5 +1,3 @@
-"use client";
-
 import { PlayerTimer } from "@/components/player/timer";
 import { useTryoutClock } from "@/components/tryout/runtime/clock";
 

@@ -1,5 +1,3 @@
-"use client";
-
 import { QueryResult } from "@confect/react";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import type { BuiltinRole } from "@repo/backend/confect/access/schema";

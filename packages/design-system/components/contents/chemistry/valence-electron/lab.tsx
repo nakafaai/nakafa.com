@@ -1,5 +1,3 @@
-"use client";
-
 import { ShellModelCanvas } from "@repo/design-system/components/contents/chemistry/shell-model/canvas";
 import { createShellModelSampleStore } from "@repo/design-system/components/contents/chemistry/shell-model/store";
 import {

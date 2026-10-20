@@ -1,5 +1,3 @@
-"use client";
-
 import { DateTime } from "effect";
 import { createContext, type ReactNode, use, useState } from "react";
 import { type StoreApi, useStore } from "zustand";
@@ -7,8 +5,8 @@ import {
   type CommentDraft,
   createCommentDraft,
 } from "@/components/comments/draft";
-import type { AgeClock } from "@/components/user/clock";
 import { useAgeClock, useAgeNow } from "@/components/user/ages";
+import type { AgeClock } from "@/components/user/clock";
 
 const ClockContext = createContext<StoreApi<AgeClock> | null>(null);
 const DraftContext = createContext<StoreApi<CommentDraft> | null>(null);

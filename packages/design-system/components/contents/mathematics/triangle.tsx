@@ -1,5 +1,3 @@
-"use client";
-
 import { MinusSignIcon, PlusSignIcon } from "@hugeicons/core-free-icons";
 import {
   type TriangleLabels,

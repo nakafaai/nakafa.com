@@ -1,5 +1,3 @@
-"use client";
-
 import { useMediaQuery } from "@mantine/hooks";
 import { useThree } from "@react-three/fiber";
 import {

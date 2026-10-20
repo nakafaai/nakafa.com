@@ -1,5 +1,3 @@
-"use client";
-
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { QuestionnaireChoiceDescription } from "@repo/design-system/components/ui/questionnaire";
 import { cn } from "cn";

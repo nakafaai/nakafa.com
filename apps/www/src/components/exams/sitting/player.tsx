@@ -1,5 +1,3 @@
-"use client";
-
 import type { GenericId } from "@confect/core";
 import { QueryResult, useQuery } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
@@ -18,17 +16,17 @@ import {
 } from "@/components/exams/sitting/attempt";
 import { SittingBar } from "@/components/exams/sitting/bar";
 import { serverTime } from "@/components/exams/sitting/clock";
-import { useSittingClock } from "@/components/exams/sitting/timer";
 import { sittingFailureMessage } from "@/components/exams/sitting/entry";
 import { SittingFinish } from "@/components/exams/sitting/finish";
-import { SittingFlagProvider } from "@/components/exams/sitting/marks";
 import { forgetKeptAttempt } from "@/components/exams/sitting/forget";
 import { useResendKeptAnswers } from "@/components/exams/sitting/kept";
+import { SittingFlagProvider } from "@/components/exams/sitting/marks";
 import { SittingNavigator } from "@/components/exams/sitting/navigator";
 import type { PaperValue } from "@/components/exams/sitting/paper";
 import { SittingQuestion } from "@/components/exams/sitting/question";
 import { SittingRetry } from "@/components/exams/sitting/retry";
 import { useSittingSignals } from "@/components/exams/sitting/signals";
+import { useSittingClock } from "@/components/exams/sitting/timer";
 import { PlayerFooter, PlayerOpener } from "@/components/player/footer";
 import { PlayerMain } from "@/components/player/frame";
 import { PlayerSheet } from "@/components/player/navigator/sheet";

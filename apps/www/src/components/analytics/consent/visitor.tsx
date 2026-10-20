@@ -1,5 +1,3 @@
-"use client";
-
 import { AnalyticsConsentControls } from "@/components/analytics/consent/controls";
 import { AnalyticsConsentFooterItem } from "@/components/analytics/consent/footer";
 import { AnalyticsConsentEffects } from "@/components/analytics/consent/provider";

@@ -1,5 +1,3 @@
-"use client";
-
 import { totalOf } from "@repo/design-system/components/contents/mathematics/chart/summary";
 import {
   formatInterval,

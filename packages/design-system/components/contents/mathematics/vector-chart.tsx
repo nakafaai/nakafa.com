@@ -1,5 +1,3 @@
-"use client";
-
 import {
   MATH_NUMBER_OPTIONS,
   mathNumber,

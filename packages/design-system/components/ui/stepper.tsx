@@ -1,5 +1,3 @@
-"use client";
-
 import { useRender } from "@base-ui/react/use-render";
 import { Tick01Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";

@@ -1,5 +1,3 @@
-"use client";
-
 import type { NinaMessage } from "@repo/backend/confect/nina/schema";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { Message } from "@repo/design-system/components/ui/message";

@@ -1,5 +1,3 @@
-"use client";
-
 import type { Ref } from "@confect/core";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { lazyComponent } from "@repo/design-system/lib/lazy";

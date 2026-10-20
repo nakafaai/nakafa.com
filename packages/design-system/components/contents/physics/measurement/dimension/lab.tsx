@@ -1,5 +1,3 @@
-"use client";
-
 import { useThree } from "@react-three/fiber";
 import {
   AREA_MODE_ID,

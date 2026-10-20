@@ -1,4 +1,3 @@
-"use client";
 import { Alert02Icon, ArrowDown01Icon } from "@hugeicons/core-free-icons";
 import { captureException } from "@repo/analytics/posthog/capture";
 import { CodeBlockText } from "@repo/design-system/components/code-block/text";

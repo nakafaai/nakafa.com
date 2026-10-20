@@ -1,5 +1,3 @@
-"use client";
-
 import type { resolveExponential } from "@repo/design-system/components/contents/mathematics/exponential";
 import { Line } from "@repo/design-system/components/evilcharts/charts/composed/line";
 import { Scatter } from "@repo/design-system/components/evilcharts/charts/composed/scatter";

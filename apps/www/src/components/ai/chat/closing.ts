@@ -1,5 +1,3 @@
-"use client";
-
 import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
 import { NINA_MESSAGES_PAGE_SIZE } from "@repo/backend/client/nina/presentation";
 import nina from "@repo/backend/confect/_generated/refs/nina";

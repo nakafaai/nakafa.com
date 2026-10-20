@@ -1,5 +1,3 @@
-"use client";
-
 import { useMutation } from "@confect/react";
 import nina from "@repo/backend/confect/_generated/refs/nina";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";

@@ -1,5 +1,3 @@
-"use client";
-
 import type { GenericId } from "@confect/core";
 import { PaginatedQueryResult, QueryResult, useMutation } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";

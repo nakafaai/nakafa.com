@@ -1,5 +1,3 @@
-"use client";
-
 import { useMutation } from "@confect/react";
 import { useDocumentVisibility } from "@mantine/hooks";
 import { captureException } from "@repo/analytics/posthog/capture";

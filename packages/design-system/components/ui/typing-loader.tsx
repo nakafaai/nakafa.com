@@ -1,5 +1,3 @@
-"use client";
-
 import { useIntersection } from "@mantine/hooks";
 import { cva } from "class-variance-authority";
 import { cn } from "cn";

@@ -1,5 +1,3 @@
-"use client";
-
 import { lazyComponent } from "@repo/design-system/lib/lazy";
 
 /**

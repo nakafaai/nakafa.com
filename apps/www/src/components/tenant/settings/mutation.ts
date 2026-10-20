@@ -1,5 +1,3 @@
-"use client";
-
 import type { Ref } from "@confect/core";
 import type { OptimisticLocalStore, OptimisticUpdate } from "@confect/react";
 import { Id } from "@repo/backend/confect/_generated/id";

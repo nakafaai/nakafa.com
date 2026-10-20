@@ -1,5 +1,3 @@
-"use client";
-
 import { Delete02Icon, PencilEdit02Icon } from "@hugeicons/core-free-icons";
 import { altText } from "@repo/design-system/components/editor/image";
 import { Button } from "@repo/design-system/components/ui/button";

@@ -1,5 +1,3 @@
-"use client";
-
 import { Cancel01Icon } from "@hugeicons/core-free-icons";
 import {
   MEMORY_TEXT_LIMIT,
@@ -18,7 +16,6 @@ import { toast } from "@repo/design-system/lib/toast/notify";
 import { type Option, String as Str } from "effect";
 import { type ComponentProps, Suspense, use, useRef, useState } from "react";
 import { useTranslations } from "use-intl";
-import { useAutosave } from "@/components/user/settings/memory/saving";
 import { MemoryDeleteDialog } from "@/components/user/settings/memory/delete";
 import {
   MemoryEnds,
@@ -42,6 +39,7 @@ import {
   useMemoryPage,
   useShownMemories,
 } from "@/components/user/settings/memory/provider";
+import { useAutosave } from "@/components/user/settings/memory/saving";
 
 /**
  * The rich editor, drawn once its code has loaded. The code loads when a learner

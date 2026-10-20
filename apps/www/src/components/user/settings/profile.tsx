@@ -1,5 +1,3 @@
-"use client";
-
 import { UserSettingsBio } from "@/components/user/settings/bio";
 import { UserSettingsDeleteAccount } from "@/components/user/settings/deletion";
 import { UserSettingsName } from "@/components/user/settings/name";

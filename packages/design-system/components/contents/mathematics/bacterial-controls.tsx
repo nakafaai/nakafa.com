@@ -1,5 +1,3 @@
-"use client";
-
 import { Clock04Icon, PauseIcon, PlayIcon } from "@hugeicons/core-free-icons";
 import { Choice } from "@repo/design-system/components/contents/mathematics/choice";
 import { Button } from "@repo/design-system/components/ui/button";

@@ -1,5 +1,3 @@
-"use client";
-
 import { MoreVerticalIcon } from "@hugeicons/core-free-icons";
 import { DocumentBlocks } from "@repo/design-system/components/editor/block";
 import type { DocumentEditorInstance } from "@repo/design-system/components/editor/document";

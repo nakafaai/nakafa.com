@@ -1,5 +1,3 @@
-"use client";
-
 import { PaginatedQueryResult } from "@confect/react";
 import {
   Delete02Icon,
@@ -26,15 +24,12 @@ import { Array as Arr, Effect, Option, pipe, String as Str } from "effect";
 import { useState } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import type { StoreApi } from "zustand";
-import {
-  type ChatFirstPage,
-  useChatList,
-} from "@/components/ai/chat/chats";
+import { type ChatFirstPage, useChatList } from "@/components/ai/chat/chats";
 import { useDeleteChatMutation } from "@/components/ai/chat/mutation";
 import { useConvexAuth } from "@/components/providers/convex";
 import { formatShortAge } from "@/components/user/age";
-import type { AgeClock } from "@/components/user/clock";
 import { useAgeClock, useAgeNow } from "@/components/user/ages";
+import type { AgeClock } from "@/components/user/clock";
 import {
   FeedAge,
   FeedAvatar,

@@ -1,5 +1,3 @@
-"use client";
-
 import { ModernPeriodicTableCanvas } from "@repo/design-system/components/contents/chemistry/modern-periodic-table/canvas";
 import {
   GROUP_ONE_FOCUS_ID,

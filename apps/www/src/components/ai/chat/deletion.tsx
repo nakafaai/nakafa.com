@@ -1,5 +1,3 @@
-"use client";
-
 import { Delete02Icon } from "@hugeicons/core-free-icons";
 import type { ChatView } from "@repo/backend/confect/chats/view";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -10,8 +8,8 @@ import { useRouter } from "@repo/internationalization/src/navigation";
 import { useConvex } from "convex/react";
 import { Effect } from "effect";
 import { useTranslations } from "use-intl";
-import { deleteOnPress } from "@/components/ai/chat/press";
 import { useDeleteChatMutation } from "@/components/ai/chat/mutation";
+import { deleteOnPress } from "@/components/ai/chat/press";
 import { useChatStore } from "@/components/ai/chat/store";
 import { useViewer } from "@/lib/identity/client";
 import { ownChatsHref } from "@/lib/profile/href";

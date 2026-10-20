@@ -1,5 +1,3 @@
-"use client";
-
 import { Frame } from "@repo/design-system/components/nina/frame";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { modeOf, type Options } from "@repo/mascot/nina/options";

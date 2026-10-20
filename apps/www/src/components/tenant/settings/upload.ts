@@ -1,5 +1,3 @@
-"use client";
-
 import { Id } from "@repo/backend/confect/_generated/id";
 import type { LogoAnswer } from "@repo/backend/confect/tenancy/schema";
 import { FetchClient } from "@repo/utilities/http/client";

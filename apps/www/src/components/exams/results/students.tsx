@@ -1,5 +1,3 @@
-"use client";
-
 import type { Ref } from "@confect/core";
 import { PaginatedQueryResult } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";

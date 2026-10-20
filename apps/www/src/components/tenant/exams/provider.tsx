@@ -1,5 +1,3 @@
-"use client";
-
 import { ExamView as ExamViewSchema } from "@repo/backend/confect/exams/exam";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Schema } from "effect";

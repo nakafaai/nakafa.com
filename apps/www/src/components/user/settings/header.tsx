@@ -1,5 +1,3 @@
-"use client";
-
 import { usePathname } from "@repo/internationalization/src/navigation";
 import { useTranslations } from "use-intl";
 import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";

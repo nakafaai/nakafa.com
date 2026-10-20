@@ -1,5 +1,3 @@
-"use client";
-
 import { type OptimisticLocalStore, useMutation } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";

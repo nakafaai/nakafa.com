@@ -1,5 +1,3 @@
-"use client";
-
 import { PeriodicPropertiesCanvas } from "@repo/design-system/components/contents/chemistry/periodic-properties/canvas";
 import {
   ATOMIC_RADIUS_MODE_ID,

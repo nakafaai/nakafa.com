@@ -1,5 +1,3 @@
-"use client";
-
 import type { InvokeReturn } from "@confect/react";
 import type tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import type {

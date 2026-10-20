@@ -1,5 +1,3 @@
-"use client";
-
 import type { StudentSittingRow } from "@repo/backend/confect/exams/sittings/contract";
 import { Array as Arr, type Option, Order } from "effect";
 

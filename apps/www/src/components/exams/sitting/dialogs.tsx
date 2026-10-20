@@ -1,5 +1,3 @@
-"use client";
-
 import { ReasonCode } from "@repo/backend/confect/exams/sittings/schema";
 import { Button } from "@repo/design-system/components/ui/button";
 import {

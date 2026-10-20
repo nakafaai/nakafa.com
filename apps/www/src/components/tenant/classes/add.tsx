@@ -1,5 +1,3 @@
-"use client";
-
 import { useMutation } from "@confect/react";
 import type { Id } from "@repo/backend/confect/_generated/id";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";

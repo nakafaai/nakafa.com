@@ -1,5 +1,3 @@
-"use client";
-
 import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
 import { PlusSignIcon } from "@hugeicons/core-free-icons";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";

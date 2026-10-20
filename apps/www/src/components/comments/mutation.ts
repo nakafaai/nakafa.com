@@ -1,5 +1,3 @@
-"use client";
-
 import type { Ref } from "@confect/core";
 import type { OptimisticUpdate } from "@confect/react";
 import type * as OptimisticLocalStore from "@confect/react/OptimisticLocalStore";

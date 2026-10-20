@@ -1,5 +1,3 @@
-"use client";
-
 import { Login01Icon } from "@hugeicons/core-free-icons";
 import { photoOf } from "@repo/backend/confect/users/picture";
 import { readLearnerText } from "@repo/backend/confect/writing/text";

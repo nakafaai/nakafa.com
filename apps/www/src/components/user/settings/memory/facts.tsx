@@ -1,5 +1,3 @@
-"use client";
-
 import { useLocale, useTranslations } from "use-intl";
 import type { Memory } from "@/components/user/settings/memory/list";
 import { useMemoryNow } from "@/components/user/settings/memory/provider";

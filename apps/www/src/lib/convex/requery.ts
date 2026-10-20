@@ -1,5 +1,3 @@
-"use client";
-
 import type { Ref } from "@confect/core";
 import { useConvex } from "convex/react";
 import { Effect } from "effect";

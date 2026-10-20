@@ -1,5 +1,3 @@
-"use client";
-
 import type { PromptInputMessage } from "@repo/design-system/lib/prompt-input/submission";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { ConvexProvider } from "convex/react";

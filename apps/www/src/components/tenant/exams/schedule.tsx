@@ -1,5 +1,3 @@
-"use client";
-
 import { QueryResult } from "@confect/react";
 import { Calendar03Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";

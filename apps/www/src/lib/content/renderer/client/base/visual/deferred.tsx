@@ -1,5 +1,3 @@
-"use client";
-
 import { ScenePlaceholder } from "@repo/design-system/components/three/placeholder";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { lazyComponent } from "@repo/design-system/lib/lazy";

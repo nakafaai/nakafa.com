@@ -1,5 +1,3 @@
-"use client";
-
 import { useFrame, useThree } from "@react-three/fiber";
 import { useVisualScene } from "@repo/design-system/components/visual/card";
 

@@ -1,5 +1,3 @@
-"use client";
-
 import { PaintBoardIcon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import {

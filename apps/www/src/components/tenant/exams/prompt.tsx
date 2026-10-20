@@ -1,5 +1,3 @@
-"use client";
-
 import { QueryResult, useQuery } from "@confect/react";
 import { MAX_DOCUMENT_DEPTH } from "@nakafa/aksara-contracts/assessment/document";
 import type { Id } from "@repo/backend/confect/_generated/id";

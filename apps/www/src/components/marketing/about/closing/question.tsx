@@ -1,5 +1,3 @@
-"use client";
-
 import { useIntersection, useReducedMotion } from "@mantine/hooks";
 import { TypedText } from "@repo/design-system/components/ui/typed";
 import { Array as Arr, Schema } from "effect";

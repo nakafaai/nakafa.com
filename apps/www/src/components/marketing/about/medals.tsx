@@ -1,5 +1,3 @@
-"use client";
-
 import { FavouriteIcon } from "@hugeicons/core-free-icons";
 import { useIntersection } from "@mantine/hooks";
 import { Image } from "@repo/design-system/components/image";

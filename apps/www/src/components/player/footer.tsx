@@ -1,5 +1,3 @@
-"use client";
-
 import {
   ArrowLeft01Icon,
   ArrowRight01Icon,

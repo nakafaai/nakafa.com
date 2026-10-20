@@ -1,5 +1,3 @@
-"use client";
-
 import type { TryoutScoreResult } from "@repo/backend/confect/tryouts/score";
 import { useTranslations } from "use-intl";
 import {

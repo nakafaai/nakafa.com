@@ -1,5 +1,3 @@
-"use client";
-
 import { useReducedMotion } from "@mantine/hooks";
 import { useFrame } from "@react-three/fiber";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";

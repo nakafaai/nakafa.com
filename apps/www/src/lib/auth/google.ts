@@ -1,5 +1,3 @@
-"use client";
-
 import { readAuthClient } from "@/lib/auth/client";
 import type { SocialSignInRequest } from "@/lib/auth/social";
 

@@ -1,5 +1,3 @@
-"use client";
-
 import { QueryResult, useQuery } from "@confect/react";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { TRYOUT_CATALOG_LIMIT } from "@repo/backend/confect/contentRelease/tryout/limits";

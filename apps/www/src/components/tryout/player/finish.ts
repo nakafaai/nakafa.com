@@ -1,5 +1,3 @@
-"use client";
-
 import { useMutation } from "@confect/react";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";

@@ -1,5 +1,3 @@
-"use client";
-
 import { ASSESSMENT_RULES } from "@repo/backend/confect/editor/model";
 import { DocumentEditor } from "@repo/design-system/components/editor/document";
 import {

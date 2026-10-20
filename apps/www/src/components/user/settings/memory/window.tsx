@@ -1,5 +1,3 @@
-"use client";
-
 import { useCallbackRef, useMergedRef } from "@mantine/hooks";
 import { cn } from "cn";
 import { Array as Arr, type Option } from "effect";

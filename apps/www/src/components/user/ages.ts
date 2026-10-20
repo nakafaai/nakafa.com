@@ -1,5 +1,3 @@
-"use client";
-
 import { DateTime } from "effect";
 import { useEffect, useState } from "react";
 import { type StoreApi, useStore } from "zustand";

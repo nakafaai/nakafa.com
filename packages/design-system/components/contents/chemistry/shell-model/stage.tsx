@@ -1,5 +1,3 @@
-"use client";
-
 import { useThree } from "@react-three/fiber";
 import { useShellModel } from "@repo/design-system/components/contents/chemistry/shell-model/context";
 import { ShellModelScene } from "@repo/design-system/components/contents/chemistry/shell-model/scene";

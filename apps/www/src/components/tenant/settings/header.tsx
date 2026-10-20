@@ -1,5 +1,3 @@
-"use client";
-
 import { usePathname } from "@repo/internationalization/src/navigation";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";

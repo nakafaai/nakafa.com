@@ -1,5 +1,3 @@
-"use client";
-
 import { Effect } from "effect";
 import { createContext, type ReactNode, use, useState } from "react";
 import { useStore } from "zustand";

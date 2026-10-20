@@ -1,5 +1,3 @@
-"use client";
-
 import { Logout01Icon, MoreVerticalIcon } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
 import {

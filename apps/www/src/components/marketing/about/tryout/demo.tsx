@@ -1,5 +1,3 @@
-"use client";
-
 import { useIntersection, useReducedMotion } from "@mantine/hooks";
 import type { QuestionResponse } from "@nakafa/aksara-contracts/question/response";
 import { captureException } from "@repo/analytics/posthog/capture";

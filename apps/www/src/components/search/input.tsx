@@ -1,5 +1,3 @@
-"use client";
-
 import { Cancel01Icon, Search02Icon } from "@hugeicons/core-free-icons";
 import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";

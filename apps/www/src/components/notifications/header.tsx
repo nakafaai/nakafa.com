@@ -1,5 +1,3 @@
-"use client";
-
 import { useMutation } from "@confect/react";
 import { CheckmarkCircle02Icon } from "@hugeicons/core-free-icons";
 import notifications from "@repo/backend/confect/_generated/refs/notifications";

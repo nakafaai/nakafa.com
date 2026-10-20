@@ -1,5 +1,3 @@
-"use client";
-
 import { QueryResult, useQuery } from "@confect/react";
 import { useInViewport } from "@mantine/hooks";
 import editors from "@repo/backend/confect/_generated/refs/editor";

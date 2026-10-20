@@ -1,5 +1,3 @@
-"use client";
-
 import type { Ref } from "@confect/core";
 import { QueryResult } from "@confect/react";
 import type { Id } from "@repo/backend/confect/_generated/id";

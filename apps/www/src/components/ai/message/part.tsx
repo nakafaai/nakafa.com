@@ -1,5 +1,3 @@
-"use client";
-
 import { useSmoothText } from "@convex-dev/agent/react";
 import {
   Reasoning,

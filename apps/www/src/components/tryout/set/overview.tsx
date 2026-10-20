@@ -1,5 +1,3 @@
-"use client";
-
 import { TryoutCountdown } from "@/components/tryout/runtime/countdown";
 import { TryoutAttemptResults } from "@/components/tryout/score/history";
 import { TryoutSetAction } from "@/components/tryout/set/action";

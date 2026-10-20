@@ -1,5 +1,3 @@
-"use client";
-
 import {
   Book03Icon,
   BookOpen02Icon,

@@ -1,5 +1,3 @@
-"use client";
-
 import type { AnalyticsConsentState } from "@repo/analytics/consent";
 import {
   resolveConsentAffordances,

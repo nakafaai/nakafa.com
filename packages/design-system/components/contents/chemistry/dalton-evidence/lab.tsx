@@ -1,5 +1,3 @@
-"use client";
-
 import {
   CONSERVATION_MODE_ID,
   DALTON_LAYOUTS,

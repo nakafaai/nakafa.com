@@ -1,5 +1,3 @@
-"use client";
-
 import { useMutation } from "@confect/react";
 import type * as OptimisticLocalStore from "@confect/react/OptimisticLocalStore";
 import chats from "@repo/backend/confect/_generated/refs/chats";

@@ -1,5 +1,3 @@
-"use client";
-
 import { Id } from "@repo/backend/confect/_generated/id";
 import { FetchClient } from "@repo/utilities/http/client";
 import { Effect, type Result, Schema } from "effect";

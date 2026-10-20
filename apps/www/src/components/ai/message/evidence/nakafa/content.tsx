@@ -1,5 +1,3 @@
-"use client";
-
 import type { NakafaDataPart } from "@repo/backend/confect/nina/contract/data";
 import { useTranslations } from "use-intl";
 import { nakafaIcons } from "@/components/ai/message/evidence/nakafa/icons";

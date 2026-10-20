@@ -1,5 +1,3 @@
-"use client";
-
 import { useWindowEvent } from "@mantine/hooks";
 import { Array as Arr, Option } from "effect";
 import { type RefObject, useEffect } from "react";

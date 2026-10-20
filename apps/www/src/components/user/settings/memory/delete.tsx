@@ -1,5 +1,3 @@
-"use client";
-
 import { Button } from "@repo/design-system/components/ui/button";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import type { ComponentProps } from "react";

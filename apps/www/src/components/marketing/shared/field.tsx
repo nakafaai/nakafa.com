@@ -1,5 +1,3 @@
-"use client";
-
 import { useDocumentVisibility } from "@mantine/hooks";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { DeferredParticles } from "@/components/shared/particles";

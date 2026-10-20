@@ -1,5 +1,3 @@
-"use client";
-
 import type { Ref } from "@confect/core";
 import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
 import {

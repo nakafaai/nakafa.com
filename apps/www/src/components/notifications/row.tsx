@@ -1,5 +1,3 @@
-"use client";
-
 import { useMutation } from "@confect/react";
 import notifications from "@repo/backend/confect/_generated/refs/notifications";
 import { toast } from "@repo/design-system/lib/toast/notify";

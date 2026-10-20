@@ -1,5 +1,3 @@
-"use client";
-
 import {
   ATOM_SHELL_SAMPLE_IDS,
   ATOM_SHELL_SAMPLES,

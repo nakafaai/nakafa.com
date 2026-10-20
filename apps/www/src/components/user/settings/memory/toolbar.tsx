@@ -1,5 +1,3 @@
-"use client";
-
 import { Add01Icon, Search01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { CardHeader } from "@repo/design-system/components/ui/card";

@@ -1,5 +1,3 @@
-"use client";
-
 import type { CapabilityArtifact } from "@repo/backend/confect/nina/capability/progress";
 import { cn } from "cn";
 import { Array as Arr, Match } from "effect";

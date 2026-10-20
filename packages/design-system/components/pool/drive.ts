@@ -1,5 +1,3 @@
-"use client";
-
 import { coverOf } from "@repo/design-system/components/pool/cover";
 import { poolStarts } from "@repo/design-system/components/pool/member";
 import {

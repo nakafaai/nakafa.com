@@ -1,5 +1,3 @@
-"use client";
-
 import { Ref } from "@confect/core";
 import { type UIMessagesQuery, useUIMessages } from "@convex-dev/agent/react";
 import { NINA_MESSAGES_PAGE_SIZE } from "@repo/backend/client/nina/presentation";

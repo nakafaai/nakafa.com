@@ -1,5 +1,3 @@
-"use client";
-
 import { useAction } from "@confect/react";
 import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import customers from "@repo/backend/confect/_generated/refs/customers";

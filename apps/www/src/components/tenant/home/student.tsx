@@ -1,5 +1,3 @@
-"use client";
-
 import { QueryResult } from "@confect/react";
 import type { StudentSittingRow } from "@repo/backend/confect/exams/sittings/contract";
 import { Array as Arr, Option } from "effect";
@@ -23,10 +21,7 @@ import {
 import { HomeFailure, HomeTitle } from "@/components/tenant/home/title";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { schoolDateTimeText } from "@/components/tenant/settings/clock";
-import {
-  enterableSitting,
-  orderSittings,
-} from "@/components/tenant/sittings";
+import { enterableSitting, orderSittings } from "@/components/tenant/sittings";
 
 /** One sitting of the student, as the student's list holds it. */
 type Sitting = typeof StudentSittingRow.Type;

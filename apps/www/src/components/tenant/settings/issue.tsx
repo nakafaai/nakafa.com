@@ -1,5 +1,3 @@
-"use client";
-
 import { useMutation } from "@confect/react";
 import identity from "@repo/backend/confect/_generated/refs/identity";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";

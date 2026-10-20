@@ -1,5 +1,3 @@
-"use client";
-
 import type { Ref } from "@confect/core";
 import { HttpClient } from "@confect/js";
 import { useDisclosure, useMounted } from "@mantine/hooks";

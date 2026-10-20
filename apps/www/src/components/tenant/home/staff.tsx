@@ -1,5 +1,3 @@
-"use client";
-
 import { QueryResult } from "@confect/react";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
@@ -12,10 +10,7 @@ import { DraftsTile } from "@/components/tenant/home/drafts";
 import { type StaffTile, staffPlan } from "@/components/tenant/home/layout";
 import { LiveTile } from "@/components/tenant/home/live";
 import { NextTile } from "@/components/tenant/home/next";
-import {
-  useHomeExams,
-  useHomeSetup,
-} from "@/components/tenant/home/query";
+import { useHomeExams, useHomeSetup } from "@/components/tenant/home/query";
 import { ResultsTile } from "@/components/tenant/home/results";
 import { SetupTile, useSetupShown } from "@/components/tenant/home/setup";
 import { HomeTitle } from "@/components/tenant/home/title";

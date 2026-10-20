@@ -1,5 +1,3 @@
-"use client";
-
 import { useMutation } from "@confect/react";
 import { Rocket01Icon } from "@hugeicons/core-free-icons";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";

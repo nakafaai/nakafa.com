@@ -1,5 +1,3 @@
-"use client";
-
 import type { ReactNode } from "react";
 import { LayoutContent } from "@/components/shared/content/layout";
 import { SchoolSettingsHeader } from "@/components/tenant/settings/header";

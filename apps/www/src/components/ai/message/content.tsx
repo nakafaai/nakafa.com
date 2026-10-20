@@ -1,5 +1,3 @@
-"use client";
-
 import { Array as Arr } from "effect";
 import { useChat } from "@/components/ai/chat/context";
 import { useMessage } from "@/components/ai/message/context";

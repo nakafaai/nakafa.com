@@ -1,5 +1,3 @@
-"use client";
-
 import type { Ref } from "@confect/core";
 import { captureException } from "@repo/analytics/posthog/capture";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";

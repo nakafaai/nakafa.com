@@ -1,5 +1,3 @@
-"use client";
-
 import { ArrowUpRight01Icon } from "@hugeicons/core-free-icons";
 import type { NakafaDataPart } from "@repo/backend/confect/nina/contract/data";
 import { Button } from "@repo/design-system/components/ui/button";

@@ -1,5 +1,3 @@
-"use client";
-
 import { useMutation } from "@confect/react";
 import {
   ArrowTurnBackwardIcon,
@@ -16,10 +14,7 @@ import { toast } from "@repo/design-system/lib/toast/notify";
 import { Effect, HashSet } from "effect";
 import type { MouseEvent, ReactNode } from "react";
 import { useLocale, useTranslations } from "use-intl";
-import {
-  likeInLists,
-  unlikeInLists,
-} from "@/components/comments/mutation";
+import { likeInLists, unlikeInLists } from "@/components/comments/mutation";
 import {
   useCommentDraft,
   useCommentsNow,

@@ -1,5 +1,3 @@
-"use client";
-
 import { useMutation, useQuery } from "@confect/react";
 import { ANALYTICS_CONSENT_CATEGORY } from "@repo/analytics/consent";
 import consents from "@repo/backend/confect/_generated/refs/consents";

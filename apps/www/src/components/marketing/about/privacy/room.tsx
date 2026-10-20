@@ -1,5 +1,3 @@
-"use client";
-
 import { useIntersection, useReducedMotion } from "@mantine/hooks";
 import { Nina } from "@repo/design-system/components/ui/nina";
 import { cva } from "class-variance-authority";

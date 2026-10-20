@@ -1,5 +1,3 @@
-"use client";
-
 import { Button } from "@repo/design-system/components/ui/button";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { Link } from "@repo/internationalization/src/navigation";

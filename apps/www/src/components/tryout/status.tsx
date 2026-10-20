@@ -1,5 +1,3 @@
-"use client";
-
 import {
   CheckmarkCircle02Icon,
   CircleDashedIcon,

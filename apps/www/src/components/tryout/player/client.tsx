@@ -1,5 +1,3 @@
-"use client";
-
 import { Array as Arr } from "effect";
 import { Suspense } from "react";
 import { useTranslations } from "use-intl";

@@ -1,13 +1,11 @@
-"use client";
-
 import { QueryResult, useQuery } from "@confect/react";
 import nina from "@repo/backend/confect/_generated/refs/nina";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { useState } from "react";
 import { readChatArgs } from "@/components/ai/chat/access";
+import { useChatTurns } from "@/components/ai/chat/closing";
 import { nextAnswer, shownAnswer } from "@/components/ai/chat/kept";
 import { turnOf } from "@/components/ai/chat/turns";
-import { useChatTurns } from "@/components/ai/chat/closing";
 import { useConvexAuth } from "@/components/providers/convex";
 
 /**

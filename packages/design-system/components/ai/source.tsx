@@ -1,5 +1,3 @@
-"use client";
-
 import { Link01Icon } from "@hugeicons/core-free-icons";
 import { Image } from "@repo/design-system/components/image";
 import {

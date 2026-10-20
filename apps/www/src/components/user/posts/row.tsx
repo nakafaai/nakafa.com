@@ -1,5 +1,3 @@
-"use client";
-
 import { useMutation } from "@confect/react";
 import posts from "@repo/backend/confect/_generated/refs/posts";
 import { DeferredLearnerText } from "@repo/design-system/components/markdown/deferred";
@@ -20,10 +18,7 @@ import {
   FeedRow,
 } from "@/components/user/feed";
 import { LikeButton } from "@/components/user/like";
-import {
-  likeInLists,
-  unlikeInLists,
-} from "@/components/user/posts/mutation";
+import { likeInLists, unlikeInLists } from "@/components/user/posts/mutation";
 import {
   usePostDraft,
   usePostsContext,

@@ -1,5 +1,3 @@
-"use client";
-
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { Link } from "@repo/internationalization/src/navigation";
 import { useTranslations } from "use-intl";

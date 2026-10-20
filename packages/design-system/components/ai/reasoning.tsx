@@ -1,5 +1,3 @@
-"use client";
-
 import { ArrowDown01Icon, BrainIcon } from "@hugeicons/core-free-icons";
 import {
   Collapsible,

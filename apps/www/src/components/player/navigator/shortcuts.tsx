@@ -1,5 +1,3 @@
-"use client";
-
 import { Kbd, KbdGroup } from "@repo/design-system/components/ui/kbd";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";

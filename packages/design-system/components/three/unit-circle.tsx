@@ -1,5 +1,3 @@
-"use client";
-
 import { Line } from "@react-three/drei";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { CoordinateSystem } from "@repo/design-system/components/three/coordinate-system";

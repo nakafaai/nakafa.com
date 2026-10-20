@@ -1,5 +1,3 @@
-"use client";
-
 import type { ConvexReactClient } from "convex/react";
 import { Option } from "effect";
 import { lazy, Suspense } from "react";

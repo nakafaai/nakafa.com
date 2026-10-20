@@ -1,5 +1,3 @@
-"use client";
-
 import { QueryResult, useQuery } from "@confect/react";
 import auth from "@repo/backend/confect/_generated/refs/auth";
 import { useAuthSession } from "@/components/auth/session";

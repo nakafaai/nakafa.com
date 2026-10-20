@@ -1,5 +1,3 @@
-"use client";
-
 import type { Ref } from "@confect/core";
 import { type OptimisticLocalStore, useMutation } from "@confect/react";
 import auth from "@repo/backend/confect/_generated/refs/auth";

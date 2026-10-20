@@ -1,5 +1,3 @@
-"use client";
-
 import { DropdownMenuSubContent } from "@repo/design-system/components/ui/dropdown-menu";
 import type { ComponentProps } from "react";
 import { ThemeMenuItems } from "@/components/shared/theme/items";

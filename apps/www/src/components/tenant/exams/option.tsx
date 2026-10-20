@@ -1,5 +1,3 @@
-"use client";
-
 import { Cancel01Icon, Tick02Icon } from "@hugeicons/core-free-icons";
 import { useCallbackRef } from "@mantine/hooks";
 import { MAX_DOCUMENT_DEPTH } from "@nakafa/aksara-contracts/assessment/document";

@@ -1,5 +1,3 @@
-"use client";
-
 import { createContext } from "react";
 import type { StoreApi } from "zustand";
 import type { AuthSession } from "@/lib/auth/session";

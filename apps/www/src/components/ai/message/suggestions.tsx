@@ -1,5 +1,3 @@
-"use client";
-
 import { Add01Icon, QuoteDownIcon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Array as Arr } from "effect";

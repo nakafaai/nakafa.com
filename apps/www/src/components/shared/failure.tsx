@@ -1,5 +1,3 @@
-"use client";
-
 import { Alert02Icon, Refresh03Icon } from "@hugeicons/core-free-icons";
 import {
   Alert,

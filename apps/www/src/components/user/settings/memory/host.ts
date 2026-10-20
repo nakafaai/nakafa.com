@@ -1,5 +1,3 @@
-"use client";
-
 import { editorFrame } from "@repo/design-system/components/editor/frame";
 import { useCallback, useRef, useState } from "react";
 import { MEMORY_EDITOR_ID } from "@/components/user/settings/memory/focus";

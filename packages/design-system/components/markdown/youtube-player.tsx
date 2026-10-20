@@ -1,5 +1,3 @@
-"use client";
-
 import { PlayIcon } from "@hugeicons/core-free-icons";
 import { Image } from "@repo/design-system/components/image";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";

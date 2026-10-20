@@ -1,5 +1,3 @@
-"use client";
-
 import { Dialog as SheetPrimitive } from "@base-ui/react/dialog";
 import { Cancel01Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";

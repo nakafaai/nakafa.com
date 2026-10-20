@@ -1,5 +1,3 @@
-"use client";
-
 import { RoundedBox } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { InlineMath } from "@repo/design-system/components/markdown/math";

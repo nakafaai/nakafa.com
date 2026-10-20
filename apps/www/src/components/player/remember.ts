@@ -1,5 +1,3 @@
-"use client";
-
 import { Effect } from "effect";
 import { PLAYER_MODE_PARAM, type PlayerMode } from "@/components/player/mode";
 import { savePlayerMode } from "@/components/player/preference";

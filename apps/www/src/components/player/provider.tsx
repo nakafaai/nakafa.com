@@ -1,5 +1,3 @@
-"use client";
-
 import { createContext, type ReactNode, use, useState } from "react";
 import { useStore } from "zustand";
 import type { PlayerMode } from "@/components/player/mode";

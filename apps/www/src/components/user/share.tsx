@@ -1,5 +1,3 @@
-"use client";
-
 import { Share01Icon } from "@hugeicons/core-free-icons";
 import { useClipboard } from "@mantine/hooks";
 import { Button } from "@repo/design-system/components/ui/button";

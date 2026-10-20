@@ -1,5 +1,3 @@
-"use client";
-
 import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import {
   SidebarMenuButton,

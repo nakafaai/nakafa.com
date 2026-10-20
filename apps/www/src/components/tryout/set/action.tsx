@@ -1,5 +1,3 @@
-"use client";
-
 import type { Locale } from "use-intl";
 import type {
   CurrentAttempt,

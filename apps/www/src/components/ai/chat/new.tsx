@@ -1,5 +1,3 @@
-"use client";
-
 import { Particles } from "@repo/design-system/components/ui/particles";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { cn } from "cn";

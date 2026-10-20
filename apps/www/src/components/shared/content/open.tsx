@@ -1,5 +1,3 @@
-"use client";
-
 import { LinkSquare02Icon } from "@hugeicons/core-free-icons";
 import { BrandLogo } from "@repo/design-system/components/logos/brand";
 import {

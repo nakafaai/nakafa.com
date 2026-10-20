@@ -1,5 +1,3 @@
-"use client";
-
 import { Option } from "effect";
 import { type RefObject, useEffect } from "react";
 import { ARTICLES_SELECTOR, readArticleKey } from "@/components/player/article";

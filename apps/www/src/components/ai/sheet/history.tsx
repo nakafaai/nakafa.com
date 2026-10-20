@@ -1,5 +1,3 @@
-"use client";
-
 import { usePaginatedQuery } from "@confect/react";
 import {
   Globe02Icon,

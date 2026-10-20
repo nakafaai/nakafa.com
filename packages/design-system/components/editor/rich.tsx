@@ -1,5 +1,3 @@
-"use client";
-
 import { useCallbackRef } from "@mantine/hooks";
 import { placeCaret } from "@repo/design-system/components/editor/caret";
 import { richOptions } from "@repo/design-system/components/editor/extensions";

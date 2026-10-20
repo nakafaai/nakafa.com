@@ -1,5 +1,3 @@
-"use client";
-
 import { Tick02Icon } from "@hugeicons/core-free-icons";
 import type { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";

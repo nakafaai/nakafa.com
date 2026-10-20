@@ -1,5 +1,3 @@
-"use client";
-
 import { getOuterOccupiedShell } from "@repo/design-system/components/contents/chemistry/atom-shell/data";
 import {
   ELECTRON_CONFIGURATION_SAMPLE_IDS,

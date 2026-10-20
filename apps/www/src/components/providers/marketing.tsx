@@ -1,5 +1,3 @@
-"use client";
-
 import { Effect, Fiber, Option } from "effect";
 import { lazy, type ReactNode, Suspense, useEffect, useState } from "react";
 import { AnalyticsConsentBootstrap } from "@/components/analytics/consent/bootstrap";

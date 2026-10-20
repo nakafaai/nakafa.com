@@ -1,5 +1,3 @@
-"use client";
-
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { lazyComponent } from "@repo/design-system/lib/lazy";
 import { Suspense } from "react";

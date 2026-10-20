@@ -1,14 +1,9 @@
-"use client";
-
 import { QueryResult } from "@confect/react";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import { CardLink, CardLinks } from "@/components/shared/card/link";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
-import {
-  homeSetupRead,
-  useHomeSetup,
-} from "@/components/tenant/home/query";
+import { homeSetupRead, useHomeSetup } from "@/components/tenant/home/query";
 import { missingSteps, type SetupStep } from "@/components/tenant/home/steps";
 import { HomeTile, RowText, TILE_ROWS } from "@/components/tenant/home/tile";
 import { ReadBoundary } from "@/components/tenant/read/boundary";

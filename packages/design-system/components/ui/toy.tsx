@@ -1,5 +1,3 @@
-"use client";
-
 import { useMergedRef } from "@mantine/hooks";
 import type { Point } from "@repo/design-system/lib/toy/flight";
 import { createScatter, type Place } from "@repo/design-system/lib/toy/scatter";

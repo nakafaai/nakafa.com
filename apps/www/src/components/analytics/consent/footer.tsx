@@ -1,5 +1,3 @@
-"use client";
-
 import { Button } from "@repo/design-system/components/ui/button";
 import { useTranslations } from "use-intl";
 import type { AnalyticsConsentContextValue } from "@/lib/analytics/consent/context";

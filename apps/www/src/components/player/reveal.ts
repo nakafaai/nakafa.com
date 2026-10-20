@@ -1,5 +1,3 @@
-"use client";
-
 import { Option } from "effect";
 import { type RefObject, useEffectEvent, useLayoutEffect } from "react";
 import { findArticle } from "@/components/player/article";

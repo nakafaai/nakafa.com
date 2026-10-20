@@ -1,5 +1,3 @@
-"use client";
-
 import { QueryResult, useQuery } from "@confect/react";
 import { Diamond02Icon } from "@hugeicons/core-free-icons";
 import subscriptions from "@repo/backend/confect/_generated/refs/subscriptions";
@@ -18,8 +16,8 @@ import {
   getPostAuthOnboardingHref,
   getPostAuthProviderErrorHref,
 } from "@/lib/auth/admission";
-import { startGoogleSignIn } from "@/lib/auth/social";
 import { requestGoogleSignIn } from "@/lib/auth/google";
+import { startGoogleSignIn } from "@/lib/auth/social";
 import { useBillingNavigation } from "@/lib/billing/checkout";
 import { isActiveLocale } from "@/lib/i18n/active";
 import { useViewer } from "@/lib/identity/client";

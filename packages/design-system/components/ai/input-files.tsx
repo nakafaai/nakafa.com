@@ -1,4 +1,3 @@
-"use client";
 import { useStableMutableValue } from "@repo/design-system/hooks/use-stable-mutable-value";
 import {
   type PromptInputFile,

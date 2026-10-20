@@ -1,5 +1,3 @@
-"use client";
-
 import { type ReactNode, useRef } from "react";
 import { usePlayerFocus } from "@/components/player/focus";
 import { usePlayerReveal } from "@/components/player/reveal";

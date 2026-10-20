@@ -1,5 +1,3 @@
-"use client";
-
 import { DropdownMenuContent } from "@repo/design-system/components/ui/dropdown-menu";
 import { ThemeMenuItems } from "@/components/shared/theme/items";
 

@@ -1,5 +1,3 @@
-"use client";
-
 import type { PaginatedQueryItem, PaginatedQueryResult } from "@confect/react";
 import type chats from "@repo/backend/confect/_generated/refs/chats";
 import { Array as Arr, HashSet } from "effect";

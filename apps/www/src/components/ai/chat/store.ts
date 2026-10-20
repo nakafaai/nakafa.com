@@ -1,5 +1,3 @@
-"use client";
-
 import type { Ref } from "@confect/core";
 import type nina from "@repo/backend/confect/_generated/refs/nina";
 import type { NinaMessage } from "@repo/backend/confect/nina/schema";

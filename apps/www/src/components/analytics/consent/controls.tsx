@@ -1,5 +1,3 @@
-"use client";
-
 import { ANALYTICS_CONSENT_ROOT_ATTRIBUTE } from "@repo/analytics/consent";
 import {
   CardContent,

@@ -1,5 +1,3 @@
-"use client";
-
 import { useWindowEvent } from "@mantine/hooks";
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
 import { Array as Arr, Option } from "effect";

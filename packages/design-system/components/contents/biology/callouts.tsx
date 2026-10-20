@@ -1,5 +1,3 @@
-"use client";
-
 import { useBiologyColors } from "@repo/design-system/components/contents/biology/context";
 import {
   type BiologyScenePoint,

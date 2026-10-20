@@ -1,5 +1,3 @@
-"use client";
-
 import type { HomeView } from "@repo/backend/confect/exams/home/contract";
 import { Array as Arr } from "effect";
 import { useLocale, useTranslations } from "use-intl";

@@ -1,5 +1,3 @@
-"use client";
-
 import { Scatter, Toy, Toys } from "@repo/design-system/components/ui/toy";
 import type { Place } from "@repo/design-system/lib/toy/scatter";
 import { Array as Arr } from "effect";

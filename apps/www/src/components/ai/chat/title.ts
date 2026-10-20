@@ -1,5 +1,3 @@
-"use client";
-
 import type { ChatView } from "@repo/backend/confect/chats/view";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Effect } from "effect";

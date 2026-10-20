@@ -1,5 +1,3 @@
-"use client";
-
 import { PreviewCard as HoverCardPrimitive } from "@base-ui/react/preview-card";
 import { cn } from "cn";
 

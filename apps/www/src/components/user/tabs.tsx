@@ -1,5 +1,3 @@
-"use client";
-
 import { usePathname } from "@repo/internationalization/src/navigation";
 import { Array as Arr, Option } from "effect";
 import { useTranslations } from "use-intl";

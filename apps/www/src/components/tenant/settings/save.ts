@@ -1,5 +1,3 @@
-"use client";
-
 import { GrantRejected } from "@repo/backend/confect/access/errors";
 import { type ToastCopy, toast } from "@repo/design-system/lib/toast/notify";
 import { Effect, Option, Record as Rec, type Result, Schema } from "effect";

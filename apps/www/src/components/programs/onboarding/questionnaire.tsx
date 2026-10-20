@@ -1,5 +1,3 @@
-"use client";
-
 import { QueryResult, useMutation, useQuery } from "@confect/react";
 import { PartyIcon } from "@hugeicons/core-free-icons";
 import onboarding from "@repo/backend/confect/_generated/refs/onboarding";

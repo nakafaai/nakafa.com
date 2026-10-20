@@ -1,5 +1,3 @@
-"use client";
-
 import { ShellModelProvider } from "@repo/design-system/components/contents/chemistry/shell-model/context";
 import {
   getShellModelSceneColors,

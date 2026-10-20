@@ -1,5 +1,3 @@
-"use client";
-
 import { useMutation } from "@confect/react";
 import { Id } from "@repo/backend/confect/_generated/id";
 import comments from "@repo/backend/confect/_generated/refs/comments";

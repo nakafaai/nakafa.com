@@ -1,5 +1,3 @@
-"use client";
-
 import { Sad02Icon } from "@hugeicons/core-free-icons";
 import {
   useIntersection,

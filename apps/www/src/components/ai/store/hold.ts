@@ -1,5 +1,3 @@
-"use client";
-
 import {
   NINA_FILE_COUNT,
   NINA_UPLOAD_LIFETIME,

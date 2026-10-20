@@ -1,5 +1,3 @@
-"use client";
-
 import type { DecimalSeparator } from "@repo/design-system/components/contents/physics/kinematics/number";
 import { ParabolicMotionProvider } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement/context";
 import {

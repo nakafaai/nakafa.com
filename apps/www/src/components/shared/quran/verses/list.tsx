@@ -1,5 +1,3 @@
-"use client";
-
 import type { QuranViewVerse } from "@repo/backend/client/quran/view";
 import { Array as Arr, Option } from "effect";
 import {

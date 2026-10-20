@@ -1,5 +1,3 @@
-"use client";
-
 import type { GenericId } from "@confect/core";
 import { CancelCircleIcon, Key01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";

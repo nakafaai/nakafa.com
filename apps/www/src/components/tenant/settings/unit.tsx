@@ -1,5 +1,3 @@
-"use client";
-
 import type { Ref } from "@confect/core";
 import { Id } from "@repo/backend/confect/_generated/id";
 import type tenancy from "@repo/backend/confect/_generated/refs/tenancy";

@@ -1,5 +1,3 @@
-"use client";
-
 import { Activity, type ComponentType } from "react";
 
 /**

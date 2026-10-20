@@ -1,5 +1,3 @@
-"use client";
-
 import { useThree } from "@react-three/fiber";
 import { getModernPeriodicTableSceneColors } from "@repo/design-system/components/contents/chemistry/modern-periodic-table/data";
 import type { ModernPeriodicTableLabProps } from "@repo/design-system/components/contents/chemistry/modern-periodic-table/lab";

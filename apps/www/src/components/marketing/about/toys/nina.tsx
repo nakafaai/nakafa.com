@@ -1,5 +1,3 @@
-"use client";
-
 import { Nina } from "@repo/design-system/components/ui/nina";
 import { Toy } from "@repo/design-system/components/ui/toy";
 import type { ActSchema } from "@repo/mascot/nina/act";

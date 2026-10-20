@@ -1,5 +1,3 @@
-"use client";
-
 import type { Ref } from "@confect/core";
 import { useMutation } from "@confect/react";
 import learningPreferences from "@repo/backend/confect/_generated/refs/learningPreferences";

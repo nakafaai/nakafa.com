@@ -1,5 +1,3 @@
-"use client";
-
 import { usePaginatedQuery, useQuery } from "@confect/react";
 import nina from "@repo/backend/confect/_generated/refs/nina";
 import { useConvexAuth } from "@/components/providers/convex";

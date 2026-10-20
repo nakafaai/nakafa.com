@@ -1,5 +1,3 @@
-"use client";
-
 import { Rocket01Icon } from "@hugeicons/core-free-icons";
 import type { TryoutStartAccess } from "@repo/backend/confect/tryouts/start/spec";
 import { Button } from "@repo/design-system/components/ui/button";

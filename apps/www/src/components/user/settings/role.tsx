@@ -1,5 +1,3 @@
-"use client";
-
 import { selfSelectableUserRoles } from "@repo/backend/confect/users/roles";
 import {
   CardContent,

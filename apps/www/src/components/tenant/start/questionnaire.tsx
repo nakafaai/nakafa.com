@@ -1,5 +1,3 @@
-"use client";
-
 import { QueryResult, useMutation, useQuery } from "@confect/react";
 import { School01Icon } from "@hugeicons/core-free-icons";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";

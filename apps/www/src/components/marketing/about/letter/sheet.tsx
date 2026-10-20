@@ -1,5 +1,3 @@
-"use client";
-
 import { useIntersection } from "@mantine/hooks";
 import { type ReactNode, useState } from "react";
 

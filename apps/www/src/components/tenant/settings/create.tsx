@@ -1,5 +1,3 @@
-"use client";
-
 import { QueryResult, useMutation, useQuery } from "@confect/react";
 import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";

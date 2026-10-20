@@ -1,5 +1,3 @@
-"use client";
-
 import type { Ref } from "@confect/core";
 import { QueryResult, useQuery } from "@confect/react";
 import { PartyIcon, Settings01Icon } from "@hugeicons/core-free-icons";

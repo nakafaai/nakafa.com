@@ -1,5 +1,3 @@
-"use client";
-
 import { useMutation } from "@confect/react";
 import { Cancel01Icon } from "@hugeicons/core-free-icons";
 import nina from "@repo/backend/confect/_generated/refs/nina";

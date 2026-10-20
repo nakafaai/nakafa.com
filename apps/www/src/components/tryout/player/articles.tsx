@@ -1,5 +1,3 @@
-"use client";
-
 import { Array as Arr, Option } from "effect";
 import { type ReactNode, use } from "react";
 import { PlayerQuestion } from "@/components/player/question";

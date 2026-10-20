@@ -1,4 +1,3 @@
-"use client";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { Data, Effect } from "effect";
 import { useTransition } from "react";

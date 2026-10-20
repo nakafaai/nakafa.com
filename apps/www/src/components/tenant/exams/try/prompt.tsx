@@ -1,5 +1,3 @@
-"use client";
-
 import type { OpenedDocument } from "@repo/backend/confect/editor/view";
 import { Effect, Option } from "effect";
 import { useMemo } from "react";

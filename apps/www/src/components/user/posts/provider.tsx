@@ -1,9 +1,7 @@
-"use client";
-
 import { createContext, type ReactNode, use, useMemo, useState } from "react";
 import { type StoreApi, useStore } from "zustand";
-import type { AgeClock } from "@/components/user/clock";
 import { useAgeNow } from "@/components/user/ages";
+import type { AgeClock } from "@/components/user/clock";
 import { createPostDraft, type PostDraft } from "@/components/user/posts/draft";
 import type { PublicProfile } from "@/lib/profile/public";
 

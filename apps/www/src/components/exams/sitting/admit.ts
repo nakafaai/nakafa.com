@@ -1,5 +1,3 @@
-"use client";
-
 import type { GenericId } from "@confect/core";
 import { useMutation } from "@confect/react";
 import { Id } from "@repo/backend/confect/_generated/id";

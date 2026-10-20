@@ -1,5 +1,3 @@
-"use client";
-
 import { useMutation } from "@confect/react";
 import { useClipboard } from "@mantine/hooks";
 import { Id } from "@repo/backend/confect/_generated/id";

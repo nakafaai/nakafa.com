@@ -1,5 +1,3 @@
-"use client";
-
 import { CardSection } from "@/components/shared/card/section";
 import { MemoryControl } from "@/components/user/settings/memory/control";
 import { MemoryEditor } from "@/components/user/settings/memory/editor";

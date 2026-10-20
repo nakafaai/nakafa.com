@@ -1,5 +1,3 @@
-"use client";
-
 import { useGLTF, useTexture } from "@react-three/drei";
 import {
   BLUE_MARBLE_EARTH_TEXTURE_ASSET,

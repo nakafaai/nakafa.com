@@ -1,5 +1,3 @@
-"use client";
-
 import type { Ref } from "@confect/core";
 import { QueryResult, useMutation } from "@confect/react";
 import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";

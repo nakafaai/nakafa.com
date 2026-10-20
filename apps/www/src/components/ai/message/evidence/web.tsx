@@ -1,5 +1,3 @@
-"use client";
-
 import { AlertCircleIcon, Search01Icon } from "@hugeicons/core-free-icons";
 import type { DataPart } from "@repo/backend/confect/nina/contract/data";
 import {

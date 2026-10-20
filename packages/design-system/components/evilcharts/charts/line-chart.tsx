@@ -1,5 +1,3 @@
-"use client";
-
 import type { LineAnimationType } from "@repo/design-system/components/evilcharts/charts/line/paint";
 import {
   type ChartBrushOptions,

@@ -1,5 +1,3 @@
-"use client";
-
 import type { Ref } from "@confect/core";
 import type { InvokeReturn } from "@confect/react";
 import { QueryResult, useQuery } from "@confect/react";

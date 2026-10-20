@@ -1,5 +1,3 @@
-"use client";
-
 import { useThree } from "@react-three/fiber";
 import { getAtomSceneColors } from "@repo/design-system/components/contents/chemistry/color";
 import {

@@ -1,5 +1,3 @@
-"use client";
-
 import type { GenericId } from "@confect/core";
 import type { StudentSittingRow } from "@repo/backend/confect/exams/sittings/contract";
 import { Array as Arr, Effect } from "effect";

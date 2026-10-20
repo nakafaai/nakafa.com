@@ -1,5 +1,3 @@
-"use client";
-
 import { DateTime, MutableHashSet } from "effect";
 import {
   createContext,

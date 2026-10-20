@@ -1,5 +1,3 @@
-"use client";
-
 import { QueryResult } from "@confect/react";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { IntentLink } from "@repo/design-system/components/ui/intent-link";

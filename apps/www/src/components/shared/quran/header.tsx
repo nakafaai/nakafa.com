@@ -1,5 +1,3 @@
-"use client";
-
 import { Menu02Icon } from "@hugeicons/core-free-icons";
 import { ButtonGroup } from "@repo/design-system/components/ui/button-group";
 import { SidebarTrigger } from "@repo/design-system/components/ui/sidebar-shell";

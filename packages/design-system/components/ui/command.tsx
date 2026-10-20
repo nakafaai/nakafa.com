@@ -1,5 +1,3 @@
-"use client";
-
 import type { AutocompleteRootProps } from "@base-ui/react/autocomplete";
 import { Dialog as CommandDialogPrimitive } from "@base-ui/react/dialog";
 import { Search02Icon } from "@hugeicons/core-free-icons";

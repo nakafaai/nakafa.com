@@ -1,5 +1,3 @@
-"use client";
-
 import { Diamond02Icon } from "@hugeicons/core-free-icons";
 import { useMounted } from "@mantine/hooks";
 import { Button } from "@repo/design-system/components/ui/button";

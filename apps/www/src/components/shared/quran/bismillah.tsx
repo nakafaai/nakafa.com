@@ -1,5 +1,3 @@
-"use client";
-
 import type { QuranViewBismillah } from "@repo/backend/client/quran/view";
 import { QuranText } from "@/components/shared/quran/text";
 import { useQuranVerses } from "@/components/shared/quran/verses/context";

@@ -1,5 +1,3 @@
-"use client";
-
 import { UnfoldMoreIcon } from "@hugeicons/core-free-icons";
 import type {
   TenantProfile,
@@ -36,7 +34,6 @@ import { type ReactNode, useTransition } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { AccountMenu } from "@/components/sidebar/menu/account";
 import { TenantAccountItems } from "@/components/tenant/account";
-import { signOutSchoolAccount } from "@/components/tenant/signout";
 import {
   type ClassesPreload,
   ClassesPreloadContext,
@@ -51,6 +48,7 @@ import type { HomeAccess } from "@/components/tenant/home/access";
 import type { Greeting } from "@/components/tenant/home/greeting";
 import { SchoolMark } from "@/components/tenant/mark";
 import { TenantNavigation } from "@/components/tenant/navigation";
+import { signOutSchoolAccount } from "@/components/tenant/signout";
 import { isExamEditorPath } from "@/lib/settings/school";
 import type { SchoolViewer } from "@/lib/tenant/frame";
 

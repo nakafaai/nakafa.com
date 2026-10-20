@@ -1,5 +1,3 @@
-"use client";
-
 import { useMutation } from "@confect/react";
 import { MoreHorizontalIcon } from "@hugeicons/core-free-icons";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
@@ -24,14 +22,14 @@ import { toast } from "@repo/design-system/lib/toast/notify";
 import { Schema } from "effect";
 import { startTransition, useId, useState } from "react";
 import { useTranslations } from "use-intl";
+import { saveSchool } from "@/components/tenant/settings/save";
+import { isDraft, type Period } from "@/components/tenant/settings/state";
 import {
   archivePeriodChange,
   openPeriodChange,
   renamePeriodChange,
   restorePeriodChange,
 } from "@/components/tenant/settings/terms";
-import { saveSchool } from "@/components/tenant/settings/save";
-import { isDraft, type Period } from "@/components/tenant/settings/state";
 
 const SOURCE = "components/tenant/settings/period";
 

@@ -1,5 +1,3 @@
-"use client";
-
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { usePathname } from "@repo/internationalization/src/navigation";
 import type { ComponentProps } from "react";

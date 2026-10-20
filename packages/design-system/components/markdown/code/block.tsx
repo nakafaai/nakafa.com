@@ -1,5 +1,3 @@
-"use client";
-
 import { CodeBlock } from "@repo/design-system/components/code-block";
 import {
   CodeBlockBody,

@@ -1,5 +1,3 @@
-"use client";
-
 import { QueryResult, useQuery } from "@confect/react";
 import learningPreferences from "@repo/backend/confect/_generated/refs/learningPreferences";
 import type { Locale } from "use-intl";

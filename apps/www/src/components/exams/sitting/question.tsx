@@ -1,5 +1,3 @@
-"use client";
-
 import type { GenericId } from "@confect/core";
 import { QueryResult, useQuery } from "@confect/react";
 import { Flag01Icon } from "@hugeicons/core-free-icons";
@@ -22,8 +20,8 @@ import { sittingCallFailures } from "@/components/exams/sitting/actions";
 import { useSendAnswer } from "@/components/exams/sitting/answer";
 import { SittingChoice } from "@/components/exams/sitting/choice";
 import { SittingDocument } from "@/components/exams/sitting/document";
-import { useFlags } from "@/components/exams/sitting/marks";
 import { keepAnswer } from "@/components/exams/sitting/keep";
+import { useFlags } from "@/components/exams/sitting/marks";
 import type { PaperQuestion } from "@/components/exams/sitting/paper";
 import {
   pictureIdsOfDocuments,

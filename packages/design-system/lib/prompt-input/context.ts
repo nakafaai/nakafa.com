@@ -1,5 +1,3 @@
-"use client";
-
 import type { usePromptInputFiles } from "@repo/design-system/components/ai/input-files";
 import { createContext, use } from "react";
 

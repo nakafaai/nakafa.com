@@ -1,5 +1,3 @@
-"use client";
-
 import { type OptimisticLocalStore, useMutation } from "@confect/react";
 import { LocalIdSchema } from "@nakafa/aksara-contracts/assessment/identity";
 import { Id } from "@repo/backend/confect/_generated/id";

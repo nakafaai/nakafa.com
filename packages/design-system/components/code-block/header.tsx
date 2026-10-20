@@ -1,5 +1,3 @@
-"use client";
-
 import { TerminalIcon } from "@hugeicons/core-free-icons";
 import {
   type ProgrammingIcon,

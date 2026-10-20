@@ -1,5 +1,3 @@
-"use client";
-
 import { Effect } from "effect";
 import { ActionButton, ActionLink } from "@/components/state/action";
 import { DeferredFigure } from "@/components/state/mascot";

@@ -1,5 +1,3 @@
-"use client";
-
 import type { SittingView } from "@repo/backend/confect/exams/sittings/contract";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { useTranslations } from "use-intl";

@@ -1,5 +1,3 @@
-"use client";
-
 import { Button } from "@repo/design-system/components/ui/button";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { Effect } from "effect";

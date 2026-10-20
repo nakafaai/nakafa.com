@@ -1,5 +1,3 @@
-"use client";
-
 import { Thing } from "@repo/design-system/components/ui/thing";
 import type { ThingName } from "@repo/mascot/thing/name";
 import { ToyAnimal } from "@/components/marketing/about/toys/animal";

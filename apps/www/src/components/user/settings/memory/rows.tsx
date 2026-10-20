@@ -1,5 +1,3 @@
-"use client";
-
 import { CardContent } from "@repo/design-system/components/ui/card";
 import {
   Empty,

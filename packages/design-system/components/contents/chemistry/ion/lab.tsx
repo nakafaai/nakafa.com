@@ -1,5 +1,3 @@
-"use client";
-
 import { ArrowDown02Icon, ArrowRight02Icon } from "@hugeicons/core-free-icons";
 import {
   ION_SAMPLE_IDS,

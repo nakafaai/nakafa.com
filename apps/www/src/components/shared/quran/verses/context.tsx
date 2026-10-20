@@ -1,5 +1,3 @@
-"use client";
-
 import type { QuranViewTafsirAccess } from "@repo/backend/client/quran/view";
 import { createContext, type ReactNode, use } from "react";
 

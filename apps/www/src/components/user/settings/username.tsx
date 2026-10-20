@@ -1,5 +1,3 @@
-"use client";
-
 import { QueryResult, useQuery } from "@confect/react";
 import { useDebouncedValue } from "@mantine/hooks";
 import users from "@repo/backend/confect/_generated/refs/users";

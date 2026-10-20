@@ -1,5 +1,3 @@
-"use client";
-
 import type { Ref } from "@confect/core";
 
 import type tryouts from "@repo/backend/confect/_generated/refs/tryouts";

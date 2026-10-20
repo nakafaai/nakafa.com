@@ -1,5 +1,3 @@
-"use client";
-
 import type { Ref } from "@confect/core";
 import type { OptimisticLocalStore, OptimisticUpdate } from "@confect/react";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";

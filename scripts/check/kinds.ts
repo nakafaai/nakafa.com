@@ -5,6 +5,7 @@ import {
   isExportAssignment,
   isExportDeclaration,
   isExpressionStatement,
+  isFunctionDeclaration,
   isIdentifier,
   isImportDeclaration,
   isNamedExports,
@@ -12,6 +13,8 @@ import {
   isSatisfiesExpression,
   isStringLiteral,
   isTypeReferenceNode,
+  isVariableStatement,
+  type Node,
   type SourceFile,
   SyntaxKind,
 } from "typescript/unstable/ast";
@@ -35,6 +38,8 @@ const CONFIGURATION_TYPE_PATTERN = /Config$/u;
 const REPOSITORY_SPECIFIER_PATTERN = /^(?:\.|@\/|@repo\/|#)/u;
 /** The directive that opens a client module, which must be the module's first statement. */
 const CLIENT_DIRECTIVE = "use client";
+/** The name that React's rules of hooks check: `use`, then a capital letter or a digit. */
+const HOOK_NAME_PATTERN = /^use[A-Z0-9]/u;
 
 /** Whether a module imports a module specifier that `pattern` matches. */
 export function imports(sourceFile: SourceFile, pattern: RegExp) {
@@ -174,6 +179,42 @@ function isClientModule(sourceFile: SourceFile) {
   );
 }
 
+/** Whether a declaration carries the `export` modifier. */
+function isExported(modifiers: readonly Node[] | undefined) {
+  return Arr.some(
+    modifiers ?? [],
+    ({ kind }) => kind === SyntaxKind.ExportKeyword
+  );
+}
+
+/**
+ * Whether a module exports a React hook. Only a component may call a hook, so a
+ * module that exports one hooks into React even when it does not import React,
+ * and a client module that the RSC graph does not reach keeps no directive.
+ */
+function exportsHook(sourceFile: SourceFile) {
+  return Arr.some(sourceFile.statements, (statement) => {
+    if (isFunctionDeclaration(statement)) {
+      return (
+        isExported(statement.modifiers) &&
+        HOOK_NAME_PATTERN.test(statement.name?.text ?? "")
+      );
+    }
+    if (isVariableStatement(statement)) {
+      return (
+        isExported(statement.modifiers) &&
+        Arr.some(
+          statement.declarationList.declarations,
+          (declaration) =>
+            isIdentifier(declaration.name) &&
+            HOOK_NAME_PATTERN.test(declaration.name.text)
+        )
+      );
+    }
+    return false;
+  });
+}
+
 /**
  * Whether a module renders or hooks into React, where timers belong to effects and
  * handlers. A client module's hooks throw during render so that the nearest error
@@ -183,6 +224,7 @@ export function isReactModule(file: string, sourceFile: SourceFile) {
   return (
     JSX_PATTERN.test(file) ||
     loadsModule(sourceFile, REACT_PATTERN) ||
-    isClientModule(sourceFile)
+    isClientModule(sourceFile) ||
+    exportsHook(sourceFile)
   );
 }

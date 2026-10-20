@@ -1,5 +1,3 @@
-"use client";
-
 import type { Ref } from "@confect/core";
 import { useAction, useMutation } from "@confect/react";
 import nina from "@repo/backend/confect/_generated/refs/nina";

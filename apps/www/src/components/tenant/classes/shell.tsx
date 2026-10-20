@@ -1,5 +1,3 @@
-"use client";
-
 import { QueryResult } from "@confect/react";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { ClassAmbiguous } from "@repo/backend/confect/classroom/errors";

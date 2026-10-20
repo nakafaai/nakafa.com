@@ -1,5 +1,3 @@
-"use client";
-
 import { MoreHorizontalIcon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import {

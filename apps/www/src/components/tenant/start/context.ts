@@ -1,5 +1,3 @@
-"use client";
-
 import { createContext, use } from "react";
 import { type StoreApi, useStore } from "zustand";
 import type { StartAnswer, StartDraft } from "@/components/tenant/start/state";

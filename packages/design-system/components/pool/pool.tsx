@@ -1,5 +1,3 @@
-"use client";
-
 import { useInViewport, useMergedRef, useReducedMotion } from "@mantine/hooks";
 import {
   createDrive,

@@ -1,5 +1,3 @@
-"use client";
-
 import { useMutation } from "@confect/react";
 import learningPreferences from "@repo/backend/confect/_generated/refs/learningPreferences";
 import { Array as Arr, Option } from "effect";

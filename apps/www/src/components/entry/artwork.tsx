@@ -1,5 +1,3 @@
-"use client";
-
 import { useMediaQuery } from "@mantine/hooks";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";

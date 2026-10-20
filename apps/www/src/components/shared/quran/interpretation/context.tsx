@@ -1,5 +1,3 @@
-"use client";
-
 import { createContext, type MouseEventHandler, use } from "react";
 
 interface QuranInterpretationContextValue {

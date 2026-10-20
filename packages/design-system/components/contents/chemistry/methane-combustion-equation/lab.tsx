@@ -1,5 +1,3 @@
-"use client";
-
 import { Line } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
 import { InlineMath } from "@repo/design-system/components/markdown/math";

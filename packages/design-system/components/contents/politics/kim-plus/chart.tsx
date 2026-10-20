@@ -1,5 +1,3 @@
-"use client";
-
 import { Bar } from "@repo/design-system/components/evilcharts/charts/bar/series";
 import {
   EvilBarChart,

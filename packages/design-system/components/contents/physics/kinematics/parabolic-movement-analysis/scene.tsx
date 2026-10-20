@@ -1,5 +1,3 @@
-"use client";
-
 import { Environment, Sky, useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import {

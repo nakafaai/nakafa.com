@@ -1,4 +1,3 @@
-"use client";
 import { HttpClient } from "@confect/js";
 import { useMutation } from "@confect/react";
 import {

@@ -1,5 +1,3 @@
-"use client";
-
 import { ChatComposer } from "@/components/ai/chat/composer";
 import { AiChatHeader } from "@/components/ai/chat/header";
 import { NinaTranscript } from "@/components/ai/transcript";

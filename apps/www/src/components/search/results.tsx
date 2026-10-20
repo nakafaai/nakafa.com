@@ -1,5 +1,3 @@
-"use client";
-
 import { useDebouncedValue } from "@mantine/hooks";
 import { useQueryStates } from "nuqs";
 import { SearchResults } from "@/components/search/list";

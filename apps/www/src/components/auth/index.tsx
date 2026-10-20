@@ -1,5 +1,3 @@
-"use client";
-
 import { Authenticated, Unauthenticated } from "@/components/auth/gate";
 import { AuthGoogle } from "@/components/auth/google";
 import { AuthLogout } from "@/components/auth/logout";

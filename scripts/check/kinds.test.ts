@@ -33,7 +33,10 @@ describe("React client modules", () => {
             },
             { file: "apps/www/src/lib/plain.ts", sourceText: BODY },
           ]),
-          ["apps/www/src/lib/plain.ts:1 timer", "apps/www/src/lib/plain.ts:2 throw"]
+          [
+            "apps/www/src/lib/plain.ts:1 timer",
+            "apps/www/src/lib/plain.ts:2 throw",
+          ]
         );
       })
   );
@@ -67,5 +70,56 @@ describe("React client modules", () => {
           ]
         );
       })
+  );
+});
+
+describe("React hook modules", () => {
+  it.effect("treats a module that exports a hook as a React module", () =>
+    Effect.gen(function* () {
+      assert.deepStrictEqual(
+        yield* findings([
+          {
+            file: "apps/www/src/lib/function.ts",
+            sourceText: `export function useHook() { return read(); }\n${BODY}`,
+          },
+          {
+            file: "apps/www/src/lib/variable.ts",
+            sourceText: `export const useHook = () => read();\n${BODY}`,
+          },
+          {
+            file: "apps/www/src/lib/usage.ts",
+            sourceText: `export const usage = () => read();\n${BODY}`,
+          },
+          {
+            file: "apps/www/src/lib/local.ts",
+            sourceText: `function useHook() { return read(); }\n${BODY}`,
+          },
+          {
+            file: "apps/www/src/lib/destructured.ts",
+            sourceText: `export const { useHook } = { useHook: read };\n${BODY}`,
+          },
+          {
+            file: "apps/www/src/lib/default.ts",
+            sourceText: `import { read } from "./read";\nexport default function () { return read(); }\n${BODY}`,
+          },
+          {
+            file: "apps/www/src/lib/plain.ts",
+            sourceText: `const useHook = () => read();\n${BODY}`,
+          },
+        ]),
+        [
+          "apps/www/src/lib/default.ts:3 timer",
+          "apps/www/src/lib/default.ts:4 throw",
+          "apps/www/src/lib/destructured.ts:2 timer",
+          "apps/www/src/lib/destructured.ts:3 throw",
+          "apps/www/src/lib/local.ts:2 timer",
+          "apps/www/src/lib/local.ts:3 throw",
+          "apps/www/src/lib/plain.ts:2 timer",
+          "apps/www/src/lib/plain.ts:3 throw",
+          "apps/www/src/lib/usage.ts:2 timer",
+          "apps/www/src/lib/usage.ts:3 throw",
+        ]
+      );
+    })
   );
 });

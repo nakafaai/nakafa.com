@@ -1,5 +1,3 @@
-"use client";
-
 import { ArrowDown01Icon, ArrowUp01Icon } from "@hugeicons/core-free-icons";
 import { useDisclosure } from "@mantine/hooks";
 import { Button } from "@repo/design-system/components/ui/button";

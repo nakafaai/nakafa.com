@@ -1,5 +1,3 @@
-"use client";
-
 import { ArrowLeft02Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { IntentLink } from "@repo/design-system/components/ui/intent-link";

@@ -1,5 +1,3 @@
-"use client";
-
 import { useMutation } from "@confect/react";
 import { MoreHorizontalIcon } from "@hugeicons/core-free-icons";
 import { Id } from "@repo/backend/confect/_generated/id";

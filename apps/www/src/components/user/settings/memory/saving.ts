@@ -1,5 +1,3 @@
-"use client";
-
 import { useCallbackRef, useDebouncedCallback } from "@mantine/hooks";
 import { Duration } from "effect";
 import { useEffect, useState } from "react";

@@ -1,5 +1,3 @@
-"use client";
-
 import { Array as Arr, DateTime, Option, Record as Rec } from "effect";
 import { createStore } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";

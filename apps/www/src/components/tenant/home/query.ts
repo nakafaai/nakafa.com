@@ -1,5 +1,3 @@
-"use client";
-
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";

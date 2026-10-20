@@ -1,5 +1,3 @@
-"use client";
-
 import {
   Crown02Icon,
   School01Icon,

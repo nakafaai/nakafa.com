@@ -1,5 +1,3 @@
-"use client";
-
 import { ConvexProvider, type ConvexReactClient } from "convex/react";
 import {
   AccountConsentControls,

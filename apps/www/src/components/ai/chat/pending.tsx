@@ -1,5 +1,3 @@
-"use client";
-
 import { Message } from "@repo/design-system/components/ui/message";
 import { MessageScrollerItem } from "@repo/design-system/components/ui/scroller";
 import { TypingLoader } from "@repo/design-system/components/ui/typing-loader";

@@ -1,5 +1,3 @@
-"use client";
-
 import { QueryResult, useMutation } from "@confect/react";
 import { Id } from "@repo/backend/confect/_generated/id";
 import integrations from "@repo/backend/confect/_generated/refs/integrations";

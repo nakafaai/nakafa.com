@@ -1,5 +1,3 @@
-"use client";
-
 import { CoordinateSystem } from "@repo/design-system/components/three/coordinate-system";
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { LineEquation } from "@repo/design-system/components/three/line-equation";

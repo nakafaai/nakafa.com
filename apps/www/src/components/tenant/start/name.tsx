@@ -1,5 +1,3 @@
-"use client";
-
 import { QueryResult, useQuery } from "@confect/react";
 import { CheckmarkCircle02Icon } from "@hugeicons/core-free-icons";
 import { useDebouncedValue } from "@mantine/hooks";

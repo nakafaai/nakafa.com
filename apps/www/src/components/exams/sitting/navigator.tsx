@@ -1,5 +1,3 @@
-"use client";
-
 import { Array as Arr } from "effect";
 import { useFlags } from "@/components/exams/sitting/marks";
 import type { PaperQuestion } from "@/components/exams/sitting/paper";

@@ -1,5 +1,3 @@
-"use client";
-
 import {
   type PaginatedQueryItem,
   PaginatedQueryResult,
@@ -38,13 +36,13 @@ import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import {
-  type CardView,
-  SchoolCardDialog,
-} from "@/components/tenant/settings/card";
-import {
   addStudentChange,
   reissueCardChange,
 } from "@/components/tenant/settings/accounts";
+import {
+  type CardView,
+  SchoolCardDialog,
+} from "@/components/tenant/settings/card";
 import { SettingsPage } from "@/components/tenant/settings/page";
 import { saveSchool } from "@/components/tenant/settings/save";
 import { SchoolDateTime } from "@/components/tenant/settings/time";

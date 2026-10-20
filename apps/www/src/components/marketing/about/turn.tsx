@@ -1,5 +1,3 @@
-"use client";
-
 import { useIntersection, useReducedMotion } from "@mantine/hooks";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { TypedText } from "@repo/design-system/components/ui/typed";

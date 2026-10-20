@@ -1,5 +1,3 @@
-"use client";
-
 import {
   Award02Icon,
   Certificate02Icon,

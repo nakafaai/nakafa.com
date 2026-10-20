@@ -1,5 +1,3 @@
-"use client";
-
 import { Globe02Icon } from "@hugeicons/core-free-icons";
 import {
   useFocusWithin,

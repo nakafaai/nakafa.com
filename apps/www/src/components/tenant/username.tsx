@@ -1,5 +1,3 @@
-"use client";
-
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
 import { lazyComponent } from "@repo/design-system/lib/lazy";

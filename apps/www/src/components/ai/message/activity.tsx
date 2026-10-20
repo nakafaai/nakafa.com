@@ -1,5 +1,3 @@
-"use client";
-
 import {
   AiBrain01Icon,
   ArrowDown01Icon,

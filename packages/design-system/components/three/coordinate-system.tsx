@@ -1,5 +1,3 @@
-"use client";
-
 import { Axes } from "@repo/design-system/components/three/axes";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { CameraControls } from "@repo/design-system/components/three/camera-controls";

@@ -1,5 +1,3 @@
-"use client";
-
 import {
   Globe02Icon,
   Search02Icon,
@@ -37,10 +35,7 @@ import { useParams } from "@tanstack/react-router";
 import { Array as Arr, Option } from "effect";
 import { type ComponentProps, createContext, use, useState } from "react";
 import { useTranslations } from "use-intl";
-import {
-  type ChatFirstPage,
-  useChatList,
-} from "@/components/ai/chat/chats";
+import { type ChatFirstPage, useChatList } from "@/components/ai/chat/chats";
 import { useAi } from "@/components/ai/context";
 import { useConvexAuth } from "@/components/providers/convex";
 import { usePaginatedPreloaded } from "@/lib/data/paginated";

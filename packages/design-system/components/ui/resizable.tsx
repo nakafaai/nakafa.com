@@ -1,5 +1,3 @@
-"use client";
-
 import { DragDropVerticalIcon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { cn } from "cn";

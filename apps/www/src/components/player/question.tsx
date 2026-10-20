@@ -1,5 +1,3 @@
-"use client";
-
 import { Activity, type ReactNode } from "react";
 import { usePlayer } from "@/components/player/provider";
 

@@ -1,5 +1,3 @@
-"use client";
-
 import { createContext, use } from "react";
 import type { ArticleNavigationItem } from "@/lib/content/article/navigation";
 

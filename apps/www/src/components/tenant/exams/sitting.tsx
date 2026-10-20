@@ -1,5 +1,3 @@
-"use client";
-
 import { QueryResult, useMutation, useQuery } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { ScheduleInvalid } from "@repo/backend/confect/exams/sittings/errors";

@@ -1,5 +1,3 @@
-"use client";
-
 import type { Ref } from "@confect/core";
 import { PaginatedQueryResult } from "@confect/react";
 import { ArrowTurnBackwardIcon } from "@hugeicons/core-free-icons";

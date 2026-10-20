@@ -1,5 +1,3 @@
-"use client";
-
 import {
   Alert02Icon,
   InformationCircleIcon,

@@ -1,5 +1,3 @@
-"use client";
-
 import type { GenericId } from "@confect/core";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Array as Arr, Effect } from "effect";

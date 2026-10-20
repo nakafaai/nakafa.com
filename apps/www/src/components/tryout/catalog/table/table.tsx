@@ -1,5 +1,3 @@
-"use client";
-
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import {
   Table,

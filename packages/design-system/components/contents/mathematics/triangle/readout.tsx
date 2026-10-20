@@ -1,5 +1,3 @@
-"use client";
-
 import { useTriangle } from "@repo/design-system/components/contents/mathematics/triangle/context";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { TRIANGLE_SIDES } from "@repo/design-system/components/three/triangle/sides";
