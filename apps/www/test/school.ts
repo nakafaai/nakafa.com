@@ -24,14 +24,13 @@ export const SCHOOL_ROOT = "https://harapan.nakafa.com/";
 export const SESSION_COOKIE = "better-auth.session_token=session-value";
 export const TOKEN = "session-token";
 export const TOKEN_PATH = "/api/auth/convex/token";
-const PROFILE = getConvexFunctionName(tenancy.profile.get);
 export const REFUSAL = getConvexFunctionName(tenancy.profile.refusal);
 
 /** One answer of the fake backend. It is a function, so a request can wait or fail. */
 type Route = () => Promise<Response>;
 
 /** The reads that a test answers: the token route and the school queries. */
-type ReadName = "profile" | "refusal" | "token" | "viewer";
+type ReadName = "refusal" | "token";
 
 /** One request that the fake backend served: a token read, with no slug, or a school query. */
 const ServedRequest = Schema.Struct({
@@ -81,10 +80,8 @@ export const tokenRefused: Route = () =>
 
 /** A route that the test does not name never answers, so a read it did not expect hangs and fails. */
 const ABSENT: Record<ReadName, Route> = {
-  profile: silent,
   refusal: silent,
   token: silent,
-  viewer: silent,
 };
 
 /** Serves every request of one test from its routes, and records each request it serves. */
@@ -105,10 +102,7 @@ export function serve(routes: Partial<Record<ReadName, Route>>) {
         slug: args[0].slug,
       },
     ];
-    if (path === PROFILE) {
-      return named.profile();
-    }
-    return path === REFUSAL ? named.refusal() : named.viewer();
+    return named.refusal();
   });
 }
 
