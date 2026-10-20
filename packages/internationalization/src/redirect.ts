@@ -43,6 +43,18 @@ function redirectToPath(url: URL, pathname: string) {
 }
 
 /**
+ * The 308 to the canonical slash spelling of a path: every run of slashes
+ * collapses and the trailing ones go. Shared paths never redirect, and a path
+ * that is already canonical has no answer.
+ */
+export function decideSlashRedirect(url: URL): Option.Option<RedirectDecision> {
+  if (isSharedPath(url.pathname)) {
+    return Option.none();
+  }
+  return redirectToPath(url, normalizePathname(url.pathname));
+}
+
+/**
  * Decides the redirect of one request before routing, from the URL, the
  * `Accept-Language` header and the locale cookie. Shared paths never redirect.
  *

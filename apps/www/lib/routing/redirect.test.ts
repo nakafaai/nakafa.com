@@ -5,8 +5,10 @@ import { Effect, Option } from "effect";
 import {
   readMainSiteRedirect,
   readMigrationResponse,
+  readMovedResponse,
   readRedirectResponse,
   readRemovedAddressNotFound,
+  readSlashRedirectResponse,
 } from "@/lib/routing/redirect";
 
 vi.hoisted(() => {
@@ -78,15 +80,12 @@ describe("readRedirectResponse", () => {
       )
     ).toBe(true);
   });
-  it("answers an address that moved with its successor before the locale rules", () => {
-    const found = Option.getOrThrow(
-      readRedirectResponse(request("https://nakafa.com/community?ref=app"))
-    );
-
-    expect(found.status).toBe(307);
-    expect(found.headers.get("location")).toBe(
-      "https://discord.gg/CPCSfKhvfQ?ref=app"
-    );
+  it("leaves an address that moved to the moved-address decision, which runs before the negotiation", () => {
+    expect(
+      Option.isNone(
+        readRedirectResponse(request("https://nakafa.com/community?ref=app"))
+      )
+    ).toBe(true);
   });
 
   it("opens a bare profile address and its tab in the negotiated locale, with a 307 and its Vary headers", () => {
@@ -109,6 +108,63 @@ describe("readRedirectResponse", () => {
         readRedirectResponse(
           request("https://harapan.nakafa.com/@nobody_has_this")
         )
+      )
+    ).toBe(true);
+  });
+});
+
+describe("readSlashRedirectResponse", () => {
+  it("answers a trailing slash with a 308 to the canonical path and keeps the query", () => {
+    const found = Option.getOrThrow(
+      readSlashRedirectResponse(
+        request("https://nakafa.com/en/curriculum/?page=2")
+      )
+    );
+
+    expect(found.status).toBe(308);
+    expect(found.headers.get("location")).toBe("/en/curriculum?page=2");
+    expect(found.headers.get("vary")).toBeNull();
+  });
+
+  it("leaves a canonical path and a shared path to the next decision", () => {
+    expect(
+      Option.isNone(
+        readSlashRedirectResponse(request("https://nakafa.com/en/curriculum"))
+      )
+    ).toBe(true);
+    expect(
+      Option.isNone(
+        readSlashRedirectResponse(request("https://nakafa.com/api/ping/"))
+      )
+    ).toBe(true);
+  });
+});
+
+describe("readMovedResponse", () => {
+  it("answers an address that moved with its successor and its status", () => {
+    const found = Option.getOrThrow(
+      readMovedResponse(request("https://nakafa.com/community?ref=app"))
+    );
+
+    expect(found.status).toBe(307);
+    expect(found.headers.get("location")).toBe(
+      "https://discord.gg/CPCSfKhvfQ?ref=app"
+    );
+  });
+
+  it("answers a localized address that moved under the locale of its path", () => {
+    const found = Option.getOrThrow(
+      readMovedResponse(request("https://nakafa.com/id/settings?tab=profile"))
+    );
+
+    expect(found.status).toBe(308);
+    expect(found.headers.get("location")).toBe("/id/user/settings?tab=profile");
+  });
+
+  it("leaves an address that did not move to the next decision", () => {
+    expect(
+      Option.isNone(
+        readMovedResponse(request("https://nakafa.com/en/curriculum"))
       )
     ).toBe(true);
   });

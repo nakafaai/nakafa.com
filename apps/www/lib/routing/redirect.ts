@@ -1,6 +1,7 @@
 import { negotiateLocale } from "@repo/internationalization/src/negotiate";
 import {
   decideRedirect,
+  decideSlashRedirect,
   LOCALE_VARY,
 } from "@repo/internationalization/src/redirect";
 import { SITE_ORIGIN } from "@repo/seo/origin";
@@ -125,44 +126,70 @@ function readBareProfileRedirect(
   );
 }
 
+/** The Response of one redirect decision: its location, its status, and its Vary field when it has one. */
+function toRedirectResponse(decision: {
+  readonly location: string;
+  readonly status: 307 | 308;
+  readonly vary?: string;
+}) {
+  return new Response(null, {
+    headers:
+      decision.vary === undefined
+        ? { location: decision.location }
+        : { location: decision.location, vary: decision.vary },
+    status: decision.status,
+  });
+}
+
 /**
- * The redirect that answers a request before the router runs, as a Response,
- * or none. The server entry calls it after the migrations, so a canonical address
- * never reaches route matching. An address that moved answers first, then the
- * bare profile address, then the locale rules.
+ * The redirect of a non-canonical slash spelling, as a Response, or none. The
+ * server entry asks this before the negotiation, so a Markdown request for a
+ * trailing slash moves to the canonical address and never meets a 406.
+ */
+export function readSlashRedirectResponse(
+  request: Request
+): Option.Option<Response> {
+  return Option.map(
+    decideSlashRedirect(new URL(request.url)),
+    toRedirectResponse
+  );
+}
+
+/**
+ * The redirect of an address that the product moved, as a Response, or none.
+ * The server entry asks this before the negotiation: the reference site answered
+ * these addresses in its configuration, before any middleware, so a Markdown
+ * request for a moved address moves too.
+ */
+export function readMovedResponse(request: Request): Option.Option<Response> {
+  return Option.map(
+    readMovedRedirect(new URL(request.url)),
+    (moved) =>
+      new Response(null, {
+        headers: { location: moved.location },
+        status: moved.status,
+      })
+  );
+}
+
+/**
+ * The locale redirect that answers a request before the router runs, as a
+ * Response, or none: a bare profile address opens in the negotiated locale, the
+ * root opens in the negotiated locale, and a non-public spelling moves to its
+ * canonical path. The server entry asks this after the negotiation, because the
+ * answer to a Markdown request does not depend on the locale.
  */
 export function readRedirectResponse(
   request: Request
 ): Option.Option<Response> {
   const url = new URL(request.url);
   const isSchoolHost = Option.isSome(readSchoolSlug(url.hostname));
-  return Option.match(readMovedRedirect(url), {
-    onNone: () =>
-      Option.orElse(
-        readBareProfileRedirect(url, request.headers, isSchoolHost),
-        () =>
-          Option.map(
-            decideRedirect({
-              headers: request.headers,
-              isSchoolHost,
-              url,
-            }),
-            (decision) =>
-              new Response(null, {
-                headers:
-                  decision.vary === undefined
-                    ? { location: decision.location }
-                    : { location: decision.location, vary: decision.vary },
-                status: decision.status,
-              })
-          )
-      ),
-    onSome: (moved) =>
-      Option.some(
-        new Response(null, {
-          headers: { location: moved.location },
-          status: moved.status,
-        })
-      ),
-  });
+  return Option.orElse(
+    readBareProfileRedirect(url, request.headers, isSchoolHost),
+    () =>
+      Option.map(
+        decideRedirect({ headers: request.headers, isSchoolHost, url }),
+        toRedirectResponse
+      )
+  );
 }

@@ -1,5 +1,6 @@
 import "@tanstack/react-start/server-only";
 
+import { AGENT_DISCOVERY_HEADERS } from "@repo/site/discovery";
 import { mergeVaryHeader } from "@repo/utilities/http/accept";
 import { Array as Arr, Effect, Match, Option } from "effect";
 import { answerLlmsMarkdown } from "@/lib/llms/markdown.server";
@@ -21,8 +22,12 @@ function representationNotAcceptable() {
   });
 }
 
-/** Adds the representation fields to a response's Vary and keeps the fields that were there. */
-function withRepresentationVary(response: Response) {
+/**
+ * Marks a localized document answer for agents: the representation fields join
+ * its Vary, and the discovery headers name the llms index. Each header keeps the
+ * values that the answer already has, and a value is added only once.
+ */
+function withDocumentHeaders(response: Response) {
   const headers = new Headers(response.headers);
   headers.set(
     "Vary",
@@ -31,6 +36,11 @@ function withRepresentationVary(response: Response) {
       LLMS_REPRESENTATION_VARY_FIELDS
     )
   );
+  for (const { key, value } of AGENT_DISCOVERY_HEADERS) {
+    if (!(headers.get(key) ?? "").includes(value)) {
+      headers.append(key, value);
+    }
+  }
   return new Response(response.body, {
     headers,
     status: response.status,
@@ -50,9 +60,7 @@ function answerDecision(decision: LlmsProxyRouteDecision) {
           hasLocalePrefix: true,
           locale: localizedRoute.locale,
         }).pipe(
-          Effect.map((response) =>
-            Option.some(withRepresentationVary(response))
-          )
+          Effect.map((response) => Option.some(withDocumentHeaders(response)))
         ),
     })
   );
@@ -62,8 +70,8 @@ function answerDecision(decision: LlmsProxyRouteDecision) {
  * Negotiates one request before the router runs. An agent that asks for
  * Markdown gets it, a representation that the site cannot send gets 406, and
  * every other request reaches `respond`, the router's answer. A localized
- * document answer carries the representation fields in `Vary`, whichever
- * representation it is.
+ * document answer, Markdown or HTML, carries the representation fields in `Vary`
+ * and the agent discovery headers, whichever representation it is.
  */
 export const negotiateDocument = Effect.fn("www.llms.negotiateDocument")(
   function* (request: Request, respond: Effect.Effect<Response>) {
@@ -79,7 +87,7 @@ export const negotiateDocument = Effect.fn("www.llms.negotiateDocument")(
     }
     const response = yield* respond;
     return isLocalizedLlmsRoute(url.pathname)
-      ? withRepresentationVary(response)
+      ? withDocumentHeaders(response)
       : response;
   }
 );

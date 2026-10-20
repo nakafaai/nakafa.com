@@ -166,4 +166,55 @@ describe("document negotiation", () => {
         expect(hasLlmsMarkdownSourceMock).not.toHaveBeenCalled();
       })
   );
+
+  it.effect("adds the discovery links to a document answer", () =>
+    Effect.gen(function* () {
+      const response = yield* negotiate("/en/articles/belajar", {
+        accept: "text/html",
+      });
+
+      expect(response.headers.get("link")).toBe('</llms.txt>; rel="llms-txt"');
+      expect(response.headers.get("x-llms-txt")).toBe("/llms.txt");
+    })
+  );
+
+  it.effect("keeps one discovery link on an answer that already names it", () =>
+    Effect.gen(function* () {
+      const response = yield* negotiate(
+        "/en/articles/belajar",
+        { accept: "text/html" },
+        Effect.succeed(
+          new Response("<html>page</html>", {
+            headers: {
+              Link: '</llms.txt>; rel="llms-txt"',
+              "X-Llms-Txt": "/llms.txt",
+            },
+          })
+        )
+      );
+
+      expect(response.headers.get("link")).toBe('</llms.txt>; rel="llms-txt"');
+      expect(response.headers.get("x-llms-txt")).toBe("/llms.txt");
+    })
+  );
+
+  it.effect(
+    "joins the discovery link to the Link values that an answer has",
+    () =>
+      Effect.gen(function* () {
+        const response = yield* negotiate(
+          "/en/articles/belajar",
+          { accept: "text/html" },
+          Effect.succeed(
+            new Response("<html>page</html>", {
+              headers: { Link: "</fonts/inter.woff2>; rel=preload" },
+            })
+          )
+        );
+
+        expect(response.headers.get("link")).toBe(
+          '</fonts/inter.woff2>; rel=preload, </llms.txt>; rel="llms-txt"'
+        );
+      })
+  );
 });

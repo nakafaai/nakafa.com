@@ -117,6 +117,11 @@ function isReadMethod(method: string) {
   return method === "GET" || method === "HEAD";
 }
 
+/** Reports whether a route is the social image route, which answers an image and never a document. */
+function isOgImageRoute(route: string) {
+  return route === "/og" || route.startsWith("/og/");
+}
+
 /** Removes one explicit Markdown suffix while preserving its exact spelling. */
 export function readLlmsMarkdownPathname(pathname: string) {
   const markdownExtension = readLlmsMarkdownExtension(pathname);
@@ -167,6 +172,9 @@ function getLocalizedLlmsRoute(
   }
 
   const rawRoute = `/${Arr.join(routeSegments, "/")}`;
+  if (isOgImageRoute(rawRoute)) {
+    return Option.none();
+  }
   const { markdownExtension, pathname: routeWithoutExtension } =
     readLlmsMarkdownPathname(rawRoute);
 

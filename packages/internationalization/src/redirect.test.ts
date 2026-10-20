@@ -1,5 +1,8 @@
 import { describe, expect, it } from "@effect/vitest";
-import { decideRedirect } from "@repo/internationalization/src/redirect";
+import {
+  decideRedirect,
+  decideSlashRedirect,
+} from "@repo/internationalization/src/redirect";
 import { Option } from "effect";
 
 /** The redirect decided for one address and its request headers. */
@@ -161,5 +164,28 @@ describe("slashes in a path", () => {
         vary: "Accept-Language, Cookie",
       })
     );
+  });
+});
+
+describe("canonical slash spelling", () => {
+  it("answers a run of slashes and a trailing slash with the canonical path and its query", () => {
+    expect(
+      decideSlashRedirect(new URL("https://nakafa.com/en//curriculum/?ref=x"))
+    ).toStrictEqual(
+      Option.some({ location: "/en/curriculum?ref=x", status: 308 })
+    );
+  });
+
+  it("leaves a canonical path and a shared path alone", () => {
+    expect(
+      Option.isNone(
+        decideSlashRedirect(new URL("https://nakafa.com/en/curriculum"))
+      )
+    ).toBe(true);
+    expect(
+      Option.isNone(
+        decideSlashRedirect(new URL("https://nakafa.com/api/ping/"))
+      )
+    ).toBe(true);
   });
 });

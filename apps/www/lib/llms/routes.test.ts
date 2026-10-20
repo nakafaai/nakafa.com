@@ -342,4 +342,30 @@ describe("localized llms route classification", () => {
     expect(isLocalizedLlmsRoute("/api/weather")).toBe(false);
     expect(isLocalizedLlmsRoute("/_nakafa/e")).toBe(false);
   });
+
+  it("leaves a localized social image route out of the documents", () => {
+    expect(isLocalizedLlmsRoute("/en/og/articles/x/image.png")).toBe(false);
+  });
+});
+
+describe("localized social image routing", () => {
+  beforeEach(() => {
+    mockHasLlmsMarkdownSource.mockReset().mockReturnValue(Effect.succeed(true));
+  });
+
+  it.effect(
+    "delegates a localized social image without negotiating its representation",
+    () =>
+      assertRoute(
+        {
+          acceptHeader: Option.some("image/png"),
+          method: "GET",
+          pathname: "/en/og/articles/x/image.png",
+        },
+        (decision) => {
+          expect(decision).toEqual({ kind: "delegate" });
+          expect(mockHasLlmsMarkdownSource).not.toHaveBeenCalled();
+        }
+      )
+  );
 });
