@@ -267,13 +267,21 @@ export function getPostAuthProviderErrorHref(
   return `/${locale}${landing}`;
 }
 
-/** Builds a clean generic retry after provider diagnostics are discarded. */
-export function getPostAuthProviderRetryHref(
+/**
+ * The typed search of the generic retry on the sign-in page, after provider
+ * diagnostics are discarded. The route hands it to its typed redirect, so the
+ * search keys stay the sign-in route's own schema.
+ */
+export function getPostAuthProviderRetrySearch(
   resolution: PostAuthIntentResolution
 ) {
-  const signInUrl = new URL(getPostAuthSignInHref(resolution), URL_PARSE_BASE);
-  signInUrl.searchParams.set(PROVIDER_ERROR_PARAM, PROVIDER_ERROR_VALUE);
-  return `${signInUrl.pathname}${signInUrl.search}`;
+  if (resolution.kind === "none") {
+    return { [PROVIDER_ERROR_PARAM]: PROVIDER_ERROR_VALUE };
+  }
+  return {
+    [PROVIDER_ERROR_PARAM]: PROVIDER_ERROR_VALUE,
+    [REDIRECT_PARAM]: resolution.intent,
+  };
 }
 
 /** Returns whether a sanitized retry represents a social-provider failure. */

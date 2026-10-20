@@ -19,7 +19,10 @@ const AuthSearch = Schema.Struct({
   redirect: TextSearchParam,
 });
 
-/** The sign-in page takes the root metadata, which names its title and description. */
+/**
+ * The sign-in page takes the root metadata, which names its title, description
+ * and the canonical address of the locale's home, as the reference app does.
+ */
 export const Route = createFileRoute("/$locale/_entry/auth/")({
   validateSearch: Schema.toStandardSchemaV1(AuthSearch),
   loader: async ({ params }) => {
@@ -41,7 +44,8 @@ export const Route = createFileRoute("/$locale/_entry/auth/")({
       ? {}
       : toRouterHead(
           createSeoHead({
-            canonicalPath: `/${params.locale}/auth`,
+            absoluteTitle: loaderData.title,
+            canonicalPath: `/${params.locale}`,
             description: loaderData.description,
             image: getAppSocialArtwork({
               key: "home",
@@ -51,7 +55,7 @@ export const Route = createFileRoute("/$locale/_entry/auth/")({
             indexable: true,
             jsonLd: [],
             locale: params.locale,
-            parts: [loaderData.title],
+            parts: [],
             type: "website",
           })
         ),

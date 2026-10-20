@@ -1,7 +1,7 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { Schema } from "effect";
 import {
-  getPostAuthProviderRetryHref,
+  getPostAuthProviderRetrySearch,
   resolvePostAuthIntent,
 } from "@/lib/auth/admission";
 import { TextSearchParam } from "@/lib/entry/search";
@@ -20,8 +20,10 @@ export const Route = createFileRoute("/$locale/_entry/auth/error")({
   beforeLoad: ({ params, search }) => {
     const resolution = resolvePostAuthIntent(search.intent, params.locale);
     throw redirect({
-      href: `/${params.locale}${getPostAuthProviderRetryHref(resolution)}`,
+      params: { locale: params.locale },
+      search: getPostAuthProviderRetrySearch(resolution),
       statusCode: 307,
+      to: "/$locale/auth",
     });
   },
 });
