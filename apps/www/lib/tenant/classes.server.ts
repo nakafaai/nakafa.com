@@ -7,12 +7,6 @@ import { preloadConfectQuery } from "@/lib/data/preload.server";
 import { orUndefined } from "@/lib/tenant/first.server";
 import { memberHandler } from "@/lib/tenant/member.server";
 
-/** One class of the school, which its home and its forum resolve. */
-export const ClassInput = Schema.Struct({
-  classSlug: ClassAddress,
-  slug: TenantSlug,
-});
-
 /** The first page of a class's forum channels, the forum tab's rows. */
 export const ClassForumInput = Schema.Struct({
   classSlug: ClassAddress,
@@ -22,21 +16,6 @@ export const ClassForumInput = Schema.Struct({
 
 /** The school whose classes the sidebar lists. */
 export const ShellInput = Schema.Struct({ slug: TenantSlug });
-
-/** The class of a home or a forum page, as the class resolves for the viewer. */
-export const classHandler = memberHandler(
-  ({ classSlug, slug }: typeof ClassInput.Type, token: string) =>
-    Effect.gen(function* () {
-      const resolved = yield* orUndefined(
-        preloadConfectQuery(
-          classroom.classes.resolve,
-          { classSlug, slug },
-          token
-        )
-      );
-      return { resolved, channels: undefined };
-    })
-);
 
 /** The class and the first page of its forum channels, in order: the channels belong to the class. */
 export const classForumHandler = memberHandler(

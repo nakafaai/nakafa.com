@@ -8,7 +8,6 @@ import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Effect, Schema } from "effect";
 import {
   classForumHandler,
-  classHandler,
   shellClassesHandler,
 } from "@/lib/tenant/classes.server";
 
@@ -54,26 +53,6 @@ beforeEach(() => {
 });
 
 describe("class first screen", () => {
-  it("reads the class with no channels for the class home", async () => {
-    mocks.preloadConfectQuery.mockReturnValue(
-      Effect.succeed({ id: "class-1", name: "Fisika X-1" })
-    );
-
-    const screen = await classHandler({
-      data: { classSlug: CLASS, slug: SLUG },
-    });
-
-    expect(screen).toStrictEqual({
-      channels: undefined,
-      resolved: { id: "class-1", name: "Fisika X-1" },
-    });
-    expect(mocks.preloadConfectQuery).toHaveBeenCalledExactlyOnceWith(
-      classroom.classes.resolve,
-      { classSlug: CLASS, slug: SLUG },
-      "token-class"
-    );
-  });
-
   it("reads the class and then the first page of its channels, which belong to the class", async () => {
     const classId = Schema.decodeUnknownSync(Id("classes"))("class-1");
     mocks.preloadConfectQuery.mockImplementation((ref) =>
