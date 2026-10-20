@@ -2,7 +2,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { JsonTextSchema } from "@repo/utilities/json";
 import { getTestInstance } from "better-auth/test";
-import { Array as Arr, Effect, Option, Schema } from "effect";
+import { Array as Arr, Effect, Option, Record as Rec, Schema } from "effect";
 import {
   getPostAuthDestination,
   getPostAuthIntentSource,
@@ -205,7 +205,7 @@ describe("post-auth admission", () => {
         error: "oauth",
         redirect: "/en/search?q=geometry#results",
       });
-      expect(Object.values(retrySearch)).not.toContain("access_denied");
+      expect(Rec.values(retrySearch)).not.toContain("access_denied");
     })
   );
 

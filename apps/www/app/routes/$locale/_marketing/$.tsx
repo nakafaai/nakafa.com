@@ -1,4 +1,8 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
+import {
+  publicContentHeaders,
+  readContentCacheTags,
+} from "@/lib/content/delivery";
 import { readLegalPageFn } from "@/lib/content/page/read.fn";
 import { createSeoHead, toHeadAlternates, toRouterHead } from "@/lib/seo/head";
 
@@ -17,8 +21,12 @@ export const Route = createFileRoute("/$locale/_marketing/$")({
     if (facts._tag === "Missing") {
       throw notFound();
     }
-    return facts;
+    return { ...facts, cacheTags: readContentCacheTags(["page"]) };
   },
+  headers: ({ loaderData }) =>
+    loaderData === undefined
+      ? undefined
+      : publicContentHeaders(loaderData.cacheTags),
   head: ({ loaderData, params }) => {
     if (loaderData === undefined) {
       return {};
