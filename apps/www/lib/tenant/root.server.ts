@@ -15,20 +15,26 @@ import { serverHandler } from "@/lib/server/fn";
  * server, so a school page never carries the whole dictionary.
  */
 const SCHOOL_NAMESPACES = [
+  "AnalyticsConsent",
   "Auth",
   "Classroom",
   "Common",
+  "DataTable",
+  "Editor",
+  "Error",
   "Exams",
   "Legal",
   "Metadata",
   "NotFound",
   "Notifications",
+  "Player",
   "School",
   "SchoolEntry",
   "SchoolSettings",
   "SchoolStart",
   "State",
   "Toast",
+  "Tryouts",
   "Utils",
 ] as const;
 
