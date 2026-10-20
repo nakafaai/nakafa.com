@@ -13,9 +13,7 @@ const LOCALE_SHAPE = /^[A-Za-z]{2}$/;
 /** Reads the image suffix that a path ends with, ignoring case, or none for any other path. */
 export function readImageSuffix(path: string): Option.Option<string> {
   const lowerPath = path.toLowerCase();
-  return Option.fromNullishOr(
-    IMAGE_SUFFIXES.find((suffix) => lowerPath.endsWith(suffix))
-  );
+  return Arr.findFirst(IMAGE_SUFFIXES, (suffix) => lowerPath.endsWith(suffix));
 }
 
 /**
