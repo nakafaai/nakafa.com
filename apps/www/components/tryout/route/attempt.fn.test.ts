@@ -23,6 +23,9 @@ vi.mock("@/components/tryout/catalog/server", () => ({
   readTryoutSectionPage: mocks.readTryoutSectionPage,
   readTryoutSetPage: mocks.readTryoutSetPage,
 }));
+vi.mock("@/components/tryout/content/signed", () => ({
+  loadSignedTryoutContent: vi.fn(),
+}));
 vi.mock("@/components/tryout/preview/read", () => ({
   readTryoutQuestionPreview: mocks.readTryoutQuestionPreview,
 }));

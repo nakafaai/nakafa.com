@@ -24,6 +24,7 @@ import {
 } from "@/components/tryout/route/path";
 import { keepPersonalResponse } from "@/components/tryout/route/response.server";
 import {
+  readAttemptContent,
   readAttemptReview,
   readPreviewRoute,
   readRetainedHead,
@@ -142,15 +143,15 @@ export const readTryoutSectionRoute = Effect.fn("www.tryout.route.readSection")(
         readSectionBinding(value, intent.value.view)
       )
     );
+    const content = Option.isSome(attempt)
+      ? yield* readAttemptContent({ attempt: attempt.value })
+      : Option.none();
     const review = Option.isSome(attempt)
-      ? yield* readAttemptReview({
-          attempt: attempt.value,
-          locale,
-          publicPath: sectionPath,
-        })
+      ? yield* readAttemptReview({ attempt: attempt.value, locale })
       : Option.none();
     return {
       binding: Option.getOrNull(binding),
+      content: Option.getOrNull(content),
       head: head.value,
       kind: "catalog" as const,
       now: yield* Clock.currentTimeMillis,
@@ -216,6 +217,7 @@ const readRetainedSectionRoute = Effect.fn(
   }
   return {
     binding: yield* readSectionBinding(attempt, view),
+    content: Option.getOrNull(yield* readAttemptContent({ attempt })),
     head: yield* readRetainedHead({
       description: attempt.page.section.description,
       locale: input.locale,
@@ -229,7 +231,6 @@ const readRetainedSectionRoute = Effect.fn(
       yield* readAttemptReview({
         attempt,
         locale: input.locale,
-        publicPath: input.publicPath,
       })
     ),
     route: input.route,

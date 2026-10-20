@@ -23,6 +23,7 @@ import {
 } from "@/components/tryout/route/path";
 import { keepPersonalResponse } from "@/components/tryout/route/response.server";
 import {
+  readAttemptContent,
   readAttemptReview,
   readPreviewRoute,
   readRetainedHead,
@@ -132,12 +133,11 @@ export const readTryoutSetRoute = Effect.fn("www.tryout.route.readSet")(
     const binding = yield* Effect.transposeOption(
       Option.map(attempt, (value) => readSetBinding(value, intent.value.view))
     );
+    const content = Option.isSome(attempt)
+      ? yield* readAttemptContent({ attempt: attempt.value })
+      : Option.none();
     const review = Option.isSome(attempt)
-      ? yield* readAttemptReview({
-          attempt: attempt.value,
-          locale,
-          publicPath: setPath,
-        })
+      ? yield* readAttemptReview({ attempt: attempt.value, locale })
       : Option.none();
     const restartTarget = Option.match(attempt, {
       onNone: () => createTryoutSetRestartTarget(page),
@@ -145,6 +145,7 @@ export const readTryoutSetRoute = Effect.fn("www.tryout.route.readSet")(
     });
     return {
       binding: Option.getOrNull(binding),
+      content: Option.getOrNull(content),
       head: head.value,
       kind: "catalog" as const,
       now: yield* Clock.currentTimeMillis,
@@ -205,6 +206,7 @@ const readRetainedSetRoute = Effect.fn("www.tryout.route.readRetainedSet")(
     const restartTarget = Option.fromNullishOr(attempt.restartTarget);
     return {
       binding: yield* readSetBinding(attempt, view),
+      content: Option.getOrNull(yield* readAttemptContent({ attempt })),
       head: yield* readRetainedHead({
         description: attempt.page.set.description,
         locale: input.locale,
@@ -219,7 +221,6 @@ const readRetainedSetRoute = Effect.fn("www.tryout.route.readRetainedSet")(
         yield* readAttemptReview({
           attempt,
           locale: input.locale,
-          publicPath: input.publicPath,
         })
       ),
       route: input.route,

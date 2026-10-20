@@ -62,3 +62,9 @@ export type TryoutAnswerContent = TryoutRuntimeContent["answers"][number];
 
 /** Rendered question body paired with its immutable attempt identity. */
 export type TryoutQuestionContent = TryoutRuntimeContent["questions"][number];
+
+/**
+ * The signed question bodies of a running section, which the page renders. A running
+ * section has no answer bodies, so none of them cross to the browser.
+ */
+export type TryoutRunningContent = Pick<TryoutRuntimeContent, "questions">;

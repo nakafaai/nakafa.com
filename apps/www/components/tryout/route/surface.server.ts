@@ -2,27 +2,22 @@ import "@tanstack/react-start/server-only";
 
 import type { Locale } from "@repo/internationalization/src/locale";
 import { readServerTranslator } from "@repo/internationalization/src/translator";
-import { Effect, Option, Schema } from "effect";
+import { Effect, Option } from "effect";
+import { loadSignedTryoutContent } from "@/components/tryout/content/signed";
 import type { readCurrentTryoutSet } from "@/components/tryout/route/current";
 import {
   renderTryoutPreview,
+  renderTryoutQuestionBody,
   renderTryoutReview,
 } from "@/components/tryout/route/rendered.server";
 import type { QuestionPreviewContent } from "@/lib/content/preview/question";
 import { getOgUrl } from "@/lib/seo/social";
 
 /**
- * A set or section that shows a learner's running attempt with its signed body. The
- * running body needs the runtime's body contract, which does not exist yet, so the
- * page stops here. A finished attempt renders its review instead.
+ * The parts of an attempt that its running content and its review read: its ID,
+ * its signed content, and its state.
  */
-class TryoutAttemptContentPending extends Schema.TaggedError<TryoutAttemptContentPending>()(
-  "TryoutAttemptContentPending",
-  { publicPath: Schema.String }
-) {}
-
-/** The parts of an attempt that its review reads: its ID, its signed content, and its state. */
-type ReviewedAttempt = Pick<
+type SurfaceAttempt = Pick<
   Option.Option.Value<Effect.Success<ReturnType<typeof readCurrentTryoutSet>>>,
   "attemptId" | "content" | "initialState"
 >;
@@ -76,32 +71,55 @@ export const readPreviewRoute = Effect.fn("www.tryout.route.readPreview")(
   }
 );
 
+/**
+ * The signed question bodies of a running attempt, verified and rendered on the
+ * server. A finished attempt, or one without signed content, has none.
+ */
+export const readAttemptContent = Effect.fn("www.tryout.route.readContent")(
+  function* (input: { readonly attempt: SurfaceAttempt }) {
+    const { content, initialState } = input.attempt;
+    if (
+      content.kind !== "signed" ||
+      initialState.attempt.status !== "in-progress"
+    ) {
+      return Option.none();
+    }
+    const signed = yield* loadSignedTryoutContent(
+      input.attempt.attemptId,
+      content
+    );
+    const questions = yield* Effect.forEach(
+      signed.questions,
+      (question) => Effect.promise(() => renderTryoutQuestionBody(question)),
+      { concurrency: "unbounded" }
+    );
+    return Option.some({ questions });
+  }
+);
+
 /** The server-rendered review tree of one finished attempt. */
 type RenderedReview = Awaited<ReturnType<typeof renderTryoutReview>>;
 
 /**
- * The terminal review of an attempt with signed content, rendered on the server. An
- * attempt without signed content, or without a runtime, has no review. A running
- * attempt with signed content is pending until the runtime's body contract exists.
+ * The terminal review of a finished attempt with signed content and a runtime,
+ * rendered on the server. A running attempt has no review: its content renders
+ * instead. An attempt without signed content, or without a runtime, has none.
  */
 export const readAttemptReview = Effect.fn("www.tryout.route.readReview")(
   function* (input: {
-    readonly attempt: ReviewedAttempt;
+    readonly attempt: SurfaceAttempt;
     readonly locale: Locale;
-    readonly publicPath: string;
   }) {
     const { attempt } = input;
     const { content, initialState } = attempt;
-    if (content.kind !== "signed") {
+    if (
+      content.kind !== "signed" ||
+      initialState.attempt.status === "in-progress"
+    ) {
       return Option.none<RenderedReview>();
     }
-    if (initialState.attempt.status === "in-progress") {
-      return yield* new TryoutAttemptContentPending({
-        publicPath: input.publicPath,
-      });
-    }
-    const { runtime } = initialState;
-    if (runtime === null) {
+    const runtime = Option.fromNullishOr(initialState.runtime);
+    if (Option.isNone(runtime)) {
       return Option.none<RenderedReview>();
     }
     return Option.some(
@@ -110,7 +128,7 @@ export const readAttemptReview = Effect.fn("www.tryout.route.readReview")(
           access: content,
           attemptId: attempt.attemptId,
           locale: input.locale,
-          runtime,
+          runtime: runtime.value,
         })
       )
     );
