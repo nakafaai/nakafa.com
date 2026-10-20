@@ -1,3 +1,4 @@
+import { useCurrentLocale } from "@repo/internationalization/src/navigation";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import { AuthLegal } from "@/components/auth/legal";
@@ -23,6 +24,7 @@ export function SignInScreen({
   figure: ReactNode;
 }) {
   const t = useTranslations("Auth");
+  const locale = useCurrentLocale();
 
   return (
     <EntryShellBody>
@@ -35,7 +37,7 @@ export function SignInScreen({
 
       {action}
 
-      <AuthLegal />
+      <AuthLegal locale={locale} />
     </EntryShellBody>
   );
 }

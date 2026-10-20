@@ -14,17 +14,15 @@ import { getLocaleOrThrow } from "@/lib/i18n/params";
  * request instant, so the first HTML carries exactly the strings it shows.
  */
 export const Route = createFileRoute("/$locale")({
-  component: LocaleLayout,
-  loader: async ({ params }) => ({
-    messages: await getRouteMessages(getLocaleOrThrow(params.locale), [
-      "Common",
-    ]),
-    now: await readRequestNow(),
-  }),
   params: {
     parse: (raw) => ({ locale: getLocaleOrThrow(raw.locale) }),
     stringify: (params) => ({ locale: params.locale }),
   },
+  loader: async ({ params }) => ({
+    messages: await getRouteMessages(params.locale, ["Common"]),
+    now: await readRequestNow(),
+  }),
+  component: LocaleLayout,
 });
 
 function LocaleLayout() {

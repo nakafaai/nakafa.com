@@ -9,9 +9,9 @@ import {
 } from "@repo/design-system/components/ui/card";
 import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import { buttonVariants } from "@repo/design-system/lib/button";
+import type { Locale } from "@repo/internationalization/src/locale";
 import { readServerTranslator } from "@repo/internationalization/src/translator";
 import { Array as Arr, Effect } from "effect";
-import { useLocale } from "use-intl";
 import {
   PricingPrice,
   StaticPrice,
@@ -70,13 +70,14 @@ const loadPreview = Effect.fn("TryoutReview.loadPreview")(
 export async function TryoutReviewLocked({
   access,
   attemptId,
+  locale,
   runtime,
 }: {
   readonly access: SignedContentAccess;
   readonly attemptId: Id<"tryoutAttempts">;
+  readonly locale: Locale;
   readonly runtime: TryoutSectionRuntime;
 }) {
-  const locale = useLocale();
   const [t, tPricing, preview] = await Promise.all([
     readServerTranslator({ locale, namespace: "Tryouts" }),
     readServerTranslator({ locale, namespace: "Pricing" }),

@@ -1,17 +1,15 @@
+import type { Locale } from "@repo/internationalization/src/locale";
 import { readServerTranslator } from "@repo/internationalization/src/translator";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import type { ReactNode } from "react";
-import { useLocale } from "use-intl";
 import { getShellPageNavigation } from "@/lib/content/page/navigation";
-import { getLocaleOrThrow } from "@/lib/i18n/params";
 
 /**
  * Shows the privacy and terms sentence of the sign-in pages, with links to the
  * two policy pages. Those pages live on the main site, so the links name its
  * origin: a relative link on a school host would reach the school instead.
  */
-export async function AuthLegal() {
-  const locale = getLocaleOrThrow(useLocale());
+export async function AuthLegal({ locale }: { readonly locale: Locale }) {
   const pageNavigation = await getShellPageNavigation(locale);
   if (!pageNavigation) {
     return null;

@@ -1,6 +1,7 @@
 import "@tanstack/react-start/server-only";
 
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
+import type { Locale } from "@repo/internationalization/src/locale";
 import { Array as Arr, Effect } from "effect";
 import { NinaAskProvider } from "@/components/ai/ask";
 import type { SignedContentAccess } from "@/components/tryout/content/model";
@@ -20,10 +21,12 @@ import type { TryoutSectionRuntime } from "@/components/tryout/runtime/types";
 export async function TryoutReview({
   access,
   attemptId,
+  locale,
   runtime,
 }: {
   readonly access: SignedContentAccess;
   readonly attemptId: Id<"tryoutAttempts">;
+  readonly locale: Locale;
   readonly runtime: TryoutSectionRuntime;
 }) {
   if (access.answers.length === 0 && runtime.questions.length > 0) {
@@ -31,6 +34,7 @@ export async function TryoutReview({
       <TryoutReviewLocked
         access={access}
         attemptId={attemptId}
+        locale={locale}
         runtime={runtime}
       />
     );

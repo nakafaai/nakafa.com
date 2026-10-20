@@ -1,7 +1,7 @@
 import { Nina } from "@repo/design-system/components/ui/nina";
+import type { Locale } from "@repo/internationalization/src/locale";
 import { readServerTranslator } from "@repo/internationalization/src/translator";
 import type { ReactNode } from "react";
-import { useLocale } from "use-intl";
 import {
   LESSON_SECTION_ID,
   LESSON_SUBJECTS,
@@ -27,15 +27,13 @@ import {
   FeatureText,
   FeatureTitle,
 } from "@/components/marketing/shared/feature";
-import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { decimalSeparators } from "@/lib/marketing/decimal";
 
 /**
  * The lessons row: a short talk with Nina and the row's title on one side, and
  * the lesson window on the other, with one lesson of each subject on its tab.
  */
-export async function Lesson() {
-  const locale = getLocaleOrThrow(useLocale());
+export async function Lesson({ locale }: { readonly locale: Locale }) {
   const [t, tCommon, tSubject] = await Promise.all([
     readServerTranslator({ locale, namespace: "Landing" }),
     readServerTranslator({ locale, namespace: "Common" }),
