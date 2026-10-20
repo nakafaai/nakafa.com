@@ -22,7 +22,7 @@ function cohortsOf(
   );
 }
 
-describe("components/tenant/settings/cohorts.client", () => {
+describe("components/tenant/settings/groups", () => {
   it("lists a new cohort in the cohorts of its own period, as active, by grade and then by name", () => {
     const local = createLocalStore();
     const term = period("ganjil", "2026-07-13", "active").id;

@@ -28,7 +28,7 @@ function periodsOf(
   );
 }
 
-describe("components/tenant/settings/periods.client", () => {
+describe("components/tenant/settings/terms", () => {
   it("lists a new period in the periods of its own unit, as planned, newest start first", () => {
     const local = createLocalStore();
     local.seed(

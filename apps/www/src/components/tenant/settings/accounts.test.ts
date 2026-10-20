@@ -34,7 +34,7 @@ function member(id: string, name: string): Member {
   };
 }
 
-describe("components/tenant/settings/members.client", () => {
+describe("components/tenant/settings/accounts", () => {
   it("shows an added member as invited, with its invite, at the top of the first loaded pages", () => {
     const local = createLocalStore();
     local.seed(

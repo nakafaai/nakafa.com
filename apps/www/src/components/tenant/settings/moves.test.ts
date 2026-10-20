@@ -62,7 +62,7 @@ function homeroomOf(
   );
 }
 
-describe("components/tenant/settings/cohort.client", () => {
+describe("components/tenant/settings/moves", () => {
   it("lists a placed student first on the first page of their cohort, under the name the people list holds", () => {
     const local = createLocalStore();
     const seventhA = cohortOf("cohort-7a");

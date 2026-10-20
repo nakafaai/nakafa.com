@@ -38,7 +38,7 @@ import {
   viewer,
 } from "@/test/settings";
 
-describe("components/tenant/settings/mutation.client", () => {
+describe("components/tenant/settings/mutation", () => {
   describe("the viewer and the units of the school", () => {
     it("shows the policy the school chose at once", () => {
       const local = createLocalStore();
