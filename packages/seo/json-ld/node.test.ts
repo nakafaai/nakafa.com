@@ -1,13 +1,13 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
   makeBookNode,
+  makeBreadcrumbNodes,
   makeCollectionPageNode,
-  readBreadcrumbNodes,
-} from "@/lib/seo/json-ld";
+} from "@repo/seo/json-ld/node";
 
-describe("readBreadcrumbNodes", () => {
+describe("makeBreadcrumbNodes", () => {
   it("returns no node for an empty hierarchy", () => {
-    expect(readBreadcrumbNodes([])).toEqual([]);
+    expect(makeBreadcrumbNodes([])).toEqual([]);
   });
 
   it("returns one BreadcrumbList node that carries every item", () => {
@@ -19,7 +19,8 @@ describe("readBreadcrumbNodes", () => {
         position: 1,
       },
     ];
-    expect(readBreadcrumbNodes(items)).toEqual([
+
+    expect(makeBreadcrumbNodes(items)).toEqual([
       {
         "@context": "https://schema.org",
         "@type": "BreadcrumbList",
@@ -30,15 +31,21 @@ describe("readBreadcrumbNodes", () => {
 });
 
 describe("makeCollectionPageNode", () => {
+  const input = {
+    description: "Articles",
+    items: [
+      {
+        name: "Algebra",
+        url: "https://nakafa.com/en/articles/math/algebra",
+      },
+    ],
+    name: "Mathematics",
+    url: "https://nakafa.com/en/articles/math",
+  };
+
   it("lists every item as a WebPage part", () => {
-    const node = makeCollectionPageNode({
-      description: "Articles",
-      items: [
-        { name: "Algebra", url: "https://nakafa.com/en/articles/math/algebra" },
-      ],
-      name: "Mathematics",
-      url: "https://nakafa.com/en/articles/math",
-    });
+    const node = makeCollectionPageNode(input);
+
     expect(node["@type"]).toBe("CollectionPage");
     expect(node.hasPart).toEqual([
       {
@@ -47,6 +54,13 @@ describe("makeCollectionPageNode", () => {
         url: "https://nakafa.com/en/articles/math/algebra",
       },
     ]);
+    expect(node).not.toHaveProperty("datePublished");
+  });
+
+  it("names the date that the collection was published, when it has one", () => {
+    expect(
+      makeCollectionPageNode({ ...input, datePublished: "2026-10-01" })
+    ).toMatchObject({ datePublished: "2026-10-01" });
   });
 });
 

@@ -1,6 +1,7 @@
 import { LocalizedPath } from "@repo/internationalization/src/alternates";
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
 import { toCanonicalPath } from "@repo/internationalization/src/rewrite";
+import { makeBreadcrumbNodes } from "@repo/seo/json-ld/node";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { Array as Arr, Effect, Option, Schema } from "effect";
@@ -50,7 +51,6 @@ import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { generateSEOMetadata } from "@/lib/seo/generator";
 import { createSeoHead, toRouterHead } from "@/lib/seo/head";
-import { readBreadcrumbNodes } from "@/lib/seo/json-ld";
 
 const CurriculumInput = Schema.Struct({
   curriculum: Schema.String,
@@ -181,7 +181,7 @@ export const Route = createFileRoute("/$locale/_main/curricula/$curriculum/$")({
         description,
         image,
         indexable: true,
-        jsonLd: readBreadcrumbNodes(breadcrumbs),
+        jsonLd: makeBreadcrumbNodes(breadcrumbs),
         locale,
         parts: [title],
         type: "website",

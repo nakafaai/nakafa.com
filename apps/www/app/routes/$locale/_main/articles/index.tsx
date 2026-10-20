@@ -1,5 +1,6 @@
 import { BookOpen02Icon } from "@hugeicons/core-free-icons";
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
+import { makeBreadcrumbNodes } from "@repo/seo/json-ld/node";
 import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { Array as Arr, Option, Schema } from "effect";
@@ -28,7 +29,6 @@ import { getAksaraTreeUrl } from "@/lib/content/repository";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { createSeoHead, toRouterHead } from "@/lib/seo/head";
-import { readBreadcrumbNodes } from "@/lib/seo/json-ld";
 import { getOgUrl } from "@/lib/seo/social";
 
 const ArticleIndexSearch = Schema.Struct({
@@ -123,7 +123,7 @@ export const Route = createFileRoute("/$locale/_main/articles/")({
         description: loaderData.description,
         image: getOgUrl(loaderData.locale, "/articles"),
         indexable: true,
-        jsonLd: readBreadcrumbNodes(loaderData.breadcrumbs),
+        jsonLd: makeBreadcrumbNodes(loaderData.breadcrumbs),
         locale: loaderData.locale,
         parts: [loaderData.title],
         type: "website",

@@ -2,6 +2,7 @@ import { parseQuranSurahNumber } from "@repo/backend/client/quran/route";
 import { selectQuranMeaning } from "@repo/backend/content/quran/contract";
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
+import { makeBookNode, makeBreadcrumbNodes } from "@repo/seo/json-ld/node";
 import { toAnchorSlug } from "@repo/utilities/slug";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
@@ -52,7 +53,6 @@ import { getAppSocialArtwork } from "@/lib/og/app";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { generateSEOMetadata } from "@/lib/seo/generator";
 import { createSeoHead, toRouterHead } from "@/lib/seo/head";
-import { makeBookNode, readBreadcrumbNodes } from "@/lib/seo/json-ld";
 import { runServerEffect } from "@/lib/server/fn";
 
 const SurahInput = Schema.Struct({
@@ -193,7 +193,7 @@ export const Route = createFileRoute("/$locale/_main/quran/$surah")({
         }),
         indexable: true,
         jsonLd: [
-          ...readBreadcrumbNodes(breadcrumbs),
+          ...makeBreadcrumbNodes(breadcrumbs),
           makeBookNode({
             author: { "@type": "Person", name: "Allah" },
             description: book.description,

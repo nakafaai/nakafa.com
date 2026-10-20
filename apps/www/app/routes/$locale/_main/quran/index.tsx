@@ -1,6 +1,7 @@
 import { AllahIcon } from "@hugeicons/core-free-icons";
 import { Card } from "@repo/design-system/components/ui/card";
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
+import { makeBreadcrumbNodes } from "@repo/seo/json-ld/node";
 import { createFileRoute } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { Array as Arr, Schema } from "effect";
@@ -20,7 +21,6 @@ import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getAppSocialArtwork } from "@/lib/og/app";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { createSeoHead, toRouterHead } from "@/lib/seo/head";
-import { readBreadcrumbNodes } from "@/lib/seo/json-ld";
 
 /** The surah list of the Quran index, with the words of its page and head. */
 const readQuranIndex = createServerFn({ method: "GET" })
@@ -69,7 +69,7 @@ export const Route = createFileRoute("/$locale/_main/quran/")({
         description,
         image,
         indexable: true,
-        jsonLd: readBreadcrumbNodes(breadcrumbs),
+        jsonLd: makeBreadcrumbNodes(breadcrumbs),
         locale,
         parts: [title],
         type: "book",

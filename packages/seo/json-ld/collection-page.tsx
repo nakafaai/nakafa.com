@@ -1,7 +1,6 @@
 import { JsonLd } from "@repo/seo/json-ld";
-import { ORGANIZATION } from "@repo/seo/json-ld/constants";
-import { Array as Arr } from "effect";
-import type { CollectionPage, CreativeWork, WithContext } from "schema-dts";
+import { makeCollectionPageNode } from "@repo/seo/json-ld/node";
+import type { CreativeWork } from "schema-dts";
 
 interface Props {
   datePublished?: string;
@@ -11,27 +10,6 @@ interface Props {
   url: string;
 }
 
-export function CollectionPageJsonLd({
-  name,
-  description,
-  url,
-  items,
-  datePublished,
-}: Props) {
-  const collectionPageJsonLd: WithContext<CollectionPage> = {
-    "@context": "https://schema.org",
-    "@type": "CollectionPage",
-    name,
-    description,
-    url,
-    publisher: ORGANIZATION,
-    maintainer: ORGANIZATION,
-    hasPart: Arr.map(items, (item) => ({
-      "@type": "WebPage",
-      ...item,
-    })),
-    ...(datePublished && { datePublished }),
-  };
-
-  return <JsonLd jsonLd={collectionPageJsonLd} />;
+export function CollectionPageJsonLd(props: Props) {
+  return <JsonLd jsonLd={makeCollectionPageNode(props)} />;
 }

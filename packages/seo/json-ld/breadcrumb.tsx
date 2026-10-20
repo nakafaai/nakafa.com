@@ -1,21 +1,17 @@
 import { JsonLd } from "@repo/seo/json-ld";
-import type { BreadcrumbList, ListItem, WithContext } from "schema-dts";
+import { makeBreadcrumbNodes } from "@repo/seo/json-ld/node";
+import type { ListItem } from "schema-dts";
 
 interface Props {
   breadcrumbItems: ListItem[];
 }
 
 export function BreadcrumbJsonLd({ breadcrumbItems }: Props) {
+  const nodes = makeBreadcrumbNodes(breadcrumbItems);
   // Don't render if no breadcrumb items - empty itemListElement is invalid JSON-LD
-  if (breadcrumbItems.length === 0) {
+  if (nodes.length === 0) {
     return null;
   }
 
-  const breadcrumbJsonLd: WithContext<BreadcrumbList> = {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    itemListElement: breadcrumbItems,
-  };
-
-  return <JsonLd jsonLd={breadcrumbJsonLd} />;
+  return <JsonLd jsonLd={nodes} />;
 }

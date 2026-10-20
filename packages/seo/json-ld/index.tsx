@@ -4,8 +4,15 @@ import { Schema } from "effect";
 import type { Thing, WithContext } from "schema-dts";
 
 interface JsonLdProps {
-  /** One node, or the independent nodes of one page as a JSON array. */
-  jsonLd: WithContext<Thing> | readonly WithContext<Thing>[];
+  /**
+   * One node, or the independent nodes of one page as a JSON array. A node built
+   * by a plain builder, such as `@repo/seo/json-ld/node`, is plain data.
+   */
+  jsonLd:
+    | WithContext<Thing>
+    | readonly WithContext<Thing>[]
+    | Readonly<Record<string, unknown>>
+    | readonly Readonly<Record<string, unknown>>[];
 }
 
 const encodeJsonLdText = Schema.encodeUnknownSync(JsonTextSchema);

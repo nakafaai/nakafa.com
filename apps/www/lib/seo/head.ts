@@ -17,12 +17,20 @@ import { createSEOTitle } from "@/lib/seo/titles";
 /** The social card format that every page uses, with its large image. */
 const TWITTER_CARD = "summary_large_image";
 
+/**
+ * One alternate link of a head: a locale's address with its `hreflang`, or a
+ * representation of the page with its `type`, such as its Markdown version.
+ */
+const HeadAlternate = Schema.Struct({
+  hreflang: Schema.optionalKey(Schema.String),
+  href: Schema.String,
+  type: Schema.optionalKey(Schema.String),
+});
+
 /** The head of one page, as the builders decide it on the server. */
 const SeoHead = Schema.Struct({
-  alternates: Schema.Array(
-    Schema.Struct({ hreflang: Schema.String, href: Schema.String })
-  ),
-  canonical: Schema.String,
+  alternates: Schema.Array(HeadAlternate),
+  canonical: Schema.optionalKey(Schema.String),
   description: Schema.String,
   jsonLd: Schema.Array(Schema.Record(Schema.String, Schema.Unknown)),
   robots: Schema.Literals(["index,follow", "noindex,nofollow"]),
@@ -35,6 +43,7 @@ type SeoHead = typeof SeoHead.Type;
 /** The facts of one page that decide its head. */
 const PageFacts = Schema.Struct({
   absoluteTitle: Schema.optionalKey(Schema.String),
+  alternates: Schema.optionalKey(Schema.Array(HeadAlternate)),
   canonicalPath: LocalizedPath,
   description: Schema.String,
   image: Schema.String,
@@ -66,10 +75,12 @@ export function createSeoHead(facts: PageFacts): SeoHead {
     width: String(SOCIAL_IMAGE_SIZE.width),
   };
   return SeoHead.make({
-    alternates: Arr.map(readAlternates(facts.canonicalPath), (alternate) => ({
-      hreflang: alternate.hreflang,
-      href: alternate.href,
-    })),
+    alternates:
+      facts.alternates ??
+      Arr.map(readAlternates(facts.canonicalPath), (alternate) => ({
+        hreflang: alternate.hreflang,
+        href: alternate.href,
+      })),
     canonical,
     description: facts.description,
     jsonLd: [...facts.jsonLd],
@@ -98,20 +109,47 @@ export function createSeoHead(facts: PageFacts): SeoHead {
 }
 
 /**
+ * The head of a page that no search engine may index, such as a signed-in
+ * screen: its title and description, a noindex rule, and no canonical link,
+ * alternates or social entries, because the page has no public address.
+ */
+export function createPrivateSeoHead(
+  facts: Pick<PageFacts, "absoluteTitle" | "description" | "parts">
+): SeoHead {
+  return SeoHead.make({
+    alternates: [],
+    description: facts.description,
+    jsonLd: [],
+    robots: "noindex,nofollow",
+    social: {},
+    title: facts.absoluteTitle ?? createSEOTitle(facts.parts, SOCIAL_SITE_NAME),
+  });
+}
+
+/** One alternate link of the router, with only the attributes that the head names. */
+function toAlternateLink({ hreflang, href, type }: typeof HeadAlternate.Type) {
+  return {
+    href,
+    rel: "alternate",
+    ...(hreflang === undefined ? {} : { hreflang }),
+    ...(type === undefined ? {} : { type }),
+  };
+}
+
+/**
  * Maps a head to the head entries of the router. The mapping keeps the order of
  * the page: the canonical link, the alternates, the title and description, the
- * robots rule, the social entries, and the JSON-LD scripts. Twitter entries are
- * named, and Open Graph entries carry a property.
+ * robots rule, the social entries, and the JSON-LD scripts. A page without a
+ * canonical address names none. Twitter entries are named, and Open Graph
+ * entries carry a property.
  */
 export function toRouterHead(head: SeoHead) {
   return {
     links: [
-      { href: head.canonical, rel: "canonical" },
-      ...Arr.map(head.alternates, ({ hreflang, href }) => ({
-        href,
-        hreflang,
-        rel: "alternate",
-      })),
+      ...(head.canonical === undefined
+        ? []
+        : [{ href: head.canonical, rel: "canonical" }]),
+      ...Arr.map(head.alternates, toAlternateLink),
     ],
     meta: [
       { title: head.title },

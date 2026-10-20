@@ -1,6 +1,10 @@
 import { ArticleRouteSlugSchema } from "@nakafa/aksara-contracts/projection/article";
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
+import {
+  makeBreadcrumbNodes,
+  makeCollectionPageNode,
+} from "@repo/seo/json-ld/node";
 import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { Array as Arr, Option, Schema } from "effect";
@@ -34,7 +38,6 @@ import { getAksaraTreeUrl } from "@/lib/content/repository";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { createSeoHead, toRouterHead } from "@/lib/seo/head";
-import { makeCollectionPageNode, readBreadcrumbNodes } from "@/lib/seo/json-ld";
 import { getOgUrl } from "@/lib/seo/social";
 
 const CategorySearch = Schema.Struct({
@@ -169,7 +172,7 @@ export const Route = createFileRoute("/$locale/_main/articles/$category/")({
         image: getOgUrl(locale, categoryPath),
         indexable: true,
         jsonLd: [
-          ...readBreadcrumbNodes(breadcrumbs),
+          ...makeBreadcrumbNodes(breadcrumbs),
           makeCollectionPageNode({
             description,
             items: Arr.map(articles, (article) => ({

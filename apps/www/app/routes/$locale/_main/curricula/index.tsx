@@ -1,5 +1,9 @@
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
+import {
+  makeBreadcrumbNodes,
+  makeCollectionPageNode,
+} from "@repo/seo/json-ld/node";
 import { createFileRoute } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { Array as Arr, Schema } from "effect";
@@ -28,7 +32,6 @@ import { getCurriculumIndexHref } from "@/lib/curriculum/routes";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { createSeoHead, toRouterHead } from "@/lib/seo/head";
-import { makeCollectionPageNode, readBreadcrumbNodes } from "@/lib/seo/json-ld";
 
 /**
  * Reads the curriculum chooser of one locale on the server: its cards with their
@@ -111,7 +114,7 @@ export const Route = createFileRoute("/$locale/_main/curricula/")({
         image,
         indexable: true,
         jsonLd: [
-          ...readBreadcrumbNodes(breadcrumbs),
+          ...makeBreadcrumbNodes(breadcrumbs),
           makeCollectionPageNode({
             description,
             items: Arr.map(cards, ({ route }) => ({
