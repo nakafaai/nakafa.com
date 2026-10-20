@@ -4,42 +4,59 @@ import { Button } from "@repo/design-system/components/ui/button";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { Link } from "@repo/internationalization/src/navigation";
 import { useLocale, useTranslations } from "use-intl";
-import { useViewer } from "@/lib/identity/client";
 
 /**
  * The name of the header, written as text: the identity's Header card keeps the
- * letter logo out of the header. It routes a signed-in learner home and clears
- * stale marketing fragments for a signed-out visitor.
+ * letter logo out of the header. A visitor's name opens the locale's home, and a
+ * learner's opens their home. Both are rendered, and the signed-in hint of the
+ * root picks the one that shows, so the first paint needs no account state.
  */
 export function LogoCta() {
-  const currentUser = useViewer((state) => state.account);
   const locale = useLocale();
 
-  if (!currentUser) {
-    return (
-      <a className="font-medium" href={`/${locale}`}>
-        Nakafa
-      </a>
-    );
-  }
-
   return (
-    <Link className="font-medium" href="/home">
-      Nakafa
-    </Link>
+    <>
+      <span className="contents" data-account="visitor">
+        <a className="font-medium" href={`/${locale}`}>
+          Nakafa
+        </a>
+      </span>
+      <span className="contents" data-account="member">
+        <Link className="font-medium" href="/home">
+          Nakafa
+        </Link>
+      </span>
+    </>
   );
 }
 
+/**
+ * The header's call to action: a visitor signs up, and a learner opens home. The
+ * signed-in hint of the root picks the one that shows, as `LogoCta` does.
+ */
 export function HeaderCta() {
   const t = useTranslations("Marketing");
-  const currentUser = useViewer((state) => state.account);
-  const href = currentUser ? "/home" : "/auth";
 
   return (
-    <Button
-      nativeButton={false}
-      render={<NavigationLink href={href}>{t("try-nakafa")}</NavigationLink>}
-      variant="secondary"
-    />
+    <>
+      <span className="contents" data-account="visitor">
+        <Button
+          nativeButton={false}
+          render={
+            <NavigationLink href="/auth">{t("try-nakafa")}</NavigationLink>
+          }
+          variant="secondary"
+        />
+      </span>
+      <span className="contents" data-account="member">
+        <Button
+          nativeButton={false}
+          render={
+            <NavigationLink href="/home">{t("try-nakafa")}</NavigationLink>
+          }
+          variant="secondary"
+        />
+      </span>
+    </>
   );
 }

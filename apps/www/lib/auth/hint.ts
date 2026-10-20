@@ -1,4 +1,4 @@
-import { Array as Arr, Schema } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 import type { ClientSession } from "@/lib/auth/visitor";
 
 /**
@@ -19,12 +19,12 @@ const HINT_MAX_AGE = 60 * 60 * 24 * 7;
  * Where the hint cookie lives: the domain of the session cookie, so every school
  * host under it reads the hint, and whether the site is served over https.
  */
-const HintScope = Schema.Struct({
+export const HintScope = Schema.Struct({
   domain: Schema.String,
   secure: Schema.Boolean,
 });
 
-type HintScope = typeof HintScope.Type;
+export type HintScope = typeof HintScope.Type;
 
 /** The attributes that every hint cookie shares. */
 function hintAttributes(scope: HintScope) {
@@ -46,6 +46,35 @@ export function hintCookieFor(session: ClientSession, scope: HintScope) {
   return session._tag === "SignedIn"
     ? signedInHintCookie(scope)
     : expiredHintCookie(scope);
+}
+
+/** The scope of the hint cookie that the site's own URL names: its host, and https when the site has it. */
+export function hintScopeFor(site: URL): HintScope {
+  return HintScope.make({
+    domain: site.hostname,
+    secure: site.protocol === "https:",
+  });
+}
+
+/** The exact pair that says the visitor is signed in, as the inline script reads it. */
+const SIGNED_IN_HINT_PAIR = `${SIGNED_IN_HINT_COOKIE}=1`;
+
+/**
+ * Whether the request's hint cookie already says what its session says, so the
+ * response sets no hint cookie. A visitor with no hint and no session is current,
+ * and so is a learner whose hint is set; any other pair is out of date.
+ */
+export function isHintCurrent(
+  session: ClientSession,
+  headers: Headers
+): boolean {
+  const signedIn = Option.fromNullishOr(headers.get("cookie")).pipe(
+    Option.map((cookie) =>
+      Arr.some(cookie.split(";"), (pair) => pair.trim() === SIGNED_IN_HINT_PAIR)
+    ),
+    Option.getOrElse(() => false)
+  );
+  return signedIn === (session._tag === "SignedIn");
 }
 
 /** The inline script that sets the sign-in attribute of the root element before the first paint. */
