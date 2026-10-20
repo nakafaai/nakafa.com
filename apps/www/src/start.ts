@@ -20,8 +20,10 @@ import { pricingCurrencyCookieFor } from "@/lib/pricing/currency";
  */
 const requestSession = createMiddleware({ type: "request" }).server(
   async ({ next, request }) => {
-    const { readSessionMemo } = await import("@/lib/auth/session.server");
-    const { runServerEffect } = await import("@/lib/server/fn");
+    const [{ readSessionMemo }, { runServerEffect }] = await Promise.all([
+      import("@/lib/auth/session.server"),
+      import("@/lib/server/fn"),
+    ]);
     const session = await runServerEffect(
       Effect.flatten(readSessionMemo(request)).pipe(Effect.option)
     );

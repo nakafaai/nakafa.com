@@ -9,7 +9,6 @@ import { stepperVariants } from "@repo/design-system/components/contents/mathema
 import {
   formatTrigRatioMath,
   QUADRANT_NUMERALS,
-  TRIG_NUMBER_OPTIONS,
   UNIT_CIRCLE_DEFAULT_ANGLE,
 } from "@repo/design-system/components/contents/mathematics/trig";
 import type { DecimalSeparator } from "@repo/design-system/components/contents/physics/kinematics/number";
@@ -121,22 +120,20 @@ export function CirclePlaceholder({
   formatNumber,
   labels,
 }: {
-  formatNumber: (value: number, options: Intl.NumberFormatOptions) => string;
+  formatNumber: (value: number) => string;
   labels: { onAxis: string; quadrant: string; radian: string };
 }) {
-  const formatApproximation = (value: number) =>
-    formatNumber(value, TRIG_NUMBER_OPTIONS);
   const sin = formatTrigRatioMath(
     getSin(UNIT_CIRCLE_DEFAULT_ANGLE),
-    formatApproximation
+    formatNumber
   );
   const cos = formatTrigRatioMath(
     getCos(UNIT_CIRCLE_DEFAULT_ANGLE),
-    formatApproximation
+    formatNumber
   );
   const tan = formatTrigRatioMath(
     getTan(UNIT_CIRCLE_DEFAULT_ANGLE),
-    formatApproximation
+    formatNumber
   );
 
   return (
@@ -162,10 +159,7 @@ export function CirclePlaceholder({
             />
             <VisualFact
               label={labels.radian}
-              value={formatNumber(
-                getRadians(UNIT_CIRCLE_DEFAULT_ANGLE),
-                TRIG_NUMBER_OPTIONS
-              )}
+              value={formatNumber(getRadians(UNIT_CIRCLE_DEFAULT_ANGLE))}
             />
             <VisualFact
               label={<InlineMath math="\sin\theta" />}
