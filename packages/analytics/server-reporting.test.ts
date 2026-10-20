@@ -3,14 +3,19 @@ import {
   isServerExceptionReportingEnabled,
   reportUncaughtRequestError,
 } from "@repo/analytics/server-reporting";
-import { Effect } from "effect";
+import { Data, Effect } from "effect";
+
+/** The provider failure that a capture may meet, so the test names its error type. */
+class ProviderUnavailable extends Data.TaggedError("ProviderUnavailable")<{
+  readonly reason: string;
+}> {}
 
 const captureServerException = vi.fn(
   (
     _error: unknown,
     _properties: unknown,
     _userAgent?: string
-  ): Effect.Effect<void, Error> => Effect.void
+  ): Effect.Effect<void, ProviderUnavailable> => Effect.void
 );
 
 afterEach(() => {
@@ -120,7 +125,7 @@ describe("uncaught request error reporting", () => {
         vi.stubEnv("TSS_PRERENDERING", undefined);
         mockProvider();
         captureServerException.mockReturnValueOnce(
-          Effect.fail(new Error("provider unavailable"))
+          Effect.fail(new ProviderUnavailable({ reason: "down" }))
         );
 
         const answered = yield* reportUncaughtRequestError(
