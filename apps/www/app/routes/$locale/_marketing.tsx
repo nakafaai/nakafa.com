@@ -2,7 +2,7 @@ import { createFileRoute, getRouteApi, Outlet } from "@tanstack/react-router";
 import { IntlProvider } from "use-intl";
 import { Footer } from "@/components/marketing/shared/footer";
 import { Header } from "@/components/marketing/shared/header";
-import { AppProviders } from "@/components/providers/app";
+import { MarketingProviders } from "@/components/providers/marketing";
 import { SharedProviders } from "@/components/providers/shared";
 import { readRouteMessages } from "@/lib/i18n/messages.fn";
 import { readMarketingShellFn } from "@/lib/marketing/shell.fn";
@@ -59,7 +59,7 @@ function MarketingLayout() {
   const shellMessages = localeRoute.useLoaderData();
   return (
     <IntlProvider locale={locale} messages={{ ...shellMessages, ...messages }}>
-      <AppProviders pageNavigation={pageNavigation}>
+      <MarketingProviders pageNavigation={pageNavigation}>
         <SharedProviders>
           <main
             className="flex min-h-screen w-full flex-1 flex-col"
@@ -73,7 +73,7 @@ function MarketingLayout() {
             />
           </main>
         </SharedProviders>
-      </AppProviders>
+      </MarketingProviders>
     </IntlProvider>
   );
 }

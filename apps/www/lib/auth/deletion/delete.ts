@@ -13,7 +13,7 @@ import {
 } from "@repo/backend/confect/auth/deletion/spec";
 import type { Schema } from "effect";
 import { Effect, Result } from "effect";
-import { authClient } from "@/lib/auth/client";
+import { readAuthClient } from "@/lib/auth/client";
 import {
   AccountDeletionFailed,
   AccountDeletionRequestUncertain,
@@ -32,7 +32,9 @@ import {
 
 const betterAuthSessionExpiredCode = "SESSION_EXPIRED";
 const betterAuthUserDeletedMessage = "User deleted";
-type DeleteUserResult = Awaited<ReturnType<typeof authClient.deleteUser>>;
+type DeleteUserResult = Awaited<
+  ReturnType<ReturnType<typeof readAuthClient>["deleteUser"]>
+>;
 type AccountDeletionAttemptId = AccountDeletionBrowserAttempt["attemptId"];
 type DeleteUserRequest = (
   attemptId: AccountDeletionAttemptId
@@ -55,7 +57,7 @@ export const deleteCurrentAccount = Effect.fn("www.auth.deleteCurrentAccount")(
     prepare,
     reconcile,
     request = async (requestAttemptId) =>
-      await authClient.deleteUser({
+      await readAuthClient().deleteUser({
         fetchOptions: {
           headers: {
             [ACCOUNT_DELETION_ATTEMPT_HEADER]: requestAttemptId,

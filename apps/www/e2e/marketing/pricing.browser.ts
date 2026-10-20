@@ -168,13 +168,18 @@ const verifyPricingNavigation = Effect.fn("NakafaE2E.verifyPricingNavigation")(
   }
 );
 
-/** Opens a pricing page the way the edge reports a visitor from one country. */
+/**
+ * Opens a pricing page the way the edge reports a visitor from one country. The
+ * first response sets the currency cookie, and the page shows that currency on
+ * the next load, so the page is loaded again once the cookie is set.
+ */
 const loadPricingPageFrom = Effect.fn("NakafaE2E.loadPricingPageFrom")(
   function* (page: Page, href: string, country: string) {
     yield* Effect.promise(() =>
       page.setExtraHTTPHeaders({ "x-vercel-ip-country": country })
     );
     yield* loadMarketingPage(page, href);
+    yield* Effect.promise(() => page.reload({ waitUntil: "domcontentloaded" }));
   }
 );
 

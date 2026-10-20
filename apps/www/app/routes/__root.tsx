@@ -19,12 +19,14 @@ import { cn } from "cn";
 import { Option } from "effect";
 import { NuqsAdapter } from "nuqs/adapters/tanstack-router";
 import type { ReactNode } from "react";
+import { DeferredPreviewRefresh } from "@/components/dev/deferred";
 import { Announcer } from "@/components/navigation/announcer";
 import {
   LocalizedError,
   LocalizedNotFound,
 } from "@/components/state/localized";
 import { signedInHintScript } from "@/lib/auth/hint";
+import { readPreviewRefreshFn } from "@/lib/content/preview/refresh.fn";
 import { pricingCurrencyScript } from "@/lib/pricing/currency";
 import { readNotFoundPageLocale } from "@/lib/routing/not-found";
 import { SOCIAL_SITE_NAME } from "@/lib/seo/social";
@@ -32,6 +34,13 @@ import { THEME_PREPAINT_SCRIPT } from "@/lib/theme/prepaint";
 import appCss from "@/styles/globals.css?url";
 
 export const Route = createRootRoute({
+  /**
+   * The local preview revision is read once per document: with an infinite stale
+   * time, a client navigation keeps the loader data of the first document, so the
+   * listener stays mounted and no navigation calls the server.
+   */
+  staleTime: Number.POSITIVE_INFINITY,
+  loader: () => readPreviewRefreshFn(),
   head: () => ({
     meta: [
       { title: SOCIAL_SITE_NAME },
@@ -73,6 +82,10 @@ function RootDocument({ children }: { children: ReactNode }) {
     strict: false,
   });
   const notFoundMatch = useMatch({ from: "/_not-found", shouldThrow: false });
+  const preview = useMatch({
+    from: "__root__",
+    shouldThrow: false,
+  })?.loaderData;
   const locale = Option.getOrElse(
     Option.orElse(decodeLocale(params.locale), () =>
       readNotFoundPageLocale(notFoundMatch?.error)
@@ -98,6 +111,12 @@ function RootDocument({ children }: { children: ReactNode }) {
         <HeadContent />
       </head>
       <body className={cn("relative touch-manipulation font-sans antialiased")}>
+        {preview === undefined ? null : (
+          <DeferredPreviewRefresh
+            revision={preview.revision}
+            status={preview.status}
+          />
+        )}
         <ThemeProvider>
           <Announcer />
           <NuqsAdapter>{children}</NuqsAdapter>

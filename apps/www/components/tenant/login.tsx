@@ -23,7 +23,7 @@ import {
   submitLogin,
 } from "@/components/tenant/login.client";
 import { clientEnv } from "@/env.client";
-import { authClient } from "@/lib/auth/client";
+import { readAuthClient } from "@/lib/auth/client";
 
 /**
  * The school login form: the school username and a password, with an optional card code for
@@ -71,7 +71,7 @@ function TenantLoginForm({ slug }: { slug: TenantSlug }) {
               }),
             signIn: (credentials) =>
               Effect.tryPromise({
-                try: () => authClient.signIn.username(credentials),
+                try: () => readAuthClient().signIn.username(credentials),
                 catch: () => new SignInUnanswered(),
               }).pipe(
                 Effect.flatMap((answer) => signInAnswerOf(answer.error?.status))

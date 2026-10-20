@@ -1,35 +1,18 @@
+import {
+  monthlyPrices,
+  proProductIds,
+} from "@repo/backend/confect/customers/polar/catalog";
 import { isPolarProduction } from "@repo/backend/confect/customers/polar/environment";
 
 /**
- * Public-safe Polar product configuration.
- * This file must stay free of secret environment access so client code can
- * safely import product IDs and slugs.
+ * The Polar products of the server that runs this code. Convex and server code
+ * read it. Browser code reads `catalog` with the public server key instead, so
+ * this module never reaches the browser bundle.
  */
 export const products = {
   pro: {
-    id: isPolarProduction
-      ? "db602388-ef0c-4a88-92fa-c785f3230c45"
-      : "5435bfd4-ca2a-4f97-ae7b-27d65907e49b",
-    monthlyPrices: {
-      EUR: {
-        amount: 8.99,
-        currency: "EUR",
-        fractionDigits: 2,
-        locale: "de-DE",
-      },
-      IDR: {
-        amount: 69_000,
-        currency: "IDR",
-        fractionDigits: 0,
-        locale: "id-ID",
-      },
-      USD: {
-        amount: 8.99,
-        currency: "USD",
-        fractionDigits: 2,
-        locale: "en-US",
-      },
-    },
+    id: isPolarProduction ? proProductIds.production : proProductIds.sandbox,
+    monthlyPrices,
     slug: "pro",
   },
 };

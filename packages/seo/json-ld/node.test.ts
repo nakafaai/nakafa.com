@@ -1,10 +1,37 @@
 import { describe, expect, it } from "@effect/vitest";
+import { COMPANY_IDENTITY } from "@repo/seo/company";
+import { FOUNDER, ORGANIZATION_ID } from "@repo/seo/json-ld/constants";
 import {
   makeBookNode,
   makeBreadcrumbNodes,
   makeCollectionPageNode,
+  makeEducationalOrganizationNode,
   makeFaqPageNode,
+  makeWebsiteNode,
 } from "@repo/seo/json-ld/node";
+
+describe("makeEducationalOrganizationNode", () => {
+  it("describes the site as an educational organization that names its founder", () => {
+    const node = makeEducationalOrganizationNode({
+      alternateName: "Nakafa",
+      description: "Free learning for every student",
+    });
+
+    expect(node).toMatchObject({
+      "@context": "https://schema.org",
+      "@id": ORGANIZATION_ID,
+      "@type": "EducationalOrganization",
+      alternateName: "Nakafa",
+      areaServed: COMPANY_IDENTITY.registeredAddress.country,
+      description: "Free learning for every student",
+      founder: FOUNDER,
+      image: COMPANY_IDENTITY.logoUrl,
+    });
+    expect(node).toMatchObject({
+      knowsAbout: expect.arrayContaining(["Mathematics"]),
+    });
+  });
+});
 
 describe("makeBreadcrumbNodes", () => {
   it("returns no node for an empty hierarchy", () => {
@@ -121,6 +148,36 @@ describe("makeFaqPageNode", () => {
         },
       ],
       url: "https://nakafa.com/en",
+    });
+  });
+});
+
+describe("makeWebsiteNode", () => {
+  it("describes the site with the search action of its search page, in the locale of the page", () => {
+    const node = makeWebsiteNode({
+      alternateName: "Nakafa: Free Lessons",
+      description: "Free learning for every student",
+      locale: "en",
+    });
+
+    expect(node).toMatchObject({
+      "@context": "https://schema.org",
+      "@id": new URL("#website", COMPANY_IDENTITY.url).href,
+      "@type": "WebSite",
+      alternateName: "Nakafa: Free Lessons",
+      description: "Free learning for every student",
+      inLanguage: "en",
+      maintainer: { "@id": ORGANIZATION_ID },
+      potentialAction: {
+        "@type": "SearchAction",
+        target: {
+          "@type": "EntryPoint",
+          urlTemplate: `${COMPANY_IDENTITY.url}/search?q={search_term_string}`,
+        },
+        "query-input": "required name=search_term_string",
+      },
+      publisher: { "@id": ORGANIZATION_ID },
+      url: COMPANY_IDENTITY.url,
     });
   });
 });

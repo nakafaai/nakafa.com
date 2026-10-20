@@ -2,15 +2,18 @@ import { Nina } from "@repo/design-system/components/ui/nina";
 import { Thing } from "@repo/design-system/components/ui/thing";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
-import { use } from "react";
 import { useTranslations } from "use-intl";
-import { PricingCountryContext } from "@/components/marketing/about/pricing/country";
+import { CurrencyBranch } from "@/components/marketing/about/pricing/currency";
 import {
   currencySymbol,
   drinkKey,
 } from "@/components/marketing/about/pricing/display";
 import { pricingSums } from "@/components/marketing/about/pricing/sums";
-import { getProMonthlyPricing } from "@/lib/pricing/monthly";
+import {
+  getProMonthlyPricingFor,
+  type PricingCurrency,
+  PricingCurrencySchema,
+} from "@/lib/pricing/monthly";
 
 /** One comparison: its picture, its sum, and the sentence that says what it means, centred in its column. */
 function Comparison({
@@ -53,23 +56,20 @@ function PriceCoin({ symbol }: { symbol: string }) {
 }
 
 /**
- * The comparisons under the price of the visitor's region. Each sum comes from
- * that price and from the credits of the plans, and each sentence has an
- * estimating word of its own.
+ * The comparisons under the price of one currency. Each sum comes from that price
+ * and from the credits of the plans, and each sentence has an estimating word of
+ * its own.
  */
-function ResolvedComparison() {
+function CurrencyComparison({ currency }: { currency: PricingCurrency }) {
   const t = useTranslations("PricingPage");
-  const { formatter, price } = getProMonthlyPricing(use(PricingCountryContext));
+  const { formatter, price } = getProMonthlyPricingFor(currency);
   const sums = pricingSums(price);
   const perDayNote =
     price.currency === "IDR" ? t("per-day-note-idr") : t("per-day-note-other");
 
   return (
     <>
-      <h2
-        className="text-balance text-center text-3xl tracking-tight sm:text-4xl"
-        id="comparison-heading"
-      >
+      <h2 className="text-balance text-center text-3xl tracking-tight sm:text-4xl">
         {t("comparison-title", { price: formatter.format(price.amount) })}
       </h2>
       <div className="mx-auto grid w-full max-w-5xl gap-10 md:grid-cols-3">
@@ -108,7 +108,7 @@ function ResolvedComparison() {
 
 /**
  * The comparison section of the pricing page. Its sums depend on the visitor's
- * region, which the pricing country context provides.
+ * currency, and the page carries the comparison of every currency.
  */
 export function PricingComparison() {
   return (
@@ -117,7 +117,11 @@ export function PricingComparison() {
       id="comparison"
     >
       <div className="mx-auto grid w-full max-w-7xl gap-12">
-        <ResolvedComparison />
+        {Arr.map(PricingCurrencySchema.literals, (currency) => (
+          <CurrencyBranch currency={currency} key={currency}>
+            <CurrencyComparison currency={currency} />
+          </CurrencyBranch>
+        ))}
       </div>
     </section>
   );

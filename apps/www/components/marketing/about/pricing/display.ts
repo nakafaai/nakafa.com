@@ -1,5 +1,8 @@
 import { Array as Arr } from "effect";
-import { getProMonthlyPricing } from "@/lib/pricing/monthly";
+import {
+  getProMonthlyPricingFor,
+  type PricingCurrency,
+} from "@/lib/pricing/monthly";
 
 /** The key of the drink that a monthly price buys in its own currency. */
 export function drinkKey(
@@ -30,15 +33,15 @@ export function currencySymbol(formatter: Intl.NumberFormat) {
 }
 
 /**
- * Prepares animated and static price display from Vercel country geolocation.
+ * The free and pro prices of one currency, animated and static, with their
+ * formatting. The page renders every currency, so no request country selects one.
  *
  * References:
- * - https://examples.vercel.com/kb/guide/geo-ip-headers-geolocation-vercel-functions
  * - https://polar.sh/docs/features/products#multiple-payment-currencies
  * - https://number-flow.barvian.me/
  */
-export function getProPricingDisplay(countryCode: string | null) {
-  const { format, formatter, price } = getProMonthlyPricing(countryCode);
+export function getProPricingDisplay(currency: PricingCurrency) {
+  const { format, formatter, price } = getProMonthlyPricingFor(currency);
 
   return {
     free: {

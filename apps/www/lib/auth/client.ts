@@ -7,7 +7,18 @@ import {
 import { createAuthClient } from "better-auth/react";
 import { authFetch } from "@/lib/auth/request";
 
-export const authClient = createAuthClient({
-  fetchOptions: { customFetchImpl: authFetch },
-  plugins: [inferAdditionalFields<Auth>(), convexClient(), usernameClient()],
-});
+function createBrowserAuthClient() {
+  return createAuthClient({
+    fetchOptions: { customFetchImpl: authFetch },
+    plugins: [inferAdditionalFields<Auth>(), convexClient(), usernameClient()],
+  });
+}
+
+/** The page's Better Auth client, created on first use so a visitor's page creates none. */
+let shared: ReturnType<typeof createBrowserAuthClient> | undefined;
+
+/** Returns the page's Better Auth client. Importing this module creates no client. */
+export function readAuthClient() {
+  shared ??= createBrowserAuthClient();
+  return shared;
+}

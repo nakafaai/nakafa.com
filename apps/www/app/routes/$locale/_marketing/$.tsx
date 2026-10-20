@@ -1,4 +1,10 @@
+import { monospace } from "@repo/design-system/lib/monospace";
 import { createFileRoute, notFound } from "@tanstack/react-router";
+import { cn } from "cn";
+import {
+  publicContentHeaders,
+  readContentCacheTags,
+} from "@/lib/content/delivery";
 import { readLegalPageFn } from "@/lib/content/page/read.fn";
 import { createSeoHead, toHeadAlternates, toRouterHead } from "@/lib/seo/head";
 
@@ -17,7 +23,7 @@ export const Route = createFileRoute("/$locale/_marketing/$")({
     if (facts._tag === "Missing") {
       throw notFound();
     }
-    return facts;
+    return { ...facts, cacheTags: readContentCacheTags(["page"]) };
   },
   head: ({ loaderData, params }) => {
     if (loaderData === undefined) {
@@ -38,11 +44,19 @@ export const Route = createFileRoute("/$locale/_marketing/$")({
       })
     );
   },
+  headers: ({ loaderData }) =>
+    loaderData === undefined
+      ? undefined
+      : publicContentHeaders(loaderData.cacheTags),
   component: LegalPage,
 });
 
 /** The legal page: the reviewed body, which the server renders as a server component tree. */
 function LegalPage() {
   const { body } = Route.useLoaderData();
-  return <main className="mx-auto w-full max-w-3xl px-6 py-20">{body}</main>;
+  return (
+    <article className="mx-auto w-full max-w-3xl px-6 py-20">
+      <div className={cn(monospace, "contents")}>{body}</div>
+    </article>
+  );
 }

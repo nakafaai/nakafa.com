@@ -11,7 +11,6 @@ import {
   accountDeletionRequestPhase,
 } from "@repo/backend/confect/auth/deletion/spec";
 import { Effect, Result } from "effect";
-import { authClient } from "@/lib/auth/client";
 import { deleteCurrentAccount } from "@/lib/auth/deletion/delete";
 import {
   AccountDeletionFailed,
@@ -22,12 +21,11 @@ import {
 import { AuthRequestDeadline } from "@/lib/auth/request";
 
 type AccountDeletionOperations = Parameters<typeof deleteCurrentAccount>[0];
-vi.mock("@/lib/auth/client", () => ({
-  authClient: {
-    deleteUser: vi.fn(),
-    signOut: vi.fn(),
-  },
+const authClient = vi.hoisted(() => ({
+  deleteUser: vi.fn(),
+  signOut: vi.fn(),
 }));
+vi.mock("@/lib/auth/client", () => ({ readAuthClient: () => authClient }));
 const ATTEMPT_ID = "019fa44c-02be-7cd0-a4ed-61a7af8e0620";
 const USER_ID = "user-1";
 function createDeletionOperations(

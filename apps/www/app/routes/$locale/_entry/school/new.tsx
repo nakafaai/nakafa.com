@@ -19,7 +19,10 @@ export const Route = createFileRoute("/$locale/_entry/school/new")({
     const [page, messages] = await Promise.all([
       readSchoolStartPageFn({ data: { locale: params.locale } }),
       readRouteMessages({
-        data: { locale: params.locale, namespaces: ["SchoolStart"] },
+        data: {
+          locale: params.locale,
+          namespaces: ["Metadata", "SchoolStart"],
+        },
       }),
     ]);
     if (page._tag === "Redirect") {
@@ -31,10 +34,15 @@ export const Route = createFileRoute("/$locale/_entry/school/new")({
       messages,
       namespace: "SchoolStart",
     });
+    const metadata = createTranslator({
+      locale: params.locale,
+      messages,
+      namespace: "Metadata",
+    });
     return {
       description: t("metadata-description"),
       legal: page.legal,
-      title: t("metadata-title"),
+      title: `${t("metadata-title")} - ${metadata("title")}`,
     };
   },
   head: ({ loaderData, params }) =>
@@ -42,7 +50,8 @@ export const Route = createFileRoute("/$locale/_entry/school/new")({
       ? {}
       : toRouterHead(
           createSeoHead({
-            canonicalPath: `/${params.locale}/school/new`,
+            absoluteTitle: loaderData.title,
+            canonicalPath: `/${params.locale}`,
             description: loaderData.description,
             image: getAppSocialArtwork({
               key: "home",
@@ -52,7 +61,7 @@ export const Route = createFileRoute("/$locale/_entry/school/new")({
             indexable: false,
             jsonLd: [],
             locale: params.locale,
-            parts: [loaderData.title],
+            parts: [],
             type: "website",
           })
         ),

@@ -34,7 +34,10 @@ export const Route = createFileRoute("/$locale/_entry/onboarding")({
         data: { intent: deps.intent, locale: params.locale },
       }),
       readRouteMessages({
-        data: { locale: params.locale, namespaces: ["LearningPrograms"] },
+        data: {
+          locale: params.locale,
+          namespaces: ["LearningPrograms", "Metadata"],
+        },
       }),
       readAuthLegalFn({ data: { locale: params.locale } }),
     ]);
@@ -47,12 +50,17 @@ export const Route = createFileRoute("/$locale/_entry/onboarding")({
       messages,
       namespace: "LearningPrograms",
     });
+    const metadata = createTranslator({
+      locale: params.locale,
+      messages,
+      namespace: "Metadata",
+    });
     return {
       description: t("metadata-description"),
       intent: page.intent,
       legal,
       profile: page.profile,
-      title: t("metadata-title"),
+      title: `${t("metadata-title")} - ${metadata("title")}`,
     };
   },
   head: ({ loaderData, params }) =>
@@ -60,7 +68,8 @@ export const Route = createFileRoute("/$locale/_entry/onboarding")({
       ? {}
       : toRouterHead(
           createSeoHead({
-            canonicalPath: `/${params.locale}/onboarding`,
+            absoluteTitle: loaderData.title,
+            canonicalPath: `/${params.locale}`,
             description: loaderData.description,
             image: getAppSocialArtwork({
               key: "home",
@@ -70,7 +79,7 @@ export const Route = createFileRoute("/$locale/_entry/onboarding")({
             indexable: true,
             jsonLd: [],
             locale: params.locale,
-            parts: [loaderData.title],
+            parts: [],
             type: "website",
           })
         ),

@@ -8,7 +8,7 @@ import {
   getPostAuthIntentSource,
   getPostAuthOnboardingHref,
   getPostAuthProviderErrorHref,
-  getPostAuthProviderRetryHref,
+  getPostAuthProviderRetrySearch,
   getPostAuthSignInHref,
   getPostAuthSignInHrefForLocation,
   isPostAuthProviderError,
@@ -71,7 +71,7 @@ describe("post-auth admission", () => {
       getPostAuthSignInHref(resume),
       getPostAuthOnboardingHref(source, "en"),
       getPostAuthProviderErrorHref(source, "en"),
-      getPostAuthProviderRetryHref(resume),
+      new URLSearchParams(getPostAuthProviderRetrySearch(resume)).toString(),
       getPostAuthDestination(resume, "en").href,
     ]) {
       expect(href).not.toContain(token);
@@ -198,15 +198,13 @@ describe("post-auth admission", () => {
         `${errorCallbackURL}&error=access_denied&error_description=provider+diagnostic`
       );
 
-      const retryHref = getPostAuthProviderRetryHref(
+      const retrySearch = getPostAuthProviderRetrySearch(
         resolvePostAuthIntent(providerUrl.searchParams.get("intent"), "en")
       );
-      expect(retryHref).toBe(
-        "/auth?redirect=%2Fen%2Fsearch%3Fq%3Dgeometry%23results&error=oauth"
-      );
-      expect(retryHref).not.toContain("access_denied");
-      expect(retryHref).not.toContain("error_description");
-      expect(retryHref).not.toContain("provider+diagnostic");
+      expect(retrySearch).toStrictEqual({
+        error: "oauth",
+        redirect: "/en/search?q=geometry#results",
+      });
     })
   );
 
@@ -346,10 +344,13 @@ describe("post-auth admission", () => {
     expect(
       getPostAuthProviderErrorHref("https://evil.example", "unsupported")
     ).toBe("/en/auth/error");
-    expect(getPostAuthProviderRetryHref(resume)).toBe(
-      "/auth?redirect=%2Fen%2Fchat%2Fchat-id&error=oauth"
-    );
-    expect(getPostAuthProviderRetryHref(none)).toBe("/auth?error=oauth");
+    expect(getPostAuthProviderRetrySearch(resume)).toStrictEqual({
+      error: "oauth",
+      redirect: "/en/chat/chat-id",
+    });
+    expect(getPostAuthProviderRetrySearch(none)).toStrictEqual({
+      error: "oauth",
+    });
     expect(isPostAuthProviderError("oauth")).toBe(true);
     expect(isPostAuthProviderError("access_denied")).toBe(false);
   });

@@ -8,13 +8,13 @@ import {
   drinkKey,
   getProPricingDisplay,
 } from "@/components/marketing/about/pricing/display";
-import { getProMonthlyPricing } from "@/lib/pricing/monthly";
+import { getProMonthlyPricingFor } from "@/lib/pricing/monthly";
 
 describe("marketing/about/pricing-display", () => {
   it("names each price by the currency symbol of its own locale", () => {
-    expect(currencySymbol(getProMonthlyPricing("DE").formatter)).toBe("€");
-    expect(currencySymbol(getProMonthlyPricing("ID").formatter)).toBe("Rp");
-    expect(currencySymbol(getProMonthlyPricing(null).formatter)).toBe("$");
+    expect(currencySymbol(getProMonthlyPricingFor("EUR").formatter)).toBe("€");
+    expect(currencySymbol(getProMonthlyPricingFor("IDR").formatter)).toBe("Rp");
+    expect(currencySymbol(getProMonthlyPricingFor("USD").formatter)).toBe("$");
   });
 
   it("gives each English drink the form that agrees with its count", async () => {
@@ -46,8 +46,8 @@ describe("marketing/about/pricing-display", () => {
     expect(page(drinkKey("USD"), { count: 2 })).toBe("Lattes");
   });
 
-  it("formats Indonesian pricing from the country code", () => {
-    const price = getProPricingDisplay("ID");
+  it("formats Indonesian pricing in rupiah", () => {
+    const price = getProPricingDisplay("IDR");
 
     expect(price.pro).toMatchObject({
       locales: "id-ID",
@@ -57,37 +57,25 @@ describe("marketing/about/pricing-display", () => {
     expect(price.pro.text.replace(/\s+/g, " ")).toBe("Rp 69.000");
   });
 
-  it("normalizes lowercase country codes", () => {
-    const price = getProPricingDisplay("id");
+  it("formats euro pricing in the German locale", () => {
+    const price = getProPricingDisplay("EUR");
 
-    expect(price.pro.text.replace(/\s+/g, " ")).toBe("Rp 69.000");
-  });
-
-  it("formats euro pricing for Polar EUR countries and territories", () => {
-    const countryPrice = getProPricingDisplay("DE");
-    const lowercasePrice = getProPricingDisplay("de");
-    const territoryPrice = getProPricingDisplay("AX");
-
-    expect(countryPrice.pro).toMatchObject({
+    expect(price.pro).toMatchObject({
       locales: "de-DE",
       value: 8.99,
     });
-    expect(countryPrice.free.text.replace(/\s+/g, " ")).toBe("0,00 €");
-    expect(countryPrice.pro.text.replace(/\s+/g, " ")).toBe("8,99 €");
-    expect(lowercasePrice).toEqual(countryPrice);
-    expect(territoryPrice).toEqual(countryPrice);
+    expect(price.free.text.replace(/\s+/g, " ")).toBe("0,00 €");
+    expect(price.pro.text.replace(/\s+/g, " ")).toBe("8,99 €");
   });
 
-  it("falls back to USD pricing when Polar has no matching price", () => {
-    const countryPrice = getProPricingDisplay("PL");
-    const fallbackPrice = getProPricingDisplay(null);
+  it("formats dollar pricing in the English locale", () => {
+    const price = getProPricingDisplay("USD");
 
-    expect(countryPrice.pro).toMatchObject({
+    expect(price.pro).toMatchObject({
       locales: "en-US",
       value: 8.99,
     });
-    expect(countryPrice.free.text).toBe("$0.00");
-    expect(countryPrice.pro.text).toBe("$8.99");
-    expect(fallbackPrice).toEqual(countryPrice);
+    expect(price.free.text).toBe("$0.00");
+    expect(price.pro.text).toBe("$8.99");
   });
 });

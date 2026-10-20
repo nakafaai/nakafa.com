@@ -13,14 +13,22 @@ import { createSeoHead, toRouterHead } from "@/lib/seo/head";
 export const Route = createFileRoute("/$locale/_marketing/contributor")({
   loader: async ({ params }) => {
     const messages = await readRouteMessages({
-      data: { locale: params.locale, namespaces: ["Contributor"] },
+      data: { locale: params.locale, namespaces: ["Contributor", "Metadata"] },
     });
     const t = createTranslator({
       locale: params.locale,
       messages,
       namespace: "Contributor",
     });
-    return { description: t("description"), title: t("title") };
+    const metadata = createTranslator({
+      locale: params.locale,
+      messages,
+      namespace: "Metadata",
+    });
+    return {
+      description: t("description"),
+      title: `${t("title")} - ${metadata("title")}`,
+    };
   },
   head: ({ loaderData, params }) =>
     loaderData === undefined
@@ -37,7 +45,8 @@ export const Route = createFileRoute("/$locale/_marketing/contributor")({
             indexable: true,
             jsonLd: [],
             locale: params.locale,
-            parts: [loaderData.title],
+            absoluteTitle: loaderData.title,
+            parts: [],
             type: "website",
           })
         ),

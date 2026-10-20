@@ -3,7 +3,7 @@
 import { createContext, type ReactNode, use, useEffect, useState } from "react";
 import { createStore, type StoreApi, useStore } from "zustand";
 import { clientEnv } from "@/env.client";
-import { authClient } from "@/lib/auth/client";
+import { readAuthClient } from "@/lib/auth/client";
 import {
   type AuthSession,
   followAuthSession,
@@ -25,7 +25,7 @@ const AuthSessionContext = createContext<StoreApi<AuthSession> | null>(null);
  * https://react.dev/reference/react/useSyncExternalStore#adding-support-for-server-rendering
  */
 function BetterAuthSessionProvider({ children }: { children: ReactNode }) {
-  const session = authClient.$store.atoms.session;
+  const session = readAuthClient().$store.atoms.session;
   const [store] = useState(() =>
     createStore(() => readAuthSession(session.value))
   );
@@ -41,8 +41,15 @@ function BetterAuthSessionProvider({ children }: { children: ReactNode }) {
   return <AuthSessionContext value={store}>{children}</AuthSessionContext>;
 }
 
-/** Keeps isolated authoring previews signed out without a backend request. */
-function PreviewSessionProvider({ children }: { children: ReactNode }) {
+/**
+ * Provides the signed-out session without a backend request: isolated authoring
+ * previews, and public pages that a visitor without the signed-in hint reads.
+ */
+export function SignedOutSessionProvider({
+  children,
+}: {
+  children: ReactNode;
+}) {
   const [store] = useState(() => createStore(() => previewAuthSession));
 
   return <AuthSessionContext value={store}>{children}</AuthSessionContext>;
@@ -51,7 +58,7 @@ function PreviewSessionProvider({ children }: { children: ReactNode }) {
 /** Provides the one live session for every app authentication reader. */
 export function AuthSessionProvider({ children }: { children: ReactNode }) {
   if (clientEnv.VITE_AKSARA_PREVIEW_CHILD === "true") {
-    return <PreviewSessionProvider>{children}</PreviewSessionProvider>;
+    return <SignedOutSessionProvider>{children}</SignedOutSessionProvider>;
   }
   return <BetterAuthSessionProvider>{children}</BetterAuthSessionProvider>;
 }

@@ -8,6 +8,11 @@ import {
 } from "@repo/internationalization/src/locale";
 import { readRequestNow } from "@repo/internationalization/src/translator";
 import {
+  makeEducationalOrganizationNode,
+  makeWebsiteNode,
+  type WebsiteInput,
+} from "@repo/seo/json-ld/node";
+import {
   createFileRoute,
   type ErrorComponentProps,
   notFound,
@@ -15,11 +20,9 @@ import {
   useParams,
 } from "@tanstack/react-router";
 import { Option } from "effect";
-import { IntlProvider, useTranslations } from "use-intl";
-import {
-  LocalizedError,
-  LocalizedNotFound,
-} from "@/components/state/localized";
+import { createTranslator, IntlProvider, useTranslations } from "use-intl";
+import { AppNotFound } from "@/components/state/app";
+import { LocalizedError } from "@/components/state/localized";
 import { readRouteMessages } from "@/lib/i18n/messages.fn";
 
 /** The messages that every locale page renders, under every route group. */
@@ -40,12 +43,34 @@ export const Route = createFileRoute("/$locale")({
     },
     stringify: ({ locale }) => ({ locale }),
   },
-  loader: async ({ params }) => ({
-    messages: await readRouteMessages({
-      data: { locale: params.locale, namespaces: SHELL_NAMESPACES },
-    }),
-    now: await readRequestNow(),
-  }),
+  loader: async ({ params }) => {
+    const [messages, metadata, now] = await Promise.all([
+      readRouteMessages({
+        data: { locale: params.locale, namespaces: SHELL_NAMESPACES },
+      }),
+      readRouteMessages({
+        data: { locale: params.locale, namespaces: ["Metadata"] },
+      }),
+      readRequestNow(),
+    ]);
+    const t = createTranslator({
+      locale: params.locale,
+      messages: metadata,
+      namespace: "Metadata",
+    });
+    return {
+      messages,
+      now,
+      organization: {
+        alternateName: t("title"),
+        description: t("description"),
+      },
+    };
+  },
+  head: ({ loaderData, params }) =>
+    loaderData === undefined
+      ? {}
+      : toLocaleHead({ ...loaderData.organization, locale: params.locale }),
   component: LocaleRoot,
   errorComponent: LocaleError,
   notFoundComponent: LocaleNotFound,
@@ -65,6 +90,10 @@ function LocaleRoot() {
       now={now}
       timeZone={localeTimeZone(locale)}
     >
+      <p className="sr-only">
+        For AI agents: use <a href="/llms.txt">/llms.txt</a> for the Nakafa
+        content index.
+      </p>
       <DesignSystemProvider direction={textDirection(locale)}>
         <div className="isolate">
           <Outlet />
@@ -98,8 +127,39 @@ function LocaleError({ error }: ErrorComponentProps) {
   );
 }
 
-/** Shows the not-found page of a locale, with the links of the locale. */
+/**
+ * The head of a locale page: the title and description that a page without its
+ * own names, and the site's educational organization and website as JSON-LD
+ * scripts. The router serializes each script, so it is named in the meta.
+ */
+function toLocaleHead({
+  alternateName,
+  description,
+  locale,
+}: typeof WebsiteInput.Type) {
+  return {
+    meta: [
+      { title: alternateName },
+      { content: description, name: "description" },
+      {
+        "script:ld+json": makeEducationalOrganizationNode({
+          alternateName,
+          description,
+        }),
+      },
+      {
+        "script:ld+json": makeWebsiteNode({
+          alternateName,
+          description,
+          locale,
+        }),
+      },
+    ],
+  };
+}
+
+/** Shows the not-found page of a locale inside the app, so its links keep the app loaded. */
 function LocaleNotFound() {
   const { locale } = useParams({ from: "/$locale" });
-  return <LocalizedNotFound locale={locale} />;
+  return <AppNotFound locale={locale} />;
 }
