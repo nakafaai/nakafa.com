@@ -21,6 +21,7 @@ import {
 import { readCatalogQuery } from "@/components/tryout/catalog/table/query";
 import { TRYOUT_SET_PAGE_SIZE } from "@/components/tryout/catalog/table/types";
 import { getTryoutHref } from "@/components/tryout/route/path";
+import { keepPersonalResponse } from "@/components/tryout/route/response.server";
 import type { TrackListRequestSchema } from "@/components/tryout/route/search";
 import { readRequestToken } from "@/components/tryout/route/token.server";
 import { getAksaraTreeUrl } from "@/lib/content/repository";
@@ -66,13 +67,11 @@ export const readTryoutRouteHead = Effect.fn("www.tryout.route.readHead")(
   }) {
     const appLocale = AppLocaleSchema.make(input.locale);
     const [published, tTryouts] = yield* Effect.all([
-      Effect.promise(() =>
-        readTryoutMetadata({
-          appLocale,
-          kind: input.kind,
-          publicPath: input.publicPath,
-        })
-      ),
+      readTryoutMetadata({
+        appLocale,
+        kind: input.kind,
+        publicPath: input.publicPath,
+      }),
       Effect.promise(() =>
         readServerTranslator({ locale: input.locale, namespace: "Tryouts" })
       ),
@@ -123,11 +122,24 @@ const readTryoutRouteLabels = Effect.fn("www.tryout.route.readLabels")(
   }
 );
 
+/**
+ * The Aksara source tree of one catalog path at its revision. A catalog without
+ * a revision names no source, so the link is absent.
+ */
+function readAksaraSourceUrl<
+  Revision extends Parameters<typeof getAksaraTreeUrl>[0]["revision"],
+>(path: string, sourceRevision: Revision | null | undefined) {
+  return Option.fromNullishOr(sourceRevision).pipe(
+    Option.map((revision) => getAksaraTreeUrl({ path, revision })),
+    Option.getOrUndefined
+  );
+}
+
 /** The hub: the country-first catalog, its breadcrumbs and its source tree. */
 export const readTryoutHubRoute = Effect.fn("www.tryout.route.readHub")(
   function* (locale: Locale) {
     const [page, labels, tTryouts] = yield* Effect.all([
-      Effect.promise(() => readTryoutHubPage(locale)),
+      readTryoutHubPage(locale),
       readTryoutRouteLabels(locale),
       Effect.promise(() =>
         readServerTranslator({ locale, namespace: "Tryouts" })
@@ -146,12 +158,10 @@ export const readTryoutHubRoute = Effect.fn("www.tryout.route.readHub")(
       }),
       labels,
       page,
-      sourceUrl: page.sourceRevision
-        ? getAksaraTreeUrl({
-            path: "packages/corpus/tryout",
-            revision: page.sourceRevision,
-          })
-        : null,
+      sourceUrl: readAksaraSourceUrl(
+        "packages/corpus/tryout",
+        page.sourceRevision
+      ),
     };
   }
 );
@@ -161,8 +171,8 @@ export const readTryoutCountryRoute = Effect.fn("www.tryout.route.readCountry")(
   function* (input: { readonly country: string; readonly locale: Locale }) {
     const countryPath = getTryoutHref({ country: input.country }).slice(1);
     const [page, hub, head, labels, tTryouts] = yield* Effect.all([
-      Effect.promise(() => readTryoutCountryPage(input.locale, countryPath)),
-      Effect.promise(() => readTryoutHubPage(input.locale)),
+      readTryoutCountryPage(input.locale, countryPath),
+      readTryoutHubPage(input.locale),
       readTryoutRouteHead({
         kind: "country",
         locale: input.locale,
@@ -173,13 +183,13 @@ export const readTryoutCountryRoute = Effect.fn("www.tryout.route.readCountry")(
         readServerTranslator({ locale: input.locale, namespace: "Tryouts" })
       ),
     ]);
-    if (!page || Option.isNone(head)) {
+    if (Option.isNone(page) || Option.isNone(head)) {
       return { kind: "notFound" as const };
     }
-    const exams = yield* Effect.forEach(page.exams, (exam) =>
+    const exams = yield* Effect.forEach(page.value.exams, (exam) =>
       resolveTryoutExamArtwork({
         appLocale: input.locale,
-        countryKey: page.country.countryKey,
+        countryKey: page.value.country.countryKey,
         examKey: exam.examKey,
         publicPath: exam.publicPath,
       }).pipe(
@@ -199,12 +209,10 @@ export const readTryoutCountryRoute = Effect.fn("www.tryout.route.readCountry")(
       kind: "found" as const,
       labels,
       selectorLabel: tTryouts("country-selector-label"),
-      sourceUrl: page.sourceRevision
-        ? getAksaraTreeUrl({
-            path: `packages/corpus/tryout/${input.country}`,
-            revision: page.sourceRevision,
-          })
-        : null,
+      sourceUrl: readAksaraSourceUrl(
+        `packages/corpus/tryout/${input.country}`,
+        page.value.sourceRevision
+      ),
     };
   }
 );
@@ -222,8 +230,8 @@ export const readTryoutExamRoute = Effect.fn("www.tryout.route.readExam")(
       exam: input.exam,
     }).slice(1);
     const [page, countryPage, head, labels, tTryouts] = yield* Effect.all([
-      Effect.promise(() => readTryoutExamPage(input.locale, examPath)),
-      Effect.promise(() => readTryoutCountryPage(input.locale, countryPath)),
+      readTryoutExamPage(input.locale, examPath),
+      readTryoutCountryPage(input.locale, countryPath),
       readTryoutRouteHead({
         kind: "exam",
         locale: input.locale,
@@ -234,13 +242,16 @@ export const readTryoutExamRoute = Effect.fn("www.tryout.route.readExam")(
         readServerTranslator({ locale: input.locale, namespace: "Tryouts" })
       ),
     ]);
-    if (!(page && countryPage) || Option.isNone(head)) {
+    if (!page || Option.isNone(countryPage) || Option.isNone(head)) {
       return { kind: "notFound" as const };
     }
     return {
       countryHref: getTryoutHref({ country: input.country }),
       exam: page,
-      examOptions: buildTryoutExamOptions(input.locale, countryPage.exams),
+      examOptions: buildTryoutExamOptions(
+        input.locale,
+        countryPage.value.exams
+      ),
       examPath,
       head: head.value,
       kind: "found" as const,
@@ -269,8 +280,8 @@ export const readTryoutTrackRoute = Effect.fn("www.tryout.route.readTrack")(
       track: input.track,
     }).slice(1);
     const [page, countryPage, head, labels, tTryouts] = yield* Effect.all([
-      Effect.promise(() => readTryoutTrackPage(input.locale, trackPath)),
-      Effect.promise(() => readTryoutCountryPage(input.locale, countryPath)),
+      readTryoutTrackPage(input.locale, trackPath),
+      readTryoutCountryPage(input.locale, countryPath),
       readTryoutRouteHead({
         kind: "track",
         locale: input.locale,
@@ -281,13 +292,16 @@ export const readTryoutTrackRoute = Effect.fn("www.tryout.route.readTrack")(
         readServerTranslator({ locale: input.locale, namespace: "Tryouts" })
       ),
     ]);
-    if (!(page && countryPage) || Option.isNone(head)) {
+    if (!page || Option.isNone(countryPage) || Option.isNone(head)) {
       return { kind: "notFound" as const };
     }
     return {
       countryHref: getTryoutHref({ country: input.country }),
       examHref: getTryoutHref({ country: input.country, exam: input.exam }),
-      examOptions: buildTryoutExamOptions(input.locale, countryPage.exams),
+      examOptions: buildTryoutExamOptions(
+        input.locale,
+        countryPage.value.exams
+      ),
       examPath,
       head: head.value,
       kind: "found" as const,
@@ -306,6 +320,7 @@ export const readTryoutTrackRoute = Effect.fn("www.tryout.route.readTrack")(
 export const readTryoutTrackSetList = Effect.fn(
   "www.tryout.route.readTrackSetList"
 )(function* (input: typeof TrackListRequestSchema.Type) {
+  yield* keepPersonalResponse;
   const token = yield* readRequestToken();
   const selection = readCatalogQuery(input.search);
   const args = {
