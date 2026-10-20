@@ -1,0 +1,75 @@
+import { createFileRoute, notFound } from "@tanstack/react-router";
+import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
+import { FooterContent } from "@/components/shared/content/footer";
+import { LayoutContent } from "@/components/shared/content/layout";
+import { RefContent } from "@/components/shared/content/references";
+import { LayoutMaterialContent } from "@/components/shared/material/content";
+import { LayoutMaterial } from "@/components/shared/material/layout";
+import { TryoutCountryPageClient } from "@/components/tryout/catalog/country.client";
+import { TryoutCountrySelector } from "@/components/tryout/catalog/selector.client";
+import { readTryoutCountryFn } from "@/components/tryout/route/catalog.fn";
+import { createTryoutHead } from "@/components/tryout/route/head";
+import { readTryoutCatalogHeaders } from "@/components/tryout/route/headers";
+
+/** One country of the try-out catalog: its exam families. */
+export const Route = createFileRoute("/$locale/_main/try-out/$country/")({
+  loader: async ({ params }) => {
+    const route = await readTryoutCountryFn({
+      data: { country: params.country, locale: params.locale },
+    });
+    if (route.kind === "notFound") {
+      throw notFound();
+    }
+    return route;
+  },
+  head: ({ loaderData, params }) =>
+    loaderData === undefined
+      ? {}
+      : createTryoutHead({
+          canonicalPath: loaderData.head.canonicalPath,
+          description: loaderData.head.description,
+          image: loaderData.head.image,
+          indexable: true,
+          jsonLd: [],
+          locale: params.locale,
+          title: loaderData.head.title,
+        }),
+  headers: readTryoutCatalogHeaders,
+  component: TryoutCountryPage,
+});
+
+function TryoutCountryPage() {
+  const route = Route.useLoaderData();
+  return (
+    <LayoutMaterial>
+      <LayoutMaterialContent>
+        <BreadcrumbHeader
+          value={{
+            action:
+              route.countryOptions.length > 0 ? (
+                <TryoutCountrySelector
+                  currentValue={route.countryPath}
+                  label={route.selectorLabel}
+                  options={route.countryOptions}
+                />
+              ) : undefined,
+            homeHref: "/home",
+            homeLabel: route.labels.home,
+            items: [{ label: route.labels.tryOut }],
+            menuLabel: route.labels.more,
+            title: route.labels.tryOut,
+          }}
+        />
+        <LayoutContent>
+          <TryoutCountryPageClient
+            actionLabel={route.actionLabel}
+            page={{ exams: route.exams }}
+          />
+        </LayoutContent>
+        <FooterContent>
+          <RefContent githubUrl={route.sourceUrl ?? undefined} />
+        </FooterContent>
+      </LayoutMaterialContent>
+    </LayoutMaterial>
+  );
+}
