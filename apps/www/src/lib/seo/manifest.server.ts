@@ -1,13 +1,14 @@
 import { THEME_COMPATIBILITY_COLORS } from "@repo/design-system/lib/theme/compatibility";
 import { readServerTranslator } from "@repo/internationalization/src/translator";
 import { Effect } from "effect";
+import { runServerEffect } from "@/lib/server/fn";
 
 /** The manifest describes the app in English, the locale the install prompt shows. */
 const MANIFEST_LOCALE = "en";
 
 /** Serves the web app manifest that lets visitors install Nakafa. */
 export function serveManifest() {
-  return Effect.runPromise(
+  return runServerEffect(
     Effect.gen(function* () {
       const t = yield* Effect.promise(() =>
         readServerTranslator({

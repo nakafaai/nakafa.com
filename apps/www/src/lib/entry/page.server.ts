@@ -93,9 +93,7 @@ const readSchoolStartPage = Effect.fn("www.entry.schoolStart")(function* (
     );
     return redirectTo(`/${input.locale}${getPostAuthSignInHref(intent)}`);
   }
-  const pages = yield* Effect.promise(() =>
-    getShellPageNavigation(input.locale)
-  );
+  const pages = yield* getShellPageNavigation(input.locale);
   return {
     _tag: "Start" as const,
     legal: pages

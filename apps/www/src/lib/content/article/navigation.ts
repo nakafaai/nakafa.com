@@ -18,6 +18,9 @@ const ArticleNavigationItemSchema = Schema.Struct({
 /** One signed article category projected into Nakafa's navigation contract. */
 export type ArticleNavigationItem = typeof ArticleNavigationItemSchema.Type;
 
+/** The shell lists no article while the local preview owns the navigation. */
+const noArticleNavigation: readonly ArticleNavigationItem[] = [];
+
 /** Reads every signed article category under one immutable release identity. */
 export const readArticleNavigation = Effect.fn("www.articles.readNavigation")(
   function* (locale: Locale) {
@@ -31,23 +34,14 @@ export const readArticleNavigation = Effect.fn("www.articles.readNavigation")(
 );
 
 /**
- * Caches complete article navigation under exact article release tags. The `use
- * cache` boundary stays so that the shells still prerender and the article tag
- * still expires them; behind it the category list comes from the content store.
+ * The article navigation of the application shell. While Aksara serves one exact
+ * local preview document, the shell lists no article and reads no signed catalog.
  */
-async function getArticleNavigation(locale: Locale) {
-  const navigation = await Effect.runPromise(readArticleNavigation(locale));
-  return navigation;
-}
-
-/**
- * Keeps the application shell independent from signed article publication
- * while Aksara serves one exact local preview document.
- */
-export function getShellArticleNavigation(locale: Locale) {
+export const getShellArticleNavigation = Effect.fn(
+  "www.articles.shellNavigation"
+)(function* (locale: Locale) {
   if (hasPreviewConfig()) {
-    return Promise.resolve<readonly ArticleNavigationItem[]>([]);
+    return noArticleNavigation;
   }
-
-  return getArticleNavigation(locale);
-}
+  return yield* readArticleNavigation(locale);
+});

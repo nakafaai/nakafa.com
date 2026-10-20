@@ -3,8 +3,8 @@ import { describe, expect, it } from "@effect/vitest";
 import { makeQuranSurah } from "@repo/backend/test/quran/rows";
 import { Effect } from "effect";
 import {
-  getPublishedQuranCatalog,
-  getPublishedQuranView,
+  readPublishedQuranCatalog,
+  readPublishedQuranView,
 } from "@/lib/content/quran/publication";
 import { recoverStalePublishedQuranSnapshot } from "@/lib/content/quran/recovery";
 import {
@@ -49,11 +49,11 @@ function publishedView() {
 let nextView: ReturnType<typeof publishedView> | null = null;
 
 vi.mock("@/lib/content/quran/publication", () => ({
-  getPublishedQuranCatalog: vi.fn(() =>
-    Promise.resolve({ surahs: catalogSurahs })
+  readPublishedQuranCatalog: vi.fn(() =>
+    Effect.succeed({ surahs: catalogSurahs })
   ),
-  getPublishedQuranView: vi.fn(() =>
-    Promise.resolve(nextView ?? publishedView())
+  readPublishedQuranView: vi.fn(() =>
+    Effect.succeed(nextView ?? publishedView())
   ),
 }));
 
@@ -68,7 +68,7 @@ describe("surah route read", () => {
     await expect(
       readSurahHandler({ data: { locale: "en", surah: "first" } })
     ).resolves.toStrictEqual({ kind: "notFound" });
-    expect(getPublishedQuranCatalog).not.toHaveBeenCalled();
+    expect(readPublishedQuranCatalog).not.toHaveBeenCalled();
   });
 
   it("answers not found for a surah that the catalog does not hold", async () => {
@@ -76,7 +76,7 @@ describe("surah route read", () => {
     await expect(
       readSurahHandler({ data: { locale: "en", surah: "1" } })
     ).resolves.toStrictEqual({ kind: "notFound" });
-    expect(getPublishedQuranView).not.toHaveBeenCalled();
+    expect(readPublishedQuranView).not.toHaveBeenCalled();
     catalogSurahs = [makeQuranSurah(1)];
   });
 
@@ -93,7 +93,7 @@ describe("surah route read", () => {
       surah: "1",
       surahNumber: 1,
     });
-    expect(getPublishedQuranView).toHaveBeenCalledWith("en", 1);
+    expect(readPublishedQuranView).toHaveBeenCalledWith("en", 1);
   });
 
   it("shows the bismillah of the surah when the publication names one", async () => {

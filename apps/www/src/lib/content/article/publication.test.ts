@@ -95,130 +95,151 @@ beforeEach(() => {
   renderMock.mockReset().mockReturnValue(Effect.succeed(published));
 });
 describe("coherent article publication", () => {
-  it("reads the shell and body once and verifies them before rendering", async () => {
-    await expect(
-      getArticlePublication("en", projection.publicPath)
-    ).resolves.toMatchObject({
-      model: {
-        activeReleaseId,
-        projection,
-      },
-      published,
-    });
-    expect(queryMock).toHaveBeenCalledExactlyOnceWith(
-      contentRelease.article.delivery,
-      {
-        appLocale: "en",
-        publicPath: projection.publicPath,
-      }
-    );
-    expect(layerMock).toHaveBeenCalledWith("https://test.convex.cloud");
-    expect(deliveryMock).toHaveBeenCalledExactlyOnceWith(
-      {
-        appLocale: "en",
-        publicPath: projection.publicPath,
-      },
-      "signed-envelope"
-    );
-    expect(renderMock).toHaveBeenCalledOnce();
-  });
-  it("caches an authenticated withdrawal without rendering", async () => {
-    queryMock.mockReturnValueOnce(
-      Effect.succeed({
-        model: {
-          ...model,
-          alternateJson: [],
-          projectionJson: null,
-        },
-        runtimeJson: null,
+  it.effect(
+    "reads the shell and body once and verifies them before rendering",
+    () =>
+      Effect.gen(function* () {
+        expect(
+          yield* getArticlePublication("en", projection.publicPath)
+        ).toMatchObject({
+          model: {
+            activeReleaseId,
+            projection,
+          },
+          published,
+        });
+        expect(queryMock).toHaveBeenCalledExactlyOnceWith(
+          contentRelease.article.delivery,
+          {
+            appLocale: "en",
+            publicPath: projection.publicPath,
+          }
+        );
+        expect(layerMock).toHaveBeenCalledWith("https://test.convex.cloud");
+        expect(deliveryMock).toHaveBeenCalledExactlyOnceWith(
+          {
+            appLocale: "en",
+            publicPath: projection.publicPath,
+          },
+          "signed-envelope"
+        );
+        expect(renderMock).toHaveBeenCalledOnce();
       })
-    );
-    await expect(
-      getArticlePublication("en", projection.publicPath)
-    ).resolves.toBeNull();
-    expect(deliveryMock).not.toHaveBeenCalled();
-    expect(renderMock).not.toHaveBeenCalled();
-  });
-  it.each(["missing-body", "orphan-body"])(
-    "rejects %s before rendering",
-    async (kind) => {
+  );
+  it.effect("caches an authenticated withdrawal without rendering", () =>
+    Effect.gen(function* () {
       queryMock.mockReturnValueOnce(
         Effect.succeed({
-          model:
-            kind === "orphan-body"
-              ? {
-                  ...model,
-                  alternateJson: [],
-                  projectionJson: null,
-                }
-              : model,
-          runtimeJson: kind === "missing-body" ? null : "signed-envelope",
+          model: {
+            ...model,
+            alternateJson: [],
+            projectionJson: null,
+          },
+          runtimeJson: null,
         })
       );
-      await expect(
-        getArticlePublication("en", projection.publicPath)
-      ).rejects.toMatchObject({
-        _tag: "PublishedProjectionError",
+      expect(
+        yield* getArticlePublication("en", projection.publicPath)
+      ).toBeNull();
+      expect(deliveryMock).not.toHaveBeenCalled();
+      expect(renderMock).not.toHaveBeenCalled();
+    })
+  );
+  it.effect.each(["missing-body", "orphan-body"])(
+    "rejects %s before rendering",
+    (kind) =>
+      Effect.gen(function* () {
+        queryMock.mockReturnValueOnce(
+          Effect.succeed({
+            model:
+              kind === "orphan-body"
+                ? {
+                    ...model,
+                    alternateJson: [],
+                    projectionJson: null,
+                  }
+                : model,
+            runtimeJson: kind === "missing-body" ? null : "signed-envelope",
+          })
+        );
+        expect(
+          yield* getArticlePublication("en", projection.publicPath).pipe(
+            Effect.flip
+          )
+        ).toMatchObject({
+          _tag: "PublishedProjectionError",
+        });
+        expect(renderMock).not.toHaveBeenCalled();
+      })
+  );
+  it.effect("rejects mismatched publication generations before rendering", () =>
+    Effect.gen(function* () {
+      deliveryMock.mockReturnValueOnce(
+        Effect.succeed({
+          ...data,
+          activeReleaseId: ReleaseIdSchema.make("release-other"),
+        })
+      );
+      expect(
+        yield* getArticlePublication("en", projection.publicPath).pipe(
+          Effect.flip
+        )
+      ).toMatchObject({
+        _tag: "PublishedReleaseMismatchError",
       });
       expect(renderMock).not.toHaveBeenCalled();
-    }
+    })
   );
-  it("rejects mismatched publication generations before rendering", async () => {
-    deliveryMock.mockReturnValueOnce(
-      Effect.succeed({
-        ...data,
-        activeReleaseId: ReleaseIdSchema.make("release-other"),
+  it.effect(
+    "preserves signed verification failures and never evaluates their body",
+    () =>
+      Effect.gen(function* () {
+        deliveryMock.mockReturnValueOnce(
+          Effect.fail(
+            new ContentRuntimeVerificationError({
+              cause: "invalid-signature",
+            })
+          )
+        );
+        expect(
+          yield* getArticlePublication("en", projection.publicPath).pipe(
+            Effect.flip
+          )
+        ).toMatchObject({
+          _tag: "ContentRuntimeVerificationError",
+        });
+        expect(renderMock).not.toHaveBeenCalled();
       })
-    );
-    await expect(
-      getArticlePublication("en", projection.publicPath)
-    ).rejects.toMatchObject({
-      _tag: "PublishedReleaseMismatchError",
-    });
-    expect(renderMock).not.toHaveBeenCalled();
-  });
-  it("preserves signed verification failures and never evaluates their body", async () => {
-    deliveryMock.mockReturnValueOnce(
-      Effect.fail(
-        new ContentRuntimeVerificationError({
-          cause: "invalid-signature",
-        })
-      )
-    );
-    await expect(
-      getArticlePublication("en", projection.publicPath)
-    ).rejects.toMatchObject({
-      _tag: "ContentRuntimeVerificationError",
-    });
-    expect(renderMock).not.toHaveBeenCalled();
-  });
+  );
 });
 describe("verified article metadata", () => {
-  it("resolves the verified model without rendering the body", async () => {
-    await expect(
-      getArticleModel("en", projection.publicPath)
-    ).resolves.toMatchObject({
-      model: {
-        activeReleaseId,
-        projection,
-      },
-    });
-    expect(renderMock).not.toHaveBeenCalled();
-  });
-  it("returns null for a withdrawn release without rendering", async () => {
-    queryMock.mockReturnValueOnce(
-      Effect.succeed({
-        model: {
-          ...model,
-          alternateJson: [],
-          projectionJson: null,
-        },
-        runtimeJson: null,
-      })
-    );
-    await expect(
-      getArticleModel("en", projection.publicPath)
-    ).resolves.toBeNull();
-    expect(renderMock).not.toHaveBeenCalled();
-  });
+  it.effect("resolves the verified model without rendering the body", () =>
+    Effect.gen(function* () {
+      expect(yield* getArticleModel("en", projection.publicPath)).toMatchObject(
+        {
+          model: {
+            activeReleaseId,
+            projection,
+          },
+        }
+      );
+      expect(renderMock).not.toHaveBeenCalled();
+    })
+  );
+  it.effect("returns null for a withdrawn release without rendering", () =>
+    Effect.gen(function* () {
+      queryMock.mockReturnValueOnce(
+        Effect.succeed({
+          model: {
+            ...model,
+            alternateJson: [],
+            projectionJson: null,
+          },
+          runtimeJson: null,
+        })
+      );
+      expect(yield* getArticleModel("en", projection.publicPath)).toBeNull();
+      expect(renderMock).not.toHaveBeenCalled();
+    })
+  );
 });

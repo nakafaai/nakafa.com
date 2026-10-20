@@ -5,7 +5,7 @@ import { loadLocaleMessages } from "@repo/internationalization/src/messages";
 import { makeArticleJsonLd } from "@repo/seo/json-ld/article";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
-import { Effect, Schema } from "effect";
+import { Effect, Match, Schema } from "effect";
 import { createTranslator } from "use-intl";
 import { SheetEntry } from "@/components/ai/sheet/entry";
 import { AiMenuItem } from "@/components/ai/sheet/menu";
@@ -37,6 +37,7 @@ import {
   publicContentHeaders,
   readContentCacheTags,
 } from "@/lib/content/delivery";
+import { outcome } from "@/lib/content/outcome";
 import { getAksaraUrl } from "@/lib/content/repository";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getLlmsMarkdownPath } from "@/lib/llms/format";
@@ -72,16 +73,14 @@ const readArticle = createServerFn({ method: "GET" })
             Schema.is(ArticleRouteSlugSchema)(data.slug)
           )
         ) {
-          return { kind: "notFound" as const };
+          return outcome("NotFound", {});
         }
         const publicPath = PublicPathSchema.make(
           `articles/${data.category}/${data.slug}`
         );
-        const publication = yield* Effect.promise(() =>
-          getArticlePublication(locale, publicPath)
-        );
+        const publication = yield* getArticlePublication(locale, publicPath);
         if (!publication) {
-          return { kind: "notFound" as const };
+          return outcome("NotFound", {});
         }
         const { model, published } = publication;
         const filePath = `/${publicPath}`;
@@ -110,45 +109,46 @@ const readArticle = createServerFn({ method: "GET" })
         });
         const categoryLabel = published.categoryTitle;
 
-        return {
-          alternates: toHeadAlternates(
-            createResolvedRouteAlternates(model.projection, model.alternates)
-          ),
-          kind: "found" as const,
-          cacheTags: readContentCacheTags(["article"]),
-          categoryLabel,
-          content: published.sourceRevision ? undefined : published.rawMdx,
-          contentId: published.contentId,
-          copySourceUrl: published.sourceRevision
-            ? getLlmsMarkdownPath({ locale, publicPath })
-            : null,
-          description: seo.description,
-          filePath,
-          headings: getHeadings(published.rawMdx),
-          labels: {
-            articles: tCommon("articles"),
-            home: tCommon("home"),
-            more: tCommon("more"),
-            onThisPage: tCommon("on-this-page"),
+        return outcome("Found", {
+          page: {
+            alternates: toHeadAlternates(
+              createResolvedRouteAlternates(model.projection, model.alternates)
+            ),
+            cacheTags: readContentCacheTags(["article"]),
+            categoryLabel,
+            content: published.sourceRevision ? undefined : published.rawMdx,
+            contentId: published.contentId,
+            copySourceUrl: published.sourceRevision
+              ? getLlmsMarkdownPath({ locale, publicPath })
+              : null,
+            description: seo.description,
+            filePath,
+            headings: getHeadings(published.rawMdx),
+            labels: {
+              articles: tCommon("articles"),
+              home: tCommon("home"),
+              more: tCommon("more"),
+              onThisPage: tCommon("on-this-page"),
+            },
+            locale,
+            metadata: published.metadata,
+            publicPath,
+            sourceUrl: published.sourceRevision
+              ? getAksaraUrl({
+                  path: published.sourcePath,
+                  revision: published.sourceRevision,
+                })
+              : null,
+            body: published.body,
+            title: seo.title,
+            category: data.category,
+            breadcrumbs: createBreadcrumbItems(locale, [
+              { name: tCommon("home"), path: "" },
+              { name: tCommon("articles"), path: "/articles" },
+              { name: categoryLabel, path: `/articles/${data.category}` },
+            ]),
           },
-          locale,
-          metadata: published.metadata,
-          publicPath,
-          sourceUrl: published.sourceRevision
-            ? getAksaraUrl({
-                path: published.sourcePath,
-                revision: published.sourceRevision,
-              })
-            : null,
-          body: published.body,
-          title: seo.title,
-          category: data.category,
-          breadcrumbs: createBreadcrumbItems(locale, [
-            { name: tCommon("home"), path: "" },
-            { name: tCommon("articles"), path: "/articles" },
-            { name: categoryLabel, path: `/articles/${data.category}` },
-          ]),
-        };
+        });
       })
     )
   );
@@ -157,11 +157,15 @@ const readArticle = createServerFn({ method: "GET" })
 export const Route = createFileRoute("/$locale/_main/articles/$category/$slug")(
   {
     loader: async ({ params }) => {
-      const article = await readArticle({ data: params });
-      if (article.kind === "notFound") {
-        throw notFound();
-      }
-      return article;
+      const read = await readArticle({ data: params });
+      return Match.value(read).pipe(
+        Match.tagsExhaustive({
+          Found: ({ page }) => page,
+          NotFound: () => {
+            throw notFound();
+          },
+        })
+      );
     },
     head: ({ loaderData }) => {
       if (loaderData === undefined) {

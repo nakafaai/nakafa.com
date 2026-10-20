@@ -10,17 +10,10 @@ import {
 } from "@nakafa/aksara-contracts/locale";
 import { PagePreviewDocumentSchema } from "@nakafa/aksara-contracts/preview/document";
 import {
-  LOCAL_PREVIEW_FORMAT,
-  PreviewPendingSchema,
-} from "@nakafa/aksara-contracts/preview/spec";
-import {
   PageKeySchema,
   PublicPageProjectionSchema,
 } from "@nakafa/aksara-contracts/projection/page";
-import {
-  previewRepositories,
-  previewWireArtifact,
-} from "@/test/content-preview";
+import { previewWireArtifact } from "@/test/content-preview";
 
 /** Exact signed Page projection used by runtime adapter tests. */
 export const testPageProjection = PublicPageProjectionSchema.make({
@@ -63,13 +56,4 @@ const testPagePreviewDocument = PagePreviewDocumentSchema.make({
     publicPath: testPageProjection.publicPath,
   },
   sourcePath: testPageProjection.sourcePath,
-});
-
-/** Pending state for one real Page that other routes must ignore. */
-export const testPagePendingManifest = PreviewPendingSchema.make({
-  document: testPagePreviewDocument,
-  format: LOCAL_PREVIEW_FORMAT,
-  repositories: previewRepositories,
-  revision: 1,
-  status: "pending",
 });

@@ -79,35 +79,34 @@ const decodeArticleDelivery = Effect.fn("NakafaArticle.decodeDelivery")(
 );
 
 /** Fetches one signed delivery row shared by body and metadata readers. */
-async function fetchArticleSource(locale: Locale, publicPath: string) {
-  return await Effect.runPromise(
-    Effect.flatMap(HttpClient.HttpClient, (client) =>
-      client.query(contentRelease.article.delivery, {
-        appLocale: AppLocaleSchema.make(locale),
-        publicPath,
-      })
-    ).pipe(Effect.provide(httpLayer()))
-  );
-}
-
-/** Reads and verifies one signed article delivery for the article page. */
-export async function getArticlePublication(
+const fetchArticleSource = Effect.fn("NakafaArticle.fetchSource")(function* (
   locale: Locale,
   publicPath: string
 ) {
-  const source = await fetchArticleSource(locale, publicPath);
-  return await Effect.runPromise(
-    decodeArticleDelivery(source, locale, publicPath)
-  );
-}
+  return yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
+    client.query(contentRelease.article.delivery, {
+      appLocale: AppLocaleSchema.make(locale),
+      publicPath,
+    })
+  ).pipe(Effect.provide(httpLayer()));
+});
+
+/** Reads and verifies one signed article delivery for the article page. */
+export const getArticlePublication = Effect.fn("NakafaArticle.getPublication")(
+  function* (locale: Locale, publicPath: string) {
+    const source = yield* fetchArticleSource(locale, publicPath);
+    return yield* decodeArticleDelivery(source, locale, publicPath);
+  }
+);
 
 /** Reads and verifies signed release metadata without rendering its body.
  *
  * Social images resolve copy through this seam so a missing release falls
  * back to brand artwork instead of rendering the application shell. */
-export async function getArticleModel(locale: Locale, publicPath: string) {
-  const source = await fetchArticleSource(locale, publicPath);
-  return await Effect.runPromise(
-    decodeArticleModel(source, locale, publicPath)
-  );
-}
+export const getArticleModel = Effect.fn("NakafaArticle.getModel")(function* (
+  locale: Locale,
+  publicPath: string
+) {
+  const source = yield* fetchArticleSource(locale, publicPath);
+  return yield* decodeArticleModel(source, locale, publicPath);
+});

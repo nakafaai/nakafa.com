@@ -1,6 +1,7 @@
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { Array as Arr, Cause, Effect, Option, Schema } from "effect";
 import { captureServerExceptionSafely } from "@/lib/analytics/exception.server";
+import { runServerEffect } from "@/lib/server/fn";
 import { readSitemapPageDescriptors } from "@/lib/sitemap/catalog";
 import { getSitemapEntries } from "@/lib/sitemap/entries";
 import { getSitemapPageDescriptor } from "@/lib/sitemap/identity";
@@ -53,7 +54,7 @@ const buildSitemapIndexResponse = Effect.fn("www.sitemap.index.response")(
 
 /** Serves the conventional sitemap index that points at bounded sitemap pages. */
 export function serveSitemapIndex() {
-  return Effect.runPromise(
+  return runServerEffect(
     buildSitemapIndexResponse().pipe(
       Effect.catchCause((cause) => reportSitemapFailure("sitemap-index", cause))
     )
@@ -115,7 +116,7 @@ export function serveSitemapPage({
     return Promise.resolve(createNotFoundResponse());
   }
 
-  return Effect.runPromise(
+  return runServerEffect(
     buildSitemapPageResponse(pageId.value).pipe(
       Effect.catchCause((cause) => reportSitemapFailure("sitemap-page", cause))
     )

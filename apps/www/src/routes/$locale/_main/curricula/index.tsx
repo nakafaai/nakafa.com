@@ -6,7 +6,7 @@ import {
 } from "@repo/seo/json-ld/node";
 import { createFileRoute } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
-import { Array as Arr, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 import { createTranslator } from "use-intl";
 import { CurriculumCardGrid } from "@/components/curriculum/cards";
 import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
@@ -32,6 +32,7 @@ import { getCurriculumIndexHref } from "@/lib/curriculum/routes";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { createSeoHead, toRouterHead } from "@/lib/seo/head";
+import { runServerEffect } from "@/lib/server/fn";
 
 /**
  * Reads the curriculum chooser of one locale on the server: its cards with their
@@ -43,10 +44,15 @@ const readCurriculumIndex = createServerFn({ method: "GET" })
   )
   .handler(async ({ data }) => {
     const locale = getLocaleOrThrow(data.locale);
-    const [catalog, messages] = await Promise.all([
-      readRuntimeCurriculumCatalog(locale),
-      loadLocaleMessages(locale),
-    ]);
+    const [catalog, messages] = await runServerEffect(
+      Effect.all(
+        [
+          readRuntimeCurriculumCatalog(locale),
+          Effect.promise(() => loadLocaleMessages(locale)),
+        ],
+        { concurrency: "unbounded" }
+      )
+    );
     const tCommon = createTranslator({ locale, messages, namespace: "Common" });
     const tLearningPrograms = createTranslator({
       locale,

@@ -82,16 +82,6 @@ export const readPublishedPageCatalog = Effect.fn(
   } satisfies PublishedPageCatalog;
 });
 
-/**
- * Caches the complete Page catalog under its signed family owner. The `use
- * cache` boundary stays so that the legal pages prerender and the page tag
- * still expires them.
- */
-export async function getPublishedPageCatalog() {
-  const catalog = await Effect.runPromise(readPublishedPageCatalog());
-  return catalog;
-}
-
 /** Proves a cached Page still matches its current signed catalog projection. */
 export const verifyPublishedPageCatalog = Effect.fn(
   "NakafaContent.verifyPublishedPageCatalog"

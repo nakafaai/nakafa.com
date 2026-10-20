@@ -4,7 +4,7 @@ import { loadLocaleMessages } from "@repo/internationalization/src/messages";
 import { makeBreadcrumbNodes } from "@repo/seo/json-ld/node";
 import { createFileRoute } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
-import { Array as Arr, Schema } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 import { createTranslator } from "use-intl";
 import { CardLink, CardLinks } from "@/components/shared/card/link";
 import { LayoutContent } from "@/components/shared/content/frame";
@@ -16,11 +16,12 @@ import {
   readContentCacheTags,
 } from "@/lib/content/delivery";
 import { getQuranSurahName } from "@/lib/content/quran/navigation";
-import { getPublishedQuranCatalog } from "@/lib/content/quran/publication";
+import { readPublishedQuranCatalog } from "@/lib/content/quran/publication";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getAppSocialArtwork } from "@/lib/og/app";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { createSeoHead, toRouterHead } from "@/lib/seo/head";
+import { runServerEffect } from "@/lib/server/fn";
 
 /** The surah list of the Quran index, with the words of its page and head. */
 const readQuranIndex = createServerFn({ method: "GET" })
@@ -29,10 +30,15 @@ const readQuranIndex = createServerFn({ method: "GET" })
   )
   .handler(async ({ data }) => {
     const locale = getLocaleOrThrow(data.locale);
-    const [{ surahs }, messages] = await Promise.all([
-      getPublishedQuranCatalog(),
-      loadLocaleMessages(locale),
-    ]);
+    const [{ surahs }, messages] = await runServerEffect(
+      Effect.all(
+        [
+          readPublishedQuranCatalog(),
+          Effect.promise(() => loadLocaleMessages(locale)),
+        ],
+        { concurrency: "unbounded" }
+      )
+    );
     const t = createTranslator({ locale, messages, namespace: "Holy" });
     const tCommon = createTranslator({ locale, messages, namespace: "Common" });
     const title = t("quran");

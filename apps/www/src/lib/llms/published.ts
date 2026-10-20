@@ -120,43 +120,28 @@ const readPublishedMarkdownSource = Effect.fn("www.llms.published.source")(
  * Markdown text from it. The source is read from Convex once for each release
  * that the caller proved; the text is derived on every fill.
  */
-const readPublishedText = Effect.fn("www.llms.published.read")(function* (
-  input: PublishedMarkdownInput
-) {
-  const source = yield* readContentStore({
-    kind: "markdown.source",
-    load: readPublishedMarkdownSource(input),
-    parts: [input.appLocale, input.family, input.publicPath],
-    release: input.activeReleaseId,
-    schema: PublishedMarkdownSourceSchema,
-  });
-  const projection = yield* {
-    article: decodePublishedArticle,
-    material: decodeMaterialProjection,
-    page: decodePublishedPage,
-  }[input.family](source.projection, input);
-  return yield* buildPublishedText({
-    description: getMdxDescription(projection.metadata),
-    appLocale: input.appLocale,
-    publicPath: projection.publicPath,
-    rawMdx: source.rawMdx,
-    sourcePath: source.sourcePath,
-    sourceRevision: source.sourceRevision,
-    title: projection.metadata.title,
-  });
-});
-
-/**
- * Caches one verified Aksara body under its exact shared content tags. The `use
- * cache` boundary stays so that the route handler still carries the scope tag
- * that expires it and so that the derived text lives only as long as the build
- * that derived it. Behind the boundary the content store keeps the signed
- * source for the release that the caller proved, so the body is read from
- * Convex once for each release. The key holds that release, so the entry needs
- * no timer.
- */
-export async function getCachedPublishedText(input: PublishedMarkdownInput) {
-  const text = await Effect.runPromise(readPublishedText(input));
-
-  return text;
-}
+export const readPublishedText = Effect.fn("www.llms.published.read")(
+  function* (input: PublishedMarkdownInput) {
+    const source = yield* readContentStore({
+      kind: "markdown.source",
+      load: readPublishedMarkdownSource(input),
+      parts: [input.appLocale, input.family, input.publicPath],
+      release: input.activeReleaseId,
+      schema: PublishedMarkdownSourceSchema,
+    });
+    const projection = yield* {
+      article: decodePublishedArticle,
+      material: decodeMaterialProjection,
+      page: decodePublishedPage,
+    }[input.family](source.projection, input);
+    return yield* buildPublishedText({
+      description: getMdxDescription(projection.metadata),
+      appLocale: input.appLocale,
+      publicPath: projection.publicPath,
+      rawMdx: source.rawMdx,
+      sourcePath: source.sourcePath,
+      sourceRevision: source.sourceRevision,
+      title: projection.metadata.title,
+    });
+  }
+);

@@ -6,12 +6,12 @@ import { readNamespaceSegment } from "@repo/contents/route/surface";
 import type { Locale } from "@repo/internationalization/src/locale";
 import { readServerTranslator } from "@repo/internationalization/src/translator";
 import { Array as Arr, Effect, Option, Schema } from "effect";
-import { getPublishedArticleCategory } from "@/lib/content/article/category";
+import { readPublishedArticleCategory } from "@/lib/content/article/category";
 import { getArticleModel } from "@/lib/content/article/publication";
 import { toMaterialMetadataCopy } from "@/lib/content/material/metadata";
 import { getMaterialModel } from "@/lib/content/material/publication";
 import { queryContentStore } from "@/lib/content/store/query";
-import { getCachedMetadataFromSlug } from "@/lib/og/metadata";
+import { getMetadataFromSlug } from "@/lib/og/metadata";
 
 /** The title and description that one social image shows. */
 const OgCopySchema = Schema.Struct({
@@ -40,9 +40,7 @@ const readArticleIndexCopy = Effect.fn("www.og.copy.articleIndex")(function* (
       title: tCommon("articles"),
     });
   }
-  const resolved = yield* Effect.promise(() =>
-    getPublishedArticleCategory(category, locale)
-  );
+  const resolved = yield* readPublishedArticleCategory(category, locale);
   if (Option.isNone(resolved)) {
     return Option.none<OgCopy>();
   }
@@ -71,11 +69,9 @@ const readArticleCopy = Effect.fn("www.og.copy.article")(function* (
     return Option.none<OgCopy>();
   }
 
-  const publication = yield* Effect.promise(() =>
-    getArticleModel(
-      locale,
-      PublicPathSchema.make(`articles/${category}/${articleSlug}`)
-    )
+  const publication = yield* getArticleModel(
+    locale,
+    PublicPathSchema.make(`articles/${category}/${articleSlug}`)
   );
   if (!publication?.model.projection) {
     return Option.none<OgCopy>();
@@ -93,9 +89,7 @@ const readMaterialCopy = Effect.fn("www.og.copy.material")(function* (
   slug: readonly string[]
 ) {
   const publicPath = PublicPathSchema.make(Arr.join(slug, "/"));
-  const publication = yield* Effect.promise(() =>
-    getMaterialModel(locale, publicPath)
-  );
+  const publication = yield* getMaterialModel(locale, publicPath);
   if (!publication?.model.projection) {
     return Option.none<OgCopy>();
   }
@@ -111,9 +105,7 @@ const readDefaultCopy = Effect.fn("www.og.copy.default")(function* (
   locale: Locale,
   slug: readonly string[]
 ) {
-  const fallback = yield* Effect.promise(() =>
-    getCachedMetadataFromSlug(locale, [...slug])
-  );
+  const fallback = yield* getMetadataFromSlug(locale, [...slug]);
   return {
     description: fallback.description ?? fallback.title,
     title: fallback.title,

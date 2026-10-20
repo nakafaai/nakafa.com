@@ -13,7 +13,7 @@ const queryContentStoreMock = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/content/article/category", () => ({
   /** Controls which article category is published. */
-  getPublishedArticleCategory: getPublishedArticleCategoryMock,
+  readPublishedArticleCategory: getPublishedArticleCategoryMock,
 }));
 
 vi.mock("@/lib/content/article/publication", () => ({
@@ -28,7 +28,7 @@ vi.mock("@/lib/content/material/publication", () => ({
 
 vi.mock("@/lib/og/metadata", () => ({
   /** Answers the default copy of a route. */
-  getCachedMetadataFromSlug: getCachedMetadataFromSlugMock,
+  getMetadataFromSlug: getCachedMetadataFromSlugMock,
 }));
 
 vi.mock("@/lib/content/store/query", () => ({
@@ -54,14 +54,18 @@ const projection = (title: string, description?: string) => ({
 beforeEach(() => {
   getPublishedArticleCategoryMock
     .mockReset()
-    .mockResolvedValue(Option.some({ title: "Belajar" }));
+    .mockReturnValue(Effect.succeedSome({ title: "Belajar" }));
   getArticleModelMock
     .mockReset()
-    .mockResolvedValue(projection("Aljabar", "Dasar"));
-  getMaterialModelMock.mockReset().mockResolvedValue(projection("Integral"));
+    .mockReturnValue(Effect.succeed(projection("Aljabar", "Dasar")));
+  getMaterialModelMock
+    .mockReset()
+    .mockReturnValue(Effect.succeed(projection("Integral")));
   getCachedMetadataFromSlugMock
     .mockReset()
-    .mockResolvedValue({ description: undefined, title: "Default" });
+    .mockReturnValue(
+      Effect.succeed({ description: undefined, title: "Default" })
+    );
   queryContentStoreMock
     .mockReset()
     .mockReturnValue(Effect.succeed({ title: "Listed" }));
@@ -94,7 +98,7 @@ describe("og copy of articles", () => {
 
   it.effect("answers none for an unpublished category", () =>
     Effect.gen(function* () {
-      getPublishedArticleCategoryMock.mockResolvedValue(Option.none());
+      getPublishedArticleCategoryMock.mockReturnValue(Effect.succeedNone);
 
       const copy = yield* readOgCopy("en", ["articles", CATEGORY]);
 
@@ -111,7 +115,9 @@ describe("og copy of articles", () => {
           CATEGORY,
           ARTICLE,
         ]);
-        getArticleModelMock.mockResolvedValue(projection("Aljabar"));
+        getArticleModelMock.mockReturnValue(
+          Effect.succeed(projection("Aljabar"))
+        );
         const titleOnly = yield* readOgCopy("en", [
           "articles",
           CATEGORY,
@@ -131,7 +137,7 @@ describe("og copy of articles", () => {
 
   it.effect("answers none for a missing article or a malformed path", () =>
     Effect.gen(function* () {
-      getArticleModelMock.mockResolvedValue(null);
+      getArticleModelMock.mockReturnValue(Effect.succeed(null));
       const missing = yield* readOgCopy("en", ["articles", CATEGORY, ARTICLE]);
       const deeper = yield* readOgCopy("en", [
         "articles",
@@ -190,7 +196,7 @@ describe("og copy of materials", () => {
 
   it.effect("answers none for an unpublished lesson", () =>
     Effect.gen(function* () {
-      getMaterialModelMock.mockResolvedValue(null);
+      getMaterialModelMock.mockReturnValue(Effect.succeed(null));
 
       const copy = yield* readOgCopy("en", [
         SUBJECT,
@@ -234,10 +240,12 @@ describe("og copy of materials", () => {
 describe("og copy of other routes", () => {
   it.effect("answers the default copy of a route that the release lists", () =>
     Effect.gen(function* () {
-      getCachedMetadataFromSlugMock.mockResolvedValue({
-        description: "Quran",
-        title: "Al-Quran",
-      });
+      getCachedMetadataFromSlugMock.mockReturnValue(
+        Effect.succeed({
+          description: "Quran",
+          title: "Al-Quran",
+        })
+      );
 
       const copy = yield* readOgCopy("id", ["quran", "1"]);
 

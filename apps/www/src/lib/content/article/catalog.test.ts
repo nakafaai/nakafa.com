@@ -14,8 +14,6 @@ import { PROJECTION_PAGE_LIMIT } from "@repo/backend/confect/contentRelease/pagi
 import { createTestPublication } from "@repo/backend/test/content/publication";
 import { Effect, Layer } from "effect";
 import {
-  getPublishedArticlePage,
-  getPublishedCategories,
   readPublishedArticlePage,
   readPublishedCategories,
 } from "@/lib/content/article/catalog";
@@ -127,12 +125,10 @@ describe("published article catalog", () => {
             })
           )
         );
-        const page = yield* Effect.promise(() =>
-          getPublishedArticlePage({
-            category: testArticleProjection.category,
-            ...initialCursor,
-          })
-        );
+        const page = yield* readPublishedArticlePage({
+          category: testArticleProjection.category,
+          ...initialCursor,
+        });
         expect(page).toMatchObject({
           activeReleaseId,
           articles: [
@@ -170,11 +166,9 @@ describe("published article catalog", () => {
   it.effect("decodes source-owned category titles without UI fallbacks", () =>
     Effect.gen(function* () {
       runtimeQueryMock.mockReturnValueOnce(Effect.succeed(categoryPage()));
-      const page = yield* Effect.promise(() =>
-        getPublishedCategories({
-          ...initialCursor,
-        })
-      );
+      const page = yield* readPublishedCategories({
+        ...initialCursor,
+      });
       expect(page).toMatchObject({
         categories: [
           {

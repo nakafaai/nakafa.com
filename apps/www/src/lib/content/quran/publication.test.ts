@@ -17,11 +17,10 @@ import {
 import { makeQuranRuntimeSource } from "@repo/backend/test/quran/runtime";
 import { Array as Arr, Context, Effect, Layer, Result } from "effect";
 import {
-  getPublishedQuranCatalog,
-  getPublishedQuranView,
   readPublishedQuranCatalog,
   readPublishedQuranIdentity,
   readPublishedQuranMarkdown,
+  readPublishedQuranView,
 } from "@/lib/content/quran/publication";
 import { activateTestRelease } from "@/test/active";
 import {
@@ -96,9 +95,7 @@ describe("published Quran content", () => {
       const signedCatalog = yield* catalogResult();
       runtimeQueryMock.mockReturnValue(Effect.succeed(signedCatalog));
       const catalog = yield* readPublishedQuranCatalog();
-      const cachedCatalog = yield* Effect.tryPromise(() =>
-        getPublishedQuranCatalog()
-      );
+      const cachedCatalog = yield* readPublishedQuranCatalog();
       expect(catalog).toMatchObject({
         surahs: expect.any(Array),
       });
@@ -194,9 +191,7 @@ describe("published Quran content", () => {
   it.effect("caches the locale-specific Quran web projection", () =>
     Effect.gen(function* () {
       runtimeQueryMock.mockReturnValue(Effect.succeed(viewResult()));
-      const view = yield* Effect.tryPromise(() =>
-        getPublishedQuranView("id", 1)
-      );
+      const view = yield* readPublishedQuranView("id", 1);
       expect(view).toMatchObject({
         appLocale: "id",
         nextSurah: {
@@ -247,9 +242,7 @@ describe("published Quran content", () => {
   it.effect("preserves the final surah and its previous neighbor", () =>
     Effect.gen(function* () {
       runtimeQueryMock.mockReturnValue(Effect.succeed(finalViewResult()));
-      const view = yield* Effect.tryPromise(() =>
-        getPublishedQuranView("id", 114)
-      );
+      const view = yield* readPublishedQuranView("id", 114);
       expect(view).toMatchObject({
         nextSurah: null,
         previousSurah: {
@@ -291,18 +284,18 @@ describe("immutable Quran application reads", () => {
           runtimeQueryMock.mockImplementation(quran.context.query);
 
           yield* readPublishedQuranCatalog();
-          yield* Effect.promise(getPublishedQuranCatalog);
+          yield* readPublishedQuranCatalog();
           expect(runtimeQueryMock).toHaveBeenCalledTimes(1);
 
-          yield* Effect.promise(() => getPublishedQuranView("id", 1));
-          yield* Effect.promise(() => getPublishedQuranView("id", 1));
+          yield* readPublishedQuranView("id", 1);
+          yield* readPublishedQuranView("id", 1);
           expect(runtimeQueryMock).toHaveBeenCalledTimes(2);
 
-          yield* Effect.promise(() => getPublishedQuranView("en", 1));
+          yield* readPublishedQuranView("en", 1);
           expect(runtimeQueryMock).toHaveBeenCalledTimes(3);
 
           activateTestRelease("quran-release-next");
-          yield* Effect.promise(() => getPublishedQuranView("id", 1));
+          yield* readPublishedQuranView("id", 1);
           expect(runtimeQueryMock).toHaveBeenCalledTimes(4);
         })
     );
@@ -314,7 +307,7 @@ describe("immutable Quran application reads", () => {
           runtimeQueryMock.mockImplementation(quran.context.query);
           const identity = yield* readPublishedQuranIdentity();
           const catalog = yield* readPublishedQuranCatalog();
-          const cached = yield* Effect.promise(getPublishedQuranCatalog);
+          const cached = yield* readPublishedQuranCatalog();
           expect(identity).toMatchObject({
             activeReleaseId: quran.state.activeReleaseId,
             activeManifestHash: quran.state.activeManifestHash,
@@ -339,9 +332,7 @@ describe("immutable Quran application reads", () => {
           runtimeQueryMock.mockImplementation(quran.context.query);
           const prefix = yield* readPublishedQuranMarkdown(appLocale, 1, 3);
           const complete = yield* readPublishedQuranMarkdown(appLocale, 1);
-          const view = yield* Effect.promise(() =>
-            getPublishedQuranView(appLocale, 1)
-          );
+          const view = yield* readPublishedQuranView(appLocale, 1);
           expect(prefix.toVerse).toBe(3);
           expect(prefix.verses).toHaveLength(3);
           expect(complete.verses).toHaveLength(complete.surah.numberOfVerses);

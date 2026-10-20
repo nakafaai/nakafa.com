@@ -1,5 +1,6 @@
 import { Effect } from "effect";
 import { openPreviewEvents } from "@/lib/content/preview/events";
+import { runServerEffect } from "@/lib/server/fn";
 
 /** Maps a disabled preview child to an intentionally unavailable endpoint. */
 function unavailableResponse() {
@@ -32,7 +33,7 @@ export function serveContentPreview({
 }: {
   readonly request: Request;
 }) {
-  return Effect.runPromise(
+  return runServerEffect(
     openPreviewEvents(request.signal).pipe(
       Effect.match({
         onFailure: mapFailure,

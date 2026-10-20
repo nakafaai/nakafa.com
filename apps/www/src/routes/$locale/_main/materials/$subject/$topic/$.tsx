@@ -6,7 +6,7 @@ import { toCanonicalPath } from "@repo/internationalization/src/rewrite";
 import { makeArticleJsonLd } from "@repo/seo/json-ld/article";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
-import { Array as Arr, Option, Schema } from "effect";
+import { Array as Arr, Effect, Match, Option, Schema } from "effect";
 import { createTranslator } from "use-intl";
 import { SheetEntry } from "@/components/ai/sheet/entry";
 import { AiMenuItem } from "@/components/ai/sheet/menu";
@@ -49,6 +49,7 @@ import {
   toMaterialNavigationPage,
 } from "@/lib/content/material/navigation";
 import { getMaterialPublication } from "@/lib/content/material/publication";
+import { outcome } from "@/lib/content/outcome";
 import { getAksaraUrl } from "@/lib/content/repository";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getLlmsMarkdownPath } from "@/lib/llms/format";
@@ -56,6 +57,7 @@ import { createResolvedRouteAlternates } from "@/lib/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { createSeoHead, toHeadAlternates, toRouterHead } from "@/lib/seo/head";
 import { getOgUrl } from "@/lib/seo/social";
+import { serverHandler } from "@/lib/server/fn";
 
 const MaterialInput = Schema.Struct({
   lesson: Schema.Array(Schema.String),
@@ -76,83 +78,96 @@ const MaterialSearch = Schema.Struct({
  */
 const readMaterial = createServerFn({ method: "GET" })
   .validator(Schema.toStandardSchemaV1(MaterialInput))
-  .handler(async ({ data }) => {
-    const locale = getLocaleOrThrow(data.locale);
-    const namespace = readNamespaceSegment("subject", locale);
-    if (!namespace || data.lesson.length === 0) {
-      return { kind: "notFound" as const };
-    }
-    const publicPath = Arr.join(
-      [namespace, data.subject, data.topic, ...data.lesson],
-      "/"
-    );
-    const publication = await getMaterialPublication(locale, publicPath);
-    if (!publication?.model.projection) {
-      return { kind: "notFound" as const };
-    }
-    const { model, published } = publication;
-    const route = model.projection;
-    const canonicalPath = Schema.decodeUnknownOption(LocalizedPath)(
-      toCanonicalPath(`/${locale}/${route.publicPath}`)
-    );
-    if (Option.isNone(canonicalPath)) {
-      return { kind: "notFound" as const };
-    }
-    const messages = await loadLocaleMessages(locale);
-    const tCommon = createTranslator({ locale, messages, namespace: "Common" });
-    const navigation = readMaterialNavigation(
-      toMaterialNavigationPage({
-        kind: "published",
-        route,
-        siblings: model.siblings,
-      }),
-      null
-    );
+  .handler(
+    serverHandler(
+      Effect.fn("www.materials.material.read")(function* (
+        data: typeof MaterialInput.Type
+      ) {
+        const locale = getLocaleOrThrow(data.locale);
+        const namespace = readNamespaceSegment("subject", locale);
+        if (!namespace || data.lesson.length === 0) {
+          return outcome("NotFound", {});
+        }
+        const publicPath = Arr.join(
+          [namespace, data.subject, data.topic, ...data.lesson],
+          "/"
+        );
+        const publication = yield* getMaterialPublication(locale, publicPath);
+        if (!publication?.model.projection) {
+          return outcome("NotFound", {});
+        }
+        const { model, published } = publication;
+        const route = model.projection;
+        const canonicalPath = Schema.decodeUnknownOption(LocalizedPath)(
+          toCanonicalPath(`/${locale}/${route.publicPath}`)
+        );
+        if (Option.isNone(canonicalPath)) {
+          return outcome("NotFound", {});
+        }
+        const messages = yield* Effect.promise(() =>
+          loadLocaleMessages(locale)
+        );
+        const tCommon = createTranslator({
+          locale,
+          messages,
+          namespace: "Common",
+        });
+        const navigation = readMaterialNavigation(
+          toMaterialNavigationPage({
+            kind: "published",
+            route,
+            siblings: model.siblings,
+          }),
+          null
+        );
 
-    return {
-      alternates: toHeadAlternates(
-        createResolvedRouteAlternates(route, model.alternates)
-      ),
-      kind: "found" as const,
-      breadcrumbs: createBreadcrumbItems(locale, [
-        { name: tCommon("home"), path: "" },
-      ]),
-      cacheTags: readContentCacheTags([
-        ...LEARN_SHELL_CACHE_SCOPES,
-        "material",
-      ]),
-      canonicalPath: canonicalPath.value,
-      content: published.sourceRevision ? undefined : published.rawMdx,
-      contentId: route.graph.assetId,
-      copySourceUrl: published.sourceRevision
-        ? getLlmsMarkdownPath({ locale, publicPath })
-        : null,
-      headMetadata: toMaterialMetadataCopy({ metadata: route.metadata }),
-      body: published.body,
-      headings: getHeadings(published.rawMdx),
-      labels: {
-        home: tCommon("home"),
-        more: tCommon("more"),
-        onThisPage: tCommon("on-this-page"),
-      },
-      locale,
-      metadata: published.metadata,
-      pagination: navigation.pagination,
-      route: {
-        appLocale: route.appLocale,
-        authors: route.metadata.authors,
-        contentKey: route.contentKey,
-        href: toMaterialHref(route),
-        publicPath: route.publicPath,
-      },
-      sourceUrl: published.sourceRevision
-        ? getAksaraUrl({
-            path: published.sourcePath,
-            revision: published.sourceRevision,
-          })
-        : null,
-    };
-  });
+        return outcome("Found", {
+          page: {
+            alternates: toHeadAlternates(
+              createResolvedRouteAlternates(route, model.alternates)
+            ),
+            breadcrumbs: createBreadcrumbItems(locale, [
+              { name: tCommon("home"), path: "" },
+            ]),
+            cacheTags: readContentCacheTags([
+              ...LEARN_SHELL_CACHE_SCOPES,
+              "material",
+            ]),
+            canonicalPath: canonicalPath.value,
+            content: published.sourceRevision ? undefined : published.rawMdx,
+            contentId: route.graph.assetId,
+            copySourceUrl: published.sourceRevision
+              ? getLlmsMarkdownPath({ locale, publicPath })
+              : null,
+            headMetadata: toMaterialMetadataCopy({ metadata: route.metadata }),
+            body: published.body,
+            headings: getHeadings(published.rawMdx),
+            labels: {
+              home: tCommon("home"),
+              more: tCommon("more"),
+              onThisPage: tCommon("on-this-page"),
+            },
+            locale,
+            metadata: published.metadata,
+            pagination: navigation.pagination,
+            route: {
+              appLocale: route.appLocale,
+              authors: route.metadata.authors,
+              contentKey: route.contentKey,
+              href: toMaterialHref(route),
+              publicPath: route.publicPath,
+            },
+            sourceUrl: published.sourceRevision
+              ? getAksaraUrl({
+                  path: published.sourcePath,
+                  revision: published.sourceRevision,
+                })
+              : null,
+          },
+        });
+      })
+    )
+  );
 
 /** One signed material lesson, reached by its subject, topic and lesson path. */
 export const Route = createFileRoute(
@@ -164,7 +179,7 @@ export const Route = createFileRoute(
       (params._splat ?? "").split("/"),
       (segment) => segment !== ""
     );
-    const page = await readMaterial({
+    const read = await readMaterial({
       data: {
         lesson,
         locale: params.locale,
@@ -172,10 +187,14 @@ export const Route = createFileRoute(
         topic: params.topic,
       },
     });
-    if (page.kind === "notFound") {
-      throw notFound();
-    }
-    return page;
+    return Match.value(read).pipe(
+      Match.tagsExhaustive({
+        Found: ({ page }) => page,
+        NotFound: () => {
+          throw notFound();
+        },
+      })
+    );
   },
   head: ({ loaderData }) => {
     if (loaderData === undefined) {

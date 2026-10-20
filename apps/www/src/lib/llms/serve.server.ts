@@ -6,6 +6,7 @@ import {
   readLlmsMarkdownTarget,
 } from "@/lib/llms/markdown.server";
 import { getNakafaAgentSkillIndex, getNakafaSkillText } from "@/lib/llms/skill";
+import { runServerEffect } from "@/lib/server/fn";
 
 /** Serves the small root llms index. */
 export function serveLlmsIndex() {
@@ -30,7 +31,7 @@ export function serveSkill() {
 
 /** Serves the agent-skills discovery manifest. A failed digest is a defect. */
 export function serveAgentSkills() {
-  return Effect.runPromise(
+  return runServerEffect(
     Effect.map(getNakafaAgentSkillIndex(), (index) =>
       Response.json(index, {
         headers: {
@@ -56,7 +57,5 @@ export function serveLlmsMarkdown({
     (params._splat ?? "").split("/"),
     (segment) => segment !== ""
   );
-  return Effect.runPromise(
-    answerLlmsMarkdown(readLlmsMarkdownTarget(segments))
-  );
+  return runServerEffect(answerLlmsMarkdown(readLlmsMarkdownTarget(segments)));
 }

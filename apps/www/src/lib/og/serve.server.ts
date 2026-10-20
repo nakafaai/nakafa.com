@@ -8,6 +8,7 @@ import { generateOGImage } from "@/lib/og";
 import { isUnservedLocaleShape, readImageSuffix } from "@/lib/og/alias";
 import { readOgCopy } from "@/lib/og/copy.server";
 import { generateFallbackImage } from "@/lib/og/fallback";
+import { runServerEffect } from "@/lib/server/fn";
 
 const IMAGE_FILE = "image.png";
 
@@ -72,12 +73,12 @@ export function serveOgImage({
     isUnservedLocaleShape(segments[0]) &&
     Option.isSome(readImageSuffix(splat))
   ) {
-    return Effect.runPromise(generateFallbackImage(DEFAULT_LOCALE));
+    return runServerEffect(generateFallbackImage(DEFAULT_LOCALE));
   }
   const prefix = decodeLocale(segments[0]);
   const locale = Option.getOrElse(prefix, () => DEFAULT_LOCALE);
   const slug = Option.isSome(prefix) ? Arr.drop(segments, 1) : segments;
-  return Effect.runPromise(renderOgImage(locale, readContentSlug(slug)));
+  return runServerEffect(renderOgImage(locale, readContentSlug(slug)));
 }
 
 /**
@@ -92,9 +93,9 @@ export function serveLocaleOgImage({
 }) {
   const locale = decodeLocale(params.lang);
   if (Option.isNone(locale)) {
-    return Effect.runPromise(generateFallbackImage(DEFAULT_LOCALE));
+    return runServerEffect(generateFallbackImage(DEFAULT_LOCALE));
   }
-  return Effect.runPromise(
+  return runServerEffect(
     renderOgImage(
       locale.value,
       readContentSlug(readSegments(params._splat ?? ""))

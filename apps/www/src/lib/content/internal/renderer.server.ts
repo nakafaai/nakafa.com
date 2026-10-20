@@ -8,6 +8,7 @@ import { env } from "@/env";
 import { isInternalContentAuthorized } from "@/lib/content/internal/authorization";
 import { readPreviewRendererConfig } from "@/lib/content/preview/config";
 import { rendererManifest } from "@/lib/content/renderer/manifest";
+import { runServerEffect } from "@/lib/server/fn";
 
 const PRIVATE_RESPONSE_HEADERS = { "Cache-Control": "private, no-store" };
 const PREVIEW_NONCE_HEADER = "x-aksara-preview-nonce";
@@ -27,7 +28,7 @@ export function serveContentRenderer({
 }: {
   readonly request: Request;
 }) {
-  return Effect.runPromise(
+  return runServerEffect(
     Effect.gen(function* () {
       const authorization = request.headers.get("Authorization");
       const isInternalAuthorized = yield* isInternalContentAuthorized(

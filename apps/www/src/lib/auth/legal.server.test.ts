@@ -21,7 +21,7 @@ let pages: Pick<
 > | null = null;
 
 vi.mock("@/lib/content/page/navigation", () => ({
-  getShellPageNavigation: vi.fn(() => Promise.resolve(pages)),
+  getShellPageNavigation: vi.fn(() => Effect.succeed(pages)),
 }));
 
 const signedLinks = {

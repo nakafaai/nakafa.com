@@ -10,8 +10,8 @@ import { PublishedProjectionError } from "@/lib/content/published/errors";
 import { readPublishedContent } from "@/lib/content/published/exchange";
 import { rendererManifest } from "@/lib/content/renderer/manifest";
 import {
-  getCachedPublishedText,
   type PublishedMarkdownInput,
+  readPublishedText,
 } from "@/lib/llms/published";
 import { activateTestRelease } from "@/test/active";
 import {
@@ -129,14 +129,12 @@ describe("published llms markdown", () => {
       Effect.gen(function* () {
         const { materialData } = yield* preparePublishedFixtures();
         activateTestRelease(materialData.activeReleaseId);
-        const text = yield* Effect.tryPromise(() =>
-          getCachedPublishedText({
-            activeReleaseId: materialData.activeReleaseId,
-            appLocale: previewProjection.appLocale,
-            family: "material",
-            publicPath: previewProjection.publicPath,
-          })
-        );
+        const text = yield* readPublishedText({
+          activeReleaseId: materialData.activeReleaseId,
+          appLocale: previewProjection.appLocale,
+          family: "material",
+          publicPath: previewProjection.publicPath,
+        });
 
         expect(text).toContain(previewMetadata.description);
         expect(text).toContain("What is a Function?");
@@ -161,14 +159,12 @@ describe("published llms markdown", () => {
       Effect.gen(function* () {
         const { articleData } = yield* preparePublishedFixtures();
         activateTestRelease(articleData.activeReleaseId);
-        const text = yield* Effect.tryPromise(() =>
-          getCachedPublishedText({
-            activeReleaseId: articleData.activeReleaseId,
-            appLocale: testArticleProjection.appLocale,
-            family: "article",
-            publicPath: testArticleProjection.publicPath,
-          })
-        );
+        const text = yield* readPublishedText({
+          activeReleaseId: articleData.activeReleaseId,
+          appLocale: testArticleProjection.appLocale,
+          family: "article",
+          publicPath: testArticleProjection.publicPath,
+        });
 
         expect(text).toContain(testArticleProjection.metadata.description);
         expect(text).toContain(testArticleArtifact.payload.rawMdx);
@@ -187,14 +183,12 @@ describe("published llms markdown", () => {
       Effect.gen(function* () {
         const { pageData } = yield* preparePublishedFixtures();
         activateTestRelease(pageData.activeReleaseId);
-        const text = yield* Effect.tryPromise(() =>
-          getCachedPublishedText({
-            activeReleaseId: pageData.activeReleaseId,
-            appLocale: testPageProjection.appLocale,
-            family: "page",
-            publicPath: testPageProjection.publicPath,
-          })
-        );
+        const text = yield* readPublishedText({
+          activeReleaseId: pageData.activeReleaseId,
+          appLocale: testPageProjection.appLocale,
+          family: "page",
+          publicPath: testPageProjection.publicPath,
+        });
 
         expect(text).toContain(testPageProjection.metadata.description);
         expect(text).toContain(testPageArtifact.payload.rawMdx);
@@ -216,14 +210,12 @@ describe("published llms markdown", () => {
         readContentMock.mockReturnValueOnce(
           Effect.succeed({ ...materialData, sourceRevision: null })
         );
-        const text = yield* Effect.tryPromise(() =>
-          getCachedPublishedText({
-            activeReleaseId: materialData.activeReleaseId,
-            appLocale: previewProjection.appLocale,
-            family: "material",
-            publicPath: previewProjection.publicPath,
-          })
-        );
+        const text = yield* readPublishedText({
+          activeReleaseId: materialData.activeReleaseId,
+          appLocale: previewProjection.appLocale,
+          family: "material",
+          publicPath: previewProjection.publicPath,
+        });
 
         expect(text).not.toContain("Source:");
       })
@@ -248,16 +240,15 @@ describe("published llms markdown", () => {
             },
           })
         );
-        const failure = yield* Effect.tryPromise({
-          catch: (cause) => new TestPublishedTextError({ cause }),
-          try: () =>
-            getCachedPublishedText({
-              activeReleaseId: materialData.activeReleaseId,
-              appLocale: previewProjection.appLocale,
-              family: "material",
-              publicPath: previewProjection.publicPath,
-            }),
-        }).pipe(Effect.flip);
+        const failure = yield* readPublishedText({
+          activeReleaseId: materialData.activeReleaseId,
+          appLocale: previewProjection.appLocale,
+          family: "material",
+          publicPath: previewProjection.publicPath,
+        }).pipe(
+          Effect.mapError((cause) => new TestPublishedTextError({ cause })),
+          Effect.flip
+        );
 
         expect(failure.cause).toBeInstanceOf(Error);
         if (failure.cause instanceof Error) {
@@ -280,10 +271,8 @@ it.effect("reads and projects one body once for each release", () =>
       publicPath: previewProjection.publicPath,
     } as const;
 
-    const first = yield* Effect.tryPromise(() => getCachedPublishedText(input));
-    const second = yield* Effect.tryPromise(() =>
-      getCachedPublishedText(input)
-    );
+    const first = yield* readPublishedText(input);
+    const second = yield* readPublishedText(input);
 
     expect(second).toBe(first);
     expect(readContentMock).toHaveBeenCalledTimes(1);
@@ -294,7 +283,7 @@ it.effect("reads and projects one body once for each release", () =>
       activeReleaseId: ReleaseIdSchema.make("release-function-concept-next"),
     };
     activateTestRelease(nextInput.activeReleaseId);
-    yield* Effect.tryPromise(() => getCachedPublishedText(nextInput));
+    yield* readPublishedText(nextInput);
     expect(readContentMock).toHaveBeenCalledTimes(2);
   })
 );
@@ -304,14 +293,12 @@ it.effect("keeps the signed source in the store and no derived text", () =>
     const { materialData } = yield* preparePublishedFixtures();
     activateTestRelease(materialData.activeReleaseId);
 
-    yield* Effect.tryPromise(() =>
-      getCachedPublishedText({
-        activeReleaseId: materialData.activeReleaseId,
-        appLocale: previewProjection.appLocale,
-        family: "material",
-        publicPath: previewProjection.publicPath,
-      })
-    );
+    yield* readPublishedText({
+      activeReleaseId: materialData.activeReleaseId,
+      appLocale: previewProjection.appLocale,
+      family: "material",
+      publicPath: previewProjection.publicPath,
+    });
 
     // The stored value has exactly these four fields: the signed projection,
     // the raw source and its provenance. The header and the projected Markdown
@@ -342,14 +329,12 @@ it.effect("derives the text from the stored source on every build", () =>
       publicPath: previewProjection.publicPath,
     } as const;
 
-    const before = yield* Effect.tryPromise(() =>
-      getCachedPublishedText(input)
-    );
+    const before = yield* readPublishedText(input);
     // A deploy changes what code derives, while the release and the answers
     // that Convex gave for it stay the same.
     const original = derivation.baseUrl;
     derivation.baseUrl = "https://deployed.example";
-    const after = yield* Effect.tryPromise(() => getCachedPublishedText(input));
+    const after = yield* readPublishedText(input);
     derivation.baseUrl = original;
 
     expect(before).toContain(`URL: ${original}/`);
@@ -363,16 +348,15 @@ it.effect("rejects a signed projection from a different family", () =>
     const { materialData } = yield* preparePublishedFixtures();
     activateTestRelease(materialData.activeReleaseId);
     readContentMock.mockReturnValueOnce(Effect.succeed(materialData));
-    const failure = yield* Effect.tryPromise({
-      catch: (cause) => new TestPublishedTextError({ cause }),
-      try: () =>
-        getCachedPublishedText({
-          activeReleaseId: materialData.activeReleaseId,
-          appLocale: previewProjection.appLocale,
-          family: "article",
-          publicPath: previewProjection.publicPath,
-        }),
-    }).pipe(Effect.flip);
+    const failure = yield* readPublishedText({
+      activeReleaseId: materialData.activeReleaseId,
+      appLocale: previewProjection.appLocale,
+      family: "article",
+      publicPath: previewProjection.publicPath,
+    }).pipe(
+      Effect.mapError((cause) => new TestPublishedTextError({ cause })),
+      Effect.flip
+    );
     expect(failure.cause).toBeInstanceOf(PublishedProjectionError);
   })
 );

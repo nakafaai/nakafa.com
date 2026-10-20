@@ -124,19 +124,19 @@ const assembleMaterialSource = Effect.fn("NakafaMaterial.assembleSource")(
 /** The release id makes a verified group immutable across its lesson URLs, and
  * the content store keeps it once for each release. New publications select a
  * new key. Never store a failed or mismatched publication lookup. */
-async function readMaterialNavigation(
-  locale: Locale,
-  materialKey: string,
-  expectedActiveReleaseId: string
-) {
-  return await Effect.runPromise(
-    queryContentStore(contentRelease.material.navigation, {
+const readMaterialNavigation = Effect.fn("NakafaMaterial.readNavigation")(
+  function* (
+    locale: Locale,
+    materialKey: string,
+    expectedActiveReleaseId: string
+  ) {
+    return yield* queryContentStore(contentRelease.material.navigation, {
       appLocale: AppLocaleSchema.make(locale),
       expectedActiveReleaseId,
       materialKey,
-    })
-  );
-}
+    });
+  }
+);
 class MaterialReadError extends Schema.TaggedError<MaterialReadError>()(
   "MaterialReadError",
   {
@@ -145,17 +145,17 @@ class MaterialReadError extends Schema.TaggedError<MaterialReadError>()(
   }
 ) {}
 
-/** Starts native IO before Effect at the request-less prerendering seam. The
- * lesson is read through the content store, so the page and its social image
- * share one read of Convex for each release. */
-async function fetchMaterialLesson(locale: Locale, publicPath: string) {
-  return await Effect.runPromise(
-    queryContentStore(contentRelease.material.lesson, {
-      appLocale: AppLocaleSchema.make(locale),
-      publicPath,
-    })
-  );
-}
+/** The lesson is read through the content store, so the page and its social
+ * image share one read of Convex for each release. */
+const fetchMaterialLesson = Effect.fn("NakafaMaterial.fetchLesson")(function* (
+  locale: Locale,
+  publicPath: string
+) {
+  return yield* queryContentStore(contentRelease.material.lesson, {
+    appLocale: AppLocaleSchema.make(locale),
+    publicPath,
+  });
+});
 const completeMaterialSource = Effect.fn("NakafaMaterial.completeSource")(
   function* (
     source: Ref.Returns<typeof contentRelease.material.lesson>,
@@ -166,15 +166,15 @@ const completeMaterialSource = Effect.fn("NakafaMaterial.completeSource")(
     const { activeReleaseId } = source.model;
     const navigation =
       materialKey !== null && activeReleaseId !== null
-        ? yield* Effect.tryPromise({
-            try: () =>
-              readMaterialNavigation(locale, materialKey, activeReleaseId),
-            catch: (cause) =>
-              new MaterialReadError({
-                cause,
-                stage: "navigation",
-              }),
-          })
+        ? yield* readMaterialNavigation(
+            locale,
+            materialKey,
+            activeReleaseId
+          ).pipe(
+            Effect.mapError(
+              (cause) => new MaterialReadError({ cause, stage: "navigation" })
+            )
+          )
         : null;
     return yield* assembleMaterialSource(
       source,
@@ -186,8 +186,8 @@ const completeMaterialSource = Effect.fn("NakafaMaterial.completeSource")(
 );
 
 /** Rechecks a failed navigation read and retries only after a release change.
- * Next serializes errors across cache boundaries, so a fresh lesson identity
- * proves the transition without relying on a preserved ConvexError class. */
+ * A fresh lesson identity proves the transition, and the typed error is the only
+ * signal that the navigation read needs a second look. */
 const readMaterialSource = Effect.fn("NakafaMaterial.readSource")(function* (
   initial: Ref.Returns<typeof contentRelease.material.lesson>,
   locale: Locale,
@@ -195,14 +195,10 @@ const readMaterialSource = Effect.fn("NakafaMaterial.readSource")(function* (
 ) {
   return yield* completeMaterialSource(initial, locale, publicPath).pipe(
     Effect.catchTag("MaterialReadError", (error) =>
-      Effect.tryPromise({
-        try: () => fetchMaterialLesson(locale, publicPath),
-        catch: (cause) =>
-          new MaterialReadError({
-            cause,
-            stage: "lesson",
-          }),
-      }).pipe(
+      fetchMaterialLesson(locale, publicPath).pipe(
+        Effect.mapError(
+          (cause) => new MaterialReadError({ cause, stage: "lesson" })
+        ),
         Effect.flatMap((source) =>
           source.model.activeReleaseId === initial.model.activeReleaseId
             ? Effect.fail(error)
@@ -214,31 +210,23 @@ const readMaterialSource = Effect.fn("NakafaMaterial.readSource")(function* (
 });
 
 /** Reads and verifies one signed material delivery for the lesson page. */
-export async function getMaterialPublication(
-  locale: Locale,
-  publicPath: string
-) {
-  const source = await fetchMaterialLesson(locale, publicPath);
-  return await Effect.runPromise(
-    readMaterialSource(source, locale, publicPath).pipe(
-      Effect.flatMap((assembled) =>
-        decodeMaterialDelivery(assembled, locale, publicPath)
-      )
-    )
-  );
-}
+export const getMaterialPublication = Effect.fn(
+  "NakafaMaterial.getPublication"
+)(function* (locale: Locale, publicPath: string) {
+  const source = yield* fetchMaterialLesson(locale, publicPath);
+  const assembled = yield* readMaterialSource(source, locale, publicPath);
+  return yield* decodeMaterialDelivery(assembled, locale, publicPath);
+});
 
 /** Reads and verifies signed release metadata without rendering its body.
  *
  * Social images resolve copy through this seam so a missing release falls
  * back to brand artwork instead of rendering the application shell. */
-export async function getMaterialModel(locale: Locale, publicPath: string) {
-  const source = await fetchMaterialLesson(locale, publicPath);
-  return await Effect.runPromise(
-    readMaterialSource(source, locale, publicPath).pipe(
-      Effect.flatMap((assembled) =>
-        decodeMaterialModel(assembled, locale, publicPath)
-      )
-    )
-  );
-}
+export const getMaterialModel = Effect.fn("NakafaMaterial.getModel")(function* (
+  locale: Locale,
+  publicPath: string
+) {
+  const source = yield* fetchMaterialLesson(locale, publicPath);
+  const assembled = yield* readMaterialSource(source, locale, publicPath);
+  return yield* decodeMaterialModel(assembled, locale, publicPath);
+});

@@ -69,11 +69,3 @@ export const getMetadataFromSlug = Effect.fn("www.metadata.readFromSlug")(
     };
   }
 );
-
-/** Resolves the metadata of one OG route from its slug. */
-export async function getCachedMetadataFromSlug(
-  locale: Locale,
-  slug: string[]
-) {
-  return await Effect.runPromise(getMetadataFromSlug(locale, slug));
-}

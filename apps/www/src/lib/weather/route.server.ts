@@ -7,6 +7,7 @@ import {
   createCorsForbiddenResponse,
   isCorsRequestAllowed,
 } from "@/lib/security/cors";
+import { runServerEffect } from "@/lib/server/fn";
 import {
   DEFAULT_LATITUDE,
   DEFAULT_LONGITUDE,
@@ -26,7 +27,7 @@ const logContext = {
 export function serveWeather({ request }: { readonly request: Request }) {
   const startedAt = performance.now();
 
-  return Effect.runPromise(
+  return runServerEffect(
     Effect.gen(function* () {
       const isAllowedOrigin = yield* isCorsRequestAllowed(request);
       if (!isAllowedOrigin) {

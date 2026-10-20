@@ -63,14 +63,3 @@ export const articlePendingManifest = Schema.decodeSync(PreviewPendingSchema)({
   revision: 1,
   status: "pending",
 });
-
-/** Pending state for the real localized German article preview route. */
-export const germanArticlePendingManifest = Schema.decodeSync(
-  PreviewPendingSchema
-)({
-  document: germanArticlePreviewDocument,
-  format: LOCAL_PREVIEW_FORMAT,
-  repositories: previewRepositories,
-  revision: 1,
-  status: "pending",
-});

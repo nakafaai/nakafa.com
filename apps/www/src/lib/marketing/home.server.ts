@@ -20,9 +20,7 @@ export const readHomeTryoutHandler = serverHandler(readHomeTryoutEffect);
 /** Reads the curricula that the home page lists, from the signed catalog of its locale. */
 const readHomeCurriculaEffect = Effect.fn("www.marketing.readHomeCurricula")(
   function* ({ locale }: HomeInput) {
-    const catalog = yield* Effect.promise(() =>
-      readRuntimeCurriculumCatalog(locale)
-    );
+    const catalog = yield* readRuntimeCurriculumCatalog(locale);
     return readRuntimeCurriculumOptions(catalog, locale);
   }
 );

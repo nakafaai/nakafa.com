@@ -13,7 +13,7 @@ import { runServerEffect } from "@/lib/server/fn";
 export const readAuthLegalLinks = Effect.fn("www.auth.legalLinks")(function* (
   locale: Locale
 ) {
-  const pages = yield* Effect.promise(() => getShellPageNavigation(locale));
+  const pages = yield* getShellPageNavigation(locale);
   return Option.map(Option.fromNullishOr(pages), (page) => ({
     privacy: new URL(`/${locale}${page.privacyPolicyHref}`, SITE_ORIGIN).href,
     terms: new URL(`/${locale}${page.termsOfServiceHref}`, SITE_ORIGIN).href,

@@ -20,8 +20,8 @@ import {
 } from "@/lib/llms/index/public";
 import { getPricingLlmsText, isPricingLlmsRoute } from "@/lib/llms/pricing";
 import {
-  getCachedPublishedText,
   type PublishedMarkdownInput,
+  readPublishedText,
 } from "@/lib/llms/published";
 import { classifyQuranLlmsRoute, getQuranLlmsText } from "@/lib/llms/quran";
 
@@ -49,10 +49,9 @@ const readCachedMarkdown = Effect.fn("www.llms.markdown.owner")(function* (
   source: PublishedMarkdownSource,
   locale: Locale
 ) {
-  return yield* Effect.tryPromise({
-    catch: (cause) => new CacheFailure({ cause, owner: "published" }),
-    try: () => readPublishedMarkdown(source, locale),
-  });
+  return yield* readPublishedMarkdown(source, locale).pipe(
+    Effect.mapError((cause) => new CacheFailure({ cause, owner: "published" }))
+  );
 });
 /** Reads the derived index fallback after concrete Markdown owners miss. */
 const readSectionIndex = Effect.fn("www.llms.markdown.index")(function* ({
@@ -164,5 +163,5 @@ function readPublishedMarkdown(
     family: source.family,
     publicPath: source.publicPath,
   };
-  return getCachedPublishedText(input);
+  return readPublishedText(input);
 }

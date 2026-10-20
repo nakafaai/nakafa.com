@@ -153,16 +153,3 @@ const PublishedProgramRouteSchema = Schema.Struct({
 
 /** Complete immutable data needed by one curriculum route page. */
 type PublishedProgramRoute = typeof PublishedProgramRouteSchema.Type;
-
-/**
- * Reads one complete curriculum route for the active release.
- */
-export async function getPublishedProgramRoute(
-  locale: Locale,
-  publicPath: string
-) {
-  const result = await Effect.runPromise(
-    readPublishedProgramRoute(locale, publicPath)
-  );
-  return result;
-}

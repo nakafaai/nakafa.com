@@ -204,9 +204,7 @@ describe("signed Page navigation", () => {
       Effect.gen(function* () {
         previewMock.mockReturnValue(true);
 
-        const navigation = yield* Effect.tryPromise(() =>
-          getShellPageNavigation("de")
-        );
+        const navigation = yield* getShellPageNavigation("de");
 
         expect(navigation).toBeNull();
         expect(catalogMock).not.toHaveBeenCalled();
@@ -217,9 +215,7 @@ describe("signed Page navigation", () => {
     "loads and caches complete signed navigation for the product shell",
     () =>
       Effect.gen(function* () {
-        const navigation = yield* Effect.tryPromise(() =>
-          getShellPageNavigation("de")
-        );
+        const navigation = yield* getShellPageNavigation("de");
 
         expect(navigation).toMatchObject({
           privacyPolicyHref: "/privacy-policy",

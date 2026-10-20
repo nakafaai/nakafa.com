@@ -19,6 +19,7 @@ import {
 import { invalidateStoreTag } from "@/lib/content/store/entry";
 import { invalidateLlmsCache } from "@/lib/llms/cache";
 import { invalidateOgCache } from "@/lib/og/cache";
+import { runServerEffect } from "@/lib/server/fn";
 import { invalidateSitemapCache } from "@/lib/sitemap/cache";
 
 const PRIVATE_RESPONSE_HEADERS = { "Cache-Control": "private, no-store" };
@@ -162,5 +163,5 @@ export function receiveContentCache({
 }: {
   readonly request: Request;
 }) {
-  return Effect.runPromise(answerCacheRequest(request));
+  return runServerEffect(answerCacheRequest(request));
 }

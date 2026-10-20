@@ -13,8 +13,8 @@ import {
   getQuranSurahName,
 } from "@/lib/content/quran/navigation";
 import {
-  getPublishedQuranCatalog,
-  getPublishedQuranView,
+  readPublishedQuranCatalog,
+  readPublishedQuranView,
 } from "@/lib/content/quran/publication";
 import { recoverStalePublishedQuranSnapshot } from "@/lib/content/quran/recovery";
 import { getQuranReferences } from "@/lib/content/quran/references";
@@ -38,7 +38,7 @@ const readSurahPage = Effect.fn("www.content.quran.readSurah")(function* (
     return { kind: "notFound" as const };
   }
   const surahNumber = parsedNumber.value;
-  const catalog = yield* Effect.promise(() => getPublishedQuranCatalog());
+  const catalog = yield* readPublishedQuranCatalog();
   const surahData = Arr.findFirst(
     catalog.surahs,
     ({ number }) => number === surahNumber
@@ -48,7 +48,7 @@ const readSurahPage = Effect.fn("www.content.quran.readSurah")(function* (
   }
   const [view, messages, seo] = yield* Effect.all(
     [
-      Effect.promise(() => getPublishedQuranView(locale, surahNumber)),
+      readPublishedQuranView(locale, surahNumber),
       Effect.promise(() => loadLocaleMessages(locale)),
       resolveSEOMetadata({ surah: surahData.value, type: "quran" }, locale),
     ],

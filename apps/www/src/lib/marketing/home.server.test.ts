@@ -1,5 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from "@effect/vitest";
+import { Effect } from "effect";
 import { readFeaturedTryout } from "@/components/tryout/catalog/source.server";
 import {
   readRuntimeCurriculumCatalog,
@@ -20,7 +21,7 @@ vi.mock("@/components/tryout/catalog/source.server", () => ({
 
 vi.mock("@/lib/curriculum/model", () => ({
   readRuntimeCurriculumCatalog: vi.fn(() =>
-    Promise.resolve({ entries: [], sourceRevision: "rev" })
+    Effect.succeed({ entries: [], sourceRevision: "rev" })
   ),
   readRuntimeCurriculumOptions: vi.fn(() => [
     { href: "/en/curricula/math", title: "Math", value: "math" },

@@ -1,4 +1,4 @@
-import { Struct } from "effect";
+import { Effect, Struct } from "effect";
 // @vitest-environment node
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
@@ -27,11 +27,11 @@ const routeMock = vi.hoisted(() => vi.fn());
 const revision = GitCommitShaSchema.make("a".repeat(40));
 
 vi.mock("@/lib/content/program/catalog", () => ({
-  getPublishedProgramCatalog: catalogMock,
+  readPublishedProgramCatalog: catalogMock,
 }));
 vi.mock("@/lib/content/cache", () => ({}));
 vi.mock("@/lib/content/program/route", () => ({
-  getPublishedProgramRoute: routeMock,
+  readPublishedProgramRoute: routeMock,
 }));
 
 /** Builds one complete signed route response for runtime selection. */
@@ -60,99 +60,117 @@ describe("signed curriculum runtime", () => {
     routeMock.mockReset();
   });
 
-  it("resolves a signed route with published cards and hierarchy", async () => {
-    routeMock.mockResolvedValueOnce(publishedRoute());
+  it.effect("resolves a signed route with published cards and hierarchy", () =>
+    Effect.gen(function* () {
+      routeMock.mockReturnValueOnce(Effect.succeed(publishedRoute()));
 
-    const model = await resolveRuntimeCurriculumRoute({
-      curriculum: "merdeka",
-      locale: "en",
-      path: ["class-11", "mathematics"],
-    });
+      const model = yield* resolveRuntimeCurriculumRoute({
+        curriculum: "merdeka",
+        locale: "en",
+        path: ["class-11", "mathematics"],
+      });
 
-    expect(model).toMatchObject({
-      ancestors: [
-        { publicPath: "curriculum/merdeka" },
-        { publicPath: "curriculum/merdeka/class-11" },
-      ],
-      materialCards: [{ items: [{ title: "Function Concept" }] }],
-      route: { publicPath: testProgramSubject.publicPath },
-      sourcePath: "packages/corpus/curriculum/merdeka",
-      sourceRevision: revision,
-    });
-  });
+      expect(model).toMatchObject({
+        ancestors: [
+          { publicPath: "curriculum/merdeka" },
+          { publicPath: "curriculum/merdeka/class-11" },
+        ],
+        materialCards: [{ items: [{ title: "Function Concept" }] }],
+        route: { publicPath: testProgramSubject.publicPath },
+        sourcePath: "packages/corpus/curriculum/merdeka",
+        sourceRevision: revision,
+      });
+    })
+  );
 
-  it("fails closed when a signed route is absent", async () => {
-    routeMock.mockResolvedValueOnce(publishedRoute({ route: null }));
+  it.effect("fails closed when a signed route is absent", () =>
+    Effect.gen(function* () {
+      routeMock.mockReturnValueOnce(
+        Effect.succeed(publishedRoute({ route: null }))
+      );
 
-    await expect(
-      resolveRuntimeCurriculumRoute({ curriculum: "missing", locale: "en" })
-    ).rejects.toThrow();
-  });
+      expect(
+        yield* Effect.exit(
+          resolveRuntimeCurriculumRoute({ curriculum: "missing", locale: "en" })
+        )
+      ).toMatchObject({ _tag: "Failure" });
+    })
+  );
 
-  it("reads signed root cards and selector values", async () => {
-    catalogMock.mockResolvedValueOnce({
-      entries: [
+  it.effect("reads signed root cards and selector values", () =>
+    Effect.gen(function* () {
+      catalogMock.mockReturnValueOnce(
+        Effect.succeed({
+          entries: [
+            {
+              program: testPublishedProgram,
+              route: testProgramRoot,
+              translation: testPublishedProgram.translations[0],
+            },
+            {
+              program: testPublishedProgram,
+              route: { ...testProgramRoot, sitemap: false },
+              translation: testPublishedProgram.translations[0],
+            },
+          ],
+          sourceRevision: revision,
+        })
+      );
+
+      const catalog = yield* readRuntimeCurriculumCatalog("en");
+
+      expect(catalog.entries).toHaveLength(1);
+      expect(readRuntimeCurriculumOptions(catalog, "en")).toEqual([
         {
-          program: testPublishedProgram,
-          route: testProgramRoot,
-          translation: testPublishedProgram.translations[0],
+          countryCode: "ID",
+          href: "/en/curriculum/merdeka",
+          programKey: "merdeka",
+          publicSlug: "merdeka",
+          title: "Kurikulum Merdeka",
+          value: "curriculum/merdeka",
         },
-        {
-          program: testPublishedProgram,
-          route: { ...testProgramRoot, sitemap: false },
-          translation: testPublishedProgram.translations[0],
-        },
-      ],
-      sourceRevision: revision,
-    });
+      ]);
+    })
+  );
 
-    const catalog = await readRuntimeCurriculumCatalog("en");
+  it.effect("omits the country for a global curriculum provider", () =>
+    Effect.gen(function* () {
+      catalogMock.mockReturnValueOnce(
+        Effect.succeed({
+          entries: [
+            {
+              program: {
+                ...testPublishedProgram,
+                provider: Struct.omit(testPublishedProgram.provider, [
+                  "homeCountry",
+                ]),
+              },
+              route: testProgramRoot,
+              translation: testPublishedProgram.translations[0],
+            },
+          ],
+          sourceRevision: revision,
+        })
+      );
+      const catalog = yield* readRuntimeCurriculumCatalog("en");
+      expect(readRuntimeCurriculumOptions(catalog, "en")[0]).not.toHaveProperty(
+        "countryCode"
+      );
+    })
+  );
 
-    expect(catalog.entries).toHaveLength(1);
-    expect(readRuntimeCurriculumOptions(catalog, "en")).toEqual([
-      {
-        countryCode: "ID",
-        href: "/en/curriculum/merdeka",
-        programKey: "merdeka",
-        publicSlug: "merdeka",
-        title: "Kurikulum Merdeka",
-        value: "curriculum/merdeka",
-      },
-    ]);
-  });
+  it.effect("builds route presentation from signed ancestors", () =>
+    Effect.gen(function* () {
+      routeMock.mockReturnValueOnce(Effect.succeed(publishedRoute()));
+      const model = yield* resolveRuntimeCurriculumRoute({
+        curriculum: "merdeka",
+        locale: "en",
+        path: ["class-11", "mathematics"],
+      });
 
-  it("omits the country for a global curriculum provider", async () => {
-    catalogMock.mockResolvedValueOnce({
-      entries: [
-        {
-          program: {
-            ...testPublishedProgram,
-            provider: Struct.omit(testPublishedProgram.provider, [
-              "homeCountry",
-            ]),
-          },
-          route: testProgramRoot,
-          translation: testPublishedProgram.translations[0],
-        },
-      ],
-      sourceRevision: revision,
-    });
-    const catalog = await readRuntimeCurriculumCatalog("en");
-    expect(readRuntimeCurriculumOptions(catalog, "en")[0]).not.toHaveProperty(
-      "countryCode"
-    );
-  });
-
-  it("builds route presentation from signed ancestors", async () => {
-    routeMock.mockResolvedValueOnce(publishedRoute());
-    const model = await resolveRuntimeCurriculumRoute({
-      curriculum: "merdeka",
-      locale: "en",
-      path: ["class-11", "mathematics"],
-    });
-
-    expect(readRuntimeCurriculumBreadcrumbs("Home", "Subjects", model)).toEqual(
-      [
+      expect(
+        readRuntimeCurriculumBreadcrumbs("Home", "Subjects", model)
+      ).toEqual([
         { name: "Home", path: "" },
         { name: "Subjects", path: "/curriculum" },
         { name: "Kurikulum Merdeka", path: "/curriculum/merdeka" },
@@ -161,14 +179,14 @@ describe("signed curriculum runtime", () => {
           name: "Mathematics",
           path: "/curriculum/merdeka/class-11/mathematics",
         },
-      ]
-    );
-    expect(readRuntimeCurriculumToc(model)).toEqual({
-      description: "Class 11",
-      href: "/en/curriculum/merdeka/class-11/mathematics",
-      title: "Mathematics",
-    });
-  });
+      ]);
+      expect(readRuntimeCurriculumToc(model)).toEqual({
+        description: "Class 11",
+        href: "/en/curriculum/merdeka/class-11/mathematics",
+        title: "Mathematics",
+      });
+    })
+  );
 
   it("omits parent presentation for a root route", () => {
     const model = {

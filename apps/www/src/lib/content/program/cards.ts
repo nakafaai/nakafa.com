@@ -179,11 +179,3 @@ export const readPublishedMaterialCards = Effect.fn(
   }
   return MutableList.toArray(cards);
 });
-
-/** Caches material cards while starting Effect only inside the cache boundary. */
-export async function getPublishedMaterialCards(
-  input: Parameters<typeof readPublishedMaterialCards>[0]
-) {
-  const cards = await Effect.runPromise(readPublishedMaterialCards(input));
-  return cards;
-}

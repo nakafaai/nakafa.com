@@ -3,7 +3,7 @@ import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import type { LocalizedPath } from "@repo/internationalization/src/alternates";
 import { Effect, Option, Schema } from "effect";
 import {
-  getPublishedPageCatalog,
+  readPublishedPageCatalog,
   verifyPublishedPageCatalog,
 } from "@/lib/content/page/catalog";
 import { renderCurrentPublishedPage } from "@/lib/content/page/published";
@@ -27,16 +27,14 @@ const readLegalPage = Effect.fn("www.pages.readLegal")(function* ({
   if (Option.isNone(path)) {
     return MISSING_LEGAL_PAGE;
   }
-  const page = yield* Effect.promise(() =>
-    renderCurrentPublishedPage({
-      appLocale: AppLocaleSchema.make(locale),
-      publicPath: path.value,
-    })
-  );
+  const page = yield* renderCurrentPublishedPage({
+    appLocale: AppLocaleSchema.make(locale),
+    publicPath: path.value,
+  });
   if (!page) {
     return MISSING_LEGAL_PAGE;
   }
-  const catalog = yield* Effect.promise(() => getPublishedPageCatalog());
+  const catalog = yield* readPublishedPageCatalog();
   const counterparts = yield* verifyPublishedPageCatalog(catalog, page);
   const { projection } = page;
   const canonicalPath: LocalizedPath = `/${locale}/${projection.publicPath}`;

@@ -42,7 +42,7 @@ vi.mock("@/lib/onboarding/status.server", () => ({
 }));
 
 vi.mock("@/lib/content/page/navigation", () => ({
-  getShellPageNavigation: vi.fn(() => Promise.resolve(pages)),
+  getShellPageNavigation: vi.fn(() => Effect.succeed(pages)),
 }));
 
 const signedIn = () => Option.some("convex-token");

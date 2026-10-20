@@ -18,6 +18,7 @@ import {
   type ContentReleasePin,
   decodeContentReleasePin,
 } from "@/lib/content/published/release";
+import { runServerEffect } from "@/lib/server/fn";
 
 const baseUrl = COMPANY_IDENTITY.url;
 const FEED_ERROR = "Internal Server Error";
@@ -59,7 +60,7 @@ function reportFeedFailure(cause: unknown) {
 
 /** Serves the RSS feed of the latest signed articles and materials. */
 export function serveRssFeed() {
-  return Effect.runPromise(
+  return runServerEffect(
     readFeed().pipe(
       Effect.map((xml) => new Response(xml, { headers: RSS_HEADERS })),
       Effect.catch(reportFeedFailure)

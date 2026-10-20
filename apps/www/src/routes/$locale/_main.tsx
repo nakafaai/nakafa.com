@@ -11,6 +11,7 @@ import { AppShell } from "@/components/sidebar/shell";
 import { readRouteMessages } from "@/lib/i18n/messages.functions";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { SHELL_MESSAGE_NAMESPACES } from "@/lib/i18n/shell";
+import { runServerEffect } from "@/lib/server/fn";
 
 const ShellInput = Schema.Struct({ locale: Schema.String });
 
@@ -29,16 +30,8 @@ const readShellNavigation = createServerFn({ method: "GET" })
   .validator(Schema.toStandardSchemaV1(ShellInput))
   .handler(async ({ data }) => {
     const locale = getLocaleOrThrow(data.locale);
-    const [{ getShellArticleNavigation }, { getShellPageNavigation }] =
-      await Promise.all([
-        import("@/lib/content/article/navigation"),
-        import("@/lib/content/page/navigation"),
-      ]);
-    const [articleNavigation, pageNavigation] = await Promise.all([
-      getShellArticleNavigation(locale),
-      getShellPageNavigation(locale),
-    ]);
-    return { articleNavigation, pageNavigation };
+    const { readMarketingShell } = await import("@/lib/marketing/shell.server");
+    return runServerEffect(readMarketingShell(locale));
   });
 
 const localeRoute = getRouteApi("/$locale");
