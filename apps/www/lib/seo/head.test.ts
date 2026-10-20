@@ -3,6 +3,7 @@ import { Array as Arr, Option } from "effect";
 import {
   createPrivateSeoHead,
   createSeoHead,
+  toHeadAlternates,
   toRouterHead,
 } from "@/lib/seo/head";
 
@@ -87,6 +88,59 @@ describe("page head", () => {
   });
 });
 
+describe("page googlebot rule", () => {
+  it("names the image and snippet limits that Google reads on an indexable page", () => {
+    expect(createSeoHead(facts).googlebot).toBe(
+      "index,follow,max-video-preview:-1,max-image-preview:large,max-snippet:-1"
+    );
+    expect(toRouterHead(createSeoHead(facts)).meta).toContainEqual({
+      content:
+        "index,follow,max-video-preview:-1,max-image-preview:large,max-snippet:-1",
+      name: "googlebot",
+    });
+  });
+
+  it("keeps an unindexable page's image out of the index", () => {
+    expect(createSeoHead({ ...facts, indexable: false }).googlebot).toBe(
+      "noindex,nofollow,noimageindex"
+    );
+  });
+});
+
+describe("head alternates of a resolved route", () => {
+  it("maps each locale and each representation to an absolute link, and skips a locale without a page", () => {
+    expect(
+      toHeadAlternates({
+        languages: {
+          de: undefined,
+          en: "/en/materials/aljabar",
+          id: "/id/materi/aljabar",
+          "x-default": "/en/materials/aljabar",
+        },
+        types: {
+          "text/markdown": "/en/materials/aljabar.md",
+          "text/plain": undefined,
+        },
+      })
+    ).toStrictEqual([
+      { hreflang: "en", href: "https://nakafa.com/en/materials/aljabar" },
+      { hreflang: "id", href: "https://nakafa.com/id/materi/aljabar" },
+      {
+        hreflang: "x-default",
+        href: "https://nakafa.com/en/materials/aljabar",
+      },
+      {
+        href: "https://nakafa.com/en/materials/aljabar.md",
+        type: "text/markdown",
+      },
+    ]);
+  });
+
+  it("names no alternate for a route without languages or representations", () => {
+    expect(toHeadAlternates({ languages: {} })).toStrictEqual([]);
+  });
+});
+
 describe("router head", () => {
   it("maps the canonical link, the alternates and the meta entries in order", () => {
     const routed = toRouterHead(createSeoHead(facts));
@@ -165,6 +219,7 @@ describe("private page head", () => {
     const head = createPrivateSeoHead(privateFacts);
 
     expect(head.robots).toBe("noindex,nofollow");
+    expect(head.googlebot).toBe("noindex,nofollow,noimageindex");
     expect(head.canonical).toBeUndefined();
     expect(head.alternates).toStrictEqual([]);
     expect(head.social).toStrictEqual({});

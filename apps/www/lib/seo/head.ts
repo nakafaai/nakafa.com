@@ -5,7 +5,7 @@ import {
 import { LocaleSchema } from "@repo/internationalization/src/locale";
 import { toPublicPath } from "@repo/internationalization/src/rewrite";
 import { SITE_ORIGIN } from "@repo/seo/origin";
-import { Array as Arr, Record as Rec, Schema } from "effect";
+import { Array as Arr, Record as Rec, Result, Schema } from "effect";
 import {
   SOCIAL_IMAGE_SIZE,
   SOCIAL_SITE_NAME,
@@ -16,6 +16,13 @@ import { createSEOTitle } from "@/lib/seo/titles";
 
 /** The social card format that every page uses, with its large image. */
 const TWITTER_CARD = "summary_large_image";
+
+/** The googlebot rule of a page that search engines may index, with the image and snippet limits they read. */
+const GOOGLEBOT_INDEXABLE =
+  "index,follow,max-video-preview:-1,max-image-preview:large,max-snippet:-1";
+
+/** The googlebot rule of a page that no search engine may index, its image included. */
+const GOOGLEBOT_PRIVATE = "noindex,nofollow,noimageindex";
 
 /**
  * One alternate link of a head: a locale's address with its `hreflang`, or a
@@ -32,6 +39,7 @@ const SeoHead = Schema.Struct({
   alternates: Schema.Array(HeadAlternate),
   canonical: Schema.optionalKey(Schema.String),
   description: Schema.String,
+  googlebot: Schema.Literals([GOOGLEBOT_INDEXABLE, GOOGLEBOT_PRIVATE]),
   jsonLd: Schema.Array(Schema.Record(Schema.String, Schema.Unknown)),
   robots: Schema.Literals(["index,follow", "noindex,nofollow"]),
   social: Schema.Record(Schema.String, Schema.String),
@@ -83,6 +91,7 @@ export function createSeoHead(facts: PageFacts): SeoHead {
       })),
     canonical,
     description: facts.description,
+    googlebot: facts.indexable ? GOOGLEBOT_INDEXABLE : GOOGLEBOT_PRIVATE,
     jsonLd: [...facts.jsonLd],
     robots: facts.indexable ? "index,follow" : "noindex,nofollow",
     social: {
@@ -109,6 +118,32 @@ export function createSeoHead(facts: PageFacts): SeoHead {
 }
 
 /**
+ * The alternates of a page from its resolved route: the address of each locale
+ * with its `hreflang`, then each representation with its `type`. The addresses
+ * are absolute, so the head names the same links as the route map does.
+ */
+export function toHeadAlternates(resolved: {
+  readonly languages: Readonly<Record<string, string | undefined>>;
+  readonly types?: Readonly<Record<string, string | undefined>>;
+}): readonly (typeof HeadAlternate.Type)[] {
+  return [
+    ...Arr.filterMap(Rec.toEntries(resolved.languages), ([hreflang, href]) =>
+      href === undefined
+        ? Result.failVoid
+        : Result.succeed({
+            hreflang,
+            href: new URL(href, SITE_ORIGIN).href,
+          })
+    ),
+    ...Arr.filterMap(Rec.toEntries(resolved.types ?? {}), ([type, href]) =>
+      href === undefined
+        ? Result.failVoid
+        : Result.succeed({ href: new URL(href, SITE_ORIGIN).href, type })
+    ),
+  ];
+}
+
+/**
  * The head of a page that no search engine may index, such as a signed-in
  * screen: its title and description, a noindex rule, and no canonical link,
  * alternates or social entries, because the page has no public address.
@@ -119,6 +154,7 @@ export function createPrivateSeoHead(
   return SeoHead.make({
     alternates: [],
     description: facts.description,
+    googlebot: GOOGLEBOT_PRIVATE,
     jsonLd: [],
     robots: "noindex,nofollow",
     social: {},
@@ -139,9 +175,9 @@ function toAlternateLink({ hreflang, href, type }: typeof HeadAlternate.Type) {
 /**
  * Maps a head to the head entries of the router. The mapping keeps the order of
  * the page: the canonical link, the alternates, the title and description, the
- * robots rule, the social entries, and the JSON-LD scripts. A page without a
- * canonical address names none. Twitter entries are named, and Open Graph
- * entries carry a property.
+ * robots and googlebot rules, the social entries, and the JSON-LD scripts. A
+ * page without a canonical address names none. Twitter entries are named, and
+ * Open Graph entries carry a property.
  */
 export function toRouterHead(head: SeoHead) {
   return {
@@ -155,6 +191,7 @@ export function toRouterHead(head: SeoHead) {
       { title: head.title },
       { content: head.description, name: "description" },
       { content: head.robots, name: "robots" },
+      { content: head.googlebot, name: "googlebot" },
       ...Arr.map(Rec.toEntries(head.social), ([key, content]) =>
         key.startsWith("twitter:")
           ? { content, name: key }

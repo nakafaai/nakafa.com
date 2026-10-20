@@ -2,6 +2,7 @@ import "@tanstack/react-start/server-only";
 
 import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
+import type { LocalizedPath } from "@repo/internationalization/src/alternates";
 import { Effect, Option, Schema } from "effect";
 import {
   getPublishedPageCatalog,
@@ -40,6 +41,7 @@ const readLegalPage = Effect.fn("www.pages.readLegal")(function* ({
   const catalog = yield* Effect.promise(() => getPublishedPageCatalog());
   const counterparts = yield* verifyPublishedPageCatalog(catalog, page);
   const { projection } = page;
+  const canonicalPath: LocalizedPath = `/${locale}/${projection.publicPath}`;
   return {
     _tag: "Legal" as const,
     alternates: createResolvedRouteAlternates(projection, counterparts, {
@@ -47,6 +49,7 @@ const readLegalPage = Effect.fn("www.pages.readLegal")(function* ({
         "text/markdown": `/${projection.appLocale}/${projection.publicPath}.md`,
       },
     }),
+    canonicalPath,
     description: projection.metadata.description,
     title: projection.metadata.title,
   };
