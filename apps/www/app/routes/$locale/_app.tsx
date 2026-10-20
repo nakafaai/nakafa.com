@@ -1,15 +1,22 @@
 import { monospace } from "@repo/design-system/lib/monospace";
+import { localeTimeZone } from "@repo/internationalization/src/locale";
 import {
   createFileRoute,
   type ErrorComponentProps,
+  getRouteApi,
   Outlet,
 } from "@tanstack/react-router";
 import { cn } from "cn";
+import { IntlProvider } from "use-intl";
 import { AppProviders } from "@/components/providers/app";
 import { SharedProviders } from "@/components/providers/shared";
 import { AppShell } from "@/components/sidebar/shell";
 import { LocalizedError } from "@/components/state/localized";
+import { readRouteMessages } from "@/lib/i18n/messages.fn";
+import { SHELL_MESSAGE_NAMESPACES } from "@/lib/i18n/shell";
 import { readMarketingShellFn } from "@/lib/marketing/shell.fn";
+
+const localeRoute = getRouteApi("/$locale");
 
 /**
  * The signed-in document shell, the (app) layout of the reference. The app
@@ -20,8 +27,15 @@ import { readMarketingShellFn } from "@/lib/marketing/shell.fn";
  * search and profiles stay open to visitors, as the reference keeps them.
  */
 export const Route = createFileRoute("/$locale/_app")({
-  loader: ({ params }) =>
-    readMarketingShellFn({ data: { locale: params.locale } }),
+  loader: async ({ params }) => {
+    const [shell, messages] = await Promise.all([
+      readMarketingShellFn({ data: { locale: params.locale } }),
+      readRouteMessages({
+        data: { locale: params.locale, namespaces: SHELL_MESSAGE_NAMESPACES },
+      }),
+    ]);
+    return { ...shell, messages };
+  },
   headers: () => ({ "Cache-Control": "private, no-store" }),
   component: AppLayout,
   errorComponent: AppError,
@@ -29,17 +43,26 @@ export const Route = createFileRoute("/$locale/_app")({
 
 /** Mounts the signed-in providers and shell once, around the page of the visitor. */
 function AppLayout() {
-  const { articleNavigation, pageNavigation } = Route.useLoaderData();
+  const { articleNavigation, messages, pageNavigation } = Route.useLoaderData();
+  const { locale } = Route.useParams();
+  const localeData = localeRoute.useLoaderData();
   return (
-    <AppProviders pageNavigation={pageNavigation}>
-      <SharedProviders>
-        <AppShell articleNavigation={articleNavigation}>
-          <div className={cn(monospace, "contents")}>
-            <Outlet />
-          </div>
-        </AppShell>
-      </SharedProviders>
-    </AppProviders>
+    <IntlProvider
+      locale={locale}
+      messages={{ ...localeData.messages, ...messages }}
+      now={localeData.now}
+      timeZone={localeTimeZone(locale)}
+    >
+      <AppProviders pageNavigation={pageNavigation}>
+        <SharedProviders>
+          <AppShell articleNavigation={articleNavigation}>
+            <div className={cn(monospace, "contents")}>
+              <Outlet />
+            </div>
+          </AppShell>
+        </SharedProviders>
+      </AppProviders>
+    </IntlProvider>
   );
 }
 
