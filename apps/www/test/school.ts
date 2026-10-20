@@ -1,8 +1,5 @@
 import { getConvexFunctionName } from "@confect/core/Ref";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
-import { AccessDenied } from "@repo/backend/confect/access/errors";
-import { NotMember } from "@repo/backend/confect/middleware/member.spec";
-import { TenantNotFound } from "@repo/backend/confect/tenancy/errors";
 import {
   Array as Arr,
   Cause,
@@ -28,20 +25,8 @@ export const SESSION_COOKIE = "better-auth.session_token=session-value";
 export const TOKEN = "session-token";
 export const TOKEN_PATH = "/api/auth/convex/token";
 const PROFILE = getConvexFunctionName(tenancy.profile.get);
-export const VIEWER = getConvexFunctionName(tenancy.viewer.get);
 export const REFUSAL = getConvexFunctionName(tenancy.profile.refusal);
 
-/**
- * The typed failures that the school queries refuse with, encoded as the
- * functions send them. The encoding runs here, outside any Effect generator.
- */
-export const TENANT_NOT_FOUND = Schema.encodeSync(TenantNotFound)(
-  new TenantNotFound()
-);
-export const NOT_MEMBER = Schema.encodeSync(NotMember)(new NotMember());
-export const ACCESS_DENIED = Schema.encodeSync(AccessDenied)(
-  new AccessDenied({ action: "tenant.view", reason: "role" })
-);
 /** One answer of the fake backend. It is a function, so a request can wait or fail. */
 type Route = () => Promise<Response>;
 
@@ -73,18 +58,6 @@ export const answered =
   () =>
     Promise.resolve(Response.json({ status: "success", value }));
 
-/** The answer of a query that fails with one typed error, encoded as the function sends it. */
-export const refusedWith =
-  (errorData: unknown): Route =>
-  () =>
-    Promise.resolve(
-      Response.json({
-        errorData,
-        errorMessage: "A typed failure.",
-        status: "error",
-      })
-    );
-
 /** A request that the network refuses with a code that a repeat may clear. */
 export const unreachable: Route = () =>
   Promise.reject(
@@ -112,35 +85,6 @@ const ABSENT: Record<ReadName, Route> = {
   refusal: silent,
   token: silent,
   viewer: silent,
-};
-
-/** A profile that a visitor reads for a school that exists. */
-export const PROFILE_VALUE = {
-  kind: "school",
-  mascot: "cat.0.243e66.right.open",
-  name: "Harapan",
-  slug: "harapan",
-  status: "active",
-};
-
-/** The viewer of a member of the school, with no class, no grant, and no unit. */
-export const VIEWER_VALUE = {
-  account: { mascot: "cat.0.243e66.right.open", name: "Ayu" },
-  can: [],
-  grants: [],
-  person: { id: "person-1", kind: "member", name: "Ayu" },
-  tenant: {
-    country: "ID",
-    currency: "IDR",
-    id: "tenant-1",
-    kind: "school",
-    mascot: "cat.0.243e66.right.open",
-    name: "Harapan",
-    policies: { emailDomains: [], nina: false, studentThreads: false },
-    slug: "harapan",
-    status: "active",
-  },
-  units: [],
 };
 
 /** Serves every request of one test from its routes, and records each request it serves. */
