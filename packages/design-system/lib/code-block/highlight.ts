@@ -12,7 +12,7 @@ import {
   transformerNotationHighlight,
   transformerNotationWordHighlight,
 } from "@shikijs/transformers";
-import { Array as Arr, Effect, Predicate, Schema } from "effect";
+import { Array as Arr, Effect, Predicate, Record, Schema } from "effect";
 import { createJavaScriptRegexEngine } from "shiki/engine/javascript";
 import { bundledLanguages } from "shiki/langs";
 import { type BundledTheme, bundledThemes } from "shiki/themes";
@@ -26,6 +26,9 @@ import { type BundledTheme, bundledThemes } from "shiki/themes";
  * their own background, with their diff header and punctuation scopes, so their text
  * is judged on that background instead.
  */
+/** One theme of a code block: a bundled name, or a registration that Shiki loads as given. */
+type CodeTheme = NonNullable<CodeOptionsMultipleThemes["themes"]>[string];
+
 export const DEFAULT_CODE_THEMES = {
   light: "github-light-high-contrast",
   dark: "github-dark-default",
@@ -74,6 +77,15 @@ export class UnsupportedCodeLanguageError extends Schema.TaggedError<Unsupported
   }
 ) {}
 
+/** Expected failure when a code block names a theme outside Shiki's bundle. */
+export class UnsupportedCodeThemeError extends Schema.TaggedError<UnsupportedCodeThemeError>()(
+  "UnsupportedCodeThemeError",
+  {
+    message: Schema.String,
+    theme: Schema.String,
+  }
+) {}
+
 /** Expected Shiki failure while rendering one supported code language. */
 export class CodeHighlightError extends Schema.TaggedError<CodeHighlightError>()(
   "CodeHighlightError",
@@ -100,25 +112,37 @@ function formatHighlightedHtml(
   return withPreClass.replace(PRE_BACKGROUND_STYLE_PATTERN, "$1$2");
 }
 
-/** Loads the themes of one highlight, and refuses a theme name that Shiki does not bundle. */
-async function loadThemes(
+/** Maps any Shiki failure of one language's highlight to the one typed error of a code block. */
+const toHighlightError = (language: string) => (cause: unknown) =>
+  new CodeHighlightError({
+    cause,
+    language,
+    message: `Failed to highlight code as "${language}".`,
+  });
+
+/** Loads one theme: a bundled name by its name, and a registration as it is given. */
+const loadTheme = Effect.fn("designSystem.codeBlock.loadTheme")(function* (
   shiki: HighlighterCore,
-  themes: CodeOptionsMultipleThemes["themes"] = DEFAULT_CODE_THEMES
+  theme: CodeTheme,
+  language: string
 ) {
-  for (const theme of Arr.filter(
-    Object.values(themes),
-    Predicate.isNotUndefined
-  )) {
-    if (typeof theme !== "string") {
-      await shiki.loadTheme(theme);
-      continue;
-    }
-    if (!isBundledTheme(theme)) {
-      throw new Error(`Theme "${theme}" is not included in Shiki's bundle.`);
-    }
-    await shiki.loadTheme(bundledThemes[theme]);
+  if (typeof theme !== "string") {
+    return yield* Effect.tryPromise({
+      try: () => shiki.loadTheme(theme),
+      catch: toHighlightError(language),
+    });
   }
-}
+  if (!isBundledTheme(theme)) {
+    return yield* new UnsupportedCodeThemeError({
+      message: `Code theme "${theme}" is not included in Shiki's bundle.`,
+      theme,
+    });
+  }
+  return yield* Effect.tryPromise({
+    try: () => shiki.loadTheme(bundledThemes[theme]),
+    catch: toHighlightError(language),
+  });
+});
 
 /** Highlights code with Nakafa's shared Shiki transformers and theme defaults. */
 export const highlightCode = Effect.fn("designSystem.codeBlock.highlight")(
@@ -136,12 +160,21 @@ export const highlightCode = Effect.fn("designSystem.codeBlock.highlight")(
       });
     }
 
+    const selectedThemes = themes ?? DEFAULT_CODE_THEMES;
+    const shiki = yield* Effect.tryPromise({
+      try: getHighlighter,
+      catch: toHighlightError(language),
+    });
+    for (const theme of Arr.filter(
+      Record.values(selectedThemes),
+      Predicate.isNotUndefined
+    )) {
+      yield* loadTheme(shiki, theme, language);
+    }
+
     const html = yield* Effect.tryPromise({
       try: async () => {
-        const shiki = await getHighlighter();
-        const selectedThemes = themes ?? DEFAULT_CODE_THEMES;
         await shiki.loadLanguage(bundledLanguages[language]);
-        await loadThemes(shiki, selectedThemes);
         return shiki.codeToHtml(code, {
           lang: language,
           themes: selectedThemes,
@@ -154,12 +187,7 @@ export const highlightCode = Effect.fn("designSystem.codeBlock.highlight")(
           ],
         });
       },
-      catch: (cause) =>
-        new CodeHighlightError({
-          cause,
-          language,
-          message: `Failed to highlight code as "${language}".`,
-        }),
+      catch: toHighlightError(language),
     });
 
     return preserveShikiLineBreaks(
