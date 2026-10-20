@@ -9,7 +9,7 @@ import {
   type ThemeAppearance,
   type ThemeChoice,
 } from "@repo/design-system/lib/theme/registry";
-import { Effect, Option } from "effect";
+import { Effect, Option, Schema } from "effect";
 import { createStore, type StoreApi } from "zustand";
 
 /** The query that matches while the system asks for a dark appearance. */
@@ -39,14 +39,23 @@ function themeSnapshot(theme: ThemeChoice, systemAppearance: ThemeAppearance) {
   };
 }
 
+/** Raised when the browser refuses to read or keep the visitor's theme choice. */
+class ThemeStorageFailed extends Schema.TaggedError<ThemeStorageFailed>()(
+  "ThemeStorageFailed",
+  {}
+) {}
+
 /** Reads the stored choice. Storage that refuses the read has no stored choice. */
 const readStoredChoice = Effect.fn("designSystem.theme.readStoredChoice")(
   function* () {
-    const stored = yield* Effect.try(() =>
-      window.localStorage.getItem(THEME_STORAGE_KEY)
-    ).pipe(
+    const stored = yield* Effect.try({
+      try: () => window.localStorage.getItem(THEME_STORAGE_KEY),
+      catch: () => new ThemeStorageFailed(),
+    }).pipe(
       Effect.map(Option.fromNullishOr),
-      Effect.orElseSucceed(() => Option.none<string>())
+      Effect.catchTag("ThemeStorageFailed", () =>
+        Effect.succeed(Option.none<string>())
+      )
     );
     return parseThemeChoice(stored);
   }
@@ -56,9 +65,10 @@ const readStoredChoice = Effect.fn("designSystem.theme.readStoredChoice")(
 const saveChoice = Effect.fn("designSystem.theme.saveChoice")(function* (
   theme: ThemeChoice
 ) {
-  yield* Effect.try(() =>
-    window.localStorage.setItem(THEME_STORAGE_KEY, theme)
-  ).pipe(Effect.ignore);
+  yield* Effect.try({
+    try: () => window.localStorage.setItem(THEME_STORAGE_KEY, theme),
+    catch: () => new ThemeStorageFailed(),
+  }).pipe(Effect.catchTag("ThemeStorageFailed", () => Effect.void));
 });
 
 /**
