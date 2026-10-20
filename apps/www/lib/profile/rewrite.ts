@@ -1,6 +1,6 @@
 import { decodeLocale } from "@repo/internationalization/src/locale";
 import { withPathname } from "@repo/internationalization/src/rewrite";
-import { Option } from "effect";
+import { Array as Arr, Option } from "effect";
 import {
   PROFILE_ROUTE_SEGMENT,
   PROFILE_SIGN,
@@ -41,7 +41,7 @@ function readRouterAddress(pathname: string) {
 
 /** Joins a locale, the first segment after it and the tab segments into a path. */
 function joinPath(locale: string, root: string, tab: readonly string[]) {
-  return ["", locale, root, ...tab].join("/");
+  return Arr.join(["", locale, root, ...tab], "/");
 }
 
 /** Maps `/{locale}/@{username}` and its tab to the router's `/{locale}/user/{username}`. */

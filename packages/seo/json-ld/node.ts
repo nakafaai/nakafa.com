@@ -1,29 +1,36 @@
 import { ORGANIZATION } from "@repo/seo/json-ld/constants";
-import { Array as Arr } from "effect";
-import type { CreativeWork, ListItem } from "schema-dts";
+import { Array as Arr, Schema } from "effect";
+import type { ListItem } from "schema-dts";
 
-/** One part of a collection: a page that the collection lists, with the facts it names. */
-type CollectionItem = Pick<CreativeWork, "name" | "description" | "url">;
+/** One page that a collection lists, with the facts it names. */
+const CollectionItem = Schema.Struct({
+  description: Schema.optionalKey(Schema.String),
+  name: Schema.String,
+  url: Schema.String,
+});
 
 /** The collection that one index page describes, with each of its pages as a part. */
-interface CollectionPageInput {
-  readonly datePublished?: string;
-  readonly description: string;
-  readonly items: readonly CollectionItem[];
-  readonly name: string;
-  readonly url: string;
-}
+const CollectionPageInput = Schema.Struct({
+  datePublished: Schema.optionalKey(Schema.String),
+  description: Schema.String,
+  items: Schema.Array(CollectionItem),
+  name: Schema.String,
+  url: Schema.String,
+});
 
 /** The Quran surah that one book page describes, with its author and its size. */
-interface BookInput {
-  readonly author: { readonly "@type": "Person"; readonly name: string };
-  readonly description: string;
-  readonly inLanguage: string;
-  readonly name: string;
-  readonly position: number;
-  readonly totalPages: number;
-  readonly url: string;
-}
+const BookInput = Schema.Struct({
+  author: Schema.Struct({
+    "@type": Schema.Literal("Person"),
+    name: Schema.String,
+  }),
+  description: Schema.String,
+  inLanguage: Schema.String,
+  name: Schema.String,
+  position: Schema.Finite,
+  totalPages: Schema.Finite,
+  url: Schema.String,
+});
 
 /**
  * The breadcrumb node of a page's visible hierarchy, as plain data for the head
@@ -43,7 +50,7 @@ export function makeBreadcrumbNodes(items: readonly ListItem[]) {
 }
 
 /** The collection node of one index, with each of its pages as a part. */
-export function makeCollectionPageNode(input: CollectionPageInput) {
+export function makeCollectionPageNode(input: typeof CollectionPageInput.Type) {
   return {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
@@ -60,7 +67,7 @@ export function makeCollectionPageNode(input: CollectionPageInput) {
 }
 
 /** The book node of one Quran surah, which is a free EBook. */
-export function makeBookNode(input: BookInput) {
+export function makeBookNode(input: typeof BookInput.Type) {
   return {
     "@context": "https://schema.org",
     "@type": "Book",

@@ -8,7 +8,7 @@ import {
   expect,
   it,
 } from "@effect/vitest";
-import { Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 import { SESSION_PATH } from "@/lib/auth/session";
 import { SessionUnavailable } from "@/lib/auth/session.server";
 
@@ -105,10 +105,12 @@ describe("Better Auth server boundary", () => {
       );
 
       const token = yield* runWithRequestHeaders(requestHeaders, getToken);
-      const tokenCall = fetcher.mock.calls.find(([url]) =>
+      const tokenCall = Arr.findFirst(fetcher.mock.calls, ([url]) =>
         String(url).endsWith("/api/auth/convex/token")
       );
-      const headers = new Headers(tokenCall?.[1]?.headers);
+      const headers = new Headers(
+        Option.getOrUndefined(tokenCall)?.[1]?.headers
+      );
 
       expect(token).toBe("test-token");
       expect(fetcher).toHaveBeenCalledTimes(2);

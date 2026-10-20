@@ -19,12 +19,12 @@ const HINT_MAX_AGE = 60 * 60 * 24 * 7;
  * Where the hint cookie lives: the domain of the session cookie, so every school
  * host under it reads the hint, and whether the site is served over https.
  */
-export const HintScope = Schema.Struct({
+const HintScope = Schema.Struct({
   domain: Schema.String,
   secure: Schema.Boolean,
 });
 
-export type HintScope = typeof HintScope.Type;
+type HintScope = typeof HintScope.Type;
 
 /** The attributes that every hint cookie shares. */
 function hintAttributes(scope: HintScope) {

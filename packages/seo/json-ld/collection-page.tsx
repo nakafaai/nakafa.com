@@ -1,11 +1,10 @@
 import { JsonLd } from "@repo/seo/json-ld";
 import { makeCollectionPageNode } from "@repo/seo/json-ld/node";
-import type { CreativeWork } from "schema-dts";
 
 interface Props {
   datePublished?: string;
   description: string;
-  items: Pick<CreativeWork, "name" | "url" | "description">[];
+  items: { description?: string; name: string; url: string }[];
   name: string;
   url: string;
 }
