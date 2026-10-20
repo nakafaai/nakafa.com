@@ -162,7 +162,27 @@ describe("exams home", () => {
 
         const read = yield* homeOf(fixture, "student");
 
-        expect(read).toEqual({ closed: [], drafts: [], live: [], next: [] });
+        expect(read).toEqual({
+          canManageSetup: false,
+          closed: [],
+          drafts: [],
+          live: [],
+          next: [],
+        });
+      })
+  );
+
+  it.effect(
+    "tells the owner that the viewer may manage the school's setup, and a student that it may not",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+
+        const owner = yield* homeOf(fixture, "owner");
+        const student = yield* homeOf(fixture, "student");
+
+        expect(owner.canManageSetup).toBe(true);
+        expect(student.canManageSetup).toBe(false);
       })
   );
 

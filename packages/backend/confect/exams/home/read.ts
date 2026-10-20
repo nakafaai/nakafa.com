@@ -15,7 +15,10 @@ import {
 import { TENANT_UNIT_LIMIT } from "@repo/backend/confect/exams/sittings/mine";
 import { sittingViews } from "@repo/backend/confect/exams/sittings/view";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
-import { unitAuthority } from "@repo/backend/confect/tenancy/authority";
+import {
+  tenantAuthority,
+  unitAuthority,
+} from "@repo/backend/confect/tenancy/authority";
 import { Array as Arr, Clock, Duration, Effect, Order } from "effect";
 
 /**
@@ -171,7 +174,9 @@ export const readHome = Effect.fn("exams.home.read")(function* () {
     Arr.filter(running, (row) => row.closesAt > now)
   );
   const next = yield* firstViewable(upcoming);
+  const can = yield* tenantAuthority.allowed(member.tenant);
   return {
+    canManageSetup: Arr.contains(can, "tenant.manage"),
     closed: yield* closedResults(watched),
     drafts: yield* draftsOf(member.tenant._id, appUser._id),
     live: yield* sittingViews(live),

@@ -52,17 +52,30 @@ beforeEach(() => {
 });
 
 describe("staff home first screen", () => {
-  it("reads the home's exams and rooms, and no setup, for a viewer who does not manage the school", async () => {
+  it("reads the home's exams and rooms, and no setup, for a viewer whom the home does not let manage the school", async () => {
     answer([
-      [exams.exams.home, { closed: [], drafts: [], live: [], next: [] }],
+      [
+        exams.exams.home,
+        {
+          canManageSetup: false,
+          closed: [],
+          drafts: [],
+          live: [],
+          next: [],
+        },
+      ],
     ]);
 
-    const screen = await staffHomeHandler({
-      data: { canManage: false, slug: SLUG },
-    });
+    const screen = await staffHomeHandler({ data: { slug: SLUG } });
 
     expect(screen).toStrictEqual({
-      home: { closed: [], drafts: [], live: [], next: [] },
+      home: {
+        canManageSetup: false,
+        closed: [],
+        drafts: [],
+        live: [],
+        next: [],
+      },
       setup: undefined,
     });
     expect(mocks.preloadConfectQuery).toHaveBeenCalledExactlyOnceWith(
@@ -72,15 +85,22 @@ describe("staff home first screen", () => {
     );
   });
 
-  it("also reads the school's setup for a viewer who manages the school", async () => {
+  it("also reads the school's setup for a viewer whom the home lets manage the school", async () => {
     answer([
-      [exams.exams.home, { closed: [], drafts: [], live: [], next: [] }],
+      [
+        exams.exams.home,
+        {
+          canManageSetup: true,
+          closed: [],
+          drafts: [],
+          live: [],
+          next: [],
+        },
+      ],
       [tenancy.home.setup, { steps: [] }],
     ]);
 
-    const screen = await staffHomeHandler({
-      data: { canManage: true, slug: SLUG },
-    });
+    const screen = await staffHomeHandler({ data: { slug: SLUG } });
 
     expect(screen.setup).toStrictEqual({ steps: [] });
     expect(mocks.preloadConfectQuery).toHaveBeenCalledWith(

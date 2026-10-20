@@ -22,9 +22,11 @@ export const ClosedView = Schema.Struct({
  * What the school home shows a viewer about exams: the viewer's own drafts that the viewer may
  * still edit, the rooms the viewer may watch that run now, the rooms that open within the next
  * fourteen days, and the closed sittings whose results the viewer may view. A viewer who holds none
- * of those gets four empty lists.
+ * of those gets four empty lists. `canManageSetup` tells whether the viewer manages the school, so
+ * the home reads the school's setup only for a viewer who may.
  */
 export const HomeView = Schema.Struct({
+  canManageSetup: Schema.Boolean,
   closed: Schema.Array(ClosedView),
   drafts: Schema.Array(ExamSummary),
   live: Schema.Array(SittingView),
