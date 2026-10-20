@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { NETWORK_ATTEMPT_DEADLINE } from "@repo/backend/client/network";
 import { Effect, Fiber, Option } from "effect";
 import { TestClock } from "effect/testing";
+import { readSchoolRefusal } from "@/lib/routing/school/refusal";
 import {
   answerAndCauses,
   answered,
@@ -224,5 +225,48 @@ describe("school page refusal", () => {
         expect(count).toBe(1);
         expect(text).toContain("SchoolReadDeadline");
       })
+  );
+});
+
+describe("school page refusal answer", () => {
+  it.effect(
+    "answers a refused school page with the not-found locale that it negotiates",
+    () =>
+      Effect.gen(function* () {
+        serve({ refusal: answered(true) });
+
+        const locale = Option.getOrThrow(
+          yield* readSchoolRefusal(
+            new Request(SCHOOL_ROOT, {
+              headers: { "accept-language": "id-ID,id;q=0.9" },
+            })
+          )
+        );
+
+        expect(locale).toBe("id");
+      })
+  );
+
+  it.effect("answers none for a school page that the school admits", () =>
+    Effect.gen(function* () {
+      serve({ refusal: answered(false) });
+
+      expect(
+        Option.isNone(yield* readSchoolRefusal(new Request(SCHOOL_ROOT)))
+      ).toBe(true);
+    })
+  );
+
+  it.effect("answers none for a method that is not a page read", () =>
+    Effect.gen(function* () {
+      serve({ refusal: answered(true) });
+
+      expect(
+        Option.isNone(
+          yield* readSchoolRefusal(new Request(SCHOOL_ROOT, { method: "POST" }))
+        )
+      ).toBe(true);
+      expect(queriesOf()).toHaveLength(0);
+    })
   );
 });

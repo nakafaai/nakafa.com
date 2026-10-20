@@ -1,9 +1,9 @@
-import { NodeFileSystem, NodePath } from "@effect/platform-node";
-import { Effect, FileSystem, Layer, Path, Schema } from "effect";
+import { Schema } from "effect";
 import type { CSSProperties } from "react";
 import { ImageResponse } from "takumi-js/response";
 import { OG_IMAGE_HEADERS } from "@/lib/og/headers";
 import { OgImage, type OgImageProps } from "@/lib/og/image";
+import logoSvg from "@/public/logo.svg?raw";
 
 const ogLogoStyle = {
   width: 48,
@@ -22,56 +22,43 @@ const OgImageResponseSchema = Schema.Struct({
 
 type GenerateOGImageOptions = OgImageProps & typeof OgImageResponseSchema.Type;
 
-/** Loads the shared logo asset as a serializable data URL for OG rendering. */
-async function getLogoDataUrl() {
-  return await Effect.runPromise(
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      const logo = yield* fs.readFileString(
-        path.join(process.cwd(), "public", "logo.svg")
-      );
-      return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(logo)}`;
-    }).pipe(Effect.provide(Layer.merge(NodeFileSystem.layer, NodePath.layer)))
-  );
-}
+/**
+ * The shared logo, bundled with the server code as a data URL. The image route
+ * never reads the file system, so the logo needs no deployment tracing.
+ */
+const LOGO_DATA_URL = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(logoSvg)}`;
 
 /**
- * Generates one OG image response with cached persistent assets. The response
- * carries the CDN headers of a known route unless the caller names others.
+ * Generates one OG image response. The response carries the CDN headers of a
+ * known route unless the caller names others.
  */
 export function generateOGImage(options: GenerateOGImageOptions) {
-  return Effect.runPromise(
-    Effect.gen(function* () {
-      const {
-        headers = OG_IMAGE_HEADERS,
-        height = 630,
-        icon,
-        width = 1200,
-        ...imageProps
-      } = options;
-      const logoDataUrl = yield* Effect.tryPromise(getLogoDataUrl);
+  const {
+    headers = OG_IMAGE_HEADERS,
+    height = 630,
+    icon,
+    width = 1200,
+    ...imageProps
+  } = options;
 
-      return new ImageResponse(
-        <OgImage
-          {...imageProps}
-          icon={
-            icon ?? (
-              <div
-                style={{
-                  ...ogLogoStyle,
-                  backgroundImage: `url(${logoDataUrl})`,
-                }}
-              />
-            )
-          }
-        />,
-        {
-          headers,
-          width,
-          height,
-        }
-      );
-    })
+  return new ImageResponse(
+    <OgImage
+      {...imageProps}
+      icon={
+        icon ?? (
+          <div
+            style={{
+              ...ogLogoStyle,
+              backgroundImage: `url(${LOGO_DATA_URL})`,
+            }}
+          />
+        )
+      }
+    />,
+    {
+      headers,
+      width,
+      height,
+    }
   );
 }

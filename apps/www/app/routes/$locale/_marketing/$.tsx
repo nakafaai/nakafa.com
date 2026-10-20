@@ -1,13 +1,13 @@
-import { SITE_ORIGIN } from "@repo/seo/origin";
 import { createFileRoute, notFound } from "@tanstack/react-router";
-import { Array as Arr, Record as Rec, Result } from "effect";
 import { readLegalPageFn } from "@/lib/content/page/read.fn";
+import { createSeoHead, toHeadAlternates, toRouterHead } from "@/lib/seo/head";
 
 /**
  * A legal page, which Aksara publishes under its own path in each locale. The
  * loader reads its signed page: a path that no signed page answers is a 404
- * before the stream, and the head names the page's own alternates, because its
- * slug can differ from one locale to the next.
+ * before the stream. The head takes the page's own title, description and
+ * alternates from the loader, because its slug can differ from one locale to the
+ * next, and it builds them with the head seam like every other page.
  */
 export const Route = createFileRoute("/$locale/_marketing/$")({
   loader: async ({ params }) => {
@@ -19,44 +19,24 @@ export const Route = createFileRoute("/$locale/_marketing/$")({
     }
     return facts;
   },
-  head: ({ loaderData }) => {
+  head: ({ loaderData, params }) => {
     if (loaderData === undefined) {
       return {};
     }
-    const languages: Readonly<Record<string, string | undefined>> =
-      loaderData.alternates.languages;
-    const markdown: string | undefined =
-      loaderData.alternates.types?.["text/markdown"];
-    return {
-      links: [
-        {
-          href: new URL(loaderData.alternates.canonical, SITE_ORIGIN).href,
-          rel: "canonical",
-        },
-        ...Arr.filterMap(Rec.toEntries(languages), ([hreflang, href]) =>
-          href === undefined
-            ? Result.failVoid
-            : Result.succeed({
-                href: new URL(href, SITE_ORIGIN).href,
-                hreflang,
-                rel: "alternate",
-              })
-        ),
-        ...(markdown === undefined
-          ? []
-          : [
-              {
-                href: new URL(markdown, SITE_ORIGIN).href,
-                rel: "alternate",
-                type: "text/markdown",
-              },
-            ]),
-      ],
-      meta: [
-        { title: loaderData.title },
-        { content: loaderData.description, name: "description" },
-      ],
-    };
+    return toRouterHead(
+      createSeoHead({
+        absoluteTitle: loaderData.title,
+        alternates: toHeadAlternates(loaderData.alternates),
+        canonicalPath: loaderData.canonicalPath,
+        description: loaderData.description,
+        image: "/og.png",
+        indexable: true,
+        jsonLd: [],
+        locale: params.locale,
+        parts: [],
+        type: "website",
+      })
+    );
   },
   component: LegalPage,
 });

@@ -7,6 +7,7 @@ import {
 import { Array as Arr, Effect, Schema } from "effect";
 import { FetchHttpClient } from "effect/http";
 import {
+  readRequestToken,
   readSessionClient,
   readSessionMemo,
   sessionHandler,
@@ -89,8 +90,10 @@ describe("request session memo", () => {
       const second = yield* readSessionMemo(request);
       yield* first;
       const client = yield* readSessionClient();
+      const token = yield* readRequestToken(request);
       yield* second;
       expect(client._tag).toBe("SignedIn");
+      expect(token).toBe("token-ada");
       expect(fetcher).toHaveBeenCalledTimes(1);
       expect(appendResponseHeader).toHaveBeenCalledTimes(1);
       expect(appendResponseHeader).toHaveBeenCalledWith(

@@ -52,8 +52,9 @@ import { getMaterialPublication } from "@/lib/content/material/publication";
 import { getAksaraUrl } from "@/lib/content/repository";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getLlmsMarkdownPath } from "@/lib/llms/format";
+import { createResolvedRouteAlternates } from "@/lib/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
-import { createSeoHead, toRouterHead } from "@/lib/seo/head";
+import { createSeoHead, toHeadAlternates, toRouterHead } from "@/lib/seo/head";
 import { getOgUrl } from "@/lib/seo/social";
 
 const MaterialInput = Schema.Struct({
@@ -109,6 +110,9 @@ const readMaterial = createServerFn({ method: "GET" })
     );
 
     return {
+      alternates: toHeadAlternates(
+        createResolvedRouteAlternates(route, model.alternates)
+      ),
       kind: "found" as const,
       breadcrumbs: createBreadcrumbItems(locale, [
         { name: tCommon("home"), path: "" },
@@ -177,10 +181,12 @@ export const Route = createFileRoute(
     if (loaderData === undefined) {
       return {};
     }
-    const { canonicalPath, headMetadata, locale, route } = loaderData;
+    const { alternates, canonicalPath, headMetadata, locale, route } =
+      loaderData;
     const metadata = loaderData.metadata;
     return toRouterHead(
       createSeoHead({
+        alternates,
         canonicalPath,
         description: headMetadata.description,
         image: getOgUrl(route.appLocale, route.publicPath),

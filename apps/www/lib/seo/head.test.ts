@@ -1,6 +1,11 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Array as Arr, Option } from "effect";
-import { createSeoHead, toRouterHead } from "@/lib/seo/head";
+import {
+  createPrivateSeoHead,
+  createSeoHead,
+  toHeadAlternates,
+  toRouterHead,
+} from "@/lib/seo/head";
 
 const facts = {
   canonicalPath: "/en/materials/aljabar",
@@ -83,6 +88,59 @@ describe("page head", () => {
   });
 });
 
+describe("page googlebot rule", () => {
+  it("names the image and snippet limits that Google reads on an indexable page", () => {
+    expect(createSeoHead(facts).googlebot).toBe(
+      "index,follow,max-video-preview:-1,max-image-preview:large,max-snippet:-1"
+    );
+    expect(toRouterHead(createSeoHead(facts)).meta).toContainEqual({
+      content:
+        "index,follow,max-video-preview:-1,max-image-preview:large,max-snippet:-1",
+      name: "googlebot",
+    });
+  });
+
+  it("keeps an unindexable page's image out of the index", () => {
+    expect(createSeoHead({ ...facts, indexable: false }).googlebot).toBe(
+      "noindex,nofollow,noimageindex"
+    );
+  });
+});
+
+describe("head alternates of a resolved route", () => {
+  it("maps each locale and each representation to an absolute link, and skips a locale without a page", () => {
+    expect(
+      toHeadAlternates({
+        languages: {
+          de: undefined,
+          en: "/en/materials/aljabar",
+          id: "/id/materi/aljabar",
+          "x-default": "/en/materials/aljabar",
+        },
+        types: {
+          "text/markdown": "/en/materials/aljabar.md",
+          "text/plain": undefined,
+        },
+      })
+    ).toStrictEqual([
+      { hreflang: "en", href: "https://nakafa.com/en/materials/aljabar" },
+      { hreflang: "id", href: "https://nakafa.com/id/materi/aljabar" },
+      {
+        hreflang: "x-default",
+        href: "https://nakafa.com/en/materials/aljabar",
+      },
+      {
+        href: "https://nakafa.com/en/materials/aljabar.md",
+        type: "text/markdown",
+      },
+    ]);
+  });
+
+  it("names no alternate for a route without languages or representations", () => {
+    expect(toHeadAlternates({ languages: {} })).toStrictEqual([]);
+  });
+});
+
 describe("router head", () => {
   it("maps the canonical link, the alternates and the meta entries in order", () => {
     const routed = toRouterHead(createSeoHead(facts));
@@ -109,5 +167,75 @@ describe("router head", () => {
     expect(Arr.last(routed.meta)).toStrictEqual(
       Option.some({ "script:ld+json": { "@type": "Article" } })
     );
+  });
+});
+
+describe("page head alternates", () => {
+  it("uses the alternates that the content supplies in place of the route map's", () => {
+    const alternates = [
+      { hreflang: "en", href: "https://nakafa.com/en/materials/aljabar" },
+      {
+        href: "https://nakafa.com/en/materials/aljabar.md",
+        type: "text/markdown",
+      },
+    ];
+
+    expect(createSeoHead({ ...facts, alternates }).alternates).toStrictEqual(
+      alternates
+    );
+  });
+
+  it("names an alternate with only the attributes it carries", () => {
+    const routed = toRouterHead(
+      createSeoHead({
+        ...facts,
+        alternates: [
+          {
+            href: "https://nakafa.com/en/materials/aljabar.md",
+            type: "text/markdown",
+          },
+        ],
+      })
+    );
+
+    expect(routed.links).toStrictEqual([
+      { href: "https://nakafa.com/en/subjects/aljabar", rel: "canonical" },
+      {
+        href: "https://nakafa.com/en/materials/aljabar.md",
+        rel: "alternate",
+        type: "text/markdown",
+      },
+    ]);
+  });
+});
+
+describe("private page head", () => {
+  const privateFacts = {
+    description: "Halaman pribadi.",
+    parts: ["Profil"],
+  } as const;
+
+  it("is indexable by no search engine and names no canonical address", () => {
+    const head = createPrivateSeoHead(privateFacts);
+
+    expect(head.robots).toBe("noindex,nofollow");
+    expect(head.googlebot).toBe("noindex,nofollow,noimageindex");
+    expect(head.canonical).toBeUndefined();
+    expect(head.alternates).toStrictEqual([]);
+    expect(head.social).toStrictEqual({});
+    expect(head.title).toBe("Profil - Nakafa");
+  });
+
+  it("keeps an absolute title as it is, with no canonical link in the router head", () => {
+    const routed = toRouterHead(
+      createPrivateSeoHead({ ...privateFacts, absoluteTitle: "Nakafa Sekolah" })
+    );
+
+    expect(routed.links).toStrictEqual([]);
+    expect(routed.meta[0]).toStrictEqual({ title: "Nakafa Sekolah" });
+    expect(routed.meta[2]).toStrictEqual({
+      content: "noindex,nofollow",
+      name: "robots",
+    });
   });
 });

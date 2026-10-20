@@ -37,8 +37,6 @@ const PageNavigationSchema = Schema.Struct({
  * the marketing layout until the server corrects the route. Opening a Page by
  * navigation teaches the same route later, and Next.js then corrects it on the
  * first runtime prefetch whose route the server contradicts.
- *
- * https://github.com/vercel/next.js/blob/v16.4.0/packages/next/src/client/components/segment-cache/optimistic-routes.ts
  */
 export type PageNavigation = typeof PageNavigationSchema.Type;
 

@@ -6,7 +6,7 @@ import {
 import { Option, Schema } from "effect";
 
 /** The headers that tell a cache the locale answer depends on the request. */
-const LOCALE_VARY = "Accept-Language, Cookie";
+export const LOCALE_VARY = "Accept-Language, Cookie";
 
 /** The redirect that the request middleware answers before routing. */
 const RedirectDecision = Schema.Struct({

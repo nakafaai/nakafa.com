@@ -30,7 +30,7 @@ export type PlayerModeParam = typeof PlayerModeParamSchema.Type;
 
 /** Classifies the optional view parameter; a repeated or unknown value is invalid. */
 export function readPlayerModeParam(
-  searchParams: Readonly<Record<string, string | string[] | undefined>>
+  searchParams: Readonly<Record<string, string | readonly string[] | undefined>>
 ): PlayerModeParam {
   const value = searchParams[PLAYER_MODE_PARAM];
   if (value === undefined) {

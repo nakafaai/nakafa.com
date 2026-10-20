@@ -10,8 +10,16 @@ import { readStandaloneMessages } from "@/lib/i18n/standalone";
 /**
  * The not-found state of one locale, with its home and search links. It reads the
  * standalone dictionary, so it still speaks when the shell's messages are missing.
+ * A page that stands on a host without the app's routes names the origin of the
+ * app, so its links reach the app.
  */
-export function LocalizedNotFound({ locale }: { readonly locale: Locale }) {
+export function LocalizedNotFound({
+  locale,
+  origin = "",
+}: {
+  readonly locale: Locale;
+  readonly origin?: string;
+}) {
   const messages = readStandaloneMessages(locale);
   return (
     <Stage>
@@ -20,12 +28,12 @@ export function LocalizedNotFound({ locale }: { readonly locale: Locale }) {
         title={messages.NotFound.title}
       >
         <ActionLink
-          href={`/${locale}`}
+          href={`${origin}/${locale}`}
           label={messages.State["home-button"]}
           variant="default"
         />
         <ActionLink
-          href={`/${locale}/search`}
+          href={`${origin}/${locale}/search`}
           label={messages.NotFound["search-button"]}
           variant="ghost"
         />

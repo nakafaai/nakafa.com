@@ -3,6 +3,8 @@ import { describe, expect, it } from "@effect/vitest";
 import {
   expiredHintCookie,
   hintCookieFor,
+  hintScopeFor,
+  isHintCurrent,
   SIGNED_IN_ATTRIBUTE,
   signedInHintCookie,
   signedInHintScript,
@@ -47,6 +49,41 @@ describe("sign-in hint cookie", () => {
     expect(hintCookieFor(ClientSession.cases.SignedOut.make({}), plain)).toBe(
       expiredHintCookie(plain)
     );
+  });
+});
+
+describe("sign-in hint scope", () => {
+  it("names the site's host, and https only for a secure site", () => {
+    expect(hintScopeFor(new URL("https://nakafa.com"))).toStrictEqual(secure);
+    expect(hintScopeFor(new URL("http://localhost:3000"))).toStrictEqual({
+      domain: "localhost",
+      secure: false,
+    });
+  });
+});
+
+describe("sign-in hint currency", () => {
+  const signedIn = ClientSession.cases.SignedIn.make({
+    name: "Ada",
+    sessionId: "session-1",
+    userId: "user-1",
+  });
+  const visitor = ClientSession.cases.SignedOut.make({});
+  const headers = (cookie?: string) =>
+    new Headers(cookie === undefined ? {} : { cookie });
+
+  it("is current for a visitor without the hint, and for a learner with it", () => {
+    expect(isHintCurrent(visitor, headers())).toBe(true);
+    expect(isHintCurrent(visitor, headers("theme=dark"))).toBe(true);
+    expect(
+      isHintCurrent(signedIn, headers("theme=dark; nakafa-signed-in=1"))
+    ).toBe(true);
+  });
+
+  it("is out of date when the hint and the session disagree", () => {
+    expect(isHintCurrent(signedIn, headers())).toBe(false);
+    expect(isHintCurrent(signedIn, headers("nakafa-signed-in=0"))).toBe(false);
+    expect(isHintCurrent(visitor, headers("nakafa-signed-in=1"))).toBe(false);
   });
 });
 

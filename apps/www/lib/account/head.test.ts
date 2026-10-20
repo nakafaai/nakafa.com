@@ -67,7 +67,7 @@ describe("profileHead", () => {
 });
 
 describe("privateHead", () => {
-  it("keeps only the title, the description and the noindex rule", () => {
+  it("keeps only the title, the description and the noindex rules", () => {
     const head = privateHead({
       canonicalPath: "/en",
       description: "Settings",
@@ -80,6 +80,7 @@ describe("privateHead", () => {
       { title: "Settings - Nakafa" },
       { content: "Settings", name: "description" },
       { content: "noindex,nofollow", name: "robots" },
+      { content: "noindex,nofollow,noimageindex", name: "googlebot" },
     ]);
   });
 });

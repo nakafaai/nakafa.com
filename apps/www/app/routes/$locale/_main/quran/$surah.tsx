@@ -1,4 +1,5 @@
 import { COMPANY_IDENTITY } from "@repo/seo/company";
+import { makeBookNode, makeBreadcrumbNodes } from "@repo/seo/json-ld/node";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { SheetEntry } from "@/components/ai/sheet/entry";
 import { AiMenuItem } from "@/components/ai/sheet/menu";
@@ -31,7 +32,6 @@ import {
 } from "@/lib/content/quran/surah.fn";
 import { getAppSocialArtwork } from "@/lib/og/app";
 import { createSeoHead, toRouterHead } from "@/lib/seo/head";
-import { makeBookNode, readBreadcrumbNodes } from "@/lib/seo/json-ld";
 
 /** One surah: its verses, its interpretation controls and its outline. */
 export const Route = createFileRoute("/$locale/_main/quran/$surah")({
@@ -60,7 +60,7 @@ export const Route = createFileRoute("/$locale/_main/quran/$surah")({
         }),
         indexable: true,
         jsonLd: [
-          ...readBreadcrumbNodes(breadcrumbs),
+          ...makeBreadcrumbNodes(breadcrumbs),
           makeBookNode({
             author: { "@type": "Person", name: "Allah" },
             description: book.description,

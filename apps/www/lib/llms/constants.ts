@@ -3,6 +3,8 @@ import { getAppUrl } from "@repo/site/app";
 export const BASE_URL = getAppUrl();
 export const LLMS_CACHE_CONTROL =
   "public, max-age=300, s-maxage=3600, must-revalidate";
+/** One CDN-only tag shared by every release-dependent Markdown answer. */
+export const CONTENT_LLMS_CACHE_TAG = "content-llms";
 export const MARKDOWN_EXTENSIONS = /\.(?:md|mdx|txt)$/;
 export const ENGLISH_LANGUAGE_NAMES = new Intl.DisplayNames(["en"], {
   type: "language",

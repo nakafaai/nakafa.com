@@ -8,10 +8,16 @@ import {
   expect,
   it,
 } from "@effect/vitest";
-import { Effect } from "effect";
-import { SessionTokenUnavailable } from "@/lib/auth/token";
+import { Array as Arr, Effect, Option } from "effect";
+import { SESSION_PATH } from "@/lib/auth/session";
+import { SessionUnavailable } from "@/lib/auth/session.server";
 
 const CONVEX_SITE_URL = "https://test.convex.site";
+/** The Better Auth session that the session route answers for a signed-in learner. */
+const SIGNED_IN_SESSION = {
+  session: { id: "session-ada" },
+  user: { id: "user-ada", name: "Ada" },
+};
 /**
  * One fetch for the whole file: both readers end in a Promise, so the double is
  * global, and Effect's client keeps the first global fetch it reads.
@@ -86,32 +92,54 @@ describe("Better Auth server boundary", () => {
   it.effect("reads the SSR token of the request the server handles", () =>
     Effect.gen(function* () {
       const { getToken } = yield* loadAuthServer();
-      const cookie = "better-auth.session_token=session-cookie";
       const requestHeaders = new Headers({
-        cookie,
+        cookie: "better-auth.session_token=session-cookie",
         host: "render.internal.example.com",
         "x-forwarded-host": "nakafa.com",
         "x-forwarded-proto": "https",
       });
-      fetcher.mockResolvedValue(Response.json({ token: "test-token" }));
+      fetcher.mockImplementation(async (url) =>
+        String(url).endsWith(SESSION_PATH)
+          ? Response.json(SIGNED_IN_SESSION)
+          : Response.json({ token: "test-token" })
+      );
 
       const token = yield* runWithRequestHeaders(requestHeaders, getToken);
-      expect(token).toBe("test-token");
-      const [, init] = fetcher.mock.calls[0] ?? [];
-      const headers = new Headers(init?.headers);
-
-      expect(String(fetcher.mock.calls[0]?.[0])).toBe(
-        `${CONVEX_SITE_URL}/api/auth/convex/token`
+      const tokenCall = Arr.findFirst(fetcher.mock.calls, ([url]) =>
+        String(url).endsWith("/api/auth/convex/token")
       );
+      const headers = new Headers(
+        Option.getOrUndefined(tokenCall)?.[1]?.headers
+      );
+
+      expect(token).toBe("test-token");
+      expect(fetcher).toHaveBeenCalledTimes(2);
       expect(headers.get("host")).toBe("test.convex.site");
-      expect(headers.get("cookie")).toBe(cookie);
+      expect(headers.get("cookie")).toBe(
+        "better-auth.session_token=session-cookie"
+      );
+    })
+  );
+
+  it.effect("answers no token for a visitor, and reads no session", () =>
+    Effect.gen(function* () {
+      const { getToken } = yield* loadAuthServer();
+
+      const token = yield* runWithRequestHeaders(new Headers(), getToken);
+
+      expect(token).toBeUndefined();
+      expect(fetcher).not.toHaveBeenCalled();
     })
   );
 
   it.effect("rejects when the token route refuses the request", () =>
     Effect.gen(function* () {
       const { getToken } = yield* loadAuthServer();
-      fetcher.mockResolvedValue(new Response(null, { status: 403 }));
+      fetcher.mockImplementation(async (url) =>
+        String(url).endsWith(SESSION_PATH)
+          ? Response.json(SIGNED_IN_SESSION)
+          : new Response(null, { status: 403 })
+      );
       const requestHeaders = new Headers({
         cookie: "better-auth.session_token=session-cookie",
       });
@@ -120,9 +148,9 @@ describe("Better Auth server boundary", () => {
         Effect.flip
       );
       expect(error.cause).toStrictEqual(
-        new SessionTokenUnavailable({ reason: "status", status: 403 })
+        new SessionUnavailable({ reason: "status", status: 403 })
       );
-      expect(fetcher).toHaveBeenCalledOnce();
+      expect(fetcher).toHaveBeenCalledTimes(2);
     })
   );
 });

@@ -1,10 +1,12 @@
 import { NINA_RESPONSE_CREDITS } from "@repo/backend/confect/credits/constants";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
-import { CollectionPageJsonLd } from "@repo/seo/json-ld/collection-page";
-import { FAQPageJsonLd } from "@repo/seo/json-ld/faq-page";
+import {
+  makeCollectionPageNode,
+  makeFaqPageNode,
+} from "@repo/seo/json-ld/node";
 import { createFileRoute } from "@tanstack/react-router";
 import { Array as Arr } from "effect";
-import { createTranslator, useTranslations } from "use-intl";
+import { createTranslator } from "use-intl";
 import { Closing } from "@/components/marketing/about/closing";
 import { Community } from "@/components/marketing/about/community";
 import { Curricula } from "@/components/marketing/about/curricula";
@@ -34,9 +36,10 @@ import { pricingCurrencyScript } from "@/lib/pricing/currency";
 import { createSeoHead, toRouterHead } from "@/lib/seo/head";
 
 /**
- * The marketing home. Its first HTML holds the whole page: the featured try-out
- * is read on the server before the stream, and the head names the locale's
- * title, description and price currency script.
+ * The marketing home. Its first HTML holds the whole page: the featured try-out,
+ * the subject collection and the questions are read before the stream, and the
+ * head names the locale's title, description, structured data and price currency
+ * script. The structured data is plain data that the head seam emits.
  */
 export const Route = createFileRoute("/$locale/_marketing/")({
   loader: async ({ params }) => {
@@ -44,7 +47,10 @@ export const Route = createFileRoute("/$locale/_marketing/")({
       readHomeCurriculaFn({ data: { locale: params.locale } }),
       readHomeTryout({ data: { locale: params.locale } }),
       readRouteMessages({
-        data: { locale: params.locale, namespaces: ["Metadata"] },
+        data: {
+          locale: params.locale,
+          namespaces: ["Landing", "Metadata", "Subject"],
+        },
       }),
     ]);
     const t = createTranslator({
@@ -52,102 +58,110 @@ export const Route = createFileRoute("/$locale/_marketing/")({
       messages,
       namespace: "Metadata",
     });
+    const tHome = createTranslator({
+      locale: params.locale,
+      messages,
+      namespace: "Landing",
+    });
+    const tSubject = createTranslator({
+      locale: params.locale,
+      messages,
+      namespace: "Subject",
+    });
+    const collection = Arr.flatMap(subjectMenu, (category) =>
+      Arr.map(category.items, (item) => {
+        const name =
+          item.title === "grade"
+            ? `${tSubject(category.title)} ${tSubject("grade", { grade: item.value })}`
+            : `${tSubject(category.title)} ${tSubject(item.title)}`;
+        return {
+          description: tSubject("grade-description"),
+          name,
+          url: `${COMPANY_IDENTITY.url}/${params.locale}${getSubjectMenuHref(item, params.locale)}`,
+        };
+      })
+    );
+
+    /**
+     * The ten questions of the home page, in the order the page asks them, the
+     * first one open. They are the questions no other part of the page answers.
+     */
+    const faqs: MarketingFaqItem[] = Arr.map(
+      [
+        "subjects",
+        "account",
+        "phone",
+        "languages",
+        "nina",
+        "credits",
+        "empty",
+        "memory",
+        "data",
+        "accuracy",
+      ] as const,
+      (key) => ({
+        answer: tHome(`faq-${key}-answer`, { cost: NINA_RESPONSE_CREDITS }),
+        question: tHome(`faq-${key}-question`),
+      })
+    );
+
     return {
+      collection,
       curricula,
       description: t("description"),
+      faqs,
       featuredTryout,
       title: t("title"),
     };
   },
-  head: ({ loaderData, params }) =>
-    loaderData === undefined
-      ? {}
-      : {
-          ...toRouterHead(
-            createSeoHead({
-              canonicalPath: `/${params.locale}`,
+  head: ({ loaderData, params }) => {
+    if (loaderData === undefined) {
+      return {};
+    }
+    const url = `${COMPANY_IDENTITY.url}/${params.locale}`;
+    return {
+      ...toRouterHead(
+        createSeoHead({
+          absoluteTitle: loaderData.title,
+          canonicalPath: `/${params.locale}`,
+          description: loaderData.description,
+          image: getAppSocialArtwork({
+            key: "home",
+            locale: params.locale,
+            publicPath: "",
+          }),
+          indexable: true,
+          jsonLd: [
+            makeCollectionPageNode({
               description: loaderData.description,
-              image: getAppSocialArtwork({
-                key: "home",
-                locale: params.locale,
-                publicPath: "",
-              }),
-              indexable: true,
-              jsonLd: [],
-              locale: params.locale,
-              absoluteTitle: loaderData.title,
-              parts: [],
-              type: "website",
-            })
-          ),
-          scripts: [{ children: pricingCurrencyScript() }],
-        },
+              items: loaderData.collection,
+              name: loaderData.title,
+              url,
+            }),
+            makeFaqPageNode({
+              inLanguage: params.locale,
+              items: loaderData.faqs,
+              url,
+            }),
+          ],
+          locale: params.locale,
+          parts: [],
+          type: "website",
+        })
+      ),
+      scripts: [{ children: pricingCurrencyScript() }],
+    };
+  },
   component: HomePage,
 });
 
-/** The marketing home: the sections of the landing page, with its structured data. */
+/** The marketing home: the sections of the landing page. */
 function HomePage() {
   const { locale } = Route.useParams();
-  const { curricula, featuredTryout } = Route.useLoaderData();
-  const tMetadata = useTranslations("Metadata");
-  const tSubject = useTranslations("Subject");
-  const tHome = useTranslations("Landing");
-
-  const collectionItems = Arr.flatMap(subjectMenu, (category) =>
-    Arr.map(category.items, (item) => {
-      const name =
-        item.title === "grade"
-          ? `${tSubject(category.title)} ${tSubject("grade", { grade: item.value })}`
-          : `${tSubject(category.title)} ${tSubject(item.title)}`;
-      return {
-        description: tSubject("grade-description"),
-        name,
-        url: `${COMPANY_IDENTITY.url}/${locale}${getSubjectMenuHref(item, locale)}`,
-      };
-    })
-  );
-
-  /**
-   * The ten questions of the home page, in the order the page asks them, the
-   * first one open. They are the questions no other part of the page answers.
-   */
-  const faqItems: MarketingFaqItem[] = Arr.map(
-    [
-      "subjects",
-      "account",
-      "phone",
-      "languages",
-      "nina",
-      "credits",
-      "empty",
-      "memory",
-      "data",
-      "accuracy",
-    ] as const,
-    (key) => ({
-      answer: tHome(`faq-${key}-answer`, { cost: NINA_RESPONSE_CREDITS }),
-      question: tHome(`faq-${key}-question`),
-    })
-  );
-
-  const url = `${COMPANY_IDENTITY.url}/${locale}`;
+  const { curricula, faqs, featuredTryout } = Route.useLoaderData();
 
   return (
     <>
-      <CollectionPageJsonLd
-        description={tMetadata("description")}
-        items={collectionItems}
-        name={tMetadata("title")}
-        url={url}
-      />
-      <FAQPageJsonLd
-        inLanguage={locale}
-        mainEntity={Arr.map(faqItems, (item) => ({
-          acceptedAnswer: { "@type": "Answer", text: item.answer },
-          name: item.question,
-        }))}
-        url={url}
-      />
       <PageField />
       <div className="relative grid grid-cols-1">
         <Hero />
@@ -161,7 +175,7 @@ function HomePage() {
         <Medals />
         <Pricing />
         <Schools herd={CLASS_HERD} />
-        <Faq faqs={faqItems} />
+        <Faq faqs={faqs} />
         <Community />
         <Closing />
         <HomeToys />

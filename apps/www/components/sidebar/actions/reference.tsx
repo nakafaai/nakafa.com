@@ -41,8 +41,7 @@ interface Props {
  * through Cache Components state preservation.
  *
  * References:
- * - Next.js preserving UI state with Cache Components:
- *   `apps/www/node_modules/next/dist/docs/01-app/02-guides/preserving-ui-state.md`
+ * - The framework's guide to preserving UI state with cached components.
  * - Mantine `useDisclosure`:
  *   https://mantine.dev/hooks/use-disclosure/
  */

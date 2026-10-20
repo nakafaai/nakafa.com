@@ -14,15 +14,14 @@ const LocalizedLlmsRouteSchema = Schema.Struct({
 });
 type LocalizedLlmsRoute = typeof LocalizedLlmsRouteSchema.Type;
 
-export const LlmsProxyRouteRequestSchema = Schema.Struct({
+const LlmsProxyRouteRequestSchema = Schema.Struct({
   acceptHeader: Schema.Option(Schema.String),
-  isRscRequest: Schema.Boolean,
   method: Schema.String,
   pathname: Schema.String,
 });
 export type LlmsProxyRouteRequest = typeof LlmsProxyRouteRequestSchema.Type;
 
-export const LlmsProxyRouteDecisionSchema = Schema.Union([
+const LlmsProxyRouteDecisionSchema = Schema.Union([
   Schema.Struct({ kind: Schema.Literal("delegate") }),
   Schema.Struct({ kind: Schema.Literal("not-acceptable") }),
   Schema.Struct({
@@ -44,15 +43,14 @@ const HTML_MEDIA_TYPES = [HTML_MEDIA_TYPE] as const;
 export const LLMS_REPRESENTATION_VARY_FIELDS = Object.freeze([
   "Accept",
   "Accept-Encoding",
-  "RSC",
 ]);
 
 /**
- * Classifies localized Markdown negotiation before the Next route handler.
+ * Classifies localized Markdown negotiation before the router.
  *
  * The resolver checks the existing source owner only after Markdown wins.
- * Ordinary HTML and marked RSC traffic stays inside Next without catalog
- * reads, while the rewritten route handler owns the final Markdown status.
+ * Ordinary HTML stays inside the router without catalog reads, while the
+ * Markdown answer owns its final status.
  */
 export const resolveLlmsProxyRoute = Effect.fn("www.llms.proxyRoute.resolve")(
   function* (request: LlmsProxyRouteRequest) {
@@ -71,10 +69,6 @@ export const resolveLlmsProxyRoute = Effect.fn("www.llms.proxyRoute.resolve")(
         kind: "rewrite-markdown",
         localizedRoute: localizedRoute.value,
       } satisfies LlmsProxyRouteDecision;
-    }
-
-    if (request.isRscRequest) {
-      return { kind: "delegate" } satisfies LlmsProxyRouteDecision;
     }
 
     const negotiatedMediaType = negotiateMediaType(
@@ -113,13 +107,18 @@ export const resolveLlmsProxyRoute = Effect.fn("www.llms.proxyRoute.resolve")(
   }
 );
 
+/** Reports whether a path addresses a localized document, the only kind that negotiates. */
+export function isLocalizedLlmsRoute(pathname: string) {
+  return Option.isSome(getLocalizedLlmsRoute(pathname));
+}
+
 /** Limits public representation negotiation to safe retrieval methods. */
 function isReadMethod(method: string) {
   return method === "GET" || method === "HEAD";
 }
 
 /** Removes one explicit Markdown suffix while preserving its exact spelling. */
-export function readLlmsMarkdownPathname(pathname: string) {
+function readLlmsMarkdownPathname(pathname: string) {
   const markdownExtension = readLlmsMarkdownExtension(pathname);
 
   return {

@@ -1,14 +1,13 @@
 import { HttpClient } from "@confect/js";
 import auth from "@repo/backend/confect/_generated/refs/auth";
-import users from "@repo/backend/confect/_generated/refs/users";
 import { LOCALES } from "@repo/internationalization/src/locale";
-import { Array as Arr, Effect, Option } from "effect";
+import { Array as Arr, Effect } from "effect";
 import { hasLocale } from "use-intl";
 import { clientEnv } from "@/env.public";
 import { readSessionToken } from "@/lib/auth/token";
 import { httpLayer } from "@/lib/convex/http";
 import { profileHref } from "@/lib/profile/href";
-import { isProfileTab, readProfileRoot } from "@/lib/profile/route";
+import { isProfileTab } from "@/lib/profile/route";
 import { permanentRedirect } from "@/lib/routing/public/redirect";
 
 /** The signed-in account of a request, or null for a visitor. */
@@ -27,47 +26,6 @@ const readRequestAccount = Effect.fn("www.routing.publicHtml.profileAccount")(
     );
   }
 );
-
-/**
- * Decides, before the page renders, whether an address of a profile,
- * `/{locale}/@username` and its tabs, is not found: a username that nobody
- * holds, or the Chat tab of a profile that the request's account does not hold.
- * Anyone may open a profile and its Posts and Comments (`readProfile` reads it),
- * and its chats are its owner's alone. Such an address is answered here, with the
- * app's not-found page and a 404 status, so the page never starts a stream that
- * it would have to end as not found. The answer is the locale of that page, or
- * null when the path is no profile address or the request may open it.
- */
-export const readProfileRefusal = Effect.fn(
-  "www.routing.publicHtml.profileRefusal"
-)(function* (pathname: string, headers: Headers) {
-  const [locale, root, ...tab] = Arr.filter(pathname.split("/"), Boolean);
-  if (
-    !(hasLocale(LOCALES, locale) && root !== undefined && isProfileTab(tab))
-  ) {
-    return null;
-  }
-  const username = readProfileRoot(root);
-  if (Option.isNone(username)) {
-    return null;
-  }
-  const profile = yield* HttpClient.HttpClient.pipe(
-    Effect.flatMap((client) =>
-      client.query(users.queries.getProfileByUsername, {
-        username: username.value,
-      })
-    ),
-    Effect.provide(httpLayer())
-  );
-  if (profile === null) {
-    return locale;
-  }
-  if (tab[0] !== "chat") {
-    return null;
-  }
-  const account = yield* readRequestAccount(headers);
-  return account?.appUser.username === profile.username ? null : locale;
-});
 
 /**
  * Resolves the retired address of a profile, `/{locale}/user/{id}` and its

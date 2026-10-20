@@ -43,7 +43,8 @@ const readRefusal = Effect.fn("www.routing.school.refusal")(function* (
  * Decides, before a school page streams, whether the school refuses the request
  * (ADR 0026). The answer is the locale of the not-found page, negotiated from the
  * request, or none when the school tree answers. A request whose host names no
- * school has none.
+ * school has none, and so has a method that is not a document read: only a GET or
+ * HEAD request is a page.
  *
  * The whole gate waits at most NETWORK_ATTEMPT_DEADLINE, so a school that does not
  * answer holds the page for that long at most (ADR 0026). A failed or late read
@@ -54,7 +55,11 @@ export const readSchoolRefusal = Effect.fn("www.routing.school.pageRefusal")(
   function* (request: Request) {
     const url = new URL(request.url);
     const slug = readSchoolSlug(url.hostname);
-    if (Option.isNone(slug) || isSharedPath(url.pathname)) {
+    if (
+      Option.isNone(slug) ||
+      isSharedPath(url.pathname) ||
+      (request.method !== "GET" && request.method !== "HEAD")
+    ) {
       return Option.none();
     }
     const refused = yield* readRefusal(slug.value, request.headers).pipe(

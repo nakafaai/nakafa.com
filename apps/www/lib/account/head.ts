@@ -1,7 +1,11 @@
 import { LocalizedPath } from "@repo/internationalization/src/alternates";
 import { LocaleSchema } from "@repo/internationalization/src/locale";
 import { Array as Arr, Schema } from "effect";
-import { createSeoHead, toRouterHead } from "@/lib/seo/head";
+import {
+  createPrivateSeoHead,
+  createSeoHead,
+  toRouterHead,
+} from "@/lib/seo/head";
 
 /** The serializable SEO facts that a signed-in screen's loader returns to its head. */
 export const ScreenSeo = Schema.Struct({
@@ -30,17 +34,6 @@ export function signedInHead(seo: ScreenSeo) {
   );
 }
 
-type HeadMeta = ReturnType<typeof signedInHead>["meta"][number];
-
-/** Whether a router meta entry is the title, the description or the robots rule. */
-function isPrivateMeta(entry: HeadMeta) {
-  return (
-    "title" in entry ||
-    ("name" in entry &&
-      (entry.name === "description" || entry.name === "robots"))
-  );
-}
-
 /**
  * The head of a profile tab. The reference's profile pages name their canonical
  * address and no hreflang alternates, so the shared head's alternates are left out.
@@ -54,14 +47,12 @@ export function profileHead(seo: ScreenSeo) {
 }
 
 /**
- * The head of a private account screen: its title, description and noindex rule.
- * The reference's settings pages name no canonical address, alternates or social
- * cards, so only those entries of the shared head are kept.
+ * The head of a private account screen: its title, description and noindex
+ * rules. The reference's settings pages name no canonical address, alternates or
+ * social cards, so the head seam builds the private head, which has none of them.
  */
 export function privateHead(seo: ScreenSeo) {
-  const head = signedInHead({ ...seo, indexable: false });
-  return {
-    links: [],
-    meta: Arr.filter(head.meta, isPrivateMeta),
-  };
+  return toRouterHead(
+    createPrivateSeoHead({ description: seo.description, parts: [seo.title] })
+  );
 }

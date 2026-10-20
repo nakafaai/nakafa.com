@@ -267,6 +267,18 @@ export const readSessionMemo = (request: Request) =>
   });
 
 /**
+ * The Convex token of one request, read from its session memo, so a request
+ * that also reads its session makes no second session call. A visitor has none.
+ */
+export const readRequestToken = Effect.fn("www.auth.session.requestToken")(
+  function* (request: Request) {
+    const memo = yield* readSessionMemo(request);
+    const session = yield* memo;
+    return Option.getOrUndefined(session.convexToken);
+  }
+);
+
+/**
  * The visitor's session, answered to the browser without any credential. The
  * session memo appends the cookies that Better Auth set, and no cache keeps the
  * answer.

@@ -63,8 +63,8 @@ function isTransientQueryFailure(error: unknown) {
  *
  * The budget is per query. A cached function that makes one Convex query and
  * then one protected content read, such as the featured try-out, can take about
- * 63 seconds. Next.js stops a cache fill at 54 seconds (see
- * next/dist/server/use-cache/use-cache-wrapper.js), so that attempt fails there,
+ * 63 seconds. The framework stops a cache fill at 54 seconds (its use-cache
+ * wrapper decides this), so that attempt fails there,
  * and the page's retry (`staticGenerationRetryCount`) runs it again.
  */
 export const withQueryRetry = <E, R>(
