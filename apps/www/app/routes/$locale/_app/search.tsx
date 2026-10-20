@@ -1,12 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { Schema } from "effect";
 import { HomeHeader } from "@/components/home/header";
 import { InputSearch } from "@/components/search/input";
 import { SearchListItems } from "@/components/search/results";
 import { BackButton } from "@/components/shared/back";
 import { signedInHead } from "@/lib/account/head";
 import { searchScreenFn } from "@/lib/account/home.fn";
+import { SearchInput } from "@/lib/nuqs/search";
 
 export const Route = createFileRoute("/$locale/_app/search")({
+  validateSearch: Schema.toStandardSchemaV1(SearchInput),
   loader: ({ params }) => searchScreenFn({ data: { locale: params.locale } }),
   head: ({ loaderData }) => loaderData && signedInHead(loaderData.seo),
   component: SearchPage,
