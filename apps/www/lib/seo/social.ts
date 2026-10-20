@@ -10,7 +10,11 @@ export const SOCIAL_SITE_NAME = "Nakafa";
 export const SOCIAL_TWITTER_ACCOUNT = "@nabilfatih_";
 
 /** The Open Graph types that a page declares. */
-export const SocialOpenGraphType = Schema.Literals(["article", "website"]);
+export const SocialOpenGraphType = Schema.Literals([
+  "article",
+  "book",
+  "website",
+]);
 
 type SocialOpenGraphType = typeof SocialOpenGraphType.Type;
 

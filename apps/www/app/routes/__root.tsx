@@ -24,12 +24,14 @@ import {
 } from "@/components/state/localized";
 import { signedInHintScript } from "@/lib/auth/hint";
 import { pricingCurrencyScript } from "@/lib/pricing/currency";
+import { SOCIAL_SITE_NAME } from "@/lib/seo/social";
 import { THEME_PREPAINT_SCRIPT } from "@/lib/theme/prepaint";
 import appCss from "@/styles/globals.css?url";
 
 export const Route = createRootRoute({
   head: () => ({
     meta: [
+      { title: SOCIAL_SITE_NAME },
       { charSet: "utf-8" },
       {
         name: "viewport",

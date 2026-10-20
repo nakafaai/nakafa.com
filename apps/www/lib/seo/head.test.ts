@@ -21,6 +21,16 @@ describe("page head", () => {
     expect(head.robots).toBe("index,follow");
   });
 
+  it("uses an absolute title as it is, without the site suffix", () => {
+    const head = createSeoHead({
+      ...facts,
+      absoluteTitle: "Harga Nakafa Pro",
+      parts: [],
+    });
+    expect(head.title).toBe("Harga Nakafa Pro");
+    expect(head.social["og:title"]).toBe("Harga Nakafa Pro");
+  });
+
   it("lists every locale and x-default from the route map", () => {
     expect(createSeoHead(facts).alternates).toStrictEqual([
       { hreflang: "en", href: "https://nakafa.com/en/subjects/aljabar" },

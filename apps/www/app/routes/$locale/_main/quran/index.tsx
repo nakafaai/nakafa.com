@@ -72,7 +72,7 @@ export const Route = createFileRoute("/$locale/_main/quran/")({
         jsonLd: readBreadcrumbNodes(breadcrumbs),
         locale,
         parts: [title],
-        type: "website",
+        type: "book",
       })
     );
   },

@@ -34,6 +34,7 @@ type SeoHead = typeof SeoHead.Type;
 
 /** The facts of one page that decide its head. */
 const PageFacts = Schema.Struct({
+  absoluteTitle: Schema.optionalKey(Schema.String),
   canonicalPath: LocalizedPath,
   description: Schema.String,
   image: Schema.String,
@@ -54,7 +55,8 @@ type PageFacts = typeof PageFacts.Type;
  * the Twitter entries name the site account as both site and creator.
  */
 export function createSeoHead(facts: PageFacts): SeoHead {
-  const title = createSEOTitle(facts.parts, SOCIAL_SITE_NAME);
+  const title =
+    facts.absoluteTitle ?? createSEOTitle(facts.parts, SOCIAL_SITE_NAME);
   const canonical = new URL(toPublicPath(facts.canonicalPath), SITE_ORIGIN)
     .href;
   const image = {

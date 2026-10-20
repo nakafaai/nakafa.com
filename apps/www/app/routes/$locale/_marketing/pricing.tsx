@@ -59,7 +59,8 @@ export const Route = createFileRoute("/$locale/_marketing/pricing")({
               indexable: true,
               jsonLd: [],
               locale: params.locale,
-              parts: [loaderData.title],
+              absoluteTitle: loaderData.title,
+              parts: [],
               type: "website",
             })
           ),

@@ -123,7 +123,8 @@ export const Route = createFileRoute("/$locale/_main/curricula/")({
           }),
         ],
         locale,
-        parts: [metadataTitle],
+        absoluteTitle: metadataTitle,
+        parts: [],
         type: "website",
       })
     );
