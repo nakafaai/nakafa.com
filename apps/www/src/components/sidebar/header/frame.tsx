@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname } from "@repo/internationalization/src/navigation";
+import { useCanonicalPath } from "@repo/internationalization/src/link";
 import {
   domAnimation,
   LazyMotion,
@@ -22,7 +22,7 @@ const BORDER_OPACITY_THRESHOLD_MAX = 50;
  * phone shows one header row.
  */
 export function HeaderContainer({ children }: { children: ReactNode }) {
-  const pathname = usePathname();
+  const pathname = useCanonicalPath();
   const { scrollY } = useScroll();
 
   //chat page not using window scroll

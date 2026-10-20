@@ -3,30 +3,34 @@ import {
   Books02Icon,
   Target01Icon,
 } from "@hugeicons/core-free-icons";
-import type { Locale } from "use-intl";
-import { getCurriculumIndexHref } from "@/lib/curriculum/routes";
+import type { LinkTarget } from "@repo/internationalization/src/link";
+import type { Locale } from "@repo/internationalization/src/locale";
+import { linkOptions } from "@tanstack/react-router";
 
 const forYouNavigationItems = {
   subject: {
-    href: "/curriculum",
     icon: Books02Icon,
     id: "subject",
     labelKey: "subject",
     labelNamespace: "Common",
+    target: (locale: Locale): LinkTarget =>
+      linkOptions({ params: { locale }, to: "/$locale/curricula" }),
   },
   tryOut: {
-    href: "/try-out",
     icon: Target01Icon,
     id: "tryOut",
     labelKey: "try-out",
     labelNamespace: "Common",
+    target: (locale: Locale): LinkTarget =>
+      linkOptions({ params: { locale }, to: "/$locale/try-out" }),
   },
   askNina: {
-    href: "/chat",
     icon: AiChat02Icon,
     id: "askNina",
     labelKey: "ask-nina",
     labelNamespace: "Ai",
+    target: (locale: Locale): LinkTarget =>
+      linkOptions({ params: { locale }, to: "/$locale/chat" }),
   },
 } as const;
 
@@ -49,26 +53,26 @@ export function getForYouNavigationItems() {
   return primaryNavigationItems;
 }
 
-/** Resolves the locale-aware destination for one personalized navigation row. */
-export function getForYouNavigationHref(
+/**
+ * Resolves the destination of one personalized navigation row. A learner's
+ * stored curriculum or try-out path, a public path that the content gives, is
+ * returned as it is; otherwise the row's own route is returned as a target.
+ */
+export function getForYouNavigationTarget(
   item: ForYouNavigationItem,
   locale: Locale,
   preferences: {
     preferredCurriculumHref?: string | null;
     preferredTryoutHref?: string | null;
   } = {}
-) {
+): LinkTarget | string {
   if (item.id === "subject" && preferences.preferredCurriculumHref) {
     return preferences.preferredCurriculumHref;
-  }
-
-  if (item.id === "subject") {
-    return getCurriculumIndexHref(locale);
   }
 
   if (item.id === "tryOut" && preferences.preferredTryoutHref) {
     return preferences.preferredTryoutHref;
   }
 
-  return item.href;
+  return item.target(locale);
 }

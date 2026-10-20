@@ -8,8 +8,8 @@ import {
   CardHeader,
 } from "@repo/design-system/components/ui/card";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { Nina } from "@repo/design-system/components/ui/nina";
+import { Link, useCurrentLocale } from "@repo/internationalization/src/link";
 import { Array as Arr } from "effect";
 import type { ComponentType, ReactNode } from "react";
 import { useTranslations } from "use-intl";
@@ -49,6 +49,7 @@ export function PricingCards({
   proAction,
 }: PricingPlanCardsProps) {
   const t = useTranslations("Pricing");
+  const locale = useCurrentLocale();
   const PlanHeading = headingLevel;
   const credits = getPlanCreditConfig("pro").amount;
 
@@ -82,14 +83,15 @@ export function PricingCards({
             className="w-full"
             nativeButton={false}
             render={
-              <NavigationLink
-                href="/auth"
+              <Link
+                params={{ locale }}
                 rel="noopener noreferrer"
                 target="_blank"
+                to="/$locale/auth"
               >
                 <HugeIcons icon={ArrowUpRight01Icon} />
                 {t("free-cta")}
-              </NavigationLink>
+              </Link>
             }
             variant="outline"
           />

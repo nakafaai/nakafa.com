@@ -21,7 +21,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@repo/design-system/components/ui/select";
-import { useRouter } from "@repo/internationalization/src/navigation";
+import { useCurrentLocale } from "@repo/internationalization/src/link";
+import { useNavigate } from "@tanstack/react-router";
 import {
   Array as Arr,
   Effect,
@@ -31,7 +32,7 @@ import {
   String as Str,
 } from "effect";
 import { useId, useMemo, useState, useTransition } from "react";
-import { useLocale, useTranslations } from "use-intl";
+import { useTranslations } from "use-intl";
 import type { StoreApi } from "zustand";
 import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import {
@@ -66,8 +67,8 @@ export function CreateExam({
 }) {
   const t = useTranslations("Exams");
   const common = useTranslations("Common");
-  const locale = useLocale();
-  const router = useRouter();
+  const locale = useCurrentLocale();
+  const navigate = useNavigate();
   const create = useMutation(exams.exams.create);
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
@@ -135,7 +136,12 @@ export function CreateExam({
             );
           }),
           Effect.tap((saved) =>
-            Effect.sync(() => router.push(`/exams/${saved.id}/edit`))
+            Effect.sync(() => {
+              navigate({
+                params: { exam: saved.id, slug },
+                to: "/school/$slug/exams/$exam/edit",
+              });
+            })
           )
         ),
         { onFailure: Fn.constVoid, onSuccess: Fn.constVoid }

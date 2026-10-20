@@ -1,4 +1,4 @@
-import { useRouter } from "@repo/internationalization/src/navigation";
+import { useNavigate } from "@tanstack/react-router";
 import { Data, Effect } from "effect";
 import { useTransition } from "react";
 import type { Locale } from "use-intl";
@@ -25,10 +25,12 @@ const loadLocalizedHrefRequest = Effect.tryPromise({
 });
 /**
  * Drives locale switches through the route-owned localization API instead of
- * preserving localized slug text across languages.
+ * preserving localized slug text across languages. The server decides the
+ * address of the page in the chosen locale, so the router takes that address
+ * as an href.
  */
 export function useLocalizedRouteSwitch() {
-  const router = useRouter();
+  const navigate = useNavigate();
   const [isPending, startTransition] = useTransition();
   function replace(locale: Locale) {
     startTransition(() => {
@@ -39,7 +41,7 @@ export function useLocalizedRouteSwitch() {
           ),
           Effect.tap(({ href }) =>
             Effect.sync(() => {
-              router.replace(href, { locale });
+              navigate({ href, replace: true });
             })
           ),
           Effect.catch(() => Effect.void)

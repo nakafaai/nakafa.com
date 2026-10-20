@@ -13,7 +13,7 @@ import {
 import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
 import { Input } from "@repo/design-system/components/ui/input";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { Link } from "@repo/internationalization/src/navigation";
+import { Link } from "@repo/internationalization/src/link";
 import { Effect, Option } from "effect";
 import {
   type FormEvent,
@@ -43,6 +43,7 @@ import {
   CardSectionFooter,
 } from "@/components/shared/card/section";
 import { LayoutContent } from "@/components/shared/content/frame";
+import { useTenant } from "@/components/tenant/context";
 import { isDenied, isLostAccess } from "@/components/tenant/refusal";
 import { schoolDateTimeText } from "@/components/tenant/settings/clock";
 import { usePreloadedQueryResult } from "@/lib/data/preloaded";
@@ -251,13 +252,18 @@ function StudentFailure({
 /** The page when the sitting is not open to the student: the header, why, and the way back home. */
 function StudentRefusal() {
   const t = useTranslations("Exams");
+  const { slug } = useTenant();
 
   return (
     <>
       <SittingBar examTitle={t("sitting")} />
       <LayoutContent className="grid w-full gap-6 py-6">
         <p>{t("student-unavailable")}</p>
-        <Link className={buttonVariants({ variant: "outline" })} href="/">
+        <Link
+          className={buttonVariants({ variant: "outline" })}
+          params={{ slug }}
+          to="/school/$slug"
+        >
           {t("student-back-home")}
         </Link>
       </LayoutContent>

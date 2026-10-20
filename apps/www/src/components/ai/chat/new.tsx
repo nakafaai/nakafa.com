@@ -1,5 +1,6 @@
 import { Particles } from "@repo/design-system/components/ui/particles";
-import { useRouter } from "@repo/internationalization/src/navigation";
+import { useCurrentLocale } from "@repo/internationalization/src/link";
+import { useNavigate } from "@tanstack/react-router";
 import { cn } from "cn";
 import type { ReactNode } from "react";
 import { ChatHeader } from "@/components/ai/chat/header";
@@ -14,9 +15,11 @@ export function ChatNew({
   children: ReactNode;
   title: ReactNode;
 }) {
-  const router = useRouter();
+  const locale = useCurrentLocale();
+  const navigate = useNavigate();
   const { disabled, prompt, submit } = useStartChat({
-    onComplete: (chatId) => router.push(`/chat/${chatId}`),
+    onComplete: (chatId) =>
+      navigate({ params: { id: chatId, locale }, to: "/$locale/chat/$id" }),
   });
 
   return (

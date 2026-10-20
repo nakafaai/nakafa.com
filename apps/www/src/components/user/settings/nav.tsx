@@ -5,7 +5,6 @@ import {
   UserIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -16,7 +15,11 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
-import { usePathname } from "@repo/internationalization/src/navigation";
+import {
+  EXACT_ACTIVE_OPTIONS,
+  HrefLink,
+  useCanonicalPath,
+} from "@repo/internationalization/src/link";
 import { Array as Arr } from "effect";
 import type { ComponentProps } from "react";
 import { useTranslations } from "use-intl";
@@ -56,7 +59,7 @@ function UserSettingsNavGroup({
 }: {
   group: (typeof userSettingsGroups)[number];
 }) {
-  const pathname = usePathname();
+  const pathname = useCanonicalPath();
   const t = useTranslations("Auth");
 
   return (
@@ -71,7 +74,13 @@ function UserSettingsNavGroup({
               <SidebarMenuItem key={section.href}>
                 <SidebarMenuButton
                   isActive={pathname === section.href}
-                  render={<NavigationLink href={section.href} title={label} />}
+                  render={
+                    <HrefLink
+                      activeOptions={EXACT_ACTIVE_OPTIONS}
+                      href={section.href}
+                      title={label}
+                    />
+                  }
                   tooltip={label}
                 >
                   <HugeIcons icon={sectionIcons[section.labelKey]} />

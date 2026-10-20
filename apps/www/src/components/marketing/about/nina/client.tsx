@@ -1,5 +1,5 @@
 import type { PromptInputMessage } from "@repo/design-system/lib/prompt-input/submission";
-import { useRouter } from "@repo/internationalization/src/navigation";
+import { useNavigate } from "@tanstack/react-router";
 import { Option } from "effect";
 import { lazy, Suspense, startTransition, useState } from "react";
 import { NinaInput } from "@/components/ai/input";
@@ -22,11 +22,11 @@ const LiveNinaComposer = lazy(() =>
  * so the page loads no chat code and opens no Convex client.
  */
 function VisitorNinaComposer() {
-  const router = useRouter();
+  const navigate = useNavigate();
   const authNavigation = useCurrentAuthNavigation();
 
   function signIn() {
-    router.push(authNavigation.readHref());
+    navigate(authNavigation.readTarget());
     return false;
   }
 

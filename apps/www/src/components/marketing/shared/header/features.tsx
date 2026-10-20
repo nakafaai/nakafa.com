@@ -1,6 +1,10 @@
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
-import { usePathname } from "@repo/internationalization/src/navigation";
-import type { ComponentProps } from "react";
+import {
+  EXACT_ACTIVE_OPTIONS,
+  Link,
+  useCurrentLocale,
+} from "@repo/internationalization/src/link";
+import { useMatchRoute } from "@tanstack/react-router";
+import type { ReactNode } from "react";
 import { LESSON_SECTION_ID } from "@/components/marketing/about/lesson/id";
 
 /**
@@ -23,23 +27,29 @@ function scrollToSection() {
  * itself and the router only records the address. From another page the router
  * scrolls to the section, as it does for every other hash link.
  */
-export function HeaderFeaturesLink(
-  props: Omit<ComponentProps<typeof NavigationLink>, "href">
-) {
-  const pathname = usePathname();
-  const onHome = pathname === "/";
+export function HeaderFeaturesLink({
+  children,
+}: {
+  readonly children: ReactNode;
+}) {
+  const locale = useCurrentLocale();
+  const matchRoute = useMatchRoute();
+  const onHome = matchRoute({ params: { locale }, to: "/$locale" }) !== false;
 
   return (
-    <NavigationLink
-      {...props}
-      href={`/#${LESSON_SECTION_ID}`}
-      onClick={(event) => {
-        props.onClick?.(event);
+    <Link
+      activeOptions={EXACT_ACTIVE_OPTIONS}
+      hash={LESSON_SECTION_ID}
+      onClick={() => {
         if (onHome) {
           scrollToSection();
         }
       }}
+      params={{ locale }}
       resetScroll={!onHome}
-    />
+      to="/$locale"
+    >
+      {children}
+    </Link>
   );
 }

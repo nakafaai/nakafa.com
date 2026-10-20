@@ -2,7 +2,7 @@ import { School01Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { PersonAvatar } from "@repo/design-system/components/ui/person";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { Link } from "@repo/internationalization/src/navigation";
+import { Link, useCurrentLocale } from "@repo/internationalization/src/link";
 import type { Mascot } from "@repo/mascot/code";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { Array as Arr } from "effect";
@@ -19,6 +19,7 @@ export function Schools({ herd }: { herd: readonly (typeof Mascot.Type)[] }) {
   const t = useTranslations("Landing");
   const tCommon = useTranslations("Common");
   const tStart = useTranslations("SchoolStart");
+  const locale = useCurrentLocale();
 
   return (
     <MarketingSection id="school">
@@ -36,7 +37,8 @@ export function Schools({ herd }: { herd: readonly (typeof Mascot.Type)[] }) {
             <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
               <Link
                 className={buttonVariants({ variant: "inverse" })}
-                href="/school/new"
+                params={{ locale }}
+                to="/$locale/school/new"
               >
                 <HugeIcons icon={School01Icon} />
                 {tCommon("open-school")}

@@ -4,7 +4,6 @@ import type { Id } from "@repo/backend/confect/_generated/id";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { Link } from "@repo/internationalization/src/navigation";
 import { Array as Arr } from "effect";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
@@ -21,6 +20,7 @@ import { ExamTryQuestion } from "@/components/tenant/exams/try/question";
 import { createExamTry } from "@/components/tenant/exams/try/store";
 import { ExamUnavailable } from "@/components/tenant/exams/unavailable";
 import { usePreloadedQueryResult } from "@/lib/data/preloaded";
+import { SchoolHrefLink } from "@/lib/routing/school/link";
 
 /**
  * One exam as its students will meet it, for its teacher to try: the same player and the same
@@ -62,9 +62,9 @@ export function ExamTryPaper({
       <TryStoreContext value={store}>
         <PlayerHeader>
           <PlayerTitle>{exam.title || t("untitled")}</PlayerTitle>
-          <Link className={buttonVariants()} href={editorPath}>
+          <SchoolHrefLink className={buttonVariants()} href={editorPath}>
             {t("try-finish")}
-          </Link>
+          </SchoolHrefLink>
         </PlayerHeader>
         <PlayerMain navigator={null}>
           <p className="text-muted-foreground text-sm">{t("try-note")}</p>

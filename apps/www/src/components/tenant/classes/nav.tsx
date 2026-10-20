@@ -1,12 +1,12 @@
 import { QueryResult } from "@confect/react";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
-import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
-import { usePathname } from "@repo/internationalization/src/navigation";
-import { Array as Arr, String as Str } from "effect";
+import { Link } from "@repo/internationalization/src/link";
+import { useMatchRoute } from "@tanstack/react-router";
+import { Array as Arr } from "effect";
 import { use } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/providers/convex";
@@ -84,15 +84,21 @@ function useClassesQuery(slug: TenantValue["slug"]) {
  * entry is the current page on the class page and on its tabs.
  */
 function TenantClassItem({ name, slug }: { name: string; slug: string }) {
-  const pathname = usePathname();
-  const base = `/classes/${slug}`;
-  const isActive = pathname === base || Str.startsWith(`${base}/`)(pathname);
+  const { slug: schoolSlug } = useTenant();
+  const matchRoute = useMatchRoute();
+  const params = { classSlug: slug, slug: schoolSlug };
+  const isActive =
+    matchRoute({
+      fuzzy: true,
+      params,
+      to: "/school/$slug/classes/$classSlug",
+    }) !== false;
 
   return (
     <SidebarMenuItem>
       <SidebarMenuButton
         isActive={isActive}
-        render={<IntentLink href={base} localized={false} />}
+        render={<Link params={params} to="/school/$slug/classes/$classSlug" />}
       >
         {name}
       </SidebarMenuButton>

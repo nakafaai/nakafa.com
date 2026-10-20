@@ -1,15 +1,15 @@
-import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
-import { usePathname } from "@repo/internationalization/src/navigation";
-import { String as Str } from "effect";
+import { Link } from "@repo/internationalization/src/link";
+import { useMatchRoute } from "@tanstack/react-router";
 import { useTranslations } from "use-intl";
 import { TenantClassesGroup } from "@/components/tenant/classes/nav";
 import { useTenant } from "@/components/tenant/context";
 import { TenantSidebarGroup } from "@/components/tenant/group";
 import { SchoolSettingsNav } from "@/components/tenant/settings/nav";
+import { useSchoolPath } from "@/lib/routing/school/link";
 import { isSchoolSettingsPath } from "@/lib/settings/school";
 
 /**
@@ -21,8 +21,9 @@ import { isSchoolSettingsPath } from "@/lib/settings/school";
  * move the groups above them.
  */
 export function TenantNavigation() {
-  const { canManage, canOpenExams } = useTenant();
-  const pathname = usePathname();
+  const { canManage, canOpenExams, slug } = useTenant();
+  const pathname = useSchoolPath();
+  const matchRoute = useMatchRoute();
   const t = useTranslations("School");
   const tExams = useTranslations("Exams");
   const tSettings = useTranslations("SchoolSettings");
@@ -36,8 +37,10 @@ export function TenantNavigation() {
       <TenantSidebarGroup label={t("for-you")}>
         <SidebarMenuItem>
           <SidebarMenuButton
-            isActive={pathname === "/"}
-            render={<IntentLink href="/" localized={false} />}
+            isActive={
+              matchRoute({ params: { slug }, to: "/school/$slug" }) !== false
+            }
+            render={<Link params={{ slug }} to="/school/$slug" />}
           >
             {t("home")}
           </SidebarMenuButton>
@@ -46,9 +49,13 @@ export function TenantNavigation() {
           <SidebarMenuItem>
             <SidebarMenuButton
               isActive={
-                pathname === "/exams" || Str.startsWith("/exams/")(pathname)
+                matchRoute({
+                  fuzzy: true,
+                  params: { slug },
+                  to: "/school/$slug/exams",
+                }) !== false
               }
-              render={<IntentLink href="/exams" localized={false} />}
+              render={<Link params={{ slug }} to="/school/$slug/exams" />}
             >
               {tExams("title")}
             </SidebarMenuButton>
@@ -59,7 +66,9 @@ export function TenantNavigation() {
         <TenantSidebarGroup label={tSettings("manage-group")}>
           <SidebarMenuItem>
             <SidebarMenuButton
-              render={<IntentLink href="/settings/profile" localized={false} />}
+              render={
+                <Link params={{ slug }} to="/school/$slug/settings/profile" />
+              }
             >
               {tSettings("manage-settings")}
             </SidebarMenuButton>

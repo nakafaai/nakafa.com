@@ -17,8 +17,9 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useSidebar } from "@repo/design-system/lib/sidebar/context";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { languages } from "@repo/internationalization/data/lang";
-import { Link, useRouter } from "@repo/internationalization/src/navigation";
+import { Link } from "@repo/internationalization/src/link";
 import { SITE_ORIGIN } from "@repo/seo/origin";
+import { useRouter } from "@tanstack/react-router";
 import { Array as Arr, Effect } from "effect";
 import { startTransition } from "react";
 import { useLocale, useTranslations } from "use-intl";
@@ -42,7 +43,7 @@ function changeLanguage(
     Effect.gen(function* () {
       const outcome = yield* changeSchoolLanguage(language, () => {
         startTransition(() => {
-          router.refresh();
+          router.invalidate();
         });
       });
       if (outcome === "rolledBack") {
@@ -71,7 +72,7 @@ export function TenantAccountItems({
 }: {
   username: string | undefined;
 }) {
-  const { canManage } = useTenant();
+  const { canManage, slug } = useTenant();
   const t = useTranslations();
   const locale = useLocale();
 
@@ -108,7 +109,7 @@ export function TenantAccountItems({
           <DropdownMenuGroup>
             <DropdownMenuItem
               render={
-                <Link href="/settings/profile">
+                <Link params={{ slug }} to="/school/$slug/settings/profile">
                   <HugeIcons icon={SchoolIcon} />
                   {t("SchoolSettings.manage-settings")}
                 </Link>

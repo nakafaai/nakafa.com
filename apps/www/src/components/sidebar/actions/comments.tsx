@@ -1,10 +1,10 @@
 import { MessageMultiple01Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
+import { HrefLink } from "@repo/internationalization/src/link";
 import { useTranslations } from "use-intl";
 
 export function CommentsButton() {
@@ -13,7 +13,7 @@ export function CommentsButton() {
   return (
     <SidebarMenuItem>
       <SidebarMenuButton
-        render={<NavigationLink href="#comments" title={t("comments")} />}
+        render={<HrefLink href="#comments" title={t("comments")} />}
         tooltip={t("comments")}
       >
         <HugeIcons className="shrink-0" icon={MessageMultiple01Icon} />

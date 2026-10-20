@@ -14,7 +14,11 @@ import {
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { lazyComponent } from "@repo/design-system/lib/lazy";
-import { useRouter } from "@repo/internationalization/src/navigation";
+import {
+  useCurrentLocale,
+  useHrefNavigate,
+} from "@repo/internationalization/src/link";
+import { useNavigate } from "@tanstack/react-router";
 import { Effect, Result } from "effect";
 import { useTranslations } from "use-intl";
 import { clearAiDraftText } from "@/components/ai/store/draft";
@@ -25,7 +29,7 @@ import { signOutAccountBrowserIdentity } from "@/lib/auth/identity/browser";
 import { useCurrentAuthNavigation } from "@/lib/auth/location";
 import { usePageNavigation } from "@/lib/content/page/context";
 import type { CurrentUser } from "@/lib/identity/client";
-import { profileHref } from "@/lib/profile/href";
+import { profileTarget } from "@/lib/profile/href";
 
 /**
  * The account's schools, loaded when the menu opens: the list brings the school
@@ -45,7 +49,9 @@ export function NavUserAccount({ user }: { user: CurrentUser }) {
   const tLegal = useTranslations("Legal");
   const tNotifications = useTranslations("Notifications");
   const pageNavigation = usePageNavigation((navigation) => navigation);
-  const router = useRouter();
+  const navigate = useNavigate();
+  const locale = useCurrentLocale();
+  const navigateToHref = useHrefNavigate();
   const authNavigation = useCurrentAuthNavigation();
   const { username } = user.appUser;
   const planLabelByPlan = {
@@ -60,7 +66,7 @@ export function NavUserAccount({ user }: { user: CurrentUser }) {
     );
     if (Result.isSuccess(result)) {
       Effect.runSync(clearAiDraftText);
-      router.replace(authNavigation.readHref());
+      navigate({ ...authNavigation.readTarget(), replace: true });
     }
   }
 
@@ -82,7 +88,7 @@ export function NavUserAccount({ user }: { user: CurrentUser }) {
         {username === undefined ? null : (
           <DropdownMenuItem
             className="cursor-pointer"
-            onClick={() => router.push(profileHref(username))}
+            onClick={() => navigate(profileTarget(username, locale))}
           >
             <HugeIcons icon={UserIcon} />
             {t("profile")}
@@ -90,14 +96,18 @@ export function NavUserAccount({ user }: { user: CurrentUser }) {
         )}
         <DropdownMenuItem
           className="cursor-pointer"
-          onClick={() => router.push("/notifications")}
+          onClick={() =>
+            navigate({ params: { locale }, to: "/$locale/notifications" })
+          }
         >
           <HugeIcons icon={Notification01Icon} />
           {tNotifications("title")}
         </DropdownMenuItem>
         <DropdownMenuItem
           className="cursor-pointer"
-          onClick={() => router.push("/user/settings")}
+          onClick={() =>
+            navigate({ params: { locale }, to: "/$locale/user/settings" })
+          }
         >
           <HugeIcons icon={Settings01Icon} />
           {t("settings")}
@@ -111,14 +121,14 @@ export function NavUserAccount({ user }: { user: CurrentUser }) {
           <>
             <DropdownMenuItem
               className="cursor-pointer"
-              onClick={() => router.push(pageNavigation.termsOfServiceHref)}
+              onClick={() => navigateToHref(pageNavigation.termsOfServiceHref)}
             >
               <HugeIcons icon={FileValidationIcon} />
               {tLegal("terms-of-service")}
             </DropdownMenuItem>
             <DropdownMenuItem
               className="cursor-pointer"
-              onClick={() => router.push(pageNavigation.privacyPolicyHref)}
+              onClick={() => navigateToHref(pageNavigation.privacyPolicyHref)}
             >
               <HugeIcons icon={LockIcon} />
               {tLegal("privacy-policy")}

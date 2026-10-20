@@ -1,17 +1,22 @@
 "use client";
 
 import { Image } from "@repo/design-system/components/image";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuDescription,
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
+import {
+  EXACT_ACTIVE_OPTIONS,
+  Link,
+  useCurrentLocale,
+} from "@repo/internationalization/src/link";
 import { useTranslations } from "use-intl";
 import { useViewer } from "@/lib/identity/client";
 
 export function HeaderMenu() {
+  const locale = useCurrentLocale();
   const t = useTranslations("Metadata");
   const currentUser = useViewer((state) => state.account);
 
@@ -20,7 +25,12 @@ export function HeaderMenu() {
       <SidebarMenuItem>
         <SidebarMenuButton
           render={
-            <NavigationLink href={currentUser ? "/home" : "/"} title="Nakafa" />
+            <Link
+              activeOptions={EXACT_ACTIVE_OPTIONS}
+              params={{ locale }}
+              title="Nakafa"
+              to={currentUser ? "/$locale/home" : "/$locale"}
+            />
           }
           size="lg"
         >

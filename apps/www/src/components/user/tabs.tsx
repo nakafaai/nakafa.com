@@ -1,9 +1,14 @@
-import { usePathname } from "@repo/internationalization/src/navigation";
+import { useCurrentLocale } from "@repo/internationalization/src/link";
+import { useMatchRoute } from "@tanstack/react-router";
 import { Array as Arr, Option } from "effect";
 import { useTranslations } from "use-intl";
 
 import { SharedTabs } from "@/components/user/navigation";
-import { ProfileTab, profileHref } from "@/lib/profile/href";
+import {
+  ProfileTab,
+  profileTabTarget,
+  profileTarget,
+} from "@/lib/profile/href";
 
 export function UserTabs({
   isOwner,
@@ -13,8 +18,8 @@ export function UserTabs({
   username: string;
 }) {
   const t = useTranslations("Common");
-
-  const pathname = usePathname();
+  const locale = useCurrentLocale();
+  const matchRoute = useMatchRoute();
   // The label of each tab the address names, so a tab without a label does not
   // compile.
   const labels: Record<typeof ProfileTab.Type, string> = {
@@ -29,19 +34,24 @@ export function UserTabs({
   );
   const tabs = [
     {
+      key: "posts",
       label: t("posts"),
-      href: profileHref(username),
+      target: profileTarget(username, locale),
     },
     ...Arr.map(tabsShown, (tab) => ({
+      key: tab,
       label: labels[tab],
-      href: `${profileHref(username)}/${tab}`,
+      target: profileTabTarget(tab, username, locale),
     })),
   ];
 
-  const activeTab = Arr.findFirst(tabs, (tab) => pathname === tab.href);
+  const activeTab = Arr.findFirst(
+    tabs,
+    (tab) => matchRoute({ ...tab.target }) !== false
+  );
   const value = Option.match(activeTab, {
-    onNone: () => tabs[0]?.href,
-    onSome: (tab) => tab.href,
+    onNone: () => "posts",
+    onSome: (tab) => tab.key,
   });
 
   return <SharedTabs tabs={tabs} value={value} />;

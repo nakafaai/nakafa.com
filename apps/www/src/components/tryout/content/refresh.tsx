@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "@repo/internationalization/src/navigation";
+import { useRouter } from "@tanstack/react-router";
 import { useEffect, useRef } from "react";
 
 /** Refreshes one stale prefetched route once Convex publishes content access. */
@@ -14,7 +14,7 @@ export function TryoutContentRefresh() {
     }
 
     hasRefreshed.current = true;
-    router.refresh();
+    router.invalidate();
   }, [router]);
 
   return null;

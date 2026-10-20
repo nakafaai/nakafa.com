@@ -1,7 +1,7 @@
 import { FavouriteIcon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { useRouter } from "@repo/internationalization/src/navigation";
+import { useNavigate } from "@tanstack/react-router";
 import { cn } from "cn";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/providers/convex";
@@ -13,7 +13,7 @@ import { useCurrentAuthNavigation } from "@/lib/auth/location";
  * the sign-in page, which returns to the page they were on.
  */
 export function useWhenSignedIn() {
-  const router = useRouter();
+  const navigate = useNavigate();
   const authNavigation = useCurrentAuthNavigation();
   const signedOut = useConvexAuth(
     (auth) => !(auth.isAuthenticated || auth.isLoading)
@@ -21,7 +21,7 @@ export function useWhenSignedIn() {
 
   return function whenSignedIn(action: () => void) {
     if (signedOut) {
-      router.push(authNavigation.readHref());
+      navigate(authNavigation.readTarget());
       return;
     }
     action();

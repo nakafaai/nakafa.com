@@ -2,8 +2,8 @@ import { ArrowLeft02Icon, ArrowRight02Icon } from "@hugeicons/core-free-icons";
 import type { IconSvgElement } from "@hugeicons/react";
 import type { ContentPagination } from "@repo/contents/content";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import { buttonVariants } from "@repo/design-system/lib/button";
+import { HrefLink } from "@repo/internationalization/src/link";
 import { cn } from "cn";
 import { useTranslations } from "use-intl";
 
@@ -88,14 +88,14 @@ function PaginationItem({
   }
 
   return (
-    <IntentLink
+    <HrefLink
       className={itemClassName}
       href={href}
-      intentActive={prefetch}
+      preload={prefetch ? "render" : "intent"}
       title={title}
     >
       {content}
-    </IntentLink>
+    </HrefLink>
   );
 }
 

@@ -5,12 +5,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
-import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
+import { HrefLink } from "@repo/internationalization/src/link";
 import { toAnchorSlug } from "@repo/utilities/slug";
 import { useTranslations } from "use-intl";
 import type { PublishedArticleSummary } from "@/lib/content/article/catalog";
@@ -29,7 +29,7 @@ export function CardArticle({ article }: Props) {
   const id = toAnchorSlug(article.title);
 
   return (
-    <IntentLink
+    <HrefLink
       className="group"
       href={`/${article.publicPath}`}
       title={article.title}
@@ -69,6 +69,6 @@ export function CardArticle({ article }: Props) {
           </Tooltip>
         </CardFooter>
       </Card>
-    </IntentLink>
+    </HrefLink>
   );
 }

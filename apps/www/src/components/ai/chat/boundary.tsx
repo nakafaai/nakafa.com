@@ -1,7 +1,7 @@
 import type { Ref } from "@confect/core";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { lazyComponent } from "@repo/design-system/lib/lazy";
-import { usePathname } from "@repo/internationalization/src/navigation";
+import { useLocation } from "@tanstack/react-router";
 import type { PropsWithChildren } from "react";
 import { readChatFailureKind } from "@/components/ai/chat/access";
 import { useAnswerRetry } from "@/lib/convex/requery";
@@ -41,7 +41,7 @@ export function ChatBoundary<Query extends Ref.AnyPublicQuery>({
   read?: ChatRead<Query> | undefined;
   resetKeys?: readonly unknown[];
 }>) {
-  const pathname = usePathname();
+  const pathname = useLocation({ select: (location) => location.pathname });
 
   // The card fills the surface it replaces, so it centres in a page whose
   // content is not a flex container, and in the sheet's flex column alike.

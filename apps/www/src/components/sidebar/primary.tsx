@@ -1,7 +1,6 @@
 "use client";
 
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -13,14 +12,17 @@ import {
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
 import {
-  usePathname,
-  useRouter,
-} from "@repo/internationalization/src/navigation";
+  DestinationLink,
+  EXACT_ACTIVE_OPTIONS,
+  useCanonicalPath,
+  useCurrentLocale,
+} from "@repo/internationalization/src/link";
+import { useMatchRoute, useRouter } from "@tanstack/react-router";
 import { Array as Arr } from "effect";
-import { useLocale, useTranslations } from "use-intl";
+import { useTranslations } from "use-intl";
 import {
-  getForYouNavigationHref,
   getForYouNavigationItems,
+  getForYouNavigationTarget,
 } from "@/components/sidebar/data/navigation";
 import { usePreferredCurriculumHref } from "@/lib/curriculum/preferences";
 import { usePreferredTryoutHref } from "@/lib/tryout/preferences";
@@ -29,11 +31,12 @@ import { usePreferredTryoutHref } from "@/lib/tryout/preferences";
  * Renders the primary app navigation shared by every audience.
  */
 export function NavForYou() {
-  const pathname = usePathname();
+  const pathname = useCanonicalPath();
   const router = useRouter();
+  const matchRoute = useMatchRoute();
   const tAi = useTranslations("Ai");
   const tCommon = useTranslations("Common");
-  const locale = useLocale();
+  const locale = useCurrentLocale();
   const items = getForYouNavigationItems();
   const preferredCurriculumHref = usePreferredCurriculumHref(locale);
   const preferredTryoutHref = usePreferredTryoutHref(locale);
@@ -48,20 +51,27 @@ export function NavForYou() {
               item.labelNamespace === "Ai"
                 ? tAi(item.labelKey)
                 : tCommon(item.labelKey);
-            const href = getForYouNavigationHref(item, locale, {
+            const destination = getForYouNavigationTarget(item, locale, {
               preferredCurriculumHref,
               preferredTryoutHref,
             });
             const prefetchChat =
-              item.id === "askNina" ? () => router.prefetch(href) : undefined;
+              typeof destination === "string"
+                ? undefined
+                : () => router.preloadRoute(destination);
+            const isActive =
+              typeof destination === "string"
+                ? pathname.includes(destination)
+                : matchRoute({ ...destination, fuzzy: true }) !== false;
 
             return (
               <SidebarMenuItem key={item.id}>
                 <SidebarMenuButton
-                  isActive={pathname.includes(href)}
+                  isActive={isActive}
                   render={
-                    <NavigationLink
-                      href={href}
+                    <DestinationLink
+                      activeOptions={EXACT_ACTIVE_OPTIONS}
+                      destination={destination}
                       onFocus={prefetchChat}
                       onPointerEnter={prefetchChat}
                       onTouchStart={prefetchChat}

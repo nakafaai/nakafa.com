@@ -25,7 +25,7 @@ import {
   SelectValue,
 } from "@repo/design-system/components/ui/select";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { Link } from "@repo/internationalization/src/navigation";
+import { Link } from "@repo/internationalization/src/link";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, Option, Schema } from "effect";
 import {
@@ -233,7 +233,8 @@ function SchoolCohortsOfPeriod({
           action={
             <Link
               className={buttonVariants({ variant: "outline" })}
-              href="/settings/periods"
+              params={{ slug }}
+              to="/school/$slug/settings/periods"
             >
               {t("cohorts-no-period-action")}
             </Link>
@@ -420,7 +421,8 @@ function SchoolCohortTable({
       cell: (info) => (
         <Link
           className="font-medium"
-          href={`/settings/cohorts/${info.row.original.id}`}
+          params={{ cohort: info.row.original.id, slug }}
+          to="/school/$slug/settings/cohorts/$cohort"
         >
           {info.getValue()}
         </Link>

@@ -11,7 +11,6 @@ import {
   CollapsibleTrigger,
 } from "@repo/design-system/components/ui/collapsible";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import {
   SidebarMenuButton,
   SidebarMenuItem,
@@ -21,11 +20,11 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "@repo/design-system/components/ui/sidebar-submenu";
-import { usePathname } from "@repo/internationalization/src/navigation";
 import { Array as Arr } from "effect";
 import type { ComponentProps } from "react";
 import { useTranslations } from "use-intl";
 import { TenantSidebarGroup } from "@/components/tenant/group";
+import { SchoolHrefLink, useSchoolPath } from "@/lib/routing/school/link";
 import { schoolSettingsGroups } from "@/lib/settings/school";
 
 /** The icon of each group. A group added without one does not compile. */
@@ -67,7 +66,7 @@ function SchoolSettingsNavGroup({
 }: {
   group: (typeof schoolSettingsGroups)[number];
 }) {
-  const pathname = usePathname();
+  const pathname = useSchoolPath();
   const t = useTranslations("SchoolSettings");
   const label = t(group.key);
   const holdsCurrent = Arr.some(
@@ -98,7 +97,7 @@ function SchoolSettingsNavGroup({
             <SidebarMenuSubItem key={section.href}>
               <SidebarMenuSubButton
                 isActive={pathname === section.href}
-                render={<IntentLink href={section.href} localized={false} />}
+                render={<SchoolHrefLink href={section.href} />}
               >
                 <span className="truncate">{t(section.labelKey)}</span>
               </SidebarMenuSubButton>

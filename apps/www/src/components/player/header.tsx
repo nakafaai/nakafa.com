@@ -1,7 +1,7 @@
 import { ArrowLeft01Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import { buttonVariants } from "@repo/design-system/lib/button";
+import { HrefLink } from "@repo/internationalization/src/link";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import { BreadcrumbHeaderFrame } from "@/components/shared/breadcrumb/frame";
@@ -23,13 +23,13 @@ export function PlayerBack({ href }: { href: string }) {
   const tCommon = useTranslations("Common");
 
   return (
-    <IntentLink
+    <HrefLink
       aria-label={tCommon("back")}
       className={buttonVariants({ size: "icon", variant: "ghost" })}
       href={href}
     >
       <HugeIcons icon={ArrowLeft01Icon} />
-    </IntentLink>
+    </HrefLink>
   );
 }
 

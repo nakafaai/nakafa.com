@@ -1,5 +1,5 @@
 import { Button } from "@repo/design-system/components/ui/button";
-import { useRouter } from "@repo/internationalization/src/navigation";
+import { useRouter } from "@tanstack/react-router";
 import { Effect } from "effect";
 import { useTransition } from "react";
 import { useTranslations } from "use-intl";
@@ -30,7 +30,7 @@ export function TenantOutsiderActions() {
 
   return (
     <div className="flex flex-wrap justify-center gap-2">
-      <Button onClick={() => router.refresh()} variant="outline">
+      <Button onClick={() => router.invalidate()} variant="outline">
         {t("outsider-check-again")}
       </Button>
       <Button

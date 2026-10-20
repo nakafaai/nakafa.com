@@ -7,8 +7,11 @@ import comments from "@repo/backend/confect/_generated/refs/comments";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { buttonVariants } from "@repo/design-system/lib/button";
+import {
+  EXACT_ACTIVE_OPTIONS,
+  HrefLink,
+} from "@repo/internationalization/src/link";
 import { Array as Arr, type Option } from "effect";
 import { useTranslations } from "use-intl";
 import { CommentsProvider } from "@/components/comments/provider";
@@ -16,7 +19,6 @@ import { CommentRow } from "@/components/comments/row";
 import { DataFailure } from "@/components/shared/failure";
 import { FeedCount, FeedEmpty, FeedNotice } from "@/components/user/feed";
 import { usePaginatedPreloaded } from "@/lib/data/paginated";
-import { getCleanHref } from "@/lib/routing/href";
 
 /**
  * Renders the comments of one user profile, newest first. The loader reads the author and
@@ -74,14 +76,19 @@ export function UserComments({
             comment={comment}
             key={comment._id}
             replyAction={
-              <NavigationLink
+              <HrefLink
+                activeOptions={EXACT_ACTIVE_OPTIONS}
                 aria-label={tCommon("reply")}
                 className={buttonVariants({ size: "sm", variant: "ghost" })}
-                href={getCleanHref(comment.slug)}
+                href={
+                  comment.slug.startsWith("/")
+                    ? comment.slug
+                    : `/${comment.slug}`
+                }
               >
                 <HugeIcons icon={ArrowTurnBackwardIcon} />
                 <FeedCount value={comment.replyCount} />
-              </NavigationLink>
+              </HrefLink>
             }
           />
         ))}

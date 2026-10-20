@@ -1,8 +1,8 @@
 import { ArrowRight02Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import { Tile, TileIcon } from "@repo/design-system/components/ui/tile";
 import type { TileLook } from "@repo/design-system/lib/look";
+import { HrefLink } from "@repo/internationalization/src/link";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
@@ -58,7 +58,7 @@ export function TryoutList({ emptyLabel, rows }: TryoutListProps) {
 /** Renders one production try-out list row. */
 function TryoutRow({ row }: { row: TryoutListRow }) {
   return (
-    <IntentLink
+    <HrefLink
       className="group flex items-center gap-3 p-4 transition-colors ease-out hover:bg-accent hover:text-accent-foreground"
       href={row.href}
     >
@@ -87,7 +87,7 @@ function TryoutRow({ row }: { row: TryoutListRow }) {
           />
         </div>
       </div>
-    </IntentLink>
+    </HrefLink>
   );
 }
 

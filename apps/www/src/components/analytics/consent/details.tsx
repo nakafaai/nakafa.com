@@ -1,7 +1,7 @@
 import { Alert02Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Link } from "@repo/internationalization/src/navigation";
+import { HrefLink } from "@repo/internationalization/src/link";
 import { useTranslations } from "use-intl";
 import type { AnalyticsConsentContextValue } from "@/lib/analytics/consent/context";
 import { usePageNavigation } from "@/lib/content/page/context";
@@ -51,8 +51,8 @@ export function ConsentDetails({
  * must (see `PageNavigation`). This prompt opens on every first visit.
  *
  * The server renders this link in the root layout, outside every `Suspense`,
- * so it is a plain localized `Link`: `NavigationLink` reads the pathname, which
- * blocks the prerender of a dynamic route such as `/[locale]/chat/[id]`.
+ * so it is a plain localized link that reads no route state, which keeps the
+ * prerender of a dynamic route such as `/[locale]/chat/[id]` free of the pathname.
  */
 function PrivacyPolicyLink() {
   const t = useTranslations("AnalyticsConsent");
@@ -68,13 +68,13 @@ function PrivacyPolicyLink() {
     <p className="text-muted-foreground text-sm">
       {t.rich("policy", {
         "privacy-policy": (chunks) => (
-          <Link
+          <HrefLink
             className="text-foreground underline underline-offset-4"
             href={href}
             preload={false}
           >
             {chunks}
-          </Link>
+          </HrefLink>
         ),
       })}
     </p>

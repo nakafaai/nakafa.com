@@ -1,9 +1,14 @@
 import { Button } from "@repo/design-system/components/ui/button";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { Nina } from "@repo/design-system/components/ui/nina";
 import { Thing } from "@repo/design-system/components/ui/thing";
+import {
+  EXACT_ACTIVE_OPTIONS,
+  HrefLink,
+  Link,
+  useCurrentLocale,
+} from "@repo/internationalization/src/link";
 import type { Array as Arr } from "effect";
-import { useLocale, useTranslations } from "use-intl";
+import { useTranslations } from "use-intl";
 import { ClosingQuestion } from "@/components/marketing/about/closing/question";
 import { NINA_SLOT } from "@/components/marketing/about/toys/slot";
 import { MarketingSection } from "@/components/marketing/shared/section";
@@ -15,7 +20,7 @@ import { getCurriculumIndexHref } from "@/lib/curriculum/routes";
  */
 export function Closing() {
   const t = useTranslations("Landing");
-  const locale = useLocale();
+  const locale = useCurrentLocale();
   const topics: Arr.NonEmptyReadonlyArray<string> = [
     t("closing-topic-0"),
     t("closing-topic-1"),
@@ -32,9 +37,12 @@ export function Closing() {
           <Button
             nativeButton={false}
             render={
-              <NavigationLink href={getCurriculumIndexHref(locale)}>
+              <HrefLink
+                activeOptions={EXACT_ACTIVE_OPTIONS}
+                href={getCurriculumIndexHref(locale)}
+              >
                 {t("hero-start")}
-              </NavigationLink>
+              </HrefLink>
             }
             size="lg"
             variant="secondary"
@@ -42,9 +50,13 @@ export function Closing() {
           <Button
             nativeButton={false}
             render={
-              <NavigationLink href="/try-out">
+              <Link
+                activeOptions={EXACT_ACTIVE_OPTIONS}
+                params={{ locale }}
+                to="/$locale/try-out"
+              >
                 {t("hero-tryout")}
-              </NavigationLink>
+              </Link>
             }
             size="lg"
             variant="outline"

@@ -1,5 +1,4 @@
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import {
   Select,
   SelectContent,
@@ -9,6 +8,7 @@ import {
   SelectTrigger,
 } from "@repo/design-system/components/ui/select";
 import { getTileLooks } from "@repo/design-system/lib/look";
+import { HrefLink } from "@repo/internationalization/src/link";
 import { Array as Arr, Effect, Option, Tuple } from "effect";
 import { useLocale } from "use-intl";
 import { useConvexAuth } from "@/components/providers/convex";
@@ -118,7 +118,7 @@ export function TryoutCountrySelector({
           {Arr.map(options, (option) => (
             <SelectItem
               key={option.value}
-              render={<IntentLink href={option.href} />}
+              render={<HrefLink href={option.href} />}
               value={option.value}
             >
               <CountryFlagIcon countryCode={option.countryCode} />
@@ -192,7 +192,7 @@ export function TryoutExamSelector({
           {Arr.map(entries, ({ icon, option }) => (
             <SelectItem
               key={option.value}
-              render={<IntentLink href={option.href} />}
+              render={<HrefLink href={option.href} />}
               value={option.value}
             >
               <HugeIcons className="size-4 shrink-0" icon={icon} />

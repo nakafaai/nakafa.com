@@ -6,7 +6,6 @@ import {
   DropdownMenuSubContent,
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Link } from "@repo/internationalization/src/navigation";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
@@ -56,11 +55,11 @@ export function OpenInSubmenuContent() {
           <DropdownMenuItem
             key={item.title}
             render={
-              <Link href={item.href} rel="noopener noreferrer" target="_blank">
+              <a href={item.href} rel="noopener noreferrer" target="_blank">
                 <BrandLogo name={item.logo} />
                 {item.title}
                 <HugeIcons className="ms-auto" icon={LinkSquare02Icon} />
-              </Link>
+              </a>
             }
           />
         ))}

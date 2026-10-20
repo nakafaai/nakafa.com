@@ -1,5 +1,4 @@
 import { Menu02Icon } from "@hugeicons/core-free-icons";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import {
   SidebarContent,
   SidebarFooter,
@@ -16,6 +15,10 @@ import {
   Sidebar,
   SidebarTrigger,
 } from "@repo/design-system/components/ui/sidebar-shell";
+import {
+  EXACT_ACTIVE_OPTIONS,
+  HrefLink,
+} from "@repo/internationalization/src/link";
 import type { ComponentProps, ReactNode } from "react";
 import { useTranslations } from "use-intl";
 
@@ -43,7 +46,13 @@ export function SidebarRightHeader({
       <SidebarMenu>
         <SidebarMenuItem>
           <SidebarMenuButton
-            render={<NavigationLink href={href} title={title} />}
+            render={
+              <HrefLink
+                activeOptions={EXACT_ACTIVE_OPTIONS}
+                href={href}
+                title={title}
+              />
+            }
             size="lg"
           >
             <div className="grid flex-1 text-left text-sm leading-tight">

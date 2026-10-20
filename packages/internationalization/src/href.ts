@@ -1,4 +1,8 @@
 import { APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
+import {
+  toCanonicalPath,
+  toPublicPath,
+} from "@repo/internationalization/src/rewrite";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { Array as Arr } from "effect";
 import { hasLocale, type Locale } from "use-intl";
@@ -63,4 +67,24 @@ export function splitLocalePathname<LocaleType extends Locale>(
     locale,
     publicSegments: locale ? Arr.drop(segments, 1) : segments,
   };
+}
+
+/**
+ * The router href of an authored internal href on one locale, such as
+ * `/id/materi/x` for `/materi/x`. The router reads a public spelling and maps
+ * it to its own route, so the href keeps the spelling the author wrote.
+ */
+export function localizeInternalHref(href: string, locale: Locale) {
+  const url = new URL(normalizeLocalizedInternalHref(href), SITE_ORIGIN);
+  const path = url.pathname === "/" ? "" : url.pathname;
+  return `/${locale}${path}${url.search}${url.hash}`;
+}
+
+/**
+ * The public path of an internal href on one locale, as the address bar shows
+ * it, such as `/id/kurikulum/merdeka` for `/curricula/merdeka`. A server reads it
+ * where no router runs, so it is the same mapping the router's rewrite applies.
+ */
+export function publicInternalHref(href: string, locale: Locale) {
+  return toPublicPath(toCanonicalPath(localizeInternalHref(href, locale)));
 }

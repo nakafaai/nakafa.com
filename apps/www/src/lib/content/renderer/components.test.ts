@@ -4,13 +4,6 @@ import { afterEach, describe, expect, it } from "@effect/vitest";
 import { ContentKeySchema } from "@nakafa/aksara-contracts/ids";
 import { Array as Arr, Effect, Order, Record as Rec } from "effect";
 
-vi.mock("@repo/internationalization/src/navigation", () => ({
-  getPathname: vi.fn(),
-  Link: vi.fn(),
-  redirect: vi.fn(),
-  usePathname: vi.fn(),
-  useRouter: vi.fn(),
-}));
 vi.mock("use-intl", () => ({
   /** Keeps renderer selection independent from navigation runtime behavior. */
   useTranslations: () => () => "",

@@ -7,13 +7,17 @@ import {
 } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { Nina } from "@repo/design-system/components/ui/nina";
+import {
+  HrefLink,
+  Link,
+  useCurrentLocale,
+} from "@repo/internationalization/src/link";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { cva } from "class-variance-authority";
 import { Array as Arr, Option } from "effect";
 import type { ComponentProps } from "react";
-import { useLocale, useTranslations } from "use-intl";
+import { useTranslations } from "use-intl";
 import { MarketingConsentFooterItem } from "@/components/analytics/consent/mount";
 import { FooterAction } from "@/components/marketing/shared/footer/action";
 import { FooterArt } from "@/components/marketing/shared/footer/art";
@@ -51,7 +55,7 @@ export function Footer({
   const tHoly = useTranslations("Holy");
   const tCommon = useTranslations("Common");
   const tMarketing = useTranslations("Marketing");
-  const locale = useLocale();
+  const locale = useCurrentLocale();
 
   return (
     <footer className="w-full border-t" id="footer">
@@ -106,18 +110,10 @@ export function Footer({
               </span>
               <ul className="flex flex-col gap-2">
                 <li>
-                  <LinkItem
-                    href={`/${locale}`}
-                    label={t("about-us")}
-                    nativeAnchor
-                  />
+                  <LinkItem href="/" label={t("about-us")} />
                 </li>
                 <li>
-                  <LinkItem
-                    href={`/${locale}/pricing`}
-                    label={tMarketing("pricing")}
-                    nativeAnchor
-                  />
+                  <LinkItem href="/pricing" label={tMarketing("pricing")} />
                 </li>
                 <li>
                   <LinkItem
@@ -159,14 +155,15 @@ export function Footer({
         </div>
       </div>
 
-      <a
+      <Link
         className="mx-auto flex w-full max-w-7xl px-6 py-16 transition-colors ease-out hover:text-primary"
-        href={`/${locale}`}
+        params={{ locale }}
+        to="/$locale"
       >
         <span className="mx-auto font-bold text-7xl transition-colors duration-300 ease-out hover:text-primary sm:text-8xl md:text-9xl lg:text-[12rem] xl:text-[18rem]">
           Nakafa
         </span>
-      </a>
+      </Link>
 
       <section className="relative w-full border-t">
         {/* Nina looks over the line under the large name, at the end of the
@@ -216,19 +213,11 @@ export function Footer({
   );
 }
 
-type LinkItemProps =
-  | {
-      href: ComponentProps<typeof NavigationLink>["href"];
-      label: string;
-      nativeAnchor?: false;
-      preload?: ComponentProps<typeof NavigationLink>["preload"];
-    }
-  | {
-      href: string;
-      label: string;
-      nativeAnchor: true;
-      preload?: never;
-    };
+interface LinkItemProps {
+  href: string;
+  label: string;
+  preload?: ComponentProps<typeof HrefLink>["preload"];
+}
 
 /** The text treatment that every footer destination shares. */
 const linkItemVariants = cva(
@@ -238,23 +227,15 @@ const linkItemVariants = cva(
 /**
  * Renders one locale-aware footer destination with the shared text treatment.
  */
-function LinkItem({ href, label, nativeAnchor, preload }: LinkItemProps) {
-  if (nativeAnchor) {
-    return (
-      <a className={linkItemVariants()} href={href}>
-        {label}
-      </a>
-    );
-  }
-
+function LinkItem({ href, label, preload }: LinkItemProps) {
   return (
-    <NavigationLink
+    <HrefLink
       className={linkItemVariants()}
       href={href}
-      preload={preload}
+      {...(preload !== undefined && { preload })}
     >
       {label}
-    </NavigationLink>
+    </HrefLink>
   );
 }
 

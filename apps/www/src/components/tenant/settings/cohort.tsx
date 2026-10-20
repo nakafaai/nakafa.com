@@ -26,7 +26,6 @@ import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { toast } from "@repo/design-system/lib/toast/notify";
-import { Link } from "@repo/internationalization/src/navigation";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, Option, Schema } from "effect";
 import {
@@ -67,6 +66,7 @@ import {
 } from "@/components/tenant/settings/state";
 import { usePaginatedPreloaded } from "@/lib/data/paginated";
 import { usePreloadedQueryResult } from "@/lib/data/preloaded";
+import { SchoolHrefLink } from "@/lib/routing/school/link";
 import { getSchoolSettingsSection } from "@/lib/settings/school";
 import type { readCohortFn } from "@/lib/tenant/settings.functions";
 
@@ -314,12 +314,12 @@ function CohortUnavailable() {
         <TableEmpty
           act="pointing"
           action={
-            <Link
+            <SchoolHrefLink
               className={buttonVariants({ variant: "outline" })}
               href={section.href}
             >
               {t(section.labelKey)}
-            </Link>
+            </SchoolHrefLink>
           }
           description={t("cohort-unavailable-description")}
           title={t("cohort-unavailable")}

@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { assert, beforeEach, describe, expect, it } from "@effect/vitest";
-import type { getPathname } from "@repo/internationalization/src/navigation";
+import type { publicInternalHref } from "@repo/internationalization/src/href";
 import { Array as Arr, DateTime, Effect, HashSet } from "effect";
 import {
   getCachedSitemapEntries,
@@ -10,17 +10,21 @@ import { SitemapPageNotFoundError } from "@/lib/sitemap/identity";
 
 const mockReadSitemapRoutePage = vi.hoisted(() => vi.fn());
 const mockGetSitemapPageDescriptor = vi.hoisted(() => vi.fn());
-const mockGetPathname = vi.hoisted(() =>
-  vi.fn<typeof getPathname>(({ href, locale }) => {
+const mockPublicInternalHref = vi.hoisted(() =>
+  vi.fn<typeof publicInternalHref>((href, locale) => {
     const route = href.startsWith("/") ? href : `/${href}`;
 
     return `/${locale}${route === "/" ? "" : route}`;
   })
 );
 
-vi.mock("@repo/internationalization/src/navigation", () => ({
-  getPathname: mockGetPathname,
-}));
+vi.mock(
+  import("@repo/internationalization/src/href"),
+  async (importOriginal) => ({
+    ...(await importOriginal()),
+    publicInternalHref: mockPublicInternalHref,
+  })
+);
 
 vi.mock("@repo/internationalization/src/routing", () => ({
   routing: {
@@ -56,7 +60,7 @@ vi.mock(import("@/lib/sitemap/identity"), async (importOriginal) => ({
 beforeEach(() => {
   mockReadSitemapRoutePage.mockReset();
   mockGetSitemapPageDescriptor.mockReset();
-  mockGetPathname.mockClear();
+  mockPublicInternalHref.mockClear();
 
   mockGetSitemapPageDescriptor.mockReturnValue({ id: "base" });
   mockReadSitemapRoutePage.mockReturnValue(

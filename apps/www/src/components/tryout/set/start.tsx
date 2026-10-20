@@ -4,11 +4,11 @@ import { useDisclosure } from "@mantine/hooks";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { toast } from "@repo/design-system/lib/toast/notify";
+import { HrefLink, useHrefNavigate } from "@repo/internationalization/src/link";
 import { LOCALES } from "@repo/internationalization/src/locale";
-import { useRouter } from "@repo/internationalization/src/navigation";
+import { useNavigate } from "@tanstack/react-router";
 import { useConvex } from "convex/react";
 import { Effect, Schema } from "effect";
 import { useTransition } from "react";
@@ -61,7 +61,8 @@ export function StartTryoutButton(props: StartTryoutButtonProps) {
 
 /** Starts or resumes a free try-out from the current page. */
 function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
-  const router = useRouter();
+  const navigate = useNavigate();
+  const navigateToHref = useHrefNavigate();
   const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);
   const isLoading = useConvexAuth((auth) => auth.isLoading);
   const startAttempt = useMutation(tryouts.mutations.attempts.startAttempt);
@@ -109,7 +110,11 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
       return;
     }
     if (!isAuthenticated) {
-      router.push(`/auth?redirect=${encodeURIComponent(authRedirect)}`);
+      navigate({
+        params: { locale: request.locale },
+        search: { redirect: authRedirect },
+        to: "/$locale/auth",
+      });
       return;
     }
     if (attempt?.status === "in-progress" && request.entrySectionKey) {
@@ -171,10 +176,10 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
             result.attemptId
           );
           if (request.successNavigation === "stay") {
-            router.replace(href);
+            navigateToHref(href, { replace: true });
             return;
           }
-          router.push(href);
+          navigateToHref(href);
         }),
     });
     startTransition(() =>
@@ -224,9 +229,9 @@ function ResumeTryoutLink({
 }) {
   const t = useTranslations("Tryouts");
   return (
-    <IntentLink className={buttonVariants()} href={request.destinationHref}>
+    <HrefLink className={buttonVariants()} href={request.destinationHref}>
       <HugeIcons icon={Rocket01Icon} />
       {t("continue-cta")}
-    </IntentLink>
+    </HrefLink>
   );
 }

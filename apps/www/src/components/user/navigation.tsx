@@ -3,13 +3,14 @@ import {
   TabsList,
   TabsTab,
 } from "@repo/design-system/components/ui/tabs";
-import { Link } from "@repo/internationalization/src/navigation";
+import { Link, type LinkTarget } from "@repo/internationalization/src/link";
 import { Array as Arr } from "effect";
 
 interface Props {
-  tabs: {
-    label: string;
-    href: string;
+  tabs: readonly {
+    readonly key: string;
+    readonly label: string;
+    readonly target: LinkTarget;
   }[];
   value: string;
 }
@@ -27,10 +28,10 @@ export function SharedTabs({ tabs, value }: Props) {
           {Arr.map(tabs, (tab) => (
             <TabsTab
               className="flex-1"
-              key={tab.href}
+              key={tab.key}
               nativeButton={false}
-              render={<Link href={tab.href}>{tab.label}</Link>}
-              value={tab.href}
+              render={<Link {...tab.target}>{tab.label}</Link>}
+              value={tab.key}
             />
           ))}
         </TabsList>

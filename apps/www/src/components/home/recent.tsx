@@ -4,9 +4,8 @@ import { Progress03Icon, Search02Icon } from "@hugeicons/core-free-icons";
 import type contents from "@repo/backend/confect/_generated/refs/contents";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
-
 import type { TileLook } from "@repo/design-system/lib/look";
+import { Link, useCurrentLocale } from "@repo/internationalization/src/link";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import { MaterialRow } from "@/components/home/material";
@@ -32,6 +31,7 @@ export function HomeContinueLearning({
   subjects: readonly RecentlyViewedSubject[];
 }) {
   const t = useTranslations("Home");
+  const locale = useCurrentLocale();
 
   if (subjects.length === 0) {
     return null;
@@ -57,10 +57,10 @@ export function HomeContinueLearning({
         className="w-fit"
         nativeButton={false}
         render={
-          <NavigationLink href="/search">
+          <Link params={{ locale }} to="/$locale/search">
             <HugeIcons className="size-4" icon={Search02Icon} />
             {t("explore-materials")}
-          </NavigationLink>
+          </Link>
         }
         variant="ghost"
       />

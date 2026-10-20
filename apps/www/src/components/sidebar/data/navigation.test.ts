@@ -1,8 +1,8 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Array as Arr } from "effect";
 import {
-  getForYouNavigationHref,
   getForYouNavigationItems,
+  getForYouNavigationTarget,
 } from "@/components/sidebar/data/navigation";
 
 describe("sidebar navigation", () => {
@@ -14,24 +14,43 @@ describe("sidebar navigation", () => {
     ]);
   });
 
-  it("uses localized hrefs only when a navigation item owns them", () => {
+  it("routes each primary action to its own route on the locale", () => {
     const [subject, tryOut, askNina] = getForYouNavigationItems();
 
     expect(subject).toBeDefined();
     expect(tryOut).toBeDefined();
     expect(askNina).toBeDefined();
-    expect(getForYouNavigationHref(subject, "id")).toBe("/kurikulum");
-    expect(getForYouNavigationHref(subject, "en")).toBe("/curriculum");
+    expect(getForYouNavigationTarget(subject, "id")).toEqual({
+      params: { locale: "id" },
+      to: "/$locale/curricula",
+    });
+    expect(getForYouNavigationTarget(tryOut, "en")).toEqual({
+      params: { locale: "en" },
+      to: "/$locale/try-out",
+    });
+    expect(getForYouNavigationTarget(askNina, "id")).toEqual({
+      params: { locale: "id" },
+      to: "/$locale/chat",
+    });
+  });
+
+  it("uses a learner's stored path only for the row that it names", () => {
+    const [subject, tryOut, askNina] = getForYouNavigationItems();
+
     expect(
-      getForYouNavigationHref(subject, "id", {
+      getForYouNavigationTarget(subject, "id", {
         preferredCurriculumHref: "/kurikulum/amerika-serikat",
       })
     ).toBe("/kurikulum/amerika-serikat");
     expect(
-      getForYouNavigationHref(tryOut, "id", {
+      getForYouNavigationTarget(tryOut, "id", {
         preferredTryoutHref: "/try-out/indonesia",
       })
     ).toBe("/try-out/indonesia");
-    expect(getForYouNavigationHref(askNina, "id")).toBe("/chat");
+    expect(
+      getForYouNavigationTarget(askNina, "id", {
+        preferredCurriculumHref: "/kurikulum/amerika-serikat",
+      })
+    ).toEqual({ params: { locale: "id" }, to: "/$locale/chat" });
   });
 });

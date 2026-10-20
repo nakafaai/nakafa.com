@@ -1,8 +1,8 @@
 import type { Ref } from "@confect/core";
 
 import type tryouts from "@repo/backend/confect/_generated/refs/tryouts";
-import { IntentLink } from "@repo/design-system/components/ui/intent-link";
 import { getTileShifts } from "@repo/design-system/lib/look";
+import { HrefLink } from "@repo/internationalization/src/link";
 import { Array as Arr, Effect, Predicate } from "effect";
 import type { Locale } from "use-intl";
 import { useTranslations } from "use-intl";
@@ -81,7 +81,7 @@ export function TryoutHubClient({ locale, page }: TryoutHubClientProps) {
       {Arr.map(Arr.zip(page.countries, visuals), ([country, visual], index) => (
         <CatalogCard
           action={
-            <IntentLink
+            <HrefLink
               href={getTryoutPublicPathHref(country.publicPath)}
               onClick={() => handleCountryClick(country)}
             />

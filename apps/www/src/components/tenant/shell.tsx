@@ -27,7 +27,7 @@ import {
   SidebarInset,
 } from "@repo/design-system/components/ui/sidebar-shell";
 import { lazyComponent } from "@repo/design-system/lib/lazy";
-import { Link, usePathname } from "@repo/internationalization/src/navigation";
+import { Link } from "@repo/internationalization/src/link";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { Effect, Option } from "effect";
 import { type ReactNode, useTransition } from "react";
@@ -49,6 +49,7 @@ import type { Greeting } from "@/components/tenant/home/greeting";
 import { SchoolMark } from "@/components/tenant/mark";
 import { TenantNavigation } from "@/components/tenant/navigation";
 import { signOutSchoolAccount } from "@/components/tenant/signout";
+import { useSchoolPath } from "@/lib/routing/school/link";
 import { isExamEditorPath } from "@/lib/settings/school";
 import type { SchoolViewer } from "@/lib/tenant/frame";
 
@@ -152,7 +153,13 @@ function TenantSwitcher() {
         <DropdownMenuContent align="start" className="min-w-56" sideOffset={4}>
           <SidebarSchoolMenuItems canOpenSchool={false} />
           <DropdownMenuGroup>
-            <DropdownMenuItem render={<Link href="/">{t("home")}</Link>} />
+            <DropdownMenuItem
+              render={
+                <Link params={{ slug: tenant.slug }} to="/school/$slug">
+                  {t("home")}
+                </Link>
+              }
+            />
             <DropdownMenuItem
               render={
                 <a href={new URL(`/${locale}`, SITE_ORIGIN).href}>
@@ -186,7 +193,7 @@ function TenantFrame({
   personName: string;
   role: TenantValue["role"];
 }) {
-  const pathname = usePathname();
+  const pathname = useSchoolPath();
   const tCommon = useTranslations("Common");
 
   if (isExamEditorPath(pathname)) {

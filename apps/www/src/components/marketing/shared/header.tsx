@@ -1,7 +1,11 @@
 import { Button } from "@repo/design-system/components/ui/button";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { Nina } from "@repo/design-system/components/ui/nina";
-import { useLocale, useTranslations } from "use-intl";
+import {
+  EXACT_ACTIVE_OPTIONS,
+  Link,
+  useCurrentLocale,
+} from "@repo/internationalization/src/link";
+import { useTranslations } from "use-intl";
 import { HeaderCta, LogoCta } from "@/components/marketing/shared/header/cta";
 import { HeaderFeaturesLink } from "@/components/marketing/shared/header/features";
 import { Language } from "@/components/marketing/shared/language";
@@ -20,7 +24,7 @@ import { Language } from "@/components/marketing/shared/language";
  */
 export function Header() {
   const t = useTranslations("Marketing");
-  const locale = useLocale();
+  const locale = useCurrentLocale();
 
   return (
     <header className="sticky top-0 z-10 h-16 shrink-0 border-b bg-background">
@@ -31,7 +35,11 @@ export function Header() {
           <nav className="hidden items-center gap-0.5 lg:flex">
             <Button
               nativeButton={false}
-              render={<a href={`/${locale}`}>{t("about")}</a>}
+              render={
+                <Link params={{ locale }} to="/$locale">
+                  {t("about")}
+                </Link>
+              }
               variant="ghost"
             />
             <Button
@@ -42,7 +50,13 @@ export function Header() {
             <Button
               nativeButton={false}
               render={
-                <NavigationLink href="/pricing">{t("pricing")}</NavigationLink>
+                <Link
+                  activeOptions={EXACT_ACTIVE_OPTIONS}
+                  params={{ locale }}
+                  to="/$locale/pricing"
+                >
+                  {t("pricing")}
+                </Link>
               }
               variant="ghost"
             />

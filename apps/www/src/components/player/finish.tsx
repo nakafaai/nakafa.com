@@ -18,7 +18,6 @@ export function PlayerFinish({
   label,
   locked,
   onFinish,
-  onIntent,
   pending,
   title,
 }: {
@@ -30,8 +29,6 @@ export function PlayerFinish({
   /** Finishing is closed because time ran out. */
   locked: boolean;
   onFinish: () => void;
-  /** Warms what follows a finish, when the learner shows intent to finish. */
-  onIntent: () => void;
   /** The finish is on its way to the server. */
   pending: boolean;
   title: string;
@@ -49,13 +46,7 @@ export function PlayerFinish({
       <Button
         disabled={locked}
         inert={pending}
-        onClick={() => {
-          onIntent();
-          open("finish");
-        }}
-        onFocus={onIntent}
-        onPointerEnter={onIntent}
-        onTouchStart={onIntent}
+        onClick={() => open("finish")}
         type="button"
         variant="destructive"
       >

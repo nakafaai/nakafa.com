@@ -9,8 +9,11 @@ import {
   EmptyHeader,
 } from "@repo/design-system/components/ui/empty";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { Separator } from "@repo/design-system/components/ui/separator";
+import {
+  EXACT_ACTIVE_OPTIONS,
+  HrefLink,
+} from "@repo/internationalization/src/link";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
 import { createContext, Fragment, type ReactElement, use } from "react";
@@ -113,7 +116,8 @@ function ResultGroup({ group }: { group: SearchResultGroup }) {
       </h2>
       <div className="flex flex-col gap-1">
         {Arr.map(group.items, (result) => (
-          <NavigationLink
+          <HrefLink
+            activeOptions={EXACT_ACTIVE_OPTIONS}
             className={cn(
               "group flex flex-col gap-2 p-2 px-4 text-sm transition-colors ease-out hover:bg-accent hover:text-accent-foreground"
             )}
@@ -132,7 +136,7 @@ function ResultGroup({ group }: { group: SearchResultGroup }) {
               excerpt={result.excerpt}
               query={query}
             />
-          </NavigationLink>
+          </HrefLink>
         ))}
       </div>
     </div>

@@ -8,7 +8,7 @@ import { MemberStatus } from "@repo/backend/confect/tenancy/roster";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { Link } from "@repo/internationalization/src/navigation";
+import { Link } from "@repo/internationalization/src/link";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, Option } from "effect";
 import { createContext, startTransition, use } from "react";
@@ -122,7 +122,8 @@ function SchoolMemberTable({
         action={
           <Link
             className={buttonVariants({ variant: "outline" })}
-            href="/settings/invites"
+            params={{ slug }}
+            to="/school/$slug/settings/invites"
           >
             {t("members-empty-action")}
           </Link>

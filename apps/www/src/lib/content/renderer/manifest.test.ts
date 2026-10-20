@@ -7,13 +7,6 @@ import { Array as Arr, Effect, HashSet, Order, Record as Rec } from "effect";
 import { baseRenderers } from "@/lib/content/renderer/domain/base";
 import { rendererDomainImplementations } from "@/lib/content/renderer/selection";
 
-vi.mock("@repo/internationalization/src/navigation", () => ({
-  getPathname: vi.fn(),
-  Link: vi.fn(),
-  redirect: vi.fn(),
-  usePathname: vi.fn(),
-  useRouter: vi.fn(),
-}));
 vi.mock("use-intl", () => ({
   /** Keeps registry discovery independent from navigation runtime behavior. */
   useTranslations: () => () => "",

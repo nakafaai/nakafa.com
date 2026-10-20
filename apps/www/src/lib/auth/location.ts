@@ -1,15 +1,8 @@
-import {
-  getPathname,
-  usePathname,
-  useRouter,
-} from "@repo/internationalization/src/navigation";
-import { useLocation } from "@tanstack/react-router";
+import type { LinkTarget } from "@repo/internationalization/src/link";
+import { useCurrentLocale } from "@repo/internationalization/src/link";
+import { useLocation, useNavigate, useRouter } from "@tanstack/react-router";
 import type { MouseEvent, SyntheticEvent } from "react";
-import { useLocale } from "use-intl";
-import {
-  getPostAuthIntentSource,
-  getPostAuthSignInHrefForLocation,
-} from "@/lib/auth/admission";
+import { getPostAuthSignInTarget } from "@/lib/auth/admission";
 
 /** Returns whether a link click must retain native browser navigation. */
 function isModifiedLinkClick(event: MouseEvent<HTMLAnchorElement>) {
@@ -24,38 +17,39 @@ function isModifiedLinkClick(event: MouseEvent<HTMLAnchorElement>) {
   );
 }
 
+/** The browser URL without its fragment, which the server never sees. */
+function withoutFragment(href: string) {
+  const fragment = href.indexOf("#");
+  return fragment === -1 ? href : href.slice(0, fragment);
+}
+
 /**
  * Builds deterministic auth-link fallback and exact browser-event navigation.
  *
- * The live reader intentionally touches `window` only after user interaction,
- * preserving hash fragments without making server and hydration renders differ.
+ * The rendered target leaves the fragment out, so the server and the hydration
+ * render agree. A click reads the router's own location, which keeps the fragment.
  */
 export function useCurrentAuthNavigation() {
-  const locale = useLocale();
-  const pathname = getPathname({ href: usePathname(), locale });
+  const locale = useCurrentLocale();
+  const navigate = useNavigate();
   const router = useRouter();
-  const search = useLocation({
-    select: (location) => location.searchStr.slice(1),
+  const renderedSource = useLocation({
+    select: (location) => withoutFragment(location.publicHref),
   });
-  const href = getPostAuthSignInHrefForLocation(
-    { hash: "", pathname, search },
-    locale
-  );
+  const renderedTarget = getPostAuthSignInTarget(renderedSource, locale);
 
-  function readIntentSource() {
-    return getPostAuthIntentSource(
-      window.location.pathname,
-      window.location.search,
-      window.location.hash
-    );
+  /** The sign-in target that resumes the browser location as it is now. */
+  function readTarget(): LinkTarget {
+    return getPostAuthSignInTarget(router.state.location.publicHref, locale);
   }
 
-  function readHref() {
-    return getPostAuthSignInHrefForLocation(window.location, locale);
+  /** The browser location as it is now, for an intent that a sign-in resumes. */
+  function readIntentSource() {
+    return router.state.location.publicHref;
   }
 
   function prepareNativeLink(event: SyntheticEvent<HTMLAnchorElement>) {
-    event.currentTarget.href = getPathname({ href: readHref(), locale });
+    event.currentTarget.href = router.buildLocation(readTarget()).publicHref;
   }
 
   function onLinkClick(event: MouseEvent<HTMLAnchorElement>) {
@@ -63,23 +57,22 @@ export function useCurrentAuthNavigation() {
       return;
     }
 
-    const currentHref = readHref();
     if (isModifiedLinkClick(event)) {
       prepareNativeLink(event);
       return;
     }
 
     event.preventDefault();
-    router.push(currentHref);
+    navigate(readTarget());
   }
 
   const linkProps = {
-    href,
+    ...renderedTarget,
     onAuxClick: prepareNativeLink,
     onClick: onLinkClick,
     onContextMenu: prepareNativeLink,
     onPointerDown: prepareNativeLink,
   };
 
-  return { linkProps, readHref, readIntentSource };
+  return { linkProps, readIntentSource, readTarget };
 }

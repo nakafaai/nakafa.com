@@ -5,7 +5,7 @@ import { Diamond02Icon } from "@hugeicons/core-free-icons";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
-import { useRouter } from "@repo/internationalization/src/navigation";
+import { useRouter } from "@tanstack/react-router";
 import { Data, Effect } from "effect";
 import { useEffect, useTransition } from "react";
 import { useLocale, useTranslations } from "use-intl";
@@ -54,7 +54,7 @@ export function TryoutReviewCheckout() {
 
   useEffect(() => {
     if (plan === "pro") {
-      startRefresh(() => router.refresh());
+      startRefresh(() => router.invalidate());
     }
   }, [plan, router]);
 

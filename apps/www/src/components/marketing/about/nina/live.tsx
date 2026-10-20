@@ -1,5 +1,6 @@
 import type { PromptInputMessage } from "@repo/design-system/lib/prompt-input/submission";
-import { useRouter } from "@repo/internationalization/src/navigation";
+import { useCurrentLocale } from "@repo/internationalization/src/link";
+import { useNavigate } from "@tanstack/react-router";
 import { ConvexProvider } from "convex/react";
 import { Option } from "effect";
 import { useEffect, useRef } from "react";
@@ -31,9 +32,11 @@ export function LiveNinaComposer({
 
 /** Sends the composer's prompt through admission, then opens the new chat. */
 function LiveNinaAdmission({ held }: { held: PromptInputMessage | null }) {
-  const router = useRouter();
+  const locale = useCurrentLocale();
+  const navigate = useNavigate();
   const { disabled, prompt, submit } = useChatAdmission({
-    onComplete: (chatId) => router.push(`/chat/${chatId}`),
+    onComplete: (chatId) =>
+      navigate({ params: { id: chatId, locale }, to: "/$locale/chat/$id" }),
   });
   const admittedHeld = useRef(false);
 

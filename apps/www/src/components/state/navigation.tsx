@@ -1,5 +1,8 @@
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { buttonVariants } from "@repo/design-system/lib/button";
+import {
+  EXACT_ACTIVE_OPTIONS,
+  HrefLink,
+} from "@repo/internationalization/src/link";
 
 interface ActionNavigationProps {
   /** Where it leads, as a path of the app: the locale is added. */
@@ -20,8 +23,12 @@ export function ActionNavigation({
   variant,
 }: ActionNavigationProps) {
   return (
-    <NavigationLink className={buttonVariants({ variant })} href={href}>
+    <HrefLink
+      activeOptions={EXACT_ACTIVE_OPTIONS}
+      className={buttonVariants({ variant })}
+      href={href}
+    >
       {label}
-    </NavigationLink>
+    </HrefLink>
   );
 }

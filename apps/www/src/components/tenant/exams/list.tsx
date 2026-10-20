@@ -4,7 +4,7 @@ import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { Link } from "@repo/internationalization/src/navigation";
+import { Link } from "@repo/internationalization/src/link";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, Option } from "effect";
 import { useMemo, useState } from "react";
@@ -189,7 +189,8 @@ function ExamTable({
           ) : (
             <Link
               className="underline-offset-4 hover:underline"
-              href={`/exams/${info.row.original.id}/edit`}
+              params={{ exam: info.row.original.id, slug: tenant.slug }}
+              to="/school/$slug/exams/$exam/edit"
             >
               {info.getValue()}
             </Link>
@@ -215,7 +216,8 @@ function ExamTable({
         Arr.contains(saving, info.row.original.id) ? null : (
           <Link
             className="underline-offset-4 hover:underline"
-            href={`/exams/${info.row.original.id}`}
+            params={{ exam: info.row.original.id, slug: tenant.slug }}
+            to="/school/$slug/exams/$exam"
           >
             {t("rooms-title")}
           </Link>
@@ -253,6 +255,7 @@ function NoExamEmpty({
   canManage: boolean;
   hasUnit: boolean;
 }) {
+  const { slug } = useTenant();
   const t = useTranslations("Exams");
 
   if (hasUnit) {
@@ -271,7 +274,8 @@ function NoExamEmpty({
         canManage ? (
           <Link
             className={buttonVariants({ variant: "outline" })}
-            href="/settings/units"
+            params={{ slug }}
+            to="/school/$slug/settings/units"
           >
             {t("no-unit-action")}
           </Link>

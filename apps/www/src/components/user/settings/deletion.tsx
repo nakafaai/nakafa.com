@@ -20,11 +20,13 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
-import { useRouter } from "@repo/internationalization/src/navigation";
+import { localizeInternalHref } from "@repo/internationalization/src/href";
+import { useCurrentLocale } from "@repo/internationalization/src/link";
+import { useNavigate } from "@tanstack/react-router";
 import { useConvex } from "convex/react";
 import { Effect, Result } from "effect";
 import { useState, useTransition } from "react";
-import { useLocale, useTranslations } from "use-intl";
+import { useTranslations } from "use-intl";
 import {
   CardSection,
   CardSectionActions,
@@ -53,8 +55,8 @@ type DialogError = (typeof dialogError)[keyof typeof dialogError] | null;
 export function UserSettingsDeleteAccount({ userId }: { userId: Id<"users"> }) {
   const t = useTranslations("Auth");
   const common = useTranslations("Common");
-  const locale = useLocale();
-  const router = useRouter();
+  const locale = useCurrentLocale();
+  const navigate = useNavigate();
   const authNavigation = useCurrentAuthNavigation();
   const cancelAccountDeletion = useMutation(
     auth.deletion.cancelAccountDeletionAttempt
@@ -104,7 +106,7 @@ export function UserSettingsDeleteAccount({ userId }: { userId: Id<"users"> }) {
         )
       );
       if (Result.isSuccess(result)) {
-        window.location.replace(`/${locale}`);
+        window.location.replace(localizeInternalHref("/", locale));
         return;
       }
 
@@ -123,7 +125,7 @@ export function UserSettingsDeleteAccount({ userId }: { userId: Id<"users"> }) {
         Effect.result(signOutAccountBrowserIdentity())
       );
       if (Result.isSuccess(result)) {
-        router.replace(authNavigation.readHref());
+        navigate({ ...authNavigation.readTarget(), replace: true });
         return;
       }
       startTransition(() => setError(dialogError.generic));

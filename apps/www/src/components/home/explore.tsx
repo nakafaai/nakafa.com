@@ -7,13 +7,17 @@ import {
   Timer02Icon,
 } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
-import { Array as Arr, HashSet, Option } from "effect";
-import type { ComponentProps, ReactNode } from "react";
-import { useLocale, useTranslations } from "use-intl";
 import {
-  getForYouNavigationHref,
+  DestinationLink,
+  type LinkTarget,
+  useCurrentLocale,
+} from "@repo/internationalization/src/link";
+import { Array as Arr, Option } from "effect";
+import type { ReactNode } from "react";
+import { useTranslations } from "use-intl";
+import {
   getForYouNavigationItems,
+  getForYouNavigationTarget,
 } from "@/components/sidebar/data/navigation";
 import { usePreferredCurriculumHref } from "@/lib/curriculum/preferences";
 import { usePreferredTryoutHref } from "@/lib/tryout/preferences";
@@ -98,56 +102,53 @@ function NinaIcon() {
 export function HomeExplore() {
   const tAi = useTranslations("Ai");
   const tCommon = useTranslations("Common");
-  const locale = useLocale();
+  const locale = useCurrentLocale();
   // The shared shortcuts are the same for every audience; only their resolved
   // destinations follow the learner preferences below.
   const items = getForYouNavigationItems();
-  const preferredCurriculumHref = usePreferredCurriculumHref(locale);
-  const preferredTryoutHref = usePreferredTryoutHref(locale);
-  const visibleCardIds = HashSet.fromIterable(
-    Arr.map(items, (item) => item.id)
-  );
-  const subjectNavigationItem = Arr.findFirst(
-    items,
-    (item) => item.id === "subject"
-  );
-  const tryoutNavigationItem = Arr.findFirst(
-    items,
-    (item) => item.id === "tryOut"
-  );
-  const subjectHref = Option.match(subjectNavigationItem, {
-    onNone: () => "/curriculum",
-    onSome: (item) =>
-      getForYouNavigationHref(item, locale, {
-        preferredCurriculumHref,
-        preferredTryoutHref,
-      }),
-  });
-  const tryoutHref = Option.match(tryoutNavigationItem, {
-    onNone: () => "/try-out",
-    onSome: (item) =>
-      getForYouNavigationHref(item, locale, {
-        preferredCurriculumHref,
-        preferredTryoutHref,
-      }),
-  });
+  const preferences = {
+    preferredCurriculumHref: usePreferredCurriculumHref(locale),
+    preferredTryoutHref: usePreferredTryoutHref(locale),
+  };
+  const subjectItem = Arr.findFirst(items, (item) => item.id === "subject");
+  const tryoutItem = Arr.findFirst(items, (item) => item.id === "tryOut");
+  const askNinaItem = Arr.findFirst(items, (item) => item.id === "askNina");
+
   return (
     <section className="flex flex-col gap-4">
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 md:gap-6">
-        {HashSet.has(visibleCardIds, "subject") && (
-          <ExploreCard href={subjectHref} title={tCommon("subject")}>
-            <SubjectIcon />
-          </ExploreCard>
+        {Option.getOrNull(
+          Option.map(subjectItem, (item) => (
+            <ExploreCard
+              destination={getForYouNavigationTarget(item, locale, preferences)}
+              key={item.id}
+              title={tCommon("subject")}
+            >
+              <SubjectIcon />
+            </ExploreCard>
+          ))
         )}
-        {HashSet.has(visibleCardIds, "tryOut") && (
-          <ExploreCard href={tryoutHref} title={tCommon("try-out")}>
-            <TryoutIcon />
-          </ExploreCard>
+        {Option.getOrNull(
+          Option.map(tryoutItem, (item) => (
+            <ExploreCard
+              destination={getForYouNavigationTarget(item, locale, preferences)}
+              key={item.id}
+              title={tCommon("try-out")}
+            >
+              <TryoutIcon />
+            </ExploreCard>
+          ))
         )}
-        {HashSet.has(visibleCardIds, "askNina") && (
-          <ExploreCard href="/chat" title={tAi("ask-nina")}>
-            <NinaIcon />
-          </ExploreCard>
+        {Option.getOrNull(
+          Option.map(askNinaItem, (item) => (
+            <ExploreCard
+              destination={getForYouNavigationTarget(item, locale, preferences)}
+              key={item.id}
+              title={tAi("ask-nina")}
+            >
+              <NinaIcon />
+            </ExploreCard>
+          ))
         )}
       </div>
     </section>
@@ -156,22 +157,22 @@ export function HomeExplore() {
 
 function ExploreCard({
   children,
-  href,
+  destination,
   title,
 }: {
   children: ReactNode;
-  href: ComponentProps<typeof NavigationLink>["href"];
+  destination: LinkTarget | string;
   title: string;
 }) {
   return (
-    <NavigationLink
+    <DestinationLink
       className="group flex flex-col items-center gap-2"
-      href={href}
+      destination={destination}
     >
       <div className="flex aspect-[1/0.95] w-full items-center justify-center rounded-xl border bg-card">
         {children}
       </div>
       <h2>{title}</h2>
-    </NavigationLink>
+    </DestinationLink>
   );
 }

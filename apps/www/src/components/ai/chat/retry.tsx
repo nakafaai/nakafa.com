@@ -5,8 +5,12 @@ import {
 } from "@repo/design-system/components/ui/alert";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { MessageScrollerItem } from "@repo/design-system/components/ui/scroller";
+import {
+  EXACT_ACTIVE_OPTIONS,
+  Link,
+  useCurrentLocale,
+} from "@repo/internationalization/src/link";
 import { useTranslations } from "use-intl";
 import { readStopFailure } from "@/components/ai/chat/cancel";
 import { useChat } from "@/components/ai/chat/context";
@@ -71,6 +75,7 @@ function FailureActions({
   retry: () => void;
 }) {
   const t = useTranslations("Ai");
+  const locale = useCurrentLocale();
   const authNavigation = useCurrentAuthNavigation();
   return (
     <>
@@ -87,7 +92,13 @@ function FailureActions({
       {action === "credits" ? (
         <Button
           nativeButton={false}
-          render={<NavigationLink href="/user/settings/subscriptions" />}
+          render={
+            <Link
+              activeOptions={EXACT_ACTIVE_OPTIONS}
+              params={{ locale }}
+              to="/$locale/user/settings/subscriptions"
+            />
+          }
           size="sm"
           variant="outline"
         >
@@ -97,7 +108,7 @@ function FailureActions({
       {action === "sign-in" ? (
         <Button
           nativeButton={false}
-          render={<NavigationLink {...authNavigation.linkProps} />}
+          render={<Link {...authNavigation.linkProps} />}
           size="sm"
           variant="outline"
         >
@@ -107,7 +118,13 @@ function FailureActions({
       {action === "new-chat" ? (
         <Button
           nativeButton={false}
-          render={<NavigationLink href="/chat" />}
+          render={
+            <Link
+              activeOptions={EXACT_ACTIVE_OPTIONS}
+              params={{ locale }}
+              to="/$locale/chat"
+            />
+          }
           size="sm"
           variant="outline"
         >

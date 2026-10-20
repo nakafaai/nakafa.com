@@ -8,20 +8,18 @@ import {
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
 import { toast } from "@repo/design-system/lib/toast/notify";
-import {
-  getPathname,
-  useCurrentLocale,
-  usePathname,
-} from "@repo/internationalization/src/navigation";
+import { toPublicPath } from "@repo/internationalization/src/rewrite";
 import { getAppUrl } from "@repo/site/app";
+import { useLocation } from "@tanstack/react-router";
 import { useTranslations } from "use-intl";
 
 export function ShareButton() {
   const t = useTranslations("Common");
 
-  // The seam's pathname omits the locale, so the copied link names it again.
-  const locale = useCurrentLocale();
-  const pathname = getPathname({ href: usePathname(), locale });
+  // The copied link is the public path of the page, locale included.
+  const pathname = useLocation({
+    select: (location) => toPublicPath(location.pathname),
+  });
 
   const clipboard = useClipboard({ timeout: 500 });
 
