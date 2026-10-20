@@ -13,6 +13,7 @@ import { defineConfig } from "vite";
  */
 const PRERENDERED_PAGES = ACTIVE_APP_LOCALE_CODES.flatMap((locale) => [
   { path: `/${locale}` },
+  { path: `/${locale}/contributor` },
   { path: `/${locale}/pricing` },
 ]);
 
