@@ -19,6 +19,8 @@ const mocks = vi.hoisted(() => ({
   readTryoutSectionPage: vi.fn(),
   readTryoutSetAttemptPage: vi.fn(),
   readTryoutSetPage: vi.fn(),
+  renderTryoutPreview: vi.fn(),
+  renderTryoutReview: vi.fn(),
   setResponseHeader: vi.fn(),
 }));
 
@@ -43,6 +45,10 @@ vi.mock("@/components/tryout/route/catalog.server", () => ({
 vi.mock("@/components/tryout/route/current", () => ({
   readCurrentTryoutSection: mocks.readCurrentTryoutSection,
   readCurrentTryoutSet: mocks.readCurrentTryoutSet,
+}));
+vi.mock("@/components/tryout/route/rendered.server", () => ({
+  renderTryoutPreview: mocks.renderTryoutPreview,
+  renderTryoutReview: mocks.renderTryoutReview,
 }));
 vi.mock("@/components/tryout/route/token.server", () => ({
   readRequestToken: mocks.readRequestToken,
@@ -93,6 +99,23 @@ const catalogSection = {
   set: { countryKey: "id", examKey: "snbt", setKey: "set-1", trackKey: "2027" },
 };
 
+/** Signed content of an attempt, which the review and the running body read. */
+const signedContent = { answers: [], kind: "signed" };
+/** The runtime that a finished attempt's review renders. */
+const runtime = { questions: [] };
+/** A running attempt with signed content, whose body waits for the runtime's contract. */
+const runningSigned = {
+  content: signedContent,
+  initialState: { attempt: { status: "in-progress" } },
+};
+/** A finished attempt with signed content, whose review renders on the server. */
+const finishedSigned = {
+  content: signedContent,
+  initialState: { attempt: { status: "completed" }, runtime },
+};
+/** One question preview, as the preview reader answers it for its section. */
+const preview = { target: { section: { title: "Question 1" } } };
+
 /** One attempt as the attempt readers return it, retained or current. */
 function attemptOf(kind: "current" | "retained", overrides: object = {}) {
   return {
@@ -120,6 +143,8 @@ beforeEach(() => {
     Promise.resolve((key: string) => key)
   );
   mocks.readTryoutQuestionPreview.mockResolvedValue(Option.none());
+  mocks.renderTryoutPreview.mockResolvedValue("preview-tree");
+  mocks.renderTryoutReview.mockResolvedValue("review-tree");
   mocks.readTryoutRouteHead.mockReturnValue(Effect.succeed(head));
   mocks.readTryoutSetPage.mockReturnValue(Effect.succeed(catalogSet));
   mocks.readTryoutSectionPage.mockReturnValue(Effect.succeed(catalogSection));
@@ -169,11 +194,11 @@ describe("readTryoutSetRoute", () => {
   );
 
   it.effect(
-    "holds a retained attempt with signed content until the renderer contract exists",
+    "holds a running retained attempt with signed content until its body contract exists",
     () =>
       Effect.gen(function* () {
         mocks.readTryoutSetAttemptPage.mockReturnValue(
-          Effect.succeed(attemptOf("retained", { content: { kind: "signed" } }))
+          Effect.succeed(attemptOf("retained", runningSigned))
         );
 
         const error = yield* Effect.flip(readSet(attemptSearch));
@@ -181,6 +206,26 @@ describe("readTryoutSetRoute", () => {
         expect(error).toMatchObject({
           _tag: "TryoutAttemptContentPending",
           publicPath: SET,
+        });
+      })
+  );
+
+  it.effect(
+    "renders the review of a finished retained attempt with signed content",
+    () =>
+      Effect.gen(function* () {
+        mocks.readTryoutSetAttemptPage.mockReturnValue(
+          Effect.succeed(attemptOf("retained", finishedSigned))
+        );
+
+        const route = yield* readSet(attemptSearch);
+
+        expect(route).toMatchObject({ kind: "attempt", review: "review-tree" });
+        expect(mocks.renderTryoutReview).toHaveBeenCalledExactlyOnceWith({
+          access: signedContent,
+          attemptId: "attempt-1",
+          locale: "en",
+          runtime,
         });
       })
   );
@@ -237,16 +282,21 @@ describe("readTryoutSetRoute", () => {
   );
 
   it.effect(
-    "holds a public set that a preview answers until the renderer contract exists",
+    "answers a public set that a preview answers with the preview",
     () =>
       Effect.gen(function* () {
-        mocks.readTryoutQuestionPreview.mockResolvedValue(
-          Option.some({ questions: [] })
+        mocks.readTryoutQuestionPreview.mockResolvedValue(Option.some(preview));
+
+        const route = yield* readSet();
+
+        expect(route).toMatchObject({
+          head: { indexable: false, title: "Question 1" },
+          kind: "preview",
+          preview: "preview-tree",
+        });
+        expect(mocks.renderTryoutPreview).toHaveBeenCalledExactlyOnceWith(
+          preview
         );
-
-        const error = yield* Effect.flip(readSet());
-
-        expect(error).toMatchObject({ _tag: "TryoutAttemptContentPending" });
       })
   );
 
@@ -278,15 +328,45 @@ describe("readTryoutSetRoute", () => {
       })
   );
 
-  it.effect("holds a learner's current set with signed content", () =>
+  it.effect("holds a learner's current running set with signed content", () =>
     Effect.gen(function* () {
       mocks.readCurrentTryoutSet.mockReturnValue(
-        Effect.succeed(attemptOf("current", { content: { kind: "signed" } }))
+        Effect.succeed(attemptOf("current", runningSigned))
       );
 
       const error = yield* Effect.flip(readSet());
 
       expect(error).toMatchObject({ _tag: "TryoutAttemptContentPending" });
+    })
+  );
+
+  it.effect("holds no review for a finished attempt without its runtime", () =>
+    Effect.gen(function* () {
+      mocks.readCurrentTryoutSet.mockReturnValue(
+        Effect.succeed(
+          attemptOf("current", {
+            content: signedContent,
+            initialState: { attempt: { status: "completed" }, runtime: null },
+          })
+        )
+      );
+
+      const route = yield* readSet();
+
+      expect(route).toMatchObject({ kind: "catalog", review: null });
+      expect(mocks.renderTryoutReview).not.toHaveBeenCalled();
+    })
+  );
+
+  it.effect("renders the review of a learner's finished current set", () =>
+    Effect.gen(function* () {
+      mocks.readCurrentTryoutSet.mockReturnValue(
+        Effect.succeed(attemptOf("current", finishedSigned))
+      );
+
+      const route = yield* readSet();
+
+      expect(route).toMatchObject({ kind: "catalog", review: "review-tree" });
     })
   );
 
@@ -360,15 +440,29 @@ describe("readTryoutSectionRoute", () => {
       })
   );
 
-  it.effect("holds a retained section attempt with signed content", () =>
+  it.effect(
+    "holds a running retained section attempt with signed content",
+    () =>
+      Effect.gen(function* () {
+        mocks.readTryoutSectionAttemptPage.mockReturnValue(
+          Effect.succeed(attemptOf("retained", runningSigned))
+        );
+
+        const error = yield* Effect.flip(readSection(attemptSearch));
+
+        expect(error).toMatchObject({ _tag: "TryoutAttemptContentPending" });
+      })
+  );
+
+  it.effect("renders the review of a finished retained section attempt", () =>
     Effect.gen(function* () {
       mocks.readTryoutSectionAttemptPage.mockReturnValue(
-        Effect.succeed(attemptOf("retained", { content: { kind: "signed" } }))
+        Effect.succeed(attemptOf("retained", finishedSigned))
       );
 
-      const error = yield* Effect.flip(readSection(attemptSearch));
+      const route = yield* readSection(attemptSearch);
 
-      expect(error).toMatchObject({ _tag: "TryoutAttemptContentPending" });
+      expect(route).toMatchObject({ kind: "attempt", review: "review-tree" });
     })
   );
 
@@ -395,16 +489,17 @@ describe("readTryoutSectionRoute", () => {
   );
 
   it.effect(
-    "holds a public section that a preview answers until the renderer contract exists",
+    "answers a public section that a preview answers with the preview",
     () =>
       Effect.gen(function* () {
-        mocks.readTryoutQuestionPreview.mockResolvedValue(
-          Option.some({ questions: [] })
-        );
+        mocks.readTryoutQuestionPreview.mockResolvedValue(Option.some(preview));
 
-        const error = yield* Effect.flip(readSection());
+        const route = yield* readSection();
 
-        expect(error).toMatchObject({ _tag: "TryoutAttemptContentPending" });
+        expect(route).toMatchObject({
+          kind: "preview",
+          preview: "preview-tree",
+        });
       })
   );
 
@@ -476,15 +571,17 @@ describe("readTryoutSectionRoute", () => {
       })
   );
 
-  it.effect("holds a learner's current section with signed content", () =>
-    Effect.gen(function* () {
-      mocks.readCurrentTryoutSection.mockReturnValue(
-        Effect.succeed(attemptOf("current", { content: { kind: "signed" } }))
-      );
+  it.effect(
+    "holds a learner's current running section with signed content",
+    () =>
+      Effect.gen(function* () {
+        mocks.readCurrentTryoutSection.mockReturnValue(
+          Effect.succeed(attemptOf("current", runningSigned))
+        );
 
-      const error = yield* Effect.flip(readSection());
+        const error = yield* Effect.flip(readSection());
 
-      expect(error).toMatchObject({ _tag: "TryoutAttemptContentPending" });
-    })
+        expect(error).toMatchObject({ _tag: "TryoutAttemptContentPending" });
+      })
   );
 });

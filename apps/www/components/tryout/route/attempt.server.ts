@@ -4,7 +4,6 @@ import {
   type Locale,
   LocaleSchema,
 } from "@repo/internationalization/src/locale";
-import { readServerTranslator } from "@repo/internationalization/src/translator";
 import { Clock, Effect, Option, Schema } from "effect";
 import {
   type PlayerModeParam,
@@ -35,18 +34,12 @@ import {
   type TryoutRouteSearchParams,
 } from "@/components/tryout/route/path";
 import { keepPersonalResponse } from "@/components/tryout/route/response.server";
+import {
+  readAttemptReview,
+  readPreviewRoute,
+  readRetainedHead,
+} from "@/components/tryout/route/surface.server";
 import { readRequestToken } from "@/components/tryout/route/token.server";
-import { getOgUrl } from "@/lib/seo/social";
-
-/**
- * A set or section that shows a learner's attempt with rendered question
- * bodies. A loader cannot return those bodies, so the page stops here until the
- * renderer's body contract exists.
- */
-class TryoutAttemptContentPending extends Schema.TaggedError<TryoutAttemptContentPending>()(
-  "TryoutAttemptContentPending",
-  { publicPath: Schema.String }
-) {}
 
 /** The learner's current or retained set attempt, as the set reader holds it. */
 type SetAttemptPage = Effect.Success<ReturnType<typeof readCurrentTryoutSet>>;
@@ -105,30 +98,6 @@ const readSectionBinding = Effect.fn("www.tryout.route.readSectionBinding")(
 );
 
 /**
- * The head of a page bound to one attempt. It names the page and keeps it out
- * of search results, as the reference's retained metadata does.
- */
-const readRetainedHead = Effect.fn("www.tryout.route.readRetainedHead")(
-  function* (input: {
-    readonly description: string | undefined;
-    readonly locale: Locale;
-    readonly publicPath: string;
-    readonly title: string;
-  }) {
-    const tTryouts = yield* Effect.promise(() =>
-      readServerTranslator({ locale: input.locale, namespace: "Tryouts" })
-    );
-    return {
-      canonicalPath: `/${input.locale}/${input.publicPath}` as const,
-      description: input.description ?? tTryouts("metadata-description"),
-      image: getOgUrl(input.locale, input.publicPath),
-      indexable: false,
-      title: input.title,
-    };
-  }
-);
-
-/**
  * Resolves one set URL for the request. A URL bound to an attempt answers for
  * that attempt only: no session sends the learner to sign-in with 307, and an
  * attempt that is not theirs is not found. A public URL shows its catalog view,
@@ -174,7 +143,11 @@ export const readTryoutSetRoute = Effect.fn("www.tryout.route.readSet")(
       readTryoutQuestionPreview(locale, setPath)
     );
     if (Option.isSome(preview)) {
-      return yield* new TryoutAttemptContentPending({ publicPath: setPath });
+      return yield* readPreviewRoute({
+        locale,
+        preview: preview.value,
+        publicPath: setPath,
+      });
     }
     const page = yield* readTryoutSetPage(locale, setPath);
     if (!page) {
@@ -197,9 +170,6 @@ export const readTryoutSetRoute = Effect.fn("www.tryout.route.readSet")(
           trackKey: page.set.trackKey,
         })
       : null;
-    if (attempt?.content.kind === "signed") {
-      return yield* new TryoutAttemptContentPending({ publicPath: setPath });
-    }
     const running = attempt?.kind === "retained" ? attempt : null;
     return {
       binding: attempt
@@ -212,6 +182,9 @@ export const readTryoutSetRoute = Effect.fn("www.tryout.route.readSet")(
       restartTarget: attempt
         ? attempt.restartTarget
         : createTryoutSetRestartTarget(page),
+      review: attempt
+        ? yield* readAttemptReview({ attempt, locale, publicPath: setPath })
+        : null,
       route,
       view: intent.value.view,
     };
@@ -260,11 +233,6 @@ const readRetainedSetRoute = Effect.fn("www.tryout.route.readRetainedSet")(
     if (attempt?.kind !== "retained") {
       return { kind: "notFound" as const };
     }
-    if (attempt.content.kind === "signed") {
-      return yield* new TryoutAttemptContentPending({
-        publicPath: input.publicPath,
-      });
-    }
     return {
       binding: yield* readSetBinding(attempt, view),
       head: yield* readRetainedHead({
@@ -277,6 +245,11 @@ const readRetainedSetRoute = Effect.fn("www.tryout.route.readRetainedSet")(
       now: yield* Clock.currentTimeMillis,
       page: attempt.page,
       restartTarget: attempt.restartTarget,
+      review: yield* readAttemptReview({
+        attempt,
+        locale: input.locale,
+        publicPath: input.publicPath,
+      }),
       route: input.route,
       view,
     };
@@ -337,7 +310,9 @@ export const readTryoutSectionRoute = Effect.fn("www.tryout.route.readSection")(
       readTryoutQuestionPreview(locale, sectionPath)
     );
     if (Option.isSome(preview)) {
-      return yield* new TryoutAttemptContentPending({
+      return yield* readPreviewRoute({
+        locale,
+        preview: preview.value,
         publicPath: sectionPath,
       });
     }
@@ -363,11 +338,6 @@ export const readTryoutSectionRoute = Effect.fn("www.tryout.route.readSection")(
           trackKey: page.set.trackKey,
         })
       : null;
-    if (attempt?.content.kind === "signed") {
-      return yield* new TryoutAttemptContentPending({
-        publicPath: sectionPath,
-      });
-    }
     return {
       binding: attempt
         ? yield* readSectionBinding(attempt, intent.value.view)
@@ -376,6 +346,13 @@ export const readTryoutSectionRoute = Effect.fn("www.tryout.route.readSection")(
       kind: "catalog" as const,
       now: yield* Clock.currentTimeMillis,
       page: attempt ? attempt.page : page,
+      review: attempt
+        ? yield* readAttemptReview({
+            attempt,
+            locale,
+            publicPath: sectionPath,
+          })
+        : null,
       route,
       setHref: selectTryoutSectionReturnHref({
         attemptPage: attempt,
@@ -431,11 +408,6 @@ const readRetainedSectionRoute = Effect.fn(
   if (attempt?.kind !== "retained") {
     return { kind: "notFound" as const };
   }
-  if (attempt.content.kind === "signed") {
-    return yield* new TryoutAttemptContentPending({
-      publicPath: input.publicPath,
-    });
-  }
   return {
     binding: yield* readSectionBinding(attempt, view),
     head: yield* readRetainedHead({
@@ -447,6 +419,11 @@ const readRetainedSectionRoute = Effect.fn(
     kind: "attempt" as const,
     now: yield* Clock.currentTimeMillis,
     page: attempt.page,
+    review: yield* readAttemptReview({
+      attempt,
+      locale: input.locale,
+      publicPath: input.publicPath,
+    }),
     route: input.route,
     setHref: selectTryoutSectionReturnHref({
       attemptPage: attempt,

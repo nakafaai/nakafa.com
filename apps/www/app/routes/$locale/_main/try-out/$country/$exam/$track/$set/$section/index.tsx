@@ -55,6 +55,9 @@ export const Route = createFileRoute(
 
 function TryoutSectionPage() {
   const route = Route.useLoaderData();
+  if (route.kind === "preview") {
+    return route.preview;
+  }
   return (
     <TryoutClockProvider initialNow={route.now}>
       <TryoutSectionPageClient
@@ -64,7 +67,7 @@ function TryoutSectionPage() {
         route={route.route}
         setHref={route.setHref}
       >
-        {null}
+        {route.review}
       </TryoutSectionPageClient>
     </TryoutClockProvider>
   );
