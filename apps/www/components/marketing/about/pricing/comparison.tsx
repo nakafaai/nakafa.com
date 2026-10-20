@@ -3,7 +3,7 @@ import { Thing } from "@repo/design-system/components/ui/thing";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
-import { PricingCurrencies } from "@/components/marketing/about/pricing/by-currency";
+import { CurrencyBranch } from "@/components/marketing/about/pricing/currency";
 import {
   currencySymbol,
   drinkKey,
@@ -12,6 +12,7 @@ import { pricingSums } from "@/components/marketing/about/pricing/sums";
 import {
   getProMonthlyPricingFor,
   type PricingCurrency,
+  PricingCurrencySchema,
 } from "@/lib/pricing/monthly";
 
 /** One comparison: its picture, its sum, and the sentence that says what it means, centred in its column. */
@@ -68,10 +69,7 @@ function CurrencyComparison({ currency }: { currency: PricingCurrency }) {
 
   return (
     <>
-      <h2
-        className="text-balance text-center text-3xl tracking-tight sm:text-4xl"
-        id="comparison-heading"
-      >
+      <h2 className="text-balance text-center text-3xl tracking-tight sm:text-4xl">
         {t("comparison-title", { price: formatter.format(price.amount) })}
       </h2>
       <div className="mx-auto grid w-full max-w-5xl gap-10 md:grid-cols-3">
@@ -119,9 +117,11 @@ export function PricingComparison() {
       id="comparison"
     >
       <div className="mx-auto grid w-full max-w-7xl gap-12">
-        <PricingCurrencies>
-          {(currency) => <CurrencyComparison currency={currency} />}
-        </PricingCurrencies>
+        {Arr.map(PricingCurrencySchema.literals, (currency) => (
+          <CurrencyBranch currency={currency} key={currency}>
+            <CurrencyComparison currency={currency} />
+          </CurrencyBranch>
+        ))}
       </div>
     </section>
   );

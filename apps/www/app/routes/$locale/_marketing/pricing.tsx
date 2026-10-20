@@ -16,7 +16,6 @@ import { PageField } from "@/components/marketing/shared/field.client";
 import { readRouteMessages } from "@/lib/i18n/messages.fn";
 import { type MarketingFaqItem, pricingFaqNumbers } from "@/lib/marketing/faq";
 import { getAppSocialArtwork } from "@/lib/og/app";
-import { pricingCurrencyScript } from "@/lib/pricing/currency";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { createSeoHead, toRouterHead } from "@/lib/seo/head";
 
@@ -91,7 +90,6 @@ export const Route = createFileRoute("/$locale/_marketing/pricing")({
           type: "website",
         })
       ),
-      scripts: [{ children: pricingCurrencyScript() }],
     };
   },
   component: PricingPage,

@@ -169,18 +169,30 @@ describe("pricing currency cookie", () => {
       new Headers({ "x-vercel-ip-country": "ID" })
     );
     expect(Option.getOrUndefined(cookie)).toBe(
-      "pricing_currency=IDR; Path=/; SameSite=Lax; Max-Age=31536000"
+      "pricing_currency=IDR; Path=/; SameSite=Lax; Max-Age=86400"
     );
   });
 
-  it("keeps a currency cookie that is already set", () => {
+  it("keeps a currency cookie that already matches the request country", () => {
+    const cookie = pricingCurrencyCookieFor(
+      new Headers({
+        cookie: "pricing_currency=IDR",
+        "x-vercel-ip-country": "ID",
+      })
+    );
+    expect(Option.isNone(cookie)).toBe(true);
+  });
+
+  it("replaces a currency cookie that differs from the request country", () => {
     const cookie = pricingCurrencyCookieFor(
       new Headers({
         cookie: "pricing_currency=EUR",
         "x-vercel-ip-country": "ID",
       })
     );
-    expect(Option.isNone(cookie)).toBe(true);
+    expect(Option.getOrUndefined(cookie)).toBe(
+      "pricing_currency=IDR; Path=/; SameSite=Lax; Max-Age=86400"
+    );
   });
 
   it("replaces a cookie that holds no known currency", () => {

@@ -106,25 +106,34 @@ export function readCurrencyCookie(
 /** The request header that names the visitor's country, as the hosting platform sets it. */
 const PRICING_COUNTRY_HEADER = "x-vercel-ip-country";
 
-/** The lifetime of the currency cookie, which keeps a visitor's price currency for a year. */
-const PRICING_CURRENCY_MAX_AGE = 60 * 60 * 24 * 365;
+/**
+ * The lifetime of the currency cookie. The country of each function-handled
+ * response is read again, so a day is the longest a stale currency can stay when
+ * a request names no country.
+ */
+const PRICING_CURRENCY_MAX_AGE = 60 * 60 * 24;
 
 /**
  * The Set-Cookie value that keeps the price currency of a visitor, from the country
- * of the request when no currency cookie is set yet. None when the cookie already
- * holds a currency, or when the request names no country, so a build or a local
- * request sets nothing.
+ * of the request. It is written when the cookie is missing or holds another
+ * currency than the request's country, so a visitor who moves gets the new price
+ * on the next response. None when the cookie already matches, or when the request
+ * names no country, so a build or a local request sets nothing.
  */
 export function pricingCurrencyCookieFor(
   headers: Headers
 ): Option.Option<string> {
-  if (Option.isSome(readCurrencyCookie(headers))) {
-    return Option.none();
-  }
-  return Option.map(
-    Option.fromNullishOr(headers.get(PRICING_COUNTRY_HEADER)),
-    (country) =>
-      `${PRICING_CURRENCY_COOKIE}=${currencyForCountry(country)}; Path=/; SameSite=Lax; Max-Age=${PRICING_CURRENCY_MAX_AGE}`
+  return Option.fromNullishOr(headers.get(PRICING_COUNTRY_HEADER)).pipe(
+    Option.flatMap((country) => {
+      const currency = currencyForCountry(country);
+      const cookie = readCurrencyCookie(headers);
+      if (Option.isSome(cookie) && cookie.value === currency) {
+        return Option.none();
+      }
+      return Option.some(
+        `${PRICING_CURRENCY_COOKIE}=${currency}; Path=/; SameSite=Lax; Max-Age=${PRICING_CURRENCY_MAX_AGE}`
+      );
+    })
   );
 }
 

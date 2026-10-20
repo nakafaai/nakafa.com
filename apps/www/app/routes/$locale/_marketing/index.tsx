@@ -32,7 +32,6 @@ import { readRouteMessages } from "@/lib/i18n/messages.fn";
 import type { MarketingFaqItem } from "@/lib/marketing/faq";
 import { readHomeCurriculaFn, readHomeTryout } from "@/lib/marketing/home.fn";
 import { getAppSocialArtwork } from "@/lib/og/app";
-import { pricingCurrencyScript } from "@/lib/pricing/currency";
 import { createSeoHead, toRouterHead } from "@/lib/seo/head";
 
 /**
@@ -149,7 +148,6 @@ export const Route = createFileRoute("/$locale/_marketing/")({
           type: "website",
         })
       ),
-      scripts: [{ children: pricingCurrencyScript() }],
     };
   },
   component: HomePage,

@@ -1,6 +1,8 @@
+import { Array as Arr } from "effect";
 import type { ComponentType } from "react";
-import { PricingCurrencies } from "@/components/marketing/about/pricing/by-currency";
+import { CurrencyBranch } from "@/components/marketing/about/pricing/currency";
 import { getProPricingDisplay } from "@/components/marketing/about/pricing/display";
+import { PricingCurrencySchema } from "@/lib/pricing/monthly";
 
 type PricingDisplay = ReturnType<typeof getProPricingDisplay>;
 type PricingPlan = keyof PricingDisplay;
@@ -34,9 +36,11 @@ export function PricingPrice({ period, Price, plan }: PricingPriceProps) {
       data-pricing-price-slot={plan}
     >
       <div className="flex h-10 items-baseline gap-2 whitespace-nowrap">
-        <PricingCurrencies>
-          {(currency) => <Price price={getProPricingDisplay(currency)[plan]} />}
-        </PricingCurrencies>
+        {Arr.map(PricingCurrencySchema.literals, (currency) => (
+          <CurrencyBranch currency={currency} key={currency}>
+            <Price price={getProPricingDisplay(currency)[plan]} />
+          </CurrencyBranch>
+        ))}
         {period ? (
           <span className="text-muted-foreground">{period}</span>
         ) : null}

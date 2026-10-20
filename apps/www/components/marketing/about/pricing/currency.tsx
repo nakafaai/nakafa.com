@@ -1,10 +1,6 @@
 import { cva } from "class-variance-authority";
-import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
-import {
-  type PricingCurrency,
-  PricingCurrencySchema,
-} from "@/lib/pricing/monthly";
+import type { PricingCurrency } from "@/lib/pricing/monthly";
 
 /**
  * The layout of one currency branch. The root document sets the visitor's
@@ -22,22 +18,23 @@ const currencyBranchVariants = cva("", {
 });
 
 /**
- * Renders one branch per price currency. The static page carries every price,
- * so the visitor's currency is chosen by the pre-paint script and never by a
- * request-time read.
+ * One price currency's branch. A page renders one branch per currency, so the
+ * static page carries every price, and the visitor's currency is chosen by the
+ * pre-paint script and never by a request-time read.
  */
-export function PricingCurrencies({
+export function CurrencyBranch({
   children,
+  currency,
 }: {
-  children: (currency: PricingCurrency) => ReactNode;
+  children: ReactNode;
+  currency: PricingCurrency;
 }) {
-  return Arr.map(PricingCurrencySchema.literals, (currency) => (
+  return (
     <div
       className={currencyBranchVariants({ currency })}
       data-price-currency={currency}
-      key={currency}
     >
-      {children(currency)}
+      {children}
     </div>
-  ));
+  );
 }
