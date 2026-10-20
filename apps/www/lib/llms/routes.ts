@@ -32,7 +32,7 @@ const LlmsProxyRouteDecisionSchema = Schema.Union([
 export type LlmsProxyRouteDecision = typeof LlmsProxyRouteDecisionSchema.Type;
 
 const HTML_MEDIA_TYPE = HttpMediaTypeSchema.make("text/html; charset=utf-8");
-const LLMS_MARKDOWN_MEDIA_TYPE = HttpMediaTypeSchema.make(
+export const LLMS_MARKDOWN_MEDIA_TYPE = HttpMediaTypeSchema.make(
   "text/markdown; charset=utf-8"
 );
 const DOCUMENT_MEDIA_TYPES = [
@@ -118,7 +118,7 @@ function isReadMethod(method: string) {
 }
 
 /** Removes one explicit Markdown suffix while preserving its exact spelling. */
-function readLlmsMarkdownPathname(pathname: string) {
+export function readLlmsMarkdownPathname(pathname: string) {
   const markdownExtension = readLlmsMarkdownExtension(pathname);
 
   return {

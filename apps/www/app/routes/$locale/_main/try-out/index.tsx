@@ -1,3 +1,4 @@
+import { makeBreadcrumbNodes } from "@repo/seo/json-ld/node";
 import { createFileRoute } from "@tanstack/react-router";
 import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
 import { FooterContent } from "@/components/shared/content/footer";
@@ -9,7 +10,6 @@ import { TryoutHubClient } from "@/components/tryout/catalog/hub.client";
 import { readTryoutHubFn } from "@/components/tryout/route/catalog.fn";
 import { createTryoutHead } from "@/components/tryout/route/head";
 import { readTryoutCatalogHeaders } from "@/components/tryout/route/headers";
-import { readBreadcrumbNodes } from "@/lib/seo/json-ld";
 
 /** The try-out hub: every exam family the catalog publishes, grouped by country. */
 export const Route = createFileRoute("/$locale/_main/try-out/")({
@@ -22,7 +22,7 @@ export const Route = createFileRoute("/$locale/_main/try-out/")({
           description: loaderData.description,
           image: loaderData.image,
           indexable: true,
-          jsonLd: readBreadcrumbNodes(loaderData.breadcrumbs),
+          jsonLd: makeBreadcrumbNodes(loaderData.breadcrumbs),
           locale: params.locale,
           title: loaderData.labels.tryOut,
         }),
