@@ -1,4 +1,4 @@
-import { captureException } from "@repo/analytics/posthog/browser";
+import { captureException } from "@repo/analytics/posthog/capture";
 import {
   createFileRoute,
   type ErrorComponentProps,

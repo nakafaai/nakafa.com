@@ -1,14 +1,21 @@
-import { afterEach, describe, expect, expectTypeOf, it } from "@effect/vitest";
+import {
+  afterEach,
+  beforeAll,
+  describe,
+  expect,
+  expectTypeOf,
+  it,
+} from "@effect/vitest";
 import { ToastMessage } from "@repo/design-system/lib/toast/message";
 import { type ToastCopy, toast } from "@repo/design-system/lib/toast/notify";
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { toast as sonner } from "sonner";
 import { IntlProvider } from "use-intl";
 
-vi.mock("sonner", () => ({
+const sonnerModule = vi.hoisted(() => ({
   toast: Object.assign(
     vi.fn(() => "shown"),
     {
@@ -20,9 +27,23 @@ vi.mock("sonner", () => ({
   ),
 }));
 
+vi.mock("@repo/analytics/posthog/capture", () => ({
+  captureException: vi.fn(),
+}));
+
+vi.mock("sonner", () => sonnerModule);
+
 afterEach(() => vi.clearAllMocks());
 
 describe("toast", () => {
+  // The first toast starts loading Sonner, and the calls made before it run once it
+  // has loaded. Waiting for that once keeps every later toast synchronous.
+  beforeAll(async () => {
+    toast.info({ title: "action-error.title" });
+    await vi.waitFor(() => expect(sonner.info).toHaveBeenCalled());
+    vi.clearAllMocks();
+  });
+
   it("hands Sonner the keys of the title and the description, with the place and id it is given", () => {
     toast.error(
       { title: "action-error.title", description: "action-error.description" },
@@ -145,5 +166,138 @@ describe("toast", () => {
 
     expect(sonner.dismiss).toHaveBeenNthCalledWith(1, "shown");
     expect(sonner.dismiss).toHaveBeenNthCalledWith(2, undefined);
+  });
+});
+
+describe("the first toast", () => {
+  /** Loads a fresh helper, so the test starts before any toast was shown. */
+  function loadFreshNotify() {
+    vi.resetModules();
+    return import("@repo/design-system/lib/toast/notify");
+  }
+
+  it("asks for the Toaster once, on the first toast, and tells each listener", async () => {
+    const notify = await loadFreshNotify();
+    const listener = vi.fn();
+    notify.subscribeToastRequests(listener);
+
+    expect(notify.isToastRequested()).toBe(false);
+    notify.toast.info({ title: "action-error.title" });
+    notify.toast.info({ title: "action-error.title" });
+
+    expect(notify.isToastRequested()).toBe(true);
+    expect(listener).toHaveBeenCalledOnce();
+  });
+
+  it("stops telling a listener that unsubscribed", async () => {
+    const notify = await loadFreshNotify();
+    const listener = vi.fn();
+    notify.subscribeToastRequests(listener)();
+
+    notify.toast.info({ title: "action-error.title" });
+
+    expect(listener).not.toHaveBeenCalled();
+  });
+
+  it("holds the toasts made before Sonner loads, and shows them in the order they were made", async () => {
+    const notify = await loadFreshNotify();
+    const { toast: sonnerToast } = await import("sonner");
+    notify.toast.success({ title: "action-error.title" });
+    notify.toast.error({ title: "action-error.title" });
+
+    expect(sonnerToast.success).not.toHaveBeenCalled();
+    await vi.waitFor(() => expect(sonnerToast.error).toHaveBeenCalledOnce());
+    expect(sonnerToast.success).toHaveBeenCalledOnce();
+    expect(
+      vi.mocked(sonnerToast.success).mock.invocationCallOrder[0]
+    ).toBeLessThan(
+      vi.mocked(sonnerToast.error).mock.invocationCallOrder[0] ??
+        Number.POSITIVE_INFINITY
+    );
+  });
+
+  it("shows a toast at once once Sonner has loaded", async () => {
+    const notify = await loadFreshNotify();
+    const { toast: sonnerToast } = await import("sonner");
+    notify.toast.info({ title: "action-error.title" });
+    await vi.waitFor(() => expect(sonnerToast.info).toHaveBeenCalledOnce());
+
+    notify.toast.info({ title: "action-error.title" });
+
+    expect(sonnerToast.info).toHaveBeenCalledTimes(2);
+  });
+
+  it("keeps the first held toasts when the wait overflows", async () => {
+    const notify = await loadFreshNotify();
+    const { toast: sonnerToast } = await import("sonner");
+    Arr.forEach(
+      Arr.makeBy(25, (index) => index),
+      (index) =>
+        notify.toast.info(
+          { title: "action-error.title" },
+          { id: `id-${index}` }
+        )
+    );
+
+    await vi.waitFor(() => expect(sonnerToast.info).toHaveBeenCalledTimes(20));
+    expect(sonnerToast.info).toHaveBeenNthCalledWith(
+      1,
+      expect.anything(),
+      expect.objectContaining({ id: "id-0" })
+    );
+    expect(sonnerToast.info).toHaveBeenLastCalledWith(
+      expect.anything(),
+      expect.objectContaining({ id: "id-19" })
+    );
+  });
+
+  it.effect("does not load Sonner for a dismiss before any toast", () =>
+    Effect.gen(function* () {
+      const sonnerLoads = vi.fn(() => sonnerModule);
+      vi.doMock("sonner", sonnerLoads);
+      const notify = yield* Effect.promise(() => loadFreshNotify());
+      const listener = vi.fn();
+      notify.subscribeToastRequests(listener);
+
+      notify.toast.dismiss("first");
+      yield* Effect.yieldNow;
+
+      expect(sonnerLoads).not.toHaveBeenCalled();
+      expect(listener).not.toHaveBeenCalled();
+      expect(notify.isToastRequested()).toBe(false);
+
+      // A toast request loads the same mock, so the spy above proves the absence.
+      notify.toast.info({ title: "action-error.title" });
+      yield* Effect.promise(() =>
+        vi.waitFor(() => expect(sonnerLoads).toHaveBeenCalledOnce())
+      );
+    })
+  );
+
+  it("loads Sonner again on the next toast after a failed load, and shows the held toasts then", async () => {
+    vi.doMock("sonner", () =>
+      Promise.reject(new Error("The Sonner chunk failed to load."))
+    );
+    const notify = await loadFreshNotify();
+    const { captureException } = await import(
+      "@repo/analytics/posthog/capture"
+    );
+    const listener = vi.fn();
+    notify.subscribeToastRequests(listener);
+
+    notify.toast.info({ title: "action-error.title" });
+    await vi.waitFor(() => expect(captureException).toHaveBeenCalledOnce());
+
+    vi.doMock("sonner", () => sonnerModule);
+    notify.toast.info({ title: "copy-success.title" });
+
+    await vi.waitFor(() =>
+      expect(sonnerModule.toast.info).toHaveBeenCalledTimes(2)
+    );
+    expect(captureException).toHaveBeenCalledExactlyOnceWith(
+      expect.anything(),
+      { source: "toast-load" }
+    );
+    expect(listener).toHaveBeenCalledOnce();
   });
 });

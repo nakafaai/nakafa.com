@@ -1,4 +1,4 @@
-import { captureException } from "@repo/analytics/posthog/browser";
+import { captureException } from "@repo/analytics/posthog/capture";
 import type { Locale } from "@repo/internationalization/src/locale";
 import { useEffect } from "react";
 import { ActionLink } from "@/components/state/action";

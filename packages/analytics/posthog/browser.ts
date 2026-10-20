@@ -6,12 +6,12 @@ import {
   CONSENT_DECISION_MECHANISMS,
   CONSENT_NOTICE_VERSIONS,
 } from "@repo/analytics/consent";
-import { POSTHOG_PROXY_PATH } from "@repo/analytics/posthog/config";
 import {
-  createOperationalException,
-  decodeOperationalExceptionProperties,
-  type OperationalExceptionProperties,
-} from "@repo/analytics/posthog/exception";
+  type BrowserAnalyticsClient,
+  publishAnalyticsClient,
+  readAnalyticsClient,
+} from "@repo/analytics/posthog/capture";
+import { POSTHOG_PROXY_PATH } from "@repo/analytics/posthog/config";
 import {
   type AnalyticsIdentityAuthorization,
   type AnalyticsTier,
@@ -22,30 +22,7 @@ import {
   startPageviewTracking,
 } from "@repo/analytics/posthog/pageview";
 import { postHogPublicKeys } from "@repo/analytics/public";
-import {
-  Array as Arr,
-  DateTime,
-  Effect,
-  MutableRef,
-  Option,
-  Schema,
-} from "effect";
-import type { PostHog } from "posthog-js";
-
-type BrowserAnalyticsClient = Pick<
-  PostHog,
-  | "capture"
-  | "captureException"
-  | "get_explicit_consent_status"
-  | "get_property"
-  | "identify"
-  | "init"
-  | "opt_in_capturing"
-  | "opt_out_capturing"
-  | "register"
-  | "reset"
-  | "setPersonProperties"
->;
+import { DateTime, Effect, MutableRef, Schema } from "effect";
 
 /** Consent provenance that every granted browser event carries into PostHog. */
 const BrowserAnalyticsConsentProvenanceFields = {
@@ -72,29 +49,12 @@ export type BrowserAnalyticsIdentity =
   typeof BrowserAnalyticsIdentitySchema.Type;
 
 const browserAnalyticsLoadFailedCode = "BROWSER_ANALYTICS_LOAD_FAILED";
-const analyticsClient = MutableRef.make<BrowserAnalyticsClient | undefined>(
-  undefined
-);
 const analyticsTier = MutableRef.make<AnalyticsTier>("baseline");
 const identityAuthorization = MutableRef.make<AnalyticsIdentityAuthorization>({
   status: "unresolved",
 });
 /** Fires the deferred landing view once: the first counted view consumes it. */
 const initialPageviewCaptured = MutableRef.make(false);
-
-/** Sends one handled exception through a client that has loaded. */
-type ExceptionCapture = (client: BrowserAnalyticsClient) => void;
-
-/**
- * Handled exceptions raised before the baseline client loads, in the order they
- * happened. The idle wait can run for seconds, so these wait here and reach
- * PostHog once the client exists. The queue keeps its first entries and stops
- * there, so a load that never completes cannot grow it without limit.
- */
-const PENDING_EXCEPTION_LIMIT = 20;
-const pendingExceptionCaptures = MutableRef.make<readonly ExceptionCapture[]>(
-  []
-);
 
 /** Raised when the baseline client cannot initialize or upgrade. */
 export class BrowserAnalyticsLoadFailed extends Schema.TaggedError<BrowserAnalyticsLoadFailed>()(
@@ -139,14 +99,6 @@ function captureInitialPageview(client: BrowserAnalyticsClient) {
   MutableRef.set(initialPageviewCaptured, true);
 }
 
-/** Sends the exceptions that waited for the client, then empties the queue. */
-function sendPendingExceptionCaptures(client: BrowserAnalyticsClient) {
-  Arr.forEach(MutableRef.get(pendingExceptionCaptures), (capture) =>
-    capture(client)
-  );
-  MutableRef.set(pendingExceptionCaptures, []);
-}
-
 /**
  * Loads the always-on baseline client without changing capture consent.
  *
@@ -163,7 +115,7 @@ export const enableBaselineAnalytics = Effect.fn(
   "Analytics.enableBaselineAnalytics"
 )(function* <E = never>(load?: Effect.Effect<BrowserAnalyticsClient, E>) {
   return yield* Effect.gen(function* () {
-    if (MutableRef.get(analyticsClient)) {
+    if (readAnalyticsClient()) {
       return;
     }
 
@@ -230,8 +182,7 @@ export const enableBaselineAnalytics = Effect.fn(
       },
       catch: browserAnalyticsLoadFailure,
     });
-    MutableRef.set(analyticsClient, client);
-    yield* Effect.sync(() => sendPendingExceptionCaptures(client));
+    yield* Effect.sync(() => publishAnalyticsClient(client));
     // A navigation that lands before the first settled admission counts
     // instead, so the admission must not recount the same destination.
     yield* startPageviewTracking(client, () =>
@@ -286,7 +237,7 @@ function synchronizeIdentity(
 export const admitConsentedIdentity = Effect.fn(
   "Analytics.admitConsentedIdentity"
 )(function* (identity: BrowserAnalyticsIdentity) {
-  const client = MutableRef.get(analyticsClient);
+  const client = readAnalyticsClient();
   if (!client) {
     return yield* new BrowserAnalyticsLoadFailed({
       code: browserAnalyticsLoadFailedCode,
@@ -329,7 +280,7 @@ export const admitConsentedIdentity = Effect.fn(
 export const revokeToBaselineAnalytics = Effect.fn(
   "Analytics.revokeToBaselineAnalytics"
 )(function* () {
-  const client = MutableRef.get(analyticsClient);
+  const client = readAnalyticsClient();
   if (!client) {
     revokeGate();
     return;
@@ -382,41 +333,8 @@ function createConsentEventProperties(
 /** Clears a signed-out account identity without loading the analytics SDK. */
 export function resetBrowserAnalyticsIdentity(resetDeviceId = false) {
   MutableRef.set(identityAuthorization, { status: "unresolved" });
-  const client = MutableRef.get(analyticsClient);
+  const client = readAnalyticsClient();
   if (client) {
     client.reset(resetDeviceId);
-  }
-}
-
-/**
- * Captures one handled client exception through the always-on baseline.
- *
- * The minimized operational payload carries no identity or user content, so
- * scrubbed reliability reporting stays available in every consent state. The
- * baseline before_send gate additionally minimizes event URLs. Before the
- * baseline client loads, the capture waits in a bounded queue and is sent once
- * the client loads.
- */
-export function captureException(
-  error: unknown,
-  properties: OperationalExceptionProperties
-) {
-  const decodedProperties = decodeOperationalExceptionProperties(properties);
-  if (Option.isNone(decodedProperties)) {
-    return;
-  }
-  const capture: ExceptionCapture = (client) =>
-    client.captureException(
-      createOperationalException(error, decodedProperties.value),
-      decodedProperties.value
-    );
-  const client = MutableRef.get(analyticsClient);
-  if (client) {
-    capture(client);
-    return;
-  }
-  const pending = MutableRef.get(pendingExceptionCaptures);
-  if (pending.length < PENDING_EXCEPTION_LIMIT) {
-    MutableRef.set(pendingExceptionCaptures, Arr.append(pending, capture));
   }
 }

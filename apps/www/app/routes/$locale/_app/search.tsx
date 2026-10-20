@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Option, Schema } from "effect";
+import { NuqsAdapter } from "nuqs/adapters/tanstack-router";
 import { HomeHeader } from "@/components/home/header";
 import { InputSearch } from "@/components/search/input";
 import { SearchListItems } from "@/components/search/results";
@@ -16,7 +17,16 @@ export const Route = createFileRoute("/$locale/_app/search")({
   component: SearchPage,
 });
 
+/** The search screen reads its query state through the URL-state adapter it mounts. */
 function SearchPage() {
+  return (
+    <NuqsAdapter>
+      <SearchScreen />
+    </NuqsAdapter>
+  );
+}
+
+function SearchScreen() {
   const { name } = Route.useLoaderData();
   return (
     <div className="relative min-h-[calc(100svh-4rem)] lg:min-h-svh">

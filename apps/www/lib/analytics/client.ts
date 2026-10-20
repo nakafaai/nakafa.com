@@ -1,6 +1,6 @@
 "use client";
 
-import { captureException } from "@repo/analytics/posthog/browser";
+import { captureException } from "@repo/analytics/posthog/capture";
 import type { OperationalExceptionProperties } from "@repo/analytics/posthog/exception";
 import { Effect } from "effect";
 
