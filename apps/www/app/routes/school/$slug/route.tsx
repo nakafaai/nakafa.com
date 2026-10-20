@@ -9,7 +9,7 @@ import {
   Outlet,
 } from "@tanstack/react-router";
 import { cn } from "cn";
-import { Effect, Option, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 import { type ReactElement, useEffect } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { AppProviders } from "@/components/providers/app";
@@ -27,6 +27,7 @@ import { readShellClassesFn } from "@/lib/tenant/classes.fn";
 import { canManageSchool, roleOf, type SchoolRead } from "@/lib/tenant/frame";
 import { readSchoolFrameFn } from "@/lib/tenant/frame.fn";
 import { schoolHead } from "@/lib/tenant/head";
+import { reusesVisitFrame } from "@/lib/tenant/visit";
 
 /**
  * Every school document is private: it is never cached, it is not indexed, and
@@ -65,9 +66,10 @@ type SchoolVisit = Partial<
 >;
 
 /**
- * Starts the memo of one school visit. TanStack keeps a route's context object for
- * every navigation that keeps the layout's match, and makes a new one when a visit
- * begins, so the frame is read once per visit and a child navigation reuses it.
+ * Starts the memo of one school visit. TanStack keeps the layout's context object
+ * for every navigation that keeps its match, so a child navigation reuses the
+ * visit's frame. Hydration after a hard load starts a fresh memo, so the first child
+ * navigation after it reads the frame once more.
  */
 function startVisit() {
   const visit: SchoolVisit = {};
@@ -79,18 +81,24 @@ function startVisit() {
  * does not exist, and a viewer whom the school denies, answer not found. A visitor
  * sees the entry surface, and an account that is not a member sees the outsider
  * page. A member gets the shell, and every page of the school renders inside it.
- * The layout's beforeLoad runs on every navigation into the school, so a child
- * navigation reuses the visit's frame and calls the server for it only once.
+ * The layout's beforeLoad runs on every navigation into the school. A child
+ * navigation reuses the visit's frame, and a refresh reads it again.
  */
 export const Route = createFileRoute("/school/$slug")({
+  // Leaving the school drops its memo at once, so a return to it reads the frame again.
+  gcTime: 0,
   params: {
     parse: ({ slug }) => ({ slug: readSlug(slug) }),
   },
   validateSearch: Schema.toStandardSchemaV1(SchoolSearch),
   context: startVisit,
-  beforeLoad: async ({ cause, context, params }) => {
+  beforeLoad: async ({ cause, context, matches, params, routeId }) => {
     const { visit } = context;
-    const reuse = cause !== "enter";
+    const invalid = Arr.some(
+      matches,
+      (match) => match.routeId === routeId && match.invalid
+    );
+    const reuse = reusesVisitFrame({ cause, invalid });
     visit.school =
       reuse && visit.school !== undefined
         ? visit.school
