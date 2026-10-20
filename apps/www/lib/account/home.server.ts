@@ -20,7 +20,8 @@ import {
 } from "@/lib/account/access.server";
 import type { ScreenSeo } from "@/lib/account/head";
 import type { ChatInput, LocaleInput } from "@/lib/account/input";
-import { getHomeTrendingSubjects } from "@/lib/content/trending";
+import { captureServerExceptionSafely } from "@/lib/analytics/server";
+import { readHomeTrendingSubjects } from "@/lib/content/trending";
 import { readOptional, readRequired } from "@/lib/data/read.server";
 
 /** Home: the onboarding gate, the account name and the recently viewed subjects. */
@@ -69,12 +70,10 @@ export const homeScreenHandler = accountHandler(
         title: t("title"),
       };
       // The icon families stay on the server: each list passes only the looks it shows.
-      const trending = yield* Effect.promise(() =>
-        getHomeTrendingSubjects(locale)
-      );
+      const trending = yield* readHomeTrendingSubjects(locale);
       const recentLooks = getMaterialLooks(recentRows ?? []);
       return {
-        name: Option.getOrNull(
+        name: Option.getOrUndefined(
           Option.map(
             Option.fromNullishOr(account),
             (user) => user.authUser.name
@@ -149,10 +148,10 @@ export const chatScreenHandler = accountHandler(
       ).pipe(
         Effect.map(Option.fromNullishOr),
         Effect.catchTag("PreloadFailed", (error) =>
-          Effect.logError(
-            "The title of the chat could not be read on the server.",
-            error
-          ).pipe(Effect.as(Option.none<string>()))
+          captureServerExceptionSafely(error, {
+            operation: "chat.title",
+            source: "chat-title",
+          }).pipe(Effect.as(Option.none<string>()))
         )
       );
       return { chatId, title: Option.getOrUndefined(title) };
@@ -183,7 +182,7 @@ export const searchScreenHandler = accountHandler(
         title: t("search-title"),
       };
       return {
-        name: Option.getOrNull(
+        name: Option.getOrUndefined(
           Option.map(account, (user) => user.authUser.name)
         ),
         seo,

@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { Option } from "effect";
 import { HomeExplore } from "@/components/home/explore";
 import { HomeHeader } from "@/components/home/header";
 import { HomeContinueLearning } from "@/components/home/recent";
@@ -21,7 +22,7 @@ function HomePage() {
     <div className="relative min-h-[calc(100svh-4rem)] lg:min-h-svh">
       <div className="mx-auto w-full max-w-3xl px-6 py-24">
         <div className="relative flex flex-col gap-12">
-          <HomeHeader name={name} />
+          <HomeHeader name={Option.fromUndefinedOr(name)} />
           <HomeExplore />
           <HomeContinueLearning looks={recentLooks} subjects={recentRows} />
           <HomeTrending looks={trendingLooks} subjects={trending} />

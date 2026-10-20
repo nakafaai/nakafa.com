@@ -33,7 +33,10 @@ const mocks = vi.hoisted(() => ({
         request: Request
       ) => Effect.Effect<Effect.Effect<unknown, unknown>, unknown>
     >(),
-  getHomeTrendingSubjects: vi.fn<(locale: string) => Promise<readonly []>>(),
+  captureServerExceptionSafely:
+    vi.fn<(error: unknown, properties: unknown) => Effect.Effect<void>>(),
+  readHomeTrendingSubjects:
+    vi.fn<(locale: string) => Effect.Effect<readonly []>>(),
   setResponseHeader: vi.fn<(name: string, value: string) => void>(),
 }));
 
@@ -51,12 +54,17 @@ vi.mock("@/lib/data/preload.server", () => ({
 }));
 
 vi.mock("@/lib/content/trending", () => ({
-  getHomeTrendingSubjects: mocks.getHomeTrendingSubjects,
+  readHomeTrendingSubjects: mocks.readHomeTrendingSubjects,
+}));
+
+vi.mock("@/lib/analytics/server", () => ({
+  captureServerExceptionSafely: mocks.captureServerExceptionSafely,
 }));
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mocks.getHomeTrendingSubjects.mockResolvedValue([]);
+  mocks.readHomeTrendingSubjects.mockReturnValue(Effect.succeed([]));
+  mocks.captureServerExceptionSafely.mockReturnValue(Effect.void);
 });
 
 const account = {
@@ -183,7 +191,7 @@ describe("homeScreenHandler", () => {
       [contents.queries.recent.getRecentlyViewed, []],
     ]);
     const screen = await homeScreenHandler({ data: { locale: "en" } });
-    expect(screen.name).toBeNull();
+    expect(screen.name).toBeUndefined();
   });
 });
 
@@ -238,7 +246,7 @@ describe("chatScreenHandler", () => {
     expect(screen.title).toBeUndefined();
   });
 
-  it("logs a title that cannot be read and answers without it", async () => {
+  it("reports a title that cannot be read to PostHog and answers without it", async () => {
     sessionWith(Option.some("token"));
     mocks.preloadConfectQuery.mockReturnValue(
       Effect.fail({ _tag: "PreloadFailed", cause: "unreachable" })
@@ -247,6 +255,22 @@ describe("chatScreenHandler", () => {
       data: { id: "chat-1", locale: "en" },
     });
     expect(screen.title).toBeUndefined();
+    expect(mocks.captureServerExceptionSafely).toHaveBeenCalledExactlyOnceWith(
+      { _tag: "PreloadFailed", cause: "unreachable" },
+      { operation: "chat.title", source: "chat-title" }
+    );
+  });
+
+  it("answers without a title, and reports nothing, when the viewer may not read it", async () => {
+    sessionWith(Option.some("token"));
+    mocks.preloadConfectQuery.mockReturnValue(
+      Effect.fail({ _tag: "AuthFailure" })
+    );
+    const screen = await chatScreenHandler({
+      data: { id: "chat-1", locale: "en" },
+    });
+    expect(screen.title).toBeUndefined();
+    expect(mocks.captureServerExceptionSafely).not.toHaveBeenCalled();
   });
 });
 
@@ -255,7 +279,7 @@ describe("searchScreenHandler", () => {
     sessionWith(Option.none());
     const screen = await searchScreenHandler({ data: { locale: "en" } });
     expect(screen).toMatchObject({
-      name: null,
+      name: undefined,
       seo: { canonicalPath: "/en/search", indexable: true },
     });
     expect(mocks.preloadConfectQuery).not.toHaveBeenCalled();
@@ -272,7 +296,7 @@ describe("searchScreenHandler", () => {
     sessionWith(Option.some("token"));
     answerQueries([[auth.queries.getCurrentUser, null]]);
     const screen = await searchScreenHandler({ data: { locale: "en" } });
-    expect(screen.name).toBeNull();
+    expect(screen.name).toBeUndefined();
   });
 });
 

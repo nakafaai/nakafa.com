@@ -1,34 +1,60 @@
-import { HttpClient } from "@confect/js";
 import "@tanstack/react-start/server-only";
+import { HttpClient } from "@confect/js";
 import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import contents from "@repo/backend/confect/_generated/refs/contents";
-import { Effect } from "effect";
+import { trendingSubjectValidator } from "@repo/backend/confect/lib/validators/trending";
+import { Duration, Effect, Option, Schema } from "effect";
+import { readStoreEntry, writeStoreEntry } from "@/lib/content/store/entry";
 import { httpLayer } from "@/lib/convex/http";
 
+/** The ranking of one locale, as the home page lists it. */
+const TrendingSubjectsSchema = Schema.Array(trendingSubjectValidator);
+
+/** The tag of every stored ranking, so one purge drops all of them. */
+const TRENDING_TAG = "trending";
+
 /**
- * Reads one point-in-time homepage popularity snapshot.
- *
- * Trending is a low-freshness aggregate, so keeping one live subscription per
- * homepage visitor would amplify every popularity-counter update. Popularity
- * is live analytics rather than signed content, so it stays on the production
- * deployment while authored content builds from the isolated snapshot. The
- * ranking counts the last seven days and drops its oldest day once a night, so
- * a snapshot that is an hour old shows the same list for practical purposes:
- * the `hours` profile refreshes it at most once an hour, where the `minutes`
- * profile that it had refreshed it every minute and regenerated the page that
- * shows it each time. The Native Confect reads disable trace timestamps until
- * the network suspends, because Cache Components reject implicit clock access
- * during prerendering.
- *
- * @see https://nextjs.org/docs/messages/next-prerender-current-time
- * @see https://confect.dev/v10/clients/js/http
+ * The ranking counts the last seven days and drops its oldest day once a night,
+ * so a snapshot an hour old lists the same subjects for practical purposes. A
+ * visitor's home page therefore reads the deployment once an hour per locale,
+ * not once per visit.
  */
-export async function getHomeTrendingSubjects(locale: ActiveAppLocaleCode) {
-  return await Effect.runPromise(
-    Effect.flatMap(HttpClient.HttpClient, (client) =>
-      client.query(contents.queries.trending.getTrendingSubjects, {
-        locale,
-      })
-    ).pipe(Effect.provide(httpLayer()), Effect.withTracerTiming(false))
-  );
-}
+const TRENDING_LIFETIME = Duration.hours(1);
+
+/** Loads the ranking of one locale from the deployment. */
+const loadTrendingSubjects = Effect.fn("www.content.trending.load")(function* (
+  locale: ActiveAppLocaleCode
+) {
+  return yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
+    client.query(contents.queries.trending.getTrendingSubjects, { locale })
+  ).pipe(Effect.provide(httpLayer()));
+});
+
+/**
+ * Reads the ranking of one locale for the home page. A stored snapshot answers
+ * while it is fresh. Otherwise the deployment answers, and the answer is stored
+ * for an hour under the trending tag. Popularity is live analytics rather than
+ * signed content, so it does not follow a content release.
+ */
+export const readHomeTrendingSubjects = Effect.fn("www.content.trending.read")(
+  function* (locale: ActiveAppLocaleCode) {
+    const parts = ["trending", locale];
+    const stored = yield* readStoreEntry({
+      parts,
+      schema: TrendingSubjectsSchema,
+    });
+    if (Option.isSome(stored)) {
+      return stored.value;
+    }
+    const subjects = yield* loadTrendingSubjects(locale);
+    yield* writeStoreEntry({
+      name: "content.trending",
+      parts,
+      schema: TrendingSubjectsSchema,
+      tags: [TRENDING_TAG],
+      ttl: TRENDING_LIFETIME,
+      value: subjects,
+    });
+    return subjects;
+  }
+);

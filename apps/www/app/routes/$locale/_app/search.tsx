@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Schema } from "effect";
+import { Option, Schema } from "effect";
 import { HomeHeader } from "@/components/home/header";
 import { InputSearch } from "@/components/search/input";
 import { SearchListItems } from "@/components/search/results";
@@ -22,7 +22,7 @@ function SearchPage() {
     <div className="relative min-h-[calc(100svh-4rem)] lg:min-h-svh">
       <div className="mx-auto w-full max-w-3xl px-6 py-24">
         <div className="relative space-y-12">
-          <HomeHeader name={name} />
+          <HomeHeader name={Option.fromUndefinedOr(name)} />
           <div className="flex flex-col gap-2">
             <BackButton
               className="w-fit p-0 text-muted-foreground"

@@ -1,13 +1,13 @@
 import { ArrowDown02Icon } from "@hugeicons/core-free-icons";
+import type { TrendingSubject } from "@repo/backend/confect/lib/validators/trending";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import type { TileLook } from "@repo/design-system/lib/look";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import { MaterialRow } from "@/components/home/material";
-import type { getHomeTrendingSubjects } from "@/lib/content/trending";
 
 /** The trending subjects of the home page, read by the route loader with their looks. */
-type TrendingSubjects = Awaited<ReturnType<typeof getHomeTrendingSubjects>>;
+type TrendingSubjects = readonly TrendingSubject[];
 
 /**
  * Renders the home-screen trending learning objects. The route loader reads the
