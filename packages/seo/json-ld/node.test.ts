@@ -3,6 +3,7 @@ import {
   makeBookNode,
   makeBreadcrumbNodes,
   makeCollectionPageNode,
+  makeFaqPageNode,
 } from "@repo/seo/json-ld/node";
 
 describe("makeBreadcrumbNodes", () => {
@@ -82,6 +83,44 @@ describe("makeBookNode", () => {
       isAccessibleForFree: true,
       numberOfPages: 7,
       position: 1,
+    });
+  });
+});
+
+describe("makeFaqPageNode", () => {
+  it("returns one FAQPage node whose questions carry their answers in order", () => {
+    expect(
+      makeFaqPageNode({
+        inLanguage: "en",
+        items: [
+          {
+            answer: "Start with arithmetic.",
+            question: "How do I learn math?",
+          },
+          { answer: "Yes, it is free.", question: "Is it free?" },
+        ],
+        url: "https://nakafa.com/en",
+      })
+    ).toEqual({
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      inLanguage: "en",
+      mainEntity: [
+        {
+          "@type": "Question",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: "Start with arithmetic.",
+          },
+          name: "How do I learn math?",
+        },
+        {
+          "@type": "Question",
+          acceptedAnswer: { "@type": "Answer", text: "Yes, it is free." },
+          name: "Is it free?",
+        },
+      ],
+      url: "https://nakafa.com/en",
     });
   });
 });

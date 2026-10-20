@@ -1,7 +1,6 @@
 import { NINA_RESPONSE_CREDITS } from "@repo/backend/confect/credits/constants";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
-import { BreadcrumbJsonLd } from "@repo/seo/json-ld/breadcrumb";
-import { FAQPageJsonLd } from "@repo/seo/json-ld/faq-page";
+import { makeBreadcrumbNodes, makeFaqPageNode } from "@repo/seo/json-ld/node";
 import { createFileRoute } from "@tanstack/react-router";
 import { Array as Arr } from "effect";
 import { createTranslator, useTranslations } from "use-intl";
@@ -23,49 +22,80 @@ import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { createSeoHead, toRouterHead } from "@/lib/seo/head";
 
 /**
- * The pricing page. The loader names the page's title and description, and
- * carries the price text of all three currencies, so the first HTML holds each
- * of them and the head script keeps the one the visitor sees.
+ * The pricing page. The loader names the page's title and description, carries
+ * the price text of all three currencies, and reads the questions and the
+ * breadcrumb labels, so the first HTML and the head hold the same structured data.
  */
 export const Route = createFileRoute("/$locale/_marketing/pricing")({
   loader: async ({ params }) => {
     const messages = await readRouteMessages({
-      data: { locale: params.locale, namespaces: ["PricingPage"] },
+      data: { locale: params.locale, namespaces: ["Common", "PricingPage"] },
     });
     const t = createTranslator({
       locale: params.locale,
       messages,
       namespace: "PricingPage",
     });
+    const tCommon = createTranslator({
+      locale: params.locale,
+      messages,
+      namespace: "Common",
+    });
     return {
+      breadcrumb: {
+        home: tCommon("home"),
+        pricing: t("breadcrumb"),
+      },
       description: t("metadata-description"),
+      faqs: Arr.map(
+        pricingFaqNumbers,
+        (number): MarketingFaqItem => ({
+          answer: t(`a${number}`, { cost: NINA_RESPONSE_CREDITS }),
+          question: t(`q${number}`),
+        })
+      ),
       prices: getProMonthlyPriceTexts(),
       title: t("metadata-title"),
     };
   },
-  head: ({ loaderData, params }) =>
-    loaderData === undefined
-      ? {}
-      : {
-          ...toRouterHead(
-            createSeoHead({
-              canonicalPath: `/${params.locale}/pricing`,
-              description: loaderData.description,
-              image: getAppSocialArtwork({
-                key: "pricing",
-                locale: params.locale,
-                publicPath: "pricing",
-              }),
-              indexable: true,
-              jsonLd: [],
-              locale: params.locale,
-              absoluteTitle: loaderData.title,
-              parts: [],
-              type: "website",
-            })
-          ),
-          scripts: [{ children: pricingCurrencyScript() }],
-        },
+  head: ({ loaderData, params }) => {
+    if (loaderData === undefined) {
+      return {};
+    }
+    const url = `${COMPANY_IDENTITY.url}/${params.locale}/pricing`;
+    return {
+      ...toRouterHead(
+        createSeoHead({
+          absoluteTitle: loaderData.title,
+          canonicalPath: `/${params.locale}/pricing`,
+          description: loaderData.description,
+          image: getAppSocialArtwork({
+            key: "pricing",
+            locale: params.locale,
+            publicPath: "pricing",
+          }),
+          indexable: true,
+          jsonLd: [
+            ...makeBreadcrumbNodes(
+              createBreadcrumbItems(params.locale, [
+                { name: loaderData.breadcrumb.home, path: "" },
+                { name: loaderData.breadcrumb.pricing, path: "/pricing" },
+              ])
+            ),
+            makeFaqPageNode({
+              inLanguage: params.locale,
+              items: loaderData.faqs,
+              url,
+            }),
+          ],
+          locale: params.locale,
+          parts: [],
+          type: "website",
+        })
+      ),
+      scripts: [{ children: pricingCurrencyScript() }],
+    };
+  },
   component: PricingPage,
 });
 
@@ -97,38 +127,17 @@ function PricingPagePlans() {
 
 /** The pricing page: its plans, comparison, schools and questions. */
 function PricingPage() {
-  const { locale } = Route.useParams();
-  const tCommon = useTranslations("Common");
-  const tPricingPage = useTranslations("PricingPage");
-  const faqItems: MarketingFaqItem[] = Arr.map(pricingFaqNumbers, (number) => ({
-    answer: tPricingPage(`a${number}`, { cost: NINA_RESPONSE_CREDITS }),
-    question: tPricingPage(`q${number}`),
-  }));
-  const url = `${COMPANY_IDENTITY.url}/${locale}/pricing`;
+  const { faqs } = Route.useLoaderData();
 
   return (
     <>
-      <BreadcrumbJsonLd
-        breadcrumbItems={createBreadcrumbItems(locale, [
-          { name: tCommon("home"), path: "" },
-          { name: tPricingPage("breadcrumb"), path: "/pricing" },
-        ])}
-      />
-      <FAQPageJsonLd
-        inLanguage={locale}
-        mainEntity={Arr.map(faqItems, (item) => ({
-          acceptedAnswer: { "@type": "Answer", text: item.answer },
-          name: item.question,
-        }))}
-        url={url}
-      />
       <PageField />
       <div className="relative grid">
         <PricingPagePlans />
         <DeferredPricingToys />
         <PricingComparison />
         <Schools herd={PRICING_CLASS_HERD} />
-        <Faq faqs={faqItems} />
+        <Faq faqs={faqs} />
       </div>
     </>
   );

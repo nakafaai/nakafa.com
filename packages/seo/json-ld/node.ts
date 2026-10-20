@@ -18,6 +18,19 @@ const CollectionPageInput = Schema.Struct({
   url: Schema.String,
 });
 
+/** One question of a FAQ page, with the answer that the page gives it. */
+const FaqItem = Schema.Struct({
+  answer: Schema.String,
+  question: Schema.String,
+});
+
+/** The FAQ page that one page answers, with its questions in the order it asks them. */
+const FaqPageInput = Schema.Struct({
+  inLanguage: Schema.String,
+  items: Schema.Array(FaqItem),
+  url: Schema.String,
+});
+
 /** The Quran surah that one book page describes, with its author and its size. */
 const BookInput = Schema.Struct({
   author: Schema.Struct({
@@ -63,6 +76,21 @@ export function makeCollectionPageNode(input: typeof CollectionPageInput.Type) {
     ...(input.datePublished === undefined
       ? {}
       : { datePublished: input.datePublished }),
+  };
+}
+
+/** The FAQ page node of one page, with each question and its answer. */
+export function makeFaqPageNode(input: typeof FaqPageInput.Type) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    url: input.url,
+    inLanguage: input.inLanguage,
+    mainEntity: Arr.map(input.items, (item) => ({
+      "@type": "Question",
+      name: item.question,
+      acceptedAnswer: { "@type": "Answer", text: item.answer },
+    })),
   };
 }
 
