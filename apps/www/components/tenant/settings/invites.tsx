@@ -4,7 +4,6 @@ import {
   type PaginatedQueryItem,
   PaginatedQueryResult,
   useMutation,
-  usePaginatedQuery,
 } from "@confect/react";
 import { MoreHorizontalIcon } from "@hugeicons/core-free-icons";
 import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
@@ -45,11 +44,20 @@ import { SettingsPage } from "@/components/tenant/settings/page";
 import { saveSchool } from "@/components/tenant/settings/save.client";
 import { isDraft } from "@/components/tenant/settings/state";
 import { SchoolDateTime } from "@/components/tenant/settings/time";
+import {
+  type PreloadedPage,
+  usePaginatedPreloaded,
+} from "@/lib/data/paginated";
 
 const SOURCE = "components/tenant/settings/invites";
 
 /** How many invites one page of the list loads, and each page after it. */
-const PAGE_SIZE = 25;
+export const PAGE_SIZE = 25;
+
+/** The first page of the list, which its loader read on the server. */
+export type InvitesFirstPage = PreloadedPage<
+  PaginatedQueryItem<typeof tenancy.invites.list>
+>;
 
 /** One pending invite as the invites list shows it. */
 type InviteItem = PaginatedQueryItem<typeof tenancy.invites.list>;
@@ -66,7 +74,13 @@ const inviteColumns = createColumnHelper<
  * revokes; an expired one stays listed as expired and is sent again as a new invite. With no
  * invite, the table says what it will hold. The list loads more rows as its end comes into view.
  */
-export function SchoolInvitesSettings({ slug }: { slug: TenantSlug }) {
+export function SchoolInvitesSettings({
+  first,
+  slug,
+}: {
+  first: InvitesFirstPage | undefined;
+  slug: TenantSlug;
+}) {
   const t = useTranslations("SchoolSettings");
   const locale = useLocale();
   const sendLocale = Option.getOrUndefined(
@@ -83,7 +97,7 @@ export function SchoolInvitesSettings({ slug }: { slug: TenantSlug }) {
       }
     >
       <ReadBoundary>
-        <SchoolInvitesBody sendLocale={sendLocale} slug={slug} />
+        <SchoolInvitesBody first={first} sendLocale={sendLocale} slug={slug} />
       </ReadBoundary>
       <SchoolInviteDialog
         open={isInviting}
@@ -96,17 +110,20 @@ export function SchoolInvitesSettings({ slug }: { slug: TenantSlug }) {
 
 /** The invites of the school, read a page at a time, with the table and its end. */
 function SchoolInvitesBody({
+  first,
   sendLocale,
   slug,
 }: {
+  first: InvitesFirstPage | undefined;
   sendLocale: typeof ActiveAppLocaleCodeSchema.Type | undefined;
   slug: TenantSlug;
 }) {
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const pagination = usePaginatedQuery(
+  const pagination = usePaginatedPreloaded(
     tenancy.invites.list,
     isSettled ? { slug } : "skip",
-    { initialNumItems: PAGE_SIZE }
+    { initialNumItems: PAGE_SIZE },
+    first
   );
 
   const failed = PaginatedQueryResult.isFailure(pagination);
@@ -181,7 +198,7 @@ function SchoolInviteTable({
         info.row.original.status === "expired" ? (
           t("invite-expired")
         ) : (
-          <SchoolDateTime at={info.getValue()} slug={slug} />
+          <SchoolDateTime at={info.getValue()} />
         ),
       header: t("invite-expires"),
       id: "expires",

@@ -5,12 +5,9 @@ import {
   PaginatedQueryResult,
   QueryResult,
   useMutation,
-  usePaginatedQuery,
-  useQuery,
 } from "@confect/react";
 import { BookOpen01Icon, MoreHorizontalIcon } from "@hugeicons/core-free-icons";
 import access from "@repo/backend/confect/_generated/refs/access";
-import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { BuiltinRole } from "@repo/backend/confect/access/schema";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -55,6 +52,7 @@ import { reloadPage } from "@/components/shared/reload";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { useViewerQuery } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { RoleBadge } from "@/components/tenant/role";
 import {
@@ -69,11 +67,20 @@ import {
 import { saveSchool } from "@/components/tenant/settings/save.client";
 import { scopeNameOf } from "@/components/tenant/settings/scope";
 import { isDraft } from "@/components/tenant/settings/state";
+import {
+  type PreloadedPage,
+  usePaginatedPreloaded,
+} from "@/lib/data/paginated";
 
 const SOURCE = "components/tenant/settings/roles";
 
 /** How many grants one page of the list loads, and each page after it. */
-const PAGE_SIZE = 25;
+export const PAGE_SIZE = 25;
+
+/** The first page of the list, which its loader read on the server. */
+export type RolesFirstPage = PreloadedPage<
+  PaginatedQueryItem<typeof access.grants.list>
+>;
 
 /** One active grant of the school as the grants list shows it. */
 type GrantItem = PaginatedQueryItem<typeof access.grants.list>;
@@ -83,7 +90,13 @@ type GrantItem = PaginatedQueryItem<typeof access.grants.list>;
  * Give role opens the dialog that gives a role of the whole school to a person. The
  * grants sit in a data table, and each grant's revoke action sits in its row menu.
  */
-export function SchoolRolesSettings({ slug }: { slug: TenantSlug }) {
+export function SchoolRolesSettings({
+  first,
+  slug,
+}: {
+  first: RolesFirstPage | undefined;
+  slug: TenantSlug;
+}) {
   const t = useTranslations("SchoolSettings");
   const [isGuiding, setIsGuiding] = useState(false);
   const [isGiving, setIsGiving] = useState(false);
@@ -108,7 +121,7 @@ export function SchoolRolesSettings({ slug }: { slug: TenantSlug }) {
       }
     >
       <ReadBoundary>
-        <SchoolGrantsBody slug={slug} />
+        <SchoolGrantsBody first={first} slug={slug} />
       </ReadBoundary>
       <SchoolRoleGuide open={isGuiding} setOpen={setIsGuiding} />
       <SchoolGrantDialog open={isGiving} setOpen={setIsGiving} slug={slug} />
@@ -117,12 +130,19 @@ export function SchoolRolesSettings({ slug }: { slug: TenantSlug }) {
 }
 
 /** The grants of the school, read a page at a time, with the table and its end. */
-function SchoolGrantsBody({ slug }: { slug: TenantSlug }) {
+function SchoolGrantsBody({
+  first,
+  slug,
+}: {
+  first: RolesFirstPage | undefined;
+  slug: TenantSlug;
+}) {
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const pagination = usePaginatedQuery(
+  const pagination = usePaginatedPreloaded(
     access.grants.list,
     isSettled ? { slug } : "skip",
-    { initialNumItems: PAGE_SIZE }
+    { initialNumItems: PAGE_SIZE },
+    first
   );
 
   const failed = PaginatedQueryResult.isFailure(pagination);
@@ -157,8 +177,7 @@ function SchoolGrantTable({
 }) {
   const t = useTranslations("SchoolSettings");
   const tSchool = useTranslations("School");
-  const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const viewer = useQuery(tenancy.viewer.get, isSettled ? { slug } : "skip");
+  const viewer = useViewerQuery();
 
   if (Arr.isReadonlyArrayEmpty(grants)) {
     return (

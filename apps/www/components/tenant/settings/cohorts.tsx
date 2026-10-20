@@ -1,6 +1,7 @@
 "use client";
 
-import { QueryResult, useMutation, useQuery } from "@confect/react";
+import type { Ref } from "@confect/core";
+import { QueryResult, useMutation } from "@confect/react";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import {
   COHORT_GRADE_MAX,
@@ -30,12 +31,20 @@ import { buttonVariants } from "@repo/design-system/lib/button";
 import { Link } from "@repo/internationalization/src/navigation";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, Option, Schema } from "effect";
-import { type ReactNode, useId, useState, useTransition } from "react";
+import {
+  createContext,
+  type ReactNode,
+  use,
+  useId,
+  useState,
+  useTransition,
+} from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/providers/convex";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { useViewerQuery } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { isDenied } from "@/components/tenant/refusal";
 import {
@@ -51,6 +60,7 @@ import {
   type UnitId,
 } from "@/components/tenant/settings/unit";
 import { NoActiveUnit } from "@/components/tenant/settings/unitless";
+import { usePreloadedQueryResult } from "@/lib/data/preloaded";
 
 const SOURCE = "components/tenant/settings/cohorts";
 
@@ -67,26 +77,48 @@ const gradeItems = Arr.makeBy(
 const cohortColumns = createColumnHelper<typeof dataTableFeatures, Cohort>();
 
 /**
+ * The first screen of the cohorts tab, which its loader read for the school's first active unit: the unit,
+ * its active period, and the cohorts of that period. A unit or a period that the tab chose later reads live.
+ */
+export interface CohortsPreload {
+  readonly active: Ref.Returns<typeof tenancy.cohorts.activePeriod> | undefined;
+  readonly cohorts: Ref.Returns<typeof tenancy.cohorts.list> | undefined;
+  readonly unitId: UnitId;
+}
+
+/** The loader's first screen of the cohorts tab, which the tab's reads take their first values from. */
+const CohortsPreloadContext = createContext<CohortsPreload | undefined>(
+  undefined
+);
+
+/**
  * Renders the cohorts of the school's unit, which belong to the unit's active period: the unit
  * choice above the table when the school has more than one unit, and the page's one action, Add
  * cohort, in the header once the unit has an active period. A school with no active unit says
  * so and links to the units, because a cohort belongs to a period of a unit.
  */
-export function SchoolCohortsSettings({ slug }: { slug: TenantSlug }) {
+export function SchoolCohortsSettings({
+  preload,
+  slug,
+}: {
+  preload: CohortsPreload | undefined;
+  slug: TenantSlug;
+}) {
   return (
-    <ReadBoundary
-      fallback={(failure) => <SettingsPage>{failure}</SettingsPage>}
-      read={{ args: { slug }, ref: tenancy.viewer.get }}
-    >
-      <SchoolCohortsContent slug={slug} />
-    </ReadBoundary>
+    <CohortsPreloadContext value={preload}>
+      <ReadBoundary
+        fallback={(failure) => <SettingsPage>{failure}</SettingsPage>}
+        read={{ args: { slug }, ref: tenancy.viewer.get }}
+      >
+        <SchoolCohortsContent slug={slug} />
+      </ReadBoundary>
+    </CohortsPreloadContext>
   );
 }
 
 /** The cohorts of the school's active unit, once the viewer's units are in. */
 function SchoolCohortsContent({ slug }: { slug: TenantSlug }) {
-  const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const viewer = useQuery(tenancy.viewer.get, isSettled ? { slug } : "skip");
+  const viewer = useViewerQuery();
   const [chosenUnit, setChosenUnit] = useState<UnitId | undefined>(undefined);
 
   if (QueryResult.isFailure(viewer)) {
@@ -169,9 +201,11 @@ function SchoolCohortsOfPeriod({
 }) {
   const t = useTranslations("SchoolSettings");
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const active = useQuery(
+  const preload = use(CohortsPreloadContext);
+  const active = usePreloadedQueryResult(
     tenancy.cohorts.activePeriod,
-    isSettled ? { slug, unitId } : "skip"
+    isSettled ? { slug, unitId } : "skip",
+    preload?.unitId === unitId ? preload.active : undefined
   );
   if (QueryResult.isFailure(active)) {
     if (isDenied(active.error)) {
@@ -362,9 +396,11 @@ function SchoolCohortTable({
 }) {
   const t = useTranslations("SchoolSettings");
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const cohorts = useQuery(
+  const preload = use(CohortsPreloadContext);
+  const cohorts = usePreloadedQueryResult(
     tenancy.cohorts.list,
-    isSettled ? { periodId, slug } : "skip"
+    isSettled ? { periodId, slug } : "skip",
+    preload?.active === periodId ? preload.cohorts : undefined
   );
   if (QueryResult.isFailure(cohorts)) {
     throw cohorts.error;

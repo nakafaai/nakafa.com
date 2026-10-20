@@ -3,25 +3,39 @@ import { Option } from "effect";
 import type { ReactElement } from "react";
 import { ClassShell } from "@/components/tenant/classes/shell";
 import { SchoolPageNotFound } from "@/components/tenant/notfound";
+import { readClassFn } from "@/lib/tenant/classes.fn";
 import { readClassAddress } from "@/lib/tenant/params";
 
-/** The home of one class of the school. */
+/** The home of one class of the school. A failed address to a class is not found for every viewer. */
 export const Route = createFileRoute("/school/$slug/classes/$classSlug/")({
-  beforeLoad: ({ context, params }) => {
+  beforeLoad: ({ params }) => {
     const classAddress = readClassAddress(params.classSlug);
-    if (context.school._tag === "Member" && Option.isNone(classAddress)) {
+    if (Option.isNone(classAddress)) {
       throw notFound();
     }
-    return { classAddress: Option.getOrNull(classAddress) };
+    return { classAddress: classAddress.value };
+  },
+  loader: ({ context }) => {
+    if (context.school._tag !== "Member") {
+      return;
+    }
+    return readClassFn({
+      data: { classSlug: context.classAddress, slug: context.slug },
+    });
   },
   component: SchoolClassPage,
   notFoundComponent: SchoolPageNotFound,
 });
 
-function SchoolClassPage(): ReactElement | null {
+function SchoolClassPage(): ReactElement {
   const { classAddress, slug } = Route.useRouteContext();
-  if (classAddress === null) {
-    return null;
-  }
-  return <ClassShell classSlug={classAddress} slug={slug} tab="home" />;
+  const preload = Route.useLoaderData();
+  return (
+    <ClassShell
+      classSlug={classAddress}
+      preload={preload}
+      slug={slug}
+      tab="home"
+    />
+  );
 }

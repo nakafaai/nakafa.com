@@ -1,17 +1,16 @@
 "use client";
 
+import type { Ref } from "@confect/core";
 import {
   type PaginatedQueryItem,
   PaginatedQueryResult,
   QueryResult,
-  usePaginatedQuery,
-  useQuery,
 } from "@confect/react";
 import journal from "@repo/backend/confect/_generated/refs/journal";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { createColumnHelper } from "@tanstack/react-table";
-import { Array as Arr } from "effect";
+import { Array as Arr, Option } from "effect";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/providers/convex";
 import { DataFailure } from "@/components/shared/failure";
@@ -22,22 +21,51 @@ import { TableEmpty } from "@/components/shared/table/frame";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { SettingsPage } from "@/components/tenant/settings/page";
 import { SchoolDateTime } from "@/components/tenant/settings/time";
+import { usePaginatedPreloaded } from "@/lib/data/paginated";
+import { usePreloadedQueryResult } from "@/lib/data/preloaded";
 
 /** How many entries one page of the journal loads, and each page after it. */
-const PAGE_SIZE = 25;
+export const PAGE_SIZE = 25;
 
 /** One journal entry as the audit list shows it. */
 type EntryItem = PaginatedQueryItem<typeof journal.audit.list>;
+
+/**
+ * An audit entry as the loader sends it to the page: the subject's name is a string, or none, because an
+ * Option does not cross the server boundary. The page restores the Option before it reads the entry.
+ */
+type EntryWire = Omit<EntryItem, "subjectName"> & {
+  readonly subjectName: string | undefined;
+};
+
+/** The first screen of the audit: the first page of its entries, and the people who appear in them. */
+export interface AuditPreload {
+  readonly entries:
+    | { readonly isDone: boolean; readonly page: readonly EntryWire[] }
+    | undefined;
+  readonly people: Ref.Returns<typeof journal.audit.actors> | undefined;
+}
+
+/** The loader's entry with its subject name as the page reads it. */
+function restoreEntry(entry: EntryWire): EntryItem {
+  return { ...entry, subjectName: Option.fromNullishOr(entry.subjectName) };
+}
 
 /** The columns of the audit table. */
 const entryColumns = createColumnHelper<typeof dataTableFeatures, EntryItem>();
 
 /** The section in the settings page frame, whose header shows while its body loads. */
-export function SchoolAuditSettings({ slug }: { slug: TenantSlug }) {
+export function SchoolAuditSettings({
+  preload,
+  slug,
+}: {
+  preload: AuditPreload | undefined;
+  slug: TenantSlug;
+}) {
   return (
     <SettingsPage>
       <ReadBoundary>
-        <SchoolAuditBody slug={slug} />
+        <SchoolAuditBody preload={preload} slug={slug} />
       </ReadBoundary>
     </SettingsPage>
   );
@@ -50,15 +78,33 @@ export function SchoolAuditSettings({ slug }: { slug: TenantSlug }) {
  * page shows none. The body waits for the first page, and an empty school shows the empty
  * state alone.
  */
-function SchoolAuditBody({ slug }: { slug: TenantSlug }) {
+function SchoolAuditBody({
+  preload,
+  slug,
+}: {
+  preload: AuditPreload | undefined;
+  slug: TenantSlug;
+}) {
   const t = useTranslations("SchoolSettings");
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const pagination = usePaginatedQuery(
+  const first =
+    preload?.entries === undefined
+      ? undefined
+      : {
+          isDone: preload.entries.isDone,
+          page: Arr.map(preload.entries.page, restoreEntry),
+        };
+  const pagination = usePaginatedPreloaded(
     journal.audit.list,
     isSettled ? { slug } : "skip",
-    { initialNumItems: PAGE_SIZE }
+    { initialNumItems: PAGE_SIZE },
+    first
   );
-  const people = useQuery(journal.audit.actors, { slug });
+  const people = usePreloadedQueryResult(
+    journal.audit.actors,
+    { slug },
+    preload?.people
+  );
 
   const failed = PaginatedQueryResult.isFailure(pagination);
   if (pagination._tag === "LoadingFirstPage") {
@@ -89,7 +135,7 @@ function SchoolAuditBody({ slug }: { slug: TenantSlug }) {
 
   const columns = entryColumns.columns([
     entryColumns.accessor((entry) => entry.at, {
-      cell: (info) => <SchoolDateTime at={info.getValue()} slug={slug} />,
+      cell: (info) => <SchoolDateTime at={info.getValue()} />,
       header: t("audit-when"),
       id: "when",
       sortFn: "basic",

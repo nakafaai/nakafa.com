@@ -25,6 +25,7 @@ import { Array as Arr, Option, Schema } from "effect";
 import { startTransition, useId, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/providers/convex";
+import { useViewerQuery } from "@/components/tenant/context";
 import {
   languageItems,
   timeZoneItems,
@@ -63,7 +64,7 @@ export function SchoolUnitCreateDialog({
   // The units and the viewer are read once the session settles, so the dialog never asks signed out.
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const units = useQuery(tenancy.units.list, isSettled ? { slug } : "skip");
-  const viewer = useQuery(tenancy.viewer.get, isSettled ? { slug } : "skip");
+  const viewer = useViewerQuery();
   if (!(QueryResult.isSuccess(units) && QueryResult.isSuccess(viewer))) {
     return null;
   }

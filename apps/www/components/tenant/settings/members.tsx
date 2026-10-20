@@ -4,7 +4,6 @@ import {
   type PaginatedQueryItem,
   PaginatedQueryResult,
   useMutation,
-  usePaginatedQuery,
 } from "@confect/react";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { MemberStatus } from "@repo/backend/confect/tenancy/roster";
@@ -28,11 +27,20 @@ import { RoleBadge } from "@/components/tenant/role";
 import { removeMemberChange } from "@/components/tenant/settings/members.client";
 import { SettingsPage } from "@/components/tenant/settings/page";
 import { saveSchool } from "@/components/tenant/settings/save.client";
+import {
+  type PreloadedPage,
+  usePaginatedPreloaded,
+} from "@/lib/data/paginated";
 
 const SOURCE = "components/tenant/settings/members";
 
 /** How many members one page of the list loads, and each page after it. */
-const PAGE_SIZE = 25;
+export const PAGE_SIZE = 25;
+
+/** The first page of the list, which its loader read on the server. */
+export type MembersFirstPage = PreloadedPage<
+  PaginatedQueryItem<typeof tenancy.roster.members>
+>;
 
 /** One member of the school as the members list shows it. */
 type MemberItem = PaginatedQueryItem<typeof tenancy.roster.members>;
@@ -49,23 +57,36 @@ const memberColumns = createColumnHelper<
  * The table filters by name and by status, and loads more rows as its end comes into
  * view. Invitations are sent on the invitations page.
  */
-export function SchoolMembersSettings({ slug }: { slug: TenantSlug }) {
+export function SchoolMembersSettings({
+  first,
+  slug,
+}: {
+  first: MembersFirstPage | undefined;
+  slug: TenantSlug;
+}) {
   return (
     <SettingsPage>
       <ReadBoundary>
-        <SchoolMembersBody slug={slug} />
+        <SchoolMembersBody first={first} slug={slug} />
       </ReadBoundary>
     </SettingsPage>
   );
 }
 
 /** The members of the school, read a page at a time, with the table and its end. */
-function SchoolMembersBody({ slug }: { slug: TenantSlug }) {
+function SchoolMembersBody({
+  first,
+  slug,
+}: {
+  first: MembersFirstPage | undefined;
+  slug: TenantSlug;
+}) {
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const pagination = usePaginatedQuery(
+  const pagination = usePaginatedPreloaded(
     tenancy.roster.members,
     isSettled ? { slug } : "skip",
-    { initialNumItems: PAGE_SIZE }
+    { initialNumItems: PAGE_SIZE },
+    first
   );
 
   const failed = PaginatedQueryResult.isFailure(pagination);

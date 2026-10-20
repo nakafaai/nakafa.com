@@ -5,8 +5,6 @@ import {
   PaginatedQueryResult,
   QueryResult,
   useMutation,
-  usePaginatedQuery,
-  useQuery,
 } from "@confect/react";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { PeriodStatus } from "@repo/backend/confect/tenancy/period";
@@ -30,6 +28,7 @@ import { reloadPage } from "@/components/shared/reload";
 import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { useViewerQuery } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { SettingsPage } from "@/components/tenant/settings/page";
 import {
@@ -43,11 +42,23 @@ import {
   type UnitId,
 } from "@/components/tenant/settings/unit";
 import { NoActiveUnit } from "@/components/tenant/settings/unitless";
+import {
+  type PreloadedPage,
+  usePaginatedPreloaded,
+} from "@/lib/data/paginated";
 
 const SOURCE = "components/tenant/settings/periods";
 
 /** How many periods one page of the list loads, and each page after it. */
-const PAGE_SIZE = 25;
+export const PAGE_SIZE = 25;
+
+/** The first screen of the periods tab: the first page of the periods of the unit the tab opens, and that unit. */
+export interface PeriodsPreload {
+  readonly page:
+    | PreloadedPage<PaginatedQueryItem<typeof tenancy.periods.list>>
+    | undefined;
+  readonly unitId: UnitId;
+}
 
 /** The ID of one unit of the school. */
 
@@ -65,13 +76,19 @@ const periodColumns = createColumnHelper<
  * known, the unit choice above the table when the school has more than one unit, and
  * the periods in a data table with their row menus.
  */
-export function SchoolPeriodsSettings({ slug }: { slug: TenantSlug }) {
+export function SchoolPeriodsSettings({
+  preload,
+  slug,
+}: {
+  preload: PeriodsPreload | undefined;
+  slug: TenantSlug;
+}) {
   return (
     <ReadBoundary
       fallback={(failure) => <SettingsPage>{failure}</SettingsPage>}
       read={{ args: { slug }, ref: tenancy.viewer.get }}
     >
-      <SchoolPeriodsContent slug={slug} />
+      <SchoolPeriodsContent preload={preload} slug={slug} />
     </ReadBoundary>
   );
 }
@@ -80,10 +97,15 @@ export function SchoolPeriodsSettings({ slug }: { slug: TenantSlug }) {
  * The periods of the school's active unit, with the unit choice when the school has more than one unit.
  * A school with no active unit says so and links to the units, because a period belongs to a unit.
  */
-function SchoolPeriodsContent({ slug }: { slug: TenantSlug }) {
+function SchoolPeriodsContent({
+  preload,
+  slug,
+}: {
+  preload: PeriodsPreload | undefined;
+  slug: TenantSlug;
+}) {
   const t = useTranslations("SchoolSettings");
-  const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const viewer = useQuery(tenancy.viewer.get, isSettled ? { slug } : "skip");
+  const viewer = useViewerQuery();
   const [chosenUnit, setChosenUnit] = useState<UnitId | undefined>(undefined);
   const [isAdding, setIsAdding] = useState(false);
 
@@ -124,7 +146,11 @@ function SchoolPeriodsContent({ slug }: { slug: TenantSlug }) {
             />
           ) : null}
           <ReadBoundary>
-            <SchoolPeriodTable slug={slug} unitId={unit.id} />
+            <SchoolPeriodTable
+              first={unit.id === preload?.unitId ? preload.page : undefined}
+              slug={slug}
+              unitId={unit.id}
+            />
           </ReadBoundary>
           <SchoolPeriodAddDialog
             open={isAdding}
@@ -145,18 +171,21 @@ function SchoolPeriodsContent({ slug }: { slug: TenantSlug }) {
  * rows arrive.
  */
 function SchoolPeriodTable({
+  first,
   slug,
   unitId,
 }: {
+  first: PeriodsPreload["page"];
   slug: TenantSlug;
   unitId: UnitId;
 }) {
   const t = useTranslations("SchoolSettings");
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const pagination = usePaginatedQuery(
+  const pagination = usePaginatedPreloaded(
     tenancy.periods.list,
     isSettled ? { slug, unitId } : "skip",
-    { initialNumItems: PAGE_SIZE }
+    { initialNumItems: PAGE_SIZE },
+    first
   );
 
   const failed = PaginatedQueryResult.isFailure(pagination);

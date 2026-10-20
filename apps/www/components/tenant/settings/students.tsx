@@ -4,7 +4,6 @@ import {
   type PaginatedQueryItem,
   PaginatedQueryResult,
   useMutation,
-  usePaginatedQuery,
 } from "@confect/react";
 import { MoreHorizontalIcon } from "@hugeicons/core-free-icons";
 import identity from "@repo/backend/confect/_generated/refs/identity";
@@ -49,11 +48,20 @@ import {
 import { SettingsPage } from "@/components/tenant/settings/page";
 import { saveSchool } from "@/components/tenant/settings/save.client";
 import { SchoolDateTime } from "@/components/tenant/settings/time";
+import {
+  type PreloadedPage,
+  usePaginatedPreloaded,
+} from "@/lib/data/paginated";
 
 const SOURCE = "components/tenant/settings/students";
 
 /** How many login names one page of the list loads, and each page after it. */
-const PAGE_SIZE = 25;
+export const PAGE_SIZE = 25;
+
+/** The first page of the list, which its loader read on the server. */
+export type StudentsFirstPage = PreloadedPage<
+  PaginatedQueryItem<typeof identity.logins.list>
+>;
 
 /** One school login as the logins list shows it. */
 type LoginItem = PaginatedQueryItem<typeof identity.logins.list>;
@@ -67,7 +75,13 @@ const loginColumns = createColumnHelper<typeof dataTableFeatures, LoginItem>();
  * action sits in its row menu. A card's code shows once, in the card dialog, which
  * prints the card.
  */
-export function SchoolStudentsSettings({ slug }: { slug: TenantSlug }) {
+export function SchoolStudentsSettings({
+  first,
+  slug,
+}: {
+  first: StudentsFirstPage | undefined;
+  slug: TenantSlug;
+}) {
   const t = useTranslations("SchoolSettings");
   const [isAdding, setIsAdding] = useState(false);
   const [issued, setIssued] = useState<CardView | undefined>(undefined);
@@ -81,7 +95,7 @@ export function SchoolStudentsSettings({ slug }: { slug: TenantSlug }) {
       }
     >
       <ReadBoundary>
-        <SchoolLoginsBody onIssued={setIssued} slug={slug} />
+        <SchoolLoginsBody first={first} onIssued={setIssued} slug={slug} />
       </ReadBoundary>
       <SchoolStudentDialog
         onAdded={setIssued}
@@ -100,17 +114,20 @@ export function SchoolStudentsSettings({ slug }: { slug: TenantSlug }) {
 
 /** The school's logins, read a page at a time, with the table and its end. */
 function SchoolLoginsBody({
+  first,
   onIssued,
   slug,
 }: {
+  first: StudentsFirstPage | undefined;
   onIssued: (card: CardView) => void;
   slug: TenantSlug;
 }) {
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const pagination = usePaginatedQuery(
+  const pagination = usePaginatedPreloaded(
     identity.logins.list,
     isSettled ? { slug } : "skip",
-    { initialNumItems: PAGE_SIZE }
+    { initialNumItems: PAGE_SIZE },
+    first
   );
 
   const failed = PaginatedQueryResult.isFailure(pagination);
@@ -173,7 +190,7 @@ function SchoolLoginTable({
       sortFn: "text",
     }),
     loginColumns.accessor((login) => login.issuedAt, {
-      cell: (info) => <SchoolDateTime at={info.getValue()} slug={slug} />,
+      cell: (info) => <SchoolDateTime at={info.getValue()} />,
       header: t("login-issued"),
       id: "issued",
       sortFn: "basic",

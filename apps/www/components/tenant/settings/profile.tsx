@@ -1,6 +1,6 @@
 "use client";
 
-import { QueryResult, useMutation, useQuery } from "@confect/react";
+import { QueryResult, useMutation } from "@confect/react";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { LogoType } from "@repo/backend/confect/tenancy/schema";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -18,12 +18,12 @@ import { MAIN_DOMAIN } from "@repo/site/domains";
 import { Effect, Schema } from "effect";
 import { startTransition, useRef, useState } from "react";
 import { useTranslations } from "use-intl";
-import { useConvexAuth } from "@/components/providers/convex";
 import {
   CardSection,
   CardSectionActions,
   CardSectionFooter,
 } from "@/components/shared/card/section";
+import { useViewerQuery } from "@/components/tenant/context";
 import { logoRefusalOf } from "@/components/tenant/logo.client";
 import { SchoolMark } from "@/components/tenant/mark";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
@@ -66,8 +66,7 @@ export function SchoolProfileSettings({ slug }: { slug: TenantSlug }) {
  * at once.
  */
 function SchoolProfileBody({ slug }: { slug: TenantSlug }) {
-  const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const viewer = useQuery(tenancy.viewer.get, isSettled ? { slug } : "skip");
+  const viewer = useViewerQuery();
 
   if (QueryResult.isFailure(viewer)) {
     throw viewer.error;

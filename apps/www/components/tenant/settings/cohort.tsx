@@ -1,12 +1,11 @@
 "use client";
 
+import type { Ref } from "@confect/core";
 import {
   type PaginatedQueryItem,
   PaginatedQueryResult,
   QueryResult,
   useMutation,
-  usePaginatedQuery,
-  useQuery,
 } from "@confect/react";
 import { MoreHorizontalIcon } from "@hugeicons/core-free-icons";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
@@ -62,6 +61,11 @@ import {
   isDraft,
   type Period,
 } from "@/components/tenant/settings/state";
+import {
+  type PreloadedPage,
+  usePaginatedPreloaded,
+} from "@/lib/data/paginated";
+import { usePreloadedQueryResult } from "@/lib/data/preloaded";
 import { getSchoolSettingsSection } from "@/lib/settings/school";
 
 const SOURCE = "components/tenant/settings/cohort";
@@ -229,15 +233,29 @@ export function SchoolCohortMenu({
 }
 
 /**
+ * The first screen of one cohort page, which its loader read on the server: the cohort, the first page of its
+ * members, and the cohorts of its period, which the cohort's move menu lists.
+ */
+export interface CohortPreload {
+  readonly cohorts: Ref.Returns<typeof tenancy.cohorts.list> | undefined;
+  readonly detail: Ref.Returns<typeof tenancy.cohorts.get> | undefined;
+  readonly members:
+    | PreloadedPage<PaginatedQueryItem<typeof tenancy.cohorts.members>>
+    | undefined;
+}
+
+/**
  * One cohort's page: its path and name in the school's one header, with the page's action
  * that places a student at its end, then the homeroom teacher and the students of the cohort.
  * An archived cohort keeps what it holds to read, and offers no action that changes it.
  */
 export function SchoolCohortSettings({
   cohortId,
+  preload,
   slug,
 }: {
   cohortId: CohortDetail["id"];
+  preload: CohortPreload | undefined;
   slug: TenantSlug;
 }) {
   return (
@@ -245,7 +263,7 @@ export function SchoolCohortSettings({
       fallback={(failure) => <CohortFailure>{failure}</CohortFailure>}
       read={{ args: { cohortId, slug }, ref: tenancy.cohorts.get }}
     >
-      <SchoolCohortPage cohortId={cohortId} slug={slug} />
+      <SchoolCohortPage cohortId={cohortId} preload={preload} slug={slug} />
     </ReadBoundary>
   );
 }
@@ -308,16 +326,19 @@ function CohortUnavailable() {
 /** One cohort's page once the cohort is read. */
 function SchoolCohortPage({
   cohortId,
+  preload,
   slug,
 }: {
   cohortId: CohortDetail["id"];
+  preload: CohortPreload | undefined;
   slug: TenantSlug;
 }) {
   const t = useTranslations("SchoolSettings");
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const cohort = useQuery(
+  const cohort = usePreloadedQueryResult(
     tenancy.cohorts.get,
-    isSettled ? { cohortId, slug } : "skip"
+    isSettled ? { cohortId, slug } : "skip",
+    preload?.detail
   );
   if (QueryResult.isFailure(cohort)) {
     if (isDenied(cohort.error)) {
@@ -351,6 +372,8 @@ function SchoolCohortPage({
         <ReadBoundary>
           <SchoolCohortMembers
             cohortId={cohortId}
+            cohorts={preload?.cohorts}
+            first={preload?.members}
             isArchived={isArchived}
             periodId={detail.periodId}
             slug={slug}
@@ -362,7 +385,7 @@ function SchoolCohortPage({
 }
 
 /** How many students one page of the members table loads, and each page after it. */
-const PAGE_SIZE = 25;
+export const PAGE_SIZE = 25;
 
 /** One student as the members table shows them. */
 type MemberItem = PaginatedQueryItem<typeof tenancy.cohorts.members>;
@@ -381,25 +404,31 @@ const memberColumns = createColumnHelper<
  */
 function SchoolCohortMembers({
   cohortId,
+  cohorts: preloadedCohorts,
+  first,
   isArchived,
   periodId,
   slug,
 }: {
   cohortId: Cohort["id"];
+  cohorts: CohortPreload["cohorts"];
+  first: CohortPreload["members"];
   isArchived: boolean;
   periodId: Period["id"];
   slug: TenantSlug;
 }) {
   const t = useTranslations("SchoolSettings");
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const pagination = usePaginatedQuery(
+  const pagination = usePaginatedPreloaded(
     tenancy.cohorts.members,
     isSettled ? { cohortId, slug } : "skip",
-    { initialNumItems: PAGE_SIZE }
+    { initialNumItems: PAGE_SIZE },
+    first
   );
-  const cohorts = useQuery(
+  const cohorts = usePreloadedQueryResult(
     tenancy.cohorts.list,
-    isSettled ? { periodId, slug } : "skip"
+    isSettled ? { periodId, slug } : "skip",
+    preloadedCohorts
   );
 
   const failed = PaginatedQueryResult.isFailure(pagination);
