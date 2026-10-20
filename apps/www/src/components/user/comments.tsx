@@ -16,7 +16,6 @@ import { CommentRow } from "@/components/comments/row";
 import { DataFailure } from "@/components/shared/failure";
 import { FeedCount, FeedEmpty, FeedNotice } from "@/components/user/feed";
 import { usePaginatedPreloaded } from "@/lib/data/paginated";
-import { getCleanHref } from "@/lib/routing/href";
 
 /**
  * Renders the comments of one user profile, newest first. The loader reads the author and
@@ -77,7 +76,11 @@ export function UserComments({
               <NavigationLink
                 aria-label={tCommon("reply")}
                 className={buttonVariants({ size: "sm", variant: "ghost" })}
-                href={getCleanHref(comment.slug)}
+                href={
+                  comment.slug.startsWith("/")
+                    ? comment.slug
+                    : `/${comment.slug}`
+                }
               >
                 <HugeIcons icon={ArrowTurnBackwardIcon} />
                 <FeedCount value={comment.replyCount} />

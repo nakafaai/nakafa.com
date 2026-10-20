@@ -1,14 +1,6 @@
 import { monospace } from "@repo/design-system/lib/monospace";
-import {
-  LocaleSchema,
-  localeTimeZone,
-} from "@repo/internationalization/src/locale";
-import {
-  createFileRoute,
-  getRouteApi,
-  notFound,
-  Outlet,
-} from "@tanstack/react-router";
+import { localeTimeZone } from "@repo/internationalization/src/locale";
+import { createFileRoute, getRouteApi, Outlet } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { cn } from "cn";
 import { Schema } from "effect";
@@ -58,11 +50,6 @@ const localeRoute = getRouteApi("/$locale");
  * raw message key.
  */
 export const Route = createFileRoute("/$locale/_main")({
-  beforeLoad: ({ params }) => {
-    if (!Schema.is(LocaleSchema)(params.locale)) {
-      throw notFound();
-    }
-  },
   loader: async ({ params }) => {
     const [messages, shell] = await Promise.all([
       readRouteMessages({

@@ -82,7 +82,6 @@ const pinnedServerFnFetch = (input: RequestInfo | URL, init?: RequestInit) => {
 };
 
 export const startInstance = createStart(() => ({
-  defaultSsr: true,
   serverFns: { fetch: pinnedServerFnFetch },
   requestMiddleware: [
     requestSession,
