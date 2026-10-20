@@ -5,8 +5,8 @@ import {
   cutText,
   lines,
   overflow,
-} from "../support/transcript/measure";
-import { onChat, onSheet } from "../support/transcript/open";
+} from "@/e2e/support/transcript/measure";
+import { onChat, onSheet } from "@/e2e/support/transcript/open";
 import {
   EXERCISE_TITLE,
   failedWebSearch,
@@ -21,7 +21,7 @@ import {
   pages,
   queries,
   sameHost,
-} from "../support/transcript/web";
+} from "@/e2e/support/transcript/web";
 
 /** Every row of a source on the page: the link that a source is. */
 const SOURCE = 'a[data-slot="hover-card-trigger"]';

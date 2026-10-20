@@ -1,8 +1,8 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect, Schema } from "effect";
 import { AI_STORAGE_KEY } from "@/components/ai/store/create";
-import { composerOf } from "../support/attachment";
-import type { Changes } from "../support/changes";
+import { composerOf } from "@/e2e/support/attachment";
+import type { Changes } from "@/e2e/support/changes";
 import {
   LESSON_PATH,
   OPENED_CHAT,
@@ -10,10 +10,10 @@ import {
   openChatPage,
   runOnPage,
   START,
-} from "../support/chat";
-import { PROMPT, pageOpensChat, promptIn, write } from "../support/prompt";
-import { inTheSheet, promptWith, UNAVAILABLE } from "../support/sheet";
-import { readinessTimeoutMilliseconds } from "../support/timeout";
+} from "@/e2e/support/chat";
+import { PROMPT, pageOpensChat, promptIn, write } from "@/e2e/support/prompt";
+import { inTheSheet, promptWith, UNAVAILABLE } from "@/e2e/support/sheet";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 declare global {
   interface Window {

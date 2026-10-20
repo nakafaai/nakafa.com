@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
-import { withObservedPageErrors } from "../support/observe";
-import { openSheet } from "../support/sheet";
+import { withObservedPageErrors } from "@/e2e/support/observe";
+import { openSheet } from "@/e2e/support/sheet";
 
 test.describe("Nina sheet at 1440px", () => {
   test.use({ viewport: { height: 900, width: 1440 } });

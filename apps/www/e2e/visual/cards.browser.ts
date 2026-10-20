@@ -14,10 +14,10 @@ import {
   patchWebGL,
   readCanvasSize,
   waitForCanvasRest,
-} from "../support/canvas";
-import { pinnedRoutes } from "../support/corpus";
-import { withObservedPageErrors } from "../support/observe";
-import { LINE_SCENE, SCENE_ACTIONS } from "../support/selector";
+} from "@/e2e/support/canvas";
+import { pinnedRoutes } from "@/e2e/support/corpus";
+import { withObservedPageErrors } from "@/e2e/support/observe";
+import { LINE_SCENE, SCENE_ACTIONS } from "@/e2e/support/selector";
 import {
   BACTERIA_SCENE,
   expectLabStill,
@@ -34,7 +34,7 @@ import {
   revealCard,
   revealLab,
   revealScene,
-} from "../support/visual";
+} from "@/e2e/support/visual";
 
 const SCENE_PROBE = "held";
 /** Room around two scenes shown at once, so neither sits at a viewport edge. */

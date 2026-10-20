@@ -1,9 +1,9 @@
 import { expect, test } from "@playwright/test";
 import { encodeJsonText, encodePrettyJsonText } from "@repo/utilities/json";
 import { Effect } from "effect";
-import { MEMORY_PATH } from "../support/memory";
-import { measureRouteJavascript } from "../support/resources";
-import { appRoutes } from "../support/route";
+import { MEMORY_PATH } from "@/e2e/support/memory";
+import { measureRouteJavascript } from "@/e2e/support/resources";
+import { appRoutes } from "@/e2e/support/route";
 
 // Measured before the Start migration at 1,048,575 encoded / 3,092,340 decoded
 // bytes. The Start build is not measured yet. Limits keep the ~6% margin.

@@ -4,10 +4,7 @@ import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { RoomRow } from "@repo/backend/confect/exams/rooms";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Array as Arr, Option, Schema } from "effect";
-import {
-  cancelRoomChange,
-  roomsArgs,
-} from "@/components/tenant/exams/filter";
+import { cancelRoomChange, roomsArgs } from "@/components/tenant/exams/filter";
 import { createLocalStore } from "@/test/optimistic";
 
 const input = {

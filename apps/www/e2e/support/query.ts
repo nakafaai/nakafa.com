@@ -4,7 +4,7 @@ import type {
 } from "@repo/backend/confect/nina/contract/message";
 import type { NinaTurnSummary } from "@repo/backend/confect/nina/contract/turn";
 import { Array as Arr, MutableHashMap, Option, Schema, Struct } from "effect";
-import type { SentSchema } from "./frames";
+import type { SentSchema } from "@/e2e/support/frames";
 
 /** The Convex name of `nina.messages.page`, the query that reads the messages of a chat. */
 const MESSAGES = "nina/messages:page";

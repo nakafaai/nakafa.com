@@ -9,15 +9,15 @@ import {
   PIXEL_READBACKS,
   patchWebGL,
   recordPixelReadbacks,
-} from "../support/canvas";
-import { pinnedRoutes } from "../support/corpus";
+} from "@/e2e/support/canvas";
+import { pinnedRoutes } from "@/e2e/support/corpus";
 import {
   withObservedEvents,
   withObservedPageErrors,
-} from "../support/observe";
-import { openRoute } from "../support/route";
-import { isKnownSceneDiagnostic, revealLineScene } from "../support/scene";
-import { lineSceneCards, SCENE_ACTIONS } from "../support/selector";
+} from "@/e2e/support/observe";
+import { openRoute } from "@/e2e/support/route";
+import { isKnownSceneDiagnostic, revealLineScene } from "@/e2e/support/scene";
+import { lineSceneCards, SCENE_ACTIONS } from "@/e2e/support/selector";
 
 /** three.js prefixes its own output, and Chromium names WebGL in its notices. */
 const SCENE_DIAGNOSTIC = /THREE\.|WebGL/;

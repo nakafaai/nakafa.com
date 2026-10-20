@@ -1,16 +1,16 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
-import { pinnedRoutes } from "../support/corpus";
-import { withObservedPageErrors } from "../support/observe";
-import { openRoute } from "../support/route";
-import { revealLineScene } from "../support/scene";
+import { pinnedRoutes } from "@/e2e/support/corpus";
+import { withObservedPageErrors } from "@/e2e/support/observe";
+import { openRoute } from "@/e2e/support/route";
+import { revealLineScene } from "@/e2e/support/scene";
 import {
   LINE_SCENE,
   lineSceneCards,
   paginationNavigation,
   SUBJECT_LINK,
-} from "../support/selector";
-import { revealTimeoutMilliseconds } from "../support/timeout";
+} from "@/e2e/support/selector";
+import { revealTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /** The axes that a line scene labels, in the order its coordinate system draws them. */
 const AXIS_NAMES = ["X", "Y", "Z"];

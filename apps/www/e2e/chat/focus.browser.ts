@@ -1,7 +1,7 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
-import { saved } from "../support/changes";
-import { FAILED, RENAME, runOnPage } from "../support/chat";
+import { saved } from "@/e2e/support/changes";
+import { FAILED, RENAME, runOnPage } from "@/e2e/support/chat";
 import {
   editorOf,
   headerControl,
@@ -12,7 +12,7 @@ import {
   REFUSED,
   startRename,
   titleOf,
-} from "../support/rename";
+} from "@/e2e/support/rename";
 
 /**
  * A rename saved with Enter while the server holds its answer. The focus goes

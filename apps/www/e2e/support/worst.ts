@@ -1,16 +1,16 @@
 import { expect, type Locator, type Page, type Route } from "@playwright/test";
 import { Effect, MutableList, Schema } from "effect";
-import { type Changes, live, saved } from "./changes";
+import { type Changes, live, saved } from "@/e2e/support/changes";
 import {
   EMPTY,
   editorOf,
   memoryRow,
   opened,
   openMemoryPage,
-} from "./memory";
-import { CARD } from "./selector";
-import { readinessTimeoutMilliseconds } from "./timeout";
-import { firstRow, isHydrated } from "./window";
+} from "@/e2e/support/memory";
+import { CARD } from "@/e2e/support/selector";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { firstRow, isHydrated } from "@/e2e/support/window";
 
 /** The scripts of the page itself. */
 const SCRIPTS = /\/assets\/.*\.js/;

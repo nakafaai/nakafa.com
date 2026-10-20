@@ -13,8 +13,8 @@ import {
   type GoogleIndexSubmitError,
   type IndexNowSubmitError,
   SubmissionHistoryError,
-} from "./errors";
-import { indexingFiles } from "./paths";
+} from "@/scripts/indexing/errors";
+import { indexingFiles } from "@/scripts/indexing/paths";
 
 const SubmissionServiceSchema = Schema.Literals([
   "bing",

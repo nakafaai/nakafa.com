@@ -1,9 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Array as Arr, Option } from "effect";
-import {
-  enterableSitting,
-  orderSittings,
-} from "@/components/tenant/sittings";
+import { enterableSitting, orderSittings } from "@/components/tenant/sittings";
 
 describe("tenant/sittings client", () => {
   it("lists every open sitting before the scheduled ones, and each group by its opening time", () => {

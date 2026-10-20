@@ -10,22 +10,22 @@ import id from "@repo/internationalization/dictionaries/standalone/id.json" with
 };
 import { Effect } from "effect";
 import { FIGURE_WIDTH } from "@/components/state/size";
-import { seedAnalyticsConsent } from "../support/consent";
-import { waitForCommittedAppRouter } from "../support/navigation/readiness";
-import { withObservedPageErrors } from "../support/observe";
+import { seedAnalyticsConsent } from "@/e2e/support/consent";
+import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
+import { withObservedPageErrors } from "@/e2e/support/observe";
 import {
   expectState,
   expectThings,
   giveRoom,
   holdWebFont,
-} from "../support/state";
-import { readinessTimeoutMilliseconds } from "../support/timeout";
+} from "@/e2e/support/state";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import {
   compactViewport,
   desktopViewport,
   targetViewports,
   touchViewport,
-} from "../support/viewport";
+} from "@/e2e/support/viewport";
 
 const dictionaries = { de, en, id };
 

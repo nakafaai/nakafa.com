@@ -1,8 +1,8 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
-import { saved, trackChanges } from "../support/changes";
-import { createSchool, hostAddress, signInOwner } from "../support/school";
-import { readinessTimeoutMilliseconds } from "../support/timeout";
+import { saved, trackChanges } from "@/e2e/support/changes";
+import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /** The address of an exam's editor on the school host. */
 const EDITOR_PATH = /\/exams\/[^/]+\/edit$/;

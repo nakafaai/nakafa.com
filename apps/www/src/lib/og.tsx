@@ -3,7 +3,7 @@ import type { CSSProperties } from "react";
 import { ImageResponse } from "takumi-js/response";
 import { OG_IMAGE_HEADERS } from "@/lib/og/headers";
 import { OgImage, type OgImageProps } from "@/lib/og/image";
-import logoSvg from "../../public/logo.svg?raw";
+import logoSvg from "@/public/logo.svg?raw";
 
 const ogLogoStyle = {
   width: 48,

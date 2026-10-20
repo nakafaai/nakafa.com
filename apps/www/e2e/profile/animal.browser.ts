@@ -5,17 +5,17 @@ import app from "@repo/internationalization/dictionaries/en.json" with {
 };
 import { encodeJsonText } from "@repo/utilities/json";
 import { Effect, FileSystem } from "effect";
-import { runAcceptanceCommand } from "../support/acceptance";
+import { runAcceptanceCommand } from "@/e2e/support/acceptance";
 import {
   animalMarkup,
   animalOf,
   drawnAnimal,
   pictureChoice,
   sidebarAvatar,
-} from "../support/avatar";
-import { LESSON_PATH, openChatPage, runOnPage } from "../support/chat";
-import { appRoutes } from "../support/route";
-import { readinessTimeoutMilliseconds } from "../support/timeout";
+} from "@/e2e/support/avatar";
+import { LESSON_PATH, openChatPage, runOnPage } from "@/e2e/support/chat";
+import { appRoutes } from "@/e2e/support/route";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /** A picture of the site that loads, and an address that holds no picture. */
 const LOADING_PHOTO = "/logo.png";

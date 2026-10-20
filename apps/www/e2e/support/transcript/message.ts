@@ -3,7 +3,7 @@ import type { LearningCapabilityName } from "@repo/backend/confect/nina/capabili
 import type { NinaTurnSummary } from "@repo/backend/confect/nina/contract/turn";
 import type { NinaMessage } from "@repo/backend/confect/nina/schema";
 import type { ToolUIPart } from "ai";
-import type { ServedMessage } from "../query";
+import type { ServedMessage } from "@/e2e/support/query";
 
 /**
  * What a capability stored when it ended, as the wire holds it: its cards, its

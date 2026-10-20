@@ -1,10 +1,10 @@
 import type { Browser, Page } from "@playwright/test";
 import { Effect } from "effect";
-import { type Changes, trackChanges } from "./changes";
-import { openChatPage } from "./chat";
-import { seedAnalyticsConsent } from "./consent";
-import { withBrowserContext } from "./context";
-import { withObservedPageErrors } from "./observe";
+import { type Changes, trackChanges } from "@/e2e/support/changes";
+import { openChatPage } from "@/e2e/support/chat";
+import { seedAnalyticsConsent } from "@/e2e/support/consent";
+import { withBrowserContext } from "@/e2e/support/context";
+import { withObservedPageErrors } from "@/e2e/support/observe";
 
 /** The browser of a reader: a window of its own, with no session of the owner's. */
 const readerOptions = (baseURL: string) =>

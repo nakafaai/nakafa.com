@@ -3,8 +3,8 @@ import app from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
 import { Effect } from "effect";
-import { openChatPage, runOnPage } from "../support/chat";
-import { readinessTimeoutMilliseconds } from "../support/timeout";
+import { openChatPage, runOnPage } from "@/e2e/support/chat";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 const POST = "Hari ini belajar trigonometri.";
 const VIEWPORTS = [

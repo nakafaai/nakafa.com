@@ -1,17 +1,17 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Array as Arr, Deferred, Duration, Effect, MutableList } from "effect";
-import { seedAnalyticsConsent } from "../support/consent";
+import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import {
   PRELOADED_FONT_SELECTOR,
   readTypefaceFiles,
-} from "../support/fonts";
-import { readLayoutShift } from "../support/layout";
-import { waitForCommittedAppRouter } from "../support/navigation/readiness";
-import { settleRouter } from "../support/navigation/settle";
-import { withObservedPageErrors } from "../support/observe";
-import { collectUnusedPreloads } from "../support/preload";
-import { appRoutes } from "../support/route";
-import { readinessTimeoutMilliseconds } from "../support/timeout";
+} from "@/e2e/support/fonts";
+import { readLayoutShift } from "@/e2e/support/layout";
+import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
+import { settleRouter } from "@/e2e/support/navigation/settle";
+import { withObservedPageErrors } from "@/e2e/support/observe";
+import { collectUnusedPreloads } from "@/e2e/support/preload";
+import { appRoutes } from "@/e2e/support/route";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /** Longer than the 100 ms block period of optional display. */
 const lateTypefaceMilliseconds = 1000;

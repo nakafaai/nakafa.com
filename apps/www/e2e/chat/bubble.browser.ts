@@ -1,6 +1,6 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
-import { runOnPage } from "../support/chat";
+import { runOnPage } from "@/e2e/support/chat";
 import {
   LEARNER_TEXT,
   learnerMessage,
@@ -10,10 +10,10 @@ import {
   pictures,
   WORKSHEET_NAME,
   worksheet,
-} from "../support/prose";
-import type { StoredMessage } from "../support/query";
-import { bubbleOf, drawnRow, openServedChat } from "../support/serve";
-import { readinessTimeoutMilliseconds } from "../support/timeout";
+} from "@/e2e/support/prose";
+import type { StoredMessage } from "@/e2e/support/query";
+import { bubbleOf, drawnRow, openServedChat } from "@/e2e/support/serve";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /** A message of one word, and a message pasted from a page of exercises. */
 const SHORT = learnerMessage({ order: 1, text: LEARNER_TEXT.one });

@@ -2,7 +2,7 @@
 
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Path } from "effect";
-import { indexingFiles } from "./paths";
+import { indexingFiles } from "@/scripts/indexing/paths";
 
 describe("indexingFiles", () => {
   it.effect(

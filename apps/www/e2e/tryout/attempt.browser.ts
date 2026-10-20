@@ -1,18 +1,18 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect, MutableList } from "effect";
-import { pressDecline, seedAnalyticsConsent } from "../support/consent";
-import { loadMathFonts } from "../support/fonts";
-import { activate, activateAncestor, visibleLink } from "../support/input";
-import { signInLearner } from "../support/learner";
-import { withObservedPageErrors } from "../support/observe";
-import { finishSection } from "../support/player";
+import { pressDecline, seedAnalyticsConsent } from "@/e2e/support/consent";
+import { loadMathFonts } from "@/e2e/support/fonts";
+import { activate, activateAncestor, visibleLink } from "@/e2e/support/input";
+import { signInLearner } from "@/e2e/support/learner";
+import { withObservedPageErrors } from "@/e2e/support/observe";
+import { finishSection } from "@/e2e/support/player";
 import {
   expectStillShell,
   observeShell,
   readPageTime,
   readShellObservation,
-} from "../support/shell";
-import { readinessTimeoutMilliseconds } from "../support/timeout";
+} from "@/e2e/support/shell";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import {
   arrive,
   arriveLocked,
@@ -22,8 +22,8 @@ import {
   openTrack,
   setHref,
   trackHref,
-} from "../support/tryout";
-import { tryoutViewports } from "../support/viewport";
+} from "@/e2e/support/tryout";
+import { tryoutViewports } from "@/e2e/support/viewport";
 
 /** Whether a pathname is the walked set. */
 const isSet = (pathname: string) => pathname === setHref;

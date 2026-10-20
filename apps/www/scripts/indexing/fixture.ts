@@ -13,7 +13,7 @@ import {
   Path,
 } from "effect";
 import { TestClock } from "effect/testing";
-import { indexingFiles } from "./paths";
+import { indexingFiles } from "@/scripts/indexing/paths";
 
 /** The folder that holds a path: the text before its last slash. */
 const folderOf = (path: string) => path.slice(0, path.lastIndexOf("/"));

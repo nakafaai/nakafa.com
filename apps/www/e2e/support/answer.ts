@@ -5,8 +5,8 @@ import {
   decodeSent,
   decodeTransition,
   encodeTransition,
-} from "./frames";
-import { LIST_QUERY } from "./memory";
+} from "@/e2e/support/frames";
+import { LIST_QUERY } from "@/e2e/support/memory";
 
 /** The answer of the list: a page of memories. */
 const ListAnswer = Schema.Struct({

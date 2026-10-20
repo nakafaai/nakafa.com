@@ -190,7 +190,10 @@ export const names = Object.keys(text);
                 "/** Auto-generated from Aksara. */\n\nexport const rows = JSON.parse(text);\n",
             },
           ]),
-          ["apps/www/src/lib/rows.ts:2 json", "apps/www/src/lib/spaced.ts:3 json"]
+          [
+            "apps/www/src/lib/rows.ts:2 json",
+            "apps/www/src/lib/spaced.ts:3 json",
+          ]
         );
       })
   );

@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { Effect } from "effect";
-import { createSchool, hostAddress } from "../support/school";
+import { createSchool, hostAddress } from "@/e2e/support/school";
 
 /**
  * The address where the app's standalone not-found page answers, and the

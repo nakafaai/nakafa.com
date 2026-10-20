@@ -1,16 +1,16 @@
 import { expect, type Locator, test } from "@playwright/test";
 import { Clock, Effect, Schema } from "effect";
-import { composerOf } from "../support/attachment";
-import type { Changes } from "../support/changes";
+import { composerOf } from "@/e2e/support/attachment";
+import type { Changes } from "@/e2e/support/changes";
 import {
   LESSON_PATH,
   onThePage,
   openChatPage,
   runOnPage,
-} from "../support/chat";
-import { CONVERSATION } from "../support/query";
-import { inTheSheet, openFromHistory, openSheet } from "../support/sheet";
-import { readinessTimeoutMilliseconds } from "../support/timeout";
+} from "@/e2e/support/chat";
+import { CONVERSATION } from "@/e2e/support/query";
+import { inTheSheet, openFromHistory, openSheet } from "@/e2e/support/sheet";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 const PROMPT = "Why is the derivative of sine the cosine?";
 const TITLE = "The derivative of sine";

@@ -1,9 +1,9 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
-import { openMemoryPage } from "../support/memory";
-import { withObservedPageErrors } from "../support/observe";
-import { readPlaceholder } from "../support/placeholder";
-import { readinessTimeoutMilliseconds } from "../support/timeout";
+import { openMemoryPage } from "@/e2e/support/memory";
+import { withObservedPageErrors } from "@/e2e/support/observe";
+import { readPlaceholder } from "@/e2e/support/placeholder";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import {
   controlCard,
   listCard,
@@ -11,7 +11,7 @@ import {
   pressTimes,
   resizerOf,
   widthOf,
-} from "../support/worst";
+} from "@/e2e/support/worst";
 
 const WORDS = "Studies after dinner";
 /** The name of the search field on the German page. */

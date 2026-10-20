@@ -24,9 +24,9 @@ import {
   recordLogs,
   runToEnd,
   runToFailure,
-} from "../fixture";
-import { runGoogleIndexing } from "./run";
-import { loadSubmissionHistory } from "../history";
+} from "@/scripts/indexing/fixture";
+import { runGoogleIndexing } from "@/scripts/indexing/google/run";
+import { loadSubmissionHistory } from "@/scripts/indexing/history";
 
 // Signing uses real Web Crypto, which the test clock does not advance, so the
 // token step is doubled here. auth.test.ts covers the signed assertion itself.
@@ -46,7 +46,7 @@ vi.mock("@/lib/sitemap/entries", () => ({
   getSitemapEntries: sitemapMocks.getSitemapEntries,
 }));
 
-vi.mock("./auth", () => ({
+vi.mock("@/scripts/indexing/google/auth", () => ({
   getGoogleAccessToken: authMocks.getGoogleAccessToken,
 }));
 

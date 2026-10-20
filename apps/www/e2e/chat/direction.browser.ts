@@ -1,8 +1,8 @@
 import { expect, type Locator, test } from "@playwright/test";
 import { Effect } from "effect";
-import { runOnPage } from "../support/chat";
-import { ANSWER, answerTurn, chatOf } from "../support/prose";
-import { drawnRow, openServedChat } from "../support/serve";
+import { runOnPage } from "@/e2e/support/chat";
+import { ANSWER, answerTurn, chatOf } from "@/e2e/support/prose";
+import { drawnRow, openServedChat } from "@/e2e/support/serve";
 
 /** An Arabic answer with a paragraph and a tight list, one with a heading and a table, and one with a loose list. */
 const STEPS = answerTurn({ markdown: ANSWER.arabic, order: 1 });

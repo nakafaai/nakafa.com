@@ -1,13 +1,13 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Deferred, Effect } from "effect";
-import { seedAnalyticsConsent } from "../support/consent";
-import { pinnedRoutes } from "../support/corpus";
-import { waitForSlide } from "../support/layout";
-import { waitForCommittedAppRouter } from "../support/navigation/readiness";
-import { withObservedPageErrors } from "../support/observe";
-import { APP_SCRIPT_PATTERN } from "../support/requests";
-import { paginationNavigation, SUBJECT_LINK } from "../support/selector";
-import { readinessTimeoutMilliseconds } from "../support/timeout";
+import { seedAnalyticsConsent } from "@/e2e/support/consent";
+import { pinnedRoutes } from "@/e2e/support/corpus";
+import { waitForSlide } from "@/e2e/support/layout";
+import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
+import { withObservedPageErrors } from "@/e2e/support/observe";
+import { APP_SCRIPT_PATTERN } from "@/e2e/support/requests";
+import { paginationNavigation, SUBJECT_LINK } from "@/e2e/support/selector";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 const NINA_DIALOG_NAME = /^Nina/;
 const INTER_FONT = /Inter/;

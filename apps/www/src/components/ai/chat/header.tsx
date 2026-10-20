@@ -39,8 +39,8 @@ import { useTranslations } from "use-intl";
 import { useChat } from "@/components/ai/chat/context";
 import { ChatDeletion } from "@/components/ai/chat/deletion";
 import { handleTitleKeyDown } from "@/components/ai/chat/rename";
-import { useChatRename } from "@/components/ai/chat/title";
 import { ChatSharing } from "@/components/ai/chat/sharing";
+import { useChatRename } from "@/components/ai/chat/title";
 import { BreadcrumbHeaderFrame } from "@/components/shared/breadcrumb/frame";
 
 /** Render the current chat header or its stable empty placeholder. */

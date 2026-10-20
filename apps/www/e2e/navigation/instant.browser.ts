@@ -1,12 +1,12 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
-import { seedAnalyticsConsent } from "../support/consent";
-import { withBrowserContext } from "../support/context";
+import { seedAnalyticsConsent } from "@/e2e/support/consent";
+import { withBrowserContext } from "@/e2e/support/context";
 import {
   navigationCases,
   verifyHardAndClientNavigation,
-} from "../support/navigation/cases";
-import { targetViewports } from "../support/viewport";
+} from "@/e2e/support/navigation/cases";
+import { targetViewports } from "@/e2e/support/viewport";
 
 test.describe.configure({ mode: "parallel" });
 

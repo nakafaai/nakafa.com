@@ -7,8 +7,8 @@ import {
   photo,
   pickFiles,
   write,
-} from "../support/attachment";
-import { openChatPage, runOnPage, START } from "../support/chat";
+} from "@/e2e/support/attachment";
+import { openChatPage, runOnPage, START } from "@/e2e/support/chat";
 import {
   inTheSheet,
   openFromHistory,
@@ -16,9 +16,9 @@ import {
   promptWith,
   UNAVAILABLE,
   UNCONFIRMED,
-} from "../support/sheet";
-import { readinessTimeoutMilliseconds } from "../support/timeout";
-import { SAVE, uploadsNamedBy, uploadsReleasedBy } from "../support/upload";
+} from "@/e2e/support/sheet";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { SAVE, uploadsNamedBy, uploadsReleasedBy } from "@/e2e/support/upload";
 
 const FIRST = { prompt: "What is a limit?", title: "About limits" };
 const SECOND = { prompt: "What is a derivative?", title: "About derivatives" };

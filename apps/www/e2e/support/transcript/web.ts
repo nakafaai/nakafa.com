@@ -9,7 +9,7 @@ import {
   said,
   stored,
   working,
-} from "./message";
+} from "@/e2e/support/transcript/message";
 
 type SearchCard = Extract<Card, { type: "data-web-search" }>["data"];
 type PageCard = Extract<Card, { type: "data-scrape-url" }>["data"];

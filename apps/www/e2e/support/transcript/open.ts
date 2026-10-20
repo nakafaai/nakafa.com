@@ -6,16 +6,16 @@ import {
 } from "@playwright/test";
 import { Effect, MutableRef, Option, Schema } from "effect";
 import { AI_STORAGE_KEY } from "@/components/ai/store/create";
-import { seedAnalyticsConsent } from "../consent";
-import { waitForSlide } from "../layout";
-import { signInLearner } from "../learner";
-import { withObservedPageErrors } from "../observe";
-import type { ServedMessage } from "../query";
-import { SHEET_POPUP } from "../selector";
-import { readinessTimeoutMilliseconds } from "../timeout";
-import { exchange, type Part } from "./message";
-import { CHAT, serveConversation } from "./serve";
-import { serveIcons } from "./web";
+import { seedAnalyticsConsent } from "@/e2e/support/consent";
+import { waitForSlide } from "@/e2e/support/layout";
+import { signInLearner } from "@/e2e/support/learner";
+import { withObservedPageErrors } from "@/e2e/support/observe";
+import type { ServedMessage } from "@/e2e/support/query";
+import { SHEET_POPUP } from "@/e2e/support/selector";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { exchange, type Part } from "@/e2e/support/transcript/message";
+import { CHAT, serveConversation } from "@/e2e/support/transcript/serve";
+import { serveIcons } from "@/e2e/support/transcript/web";
 
 /** The question that every fixture conversation starts from. */
 const QUESTION = "Tolong bantu?";

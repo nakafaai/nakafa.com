@@ -1,17 +1,17 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Effect, type MutableList } from "effect";
-import { seedAnalyticsConsent } from "../support/consent";
-import { activate, press, visibleLink } from "../support/input";
-import { pressPreloaded } from "../support/navigation/prefetch";
-import { withObservedPageErrors } from "../support/observe";
-import { recordServerFunctionCalls } from "../support/requests";
+import { seedAnalyticsConsent } from "@/e2e/support/consent";
+import { activate, press, visibleLink } from "@/e2e/support/input";
+import { pressPreloaded } from "@/e2e/support/navigation/prefetch";
+import { withObservedPageErrors } from "@/e2e/support/observe";
+import { recordServerFunctionCalls } from "@/e2e/support/requests";
 import {
   expectStillShell,
   observeShell,
   readPageTime,
   readShellObservation,
-} from "../support/shell";
-import { readinessTimeoutMilliseconds } from "../support/timeout";
+} from "@/e2e/support/shell";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import {
   arrive,
   intend,
@@ -23,8 +23,8 @@ import {
   setHref,
   settledSection,
   trackHref,
-} from "../support/tryout";
-import { tryoutViewports } from "../support/viewport";
+} from "@/e2e/support/tryout";
+import { tryoutViewports } from "@/e2e/support/viewport";
 
 /**
  * Opens a set or section from a link that the reader showed intent toward, so

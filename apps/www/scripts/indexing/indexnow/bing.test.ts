@@ -12,11 +12,11 @@ import {
 } from "effect";
 import { FetchHttpClient } from "effect/http";
 import { TestClock } from "effect/testing";
-import { answer, quotaAnswer, urlsOf } from "../fixture";
+import { answer, quotaAnswer, urlsOf } from "@/scripts/indexing/fixture";
 import {
   readBingWebmasterApiKey,
   submitUrlsToBing,
-} from "./bing";
+} from "@/scripts/indexing/indexnow/bing";
 
 const BING_SUBMIT_ENDPOINT =
   "https://ssl.bing.com/webmaster/api.svc/json/SubmitUrlbatch";

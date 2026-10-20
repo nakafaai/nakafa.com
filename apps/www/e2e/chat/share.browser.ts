@@ -1,9 +1,9 @@
 import { type Browser, expect, type Page, test } from "@playwright/test";
 import { Array as Arr, Effect } from "effect";
-import { ANSWER_MILLISECONDS, type Changes } from "../support/changes";
-import { runOnPage } from "../support/chat";
-import { withLearner, withReader } from "../support/reader";
-import { pageRows } from "../support/rows";
+import { ANSWER_MILLISECONDS, type Changes } from "@/e2e/support/changes";
+import { runOnPage } from "@/e2e/support/chat";
+import { withLearner, withReader } from "@/e2e/support/reader";
+import { pageRows } from "@/e2e/support/rows";
 import {
   linkOn,
   notAvailable,
@@ -16,15 +16,15 @@ import {
   shareChat,
   unshareChat,
   watchRequests,
-} from "../support/share";
-import { readinessTimeoutMilliseconds } from "../support/timeout";
+} from "@/e2e/support/share";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import {
   learnsNoStreamAndNoMemory,
   learnsNothingOfWhoOwnsTheChat,
   learnsOnlyWhereTurnsStand,
   learnsWhatTurnsCost,
   learnsWhoOwnsTheChat,
-} from "../support/told";
+} from "@/e2e/support/told";
 
 const PROMPT = "Why is the derivative of sine the cosine?";
 const TITLE = "The derivative of sine";

@@ -1,7 +1,7 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Array as Arr, Effect, MutableList } from "effect";
 import { LessonSchema } from "@/components/marketing/about/lesson/id";
-import { withBrowserContext } from "../../support/context";
+import { withBrowserContext } from "@/e2e/support/context";
 import {
   LESSON_WAIT_MS,
   lessonPanel,
@@ -9,15 +9,15 @@ import {
   lessonVisual,
   lessonWindow,
   PROJECTILE_VIEW,
-} from "../../support/lesson";
-import { withObservedPageErrors } from "../../support/observe";
-import { openRoute } from "../../support/route";
-import { readinessTimeoutMilliseconds } from "../../support/timeout";
+} from "@/e2e/support/lesson";
+import { withObservedPageErrors } from "@/e2e/support/observe";
+import { openRoute } from "@/e2e/support/route";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import {
   desktopViewport,
   touchViewport,
   viewportSize,
-} from "../../support/viewport";
+} from "@/e2e/support/viewport";
 
 /** How often the lesson panel's height is read once its visual is mounted. */
 const HEIGHT_SAMPLE_MS = 200;

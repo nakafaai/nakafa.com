@@ -1,10 +1,10 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
-import { live, reloadUntil, saved } from "../support/changes";
-import { DELETE, FAILED, openChatPage, runOnPage } from "../support/chat";
-import { ACCESS_TITLE } from "../support/share";
-import { shownTexts, watchTexts } from "../support/shown";
-import { readinessTimeoutMilliseconds } from "../support/timeout";
+import { live, reloadUntil, saved } from "@/e2e/support/changes";
+import { DELETE, FAILED, openChatPage, runOnPage } from "@/e2e/support/chat";
+import { ACCESS_TITLE } from "@/e2e/support/share";
+import { shownTexts, watchTexts } from "@/e2e/support/shown";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /** A chat's row on the learner's chats page, which holds a link over the whole row. */
 const rowOf = (page: Page, chatId: string) =>

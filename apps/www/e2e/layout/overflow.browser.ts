@@ -1,12 +1,12 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
-import { LESSON_PATH } from "../support/chat";
-import { withBrowserContext } from "../support/context";
-import { expectNoOverflow } from "../support/layout";
-import { withObservedPageErrors } from "../support/observe";
-import { appRoutes, openRoute } from "../support/route";
-import { scrollThroughPage } from "../support/scroll";
-import { desktopViewport, viewportSize } from "../support/viewport";
+import { LESSON_PATH } from "@/e2e/support/chat";
+import { withBrowserContext } from "@/e2e/support/context";
+import { expectNoOverflow } from "@/e2e/support/layout";
+import { withObservedPageErrors } from "@/e2e/support/observe";
+import { appRoutes, openRoute } from "@/e2e/support/route";
+import { scrollThroughPage } from "@/e2e/support/scroll";
+import { desktopViewport, viewportSize } from "@/e2e/support/viewport";
 
 /**
  * The pages that must never scroll sideways: the home page in each language,

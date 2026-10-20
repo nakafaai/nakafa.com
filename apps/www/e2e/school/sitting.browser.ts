@@ -6,8 +6,8 @@ import {
   inviteLearner,
   seedSitting,
   signInOwner,
-} from "../support/school";
-import { readinessTimeoutMilliseconds } from "../support/timeout";
+} from "@/e2e/support/school";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /** The name that the acceptance runtime gives every learner it invites. */
 const LEARNER_NAME = "Acceptance Learner";

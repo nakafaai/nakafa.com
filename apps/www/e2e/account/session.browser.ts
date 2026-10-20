@@ -1,12 +1,12 @@
 import { expect, type Page, test, type WebSocket } from "@playwright/test";
 import { Deferred, Effect, Ref } from "effect";
-import { signInLearner } from "../support/learner";
+import { signInLearner } from "@/e2e/support/learner";
 import {
   withObservedEvents,
   withObservedPageErrors,
-} from "../support/observe";
-import { appRoutes } from "../support/route";
-import { readinessTimeoutMilliseconds } from "../support/timeout";
+} from "@/e2e/support/observe";
+import { appRoutes } from "@/e2e/support/route";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 const SESSION_ANSWER = "**/api/auth/get-session**";
 /** What Better Auth answers when its session lookup throws, as the trace of a failed run showed. */

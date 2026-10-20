@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
-import { readCumulativeLayoutShift } from "../support/layout";
+import { readCumulativeLayoutShift } from "@/e2e/support/layout";
 import {
   createSchool,
   hostAddress,
@@ -8,7 +8,7 @@ import {
   seedSitting,
   signInOwner,
   signInTeacher,
-} from "../support/school";
+} from "@/e2e/support/school";
 
 /** The exam title and the room that the acceptance runtime seeds for a sitting that is open now. */
 const SEEDED_EXAM = "Ujian Acceptance";

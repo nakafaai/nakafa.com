@@ -3,8 +3,8 @@ import en from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
 import { Effect } from "effect";
-import { LESSON_PATH } from "./chat";
-import { BUBBLE, SHEET_POPUP } from "./selector";
+import { LESSON_PATH } from "@/e2e/support/chat";
+import { BUBBLE, SHEET_POPUP } from "@/e2e/support/selector";
 
 /** What the pages tell the learner when a prompt could not be confirmed. */
 export const UNCONFIRMED = en.Toast["failure-connection"].title;

@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { Array as Arr } from "effect";
-import { cutText, lines, overflow } from "../support/transcript/measure";
+import { cutText, lines, overflow } from "@/e2e/support/transcript/measure";
 import {
   content,
   contentBare,
@@ -11,8 +11,8 @@ import {
   searchId,
   searchMany,
   searchNone,
-} from "../support/transcript/nakafa";
-import { onChat, onSheet } from "../support/transcript/open";
+} from "@/e2e/support/transcript/nakafa";
+import { onChat, onSheet } from "@/e2e/support/transcript/open";
 
 /**
  * The button of a result: Nakafa renders each result as a link inside a

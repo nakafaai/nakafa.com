@@ -1,16 +1,16 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
-import { withBrowserContext } from "../support/context";
-import { expectNoOverflow } from "../support/layout";
-import { withObservedPageErrors } from "../support/observe";
-import { openRoute } from "../support/route";
-import { scrollThroughPage } from "../support/scroll";
+import { withBrowserContext } from "@/e2e/support/context";
+import { expectNoOverflow } from "@/e2e/support/layout";
+import { withObservedPageErrors } from "@/e2e/support/observe";
+import { openRoute } from "@/e2e/support/route";
+import { scrollThroughPage } from "@/e2e/support/scroll";
 import {
   compactViewport,
   tabletPortraitViewport,
   touchViewport,
   viewportSize,
-} from "../support/viewport";
+} from "@/e2e/support/viewport";
 
 /** The widths below the desktop, where long words and long tab names push hardest on the page. */
 const NARROW_VIEWPORTS = [

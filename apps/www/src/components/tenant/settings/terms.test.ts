@@ -1,6 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { Array as Arr, Option } from "effect";
+import { isDraft, type Unit } from "@/components/tenant/settings/state";
 import {
   archivePeriodChange,
   createPeriodChange,
@@ -8,7 +9,6 @@ import {
   renamePeriodChange,
   restorePeriodChange,
 } from "@/components/tenant/settings/terms";
-import { isDraft, type Unit } from "@/components/tenant/settings/state";
 import { createLocalStore } from "@/test/optimistic";
 import { later, pageOf, paging, period, slug, sma, smp } from "@/test/settings";
 

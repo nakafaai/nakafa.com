@@ -1,6 +1,6 @@
 import type { NinaTurnSummary } from "@repo/backend/confect/nina/contract/turn";
 import { Array as Arr } from "effect";
-import type { ServedMessage, StoredMessage } from "./query";
+import type { ServedMessage, StoredMessage } from "@/e2e/support/query";
 
 /** The moment every stored message was written, in milliseconds. */
 const WRITTEN = 1_760_000_000_000;

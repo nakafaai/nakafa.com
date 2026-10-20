@@ -1,10 +1,10 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
-import { seedAnalyticsConsent } from "../support/consent";
-import { waitForCommittedAppRouter } from "../support/navigation/readiness";
-import { withObservedPageErrors } from "../support/observe";
-import { appRoutes } from "../support/route";
-import { readinessTimeoutMilliseconds } from "../support/timeout";
+import { seedAnalyticsConsent } from "@/e2e/support/consent";
+import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
+import { withObservedPageErrors } from "@/e2e/support/observe";
+import { appRoutes } from "@/e2e/support/route";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 // The shared content column's cap, Tailwind's max-w-3xl.
 const columnMaxWidth = 768;

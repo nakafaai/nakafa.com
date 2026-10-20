@@ -13,9 +13,9 @@ import {
   type Changes,
   live,
   saved,
-} from "./changes";
-import { onThePage, openChatPage } from "./chat";
-import { readinessTimeoutMilliseconds } from "./timeout";
+} from "@/e2e/support/changes";
+import { onThePage, openChatPage } from "@/e2e/support/chat";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { SHARE_ENTRY } from "@/lib/share/fragment";
 
 /** The shape of a share token: 32 random bytes in URL-safe Base64, 43 characters. */

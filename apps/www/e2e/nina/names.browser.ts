@@ -10,8 +10,8 @@ import {
   pickFiles,
   runPage,
   write,
-} from "../support/attachment";
-import { onThePage, openChatPage, runOnPage } from "../support/chat";
+} from "@/e2e/support/attachment";
+import { onThePage, openChatPage, runOnPage } from "@/e2e/support/chat";
 
 /** Names a learner can have on a file, longer than a title can show. */
 const LONG_NAMES = [

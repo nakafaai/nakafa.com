@@ -1,14 +1,14 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
-import { type Changes, trackChanges } from "../support/changes";
+import { type Changes, trackChanges } from "@/e2e/support/changes";
 import {
   createSchool,
   hostAddress,
   inviteLearner,
   seedSitting,
   signInOwner,
-} from "../support/school";
-import { readinessTimeoutMilliseconds } from "../support/timeout";
+} from "@/e2e/support/school";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /**
  * Opens a page and waits until the server answered each of its reads, which all need

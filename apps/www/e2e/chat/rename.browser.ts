@@ -1,7 +1,7 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
-import { reloadUntil, saved } from "../support/changes";
-import { FAILED, RENAME, runOnPage } from "../support/chat";
+import { reloadUntil, saved } from "@/e2e/support/changes";
+import { FAILED, RENAME, runOnPage } from "@/e2e/support/chat";
 import {
   editorOf,
   NEW,
@@ -10,7 +10,7 @@ import {
   REFUSED,
   startRename,
   titleOf,
-} from "../support/rename";
+} from "@/e2e/support/rename";
 
 /** The longest title a chat takes, and what a learner who types more ends up with. */
 const LONGEST = "x".repeat(80);

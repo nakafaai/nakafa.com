@@ -16,14 +16,14 @@ import {
   seedAnalyticsConsent,
   seedRawStorage,
   stopAppCode,
-} from "../support/consent";
-import { withBrowserContext } from "../support/context";
-import { pinnedRoutes } from "../support/corpus";
-import { readFooterActions, setLargeText } from "../support/footer";
-import { withObservedPageErrors } from "../support/observe";
-import { APP_CHUNK_PATH } from "../support/route";
-import { readinessTimeoutMilliseconds } from "../support/timeout";
-import { compactViewport } from "../support/viewport";
+} from "@/e2e/support/consent";
+import { withBrowserContext } from "@/e2e/support/context";
+import { pinnedRoutes } from "@/e2e/support/corpus";
+import { readFooterActions, setLargeText } from "@/e2e/support/footer";
+import { withObservedPageErrors } from "@/e2e/support/observe";
+import { APP_CHUNK_PATH } from "@/e2e/support/route";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { compactViewport } from "@/e2e/support/viewport";
 
 /** An earlier notice that a browser may still hold a choice for. */
 const OLDER_NOTICE_VERSION = "privacy-2026-08-21";

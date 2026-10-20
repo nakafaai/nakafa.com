@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
-import { readCumulativeLayoutShift } from "../support/layout";
-import { createSchool, hostAddress, signInOwner } from "../support/school";
+import { readCumulativeLayoutShift } from "@/e2e/support/layout";
+import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 
 /** The sidebar of the school, whose links every click below starts from. */
 const SIDEBAR = '[data-slot="sidebar-content"]';

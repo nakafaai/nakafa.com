@@ -1,7 +1,7 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
-import { composerOf } from "../support/attachment";
-import type { Changes } from "../support/changes";
+import { composerOf } from "@/e2e/support/attachment";
+import type { Changes } from "@/e2e/support/changes";
 import {
   LESSON_PATH,
   OPENED_CHAT,
@@ -9,17 +9,17 @@ import {
   openChatPage,
   runOnPage,
   START,
-} from "../support/chat";
-import { PROMPT, pageOpensChat, promptIn, write } from "../support/prompt";
-import { BUBBLE } from "../support/selector";
+} from "@/e2e/support/chat";
+import { PROMPT, pageOpensChat, promptIn, write } from "@/e2e/support/prompt";
+import { BUBBLE } from "@/e2e/support/selector";
 import {
   inTheSheet,
   openSheet,
   UNAVAILABLE,
   UNCONFIRMED,
-} from "../support/sheet";
-import { mostCopies, watchCopies } from "../support/shown";
-import { readinessTimeoutMilliseconds } from "../support/timeout";
+} from "@/e2e/support/sheet";
+import { mostCopies, watchCopies } from "@/e2e/support/shown";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /**
  * The prompt shows at once, Nina types after it and the composer is empty. Then

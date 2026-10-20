@@ -4,7 +4,7 @@ import {
   shownTexts,
   watchCopies,
   watchTexts,
-} from "./shown";
+} from "@/e2e/support/shown";
 
 const SEEN = "Access denied";
 const NEVER = "Another text";

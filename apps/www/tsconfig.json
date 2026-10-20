@@ -8,6 +8,10 @@
       "vitest/globals"
     ],
     "paths": {
+      "@/e2e/*": ["./e2e/*"],
+      "@/checks/*": ["./checks/*"],
+      "@/scripts/*": ["./scripts/*"],
+      "@/public/*": ["./public/*"],
       "@/*": ["./src/*"],
       "@repo/*": ["../../packages/*"]
     }

@@ -3,8 +3,8 @@ import en from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
 import { Effect } from "effect";
-import { openChatPage, runOnPage } from "../support/chat";
-import { readCumulativeLayoutShift } from "../support/layout";
+import { openChatPage, runOnPage } from "@/e2e/support/chat";
+import { readCumulativeLayoutShift } from "@/e2e/support/layout";
 
 const VIEWPORTS = [
   { name: "a phone", size: { width: 390, height: 844 } },

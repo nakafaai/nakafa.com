@@ -1,14 +1,14 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
-import { loadMarketingPage } from "../support/marketing";
-import { withObservedPageErrors } from "../support/observe";
+import { loadMarketingPage } from "@/e2e/support/marketing";
+import { withObservedPageErrors } from "@/e2e/support/observe";
 import {
   expectStablePricingAppShell,
   expectStablePricingTransition,
   observeStablePricingReload,
-} from "../support/pricing";
-import { readinessTimeoutMilliseconds } from "../support/timeout";
-import { desktopViewport } from "../support/viewport";
+} from "@/e2e/support/pricing";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { desktopViewport } from "@/e2e/support/viewport";
 
 const PRICING_PATH_PATTERN = /\/id\/pricing$/;
 const EURO_TITLE_PATTERN = /So viel sind 8,99\s€/;

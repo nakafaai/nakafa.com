@@ -14,8 +14,8 @@ import {
   PlatformError,
 } from "effect";
 import { TestClock } from "effect/testing";
-import { IndexNowSubmitError } from "./errors";
-import { recordLogs } from "./fixture";
+import { IndexNowSubmitError } from "@/scripts/indexing/errors";
+import { recordLogs } from "@/scripts/indexing/fixture";
 import {
   ensureSubmissionHistoryFolder,
   listUnsubmittedUrls,
@@ -23,8 +23,8 @@ import {
   saveAcceptedUrls,
   saveSubmissionHistory,
   updateSubmissionHistory,
-} from "./history";
-import { indexingFiles } from "./paths";
+} from "@/scripts/indexing/history";
+import { indexingFiles } from "@/scripts/indexing/paths";
 
 const FIRST = "https://nakafa.com/id/first";
 const SECOND = "https://nakafa.com/id/second";

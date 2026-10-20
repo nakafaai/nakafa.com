@@ -6,7 +6,7 @@ import {
   type Part,
   ran,
   stored,
-} from "./message";
+} from "@/e2e/support/transcript/message";
 
 /**
  * Every way a capability ends short of a plain answer: a part for each outcome

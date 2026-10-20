@@ -8,8 +8,8 @@ import {
   EntryShellPanel,
 } from "@/components/entry/shell";
 import { ThemePicker } from "@/components/shared/theme/picker";
-import { SchoolMark } from "@/components/tenant/mark";
 import { TenantOutsiderActions } from "@/components/tenant/leave";
+import { SchoolMark } from "@/components/tenant/mark";
 
 /**
  * The page of a signed-in visitor who is not a member of the school. It names the account,

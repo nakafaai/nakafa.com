@@ -1,6 +1,6 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect, Exit } from "effect";
-import { withObservedPageErrors } from "./observe";
+import { withObservedPageErrors } from "@/e2e/support/observe";
 
 const PROBE_MESSAGE = "page error guard probe";
 

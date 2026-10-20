@@ -1,16 +1,16 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
-import { runOnPage } from "../support/chat";
+import { runOnPage } from "@/e2e/support/chat";
 import {
   ANSWER,
   answerTurn,
   chatOf,
   DIAGRAM_DESCRIPTION,
   DIAGRAM_TITLE,
-} from "../support/prose";
-import { settled } from "../support/rows";
-import { drawnRow, openServedChat } from "../support/serve";
-import { revealTimeoutMilliseconds } from "../support/timeout";
+} from "@/e2e/support/prose";
+import { settled } from "@/e2e/support/rows";
+import { drawnRow, openServedChat } from "@/e2e/support/serve";
+import { revealTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /** A diagram with no title or description, one that cannot be drawn, and one with a title and a description. */
 const PLAIN = answerTurn({ markdown: ANSWER.diagramPlain, order: 1 });

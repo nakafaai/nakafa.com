@@ -7,13 +7,13 @@ import {
   Option,
   Result,
 } from "effect";
-import { openChatPage } from "./chat";
+import { openChatPage } from "@/e2e/support/chat";
 import {
   CONVEX_SOCKET,
   decodeSent,
   decodeTransition,
   encodeTransition,
-} from "./frames";
+} from "@/e2e/support/frames";
 import {
   type Asked,
   type AskedQueries,
@@ -21,9 +21,9 @@ import {
   noticeQueries,
   type ServedMessage,
   type StoredMessage,
-} from "./query";
-import { BUBBLE_CONTENT, TRANSCRIPT_ROW } from "./selector";
-import { readinessTimeoutMilliseconds } from "./timeout";
+} from "@/e2e/support/query";
+import { BUBBLE_CONTENT, TRANSCRIPT_ROW } from "@/e2e/support/selector";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /** A frame in which the server moves the page to a new view of the database. */
 type Transition = Option.Option.Value<ReturnType<typeof decodeTransition>>;

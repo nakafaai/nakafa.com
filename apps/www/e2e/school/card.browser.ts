@@ -1,8 +1,8 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
-import { signInLearner } from "../support/learner";
-import { createSchool, hostAddress, seedCard } from "../support/school";
-import { readinessTimeoutMilliseconds } from "../support/timeout";
+import { signInLearner } from "@/e2e/support/learner";
+import { createSchool, hostAddress, seedCard } from "@/e2e/support/school";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 test("a wrong card code is refused with one message that does not say whether the username exists", async ({
   page,

@@ -6,8 +6,8 @@ import {
   live,
   reloadUntil,
   saved,
-} from "../support/changes";
-import { writeMemory } from "../support/list";
+} from "@/e2e/support/changes";
+import { writeMemory } from "@/e2e/support/list";
 import {
   confirmDelete,
   EMPTY,
@@ -16,9 +16,9 @@ import {
   memoryRow,
   opened,
   openMemoryPage,
-} from "../support/memory";
-import { withObservedPageErrors } from "../support/observe";
-import { readinessTimeoutMilliseconds } from "../support/timeout";
+} from "@/e2e/support/memory";
+import { withObservedPageErrors } from "@/e2e/support/observe";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 const KEPT = "Studies after dinner";
 const MORE = " and on Sundays";

@@ -1,14 +1,14 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 import { Array as Arr, Duration, Effect, Option } from "effect";
-import { waitForStableCanvas } from "./canvas";
-import { seedAnalyticsConsent } from "./consent";
-import { scrollToElement } from "./input";
+import { waitForStableCanvas } from "@/e2e/support/canvas";
+import { seedAnalyticsConsent } from "@/e2e/support/consent";
+import { scrollToElement } from "@/e2e/support/input";
 import {
   readCumulativeLayoutShift,
   readPageLayoutShift,
-} from "./layout";
-import { CARD, LINE_SCENE, VISUAL_CARD } from "./selector";
-import { revealTimeoutMilliseconds } from "./timeout";
+} from "@/e2e/support/layout";
+import { CARD, LINE_SCENE, VISUAL_CARD } from "@/e2e/support/selector";
+import { revealTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 /** How long one attempt of a retried check waits before the next one. */
 const ATTEMPT_TIMEOUT_MILLISECONDS = 1000;

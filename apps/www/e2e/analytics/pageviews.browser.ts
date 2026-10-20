@@ -10,10 +10,10 @@ import {
 import {
   openConsentPreferences,
   seedAnalyticsConsent,
-} from "../support/consent";
-import { withBrowserContext } from "../support/context";
-import { withObservedPageErrors } from "../support/observe";
-import { readinessTimeoutMilliseconds } from "../support/timeout";
+} from "@/e2e/support/consent";
+import { withBrowserContext } from "@/e2e/support/context";
+import { withObservedPageErrors } from "@/e2e/support/observe";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 const CapturedIngestSchema = Schema.Struct({
   event: Schema.String,

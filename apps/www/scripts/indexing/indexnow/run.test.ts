@@ -24,10 +24,10 @@ import {
   runToEnd,
   runToFailure,
   urlsOf,
-} from "../fixture";
-import { loadSubmissionHistory } from "../history";
-import { runIndexNow } from "./run";
-import { INDEXNOW_KEY, INDEXNOW_KEY_LOCATION } from "../paths";
+} from "@/scripts/indexing/fixture";
+import { loadSubmissionHistory } from "@/scripts/indexing/history";
+import { runIndexNow } from "@/scripts/indexing/indexnow/run";
+import { INDEXNOW_KEY, INDEXNOW_KEY_LOCATION } from "@/scripts/indexing/paths";
 
 const sitemapMocks = vi.hoisted(() => ({
   getSitemapEntries: vi.fn(),

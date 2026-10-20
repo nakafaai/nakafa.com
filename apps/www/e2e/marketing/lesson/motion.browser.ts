@@ -1,12 +1,12 @@
 import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
-import { withBrowserContext } from "../../support/context";
-import { lessonPanel, lessonSection } from "../../support/lesson";
-import { withObservedPageErrors } from "../../support/observe";
-import { openRoute } from "../../support/route";
-import { readinessTimeoutMilliseconds } from "../../support/timeout";
-import { desktopViewport, viewportSize } from "../../support/viewport";
+import { withBrowserContext } from "@/e2e/support/context";
+import { lessonPanel, lessonSection } from "@/e2e/support/lesson";
+import { withObservedPageErrors } from "@/e2e/support/observe";
+import { openRoute } from "@/e2e/support/route";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { desktopViewport, viewportSize } from "@/e2e/support/viewport";
 
 /** The window's tab of each lab that the reduced-motion check opens, in the window's order. */
 const PROJECTILE_TAB_INDEX = 0;

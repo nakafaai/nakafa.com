@@ -1,9 +1,9 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 import { Effect, type MutableList } from "effect";
-import { activate, visibleLink } from "./input";
-import { waitForCommittedAppRouter } from "./navigation/readiness";
-import { appRoutes } from "./route";
-import { readinessTimeoutMilliseconds } from "./timeout";
+import { activate, visibleLink } from "@/e2e/support/input";
+import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
+import { appRoutes } from "@/e2e/support/route";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 const countryHref = `${appRoutes.tryout}/indonesia`;
 const examHref = `${countryHref}/snbt`;

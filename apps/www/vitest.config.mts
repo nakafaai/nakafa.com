@@ -11,10 +11,17 @@ import { configDefaults, mergeConfig } from "vitest/config";
  */
 export default mergeConfig(config, {
   resolve: {
-    alias: {
+    alias: [
+      /** The scripts folder sits beside src, so its tests keep the `@/` alias to it. */
+      {
+        find: /^@\/scripts\//u,
+        replacement: `${import.meta.dirname}/scripts/`,
+      },
+      { find: /^@\/e2e\//u, replacement: `${import.meta.dirname}/e2e/` },
+      { find: /^@\/public\//u, replacement: `${import.meta.dirname}/public/` },
       /** Match the app's `@/` import alias inside tests. */
-      "@": `${import.meta.dirname}/src`,
-    },
+      { find: /^@\//u, replacement: `${import.meta.dirname}/src/` },
+    ],
   },
   test: {
     /** Production AFDocs checks run only against an already-started site. */

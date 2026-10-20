@@ -3,8 +3,8 @@ import en from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
 import { Clock, Effect } from "effect";
-import { rewriteList } from "../support/answer";
-import { type Changes, live, reloadUntil, saved } from "../support/changes";
+import { rewriteList } from "@/e2e/support/answer";
+import { type Changes, live, reloadUntil, saved } from "@/e2e/support/changes";
 import {
   confirmDelete,
   EMPTY,
@@ -14,10 +14,10 @@ import {
   memoryRow,
   opened,
   openMemoryPage,
-} from "../support/memory";
-import { withObservedPageErrors } from "../support/observe";
-import { readinessTimeoutMilliseconds } from "../support/timeout";
-import { titleOf, widthOf, wordsShown, writeWorst } from "../support/worst";
+} from "@/e2e/support/memory";
+import { withObservedPageErrors } from "@/e2e/support/observe";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { titleOf, widthOf, wordsShown, writeWorst } from "@/e2e/support/worst";
 
 const TITLE = "Study habits";
 const WORDS = "Studies after dinner";

@@ -1,20 +1,20 @@
 import { Effect, Record as Rec } from "effect";
-import { GoogleIndexSubmitError } from "../errors";
-import { getGoogleAccessToken } from "./auth";
-import { getEligibleGoogleIndexingUrls } from "./eligibility";
-import { submitUrlsToGoogle } from "./submit";
+import { GoogleIndexSubmitError } from "@/scripts/indexing/errors";
+import { getGoogleAccessToken } from "@/scripts/indexing/google/auth";
+import { getEligibleGoogleIndexingUrls } from "@/scripts/indexing/google/eligibility";
+import { submitUrlsToGoogle } from "@/scripts/indexing/google/submit";
 import {
   ensureSubmissionHistoryFolder,
   listUnsubmittedUrls,
   loadSubmissionHistory,
   type SubmissionHistory,
   saveAcceptedUrls,
-} from "../history";
+} from "@/scripts/indexing/history";
 import {
   forEachSiteIndexUrlBatch,
   type SiteIndexManifestSummary,
-} from "../manifest";
-import { INDEXING_HOST } from "../paths";
+} from "@/scripts/indexing/manifest";
+import { INDEXING_HOST } from "@/scripts/indexing/paths";
 
 const RATE_LIMIT_DELAY = 1000;
 const PERCENTAGE_MULTIPLIER = 100;

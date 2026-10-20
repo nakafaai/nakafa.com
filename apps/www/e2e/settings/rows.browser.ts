@@ -1,16 +1,16 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
-import { live, saved } from "../support/changes";
-import { writeMemory } from "../support/list";
+import { live, saved } from "@/e2e/support/changes";
+import { writeMemory } from "@/e2e/support/list";
 import {
   confirmDelete,
   deleteQuestion,
   EMPTY,
   memoryRow,
   openMemoryPage,
-} from "../support/memory";
-import { withObservedPageErrors } from "../support/observe";
-import { readinessTimeoutMilliseconds } from "../support/timeout";
+} from "@/e2e/support/memory";
+import { withObservedPageErrors } from "@/e2e/support/observe";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 const FIRST = "Studies after dinner";
 const SECOND = "Prefers short answers";

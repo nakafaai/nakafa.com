@@ -2,7 +2,7 @@ import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
 import { LESSON_SECTION_ID } from "@/components/marketing/about/lesson/id";
 import { LAB_VISIBLE_SHARE } from "@/components/marketing/about/lesson/reveal";
-import { withBrowserContext } from "../../support/context";
+import { withBrowserContext } from "@/e2e/support/context";
 import {
   lessonPanel,
   lessonSection,
@@ -10,11 +10,11 @@ import {
   lessonWindow,
   PROJECTILE_VIEW,
   visibleShare,
-} from "../../support/lesson";
-import { withObservedPageErrors } from "../../support/observe";
-import { holdChunkHolding, openRoute } from "../../support/route";
-import { readinessTimeoutMilliseconds } from "../../support/timeout";
-import { desktopViewport, viewportSize } from "../../support/viewport";
+} from "@/e2e/support/lesson";
+import { withObservedPageErrors } from "@/e2e/support/observe";
+import { holdChunkHolding, openRoute } from "@/e2e/support/route";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { desktopViewport, viewportSize } from "@/e2e/support/viewport";
 
 /** How long the circle's scene is held back, so its placeholder stays on the screen. */
 const LOADING_HOLD_MS = 8000;

@@ -3,11 +3,11 @@ import app from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
 import { Array as Arr, Effect } from "effect";
-import { openChatPage, runOnPage } from "../support/chat";
-import { readFooterActions, setLargeText } from "../support/footer";
-import { appRoutes } from "../support/route";
-import { readinessTimeoutMilliseconds } from "../support/timeout";
-import { compactViewport, touchViewport } from "../support/viewport";
+import { openChatPage, runOnPage } from "@/e2e/support/chat";
+import { readFooterActions, setLargeText } from "@/e2e/support/footer";
+import { appRoutes } from "@/e2e/support/route";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { compactViewport, touchViewport } from "@/e2e/support/viewport";
 
 /** The destructive card that holds the account deletion, the only one on the page. */
 const deletionCard = (page: Page) =>

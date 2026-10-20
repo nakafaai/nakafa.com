@@ -1,6 +1,6 @@
 import type { ConsoleMessage, Page } from "@playwright/test";
 import { Duration, Effect } from "effect";
-import { withObservedEvents } from "./observe";
+import { withObservedEvents } from "@/e2e/support/observe";
 
 // Chrome reports a preload the page never used a few seconds after loading.
 const UNUSED_PRELOAD_SETTLE = Duration.millis(5000);

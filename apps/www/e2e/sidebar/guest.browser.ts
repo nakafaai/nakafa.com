@@ -3,14 +3,14 @@ import en from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
 import { Effect } from "effect";
-import { expectSignInParts } from "../support/auth";
-import { seedAnalyticsConsent } from "../support/consent";
-import { activateUntilVisible } from "../support/input";
-import { withObservedPageErrors } from "../support/observe";
-import { appRoutes } from "../support/route";
-import { VISIBLE_SIDEBAR_TRIGGER } from "../support/selector";
-import { readinessTimeoutMilliseconds } from "../support/timeout";
-import { desktopViewport } from "../support/viewport";
+import { expectSignInParts } from "@/e2e/support/auth";
+import { seedAnalyticsConsent } from "@/e2e/support/consent";
+import { activateUntilVisible } from "@/e2e/support/input";
+import { withObservedPageErrors } from "@/e2e/support/observe";
+import { appRoutes } from "@/e2e/support/route";
+import { VISIBLE_SIDEBAR_TRIGGER } from "@/e2e/support/selector";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { desktopViewport } from "@/e2e/support/viewport";
 
 /** The phone sheet and the desktop rail the guest sidebar opens in. */
 const sidebarViewports = [

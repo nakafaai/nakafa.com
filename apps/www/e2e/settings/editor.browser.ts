@@ -1,15 +1,15 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Array as Arr, Effect, String as Str } from "effect";
-import { saved } from "../support/changes";
+import { saved } from "@/e2e/support/changes";
 import {
   EMPTY,
   editorOf,
   memoryRow,
   opened,
   openMemoryPage,
-} from "../support/memory";
-import { withObservedPageErrors } from "../support/observe";
-import { readinessTimeoutMilliseconds } from "../support/timeout";
+} from "@/e2e/support/memory";
+import { withObservedPageErrors } from "@/e2e/support/observe";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 const TITLE = "Study plan";
 const WORDS = "Hello world";

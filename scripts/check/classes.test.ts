@@ -452,7 +452,10 @@ describe("class constant policy", () => {
   it.effect("keeps the names of one module out of another", () =>
     Effect.gen(function* () {
       const violations = yield* inspectAll([
-        { file: "apps/www/src/components/a.tsx", sourceText: 'const ON = "flex";' },
+        {
+          file: "apps/www/src/components/a.tsx",
+          sourceText: 'const ON = "flex";',
+        },
         {
           file: "apps/www/src/components/b.tsx",
           sourceText: "const view = <div className={ON} />;",

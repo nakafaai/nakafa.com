@@ -1,9 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { LOGO_BYTE_LIMIT } from "@repo/backend/confect/tenancy/schema";
-import {
-  logoAnswerOutcome,
-  logoRefusalOf,
-} from "@/components/tenant/logo";
+import { logoAnswerOutcome, logoRefusalOf } from "@/components/tenant/logo";
 
 describe("tenant/logo refusalOf", () => {
   it("refuses a file that is not a PNG or an SVG image, before any upload", () => {

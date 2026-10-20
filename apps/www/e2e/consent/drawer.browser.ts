@@ -1,17 +1,17 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
-import { usageDataTrigger } from "../support/consent";
-import { activateUntilVisible } from "../support/input";
-import { waitForCommittedAppRouter } from "../support/navigation/readiness";
-import { withObservedPageErrors } from "../support/observe";
-import { openRoute } from "../support/route";
+import { usageDataTrigger } from "@/e2e/support/consent";
+import { activateUntilVisible } from "@/e2e/support/input";
+import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
+import { withObservedPageErrors } from "@/e2e/support/observe";
+import { openRoute } from "@/e2e/support/route";
 import {
   DRAWER_BAR,
   DRAWER_PANEL,
   DRAWER_POPUP,
   DRAWER_TITLE,
-} from "../support/selector";
-import { readinessTimeoutMilliseconds } from "../support/timeout";
+} from "@/e2e/support/selector";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 const usageDataName = "Usage data";
 

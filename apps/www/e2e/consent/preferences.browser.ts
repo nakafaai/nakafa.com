@@ -1,12 +1,12 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Array as Arr, Effect } from "effect";
-import { openConsentPreferences } from "../support/consent";
-import { withBrowserContext } from "../support/context";
-import { readBounds, swipeDown } from "../support/input";
-import { withObservedPageErrors } from "../support/observe";
-import { openRoute } from "../support/route";
-import { DRAWER_BAR } from "../support/selector";
-import { targetViewports } from "../support/viewport";
+import { openConsentPreferences } from "@/e2e/support/consent";
+import { withBrowserContext } from "@/e2e/support/context";
+import { readBounds, swipeDown } from "@/e2e/support/input";
+import { withObservedPageErrors } from "@/e2e/support/observe";
+import { openRoute } from "@/e2e/support/route";
+import { DRAWER_BAR } from "@/e2e/support/selector";
+import { targetViewports } from "@/e2e/support/viewport";
 
 /** The surface each viewport opens: a drawer on a phone, a dialog on wider screens. */
 const slotByViewport = {

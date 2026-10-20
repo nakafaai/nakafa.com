@@ -1,8 +1,8 @@
 import { expect, test, type WebSocketRoute } from "@playwright/test";
 import { Effect, MutableList } from "effect";
-import { seedAnalyticsConsent } from "../support/consent";
-import { withBrowserContext } from "../support/context";
-import { withObservedPageErrors } from "../support/observe";
+import { seedAnalyticsConsent } from "@/e2e/support/consent";
+import { withBrowserContext } from "@/e2e/support/context";
+import { withObservedPageErrors } from "@/e2e/support/observe";
 
 const MATERIAL_PATH =
   "/en/subjects/mathematics/function-composition-inverse-function/function-concept";

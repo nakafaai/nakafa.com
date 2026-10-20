@@ -3,7 +3,7 @@
 import { assert, describe, it } from "@effect/vitest";
 import { encodePrettyJsonText } from "@repo/utilities/json";
 import { Array as Arr, Effect, HashSet, Predicate } from "effect";
-import { runAfdocs } from "./afdocs";
+import { runAfdocs } from "@/checks/afdocs";
 
 const TIMEOUT_MS = 600_000;
 const ALLOWED_SKIPS = HashSet.make("auth-alternative-access");

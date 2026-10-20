@@ -5,9 +5,9 @@ import { HttpClient } from "effect/http";
 import {
   GoogleIndexPageFetchError,
   GoogleStructuredDataParseError,
-} from "../errors";
-import { hasGoogleIndexingApiEligibleStructuredData } from "./structured";
-import type { SiteIndexUrlBatch } from "../manifest";
+} from "@/scripts/indexing/errors";
+import { hasGoogleIndexingApiEligibleStructuredData } from "@/scripts/indexing/google/structured";
+import type { SiteIndexUrlBatch } from "@/scripts/indexing/manifest";
 
 const ELIGIBILITY_FETCH_CONCURRENCY = 8;
 const JSON_LD_SCRIPT_PATTERN =

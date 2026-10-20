@@ -1,9 +1,9 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Effect, MutableList, Record as Rec } from "effect";
-import { withBrowserContext } from "../support/context";
-import { pinnedRoutes } from "../support/corpus";
-import { withObservedPageErrors } from "../support/observe";
-import { servedTimeoutMilliseconds } from "../support/timeout";
+import { withBrowserContext } from "@/e2e/support/context";
+import { pinnedRoutes } from "@/e2e/support/corpus";
+import { withObservedPageErrors } from "@/e2e/support/observe";
+import { servedTimeoutMilliseconds } from "@/e2e/support/timeout";
 
 const revealChart = Effect.fn("NakafaE2E.revealChart")(function* (
   chart: Locator

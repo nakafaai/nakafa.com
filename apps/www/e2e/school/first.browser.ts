@@ -6,7 +6,7 @@ import {
   inviteLearner,
   seedSitting,
   signInOwner,
-} from "../support/school";
+} from "@/e2e/support/school";
 
 /**
  * The first screens of the school pages are in the first HTML, so a member's page

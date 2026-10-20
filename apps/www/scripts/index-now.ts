@@ -10,8 +10,8 @@
 import { NodeServices } from "@effect/platform-node";
 import { FetchClient } from "@repo/utilities/http/client";
 import { Effect, Layer } from "effect";
-import { runIndexNow } from "./indexing/indexnow/run";
-import { IndexingLogger } from "./indexing/logger";
+import { runIndexNow } from "@/scripts/indexing/indexnow/run";
+import { IndexingLogger } from "@/scripts/indexing/logger";
 
 Effect.runPromise(
   runIndexNow().pipe(

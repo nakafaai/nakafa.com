@@ -1,16 +1,16 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
-import { seedAnalyticsConsent } from "../support/consent";
-import { pinnedRoutes } from "../support/corpus";
+import { seedAnalyticsConsent } from "@/e2e/support/consent";
+import { pinnedRoutes } from "@/e2e/support/corpus";
 import {
   openObservedRoute,
   openPrefetched,
-} from "../support/navigation/prefetch";
-import { settleRouter } from "../support/navigation/settle";
-import { withObservedPageErrors } from "../support/observe";
-import { recordServerFunctionCalls } from "../support/requests";
-import { paginationNavigation } from "../support/selector";
-import { desktopViewport, touchViewport } from "../support/viewport";
+} from "@/e2e/support/navigation/prefetch";
+import { settleRouter } from "@/e2e/support/navigation/settle";
+import { withObservedPageErrors } from "@/e2e/support/observe";
+import { recordServerFunctionCalls } from "@/e2e/support/requests";
+import { paginationNavigation } from "@/e2e/support/selector";
+import { desktopViewport, touchViewport } from "@/e2e/support/viewport";
 
 const lessonHref = pinnedRoutes.material.en;
 const articleHref = pinnedRoutes.article.en;

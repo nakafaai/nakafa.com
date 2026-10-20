@@ -3,7 +3,7 @@ import app from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
 import { Effect } from "effect";
-import { trackChanges } from "../support/changes";
+import { trackChanges } from "@/e2e/support/changes";
 import {
   allowUsageData,
   compactContext,
@@ -13,12 +13,12 @@ import {
   seedAnalyticsConsent,
   seedRawStorage,
   stopAppCode,
-} from "../support/consent";
-import { withBrowserContext } from "../support/context";
-import { pinnedRoutes } from "../support/corpus";
-import { signInLearner } from "../support/learner";
-import { APP_CHUNK_PATH } from "../support/route";
-import { readinessTimeoutMilliseconds } from "../support/timeout";
+} from "@/e2e/support/consent";
+import { withBrowserContext } from "@/e2e/support/context";
+import { pinnedRoutes } from "@/e2e/support/corpus";
+import { signInLearner } from "@/e2e/support/learner";
+import { APP_CHUNK_PATH } from "@/e2e/support/route";
+import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { EXPECTED_SESSION, KNOWN_SESSION_KEY } from "@/lib/auth/keys";
 
 /** The name of the synthetic learner, which the account button shows. */

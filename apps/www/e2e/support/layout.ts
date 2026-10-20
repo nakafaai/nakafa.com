@@ -1,6 +1,6 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 import { Array as Arr, Effect, Number as Num, Schema } from "effect";
-import { VISUAL_CARD } from "./selector";
+import { VISUAL_CARD } from "@/e2e/support/selector";
 
 /**
  * Records, from the first script on, the start time, value and input of every

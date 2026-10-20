@@ -15,7 +15,7 @@ import {
 } from "effect";
 import { FetchHttpClient } from "effect/http";
 import { TestClock } from "effect/testing";
-import { getGoogleAccessToken } from "./auth";
+import { getGoogleAccessToken } from "@/scripts/indexing/google/auth";
 
 const TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token";
 const GRANT_TYPE = "urn:ietf:params:oauth:grant-type:jwt-bearer";

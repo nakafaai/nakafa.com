@@ -1,8 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import {
-  cardQr,
-  cardQrPayload,
-} from "@/components/tenant/settings/qr";
+import { cardQr, cardQrPayload } from "@/components/tenant/settings/qr";
 
 const card = {
   code: "ABCDE-FGHJK",
