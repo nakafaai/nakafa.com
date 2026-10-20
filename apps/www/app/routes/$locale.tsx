@@ -1,4 +1,3 @@
-import { captureException } from "@repo/analytics/posthog/browser";
 import { DesignSystemProvider } from "@repo/design-system";
 import { Toaster } from "@repo/design-system/components/ui/sonner";
 import { TailwindIndicator } from "@repo/design-system/components/ui/tailwind-indicator";
@@ -16,14 +15,12 @@ import {
   useParams,
 } from "@tanstack/react-router";
 import { Option } from "effect";
-import { useEffect } from "react";
 import { IntlProvider, useTranslations } from "use-intl";
-import { ActionLink } from "@/components/state/action";
-import { Broken } from "@/components/state/broken";
-import { Missing } from "@/components/state/missing";
-import { Stage } from "@/components/state/stage";
+import {
+  LocalizedError,
+  LocalizedNotFound,
+} from "@/components/state/localized";
 import { readRouteMessages } from "@/lib/i18n/messages.fn";
-import { readStandaloneMessages } from "@/lib/i18n/standalone";
 
 /** The messages that every locale page renders, under every route group. */
 const SHELL_NAMESPACES = ["Common", "State", "Toast"] as const;
@@ -92,49 +89,17 @@ function ShellToaster() {
 
 /**
  * Shows a locale page that failed. It keeps the page's frame and speaks the
- * locale of the address, from the standalone dictionary, because the shell's
- * messages may be the failure itself.
+ * locale of the address, because the shell's messages may be the failure itself.
  */
 function LocaleError({ error }: ErrorComponentProps) {
   const { locale } = useParams({ from: "/$locale" });
-  const messages = readStandaloneMessages(locale);
-  useEffect(() => {
-    captureException(error, { source: "start-locale-error" });
-  }, [error]);
   return (
-    <Stage>
-      <Broken
-        description={messages.Error.description}
-        home={messages.State["home-button"]}
-        homeHref={`/${locale}`}
-        retry={messages.Error.retry}
-        title={messages.Error.title}
-      />
-    </Stage>
+    <LocalizedError error={error} locale={locale} source="start-locale-error" />
   );
 }
 
 /** Shows the not-found page of a locale, with the links of the locale. */
 function LocaleNotFound() {
   const { locale } = useParams({ from: "/$locale" });
-  const messages = readStandaloneMessages(locale);
-  return (
-    <Stage>
-      <Missing
-        description={messages.NotFound.description}
-        title={messages.NotFound.title}
-      >
-        <ActionLink
-          href={`/${locale}`}
-          label={messages.State["home-button"]}
-          variant="default"
-        />
-        <ActionLink
-          href={`/${locale}/search`}
-          label={messages.NotFound["search-button"]}
-          variant="ghost"
-        />
-      </Missing>
-    </Stage>
-  );
+  return <LocalizedNotFound locale={locale} />;
 }

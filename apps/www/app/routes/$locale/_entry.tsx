@@ -6,7 +6,6 @@ import {
   Outlet,
   useParams,
 } from "@tanstack/react-router";
-import { NuqsAdapter } from "nuqs/adapters/tanstack-router";
 import { useEffect } from "react";
 import { IntlProvider } from "use-intl";
 import { EntryShellArtwork } from "@/components/entry/artwork.client";
@@ -56,11 +55,10 @@ function EntryLayout() {
     <IntlProvider locale={locale} messages={{ ...shellMessages, ...messages }}>
       <EntryShell>
         <EntryShellPanel>
-          <NuqsAdapter>
-            <ConvexProvider convexUrl={clientEnv.VITE_CONVEX_URL}>
-              <Outlet />
-            </ConvexProvider>
-          </NuqsAdapter>
+          {" "}
+          <ConvexProvider convexUrl={clientEnv.VITE_CONVEX_URL}>
+            <Outlet />
+          </ConvexProvider>
         </EntryShellPanel>
         <EntryShellArtwork />
       </EntryShell>

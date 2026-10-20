@@ -1,6 +1,5 @@
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import type { Mascot } from "@repo/mascot/code";
-import { NuqsAdapter } from "nuqs/adapters/tanstack-router";
 import { SignInScreen } from "@/components/auth/screen";
 import { EntryShellArtwork } from "@/components/entry/artwork.client";
 import {
@@ -32,20 +31,18 @@ export function TenantEntry({
   return (
     <EntryShell>
       <EntryShellPanel>
-        <NuqsAdapter>
-          <EntryShellHeader>
-            <div className="ms-auto">
-              <ThemePicker variant="ghost" />
-            </div>
-          </EntryShellHeader>
-
-          <SignInScreen
-            action={<TenantEntryActions slug={slug} />}
-            figure={<SchoolMark logo={logo} mascot={mascot} size="lg" />}
-          >
-            <h1 className="font-semibold text-2xl">{title}</h1>
-          </SignInScreen>
-        </NuqsAdapter>
+        {" "}
+        <EntryShellHeader>
+          <div className="ms-auto">
+            <ThemePicker variant="ghost" />
+          </div>
+        </EntryShellHeader>
+        <SignInScreen
+          action={<TenantEntryActions slug={slug} />}
+          figure={<SchoolMark logo={logo} mascot={mascot} size="lg" />}
+        >
+          <h1 className="font-semibold text-2xl">{title}</h1>
+        </SignInScreen>
       </EntryShellPanel>
       <EntryShellArtwork />
     </EntryShell>

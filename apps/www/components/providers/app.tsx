@@ -1,4 +1,3 @@
-import { NuqsAdapter } from "nuqs/adapters/tanstack-router";
 import type { ReactNode } from "react";
 import { AnalyticsConsentBootstrap } from "@/components/analytics/consent/bootstrap";
 import { AnalyticsConsentControls } from "@/components/analytics/consent/controls";
@@ -31,24 +30,22 @@ export function AppProviders({
   pageNavigation: PageNavigation | null;
 }) {
   return (
-    <NuqsAdapter>
-      <ConvexProvider convexUrl={clientEnv.VITE_CONVEX_URL}>
-        <PageNavigationProvider navigation={pageNavigation}>
-          {pageNavigation ? (
-            <AnalyticsConsentProvider
-              isPreviewChild={clientEnv.VITE_AKSARA_PREVIEW_CHILD === "true"}
-            >
-              {children}
-              <AnalyticsConsentBootstrap />
-              <AnalyticsConsentControls />
-            </AnalyticsConsentProvider>
-          ) : (
-            <AnalyticsUnavailableProvider>
-              {children}
-            </AnalyticsUnavailableProvider>
-          )}
-        </PageNavigationProvider>
-      </ConvexProvider>
-    </NuqsAdapter>
+    <ConvexProvider convexUrl={clientEnv.VITE_CONVEX_URL}>
+      <PageNavigationProvider navigation={pageNavigation}>
+        {pageNavigation ? (
+          <AnalyticsConsentProvider
+            isPreviewChild={clientEnv.VITE_AKSARA_PREVIEW_CHILD === "true"}
+          >
+            {children}
+            <AnalyticsConsentBootstrap />
+            <AnalyticsConsentControls />
+          </AnalyticsConsentProvider>
+        ) : (
+          <AnalyticsUnavailableProvider>
+            {children}
+          </AnalyticsUnavailableProvider>
+        )}
+      </PageNavigationProvider>
+    </ConvexProvider>
   );
 }
