@@ -2,7 +2,7 @@
 
 import { describe, expect, it } from "@effect/vitest";
 import { PREVIEW_RENDERER_AUTH_FORMAT } from "@nakafa/aksara-contracts/preview/auth";
-import { Effect, Option, Redacted } from "effect";
+import { Effect, Redacted } from "effect";
 import { serveContentRenderer } from "@/lib/content/internal/renderer.server";
 
 const readPreviewRendererConfigMock = vi.hoisted(() => vi.fn());
@@ -33,9 +33,7 @@ function renderer(headers: Record<string, string> = {}) {
 
 describe("content renderer route", () => {
   it("returns the renderer manifest to the publication token", async () => {
-    readPreviewRendererConfigMock.mockReturnValue(
-      Effect.succeed(Option.none())
-    );
+    readPreviewRendererConfigMock.mockReturnValue(Effect.succeedNone);
 
     const response = await renderer({
       Authorization: "Bearer publication-key",
@@ -49,9 +47,7 @@ describe("content renderer route", () => {
   });
 
   it("answers 401 when neither token nor preview renderer is configured", async () => {
-    readPreviewRendererConfigMock.mockReturnValue(
-      Effect.succeed(Option.none())
-    );
+    readPreviewRendererConfigMock.mockReturnValue(Effect.succeedNone);
 
     const response = await renderer({ Authorization: "Bearer wrong-key" });
 
@@ -61,12 +57,10 @@ describe("content renderer route", () => {
 
   it("answers 401 when the preview request has no nonce", async () => {
     readPreviewRendererConfigMock.mockReturnValue(
-      Effect.succeed(
-        Option.some({
-          secret: PREVIEW_SECRET,
-          token: Redacted.make(PREVIEW_TOKEN),
-        })
-      )
+      Effect.succeedSome({
+        secret: PREVIEW_SECRET,
+        token: Redacted.make(PREVIEW_TOKEN),
+      })
     );
 
     const response = await renderer({
@@ -78,12 +72,10 @@ describe("content renderer route", () => {
 
   it("answers 401 when the bearer token is not the preview token", async () => {
     readPreviewRendererConfigMock.mockReturnValue(
-      Effect.succeed(
-        Option.some({
-          secret: PREVIEW_SECRET,
-          token: Redacted.make(PREVIEW_TOKEN),
-        })
-      )
+      Effect.succeedSome({
+        secret: PREVIEW_SECRET,
+        token: Redacted.make(PREVIEW_TOKEN),
+      })
     );
 
     const response = await renderer({
@@ -96,12 +88,10 @@ describe("content renderer route", () => {
 
   it("returns the manifest with a proof bound to the preview nonce", async () => {
     readPreviewRendererConfigMock.mockReturnValue(
-      Effect.succeed(
-        Option.some({
-          secret: PREVIEW_SECRET,
-          token: Redacted.make(PREVIEW_TOKEN),
-        })
-      )
+      Effect.succeedSome({
+        secret: PREVIEW_SECRET,
+        token: Redacted.make(PREVIEW_TOKEN),
+      })
     );
 
     const response = await renderer({

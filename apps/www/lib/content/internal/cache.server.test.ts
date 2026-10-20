@@ -3,6 +3,7 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { ContentCacheRequestSchema } from "@nakafa/aksara-contracts/cache/content";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
+import { BodyReadError } from "@repo/utilities/body";
 import { Effect } from "effect";
 import {
   ContentCacheInvalidationError,
@@ -33,12 +34,21 @@ const invalidateContentCacheMock = vi.hoisted(() =>
   vi.fn<typeof invalidateContentCache>()
 );
 const invalidateStoreTagMock = vi.hoisted(() => vi.fn());
+const readBoundedBodyMock = vi.hoisted(() => vi.fn());
 const invalidateSitemapCacheMock = vi.hoisted(() =>
   vi.fn<typeof invalidateSitemapCache>()
 );
 const invalidateOgCacheMock = vi.hoisted(() =>
   vi.fn<typeof invalidateOgCache>()
 );
+
+vi.mock("@repo/utilities/body", async (importOriginal) => {
+  const original =
+    await importOriginal<typeof import("@repo/utilities/body")>();
+  /** Reads the body as the package does unless one test names a failure. */
+  readBoundedBodyMock.mockImplementation(original.readBoundedBody);
+  return { ...original, readBoundedBody: readBoundedBodyMock };
+});
 
 vi.mock("@/env", () => ({
   /** Provides a deterministic publication key for the receiver. */
@@ -163,22 +173,9 @@ describe("content cache receiver body", () => {
   );
 
   it("maps a failed body read to a private bad request", async () => {
-    const body = new ReadableStream<Uint8Array>({
-      pull(controller) {
-        controller.error(new Error("connection reset"));
-      },
-    });
-    const response = await receiveContentCache({
-      request: new Request(CACHE_URL, {
-        body,
-        duplex: "half",
-        headers: {
-          Authorization: "Bearer test-key",
-          "Content-Type": "application/json",
-        },
-        method: "POST",
-      }),
-    });
+    readBoundedBodyMock.mockReturnValueOnce(Effect.fail(new BodyReadError({})));
+
+    const response = await postAuthorized(exactBody);
 
     expect(response.status).toBe(400);
     expect(invalidateContentCacheMock).not.toHaveBeenCalled();
@@ -213,7 +210,7 @@ describe("content cache receiver release", () => {
   });
 
   it("answers 409 when Convex holds no active release", async () => {
-    loadActiveContentIdentityMock.mockReturnValue(Effect.succeed(undefined));
+    loadActiveContentIdentityMock.mockReturnValue(Effect.void);
 
     const response = await postAuthorized(exactBody);
 

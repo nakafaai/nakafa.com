@@ -1,7 +1,7 @@
 // @vitest-environment node
 
 import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 import { DEFAULT_LATITUDE, DEFAULT_LONGITUDE } from "@/lib/weather/client";
 import { serveWeather } from "@/lib/weather/route.server";
 
@@ -35,6 +35,12 @@ vi.mock("@/lib/analytics/server", () => ({
 }));
 
 const summary = { temperature: 30, description: "clear" };
+
+/** The provider failure that the weather read reports. */
+class WeatherProviderDown extends Schema.TaggedError<WeatherProviderDown>()(
+  "WeatherProviderDown",
+  {}
+) {}
 
 /** Posts one weather request to the route. */
 function weather() {
@@ -89,7 +95,7 @@ describe("weather route", () => {
     isCorsRequestAllowedMock.mockReturnValue(Effect.succeed(true));
     geolocationMock.mockReturnValue({ latitude: "1", longitude: "2" });
     getCurrentWeatherMock.mockReturnValue(
-      Effect.fail(new Error("provider is down"))
+      Effect.fail(new WeatherProviderDown({}))
     );
     scheduleCaptureMock.mockReturnValue(Effect.void);
 

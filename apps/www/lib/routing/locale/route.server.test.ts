@@ -75,7 +75,7 @@ describe("localized href route", () => {
     resolveLocalizedNavigationHrefMock.mockReturnValue(
       Effect.fail(
         new MissingLocalizedRouteProjectionError({
-          appLocale: "en",
+          locale: "en",
           publicPath: "materials/math",
         })
       )
