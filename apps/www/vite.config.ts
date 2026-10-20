@@ -66,7 +66,9 @@ const verifyPrerenderedPages: Plugin = {
   buildApp: {
     order: "post",
     handler: (builder) =>
-      assertPrerenderedPages(builder.environments.client.config.build.outDir),
+      Promise.resolve(
+        assertPrerenderedPages(builder.environments.client.config.build.outDir)
+      ),
   },
   name: "www:verify-prerendered-pages",
 };
