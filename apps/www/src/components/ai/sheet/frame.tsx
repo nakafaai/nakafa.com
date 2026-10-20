@@ -31,7 +31,8 @@ const SheetConversation = lazy(() =>
 
 // The boundary holds the failure card, whose sign-in chain only a signed-out
 // visitor who cannot read a chat needs. It loads with the body, so the shell's
-// first JavaScript does not carry it on every page.
+// first JavaScript does not carry it on every page. Its own Suspense keeps the
+// route on screen while the chunk loads.
 const ChatBoundary = lazy(() =>
   import("@/components/ai/chat/boundary").then((module) => ({
     default: module.ChatBoundary,
@@ -154,24 +155,26 @@ function SheetBody() {
       </Activity>
       <Activity mode={activeChatId ? "visible" : "hidden"}>
         <ConvexIsland>
-          <ChatBoundary key={activeChatId} read={read}>
-            <Authenticated>
-              {!!activeChatId && (
+          <Suspense fallback={null}>
+            <ChatBoundary key={activeChatId} read={read}>
+              <Authenticated>
+                {!!activeChatId && (
+                  <Suspense fallback={null}>
+                    <ClientOnly fallback={null}>
+                      <SheetConversation chatId={activeChatId} />
+                    </ClientOnly>
+                  </Suspense>
+                )}
+              </Authenticated>
+              <Unauthenticated>
                 <Suspense fallback={null}>
                   <ClientOnly fallback={null}>
-                    <SheetConversation chatId={activeChatId} />
+                    <SheetNew />
                   </ClientOnly>
                 </Suspense>
-              )}
-            </Authenticated>
-            <Unauthenticated>
-              <Suspense fallback={null}>
-                <ClientOnly fallback={null}>
-                  <SheetNew />
-                </ClientOnly>
-              </Suspense>
-            </Unauthenticated>
-          </ChatBoundary>
+              </Unauthenticated>
+            </ChatBoundary>
+          </Suspense>
         </ConvexIsland>
       </Activity>
     </>
