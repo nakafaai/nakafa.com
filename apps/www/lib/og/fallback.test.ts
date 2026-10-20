@@ -1,7 +1,7 @@
 // @vitest-environment node
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { Schema } from "effect";
+import { Effect, Schema } from "effect";
 import { generateOGImage } from "@/lib/og";
 import { generateFallbackImage } from "@/lib/og/fallback";
 import { OG_FALLBACK_HEADERS, OG_IMAGE_HEADERS } from "@/lib/og/headers";
@@ -57,33 +57,35 @@ beforeEach(() => {
 });
 
 describe("fallback social image", () => {
-  it("answers unknown slugs with translated brand artwork", async () => {
-    const response = await generateFallbackImage("de");
+  it.effect("answers unknown slugs with translated brand artwork", () =>
+    Effect.gen(function* () {
+      const response = yield* generateFallbackImage("de");
 
-    expect(mocks.readServerTranslator).toHaveBeenCalledWith({
-      locale: "de",
-      namespace: "NotFound",
-    });
-    expect(mocks.imageCalls).toHaveLength(1);
-    const [{ element, options }] = mocks.imageCalls;
-    expect(element).toMatchObject({
-      props: {
-        description: "NotFound.description",
-        title: "NotFound.title",
-      },
-    });
-    expect(options).toMatchObject({
-      headers: OG_FALLBACK_HEADERS,
-      height: 630,
-      width: 1200,
-    });
-    expect(response).toBeInstanceOf(Response);
-    expect(response.status).toBe(404);
-    expect(response.headers.get("content-type")).toBe("image/png");
-  });
+      expect(mocks.readServerTranslator).toHaveBeenCalledWith({
+        locale: "de",
+        namespace: "NotFound",
+      });
+      expect(mocks.imageCalls).toHaveLength(1);
+      const [{ element, options }] = mocks.imageCalls;
+      expect(element).toMatchObject({
+        props: {
+          description: "NotFound.description",
+          title: "NotFound.title",
+        },
+      });
+      expect(options).toMatchObject({
+        headers: OG_FALLBACK_HEADERS,
+        height: 630,
+        width: 1200,
+      });
+      expect(response).toBeInstanceOf(Response);
+      expect(response.status).toBe(404);
+      expect(response.headers.get("content-type")).toBe("image/png");
+    })
+  );
 
-  it("gives the image of a known route the CDN headers unless the caller names others", async () => {
-    await generateOGImage({ description: "Lesson", title: "Function" });
+  it("gives the image of a known route the CDN headers unless the caller names others", () => {
+    generateOGImage({ description: "Lesson", title: "Function" });
 
     const [{ options }] = mocks.imageCalls;
     expect(options).toMatchObject({ headers: OG_IMAGE_HEADERS });
