@@ -88,16 +88,16 @@ const eurPricing = makePricing("EUR", products.pro.monthlyPrices.EUR);
 const idrPricing = makePricing("IDR", products.pro.monthlyPrices.IDR);
 const usdPricing = makePricing("USD", products.pro.monthlyPrices.USD);
 
-/**
- * The text of the monthly pro price in every currency. The static page carries
- * all three, and the head script keeps the one that the visitor sees.
- */
-export function getProMonthlyPriceTexts() {
-  return {
-    EUR: eurPricing.formatter.format(eurPricing.price.amount),
-    IDR: idrPricing.formatter.format(idrPricing.price.amount),
-    USD: usdPricing.formatter.format(usdPricing.price.amount),
-  } satisfies Record<PricingCurrency, string>;
+/** The monthly pro price of every currency, which the static page carries in full. */
+const pricingByCurrency = {
+  EUR: eurPricing,
+  IDR: idrPricing,
+  USD: usdPricing,
+} satisfies Record<PricingCurrency, unknown>;
+
+/** The monthly pro price of one currency, with its formatting. */
+export function getProMonthlyPricingFor(currency: PricingCurrency) {
+  return pricingByCurrency[currency];
 }
 
 /** Selects the Polar catalog price, with its currency, for the request country. */

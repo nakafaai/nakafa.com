@@ -2,15 +2,17 @@ import { Nina } from "@repo/design-system/components/ui/nina";
 import { Thing } from "@repo/design-system/components/ui/thing";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
-import { use } from "react";
 import { useTranslations } from "use-intl";
-import { PricingCountryContext } from "@/components/marketing/about/pricing/country";
+import { PricingCurrencies } from "@/components/marketing/about/pricing/by-currency";
 import {
   currencySymbol,
   drinkKey,
 } from "@/components/marketing/about/pricing/display";
 import { pricingSums } from "@/components/marketing/about/pricing/sums";
-import { getProMonthlyPricing } from "@/lib/pricing/monthly";
+import {
+  getProMonthlyPricingFor,
+  type PricingCurrency,
+} from "@/lib/pricing/monthly";
 
 /** One comparison: its picture, its sum, and the sentence that says what it means, centred in its column. */
 function Comparison({
@@ -53,13 +55,13 @@ function PriceCoin({ symbol }: { symbol: string }) {
 }
 
 /**
- * The comparisons under the price of the visitor's region. Each sum comes from
- * that price and from the credits of the plans, and each sentence has an
- * estimating word of its own.
+ * The comparisons under the price of one currency. Each sum comes from that price
+ * and from the credits of the plans, and each sentence has an estimating word of
+ * its own.
  */
-function ResolvedComparison() {
+function CurrencyComparison({ currency }: { currency: PricingCurrency }) {
   const t = useTranslations("PricingPage");
-  const { formatter, price } = getProMonthlyPricing(use(PricingCountryContext));
+  const { formatter, price } = getProMonthlyPricingFor(currency);
   const sums = pricingSums(price);
   const perDayNote =
     price.currency === "IDR" ? t("per-day-note-idr") : t("per-day-note-other");
@@ -108,7 +110,7 @@ function ResolvedComparison() {
 
 /**
  * The comparison section of the pricing page. Its sums depend on the visitor's
- * region, which the pricing country context provides.
+ * currency, and the page carries the comparison of every currency.
  */
 export function PricingComparison() {
   return (
@@ -117,7 +119,9 @@ export function PricingComparison() {
       id="comparison"
     >
       <div className="mx-auto grid w-full max-w-7xl gap-12">
-        <ResolvedComparison />
+        <PricingCurrencies>
+          {(currency) => <CurrencyComparison currency={currency} />}
+        </PricingCurrencies>
       </div>
     </section>
   );
