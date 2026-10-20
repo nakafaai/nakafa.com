@@ -1,9 +1,9 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Array as Arr, Effect } from "effect";
-import { withBrowserContext } from "@/e2e/support/context";
-import { withObservedPageErrors } from "@/e2e/support/observe";
-import { openRoute } from "@/e2e/support/route";
-import { targetViewports, viewportSize } from "@/e2e/support/viewport";
+import { withBrowserContext } from "../support/context";
+import { withObservedPageErrors } from "../support/observe";
+import { openRoute } from "../support/route";
+import { targetViewports, viewportSize } from "../support/viewport";
 
 /** Nina, the line under the header and the header's links, measured as the eye sees them. */
 function readHeader() {

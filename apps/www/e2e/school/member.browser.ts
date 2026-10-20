@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
-import { readCumulativeLayoutShift } from "@/e2e/support/layout";
-import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
+import { readCumulativeLayoutShift } from "../support/layout";
+import { createSchool, hostAddress, signInOwner } from "../support/school";
 
 test("a member sees the school in the sidebar and the page's one action in Beranda", async ({
   browser,

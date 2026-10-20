@@ -7,17 +7,17 @@ import {
   CROWD_HERD,
   CROWD_TYPING_EVERY,
 } from "@/components/marketing/about/toys/herd";
-import { activateUntilVisible } from "@/e2e/support/input";
+import { activateUntilVisible } from "../support/input";
 import {
   loadMarketingPage,
   measureMarketingPage,
   readFirstContributor,
-} from "@/e2e/support/marketing";
-import { withObservedPageErrors } from "@/e2e/support/observe";
-import { openRoute } from "@/e2e/support/route";
-import { DRAWER_TITLE } from "@/e2e/support/selector";
-import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
-import { desktopViewport, targetViewports } from "@/e2e/support/viewport";
+} from "../support/marketing";
+import { withObservedPageErrors } from "../support/observe";
+import { openRoute } from "../support/route";
+import { DRAWER_TITLE } from "../support/selector";
+import { readinessTimeoutMilliseconds } from "../support/timeout";
+import { desktopViewport, targetViewports } from "../support/viewport";
 import { contributors } from "@/lib/data/contributor";
 
 /**

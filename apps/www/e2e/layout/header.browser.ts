@@ -1,14 +1,14 @@
 import { type BrowserContext, expect, type Page, test } from "@playwright/test";
 import { Array as Arr, Effect } from "effect";
-import { LESSON_PATH } from "@/e2e/support/chat";
-import { withBrowserContext } from "@/e2e/support/context";
-import { activateUntilVisible } from "@/e2e/support/input";
-import { signInLearner } from "@/e2e/support/learner";
-import { withObservedPageErrors } from "@/e2e/support/observe";
-import { appRoutes, openRoute } from "@/e2e/support/route";
-import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
-import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
-import { desktopViewport, viewportSize } from "@/e2e/support/viewport";
+import { LESSON_PATH } from "../support/chat";
+import { withBrowserContext } from "../support/context";
+import { activateUntilVisible } from "../support/input";
+import { signInLearner } from "../support/learner";
+import { withObservedPageErrors } from "../support/observe";
+import { appRoutes, openRoute } from "../support/route";
+import { createSchool, hostAddress, signInOwner } from "../support/school";
+import { readinessTimeoutMilliseconds } from "../support/timeout";
+import { desktopViewport, viewportSize } from "../support/viewport";
 
 /**
  * The owner's rule (18 Oct): every page header is one row at every width. A header

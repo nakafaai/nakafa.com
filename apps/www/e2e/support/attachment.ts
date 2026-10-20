@@ -6,10 +6,10 @@ import en from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
 import { Effect, Schema } from "effect";
-import { CHAT_PATH } from "@/e2e/support/chat";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
-import { withObservedPageErrors } from "@/e2e/support/observe";
-import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { CHAT_PATH } from "./chat";
+import { seedAnalyticsConsent } from "./consent";
+import { withObservedPageErrors } from "./observe";
+import { readinessTimeoutMilliseconds } from "./timeout";
 
 /** A file for the picker, in the form Playwright hands to a file chooser. */
 const UploadSchema = Schema.Struct({

@@ -6,8 +6,8 @@ import {
   SERVER_FUNCTION_HEADER,
   type TrackedRequestKind,
   withRequestTracker,
-} from "@/e2e/support/requests";
-import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+} from "../requests";
+import { readinessTimeoutMilliseconds } from "../timeout";
 
 const QUIET_MILLISECONDS = 500;
 const POLL_MILLISECONDS = 100;

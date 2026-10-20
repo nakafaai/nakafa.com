@@ -1,17 +1,17 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
-import { composerOf } from "@/e2e/support/attachment";
-import type { Changes } from "@/e2e/support/changes";
+import { composerOf } from "../support/attachment";
+import type { Changes } from "../support/changes";
 import {
   OPENED_CHAT,
   onThePage,
   openChatPage,
   runOnPage,
-} from "@/e2e/support/chat";
-import { LEARNER_TEXT, PASTED } from "@/e2e/support/prose";
-import { MARKDOWN_MARKUP, NINA_SECTION } from "@/e2e/support/selector";
-import { promptWith } from "@/e2e/support/sheet";
-import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+} from "../support/chat";
+import { LEARNER_TEXT, PASTED } from "../support/prose";
+import { MARKDOWN_MARKUP, NINA_SECTION } from "../support/selector";
+import { promptWith } from "../support/sheet";
+import { readinessTimeoutMilliseconds } from "../support/timeout";
 
 /** What a learner writes first: text that reads as HTML, a product with asterisks and lines of choices, then a pasted set of exercises. */
 const WORDS = `${LEARNER_TEXT.angle}\n${LEARNER_TEXT.product}\n${LEARNER_TEXT.choices}\n${PASTED}`;

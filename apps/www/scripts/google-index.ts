@@ -16,8 +16,8 @@
 import { NodeServices } from "@effect/platform-node";
 import { FetchClient } from "@repo/utilities/http/client";
 import { Effect, Layer } from "effect";
-import { runGoogleIndexing } from "@/scripts/indexing/google/run";
-import { IndexingLogger } from "@/scripts/indexing/logger";
+import { runGoogleIndexing } from "./indexing/google/run";
+import { IndexingLogger } from "./indexing/logger";
 
 Effect.runPromise(
   runGoogleIndexing().pipe(

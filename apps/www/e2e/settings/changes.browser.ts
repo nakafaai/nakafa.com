@@ -1,7 +1,7 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
-import { type Changes, live, reloadUntil, saved } from "@/e2e/support/changes";
-import { writeMemory } from "@/e2e/support/list";
+import { type Changes, live, reloadUntil, saved } from "../support/changes";
+import { writeMemory } from "../support/list";
 import {
   confirmDelete,
   EMPTY,
@@ -10,9 +10,9 @@ import {
   memoryRow,
   opened,
   openMemoryPage,
-} from "@/e2e/support/memory";
-import { withObservedPageErrors } from "@/e2e/support/observe";
-import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+} from "../support/memory";
+import { withObservedPageErrors } from "../support/observe";
+import { readinessTimeoutMilliseconds } from "../support/timeout";
 
 const ADDED = "Prefers short answers";
 const REWRITTEN = "Prefers a long walk through each step";

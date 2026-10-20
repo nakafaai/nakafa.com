@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { Effect, MutableList } from "effect";
-import { withObservedPageErrors } from "@/e2e/support/observe";
+import { withObservedPageErrors } from "../support/observe";
 
 const SIGN_IN_PATH = /\/en\/auth/;
 

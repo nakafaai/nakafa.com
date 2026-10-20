@@ -3,18 +3,18 @@ import en from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
 import { Effect } from "effect";
-import { onThePage, openChatPage, runOnPage } from "@/e2e/support/chat";
-import { withBrowserContext } from "@/e2e/support/context";
-import { CONVERSATION } from "@/e2e/support/query";
-import { sidebarRows } from "@/e2e/support/rows";
-import { ACCESS_TITLE, UNAVAILABLE_COPY } from "@/e2e/support/share";
+import { onThePage, openChatPage, runOnPage } from "../support/chat";
+import { withBrowserContext } from "../support/context";
+import { CONVERSATION } from "../support/query";
+import { sidebarRows } from "../support/rows";
+import { ACCESS_TITLE, UNAVAILABLE_COPY } from "../support/share";
 import {
   inTheSheet,
   openFromHistory,
   openSheet,
   promptWith,
-} from "@/e2e/support/sheet";
-import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+} from "../support/sheet";
+import { readinessTimeoutMilliseconds } from "../support/timeout";
 
 const PROMPT = "Why is the derivative of sine the cosine?";
 const TITLE = "The derivative of sine";

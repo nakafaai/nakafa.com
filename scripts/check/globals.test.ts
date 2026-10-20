@@ -3,7 +3,7 @@ import { Array as Arr, Effect } from "effect";
 import { effectFindings } from "#scripts/check/effect";
 import { parseSources } from "#scripts/check/source";
 
-const CODE = "apps/www/lib/example.ts";
+const CODE = "apps/www/src/lib/example.ts";
 
 /** Lists the Effect-native findings of one module as `line rule`. */
 const findings = Effect.fn("GlobalPolicyTest.findings")(function* (
@@ -356,7 +356,7 @@ page.addInitScript(() => {
   setTimeout(run, Date.now());
 });
 `,
-            "apps/www/lib/page.ts"
+            "apps/www/src/lib/page.ts"
           ),
           ["1 map-set", "1 object-helper", "3 json", "4 clock", "4 timer"]
         );

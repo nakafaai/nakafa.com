@@ -3,19 +3,19 @@ import app from "@repo/internationalization/dictionaries/id.json" with {
   type: "json",
 };
 import { Array as Arr, Effect, Option } from "effect";
-import { runOnPage } from "@/e2e/support/chat";
-import { readFooterActions, setLargeText } from "@/e2e/support/footer";
-import { CONVEX_SOCKET, decodeSent } from "@/e2e/support/frames";
-import { activate, visibleLink } from "@/e2e/support/input";
+import { runOnPage } from "../support/chat";
+import { readFooterActions, setLargeText } from "../support/footer";
+import { CONVEX_SOCKET, decodeSent } from "../support/frames";
+import { activate, visibleLink } from "../support/input";
 import {
   confirmFinish,
   finishSection,
   runFirstSection,
-} from "@/e2e/support/player";
-import { CARD } from "@/e2e/support/selector";
-import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
-import { arrive, arriveLocked, setHref } from "@/e2e/support/tryout";
-import { compactViewport } from "@/e2e/support/viewport";
+} from "../support/player";
+import { CARD } from "../support/selector";
+import { readinessTimeoutMilliseconds } from "../support/timeout";
+import { arrive, arriveLocked, setHref } from "../support/tryout";
+import { compactViewport } from "../support/viewport";
 
 /** The English route prefix that the walked set's addresses start with. */
 const ENGLISH_PREFIX = /^\/en\//;

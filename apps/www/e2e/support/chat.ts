@@ -2,15 +2,15 @@ import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import type { Page } from "@playwright/test";
 import { CHAT_LIST_PAGE_SIZE } from "@repo/backend/client/chats/list";
 import { Array as Arr, Clock, Effect, FileSystem, Schema } from "effect";
-import { runAcceptanceCommand } from "@/e2e/support/acceptance";
-import { trackChanges } from "@/e2e/support/changes";
+import { runAcceptanceCommand } from "./acceptance";
+import { trackChanges } from "./changes";
 import {
   declineUsageData,
   type PromptLocale,
   seedAnalyticsConsent,
-} from "@/e2e/support/consent";
-import { signInLearner } from "@/e2e/support/learner";
-import { withObservedPageErrors } from "@/e2e/support/observe";
+} from "./consent";
+import { signInLearner } from "./learner";
+import { withObservedPageErrors } from "./observe";
 
 /** The new chat page of a language of the site. */
 export const chatPathOf = (locale: PromptLocale) => `/${locale}/chat`;

@@ -1,14 +1,14 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Array as Arr, Effect } from "effect";
-import { runOnPage } from "@/e2e/support/chat";
-import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
-import { exchange, said } from "@/e2e/support/transcript/message";
-import { showChat, startTranscript } from "@/e2e/support/transcript/open";
+import { runOnPage } from "../support/chat";
+import { readinessTimeoutMilliseconds } from "../support/timeout";
+import { exchange, said } from "../support/transcript/message";
+import { showChat, startTranscript } from "../support/transcript/open";
 import {
   commitCount,
   commitsAfter,
   watchRenders,
-} from "@/e2e/support/transcript/renders";
+} from "../support/transcript/renders";
 
 /** Ten settled turns, twenty messages: the rows that a streamed answer must leave alone. */
 const SETTLED = Arr.flatten(

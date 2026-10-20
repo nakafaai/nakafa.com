@@ -3,8 +3,8 @@ import { Array as Arr, Effect, Option, pipe, Schema } from "effect";
 import {
   readRecordedLayoutShifts,
   recordLayoutShifts,
-} from "@/e2e/support/layout";
-import { TOASTER } from "@/e2e/support/selector";
+} from "./layout";
+import { TOASTER } from "./selector";
 
 const SAMPLES_KEY = "nakafaShellSamples";
 const LAYOUT_SHIFTS_KEY = "nakafaLayoutShifts";

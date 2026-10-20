@@ -1,12 +1,12 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 import { Array as Arr, Effect, Option } from "effect";
-import { pressDecline, seedAnalyticsConsent } from "@/e2e/support/consent";
-import { loadMathFonts } from "@/e2e/support/fonts";
-import { activate, visibleLink } from "@/e2e/support/input";
-import { waitForSlide } from "@/e2e/support/layout";
-import { signInLearner } from "@/e2e/support/learner";
-import { observeShell } from "@/e2e/support/shell";
-import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { pressDecline, seedAnalyticsConsent } from "./consent";
+import { loadMathFonts } from "./fonts";
+import { activate, visibleLink } from "./input";
+import { waitForSlide } from "./layout";
+import { signInLearner } from "./learner";
+import { observeShell } from "./shell";
+import { readinessTimeoutMilliseconds } from "./timeout";
 import {
   arrive,
   arriveLocked,
@@ -14,7 +14,7 @@ import {
   openHub,
   openTrack,
   setHref,
-} from "@/e2e/support/tryout";
+} from "./tryout";
 
 /** The article of every question the player has mounted, shown or not. */
 const ARTICLE = "article[data-player-key]";

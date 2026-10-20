@@ -3,7 +3,7 @@ import { Array as Arr, Effect } from "effect";
 import { effectFindings } from "#scripts/check/effect";
 import { parseSources, type RepositorySource } from "#scripts/check/source";
 
-const CODE = "apps/www/lib/example.ts";
+const CODE = "apps/www/src/lib/example.ts";
 
 /** Lists the Effect-native findings of one module as `line rule`. */
 const findings = Effect.fn("AssertionPolicyTest.findings")(function* (
@@ -170,12 +170,12 @@ export function read(page: Page) {
                 "export const expected = value!;\nexport const label = value as Label;\n",
             },
             {
-              file: "apps/www/components/card.tsx",
+              file: "apps/www/src/components/card.tsx",
               sourceText: "export const node = ref.current!;\n",
             },
           ]),
           [
-            "apps/www/components/card.tsx:1 assertion",
+            "apps/www/src/components/card.tsx:1 assertion",
             "scripts/tool.test.ts:1 assertion",
             "scripts/tool.test.ts:2 assertion",
           ]

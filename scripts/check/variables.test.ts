@@ -4,7 +4,7 @@ import { isIdentifier, type Node } from "typescript/unstable/ast";
 import { descendants, parseSources } from "#scripts/check/source";
 import { isVariable, variableValues } from "#scripts/check/variables";
 
-const VIEW = "apps/www/components/example.tsx";
+const VIEW = "apps/www/src/components/example.tsx";
 const NAME = "ON";
 const BY_POSITION = Order.mapInput(
   Order.Number,

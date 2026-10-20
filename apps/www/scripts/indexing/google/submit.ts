@@ -5,7 +5,7 @@ import {
   HttpClientRequest,
   type HttpClientResponse,
 } from "effect/http";
-import { GoogleIndexSubmitError } from "@/scripts/indexing/errors";
+import { GoogleIndexSubmitError } from "../errors";
 
 const RATE_LIMIT_DELAY = 1000;
 const MAX_BACKOFF_DELAY = 30_000;

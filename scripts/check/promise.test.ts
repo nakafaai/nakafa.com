@@ -3,7 +3,7 @@ import { Array as Arr, Effect } from "effect";
 import { effectFindings } from "#scripts/check/effect";
 import { parseSources, type RepositorySource } from "#scripts/check/source";
 
-const CODE = "apps/www/lib/example.ts";
+const CODE = "apps/www/src/lib/example.ts";
 const SCRIPT = "scripts/tool.ts";
 
 /** Lists the Effect-native findings of one module as `line rule`. */
@@ -59,20 +59,20 @@ export const arrow = async () => 1;
         const construct = "export const later = new Promise(start);\n";
         assert.deepStrictEqual(
           yield* fileFindings([
-            { file: "apps/www/lib/load.ts", sourceText: construct },
-            { file: "apps/www/components/card.tsx", sourceText: construct },
-            { file: "apps/www/test/fixtures.ts", sourceText: construct },
+            { file: "apps/www/src/lib/load.ts", sourceText: construct },
+            { file: "apps/www/src/components/card.tsx", sourceText: construct },
+            { file: "apps/www/src/test/fixtures.ts", sourceText: construct },
             {
               file: "packages/backend/confect/proof/run.ts",
               sourceText: construct,
             },
-            { file: "apps/www/lib/load.test.ts", sourceText: construct },
+            { file: "apps/www/src/lib/load.test.ts", sourceText: construct },
             { file: "apps/www/vite.config.ts", sourceText: construct },
           ]),
           [
-            "apps/www/components/card.tsx:1 new-promise",
-            "apps/www/lib/load.ts:1 new-promise",
-            "apps/www/test/fixtures.ts:1 new-promise",
+            "apps/www/src/components/card.tsx:1 new-promise",
+            "apps/www/src/lib/load.ts:1 new-promise",
+            "apps/www/src/test/fixtures.ts:1 new-promise",
             "packages/backend/confect/proof/run.ts:1 new-promise",
           ]
         );

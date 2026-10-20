@@ -8,7 +8,7 @@ const findings = Effect.fn("FailureSignalsTest.findings")(function* (
   sourceText: string
 ) {
   const found = yield* effectFindings(
-    yield* parseSources([{ file: "apps/www/lib/example.ts", sourceText }])
+    yield* parseSources([{ file: "apps/www/src/lib/example.ts", sourceText }])
   );
   return Arr.map(found, ({ line, rule }) => `${line} ${rule}`);
 }, Effect.scoped);

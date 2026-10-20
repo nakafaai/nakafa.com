@@ -124,7 +124,6 @@ export default defineConfig({
   },
   plugins: [
     tanstackStart({
-      srcDirectory: "app",
       // Client components render on the server during the RSC pass, so their
       // `.client` modules belong to the server bundle. The browser keeps its
       // rule against `.server` modules; the server pass has no `.client` rule.

@@ -5,23 +5,23 @@ import app from "@repo/internationalization/dictionaries/en.json" with {
 };
 import { encodeJsonText } from "@repo/utilities/json";
 import { Effect, FileSystem } from "effect";
-import { runAcceptanceCommand } from "@/e2e/support/acceptance";
+import { runAcceptanceCommand } from "../support/acceptance";
 import {
   animalMarkup,
   animalOf,
   drawnAnimal,
   pictureChoice,
   sidebarAvatar,
-} from "@/e2e/support/avatar";
-import { LESSON_PATH, openChatPage, runOnPage } from "@/e2e/support/chat";
-import { appRoutes } from "@/e2e/support/route";
-import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+} from "../support/avatar";
+import { LESSON_PATH, openChatPage, runOnPage } from "../support/chat";
+import { appRoutes } from "../support/route";
+import { readinessTimeoutMilliseconds } from "../support/timeout";
 
 /** A picture of the site that loads, and an address that holds no picture. */
 const LOADING_PHOTO = "/logo.png";
 /**
  * An address that holds no picture. The site answers any `.png` address with
- * its social image (`apps/www/lib/og/route.ts`), so the photo test answers this
+ * its social image (`apps/www/src/lib/og/route.ts`), so the photo test answers this
  * one with a 404 itself, as a real missing image answers.
  */
 const MISSING_PHOTO = "/animal-photo-that-does-not-exist.png";

@@ -4,8 +4,8 @@ import { FIGURE_WIDTH } from "@/components/state/size";
 import {
   expectNoOverflow,
   readCumulativeLayoutShift,
-} from "@/e2e/support/layout";
-import { STATE_FIGURE } from "@/e2e/support/selector";
+} from "./layout";
+import { STATE_FIGURE } from "./selector";
 
 /** What a full-page state says and offers: its title, its sentence, and each way on with where it leads. */
 const StateSchema = Schema.Struct({

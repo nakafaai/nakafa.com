@@ -1,14 +1,14 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Array as Arr, Effect, HashSet, Order } from "effect";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
-import { pinnedRoutes } from "@/e2e/support/corpus";
-import { readMathFonts } from "@/e2e/support/fonts";
-import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
-import { withObservedPageErrors } from "@/e2e/support/observe";
-import { collectUnusedPreloads } from "@/e2e/support/preload";
-import { waitForServedRoute } from "@/e2e/support/route";
-import { paginationNavigation, SUBJECT_LINK } from "@/e2e/support/selector";
-import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { seedAnalyticsConsent } from "../support/consent";
+import { pinnedRoutes } from "../support/corpus";
+import { readMathFonts } from "../support/fonts";
+import { waitForCommittedAppRouter } from "../support/navigation/readiness";
+import { withObservedPageErrors } from "../support/observe";
+import { collectUnusedPreloads } from "../support/preload";
+import { waitForServedRoute } from "../support/route";
+import { paginationNavigation, SUBJECT_LINK } from "../support/selector";
+import { readinessTimeoutMilliseconds } from "../support/timeout";
 
 const lessonPath = /^\/en\/subjects\//;
 

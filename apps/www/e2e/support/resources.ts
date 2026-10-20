@@ -8,9 +8,9 @@ import {
   Option,
   Schema,
 } from "effect";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
-import { withBrowserContext } from "@/e2e/support/context";
-import { signInLearner } from "@/e2e/support/learner";
+import { seedAnalyticsConsent } from "./consent";
+import { withBrowserContext } from "./context";
+import { signInLearner } from "./learner";
 import {
   formatRequestFailure,
   type RequestTracker,
@@ -18,8 +18,8 @@ import {
   SERVER_FUNCTION_HEADER,
   type TrackedRequestKind,
   withRequestTracker,
-} from "@/e2e/support/requests";
-import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+} from "./requests";
+import { readinessTimeoutMilliseconds } from "./timeout";
 
 const JAVASCRIPT_RESOURCE_PATTERN = /^\/assets\/.+\.js$/;
 const RESOURCE_IDLE_MILLISECONDS = 1000;

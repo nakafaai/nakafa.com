@@ -1,8 +1,8 @@
 import { expect, type Page } from "@playwright/test";
 import { Effect } from "effect";
-import { live } from "@/e2e/support/changes";
-import { openChatPage } from "@/e2e/support/chat";
-import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { live } from "./changes";
+import { openChatPage } from "./chat";
+import { readinessTimeoutMilliseconds } from "./timeout";
 
 export const OLD = "Limits of sine";
 export const NEW = "Derivatives of cosine";

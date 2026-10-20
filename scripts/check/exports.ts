@@ -40,7 +40,7 @@ const WORD_BREAK_PATTERN = /[^\w$]+/u;
  * an app, and the Vercel project configuration.
  */
 const FRAMEWORK_MODULE_PATTERNS = [
-  /^apps\/[^/]+\/app\/(?:routes\/.+|routeTree\.gen|router|server|start)\.tsx?$/u,
+  /^apps\/[^/]+\/src\/(?:routes\/.+|routeTree\.gen|router|server|start)\.tsx?$/u,
   /^apps\/[^/]+\/vercel\.tsx?$/u,
 ];
 /**

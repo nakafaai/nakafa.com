@@ -9,8 +9,8 @@ import {
   Schema,
 } from "effect";
 import { HttpBody, HttpClient } from "effect/http";
-import { BingSubmitError } from "@/scripts/indexing/errors";
-import { INDEXING_HOST } from "@/scripts/indexing/paths";
+import { BingSubmitError } from "../errors";
+import { INDEXING_HOST } from "../paths";
 
 const BATCH_SIZE = 100;
 const RATE_LIMIT_DELAY = 1000;

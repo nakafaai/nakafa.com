@@ -3,9 +3,9 @@ import app from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
 import { Array as Arr, Effect } from "effect";
-import { saved } from "@/e2e/support/changes";
-import { openChatPage, runOnPage } from "@/e2e/support/chat";
-import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { saved } from "../support/changes";
+import { openChatPage, runOnPage } from "../support/chat";
+import { readinessTimeoutMilliseconds } from "../support/timeout";
 
 /** A post with each kind of Markdown a learner writes, one kind to a block. */
 const MARKDOWN = Arr.join(

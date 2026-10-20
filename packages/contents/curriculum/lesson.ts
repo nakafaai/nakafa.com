@@ -22,7 +22,7 @@ const lessonIconsByKey = { ...SCHOOL_LESSON_ICONS, ...BACHELOR_LESSON_ICONS };
  * or across families, draw the same object at 40px, so a learner of one subject
  * sees a family of different things and a list of lessons of several subjects
  * never shows two alike. The product-wide test of icons in
- * `apps/www/components/tryout/catalog/icons.test.ts` checks the length of every
+ * `apps/www/src/components/tryout/catalog/icons.test.ts` checks the length of every
  * pool of icons and that no icon belongs to two keys. A subject the product
  * does not know yet offers the spare icons.
  *

@@ -1,14 +1,14 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
-import { runOnPage } from "@/e2e/support/chat";
+import { runOnPage } from "../support/chat";
 import {
   ANSWER,
   answerTurn,
   BREAKABLE_TEX,
   FITTING_TEX,
   UNBREAKABLE_TEX,
-} from "@/e2e/support/prose";
-import { drawnRow, openServedChat } from "@/e2e/support/serve";
+} from "../support/prose";
+import { drawnRow, openServedChat } from "../support/serve";
 
 /** An answer with three inline formulas and a display formula. */
 const FORMULAS = answerTurn({ markdown: ANSWER.formulas, order: 1 });

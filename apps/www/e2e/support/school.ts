@@ -7,8 +7,8 @@ import {
   SittingFixture,
 } from "@repo/backend/scripts/content/acceptance/fixture";
 import { Effect, FileSystem, Schema } from "effect";
-import { runAcceptanceCommand } from "@/e2e/support/acceptance";
-import { addSessionCookie } from "@/e2e/support/context";
+import { runAcceptanceCommand } from "./acceptance";
+import { addSessionCookie } from "./context";
 
 /**
  * Opens a new school in the running local acceptance runtime and reads its

@@ -1,9 +1,9 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
-import { withBrowserContext } from "@/e2e/support/context";
-import { withObservedPageErrors } from "@/e2e/support/observe";
-import { openRoute } from "@/e2e/support/route";
-import { desktopViewport, viewportSize } from "@/e2e/support/viewport";
+import { withBrowserContext } from "../support/context";
+import { withObservedPageErrors } from "../support/observe";
+import { openRoute } from "../support/route";
+import { desktopViewport, viewportSize } from "../support/viewport";
 
 /** The fractions of the page's height that the reader scrolls to, top to bottom. */
 const SCROLL_POSITIONS = [0, 0.25, 0.5, 0.75, 1];

@@ -1,10 +1,10 @@
 import { expect, type Page } from "@playwright/test";
 import { Effect } from "effect";
-import { trackChanges } from "@/e2e/support/changes";
-import { declineUsageData, seedAnalyticsConsent } from "@/e2e/support/consent";
-import { signInLearner } from "@/e2e/support/learner";
-import { appRoutes } from "@/e2e/support/route";
-import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { trackChanges } from "./changes";
+import { declineUsageData, seedAnalyticsConsent } from "./consent";
+import { signInLearner } from "./learner";
+import { appRoutes } from "./route";
+import { readinessTimeoutMilliseconds } from "./timeout";
 
 /** The Memory page of the English site. */
 export const MEMORY_PATH = `${appRoutes.settings}/memory`;

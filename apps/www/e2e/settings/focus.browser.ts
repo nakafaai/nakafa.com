@@ -1,7 +1,7 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
-import { reloadUntil, saved } from "@/e2e/support/changes";
-import { runOnPage } from "@/e2e/support/chat";
+import { reloadUntil, saved } from "../support/changes";
+import { runOnPage } from "../support/chat";
 import {
   LAST_SERVER,
   NEWEST,
@@ -9,7 +9,7 @@ import {
   SECOND_NEWEST,
   writeLongList,
   writeMemory,
-} from "@/e2e/support/list";
+} from "../support/list";
 import {
   confirmDelete,
   EMPTY,
@@ -18,8 +18,8 @@ import {
   nameOf,
   opened,
   openMemoryPage,
-} from "@/e2e/support/memory";
-import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+} from "../support/memory";
+import { readinessTimeoutMilliseconds } from "../support/timeout";
 
 const WRITTEN = "Prefers worked examples before the formula";
 const SECOND = "Revises the proofs on Sundays";

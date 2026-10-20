@@ -24,10 +24,10 @@ import {
   ANSWER_MILLISECONDS,
   type Changes,
   saved,
-} from "@/e2e/support/changes";
-import { activate, activateUntilVisible } from "@/e2e/support/input";
-import { APP_CHUNK_PATH } from "@/e2e/support/route";
-import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+} from "./changes";
+import { activate, activateUntilVisible } from "./input";
+import { APP_CHUNK_PATH } from "./route";
+import { readinessTimeoutMilliseconds } from "./timeout";
 
 /**
  * The Convex names of the functions that read the signed-in learner and the

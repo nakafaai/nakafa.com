@@ -6,7 +6,7 @@ import {
   reply,
   stored,
   working,
-} from "@/e2e/support/transcript/message";
+} from "./message";
 
 /** A request and a result of the CAS, as the wire holds them. */
 type MathRequest = typeof MathRequestSchema.Encoded;

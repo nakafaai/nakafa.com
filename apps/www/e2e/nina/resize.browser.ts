@@ -1,10 +1,10 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
-import { waitForSlide } from "@/e2e/support/layout";
-import { withObservedPageErrors } from "@/e2e/support/observe";
-import { SHEET_POPUP } from "@/e2e/support/selector";
-import { openSheet } from "@/e2e/support/sheet";
+import { seedAnalyticsConsent } from "../support/consent";
+import { waitForSlide } from "../support/layout";
+import { withObservedPageErrors } from "../support/observe";
+import { SHEET_POPUP } from "../support/selector";
+import { openSheet } from "../support/sheet";
 
 /** Where the pointer lets go of the edge, in pixels from the left of the window. */
 const POINTER = 800;

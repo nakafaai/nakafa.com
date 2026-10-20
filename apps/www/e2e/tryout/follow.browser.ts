@@ -1,7 +1,7 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
-import { activate } from "@/e2e/support/input";
-import { withObservedPageErrors } from "@/e2e/support/observe";
+import { activate } from "../support/input";
+import { withObservedPageErrors } from "../support/observe";
 import {
   currentNumberOf,
   expectView,
@@ -13,8 +13,8 @@ import {
   scrollToQuestion,
   sidebarOf,
   waitForObservers,
-} from "@/e2e/support/player";
-import { desktopViewport, tryoutViewports } from "@/e2e/support/viewport";
+} from "../support/player";
+import { desktopViewport, tryoutViewports } from "../support/viewport";
 
 /** How much taller than its page a window is made, so the whole list fits in it. */
 const FITTING_ROOM = 200;

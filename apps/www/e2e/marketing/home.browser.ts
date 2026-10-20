@@ -10,26 +10,26 @@ import {
   Schema,
 } from "effect";
 import { LESSON_SECTION_ID } from "@/components/marketing/about/lesson/id";
-import { withBrowserContext } from "@/e2e/support/context";
+import { withBrowserContext } from "../support/context";
 import {
   readRecordedLayoutShifts,
   recordLayoutShifts,
-} from "@/e2e/support/layout";
-import { withObservedPageErrors } from "@/e2e/support/observe";
+} from "../support/layout";
+import { withObservedPageErrors } from "../support/observe";
 import {
   readRecordedSizeChanges,
   recordSizeChanges,
-} from "@/e2e/support/resize";
-import { abortChunkHolding, openRoute } from "@/e2e/support/route";
-import { isKnownSceneDiagnostic } from "@/e2e/support/scene";
-import { scrollThroughPage } from "@/e2e/support/scroll";
-import { TOASTER } from "@/e2e/support/selector";
+} from "../support/resize";
+import { abortChunkHolding, openRoute } from "../support/route";
+import { isKnownSceneDiagnostic } from "../support/scene";
+import { scrollThroughPage } from "../support/scroll";
+import { TOASTER } from "../support/selector";
 import {
   desktopViewport,
   tabletPortraitViewport,
   touchViewport,
   viewportSize,
-} from "@/e2e/support/viewport";
+} from "../support/viewport";
 
 /** The parts of the home page, in the order of the page. */
 const HOME_PARTS = [

@@ -8,12 +8,12 @@ import {
   pickFiles,
   pictureOf,
   runPage,
-} from "@/e2e/support/attachment";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
-import { pinnedRoutes } from "@/e2e/support/corpus";
-import { waitForSlide } from "@/e2e/support/layout";
-import { SHEET_POPUP } from "@/e2e/support/selector";
-import { openSheet } from "@/e2e/support/sheet";
+} from "../support/attachment";
+import { seedAnalyticsConsent } from "../support/consent";
+import { pinnedRoutes } from "../support/corpus";
+import { waitForSlide } from "../support/layout";
+import { SHEET_POPUP } from "../support/selector";
+import { openSheet } from "../support/sheet";
 
 const PLACEHOLDER = ENGLISH.input;
 

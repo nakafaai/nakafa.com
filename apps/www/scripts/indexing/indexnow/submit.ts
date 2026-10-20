@@ -1,11 +1,11 @@
 import { NETWORK_ATTEMPT_DEADLINE } from "@repo/backend/client/network";
 import { Array as Arr, Effect, MutableList, Option, Result } from "effect";
 import { HttpBody, HttpClient } from "effect/http";
-import { IndexNowSubmitError } from "@/scripts/indexing/errors";
+import { IndexNowSubmitError } from "../errors";
 import {
   INDEXING_HOSTNAME,
   INDEXNOW_KEY_LOCATION,
-} from "@/scripts/indexing/paths";
+} from "../paths";
 
 const BATCH_SIZE = 100;
 const RATE_LIMIT_DELAY = 1000;

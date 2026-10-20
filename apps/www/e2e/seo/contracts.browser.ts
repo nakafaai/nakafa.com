@@ -13,21 +13,21 @@ import {
   Schedule,
   Schema,
 } from "effect";
-import { usageDataTrigger } from "@/e2e/support/consent";
-import { withBrowserContext } from "@/e2e/support/context";
-import { pinnedRoutes } from "@/e2e/support/corpus";
+import { usageDataTrigger } from "../support/consent";
+import { withBrowserContext } from "../support/context";
+import { pinnedRoutes } from "../support/corpus";
 import {
   expectSingleLink,
   readServerDocument,
   type ServerDocument,
-} from "@/e2e/support/crawler";
-import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
-import { withObservedPageErrors } from "@/e2e/support/observe";
-import { LINE_SCENE, lineSceneCards } from "@/e2e/support/selector";
+} from "../support/crawler";
+import { waitForCommittedAppRouter } from "../support/navigation/readiness";
+import { withObservedPageErrors } from "../support/observe";
+import { LINE_SCENE, lineSceneCards } from "../support/selector";
 import {
   readinessTimeoutMilliseconds,
   revealTimeoutMilliseconds,
-} from "@/e2e/support/timeout";
+} from "../support/timeout";
 
 const APP_ORIGIN = "https://nakafa.com";
 const CLASS_SEPARATOR_PATTERN = /\s+/;

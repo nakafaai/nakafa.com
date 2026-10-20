@@ -1,8 +1,8 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Deferred, Effect, Option } from "effect";
-import { activate } from "@/e2e/support/input";
-import { expectUncovered } from "@/e2e/support/layout";
-import { withObservedPageErrors } from "@/e2e/support/observe";
+import { activate } from "../support/input";
+import { expectUncovered } from "../support/layout";
+import { withObservedPageErrors } from "../support/observe";
 import {
   chooseView,
   countSentQuestions,
@@ -17,15 +17,15 @@ import {
   scrollPageTo,
   shownQuestions,
   sidebarOf,
-} from "@/e2e/support/player";
-import { SERVER_FUNCTION_PATH } from "@/e2e/support/requests";
+} from "../support/player";
+import { SERVER_FUNCTION_PATH } from "../support/requests";
 import {
   expectStillShell,
   readPageTime,
   readShellObservation,
-} from "@/e2e/support/shell";
-import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
-import { desktopViewport, tryoutViewports } from "@/e2e/support/viewport";
+} from "../support/shell";
+import { readinessTimeoutMilliseconds } from "../support/timeout";
+import { desktopViewport, tryoutViewports } from "../support/viewport";
 
 /** The height of a window that is short enough for the sidebar to scroll. */
 const SHORT_WINDOW_HEIGHT = 400;

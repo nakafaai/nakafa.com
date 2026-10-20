@@ -1,11 +1,11 @@
 import { expect, type Page, test } from "@playwright/test";
 import { NINA_MESSAGES_PAGE_SIZE } from "@repo/backend/client/nina/presentation";
 import { Array as Arr, Duration, Effect } from "effect";
-import { runOnPage } from "@/e2e/support/chat";
-import { answerTurn, chatOf } from "@/e2e/support/prose";
-import { TRANSCRIPT_ROW } from "@/e2e/support/selector";
-import { openServedChat } from "@/e2e/support/serve";
-import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { runOnPage } from "../support/chat";
+import { answerTurn, chatOf } from "../support/prose";
+import { TRANSCRIPT_ROW } from "../support/selector";
+import { openServedChat } from "../support/serve";
+import { readinessTimeoutMilliseconds } from "../support/timeout";
 
 /**
  * Answers more than two pages of turns hold, so the third page of turns is the

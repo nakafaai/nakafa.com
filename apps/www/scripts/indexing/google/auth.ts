@@ -5,8 +5,8 @@ import { HttpClient, HttpClientRequest } from "effect/http";
 import {
   GoogleAssertionSignError,
   GoogleTokenRequestError,
-} from "@/scripts/indexing/errors";
-import { indexingFiles } from "@/scripts/indexing/paths";
+} from "../errors";
+import { indexingFiles } from "../paths";
 
 const GOOGLE_INDEXING_SCOPE = "https://www.googleapis.com/auth/indexing";
 const GOOGLE_TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token";

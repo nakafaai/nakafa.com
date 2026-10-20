@@ -8,17 +8,17 @@ import {
   expectCanvasToMove,
   observeDrawingBufferSize,
   waitForStableCanvas,
-} from "@/e2e/support/canvas";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
-import { withBrowserContext } from "@/e2e/support/context";
-import { withObservedPageErrors } from "@/e2e/support/observe";
+} from "../support/canvas";
+import { seedAnalyticsConsent } from "../support/consent";
+import { withBrowserContext } from "../support/context";
+import { withObservedPageErrors } from "../support/observe";
 import {
   CARD,
   LINE_SCENE,
   SCENE_ACTIONS,
   VISUAL_CARD_FOOTER,
-} from "@/e2e/support/selector";
-import { revealTimeoutMilliseconds } from "@/e2e/support/timeout";
+} from "../support/selector";
+import { revealTimeoutMilliseconds } from "../support/timeout";
 
 const LINEAR_SYSTEM_ROUTE =
   "/id/materi/matematika/sistem-persamaan-dan-pertidaksamaan-linear/sistem-persamaan-linear";

@@ -1,9 +1,9 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect, Record as Rec, Schema } from "effect";
-import { withBrowserContext } from "@/e2e/support/context";
-import { pinnedRoutes } from "@/e2e/support/corpus";
-import { withObservedPageErrors } from "@/e2e/support/observe";
-import { paginationNavigation } from "@/e2e/support/selector";
+import { withBrowserContext } from "../support/context";
+import { pinnedRoutes } from "../support/corpus";
+import { withObservedPageErrors } from "../support/observe";
+import { paginationNavigation } from "../support/selector";
 
 class LessonNavigationMissing extends Schema.TaggedError<LessonNavigationMissing>()(
   "LessonNavigationMissing",

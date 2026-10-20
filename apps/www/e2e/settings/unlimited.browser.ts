@@ -6,14 +6,14 @@ import {
   live,
   reloadUntil,
   saved,
-} from "@/e2e/support/changes";
+} from "../support/changes";
 import {
   LATE,
   NEWEST,
   OLDEST,
   OLDEST_WORD,
   writeLongList,
-} from "@/e2e/support/list";
+} from "../support/list";
 import {
   EMPTY,
   editorOf,
@@ -21,16 +21,16 @@ import {
   NO_RESULT,
   opened,
   openMemoryPage,
-} from "@/e2e/support/memory";
-import { withObservedPageErrors } from "@/e2e/support/observe";
-import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+} from "../support/memory";
+import { withObservedPageErrors } from "../support/observe";
+import { readinessTimeoutMilliseconds } from "../support/timeout";
 import {
   firstRow,
   hydratesInPlace,
   hydratesInPlaceAtLargeText,
   isHydrated,
   reachesRows,
-} from "@/e2e/support/window";
+} from "../support/window";
 
 const OLDEST_REVISED = "Astronomy club moved to Mondays";
 const EXTENDED = " and the Oort cloud";

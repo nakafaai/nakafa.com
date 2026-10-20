@@ -8,18 +8,18 @@ import en from "@repo/internationalization/dictionaries/standalone/en.json" with
 };
 import { Effect } from "effect";
 import { NINA_SIZE } from "@/components/state/size";
-import { activateUntilVisible } from "@/e2e/support/input";
-import { expectNoOverflow } from "@/e2e/support/layout";
-import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
-import { withObservedPageErrors } from "@/e2e/support/observe";
-import { APP_CHUNK_PATH, openRoute } from "@/e2e/support/route";
-import { STATE_FIGURE } from "@/e2e/support/selector";
-import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { activateUntilVisible } from "../support/input";
+import { expectNoOverflow } from "../support/layout";
+import { waitForCommittedAppRouter } from "../support/navigation/readiness";
+import { withObservedPageErrors } from "../support/observe";
+import { APP_CHUNK_PATH, openRoute } from "../support/route";
+import { STATE_FIGURE } from "../support/selector";
+import { readinessTimeoutMilliseconds } from "../support/timeout";
 import {
   compactViewport,
   desktopViewport,
   touchViewport,
-} from "@/e2e/support/viewport";
+} from "../support/viewport";
 
 /** What a visitor must never read on this page: the error itself. */
 const ERROR_DETAILS = /ChunkLoadError|digest|5XX|\bat \w+ \(/i;

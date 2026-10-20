@@ -18,9 +18,9 @@ import {
   runPage,
   WORD_TYPE,
   write,
-} from "@/e2e/support/attachment";
-import { openChatPage, runOnPage } from "@/e2e/support/chat";
-import { inTheSheet, openSheet } from "@/e2e/support/sheet";
+} from "../support/attachment";
+import { openChatPage, runOnPage } from "../support/chat";
+import { inTheSheet, openSheet } from "../support/sheet";
 
 /** The English reasons a refused chip gives, as the site words them. */
 const REJECTIONS = en.Ai["attachment-rejections"];

@@ -57,7 +57,7 @@ contextual visit cannot first record a canonical view and then a placement view.
   of each page; it needs a release in every entry's key first, and a check on
   Vercel that the header changes nothing at the CDN.
 - A read that depends only on the active release goes through the content
-  store (`apps/www/lib/content/store`), which keeps its answer in the Vercel
+  store (`apps/www/src/lib/content/store`), which keeps its answer in the Vercel
   Runtime Cache. That cache is shared by every instance and survives a deploy,
   while `use cache` keys include the build, so a deploy and every new instance
   used to read Convex again. A store key holds a version constant, the release

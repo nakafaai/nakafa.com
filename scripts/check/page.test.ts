@@ -146,7 +146,7 @@ page.$eval("main", countMain);
 `,
             },
             {
-              file: "apps/www/lib/page.ts",
+              file: "apps/www/src/lib/page.ts",
               sourceText: "page.evaluate(countFrames);\n",
             },
           ]),
@@ -174,8 +174,8 @@ page.$eval("main", countMain);
         );
         assert.deepStrictEqual(
           yield* outsideGlobals(
-            [{ file: "apps/www/lib/page.ts", sourceText: PAGE_CALLS }],
-            "apps/www/lib/page.ts"
+            [{ file: "apps/www/src/lib/page.ts", sourceText: PAGE_CALLS }],
+            "apps/www/src/lib/page.ts"
           ),
           [
             "1 Object",
@@ -220,7 +220,7 @@ page.evaluate(countWrapped);
             file: "apps/www/e2e/support/frames.ts",
             sourceText: SHARED_FUNCTIONS,
           },
-          { file: "apps/www/lib/frames.ts", sourceText: SHARED_FUNCTIONS },
+          { file: "apps/www/src/lib/frames.ts", sourceText: SHARED_FUNCTIONS },
         ];
         assert.deepStrictEqual(
           yield* outsideGlobals(sources, "apps/www/e2e/named.browser.ts"),
@@ -231,7 +231,7 @@ page.evaluate(countWrapped);
           ["5 Object", "10 Object"]
         );
         assert.deepStrictEqual(
-          yield* outsideGlobals(sources, "apps/www/lib/frames.ts"),
+          yield* outsideGlobals(sources, "apps/www/src/lib/frames.ts"),
           ["2 Object", "5 Object", "8 Array", "10 Object"]
         );
       })
@@ -314,12 +314,12 @@ export function probe(page: Page) {
                 'import { test } from "@playwright/test";\nimport { countFrames } from "./support/frames";\npage.evaluate(countFrames);\n',
             },
             {
-              file: "apps/www/lib/frames.ts",
+              file: "apps/www/src/lib/frames.ts",
               sourceText:
                 'export function countFrames() {\n  throw new Error("frames");\n}\n',
             },
           ]),
-          ["apps/www/lib/frames.ts:2 throw"]
+          ["apps/www/src/lib/frames.ts:2 throw"]
         );
       })
   );

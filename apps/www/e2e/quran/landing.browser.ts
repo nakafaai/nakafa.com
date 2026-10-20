@@ -1,11 +1,11 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Duration, Effect } from "effect";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
-import { waitForSlide } from "@/e2e/support/layout";
-import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
-import { withObservedPageErrors } from "@/e2e/support/observe";
-import { appRoutes } from "@/e2e/support/route";
-import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { seedAnalyticsConsent } from "../support/consent";
+import { waitForSlide } from "../support/layout";
+import { waitForCommittedAppRouter } from "../support/navigation/readiness";
+import { withObservedPageErrors } from "../support/observe";
+import { appRoutes } from "../support/route";
+import { readinessTimeoutMilliseconds } from "../support/timeout";
 
 /** How far the verse's number row sits below the headers stuck to the top of the screen. Zero is right under them. */
 function readVerseGap(id: string) {

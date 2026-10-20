@@ -5,9 +5,9 @@ import en from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
 import { Effect, Schema } from "effect";
-import { ANSWER_MILLISECONDS } from "@/e2e/support/changes";
-import { openChatPage, runOnPage, SHARE_TOKEN_QUERY } from "@/e2e/support/chat";
-import { withReader } from "@/e2e/support/reader";
+import { ANSWER_MILLISECONDS } from "../support/changes";
+import { openChatPage, runOnPage, SHARE_TOKEN_QUERY } from "../support/chat";
+import { withReader } from "../support/reader";
 import {
   notAvailable,
   offersNoWriting,
@@ -17,8 +17,8 @@ import {
   readLink,
   readsChat,
   SHARE_TOKEN,
-} from "@/e2e/support/share";
-import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+} from "../support/share";
+import { readinessTimeoutMilliseconds } from "../support/timeout";
 import { SHARE_ENTRY } from "@/lib/share/fragment";
 
 const PROMPT = "What is the limit of one over x?";

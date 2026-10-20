@@ -1,10 +1,10 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
-import { live } from "@/e2e/support/changes";
-import { EMPTY, memoryRow, opened, openMemoryPage } from "@/e2e/support/memory";
-import { withObservedPageErrors } from "@/e2e/support/observe";
-import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
-import { resizerOf, writeWorst } from "@/e2e/support/worst";
+import { live } from "../support/changes";
+import { EMPTY, memoryRow, opened, openMemoryPage } from "../support/memory";
+import { withObservedPageErrors } from "../support/observe";
+import { readinessTimeoutMilliseconds } from "../support/timeout";
+import { resizerOf, writeWorst } from "../support/worst";
 
 const WORDS = "Studies after dinner";
 /** Where the pointer lets go of the edge, in pixels from the left of the window. */

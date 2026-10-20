@@ -3,9 +3,9 @@ import { Array as Arr, Effect } from "effect";
 import { inspectRefsSource } from "#scripts/check/refs";
 import { parseSources } from "#scripts/check/source";
 
-const COMPONENT = "apps/www/components/sidebar/menu/utility.tsx";
-const SHIPPED_MODULE = "apps/www/lib/example.ts";
-const TEST_MODULE = "apps/www/components/example.test.ts";
+const COMPONENT = "apps/www/src/components/sidebar/menu/utility.tsx";
+const SHIPPED_MODULE = "apps/www/src/lib/example.ts";
+const TEST_MODULE = "apps/www/src/components/example.test.ts";
 const SERVER = "packages/backend/confect/tenancy/viewer.impl.ts";
 const RULE =
   "import the per-domain refs of each domain the module uses, such as @repo/backend/confect/_generated/refs/nina for refs.public.nina, instead of the whole @repo/backend/confect/_generated/refs tree";

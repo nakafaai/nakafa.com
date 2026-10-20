@@ -1,14 +1,14 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
-import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
-import { withObservedPageErrors } from "@/e2e/support/observe";
+import { seedAnalyticsConsent } from "../support/consent";
+import { waitForCommittedAppRouter } from "../support/navigation/readiness";
+import { withObservedPageErrors } from "../support/observe";
 import {
   CARD,
   SHEET_POPUP,
   SURAH_SIDEBAR_TRIGGER,
-} from "@/e2e/support/selector";
-import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+} from "../support/selector";
+import { readinessTimeoutMilliseconds } from "../support/timeout";
 
 const verifyCompactReferenceSheet = Effect.fn(
   "NakafaE2E.verifyCompactReferenceSheet"

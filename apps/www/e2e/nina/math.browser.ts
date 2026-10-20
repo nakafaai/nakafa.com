@@ -10,16 +10,16 @@ import {
   loadingCheck,
   roots,
   rref,
-} from "@/e2e/support/transcript/math";
+} from "../support/transcript/math";
 import {
   cutText,
   overflow,
   reachable,
   replyOverflow,
   rowOf,
-} from "@/e2e/support/transcript/measure";
-import { onChat, onSheet } from "@/e2e/support/transcript/open";
-import { sameHost } from "@/e2e/support/transcript/web";
+} from "../support/transcript/measure";
+import { onChat, onSheet } from "../support/transcript/open";
+import { sameHost } from "../support/transcript/web";
 
 /** The label of a step of a derivation, in German. */
 const STEP = /^Schritt \d+$/u;

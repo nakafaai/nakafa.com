@@ -1,8 +1,8 @@
 import { expect, type Locator } from "@playwright/test";
 import { Array as Arr, Effect } from "effect";
-import { waitForStableCanvas } from "@/e2e/support/canvas";
-import { LINE_SCENE } from "@/e2e/support/selector";
-import { revealTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { waitForStableCanvas } from "./canvas";
+import { LINE_SCENE } from "./selector";
+import { revealTimeoutMilliseconds } from "./timeout";
 
 /**
  * Scene notices that come from the test browser or a held dependency.

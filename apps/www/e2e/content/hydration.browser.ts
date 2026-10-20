@@ -1,8 +1,8 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Array as Arr, Effect, MutableRef, Schema } from "effect";
-import { signInLearner } from "@/e2e/support/learner";
-import { withObservedPageErrors } from "@/e2e/support/observe";
-import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { signInLearner } from "../support/learner";
+import { withObservedPageErrors } from "../support/observe";
+import { readinessTimeoutMilliseconds } from "../support/timeout";
 import { KNOWN_SESSION_KEY } from "@/lib/auth/keys";
 
 declare global {

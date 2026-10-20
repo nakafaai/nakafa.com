@@ -1,12 +1,12 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Effect, HashSet } from "effect";
-import { GERMAN, openComposer, runPage } from "@/e2e/support/attachment";
-import { CHAT_PATH, chatPathOf } from "@/e2e/support/chat";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
-import { waitForSlide } from "@/e2e/support/layout";
-import { withObservedPageErrors } from "@/e2e/support/observe";
-import { NINA_SECTION, SHEET_POPUP } from "@/e2e/support/selector";
-import { openSheet } from "@/e2e/support/sheet";
+import { GERMAN, openComposer, runPage } from "../support/attachment";
+import { CHAT_PATH, chatPathOf } from "../support/chat";
+import { seedAnalyticsConsent } from "../support/consent";
+import { waitForSlide } from "../support/layout";
+import { withObservedPageErrors } from "../support/observe";
+import { NINA_SECTION, SHEET_POPUP } from "../support/selector";
+import { openSheet } from "../support/sheet";
 
 const SAMPLE_IMAGE = Buffer.from(
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aZ1sAAAAASUVORK5CYII=",

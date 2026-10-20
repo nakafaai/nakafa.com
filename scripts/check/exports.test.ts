@@ -202,9 +202,9 @@ export const { tax } = source;
       assert.deepStrictEqual(
         yield* inspect(
           {
-            "apps/www/app/routes/lesson.tsx": text,
-            "apps/www/app/routes/api/health.ts": text,
-            "apps/www/app/start.ts": text,
+            "apps/www/src/routes/lesson.tsx": text,
+            "apps/www/src/routes/api/health.ts": text,
+            "apps/www/src/start.ts": text,
             "apps/www/vercel.ts": text,
             "packages/design-system/components/ui/table.tsx": text,
             "packages/design-system/components/evilcharts/charts/area.tsx":
@@ -219,11 +219,11 @@ export const { tax } = source;
       );
       assert.deepStrictEqual(
         yield* inspect({
-          "apps/www/components/app/lesson.tsx": text,
+          "apps/www/src/components/app/lesson.tsx": text,
           "packages/shop/start.ts": "export const started = 1;\n",
         }),
         [
-          report(1, "maxDuration", "apps/www/components/app/lesson.tsx"),
+          report(1, "maxDuration", "apps/www/src/components/app/lesson.tsx"),
           report(1, "started", "packages/shop/start.ts"),
         ]
       );

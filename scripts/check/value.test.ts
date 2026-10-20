@@ -11,7 +11,7 @@ import { valueMembers } from "#scripts/check/value";
  */
 const holds = Effect.fn("ValueTest.holds")(function* (sourceText: string) {
   const { modules } = yield* parseSources([
-    { file: "apps/www/lib/example.ts", sourceText },
+    { file: "apps/www/src/lib/example.ts", sourceText },
   ]);
   return Arr.flatMap(modules, ({ sourceFile }) => {
     const holdsValue = valueMembers(sourceFile);
@@ -28,7 +28,7 @@ const reported = Effect.fn("ValueTest.reported")(function* (
   sourceText: string
 ) {
   const found = yield* effectFindings(
-    yield* parseSources([{ file: "apps/www/lib/example.ts", sourceText }])
+    yield* parseSources([{ file: "apps/www/src/lib/example.ts", sourceText }])
   );
   return Arr.map(
     Arr.filter(found, ({ rule }) => rule === "data-type"),

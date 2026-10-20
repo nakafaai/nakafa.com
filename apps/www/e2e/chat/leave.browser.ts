@@ -3,23 +3,23 @@ import en from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
 import { Effect } from "effect";
-import { composerOf } from "@/e2e/support/attachment";
-import type { Changes } from "@/e2e/support/changes";
+import { composerOf } from "../support/attachment";
+import type { Changes } from "../support/changes";
 import {
   OPENED_CHAT,
   onThePage,
   openChatPage,
   runOnPage,
   START,
-} from "@/e2e/support/chat";
-import { sidebarRows } from "@/e2e/support/rows";
+} from "../support/chat";
+import { sidebarRows } from "../support/rows";
 import {
   inTheSheet,
   openSheet,
   promptWith,
   UNCONFIRMED,
-} from "@/e2e/support/sheet";
-import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+} from "../support/sheet";
+import { readinessTimeoutMilliseconds } from "../support/timeout";
 
 const PROMPT = "Why is the derivative of sine the cosine?";
 /** A chat the learner already has, which the sidebar opens while the new chat is admitted. */

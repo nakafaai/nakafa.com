@@ -1,6 +1,6 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Array as Arr, Effect } from "effect";
-import { live, saved } from "@/e2e/support/changes";
+import { live, saved } from "../support/changes";
 import {
   EMPTY,
   editorOf,
@@ -8,15 +8,15 @@ import {
   memoryRow,
   opened,
   openMemoryPage,
-} from "@/e2e/support/memory";
-import { withObservedPageErrors } from "@/e2e/support/observe";
-import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+} from "../support/memory";
+import { withObservedPageErrors } from "../support/observe";
+import { readinessTimeoutMilliseconds } from "../support/timeout";
 import {
   namesAcrossHydration,
   namesOf,
   titleOf,
   writeWorst,
-} from "@/e2e/support/worst";
+} from "../support/worst";
 
 const ARABIC = "نور الهدى عبد الرحمن";
 const ADDRESS =

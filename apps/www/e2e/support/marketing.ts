@@ -1,10 +1,10 @@
 import { expect, type Page } from "@playwright/test";
 import type { Contributor } from "@repo/contents/contributor";
 import { Effect, Schema } from "effect";
-import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
-import { openRoute } from "@/e2e/support/route";
-import { MARKETING_PAGE } from "@/e2e/support/selector";
-import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { waitForCommittedAppRouter } from "./navigation/readiness";
+import { openRoute } from "./route";
+import { MARKETING_PAGE } from "./selector";
+import { readinessTimeoutMilliseconds } from "./timeout";
 
 const MarketingSurfaceSchema = Schema.Literals(["community"]);
 

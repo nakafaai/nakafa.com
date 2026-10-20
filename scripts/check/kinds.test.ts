@@ -24,16 +24,16 @@ describe("React client modules", () => {
         assert.deepStrictEqual(
           yield* findings([
             {
-              file: "apps/www/lib/double.ts",
+              file: "apps/www/src/lib/double.ts",
               sourceText: `"use client";\n${BODY}`,
             },
             {
-              file: "apps/www/lib/single.ts",
+              file: "apps/www/src/lib/single.ts",
               sourceText: `'use client';\n${BODY}`,
             },
-            { file: "apps/www/lib/plain.ts", sourceText: BODY },
+            { file: "apps/www/src/lib/plain.ts", sourceText: BODY },
           ]),
-          ["apps/www/lib/plain.ts:1 timer", "apps/www/lib/plain.ts:2 throw"]
+          ["apps/www/src/lib/plain.ts:1 timer", "apps/www/src/lib/plain.ts:2 throw"]
         );
       })
   );
@@ -45,25 +45,25 @@ describe("React client modules", () => {
         assert.deepStrictEqual(
           yield* findings([
             {
-              file: "apps/www/lib/after.ts",
+              file: "apps/www/src/lib/after.ts",
               sourceText: `import { hook } from "./hook";\n"use client";\n${BODY}`,
             },
             {
-              file: "apps/www/lib/parenthesized.ts",
+              file: "apps/www/src/lib/parenthesized.ts",
               sourceText: `("use client");\n${BODY}`,
             },
             {
-              file: "apps/www/lib/template.ts",
+              file: "apps/www/src/lib/template.ts",
               sourceText: `\`use client\`;\n${BODY}`,
             },
           ]),
           [
-            "apps/www/lib/after.ts:3 timer",
-            "apps/www/lib/after.ts:4 throw",
-            "apps/www/lib/parenthesized.ts:2 timer",
-            "apps/www/lib/parenthesized.ts:3 throw",
-            "apps/www/lib/template.ts:2 timer",
-            "apps/www/lib/template.ts:3 throw",
+            "apps/www/src/lib/after.ts:3 timer",
+            "apps/www/src/lib/after.ts:4 throw",
+            "apps/www/src/lib/parenthesized.ts:2 timer",
+            "apps/www/src/lib/parenthesized.ts:3 throw",
+            "apps/www/src/lib/template.ts:2 timer",
+            "apps/www/src/lib/template.ts:3 throw",
           ]
         );
       })

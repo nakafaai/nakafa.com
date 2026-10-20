@@ -1,9 +1,9 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
-import { CHAT_PATH } from "@/e2e/support/chat";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
-import { withObservedPageErrors } from "@/e2e/support/observe";
-import { revealTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { CHAT_PATH } from "../support/chat";
+import { seedAnalyticsConsent } from "../support/consent";
+import { withObservedPageErrors } from "../support/observe";
+import { revealTimeoutMilliseconds } from "../support/timeout";
 
 /** What the app's weather route answers for a long place name in heavy rain, at -10 degrees. */
 const SUMMARY = {

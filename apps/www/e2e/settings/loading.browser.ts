@@ -1,17 +1,17 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
-import { reloadUntil, saved } from "@/e2e/support/changes";
-import { runOnPage } from "@/e2e/support/chat";
-import { writeMemory } from "@/e2e/support/list";
+import { reloadUntil, saved } from "../support/changes";
+import { runOnPage } from "../support/chat";
+import { writeMemory } from "../support/list";
 import {
   editorOf,
   memoryRow,
   nameOf,
   openMemoryPage,
   panelOf,
-} from "@/e2e/support/memory";
-import { holdChunks } from "@/e2e/support/route";
-import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+} from "../support/memory";
+import { holdChunks } from "../support/route";
+import { readinessTimeoutMilliseconds } from "../support/timeout";
 
 const PLAIN = "Prefers worked examples before the formula";
 /** A memory with a heading, a bulleted item and a bold word, typed with the Markdown shortcuts. */

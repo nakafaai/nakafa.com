@@ -1,10 +1,10 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
-import { activateUntilVisible } from "@/e2e/support/input";
-import { withObservedPageErrors } from "@/e2e/support/observe";
-import { VISIBLE_SIDEBAR_TRIGGER } from "@/e2e/support/selector";
-import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { seedAnalyticsConsent } from "../support/consent";
+import { activateUntilVisible } from "../support/input";
+import { withObservedPageErrors } from "../support/observe";
+import { VISIBLE_SIDEBAR_TRIGGER } from "../support/selector";
+import { readinessTimeoutMilliseconds } from "../support/timeout";
 
 /** The page header a page draws for itself. */
 const PAGE_HEADER = '[data-slot="page-header"]';

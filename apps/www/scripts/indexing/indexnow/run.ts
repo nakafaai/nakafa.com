@@ -5,22 +5,22 @@ import {
   loadSubmissionHistory,
   type SubmissionHistory,
   saveAcceptedUrls,
-} from "@/scripts/indexing/history";
+} from "../history";
 import {
   readBingWebmasterApiKey,
   submitUrlsToBing,
-} from "@/scripts/indexing/indexnow/bing";
-import { submitUrlsToIndexNow } from "@/scripts/indexing/indexnow/submit";
+} from "./bing";
+import { submitUrlsToIndexNow } from "./submit";
 import {
   forEachSiteIndexUrlBatch,
   type SiteIndexManifestSummary,
-} from "@/scripts/indexing/manifest";
+} from "../manifest";
 import {
   INDEXING_HOST,
   INDEXING_HOSTNAME,
   INDEXNOW_KEY,
   INDEXNOW_KEY_LOCATION,
-} from "@/scripts/indexing/paths";
+} from "../paths";
 
 /**
  * Runs sitemap-derived URL notifications for IndexNow and Bing.

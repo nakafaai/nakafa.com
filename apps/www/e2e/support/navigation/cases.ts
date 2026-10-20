@@ -1,17 +1,17 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
 import { Duration, Effect, Schedule, Schema } from "effect";
-import { pinnedRoutes } from "@/e2e/support/corpus";
-import { activateUntilVisible, press } from "@/e2e/support/input";
-import { pressPreloaded } from "@/e2e/support/navigation/prefetch";
-import { prepareClientNavigation } from "@/e2e/support/navigation/readiness";
-import { appRoutes } from "@/e2e/support/route";
+import { pinnedRoutes } from "../corpus";
+import { activateUntilVisible, press } from "../input";
+import { pressPreloaded } from "./prefetch";
+import { prepareClientNavigation } from "./readiness";
+import { appRoutes } from "../route";
 import {
   MARKETING_PAGE,
   VISIBLE_SIDEBAR_TRIGGER,
-} from "@/e2e/support/selector";
-import { observeShell } from "@/e2e/support/shell";
-import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+} from "../selector";
+import { observeShell } from "../shell";
+import { readinessTimeoutMilliseconds } from "../timeout";
 
 const HOMEPAGE_HEADING_PATTERN = /Learn until it clicks/i;
 const QURAN_HEADING_PATTERN = /Al-Baqara/i;

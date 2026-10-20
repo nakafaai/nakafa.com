@@ -16,7 +16,7 @@ export default {
         // https://github.com/vercel/ai/blob/ai%407.0.58/packages/ai/src/ui/process-ui-message-stream.ts#L415-L495
         // React's index-key warning applies when list order can change.
         // https://react.dev/learn/rendering-lists#rules-of-keys
-        files: ["components/ai/message-parts.tsx"],
+        files: ["src/components/ai/message-parts.tsx"],
         rules: ["react-doctor/no-array-index-as-key"],
       },
       {
@@ -27,7 +27,7 @@ export default {
         // see across that boundary.
         // https://docs.convex.dev/api/modules/react#convexproviderwithauth
         // https://react.dev/reference/rules/react-calls-components-and-hooks#never-pass-around-hooks-as-regular-values
-        files: ["components/providers/convex.tsx"],
+        files: ["src/components/providers/convex.tsx"],
         rules: ["react-hooks-js/hooks"],
       },
       {

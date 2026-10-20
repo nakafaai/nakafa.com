@@ -3,7 +3,7 @@ import { Array as Arr, Effect } from "effect";
 import { classFindings } from "#scripts/check/classes";
 import { parseSources, type RepositorySource } from "#scripts/check/source";
 
-const VIEW = "apps/www/components/example.tsx";
+const VIEW = "apps/www/src/components/example.tsx";
 const RULE =
   "write them inside cva(...) (one compoundVariants entry when several variants share them), inside cn(...), or in the className itself, or give the element a small component that owns them";
 
@@ -328,14 +328,14 @@ describe("class constant policy", () => {
         "const view = <div className={cn(EARLIER, LATER)} />;"
       );
       const violations = yield* inspectAll([
-        { file: "apps/www/components/b.tsx", sourceText },
-        { file: "apps/www/components/a.tsx", sourceText },
+        { file: "apps/www/src/components/b.tsx", sourceText },
+        { file: "apps/www/src/components/a.tsx", sourceText },
       ]);
       assert.deepStrictEqual(violations, [
-        violation("LATER", 1, "apps/www/components/a.tsx"),
-        violation("EARLIER", 2, "apps/www/components/a.tsx"),
-        violation("LATER", 1, "apps/www/components/b.tsx"),
-        violation("EARLIER", 2, "apps/www/components/b.tsx"),
+        violation("LATER", 1, "apps/www/src/components/a.tsx"),
+        violation("EARLIER", 2, "apps/www/src/components/a.tsx"),
+        violation("LATER", 1, "apps/www/src/components/b.tsx"),
+        violation("EARLIER", 2, "apps/www/src/components/b.tsx"),
       ]);
     })
   );
@@ -452,9 +452,9 @@ describe("class constant policy", () => {
   it.effect("keeps the names of one module out of another", () =>
     Effect.gen(function* () {
       const violations = yield* inspectAll([
-        { file: "apps/www/components/a.tsx", sourceText: 'const ON = "flex";' },
+        { file: "apps/www/src/components/a.tsx", sourceText: 'const ON = "flex";' },
         {
-          file: "apps/www/components/b.tsx",
+          file: "apps/www/src/components/b.tsx",
           sourceText: "const view = <div className={ON} />;",
         },
       ]);
@@ -463,7 +463,7 @@ describe("class constant policy", () => {
   );
 
   it.effect.each([
-    { kind: "a test", file: "apps/www/components/example.test.tsx" },
+    { kind: "a test", file: "apps/www/src/components/example.test.tsx" },
     { kind: "a test support module", file: "apps/www/test.setup.ts" },
     { kind: "a configuration file", file: "apps/www/tailwind.config.ts" },
   ])("skips $kind", ({ file }) =>

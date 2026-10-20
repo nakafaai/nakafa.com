@@ -4,12 +4,12 @@ import {
   ANSWER_MILLISECONDS,
   saved,
   trackChanges,
-} from "@/e2e/support/changes";
-import { runOnPage } from "@/e2e/support/chat";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
-import { signInLearner } from "@/e2e/support/learner";
-import { LIST_QUERY, MEMORY_PATH } from "@/e2e/support/memory";
-import { isTakenOver } from "@/e2e/support/window";
+} from "../support/changes";
+import { runOnPage } from "../support/chat";
+import { seedAnalyticsConsent } from "../support/consent";
+import { signInLearner } from "../support/learner";
+import { LIST_QUERY, MEMORY_PATH } from "../support/memory";
+import { isTakenOver } from "../support/window";
 
 /** The Convex name of `nina.memory.pause`, the mutation behind the switch. */
 const PAUSE_MUTATION = "nina/memory:pause";

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import { hasGoogleIndexingApiEligibleStructuredData } from "@/scripts/indexing/google/structured";
+import { hasGoogleIndexingApiEligibleStructuredData } from "./structured";
 
 describe("hasGoogleIndexingApiEligibleStructuredData", () => {
   it("accepts JobPosting JSON-LD because Google Indexing API supports job pages", () => {

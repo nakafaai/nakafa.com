@@ -13,7 +13,7 @@ export default mergeConfig(config, {
   resolve: {
     alias: {
       /** Match the app's `@/` import alias inside tests. */
-      "@": import.meta.dirname,
+      "@": `${import.meta.dirname}/src`,
     },
   },
   test: {
@@ -23,7 +23,7 @@ export default mergeConfig(config, {
     setupFiles: ["./vitest.setup.ts"],
     coverage: {
       /** Client lazy boundaries are verified by analyzer and browser gates. */
-      exclude: ["lib/content/renderer/client/**"],
+      exclude: ["src/lib/content/renderer/client/**"],
     },
   },
 });

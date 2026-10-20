@@ -1,9 +1,9 @@
 import { expect, test } from "@playwright/test";
 import { Clock, Effect } from "effect";
-import { CHAT_PATH, openChatPage, runOnPage } from "@/e2e/support/chat";
-import { answerMessage, learnerMessage } from "@/e2e/support/prose";
-import { openServedChat } from "@/e2e/support/serve";
-import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { CHAT_PATH, openChatPage, runOnPage } from "../support/chat";
+import { answerMessage, learnerMessage } from "../support/prose";
+import { openServedChat } from "../support/serve";
+import { readinessTimeoutMilliseconds } from "../support/timeout";
 
 /** The words of the page for a thought, by language: while it runs, after a second, after two, and a saved one. */
 const LANGUAGES = [

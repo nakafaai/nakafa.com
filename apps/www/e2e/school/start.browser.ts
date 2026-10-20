@@ -1,9 +1,9 @@
 import { expect, type Frame, test } from "@playwright/test";
 import { Array as Arr, Effect } from "effect";
-import { saved, trackChanges } from "@/e2e/support/changes";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
-import { signInLearner } from "@/e2e/support/learner";
-import { hostAddress } from "@/e2e/support/school";
+import { saved, trackChanges } from "../support/changes";
+import { seedAnalyticsConsent } from "../support/consent";
+import { signInLearner } from "../support/learner";
+import { hostAddress } from "../support/school";
 
 test("a new account opens its own school in five questions and lands in it as its Owner", async ({
   baseURL,

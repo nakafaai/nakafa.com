@@ -7,7 +7,7 @@ import {
   inviteLearner,
   signInOwner,
   signInTeacher,
-} from "@/e2e/support/school";
+} from "../support/school";
 
 /** The Owner option of the Role filter, whose name ends with its count. */
 const OWNER_OPTION = /^Owner/;

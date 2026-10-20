@@ -248,7 +248,7 @@ describe("dependency policy validation", () => {
           dependencies: { ...manifest.dependencies, "date-fns": "4.4.0" },
         })),
       problem:
-        "apps/www/package.json declares the obsolete dependency date-fns; use Intl.DateTimeFormat and Intl.RelativeTimeFormat with DateTime and Duration from effect, as apps/www/lib/i18n/date.ts does.",
+        "apps/www/package.json declares the obsolete dependency date-fns; use Intl.DateTimeFormat and Intl.RelativeTimeFormat with DateTime and Duration from effect, as apps/www/src/lib/i18n/date.ts does.",
     },
     {
       name: "nanoid, which randomUuid replaces",

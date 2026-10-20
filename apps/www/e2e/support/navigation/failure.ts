@@ -2,7 +2,7 @@ import { Schema } from "effect";
 import {
   formatRequestFailure,
   requestFailureFields,
-} from "@/e2e/support/requests";
+} from "../requests";
 
 const NavigationReadinessPhaseSchema = Schema.Literals([
   "hydration",

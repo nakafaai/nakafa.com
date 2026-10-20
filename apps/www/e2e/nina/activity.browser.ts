@@ -1,16 +1,16 @@
 import { expect, test } from "@playwright/test";
-import { checkFailed, roots } from "@/e2e/support/transcript/math";
-import { cutText, startsUnder } from "@/e2e/support/transcript/measure";
-import { said } from "@/e2e/support/transcript/message";
+import { checkFailed, roots } from "../support/transcript/math";
+import { cutText, startsUnder } from "../support/transcript/measure";
+import { said } from "../support/transcript/message";
 import {
   content,
   nakafaSearchFailed,
   quranRefs,
   searchId,
-} from "@/e2e/support/transcript/nakafa";
-import { onChat } from "@/e2e/support/transcript/open";
-import { outcomes } from "@/e2e/support/transcript/outcome";
-import { pages, sameHost, webSearchFailed } from "@/e2e/support/transcript/web";
+} from "../support/transcript/nakafa";
+import { onChat } from "../support/transcript/open";
+import { outcomes } from "../support/transcript/outcome";
+import { pages, sameHost, webSearchFailed } from "../support/transcript/web";
 
 /**
  * Every capability, ended in every way a capability ends short of a plain

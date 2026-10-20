@@ -1,8 +1,8 @@
 import { expect, type Locator, type Page, type Route } from "@playwright/test";
 import { Effect, MutableList } from "effect";
-import { LAST_SERVER, NEWEST } from "@/e2e/support/list";
-import { MEMORY_PATH, memoryRow } from "@/e2e/support/memory";
-import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { LAST_SERVER, NEWEST } from "./list";
+import { MEMORY_PATH, memoryRow } from "./memory";
+import { readinessTimeoutMilliseconds } from "./timeout";
 
 /** The scripts of the page itself. */
 const SCRIPTS = /\/assets\/.*\.js/;

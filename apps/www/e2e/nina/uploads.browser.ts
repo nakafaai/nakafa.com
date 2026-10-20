@@ -13,9 +13,9 @@ import {
   pictureOf,
   TRANSPARENT,
   write,
-} from "@/e2e/support/attachment";
-import { saved } from "@/e2e/support/changes";
-import { onThePage, openChatPage, runOnPage, START } from "@/e2e/support/chat";
+} from "../support/attachment";
+import { saved } from "../support/changes";
+import { onThePage, openChatPage, runOnPage, START } from "../support/chat";
 import {
   inTheSheet,
   openFromHistory,
@@ -23,14 +23,14 @@ import {
   promptWith,
   UNAVAILABLE,
   UNCONFIRMED,
-} from "@/e2e/support/sheet";
-import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+} from "../support/sheet";
+import { readinessTimeoutMilliseconds } from "../support/timeout";
 import {
   RELEASE,
   SAVE,
   uploadsNamedBy,
   uploadsReleasedBy,
-} from "@/e2e/support/upload";
+} from "../support/upload";
 
 /** What the pages tell the learner when the server calls an upload invalid. */
 const INVALID = en.Toast["failure-attachment-invalid"].title;

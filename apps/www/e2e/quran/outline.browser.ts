@@ -1,17 +1,17 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Duration, Effect } from "effect";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
-import { pinnedRoutes } from "@/e2e/support/corpus";
+import { seedAnalyticsConsent } from "../support/consent";
+import { pinnedRoutes } from "../support/corpus";
 import {
   expectUncovered,
   readLayoutShift,
   waitForSlide,
-} from "@/e2e/support/layout";
-import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
-import { withObservedPageErrors } from "@/e2e/support/observe";
-import { APP_SCRIPT_PATTERN } from "@/e2e/support/requests";
-import { appRoutes } from "@/e2e/support/route";
-import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+} from "../support/layout";
+import { waitForCommittedAppRouter } from "../support/navigation/readiness";
+import { withObservedPageErrors } from "../support/observe";
+import { APP_SCRIPT_PATTERN } from "../support/requests";
+import { appRoutes } from "../support/route";
+import { readinessTimeoutMilliseconds } from "../support/timeout";
 
 // Long enough that the server-rendered page paints before it hydrates.
 const heldScriptMilliseconds = 1000;

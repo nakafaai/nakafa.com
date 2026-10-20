@@ -3,10 +3,10 @@ import app from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
 import { Effect } from "effect";
-import { saved } from "@/e2e/support/changes";
-import { openChatPage, runOnPage } from "@/e2e/support/chat";
-import { appRoutes } from "@/e2e/support/route";
-import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { saved } from "../support/changes";
+import { openChatPage, runOnPage } from "../support/chat";
+import { appRoutes } from "../support/route";
+import { readinessTimeoutMilliseconds } from "../support/timeout";
 
 /** The name of the synthetic learner, which the account button shows. */
 const LEARNER_NAME = "Acceptance Learner";

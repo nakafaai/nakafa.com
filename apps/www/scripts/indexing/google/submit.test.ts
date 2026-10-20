@@ -5,7 +5,7 @@ import { FetchClient } from "@repo/utilities/http/client";
 import { Array as Arr, Effect, Fiber, Option, Schema } from "effect";
 import { FetchHttpClient } from "effect/http";
 import { TestClock } from "effect/testing";
-import { submitUrlsToGoogle } from "@/scripts/indexing/google/submit";
+import { submitUrlsToGoogle } from "./submit";
 
 const PUBLISH_ENDPOINT =
   "https://indexing.googleapis.com/v3/urlNotifications:publish";

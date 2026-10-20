@@ -5,7 +5,7 @@ import {
   hostAddress,
   signInClassTeacher,
   signInOwner,
-} from "@/e2e/support/school";
+} from "../support/school";
 
 test("a school without a logo shows its animal beside its name, and its account menu lists its items", async ({
   browser,

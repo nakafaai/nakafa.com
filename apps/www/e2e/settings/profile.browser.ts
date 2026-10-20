@@ -5,10 +5,10 @@ import app from "@repo/internationalization/dictionaries/en.json" with {
 };
 import { MAIN_DOMAIN } from "@repo/site/domains";
 import { Array as Arr, Effect } from "effect";
-import { animalMarkup, drawnAnimal, sidebarAvatar } from "@/e2e/support/avatar";
-import { openChatPage, runOnPage } from "@/e2e/support/chat";
-import { appRoutes } from "@/e2e/support/route";
-import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { animalMarkup, drawnAnimal, sidebarAvatar } from "../support/avatar";
+import { openChatPage, runOnPage } from "../support/chat";
+import { appRoutes } from "../support/route";
+import { readinessTimeoutMilliseconds } from "../support/timeout";
 
 /** The query that tells whether a username can be taken. */
 const CHECK_USERNAME = "users/queries:checkUsername";

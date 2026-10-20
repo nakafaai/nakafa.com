@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
-import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
-import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { createSchool, hostAddress, signInOwner } from "../support/school";
+import { readinessTimeoutMilliseconds } from "../support/timeout";
 
 /** The address of an exam's editor on the school host. */
 const EDITOR_PATH = /\/exams\/[^/]+\/edit$/;

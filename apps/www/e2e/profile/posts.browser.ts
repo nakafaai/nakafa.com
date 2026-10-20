@@ -5,9 +5,9 @@ import app from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
 import { Array as Arr, Effect, Schema } from "effect";
-import { saved } from "@/e2e/support/changes";
-import { openChatPage, runOnPage } from "@/e2e/support/chat";
-import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { saved } from "../support/changes";
+import { openChatPage, runOnPage } from "../support/chat";
+import { readinessTimeoutMilliseconds } from "../support/timeout";
 
 const OLDER = "Kemarin belajar aljabar.";
 const POST = "Hari ini belajar trigonometri.";

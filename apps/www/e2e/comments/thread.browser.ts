@@ -8,10 +8,10 @@ import app from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
 import { DateTime, Effect } from "effect";
-import { LESSON_PATH, openChatPage } from "@/e2e/support/chat";
-import { withBrowserContext } from "@/e2e/support/context";
-import { withObservedPageErrors } from "@/e2e/support/observe";
-import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { LESSON_PATH, openChatPage } from "../support/chat";
+import { withBrowserContext } from "../support/context";
+import { withObservedPageErrors } from "../support/observe";
+import { readinessTimeoutMilliseconds } from "../support/timeout";
 
 const PLACEHOLDER = app.Comments["add-comment-placeholder"];
 /** The line above a reply to a reply, in English. */

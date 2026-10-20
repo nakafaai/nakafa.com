@@ -3,7 +3,7 @@ import { defineConfig } from "vitest/config";
 /** Runs AFDocs against an already-started production site. */
 export default defineConfig({
   resolve: {
-    alias: { "@": import.meta.dirname },
+    alias: { "@": `${import.meta.dirname}/src` },
   },
   test: {
     environment: "node",

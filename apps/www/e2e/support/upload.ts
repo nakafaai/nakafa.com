@@ -1,6 +1,6 @@
 import { Effect, Schema } from "effect";
-import type { Changes } from "@/e2e/support/changes";
-import { START } from "@/e2e/support/chat";
+import type { Changes } from "./changes";
+import { START } from "./chat";
 
 /** The Convex names of the upload functions the composer calls. */
 export const SAVE = "nina/uploads:save";

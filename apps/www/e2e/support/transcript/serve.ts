@@ -17,7 +17,7 @@ import {
   decodeTransition,
   encodeTransition,
   type SentSchema,
-} from "@/e2e/support/frames";
+} from "../frames";
 import {
   type AskedQueries,
   answerTo,
@@ -25,8 +25,8 @@ import {
   noticeQueries,
   type ServedMessage,
   type Writing,
-} from "@/e2e/support/query";
-import { THREAD } from "@/e2e/support/transcript/message";
+} from "../query";
+import { THREAD } from "./message";
 
 /** The socket of the page's realtime connection, as Playwright routes it. */
 type Socket = Parameters<Parameters<Page["routeWebSocket"]>[1]>[0];

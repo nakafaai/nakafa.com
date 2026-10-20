@@ -5,7 +5,7 @@ import {
   NavigationReadinessTimeout,
   NavigationRequestError,
   readErrorText,
-} from "@/e2e/support/navigation/failure";
+} from "./failure";
 
 const DETACHED_ELEMENT_MESSAGE = "Element is not attached to the DOM";
 const VIEWPORT_RETRY_MILLISECONDS = 100;

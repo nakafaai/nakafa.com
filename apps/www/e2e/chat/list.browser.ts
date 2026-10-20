@@ -1,13 +1,13 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Array as Arr, Effect } from "effect";
-import { ANSWER_MILLISECONDS } from "@/e2e/support/changes";
+import { ANSWER_MILLISECONDS } from "../support/changes";
 import {
   CHAT_PATH,
   LESSON_PATH,
   openChatPage,
   PAGE,
   runOnPage,
-} from "@/e2e/support/chat";
+} from "../support/chat";
 import {
   historyRows,
   markedRows,
@@ -19,8 +19,8 @@ import {
   sidebarRows,
   sidebarScroller,
   sidebarSearch,
-} from "@/e2e/support/rows";
-import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+} from "../support/rows";
+import { readinessTimeoutMilliseconds } from "../support/timeout";
 
 /** The chats after the first page, beside the chat that waits at the end. */
 const LATER = 5;

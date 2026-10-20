@@ -335,7 +335,7 @@ never a second one.
   `@repo/contents/route/root`, every namespace of a public route surface, and
   the few roots that answer outside the route tree) or could pass for Nakafa,
   its people, or its help (`users/reserved.ts`). A test reads the route tree of
-  `apps/www/app` and fails when a root that could be a username is not
+  `apps/www/src` and fails when a root that could be a username is not
   reserved.
 - A new account gets its username in the transaction that makes the row: the
   letters and digits of its name, then the name with 2 up to 9, then the name
@@ -372,10 +372,10 @@ nothing. So no profile is public yet.
   answer only a signed-in account: a visitor's check is refused with
   `SessionRequired`.)
   The proxy decides before the page renders (`readProfileRefusal` in
-  `apps/www/lib/routing/public/profile.ts`): it reads the signed-in account and
+  `apps/www/src/lib/routing/public/profile.ts`): it reads the signed-in account and
   answers any other request with the app's not-found page and a 404 status, so
   no stream starts that would have to end as not found. `readProfile` in
-  `apps/www/lib/profile/server.ts` reads the same account for the page and
+  `apps/www/src/lib/profile/server.ts` reads the same account for the page and
   repeats the rule. The backend holds no public lookup of a profile by username.
 - A comment shows no link to the profile of its author.
 - The retired address `/{locale}/user/{id}` and its `chat` tab answer 308 to the

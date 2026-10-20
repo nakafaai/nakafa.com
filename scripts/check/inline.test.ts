@@ -6,7 +6,7 @@ import { parseSources } from "#scripts/check/source";
 /** Lists the lines of the data shapes that one module writes, as the shape rule reports them. */
 const shapes = Effect.fn("InlinePolicyTest.shapes")(function* (
   sourceText: string,
-  file = "apps/www/lib/example.ts"
+  file = "apps/www/src/lib/example.ts"
 ) {
   const found = yield* effectFindings(
     yield* parseSources([{ file, sourceText }])
@@ -195,14 +195,14 @@ class Panel {
   render(input: { rows: { id: string }[] }) {}
 }
 `,
-            "apps/www/components/card.tsx"
+            "apps/www/src/components/card.tsx"
           ),
           [5, 6, 7, 8, 9, 11]
         );
         assert.deepStrictEqual(
           yield* shapes(
             "export function Card({ rows }: { rows: { id: string }[] }) {}\n",
-            "apps/www/lib/card.ts"
+            "apps/www/src/lib/card.ts"
           ),
           [1]
         );

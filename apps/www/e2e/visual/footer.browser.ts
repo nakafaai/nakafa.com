@@ -3,12 +3,12 @@ import en from "@repo/internationalization/dictionaries/en.json" with {
   type: "json",
 };
 import { Array as Arr, Effect } from "effect";
-import { pinnedRoutes } from "@/e2e/support/corpus";
-import { readFooterActions, setLargeText } from "@/e2e/support/footer";
-import { withObservedPageErrors } from "@/e2e/support/observe";
-import { VISUAL_CARD_TOOLBAR } from "@/e2e/support/selector";
-import { compactViewport } from "@/e2e/support/viewport";
-import { openVisualLesson, revealLab, revealScene } from "@/e2e/support/visual";
+import { pinnedRoutes } from "../support/corpus";
+import { readFooterActions, setLargeText } from "../support/footer";
+import { withObservedPageErrors } from "../support/observe";
+import { VISUAL_CARD_TOOLBAR } from "../support/selector";
+import { compactViewport } from "../support/viewport";
+import { openVisualLesson, revealLab, revealScene } from "../support/visual";
 
 /** The bands a visual card may hold, in the only order it holds them. */
 const BAND_ORDER = [

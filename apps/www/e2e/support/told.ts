@@ -8,7 +8,7 @@ import {
   type Result,
   Schema,
 } from "effect";
-import type { Changes } from "@/e2e/support/changes";
+import type { Changes } from "./changes";
 
 /**
  * The queries that tell a page of a chat: its conversation with the latest

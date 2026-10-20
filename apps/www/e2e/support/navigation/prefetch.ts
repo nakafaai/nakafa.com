@@ -1,16 +1,16 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Array as Arr, Clock, Effect } from "effect";
-import { loadMathFonts } from "@/e2e/support/fonts";
-import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
-import { settleRouter } from "@/e2e/support/navigation/settle";
-import { recordServerFunctionCalls } from "@/e2e/support/requests";
+import { loadMathFonts } from "../fonts";
+import { waitForCommittedAppRouter } from "./readiness";
+import { settleRouter } from "./settle";
+import { recordServerFunctionCalls } from "../requests";
 import {
   expectStillShell,
   observeShell,
   readPageTime,
   readShellObservation,
-} from "@/e2e/support/shell";
-import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+} from "../shell";
+import { readinessTimeoutMilliseconds } from "../timeout";
 
 /** Loads `href` with the frame recorder running and its router hydrated. */
 export const openObservedRoute = Effect.fn("NakafaE2E.openObservedRoute")(

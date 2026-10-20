@@ -12,12 +12,12 @@ import {
   GERMAN,
   noticeWith,
   write,
-} from "@/e2e/support/attachment";
-import { onThePage, openChatPage, runOnPage, START } from "@/e2e/support/chat";
-import { pinnedRoutes } from "@/e2e/support/corpus";
-import { waitForSlide } from "@/e2e/support/layout";
-import { SHEET_POPUP } from "@/e2e/support/selector";
-import { UNCONFIRMED_TOAST } from "@/e2e/support/sheet";
+} from "../support/attachment";
+import { onThePage, openChatPage, runOnPage, START } from "../support/chat";
+import { pinnedRoutes } from "../support/corpus";
+import { waitForSlide } from "../support/layout";
+import { SHEET_POPUP } from "../support/selector";
+import { UNCONFIRMED_TOAST } from "../support/sheet";
 
 /**
  * The English notice of a prompt over the limit. It says what the turn budget

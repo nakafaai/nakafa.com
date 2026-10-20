@@ -24,7 +24,7 @@ import {
   later,
   momentOf,
   type SentSchema,
-} from "@/e2e/support/frames";
+} from "./frames";
 
 /** How long a step waits for the server to answer a change. */
 export const ANSWER_MILLISECONDS = 15_000;

@@ -9,7 +9,7 @@ import {
   learnsOnlyWhereTurnsStand,
   learnsWhatTurnsCost,
   learnsWhoOwnsTheChat,
-} from "@/e2e/support/told";
+} from "./told";
 
 const CONVERSATION = "nina/conversation:get";
 const TURNS = "nina/conversation:turns";

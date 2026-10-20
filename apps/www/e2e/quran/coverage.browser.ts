@@ -4,11 +4,11 @@ import {
 } from "@nakafa/aksara-contracts/locale";
 import { expect, type Page, test } from "@playwright/test";
 import { Array as Arr, Effect, HashSet, Record as Rec, Schema } from "effect";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
-import { readLayoutShift } from "@/e2e/support/layout";
-import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
-import { withObservedPageErrors } from "@/e2e/support/observe";
-import { appRoutes, waitForServedRoute } from "@/e2e/support/route";
+import { seedAnalyticsConsent } from "../support/consent";
+import { readLayoutShift } from "../support/layout";
+import { waitForCommittedAppRouter } from "../support/navigation/readiness";
+import { withObservedPageErrors } from "../support/observe";
+import { appRoutes, waitForServedRoute } from "../support/route";
 import {
   CARD,
   DRAWER_BAR,
@@ -17,8 +17,8 @@ import {
   DRAWER_TITLE,
   SHEET_POPUP,
   SURAH_SIDEBAR_TRIGGER,
-} from "@/e2e/support/selector";
-import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+} from "../support/selector";
+import { readinessTimeoutMilliseconds } from "../support/timeout";
 
 const quranIndexUrlPattern = /\/id\/quran$/;
 const quranSurahUrlPattern = /\/id\/quran\/2$/;

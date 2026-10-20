@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { LAB_VISIBLE_SHARE } from "@/components/marketing/about/lesson/reveal";
-import { withBrowserContext } from "@/e2e/support/context";
+import { withBrowserContext } from "../../support/context";
 import {
   LESSON_WAIT_MS,
   lessonPanel,
@@ -10,11 +10,11 @@ import {
   lessonWindow,
   PROJECTILE_VIEW,
   visibleShare,
-} from "@/e2e/support/lesson";
-import { withObservedPageErrors } from "@/e2e/support/observe";
-import { openRoute } from "@/e2e/support/route";
-import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
-import { desktopViewport, viewportSize } from "@/e2e/support/viewport";
+} from "../../support/lesson";
+import { withObservedPageErrors } from "../../support/observe";
+import { openRoute } from "../../support/route";
+import { readinessTimeoutMilliseconds } from "../../support/timeout";
+import { desktopViewport, viewportSize } from "../../support/viewport";
 
 /** The attribute that marks the control whose focus must survive a scroll. */
 const FOCUS_PROBE = "data-focus-probe";

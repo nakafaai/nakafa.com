@@ -36,7 +36,7 @@ describe("forEachSiteIndexUrlBatch", () => {
           Effect.succeed([{ url: "https://nakafa.com/en/home" }])
         );
       const { forEachSiteIndexUrlBatch } = yield* Effect.promise(
-        () => import("@/scripts/indexing/manifest")
+        () => import("./manifest")
       );
       const batches = MutableList.make<string[]>();
 
@@ -69,7 +69,7 @@ describe("forEachSiteIndexUrlBatch", () => {
         );
         sitemapMocks.getSitemapEntries.mockReturnValueOnce(Effect.succeed([]));
         const { forEachSiteIndexUrlBatch } = yield* Effect.promise(
-          () => import("@/scripts/indexing/manifest")
+          () => import("./manifest")
         );
         const processBatch = vi.fn(() => Effect.succeed(false));
 
@@ -101,7 +101,7 @@ describe("forEachSiteIndexUrlBatch", () => {
             Effect.succeed([{ url: "https://nakafa.com/en/home" }])
           );
         const { forEachSiteIndexUrlBatch } = yield* Effect.promise(
-          () => import("@/scripts/indexing/manifest")
+          () => import("./manifest")
         );
         const batches = MutableList.make<string[]>();
 

@@ -13,7 +13,7 @@ import {
 } from "effect";
 import { FetchHttpClient } from "effect/http";
 import { TestClock } from "effect/testing";
-import { submitUrlsToIndexNow } from "@/scripts/indexing/indexnow/submit";
+import { submitUrlsToIndexNow } from "./submit";
 
 const INDEXNOW_ENDPOINT = "https://api.indexnow.org/";
 const KEY = "test-indexnow-key";

@@ -13,7 +13,7 @@ import {
 } from "#scripts/check/source";
 
 const FILE = "packages/example/src/program.ts";
-const VIEW = "apps/www/components/example.tsx";
+const VIEW = "apps/www/src/components/example.tsx";
 
 /** Returns the identifiers named `name` in one module, type positions included. */
 function named(sourceFile: SourceFile, name: string) {

@@ -6,8 +6,8 @@ import {
 } from "@playwright/test";
 import type { AnalyticsConsentDecision } from "@repo/analytics/consent";
 import { Deferred, Effect, MutableList } from "effect";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
-import { servedTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { seedAnalyticsConsent } from "./consent";
+import { servedTimeoutMilliseconds } from "./timeout";
 
 /** The app routes that several suites open by name, in English and Indonesian. */
 export const appRoutes = {

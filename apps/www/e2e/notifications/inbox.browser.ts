@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
-import { openChatPage, runOnPage } from "@/e2e/support/chat";
-import { createSchool, inviteLearner } from "@/e2e/support/school";
+import { openChatPage, runOnPage } from "../support/chat";
+import { createSchool, inviteLearner } from "../support/school";
 
 /** The sentence an invitation row shows in English. */
 const INVITATION = "You have been invited to join this school.";

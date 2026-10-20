@@ -5,9 +5,9 @@ import {
   ANSWER_MILLISECONDS,
   type Changes,
   saved,
-} from "@/e2e/support/changes";
-import { EMPTY, editorOf, opened } from "@/e2e/support/memory";
-import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+} from "./changes";
+import { EMPTY, editorOf, opened } from "./memory";
+import { readinessTimeoutMilliseconds } from "./timeout";
 
 /** How many memories the long list holds: three more than the first page loads. */
 const MANY = MEMORY_PAGE + 3;

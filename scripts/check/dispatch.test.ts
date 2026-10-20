@@ -3,7 +3,7 @@ import { Array as Arr, Effect } from "effect";
 import { effectFindings } from "#scripts/check/effect";
 import { parseSources, type RepositorySource } from "#scripts/check/source";
 
-const CODE = "apps/www/lib/example.ts";
+const CODE = "apps/www/src/lib/example.ts";
 
 /** Lists the Effect-native findings of one module as `line rule`. */
 const findings = Effect.fn("DispatchPolicyTest.findings")(function* (
@@ -67,7 +67,7 @@ export function call(value: Shape) {
         assert.deepStrictEqual(
           yield* fileFindings([
             {
-              file: "apps/www/components/status.tsx",
+              file: "apps/www/src/components/status.tsx",
               sourceText:
                 "export const status = (mode: string) => { switch (mode) { default: return 0; } };\n",
             },
@@ -83,7 +83,7 @@ export function call(value: Shape) {
             },
           ]),
           [
-            "apps/www/components/status.tsx:1 switch",
+            "apps/www/src/components/status.tsx:1 switch",
             "apps/www/vite.config.ts:1 switch",
             "scripts/tool.test.ts:1 switch",
           ]

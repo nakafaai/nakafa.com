@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
-import { expectSignInParts } from "@/e2e/support/auth";
-import { createSchool, hostAddress } from "@/e2e/support/school";
+import { expectSignInParts } from "../support/auth";
+import { createSchool, hostAddress } from "../support/school";
 
 test("a signed-out visitor sees the sign-in surface of an existing school", async ({
   page,

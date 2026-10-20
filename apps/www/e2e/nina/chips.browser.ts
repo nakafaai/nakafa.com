@@ -10,11 +10,11 @@ import {
   runPage,
   TRANSPARENT,
   write,
-} from "@/e2e/support/attachment";
-import { onThePage, openChatPage, runOnPage } from "@/e2e/support/chat";
-import { UNCONFIRMED } from "@/e2e/support/sheet";
-import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
-import { SAVE } from "@/e2e/support/upload";
+} from "../support/attachment";
+import { onThePage, openChatPage, runOnPage } from "../support/chat";
+import { UNCONFIRMED } from "../support/sheet";
+import { readinessTimeoutMilliseconds } from "../support/timeout";
+import { SAVE } from "../support/upload";
 
 /** The themes a chip is read in. */
 const ThemeSchema = Schema.Literals(["light", "dark"]);

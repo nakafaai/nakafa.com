@@ -1,10 +1,10 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { COVER } from "@repo/design-system/components/pool/cover";
 import { Array as Arr, Duration, Effect, MutableList, Schema } from "effect";
-import { expectSignInParts, NINA } from "@/e2e/support/auth";
-import { seedAnalyticsConsent } from "@/e2e/support/consent";
-import { withObservedPageErrors } from "@/e2e/support/observe";
-import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { expectSignInParts, NINA } from "../support/auth";
+import { seedAnalyticsConsent } from "../support/consent";
+import { withObservedPageErrors } from "../support/observe";
+import { readinessTimeoutMilliseconds } from "../support/timeout";
 
 const SIGN_IN = "/en/auth";
 /** The pool, and each of its members as the frame loop places them. */

@@ -5,7 +5,7 @@ import {
   type Changes,
   reloadUntil,
   saved,
-} from "@/e2e/support/changes";
+} from "../support/changes";
 import {
   confirmDelete,
   deleteQuestion,
@@ -14,10 +14,10 @@ import {
   memoryRow,
   opened,
   openMemoryPage,
-} from "@/e2e/support/memory";
-import { withObservedPageErrors } from "@/e2e/support/observe";
-import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
-import { isTakenOver } from "@/e2e/support/window";
+} from "../support/memory";
+import { withObservedPageErrors } from "../support/observe";
+import { readinessTimeoutMilliseconds } from "../support/timeout";
+import { isTakenOver } from "../support/window";
 
 const WRITTEN = "Prefers worked examples before the formula";
 const REWRITTEN = "Prefers a short summary before the examples";

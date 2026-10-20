@@ -12,7 +12,7 @@ import {
   isMutation,
   later,
   momentOf,
-} from "@/e2e/support/frames";
+} from "./frames";
 
 /** A call to a function of the backend, as the page sends it. */
 const call = (type: "Action" | "Mutation", udfPath: string) =>

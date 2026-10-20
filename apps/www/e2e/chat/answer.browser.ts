@@ -1,14 +1,14 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { Effect } from "effect";
-import { runOnPage } from "@/e2e/support/chat";
+import { runOnPage } from "../support/chat";
 import {
   ANSWER,
   answerTurn,
   chatOf,
   GERMAN_SUGGESTIONS,
-} from "@/e2e/support/prose";
-import { drawnRow, openServedChat } from "@/e2e/support/serve";
-import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+} from "../support/prose";
+import { drawnRow, openServedChat } from "../support/serve";
+import { readinessTimeoutMilliseconds } from "../support/timeout";
 
 /** Answers with a code block, a long link, a list four levels deep and a wide table. */
 const CODE = answerTurn({ markdown: ANSWER.code, order: 1 });

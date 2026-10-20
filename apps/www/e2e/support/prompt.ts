@@ -1,8 +1,8 @@
 import { expect, type Locator, type Page } from "@playwright/test";
-import { composerOf } from "@/e2e/support/attachment";
-import { OPENED_CHAT, onThePage } from "@/e2e/support/chat";
-import { promptWith } from "@/e2e/support/sheet";
-import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
+import { composerOf } from "./attachment";
+import { OPENED_CHAT, onThePage } from "./chat";
+import { promptWith } from "./sheet";
+import { readinessTimeoutMilliseconds } from "./timeout";
 
 /** The prompt the new chat tests send. */
 export const PROMPT = "Why is the derivative of sine the cosine?";

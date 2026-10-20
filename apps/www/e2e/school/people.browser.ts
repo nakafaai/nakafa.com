@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
-import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
+import { createSchool, hostAddress, signInOwner } from "../support/school";
 
 /** The two widths every school screen is checked at: a phone and a desktop. */
 const WIDTHS = [

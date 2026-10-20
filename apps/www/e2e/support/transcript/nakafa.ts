@@ -8,7 +8,7 @@ import {
   type Card,
   reply,
   type stored,
-} from "@/e2e/support/transcript/message";
+} from "./message";
 
 /** The reference Nakafa gives one page, as the wire holds it. */
 type Reference = typeof NakafaAgentContentRefSchema.Encoded;

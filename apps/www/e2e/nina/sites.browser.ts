@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
-import { cutText, lines, overflow } from "@/e2e/support/transcript/measure";
-import { onChat } from "@/e2e/support/transcript/open";
+import { cutText, lines, overflow } from "../support/transcript/measure";
+import { onChat } from "../support/transcript/open";
 import {
   LIMIT_SITES,
   limited,
@@ -8,7 +8,7 @@ import {
   PUNYCODE_SITE,
   SITE_LONG_LABEL,
   sameHost,
-} from "@/e2e/support/transcript/web";
+} from "../support/transcript/web";
 
 /** The sites of a search, under its query: one box for each card that was limited. */
 const SITES = '[data-slot="web-search-sites"]';

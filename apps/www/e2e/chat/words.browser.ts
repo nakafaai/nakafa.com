@@ -1,10 +1,10 @@
 import { expect, type Page, test } from "@playwright/test";
 import { Effect, Record as Rec, Struct } from "effect";
-import { runOnPage } from "@/e2e/support/chat";
-import { LEARNER_TEXT, learnerMessage } from "@/e2e/support/prose";
-import type { StoredMessage } from "@/e2e/support/query";
-import { BUBBLE_CONTENT, MARKDOWN_MARKUP } from "@/e2e/support/selector";
-import { bubbleOf, openServedChat, rowOf } from "@/e2e/support/serve";
+import { runOnPage } from "../support/chat";
+import { LEARNER_TEXT, learnerMessage } from "../support/prose";
+import type { StoredMessage } from "../support/query";
+import { BUBBLE_CONTENT, MARKDOWN_MARKUP } from "../support/selector";
+import { bubbleOf, openServedChat, rowOf } from "../support/serve";
 
 /** What learners wrote, one message of each, in the order the page shows them. */
 const WORDS = {
