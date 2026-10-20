@@ -12,6 +12,7 @@ import {
   HeadContent,
   Outlet,
   Scripts,
+  useMatch,
   useParams,
 } from "@tanstack/react-router";
 import { cn } from "cn";
@@ -24,6 +25,7 @@ import {
 } from "@/components/state/localized";
 import { signedInHintScript } from "@/lib/auth/hint";
 import { pricingCurrencyScript } from "@/lib/pricing/currency";
+import { readNotFoundPageLocale } from "@/lib/routing/not-found";
 import { SOCIAL_SITE_NAME } from "@/lib/seo/social";
 import { THEME_PREPAINT_SCRIPT } from "@/lib/theme/prepaint";
 import appCss from "@/styles/globals.css?url";
@@ -58,17 +60,21 @@ export const Route = createRootRoute({
 
 /**
  * The document of every route. Its language and direction follow the locale
- * param of the route on screen, and the default locale answers a path without
- * one. The pre-paint scripts set the theme, the pricing currency and the
- * signed-in hint before the first frame, so nothing changes after paint. The
- * URL-state adapter is mounted here once, for every route below.
+ * param of the route on screen, or the locale of the standalone not-found page,
+ * and the default locale answers a path without one. The pre-paint scripts set
+ * the theme, the pricing currency and the signed-in hint before the first frame,
+ * so nothing changes after paint. The URL-state adapter is mounted here once, for
+ * every route below.
  */
 function RootDocument() {
   const params: Readonly<Record<string, string | undefined>> = useParams({
     strict: false,
   });
+  const notFoundMatch = useMatch({ from: "/_not-found", shouldThrow: false });
   const locale = Option.getOrElse(
-    decodeLocale(params.locale),
+    Option.orElse(decodeLocale(params.locale), () =>
+      readNotFoundPageLocale(notFoundMatch?.error)
+    ),
     () => DEFAULT_LOCALE
   );
 

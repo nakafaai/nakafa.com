@@ -1,11 +1,13 @@
 // @vitest-environment node
 
 import { describe, expect, it } from "@effect/vitest";
+import { Option } from "effect";
 import {
   createNotFoundRequest,
   NOT_FOUND_LOCALE_HEADER,
   NOT_FOUND_PATH,
   readNotFoundLocale,
+  readNotFoundPageLocale,
   withContentLanguage,
 } from "@/lib/routing/not-found";
 
@@ -21,6 +23,28 @@ describe("readNotFoundLocale", () => {
     expect(
       readNotFoundLocale(new Headers({ [NOT_FOUND_LOCALE_HEADER]: "zz" }))
     ).toBe("en");
+  });
+});
+
+describe("readNotFoundPageLocale", () => {
+  it("reads the locale of the not-found error of the standalone page", () => {
+    expect(
+      readNotFoundPageLocale({ data: { locale: "id" }, isNotFound: true })
+    ).toStrictEqual(Option.some("id"));
+  });
+
+  it("answers none for any other error, and for a page error without a known locale", () => {
+    expect(Option.isNone(readNotFoundPageLocale(new Error("broken")))).toBe(
+      true
+    );
+    expect(
+      Option.isNone(
+        readNotFoundPageLocale({ data: { locale: "zz" }, isNotFound: true })
+      )
+    ).toBe(true);
+    expect(Option.isNone(readNotFoundPageLocale({ isNotFound: true }))).toBe(
+      true
+    );
   });
 });
 
