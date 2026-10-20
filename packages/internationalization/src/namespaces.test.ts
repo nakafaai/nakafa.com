@@ -2,7 +2,13 @@ import { describe, expect, it } from "@effect/vitest";
 import de from "@repo/internationalization/dictionaries/de.json" with {
   type: "json",
 };
+import en from "@repo/internationalization/dictionaries/en.json" with {
+  type: "json",
+};
 import id from "@repo/internationalization/dictionaries/id.json" with {
+  type: "json",
+};
+import enStandalone from "@repo/internationalization/dictionaries/standalone/en.json" with {
   type: "json",
 };
 import {
@@ -16,6 +22,12 @@ import { Array as Arr, Order, Record as Rec, Schema } from "effect";
 const sortedKeys = (value: object) => Arr.sort(Order.String)(Rec.keys(value));
 
 describe("message namespaces", () => {
+  it("lists exactly the namespaces that the dictionaries define", () => {
+    expect(Arr.sort(Order.String)(MESSAGE_NAMESPACES)).toStrictEqual(
+      sortedKeys({ ...en, ...enStandalone })
+    );
+  });
+
   it("gives every locale the same namespaces", () => {
     for (const locale of ["de", "en", "id"] as const) {
       expect(

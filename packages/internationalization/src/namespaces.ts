@@ -20,16 +20,31 @@ import type { Locale } from "@repo/internationalization/src/locale";
 import type { MessageNamespace } from "@repo/internationalization/src/namespace";
 import { Struct } from "effect";
 
+/** Every namespace that a dictionary defines, in the app or on the standalone pages. */
+type DictionaryNamespace = keyof typeof en | keyof typeof enStandalone;
+
+/** `true` only when the two types are identical, so a difference is a compile error. */
+type Equals<A, B> =
+  (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2
+    ? true
+    : false;
+
+/** The namespace list names exactly the dictionaries' namespaces, in both directions. */
+type NamespaceListMatchesDictionaries =
+  Equals<MessageNamespace, DictionaryNamespace> extends true ? unknown : never;
+
 /**
  * The complete messages of each locale: the app dictionary with the words of
- * the standalone pages. Every locale must define every namespace, which the
- * `satisfies` check makes a build error when one does not.
+ * the standalone pages. Every locale must define every namespace, and the list
+ * must name every namespace the dictionaries define, so either difference is a
+ * build error.
  */
 const MESSAGES = {
   de: { ...de, ...deStandalone },
   en: { ...en, ...enStandalone },
   id: { ...id, ...idStandalone },
-} satisfies Record<Locale, Record<MessageNamespace, unknown>>;
+} satisfies Record<Locale, Record<MessageNamespace, unknown>> &
+  NamespaceListMatchesDictionaries;
 
 /** The messages of every locale, which share one shape. */
 type Messages = (typeof MESSAGES)["en"];
