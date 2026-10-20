@@ -1,7 +1,10 @@
 import { isRenderableCurriculumLevel } from "@nakafa/aksara-contracts/program/curriculum";
 import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/route/surface";
-import { LOCALES } from "@repo/internationalization/src/locale";
+import {
+  type Locale,
+  LocaleSchema,
+} from "@repo/internationalization/src/locale";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 import {
   readPublishedArticleCategory,
@@ -20,10 +23,6 @@ import {
   readMaterialContextQuery,
   toMaterialContextQueryString,
 } from "@/lib/routing/material/query";
-
-type Locale = (typeof LOCALES)[number];
-
-const LocaleSchema = Schema.Literals(LOCALES);
 
 const PublishedLocalizedHrefInputSchema = Schema.Struct({
   currentLocale: LocaleSchema,

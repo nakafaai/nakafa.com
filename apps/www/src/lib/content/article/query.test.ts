@@ -38,17 +38,8 @@ describe("article catalog query", () => {
     });
   });
 
-  it("rejects incomplete, repeated, and oversized query values", () => {
+  it("rejects incomplete and oversized query values", () => {
     expect(Option.isNone(readArticlePageCursor({ cursor: "next" }))).toBe(true);
-    expect(
-      Option.isNone(
-        readArticlePageCursor({
-          cursor: ["first", "second"],
-          manifest,
-          release: releaseId,
-        })
-      )
-    ).toBe(true);
     expect(
       Option.isNone(
         readArticlePageCursor({

@@ -16,12 +16,13 @@ const articlePageQueryFields = {
   release: ReleaseIdSchema,
 };
 const ArticlePageQuerySchema = Schema.Struct(articlePageQueryFields);
-const RawArticlePageQuerySchema = Schema.Record(
-  Schema.String,
-  Schema.Union([Schema.String, Schema.Array(Schema.String), Schema.Undefined])
-);
-/** Raw Next.js query values accepted by article catalog pages. */
-type ArticlePageQuery = typeof RawArticlePageQuerySchema.Type;
+/** The search values of one article catalog page as the route validates them. */
+const ArticlePageSearchSchema = Schema.Struct({
+  cursor: Schema.optional(Schema.String),
+  manifest: Schema.optional(Schema.String),
+  release: Schema.optional(Schema.String),
+});
+type ArticlePageQuery = typeof ArticlePageSearchSchema.Type;
 const ArticleNextPageSchema = Schema.Struct({
   activeManifestHash: Schema.NullOr(Sha256HashSchema),
   activeReleaseId: Schema.NullOr(ReleaseIdSchema),
