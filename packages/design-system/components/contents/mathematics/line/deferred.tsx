@@ -6,12 +6,11 @@ import { VisualCardBody } from "@repo/design-system/components/visual/card";
 import { ClientOnly } from "@tanstack/react-router";
 import { lazy, Suspense, useState } from "react";
 
-const LineScene = lazy(async () => ({
-  default: await (() =>
-    import(
-      "@repo/design-system/components/contents/mathematics/line/scene"
-    ).then((module) => module.LineScene))(),
-}));
+const LineScene = lazy(() =>
+  import("@repo/design-system/components/contents/mathematics/line/scene").then(
+    (module) => ({ default: module.LineScene })
+  )
+);
 
 /** Loads the WebGL scene shortly before its card enters the viewport. */
 export function DeferredLineScene() {

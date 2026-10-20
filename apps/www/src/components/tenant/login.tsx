@@ -78,6 +78,8 @@ function TenantLoginForm({ slug }: { slug: TenantSlug }) {
         )
       );
       if (step === "signed-in") {
+        // The session changed, so the school loads again and its client starts
+        // with the session that this sign-in set.
         window.location.assign("/");
         return;
       }

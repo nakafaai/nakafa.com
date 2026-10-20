@@ -14,7 +14,6 @@ import {
 import {
   DestinationLink,
   EXACT_ACTIVE_OPTIONS,
-  useCanonicalPath,
   useCurrentLocale,
 } from "@repo/internationalization/src/link";
 import { useMatchRoute, useRouter } from "@tanstack/react-router";
@@ -24,22 +23,21 @@ import {
   getForYouNavigationItems,
   getForYouNavigationTarget,
 } from "@/components/sidebar/data/navigation";
-import { usePreferredCurriculumHref } from "@/lib/curriculum/preferences";
-import { usePreferredTryoutHref } from "@/lib/tryout/preferences";
+import { usePreferredCurriculumTarget } from "@/lib/curriculum/preferences";
+import { usePreferredTryoutTarget } from "@/lib/tryout/preferences";
 
 /**
  * Renders the primary app navigation shared by every audience.
  */
 export function NavForYou() {
-  const pathname = useCanonicalPath();
   const router = useRouter();
   const matchRoute = useMatchRoute();
   const tAi = useTranslations("Ai");
   const tCommon = useTranslations("Common");
   const locale = useCurrentLocale();
   const items = getForYouNavigationItems();
-  const preferredCurriculumHref = usePreferredCurriculumHref(locale);
-  const preferredTryoutHref = usePreferredTryoutHref(locale);
+  const preferredCurriculumTarget = usePreferredCurriculumTarget(locale);
+  const preferredTryoutTarget = usePreferredTryoutTarget(locale);
 
   return (
     <SidebarGroup>
@@ -52,17 +50,17 @@ export function NavForYou() {
                 ? tAi(item.labelKey)
                 : tCommon(item.labelKey);
             const destination = getForYouNavigationTarget(item, locale, {
-              preferredCurriculumHref,
-              preferredTryoutHref,
+              preferredCurriculumTarget,
+              preferredTryoutTarget,
             });
-            const prefetchChat =
-              typeof destination === "string"
-                ? undefined
-                : () => router.preloadRoute(destination);
+            const isAskNina = item.id === "askNina";
+            // Every other row preloads on intent through its link; the chat
+            // route also warms on focus and pointer, because its link does not.
+            const prefetchAskNina = isAskNina
+              ? () => router.preloadRoute(destination)
+              : undefined;
             const isActive =
-              typeof destination === "string"
-                ? pathname.includes(destination)
-                : matchRoute({ ...destination, fuzzy: true }) !== false;
+              matchRoute({ ...destination, fuzzy: true }) !== false;
 
             return (
               <SidebarMenuItem key={item.id}>
@@ -72,10 +70,10 @@ export function NavForYou() {
                     <DestinationLink
                       activeOptions={EXACT_ACTIVE_OPTIONS}
                       destination={destination}
-                      onFocus={prefetchChat}
-                      onPointerEnter={prefetchChat}
-                      onTouchStart={prefetchChat}
-                      preload={item.id === "askNina" ? false : undefined}
+                      onFocus={prefetchAskNina}
+                      onPointerEnter={prefetchAskNina}
+                      onTouchStart={prefetchAskNina}
+                      preload={isAskNina ? false : undefined}
                       title={label}
                     />
                   }

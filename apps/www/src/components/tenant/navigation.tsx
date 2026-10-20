@@ -2,7 +2,10 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
-import { Link } from "@repo/internationalization/src/link";
+import {
+  EXACT_ACTIVE_OPTIONS,
+  Link,
+} from "@repo/internationalization/src/link";
 import { useMatchRoute } from "@tanstack/react-router";
 import { useTranslations } from "use-intl";
 import { TenantClassesGroup } from "@/components/tenant/classes/nav";
@@ -40,7 +43,13 @@ export function TenantNavigation() {
             isActive={
               matchRoute({ params: { slug }, to: "/school/$slug" }) !== false
             }
-            render={<Link params={{ slug }} to="/school/$slug" />}
+            render={
+              <Link
+                activeOptions={EXACT_ACTIVE_OPTIONS}
+                params={{ slug }}
+                to="/school/$slug"
+              />
+            }
           >
             {t("home")}
           </SidebarMenuButton>

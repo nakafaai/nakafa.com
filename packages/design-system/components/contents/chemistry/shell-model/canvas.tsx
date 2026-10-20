@@ -11,12 +11,11 @@ import { useTheme } from "@repo/design-system/providers/theme";
 import { lazy, Suspense } from "react";
 
 /** The model loads once the lab asks for it, and its frame holds the place meanwhile. */
-const ShellModelStage = lazy(async () => ({
-  default: await (() =>
-    import(
-      "@repo/design-system/components/contents/chemistry/shell-model/stage"
-    ).then(({ ShellModelStage }) => ShellModelStage))(),
-}));
+const ShellModelStage = lazy(() =>
+  import(
+    "@repo/design-system/components/contents/chemistry/shell-model/stage"
+  ).then((module) => ({ default: module.ShellModelStage }))
+);
 
 /**
  * Renders the shared responsive 3D shell model used by chemistry shell labs.

@@ -1,6 +1,6 @@
 /**
  * Answers a request method that a route does not serve with 405 and the
- * methods it does serve, as Next answered. Without this handler the router
+ * methods it does serve. Without this handler the router
  * renders the document for that request.
  */
 export function methodNotAllowed(allow: string) {

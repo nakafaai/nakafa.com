@@ -1,6 +1,9 @@
 "use client";
 
-import { HrefLink } from "@repo/internationalization/src/link";
+import {
+  EXACT_ACTIVE_OPTIONS,
+  HrefLink,
+} from "@repo/internationalization/src/link";
 import { createContext, type ReactNode, use } from "react";
 import { SchoolHrefLink } from "@/lib/routing/school/link";
 
@@ -38,11 +41,15 @@ export function BreadcrumbAnchor({
   const host = use(BreadcrumbHostContext);
   const classes = className === undefined ? {} : { className };
   return host === "school" ? (
-    <SchoolHrefLink href={href} {...classes}>
+    <SchoolHrefLink
+      activeOptions={EXACT_ACTIVE_OPTIONS}
+      href={href}
+      {...classes}
+    >
       {children}
     </SchoolHrefLink>
   ) : (
-    <HrefLink href={href} {...classes}>
+    <HrefLink activeOptions={EXACT_ACTIVE_OPTIONS} href={href} {...classes}>
       {children}
     </HrefLink>
   );

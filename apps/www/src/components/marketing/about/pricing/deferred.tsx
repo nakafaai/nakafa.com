@@ -5,12 +5,11 @@ import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
 import { lazy, Suspense, useState } from "react";
 
 /** The toys of the pricing page. Their code loads only when the page reaches them. */
-const PricingToys = lazy(async () => ({
-  default: await (() =>
-    import("@/components/marketing/about/pricing/toys").then(
-      (module) => module.PricingToys
-    ))(),
-}));
+const PricingToys = lazy(() =>
+  import("@/components/marketing/about/pricing/toys").then((module) => ({
+    default: module.PricingToys,
+  }))
+);
 
 /**
  * The toys of the pricing page, loaded when the sentinel between the plans and

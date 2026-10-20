@@ -38,7 +38,7 @@ const messages = {
     "Production content is restricted to the protected Vercel production build. Use an isolated Convex deployment for local builds.",
 } satisfies Record<Failure, string>;
 
-/** One Next process attempted to cross the protected production-content seam. */
+/** One server process attempted to cross the protected production-content seam. */
 export class UnsafeRuntimeError extends Schema.TaggedError<UnsafeRuntimeError>()(
   "UnsafeRuntimeError",
   { reason: FailureSchema }
@@ -118,7 +118,7 @@ const validateProtectedTarget = Effect.fn(
   }
 });
 
-/** Blocks production-backed Next commands before route discovery begins. */
+/** Blocks production-backed app commands before route discovery begins. */
 export const assertRuntimeTarget = Effect.fn("www.runtime.assertTarget")(
   function* (target: RuntimeTarget) {
     const queryUrl = yield* decode(target.query);
@@ -171,7 +171,7 @@ export const assertRuntimeTarget = Effect.fn("www.runtime.assertTarget")(
 
 const optionalText = Schema.UndefinedOr(Schema.String);
 
-/** Reads and validates the content runtime used by Next configuration. */
+/** Reads and validates the content runtime used by the app configuration. */
 export function readRuntimeConfig() {
   const env = readEnvironment(
     {

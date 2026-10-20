@@ -39,7 +39,7 @@ const PublishedContentInputSchema = Schema.Struct({
 /** Public identity pinned to one release selected by another trusted read. */
 export type PublishedContentInput = typeof PublishedContentInputSchema.Type;
 
-/** Verified family-neutral data safe to return from a Next Cache Component. */
+/** Verified family-neutral data safe to return from a cached function. */
 const PublishedContentDataSchema = Schema.Struct({
   activeReleaseId: PublicContentRuntimeFoundSchema.fields.activeReleaseId,
   artifact: PublicContentRuntimeFoundSchema.fields.artifact,

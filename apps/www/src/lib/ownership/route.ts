@@ -58,12 +58,12 @@ export function isApplicationRouteRoot(locale: PublicLocale, root: string) {
 }
 
 /**
- * Checks whether the Next.js route tree can receive one public path.
+ * Checks whether the route tree can receive one public path.
  *
  * Signed projection namespaces accept descendant shapes here because their
  * owning route validates the exact published inventory. Fixed application
  * routes are matched exactly so impossible descendants can return a hard 404
- * before Next.js starts streaming.
+ * before the app starts streaming.
  */
 export function isApplicationRoutePath(
   locale: PublicLocale,

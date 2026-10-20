@@ -45,12 +45,11 @@ import { OpenTargetContext } from "@/components/shared/content/target";
  * Loads the open-in submenu when the actions menu opens. Its brand logos are
  * one module that no content page needs before that.
  */
-const OpenInSubmenuContent = lazy(async () => ({
-  default: await (() =>
-    import("@/components/shared/content/open").then(
-      (module) => module.OpenInSubmenuContent
-    ))(),
-}));
+const OpenInSubmenuContent = lazy(() =>
+  import("@/components/shared/content/open").then((module) => ({
+    default: module.OpenInSubmenuContent,
+  }))
+);
 
 /**
  * Renders open/share actions for one content page.

@@ -114,7 +114,7 @@ export function sharedCookieReaches(hostname: string, cookieDomain: string) {
 }
 
 /**
- * The hostname that the browser asked for. The Next.js proxy forwards it as
+ * The hostname that the browser asked for. The hosting proxy forwards it as
  * `x-forwarded-host`, and Convex restores that header before Better Auth reads
  * the request. Without it, the response answers the backend's own host, which no
  * shared cookie of the site reaches, so the answer names no host.

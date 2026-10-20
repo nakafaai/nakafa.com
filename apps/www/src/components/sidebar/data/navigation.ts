@@ -55,23 +55,23 @@ export function getForYouNavigationItems() {
 
 /**
  * Resolves the destination of one personalized navigation row. A learner's
- * stored curriculum or try-out path, a public path that the content gives, is
- * returned as it is; otherwise the row's own route is returned as a target.
+ * stored curriculum or try-out target replaces the row's own route on the row
+ * that it names; otherwise the row's own route is returned.
  */
 export function getForYouNavigationTarget(
   item: ForYouNavigationItem,
   locale: Locale,
   preferences: {
-    preferredCurriculumHref?: string | null;
-    preferredTryoutHref?: string | null;
+    preferredCurriculumTarget?: LinkTarget | null;
+    preferredTryoutTarget?: LinkTarget | null;
   } = {}
-): LinkTarget | string {
-  if (item.id === "subject" && preferences.preferredCurriculumHref) {
-    return preferences.preferredCurriculumHref;
+): LinkTarget {
+  if (item.id === "subject" && preferences.preferredCurriculumTarget) {
+    return preferences.preferredCurriculumTarget;
   }
 
-  if (item.id === "tryOut" && preferences.preferredTryoutHref) {
-    return preferences.preferredTryoutHref;
+  if (item.id === "tryOut" && preferences.preferredTryoutTarget) {
+    return preferences.preferredTryoutTarget;
   }
 
   return item.target(locale);

@@ -5,9 +5,11 @@ import {
   Link,
   useCurrentLocale,
 } from "@repo/internationalization/src/link";
+import { useMatchRoute } from "@tanstack/react-router";
 import { useTranslations } from "use-intl";
+import { LESSON_SECTION_ID } from "@/components/marketing/about/lesson/id";
 import { HeaderCta, LogoCta } from "@/components/marketing/shared/header/cta";
-import { HeaderFeaturesLink } from "@/components/marketing/shared/header/features";
+import { scrollToLessonSection } from "@/components/marketing/shared/header/features";
 import { Language } from "@/components/marketing/shared/language";
 
 /**
@@ -25,6 +27,8 @@ import { Language } from "@/components/marketing/shared/language";
 export function Header() {
   const t = useTranslations("Marketing");
   const locale = useCurrentLocale();
+  const matchRoute = useMatchRoute();
+  const onHome = matchRoute({ params: { locale }, to: "/$locale" }) !== false;
 
   return (
     <header className="sticky top-0 z-10 h-16 shrink-0 border-b bg-background">
@@ -36,15 +40,35 @@ export function Header() {
             <Button
               nativeButton={false}
               render={
-                <Link params={{ locale }} to="/$locale">
+                <Link
+                  activeOptions={EXACT_ACTIVE_OPTIONS}
+                  params={{ locale }}
+                  to="/$locale"
+                >
                   {t("about")}
                 </Link>
               }
               variant="ghost"
             />
+            {/* On the home page the lesson section is already on screen, so the link scrolls to it itself; from another page the router scrolls to it. */}
             <Button
               nativeButton={false}
-              render={<HeaderFeaturesLink>{t("features")}</HeaderFeaturesLink>}
+              render={
+                <Link
+                  activeOptions={EXACT_ACTIVE_OPTIONS}
+                  hash={LESSON_SECTION_ID}
+                  onClick={() => {
+                    if (onHome) {
+                      scrollToLessonSection();
+                    }
+                  }}
+                  params={{ locale }}
+                  resetScroll={!onHome}
+                  to="/$locale"
+                >
+                  {t("features")}
+                </Link>
+              }
               variant="ghost"
             />
             <Button

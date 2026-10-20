@@ -39,7 +39,7 @@ const hasAgentKey =
   agentEnvironment.AKSARA_AGENT_SIGNING_KEY_ID !== undefined ||
   agentEnvironment.AKSARA_AGENT_SIGNING_PUBLIC_KEY !== undefined;
 const agentKey = hasAgentKey
-  ? // Convex and Next load this immutable trust configuration at module startup.
+  ? // Convex and the app load this immutable trust configuration at module startup.
     // Synchronous schema validation fails before any publication or artifact read.
     Schema.decodeUnknownSync(AgentTrustSchema)({
       key: {

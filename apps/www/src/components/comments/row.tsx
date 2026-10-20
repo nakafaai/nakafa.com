@@ -42,12 +42,11 @@ import { reportClientException } from "@/lib/analytics/client";
 import { useViewer } from "@/lib/identity/client";
 
 /** The delete dialog loads when the learner opens the More menu of a comment, before they can choose Delete. */
-const CommentDeletion = lazy(async () => ({
-  default: await (() =>
-    import("@/components/comments/delete").then(
-      (module) => module.CommentDeletion
-    ))(),
-}));
+const CommentDeletion = lazy(() =>
+  import("@/components/comments/delete").then((module) => ({
+    default: module.CommentDeletion,
+  }))
+);
 
 /** The fields of a comment that a row shows and acts on: a top-level comment, a reply, and a profile's comment all carry them. */
 type RowComment = Pick<

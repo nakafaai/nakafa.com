@@ -78,7 +78,7 @@ function readRejectedPublicRouteLocale(pathname: string) {
  * Reads finite public HTML routes that should 404 before app rendering.
  *
  * Quran, signed Article, and signed Page routes have finite inventories.
- * Rejecting impossible shapes here prevents Next streamed not-found responses
+ * Rejecting impossible shapes here prevents streamed not-found responses
  * from looking like successful soft 404s to agents and crawlers.
  */
 function readMissingHtmlRouteLocale({

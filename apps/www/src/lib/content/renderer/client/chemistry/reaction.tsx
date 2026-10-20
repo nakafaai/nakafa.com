@@ -4,33 +4,25 @@ import { lazy } from "react";
 import { withHydrationBoundary } from "@/lib/content/renderer/client/boundary";
 
 export const ChemicalReactionCharacteristicsLab = withHydrationBoundary(
-  lazy(async () => ({
-    default: await (() =>
-      import(
-        "@repo/design-system/components/contents/chemistry/chemical-reaction-characteristics/lab"
-      ).then(
-        ({ ChemicalReactionCharacteristicsLab }) =>
-          ChemicalReactionCharacteristicsLab
-      ))(),
-  }))
+  lazy(() =>
+    import(
+      "@repo/design-system/components/contents/chemistry/chemical-reaction-characteristics/lab"
+    ).then((module) => ({ default: module.ChemicalReactionCharacteristicsLab }))
+  )
 );
 
 export const ChemicalReactionTypesLab = withHydrationBoundary(
-  lazy(async () => ({
-    default: await (() =>
-      import(
-        "@repo/design-system/components/contents/chemistry/chemical-reaction-types/lab"
-      ).then(({ ChemicalReactionTypesLab }) => ChemicalReactionTypesLab))(),
-  }))
+  lazy(() =>
+    import(
+      "@repo/design-system/components/contents/chemistry/chemical-reaction-types/lab"
+    ).then((module) => ({ default: module.ChemicalReactionTypesLab }))
+  )
 );
 
 export const MethaneCombustionEquationLab = withHydrationBoundary(
-  lazy(async () => ({
-    default: await (() =>
-      import(
-        "@repo/design-system/components/contents/chemistry/methane-combustion-equation/lab"
-      ).then(
-        ({ MethaneCombustionEquationLab }) => MethaneCombustionEquationLab
-      ))(),
-  }))
+  lazy(() =>
+    import(
+      "@repo/design-system/components/contents/chemistry/methane-combustion-equation/lab"
+    ).then((module) => ({ default: module.MethaneCombustionEquationLab }))
+  )
 );

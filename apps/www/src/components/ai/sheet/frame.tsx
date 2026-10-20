@@ -16,27 +16,26 @@ import { Authenticated, Unauthenticated } from "@/components/auth/gate";
 const MIN_WIDTH = 384;
 const MAX_WIDTH = 672;
 
-const SheetNew = lazy(async () => ({
-  default: await (() =>
-    import("@/components/ai/sheet/new").then((module) => module.SheetNew))(),
-}));
+const SheetNew = lazy(() =>
+  import("@/components/ai/sheet/new").then((module) => ({
+    default: module.SheetNew,
+  }))
+);
 
-const SheetConversation = lazy(async () => ({
-  default: await (() =>
-    import("@/components/ai/sheet/conversation").then(
-      (module) => module.SheetConversation
-    ))(),
-}));
+const SheetConversation = lazy(() =>
+  import("@/components/ai/sheet/conversation").then((module) => ({
+    default: module.SheetConversation,
+  }))
+);
 
 // The boundary holds the failure card, whose sign-in chain only a signed-out
 // visitor who cannot read a chat needs. It loads with the body, so the shell's
 // first JavaScript does not carry it on every page.
-const ChatBoundary = lazy(async () => ({
-  default: await (() =>
-    import("@/components/ai/chat/boundary").then(
-      (module) => module.ChatBoundary
-    ))(),
-}));
+const ChatBoundary = lazy(() =>
+  import("@/components/ai/chat/boundary").then((module) => ({
+    default: module.ChatBoundary,
+  }))
+);
 
 /**
  * Nina's resizable side sheet. The frame is part of the app shell and stays

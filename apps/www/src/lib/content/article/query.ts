@@ -20,7 +20,7 @@ const RawArticlePageQuerySchema = Schema.Record(
   Schema.String,
   Schema.Union([Schema.String, Schema.Array(Schema.String), Schema.Undefined])
 );
-/** Raw Next.js query values accepted by article catalog pages. */
+/** Raw search values accepted by article catalog pages. */
 type ArticlePageQuery = typeof RawArticlePageQuerySchema.Type;
 const ArticleNextPageSchema = Schema.Struct({
   activeManifestHash: Schema.NullOr(Sha256HashSchema),

@@ -40,8 +40,9 @@ test("the language menu replaces the route in the chosen locale in place", async
           readinessTimeoutMilliseconds
         );
         yield* Effect.promise(() => german.click());
-        yield* Effect.promise(() =>
-          page.waitForURL((url) => url.pathname.startsWith("/de"))
+        yield* Effect.promise(() => page.waitForURL("**/de/search"));
+        yield* Effect.sync(() =>
+          expect(new URL(page.url()).pathname).toBe("/de/search")
         );
 
         const marker = yield* Effect.promise(() =>

@@ -6,12 +6,11 @@ import { type ComponentProps, lazy, Suspense } from "react";
  * rendered. Error boundaries are part of every route's first JavaScript, and
  * the field is only drawn once one of them shows.
  */
-const LazyDeferredParticles = lazy(async () => ({
-  default: await (() =>
-    import("@repo/design-system/components/ui/particles").then(
-      (module) => module.Particles
-    ))(),
-}));
+const LazyDeferredParticles = lazy(() =>
+  import("@repo/design-system/components/ui/particles").then((module) => ({
+    default: module.Particles,
+  }))
+);
 
 export function DeferredParticles(
   props: ComponentProps<typeof LazyDeferredParticles>

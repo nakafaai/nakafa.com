@@ -2,6 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import {
   getTryoutAttemptAuthHref,
   getTryoutAttemptHref,
+  getTryoutCountryTarget,
   getTryoutHref,
   getTryoutPublicPathHref,
   hasTryoutAttemptCapability,
@@ -59,5 +60,14 @@ describe("tryout route paths", () => {
         new URLSearchParams("attemptId=first&attemptId=second")
       )
     ).toBe(false);
+  });
+
+  it("types a country path as its route target and refuses any other shape", () => {
+    expect(getTryoutCountryTarget("id", "try-out/indonesia")).toEqual({
+      params: { country: "indonesia", locale: "id" },
+      to: "/$locale/try-out/$country",
+    });
+    expect(getTryoutCountryTarget("id", "try-out")).toBeNull();
+    expect(getTryoutCountryTarget("id", "curricula/indonesia")).toBeNull();
   });
 });

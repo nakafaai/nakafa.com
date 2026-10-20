@@ -116,7 +116,7 @@ export const previewUrl = Effect.fn("NakafaContent.previewUrl")(function* (
 /**
  * Reports whether a development child supplied any preview connection field.
  *
- * Next route boundaries use this pure check to avoid starting Effect's runtime
+ * Route boundaries use this pure check to avoid starting Effect's runtime
  * during production static prerender. Partial configuration deliberately
  * returns true so strict decoding exposes the error instead of falling back.
  */

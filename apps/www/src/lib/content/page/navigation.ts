@@ -26,8 +26,9 @@ const PageNavigationSchema = Schema.Struct({
 });
 /**
  * Verified developer and legal destinations for one locale. The router matches
- * each of them from its own route tree and preloads it on intent, as it does for
- * every other link.
+ * each of them from its own route tree. Their links never preload: the route's
+ * loader reads the signed Page through a server function, and a preload on hover
+ * would run that read before the reader chooses the link.
  */
 export type PageNavigation = typeof PageNavigationSchema.Type;
 

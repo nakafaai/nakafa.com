@@ -16,19 +16,17 @@ import { cn } from "cn";
 import { type ComponentProps, lazy, Suspense } from "react";
 import { useTranslations } from "use-intl";
 
-const LazyMarkdownCodeBlock = lazy(async () => ({
-  default: await (() =>
-    import("@repo/design-system/components/markdown/react/block").then(
-      ({ MarkdownCodeBlock }) => MarkdownCodeBlock
-    ))(),
-}));
+const LazyMarkdownCodeBlock = lazy(() =>
+  import("@repo/design-system/components/markdown/react/block").then(
+    (module) => ({ default: module.MarkdownCodeBlock })
+  )
+);
 
-const LazyMermaidMdx = lazy(async () => ({
-  default: await (() =>
-    import("@repo/design-system/components/markdown/mermaid").then(
-      ({ MermaidMdx }) => MermaidMdx
-    ))(),
-}));
+const LazyMermaidMdx = lazy(() =>
+  import("@repo/design-system/components/markdown/mermaid").then((module) => ({
+    default: module.MermaidMdx,
+  }))
+);
 
 interface MarkdownCodeBlockProps {
   readonly className?: string | undefined;

@@ -5,10 +5,11 @@ import { ClientOnly } from "@tanstack/react-router";
 import { lazy, Suspense, useState } from "react";
 import { CommentsSlugContext } from "@/components/comments/slug";
 
-const LazyComments = lazy(async () => ({
-  default: await (() =>
-    import("@/components/comments").then((module) => module.Comments))(),
-}));
+const LazyComments = lazy(() =>
+  import("@/components/comments").then((module) => ({
+    default: module.Comments,
+  }))
+);
 
 /**
  * Defers the comments bundle and live Convex page until the footer is nearby.

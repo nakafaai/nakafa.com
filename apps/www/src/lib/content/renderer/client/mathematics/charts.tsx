@@ -4,37 +4,33 @@ import { lazy } from "react";
 import { withHydrationBoundary } from "@/lib/content/renderer/client/boundary";
 
 export const BarChart = withHydrationBoundary(
-  lazy(async () => ({
-    default: await (() =>
-      import(
-        "@repo/design-system/components/contents/mathematics/bar-chart"
-      ).then(({ BarChart }) => BarChart))(),
-  }))
+  lazy(() =>
+    import(
+      "@repo/design-system/components/contents/mathematics/bar-chart"
+    ).then((module) => ({ default: module.BarChart }))
+  )
 );
 
 export const HistogramChart = withHydrationBoundary(
-  lazy(async () => ({
-    default: await (() =>
-      import(
-        "@repo/design-system/components/contents/mathematics/bar-chart"
-      ).then(({ HistogramChart }) => HistogramChart))(),
-  }))
+  lazy(() =>
+    import(
+      "@repo/design-system/components/contents/mathematics/bar-chart"
+    ).then((module) => ({ default: module.HistogramChart }))
+  )
 );
 
 export const ScatterDiagram = withHydrationBoundary(
-  lazy(async () => ({
-    default: await (() =>
-      import(
-        "@repo/design-system/components/contents/mathematics/scatter-diagram"
-      ).then(({ ScatterDiagram }) => ScatterDiagram))(),
-  }))
+  lazy(() =>
+    import(
+      "@repo/design-system/components/contents/mathematics/scatter-diagram"
+    ).then((module) => ({ default: module.ScatterDiagram }))
+  )
 );
 
 export const VectorChart = withHydrationBoundary(
-  lazy(async () => ({
-    default: await (() =>
-      import(
-        "@repo/design-system/components/contents/mathematics/vector-chart"
-      ).then(({ VectorChart }) => VectorChart))(),
-  }))
+  lazy(() =>
+    import(
+      "@repo/design-system/components/contents/mathematics/vector-chart"
+    ).then((module) => ({ default: module.VectorChart }))
+  )
 );

@@ -13,12 +13,11 @@ import { useTranslations } from "use-intl";
  * Loads the theme list on first intent. It carries one icon for each theme,
  * which no page needs before a visitor reaches for the selector.
  */
-const ThemeMenuContent = lazy(async () => ({
-  default: await (() =>
-    import("@/components/shared/theme/menu").then(
-      (module) => module.ThemeMenuContent
-    ))(),
-}));
+const ThemeMenuContent = lazy(() =>
+  import("@/components/shared/theme/menu").then((module) => ({
+    default: module.ThemeMenuContent,
+  }))
+);
 
 /** Renders the theme selector. The selected theme lives in the theme store. */
 export function ThemePicker({

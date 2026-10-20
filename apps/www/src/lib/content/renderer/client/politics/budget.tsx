@@ -4,19 +4,17 @@ import { lazy } from "react";
 import { withHydrationBoundary } from "@/lib/content/renderer/client/boundary";
 
 export const PorkBarrelBudgetChart = withHydrationBoundary(
-  lazy(async () => ({
-    default: await (() =>
-      import(
-        "@repo/design-system/components/contents/politics/pork-barrel/budget"
-      ).then(({ BudgetChart }) => BudgetChart))(),
-  }))
+  lazy(() =>
+    import(
+      "@repo/design-system/components/contents/politics/pork-barrel/budget"
+    ).then((module) => ({ default: module.BudgetChart }))
+  )
 );
 
 export const PorkBarrelFundChart = withHydrationBoundary(
-  lazy(async () => ({
-    default: await (() =>
-      import(
-        "@repo/design-system/components/contents/politics/pork-barrel/fund"
-      ).then(({ FundChart }) => FundChart))(),
-  }))
+  lazy(() =>
+    import(
+      "@repo/design-system/components/contents/politics/pork-barrel/fund"
+    ).then((module) => ({ default: module.FundChart }))
+  )
 );

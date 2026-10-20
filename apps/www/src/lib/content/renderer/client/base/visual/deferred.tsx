@@ -4,12 +4,11 @@ import { ClientOnly } from "@tanstack/react-router";
 import { lazy, Suspense, useState } from "react";
 import type { MathSceneProps } from "@/lib/content/renderer/client/base/visual/render";
 
-const MathScene = lazy(async () => ({
-  default: await (() =>
-    import("@/lib/content/renderer/client/base/visual/render").then(
-      ({ MathScene: Scene }) => Scene
-    ))(),
-}));
+const MathScene = lazy(() =>
+  import("@/lib/content/renderer/client/base/visual/render").then((module) => ({
+    default: module.MathScene,
+  }))
+);
 
 /**
  * Loads the WebGL implementation shortly before the visual enters view, inside

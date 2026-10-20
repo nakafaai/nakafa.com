@@ -9,12 +9,11 @@ import { useAnswerRetry } from "@/lib/convex/requery";
 // The failure card holds the sign-in chain, which only a signed-out visitor who
 // cannot read a chat needs. It loads when a card is needed, so the first
 // JavaScript of every chat route does not carry it.
-const ChatFailure = lazy(async () => ({
-  default: await (() =>
-    import("@/components/ai/chat/failure").then(
-      (module) => module.ChatFailure
-    ))(),
-}));
+const ChatFailure = lazy(() =>
+  import("@/components/ai/chat/failure").then((module) => ({
+    default: module.ChatFailure,
+  }))
+);
 
 /** The query whose failure a boundary shows, and the args that read it. */
 interface ChatRead<Query extends Ref.AnyPublicQuery> {

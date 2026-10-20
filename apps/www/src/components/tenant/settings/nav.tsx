@@ -20,11 +20,13 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "@repo/design-system/components/ui/sidebar-submenu";
+import { useMatchRoute } from "@tanstack/react-router";
 import { Array as Arr } from "effect";
 import type { ComponentProps } from "react";
 import { useTranslations } from "use-intl";
+import { useTenant } from "@/components/tenant/context";
 import { TenantSidebarGroup } from "@/components/tenant/group";
-import { SchoolHrefLink, useSchoolPath } from "@/lib/routing/school/link";
+import { SchoolHrefLink } from "@/lib/routing/school/link";
 import { schoolSettingsGroups } from "@/lib/settings/school";
 
 /** The icon of each group. A group added without one does not compile. */
@@ -66,13 +68,16 @@ function SchoolSettingsNavGroup({
 }: {
   group: (typeof schoolSettingsGroups)[number];
 }) {
-  const pathname = useSchoolPath();
+  const matchRoute = useMatchRoute();
+  const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
   const label = t(group.key);
-  const holdsCurrent = Arr.some(
-    group.sections,
-    (section) => section.href === pathname
-  );
+  const isSectionActive = (section: (typeof group.sections)[number]) =>
+    matchRoute({
+      params: { slug },
+      to: `/school/$slug/settings/${section.labelKey}` as const,
+    }) !== false;
+  const holdsCurrent = Arr.some(group.sections, isSectionActive);
 
   // A new key starts the group again from its default when the current section
   // moves in or out of it, and leaves a group the viewer folded alone otherwise.
@@ -96,7 +101,7 @@ function SchoolSettingsNavGroup({
           {Arr.map(group.sections, (section) => (
             <SidebarMenuSubItem key={section.href}>
               <SidebarMenuSubButton
-                isActive={pathname === section.href}
+                isActive={isSectionActive(section)}
                 render={<SchoolHrefLink href={section.href} />}
               >
                 <span className="truncate">{t(section.labelKey)}</span>

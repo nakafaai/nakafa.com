@@ -24,12 +24,11 @@ import { useAi } from "@/components/ai/context";
 import { useViewer } from "@/lib/identity/client";
 
 /** The recent chats and their query load when the learner shows intent on the history button. */
-const SheetHistory = lazy(async () => ({
-  default: await (() =>
-    import("@/components/ai/sheet/history").then(
-      (module) => module.SheetHistory
-    ))(),
-}));
+const SheetHistory = lazy(() =>
+  import("@/components/ai/sheet/history").then((module) => ({
+    default: module.SheetHistory,
+  }))
+);
 
 interface Props {
   expanded: boolean;

@@ -50,12 +50,11 @@ import {
 import { useFormatter, useLocale, useTranslations } from "use-intl";
 
 /** The scene loads once the card asks for it, and its frame holds the place meanwhile. */
-const UnitCircleStage = lazy(async () => ({
-  default: await (() =>
-    import("@repo/design-system/components/three/unit-circle").then(
-      ({ UnitCircleStage }) => UnitCircleStage
-    ))(),
-}));
+const UnitCircleStage = lazy(() =>
+  import("@repo/design-system/components/three/unit-circle").then((module) => ({
+    default: module.UnitCircleStage,
+  }))
+);
 
 interface CardProps {
   /** The angle the card shows until the reader picks another. */

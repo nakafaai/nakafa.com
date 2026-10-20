@@ -39,12 +39,11 @@ const HIDE_PROMPT_WITHOUT_SCRIPTS = `[${PROMPT_ATTRIBUTE}]{display:none}`;
  * The preferences dialog ships as its own chunk. Its footer control warms it on
  * hover, focus or press, so the root layout never carries the dialog's code.
  */
-const ConsentPreferences = lazy(async () => ({
-  default: await (() =>
-    import("@/components/analytics/consent/preferences").then(
-      (module) => module.ConsentPreferences
-    ))(),
-}));
+const ConsentPreferences = lazy(() =>
+  import("@/components/analytics/consent/preferences").then((module) => ({
+    default: module.ConsentPreferences,
+  }))
+);
 
 /**
  * Renders the non-blocking first decision and permanent preferences dialog.

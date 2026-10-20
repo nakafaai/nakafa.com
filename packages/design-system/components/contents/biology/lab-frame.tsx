@@ -31,12 +31,11 @@ import { useTranslations } from "use-intl";
 import { useStore } from "zustand";
 
 /** The stage loads once the lab asks for it, and its frame holds the place meanwhile. */
-const BiologyStage = lazy(async () => ({
-  default: await (() =>
-    import("@repo/design-system/components/contents/biology/stage").then(
-      ({ BiologyStage }) => BiologyStage
-    ))(),
-}));
+const BiologyStage = lazy(() =>
+  import("@repo/design-system/components/contents/biology/stage").then(
+    (module) => ({ default: module.BiologyStage })
+  )
+);
 
 export interface BiologyLabCalloutProps {
   id: string;

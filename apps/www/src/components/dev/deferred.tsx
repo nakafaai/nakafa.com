@@ -6,12 +6,11 @@ import { type ComponentProps, lazy, Suspense } from "react";
  * Client Component that a layout imports is part of every route's first
  * JavaScript, and a production layout never renders this one.
  */
-const LazyDeferredPreviewRefresh = lazy(async () => ({
-  default: await (() =>
-    import("@/components/dev/refresh").then(
-      (module) => module.PreviewRefresh
-    ))(),
-}));
+const LazyDeferredPreviewRefresh = lazy(() =>
+  import("@/components/dev/refresh").then((module) => ({
+    default: module.PreviewRefresh,
+  }))
+);
 
 export function DeferredPreviewRefresh(
   props: ComponentProps<typeof LazyDeferredPreviewRefresh>

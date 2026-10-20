@@ -29,12 +29,11 @@ import type { ListPost } from "@/components/user/posts/state";
 import { reportClientException } from "@/lib/analytics/client";
 
 /** The delete dialog loads when the learner opens the More menu of a post, before they can choose Delete. */
-const PostDeletion = lazy(async () => ({
-  default: await (() =>
-    import("@/components/user/posts/delete").then(
-      (module) => module.PostDeletion
-    ))(),
-}));
+const PostDeletion = lazy(() =>
+  import("@/components/user/posts/delete").then((module) => ({
+    default: module.PostDeletion,
+  }))
+);
 
 /**
  * One post of the list, in the anatomy every row of the profile shares: the

@@ -2,7 +2,10 @@ import { QueryResult } from "@confect/react";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { ClassAmbiguous } from "@repo/backend/confect/classroom/errors";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { Link } from "@repo/internationalization/src/link";
+import {
+  EXACT_ACTIVE_OPTIONS,
+  Link,
+} from "@repo/internationalization/src/link";
 import { cva } from "class-variance-authority";
 import { Array as Arr, Option, Schema } from "effect";
 import { createContext, use, useState } from "react";
@@ -141,7 +144,7 @@ function ClassTabs({ classSlug, tab }: { classSlug: string; tab: ClassTab }) {
   return (
     <nav className="flex gap-1 border-b">
       <Link
-        aria-current={tab === "home" ? "page" : undefined}
+        activeOptions={EXACT_ACTIVE_OPTIONS}
         className={classTab({ active: tab === "home" })}
         params={params}
         to="/school/$slug/classes/$classSlug"
@@ -149,7 +152,7 @@ function ClassTabs({ classSlug, tab }: { classSlug: string; tab: ClassTab }) {
         {t("tabs-home")}
       </Link>
       <Link
-        aria-current={tab === "forum" ? "page" : undefined}
+        activeOptions={EXACT_ACTIVE_OPTIONS}
         className={classTab({ active: tab === "forum" })}
         params={params}
         to="/school/$slug/classes/$classSlug/forum"

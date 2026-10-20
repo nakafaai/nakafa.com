@@ -35,12 +35,11 @@ import { profileTarget } from "@/lib/profile/href";
  * The account's schools, loaded when the menu opens: the list brings the school
  * contracts with it, which no page needs at first paint.
  */
-const SidebarSchoolMenuItems = lazy(async () => ({
-  default: await (() =>
-    import("@/components/sidebar/menu/schools").then(
-      (module) => module.SidebarSchoolMenuItems
-    ))(),
-}));
+const SidebarSchoolMenuItems = lazy(() =>
+  import("@/components/sidebar/menu/schools").then((module) => ({
+    default: module.SidebarSchoolMenuItems,
+  }))
+);
 
 /** Renders the app account menu, with the account and legal pages, once authentication is confirmed. */
 export function NavUserAccount({ user }: { user: CurrentUser }) {

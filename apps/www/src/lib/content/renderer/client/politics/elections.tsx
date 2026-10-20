@@ -4,19 +4,17 @@ import { lazy } from "react";
 import { withHydrationBoundary } from "@/lib/content/renderer/client/boundary";
 
 export const KimPlusElectabilityChart = withHydrationBoundary(
-  lazy(async () => ({
-    default: await (() =>
-      import(
-        "@repo/design-system/components/contents/politics/kim-plus/chart"
-      ).then(({ ElectabilityChart }) => ElectabilityChart))(),
-  }))
+  lazy(() =>
+    import(
+      "@repo/design-system/components/contents/politics/kim-plus/chart"
+    ).then((module) => ({ default: module.ElectabilityChart }))
+  )
 );
 
 export const PorkBarrelElectabilityChart = withHydrationBoundary(
-  lazy(async () => ({
-    default: await (() =>
-      import(
-        "@repo/design-system/components/contents/politics/pork-barrel/electability"
-      ).then(({ ElectabilityChart }) => ElectabilityChart))(),
-  }))
+  lazy(() =>
+    import(
+      "@repo/design-system/components/contents/politics/pork-barrel/electability"
+    ).then((module) => ({ default: module.ElectabilityChart }))
+  )
 );

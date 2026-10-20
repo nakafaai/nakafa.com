@@ -49,7 +49,7 @@ export function createLoopbackConnectSources(source: URL) {
 }
 
 /**
- * Builds the shared security headers used by the Next.js apps in this repo.
+ * Builds the shared security headers used by the web apps in this repo.
  *
  * PostHog traffic is routed through a same-origin proxy path, so the default
  * `'self'` sources already cover analytics scripts and network requests.

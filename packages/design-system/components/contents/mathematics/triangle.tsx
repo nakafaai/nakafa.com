@@ -32,21 +32,19 @@ import {
 } from "react-aria-components";
 import { useLocale, useTranslations } from "use-intl";
 
-// Next owns this client-only import boundary so offscreen lessons do not load WebGL.
-const TriangleScene = lazy(async () => ({
-  default: await (() =>
-    import(
-      "@repo/design-system/components/contents/mathematics/triangle/scene"
-    ).then((module) => module.TriangleScene))(),
-}));
+// The client-only import boundary keeps offscreen lessons from loading WebGL.
+const TriangleScene = lazy(() =>
+  import(
+    "@repo/design-system/components/contents/mathematics/triangle/scene"
+  ).then((module) => ({ default: module.TriangleScene }))
+);
 
 // Keep KaTeX outside the page's initial component graph until the scene is visible.
-const TriangleReadout = lazy(async () => ({
-  default: await (() =>
-    import(
-      "@repo/design-system/components/contents/mathematics/triangle/readout"
-    ).then((module) => module.TriangleReadout))(),
-}));
+const TriangleReadout = lazy(() =>
+  import(
+    "@repo/design-system/components/contents/mathematics/triangle/readout"
+  ).then((module) => ({ default: module.TriangleReadout }))
+);
 
 interface Props {
   angle?: number;

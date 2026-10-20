@@ -6,12 +6,11 @@ import { useReachedPage } from "@/components/marketing/about/toys/reach";
  * The toy layer's code. Its import starts only when the layer is first rendered,
  * which happens once the reader has acted on the page.
  */
-const HomeToyLayer = lazy(async () => ({
-  default: await (() =>
-    import("@/components/marketing/about/toys/layer").then(
-      (module) => module.HomeToyLayer
-    ))(),
-}));
+const HomeToyLayer = lazy(() =>
+  import("@/components/marketing/about/toys/layer").then((module) => ({
+    default: module.HomeToyLayer,
+  }))
+);
 
 /**
  * Mounts the toys once the reader has scrolled, moved the pointer or touched the

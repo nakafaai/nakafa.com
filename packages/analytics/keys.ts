@@ -4,7 +4,7 @@ import { Schema } from "effect";
 
 const optionalStringSchema = Schema.UndefinedOr(Schema.String);
 /**
- * Validates the PostHog managed reverse proxy host read by Next config. Server
+ * Validates the PostHog managed reverse proxy host read by the app configuration. Server
  * code only: the browser reads `@repo/analytics/public`.
  */
 export const postHogProxyKeys = () =>

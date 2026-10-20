@@ -32,6 +32,7 @@ export const Route = createFileRoute(
       throw notFound();
     }
     if (route.kind === "signIn") {
+      // The sign-in address carries the attempt's return path, so it stays an href.
       throw redirect({ href: route.href, statusCode: 307 });
     }
     return route;

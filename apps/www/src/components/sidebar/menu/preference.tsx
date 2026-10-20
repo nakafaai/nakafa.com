@@ -35,12 +35,11 @@ import { useLocalizedRouteSwitch } from "@/lib/routing/locale/client";
  * Loads the theme submenu when the account menu opens. Its list carries one
  * icon for each theme, which no page needs before that.
  */
-const ThemeSubmenuContent = lazy(async () => ({
-  default: await (() =>
-    import("@/components/sidebar/menu/theme").then(
-      (module) => module.ThemeSubmenuContent
-    ))(),
-}));
+const ThemeSubmenuContent = lazy(() =>
+  import("@/components/sidebar/menu/theme").then((module) => ({
+    default: module.ThemeSubmenuContent,
+  }))
+);
 
 /** Opens menus beside the sidebar, or above their trigger on phones, where the sidebar fills the screen. */
 function selectMenuSide(sidebar: SidebarContextValue) {

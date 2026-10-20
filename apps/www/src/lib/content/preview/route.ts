@@ -23,7 +23,7 @@ const PreviewRouteInputSchema = Schema.Struct({
   publicPath: Schema.String,
 });
 type PreviewRouteInput = typeof PreviewRouteInputSchema.Type;
-/** Next-intl rewrite identity visible only on its internal second pass. */
+/** Locale rewrite identity visible only on the router's internal second pass. */
 const InternalRouteInputSchema = Schema.Struct({
   localeHint: Schema.NullOr(Schema.String),
   pathname: Schema.String,
@@ -51,7 +51,7 @@ const ArticlePreviewStaticParamsSchema = Schema.Struct({
   category: ArticleRouteSlugSchema,
   slug: ArticleRouteSlugSchema,
 });
-/** Concrete child params Next prerenders for one selected Page preview. */
+/** Concrete child params that prerender one selected Page preview. */
 const PagePreviewStaticParamsSchema = Schema.Struct({
   page: Schema.Array(Schema.String),
 });
@@ -114,7 +114,7 @@ function decodeMaterialPreviewStaticParams({
     () => new PreviewIntegrityError({ check: "projection" })
   );
 }
-/** Parses one canonical material path into Next child params. */
+/** Parses one canonical material path into route params. */
 export const parseMaterialPreviewStaticParams = Effect.fn(
   "NakafaContent.parseMaterialPreviewStaticParams"
 )(function* (input: {
@@ -127,7 +127,7 @@ export const parseMaterialPreviewStaticParams = Effect.fn(
   }
   return decoded.success;
 });
-/** Reads the selected material route so Cache Components can build its shell. */
+/** Reads the selected material route so its page shell can be built. */
 export function readMaterialPreviewStaticParams(appLocale: AppLocale) {
   return readPreviewManifestForPrerender().then((manifest) => {
     const document = manifest.document;
@@ -147,7 +147,7 @@ export function readMaterialPreviewStaticParams(appLocale: AppLocale) {
     return [decoded.success];
   });
 }
-/** Reads the selected article route so Cache Components can build its shell. */
+/** Reads the selected article route so its page shell can be built. */
 export function readArticlePreviewStaticParams(appLocale: AppLocale) {
   return readPreviewManifestForPrerender().then((manifest) => {
     const document = manifest.document;
@@ -165,7 +165,7 @@ export function readArticlePreviewStaticParams(appLocale: AppLocale) {
     ];
   });
 }
-/** Reads the selected Page route so Cache Components can build its shell. */
+/** Reads the selected Page route so its page shell can be built. */
 export function readPagePreviewStaticParams(appLocale: AppLocale) {
   return readPreviewManifestForPrerender().then((manifest) => {
     const document = manifest.document;

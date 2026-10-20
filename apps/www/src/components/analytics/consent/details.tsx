@@ -47,7 +47,8 @@ export function ConsentDetails({
 }
 
 /**
- * Links the privacy policy. This prompt opens on every first visit.
+ * Links the privacy policy. This prompt opens on every first visit. The link
+ * never preloads, as no signed Page link does (see `PageNavigation`).
  *
  * The server renders this link in the root layout, outside every `Suspense`,
  * so the link must render on the server with the locale of the route.
@@ -69,6 +70,7 @@ function PrivacyPolicyLink() {
           <HrefLink
             className="text-foreground underline underline-offset-4"
             href={href}
+            preload={false}
           >
             {chunks}
           </HrefLink>

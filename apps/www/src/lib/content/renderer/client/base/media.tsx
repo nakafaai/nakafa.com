@@ -4,19 +4,17 @@ import { lazy } from "react";
 import { withHydrationBoundary } from "@/lib/content/renderer/client/boundary";
 
 export const MermaidMdx = withHydrationBoundary(
-  lazy(async () => ({
-    default: await (() =>
-      import("@repo/design-system/components/markdown/mermaid").then(
-        ({ MermaidMdx: Component }) => Component
-      ))(),
-  }))
+  lazy(() =>
+    import("@repo/design-system/components/markdown/mermaid").then(
+      (module) => ({ default: module.MermaidMdx })
+    )
+  )
 );
 
 export const Youtube = withHydrationBoundary(
-  lazy(async () => ({
-    default: await (() =>
-      import("@repo/design-system/components/markdown/youtube").then(
-        ({ Youtube: Component }) => Component
-      ))(),
-  }))
+  lazy(() =>
+    import("@repo/design-system/components/markdown/youtube").then(
+      (module) => ({ default: module.Youtube })
+    )
+  )
 );

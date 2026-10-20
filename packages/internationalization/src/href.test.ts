@@ -58,7 +58,7 @@ describe("localized internal href", () => {
     ["/", "en", "/en"],
     ["/id/materi/x", "id", "/id/materi/x"],
     ["/search?q=a#b", "de", "/de/search?q=a#b"],
-  ])("leads %s with the locale %s", (href, locale, expected) => {
+  ] as const)("leads %s with the locale %s", (href, locale, expected) => {
     expect(localizeInternalHref(href, locale)).toBe(expected);
   });
 
@@ -67,7 +67,7 @@ describe("localized internal href", () => {
     ["/curricula/merdeka", "en", "/en/curriculum/merdeka"],
     ["/curricula/merdeka", "de", "/de/lehrplaene/merdeka"],
     ["/", "de", "/de"],
-  ])("maps %s to its public path on %s", (href, locale, expected) => {
+  ] as const)("maps %s to its public path on %s", (href, locale, expected) => {
     expect(publicInternalHref(href, locale)).toBe(expected);
   });
 });

@@ -1,4 +1,7 @@
+import type { LinkTarget } from "@repo/internationalization/src/link";
+import { linkOptions } from "@tanstack/react-router";
 import { Array as Arr, Schema } from "effect";
+import type { Locale } from "use-intl";
 import type { TryoutSectionRoute } from "@/components/tryout/section/model";
 
 /** Route coordinates of an href; each one is optional because a href can omit any of them. */
@@ -39,6 +42,24 @@ export function getTryoutHref({
 /** Converts a Convex publicPath row into the href expected by localized links. */
 export function getTryoutPublicPathHref(publicPath: string) {
   return `/${publicPath}`;
+}
+
+/**
+ * Returns the typed target of a try-out country page. The public path names it
+ * as `try-out/{country}`; a path of any other shape has no target.
+ */
+export function getTryoutCountryTarget(
+  locale: Locale,
+  publicPath: string
+): LinkTarget | null {
+  const [root, country] = publicPath.split("/");
+  if (root !== "try-out" || !country) {
+    return null;
+  }
+  return linkOptions({
+    params: { country, locale },
+    to: "/$locale/try-out/$country",
+  });
 }
 
 /** Builds a route capability that binds navigation to one owned attempt. */

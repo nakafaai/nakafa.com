@@ -9,6 +9,7 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Nina } from "@repo/design-system/components/ui/nina";
 import {
+  EXACT_ACTIVE_OPTIONS,
   HrefLink,
   Link,
   useCurrentLocale,
@@ -156,6 +157,7 @@ export function Footer({
       </div>
 
       <Link
+        activeOptions={EXACT_ACTIVE_OPTIONS}
         className="mx-auto flex w-full max-w-7xl px-6 py-16 transition-colors ease-out hover:text-primary"
         params={{ locale }}
         to="/$locale"

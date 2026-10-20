@@ -9,7 +9,7 @@ import {
   LocaleSchema,
 } from "@repo/internationalization/src/locale";
 import { toPublicPath } from "@repo/internationalization/src/rewrite";
-import { Array as Arr, Schema } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 
 /** The router location that a page reads: its pathname in the router's spelling, and its search string. */
 export const RouterPageLocation = Schema.Struct({
@@ -39,15 +39,19 @@ export function readRouterPage(
     toPublicPath(location.pathname),
     LOCALES
   );
-  const hint = new URLSearchParams(location.searchStr).get(
-    MATERIAL_CONTEXT_QUERY_PARAM
+  const hint = Option.fromNullishOr(
+    new URLSearchParams(location.searchStr).get(MATERIAL_CONTEXT_QUERY_PARAM)
   );
   const slug = Arr.join(publicSegments, "/");
   return {
     locale: locale ?? DEFAULT_LOCALE,
     slug: slug === "" ? "/" : `/${slug}`,
-    ...(hint !== null && hint.length <= MATERIAL_CONTEXT_HINT_LENGTH
-      ? { materialContextHint: hint }
-      : {}),
+    ...Option.match(hint, {
+      onNone: () => ({}),
+      onSome: (value) =>
+        value.length <= MATERIAL_CONTEXT_HINT_LENGTH
+          ? { materialContextHint: value }
+          : {},
+    }),
   };
 }

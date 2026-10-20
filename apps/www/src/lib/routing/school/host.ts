@@ -76,7 +76,7 @@ export function readRequestHost(headers: Headers) {
  * The hostname that the visitor asked for, read from the `host` header and not
  * from the request URL. A local run, or any server that builds its request URL
  * from its own address, names that address for every host, so only the header
- * tells the school hosts apart. On Vercel, Next.js builds the URL from this same
+ * tells the school hosts apart. On Vercel, the platform builds the URL from this same
  * header (`trustHostHeader`), so production reads the same host here. The port
  * is dropped, and a missing header or a value that is not a host names no host.
  */

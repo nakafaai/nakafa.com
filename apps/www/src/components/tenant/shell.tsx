@@ -26,7 +26,10 @@ import {
   Sidebar,
   SidebarInset,
 } from "@repo/design-system/components/ui/sidebar-shell";
-import { Link } from "@repo/internationalization/src/link";
+import {
+  EXACT_ACTIVE_OPTIONS,
+  Link,
+} from "@repo/internationalization/src/link";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { ClientOnly } from "@tanstack/react-router";
 import { Effect, Option } from "effect";
@@ -57,12 +60,11 @@ import type { SchoolViewer } from "@/lib/tenant/frame";
  * The schools of the viewer, which the school switcher lists. The list loads when the
  * switcher opens, as the account menu of Nakafa loads its own.
  */
-const SidebarSchoolMenuItems = lazy(async () => ({
-  default: await (() =>
-    import("@/components/sidebar/menu/schools").then(
-      (module) => module.SidebarSchoolMenuItems
-    ))(),
-}));
+const SidebarSchoolMenuItems = lazy(() =>
+  import("@/components/sidebar/menu/schools").then((module) => ({
+    default: module.SidebarSchoolMenuItems,
+  }))
+);
 
 /**
  * Signs out of the school, then returns to the school address, which shows the
@@ -158,7 +160,11 @@ function TenantSwitcher() {
           <DropdownMenuGroup>
             <DropdownMenuItem
               render={
-                <Link params={{ slug: tenant.slug }} to="/school/$slug">
+                <Link
+                  activeOptions={EXACT_ACTIVE_OPTIONS}
+                  params={{ slug: tenant.slug }}
+                  to="/school/$slug"
+                >
                   {t("home")}
                 </Link>
               }

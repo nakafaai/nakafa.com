@@ -8,10 +8,11 @@ import { ArticleNavigationContext } from "@/components/search/navigation";
 import type { ArticleNavigationItem } from "@/lib/content/article/navigation";
 import { useSearch } from "@/lib/search/context";
 
-const LazySearchCommand = lazy(async () => ({
-  default: await (() =>
-    loadSearchCommandModule().then((module) => module.SearchCommand))(),
-}));
+const LazySearchCommand = lazy(() =>
+  loadSearchCommandModule().then((module) => ({
+    default: module.SearchCommand,
+  }))
+);
 
 /** Registers lightweight shortcuts and mounts search after first activation. */
 export function DeferredSearchCommand({

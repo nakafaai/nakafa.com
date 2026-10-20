@@ -12,15 +12,15 @@ import {
   type LinkTarget,
   useCurrentLocale,
 } from "@repo/internationalization/src/link";
-import { Array as Arr, Option } from "effect";
+import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import {
   getForYouNavigationItems,
   getForYouNavigationTarget,
 } from "@/components/sidebar/data/navigation";
-import { usePreferredCurriculumHref } from "@/lib/curriculum/preferences";
-import { usePreferredTryoutHref } from "@/lib/tryout/preferences";
+import { usePreferredCurriculumTarget } from "@/lib/curriculum/preferences";
+import { usePreferredTryoutTarget } from "@/lib/tryout/preferences";
 
 function SubjectIcon() {
   return (
@@ -107,49 +107,27 @@ export function HomeExplore() {
   // destinations follow the learner preferences below.
   const items = getForYouNavigationItems();
   const preferences = {
-    preferredCurriculumHref: usePreferredCurriculumHref(locale),
-    preferredTryoutHref: usePreferredTryoutHref(locale),
+    preferredCurriculumTarget: usePreferredCurriculumTarget(locale),
+    preferredTryoutTarget: usePreferredTryoutTarget(locale),
   };
-  const subjectItem = Arr.findFirst(items, (item) => item.id === "subject");
-  const tryoutItem = Arr.findFirst(items, (item) => item.id === "tryOut");
-  const askNinaItem = Arr.findFirst(items, (item) => item.id === "askNina");
+  const exploreCards = {
+    askNina: { icon: <NinaIcon />, title: tAi("ask-nina") },
+    subject: { icon: <SubjectIcon />, title: tCommon("subject") },
+    tryOut: { icon: <TryoutIcon />, title: tCommon("try-out") },
+  };
 
   return (
     <section className="flex flex-col gap-4">
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 md:gap-6">
-        {Option.getOrNull(
-          Option.map(subjectItem, (item) => (
-            <ExploreCard
-              destination={getForYouNavigationTarget(item, locale, preferences)}
-              key={item.id}
-              title={tCommon("subject")}
-            >
-              <SubjectIcon />
-            </ExploreCard>
-          ))
-        )}
-        {Option.getOrNull(
-          Option.map(tryoutItem, (item) => (
-            <ExploreCard
-              destination={getForYouNavigationTarget(item, locale, preferences)}
-              key={item.id}
-              title={tCommon("try-out")}
-            >
-              <TryoutIcon />
-            </ExploreCard>
-          ))
-        )}
-        {Option.getOrNull(
-          Option.map(askNinaItem, (item) => (
-            <ExploreCard
-              destination={getForYouNavigationTarget(item, locale, preferences)}
-              key={item.id}
-              title={tAi("ask-nina")}
-            >
-              <NinaIcon />
-            </ExploreCard>
-          ))
-        )}
+        {Arr.map(items, (item) => (
+          <ExploreCard
+            destination={getForYouNavigationTarget(item, locale, preferences)}
+            key={item.id}
+            title={exploreCards[item.id].title}
+          >
+            {exploreCards[item.id].icon}
+          </ExploreCard>
+        ))}
       </div>
     </section>
   );
@@ -161,7 +139,7 @@ function ExploreCard({
   title,
 }: {
   children: ReactNode;
-  destination: LinkTarget | string;
+  destination: LinkTarget;
   title: string;
 }) {
   return (

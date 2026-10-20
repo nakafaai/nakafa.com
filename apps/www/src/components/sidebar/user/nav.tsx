@@ -5,15 +5,13 @@ import { SidebarMenu } from "@repo/design-system/components/ui/sidebar-menu";
 import { lazy, Suspense } from "react";
 import { AccountPricing } from "@/components/sidebar/menu/pricing";
 import { NavUserGuest } from "@/components/sidebar/user/guest/card";
-import { NavUserAccountSkeleton } from "@/components/sidebar/user/skeleton";
 import { useViewer } from "@/lib/identity/client";
 
-const NavUserAccount = lazy(async () => ({
-  default: await (() =>
-    import("@/components/sidebar/user/account").then(
-      (module) => module.NavUserAccount
-    ))(),
-}));
+const NavUserAccount = lazy(() =>
+  import("@/components/sidebar/user/account").then((module) => ({
+    default: module.NavUserAccount,
+  }))
+);
 
 /**
  * Renders the guest or account footer once authentication settles. Guest,
@@ -33,7 +31,7 @@ export function NavUser() {
         {user ? (
           <>
             <AccountPricing plan={user.appUser.plan} />
-            <Suspense fallback={<NavUserAccountSkeleton />}>
+            <Suspense fallback={null}>
               <NavUserAccount user={user} />
             </Suspense>
           </>

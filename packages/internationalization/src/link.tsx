@@ -39,6 +39,11 @@ export type LinkTarget = [keyof FileRoutesByPath] extends [never]
       >;
     }[keyof FileRoutesByPath];
 
+/** When a link preloads its route, as the router declares it. */
+type LinkPreload = NonNullable<
+  LinkOptions<RegisteredRouter, string, string>["preload"]
+>;
+
 /** The anchor that every app link renders; the router sets its href, its active state and its preload handlers. */
 function LinkAnchor(props: ComponentProps<"a">) {
   return <a {...props} />;
@@ -70,7 +75,7 @@ export function useCurrentLocale(): Locale {
  * opens another target, renders as a plain anchor, which keeps its locale.
  */
 export function HrefLink({
-  activeOptions,
+  activeOptions = EXACT_ACTIVE_OPTIONS,
   href,
   preload,
   target,
@@ -78,7 +83,7 @@ export function HrefLink({
 }: Omit<ComponentPropsWithoutRef<"a">, "href" | "target"> & {
   readonly activeOptions?: ActiveOptions | undefined;
   readonly href: string;
-  readonly preload?: false | "intent" | "render" | "viewport" | undefined;
+  readonly preload?: LinkPreload | undefined;
   readonly target?: string | undefined;
 }) {
   const locale = useCurrentLocale();
@@ -92,7 +97,7 @@ export function HrefLink({
   return (
     <Link<RegisteredRouter, string, string>
       {...anchor}
-      {...(activeOptions !== undefined && { activeOptions })}
+      activeOptions={activeOptions}
       href={localized}
       {...(preload !== undefined && { preload })}
     />
@@ -129,26 +134,23 @@ export function useCanonicalPath() {
   });
 }
 
-/**
- * A link to a destination: a route target that the route tree types, or a path
- * that the content gives, which `HrefLink` localizes.
- */
+/** A link to a route target that the route tree types, with the exact active rule by default. */
 export function DestinationLink({
-  activeOptions,
+  activeOptions = EXACT_ACTIVE_OPTIONS,
   destination,
   preload,
   ...anchor
 }: Omit<ComponentPropsWithoutRef<"a">, "href" | "target"> & {
   readonly activeOptions?: ActiveOptions | undefined;
-  readonly destination: LinkTarget | string;
-  readonly preload?: false | "intent" | "render" | "viewport" | undefined;
+  readonly destination: LinkTarget;
+  readonly preload?: LinkPreload | undefined;
 }) {
-  const options = {
-    ...(activeOptions !== undefined && { activeOptions }),
-    ...(preload !== undefined && { preload }),
-  };
-  if (typeof destination === "string") {
-    return <HrefLink {...anchor} {...options} href={destination} />;
-  }
-  return <Link {...anchor} {...options} {...destination} />;
+  return (
+    <Link
+      {...anchor}
+      activeOptions={activeOptions}
+      {...(preload !== undefined && { preload })}
+      {...destination}
+    />
+  );
 }

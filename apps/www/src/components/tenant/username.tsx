@@ -12,10 +12,11 @@ const schoolRoute = getRouteApi("/school/$slug");
  * The school username form. It loads when the visitor opens it, so the card code it needs stays
  * out of the entry's first JavaScript.
  */
-const TenantLogin = lazy(async () => ({
-  default: await (() =>
-    import("@/components/tenant/login").then((module) => module.TenantLogin))(),
-}));
+const TenantLogin = lazy(() =>
+  import("@/components/tenant/login").then((module) => ({
+    default: module.TenantLogin,
+  }))
+);
 
 /**
  * The sign-in actions of a school host: Google beside the school username action. The

@@ -17,12 +17,11 @@ import { nextQuarter } from "@/components/tenant/exams/time";
  * The dialog that schedules a sitting. It loads on the first opening, so the editor's first page
  * does not carry the scheduling code.
  */
-const ScheduleSitting = lazy(async () => ({
-  default: await (() =>
-    import("@/components/tenant/exams/sitting").then(
-      (module) => module.ScheduleSitting
-    ))(),
-}));
+const ScheduleSitting = lazy(() =>
+  import("@/components/tenant/exams/sitting").then((module) => ({
+    default: module.ScheduleSitting,
+  }))
+);
 
 /**
  * The next whole quarter hour on the clock of a unit, as a `datetime-local` value. None when the

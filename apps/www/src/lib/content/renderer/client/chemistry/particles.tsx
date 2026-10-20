@@ -4,48 +4,41 @@ import { lazy } from "react";
 import { withHydrationBoundary } from "@/lib/content/renderer/client/boundary";
 
 export const IonLab = withHydrationBoundary(
-  lazy(async () => ({
-    default: await (() =>
-      import("@repo/design-system/components/contents/chemistry/ion/lab").then(
-        ({ IonLab }) => IonLab
-      ))(),
-  }))
+  lazy(() =>
+    import("@repo/design-system/components/contents/chemistry/ion/lab").then(
+      (module) => ({ default: module.IonLab })
+    )
+  )
 );
 
 export const IsotopeLab = withHydrationBoundary(
-  lazy(async () => ({
-    default: await (() =>
-      import(
-        "@repo/design-system/components/contents/chemistry/isotope/lab"
-      ).then(({ IsotopeLab }) => IsotopeLab))(),
-  }))
+  lazy(() =>
+    import(
+      "@repo/design-system/components/contents/chemistry/isotope/lab"
+    ).then((module) => ({ default: module.IsotopeLab }))
+  )
 );
 
 export const MatterParticleReaderLab = withHydrationBoundary(
-  lazy(async () => ({
-    default: await (() =>
-      import(
-        "@repo/design-system/components/contents/chemistry/matter-particle-reader/lab"
-      ).then(({ MatterParticleReaderLab }) => MatterParticleReaderLab))(),
-  }))
+  lazy(() =>
+    import(
+      "@repo/design-system/components/contents/chemistry/matter-particle-reader/lab"
+    ).then((module) => ({ default: module.MatterParticleReaderLab }))
+  )
 );
 
 export const SubatomicParticlePropertiesLab = withHydrationBoundary(
-  lazy(async () => ({
-    default: await (() =>
-      import(
-        "@repo/design-system/components/contents/chemistry/subatomic-particles-properties/lab"
-      ).then(
-        ({ SubatomicParticlePropertiesLab }) => SubatomicParticlePropertiesLab
-      ))(),
-  }))
+  lazy(() =>
+    import(
+      "@repo/design-system/components/contents/chemistry/subatomic-particles-properties/lab"
+    ).then((module) => ({ default: module.SubatomicParticlePropertiesLab }))
+  )
 );
 
 export const SubatomicParticlesLab = withHydrationBoundary(
-  lazy(async () => ({
-    default: await (() =>
-      import(
-        "@repo/design-system/components/contents/chemistry/subatomic-particles/lab"
-      ).then(({ SubatomicParticlesLab }) => SubatomicParticlesLab))(),
-  }))
+  lazy(() =>
+    import(
+      "@repo/design-system/components/contents/chemistry/subatomic-particles/lab"
+    ).then((module) => ({ default: module.SubatomicParticlesLab }))
+  )
 );

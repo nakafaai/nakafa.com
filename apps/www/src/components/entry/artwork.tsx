@@ -8,12 +8,11 @@ import { lazy, Suspense } from "react";
  * Loads the animal pool only when the entry page shows it. Its code stays out of
  * the entry routes' first JavaScript, and nothing stands in while it loads.
  */
-const DeferredPool = lazy(async () => ({
-  default: await (() =>
-    import("@repo/design-system/components/pool/pool").then(
-      (module) => module.Pool
-    ))(),
-}));
+const DeferredPool = lazy(() =>
+  import("@repo/design-system/components/pool/pool").then((module) => ({
+    default: module.Pool,
+  }))
+);
 
 /**
  * Shows the animal pool beside the sign-in form on wide screens, where the layout

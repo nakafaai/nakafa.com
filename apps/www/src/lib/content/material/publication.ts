@@ -187,7 +187,7 @@ const completeMaterialSource = Effect.fn("NakafaMaterial.completeSource")(
 );
 
 /** Rechecks a failed navigation read and retries only after a release change.
- * Next serializes errors across cache boundaries, so a fresh lesson identity
+ * Cache boundaries serialize errors, so a fresh lesson identity
  * proves the transition without relying on a preserved ConvexError class. */
 const readMaterialSource = Effect.fn("NakafaMaterial.readSource")(function* (
   initial: Ref.Returns<typeof contentRelease.material.lesson>,

@@ -16,12 +16,11 @@ const TRY_CLIENT = "try";
  * The prompt loads once its document has opened, with the editor's schema and the fold that
  * applies the steps, so the try's first page carries neither (the editor's prompt does the same).
  */
-const TryPrompt = lazy(async () => ({
-  default: await (() =>
-    import("@/components/tenant/exams/try/prompt").then(
-      (module) => module.TryPrompt
-    ))(),
-}));
+const TryPrompt = lazy(() =>
+  import("@/components/tenant/exams/try/prompt").then((module) => ({
+    default: module.TryPrompt,
+  }))
+);
 
 /**
  * One question as a student meets it: its number, its prompt, and its options, with the same

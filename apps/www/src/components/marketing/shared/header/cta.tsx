@@ -18,12 +18,22 @@ export function LogoCta() {
   return (
     <>
       <span className="contents" data-account="visitor">
-        <Link className="font-medium" params={{ locale }} to="/$locale">
+        <Link
+          activeOptions={EXACT_ACTIVE_OPTIONS}
+          className="font-medium"
+          params={{ locale }}
+          to="/$locale"
+        >
           Nakafa
         </Link>
       </span>
       <span className="contents" data-account="member">
-        <Link className="font-medium" params={{ locale }} to="/$locale/home">
+        <Link
+          activeOptions={EXACT_ACTIVE_OPTIONS}
+          className="font-medium"
+          params={{ locale }}
+          to="/$locale/home"
+        >
           Nakafa
         </Link>
       </span>

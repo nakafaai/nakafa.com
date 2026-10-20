@@ -25,7 +25,7 @@ type QuestionPreviewDocument =
   | QuestionAnswerPreviewDocument
   | QuestionPromptPreviewDocument;
 type ReadyPreviewManifest = typeof PreviewReadySchema.Type;
-/** Exact try-out route identity requested by one Next server boundary. */
+/** Exact try-out route identity requested by one server boundary. */
 const QuestionPreviewInputSchema = Schema.Struct({
   appLocale: AppLocaleSchema,
   publicPath: Schema.String,

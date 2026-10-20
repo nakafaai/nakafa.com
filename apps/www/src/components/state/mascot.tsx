@@ -7,10 +7,11 @@ import { type ComponentProps, lazy, Suspense } from "react";
  * picture for the page that needs it, and her place keeps its height until the
  * code arrives (`Screen`).
  */
-const LazyDeferredFigure = lazy(async () => ({
-  default: await (() =>
-    import("@/components/state/figure").then((module) => module.Figure))(),
-}));
+const LazyDeferredFigure = lazy(() =>
+  import("@/components/state/figure").then((module) => ({
+    default: module.Figure,
+  }))
+);
 
 export function DeferredFigure(
   props: ComponentProps<typeof LazyDeferredFigure>

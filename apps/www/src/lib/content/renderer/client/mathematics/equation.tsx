@@ -4,28 +4,25 @@ import { lazy } from "react";
 import { withHydrationBoundary } from "@/lib/content/renderer/client/boundary";
 
 export const Inequality = withHydrationBoundary(
-  lazy(async () => ({
-    default: await (() =>
-      import(
-        "@repo/design-system/components/contents/mathematics/inequality"
-      ).then(({ Inequality: Component }) => Component))(),
-  }))
+  lazy(() =>
+    import(
+      "@repo/design-system/components/contents/mathematics/inequality"
+    ).then((module) => ({ default: module.Inequality }))
+  )
 );
 
 export const LineEquation = withHydrationBoundary(
-  lazy(async () => ({
-    default: await (() =>
-      import(
-        "@repo/design-system/components/contents/mathematics/line/equation"
-      ).then(({ LineEquation: Component }) => Component))(),
-  }))
+  lazy(() =>
+    import(
+      "@repo/design-system/components/contents/mathematics/line/equation"
+    ).then((module) => ({ default: module.LineEquation }))
+  )
 );
 
 export const QuadraticEquationReadingRoomProblem = withHydrationBoundary(
-  lazy(async () => ({
-    default: await (() =>
-      import(
-        "@repo/design-system/components/contents/mathematics/quadratic/reading-room"
-      ).then(({ ReadingRoomProblem }) => ReadingRoomProblem))(),
-  }))
+  lazy(() =>
+    import(
+      "@repo/design-system/components/contents/mathematics/quadratic/reading-room"
+    ).then((module) => ({ default: module.ReadingRoomProblem }))
+  )
 );

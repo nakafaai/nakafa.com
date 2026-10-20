@@ -2,12 +2,22 @@ import { createRouter } from "@tanstack/react-router";
 import { routeRewrite } from "@/lib/routing/rewrite";
 import { routeTree } from "@/routeTree.gen";
 
+/**
+ * Keys a route's component by its params. A route keeps its component mounted
+ * while only its params change, so keying it makes each page start fresh and
+ * runs the unmount cleanups of its open menus and sheets on the move.
+ */
+function remountByParams({ params }: { readonly params: object }) {
+  return params;
+}
+
 export function getRouter() {
   return createRouter({
     defaultPendingMinMs: 300,
     defaultPendingMs: 200,
     defaultPreload: "intent",
     defaultPreloadStaleTime: 30_000,
+    defaultRemountDeps: remountByParams,
     rewrite: routeRewrite,
     routeTree,
     scrollRestoration: true,

@@ -27,9 +27,7 @@ import { ClientOnly } from "@tanstack/react-router";
 import { cn } from "cn";
 import {
   type ComponentProps,
-  lazy,
   type ReactNode,
-  Suspense,
   useLayoutEffect,
   useRef,
   useState,
@@ -231,28 +229,22 @@ function ThreeCanvasComponent({
   );
 }
 
-const LazyThreeCanvas = lazy(async () => ({
-  default: await (() => Promise.resolve(ThreeCanvasComponent))(),
-}));
-
-export function ThreeCanvas(props: ComponentProps<typeof LazyThreeCanvas>) {
+/**
+ * Mounts the canvas on the client only. The canvas lives in this module, so it
+ * needs no lazy boundary of its own; the spinner holds the place until mount.
+ */
+export function ThreeCanvas(
+  props: ComponentProps<typeof ThreeCanvasComponent>
+) {
   return (
-    <Suspense
+    <ClientOnly
       fallback={
         <div className="flex h-full w-full items-center justify-center">
           <Spinner aria-hidden="true" className="size-6" />
         </div>
       }
     >
-      <ClientOnly
-        fallback={
-          <div className="flex h-full w-full items-center justify-center">
-            <Spinner aria-hidden="true" className="size-6" />
-          </div>
-        }
-      >
-        <LazyThreeCanvas {...props} />
-      </ClientOnly>
-    </Suspense>
+      <ThreeCanvasComponent {...props} />
+    </ClientOnly>
   );
 }

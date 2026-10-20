@@ -30,12 +30,11 @@ import { Array as Arr } from "effect";
 import { lazy, type ReactNode, Suspense, useMemo, useState } from "react";
 
 /** The scene loads once the lab asks for it, and its frame holds the place meanwhile. */
-const ParabolicMovementStage = lazy(async () => ({
-  default: await (() =>
-    import(
-      "@repo/design-system/components/contents/physics/kinematics/parabolic-movement/stage"
-    ).then(({ ParabolicMovementStage }) => ParabolicMovementStage))(),
-}));
+const ParabolicMovementStage = lazy(() =>
+  import(
+    "@repo/design-system/components/contents/physics/kinematics/parabolic-movement/stage"
+  ).then((module) => ({ default: module.ParabolicMovementStage }))
+);
 
 interface ParabolicMovementLabProps {
   decimalSeparator?: DecimalSeparator;

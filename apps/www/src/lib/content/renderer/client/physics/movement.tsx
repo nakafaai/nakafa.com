@@ -4,19 +4,17 @@ import { lazy } from "react";
 import { withHydrationBoundary } from "@/lib/content/renderer/client/boundary";
 
 export const RelativeMovementLab = withHydrationBoundary(
-  lazy(async () => ({
-    default: await (() =>
-      import(
-        "@repo/design-system/components/contents/physics/kinematics/relative-movement/lab"
-      ).then(({ RelativeMovementLab }) => RelativeMovementLab))(),
-  }))
+  lazy(() =>
+    import(
+      "@repo/design-system/components/contents/physics/kinematics/relative-movement/lab"
+    ).then((module) => ({ default: module.RelativeMovementLab }))
+  )
 );
 
 export const VerticalMovementLab = withHydrationBoundary(
-  lazy(async () => ({
-    default: await (() =>
-      import(
-        "@repo/design-system/components/contents/physics/kinematics/vertical-movement/lab"
-      ).then(({ VerticalMovementLab }) => VerticalMovementLab))(),
-  }))
+  lazy(() =>
+    import(
+      "@repo/design-system/components/contents/physics/kinematics/vertical-movement/lab"
+    ).then((module) => ({ default: module.VerticalMovementLab }))
+  )
 );
