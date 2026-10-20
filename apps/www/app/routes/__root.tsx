@@ -62,20 +62,24 @@ export const Route = createRootRoute({
 /**
  * The document of every route, and of the error and not-found states, which the
  * router renders inside it. Its language and direction follow the locale param
- * of the route on screen, or the locale of the standalone not-found page, and
- * the default locale answers a path without one. The pre-paint scripts set the
- * theme, the pricing currency and the signed-in hint before the first frame, so
- * nothing changes after paint. The theme and the URL-state adapter are mounted
- * here once, for every route below.
+ * of the route on screen, then the language a school page renders in, then the
+ * locale of the standalone not-found page, and the default locale answers a path
+ * without one. The pre-paint scripts set the theme, the pricing currency and the
+ * signed-in hint before the first frame, so nothing changes after paint. The
+ * theme and the URL-state adapter are mounted here once, for every route below.
  */
 function RootDocument({ children }: { children: ReactNode }) {
   const params: Readonly<Record<string, string | undefined>> = useParams({
     strict: false,
   });
   const notFoundMatch = useMatch({ from: "/_not-found", shouldThrow: false });
+  const schoolMatch = useMatch({ from: "/school", shouldThrow: false });
   const locale = Option.getOrElse(
-    Option.orElse(decodeLocale(params.locale), () =>
-      readNotFoundPageLocale(notFoundMatch?.error)
+    Option.orElse(
+      Option.orElse(decodeLocale(params.locale), () =>
+        Option.fromNullishOr(schoolMatch?.loaderData?.locale)
+      ),
+      () => readNotFoundPageLocale(notFoundMatch?.error)
     ),
     () => DEFAULT_LOCALE
   );
