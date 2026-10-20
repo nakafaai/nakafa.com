@@ -63,6 +63,8 @@ function assertPrerenderedPages() {
 
 const verifyPrerenderedPages: Plugin = {
   apply: "build",
+  // TanStack's prerender is a post plugin too; this check must run after it.
+  enforce: "post",
   // After every environment is built and TanStack has prerendered the pages.
   buildApp: {
     order: "post",
