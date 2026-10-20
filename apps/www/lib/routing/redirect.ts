@@ -4,7 +4,7 @@ import {
   LOCALE_VARY,
 } from "@repo/internationalization/src/redirect";
 import { SITE_ORIGIN } from "@repo/seo/origin";
-import { Effect, Option } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 import { hasTryoutAttemptCapability } from "@/components/tryout/route/path";
 import { readLlmsMarkdownPathname } from "@/lib/llms/routes";
 import { readProfileRoot } from "@/lib/profile/route";
@@ -106,8 +106,11 @@ function readBareProfileRedirect(
   headers: Headers,
   isSchoolHost: boolean
 ): Option.Option<Response> {
-  const [, root = ""] = url.pathname.split("/");
-  if (isSchoolHost || Option.isNone(readProfileRoot(root))) {
+  const profile = Option.flatMap(
+    Arr.get(url.pathname.split("/"), 1),
+    readProfileRoot
+  );
+  if (isSchoolHost || Option.isNone(profile)) {
     return Option.none();
   }
   return Option.some(
