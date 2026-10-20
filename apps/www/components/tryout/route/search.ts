@@ -1,15 +1,42 @@
 import { LocaleSchema } from "@repo/internationalization/src/locale";
-import { Effect, Schema } from "effect";
+import { Effect, Schema, SchemaTransformation } from "effect";
 
 /**
- * The catalog query of a track page: its status filter, sort and direction. A
- * value that does not decode reads as none, so a stale link still opens the track.
+ * TanStack reads a query value that starts like JSON as its JSON value, so
+ * `view=1` arrives as the number 1 and `view=false` as false. The readers classify
+ * the text a learner wrote, so a parsed scalar goes back to that text.
  */
-const TryoutTrackSearchFields = Schema.Struct({
-  direction: Schema.optional(Schema.String),
-  sort: Schema.optional(Schema.String),
-  status: Schema.optional(Schema.String),
+const QueryScalarText = Schema.Union([
+  Schema.String,
+  Schema.Finite,
+  Schema.Boolean,
+  Schema.Null,
+]).pipe(
+  Schema.decodeTo(
+    Schema.String,
+    SchemaTransformation.transform({
+      decode: (value) => (typeof value === "string" ? value : String(value)),
+      encode: (text) => text,
+    })
+  )
+);
+
+/** One optional catalog query value of a track. A value that does not read as text reads as none. */
+const TrackQueryValue = Schema.optionalKey(
+  QueryScalarText.pipe(Schema.catchDecoding(() => Effect.succeedNone))
+);
+
+/**
+ * The catalog query of a track page: its status filter, sort and direction. Each
+ * value decodes on its own, so one malformed value keeps the other two.
+ */
+export const TryoutTrackSearch = Schema.Struct({
+  direction: TrackQueryValue,
+  sort: TrackQueryValue,
+  status: TrackQueryValue,
 });
+
+export type TryoutTrackSearch = typeof TryoutTrackSearch.Type;
 
 /** The keys of one track that its learner's set list is read for. */
 const TrackKeysSchema = Schema.Struct({
@@ -21,18 +48,19 @@ const TrackKeysSchema = Schema.Struct({
 /** The set list request of one track: its locale, its catalog query and its keys. */
 export const TrackListRequestSchema = Schema.Struct({
   locale: LocaleSchema,
-  search: TryoutTrackSearchFields,
+  search: TryoutTrackSearch,
   track: TrackKeysSchema,
 });
 
-export const TryoutTrackSearch = TryoutTrackSearchFields.pipe(
-  Schema.catchDecoding(() => Effect.succeedSome({}))
-);
-
-export type TryoutTrackSearch = typeof TryoutTrackSearch.Type;
-
-/** A query value that a learner's link may repeat, which the readers then refuse. */
-const QueryValue = Schema.Union([Schema.String, Schema.Array(Schema.String)]);
+/**
+ * One query value of an attempt page: its text, or the text of each repeated
+ * value. A value of any other shape reads as empty, which the readers refuse as
+ * invalid, so the page answers not found.
+ */
+const TryoutQueryValue = Schema.Union([
+  QueryScalarText,
+  Schema.Array(QueryScalarText),
+]).pipe(Schema.catchDecoding(() => Effect.succeedSome("")));
 
 /**
  * The address of an attempt page: its attempt capability and its player view.
@@ -40,8 +68,8 @@ const QueryValue = Schema.Union([Schema.String, Schema.Array(Schema.String)]);
  * the attempt readers decide it.
  */
 export const TryoutAttemptSearch = Schema.Struct({
-  attemptId: Schema.optional(QueryValue),
-  view: Schema.optional(QueryValue),
+  attemptId: Schema.optionalKey(TryoutQueryValue),
+  view: Schema.optionalKey(TryoutQueryValue),
 });
 
 export type TryoutAttemptSearch = typeof TryoutAttemptSearch.Type;
