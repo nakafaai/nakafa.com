@@ -31,99 +31,97 @@ import { serverHandler } from "@/lib/server/fn";
  * Reads one surah with its verses, pagination and sources on the server. A
  * route that does not name a surah of the catalog is a 404.
  */
-const readSurahPage = Effect.fn("www.content.quran.readSurah")(
-  function* (data: typeof SurahRouteInput.Type) {
-    const locale = getLocaleOrThrow(data.locale);
-    const parsedNumber = Option.fromNullishOr(
-      parseQuranSurahNumber(data.surah)
-    );
-    if (Option.isNone(parsedNumber)) {
-      return { kind: "notFound" as const };
-    }
-    const surahNumber = parsedNumber.value;
-    const catalog = yield* Effect.promise(() => getPublishedQuranCatalog());
-    const surahData = Arr.findFirst(
-      catalog.surahs,
-      ({ number }) => number === surahNumber
-    );
-    if (Option.isNone(surahData)) {
-      return { kind: "notFound" as const };
-    }
-    const [view, messages, seo] = yield* Effect.all(
-      [
-        Effect.promise(() => getPublishedQuranView(locale, surahNumber)),
-        Effect.promise(() => loadLocaleMessages(locale)),
-        generateSEOMetadata({ surah: surahData.value, type: "quran" }, locale),
-      ],
-      { concurrency: "unbounded" }
-    );
-    const t = createTranslator({ locale, messages, namespace: "Holy" });
-    const tCommon = createTranslator({ locale, messages, namespace: "Common" });
-    const title = getQuranSurahName(view.surah.name);
-    const meaning = selectQuranMeaning(view.surah.name.meaning, locale);
-    const verseItems = Arr.map(view.verses, (verse) => {
-      const label = t("verse-count", { count: verse.number.inSurah });
-      return { id: toAnchorSlug(label), label, verse };
-    });
-
-    const preBismillah = Option.match(Option.fromNullishOr(view.preBismillah), {
-      onNone: () => ({ kind: "hidden" as const }),
-      onSome: (value) => ({ kind: "shown" as const, value }),
-    });
-
-    return {
-      kind: "found" as const,
-      arabic: view.surah.name.arabic,
-      book: {
-        description: meaning.text,
-        name: title,
-        numberOfVerses: view.surah.numberOfVerses,
-        position: surahNumber,
-      },
-      breadcrumbs: createBreadcrumbItems(locale, [
-        { name: tCommon("home"), path: "" },
-        { name: t("quran"), path: "/quran" },
-        { name: title, path: `/quran/${data.surah}` },
-      ]),
-      cacheTags: readContentCacheTags(
-        [...LEARN_SHELL_CACHE_SCOPES, "quran"],
-        [view.snapshotId]
-      ),
-      copySourceUrl: getLlmsMarkdownPath({
-        locale,
-        publicPath: `quran/${data.surah}`,
-      }),
-      description: seo.description,
-      headings: Arr.map(verseItems, ({ id, label }) => ({
-        children: [],
-        href: `#${id}`,
-        label,
-      })),
-      labels: {
-        home: tCommon("home"),
-        more: tCommon("more"),
-        quran: t("quran"),
-        verse: t("verse"),
-      },
-      interpretationLabel: t("interpretation"),
-      locale,
-      meaning: { appLocale: meaning.appLocale, text: meaning.text },
-      pagination: getQuranPagination({
-        nextSurah: view.nextSurah,
-        prevSurah: view.previousSurah,
-      }),
-      preBismillah,
-      references: getQuranReferences(view.sources, view.tafsirAccess),
-      snapshotId: view.snapshotId,
-      surah: data.surah,
-      surahNumber,
-      tafsirAccess: view.tafsirAccess,
-      title,
-      translationNotesLabel: t("translation-notes"),
-      verseItems,
-    };
+const readSurahPage = Effect.fn("www.content.quran.readSurah")(function* (
+  data: typeof SurahRouteInput.Type
+) {
+  const locale = getLocaleOrThrow(data.locale);
+  const parsedNumber = Option.fromNullishOr(parseQuranSurahNumber(data.surah));
+  if (Option.isNone(parsedNumber)) {
+    return { kind: "notFound" as const };
   }
-);
+  const surahNumber = parsedNumber.value;
+  const catalog = yield* Effect.promise(() => getPublishedQuranCatalog());
+  const surahData = Arr.findFirst(
+    catalog.surahs,
+    ({ number }) => number === surahNumber
+  );
+  if (Option.isNone(surahData)) {
+    return { kind: "notFound" as const };
+  }
+  const [view, messages, seo] = yield* Effect.all(
+    [
+      Effect.promise(() => getPublishedQuranView(locale, surahNumber)),
+      Effect.promise(() => loadLocaleMessages(locale)),
+      generateSEOMetadata({ surah: surahData.value, type: "quran" }, locale),
+    ],
+    { concurrency: "unbounded" }
+  );
+  const t = createTranslator({ locale, messages, namespace: "Holy" });
+  const tCommon = createTranslator({ locale, messages, namespace: "Common" });
+  const title = getQuranSurahName(view.surah.name);
+  const meaning = selectQuranMeaning(view.surah.name.meaning, locale);
+  const verseItems = Arr.map(view.verses, (verse) => {
+    const label = t("verse-count", { count: verse.number.inSurah });
+    return { id: toAnchorSlug(label), label, verse };
+  });
+
+  const preBismillah = Option.match(Option.fromNullishOr(view.preBismillah), {
+    onNone: () => ({ kind: "hidden" as const }),
+    onSome: (value) => ({ kind: "shown" as const, value }),
+  });
+
+  return {
+    kind: "found" as const,
+    arabic: view.surah.name.arabic,
+    book: {
+      description: meaning.text,
+      name: title,
+      numberOfVerses: view.surah.numberOfVerses,
+      position: surahNumber,
+    },
+    breadcrumbs: createBreadcrumbItems(locale, [
+      { name: tCommon("home"), path: "" },
+      { name: t("quran"), path: "/quran" },
+      { name: title, path: `/quran/${data.surah}` },
+    ]),
+    cacheTags: readContentCacheTags(
+      [...LEARN_SHELL_CACHE_SCOPES, "quran"],
+      [view.snapshotId]
+    ),
+    copySourceUrl: getLlmsMarkdownPath({
+      locale,
+      publicPath: `quran/${data.surah}`,
+    }),
+    description: seo.description,
+    headings: Arr.map(verseItems, ({ id, label }) => ({
+      children: [],
+      href: `#${id}`,
+      label,
+    })),
+    labels: {
+      home: tCommon("home"),
+      more: tCommon("more"),
+      quran: t("quran"),
+      verse: t("verse"),
+    },
+    interpretationLabel: t("interpretation"),
+    locale,
+    meaning: { appLocale: meaning.appLocale, text: meaning.text },
+    pagination: getQuranPagination({
+      nextSurah: view.nextSurah,
+      prevSurah: view.previousSurah,
+    }),
+    preBismillah,
+    references: getQuranReferences(view.sources, view.tafsirAccess),
+    snapshotId: view.snapshotId,
+    surah: data.surah,
+    surahNumber,
+    tafsirAccess: view.tafsirAccess,
+    title,
+    translationNotesLabel: t("translation-notes"),
+    verseItems,
+  };
+});
 
 /** The surah route's server function answer: the read, stopped when the visitor leaves. */
 export const readSurahHandler = serverHandler(readSurahPage);
@@ -132,11 +130,11 @@ export const readSurahHandler = serverHandler(readSurahPage);
  * Recovers a stale interpretation snapshot. The reader that served it asks once,
  * and the recovery decides, so the answer never names another snapshot.
  */
-const recoverQuranSnapshotPage = Effect.fn(
-  "www.content.quran.recoverSnapshot"
-)(function* (data: { readonly snapshotId: string }) {
-  return yield* recoverStalePublishedQuranSnapshot(data.snapshotId);
-});
+const recoverQuranSnapshotPage = Effect.fn("www.content.quran.recoverSnapshot")(
+  function* (data: { readonly snapshotId: string }) {
+    return yield* recoverStalePublishedQuranSnapshot(data.snapshotId);
+  }
+);
 
 /** The recovery server function's answer, stopped when the visitor leaves. */
 export const recoverQuranSnapshotHandler = serverHandler(
