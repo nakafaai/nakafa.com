@@ -11,12 +11,10 @@ import type { LiveSessionState, LiveSessionStore } from "@/lib/auth/live";
 export const LiveSessionContext = createContext<LiveSessionStore | null>(null);
 
 /** Returns the live-session store and rejects a missing provider. */
-export function useLiveSessionStore() {
+function useLiveSessionStore() {
   const store = use(LiveSessionContext);
   if (!store) {
-    throw new TypeError(
-      "useLiveSession must be used within MarketingProviders"
-    );
+    throw new TypeError("useLiveSession must be used within PageProviders");
   }
   return store;
 }

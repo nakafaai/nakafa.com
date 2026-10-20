@@ -28,9 +28,11 @@ const IslandConsentEffects = lazy(() =>
 );
 
 /**
- * The consent account of a page: the page's one Convex client, and only
- * for a page whose consent is live. A page without a live notice reads no account.
- * `isAwaitingClient` is true while a signed-in session is still loading its client.
+ * The consent account of a page: the page's one Convex client, and only for a
+ * signed-in session on a page whose consent is live. A page without a live notice
+ * reads no account. `isAwaitingSession` is true while the page's session still
+ * loads: the page shows neither the visitor's nor the account's consent until it
+ * settles, so a learner never sees the visitor's prompt first.
  */
 function useConsentAccount() {
   const isLive = useStore(
@@ -38,21 +40,26 @@ function useConsentAccount() {
     (state) => state.mode === "live"
   );
   const client = useLiveSession((state) => state.client);
+  const sessionId = useLiveSession((state) => state.sessionId);
   const isSessionPending = useLiveSession((state) => state.isPending);
   return {
-    client: isLive ? client : Option.none<ConvexReactClient>(),
-    isAwaitingClient: isLive && Option.isNone(client) && isSessionPending,
+    client:
+      isLive && sessionId !== null ? client : Option.none<ConvexReactClient>(),
+    isAwaitingSession: isLive && isSessionPending,
   };
 }
 
 /** The prompt on a page: the visitor's, then the signed-in one on the page's client. */
 export function PageConsentControls() {
-  const { client } = useConsentAccount();
+  const { client, isAwaitingSession } = useConsentAccount();
+  if (isAwaitingSession) {
+    return null;
+  }
   if (Option.isNone(client)) {
     return <VisitorConsentControls />;
   }
   return (
-    <Suspense fallback={<VisitorConsentControls />}>
+    <Suspense fallback={null}>
       <IslandConsentControls client={client.value} />
     </Suspense>
   );
@@ -60,33 +67,36 @@ export function PageConsentControls() {
 
 /** The privacy item of a footer, which follows the same rule as the prompt. */
 export function PageConsentFooterItem() {
-  const { client } = useConsentAccount();
+  const { client, isAwaitingSession } = useConsentAccount();
+  if (isAwaitingSession) {
+    return null;
+  }
   if (Option.isNone(client)) {
     return <VisitorConsentFooterItem />;
   }
   return (
-    <Suspense fallback={<VisitorConsentFooterItem />}>
+    <Suspense fallback={null}>
       <IslandConsentFooterItem client={client.value} />
     </Suspense>
   );
 }
 
 /**
- * The consent effects of a page, which follow the same rule as the
- * prompt. A signed-in page starts its analytics with its account, so the visitor's
- * effects wait for the client instead of sending a first pageview without it.
+ * The consent effects of a page, which follow the same rule as the prompt. A
+ * signed-in page starts its analytics with its account, so the visitor's effects
+ * wait for the session and the client instead of sending a first pageview without them.
  */
 export function PageConsentEffects() {
-  const { client, isAwaitingClient } = useConsentAccount();
+  const { client, isAwaitingSession } = useConsentAccount();
+  if (isAwaitingSession) {
+    return null;
+  }
   if (Option.isSome(client)) {
     return (
-      <Suspense fallback={<VisitorConsentEffects />}>
+      <Suspense fallback={null}>
         <IslandConsentEffects client={client.value} />
       </Suspense>
     );
-  }
-  if (isAwaitingClient) {
-    return null;
   }
   return <VisitorConsentEffects />;
 }

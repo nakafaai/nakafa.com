@@ -5,7 +5,7 @@ import type { RecordContentViewArgs } from "@repo/backend/confect/contents/views
 import type { Locale } from "@repo/backend/confect/lib/validators/contents";
 import type { PropsWithChildren } from "react";
 import type { Locale as RouteLocale } from "use-intl";
-import { ConvexIsland } from "@/components/providers/island";
+import { SignedInIsland } from "@/components/providers/island";
 import { useRecordContentView } from "@/lib/content/views/record";
 import { isActiveLocale } from "@/lib/i18n/active";
 
@@ -56,8 +56,8 @@ export function ContentViewTracker({
 
 /**
  * Keeps the locale narrowed for the recorder. The recorder reads Convex, so it
- * mounts on the page's island: a visitor's page has no client and records nothing,
- * and the children render either way.
+ * mounts on the page's signed-in island: a visitor's page has no client, and a
+ * page without a signed-in session records nothing. The children render either way.
  */
 function ActiveContentViewTracker({
   contentId,
@@ -70,7 +70,7 @@ function ActiveContentViewTracker({
 }: PropsWithChildren<Omit<Props, "locale"> & { locale: Locale }>) {
   return (
     <>
-      <ConvexIsland>
+      <SignedInIsland>
         <ContentViewRecorder
           contentId={contentId}
           context={context}
@@ -79,7 +79,7 @@ function ActiveContentViewTracker({
           publicPath={publicPath}
           section={section}
         />
-      </ConvexIsland>
+      </SignedInIsland>
       {children}
     </>
   );

@@ -14,9 +14,7 @@ import { ConvexAuthContext } from "@/lib/auth/convex";
 export function LiveCredentials({ client }: { client: ConvexReactClient }) {
   const store = use(ConvexAuthContext);
   if (!store) {
-    throw new TypeError(
-      "LiveCredentials must be used within MarketingProviders"
-    );
+    throw new TypeError("LiveCredentials must be used within PageProviders");
   }
   return (
     <>

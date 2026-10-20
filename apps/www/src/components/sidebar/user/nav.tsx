@@ -3,7 +3,7 @@
 import { SidebarFooter } from "@repo/design-system/components/ui/sidebar-content";
 import { SidebarMenu } from "@repo/design-system/components/ui/sidebar-menu";
 import { lazyComponent } from "@repo/design-system/lib/lazy";
-import { ConvexIsland } from "@/components/providers/island";
+import { SignedInIsland } from "@/components/providers/island";
 import { AccountPricing } from "@/components/sidebar/menu/pricing";
 import { NavUserGuest } from "@/components/sidebar/user/guest/card";
 import { NavUserAccountSkeleton } from "@/components/sidebar/user/skeleton";
@@ -33,9 +33,9 @@ export function NavUser() {
       </SidebarFooter>
       <SidebarFooter className="border-t" data-account="member">
         <SidebarMenu>
-          <ConvexIsland>
+          <SignedInIsland>
             <NavUserMember />
-          </ConvexIsland>
+          </SignedInIsland>
         </SidebarMenu>
       </SidebarFooter>
     </>

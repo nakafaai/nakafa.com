@@ -1,12 +1,9 @@
 import { ConvexProvider } from "convex/react";
-import { Effect, Fiber, Option } from "effect";
-import { type ReactNode, useEffect } from "react";
-import {
-  useLiveSession,
-  useLiveSessionStore,
-} from "@/components/providers/live";
+import { Option } from "effect";
+import type { ReactNode } from "react";
+import { useLiveSession } from "@/components/providers/live";
 import { clientEnv } from "@/env.public";
-import { openLiveClient } from "@/lib/auth/live";
+import { readConvexClient } from "@/lib/convex/client";
 
 /**
  * Gives its children the page's one Convex client once the live session holds it,
@@ -29,30 +26,34 @@ export function ConvexIsland({
 }
 
 /**
- * An island whose reader's intent needs a client even as a visitor, such as an
- * opened search. Mounting it opens the page's client, once, and the children mount
- * when the client exists. A hinted page already has its client from the session.
+ * Gives its children Convex for a reader whose intent needs a client even as a
+ * visitor, such as an opened search. It provides the shared client and nothing
+ * else: the live session does not hold it, so no other island of the page mounts
+ * for that visitor.
  */
-export function ConvexIntentIsland({
+export function ConvexIntentIsland({ children }: { children: ReactNode }) {
+  return (
+    <ConvexProvider client={readConvexClient(clientEnv.VITE_CONVEX_URL)}>
+      {children}
+    </ConvexProvider>
+  );
+}
+
+/**
+ * Mounts the page's client for a signed-in session only. A stale signed-in hint
+ * can hold the client without a session, so a reader that shows the account waits
+ * for Convex to confirm one, and renders `fallback` until then.
+ */
+export function SignedInIsland({
   children,
   fallback = null,
 }: {
   children: ReactNode;
   fallback?: ReactNode;
 }) {
-  const store = useLiveSessionStore();
-
-  useEffect(() => {
-    const opening = Effect.runFork(
-      openLiveClient(store, {
-        convexUrl: clientEnv.VITE_CONVEX_URL,
-        cookie: document.cookie,
-      })
-    );
-    return () => {
-      Effect.runFork(Fiber.interrupt(opening));
-    };
-  }, [store]);
-
+  const isSignedIn = useLiveSession((state) => state.sessionId !== null);
+  if (!isSignedIn) {
+    return fallback;
+  }
   return <ConvexIsland fallback={fallback}>{children}</ConvexIsland>;
 }

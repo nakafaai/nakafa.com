@@ -4,7 +4,7 @@ import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { lazyComponent } from "@repo/design-system/lib/lazy";
 import { useState } from "react";
 import { CommentsSlugContext } from "@/components/comments/slug";
-import { ConvexIsland } from "@/components/providers/island";
+import { SignedInIsland } from "@/components/providers/island";
 
 const LazyComments = lazyComponent(
   () => import("@/components/comments").then((module) => module.Comments),
@@ -25,13 +25,13 @@ export function DeferredComments({ slug }: { slug: string }) {
 
   if (isNearViewport) {
     return (
-      <ConvexIsland
+      <SignedInIsland
         fallback={<div aria-hidden="true" className="h-px" id="comments" />}
       >
         <CommentsSlugContext value={slug}>
           <LazyComments />
         </CommentsSlugContext>
-      </ConvexIsland>
+      </SignedInIsland>
     );
   }
 
