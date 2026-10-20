@@ -1,7 +1,7 @@
 import "@tanstack/react-start/server-only";
 import { LocalPreviewManifestSchema } from "@nakafa/aksara-contracts/preview/spec";
+import { getRequest } from "@tanstack/react-start/server";
 import { Effect, Option, Result, Schema } from "effect";
-import { cache } from "react";
 import {
   decodePreviewEnvironment,
   hasPreviewConfig,
@@ -10,7 +10,7 @@ import {
 import { readPreviewEnvironment } from "@/lib/content/preview/environment";
 import { PreviewIntegrityError } from "@/lib/content/preview/errors";
 import {
-  fetchPreviewJsonForPrerender,
+  fetchPreviewJson,
   MAX_PREVIEW_MANIFEST_BYTES,
 } from "@/lib/content/preview/request";
 
@@ -20,11 +20,7 @@ const PreviewSnapshotSchema = Schema.Struct({
   manifest: LocalPreviewManifestSchema,
 });
 type PreviewSnapshot = typeof PreviewSnapshotSchema.Type;
-type PreviewSnapshotError =
-  | PreviewIntegrityError
-  | Result.Result.Failure<
-      Awaited<ReturnType<typeof fetchPreviewJsonForPrerender>>
-    >;
+
 /** Strictly decodes one current loopback manifest without a runtime. */
 function decodeManifest(input: unknown) {
   return Result.mapError(
@@ -34,49 +30,76 @@ function decodeManifest(input: unknown) {
     () => new PreviewIntegrityError({ check: "manifest" })
   );
 }
-/** Shares one authenticated snapshot across a single React server render. */
-const readSnapshotForRender = cache(
-  (): Promise<Result.Result<PreviewSnapshot, PreviewSnapshotError>> => {
+
+/** Reads the authenticated snapshot from the local provider: its configuration, then its manifest. */
+const loadPreviewSnapshot = Effect.fn("NakafaContent.loadPreviewSnapshot")(
+  function* () {
     const config = decodePreviewEnvironment(readPreviewEnvironment());
     if (Result.isFailure(config)) {
-      return Promise.resolve(Result.fail(config.failure));
+      return yield* config.failure;
     }
-    return fetchPreviewJsonForPrerender(
+    const input = yield* fetchPreviewJson(
       config.success,
       config.success.manifestPath,
       MAX_PREVIEW_MANIFEST_BYTES
-    ).then((result) =>
-      Result.flatMap(result, (input) =>
-        Result.map(decodeManifest(input), (manifest) => ({
-          config: config.success,
-          manifest,
-        }))
-      )
     );
+    const manifest = decodeManifest(input);
+    if (Result.isFailure(manifest)) {
+      return yield* manifest.failure;
+    }
+    return { config: config.success, manifest: manifest.success };
   }
 );
 
-/** Reads the same snapshot as the root revision listener in this render. */
+/** The memo of one request: an effect that loads the snapshot once and answers it to every later reader. */
+const createSnapshotMemo = () => Effect.cached(loadPreviewSnapshot());
+
+/** The type of the memo that one request holds. */
+type PreviewSnapshotMemo = Effect.Success<
+  ReturnType<typeof createSnapshotMemo>
+>;
+
+/** The snapshot memo of each request, keyed by its Request object. A WeakMap lets a memo leave with its request. */
+const snapshotMemos = new WeakMap<Request, PreviewSnapshotMemo>();
+
+/**
+ * The snapshot memo of one request. The first reader of a request creates it,
+ * and every later reader of that request awaits the same memo, so the manifest
+ * is fetched once per request however many readers run.
+ */
+const readSnapshotMemo = (request: Request) =>
+  Effect.suspend(() => {
+    const existing = snapshotMemos.get(request);
+    if (existing !== undefined) {
+      return Effect.succeed(existing);
+    }
+    return createSnapshotMemo().pipe(
+      Effect.tap((memo) => Effect.sync(() => snapshotMemos.set(request, memo)))
+    );
+  });
+
+/** Reads the snapshot of the current request, shared with every other reader of that request. */
+const readRequestSnapshot = Effect.fn("NakafaContent.readRequestSnapshot")(
+  function* () {
+    const memo = yield* readSnapshotMemo(getRequest());
+    return yield* memo;
+  }
+);
+
+/** Reads the snapshot that the root revision listener and the document of one request share. */
 export const readPreviewSnapshot = Effect.fn(
   "NakafaContent.readPreviewSnapshot"
 )(function* () {
   if (!hasPreviewConfig()) {
     return Option.none<PreviewSnapshot>();
   }
-  const snapshot = yield* Effect.promise(() => readSnapshotForRender());
-  if (Result.isFailure(snapshot)) {
-    return yield* snapshot.failure;
-  }
-  return Option.some(snapshot.success);
+  return Option.some(yield* readRequestSnapshot());
 });
-/**
- * Reads one manifest as a Promise for callers that cannot yield an Effect.
- */
-export function readPreviewManifestForPrerender() {
-  return readSnapshotForRender().then((snapshot) => {
-    if (Result.isFailure(snapshot)) {
-      return Promise.reject(snapshot.failure);
-    }
-    return snapshot.success.manifest;
-  });
-}
+
+/** Reads the current manifest of the local preview, which the refresh handler answers. */
+export const readPreviewManifest = Effect.fn(
+  "NakafaContent.readPreviewManifest"
+)(function* () {
+  const snapshot = yield* readRequestSnapshot();
+  return snapshot.manifest;
+});

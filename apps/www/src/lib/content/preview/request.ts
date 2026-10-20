@@ -136,16 +136,3 @@ export const fetchPreviewJson = Effect.fn("NakafaContent.fetchPreviewJson")(
   Effect.scoped,
   Effect.provide(PreviewHttpClient)
 );
-/**
- * Fetches one bounded result as a Promise for callers that cannot yield an
- * Effect.
- */
-export function fetchPreviewJsonForPrerender(
-  config: PreviewConfig,
-  path: string,
-  maxBytes: number
-) {
-  return Effect.runPromise(
-    fetchPreviewJson(config, path, maxBytes).pipe(Effect.result)
-  );
-}

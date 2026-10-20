@@ -1,5 +1,6 @@
 import { hasPreviewConfig } from "@/lib/content/preview/config";
-import { readPreviewManifestForPrerender } from "@/lib/content/preview/manifest";
+import { readPreviewManifest } from "@/lib/content/preview/manifest";
+import { runServerEffect } from "@/lib/server/fn";
 
 /**
  * The revision and status of the local preview that the root document starts
@@ -10,6 +11,6 @@ export async function readPreviewRefreshHandler() {
   if (!hasPreviewConfig()) {
     return;
   }
-  const manifest = await readPreviewManifestForPrerender();
+  const manifest = await runServerEffect(readPreviewManifest());
   return { revision: manifest.revision, status: manifest.status };
 }

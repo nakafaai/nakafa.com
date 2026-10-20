@@ -7,10 +7,9 @@ import {
   LocalPreviewManifestSchema,
 } from "@nakafa/aksara-contracts/preview/spec";
 import type { RendererDomain } from "@nakafa/aksara-contracts/renderer/domain";
-import { Data, Effect, Schema } from "effect";
-import { PreviewIntegrityError } from "@/lib/content/preview/errors";
+import { Effect, Schema } from "effect";
 import {
-  readPreviewManifestForPrerender,
+  readPreviewManifest,
   readPreviewSnapshot,
 } from "@/lib/content/preview/manifest";
 import {
@@ -19,30 +18,21 @@ import {
   matchesMaterialPreviewRoute,
   matchesPreviewPathname,
   matchesPreviewRoute,
-  parseMaterialPreviewStaticParams,
-  readArticlePreviewStaticParams,
-  readMaterialPreviewStaticParams,
-  readPagePreviewStaticParams,
-  readPreviewStaticLocaleParams,
 } from "@/lib/content/preview/route";
-import { testPagePendingManifest } from "@/test/content-page";
 import {
   makePendingManifest,
   previewConfig,
   previewDocument,
   previewRoute,
 } from "@/test/content-preview";
-import {
-  articlePendingManifest,
-  germanArticlePendingManifest,
-} from "@/test/preview-article";
+import { articlePendingManifest } from "@/test/preview-article";
 
 vi.mock("@/lib/content/preview/manifest", () => ({
-  readPreviewManifestForPrerender: vi.fn(),
+  readPreviewManifest: vi.fn(),
   readPreviewSnapshot: vi.fn(),
 }));
 
-const prerenderManifestMock = vi.mocked(readPreviewManifestForPrerender);
+const prerenderManifestMock = vi.mocked(readPreviewManifest);
 const snapshotMock = vi.mocked(readPreviewSnapshot);
 const materialInput = {
   params: {
@@ -52,25 +42,6 @@ const materialInput = {
     topic: "function-composition-inverse-function",
   },
 } satisfies MaterialPreviewRouteInput;
-
-class UnexpectedPreviewPromiseError extends Data.TaggedError(
-  "UnexpectedPreviewPromiseError"
-)<{ readonly cause: unknown }> {}
-
-/** Adapts the intentional Next prerender Promise seam without erasing failures. */
-function fromPreviewPromise<A>(evaluate: () => Promise<A>) {
-  return Effect.tryPromise({
-    catch: (cause) =>
-      Schema.is(PreviewIntegrityError)(cause)
-        ? cause
-        : new UnexpectedPreviewPromiseError({ cause }),
-    try: evaluate,
-  }).pipe(
-    Effect.catchTag("UnexpectedPreviewPromiseError", ({ cause }) =>
-      Effect.die(cause)
-    )
-  );
-}
 
 /** Builds a strictly decoded pending manifest for route-matching cases. */
 function pendingRoute({
@@ -120,7 +91,7 @@ function matchInternal(
 
 beforeEach(() => {
   prerenderManifestMock.mockReset();
-  prerenderManifestMock.mockResolvedValue(makePendingManifest());
+  prerenderManifestMock.mockReturnValue(Effect.succeed(makePendingManifest()));
   snapshotMock.mockReset();
   snapshotMock.mockReturnValue(
     Effect.succeedSome({
@@ -131,26 +102,6 @@ beforeEach(() => {
 });
 
 describe("local preview route matching", () => {
-  it.effect("prerenders only the selected preview locale", () =>
-    Effect.gen(function* () {
-      expect(yield* fromPreviewPromise(readPreviewStaticLocaleParams)).toEqual([
-        { locale: "en" },
-      ]);
-
-      prerenderManifestMock.mockRejectedValueOnce(
-        new PreviewIntegrityError({ check: "manifest" })
-      );
-      expect(
-        yield* fromPreviewPromise(readPreviewStaticLocaleParams).pipe(
-          Effect.flip
-        )
-      ).toMatchObject({
-        _tag: "PreviewIntegrityError",
-        check: "manifest",
-      });
-    })
-  );
-
   it.effect("leaves every route unchanged when preview is disabled", () =>
     Effect.gen(function* () {
       snapshotMock.mockReturnValueOnce(Effect.succeedNone);
@@ -197,208 +148,6 @@ describe("local preview route matching", () => {
       true
     );
   });
-
-  it.effect(
-    "projects the selected material route into nonempty static params",
-    () =>
-      Effect.gen(function* () {
-        expect(
-          yield* fromPreviewPromise(() =>
-            readMaterialPreviewStaticParams(AppLocaleSchema.make("en"))
-          )
-        ).toEqual([
-          {
-            lesson: ["function-concept"],
-            subject: "mathematics",
-            topic: "function-composition-inverse-function",
-          },
-        ]);
-      })
-  );
-
-  it.effect(
-    "projects the selected article route into localized static params",
-    () =>
-      Effect.gen(function* () {
-        prerenderManifestMock.mockResolvedValueOnce(
-          germanArticlePendingManifest
-        );
-
-        expect(
-          yield* fromPreviewPromise(() =>
-            readArticlePreviewStaticParams(AppLocaleSchema.make("de"))
-          )
-        ).toEqual([
-          {
-            category: "politik",
-            slug: "politische-dynastien-und-asiatische-werte",
-          },
-        ]);
-      })
-  );
-
-  it.effect(
-    "projects the selected Page route into catch-all static params",
-    () =>
-      Effect.gen(function* () {
-        prerenderManifestMock.mockResolvedValueOnce(testPagePendingManifest);
-
-        expect(
-          yield* fromPreviewPromise(() =>
-            readPagePreviewStaticParams(AppLocaleSchema.make("en"))
-          )
-        ).toEqual([{ page: ["terms-of-service"] }]);
-      })
-  );
-
-  it.effect("rejects malformed material preview paths", () =>
-    Effect.gen(function* () {
-      expect(
-        yield* parseMaterialPreviewStaticParams({
-          appLocale: AppLocaleSchema.make("en"),
-          publicPath: previewRoute.publicPath,
-        })
-      ).toEqual({
-        lesson: ["function-concept"],
-        subject: "mathematics",
-        topic: "function-composition-inverse-function",
-      });
-
-      expect(
-        yield* parseMaterialPreviewStaticParams({
-          appLocale: AppLocaleSchema.make("en"),
-          publicPath: "articles/mathematics/functions/concept",
-        }).pipe(Effect.flip)
-      ).toMatchObject({
-        _tag: "PreviewIntegrityError",
-        check: "projection",
-      });
-
-      expect(
-        yield* parseMaterialPreviewStaticParams({
-          appLocale: AppLocaleSchema.make("en"),
-          publicPath: "subjects/mathematics/functions",
-        }).pipe(Effect.flip)
-      ).toMatchObject({
-        _tag: "PreviewIntegrityError",
-        check: "projection",
-      });
-    })
-  );
-
-  it.effect(
-    "skips unrelated material routes and rejects invalid preview projections",
-    () =>
-      Effect.gen(function* () {
-        prerenderManifestMock.mockRejectedValueOnce(
-          new PreviewIntegrityError({ check: "manifest" })
-        );
-        expect(
-          yield* fromPreviewPromise(() =>
-            readMaterialPreviewStaticParams(AppLocaleSchema.make("en"))
-          ).pipe(Effect.flip)
-        ).toMatchObject({
-          _tag: "PreviewIntegrityError",
-          check: "manifest",
-        });
-
-        prerenderManifestMock.mockResolvedValueOnce(articlePendingManifest);
-        expect(
-          yield* fromPreviewPromise(() =>
-            readMaterialPreviewStaticParams(AppLocaleSchema.make("en"))
-          )
-        ).toEqual([]);
-        prerenderManifestMock.mockResolvedValueOnce(makePendingManifest());
-        expect(
-          yield* fromPreviewPromise(() =>
-            readMaterialPreviewStaticParams(AppLocaleSchema.make("id"))
-          ).pipe(Effect.flip)
-        ).toMatchObject({
-          _tag: "PreviewIntegrityError",
-          check: "projection",
-        });
-
-        prerenderManifestMock.mockResolvedValueOnce(
-          pendingRoute({ publicPath: "subjects/mathematics/functions" })
-        );
-        expect(
-          yield* fromPreviewPromise(() =>
-            readMaterialPreviewStaticParams(AppLocaleSchema.make("en"))
-          ).pipe(Effect.flip)
-        ).toMatchObject({
-          _tag: "PreviewIntegrityError",
-          check: "projection",
-        });
-      })
-  );
-
-  it.effect(
-    "skips unrelated article routes and rejects invalid preview projections",
-    () =>
-      Effect.gen(function* () {
-        prerenderManifestMock.mockRejectedValueOnce(
-          new PreviewIntegrityError({ check: "manifest" })
-        );
-        expect(
-          yield* fromPreviewPromise(() =>
-            readArticlePreviewStaticParams(AppLocaleSchema.make("en"))
-          ).pipe(Effect.flip)
-        ).toMatchObject({
-          _tag: "PreviewIntegrityError",
-          check: "manifest",
-        });
-
-        prerenderManifestMock.mockResolvedValueOnce(makePendingManifest());
-        expect(
-          yield* fromPreviewPromise(() =>
-            readArticlePreviewStaticParams(AppLocaleSchema.make("en"))
-          )
-        ).toEqual([]);
-        prerenderManifestMock.mockResolvedValueOnce(articlePendingManifest);
-        expect(
-          yield* fromPreviewPromise(() =>
-            readArticlePreviewStaticParams(AppLocaleSchema.make("id"))
-          ).pipe(Effect.flip)
-        ).toMatchObject({
-          _tag: "PreviewIntegrityError",
-          check: "projection",
-        });
-      })
-  );
-
-  it.effect(
-    "skips unrelated Page routes and rejects invalid preview projections",
-    () =>
-      Effect.gen(function* () {
-        prerenderManifestMock.mockRejectedValueOnce(
-          new PreviewIntegrityError({ check: "manifest" })
-        );
-        expect(
-          yield* fromPreviewPromise(() =>
-            readPagePreviewStaticParams(AppLocaleSchema.make("en"))
-          ).pipe(Effect.flip)
-        ).toMatchObject({
-          _tag: "PreviewIntegrityError",
-          check: "manifest",
-        });
-
-        prerenderManifestMock.mockResolvedValueOnce(makePendingManifest());
-        expect(
-          yield* fromPreviewPromise(() =>
-            readPagePreviewStaticParams(AppLocaleSchema.make("en"))
-          )
-        ).toEqual([]);
-        prerenderManifestMock.mockResolvedValueOnce(testPagePendingManifest);
-        expect(
-          yield* fromPreviewPromise(() =>
-            readPagePreviewStaticParams(AppLocaleSchema.make("id"))
-          ).pipe(Effect.flip)
-        ).toMatchObject({
-          _tag: "PreviewIntegrityError",
-          check: "projection",
-        });
-      })
-  );
 
   it("does not claim an article preview route", () => {
     expect(

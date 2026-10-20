@@ -1,5 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from "@effect/vitest";
+import { Effect } from "effect";
 import { readPreviewRefreshHandler } from "@/lib/content/preview/refresh.server";
 
 let previewConfigured = false;
@@ -9,8 +10,7 @@ vi.mock("@/lib/content/preview/config", () => ({
 }));
 
 vi.mock("@/lib/content/preview/manifest", () => ({
-  readPreviewManifestForPrerender: () =>
-    Promise.resolve({ revision: 7, status: "ready" }),
+  readPreviewManifest: () => Effect.succeed({ revision: 7, status: "ready" }),
 }));
 
 describe("readPreviewRefreshHandler", () => {
