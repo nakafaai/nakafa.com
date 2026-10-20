@@ -30,7 +30,7 @@ const SectionInput = Schema.Struct({
 });
 
 /** One set page for its learner: the catalog view, or the attempt bound to the URL. */
-export const readTryoutSetHandler = ({
+const readTryoutSetHandler = ({
   data,
 }: {
   readonly data: typeof SetInput.Type;
@@ -42,7 +42,7 @@ export const readTryoutSetFn = createServerFn({ method: "GET" })
   .handler(readTryoutSetHandler);
 
 /** One section page for its learner: the catalog view, or the attempt bound to the URL. */
-export const readTryoutSectionHandler = ({
+const readTryoutSectionHandler = ({
   data,
 }: {
   readonly data: typeof SectionInput.Type;

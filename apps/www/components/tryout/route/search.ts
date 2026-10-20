@@ -1,13 +1,28 @@
+import { LocaleSchema } from "@repo/internationalization/src/locale";
 import { Effect, Schema } from "effect";
 
 /**
  * The catalog query of a track page: its status filter, sort and direction. A
  * value that does not decode reads as none, so a stale link still opens the track.
  */
-export const TryoutTrackSearchFields = Schema.Struct({
+const TryoutTrackSearchFields = Schema.Struct({
   direction: Schema.optional(Schema.String),
   sort: Schema.optional(Schema.String),
   status: Schema.optional(Schema.String),
+});
+
+/** The keys of one track that its learner's set list is read for. */
+const TrackKeysSchema = Schema.Struct({
+  countryKey: Schema.String,
+  examKey: Schema.String,
+  trackKey: Schema.String,
+});
+
+/** The set list request of one track: its locale, its catalog query and its keys. */
+export const TrackListRequestSchema = Schema.Struct({
+  locale: LocaleSchema,
+  search: TryoutTrackSearchFields,
+  track: TrackKeysSchema,
 });
 
 export const TryoutTrackSearch = TryoutTrackSearchFields.pipe(

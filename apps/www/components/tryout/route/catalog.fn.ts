@@ -1,7 +1,6 @@
-import type { Ref } from "@confect/core";
-import type tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { LocaleSchema } from "@repo/internationalization/src/locale";
 import { createServerFn } from "@tanstack/react-start";
+import type { Effect } from "effect";
 import { Schema } from "effect";
 import {
   readTryoutCountryRoute,
@@ -10,7 +9,7 @@ import {
   readTryoutTrackRoute,
   readTryoutTrackSetList,
 } from "@/components/tryout/route/catalog.server";
-import { TryoutTrackSearchFields } from "@/components/tryout/route/search";
+import { TrackListRequestSchema } from "@/components/tryout/route/search";
 import { runServerEffect } from "@/lib/server/fn";
 
 /** The locale of every catalog request, already decoded by the locale route. */
@@ -37,22 +36,8 @@ const TrackInput = Schema.Struct({
   track: Schema.String,
 });
 
-/** The keys of one track that the set list of the learner is read for. */
-const TrackKeysInput = Schema.Struct({
-  countryKey: Schema.String,
-  examKey: Schema.String,
-  trackKey: Schema.String,
-});
-
-/** The set list request: one track's keys, the locale and the catalog query. */
-const TrackListInput = Schema.Struct({
-  locale: LocaleSchema,
-  search: TryoutTrackSearchFields,
-  track: TrackKeysInput,
-});
-
 /** The hub page of one locale. */
-export const readTryoutHubHandler = ({
+const readTryoutHubHandler = ({
   data,
 }: {
   readonly data: typeof LocaleInput.Type;
@@ -64,7 +49,7 @@ export const readTryoutHubFn = createServerFn({ method: "GET" })
   .handler(readTryoutHubHandler);
 
 /** One country page, or the not-found decision when the catalog has none. */
-export const readTryoutCountryHandler = ({
+const readTryoutCountryHandler = ({
   data,
 }: {
   readonly data: typeof CountryInput.Type;
@@ -76,7 +61,7 @@ export const readTryoutCountryFn = createServerFn({ method: "GET" })
   .handler(readTryoutCountryHandler);
 
 /** One exam page, or the not-found decision when the catalog has none. */
-export const readTryoutExamHandler = ({
+const readTryoutExamHandler = ({
   data,
 }: {
   readonly data: typeof ExamInput.Type;
@@ -88,7 +73,7 @@ export const readTryoutExamFn = createServerFn({ method: "GET" })
   .handler(readTryoutExamHandler);
 
 /** One track page, or the not-found decision when the catalog has none. */
-export const readTryoutTrackHandler = ({
+const readTryoutTrackHandler = ({
   data,
 }: {
   readonly data: typeof TrackInput.Type;
@@ -100,20 +85,19 @@ export const readTryoutTrackFn = createServerFn({ method: "GET" })
   .handler(readTryoutTrackHandler);
 
 /** The learner's set list of one track: its arguments and the page of rows. */
-interface TryoutTrackListResult {
-  readonly args: Ref.Args<typeof tryouts.queries.sets.list>;
-  readonly result: Ref.Returns<typeof tryouts.queries.sets.list>;
-}
+type TryoutTrackListResult = Effect.Success<
+  ReturnType<typeof readTryoutTrackSetList>
+>;
 
 /** The learner's set list of one track, read per request. */
-export const readTryoutTrackListHandler = ({
+const readTryoutTrackListHandler = ({
   data,
 }: {
-  readonly data: typeof TrackListInput.Type;
+  readonly data: typeof TrackListRequestSchema.Type;
 }): Promise<TryoutTrackListResult> =>
   runServerEffect(readTryoutTrackSetList(data));
 
 /** The learner's set list of one track, read on the server for a loader. */
 export const readTryoutTrackListFn = createServerFn({ method: "GET" })
-  .validator(Schema.toStandardSchemaV1(TrackListInput))
+  .validator(Schema.toStandardSchemaV1(TrackListRequestSchema))
   .handler(readTryoutTrackListHandler);

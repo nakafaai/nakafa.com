@@ -21,7 +21,7 @@ import {
 import { readCatalogQuery } from "@/components/tryout/catalog/table/query";
 import { TRYOUT_SET_PAGE_SIZE } from "@/components/tryout/catalog/table/types";
 import { getTryoutHref } from "@/components/tryout/route/path";
-import type { TryoutTrackSearch } from "@/components/tryout/route/search";
+import type { TrackListRequestSchema } from "@/components/tryout/route/search";
 import { readRequestToken } from "@/components/tryout/route/token.server";
 import { getAksaraTreeUrl } from "@/lib/content/repository";
 import { getAppSocialArtwork } from "@/lib/og/app";
@@ -30,7 +30,7 @@ import { getOgUrl } from "@/lib/seo/social";
 import { resolveTryoutExamArtwork } from "@/lib/tryout/artwork";
 
 /** The catalog kinds whose published route carries its own title and social image. */
-export type TryoutRouteKind = typeof tryoutMetadataArgsValidator.kind.Type;
+type TryoutRouteKind = typeof tryoutMetadataArgsValidator.kind.Type;
 
 /** The head facts of one published try-out route, as its page builds them. */
 const TryoutRouteHeadSchema = Schema.Struct({
@@ -41,7 +41,7 @@ const TryoutRouteHeadSchema = Schema.Struct({
   title: Schema.String,
 });
 
-export type TryoutRouteHead = typeof TryoutRouteHeadSchema.Type;
+type TryoutRouteHead = typeof TryoutRouteHeadSchema.Type;
 
 /** The catalog labels that one try-out page names, read in its locale. */
 const TryoutRouteLabelsSchema = Schema.Struct({
@@ -50,7 +50,7 @@ const TryoutRouteLabelsSchema = Schema.Struct({
   tryOut: Schema.String,
   tryOutShort: Schema.String,
 });
-export type TryoutRouteLabels = typeof TryoutRouteLabelsSchema.Type;
+type TryoutRouteLabels = typeof TryoutRouteLabelsSchema.Type;
 
 /**
  * Reads the head facts of one published try-out route. The catalog decides the
@@ -305,15 +305,7 @@ export const readTryoutTrackRoute = Effect.fn("www.tryout.route.readTrack")(
  */
 export const readTryoutTrackSetList = Effect.fn(
   "www.tryout.route.readTrackSetList"
-)(function* (input: {
-  readonly locale: Locale;
-  readonly search: TryoutTrackSearch;
-  readonly track: {
-    readonly countryKey: string;
-    readonly examKey: string;
-    readonly trackKey: string;
-  };
-}) {
+)(function* (input: typeof TrackListRequestSchema.Type) {
   const token = yield* readRequestToken();
   const selection = readCatalogQuery(input.search);
   const args = {

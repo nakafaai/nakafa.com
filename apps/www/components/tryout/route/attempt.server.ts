@@ -1,5 +1,6 @@
 import "@tanstack/react-start/server-only";
 
+import { LocaleSchema } from "@repo/internationalization/src/locale";
 import { readServerTranslator } from "@repo/internationalization/src/translator";
 import { Clock, Effect, Option, Schema } from "effect";
 import {
@@ -39,7 +40,7 @@ import { getOgUrl } from "@/lib/seo/social";
  * bodies. A loader cannot return those bodies, so the page stops here until the
  * renderer's body contract exists.
  */
-export class TryoutAttemptContentPending extends Schema.TaggedError<TryoutAttemptContentPending>()(
+class TryoutAttemptContentPending extends Schema.TaggedError<TryoutAttemptContentPending>()(
   "TryoutAttemptContentPending",
   { publicPath: Schema.String }
 ) {}
@@ -51,19 +52,11 @@ type SectionAttemptPage = Effect.Success<
   ReturnType<typeof readCurrentTryoutSection>
 >;
 
-/** The address of a try-out page: its attempt capability and its player view. */
-interface AddressIntent {
-  readonly attemptId: string | undefined;
-  readonly view: PlayerModeParam;
-}
-
 /**
  * Reads the attempt capability and the player view of one address. Either one
  * being invalid makes the page not found, as the reference answers it.
  */
-function readAddressIntent(
-  search: TryoutRouteSearchParams
-): Option.Option<AddressIntent> {
+function readAddressIntent(search: TryoutRouteSearchParams) {
   const capability = readTryoutRouteAttemptCapability(search);
   const view = readPlayerModeParam(search);
   if (capability.kind === "invalid" || view.kind === "invalid") {
@@ -162,14 +155,16 @@ export const readTryoutSetRoute = Effect.fn("www.tryout.route.readSet")(
     const setPath = getTryoutHref(route).slice(1);
     const token = yield* readRequestToken();
     if (intent.value.attemptId !== undefined) {
-      return yield* readRetainedSetRoute({
-        attemptId: intent.value.attemptId,
-        locale,
-        publicPath: setPath,
-        route,
-        token,
-        view: intent.value.view,
-      });
+      return yield* readRetainedSetRoute(
+        {
+          attemptId: intent.value.attemptId,
+          locale,
+          publicPath: setPath,
+          route,
+          token,
+        },
+        intent.value.view
+      );
     }
     const preview = yield* Effect.promise(() =>
       readTryoutQuestionPreview(locale, setPath)
@@ -222,21 +217,29 @@ export const readTryoutSetRoute = Effect.fn("www.tryout.route.readSet")(
 );
 
 /** The set bound to one attempt URL, rendered when that attempt is the learner's own. */
+/** The coordinates of one set page. */
+const SetRouteSchema = Schema.Struct({
+  country: Schema.String,
+  exam: Schema.String,
+  locale: LocaleSchema,
+  set: Schema.String,
+  track: Schema.String,
+});
+
+/** A set URL bound to one attempt, with the request's learner token when there is one. */
+const RetainedSetRequestSchema = Schema.Struct({
+  attemptId: Schema.String,
+  locale: LocaleSchema,
+  publicPath: Schema.String,
+  route: SetRouteSchema,
+  token: Schema.UndefinedOr(Schema.String),
+});
+
 const readRetainedSetRoute = Effect.fn("www.tryout.route.readRetainedSet")(
-  function* (input: {
-    readonly attemptId: string;
-    readonly locale: ReturnType<typeof getLocaleOrThrow>;
-    readonly publicPath: string;
-    readonly route: {
-      readonly country: string;
-      readonly exam: string;
-      readonly locale: ReturnType<typeof getLocaleOrThrow>;
-      readonly set: string;
-      readonly track: string;
-    };
-    readonly token: string | undefined;
-    readonly view: PlayerModeParam;
-  }) {
+  function* (
+    input: typeof RetainedSetRequestSchema.Type,
+    view: PlayerModeParam
+  ) {
     if (input.token === undefined) {
       return {
         href: getTryoutAttemptAuthHref(
@@ -262,7 +265,7 @@ const readRetainedSetRoute = Effect.fn("www.tryout.route.readRetainedSet")(
       });
     }
     return {
-      binding: yield* readSetBinding(attempt, input.view),
+      binding: yield* readSetBinding(attempt, view),
       head: yield* readRetainedHead({
         description: attempt.page.set.description,
         locale: input.locale,
@@ -274,7 +277,7 @@ const readRetainedSetRoute = Effect.fn("www.tryout.route.readRetainedSet")(
       page: attempt.page,
       restartTarget: attempt.restartTarget,
       route: input.route,
-      view: input.view,
+      view,
     };
   }
 );
@@ -316,15 +319,17 @@ export const readTryoutSectionRoute = Effect.fn("www.tryout.route.readSection")(
     });
     const token = yield* readRequestToken();
     if (intent.value.attemptId !== undefined) {
-      return yield* readRetainedSectionRoute({
-        attemptId: intent.value.attemptId,
-        locale,
-        publicPath: sectionPath,
-        route,
-        setHref,
-        token,
-        view: intent.value.view,
-      });
+      return yield* readRetainedSectionRoute(
+        {
+          attemptId: intent.value.attemptId,
+          locale,
+          publicPath: sectionPath,
+          route,
+          setHref,
+          token,
+        },
+        intent.value.view
+      );
     }
     const preview = yield* Effect.promise(() =>
       readTryoutQuestionPreview(locale, sectionPath)
@@ -382,24 +387,32 @@ export const readTryoutSectionRoute = Effect.fn("www.tryout.route.readSection")(
 );
 
 /** The section bound to one attempt URL, rendered when that attempt is the learner's own. */
+/** The coordinates of one section page. */
+const SectionRouteSchema = Schema.Struct({
+  country: Schema.String,
+  exam: Schema.String,
+  locale: LocaleSchema,
+  section: Schema.String,
+  set: Schema.String,
+  track: Schema.String,
+});
+
+/** A section URL bound to one attempt, with the set page it returns to. */
+const RetainedSectionRequestSchema = Schema.Struct({
+  attemptId: Schema.String,
+  locale: LocaleSchema,
+  publicPath: Schema.String,
+  route: SectionRouteSchema,
+  setHref: Schema.String,
+  token: Schema.UndefinedOr(Schema.String),
+});
+
 const readRetainedSectionRoute = Effect.fn(
   "www.tryout.route.readRetainedSection"
-)(function* (input: {
-  readonly attemptId: string;
-  readonly locale: ReturnType<typeof getLocaleOrThrow>;
-  readonly publicPath: string;
-  readonly route: {
-    readonly country: string;
-    readonly exam: string;
-    readonly locale: ReturnType<typeof getLocaleOrThrow>;
-    readonly section: string;
-    readonly set: string;
-    readonly track: string;
-  };
-  readonly setHref: string;
-  readonly token: string | undefined;
-  readonly view: PlayerModeParam;
-}) {
+)(function* (
+  input: typeof RetainedSectionRequestSchema.Type,
+  view: PlayerModeParam
+) {
   if (input.token === undefined) {
     return {
       href: getTryoutAttemptAuthHref(
@@ -425,7 +438,7 @@ const readRetainedSectionRoute = Effect.fn(
     });
   }
   return {
-    binding: yield* readSectionBinding(attempt, input.view),
+    binding: yield* readSectionBinding(attempt, view),
     head: yield* readRetainedHead({
       description: attempt.page.section.description,
       locale: input.locale,
@@ -440,6 +453,6 @@ const readRetainedSectionRoute = Effect.fn(
       attemptPage: attempt,
       publicHref: input.setHref,
     }),
-    view: input.view,
+    view,
   };
 });

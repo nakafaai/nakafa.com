@@ -2,8 +2,12 @@ import type { LocalizedPath } from "@repo/internationalization/src/alternates";
 import type { Locale } from "@repo/internationalization/src/locale";
 import { createSeoHead, toRouterHead } from "@/lib/seo/head";
 
-/** The facts of one try-out page that its head is built from. */
-export interface TryoutHeadInput {
+/**
+ * The head of one try-out page, with the title, description, canonical link,
+ * alternates, social card and JSON-LD of the head seam. The page's own title
+ * is its only part, so the head seam names the site once.
+ */
+export function createTryoutHead(input: {
   readonly canonicalPath: LocalizedPath;
   readonly description: string;
   readonly image: string;
@@ -12,14 +16,7 @@ export interface TryoutHeadInput {
   readonly jsonLd: readonly Readonly<Record<string, unknown>>[];
   readonly locale: Locale;
   readonly title: string;
-}
-
-/**
- * The head of one try-out page, with the title, description, canonical link,
- * alternates, social card and JSON-LD of the head seam. The page's own title
- * is its only part, so the head seam names the site once.
- */
-export function createTryoutHead(input: TryoutHeadInput) {
+}) {
   return toRouterHead(
     createSeoHead({
       canonicalPath: input.canonicalPath,
