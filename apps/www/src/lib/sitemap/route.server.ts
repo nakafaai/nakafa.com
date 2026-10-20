@@ -1,8 +1,8 @@
 import { SITE_ORIGIN } from "@repo/seo/origin";
-import { Array as Arr, Effect, Match, Option, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 import { captureServerExceptionSafely } from "@/lib/analytics/exception.server";
-import { getCachedSitemapDescriptors } from "@/lib/sitemap/catalog";
-import { getCachedSitemapEntries } from "@/lib/sitemap/entries";
+import { readSitemapPageDescriptors } from "@/lib/sitemap/catalog";
+import { getSitemapEntries } from "@/lib/sitemap/entries";
 import { getSitemapPageDescriptor } from "@/lib/sitemap/identity";
 import {
   buildSitemapIndexXml,
@@ -32,9 +32,7 @@ function createNotFoundResponse() {
 /** Builds the sitemap index response from materialized page descriptors. */
 const buildSitemapIndexResponse = Effect.fn("www.sitemap.index.response")(
   function* () {
-    const descriptors = yield* Effect.tryPromise(() =>
-      getCachedSitemapDescriptors()
-    );
+    const descriptors = yield* readSitemapPageDescriptors();
     const urls = Arr.map(
       descriptors,
       (descriptor) => `${SITE_ORIGIN}/sitemap/${descriptor.id}.xml`
@@ -50,9 +48,7 @@ const buildSitemapIndexResponse = Effect.fn("www.sitemap.index.response")(
 export function serveSitemapIndex() {
   return Effect.runPromise(
     buildSitemapIndexResponse().pipe(
-      Effect.catch((error) =>
-        reportSitemapFailure("sitemap-index", error.cause)
-      )
+      Effect.catch((error) => reportSitemapFailure("sitemap-index", error))
     )
   );
 }
@@ -77,23 +73,21 @@ function parseSitemapPageId(segment: string): Option.Option<string> {
  */
 const buildSitemapPageResponse = Effect.fn("www.sitemap.page.response")(
   function* (pageId: string) {
-    const descriptors = yield* Effect.tryPromise(() =>
-      getCachedSitemapDescriptors()
-    );
+    const descriptors = yield* readSitemapPageDescriptors();
     if (!Arr.some(descriptors, ({ id }) => id === pageId)) {
       return createNotFoundResponse();
     }
-    const page = yield* Effect.tryPromise(() =>
-      getCachedSitemapEntries({ pageId })
+    return yield* getSitemapEntries({ pageId }).pipe(
+      Effect.map(
+        (entries) =>
+          new Response(buildSitemapUrlSetXml(entries), {
+            headers: sitemapXmlHeaders,
+          })
+      ),
+      Effect.catchTag("SitemapPageNotFoundError", () =>
+        Effect.succeed(createNotFoundResponse())
+      )
     );
-
-    return Match.valueTags(page, {
-      Found: ({ entries }) =>
-        new Response(buildSitemapUrlSetXml(entries), {
-          headers: sitemapXmlHeaders,
-        }),
-      Missing: createNotFoundResponse,
-    });
   }
 );
 
@@ -113,7 +107,7 @@ export function serveSitemapPage({
 
   return Effect.runPromise(
     buildSitemapPageResponse(pageId.value).pipe(
-      Effect.catch((error) => reportSitemapFailure("sitemap-page", error.cause))
+      Effect.catch((error) => reportSitemapFailure("sitemap-page", error))
     )
   );
 }

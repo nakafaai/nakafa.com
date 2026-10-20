@@ -2,10 +2,7 @@
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Effect, Schema } from "effect";
-import {
-  getCachedSitemapDescriptors,
-  readSitemapPageDescriptors,
-} from "@/lib/sitemap/catalog";
+import { readSitemapPageDescriptors } from "@/lib/sitemap/catalog";
 
 class MissingSignedMaterialInventory extends Schema.TaggedError<MissingSignedMaterialInventory>()(
   "MissingSignedMaterialInventory",
@@ -349,33 +346,42 @@ describe("sitemap page catalog", () => {
     })
   );
 
-  it("shares the cached index inside the sitemap origin cache", async () => {
-    const descriptors = await getCachedSitemapDescriptors();
+  it.effect("reads the sitemap index", () =>
+    Effect.gen(function* () {
+      const descriptors = yield* readSitemapPageDescriptors();
 
-    expect(descriptors).toContainEqual({ id: "base" });
-  });
+      expect(descriptors).toContainEqual({ id: "base" });
+    })
+  );
 
-  it("checks the release with Convex on every fill and never caches a stale index", async () => {
-    // The stored pointer still names the previous release while Convex names
-    // the next one, so a hit for the previous index must not be possible: the
-    // fill rebuilds the index and its final check fails.
-    activeMocks.loadActiveContentIdentity.mockReturnValue(
-      Effect.succeed({ releaseId: "release-next" })
-    );
+  it.effect(
+    "checks the release with Convex on every read and never keeps a stale index",
+    () =>
+      Effect.gen(function* () {
+        // The stored pointer still names the previous release while Convex names
+        // the next one, so the read rebuilds the index and its final check fails.
+        activeMocks.loadActiveContentIdentity.mockReturnValue(
+          Effect.succeed({ releaseId: "release-next" })
+        );
 
-    await expect(getCachedSitemapDescriptors()).rejects.toMatchObject({
-      _tag: "PublishedReleaseMismatchError",
-      actualReleaseId: "release-next",
-      expectedReleaseId: "release-material",
-    });
-    expect(activeMocks.expireActiveContentIdentity).toHaveBeenCalledOnce();
-  });
+        const error = yield* Effect.flip(readSitemapPageDescriptors());
 
-  it("derives the index from the stored answers on every fill", async () => {
-    await getCachedSitemapDescriptors();
-    await getCachedSitemapDescriptors();
+        expect(error).toMatchObject({
+          _tag: "PublishedReleaseMismatchError",
+          actualReleaseId: "release-next",
+          expectedReleaseId: "release-material",
+        });
+        expect(activeMocks.expireActiveContentIdentity).toHaveBeenCalledOnce();
+      })
+  );
 
-    expect(pageMocks.readPublishedPageCatalog).toHaveBeenCalledTimes(2);
-    expect(activeMocks.loadActiveContentIdentity).toHaveBeenCalledTimes(2);
-  });
+  it.effect("derives the index from the stored answers on every read", () =>
+    Effect.gen(function* () {
+      yield* readSitemapPageDescriptors();
+      yield* readSitemapPageDescriptors();
+
+      expect(pageMocks.readPublishedPageCatalog).toHaveBeenCalledTimes(2);
+      expect(activeMocks.loadActiveContentIdentity).toHaveBeenCalledTimes(2);
+    })
+  );
 });

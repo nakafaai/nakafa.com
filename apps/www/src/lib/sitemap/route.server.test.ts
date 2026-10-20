@@ -1,24 +1,30 @@
 // @vitest-environment node
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
+import { SitemapPageNotFoundError } from "@/lib/sitemap/identity";
 import {
   serveSitemapIndex,
   serveSitemapPage,
 } from "@/lib/sitemap/route.server";
 
-const getCachedSitemapDescriptorsMock = vi.hoisted(() => vi.fn());
-const getCachedSitemapEntriesMock = vi.hoisted(() => vi.fn());
+class SitemapStoreUnavailable extends Schema.TaggedError<SitemapStoreUnavailable>()(
+  "SitemapStoreUnavailable",
+  { message: Schema.String }
+) {}
+
+const readSitemapPageDescriptorsMock = vi.hoisted(() => vi.fn());
+const getSitemapEntriesMock = vi.hoisted(() => vi.fn());
 const captureMock = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/sitemap/catalog", () => ({
   /** Controls the sitemap pages that the release lists. */
-  getCachedSitemapDescriptors: getCachedSitemapDescriptorsMock,
+  readSitemapPageDescriptors: readSitemapPageDescriptorsMock,
 }));
 
 vi.mock("@/lib/sitemap/entries", () => ({
   /** Controls the entries of one sitemap page. */
-  getCachedSitemapEntries: getCachedSitemapEntriesMock,
+  getSitemapEntries: getSitemapEntriesMock,
 }));
 
 vi.mock("@/lib/analytics/exception.server", () => ({
@@ -29,11 +35,14 @@ vi.mock("@/lib/analytics/exception.server", () => ({
 const descriptors = [{ id: "article_en_p0", kind: "article", locale: "en" }];
 
 beforeEach(() => {
-  getCachedSitemapDescriptorsMock.mockReset().mockResolvedValue(descriptors);
-  getCachedSitemapEntriesMock.mockReset().mockResolvedValue({
-    _tag: "Found",
-    entries: [{ url: "https://nakafa.com/en/articles/belajar" }],
-  });
+  readSitemapPageDescriptorsMock
+    .mockReset()
+    .mockReturnValue(Effect.succeed(descriptors));
+  getSitemapEntriesMock
+    .mockReset()
+    .mockReturnValue(
+      Effect.succeed([{ url: "https://nakafa.com/en/articles/belajar" }])
+    );
   captureMock.mockReset().mockReturnValue(Effect.void);
 });
 
@@ -51,7 +60,9 @@ describe("sitemap index route", () => {
   });
 
   it("reports a failed index and answers 500 without details", async () => {
-    getCachedSitemapDescriptorsMock.mockRejectedValue(new Error("convex"));
+    readSitemapPageDescriptorsMock.mockReturnValue(
+      Effect.fail(new SitemapStoreUnavailable({ message: "convex" }))
+    );
 
     const response = await serveSitemapIndex();
 
@@ -76,7 +87,7 @@ describe("sitemap page route", () => {
     await expect(response.text()).resolves.toContain(
       "https://nakafa.com/en/articles/belajar"
     );
-    expect(getCachedSitemapEntriesMock).toHaveBeenCalledWith({
+    expect(getSitemapEntriesMock).toHaveBeenCalledWith({
       pageId: "article_en_p0",
     });
   });
@@ -87,7 +98,7 @@ describe("sitemap page route", () => {
 
     expect(plain.status).toBe(404);
     expect(unnamed.status).toBe(404);
-    expect(getCachedSitemapDescriptorsMock).not.toHaveBeenCalled();
+    expect(readSitemapPageDescriptorsMock).not.toHaveBeenCalled();
   });
 
   it("answers 404 without a Convex read for an unknown page", async () => {
@@ -97,22 +108,24 @@ describe("sitemap page route", () => {
 
     expect(response.status).toBe(404);
     await expect(response.text()).resolves.toBe("Not found");
-    expect(getCachedSitemapEntriesMock).not.toHaveBeenCalled();
+    expect(getSitemapEntriesMock).not.toHaveBeenCalled();
   });
 
   it("answers 404 for a valid page that the release does not list", async () => {
-    getCachedSitemapDescriptorsMock.mockResolvedValue([]);
+    readSitemapPageDescriptorsMock.mockReturnValue(Effect.succeed([]));
 
     const response = await serveSitemapPage({
       params: { id: "article_en_p0.xml" },
     });
 
     expect(response.status).toBe(404);
-    expect(getCachedSitemapEntriesMock).not.toHaveBeenCalled();
+    expect(getSitemapEntriesMock).not.toHaveBeenCalled();
   });
 
   it("answers 404 when the stored page is missing", async () => {
-    getCachedSitemapEntriesMock.mockResolvedValue({ _tag: "Missing" });
+    getSitemapEntriesMock.mockReturnValue(
+      Effect.fail(new SitemapPageNotFoundError({ pageId: "article_en_p0" }))
+    );
 
     const response = await serveSitemapPage({
       params: { id: "article_en_p0.xml" },
@@ -122,7 +135,9 @@ describe("sitemap page route", () => {
   });
 
   it("reports a failed page and answers 500 without details", async () => {
-    getCachedSitemapEntriesMock.mockRejectedValue(new Error("store"));
+    getSitemapEntriesMock.mockReturnValue(
+      Effect.fail(new SitemapStoreUnavailable({ message: "store" }))
+    );
 
     const response = await serveSitemapPage({
       params: { id: "article_en_p0.xml" },

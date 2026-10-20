@@ -1,11 +1,8 @@
 // @vitest-environment node
-import { assert, beforeEach, describe, expect, it } from "@effect/vitest";
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import type { getPathname } from "@repo/internationalization/src/navigation";
-import { Array as Arr, DateTime, Effect, HashSet } from "effect";
-import {
-  getCachedSitemapEntries,
-  getSitemapEntries,
-} from "@/lib/sitemap/entries";
+import { Array as Arr, Effect, HashSet } from "effect";
+import { getSitemapEntries } from "@/lib/sitemap/entries";
 import { SitemapPageNotFoundError } from "@/lib/sitemap/identity";
 
 const mockReadSitemapRoutePage = vi.hoisted(() => vi.fn());
@@ -282,80 +279,73 @@ describe("sitemap entries", () => {
     })
   );
 
-  it("shares base sitemap pages through the origin cache", async () => {
-    const page = await getCachedSitemapEntries({ pageId: "base" });
+  it.effect("reads base sitemap pages", () =>
+    Effect.gen(function* () {
+      const entries = yield* getSitemapEntries({ pageId: "base" });
 
-    assert(page._tag === "Found");
-    expect(page.entries.length).toBeGreaterThan(0);
-  });
+      expect(entries.length).toBeGreaterThan(0);
+    })
+  );
 
-  it("shares material partitions through the origin cache", async () => {
-    mockGetSitemapPageDescriptor.mockReturnValue({
-      id: "material_en_p0",
-      kind: "material",
-      locale: "en",
-      partition: 0,
-    });
+  it.effect("reads material partitions", () =>
+    Effect.gen(function* () {
+      mockGetSitemapPageDescriptor.mockReturnValue({
+        id: "material_en_p0",
+        kind: "material",
+        locale: "en",
+        partition: 0,
+      });
 
-    const page = await getCachedSitemapEntries({ pageId: "material_en_p0" });
+      const entries = yield* getSitemapEntries({ pageId: "material_en_p0" });
 
-    assert(page._tag === "Found");
-    expect(page.entries.length).toBeGreaterThan(0);
-  });
+      expect(entries.length).toBeGreaterThan(0);
+    })
+  );
 
-  it("tags unknown sitemap pages with only the shared sitemap tag", async () => {
-    mockGetSitemapPageDescriptor.mockReturnValue(null);
+  it.effect("reads unknown sitemap pages without a locale filter", () =>
+    Effect.gen(function* () {
+      mockGetSitemapPageDescriptor.mockReturnValue(null);
 
-    await getCachedSitemapEntries({ pageId: "unknown" });
-  });
+      yield* getSitemapEntries({ pageId: "unknown" });
+    })
+  );
 
-  it("caches a route's modification date as the text the route carries", async () => {
-    mockGetSitemapPageDescriptor.mockReturnValue({ id: "base" });
-    mockReadSitemapRoutePage.mockReturnValueOnce(
-      Effect.succeed({
-        routes: [
-          {
-            lastModified: "2024-01-02T00:00:00.000Z",
-            path: "/search",
-          },
-        ],
+  it.effect(
+    "keeps a route's modification date as the text the route carries",
+    () =>
+      Effect.gen(function* () {
+        mockGetSitemapPageDescriptor.mockReturnValue({ id: "base" });
+        mockReadSitemapRoutePage.mockReturnValueOnce(
+          Effect.succeed({
+            routes: [
+              {
+                lastModified: "2024-01-02T00:00:00.000Z",
+                path: "/search",
+              },
+            ],
+          })
+        );
+
+        const entries = yield* getSitemapEntries({ pageId: "base" });
+
+        expect(entries).toContainEqual({
+          lastModified: "2024-01-02T00:00:00.000Z",
+          url: "https://nakafa.com/en/search",
+        });
       })
-    );
+  );
 
-    const page = await getCachedSitemapEntries({ pageId: "base" });
+  it.effect("fails with the not-found error of a missing page", () =>
+    Effect.gen(function* () {
+      mockReadSitemapRoutePage.mockReturnValueOnce(
+        Effect.fail(new SitemapPageNotFoundError({ pageId: "material_en_p7" }))
+      );
 
-    assert(page._tag === "Found");
-    expect(page.entries).toContainEqual({
-      lastModified: "2024-01-02T00:00:00.000Z",
-      url: "https://nakafa.com/en/search",
-    });
-  });
+      const error = yield* Effect.flip(
+        getSitemapEntries({ pageId: "material_en_p7" })
+      );
 
-  it("fails the read when a route's date is not text, instead of caching it", async () => {
-    mockGetSitemapPageDescriptor.mockReturnValue({ id: "base" });
-    mockReadSitemapRoutePage.mockReturnValueOnce(
-      Effect.succeed({
-        routes: [
-          {
-            lastModified: DateTime.toDateUtc(
-              DateTime.makeUnsafe("2024-01-02T00:00:00.000Z")
-            ),
-            path: "/search",
-          },
-        ],
-      })
-    );
-
-    await expect(getCachedSitemapEntries({ pageId: "base" })).rejects.toThrow();
-  });
-
-  it("returns a missing page as data, because the cache boundary drops the error's class", async () => {
-    mockReadSitemapRoutePage.mockReturnValueOnce(
-      Effect.fail(new SitemapPageNotFoundError({ pageId: "material_en_p7" }))
-    );
-
-    const page = await getCachedSitemapEntries({ pageId: "material_en_p7" });
-
-    expect(page).toEqual({ _tag: "Missing" });
-  });
+      expect(error._tag).toBe("SitemapPageNotFoundError");
+    })
+  );
 });
