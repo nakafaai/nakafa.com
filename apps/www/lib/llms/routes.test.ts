@@ -2,6 +2,7 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Effect, Option } from "effect";
 import {
+  isLocalizedLlmsRoute,
   type LlmsProxyRouteDecision,
   type LlmsProxyRouteRequest,
   resolveLlmsProxyRoute,
@@ -31,7 +32,6 @@ describe("llms proxy route resolver", () => {
       assertRoute(
         {
           acceptHeader: Option.none(),
-          isRscRequest: false,
           method: "GET",
           pathname: "/en/subjects/mathematics/integral",
         },
@@ -46,7 +46,6 @@ describe("llms proxy route resolver", () => {
     assertRoute(
       {
         acceptHeader: Option.some("text/markdown"),
-        isRscRequest: false,
         method: "POST",
         pathname: "/en/subjects/mathematics/integral",
       },
@@ -63,7 +62,6 @@ describe("llms proxy route resolver", () => {
       assertRoute(
         {
           acceptHeader: Option.some("text/markdown, text/plain;q=0.8"),
-          isRscRequest: false,
           method: "GET",
           pathname: "/en/subjects/mathematics/integral/area",
         },
@@ -86,7 +84,6 @@ describe("llms proxy route resolver", () => {
       assertRoute(
         {
           acceptHeader: Option.some(`text/markdown; charset=${charset}`),
-          isRscRequest: false,
           method: "GET",
           pathname: "/en/subjects/mathematics/integral/area",
         },
@@ -109,7 +106,6 @@ describe("llms proxy route resolver", () => {
       return assertRoute(
         {
           acceptHeader: Option.some(acceptHeader),
-          isRscRequest: false,
           method: "GET",
           pathname: `/id/artikel/tidak-ada${markdownExtension}`,
         },
@@ -132,7 +128,6 @@ describe("llms proxy route resolver", () => {
     assertRoute(
       {
         acceptHeader: Option.some("text/markdown"),
-        isRscRequest: false,
         method: "GET",
         pathname: "/fr/articles/example",
       },
@@ -146,7 +141,6 @@ describe("llms proxy route resolver", () => {
     assertRoute(
       {
         acceptHeader: Option.some("text/markdown"),
-        isRscRequest: false,
         method: "GET",
         pathname: "/en",
       },
@@ -169,7 +163,6 @@ describe("llms proxy route resolver", () => {
       assertRoute(
         {
           acceptHeader: Option.some("text/markdown"),
-          isRscRequest: false,
           method: "GET",
           pathname: "/",
         },
@@ -196,7 +189,6 @@ describe("llms proxy route resolver", () => {
     assertRoute(
       {
         acceptHeader: Option.some(acceptHeader),
-        isRscRequest: false,
         method: "GET",
         pathname: "/en/terms-of-service",
       },
@@ -215,7 +207,6 @@ describe("llms proxy route resolver", () => {
     assertRoute(
       {
         acceptHeader: Option.some(acceptHeader),
-        isRscRequest: false,
         method: "GET",
         pathname: "/en/terms-of-service",
       },
@@ -225,26 +216,10 @@ describe("llms proxy route resolver", () => {
     )
   );
 
-  it.effect("delegates an actual Next.js RSC request", () =>
-    assertRoute(
-      {
-        acceptHeader: Option.some("text/x-component"),
-        isRscRequest: true,
-        method: "GET",
-        pathname: "/en/quran/1",
-      },
-      (decision) => {
-        expect(decision).toEqual({ kind: "delegate" });
-        expect(mockHasLlmsMarkdownSource).not.toHaveBeenCalled();
-      }
-    )
-  );
-
   it.effect("does not misclassify another component-like media type", () =>
     assertRoute(
       {
         acceptHeader: Option.some("text/x-component-other"),
-        isRscRequest: false,
         method: "GET",
         pathname: "/en/quran/1",
       },
@@ -260,7 +235,6 @@ describe("llms proxy route resolver", () => {
         acceptHeader: Option.some(
           "text/x-component;q=0, text/markdown; charset=utf-8"
         ),
-        isRscRequest: false,
         method: "GET",
         pathname: "/en/quran/1",
       },
@@ -276,7 +250,6 @@ describe("llms proxy route resolver", () => {
     return assertRoute(
       {
         acceptHeader: Option.some("text/*"),
-        isRscRequest: false,
         method: "GET",
         pathname: "/en/search",
       },
@@ -295,7 +268,6 @@ describe("llms proxy route resolver", () => {
       return assertRoute(
         {
           acceptHeader: Option.some("text/*;q=1, text/html;q=0.8"),
-          isRscRequest: false,
           method: "GET",
           pathname: "/en/search",
         },
@@ -313,7 +285,6 @@ describe("llms proxy route resolver", () => {
         acceptHeader: Option.some(
           "text/x-component, text/markdown;q=0.8, text/html;q=0.7"
         ),
-        isRscRequest: false,
         method: "GET",
         pathname: "/en/quran/1",
       },
@@ -333,7 +304,6 @@ describe("llms proxy route resolver", () => {
           acceptHeader: Option.some(
             "text/markdown;q=1, text/x-component;q=0.8, text/html;q=0.7"
           ),
-          isRscRequest: false,
           method: "GET",
           pathname: "/en/search",
         },
@@ -353,7 +323,6 @@ describe("llms proxy route resolver", () => {
       return assertRoute(
         {
           acceptHeader: Option.some("text/markdown"),
-          isRscRequest: false,
           method: "GET",
           pathname: "/en/search",
         },
@@ -364,4 +333,13 @@ describe("llms proxy route resolver", () => {
       );
     }
   );
+});
+
+describe("localized llms route classification", () => {
+  it("classifies only locale-prefixed paths and the root as documents", () => {
+    expect(isLocalizedLlmsRoute("/")).toBe(true);
+    expect(isLocalizedLlmsRoute("/en/articles/x.md")).toBe(true);
+    expect(isLocalizedLlmsRoute("/api/weather")).toBe(false);
+    expect(isLocalizedLlmsRoute("/_nakafa/e")).toBe(false);
+  });
 });
