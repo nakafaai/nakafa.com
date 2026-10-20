@@ -18,12 +18,12 @@ import { readNotFoundLocaleFn } from "@/lib/routing/not-found.fn";
  * engine indexes it.
  */
 export const Route = createFileRoute("/_not-found")({
-  head: () => ({
-    meta: [{ content: "noindex,nofollow", name: "robots" }],
-  }),
   loader: async () => {
     throw notFound({ data: { locale: await readNotFoundLocaleFn() } });
   },
+  head: () => ({
+    meta: [{ content: "noindex,nofollow", name: "robots" }],
+  }),
   notFoundComponent: StandaloneNotFound,
 });
 
