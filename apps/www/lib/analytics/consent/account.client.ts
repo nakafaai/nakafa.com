@@ -1,9 +1,11 @@
 "use client";
 
-import { QueryResult, useMutation, useQuery } from "@confect/react";
+import { useMutation, useQuery } from "@confect/react";
 import { ANALYTICS_CONSENT_CATEGORY } from "@repo/analytics/consent";
 import consents from "@repo/backend/confect/_generated/refs/consents";
+import { useStore } from "zustand";
 import { useConvexAuth } from "@/components/providers/convex";
+import { readAccountConsentQuery } from "@/lib/analytics/consent/account";
 import {
   type AnalyticsConsentContextValue,
   useAnalyticsConsentStore,
@@ -16,19 +18,6 @@ import {
 import type { AnalyticsConsentStore } from "@/lib/analytics/consent/store";
 import { useViewer } from "@/lib/identity/client";
 
-/** Names the account's consent query for the model: its decision, its failure, or nothing yet. */
-function readAccountQuery(
-  query: ReturnType<typeof useQuery<typeof consents.current.get>>
-): AnalyticsConsentAccount["accountQuery"] {
-  if (QueryResult.isSuccess(query)) {
-    return { decision: query.value.decision, status: "success" };
-  }
-  if (QueryResult.isFailure(query)) {
-    return { status: "failure" };
-  }
-  return { status: "pending" };
-}
-
 /**
  * Reads the signed-in account's consent facts with Convex hooks. Only a page with
  * a Convex client calls it, so a visitor's page never reads the account.
@@ -36,24 +25,21 @@ function readAccountQuery(
 function useAnalyticsConsentAccount(
   store: AnalyticsConsentStore
 ): AnalyticsConsentAccount {
+  const isLive = useStore(store, (state) => state.mode === "live");
   const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);
   const isAuthLoading = useConvexAuth((auth) => auth.isLoading);
   const identity = useViewer((state) => state);
   const user = identity.account;
   const setAccountConsent = useMutation(consents.current.set);
   const shouldLoadAccountConsent =
-    store.getState().mode === "live" &&
-    isAuthenticated &&
-    !isAuthLoading &&
-    !!user;
+    isLive && isAuthenticated && !isAuthLoading && !!user;
   const accountConsentQuery = useQuery(
     consents.current.get,
     shouldLoadAccountConsent ? { category: ANALYTICS_CONSENT_CATEGORY } : "skip"
   );
-  const accountQuery = readAccountQuery(accountConsentQuery);
 
   return {
-    accountQuery,
+    accountQuery: readAccountConsentQuery(accountConsentQuery),
     isAuthLoading,
     isAuthenticated,
     isUserPending: identity.isPending,
