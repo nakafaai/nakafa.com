@@ -2884,6 +2884,7 @@ export declare const api: {
         "public",
         { slug: string },
         {
+          canManageSetup: boolean;
           closed: Array<{
             canRelease: boolean;
             closesAt: number;
@@ -2927,6 +2928,11 @@ export declare const api: {
             timeZone: string;
             unitId: Id<"tenantUnits">;
           }>;
+          setup?: {
+            hasPendingInvite: boolean;
+            hasStudent: boolean;
+            hasTeacher: boolean;
+          };
         }
       >;
       list: FunctionReference<
@@ -12877,7 +12883,12 @@ export declare const internal: {
         "mutation",
         "internal",
         { crowd?: number; email: string; slug: string },
-        { examId: Id<"exams">; sittingId: Id<"examSittings">; token: string }
+        {
+          examId: Id<"exams">;
+          sittingId: Id<"examSittings">;
+          title: string;
+          token: string;
+        }
       >;
     };
     sittings: {
