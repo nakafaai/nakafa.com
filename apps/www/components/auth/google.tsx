@@ -28,10 +28,10 @@ interface Props {
 }
 
 /**
- * Renders the Google sign-in button. It returns the visitor to one sanitized
- * internal destination, or to `returnPath` on the host the button is on.
+ * Renders the Google sign-in button, which returns the visitor to one sanitized
+ * internal destination, or to `returnPath` on the host the button is on. The
+ * button reads the sign-in query state, so it mounts the adapter it reads through.
  */
-/** The sign-in button reads the sign-in query state, so it mounts the adapter it reads through. */
 export function AuthGoogle(props: Props) {
   return (
     <NuqsAdapter>

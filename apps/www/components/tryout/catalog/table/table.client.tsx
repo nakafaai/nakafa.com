@@ -31,8 +31,11 @@ export interface TryoutSetTableProps {
   title: string;
 }
 
-/** Displays one complete signed discovery result with independent URL controls. */
-/** The catalog table reads its filters from the URL, so it mounts the adapter it reads through. */
+/**
+ * Displays one complete signed discovery result with independent URL controls.
+ * The catalog table reads its filters from the URL, so it mounts the adapter it
+ * reads through.
+ */
 export function TryoutSetTable(props: TryoutSetTableProps) {
   return (
     <NuqsAdapter>

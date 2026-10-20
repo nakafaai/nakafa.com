@@ -14,12 +14,12 @@ import type { PageNavigation } from "@/lib/content/page/navigation";
 /**
  * Mounts the app-wide client runtime providers for the localized app subtree.
  *
- * `NuqsAdapter` is global router config, and the Convex, session, and analytics
- * consent providers are mounted once at the shared `(app)` boundary. Every
- * value these providers put in context stays the same after hydration: React
- * client-renders a streamed Suspense boundary that is still pending when an
- * ancestor context changes, so state that resolves in the browser reaches
- * readers through stores instead.
+ * The Convex, session, and analytics consent providers are mounted once at the
+ * shared app boundary. Each reader of URL state mounts the `NuqsAdapter` it
+ * reads through. Every value these providers put in context stays the same after
+ * hydration: React client-renders a streamed Suspense boundary that is still
+ * pending when an ancestor context changes, so state that resolves in the browser
+ * reaches readers through stores instead.
  *
  * @see https://github.com/47ng/nuqs#readme
  * @see https://docs.convex.dev/client/nextjs/app-router/server-rendering
