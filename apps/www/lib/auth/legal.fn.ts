@@ -24,8 +24,8 @@ export const readAuthLegalFn = createServerFn({ method: "GET" })
     )
   )
   .handler(async ({ data }) => {
-    const { readAuthLegalLinks } = await import("@/lib/auth/legal.server");
-    return readAuthLegalLinks(
+    const { readAuthLegalAnswer } = await import("@/lib/auth/legal.server");
+    return readAuthLegalAnswer(
       data.locale ?? negotiateLocale(getRequestHeaders())
     );
   });
