@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
-import { MutableList } from "effect";
+import { Effect, MutableList } from "effect";
+import { withObservedPageErrors } from "@/e2e/support/observe";
 
 /**
  * A visitor without the signed-in hint cookie loads the home page with no
@@ -13,7 +14,6 @@ test("an anonymous home load shows Nina's composer, opens no WebSocket, reads no
 }) => {
   const sockets = MutableList.make<string>();
   const sessionReads = MutableList.make<string>();
-  const pageErrors = MutableList.make<string>();
   page.on("websocket", (socket) => {
     MutableList.append(sockets, socket.url());
   });
@@ -22,20 +22,33 @@ test("an anonymous home load shows Nina's composer, opens no WebSocket, reads no
       MutableList.append(sessionReads, request.url());
     }
   });
-  page.on("pageerror", (error) => {
-    MutableList.append(pageErrors, String(error));
-  });
 
-  await page.goto("/en", { waitUntil: "load" });
-  await expect(page.locator("[data-marketing-page]")).toBeVisible();
-  await expect(
-    page.locator("#hero").getByRole("heading", { level: 1 })
-  ).toBeVisible();
-  await expect(
-    page.getByRole("textbox", { name: "Ask Nina anything..." })
-  ).toBeVisible();
+  await Effect.runPromise(
+    withObservedPageErrors(
+      page,
+      Effect.gen(function* () {
+        yield* Effect.promise(() => page.goto("/en", { waitUntil: "load" }));
+        yield* Effect.promise(() =>
+          expect(page.locator("[data-marketing-page]")).toBeVisible()
+        );
+        yield* Effect.promise(() =>
+          expect(
+            page.locator("#hero").getByRole("heading", { level: 1 })
+          ).toBeVisible()
+        );
+        yield* Effect.promise(() =>
+          expect(
+            page.getByRole("textbox", { name: "Ask Nina anything..." })
+          ).toBeVisible()
+        );
 
-  expect(MutableList.toArray(sockets)).toStrictEqual([]);
-  expect(MutableList.toArray(sessionReads)).toStrictEqual([]);
-  expect(MutableList.toArray(pageErrors)).toStrictEqual([]);
+        yield* Effect.sync(() =>
+          expect(MutableList.toArray(sockets)).toStrictEqual([])
+        );
+        yield* Effect.sync(() =>
+          expect(MutableList.toArray(sessionReads)).toStrictEqual([])
+        );
+      })
+    )
+  );
 });
