@@ -10,6 +10,7 @@ import { readRequestNow } from "@repo/internationalization/src/translator";
 import {
   makeEducationalOrganizationNode,
   makeWebsiteNode,
+  type WebsiteInput,
 } from "@repo/seo/json-ld/node";
 import {
   createFileRoute,
@@ -135,11 +136,7 @@ function toLocaleHead({
   alternateName,
   description,
   locale,
-}: {
-  readonly alternateName: string;
-  readonly description: string;
-  readonly locale: string;
-}) {
+}: typeof WebsiteInput.Type) {
   return {
     meta: [
       { title: alternateName },
@@ -151,7 +148,11 @@ function toLocaleHead({
         }),
       },
       {
-        "script:ld+json": makeWebsiteNode({ alternateName, description, locale }),
+        "script:ld+json": makeWebsiteNode({
+          alternateName,
+          description,
+          locale,
+        }),
       },
     ],
   };

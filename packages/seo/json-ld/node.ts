@@ -165,7 +165,7 @@ export function makeEducationalOrganizationNode(
 }
 
 /** The locale of the site's WebSite node, which names the site in the locale's words. */
-const WebsiteInput = Schema.Struct({
+export const WebsiteInput = Schema.Struct({
   alternateName: Schema.String,
   description: Schema.String,
   locale: Schema.String,
