@@ -1,7 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { methodNotAllowed } from "@/lib/routing/method";
 import { serveManifest } from "@/lib/seo/manifest.server";
 
 /** The web app manifest of the installable app. */
 export const Route = createFileRoute("/manifest.webmanifest")({
-  server: { handlers: { GET: serveManifest } },
+  server: {
+    handlers: { ANY: methodNotAllowed("GET, HEAD"), GET: serveManifest },
+  },
 });
