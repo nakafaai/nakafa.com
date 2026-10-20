@@ -7,6 +7,7 @@ import {
 } from "@tanstack/react-start/server";
 import { Effect, Option, Schema } from "effect";
 import { readRedirectResponse } from "@/lib/routing/redirect";
+import { answerSchoolGate, withPageHeaders } from "@/lib/tenant/gate";
 
 const startHandler = createStartHandler(defaultStreamHandler);
 
@@ -17,7 +18,10 @@ class UncaughtRequestError extends Schema.TaggedError<UncaughtRequestError>()(
 ) {}
 
 /**
- * Start's server entry. Route errors are handled by the router. Only an error
+ * Start's server entry. A redirect that the address alone decides answers
+ * first. A school tree path on a main host then answers not found before the
+ * router sees it, and every school page and not-found answer carries the page
+ * headers (ADR 0026). Route errors are handled by the router. Only an error
  * that escapes the handler reaches the catch, which reports it and answers with
  * Start's error response.
  *
@@ -28,6 +32,10 @@ export default createServerEntry({
     const redirect = readRedirectResponse(request);
     if (Option.isSome(redirect)) {
       return Promise.resolve(redirect.value);
+    }
+    const gated = answerSchoolGate(request);
+    if (Option.isSome(gated)) {
+      return Promise.resolve(gated.value);
     }
     return Effect.runPromise(
       Effect.tryPromise({
@@ -40,6 +48,6 @@ export default createServerEntry({
           )
         )
       )
-    );
+    ).then((response) => withPageHeaders(request, response));
   },
 });
