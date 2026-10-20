@@ -3,6 +3,7 @@
 import { QueryResult, useQuery } from "@confect/react";
 import auth from "@repo/backend/confect/_generated/refs/auth";
 import { useAuthSession } from "@/components/auth/session";
+import { useConvexAuth } from "@/components/providers/convex";
 import { type AccountRecord, toViewer } from "@/lib/identity/viewer";
 
 export type { AccountRecord, Viewer } from "@/lib/identity/viewer";
@@ -44,7 +45,8 @@ type IdentityState =
  * Resolves identity from the session and its account query.
  *
  * A visitor with no session settles as signed out instead of waiting on a
- * query that will never run.
+ * query that will never run. A session stays pending until Convex confirms its
+ * credentials, because a query that Convex runs without them answers no account.
  */
 function resolveIdentityState({
   account,
@@ -82,6 +84,7 @@ function resolveIdentityState({
 export function useViewer<T>(selector: (state: IdentityState) => T): T {
   const sessionId = useAuthSession((session) => session.sessionId);
   const isSessionPending = useAuthSession((session) => session.isPending);
+  const isConvexAuthLoading = useConvexAuth((auth) => auth.isLoading);
   const query = useQuery(
     auth.queries.getCurrentUser,
     sessionId === null ? "skip" : {}
@@ -94,7 +97,7 @@ export function useViewer<T>(selector: (state: IdentityState) => T): T {
       account: QueryResult.isSuccess(query) ? query.value : null,
       hasSession: sessionId !== null,
       isSessionPending,
-      isQueryPending: QueryResult.isLoading(query),
+      isQueryPending: QueryResult.isLoading(query) || isConvexAuthLoading,
     })
   );
 }
