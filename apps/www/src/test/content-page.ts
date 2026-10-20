@@ -8,7 +8,6 @@ import {
   AppLocaleSchema,
   ArtifactLocaleSchema,
 } from "@nakafa/aksara-contracts/locale";
-import { PagePreviewDocumentSchema } from "@nakafa/aksara-contracts/preview/document";
 import {
   PageKeySchema,
   PublicPageProjectionSchema,
@@ -44,16 +43,3 @@ export const testPageArtifact = SignedContentArtifactSchema.make({
 });
 
 /** Exact reviewed Page selected by local preview tests. */
-const testPagePreviewDocument = PagePreviewDocumentSchema.make({
-  delivery: "public",
-  family: "page",
-  rendererDomain: "site",
-  route: {
-    appLocale: testPageProjection.appLocale,
-    artifactLocale: testPageProjection.artifactLocale,
-    contentKey: testPageProjection.contentKey,
-    pageKey: testPageProjection.pageKey,
-    publicPath: testPageProjection.publicPath,
-  },
-  sourcePath: testPageProjection.sourcePath,
-});

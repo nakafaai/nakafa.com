@@ -23,19 +23,6 @@ const articleRoute = Schema.decodeSync(ArticleRouteSchema)({
   publicPath: testArticleProjection.publicPath,
 });
 
-const germanArticleRoute = Schema.decodeSync(ArticleRouteSchema)({
-  ...articleRoute,
-  appLocale: "de",
-  articleRouteSlug: "politische-dynastien-und-asiatische-werte",
-  artifactLocale: "de",
-  categoryRouteSlug: "politik",
-  graph: {
-    ...articleRoute.graph,
-    assetId: articleRoute.graph.assetId.replace("asset:en:", "asset:de:"),
-  },
-  publicPath: "articles/politik/politische-dynastien-und-asiatische-werte",
-});
-
 /** Exact real article selected by local preview tests. */
 const articlePreviewDocument = Schema.decodeSync(ArticlePreviewDocumentSchema)({
   delivery: "public",
@@ -46,15 +33,6 @@ const articlePreviewDocument = Schema.decodeSync(ArticlePreviewDocumentSchema)({
 });
 
 /** Exact real German article route used by candidate-locale preview tests. */
-const germanArticlePreviewDocument = Schema.decodeSync(
-  ArticlePreviewDocumentSchema
-)({
-  ...articlePreviewDocument,
-  route: germanArticleRoute,
-  sourcePath:
-    "packages/corpus/articles/politics/dynastic-politics/asian-values/de.mdx",
-});
-
 /** Pending state for one real article that a material route must ignore. */
 export const articlePendingManifest = Schema.decodeSync(PreviewPendingSchema)({
   document: articlePreviewDocument,
