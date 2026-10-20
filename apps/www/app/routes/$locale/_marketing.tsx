@@ -1,17 +1,20 @@
-import { createFileRoute, Outlet } from "@tanstack/react-router";
+import { createFileRoute, getRouteApi, Outlet } from "@tanstack/react-router";
 import { IntlProvider } from "use-intl";
 import { Footer } from "@/components/marketing/shared/footer";
 import { Header } from "@/components/marketing/shared/header";
 import { AppProviders } from "@/components/providers/app";
 import { SharedProviders } from "@/components/providers/shared";
-import { getShellArticleNavigation } from "@/lib/content/article/navigation";
-import { getShellPageNavigation } from "@/lib/content/page/navigation";
 import { readRouteMessages } from "@/lib/i18n/messages.fn";
+import { readMarketingShellFn } from "@/lib/marketing/shell.fn";
 
-/** The messages of the marketing pages, which the shell messages join. */
+/**
+ * The messages of the marketing pages that the locale route does not carry. The
+ * Common, State and Toast messages come from the locale route, once.
+ */
 const MARKETING_NAMESPACES = [
   "About",
-  "Common",
+  "Ai",
+  "AnalyticsConsent",
   "Contributor",
   "Faq",
   "Holy",
@@ -24,26 +27,27 @@ const MARKETING_NAMESPACES = [
   "PricingPage",
   "SEO",
   "SchoolStart",
-  "State",
   "Subject",
-  "Toast",
   "Tryouts",
 ] as const;
+
+const localeRoute = getRouteApi("/$locale");
 
 /**
  * The marketing group: the home, pricing, contributor and legal pages share one
  * message set, the app and shared providers, and the site header and footer.
+ * The navigation of the shell is read on the server, so the loader imports no
+ * server-only module.
  */
 export const Route = createFileRoute("/$locale/_marketing")({
   loader: async ({ params }) => {
-    const [messages, articleNavigation, pageNavigation] = await Promise.all([
+    const [messages, shell] = await Promise.all([
       readRouteMessages({
         data: { locale: params.locale, namespaces: MARKETING_NAMESPACES },
       }),
-      getShellArticleNavigation(params.locale),
-      getShellPageNavigation(params.locale),
+      readMarketingShellFn({ data: { locale: params.locale } }),
     ]);
-    return { articleNavigation, messages, pageNavigation };
+    return { ...shell, messages };
   },
   component: MarketingLayout,
 });
@@ -52,8 +56,9 @@ export const Route = createFileRoute("/$locale/_marketing")({
 function MarketingLayout() {
   const { locale } = Route.useParams();
   const { articleNavigation, messages, pageNavigation } = Route.useLoaderData();
+  const shellMessages = localeRoute.useLoaderData();
   return (
-    <IntlProvider locale={locale} messages={messages}>
+    <IntlProvider locale={locale} messages={{ ...shellMessages, ...messages }}>
       <AppProviders pageNavigation={pageNavigation}>
         <SharedProviders>
           <main

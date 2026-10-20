@@ -1,20 +1,21 @@
 import { LocaleSchema } from "@repo/internationalization/src/locale";
 import { createServerFn } from "@tanstack/react-start";
-import { Effect, Schema } from "effect";
-import { readFeaturedTryout } from "@/components/tryout/catalog/server";
-import { serverHandler } from "@/lib/server/fn";
+import { Schema } from "effect";
 
 /** The locale of the marketing home page. */
 export const HomeInput = Schema.Struct({ locale: LocaleSchema });
 
 export type HomeInput = typeof HomeInput.Type;
 
-/** The featured try-out of the home page, read from the tagged content cache on the server. */
-export const readHomeTryoutHandler = serverHandler(({ locale }: HomeInput) =>
-  Effect.promise(() => readFeaturedTryout(locale))
-);
-
-/** Reads the featured try-out of the home page for one locale. */
+/**
+ * Reads the featured try-out of the home page on the server. The server module
+ * holds the catalog reads, so the browser bundle never imports them.
+ */
 export const readHomeTryout = createServerFn({ method: "GET" })
   .validator(Schema.toStandardSchemaV1(HomeInput))
-  .handler(readHomeTryoutHandler);
+  .handler(async ({ data }) => {
+    const { readHomeTryoutHandler } = await import(
+      "@/lib/marketing/home.server"
+    );
+    return readHomeTryoutHandler({ data });
+  });

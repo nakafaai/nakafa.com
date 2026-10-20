@@ -1,12 +1,14 @@
+import { captureException } from "@repo/analytics/posthog/browser";
 import { Nina } from "@repo/design-system/components/ui/nina";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { Schema } from "effect";
+import { useEffect } from "react";
 import { createTranslator } from "use-intl";
 import { AuthLegal } from "@/components/auth/legal";
 import { EntryShellBody, EntryShellHeader } from "@/components/entry/shell";
 import { OnboardingQuestionnaire } from "@/components/programs/onboarding/questionnaire";
 import { ThemePicker } from "@/components/shared/theme/picker";
-import { readOnboardingPageFn } from "@/lib/entry/page.fn";
+import { admitOnboardingFn, readOnboardingPageFn } from "@/lib/entry/page.fn";
 import { TextSearchParam } from "@/lib/entry/search";
 import { readRouteMessages } from "@/lib/i18n/messages.fn";
 import { getAppSocialArtwork } from "@/lib/og/app";
@@ -35,6 +37,7 @@ export const Route = createFileRoute("/$locale/_entry/onboarding")({
       }),
     ]);
     if (page._tag === "Redirect") {
+      // The destination is the server's decision, so it stays an href, not a typed route.
       throw redirect({ href: page.href, statusCode: 307 });
     }
     const t = createTranslator({
@@ -71,9 +74,17 @@ export const Route = createFileRoute("/$locale/_entry/onboarding")({
   component: OnboardingPage,
 });
 
-/** The questionnaire of the account, with the legal links of the sign-up. */
+/**
+ * The questionnaire of the account, with the legal links of the sign-up. The
+ * admission is recorded once the questionnaire mounts, never by the page read.
+ */
 function OnboardingPage() {
   const { intent, profile } = Route.useLoaderData();
+  useEffect(() => {
+    admitOnboardingFn().catch((error: unknown) => {
+      captureException(error, { source: "start-onboarding-admission" });
+    });
+  }, []);
   return (
     <>
       <EntryShellHeader>

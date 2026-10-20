@@ -23,6 +23,7 @@ export const Route = createFileRoute("/$locale/_entry/school/new")({
       }),
     ]);
     if (page._tag === "Redirect") {
+      // The destination is the server's decision, so it stays an href, not a typed route.
       throw redirect({ href: page.href, statusCode: 307 });
     }
     const t = createTranslator({

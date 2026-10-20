@@ -14,7 +14,7 @@ export const Route = createFileRoute("/$locale/_marketing/$")({
     const facts = await readLegalPageFn({
       data: { locale: params.locale, publicPath: params._splat ?? "" },
     });
-    if (!facts) {
+    if (facts._tag === "Missing") {
       throw notFound();
     }
     return facts;
@@ -25,6 +25,8 @@ export const Route = createFileRoute("/$locale/_marketing/$")({
     }
     const languages: Readonly<Record<string, string | undefined>> =
       loaderData.alternates.languages;
+    const markdown: string | undefined =
+      loaderData.alternates.types?.["text/markdown"];
     return {
       links: [
         {
@@ -40,6 +42,15 @@ export const Route = createFileRoute("/$locale/_marketing/$")({
                 rel: "alternate",
               })
         ),
+        ...(markdown === undefined
+          ? []
+          : [
+              {
+                href: new URL(markdown, SITE_ORIGIN).href,
+                rel: "alternate",
+                type: "text/markdown",
+              },
+            ]),
       ],
       meta: [
         { title: loaderData.title },

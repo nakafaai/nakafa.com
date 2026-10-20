@@ -1,16 +1,18 @@
 // @vitest-environment node
-import { describe, expect, it } from "@effect/vitest";
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { appendResponseHeader } from "@tanstack/react-start/server";
 import { Array as Arr, Effect, Option } from "effect";
 import type { PageNavigation } from "@/lib/content/page/navigation";
 import { getShellPageNavigation } from "@/lib/content/page/navigation";
 import {
+  admitOnboardingHandler,
   onboardingPageHandler,
   schoolStartPageHandler,
-} from "@/lib/entry/page.fn";
-import { recordOnboardingAdmission } from "@/lib/onboarding/server";
-
-process.env.VITE_CONVEX_URL = "https://example.convex.cloud";
+} from "@/lib/entry/page.server";
+import {
+  readOnboardingStatus,
+  recordOnboardingAdmission,
+} from "@/lib/onboarding/server";
 
 /** The request session, the onboarding status and the policy pages of the current test. */
 let session = {
@@ -37,6 +39,7 @@ vi.mock("@/lib/auth/session.server", () => ({
 }));
 
 vi.mock("@/lib/onboarding/server", () => ({
+  readOnboardingStatus: vi.fn(() => Effect.succeed(status)),
   recordOnboardingAdmission: vi.fn(() => Effect.succeed(status)),
 }));
 
@@ -45,6 +48,10 @@ vi.mock("@/lib/content/page/navigation", () => ({
 }));
 
 const signedIn = () => Option.some("convex-token");
+
+beforeEach(() => {
+  vi.clearAllMocks();
+});
 
 describe("onboarding page", () => {
   it("sends a visitor without a session to sign in, in the locale", async () => {
@@ -109,7 +116,32 @@ describe("onboarding page", () => {
       "set-cookie",
       "refreshed=1"
     );
+    expect(readOnboardingStatus).toHaveBeenCalledWith("convex-token");
+  });
+
+  it("reads the status without recording the admission", async () => {
+    session = { convexToken: signedIn(), setCookies: [] };
+    status = {
+      isAuthenticated: true,
+      isRequired: true,
+      profile: { role: "teacher" },
+    };
+    await onboardingPageHandler({ data: { locale: "en" } });
+    expect(recordOnboardingAdmission).not.toHaveBeenCalled();
+  });
+});
+
+describe("onboarding admission", () => {
+  it("records the admission of the signed-in account", async () => {
+    session = { convexToken: signedIn(), setCookies: [] };
+    await admitOnboardingHandler();
     expect(recordOnboardingAdmission).toHaveBeenCalledWith("convex-token");
+  });
+
+  it("records nothing for a request without a session", async () => {
+    session = { convexToken: Option.none(), setCookies: [] };
+    await admitOnboardingHandler();
+    expect(recordOnboardingAdmission).not.toHaveBeenCalled();
   });
 });
 
