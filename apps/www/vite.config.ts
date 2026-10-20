@@ -6,10 +6,21 @@ import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import react, { reactCompilerPreset } from "@vitejs/plugin-react";
 import { nitro } from "nitro/vite";
 import { defineConfig } from "vite";
+import { AGENT_DISCOVERY_HEADERS } from "@/lib/discovery";
 
-/** The PostHog proxy origin: the production proxy unless the build names another. */
-const POSTHOG_PROXY_ORIGIN =
-  process.env.POSTHOG_PROXY_HOST ?? "https://t.nakafa.com";
+/**
+ * The PostHog proxy origin that the build names. Without one, no proxy route is
+ * installed, so analytics requests never leave the app for an unset provider.
+ */
+const POSTHOG_PROXY_ORIGIN = process.env.POSTHOG_PROXY_HOST;
+
+/** Every response carries the security headers and the agent discovery links. */
+const SHARED_HEADERS = Object.fromEntries(
+  [...securityHeaders, ...AGENT_DISCOVERY_HEADERS].map(({ key, value }) => [
+    key,
+    value,
+  ])
+);
 
 export default defineConfig({
   resolve: {
@@ -24,14 +35,14 @@ export default defineConfig({
     // pinned deployment through Start's client fetch seam instead.
     nitro({
       routeRules: {
-        [`${POSTHOG_PROXY_PATH}/**`]: {
-          proxy: `${POSTHOG_PROXY_ORIGIN}/**`,
-        },
-        "/**": {
-          headers: Object.fromEntries(
-            securityHeaders.map(({ key, value }) => [key, value])
-          ),
-        },
+        ...(POSTHOG_PROXY_ORIGIN === undefined
+          ? {}
+          : {
+              [`${POSTHOG_PROXY_PATH}/**`]: {
+                proxy: `${POSTHOG_PROXY_ORIGIN}/**`,
+              },
+            }),
+        "/**": { headers: SHARED_HEADERS },
       },
       vercel: { skewProtection: false },
     }),
