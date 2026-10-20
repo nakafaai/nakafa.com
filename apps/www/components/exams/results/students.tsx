@@ -34,7 +34,7 @@ import { usePaginatedPreloaded } from "@/lib/data/paginated";
 export const STUDENT_PAGE_SIZE = 50;
 
 /** The first page of the students of one sitting, which its loader read on the server. */
-export type StudentsFirstPage = Pick<
+type StudentsFirstPage = Pick<
   Ref.Returns<typeof exams.results.results.byStudent>,
   "isDone" | "page"
 >;

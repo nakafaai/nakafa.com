@@ -50,7 +50,7 @@ const SOURCE = "components/tenant/settings/clients";
 export const PAGE_SIZE = 25;
 
 /** The first page of the list, which its loader read on the server. */
-export type ClientsFirstPage = PreloadedPage<
+type ClientsFirstPage = PreloadedPage<
   PaginatedQueryItem<typeof integrations.clients.list>
 >;
 

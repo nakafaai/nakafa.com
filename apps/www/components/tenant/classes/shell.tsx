@@ -70,7 +70,7 @@ export function ClassShell({
 }
 
 /** The first screen of a class page, which its loader read on the server: the class and, on the forum, its first channels. */
-export interface ClassPreload {
+interface ClassPreload {
   readonly channels?: ChannelsFirstPage | undefined;
   readonly resolved: Ref.Returns<typeof classroom.classes.resolve> | undefined;
 }

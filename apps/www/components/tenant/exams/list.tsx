@@ -31,7 +31,7 @@ import { usePaginatedPreloaded } from "@/lib/data/paginated";
 export const EXAM_PAGE_SIZE = 20;
 
 /** The first page of the exam list, which its loader read on the server. */
-export type ExamListFirstPage = Pick<
+type ExamListFirstPage = Pick<
   Ref.Returns<typeof exams.exams.list>,
   "isDone" | "page"
 >;

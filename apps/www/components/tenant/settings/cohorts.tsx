@@ -80,7 +80,7 @@ const cohortColumns = createColumnHelper<typeof dataTableFeatures, Cohort>();
  * The first screen of the cohorts tab, which its loader read for the school's first active unit: the unit,
  * its active period, and the cohorts of that period. A unit or a period that the tab chose later reads live.
  */
-export interface CohortsPreload {
+interface CohortsPreload {
   readonly active: Ref.Returns<typeof tenancy.cohorts.activePeriod> | undefined;
   readonly cohorts: Ref.Returns<typeof tenancy.cohorts.list> | undefined;
   readonly unitId: UnitId;

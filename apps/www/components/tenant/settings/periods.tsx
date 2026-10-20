@@ -53,7 +53,7 @@ const SOURCE = "components/tenant/settings/periods";
 export const PAGE_SIZE = 25;
 
 /** The first screen of the periods tab: the first page of the periods of the unit the tab opens, and that unit. */
-export interface PeriodsPreload {
+interface PeriodsPreload {
   readonly page:
     | PreloadedPage<PaginatedQueryItem<typeof tenancy.periods.list>>
     | undefined;

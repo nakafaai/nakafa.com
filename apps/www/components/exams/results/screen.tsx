@@ -22,7 +22,7 @@ import { isDenied, isLostAccess } from "@/components/tenant/refusal";
 import { usePreloadedQueryResult } from "@/lib/data/preloaded";
 
 /** The first screen of the results, which the results page's loader read on the server. */
-export interface ResultsPreload {
+interface ResultsPreload {
   readonly overview:
     | Ref.Returns<typeof exams.results.results.overview>
     | undefined;

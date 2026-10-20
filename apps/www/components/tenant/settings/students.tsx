@@ -59,7 +59,7 @@ const SOURCE = "components/tenant/settings/students";
 export const PAGE_SIZE = 25;
 
 /** The first page of the list, which its loader read on the server. */
-export type StudentsFirstPage = PreloadedPage<
+type StudentsFirstPage = PreloadedPage<
   PaginatedQueryItem<typeof identity.logins.list>
 >;
 

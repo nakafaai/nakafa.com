@@ -27,7 +27,7 @@ const LOCALE_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
 const SchoolLanguageOutcome = Schema.Literals(["saved", "rolledBack"]);
 
 /** The way a language change ended. */
-export type SchoolLanguageOutcome = typeof SchoolLanguageOutcome.Type;
+type SchoolLanguageOutcome = typeof SchoolLanguageOutcome.Type;
 
 /**
  * The language cookie of this browser, or none when the browser holds none. The server reads the

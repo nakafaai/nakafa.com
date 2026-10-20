@@ -236,7 +236,7 @@ export function SchoolCohortMenu({
  * The first screen of one cohort page, which its loader read on the server: the cohort, the first page of its
  * members, and the cohorts of its period, which the cohort's move menu lists.
  */
-export interface CohortPreload {
+interface CohortPreload {
   readonly cohorts: Ref.Returns<typeof tenancy.cohorts.list> | undefined;
   readonly detail: Ref.Returns<typeof tenancy.cohorts.get> | undefined;
   readonly members:

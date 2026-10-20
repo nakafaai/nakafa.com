@@ -78,7 +78,7 @@ const SOURCE = "components/tenant/settings/roles";
 export const PAGE_SIZE = 25;
 
 /** The first page of the list, which its loader read on the server. */
-export type RolesFirstPage = PreloadedPage<
+type RolesFirstPage = PreloadedPage<
   PaginatedQueryItem<typeof access.grants.list>
 >;
 

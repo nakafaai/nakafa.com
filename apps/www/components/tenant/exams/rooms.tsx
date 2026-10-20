@@ -58,7 +58,7 @@ type StateFilter = typeof RoomStateFilter.Type;
 export const ROOM_PAGE_SIZE = 20;
 
 /** The first screen of the rooms page, which its loader read on the server: the exam and the first page of its rooms. */
-export interface ExamRoomsPreload {
+interface ExamRoomsPreload {
   readonly rooms:
     | Pick<Ref.Returns<typeof exams.rooms.list>, "isDone" | "page">
     | undefined;

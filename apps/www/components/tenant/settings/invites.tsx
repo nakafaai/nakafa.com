@@ -55,7 +55,7 @@ const SOURCE = "components/tenant/settings/invites";
 export const PAGE_SIZE = 25;
 
 /** The first page of the list, which its loader read on the server. */
-export type InvitesFirstPage = PreloadedPage<
+type InvitesFirstPage = PreloadedPage<
   PaginatedQueryItem<typeof tenancy.invites.list>
 >;
 

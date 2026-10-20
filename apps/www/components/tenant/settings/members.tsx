@@ -38,7 +38,7 @@ const SOURCE = "components/tenant/settings/members";
 export const PAGE_SIZE = 25;
 
 /** The first page of the list, which its loader read on the server. */
-export type MembersFirstPage = PreloadedPage<
+type MembersFirstPage = PreloadedPage<
   PaginatedQueryItem<typeof tenancy.roster.members>
 >;
 

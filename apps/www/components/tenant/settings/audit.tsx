@@ -39,7 +39,7 @@ type EntryWire = Omit<EntryItem, "subjectName"> & {
 };
 
 /** The first screen of the audit: the first page of its entries, and the people who appear in them. */
-export interface AuditPreload {
+interface AuditPreload {
   readonly entries:
     | { readonly isDone: boolean; readonly page: readonly EntryWire[] }
     | undefined;
