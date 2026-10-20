@@ -20,7 +20,7 @@ import { useRouter } from "@repo/internationalization/src/navigation";
 import { Effect, Result } from "effect";
 import { useTranslations } from "use-intl";
 import { clearAiDraftText } from "@/components/ai/store/draft";
-import { AnalyticsConsentMenuItem } from "@/components/analytics/consent/actions";
+import { AnalyticsConsentMenuItem } from "@/components/analytics/consent/menu";
 import { AccountMenu } from "@/components/sidebar/menu/account";
 import { SidebarUtilityMenuItems } from "@/components/sidebar/menu/utility";
 import { signOutAccountBrowserIdentity } from "@/lib/auth/identity/browser";

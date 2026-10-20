@@ -6,7 +6,7 @@ import {
   ConsentActions,
   ConsentDetails,
 } from "@/components/analytics/consent/details";
-import { useAnalyticsConsent } from "@/lib/analytics/consent/context";
+import type { AnalyticsConsentContextValue } from "@/lib/analytics/consent/context";
 
 /**
  * The permanent preferences dialog. The first intent to open it (hover, focus,
@@ -14,9 +14,12 @@ import { useAnalyticsConsent } from "@/lib/analytics/consent/context";
  * touch tap can open the dialog before its chunk arrives, so on a slow
  * connection that first open waits for the chunk instead of appearing at once.
  */
-export function ConsentPreferences() {
+export function ConsentPreferences({
+  consent,
+}: {
+  consent: AnalyticsConsentContextValue;
+}) {
   const t = useTranslations("AnalyticsConsent");
-  const consent = useAnalyticsConsent((state) => state);
 
   return (
     <ResponsiveDialog

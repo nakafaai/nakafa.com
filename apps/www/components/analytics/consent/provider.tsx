@@ -11,14 +11,14 @@ import {
   useAnonymousDenialPersistence,
   useBrowserConsentSync,
 } from "@/lib/analytics/consent/browser";
-import { AnalyticsConsentContext } from "@/lib/analytics/consent/context";
-import { useAnalyticsConsentModel } from "@/lib/analytics/consent/model";
+import {
+  AnalyticsConsentContext,
+  useAnalyticsConsentStore,
+} from "@/lib/analytics/consent/context";
+import type { AnalyticsConsentModel } from "@/lib/analytics/consent/model";
 import { useAccountAnalyticsConsentRevocation } from "@/lib/analytics/consent/revocation";
 import { useAnalyticsRuntimeAlignment } from "@/lib/analytics/consent/runtime";
-import {
-  type AnalyticsConsentStore,
-  createAnalyticsConsentStore,
-} from "@/lib/analytics/consent/store";
+import { createAnalyticsConsentStore } from "@/lib/analytics/consent/store";
 import {
   clearContentViewDevice,
   isContentViewDeviceRetained,
@@ -28,8 +28,9 @@ import {
  * Owns the state that exclusively controls optional product analytics.
  *
  * The context carries only the consent store, so its value never changes
- * after hydration; readers derive the consent state with
- * `useAnalyticsConsent`, and the controller below runs the effects once.
+ * after hydration. Readers derive the consent state from the store and the
+ * account they are given, and the effects run in the controller that the page
+ * mounts for its account: a visitor's or a signed-in page's.
  */
 export function AnalyticsConsentProvider({
   children,
@@ -43,10 +44,7 @@ export function AnalyticsConsentProvider({
   );
 
   return (
-    <AnalyticsConsentContext value={store}>
-      {children}
-      <AnalyticsConsentController store={store} />
-    </AnalyticsConsentContext>
+    <AnalyticsConsentContext value={store}>{children}</AnalyticsConsentContext>
   );
 }
 
@@ -54,12 +52,12 @@ export function AnalyticsConsentProvider({
  * Keeps the browser consent, the analytics runtime, the content-view
  * identifier, and account revocations aligned with the derived consent state.
  */
-function AnalyticsConsentController({
-  store,
+export function AnalyticsConsentEffects({
+  consent,
 }: {
-  store: AnalyticsConsentStore;
+  consent: AnalyticsConsentModel;
 }) {
-  const consent = useAnalyticsConsentModel(store);
+  const store = useAnalyticsConsentStore();
   const setBrowserConsent = useStore(store, (state) => state.setBrowserConsent);
   const setHasRuntimeError = useStore(
     store,

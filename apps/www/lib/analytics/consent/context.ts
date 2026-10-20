@@ -1,20 +1,22 @@
 "use client";
 
 import { createContext, use } from "react";
-import { useAnalyticsConsentModel } from "@/lib/analytics/consent/model";
+import {
+  type AnalyticsConsentModel,
+  useAnalyticsConsentModel,
+  visitorAnalyticsConsentAccount,
+} from "@/lib/analytics/consent/model";
 import type { AnalyticsConsentStore } from "@/lib/analytics/consent/store";
 
 /** The consent controller's value, derived from the model that builds it. */
-export type AnalyticsConsentContextValue = ReturnType<
-  typeof useAnalyticsConsentModel
->["value"];
+export type AnalyticsConsentContextValue = AnalyticsConsentModel["value"];
 
 /** Carries one provider's consent store, which never changes after mount. */
 export const AnalyticsConsentContext =
   createContext<AnalyticsConsentStore | null>(null);
 
 /** Returns the consent store and rejects a missing provider. */
-function useAnalyticsConsentStore() {
+export function useAnalyticsConsentStore() {
   const store = use(AnalyticsConsentContext);
   if (!store) {
     throw new Error(
@@ -25,14 +27,12 @@ function useAnalyticsConsentStore() {
 }
 
 /**
- * Reads one derived slice of the optional analytics consent controller.
- *
- * The slice is derived in the reading component from the consent store, the
- * session and Convex authentication stores, and the account consent query,
- * so a reader that hydrates late renders the consent state the server did.
+ * Derives the consent model of a visitor's page from the store alone. No Convex
+ * hook runs, so a visitor's page loads no Convex client and opens no socket.
  */
-export function useAnalyticsConsent<T>(
-  selector: (state: AnalyticsConsentContextValue) => T
-) {
-  return selector(useAnalyticsConsentModel(useAnalyticsConsentStore()).value);
+export function useVisitorAnalyticsConsentModel(): AnalyticsConsentModel {
+  return useAnalyticsConsentModel(
+    useAnalyticsConsentStore(),
+    visitorAnalyticsConsentAccount
+  );
 }

@@ -7,7 +7,7 @@ import contents from "@repo/backend/confect/_generated/refs/contents";
 import { Effect, Option, Result } from "effect";
 import { useEffect } from "react";
 import { useConvexAuth } from "@/components/providers/convex";
-import { useAnalyticsConsent } from "@/lib/analytics/consent/context";
+import { useAnalyticsConsent } from "@/lib/analytics/consent/account.client";
 import { useContentViews } from "@/lib/content/views/context";
 import {
   readContentViewIdentity,

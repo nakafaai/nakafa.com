@@ -1,6 +1,9 @@
 import type { ReactNode } from "react";
+import {
+  AccountConsentControls,
+  AccountConsentEffects,
+} from "@/components/analytics/consent/account.client";
 import { AnalyticsConsentBootstrap } from "@/components/analytics/consent/bootstrap";
-import { AnalyticsConsentControls } from "@/components/analytics/consent/controls";
 import { AnalyticsConsentProvider } from "@/components/analytics/consent/provider";
 import { AnalyticsUnavailableProvider } from "@/components/analytics/consent/unavailable";
 import { ConvexProvider } from "@/components/providers/convex";
@@ -38,7 +41,8 @@ export function AppProviders({
           >
             {children}
             <AnalyticsConsentBootstrap />
-            <AnalyticsConsentControls />
+            <AccountConsentControls />
+            <AccountConsentEffects />
           </AnalyticsConsentProvider>
         ) : (
           <AnalyticsUnavailableProvider>

@@ -2,6 +2,12 @@
 
 import { Effect, Fiber } from "effect";
 import { lazy, type ReactNode, Suspense, useEffect, useState } from "react";
+import { AnalyticsConsentBootstrap } from "@/components/analytics/consent/bootstrap";
+import {
+  MarketingConsentControls,
+  MarketingConsentEffects,
+} from "@/components/analytics/consent/mount";
+import { AnalyticsConsentProvider } from "@/components/analytics/consent/provider";
 import { AnalyticsUnavailableProvider } from "@/components/analytics/consent/unavailable";
 import { AuthSessionContext } from "@/components/auth/session";
 import {
@@ -68,9 +74,20 @@ export function MarketingProviders({
         <ConvexAuthContext value={store}>
           <MarketingCredentials />
           <PageNavigationProvider navigation={pageNavigation}>
-            <AnalyticsUnavailableProvider>
-              {children}
-            </AnalyticsUnavailableProvider>
+            {pageNavigation ? (
+              <AnalyticsConsentProvider
+                isPreviewChild={clientEnv.VITE_AKSARA_PREVIEW_CHILD === "true"}
+              >
+                {children}
+                <AnalyticsConsentBootstrap />
+                <MarketingConsentControls />
+                <MarketingConsentEffects />
+              </AnalyticsConsentProvider>
+            ) : (
+              <AnalyticsUnavailableProvider>
+                {children}
+              </AnalyticsUnavailableProvider>
+            )}
           </PageNavigationProvider>
         </ConvexAuthContext>
       </AuthSessionContext>

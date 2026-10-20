@@ -1,10 +1,6 @@
 "use client";
 
-import { QueryResult, useMutation, useQuery } from "@confect/react";
-import {
-  ANALYTICS_CONSENT_CATEGORY,
-  type AnalyticsConsentState,
-} from "@repo/analytics/consent";
+import type { AnalyticsConsentState } from "@repo/analytics/consent";
 import {
   resolveConsentAffordances,
   resolveConsentError,
@@ -17,22 +13,65 @@ import {
   createAnalyticsConsentPromptIdentity,
   resolveAnalyticsConsentSessionPolicy,
 } from "@repo/analytics/consent/session";
-import consents from "@repo/backend/confect/_generated/refs/consents";
 import { Option } from "effect";
 import { useState } from "react";
 import { useStore } from "zustand";
-import { useConvexAuth } from "@/components/providers/convex";
 import {
   createAnonymousConsentSave,
   refreshBrowserPrivacySignal,
 } from "@/lib/analytics/consent/browser";
 import { useAnalyticsConsentDecision } from "@/lib/analytics/consent/saves";
+import type { saveAccountAnalyticsChoice } from "@/lib/analytics/consent/signal";
 import {
+  type AccountConsentDecision,
   resolveBrowserAnalyticsConsentState,
   shouldRevokeAccountAnalyticsGrant,
 } from "@/lib/analytics/consent/state";
 import type { AnalyticsConsentStore } from "@/lib/analytics/consent/store";
-import { useViewer } from "@/lib/identity/client";
+import type { AccountRecord } from "@/lib/identity/viewer";
+
+/**
+ * What the signed-in account says about optional analytics, as the consent model
+ * reads it. A signed-in page reads it through the account reader, which only a
+ * page with a Convex client mounts. A visitor's page reads the visitor value below,
+ * so no Convex hook runs there.
+ */
+export interface AnalyticsConsentAccount {
+  /** The account's consent query: its decision once it answers, or the failure, or nothing yet. */
+  readonly accountQuery:
+    | { readonly status: "pending" }
+    | { readonly status: "failure" }
+    | {
+        readonly status: "success";
+        readonly decision: AccountConsentDecision | null;
+      };
+  readonly isAuthenticated: boolean;
+  readonly isAuthLoading: boolean;
+  readonly isUserPending: boolean;
+  readonly setAccountConsent: Parameters<typeof saveAccountAnalyticsChoice>[0];
+  readonly user: AccountRecord | null;
+}
+
+/** The full derived consent model: its value for readers and the inputs its effects need. */
+export type AnalyticsConsentModel = ReturnType<typeof useAnalyticsConsentModel>;
+
+/** A visitor has no account, so no account answer and no account save exist. */
+const visitorAccountQuery = { status: "pending" } as const;
+
+/**
+ * The account of a visitor. The account path never runs for it: nothing is
+ * signed in, no account query is made, and no account save can start.
+ */
+export const visitorAnalyticsConsentAccount: AnalyticsConsentAccount = {
+  accountQuery: visitorAccountQuery,
+  isAuthLoading: false,
+  isAuthenticated: false,
+  isUserPending: false,
+  setAccountConsent: () => {
+    throw new TypeError("A visitor has no account to save a consent choice to");
+  },
+  user: null,
+};
 
 function ignoreUnavailableConsentAction() {
   // Optional analytics cannot accept a decision before its signed notice is live.
@@ -56,13 +95,18 @@ const unavailableAnalyticsConsent = {
 };
 
 /**
- * Derives the consent state one component sees, plus the inputs the consent
- * controller's effects need.
+ * Derives the consent state one component sees, from the consent store and the
+ * account it is given, plus the inputs the consent controller's effects need.
  *
- * Every input comes from a store or a query hook, so the derivation runs in
- * each reader and no provider value changes after hydration.
+ * Every input comes from a store or a plain value, so the derivation runs in each
+ * reader and no provider value changes after hydration. The account is read by the
+ * caller: a visitor passes `visitorAnalyticsConsentAccount`, and a signed-in page
+ * passes what its Convex-backed account reader derives.
  */
-export function useAnalyticsConsentModel(store: AnalyticsConsentStore) {
+export function useAnalyticsConsentModel(
+  store: AnalyticsConsentStore,
+  account: AnalyticsConsentAccount
+) {
   const mode = useStore(store, (state) => state.mode);
   const browserConsent = useStore(store, (state) => state.browserConsent);
   const hasRuntimeError = useStore(store, (state) => state.hasRuntimeError);
@@ -76,22 +120,14 @@ export function useAnalyticsConsentModel(store: AnalyticsConsentStore) {
     store,
     (state) => state.setSessionOverrides
   );
-  const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);
-  const isAuthLoading = useConvexAuth((auth) => auth.isLoading);
-  const identity = useViewer((state) => state);
-  const user = identity.account;
+  const { isAuthenticated, isAuthLoading, user, setAccountConsent } = account;
+  const identity = { isPending: account.isUserPending, account: user };
   const isPreviewChild = mode === "preview";
-  const setAccountConsent = useMutation(consents.current.set);
-  const shouldLoadAccountConsent =
-    mode === "live" && isAuthenticated && !isAuthLoading && !!user;
-  const accountConsentQuery = useQuery(
-    consents.current.get,
-    shouldLoadAccountConsent ? { category: ANALYTICS_CONSENT_CATEGORY } : "skip"
-  );
-  const isAccountConsentResolved = QueryResult.isSuccess(accountConsentQuery);
-  const accountConsent = QueryResult.isSuccess(accountConsentQuery)
-    ? accountConsentQuery.value.decision
-    : null;
+  const isAccountConsentResolved = account.accountQuery.status === "success";
+  const accountConsent =
+    account.accountQuery.status === "success"
+      ? account.accountQuery.decision
+      : null;
   // One stable Effect identity per reader, so the effects that depend on them
   // rerun only when their inputs change.
   const [currentBrowserPrivacySignal] = useState(() =>
@@ -117,7 +153,7 @@ export function useAnalyticsConsentModel(store: AnalyticsConsentStore) {
     user,
   });
   const hasLoadError =
-    QueryResult.isFailure(accountConsentQuery) ||
+    account.accountQuery.status === "failure" ||
     (!isAuthenticated && hasStorageError);
   const sessionPolicy = resolveAnalyticsConsentSessionPolicy({
     durableConsent,
@@ -129,8 +165,8 @@ export function useAnalyticsConsentModel(store: AnalyticsConsentStore) {
     hasBrowserPrivacySignal: browserConsent.hasBrowserPrivacySignal,
     isAccountResolved:
       !!user &&
-      (QueryResult.isSuccess(accountConsentQuery) ||
-        QueryResult.isFailure(accountConsentQuery)),
+      (account.accountQuery.status === "success" ||
+        account.accountQuery.status === "failure"),
     isAnonymousResolved: browserConsent.isResolved,
     isAuthenticated,
     isBlocked: isPreviewChild || isAuthLoading || identity.isPending,

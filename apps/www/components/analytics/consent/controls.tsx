@@ -18,7 +18,7 @@ import {
   CardSectionActions,
   CardSectionFooter,
 } from "@/components/shared/card/section";
-import { useAnalyticsConsent } from "@/lib/analytics/consent/context";
+import type { AnalyticsConsentContextValue } from "@/lib/analytics/consent/context";
 
 /** Names the prompt section, so the hide rules below can match it. */
 const PROMPT_ATTRIBUTE = "data-analytics-consent-prompt";
@@ -60,9 +60,12 @@ const ConsentPreferences = lazyComponent(() =>
  * The consent state is derived once here and handed to the decision and
  * detail parts, which render in both the prompt and the dialog.
  */
-export function AnalyticsConsentControls() {
+export function AnalyticsConsentControls({
+  consent,
+}: {
+  consent: AnalyticsConsentContextValue;
+}) {
   const t = useTranslations("AnalyticsConsent");
-  const consent = useAnalyticsConsent((state) => state);
 
   if (!consent.isAvailable) {
     return null;
@@ -106,7 +109,9 @@ export function AnalyticsConsentControls() {
         </section>
       ) : null}
 
-      {consent.preferencesWarm ? <ConsentPreferences /> : null}
+      {consent.preferencesWarm ? (
+        <ConsentPreferences consent={consent} />
+      ) : null}
     </>
   );
 }
