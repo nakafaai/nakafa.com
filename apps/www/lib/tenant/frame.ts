@@ -1,46 +1,65 @@
-import type { Returns } from "@confect/core/Ref";
-import type tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import type { BuiltinRole } from "@repo/backend/confect/access/schema";
-import type { Locale } from "@repo/internationalization/src/locale";
-import { Array as Arr, Option } from "effect";
-import type { HomeAccess } from "@/components/tenant/home/access";
-import type { Greeting } from "@/components/tenant/home/greeting";
+import { TenantProfile } from "@repo/backend/confect/tenancy/schema";
+import { ViewerView } from "@repo/backend/confect/tenancy/viewer.spec";
+import { LocaleSchema } from "@repo/internationalization/src/locale";
+import { Array as Arr, Option, Schema } from "effect";
+import { HomeAccessSchema } from "@/components/tenant/home/access";
+import { GreetingSchema } from "@/components/tenant/home/greeting";
 
 /** The public profile of a school, as its profile query returns it. */
-export type SchoolProfile = Returns<typeof tenancy.profile.get>;
+export type SchoolProfile = typeof TenantProfile.Type;
 
 /** A signed-in member's view of a school, as its viewer query returns it. */
-export type SchoolViewer = Returns<typeof tenancy.viewer.get>;
+export type SchoolViewer = typeof ViewerView.Type;
+
+/**
+ * What the school layout shows a visitor with no session: the entry surface of a school
+ * that has a profile. A visitor's page holds no account, so it carries only the title.
+ */
+const VisitorFrame = Schema.TaggedStruct("Visitor", {
+  locale: LocaleSchema,
+  profile: TenantProfile,
+  title: Schema.String,
+});
+
+/** What the school layout shows an account that is signed in but is not a member. */
+const OutsiderFrame = Schema.TaggedStruct("Outsider", {
+  account: Schema.String,
+  locale: LocaleSchema,
+  profile: TenantProfile,
+});
+
+/**
+ * What the school layout shows a member: the shell, its greeting, and what the viewer may do with
+ * exams. The shell's context carries it to every page of the school.
+ */
+const MemberFrame = Schema.TaggedStruct("Member", {
+  greeting: GreetingSchema,
+  home: HomeAccessSchema,
+  locale: LocaleSchema,
+  profile: TenantProfile,
+  viewer: ViewerView,
+});
 
 /**
  * What the school layout shows for one request. The server decides it before the
  * stream starts. It holds no credential, so it crosses to the browser as route
  * context, and the browser never reads the session token.
  */
-type SchoolFrame =
-  | {
-      readonly _tag: "Visitor";
-      readonly locale: Locale;
-      readonly profile: SchoolProfile;
-      readonly title: string;
-    }
-  | {
-      readonly _tag: "Outsider";
-      readonly account: string;
-      readonly locale: Locale;
-      readonly profile: SchoolProfile;
-    }
-  | {
-      readonly _tag: "Member";
-      readonly greeting: Greeting;
-      readonly home: HomeAccess;
-      readonly locale: Locale;
-      readonly profile: SchoolProfile;
-      readonly viewer: SchoolViewer;
-    };
+export const SchoolFrameSchema = Schema.Union([
+  VisitorFrame,
+  OutsiderFrame,
+  MemberFrame,
+]);
+
+/** The frame of one request, as the school layout renders it. */
+export type SchoolFrame = typeof SchoolFrameSchema.Type;
+
+/** The refusal that answers a school page with not found. */
+const RefusedRead = Schema.TaggedStruct("Refused", {});
 
 /** The answer of the school read: the frame, or a refusal that answers the page with not found. */
-export type SchoolRead = SchoolFrame | { readonly _tag: "Refused" };
+export type SchoolRead = SchoolFrame | typeof RefusedRead.Type;
 
 /**
  * The account name of an outsider's page: the account's name, or its username
