@@ -21,12 +21,13 @@ import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Array as Arr, Effect, Option, pipe, String as Str } from "effect";
-import { useState } from "react";
+import { type ComponentProps, useState } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import type { StoreApi } from "zustand";
 import { type ChatFirstPage, useChatList } from "@/components/ai/chat/chats";
 import { useDeleteChatMutation } from "@/components/ai/chat/mutation";
 import { useConvexAuth } from "@/components/providers/convex";
+import { SignedInIsland } from "@/components/providers/island";
 import { formatShortAge } from "@/components/user/age";
 import { useAgeClock, useAgeNow } from "@/components/user/ages";
 import type { AgeClock } from "@/components/user/clock";
@@ -51,7 +52,19 @@ import type { PublicProfile } from "@/lib/profile/public";
  * browser connects, and the live list takes its place once the session settles. The next
  * page loads as the end of the list comes into view.
  */
-export function UserChats({
+/**
+ * The owner's chats of a profile. Only the owner holds a client on this page, so
+ * the list mounts once the page has one, and no visitor reads it.
+ */
+export function UserChats(props: ComponentProps<typeof LiveUserChats>) {
+  return (
+    <SignedInIsland>
+      <LiveUserChats {...props} />
+    </SignedInIsland>
+  );
+}
+
+function LiveUserChats({
   first,
   now: serverNow,
   profile,

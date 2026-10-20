@@ -5,6 +5,7 @@ import { lazyComponent } from "@repo/design-system/lib/lazy";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Effect, HashSet } from "effect";
 import { useLocale } from "use-intl";
+import { ConvexIsland, SignedInIsland } from "@/components/providers/island";
 import { MoreMenu } from "@/components/shared/more";
 import { formatShortAge } from "@/components/user/age";
 import {
@@ -17,7 +18,7 @@ import {
   FeedName,
   FeedRow,
 } from "@/components/user/feed";
-import { LikeButton } from "@/components/user/like";
+import { LikeButton, useWhenSignedIn } from "@/components/user/like";
 import { likeInLists, unlikeInLists } from "@/components/user/posts/mutation";
 import {
   usePostDraft,
@@ -61,7 +62,9 @@ export function PostRow({ post }: { post: ListPost }) {
           {isOwner && (
             <FeedEnd>
               <MoreMenu inert={pending}>
-                <PostDeletion postId={post._id} />
+                <SignedInIsland>
+                  <PostDeletion postId={post._id} />
+                </SignedInIsland>
               </MoreMenu>
             </FeedEnd>
           )}
@@ -75,8 +78,32 @@ export function PostRow({ post }: { post: ListPost }) {
   );
 }
 
-/** The like toggle of a post, which changes the post at once and tells the learner when the server refuses. */
+/**
+ * The like toggle of a post. A learner's toggle changes the post through the
+ * page's client, and a visitor's toggle sends the visitor to sign in.
+ */
 function PostLikeButton({ post }: { post: ListPost }) {
+  return (
+    <ConvexIsland fallback={<VisitorPostLikeButton post={post} />}>
+      <LivePostLikeButton post={post} />
+    </ConvexIsland>
+  );
+}
+
+/** A visitor's like toggle: it asks for sign-in, and changes nothing. */
+function VisitorPostLikeButton({ post }: { post: ListPost }) {
+  const whenSignedIn = useWhenSignedIn();
+  return (
+    <LikeButton
+      likeCount={post.likeCount}
+      liked={post.liked}
+      onToggle={() => whenSignedIn(() => undefined)}
+    />
+  );
+}
+
+/** A learner's like toggle, which changes the post at once and tells the learner when the server refuses. */
+function LivePostLikeButton({ post }: { post: ListPost }) {
   const like = useMutation(posts.mutations.like).withOptimisticUpdate(
     likeInLists
   );

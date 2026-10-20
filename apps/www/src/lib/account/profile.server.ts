@@ -15,7 +15,7 @@ import {
   readToken,
 } from "@/lib/account/access.server";
 import type { ScreenSeo } from "@/lib/account/head";
-import type { ProfileInput } from "@/lib/account/input";
+import type { ProfileInput, ProfilePageInput } from "@/lib/account/input";
 import { readOptional, readRequired } from "@/lib/data/read.server";
 import { profileHref } from "@/lib/profile/href";
 
@@ -137,5 +137,45 @@ export const profileCommentsHandler = accountHandler(
         title: t("profile"),
       };
       return { author, first, seo, userId: profile._id };
+    })
+);
+
+/**
+ * One more page of a profile's posts, read by the cursor of the page before. A
+ * visitor reads it through the server, because the live list needs a client.
+ */
+export const profilePostsPageHandler = accountHandler(
+  ({ cursor, username }: typeof ProfilePageInput.Type) =>
+    Effect.gen(function* () {
+      const token = yield* readToken();
+      const { profile } = yield* readProfileOrNotFound(username, token);
+      return yield* readRequired(
+        posts.queries.list,
+        {
+          authorId: profile._id,
+          paginationOpts: { cursor, numItems: POST_PAGE_SIZE },
+        },
+        token
+      );
+    })
+);
+
+/**
+ * One more page of a profile's comments, read by the cursor of the page before.
+ * A visitor reads it through the server, because the live list needs a client.
+ */
+export const profileCommentsPageHandler = accountHandler(
+  ({ cursor, username }: typeof ProfilePageInput.Type) =>
+    Effect.gen(function* () {
+      const token = yield* readToken();
+      const { profile } = yield* readProfileOrNotFound(username, token);
+      return yield* readRequired(
+        comments.queries.getCommentsByUserId,
+        {
+          paginationOpts: { cursor, numItems: COMMENT_PAGE_SIZE },
+          userId: profile._id,
+        },
+        token
+      );
     })
 );
