@@ -8,7 +8,9 @@ import { LayoutMaterial } from "@/components/shared/material/layout";
 import { signedInHead } from "@/lib/account/head";
 import { notificationsScreenFn } from "@/lib/account/home.fn";
 
-export const Route = createFileRoute("/$locale/_main/_app/_account/notifications")({
+export const Route = createFileRoute(
+  "/$locale/_main/_app/_account/notifications"
+)({
   loader: ({ params }) =>
     notificationsScreenFn({ data: { locale: params.locale } }),
   head: ({ loaderData }) =>

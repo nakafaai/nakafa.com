@@ -3,7 +3,9 @@ import { UserComments } from "@/components/user/comments";
 import { profileHead } from "@/lib/account/head";
 import { profileCommentsScreenFn } from "@/lib/account/profile.fn";
 
-export const Route = createFileRoute("/$locale/_main/_app/user/$username/comments")({
+export const Route = createFileRoute(
+  "/$locale/_main/_app/user/$username/comments"
+)({
   loader: ({ params }) =>
     profileCommentsScreenFn({
       data: { locale: params.locale, username: params.username },
