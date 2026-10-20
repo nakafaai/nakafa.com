@@ -137,8 +137,8 @@ function Content() {
       </VisualCardToolbar>
       <VisualCardBody className="relative" data-scene="triangle">
         {isNearViewport ? (
-          <Suspense fallback={ScenePlaceholder()}>
-            <ClientOnly fallback={ScenePlaceholder()}>
+          <Suspense fallback={<ScenePlaceholder />}>
+            <ClientOnly fallback={<ScenePlaceholder />}>
               <TriangleScene angle={angleValue} />
             </ClientOnly>
           </Suspense>

@@ -114,7 +114,7 @@ export function ParabolicMovementLab({
       >
         {live ? (
           <ParabolicMotionProvider motion={motion}>
-            <Suspense fallback={SceneSpinner()}>
+            <Suspense fallback={<SceneSpinner />}>
               <ParabolicMovementStage />
             </Suspense>
           </ParabolicMotionProvider>

@@ -27,8 +27,8 @@ export function DeferredMathScene(props: MathSceneProps) {
         onIntersect={() => setShouldRender(true)}
       />
       {shouldRender ? (
-        <Suspense fallback={ScenePlaceholder()}>
-          <ClientOnly fallback={ScenePlaceholder()}>
+        <Suspense fallback={<ScenePlaceholder />}>
+          <ClientOnly fallback={<ScenePlaceholder />}>
             <MathScene {...props} />
           </ClientOnly>
         </Suspense>

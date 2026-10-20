@@ -158,7 +158,7 @@ export function BiologyLabFrame<Item extends BiologyLabItemProps>({
         render={<section />}
       >
         {live ? (
-          <Suspense fallback={SceneSpinner()}>
+          <Suspense fallback={<SceneSpinner />}>
             <BiologyStage colors={colors} store={store} view={view}>
               <Scene item={selectedItem} />
             </BiologyStage>

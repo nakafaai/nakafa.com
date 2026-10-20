@@ -250,7 +250,7 @@ function Content() {
       {/* The loading frame and the stage share this band, so nothing moves when the stage mounts. */}
       <VisualCardBody className="group-data-fullscreen/visual:justify-center">
         {live ? (
-          <Suspense fallback={ScenePlaceholder()}>
+          <Suspense fallback={<ScenePlaceholder />}>
             <UnitCircleStage angle={angleValue} viewLabel={viewLabel} />
           </Suspense>
         ) : (

@@ -51,7 +51,7 @@ export function ShellModelCanvas({
           sample={sample}
           shells={shells}
         >
-          <Suspense fallback={SceneSpinner()}>
+          <Suspense fallback={<SceneSpinner />}>
             <ShellModelStage />
           </Suspense>
         </ShellModelProvider>

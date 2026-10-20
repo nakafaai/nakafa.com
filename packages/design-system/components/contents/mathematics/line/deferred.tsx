@@ -20,8 +20,8 @@ export function DeferredLineScene() {
   return (
     <VisualCardBody className="relative" data-scene="line">
       {shouldRender ? (
-        <Suspense fallback={ScenePlaceholder()}>
-          <ClientOnly fallback={ScenePlaceholder()}>
+        <Suspense fallback={<ScenePlaceholder />}>
+          <ClientOnly fallback={<ScenePlaceholder />}>
             <LineScene />
           </ClientOnly>
         </Suspense>
