@@ -14,8 +14,8 @@ import { ArticleNext } from "@/components/articles/next";
 import { CardArticle } from "@/components/shared/card/article";
 import { ContainerList } from "@/components/shared/card/list";
 import { FooterContent } from "@/components/shared/content/footer";
+import { LayoutContent } from "@/components/shared/content/frame";
 import { HeaderContent } from "@/components/shared/content/header";
-import { LayoutContent } from "@/components/shared/content/layout";
 import { RefContent } from "@/components/shared/content/references";
 import {
   ARTICLE_SOURCE_ROOT,

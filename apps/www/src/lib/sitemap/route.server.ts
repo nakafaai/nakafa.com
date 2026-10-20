@@ -1,8 +1,6 @@
-import "@tanstack/react-start/server-only";
-
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { Array as Arr, Effect, Match, Option, Schema } from "effect";
-import { captureServerExceptionSafely } from "@/lib/analytics/server";
+import { captureServerExceptionSafely } from "@/lib/analytics/exception.server";
 import { getCachedSitemapDescriptors } from "@/lib/sitemap/catalog";
 import { getCachedSitemapEntries } from "@/lib/sitemap/entries";
 import { getSitemapPageDescriptor } from "@/lib/sitemap/identity";

@@ -1,5 +1,3 @@
-import "@tanstack/react-start/server-only";
-
 import { setResponseHeader } from "@tanstack/react-start/server";
 import { Effect } from "effect";
 

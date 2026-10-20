@@ -3,7 +3,7 @@ import { Option } from "effect";
 import type { ReactElement } from "react";
 import { ExamRooms, ROOM_PAGE_SIZE } from "@/components/tenant/exams/rooms";
 import { SchoolPageNotFound } from "@/components/tenant/notfound";
-import { readExamRoomsFn } from "@/lib/tenant/exams.fn";
+import { readExamRoomsFn } from "@/lib/tenant/exams.functions";
 import { readExamId } from "@/lib/tenant/params";
 
 /** The rooms of one exam of the school. A failed address to an exam is not found for every viewer. */

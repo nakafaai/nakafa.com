@@ -4,7 +4,7 @@ import type { ReactElement } from "react";
 import { CHANNEL_PAGE_SIZE } from "@/components/tenant/classes/channels";
 import { ClassShell } from "@/components/tenant/classes/shell";
 import { SchoolPageNotFound } from "@/components/tenant/notfound";
-import { readClassForumFn } from "@/lib/tenant/classes.fn";
+import { readClassForumFn } from "@/lib/tenant/classes.functions";
 import { readClassAddress } from "@/lib/tenant/params";
 
 /** The forum of one class of the school. A failed address to a class is not found for every viewer. */

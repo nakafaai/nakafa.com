@@ -1,5 +1,3 @@
-import "@tanstack/react-start/server-only";
-
 import { negotiateLocale } from "@repo/internationalization/src/negotiate";
 import {
   getRequest,
@@ -9,7 +7,7 @@ import {
 import { Effect } from "effect";
 import { readSessionMemo } from "@/lib/auth/session.server";
 import { serverHandler } from "@/lib/server/fn";
-import type { SchoolFrameInput } from "@/lib/tenant/frame.fn";
+import type { SchoolFrameInput } from "@/lib/tenant/frame.functions";
 import { readSchoolFrame, SchoolReadsLive } from "@/lib/tenant/read";
 
 /**

@@ -28,9 +28,12 @@ import {
   getSubjectMenuHref,
   subjectMenu,
 } from "@/components/sidebar/data/subject";
-import { readRouteMessages } from "@/lib/i18n/messages.fn";
+import { readRouteMessages } from "@/lib/i18n/messages.functions";
 import type { MarketingFaqItem } from "@/lib/marketing/faq";
-import { readHomeCurriculaFn, readHomeTryout } from "@/lib/marketing/home.fn";
+import {
+  readHomeCurriculaFn,
+  readHomeTryout,
+} from "@/lib/marketing/home.functions";
 import { getAppSocialArtwork } from "@/lib/og/app";
 import { createSeoHead, toRouterHead } from "@/lib/seo/head";
 

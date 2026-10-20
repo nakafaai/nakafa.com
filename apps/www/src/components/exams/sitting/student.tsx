@@ -42,7 +42,7 @@ import {
   CardSectionActions,
   CardSectionFooter,
 } from "@/components/shared/card/section";
-import { LayoutContent } from "@/components/shared/content/layout";
+import { LayoutContent } from "@/components/shared/content/frame";
 import { isDenied, isLostAccess } from "@/components/tenant/refusal";
 import { schoolDateTimeText } from "@/components/tenant/settings/clock";
 import { usePreloadedQueryResult } from "@/lib/data/preloaded";

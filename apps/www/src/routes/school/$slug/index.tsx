@@ -4,7 +4,10 @@ import { TenantHome } from "@/components/tenant/home";
 import { showsStudentHome } from "@/components/tenant/home/access";
 import type { HomePreload } from "@/components/tenant/home/data";
 import { canManageSchool, roleOf } from "@/lib/tenant/frame";
-import { readStaffHomeFn, readStudentHomeFn } from "@/lib/tenant/home.fn";
+import {
+  readStaffHomeFn,
+  readStudentHomeFn,
+} from "@/lib/tenant/home.functions";
 
 /**
  * The home of a school host, rendered inside the school shell. A member's home

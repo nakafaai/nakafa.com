@@ -3,7 +3,7 @@ import { Option } from "effect";
 import type { ReactElement } from "react";
 import { SchoolCohortsSettings } from "@/components/tenant/settings/cohorts";
 import { firstActiveUnitOf } from "@/lib/tenant/frame";
-import { readCohortsFn } from "@/lib/tenant/settings.fn";
+import { readCohortsFn } from "@/lib/tenant/settings.functions";
 
 /**
  * The cohorts of the school, by period. The tab opens the school's first active unit, so its active period

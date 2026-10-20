@@ -1,7 +1,7 @@
 import { cva } from "class-variance-authority";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
-import { tileSpans } from "@/components/tenant/home/layout";
+import { tileSpans } from "@/components/tenant/home/plan";
 
 /**
  * The columns a tile takes at two columns (from 600 pixels) and at three (from 960 pixels), by the place its

@@ -1,8 +1,7 @@
-import "@tanstack/react-start/server-only";
 import type { AnyPublicQuery, Args } from "@confect/core/Ref";
 import { notFound } from "@tanstack/react-router";
 import { Effect } from "effect";
-import { captureServerExceptionSafely } from "@/lib/analytics/server";
+import { captureServerExceptionSafely } from "@/lib/analytics/exception.server";
 import { preloadConfectQuery } from "@/lib/data/preload.server";
 
 /** Whether a failed read is a real failure rather than one of the query's refusals. */

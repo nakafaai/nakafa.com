@@ -1,4 +1,3 @@
-import "@tanstack/react-start/server-only";
 import access from "@repo/backend/confect/_generated/refs/access";
 import identity from "@repo/backend/confect/_generated/refs/identity";
 import integrations from "@repo/backend/confect/_generated/refs/integrations";

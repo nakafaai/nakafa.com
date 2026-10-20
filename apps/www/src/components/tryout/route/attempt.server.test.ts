@@ -24,10 +24,10 @@ const mocks = vi.hoisted(() => ({
 vi.mock("@tanstack/react-start/server", () => ({
   setResponseHeader: mocks.setResponseHeader,
 }));
-vi.mock("@/components/player/server", () => ({
+vi.mock("@/components/player/mode.server", () => ({
   readPlayerMode: mocks.readPlayerMode,
 }));
-vi.mock("@/components/tryout/catalog/server", () => ({
+vi.mock("@/components/tryout/catalog/source.server", () => ({
   readTryoutSectionAttemptPage: mocks.readTryoutSectionAttemptPage,
   readTryoutSectionPage: mocks.readTryoutSectionPage,
   readTryoutSetAttemptPage: mocks.readTryoutSetAttemptPage,

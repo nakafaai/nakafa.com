@@ -4,7 +4,7 @@ import {
   PAGE_SIZE,
   SchoolInvitesSettings,
 } from "@/components/tenant/settings/invites";
-import { readInvitesFn } from "@/lib/tenant/settings.fn";
+import { readInvitesFn } from "@/lib/tenant/settings.functions";
 
 /** The pending invites of the school. */
 export const Route = createFileRoute("/school/$slug/settings/invites")({

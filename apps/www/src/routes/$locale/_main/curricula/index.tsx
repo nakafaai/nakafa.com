@@ -11,10 +11,10 @@ import { createTranslator } from "use-intl";
 import { CurriculumCardGrid } from "@/components/curriculum/cards";
 import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
 import { FooterContent } from "@/components/shared/content/footer";
-import { LayoutContent } from "@/components/shared/content/layout";
+import { LayoutContent } from "@/components/shared/content/frame";
 import { RefContent } from "@/components/shared/content/references";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
-import { LayoutMaterial } from "@/components/shared/material/layout";
+import { LayoutMaterial } from "@/components/shared/material/frame";
 import { ComingSoon } from "@/components/shared/upcoming";
 import {
   LEARN_SHELL_CACHE_SCOPES,

@@ -20,10 +20,10 @@ import {
 } from "@/components/shared/breadcrumb/header";
 import { OpenContent } from "@/components/shared/content/actions";
 import { FooterContent } from "@/components/shared/content/footer";
-import { LayoutContent } from "@/components/shared/content/layout";
+import { LayoutContent } from "@/components/shared/content/frame";
 import { PaginationContent } from "@/components/shared/content/pagination";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
-import { LayoutMaterial } from "@/components/shared/material/layout";
+import { LayoutMaterial } from "@/components/shared/material/frame";
 import {
   SidebarRightFooter,
   SidebarRightHeader,

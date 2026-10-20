@@ -1,7 +1,6 @@
-import "@tanstack/react-start/server-only";
 import { convexBetterAuthReactStart } from "@convex-dev/better-auth/react-start";
 import { Effect } from "effect";
-import { createAuthProxy } from "@/lib/auth/proxy";
+import { createAuthProxy } from "@/lib/auth/relay";
 import { runServerEffect } from "@/lib/server/fn";
 import { CONVEX_SITE_URL, CONVEX_URL } from "@/lib/server/runtime";
 

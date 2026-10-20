@@ -1,5 +1,3 @@
-import "@tanstack/react-start/server-only";
-
 import {
   computePreviewRendererProof,
   PREVIEW_RENDERER_AUTH_FORMAT,

@@ -4,7 +4,7 @@ import { useTranslations } from "use-intl";
 import { StudentResults } from "@/components/exams/results/student";
 import type { AttemptValue } from "@/components/exams/sitting/attempt";
 import { SittingBar } from "@/components/exams/sitting/bar";
-import { LayoutContent } from "@/components/shared/content/layout";
+import { LayoutContent } from "@/components/shared/content/frame";
 
 /** The copy key of each state of an attempt that takes no answers. */
 const sentenceKeys = {

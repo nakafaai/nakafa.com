@@ -10,7 +10,7 @@ import {
   createAuthProxy,
   readAuthResponse,
   writeAuthResponse,
-} from "@/lib/auth/proxy";
+} from "@/lib/auth/relay";
 
 const GET_URL = "https://nakafa.com/api/auth/get-session";
 const POST_URL = "https://nakafa.com/api/auth/sign-in/email";

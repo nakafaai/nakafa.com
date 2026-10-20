@@ -2,10 +2,10 @@ import { LoveKoreanFingerIcon } from "@hugeicons/core-free-icons";
 import { createFileRoute } from "@tanstack/react-router";
 import { createTranslator, useTranslations } from "use-intl";
 import { ContributorGallery } from "@/components/contributor/gallery";
+import { LayoutContent } from "@/components/shared/content/frame";
 import { HeaderContent } from "@/components/shared/content/header";
-import { LayoutContent } from "@/components/shared/content/layout";
 import { contributors } from "@/lib/data/contributor";
-import { readRouteMessages } from "@/lib/i18n/messages.fn";
+import { readRouteMessages } from "@/lib/i18n/messages.functions";
 import { getAppSocialArtwork } from "@/lib/og/app";
 import { createSeoHead, toRouterHead } from "@/lib/seo/head";
 

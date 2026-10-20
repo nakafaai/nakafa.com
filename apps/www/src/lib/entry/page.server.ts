@@ -1,5 +1,3 @@
-import "@tanstack/react-start/server-only";
-
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { getRequest } from "@tanstack/react-start/server";
 import { Effect, Option } from "effect";
@@ -14,11 +12,11 @@ import { getShellPageNavigation } from "@/lib/content/page/navigation";
 import type {
   OnboardingPageInput,
   SchoolStartPageInput,
-} from "@/lib/entry/page.fn";
+} from "@/lib/entry/page.functions";
 import {
   readOnboardingStatus,
   recordOnboardingAdmission,
-} from "@/lib/onboarding/server";
+} from "@/lib/onboarding/status.server";
 import { runServerEffect, serverHandler } from "@/lib/server/fn";
 
 /** The page where an account opens its own school, which its first sign-in can resume. */

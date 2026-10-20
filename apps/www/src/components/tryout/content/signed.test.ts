@@ -96,7 +96,7 @@ vi.mock("@confect/js", async (importOriginal) => {
     },
   };
 });
-vi.mock("@/lib/auth/server", () => ({
+vi.mock("@/lib/auth/handler.server", () => ({
   getToken: tokenMock,
 }));
 vi.mock("@repo/site/keys", () => ({

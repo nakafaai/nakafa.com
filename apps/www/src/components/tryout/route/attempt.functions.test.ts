@@ -19,7 +19,7 @@ vi.mock("@tanstack/react-start/server", () => ({
   getRequest: () => new Request("https://nakafa.com/en/try-out"),
   setResponseHeader: mocks.setResponseHeader,
 }));
-vi.mock("@/components/tryout/catalog/server", () => ({
+vi.mock("@/components/tryout/catalog/source.server", () => ({
   readTryoutSectionPage: mocks.readTryoutSectionPage,
   readTryoutSetPage: mocks.readTryoutSetPage,
 }));

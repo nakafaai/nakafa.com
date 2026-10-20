@@ -6,7 +6,7 @@ import { Effect } from "effect";
 import {
   readTryoutSectionAttemptPage,
   readTryoutSetAttemptPage,
-} from "@/components/tryout/catalog/server";
+} from "@/components/tryout/catalog/source.server";
 
 /** The set a public URL names, as its current-attempt request takes it. */
 type CurrentSetRequest = Omit<typeof currentSetRequestValidator.Type, "kind">;

@@ -1,10 +1,8 @@
-import "@tanstack/react-start/server-only";
-
 import { FetchClient } from "@repo/utilities/http/client";
 import { logError, logHttpRequest } from "@repo/utilities/logging/effect";
 import { geolocation } from "@vercel/functions";
 import { Cause, Effect } from "effect";
-import { scheduleServerExceptionCapture } from "@/lib/analytics/server";
+import { scheduleServerExceptionCapture } from "@/lib/analytics/exception.server";
 import {
   createCorsForbiddenResponse,
   isCorsRequestAllowed,

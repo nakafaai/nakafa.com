@@ -1,4 +1,3 @@
-import "@tanstack/react-start/server-only";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { Effect } from "effect";
 import { readOptional, readRequired } from "@/lib/data/read.server";

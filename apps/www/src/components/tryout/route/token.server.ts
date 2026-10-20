@@ -1,5 +1,3 @@
-import "@tanstack/react-start/server-only";
-
 import { getRequest } from "@tanstack/react-start/server";
 import { Effect } from "effect";
 import { env } from "@/env";

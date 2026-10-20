@@ -5,7 +5,7 @@ import { Option } from "effect";
 import { type ReactNode, useState } from "react";
 import { useTranslations } from "use-intl";
 import type { StoreApi } from "zustand";
-import { LayoutContent } from "@/components/shared/content/layout";
+import { LayoutContent } from "@/components/shared/content/frame";
 import { useTenant } from "@/components/tenant/context";
 import { CreateExam } from "@/components/tenant/exams/dialog";
 import {

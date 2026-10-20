@@ -33,7 +33,7 @@ const analytics = vi.hoisted(() => ({
     vi.fn<(error: unknown, properties: unknown) => Effect.Effect<void>>(),
 }));
 
-vi.mock("@/lib/analytics/server", () => ({
+vi.mock("@/lib/analytics/exception.server", () => ({
   captureServerExceptionSafely: analytics.captureServerExceptionSafely,
 }));
 

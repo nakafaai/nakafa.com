@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { UserSettingsSubscriptions } from "@/components/user/settings/subscriptions";
 import { privateHead } from "@/lib/account/head";
-import { subscriptionsScreenFn } from "@/lib/account/settings.fn";
+import { subscriptionsScreenFn } from "@/lib/account/settings.functions";
 
 export const Route = createFileRoute(
   "/$locale/_main/_app/_account/user/settings/subscriptions"

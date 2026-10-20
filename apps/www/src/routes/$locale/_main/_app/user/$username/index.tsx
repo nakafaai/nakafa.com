@@ -2,7 +2,7 @@ import { createFileRoute, getRouteApi } from "@tanstack/react-router";
 import { Option } from "effect";
 import { UserPosts } from "@/components/user/posts/list";
 import { profileHead } from "@/lib/account/head";
-import { profilePostsFn } from "@/lib/account/profile.fn";
+import { profilePostsFn } from "@/lib/account/profile.functions";
 
 export const Route = createFileRoute("/$locale/_main/_app/user/$username/")({
   loader: ({ params }) =>

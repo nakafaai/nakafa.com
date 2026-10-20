@@ -1,4 +1,3 @@
-import "@tanstack/react-start/server-only";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Effect, Schema } from "effect";

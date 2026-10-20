@@ -48,7 +48,7 @@ vi.mock("@/lib/auth/session.server", () => ({
 vi.mock("@/lib/data/preload.server", () => ({
   preloadConfectQuery: mocks.preloadConfectQuery,
 }));
-vi.mock("@/lib/analytics/server", () => ({
+vi.mock("@/lib/analytics/exception.server", () => ({
   captureServerExceptionSafely: mocks.captureServerExceptionSafely,
 }));
 

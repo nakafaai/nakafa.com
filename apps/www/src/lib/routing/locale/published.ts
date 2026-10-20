@@ -15,7 +15,7 @@ import { readPublishedPageLocalePath } from "@/lib/content/page/catalog";
 import { readPublishedProgramRoute } from "@/lib/content/program/route";
 import type { ContentReleasePin } from "@/lib/content/published/release";
 import { readPublishedTryoutLocalizedPath } from "@/lib/content/tryout/path";
-import { MissingLocalizedRouteProjectionError } from "@/lib/routing/locale/error";
+import { MissingLocalizedRouteProjectionError } from "@/lib/routing/locale/missing";
 import {
   readMaterialContextQuery,
   toMaterialContextQueryString,

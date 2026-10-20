@@ -3,7 +3,7 @@ import { Option } from "effect";
 import type { ReactElement } from "react";
 import { StudentSitting } from "@/components/exams/sitting/student";
 import { SchoolPageNotFound } from "@/components/tenant/notfound";
-import { readStudentSittingFn } from "@/lib/tenant/exams.fn";
+import { readStudentSittingFn } from "@/lib/tenant/exams.functions";
 import { readSittingId } from "@/lib/tenant/params";
 
 /**

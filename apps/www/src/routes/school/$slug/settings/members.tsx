@@ -4,7 +4,7 @@ import {
   PAGE_SIZE,
   SchoolMembersSettings,
 } from "@/components/tenant/settings/members";
-import { readMembersFn } from "@/lib/tenant/settings.fn";
+import { readMembersFn } from "@/lib/tenant/settings.functions";
 
 /** The members of the school. */
 export const Route = createFileRoute("/school/$slug/settings/members")({

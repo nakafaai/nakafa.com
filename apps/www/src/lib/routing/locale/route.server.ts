@@ -1,5 +1,3 @@
-import "@tanstack/react-start/server-only";
-
 import { decodeLocale } from "@repo/internationalization/src/locale";
 import { Effect } from "effect";
 import { resolveLocalizedNavigationHref } from "@/lib/routing/locale/resolve";

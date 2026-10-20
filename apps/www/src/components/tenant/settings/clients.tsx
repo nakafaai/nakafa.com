@@ -33,10 +33,10 @@ import { useViewerQuery } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { SchoolClientCreateDialog } from "@/components/tenant/settings/client";
 import { revokeClientChange } from "@/components/tenant/settings/mutation";
-import { SettingsPage } from "@/components/tenant/settings/page";
 import { saveSchool } from "@/components/tenant/settings/save";
 import { scopeNameOf } from "@/components/tenant/settings/scope";
 import { SchoolSecretDialog } from "@/components/tenant/settings/secret";
+import { SettingsPage } from "@/components/tenant/settings/section";
 import {
   type PreloadedPage,
   usePaginatedPreloaded,

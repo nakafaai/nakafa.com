@@ -11,7 +11,7 @@ import {
 import {
   readOnboardingStatus,
   recordOnboardingAdmission,
-} from "@/lib/onboarding/server";
+} from "@/lib/onboarding/status.server";
 
 /** The request session, the onboarding status and the policy pages of the current test. */
 let session = {
@@ -36,7 +36,7 @@ vi.mock("@/lib/auth/session.server", () => ({
   readSessionMemo: () => Effect.succeed(Effect.succeed(session)),
 }));
 
-vi.mock("@/lib/onboarding/server", () => ({
+vi.mock("@/lib/onboarding/status.server", () => ({
   readOnboardingStatus: vi.fn(() => Effect.succeed(status)),
   recordOnboardingAdmission: vi.fn(() => Effect.succeed(status)),
 }));

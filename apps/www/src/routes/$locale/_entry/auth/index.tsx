@@ -7,9 +7,9 @@ import { SignInScreen } from "@/components/auth/screen";
 import { EntryShellHeader } from "@/components/entry/shell";
 import { BackButton } from "@/components/shared/back";
 import { ThemePicker } from "@/components/shared/theme/picker";
-import { readAuthLegalFn } from "@/lib/auth/legal.fn";
+import { readAuthLegalFn } from "@/lib/auth/legal.functions";
 import { TextSearchParam } from "@/lib/entry/search";
-import { readRouteMessages } from "@/lib/i18n/messages.fn";
+import { readRouteMessages } from "@/lib/i18n/messages.functions";
 import { getAppSocialArtwork } from "@/lib/og/app";
 import { createSeoHead, toRouterHead } from "@/lib/seo/head";
 

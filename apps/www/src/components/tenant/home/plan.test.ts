@@ -4,7 +4,7 @@ import {
   staffPlan,
   studentPlan,
   tileSpans,
-} from "@/components/tenant/home/layout";
+} from "@/components/tenant/home/plan";
 
 const EMPTY = {
   canCreate: false,

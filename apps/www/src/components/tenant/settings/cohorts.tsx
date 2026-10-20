@@ -49,8 +49,8 @@ import {
   SchoolCohortRestore,
 } from "@/components/tenant/settings/cohort";
 import { createCohortChange } from "@/components/tenant/settings/groups";
-import { SettingsPage } from "@/components/tenant/settings/page";
 import { saveSchool } from "@/components/tenant/settings/save";
+import { SettingsPage } from "@/components/tenant/settings/section";
 import type { Cohort, Period } from "@/components/tenant/settings/state";
 import {
   SchoolUnitChoice,
@@ -58,7 +58,7 @@ import {
 } from "@/components/tenant/settings/unit";
 import { NoActiveUnit } from "@/components/tenant/settings/unitless";
 import { usePreloadedQueryResult } from "@/lib/data/preloaded";
-import type { readCohortsFn } from "@/lib/tenant/settings.fn";
+import type { readCohortsFn } from "@/lib/tenant/settings.functions";
 
 const SOURCE = "components/tenant/settings/cohorts";
 

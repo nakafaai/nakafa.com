@@ -4,11 +4,11 @@ import { createFileRoute, notFound } from "@tanstack/react-router";
 import { SheetEntry } from "@/components/ai/sheet/entry";
 import { AiMenuItem } from "@/components/ai/sheet/menu";
 import { OpenContent } from "@/components/shared/content/actions";
-import { LayoutContent } from "@/components/shared/content/layout";
+import { LayoutContent } from "@/components/shared/content/frame";
 import { PaginationContent } from "@/components/shared/content/pagination";
 import { FragmentLanding } from "@/components/shared/fragment";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
-import { LayoutMaterial } from "@/components/shared/material/layout";
+import { LayoutMaterial } from "@/components/shared/material/frame";
 import {
   SidebarRightFooter,
   SidebarRightHeader,
@@ -29,7 +29,7 @@ import { publicContentHeaders } from "@/lib/content/delivery";
 import {
   readSurahFn,
   recoverQuranSnapshotFn,
-} from "@/lib/content/quran/surah.fn";
+} from "@/lib/content/quran/surah.functions";
 import { getAppSocialArtwork } from "@/lib/og/app";
 import { createSeoHead, toRouterHead } from "@/lib/seo/head";
 

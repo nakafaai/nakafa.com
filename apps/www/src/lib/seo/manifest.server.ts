@@ -1,5 +1,3 @@
-import "@tanstack/react-start/server-only";
-
 import { THEME_COMPATIBILITY_COLORS } from "@repo/design-system/lib/theme/compatibility";
 import { readServerTranslator } from "@repo/internationalization/src/translator";
 import { Effect } from "effect";

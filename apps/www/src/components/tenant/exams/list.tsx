@@ -11,7 +11,7 @@ import { useMemo, useState } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { useStore } from "zustand";
 import { useConvexAuth } from "@/components/providers/convex";
-import { LayoutContent } from "@/components/shared/content/layout";
+import { LayoutContent } from "@/components/shared/content/frame";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import { DataTable } from "@/components/shared/table/data";

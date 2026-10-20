@@ -24,7 +24,7 @@ import { Option } from "effect";
 import { createTranslator, IntlProvider, useTranslations } from "use-intl";
 import { AppNotFound } from "@/components/state/app";
 import { LocalizedError } from "@/components/state/localized";
-import { readRouteMessages } from "@/lib/i18n/messages.fn";
+import { readRouteMessages } from "@/lib/i18n/messages.functions";
 
 /** The messages that every locale page renders, under every route group. */
 const SHELL_NAMESPACES = ["Common", "State", "Toast"] as const;

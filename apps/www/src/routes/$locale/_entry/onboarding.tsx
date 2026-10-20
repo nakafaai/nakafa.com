@@ -8,10 +8,13 @@ import { AuthLegal } from "@/components/auth/legal";
 import { EntryShellBody, EntryShellHeader } from "@/components/entry/shell";
 import { OnboardingQuestionnaire } from "@/components/programs/onboarding/questionnaire";
 import { ThemePicker } from "@/components/shared/theme/picker";
-import { readAuthLegalFn } from "@/lib/auth/legal.fn";
-import { admitOnboardingFn, readOnboardingPageFn } from "@/lib/entry/page.fn";
+import { readAuthLegalFn } from "@/lib/auth/legal.functions";
+import {
+  admitOnboardingFn,
+  readOnboardingPageFn,
+} from "@/lib/entry/page.functions";
 import { TextSearchParam } from "@/lib/entry/search";
-import { readRouteMessages } from "@/lib/i18n/messages.fn";
+import { readRouteMessages } from "@/lib/i18n/messages.functions";
 import { getAppSocialArtwork } from "@/lib/og/app";
 import { createSeoHead, toRouterHead } from "@/lib/seo/head";
 

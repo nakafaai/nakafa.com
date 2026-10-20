@@ -1,5 +1,3 @@
-import "@tanstack/react-start/server-only";
-
 import { HttpClient } from "@confect/js";
 import { NETWORK_ATTEMPT_DEADLINE } from "@repo/backend/client/network";
 import onboarding from "@repo/backend/confect/_generated/refs/onboarding";

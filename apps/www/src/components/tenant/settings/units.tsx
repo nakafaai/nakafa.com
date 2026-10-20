@@ -47,8 +47,8 @@ import {
   setUnitLocaleChange,
   unarchiveUnitChange,
 } from "@/components/tenant/settings/mutation";
-import { SettingsPage } from "@/components/tenant/settings/page";
 import { saveSchool } from "@/components/tenant/settings/save";
+import { SettingsPage } from "@/components/tenant/settings/section";
 import type { Unit } from "@/components/tenant/settings/state";
 import { usePreloadedQueryResult } from "@/lib/data/preloaded";
 

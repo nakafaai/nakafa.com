@@ -1,5 +1,8 @@
 import { createContext } from "react";
-import type { readStaffHomeFn, readStudentHomeFn } from "@/lib/tenant/home.fn";
+import type {
+  readStaffHomeFn,
+  readStudentHomeFn,
+} from "@/lib/tenant/home.functions";
 
 /**
  * The first screen of the school home, as the home's loader read it on the server.

@@ -11,7 +11,7 @@ import {
   FeatureText,
   FeatureTitle,
 } from "@/components/marketing/shared/feature";
-import type { readFeaturedTryout } from "@/components/tryout/catalog/server";
+import type { readFeaturedTryout } from "@/components/tryout/catalog/source.server";
 import { renderTryoutResponseLabels } from "@/components/tryout/runtime/response/labels";
 
 /** The featured question and its response, as the catalog reads them. */

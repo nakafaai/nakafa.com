@@ -2,7 +2,7 @@
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { PLAYER_MODE_COOKIE } from "@/components/player/mode";
-import { readPlayerMode } from "@/components/player/server";
+import { readPlayerMode } from "@/components/player/mode.server";
 
 const cookies = vi.hoisted(() => ({ getCookie: vi.fn() }));
 

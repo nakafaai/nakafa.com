@@ -2,8 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useSyncExternalStore } from "react";
 import { ChatHeader } from "@/components/ai/chat/header";
 import { readShareToken } from "@/components/ai/chat/link";
-import { AiChatPage } from "@/components/ai/chat/page";
-import { chatScreenFn } from "@/lib/account/home.fn";
+import { AiChatPage } from "@/components/ai/chat/screen";
+import { chatScreenFn } from "@/lib/account/home.functions";
 
 export const Route = createFileRoute("/$locale/_main/_app/chat/$id")({
   loader: ({ params }) =>

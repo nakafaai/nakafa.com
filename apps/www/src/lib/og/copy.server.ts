@@ -1,5 +1,3 @@
-import "@tanstack/react-start/server-only";
-
 import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
 import { ArticleRouteSlugSchema } from "@nakafa/aksara-contracts/projection/article";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";

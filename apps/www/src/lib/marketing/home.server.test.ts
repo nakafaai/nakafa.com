@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from "@effect/vitest";
-import { readFeaturedTryout } from "@/components/tryout/catalog/server";
+import { readFeaturedTryout } from "@/components/tryout/catalog/source.server";
 import {
   readRuntimeCurriculumCatalog,
   readRuntimeCurriculumOptions,
@@ -14,7 +14,7 @@ vi.mock("@tanstack/react-start/server", () => ({
   getRequest: () => new Request("https://nakafa.com/en"),
 }));
 
-vi.mock("@/components/tryout/catalog/server", () => ({
+vi.mock("@/components/tryout/catalog/source.server", () => ({
   readFeaturedTryout: vi.fn(() => Promise.resolve({ title: "Featured" })),
 }));
 

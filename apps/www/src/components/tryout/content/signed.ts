@@ -25,7 +25,7 @@ import {
 } from "@/components/tryout/content/model";
 import { makeTryoutRuntimeRequest } from "@/components/tryout/content/request";
 import { env } from "@/env";
-import { getToken } from "@/lib/auth/server";
+import { getToken } from "@/lib/auth/handler.server";
 import { ContentRuntimeConfigurationError } from "@/lib/content/published/errors";
 import { rendererManifest } from "@/lib/content/renderer/manifest";
 import { httpLayer } from "@/lib/convex/http";

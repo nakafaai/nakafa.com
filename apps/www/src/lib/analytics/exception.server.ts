@@ -1,5 +1,3 @@
-import "@tanstack/react-start/server-only";
-
 import type { OperationalExceptionProperties } from "@repo/analytics/posthog/exception";
 import { isServerExceptionReportingEnabled } from "@repo/analytics/server-reporting";
 import { getRequestHeader } from "@tanstack/react-start/server";

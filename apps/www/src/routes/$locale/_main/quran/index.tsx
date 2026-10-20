@@ -7,8 +7,8 @@ import { createServerFn } from "@tanstack/react-start";
 import { Array as Arr, Schema } from "effect";
 import { createTranslator } from "use-intl";
 import { CardLink, CardLinks } from "@/components/shared/card/link";
+import { LayoutContent } from "@/components/shared/content/frame";
 import { HeaderContent } from "@/components/shared/content/header";
-import { LayoutContent } from "@/components/shared/content/layout";
 import { QuranSurahRow } from "@/components/shared/quran/surah";
 import {
   LEARN_SHELL_CACHE_SCOPES,

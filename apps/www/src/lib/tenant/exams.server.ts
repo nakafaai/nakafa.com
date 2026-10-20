@@ -1,4 +1,3 @@
-import "@tanstack/react-start/server-only";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import { Effect } from "effect";
 import { dashboardArgs } from "@/components/exams/sitting/change";

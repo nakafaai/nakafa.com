@@ -1,7 +1,7 @@
 import { useDebouncedValue } from "@mantine/hooks";
 import { useQueryStates } from "nuqs";
 import { SearchResults } from "@/components/search/list";
-import { getErrorMessage } from "@/lib/error";
+import { getErrorMessage } from "@/lib/failure";
 import { searchParsers } from "@/lib/nuqs/search";
 import { useSearchQuery } from "@/lib/search/query";
 

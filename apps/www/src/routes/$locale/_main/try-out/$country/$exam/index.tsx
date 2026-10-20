@@ -1,10 +1,10 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
-import { LayoutMaterial } from "@/components/shared/material/layout";
+import { LayoutMaterial } from "@/components/shared/material/frame";
 import { TryoutExamPageClient } from "@/components/tryout/catalog/exam";
 import { TryoutExamSelector } from "@/components/tryout/catalog/selector";
-import { readTryoutExamFn } from "@/components/tryout/route/catalog.fn";
+import { readTryoutExamFn } from "@/components/tryout/route/catalog.functions";
 import { createTryoutHead } from "@/components/tryout/route/head";
 import { readTryoutCatalogHeaders } from "@/components/tryout/route/headers";
 

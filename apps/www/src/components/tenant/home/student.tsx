@@ -7,7 +7,7 @@ import { forgetSubmittedKept } from "@/components/exams/sitting/forget";
 import { CardLink, CardLinks } from "@/components/shared/card/link";
 import { useTenant } from "@/components/tenant/context";
 import { Bento, type BentoTile } from "@/components/tenant/home/bento";
-import { type StudentTile, studentPlan } from "@/components/tenant/home/layout";
+import { type StudentTile, studentPlan } from "@/components/tenant/home/plan";
 import {
   studentSittingsRead,
   useStudentSittings,

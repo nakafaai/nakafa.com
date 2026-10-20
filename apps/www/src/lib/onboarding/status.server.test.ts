@@ -19,7 +19,7 @@ import {
   OnboardingStatusReadError,
   readOnboardingStatus,
   recordOnboardingAdmission,
-} from "@/lib/onboarding/server";
+} from "@/lib/onboarding/status.server";
 
 vi.mock("@confect/js", async (importOriginal) => {
   const { HttpClient } = await importOriginal<typeof import("@confect/js")>();

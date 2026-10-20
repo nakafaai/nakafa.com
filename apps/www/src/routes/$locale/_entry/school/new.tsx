@@ -4,8 +4,8 @@ import { createTranslator } from "use-intl";
 import { EntryShellBody, EntryShellHeader } from "@/components/entry/shell";
 import { ThemePicker } from "@/components/shared/theme/picker";
 import { SchoolStart } from "@/components/tenant/start/questionnaire";
-import { readSchoolStartPageFn } from "@/lib/entry/page.fn";
-import { readRouteMessages } from "@/lib/i18n/messages.fn";
+import { readSchoolStartPageFn } from "@/lib/entry/page.functions";
+import { readRouteMessages } from "@/lib/i18n/messages.functions";
 import { getAppSocialArtwork } from "@/lib/og/app";
 import { createSeoHead, toRouterHead } from "@/lib/seo/head";
 

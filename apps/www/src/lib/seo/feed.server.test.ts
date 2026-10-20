@@ -31,7 +31,7 @@ vi.mock("@repo/internationalization/src/translator", () => ({
   readServerTranslator: readServerTranslatorMock,
 }));
 
-vi.mock("@/lib/analytics/server", () => ({
+vi.mock("@/lib/analytics/exception.server", () => ({
   /** Records every feed failure that the route reports. */
   captureServerExceptionSafely: captureMock,
 }));

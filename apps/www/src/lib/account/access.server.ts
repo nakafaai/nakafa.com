@@ -1,4 +1,3 @@
-import "@tanstack/react-start/server-only";
 import auth from "@repo/backend/confect/_generated/refs/auth";
 import users from "@repo/backend/confect/_generated/refs/users";
 import type { Locale } from "@repo/internationalization/src/locale";

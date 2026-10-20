@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import type { ReactElement } from "react";
 import { SchoolUnitsSettings } from "@/components/tenant/settings/units";
-import { readUnitsFn } from "@/lib/tenant/settings.fn";
+import { readUnitsFn } from "@/lib/tenant/settings.functions";
 
 /** The units of the school, with their time zones and content languages. */
 export const Route = createFileRoute("/school/$slug/settings/units")({

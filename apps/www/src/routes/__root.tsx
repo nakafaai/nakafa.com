@@ -25,7 +25,7 @@ import {
   LocalizedNotFound,
 } from "@/components/state/localized";
 import { signedInHintScript } from "@/lib/auth/hint";
-import { readPreviewRefreshFn } from "@/lib/content/preview/refresh.fn";
+import { readPreviewRefreshFn } from "@/lib/content/preview/refresh.functions";
 import { pricingCurrencyScript } from "@/lib/pricing/currency";
 import { readNotFoundPageLocale } from "@/lib/routing/not-found";
 import { SOCIAL_SITE_NAME } from "@/lib/seo/social";

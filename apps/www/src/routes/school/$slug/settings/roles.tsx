@@ -4,7 +4,7 @@ import {
   PAGE_SIZE,
   SchoolRolesSettings,
 } from "@/components/tenant/settings/roles";
-import { readRolesFn } from "@/lib/tenant/settings.fn";
+import { readRolesFn } from "@/lib/tenant/settings.functions";
 
 /** The roles of the people of the school. */
 export const Route = createFileRoute("/school/$slug/settings/roles")({

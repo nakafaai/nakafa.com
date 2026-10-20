@@ -39,7 +39,7 @@ import {
 } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/providers/convex";
-import { LayoutContent } from "@/components/shared/content/layout";
+import { LayoutContent } from "@/components/shared/content/frame";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import { DataTable } from "@/components/shared/table/data";
@@ -68,7 +68,7 @@ import {
 import { usePaginatedPreloaded } from "@/lib/data/paginated";
 import { usePreloadedQueryResult } from "@/lib/data/preloaded";
 import { getSchoolSettingsSection } from "@/lib/settings/school";
-import type { readCohortFn } from "@/lib/tenant/settings.fn";
+import type { readCohortFn } from "@/lib/tenant/settings.functions";
 
 const SOURCE = "components/tenant/settings/cohort";
 

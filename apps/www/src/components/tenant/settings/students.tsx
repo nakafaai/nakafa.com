@@ -43,8 +43,8 @@ import {
   type CardView,
   SchoolCardDialog,
 } from "@/components/tenant/settings/card";
-import { SettingsPage } from "@/components/tenant/settings/page";
 import { saveSchool } from "@/components/tenant/settings/save";
+import { SettingsPage } from "@/components/tenant/settings/section";
 import { SchoolDateTime } from "@/components/tenant/settings/time";
 import {
   type PreloadedPage,

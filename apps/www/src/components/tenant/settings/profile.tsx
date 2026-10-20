@@ -27,8 +27,8 @@ import { SchoolMark } from "@/components/tenant/mark";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { removeLogoChange } from "@/components/tenant/settings/mutation";
 import { SchoolNameCard } from "@/components/tenant/settings/name";
-import { SettingsPage } from "@/components/tenant/settings/page";
 import { saveSchool } from "@/components/tenant/settings/save";
+import { SettingsPage } from "@/components/tenant/settings/section";
 import { storeSchoolLogo } from "@/components/tenant/settings/upload";
 import { reportClientException } from "@/lib/analytics/client";
 

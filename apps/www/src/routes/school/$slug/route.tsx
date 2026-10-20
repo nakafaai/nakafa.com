@@ -22,10 +22,10 @@ import { TenantOutsider } from "@/components/tenant/outsider";
 import { isLostAccess } from "@/components/tenant/refusal";
 import { TenantRefused } from "@/components/tenant/refused";
 import { TenantShell } from "@/components/tenant/shell";
-import { readAuthLegalFn } from "@/lib/auth/legal.fn";
-import { readShellClassesFn } from "@/lib/tenant/classes.fn";
+import { readAuthLegalFn } from "@/lib/auth/legal.functions";
+import { readShellClassesFn } from "@/lib/tenant/classes.functions";
 import { canManageSchool, roleOf, type SchoolRead } from "@/lib/tenant/frame";
-import { readSchoolFrameFn } from "@/lib/tenant/frame.fn";
+import { readSchoolFrameFn } from "@/lib/tenant/frame.functions";
 import { schoolHead } from "@/lib/tenant/head";
 import { reusesVisitFrame } from "@/lib/tenant/visit";
 

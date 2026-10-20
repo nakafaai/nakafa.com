@@ -4,7 +4,7 @@ import type { ReactElement } from "react";
 import { canOpenExams } from "@/components/tenant/exams/access";
 import { ExamEditor } from "@/components/tenant/exams/editor";
 import { SchoolPageNotFound } from "@/components/tenant/notfound";
-import { readExamFn } from "@/lib/tenant/exams.fn";
+import { readExamFn } from "@/lib/tenant/exams.functions";
 import { readExamId } from "@/lib/tenant/params";
 
 /**

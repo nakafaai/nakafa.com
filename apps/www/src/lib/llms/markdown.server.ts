@@ -1,5 +1,3 @@
-import "@tanstack/react-start/server-only";
-
 import {
   DEFAULT_LOCALE,
   LOCALES,

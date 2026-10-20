@@ -48,7 +48,7 @@ import {
   readTryoutSetList,
   readTryoutSetPage,
   readTryoutTrackPage,
-} from "@/components/tryout/catalog/server";
+} from "@/components/tryout/catalog/source.server";
 import { resetTestRuntimeCache } from "@/test/store";
 
 const fetchQueryMock = vi.hoisted(() => vi.fn());

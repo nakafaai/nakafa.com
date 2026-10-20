@@ -19,7 +19,7 @@ import { ConvexProvider } from "@/components/providers/convex";
 import { ThemePicker } from "@/components/shared/theme/picker";
 import { Broken } from "@/components/state/broken";
 import { clientEnv } from "@/env.public";
-import { readRouteMessages } from "@/lib/i18n/messages.fn";
+import { readRouteMessages } from "@/lib/i18n/messages.functions";
 import { readStandaloneMessages } from "@/lib/i18n/standalone";
 
 /** The messages of the entry pages, which the locale route's messages join. */

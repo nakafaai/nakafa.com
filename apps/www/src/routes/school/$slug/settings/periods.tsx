@@ -6,7 +6,7 @@ import {
   SchoolPeriodsSettings,
 } from "@/components/tenant/settings/periods";
 import { firstActiveUnitOf } from "@/lib/tenant/frame";
-import { readPeriodsFn } from "@/lib/tenant/settings.fn";
+import { readPeriodsFn } from "@/lib/tenant/settings.functions";
 
 /**
  * The periods of the school, by unit. The tab opens the school's first active unit, so its first page of

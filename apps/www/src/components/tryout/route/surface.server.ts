@@ -1,5 +1,3 @@
-import "@tanstack/react-start/server-only";
-
 import type { Locale } from "@repo/internationalization/src/locale";
 import { readServerTranslator } from "@repo/internationalization/src/translator";
 import { Effect, Option, Schema } from "effect";

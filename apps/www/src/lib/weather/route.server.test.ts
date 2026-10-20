@@ -29,7 +29,7 @@ vi.mock("@/lib/security/cors", () => ({
     new Response("Access denied.", { status: 403 }),
 }));
 
-vi.mock("@/lib/analytics/server", () => ({
+vi.mock("@/lib/analytics/exception.server", () => ({
   /** Records every handled failure that the route reports. */
   scheduleServerExceptionCapture: scheduleCaptureMock,
 }));

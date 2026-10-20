@@ -4,7 +4,7 @@ import { HomeTitle } from "@/components/ai/home/title";
 import { Videos } from "@/components/ai/home/videos";
 import { DeferredWeather } from "@/components/ai/home/weather/deferred";
 import { signedInHead } from "@/lib/account/head";
-import { chatIndexScreenFn } from "@/lib/account/home.fn";
+import { chatIndexScreenFn } from "@/lib/account/home.functions";
 
 export const Route = createFileRoute("/$locale/_main/_app/chat/")({
   loader: ({ params }) =>

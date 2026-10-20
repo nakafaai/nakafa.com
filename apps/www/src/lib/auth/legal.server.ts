@@ -1,5 +1,3 @@
-import "@tanstack/react-start/server-only";
-
 import type { Locale } from "@repo/internationalization/src/locale";
 import { negotiateLocale } from "@repo/internationalization/src/negotiate";
 import { SITE_ORIGIN } from "@repo/seo/origin";

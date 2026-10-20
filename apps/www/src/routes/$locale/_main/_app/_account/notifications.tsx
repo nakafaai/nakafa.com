@@ -3,12 +3,12 @@ import { Option } from "effect";
 import { NotificationsClockContext } from "@/components/notifications/clock";
 import { NotificationsHeader } from "@/components/notifications/header";
 import { NotificationsList } from "@/components/notifications/list";
-import { LayoutContent } from "@/components/shared/content/layout";
+import { LayoutContent } from "@/components/shared/content/frame";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
-import { LayoutMaterial } from "@/components/shared/material/layout";
+import { LayoutMaterial } from "@/components/shared/material/frame";
 import { useAgeClock } from "@/components/user/ages";
 import { signedInHead } from "@/lib/account/head";
-import { notificationsScreenFn } from "@/lib/account/home.fn";
+import { notificationsScreenFn } from "@/lib/account/home.functions";
 
 export const Route = createFileRoute(
   "/$locale/_main/_app/_account/notifications"

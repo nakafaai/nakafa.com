@@ -4,8 +4,8 @@ import { Footer } from "@/components/marketing/shared/footer";
 import { Header } from "@/components/marketing/shared/header";
 import { MarketingProviders } from "@/components/providers/marketing";
 import { SharedProviders } from "@/components/providers/shared";
-import { readRouteMessages } from "@/lib/i18n/messages.fn";
-import { readMarketingShellFn } from "@/lib/marketing/shell.fn";
+import { readRouteMessages } from "@/lib/i18n/messages.functions";
+import { readMarketingShellFn } from "@/lib/marketing/shell.functions";
 
 /**
  * The messages of the marketing pages that the locale route does not carry. The

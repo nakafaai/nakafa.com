@@ -8,8 +8,8 @@ import { type RefObject, useEffect } from "react";
 import { useTranslations } from "use-intl";
 import { useQuestionActions } from "@/components/tenant/exams/actions";
 import { isLocked } from "@/components/tenant/exams/freeze";
-import { ExamPage } from "@/components/tenant/exams/page";
 import { pageAt } from "@/components/tenant/exams/pages";
+import { ExamPage } from "@/components/tenant/exams/paper";
 import {
   useExam,
   useExamSelectionStore,

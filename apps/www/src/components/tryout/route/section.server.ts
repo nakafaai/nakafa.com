@@ -1,16 +1,14 @@
-import "@tanstack/react-start/server-only";
-
 import {
   type Locale,
   LocaleSchema,
 } from "@repo/internationalization/src/locale";
 import { Clock, Effect, Option, Schema } from "effect";
 import type { PlayerModeParam } from "@/components/player/mode";
-import { readPlayerMode } from "@/components/player/server";
+import { readPlayerMode } from "@/components/player/mode.server";
 import {
   readTryoutSectionAttemptPage,
   readTryoutSectionPage,
-} from "@/components/tryout/catalog/server";
+} from "@/components/tryout/catalog/source.server";
 import { readTryoutQuestionPreview } from "@/components/tryout/preview/read";
 import { readTryoutRouteHead } from "@/components/tryout/route/catalog.server";
 import { readCurrentTryoutSection } from "@/components/tryout/route/current";

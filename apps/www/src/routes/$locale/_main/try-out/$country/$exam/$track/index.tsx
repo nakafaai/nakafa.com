@@ -7,14 +7,14 @@ import {
 import { Schema } from "effect";
 import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
-import { LayoutMaterial } from "@/components/shared/material/layout";
+import { LayoutMaterial } from "@/components/shared/material/frame";
 import { TryoutExamSelector } from "@/components/tryout/catalog/selector";
 import { TryoutSetTable } from "@/components/tryout/catalog/table/table";
 import {
   readTryoutTrackFn,
   readTryoutTrackListFn,
   type TryoutTrackListResult,
-} from "@/components/tryout/route/catalog.fn";
+} from "@/components/tryout/route/catalog.functions";
 import { createTryoutHead } from "@/components/tryout/route/head";
 import { readTryoutPersonalHeaders } from "@/components/tryout/route/headers";
 import { TryoutTrackSearch } from "@/components/tryout/route/search";

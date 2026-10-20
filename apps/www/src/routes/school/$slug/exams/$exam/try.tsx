@@ -3,7 +3,7 @@ import { Option } from "effect";
 import type { ReactElement } from "react";
 import { ExamTryPaper } from "@/components/tenant/exams/try/paper";
 import { SchoolPageNotFound } from "@/components/tenant/notfound";
-import { readExamFn } from "@/lib/tenant/exams.fn";
+import { readExamFn } from "@/lib/tenant/exams.functions";
 import { readExamId } from "@/lib/tenant/params";
 
 /** One exam of the school, as its teacher tries it the way a student would. */

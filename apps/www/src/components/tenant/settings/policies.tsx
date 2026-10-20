@@ -34,8 +34,8 @@ import {
 import { useViewerQuery } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { setPolicyChange } from "@/components/tenant/settings/mutation";
-import { SettingsPage } from "@/components/tenant/settings/page";
 import { saveSchool } from "@/components/tenant/settings/save";
+import { SettingsPage } from "@/components/tenant/settings/section";
 import { SchoolTrailAction } from "@/components/tenant/settings/trail";
 
 const SOURCE = "components/tenant/settings/policies";

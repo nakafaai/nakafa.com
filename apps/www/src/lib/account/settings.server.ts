@@ -1,4 +1,3 @@
-import "@tanstack/react-start/server-only";
 import auth from "@repo/backend/confect/_generated/refs/auth";
 import learningPreferences from "@repo/backend/confect/_generated/refs/learningPreferences";
 import nina from "@repo/backend/confect/_generated/refs/nina";

@@ -23,8 +23,8 @@ import { TableEmpty } from "@/components/shared/table/frame";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { RoleBadge } from "@/components/tenant/role";
 import { removeMemberChange } from "@/components/tenant/settings/accounts";
-import { SettingsPage } from "@/components/tenant/settings/page";
 import { saveSchool } from "@/components/tenant/settings/save";
+import { SettingsPage } from "@/components/tenant/settings/section";
 import {
   type PreloadedPage,
   usePaginatedPreloaded,

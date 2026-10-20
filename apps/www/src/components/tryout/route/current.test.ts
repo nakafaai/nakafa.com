@@ -10,7 +10,7 @@ const catalogMocks = vi.hoisted(() => ({
   readTryoutSetAttemptPage: vi.fn(),
 }));
 
-vi.mock("@/components/tryout/catalog/server", () => catalogMocks);
+vi.mock("@/components/tryout/catalog/source.server", () => catalogMocks);
 
 const keys = {
   countryKey: "indonesia",

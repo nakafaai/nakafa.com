@@ -1,4 +1,3 @@
-import "@tanstack/react-start/server-only";
 import { CHAT_LIST_PAGE_SIZE } from "@repo/backend/client/chats/list";
 import { INBOX_PAGE_SIZE } from "@repo/backend/client/notifications/list";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";

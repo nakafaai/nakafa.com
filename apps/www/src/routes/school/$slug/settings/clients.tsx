@@ -4,7 +4,7 @@ import {
   PAGE_SIZE,
   SchoolClientsSettings,
 } from "@/components/tenant/settings/clients";
-import { readClientsFn } from "@/lib/tenant/settings.fn";
+import { readClientsFn } from "@/lib/tenant/settings.functions";
 
 /** The integration clients of the school. */
 export const Route = createFileRoute("/school/$slug/settings/clients")({

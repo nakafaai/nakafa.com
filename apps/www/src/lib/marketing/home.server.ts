@@ -1,12 +1,10 @@
-import "@tanstack/react-start/server-only";
-
 import { Effect } from "effect";
-import { readFeaturedTryout } from "@/components/tryout/catalog/server";
+import { readFeaturedTryout } from "@/components/tryout/catalog/source.server";
 import {
   readRuntimeCurriculumCatalog,
   readRuntimeCurriculumOptions,
 } from "@/lib/curriculum/model";
-import type { HomeInput } from "@/lib/marketing/home.fn";
+import type { HomeInput } from "@/lib/marketing/home.functions";
 import { serverHandler } from "@/lib/server/fn";
 
 /** Reads the featured try-out of the home page for one locale from the tagged content cache. */

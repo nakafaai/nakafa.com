@@ -5,7 +5,7 @@ import {
   publicContentHeaders,
   readContentCacheTags,
 } from "@/lib/content/delivery";
-import { readLegalPageFn } from "@/lib/content/page/read.fn";
+import { readLegalPageFn } from "@/lib/content/page/read.functions";
 import { createSeoHead, toHeadAlternates, toRouterHead } from "@/lib/seo/head";
 
 /**

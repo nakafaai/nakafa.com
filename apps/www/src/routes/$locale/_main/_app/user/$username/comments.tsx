@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Option } from "effect";
 import { UserComments } from "@/components/user/comments";
 import { profileHead } from "@/lib/account/head";
-import { profileCommentsScreenFn } from "@/lib/account/profile.fn";
+import { profileCommentsScreenFn } from "@/lib/account/profile.functions";
 
 export const Route = createFileRoute(
   "/$locale/_main/_app/user/$username/comments"

@@ -1,5 +1,3 @@
-import "@tanstack/react-start/server-only";
-
 import type { Locale } from "use-intl";
 import { getShellArticleNavigation } from "@/lib/content/article/navigation";
 import { getShellPageNavigation } from "@/lib/content/page/navigation";

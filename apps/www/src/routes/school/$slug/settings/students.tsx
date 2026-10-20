@@ -4,7 +4,7 @@ import {
   PAGE_SIZE,
   SchoolStudentsSettings,
 } from "@/components/tenant/settings/students";
-import { readStudentsFn } from "@/lib/tenant/settings.fn";
+import { readStudentsFn } from "@/lib/tenant/settings.functions";
 
 /** The login cards of the school's people. */
 export const Route = createFileRoute("/school/$slug/settings/students")({

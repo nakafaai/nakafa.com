@@ -2,7 +2,7 @@
 
 import { describe, expect, it } from "@effect/vitest";
 import { Data, Effect } from "effect";
-import { MissingLocalizedRouteProjectionError } from "@/lib/routing/locale/error";
+import { MissingLocalizedRouteProjectionError } from "@/lib/routing/locale/missing";
 import { serveLocalizedHref } from "@/lib/routing/locale/route.server";
 
 const resolveLocalizedNavigationHrefMock = vi.hoisted(() => vi.fn());

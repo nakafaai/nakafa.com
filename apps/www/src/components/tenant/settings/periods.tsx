@@ -28,12 +28,12 @@ import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { useViewerQuery } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
-import { SettingsPage } from "@/components/tenant/settings/page";
 import {
   SchoolPeriodMenu,
   SchoolPeriodRestore,
 } from "@/components/tenant/settings/period";
 import { saveSchool } from "@/components/tenant/settings/save";
+import { SettingsPage } from "@/components/tenant/settings/section";
 import { createPeriodChange } from "@/components/tenant/settings/terms";
 import {
   SchoolUnitChoice,
@@ -41,7 +41,7 @@ import {
 } from "@/components/tenant/settings/unit";
 import { NoActiveUnit } from "@/components/tenant/settings/unitless";
 import { usePaginatedPreloaded } from "@/lib/data/paginated";
-import type { readPeriodsFn } from "@/lib/tenant/settings.fn";
+import type { readPeriodsFn } from "@/lib/tenant/settings.functions";
 
 const SOURCE = "components/tenant/settings/periods";
 

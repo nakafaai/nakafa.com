@@ -1,5 +1,3 @@
-import "@tanstack/react-start/server-only";
-
 import { makeContentCacheTag } from "@nakafa/aksara-contracts/cache/content";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import {
@@ -11,7 +9,7 @@ import { readServerTranslator } from "@repo/internationalization/src/translator"
 import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { Array as Arr, DateTime, Effect, Order, Schema } from "effect";
 import { Feed, type Item } from "feed";
-import { captureServerExceptionSafely } from "@/lib/analytics/server";
+import { captureServerExceptionSafely } from "@/lib/analytics/exception.server";
 import { readPublishedLatestArticles } from "@/lib/content/article/discovery";
 import { readPublishedLatestMaterials } from "@/lib/content/material/discovery";
 import { loadActiveContentIdentity } from "@/lib/content/published/active";

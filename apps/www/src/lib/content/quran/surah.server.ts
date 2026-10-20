@@ -1,5 +1,3 @@
-import "@tanstack/react-start/server-only";
-
 import { parseQuranSurahNumber } from "@repo/backend/client/quran/route";
 import { selectQuranMeaning } from "@repo/backend/content/quran/contract";
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
@@ -20,7 +18,7 @@ import {
 } from "@/lib/content/quran/publication";
 import { recoverStalePublishedQuranSnapshot } from "@/lib/content/quran/recovery";
 import { getQuranReferences } from "@/lib/content/quran/references";
-import type { SurahRouteInput } from "@/lib/content/quran/surah.fn";
+import type { SurahRouteInput } from "@/lib/content/quran/surah.functions";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getLlmsMarkdownPath } from "@/lib/llms/format";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";

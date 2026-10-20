@@ -1,5 +1,3 @@
-import "@tanstack/react-start/server-only";
-
 import {
   LOCALE_COOKIE,
   LOCALE_COOKIE_ATTRIBUTES,

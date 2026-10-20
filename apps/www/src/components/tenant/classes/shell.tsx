@@ -9,7 +9,7 @@ import type { ReactNode } from "react";
 import { createContext, use, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/providers/convex";
-import { LayoutContent } from "@/components/shared/content/layout";
+import { LayoutContent } from "@/components/shared/content/frame";
 import { ActionLink } from "@/components/state/action";
 import { Missing } from "@/components/state/missing";
 import { AddChannel } from "@/components/tenant/classes/add";
@@ -19,7 +19,7 @@ import { SchoolHeader } from "@/components/tenant/header";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { isDenied, isLostAccess } from "@/components/tenant/refusal";
 import { usePreloadedQueryResult } from "@/lib/data/preloaded";
-import type { readClassForumFn } from "@/lib/tenant/classes.fn";
+import type { readClassForumFn } from "@/lib/tenant/classes.functions";
 
 /** The tabs of a class that have a page. The other tabs join with the slices that build them. */
 const ClassTab = Schema.Literals(["home", "forum"]);

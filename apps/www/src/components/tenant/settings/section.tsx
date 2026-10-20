@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { LayoutContent } from "@/components/shared/content/layout";
+import { LayoutContent } from "@/components/shared/content/frame";
 import { SchoolSettingsHeader } from "@/components/tenant/settings/header";
 
 /**

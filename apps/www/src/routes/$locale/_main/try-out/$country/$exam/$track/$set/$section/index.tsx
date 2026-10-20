@@ -1,6 +1,6 @@
 import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
 import { Schema } from "effect";
-import { readTryoutSectionFn } from "@/components/tryout/route/attempt.fn";
+import { readTryoutSectionFn } from "@/components/tryout/route/attempt.functions";
 import { createTryoutHead } from "@/components/tryout/route/head";
 import { readTryoutPersonalHeaders } from "@/components/tryout/route/headers";
 import { TryoutAttemptSearch } from "@/components/tryout/route/search";

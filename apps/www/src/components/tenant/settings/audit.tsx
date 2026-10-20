@@ -17,11 +17,11 @@ import { DataTable } from "@/components/shared/table/data";
 import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
-import { SettingsPage } from "@/components/tenant/settings/page";
+import { SettingsPage } from "@/components/tenant/settings/section";
 import { SchoolDateTime } from "@/components/tenant/settings/time";
 import { usePaginatedPreloaded } from "@/lib/data/paginated";
 import { usePreloadedQueryResult } from "@/lib/data/preloaded";
-import type { readAuditFn } from "@/lib/tenant/settings.fn";
+import type { readAuditFn } from "@/lib/tenant/settings.functions";
 
 /** How many entries one page of the journal loads, and each page after it. */
 export const PAGE_SIZE = 25;

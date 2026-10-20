@@ -1,5 +1,5 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
-import { sessionFn } from "@/lib/auth/session.fn";
+import { sessionFn } from "@/lib/auth/session.functions";
 
 /**
  * Admits a signed-in visitor to the account screens (home, notifications and

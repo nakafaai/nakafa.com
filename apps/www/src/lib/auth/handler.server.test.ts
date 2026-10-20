@@ -33,7 +33,7 @@ vi.mock("@tanstack/react-start/server", () => ({
 }));
 
 const loadAuthServer = Effect.fn("auth.server.test.load")(() =>
-  Effect.tryPromise(() => import("@/lib/auth/server"))
+  Effect.tryPromise(() => import("@/lib/auth/handler.server"))
 );
 
 /** Runs one reader while the request that the server handles carries these headers. */

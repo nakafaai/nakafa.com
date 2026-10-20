@@ -6,7 +6,7 @@ import {
 } from "@tanstack/react-router";
 import { IntlProvider } from "use-intl";
 import { LocalizedError } from "@/components/state/localized";
-import { readRouteMessages } from "@/lib/i18n/messages.fn";
+import { readRouteMessages } from "@/lib/i18n/messages.functions";
 
 /**
  * The messages of the signed-in screens that the student shell and the locale

@@ -1,8 +1,6 @@
-import "@tanstack/react-start/server-only";
-
 import { renderServerComponent } from "@tanstack/react-start/rsc";
-import { TryoutQuestionPreview } from "@/components/tryout/preview/server";
-import { TryoutReview } from "@/components/tryout/review/server";
+import { TryoutQuestionPreview } from "@/components/tryout/preview/question.server";
+import { TryoutReview } from "@/components/tryout/review/screen.server";
 import type { QuestionPreviewContent } from "@/lib/content/preview/question";
 
 /**

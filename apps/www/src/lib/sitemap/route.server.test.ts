@@ -21,7 +21,7 @@ vi.mock("@/lib/sitemap/entries", () => ({
   getCachedSitemapEntries: getCachedSitemapEntriesMock,
 }));
 
-vi.mock("@/lib/analytics/server", () => ({
+vi.mock("@/lib/analytics/exception.server", () => ({
   /** Records every sitemap failure that the route reports. */
   captureServerExceptionSafely: captureMock,
 }));

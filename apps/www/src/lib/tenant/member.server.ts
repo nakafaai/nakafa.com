@@ -1,4 +1,3 @@
-import "@tanstack/react-start/server-only";
 import { getRequest, setResponseHeader } from "@tanstack/react-start/server";
 import { Effect } from "effect";
 import { readRequestToken } from "@/lib/auth/session.server";

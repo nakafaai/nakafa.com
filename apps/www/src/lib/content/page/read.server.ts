@@ -1,5 +1,3 @@
-import "@tanstack/react-start/server-only";
-
 import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import type { LocalizedPath } from "@repo/internationalization/src/alternates";
@@ -9,7 +7,7 @@ import {
   verifyPublishedPageCatalog,
 } from "@/lib/content/page/catalog";
 import { renderCurrentPublishedPage } from "@/lib/content/page/published";
-import type { LegalPageInput } from "@/lib/content/page/read.fn";
+import type { LegalPageInput } from "@/lib/content/page/read.functions";
 import { createResolvedRouteAlternates } from "@/lib/seo/alternates";
 import { serverHandler } from "@/lib/server/fn";
 

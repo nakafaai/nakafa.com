@@ -2,7 +2,7 @@ import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary"
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { UserHeader } from "@/components/user/header";
 import { UserTabs } from "@/components/user/tabs";
-import { profileScreenFn } from "@/lib/account/profile.fn";
+import { profileScreenFn } from "@/lib/account/profile.functions";
 
 /**
  * A profile shows a learner's name, bio, posts, comments and chats, and many

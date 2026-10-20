@@ -5,7 +5,7 @@ import { HomeHeader } from "@/components/home/header";
 import { HomeContinueLearning } from "@/components/home/recent";
 import { HomeTrending } from "@/components/home/trending";
 import { signedInHead } from "@/lib/account/head";
-import { homeScreenFn } from "@/lib/account/home.fn";
+import { homeScreenFn } from "@/lib/account/home.functions";
 
 export const Route = createFileRoute("/$locale/_main/_app/_account/home")({
   loader: ({ params }) => homeScreenFn({ data: { locale: params.locale } }),

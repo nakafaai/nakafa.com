@@ -10,7 +10,7 @@ import { Option, Record as Rec, Schema } from "effect";
 import {
   RouteMessagesInput,
   routeMessagesHandler,
-} from "@/lib/i18n/messages.fn";
+} from "@/lib/i18n/messages.functions";
 
 describe("route messages", () => {
   it("returns only the namespaces that the route declares", () => {

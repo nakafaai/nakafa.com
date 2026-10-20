@@ -25,7 +25,7 @@ import { Array as Arr, Option, Schema } from "effect";
 import { createContext, startTransition, use, useState } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/providers/convex";
-import { LayoutContent } from "@/components/shared/content/layout";
+import { LayoutContent } from "@/components/shared/content/frame";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import { ConfirmRowMenu } from "@/components/shared/table/confirm";
@@ -43,7 +43,7 @@ import { schoolDateTimeText } from "@/components/tenant/settings/clock";
 import { saveSchool } from "@/components/tenant/settings/save";
 import { usePaginatedPreloaded } from "@/lib/data/paginated";
 import { usePreloadedQueryResult } from "@/lib/data/preloaded";
-import type { readExamRoomsFn } from "@/lib/tenant/exams.fn";
+import type { readExamRoomsFn } from "@/lib/tenant/exams.functions";
 
 const SOURCE = "components/tenant/exams/rooms";
 

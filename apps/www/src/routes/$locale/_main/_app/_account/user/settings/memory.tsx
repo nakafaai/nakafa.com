@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { UserSettingsMemory } from "@/components/user/settings/memory/view";
 import { privateHead } from "@/lib/account/head";
-import { memoryScreenFn } from "@/lib/account/settings.fn";
+import { memoryScreenFn } from "@/lib/account/settings.functions";
 
 export const Route = createFileRoute(
   "/$locale/_main/_app/_account/user/settings/memory"

@@ -64,13 +64,13 @@ import {
   assignGrantChange,
   revokeGrantChange,
 } from "@/components/tenant/settings/mutation";
-import { SettingsPage } from "@/components/tenant/settings/page";
 import {
   type PersonId,
   SchoolPersonPicker,
 } from "@/components/tenant/settings/people";
 import { saveSchool } from "@/components/tenant/settings/save";
 import { scopeNameOf } from "@/components/tenant/settings/scope";
+import { SettingsPage } from "@/components/tenant/settings/section";
 import { isDraft } from "@/components/tenant/settings/state";
 import {
   type PreloadedPage,

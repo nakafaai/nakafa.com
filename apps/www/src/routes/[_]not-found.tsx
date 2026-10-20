@@ -8,7 +8,7 @@ import {
 import { Option, Schema } from "effect";
 import { LocalizedNotFound } from "@/components/state/localized";
 import { NotFoundPageData } from "@/lib/routing/not-found";
-import { readNotFoundLocaleFn } from "@/lib/routing/not-found.fn";
+import { readNotFoundLocaleFn } from "@/lib/routing/not-found.functions";
 
 /**
  * The standalone not-found page. The server renders it in the locale of a refused

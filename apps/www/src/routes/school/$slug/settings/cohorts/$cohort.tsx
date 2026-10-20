@@ -7,7 +7,7 @@ import {
   SchoolCohortSettings,
 } from "@/components/tenant/settings/cohort";
 import { readCohortId } from "@/lib/tenant/params";
-import { readCohortFn } from "@/lib/tenant/settings.fn";
+import { readCohortFn } from "@/lib/tenant/settings.functions";
 
 /** One cohort of the school. A failed address to a cohort is not found for every viewer. */
 export const Route = createFileRoute("/school/$slug/settings/cohorts/$cohort")({

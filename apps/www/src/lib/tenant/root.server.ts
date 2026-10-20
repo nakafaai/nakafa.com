@@ -1,4 +1,3 @@
-import "@tanstack/react-start/server-only";
 import { pickRouteMessages } from "@repo/internationalization/src/namespaces";
 import { negotiateLocale } from "@repo/internationalization/src/negotiate";
 import {

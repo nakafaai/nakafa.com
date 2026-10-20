@@ -5,7 +5,7 @@ import { Array as Arr, Effect } from "effect";
 import {
   scheduleCurrentServerExceptionCapture,
   scheduleServerExceptionCapture,
-} from "@/lib/analytics/server";
+} from "@/lib/analytics/exception.server";
 
 const userAgent = "Mozilla/5.0 (compatible; Googlebot/2.1)";
 

@@ -57,7 +57,7 @@ vi.mock("@/lib/content/trending", () => ({
   readHomeTrendingSubjects: mocks.readHomeTrendingSubjects,
 }));
 
-vi.mock("@/lib/analytics/server", () => ({
+vi.mock("@/lib/analytics/exception.server", () => ({
   captureServerExceptionSafely: mocks.captureServerExceptionSafely,
 }));
 

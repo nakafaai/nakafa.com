@@ -1,4 +1,3 @@
-import "@tanstack/react-start/server-only";
 import { CHAT_LIST_PAGE_SIZE } from "@repo/backend/client/chats/list";
 import { COMMENT_PAGE_SIZE } from "@repo/backend/client/comments/list";
 import { POST_PAGE_SIZE } from "@repo/backend/client/posts/list";

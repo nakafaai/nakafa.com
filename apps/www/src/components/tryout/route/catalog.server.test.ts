@@ -39,7 +39,7 @@ vi.mock("@/components/tryout/catalog/options", () => ({
   buildTryoutCountryOptions: catalog.buildTryoutCountryOptions,
   buildTryoutExamOptions: catalog.buildTryoutExamOptions,
 }));
-vi.mock("@/components/tryout/catalog/server", () => ({
+vi.mock("@/components/tryout/catalog/source.server", () => ({
   readTryoutCountryPage: catalog.readTryoutCountryPage,
   readTryoutExamPage: catalog.readTryoutExamPage,
   readTryoutHubPage: catalog.readTryoutHubPage,

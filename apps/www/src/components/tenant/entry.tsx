@@ -8,9 +8,9 @@ import {
   EntryShellPanel,
 } from "@/components/entry/shell";
 import { ThemePicker } from "@/components/shared/theme/picker";
-import { TenantEntryActions } from "@/components/tenant/username";
 import { SchoolMark } from "@/components/tenant/mark";
-import type { AuthLegalLinks } from "@/lib/auth/legal.fn";
+import { TenantEntryActions } from "@/components/tenant/username";
+import type { AuthLegalLinks } from "@/lib/auth/legal.functions";
 
 /**
  * The entry surface of a school for a visitor who is signed out. It reuses the

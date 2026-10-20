@@ -40,7 +40,7 @@ import {
 } from "@/components/sidebar/data/subject";
 import { EmptyNina } from "@/components/state/empty";
 import type { ArticleNavigationItem } from "@/lib/content/article/navigation";
-import { getErrorMessage } from "@/lib/error";
+import { getErrorMessage } from "@/lib/failure";
 import { useSearch } from "@/lib/search/context";
 import {
   type ContentSearchResultItem,

@@ -6,7 +6,7 @@ import {
 } from "@repo/design-system/components/ui/message";
 import { Array as Arr } from "effect";
 import { useChat } from "@/components/ai/chat/context";
-import { AiChatPersistedError } from "@/components/ai/chat/error";
+import { AiChatPersistedError } from "@/components/ai/chat/retry";
 import { AiChatMessageActions } from "@/components/ai/message/actions";
 import {
   AiChatMessageContent,
@@ -14,8 +14,8 @@ import {
 } from "@/components/ai/message/content";
 import { MessageProvider, useMessage } from "@/components/ai/message/context";
 import { AiChatMessageCredits } from "@/components/ai/message/credits";
-import { AiChatMessageLoading } from "@/components/ai/message/loading";
 import { NinaPrompt } from "@/components/ai/message/prompt";
+import { AiChatMessageLoading } from "@/components/ai/message/typing";
 
 interface Props {
   message: NinaMessage;

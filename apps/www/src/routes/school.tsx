@@ -5,7 +5,7 @@ import { localeTimeZone } from "@repo/internationalization/src/locale";
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 import type { ReactElement } from "react";
 import { IntlProvider, useTranslations } from "use-intl";
-import { readSchoolRootFn } from "@/lib/tenant/root.fn";
+import { readSchoolRootFn } from "@/lib/tenant/root.functions";
 
 /**
  * The providers of every school page: the school messages of the request's locale

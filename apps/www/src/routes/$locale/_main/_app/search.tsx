@@ -6,7 +6,7 @@ import { InputSearch } from "@/components/search/input";
 import { SearchListItems } from "@/components/search/results";
 import { BackButton } from "@/components/shared/back";
 import { signedInHead } from "@/lib/account/head";
-import { searchScreenFn } from "@/lib/account/home.fn";
+import { searchScreenFn } from "@/lib/account/home.functions";
 import { SearchInput } from "@/lib/nuqs/search";
 
 export const Route = createFileRoute("/$locale/_main/_app/search")({

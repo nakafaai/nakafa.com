@@ -13,7 +13,7 @@ import { StaticPrice } from "@/components/marketing/about/pricing/price";
 import { Schools } from "@/components/marketing/about/schools";
 import { PRICING_CLASS_HERD } from "@/components/marketing/about/toys/herd";
 import { PageField } from "@/components/marketing/shared/field";
-import { readRouteMessages } from "@/lib/i18n/messages.fn";
+import { readRouteMessages } from "@/lib/i18n/messages.functions";
 import { type MarketingFaqItem, pricingFaqNumbers } from "@/lib/marketing/faq";
 import { getAppSocialArtwork } from "@/lib/og/app";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";

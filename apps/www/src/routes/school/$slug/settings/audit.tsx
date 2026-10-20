@@ -4,7 +4,7 @@ import {
   PAGE_SIZE,
   SchoolAuditSettings,
 } from "@/components/tenant/settings/audit";
-import { readAuditFn } from "@/lib/tenant/settings.fn";
+import { readAuditFn } from "@/lib/tenant/settings.functions";
 
 /** The audit journal of the school: who changed what, and when. */
 export const Route = createFileRoute("/school/$slug/settings/audit")({

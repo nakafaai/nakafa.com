@@ -1,5 +1,3 @@
-import "@tanstack/react-start/server-only";
-
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import type { tryoutMetadataArgsValidator } from "@repo/backend/content/tryout/spec";
 import { LocalizedPath } from "@repo/internationalization/src/alternates";
@@ -17,7 +15,7 @@ import {
   readTryoutMetadata,
   readTryoutSetList,
   readTryoutTrackPage,
-} from "@/components/tryout/catalog/server";
+} from "@/components/tryout/catalog/source.server";
 import { readCatalogQuery } from "@/components/tryout/catalog/table/query";
 import { TRYOUT_SET_PAGE_SIZE } from "@/components/tryout/catalog/table/types";
 import { getTryoutHref } from "@/components/tryout/route/path";

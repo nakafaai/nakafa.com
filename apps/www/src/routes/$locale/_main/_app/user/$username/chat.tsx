@@ -2,7 +2,7 @@ import { createFileRoute, getRouteApi } from "@tanstack/react-router";
 import { Option } from "effect";
 import { UserChats } from "@/components/user/chats";
 import { profileHead } from "@/lib/account/head";
-import { profileChatScreenFn } from "@/lib/account/profile.fn";
+import { profileChatScreenFn } from "@/lib/account/profile.functions";
 
 export const Route = createFileRoute("/$locale/_main/_app/user/$username/chat")(
   {

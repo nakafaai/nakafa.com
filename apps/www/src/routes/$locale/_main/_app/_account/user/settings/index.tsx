@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { UserSettingsProfilePage } from "@/components/user/settings/profile";
 import { privateHead } from "@/lib/account/head";
-import { settingsScreenFn } from "@/lib/account/settings.fn";
+import { settingsScreenFn } from "@/lib/account/settings.functions";
 
 export const Route = createFileRoute(
   "/$locale/_main/_app/_account/user/settings/"

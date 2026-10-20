@@ -3,7 +3,7 @@ import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { Option } from "effect";
 import { ChatBoundary } from "@/components/ai/chat/boundary";
 import { AiChatSidebar } from "@/components/ai/chat/sidebar";
-import { chatSidebarScreenFn } from "@/lib/account/home.fn";
+import { chatSidebarScreenFn } from "@/lib/account/home.functions";
 
 export const Route = createFileRoute("/$locale/_main/_app/chat")({
   loader: () => chatSidebarScreenFn(),

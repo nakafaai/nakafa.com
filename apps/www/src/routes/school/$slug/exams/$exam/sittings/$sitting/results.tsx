@@ -4,7 +4,7 @@ import type { ReactElement } from "react";
 import { SittingResults } from "@/components/exams/results/screen";
 import { STUDENT_PAGE_SIZE } from "@/components/exams/results/students";
 import { SchoolPageNotFound } from "@/components/tenant/notfound";
-import { readResultsFn } from "@/lib/tenant/exams.fn";
+import { readResultsFn } from "@/lib/tenant/exams.functions";
 import { readExamId, readSittingId } from "@/lib/tenant/params";
 
 /** The results of one sitting, for the proctor of the exam. */

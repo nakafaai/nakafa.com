@@ -16,7 +16,7 @@ import { IntlProvider } from "use-intl";
 import { AppProviders } from "@/components/providers/app";
 import { SharedProviders } from "@/components/providers/shared";
 import { AppShell } from "@/components/sidebar/shell";
-import { readRouteMessages } from "@/lib/i18n/messages.fn";
+import { readRouteMessages } from "@/lib/i18n/messages.functions";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { SHELL_MESSAGE_NAMESPACES } from "@/lib/i18n/shell";
 
