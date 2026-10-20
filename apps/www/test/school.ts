@@ -27,7 +27,7 @@ export const SCHOOL_ROOT = "https://harapan.nakafa.com/";
 export const SESSION_COOKIE = "better-auth.session_token=session-value";
 export const TOKEN = "session-token";
 export const TOKEN_PATH = "/api/auth/convex/token";
-export const PROFILE = getConvexFunctionName(tenancy.profile.get);
+const PROFILE = getConvexFunctionName(tenancy.profile.get);
 export const VIEWER = getConvexFunctionName(tenancy.viewer.get);
 export const REFUSAL = getConvexFunctionName(tenancy.profile.refusal);
 

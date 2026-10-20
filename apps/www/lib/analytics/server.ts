@@ -48,7 +48,7 @@ const readRequestUserAgent = Effect.fn("www.analytics.readRequestUserAgent")(
  * visitor faults from crawlers and automation at triage. Callers that must
  * observe the capture failure use `captureServerException` directly.
  */
-export const captureServerExceptionSafely = Effect.fn(
+const captureServerExceptionSafely = Effect.fn(
   "www.analytics.captureServerExceptionSafely"
 )(function* (error: unknown, properties: OperationalExceptionProperties) {
   const requestUserAgent = yield* readRequestUserAgent();

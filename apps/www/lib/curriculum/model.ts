@@ -42,7 +42,7 @@ const CurriculumCatalogModelSchema = Schema.Struct({
   entries: Schema.Array(CurriculumCatalogEntrySchema),
   sourceRevision: Schema.NullOr(GitCommitShaSchema),
 });
-export type CurriculumCatalogModel = typeof CurriculumCatalogModelSchema.Type;
+type CurriculumCatalogModel = typeof CurriculumCatalogModelSchema.Type;
 
 /**
  * Complete presentation data for one signed curriculum route.

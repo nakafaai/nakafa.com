@@ -182,7 +182,7 @@ export function readPagePreviewStaticParams(appLocale: AppLocale) {
     ];
   });
 }
-/** Resolves a next-intl material rewrite back to its canonical public path. */
+/** Resolves a the locale seam material rewrite back to its canonical public path. */
 function resolveInternalRoute({ localeHint, pathname }: InternalRouteInput) {
   const [locale, appSegment, ...segments] = Arr.filter(
     pathname.split("/"),
@@ -235,7 +235,7 @@ export const matchesPreviewPathname = Effect.fn(
     publicPath: Arr.join(segments, "/"),
   });
 });
-/** Allows only the selected local document through next-intl's internal pass. */
+/** Allows only the selected local document through the locale seam's internal pass. */
 export const matchesInternalPreviewRoute = Effect.fn(
   "NakafaContent.matchesInternalPreviewRoute"
 )(function* (input: InternalRouteInput) {

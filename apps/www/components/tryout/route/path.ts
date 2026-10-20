@@ -8,10 +8,7 @@ type TryoutHrefInput = Partial<
 
 const ATTEMPT_ID_PARAM = "attemptId";
 
-export type TryoutRouteSearchParams = Record<
-  string,
-  string | string[] | undefined
->;
+type TryoutRouteSearchParams = Record<string, string | string[] | undefined>;
 
 const TryoutAttemptCapabilitySchema = Schema.Union([
   Schema.Struct({ kind: Schema.Literal("absent") }),

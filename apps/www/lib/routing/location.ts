@@ -19,7 +19,7 @@ export function getLocale() {
 
 /**
  * Get current pathname without the locale prefix
- * This matches what usePathname() from next-intl returns
+ * This matches what usePathname() from the locale seam returns
  */
 export function getPathname() {
   const pathname = window.location.pathname;

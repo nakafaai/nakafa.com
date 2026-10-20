@@ -4,7 +4,7 @@ import {
   appendResponseHeader,
   setResponseHeader,
 } from "@tanstack/react-start/server";
-import { Effect } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 import { FetchHttpClient } from "effect/http";
 import {
   readSessionClient,
@@ -36,16 +36,21 @@ const signedInRequest = () =>
   });
 
 /** The session route's answer for one account, with its Set-Cookie values. */
+const encodeJson = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown));
+
 const answer = (cookies: readonly string[] = []) =>
   new Response(
-    JSON.stringify({
+    encodeJson({
       session: { id: "session-1" },
       user: { id: "user-1", name: "Ada" },
     }),
     {
       headers: [
         ["content-type", "application/json"],
-        ...cookies.map((cookie): [string, string] => ["set-cookie", cookie]),
+        ...Arr.map(cookies, (cookie): [string, string] => [
+          "set-cookie",
+          cookie,
+        ]),
       ],
     }
   );

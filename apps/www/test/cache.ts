@@ -13,7 +13,7 @@ import { Schema } from "effect";
 export const releaseId = ReleaseIdSchema.make("release-cache-test");
 
 /** Encodes one cache request as the publisher sends it. */
-export const encodeCacheRequest = Schema.encodeSync(
+const encodeCacheRequest = Schema.encodeSync(
   Schema.fromJsonString(ContentCacheRequestSchema)
 );
 

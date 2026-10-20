@@ -8,7 +8,7 @@ import {
 } from "@/lib/routing/locale/published";
 import { projectLocalizedMappedRoutePathname } from "@/lib/routing/public/pathnames";
 
-/** Locale values accepted by next-intl routing and public route projection. */
+/** Locale values accepted by the locale seam routing and public route projection. */
 const LocaleSchema = Schema.Literals(LOCALES);
 
 /** Browser route-localization request accepted by the resolver. */
@@ -62,7 +62,7 @@ function toStaticNavigationHref(parsed: ParsedLocalizedHref) {
  * Resolves a browser href to the target locale's route-owned navigation href.
  *
  * Projected content routes are matched by stable source identity. Static app
- * routes keep the regular next-intl locale switch behavior and preserve
+ * routes keep the regular locale switch behavior and preserve
  * query/hash state.
  */
 export const resolveLocalizedNavigationHref = Effect.fn(

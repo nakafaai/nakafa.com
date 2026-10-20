@@ -12,7 +12,7 @@ const LocalizedLlmsRouteSchema = Schema.Struct({
   markdownExtension: Schema.Literals(["", ".md", ".mdx"]),
   route: Schema.String,
 });
-export type LocalizedLlmsRoute = typeof LocalizedLlmsRouteSchema.Type;
+type LocalizedLlmsRoute = typeof LocalizedLlmsRouteSchema.Type;
 
 export const LlmsProxyRouteRequestSchema = Schema.Struct({
   acceptHeader: Schema.Option(Schema.String),
@@ -33,7 +33,7 @@ export const LlmsProxyRouteDecisionSchema = Schema.Union([
 export type LlmsProxyRouteDecision = typeof LlmsProxyRouteDecisionSchema.Type;
 
 const HTML_MEDIA_TYPE = HttpMediaTypeSchema.make("text/html; charset=utf-8");
-export const LLMS_MARKDOWN_MEDIA_TYPE = HttpMediaTypeSchema.make(
+const LLMS_MARKDOWN_MEDIA_TYPE = HttpMediaTypeSchema.make(
   "text/markdown; charset=utf-8"
 );
 const DOCUMENT_MEDIA_TYPES = [

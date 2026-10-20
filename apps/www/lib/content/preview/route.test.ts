@@ -110,7 +110,7 @@ function matchPublic(publicPath: string = previewRoute.publicPath) {
   return matchesPreviewRoute({ appLocale: previewRoute.appLocale, publicPath });
 }
 
-/** Runs one next-intl internal rewrite decision. */
+/** Runs one locale seam internal rewrite decision. */
 function matchInternal(
   pathname = "/en/materials/mathematics/function-composition-inverse-function/function-concept",
   localeHint: string | null = "en"
@@ -186,7 +186,7 @@ describe("local preview route matching", () => {
     })
   );
 
-  it.effect("maps the exact next-intl internal material rewrite", () =>
+  it.effect("maps the exact locale seam internal material rewrite", () =>
     Effect.gen(function* () {
       expect(yield* matchInternal()).toBe(true);
     })

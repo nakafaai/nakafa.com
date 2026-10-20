@@ -38,7 +38,7 @@ type PublishedLocalizedHrefInput =
 const ARTICLE_NAMESPACE = "articles";
 
 /**
- * Returns a next-intl navigation href without a locale prefix; the router adds
+ * Returns a the locale seam navigation href without a locale prefix; the router adds
  * the target locale using its configured localized pathname mapping.
  */
 export function toNavigationHref(publicPath: string, suffix: string) {

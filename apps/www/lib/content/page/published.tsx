@@ -13,7 +13,7 @@ import {
 import { decodePublishedPage } from "@/lib/content/published/projection";
 
 /** Current public Page identity resolved from signed runtime state. */
-export type CurrentPublishedPageInput = PublishedContentRouteInput;
+type CurrentPublishedPageInput = PublishedContentRouteInput;
 
 const PublishedPageDataSchema = Schema.Struct({
   activeReleaseId: PublicContentRuntimeFoundSchema.fields.activeReleaseId,

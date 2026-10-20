@@ -31,7 +31,7 @@ export type ToastDescriptionKey = {
  * named here.
  */
 export const ToastValuesSchema = Schema.Struct({ size: Schema.Finite });
-/** The values of one toast message, which the Toaster passes to next-intl. */
+/** The values of one toast message, which the Toaster passes to the locale seam. */
 export type ToastValues = typeof ToastValuesSchema.Type;
 
 /**

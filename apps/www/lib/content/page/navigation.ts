@@ -30,7 +30,7 @@ const PageNavigationSchema = Schema.Struct({
  * Links to these destinations never prefetch. Every signed Page shares the
  * root `[...page]` route, and the client router learns that route from the
  * first Page it fetches. Its optimistic routing then reads each lesson and
- * curriculum URL that next-intl rewrites, such as `/en/subjects/...` for
+ * curriculum URL that the locale seam rewrites, such as `/en/subjects/...` for
  * `/[locale]/materials/...`, as a Page. A prefetch teaches the router at
  * hydration, before any lesson link is scheduled, so each lesson prefetch that
  * follows is predicted as a Page and loads nothing, and opening a lesson shows
