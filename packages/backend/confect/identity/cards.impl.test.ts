@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import { CARD_TERM } from "@repo/backend/confect/identity/card";
-import { hashCardCode } from "@repo/backend/confect/identity/code";
+import { hashCardCode } from "@repo/backend/confect/identity/secret";
 import {
   CARD_NOW,
   CODE_PATTERN,

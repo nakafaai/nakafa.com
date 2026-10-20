@@ -15,16 +15,14 @@ import {
   cardRefusalOf,
   markRedeemed,
 } from "@repo/backend/confect/identity/card";
-import {
-  hashCardCode,
-  readCardCode,
-} from "@repo/backend/confect/identity/code";
+import { readCardCode } from "@repo/backend/confect/identity/code";
 import { loginOf, readLoginName } from "@repo/backend/confect/identity/logins";
 import type {
   RedeemOutcome,
   RedeemRefusal,
   RedeemRequest,
 } from "@repo/backend/confect/identity/schema";
+import { hashCardCode } from "@repo/backend/confect/identity/secret";
 import { personActor } from "@repo/backend/confect/tenancy/actor";
 import { personAuthority } from "@repo/backend/confect/tenancy/authority";
 import { bindPerson } from "@repo/backend/confect/tenancy/claim";

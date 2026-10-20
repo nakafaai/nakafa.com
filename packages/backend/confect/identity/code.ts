@@ -1,25 +1,12 @@
-import { layer as WebCryptoLayer } from "@effect/platform-browser/BrowserCrypto";
-import {
-  Array as Arr,
-  Config,
-  Crypto,
-  Effect,
-  pipe,
-  Redacted,
-  Schema,
-  String as Str,
-} from "effect";
-import { Hex } from "effect/encoding";
+import { Array as Arr, pipe, Schema, String as Str } from "effect";
 
 /** The characters of a card code: Crockford base32, which leaves out I, L, O, and U. */
 const CODE_ALPHABET = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
 /** One character takes one byte. 32 divides 256 evenly, so every character is equally likely. */
 const CODE_BYTE_MODULUS = CODE_ALPHABET.length;
-const CODE_LENGTH = 10;
+/** The characters of one canonical code. */
+export const CODE_LENGTH = 10;
 const GROUP_LENGTH = 5;
-/** Names what the hash is for, so the same secret never hashes a code for another purpose. */
-const CODE_HASH_LABEL = "nakafa/identity/card/v1:";
-const encoder = new TextEncoder();
 
 /**
  * A card code as it is stored and compared: ten characters of the alphabet, no
@@ -57,41 +44,3 @@ export const codeFromBytes = (bytes: Uint8Array) =>
     Arr.map((byte) => CODE_ALPHABET.charAt(byte % CODE_BYTE_MODULUS)),
     Arr.join("")
   );
-
-/**
- * Draws a new canonical code from Effect's `Crypto` service, which reads the
- * platform's secure random source. Effect's default `Random` is not secure, so
- * a code never comes from it.
- */
-export const drawCardCode = Effect.fn("identity.code.draw")(
-  function* () {
-    const bytes = yield* (yield* Crypto.Crypto).randomBytes(CODE_LENGTH);
-    return codeFromBytes(bytes);
-  },
-  Effect.orDie,
-  Effect.provide(WebCryptoLayer)
-);
-
-/**
- * The keyed hash of a canonical code: HMAC-SHA-256 under the server secret, in
- * hex. Only this hash is stored, so without the secret nobody can check a
- * guessed code against the table. A missing secret is a deployment defect.
- */
-export const hashCardCode = Effect.fn("identity.code.hash")(function* (
-  code: string
-) {
-  const secret = yield* Config.Redacted("LOGIN_CARD_SECRET");
-  const key = yield* Effect.promise(() =>
-    crypto.subtle.importKey(
-      "raw",
-      encoder.encode(Redacted.value(secret)),
-      { hash: "SHA-256", name: "HMAC" },
-      false,
-      ["sign"]
-    )
-  );
-  const signature = yield* Effect.promise(() =>
-    crypto.subtle.sign("HMAC", key, encoder.encode(`${CODE_HASH_LABEL}${code}`))
-  );
-  return Hex.encode(new Uint8Array(signature));
-}, Effect.orDie);
