@@ -5,7 +5,8 @@ import {
   defaultStreamHandler,
   handleStartError,
 } from "@tanstack/react-start/server";
-import { Effect, Schema } from "effect";
+import { Effect, Option, Schema } from "effect";
+import { readRedirectResponse } from "@/lib/routing/redirect";
 
 const startHandler = createStartHandler(defaultStreamHandler);
 
@@ -24,6 +25,10 @@ class UncaughtRequestError extends Schema.TaggedError<UncaughtRequestError>()(
  */
 export default createServerEntry({
   fetch(request, opts) {
+    const redirect = readRedirectResponse(request);
+    if (Option.isSome(redirect)) {
+      return Promise.resolve(redirect.value);
+    }
     return Effect.runPromise(
       Effect.tryPromise({
         try: async () => startHandler(request, opts),
