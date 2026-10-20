@@ -20,9 +20,9 @@ import { readMarketingShellFn } from "@/lib/marketing/shell.fn";
  * search and profiles stay open to visitors, as the reference keeps them.
  */
 export const Route = createFileRoute("/$locale/_app")({
-  headers: () => ({ "Cache-Control": "private, no-store" }),
   loader: ({ params }) =>
     readMarketingShellFn({ data: { locale: params.locale } }),
+  headers: () => ({ "Cache-Control": "private, no-store" }),
   component: AppLayout,
   errorComponent: AppError,
 });

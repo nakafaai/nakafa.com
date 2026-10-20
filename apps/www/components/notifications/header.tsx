@@ -6,10 +6,13 @@ import notifications from "@repo/backend/confect/_generated/refs/notifications";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { toast } from "@repo/design-system/lib/toast/notify";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, type Option } from "effect";
 import { useTranslations } from "use-intl";
+import {
+  type InboxFirstPage,
+  useInbox,
+} from "@/components/notifications/inbox.client";
 import { markAllReadInLists } from "@/components/notifications/mutation.client";
-import { useInbox } from "@/components/notifications/provider";
 import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
 import { reportClientException } from "@/lib/analytics/client";
 
@@ -19,9 +22,13 @@ import { reportClientException } from "@/lib/analytics/client";
  * on a phone its icon alone, named for assistive technology, so the header stays one row. The action marks every loaded row read at once, and
  * a refusal by the server rolls the change back and shows the shared error toast.
  */
-export function NotificationsHeader() {
+export function NotificationsHeader({
+  first,
+}: {
+  first: Option.Option<InboxFirstPage>;
+}) {
   const t = useTranslations("Notifications");
-  const inbox = useInbox();
+  const inbox = useInbox(first);
   const hasRows =
     !(
       PaginatedQueryResult.isLoadingFirstPage(inbox) ||

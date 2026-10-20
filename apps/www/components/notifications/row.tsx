@@ -30,7 +30,7 @@ function useNotificationsNow() {
 
   if (!clock) {
     throw new Error(
-      "useNotificationsNow must be used within NotificationsFeed"
+      "useNotificationsNow must be used within the notifications page"
     );
   }
 
