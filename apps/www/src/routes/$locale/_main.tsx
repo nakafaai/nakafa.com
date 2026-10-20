@@ -13,7 +13,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { cn } from "cn";
 import { Schema } from "effect";
 import { IntlProvider } from "use-intl";
-import { AppProviders } from "@/components/providers/app";
+import { PageProviders } from "@/components/providers/page";
 import { SharedProviders } from "@/components/providers/shared";
 import { AppShell } from "@/components/sidebar/shell";
 import { readRouteMessages } from "@/lib/i18n/messages.functions";
@@ -76,8 +76,10 @@ export const Route = createFileRoute("/$locale/_main")({
 });
 
 /**
- * Renders the student shell inside the app and shared providers, which the
- * reference app mounts above the (main) group.
+ * Renders the student shell inside the page providers, which hold the one live
+ * session of a learner and a visitor alike. Convex is not mounted for the group:
+ * each leaf that reads it mounts its own island, so a visitor's lesson opens no
+ * socket.
  */
 function MainLayout() {
   const { locale } = Route.useParams();
@@ -90,7 +92,7 @@ function MainLayout() {
       now={localeData.now}
       timeZone={localeTimeZone(locale)}
     >
-      <AppProviders pageNavigation={pageNavigation}>
+      <PageProviders pageNavigation={pageNavigation}>
         <SharedProviders>
           <AppShell articleNavigation={articleNavigation}>
             <div className={cn(monospace, "contents")}>
@@ -98,7 +100,7 @@ function MainLayout() {
             </div>
           </AppShell>
         </SharedProviders>
-      </AppProviders>
+      </PageProviders>
     </IntlProvider>
   );
 }

@@ -28,7 +28,7 @@ const IslandConsentEffects = lazy(() =>
 );
 
 /**
- * The consent account of a marketing page: the page's one Convex client, and only
+ * The consent account of a page: the page's one Convex client, and only
  * for a page whose consent is live. A page without a live notice reads no account.
  * `isAwaitingClient` is true while a signed-in session is still loading its client.
  */
@@ -45,8 +45,8 @@ function useConsentAccount() {
   };
 }
 
-/** The prompt on a marketing page: the visitor's, then the signed-in one on the page's client. */
-export function MarketingConsentControls() {
+/** The prompt on a page: the visitor's, then the signed-in one on the page's client. */
+export function PageConsentControls() {
   const { client } = useConsentAccount();
   if (Option.isNone(client)) {
     return <VisitorConsentControls />;
@@ -58,8 +58,8 @@ export function MarketingConsentControls() {
   );
 }
 
-/** The privacy item of a marketing footer, which follows the same rule as the prompt. */
-export function MarketingConsentFooterItem() {
+/** The privacy item of a footer, which follows the same rule as the prompt. */
+export function PageConsentFooterItem() {
   const { client } = useConsentAccount();
   if (Option.isNone(client)) {
     return <VisitorConsentFooterItem />;
@@ -72,11 +72,11 @@ export function MarketingConsentFooterItem() {
 }
 
 /**
- * The consent effects of a marketing page, which follow the same rule as the
+ * The consent effects of a page, which follow the same rule as the
  * prompt. A signed-in page starts its analytics with its account, so the visitor's
  * effects wait for the client instead of sending a first pageview without it.
  */
-export function MarketingConsentEffects() {
+export function PageConsentEffects() {
   const { client, isAwaitingClient } = useConsentAccount();
   if (Option.isSome(client)) {
     return (

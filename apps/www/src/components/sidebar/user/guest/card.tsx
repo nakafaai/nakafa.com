@@ -3,7 +3,7 @@ import {
   SidebarMenuSeparator,
 } from "@repo/design-system/components/ui/sidebar-menu";
 import { useTranslations } from "use-intl";
-import { AnalyticsConsentSidebarItem } from "@/components/analytics/consent/sidebar";
+import { VisitorConsentSidebarItem } from "@/components/analytics/consent/sidebar";
 import { GuestLanguageMenu } from "@/components/sidebar/menu/preference";
 import { PricingItem } from "@/components/sidebar/menu/pricing";
 import { NavUserGuestButton } from "@/components/sidebar/user/guest/action";
@@ -16,7 +16,7 @@ export function NavUserGuest() {
     <>
       <PricingItem />
       <GuestLanguageMenu />
-      <AnalyticsConsentSidebarItem />
+      <VisitorConsentSidebarItem />
       <SidebarMenuSeparator />
       <SidebarMenuItem className="flex flex-col gap-3 px-2 py-1">
         <div className="grid gap-1">

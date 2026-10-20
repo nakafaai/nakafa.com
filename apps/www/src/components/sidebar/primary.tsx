@@ -18,6 +18,7 @@ import {
 } from "@repo/internationalization/src/navigation";
 import { Array as Arr } from "effect";
 import { useLocale, useTranslations } from "use-intl";
+import { ConvexIsland } from "@/components/providers/island";
 import {
   getForYouNavigationHref,
   getForYouNavigationItems,
@@ -29,14 +30,46 @@ import { usePreferredTryoutHref } from "@/lib/tryout/preferences";
  * Renders the primary app navigation shared by every audience.
  */
 export function NavForYou() {
+  return (
+    <ConvexIsland
+      fallback={
+        <NavForYouGroup
+          preferredCurriculumHref={null}
+          preferredTryoutHref={null}
+        />
+      }
+    >
+      <LearnerNavForYou />
+    </ConvexIsland>
+  );
+}
+
+/** Reads the learner's preferences on the page's Convex island. */
+function LearnerNavForYou() {
+  const locale = useLocale();
+  const preferredCurriculumHref = usePreferredCurriculumHref(locale);
+  const preferredTryoutHref = usePreferredTryoutHref(locale);
+  return (
+    <NavForYouGroup
+      preferredCurriculumHref={preferredCurriculumHref ?? null}
+      preferredTryoutHref={preferredTryoutHref ?? null}
+    />
+  );
+}
+
+function NavForYouGroup({
+  preferredCurriculumHref,
+  preferredTryoutHref,
+}: {
+  preferredCurriculumHref: string | null;
+  preferredTryoutHref: string | null;
+}) {
   const pathname = usePathname();
   const router = useRouter();
   const tAi = useTranslations("Ai");
   const tCommon = useTranslations("Common");
   const locale = useLocale();
   const items = getForYouNavigationItems();
-  const preferredCurriculumHref = usePreferredCurriculumHref(locale);
-  const preferredTryoutHref = usePreferredTryoutHref(locale);
 
   return (
     <SidebarGroup>

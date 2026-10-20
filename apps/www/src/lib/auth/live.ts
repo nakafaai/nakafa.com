@@ -156,3 +156,40 @@ export const startLiveSession = Effect.fn("www.auth.startLiveSession")(
     );
   }
 );
+
+/**
+ * Gives the page its one Convex client on intent, for a reader with no signed-in
+ * hint: a visitor who opens search needs the client, so it is created here with
+ * no credentials. A hinted page gets its client from `startLiveSession`, which
+ * also follows the session, so this leaves that page alone. A page that already
+ * holds a client keeps it. A failed load leaves the page without a client.
+ */
+export const openLiveClient = Effect.fn("www.auth.openLiveClient")(function* (
+  store: LiveSessionStore,
+  {
+    convexUrl,
+    cookie,
+    modules = liveSessionModules,
+  }: {
+    readonly convexUrl: string;
+    readonly cookie: string;
+    readonly modules?: LiveSessionModules;
+  }
+) {
+  if (hasSignedInHint(cookie) || Option.isSome(store.getState().client)) {
+    return;
+  }
+  const loaded = yield* modules.convex.pipe(
+    Effect.tapError((error) =>
+      reportClientException(error, { source: "live-client-load" })
+    ),
+    Effect.result
+  );
+  if (Result.isFailure(loaded)) {
+    return;
+  }
+  const client = loaded.success.readConvexClient(convexUrl);
+  store.setState((state) =>
+    Option.isSome(state.client) ? {} : { client: Option.some(client) }
+  );
+});

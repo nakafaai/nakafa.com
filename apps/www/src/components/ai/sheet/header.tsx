@@ -21,7 +21,8 @@ import { lazyComponent } from "@repo/design-system/lib/lazy";
 import { Activity, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useAi } from "@/components/ai/context";
-import { useViewer } from "@/lib/identity/client";
+import { ConvexIsland } from "@/components/providers/island";
+import { useLiveSession } from "@/components/providers/live";
 
 /** The recent chats and their query load when the learner shows intent on the history button. */
 const SheetHistory = lazyComponent(
@@ -100,8 +101,8 @@ export function AiSheetHeader({ expanded, onResizeToggle }: Props) {
  */
 function HistorySlot() {
   const t = useTranslations("Ai");
-  const signedIn = useViewer(
-    (state) => !state.isPending && state.viewer !== null
+  const signedIn = useLiveSession(
+    (state) => !state.isPending && state.sessionId !== null
   );
   const [warmed, setWarmed] = useState(false);
   if (!signedIn) {
@@ -109,23 +110,25 @@ function HistorySlot() {
   }
   return (
     <span className="inline-flex size-8">
-      <DropdownMenu modal={false}>
-        <DropdownMenuTrigger
-          render={
-            <Button
-              onFocus={() => setWarmed(true)}
-              onMouseEnter={() => setWarmed(true)}
-              onPointerDown={() => setWarmed(true)}
-              size="icon-sm"
-              variant="ghost"
-            >
-              <HugeIcons icon={ChatSearch01Icon} />
-              <span className="sr-only">{t("chat-history")}</span>
-            </Button>
-          }
-        />
-        {warmed ? <SheetHistory /> : null}
-      </DropdownMenu>
+      <ConvexIsland>
+        <DropdownMenu modal={false}>
+          <DropdownMenuTrigger
+            render={
+              <Button
+                onFocus={() => setWarmed(true)}
+                onMouseEnter={() => setWarmed(true)}
+                onPointerDown={() => setWarmed(true)}
+                size="icon-sm"
+                variant="ghost"
+              >
+                <HugeIcons icon={ChatSearch01Icon} />
+                <span className="sr-only">{t("chat-history")}</span>
+              </Button>
+            }
+          />
+          {warmed ? <SheetHistory /> : null}
+        </DropdownMenu>
+      </ConvexIsland>
     </span>
   );
 }

@@ -2,8 +2,8 @@ import { Effect, Fiber, Option } from "effect";
 import { lazy, type ReactNode, Suspense, useEffect, useState } from "react";
 import { AnalyticsConsentBootstrap } from "@/components/analytics/consent/bootstrap";
 import {
-  MarketingConsentControls,
-  MarketingConsentEffects,
+  PageConsentControls,
+  PageConsentEffects,
 } from "@/components/analytics/consent/mount";
 import { AnalyticsConsentProvider } from "@/components/analytics/consent/provider";
 import { AnalyticsUnavailableProvider } from "@/components/analytics/consent/unavailable";
@@ -26,7 +26,7 @@ const LiveCredentials = lazy(() =>
 );
 
 /** Hands the page's client its credentials once the store holds one. */
-function MarketingCredentials() {
+function PageCredentials() {
   const client = useLiveSession((state) => state.client);
   if (Option.isNone(client)) {
     return null;
@@ -39,13 +39,15 @@ function MarketingCredentials() {
 }
 
 /**
- * Mounts the one live session of a marketing page. The store is created once and
+ * Mounts the one live session of a route group that visitors and learners both
+ * read: the marketing pages and the student shell. The store is created once and
  * its context value never changes. The page starts the session after hydration,
  * and only a signed-in hint starts it: a visitor's page creates no Convex client,
  * no Better Auth client and no socket. Leaves that need Convex mount their own
- * island around that one client, and render their visitor variant until it exists.
+ * island around that one client (see `ConvexIsland`), and render their visitor
+ * variant until it exists.
  */
-export function MarketingProviders({
+export function PageProviders({
   children,
   pageNavigation,
 }: {
@@ -70,7 +72,7 @@ export function MarketingProviders({
     <LiveSessionContext value={store}>
       <AuthSessionContext value={store}>
         <ConvexAuthContext value={store}>
-          <MarketingCredentials />
+          <PageCredentials />
           <PageNavigationProvider navigation={pageNavigation}>
             {pageNavigation ? (
               <AnalyticsConsentProvider
@@ -78,8 +80,8 @@ export function MarketingProviders({
               >
                 {children}
                 <AnalyticsConsentBootstrap />
-                <MarketingConsentControls />
-                <MarketingConsentEffects />
+                <PageConsentControls />
+                <PageConsentEffects />
               </AnalyticsConsentProvider>
             ) : (
               <AnalyticsUnavailableProvider>

@@ -12,6 +12,7 @@ import { readChatArgs } from "@/components/ai/chat/access";
 import { useAi } from "@/components/ai/context";
 import { AiSheetHeader } from "@/components/ai/sheet/header";
 import { Authenticated, Unauthenticated } from "@/components/auth/gate";
+import { ConvexIsland } from "@/components/providers/island";
 
 const MIN_WIDTH = 384;
 const MAX_WIDTH = 672;
@@ -151,14 +152,16 @@ function SheetBody() {
         <SheetNew />
       </Activity>
       <Activity mode={activeChatId ? "visible" : "hidden"}>
-        <ChatBoundary key={activeChatId} read={read}>
-          <Authenticated>
-            {!!activeChatId && <SheetConversation chatId={activeChatId} />}
-          </Authenticated>
-          <Unauthenticated>
-            <SheetNew />
-          </Unauthenticated>
-        </ChatBoundary>
+        <ConvexIsland>
+          <ChatBoundary key={activeChatId} read={read}>
+            <Authenticated>
+              {!!activeChatId && <SheetConversation chatId={activeChatId} />}
+            </Authenticated>
+            <Unauthenticated>
+              <SheetNew />
+            </Unauthenticated>
+          </ChatBoundary>
+        </ConvexIsland>
       </Activity>
     </>
   );

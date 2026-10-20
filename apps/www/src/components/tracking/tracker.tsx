@@ -5,6 +5,7 @@ import type { RecordContentViewArgs } from "@repo/backend/confect/contents/views
 import type { Locale } from "@repo/backend/confect/lib/validators/contents";
 import type { PropsWithChildren } from "react";
 import type { Locale as RouteLocale } from "use-intl";
+import { ConvexIsland } from "@/components/providers/island";
 import { useRecordContentView } from "@/lib/content/views/record";
 import { isActiveLocale } from "@/lib/i18n/active";
 
@@ -53,7 +54,11 @@ export function ContentViewTracker({
   );
 }
 
-/** Keeps hooks unconditional after the route locale has been narrowed. */
+/**
+ * Keeps the locale narrowed for the recorder. The recorder reads Convex, so it
+ * mounts on the page's island: a visitor's page has no client and records nothing,
+ * and the children render either way.
+ */
 function ActiveContentViewTracker({
   contentId,
   context,
@@ -63,6 +68,43 @@ function ActiveContentViewTracker({
   children,
   delay,
 }: PropsWithChildren<Omit<Props, "locale"> & { locale: Locale }>) {
+  return (
+    <>
+      <ConvexIsland>
+        <ContentViewRecorder
+          contentId={contentId}
+          context={context}
+          delay={delay}
+          locale={locale}
+          publicPath={publicPath}
+          section={section}
+        />
+      </ConvexIsland>
+      {children}
+    </>
+  );
+}
+
+/** The inputs that the view recorder reads, with the route locale narrowed. */
+interface RecorderProps {
+  contentId?: string | null | undefined;
+  context?: LearningContextInput | undefined;
+  delay?: number | undefined;
+  locale: Locale;
+  publicPath: string;
+  section: RecordContentViewArgs["section"];
+}
+
+/** Records one view of the page on the page's Convex client. */
+function ContentViewRecorder({
+  contentId,
+  context,
+  locale,
+  publicPath,
+  section,
+  delay,
+}: RecorderProps) {
+  // Keeps hooks unconditional after the route locale has been narrowed.
   useRecordContentView({
     ...(contentId === undefined ? {} : { contentId }),
     ...(context === undefined ? {} : { context }),
@@ -72,5 +114,5 @@ function ActiveContentViewTracker({
     section,
   });
 
-  return children;
+  return null;
 }

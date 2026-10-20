@@ -9,18 +9,22 @@ import {
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
 import { useTranslations } from "use-intl";
-import { useViewer } from "@/lib/identity/client";
+import { useLiveSession } from "@/components/providers/live";
 
+/**
+ * The brand link of the sidebar. It reads the session the page's live store holds,
+ * so a visitor's page reads no account and opens no Convex socket for the link.
+ */
 export function HeaderMenu() {
   const t = useTranslations("Metadata");
-  const currentUser = useViewer((state) => state.account);
+  const isSignedIn = useLiveSession((state) => state.sessionId !== null);
 
   return (
     <SidebarMenu>
       <SidebarMenuItem>
         <SidebarMenuButton
           render={
-            <NavigationLink href={currentUser ? "/home" : "/"} title="Nakafa" />
+            <NavigationLink href={isSignedIn ? "/home" : "/"} title="Nakafa" />
           }
           size="lg"
         >

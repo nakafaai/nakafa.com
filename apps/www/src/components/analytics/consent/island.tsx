@@ -5,7 +5,7 @@ import {
   AccountConsentFooterItem,
 } from "@/components/analytics/consent/account";
 
-/** The signed-in prompt on a marketing page: the page's one Convex client around the account. */
+/** The signed-in prompt on a page: the page's one Convex client around the account. */
 export function IslandConsentControls({
   client,
 }: {
@@ -18,7 +18,7 @@ export function IslandConsentControls({
   );
 }
 
-/** The signed-in footer item on a marketing page, on the page's one Convex client. */
+/** The signed-in footer item on a page, on the page's one Convex client. */
 export function IslandConsentFooterItem({
   client,
 }: {
@@ -31,7 +31,7 @@ export function IslandConsentFooterItem({
   );
 }
 
-/** The signed-in consent effects of a marketing page, on the page's one Convex client. */
+/** The signed-in consent effects of a page, on the page's one Convex client. */
 export function IslandConsentEffects({
   client,
 }: {

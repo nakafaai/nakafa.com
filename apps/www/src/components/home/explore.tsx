@@ -11,6 +11,7 @@ import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { Array as Arr, HashSet, Option } from "effect";
 import type { ComponentProps, ReactNode } from "react";
 import { useLocale, useTranslations } from "use-intl";
+import { ConvexIsland } from "@/components/providers/island";
 import {
   getForYouNavigationHref,
   getForYouNavigationItems,
@@ -96,14 +97,46 @@ function NinaIcon() {
  * used by sidebar and sitemap navigation.
  */
 export function HomeExplore() {
+  return (
+    <ConvexIsland
+      fallback={
+        <HomeExploreGroup
+          preferredCurriculumHref={null}
+          preferredTryoutHref={null}
+        />
+      }
+    >
+      <LearnerHomeExplore />
+    </ConvexIsland>
+  );
+}
+
+/** Reads the learner's preferences on the page's Convex island. */
+function LearnerHomeExplore() {
+  const locale = useLocale();
+  const preferredCurriculumHref = usePreferredCurriculumHref(locale);
+  const preferredTryoutHref = usePreferredTryoutHref(locale);
+  return (
+    <HomeExploreGroup
+      preferredCurriculumHref={preferredCurriculumHref ?? null}
+      preferredTryoutHref={preferredTryoutHref ?? null}
+    />
+  );
+}
+
+function HomeExploreGroup({
+  preferredCurriculumHref,
+  preferredTryoutHref,
+}: {
+  preferredCurriculumHref: string | null;
+  preferredTryoutHref: string | null;
+}) {
   const tAi = useTranslations("Ai");
   const tCommon = useTranslations("Common");
   const locale = useLocale();
   // The shared shortcuts are the same for every audience; only their resolved
   // destinations follow the learner preferences below.
   const items = getForYouNavigationItems();
-  const preferredCurriculumHref = usePreferredCurriculumHref(locale);
-  const preferredTryoutHref = usePreferredTryoutHref(locale);
   const visibleCardIds = HashSet.fromIterable(
     Arr.map(items, (item) => item.id)
   );

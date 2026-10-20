@@ -2,7 +2,7 @@
 
 import { useHotkeys } from "@mantine/hooks";
 import { lazyComponent } from "@repo/design-system/lib/lazy";
-
+import { ConvexIntentIsland } from "@/components/providers/island";
 import { loadSearchCommandModule } from "@/components/search/command/module";
 import { ArticleNavigationContext } from "@/components/search/navigation";
 import type { ArticleNavigationItem } from "@/lib/content/article/navigation";
@@ -36,7 +36,9 @@ export function DeferredSearchCommand({
 
   return (
     <ArticleNavigationContext value={articleNavigation}>
-      <LazySearchCommand />
+      <ConvexIntentIsland>
+        <LazySearchCommand />
+      </ConvexIntentIsland>
     </ArticleNavigationContext>
   );
 }
