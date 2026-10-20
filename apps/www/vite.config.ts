@@ -72,6 +72,11 @@ const verifyPrerenderedPages: Plugin = {
 };
 
 export default defineConfig({
+  define: {
+    "import.meta.env.VITE_VERCEL_DEPLOYMENT_ID": JSON.stringify(
+      process.env.VERCEL_DEPLOYMENT_ID ?? ""
+    ),
+  },
   resolve: {
     tsconfigPaths: true,
   },
