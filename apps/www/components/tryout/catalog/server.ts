@@ -4,6 +4,7 @@ import "@tanstack/react-start/server-only";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { tryoutMetadataArgsValidator } from "@repo/backend/content/tryout/spec";
+import { renderServerComponent } from "@tanstack/react-start/rsc";
 import { Effect, Schema } from "effect";
 import type { Locale } from "use-intl";
 import { loadTryoutQuestion } from "@/components/tryout/content/signed";
@@ -44,8 +45,12 @@ export async function readFeaturedTryout(locale: Locale) {
   return await Effect.runPromise(
     Effect.gen(function* () {
       const question = yield* loadTryoutQuestion(featured.question);
+      // The question is a server component tree, so it crosses to the page as Flight data.
+      const content = yield* Effect.promise(() =>
+        renderServerComponent(question.content)
+      );
       return {
-        question: question.content,
+        question: content,
         response: featured.response,
       };
     })

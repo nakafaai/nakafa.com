@@ -124,6 +124,7 @@ const readArticle = createServerFn({ method: "GET" })
             revision: published.sourceRevision,
           })
         : null,
+      body: published.body,
       title: seo.title,
       category: data.category,
       breadcrumbs: createBreadcrumbItems(locale, [
@@ -241,7 +242,7 @@ function ArticlePage() {
               datePublished={metadata.datePublished}
             />
             <LayoutContent>
-              {headings.length === 0 ? <ComingSoon /> : null}
+              {headings.length === 0 ? <ComingSoon /> : article.body}
             </LayoutContent>
             <FooterContent>
               <DeferredComments key={`comments:${filePath}`} slug={filePath} />

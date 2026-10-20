@@ -124,6 +124,7 @@ const readMaterial = createServerFn({ method: "GET" })
         ? getLlmsMarkdownPath({ locale, publicPath })
         : null,
       headMetadata: toMaterialMetadataCopy({ metadata: route.metadata }),
+      body: published.body,
       headings: getHeadings(published.rawMdx),
       labels: {
         home: tCommon("home"),
@@ -252,7 +253,7 @@ function MaterialPage() {
             datePublished={metadata.datePublished}
           />
           <LayoutContent>
-            {headings.length === 0 ? <ComingSoon /> : null}
+            {headings.length === 0 ? <ComingSoon /> : page.body}
           </LayoutContent>
           <PaginationContent pagination={page.pagination} prefetchNext />
           <FooterContent>

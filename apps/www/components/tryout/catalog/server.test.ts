@@ -86,7 +86,10 @@ vi.mock("@repo/internationalization/src/navigation", () => ({
   useRouter: vi.fn(),
 }));
 vi.mock("@/lib/content/cache", () => ({}));
-vi.mock("@/env.client", () => ({
+vi.mock("@tanstack/react-start/rsc", () => ({
+  renderServerComponent: (node: unknown) => Promise.resolve(node),
+}));
+vi.mock("@/env.public", () => ({
   clientEnv: { VITE_CONVEX_URL: "https://test.convex.cloud" },
 }));
 vi.mock("@/env", () => ({

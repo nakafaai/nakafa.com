@@ -1,3 +1,5 @@
+"use client";
+
 import type { MathVisual as MathVisualScene } from "@nakafa/aksara-contracts/math/visual";
 import {
   CoordinateControls,

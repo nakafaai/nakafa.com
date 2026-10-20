@@ -1,23 +1,26 @@
 import "@tanstack/react-start/server-only";
 import type { SignedContentArtifact } from "@nakafa/aksara-contracts/content";
 
+import { renderServerComponent } from "@tanstack/react-start/rsc";
 import { Effect } from "effect";
 import { evaluateVerifiedArtifact } from "@/lib/content/published/artifact";
 import { ContentExecutionError } from "@/lib/content/published/errors";
 
-/** Caches JSX by the full signed artifact and Next's build identity. */
+/**
+ * Renders a verified body as a server component tree. Its text, math and frames
+ * are server markup, and each interactive visual is a client reference that its
+ * own boundary loads, so the body ships no JavaScript it does not run.
+ */
 async function renderVerifiedBody(artifact: SignedContentArtifact) {
   const rendered = await Effect.runPromise(
     evaluateVerifiedArtifact({ artifact })
   );
-  return <rendered.Content />;
+  return await renderServerComponent(<rendered.Content />);
 }
 
 /**
- * Reads the cached body. Next.js replaces an error thrown inside a cached
- * function with a digest before the caller sees it, and reports the original
- * error where it was thrown, so every failure arrives here without its class
- * and becomes the one content execution error.
+ * Reads the body of one signed artifact. Any failure becomes one content
+ * execution error, which names the content and the stage and nothing else.
  */
 export const readRenderedBody = Effect.fn("NakafaContent.readRenderedBody")(
   (artifact: SignedContentArtifact) =>
