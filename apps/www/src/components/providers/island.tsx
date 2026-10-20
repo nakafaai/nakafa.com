@@ -2,8 +2,6 @@ import { ConvexProvider } from "convex/react";
 import { Option } from "effect";
 import type { ReactNode } from "react";
 import { useLiveSession } from "@/components/providers/live";
-import { clientEnv } from "@/env.public";
-import { readConvexClient } from "@/lib/convex/client";
 
 /**
  * Gives its children the page's one Convex client once the live session holds it,
@@ -23,20 +21,6 @@ export function ConvexIsland({
     return fallback;
   }
   return <ConvexProvider client={client.value}>{children}</ConvexProvider>;
-}
-
-/**
- * Gives its children Convex for a reader whose intent needs a client even as a
- * visitor, such as an opened search. It provides the shared client and nothing
- * else: the live session does not hold it, so no other island of the page mounts
- * for that visitor.
- */
-export function ConvexIntentIsland({ children }: { children: ReactNode }) {
-  return (
-    <ConvexProvider client={readConvexClient(clientEnv.VITE_CONVEX_URL)}>
-      {children}
-    </ConvexProvider>
-  );
 }
 
 /**
