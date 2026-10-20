@@ -9,7 +9,7 @@ import { profileScreenFn } from "@/lib/account/profile.fn";
  * learners are minors, so the layout keeps the profile out of search results.
  * Each tab names its own address.
  */
-export const Route = createFileRoute("/$locale/_app/user/$username")({
+export const Route = createFileRoute("/$locale/_main/_app/user/$username")({
   loader: ({ params }) =>
     profileScreenFn({
       data: { locale: params.locale, username: params.username },

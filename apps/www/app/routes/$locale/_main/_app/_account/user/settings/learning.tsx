@@ -5,7 +5,7 @@ import { privateHead } from "@/lib/account/head";
 import { learningScreenFn } from "@/lib/account/settings.fn";
 
 export const Route = createFileRoute(
-  "/$locale/_app/_account/user/settings/learning"
+  "/$locale/_main/_app/_account/user/settings/learning"
 )({
   loader: ({ params }) => learningScreenFn({ data: { locale: params.locale } }),
   head: ({ loaderData }) =>

@@ -52,8 +52,9 @@ const readShellNavigation = createServerFn({ method: "GET" })
 const localeRoute = getRouteApi("/$locale");
 
 /**
- * The student shell that every learn page shares, as the (main) layout of the
- * reference app. An unknown locale stops before any page loads.
+ * The student shell that every learn page and signed-in screen shares, as the
+ * (main) layout of the reference app. An unknown locale stops before any page
+ * loads.
  */
 export const Route = createFileRoute("/$locale/_main")({
   beforeLoad: ({ params }) => {

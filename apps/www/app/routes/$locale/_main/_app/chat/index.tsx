@@ -6,7 +6,7 @@ import { DeferredWeather } from "@/components/ai/home/weather/deferred";
 import { signedInHead } from "@/lib/account/head";
 import { chatIndexScreenFn } from "@/lib/account/home.fn";
 
-export const Route = createFileRoute("/$locale/_app/chat/")({
+export const Route = createFileRoute("/$locale/_main/_app/chat/")({
   loader: ({ params }) =>
     chatIndexScreenFn({ data: { locale: params.locale } }),
   head: ({ loaderData }) =>

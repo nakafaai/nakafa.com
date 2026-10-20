@@ -4,7 +4,7 @@ import { ChatBoundary } from "@/components/ai/chat/boundary";
 import { AiChatSidebar } from "@/components/ai/chat/sidebar";
 import { chatSidebarScreenFn } from "@/lib/account/home.fn";
 
-export const Route = createFileRoute("/$locale/_app/chat")({
+export const Route = createFileRoute("/$locale/_main/_app/chat")({
   loader: () => chatSidebarScreenFn(),
   component: ChatLayout,
 });

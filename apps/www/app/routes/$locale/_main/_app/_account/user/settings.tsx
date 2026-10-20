@@ -10,7 +10,7 @@ import { SETTINGS_PANEL_ID } from "@/components/user/settings/panel";
  * settings page puts a panel on a wide screen. The reference keeps private
  * settings out of search, which the child pages' heads state.
  */
-export const Route = createFileRoute("/$locale/_app/_account/user/settings")({
+export const Route = createFileRoute("/$locale/_main/_app/_account/user/settings")({
   component: SettingsLayout,
 });
 

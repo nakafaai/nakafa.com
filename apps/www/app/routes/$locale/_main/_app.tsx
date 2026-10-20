@@ -1,12 +1,58 @@
-import { createFileRoute, Outlet } from "@tanstack/react-router";
+import { createFileRoute, getRouteApi, Outlet } from "@tanstack/react-router";
+import { IntlProvider } from "use-intl";
+import { readRouteMessages } from "@/lib/i18n/messages.fn";
 
 /**
- * The signed-in document shell. Every page under `_app` renders for one visitor
- * on each request, so no cache may keep it. Account screens pass the sign-in
- * gate in `_account`; chat, search and profiles stay open to visitors, as the
- * reference keeps them.
+ * The messages of the signed-in screens that the student shell and the locale
+ * route do not carry. They join the shell's messages, so no screen loses one.
  */
-export const Route = createFileRoute("/$locale/_app")({
+const APP_NAMESPACES = [
+  "Auth",
+  "Comments",
+  "Editor",
+  "Home",
+  "Legal",
+  "Memory",
+  "Notifications",
+  "Posts",
+  "Pricing",
+  "Subject",
+  "Videos",
+  "Weather",
+] as const;
+
+const localeRoute = getRouteApi("/$locale");
+const mainRoute = getRouteApi("/$locale/_main");
+
+/**
+ * The signed-in document shell. It nests inside the student shell of `_main`, as
+ * the reference nests its core routes in `(main)`, so the sidebar and the
+ * providers mount once. Every page under `_app` renders for one visitor on each
+ * request, so no cache may keep it. Account screens pass the sign-in gate in
+ * `_account`; chat, search and profiles stay open to visitors, as the reference
+ * keeps them.
+ */
+export const Route = createFileRoute("/$locale/_main/_app")({
   headers: () => ({ "Cache-Control": "private, no-store" }),
-  component: Outlet,
+  loader: ({ params }) =>
+    readRouteMessages({
+      data: { locale: params.locale, namespaces: APP_NAMESPACES },
+    }),
+  component: AppLayout,
 });
+
+/** Renders the signed-in screens with their own messages joined to the shell's. */
+function AppLayout() {
+  const { locale } = Route.useParams();
+  const messages = Route.useLoaderData();
+  const { messages: mainMessages } = mainRoute.useLoaderData();
+  const { messages: shellMessages } = localeRoute.useLoaderData();
+  return (
+    <IntlProvider
+      locale={locale}
+      messages={{ ...shellMessages, ...mainMessages, ...messages }}
+    >
+      <Outlet />
+    </IntlProvider>
+  );
+}

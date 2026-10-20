@@ -5,7 +5,7 @@ import { readShareToken } from "@/components/ai/chat/link";
 import { AiChatPage } from "@/components/ai/chat/page";
 import { chatScreenFn } from "@/lib/account/home.fn";
 
-export const Route = createFileRoute("/$locale/_app/chat/$id")({
+export const Route = createFileRoute("/$locale/_main/_app/chat/$id")({
   loader: ({ params }) =>
     chatScreenFn({ data: { id: params.id, locale: params.locale } }),
   head: ({ loaderData }) => ({

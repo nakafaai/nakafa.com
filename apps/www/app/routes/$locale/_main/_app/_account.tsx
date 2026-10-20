@@ -7,7 +7,7 @@ import { sessionFn } from "@/lib/auth/session.fn";
  * reference's `admitAccountRoute` and home page do. The gate runs before every
  * child loader, so no account read starts for a visitor who must sign in.
  */
-export const Route = createFileRoute("/$locale/_app/_account")({
+export const Route = createFileRoute("/$locale/_main/_app/_account")({
   beforeLoad: async ({ params }) => {
     const session = await sessionFn();
     if (session._tag === "SignedOut") {

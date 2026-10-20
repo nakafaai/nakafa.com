@@ -4,7 +4,7 @@ import { privateHead } from "@/lib/account/head";
 import { subscriptionsScreenFn } from "@/lib/account/settings.fn";
 
 export const Route = createFileRoute(
-  "/$locale/_app/_account/user/settings/subscriptions"
+  "/$locale/_main/_app/_account/user/settings/subscriptions"
 )({
   loader: ({ params }) =>
     subscriptionsScreenFn({ data: { locale: params.locale } }),

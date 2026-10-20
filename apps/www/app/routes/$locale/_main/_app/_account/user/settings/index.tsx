@@ -3,7 +3,7 @@ import { UserSettingsProfilePage } from "@/components/user/settings/profile";
 import { privateHead } from "@/lib/account/head";
 import { settingsScreenFn } from "@/lib/account/settings.fn";
 
-export const Route = createFileRoute("/$locale/_app/_account/user/settings/")({
+export const Route = createFileRoute("/$locale/_main/_app/_account/user/settings/")({
   loader: ({ params }) => settingsScreenFn({ data: { locale: params.locale } }),
   head: ({ loaderData }) =>
     loaderData === undefined ? {} : privateHead(loaderData.seo),

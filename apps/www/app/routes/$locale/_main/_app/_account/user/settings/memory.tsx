@@ -4,7 +4,7 @@ import { privateHead } from "@/lib/account/head";
 import { memoryScreenFn } from "@/lib/account/settings.fn";
 
 export const Route = createFileRoute(
-  "/$locale/_app/_account/user/settings/memory"
+  "/$locale/_main/_app/_account/user/settings/memory"
 )({
   loader: ({ params }) => memoryScreenFn({ data: { locale: params.locale } }),
   head: ({ loaderData }) =>

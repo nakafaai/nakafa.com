@@ -3,7 +3,7 @@ import { UserChats } from "@/components/user/chats";
 import { profileHead } from "@/lib/account/head";
 import { profileChatScreenFn } from "@/lib/account/profile.fn";
 
-export const Route = createFileRoute("/$locale/_app/user/$username/chat")({
+export const Route = createFileRoute("/$locale/_main/_app/user/$username/chat")({
   loader: ({ params }) =>
     profileChatScreenFn({
       data: { locale: params.locale, username: params.username },

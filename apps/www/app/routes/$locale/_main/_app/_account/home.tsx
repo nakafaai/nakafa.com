@@ -6,7 +6,7 @@ import { HomeTrending } from "@/components/home/trending";
 import { signedInHead } from "@/lib/account/head";
 import { homeScreenFn } from "@/lib/account/home.fn";
 
-export const Route = createFileRoute("/$locale/_app/_account/home")({
+export const Route = createFileRoute("/$locale/_main/_app/_account/home")({
   loader: ({ params }) => homeScreenFn({ data: { locale: params.locale } }),
   head: ({ loaderData }) =>
     loaderData === undefined ? {} : signedInHead(loaderData.seo),
