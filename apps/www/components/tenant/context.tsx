@@ -4,6 +4,7 @@ import { QueryResult } from "@confect/react";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import type { BuiltinRole } from "@repo/backend/confect/access/schema";
 import type { TenantProfile } from "@repo/backend/confect/tenancy/schema";
+import type { Option } from "effect";
 import { createContext, use } from "react";
 import { useConvexAuth } from "@/components/providers/convex";
 import type { HomeAccess } from "@/components/tenant/home/access";
@@ -24,7 +25,7 @@ export type TenantValue = Pick<
   "mascot" | "name" | "slug"
 > &
   Record<"logo", string | undefined> &
-  Record<"role", BuiltinRole | null> &
+  Record<"role", Option.Option<BuiltinRole>> &
   Record<"canManage" | "canOpenExams", boolean> &
   Record<"greeting", Greeting> &
   Record<"home", HomeAccess>;

@@ -66,9 +66,8 @@ export function firstActiveUnitOf<Unit extends { readonly status: string }>(
 }
 
 /** The first role the viewer holds in the school, or none when the viewer holds no grant. */
-export function roleOf(grants: SchoolViewer["grants"]): BuiltinRole | null {
-  return Option.match(Arr.head(grants), {
-    onNone: () => null,
-    onSome: (grant) => grant.role.key,
-  });
+export function roleOf(
+  grants: SchoolViewer["grants"]
+): Option.Option<BuiltinRole> {
+  return Option.map(Arr.head(grants), (grant) => grant.role.key);
 }

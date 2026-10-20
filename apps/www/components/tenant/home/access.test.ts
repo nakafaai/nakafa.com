@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
-import { Array as Arr, Schema } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 import type { ViewerUnit } from "@/components/tenant/exams/create";
 import { homeAccess, showsStudentHome } from "@/components/tenant/home/access";
 
@@ -68,14 +68,14 @@ describe("homeAccess", () => {
 });
 
 describe("showsStudentHome", () => {
-  const noGrant = { canManage: false, role: null } as const;
+  const noGrant = { canManage: false, role: Option.none() } as const;
 
   it("shows the student's home to a student", () => {
     const smp = unit("smp", ["exam.edit", "exam.rooms"]);
 
     expect(
       showsStudentHome(
-        { canManage: false, role: "student" },
+        { canManage: false, role: Option.some("student") },
         homeAccess({ can: [], units: [smp] })
       )
     ).toBe(true);
@@ -95,7 +95,7 @@ describe("showsStudentHome", () => {
 
     expect(
       showsStudentHome(
-        { canManage: false, role: "teacher" },
+        { canManage: false, role: Option.some("teacher") },
         homeAccess({ can: [], units: [smp] })
       )
     ).toBe(false);
@@ -120,7 +120,7 @@ describe("showsStudentHome", () => {
   it("shows the staff home, not the student's sentence, to a counselor with no exam action", () => {
     expect(
       showsStudentHome(
-        { canManage: false, role: "counselor" },
+        { canManage: false, role: Option.some("counselor") },
         homeAccess({ can: [], units: [unit("smp", [])] })
       )
     ).toBe(false);
@@ -129,7 +129,7 @@ describe("showsStudentHome", () => {
   it("keeps a manager on the staff home with no exam action, so its setup stays", () => {
     expect(
       showsStudentHome(
-        { canManage: true, role: "admin" },
+        { canManage: true, role: Option.some("admin") },
         homeAccess({ can: [], units: [unit("smp", [])] })
       )
     ).toBe(false);

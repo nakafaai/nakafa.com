@@ -1,7 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { MascotCode } from "@repo/mascot/code";
-import { Schema } from "effect";
+import { Option, Schema } from "effect";
 import type { TenantValue } from "@/components/tenant/context";
 import { liveTenant } from "@/components/tenant/live";
 
@@ -13,7 +13,7 @@ const rendered: TenantValue = {
   logo: "https://files.example.com/rendered.png",
   mascot: Schema.decodeSync(MascotCode)("cat.0.243e66.right.open"),
   name: "Yayasan Lama",
-  role: "owner",
+  role: Option.some("owner"),
   slug: Schema.decodeSync(TenantSlug)("harapan"),
 };
 

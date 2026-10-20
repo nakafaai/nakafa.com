@@ -39,8 +39,8 @@ describe("school viewer helpers", () => {
       scope: { kind: "tenant" },
       term: { kind: "standing" },
     });
-    expect(roleOf([])).toBeNull();
-    expect(roleOf([grant])).toBe("owner");
+    expect(Option.isNone(roleOf([]))).toBe(true);
+    expect(roleOf([grant])).toStrictEqual(Option.some("owner"));
   });
 
   it("opens the settings on the first active unit", () => {

@@ -31,7 +31,7 @@ import {
 import { lazyComponent } from "@repo/design-system/lib/lazy";
 import { Link, usePathname } from "@repo/internationalization/src/navigation";
 import { SITE_ORIGIN } from "@repo/seo/origin";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 import { type ReactNode, useTransition } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { AccountMenu } from "@/components/sidebar/menu/account";
@@ -110,7 +110,10 @@ function TenantAccount({
               mascot: account.mascot,
               photo: account.image,
             }}
-            description={role === null ? undefined : t(`role.${role}`)}
+            description={Option.match(role, {
+              onNone: () => undefined,
+              onSome: (value) => t(`role.${value}`),
+            })}
             name={name}
             onSignOut={() => startSigningOut(() => signOutOfSchool())}
           >
