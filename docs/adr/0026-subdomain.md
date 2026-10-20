@@ -69,7 +69,7 @@ finds the right data.
   `x-forwarded-host` for the school host gate, and credentials and the slug-scoped
   lookup, not the header, protect sign-in.
 - The proxy's redirects name the host and port that the visitor asked for, read
-  from the Host header (`lib/routing/visitor.ts`): the port of the header, or the
+  from the Host header (`apps/www/src/lib/routing/school/host.ts`): the port of the header, or the
   default port of the protocol when the header names none. Only the protocol comes
   from the request URL. Its rewrites name the request URL, the origin of the
   server, because Next proxies a rewrite to any other origin: a
@@ -80,14 +80,14 @@ finds the right data.
   still name that address. Vercel builds the request URL from the Host header, so
   that limit applies to a local or self-hosted run only.
 - A school page's status is decided by the proxy before the page streams, in
-  `lib/routing/school/refusal.ts`, as the profile page already decides its 404 in
-  the proxy (`lib/routing/public/profile.ts`). The gate reads one query,
+  `apps/www/src/lib/routing/school/refusal.ts`, as the profile page already decides its 404 in
+  the proxy (`apps/www/src/lib/routing/public/profile.ts`). The gate reads one query,
   `tenancy.profile.refusal` (`packages/backend/confect/tenancy/profile.impl.ts`),
   which decides the school's existence and the caller's view of it together: a
   school that no one has the address of is refused for every caller, and a signed-in
   member whom the school does not admit (`tenant.view` denied) is refused. A visitor,
   and a signed-in non-member of an existing school, reach the layout, which renders
-  the outsider page (`components/tenant/outsider.tsx`) with a 200 status. The refused page answers
+  the outsider page (`apps/www/src/components/tenant/outsider.tsx`) with a 200 status. The refused page answers
   with the app's not-found page and a 404 status, through a rewrite to the
   not-found route, in the locale that the school page negotiates. The school
   layout cannot answer 404 itself: Next sends the static shell of the route with
@@ -106,7 +106,7 @@ finds the right data.
   `tenancy.profile.refusal`, which reads one school row by its slug and, for a
   signed-in caller, the caller's Person and grants, so a non-member costs the same
   one call as a member. The layout reads its profile and, for a signed-in viewer,
-  its viewer once per request (`lib/tenant/read.ts`), because it still renders the
+  its viewer once per request (`apps/www/src/lib/tenant/read.ts`), because it still renders the
   name and the role. A signed-in viewer also
   reads the session token twice, once in the proxy and once in the layout, because
   React's `cache` does not span the two. Each read of the layout, token or query,
@@ -115,7 +115,7 @@ finds the right data.
   makes one attempt per query, and the whole gate, its session read included,
   waits at most one deadline: `NETWORK_ATTEMPT_DEADLINE`, 10 seconds, the bound
   that every attempt of a network read already has (`packages/backend/client/network.ts`,
-  used by `lib/routing/school/refusal.ts`). A gate that misses the deadline or
+  used by `apps/www/src/lib/routing/school/refusal.ts`). A gate that misses the deadline or
   fails goes on to the page, with its full cause logged. So a school that does not
   answer holds a page request for at most 10 seconds in the proxy and then up to
   31.5 seconds in the layout, before the error boundary. Before this change the

@@ -242,7 +242,7 @@ sitting does not show.
 - Students, teachers, and guardians on iPhone get a step in their onboarding
   that leads from Safari to the Home Screen. The step writes no journal entry,
   because the inbox stays the source of truth.
-- `apps/www/src/manifest.ts` already sets `display: "standalone"`. No service
+- `apps/www/src/lib/seo/manifest.server.ts` already sets `display: "standalone"`. No service
   worker and no subscription code exist yet. The build adds both, with
   `pushSubscriptions` (planned). RFC 8030 section 7.3 makes a push service
   answer a send to an expired subscription with 404. Deleting the stored
@@ -339,7 +339,7 @@ sitting does not show.
 | --- | --- |
 | The welcome email through `confect/emails` and the Resend component | Live |
 | The invitation email through `confect/emails/invite`, started by the invite mutation | Live |
-| `apps/www/src/manifest.ts` with `display: "standalone"` | Live |
+| `apps/www/src/lib/seo/manifest.server.ts` with `display: "standalone"` | Live |
 | `journalCursors`, which start five seconds before the entry that makes them, pass only settled entries, hold at most one page of handled ids with one slot kept free, and schedule their next run when a run leaves entries unread; and the index of `journalEntries` on the owner and the change type (creation time is its last column) | Built |
 | `notifications`, one row for each Person and invitation (`by_recipientPersonId_and_inviteId`), with the purge of a released Person's rows and of a revoked invitation's row | Built |
 | The invitation rows: `person.invited` is published, written by the invite, and refreshed by the resend; the inbox consumer writes them from the start of its cursor; an invitation revoked before its run gets no row, and a revoked invitation loses its row | Built |

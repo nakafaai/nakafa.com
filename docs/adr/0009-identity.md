@@ -374,8 +374,8 @@ nothing. So no profile is public yet.
   The proxy decides before the page renders (`readProfileRefusal` in
   `apps/www/src/lib/routing/public/profile.ts`): it reads the signed-in account and
   answers any other request with the app's not-found page and a 404 status, so
-  no stream starts that would have to end as not found. `readProfile` in
-  `apps/www/src/lib/profile/server.ts` reads the same account for the page and
+  no stream starts that would have to end as not found. `readProfileOrNotFound` in
+  `apps/www/src/lib/account/access.server.ts` reads the same account for the page and
   repeats the rule. The backend holds no public lookup of a profile by username.
 - A comment shows no link to the profile of its author.
 - The retired address `/{locale}/user/{id}` and its `chat` tab answer 308 to the

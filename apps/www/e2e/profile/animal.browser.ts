@@ -21,7 +21,7 @@ import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 const LOADING_PHOTO = "/logo.png";
 /**
  * An address that holds no picture. The site answers any `.png` address with
- * its social image (`apps/www/src/lib/og/route.ts`), so the photo test answers this
+ * its social image (`apps/www/src/lib/og/alias.ts` rewrites it to the image route `apps/www/src/routes/og/$.ts`), so the photo test answers this
  * one with a 404 itself, as a real missing image answers.
  */
 const MISSING_PHOTO = "/animal-photo-that-does-not-exist.png";
