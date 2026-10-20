@@ -8,7 +8,7 @@ import contents from "@repo/backend/confect/_generated/refs/contents";
 import notifications from "@repo/backend/confect/_generated/refs/notifications";
 import onboarding from "@repo/backend/confect/_generated/refs/onboarding";
 import { redirect } from "@tanstack/react-router";
-import { Effect, Option, Schema } from "effect";
+import { Clock, Effect, Option, Schema } from "effect";
 import { createTranslator } from "use-intl";
 import { getMaterialLooks } from "@/components/home/look";
 import {
@@ -20,7 +20,6 @@ import {
 } from "@/lib/account/access.server";
 import type { ScreenSeo } from "@/lib/account/head";
 import type { ChatInput, LocaleInput } from "@/lib/account/input";
-import { captureServerExceptionSafely } from "@/lib/analytics/server";
 import { readHomeTrendingSubjects } from "@/lib/content/trending";
 import { readOptional, readRequired } from "@/lib/data/read.server";
 
@@ -145,15 +144,7 @@ export const chatScreenHandler = accountHandler(
         chats.queries.getChatTitle,
         { chatId },
         token
-      ).pipe(
-        Effect.map(Option.fromNullishOr),
-        Effect.catchTag("PreloadFailed", (error) =>
-          captureServerExceptionSafely(error, {
-            operation: "chat.title",
-            source: "chat-title",
-          }).pipe(Effect.as(Option.none<string>()))
-        )
-      );
+      ).pipe(Effect.map(Option.fromNullishOr));
       return { chatId, title: Option.getOrUndefined(title) };
     })
 );
@@ -203,6 +194,7 @@ export const notificationsScreenHandler = accountHandler(
         { paginationOpts: { cursor: null, numItems: INBOX_PAGE_SIZE } },
         token
       );
+      const now = yield* Clock.currentTimeMillis;
       const messages = yield* messagesFor(locale);
       const t = createTranslator({
         locale,
@@ -221,6 +213,6 @@ export const notificationsScreenHandler = accountHandler(
         locale,
         title: t("title"),
       };
-      return { first, seo };
+      return { first, now, seo };
     })
 );

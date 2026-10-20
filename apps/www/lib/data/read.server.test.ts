@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { describe, expect, it } from "@effect/vitest";
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
 import refs from "@repo/backend/confect/_generated/refs";
 import exams from "@repo/backend/confect/_generated/refs/exams";
@@ -26,6 +26,20 @@ vi.mock("convex/browser", () => ({
     }
   },
 }));
+
+/** The exception reporter that a real failure of an optional part calls. */
+const analytics = vi.hoisted(() => ({
+  captureServerExceptionSafely:
+    vi.fn<(error: unknown, properties: unknown) => Effect.Effect<void>>(),
+}));
+
+vi.mock("@/lib/analytics/server", () => ({
+  captureServerExceptionSafely: analytics.captureServerExceptionSafely,
+}));
+
+beforeEach(() => {
+  analytics.captureServerExceptionSafely.mockReturnValue(Effect.void);
+});
 
 process.env.VITE_CONVEX_URL = "https://example.convex.cloud";
 
@@ -80,15 +94,21 @@ describe("required and optional preloads", () => {
     })
   );
 
-  it.effect("keeps a real failure of an optional part as the failure", () =>
-    Effect.gen(function* () {
-      const cause = new Error("offline");
-      convex.query.mockRejectedValueOnce(cause);
-      const error = yield* Effect.flip(
-        readOptional(ref, { locale: "en" }, undefined)
-      );
-      expect(error).toEqual(new PreloadFailed({ cause }));
-    })
+  it.effect(
+    "reports a real failure of an optional part and leaves it without a value",
+    () =>
+      Effect.gen(function* () {
+        const cause = new Error("offline");
+        convex.query.mockRejectedValueOnce(cause);
+        const value = yield* readOptional(ref, { locale: "en" }, undefined);
+        expect(value).toBeUndefined();
+        expect(
+          analytics.captureServerExceptionSafely
+        ).toHaveBeenCalledExactlyOnceWith(new PreloadFailed({ cause }), {
+          operation: ref.convexFunctionName,
+          source: "data.readOptional",
+        });
+      })
   );
 
   it.effect("returns the value of an optional part that Convex answers", () =>

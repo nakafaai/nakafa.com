@@ -257,7 +257,10 @@ describe("chatScreenHandler", () => {
     expect(screen.title).toBeUndefined();
     expect(mocks.captureServerExceptionSafely).toHaveBeenCalledExactlyOnceWith(
       { _tag: "PreloadFailed", cause: "unreachable" },
-      { operation: "chat.title", source: "chat-title" }
+      {
+        operation: chats.queries.getChatTitle.convexFunctionName,
+        source: "data.readOptional",
+      }
     );
   });
 
