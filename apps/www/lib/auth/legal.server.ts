@@ -34,12 +34,6 @@ export function readAuthLegalAnswer(locale: Locale) {
  * The sign-in answer for the locale that the request names, or for the locale
  * that the request negotiates when it names none.
  */
-export function readAuthLegalHandler({
-  data,
-}: {
-  readonly data: { readonly locale?: Locale | undefined };
-}) {
-  return readAuthLegalAnswer(
-    data.locale ?? negotiateLocale(getRequestHeaders())
-  );
+export function readAuthLegalHandler(requested: Locale | undefined) {
+  return readAuthLegalAnswer(requested ?? negotiateLocale(getRequestHeaders()));
 }

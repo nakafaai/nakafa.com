@@ -240,10 +240,7 @@ describe("readTryoutHubRoute", () => {
         expect(linked.image).toBe("og-app");
       })
   );
-});
-
-describe("readTryoutHubHandler", () => {
-  it("answers the hub of the locale that the request names", async () => {
+  it("answers the hub through its server handler", async () => {
     const route = await readTryoutHubHandler({ data: { locale: "en" } });
 
     expect(route.sourceUrl).toBeUndefined();

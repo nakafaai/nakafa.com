@@ -57,10 +57,10 @@ describe("sign-in legal links", () => {
       privacyPolicyHref: "/privacy-policy",
       termsOfServiceHref: "/terms-of-service",
     };
-    await expect(
-      readAuthLegalHandler({ data: { locale: "id" } })
-    ).resolves.toStrictEqual(signedLinks);
-    await expect(readAuthLegalHandler({ data: {} })).resolves.toStrictEqual({
+    await expect(readAuthLegalHandler("id")).resolves.toStrictEqual(
+      signedLinks
+    );
+    await expect(readAuthLegalHandler(undefined)).resolves.toStrictEqual({
       privacy: new URL("/de/privacy-policy", SITE_ORIGIN).href,
       terms: new URL("/de/terms-of-service", SITE_ORIGIN).href,
     });

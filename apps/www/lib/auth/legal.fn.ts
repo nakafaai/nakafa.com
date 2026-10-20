@@ -21,7 +21,7 @@ export const readAuthLegalFn = createServerFn({ method: "GET" })
       Schema.Struct({ locale: Schema.optionalKey(LocaleSchema) })
     )
   )
-  .handler(async (options) => {
+  .handler(async ({ data }) => {
     const { readAuthLegalHandler } = await import("@/lib/auth/legal.server");
-    return readAuthLegalHandler(options);
+    return readAuthLegalHandler(data.locale);
   });
