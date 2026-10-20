@@ -63,7 +63,7 @@ export function ExamList({
     exams.exams.list,
     isSettled ? { slug } : "skip",
     { initialNumItems: EXAM_PAGE_SIZE },
-    first
+    Option.fromUndefinedOr(first)
   );
   const [drafts] = useState(createExamDrafts);
   const saving = useStore(drafts, (state) => state.ids);

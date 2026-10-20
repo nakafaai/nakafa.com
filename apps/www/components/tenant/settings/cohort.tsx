@@ -30,7 +30,7 @@ import { buttonVariants } from "@repo/design-system/lib/button";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Link } from "@repo/internationalization/src/navigation";
 import { createColumnHelper } from "@tanstack/react-table";
-import { Array as Arr, Schema } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 import {
   createContext,
   type ReactNode,
@@ -419,7 +419,7 @@ function SchoolCohortMembers({
 }: {
   cohortId: Cohort["id"];
   cohorts: CohortPreload["cohorts"];
-  first: CohortPreload["members"];
+  first: CohortPreload["members"] | undefined;
   isArchived: boolean;
   periodId: Period["id"];
   slug: TenantSlug;
@@ -430,7 +430,7 @@ function SchoolCohortMembers({
     tenancy.cohorts.members,
     isSettled ? { cohortId, slug } : "skip",
     { initialNumItems: PAGE_SIZE },
-    first
+    Option.fromUndefinedOr(first)
   );
   const cohorts = usePreloadedQueryResult(
     tenancy.cohorts.list,

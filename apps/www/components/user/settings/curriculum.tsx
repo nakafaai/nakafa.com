@@ -65,7 +65,9 @@ class CurriculumPreferenceMutationError extends Schema.TaggedError<CurriculumPre
   }
 ) {}
 interface UserSettingsCurriculumProps {
-  initialPreference: Ref.Returns<typeof learningPreferences.queries.getCurrent>;
+  initialPreference:
+    | Ref.Returns<typeof learningPreferences.queries.getCurrent>
+    | undefined;
   initialPrograms: Ref.Returns<
     typeof learningPreferences.queries.listCurriculumPrograms
   >;

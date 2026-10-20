@@ -22,7 +22,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { createColumnHelper } from "@tanstack/react-table";
-import { Array as Arr } from "effect";
+import { Array as Arr, Option } from "effect";
 import { createContext, use, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/providers/convex";
@@ -135,7 +135,7 @@ function SchoolClientTable({
     integrations.clients.list,
     isSettled ? { slug } : "skip",
     { initialNumItems: PAGE_SIZE },
-    first
+    Option.fromUndefinedOr(first)
   );
   const viewer = useViewerQuery();
 

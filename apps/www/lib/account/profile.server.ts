@@ -13,7 +13,7 @@ import {
 } from "@/lib/account/access.server";
 import type { ScreenSeo } from "@/lib/account/head";
 import type { ProfileInput } from "@/lib/account/input";
-import { preloadConfectQuery } from "@/lib/data/preload.server";
+import { readOptional } from "@/lib/data/read.server";
 import { profileHref } from "@/lib/profile/href";
 
 /** The comments that a profile's list shows on its first page. */
@@ -30,28 +30,21 @@ export const profileScreenHandler = accountHandler(
 
 /**
  * The Posts tab: the first page of a profile's posts, the moment the server read
- * them, and the tab's head. A first page that cannot be read is logged, and then
- * the live list loads the page.
+ * them, and the tab's head. A posts page the viewer may not read is left to the
+ * live list; a real failure fails the page.
  */
 export const profilePostsHandler = accountHandler(
   ({ locale, username }: typeof ProfileInput.Type) =>
     Effect.gen(function* () {
       const token = yield* readToken();
       const { profile } = yield* readProfileOrNotFound(username, token);
-      const first = yield* preloadConfectQuery(
+      const first = yield* readOptional(
         posts.queries.list,
         {
           authorId: profile._id,
           paginationOpts: { cursor: null, numItems: POST_PAGE_SIZE },
         },
         token
-      ).pipe(
-        Effect.catchTag("PreloadFailed", (error) =>
-          Effect.logWarning(
-            "The first page of posts could not be read on the server.",
-            error
-          ).pipe(Effect.as(null))
-        )
       );
       const now = yield* Clock.currentTimeMillis;
       const t = createTranslator({
@@ -107,7 +100,7 @@ export const profileCommentsHandler = accountHandler(
     Effect.gen(function* () {
       const token = yield* readToken();
       const { profile } = yield* readProfileOrNotFound(username, token);
-      const first = yield* preloadConfectQuery(
+      const first = yield* readOptional(
         comments.queries.getCommentsByUserId,
         {
           paginationOpts: { cursor: null, numItems: COMMENT_PAGE_SIZE },

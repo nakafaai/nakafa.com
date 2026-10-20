@@ -15,14 +15,14 @@ import {
 } from "@/lib/account/access.server";
 import type { ScreenSeo } from "@/lib/account/head";
 import type { LocaleInput } from "@/lib/account/input";
-import { preloadConfectQuery } from "@/lib/data/preload.server";
+import { readOptional, readRequired } from "@/lib/data/read.server";
 
 /** Settings: the account, or not found when the account is gone. */
 export const settingsScreenHandler = accountHandler(
   ({ locale }: typeof LocaleInput.Type) =>
     Effect.gen(function* () {
       const token = yield* admitAccount(locale);
-      const account = yield* preloadConfectQuery(
+      const account = yield* readRequired(
         auth.queries.getCurrentUser,
         {},
         token
@@ -53,13 +53,13 @@ export const learningScreenHandler = accountHandler(
       const token = yield* admitAccount(locale);
       const [account, preference, programs] = yield* Effect.all(
         [
-          preloadConfectQuery(auth.queries.getCurrentUser, {}, token),
-          preloadConfectQuery(
+          readRequired(auth.queries.getCurrentUser, {}, token),
+          readOptional(
             learningPreferences.queries.getCurrent,
             { locale },
             token
           ),
-          preloadConfectQuery(
+          readRequired(
             learningPreferences.queries.listCurriculumPrograms,
             { locale },
             token
@@ -96,12 +96,12 @@ export const memoryScreenHandler = accountHandler(
       const token = yield* admitAccount(locale);
       const [first, state] = yield* Effect.all(
         [
-          preloadConfectQuery(
+          readRequired(
             nina.memory.list,
             { paginationOpts: { cursor: null, numItems: MEMORY_PAGE } },
             token
           ),
-          preloadConfectQuery(nina.memory.state, {}, token),
+          readRequired(nina.memory.state, {}, token),
         ],
         { concurrency: "unbounded" }
       );
@@ -130,7 +130,7 @@ export const subscriptionsScreenHandler = accountHandler(
   ({ locale }: typeof LocaleInput.Type) =>
     Effect.gen(function* () {
       const token = yield* admitAccount(locale);
-      const subscription = yield* preloadConfectQuery(
+      const subscription = yield* readRequired(
         subscriptions.queries.hasActiveSubscription,
         { productId: products.pro.id },
         token

@@ -280,7 +280,7 @@ function RoomsTable({
     exams.rooms.list,
     isSettled ? roomsArgs({ examId, slug }, filter) : "skip",
     { initialNumItems: ROOM_PAGE_SIZE },
-    filter === "all" ? first : undefined
+    filter === "all" ? Option.fromUndefinedOr(first) : Option.none()
   );
 
   if (

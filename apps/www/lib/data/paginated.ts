@@ -6,8 +6,14 @@ import {
   type UsePaginatedQueryArgs,
   usePaginatedQuery,
 } from "@confect/react";
+import { Option } from "effect";
 
-/** The first page that the loader read on the server, and whether it is the last. */
+/**
+ * The first page that the loader read on the server, and whether it is the last.
+ * This is the one owner of the shape: a loader returns it as plain data, because
+ * an Effect Option does not survive the trip to the browser, and the page takes
+ * it as an Option.
+ */
 export interface PreloadedPage<Item> {
   readonly isDone: boolean;
   readonly page: readonly Item[];
@@ -23,18 +29,18 @@ export interface PreloadedPage<Item> {
  */
 export function readFirstPage<Item, E>(
   live: PaginatedQueryResult.PaginatedQueryResult<Item, E>,
-  preloaded: PreloadedPage<Item> | undefined
+  preloaded: Option.Option<PreloadedPage<Item>>
 ): PaginatedQueryResult.PaginatedQueryResult<Item, E> {
   if (
-    preloaded === undefined ||
+    Option.isNone(preloaded) ||
     !PaginatedQueryResult.isLoadingFirstPage(live)
   ) {
     return live;
   }
-  if (preloaded.isDone) {
-    return PaginatedQueryResult.exhausted({ results: preloaded.page });
+  if (preloaded.value.isDone) {
+    return PaginatedQueryResult.exhausted({ results: preloaded.value.page });
   }
-  return PaginatedQueryResult.loadingMore({ results: preloaded.page });
+  return PaginatedQueryResult.loadingMore({ results: preloaded.value.page });
 }
 
 /** A paginated Confect query whose first page is the loader's. */
@@ -44,7 +50,7 @@ export function usePaginatedPreloaded<
   ref: Query,
   args: UsePaginatedQueryArgs<Query>,
   options: PaginatedQueryOptions,
-  preloaded: PreloadedPage<PaginatedQueryItem<Query>> | undefined
+  preloaded: Option.Option<PreloadedPage<PaginatedQueryItem<Query>>>
 ) {
   const live = usePaginatedQuery(ref, args, options);
   return readFirstPage(live, preloaded);

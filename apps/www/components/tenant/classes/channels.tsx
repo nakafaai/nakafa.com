@@ -15,7 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from "@repo/design-system/components/ui/table";
-import { Array as Arr } from "effect";
+import { Array as Arr, Option } from "effect";
 import { useEffect } from "react";
 import { useTranslations } from "use-intl";
 import { type StoreApi, useStore } from "zustand";
@@ -61,7 +61,7 @@ export function ChannelList({
     classroom.forum.channels.list,
     { classId, slug },
     { initialNumItems: CHANNEL_PAGE_SIZE },
-    first
+    Option.fromUndefinedOr(first)
   );
   const saving = useStore(drafts, (state) => state.names);
   const { entry, ref } = useIntersection<HTMLDivElement>();

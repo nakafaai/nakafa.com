@@ -14,7 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from "@repo/design-system/components/ui/table";
-import { Array as Arr, DateTime, Schema } from "effect";
+import { Array as Arr, DateTime, Option, Schema } from "effect";
 import { useState } from "react";
 import { useFormatter, useTranslations } from "use-intl";
 import {
@@ -180,7 +180,7 @@ export function StudentsTable({
     exams.results.results.byStudent,
     settled ? scope : "skip",
     { initialNumItems: STUDENT_PAGE_SIZE },
-    status === "all" ? first : undefined
+    status === "all" ? Option.fromUndefinedOr(first) : Option.none()
   );
 
   if (

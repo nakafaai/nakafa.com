@@ -3,18 +3,25 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
+import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { ClassAddress } from "@repo/backend/confect/classroom/class";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
+import { isNotFound } from "@tanstack/react-router";
 import { Effect, Schema } from "effect";
 import {
   classForumHandler,
   shellClassesHandler,
 } from "@/lib/tenant/classes.server";
 
-/** A read that the test backend fails with, so a first screen answers no value for it. */
-class ReadFailed extends Schema.TaggedError<ReadFailed>()("ReadFailed", {
-  cause: Schema.Unknown,
-}) {}
+/** A read that Convex could not answer: a real failure, which the screen fails with. */
+class PreloadFailed extends Schema.TaggedError<PreloadFailed>()(
+  "PreloadFailed",
+  { cause: Schema.Unknown }
+) {}
+
+/** A refusal that the query declares for a viewer without access to the class. */
+const refused = () =>
+  new AccessDenied({ action: "class.view", reason: "resource" });
 
 process.env.VITE_CONVEX_URL = "https://example.convex.cloud";
 
@@ -78,35 +85,32 @@ describe("class first screen", () => {
     );
   });
 
-  it("reads no channels when the class itself is not readable", async () => {
-    mocks.preloadConfectQuery.mockReturnValue(
-      Effect.fail(new ReadFailed({ cause: "denied" }))
-    );
+  it("ends the class as not found when the viewer is refused it", async () => {
+    mocks.preloadConfectQuery.mockReturnValue(Effect.fail(refused()));
 
-    const screen = await classForumHandler({
-      data: { classSlug: CLASS, numItems: 20, slug: SLUG },
-    });
-
-    expect(screen).toStrictEqual({ channels: undefined, resolved: undefined });
+    await expect(
+      classForumHandler({
+        data: { classSlug: CLASS, numItems: 20, slug: SLUG },
+      })
+    ).rejects.toSatisfy(isNotFound);
     expect(mocks.preloadConfectQuery).toHaveBeenCalledTimes(1);
   });
 
-  it("answers no channels when the channels read fails and keeps the class", async () => {
+  it("fails the forum when its channels read fails", async () => {
     mocks.preloadConfectQuery.mockImplementation((ref) =>
       ref === classroom.classes.resolve
         ? Effect.succeed({
             id: Schema.decodeUnknownSync(Id("classes"))("class-1"),
             name: "Fisika",
           })
-        : Effect.fail(new ReadFailed({ cause: "offline" }))
+        : Effect.fail(new PreloadFailed({ cause: "offline" }))
     );
 
-    const screen = await classForumHandler({
-      data: { classSlug: CLASS, numItems: 20, slug: SLUG },
-    });
-
-    expect(screen.channels).toBeUndefined();
-    expect(screen.resolved?.name).toBe("Fisika");
+    await expect(
+      classForumHandler({
+        data: { classSlug: CLASS, numItems: 20, slug: SLUG },
+      })
+    ).rejects.toMatchObject({ _tag: "PreloadFailed" });
   });
 });
 

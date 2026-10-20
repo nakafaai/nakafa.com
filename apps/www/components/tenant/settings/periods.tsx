@@ -173,7 +173,7 @@ function SchoolPeriodTable({
   slug,
   unitId,
 }: {
-  first: PeriodsPreload["page"];
+  first: PeriodsPreload["page"] | undefined;
   slug: TenantSlug;
   unitId: UnitId;
 }) {
@@ -183,7 +183,7 @@ function SchoolPeriodTable({
     tenancy.periods.list,
     isSettled ? { slug, unitId } : "skip",
     { initialNumItems: PAGE_SIZE },
-    first
+    Option.fromUndefinedOr(first)
   );
 
   const failed = PaginatedQueryResult.isFailure(pagination);

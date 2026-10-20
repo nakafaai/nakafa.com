@@ -12,7 +12,7 @@ import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { Link } from "@repo/internationalization/src/navigation";
 import { createColumnHelper } from "@tanstack/react-table";
-import { Array as Arr } from "effect";
+import { Array as Arr, Option } from "effect";
 import { createContext, startTransition, use } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/providers/convex";
@@ -88,7 +88,7 @@ function SchoolMembersBody({ slug }: { slug: TenantSlug }) {
     tenancy.roster.members,
     isSettled ? { slug } : "skip",
     { initialNumItems: PAGE_SIZE },
-    first
+    Option.fromUndefinedOr(first)
   );
 
   const failed = PaginatedQueryResult.isFailure(pagination);

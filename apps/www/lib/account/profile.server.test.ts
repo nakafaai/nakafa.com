@@ -130,17 +130,29 @@ describe("profilePostsHandler", () => {
     });
   });
 
-  it("answers no first page when the posts cannot be read, so the live list loads them", async () => {
+  it("answers no first page when the viewer is refused the posts, so the live list decides", async () => {
+    sessionWith(Option.none());
+    mocks.preloadConfectQuery.mockImplementation((ref) =>
+      ref === posts.queries.list
+        ? Effect.fail({ _tag: "AccessDenied", action: "post.view" })
+        : Effect.succeed(profile)
+    );
+    const screen = await profilePostsHandler({
+      data: { locale: "en", username: "nabil" },
+    });
+    expect(screen.first).toBeUndefined();
+  });
+
+  it("fails the posts tab when its first page cannot be read", async () => {
     sessionWith(Option.none());
     mocks.preloadConfectQuery.mockImplementation((ref) =>
       ref === posts.queries.list
         ? Effect.fail({ _tag: "PreloadFailed", cause: "unreachable" })
         : Effect.succeed(profile)
     );
-    const screen = await profilePostsHandler({
-      data: { locale: "en", username: "nabil" },
-    });
-    expect(screen.first).toBeNull();
+    await expect(
+      profilePostsHandler({ data: { locale: "en", username: "nabil" } })
+    ).rejects.toMatchObject({ _tag: "PreloadFailed" });
   });
 });
 

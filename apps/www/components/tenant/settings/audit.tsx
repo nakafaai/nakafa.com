@@ -95,7 +95,7 @@ function SchoolAuditBody({ slug }: { slug: TenantSlug }) {
     journal.audit.list,
     isSettled ? { slug } : "skip",
     { initialNumItems: PAGE_SIZE },
-    first
+    Option.fromUndefinedOr(first)
   );
   const people = usePreloadedQueryResult(
     journal.audit.actors,

@@ -7,7 +7,9 @@ import identity from "@repo/backend/confect/_generated/refs/identity";
 import integrations from "@repo/backend/confect/_generated/refs/integrations";
 import journal from "@repo/backend/confect/_generated/refs/journal";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
+import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
+import { isNotFound } from "@tanstack/react-router";
 import { Effect, Option, Schema } from "effect";
 import {
   auditHandler,
@@ -22,10 +24,15 @@ import {
   unitsHandler,
 } from "@/lib/tenant/settings.server";
 
-/** A read that the test backend fails with, so a first screen answers no value for it. */
-class ReadFailed extends Schema.TaggedError<ReadFailed>()("ReadFailed", {
-  cause: Schema.Unknown,
-}) {}
+/** A read that Convex could not answer: a real failure, which the screen fails with. */
+class PreloadFailed extends Schema.TaggedError<PreloadFailed>()(
+  "PreloadFailed",
+  { cause: Schema.Unknown }
+) {}
+
+/** A refusal that the query declares for a viewer without the grant. */
+const refused = () =>
+  new AccessDenied({ action: "tenant.manage", reason: "role" });
 
 process.env.VITE_CONVEX_URL = "https://example.convex.cloud";
 
@@ -101,14 +108,22 @@ describe("settings list first screens", () => {
       );
     });
 
-    it(`answers no page for a failed ${name} read`, async () => {
+    it(`ends the ${name} screen as not found when the viewer is refused it`, async () => {
+      mocks.preloadConfectQuery.mockReturnValue(Effect.fail(refused()));
+
+      await expect(
+        handler({ data: { numItems: 25, slug: SLUG } })
+      ).rejects.toSatisfy(isNotFound);
+    });
+
+    it(`fails the ${name} screen when its read fails`, async () => {
       mocks.preloadConfectQuery.mockReturnValue(
-        Effect.fail(new ReadFailed({ cause: "offline" }))
+        Effect.fail(new PreloadFailed({ cause: "offline" }))
       );
 
       await expect(
         handler({ data: { numItems: 25, slug: SLUG } })
-      ).resolves.toBeUndefined();
+      ).rejects.toMatchObject({ _tag: "PreloadFailed" });
     });
   }
 });
@@ -155,17 +170,14 @@ describe("audit first screen", () => {
     });
   });
 
-  it("answers no entries for a failed journal read", async () => {
+  it("ends the audit screen as not found when the journal is refused", async () => {
     mocks.preloadConfectQuery.mockImplementation((ref) =>
-      ref === journal.audit.list
-        ? Effect.fail(new ReadFailed({ cause: "offline" }))
-        : Effect.succeed([])
+      ref === journal.audit.list ? Effect.fail(refused()) : Effect.succeed([])
     );
 
-    const screen = await auditHandler({ data: { numItems: 25, slug: SLUG } });
-
-    expect(screen.entries).toBeUndefined();
-    expect(screen.people).toStrictEqual([]);
+    await expect(
+      auditHandler({ data: { numItems: 25, slug: SLUG } })
+    ).rejects.toSatisfy(isNotFound);
   });
 });
 
@@ -194,16 +206,12 @@ describe("periods first screen", () => {
     );
   });
 
-  it("names the unit with no page for a failed periods read", async () => {
-    mocks.preloadConfectQuery.mockReturnValue(
-      Effect.fail(new ReadFailed({ cause: "offline" }))
-    );
+  it("ends the periods screen as not found when the unit's periods are refused", async () => {
+    mocks.preloadConfectQuery.mockReturnValue(Effect.fail(refused()));
 
-    const screen = await periodsHandler({
-      data: { numItems: 25, slug: SLUG, unitId: UNIT },
-    });
-
-    expect(screen).toStrictEqual({ page: undefined, unitId: UNIT });
+    await expect(
+      periodsHandler({ data: { numItems: 25, slug: SLUG, unitId: UNIT } })
+    ).rejects.toSatisfy(isNotFound);
   });
 });
 
@@ -242,18 +250,12 @@ describe("cohorts first screen", () => {
     expect(mocks.preloadConfectQuery).toHaveBeenCalledTimes(1);
   });
 
-  it("reads no cohorts when the active period read fails", async () => {
-    mocks.preloadConfectQuery.mockReturnValue(
-      Effect.fail(new ReadFailed({ cause: "offline" }))
-    );
+  it("ends the cohorts screen as not found when the active period is refused", async () => {
+    mocks.preloadConfectQuery.mockReturnValue(Effect.fail(refused()));
 
-    const screen = await cohortsHandler({ data: { slug: SLUG, unitId: UNIT } });
-
-    expect(screen).toStrictEqual({
-      active: undefined,
-      cohorts: undefined,
-      unitId: UNIT,
-    });
+    await expect(
+      cohortsHandler({ data: { slug: SLUG, unitId: UNIT } })
+    ).rejects.toSatisfy(isNotFound);
   });
 });
 
@@ -285,10 +287,26 @@ describe("cohort first screen", () => {
     );
   });
 
-  it("reads no period cohorts for a cohort that is not readable", async () => {
-    mocks.preloadConfectQuery.mockReturnValue(
-      Effect.fail(new ReadFailed({ cause: "denied" }))
-    );
+  it("ends the cohort screen as not found when the cohort is refused", async () => {
+    mocks.preloadConfectQuery.mockReturnValue(Effect.fail(refused()));
+
+    await expect(
+      cohortHandler({
+        data: { cohortId: COHORT, numItems: 25, slug: SLUG },
+      })
+    ).rejects.toSatisfy(isNotFound);
+  });
+
+  it("leaves the period's cohorts unread when the list is refused, and keeps the cohort", async () => {
+    mocks.preloadConfectQuery.mockImplementation((ref) => {
+      if (ref === tenancy.cohorts.get) {
+        return Effect.succeed({ id: COHORT, periodId: PERIOD });
+      }
+      if (ref === tenancy.cohorts.list) {
+        return Effect.fail(refused());
+      }
+      return Effect.succeed(page([]));
+    });
 
     const screen = await cohortHandler({
       data: { cohortId: COHORT, numItems: 25, slug: SLUG },
@@ -296,9 +314,8 @@ describe("cohort first screen", () => {
 
     expect(screen).toStrictEqual({
       cohorts: undefined,
-      detail: undefined,
-      members: undefined,
+      detail: { id: COHORT, periodId: PERIOD },
+      members: { isDone: false, page: [] },
     });
-    expect(mocks.preloadConfectQuery).toHaveBeenCalledTimes(2);
   });
 });

@@ -3,6 +3,7 @@
 import { PaginatedQueryResult } from "@confect/react";
 import { describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
+import { Option } from "effect";
 import { readFirstPage, usePaginatedPreloaded } from "@/lib/data/paginated";
 
 /** The live page that the mocked Confect hook returns. */
@@ -16,15 +17,15 @@ vi.mock("@confect/react", async (importOriginal) => ({
 describe("paginated first page", () => {
   it("shows the live list once its subscription has a page", () => {
     const current = PaginatedQueryResult.exhausted({ results: ["live"] });
-    expect(readFirstPage(current, { isDone: false, page: ["loader"] })).toBe(
-      current
-    );
+    expect(
+      readFirstPage(current, Option.some({ isDone: false, page: ["loader"] }))
+    ).toBe(current);
   });
 
   it("shows the loader's last page as the whole list", () => {
     const page = readFirstPage(
       PaginatedQueryResult.loadingFirstPage({ skipped: false }),
-      { isDone: true, page: ["loader"] }
+      Option.some({ isDone: true, page: ["loader"] })
     );
     expect(PaginatedQueryResult.isLoadingFirstPage(page)).toBe(false);
     expect(page.results).toStrictEqual(["loader"]);
@@ -33,7 +34,7 @@ describe("paginated first page", () => {
   it("shows the loader's first page as loading more, with no load more until the subscription has its page", () => {
     const page = readFirstPage(
       PaginatedQueryResult.loadingFirstPage({ skipped: false }),
-      { isDone: false, page: ["loader"] }
+      Option.some({ isDone: false, page: ["loader"] })
     );
     expect(page.results).toStrictEqual(["loader"]);
     expect(PaginatedQueryResult.isLoadingFirstPage(page)).toBe(false);
@@ -45,7 +46,7 @@ describe("paginated first page", () => {
 describe("paginated first page without a loader page", () => {
   it("keeps the live result when the loader has no page for these arguments", () => {
     const loading = PaginatedQueryResult.loadingFirstPage({ skipped: false });
-    expect(readFirstPage(loading, undefined)).toBe(loading);
+    expect(readFirstPage(loading, Option.none())).toBe(loading);
   });
 });
 
@@ -62,7 +63,7 @@ describe("paginated preloaded hook", () => {
       {
         initialNumItems: 2,
       },
-      { isDone: true, page: [] }
+      Option.some({ isDone: true, page: [] })
     );
     expect(page.results).toStrictEqual([]);
   });

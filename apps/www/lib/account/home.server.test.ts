@@ -155,6 +155,23 @@ describe("homeScreenHandler", () => {
     expect(screen.seo).toMatchObject({ canonicalPath: "/en", indexable: true });
   });
 
+  it("answers the home screen with no recent subjects when the server refuses them", async () => {
+    sessionWith(Option.some("token"));
+    mocks.preloadConfectQuery.mockImplementation((ref) => {
+      if (ref === onboarding.queries.getStatus) {
+        return Effect.succeed({ isAuthenticated: true, isRequired: false });
+      }
+      if (ref === contents.queries.recent.getRecentlyViewed) {
+        return Effect.fail({ _tag: "ReleaseError" });
+      }
+      return Effect.succeed(account);
+    });
+    const screen = await homeScreenHandler({ data: { locale: "en" } });
+    expect(screen.recentRows).toStrictEqual([]);
+    expect(screen.recentLooks).toStrictEqual([]);
+    expect(screen.name).toBe("Nabil");
+  });
+
   it("answers the home screen without a name when the account is gone", async () => {
     sessionWith(Option.some("token"));
     answerQueries([

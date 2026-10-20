@@ -135,7 +135,7 @@ function SchoolInvitesBody({
     tenancy.invites.list,
     isSettled ? { slug } : "skip",
     { initialNumItems: PAGE_SIZE },
-    first
+    Option.fromUndefinedOr(first)
   );
 
   const failed = PaginatedQueryResult.isFailure(pagination);

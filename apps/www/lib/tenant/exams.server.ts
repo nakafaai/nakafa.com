@@ -4,8 +4,7 @@ import exams from "@repo/backend/confect/_generated/refs/exams";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Effect, Schema } from "effect";
 import { dashboardArgs } from "@/components/exams/sitting/change";
-import { preloadConfectQuery } from "@/lib/data/preload.server";
-import { orUndefined } from "@/lib/tenant/first.server";
+import { readRequired } from "@/lib/data/read.server";
 import { memberHandler } from "@/lib/tenant/member.server";
 
 /** The rows a list asks for on its first page: at least one, and at most one hundred. */
@@ -45,20 +44,19 @@ export const ResultsInput = Schema.Struct({
   slug: TenantSlug,
 });
 
-/** The first page of the exam list, with the page's end. */
+/**
+ * The first page of the exam list, with the page's end. A refusal of the list
+ * ends the page as not found.
+ */
 export const examListHandler = memberHandler(
   ({ numItems, slug }: typeof ExamListInput.Type, token: string) =>
     Effect.gen(function* () {
-      const page = yield* orUndefined(
-        preloadConfectQuery(
-          exams.exams.list,
-          { paginationOpts: { cursor: null, numItems }, slug },
-          token
-        )
+      const page = yield* readRequired(
+        exams.exams.list,
+        { paginationOpts: { cursor: null, numItems }, slug },
+        token
       );
-      return page === undefined
-        ? undefined
-        : { isDone: page.isDone, page: page.page };
+      return { isDone: page.isDone, page: page.page };
     })
 );
 
@@ -68,24 +66,17 @@ export const examRoomsHandler = memberHandler(
     Effect.gen(function* () {
       const [summary, rooms] = yield* Effect.all(
         [
-          orUndefined(
-            preloadConfectQuery(exams.rooms.exam, { examId, slug }, token)
-          ),
-          orUndefined(
-            preloadConfectQuery(
-              exams.rooms.list,
-              { examId, paginationOpts: { cursor: null, numItems }, slug },
-              token
-            )
+          readRequired(exams.rooms.exam, { examId, slug }, token),
+          readRequired(
+            exams.rooms.list,
+            { examId, paginationOpts: { cursor: null, numItems }, slug },
+            token
           ),
         ],
         { concurrency: "unbounded" }
       );
       return {
-        rooms:
-          rooms === undefined
-            ? undefined
-            : { isDone: rooms.isDone, page: rooms.page },
+        rooms: { isDone: rooms.isDone, page: rooms.page },
         summary,
       };
     })
@@ -94,27 +85,23 @@ export const examRoomsHandler = memberHandler(
 /** The exam as its editor and its try open it. */
 export const examOpenHandler = memberHandler(
   ({ examId, slug }: typeof ExamInput.Type, token: string) =>
-    orUndefined(preloadConfectQuery(exams.exams.open, { examId, slug }, token))
+    readRequired(exams.exams.open, { examId, slug }, token)
 );
 
 /** The proctor's dashboard of one sitting, its first page of seats. */
 export const sittingDashboardHandler = memberHandler(
   ({ sittingId, slug }: typeof SittingInput.Type, token: string) =>
-    orUndefined(
-      preloadConfectQuery(
-        exams.sittings.dashboard,
-        dashboardArgs({ sittingId, slug }, null),
-        token
-      )
+    readRequired(
+      exams.sittings.dashboard,
+      dashboardArgs({ sittingId, slug }, null),
+      token
     )
 );
 
 /** The student's screen of one sitting. */
 export const studentSittingHandler = memberHandler(
   ({ sittingId, slug }: typeof SittingInput.Type, token: string) =>
-    orUndefined(
-      preloadConfectQuery(exams.sittings.student, { sittingId, slug }, token)
-    )
+    readRequired(exams.sittings.student, { sittingId, slug }, token)
 );
 
 /** The overview of one sitting's results, with the first page of its students, in one bounded call. */
@@ -123,29 +110,22 @@ export const resultsHandler = memberHandler(
     Effect.gen(function* () {
       const [overview, students] = yield* Effect.all(
         [
-          orUndefined(
-            preloadConfectQuery(
-              exams.results.results.overview,
-              { sittingId, slug },
-              token
-            )
+          readRequired(
+            exams.results.results.overview,
+            { sittingId, slug },
+            token
           ),
-          orUndefined(
-            preloadConfectQuery(
-              exams.results.results.byStudent,
-              { paginationOpts: { cursor: null, numItems }, sittingId, slug },
-              token
-            )
+          readRequired(
+            exams.results.results.byStudent,
+            { paginationOpts: { cursor: null, numItems }, sittingId, slug },
+            token
           ),
         ],
         { concurrency: "unbounded" }
       );
       return {
         overview,
-        students:
-          students === undefined
-            ? undefined
-            : { isDone: students.isDone, page: students.page },
+        students: { isDone: students.isDone, page: students.page },
       };
     })
 );

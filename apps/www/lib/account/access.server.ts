@@ -7,7 +7,7 @@ import { notFound, redirect } from "@tanstack/react-router";
 import { getRequest, setResponseHeader } from "@tanstack/react-start/server";
 import { Effect, Option, String as Str } from "effect";
 import { readSessionMemo } from "@/lib/auth/session.server";
-import { preloadConfectQuery } from "@/lib/data/preload.server";
+import { readOptional, readRequired } from "@/lib/data/read.server";
 import { serverHandler } from "@/lib/server/fn";
 import type { ServerServices } from "@/lib/server/runtime";
 
@@ -68,14 +68,14 @@ export const readProfileOrNotFound = Effect.fn("www.account.profile")(
   function* (username: string, token: string | undefined) {
     const [profile, account] = yield* Effect.all(
       [
-        preloadConfectQuery(
+        readRequired(
           users.queries.getProfileByUsername,
           { username: Str.toLowerCase(username) },
           undefined
         ),
         token === undefined
           ? Effect.succeedNone
-          : preloadConfectQuery(auth.queries.getCurrentUser, {}, token).pipe(
+          : readOptional(auth.queries.getCurrentUser, {}, token).pipe(
               Effect.map(Option.fromNullishOr)
             ),
       ],

@@ -3,7 +3,9 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
 import exams from "@repo/backend/confect/_generated/refs/exams";
+import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
+import { isNotFound } from "@tanstack/react-router";
 import { Effect, Schema } from "effect";
 import {
   examListHandler,
@@ -14,10 +16,15 @@ import {
   studentSittingHandler,
 } from "@/lib/tenant/exams.server";
 
-/** A read that the test backend fails with, so a first screen answers no value for it. */
-class ReadFailed extends Schema.TaggedError<ReadFailed>()("ReadFailed", {
-  cause: Schema.Unknown,
-}) {}
+/** A read that Convex could not answer: a real failure, which the screen fails with. */
+class PreloadFailed extends Schema.TaggedError<PreloadFailed>()(
+  "PreloadFailed",
+  { cause: Schema.Unknown }
+) {}
+
+/** A refusal that the query declares for a viewer without the grant. */
+const refused = () =>
+  new AccessDenied({ action: "exam.view", reason: "resource" });
 
 process.env.VITE_CONVEX_URL = "https://example.convex.cloud";
 
@@ -78,46 +85,51 @@ describe("exam list first screen", () => {
   });
 });
 
-describe("first screens of a failed read", () => {
-  it("answers no page for a failed exam list, so the live query decides", async () => {
+describe("first screens of a read the viewer is refused or that fails", () => {
+  it("ends the exam list as not found when the viewer is refused it", async () => {
+    mocks.preloadConfectQuery.mockReturnValue(Effect.fail(refused()));
+
+    await expect(
+      examListHandler({ data: { numItems: 20, slug: SLUG } })
+    ).rejects.toSatisfy(isNotFound);
+  });
+
+  it("fails the exam list when its read fails", async () => {
     mocks.preloadConfectQuery.mockReturnValue(
-      Effect.fail(new ReadFailed({ cause: "offline" }))
+      Effect.fail(new PreloadFailed({ cause: "offline" }))
     );
 
     await expect(
       examListHandler({ data: { numItems: 20, slug: SLUG } })
-    ).resolves.toBeUndefined();
+    ).rejects.toMatchObject({ _tag: "PreloadFailed" });
   });
 
-  it("answers no rooms for a failed rooms read and keeps the summary", async () => {
+  it("ends the exam page as not found when its rooms are refused", async () => {
     mocks.preloadConfectQuery.mockImplementation((ref) =>
       ref === exams.rooms.exam
         ? Effect.succeed({ title: "Ujian" })
-        : Effect.fail(new ReadFailed({ cause: "offline" }))
+        : Effect.fail(refused())
     );
 
     await expect(
       examRoomsHandler({
         data: { examId: examIdOf("exam-1"), numItems: 20, slug: SLUG },
       })
-    ).resolves.toStrictEqual({ rooms: undefined, summary: { title: "Ujian" } });
+    ).rejects.toSatisfy(isNotFound);
   });
 
-  it("answers no students for a failed student page and keeps the overview", async () => {
+  it("ends the results page as not found when its students are refused", async () => {
     mocks.preloadConfectQuery.mockImplementation((ref) =>
       ref === exams.results.results.overview
         ? Effect.succeed({ questions: [] })
-        : Effect.fail(new ReadFailed({ cause: "offline" }))
+        : Effect.fail(refused())
     );
 
     await expect(
       resultsHandler({
         data: { numItems: 50, sittingId: sittingIdOf("sitting-1"), slug: SLUG },
       })
-    ).resolves.toStrictEqual({
-      overview: { questions: [] },
-      students: undefined,
-    });
+    ).rejects.toSatisfy(isNotFound);
   });
 });
 

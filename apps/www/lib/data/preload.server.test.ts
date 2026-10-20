@@ -1,10 +1,17 @@
 // @vitest-environment node
+
+import { getFunctionReference } from "@confect/core/Ref";
 import { describe, expect, it } from "@effect/vitest";
+import { Id } from "@repo/backend/confect/_generated/id";
 import refs from "@repo/backend/confect/_generated/refs";
-import { Effect } from "effect";
+import exams from "@repo/backend/confect/_generated/refs/exams";
+import { AccessDenied } from "@repo/backend/confect/access/errors";
+import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
+import { ConvexError } from "convex/values";
+import { Effect, Schema } from "effect";
 import { PreloadFailed, preloadConfectQuery } from "@/lib/data/preload.server";
 
-/** The calls that the Convex HTTP client and the Confect codec receive, as doubles. */
+/** The calls that the Convex HTTP client receives, as doubles. */
 const convex = vi.hoisted(() => ({
   instances: 0,
   query: vi.fn<(reference: unknown, args: unknown) => Promise<unknown>>(),
@@ -27,15 +34,25 @@ vi.mock("convex/browser", () => ({
   },
 }));
 
-vi.mock("@confect/core/Ref", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@confect/core/Ref")>()),
-  getFunctionReference: () => "reference",
-}));
-
 process.env.VITE_CONVEX_URL = "https://example.convex.cloud";
 
 /** A real public query reference, whose value is a list of learning rows. */
 const ref = refs.public.contents.queries.recent.getRecentlyViewed;
+
+/** A real query that declares the refusal of a viewer without access. */
+const openExam = exams.exams.open;
+const openArgs = {
+  examId: Schema.decodeUnknownSync(Id("exams"))("exam-1"),
+  slug: Schema.decodeSync(TenantSlug)("harapan"),
+};
+
+/** The error that Convex carries for a refusal the query declares, with its encoded fields. */
+const refusal = () =>
+  new ConvexError(
+    Schema.encodeSync(AccessDenied)(
+      new AccessDenied({ action: "exam.view", reason: "resource" })
+    )
+  );
 
 describe("server preload", () => {
   it.effect("reads the query for a visitor without a token", () =>
@@ -48,7 +65,9 @@ describe("server preload", () => {
       );
       expect(value).toStrictEqual([]);
       expect(convex.setAuth).not.toHaveBeenCalled();
-      expect(convex.query).toHaveBeenCalledWith("reference", { locale: "en" });
+      expect(convex.query).toHaveBeenCalledWith(getFunctionReference(ref), {
+        locale: "en",
+      });
     })
   );
 
@@ -71,15 +90,15 @@ describe("server preload", () => {
   );
 
   it.effect(
-    "fails the decode when Convex answers a value of another shape",
+    "fails with PreloadFailed when Convex answers a value of another shape",
     () =>
       Effect.gen(function* () {
         convex.query.mockResolvedValueOnce("not a list of rows");
         const error = yield* Effect.flip(
           preloadConfectQuery(ref, { locale: "en" }, undefined)
         );
-        expect(error).not.toBeInstanceOf(PreloadFailed);
-        expect(error._tag).toBe("SchemaError");
+        expect(error).toBeInstanceOf(PreloadFailed);
+        expect(error._tag).toBe("PreloadFailed");
       })
   );
 
@@ -91,6 +110,16 @@ describe("server preload", () => {
         preloadConfectQuery(ref, { locale: "en" }, undefined)
       );
       expect(error).toEqual(new PreloadFailed({ cause }));
+    })
+  );
+
+  it.effect("decodes a refusal the query declares into its typed error", () =>
+    Effect.gen(function* () {
+      convex.query.mockRejectedValueOnce(refusal());
+      const error = yield* Effect.flip(
+        preloadConfectQuery(openExam, openArgs, "token-alice")
+      );
+      expect(error).toBeInstanceOf(AccessDenied);
     })
   );
 });

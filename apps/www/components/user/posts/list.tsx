@@ -42,7 +42,7 @@ export function UserPosts({
   profile,
 }: {
   /** The first page the server read, or none when that read failed, so the live list loads the page. */
-  first: Ref.Returns<typeof posts.queries.list> | null;
+  first: Ref.Returns<typeof posts.queries.list> | undefined;
   isOwner: boolean;
   now: number;
   profile: PublicProfile;
@@ -84,7 +84,7 @@ export function UserPosts({
 function PostsFeed({
   first,
 }: {
-  first: Ref.Returns<typeof posts.queries.list> | null;
+  first: Ref.Returns<typeof posts.queries.list> | undefined;
 }) {
   const { profile } = usePostsContext();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);

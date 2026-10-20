@@ -21,14 +21,14 @@ import {
 import type { ScreenSeo } from "@/lib/account/head";
 import type { ChatInput, LocaleInput } from "@/lib/account/input";
 import { getHomeTrendingSubjects } from "@/lib/content/trending";
-import { preloadConfectQuery } from "@/lib/data/preload.server";
+import { readOptional, readRequired } from "@/lib/data/read.server";
 
 /** Home: the onboarding gate, the account name and the recently viewed subjects. */
 export const homeScreenHandler = accountHandler(
   ({ locale }: typeof LocaleInput.Type) =>
     Effect.gen(function* () {
       const token = yield* admitAccount(locale);
-      const status = yield* preloadConfectQuery(
+      const status = yield* readRequired(
         onboarding.queries.getStatus,
         {},
         token
@@ -52,8 +52,8 @@ export const homeScreenHandler = accountHandler(
       });
       const [account, recentRows] = yield* Effect.all(
         [
-          preloadConfectQuery(auth.queries.getCurrentUser, {}, token),
-          preloadConfectQuery(
+          readOptional(auth.queries.getCurrentUser, {}, token),
+          readOptional(
             contents.queries.recent.getRecentlyViewed,
             { locale, limit: 5 },
             token
@@ -72,7 +72,7 @@ export const homeScreenHandler = accountHandler(
       const trending = yield* Effect.promise(() =>
         getHomeTrendingSubjects(locale)
       );
-      const recentLooks = getMaterialLooks(recentRows);
+      const recentLooks = getMaterialLooks(recentRows ?? []);
       return {
         name: Option.getOrNull(
           Option.map(
@@ -81,7 +81,7 @@ export const homeScreenHandler = accountHandler(
           )
         ),
         recentLooks,
-        recentRows,
+        recentRows: recentRows ?? [],
         seo,
         trending,
         trendingLooks: getMaterialLooks(trending, recentLooks),
@@ -119,7 +119,7 @@ export const chatSidebarScreenHandler = accountHandler(() =>
     if (token === undefined) {
       return { first: undefined };
     }
-    const first = yield* preloadConfectQuery(
+    const first = yield* readOptional(
       chats.queries.getOwnChats,
       {
         paginationOpts: { cursor: null, numItems: CHAT_LIST_PAGE_SIZE },
@@ -142,7 +142,7 @@ export const chatScreenHandler = accountHandler(
         id
       ).pipe(Effect.orDie);
       const token = yield* readToken();
-      const title = yield* preloadConfectQuery(
+      const title = yield* readOptional(
         chats.queries.getChatTitle,
         { chatId },
         token
@@ -173,7 +173,7 @@ export const searchScreenHandler = accountHandler(
         token === undefined
           ? Option.none()
           : Option.fromNullishOr(
-              yield* preloadConfectQuery(auth.queries.getCurrentUser, {}, token)
+              yield* readOptional(auth.queries.getCurrentUser, {}, token)
             );
       const seo: ScreenSeo = {
         canonicalPath: `/${locale}/search`,
@@ -199,7 +199,7 @@ export const notificationsScreenHandler = accountHandler(
   ({ locale }: typeof LocaleInput.Type) =>
     Effect.gen(function* () {
       const token = yield* admitAccount(locale);
-      const first = yield* preloadConfectQuery(
+      const first = yield* readOptional(
         notifications.inbox.list,
         { paginationOpts: { cursor: null, numItems: INBOX_PAGE_SIZE } },
         token
