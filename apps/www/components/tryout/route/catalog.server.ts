@@ -28,6 +28,7 @@ import { getAksaraTreeUrl } from "@/lib/content/repository";
 import { getAppSocialArtwork } from "@/lib/og/app";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { getOgUrl } from "@/lib/seo/social";
+import { serverHandler } from "@/lib/server/fn";
 import { resolveTryoutExamArtwork } from "@/lib/tryout/artwork";
 
 /** The catalog kinds whose published route carries its own title and social image. */
@@ -335,3 +336,20 @@ export const readTryoutTrackSetList = Effect.fn(
   const result = yield* readTryoutSetList(token, args);
   return { args, result };
 });
+
+/** The hub page of one locale, read on the server for a loader. */
+export const readTryoutHubHandler = serverHandler(
+  ({ locale }: { readonly locale: Locale }) => readTryoutHubRoute(locale)
+);
+
+/** One country page, or the not-found decision when the catalog has none. */
+export const readTryoutCountryHandler = serverHandler(readTryoutCountryRoute);
+
+/** One exam page, or the not-found decision when the catalog has none. */
+export const readTryoutExamHandler = serverHandler(readTryoutExamRoute);
+
+/** One track page, or the not-found decision when the catalog has none. */
+export const readTryoutTrackHandler = serverHandler(readTryoutTrackRoute);
+
+/** The learner's set list of one track, read per request and never cached. */
+export const readTryoutTrackListHandler = serverHandler(readTryoutTrackSetList);

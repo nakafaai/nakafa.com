@@ -37,6 +37,7 @@ import {
 import { keepPersonalResponse } from "@/components/tryout/route/response.server";
 import { readRequestToken } from "@/components/tryout/route/token.server";
 import { getOgUrl } from "@/lib/seo/social";
+import { serverHandler } from "@/lib/server/fn";
 
 /**
  * A set or section that shows a learner's attempt with rendered question
@@ -455,3 +456,9 @@ const readRetainedSectionRoute = Effect.fn(
     view,
   };
 });
+
+/** One set page for its learner: the catalog view, or the attempt bound to the URL. */
+export const readTryoutSetHandler = serverHandler(readTryoutSetRoute);
+
+/** One section page for its learner: the catalog view, or the attempt bound to the URL. */
+export const readTryoutSectionHandler = serverHandler(readTryoutSectionRoute);
