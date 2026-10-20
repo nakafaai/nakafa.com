@@ -459,4 +459,5 @@ export const OBSOLETE_DEPENDENCIES = {
   "date-fns":
     "Intl.DateTimeFormat and Intl.RelativeTimeFormat with DateTime and Duration from effect, as apps/www/src/lib/i18n/date.ts does",
   nanoid: "randomUuid from @repo/utilities/uuid",
+  next: "TanStack Start and TanStack Router, which the www app runs on",
 };
