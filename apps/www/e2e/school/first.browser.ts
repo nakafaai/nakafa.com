@@ -2,9 +2,6 @@ import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 
-/** The Google sign-in action of the school entry, which the username address keeps on screen. */
-const GOOGLE_ACTION = /Google/;
-
 /**
  * The first screens of the school pages are in the first HTML, so a member's page
  * draws its data with JavaScript off, and the live reads start after hydration.
@@ -46,7 +43,9 @@ test("the exam list's first HTML holds the exams of a member who may open them",
   const response = await page.goto(examsPage);
 
   expect(response?.status()).toBe(200);
-  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+  await expect(
+    page.getByText("There are no exams yet.", { exact: true })
+  ).toBeVisible();
   await context.close();
   await withoutScript.close();
 });
@@ -71,6 +70,9 @@ test("the settings units tab's first HTML holds the school's units", async ({
 
   expect(response?.status()).toBe(200);
   await expect(page.getByText(school.name, { exact: true })).toHaveCount(1);
+  await expect(
+    page.getByText(`SMA ${school.name}`, { exact: true })
+  ).toHaveCount(1);
   await context.close();
   await withoutScript.close();
 });
@@ -87,9 +89,12 @@ test("an exam address that is not an id answers not found for every viewer", asy
     "/exams/not-an-exam"
   );
 
-  const response = await context.request.get(address);
+  const visitor = await context.request.get(address);
+  expect(visitor.status()).toBe(404);
 
-  expect(response.status()).toBe(404);
+  await Effect.runPromise(signInOwner(context, school.slug, address));
+  const member = await context.request.get(address);
+  expect(member.status()).toBe(404);
   await context.close();
 });
 
@@ -105,6 +110,6 @@ test("the username address of the entry opens the form from the route's search",
     hostAddress(baseURL, `${school.slug}.localhost`, "/?masuk=username")
   );
 
-  await expect(page.getByRole("button", { name: GOOGLE_ACTION })).toBeVisible();
+  await expect(page.getByLabel("School username")).toBeVisible();
   await context.close();
 });
