@@ -94,7 +94,13 @@ describe("surah route read", () => {
   it("shows the bismillah of the surah when the publication names one", async () => {
     vi.mocked(getPublishedQuranView).mockResolvedValueOnce({
       ...publishedView(),
-      preBismillah: { arabic: "بسم", translation: "In the name" },
+      preBismillah: {
+        arabic: "بسم",
+        translation: {
+          notes: [],
+          segments: [{ kind: "text", offset: 0, value: "In the name" }],
+        },
+      },
     });
     await expect(
       readSurahHandler({ data: { locale: "en", surah: "1" } })
@@ -102,7 +108,13 @@ describe("surah route read", () => {
       kind: "found",
       preBismillah: {
         kind: "shown",
-        value: { arabic: "بسم", translation: "In the name" },
+        value: {
+          arabic: "بسم",
+          translation: {
+            notes: [],
+            segments: [{ kind: "text", offset: 0, value: "In the name" }],
+          },
+        },
       },
     });
   });
