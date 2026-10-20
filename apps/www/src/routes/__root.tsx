@@ -17,6 +17,7 @@ import {
 } from "@tanstack/react-router";
 import { cn } from "cn";
 import { Option } from "effect";
+import { MotionConfig } from "motion/react";
 import type { ReactNode } from "react";
 import { DeferredPreviewRefresh } from "@/components/dev/deferred";
 import { Announcer } from "@/components/navigation/announcer";
@@ -122,7 +123,7 @@ function RootDocument({ children }: { children: ReactNode }) {
         )}
         <ThemeProvider>
           <Announcer />
-          {children}
+          <MotionConfig reducedMotion="user">{children}</MotionConfig>
         </ThemeProvider>
         <Scripts />
       </body>
