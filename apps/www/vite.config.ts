@@ -123,6 +123,7 @@ export default defineConfig({
       // Client components render on the server during the RSC pass, so their
       // `.client` modules belong to the server bundle. The browser keeps its
       // rule against `.server` modules; the server pass has no `.client` rule.
+      // docs/adr/0036-boundary.md records this exception.
       importProtection: {
         behavior: { dev: "error", build: "error" },
         // Node built-ins have no browser build. The default client specifiers
