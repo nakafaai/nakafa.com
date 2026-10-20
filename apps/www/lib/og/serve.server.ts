@@ -14,8 +14,8 @@ import { generateFallbackImage } from "@/lib/og/fallback";
 const IMAGE_FILE = "image.png";
 
 /** Splits a catch-all path into its segments, ignoring empty ones. */
-function readSegments(splat: string | undefined) {
-  return Arr.filter((splat ?? "").split("/"), (segment) => segment !== "");
+function readSegments(splat: string) {
+  return Arr.filter(splat.split("/"), (segment) => segment !== "");
 }
 
 /** Drops the image file name that the social tags append to a route. */
@@ -60,17 +60,19 @@ const LocaleOgImageParamsSchema = Schema.Struct({
 /**
  * Serves the social image of a route whose locale prefix is optional. An image
  * address under a locale shape that no locale is served by answers the brand
- * fallback, as its public alias does, because that shape names no route.
+ * fallback with 404, because that shape names no route, and the public alias of
+ * the same address answers not found.
  */
 export function serveOgImage({
   params,
 }: {
   readonly params: typeof OgImageParamsSchema.Type;
 }) {
-  const segments = readSegments(params._splat);
+  const splat = params._splat ?? "";
+  const segments = readSegments(splat);
   if (
     isUnservedLocaleShape(segments[0]) &&
-    Option.isSome(readImageSuffix(params._splat ?? ""))
+    Option.isSome(readImageSuffix(splat))
   ) {
     return Effect.runPromise(generateFallbackImage(DEFAULT_LOCALE));
   }
@@ -95,6 +97,9 @@ export function serveLocaleOgImage({
     return Effect.runPromise(generateFallbackImage(DEFAULT_LOCALE));
   }
   return Effect.runPromise(
-    renderOgImage(locale.value, readContentSlug(readSegments(params._splat)))
+    renderOgImage(
+      locale.value,
+      readContentSlug(readSegments(params._splat ?? ""))
+    )
   );
 }

@@ -88,6 +88,12 @@ describe("og image route", () => {
 });
 
 describe("localized og image route", () => {
+  it("renders the default copy of a localized root without a splat", async () => {
+    await serveLocaleOgImage({ params: { lang: "de" } });
+
+    expect(readOgCopyMock).toHaveBeenCalledWith("de", []);
+  });
+
   it("renders the copy of a localized route", async () => {
     const response = await serveLocaleOgImage({
       params: { _splat: "articles/aljabar/image.png", lang: "de" },
