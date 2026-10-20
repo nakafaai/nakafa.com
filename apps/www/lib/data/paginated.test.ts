@@ -45,6 +45,13 @@ describe("paginated first page", () => {
   });
 });
 
+describe("paginated first page without a loader page", () => {
+  it("keeps the live result when the loader has no page for these arguments", () => {
+    const loading = PaginatedQueryResult.loadingFirstPage({ skipped: false });
+    expect(readFirstPage(loading, undefined)).toBe(loading);
+  });
+});
+
 describe("paginated preloaded hook", () => {
   const ref = refs.public.contents.queries.recent.getRecentlyViewed;
 

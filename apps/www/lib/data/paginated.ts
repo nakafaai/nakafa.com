@@ -8,7 +8,7 @@ import {
 } from "@confect/react";
 
 /** The first page that the loader read on the server, and whether it is the last. */
-interface PreloadedPage<Item> {
+export interface PreloadedPage<Item> {
   readonly isDone: boolean;
   readonly page: readonly Item[];
 }
@@ -17,13 +17,17 @@ interface PreloadedPage<Item> {
  * Chooses what a paginated list shows. Until the live subscription has its
  * first page, the loader's page stands in. Its `loadMore` does nothing until
  * the live subscription can load the next page, so an infinite list waits for
- * the subscription and never asks for a page twice.
+ * the subscription and never asks for a page twice. A list with no loader page,
+ * such as a filtered list, keeps the live result.
  */
 export function readFirstPage<Item, E>(
   live: PaginatedQueryResult.PaginatedQueryResult<Item, E>,
-  preloaded: PreloadedPage<Item>
+  preloaded: PreloadedPage<Item> | undefined
 ): PaginatedQueryResult.PaginatedQueryResult<Item, E> {
-  if (!PaginatedQueryResult.isLoadingFirstPage(live)) {
+  if (
+    preloaded === undefined ||
+    !PaginatedQueryResult.isLoadingFirstPage(live)
+  ) {
     return live;
   }
   if (preloaded.isDone) {
@@ -42,7 +46,7 @@ export function usePaginatedPreloaded<
   ref: Query,
   args: UsePaginatedQueryArgs<Query>,
   options: PaginatedQueryOptions,
-  preloaded: PreloadedPage<PaginatedQueryItem<Query>>
+  preloaded: PreloadedPage<PaginatedQueryItem<Query>> | undefined
 ) {
   const live = usePaginatedQuery(ref, args, options);
   return readFirstPage(live, preloaded);

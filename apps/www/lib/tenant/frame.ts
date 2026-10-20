@@ -1,7 +1,8 @@
 import type { Returns } from "@confect/core/Ref";
 import type tenancy from "@repo/backend/confect/_generated/refs/tenancy";
+import type { BuiltinRole } from "@repo/backend/confect/access/schema";
 import type { Locale } from "@repo/internationalization/src/locale";
-import { Option } from "effect";
+import { Array as Arr, Option } from "effect";
 import type { HomeAccess } from "@/components/tenant/home/access";
 import type { Greeting } from "@/components/tenant/home/greeting";
 
@@ -50,4 +51,24 @@ export function readAccountName(
   username: string | undefined
 ): Option.Option<string> {
   return Option.fromUndefinedOr(name === "" ? username : name);
+}
+
+/** Whether the viewer may manage the school, which the school's settings and its setup need. */
+export function canManageSchool(can: readonly string[]): boolean {
+  return Arr.contains(can, "tenant.manage");
+}
+
+/** The unit that a settings page opens first: the school's first active unit, or none when no unit is active. */
+export function firstActiveUnitOf<Unit extends { readonly status: string }>(
+  units: readonly Unit[]
+) {
+  return Arr.findFirst(units, (unit) => unit.status === "active");
+}
+
+/** The first role the viewer holds in the school, or none when the viewer holds no grant. */
+export function roleOf(grants: SchoolViewer["grants"]): BuiltinRole | null {
+  return Option.match(Arr.head(grants), {
+    onNone: () => null,
+    onSome: (grant) => grant.role.key,
+  });
 }

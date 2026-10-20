@@ -38,15 +38,21 @@ import { AccountMenu } from "@/components/sidebar/menu/account";
 import { TenantAccountItems } from "@/components/tenant/account";
 import { signOutSchoolAccount } from "@/components/tenant/account.client";
 import {
+  type ClassesPreload,
+  ClassesPreloadContext,
+} from "@/components/tenant/classes/preload";
+import {
   TenantContext,
   type TenantValue,
   useTenant,
+  ViewerPreloadContext,
 } from "@/components/tenant/context";
 import type { HomeAccess } from "@/components/tenant/home/access";
 import type { Greeting } from "@/components/tenant/home/greeting";
 import { SchoolMark } from "@/components/tenant/mark";
 import { TenantNavigation } from "@/components/tenant/navigation";
 import { isExamEditorPath } from "@/lib/settings/school";
+import type { SchoolViewer } from "@/lib/tenant/frame";
 
 /**
  * The schools of the viewer, which the school switcher lists. The list loads when the
@@ -215,39 +221,47 @@ export function TenantShell({
   canManage,
   canOpenExams,
   children,
+  classes,
   greeting,
   home,
   personName,
   profile,
   role,
+  viewer,
 }: {
   account: typeof ViewerAccount.Type;
   canManage: boolean;
   canOpenExams: boolean;
   children: ReactNode;
+  classes: ClassesPreload;
   greeting: Greeting;
   home: HomeAccess;
   personName: string;
   profile: typeof TenantProfile.Type;
   role: TenantValue["role"];
+  viewer: SchoolViewer;
 }) {
   return (
-    <TenantContext
-      value={{
-        canManage,
-        canOpenExams,
-        greeting,
-        logo: profile.logo,
-        mascot: profile.mascot,
-        home,
-        name: profile.name,
-        role,
-        slug: profile.slug,
-      }}
-    >
-      <TenantFrame account={account} personName={personName} role={role}>
-        {children}
-      </TenantFrame>
-    </TenantContext>
+    <ViewerPreloadContext value={viewer}>
+      <ClassesPreloadContext value={classes}>
+        <TenantContext
+          value={{
+            canManage,
+            canOpenExams,
+            greeting,
+            logo: profile.logo,
+            mascot: profile.mascot,
+            home,
+            name: profile.name,
+            role,
+            slug: profile.slug,
+          }}
+        >
+          <TenantFrame account={account} personName={personName} role={role}>
+            {children}
+          </TenantFrame>
+        </TenantContext>
+      </ClassesPreloadContext>
+    </ViewerPreloadContext>
   );
 }

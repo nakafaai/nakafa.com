@@ -9,7 +9,7 @@ import {
   Outlet,
 } from "@tanstack/react-router";
 import { cn } from "cn";
-import { Array as Arr, Effect, Option, Schema } from "effect";
+import { Effect, Option, Schema } from "effect";
 import { type ReactElement, useEffect } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { AppProviders } from "@/components/providers/app";
@@ -22,7 +22,8 @@ import { TenantOutsider } from "@/components/tenant/outsider";
 import { isLostAccess } from "@/components/tenant/refusal";
 import { TenantRefused } from "@/components/tenant/refused";
 import { TenantShell } from "@/components/tenant/shell";
-import type { SchoolViewer } from "@/lib/tenant/frame";
+import { readShellClassesFn } from "@/lib/tenant/classes.fn";
+import { canManageSchool, roleOf } from "@/lib/tenant/frame";
 import { readSchoolFrameFn } from "@/lib/tenant/frame.fn";
 import { schoolHead } from "@/lib/tenant/head";
 
@@ -54,14 +55,6 @@ function readSlug(slug: string): TenantSlug {
   return school.value;
 }
 
-/** The first role the viewer holds in the school, or none when the viewer holds no grant. */
-function roleOf(viewer: SchoolViewer) {
-  return Option.match(Arr.head(viewer.grants), {
-    onNone: () => null,
-    onSome: (grant) => grant.role.key,
-  });
-}
-
 /**
  * The school layout. The gate decides the page before it streams: a school that
  * does not exist, and a viewer whom the school denies, answer not found. A visitor
@@ -80,6 +73,10 @@ export const Route = createFileRoute("/school/$slug")({
     }
     return { school, slug: params.slug };
   },
+  loader: ({ context }) =>
+    context.school._tag === "Member"
+      ? readShellClassesFn({ data: { slug: context.slug } })
+      : undefined,
   head: ({ match }) => {
     const school = match.context.school;
     return school === undefined ? {} : schoolHead(school.profile.name);
@@ -92,6 +89,7 @@ export const Route = createFileRoute("/school/$slug")({
 
 function SchoolLayout(): ReactElement {
   const { school } = Route.useRouteContext();
+  const classes = Route.useLoaderData();
   if (school._tag === "Visitor") {
     return (
       <TenantEntry
@@ -117,13 +115,15 @@ function SchoolLayout(): ReactElement {
     <AppProviders pageNavigation={null}>
       <TenantShell
         account={viewer.account}
-        canManage={Arr.contains(viewer.can, "tenant.manage")}
+        canManage={canManageSchool(viewer.can)}
         canOpenExams={canOpenExams(viewer)}
+        classes={classes}
         greeting={school.greeting}
         home={school.home}
         personName={viewer.person.name}
         profile={school.profile}
-        role={roleOf(viewer)}
+        role={roleOf(viewer.grants)}
+        viewer={viewer}
       >
         <div className={cn(monospace, "contents")}>
           <Outlet />
