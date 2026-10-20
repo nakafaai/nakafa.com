@@ -3,6 +3,7 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import { Option } from "effect";
+import { readSchoolSlug } from "@/lib/routing/school/host";
 
 /**
  * Decides the root's redirect on the server, with the shared locale contract:
@@ -11,8 +12,13 @@ import { Option } from "effect";
  */
 const readRootRedirect = createServerFn({ method: "GET" }).handler(() => {
   const request = getRequest();
+  const url = new URL(request.url);
   return Option.match(
-    decideRedirect({ headers: request.headers, url: new URL(request.url) }),
+    decideRedirect({
+      headers: request.headers,
+      isSchoolHost: Option.isSome(readSchoolSlug(url.hostname)),
+      url,
+    }),
     {
       onNone: () => ({ _tag: "Render" as const }),
       onSome: (decision) => ({

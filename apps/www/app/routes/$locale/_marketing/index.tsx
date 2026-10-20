@@ -148,7 +148,7 @@ function HomePage() {
       <PageField />
       <div className="relative grid grid-cols-1">
         <Hero />
-        <Lesson />
+        <Lesson locale={locale} />
         <Tryout value={featuredTryout} />
         <NinaSection />
         <Memory />

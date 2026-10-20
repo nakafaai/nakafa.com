@@ -79,6 +79,7 @@ export const Route = createFileRoute("/$locale/_entry/onboarding")({
  * admission is recorded once the questionnaire mounts, never by the page read.
  */
 function OnboardingPage() {
+  const { locale } = Route.useParams();
   const { intent, profile } = Route.useLoaderData();
   useEffect(() => {
     admitOnboardingFn().catch((error: unknown) => {
@@ -95,7 +96,7 @@ function OnboardingPage() {
       <EntryShellBody>
         <Nina act="writing" label="" size={120} whole />
         <OnboardingQuestionnaire initialProfile={profile} intent={intent} />
-        <AuthLegal />
+        <AuthLegal locale={locale} />
       </EntryShellBody>
     </>
   );

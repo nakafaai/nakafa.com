@@ -1,7 +1,7 @@
 import { decodeLocale } from "@repo/internationalization/src/locale";
-import { readSchoolSlug } from "@repo/internationalization/src/rewrite";
 import { mergeVaryHeader } from "@repo/utilities/http/accept";
 import { Array as Arr, Option } from "effect";
+import { readSchoolSlug } from "@/lib/routing/school/host";
 
 /** The segment of the router tree that holds every school page (ADR 0026). */
 const SCHOOL_SEGMENT = "school";

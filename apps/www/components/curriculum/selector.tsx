@@ -13,8 +13,8 @@ import {
 } from "@repo/design-system/components/ui/select";
 import { type ToastCopy, toast } from "@repo/design-system/lib/toast/notify";
 import { normalizeLocalizedInternalHref } from "@repo/internationalization/src/href";
+import type { Locale } from "@repo/internationalization/src/locale";
 import { useRouter } from "@repo/internationalization/src/navigation";
-import type { PublicAppLocale } from "@repo/internationalization/src/routing";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 import { useLocale } from "use-intl";
 import { useConvexAuth } from "@/components/providers/convex";
@@ -161,7 +161,7 @@ function saveCurriculumPreference({
   setPreferredCurriculum,
 }: {
   errorMessage: ToastCopy;
-  locale: PublicAppLocale;
+  locale: Locale;
   programKey: string;
   setPreferredCurriculum: SavePreferredCurriculum;
 }) {
