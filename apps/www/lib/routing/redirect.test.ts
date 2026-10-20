@@ -1,8 +1,22 @@
 // @vitest-environment node
 
-import { describe, expect, it } from "@effect/vitest";
-import { Option } from "effect";
-import { readRedirectResponse } from "@/lib/routing/redirect";
+import { beforeEach, describe, expect, it } from "@effect/vitest";
+import { Effect, Option } from "effect";
+import {
+  readMigrationResponse,
+  readRedirectResponse,
+} from "@/lib/routing/redirect";
+
+vi.hoisted(() => {
+  vi.stubEnv("AKSARA_PUBLICATION_TOKEN", "test-publication-token");
+  vi.stubEnv("SITE_URL", "https://nakafa.com");
+});
+
+const migration = vi.hoisted(() => ({ read: vi.fn() }));
+
+vi.mock("@/lib/routing/public/migration", () => ({
+  readPublicUrlMigrationRedirect: migration.read,
+}));
 
 const request = (address: string, acceptLanguage?: string) =>
   new Request(
@@ -23,6 +37,14 @@ describe("readRedirectResponse", () => {
     expect(found.status).toBe(307);
     expect(found.headers.get("location")).toBe("/id");
     expect(found.headers.get("vary")).toBe("Accept-Language, Cookie");
+  });
+
+  it("leaves the root of a school host to the school home, which the router serves", () => {
+    expect(
+      Option.isNone(
+        readRedirectResponse(request("https://harapan.nakafa.com/"))
+      )
+    ).toBe(true);
   });
 
   it("answers a trailing slash on a public path with a 308 to the canonical path", () => {
@@ -64,4 +86,105 @@ describe("readRedirectResponse", () => {
       "https://discord.gg/CPCSfKhvfQ?ref=app"
     );
   });
+});
+
+describe("readMigrationResponse", () => {
+  beforeEach(() => {
+    migration.read.mockReset();
+  });
+
+  const migrationRequest = (address: string, cookie?: string) =>
+    new Request(
+      address,
+      cookie === undefined ? undefined : { headers: { cookie } }
+    );
+
+  it.effect(
+    "answers a retired try-out address with its status and the query of the request",
+    () =>
+      Effect.gen(function* () {
+        migration.read.mockReturnValue(
+          Effect.succeed({ destination: "/en/tryout/sets/exam", status: 307 })
+        );
+
+        const found = Option.getOrThrow(
+          yield* readMigrationResponse(
+            migrationRequest("https://nakafa.com/en/tryout/old?page=2")
+          )
+        );
+
+        expect(found.status).toBe(307);
+        expect(found.headers.get("location")).toBe(
+          "/en/tryout/sets/exam?page=2"
+        );
+        expect(found.headers.get("vary")).toBe("Cookie");
+        expect(migration.read.mock.calls[0]?.[0]).toMatchObject({
+          hasAttemptCapability: false,
+          markdown: false,
+          method: "GET",
+          pathname: "/en/tryout/old",
+        });
+      })
+  );
+
+  it.effect(
+    "answers a retired profile id with a permanent redirect for the session that asks",
+    () =>
+      Effect.gen(function* () {
+        migration.read.mockReturnValue(
+          Effect.succeed({ destination: "/en/@nabilfatih/chat", status: 308 })
+        );
+
+        const found = Option.getOrThrow(
+          yield* readMigrationResponse(
+            migrationRequest(
+              "https://nakafa.com/en/user/abc123/chat",
+              "session=1"
+            )
+          )
+        );
+
+        expect(found.status).toBe(308);
+        expect(found.headers.get("location")).toBe("/en/@nabilfatih/chat");
+        expect(migration.read.mock.calls[0]?.[0].headers.get("cookie")).toBe(
+          "session=1"
+        );
+      })
+  );
+
+  it.effect(
+    "keeps the Markdown suffix on the successor and asks for the page without it",
+    () =>
+      Effect.gen(function* () {
+        migration.read.mockReturnValue(
+          Effect.succeed({ destination: "/de/politik", status: 308 })
+        );
+
+        const found = Option.getOrThrow(
+          yield* readMigrationResponse(
+            migrationRequest("https://nakafa.com/de/articles/politics.md?x=1")
+          )
+        );
+
+        expect(found.headers.get("location")).toBe("/de/politik.md?x=1");
+        expect(migration.read.mock.calls[0]?.[0]).toMatchObject({
+          markdown: true,
+          pathname: "/de/articles/politics",
+        });
+      })
+  );
+
+  it.effect("answers none when no retired address matches", () =>
+    Effect.gen(function* () {
+      migration.read.mockReturnValue(Effect.succeed(null));
+
+      expect(
+        Option.isNone(
+          yield* readMigrationResponse(
+            migrationRequest("https://nakafa.com/en/curriculum")
+          )
+        )
+      ).toBe(true);
+    })
+  );
 });

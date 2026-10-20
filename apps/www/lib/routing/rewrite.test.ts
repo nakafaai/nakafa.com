@@ -1,8 +1,6 @@
 // @vitest-environment node
 
 import { describe, expect, it } from "@effect/vitest";
-import { Option } from "effect";
-import { readRedirectResponse } from "@/lib/routing/redirect";
 import { routeRewrite } from "@/lib/routing/rewrite";
 
 const address = (path: string) => new URL(`https://nakafa.com${path}`);
@@ -30,12 +28,7 @@ describe("routeRewrite", () => {
     ).toBe("/en/user/settings/memory");
   });
 
-  it("maps the root of a school host to the school home, with no locale redirect", () => {
-    expect(
-      Option.isNone(
-        readRedirectResponse(new Request("https://harapan.nakafa.com/"))
-      )
-    ).toBe(true);
+  it("maps the root of a school host to the school home", () => {
     expect(routeRewrite.input({ url: schoolAddress("/") }).pathname).toBe(
       "/school/harapan"
     );
