@@ -107,6 +107,11 @@ export default defineConfig({
             }),
         "/**": { headers: SHARED_HEADERS },
       },
+      // The server bundle has no WebAssembly module. Nitro's wasm support adds
+      // the `unwasm` export condition, which selects takumi-js's wasm backend,
+      // since its `#backend` map lists `unwasm` before `node`. Without it,
+      // takumi-js loads its native Node backend, as Next did before.
+      wasm: false,
       vercel: { skewProtection: false },
     }),
     rsc(),
