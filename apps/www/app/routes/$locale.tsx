@@ -3,6 +3,7 @@ import { Toaster } from "@repo/design-system/components/ui/sonner";
 import { TailwindIndicator } from "@repo/design-system/components/ui/tailwind-indicator";
 import { textDirection } from "@repo/internationalization/src/direction";
 import {
+  DEFAULT_LOCALE,
   decodeLocale,
   localeTimeZone,
 } from "@repo/internationalization/src/locale";
@@ -98,8 +99,16 @@ function LocaleError({ error }: ErrorComponentProps) {
   );
 }
 
-/** Shows the not-found page of a locale, with the links of the locale. */
+/**
+ * Shows the not-found page of a locale, with the links of the locale. The parse
+ * refuses a first segment that is not a locale and keeps it raw, so this page
+ * falls back to the default locale for that segment.
+ */
 function LocaleNotFound() {
   const { locale } = useParams({ from: "/$locale" });
-  return <LocalizedNotFound locale={locale} />;
+  return (
+    <LocalizedNotFound
+      locale={Option.getOrElse(decodeLocale(locale), () => DEFAULT_LOCALE)}
+    />
+  );
 }
