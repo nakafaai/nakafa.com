@@ -20,8 +20,8 @@ import { useTranslations } from "use-intl";
 import {
   WeatherCard,
   WeatherCardHeader,
+  WeatherFrame,
   WeatherGap,
-  WeatherSkeleton,
 } from "@/components/ai/home/weather/card";
 import { readWeatherSummary, type WeatherRead } from "@/lib/weather/request";
 
@@ -56,7 +56,7 @@ export function WeatherWidget() {
   const [weather] = useState(() => readWeatherSummary());
 
   return (
-    <Suspense fallback={<WeatherSkeleton />}>
+    <Suspense fallback={<WeatherFrame />}>
       <WeatherSummary weather={weather} />
     </Suspense>
   );

@@ -1,12 +1,12 @@
 "use client";
 
 import { lazyComponent } from "@repo/design-system/lib/lazy";
-import { WeatherSkeleton } from "@/components/ai/home/weather/card";
+import { WeatherFrame } from "@/components/ai/home/weather/card";
 
 /**
  * Loads the weather widget and its request after the page renders. Until the
- * chunk arrives, the same square skeleton holds the grid cell, as the server
- * render does.
+ * chunk arrives, the widget's frame at its final size holds the grid cell, as the
+ * server render does.
  */
 export const DeferredWeather = lazyComponent(
   () =>
@@ -14,7 +14,7 @@ export const DeferredWeather = lazyComponent(
       (module) => module.WeatherWidget
     ),
   {
-    loading: () => <WeatherSkeleton />,
+    loading: () => <WeatherFrame />,
     ssr: false,
   }
 );

@@ -11,7 +11,6 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { Separator } from "@repo/design-system/components/ui/separator";
-import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
 import { createContext, Fragment, type ReactElement, use } from "react";
@@ -74,12 +73,7 @@ export function SearchResults({
   }
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center gap-1 text-muted-foreground text-sm">
-        <Spinner className="size-4" />
-        <p>{t("search-loading")}</p>
-      </div>
-    );
+    return null;
   }
 
   if (results.length === 0 && query) {
