@@ -5,7 +5,7 @@ import { useMounted } from "@mantine/hooks";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { toast } from "@repo/design-system/lib/toast/notify";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 import { lazy, Suspense, useTransition } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { useLiveSession } from "@/components/providers/live";
@@ -115,18 +115,24 @@ function VisitorButton({ variant }: { variant: PricingButtonVariant }) {
 export function PricingButton({ variant }: { variant: PricingButtonVariant }) {
   const mounted = useMounted();
   const client = useLiveSession((state) => state.client);
+  const isSessionPending = useLiveSession((state) => state.isPending);
 
   if (!mounted) {
     return <LoadingButton variant={variant} />;
   }
 
-  if (client === null) {
-    return <VisitorButton variant={variant} />;
+  if (Option.isNone(client)) {
+    // A signed-in page's session is still loading, so its Pro action waits instead of offering sign-in.
+    return isSessionPending ? (
+      <LoadingButton variant={variant} />
+    ) : (
+      <VisitorButton variant={variant} />
+    );
   }
 
   return (
     <Suspense fallback={<LoadingButton variant={variant} />}>
-      <BillingButton client={client} variant={variant} />
+      <BillingButton client={client.value} variant={variant} />
     </Suspense>
   );
 }

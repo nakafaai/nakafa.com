@@ -11,7 +11,7 @@ import { followAuthSession, previewAuthSession } from "@/lib/auth/session";
  * client and no Convex answer. Its type is derived from this constructor, because
  * the Convex client is a runtime value that no Schema describes.
  */
-function initialLiveSessionState(client: ConvexReactClient | null) {
+function initialLiveSessionState(client: Option.Option<ConvexReactClient>) {
   return {
     ...previewAuthSession,
     client,
@@ -35,7 +35,9 @@ export type LiveSessionStore = StoreApi<LiveSessionState>;
  * page whose signed-in hint says a session may exist.
  */
 export function createLiveSessionStore(): LiveSessionStore {
-  return createStore<LiveSessionState>(() => initialLiveSessionState(null));
+  return createStore<LiveSessionState>(() =>
+    initialLiveSessionState(Option.none())
+  );
 }
 
 /** A browser module of a signed-in page failed to load, so the page keeps its visitor state. */
@@ -124,7 +126,7 @@ export const startLiveSession = Effect.fn("www.auth.startLiveSession")(
       readonly modules?: LiveSessionModules;
     }
   ) {
-    if (!hasSignedInHint(cookie) || store.getState().client !== null) {
+    if (!hasSignedInHint(cookie) || Option.isSome(store.getState().client)) {
       return;
     }
     store.setState({
@@ -143,11 +145,11 @@ export const startLiveSession = Effect.fn("www.auth.startLiveSession")(
       Effect.result
     );
     if (Result.isFailure(loaded)) {
-      store.setState({ ...previewAuthSession, client: null });
+      store.setState({ ...previewAuthSession, client: Option.none() });
       return;
     }
     store.setState({
-      client: loaded.success.convex.readConvexClient(convexUrl),
+      client: Option.some(loaded.success.convex.readConvexClient(convexUrl)),
     });
     return yield* Effect.scoped(
       followSession(store, loaded.success.auth.readSessionAtom())

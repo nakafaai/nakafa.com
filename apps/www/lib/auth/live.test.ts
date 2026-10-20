@@ -87,7 +87,7 @@ describe("live session store", () => {
 
     expect(state.isPending).toBe(false);
     expect(state.sessionId).toBeNull();
-    expect(state.client).toBeNull();
+    expect(Option.isNone(state.client)).toBe(true);
     expect(Option.isNone(state.confirmation)).toBe(true);
   });
 
@@ -116,7 +116,7 @@ describe("live session store", () => {
         });
 
         expect(loads).not.toHaveBeenCalled();
-        expect(store.getState().client).toBeNull();
+        expect(Option.isNone(store.getState().client)).toBe(true);
         expect(store.getState().isPending).toBe(false);
       })
   );
@@ -142,7 +142,7 @@ describe("live session store", () => {
 
             expect(loads).toHaveBeenCalledWith("auth");
             expect(loads).toHaveBeenCalledWith("convex");
-            expect(store.getState().client).toBe(convex);
+            expect(Option.getOrUndefined(store.getState().client)).toBe(convex);
             expect(store.getState().isPending).toBe(true);
 
             session.report(signedInSession);
@@ -171,7 +171,7 @@ describe("live session store", () => {
           );
           yield* Effect.promise(() =>
             vi.waitFor(() => {
-              expect(store.getState().client).not.toBeNull();
+              expect(Option.isSome(store.getState().client)).toBe(true);
             })
           );
 
@@ -220,7 +220,7 @@ describe("live session store", () => {
           },
         });
 
-        expect(store.getState().client).toBeNull();
+        expect(Option.isNone(store.getState().client)).toBe(true);
         expect(store.getState().isPending).toBe(false);
       })
   );

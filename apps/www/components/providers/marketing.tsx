@@ -1,6 +1,6 @@
 "use client";
 
-import { Effect, Fiber } from "effect";
+import { Effect, Fiber, Option } from "effect";
 import { lazy, type ReactNode, Suspense, useEffect, useState } from "react";
 import { AnalyticsConsentBootstrap } from "@/components/analytics/consent/bootstrap";
 import {
@@ -30,12 +30,12 @@ const LiveCredentials = lazy(() =>
 /** Hands the page's client its credentials once the store holds one. */
 function MarketingCredentials() {
   const client = useLiveSession((state) => state.client);
-  if (client === null) {
+  if (Option.isNone(client)) {
     return null;
   }
   return (
     <Suspense fallback={null}>
-      <LiveCredentials client={client} />
+      <LiveCredentials client={client.value} />
     </Suspense>
   );
 }
