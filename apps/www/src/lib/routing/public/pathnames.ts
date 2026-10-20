@@ -1,4 +1,5 @@
 import { PATHNAMES } from "@repo/internationalization/src/pathnames";
+import { withLeadingSlash } from "@repo/utilities/path";
 import { Array as Arr, Option, Record as Rec } from "effect";
 import type { Locale } from "use-intl";
 
@@ -35,7 +36,7 @@ export function projectLocalizedMappedRoutePathname({
   publicPath: string;
   targetLocale: Locale;
 }) {
-  const pathname = publicPath.startsWith("/") ? publicPath : `/${publicPath}`;
+  const pathname = withLeadingSlash(publicPath);
 
   for (const route of mappedRoutePathnames) {
     if (mappedPathnames[route][currentLocale] === pathname) {

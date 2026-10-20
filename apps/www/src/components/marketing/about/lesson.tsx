@@ -1,6 +1,7 @@
+import { TRIG_NUMBER_OPTIONS } from "@repo/design-system/components/contents/mathematics/trig";
 import { Nina } from "@repo/design-system/components/ui/nina";
 import type { Locale } from "@repo/internationalization/src/locale";
-import type { ReactNode } from "react";
+import { type ReactNode, useMemo } from "react";
 import { useTranslations } from "use-intl";
 import {
   LESSON_SECTION_ID,
@@ -38,15 +39,17 @@ export function Lesson({ locale }: { readonly locale: Locale }) {
   const tCommon = useTranslations("Common");
   const tSubject = useTranslations("Subject");
   const decimalSeparator = decimalSeparators[locale];
+  const numberFormat = useMemo(
+    () => new Intl.NumberFormat(locale, TRIG_NUMBER_OPTIONS),
+    [locale]
+  );
   // Each card and its lab read their labels from the same builder, so the card and the lab agree.
   const placeholders: Record<LessonId, ReactNode> = {
     atom: <AtomPlaceholder labels={getAtomLabels(t)} />,
     cell: <CellPlaceholder labels={getCellLabels(t)} />,
     circle: (
       <CirclePlaceholder
-        formatNumber={(value, options) =>
-          new Intl.NumberFormat(locale, options).format(value)
-        }
+        formatNumber={(value) => numberFormat.format(value)}
         labels={{
           onAxis: tCommon("on-axis"),
           quadrant: tCommon("quadrant"),

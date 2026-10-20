@@ -3,33 +3,18 @@ import { LOCALES } from "@repo/internationalization/src/locale";
 import { getPathname } from "@repo/internationalization/src/navigation";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { Array as Arr, Effect, Option, Schema } from "effect";
-import { cache } from "react";
 import type { Locale } from "use-intl";
 import { getLocalizedMappedRoutePathname } from "@/lib/routing/public/pathnames";
 import { getSitemapPageDescriptor } from "@/lib/sitemap/identity";
 import { readSitemapRoutePage } from "@/lib/sitemap/routes";
 
-/** One sitemap URL as the origin cache stores it, with its date as text. */
+/** One canonical sitemap URL, with its optional date as text. */
 const SitemapPageUrl = Schema.Struct({
   lastModified: Schema.optionalKey(Schema.String),
   url: Schema.String,
 });
 
-const SitemapPageFound = Schema.TaggedStruct("Found", {
-  entries: Schema.Array(SitemapPageUrl),
-});
-const SitemapPageMissing = Schema.TaggedStruct("Missing", {});
-
-/**
- * The outcome of one sitemap page read as it crosses the origin cache.
- *
- * Next.js rethrows a cached function's failure to its caller as a new error
- * without the original class, so a missing page travels as data instead of as
- * a thrown `SitemapPageNotFoundError`.
- */
-const SitemapPageRead = Schema.Union([SitemapPageFound, SitemapPageMissing]);
-
-/** Optional settings shared by the Next route and standalone indexing scripts. */
+/** Optional settings of one route's canonical sitemap entries. */
 const SitemapEntryOptions = Schema.Struct({
   lastModified: Schema.optionalKey(Schema.String),
   locales: Schema.Array(ActiveAppLocaleCodeSchema),
@@ -94,36 +79,9 @@ export const getSitemapEntries = Effect.fn("www.sitemap.entries.page")(
 
 /** Selects all locales for base pages and one locale for content pages. */
 function getSitemapEntryLocales(pageId: string) {
-  const descriptor = getSitemapPageDescriptor(pageId);
-
-  if (descriptor && "kind" in descriptor) {
-    return [descriptor.locale];
-  }
-
-  return LOCALES;
+  return Option.match(getSitemapPageDescriptor(pageId), {
+    onNone: () => LOCALES,
+    onSome: (descriptor) =>
+      "kind" in descriptor ? [descriptor.locale] : LOCALES,
+  });
 }
-
-/**
- * Reads one bounded sitemap page. The page id names the family, the locale and
- * the partition. Every Convex read behind the page goes through the content
- * store, so a page is built from Convex only once for each release. The page
- * itself, with its URLs, is derived on every read, so a deploy that changes the
- * routing or the origin takes effect at once. The outcome is built through
- * `SitemapPageRead`, so only plain, serializable data is returned.
- */
-async function readCachedSitemapEntries(
-  options: SitemapPageEntryOptions
-): Promise<typeof SitemapPageRead.Type> {
-  return await Effect.runPromise(
-    getSitemapEntries(options).pipe(
-      Effect.flatMap((entries) => SitemapPageFound.makeEffect({ entries })),
-      Effect.catchTag("SitemapPageNotFoundError", () =>
-        Effect.succeed(SitemapPageMissing.make({}))
-      )
-    )
-  );
-}
-
-/** Shares one cached sitemap page between the route and indexing scripts
- * in a single render pass. https://react.dev/reference/react/cache */
-export const getCachedSitemapEntries = cache(readCachedSitemapEntries);

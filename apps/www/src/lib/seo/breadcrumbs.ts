@@ -1,4 +1,5 @@
 import { SITE_ORIGIN } from "@repo/seo/origin";
+import { withLeadingSlash } from "@repo/utilities/path";
 import { Array as Arr, Schema } from "effect";
 import type { Locale } from "use-intl";
 
@@ -14,7 +15,7 @@ function normalizeBreadcrumbPath(path: string, locale: Locale) {
     return "";
   }
 
-  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  const normalizedPath = withLeadingSlash(path);
   const localePrefix = `/${locale}`;
 
   if (normalizedPath === localePrefix) {

@@ -18,6 +18,7 @@ import {
   getPublishedCategories,
 } from "@/lib/content/article/catalog";
 import {
+  ArticlePageSearchSchema,
   getArticleNextHref,
   readArticlePageCursor,
 } from "@/lib/content/article/query";
@@ -31,12 +32,6 @@ import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { createSeoHead, toRouterHead } from "@/lib/seo/head";
 import { getOgUrl } from "@/lib/seo/social";
 
-const ArticleIndexSearch = Schema.Struct({
-  cursor: Schema.optional(Schema.String),
-  manifest: Schema.optional(Schema.String),
-  release: Schema.optional(Schema.String),
-});
-
 /**
  * Reads the article categories of one locale on the server. The decision to
  * answer 404 or redirect is returned, and the route loader acts on it, so the
@@ -45,7 +40,10 @@ const ArticleIndexSearch = Schema.Struct({
 const readArticleIndex = createServerFn({ method: "GET" })
   .validator(
     Schema.toStandardSchemaV1(
-      Schema.Struct({ ...ArticleIndexSearch.fields, locale: Schema.String })
+      Schema.Struct({
+        ...ArticlePageSearchSchema.fields,
+        locale: Schema.String,
+      })
     )
   )
   .handler(async ({ data }) => {
@@ -83,7 +81,7 @@ const readArticleIndex = createServerFn({ method: "GET" })
       categories: catalog.categories,
       description: tArticles("description"),
       locale,
-      nextHref: getArticleNextHref("/articles", catalog),
+      nextHref: Option.getOrNull(getArticleNextHref("/articles", catalog)),
       sourceUrl,
       title: tCommon("articles"),
     };
@@ -91,7 +89,7 @@ const readArticleIndex = createServerFn({ method: "GET" })
 
 /** The article categories of one locale, with the cursor the reader asks for. */
 export const Route = createFileRoute("/$locale/_main/articles/")({
-  validateSearch: Schema.toStandardSchemaV1(ArticleIndexSearch),
+  validateSearch: Schema.toStandardSchemaV1(ArticlePageSearchSchema),
   loaderDeps: ({ search }) => ({
     cursor: search.cursor,
     manifest: search.manifest,

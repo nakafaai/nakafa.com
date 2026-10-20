@@ -26,6 +26,7 @@ import {
   getPublishedCategoryPage,
 } from "@/lib/content/article/category";
 import {
+  ArticlePageSearchSchema,
   getArticleNextHref,
   readArticlePageCursor,
   shouldResetArticlePublicationCursor,
@@ -39,12 +40,6 @@ import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { createSeoHead, toRouterHead } from "@/lib/seo/head";
 import { getOgUrl } from "@/lib/seo/social";
-
-const CategorySearch = Schema.Struct({
-  cursor: Schema.optional(Schema.String),
-  manifest: Schema.optional(Schema.String),
-  release: Schema.optional(Schema.String),
-});
 
 /** The first page of a category, which the reader needs before it can answer. */
 const FIRST_PAGE: ArticlePageCursor = {
@@ -62,7 +57,7 @@ const readArticleCategory = createServerFn({ method: "GET" })
   .validator(
     Schema.toStandardSchemaV1(
       Schema.Struct({
-        ...CategorySearch.fields,
+        ...ArticlePageSearchSchema.fields,
         category: Schema.String,
         locale: Schema.String,
       })
@@ -124,7 +119,7 @@ const readArticleCategory = createServerFn({ method: "GET" })
       description: tArticles("description"),
       label: model.title,
       locale,
-      nextHref: getArticleNextHref(categoryPath, catalog),
+      nextHref: Option.getOrNull(getArticleNextHref(categoryPath, catalog)),
       sourceUrl: catalog.sourceRevision
         ? getAksaraTreeUrl({
             path: `${ARTICLE_SOURCE_ROOT}/${model.category}`,
@@ -136,7 +131,7 @@ const readArticleCategory = createServerFn({ method: "GET" })
 
 /** One article category: its cards, its pages and its collection data. */
 export const Route = createFileRoute("/$locale/_main/articles/$category/")({
-  validateSearch: Schema.toStandardSchemaV1(CategorySearch),
+  validateSearch: Schema.toStandardSchemaV1(ArticlePageSearchSchema),
   loaderDeps: ({ search }) => ({
     cursor: search.cursor,
     manifest: search.manifest,

@@ -1,6 +1,6 @@
 import { getGradeNonNumeric } from "@repo/contents/curriculum/grade";
 import type { Grade, PresentedMaterialDomain } from "@repo/contents/taxonomy";
-import { Effect, Option } from "effect";
+import { Effect, Match, Option } from "effect";
 import type { Locale } from "use-intl";
 import type {
   ContentSEOData,
@@ -212,29 +212,24 @@ const generateArticleMetadata = Effect.fn("SEO.generateArticleMetadata")(
     })
 );
 
-/** Generates one complete SEO projection through typed translation failures. */
-export const generateSEOMetadata = Effect.fn("SEO.generateMetadata")(
-  (context: SEOContext, locale: Locale): Effect.Effect<SEOMetadata> => {
-    const { type } = context;
-
-    return Effect.gen(function* () {
-      if (type === "material-lesson") {
-        return yield* generateSubjectMetadata(context, locale);
-      }
-
-      if (type === "curriculum-context") {
-        return yield* generateCurriculumMetadata(context, locale);
-      }
-
-      if (type === "article") {
-        return yield* generateArticleMetadata(context, locale);
-      }
-
-      return yield* generateQuranMetadata(context.surah, locale);
-    }).pipe(
-      Effect.catchTag("SEOTranslationLoadError", () =>
-        Effect.sync(() => generateFallbackMetadata(context))
+/** Resolves one complete SEO projection through typed translation failures. */
+export const resolveSEOMetadata = Effect.fn("SEO.resolve")(
+  (context: SEOContext, locale: Locale): Effect.Effect<SEOMetadata> =>
+    Match.value(context).pipe(
+      Match.discriminatorsExhaustive("type")({
+        "material-lesson": (lesson) => generateSubjectMetadata(lesson, locale),
+        "curriculum-context": (curriculum) =>
+          generateCurriculumMetadata(curriculum, locale),
+        article: (article) => generateArticleMetadata(article, locale),
+        quran: (quran) => generateQuranMetadata(quran.surah, locale),
+      }),
+      Effect.catchTag("SEOTranslationLoadError", (error) =>
+        Effect.logWarning(
+          "The SEO dictionary could not load, so fallback metadata answers.",
+          error
+        ).pipe(
+          Effect.andThen(Effect.sync(() => generateFallbackMetadata(context)))
+        )
       )
-    );
-  }
+    )
 );

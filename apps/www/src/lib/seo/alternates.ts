@@ -3,6 +3,7 @@ import {
   AppLocaleCodeSchema,
 } from "@nakafa/aksara-contracts/locale";
 import { DEFAULT_LOCALE, LOCALES } from "@repo/internationalization/src/locale";
+import { withLeadingSlash } from "@repo/utilities/path";
 import { Array as Arr, Record as Rec, Schema } from "effect";
 
 const AlternateLanguagePathSchema = Schema.Record(
@@ -44,7 +45,7 @@ export function createLocalizedAlternates(
   path: string,
   options: LocalizedAlternatesOptions = {}
 ) {
-  const canonical = path.startsWith("/") ? path : `/${path}`;
+  const canonical = withLeadingSlash(path);
   const pathWithoutLocale = getPathWithoutLocale(canonical);
   const languages =
     options.languages ??

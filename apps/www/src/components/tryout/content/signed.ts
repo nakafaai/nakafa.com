@@ -112,7 +112,6 @@ const readAttemptBatch = Effect.fn("NakafaContent.readAttemptBatch")(function* (
         auth: token,
       })
     ),
-    Effect.withTracerTiming(false),
     Effect.mapError(
       (cause) =>
         new ContentRuntimeVerificationError({

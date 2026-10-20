@@ -42,9 +42,10 @@ import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getLlmsMarkdownPath } from "@/lib/llms/format";
 import { createResolvedRouteAlternates } from "@/lib/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
-import { generateSEOMetadata } from "@/lib/seo/generator";
+import { resolveSEOMetadata } from "@/lib/seo/generator";
 import { createSeoHead, toHeadAlternates, toRouterHead } from "@/lib/seo/head";
 import { getOgUrl } from "@/lib/seo/social";
+import { serverHandler } from "@/lib/server/fn";
 
 const ArticleInput = Schema.Struct({
   category: Schema.String,
@@ -59,85 +60,98 @@ const ArticleInput = Schema.Struct({
  */
 const readArticle = createServerFn({ method: "GET" })
   .validator(Schema.toStandardSchemaV1(ArticleInput))
-  .handler(async ({ data }) => {
-    const locale = getLocaleOrThrow(data.locale);
-    if (
-      !(
-        Schema.is(ArticleRouteSlugSchema)(data.category) &&
-        Schema.is(ArticleRouteSlugSchema)(data.slug)
-      )
-    ) {
-      return { kind: "notFound" as const };
-    }
-    const publicPath = PublicPathSchema.make(
-      `articles/${data.category}/${data.slug}`
-    );
-    const publication = await getArticlePublication(locale, publicPath);
-    if (!publication) {
-      return { kind: "notFound" as const };
-    }
-    const { model, published } = publication;
-    const filePath = `/${publicPath}`;
-    const [seo, messages] = await Promise.all([
-      Effect.runPromise(
-        generateSEOMetadata(
-          {
-            type: "article",
-            categoryLabel: model.projection.categoryTitle,
-            data: {
-              title: model.projection.metadata.title,
-              description: model.projection.metadata.description,
-              subject: undefined,
-            },
-          },
-          locale
-        )
-      ),
-      loadLocaleMessages(locale),
-    ]);
-    const tCommon = createTranslator({ locale, messages, namespace: "Common" });
-    const categoryLabel = published.categoryTitle;
+  .handler(
+    serverHandler(
+      Effect.fn("www.articles.article.read")(function* (
+        data: typeof ArticleInput.Type
+      ) {
+        const locale = getLocaleOrThrow(data.locale);
+        if (
+          !(
+            Schema.is(ArticleRouteSlugSchema)(data.category) &&
+            Schema.is(ArticleRouteSlugSchema)(data.slug)
+          )
+        ) {
+          return { kind: "notFound" as const };
+        }
+        const publicPath = PublicPathSchema.make(
+          `articles/${data.category}/${data.slug}`
+        );
+        const publication = yield* Effect.promise(() =>
+          getArticlePublication(locale, publicPath)
+        );
+        if (!publication) {
+          return { kind: "notFound" as const };
+        }
+        const { model, published } = publication;
+        const filePath = `/${publicPath}`;
+        const [seo, messages] = yield* Effect.all(
+          [
+            resolveSEOMetadata(
+              {
+                type: "article",
+                categoryLabel: model.projection.categoryTitle,
+                data: {
+                  title: model.projection.metadata.title,
+                  description: model.projection.metadata.description,
+                  subject: undefined,
+                },
+              },
+              locale
+            ),
+            Effect.promise(() => loadLocaleMessages(locale)),
+          ],
+          { concurrency: "unbounded" }
+        );
+        const tCommon = createTranslator({
+          locale,
+          messages,
+          namespace: "Common",
+        });
+        const categoryLabel = published.categoryTitle;
 
-    return {
-      alternates: toHeadAlternates(
-        createResolvedRouteAlternates(model.projection, model.alternates)
-      ),
-      kind: "found" as const,
-      cacheTags: readContentCacheTags(["article"]),
-      categoryLabel,
-      content: published.sourceRevision ? undefined : published.rawMdx,
-      contentId: published.contentId,
-      copySourceUrl: published.sourceRevision
-        ? getLlmsMarkdownPath({ locale, publicPath })
-        : null,
-      description: seo.description,
-      filePath,
-      headings: getHeadings(published.rawMdx),
-      labels: {
-        articles: tCommon("articles"),
-        home: tCommon("home"),
-        more: tCommon("more"),
-        onThisPage: tCommon("on-this-page"),
-      },
-      locale,
-      metadata: published.metadata,
-      publicPath,
-      sourceUrl: published.sourceRevision
-        ? getAksaraUrl({
-            path: published.sourcePath,
-            revision: published.sourceRevision,
-          })
-        : null,
-      body: published.body,
-      title: seo.title,
-      category: data.category,
-      breadcrumbs: createBreadcrumbItems(locale, [
-        { name: tCommon("home"), path: "" },
-        { name: tCommon("articles"), path: "/articles" },
-        { name: categoryLabel, path: `/articles/${data.category}` },
-      ]),
-    };
-  });
+        return {
+          alternates: toHeadAlternates(
+            createResolvedRouteAlternates(model.projection, model.alternates)
+          ),
+          kind: "found" as const,
+          cacheTags: readContentCacheTags(["article"]),
+          categoryLabel,
+          content: published.sourceRevision ? undefined : published.rawMdx,
+          contentId: published.contentId,
+          copySourceUrl: published.sourceRevision
+            ? getLlmsMarkdownPath({ locale, publicPath })
+            : null,
+          description: seo.description,
+          filePath,
+          headings: getHeadings(published.rawMdx),
+          labels: {
+            articles: tCommon("articles"),
+            home: tCommon("home"),
+            more: tCommon("more"),
+            onThisPage: tCommon("on-this-page"),
+          },
+          locale,
+          metadata: published.metadata,
+          publicPath,
+          sourceUrl: published.sourceRevision
+            ? getAksaraUrl({
+                path: published.sourcePath,
+                revision: published.sourceRevision,
+              })
+            : null,
+          body: published.body,
+          title: seo.title,
+          category: data.category,
+          breadcrumbs: createBreadcrumbItems(locale, [
+            { name: tCommon("home"), path: "" },
+            { name: tCommon("articles"), path: "/articles" },
+            { name: categoryLabel, path: `/articles/${data.category}` },
+          ]),
+        };
+      })
+    )
+  );
 
 /** One published article: its shell, its outline and its structured data. */
 export const Route = createFileRoute("/$locale/_main/articles/$category/$slug")(

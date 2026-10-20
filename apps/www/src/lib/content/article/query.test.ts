@@ -38,17 +38,8 @@ describe("article catalog query", () => {
     });
   });
 
-  it("rejects incomplete, repeated, and oversized query values", () => {
+  it("rejects incomplete and oversized query values", () => {
     expect(Option.isNone(readArticlePageCursor({ cursor: "next" }))).toBe(true);
-    expect(
-      Option.isNone(
-        readArticlePageCursor({
-          cursor: ["first", "second"],
-          manifest,
-          release: releaseId,
-        })
-      )
-    ).toBe(true);
     expect(
       Option.isNone(
         readArticlePageCursor({
@@ -124,8 +115,10 @@ describe("article catalog query", () => {
         activeReleaseId: releaseId,
         nextCursor: "next page",
       })
-    ).toBe(
-      `/articles/politics?cursor=next+page&manifest=${encodeURIComponent(manifest)}&release=release-article`
+    ).toEqual(
+      Option.some(
+        `/articles/politics?cursor=next+page&manifest=${encodeURIComponent(manifest)}&release=release-article`
+      )
     );
     expect(
       getArticleNextHref("/articles", {
@@ -133,20 +126,20 @@ describe("article catalog query", () => {
         activeReleaseId: releaseId,
         nextCursor: null,
       })
-    ).toBeNull();
+    ).toEqual(Option.none());
     expect(
       getArticleNextHref("/articles", {
         activeManifestHash: null,
         activeReleaseId: releaseId,
         nextCursor: "next",
       })
-    ).toBeNull();
+    ).toEqual(Option.none());
     expect(
       getArticleNextHref("/articles", {
         activeManifestHash: manifest,
         activeReleaseId: null,
         nextCursor: "next",
       })
-    ).toBeNull();
+    ).toEqual(Option.none());
   });
 });

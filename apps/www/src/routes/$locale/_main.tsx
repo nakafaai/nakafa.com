@@ -1,14 +1,6 @@
 import { monospace } from "@repo/design-system/lib/monospace";
-import {
-  LocaleSchema,
-  localeTimeZone,
-} from "@repo/internationalization/src/locale";
-import {
-  createFileRoute,
-  getRouteApi,
-  notFound,
-  Outlet,
-} from "@tanstack/react-router";
+import { localeTimeZone } from "@repo/internationalization/src/locale";
+import { createFileRoute, getRouteApi, Outlet } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { cn } from "cn";
 import { Schema } from "effect";
@@ -52,17 +44,11 @@ const readShellNavigation = createServerFn({ method: "GET" })
 const localeRoute = getRouteApi("/$locale");
 
 /**
- * The student shell that every learn page and signed-in screen shares, as the
- * (main) layout of the reference app. An unknown locale stops before any page
- * loads. The shell's messages load with the layout, so no part of it renders a
- * raw message key.
+ * The student shell that every learn page and signed-in screen shares. An
+ * unknown locale stops before any page loads. The shell's messages load with the
+ * layout, so no part of it renders a raw message key.
  */
 export const Route = createFileRoute("/$locale/_main")({
-  beforeLoad: ({ params }) => {
-    if (!Schema.is(LocaleSchema)(params.locale)) {
-      throw notFound();
-    }
-  },
   loader: async ({ params }) => {
     const [messages, shell] = await Promise.all([
       readRouteMessages({

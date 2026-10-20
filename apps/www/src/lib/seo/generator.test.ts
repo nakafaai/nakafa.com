@@ -3,7 +3,7 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import type { QuranSurahRow } from "@nakafa/aksara-contracts/quran/spec";
 import { Array as Arr, Effect, HashMap, Option, Schema } from "effect";
-import { generateSEOMetadata } from "@/lib/seo/generator";
+import { resolveSEOMetadata } from "@/lib/seo/generator";
 
 const { mockGetTranslations } = vi.hoisted(() => ({
   mockGetTranslations: vi.fn(),
@@ -176,10 +176,10 @@ beforeEach(() => {
   );
 });
 
-describe("generateSEOMetadata", () => {
+describe("resolveSEOMetadata", () => {
   it.effect("uses subject MDX description before generated fallback copy", () =>
     Effect.gen(function* () {
-      const result = yield* generateSEOMetadata(
+      const result = yield* resolveSEOMetadata(
         {
           type: "material-lesson",
           grade: "11",
@@ -210,7 +210,7 @@ describe("generateSEOMetadata", () => {
     "uses generated subject description when MDX description is missing",
     () =>
       Effect.gen(function* () {
-        const result = yield* generateSEOMetadata(
+        const result = yield* resolveSEOMetadata(
           {
             type: "material-lesson",
             grade: "bachelor",
@@ -231,7 +231,7 @@ describe("generateSEOMetadata", () => {
 
   it.effect("uses subject metadata when title is missing", () =>
     Effect.gen(function* () {
-      const result = yield* generateSEOMetadata(
+      const result = yield* resolveSEOMetadata(
         {
           type: "material-lesson",
           grade: "11",
@@ -254,7 +254,7 @@ describe("generateSEOMetadata", () => {
     "uses the site title when content title and subject are missing",
     () =>
       Effect.gen(function* () {
-        const result = yield* generateSEOMetadata(
+        const result = yield* resolveSEOMetadata(
           {
             type: "material-lesson",
             grade: "11",
@@ -270,7 +270,7 @@ describe("generateSEOMetadata", () => {
 
   it.effect("uses article MDX description before generated fallback copy", () =>
     Effect.gen(function* () {
-      const result = yield* generateSEOMetadata(
+      const result = yield* resolveSEOMetadata(
         {
           type: "article",
           categoryLabel: "Politics",
@@ -291,7 +291,7 @@ describe("generateSEOMetadata", () => {
     "uses generated article description when MDX description is missing",
     () =>
       Effect.gen(function* () {
-        const result = yield* generateSEOMetadata(
+        const result = yield* resolveSEOMetadata(
           {
             type: "article",
             categoryLabel: "Politics",
@@ -312,7 +312,7 @@ describe("generateSEOMetadata", () => {
     "generates curriculum metadata from source-owned route context",
     () =>
       Effect.gen(function* () {
-        const nested = yield* generateSEOMetadata(
+        const nested = yield* resolveSEOMetadata(
           {
             type: "curriculum-context",
             level: "subject",
@@ -322,7 +322,7 @@ describe("generateSEOMetadata", () => {
           },
           "en"
         );
-        const root = yield* generateSEOMetadata(
+        const root = yield* resolveSEOMetadata(
           {
             type: "curriculum-context",
             level: "track",
@@ -346,7 +346,7 @@ describe("generateSEOMetadata", () => {
 
   it.effect("generates Quran metadata from the surah payload", () =>
     Effect.gen(function* () {
-      const result = yield* generateSEOMetadata(
+      const result = yield* resolveSEOMetadata(
         {
           type: "quran",
           surah,
@@ -363,7 +363,7 @@ describe("generateSEOMetadata", () => {
     Effect.gen(function* () {
       mockGetTranslations.mockRejectedValueOnce("missing translations");
 
-      const result = yield* generateSEOMetadata(
+      const result = yield* resolveSEOMetadata(
         {
           type: "material-lesson",
           grade: "11",

@@ -20,8 +20,10 @@ import { pricingCurrencyCookieFor } from "@/lib/pricing/currency";
  */
 const requestSession = createMiddleware({ type: "request" }).server(
   async ({ next, request }) => {
-    const { readSessionMemo } = await import("@/lib/auth/session.server");
-    const { runServerEffect } = await import("@/lib/server/fn");
+    const [{ readSessionMemo }, { runServerEffect }] = await Promise.all([
+      import("@/lib/auth/session.server"),
+      import("@/lib/server/fn"),
+    ]);
     const session = await runServerEffect(
       Effect.flatten(readSessionMemo(request)).pipe(Effect.option)
     );
@@ -29,10 +31,10 @@ const requestSession = createMiddleware({ type: "request" }).server(
       Option.isSome(session) &&
       !isHintCurrent(session.value.client, request.headers)
     ) {
-      const { appendResponseHeader } = await import(
-        "@tanstack/react-start/server"
-      );
-      const { env } = await import("@/env");
+      const [{ appendResponseHeader }, { env }] = await Promise.all([
+        import("@tanstack/react-start/server"),
+        import("@/env"),
+      ]);
       appendResponseHeader(
         "set-cookie",
         hintCookieFor(session.value.client, hintScopeFor(new URL(env.SITE_URL)))
@@ -82,7 +84,6 @@ const pinnedServerFnFetch = (input: RequestInfo | URL, init?: RequestInit) => {
 };
 
 export const startInstance = createStart(() => ({
-  defaultSsr: true,
   serverFns: { fetch: pinnedServerFnFetch },
   requestMiddleware: [
     requestSession,

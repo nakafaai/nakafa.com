@@ -2,10 +2,8 @@ import { createFileRoute, notFound } from "@tanstack/react-router";
 import { Option } from "effect";
 import type { ReactElement } from "react";
 import { SchoolPageNotFound } from "@/components/tenant/notfound";
-import {
-  PAGE_SIZE as COHORT_MEMBER_PAGE_SIZE,
-  SchoolCohortSettings,
-} from "@/components/tenant/settings/cohort";
+import { SchoolCohortSettings } from "@/components/tenant/settings/cohort";
+import { PAGE_SIZE as COHORT_MEMBER_PAGE_SIZE } from "@/components/tenant/settings/cohort/members";
 import { readCohortId } from "@/lib/tenant/params";
 import { readCohortFn } from "@/lib/tenant/settings.functions";
 

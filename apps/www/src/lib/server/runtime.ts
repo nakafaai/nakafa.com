@@ -1,7 +1,6 @@
 import "@tanstack/react-start/server-only";
-import { HttpClient } from "@confect/js";
 import { FetchClient } from "@repo/utilities/http/client";
-import { Config, Effect, Layer, ManagedRuntime } from "effect";
+import { Config, Layer, ManagedRuntime } from "effect";
 
 /**
  * The address of the Convex deployment, read by server code at runtime. The
@@ -14,16 +13,12 @@ export const CONVEX_URL = Config.NonEmptyString("VITE_CONVEX_URL");
 export const CONVEX_SITE_URL = Config.NonEmptyString("VITE_CONVEX_SITE_URL");
 
 /**
- * The Confect client of the Convex deployment, built from its address. A
- * missing address is a configuration defect, so it stops the server instead of
- * reaching the typed failures of the handlers.
+ * The services that server code provides: outbound `fetch` only. The Confect
+ * client is not shared, because a Convex HTTP client holds per-request auth state.
+ * Each effect that calls Convex provides `httpLayer({ auth })` itself, so a call
+ * site never reads an unauthenticated client by accident.
  */
-const ConfectClient = Layer.orDie(
-  Layer.unwrap(Effect.map(CONVEX_URL, (url) => HttpClient.layer(url)))
-);
-
-/** Every service that server code provides: outbound `fetch` and the Confect client. */
-const ServerLayer = Layer.mergeAll(FetchClient, ConfectClient);
+const ServerLayer = FetchClient;
 
 /** The services that a server effect may require, which the runtime provides. */
 export type ServerServices = Layer.Success<typeof ServerLayer>;

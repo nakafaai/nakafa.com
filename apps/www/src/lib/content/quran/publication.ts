@@ -88,9 +88,7 @@ const readPublishedQuranView = Effect.fn("NakafaQuran.readPublishedView")(
  * still expires them.
  */
 export async function getPublishedQuranCatalog() {
-  const catalog = await Effect.runPromise(
-    readPublishedQuranCatalog().pipe(Effect.withTracerTiming(false))
-  );
+  const catalog = await Effect.runPromise(readPublishedQuranCatalog());
   return catalog;
 }
 
@@ -102,9 +100,7 @@ export async function getPublishedQuranView(
   surahNumber: number
 ) {
   const view = await Effect.runPromise(
-    readPublishedQuranView(locale, surahNumber).pipe(
-      Effect.withTracerTiming(false)
-    )
+    readPublishedQuranView(locale, surahNumber)
   );
   return view;
 }

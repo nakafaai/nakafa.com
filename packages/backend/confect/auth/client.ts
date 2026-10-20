@@ -1,22 +1,10 @@
 import { RegisteredConvexFunction, RegisteredFunction } from "@confect/server";
 import type { AuthFunctions } from "@convex-dev/better-auth";
-import databaseSchema from "@repo/backend/confect/_generated/schema";
-import {
-  Clock,
-  Duration,
-  Effect,
-  Scheduler as EffectScheduler,
-  Predicate,
-} from "effect";
-
-const runHook = RegisteredFunction.runHandlerPromise(undefined, {
-  scheduler: new EffectScheduler.MixedScheduler("sync"),
-});
-
 import { createClient, type Triggers } from "@convex-dev/better-auth";
 import authSchema from "@repo/backend/components/betterAuth/schema";
 import { components } from "@repo/backend/confect/_generated/components";
 import refs from "@repo/backend/confect/_generated/refs";
+import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseWriter,
   MutationCtx as MutationCtxService,
@@ -37,6 +25,17 @@ import { getAppUserByAuthId } from "@repo/backend/confect/users/directory";
 import { accountMascot } from "@repo/backend/confect/users/mascot";
 import { internal } from "@repo/backend/convex/_generated/api";
 import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
+import {
+  Clock,
+  Duration,
+  Effect,
+  Scheduler as EffectScheduler,
+  Predicate,
+} from "effect";
+
+const runHook = RegisteredFunction.runHandlerPromise(undefined, {
+  scheduler: new EffectScheduler.MixedScheduler("sync"),
+});
 
 type UserTriggers = NonNullable<Triggers<DataModel, typeof authSchema>["user"]>;
 type AuthUser = Parameters<NonNullable<UserTriggers["onCreate"]>>[1];

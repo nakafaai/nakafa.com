@@ -1,7 +1,9 @@
 import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
-import { LOCALES } from "@repo/internationalization/src/locale";
-import { Data, Schema } from "effect";
-import { hasLocale, type Locale } from "use-intl";
+import {
+  decodeLocale,
+  type Locale,
+} from "@repo/internationalization/src/locale";
+import { Data, Option, Schema } from "effect";
 
 /** Stable identity for the sitemap containing application-level routes. */
 export const SITEMAP_BASE_ID = "base";
@@ -78,7 +80,8 @@ export class SitemapPageNotFoundError extends Data.TaggedError(
 }> {}
 
 /** Content families served through capacity-owned sitemap partitions. */
-export type SitemapFamily = "article" | "material" | "program";
+const SitemapFamilySchema = Schema.Literals(["article", "material", "program"]);
+export type SitemapFamily = typeof SitemapFamilySchema.Type;
 
 /** Prefix marking one capacity-owned sitemap partition index. */
 const PARTITION_PREFIX = "p";
@@ -113,38 +116,42 @@ export function formatTryoutPage(locale: Locale, page: number) {
   return `tryout_${locale}_${page}`;
 }
 
-/** Parses one canonical sitemap page identity. */
-export function getSitemapPageDescriptor(id: string): SitemapPage | null {
+/** Parses one canonical sitemap page identity, or none when no page has that id. */
+export function getSitemapPageDescriptor(
+  id: string
+): Option.Option<SitemapPage> {
   if (id === SITEMAP_BASE_ID) {
-    return { id: SITEMAP_BASE_ID };
+    return Option.some({ id: SITEMAP_BASE_ID });
   }
 
   const segments = id.split("_");
-  const [prefix, locale] = segments;
-
-  if (!hasLocale(LOCALES, locale)) {
-    return null;
+  const [prefix, rawLocale] = segments;
+  const decodedLocale = decodeLocale(rawLocale);
+  if (Option.isNone(decodedLocale)) {
+    return Option.none();
   }
+  const locale = decodedLocale.value;
 
   if (prefix === "quran" || prefix === "page") {
-    return segments.length === 2 ? { id, kind: prefix, locale } : null;
+    return segments.length === 2
+      ? Option.some({ id, kind: prefix, locale })
+      : Option.none();
   }
 
   if (segments.length !== 3) {
-    return null;
+    return Option.none();
   }
   if (prefix === "tryout") {
-    const page = parsePageNumber(segments[2]);
-    if (page === null) {
-      return null;
-    }
-    return { id, kind: prefix, locale, page };
+    return Option.map(parsePageNumber(segments[2]), (page) => ({
+      id,
+      kind: prefix,
+      locale,
+      page,
+    }));
   }
 
-  if (
-    !(prefix === "article" || prefix === "material" || prefix === "program")
-  ) {
-    return null;
+  if (!Schema.is(SitemapFamilySchema)(prefix)) {
+    return Option.none();
   }
   return describePartitionSitemapPage(prefix, id, locale, segments[2]);
 }
@@ -155,18 +162,13 @@ function describePartitionSitemapPage(
   id: string,
   locale: Locale,
   segment: string | undefined
-): SitemapPage | null {
-  const partition = parsePartitionNumber(segment);
-  if (partition === null) {
-    return null;
-  }
-  if (kind === "article") {
-    return { id, kind, locale, partition };
-  }
-  if (kind === "material") {
-    return { id, kind, locale, partition };
-  }
-  return { id, kind, locale, partition };
+): Option.Option<SitemapPage> {
+  return Option.map(parsePartitionNumber(segment), (partition) => ({
+    id,
+    kind,
+    locale,
+    partition,
+  }));
 }
 
 /** Checks whether one page targets published article rows. */
@@ -212,21 +214,23 @@ export function isTryoutSitemapPage(
 }
 
 /** Parses one canonical non-negative sitemap page number. */
-function parsePageNumber(segment: string | undefined) {
+function parsePageNumber(segment: string | undefined): Option.Option<number> {
   if (!segment) {
-    return null;
+    return Option.none();
   }
   const page = Number(segment);
   if (!Number.isSafeInteger(page) || page < 0 || String(page) !== segment) {
-    return null;
+    return Option.none();
   }
-  return page;
+  return Option.some(page);
 }
 
 /** Parses one canonical capacity-owned partition suffix such as `p0`. */
-function parsePartitionNumber(segment: string | undefined) {
+function parsePartitionNumber(
+  segment: string | undefined
+): Option.Option<number> {
   if (!segment?.startsWith(PARTITION_PREFIX)) {
-    return null;
+    return Option.none();
   }
   return parsePageNumber(segment.slice(PARTITION_PREFIX.length));
 }

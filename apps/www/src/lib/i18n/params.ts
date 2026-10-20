@@ -1,15 +1,20 @@
-import { LOCALES, type Locale } from "@repo/internationalization/src/locale";
+import {
+  decodeLocale,
+  type Locale,
+} from "@repo/internationalization/src/locale";
 import { notFound } from "@tanstack/react-router";
-import { hasLocale } from "use-intl";
+import { Option } from "effect";
 
 /**
  * Narrows one route locale segment to the public locale set. The router passes
- * locale params as plain strings, so this runtime guard is the one place that
- * turns an unknown locale into a 404 before a page or a loader reads it.
+ * locale params as plain strings, so a loader calls this to turn an unknown
+ * locale into a 404 before it reads anything. It decodes with the same owner
+ * as the locale route's parse.
  */
 export function getLocaleOrThrow(locale: string): Locale {
-  if (hasLocale(LOCALES, locale)) {
-    return locale;
+  const decoded = decodeLocale(locale);
+  if (Option.isSome(decoded)) {
+    return decoded.value;
   }
 
   throw notFound();

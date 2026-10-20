@@ -1,7 +1,6 @@
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { DEFAULT_LOCALE, LOCALES } from "@repo/internationalization/src/locale";
 import { Array as Arr, Effect, MutableList } from "effect";
-import { cache } from "react";
 import { readPublishedArticleBuckets } from "@/lib/content/article/sitemap";
 import { readPublishedMaterialBuckets } from "@/lib/content/material/sitemap";
 import { readPublishedPageCatalog } from "@/lib/content/page/catalog";
@@ -23,7 +22,13 @@ import {
 } from "@/lib/sitemap/identity";
 import { describeSitemapPartitions } from "@/lib/sitemap/partition";
 
-/** Reads sitemap page descriptors without loading route rows. */
+/**
+ * Reads sitemap page descriptors without loading route rows. Every Convex read
+ * behind them goes through the content store, so an instance that starts empty
+ * rebuilds the index from stored answers and not from Convex. The index is derived
+ * on every read, so a deploy that changes the locales or the partition size takes
+ * effect at once, and the final release check runs on every read.
+ */
 export const readSitemapPageDescriptors = Effect.fn(
   "www.sitemap.pageDescriptors"
 )(function* () {
@@ -102,18 +107,3 @@ export const readSitemapPageDescriptors = Effect.fn(
 
   return MutableList.toArray(descriptors);
 });
-
-/**
- * Reads sitemap page descriptors. Every Convex read behind them goes through the
- * content store, so an instance that starts empty rebuilds the index from
- * stored answers and not from Convex. The index is derived on every read, so a
- * deploy that changes the locales or the partition size takes effect at once,
- * and the final release check runs on every read.
- */
-async function readCachedSitemapDescriptors(): Promise<readonly SitemapPage[]> {
-  return await Effect.runPromise(readSitemapPageDescriptors());
-}
-
-/** Shares one cached sitemap index between the route and indexing scripts
- * in a single render pass. https://react.dev/reference/react/cache */
-export const getCachedSitemapDescriptors = cache(readCachedSitemapDescriptors);

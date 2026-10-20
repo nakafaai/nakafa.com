@@ -33,7 +33,7 @@ vi.mock("@repo/internationalization/src/messages", () => ({
 }));
 
 vi.mock("@/lib/seo/generator", () => ({
-  generateSEOMetadata: vi.fn(() =>
+  resolveSEOMetadata: vi.fn(() =>
     Effect.succeed({ description: "Surah description" })
   ),
 }));
