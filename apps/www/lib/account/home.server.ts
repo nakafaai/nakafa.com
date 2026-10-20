@@ -10,16 +10,17 @@ import onboarding from "@repo/backend/confect/_generated/refs/onboarding";
 import { redirect } from "@tanstack/react-router";
 import { Effect, Option, Schema } from "effect";
 import { createTranslator } from "use-intl";
+import { getMaterialLooks } from "@/components/home/look";
 import {
   accountHandler,
   admitAccount,
-  type ChatInput,
-  type LocaleInput,
   messagesFor,
   readToken,
   redirectToAuth,
 } from "@/lib/account/access.server";
 import type { ScreenSeo } from "@/lib/account/head";
+import type { ChatInput, LocaleInput } from "@/lib/account/input";
+import { getHomeTrendingSubjects } from "@/lib/content/trending";
 import { preloadConfectQuery } from "@/lib/data/preload.server";
 
 /** Home: the onboarding gate, the account name and the recently viewed subjects. */
@@ -67,6 +68,11 @@ export const homeScreenHandler = accountHandler(
         locale,
         title: t("title"),
       };
+      // The icon families stay on the server: each list passes only the looks it shows.
+      const trending = yield* Effect.promise(() =>
+        getHomeTrendingSubjects(locale)
+      );
+      const recentLooks = getMaterialLooks(recentRows);
       return {
         name: Option.getOrNull(
           Option.map(
@@ -74,8 +80,11 @@ export const homeScreenHandler = accountHandler(
             (user) => user.authUser.name
           )
         ),
+        recentLooks,
         recentRows,
         seo,
+        trending,
+        trendingLooks: getMaterialLooks(trending, recentLooks),
       };
     })
 );

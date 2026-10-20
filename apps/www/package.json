@@ -88,6 +88,7 @@
     "@types/react-dom": "19.3.0",
     "@vercel/config": "catalog:",
     "@vitejs/plugin-react": "6.1.2",
+    "@vitejs/plugin-rsc": "0.5.38",
     "@vitest/coverage-istanbul": "catalog:",
     "@vitest/ui": "catalog:",
     "afdocs": "0.22.2",

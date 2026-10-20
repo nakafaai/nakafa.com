@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { HomeExplore } from "@/components/home/explore";
 import { HomeHeader } from "@/components/home/header";
-import { getMaterialLooks } from "@/components/home/look";
 import { HomeContinueLearning } from "@/components/home/recent";
 import { HomeTrending } from "@/components/home/trending";
 import { signedInHead } from "@/lib/account/head";
@@ -15,9 +14,8 @@ export const Route = createFileRoute("/$locale/_app/_account/home")({
 });
 
 function HomePage() {
-  const { locale } = Route.useParams();
-  const { name, recentRows } = Route.useLoaderData();
-  const recentLooks = getMaterialLooks(recentRows);
+  const { name, recentLooks, recentRows, trending, trendingLooks } =
+    Route.useLoaderData();
 
   return (
     <div className="relative min-h-[calc(100svh-4rem)] lg:min-h-svh">
@@ -26,7 +24,7 @@ function HomePage() {
           <HomeHeader name={name} />
           <HomeExplore />
           <HomeContinueLearning looks={recentLooks} subjects={recentRows} />
-          <HomeTrending locale={locale} shown={recentLooks} />
+          <HomeTrending looks={trendingLooks} subjects={trending} />
         </div>
       </div>
     </div>

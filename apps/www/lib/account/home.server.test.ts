@@ -33,6 +33,7 @@ const mocks = vi.hoisted(() => ({
         request: Request
       ) => Effect.Effect<Effect.Effect<unknown, unknown>, unknown>
     >(),
+  getHomeTrendingSubjects: vi.fn<(locale: string) => Promise<readonly []>>(),
   setResponseHeader: vi.fn<(name: string, value: string) => void>(),
 }));
 
@@ -49,8 +50,13 @@ vi.mock("@/lib/data/preload.server", () => ({
   preloadConfectQuery: mocks.preloadConfectQuery,
 }));
 
+vi.mock("@/lib/content/trending", () => ({
+  getHomeTrendingSubjects: mocks.getHomeTrendingSubjects,
+}));
+
 beforeEach(() => {
   vi.clearAllMocks();
+  mocks.getHomeTrendingSubjects.mockResolvedValue([]);
 });
 
 const account = {
@@ -133,11 +139,19 @@ describe("homeScreenHandler", () => {
         { isAuthenticated: true, isRequired: false },
       ],
       [auth.queries.getCurrentUser, account],
-      [contents.queries.recent.getRecentlyViewed, ["math"]],
+      [
+        contents.queries.recent.getRecentlyViewed,
+        [{ content_id: "math-1", materialDomain: "mathematics" }],
+      ],
     ]);
     const screen = await homeScreenHandler({ data: { locale: "en" } });
     expect(screen.name).toBe("Nabil");
-    expect(screen.recentRows).toEqual(["math"]);
+    expect(screen.recentRows).toEqual([
+      { content_id: "math-1", materialDomain: "mathematics" },
+    ]);
+    expect(screen.recentLooks).toHaveLength(1);
+    expect(screen.trending).toEqual([]);
+    expect(screen.trendingLooks).toEqual([]);
     expect(screen.seo).toMatchObject({ canonicalPath: "/en", indexable: true });
   });
 

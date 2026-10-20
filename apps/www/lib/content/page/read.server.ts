@@ -8,7 +8,7 @@ import {
   getPublishedPageCatalog,
   verifyPublishedPageCatalog,
 } from "@/lib/content/page/catalog";
-import { getCurrentPublishedPage } from "@/lib/content/page/published";
+import { renderCurrentPublishedPage } from "@/lib/content/page/published";
 import type { LegalPageInput } from "@/lib/content/page/read.fn";
 import { createResolvedRouteAlternates } from "@/lib/seo/alternates";
 import { serverHandler } from "@/lib/server/fn";
@@ -30,7 +30,7 @@ const readLegalPage = Effect.fn("www.pages.readLegal")(function* ({
     return MISSING_LEGAL_PAGE;
   }
   const page = yield* Effect.promise(() =>
-    getCurrentPublishedPage({
+    renderCurrentPublishedPage({
       appLocale: AppLocaleSchema.make(locale),
       publicPath: path.value,
     })
@@ -49,6 +49,7 @@ const readLegalPage = Effect.fn("www.pages.readLegal")(function* ({
         "text/markdown": `/${projection.appLocale}/${projection.publicPath}.md`,
       },
     }),
+    body: page.body,
     canonicalPath,
     description: projection.metadata.description,
     title: projection.metadata.title,

@@ -2,7 +2,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Option } from "effect";
 import { getPublishedPageCatalog } from "@/lib/content/page/catalog";
-import { getCurrentPublishedPage } from "@/lib/content/page/published";
+import { renderCurrentPublishedPage } from "@/lib/content/page/published";
 import { readLegalPageHandler } from "@/lib/content/page/read.server";
 import { testPageProjection } from "@/test/content-page";
 
@@ -10,14 +10,17 @@ vi.mock("@tanstack/react-start/server", () => ({
   getRequest: () => new Request("https://nakafa.com/en/privacy-policy"),
 }));
 
-/** A signed page, as the published read answers it. */
-const signedPage = (projection: typeof testPageProjection) => ({ projection });
+/** A signed page with its rendered body, as the published read answers it. */
+const signedPage = (projection: typeof testPageProjection) => ({
+  body: "rendered legal body",
+  projection,
+});
 
 /** The signed page that the published read answers with in the current test. */
 let currentPage: Option.Option<ReturnType<typeof signedPage>> = Option.none();
 
 vi.mock("@/lib/content/page/published", () => ({
-  getCurrentPublishedPage: vi.fn(() =>
+  renderCurrentPublishedPage: vi.fn(() =>
     Promise.resolve(Option.getOrNull(currentPage))
   ),
 }));
@@ -32,7 +35,7 @@ describe("legal page head facts", () => {
     await expect(
       readLegalPageHandler({ data: { locale: "en", publicPath: "" } })
     ).resolves.toStrictEqual({ _tag: "Missing" });
-    expect(getCurrentPublishedPage).not.toHaveBeenCalled();
+    expect(renderCurrentPublishedPage).not.toHaveBeenCalled();
   });
 
   it("answers missing when no signed page answers the path", async () => {
@@ -51,6 +54,7 @@ describe("legal page head facts", () => {
     });
     expect(facts._tag).toBe("Legal");
     expect(facts).toMatchObject({
+      body: "rendered legal body",
       description: testPageProjection.metadata.description,
       title: testPageProjection.metadata.title,
     });

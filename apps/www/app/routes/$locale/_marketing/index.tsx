@@ -30,7 +30,7 @@ import {
 } from "@/components/sidebar/data/subject";
 import { readRouteMessages } from "@/lib/i18n/messages.fn";
 import type { MarketingFaqItem } from "@/lib/marketing/faq";
-import { readHomeTryout } from "@/lib/marketing/home.fn";
+import { readHomeCurriculaFn, readHomeTryout } from "@/lib/marketing/home.fn";
 import { getAppSocialArtwork } from "@/lib/og/app";
 import { pricingCurrencyScript } from "@/lib/pricing/currency";
 import { createSeoHead, toRouterHead } from "@/lib/seo/head";
@@ -43,7 +43,8 @@ import { createSeoHead, toRouterHead } from "@/lib/seo/head";
  */
 export const Route = createFileRoute("/$locale/_marketing/")({
   loader: async ({ params }) => {
-    const [featuredTryout, messages] = await Promise.all([
+    const [curricula, featuredTryout, messages] = await Promise.all([
+      readHomeCurriculaFn({ data: { locale: params.locale } }),
       readHomeTryout({ data: { locale: params.locale } }),
       readRouteMessages({
         data: {
@@ -106,6 +107,7 @@ export const Route = createFileRoute("/$locale/_marketing/")({
 
     return {
       collection,
+      curricula,
       description: t("description"),
       faqs,
       featuredTryout,
@@ -156,7 +158,7 @@ export const Route = createFileRoute("/$locale/_marketing/")({
 /** The marketing home: the sections of the landing page. */
 function HomePage() {
   const { locale } = Route.useParams();
-  const { faqs, featuredTryout } = Route.useLoaderData();
+  const { curricula, faqs, featuredTryout } = Route.useLoaderData();
 
   return (
     <>
@@ -168,7 +170,7 @@ function HomePage() {
         <NinaSection />
         <Memory />
         <Privacy />
-        <Curricula locale={locale} />
+        <Curricula curricula={curricula} />
         <Letter />
         <Medals />
         <Pricing />

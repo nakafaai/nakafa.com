@@ -1,3 +1,5 @@
+"use client";
+
 import {
   formatInterval,
   type Interval,

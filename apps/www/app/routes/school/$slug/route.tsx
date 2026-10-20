@@ -22,6 +22,7 @@ import { TenantOutsider } from "@/components/tenant/outsider";
 import { isLostAccess } from "@/components/tenant/refusal";
 import { TenantRefused } from "@/components/tenant/refused";
 import { TenantShell } from "@/components/tenant/shell";
+import { readAuthLegalFn } from "@/lib/auth/legal.fn";
 import type { SchoolViewer } from "@/lib/tenant/frame";
 import { readSchoolFrameFn } from "@/lib/tenant/frame.fn";
 import { schoolHead } from "@/lib/tenant/head";
@@ -78,7 +79,8 @@ export const Route = createFileRoute("/school/$slug")({
     if (school._tag === "Refused") {
       throw notFound();
     }
-    return { school, slug: params.slug };
+    const legal = await readAuthLegalFn({ data: {} });
+    return { legal, school, slug: params.slug };
   },
   head: ({ match }) => {
     const school = match.context.school;
@@ -91,10 +93,11 @@ export const Route = createFileRoute("/school/$slug")({
 });
 
 function SchoolLayout(): ReactElement {
-  const { school } = Route.useRouteContext();
+  const { legal, school } = Route.useRouteContext();
   if (school._tag === "Visitor") {
     return (
       <TenantEntry
+        legal={legal}
         logo={school.profile.logo}
         mascot={school.profile.mascot}
         slug={school.profile.slug}

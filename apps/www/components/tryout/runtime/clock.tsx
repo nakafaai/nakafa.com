@@ -24,6 +24,20 @@ export function TryoutClockProvider({
 
 const TICK_MS = 1000;
 
+/**
+ * Gives every timer of one try-out page the time that the page loaded at. The
+ * value is fixed for the page's life, so streamed content never sees it change.
+ */
+export function TryoutClockProvider({
+  children,
+  initialNow,
+}: {
+  readonly children: ReactNode;
+  readonly initialNow: number;
+}) {
+  return <InitialClock value={initialNow}>{children}</InitialClock>;
+}
+
 let currentNow = 0;
 let timer: number | null = null;
 const listeners = MutableHashSet.empty<() => void>();

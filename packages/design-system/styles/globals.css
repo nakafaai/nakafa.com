@@ -314,6 +314,15 @@
   }
 }
 
+/*
+ * Geist Mono is defined by @fontsource-variable/geist-mono. Applying this class defines
+ * `--font-geist-mono` for the element and every descendant, so the shared monospace
+ * token resolves to the face only where the class applies.
+ */
+.geist-mono {
+  --font-geist-mono: "Geist Mono Variable", ui-monospace, monospace;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
