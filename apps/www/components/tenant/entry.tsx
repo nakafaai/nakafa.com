@@ -10,6 +10,7 @@ import {
 import { ThemePicker } from "@/components/shared/theme/picker";
 import { TenantEntryActions } from "@/components/tenant/entry.client";
 import { SchoolMark } from "@/components/tenant/mark";
+import type { AuthLegalLinks } from "@/lib/auth/legal.fn";
 
 /**
  * The entry surface of a school for a visitor who is signed out. It reuses the
@@ -18,11 +19,13 @@ import { SchoolMark } from "@/components/tenant/mark";
  * username and card (`TenantEntryActions`).
  */
 export function TenantEntry({
+  legal,
   logo,
   mascot,
   slug,
   title,
 }: {
+  legal: AuthLegalLinks | null;
   logo: string | undefined;
   mascot: typeof Mascot.Type;
   slug: TenantSlug;
@@ -40,6 +43,7 @@ export function TenantEntry({
         <SignInScreen
           action={<TenantEntryActions slug={slug} />}
           figure={<SchoolMark logo={logo} mascot={mascot} size="lg" />}
+          legal={legal}
         >
           <h1 className="font-semibold text-2xl">{title}</h1>
         </SignInScreen>

@@ -41,11 +41,8 @@ export const Route = createFileRoute("/$locale/_marketing/$")({
   component: LegalPage,
 });
 
-/**
- * The legal page body. Aksara's reviewed body is a React tree that the server
- * renders, and the route does not yet carry it to the browser: the content
- * lane decides between a server component and server HTML (blueprint 4.2).
- */
+/** The legal page: the reviewed body, which the server renders as a server component tree. */
 function LegalPage() {
-  return <main className="mx-auto w-full max-w-3xl px-6 py-20" />;
+  const { body } = Route.useLoaderData();
+  return <main className="mx-auto w-full max-w-3xl px-6 py-20">{body}</main>;
 }

@@ -8,6 +8,7 @@ import { AuthLegal } from "@/components/auth/legal";
 import { EntryShellBody, EntryShellHeader } from "@/components/entry/shell";
 import { OnboardingQuestionnaire } from "@/components/programs/onboarding/questionnaire";
 import { ThemePicker } from "@/components/shared/theme/picker";
+import { readAuthLegalFn } from "@/lib/auth/legal.fn";
 import { admitOnboardingFn, readOnboardingPageFn } from "@/lib/entry/page.fn";
 import { TextSearchParam } from "@/lib/entry/search";
 import { readRouteMessages } from "@/lib/i18n/messages.fn";
@@ -28,13 +29,14 @@ export const Route = createFileRoute("/$locale/_entry/onboarding")({
   validateSearch: Schema.toStandardSchemaV1(OnboardingSearch),
   loaderDeps: ({ search }) => ({ intent: search.intent }),
   loader: async ({ deps, params }) => {
-    const [page, messages] = await Promise.all([
+    const [page, messages, legal] = await Promise.all([
       readOnboardingPageFn({
         data: { intent: deps.intent, locale: params.locale },
       }),
       readRouteMessages({
         data: { locale: params.locale, namespaces: ["LearningPrograms"] },
       }),
+      readAuthLegalFn({ data: { locale: params.locale } }),
     ]);
     if (page._tag === "Redirect") {
       // The destination is the server's decision, so it stays an href, not a typed route.
@@ -48,6 +50,7 @@ export const Route = createFileRoute("/$locale/_entry/onboarding")({
     return {
       description: t("metadata-description"),
       intent: page.intent,
+      legal,
       profile: page.profile,
       title: t("metadata-title"),
     };
@@ -79,8 +82,7 @@ export const Route = createFileRoute("/$locale/_entry/onboarding")({
  * admission is recorded once the questionnaire mounts, never by the page read.
  */
 function OnboardingPage() {
-  const { locale } = Route.useParams();
-  const { intent, profile } = Route.useLoaderData();
+  const { intent, legal, profile } = Route.useLoaderData();
   useEffect(() => {
     admitOnboardingFn().catch((error: unknown) => {
       captureException(error, { source: "start-onboarding-admission" });
@@ -96,7 +98,7 @@ function OnboardingPage() {
       <EntryShellBody>
         <Nina act="writing" label="" size={120} whole />
         <OnboardingQuestionnaire initialProfile={profile} intent={intent} />
-        <AuthLegal locale={locale} />
+        <AuthLegal links={legal} />
       </EntryShellBody>
     </>
   );

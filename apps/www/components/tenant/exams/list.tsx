@@ -1,6 +1,7 @@
 "use client";
 
-import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
+import type { Ref } from "@confect/core";
+import { PaginatedQueryResult } from "@confect/react";
 import { useIntersection } from "@mantine/hooks";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -24,9 +25,16 @@ import { createExamDrafts } from "@/components/tenant/exams/drafts";
 import type { ExamSummary } from "@/components/tenant/exams/optimistic";
 import { SchoolHeader } from "@/components/tenant/header";
 import { isLostAccess } from "@/components/tenant/refusal";
+import { usePaginatedPreloaded } from "@/lib/data/paginated";
 
 /** How many exams the list asks for each time its end comes into view. */
-const EXAM_PAGE_SIZE = 20;
+export const EXAM_PAGE_SIZE = 20;
+
+/** The first page of the exam list, which its loader read on the server. */
+type ExamListFirstPage = Pick<
+  Ref.Returns<typeof exams.exams.list>,
+  "isDone" | "page"
+>;
 
 /** The columns of the exams table. */
 const examColumns = createColumnHelper<typeof dataTableFeatures, ExamSummary>();
@@ -39,16 +47,23 @@ const examColumns = createColumnHelper<typeof dataTableFeatures, ExamSummary>();
  * of the list shows its own sentence and a retry, and a viewer who lost the school's access is
  * sent to the refused page.
  */
-export function ExamList({ slug }: { slug: TenantSlug }) {
+export function ExamList({
+  first,
+  slug,
+}: {
+  first: ExamListFirstPage | undefined;
+  slug: TenantSlug;
+}) {
   const t = useTranslations("Exams");
   const tenant = useTenant();
   const locale = useLocale();
   // The list needs the session, which Convex learns a moment after the page draws.
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const pagination = usePaginatedQuery(
+  const pagination = usePaginatedPreloaded(
     exams.exams.list,
     isSettled ? { slug } : "skip",
-    { initialNumItems: EXAM_PAGE_SIZE }
+    { initialNumItems: EXAM_PAGE_SIZE },
+    first
   );
   const [drafts] = useState(createExamDrafts);
   const saving = useStore(drafts, (state) => state.ids);

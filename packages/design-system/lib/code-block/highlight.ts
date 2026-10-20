@@ -1,14 +1,21 @@
 import { isBundledLanguage } from "@repo/design-system/lib/code-block/language";
 import { preserveShikiLineBreaks } from "@repo/design-system/lib/code-block/lines";
 import {
+  type CodeOptionsMultipleThemes,
+  createHighlighterCore,
+  type HighlighterCore,
+} from "@shikijs/core";
+import {
   transformerNotationDiff,
   transformerNotationErrorLevel,
   transformerNotationFocus,
   transformerNotationHighlight,
   transformerNotationWordHighlight,
 } from "@shikijs/transformers";
-import { Effect, Schema } from "effect";
-import { type CodeOptionsMultipleThemes, codeToHtml } from "shiki";
+import { Array as Arr, Effect, Predicate, Record, Schema } from "effect";
+import { createJavaScriptRegexEngine } from "shiki/engine/javascript";
+import { bundledLanguages } from "shiki/langs";
+import { type BundledTheme, bundledThemes } from "shiki/themes";
 
 /**
  * The only default theme pair. The light theme is the high-contrast variant: every
@@ -19,10 +26,35 @@ import { type CodeOptionsMultipleThemes, codeToHtml } from "shiki";
  * their own background, with their diff header and punctuation scopes, so their text
  * is judged on that background instead.
  */
+/** One theme of a code block: a bundled name, or a registration that Shiki loads as given. */
+type CodeTheme = NonNullable<
+  NonNullable<CodeOptionsMultipleThemes["themes"]>[string]
+>;
+
 export const DEFAULT_CODE_THEMES = {
   light: "github-light-high-contrast",
   dark: "github-dark-default",
 } satisfies CodeOptionsMultipleThemes["themes"];
+/**
+ * One highlighter for the process. Shiki's default entry loads a WebAssembly
+ * regular-expression engine, which the server bundle cannot carry, so this entry
+ * uses the JavaScript engine and loads each grammar and theme on first use.
+ */
+let highlighter: Promise<HighlighterCore> | undefined;
+
+function isBundledTheme(theme: string): theme is BundledTheme {
+  return Object.hasOwn(bundledThemes, theme);
+}
+
+function getHighlighter() {
+  highlighter ??= createHighlighterCore({
+    engine: createJavaScriptRegexEngine(),
+    langs: [],
+    themes: [],
+  });
+  return highlighter;
+}
+
 const PRE_TAG_PATTERN = /<pre(\s|>)/;
 const PRE_BACKGROUND_STYLE_PATTERN =
   /(<pre[^>]*?)\s+style="[^"]*background[^"]*"([^>]*>)/g;
@@ -44,6 +76,15 @@ export class UnsupportedCodeLanguageError extends Schema.TaggedError<Unsupported
   {
     language: Schema.String,
     message: Schema.String,
+  }
+) {}
+
+/** Expected failure when a code block names a theme outside Shiki's bundle. */
+export class UnsupportedCodeThemeError extends Schema.TaggedError<UnsupportedCodeThemeError>()(
+  "UnsupportedCodeThemeError",
+  {
+    message: Schema.String,
+    theme: Schema.String,
   }
 ) {}
 
@@ -73,6 +114,38 @@ function formatHighlightedHtml(
   return withPreClass.replace(PRE_BACKGROUND_STYLE_PATTERN, "$1$2");
 }
 
+/** Maps any Shiki failure of one language's highlight to the one typed error of a code block. */
+const toHighlightError = (language: string) => (cause: unknown) =>
+  new CodeHighlightError({
+    cause,
+    language,
+    message: `Failed to highlight code as "${language}".`,
+  });
+
+/** Loads one theme: a bundled name by its name, and a registration as it is given. */
+const loadTheme = Effect.fn("designSystem.codeBlock.loadTheme")(function* (
+  shiki: HighlighterCore,
+  theme: CodeTheme,
+  language: string
+) {
+  if (typeof theme !== "string") {
+    return yield* Effect.tryPromise({
+      try: () => shiki.loadTheme(theme),
+      catch: toHighlightError(language),
+    });
+  }
+  if (!isBundledTheme(theme)) {
+    return yield* new UnsupportedCodeThemeError({
+      message: `Code theme "${theme}" is not included in Shiki's bundle.`,
+      theme,
+    });
+  }
+  return yield* Effect.tryPromise({
+    try: () => shiki.loadTheme(bundledThemes[theme]),
+    catch: toHighlightError(language),
+  });
+});
+
 /** Highlights code with Nakafa's shared Shiki transformers and theme defaults. */
 export const highlightCode = Effect.fn("designSystem.codeBlock.highlight")(
   function* ({
@@ -89,11 +162,24 @@ export const highlightCode = Effect.fn("designSystem.codeBlock.highlight")(
       });
     }
 
+    const selectedThemes = themes ?? DEFAULT_CODE_THEMES;
+    const shiki = yield* Effect.tryPromise({
+      try: getHighlighter,
+      catch: toHighlightError(language),
+    });
+    for (const theme of Arr.filter(
+      Record.values(selectedThemes),
+      Predicate.isNotUndefined
+    )) {
+      yield* loadTheme(shiki, theme, language);
+    }
+
     const html = yield* Effect.tryPromise({
-      try: () =>
-        codeToHtml(code, {
+      try: async () => {
+        await shiki.loadLanguage(bundledLanguages[language]);
+        return shiki.codeToHtml(code, {
           lang: language,
-          themes: themes ?? DEFAULT_CODE_THEMES,
+          themes: selectedThemes,
           transformers: [
             transformerNotationDiff({ matchAlgorithm: "v3" }),
             transformerNotationHighlight({ matchAlgorithm: "v3" }),
@@ -101,13 +187,9 @@ export const highlightCode = Effect.fn("designSystem.codeBlock.highlight")(
             transformerNotationFocus({ matchAlgorithm: "v3" }),
             transformerNotationErrorLevel({ matchAlgorithm: "v3" }),
           ],
-        }),
-      catch: (cause) =>
-        new CodeHighlightError({
-          cause,
-          language,
-          message: `Failed to highlight code as "${language}".`,
-        }),
+        });
+      },
+      catch: toHighlightError(language),
     });
 
     return preserveShikiLineBreaks(

@@ -1,19 +1,18 @@
 "use client";
 
-import { QueryResult, useQuery } from "@confect/react";
+import { QueryResult } from "@confect/react";
 import { Calendar03Icon } from "@hugeicons/core-free-icons";
-import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { lazyComponent } from "@repo/design-system/lib/lazy";
 import { Array as Arr, DateTime, Effect, Option } from "effect";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
+import { useViewerQuery } from "@/components/tenant/context";
 import {
   creatableUnits,
   type ViewerUnit,
 } from "@/components/tenant/exams/create";
-import { useExam } from "@/components/tenant/exams/provider";
 import { nextQuarter } from "@/components/tenant/exams/time";
 
 /**
@@ -45,8 +44,7 @@ const quarterOf = (unit: ViewerUnit, now: DateTime.Utc) =>
  */
 export function ScheduleExam() {
   const t = useTranslations("Exams");
-  const { slug } = useExam();
-  const viewer = useQuery(tenancy.viewer.get, { slug });
+  const viewer = useViewerQuery();
   const [openings, setOpenings] = useState(0);
   const [starts, setStarts] = useState("");
   const units = QueryResult.isSuccess(viewer)

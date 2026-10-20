@@ -1,13 +1,22 @@
 import { createFileRoute } from "@tanstack/react-router";
 import type { ReactElement } from "react";
-import { SchoolAuditSettings } from "@/components/tenant/settings/audit";
+import {
+  PAGE_SIZE,
+  SchoolAuditSettings,
+} from "@/components/tenant/settings/audit";
+import { readAuditFn } from "@/lib/tenant/settings.fn";
 
-/** The audit log of the school: who changed what, and when. */
+/** The audit journal of the school: who changed what, and when. */
 export const Route = createFileRoute("/school/$slug/settings/audit")({
+  loader: ({ context }) =>
+    context.school._tag === "Member"
+      ? readAuditFn({ data: { numItems: PAGE_SIZE, slug: context.slug } })
+      : undefined,
   component: SchoolAuditPage,
 });
 
 function SchoolAuditPage(): ReactElement {
   const { slug } = Route.useRouteContext();
-  return <SchoolAuditSettings slug={slug} />;
+  const preload = Route.useLoaderData();
+  return <SchoolAuditSettings preload={preload} slug={slug} />;
 }

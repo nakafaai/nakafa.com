@@ -11,18 +11,21 @@ import { notifyTickListeners } from "@/components/tryout/runtime/tick";
 
 const InitialClock = createContext<number | null>(null);
 
-/** Transfers the request timestamp unchanged through server rendering and hydration. */
+const TICK_MS = 1000;
+
+/**
+ * Gives every timer of one try-out page the time that the page loaded at. The
+ * value is fixed for the page's life, so streamed content never sees it change.
+ */
 export function TryoutClockProvider({
   children,
   initialNow,
 }: {
-  children: ReactNode;
-  initialNow: number;
+  readonly children: ReactNode;
+  readonly initialNow: number;
 }) {
   return <InitialClock value={initialNow}>{children}</InitialClock>;
 }
-
-const TICK_MS = 1000;
 
 let currentNow = 0;
 let timer: number | null = null;

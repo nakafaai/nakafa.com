@@ -4,7 +4,6 @@ import {
   type PaginatedQueryItem,
   PaginatedQueryResult,
   useMutation,
-  usePaginatedQuery,
 } from "@confect/react";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { MemberStatus } from "@repo/backend/confect/tenancy/roster";
@@ -14,7 +13,7 @@ import { buttonVariants } from "@repo/design-system/lib/button";
 import { Link } from "@repo/internationalization/src/navigation";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr } from "effect";
-import { startTransition } from "react";
+import { createContext, startTransition, use } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/providers/convex";
 import { DataFailure } from "@/components/shared/failure";
@@ -28,11 +27,20 @@ import { RoleBadge } from "@/components/tenant/role";
 import { removeMemberChange } from "@/components/tenant/settings/members.client";
 import { SettingsPage } from "@/components/tenant/settings/page";
 import { saveSchool } from "@/components/tenant/settings/save.client";
+import {
+  type PreloadedPage,
+  usePaginatedPreloaded,
+} from "@/lib/data/paginated";
 
 const SOURCE = "components/tenant/settings/members";
 
 /** How many members one page of the list loads, and each page after it. */
-const PAGE_SIZE = 25;
+export const PAGE_SIZE = 25;
+
+/** The first page of the list, which its loader read on the server. */
+type MembersFirstPage = PreloadedPage<
+  PaginatedQueryItem<typeof tenancy.roster.members>
+>;
 
 /** One member of the school as the members list shows it. */
 type MemberItem = PaginatedQueryItem<typeof tenancy.roster.members>;
@@ -43,17 +51,30 @@ const memberColumns = createColumnHelper<
   MemberItem
 >();
 
+/** The first page of the members, which the page's loader read on the server. */
+const MembersFirstPageContext = createContext<MembersFirstPage | undefined>(
+  undefined
+);
+
 /**
  * Every active member of the school in a data table: its name, how far it has joined,
  * and its roles as badges. A member who is not invited has a row menu that removes it.
  * The table filters by name and by status, and loads more rows as its end comes into
  * view. Invitations are sent on the invitations page.
  */
-export function SchoolMembersSettings({ slug }: { slug: TenantSlug }) {
+export function SchoolMembersSettings({
+  first,
+  slug,
+}: {
+  first: MembersFirstPage | undefined;
+  slug: TenantSlug;
+}) {
   return (
     <SettingsPage>
       <ReadBoundary>
-        <SchoolMembersBody slug={slug} />
+        <MembersFirstPageContext value={first}>
+          <SchoolMembersBody slug={slug} />
+        </MembersFirstPageContext>
       </ReadBoundary>
     </SettingsPage>
   );
@@ -61,11 +82,13 @@ export function SchoolMembersSettings({ slug }: { slug: TenantSlug }) {
 
 /** The members of the school, read a page at a time, with the table and its end. */
 function SchoolMembersBody({ slug }: { slug: TenantSlug }) {
+  const first = use(MembersFirstPageContext);
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const pagination = usePaginatedQuery(
+  const pagination = usePaginatedPreloaded(
     tenancy.roster.members,
     isSettled ? { slug } : "skip",
-    { initialNumItems: PAGE_SIZE }
+    { initialNumItems: PAGE_SIZE },
+    first
   );
 
   const failed = PaginatedQueryResult.isFailure(pagination);

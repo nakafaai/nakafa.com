@@ -1,9 +1,8 @@
 "use client";
 
-import { QueryResult, useMutation, useQuery } from "@confect/react";
+import { QueryResult, useMutation } from "@confect/react";
 import { Id } from "@repo/backend/confect/_generated/id";
 import integrations from "@repo/backend/confect/_generated/refs/integrations";
-import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import type { GrantScope } from "@repo/backend/confect/access/schema";
 import { IntegrationName } from "@repo/backend/confect/integrations/schema";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -30,7 +29,7 @@ import {
 import { Array as Arr, Option, Schema } from "effect";
 import { useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
-import { useConvexAuth } from "@/components/providers/convex";
+import { useViewerQuery } from "@/components/tenant/context";
 import {
   IntegrationAction,
   toggleAction,
@@ -58,8 +57,7 @@ export function SchoolClientCreateDialog({
 }) {
   const t = useTranslations("SchoolSettings");
   const common = useTranslations("Common");
-  const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const viewer = useQuery(tenancy.viewer.get, isSettled ? { slug } : "skip");
+  const viewer = useViewerQuery();
   const create = useMutation(integrations.clients.create);
   const id = useId();
   const [isPending, startTransition] = useTransition();

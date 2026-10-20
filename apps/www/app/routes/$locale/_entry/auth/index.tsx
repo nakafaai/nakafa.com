@@ -7,6 +7,7 @@ import { SignInScreen } from "@/components/auth/screen";
 import { EntryShellHeader } from "@/components/entry/shell";
 import { BackButton } from "@/components/shared/back";
 import { ThemePicker } from "@/components/shared/theme/picker";
+import { readAuthLegalFn } from "@/lib/auth/legal.fn";
 import { TextSearchParam } from "@/lib/entry/search";
 import { readRouteMessages } from "@/lib/i18n/messages.fn";
 import { getAppSocialArtwork } from "@/lib/og/app";
@@ -22,15 +23,18 @@ const AuthSearch = Schema.Struct({
 export const Route = createFileRoute("/$locale/_entry/auth/")({
   validateSearch: Schema.toStandardSchemaV1(AuthSearch),
   loader: async ({ params }) => {
-    const messages = await readRouteMessages({
-      data: { locale: params.locale, namespaces: ["Metadata"] },
-    });
+    const [messages, legal] = await Promise.all([
+      readRouteMessages({
+        data: { locale: params.locale, namespaces: ["Metadata"] },
+      }),
+      readAuthLegalFn({ data: { locale: params.locale } }),
+    ]);
     const t = createTranslator({
       locale: params.locale,
       messages,
       namespace: "Metadata",
     });
-    return { description: t("description"), title: t("title") };
+    return { description: t("description"), legal, title: t("title") };
   },
   head: ({ loaderData, params }) =>
     loaderData === undefined
@@ -57,6 +61,7 @@ export const Route = createFileRoute("/$locale/_entry/auth/")({
 /** The sign-in page: the back button, the theme, the title and the sign-in actions. */
 function AuthPage() {
   const t = useTranslations("Auth");
+  const { legal } = Route.useLoaderData();
   return (
     <>
       <EntryShellHeader>
@@ -75,6 +80,7 @@ function AuthPage() {
             whole
           />
         }
+        legal={legal}
       >
         <h1 className="font-semibold text-2xl">{t("sign-in-title")}</h1>
       </SignInScreen>

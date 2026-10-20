@@ -1,13 +1,9 @@
 import { Nina } from "@repo/design-system/components/ui/nina";
-import { readServerTranslator } from "@repo/internationalization/src/translator";
-import type { Locale } from "use-intl";
+import { useTranslations } from "use-intl";
 import { CurriculumList } from "@/components/marketing/about/curricula/list.client";
 import { NINA_SLOT } from "@/components/marketing/about/toys/slot";
 import { MarketingSection } from "@/components/marketing/shared/section";
-import {
-  readRuntimeCurriculumCatalog,
-  readRuntimeCurriculumOptions,
-} from "@/lib/curriculum/model";
+import type { readRuntimeCurriculumOptions } from "@/lib/curriculum/model";
 
 /**
  * The curricula part: a heading, then Nina pointing at the curricula of the
@@ -15,12 +11,12 @@ import {
  * catalog, so the page never names a class. On a phone, where the list stands
  * under the heading on its own, Nina is left out.
  */
-export async function Curricula({ locale }: { locale: Locale }) {
-  const [t, catalog] = await Promise.all([
-    readServerTranslator({ locale, namespace: "Landing" }),
-    readRuntimeCurriculumCatalog(locale),
-  ]);
-  const curricula = readRuntimeCurriculumOptions(catalog, locale);
+export function Curricula({
+  curricula,
+}: {
+  readonly curricula: ReturnType<typeof readRuntimeCurriculumOptions>;
+}) {
+  const t = useTranslations("Landing");
 
   return (
     <MarketingSection id="curricula">

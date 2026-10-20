@@ -1,27 +1,24 @@
 "use client";
 
-import { useQuery } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
+import { use } from "react";
 import { useConvexAuth } from "@/components/providers/convex";
 import { useTenant } from "@/components/tenant/context";
-
-/**
- * The viewer's view of the school, which the home reads for its header and its greeting. The read waits
- * for the session, which Convex learns a moment after the page draws.
- */
-export function useHomeViewer() {
-  const { slug } = useTenant();
-  const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  return useQuery(tenancy.viewer.get, isSettled ? { slug } : "skip");
-}
+import { HomePreloadContext } from "@/components/tenant/home/data";
+import { usePreloadedQueryResult } from "@/lib/data/preloaded";
 
 /** The exams and rooms the school home lists for the viewer, read in one bounded call. */
 export function useHomeExams() {
   const { slug } = useTenant();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  return useQuery(exams.exams.home, isSettled ? { slug } : "skip");
+  const { home } = use(HomePreloadContext);
+  return usePreloadedQueryResult(
+    exams.exams.home,
+    isSettled ? { slug } : "skip",
+    home
+  );
 }
 
 /** The read of the exams and rooms the school home lists, which a tile's failure part runs again. */
@@ -36,9 +33,11 @@ export function homeExamsRead(slug: TenantSlug) {
 export function useHomeSetup() {
   const { canManage, slug } = useTenant();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  return useQuery(
+  const { setup } = use(HomePreloadContext);
+  return usePreloadedQueryResult(
     tenancy.home.setup,
-    isSettled && canManage ? { slug } : "skip"
+    isSettled && canManage ? { slug } : "skip",
+    setup
   );
 }
 
@@ -56,5 +55,10 @@ export function studentSittingsRead(slug: TenantSlug) {
 export function useStudentSittings() {
   const { slug } = useTenant();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  return useQuery(exams.sittings.mine, isSettled ? { slug } : "skip");
+  const { sittings } = use(HomePreloadContext);
+  return usePreloadedQueryResult(
+    exams.sittings.mine,
+    isSettled ? { slug } : "skip",
+    sittings
+  );
 }

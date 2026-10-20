@@ -174,7 +174,7 @@ function SchoolCardFace({ card, slug }: { card: CardView; slug: TenantSlug }) {
           <div>
             <dt className="text-muted-foreground">{t("card-expires")}</dt>
             <dd>
-              <SchoolDateTime at={card.expiresAt} slug={slug} />
+              <SchoolDateTime at={card.expiresAt} />
             </dd>
           </div>
         </dl>

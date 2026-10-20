@@ -1,8 +1,8 @@
-import { useCurrentLocale } from "@repo/internationalization/src/navigation";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import { AuthLegal } from "@/components/auth/legal";
 import { EntryShellBody } from "@/components/entry/shell";
+import type { AuthLegalLinks } from "@/lib/auth/legal.fn";
 
 /**
  * The sign-in body of the main site and of a school host. The page passes its
@@ -17,14 +17,16 @@ export function SignInScreen({
   action,
   children,
   figure,
+  legal,
 }: {
   action: ReactNode;
   children: ReactNode;
   /** What stands above the title: Nina on the main site, the school's mark on a school host. */
   figure: ReactNode;
+  /** The privacy and terms addresses that the route loader read for this locale. */
+  legal: AuthLegalLinks | null;
 }) {
   const t = useTranslations("Auth");
-  const locale = useCurrentLocale();
 
   return (
     <EntryShellBody>
@@ -37,7 +39,7 @@ export function SignInScreen({
 
       {action}
 
-      <AuthLegal locale={locale} />
+      <AuthLegal links={legal} />
     </EntryShellBody>
   );
 }

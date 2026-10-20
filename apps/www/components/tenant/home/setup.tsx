@@ -4,11 +4,10 @@ import { QueryResult } from "@confect/react";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import { CardLink, CardLinks } from "@/components/shared/card/link";
-import { useTenant } from "@/components/tenant/context";
+import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import {
   homeSetupRead,
   useHomeSetup,
-  useHomeViewer,
 } from "@/components/tenant/home/query.client";
 import { missingSteps, type SetupStep } from "@/components/tenant/home/steps";
 import { HomeTile, RowText, TILE_ROWS } from "@/components/tenant/home/tile";
@@ -28,7 +27,7 @@ const STEP_HREF: Record<SetupStep, string> = {
  */
 function stepsOf(
   setup: ReturnType<typeof useHomeSetup>,
-  viewer: ReturnType<typeof useHomeViewer>
+  viewer: ReturnType<typeof useViewerQuery>
 ) {
   if (!(QueryResult.isSuccess(setup) && QueryResult.isSuccess(viewer))) {
     return [];
@@ -51,7 +50,7 @@ function stepsOf(
 export function useSetupShown() {
   const tenant = useTenant();
   const setup = useHomeSetup();
-  const viewer = useHomeViewer();
+  const viewer = useViewerQuery();
   if (!tenant.canManage) {
     return false;
   }
@@ -92,7 +91,7 @@ export function SetupTile({ className }: { className?: string | undefined }) {
 function SetupRows({ className }: { className?: string | undefined }) {
   const t = useTranslations("School");
   const setup = useHomeSetup();
-  const viewer = useHomeViewer();
+  const viewer = useViewerQuery();
   if (QueryResult.isFailure(setup)) {
     throw setup.error;
   }

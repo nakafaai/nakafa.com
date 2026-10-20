@@ -4,7 +4,12 @@ import { QueryResult } from "@confect/react";
 import { describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { Result } from "effect";
-import { readPreloaded, usePreloadedQuery } from "@/lib/data/preloaded";
+import {
+  readPreloaded,
+  readPreloadedResult,
+  usePreloadedQuery,
+  usePreloadedQueryResult,
+} from "@/lib/data/preloaded";
 
 /** The live result that the mocked Confect hook returns. */
 const live = vi.hoisted(() => ({ next: vi.fn<() => unknown>() }));
@@ -45,5 +50,40 @@ describe("preloaded query hook", () => {
   it("throws a failed live query to the error boundary", () => {
     live.next.mockReturnValue(QueryResult.fail("offline"));
     expect(() => usePreloadedQuery(ref, { locale: "en" }, [])).toThrow();
+  });
+});
+
+describe("preloaded query result", () => {
+  it("shows the loader's value as a success while the live result loads", () => {
+    expect(
+      readPreloadedResult(QueryResult.load<string, never>(false), "loader")
+    ).toStrictEqual(QueryResult.succeed("loader"));
+  });
+
+  it("keeps the live result when the loader has no value", () => {
+    const live = QueryResult.load<string, never>(false);
+    expect(readPreloadedResult(live, undefined)).toBe(live);
+  });
+
+  it("keeps the live result once it has one", () => {
+    const live = QueryResult.succeed<string, never>("live");
+    expect(readPreloadedResult(live, "loader")).toBe(live);
+  });
+
+  it("shows the loader's value while the live query is skipped", () => {
+    live.next.mockReturnValue(QueryResult.load(true));
+    const ref = refs.public.contents.queries.recent.getRecentlyViewed;
+    expect(usePreloadedQueryResult(ref, { locale: "en" }, [])).toStrictEqual(
+      QueryResult.succeed([])
+    );
+  });
+
+  it("returns the live result without a loader value", () => {
+    const failed = QueryResult.fail("offline");
+    live.next.mockReturnValue(failed);
+    const ref = refs.public.contents.queries.recent.getRecentlyViewed;
+    expect(usePreloadedQueryResult(ref, { locale: "en" }, undefined)).toBe(
+      failed
+    );
   });
 });

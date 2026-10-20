@@ -1,7 +1,7 @@
 import type { Ref } from "@confect/core";
 import type tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import type { BuiltinRole } from "@repo/backend/confect/access/schema";
-import { Array as Arr } from "effect";
+import { Array as Arr, Option } from "effect";
 import { canOpenRooms } from "@/components/tenant/exams/access";
 import { scopeChoices, unitLanguages } from "@/components/tenant/exams/create";
 
@@ -41,10 +41,13 @@ export type HomeAccess = ReturnType<typeof homeAccess>;
  * since the student's sentence is not theirs.
  */
 export const showsStudentHome = (
-  viewer: { readonly canManage: boolean; readonly role: BuiltinRole | null },
+  viewer: {
+    readonly canManage: boolean;
+    readonly role: Option.Option<BuiltinRole>;
+  },
   access: Pick<HomeAccess, "canCreate" | "canWatch">
 ) =>
-  viewer.role === "student" ||
-  (viewer.role === null &&
-    !viewer.canManage &&
-    !(access.canCreate || access.canWatch));
+  Option.match(viewer.role, {
+    onNone: () => !(viewer.canManage || access.canCreate || access.canWatch),
+    onSome: (role) => role === "student",
+  });

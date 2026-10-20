@@ -1,6 +1,7 @@
 "use client";
 
-import { QueryResult, useQuery } from "@confect/react";
+import type { Ref } from "@confect/core";
+import { QueryResult } from "@confect/react";
 import type { Id } from "@repo/backend/confect/_generated/id";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -15,6 +16,7 @@ import { ExamProvider, useExamZoom } from "@/components/tenant/exams/provider";
 import { ExamToolbar } from "@/components/tenant/exams/toolbar";
 import { ExamUnavailable } from "@/components/tenant/exams/unavailable";
 import { readZoom, writeZoom } from "@/components/tenant/exams/zoom";
+import { usePreloadedQueryResult } from "@/lib/data/preloaded";
 
 /**
  * The editor of one exam, as a design tool lays out its document: a header with the title and the
@@ -26,16 +28,19 @@ import { readZoom, writeZoom } from "@/components/tenant/exams/zoom";
  */
 export function ExamEditor({
   examId,
+  preload,
   slug,
 }: {
   examId: Id<"exams">;
+  preload: Ref.Returns<typeof exams.exams.open> | undefined;
   slug: TenantSlug;
 }) {
   // The exam needs the session, which Convex learns a moment after the page draws.
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const result = useQuery(
+  const result = usePreloadedQueryResult(
     exams.exams.open,
-    isSettled ? { examId, slug } : "skip"
+    isSettled ? { examId, slug } : "skip",
+    preload
   );
 
   if (QueryResult.isFailure(result)) {

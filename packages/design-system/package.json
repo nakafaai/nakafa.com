@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
+    "@fontsource-variable/geist-mono": "5.3.0",
     "@hugeicons/core-free-icons": "catalog:",
     "@hugeicons/react": "catalog:",
     "@mantine/hooks": "catalog:",
@@ -23,6 +24,7 @@
     "@repo/seo": "workspace:*",
     "@repo/utilities": "workspace:*",
     "@shadcn/react": "catalog:",
+    "@shikijs/core": "4.5.0",
     "@shikijs/transformers": "^4.5.0",
     "@tiptap/core": "3.32.0",
     "@tiptap/extension-document": "3.32.0",
@@ -46,7 +48,6 @@
     "country-code-lookup": "^0.2.1",
     "effect": "catalog:",
     "frimousse": "^0.4.0",
-    "geist": "^1.8.1",
     "katex": "^0.19.0",
     "marked": "^18.1.1",
     "marked-tiptap": "npm:marked@^17.0.1",

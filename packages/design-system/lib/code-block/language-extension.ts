@@ -1,5 +1,5 @@
 import { isBundledLanguage } from "@repo/design-system/lib/code-block/language";
-import type { BundledLanguage } from "shiki";
+import type { BundledLanguage } from "shiki/langs";
 
 const LANGUAGE_EXTENSION_OVERRIDES: Partial<Record<BundledLanguage, string>> = {
   "1c-query": "1cq",

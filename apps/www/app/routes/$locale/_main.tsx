@@ -5,7 +5,6 @@ import { createServerFn } from "@tanstack/react-start";
 import { cn } from "cn";
 import { Schema } from "effect";
 import { AppShell } from "@/components/sidebar/shell";
-import { getShellArticleNavigation } from "@/lib/content/article/navigation";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
 const ShellInput = Schema.Struct({ locale: Schema.String });
@@ -13,9 +12,12 @@ const ShellInput = Schema.Struct({ locale: Schema.String });
 /** The article navigation of the shell, read on the server for every learn page. */
 const readShellNavigation = createServerFn({ method: "GET" })
   .validator(Schema.toStandardSchemaV1(ShellInput))
-  .handler(({ data }) =>
-    getShellArticleNavigation(getLocaleOrThrow(data.locale))
-  );
+  .handler(async ({ data }) => {
+    const { getShellArticleNavigation } = await import(
+      "@/lib/content/article/navigation"
+    );
+    return getShellArticleNavigation(getLocaleOrThrow(data.locale));
+  });
 
 /**
  * The student shell that every learn page shares, as the (main) layout of the
