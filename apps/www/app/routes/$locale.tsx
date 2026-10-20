@@ -7,6 +7,7 @@ import {
   localeTimeZone,
 } from "@repo/internationalization/src/locale";
 import { readRequestNow } from "@repo/internationalization/src/translator";
+import { makeEducationalOrganizationNode } from "@repo/seo/json-ld/node";
 import {
   createFileRoute,
   type ErrorComponentProps,
@@ -15,11 +16,9 @@ import {
   useParams,
 } from "@tanstack/react-router";
 import { Option } from "effect";
-import { IntlProvider, useTranslations } from "use-intl";
-import {
-  LocalizedError,
-  LocalizedNotFound,
-} from "@/components/state/localized";
+import { createTranslator, IntlProvider, useTranslations } from "use-intl";
+import { AppNotFound } from "@/components/state/app";
+import { LocalizedError } from "@/components/state/localized";
 import { readRouteMessages } from "@/lib/i18n/messages.fn";
 
 /** The messages that every locale page renders, under every route group. */
@@ -40,12 +39,39 @@ export const Route = createFileRoute("/$locale")({
     },
     stringify: ({ locale }) => ({ locale }),
   },
-  loader: async ({ params }) => ({
-    messages: await readRouteMessages({
-      data: { locale: params.locale, namespaces: SHELL_NAMESPACES },
-    }),
-    now: await readRequestNow(),
-  }),
+  loader: async ({ params }) => {
+    const [messages, metadata, now] = await Promise.all([
+      readRouteMessages({
+        data: { locale: params.locale, namespaces: SHELL_NAMESPACES },
+      }),
+      readRouteMessages({
+        data: { locale: params.locale, namespaces: ["Metadata"] },
+      }),
+      readRequestNow(),
+    ]);
+    const t = createTranslator({
+      locale: params.locale,
+      messages: metadata,
+      namespace: "Metadata",
+    });
+    return {
+      messages,
+      now,
+      organization: { alternateName: t("title"), description: t("description") },
+    };
+  },
+  head: ({ loaderData }) =>
+    loaderData === undefined
+      ? {}
+      : {
+          meta: [
+            {
+              "script:ld+json": makeEducationalOrganizationNode(
+                loaderData.organization
+              ),
+            },
+          ],
+        },
   component: LocaleRoot,
   errorComponent: LocaleError,
   notFoundComponent: LocaleNotFound,
@@ -98,8 +124,8 @@ function LocaleError({ error }: ErrorComponentProps) {
   );
 }
 
-/** Shows the not-found page of a locale, with the links of the locale. */
+/** Shows the not-found page of a locale inside the app, so its links keep the app loaded. */
 function LocaleNotFound() {
   const { locale } = useParams({ from: "/$locale" });
-  return <LocalizedNotFound locale={locale} />;
+  return <AppNotFound locale={locale} />;
 }

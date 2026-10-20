@@ -1,0 +1,34 @@
+import type { Locale } from "@repo/internationalization/src/locale";
+import { Missing } from "@/components/state/missing";
+import { ActionNavigation } from "@/components/state/navigation";
+import { Stage } from "@/components/state/stage";
+import { readStandaloneMessages } from "@/lib/i18n/standalone";
+
+/**
+ * The not-found state of a page inside the app. Its two ways on navigate in the
+ * app, so the app stays loaded, as the reference app's locale not-found does. The
+ * standalone not-found page uses plain anchors instead, so it never loads this
+ * module or the app's navigation.
+ */
+export function AppNotFound({ locale }: { readonly locale: Locale }) {
+  const messages = readStandaloneMessages(locale);
+  return (
+    <Stage>
+      <Missing
+        description={messages.NotFound.description}
+        title={messages.NotFound.title}
+      >
+        <ActionNavigation
+          href="/"
+          label={messages.State["home-button"]}
+          variant="default"
+        />
+        <ActionNavigation
+          href="/search"
+          label={messages.NotFound["search-button"]}
+          variant="ghost"
+        />
+      </Missing>
+    </Stage>
+  );
+}

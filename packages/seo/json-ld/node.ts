@@ -1,6 +1,26 @@
-import { ORGANIZATION } from "@repo/seo/json-ld/constants";
+import { COMPANY_IDENTITY } from "@repo/seo/company";
+import { FOUNDER, ORGANIZATION } from "@repo/seo/json-ld/constants";
 import { Array as Arr, Schema } from "effect";
 import type { ListItem } from "schema-dts";
+
+/** The names of the site's own organization, in the locale of the page that carries it. */
+const EducationalOrganizationInput = Schema.Struct({
+  alternateName: Schema.String,
+  description: Schema.String,
+});
+
+/** The subjects that the educational organization says it knows about. */
+const EDUCATIONAL_SUBJECTS = [
+  "Education",
+  "Mathematics",
+  "Science",
+  "Computer Science",
+  "Artificial Intelligence",
+  "K-12 Education",
+  "University Level Education",
+  "Online Learning",
+  "Educational Technology",
+];
 
 /** One page that a collection lists, with the facts it names. */
 const CollectionItem = Schema.Struct({
@@ -108,5 +128,29 @@ export function makeBookNode(input: typeof BookInput.Type) {
     author: input.author,
     position: input.position,
     numberOfPages: input.totalPages,
+  };
+}
+
+/**
+ * The EducationalOrganization node of the site, which names its founder. It
+ * extends the organization node, so both describe the same `@id`, and every page
+ * of a locale carries it as the reference app's locale layout does.
+ *
+ * @see https://schema.org/EducationalOrganization
+ */
+export function makeEducationalOrganizationNode(
+  input: typeof EducationalOrganizationInput.Type
+) {
+  return {
+    ...ORGANIZATION,
+    "@context": "https://schema.org",
+    "@type": "EducationalOrganization",
+    alternateName: input.alternateName,
+    areaServed: COMPANY_IDENTITY.registeredAddress.country,
+    description: input.description,
+    foundingDate: "2021",
+    founder: FOUNDER,
+    image: COMPANY_IDENTITY.logoUrl,
+    knowsAbout: EDUCATIONAL_SUBJECTS,
   };
 }

@@ -1,10 +1,34 @@
 import { describe, expect, it } from "@effect/vitest";
+import { COMPANY_IDENTITY } from "@repo/seo/company";
+import { FOUNDER, ORGANIZATION_ID } from "@repo/seo/json-ld/constants";
 import {
   makeBookNode,
   makeBreadcrumbNodes,
   makeCollectionPageNode,
+  makeEducationalOrganizationNode,
   makeFaqPageNode,
 } from "@repo/seo/json-ld/node";
+
+describe("makeEducationalOrganizationNode", () => {
+  it("describes the site as an educational organization that names its founder", () => {
+    const node = makeEducationalOrganizationNode({
+      alternateName: "Nakafa",
+      description: "Free learning for every student",
+    });
+
+    expect(node).toMatchObject({
+      "@context": "https://schema.org",
+      "@id": ORGANIZATION_ID,
+      "@type": "EducationalOrganization",
+      alternateName: "Nakafa",
+      areaServed: COMPANY_IDENTITY.registeredAddress.country,
+      description: "Free learning for every student",
+      founder: FOUNDER,
+      image: COMPANY_IDENTITY.logoUrl,
+    });
+    expect(node.knowsAbout).toContain("Mathematics");
+  });
+});
 
 describe("makeBreadcrumbNodes", () => {
   it("returns no node for an empty hierarchy", () => {
