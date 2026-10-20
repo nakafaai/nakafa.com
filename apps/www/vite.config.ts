@@ -6,6 +6,7 @@ import babel from "@rolldown/plugin-babel";
 import tailwindcss from "@tailwindcss/vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import react, { reactCompilerPreset } from "@vitejs/plugin-react";
+import rsc from "@vitejs/plugin-rsc";
 import { nitro } from "nitro/vite";
 import { defineConfig } from "vite";
 
@@ -43,6 +44,10 @@ export default defineConfig({
       srcDirectory: "app",
       importProtection: { behavior: { dev: "error", build: "error" } },
       pages: PRERENDERED_PAGES,
+      // Server Components: content bodies render on the server, and only "use
+      // client" islands ship JavaScript. An island's heavy module loads on
+      // intent, never in the first load of the route.
+      rsc: { enabled: true },
       // Only the listed pages prerender: discovery would add the root route,
       // whose 307 answer depends on the request, and a failed page fails the build.
       prerender: {
@@ -67,6 +72,7 @@ export default defineConfig({
       },
       vercel: { skewProtection: false },
     }),
+    rsc(),
     tailwindcss(),
     react(),
     babel({ presets: [reactCompilerPreset()] }),
