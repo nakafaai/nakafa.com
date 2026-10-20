@@ -35,7 +35,7 @@ const PageNavigationSchema = Schema.Struct({
  * hydration, before any lesson link is scheduled, so each lesson prefetch that
  * follows is predicted as a Page and loads nothing, and opening a lesson shows
  * the marketing layout until the server corrects the route. Opening a Page by
- * navigation teaches the same route later, and Next.js then corrects it on the
+ * navigation teaches the same route later, and the router corrects it on the
  * first runtime prefetch whose route the server contradicts.
  */
 export type PageNavigation = typeof PageNavigationSchema.Type;

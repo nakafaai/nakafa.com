@@ -14,7 +14,7 @@ const PreviewRouteInputSchema = Schema.Struct({
   publicPath: Schema.String,
 });
 type PreviewRouteInput = typeof PreviewRouteInputSchema.Type;
-/** Next-intl rewrite identity visible only on its internal second pass. */
+/** Locale rewrite identity visible only on the internal second pass. */
 const InternalRouteInputSchema = Schema.Struct({
   localeHint: Schema.NullOr(Schema.String),
   pathname: Schema.String,

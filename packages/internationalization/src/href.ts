@@ -18,7 +18,7 @@ export function isInternalHref(href: string) {
 }
 
 /**
- * Normalize one internal href for locale-aware Next.js navigation.
+ * Normalize one internal href for locale-aware navigation.
  *
  * `the locale seam` navigation helpers already prepend the request locale. When a
  * localized internal href like `/id/kurikulum/...` is pushed directly, the locale
