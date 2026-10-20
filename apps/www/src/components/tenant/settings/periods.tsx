@@ -35,8 +35,8 @@ import {
   SchoolPeriodMenu,
   SchoolPeriodRestore,
 } from "@/components/tenant/settings/period";
-import { createPeriodChange } from "@/components/tenant/settings/periods.client";
-import { saveSchool } from "@/components/tenant/settings/save.client";
+import { createPeriodChange } from "@/components/tenant/settings/terms";
+import { saveSchool } from "@/components/tenant/settings/save";
 import {
   SchoolUnitChoice,
   type UnitId,

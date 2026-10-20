@@ -21,9 +21,9 @@ import { Pricing } from "@/components/marketing/about/pricing/landing";
 import { Privacy } from "@/components/marketing/about/privacy";
 import { Schools } from "@/components/marketing/about/schools";
 import { CLASS_HERD } from "@/components/marketing/about/toys/herd";
-import { HomeToys } from "@/components/marketing/about/toys/intent.client";
+import { HomeToys } from "@/components/marketing/about/toys/intent";
 import { Tryout } from "@/components/marketing/about/tryout";
-import { PageField } from "@/components/marketing/shared/field.client";
+import { PageField } from "@/components/marketing/shared/field";
 import {
   getSubjectMenuHref,
   subjectMenu,

@@ -9,7 +9,7 @@ import {
   type CustomItemComponentProps,
   WindowVirtualizer,
 } from "virtua";
-import { useMemoryActions } from "@/components/user/settings/memory/actions.client";
+import { useMemoryActions } from "@/components/user/settings/memory/actions";
 import { MemoryDeleteDialog } from "@/components/user/settings/memory/delete";
 import {
   focusAfterDelete,

@@ -35,7 +35,7 @@ vi.mock("@/lib/auth/client", () => ({
   }),
 }));
 
-vi.mock("@/lib/convex/client.client", async () => {
+vi.mock("@/lib/convex/client", async () => {
   const { ConvexReactClient: Client } = await import("convex/react");
   const client = new Client("https://example.convex.cloud", { logger: false });
   pageModules.readConvexClient.mockReturnValue(client);

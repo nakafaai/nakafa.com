@@ -16,7 +16,7 @@ import { type ComposerKey, textOf } from "@/components/comments/draft";
 import { useCommentDraft } from "@/components/comments/provider";
 import { FeedAvatar, FeedForm } from "@/components/user/feed";
 import { remainingToShow } from "@/components/user/posts/remaining";
-import { useCurrentAuthNavigation } from "@/lib/auth/location.client";
+import { useCurrentAuthNavigation } from "@/lib/auth/location";
 import { useViewer } from "@/lib/identity/client";
 
 /** Props of the composer: whose words it holds, how it posts, and how it closes when it is a reply. */

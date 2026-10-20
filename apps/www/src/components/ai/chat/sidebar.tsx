@@ -40,7 +40,7 @@ import { useTranslations } from "use-intl";
 import {
   type ChatFirstPage,
   useChatList,
-} from "@/components/ai/chat/history.client";
+} from "@/components/ai/chat/chats";
 import { useAi } from "@/components/ai/context";
 import { useConvexAuth } from "@/components/providers/convex";
 import { usePaginatedPreloaded } from "@/lib/data/paginated";

@@ -22,10 +22,10 @@ import { PlayerProvider } from "@/components/player/provider";
 import { PlayerUnanswered } from "@/components/player/unanswered";
 import type { TryoutRuntimeContent } from "@/components/tryout/content/model";
 import { TryoutArticles } from "@/components/tryout/player/articles";
-import type { TryoutFinish } from "@/components/tryout/player/finish.client";
+import type { TryoutFinish } from "@/components/tryout/player/finish";
 import { projectTryoutQuestions } from "@/components/tryout/player/model";
 import { TryoutPlayerTimer } from "@/components/tryout/player/timer";
-import { useTryoutResponseSubmit } from "@/components/tryout/runtime/response/submit.client";
+import { useTryoutResponseSubmit } from "@/components/tryout/runtime/response/submit";
 import type { TryoutSectionRuntime } from "@/components/tryout/runtime/types";
 
 /**

@@ -6,7 +6,7 @@ import { Option } from "effect";
 import { lazy, Suspense, startTransition, useState } from "react";
 import { NinaInput } from "@/components/ai/input";
 import { useLiveSession } from "@/components/providers/live";
-import { useCurrentAuthNavigation } from "@/lib/auth/location.client";
+import { useCurrentAuthNavigation } from "@/lib/auth/location";
 
 /**
  * The signed-in composer's admission and submission code. It loads on the first
@@ -14,7 +14,7 @@ import { useCurrentAuthNavigation } from "@/lib/auth/location.client";
  * a visitor's page never loads it at all.
  */
 const LiveNinaComposer = lazy(() =>
-  import("@/components/marketing/about/nina/live.client").then((loaded) => ({
+  import("@/components/marketing/about/nina/live").then((loaded) => ({
     default: loaded.LiveNinaComposer,
   }))
 );

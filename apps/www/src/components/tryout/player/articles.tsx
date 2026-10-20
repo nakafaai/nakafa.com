@@ -5,11 +5,11 @@ import { type ReactNode, use } from "react";
 import { PlayerQuestion } from "@/components/player/question";
 import { PlayerQuestions } from "@/components/player/questions";
 import type { TryoutRuntimeContent } from "@/components/tryout/content/model";
-import { TryoutContentRefresh } from "@/components/tryout/content/refresh.client";
+import { TryoutContentRefresh } from "@/components/tryout/content/refresh";
 import { joinTryoutBodies } from "@/components/tryout/player/model";
 import { getTryoutQuestionIds } from "@/components/tryout/runtime/question/id";
-import { TryoutQuestionHeader } from "@/components/tryout/runtime/question/shell.client";
-import { TryoutResponse } from "@/components/tryout/runtime/response/input.client";
+import { TryoutQuestionHeader } from "@/components/tryout/runtime/question/shell";
+import { TryoutResponse } from "@/components/tryout/runtime/response/input";
 import type {
   TryoutRuntimeQuestion,
   TryoutSectionRuntime,

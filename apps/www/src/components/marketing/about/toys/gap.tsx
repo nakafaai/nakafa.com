@@ -4,7 +4,7 @@ import { Array as Arr, Match } from "effect";
 import type { ReactNode } from "react";
 import { ToyAnimal } from "@/components/marketing/about/toys/animal";
 import type { TOY_HERD } from "@/components/marketing/about/toys/herd";
-import type { ToyPlacement } from "@/components/marketing/about/toys/layer.client";
+import type { ToyPlacement } from "@/components/marketing/about/toys/layer";
 import { within } from "@/components/marketing/about/toys/place";
 import {
   type GapPicture,

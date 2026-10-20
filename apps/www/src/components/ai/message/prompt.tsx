@@ -11,7 +11,7 @@ import type { FileUIPart } from "ai";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { NinaAttachment } from "@/components/ai/attachment";
-import { NinaWords } from "@/components/ai/message/words.client";
+import { NinaWords } from "@/components/ai/message/words";
 
 /**
  * The same prompt geometry before admission, during navigation and in history,

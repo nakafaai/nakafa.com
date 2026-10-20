@@ -8,8 +8,8 @@ import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Array as Arr, Option } from "effect";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
-import { runSittingCall } from "@/components/exams/sitting/actions.client";
-import { useFinish } from "@/components/exams/sitting/answer.client";
+import { runSittingCall } from "@/components/exams/sitting/actions";
+import { useFinish } from "@/components/exams/sitting/answer";
 import {
   type AttemptValue,
   isActive,
@@ -18,17 +18,17 @@ import {
 } from "@/components/exams/sitting/attempt";
 import { SittingBar } from "@/components/exams/sitting/bar";
 import { serverTime } from "@/components/exams/sitting/clock";
-import { useSittingClock } from "@/components/exams/sitting/clock.client";
+import { useSittingClock } from "@/components/exams/sitting/timer";
 import { sittingFailureMessage } from "@/components/exams/sitting/entry";
 import { SittingFinish } from "@/components/exams/sitting/finish";
-import { SittingFlagProvider } from "@/components/exams/sitting/flags.client";
-import { forgetKeptAttempt } from "@/components/exams/sitting/forget.client";
-import { useResendKeptAnswers } from "@/components/exams/sitting/kept.client";
+import { SittingFlagProvider } from "@/components/exams/sitting/marks";
+import { forgetKeptAttempt } from "@/components/exams/sitting/forget";
+import { useResendKeptAnswers } from "@/components/exams/sitting/kept";
 import { SittingNavigator } from "@/components/exams/sitting/navigator";
 import type { PaperValue } from "@/components/exams/sitting/paper";
 import { SittingQuestion } from "@/components/exams/sitting/question";
 import { SittingRetry } from "@/components/exams/sitting/retry";
-import { useSittingSignals } from "@/components/exams/sitting/signals.client";
+import { useSittingSignals } from "@/components/exams/sitting/signals";
 import { PlayerFooter, PlayerOpener } from "@/components/player/footer";
 import { PlayerMain } from "@/components/player/frame";
 import { PlayerSheet } from "@/components/player/navigator/sheet";

@@ -9,12 +9,12 @@ import type { PlayerMode } from "@/components/player/mode";
 import { useConvexAuth } from "@/components/providers/convex";
 import { ShellLock } from "@/components/sidebar/lock";
 import type { TryoutRuntimeContent } from "@/components/tryout/content/model";
-import { TryoutContentRefresh } from "@/components/tryout/content/refresh.client";
+import { TryoutContentRefresh } from "@/components/tryout/content/refresh";
 import { TryoutPlayer } from "@/components/tryout/player/client";
 import {
   type TryoutFinish,
   useTryoutFinish,
-} from "@/components/tryout/player/finish.client";
+} from "@/components/tryout/player/finish";
 import {
   getTryoutAttemptHref,
   getTryoutHref,
@@ -31,7 +31,7 @@ import type { TryoutSectionRuntime } from "@/components/tryout/runtime/types";
 import {
   type TryoutStartDestination,
   TryoutSummaryAction,
-} from "@/components/tryout/section/action.client";
+} from "@/components/tryout/section/action";
 import { getTryoutFinishedSectionStatus } from "@/components/tryout/section/finished";
 import { TryoutSectionPageHeader } from "@/components/tryout/section/header";
 import type {

@@ -36,7 +36,7 @@ import {
   StartSizeQuestion,
 } from "@/components/tenant/start/choices";
 import { StartContext } from "@/components/tenant/start/context";
-import { useSaveStartAnswer } from "@/components/tenant/start/draft.client";
+import { useSaveStartAnswer } from "@/components/tenant/start/draft";
 import { StartNameQuestion } from "@/components/tenant/start/name";
 import { StartOpening } from "@/components/tenant/start/opening";
 import {

@@ -6,7 +6,7 @@ import { lazyComponent } from "@repo/design-system/lib/lazy";
 import { usePathname } from "@repo/internationalization/src/navigation";
 import type { PropsWithChildren } from "react";
 import { readChatFailureKind } from "@/components/ai/chat/access";
-import { useAnswerRetry } from "@/lib/convex/retry.client";
+import { useAnswerRetry } from "@/lib/convex/requery";
 
 // The failure card holds the sign-in chain, which only a signed-out visitor who
 // cannot read a chat needs. It loads when a card is needed, so the first

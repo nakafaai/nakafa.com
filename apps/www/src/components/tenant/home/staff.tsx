@@ -15,7 +15,7 @@ import { NextTile } from "@/components/tenant/home/next";
 import {
   useHomeExams,
   useHomeSetup,
-} from "@/components/tenant/home/query.client";
+} from "@/components/tenant/home/query";
 import { ResultsTile } from "@/components/tenant/home/results";
 import { SetupTile, useSetupShown } from "@/components/tenant/home/setup";
 import { HomeTitle } from "@/components/tenant/home/title";

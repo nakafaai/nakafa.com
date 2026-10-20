@@ -13,7 +13,7 @@ import { Array as Arr, Effect, Option } from "effect";
 import { useCallback } from "react";
 import type { PendingPicture } from "@/components/tenant/exams/editing";
 import { isLocked } from "@/components/tenant/exams/freeze";
-import { storeExamImage } from "@/components/tenant/exams/image.client";
+import { storeExamImage } from "@/components/tenant/exams/image";
 import {
   queuePictureFile,
   refuseFile,

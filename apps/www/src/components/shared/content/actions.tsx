@@ -32,7 +32,7 @@ import {
   readOpenContentCopySource,
   writeOpenContentCopy,
 } from "@/components/shared/content/copy";
-import { OpenTargetContext } from "@/components/shared/content/target.client";
+import { OpenTargetContext } from "@/components/shared/content/target";
 
 /**
  * Loads the open-in submenu when the actions menu opens. Its brand logos are

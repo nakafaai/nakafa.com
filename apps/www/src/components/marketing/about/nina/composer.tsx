@@ -1,6 +1,6 @@
 "use client";
 
-import { DeferredLearnerText } from "@repo/design-system/components/markdown/learner.client";
+import { DeferredLearnerText } from "@repo/design-system/components/markdown/deferred";
 import { Message } from "@repo/design-system/components/ui/message";
 import { TypingLoader } from "@repo/design-system/components/ui/typing-loader";
 import type { useChatAdmission } from "@/components/ai/chat/admission";

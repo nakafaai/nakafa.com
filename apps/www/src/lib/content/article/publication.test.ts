@@ -73,7 +73,7 @@ vi.mock("@confect/js", async (importOriginal) => {
     },
   };
 });
-vi.mock("@/env.client", () => ({
+vi.mock("@/env.public", () => ({
   clientEnv: { VITE_CONVEX_URL: "https://test.convex.cloud" },
 }));
 vi.mock("@/lib/content/cache", () => ({}));

@@ -14,17 +14,17 @@ import { useAnalyticsConsentStore } from "@/lib/analytics/consent/context";
 
 /** The signed-in consent parts load with the page's Convex island, so a visitor's page never loads them. */
 const IslandConsentControls = lazy(() =>
-  import("@/components/analytics/consent/island.client").then((loaded) => ({
+  import("@/components/analytics/consent/island").then((loaded) => ({
     default: loaded.IslandConsentControls,
   }))
 );
 const IslandConsentFooterItem = lazy(() =>
-  import("@/components/analytics/consent/island.client").then((loaded) => ({
+  import("@/components/analytics/consent/island").then((loaded) => ({
     default: loaded.IslandConsentFooterItem,
   }))
 );
 const IslandConsentEffects = lazy(() =>
-  import("@/components/analytics/consent/island.client").then((loaded) => ({
+  import("@/components/analytics/consent/island").then((loaded) => ({
     default: loaded.IslandConsentEffects,
   }))
 );

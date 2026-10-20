@@ -124,16 +124,15 @@ export default defineConfig({
   },
   plugins: [
     tanstackStart({
-      // Client components render on the server during the RSC pass, so their
-      // `.client` modules belong to the server bundle. The browser keeps its
-      // rule against `.server` modules; the server pass has no `.client` rule.
-      // docs/adr/0036-boundary.md records this exception.
+      // The default rules stay in both passes: the browser rejects `.server`
+      // modules, and the server pass rejects `.client` modules, so a module
+      // that the server imports carries no `.client` suffix. The boundary is
+      // recorded in docs/adr/0036-boundary.md.
       importProtection: {
         behavior: { dev: "error", build: "error" },
         // Node built-ins have no browser build. The default client specifiers
         // stay, and this one adds every `node:` specifier, subpaths included.
         client: { specifiers: [/^node:/] },
-        server: { files: [] },
       },
       pages: PRERENDERED_PAGES,
       // Server Components: content bodies render on the server, and only "use

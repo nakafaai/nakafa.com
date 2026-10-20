@@ -18,7 +18,7 @@ import {
   CirclePlaceholder,
   ProjectilePlaceholder,
 } from "@/components/marketing/about/lesson/placeholder";
-import { LessonWindow } from "@/components/marketing/about/lesson/window.client";
+import { LessonWindow } from "@/components/marketing/about/lesson/window";
 import { NINA_SLOT } from "@/components/marketing/about/toys/slot";
 import {
   FeatureLead,

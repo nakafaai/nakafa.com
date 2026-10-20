@@ -10,7 +10,7 @@ import { toast } from "@repo/design-system/lib/toast/notify";
 import { Effect } from "effect";
 import { useTranslations } from "use-intl";
 import { useDeletion } from "@/components/shared/more";
-import { removeFromLists } from "@/components/user/posts/mutation.client";
+import { removeFromLists } from "@/components/user/posts/mutation";
 import type { ListPost } from "@/components/user/posts/state";
 import { reportClientException } from "@/lib/analytics/client";
 

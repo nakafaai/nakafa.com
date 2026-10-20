@@ -3,15 +3,15 @@
 import { type ReactNode, Suspense } from "react";
 import type { PlayerMode } from "@/components/player/mode";
 import type { TryoutRuntimeContent } from "@/components/tryout/content/model";
-import { TryoutContentRefresh } from "@/components/tryout/content/refresh.client";
+import { TryoutContentRefresh } from "@/components/tryout/content/refresh";
 import { TryoutPlayer } from "@/components/tryout/player/client";
-import type { TryoutFinish } from "@/components/tryout/player/finish.client";
+import type { TryoutFinish } from "@/components/tryout/player/finish";
 import {
   isTryoutRuntimeRunning,
   type TryoutRuntimeState,
 } from "@/components/tryout/runtime/state";
-import { TryoutAttemptResults } from "@/components/tryout/score/history.client";
-import { TryoutSummaryAction } from "@/components/tryout/section/action.client";
+import { TryoutAttemptResults } from "@/components/tryout/score/history";
+import { TryoutSummaryAction } from "@/components/tryout/section/action";
 import { getTryoutFinishedSectionStatus } from "@/components/tryout/section/finished";
 import { TryoutSectionSummary } from "@/components/tryout/section/summary";
 import { TryoutSetPageHeader } from "@/components/tryout/set/header";

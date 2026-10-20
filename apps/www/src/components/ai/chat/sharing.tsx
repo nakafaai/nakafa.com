@@ -24,9 +24,9 @@ import { Array as Arr, Effect } from "effect";
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "use-intl";
 import { shareLink } from "@/components/ai/chat/link";
-import { useUpdateChatVisibilityMutation } from "@/components/ai/chat/mutation.client";
+import { useUpdateChatVisibilityMutation } from "@/components/ai/chat/mutation";
 import { reportClientException } from "@/lib/analytics/client";
-import { useAnswerRetry } from "@/lib/convex/retry.client";
+import { useAnswerRetry } from "@/lib/convex/requery";
 import { isNewLinkFailure } from "@/lib/share/failure";
 
 /**

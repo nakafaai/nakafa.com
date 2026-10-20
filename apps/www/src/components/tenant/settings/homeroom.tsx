@@ -24,12 +24,12 @@ import {
 import {
   assignHomeroomChange,
   unassignHomeroomChange,
-} from "@/components/tenant/settings/cohort.client";
+} from "@/components/tenant/settings/moves";
 import {
   type PersonId,
   SchoolPersonPicker,
 } from "@/components/tenant/settings/people";
-import { saveSchool } from "@/components/tenant/settings/save.client";
+import { saveSchool } from "@/components/tenant/settings/save";
 import type { CohortDetail } from "@/components/tenant/settings/state";
 
 const SOURCE = "components/tenant/settings/homeroom";

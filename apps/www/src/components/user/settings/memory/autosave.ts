@@ -1,5 +1,5 @@
 import { MutableRef, Option } from "effect";
-import type { useMemoryActions } from "@/components/user/settings/memory/actions.client";
+import type { useMemoryActions } from "@/components/user/settings/memory/actions";
 import {
   draftOf,
   isBlank,

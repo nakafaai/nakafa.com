@@ -23,7 +23,7 @@ import {
 import {
   homeExamsRead,
   useStudentSittings,
-} from "@/components/tenant/home/query.client";
+} from "@/components/tenant/home/query";
 import { StaffTiles } from "@/components/tenant/home/staff";
 import { StudentHome } from "@/components/tenant/home/student";
 import { HomeFailure } from "@/components/tenant/home/title";
@@ -31,7 +31,7 @@ import { ReadBoundary } from "@/components/tenant/read/boundary";
 import {
   enterableSitting,
   orderSittings,
-} from "@/components/tenant/sittings.client";
+} from "@/components/tenant/sittings";
 
 /**
  * The home of a school: one header with the page's one end-goal action for the viewer, a title row with Nina, and

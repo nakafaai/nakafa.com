@@ -35,9 +35,9 @@ import {
 } from "@/components/shared/card/section";
 import { useViewerQuery } from "@/components/tenant/context";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
-import { setPolicyChange } from "@/components/tenant/settings/mutation.client";
+import { setPolicyChange } from "@/components/tenant/settings/mutation";
 import { SettingsPage } from "@/components/tenant/settings/page";
-import { saveSchool } from "@/components/tenant/settings/save.client";
+import { saveSchool } from "@/components/tenant/settings/save";
 import { SchoolTrailAction } from "@/components/tenant/settings/trail";
 
 const SOURCE = "components/tenant/settings/policies";

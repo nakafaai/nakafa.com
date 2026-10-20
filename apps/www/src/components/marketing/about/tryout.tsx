@@ -3,7 +3,7 @@ import {
   TryoutDemo,
   TryoutDemoNina,
   TryoutDemoQuestion,
-} from "@/components/marketing/about/tryout/demo.client";
+} from "@/components/marketing/about/tryout/demo";
 import {
   FeatureCard,
   FeatureLead,

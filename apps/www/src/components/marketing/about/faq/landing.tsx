@@ -1,5 +1,5 @@
 import { useTranslations } from "use-intl";
-import { FaqAccordion } from "@/components/marketing/about/faq/accordion.client";
+import { FaqAccordion } from "@/components/marketing/about/faq/accordion";
 import { MarketingSection } from "@/components/marketing/shared/section";
 import type { MarketingFaqItem } from "@/lib/marketing/faq";
 

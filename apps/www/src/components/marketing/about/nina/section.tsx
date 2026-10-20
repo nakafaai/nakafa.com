@@ -22,7 +22,7 @@ import {
   TurnAsk,
   TurnPlayer,
   TurnReveal,
-} from "@/components/marketing/about/turn.client";
+} from "@/components/marketing/about/turn";
 import {
   FeatureCard,
   FeatureLead,

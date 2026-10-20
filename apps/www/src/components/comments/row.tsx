@@ -8,7 +8,7 @@ import {
 import comments from "@repo/backend/confect/_generated/refs/comments";
 import { photoOf } from "@repo/backend/confect/users/picture";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
-import { DeferredLearnerText } from "@repo/design-system/components/markdown/learner.client";
+import { DeferredLearnerText } from "@repo/design-system/components/markdown/deferred";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { lazyComponent } from "@repo/design-system/lib/lazy";
@@ -19,7 +19,7 @@ import { useLocale, useTranslations } from "use-intl";
 import {
   likeInLists,
   unlikeInLists,
-} from "@/components/comments/mutation.client";
+} from "@/components/comments/mutation";
 import {
   useCommentDraft,
   useCommentsNow,

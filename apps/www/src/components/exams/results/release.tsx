@@ -9,7 +9,7 @@ import { Clock, Effect, Option } from "effect";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { useResultsScope } from "@/components/exams/results/context";
-import { runSittingCall } from "@/components/exams/sitting/actions.client";
+import { runSittingCall } from "@/components/exams/sitting/actions";
 import { ConfirmActions } from "@/components/exams/sitting/dialogs";
 import {
   CardSection,

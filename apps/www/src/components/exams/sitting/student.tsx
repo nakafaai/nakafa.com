@@ -30,7 +30,7 @@ import { useLocale, useTranslations } from "use-intl";
 import {
   type Admission,
   useEnterSitting,
-} from "@/components/exams/sitting/admit.client";
+} from "@/components/exams/sitting/admit";
 import { isActive, takesAnswers } from "@/components/exams/sitting/attempt";
 import { SittingBar } from "@/components/exams/sitting/bar";
 import { readSittingDevice } from "@/components/exams/sitting/device";

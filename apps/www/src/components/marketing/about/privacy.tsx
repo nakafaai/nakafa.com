@@ -1,5 +1,5 @@
 import { useTranslations } from "use-intl";
-import { PrivacyRoom } from "@/components/marketing/about/privacy/room.client";
+import { PrivacyRoom } from "@/components/marketing/about/privacy/room";
 import { MarketingSection } from "@/components/marketing/shared/section";
 
 /**

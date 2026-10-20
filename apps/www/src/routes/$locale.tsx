@@ -1,6 +1,6 @@
 import { DesignSystemProvider } from "@repo/design-system";
 import { TailwindIndicator } from "@repo/design-system/components/ui/tailwind-indicator";
-import { ToasterHost } from "@repo/design-system/components/ui/toaster.client";
+import { ToasterHost } from "@repo/design-system/components/ui/toaster";
 import { textDirection } from "@repo/internationalization/src/direction";
 import {
   DEFAULT_LOCALE,

@@ -10,7 +10,7 @@ import {
   Struct,
 } from "effect";
 
-import type { TryoutResponseFieldsProps } from "@/components/tryout/runtime/response/fields.client";
+import type { TryoutResponseFieldsProps } from "@/components/tryout/runtime/response/fields";
 import type {
   TryoutRuntimeQuestion,
   TryoutSectionRuntime,

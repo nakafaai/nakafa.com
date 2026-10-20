@@ -41,7 +41,7 @@ import {
   clearDeletedAccountBrowserIdentity,
   signOutAccountBrowserIdentity,
 } from "@/lib/auth/identity/browser";
-import { useCurrentAuthNavigation } from "@/lib/auth/location.client";
+import { useCurrentAuthNavigation } from "@/lib/auth/location";
 import { httpLayer } from "@/lib/convex/http";
 import { requireConvexOnline } from "@/lib/convex/online";
 

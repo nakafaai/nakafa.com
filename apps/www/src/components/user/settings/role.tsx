@@ -23,7 +23,7 @@ import { Array as Arr, Effect, Option, Schema } from "effect";
 import { useRef } from "react";
 import { useTranslations } from "use-intl";
 import { CardSection } from "@/components/shared/card/section";
-import { useUpdateUserRoleMutation } from "@/components/user/mutation.client";
+import { useUpdateUserRoleMutation } from "@/components/user/mutation";
 import { SettingsFormFooter } from "@/components/user/settings/save";
 import { reportClientException } from "@/lib/analytics/client";
 import { roles } from "@/lib/data/roles";

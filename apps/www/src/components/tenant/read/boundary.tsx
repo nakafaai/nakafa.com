@@ -8,7 +8,7 @@ import { useTranslations } from "use-intl";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import { isDenied, isLostAccess } from "@/components/tenant/refusal";
-import { useAnswerRetry } from "@/lib/convex/retry.client";
+import { useAnswerRetry } from "@/lib/convex/requery";
 
 /** The query that a boundary reads again when its Try again runs, and the args that read it. */
 interface TenantRead<Query extends Ref.AnyPublicQuery> {

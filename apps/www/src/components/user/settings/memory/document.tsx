@@ -18,7 +18,7 @@ import { toast } from "@repo/design-system/lib/toast/notify";
 import { type Option, String as Str } from "effect";
 import { type ComponentProps, Suspense, use, useRef, useState } from "react";
 import { useTranslations } from "use-intl";
-import { useAutosave } from "@/components/user/settings/memory/autosave.client";
+import { useAutosave } from "@/components/user/settings/memory/saving";
 import { MemoryDeleteDialog } from "@/components/user/settings/memory/delete";
 import {
   MemoryEnds,

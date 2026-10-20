@@ -5,7 +5,7 @@ import {
 } from "@tanstack/react-start";
 import { Effect, Option } from "effect";
 import { FetchHttpClient } from "effect/http";
-import { clientEnv } from "@/env.client";
+import { clientEnv } from "@/env.public";
 import { hintCookieFor, hintScopeFor, isHintCurrent } from "@/lib/auth/hint";
 import { pinServerFunctionUrl } from "@/lib/deployment/pin";
 import { pricingCurrencyCookieFor } from "@/lib/pricing/currency";

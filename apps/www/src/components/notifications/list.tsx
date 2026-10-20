@@ -6,7 +6,7 @@ import { useTranslations } from "use-intl";
 import {
   type InboxFirstPage,
   useInbox,
-} from "@/components/notifications/inbox.client";
+} from "@/components/notifications/inbox";
 import { NotificationRow } from "@/components/notifications/row";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";

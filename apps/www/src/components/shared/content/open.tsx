@@ -12,7 +12,7 @@ import { Link } from "@repo/internationalization/src/navigation";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
-import { useOpenTarget } from "@/components/shared/content/target.client";
+import { useOpenTarget } from "@/components/shared/content/target";
 
 /**
  * Lists where a reader can open one content page: its source and three

@@ -3,7 +3,7 @@
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { lazyComponent } from "@repo/design-system/lib/lazy";
 import { useState } from "react";
-import { CommentsSlugContext } from "@/components/comments/slug.client";
+import { CommentsSlugContext } from "@/components/comments/slug";
 
 const LazyComments = lazyComponent(
   () => import("@/components/comments").then((module) => module.Comments),

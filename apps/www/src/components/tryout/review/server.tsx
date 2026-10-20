@@ -5,7 +5,7 @@ import type { Locale } from "@repo/internationalization/src/locale";
 import { Array as Arr, Effect } from "effect";
 import { NinaAskProvider } from "@/components/ai/ask";
 import type { SignedContentAccess } from "@/components/tryout/content/model";
-import { TryoutContentRefresh } from "@/components/tryout/content/refresh.client";
+import { TryoutContentRefresh } from "@/components/tryout/content/refresh";
 import { loadSignedTryoutContent } from "@/components/tryout/content/signed";
 import { TryoutAskButton } from "@/components/tryout/review/ask";
 import { TryoutReviewLocked } from "@/components/tryout/review/locked";
@@ -13,7 +13,7 @@ import { projectTryoutReview } from "@/components/tryout/review/model";
 import {
   TryoutReviewQuestionExplanation,
   TryoutReviewQuestionShell,
-} from "@/components/tryout/runtime/question/shell.client";
+} from "@/components/tryout/runtime/question/shell";
 import { TryoutReviewedResponse } from "@/components/tryout/runtime/response/review";
 import type { TryoutSectionRuntime } from "@/components/tryout/runtime/types";
 

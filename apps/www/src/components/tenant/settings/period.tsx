@@ -29,8 +29,8 @@ import {
   openPeriodChange,
   renamePeriodChange,
   restorePeriodChange,
-} from "@/components/tenant/settings/periods.client";
-import { saveSchool } from "@/components/tenant/settings/save.client";
+} from "@/components/tenant/settings/terms";
+import { saveSchool } from "@/components/tenant/settings/save";
 import { isDraft, type Period } from "@/components/tenant/settings/state";
 
 const SOURCE = "components/tenant/settings/period";

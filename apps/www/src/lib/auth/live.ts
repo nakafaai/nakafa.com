@@ -82,7 +82,7 @@ const liveSessionModules: LiveSessionModules = {
       readSessionAtom: () => loaded.readAuthClient().$store.atoms.session,
     }))
   ),
-  convex: loadPageModule(() => import("@/lib/convex/client.client")),
+  convex: loadPageModule(() => import("@/lib/convex/client")),
 };
 
 /**

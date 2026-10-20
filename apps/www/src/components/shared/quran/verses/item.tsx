@@ -1,6 +1,6 @@
 import { cn } from "cn";
 import type { ReactNode } from "react";
-import { useQuranVerseRow } from "@/components/shared/quran/verses/row.client";
+import { useQuranVerseRow } from "@/components/shared/quran/verses/row";
 
 /** Frames one Quran verse, so every verse keeps the same spacing and rule. */
 export function QuranVerse({

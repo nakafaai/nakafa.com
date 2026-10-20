@@ -13,8 +13,8 @@ import { Schema } from "effect";
 import { useTransition } from "react";
 import { createPortal } from "react-dom";
 import { useTranslations } from "use-intl";
-import { cardQr } from "@/components/tenant/settings/card.client";
-import { saveSchool } from "@/components/tenant/settings/save.client";
+import { cardQr } from "@/components/tenant/settings/qr";
+import { saveSchool } from "@/components/tenant/settings/save";
 import { SchoolDateTime } from "@/components/tenant/settings/time";
 import { schoolOrigin } from "@/lib/routing/school/host";
 

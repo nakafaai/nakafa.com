@@ -7,7 +7,7 @@ import {
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
 import { useTranslations } from "use-intl";
-import { useAnalyticsConsent } from "@/lib/analytics/consent/account.client";
+import { useAnalyticsConsent } from "@/lib/analytics/consent/facts";
 
 /** Keeps privacy preferences reachable for signed-out sidebar visitors. */
 export function AnalyticsConsentSidebarItem() {

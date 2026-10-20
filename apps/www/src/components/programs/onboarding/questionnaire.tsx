@@ -22,7 +22,7 @@ import { useState, useTransition } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { OnboardingOption } from "@/components/programs/onboarding/choice";
 import { getOnboardingDestination } from "@/components/programs/onboarding/destination";
-import { useSaveOnboardingAnswerMutation } from "@/components/programs/onboarding/mutation.client";
+import { useSaveOnboardingAnswerMutation } from "@/components/programs/onboarding/mutation";
 import {
   focusOptions,
   isOnboardingItemName,

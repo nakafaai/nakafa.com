@@ -8,7 +8,7 @@ import {
   createCommentDraft,
 } from "@/components/comments/draft";
 import type { AgeClock } from "@/components/user/clock";
-import { useAgeClock, useAgeNow } from "@/components/user/clock.client";
+import { useAgeClock, useAgeNow } from "@/components/user/ages";
 
 const ClockContext = createContext<StoreApi<AgeClock> | null>(null);
 const DraftContext = createContext<StoreApi<CommentDraft> | null>(null);

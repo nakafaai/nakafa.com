@@ -17,7 +17,7 @@ import {
   CardSection,
   CardSectionFooter,
 } from "@/components/shared/card/section";
-import { useUpdateBioMutation } from "@/components/user/mutation.client";
+import { useUpdateBioMutation } from "@/components/user/mutation";
 import { SettingsSave } from "@/components/user/settings/save";
 import { reportClientException } from "@/lib/analytics/client";
 import type { CurrentUser } from "@/lib/identity/client";

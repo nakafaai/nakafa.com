@@ -3,7 +3,7 @@
 import type { HomeView } from "@repo/backend/confect/exams/home/contract";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
-import { useSittingClock } from "@/components/exams/sitting/clock.client";
+import { useSittingClock } from "@/components/exams/sitting/timer";
 import { CardLink, CardLinks } from "@/components/shared/card/link";
 import { useTenant } from "@/components/tenant/context";
 import { minutesLeft } from "@/components/tenant/home/left";

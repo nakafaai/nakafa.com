@@ -1,7 +1,7 @@
 "use client";
 
 import { PencilEdit02Icon } from "@hugeicons/core-free-icons";
-import { DeferredLearnerText } from "@repo/design-system/components/markdown/learner.client";
+import { DeferredLearnerText } from "@repo/design-system/components/markdown/deferred";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";

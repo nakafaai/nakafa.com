@@ -14,7 +14,7 @@ import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-d
 import { startTransition, useId, useState } from "react";
 import { useTranslations } from "use-intl";
 import type { CardView } from "@/components/tenant/settings/card";
-import { saveSchool } from "@/components/tenant/settings/save.client";
+import { saveSchool } from "@/components/tenant/settings/save";
 
 const SOURCE = "components/tenant/settings/issue";
 

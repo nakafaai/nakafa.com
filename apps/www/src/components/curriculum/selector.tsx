@@ -21,7 +21,7 @@ import { useConvexAuth } from "@/components/providers/convex";
 import { CountryFlagIcon } from "@/components/shared/flag";
 import { reportClientException } from "@/lib/analytics/client";
 import type { readRuntimeCurriculumOptions } from "@/lib/curriculum/model";
-import { useSetPreferredCurriculumMutation } from "@/lib/curriculum/mutation.client";
+import { useSetPreferredCurriculumMutation } from "@/lib/curriculum/mutation";
 import { isActiveLocale } from "@/lib/i18n/active";
 
 type CurriculumSelectorOption = ReturnType<

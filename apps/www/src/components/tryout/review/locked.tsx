@@ -24,11 +24,11 @@ import {
 import type { SignedContentAccess } from "@/components/tryout/content/model";
 import { loadSignedTryoutContent } from "@/components/tryout/content/signed";
 import { projectTryoutReview } from "@/components/tryout/review/model";
-import { TryoutReviewCheckout } from "@/components/tryout/review/upgrade.client";
+import { TryoutReviewCheckout } from "@/components/tryout/review/upgrade";
 import {
   TryoutLockedQuestionShell,
   TryoutReviewQuestionExplanation,
-} from "@/components/tryout/runtime/question/shell.client";
+} from "@/components/tryout/runtime/question/shell";
 import { TryoutReviewedResponse } from "@/components/tryout/runtime/response/review";
 import type { TryoutSectionRuntime } from "@/components/tryout/runtime/types";
 

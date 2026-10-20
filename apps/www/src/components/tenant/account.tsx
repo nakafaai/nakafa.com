@@ -28,7 +28,7 @@ import { ActiveBadge } from "@/components/shared/active";
 import { CountryFlagIcon } from "@/components/shared/flag";
 import { SidebarThemeSubmenu } from "@/components/sidebar/menu/preference";
 import { useTenant } from "@/components/tenant/context";
-import { changeSchoolLanguage } from "@/components/tenant/language.client";
+import { changeSchoolLanguage } from "@/components/tenant/locale";
 import { profileHref } from "@/lib/profile/href";
 
 /**

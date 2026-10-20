@@ -1,8 +1,8 @@
 "use client";
 
 import { TryoutCountdown } from "@/components/tryout/runtime/countdown";
-import { TryoutAttemptResults } from "@/components/tryout/score/history.client";
-import { TryoutSetAction } from "@/components/tryout/set/action.client";
+import { TryoutAttemptResults } from "@/components/tryout/score/history";
+import { TryoutSetAction } from "@/components/tryout/set/action";
 import { TryoutSetPageHeader } from "@/components/tryout/set/header";
 import type {
   CurrentAttempt,
@@ -11,7 +11,7 @@ import type {
   TryoutSetDestination,
   TryoutSetRoute,
 } from "@/components/tryout/set/model";
-import { TryoutSectionRows } from "@/components/tryout/set/rows.client";
+import { TryoutSectionRows } from "@/components/tryout/set/rows";
 import { TryoutPage, TryoutPageBody } from "@/components/tryout/shell/header";
 
 /** Props of the set overview: one cohesive render model shared by its surfaces. */

@@ -30,7 +30,7 @@ import {
 import {
   useUpdateMascotMutation,
   useUpdatePictureMutation,
-} from "@/components/user/mutation.client";
+} from "@/components/user/mutation";
 import { reportClientException } from "@/lib/analytics/client";
 import type { CurrentUser } from "@/lib/identity/client";
 

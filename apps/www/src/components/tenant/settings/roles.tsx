@@ -65,13 +65,13 @@ import { RoleBadge } from "@/components/tenant/role";
 import {
   assignGrantChange,
   revokeGrantChange,
-} from "@/components/tenant/settings/mutation.client";
+} from "@/components/tenant/settings/mutation";
 import { SettingsPage } from "@/components/tenant/settings/page";
 import {
   type PersonId,
   SchoolPersonPicker,
 } from "@/components/tenant/settings/people";
-import { saveSchool } from "@/components/tenant/settings/save.client";
+import { saveSchool } from "@/components/tenant/settings/save";
 import { scopeNameOf } from "@/components/tenant/settings/scope";
 import { isDraft } from "@/components/tenant/settings/state";
 import {

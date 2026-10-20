@@ -1,7 +1,7 @@
 import { HttpClient } from "@confect/js";
 import auth from "@repo/backend/confect/_generated/refs/auth";
 import { Array as Arr, Effect, Option } from "effect";
-import { clientEnv } from "@/env.client";
+import { clientEnv } from "@/env.public";
 import { readSessionToken } from "@/lib/auth/token";
 import { httpLayer } from "@/lib/convex/http";
 import { profileHref } from "@/lib/profile/href";

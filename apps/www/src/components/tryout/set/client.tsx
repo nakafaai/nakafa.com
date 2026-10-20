@@ -13,7 +13,7 @@ import type { TryoutRuntimeContent } from "@/components/tryout/content/model";
 import {
   type TryoutFinish,
   useTryoutFinish,
-} from "@/components/tryout/player/finish.client";
+} from "@/components/tryout/player/finish";
 import { selectTryoutSetLinks } from "@/components/tryout/route/owner";
 import {
   getTryoutAttemptHref,

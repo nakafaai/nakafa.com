@@ -9,7 +9,7 @@ import {
   withoutHidden,
 } from "@/components/user/settings/memory/list";
 import type { MemoryReading } from "@/components/user/settings/memory/reading";
-import { useMemoryReading } from "@/components/user/settings/memory/reading.client";
+import { useMemoryReading } from "@/components/user/settings/memory/recall";
 import {
   createMemoryStore,
   type MemoryStore,

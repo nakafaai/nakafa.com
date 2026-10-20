@@ -9,12 +9,12 @@ import { type MouseEvent, type ReactNode, use } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { NotificationsClockContext } from "@/components/notifications/clock";
 import { pageOf } from "@/components/notifications/destination";
-import { markReadInLists } from "@/components/notifications/mutation.client";
+import { markReadInLists } from "@/components/notifications/mutation";
 import { navigationOf } from "@/components/notifications/press";
 import type { ListNotification } from "@/components/notifications/state";
 import { SchoolMark } from "@/components/tenant/mark";
 import { formatShortAge } from "@/components/user/age";
-import { useAgeNow } from "@/components/user/clock.client";
+import { useAgeNow } from "@/components/user/ages";
 import {
   FeedAge,
   FeedBody,

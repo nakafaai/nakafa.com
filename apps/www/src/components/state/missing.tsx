@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { DeferredFigure } from "@/components/state/figure.client";
+import { DeferredFigure } from "@/components/state/mascot";
 import { Screen } from "@/components/state/screen";
 
 interface MissingProps {

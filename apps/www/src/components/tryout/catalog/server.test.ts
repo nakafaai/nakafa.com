@@ -89,7 +89,7 @@ vi.mock("@/lib/content/cache", () => ({}));
 vi.mock("@tanstack/react-start/rsc", () => ({
   renderServerComponent: (node: unknown) => Promise.resolve(node),
 }));
-vi.mock("@/env.client", () => ({
+vi.mock("@/env.public", () => ({
   clientEnv: { VITE_CONVEX_URL: "https://test.convex.cloud" },
 }));
 vi.mock("@/env", () => ({

@@ -7,9 +7,9 @@ import {
   TryoutActiveQuestionShell,
   TryoutReviewQuestionExplanation,
   TryoutReviewQuestionShell,
-} from "@/components/tryout/runtime/question/shell.client";
+} from "@/components/tryout/runtime/question/shell";
 import { renderTryoutResponseLabels } from "@/components/tryout/runtime/response/labels";
-import { TryoutResponsePreview } from "@/components/tryout/runtime/response/preview.client";
+import { TryoutResponsePreview } from "@/components/tryout/runtime/response/echo";
 import { TryoutReviewedResponse } from "@/components/tryout/runtime/response/review";
 import type { TryoutResponseSelection } from "@/components/tryout/runtime/response/state";
 import {

@@ -14,7 +14,7 @@ import {
   LiveSessionContext,
   useLiveSession,
 } from "@/components/providers/live";
-import { clientEnv } from "@/env.client";
+import { clientEnv } from "@/env.public";
 import { ConvexAuthContext } from "@/lib/auth/convex";
 import { createLiveSessionStore, startLiveSession } from "@/lib/auth/live";
 import { PageNavigationProvider } from "@/lib/content/page/context";
@@ -22,7 +22,7 @@ import type { PageNavigation } from "@/lib/content/page/navigation";
 
 /** The Convex credentials load with the page's client, so a visitor's page never loads them. */
 const LiveCredentials = lazy(() =>
-  import("@/components/providers/live.client").then((loaded) => ({
+  import("@/components/providers/credentials").then((loaded) => ({
     default: loaded.LiveCredentials,
   }))
 );

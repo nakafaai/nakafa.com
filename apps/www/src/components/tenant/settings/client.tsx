@@ -34,7 +34,7 @@ import {
   IntegrationAction,
   toggleAction,
 } from "@/components/tenant/settings/actions";
-import { saveSchool } from "@/components/tenant/settings/save.client";
+import { saveSchool } from "@/components/tenant/settings/save";
 
 const SOURCE = "components/tenant/settings/client";
 

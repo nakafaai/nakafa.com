@@ -8,7 +8,7 @@ import { type Choice, toggleOption } from "@/components/exams/sitting/response";
 import {
   TryoutSelectableMultipleChoice,
   TryoutSelectableRadioOption,
-} from "@/components/tryout/runtime/choice/surface.client";
+} from "@/components/tryout/runtime/choice/surface";
 
 /**
  * The options of one choice, read from the paper. A single choice is a radio group, and a

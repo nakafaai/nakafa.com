@@ -2,7 +2,7 @@ import { Card, CardContent } from "@repo/design-system/components/ui/card";
 import { Nina } from "@repo/design-system/components/ui/nina";
 import { cva } from "class-variance-authority";
 import { useTranslations } from "use-intl";
-import { LetterSheet } from "@/components/marketing/about/letter/sheet.client";
+import { LetterSheet } from "@/components/marketing/about/letter/sheet";
 import { Signature } from "@/components/marketing/about/letter/signature";
 import { MarketingSection } from "@/components/marketing/shared/section";
 

@@ -54,13 +54,13 @@ import {
   archiveCohortChange,
   renameCohortChange,
   restoreCohortChange,
-} from "@/components/tenant/settings/cohorts.client";
+} from "@/components/tenant/settings/groups";
 import { SchoolHomeroomCard } from "@/components/tenant/settings/homeroom";
 import {
   SchoolPlacementAdd,
   SchoolPlacementMove,
 } from "@/components/tenant/settings/placement";
-import { saveSchool } from "@/components/tenant/settings/save.client";
+import { saveSchool } from "@/components/tenant/settings/save";
 import {
   type Cohort,
   type CohortDetail,

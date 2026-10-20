@@ -11,7 +11,7 @@ const mocks = vi.hoisted(() => ({
   writeStoreEntry: vi.fn(),
 }));
 
-vi.mock("@/env.client", () => ({
+vi.mock("@/env.public", () => ({
   clientEnv: { VITE_CONVEX_URL: "https://test.convex.cloud" },
 }));
 

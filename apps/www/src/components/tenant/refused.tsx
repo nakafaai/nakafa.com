@@ -3,7 +3,7 @@
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { useLocale, useTranslations } from "use-intl";
 import { ActionLink } from "@/components/state/action";
-import { DeferredFigure } from "@/components/state/figure.client";
+import { DeferredFigure } from "@/components/state/mascot";
 import { Screen } from "@/components/state/screen";
 
 /**

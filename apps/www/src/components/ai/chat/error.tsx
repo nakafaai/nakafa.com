@@ -12,14 +12,14 @@ import { MessageScrollerItem } from "@repo/design-system/components/ui/scroller"
 import { useTranslations } from "use-intl";
 import { readStopFailure } from "@/components/ai/chat/cancel";
 import { useChat } from "@/components/ai/chat/context";
-import { useChatStore } from "@/components/ai/chat/store.client";
+import { useChatStore } from "@/components/ai/chat/store";
 import {
   ninaFailureFeedback,
   ninaFailureLimits,
   ninaResponseFeedback,
 } from "@/components/ai/feedback";
 import { useMessage } from "@/components/ai/message/context";
-import { useCurrentAuthNavigation } from "@/lib/auth/location.client";
+import { useCurrentAuthNavigation } from "@/lib/auth/location";
 
 /** Read the turn attached to this message, including older failed responses. */
 export function AiChatPersistedError() {

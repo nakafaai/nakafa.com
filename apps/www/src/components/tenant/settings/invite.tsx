@@ -34,9 +34,9 @@ import { Array as Arr, Option, Schema } from "effect";
 import { useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useViewerQuery } from "@/components/tenant/context";
-import { addMemberChange } from "@/components/tenant/settings/members.client";
+import { addMemberChange } from "@/components/tenant/settings/accounts";
 import { cardOffered } from "@/components/tenant/settings/offer";
-import { saveSchool } from "@/components/tenant/settings/save.client";
+import { saveSchool } from "@/components/tenant/settings/save";
 
 const SOURCE = "components/tenant/settings/invite";
 

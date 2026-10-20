@@ -6,7 +6,7 @@ import { LayoutContent } from "@/components/shared/content/layout";
 import { RefContent } from "@/components/shared/content/references";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/layout";
-import { TryoutHubClient } from "@/components/tryout/catalog/hub.client";
+import { TryoutHubClient } from "@/components/tryout/catalog/hub";
 import { readTryoutHubFn } from "@/components/tryout/route/catalog.fn";
 import { createTryoutHead } from "@/components/tryout/route/head";
 import { readTryoutCatalogHeaders } from "@/components/tryout/route/headers";

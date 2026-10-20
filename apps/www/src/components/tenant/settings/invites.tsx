@@ -44,10 +44,10 @@ import {
 } from "@/components/tenant/settings/card";
 import { SchoolInviteDialog } from "@/components/tenant/settings/invite";
 import { SchoolIssueCardDialog } from "@/components/tenant/settings/issue";
-import { revokeInviteChange } from "@/components/tenant/settings/mutation.client";
+import { revokeInviteChange } from "@/components/tenant/settings/mutation";
 import { cardOffered } from "@/components/tenant/settings/offer";
 import { SettingsPage } from "@/components/tenant/settings/page";
-import { saveSchool } from "@/components/tenant/settings/save.client";
+import { saveSchool } from "@/components/tenant/settings/save";
 import { isDraft } from "@/components/tenant/settings/state";
 import { SchoolDateTime } from "@/components/tenant/settings/time";
 import {

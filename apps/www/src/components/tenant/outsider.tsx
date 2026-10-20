@@ -1,6 +1,6 @@
 import type { Mascot } from "@repo/mascot/code";
 import { useTranslations } from "use-intl";
-import { EntryShellArtwork } from "@/components/entry/artwork.client";
+import { EntryShellArtwork } from "@/components/entry/artwork";
 import {
   EntryShell,
   EntryShellBody,
@@ -9,7 +9,7 @@ import {
 } from "@/components/entry/shell";
 import { ThemePicker } from "@/components/shared/theme/picker";
 import { SchoolMark } from "@/components/tenant/mark";
-import { TenantOutsiderActions } from "@/components/tenant/outsider.client";
+import { TenantOutsiderActions } from "@/components/tenant/leave";
 
 /**
  * The page of a signed-in visitor who is not a member of the school. It names the account,

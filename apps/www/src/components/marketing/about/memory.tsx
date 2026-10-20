@@ -1,5 +1,5 @@
 import { useTranslations } from "use-intl";
-import { MemoryDesk } from "@/components/marketing/about/memory/desk.client";
+import { MemoryDesk } from "@/components/marketing/about/memory/desk";
 import { MarketingSection } from "@/components/marketing/shared/section";
 
 /**

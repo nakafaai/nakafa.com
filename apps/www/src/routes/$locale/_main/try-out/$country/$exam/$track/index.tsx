@@ -8,8 +8,8 @@ import { Schema } from "effect";
 import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/layout";
-import { TryoutExamSelector } from "@/components/tryout/catalog/selector.client";
-import { TryoutSetTable } from "@/components/tryout/catalog/table/table.client";
+import { TryoutExamSelector } from "@/components/tryout/catalog/selector";
+import { TryoutSetTable } from "@/components/tryout/catalog/table/table";
 import {
   readTryoutTrackFn,
   readTryoutTrackListFn,

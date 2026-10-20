@@ -30,7 +30,7 @@ import { CardSection } from "@/components/shared/card/section";
 import { CountryFlagIcon } from "@/components/shared/flag";
 import { SettingsFormFooter } from "@/components/user/settings/save";
 import { reportClientException } from "@/lib/analytics/client";
-import { useSetPreferredCurriculumMutation } from "@/lib/curriculum/mutation.client";
+import { useSetPreferredCurriculumMutation } from "@/lib/curriculum/mutation";
 import { isActiveLocale } from "@/lib/i18n/active";
 
 type CurriculumPrograms = Ref.Returns<

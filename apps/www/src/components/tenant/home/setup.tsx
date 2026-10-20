@@ -8,7 +8,7 @@ import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import {
   homeSetupRead,
   useHomeSetup,
-} from "@/components/tenant/home/query.client";
+} from "@/components/tenant/home/query";
 import { missingSteps, type SetupStep } from "@/components/tenant/home/steps";
 import { HomeTile, RowText, TILE_ROWS } from "@/components/tenant/home/tile";
 import { ReadBoundary } from "@/components/tenant/read/boundary";

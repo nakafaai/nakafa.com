@@ -10,9 +10,9 @@ import { useRouter } from "@repo/internationalization/src/navigation";
 import { useConvex } from "convex/react";
 import { Effect } from "effect";
 import { useTranslations } from "use-intl";
-import { deleteOnPress } from "@/components/ai/chat/deletion.client";
-import { useDeleteChatMutation } from "@/components/ai/chat/mutation.client";
-import { useChatStore } from "@/components/ai/chat/store.client";
+import { deleteOnPress } from "@/components/ai/chat/press";
+import { useDeleteChatMutation } from "@/components/ai/chat/mutation";
+import { useChatStore } from "@/components/ai/chat/store";
 import { useViewer } from "@/lib/identity/client";
 import { ownChatsHref } from "@/lib/profile/href";
 

@@ -5,7 +5,7 @@ import type { StudentSittingRow } from "@repo/backend/confect/exams/sittings/con
 import { Array as Arr, Option } from "effect";
 import { type ReactNode, useEffect } from "react";
 import { useLocale, useTranslations } from "use-intl";
-import { forgetSubmittedKept } from "@/components/exams/sitting/forget.client";
+import { forgetSubmittedKept } from "@/components/exams/sitting/forget";
 import { CardLink, CardLinks } from "@/components/shared/card/link";
 import { useTenant } from "@/components/tenant/context";
 import { Bento, type BentoTile } from "@/components/tenant/home/bento";
@@ -13,7 +13,7 @@ import { type StudentTile, studentPlan } from "@/components/tenant/home/layout";
 import {
   studentSittingsRead,
   useStudentSittings,
-} from "@/components/tenant/home/query.client";
+} from "@/components/tenant/home/query";
 import {
   AllExamsAction,
   HomeTile,
@@ -26,7 +26,7 @@ import { schoolDateTimeText } from "@/components/tenant/settings/clock";
 import {
   enterableSitting,
   orderSittings,
-} from "@/components/tenant/sittings.client";
+} from "@/components/tenant/sittings";
 
 /** One sitting of the student, as the student's list holds it. */
 type Sitting = typeof StudentSittingRow.Type;

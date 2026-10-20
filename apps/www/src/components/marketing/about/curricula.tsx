@@ -1,6 +1,6 @@
 import { Nina } from "@repo/design-system/components/ui/nina";
 import { useTranslations } from "use-intl";
-import { CurriculumList } from "@/components/marketing/about/curricula/list.client";
+import { CurriculumList } from "@/components/marketing/about/curricula/list";
 import { NINA_SLOT } from "@/components/marketing/about/toys/slot";
 import { MarketingSection } from "@/components/marketing/shared/section";
 import type { readRuntimeCurriculumOptions } from "@/lib/curriculum/model";

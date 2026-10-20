@@ -2,7 +2,7 @@
 
 import { Effect } from "effect";
 import { ActionButton, ActionLink } from "@/components/state/action";
-import { DeferredFigure } from "@/components/state/figure.client";
+import { DeferredFigure } from "@/components/state/mascot";
 import { Screen } from "@/components/state/screen";
 
 interface BrokenProps {

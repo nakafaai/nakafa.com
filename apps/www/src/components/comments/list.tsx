@@ -8,7 +8,7 @@ import { CommentComposer } from "@/components/comments/composer";
 import { usePostComment } from "@/components/comments/posting";
 import { CommentsProvider } from "@/components/comments/provider";
 import { CommentRow, ReplyButton } from "@/components/comments/row";
-import { useCommentsSlug } from "@/components/comments/slug.client";
+import { useCommentsSlug } from "@/components/comments/slug";
 import { CommentThread } from "@/components/comments/thread";
 import { DataFailure } from "@/components/shared/failure";
 

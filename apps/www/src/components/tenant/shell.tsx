@@ -36,7 +36,7 @@ import { type ReactNode, useTransition } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { AccountMenu } from "@/components/sidebar/menu/account";
 import { TenantAccountItems } from "@/components/tenant/account";
-import { signOutSchoolAccount } from "@/components/tenant/account.client";
+import { signOutSchoolAccount } from "@/components/tenant/signout";
 import {
   type ClassesPreload,
   ClassesPreloadContext,

@@ -29,7 +29,7 @@ import {
   useCloseSitting,
   useLockAttempt,
   useUnlockAttempt,
-} from "@/components/exams/sitting/actions.client";
+} from "@/components/exams/sitting/actions";
 import type { DashboardAttempt } from "@/components/exams/sitting/change";
 import { useSittingData } from "@/components/exams/sitting/context";
 import { parseMinutes } from "@/components/exams/sitting/minutes";

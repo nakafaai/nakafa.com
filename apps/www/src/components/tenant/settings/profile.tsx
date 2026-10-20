@@ -24,14 +24,14 @@ import {
   CardSectionFooter,
 } from "@/components/shared/card/section";
 import { useViewerQuery } from "@/components/tenant/context";
-import { logoRefusalOf } from "@/components/tenant/logo.client";
+import { logoRefusalOf } from "@/components/tenant/logo";
 import { SchoolMark } from "@/components/tenant/mark";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
-import { removeLogoChange } from "@/components/tenant/settings/mutation.client";
+import { removeLogoChange } from "@/components/tenant/settings/mutation";
 import { SchoolNameCard } from "@/components/tenant/settings/name";
 import { SettingsPage } from "@/components/tenant/settings/page";
-import { saveSchool } from "@/components/tenant/settings/save.client";
-import { storeSchoolLogo } from "@/components/tenant/settings/upload.client";
+import { saveSchool } from "@/components/tenant/settings/save";
+import { storeSchoolLogo } from "@/components/tenant/settings/upload";
 import { reportClientException } from "@/lib/analytics/client";
 
 const SOURCE = "components/tenant/settings/profile";

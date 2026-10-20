@@ -18,7 +18,7 @@ import type { NinaPrompt } from "@/components/ai/message/prompt";
 import { restoreRefusedText } from "@/components/ai/store/draft";
 import { useNinaSubmission } from "@/components/ai/submission";
 import { useAuthSessionStore } from "@/components/auth/session";
-import { useCurrentAuthNavigation } from "@/lib/auth/location.client";
+import { useCurrentAuthNavigation } from "@/lib/auth/location";
 import { useViewer } from "@/lib/identity/client";
 
 /** Admission waits for identity and sends signed-out learners to sign in. */

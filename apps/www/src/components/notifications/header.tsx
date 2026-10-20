@@ -11,8 +11,8 @@ import { useTranslations } from "use-intl";
 import {
   type InboxFirstPage,
   useInbox,
-} from "@/components/notifications/inbox.client";
-import { markAllReadInLists } from "@/components/notifications/mutation.client";
+} from "@/components/notifications/inbox";
+import { markAllReadInLists } from "@/components/notifications/mutation";
 import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
 import { reportClientException } from "@/lib/analytics/client";
 

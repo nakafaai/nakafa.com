@@ -7,7 +7,7 @@ import type { ComponentProps } from "react";
 import { useChat } from "@/components/ai/chat/context";
 import { readComposerSubmit } from "@/components/ai/chat/submit";
 import { NinaInput } from "@/components/ai/input";
-import { useCurrentAuthNavigation } from "@/lib/auth/location.client";
+import { useCurrentAuthNavigation } from "@/lib/auth/location";
 import { useViewer } from "@/lib/identity/client";
 
 /**

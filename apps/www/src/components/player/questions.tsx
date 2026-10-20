@@ -1,9 +1,9 @@
 "use client";
 
 import { type ReactNode, useRef } from "react";
-import { usePlayerFocus } from "@/components/player/focus.client";
-import { usePlayerReveal } from "@/components/player/reveal.client";
-import { usePlayerSpy } from "@/components/player/spy.client";
+import { usePlayerFocus } from "@/components/player/focus";
+import { usePlayerReveal } from "@/components/player/reveal";
+import { usePlayerSpy } from "@/components/player/watch";
 
 /**
  * Holds the questions of the player, whichever view shows them. Every

@@ -44,9 +44,9 @@ import {
 import {
   addStudentChange,
   reissueCardChange,
-} from "@/components/tenant/settings/members.client";
+} from "@/components/tenant/settings/accounts";
 import { SettingsPage } from "@/components/tenant/settings/page";
-import { saveSchool } from "@/components/tenant/settings/save.client";
+import { saveSchool } from "@/components/tenant/settings/save";
 import { SchoolDateTime } from "@/components/tenant/settings/time";
 import {
   type PreloadedPage,

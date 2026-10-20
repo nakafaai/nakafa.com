@@ -30,8 +30,8 @@ import {
   languageItems,
   timeZoneItems,
 } from "@/components/tenant/settings/choices";
-import { addUnitChange } from "@/components/tenant/settings/mutation.client";
-import { saveSchool } from "@/components/tenant/settings/save.client";
+import { addUnitChange } from "@/components/tenant/settings/mutation";
+import { saveSchool } from "@/components/tenant/settings/save";
 import type { Unit } from "@/components/tenant/settings/state";
 import { levelsOf } from "@/components/tenant/start/state";
 

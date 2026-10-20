@@ -50,9 +50,9 @@ import {
   SchoolCohortMenu,
   SchoolCohortRestore,
 } from "@/components/tenant/settings/cohort";
-import { createCohortChange } from "@/components/tenant/settings/cohorts.client";
+import { createCohortChange } from "@/components/tenant/settings/groups";
 import { SettingsPage } from "@/components/tenant/settings/page";
-import { saveSchool } from "@/components/tenant/settings/save.client";
+import { saveSchool } from "@/components/tenant/settings/save";
 import type { Cohort, Period } from "@/components/tenant/settings/state";
 import {
   SchoolUnitChoice,

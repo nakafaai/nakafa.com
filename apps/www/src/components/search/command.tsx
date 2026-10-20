@@ -34,7 +34,7 @@ import { useLocale, useTranslations } from "use-intl";
 import { getArticleCategoryIcons } from "@/components/articles/category";
 import { SearchExcerpt } from "@/components/search/excerpt";
 import { useSearchSectionLabels } from "@/components/search/labels";
-import { useArticleNavigation } from "@/components/search/navigation.client";
+import { useArticleNavigation } from "@/components/search/navigation";
 import { holyMenu } from "@/components/sidebar/data/holy";
 import {
   getSubjectMenuHref,

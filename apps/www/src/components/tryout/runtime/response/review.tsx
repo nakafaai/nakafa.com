@@ -1,6 +1,6 @@
 import { Array as Arr, HashMap, HashSet, Option } from "effect";
-import { TryoutReviewedChoice } from "@/components/tryout/runtime/choice/surface.client";
-import { TryoutResponseLabel } from "@/components/tryout/runtime/response/label.client";
+import { TryoutReviewedChoice } from "@/components/tryout/runtime/choice/surface";
+import { TryoutResponseLabel } from "@/components/tryout/runtime/response/label";
 import type { TryoutResponseSelection } from "@/components/tryout/runtime/response/state";
 import type { TryoutRenderableResponseSpec } from "@/components/tryout/runtime/types";
 

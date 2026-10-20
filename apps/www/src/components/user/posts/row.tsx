@@ -2,7 +2,7 @@
 
 import { useMutation } from "@confect/react";
 import posts from "@repo/backend/confect/_generated/refs/posts";
-import { DeferredLearnerText } from "@repo/design-system/components/markdown/learner.client";
+import { DeferredLearnerText } from "@repo/design-system/components/markdown/deferred";
 import { lazyComponent } from "@repo/design-system/lib/lazy";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Effect, HashSet } from "effect";
@@ -23,7 +23,7 @@ import { LikeButton } from "@/components/user/like";
 import {
   likeInLists,
   unlikeInLists,
-} from "@/components/user/posts/mutation.client";
+} from "@/components/user/posts/mutation";
 import {
   usePostDraft,
   usePostsContext,

@@ -9,7 +9,7 @@ import { DateTime, Effect, Schema, Struct } from "effect";
 import {
   insertDraftComment,
   insertDraftReply,
-} from "@/components/comments/mutation.client";
+} from "@/components/comments/mutation";
 import { useCommentDraft } from "@/components/comments/provider";
 import {
   type CommentAuthor,

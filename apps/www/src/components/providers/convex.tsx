@@ -12,7 +12,7 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
-import { AuthSessionProvider } from "@/components/auth/follow.client";
+import { AuthSessionProvider } from "@/components/auth/follow";
 import { useAuthSession, useAuthSessionStore } from "@/components/auth/session";
 import { readAuthClient } from "@/lib/auth/client";
 import {
@@ -26,7 +26,7 @@ import {
   readConvexSessionId,
 } from "@/lib/auth/convex";
 import { loadKnownSession, saveKnownSession } from "@/lib/auth/known";
-import { readConvexClient } from "@/lib/convex/client.client";
+import { readConvexClient } from "@/lib/convex/client";
 
 /**
  * Reads a fresh Convex JWT through the installed Better Auth client plugin.

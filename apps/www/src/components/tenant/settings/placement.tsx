@@ -33,12 +33,12 @@ import { useTranslations } from "use-intl";
 import {
   moveStudentChange,
   placeStudentChange,
-} from "@/components/tenant/settings/cohort.client";
+} from "@/components/tenant/settings/moves";
 import {
   type PersonId,
   SchoolStudentPicker,
 } from "@/components/tenant/settings/people";
-import { saveSchool } from "@/components/tenant/settings/save.client";
+import { saveSchool } from "@/components/tenant/settings/save";
 import type { Cohort, CohortMember } from "@/components/tenant/settings/state";
 
 const SOURCE = "components/tenant/settings/placement";

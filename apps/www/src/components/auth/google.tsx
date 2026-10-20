@@ -13,9 +13,9 @@ import {
   getPostAuthProviderErrorHref,
   isPostAuthProviderError,
 } from "@/lib/auth/admission";
-import { useCurrentAuthNavigation } from "@/lib/auth/location.client";
+import { useCurrentAuthNavigation } from "@/lib/auth/location";
 import { startGoogleSignIn } from "@/lib/auth/social";
-import { requestGoogleSignIn } from "@/lib/auth/social.client";
+import { requestGoogleSignIn } from "@/lib/auth/google";
 
 interface Props {
   /**

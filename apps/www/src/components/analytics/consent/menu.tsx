@@ -4,7 +4,7 @@ import { Analytics01Icon } from "@hugeicons/core-free-icons";
 import { DropdownMenuItem } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useTranslations } from "use-intl";
-import { useAnalyticsConsent } from "@/lib/analytics/consent/account.client";
+import { useAnalyticsConsent } from "@/lib/analytics/consent/facts";
 
 /** Adds the privacy preference action to account menus. */
 export function AnalyticsConsentMenuItem() {

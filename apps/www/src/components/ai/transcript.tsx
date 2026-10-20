@@ -17,10 +17,10 @@ import { memo, useEffect } from "react";
 import { useTranslations } from "use-intl";
 import { useChat } from "@/components/ai/chat/context";
 import { AiChatError } from "@/components/ai/chat/error";
-import { useChatFeed } from "@/components/ai/chat/feed.client";
+import { useChatFeed } from "@/components/ai/chat/feed";
 import { hasFailedReply, hasReply } from "@/components/ai/chat/messages";
 import { AiChatPending } from "@/components/ai/chat/pending";
-import { LastMessageContext } from "@/components/ai/message/last.client";
+import { LastMessageContext } from "@/components/ai/message/last";
 import { sameRow } from "@/components/ai/message/row";
 import { AiChatMessage } from "@/components/ai/message/view";
 

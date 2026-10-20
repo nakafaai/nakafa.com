@@ -10,7 +10,7 @@ import { useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { decodePlayerMode } from "@/components/player/mode";
 import { usePlayer } from "@/components/player/provider";
-import { rememberPlayerMode } from "@/components/player/remember.client";
+import { rememberPlayerMode } from "@/components/player/remember";
 
 /**
  * Switches between the list and one question at a time. The view changes at

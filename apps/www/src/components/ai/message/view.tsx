@@ -1,7 +1,7 @@
 "use client";
 
 import type { NinaMessage } from "@repo/backend/confect/nina/schema";
-import { DeferredLearnerText } from "@repo/design-system/components/markdown/learner.client";
+import { DeferredLearnerText } from "@repo/design-system/components/markdown/deferred";
 import {
   MessageContent,
   MessageFooter,

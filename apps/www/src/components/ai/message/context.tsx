@@ -3,7 +3,7 @@
 import type { NinaTurnSummary } from "@repo/backend/confect/nina/contract/turn";
 import type { NinaMessage } from "@repo/backend/confect/nina/schema";
 import { createContext, type PropsWithChildren, use } from "react";
-import { LastMessageContext } from "@/components/ai/message/last.client";
+import { LastMessageContext } from "@/components/ai/message/last";
 
 /**
  * Props of the message provider: one AI message and the turn it displays.

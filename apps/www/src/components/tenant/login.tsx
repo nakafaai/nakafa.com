@@ -21,8 +21,8 @@ import {
   SignInUnanswered,
   signInAnswerOf,
   submitLogin,
-} from "@/components/tenant/login.client";
-import { clientEnv } from "@/env.client";
+} from "@/components/tenant/signin";
+import { clientEnv } from "@/env.public";
 import { readAuthClient } from "@/lib/auth/client";
 
 /**

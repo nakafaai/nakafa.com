@@ -15,7 +15,7 @@ import {
 import {
   QuranVerseRowContext,
   useQuranVerseRow,
-} from "@/components/shared/quran/verses/row.client";
+} from "@/components/shared/quran/verses/row";
 import { QuranTranslation } from "@/components/shared/quran/verses/translation";
 
 interface QuranVerseListProps {

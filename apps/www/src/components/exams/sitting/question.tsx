@@ -18,11 +18,11 @@ import {
 } from "effect";
 import { useId, useMemo } from "react";
 import { useTranslations } from "use-intl";
-import { sittingCallFailures } from "@/components/exams/sitting/actions.client";
-import { useSendAnswer } from "@/components/exams/sitting/answer.client";
+import { sittingCallFailures } from "@/components/exams/sitting/actions";
+import { useSendAnswer } from "@/components/exams/sitting/answer";
 import { SittingChoice } from "@/components/exams/sitting/choice";
 import { SittingDocument } from "@/components/exams/sitting/document";
-import { useFlags } from "@/components/exams/sitting/flags.client";
+import { useFlags } from "@/components/exams/sitting/marks";
 import { keepAnswer } from "@/components/exams/sitting/keep";
 import type { PaperQuestion } from "@/components/exams/sitting/paper";
 import {
@@ -30,7 +30,7 @@ import {
   SittingPictures,
 } from "@/components/exams/sitting/pictures";
 import { choiceOf } from "@/components/exams/sitting/response";
-import { sittingStorage } from "@/components/exams/sitting/storage.client";
+import { sittingStorage } from "@/components/exams/sitting/storage";
 import { PlayerQuestion } from "@/components/player/question";
 import { reportClientException } from "@/lib/analytics/client";
 

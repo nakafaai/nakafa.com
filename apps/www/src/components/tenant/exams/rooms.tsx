@@ -37,12 +37,12 @@ import {
   cancelRoomChange,
   RoomStateFilter,
   roomsArgs,
-} from "@/components/tenant/exams/rooms.client";
+} from "@/components/tenant/exams/filter";
 import { SchoolHeader } from "@/components/tenant/header";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { isDenied, isLostAccess } from "@/components/tenant/refusal";
 import { schoolDateTimeText } from "@/components/tenant/settings/clock";
-import { saveSchool } from "@/components/tenant/settings/save.client";
+import { saveSchool } from "@/components/tenant/settings/save";
 import { usePaginatedPreloaded } from "@/lib/data/paginated";
 import { usePreloadedQueryResult } from "@/lib/data/preloaded";
 import type { readExamRoomsFn } from "@/lib/tenant/exams.fn";

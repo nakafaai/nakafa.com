@@ -25,8 +25,8 @@ import {
   CardSectionActions,
   CardSectionFooter,
 } from "@/components/shared/card/section";
-import { setNameChange } from "@/components/tenant/settings/mutation.client";
-import { saveSchool } from "@/components/tenant/settings/save.client";
+import { setNameChange } from "@/components/tenant/settings/mutation";
+import { saveSchool } from "@/components/tenant/settings/save";
 
 const SOURCE = "components/tenant/settings/name";
 

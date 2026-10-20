@@ -18,11 +18,11 @@ import {
   MEMORY_ADD_ID,
   memoryRowId,
 } from "@/components/user/settings/memory/focus";
-import { useFocusAfterClose } from "@/components/user/settings/memory/focus.client";
+import { useFocusAfterClose } from "@/components/user/settings/memory/refocus";
 import {
   createHost,
   useEditorHost,
-} from "@/components/user/settings/memory/host.client";
+} from "@/components/user/settings/memory/host";
 import type { Memory } from "@/components/user/settings/memory/list";
 import { useMemoryPage } from "@/components/user/settings/memory/provider";
 import { SETTINGS_PANEL_ID } from "@/components/user/settings/panel";

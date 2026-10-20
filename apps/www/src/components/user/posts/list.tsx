@@ -11,7 +11,7 @@ import { useCallback, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/providers/convex";
 import { DataFailure } from "@/components/shared/failure";
-import { useAgeClock } from "@/components/user/clock.client";
+import { useAgeClock } from "@/components/user/ages";
 import { FeedEmpty, FeedNotice } from "@/components/user/feed";
 import { PostComposer } from "@/components/user/posts/composer";
 import {

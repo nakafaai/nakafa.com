@@ -17,7 +17,7 @@ import {
   CardSectionActions,
   CardSectionFooter,
 } from "@/components/shared/card/section";
-import { useMemoryActions } from "@/components/user/settings/memory/actions.client";
+import { useMemoryActions } from "@/components/user/settings/memory/actions";
 import { MEMORY_ADD_ID } from "@/components/user/settings/memory/focus";
 import { useMemory } from "@/components/user/settings/memory/provider";
 

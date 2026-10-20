@@ -12,7 +12,7 @@ import { DateTime, Effect, Option, Result, Schema } from "effect";
 import type { SubmitEventHandler } from "react";
 import { useTranslations } from "use-intl";
 import { FeedAvatar, FeedForm } from "@/components/user/feed";
-import { insertDraftPost } from "@/components/user/posts/mutation.client";
+import { insertDraftPost } from "@/components/user/posts/mutation";
 import { usePostDraft } from "@/components/user/posts/provider";
 import { remainingToShow } from "@/components/user/posts/remaining";
 import type { ListPost } from "@/components/user/posts/state";

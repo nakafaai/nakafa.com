@@ -16,13 +16,13 @@ import { useStore } from "zustand";
 import { readChatAccess } from "@/components/ai/chat/access";
 import { isChatBusy } from "@/components/ai/chat/busy";
 import { optimisticCancel } from "@/components/ai/chat/cancel";
-import { useConversation } from "@/components/ai/chat/conversation.client";
+import { useConversation } from "@/components/ai/chat/conversation";
 import { draftMessage } from "@/components/ai/chat/messages";
 import {
   type ChatStoreApi,
   ChatStoreContext,
   createChatStore,
-} from "@/components/ai/chat/store.client";
+} from "@/components/ai/chat/store";
 import { useAi } from "@/components/ai/context";
 import { NinaConnectionError } from "@/components/ai/feedback";
 import { restoreRefusedText } from "@/components/ai/store/draft";

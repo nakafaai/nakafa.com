@@ -4,7 +4,7 @@ import { Nina } from "@repo/design-system/components/ui/nina";
 import { Thing } from "@repo/design-system/components/ui/thing";
 import type { Array as Arr } from "effect";
 import { useLocale, useTranslations } from "use-intl";
-import { ClosingQuestion } from "@/components/marketing/about/closing/question.client";
+import { ClosingQuestion } from "@/components/marketing/about/closing/question";
 import { NINA_SLOT } from "@/components/marketing/about/toys/slot";
 import { MarketingSection } from "@/components/marketing/shared/section";
 import { getCurriculumIndexHref } from "@/lib/curriculum/routes";

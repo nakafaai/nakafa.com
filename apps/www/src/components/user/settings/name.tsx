@@ -14,7 +14,7 @@ import { Effect, Schema, String as Str } from "effect";
 import { useRef } from "react";
 import { useTranslations } from "use-intl";
 import { CardSection } from "@/components/shared/card/section";
-import { useUpdateUserNameMutation } from "@/components/user/mutation.client";
+import { useUpdateUserNameMutation } from "@/components/user/mutation";
 import { SettingsFormFooter } from "@/components/user/settings/save";
 import { reportClientException } from "@/lib/analytics/client";
 import type { CurrentUser } from "@/lib/identity/client";

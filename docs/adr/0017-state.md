@@ -69,7 +69,7 @@ pending with that action (`entangleAsyncAction` in react-dom 19.3.0), and
 Next.js dispatches navigation inside `startTransition`
 (`dist/client/components/app-router-instance.js` in next 16.4.0). A transition
 that held a send would therefore hold the learner's next navigation until the
-server answered. The chat store (`apps/www/src/components/ai/chat/store.client.ts`)
+server answered. The chat store (`apps/www/src/components/ai/chat/store.ts`)
 holds the pending flags of a send, a stop, or a retry. The admission
 (`apps/www/src/components/ai/chat/admission.tsx`) holds its prompt, and the tray
 (`apps/www/src/components/ai/input.tsx`) holds the files that wait for it. The

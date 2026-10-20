@@ -10,7 +10,7 @@ import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-d
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { Effect } from "effect";
 import { useTranslations } from "use-intl";
-import { removeFromLists } from "@/components/comments/mutation.client";
+import { removeFromLists } from "@/components/comments/mutation";
 import { useDeletion } from "@/components/shared/more";
 import { reportClientException } from "@/lib/analytics/client";
 

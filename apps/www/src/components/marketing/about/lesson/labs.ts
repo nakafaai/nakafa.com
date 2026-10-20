@@ -19,19 +19,19 @@ export type LessonLabProps = typeof LessonLabPropsSchema.Type;
  */
 const LAB_LOADERS = {
   atom: () =>
-    import("@/components/marketing/about/lesson/atom.client").then(
+    import("@/components/marketing/about/lesson/atom").then(
       ({ AtomLesson }) => ({ default: AtomLesson })
     ),
   cell: () =>
-    import("@/components/marketing/about/lesson/cell.client").then(
+    import("@/components/marketing/about/lesson/cell").then(
       ({ CellLesson }) => ({ default: CellLesson })
     ),
   circle: () =>
-    import("@/components/marketing/about/lesson/circle.client").then(
+    import("@/components/marketing/about/lesson/circle").then(
       ({ CircleLesson }) => ({ default: CircleLesson })
     ),
   projectile: () =>
-    import("@/components/marketing/about/lesson/projectile.client").then(
+    import("@/components/marketing/about/lesson/projectile").then(
       ({ ProjectileLesson }) => ({ default: ProjectileLesson })
     ),
 };

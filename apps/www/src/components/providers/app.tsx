@@ -2,12 +2,12 @@ import type { ReactNode } from "react";
 import {
   AccountConsentControls,
   AccountConsentEffects,
-} from "@/components/analytics/consent/account.client";
+} from "@/components/analytics/consent/account";
 import { AnalyticsConsentBootstrap } from "@/components/analytics/consent/bootstrap";
 import { AnalyticsConsentProvider } from "@/components/analytics/consent/provider";
 import { AnalyticsUnavailableProvider } from "@/components/analytics/consent/unavailable";
 import { ConvexProvider } from "@/components/providers/convex";
-import { clientEnv } from "@/env.client";
+import { clientEnv } from "@/env.public";
 import { PageNavigationProvider } from "@/lib/content/page/context";
 import type { PageNavigation } from "@/lib/content/page/navigation";
 

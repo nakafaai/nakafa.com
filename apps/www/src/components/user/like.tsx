@@ -8,7 +8,7 @@ import { cn } from "cn";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/providers/convex";
 import { FeedCount } from "@/components/user/feed";
-import { useCurrentAuthNavigation } from "@/lib/auth/location.client";
+import { useCurrentAuthNavigation } from "@/lib/auth/location";
 
 /**
  * Runs an action for a signed-in learner. A visitor who has not signed in goes to
