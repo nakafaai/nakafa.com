@@ -14,6 +14,7 @@ describe("shared paths", () => {
     "/api/ping",
     "/_serverFn/abc",
     "/_nakafa/i/v0/e/",
+    "/_not-found",
     "/assets/app.js",
     "/.well-known/llms.txt",
     "/og/article",

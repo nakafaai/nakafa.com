@@ -28,6 +28,7 @@ interface RouteRewrite {
 const SHARED_FIRST_SEGMENTS = HashSet.fromIterable([
   ".well-known",
   "_nakafa",
+  "_not-found",
   "_serverFn",
   "api",
   "assets",

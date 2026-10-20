@@ -3,8 +3,8 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Option } from "effect";
 import {
-  answerSchoolGate,
   isSchoolTreePath,
+  readSchoolTreeGate,
   withPageHeaders,
 } from "@/lib/tenant/gate";
 
@@ -39,48 +39,45 @@ describe("isSchoolTreePath", () => {
   });
 });
 
-describe("answerSchoolGate", () => {
-  it("answers a school tree page of a main host with not found", () => {
-    const answer = answerSchoolGate(
-      requestTo("/school/harapan", "nakafa.test")
-    );
-    expect(Option.isSome(answer)).toBe(true);
-    const response = Option.getOrThrow(answer);
-    expect(response.status).toBe(404);
-    expect(response.headers.get("x-robots-tag")).toBe("noindex");
-    expect(response.headers.get("content-type")).toBe(
-      "text/plain; charset=utf-8"
-    );
+describe("readSchoolTreeGate", () => {
+  it("answers a school tree page of a main host with the not-found locale that it negotiates", () => {
+    expect(
+      readSchoolTreeGate(requestTo("/school/harapan", "nakafa.test"))
+    ).toStrictEqual(Option.some("en"));
   });
 
   it("answers a school tree page of a request without a host header", () => {
-    const answer = answerSchoolGate(requestTo("/school/harapan"));
-    expect(Option.getOrThrow(answer).status).toBe(404);
+    expect(readSchoolTreeGate(requestTo("/school/harapan"))).toStrictEqual(
+      Option.some("en")
+    );
   });
 
   it("answers a school tree page of a host that names no valid host", () => {
-    const answer = answerSchoolGate(requestTo("/school/harapan", "bad host"));
-    expect(Option.getOrThrow(answer).status).toBe(404);
+    expect(
+      readSchoolTreeGate(requestTo("/school/harapan", "bad host"))
+    ).toStrictEqual(Option.some("en"));
   });
 
   it("lets a school host through to its own school tree", () => {
     expect(
       Option.isNone(
-        answerSchoolGate(requestTo("/school/harapan", "harapan.localhost:3000"))
+        readSchoolTreeGate(
+          requestTo("/school/harapan", "harapan.localhost:3000")
+        )
       )
     ).toBe(true);
   });
 
   it("lets the start page of an account through on a main host", () => {
     expect(
-      Option.isNone(answerSchoolGate(requestTo("/school/new", "nakafa.test")))
+      Option.isNone(readSchoolTreeGate(requestTo("/school/new", "nakafa.test")))
     ).toBe(true);
   });
 
   it("lets every other path of a main host through", () => {
-    expect(Option.isNone(answerSchoolGate(requestTo("/", "nakafa.test")))).toBe(
-      true
-    );
+    expect(
+      Option.isNone(readSchoolTreeGate(requestTo("/", "nakafa.test")))
+    ).toBe(true);
   });
 });
 

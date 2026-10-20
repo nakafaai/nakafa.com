@@ -1,4 +1,8 @@
-import { decodeLocale } from "@repo/internationalization/src/locale";
+import {
+  decodeLocale,
+  type Locale,
+} from "@repo/internationalization/src/locale";
+import { negotiateLocale } from "@repo/internationalization/src/negotiate";
 import { mergeVaryHeader } from "@repo/utilities/http/accept";
 import { Array as Arr, Option } from "effect";
 import { readSchoolSlug } from "@/lib/routing/school/host";
@@ -59,35 +63,18 @@ function readRequestSchool(headers: Headers) {
 }
 
 /**
- * The not-found answer that names no page, so no search engine indexes the
- * address. A gate of the server entry answers with it before the router sees
- * the address.
+ * The locale of the not-found page that answers a school tree path of a main host
+ * before the router sees it, or none for every other request. The page names no
+ * school, so no search engine indexes the address.
  */
-export function notFoundAnswer(
-  request: Request,
-  headers: Readonly<Record<string, string>>
-): Response {
-  return withPageHeaders(
-    request,
-    new Response("Not Found", {
-      headers: { ...headers, "content-type": "text/plain; charset=utf-8" },
-      status: 404,
-    })
-  );
-}
-
-/**
- * Answers a school tree path of a main host with not found before the router
- * sees it, and returns none for every other request.
- */
-export function answerSchoolGate(request: Request): Option.Option<Response> {
+export function readSchoolTreeGate(request: Request): Option.Option<Locale> {
   if (Option.isSome(readRequestSchool(request.headers))) {
     return Option.none();
   }
   if (!isSchoolTreePath(new URL(request.url).pathname)) {
     return Option.none();
   }
-  return Option.some(notFoundAnswer(request, {}));
+  return Option.some(negotiateLocale(request.headers));
 }
 
 /**

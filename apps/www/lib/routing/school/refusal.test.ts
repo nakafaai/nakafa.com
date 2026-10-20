@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { NETWORK_ATTEMPT_DEADLINE } from "@repo/backend/client/network";
 import { Effect, Fiber, Option } from "effect";
 import { TestClock } from "effect/testing";
-import { answerSchoolRefusal } from "@/lib/routing/school/refusal";
+import { readSchoolRefusal } from "@/lib/routing/school/refusal";
 import {
   answerAndCauses,
   answered,
@@ -230,22 +230,20 @@ describe("school page refusal", () => {
 
 describe("school page refusal answer", () => {
   it.effect(
-    "answers a refused school page with not found, in the locale it negotiates",
+    "answers a refused school page with the not-found locale that it negotiates",
     () =>
       Effect.gen(function* () {
         serve({ refusal: answered(true) });
 
-        const answer = Option.getOrThrow(
-          yield* answerSchoolRefusal(
+        const locale = Option.getOrThrow(
+          yield* readSchoolRefusal(
             new Request(SCHOOL_ROOT, {
               headers: { "accept-language": "id-ID,id;q=0.9" },
             })
           )
         );
 
-        expect(answer.status).toBe(404);
-        expect(answer.headers.get("content-language")).toBe("id");
-        expect(answer.headers.get("x-robots-tag")).toBe("noindex");
+        expect(locale).toBe("id");
       })
   );
 
@@ -254,8 +252,21 @@ describe("school page refusal answer", () => {
       serve({ refusal: answered(false) });
 
       expect(
-        Option.isNone(yield* answerSchoolRefusal(new Request(SCHOOL_ROOT)))
+        Option.isNone(yield* readSchoolRefusal(new Request(SCHOOL_ROOT)))
       ).toBe(true);
+    })
+  );
+
+  it.effect("answers none for a method that is not a page read", () =>
+    Effect.gen(function* () {
+      serve({ refusal: answered(true) });
+
+      expect(
+        Option.isNone(
+          yield* readSchoolRefusal(new Request(SCHOOL_ROOT, { method: "POST" }))
+        )
+      ).toBe(true);
+      expect(queriesOf()).toHaveLength(0);
     })
   );
 });
