@@ -12,7 +12,12 @@ const readers = vi.hoisted(() => ({
   readTryoutSetRoute: vi.fn(),
 }));
 
-vi.mock("@/components/tryout/route/attempt.server", () => readers);
+vi.mock("@/components/tryout/route/attempt.server", () => ({
+  readTryoutSetRoute: readers.readTryoutSetRoute,
+}));
+vi.mock("@/components/tryout/route/section.server", () => ({
+  readTryoutSectionRoute: readers.readTryoutSectionRoute,
+}));
 vi.mock("@tanstack/react-start/server", () => ({
   getRequest: () => new Request("https://nakafa.test/en/try-out"),
 }));

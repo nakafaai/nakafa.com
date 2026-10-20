@@ -16,7 +16,7 @@ import { getOgUrl } from "@/lib/seo/social";
  * running body needs the runtime's body contract, which does not exist yet, so the
  * page stops here. A finished attempt renders its review instead.
  */
-export class TryoutAttemptContentPending extends Schema.TaggedError<TryoutAttemptContentPending>()(
+class TryoutAttemptContentPending extends Schema.TaggedError<TryoutAttemptContentPending>()(
   "TryoutAttemptContentPending",
   { publicPath: Schema.String }
 ) {}

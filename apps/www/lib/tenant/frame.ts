@@ -46,14 +46,14 @@ const MemberFrame = Schema.TaggedStruct("Member", {
  * stream starts. It holds no credential, so it crosses to the browser as route
  * context, and the browser never reads the session token.
  */
-export const SchoolFrameSchema = Schema.Union([
+const SchoolFrameSchema = Schema.Union([
   VisitorFrame,
   OutsiderFrame,
   MemberFrame,
 ]);
 
 /** The frame of one request, as the school layout renders it. */
-export type SchoolFrame = typeof SchoolFrameSchema.Type;
+type SchoolFrame = typeof SchoolFrameSchema.Type;
 
 /** The refusal that answers a school page with not found. */
 const RefusedRead = Schema.TaggedStruct("Refused", {});

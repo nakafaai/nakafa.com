@@ -1,11 +1,9 @@
 import { LocaleSchema } from "@repo/internationalization/src/locale";
 import { createServerFn } from "@tanstack/react-start";
 import { Schema } from "effect";
-import {
-  readTryoutSectionRoute,
-  readTryoutSetRoute,
-} from "@/components/tryout/route/attempt.server";
+import { readTryoutSetRoute } from "@/components/tryout/route/attempt.server";
 import { TryoutAttemptSearch } from "@/components/tryout/route/search";
+import { readTryoutSectionRoute } from "@/components/tryout/route/section.server";
 import { serverHandler } from "@/lib/server/fn";
 
 /** The address segments of a set page, with its attempt search. */
