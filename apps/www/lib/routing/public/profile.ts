@@ -1,13 +1,11 @@
 import { HttpClient } from "@confect/js";
 import auth from "@repo/backend/confect/_generated/refs/auth";
-import { LOCALES } from "@repo/internationalization/src/locale";
-import { Array as Arr, Effect } from "effect";
-import { hasLocale } from "use-intl";
+import { Array as Arr, Effect, Option } from "effect";
 import { clientEnv } from "@/env.client";
 import { readSessionToken } from "@/lib/auth/token";
 import { httpLayer } from "@/lib/convex/http";
 import { profileHref } from "@/lib/profile/href";
-import { isProfileTab } from "@/lib/profile/route";
+import { readProfileIdAddress } from "@/lib/profile/route";
 import { permanentRedirect } from "@/lib/routing/public/redirect";
 
 /** The signed-in account of a request, or null for a visitor. */
@@ -43,18 +41,11 @@ const readRequestAccount = Effect.fn("www.routing.publicHtml.profileAccount")(
 export const readProfileRedirect = Effect.fn(
   "www.routing.publicHtml.profileRedirect"
 )(function* (pathname: string, headers: Headers) {
-  const [locale, root, id, ...tab] = Arr.filter(pathname.split("/"), Boolean);
-  if (
-    !(
-      hasLocale(LOCALES, locale) &&
-      root === "user" &&
-      id !== undefined &&
-      id !== "settings" &&
-      isProfileTab(tab)
-    )
-  ) {
+  const address = readProfileIdAddress(pathname);
+  if (Option.isNone(address)) {
     return null;
   }
+  const { id, locale, tab } = address.value;
   const account = yield* readRequestAccount(headers);
   const username =
     account?.appUser._id === id ? account.appUser.username : undefined;

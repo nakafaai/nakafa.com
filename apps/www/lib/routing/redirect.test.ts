@@ -9,6 +9,7 @@ import {
   readRedirectResponse,
   readRemovedAddressNotFound,
   readSlashRedirectResponse,
+  readSpellingRedirectResponse,
 } from "@/lib/routing/redirect";
 
 vi.hoisted(() => {
@@ -49,15 +50,6 @@ describe("readRedirectResponse", () => {
         readRedirectResponse(request("https://harapan.nakafa.com/"))
       )
     ).toBe(true);
-  });
-
-  it("answers a trailing slash on a public path with a 308 to the canonical path", () => {
-    const found = Option.getOrThrow(
-      readRedirectResponse(request("https://nakafa.com/en/curriculum/"))
-    );
-
-    expect(found.status).toBe(308);
-    expect(found.headers.get("location")).toBe("/en/curriculum");
   });
 
   it("leaves a canonical path and a shared path to the router", () => {
@@ -107,6 +99,37 @@ describe("readRedirectResponse", () => {
       Option.isNone(
         readRedirectResponse(
           request("https://harapan.nakafa.com/@nobody_has_this")
+        )
+      )
+    ).toBe(true);
+  });
+});
+
+describe("readSpellingRedirectResponse", () => {
+  it("answers a non-public spelling with a 308 to the public spelling and keeps the query", () => {
+    const found = Option.getOrThrow(
+      readSpellingRedirectResponse(
+        request("https://nakafa.com/en/curricula/x?page=2")
+      )
+    );
+
+    expect(found.status).toBe(308);
+    expect(found.headers.get("location")).toBe("/en/curriculum/x?page=2");
+    expect(found.headers.get("vary")).toBeNull();
+  });
+
+  it("leaves the public spelling and a school host to the next decision", () => {
+    expect(
+      Option.isNone(
+        readSpellingRedirectResponse(
+          request("https://nakafa.com/en/curriculum")
+        )
+      )
+    ).toBe(true);
+    expect(
+      Option.isNone(
+        readSpellingRedirectResponse(
+          request("https://harapan.nakafa.com/en/curricula")
         )
       )
     ).toBe(true);
@@ -199,7 +222,7 @@ describe("readMigrationResponse", () => {
         expect(found.headers.get("location")).toBe(
           "/en/tryout/sets/exam?page=2"
         );
-        expect(found.headers.get("vary")).toBe("Cookie");
+        expect(found.headers.get("vary")).toBeNull();
         expect(migration.read.mock.calls[0]?.[0]).toMatchObject({
           hasAttemptCapability: false,
           markdown: false,
@@ -228,6 +251,7 @@ describe("readMigrationResponse", () => {
 
         expect(found.status).toBe(308);
         expect(found.headers.get("location")).toBe("/en/@nabilfatih/chat");
+        expect(found.headers.get("vary")).toBe("Cookie");
         expect(migration.read.mock.calls[0]?.[0].headers.get("cookie")).toBe(
           "session=1"
         );
@@ -327,6 +351,18 @@ describe("readMainSiteRedirect", () => {
     );
 
     expect(found.headers.get("location")).toBe("https://nakafa.com//evil.com/");
+  });
+
+  it("leaves a shared root file on a host that names no school to the router", () => {
+    expect(
+      Option.isNone(
+        readMainSiteRedirect(
+          new Request("https://www.nakafa.com/robots.txt", {
+            headers: { host: "www.nakafa.com" },
+          })
+        )
+      )
+    ).toBe(true);
   });
 
   it("leaves a school host, the main host and a request without a host to the router", () => {

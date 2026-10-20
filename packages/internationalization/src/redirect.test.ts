@@ -1,12 +1,13 @@
 import { describe, expect, it } from "@effect/vitest";
 import {
-  decideRedirect,
+  decideRootRedirect,
   decideSlashRedirect,
+  decideSpellingRedirect,
 } from "@repo/internationalization/src/redirect";
 import { Option } from "effect";
 
-/** The redirect decided for one address and its request headers. */
-const decide = (
+/** The root redirect decided for one address and its request headers. */
+const decideRoot = (
   address: string,
   acceptLanguage?: string,
   isSchoolHost = false
@@ -15,22 +16,30 @@ const decide = (
   if (acceptLanguage !== undefined) {
     headers.set("accept-language", acceptLanguage);
   }
-  return decideRedirect({ headers, isSchoolHost, url: new URL(address) });
+  return decideRootRedirect({
+    headers,
+    isSchoolHost,
+    url: new URL(address),
+  });
 };
 
-/** The location of a redirect that the request answers, or none. */
-const locationOf = (
+/** The location of a root redirect that the request answers, or none. */
+const rootLocationOf = (
   address: string,
   acceptLanguage?: string,
   isSchoolHost = false
 ) =>
-  decide(address, acceptLanguage, isSchoolHost).pipe(
+  decideRoot(address, acceptLanguage, isSchoolHost).pipe(
     Option.map((d) => d.location)
   );
 
+/** The spelling redirect decided for one address on a main or a school host. */
+const decideSpelling = (address: string, isSchoolHost = false) =>
+  decideSpellingRedirect({ isSchoolHost, url: new URL(address) });
+
 describe("root redirect", () => {
   it("answers the root with the default locale and a 307 that varies", () => {
-    expect(decide("https://nakafa.com/")).toStrictEqual(
+    expect(decideRoot("https://nakafa.com/")).toStrictEqual(
       Option.some({
         location: "/en",
         status: 307,
@@ -43,7 +52,7 @@ describe("root redirect", () => {
     ["id-ID,id;q=0.9", "/id"],
     ["de-DE,de;q=0.9", "/de"],
   ])("answers the root for Accept-Language %s with %s", (header, location) => {
-    expect(decide("https://nakafa.com/", header)).toStrictEqual(
+    expect(decideRoot("https://nakafa.com/", header)).toStrictEqual(
       Option.some({
         location,
         status: 307,
@@ -53,15 +62,19 @@ describe("root redirect", () => {
   });
 
   it("keeps the query on the root answer", () => {
-    expect(locationOf("https://nakafa.com/?utm=x")).toStrictEqual(
+    expect(rootLocationOf("https://nakafa.com/?utm=x")).toStrictEqual(
       Option.some("/en?utm=x")
     );
   });
 
-  it("answers a path of slashes as the root", () => {
-    expect(locationOf("https://nakafa.com//")).toStrictEqual(
-      Option.some("/en")
-    );
+  it("leaves a path of slashes to the slash decision, which names the root", () => {
+    expect(Option.isNone(decideRoot("https://nakafa.com//"))).toBe(true);
+  });
+
+  it("keeps the school home at the root without a locale redirect", () => {
+    expect(
+      Option.isNone(decideRoot("https://harapan.nakafa.com/", undefined, true))
+    ).toBe(true);
   });
 
   it("uses the locale cookie before Accept-Language", () => {
@@ -69,7 +82,7 @@ describe("root redirect", () => {
       "accept-language": "id-ID",
       cookie: "NAKAFA_LOCALE=de",
     });
-    const decision = decideRedirect({
+    const decision = decideRootRedirect({
       headers,
       isSchoolHost: false,
       url: new URL("https://nakafa.com/"),
@@ -80,15 +93,14 @@ describe("root redirect", () => {
   });
 });
 
-describe("permanent redirects", () => {
+describe("spelling redirect", () => {
   it.each([
-    ["https://nakafa.com/en/curriculum/", "/en/curriculum"],
     ["https://nakafa.com/en/curricula", "/en/curriculum"],
-    ["https://nakafa.com/en/materials/x/?tab=1", "/en/subjects/x?tab=1"],
-    ["https://nakafa.com/de/curricula/merdeka/", "/de/lehrplaene/merdeka"],
+    ["https://nakafa.com/en/materials/x?tab=1", "/en/subjects/x?tab=1"],
+    ["https://nakafa.com/de/curricula/merdeka", "/de/lehrplaene/merdeka"],
     ["https://nakafa.com/id/materials/matematika", "/id/materi/matematika"],
   ])("moves %s to %s with a 308", (address, location) => {
-    expect(decide(address)).toStrictEqual(
+    expect(decideSpelling(address)).toStrictEqual(
       Option.some({ location, status: 308 })
     );
   });
@@ -98,71 +110,54 @@ describe("permanent redirects", () => {
     "https://nakafa.com/id/materi/matematika",
     "https://nakafa.com/fr/curriculum",
     "https://nakafa.com/id/subjects/matematika",
-    "https://nakafa.com/api/ping/",
-    "https://nakafa.com/robots.txt",
-    "https://nakafa.com/_serverFn/abc/",
-  ])("leaves %s to the router", (address) => {
-    expect(Option.isNone(decide(address))).toBe(true);
-  });
-});
-
-describe("school hosts", () => {
-  it("keeps the school home without a locale redirect", () => {
-    expect(
-      Option.isNone(decide("https://harapan.nakafa.com/", undefined, true))
-    ).toBe(true);
+    "https://nakafa.com/api/ping",
+    "https://nakafa.com/",
+  ])("leaves %s to the next decision", (address) => {
+    expect(Option.isNone(decideSpelling(address))).toBe(true);
   });
 
-  it("removes a trailing slash with a 308 and keeps the host", () => {
-    expect(
-      decide("https://harapan.nakafa.com/exams/?x=1", undefined, true)
-    ).toStrictEqual(Option.some({ location: "/exams?x=1", status: 308 }));
-  });
-
-  it("leaves a shared root file on a school host to the router", () => {
+  it("leaves a non-public spelling of a school host alone, since a school has no locale", () => {
     expect(
       Option.isNone(
-        decide(
-          "https://harapan.nakafa.com/e22d548f7fd2482a9022e3b84e944901.txt",
-          undefined,
-          true
-        )
+        decideSpelling("https://harapan.nakafa.com/en/curricula", true)
       )
-    ).toBe(true);
-  });
-
-  it("leaves a school path without a trailing slash", () => {
-    expect(
-      Option.isNone(decide("https://harapan.nakafa.com/exams", undefined, true))
     ).toBe(true);
   });
 });
 
 describe("slashes in a path", () => {
   it.each([
-    ["https://nakafa.com//evil.com/", "/evil.com"],
+    ["https://nakafa.com/en/curriculum/", "/en/curriculum"],
     ["https://nakafa.com/en//curriculum", "/en/curriculum"],
     ["https://nakafa.com/en/curriculum//", "/en/curriculum"],
+    ["https://nakafa.com//evil.com/", "/evil.com"],
+    ["https://harapan.nakafa.com/exams/", "/exams"],
   ])("moves %s to the single-slash path %s", (address, location) => {
-    expect(locationOf(address)).toStrictEqual(Option.some(location));
+    expect(
+      decideSlashRedirect(new URL(address)).pipe(Option.map((d) => d.location))
+    ).toStrictEqual(Option.some(location));
   });
 
   it.each([
     "https://harapan.nakafa.com//evil.com/",
     "https://harapan.nakafa.com///evil.com",
   ])("never answers %s with a protocol-relative location", (address) => {
-    expect(locationOf(address, undefined, true)).toStrictEqual(
-      Option.some("/evil.com")
+    expect(
+      decideSlashRedirect(new URL(address)).pipe(Option.map((d) => d.location))
+    ).toStrictEqual(Option.some("/evil.com"));
+  });
+
+  it("answers a path of slashes with the root path, which the root decision then answers", () => {
+    expect(decideSlashRedirect(new URL("https://nakafa.com///"))).toStrictEqual(
+      Option.some({ location: "/", status: 308 })
     );
   });
 
-  it("answers a path of slashes on the root with the root redirect", () => {
-    expect(decide("https://nakafa.com///", "de-DE")).toStrictEqual(
-      Option.some({
-        location: "/de",
-        status: 307,
-        vary: "Accept-Language, Cookie",
-      })
+  it("keeps the query of a path with slashes", () => {
+    expect(
+      decideSlashRedirect(new URL("https://nakafa.com/en//curriculum/?page=2"))
+    ).toStrictEqual(
+      Option.some({ location: "/en/curriculum?page=2", status: 308 })
     );
   });
 });
@@ -185,6 +180,11 @@ describe("canonical slash spelling", () => {
     expect(
       Option.isNone(
         decideSlashRedirect(new URL("https://nakafa.com/api/ping/"))
+      )
+    ).toBe(true);
+    expect(
+      Option.isNone(
+        decideSlashRedirect(new URL("https://nakafa.com/robots.txt"))
       )
     ).toBe(true);
   });

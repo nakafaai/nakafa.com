@@ -12,9 +12,9 @@ import { useStableMutableValue } from "@repo/design-system/hooks/use-stable-muta
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
 import { createSeededRandom } from "@repo/design-system/lib/random";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
+import { useTheme } from "@repo/design-system/providers/theme";
 import { cn } from "cn";
 import { Array as Arr, MutableList, Schema } from "effect";
-import { useTheme } from "next-themes";
 import {
   useCallback,
   useEffect,
@@ -139,7 +139,7 @@ export function Particles({
   staticity = 100,
   ease = 100,
 }: ParticlesProps) {
-  const { resolvedTheme } = useTheme();
+  const resolvedTheme = useTheme((state) => state.resolvedTheme);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const canvasContainerRef = useRef<HTMLDivElement>(null);

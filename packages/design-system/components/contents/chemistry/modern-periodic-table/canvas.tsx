@@ -15,7 +15,7 @@ import {
   threeSceneFrameVariants,
 } from "@repo/design-system/components/three/scene-frame";
 import { VisualCardBody } from "@repo/design-system/components/visual/card";
-import { useTheme } from "next-themes";
+import { useTheme } from "@repo/design-system/providers/theme";
 import { Suspense, useEffect, useMemo } from "react";
 import { useStore } from "zustand";
 
@@ -44,7 +44,7 @@ export function ModernPeriodicTableCanvas({
   labels: ModernPeriodicTableLabProps["labels"];
   store: ModernPeriodicTableFocusStore;
 }) {
-  const { resolvedTheme } = useTheme();
+  const resolvedTheme = useTheme((state) => state.resolvedTheme);
   const focusId = useStore(store, (state) => state.focusId);
   const colors = useMemo(
     () => getModernPeriodicTableSceneColors(resolvedTheme),

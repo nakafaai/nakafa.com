@@ -1,14 +1,16 @@
 import { negotiateLocale } from "@repo/internationalization/src/negotiate";
 import {
-  decideRedirect,
+  decideRootRedirect,
   decideSlashRedirect,
+  decideSpellingRedirect,
   LOCALE_VARY,
 } from "@repo/internationalization/src/redirect";
+import { isSharedPath } from "@repo/internationalization/src/rewrite";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { Array as Arr, Effect, Option } from "effect";
 import { hasTryoutAttemptCapability } from "@/components/tryout/route/path";
 import { readLlmsMarkdownPathname } from "@/lib/llms/routes";
-import { readProfileRoot } from "@/lib/profile/route";
+import { readProfileIdAddress, readProfileRoot } from "@/lib/profile/route";
 import { readMovedRedirect } from "@/lib/routing/moved";
 import { readPublicUrlMigrationRedirect } from "@/lib/routing/public/migration";
 import { readRetiredPublicRoute } from "@/lib/routing/public/retired";
@@ -20,10 +22,10 @@ import {
 
 /**
  * The answer to a retired public address, as a Response, or none. The
- * successor keeps the Markdown suffix and the query string of the request. A
- * retired profile address depends on the session cookie, so the answer says so
- * with `Vary`. The server entry asks this after the main-site and removed-address
- * answers, and before any other redirect.
+ * successor keeps the Markdown suffix and the query string of the request. Only
+ * a retired profile address depends on the session cookie, so only its answer
+ * says so with `Vary`. The server entry asks this after the school gates and the
+ * removed-address answer, and before the moved addresses.
  */
 export const readMigrationResponse = Effect.fn("www.routing.migrationResponse")(
   function* (request: Request) {
@@ -41,14 +43,14 @@ export const readMigrationResponse = Effect.fn("www.routing.migrationResponse")(
     if (migration === null) {
       return Option.none();
     }
+    const headers = new Headers({
+      location: `${migration.destination}${markdownExtension}${url.search}`,
+    });
+    if (Option.isSome(readProfileIdAddress(pathname))) {
+      headers.set("vary", "Cookie");
+    }
     return Option.some(
-      new Response(null, {
-        headers: {
-          location: `${migration.destination}${markdownExtension}${url.search}`,
-          vary: "Cookie",
-        },
-        status: migration.status,
-      })
+      new Response(null, { headers, status: migration.status })
     );
   }
 );
@@ -57,7 +59,8 @@ export const readMigrationResponse = Effect.fn("www.routing.migrationResponse")(
  * The redirect of a host that sits under the production domain but names no
  * school, such as `www`: the same path and query open on the main site, with a
  * 307 (ADR 0026). Only the path and query move, so a path that starts with two
- * slashes stays on the main site.
+ * slashes stays on the main site. A shared path, such as the robots file, answers
+ * on every host, so the refused host serves it itself.
  */
 export function readMainSiteRedirect(
   request: Request
@@ -67,6 +70,9 @@ export function readMainSiteRedirect(
     return Option.none();
   }
   const url = new URL(request.url);
+  if (isSharedPath(url.pathname)) {
+    return Option.none();
+  }
   const target = new URL(SITE_ORIGIN);
   target.pathname = url.pathname;
   target.search = url.search;
@@ -156,6 +162,23 @@ export function readSlashRedirectResponse(
 }
 
 /**
+ * The redirect of a non-public spelling of a localized path, such as
+ * `/en/curricula` for `/en/curriculum`, as a Response, or none. The server entry
+ * asks this before the negotiation, so a Markdown request for the non-public
+ * spelling moves to the public address too.
+ */
+export function readSpellingRedirectResponse(
+  request: Request
+): Option.Option<Response> {
+  const url = new URL(request.url);
+  const isSchoolHost = Option.isSome(readSchoolSlug(url.hostname));
+  return Option.map(
+    decideSpellingRedirect({ isSchoolHost, url }),
+    toRedirectResponse
+  );
+}
+
+/**
  * The redirect of an address that the product moved, as a Response, or none.
  * The server entry asks this before the negotiation: the reference site answered
  * these addresses in its configuration, before any middleware, so a Markdown
@@ -174,10 +197,10 @@ export function readMovedResponse(request: Request): Option.Option<Response> {
 
 /**
  * The locale redirect that answers a request before the router runs, as a
- * Response, or none: a bare profile address opens in the negotiated locale, the
- * root opens in the negotiated locale, and a non-public spelling moves to its
- * canonical path. The server entry asks this after the negotiation, because the
- * answer to a Markdown request does not depend on the locale.
+ * Response, or none: a bare profile address opens in the negotiated locale, and
+ * the root opens in the negotiated locale. The server entry asks this after the
+ * negotiation, because the answer to a Markdown request does not depend on the
+ * locale.
  */
 export function readRedirectResponse(
   request: Request
@@ -188,7 +211,7 @@ export function readRedirectResponse(
     readBareProfileRedirect(url, request.headers, isSchoolHost),
     () =>
       Option.map(
-        decideRedirect({ headers: request.headers, isSchoolHost, url }),
+        decideRootRedirect({ headers: request.headers, isSchoolHost, url }),
         toRedirectResponse
       )
   );

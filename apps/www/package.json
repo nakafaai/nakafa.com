@@ -62,7 +62,6 @@
     "effect": "catalog:",
     "feed": "^6.0.0",
     "motion": "catalog:",
-    "next-themes": "catalog:",
     "nitro": "3.0.260903-beta",
     "nuqs": "^2.10.2",
     "prosemirror-collab": "1.3.1",

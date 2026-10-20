@@ -36,7 +36,7 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
-import { useTheme } from "next-themes";
+import { useTheme } from "@repo/design-system/providers/theme";
 import type { ReactNode } from "react";
 import { Suspense, useState } from "react";
 
@@ -62,7 +62,7 @@ export function DimensionLab({
   description,
   labels,
 }: DimensionLabProps) {
-  const { resolvedTheme } = useTheme();
+  const resolvedTheme = useTheme((state) => state.resolvedTheme);
   const [selectedModeId, setSelectedModeId] =
     useState<DimensionModeId>(LENGTH_MODE_ID);
   const selectedMode = DIMENSION_MODES[selectedModeId];

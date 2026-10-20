@@ -1,4 +1,9 @@
-import { describe, expect, it } from "@effect/vitest";
+import { afterEach, describe, expect, it } from "@effect/vitest";
+import { THEME_STORAGE_KEY } from "@repo/design-system/lib/theme/registry";
+import {
+  connectThemeStore,
+  createThemeStore,
+} from "@repo/design-system/lib/theme/store";
 import { Schema } from "effect";
 import { THEME_PREPAINT_SCRIPT } from "@/lib/theme/prepaint";
 
@@ -82,4 +87,75 @@ describe("THEME_PREPAINT_SCRIPT", () => {
       colorScheme: "dark",
     });
   });
+});
+
+/** Stands in for the prefers-color-scheme query that the script and the store both read. */
+function stubSystemAppearance(prefersDark: boolean) {
+  vi.stubGlobal("matchMedia", () =>
+    Object.assign(new EventTarget(), { matches: prefersDark })
+  );
+}
+
+/** Puts the page in the state the server sends, with the stored choice in storage. */
+function resetPage(stored: string | null) {
+  localStorage.clear();
+  if (stored !== null) {
+    localStorage.setItem(THEME_STORAGE_KEY, stored);
+  }
+  document.documentElement.removeAttribute("class");
+  document.documentElement.style.removeProperty("color-scheme");
+  document.head.replaceChildren();
+}
+
+/** The root class and color scheme that the page shows now. */
+function readRoot() {
+  const root = document.documentElement;
+  return {
+    classes: [...root.classList],
+    colorScheme: root.style.getPropertyValue("color-scheme"),
+  };
+}
+
+/** Paints the page with the inline script, as the server's HTML does before hydration. */
+function paintWithScript() {
+  new Function("window", "document", THEME_PREPAINT_SCRIPT)(window, document);
+  return readRoot();
+}
+
+/** Paints the page with the theme store, as the provider does once the page hydrates. */
+function paintWithStore() {
+  const disconnect = connectThemeStore(createThemeStore());
+  const painted = readRoot();
+  disconnect();
+  return painted;
+}
+
+describe("THEME_PREPAINT_SCRIPT and the theme store", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    resetPage(null);
+  });
+
+  it.each([
+    { prefersDark: false, stored: null },
+    { prefersDark: true, stored: null },
+    { prefersDark: false, stored: "system" },
+    { prefersDark: true, stored: "system" },
+    { prefersDark: true, stored: "dark" },
+    { prefersDark: false, stored: "darkmatter" },
+    { prefersDark: true, stored: "bean" },
+    { prefersDark: true, stored: "unknown" },
+  ])(
+    "paints the root as the store does for $stored when the system prefers dark is $prefersDark",
+    ({ prefersDark, stored }) => {
+      stubSystemAppearance(prefersDark);
+      resetPage(stored);
+      const scripted = paintWithScript();
+
+      resetPage(stored);
+      const applied = paintWithStore();
+
+      expect(applied).toEqual(scripted);
+    }
+  );
 });

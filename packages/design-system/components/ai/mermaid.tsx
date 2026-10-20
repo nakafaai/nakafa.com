@@ -15,11 +15,11 @@ import {
   renderMermaid,
 } from "@repo/design-system/lib/mermaid/render";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
+import { useTheme } from "@repo/design-system/providers/theme";
 import { createStableId } from "@repo/utilities/id";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "cn";
 import { Effect, Fiber } from "effect";
-import { useTheme } from "next-themes";
 import { useEffect, useId, useRef, useState } from "react";
 import { useTranslations } from "use-intl";
 
@@ -73,7 +73,7 @@ export function Mermaid({
   const t = useTranslations("Ai");
   const tCommon = useTranslations("Common");
   const componentId = useId();
-  const { resolvedTheme } = useTheme();
+  const resolvedTheme = useTheme((state) => state.resolvedTheme);
   const renderId = createStableId(
     `mermaid-${componentId.replaceAll(":", "")}`,
     chart

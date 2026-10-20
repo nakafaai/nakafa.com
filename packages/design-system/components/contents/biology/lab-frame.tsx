@@ -26,8 +26,8 @@ import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import type { NarrowCameraPose } from "@repo/design-system/lib/geometry/camera";
 import { lazyComponent } from "@repo/design-system/lib/lazy";
+import { useTheme } from "@repo/design-system/providers/theme";
 import { Array as Arr } from "effect";
-import { useTheme } from "next-themes";
 import type { ComponentType, ReactNode } from "react";
 import { useMemo, useState } from "react";
 import { useTranslations } from "use-intl";
@@ -102,7 +102,7 @@ export function BiologyLabFrame<Item extends BiologyLabItemProps>({
   scene: ComponentType<BiologySceneProps<Item>>;
   view?: NarrowCameraPose;
 }) {
-  const { resolvedTheme } = useTheme();
+  const resolvedTheme = useTheme((state) => state.resolvedTheme);
   const [store] = useState(() => createBiologyItemStore(defaultItemIndex));
   const colors = useMemo(
     () => getBiologySceneColors(resolvedTheme),

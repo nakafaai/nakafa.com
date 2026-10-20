@@ -17,8 +17,8 @@ import { COLORS, getColor } from "@repo/design-system/lib/color";
 import type { CameraProjection } from "@repo/design-system/lib/geometry/camera";
 import type { Point3 } from "@repo/design-system/lib/geometry/point";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
+import { useTheme } from "@repo/design-system/providers/theme";
 import { cn } from "cn";
-import { useTheme } from "next-themes";
 import {
   type ComponentProps,
   type CSSProperties,
@@ -171,7 +171,7 @@ export function CoordinateSystem({
   "aria-label": ariaLabel,
 }: Props) {
   const showGrid = useCoordinateControls((controls) => controls.showGrid);
-  const { resolvedTheme } = useTheme();
+  const resolvedTheme = useTheme((state) => state.resolvedTheme);
   const isDarkTheme = getThemeAppearance(resolvedTheme) === "dark";
   // Color mapping based on color scheme
   const gridColors = useMemo(() => {

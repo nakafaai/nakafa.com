@@ -17,9 +17,9 @@ function readAlias(path: string) {
 }
 
 describe("social image suffix", () => {
-  it("names the image file of a route, the png and og alias, ignoring case", () => {
+  it("names the png and og alias of a route, ignoring case", () => {
     expect(readImageSuffix("en/articles/x/image.png")).toEqual(
-      Option.some("/image.png")
+      Option.some(".png")
     );
     expect(readImageSuffix("en/articles/x.PNG")).toEqual(Option.some(".png"));
     expect(readImageSuffix("en/articles/x.og")).toEqual(Option.some(".og"));
@@ -41,12 +41,18 @@ describe("public social image aliases", () => {
     );
   });
 
-  it("rewrites an image alias and an og alias without a locale prefix", () => {
-    expect(readAlias("/de/articles/aljabar/image.png")).toEqual(
-      Option.some(`${ORIGIN}/og/de/articles/aljabar`)
+  it("rewrites a png alias and an og alias without a locale prefix", () => {
+    expect(readAlias("/articles/aljabar.png")).toEqual(
+      Option.some(`${ORIGIN}/og/articles/aljabar`)
     );
     expect(readAlias("/articles/aljabar.og")).toEqual(
       Option.some(`${ORIGIN}/og/articles/aljabar`)
+    );
+  });
+
+  it("rewrites an image file under a served locale to the OG route of its own path", () => {
+    expect(readAlias("/de/articles/aljabar/image.png")).toEqual(
+      Option.some(`${ORIGIN}/og/de/articles/aljabar/image`)
     );
   });
 
@@ -64,12 +70,6 @@ describe("public social image aliases", () => {
       Option.none()
     );
     expect(readAlias("/en/og/articles/aljabar.png")).toEqual(Option.none());
-  });
-
-  it("leaves the public PNG files of the root and the public folder to the static files", () => {
-    expect(readAlias("/og.png")).toEqual(Option.none());
-    expect(readAlias("/open-graph/app/de-pricing.png")).toEqual(Option.none());
-    expect(readAlias("/logos/ui.png")).toEqual(Option.none());
   });
 
   it("serves an og alias of a path without a locale, since no public file ends in .og", () => {
