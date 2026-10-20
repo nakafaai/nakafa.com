@@ -95,9 +95,9 @@ describe("student home first screen", () => {
   it("reads the sittings the student may take part in", async () => {
     answer([[exams.sittings.mine, [{ id: "sitting-1" }]]]);
 
-    const sittings = await studentHomeHandler({ data: { slug: SLUG } });
+    const screen = await studentHomeHandler({ data: { slug: SLUG } });
 
-    expect(sittings).toStrictEqual([{ id: "sitting-1" }]);
+    expect(screen).toStrictEqual({ sittings: [{ id: "sitting-1" }] });
     expect(mocks.preloadConfectQuery).toHaveBeenCalledExactlyOnceWith(
       exams.sittings.mine,
       { slug: SLUG },

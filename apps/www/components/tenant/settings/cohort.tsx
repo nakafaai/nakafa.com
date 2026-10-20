@@ -1,6 +1,5 @@
 "use client";
 
-import type { Ref } from "@confect/core";
 import {
   type PaginatedQueryItem,
   PaginatedQueryResult,
@@ -32,7 +31,14 @@ import { toast } from "@repo/design-system/lib/toast/notify";
 import { Link } from "@repo/internationalization/src/navigation";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, Schema } from "effect";
-import { type ReactNode, startTransition, useId, useState } from "react";
+import {
+  createContext,
+  type ReactNode,
+  startTransition,
+  use,
+  useId,
+  useState,
+} from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/providers/convex";
 import { LayoutContent } from "@/components/shared/content/layout";
@@ -61,12 +67,10 @@ import {
   isDraft,
   type Period,
 } from "@/components/tenant/settings/state";
-import {
-  type PreloadedPage,
-  usePaginatedPreloaded,
-} from "@/lib/data/paginated";
+import { usePaginatedPreloaded } from "@/lib/data/paginated";
 import { usePreloadedQueryResult } from "@/lib/data/preloaded";
 import { getSchoolSettingsSection } from "@/lib/settings/school";
+import type { readCohortFn } from "@/lib/tenant/settings.fn";
 
 const SOURCE = "components/tenant/settings/cohort";
 
@@ -236,13 +240,15 @@ export function SchoolCohortMenu({
  * The first screen of one cohort page, which its loader read on the server: the cohort, the first page of its
  * members, and the cohorts of its period, which the cohort's move menu lists.
  */
-interface CohortPreload {
-  readonly cohorts: Ref.Returns<typeof tenancy.cohorts.list> | undefined;
-  readonly detail: Ref.Returns<typeof tenancy.cohorts.get> | undefined;
-  readonly members:
-    | PreloadedPage<PaginatedQueryItem<typeof tenancy.cohorts.members>>
-    | undefined;
-}
+type CohortPreload = Pick<
+  Awaited<ReturnType<typeof readCohortFn>>,
+  "cohorts" | "detail" | "members"
+>;
+
+/** The first screen of one cohort page, which the page's loader read on the server. */
+const CohortPreloadContext = createContext<CohortPreload | undefined>(
+  undefined
+);
 
 /**
  * One cohort's page: its path and name in the school's one header, with the page's action
@@ -263,7 +269,9 @@ export function SchoolCohortSettings({
       fallback={(failure) => <CohortFailure>{failure}</CohortFailure>}
       read={{ args: { cohortId, slug }, ref: tenancy.cohorts.get }}
     >
-      <SchoolCohortPage cohortId={cohortId} preload={preload} slug={slug} />
+      <CohortPreloadContext value={preload}>
+        <SchoolCohortPage cohortId={cohortId} slug={slug} />
+      </CohortPreloadContext>
     </ReadBoundary>
   );
 }
@@ -326,13 +334,12 @@ function CohortUnavailable() {
 /** One cohort's page once the cohort is read. */
 function SchoolCohortPage({
   cohortId,
-  preload,
   slug,
 }: {
   cohortId: CohortDetail["id"];
-  preload: CohortPreload | undefined;
   slug: TenantSlug;
 }) {
+  const preload = use(CohortPreloadContext);
   const t = useTranslations("SchoolSettings");
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const cohort = usePreloadedQueryResult(

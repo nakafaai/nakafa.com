@@ -44,7 +44,14 @@ import {
 } from "@repo/design-system/components/ui/sheet";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, Option, Schema } from "effect";
-import { startTransition, useId, useState, useTransition } from "react";
+import {
+  createContext,
+  startTransition,
+  use,
+  useId,
+  useState,
+  useTransition,
+} from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/providers/convex";
 import { DataFailure } from "@/components/shared/failure";
@@ -85,6 +92,11 @@ type RolesFirstPage = PreloadedPage<
 /** One active grant of the school as the grants list shows it. */
 type GrantItem = PaginatedQueryItem<typeof access.grants.list>;
 
+/** The first page of the grants, which the page's loader read on the server. */
+const RolesFirstPageContext = createContext<RolesFirstPage | undefined>(
+  undefined
+);
+
 /**
  * The roles of the school: Role guide in the header opens what each role may do, and
  * Give role opens the dialog that gives a role of the whole school to a person. The
@@ -121,7 +133,9 @@ export function SchoolRolesSettings({
       }
     >
       <ReadBoundary>
-        <SchoolGrantsBody first={first} slug={slug} />
+        <RolesFirstPageContext value={first}>
+          <SchoolGrantsBody slug={slug} />
+        </RolesFirstPageContext>
       </ReadBoundary>
       <SchoolRoleGuide open={isGuiding} setOpen={setIsGuiding} />
       <SchoolGrantDialog open={isGiving} setOpen={setIsGiving} slug={slug} />
@@ -130,13 +144,8 @@ export function SchoolRolesSettings({
 }
 
 /** The grants of the school, read a page at a time, with the table and its end. */
-function SchoolGrantsBody({
-  first,
-  slug,
-}: {
-  first: RolesFirstPage | undefined;
-  slug: TenantSlug;
-}) {
+function SchoolGrantsBody({ slug }: { slug: TenantSlug }) {
+  const first = use(RolesFirstPageContext);
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const pagination = usePaginatedPreloaded(
     access.grants.list,

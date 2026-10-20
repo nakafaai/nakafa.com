@@ -20,7 +20,7 @@ import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, Option } from "effect";
-import { useId, useState, useTransition } from "react";
+import { createContext, use, useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/providers/convex";
 import { DataFailure } from "@/components/shared/failure";
@@ -42,10 +42,8 @@ import {
   type UnitId,
 } from "@/components/tenant/settings/unit";
 import { NoActiveUnit } from "@/components/tenant/settings/unitless";
-import {
-  type PreloadedPage,
-  usePaginatedPreloaded,
-} from "@/lib/data/paginated";
+import { usePaginatedPreloaded } from "@/lib/data/paginated";
+import type { readPeriodsFn } from "@/lib/tenant/settings.fn";
 
 const SOURCE = "components/tenant/settings/periods";
 
@@ -53,12 +51,10 @@ const SOURCE = "components/tenant/settings/periods";
 export const PAGE_SIZE = 25;
 
 /** The first screen of the periods tab: the first page of the periods of the unit the tab opens, and that unit. */
-interface PeriodsPreload {
-  readonly page:
-    | PreloadedPage<PaginatedQueryItem<typeof tenancy.periods.list>>
-    | undefined;
-  readonly unitId: UnitId;
-}
+type PeriodsPreload = Pick<
+  Awaited<ReturnType<typeof readPeriodsFn>>,
+  "page" | "unitId"
+>;
 
 /** The ID of one unit of the school. */
 
@@ -70,6 +66,11 @@ const periodColumns = createColumnHelper<
   typeof dataTableFeatures,
   PeriodItem
 >();
+
+/** The first screen of the periods tab, which the page's loader read on the server. */
+const PeriodsPreloadContext = createContext<PeriodsPreload | undefined>(
+  undefined
+);
 
 /**
  * Renders the periods of the school's unit: Add period in the header once a unit is
@@ -88,7 +89,9 @@ export function SchoolPeriodsSettings({
       fallback={(failure) => <SettingsPage>{failure}</SettingsPage>}
       read={{ args: { slug }, ref: tenancy.viewer.get }}
     >
-      <SchoolPeriodsContent preload={preload} slug={slug} />
+      <PeriodsPreloadContext value={preload}>
+        <SchoolPeriodsContent slug={slug} />
+      </PeriodsPreloadContext>
     </ReadBoundary>
   );
 }
@@ -97,13 +100,8 @@ export function SchoolPeriodsSettings({
  * The periods of the school's active unit, with the unit choice when the school has more than one unit.
  * A school with no active unit says so and links to the units, because a period belongs to a unit.
  */
-function SchoolPeriodsContent({
-  preload,
-  slug,
-}: {
-  preload: PeriodsPreload | undefined;
-  slug: TenantSlug;
-}) {
+function SchoolPeriodsContent({ slug }: { slug: TenantSlug }) {
+  const preload = use(PeriodsPreloadContext);
   const t = useTranslations("SchoolSettings");
   const viewer = useViewerQuery();
   const [chosenUnit, setChosenUnit] = useState<UnitId | undefined>(undefined);

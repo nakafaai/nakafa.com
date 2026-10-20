@@ -1,11 +1,11 @@
 "use client";
 
-import type { GenericId, Ref } from "@confect/core";
+import type { GenericId } from "@confect/core";
 import { QueryResult } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Array as Arr } from "effect";
-import { useMemo } from "react";
+import { createContext, use, useMemo } from "react";
 import { useTranslations } from "use-intl";
 import {
   ResultsPaperContext,
@@ -20,19 +20,18 @@ import { SchoolHeader } from "@/components/tenant/header";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { isDenied, isLostAccess } from "@/components/tenant/refusal";
 import { usePreloadedQueryResult } from "@/lib/data/preloaded";
+import type { readResultsFn } from "@/lib/tenant/exams.fn";
 
 /** The first screen of the results, which the results page's loader read on the server. */
-interface ResultsPreload {
-  readonly overview:
-    | Ref.Returns<typeof exams.results.results.overview>
-    | undefined;
-  readonly students:
-    | Pick<
-        Ref.Returns<typeof exams.results.results.byStudent>,
-        "isDone" | "page"
-      >
-    | undefined;
-}
+type ResultsPreload = Pick<
+  Awaited<ReturnType<typeof readResultsFn>>,
+  "overview" | "students"
+>;
+
+/** The first screen of the results, which the page's loader read on the server. */
+const ResultsPreloadContext = createContext<ResultsPreload | undefined>(
+  undefined
+);
 
 /**
  * The results of one sitting for its teacher: the release of the results, the students' list, and each
@@ -64,7 +63,9 @@ export function SittingResults({
       )}
       read={{ args: scope, ref: exams.results.results.overview }}
     >
-      <SittingResultsContent examId={examId} preload={preload} scope={scope} />
+      <ResultsPreloadContext value={preload}>
+        <SittingResultsContent examId={examId} scope={scope} />
+      </ResultsPreloadContext>
     </ReadBoundary>
   );
 }
@@ -72,16 +73,15 @@ export function SittingResults({
 /** The results of one sitting once its overview is in: the release, the students, and the questions. */
 function SittingResultsContent({
   examId,
-  preload,
   scope,
 }: {
   readonly examId: GenericId.GenericId<"exams">;
-  readonly preload: ResultsPreload | undefined;
   readonly scope: {
     readonly sittingId: GenericId.GenericId<"examSittings">;
     readonly slug: TenantSlug;
   };
 }) {
+  const preload = use(ResultsPreloadContext);
   const settled = useSessionSettled();
   const overview = usePreloadedQueryResult(
     exams.results.results.overview,

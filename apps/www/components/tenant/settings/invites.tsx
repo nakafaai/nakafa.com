@@ -22,7 +22,13 @@ import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, Option, Schema } from "effect";
-import { startTransition, useState, useTransition } from "react";
+import {
+  createContext,
+  startTransition,
+  use,
+  useState,
+  useTransition,
+} from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/providers/convex";
 import { DataFailure } from "@/components/shared/failure";
@@ -68,6 +74,11 @@ const inviteColumns = createColumnHelper<
   InviteItem
 >();
 
+/** The first page of the invites, which the page's loader read on the server. */
+const InvitesFirstPageContext = createContext<InvitesFirstPage | undefined>(
+  undefined
+);
+
 /**
  * The invites of the school: Invite in the header, then every pending and expired invite in a
  * data table with its role, its expiry and its row menu. A pending invite sends again or
@@ -97,7 +108,9 @@ export function SchoolInvitesSettings({
       }
     >
       <ReadBoundary>
-        <SchoolInvitesBody first={first} sendLocale={sendLocale} slug={slug} />
+        <InvitesFirstPageContext value={first}>
+          <SchoolInvitesBody sendLocale={sendLocale} slug={slug} />
+        </InvitesFirstPageContext>
       </ReadBoundary>
       <SchoolInviteDialog
         open={isInviting}
@@ -110,14 +123,13 @@ export function SchoolInvitesSettings({
 
 /** The invites of the school, read a page at a time, with the table and its end. */
 function SchoolInvitesBody({
-  first,
   sendLocale,
   slug,
 }: {
-  first: InvitesFirstPage | undefined;
   sendLocale: typeof ActiveAppLocaleCodeSchema.Type | undefined;
   slug: TenantSlug;
 }) {
+  const first = use(InvitesFirstPageContext);
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const pagination = usePaginatedPreloaded(
     tenancy.invites.list,

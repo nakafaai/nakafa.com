@@ -1,6 +1,5 @@
 "use client";
 
-import type { Ref } from "@confect/core";
 import {
   type PaginatedQueryItem,
   PaginatedQueryResult,
@@ -11,6 +10,7 @@ import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, Option } from "effect";
+import { createContext, use } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/providers/convex";
 import { DataFailure } from "@/components/shared/failure";
@@ -23,6 +23,7 @@ import { SettingsPage } from "@/components/tenant/settings/page";
 import { SchoolDateTime } from "@/components/tenant/settings/time";
 import { usePaginatedPreloaded } from "@/lib/data/paginated";
 import { usePreloadedQueryResult } from "@/lib/data/preloaded";
+import type { readAuditFn } from "@/lib/tenant/settings.fn";
 
 /** How many entries one page of the journal loads, and each page after it. */
 export const PAGE_SIZE = 25;
@@ -30,21 +31,17 @@ export const PAGE_SIZE = 25;
 /** One journal entry as the audit list shows it. */
 type EntryItem = PaginatedQueryItem<typeof journal.audit.list>;
 
+/** The audit's first screen as its loader reads it on the server. */
+type AuditFirstScreen = Awaited<ReturnType<typeof readAuditFn>>;
+
 /**
  * An audit entry as the loader sends it to the page: the subject's name is a string, or none, because an
  * Option does not cross the server boundary. The page restores the Option before it reads the entry.
  */
-type EntryWire = Omit<EntryItem, "subjectName"> & {
-  readonly subjectName: string | undefined;
-};
+type EntryWire = NonNullable<AuditFirstScreen["entries"]>["page"][number];
 
 /** The first screen of the audit: the first page of its entries, and the people who appear in them. */
-interface AuditPreload {
-  readonly entries:
-    | { readonly isDone: boolean; readonly page: readonly EntryWire[] }
-    | undefined;
-  readonly people: Ref.Returns<typeof journal.audit.actors> | undefined;
-}
+type AuditPreload = Pick<AuditFirstScreen, "entries" | "people">;
 
 /** The loader's entry with its subject name as the page reads it. */
 function restoreEntry(entry: EntryWire): EntryItem {
@@ -53,6 +50,9 @@ function restoreEntry(entry: EntryWire): EntryItem {
 
 /** The columns of the audit table. */
 const entryColumns = createColumnHelper<typeof dataTableFeatures, EntryItem>();
+
+/** The audit's first screen, which the page's loader read on the server. */
+const AuditPreloadContext = createContext<AuditPreload | undefined>(undefined);
 
 /** The section in the settings page frame, whose header shows while its body loads. */
 export function SchoolAuditSettings({
@@ -65,7 +65,9 @@ export function SchoolAuditSettings({
   return (
     <SettingsPage>
       <ReadBoundary>
-        <SchoolAuditBody preload={preload} slug={slug} />
+        <AuditPreloadContext value={preload}>
+          <SchoolAuditBody slug={slug} />
+        </AuditPreloadContext>
       </ReadBoundary>
     </SettingsPage>
   );
@@ -78,13 +80,8 @@ export function SchoolAuditSettings({
  * page shows none. The body waits for the first page, and an empty school shows the empty
  * state alone.
  */
-function SchoolAuditBody({
-  preload,
-  slug,
-}: {
-  preload: AuditPreload | undefined;
-  slug: TenantSlug;
-}) {
+function SchoolAuditBody({ slug }: { slug: TenantSlug }) {
+  const preload = use(AuditPreloadContext);
   const t = useTranslations("SchoolSettings");
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const first =

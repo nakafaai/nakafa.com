@@ -23,7 +23,7 @@ import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr } from "effect";
-import { useState, useTransition } from "react";
+import { createContext, use, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/providers/convex";
 import { DataFailure } from "@/components/shared/failure";
@@ -63,6 +63,11 @@ const clientColumns = createColumnHelper<
   ClientItem
 >();
 
+/** The first page of the clients, which the page's loader read on the server. */
+const ClientsFirstPageContext = createContext<ClientsFirstPage | undefined>(
+  undefined
+);
+
 /**
  * Renders the integration clients of the school, each with the part of the school it
  * covers, in a data table with Create client in the header. A client is created, rotated
@@ -90,11 +95,9 @@ export function SchoolClientsSettings({
       }
     >
       <ReadBoundary>
-        <SchoolClientTable
-          first={first}
-          onIssued={setIssuedSecret}
-          slug={slug}
-        />
+        <ClientsFirstPageContext value={first}>
+          <SchoolClientTable onIssued={setIssuedSecret} slug={slug} />
+        </ClientsFirstPageContext>
       </ReadBoundary>
       <SchoolClientCreateDialog
         onIssued={setIssuedSecret}
@@ -119,14 +122,13 @@ export function SchoolClientsSettings({
  * before the rows arrive.
  */
 function SchoolClientTable({
-  first,
   onIssued,
   slug,
 }: {
-  first: ClientsFirstPage | undefined;
   onIssued: (secret: string) => void;
   slug: TenantSlug;
 }) {
+  const first = use(ClientsFirstPageContext);
   const t = useTranslations("SchoolSettings");
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const pagination = usePaginatedPreloaded(

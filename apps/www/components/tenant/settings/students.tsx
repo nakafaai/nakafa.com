@@ -28,7 +28,7 @@ import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, Option, Schema } from "effect";
-import { useId, useState, useTransition } from "react";
+import { createContext, use, useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/providers/convex";
 import { DataFailure } from "@/components/shared/failure";
@@ -69,6 +69,11 @@ type LoginItem = PaginatedQueryItem<typeof identity.logins.list>;
 /** The columns of the logins table. */
 const loginColumns = createColumnHelper<typeof dataTableFeatures, LoginItem>();
 
+/** The first page of the logins, which the page's loader read on the server. */
+const StudentsFirstPageContext = createContext<StudentsFirstPage | undefined>(
+  undefined
+);
+
 /**
  * The student accounts of the school: Add student in the header creates a student and
  * the first card in one step. The logins sit in a data table, and each login's reissue
@@ -95,7 +100,9 @@ export function SchoolStudentsSettings({
       }
     >
       <ReadBoundary>
-        <SchoolLoginsBody first={first} onIssued={setIssued} slug={slug} />
+        <StudentsFirstPageContext value={first}>
+          <SchoolLoginsBody onIssued={setIssued} slug={slug} />
+        </StudentsFirstPageContext>
       </ReadBoundary>
       <SchoolStudentDialog
         onAdded={setIssued}
@@ -114,14 +121,13 @@ export function SchoolStudentsSettings({
 
 /** The school's logins, read a page at a time, with the table and its end. */
 function SchoolLoginsBody({
-  first,
   onIssued,
   slug,
 }: {
-  first: StudentsFirstPage | undefined;
   onIssued: (card: CardView) => void;
   slug: TenantSlug;
 }) {
+  const first = use(StudentsFirstPageContext);
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const pagination = usePaginatedPreloaded(
     identity.logins.list,

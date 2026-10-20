@@ -30,7 +30,7 @@ import { usePaginatedPreloaded } from "@/lib/data/paginated";
 export const CHANNEL_PAGE_SIZE = 20;
 
 /** The first page of a class's channels, which its forum loader read on the server. */
-export type ChannelsFirstPage = Pick<
+type ChannelsFirstPage = Pick<
   Ref.Returns<typeof classroom.forum.channels.list>,
   "isDone" | "page"
 >;

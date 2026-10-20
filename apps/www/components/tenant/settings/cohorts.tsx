@@ -1,6 +1,5 @@
 "use client";
 
-import type { Ref } from "@confect/core";
 import { QueryResult, useMutation } from "@confect/react";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import {
@@ -61,6 +60,7 @@ import {
 } from "@/components/tenant/settings/unit";
 import { NoActiveUnit } from "@/components/tenant/settings/unitless";
 import { usePreloadedQueryResult } from "@/lib/data/preloaded";
+import type { readCohortsFn } from "@/lib/tenant/settings.fn";
 
 const SOURCE = "components/tenant/settings/cohorts";
 
@@ -80,11 +80,10 @@ const cohortColumns = createColumnHelper<typeof dataTableFeatures, Cohort>();
  * The first screen of the cohorts tab, which its loader read for the school's first active unit: the unit,
  * its active period, and the cohorts of that period. A unit or a period that the tab chose later reads live.
  */
-interface CohortsPreload {
-  readonly active: Ref.Returns<typeof tenancy.cohorts.activePeriod> | undefined;
-  readonly cohorts: Ref.Returns<typeof tenancy.cohorts.list> | undefined;
-  readonly unitId: UnitId;
-}
+type CohortsPreload = Pick<
+  Awaited<ReturnType<typeof readCohortsFn>>,
+  "active" | "cohorts" | "unitId"
+>;
 
 /** The loader's first screen of the cohorts tab, which the tab's reads take their first values from. */
 const CohortsPreloadContext = createContext<CohortsPreload | undefined>(

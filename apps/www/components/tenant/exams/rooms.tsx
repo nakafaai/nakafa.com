@@ -1,6 +1,6 @@
 "use client";
 
-import type { GenericId, Ref } from "@confect/core";
+import type { GenericId } from "@confect/core";
 import { PaginatedQueryResult, QueryResult, useMutation } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { RoomRow } from "@repo/backend/confect/exams/rooms";
@@ -24,7 +24,7 @@ import {
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { Link } from "@repo/internationalization/src/navigation";
 import { Array as Arr, Option, Schema } from "effect";
-import { startTransition, useState } from "react";
+import { createContext, startTransition, use, useState } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/providers/convex";
 import { LayoutContent } from "@/components/shared/content/layout";
@@ -45,6 +45,7 @@ import { schoolDateTimeText } from "@/components/tenant/settings/clock";
 import { saveSchool } from "@/components/tenant/settings/save.client";
 import { usePaginatedPreloaded } from "@/lib/data/paginated";
 import { usePreloadedQueryResult } from "@/lib/data/preloaded";
+import type { readExamRoomsFn } from "@/lib/tenant/exams.fn";
 
 const SOURCE = "components/tenant/exams/rooms";
 
@@ -58,12 +59,15 @@ type StateFilter = typeof RoomStateFilter.Type;
 export const ROOM_PAGE_SIZE = 20;
 
 /** The first screen of the rooms page, which its loader read on the server: the exam and the first page of its rooms. */
-interface ExamRoomsPreload {
-  readonly rooms:
-    | Pick<Ref.Returns<typeof exams.rooms.list>, "isDone" | "page">
-    | undefined;
-  readonly summary: Ref.Returns<typeof exams.rooms.exam> | undefined;
-}
+type ExamRoomsPreload = Pick<
+  Awaited<ReturnType<typeof readExamRoomsFn>>,
+  "rooms" | "summary"
+>;
+
+/** The first screen of the rooms page, which the page's loader read on the server. */
+const ExamRoomsPreloadContext = createContext<ExamRoomsPreload | undefined>(
+  undefined
+);
 
 /**
  * The rooms of one exam: its title in the header, the state filter, and a table of its rooms in
@@ -95,7 +99,9 @@ export function ExamRooms({
       )}
       read={{ args: { examId, slug }, ref: exams.rooms.exam }}
     >
-      <ExamRoomsContent examId={examId} preload={preload} slug={slug} />
+      <ExamRoomsPreloadContext value={preload}>
+        <ExamRoomsContent examId={examId} slug={slug} />
+      </ExamRoomsPreloadContext>
     </ReadBoundary>
   );
 }
@@ -109,13 +115,12 @@ function useExamsItems(canOpenExams: boolean) {
 /** The rooms page once the exam's summary is in: the header with the exam's title, and the table. */
 function ExamRoomsContent({
   examId,
-  preload,
   slug,
 }: {
   examId: GenericId.GenericId<"exams">;
-  preload: ExamRoomsPreload | undefined;
   slug: TenantSlug;
 }) {
+  const preload = use(ExamRoomsPreloadContext);
   const t = useTranslations("Exams");
   const tenant = useTenant();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);

@@ -13,7 +13,7 @@ import { buttonVariants } from "@repo/design-system/lib/button";
 import { Link } from "@repo/internationalization/src/navigation";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr } from "effect";
-import { startTransition } from "react";
+import { createContext, startTransition, use } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/providers/convex";
 import { DataFailure } from "@/components/shared/failure";
@@ -51,6 +51,11 @@ const memberColumns = createColumnHelper<
   MemberItem
 >();
 
+/** The first page of the members, which the page's loader read on the server. */
+const MembersFirstPageContext = createContext<MembersFirstPage | undefined>(
+  undefined
+);
+
 /**
  * Every active member of the school in a data table: its name, how far it has joined,
  * and its roles as badges. A member who is not invited has a row menu that removes it.
@@ -67,20 +72,17 @@ export function SchoolMembersSettings({
   return (
     <SettingsPage>
       <ReadBoundary>
-        <SchoolMembersBody first={first} slug={slug} />
+        <MembersFirstPageContext value={first}>
+          <SchoolMembersBody slug={slug} />
+        </MembersFirstPageContext>
       </ReadBoundary>
     </SettingsPage>
   );
 }
 
 /** The members of the school, read a page at a time, with the table and its end. */
-function SchoolMembersBody({
-  first,
-  slug,
-}: {
-  first: MembersFirstPage | undefined;
-  slug: TenantSlug;
-}) {
+function SchoolMembersBody({ slug }: { slug: TenantSlug }) {
+  const first = use(MembersFirstPageContext);
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const pagination = usePaginatedPreloaded(
     tenancy.roster.members,

@@ -29,7 +29,7 @@ import {
   SelectValue,
 } from "@repo/design-system/components/ui/select";
 import { Array as Arr, Option, Schema } from "effect";
-import { Fragment, startTransition, useState } from "react";
+import { createContext, Fragment, startTransition, use, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/providers/convex";
 import {
@@ -56,6 +56,11 @@ import { usePreloadedQueryResult } from "@/lib/data/preloaded";
 
 const SOURCE = "components/tenant/settings/units";
 
+/** The first page of the units, which the page's loader read on the server. */
+const UnitsPreloadContext = createContext<
+  Ref.Returns<typeof tenancy.units.list> | undefined
+>(undefined);
+
 /** The section in the settings page frame, whose header shows while its body loads. */
 export function SchoolUnitsSettings({
   preload,
@@ -76,7 +81,9 @@ export function SchoolUnitsSettings({
       }
     >
       <ReadBoundary read={{ args: { slug }, ref: tenancy.units.list }}>
-        <SchoolUnitsBody preload={preload} slug={slug} />
+        <UnitsPreloadContext value={preload}>
+          <SchoolUnitsBody slug={slug} />
+        </UnitsPreloadContext>
       </ReadBoundary>
       <SchoolUnitCreateDialog
         open={isAdding}
@@ -88,13 +95,8 @@ export function SchoolUnitsSettings({
 }
 
 /** Renders one card per unit of the school, with its time zone and content language, and its NPSN card. */
-function SchoolUnitsBody({
-  preload,
-  slug,
-}: {
-  preload: Ref.Returns<typeof tenancy.units.list> | undefined;
-  slug: TenantSlug;
-}) {
+function SchoolUnitsBody({ slug }: { slug: TenantSlug }) {
+  const preload = use(UnitsPreloadContext);
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const units = usePreloadedQueryResult(
     tenancy.units.list,

@@ -40,5 +40,10 @@ export const staffHomeHandler = memberHandler(
 /** The first screen of a student home: the sittings the student may take part in. */
 export const studentHomeHandler = memberHandler(
   ({ slug }: typeof StudentHomeInput.Type, token: string) =>
-    orUndefined(preloadConfectQuery(exams.sittings.mine, { slug }, token))
+    Effect.gen(function* () {
+      const sittings = yield* orUndefined(
+        preloadConfectQuery(exams.sittings.mine, { slug }, token)
+      );
+      return { sittings };
+    })
 );
