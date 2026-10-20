@@ -19,6 +19,7 @@ import {
   loadActiveContentIdentity,
 } from "@/lib/content/published/active";
 import { invalidateStoreTag } from "@/lib/content/store/entry";
+import { invalidateLlmsCache } from "@/lib/llms/cache";
 import { invalidateOgCache } from "@/lib/og/cache";
 import { invalidateSitemapCache } from "@/lib/sitemap/cache";
 
@@ -92,10 +93,10 @@ const readCacheRequest = Effect.fn("NakafaContent.readCacheRequest")(function* (
 /**
  * Expires the stored release pointer and proves the expiry, then purges one
  * content scope from the store and from the CDN, then purges the shared
- * sitemap response and the social images once for the release, then expires
- * the pointer again. The pointer goes first: a page that refills after the
- * purge must read the release that this call activates and not the one it
- * replaces. The Runtime Cache client resolves even when an expiry failed, so
+ * sitemap response and the Markdown answers once for the release, then the
+ * social images, then expires the pointer again. The pointer goes first: a
+ * page that refills after the purge must read the release that this call
+ * activates and not the one it replaces. The Runtime Cache client resolves even when an expiry failed, so
  * the call reads the pointer back and stops before it purges anything when the
  * pointer still names the previous release. The last expiry drops a pointer
  * that a read which began before the activation wrote after the first one, so
@@ -111,6 +112,7 @@ const invalidateContentRuntime = Effect.fn("NakafaContent.invalidateRuntime")(
     yield* invalidateContentCache(scope);
     yield* invalidateStoreTag(makeContentCacheTag(scope));
     yield* invalidateSitemapCache(releaseId);
+    yield* invalidateLlmsCache(releaseId);
     yield* invalidateOgCache(releaseId).pipe(Effect.ignore({ log: "Warn" }));
     yield* expireActiveContentIdentity();
   }

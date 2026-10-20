@@ -12,6 +12,7 @@ import {
 import { receiveContentCache } from "@/lib/content/internal/cache.server";
 import { PublishedReleaseMismatchError } from "@/lib/content/published/errors";
 import { ContentStoreUnavailableError } from "@/lib/content/store/entry";
+import type { invalidateLlmsCache } from "@/lib/llms/cache";
 import {
   type invalidateOgCache,
   OgCacheInvalidationError,
@@ -40,6 +41,9 @@ const invalidateSitemapCacheMock = vi.hoisted(() =>
 );
 const invalidateOgCacheMock = vi.hoisted(() =>
   vi.fn<typeof invalidateOgCache>()
+);
+const invalidateLlmsCacheMock = vi.hoisted(() =>
+  vi.fn<typeof invalidateLlmsCache>()
 );
 
 vi.mock("@repo/utilities/body", async (importOriginal) => {
@@ -79,6 +83,11 @@ vi.mock("@/lib/og/cache", async (importOriginal) => ({
   invalidateOgCache: invalidateOgCacheMock,
 }));
 
+vi.mock("@/lib/llms/cache", () => ({
+  /** Records the Markdown corpus invalidation without calling Vercel. */
+  invalidateLlmsCache: invalidateLlmsCacheMock,
+}));
+
 vi.mock("@/lib/content/published/active", () => ({
   /** Answers whether the stored release pointer names the activated release. */
   confirmActiveContentIdentity: confirmActiveContentIdentityMock,
@@ -103,6 +112,7 @@ beforeEach(() => {
     .mockImplementation((scope) => Effect.succeed(scope));
   invalidateStoreTagMock.mockReset().mockReturnValue(Effect.void);
   invalidateSitemapCacheMock.mockReset().mockReturnValue(Effect.void);
+  invalidateLlmsCacheMock.mockReset().mockReturnValue(Effect.void);
   invalidateOgCacheMock.mockReset().mockReturnValue(Effect.void);
 });
 
@@ -234,6 +244,7 @@ describe("content cache receiver release", () => {
       "content-scope:material"
     );
     expect(invalidateSitemapCacheMock).toHaveBeenCalledWith(releaseId);
+    expect(invalidateLlmsCacheMock).toHaveBeenCalledWith(releaseId);
     expect(invalidateOgCacheMock).toHaveBeenCalledWith(releaseId);
   });
 
@@ -301,6 +312,22 @@ describe("content cache receiver release", () => {
   it("answers 503 without a receipt when the sitemap purge fails", async () => {
     invalidateSitemapCacheMock.mockReturnValue(
       Effect.fail(new SitemapCacheInvalidationError())
+    );
+
+    const response = await postAuthorized(exactBody);
+
+    expect(response.status).toBe(503);
+    expect(invalidateOgCacheMock).not.toHaveBeenCalled();
+  });
+
+  it("answers 503 without a receipt when the Markdown purge fails", async () => {
+    invalidateLlmsCacheMock.mockReturnValue(
+      Effect.fail(
+        new ContentStoreUnavailableError({
+          cause: new Error("offline"),
+          operation: "invalidate",
+        })
+      )
     );
 
     const response = await postAuthorized(exactBody);

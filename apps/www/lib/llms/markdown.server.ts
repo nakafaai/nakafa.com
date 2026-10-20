@@ -7,9 +7,12 @@ import {
   LocaleSchema,
 } from "@repo/internationalization/src/locale";
 import { AGENT_DISCOVERY_HEADERS } from "@repo/site/discovery";
-import { Array as Arr, Effect, Record as Rec, Schema } from "effect";
+import { Array as Arr, Effect, Option, Record as Rec, Schema } from "effect";
 import { hasLocale } from "use-intl";
-import { LLMS_CACHE_CONTROL } from "@/lib/llms/constants";
+import {
+  CONTENT_LLMS_CACHE_TAG,
+  LLMS_CACHE_CONTROL,
+} from "@/lib/llms/constants";
 import { getLlmsMarkdownText } from "@/lib/llms/content/markdown";
 import { stripLlmsRouteExtension } from "@/lib/llms/format";
 import { getLlmsSectionIndexText } from "@/lib/llms/index/generate";
@@ -32,15 +35,18 @@ const AGENT_HEADERS = Rec.fromEntries(
   Arr.map(AGENT_DISCOVERY_HEADERS, ({ key, value }) => [key, value] as const)
 );
 
+/** Every answer depends on the release, so the CDN purges it with the corpus. */
 const MARKDOWN_HEADERS = {
   "Cache-Control": LLMS_CACHE_CONTROL,
   "Content-Type": LLMS_MARKDOWN_MEDIA_TYPE,
+  "Vercel-Cache-Tag": CONTENT_LLMS_CACHE_TAG,
   Vary: VARY,
 };
 
 const TEXT_HEADERS = {
   "Cache-Control": LLMS_CACHE_CONTROL,
   "Content-Type": "text/plain; charset=utf-8",
+  "Vercel-Cache-Tag": CONTENT_LLMS_CACHE_TAG,
   Vary: VARY,
 };
 
@@ -59,8 +65,17 @@ const LlmsMarkdownTargetSchema = Schema.Struct({
 type LlmsMarkdownTarget = typeof LlmsMarkdownTargetSchema.Type;
 
 /** Answers one Markdown body with the representation headers. */
-function markdownResponse(text: string | null) {
+function markdownResponse(text: string) {
   return new Response(text, { headers: MARKDOWN_HEADERS });
+}
+
+/** Answers the body of one index, or a plain not found when the index names no body. */
+function indexResponse(text: Option.Option<string>) {
+  return Option.match(text, {
+    onNone: () =>
+      new Response("Not found", { headers: TEXT_HEADERS, status: 404 }),
+    onSome: markdownResponse,
+  });
 }
 
 /**
@@ -72,7 +87,9 @@ function markdownResponse(text: string | null) {
 export const answerLlmsMarkdown = Effect.fn("www.llms.markdown.answer")(
   function* ({ cleanSlug, hasLocalePrefix, locale }: LlmsMarkdownTarget) {
     if (hasLocalePrefix && isPublicLlmsLocaleIndexRoute(cleanSlug)) {
-      return markdownResponse(yield* getLlmsSectionIndexText(`llms/${locale}`));
+      return indexResponse(
+        Option.fromNullishOr(yield* getLlmsSectionIndexText(`llms/${locale}`))
+      );
     }
 
     if (cleanSlug === "llms") {
@@ -93,26 +110,32 @@ export const answerLlmsMarkdown = Effect.fn("www.llms.markdown.answer")(
             })
           );
         }
-        return markdownResponse(
-          yield* getLlmsSectionIndexText(
-            `llms/${locale}/${publicSectionIndex.section}`
+        return indexResponse(
+          Option.fromNullishOr(
+            yield* getLlmsSectionIndexText(
+              `llms/${locale}/${publicSectionIndex.section}`
+            )
           )
         );
       }
     }
 
-    const sectionIndexText = yield* getLlmsSectionIndexText(cleanSlug);
-    if (sectionIndexText) {
-      return markdownResponse(sectionIndexText);
+    const sectionIndex = Option.fromNullishOr(
+      yield* getLlmsSectionIndexText(cleanSlug)
+    );
+    if (Option.isSome(sectionIndex)) {
+      return markdownResponse(sectionIndex.value);
     }
 
     if (cleanSlug.startsWith("llms/")) {
       return new Response("Not found", { headers: TEXT_HEADERS, status: 404 });
     }
 
-    const markdownText = yield* getLlmsMarkdownText({ cleanSlug, locale });
-    if (markdownText) {
-      return markdownResponse(markdownText);
+    const markdownText = Option.fromNullishOr(
+      yield* getLlmsMarkdownText({ cleanSlug, locale })
+    );
+    if (Option.isSome(markdownText)) {
+      return markdownResponse(markdownText.value);
     }
 
     return new Response(
