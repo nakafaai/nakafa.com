@@ -33,10 +33,9 @@ const TokenResponseSchema = Schema.Struct({
 });
 
 /**
- * Prepares the headers as the installed helper prepares them before it calls the
- * token route, in @convex-dev/better-auth 0.12.5: `cachedGetToken` removes the
- * framing headers and sets `accept-encoding` (`src/nextjs/index.ts` lines 99 to
- * 103), and `getToken` sets `host` (`src/utils/index.ts` line 140).
+ * Builds the headers of one Convex token request. The request forwards no body,
+ * so the framing headers go; `accept-encoding` is `identity`, so the response is
+ * read as sent; and `host` names the Convex site.
  */
 function tokenRequestHeaders(site: URL, requestHeaders: Headers) {
   const headers = new Headers(requestHeaders);
