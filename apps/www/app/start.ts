@@ -16,8 +16,8 @@ const requestSession = createMiddleware({ type: "request" }).server(
   async ({ next, request }) => {
     const { readSessionMemo } = await import("@/lib/auth/session.server");
     const { runServerEffect } = await import("@/lib/server/fn");
-    const session = await runServerEffect(readSessionMemo(request));
-    return next({ context: { session } });
+    await runServerEffect(readSessionMemo(request));
+    return next();
   }
 );
 
