@@ -17,16 +17,16 @@ export const Route = createFileRoute("/school/$slug/exams/$exam/edit")({
     ) {
       throw notFound();
     }
-    return { examId };
+    return { examId: Option.getOrNull(examId) };
   },
   component: SchoolExamEditPage,
   notFoundComponent: SchoolPageNotFound,
 });
 
-function SchoolExamEditPage(): ReactElement {
+function SchoolExamEditPage(): ReactElement | null {
   const { examId, slug } = Route.useRouteContext();
-  return Option.match(examId, {
-    onNone: () => <></>,
-    onSome: (id) => <ExamEditor examId={id} slug={slug} />,
-  });
+  if (examId === null) {
+    return null;
+  }
+  return <ExamEditor examId={examId} slug={slug} />;
 }

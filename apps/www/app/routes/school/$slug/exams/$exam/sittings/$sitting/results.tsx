@@ -18,18 +18,19 @@ export const Route = createFileRoute(
     ) {
       throw notFound();
     }
-    return { examId, sittingId };
+    return {
+      examId: Option.getOrNull(examId),
+      sittingId: Option.getOrNull(sittingId),
+    };
   },
   component: SittingResultsPage,
   notFoundComponent: SchoolPageNotFound,
 });
 
-function SittingResultsPage(): ReactElement {
+function SittingResultsPage(): ReactElement | null {
   const { examId, sittingId, slug } = Route.useRouteContext();
-  return Option.match(Option.all([examId, sittingId]), {
-    onNone: () => <></>,
-    onSome: ([exam, sitting]) => (
-      <SittingResults examId={exam} sittingId={sitting} slug={slug} />
-    ),
-  });
+  if (examId === null || sittingId === null) {
+    return null;
+  }
+  return <SittingResults examId={examId} sittingId={sittingId} slug={slug} />;
 }

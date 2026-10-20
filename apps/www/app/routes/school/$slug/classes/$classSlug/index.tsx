@@ -12,18 +12,16 @@ export const Route = createFileRoute("/school/$slug/classes/$classSlug/")({
     if (context.school._tag === "Member" && Option.isNone(classAddress)) {
       throw notFound();
     }
-    return { classAddress };
+    return { classAddress: Option.getOrNull(classAddress) };
   },
   component: SchoolClassPage,
   notFoundComponent: SchoolPageNotFound,
 });
 
-function SchoolClassPage(): ReactElement {
+function SchoolClassPage(): ReactElement | null {
   const { classAddress, slug } = Route.useRouteContext();
-  return Option.match(classAddress, {
-    onNone: () => <></>,
-    onSome: (address) => (
-      <ClassShell classSlug={address} slug={slug} tab="home" />
-    ),
-  });
+  if (classAddress === null) {
+    return null;
+  }
+  return <ClassShell classSlug={classAddress} slug={slug} tab="home" />;
 }

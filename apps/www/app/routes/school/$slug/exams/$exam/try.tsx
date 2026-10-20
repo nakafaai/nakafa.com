@@ -12,16 +12,16 @@ export const Route = createFileRoute("/school/$slug/exams/$exam/try")({
     if (context.school._tag === "Member" && Option.isNone(examId)) {
       throw notFound();
     }
-    return { examId };
+    return { examId: Option.getOrNull(examId) };
   },
   component: SchoolExamTryPage,
   notFoundComponent: SchoolPageNotFound,
 });
 
-function SchoolExamTryPage(): ReactElement {
+function SchoolExamTryPage(): ReactElement | null {
   const { examId, slug } = Route.useRouteContext();
-  return Option.match(examId, {
-    onNone: () => <></>,
-    onSome: (id) => <ExamTryPaper examId={id} slug={slug} />,
-  });
+  if (examId === null) {
+    return null;
+  }
+  return <ExamTryPaper examId={examId} slug={slug} />;
 }

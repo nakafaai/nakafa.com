@@ -12,16 +12,16 @@ export const Route = createFileRoute("/school/$slug/settings/cohorts/$cohort")({
     if (context.school._tag === "Member" && Option.isNone(cohortId)) {
       throw notFound();
     }
-    return { cohortId };
+    return { cohortId: Option.getOrNull(cohortId) };
   },
   component: SchoolCohortPage,
   notFoundComponent: SchoolPageNotFound,
 });
 
-function SchoolCohortPage(): ReactElement {
+function SchoolCohortPage(): ReactElement | null {
   const { cohortId, slug } = Route.useRouteContext();
-  return Option.match(cohortId, {
-    onNone: () => <></>,
-    onSome: (id) => <SchoolCohortSettings cohortId={id} slug={slug} />,
-  });
+  if (cohortId === null) {
+    return null;
+  }
+  return <SchoolCohortSettings cohortId={cohortId} slug={slug} />;
 }

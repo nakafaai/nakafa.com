@@ -12,16 +12,16 @@ export const Route = createFileRoute("/school/$slug/sittings/$sitting/")({
     if (context.school._tag === "Member" && Option.isNone(sittingId)) {
       throw notFound();
     }
-    return { sittingId };
+    return { sittingId: Option.getOrNull(sittingId) };
   },
   component: StudentSittingPage,
   notFoundComponent: SchoolPageNotFound,
 });
 
-function StudentSittingPage(): ReactElement {
+function StudentSittingPage(): ReactElement | null {
   const { sittingId, slug } = Route.useRouteContext();
-  return Option.match(sittingId, {
-    onNone: () => <></>,
-    onSome: (id) => <StudentSitting sittingId={id} slug={slug} />,
-  });
+  if (sittingId === null) {
+    return null;
+  }
+  return <StudentSitting sittingId={sittingId} slug={slug} />;
 }
