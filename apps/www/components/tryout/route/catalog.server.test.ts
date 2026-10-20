@@ -3,11 +3,15 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Effect, Option } from "effect";
 import {
+  readTryoutCountryHandler,
   readTryoutCountryRoute,
+  readTryoutExamHandler,
   readTryoutExamRoute,
   readTryoutHubHandler,
   readTryoutHubRoute,
   readTryoutRouteHead,
+  readTryoutTrackHandler,
+  readTryoutTrackListHandler,
   readTryoutTrackRoute,
   readTryoutTrackSetList,
 } from "@/components/tryout/route/catalog.server";
@@ -495,4 +499,60 @@ describe("readTryoutTrackSetList", () => {
         );
       })
   );
+});
+
+describe("try-out catalog server handlers", () => {
+  const search = { direction: "asc", sort: "title", status: "all" };
+  const track = { countryKey: "id", examKey: "snbt", trackKey: "2027" };
+
+  it("answers one country through its server handler", async () => {
+    catalog.readTryoutCountryPage.mockReturnValueOnce(Effect.succeedNone);
+
+    await expect(
+      readTryoutCountryHandler({ data: { country: "id", locale: "en" } })
+    ).resolves.toEqual({ kind: "notFound" });
+    expect(catalog.readTryoutCountryPage).toHaveBeenCalled();
+  });
+
+  it("answers one exam through its server handler", async () => {
+    catalog.readTryoutCountryPage.mockReturnValueOnce(Effect.succeedNone);
+
+    await expect(
+      readTryoutExamHandler({
+        data: { country: "id", exam: "snbt", locale: "en" },
+      })
+    ).resolves.toEqual({ kind: "notFound" });
+  });
+
+  it("answers one track through its server handler", async () => {
+    catalog.readTryoutCountryPage.mockReturnValueOnce(Effect.succeedNone);
+
+    await expect(
+      readTryoutTrackHandler({
+        data: { country: "id", exam: "snbt", locale: "en", track: "2027" },
+      })
+    ).resolves.toEqual({ kind: "notFound" });
+  });
+
+  it("answers the learner's set list of one track with its query", async () => {
+    catalog.readRequestToken.mockReturnValue(Effect.succeed("token-1"));
+    catalog.readCatalogQuery.mockReturnValue(search);
+    catalog.readTryoutSetList.mockReturnValue(
+      Effect.succeed({ page: [], isDone: true })
+    );
+
+    const answer = await readTryoutTrackListHandler({
+      data: { locale: "en", search, track },
+    });
+
+    expect(answer.result).toEqual({ page: [], isDone: true });
+    expect(answer.args).toMatchObject({
+      countryKey: "id",
+      examKey: "snbt",
+      filter: "all",
+      locale: "en",
+      sort: { direction: "asc", field: "title" },
+      trackKey: "2027",
+    });
+  });
 });
