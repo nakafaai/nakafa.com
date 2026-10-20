@@ -1,6 +1,9 @@
 import "@tanstack/react-start/server-only";
 
-import { LocaleSchema } from "@repo/internationalization/src/locale";
+import {
+  type Locale,
+  LocaleSchema,
+} from "@repo/internationalization/src/locale";
 import { readServerTranslator } from "@repo/internationalization/src/translator";
 import { Clock, Effect, Option, Schema } from "effect";
 import {
@@ -31,8 +34,8 @@ import {
   readTryoutRouteAttemptCapability,
   type TryoutRouteSearchParams,
 } from "@/components/tryout/route/path";
+import { keepPersonalResponse } from "@/components/tryout/route/response.server";
 import { readRequestToken } from "@/components/tryout/route/token.server";
-import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getOgUrl } from "@/lib/seo/social";
 
 /**
@@ -108,7 +111,7 @@ const readSectionBinding = Effect.fn("www.tryout.route.readSectionBinding")(
 const readRetainedHead = Effect.fn("www.tryout.route.readRetainedHead")(
   function* (input: {
     readonly description: string | undefined;
-    readonly locale: ReturnType<typeof getLocaleOrThrow>;
+    readonly locale: Locale;
     readonly publicPath: string;
     readonly title: string;
   }) {
@@ -135,16 +138,17 @@ export const readTryoutSetRoute = Effect.fn("www.tryout.route.readSet")(
   function* (input: {
     readonly country: string;
     readonly exam: string;
-    readonly locale: string;
+    readonly locale: Locale;
     readonly search: TryoutRouteSearchParams;
     readonly set: string;
     readonly track: string;
   }) {
+    yield* keepPersonalResponse;
     const intent = readAddressIntent(input.search);
     if (Option.isNone(intent)) {
       return { kind: "notFound" as const };
     }
-    const locale = getLocaleOrThrow(input.locale);
+    const locale = input.locale;
     const route = {
       country: input.country,
       exam: input.exam,
@@ -172,9 +176,7 @@ export const readTryoutSetRoute = Effect.fn("www.tryout.route.readSet")(
     if (Option.isSome(preview)) {
       return yield* new TryoutAttemptContentPending({ publicPath: setPath });
     }
-    const page = yield* Effect.promise(() =>
-      readTryoutSetPage(locale, setPath)
-    );
+    const page = yield* readTryoutSetPage(locale, setPath);
     if (!page) {
       return { kind: "notFound" as const };
     }
@@ -216,7 +218,6 @@ export const readTryoutSetRoute = Effect.fn("www.tryout.route.readSet")(
   }
 );
 
-/** The set bound to one attempt URL, rendered when that attempt is the learner's own. */
 /** The coordinates of one set page. */
 const SetRouteSchema = Schema.Struct({
   country: Schema.String,
@@ -291,17 +292,18 @@ export const readTryoutSectionRoute = Effect.fn("www.tryout.route.readSection")(
   function* (input: {
     readonly country: string;
     readonly exam: string;
-    readonly locale: string;
+    readonly locale: Locale;
     readonly search: TryoutRouteSearchParams;
     readonly section: string;
     readonly set: string;
     readonly track: string;
   }) {
+    yield* keepPersonalResponse;
     const intent = readAddressIntent(input.search);
     if (Option.isNone(intent)) {
       return { kind: "notFound" as const };
     }
-    const locale = getLocaleOrThrow(input.locale);
+    const locale = input.locale;
     const route = {
       country: input.country,
       exam: input.exam,
@@ -339,9 +341,7 @@ export const readTryoutSectionRoute = Effect.fn("www.tryout.route.readSection")(
         publicPath: sectionPath,
       });
     }
-    const page = yield* Effect.promise(() =>
-      readTryoutSectionPage(locale, sectionPath)
-    );
+    const page = yield* readTryoutSectionPage(locale, sectionPath);
     if (!page) {
       return { kind: "notFound" as const };
     }
@@ -386,7 +386,6 @@ export const readTryoutSectionRoute = Effect.fn("www.tryout.route.readSection")(
   }
 );
 
-/** The section bound to one attempt URL, rendered when that attempt is the learner's own. */
 /** The coordinates of one section page. */
 const SectionRouteSchema = Schema.Struct({
   country: Schema.String,
