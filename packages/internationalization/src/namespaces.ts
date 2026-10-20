@@ -17,64 +17,8 @@ import idStandalone from "@repo/internationalization/dictionaries/standalone/id.
   type: "json",
 };
 import type { Locale } from "@repo/internationalization/src/locale";
-import { Record as Rec, Schema, Struct } from "effect";
-
-/**
- * Every namespace of the app dictionaries, and the standalone pages' namespaces
- * beside them. The record is checked against the English dictionary, so a
- * namespace that one dictionary adds or drops fails the build here.
- */
-const namespaceFlags = {
-  AnalyticsConsent: true,
-  Articles: true,
-  Auth: true,
-  Classroom: true,
-  Common: true,
-  ComingSoon: true,
-  Comments: true,
-  Contributor: true,
-  DataTable: true,
-  Editor: true,
-  Exams: true,
-  Faq: true,
-  Holy: true,
-  Home: true,
-  Landing: true,
-  LearningPrograms: true,
-  Legal: true,
-  Marketing: true,
-  Memory: true,
-  Metadata: true,
-  Notifications: true,
-  Player: true,
-  Posts: true,
-  Pricing: true,
-  PricingPage: true,
-  Ai: true,
-  About: true,
-  Subject: true,
-  School: true,
-  SchoolEntry: true,
-  SchoolSettings: true,
-  SchoolStart: true,
-  SEO: true,
-  Toast: true,
-  Tryouts: true,
-  Utils: true,
-  Videos: true,
-  Weather: true,
-  NotFound: true,
-  Error: true,
-  State: true,
-} satisfies Record<keyof typeof en | keyof typeof enStandalone, true>;
-
-/** The namespaces that the dictionaries define, as literal names. */
-export const MESSAGE_NAMESPACES = Rec.keys(namespaceFlags);
-
-/** One message namespace, decoded from a route's declaration. */
-export const MessageNamespaceSchema = Schema.Literals(MESSAGE_NAMESPACES);
-
-type MessageNamespace = typeof MessageNamespaceSchema.Type;
+import type { MessageNamespace } from "@repo/internationalization/src/namespace";
+import { Struct } from "effect";
 
 /**
  * The complete messages of each locale: the app dictionary with the words of

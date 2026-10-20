@@ -8,8 +8,8 @@ import id from "@repo/internationalization/dictionaries/id.json" with {
 import {
   MESSAGE_NAMESPACES,
   MessageNamespaceSchema,
-  pickRouteMessages,
-} from "@repo/internationalization/src/namespaces";
+} from "@repo/internationalization/src/namespace";
+import { pickRouteMessages } from "@repo/internationalization/src/namespaces";
 import { Array as Arr, Order, Record as Rec, Schema } from "effect";
 
 /** The sorted names of an object's keys. */
