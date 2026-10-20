@@ -45,11 +45,16 @@ function publishedView() {
   return { ...viewResult(), surah: makeQuranSurah(1) };
 }
 
+/** The view the next read answers with, when a test names one. */
+let nextView: ReturnType<typeof publishedView> | null = null;
+
 vi.mock("@/lib/content/quran/publication", () => ({
   getPublishedQuranCatalog: vi.fn(() =>
     Promise.resolve({ surahs: catalogSurahs })
   ),
-  getPublishedQuranView: vi.fn(() => Promise.resolve(publishedView())),
+  getPublishedQuranView: vi.fn(() =>
+    Promise.resolve(nextView ?? publishedView())
+  ),
 }));
 
 vi.mock("@/lib/content/quran/recovery", () => ({
@@ -92,7 +97,7 @@ describe("surah route read", () => {
   });
 
   it("shows the bismillah of the surah when the publication names one", async () => {
-    vi.mocked(getPublishedQuranView).mockResolvedValueOnce({
+    const withBismillah = {
       ...publishedView(),
       preBismillah: {
         arabic: "بسم",
@@ -101,7 +106,8 @@ describe("surah route read", () => {
           segments: [{ kind: "text", offset: 0, value: "In the name" }],
         },
       },
-    });
+    };
+    nextView = withBismillah;
     await expect(
       readSurahHandler({ data: { locale: "en", surah: "1" } })
     ).resolves.toMatchObject({
@@ -117,6 +123,7 @@ describe("surah route read", () => {
         },
       },
     });
+    nextView = null;
   });
 });
 
