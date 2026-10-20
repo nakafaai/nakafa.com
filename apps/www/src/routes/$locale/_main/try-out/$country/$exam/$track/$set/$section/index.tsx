@@ -62,7 +62,7 @@ function TryoutSectionPage() {
     <TryoutClockProvider initialNow={route.now}>
       <TryoutSectionPageClient
         binding={route.binding}
-        content={null}
+        content={route.content}
         page={route.page}
         route={route.route}
         setHref={route.setHref}

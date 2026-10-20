@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { Data, Effect } from "effect";
+import { Data, Effect, Option } from "effect";
 import {
   readCurrentTryoutSection,
   readCurrentTryoutSet,
@@ -47,7 +47,9 @@ describe("the attempt a public try-out URL shows", () => {
         catalogMocks.readTryoutSetAttemptPage.mockReturnValueOnce(
           Effect.succeed(current)
         );
-        expect(yield* readCurrentTryoutSet("token", keys)).toBe(current);
+        expect(yield* readCurrentTryoutSet("token", keys)).toEqual(
+          Option.fromNullishOr(current)
+        );
       }
       expect(catalogMocks.readTryoutSetAttemptPage.mock.calls).toEqual([
         ["token", { ...keys, kind: "current" }],
@@ -64,8 +66,10 @@ describe("the attempt a public try-out URL shows", () => {
         .mockReturnValueOnce(Effect.succeed(running))
         .mockReturnValueOnce(Effect.succeed(retained));
       // The attempt can finish and lose its page between the two reads.
-      expect(yield* readCurrentTryoutSet("token", keys)).toBeNull();
-      expect(yield* readCurrentTryoutSet("token", keys)).toBe(retained);
+      expect(yield* readCurrentTryoutSet("token", keys)).toEqual(Option.none());
+      expect(yield* readCurrentTryoutSet("token", keys)).toEqual(
+        Option.some(retained)
+      );
       expect(catalogMocks.readTryoutSetAttemptPage).toHaveBeenLastCalledWith(
         "token",
         {
@@ -87,10 +91,16 @@ describe("the attempt a public try-out URL shows", () => {
         .mockReturnValueOnce(Effect.succeed(retained))
         .mockReturnValueOnce(Effect.succeed(running))
         .mockReturnValueOnce(Effect.succeed(null));
-      expect(yield* readCurrentTryoutSection("token", section)).toBeNull();
-      expect(yield* readCurrentTryoutSection("token", section)).toBe(retained);
+      expect(yield* readCurrentTryoutSection("token", section)).toEqual(
+        Option.none()
+      );
+      expect(yield* readCurrentTryoutSection("token", section)).toEqual(
+        Option.some(retained)
+      );
       // The attempt can finish and lose its page between the two reads.
-      expect(yield* readCurrentTryoutSection("token", section)).toBeNull();
+      expect(yield* readCurrentTryoutSection("token", section)).toEqual(
+        Option.none()
+      );
       const retainedRequest = {
         attemptId: running.attemptId,
         kind: "retained",

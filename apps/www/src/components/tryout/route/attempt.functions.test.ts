@@ -23,6 +23,9 @@ vi.mock("@/components/tryout/catalog/source.server", () => ({
   readTryoutSectionPage: mocks.readTryoutSectionPage,
   readTryoutSetPage: mocks.readTryoutSetPage,
 }));
+vi.mock("@/components/tryout/content/signed", () => ({
+  loadSignedTryoutContent: vi.fn(),
+}));
 vi.mock("@/components/tryout/preview/read", () => ({
   readTryoutQuestionPreview: mocks.readTryoutQuestionPreview,
 }));
@@ -46,7 +49,7 @@ const NOT_FOUND = { kind: "notFound" };
 
 beforeEach(() => {
   vi.clearAllMocks();
-  mocks.readRequestToken.mockReturnValue(Effect.succeed("token-1"));
+  mocks.readRequestToken.mockReturnValue(Effect.succeedSome("token-1"));
   mocks.readTryoutQuestionPreview.mockResolvedValue(Option.none());
 });
 

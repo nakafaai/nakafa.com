@@ -438,7 +438,7 @@ describe("readTryoutTrackSetList", () => {
     "reads the learner's set list with their token and marks the answer private",
     () =>
       Effect.gen(function* () {
-        catalog.readRequestToken.mockReturnValue(Effect.succeed("token-1"));
+        catalog.readRequestToken.mockReturnValue(Effect.succeedSome("token-1"));
         catalog.readCatalogQuery.mockReturnValue({
           direction: "asc",
           sort: "title",
@@ -462,7 +462,7 @@ describe("readTryoutTrackSetList", () => {
           search
         );
         expect(catalog.readTryoutSetList).toHaveBeenCalledExactlyOnceWith(
-          "token-1",
+          Option.some("token-1"),
           expect.objectContaining({
             countryKey: "id",
             examKey: "snbt",
@@ -479,7 +479,7 @@ describe("readTryoutTrackSetList", () => {
     "reads the list without a token for a visitor without a session",
     () =>
       Effect.gen(function* () {
-        catalog.readRequestToken.mockReturnValue(Effect.void);
+        catalog.readRequestToken.mockReturnValue(Effect.succeedNone);
         catalog.readCatalogQuery.mockReturnValue({
           direction: undefined,
           sort: undefined,
@@ -490,7 +490,7 @@ describe("readTryoutTrackSetList", () => {
         yield* readTryoutTrackSetList({ locale: "en", search: {}, track });
 
         expect(catalog.readTryoutSetList).toHaveBeenCalledExactlyOnceWith(
-          undefined,
+          Option.none(),
           expect.any(Object)
         );
       })

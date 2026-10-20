@@ -2,7 +2,7 @@ import type {
   currentSectionRequestValidator,
   currentSetRequestValidator,
 } from "@repo/backend/confect/tryouts/attemptPage/spec";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 import {
   readTryoutSectionAttemptPage,
   readTryoutSetAttemptPage,
@@ -32,7 +32,7 @@ export const readCurrentTryoutSet = Effect.fn(
     kind: "current",
   });
   if (current?.kind !== "redirect") {
-    return current;
+    return Option.fromNullishOr(current);
   }
   const running = yield* readTryoutSetAttemptPage(token, {
     attemptId: current.attemptId,
@@ -40,7 +40,7 @@ export const readCurrentTryoutSet = Effect.fn(
     locale: request.locale,
     publicPath: current.publicPath,
   });
-  return running?.kind === "retained" ? running : null;
+  return running?.kind === "retained" ? Option.some(running) : Option.none();
 });
 
 /**
@@ -55,7 +55,7 @@ export const readCurrentTryoutSection = Effect.fn(
     kind: "current",
   });
   if (current?.kind !== "redirect") {
-    return current;
+    return Option.fromNullishOr(current);
   }
   const running = yield* readTryoutSectionAttemptPage(token, {
     attemptId: current.attemptId,
@@ -63,5 +63,5 @@ export const readCurrentTryoutSection = Effect.fn(
     locale: request.locale,
     publicPath: current.publicPath,
   });
-  return running?.kind === "retained" ? running : null;
+  return running?.kind === "retained" ? Option.some(running) : Option.none();
 });

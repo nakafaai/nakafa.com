@@ -1,3 +1,4 @@
+import { Option } from "effect";
 import {
   getTryoutHref,
   getTryoutPublicPathHref,
@@ -14,13 +15,13 @@ export function createTryoutSetRestartTarget<EntrySection>(page: {
   readonly set: Pick<SetPage["set"], "publicPath">;
 }) {
   if (!page.entrySection) {
-    return null;
+    return Option.none();
   }
 
-  return {
+  return Option.some({
     entrySection: page.entrySection,
     setPublicPath: page.set.publicPath,
-  };
+  });
 }
 
 /**
@@ -28,23 +29,22 @@ export function createTryoutSetRestartTarget<EntrySection>(page: {
  * retained set, or the try-out root when the set is no longer active.
  */
 export function selectTryoutSetLinks(
-  restartTarget: Pick<TryoutSetRestartTarget, "setPublicPath"> | null
+  restartTarget: Option.Option<Pick<TryoutSetRestartTarget, "setPublicPath">>
 ) {
-  if (!restartTarget) {
+  if (Option.isNone(restartTarget)) {
     return { currentHref: getTryoutHref(), returnHref: getTryoutHref() };
   }
 
-  const currentHref = getTryoutPublicPathHref(restartTarget.setPublicPath);
-  const separator = restartTarget.setPublicPath.lastIndexOf("/");
+  const { setPublicPath } = restartTarget.value;
+  const currentHref = getTryoutPublicPathHref(setPublicPath);
+  const separator = setPublicPath.lastIndexOf("/");
   if (separator <= 0) {
     return { currentHref, returnHref: getTryoutHref() };
   }
 
   return {
     currentHref,
-    returnHref: getTryoutPublicPathHref(
-      restartTarget.setPublicPath.slice(0, separator)
-    ),
+    returnHref: getTryoutPublicPathHref(setPublicPath.slice(0, separator)),
   };
 }
 
@@ -53,19 +53,19 @@ export function selectTryoutSectionReturnHref({
   attemptPage,
   publicHref,
 }: {
-  attemptPage: Pick<
-    RetainedSectionAttemptPage,
-    "activeSetPublicPath" | "kind"
-  > | null;
+  attemptPage: Option.Option<
+    Pick<RetainedSectionAttemptPage, "activeSetPublicPath" | "kind">
+  >;
   publicHref: string;
 }) {
-  if (!attemptPage) {
+  if (Option.isNone(attemptPage)) {
     return publicHref;
   }
 
-  if (!attemptPage.activeSetPublicPath) {
+  const { activeSetPublicPath } = attemptPage.value;
+  if (!activeSetPublicPath) {
     return getTryoutHref();
   }
 
-  return getTryoutPublicPathHref(attemptPage.activeSetPublicPath);
+  return getTryoutPublicPathHref(activeSetPublicPath);
 }

@@ -21,6 +21,7 @@ import {
 } from "@/components/tryout/route/path";
 import { keepPersonalResponse } from "@/components/tryout/route/response.server";
 import {
+  readAttemptContent,
   readAttemptReview,
   readPreviewRoute,
   readRetainedHead,
@@ -29,14 +30,16 @@ import { readRequestToken } from "@/components/tryout/route/token.server";
 import { serverHandler } from "@/lib/server/fn";
 
 /** The learner's current or retained set attempt, as the set reader holds it. */
-type SetAttemptPage = Effect.Success<ReturnType<typeof readCurrentTryoutSet>>;
+type SetAttempt = Option.Option.Value<
+  Effect.Success<ReturnType<typeof readCurrentTryoutSet>>
+>;
 
 /**
  * The attempt state a page binds to its player: the attempt, its state, the view
  * the server resolved for the learner, and the page's section routes.
  */
 const readSetBinding = Effect.fn("www.tryout.route.readSetBinding")(function* (
-  attempt: NonNullable<SetAttemptPage>,
+  attempt: SetAttempt,
   view: PlayerModeParam
 ) {
   return {
@@ -111,32 +114,44 @@ export const readTryoutSetRoute = Effect.fn("www.tryout.route.readSet")(
     if (Option.isNone(head)) {
       return { kind: "notFound" as const };
     }
-    const attempt = token
-      ? yield* readCurrentTryoutSet(token, {
+    const attempt = Option.isNone(token)
+      ? Option.none<SetAttempt>()
+      : yield* readCurrentTryoutSet(token.value, {
           countryKey: page.set.countryKey,
           examKey: page.set.examKey,
           locale,
           setKey: page.set.setKey,
           trackKey: page.set.trackKey,
-        })
-      : null;
-    const running = attempt?.kind === "retained" ? attempt : null;
+        });
+    const running = Option.filter(
+      attempt,
+      (value) => value.kind === "retained"
+    );
+    const binding = yield* Effect.transposeOption(
+      Option.map(attempt, (value) => readSetBinding(value, intent.value.view))
+    );
+    const content = Option.isSome(attempt)
+      ? yield* readAttemptContent({ attempt: attempt.value })
+      : Option.none();
+    const review = Option.isSome(attempt)
+      ? yield* readAttemptReview({ attempt: attempt.value, locale })
+      : Option.none();
+    const restartTarget = Option.match(attempt, {
+      onNone: () => createTryoutSetRestartTarget(page),
+      onSome: (value) => Option.fromNullishOr(value.restartTarget),
+    });
     return {
-      binding: attempt
-        ? yield* readSetBinding(attempt, intent.value.view)
-        : null,
+      binding: Option.getOrNull(binding),
+      content: Option.getOrNull(content),
       head: head.value,
       kind: "catalog" as const,
       now: yield* Clock.currentTimeMillis,
-      page: running ? running.page : page,
-      restartTarget: attempt
-        ? attempt.restartTarget
-        : createTryoutSetRestartTarget(page),
-      review: attempt
-        ? Option.getOrUndefined(
-            yield* readAttemptReview({ attempt, locale, publicPath: setPath })
-          )
-        : undefined,
+      page: Option.match(running, {
+        onNone: () => page,
+        onSome: (value) => value.page,
+      }),
+      restartTarget: Option.getOrNull(restartTarget),
+      review: Option.getOrUndefined(review),
       route,
       view: intent.value.view,
     };
@@ -158,7 +173,7 @@ const RetainedSetRequestSchema = Schema.Struct({
   locale: LocaleSchema,
   publicPath: Schema.String,
   route: SetRouteSchema,
-  token: Schema.UndefinedOr(Schema.String),
+  token: Schema.Option(Schema.String),
 });
 
 const readRetainedSetRoute = Effect.fn("www.tryout.route.readRetainedSet")(
@@ -166,7 +181,7 @@ const readRetainedSetRoute = Effect.fn("www.tryout.route.readRetainedSet")(
     input: typeof RetainedSetRequestSchema.Type,
     view: PlayerModeParam
   ) {
-    if (input.token === undefined) {
+    if (Option.isNone(input.token)) {
       return {
         href: getTryoutAttemptAuthHref(
           input.locale,
@@ -176,7 +191,7 @@ const readRetainedSetRoute = Effect.fn("www.tryout.route.readRetainedSet")(
         kind: "signIn" as const,
       };
     }
-    const attempt = yield* readTryoutSetAttemptPage(input.token, {
+    const attempt = yield* readTryoutSetAttemptPage(input.token.value, {
       attemptId: input.attemptId,
       kind: "retained",
       locale: input.locale,
@@ -185,8 +200,10 @@ const readRetainedSetRoute = Effect.fn("www.tryout.route.readRetainedSet")(
     if (attempt?.kind !== "retained") {
       return { kind: "notFound" as const };
     }
+    const restartTarget = Option.fromNullishOr(attempt.restartTarget);
     return {
       binding: yield* readSetBinding(attempt, view),
+      content: Option.getOrNull(yield* readAttemptContent({ attempt })),
       head: yield* readRetainedHead({
         description: attempt.page.set.description,
         locale: input.locale,
@@ -196,12 +213,11 @@ const readRetainedSetRoute = Effect.fn("www.tryout.route.readRetainedSet")(
       kind: "attempt" as const,
       now: yield* Clock.currentTimeMillis,
       page: attempt.page,
-      restartTarget: attempt.restartTarget,
+      restartTarget: Option.getOrNull(restartTarget),
       review: Option.getOrUndefined(
         yield* readAttemptReview({
           attempt,
           locale: input.locale,
-          publicPath: input.publicPath,
         })
       ),
       route: input.route,

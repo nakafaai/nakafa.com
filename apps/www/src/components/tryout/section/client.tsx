@@ -6,7 +6,7 @@ import { useLocale } from "use-intl";
 import type { PlayerMode } from "@/components/player/mode";
 import { useConvexAuth } from "@/components/providers/convex";
 import { ShellLock } from "@/components/sidebar/lock";
-import type { TryoutRuntimeContent } from "@/components/tryout/content/model";
+import type { TryoutRunningContent } from "@/components/tryout/content/model";
 import { TryoutContentRefresh } from "@/components/tryout/content/refresh";
 import { TryoutPlayer } from "@/components/tryout/player/client";
 import {
@@ -51,7 +51,8 @@ interface TryoutSectionPageClientProps {
     startHref: string | null;
   } | null;
   children: ReactNode;
-  content: Promise<TryoutRuntimeContent> | null;
+  /** The signed questions of a running section, rendered on the server. */
+  content: TryoutRunningContent | null;
   page: TryoutSectionPage;
   route: TryoutSectionRoute;
   setHref: string;

@@ -61,7 +61,7 @@ function TryoutSetPage() {
     <TryoutClockProvider initialNow={route.now}>
       <TryoutSetPageClient
         binding={route.binding}
-        content={null}
+        content={route.content}
         page={route.page}
         restartTarget={route.restartTarget}
         route={route.route}

@@ -1,6 +1,6 @@
 import { type ReactNode, Suspense } from "react";
 import type { PlayerMode } from "@/components/player/mode";
-import type { TryoutRuntimeContent } from "@/components/tryout/content/model";
+import type { TryoutRunningContent } from "@/components/tryout/content/model";
 import { TryoutContentRefresh } from "@/components/tryout/content/refresh";
 import { TryoutPlayer } from "@/components/tryout/player/client";
 import type { TryoutFinish } from "@/components/tryout/player/finish";
@@ -23,7 +23,7 @@ import { TryoutPage, TryoutPageBody } from "@/components/tryout/shell/header";
 /** Props of the direct-entry set: its render model and its only section's runtime. */
 interface TryoutSetEntryProps {
   children: ReactNode;
-  content: Promise<TryoutRuntimeContent> | null;
+  content: TryoutRunningContent | null;
   /** Render model for sets whose only section is the set entry itself. */
   value: TryoutSetOverviewProps["value"] & {
     entrySection: SetEntrySection;
