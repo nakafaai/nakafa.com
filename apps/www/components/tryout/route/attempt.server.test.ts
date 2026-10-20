@@ -507,7 +507,10 @@ describe("try-out attempt server handlers", () => {
     await expect(
       readTryoutSetHandler({ data: { ...address, set: "set-1" } })
     ).resolves.toEqual(NOT_FOUND);
-    expect(mocks.readTryoutSetPage).toHaveBeenCalled();
+    expect(mocks.readTryoutSetPage).toHaveBeenCalledExactlyOnceWith(
+      "en",
+      "try-out/id/snbt/2027/set-1"
+    );
   });
 
   it("answers one section page for its learner through its server handler", async () => {
@@ -518,6 +521,9 @@ describe("try-out attempt server handlers", () => {
         data: { ...address, section: "section-1", set: "set-1" },
       })
     ).resolves.toEqual(NOT_FOUND);
-    expect(mocks.readTryoutSectionPage).toHaveBeenCalled();
+    expect(mocks.readTryoutSectionPage).toHaveBeenCalledExactlyOnceWith(
+      "en",
+      "try-out/id/snbt/2027/set-1/section-1"
+    );
   });
 });

@@ -511,27 +511,38 @@ describe("try-out catalog server handlers", () => {
     await expect(
       readTryoutCountryHandler({ data: { country: "id", locale: "en" } })
     ).resolves.toEqual({ kind: "notFound" });
-    expect(catalog.readTryoutCountryPage).toHaveBeenCalled();
+    expect(catalog.readTryoutCountryPage).toHaveBeenCalledExactlyOnceWith(
+      "en",
+      "try-out/id"
+    );
   });
 
   it("answers one exam through its server handler", async () => {
-    catalog.readTryoutCountryPage.mockReturnValueOnce(Effect.succeedNone);
+    catalog.readTryoutExamPage.mockReturnValueOnce(Effect.void);
 
     await expect(
       readTryoutExamHandler({
         data: { country: "id", exam: "snbt", locale: "en" },
       })
     ).resolves.toEqual({ kind: "notFound" });
+    expect(catalog.readTryoutExamPage).toHaveBeenCalledExactlyOnceWith(
+      "en",
+      "try-out/id/snbt"
+    );
   });
 
   it("answers one track through its server handler", async () => {
-    catalog.readTryoutCountryPage.mockReturnValueOnce(Effect.succeedNone);
+    catalog.readTryoutTrackPage.mockReturnValueOnce(Effect.void);
 
     await expect(
       readTryoutTrackHandler({
         data: { country: "id", exam: "snbt", locale: "en", track: "2027" },
       })
     ).resolves.toEqual({ kind: "notFound" });
+    expect(catalog.readTryoutTrackPage).toHaveBeenCalledExactlyOnceWith(
+      "en",
+      "try-out/id/snbt/2027"
+    );
   });
 
   it("answers the learner's set list of one track with its query", async () => {
@@ -554,5 +565,9 @@ describe("try-out catalog server handlers", () => {
       sort: { direction: "asc", field: "title" },
       trackKey: "2027",
     });
+    expect(catalog.readTryoutSetList).toHaveBeenCalledExactlyOnceWith(
+      "token-1",
+      answer.args
+    );
   });
 });
