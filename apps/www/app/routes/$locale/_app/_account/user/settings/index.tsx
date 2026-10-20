@@ -5,7 +5,8 @@ import { settingsScreenFn } from "@/lib/account/settings.fn";
 
 export const Route = createFileRoute("/$locale/_app/_account/user/settings/")({
   loader: ({ params }) => settingsScreenFn({ data: { locale: params.locale } }),
-  head: ({ loaderData }) => loaderData && privateHead(loaderData.seo),
+  head: ({ loaderData }) =>
+    loaderData === undefined ? {} : privateHead(loaderData.seo),
   component: SettingsPage,
 });
 

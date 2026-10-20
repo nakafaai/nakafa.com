@@ -8,7 +8,8 @@ export const Route = createFileRoute(
 )({
   loader: ({ params }) =>
     subscriptionsScreenFn({ data: { locale: params.locale } }),
-  head: ({ loaderData }) => loaderData && privateHead(loaderData.seo),
+  head: ({ loaderData }) =>
+    loaderData === undefined ? {} : privateHead(loaderData.seo),
   component: SubscriptionsPage,
 });
 

@@ -11,7 +11,8 @@ import { notificationsScreenFn } from "@/lib/account/home.fn";
 export const Route = createFileRoute("/$locale/_app/_account/notifications")({
   loader: ({ params }) =>
     notificationsScreenFn({ data: { locale: params.locale } }),
-  head: ({ loaderData }) => loaderData && signedInHead(loaderData.seo),
+  head: ({ loaderData }) =>
+    loaderData === undefined ? {} : signedInHead(loaderData.seo),
   component: NotificationsPage,
 });
 

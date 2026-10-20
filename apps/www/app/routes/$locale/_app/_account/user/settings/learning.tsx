@@ -8,7 +8,8 @@ export const Route = createFileRoute(
   "/$locale/_app/_account/user/settings/learning"
 )({
   loader: ({ params }) => learningScreenFn({ data: { locale: params.locale } }),
-  head: ({ loaderData }) => loaderData && privateHead(loaderData.seo),
+  head: ({ loaderData }) =>
+    loaderData === undefined ? {} : privateHead(loaderData.seo),
   component: LearningPage,
 });
 

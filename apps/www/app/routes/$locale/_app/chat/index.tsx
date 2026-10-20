@@ -9,7 +9,8 @@ import { chatIndexScreenFn } from "@/lib/account/home.fn";
 export const Route = createFileRoute("/$locale/_app/chat/")({
   loader: ({ params }) =>
     chatIndexScreenFn({ data: { locale: params.locale } }),
-  head: ({ loaderData }) => loaderData && signedInHead(loaderData.seo),
+  head: ({ loaderData }) =>
+    loaderData === undefined ? {} : signedInHead(loaderData.seo),
   component: ChatPage,
 });
 

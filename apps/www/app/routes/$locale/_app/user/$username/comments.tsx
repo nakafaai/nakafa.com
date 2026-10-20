@@ -8,7 +8,8 @@ export const Route = createFileRoute("/$locale/_app/user/$username/comments")({
     profileCommentsScreenFn({
       data: { locale: params.locale, username: params.username },
     }),
-  head: ({ loaderData }) => loaderData && profileHead(loaderData.seo),
+  head: ({ loaderData }) =>
+    loaderData === undefined ? {} : profileHead(loaderData.seo),
   component: UserCommentsPage,
 });
 

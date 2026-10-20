@@ -11,7 +11,8 @@ import { SearchInput } from "@/lib/nuqs/search";
 export const Route = createFileRoute("/$locale/_app/search")({
   validateSearch: Schema.toStandardSchemaV1(SearchInput),
   loader: ({ params }) => searchScreenFn({ data: { locale: params.locale } }),
-  head: ({ loaderData }) => loaderData && signedInHead(loaderData.seo),
+  head: ({ loaderData }) =>
+    loaderData === undefined ? {} : signedInHead(loaderData.seo),
   component: SearchPage,
 });
 
