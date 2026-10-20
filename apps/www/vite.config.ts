@@ -1,3 +1,5 @@
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import { POSTHOG_PROXY_PATH } from "@repo/analytics/posthog/config";
 import { securityHeaders } from "@repo/site";
@@ -7,8 +9,6 @@ import tailwindcss from "@tailwindcss/vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import react, { reactCompilerPreset } from "@vitejs/plugin-react";
 import rsc from "@vitejs/plugin-rsc";
-import { existsSync } from "node:fs";
-import { join } from "node:path";
 import { nitro } from "nitro/vite";
 import { defineConfig, type Plugin } from "vite";
 
@@ -49,22 +49,24 @@ const CLIENT_OUTPUT_DIRECTORY =
  * page that fails only logs an unhandled rejection, and the build still exits 0.
  * This check fails the build when a listed page did not reach the client output.
  */
+/** Throws when a listed page is missing from the client output. */
+function assertPrerenderedPages() {
+  const missing = PRERENDERED_PAGES.map(({ path }) => path).filter(
+    (path) => !existsSync(join(CLIENT_OUTPUT_DIRECTORY, path, "index.html"))
+  );
+  if (missing.length > 0) {
+    throw new Error(
+      `Prerendering wrote no page for: ${missing.join(", ")} (${CLIENT_OUTPUT_DIRECTORY})`
+    );
+  }
+}
+
 const verifyPrerenderedPages: Plugin = {
   apply: "build",
   // After every environment is built and TanStack has prerendered the pages.
   buildApp: {
     order: "post",
-    handler() {
-      const missing = PRERENDERED_PAGES.map(({ path }) => path).filter(
-        (path) =>
-          !existsSync(join(CLIENT_OUTPUT_DIRECTORY, path, "index.html"))
-      );
-      if (missing.length > 0) {
-        throw new Error(
-          `Prerendering wrote no page for: ${missing.join(", ")} (${CLIENT_OUTPUT_DIRECTORY})`
-        );
-      }
-    },
+    handler: () => Promise.resolve(assertPrerenderedPages()),
   },
   name: "www:verify-prerendered-pages",
 };
