@@ -75,6 +75,13 @@ export default defineConfig({
   resolve: {
     tsconfigPaths: true,
   },
+  // takumi-js loads its native `@takumi-rs/core` addon at runtime. A bundled copy
+  // cannot find its platform binary, so the server pass keeps the package external.
+  environments: {
+    ssr: {
+      resolve: { external: ["@takumi-rs/core"] },
+    },
+  },
   plugins: [
     tanstackStart({
       srcDirectory: "app",
