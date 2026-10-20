@@ -26,7 +26,7 @@ export const Route = createFileRoute("/school/$slug/")({
     if (studentView) {
       return await readStudentHomeFn({ data: { slug } });
     }
-    return readStaffHomeFn({ data: { canManage, slug } });
+    return readStaffHomeFn({ data: { slug } });
   },
   component: SchoolHomePage,
 });

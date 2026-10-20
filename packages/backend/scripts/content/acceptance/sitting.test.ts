@@ -65,7 +65,7 @@ describe("acceptance sitting", () => {
             MutableList.append(specs, spec);
             yield* fs.writeFileString(
               spec.stdoutPath,
-              '{"examId":"exam-1","sittingId":"sitting-1","token":"K7Q4XM"}'
+              '{"examId":"exam-1","sittingId":"sitting-1","title":"Ujian Acceptance","token":"K7Q4XM"}'
             );
           })
         );
@@ -96,6 +96,7 @@ describe("acceptance sitting", () => {
         expect(seeded).toEqual({
           examId: "exam-1",
           sittingId: "sitting-1",
+          title: "Ujian Acceptance",
           token: "K7Q4XM",
         });
         expect((yield* fs.stat(`${root}/sitting.json`)).mode % 0o1000).toBe(
@@ -117,7 +118,7 @@ describe("acceptance sitting", () => {
           MutableList.append(specs, spec);
           yield* fs.writeFileString(
             spec.stdoutPath,
-            '{"examId":"exam-1","sittingId":"sitting-1","token":"K7Q4XM"}'
+            '{"examId":"exam-1","sittingId":"sitting-1","title":"Ujian Acceptance","token":"K7Q4XM"}'
           );
         })
       );
@@ -180,7 +181,7 @@ describe("acceptance sitting", () => {
             MutableList.append(specs, spec);
             yield* fs.writeFileString(
               spec.stdoutPath,
-              '{"examId":"exam-1","sittingId":"sitting-1","token":"K7Q4XM"}'
+              '{"examId":"exam-1","sittingId":"sitting-1","title":"Ujian Acceptance","token":"K7Q4XM"}'
             );
           })
         );
@@ -224,7 +225,7 @@ describe("acceptance sitting", () => {
             MutableList.append(specs, spec);
             yield* fs.writeFileString(
               spec.stdoutPath,
-              '{"examId":"exam-1","sittingId":"sitting-1","token":"K7Q4XM"}'
+              '{"examId":"exam-1","sittingId":"sitting-1","title":"Ujian Acceptance","token":"K7Q4XM"}'
             );
           })
         );

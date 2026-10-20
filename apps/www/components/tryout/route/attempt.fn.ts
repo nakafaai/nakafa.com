@@ -39,7 +39,7 @@ export const readTryoutSectionFn = createServerFn({ method: "GET" })
   .validator(Schema.toStandardSchemaV1(SectionInput))
   .handler(async (options) => {
     const { readTryoutSectionHandler } = await import(
-      "@/components/tryout/route/attempt.server"
+      "@/components/tryout/route/section.server"
     );
     return readTryoutSectionHandler(options);
   });

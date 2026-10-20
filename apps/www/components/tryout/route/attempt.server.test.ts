@@ -2,10 +2,7 @@
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Effect, Option } from "effect";
-import {
-  readTryoutSectionRoute,
-  readTryoutSetRoute,
-} from "@/components/tryout/route/attempt.server";
+import { readTryoutSetRoute } from "@/components/tryout/route/attempt.server";
 
 const mocks = vi.hoisted(() => ({
   readCurrentTryoutSection: vi.fn(),
@@ -19,6 +16,8 @@ const mocks = vi.hoisted(() => ({
   readTryoutSectionPage: vi.fn(),
   readTryoutSetAttemptPage: vi.fn(),
   readTryoutSetPage: vi.fn(),
+  renderTryoutPreview: vi.fn(),
+  renderTryoutReview: vi.fn(),
   setResponseHeader: vi.fn(),
 }));
 
@@ -44,6 +43,10 @@ vi.mock("@/components/tryout/route/current", () => ({
   readCurrentTryoutSection: mocks.readCurrentTryoutSection,
   readCurrentTryoutSet: mocks.readCurrentTryoutSet,
 }));
+vi.mock("@/components/tryout/route/rendered.server", () => ({
+  renderTryoutPreview: mocks.renderTryoutPreview,
+  renderTryoutReview: mocks.renderTryoutReview,
+}));
 vi.mock("@/components/tryout/route/token.server", () => ({
   readRequestToken: mocks.readRequestToken,
 }));
@@ -68,7 +71,6 @@ const setAddress = {
   set: "set-1",
   track: "2027",
 } as const;
-const sectionAddress = { ...setAddress, section: "section-1" } as const;
 const attemptSearch = { attemptId: "attempt-1" };
 
 const NOT_FOUND = { kind: "notFound" };
@@ -79,19 +81,23 @@ type Search = Readonly<Record<string, string | undefined>>;
 const readSet = (search: Search = {}) =>
   readTryoutSetRoute({ ...setAddress, search });
 
-/** Reads the section URL of the fixture address with one search. */
-const readSection = (search: Search = {}) =>
-  readTryoutSectionRoute({ ...sectionAddress, search });
-
 const catalogSet = {
   entrySection: { sectionKey: "section-1" },
   set: { description: "Set", publicPath: SET, title: "Set 1" },
   sections: [{ publicPath: SECTION }],
 };
-const catalogSection = {
-  section: { description: "Section", publicPath: SECTION, title: "Section 1" },
-  set: { countryKey: "id", examKey: "snbt", setKey: "set-1", trackKey: "2027" },
+
+const signedContent = { answers: [], kind: "signed" };
+const runtime = { questions: [] };
+const runningSigned = {
+  content: signedContent,
+  initialState: { attempt: { status: "in-progress" } },
 };
+const finishedSigned = {
+  content: signedContent,
+  initialState: { attempt: { status: "completed" }, runtime },
+};
+const preview = { target: { section: { title: "Question 1" } } };
 
 /** One attempt as the attempt readers return it, retained or current. */
 function attemptOf(kind: "current" | "retained", overrides: object = {}) {
@@ -120,9 +126,10 @@ beforeEach(() => {
     Promise.resolve((key: string) => key)
   );
   mocks.readTryoutQuestionPreview.mockResolvedValue(Option.none());
+  mocks.renderTryoutPreview.mockResolvedValue("preview-tree");
+  mocks.renderTryoutReview.mockResolvedValue("review-tree");
   mocks.readTryoutRouteHead.mockReturnValue(Effect.succeed(head));
   mocks.readTryoutSetPage.mockReturnValue(Effect.succeed(catalogSet));
-  mocks.readTryoutSectionPage.mockReturnValue(Effect.succeed(catalogSection));
   mocks.readTryoutSetAttemptPage.mockReturnValue(
     Effect.succeed(attemptOf("retained"))
   );
@@ -168,21 +175,28 @@ describe("readTryoutSetRoute", () => {
     })
   );
 
-  it.effect(
-    "holds a retained attempt with signed content until the renderer contract exists",
-    () =>
-      Effect.gen(function* () {
-        mocks.readTryoutSetAttemptPage.mockReturnValue(
-          Effect.succeed(attemptOf("retained", { content: { kind: "signed" } }))
-        );
+  it.effect("holds a running retained set with signed content", () =>
+    Effect.gen(function* () {
+      mocks.readTryoutSetAttemptPage.mockReturnValue(
+        Effect.succeed(attemptOf("retained", runningSigned))
+      );
 
-        const error = yield* Effect.flip(readSet(attemptSearch));
+      const error = yield* Effect.flip(readSet(attemptSearch));
 
-        expect(error).toMatchObject({
-          _tag: "TryoutAttemptContentPending",
-          publicPath: SET,
-        });
-      })
+      expect(error).toMatchObject({ _tag: "TryoutAttemptContentPending" });
+    })
+  );
+
+  it.effect("renders the review of a finished retained set", () =>
+    Effect.gen(function* () {
+      mocks.readTryoutSetAttemptPage.mockReturnValue(
+        Effect.succeed(attemptOf("retained", finishedSigned))
+      );
+
+      const route = yield* readSet(attemptSearch);
+
+      expect(route).toMatchObject({ kind: "attempt", review: "review-tree" });
+    })
   );
 
   it.effect(
@@ -200,7 +214,7 @@ describe("readTryoutSetRoute", () => {
             canonicalPath: "/en/try-out/id/snbt/2027/set-1",
             description: "Set",
             indexable: false,
-            title: "Set 1",
+            title: { absolute: "Set 1" },
           },
           kind: "attempt",
           restartTarget: { setPublicPath: SET },
@@ -236,18 +250,15 @@ describe("readTryoutSetRoute", () => {
       })
   );
 
-  it.effect(
-    "holds a public set that a preview answers until the renderer contract exists",
-    () =>
-      Effect.gen(function* () {
-        mocks.readTryoutQuestionPreview.mockResolvedValue(
-          Option.some({ questions: [] })
-        );
+  it.effect("answers a public set with its question preview", () =>
+    Effect.gen(function* () {
+      mocks.readTryoutQuestionPreview.mockResolvedValue(Option.some(preview));
 
-        const error = yield* Effect.flip(readSet());
-
-        expect(error).toMatchObject({ _tag: "TryoutAttemptContentPending" });
-      })
+      expect(yield* readSet()).toMatchObject({
+        kind: "preview",
+        preview: "preview-tree",
+      });
+    })
   );
 
   it.effect(
@@ -278,15 +289,30 @@ describe("readTryoutSetRoute", () => {
       })
   );
 
-  it.effect("holds a learner's current set with signed content", () =>
+  it.effect("holds a running current set with signed content", () =>
     Effect.gen(function* () {
       mocks.readCurrentTryoutSet.mockReturnValue(
-        Effect.succeed(attemptOf("current", { content: { kind: "signed" } }))
+        Effect.succeed(attemptOf("current", runningSigned))
       );
 
       const error = yield* Effect.flip(readSet());
 
       expect(error).toMatchObject({ _tag: "TryoutAttemptContentPending" });
+    })
+  );
+
+  it.effect("holds no review for a finished attempt without a runtime", () =>
+    Effect.gen(function* () {
+      mocks.readCurrentTryoutSet.mockReturnValue(
+        Effect.succeed(
+          attemptOf("current", {
+            ...finishedSigned,
+            initialState: { attempt: { status: "completed" }, runtime: null },
+          })
+        )
+      );
+
+      expect(yield* readSet()).toMatchObject({ review: undefined });
     })
   );
 
@@ -326,165 +352,5 @@ describe("readTryoutSetRoute", () => {
           restartTarget: { setPublicPath: SET },
         });
       })
-  );
-});
-
-describe("readTryoutSectionRoute", () => {
-  it.effect("answers not found for an empty attempt in a section URL", () =>
-    Effect.gen(function* () {
-      expect(yield* readSection({ attemptId: "" })).toEqual(NOT_FOUND);
-    })
-  );
-
-  it.effect(
-    "sends an attempt section URL to sign-in when there is no session",
-    () =>
-      Effect.gen(function* () {
-        mocks.readRequestToken.mockReturnValue(Effect.void);
-
-        expect(yield* readSection(attemptSearch)).toMatchObject({
-          kind: "signIn",
-        });
-      })
-  );
-
-  it.effect(
-    "answers not found when the attempt section is not the learner's own",
-    () =>
-      Effect.gen(function* () {
-        mocks.readTryoutSectionAttemptPage.mockReturnValue(
-          Effect.succeed(attemptOf("current"))
-        );
-
-        expect(yield* readSection(attemptSearch)).toEqual(NOT_FOUND);
-      })
-  );
-
-  it.effect("holds a retained section attempt with signed content", () =>
-    Effect.gen(function* () {
-      mocks.readTryoutSectionAttemptPage.mockReturnValue(
-        Effect.succeed(attemptOf("retained", { content: { kind: "signed" } }))
-      );
-
-      const error = yield* Effect.flip(readSection(attemptSearch));
-
-      expect(error).toMatchObject({ _tag: "TryoutAttemptContentPending" });
-    })
-  );
-
-  it.effect(
-    "renders the retained section with its set as the return link",
-    () =>
-      Effect.gen(function* () {
-        mocks.readTryoutSectionAttemptPage.mockReturnValue(
-          Effect.succeed(
-            attemptOf("retained", {
-              activeSetPublicPath: "try-out/id/snbt/2027/set-2",
-            })
-          )
-        );
-
-        const route = yield* readSection(attemptSearch);
-
-        expect(route).toMatchObject({
-          kind: "attempt",
-          setHref: "/try-out/id/snbt/2027/set-2",
-          head: { description: "Section", title: "Section 1" },
-        });
-      })
-  );
-
-  it.effect(
-    "holds a public section that a preview answers until the renderer contract exists",
-    () =>
-      Effect.gen(function* () {
-        mocks.readTryoutQuestionPreview.mockResolvedValue(
-          Option.some({ questions: [] })
-        );
-
-        const error = yield* Effect.flip(readSection());
-
-        expect(error).toMatchObject({ _tag: "TryoutAttemptContentPending" });
-      })
-  );
-
-  it.effect(
-    "answers not found when the catalog has no section page or no head",
-    () =>
-      Effect.gen(function* () {
-        mocks.readTryoutSectionPage.mockReturnValueOnce(Effect.void);
-        expect(yield* readSection()).toEqual(NOT_FOUND);
-
-        mocks.readTryoutRouteHead.mockReturnValueOnce(Effect.succeedNone);
-        expect(yield* readSection()).toEqual(NOT_FOUND);
-      })
-  );
-
-  it.effect(
-    "shows the catalog section without an attempt when the learner has no session",
-    () =>
-      Effect.gen(function* () {
-        mocks.readRequestToken.mockReturnValue(Effect.void);
-
-        const route = yield* readSection();
-
-        expect(route).toMatchObject({
-          binding: null,
-          kind: "catalog",
-          setHref: "/try-out/id/snbt/2027/set-1",
-        });
-      })
-  );
-
-  it.effect(
-    "binds the learner's current section to its start link and its set",
-    () =>
-      Effect.gen(function* () {
-        mocks.readCurrentTryoutSection.mockReturnValue(
-          Effect.succeed(
-            attemptOf("current", {
-              activeSectionPublicPath: SECTION,
-              activeSetPublicPath: "try-out/id/snbt/2027/set-2",
-            })
-          )
-        );
-
-        const route = yield* readSection();
-
-        expect(route).toMatchObject({
-          binding: { startHref: `/${SECTION}` },
-          kind: "catalog",
-          setHref: "/try-out/id/snbt/2027/set-2",
-        });
-      })
-  );
-
-  it.effect(
-    "binds a current section with no active section or set to the public links",
-    () =>
-      Effect.gen(function* () {
-        mocks.readCurrentTryoutSection.mockReturnValue(
-          Effect.succeed(attemptOf("current"))
-        );
-
-        const route = yield* readSection();
-
-        expect(route).toMatchObject({
-          binding: { startHref: null },
-          setHref: "/try-out",
-        });
-      })
-  );
-
-  it.effect("holds a learner's current section with signed content", () =>
-    Effect.gen(function* () {
-      mocks.readCurrentTryoutSection.mockReturnValue(
-        Effect.succeed(attemptOf("current", { content: { kind: "signed" } }))
-      );
-
-      const error = yield* Effect.flip(readSection());
-
-      expect(error).toMatchObject({ _tag: "TryoutAttemptContentPending" });
-    })
   );
 });

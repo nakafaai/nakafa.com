@@ -54,6 +54,9 @@ export const Route = createFileRoute(
 
 function TryoutSetPage() {
   const route = Route.useLoaderData();
+  if (route.kind === "preview") {
+    return route.preview;
+  }
   return (
     <TryoutClockProvider initialNow={route.now}>
       <TryoutSetPageClient
@@ -63,7 +66,7 @@ function TryoutSetPage() {
         restartTarget={route.restartTarget}
         route={route.route}
       >
-        {null}
+        {route.review}
       </TryoutSetPageClient>
     </TryoutClockProvider>
   );

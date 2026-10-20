@@ -33,11 +33,11 @@ export function homeExamsRead(slug: TenantSlug) {
 export function useHomeSetup() {
   const { canManage, slug } = useTenant();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
-  const { setup } = use(HomePreloadContext);
+  const { home } = use(HomePreloadContext);
   return usePreloadedQueryResult(
     tenancy.home.setup,
     isSettled && canManage ? { slug } : "skip",
-    setup
+    home?.setup
   );
 }
 

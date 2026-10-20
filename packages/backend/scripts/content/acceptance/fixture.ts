@@ -25,6 +25,7 @@ export const SittingFixture = Schema.fromJsonString(
   Schema.Struct({
     examId: Schema.String,
     sittingId: Schema.String,
+    title: Schema.String,
     token: Schema.String,
   })
 );

@@ -7,7 +7,7 @@ import type { readStaffHomeFn, readStudentHomeFn } from "@/lib/tenant/home.fn";
  * a read that the viewer's view does not make is none.
  */
 export type HomePreload = Partial<
-  Pick<Awaited<ReturnType<typeof readStaffHomeFn>>, "home" | "setup">
+  Pick<Awaited<ReturnType<typeof readStaffHomeFn>>, "home">
 > &
   Partial<Pick<Awaited<ReturnType<typeof readStudentHomeFn>>, "sittings">>;
 

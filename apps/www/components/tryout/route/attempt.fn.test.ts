@@ -2,13 +2,13 @@
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Effect, Option } from "effect";
-import {
-  readTryoutSectionHandler,
-  readTryoutSetHandler,
-} from "@/components/tryout/route/attempt.server";
+import { readTryoutSetHandler } from "@/components/tryout/route/attempt.server";
+import { readTryoutSectionHandler } from "@/components/tryout/route/section.server";
 
 const mocks = vi.hoisted(() => ({
   readRequestToken: vi.fn(),
+  renderTryoutPreview: vi.fn(),
+  renderTryoutReview: vi.fn(),
   readTryoutQuestionPreview: vi.fn(),
   readTryoutSectionPage: vi.fn(),
   readTryoutSetPage: vi.fn(),
@@ -25,6 +25,10 @@ vi.mock("@/components/tryout/catalog/server", () => ({
 }));
 vi.mock("@/components/tryout/preview/read", () => ({
   readTryoutQuestionPreview: mocks.readTryoutQuestionPreview,
+}));
+vi.mock("@/components/tryout/route/rendered.server", () => ({
+  renderTryoutPreview: mocks.renderTryoutPreview,
+  renderTryoutReview: mocks.renderTryoutReview,
 }));
 vi.mock("@/components/tryout/route/token.server", () => ({
   readRequestToken: mocks.readRequestToken,

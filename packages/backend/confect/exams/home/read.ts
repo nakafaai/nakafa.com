@@ -15,7 +15,11 @@ import {
 import { TENANT_UNIT_LIMIT } from "@repo/backend/confect/exams/sittings/mine";
 import { sittingViews } from "@repo/backend/confect/exams/sittings/view";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
-import { unitAuthority } from "@repo/backend/confect/tenancy/authority";
+import {
+  tenantAuthority,
+  unitAuthority,
+} from "@repo/backend/confect/tenancy/authority";
+import { readSetup } from "@repo/backend/confect/tenancy/setup";
 import { Array as Arr, Clock, Duration, Effect, Order } from "effect";
 
 /**
@@ -146,7 +150,7 @@ const draftsOf = Effect.fn("exams.home.drafts")(function* (
  * The school home's exam reads for the caller, in one bounded call. Every read is an index read
  * with a small limit over the school's active units, and each room, result, and draft is decided by
  * its own authority before it is returned. A caller who holds no room, result, or exam action gets
- * four empty lists.
+ * four empty lists. A caller who manages the school gets the school's setup in the same call.
  */
 export const readHome = Effect.fn("exams.home.read")(function* () {
   const member = yield* Member;
@@ -171,10 +175,16 @@ export const readHome = Effect.fn("exams.home.read")(function* () {
     Arr.filter(running, (row) => row.closesAt > now)
   );
   const next = yield* firstViewable(upcoming);
-  return {
+  const can = yield* tenantAuthority.allowed(member.tenant);
+  const home = {
+    canManageSetup: Arr.contains(can, "tenant.manage"),
     closed: yield* closedResults(watched),
     drafts: yield* draftsOf(member.tenant._id, appUser._id),
     live: yield* sittingViews(live),
     next: yield* sittingViews(next),
   };
+  if (!home.canManageSetup) {
+    return home;
+  }
+  return { ...home, setup: yield* readSetup(member.tenant._id) };
 });

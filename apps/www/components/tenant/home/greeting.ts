@@ -67,6 +67,15 @@ const WORD_GAP = /\s+/u;
 export const firstNameOf = (name: string) =>
   Arr.headNonEmpty(Str.split(WORD_GAP)(Str.trim(name)));
 
+/** The greeting of the school home: the viewer's first name, and the part of the day that Nina's act follows. */
+export const GreetingSchema = Schema.Struct({
+  firstName: Schema.String,
+  part: DayPartSchema,
+});
+
+/** The greeting of the school home, as the school layout computes it and the shell carries it. */
+export type Greeting = typeof GreetingSchema.Type;
+
 /**
  * The greeting of the school home for one viewer at an instant: the viewer's first name, and the part of the
  * day on the clock of the school's first unit. The school layout computes it on the server, so the first HTML
@@ -78,7 +87,7 @@ export const greetingOf = (
     readonly units: readonly Pick<Viewer["units"][number], "timeZone">[];
   },
   now: DateTime.Utc
-) => ({
+): Greeting => ({
   firstName: firstNameOf(viewer.person.name),
   part: dayPartAt(
     now,
@@ -87,6 +96,3 @@ export const greetingOf = (
     )
   ),
 });
-
-/** The greeting of the school home, as the school layout computes it and the shell carries it. */
-export type Greeting = ReturnType<typeof greetingOf>;

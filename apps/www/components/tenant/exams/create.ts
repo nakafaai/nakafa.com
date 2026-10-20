@@ -16,7 +16,7 @@ export type ViewerUnit = Viewer["units"][number];
  * `language` is the content language of the unit, or none for the whole school, where the
  * teacher picks one. `scope` is the scope the exam is created with.
  */
-const ScopeChoice = Schema.Struct({
+export const ScopeChoice = Schema.Struct({
   language: Schema.NullOr(DeliveryLanguageSchema),
   scope: GrantScope,
   unitId: Schema.NullOr(Id("tenantUnits")),

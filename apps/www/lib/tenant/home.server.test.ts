@@ -2,7 +2,6 @@
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import exams from "@repo/backend/confect/_generated/refs/exams";
-import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 import { staffHomeHandler, studentHomeHandler } from "@/lib/tenant/home.server";
@@ -52,18 +51,30 @@ beforeEach(() => {
 });
 
 describe("staff home first screen", () => {
-  it("reads the home's exams and rooms, and no setup, for a viewer who does not manage the school", async () => {
+  it("reads the home's exams and rooms, and no setup, for a viewer whom the home does not let manage the school", async () => {
     answer([
-      [exams.exams.home, { closed: [], drafts: [], live: [], next: [] }],
+      [
+        exams.exams.home,
+        {
+          canManageSetup: false,
+          closed: [],
+          drafts: [],
+          live: [],
+          next: [],
+        },
+      ],
     ]);
 
-    const screen = await staffHomeHandler({
-      data: { canManage: false, slug: SLUG },
-    });
+    const screen = await staffHomeHandler({ data: { slug: SLUG } });
 
     expect(screen).toStrictEqual({
-      home: { closed: [], drafts: [], live: [], next: [] },
-      setup: undefined,
+      home: {
+        canManageSetup: false,
+        closed: [],
+        drafts: [],
+        live: [],
+        next: [],
+      },
     });
     expect(mocks.preloadConfectQuery).toHaveBeenCalledExactlyOnceWith(
       exams.exams.home,
@@ -72,19 +83,31 @@ describe("staff home first screen", () => {
     );
   });
 
-  it("also reads the school's setup for a viewer who manages the school", async () => {
+  it("hands the setup of the home's one read to a viewer whom the home lets manage the school", async () => {
+    const setup = {
+      hasPendingInvite: false,
+      hasStudent: true,
+      hasTeacher: false,
+    };
     answer([
-      [exams.exams.home, { closed: [], drafts: [], live: [], next: [] }],
-      [tenancy.home.setup, { steps: [] }],
+      [
+        exams.exams.home,
+        {
+          canManageSetup: true,
+          closed: [],
+          drafts: [],
+          live: [],
+          next: [],
+          setup,
+        },
+      ],
     ]);
 
-    const screen = await staffHomeHandler({
-      data: { canManage: true, slug: SLUG },
-    });
+    const screen = await staffHomeHandler({ data: { slug: SLUG } });
 
-    expect(screen.setup).toStrictEqual({ steps: [] });
-    expect(mocks.preloadConfectQuery).toHaveBeenCalledWith(
-      tenancy.home.setup,
+    expect(screen.home.setup).toStrictEqual(setup);
+    expect(mocks.preloadConfectQuery).toHaveBeenCalledExactlyOnceWith(
+      exams.exams.home,
       { slug: SLUG },
       "token-home"
     );

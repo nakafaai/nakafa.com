@@ -1,6 +1,12 @@
 import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
-import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
+import {
+  createSchool,
+  hostAddress,
+  inviteLearner,
+  seedSitting,
+  signInOwner,
+} from "@/e2e/support/school";
 
 /**
  * The first screens of the school pages are in the first HTML, so a member's page
@@ -33,7 +39,26 @@ test("the exam list's first HTML holds the exams of a member who may open them",
   baseURL,
 }) => {
   const school = await Effect.runPromise(createSchool());
-  const examsPage = hostAddress(baseURL, `${school.slug}.localhost`, "/exams");
+  const address = (path: string) =>
+    hostAddress(baseURL, `${school.slug}.localhost`, path);
+  const learner = `student-${school.slug}@acceptance.example.test`;
+  const learnerContext = await browser.newContext();
+  await Effect.runPromise(
+    inviteLearner({
+      address: learner,
+      baseURL: address("/"),
+      context: learnerContext,
+      slug: school.slug,
+    })
+  );
+  await learnerContext.close();
+  // The seed records its exam as made by the school's Owner, who must have signed in first.
+  const ownerContext = await browser.newContext();
+  await Effect.runPromise(signInOwner(ownerContext, school.slug, address("/")));
+  const sitting = await Effect.runPromise(seedSitting(school.slug, learner));
+  await ownerContext.close();
+
+  const examsPage = address("/exams");
   const context = await browser.newContext();
   await Effect.runPromise(signInOwner(context, school.slug, examsPage));
   const withoutScript = await browser.newContext({ javaScriptEnabled: false });
@@ -43,9 +68,7 @@ test("the exam list's first HTML holds the exams of a member who may open them",
   const response = await page.goto(examsPage);
 
   expect(response?.status()).toBe(200);
-  await expect(
-    page.getByText("There are no exams yet.", { exact: true })
-  ).toBeVisible();
+  await expect(page.getByText(sitting.title, { exact: true })).toBeVisible();
   await context.close();
   await withoutScript.close();
 });
