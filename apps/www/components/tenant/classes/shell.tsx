@@ -6,7 +6,7 @@ import { ClassAmbiguous } from "@repo/backend/confect/classroom/errors";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Link } from "@repo/internationalization/src/navigation";
 import { cn } from "cn";
-import { Array as Arr, Schema } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 import type { ReactNode } from "react";
 import { createContext, use, useState } from "react";
 import { useTranslations } from "use-intl";
@@ -126,7 +126,7 @@ function ClassPage({
         <ChannelList
           classId={klass.id}
           drafts={drafts}
-          first={preload?.channels}
+          first={Option.fromUndefinedOr(preload?.channels)}
           slug={slug}
         />
       </LayoutContent>

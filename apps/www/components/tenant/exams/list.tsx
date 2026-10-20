@@ -2,14 +2,14 @@
 
 import type { Ref } from "@confect/core";
 import { PaginatedQueryResult } from "@confect/react";
-import { useIntersection } from "@mantine/hooks";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
+import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { Link } from "@repo/internationalization/src/navigation";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, Option } from "effect";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { useStore } from "zustand";
 import { useConvexAuth } from "@/components/providers/convex";
@@ -67,17 +67,9 @@ export function ExamList({
   );
   const [drafts] = useState(createExamDrafts);
   const saving = useStore(drafts, (state) => state.ids);
-  const { entry, ref } = useIntersection<HTMLDivElement>();
   const loadMore = PaginatedQueryResult.isCanLoadMore(pagination)
     ? pagination.loadMore
     : null;
-  const atEnd = entry?.isIntersecting === true;
-
-  useEffect(() => {
-    if (atEnd && loadMore !== null) {
-      loadMore(EXAM_PAGE_SIZE);
-    }
-  }, [atEnd, loadMore]);
 
   const names = useMemo(
     () => new Intl.DisplayNames([locale], { type: "language" }),
@@ -110,7 +102,9 @@ export function ExamList({
           names={names}
           saving={saving}
         />
-        <div aria-hidden ref={ref} />
+        {loadMore !== null && (
+          <Intersection onIntersect={() => loadMore(EXAM_PAGE_SIZE)} />
+        )}
       </LayoutContent>
     </>
   );

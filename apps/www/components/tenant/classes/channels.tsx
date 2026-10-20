@@ -2,11 +2,11 @@
 
 import type { Ref } from "@confect/core";
 import { PaginatedQueryResult } from "@confect/react";
-import { useIntersection } from "@mantine/hooks";
 import type { Id } from "@repo/backend/confect/_generated/id";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import type { ChannelView } from "@repo/backend/confect/classroom/forum/channel";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
+import { Intersection } from "@repo/design-system/components/ui/intersection";
 import {
   Table,
   TableBody,
@@ -15,8 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from "@repo/design-system/components/ui/table";
-import { Array as Arr, Option } from "effect";
-import { useEffect } from "react";
+import { Array as Arr, type Option } from "effect";
 import { useTranslations } from "use-intl";
 import { type StoreApi, useStore } from "zustand";
 import { DataFailure } from "@/components/shared/failure";
@@ -54,17 +53,16 @@ export function ChannelList({
 }: {
   classId: Id<"classes">;
   drafts: StoreApi<ChannelDrafts>;
-  first: ChannelsFirstPage | undefined;
+  first: Option.Option<ChannelsFirstPage>;
   slug: TenantSlug;
 }) {
   const pagination = usePaginatedPreloaded(
     classroom.forum.channels.list,
     { classId, slug },
     { initialNumItems: CHANNEL_PAGE_SIZE },
-    Option.fromUndefinedOr(first)
+    first
   );
   const saving = useStore(drafts, (state) => state.names);
-  const { entry, ref } = useIntersection<HTMLDivElement>();
   if (
     PaginatedQueryResult.isFailure(pagination) &&
     isLostAccess(pagination.error)
@@ -74,13 +72,6 @@ export function ChannelList({
   const loadMore = PaginatedQueryResult.isCanLoadMore(pagination)
     ? pagination.loadMore
     : null;
-  const atEnd = entry?.isIntersecting === true;
-
-  useEffect(() => {
-    if (atEnd && loadMore !== null) {
-      loadMore(CHANNEL_PAGE_SIZE);
-    }
-  }, [atEnd, loadMore]);
 
   const failure = PaginatedQueryResult.isFailure(pagination) ? (
     <DataFailure onRetry={reloadPage} />
@@ -94,7 +85,9 @@ export function ChannelList({
         Arr.isReadonlyArrayEmpty(pagination.results)) ? null : (
         <ChannelTable channels={pagination.results} saving={saving} />
       )}
-      <div aria-hidden ref={ref} />
+      {loadMore !== null && (
+        <Intersection onIntersect={() => loadMore(CHANNEL_PAGE_SIZE)} />
+      )}
     </>
   );
 }

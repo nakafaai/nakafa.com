@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, type ReactNode, use, useState } from "react";
+import { createContext, type ReactNode, use, useMemo, useState } from "react";
 import { type StoreApi, useStore } from "zustand";
 import type { AgeClock } from "@/components/user/clock";
 import { useAgeNow } from "@/components/user/clock.client";
@@ -59,11 +59,11 @@ export function PostsProvider({
   onRetry,
   profile,
 }: PostsValue & { children: ReactNode }) {
-  return (
-    <PostsContext value={{ clock, isOwner, onRetry, profile }}>
-      {children}
-    </PostsContext>
+  const value = useMemo(
+    () => ({ clock, isOwner, onRetry, profile }),
+    [clock, isOwner, onRetry, profile]
   );
+  return <PostsContext value={value}>{children}</PostsContext>;
 }
 
 /** Reads the profile's posts value, which the provider above the list gives. */
