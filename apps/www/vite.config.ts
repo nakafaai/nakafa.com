@@ -78,7 +78,13 @@ export default defineConfig({
   plugins: [
     tanstackStart({
       srcDirectory: "app",
-      importProtection: { behavior: { dev: "error", build: "error" } },
+      // Client components render on the server during the RSC pass, so their
+      // `.client` modules belong to the server bundle. The browser keeps its
+      // rule against `.server` modules; the server pass has no `.client` rule.
+      importProtection: {
+        behavior: { dev: "error", build: "error" },
+        server: { files: [] },
+      },
       pages: PRERENDERED_PAGES,
       // Server Components: content bodies render on the server, and only "use
       // client" islands ship JavaScript. An island's heavy module loads on
