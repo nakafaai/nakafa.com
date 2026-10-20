@@ -4,6 +4,7 @@ import {
   useRouter,
 } from "@repo/internationalization/src/navigation";
 import { useLocation } from "@tanstack/react-router";
+import { pipe, String as Str } from "effect";
 import type { MouseEvent, SyntheticEvent } from "react";
 import { useLocale } from "use-intl";
 import {
@@ -35,7 +36,7 @@ export function useCurrentAuthNavigation() {
   const pathname = getPathname({ href: usePathname(), locale });
   const router = useRouter();
   const search = useLocation({
-    select: (location) => location.searchStr.slice(1),
+    select: (location) => pipe(location.searchStr, Str.slice(1)),
   });
   const href = getPostAuthSignInHrefForLocation(
     { hash: "", pathname, search },
