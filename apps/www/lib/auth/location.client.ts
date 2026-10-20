@@ -34,7 +34,7 @@ function isModifiedLinkClick(event: MouseEvent<HTMLAnchorElement>) {
  */
 export function useCurrentAuthNavigation() {
   const locale = useLocale();
-  const pathname = usePathname();
+  const pathname = getPathname({ href: usePathname(), locale });
   const router = useRouter();
   const search = useLocation({
     select: (location) => location.searchStr.slice(1),

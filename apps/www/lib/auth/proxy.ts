@@ -1,4 +1,4 @@
-import type { convexBetterAuthNextJs } from "@convex-dev/better-auth/nextjs";
+import type { convexBetterAuthReactStart } from "@convex-dev/better-auth/react-start";
 import {
   createNetworkRequestError,
   NETWORK_RETRY_SCHEDULE,
@@ -22,8 +22,10 @@ import { readRequestHost } from "@/lib/routing/school/host";
 /** One method of the Better Auth route handler that the proxy forwards to. */
 type AuthHandlerMethod = (request: Request) => Promise<Response>;
 
-/** The route handler that `@convex-dev/better-auth` returns for Next.js. */
-type AuthRouteHandler = ReturnType<typeof convexBetterAuthNextJs>["handler"];
+/** The route handler that `@convex-dev/better-auth` returns for TanStack Start. */
+type AuthRouteHandler = ReturnType<
+  typeof convexBetterAuthReactStart
+>["handler"];
 
 /**
  * The longest a proxied Better Auth request may take, retries included. It is
@@ -209,9 +211,9 @@ function withBrowserHost(request: Request): Request {
 }
 
 /**
- * Builds the Next.js route methods for the Better Auth handler. A network
- * failure that is not repeated rejects the route, and Next.js answers 500, as it
- * did before the proxy existed. A session read from a visitor without a session
+ * Builds the route methods for the Better Auth handler. A network failure that
+ * is not repeated rejects the route, and the server answers 500. A session read
+ * from a visitor without a session
  * cookie is answered here and never reaches Convex. Every other request reaches
  * Better Auth with the browser's host (`withBrowserHost`).
  */

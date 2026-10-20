@@ -8,15 +8,20 @@ import {
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
 import { toast } from "@repo/design-system/lib/toast/notify";
-import { usePathname } from "@repo/internationalization/src/navigation";
+import {
+  getPathname,
+  useCurrentLocale,
+  usePathname,
+} from "@repo/internationalization/src/navigation";
 import { getAppUrl } from "@repo/site/app";
 import { useTranslations } from "use-intl";
 
 export function ShareButton() {
   const t = useTranslations("Common");
 
-  // use pathname hook from nextjs to get the locale
-  const pathname = usePathname();
+  // The seam's pathname omits the locale, so the copied link names it again.
+  const locale = useCurrentLocale();
+  const pathname = getPathname({ href: usePathname(), locale });
 
   const clipboard = useClipboard({ timeout: 500 });
 
