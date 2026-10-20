@@ -29,3 +29,18 @@ export const LOCALE_COOKIE_ATTRIBUTES = { path: "/", sameSite: "lax" } as const;
 
 /** Decodes an unknown value into a public locale, or none. */
 export const decodeLocale = Schema.decodeUnknownOption(LocaleSchema);
+
+/**
+ * The time zone that each locale formats dates and times in. Server and client
+ * render one clock, and use-intl logs ENVIRONMENT_FALLBACK for a date without one.
+ */
+const LOCALE_TIME_ZONES = {
+  de: "Europe/Berlin",
+  en: "Asia/Jakarta",
+  id: "Asia/Jakarta",
+} as const satisfies Record<Locale, string>;
+
+/** The time zone that dates of one locale are formatted in. */
+export function localeTimeZone(locale: Locale) {
+  return LOCALE_TIME_ZONES[locale];
+}
