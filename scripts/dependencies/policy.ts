@@ -456,7 +456,11 @@ export const OBSOLETE_DEPENDENCIES = {
   "@effect/rpc": IN_EFFECT,
   "@effect/sql": IN_EFFECT,
   "@effect/workflow": IN_EFFECT,
+  "@next/third-parties":
+    "the lite YouTube embed in @repo/design-system, which the www app renders",
   "date-fns":
     "Intl.DateTimeFormat and Intl.RelativeTimeFormat with DateTime and Duration from effect, as apps/www/lib/i18n/date.ts does",
   nanoid: "randomUuid from @repo/utilities/uuid",
+  next: "TanStack Start and TanStack Router, which the www app runs on",
+  "next-intl": "the locale seam in @repo/internationalization over use-intl",
 };

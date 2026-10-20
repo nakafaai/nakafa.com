@@ -211,13 +211,14 @@ describe("dependency policy validation", () => {
       problem: "react has 0 declarations; expected at least 1.",
     },
     {
-      name: "an unapproved exact version",
+      name: "an obsolete Next package",
       change: (input) =>
         updateWebManifest(input, (manifest) => ({
           ...manifest,
           dependencies: { ...manifest.dependencies, next: "0.0.0" },
         })),
-      problem: `apps/www/package.json declares next as 0.0.0; approved ${approvedSpec("next")}.`,
+      problem:
+        "apps/www/package.json declares the obsolete dependency next; use TanStack Start and TanStack Router, which the www app runs on.",
     },
     {
       name: "a spec outside the allowed list",

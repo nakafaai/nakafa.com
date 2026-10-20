@@ -32,11 +32,11 @@ const ROUTER_SIGNALS = HashSet.make("notFound", "redirect");
 
 /** Whether a throw statement calls a router signal that the module imports from the router. */
 function isRouterSignal(node: ThrowStatement, signals: readonly string[]) {
-  return (
-    isCallExpression(node.expression) &&
-    isIdentifier(node.expression.expression) &&
-    Arr.some(signals, (name) => name === node.expression.expression.text)
-  );
+  const { expression } = node;
+  if (!(isCallExpression(expression) && isIdentifier(expression.expression))) {
+    return false;
+  }
+  return Arr.contains(signals, expression.expression.text);
 }
 
 /** The Convex function builders whose options object holds a vanilla handler. */

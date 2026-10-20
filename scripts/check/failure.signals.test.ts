@@ -27,13 +27,13 @@ export function load(value: string | undefined) {
   throw route({ to: "/en" });
 }
 export function unimported() {
-  throw notFound();
+  throw answerNotFound();
 }
 export function failure() {
   throw new Error("bad");
 }
 `),
-          ["10 throw", "13 throw"]
+          ["9 throw", "12 throw"]
         );
       })
   );
