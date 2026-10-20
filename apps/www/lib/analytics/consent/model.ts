@@ -48,7 +48,9 @@ export interface AnalyticsConsentAccount {
   readonly isAuthenticated: boolean;
   readonly isAuthLoading: boolean;
   readonly isUserPending: boolean;
-  readonly setAccountConsent: Parameters<typeof saveAccountAnalyticsChoice>[0];
+  readonly setAccountConsent: (
+    ...args: Parameters<Parameters<typeof saveAccountAnalyticsChoice>[0]>
+  ) => ReturnType<Parameters<typeof saveAccountAnalyticsChoice>[0]>;
   readonly user: AccountRecord | null;
 }
 

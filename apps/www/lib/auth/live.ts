@@ -4,11 +4,20 @@ import { createStore, type StoreApi } from "zustand";
 import { reportClientException } from "@/lib/analytics/client";
 import type { ConvexAuthConfirmation } from "@/lib/auth/convex";
 import { hasSignedInHint } from "@/lib/auth/hint";
-import {
-  type AuthSession,
-  followAuthSession,
-  previewAuthSession,
-} from "@/lib/auth/session";
+import { followAuthSession, previewAuthSession } from "@/lib/auth/session";
+
+/**
+ * The state the server renders for a page's live session: signed out, with no
+ * client and no Convex answer. Its type is derived from this constructor, because
+ * the Convex client is a runtime value that no Schema describes.
+ */
+function initialLiveSessionState(client: ConvexReactClient | null) {
+  return {
+    ...previewAuthSession,
+    client,
+    confirmation: Option.none<ConvexAuthConfirmation>(),
+  };
+}
 
 /**
  * The live session of one page: Better Auth's session as its readers see it,
@@ -16,10 +25,7 @@ import {
  * are flat, so the store is also the session store and the Convex authentication
  * store that the shared readers select from, and one store serves every reader.
  */
-export type LiveSessionState = AuthSession & {
-  readonly client: ConvexReactClient | null;
-  readonly confirmation: Option.Option<ConvexAuthConfirmation>;
-};
+export type LiveSessionState = ReturnType<typeof initialLiveSessionState>;
 
 export type LiveSessionStore = StoreApi<LiveSessionState>;
 
@@ -29,11 +35,7 @@ export type LiveSessionStore = StoreApi<LiveSessionState>;
  * page whose signed-in hint says a session may exist.
  */
 export function createLiveSessionStore(): LiveSessionStore {
-  return createStore<LiveSessionState>(() => ({
-    ...previewAuthSession,
-    client: null,
-    confirmation: Option.none(),
-  }));
+  return createStore<LiveSessionState>(() => initialLiveSessionState(null));
 }
 
 /** A browser module of a signed-in page failed to load, so the page keeps its visitor state. */
@@ -47,16 +49,11 @@ interface LiveAtom {
   readonly subscribe: (listener: (value: unknown) => void) => () => void;
 }
 
-/** The part of Better Auth's client that the live session follows: its atoms, the session among them. */
-export interface LiveAuthClient {
-  readonly $store: { readonly atoms: Readonly<Record<string, LiveAtom>> };
-}
-
 /** The browser modules a signed-in page loads, as the page loads them. */
 export interface LiveSessionModules {
-  /** Better Auth's client, which a signed-in page needs and a visitor never does. */
+  /** Better Auth's session atom, which a signed-in page needs and a visitor never does. */
   readonly auth: Effect.Effect<
-    { readonly readAuthClient: () => LiveAuthClient },
+    { readonly readSessionAtom: () => LiveAtom },
     LiveSessionLoadFailed
   >;
   /** Convex's client module, whose constructor opens no socket. */
@@ -77,8 +74,12 @@ export function loadPageModule<A>(load: () => Promise<A>) {
 }
 
 /** The page's browser modules, loaded with dynamic imports so a visitor's page never loads them. */
-export const liveSessionModules: LiveSessionModules = {
-  auth: loadPageModule(() => import("@/lib/auth/client")),
+const liveSessionModules: LiveSessionModules = {
+  auth: loadPageModule(() => import("@/lib/auth/client")).pipe(
+    Effect.map((loaded) => ({
+      readSessionAtom: () => loaded.readAuthClient().$store.atoms.session,
+    }))
+  ),
   convex: loadPageModule(() => import("@/lib/convex/client.client")),
 };
 
@@ -88,7 +89,7 @@ export const liveSessionModules: LiveSessionModules = {
  */
 const followSession = Effect.fn("www.auth.followSession")(function* (
   store: LiveSessionStore,
-  session: LiveAuthClient["$store"]["atoms"]["session"]
+  session: LiveAtom
 ) {
   yield* Effect.acquireRelease(
     Effect.sync(() =>
@@ -149,10 +150,7 @@ export const startLiveSession = Effect.fn("www.auth.startLiveSession")(
       client: loaded.success.convex.readConvexClient(convexUrl),
     });
     return yield* Effect.scoped(
-      followSession(
-        store,
-        loaded.success.auth.readAuthClient().$store.atoms.session
-      )
+      followSession(store, loaded.success.auth.readSessionAtom())
     );
   }
 );

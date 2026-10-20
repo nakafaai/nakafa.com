@@ -6,7 +6,7 @@ import { Record as Rec, Schema } from "effect";
  * module that decodes a namespace never loads the messages. The server module
  * `namespaces.ts` checks this record against the English dictionary.
  */
-export const messageNamespaceFlags = {
+const messageNamespaceFlags = {
   AnalyticsConsent: true,
   Articles: true,
   Auth: true,

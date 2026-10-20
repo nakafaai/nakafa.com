@@ -33,7 +33,7 @@ function readAccountQuery(
  * Reads the signed-in account's consent facts with Convex hooks. Only a page with
  * a Convex client calls it, so a visitor's page never reads the account.
  */
-export function useAnalyticsConsentAccount(
+function useAnalyticsConsentAccount(
   store: AnalyticsConsentStore
 ): AnalyticsConsentAccount {
   const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);

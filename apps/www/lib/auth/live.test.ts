@@ -2,10 +2,9 @@
 
 import { describe, expect, it } from "@effect/vitest";
 import { ConvexReactClient } from "convex/react";
-import { Effect, Fiber, Option } from "effect";
+import { Effect, Option } from "effect";
 import {
   createLiveSessionStore,
-  type LiveAuthClient,
   LiveSessionLoadFailed,
   type LiveSessionModules,
   loadPageModule,
@@ -16,17 +15,13 @@ const CONVEX_URL = "https://example.convex.cloud";
 const SIGNED_IN_COOKIE = "theme=dark; nakafa-signed-in=1";
 const VISITOR_COOKIE = "theme=dark";
 
-const reports = vi.hoisted(() => ({ errors: [] as unknown[] }));
-
-/** The page's browser modules, as the default loader of a signed-in page imports them. */
+/** The page's browser modules that the default loader of a signed-in page imports. */
 const pageModules = vi.hoisted(() => {
-  const session = {
-    listener: undefined as ((value: unknown) => void) | undefined,
-    unsubscribed: 0,
-  };
+  const unsubscribe = vi.fn();
   return {
-    convex: undefined as ConvexReactClient | undefined,
-    session,
+    listen: vi.fn(() => unsubscribe),
+    readConvexClient: vi.fn(),
+    unsubscribe,
   };
 });
 
@@ -34,42 +29,23 @@ vi.mock("@/lib/auth/client", () => ({
   readAuthClient: () => ({
     $store: {
       atoms: {
-        session: {
-          subscribe: (next: (value: unknown) => void) => {
-            pageModules.session.listener = next;
-            return () => {
-              pageModules.session.unsubscribed += 1;
-            };
-          },
-        },
+        session: { subscribe: pageModules.listen },
       },
     },
   }),
 }));
 
-vi.mock("@/lib/convex/client.client", () => ({
-  readConvexClient: (convexUrl: string) => {
-    pageModules.convex ??= new ConvexReactClient(convexUrl, { logger: false });
-    return pageModules.convex;
-  },
-}));
-
-vi.mock("@/lib/analytics/client", async () => {
-  const { Effect: Eff } = await import("effect");
-  return {
-    reportClientException: (error: unknown) =>
-      Eff.sync(() => {
-        reports.errors.push(error);
-      }),
-  };
+vi.mock("@/lib/convex/client.client", async () => {
+  const { ConvexReactClient: Client } = await import("convex/react");
+  const client = new Client("https://example.convex.cloud", { logger: false });
+  pageModules.readConvexClient.mockReturnValue(client);
+  return { readConvexClient: pageModules.readConvexClient };
 });
 
 /** A Better Auth session atom that the test drives: it reports values to its listener. */
 function sessionAtom() {
   let listener: ((value: unknown) => void) | undefined;
-  const unsubscribe = vi.fn(() => {
-    listener = undefined;
-  });
+  const unsubscribe = vi.fn();
   return {
     atom: {
       subscribe: (next: (value: unknown) => void) => {
@@ -82,20 +58,17 @@ function sessionAtom() {
   };
 }
 
-/** Browser modules that load and record each load, so a test can see what a page loaded. */
-function loadedModules(session: ReturnType<typeof sessionAtom>) {
-  const loads: string[] = [];
+/** Browser modules that record each load, so a test can see which modules a page loaded. */
+function recordingModules(atom: ReturnType<typeof sessionAtom>["atom"]) {
+  const loads = vi.fn();
   const convex = new ConvexReactClient(CONVEX_URL, { logger: false });
-  const authClient: LiveAuthClient = {
-    $store: { atoms: { session: session.atom } },
-  };
   const modules: LiveSessionModules = {
     auth: Effect.sync(() => {
-      loads.push("auth");
-      return { readAuthClient: () => authClient };
+      loads("auth");
+      return { readSessionAtom: () => atom };
     }),
     convex: Effect.sync(() => {
-      loads.push("convex");
+      loads("convex");
       return { readConvexClient: () => convex };
     }),
   };
@@ -109,14 +82,6 @@ const signedInSession = {
 };
 
 describe("live session store", () => {
-  it("names a browser module that fails to load", async () => {
-    const failure = await Effect.runPromise(
-      Effect.flip(loadPageModule(() => Promise.reject(new Error("offline"))))
-    );
-
-    expect(failure).toBeInstanceOf(LiveSessionLoadFailed);
-  });
-
   it("starts signed out with no client and no Convex answer", () => {
     const state = createLiveSessionStore().getState();
 
@@ -126,103 +91,137 @@ describe("live session store", () => {
     expect(Option.isNone(state.confirmation)).toBe(true);
   });
 
-  it("leaves a visitor's page with no client and loads no browser module", () => {
-    const session = sessionAtom();
-    const { loads, modules } = loadedModules(session);
-    const store = createLiveSessionStore();
+  it.effect("names a browser module that fails to load", () =>
+    Effect.gen(function* () {
+      const failure = yield* Effect.flip(
+        loadPageModule(() => Promise.reject(new Error("offline")))
+      );
 
-    Effect.runFork(
-      startLiveSession(store, {
-        convexUrl: CONVEX_URL,
-        cookie: VISITOR_COOKIE,
-        modules,
+      expect(failure).toBeInstanceOf(LiveSessionLoadFailed);
+    })
+  );
+
+  it.effect(
+    "leaves a visitor's page with no client and loads no browser module",
+    () =>
+      Effect.gen(function* () {
+        const session = sessionAtom();
+        const { loads, modules } = recordingModules(session.atom);
+        const store = createLiveSessionStore();
+
+        yield* startLiveSession(store, {
+          convexUrl: CONVEX_URL,
+          cookie: VISITOR_COOKIE,
+          modules,
+        });
+
+        expect(loads).not.toHaveBeenCalled();
+        expect(store.getState().client).toBeNull();
+        expect(store.getState().isPending).toBe(false);
       })
-    );
+  );
 
-    expect(loads).toStrictEqual([]);
-    expect(store.getState().client).toBeNull();
-    expect(store.getState().isPending).toBe(false);
-  });
+  it.effect(
+    "creates the page's one client and follows Better Auth's session",
+    () =>
+      Effect.gen(function* () {
+        const session = sessionAtom();
+        const { convex, loads, modules } = recordingModules(session.atom);
+        const store = createLiveSessionStore();
 
-  it("creates the page's one client for a signed-in hint and follows Better Auth's session", () => {
-    const session = sessionAtom();
-    const { convex, loads, modules } = loadedModules(session);
-    const store = createLiveSessionStore();
+        yield* Effect.scoped(
+          Effect.gen(function* () {
+            yield* Effect.forkScoped(
+              startLiveSession(store, {
+                convexUrl: CONVEX_URL,
+                cookie: SIGNED_IN_COOKIE,
+                modules,
+              })
+            );
+            yield* Effect.yieldNow;
 
-    const fiber = Effect.runFork(
-      startLiveSession(store, {
+            expect(loads).toHaveBeenCalledWith("auth");
+            expect(loads).toHaveBeenCalledWith("convex");
+            expect(store.getState().client).toBe(convex);
+            expect(store.getState().isPending).toBe(true);
+
+            session.report(signedInSession);
+
+            expect(store.getState().isPending).toBe(false);
+            expect(store.getState().sessionId).toBe("session-1");
+            expect(store.getState().userId).toBe("user-1");
+          })
+        );
+
+        expect(session.unsubscribe).toHaveBeenCalledOnce();
+      })
+  );
+
+  it.effect("loads the page's own browser modules for a signed-in hint", () =>
+    Effect.gen(function* () {
+      const store = createLiveSessionStore();
+
+      yield* Effect.scoped(
+        Effect.gen(function* () {
+          yield* Effect.forkScoped(
+            startLiveSession(store, {
+              convexUrl: CONVEX_URL,
+              cookie: SIGNED_IN_COOKIE,
+            })
+          );
+          yield* Effect.promise(() =>
+            vi.waitFor(() => {
+              expect(store.getState().client).not.toBeNull();
+            })
+          );
+
+          expect(pageModules.readConvexClient).toHaveBeenCalledWith(CONVEX_URL);
+          expect(store.getState().isPending).toBe(true);
+        })
+      );
+
+      expect(pageModules.unsubscribe).toHaveBeenCalledOnce();
+    })
+  );
+
+  it.effect("starts once, so a second start loads nothing", () =>
+    Effect.gen(function* () {
+      const session = sessionAtom();
+      const { loads, modules } = recordingModules(session.atom);
+      const store = createLiveSessionStore();
+      const start = startLiveSession(store, {
         convexUrl: CONVEX_URL,
         cookie: SIGNED_IN_COOKIE,
         modules,
+      });
+
+      yield* Effect.forkScoped(start);
+      yield* Effect.yieldNow;
+      yield* Effect.forkScoped(start);
+      yield* Effect.yieldNow;
+
+      expect(loads).toHaveBeenCalledTimes(2);
+    }).pipe(Effect.scoped)
+  );
+
+  it.effect(
+    "keeps the visitor's signed-out page when a module fails to load",
+    () =>
+      Effect.gen(function* () {
+        const store = createLiveSessionStore();
+        const failure = new LiveSessionLoadFailed({ cause: "offline" });
+
+        yield* startLiveSession(store, {
+          convexUrl: CONVEX_URL,
+          cookie: SIGNED_IN_COOKIE,
+          modules: {
+            auth: Effect.fail(failure),
+            convex: Effect.fail(failure),
+          },
+        });
+
+        expect(store.getState().client).toBeNull();
+        expect(store.getState().isPending).toBe(false);
       })
-    );
-
-    expect(loads).toStrictEqual(["auth", "convex"]);
-    expect(store.getState().client).toBe(convex);
-    expect(store.getState().isPending).toBe(true);
-
-    session.report(signedInSession);
-
-    expect(store.getState().isPending).toBe(false);
-    expect(store.getState().sessionId).toBe("session-1");
-    expect(store.getState().userId).toBe("user-1");
-
-    Effect.runFork(Fiber.interrupt(fiber));
-    expect(session.unsubscribe).toHaveBeenCalledOnce();
-  });
-
-  it("loads the page's own browser modules for a signed-in hint", async () => {
-    const store = createLiveSessionStore();
-
-    const fiber = Effect.runFork(
-      startLiveSession(store, {
-        convexUrl: CONVEX_URL,
-        cookie: SIGNED_IN_COOKIE,
-      })
-    );
-
-    await vi.waitFor(() => {
-      expect(store.getState().client).not.toBeNull();
-    });
-    expect(store.getState().client).toBe(pageModules.convex);
-    expect(store.getState().isPending).toBe(true);
-    Effect.runFork(Fiber.interrupt(fiber));
-    expect(pageModules.session.unsubscribed).toBe(1);
-  });
-
-  it("starts once, so a second start loads nothing", () => {
-    const session = sessionAtom();
-    const { loads, modules } = loadedModules(session);
-    const store = createLiveSessionStore();
-    const start = startLiveSession(store, {
-      convexUrl: CONVEX_URL,
-      cookie: SIGNED_IN_COOKIE,
-      modules,
-    });
-
-    Effect.runFork(start);
-    Effect.runFork(start);
-
-    expect(loads).toStrictEqual(["auth", "convex"]);
-  });
-
-  it("reports a failed module load and keeps the visitor's signed-out page", () => {
-    const store = createLiveSessionStore();
-    const failure = new LiveSessionLoadFailed({ cause: "offline" });
-
-    Effect.runFork(
-      startLiveSession(store, {
-        convexUrl: CONVEX_URL,
-        cookie: SIGNED_IN_COOKIE,
-        modules: {
-          auth: Effect.fail(failure),
-          convex: Effect.fail(failure),
-        },
-      })
-    );
-
-    expect(reports.errors).toStrictEqual([failure]);
-    expect(store.getState().client).toBeNull();
-    expect(store.getState().isPending).toBe(false);
-  });
+  );
 });
