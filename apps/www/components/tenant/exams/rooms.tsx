@@ -1,13 +1,7 @@
 "use client";
 
-import type { GenericId } from "@confect/core";
-import {
-  PaginatedQueryResult,
-  QueryResult,
-  useMutation,
-  usePaginatedQuery,
-  useQuery,
-} from "@confect/react";
+import type { GenericId, Ref } from "@confect/core";
+import { PaginatedQueryResult, QueryResult, useMutation } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { RoomRow } from "@repo/backend/confect/exams/rooms";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -49,6 +43,8 @@ import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { isDenied, isLostAccess } from "@/components/tenant/refusal";
 import { schoolDateTimeText } from "@/components/tenant/settings/clock";
 import { saveSchool } from "@/components/tenant/settings/save.client";
+import { usePaginatedPreloaded } from "@/lib/data/paginated";
+import { usePreloadedQueryResult } from "@/lib/data/preloaded";
 
 const SOURCE = "components/tenant/exams/rooms";
 
@@ -59,7 +55,15 @@ type Room = typeof RoomRow.Type;
 type StateFilter = typeof RoomStateFilter.Type;
 
 /** How many rooms each page asks for. The next page loads when the end of the table comes into view. */
-const ROOM_PAGE_SIZE = 20;
+export const ROOM_PAGE_SIZE = 20;
+
+/** The first screen of the rooms page, which its loader read on the server: the exam and the first page of its rooms. */
+export interface ExamRoomsPreload {
+  readonly rooms:
+    | Pick<Ref.Returns<typeof exams.rooms.list>, "isDone" | "page">
+    | undefined;
+  readonly summary: Ref.Returns<typeof exams.rooms.exam> | undefined;
+}
 
 /**
  * The rooms of one exam: its title in the header, the state filter, and a table of its rooms in
@@ -70,9 +74,11 @@ const ROOM_PAGE_SIZE = 20;
  */
 export function ExamRooms({
   examId,
+  preload,
   slug,
 }: {
   examId: GenericId.GenericId<"exams">;
+  preload: ExamRoomsPreload | undefined;
   slug: TenantSlug;
 }) {
   const tenant = useTenant();
@@ -89,7 +95,7 @@ export function ExamRooms({
       )}
       read={{ args: { examId, slug }, ref: exams.rooms.exam }}
     >
-      <ExamRoomsContent examId={examId} slug={slug} />
+      <ExamRoomsContent examId={examId} preload={preload} slug={slug} />
     </ReadBoundary>
   );
 }
@@ -103,18 +109,21 @@ function useExamsItems(canOpenExams: boolean) {
 /** The rooms page once the exam's summary is in: the header with the exam's title, and the table. */
 function ExamRoomsContent({
   examId,
+  preload,
   slug,
 }: {
   examId: GenericId.GenericId<"exams">;
+  preload: ExamRoomsPreload | undefined;
   slug: TenantSlug;
 }) {
   const t = useTranslations("Exams");
   const tenant = useTenant();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const [filter, setFilter] = useState<StateFilter>("all");
-  const summary = useQuery(
+  const summary = usePreloadedQueryResult(
     exams.rooms.exam,
-    isSettled ? { examId, slug } : "skip"
+    isSettled ? { examId, slug } : "skip",
+    preload?.summary
   );
   const examsItems = useExamsItems(tenant.canOpenExams);
 
@@ -149,6 +158,7 @@ function ExamRoomsContent({
         <RoomsTable
           examId={examId}
           filter={filter}
+          first={preload?.rooms}
           isSettled={isSettled}
           slug={slug}
         />
@@ -249,19 +259,23 @@ function RoomStateSelect({
 function RoomsTable({
   examId,
   filter,
+  first,
   isSettled,
   slug,
 }: {
   examId: GenericId.GenericId<"exams">;
   filter: StateFilter;
+  first: ExamRoomsPreload["rooms"] | undefined;
   isSettled: boolean;
   slug: TenantSlug;
 }) {
   const t = useTranslations("Exams");
-  const pagination = usePaginatedQuery(
+  // The loader's first page is the page of the default filter, so a filtered table waits for its own first page.
+  const pagination = usePaginatedPreloaded(
     exams.rooms.list,
     isSettled ? roomsArgs({ examId, slug }, filter) : "skip",
-    { initialNumItems: ROOM_PAGE_SIZE }
+    { initialNumItems: ROOM_PAGE_SIZE },
+    filter === "all" ? first : undefined
   );
 
   if (

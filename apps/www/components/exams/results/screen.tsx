@@ -1,7 +1,7 @@
 "use client";
 
-import type { GenericId } from "@confect/core";
-import { QueryResult, useQuery } from "@confect/react";
+import type { GenericId, Ref } from "@confect/core";
+import { QueryResult } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Array as Arr } from "effect";
@@ -19,6 +19,20 @@ import { useTenant } from "@/components/tenant/context";
 import { SchoolHeader } from "@/components/tenant/header";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { isDenied, isLostAccess } from "@/components/tenant/refusal";
+import { usePreloadedQueryResult } from "@/lib/data/preloaded";
+
+/** The first screen of the results, which the results page's loader read on the server. */
+export interface ResultsPreload {
+  readonly overview:
+    | Ref.Returns<typeof exams.results.results.overview>
+    | undefined;
+  readonly students:
+    | Pick<
+        Ref.Returns<typeof exams.results.results.byStudent>,
+        "isDone" | "page"
+      >
+    | undefined;
+}
 
 /**
  * The results of one sitting for its teacher: the release of the results, the students' list, and each
@@ -29,10 +43,12 @@ import { isDenied, isLostAccess } from "@/components/tenant/refusal";
  */
 export function SittingResults({
   examId,
+  preload,
   sittingId,
   slug,
 }: {
   readonly examId: GenericId.GenericId<"exams">;
+  readonly preload: ResultsPreload | undefined;
   readonly sittingId: GenericId.GenericId<"examSittings">;
   readonly slug: TenantSlug;
 }) {
@@ -48,7 +64,7 @@ export function SittingResults({
       )}
       read={{ args: scope, ref: exams.results.results.overview }}
     >
-      <SittingResultsContent examId={examId} scope={scope} />
+      <SittingResultsContent examId={examId} preload={preload} scope={scope} />
     </ReadBoundary>
   );
 }
@@ -56,18 +72,21 @@ export function SittingResults({
 /** The results of one sitting once its overview is in: the release, the students, and the questions. */
 function SittingResultsContent({
   examId,
+  preload,
   scope,
 }: {
   readonly examId: GenericId.GenericId<"exams">;
+  readonly preload: ResultsPreload | undefined;
   readonly scope: {
     readonly sittingId: GenericId.GenericId<"examSittings">;
     readonly slug: TenantSlug;
   };
 }) {
   const settled = useSessionSettled();
-  const overview = useQuery(
+  const overview = usePreloadedQueryResult(
     exams.results.results.overview,
-    settled ? scope : "skip"
+    settled ? scope : "skip",
+    preload?.overview
   );
   const timeZone = QueryResult.isSuccess(overview)
     ? overview.value.sitting.timeZone
@@ -106,7 +125,7 @@ function SittingResultsContent({
       <div className="grid min-w-0 content-start gap-4 p-4 md:p-6">
         <ReleaseCard canRelease={canRelease} releasedAt={releasedAt} />
         <ResultsPaperContext value={paper}>
-          <StudentsTable />
+          <StudentsTable first={preload?.students} />
         </ResultsPaperContext>
         <QuestionResults questions={questions} />
       </div>

@@ -5,7 +5,7 @@ import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import type { StoreApi } from "zustand";
-import { useTenant } from "@/components/tenant/context";
+import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import type { ExamDrafts } from "@/components/tenant/exams/drafts";
 import { Bento, type BentoTile } from "@/components/tenant/home/bento";
 import { DraftsTile } from "@/components/tenant/home/drafts";
@@ -15,7 +15,6 @@ import { NextTile } from "@/components/tenant/home/next";
 import {
   useHomeExams,
   useHomeSetup,
-  useHomeViewer,
 } from "@/components/tenant/home/query.client";
 import { ResultsTile } from "@/components/tenant/home/results";
 import { SetupTile, useSetupShown } from "@/components/tenant/home/setup";
@@ -33,7 +32,7 @@ export function StaffTiles({ drafts }: { drafts: StoreApi<ExamDrafts> }) {
   const tenant = useTenant();
   const exams = useHomeExams();
   const setup = useHomeSetup();
-  const viewer = useHomeViewer();
+  const viewer = useViewerQuery();
   const setupShown = useSetupShown();
 
   if (QueryResult.isFailure(exams)) {

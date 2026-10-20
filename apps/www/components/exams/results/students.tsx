@@ -1,6 +1,7 @@
 "use client";
 
-import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
+import type { Ref } from "@confect/core";
+import { PaginatedQueryResult } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { StudentRow as StudentRowSchema } from "@repo/backend/confect/exams/results/contract";
 import { AttemptState } from "@repo/backend/confect/exams/sittings/schema";
@@ -27,9 +28,16 @@ import { reloadPage } from "@/components/shared/reload";
 import { TableEmpty, TableFrame } from "@/components/shared/table/frame";
 import { matchesSearch } from "@/components/shared/table/search";
 import { isLostAccess } from "@/components/tenant/refusal";
+import { usePaginatedPreloaded } from "@/lib/data/paginated";
 
 /** The students of one page of the list. The next page loads as the list's end comes into view. */
-const STUDENT_PAGE_SIZE = 50;
+export const STUDENT_PAGE_SIZE = 50;
+
+/** The first page of the students of one sitting, which its loader read on the server. */
+export type StudentsFirstPage = Pick<
+  Ref.Returns<typeof exams.results.results.byStudent>,
+  "isDone" | "page"
+>;
 
 /** The copy key of each state of an attempt. */
 const stateKeys = {
@@ -156,17 +164,23 @@ function StudentTable({
  * that are loaded. The list reads one page at a time through an intersection sentinel, not a button, so a
  * search that matches no loaded row keeps reading the next page until one matches or the list ends.
  */
-export function StudentsTable() {
+export function StudentsTable({
+  first,
+}: {
+  first: StudentsFirstPage | undefined;
+}) {
   const { sittingId, slug } = useResultsScope();
   const settled = useSessionSettled();
   const [status, setStatus] = useState<StatusFilter>("all");
   const [search, setSearch] = useState("");
   const scope =
     status === "all" ? { sittingId, slug } : { sittingId, slug, state: status };
-  const students = usePaginatedQuery(
+  // The loader's first page is the page of every student, so a filtered list waits for its own first page.
+  const students = usePaginatedPreloaded(
     exams.results.results.byStudent,
     settled ? scope : "skip",
-    { initialNumItems: STUDENT_PAGE_SIZE }
+    { initialNumItems: STUDENT_PAGE_SIZE },
+    status === "all" ? first : undefined
   );
 
   if (
