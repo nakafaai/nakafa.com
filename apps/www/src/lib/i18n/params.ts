@@ -1,6 +1,9 @@
-import { LOCALES, type Locale } from "@repo/internationalization/src/locale";
+import {
+  type Locale,
+  LocaleSchema,
+} from "@repo/internationalization/src/locale";
 import { notFound } from "@tanstack/react-router";
-import { hasLocale } from "use-intl";
+import { Schema } from "effect";
 
 /**
  * Narrows one route locale segment to the public locale set. The router passes
@@ -8,7 +11,7 @@ import { hasLocale } from "use-intl";
  * turns an unknown locale into a 404 before a page or a loader reads it.
  */
 export function getLocaleOrThrow(locale: string): Locale {
-  if (hasLocale(LOCALES, locale)) {
+  if (Schema.is(LocaleSchema)(locale)) {
     return locale;
   }
 

@@ -78,7 +78,8 @@ export class SitemapPageNotFoundError extends Data.TaggedError(
 }> {}
 
 /** Content families served through capacity-owned sitemap partitions. */
-export type SitemapFamily = "article" | "material" | "program";
+const SitemapFamilySchema = Schema.Literals(["article", "material", "program"]);
+export type SitemapFamily = typeof SitemapFamilySchema.Type;
 
 /** Prefix marking one capacity-owned sitemap partition index. */
 const PARTITION_PREFIX = "p";
