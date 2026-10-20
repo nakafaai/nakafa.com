@@ -1,0 +1,120 @@
+// @vitest-environment node
+
+import { describe, expect, it } from "@effect/vitest";
+import { Effect } from "effect";
+import { DEFAULT_LATITUDE, DEFAULT_LONGITUDE } from "@/lib/weather/client";
+import { serveWeather } from "@/lib/weather/route.server";
+
+const getCurrentWeatherMock = vi.hoisted(() => vi.fn());
+const geolocationMock = vi.hoisted(() => vi.fn());
+const isCorsRequestAllowedMock = vi.hoisted(() => vi.fn());
+const scheduleCaptureMock = vi.hoisted(() => vi.fn());
+
+vi.mock("@vercel/functions", () => ({
+  /** Provides the platform geolocation of the visitor. */
+  geolocation: geolocationMock,
+}));
+
+vi.mock("@/lib/weather/client", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/weather/client")>()),
+  /** Records the coordinates and answers the weather summary. */
+  getCurrentWeather: getCurrentWeatherMock,
+}));
+
+vi.mock("@/lib/security/cors", () => ({
+  /** Controls whether the browser origin may read the weather. */
+  isCorsRequestAllowed: isCorsRequestAllowedMock,
+  /** Answers a refused origin the way the route does. */
+  createCorsForbiddenResponse: () =>
+    new Response("Access denied.", { status: 403 }),
+}));
+
+vi.mock("@/lib/analytics/server", () => ({
+  /** Records every handled failure that the route reports. */
+  scheduleServerExceptionCapture: scheduleCaptureMock,
+}));
+
+const summary = { temperature: 30, description: "clear" };
+
+/** Posts one weather request to the route. */
+function weather() {
+  return serveWeather({
+    request: new Request("https://nakafa.com/api/weather", { method: "POST" }),
+  });
+}
+
+describe("weather route", () => {
+  it("answers the weather of the visitor's location", async () => {
+    isCorsRequestAllowedMock.mockReturnValue(Effect.succeed(true));
+    geolocationMock.mockReturnValue({ latitude: "1.5", longitude: "2.5" });
+    getCurrentWeatherMock.mockReturnValue(Effect.succeed(summary));
+
+    const response = await weather();
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual(summary);
+    expect(getCurrentWeatherMock).toHaveBeenCalledWith({
+      latitude: "1.5",
+      longitude: "2.5",
+    });
+  });
+
+  it("uses the default location when the platform has no geolocation", async () => {
+    isCorsRequestAllowedMock.mockReturnValue(Effect.succeed(true));
+    geolocationMock.mockReturnValue({
+      latitude: undefined,
+      longitude: undefined,
+    });
+    getCurrentWeatherMock.mockReturnValue(Effect.succeed(summary));
+
+    const response = await weather();
+
+    expect(response.status).toBe(200);
+    expect(getCurrentWeatherMock).toHaveBeenCalledWith({
+      latitude: DEFAULT_LATITUDE,
+      longitude: DEFAULT_LONGITUDE,
+    });
+  });
+
+  it("refuses a request from an origin that is not allowed", async () => {
+    isCorsRequestAllowedMock.mockReturnValue(Effect.succeed(false));
+
+    const response = await weather();
+
+    expect(response.status).toBe(403);
+    expect(getCurrentWeatherMock).not.toHaveBeenCalled();
+  });
+
+  it("reports a failed weather read and answers 500 without details", async () => {
+    isCorsRequestAllowedMock.mockReturnValue(Effect.succeed(true));
+    geolocationMock.mockReturnValue({ latitude: "1", longitude: "2" });
+    getCurrentWeatherMock.mockReturnValue(
+      Effect.fail(new Error("provider is down"))
+    );
+    scheduleCaptureMock.mockReturnValue(Effect.void);
+
+    const response = await weather();
+
+    expect(response.status).toBe(500);
+    await expect(response.json()).resolves.toEqual({
+      error: "Failed to fetch weather data",
+    });
+    expect(scheduleCaptureMock).toHaveBeenCalledWith(expect.any(Error), {
+      source: "weather-api",
+    });
+  });
+
+  it("reports a non-error failure as an error", async () => {
+    isCorsRequestAllowedMock.mockReturnValue(Effect.succeed(true));
+    geolocationMock.mockReturnValue({ latitude: "1", longitude: "2" });
+    getCurrentWeatherMock.mockReturnValue(Effect.fail("timeout"));
+    scheduleCaptureMock.mockReturnValue(Effect.void);
+
+    const response = await weather();
+
+    expect(response.status).toBe(500);
+    expect(scheduleCaptureMock).toHaveBeenCalledWith(new Error("timeout"), {
+      source: "weather-api",
+    });
+  });
+});
