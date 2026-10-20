@@ -1,3 +1,4 @@
+import { Option } from "effect";
 import {
   getTryoutHref,
   getTryoutPublicPathHref,
@@ -14,13 +15,13 @@ export function createTryoutSetRestartTarget<EntrySection>(page: {
   readonly set: Pick<SetPage["set"], "publicPath">;
 }) {
   if (!page.entrySection) {
-    return null;
+    return Option.none();
   }
 
-  return {
+  return Option.some({
     entrySection: page.entrySection,
     setPublicPath: page.set.publicPath,
-  };
+  });
 }
 
 /**
@@ -53,19 +54,19 @@ export function selectTryoutSectionReturnHref({
   attemptPage,
   publicHref,
 }: {
-  attemptPage: Pick<
-    RetainedSectionAttemptPage,
-    "activeSetPublicPath" | "kind"
-  > | null;
+  attemptPage: Option.Option<
+    Pick<RetainedSectionAttemptPage, "activeSetPublicPath" | "kind">
+  >;
   publicHref: string;
 }) {
-  if (!attemptPage) {
+  if (Option.isNone(attemptPage)) {
     return publicHref;
   }
 
-  if (!attemptPage.activeSetPublicPath) {
+  const { activeSetPublicPath } = attemptPage.value;
+  if (!activeSetPublicPath) {
     return getTryoutHref();
   }
 
-  return getTryoutPublicPathHref(attemptPage.activeSetPublicPath);
+  return getTryoutPublicPathHref(activeSetPublicPath);
 }

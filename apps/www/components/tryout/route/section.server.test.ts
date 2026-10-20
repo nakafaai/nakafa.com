@@ -136,8 +136,8 @@ beforeEach(() => {
   mocks.readTryoutSectionAttemptPage.mockReturnValue(
     Effect.succeed(attemptOf("retained"))
   );
-  mocks.readCurrentTryoutSet.mockReturnValue(Effect.void);
-  mocks.readCurrentTryoutSection.mockReturnValue(Effect.void);
+  mocks.readCurrentTryoutSet.mockReturnValue(Effect.succeedNone);
+  mocks.readCurrentTryoutSection.mockReturnValue(Effect.succeedNone);
 });
 
 describe("readTryoutSectionRoute", () => {
@@ -264,7 +264,7 @@ describe("readTryoutSectionRoute", () => {
     () =>
       Effect.gen(function* () {
         mocks.readCurrentTryoutSection.mockReturnValue(
-          Effect.succeed(
+          Effect.succeedSome(
             attemptOf("current", {
               activeSectionPublicPath: SECTION,
               activeSetPublicPath: "try-out/id/snbt/2027/set-2",
@@ -287,7 +287,7 @@ describe("readTryoutSectionRoute", () => {
     () =>
       Effect.gen(function* () {
         mocks.readCurrentTryoutSection.mockReturnValue(
-          Effect.succeed(attemptOf("current"))
+          Effect.succeedSome(attemptOf("current"))
         );
 
         const route = yield* readSection();
@@ -302,7 +302,7 @@ describe("readTryoutSectionRoute", () => {
   it.effect("holds a running current section with signed content", () =>
     Effect.gen(function* () {
       mocks.readCurrentTryoutSection.mockReturnValue(
-        Effect.succeed(attemptOf("current", runningSigned))
+        Effect.succeedSome(attemptOf("current", runningSigned))
       );
 
       const error = yield* Effect.flip(readSection());

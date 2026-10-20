@@ -136,8 +136,8 @@ beforeEach(() => {
   mocks.readTryoutSectionAttemptPage.mockReturnValue(
     Effect.succeed(attemptOf("retained"))
   );
-  mocks.readCurrentTryoutSet.mockReturnValue(Effect.void);
-  mocks.readCurrentTryoutSection.mockReturnValue(Effect.void);
+  mocks.readCurrentTryoutSet.mockReturnValue(Effect.succeedNone);
+  mocks.readCurrentTryoutSection.mockReturnValue(Effect.succeedNone);
 });
 
 describe("readTryoutSetRoute", () => {
@@ -292,7 +292,7 @@ describe("readTryoutSetRoute", () => {
   it.effect("holds a running current set with signed content", () =>
     Effect.gen(function* () {
       mocks.readCurrentTryoutSet.mockReturnValue(
-        Effect.succeed(attemptOf("current", runningSigned))
+        Effect.succeedSome(attemptOf("current", runningSigned))
       );
 
       const error = yield* Effect.flip(readSet());
@@ -304,7 +304,7 @@ describe("readTryoutSetRoute", () => {
   it.effect("holds no review for a finished attempt without a runtime", () =>
     Effect.gen(function* () {
       mocks.readCurrentTryoutSet.mockReturnValue(
-        Effect.succeed(
+        Effect.succeedSome(
           attemptOf("current", {
             ...finishedSigned,
             initialState: { attempt: { status: "completed" }, runtime: null },
@@ -319,7 +319,7 @@ describe("readTryoutSetRoute", () => {
   it.effect("shows the running attempt in place of the catalog page", () =>
     Effect.gen(function* () {
       mocks.readCurrentTryoutSet.mockReturnValue(
-        Effect.succeed(
+        Effect.succeedSome(
           attemptOf("retained", {
             page: { set: { description: "Running", title: "Running set" } },
           })
@@ -341,7 +341,7 @@ describe("readTryoutSetRoute", () => {
     () =>
       Effect.gen(function* () {
         mocks.readCurrentTryoutSet.mockReturnValue(
-          Effect.succeed(attemptOf("current"))
+          Effect.succeedSome(attemptOf("current"))
         );
 
         const route = yield* readSet();

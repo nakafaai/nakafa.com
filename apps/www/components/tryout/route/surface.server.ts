@@ -23,7 +23,7 @@ class TryoutAttemptContentPending extends Schema.TaggedError<TryoutAttemptConten
 
 /** The parts of an attempt that its review reads: its ID, its signed content, and its state. */
 type ReviewedAttempt = Pick<
-  NonNullable<Effect.Success<ReturnType<typeof readCurrentTryoutSet>>>,
+  Option.Option.Value<Effect.Success<ReturnType<typeof readCurrentTryoutSet>>>,
   "attemptId" | "content" | "initialState"
 >;
 
