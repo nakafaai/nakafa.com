@@ -28,6 +28,7 @@ const MAIN_NAMESPACES = [
   "Articles",
   "Holy",
   "Metadata",
+  "Player",
   "Tryouts",
   "Utils",
 ] as const;
