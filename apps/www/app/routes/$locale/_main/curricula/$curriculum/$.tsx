@@ -3,7 +3,7 @@ import { loadLocaleMessages } from "@repo/internationalization/src/messages";
 import { toCanonicalPath } from "@repo/internationalization/src/rewrite";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
-import { Array as Arr, Option, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 import { createTranslator } from "use-intl";
 import { CurriculumCardGrid } from "@/components/curriculum/cards";
 import { CurriculumNestedHeader } from "@/components/curriculum/header";
@@ -48,7 +48,7 @@ import {
 import { readCurriculumSeoContext } from "@/lib/curriculum/seo";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
-import { getCachedSEOMetadata } from "@/lib/seo/cache";
+import { generateSEOMetadata } from "@/lib/seo/generator";
 import { createSeoHead, toRouterHead } from "@/lib/seo/head";
 import { readBreadcrumbNodes } from "@/lib/seo/json-ld";
 
@@ -82,9 +82,11 @@ const readCurriculumRoute = createServerFn({ method: "GET" })
     const [catalog, messages, seo] = await Promise.all([
       readRuntimeCurriculumCatalog(locale),
       loadLocaleMessages(locale),
-      getCachedSEOMetadata(
-        readCurriculumSeoContext(route, model.ancestors),
-        locale
+      Effect.runPromise(
+        generateSEOMetadata(
+          readCurriculumSeoContext(route, model.ancestors),
+          locale
+        )
       ),
     ]);
     const tCommon = createTranslator({ locale, messages, namespace: "Common" });

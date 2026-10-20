@@ -5,7 +5,7 @@ import { loadLocaleMessages } from "@repo/internationalization/src/messages";
 import { makeArticleJsonLd } from "@repo/seo/json-ld/article";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
-import { Schema } from "effect";
+import { Effect, Schema } from "effect";
 import { createTranslator } from "use-intl";
 import { SheetEntry } from "@/components/ai/sheet/entry";
 import { AiMenuItem } from "@/components/ai/sheet/menu";
@@ -41,7 +41,7 @@ import { getAksaraUrl } from "@/lib/content/repository";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getLlmsMarkdownPath } from "@/lib/llms/format";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
-import { getCachedSEOMetadata } from "@/lib/seo/cache";
+import { generateSEOMetadata } from "@/lib/seo/generator";
 import { createSeoHead, toRouterHead } from "@/lib/seo/head";
 import { getOgUrl } from "@/lib/seo/social";
 
@@ -78,17 +78,19 @@ const readArticle = createServerFn({ method: "GET" })
     const { model, published } = publication;
     const filePath = `/${publicPath}`;
     const [seo, messages] = await Promise.all([
-      getCachedSEOMetadata(
-        {
-          type: "article",
-          categoryLabel: model.projection.categoryTitle,
-          data: {
-            title: model.projection.metadata.title,
-            description: model.projection.metadata.description,
-            subject: undefined,
+      Effect.runPromise(
+        generateSEOMetadata(
+          {
+            type: "article",
+            categoryLabel: model.projection.categoryTitle,
+            data: {
+              title: model.projection.metadata.title,
+              description: model.projection.metadata.description,
+              subject: undefined,
+            },
           },
-        },
-        locale
+          locale
+        )
       ),
       loadLocaleMessages(locale),
     ]);

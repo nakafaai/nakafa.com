@@ -5,7 +5,7 @@ import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { toAnchorSlug } from "@repo/utilities/slug";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
-import { Array as Arr, Option, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 import { createTranslator } from "use-intl";
 import { SheetEntry } from "@/components/ai/sheet/entry";
 import { AiMenuItem } from "@/components/ai/sheet/menu";
@@ -50,7 +50,7 @@ import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getLlmsMarkdownPath } from "@/lib/llms/format";
 import { getAppSocialArtwork } from "@/lib/og/app";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
-import { getCachedSEOMetadata } from "@/lib/seo/cache";
+import { generateSEOMetadata } from "@/lib/seo/generator";
 import { createSeoHead, toRouterHead } from "@/lib/seo/head";
 import { makeBookNode, readBreadcrumbNodes } from "@/lib/seo/json-ld";
 import { runServerEffect } from "@/lib/server/fn";
@@ -83,7 +83,9 @@ const readSurah = createServerFn({ method: "GET" })
     const [view, messages, seo] = await Promise.all([
       getPublishedQuranView(locale, surahNumber),
       loadLocaleMessages(locale),
-      getCachedSEOMetadata({ surah: surahData.value, type: "quran" }, locale),
+      Effect.runPromise(
+        generateSEOMetadata({ surah: surahData.value, type: "quran" }, locale)
+      ),
     ]);
     const t = createTranslator({ locale, messages, namespace: "Holy" });
     const tCommon = createTranslator({ locale, messages, namespace: "Common" });
