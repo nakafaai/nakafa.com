@@ -8,6 +8,7 @@ import { polarPublicKeys } from "@repo/backend/public";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { toast } from "@repo/design-system/lib/toast/notify";
+import { ConvexProvider, type ConvexReactClient } from "convex/react";
 import { Effect } from "effect";
 import { useTransition } from "react";
 import { useLocale, useTranslations } from "use-intl";
@@ -23,13 +24,32 @@ import { useBillingNavigation } from "@/lib/billing/navigation.client";
 import { isActiveLocale } from "@/lib/i18n/active";
 import { useViewer } from "@/lib/identity/client";
 
+/**
+ * The signed-in billing action. It mounts its own island around the page's one
+ * Convex client, so every query and action it runs shares that client.
+ */
+export function BillingButton({
+  client,
+  variant,
+}: {
+  client: ConvexReactClient;
+  variant: PricingButtonVariant;
+}) {
+  return (
+    <ConvexProvider client={client}>
+      <BillingAction variant={variant} />
+    </ConvexProvider>
+  );
+}
+
 /** Opens browser-originated checkout or the existing customer's portal. */
-export function BillingButton({ variant }: { variant: PricingButtonVariant }) {
+function BillingAction({ variant }: { variant: PricingButtonVariant }) {
   const locale = useLocale();
   const t = useTranslations("Pricing");
   const callbackURL = getPostAuthOnboardingHref("/pricing", locale);
   const errorCallbackURL = getPostAuthProviderErrorHref("/pricing", locale);
   const currentUser = useViewer((state) => state.account);
+  const isIdentityPending = useViewer((state) => state.isPending);
   const billing = useBillingNavigation();
   const [isAuthPending, startAuthTransition] = useTransition();
 
@@ -92,15 +112,16 @@ export function BillingButton({ variant }: { variant: PricingButtonVariant }) {
     });
   };
   const isPending = billing.isPending || isAuthPending;
+  const isWaiting = isIdentityPending || !billingReady;
 
   return (
     <Button
       className="w-full"
-      disabled={isPending || !billingReady || !isActiveLocale(locale)}
+      disabled={isPending || isWaiting || !isActiveLocale(locale)}
       onClick={handleBilling}
       variant={variant}
     >
-      <Spinner icon={Diamond02Icon} isLoading={isPending || !billingReady} />
+      <Spinner icon={Diamond02Icon} isLoading={isPending || isWaiting} />
       {t("pro-cta")}
     </Button>
   );

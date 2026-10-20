@@ -2,7 +2,7 @@
 
 import { useIntersection, useReducedMotion } from "@mantine/hooks";
 import type { QuestionResponse } from "@nakafa/aksara-contracts/question/response";
-import { captureException } from "@repo/analytics/posthog/browser";
+import { captureException } from "@repo/analytics/posthog/capture";
 import { Nina } from "@repo/design-system/components/ui/nina";
 import type { MoodSchema } from "@repo/mascot/nina/face";
 import { Array as Arr, Effect, Option, Schema } from "effect";

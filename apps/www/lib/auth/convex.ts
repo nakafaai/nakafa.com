@@ -10,6 +10,7 @@ import {
   Predicate,
   Schema,
 } from "effect";
+import { createContext } from "react";
 import { createStore } from "zustand";
 import type { AuthSession } from "@/lib/auth/session";
 
@@ -40,6 +41,9 @@ export function createConvexAuthStore() {
 }
 
 export type ConvexAuthStore = ReturnType<typeof createConvexAuthStore>;
+
+/** Carries one page's Convex authentication store, which never changes after mount. */
+export const ConvexAuthContext = createContext<ConvexAuthStore | null>(null);
 
 /** A Better Auth token request that produced no usable Convex credential. */
 export class ConvexTokenReadError extends Schema.TaggedError<ConvexTokenReadError>()(

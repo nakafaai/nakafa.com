@@ -9,6 +9,7 @@ import {
   TableRow,
 } from "@repo/design-system/components/ui/table";
 import { useQueryStates } from "nuqs";
+import { NuqsAdapter } from "nuqs/adapters/tanstack-router";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { useTryoutSetData } from "@/components/tryout/catalog/table/data.client";
@@ -30,8 +31,20 @@ export interface TryoutSetTableProps {
   title: string;
 }
 
-/** Displays one complete signed discovery result with independent URL controls. */
-export function TryoutSetTable({ bootstrap, title }: TryoutSetTableProps) {
+/**
+ * Displays one complete signed discovery result with independent URL controls.
+ * The catalog table reads its filters from the URL, so it mounts the adapter it
+ * reads through.
+ */
+export function TryoutSetTable(props: TryoutSetTableProps) {
+  return (
+    <NuqsAdapter>
+      <TryoutSetCatalog {...props} />
+    </NuqsAdapter>
+  );
+}
+
+function TryoutSetCatalog({ bootstrap, title }: TryoutSetTableProps) {
   const t = useTranslations("Tryouts");
   const [scrollRoot, setScrollRoot] = useState<HTMLDivElement | null>(null);
   const [selection, setSelection] = useQueryStates(catalogQuery, {

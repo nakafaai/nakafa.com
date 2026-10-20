@@ -1,5 +1,8 @@
 import { monospace } from "@repo/design-system/lib/monospace";
-import { LocaleSchema } from "@repo/internationalization/src/locale";
+import {
+  LocaleSchema,
+  localeTimeZone,
+} from "@repo/internationalization/src/locale";
 import {
   createFileRoute,
   getRouteApi,
@@ -15,6 +18,7 @@ import { SharedProviders } from "@/components/providers/shared";
 import { AppShell } from "@/components/sidebar/shell";
 import { readRouteMessages } from "@/lib/i18n/messages.fn";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
+import { SHELL_MESSAGE_NAMESPACES } from "@/lib/i18n/shell";
 
 const ShellInput = Schema.Struct({ locale: Schema.String });
 
@@ -22,15 +26,7 @@ const ShellInput = Schema.Struct({ locale: Schema.String });
  * The messages of the student shell and of the learn pages that the locale route
  * does not carry. The Common, State and Toast messages come from the locale route.
  */
-const MAIN_NAMESPACES = [
-  "AnalyticsConsent",
-  "Ai",
-  "Articles",
-  "Holy",
-  "Metadata",
-  "Tryouts",
-  "Utils",
-] as const;
+const MAIN_NAMESPACES = [...SHELL_MESSAGE_NAMESPACES, "Tryouts"] as const;
 
 /** The navigation of the shell, read on the server for every learn page. */
 const readShellNavigation = createServerFn({ method: "GET" })
@@ -54,7 +50,8 @@ const localeRoute = getRouteApi("/$locale");
 /**
  * The student shell that every learn page and signed-in screen shares, as the
  * (main) layout of the reference app. An unknown locale stops before any page
- * loads.
+ * loads. The shell's messages load with the layout, so no part of it renders a
+ * raw message key.
  */
 export const Route = createFileRoute("/$locale/_main")({
   beforeLoad: ({ params }) => {
@@ -81,9 +78,14 @@ export const Route = createFileRoute("/$locale/_main")({
 function MainLayout() {
   const { locale } = Route.useParams();
   const { articleNavigation, messages, pageNavigation } = Route.useLoaderData();
-  const { messages: shellMessages } = localeRoute.useLoaderData();
+  const localeData = localeRoute.useLoaderData();
   return (
-    <IntlProvider locale={locale} messages={{ ...shellMessages, ...messages }}>
+    <IntlProvider
+      locale={locale}
+      messages={{ ...localeData.messages, ...messages }}
+      now={localeData.now}
+      timeZone={localeTimeZone(locale)}
+    >
       <AppProviders pageNavigation={pageNavigation}>
         <SharedProviders>
           <AppShell articleNavigation={articleNavigation}>

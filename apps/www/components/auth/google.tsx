@@ -4,6 +4,7 @@ import { BrandLogo } from "@repo/design-system/components/logos/brand";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Effect } from "effect";
 import { useQueryState } from "nuqs";
+import { NuqsAdapter } from "nuqs/adapters/tanstack-router";
 import { type ComponentProps, useState, useTransition } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { reportClientException } from "@/lib/analytics/client";
@@ -27,10 +28,19 @@ interface Props {
 }
 
 /**
- * Renders the Google sign-in button. It returns the visitor to one sanitized
- * internal destination, or to `returnPath` on the host the button is on.
+ * Renders the Google sign-in button, which returns the visitor to one sanitized
+ * internal destination, or to `returnPath` on the host the button is on. The
+ * button reads the sign-in query state, so it mounts the adapter it reads through.
  */
-export function AuthGoogle({ returnPath, variant }: Props) {
+export function AuthGoogle(props: Props) {
+  return (
+    <NuqsAdapter>
+      <AuthGoogleButton {...props} />
+    </NuqsAdapter>
+  );
+}
+
+function AuthGoogleButton({ returnPath, variant }: Props) {
   const locale = useLocale();
   const t = useTranslations("Auth");
   const tToast = useTranslations("Toast");

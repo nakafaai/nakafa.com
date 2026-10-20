@@ -1,4 +1,4 @@
-import { captureException } from "@repo/analytics/posthog/browser";
+import { captureException } from "@repo/analytics/posthog/capture";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { monospace } from "@repo/design-system/lib/monospace";
 import { SITE_ORIGIN } from "@repo/seo/origin";

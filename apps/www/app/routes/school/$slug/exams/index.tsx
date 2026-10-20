@@ -1,8 +1,9 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import type { ReactElement } from "react";
 import { canOpenExams } from "@/components/tenant/exams/access";
-import { EXAM_PAGE_SIZE, ExamList } from "@/components/tenant/exams/list";
+import { ExamList } from "@/components/tenant/exams/list";
 import { SchoolPageNotFound } from "@/components/tenant/notfound";
+import { EXAM_PAGE_SIZE } from "@/lib/tenant/exams";
 import { readExamListFn } from "@/lib/tenant/exams.fn";
 
 /** The exams of the school, newest first. Only a viewer who may open exams sees the list. */

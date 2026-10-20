@@ -26,9 +26,7 @@ import type { ExamSummary } from "@/components/tenant/exams/optimistic";
 import { SchoolHeader } from "@/components/tenant/header";
 import { isLostAccess } from "@/components/tenant/refusal";
 import { usePaginatedPreloaded } from "@/lib/data/paginated";
-
-/** How many exams the list asks for each time its end comes into view. */
-export const EXAM_PAGE_SIZE = 20;
+import { EXAM_PAGE_SIZE } from "@/lib/tenant/exams";
 
 /** The first page of the exam list, which its loader read on the server. */
 type ExamListFirstPage = Pick<

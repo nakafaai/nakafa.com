@@ -17,7 +17,6 @@ import {
 } from "@tanstack/react-router";
 import { cn } from "cn";
 import { Option } from "effect";
-import { NuqsAdapter } from "nuqs/adapters/tanstack-router";
 import type { ReactNode } from "react";
 import { DeferredPreviewRefresh } from "@/components/dev/deferred";
 import { Announcer } from "@/components/navigation/announcer";
@@ -123,7 +122,7 @@ function RootDocument({ children }: { children: ReactNode }) {
         )}
         <ThemeProvider>
           <Announcer />
-          <NuqsAdapter>{children}</NuqsAdapter>
+          {children}
         </ThemeProvider>
         <Scripts />
       </body>

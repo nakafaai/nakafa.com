@@ -14,7 +14,7 @@ import { cva } from "class-variance-authority";
 import { Array as Arr, Option } from "effect";
 import type { ComponentProps } from "react";
 import { useLocale, useTranslations } from "use-intl";
-import { AnalyticsConsentFooterItem } from "@/components/analytics/consent/actions";
+import { MarketingConsentFooterItem } from "@/components/analytics/consent/mount";
 import { FooterAction } from "@/components/marketing/shared/footer/action";
 import { FooterArt } from "@/components/marketing/shared/footer/art";
 import { holyMenu } from "@/components/sidebar/data/holy";
@@ -152,7 +152,7 @@ export function Footer({
                       />
                     </li>
                   ))}
-                <AnalyticsConsentFooterItem />
+                <MarketingConsentFooterItem />
               </ul>
             </div>
           </section>

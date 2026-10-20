@@ -13,13 +13,9 @@ import { readRouteMessages } from "@/lib/i18n/messages.fn";
  * route do not carry. They join the shell's messages, so no screen loses one.
  */
 const APP_NAMESPACES = [
-  "Auth",
   "Comments",
   "Editor",
-  "Home",
-  "Legal",
   "Memory",
-  "Notifications",
   "Posts",
   "Pricing",
   "Subject",

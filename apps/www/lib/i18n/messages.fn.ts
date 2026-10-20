@@ -1,8 +1,6 @@
 import { LocaleSchema } from "@repo/internationalization/src/locale";
-import {
-  MessageNamespaceSchema,
-  pickRouteMessages,
-} from "@repo/internationalization/src/namespaces";
+import { MessageNamespaceSchema } from "@repo/internationalization/src/namespace";
+import { pickRouteMessages } from "@repo/internationalization/src/namespaces";
 import { createServerFn } from "@tanstack/react-start";
 import { Schema } from "effect";
 

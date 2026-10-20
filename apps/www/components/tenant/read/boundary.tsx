@@ -1,7 +1,7 @@
 "use client";
 
 import type { Ref } from "@confect/core";
-import { captureException } from "@repo/analytics/posthog/browser";
+import { captureException } from "@repo/analytics/posthog/capture";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";

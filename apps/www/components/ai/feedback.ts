@@ -1,5 +1,5 @@
 import type { Ref } from "@confect/core";
-import { captureException } from "@repo/analytics/posthog/browser";
+import { captureException } from "@repo/analytics/posthog/capture";
 import {
   isPromptWithinLimit,
   NINA_PROMPT_LENGTH_MESSAGE,

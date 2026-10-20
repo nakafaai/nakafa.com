@@ -17,75 +17,34 @@ import idStandalone from "@repo/internationalization/dictionaries/standalone/id.
   type: "json",
 };
 import type { Locale } from "@repo/internationalization/src/locale";
-import { Record as Rec, Schema, Struct } from "effect";
+import type { MessageNamespace } from "@repo/internationalization/src/namespace";
+import { Struct } from "effect";
 
-/**
- * Every namespace of the app dictionaries, and the standalone pages' namespaces
- * beside them. The record is checked against the English dictionary, so a
- * namespace that one dictionary adds or drops fails the build here.
- */
-const namespaceFlags = {
-  AnalyticsConsent: true,
-  Articles: true,
-  Auth: true,
-  Classroom: true,
-  Common: true,
-  ComingSoon: true,
-  Comments: true,
-  Contributor: true,
-  DataTable: true,
-  Editor: true,
-  Exams: true,
-  Faq: true,
-  Holy: true,
-  Home: true,
-  Landing: true,
-  LearningPrograms: true,
-  Legal: true,
-  Marketing: true,
-  Memory: true,
-  Metadata: true,
-  Notifications: true,
-  Player: true,
-  Posts: true,
-  Pricing: true,
-  PricingPage: true,
-  Ai: true,
-  About: true,
-  Subject: true,
-  School: true,
-  SchoolEntry: true,
-  SchoolSettings: true,
-  SchoolStart: true,
-  SEO: true,
-  Toast: true,
-  Tryouts: true,
-  Utils: true,
-  Videos: true,
-  Weather: true,
-  NotFound: true,
-  Error: true,
-  State: true,
-} satisfies Record<keyof typeof en | keyof typeof enStandalone, true>;
+/** Every namespace that a dictionary defines, in the app or on the standalone pages. */
+type DictionaryNamespace = keyof typeof en | keyof typeof enStandalone;
 
-/** The namespaces that the dictionaries define, as literal names. */
-export const MESSAGE_NAMESPACES = Rec.keys(namespaceFlags);
+/** `true` only when the two types are identical, so a difference is a compile error. */
+type Equals<A, B> =
+  (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2
+    ? true
+    : false;
 
-/** One message namespace, decoded from a route's declaration. */
-export const MessageNamespaceSchema = Schema.Literals(MESSAGE_NAMESPACES);
-
-type MessageNamespace = typeof MessageNamespaceSchema.Type;
+/** The namespace list names exactly the dictionaries' namespaces, in both directions. */
+type NamespaceListMatchesDictionaries =
+  Equals<MessageNamespace, DictionaryNamespace> extends true ? unknown : never;
 
 /**
  * The complete messages of each locale: the app dictionary with the words of
- * the standalone pages. Every locale must define every namespace, which the
- * `satisfies` check makes a build error when one does not.
+ * the standalone pages. Every locale must define every namespace, and the list
+ * must name every namespace the dictionaries define, so either difference is a
+ * build error.
  */
 const MESSAGES = {
   de: { ...de, ...deStandalone },
   en: { ...en, ...enStandalone },
   id: { ...id, ...idStandalone },
-} satisfies Record<Locale, Record<MessageNamespace, unknown>>;
+} satisfies Record<Locale, Record<MessageNamespace, unknown>> &
+  NamespaceListMatchesDictionaries;
 
 /** The messages of every locale, which share one shape. */
 type Messages = (typeof MESSAGES)["en"];

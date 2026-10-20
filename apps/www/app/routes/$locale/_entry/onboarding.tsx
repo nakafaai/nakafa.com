@@ -1,4 +1,4 @@
-import { captureException } from "@repo/analytics/posthog/browser";
+import { captureException } from "@repo/analytics/posthog/capture";
 import { Nina } from "@repo/design-system/components/ui/nina";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { Schema } from "effect";

@@ -1,6 +1,6 @@
 import { DesignSystemProvider } from "@repo/design-system";
-import { Toaster } from "@repo/design-system/components/ui/sonner";
 import { TailwindIndicator } from "@repo/design-system/components/ui/tailwind-indicator";
+import { ToasterHost } from "@repo/design-system/components/ui/toaster.client";
 import { textDirection } from "@repo/internationalization/src/direction";
 import {
   DEFAULT_LOCALE,
@@ -110,7 +110,7 @@ function LocaleRoot() {
 function ShellToaster() {
   const t = useTranslations("Common");
   return (
-    <Toaster
+    <ToasterHost
       closeButtonAriaLabel={t("close-notification")}
       containerAriaLabel={t("notifications")}
     />

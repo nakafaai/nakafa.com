@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
-import { captureException } from "@repo/analytics/posthog/browser";
+import { captureException } from "@repo/analytics/posthog/capture";
 import { NINA_PROMPT_LENGTH } from "@repo/backend/client/nina/prompt";
 import { NINA_DOCUMENT_MEBIBYTES } from "@repo/backend/client/nina/uploads";
 import { NinaCreditError } from "@repo/backend/confect/nina/credits/schema";
@@ -17,7 +17,7 @@ import {
 } from "@/components/ai/feedback";
 import { NO_BREAK, toastTranslator } from "@/test/ai";
 
-vi.mock("@repo/analytics/posthog/browser", () => ({
+vi.mock("@repo/analytics/posthog/capture", () => ({
   captureException: vi.fn(),
 }));
 vi.mock("@repo/design-system/lib/toast/notify", () => ({

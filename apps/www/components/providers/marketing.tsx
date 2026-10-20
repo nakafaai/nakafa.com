@@ -1,65 +1,51 @@
 "use client";
 
-import { Function as Fn } from "effect";
+import { Effect, Fiber, Option } from "effect";
+import { lazy, type ReactNode, Suspense, useEffect, useState } from "react";
+import { AnalyticsConsentBootstrap } from "@/components/analytics/consent/bootstrap";
 import {
-  createContext,
-  type ReactNode,
-  use,
-  useSyncExternalStore,
-} from "react";
+  MarketingConsentControls,
+  MarketingConsentEffects,
+} from "@/components/analytics/consent/mount";
+import { AnalyticsConsentProvider } from "@/components/analytics/consent/provider";
 import { AnalyticsUnavailableProvider } from "@/components/analytics/consent/unavailable";
-import { SignedOutSessionProvider } from "@/components/auth/session";
-import { AppProviders } from "@/components/providers/app";
-import { hasSignedInHint } from "@/lib/auth/hint";
+import { AuthSessionContext } from "@/components/auth/context";
+import {
+  LiveSessionContext,
+  useLiveSession,
+} from "@/components/providers/live";
+import { clientEnv } from "@/env.client";
+import { ConvexAuthContext } from "@/lib/auth/convex";
+import { createLiveSessionStore, startLiveSession } from "@/lib/auth/live";
 import { PageNavigationProvider } from "@/lib/content/page/context";
 import type { PageNavigation } from "@/lib/content/page/navigation";
 
-const LiveSessionContext = createContext(false);
+/** The Convex credentials load with the page's client, so a visitor's page never loads them. */
+const LiveCredentials = lazy(() =>
+  import("@/components/providers/live.client").then((loaded) => ({
+    default: loaded.LiveCredentials,
+  }))
+);
 
-/**
- * Whether this page runs the live session: the Convex client and Better Auth's
- * session. A visitor's page runs the signed-out session and no Convex client.
- */
-export function useLiveSession() {
-  return use(LiveSessionContext);
-}
-
-/** The cookie does not change while the page is open, so no store notifies its readers. */
-function subscribeNothing() {
-  return Fn.constVoid;
-}
-
-/** The server renders the visitor's page, which the browser keeps unless its hint says otherwise. */
-function readServerSignedInHint() {
-  return false;
-}
-
-/** The browser reads the signed-in hint of its cookies. */
-function readBrowserSignedInHint() {
-  return hasSignedInHint(document.cookie);
-}
-
-/** The visitor's providers: the signed-out session, page navigation and no consent controls. */
-function VisitorProviders({
-  children,
-  pageNavigation,
-}: {
-  children: ReactNode;
-  pageNavigation: PageNavigation | null;
-}) {
+/** Hands the page's client its credentials once the store holds one. */
+function MarketingCredentials() {
+  const client = useLiveSession((state) => state.client);
+  if (Option.isNone(client)) {
+    return null;
+  }
   return (
-    <SignedOutSessionProvider>
-      <PageNavigationProvider navigation={pageNavigation}>
-        <AnalyticsUnavailableProvider>{children}</AnalyticsUnavailableProvider>
-      </PageNavigationProvider>
-    </SignedOutSessionProvider>
+    <Suspense fallback={null}>
+      <LiveCredentials client={client.value} />
+    </Suspense>
   );
 }
 
 /**
- * Mounts the providers of a marketing page. A visitor without the signed-in hint
- * gets no Convex client, no Better Auth session and no WebSocket. A signed-in
- * account keeps the live app providers.
+ * Mounts the one live session of a marketing page. The store is created once and
+ * its context value never changes. The page starts the session after hydration,
+ * and only a signed-in hint starts it: a visitor's page creates no Convex client,
+ * no Better Auth client and no socket. Leaves that need Convex mount their own
+ * island around that one client, and render their visitor variant until it exists.
  */
 export function MarketingProviders({
   children,
@@ -68,21 +54,43 @@ export function MarketingProviders({
   children: ReactNode;
   pageNavigation: PageNavigation | null;
 }) {
-  const signedIn = useSyncExternalStore(
-    subscribeNothing,
-    readBrowserSignedInHint,
-    readServerSignedInHint
-  );
+  const [store] = useState(() => createLiveSessionStore());
+
+  useEffect(() => {
+    const starting = Effect.runFork(
+      startLiveSession(store, {
+        convexUrl: clientEnv.VITE_CONVEX_URL,
+        cookie: document.cookie,
+      })
+    );
+    return () => {
+      Effect.runFork(Fiber.interrupt(starting));
+    };
+  }, [store]);
 
   return (
-    <LiveSessionContext value={signedIn}>
-      {signedIn ? (
-        <AppProviders pageNavigation={pageNavigation}>{children}</AppProviders>
-      ) : (
-        <VisitorProviders pageNavigation={pageNavigation}>
-          {children}
-        </VisitorProviders>
-      )}
+    <LiveSessionContext value={store}>
+      <AuthSessionContext value={store}>
+        <ConvexAuthContext value={store}>
+          <MarketingCredentials />
+          <PageNavigationProvider navigation={pageNavigation}>
+            {pageNavigation ? (
+              <AnalyticsConsentProvider
+                isPreviewChild={clientEnv.VITE_AKSARA_PREVIEW_CHILD === "true"}
+              >
+                {children}
+                <AnalyticsConsentBootstrap />
+                <MarketingConsentControls />
+                <MarketingConsentEffects />
+              </AnalyticsConsentProvider>
+            ) : (
+              <AnalyticsUnavailableProvider>
+                {children}
+              </AnalyticsUnavailableProvider>
+            )}
+          </PageNavigationProvider>
+        </ConvexAuthContext>
+      </AuthSessionContext>
     </LiveSessionContext>
   );
 }
