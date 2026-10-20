@@ -86,6 +86,30 @@ describe("readRedirectResponse", () => {
       "https://discord.gg/CPCSfKhvfQ?ref=app"
     );
   });
+
+  it("opens a bare profile address and its tab in the negotiated locale, with a 307 and its Vary headers", () => {
+    const found = Option.getOrThrow(
+      readRedirectResponse(
+        request("https://nakafa.com/@nobody_has_this/chat?tab=1", "id-ID")
+      )
+    );
+
+    expect(found.status).toBe(307);
+    expect(found.headers.get("location")).toBe(
+      "/id/@nobody_has_this/chat?tab=1"
+    );
+    expect(found.headers.get("vary")).toBe("Accept-Language, Cookie");
+  });
+
+  it("leaves a bare profile address of a school host to the router", () => {
+    expect(
+      Option.isNone(
+        readRedirectResponse(
+          request("https://harapan.nakafa.com/@nobody_has_this")
+        )
+      )
+    ).toBe(true);
+  });
 });
 
 describe("readMigrationResponse", () => {
