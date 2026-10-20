@@ -9,7 +9,7 @@ import {
 } from "@/components/analytics/consent/mount";
 import { AnalyticsConsentProvider } from "@/components/analytics/consent/provider";
 import { AnalyticsUnavailableProvider } from "@/components/analytics/consent/unavailable";
-import { AuthSessionContext } from "@/components/auth/session";
+import { AuthSessionContext } from "@/components/auth/context";
 import {
   LiveSessionContext,
   useLiveSession,

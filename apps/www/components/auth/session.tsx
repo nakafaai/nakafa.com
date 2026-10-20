@@ -1,16 +1,9 @@
 "use client";
 
-import { createContext, type ReactNode, use, useState } from "react";
-import { createStore, type StoreApi, useStore } from "zustand";
+import { type ReactNode, use, useState } from "react";
+import { createStore, useStore } from "zustand";
+import { AuthSessionContext } from "@/components/auth/context";
 import { type AuthSession, previewAuthSession } from "@/lib/auth/session";
-
-/**
- * Carries the one session store of a provider. The context value is the store,
- * which never changes after mount, so readers subscribe with `useStore`.
- */
-export const AuthSessionContext = createContext<StoreApi<AuthSession> | null>(
-  null
-);
 
 /**
  * Provides the signed-out session without a backend request: isolated authoring

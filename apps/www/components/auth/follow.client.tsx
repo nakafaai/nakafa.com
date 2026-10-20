@@ -2,10 +2,8 @@
 
 import { type ReactNode, useEffect, useState } from "react";
 import { createStore } from "zustand";
-import {
-  AuthSessionContext,
-  SignedOutSessionProvider,
-} from "@/components/auth/session";
+import { AuthSessionContext } from "@/components/auth/context";
+import { SignedOutSessionProvider } from "@/components/auth/session";
 import { clientEnv } from "@/env.client";
 import { readAuthClient } from "@/lib/auth/client";
 import { followAuthSession, readAuthSession } from "@/lib/auth/session";
