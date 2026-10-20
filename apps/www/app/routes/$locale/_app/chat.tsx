@@ -1,5 +1,6 @@
 import { SidebarProvider } from "@repo/design-system/components/ui/sidebar-provider";
 import { createFileRoute, Outlet } from "@tanstack/react-router";
+import { Option } from "effect";
 import { ChatBoundary } from "@/components/ai/chat/boundary";
 import { AiChatSidebar } from "@/components/ai/chat/sidebar";
 import { chatSidebarScreenFn } from "@/lib/account/home.fn";
@@ -24,7 +25,7 @@ function ChatLayout() {
             <Outlet />
           </ChatBoundary>
         </div>
-        <AiChatSidebar first={first} />
+        <AiChatSidebar first={Option.fromUndefinedOr(first)} />
       </SidebarProvider>
     </main>
   );

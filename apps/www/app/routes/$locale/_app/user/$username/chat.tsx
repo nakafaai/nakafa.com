@@ -1,4 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, getRouteApi } from "@tanstack/react-router";
+import { Option } from "effect";
 import { UserChats } from "@/components/user/chats";
 import { profileHead } from "@/lib/account/head";
 import { profileChatScreenFn } from "@/lib/account/profile.fn";
@@ -13,8 +14,17 @@ export const Route = createFileRoute("/$locale/_app/user/$username/chat")({
   component: UserChatsPage,
 });
 
+const profileRoute = getRouteApi("/$locale/_app/user/$username");
+
 /** The chats of a profile belong to its owner alone; the loader answers anyone else with not found. */
 function UserChatsPage() {
-  const { userId } = Route.useLoaderData();
-  return <UserChats userId={userId} />;
+  const { first, now } = Route.useLoaderData();
+  const { profile } = profileRoute.useLoaderData();
+  return (
+    <UserChats
+      first={Option.fromUndefinedOr(first)}
+      now={now}
+      profile={profile}
+    />
+  );
 }

@@ -1,6 +1,5 @@
 "use client";
 
-import type { PaginatedQueryItem } from "@confect/react";
 import {
   Globe02Icon,
   Search02Icon,
@@ -38,12 +37,13 @@ import { useParams } from "@tanstack/react-router";
 import { Array as Arr, Option } from "effect";
 import { type ComponentProps, createContext, use, useState } from "react";
 import { useTranslations } from "use-intl";
-import { useChatList } from "@/components/ai/chat/history.client";
-import { useAi } from "@/components/ai/context";
 import {
-  type PreloadedPage,
-  usePaginatedPreloaded,
-} from "@/lib/data/paginated";
+  type ChatFirstPage,
+  useChatList,
+} from "@/components/ai/chat/history.client";
+import { useAi } from "@/components/ai/context";
+import { useConvexAuth } from "@/components/providers/convex";
+import { usePaginatedPreloaded } from "@/lib/data/paginated";
 import { useViewer } from "@/lib/identity/client";
 
 const CHAT_SEARCH_DEBOUNCE_MS = 500;
@@ -51,14 +51,9 @@ const CHAT_SEARCH_DEBOUNCE_MS = 500;
 /** The chat search the sidebar applies, once the learner stops typing. */
 const ChatSearchContext = createContext<string | null>(null);
 
-/** The first page of the study chats, which the route's loader read on the server. */
-type ChatFirstPage = PreloadedPage<
-  PaginatedQueryItem<typeof chats.queries.getOwnChats>
->;
-
 /** The loader's first page of the chat list, which the list shows until its live page loads. */
-const ChatFirstPageContext = createContext<ChatFirstPage | undefined>(
-  undefined
+const ChatFirstPageContext = createContext<Option.Option<ChatFirstPage>>(
+  Option.none()
 );
 
 /** Reads the chat search that the sidebar applies. */
@@ -74,7 +69,7 @@ export function AiChatSidebar({
   first,
   ...props
 }: Omit<ComponentProps<typeof Sidebar>, "label"> & {
-  first: ChatFirstPage | undefined;
+  first: Option.Option<ChatFirstPage>;
 }) {
   const t = useTranslations("Ai");
   const setOpenMobile = useSidebar((sidebar) => sidebar.setOpenMobile);
@@ -137,9 +132,11 @@ export function AiChatSidebar({
   );
 }
 function AiChatSidebarHistory() {
+  const firstPage = use(ChatFirstPageContext);
   const isPending = useViewer((state) => state.isPending);
   const viewer = useViewer((state) => state.viewer);
-  if (isPending || viewer === null) {
+  // The loader's page draws the history on the server, where the viewer has not resolved yet.
+  if (Option.isNone(firstPage) && (isPending || viewer === null)) {
     return null;
   }
   return (
@@ -160,6 +157,8 @@ function AiChatSidebarChats() {
   const id = params.id;
   const searchQuery = useChatSearch().trim();
   const firstPage = use(ChatFirstPageContext);
+  // The loader's page stands in until the session settles, and the live list subscribes after that.
+  const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const type = "study" as const;
   const queryArgs = searchQuery
     ? {
@@ -172,9 +171,9 @@ function AiChatSidebarChats() {
   // The loader's page is the unfiltered list, so a search reads its own page.
   const pagination = usePaginatedPreloaded(
     chats.queries.getOwnChats,
-    queryArgs,
+    isSettled ? queryArgs : "skip",
     { initialNumItems: CHAT_LIST_PAGE_SIZE },
-    searchQuery ? Option.none() : Option.fromUndefinedOr(firstPage)
+    searchQuery ? Option.none() : firstPage
   );
   const { loadMore, results, searchFurther } = useChatList(
     pagination,

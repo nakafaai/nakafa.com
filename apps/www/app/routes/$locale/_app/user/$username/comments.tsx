@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { Option } from "effect";
 import { UserComments } from "@/components/user/comments";
 import { profileHead } from "@/lib/account/head";
 import { profileCommentsScreenFn } from "@/lib/account/profile.fn";
@@ -14,6 +15,12 @@ export const Route = createFileRoute("/$locale/_app/user/$username/comments")({
 });
 
 function UserCommentsPage() {
-  const { first, userId } = Route.useLoaderData();
-  return <UserComments first={first} userId={userId} />;
+  const { author, first, userId } = Route.useLoaderData();
+  return (
+    <UserComments
+      author={author}
+      first={Option.fromUndefinedOr(first)}
+      userId={userId}
+    />
+  );
 }

@@ -1,17 +1,17 @@
 "use client";
 
 import type { Ref } from "@confect/core";
-import { PaginatedQueryResult, QueryResult, useQuery } from "@confect/react";
+import { PaginatedQueryResult } from "@confect/react";
 import { ArrowTurnBackwardIcon } from "@hugeicons/core-free-icons";
 import { COMMENT_PAGE_SIZE } from "@repo/backend/client/comments/list";
-import auth from "@repo/backend/confect/_generated/refs/auth";
+import type auth from "@repo/backend/confect/_generated/refs/auth";
 import comments from "@repo/backend/confect/_generated/refs/comments";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { Array as Arr, Option } from "effect";
+import { Array as Arr, type Option } from "effect";
 import { useTranslations } from "use-intl";
 import { CommentsProvider } from "@/components/comments/provider";
 import { CommentRow } from "@/components/comments/row";
@@ -21,36 +21,32 @@ import { usePaginatedPreloaded } from "@/lib/data/paginated";
 import { getCleanHref } from "@/lib/routing/href";
 
 /**
- * Renders the comments of one user profile, newest first. The first page comes from
- * the server, so it is on the screen before the browser connects, and the live list
+ * Renders the comments of one user profile, newest first. The loader reads the author and
+ * the first page, so both are on the screen before the browser connects, and the live list
  * takes its place with the same comments.
  */
 export function UserComments({
+  author,
   first,
   userId,
 }: {
-  first: Ref.Returns<typeof comments.queries.getCommentsByUserId> | undefined;
+  /** The profile's author, as each comment row shows it. */
+  author: Ref.Returns<typeof auth.queries.getUserById>;
+  first: Option.Option<
+    Ref.Returns<typeof comments.queries.getCommentsByUserId>
+  >;
   userId: Id<"users">;
 }) {
   const t = useTranslations("Comments");
   const tCommon = useTranslations("Common");
-  const userQuery = useQuery(auth.queries.getUserById, {
-    userId,
-  });
   const pagination = usePaginatedPreloaded(
     comments.queries.getCommentsByUserId,
     { userId },
     { initialNumItems: COMMENT_PAGE_SIZE },
-    Option.fromUndefinedOr(first)
+    first
   );
   const { results } = pagination;
-  if (QueryResult.isFailure(userQuery)) {
-    throw userQuery.error;
-  }
-  if (
-    PaginatedQueryResult.isLoadingFirstPage(pagination) ||
-    QueryResult.isLoading(userQuery)
-  ) {
+  if (PaginatedQueryResult.isLoadingFirstPage(pagination)) {
     return null;
   }
   if (
@@ -76,7 +72,7 @@ export function UserComments({
         )}
         {Arr.map(results, (comment) => (
           <CommentRow
-            author={userQuery.value}
+            author={author}
             comment={comment}
             key={comment._id}
             replyAction={

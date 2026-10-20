@@ -1,6 +1,6 @@
 "use client";
 
-import { PaginatedQueryResult, usePaginatedQuery } from "@confect/react";
+import { PaginatedQueryResult } from "@confect/react";
 import {
   Delete02Icon,
   Globe02Icon,
@@ -10,8 +10,6 @@ import {
 import { CHAT_LIST_PAGE_SIZE } from "@repo/backend/client/chats/list";
 import chats from "@repo/backend/confect/_generated/refs/chats";
 import type { ChatView } from "@repo/backend/confect/chats/view";
-import { photoOf } from "@repo/backend/confect/users/picture";
-import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   DropdownMenu,
@@ -24,19 +22,16 @@ import { Intersection } from "@repo/design-system/components/ui/intersection";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { toast } from "@repo/design-system/lib/toast/notify";
-import {
-  Array as Arr,
-  DateTime,
-  Effect,
-  Option,
-  pipe,
-  String as Str,
-} from "effect";
+import { Array as Arr, Effect, Option, pipe, String as Str } from "effect";
 import { useState } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import type { StoreApi } from "zustand";
-import { useChatList } from "@/components/ai/chat/history.client";
+import {
+  type ChatFirstPage,
+  useChatList,
+} from "@/components/ai/chat/history.client";
 import { useDeleteChatMutation } from "@/components/ai/chat/mutation.client";
+import { useConvexAuth } from "@/components/providers/convex";
 import { formatShortAge } from "@/components/user/age";
 import type { AgeClock } from "@/components/user/clock";
 import { useAgeClock, useAgeNow } from "@/components/user/clock.client";
@@ -51,50 +46,36 @@ import {
   FeedRow,
 } from "@/components/user/feed";
 import { reportClientException } from "@/lib/analytics/client";
-import { useViewer } from "@/lib/identity/client";
+import { usePaginatedPreloaded } from "@/lib/data/paginated";
+import type { PublicProfile } from "@/lib/profile/public";
 
 /**
- * Render the chats of a profile. A learner sees their own chats, private and
- * shared. A shared chat is reached by its link alone, so a profile lists no
- * chat of anyone else.
+ * The study chats of the profile's owner, in the anatomy every row of the profile shares.
+ * The profile is the owner's alone, because its loader answers anyone else with not found,
+ * so the list needs no viewer check. The loader's first page is on the screen before the
+ * browser connects, and the live list takes its place once the session settles. The next
+ * page loads as the end of the list comes into view.
  */
-export function UserChats({ userId }: { userId: Id<"users"> }) {
-  const user = useViewer((state) => state.account);
-  const isPending = useViewer((state) => state.isPending);
-
-  if (user?.appUser._id === userId) {
-    return <OwnChatsList />;
-  }
-  if (isPending) {
-    return null;
-  }
-  return <ChatsByLink />;
-}
-
-/** What another learner's profile says in place of a list: a chat opens by its link. */
-function ChatsByLink() {
+export function UserChats({
+  first,
+  now: serverNow,
+  profile,
+}: {
+  first: Option.Option<ChatFirstPage>;
+  now: number;
+  profile: PublicProfile;
+}) {
   const t = useTranslations("Common");
-  return <FeedEmpty>{t("chats-by-link")}</FeedEmpty>;
-}
-
-/**
- * The owner's study chats, in the anatomy every row of the profile shares.
- * Nothing shows while the first page loads, and the next page loads as the end
- * of the list comes into view.
- */
-function OwnChatsList() {
-  const t = useTranslations("Common");
-  const pagination = usePaginatedQuery(
+  // The list subscribes once Convex has settled the session, as the sidebar's list does.
+  const isSettled = useConvexAuth((auth) => !auth.isLoading);
+  const pagination = usePaginatedPreloaded(
     chats.queries.getOwnChats,
-    {
-      type: "study",
-    },
-    {
-      initialNumItems: CHAT_LIST_PAGE_SIZE,
-    }
+    isSettled ? { type: "study" } : "skip",
+    { initialNumItems: CHAT_LIST_PAGE_SIZE },
+    first
   );
   const { loadMore, results } = useChatList(pagination);
-  const clock = useAgeClock(DateTime.toEpochMillis(DateTime.nowUnsafe()));
+  const clock = useAgeClock(serverNow);
   if (PaginatedQueryResult.isFailure(pagination)) {
     throw pagination.error;
   }
@@ -107,7 +88,7 @@ function OwnChatsList() {
   return (
     <div className="flex flex-col">
       {Arr.map(results, (chat) => (
-        <ChatRow chat={chat} clock={clock} key={chat._id} />
+        <ChatRow chat={chat} clock={clock} key={chat._id} profile={profile} />
       ))}
       {loadMore ? <Intersection onIntersect={loadMore} /> : null}
     </div>
@@ -123,13 +104,14 @@ function OwnChatsList() {
 function ChatRow({
   chat,
   clock,
+  profile,
 }: {
   chat: ChatView;
   clock: StoreApi<AgeClock>;
+  profile: PublicProfile;
 }) {
   const tAi = useTranslations("Ai");
   const locale = useLocale();
-  const account = useViewer((state) => state.account);
   const now = useAgeNow(clock);
   const isPrivate = chat.visibility === "private";
   // A chat Nina has not named yet reads as a new chat, so its link has a name.
@@ -138,18 +120,12 @@ function ChatRow({
     Option.filter(Str.isNonEmpty),
     Option.getOrElse(() => tAi("new-chat"))
   );
-  if (!account) {
-    return null;
-  }
   return (
     <FeedRow>
-      <FeedAvatar
-        mascot={account.appUser.mascot}
-        photo={photoOf(account.appUser)}
-      />
+      <FeedAvatar mascot={profile.mascot} photo={profile.image} />
       <FeedBody>
         <FeedHeader>
-          <FeedName>{account.authUser.name}</FeedName>
+          <FeedName>{profile.name}</FeedName>
           <FeedAge at={chat.updatedAt}>
             {formatShortAge(chat.updatedAt, now, locale)}
           </FeedAge>

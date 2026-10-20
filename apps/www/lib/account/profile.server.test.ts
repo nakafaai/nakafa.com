@@ -1,6 +1,7 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import auth from "@repo/backend/confect/_generated/refs/auth";
+import chats from "@repo/backend/confect/_generated/refs/chats";
 import comments from "@repo/backend/confect/_generated/refs/comments";
 import posts from "@repo/backend/confect/_generated/refs/posts";
 import users from "@repo/backend/confect/_generated/refs/users";
@@ -30,6 +31,8 @@ const mocks = vi.hoisted(() => ({
         request: Request
       ) => Effect.Effect<Effect.Effect<unknown, unknown>, unknown>
     >(),
+  captureServerExceptionSafely:
+    vi.fn<(error: unknown, properties: unknown) => Effect.Effect<void>>(),
   setResponseHeader: vi.fn<(name: string, value: string) => void>(),
 }));
 
@@ -45,9 +48,13 @@ vi.mock("@/lib/auth/session.server", () => ({
 vi.mock("@/lib/data/preload.server", () => ({
   preloadConfectQuery: mocks.preloadConfectQuery,
 }));
+vi.mock("@/lib/analytics/server", () => ({
+  captureServerExceptionSafely: mocks.captureServerExceptionSafely,
+}));
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mocks.captureServerExceptionSafely.mockReturnValue(Effect.void);
 });
 
 const profile = { _id: "users-owner", username: "nabil" };
@@ -143,33 +150,44 @@ describe("profilePostsHandler", () => {
     expect(screen.first).toBeUndefined();
   });
 
-  it("fails the posts tab when its first page cannot be read", async () => {
+  it("reports a posts page that cannot be read and leaves it to the live list", async () => {
     sessionWith(Option.none());
+    const failure = { _tag: "PreloadFailed", cause: "unreachable" };
     mocks.preloadConfectQuery.mockImplementation((ref) =>
       ref === posts.queries.list
-        ? Effect.fail({ _tag: "PreloadFailed", cause: "unreachable" })
+        ? Effect.fail(failure)
         : Effect.succeed(profile)
     );
-    await expect(
-      profilePostsHandler({ data: { locale: "en", username: "nabil" } })
-    ).rejects.toMatchObject({ _tag: "PreloadFailed" });
+    const screen = await profilePostsHandler({
+      data: { locale: "en", username: "nabil" },
+    });
+    expect(screen.first).toBeUndefined();
+    expect(mocks.captureServerExceptionSafely).toHaveBeenCalledExactlyOnceWith(
+      failure,
+      {
+        operation: posts.queries.list.convexFunctionName,
+        source: "data.readOptional",
+      }
+    );
   });
 });
 
 describe("profileChatHandler", () => {
-  it("answers the chat head and the owner's id to the owner", async () => {
+  it("answers the owner's first page of study chats, the moment of the read and the chat head", async () => {
     sessionWith(Option.some("token"));
     answerQueries([
       [users.queries.getProfileByUsername, profile],
       [auth.queries.getCurrentUser, ownerAccount],
+      [chats.queries.getOwnChats, { page: ["chat-1"], isDone: true }],
     ]);
     const screen = await profileChatHandler({
       data: { locale: "en", username: "nabil" },
     });
     expect(screen).toMatchObject({
+      first: { page: ["chat-1"], isDone: true },
       seo: { canonicalPath: "/en/@nabil/chat", indexable: false },
-      userId: "users-owner",
     });
+    expect(typeof screen.now).toBe("number");
   });
 
   it("ends the request as not found for anyone else", async () => {
@@ -186,16 +204,19 @@ describe("profileChatHandler", () => {
 });
 
 describe("profileCommentsHandler", () => {
-  it("answers the first page of comments, the Comments head and the owner's id", async () => {
+  it("answers the author, the first page of comments, the Comments head and the owner's id", async () => {
     sessionWith(Option.none());
+    const author = { mascot: "fox", name: "Nabil", picture: "animal" };
     answerQueries([
       [users.queries.getProfileByUsername, profile],
+      [auth.queries.getUserById, author],
       [comments.queries.getCommentsByUserId, { page: ["comment-1"] }],
     ]);
     const screen = await profileCommentsHandler({
       data: { locale: "en", username: "nabil" },
     });
     expect(screen).toMatchObject({
+      author,
       first: { page: ["comment-1"] },
       seo: { canonicalPath: "/en/@nabil/comments", indexable: false },
       userId: "users-owner",

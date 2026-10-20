@@ -1,6 +1,7 @@
 "use client";
 
-import type { PaginatedQueryResult } from "@confect/react";
+import type { PaginatedQueryItem, PaginatedQueryResult } from "@confect/react";
+import type chats from "@repo/backend/confect/_generated/refs/chats";
 import { Array as Arr, HashSet } from "effect";
 import { useState } from "react";
 import {
@@ -8,6 +9,12 @@ import {
   readChatList,
   searchStopped,
 } from "@/components/ai/chat/history";
+import type { PreloadedPage } from "@/lib/data/paginated";
+
+/** The first page of the study chats, which the route's loader read on the server. */
+export type ChatFirstPage = PreloadedPage<
+  PaginatedQueryItem<typeof chats.queries.getOwnChats>
+>;
 
 /**
  * The chats a list shows, from the paginated query it reads. It remembers the
