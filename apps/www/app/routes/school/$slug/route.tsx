@@ -24,7 +24,7 @@ import { TenantRefused } from "@/components/tenant/refused";
 import { TenantShell } from "@/components/tenant/shell";
 import { readAuthLegalFn } from "@/lib/auth/legal.fn";
 import { readShellClassesFn } from "@/lib/tenant/classes.fn";
-import { canManageSchool, roleOf } from "@/lib/tenant/frame";
+import { canManageSchool, roleOf, type SchoolRead } from "@/lib/tenant/frame";
 import { readSchoolFrameFn } from "@/lib/tenant/frame.fn";
 import { schoolHead } from "@/lib/tenant/head";
 
@@ -56,24 +56,53 @@ function readSlug(slug: string): TenantSlug {
   return school.value;
 }
 
+/** The legal notice of the sign-in sentence, as its server function answers it. */
+type LegalRead = Awaited<ReturnType<typeof readAuthLegalFn>>;
+
+/** The frame and the legal notice that one school visit has read so far. */
+type SchoolVisit = Partial<
+  Record<"legal", LegalRead> & Record<"school", SchoolRead>
+>;
+
+/**
+ * Starts the memo of one school visit. TanStack keeps a route's context object for
+ * every navigation that keeps the layout's match, and makes a new one when a visit
+ * begins, so the frame is read once per visit and a child navigation reuses it.
+ */
+function startVisit() {
+  const visit: SchoolVisit = {};
+  return { visit };
+}
+
 /**
  * The school layout. The gate decides the page before it streams: a school that
  * does not exist, and a viewer whom the school denies, answer not found. A visitor
  * sees the entry surface, and an account that is not a member sees the outsider
  * page. A member gets the shell, and every page of the school renders inside it.
+ * The layout's beforeLoad runs on every navigation into the school, so a child
+ * navigation reuses the visit's frame and calls the server for it only once.
  */
 export const Route = createFileRoute("/school/$slug")({
   params: {
     parse: ({ slug }) => ({ slug: readSlug(slug) }),
   },
   validateSearch: Schema.toStandardSchemaV1(SchoolSearch),
-  beforeLoad: async ({ params }) => {
-    const school = await readSchoolFrameFn({ data: { slug: params.slug } });
-    if (school._tag === "Refused") {
+  context: startVisit,
+  beforeLoad: async ({ cause, context, params }) => {
+    const { visit } = context;
+    const reuse = cause !== "enter";
+    visit.school =
+      reuse && visit.school !== undefined
+        ? visit.school
+        : await readSchoolFrameFn({ data: { slug: params.slug } });
+    visit.legal =
+      reuse && visit.legal !== undefined
+        ? visit.legal
+        : await readAuthLegalFn({ data: {} });
+    if (visit.school._tag === "Refused") {
       throw notFound();
     }
-    const legal = await readAuthLegalFn({ data: {} });
-    return { legal, school, slug: params.slug };
+    return { legal: visit.legal, school: visit.school, slug: params.slug };
   },
   loader: ({ context }) =>
     context.school._tag === "Member"
