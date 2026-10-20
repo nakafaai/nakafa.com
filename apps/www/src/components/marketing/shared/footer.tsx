@@ -40,8 +40,8 @@ const highSchoolSubjects = Option.getOrElse(
 
 /**
  * Composes the shared marketing footer from product, policy, and social links
- * without owning route generation itself. Signed Page links load on the press,
- * not on hover (see `PageNavigation`).
+ * without owning route generation itself. Signed Page links never preload, so
+ * they load on the press (see `PageNavigation`).
  */
 export function Footer({
   articleNavigation,
