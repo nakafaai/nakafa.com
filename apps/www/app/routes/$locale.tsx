@@ -16,7 +16,9 @@ import { getLocaleOrThrow } from "@/lib/i18n/params";
 export const Route = createFileRoute("/$locale")({
   component: LocaleLayout,
   loader: async ({ params }) => ({
-    messages: await getRouteMessages(params.locale, ["Common"]),
+    messages: await getRouteMessages(getLocaleOrThrow(params.locale), [
+      "Common",
+    ]),
     now: await readRequestNow(),
   }),
   params: {

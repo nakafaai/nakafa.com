@@ -1,4 +1,3 @@
-import type { convexBetterAuthReactStart } from "@convex-dev/better-auth/react-start";
 import {
   createNetworkRequestError,
   NETWORK_RETRY_SCHEDULE,
@@ -22,10 +21,11 @@ import { readRequestHost } from "@/lib/routing/school/host";
 /** One method of the Better Auth route handler that the proxy forwards to. */
 type AuthHandlerMethod = (request: Request) => Promise<Response>;
 
-/** The route handler that `@convex-dev/better-auth` returns for TanStack Start. */
-type AuthRouteHandler = ReturnType<
-  typeof convexBetterAuthReactStart
->["handler"];
+/** The route methods the proxy forwards to. The Better Auth handler serves each HTTP method. */
+interface AuthRouteHandler {
+  readonly GET: AuthHandlerMethod;
+  readonly POST: AuthHandlerMethod;
+}
 
 /**
  * The longest a proxied Better Auth request may take, retries included. It is
