@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { UserSettingsSubscriptions } from "@/components/user/settings/subscriptions";
-import { signedInHead } from "@/lib/account/head";
+import { privateHead } from "@/lib/account/head";
 import { subscriptionsScreenFn } from "@/lib/account/settings.fn";
 
 export const Route = createFileRoute(
@@ -8,7 +8,7 @@ export const Route = createFileRoute(
 )({
   loader: ({ params }) =>
     subscriptionsScreenFn({ data: { locale: params.locale } }),
-  head: ({ loaderData }) => loaderData && signedInHead(loaderData.seo),
+  head: ({ loaderData }) => loaderData && privateHead(loaderData.seo),
   component: SubscriptionsPage,
 });
 

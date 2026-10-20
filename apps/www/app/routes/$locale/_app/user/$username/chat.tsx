@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { UserChats } from "@/components/user/chats";
-import { signedInHead } from "@/lib/account/head";
+import { profileHead } from "@/lib/account/head";
 import { profileChatScreenFn } from "@/lib/account/profile.fn";
 
 export const Route = createFileRoute("/$locale/_app/user/$username/chat")({
@@ -8,7 +8,7 @@ export const Route = createFileRoute("/$locale/_app/user/$username/chat")({
     profileChatScreenFn({
       data: { locale: params.locale, username: params.username },
     }),
-  head: ({ loaderData }) => loaderData && signedInHead(loaderData.seo),
+  head: ({ loaderData }) => loaderData && profileHead(loaderData.seo),
   component: UserChatsPage,
 });
 

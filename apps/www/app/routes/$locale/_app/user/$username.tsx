@@ -2,22 +2,24 @@ import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary"
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { UserHeader } from "@/components/user/header";
 import { UserTabs } from "@/components/user/tabs";
-import { signedInHead } from "@/lib/account/head";
 import { profileScreenFn } from "@/lib/account/profile.fn";
 
+/**
+ * A profile shows a learner's name, bio, posts, comments and chats, and many
+ * learners are minors, so the layout keeps the profile out of search results.
+ * Each tab names its own address.
+ */
 export const Route = createFileRoute("/$locale/_app/user/$username")({
   loader: ({ params }) =>
     profileScreenFn({
       data: { locale: params.locale, username: params.username },
     }),
-  head: ({ loaderData }) => loaderData && signedInHead(loaderData.seo),
+  head: () => ({
+    meta: [{ content: "noindex,nofollow", name: "robots" }],
+  }),
   component: UserLayout,
 });
 
-/**
- * A profile shows a learner's name, bio, posts, comments and chats, and many
- * learners are minors, so the head keeps it out of search results.
- */
 function UserLayout() {
   const { isOwner, profile } = Route.useLoaderData();
   return (

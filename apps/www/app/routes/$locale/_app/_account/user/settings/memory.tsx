@@ -1,13 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { UserSettingsMemory } from "@/components/user/settings/memory/view";
-import { signedInHead } from "@/lib/account/head";
+import { privateHead } from "@/lib/account/head";
 import { memoryScreenFn } from "@/lib/account/settings.fn";
 
 export const Route = createFileRoute(
   "/$locale/_app/_account/user/settings/memory"
 )({
   loader: ({ params }) => memoryScreenFn({ data: { locale: params.locale } }),
-  head: ({ loaderData }) => loaderData && signedInHead(loaderData.seo),
+  head: ({ loaderData }) => loaderData && privateHead(loaderData.seo),
   component: MemoryPage,
 });
 

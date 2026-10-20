@@ -1,14 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { UserSettingsCurriculum } from "@/components/user/settings/curriculum";
 import { UserSettingsLearningPage } from "@/components/user/settings/learning";
-import { signedInHead } from "@/lib/account/head";
+import { privateHead } from "@/lib/account/head";
 import { learningScreenFn } from "@/lib/account/settings.fn";
 
 export const Route = createFileRoute(
   "/$locale/_app/_account/user/settings/learning"
 )({
   loader: ({ params }) => learningScreenFn({ data: { locale: params.locale } }),
-  head: ({ loaderData }) => loaderData && signedInHead(loaderData.seo),
+  head: ({ loaderData }) => loaderData && privateHead(loaderData.seo),
   component: LearningPage,
 });
 

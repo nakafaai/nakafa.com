@@ -2,8 +2,10 @@ import { SidebarProvider } from "@repo/design-system/components/ui/sidebar-provi
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { ChatBoundary } from "@/components/ai/chat/boundary";
 import { AiChatSidebar } from "@/components/ai/chat/sidebar";
+import { chatSidebarScreenFn } from "@/lib/account/home.fn";
 
 export const Route = createFileRoute("/$locale/_app/chat")({
+  loader: () => chatSidebarScreenFn(),
   component: ChatLayout,
 });
 
