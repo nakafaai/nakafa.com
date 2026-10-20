@@ -44,6 +44,11 @@ function countTransitionRules() {
   return document.head.querySelectorAll("style").length;
 }
 
+/** Reads the text of the transition rule that has not been removed yet. */
+function transitionRuleText() {
+  return document.head.querySelector("style")?.textContent;
+}
+
 afterEach(() => {
   disconnectRunningStore?.();
   disconnectRunningStore = undefined;
@@ -175,6 +180,7 @@ describe("connectThemeStore", () => {
     store.getState().setTheme("dark");
 
     expect(countTransitionRules()).toBe(1);
+    expect(transitionRuleText()).toContain("transition: none");
     nextFrame?.(0);
     expect(countTransitionRules()).toBe(0);
   });
