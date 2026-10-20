@@ -31,7 +31,7 @@ import { serverHandler } from "@/lib/server/fn";
  * Reads one surah with its verses, pagination and sources on the server. A
  * route that does not name a surah of the catalog is a 404.
  */
-export const readSurahPage = Effect.fn("www.content.quran.readSurah")(
+const readSurahPage = Effect.fn("www.content.quran.readSurah")(
   function* (data: typeof SurahRouteInput.Type) {
     const locale = getLocaleOrThrow(data.locale);
     const parsedNumber = Option.fromNullishOr(
@@ -132,7 +132,7 @@ export const readSurahHandler = serverHandler(readSurahPage);
  * Recovers a stale interpretation snapshot. The reader that served it asks once,
  * and the recovery decides, so the answer never names another snapshot.
  */
-export const recoverQuranSnapshotPage = Effect.fn(
+const recoverQuranSnapshotPage = Effect.fn(
   "www.content.quran.recoverSnapshot"
 )(function* (data: { readonly snapshotId: string }) {
   return yield* recoverStalePublishedQuranSnapshot(data.snapshotId);
