@@ -5,10 +5,7 @@ import {
   LocaleSchema,
 } from "@repo/internationalization/src/locale";
 import { Clock, Effect, Option, Schema } from "effect";
-import {
-  type PlayerModeParam,
-  readPlayerModeParam,
-} from "@/components/player/mode";
+import type { PlayerModeParam } from "@/components/player/mode";
 import { readPlayerMode } from "@/components/player/server";
 import {
   readTryoutSetAttemptPage,
@@ -17,11 +14,11 @@ import {
 import { readTryoutQuestionPreview } from "@/components/tryout/preview/read";
 import { readTryoutRouteHead } from "@/components/tryout/route/catalog.server";
 import { readCurrentTryoutSet } from "@/components/tryout/route/current";
+import { readAddressIntent } from "@/components/tryout/route/intent";
 import { createTryoutSetRestartTarget } from "@/components/tryout/route/owner";
 import {
   getTryoutAttemptAuthHref,
   getTryoutHref,
-  readTryoutRouteAttemptCapability,
   type TryoutRouteSearchParams,
 } from "@/components/tryout/route/path";
 import { keepPersonalResponse } from "@/components/tryout/route/response.server";
@@ -34,21 +31,6 @@ import { readRequestToken } from "@/components/tryout/route/token.server";
 
 /** The learner's current or retained set attempt, as the set reader holds it. */
 type SetAttemptPage = Effect.Success<ReturnType<typeof readCurrentTryoutSet>>;
-/**
- * Reads the attempt capability and the player view of one address. Either one
- * being invalid makes the page not found, as the reference answers it.
- */
-export function readAddressIntent(search: TryoutRouteSearchParams) {
-  const capability = readTryoutRouteAttemptCapability(search);
-  const view = readPlayerModeParam(search);
-  if (capability.kind === "invalid" || view.kind === "invalid") {
-    return Option.none();
-  }
-  return Option.some({
-    attemptId: capability.kind === "valid" ? capability.attemptId : undefined,
-    view,
-  });
-}
 
 /**
  * The attempt state a page binds to its player: the attempt, its state, the view
@@ -152,8 +134,10 @@ export const readTryoutSetRoute = Effect.fn("www.tryout.route.readSet")(
         ? attempt.restartTarget
         : createTryoutSetRestartTarget(page),
       review: attempt
-        ? yield* readAttemptReview({ attempt, locale, publicPath: setPath })
-        : null,
+        ? Option.getOrUndefined(
+            yield* readAttemptReview({ attempt, locale, publicPath: setPath })
+          )
+        : undefined,
       route,
       view: intent.value.view,
     };
@@ -214,11 +198,13 @@ const readRetainedSetRoute = Effect.fn("www.tryout.route.readRetainedSet")(
       now: yield* Clock.currentTimeMillis,
       page: attempt.page,
       restartTarget: attempt.restartTarget,
-      review: yield* readAttemptReview({
-        attempt,
-        locale: input.locale,
-        publicPath: input.publicPath,
-      }),
+      review: Option.getOrUndefined(
+        yield* readAttemptReview({
+          attempt,
+          locale: input.locale,
+          publicPath: input.publicPath,
+        })
+      ),
       route: input.route,
       view,
     };

@@ -214,7 +214,7 @@ describe("readTryoutSetRoute", () => {
             canonicalPath: "/en/try-out/id/snbt/2027/set-1",
             description: "Set",
             indexable: false,
-            title: "Set 1",
+            title: { absolute: "Set 1" },
           },
           kind: "attempt",
           restartTarget: { setPublicPath: SET },
@@ -312,7 +312,7 @@ describe("readTryoutSetRoute", () => {
         )
       );
 
-      expect(yield* readSet()).toMatchObject({ review: null });
+      expect(yield* readSet()).toMatchObject({ review: undefined });
     })
   );
 

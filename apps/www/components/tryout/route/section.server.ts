@@ -12,9 +12,9 @@ import {
   readTryoutSectionPage,
 } from "@/components/tryout/catalog/server";
 import { readTryoutQuestionPreview } from "@/components/tryout/preview/read";
-import { readAddressIntent } from "@/components/tryout/route/attempt.server";
 import { readTryoutRouteHead } from "@/components/tryout/route/catalog.server";
 import { readCurrentTryoutSection } from "@/components/tryout/route/current";
+import { readAddressIntent } from "@/components/tryout/route/intent";
 import { selectTryoutSectionReturnHref } from "@/components/tryout/route/owner";
 import {
   getTryoutAttemptAuthHref,
@@ -143,12 +143,14 @@ export const readTryoutSectionRoute = Effect.fn("www.tryout.route.readSection")(
       now: yield* Clock.currentTimeMillis,
       page: attempt ? attempt.page : page,
       review: attempt
-        ? yield* readAttemptReview({
-            attempt,
-            locale,
-            publicPath: sectionPath,
-          })
-        : null,
+        ? Option.getOrUndefined(
+            yield* readAttemptReview({
+              attempt,
+              locale,
+              publicPath: sectionPath,
+            })
+          )
+        : undefined,
       route,
       setHref: selectTryoutSectionReturnHref({
         attemptPage: attempt,
@@ -215,11 +217,13 @@ const readRetainedSectionRoute = Effect.fn(
     kind: "attempt" as const,
     now: yield* Clock.currentTimeMillis,
     page: attempt.page,
-    review: yield* readAttemptReview({
-      attempt,
-      locale: input.locale,
-      publicPath: input.publicPath,
-    }),
+    review: Option.getOrUndefined(
+      yield* readAttemptReview({
+        attempt,
+        locale: input.locale,
+        publicPath: input.publicPath,
+      })
+    ),
     route: input.route,
     setHref: selectTryoutSectionReturnHref({
       attemptPage: attempt,

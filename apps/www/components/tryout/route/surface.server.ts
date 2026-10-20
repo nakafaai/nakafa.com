@@ -2,7 +2,7 @@ import "@tanstack/react-start/server-only";
 
 import type { Locale } from "@repo/internationalization/src/locale";
 import { readServerTranslator } from "@repo/internationalization/src/translator";
-import { Effect, Schema } from "effect";
+import { Effect, Option, Schema } from "effect";
 import type { readCurrentTryoutSet } from "@/components/tryout/route/current";
 import {
   renderTryoutPreview,
@@ -29,7 +29,8 @@ type ReviewedAttempt = Pick<
 
 /**
  * The head of a page bound to one attempt, or to a question preview. It names the
- * page and keeps it out of search results, as the reference's retained metadata does.
+ * page with its absolute title and keeps it out of search results, as the
+ * reference's retained metadata does.
  */
 export const readRetainedHead = Effect.fn("www.tryout.route.readRetainedHead")(
   function* (input: {
@@ -46,7 +47,7 @@ export const readRetainedHead = Effect.fn("www.tryout.route.readRetainedHead")(
       description: input.description ?? tTryouts("metadata-description"),
       image: getOgUrl(input.locale, input.publicPath),
       indexable: false,
-      title: input.title,
+      title: { absolute: input.title },
     };
   }
 );
@@ -75,10 +76,13 @@ export const readPreviewRoute = Effect.fn("www.tryout.route.readPreview")(
   }
 );
 
+/** The server-rendered review tree of one finished attempt. */
+type RenderedReview = Awaited<ReturnType<typeof renderTryoutReview>>;
+
 /**
  * The terminal review of an attempt with signed content, rendered on the server. An
- * attempt without signed content has no review, and a running attempt with signed
- * content is pending until the runtime's body contract exists.
+ * attempt without signed content, or without a runtime, has no review. A running
+ * attempt with signed content is pending until the runtime's body contract exists.
  */
 export const readAttemptReview = Effect.fn("www.tryout.route.readReview")(
   function* (input: {
@@ -89,7 +93,7 @@ export const readAttemptReview = Effect.fn("www.tryout.route.readReview")(
     const { attempt } = input;
     const { content, initialState } = attempt;
     if (content.kind !== "signed") {
-      return null;
+      return Option.none<RenderedReview>();
     }
     if (initialState.attempt.status === "in-progress") {
       return yield* new TryoutAttemptContentPending({
@@ -98,15 +102,17 @@ export const readAttemptReview = Effect.fn("www.tryout.route.readReview")(
     }
     const { runtime } = initialState;
     if (runtime === null) {
-      return null;
+      return Option.none<RenderedReview>();
     }
-    return yield* Effect.promise(() =>
-      renderTryoutReview({
-        access: content,
-        attemptId: attempt.attemptId,
-        locale: input.locale,
-        runtime,
-      })
+    return Option.some(
+      yield* Effect.promise(() =>
+        renderTryoutReview({
+          access: content,
+          attemptId: attempt.attemptId,
+          locale: input.locale,
+          runtime,
+        })
+      )
     );
   }
 );

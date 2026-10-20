@@ -27,6 +27,17 @@ describe("createTryoutHead", () => {
     });
   });
 
+  it("keeps an absolute title as the whole title, without the site name", () => {
+    const head = createTryoutHead({
+      ...page,
+      indexable: false,
+      jsonLd: [],
+      title: { absolute: "Set 1" },
+    });
+
+    expect(head.meta).toContainEqual({ title: "Set 1" });
+  });
+
   it("keeps an attempt page out of search results", () => {
     const head = createTryoutHead({ ...page, indexable: false, jsonLd: [] });
 

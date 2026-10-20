@@ -88,9 +88,14 @@ const catalogSection = {
 };
 
 const signedContent = { answers: [], kind: "signed" };
+const runtime = { questions: [] };
 const runningSigned = {
   content: signedContent,
   initialState: { attempt: { status: "in-progress" } },
+};
+const finishedSigned = {
+  content: signedContent,
+  initialState: { attempt: { status: "completed" }, runtime },
 };
 const preview = { target: { section: { title: "Question 1" } } };
 
@@ -195,9 +200,24 @@ describe("readTryoutSectionRoute", () => {
         expect(route).toMatchObject({
           kind: "attempt",
           setHref: "/try-out/id/snbt/2027/set-2",
-          head: { description: "Section", title: "Section 1" },
+          head: {
+            description: "Section",
+            title: { absolute: "Section 1" },
+          },
         });
       })
+  );
+
+  it.effect("renders the review of a finished retained section", () =>
+    Effect.gen(function* () {
+      mocks.readTryoutSectionAttemptPage.mockReturnValue(
+        Effect.succeed(attemptOf("retained", finishedSigned))
+      );
+
+      const route = yield* readSection(attemptSearch);
+
+      expect(route).toMatchObject({ kind: "attempt", review: "review-tree" });
+    })
   );
 
   it.effect("answers a public section with its question preview", () =>
