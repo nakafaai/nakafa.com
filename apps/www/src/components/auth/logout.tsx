@@ -1,22 +1,21 @@
 import { Logout01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { useRouter } from "@repo/internationalization/src/navigation";
 import { Effect, Result } from "effect";
-import { useTranslations } from "use-intl";
+import { useLocale, useTranslations } from "use-intl";
 import { clearAiDraftText } from "@/components/ai/store/draft";
 import { signOutAccountBrowserIdentity } from "@/lib/auth/identity/browser";
 export function AuthLogout() {
   const t = useTranslations("Auth");
-  const router = useRouter();
-  /** Signs the user out and returns them to the public home page on success. */
+  const locale = useLocale();
+  /** Signs the user out, then opens the locale home as a full document load, which closes the socket and resets every store. */
   async function handleSignOut() {
     const result = await Effect.runPromise(
       Effect.result(signOutAccountBrowserIdentity())
     );
     if (Result.isSuccess(result)) {
       Effect.runSync(clearAiDraftText);
-      router.replace("/");
+      window.location.assign(`/${locale}`);
     }
   }
   return (

@@ -20,7 +20,6 @@ import {
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
-import { useRouter } from "@repo/internationalization/src/navigation";
 import { useConvex } from "convex/react";
 import { Effect, Result } from "effect";
 import { useState, useTransition } from "react";
@@ -54,7 +53,6 @@ export function UserSettingsDeleteAccount({ userId }: { userId: Id<"users"> }) {
   const t = useTranslations("Auth");
   const common = useTranslations("Common");
   const locale = useLocale();
-  const router = useRouter();
   const authNavigation = useCurrentAuthNavigation();
   const cancelAccountDeletion = useMutation(
     auth.deletion.cancelAccountDeletionAttempt
@@ -123,7 +121,7 @@ export function UserSettingsDeleteAccount({ userId }: { userId: Id<"users"> }) {
         Effect.result(signOutAccountBrowserIdentity())
       );
       if (Result.isSuccess(result)) {
-        router.replace(authNavigation.readHref());
+        window.location.assign(authNavigation.readHref());
         return;
       }
       startTransition(() => setError(dialogError.generic));

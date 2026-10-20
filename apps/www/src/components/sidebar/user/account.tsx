@@ -16,13 +16,12 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { lazyComponent } from "@repo/design-system/lib/lazy";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { Effect, Result } from "effect";
-import { useTranslations } from "use-intl";
+import { useLocale, useTranslations } from "use-intl";
 import { clearAiDraftText } from "@/components/ai/store/draft";
 import { AnalyticsConsentMenuItem } from "@/components/analytics/consent/menu";
 import { AccountMenu } from "@/components/sidebar/menu/account";
 import { SidebarUtilityMenuItems } from "@/components/sidebar/menu/utility";
 import { signOutAccountBrowserIdentity } from "@/lib/auth/identity/browser";
-import { useCurrentAuthNavigation } from "@/lib/auth/location";
 import { usePageNavigation } from "@/lib/content/page/context";
 import type { CurrentUser } from "@/lib/identity/client";
 import { profileHref } from "@/lib/profile/href";
@@ -46,21 +45,21 @@ export function NavUserAccount({ user }: { user: CurrentUser }) {
   const tNotifications = useTranslations("Notifications");
   const pageNavigation = usePageNavigation((navigation) => navigation);
   const router = useRouter();
-  const authNavigation = useCurrentAuthNavigation();
+  const locale = useLocale();
   const { username } = user.appUser;
   const planLabelByPlan = {
     free: t("plan-free"),
     pro: t("plan-pro"),
   };
 
-  /** Signs the user out and leaves the shared authenticated app subtree on success. */
+  /** Signs the user out, then opens the locale home as a full document load on success, so the socket closes and every store resets. */
   async function handleSignOut() {
     const result = await Effect.runPromise(
       Effect.result(signOutAccountBrowserIdentity())
     );
     if (Result.isSuccess(result)) {
       Effect.runSync(clearAiDraftText);
-      router.replace(authNavigation.readHref());
+      window.location.assign(`/${locale}`);
     }
   }
 
