@@ -802,6 +802,9 @@ importers:
       '@base-ui/react':
         specifier: ^1.9.0
         version: 1.9.0(@date-fns/tz@1.5.0)(@types/react@19.3.0)(date-fns@4.4.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+      '@fontsource-variable/geist-mono':
+        specifier: 5.3.0
+        version: 5.3.0
       '@hugeicons/core-free-icons':
         specifier: 'catalog:'
         version: 4.3.5
@@ -841,6 +844,9 @@ importers:
       '@shadcn/react':
         specifier: 'catalog:'
         version: 0.3.1(@types/react@19.3.0)(react@19.3.1)
+      '@shikijs/core':
+        specifier: 4.5.0
+        version: 4.5.0
       '@shikijs/transformers':
         specifier: ^4.5.0
         version: 4.5.0
@@ -910,9 +916,6 @@ importers:
       frimousse:
         specifier: ^0.4.0
         version: 0.4.0(react@19.3.1)(typescript@7.0.2)
-      geist:
-        specifier: ^1.8.1
-        version: 1.8.1(next@16.4.2(@babel/core@8.0.5)(@playwright/test@1.64.1)(@types/node@24.19.2)(babel-plugin-react-compiler@1.0.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))
       katex:
         specifier: ^0.19.0
         version: 0.19.0
@@ -2530,6 +2533,9 @@ packages:
 
   '@floating-ui/utils@0.2.12':
     resolution: {integrity: sha512-HpCo8tmWzLVad5s2d19EhAz5zqrrQ6s69qd6moPMQvkOuSwDT1YgRfWSVuc4ennqrgv3OHppiOGMQ7oC13yIww==}
+
+  '@fontsource-variable/geist-mono@5.3.0':
+    resolution: {integrity: sha512-vBbuwDEo9AkrqADMXOrlAR3DFcJi4/JxeuU43FoiQERnNwsfXNnvxvReZG02cQKmyk4DZkZdBZX3oTDvy2zBAw==}
 
   '@fontsource-variable/inter@5.3.0':
     resolution: {integrity: sha512-OupL48va4JNofb97w6NYeF9S7W/kHNKM0Er8Dem5nqi4jeOLrVJDoE8tZEpnMJmtkvNbB1EIPPwHcdkF6b1oUA==}
@@ -5641,11 +5647,6 @@ packages:
   function-timeout@0.1.1:
     resolution: {integrity: sha512-0NVVC0TaP7dSTvn1yMiy6d6Q8gifzbvQafO46RtLG/kHJUBNd+pVRGOBoK44wNBvtSPUJRfdVvkFdD3p0xvyZg==}
     engines: {node: '>=14.16'}
-
-  geist@1.8.1:
-    resolution: {integrity: sha512-oSBhuzTvwZqGAZVC4swTRo61G/JHojtEVNR3DCToU+4nUBkG48ndKNvj4Ma7zZ+OlJkYDLT66HS+hrFszkovTg==}
-    peerDependencies:
-      next: '>=13.2.0'
 
   gensync@1.0.0-beta.2:
     resolution: {integrity: sha512-3hN7NaskYvMDLQY55gnW3NQ+mesEAepTqlg+VEbj7zzqEMBVNhzcGYYeqFo/TlYz6eQiFcp1HcsCZO+nGgS8zg==}
@@ -9479,6 +9480,8 @@ snapshots:
 
   '@floating-ui/utils@0.2.12': {}
 
+  '@fontsource-variable/geist-mono@5.3.0': {}
+
   '@fontsource-variable/inter@5.3.0': {}
 
   '@fontsource/amiri@5.3.0': {}
@@ -9860,7 +9863,8 @@ snapshots:
     dependencies:
       effect: 4.0.5
 
-  '@next/env@16.4.2': {}
+  '@next/env@16.4.2':
+    optional: true
 
   '@next/swc-darwin-arm64@16.4.2':
     optional: true
@@ -11684,7 +11688,8 @@ snapshots:
 
   baseline-browser-mapping@2.11.26: {}
 
-  baseline-browser-mapping@2.11.27: {}
+  baseline-browser-mapping@2.11.27:
+    optional: true
 
   better-auth@1.6.33(5aef01f8c5d0ee74d7c6e74624b8dab7):
     dependencies:
@@ -11803,7 +11808,8 @@ snapshots:
 
   caniuse-lite@1.0.30001813: {}
 
-  caniuse-lite@1.0.30001815: {}
+  caniuse-lite@1.0.30001815:
+    optional: true
 
   ccount@2.0.1: {}
 
@@ -12579,10 +12585,6 @@ snapshots:
     optional: true
 
   function-timeout@0.1.1: {}
-
-  geist@1.8.1(next@16.4.2(@babel/core@8.0.5)(@playwright/test@1.64.1)(@types/node@24.19.2)(babel-plugin-react-compiler@1.0.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)):
-    dependencies:
-      next: 16.4.2(@babel/core@8.0.5)(@playwright/test@1.64.1)(@types/node@24.19.2)(babel-plugin-react-compiler@1.0.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
 
   gensync@1.0.0-beta.2: {}
 
@@ -13780,33 +13782,6 @@ snapshots:
       - babel-plugin-macros
     optional: true
 
-  next@16.4.2(@babel/core@8.0.5)(@playwright/test@1.64.1)(@types/node@24.19.2)(babel-plugin-react-compiler@1.0.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1):
-    dependencies:
-      '@next/env': 16.4.2
-      '@swc/helpers': 0.5.23
-      baseline-browser-mapping: 2.11.27
-      caniuse-lite: 1.0.30001815
-      postcss: 8.5.23
-      react: 19.3.1
-      react-dom: 19.3.1(react@19.3.1)
-      styled-jsx: 5.1.6(@babel/core@8.0.5)(react@19.3.1)
-    optionalDependencies:
-      '@next/swc-darwin-arm64': 16.4.2
-      '@next/swc-darwin-x64': 16.4.2
-      '@next/swc-linux-arm64-gnu': 16.4.2
-      '@next/swc-linux-arm64-musl': 16.4.2
-      '@next/swc-linux-x64-gnu': 16.4.2
-      '@next/swc-linux-x64-musl': 16.4.2
-      '@next/swc-win32-arm64-msvc': 16.4.2
-      '@next/swc-win32-x64-msvc': 16.4.2
-      '@playwright/test': 1.64.1
-      babel-plugin-react-compiler: 1.0.0
-      sharp: 0.35.5(@types/node@24.19.2)
-    transitivePeerDependencies:
-      - '@babel/core'
-      - '@types/node'
-      - babel-plugin-macros
-
   nf3@0.3.24: {}
 
   nitro@3.0.260903-beta:
@@ -14002,6 +13977,7 @@ snapshots:
       nanoid: 3.3.20
       picocolors: 1.1.1
       source-map-js: 1.2.2
+    optional: true
 
   postcss@8.5.29:
     dependencies:
@@ -14830,13 +14806,6 @@ snapshots:
     optionalDependencies:
       '@babel/core': 7.29.7(supports-color@8.1.1)
     optional: true
-
-  styled-jsx@5.1.6(@babel/core@8.0.5)(react@19.3.1):
-    dependencies:
-      client-only: 0.0.1
-      react: 19.3.1
-    optionalDependencies:
-      '@babel/core': 8.0.5
 
   stylis@4.4.0: {}
 

@@ -1,72 +1,38 @@
-import { afterEach, describe, expect, it } from "@effect/vitest";
+import { describe, expect, it } from "@effect/vitest";
 import {
   CodeHighlightError,
   highlightCode,
   UnsupportedCodeLanguageError,
 } from "@repo/design-system/lib/code-block/highlight";
 import { Effect } from "effect";
-import type { CodeOptionsMultipleThemes } from "shiki";
-
-const { codeToHtmlMock } = vi.hoisted(() => ({
-  codeToHtmlMock: vi.fn(),
-}));
-
-vi.mock("shiki", async (importOriginal) => {
-  const shiki = await importOriginal<typeof import("shiki")>();
-
-  return {
-    ...shiki,
-    codeToHtml: codeToHtmlMock,
-  };
-});
-
-afterEach(() => {
-  vi.clearAllMocks();
-});
 
 describe("code highlighting", () => {
-  it.effect("uses Nakafa's defaults and preserves Shiki line boundaries", () =>
+  it.effect("uses Nakafa's default theme pair and keeps line boundaries", () =>
     Effect.gen(function* () {
-      codeToHtmlMock.mockResolvedValue(
-        '<span class="line">one</span><span class="line">two</span>'
-      );
-
       const html = yield* highlightCode({ code: "one\ntwo" });
 
-      expect(html).toBe(
-        '<span class="line">one</span>\n<span class="line">two</span>'
+      expect(html).toContain(
+        "shiki-themes github-light-high-contrast github-dark-default"
       );
-      expect(codeToHtmlMock).toHaveBeenCalledWith(
-        "one\ntwo",
-        expect.objectContaining({
-          lang: "typescript",
-          themes: {
-            dark: "github-dark-default",
-            light: "github-light-high-contrast",
-          },
-        })
-      );
+      expect(html).toContain('</span>\n<span class="line');
     })
   );
 
   it.effect("forwards an explicit supported language and theme pair", () =>
     Effect.gen(function* () {
-      codeToHtmlMock.mockResolvedValue("<pre>const answer = 42;</pre>");
-      const themes = {
-        dark: "github-dark",
-        light: "github-light-high-contrast",
-      } satisfies CodeOptionsMultipleThemes["themes"];
-
-      yield* highlightCode({
+      const html = yield* highlightCode({
         code: "const answer = 42;",
         language: "javascript",
-        themes,
+        themes: {
+          dark: "github-dark",
+          light: "github-light-high-contrast",
+        },
       });
 
-      expect(codeToHtmlMock).toHaveBeenCalledWith(
-        "const answer = 42;",
-        expect.objectContaining({ lang: "javascript", themes })
+      expect(html).toContain(
+        "shiki-themes github-light-high-contrast github-dark"
       );
+      expect(html).toContain("answer");
     })
   );
 
@@ -74,23 +40,18 @@ describe("code highlighting", () => {
     "applies a pre class and removes Shiki's inline background on request",
     () =>
       Effect.gen(function* () {
-        codeToHtmlMock.mockResolvedValue(
-          '<pre style="background:#fff;color:#111"><code>example</code></pre>'
-        );
-
         const html = yield* highlightCode({
           code: "example",
           preClassName: "overflow-x-auto",
           transparentBackground: true,
         });
 
-        expect(html).toBe(
-          '<pre class="overflow-x-auto"><code>example</code></pre>'
-        );
+        expect(html.startsWith('<pre class="overflow-x-auto"')).toBe(true);
+        expect(html).not.toContain("background-color");
       })
   );
 
-  it.effect("rejects unsupported languages before invoking Shiki", () =>
+  it.effect("rejects unsupported languages before Shiki loads anything", () =>
     Effect.gen(function* () {
       const error = yield* highlightCode({
         code: "example",
@@ -104,24 +65,23 @@ describe("code highlighting", () => {
         message:
           'Code language "not-a-language" is not included in Shiki\'s bundle.',
       });
-      expect(codeToHtmlMock).not.toHaveBeenCalled();
     })
   );
 
   it.effect("maps Shiki rendering failures into the typed error channel", () =>
     Effect.gen(function* () {
-      const cause = new Error("Shiki failed to load its grammar.");
-      codeToHtmlMock.mockRejectedValue(cause);
-
       const error = yield* highlightCode({
         code: "const answer = 42;",
         language: "typescript",
+        themes: {
+          dark: "github-dark-default",
+          light: "not-a-bundled-theme",
+        },
       }).pipe(Effect.flip);
 
       expect(error).toBeInstanceOf(CodeHighlightError);
       expect(error).toMatchObject({
         _tag: "CodeHighlightError",
-        cause,
         language: "typescript",
         message: 'Failed to highlight code as "typescript".',
       });
