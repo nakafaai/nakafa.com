@@ -10,6 +10,7 @@ export const Route = createFileRoute("/$locale/_app/chat")({
 });
 
 function ChatLayout() {
+  const { first } = Route.useLoaderData();
   return (
     <main className="h-[calc(100svh-var(--app-header-top,4rem))] lg:h-svh">
       <SidebarProvider
@@ -23,7 +24,7 @@ function ChatLayout() {
             <Outlet />
           </ChatBoundary>
         </div>
-        <AiChatSidebar />
+        <AiChatSidebar first={first} />
       </SidebarProvider>
     </main>
   );

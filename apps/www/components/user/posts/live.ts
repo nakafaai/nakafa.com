@@ -1,5 +1,6 @@
 import { PaginatedQueryResult } from "@confect/react";
 import type { Id } from "@repo/backend/confect/_generated/id";
+import { Option } from "effect";
 import type { ListPost } from "@/components/user/posts/state";
 
 /**
@@ -12,14 +13,14 @@ import type { ListPost } from "@/components/user/posts/state";
  */
 export function postsView<E>(
   live: PaginatedQueryResult.Variants<ListPost, E>,
-  first: readonly ListPost[] | null
+  first: Option.Option<readonly ListPost[]>
 ): PostsView {
   if (PaginatedQueryResult.isLoadingFirstPage(live)) {
     return {
-      empty: first !== null && first.length === 0,
+      empty: Option.isSome(first) && first.value.length === 0,
       failed: false,
       ready: false,
-      rows: first ?? [],
+      rows: Option.getOrElse(first, () => []),
     };
   }
   if (PaginatedQueryResult.isFailure(live)) {
@@ -42,8 +43,13 @@ export function postsView<E>(
  * The view of a first page that failed, and of an error the live list throws:
  * the server's page stands under the failure, and nothing is ready to change.
  */
-export function failedView(first: readonly ListPost[] | null) {
-  return { empty: false, failed: true, ready: false, rows: first ?? [] };
+export function failedView(first: Option.Option<readonly ListPost[]>) {
+  return {
+    empty: false,
+    failed: true,
+    ready: false,
+    rows: Option.getOrElse(first, () => []),
+  };
 }
 
 /** What the posts list shows: its rows, its failure, its empty state, and whether it takes a change. */

@@ -1,6 +1,6 @@
 "use client";
 
-import { usePaginatedQuery } from "@confect/react";
+import type { PaginatedQueryItem } from "@confect/react";
 import {
   Globe02Icon,
   Search02Icon,
@@ -35,17 +35,31 @@ import {
 import { Sidebar } from "@repo/design-system/components/ui/sidebar-shell";
 import { useSidebar } from "@repo/design-system/lib/sidebar/context";
 import { useParams } from "@tanstack/react-router";
-import { Array as Arr } from "effect";
+import { Array as Arr, Option } from "effect";
 import { type ComponentProps, createContext, use, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useChatList } from "@/components/ai/chat/history.client";
 import { useAi } from "@/components/ai/context";
+import {
+  type PreloadedPage,
+  usePaginatedPreloaded,
+} from "@/lib/data/paginated";
 import { useViewer } from "@/lib/identity/client";
 
 const CHAT_SEARCH_DEBOUNCE_MS = 500;
 
 /** The chat search the sidebar applies, once the learner stops typing. */
 const ChatSearchContext = createContext<string | null>(null);
+
+/** The first page of the study chats, which the route's loader read on the server. */
+type ChatFirstPage = PreloadedPage<
+  PaginatedQueryItem<typeof chats.queries.getOwnChats>
+>;
+
+/** The loader's first page of the chat list, which the list shows until its live page loads. */
+const ChatFirstPageContext = createContext<ChatFirstPage | undefined>(
+  undefined
+);
 
 /** Reads the chat search that the sidebar applies. */
 function useChatSearch() {
@@ -57,8 +71,11 @@ function useChatSearch() {
 }
 
 export function AiChatSidebar({
+  first,
   ...props
-}: Omit<ComponentProps<typeof Sidebar>, "label">) {
+}: Omit<ComponentProps<typeof Sidebar>, "label"> & {
+  first: ChatFirstPage | undefined;
+}) {
   const t = useTranslations("Ai");
   const setOpenMobile = useSidebar((sidebar) => sidebar.setOpenMobile);
   const [q, setQ] = useState("");
@@ -110,9 +127,11 @@ export function AiChatSidebar({
       </SidebarHeader>
 
       <SidebarContent>
-        <ChatSearchContext value={debouncedQ}>
-          <AiChatSidebarHistory />
-        </ChatSearchContext>
+        <ChatFirstPageContext value={first}>
+          <ChatSearchContext value={debouncedQ}>
+            <AiChatSidebarHistory />
+          </ChatSearchContext>
+        </ChatFirstPageContext>
       </SidebarContent>
     </Sidebar>
   );
@@ -140,6 +159,7 @@ function AiChatSidebarChats() {
   });
   const id = params.id;
   const searchQuery = useChatSearch().trim();
+  const firstPage = use(ChatFirstPageContext);
   const type = "study" as const;
   const queryArgs = searchQuery
     ? {
@@ -149,9 +169,13 @@ function AiChatSidebarChats() {
     : {
         type,
       };
-  const pagination = usePaginatedQuery(chats.queries.getOwnChats, queryArgs, {
-    initialNumItems: CHAT_LIST_PAGE_SIZE,
-  });
+  // The loader's page is the unfiltered list, so a search reads its own page.
+  const pagination = usePaginatedPreloaded(
+    chats.queries.getOwnChats,
+    queryArgs,
+    { initialNumItems: CHAT_LIST_PAGE_SIZE },
+    searchQuery ? Option.none() : Option.fromUndefinedOr(firstPage)
+  );
   const { loadMore, results, searchFurther } = useChatList(
     pagination,
     searchQuery

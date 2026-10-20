@@ -1,7 +1,7 @@
 import { PaginatedQueryResult } from "@confect/react";
 import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
-import { Schema } from "effect";
+import { Option, Schema } from "effect";
 import { livePostsArgs, postsView } from "@/components/user/posts/live";
 import type { ListPost } from "@/components/user/posts/state";
 
@@ -22,9 +22,10 @@ const serverPost = row("server");
 describe("posts list view", () => {
   it("shows the server's first page while the live list loads its first page, and holds nothing yet", () => {
     expect(
-      postsView(PaginatedQueryResult.loadingFirstPage({ skipped: false }), [
-        serverPost,
-      ])
+      postsView(
+        PaginatedQueryResult.loadingFirstPage({ skipped: false }),
+        Option.some([serverPost])
+      )
     ).toEqual({
       empty: false,
       failed: false,
@@ -35,7 +36,10 @@ describe("posts list view", () => {
 
   it("shows nothing while the live list loads its first page and no server page was read", () => {
     expect(
-      postsView(PaginatedQueryResult.loadingFirstPage({ skipped: false }), null)
+      postsView(
+        PaginatedQueryResult.loadingFirstPage({ skipped: false }),
+        Option.none()
+      )
     ).toEqual({ empty: false, failed: false, ready: false, rows: [] });
   });
 
@@ -46,20 +50,26 @@ describe("posts list view", () => {
           loadMore: () => undefined,
           results: [post],
         }),
-        [serverPost]
+        Option.some([serverPost])
       )
     ).toEqual({ empty: false, failed: false, ready: true, rows: [post] });
   });
 
   it("says the list is empty once the live list answers with no posts", () => {
     expect(
-      postsView(PaginatedQueryResult.exhausted({ results: [] }), [])
+      postsView(
+        PaginatedQueryResult.exhausted({ results: [] }),
+        Option.some([])
+      )
     ).toEqual({ empty: true, failed: false, ready: true, rows: [] });
   });
 
   it("keeps the rows of a list that loads its next page", () => {
     expect(
-      postsView(PaginatedQueryResult.loadingMore({ results: [post] }), null)
+      postsView(
+        PaginatedQueryResult.loadingMore({ results: [post] }),
+        Option.none()
+      )
     ).toEqual({ empty: false, failed: false, ready: true, rows: [post] });
   });
 
@@ -67,7 +77,7 @@ describe("posts list view", () => {
     expect(
       postsView(
         PaginatedQueryResult.failure({ error: "failed", results: [] }),
-        [serverPost]
+        Option.some([serverPost])
       )
     ).toEqual({
       empty: false,
@@ -81,7 +91,7 @@ describe("posts list view", () => {
     expect(
       postsView(
         PaginatedQueryResult.failure({ error: "failed", results: [] }),
-        null
+        Option.none()
       )
     ).toEqual({ empty: false, failed: true, ready: false, rows: [] });
   });
@@ -90,7 +100,7 @@ describe("posts list view", () => {
     expect(
       postsView(
         PaginatedQueryResult.failure({ error: "failed", results: [post] }),
-        [serverPost]
+        Option.some([serverPost])
       )
     ).toEqual({ empty: false, failed: true, ready: true, rows: [post] });
   });

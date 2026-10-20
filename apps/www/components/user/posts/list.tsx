@@ -6,7 +6,7 @@ import { POST_PAGE_SIZE } from "@repo/backend/client/posts/list";
 import posts from "@repo/backend/confect/_generated/refs/posts";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
-import { Array as Arr } from "effect";
+import { Array as Arr, Option } from "effect";
 import { useCallback, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/providers/convex";
@@ -41,8 +41,8 @@ export function UserPosts({
   now: serverNow,
   profile,
 }: {
-  /** The first page the server read, or none when that read failed, so the live list loads the page. */
-  first: Ref.Returns<typeof posts.queries.list> | undefined;
+  /** The first page the server read, or none when the viewer may not read it, so the live list loads the page. */
+  first: Option.Option<Ref.Returns<typeof posts.queries.list>>;
   isOwner: boolean;
   now: number;
   profile: PublicProfile;
@@ -65,7 +65,9 @@ export function UserPosts({
       >
         <ErrorBoundary
           fallbackRender={() => (
-            <PostsPanel view={failedView(first?.page ?? null)} />
+            <PostsPanel
+              view={failedView(Option.map(first, (page) => page.page))}
+            />
           )}
           key={attempt}
         >
@@ -84,7 +86,7 @@ export function UserPosts({
 function PostsFeed({
   first,
 }: {
-  first: Ref.Returns<typeof posts.queries.list> | undefined;
+  first: Option.Option<Ref.Returns<typeof posts.queries.list>>;
 }) {
   const { profile } = usePostsContext();
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
@@ -101,7 +103,10 @@ function PostsFeed({
           ? () => live.loadMore(POST_PAGE_SIZE)
           : undefined
       }
-      view={postsView(live, first?.page ?? null)}
+      view={postsView(
+        live,
+        Option.map(first, (page) => page.page)
+      )}
     />
   );
 }

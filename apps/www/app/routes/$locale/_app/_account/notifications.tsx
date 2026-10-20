@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { Option } from "effect";
 import { NotificationsFeed } from "@/components/notifications/feed";
 import { NotificationsHeader } from "@/components/notifications/header";
 import { NotificationsProvider } from "@/components/notifications/provider";
@@ -18,10 +19,11 @@ export const Route = createFileRoute("/$locale/_app/_account/notifications")({
 
 /** The inbox of the signed-in account, in the app shell. */
 function NotificationsPage() {
+  const { first } = Route.useLoaderData();
   return (
     <LayoutMaterial>
       <LayoutMaterialContent>
-        <NotificationsProvider>
+        <NotificationsProvider first={Option.fromUndefinedOr(first)}>
           <NotificationsHeader />
           <LayoutContent className="flex flex-col gap-6 py-6">
             <NotificationsFeed />

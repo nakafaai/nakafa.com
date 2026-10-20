@@ -1,12 +1,9 @@
 "use client";
 
-import {
-  PaginatedQueryResult,
-  QueryResult,
-  usePaginatedQuery,
-  useQuery,
-} from "@confect/react";
+import type { Ref } from "@confect/core";
+import { PaginatedQueryResult, QueryResult, useQuery } from "@confect/react";
 import { ArrowTurnBackwardIcon } from "@hugeicons/core-free-icons";
+import { COMMENT_PAGE_SIZE } from "@repo/backend/client/comments/list";
 import auth from "@repo/backend/confect/_generated/refs/auth";
 import comments from "@repo/backend/confect/_generated/refs/comments";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
@@ -14,32 +11,37 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { Array as Arr } from "effect";
+import { Array as Arr, Option } from "effect";
 import { useTranslations } from "use-intl";
 import { CommentsProvider } from "@/components/comments/provider";
 import { CommentRow } from "@/components/comments/row";
 import { DataFailure } from "@/components/shared/failure";
 import { FeedCount, FeedEmpty, FeedNotice } from "@/components/user/feed";
+import { usePaginatedPreloaded } from "@/lib/data/paginated";
 import { getCleanHref } from "@/lib/routing/href";
 
-/** How many comments a page of the profile holds, the first one and each one after it. */
-const PAGE_SIZE = 25;
-
-/** Render the incrementally loaded comments for one user profile. */
-export function UserComments({ userId }: { userId: Id<"users"> }) {
+/**
+ * Renders the comments of one user profile, newest first. The first page comes from
+ * the server, so it is on the screen before the browser connects, and the live list
+ * takes its place with the same comments.
+ */
+export function UserComments({
+  first,
+  userId,
+}: {
+  first: Ref.Returns<typeof comments.queries.getCommentsByUserId> | undefined;
+  userId: Id<"users">;
+}) {
   const t = useTranslations("Comments");
   const tCommon = useTranslations("Common");
   const userQuery = useQuery(auth.queries.getUserById, {
     userId,
   });
-  const pagination = usePaginatedQuery(
+  const pagination = usePaginatedPreloaded(
     comments.queries.getCommentsByUserId,
-    {
-      userId,
-    },
-    {
-      initialNumItems: PAGE_SIZE,
-    }
+    { userId },
+    { initialNumItems: COMMENT_PAGE_SIZE },
+    Option.fromUndefinedOr(first)
   );
   const { results } = pagination;
   if (QueryResult.isFailure(userQuery)) {
@@ -90,7 +92,9 @@ export function UserComments({ userId }: { userId: Id<"users"> }) {
           />
         ))}
         {PaginatedQueryResult.isCanLoadMore(pagination) && (
-          <Intersection onIntersect={() => pagination.loadMore(PAGE_SIZE)} />
+          <Intersection
+            onIntersect={() => pagination.loadMore(COMMENT_PAGE_SIZE)}
+          />
         )}
       </div>
     </CommentsProvider>

@@ -1,4 +1,5 @@
 import { createFileRoute, getRouteApi } from "@tanstack/react-router";
+import { Option } from "effect";
 import { UserPosts } from "@/components/user/posts/list";
 import { profileHead } from "@/lib/account/head";
 import { profilePostsFn } from "@/lib/account/profile.fn";
@@ -19,6 +20,11 @@ function UserPostsPage() {
   const { first, now } = Route.useLoaderData();
   const { isOwner, profile } = profileRoute.useLoaderData();
   return (
-    <UserPosts first={first} isOwner={isOwner} now={now} profile={profile} />
+    <UserPosts
+      first={Option.fromUndefinedOr(first)}
+      isOwner={isOwner}
+      now={now}
+      profile={profile}
+    />
   );
 }

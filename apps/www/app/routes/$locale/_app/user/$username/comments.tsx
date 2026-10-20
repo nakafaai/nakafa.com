@@ -14,6 +14,6 @@ export const Route = createFileRoute("/$locale/_app/user/$username/comments")({
 });
 
 function UserCommentsPage() {
-  const { userId } = Route.useLoaderData();
-  return <UserComments userId={userId} />;
+  const { first, userId } = Route.useLoaderData();
+  return <UserComments first={first} userId={userId} />;
 }

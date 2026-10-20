@@ -1,4 +1,5 @@
 import "@tanstack/react-start/server-only";
+import { COMMENT_PAGE_SIZE } from "@repo/backend/client/comments/list";
 import { POST_PAGE_SIZE } from "@repo/backend/client/posts/list";
 import comments from "@repo/backend/confect/_generated/refs/comments";
 import posts from "@repo/backend/confect/_generated/refs/posts";
@@ -15,9 +16,6 @@ import type { ScreenSeo } from "@/lib/account/head";
 import type { ProfileInput } from "@/lib/account/input";
 import { readOptional } from "@/lib/data/read.server";
 import { profileHref } from "@/lib/profile/href";
-
-/** The comments that a profile's list shows on its first page. */
-const COMMENT_PAGE_SIZE = 25;
 
 /** A profile: the profile and whether the visitor owns it. The layout's head is robots only. */
 export const profileScreenHandler = accountHandler(
