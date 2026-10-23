@@ -1,8 +1,11 @@
-import { Array as Arr, Predicate, Schema } from "effect";
+import { Array as Arr, Option, Predicate, Schema } from "effect";
 
 const shortTextSchema = Schema.String.check(Schema.isMaxLength(128));
 const identityTextSchema = Schema.String.check(Schema.isMaxLength(512));
 const componentStackSchema = Schema.String.check(Schema.isMaxLength(4096));
+const errorNameSchema = Schema.String.check(
+  Schema.isPattern(/^[A-Za-z_$][\w$]{0,127}$/u)
+);
 const sourceSchema = Schema.Trimmed.check(Schema.isNonEmpty()).pipe(
   Schema.check(Schema.isMaxLength(128))
 );
@@ -17,6 +20,7 @@ const OperationalExceptionPropertiesSchema = Schema.Struct({
   cookie_name: Schema.optional(shortTextSchema),
   countryKey: Schema.optional(shortTextSchema),
   error_location: Schema.optional(shortTextSchema),
+  error_name: Schema.optional(errorNameSchema),
   gateway_error_type: Schema.optional(shortTextSchema),
   gateway_model_id: Schema.optional(identityTextSchema),
   gateway_retryable: Schema.optional(Schema.Boolean),
@@ -93,6 +97,17 @@ function deriveOperationalExceptionName(
   );
   const scope = Arr.join([properties.source, ...refinements], ".");
   return `${operationalExceptionName}(${scope})`;
+}
+
+/**
+ * Returns the class name of a caught error, such as `TypeError` or the name of
+ * a `DOMException`, when it is a plain identifier. The class name tells failure
+ * kinds apart while the message, which can carry user content, stays out.
+ */
+export function operationalErrorName(error: unknown) {
+  return Predicate.isError(error)
+    ? Option.getOrUndefined(Schema.decodeOption(errorNameSchema)(error.name))
+    : undefined;
 }
 
 /** Removes messages, causes, and arbitrary payloads while retaining code frames. */
