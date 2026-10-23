@@ -1,6 +1,7 @@
 "use client";
 import { Alert02Icon, ArrowDown01Icon } from "@hugeicons/core-free-icons";
 import { captureException } from "@repo/analytics/posthog/browser";
+import { operationalErrorName } from "@repo/analytics/posthog/exception";
 import { CodeBlockText } from "@repo/design-system/components/code-block/text";
 import {
   Collapsible,
@@ -102,6 +103,7 @@ export function Mermaid({
             Effect.sync(() => {
               const svg = lastValidSvg.current;
               captureException(error.cause, {
+                error_name: operationalErrorName(error.cause),
                 has_cached_svg: !!svg,
                 operation: error.operation,
                 source: "mermaid-render",
