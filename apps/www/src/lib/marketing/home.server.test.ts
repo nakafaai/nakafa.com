@@ -40,9 +40,9 @@ describe("home page try-out", () => {
       { href: "/en/curricula/math", title: "Math", value: "math" },
     ]);
     expect(readRuntimeCurriculumCatalog).toHaveBeenCalledWith("en");
-    expect(readRuntimeCurriculumOptions).toHaveBeenCalledWith(
-      { entries: [], sourceRevision: "rev" },
-      "en"
-    );
+    expect(readRuntimeCurriculumOptions).toHaveBeenCalledWith({
+      entries: [],
+      sourceRevision: "rev",
+    });
   });
 });

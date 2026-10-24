@@ -12,8 +12,8 @@ import {
   SelectTrigger,
 } from "@repo/design-system/components/ui/select";
 import { type ToastCopy, toast } from "@repo/design-system/lib/toast/notify";
-import { useHrefNavigate } from "@repo/internationalization/src/link";
 import type { Locale } from "@repo/internationalization/src/locale";
+import { useNavigate } from "@tanstack/react-router";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 import { useLocale } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
@@ -23,6 +23,7 @@ import { reportClientException } from "@/lib/analytics/client";
 import type { readRuntimeCurriculumOptions } from "@/lib/curriculum/model";
 import { useSetPreferredCurriculumMutation } from "@/lib/curriculum/mutation";
 import { isActiveLocale } from "@/lib/i18n/active";
+import { publicPathTarget } from "@/lib/routing/target";
 
 type CurriculumSelectorOption = ReturnType<
   typeof readRuntimeCurriculumOptions
@@ -81,7 +82,7 @@ function VisitorCurriculumSelector({
   label,
   options,
 }: CurriculumSelectorProps) {
-  const navigateToHref = useHrefNavigate();
+  const navigate = useNavigate();
 
   /** Navigate to a selected curriculum. */
   function handleValueChange(value: string | null) {
@@ -89,7 +90,9 @@ function VisitorCurriculumSelector({
     if (Option.isNone(selectedOption)) {
       return;
     }
-    navigateToHref(selectedOption.value.href);
+    Option.map(publicPathTarget(selectedOption.value.publicPath), (target) =>
+      navigate(target)
+    );
   }
 
   return (
@@ -110,7 +113,7 @@ function SignedCurriculumSelector({
   options,
 }: CurriculumSelectorProps) {
   const locale = useLocale();
-  const navigateToHref = useHrefNavigate();
+  const navigate = useNavigate();
   const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);
   const isLoading = useConvexAuth((auth) => auth.isLoading);
   const setPreferredCurriculum = useSetPreferredCurriculumMutation(
@@ -136,7 +139,9 @@ function SignedCurriculumSelector({
     if (Option.isNone(selectedOption) || isLoading) {
       return;
     }
-    navigateToHref(selectedOption.value.href);
+    Option.map(publicPathTarget(selectedOption.value.publicPath), (target) =>
+      navigate(target)
+    );
     if (!(isAuthenticated && isActiveLocale(locale))) {
       return;
     }

@@ -15,7 +15,7 @@ interface TryoutSetActionProps {
   value: {
     activeAttempt: CurrentAttempt | null;
     currentAttempt?: CurrentAttempt | null;
-    currentHref: string;
+    currentPath: string;
     destination: TryoutSetDestination | null;
     entrySection: SetEntrySection | null;
     locale: Locale;
@@ -36,9 +36,9 @@ export function TryoutSetAction({ value }: TryoutSetActionProps) {
       ? value.entrySection.sectionKey
       : undefined;
   const request: StartTryoutRequest = {
-    authRedirectHref: value.currentHref,
+    authRedirect: { publicPath: value.currentPath },
     countryKey: value.set.countryKey,
-    destinationHref: value.destination.href,
+    destination: value.destination.address,
     destinationSectionKey: value.destination.sectionKey,
     ...(entrySectionKey === undefined ? {} : { entrySectionKey }),
     examKey: value.set.examKey,

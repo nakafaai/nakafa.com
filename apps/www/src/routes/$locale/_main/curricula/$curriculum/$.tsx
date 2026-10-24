@@ -48,6 +48,7 @@ import {
 } from "@/lib/curriculum/model";
 import { readCurriculumSeoContext } from "@/lib/curriculum/seo";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
+import { HOME_TARGET } from "@/lib/routing/target";
 import { createResolvedRouteAlternates } from "@/lib/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { resolveSEOMetadata } from "@/lib/seo/generator";
@@ -154,7 +155,7 @@ const readCurriculumRoute = createServerFn({ method: "GET" })
           },
           locale,
           materialCards: model.materialCards,
-          options: readRuntimeCurriculumOptions(catalog, locale),
+          options: readRuntimeCurriculumOptions(catalog),
           route,
           sourceUrl: model.sourceRevision
             ? getAksaraTreeUrl({
@@ -237,7 +238,7 @@ function CurriculumRoutePage() {
                   options={page.options}
                 />
               ),
-              homeHref: "/home",
+              home: HOME_TARGET,
               homeLabel: labels.home,
               items: [{ label: labels.subject }],
               menuLabel: labels.more,
@@ -249,7 +250,6 @@ function CurriculumRoutePage() {
             ancestors={page.ancestors}
             currentRoute={route}
             homeLabel={labels.home}
-            locale={page.locale}
             menuLabel={labels.more}
             subjectLabel={labels.subject}
           />
@@ -258,7 +258,10 @@ function CurriculumRoutePage() {
           {page.materialCards.length > 0 ? (
             <ContainerList className="pt-6 sm:grid-cols-1">
               {Arr.map(page.materialCards, (material) => (
-                <CardMaterial key={material.href} material={material} />
+                <CardMaterial
+                  key={material.link.publicPath}
+                  material={material}
+                />
               ))}
             </ContainerList>
           ) : null}

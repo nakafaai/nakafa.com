@@ -1,6 +1,5 @@
 import { CardHeader, CardTitle } from "@repo/design-system/components/ui/card";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { Link } from "@repo/internationalization/src/link";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import {
@@ -9,6 +8,7 @@ import {
   CardSectionFooter,
 } from "@/components/shared/card/section";
 import { useTenant } from "@/components/tenant/context";
+import { Link } from "@/lib/routing/link";
 
 /** The most rows one tile lists. A tile with more rows ends with All exams, when the viewer may open the exams. */
 export const TILE_ROWS = 3;

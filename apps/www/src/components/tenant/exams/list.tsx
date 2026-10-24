@@ -4,7 +4,6 @@ import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { Link } from "@repo/internationalization/src/link";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, Option } from "effect";
 import { useMemo, useState } from "react";
@@ -24,6 +23,7 @@ import type { ExamSummary } from "@/components/tenant/exams/optimistic";
 import { SchoolHeader } from "@/components/tenant/header";
 import { isLostAccess } from "@/components/tenant/refusal";
 import { usePaginatedPreloaded } from "@/lib/data/paginated";
+import { Link } from "@/lib/routing/link";
 import { EXAM_PAGE_SIZE } from "@/lib/tenant/exams";
 
 /** The first page of the exam list, which its loader read on the server. */

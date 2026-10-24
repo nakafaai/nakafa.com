@@ -1,8 +1,9 @@
+import type { Locale } from "@repo/internationalization/src/locale";
 import { PATHNAMES } from "@repo/internationalization/src/pathnames";
-import type { Locale } from "use-intl";
+import { Array as Arr } from "effect";
 import { CURRICULUM_NAVIGATION_ICONS } from "@/lib/curriculum/icons";
-
-const curriculaPath = PATHNAMES["/curricula"];
+import type { LinkTarget } from "@/lib/routing/link";
+import { curriculumTarget } from "@/lib/routing/target";
 
 /**
  * The high school grades of the subject menu. Each grade draws the icon of its
@@ -16,30 +17,33 @@ export const subjectMenu = [
         title: "grade",
         value: 10,
         icon: CURRICULUM_NAVIGATION_ICONS["grade-10"],
-        href: {
-          de: `${curriculaPath.de}/merdeka/klasse-10`,
-          en: `${curriculaPath.en}/merdeka/class-10`,
-          id: `${curriculaPath.id}/merdeka/kelas-10`,
+        curriculum: "merdeka",
+        path: {
+          de: ["klasse-10"],
+          en: ["class-10"],
+          id: ["kelas-10"],
         },
       },
       {
         title: "grade",
         value: 11,
         icon: CURRICULUM_NAVIGATION_ICONS["grade-11"],
-        href: {
-          de: `${curriculaPath.de}/merdeka/klasse-11`,
-          en: `${curriculaPath.en}/merdeka/class-11`,
-          id: `${curriculaPath.id}/merdeka/kelas-11`,
+        curriculum: "merdeka",
+        path: {
+          de: ["klasse-11"],
+          en: ["class-11"],
+          id: ["kelas-11"],
         },
       },
       {
         title: "grade",
         value: 12,
         icon: CURRICULUM_NAVIGATION_ICONS["grade-12"],
-        href: {
-          de: `${curriculaPath.de}/merdeka/klasse-12`,
-          en: `${curriculaPath.en}/merdeka/class-12`,
-          id: `${curriculaPath.id}/merdeka/kelas-12`,
+        curriculum: "merdeka",
+        path: {
+          de: ["klasse-12"],
+          en: ["class-12"],
+          id: ["kelas-12"],
         },
       },
     ],
@@ -49,9 +53,22 @@ export const subjectMenu = [
 type SubjectMenuItem = (typeof subjectMenu)[number]["items"][number];
 
 /**
- * Selects the localized public subject URL carried by the subject menu source
- * row.
+ * The localized public URL of a subject menu row, such as
+ * `/curriculum/merdeka/class-11`. The route map spells the curriculum segment,
+ * and the row spells its program and page in each locale.
  */
 export function getSubjectMenuHref(item: SubjectMenuItem, locale: Locale) {
-  return item.href[locale];
+  const curriculum = PATHNAMES["/curricula"][locale];
+  return `${curriculum}/${item.curriculum}/${Arr.join(item.path[locale], "/")}`;
+}
+
+/** The typed link target of a subject menu row on one locale. */
+export function getSubjectMenuTarget(
+  item: SubjectMenuItem,
+  locale: Locale
+): LinkTarget {
+  return curriculumTarget({
+    curriculum: item.curriculum,
+    path: item.path[locale],
+  });
 }

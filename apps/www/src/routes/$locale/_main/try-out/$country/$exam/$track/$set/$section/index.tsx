@@ -66,7 +66,7 @@ function TryoutSectionPage() {
         content={route.content}
         page={route.page}
         route={route.route}
-        setHref={route.setHref}
+        setPath={route.setPath}
       >
         {route.review}
       </TryoutSectionPageClient>

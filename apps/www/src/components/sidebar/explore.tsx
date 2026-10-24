@@ -12,15 +12,13 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
-import {
-  EXACT_ACTIVE_OPTIONS,
-  HrefLink,
-  useCanonicalPath,
-} from "@repo/internationalization/src/link";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import { holyMenu } from "@/components/sidebar/data/holy";
 import type { ArticleNavigationItem } from "@/lib/content/article/navigation";
+import { Link, type LinkTarget, useRouteMatched } from "@/lib/routing/link";
+import { articleCategoryTarget } from "@/lib/routing/target";
+import { EXACT_ACTIVE_OPTIONS } from "@/lib/routing/tree";
 
 /**
  * Renders the public exploration links that stay useful for every viewer type.
@@ -37,19 +35,18 @@ export function NavExplore({
   articleIcons: readonly IconSvgElement[];
   articleNavigation: readonly ArticleNavigationItem[];
 }) {
-  const pathname = useCanonicalPath();
   const tCommon = useTranslations("Common");
   const tHoly = useTranslations("Holy");
   const items = [
     ...Arr.map(holyMenu, (item) => ({
-      href: item.href,
       icon: item.icon,
       label: tHoly(item.title),
+      target: item.target,
     })),
     ...Arr.zipWith(articleNavigation, articleIcons, (item, icon) => ({
-      href: item.href,
       icon,
       label: item.title,
+      target: articleCategoryTarget(item.route),
     })),
   ];
 
@@ -59,25 +56,47 @@ export function NavExplore({
       <SidebarGroupContent>
         <SidebarMenu>
           {Arr.map(items, (item) => (
-            <SidebarMenuItem key={item.href}>
-              <SidebarMenuButton
-                isActive={pathname.includes(item.href)}
-                render={
-                  <HrefLink
-                    activeOptions={EXACT_ACTIVE_OPTIONS}
-                    href={item.href}
-                    title={item.label}
-                  />
-                }
-                tooltip={item.label}
-              >
-                <HugeIcons icon={item.icon} />
-                <span className="truncate">{item.label}</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
+            <ExploreItem
+              icon={item.icon}
+              key={item.target.to}
+              label={item.label}
+              target={item.target}
+            />
           ))}
         </SidebarMenu>
       </SidebarGroupContent>
     </SidebarGroup>
+  );
+}
+
+/** One exploration link, which is active on its own page, as the router's match says. */
+function ExploreItem({
+  icon,
+  label,
+  target,
+}: {
+  icon: IconSvgElement;
+  label: string;
+  target: LinkTarget;
+}) {
+  const isActive = useRouteMatched(target.to, { exact: true });
+
+  return (
+    <SidebarMenuItem>
+      <SidebarMenuButton
+        isActive={isActive}
+        render={
+          <Link
+            activeOptions={EXACT_ACTIVE_OPTIONS}
+            {...target}
+            title={label}
+          />
+        }
+        tooltip={label}
+      >
+        <HugeIcons icon={icon} />
+        <span className="truncate">{label}</span>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
   );
 }

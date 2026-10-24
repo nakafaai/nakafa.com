@@ -11,8 +11,8 @@ import { readPublishedPageCatalog } from "@/lib/content/page/catalog";
 import { hasPreviewConfig } from "@/lib/content/preview/config";
 
 const PageNavigationItemSchema = Schema.Struct({
-  href: Schema.String,
   pageKey: PageKeySchema,
+  publicPath: Schema.String,
   title: PageMetadataSchema.fields.title,
 });
 /** One signed Page projected into the shared site navigation contract. */
@@ -21,8 +21,8 @@ type PageNavigationItem = typeof PageNavigationItemSchema.Type;
 const PageNavigationSchema = Schema.Struct({
   developerItem: PageNavigationItemSchema,
   legalItems: Schema.Array(PageNavigationItemSchema),
-  privacyPolicyHref: Schema.String,
-  termsOfServiceHref: Schema.String,
+  privacyPolicyPath: Schema.String,
+  termsOfServicePath: Schema.String,
 });
 /**
  * Verified developer and legal destinations for one locale. The router matches
@@ -70,8 +70,8 @@ export const readPageNavigation = Effect.fn("www.pages.readNavigation")(
     const localeItems = Arr.map(
       Arr.filter(catalog.projections, ({ appLocale }) => appLocale === locale),
       ({ metadata, pageKey, publicPath }): PageNavigationItem => ({
-        href: `/${publicPath}`,
         pageKey,
+        publicPath,
         title: metadata.title,
       })
     );
@@ -96,8 +96,8 @@ export const readPageNavigation = Effect.fn("www.pages.readNavigation")(
         securityPolicyItem,
         termsOfServiceItem,
       ],
-      privacyPolicyHref: privacyPolicyItem.href,
-      termsOfServiceHref: termsOfServiceItem.href,
+      privacyPolicyPath: privacyPolicyItem.publicPath,
+      termsOfServicePath: termsOfServiceItem.publicPath,
     } satisfies PageNavigation;
   }
 );

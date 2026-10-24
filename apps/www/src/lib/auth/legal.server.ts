@@ -15,8 +15,8 @@ export const readAuthLegalLinks = Effect.fn("www.auth.legalLinks")(function* (
 ) {
   const pages = yield* Effect.promise(() => getShellPageNavigation(locale));
   return Option.map(Option.fromNullishOr(pages), (page) => ({
-    privacy: new URL(`/${locale}${page.privacyPolicyHref}`, SITE_ORIGIN).href,
-    terms: new URL(`/${locale}${page.termsOfServiceHref}`, SITE_ORIGIN).href,
+    privacy: new URL(`/${locale}/${page.privacyPolicyPath}`, SITE_ORIGIN).href,
+    terms: new URL(`/${locale}/${page.termsOfServicePath}`, SITE_ORIGIN).href,
   }));
 });
 

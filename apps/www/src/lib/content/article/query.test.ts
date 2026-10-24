@@ -7,7 +7,7 @@ import { encodeArticlePublicationCursor } from "@repo/contents/publication";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Option } from "effect";
 import {
-  getArticleNextHref,
+  getArticleNextSearch,
   readArticlePageCursor,
   shouldResetArticlePublicationCursor,
   stripArticlePagination,
@@ -108,34 +108,36 @@ describe("article catalog query", () => {
     ).toBe(false);
   });
 
-  it("builds encoded next links only for complete page identities", () => {
+  it("builds the search of the next page only for complete page identities", () => {
     expect(
-      getArticleNextHref("/articles/politics", {
+      getArticleNextSearch({
         activeManifestHash: manifest,
         activeReleaseId: releaseId,
         nextCursor: "next page",
       })
     ).toEqual(
-      Option.some(
-        `/articles/politics?cursor=next+page&manifest=${encodeURIComponent(manifest)}&release=release-article`
-      )
+      Option.some({
+        cursor: "next page",
+        manifest,
+        release: releaseId,
+      })
     );
     expect(
-      getArticleNextHref("/articles", {
+      getArticleNextSearch({
         activeManifestHash: manifest,
         activeReleaseId: releaseId,
         nextCursor: null,
       })
     ).toEqual(Option.none());
     expect(
-      getArticleNextHref("/articles", {
+      getArticleNextSearch({
         activeManifestHash: null,
         activeReleaseId: releaseId,
         nextCursor: "next",
       })
     ).toEqual(Option.none());
     expect(
-      getArticleNextHref("/articles", {
+      getArticleNextSearch({
         activeManifestHash: manifest,
         activeReleaseId: null,
         nextCursor: "next",

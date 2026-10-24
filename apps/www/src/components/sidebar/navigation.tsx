@@ -1,9 +1,8 @@
 "use client";
 
-import { useCanonicalPath } from "@repo/internationalization/src/link";
 import type { ReactNode } from "react";
 import { UserSettingsNav } from "@/components/user/settings/nav";
-import { isUserSettingsPath } from "@/lib/settings/routes";
+import { useRouteMatched } from "@/lib/routing/link";
 
 /**
  * Renders the navigation owned by the current route surface.
@@ -14,9 +13,11 @@ import { isUserSettingsPath } from "@/lib/settings/routes";
  * so this chooser never carries data it does not render itself.
  */
 export function SidebarNavigation({ browse }: { browse: ReactNode }) {
-  const pathname = useCanonicalPath();
+  const isSettings = useRouteMatched("/$locale/user/settings", {
+    exact: false,
+  });
 
-  if (isUserSettingsPath(pathname)) {
+  if (isSettings) {
     return <UserSettingsNav />;
   }
 

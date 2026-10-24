@@ -16,6 +16,7 @@ import {
   RowText,
   TILE_ROWS,
 } from "@/components/tenant/home/tile";
+import { schoolExamEditTarget } from "@/lib/routing/school/target";
 
 /** One draft of the viewer, as the school home holds it. */
 type Draft = (typeof HomeView.Type)["drafts"][number];
@@ -81,6 +82,7 @@ function DraftRow({
   names: Intl.DisplayNames;
   saving: boolean;
 }) {
+  const tenant = useTenant();
   if (saving) {
     return (
       <CardRowText>
@@ -90,8 +92,7 @@ function DraftRow({
   }
   return (
     <CardLink
-      href={`/exams/${draft.id}/edit`}
-      localized={false}
+      target={schoolExamEditTarget(tenant.slug, draft.id)}
       title={draft.title}
     >
       <RowText detail={names.of(draft.language)} title={draft.title} />

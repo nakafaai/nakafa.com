@@ -1,6 +1,5 @@
 import { QueryResult } from "@confect/react";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { Link } from "@repo/internationalization/src/link";
 import { Option } from "effect";
 import { type ReactNode, useState } from "react";
 import { useTranslations } from "use-intl";
@@ -27,6 +26,7 @@ import { StudentHome } from "@/components/tenant/home/student";
 import { HomeFailure } from "@/components/tenant/home/title";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { enterableSitting, orderSittings } from "@/components/tenant/sittings";
+import { Link } from "@/lib/routing/link";
 
 /**
  * The home of a school: one header with the page's one end-goal action for the viewer, a title row with Nina, and

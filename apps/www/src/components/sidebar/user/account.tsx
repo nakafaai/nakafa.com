@@ -14,12 +14,8 @@ import {
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { localizeInternalHref } from "@repo/internationalization/src/href";
-import {
-  useCurrentLocale,
-  useHrefNavigate,
-} from "@repo/internationalization/src/link";
 import { ClientOnly, useNavigate } from "@tanstack/react-router";
-import { Effect, Result } from "effect";
+import { Effect, Option, Result } from "effect";
 import { lazy, Suspense } from "react";
 import { useTranslations } from "use-intl";
 import { clearAiDraftText } from "@/components/ai/store/draft";
@@ -30,6 +26,9 @@ import { signOutAccountBrowserIdentity } from "@/lib/auth/identity/browser";
 import { usePageNavigation } from "@/lib/content/page/context";
 import type { CurrentUser } from "@/lib/identity/client";
 import { profileTarget } from "@/lib/profile/href";
+import { useCurrentLocale } from "@/lib/routing/link";
+import { publicPathTarget } from "@/lib/routing/target";
+import { LOCALE_ROUTE } from "@/lib/routing/tree";
 
 /**
  * The account's schools, loaded when the menu opens: the list brings the school
@@ -49,7 +48,10 @@ export function NavUserAccount({ user }: { user: CurrentUser }) {
   const pageNavigation = usePageNavigation((navigation) => navigation);
   const navigate = useNavigate();
   const locale = useCurrentLocale();
-  const navigateToHref = useHrefNavigate();
+  /** Opens one signed Page of the account menu inside the app. */
+  function openPage(publicPath: string) {
+    Option.map(publicPathTarget(publicPath), (target) => navigate(target));
+  }
   const { username } = user.appUser;
   const planLabelByPlan = {
     free: t("plan-free"),
@@ -89,7 +91,7 @@ export function NavUserAccount({ user }: { user: CurrentUser }) {
         {username === undefined ? null : (
           <DropdownMenuItem
             className="cursor-pointer"
-            onClick={() => navigate(profileTarget(username, locale))}
+            onClick={() => navigate(profileTarget(username))}
           >
             <HugeIcons icon={UserIcon} />
             {t("profile")}
@@ -98,7 +100,7 @@ export function NavUserAccount({ user }: { user: CurrentUser }) {
         <DropdownMenuItem
           className="cursor-pointer"
           onClick={() =>
-            navigate({ params: { locale }, to: "/$locale/notifications" })
+            navigate({ from: LOCALE_ROUTE, to: "/$locale/notifications" })
           }
         >
           <HugeIcons icon={Notification01Icon} />
@@ -107,7 +109,7 @@ export function NavUserAccount({ user }: { user: CurrentUser }) {
         <DropdownMenuItem
           className="cursor-pointer"
           onClick={() =>
-            navigate({ params: { locale }, to: "/$locale/user/settings" })
+            navigate({ from: LOCALE_ROUTE, to: "/$locale/user/settings" })
           }
         >
           <HugeIcons icon={Settings01Icon} />
@@ -122,14 +124,14 @@ export function NavUserAccount({ user }: { user: CurrentUser }) {
           <>
             <DropdownMenuItem
               className="cursor-pointer"
-              onClick={() => navigateToHref(pageNavigation.termsOfServiceHref)}
+              onClick={() => openPage(pageNavigation.termsOfServicePath)}
             >
               <HugeIcons icon={FileValidationIcon} />
               {tLegal("terms-of-service")}
             </DropdownMenuItem>
             <DropdownMenuItem
               className="cursor-pointer"
-              onClick={() => navigateToHref(pageNavigation.privacyPolicyHref)}
+              onClick={() => openPage(pageNavigation.privacyPolicyPath)}
             >
               <HugeIcons icon={LockIcon} />
               {tLegal("privacy-policy")}

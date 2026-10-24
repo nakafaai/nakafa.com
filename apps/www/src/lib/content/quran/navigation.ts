@@ -16,7 +16,7 @@ type QuranSurahNavigation = typeof QuranSurahNavigationSchema.Type;
 type QuranSurahMetadata = null | QuranSurahNavigation;
 
 const QuranPaginationItemSchema = Schema.Struct({
-  href: Schema.String,
+  publicPath: Schema.String,
   title: Schema.String,
 });
 
@@ -45,11 +45,11 @@ export function getQuranPagination({
 /** Builds one Quran pagination link or an empty boundary item. */
 function getQuranPaginationItem(surah: QuranSurahMetadata) {
   if (!surah) {
-    return { href: "", title: "" };
+    return { publicPath: "", title: "" };
   }
 
   return {
-    href: `/quran/${surah.number}`,
+    publicPath: `quran/${surah.number}`,
     title: getQuranSurahName(surah.name),
   };
 }

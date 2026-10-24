@@ -38,8 +38,8 @@ export const homeScreenHandler = accountHandler(
       if (status.isRequired) {
         return yield* Effect.die(
           redirect({
-            to: "/$locale/onboarding",
             params: { locale },
+            to: "/$locale/onboarding",
             statusCode: 307,
           })
         );

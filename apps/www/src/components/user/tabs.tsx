@@ -1,14 +1,12 @@
-import { useCurrentLocale } from "@repo/internationalization/src/link";
-import { useMatchRoute } from "@tanstack/react-router";
 import { Array as Arr, Option } from "effect";
 import { useTranslations } from "use-intl";
-
 import { SharedTabs } from "@/components/user/navigation";
 import {
   ProfileTab,
   profileTabTarget,
   profileTarget,
 } from "@/lib/profile/href";
+import { useLeafRoutePath } from "@/lib/routing/link";
 
 export function UserTabs({
   isOwner,
@@ -18,8 +16,7 @@ export function UserTabs({
   username: string;
 }) {
   const t = useTranslations("Common");
-  const locale = useCurrentLocale();
-  const matchRoute = useMatchRoute();
+  const leafPath = useLeafRoutePath();
   // The label of each tab the address names, so a tab without a label does not
   // compile.
   const labels: Record<typeof ProfileTab.Type, string> = {
@@ -36,19 +33,16 @@ export function UserTabs({
     {
       key: "posts",
       label: t("posts"),
-      target: profileTarget(username, locale),
+      target: profileTarget(username),
     },
     ...Arr.map(tabsShown, (tab) => ({
       key: tab,
       label: labels[tab],
-      target: profileTabTarget(tab, username, locale),
+      target: profileTabTarget(tab, username),
     })),
   ];
 
-  const activeTab = Arr.findFirst(
-    tabs,
-    (tab) => matchRoute({ ...tab.target }) !== false
-  );
+  const activeTab = Arr.findFirst(tabs, (tab) => tab.target.to === leafPath);
   const value = Option.match(activeTab, {
     onNone: () => "posts",
     onSome: (tab) => tab.key,

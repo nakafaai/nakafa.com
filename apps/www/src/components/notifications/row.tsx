@@ -104,6 +104,7 @@ export function NotificationRow({
       return;
     }
     event.preventDefault();
+    // A row's page is on the school's own host, which the browser opens.
     Effect.runPromise(
       markRead.pipe(
         Effect.flatMap((taken) =>

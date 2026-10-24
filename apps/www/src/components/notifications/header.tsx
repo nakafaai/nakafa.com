@@ -13,6 +13,7 @@ import {
 import { markAllReadInLists } from "@/components/notifications/mutation";
 import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
 import { reportClientException } from "@/lib/analytics/client";
+import { HOME_TARGET } from "@/lib/routing/target";
 
 /**
  * The sticky breadcrumb header of the inbox, as every account page has it, with the
@@ -74,7 +75,7 @@ export function NotificationsHeader({
               <span className="max-sm:sr-only">{t("mark-all-read")}</span>
             </Button>
           ) : undefined,
-        homeHref: "/home",
+        home: HOME_TARGET,
         homeLabel: tCommon("home"),
         items: [{ label: t("title") }],
         menuLabel: tCommon("more"),

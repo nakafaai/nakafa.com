@@ -1,5 +1,6 @@
+import { Option } from "effect";
 import type { ReactNode } from "react";
-import { getTryoutPublicPathHref } from "@/components/tryout/route/path";
+import { getTryoutCrumbTarget } from "@/components/tryout/route/path";
 import type { SetPage } from "@/components/tryout/set/model";
 import { TryoutPageHeader } from "@/components/tryout/shell/header";
 
@@ -9,27 +10,32 @@ import { TryoutPageHeader } from "@/components/tryout/shell/header";
  */
 export function TryoutSetPageHeader({
   action,
-  currentHref,
+  currentPath,
   page,
-  returnHref,
+  returnPath,
 }: {
   action: ReactNode;
-  currentHref: string;
+  currentPath: string;
   page: Pick<SetPage, "exam" | "set" | "track">;
-  returnHref: string;
+  returnPath: string;
 }) {
   return (
     <TryoutPageHeader
       action={action}
       items={[
         {
-          href:
-            currentHref === getTryoutPublicPathHref(page.set.publicPath)
-              ? getTryoutPublicPathHref(page.exam.publicPath)
-              : undefined,
           label: page.exam.title,
+          target:
+            currentPath === page.set.publicPath
+              ? Option.getOrUndefined(
+                  getTryoutCrumbTarget(page.exam.publicPath)
+                )
+              : undefined,
         },
-        { href: returnHref, label: page.track.title },
+        {
+          label: page.track.title,
+          target: Option.getOrUndefined(getTryoutCrumbTarget(returnPath)),
+        },
       ]}
       title={page.set.title}
     />

@@ -2,10 +2,11 @@ import { ArrowRight02Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Tile, TileIcon } from "@repo/design-system/components/ui/tile";
 import type { TileLook } from "@repo/design-system/lib/look";
-import { HrefLink } from "@repo/internationalization/src/link";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
+import { TryoutPageLink } from "@/components/tryout/route/link";
+import type { TryoutPageAddress } from "@/components/tryout/route/path";
 import {
   TryoutStatus,
   type TryoutStatusValue,
@@ -19,9 +20,9 @@ import {
 interface TryoutListProps {
   emptyLabel: string;
   rows: readonly {
+    address: TryoutPageAddress;
     current?: boolean;
     description?: string;
-    href: string;
     key: string;
     meta?: ReactNode;
     status?: TryoutStatusValue;
@@ -58,9 +59,9 @@ export function TryoutList({ emptyLabel, rows }: TryoutListProps) {
 /** Renders one production try-out list row. */
 function TryoutRow({ row }: { row: TryoutListRow }) {
   return (
-    <HrefLink
+    <TryoutPageLink
       className="group flex items-center gap-3 p-4 transition-colors ease-out hover:bg-accent hover:text-accent-foreground"
-      href={row.href}
+      {...row.address}
     >
       <div className="grid w-full gap-4">
         <div className="flex flex-1 items-start gap-3">
@@ -87,7 +88,7 @@ function TryoutRow({ row }: { row: TryoutListRow }) {
           />
         </div>
       </div>
-    </HrefLink>
+    </TryoutPageLink>
   );
 }
 

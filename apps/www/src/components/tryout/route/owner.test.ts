@@ -2,7 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Option } from "effect";
 import {
   createTryoutSetRestartTarget,
-  selectTryoutSectionReturnHref,
+  selectTryoutSectionReturnPath,
   selectTryoutSetLinks,
 } from "@/components/tryout/route/owner";
 
@@ -33,45 +33,45 @@ describe("try-out route ownership", () => {
         Option.some({ setPublicPath: "try-out/indonesia/tka/2027/renamed-set" })
       )
     ).toEqual({
-      currentHref: "/try-out/indonesia/tka/2027/renamed-set",
-      returnHref: "/try-out/indonesia/tka/2027",
+      currentPath: "try-out/indonesia/tka/2027/renamed-set",
+      returnPath: "try-out/indonesia/tka/2027",
     });
     expect(selectTryoutSetLinks(Option.none())).toEqual({
-      currentHref: "/try-out",
-      returnHref: "/try-out",
+      currentPath: "try-out",
+      returnPath: "try-out",
     });
     expect(
       selectTryoutSetLinks(Option.some({ setPublicPath: "malformed" }))
     ).toEqual({
-      currentHref: "/malformed",
-      returnHref: "/try-out",
+      currentPath: "malformed",
+      returnPath: "try-out",
     });
   });
 
   it("uses the active retained set destination or the try-out root", () => {
     expect(
-      selectTryoutSectionReturnHref({
+      selectTryoutSectionReturnPath({
         attemptPage: Option.some({
           activeSetPublicPath: "try-out/indonesia/tka/2027/renamed-set",
           kind: "retained",
         }),
-        publicHref: "/try-out/indonesia/tka/2027/set-1",
+        publicPath: "try-out/indonesia/tka/2027/set-1",
       })
-    ).toBe("/try-out/indonesia/tka/2027/renamed-set");
+    ).toBe("try-out/indonesia/tka/2027/renamed-set");
     expect(
-      selectTryoutSectionReturnHref({
+      selectTryoutSectionReturnPath({
         attemptPage: Option.some({
           activeSetPublicPath: null,
           kind: "retained",
         }),
-        publicHref: "/try-out/indonesia/tka/2027/set-1",
+        publicPath: "try-out/indonesia/tka/2027/set-1",
       })
-    ).toBe("/try-out");
+    ).toBe("try-out");
     expect(
-      selectTryoutSectionReturnHref({
+      selectTryoutSectionReturnPath({
         attemptPage: Option.none(),
-        publicHref: "/try-out/indonesia/tka/2027/set-1",
+        publicPath: "try-out/indonesia/tka/2027/set-1",
       })
-    ).toBe("/try-out/indonesia/tka/2027/set-1");
+    ).toBe("try-out/indonesia/tka/2027/set-1");
   });
 });

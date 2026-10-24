@@ -4,7 +4,6 @@ import exams from "@repo/backend/confect/_generated/refs/exams";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { Link } from "@repo/internationalization/src/link";
 import { isComposingKey } from "@repo/utilities/composition";
 import { Function as Fn, Option } from "effect";
 import { useState } from "react";
@@ -15,6 +14,7 @@ import { renameUpdate } from "@/components/tenant/exams/optimistic";
 import { useExam } from "@/components/tenant/exams/provider";
 import { ScheduleExam } from "@/components/tenant/exams/schedule";
 import { titleToSave } from "@/components/tenant/exams/title";
+import { Link } from "@/lib/routing/link";
 
 /**
  * The header of the editor: a link back to the exams, then the exam's title, renamed in place,

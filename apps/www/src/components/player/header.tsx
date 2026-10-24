@@ -1,9 +1,4 @@
-import { ArrowLeft01Icon } from "@hugeicons/core-free-icons";
-import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { buttonVariants } from "@repo/design-system/lib/button";
-import { HrefLink } from "@repo/internationalization/src/link";
 import type { ReactNode } from "react";
-import { useTranslations } from "use-intl";
 import { BreadcrumbHeaderFrame } from "@/components/shared/breadcrumb/frame";
 
 /**
@@ -15,21 +10,6 @@ export function PlayerHeader({ children }: { children: ReactNode }) {
     <BreadcrumbHeaderFrame contentClassName="gap-2 lg:max-w-5xl">
       {children}
     </BreadcrumbHeaderFrame>
-  );
-}
-
-/** Leaves the running questions for the page they came from; the timer keeps going. */
-export function PlayerBack({ href }: { href: string }) {
-  const tCommon = useTranslations("Common");
-
-  return (
-    <HrefLink
-      aria-label={tCommon("back")}
-      className={buttonVariants({ size: "icon", variant: "ghost" })}
-      href={href}
-    >
-      <HugeIcons icon={ArrowLeft01Icon} />
-    </HrefLink>
   );
 }
 

@@ -1,13 +1,12 @@
 import { Option } from "effect";
-import {
-  getTryoutHref,
-  getTryoutPublicPathHref,
-} from "@/components/tryout/route/path";
 import type { RetainedSectionAttemptPage } from "@/components/tryout/section/model";
 import type {
   SetPage,
   TryoutSetRestartTarget,
 } from "@/components/tryout/set/model";
+
+/** The public path of the try-out catalog, which every try-out path starts from. */
+const TRYOUT_ROOT_PATH = "try-out";
 
 /** Builds the current restart target exposed by one public set page. */
 export function createTryoutSetRestartTarget<EntrySection>(page: {
@@ -25,47 +24,46 @@ export function createTryoutSetRestartTarget<EntrySection>(page: {
 }
 
 /**
- * Selects the active set route and its parent track for one current or
+ * Selects the active set path and its parent track path for one current or
  * retained set, or the try-out root when the set is no longer active.
  */
 export function selectTryoutSetLinks(
   restartTarget: Option.Option<Pick<TryoutSetRestartTarget, "setPublicPath">>
 ) {
   if (Option.isNone(restartTarget)) {
-    return { currentHref: getTryoutHref(), returnHref: getTryoutHref() };
+    return { currentPath: TRYOUT_ROOT_PATH, returnPath: TRYOUT_ROOT_PATH };
   }
 
   const { setPublicPath } = restartTarget.value;
-  const currentHref = getTryoutPublicPathHref(setPublicPath);
   const separator = setPublicPath.lastIndexOf("/");
   if (separator <= 0) {
-    return { currentHref, returnHref: getTryoutHref() };
+    return { currentPath: setPublicPath, returnPath: TRYOUT_ROOT_PATH };
   }
 
   return {
-    currentHref,
-    returnHref: getTryoutPublicPathHref(setPublicPath.slice(0, separator)),
+    currentPath: setPublicPath,
+    returnPath: setPublicPath.slice(0, separator),
   };
 }
 
-/** Selects the active set destination for one retained section. */
-export function selectTryoutSectionReturnHref({
+/** Selects the active set path for one retained section. */
+export function selectTryoutSectionReturnPath({
   attemptPage,
-  publicHref,
+  publicPath,
 }: {
   attemptPage: Option.Option<
     Pick<RetainedSectionAttemptPage, "activeSetPublicPath" | "kind">
   >;
-  publicHref: string;
+  publicPath: string;
 }) {
   if (Option.isNone(attemptPage)) {
-    return publicHref;
+    return publicPath;
   }
 
   const { activeSetPublicPath } = attemptPage.value;
   if (!activeSetPublicPath) {
-    return getTryoutHref();
+    return TRYOUT_ROOT_PATH;
   }
 
-  return getTryoutPublicPathHref(activeSetPublicPath);
+  return activeSetPublicPath;
 }

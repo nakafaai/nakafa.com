@@ -1,8 +1,8 @@
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { Link } from "@repo/internationalization/src/link";
 import { useTranslations } from "use-intl";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { useTenant } from "@/components/tenant/context";
+import { Link } from "@/lib/routing/link";
 
 /**
  * The state of a school page that belongs to an active unit, while the school has none: Nina

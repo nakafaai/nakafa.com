@@ -3,9 +3,11 @@ import type { IconSvgElement } from "@hugeicons/react";
 import type { ContentPagination } from "@repo/contents/content";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { HrefLink } from "@repo/internationalization/src/link";
 import { cn } from "cn";
+import { Option } from "effect";
 import { useTranslations } from "use-intl";
+import { TargetLink } from "@/lib/routing/link";
+import { publicPathTarget } from "@/lib/routing/target";
 
 interface Props {
   className?: string;
@@ -30,7 +32,8 @@ interface Props {
  * https://nextjs.org/docs/app/guides/optimizing-prefetching
  */
 function PaginationItem({
-  href,
+  context,
+  publicPath,
   title,
   label,
   icon,
@@ -38,7 +41,8 @@ function PaginationItem({
   iconPosition = "right",
   prefetch = false,
 }: {
-  href: string;
+  context?: string | undefined;
+  publicPath: string;
   title: string;
   label: string;
   icon: IconSvgElement;
@@ -73,8 +77,8 @@ function PaginationItem({
     </>
   );
 
-  if (!href) {
-    return (
+  return Option.match(publicPathTarget(publicPath, context), {
+    onNone: () => (
       <div
         aria-hidden="true"
         className={cn(
@@ -84,19 +88,18 @@ function PaginationItem({
       >
         {content}
       </div>
-    );
-  }
-
-  return (
-    <HrefLink
-      className={itemClassName}
-      href={href}
-      preload={prefetch ? "render" : "intent"}
-      title={title}
-    >
-      {content}
-    </HrefLink>
-  );
+    ),
+    onSome: (target) => (
+      <TargetLink
+        className={itemClassName}
+        preload={prefetch ? "render" : "intent"}
+        target={target}
+        title={title}
+      >
+        {content}
+      </TargetLink>
+    ),
+  });
 }
 
 /**
@@ -120,20 +123,22 @@ export function PaginationContent({
       <div className="mx-auto grid max-w-3xl gap-6 px-6 sm:grid-cols-2">
         <PaginationItem
           className="items-start"
-          href={pagination.prev.href}
+          context={pagination.prev.context}
           icon={ArrowLeft02Icon}
           iconPosition="left"
           label={t("previous")}
+          publicPath={pagination.prev.publicPath}
           title={pagination.prev.title}
         />
 
         <PaginationItem
           className="items-end"
-          href={pagination.next.href}
+          context={pagination.next.context}
           icon={ArrowRight02Icon}
           iconPosition="right"
           label={t("next")}
           prefetch={prefetchNext}
+          publicPath={pagination.next.publicPath}
           title={pagination.next.title}
         />
       </div>

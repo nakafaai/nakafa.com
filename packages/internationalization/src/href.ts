@@ -14,7 +14,7 @@ const NOT_INTERNAL_REGEX = /^(#|mailto:|tel:|\/\/)/;
  * Whether an href leads inside the app. A hash, mail or telephone link, a
  * protocol-relative address and an absolute URL leave the router.
  */
-export function isInternalHref(href: string) {
+function isInternalHref(href: string) {
   return (
     href.length > 0 &&
     !NOT_INTERNAL_REGEX.test(href) &&

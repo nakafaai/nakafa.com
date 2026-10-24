@@ -1,6 +1,6 @@
-import { Array as Arr } from "effect";
+import { Array as Arr, Option } from "effect";
 import type { ReactNode } from "react";
-import { getTryoutPublicPathHref } from "@/components/tryout/route/path";
+import { getTryoutCrumbTarget } from "@/components/tryout/route/path";
 import {
   TryoutActiveQuestionShell,
   TryoutReviewQuestionExplanation,
@@ -31,18 +31,24 @@ export function TryoutQuestionPreview({
         action={null}
         items={[
           {
-            href: getTryoutPublicPathHref(exam.publicPath),
             label: exam.title,
+            target: Option.getOrUndefined(
+              getTryoutCrumbTarget(exam.publicPath)
+            ),
           },
           {
-            href: getTryoutPublicPathHref(track.publicPath),
             label: track.title,
+            target: Option.getOrUndefined(
+              getTryoutCrumbTarget(track.publicPath)
+            ),
           },
           ...(section.publicPath
             ? [
                 {
-                  href: getTryoutPublicPathHref(set.publicPath),
                   label: set.title,
+                  target: Option.getOrUndefined(
+                    getTryoutCrumbTarget(set.publicPath)
+                  ),
                 },
               ]
             : []),

@@ -1,13 +1,11 @@
 import { buttonVariants } from "@repo/design-system/lib/button";
-import {
-  EXACT_ACTIVE_OPTIONS,
-  HrefLink,
-} from "@repo/internationalization/src/link";
+import { Link, type LinkTarget } from "@/lib/routing/link";
+import { EXACT_ACTIVE_OPTIONS } from "@/lib/routing/tree";
 
 interface ActionNavigationProps {
-  /** Where it leads, as a path of the app: the locale is added. */
-  href: string;
   label: string;
+  /** Where it leads, as a route of the app: the locale is the one of the page on screen. */
+  target: LinkTarget;
   variant: "default" | "ghost";
 }
 
@@ -18,17 +16,17 @@ interface ActionNavigationProps {
  * never load the app's navigation.
  */
 export function ActionNavigation({
-  href,
   label,
+  target,
   variant,
 }: ActionNavigationProps) {
   return (
-    <HrefLink
+    <Link
       activeOptions={EXACT_ACTIVE_OPTIONS}
       className={buttonVariants({ variant })}
-      href={href}
+      {...target}
     >
       {label}
-    </HrefLink>
+    </Link>
   );
 }

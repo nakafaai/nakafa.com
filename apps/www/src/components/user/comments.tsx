@@ -8,11 +8,6 @@ import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import {
-  EXACT_ACTIVE_OPTIONS,
-  HrefLink,
-} from "@repo/internationalization/src/link";
-import { withLeadingSlash } from "@repo/utilities/path";
 import { Array as Arr, Option } from "effect";
 import { createContext, use } from "react";
 import { useLocale, useTranslations } from "use-intl";
@@ -25,6 +20,9 @@ import { useVisitorList } from "@/components/user/paging";
 import { visitorListView } from "@/components/user/visitor";
 import { profileCommentsPageFn } from "@/lib/account/profile.functions";
 import { usePaginatedPreloaded } from "@/lib/data/paginated";
+import { TargetLink } from "@/lib/routing/link";
+import { publicPathTarget } from "@/lib/routing/target";
+import { EXACT_ACTIVE_OPTIONS } from "@/lib/routing/tree";
 
 type ProfileComment = Ref.Returns<
   typeof comments.queries.getCommentsByUserId
@@ -164,15 +162,11 @@ function CommentsList({
             comment={comment}
             key={comment._id}
             replyAction={
-              <HrefLink
-                activeOptions={EXACT_ACTIVE_OPTIONS}
-                aria-label={tCommon("reply")}
-                className={buttonVariants({ size: "sm", variant: "ghost" })}
-                href={withLeadingSlash(comment.slug)}
-              >
-                <HugeIcons icon={ArrowTurnBackwardIcon} />
-                <FeedCount value={comment.replyCount} />
-              </HrefLink>
+              <ReplyLink
+                label={tCommon("reply")}
+                replyCount={comment.replyCount}
+                slug={comment.slug}
+              />
             }
           />
         ))}
@@ -182,4 +176,30 @@ function CommentsList({
       </div>
     </CommentsProvider>
   );
+}
+
+/** The reply link of one comment: the page the comment belongs to, with its reply count. */
+function ReplyLink({
+  label,
+  replyCount,
+  slug,
+}: {
+  label: string;
+  replyCount: number;
+  slug: string;
+}) {
+  return Option.match(publicPathTarget(slug), {
+    onNone: () => null,
+    onSome: (target) => (
+      <TargetLink
+        activeOptions={EXACT_ACTIVE_OPTIONS}
+        aria-label={label}
+        className={buttonVariants({ size: "sm", variant: "ghost" })}
+        target={target}
+      >
+        <HugeIcons icon={ArrowTurnBackwardIcon} />
+        <FeedCount value={replyCount} />
+      </TargetLink>
+    ),
+  });
 }

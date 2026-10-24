@@ -30,11 +30,6 @@ import {
 } from "@repo/design-system/components/ui/sidebar-menu";
 import { Sidebar } from "@repo/design-system/components/ui/sidebar-shell";
 import { useSidebar } from "@repo/design-system/lib/sidebar/context";
-import {
-  EXACT_ACTIVE_OPTIONS,
-  Link,
-  useCurrentLocale,
-} from "@repo/internationalization/src/link";
 import { useParams } from "@tanstack/react-router";
 import { Array as Arr, Option } from "effect";
 import { type ComponentProps, createContext, use, useState } from "react";
@@ -45,6 +40,8 @@ import { useConvexAuth } from "@/components/auth/convex";
 import { ConvexIsland } from "@/components/providers/island";
 import { usePaginatedPreloaded } from "@/lib/data/paginated";
 import { useViewer } from "@/lib/identity/client";
+import { Link, useCurrentLocale } from "@/lib/routing/link";
+import { EXACT_ACTIVE_OPTIONS } from "@/lib/routing/tree";
 
 const CHAT_SEARCH_DEBOUNCE_MS = 500;
 
@@ -72,7 +69,6 @@ export function AiChatSidebar({
   first: Option.Option<ChatFirstPage>;
 }) {
   const t = useTranslations("Ai");
-  const locale = useCurrentLocale();
   const setOpenMobile = useSidebar((sidebar) => sidebar.setOpenMobile);
   const [q, setQ] = useState("");
   const [debouncedQ] = useDebouncedValue(q, CHAT_SEARCH_DEBOUNCE_MS);
@@ -93,7 +89,6 @@ export function AiChatSidebar({
                 <Link
                   activeOptions={EXACT_ACTIVE_OPTIONS}
                   onClick={() => setOpenMobile(false)}
-                  params={{ locale }}
                   title={t("new-chat")}
                   to="/$locale/chat"
                 >

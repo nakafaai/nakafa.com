@@ -13,6 +13,7 @@ import {
   BreadcrumbHeaderFold,
   BreadcrumbHeaderPath,
 } from "@/components/shared/breadcrumb/header";
+import { HOME_TARGET, QURAN_TARGET } from "@/lib/routing/target";
 
 /**
  * Keeps surah navigation, name, and outline actions in one row at every width. On a
@@ -46,16 +47,26 @@ export function QuranSurahHeader({
       <div className="col-start-1 row-start-1 min-w-0">
         <BreadcrumbHeaderFold
           className="md:hidden"
-          homeHref="/home"
+          home={HOME_TARGET}
           homeLabel={tCommon("home")}
-          items={[{ href: "/quran", label: quranLabel }]}
+          items={[
+            {
+              label: quranLabel,
+              target: QURAN_TARGET,
+            },
+          ]}
           menuLabel={tCommon("more")}
         />
         <div className="min-w-0 max-md:hidden">
           <BreadcrumbHeaderPath
-            homeHref="/home"
+            home={HOME_TARGET}
             homeLabel={tCommon("home")}
-            items={[{ href: "/quran", label: quranLabel }]}
+            items={[
+              {
+                label: quranLabel,
+                target: QURAN_TARGET,
+              },
+            ]}
             menuLabel={tCommon("more")}
           />
         </div>

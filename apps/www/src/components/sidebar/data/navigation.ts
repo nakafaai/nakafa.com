@@ -3,9 +3,10 @@ import {
   Books02Icon,
   Target01Icon,
 } from "@hugeicons/core-free-icons";
-import type { LinkTarget } from "@repo/internationalization/src/link";
-import type { Locale } from "@repo/internationalization/src/locale";
-import { linkOptions } from "@tanstack/react-router";
+
+import { Option } from "effect";
+import type { LinkTarget } from "@/lib/routing/link";
+import { LOCALE_ROUTE } from "@/lib/routing/tree";
 
 const forYouNavigationItems = {
   subject: {
@@ -13,24 +14,24 @@ const forYouNavigationItems = {
     id: "subject",
     labelKey: "subject",
     labelNamespace: "Common",
-    target: (locale: Locale): LinkTarget =>
-      linkOptions({ params: { locale }, to: "/$locale/curricula" }),
+    target: {
+      from: LOCALE_ROUTE,
+      to: "/$locale/curricula",
+    } satisfies LinkTarget,
   },
   tryOut: {
     icon: Target01Icon,
     id: "tryOut",
     labelKey: "try-out",
     labelNamespace: "Common",
-    target: (locale: Locale): LinkTarget =>
-      linkOptions({ params: { locale }, to: "/$locale/try-out" }),
+    target: { from: LOCALE_ROUTE, to: "/$locale/try-out" } satisfies LinkTarget,
   },
   askNina: {
     icon: AiChat02Icon,
     id: "askNina",
     labelKey: "ask-nina",
     labelNamespace: "Ai",
-    target: (locale: Locale): LinkTarget =>
-      linkOptions({ params: { locale }, to: "/$locale/chat" }),
+    target: { from: LOCALE_ROUTE, to: "/$locale/chat" } satisfies LinkTarget,
   },
 } as const;
 
@@ -60,19 +61,24 @@ export function getForYouNavigationItems() {
  */
 export function getForYouNavigationTarget(
   item: ForYouNavigationItem,
-  locale: Locale,
   preferences: {
-    preferredCurriculumTarget?: LinkTarget | null;
-    preferredTryoutTarget?: LinkTarget | null;
+    preferredCurriculumTarget?: Option.Option<LinkTarget> | undefined;
+    preferredTryoutTarget?: Option.Option<LinkTarget> | undefined;
   } = {}
 ): LinkTarget {
-  if (item.id === "subject" && preferences.preferredCurriculumTarget) {
-    return preferences.preferredCurriculumTarget;
+  if (item.id === "subject") {
+    return Option.getOrElse(
+      preferences.preferredCurriculumTarget ?? Option.none(),
+      () => item.target
+    );
   }
 
-  if (item.id === "tryOut" && preferences.preferredTryoutTarget) {
-    return preferences.preferredTryoutTarget;
+  if (item.id === "tryOut") {
+    return Option.getOrElse(
+      preferences.preferredTryoutTarget ?? Option.none(),
+      () => item.target
+    );
   }
 
-  return item.target(locale);
+  return item.target;
 }

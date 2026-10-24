@@ -6,16 +6,21 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { toast } from "@repo/design-system/lib/toast/notify";
-import { HrefLink, useHrefNavigate } from "@repo/internationalization/src/link";
 import { LOCALES } from "@repo/internationalization/src/locale";
 import { useNavigate } from "@tanstack/react-router";
 import { useConvex } from "convex/react";
-import { Effect, Schema } from "effect";
+import { Effect, Option, Schema } from "effect";
 import { useTransition } from "react";
 import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/auth/convex";
 import { ConvexIsland } from "@/components/providers/island";
-import { getTryoutAttemptHref } from "@/components/tryout/route/path";
+import { TryoutPageLink } from "@/components/tryout/route/link";
+import {
+  getTryoutPageHref,
+  getTryoutPageTarget,
+  type TryoutPageAddress,
+  TryoutPageAddressSchema,
+} from "@/components/tryout/route/path";
 import { useTryoutClock } from "@/components/tryout/runtime/clock";
 import { START_ERROR, START_PART_ERROR } from "@/components/tryout/set/copy";
 import { TryoutStartDialog } from "@/components/tryout/set/dialog";
@@ -31,9 +36,9 @@ type StartAttempt = Pick<
   "attemptId" | "resumeSectionKey" | "status"
 > | null;
 const StartTryoutRequestSchema = Schema.Struct({
-  authRedirectHref: Schema.String,
+  authRedirect: TryoutPageAddressSchema,
   countryKey: Schema.String,
-  destinationHref: Schema.String,
+  destination: TryoutPageAddressSchema,
   destinationSectionKey: Schema.String,
   entrySectionKey: Schema.optionalKey(Schema.String),
   examKey: Schema.String,
@@ -85,7 +90,7 @@ function TryoutStartSignInButton({
 }) {
   const navigate = useNavigate();
   const t = useTranslations("Tryouts");
-  const authRedirect = `/${request.locale}${request.authRedirectHref}`;
+  const authRedirect = `/${request.locale}${getTryoutPageHref(request.authRedirect)}`;
 
   /** Sends a visitor to sign in before any attempt starts. */
   function onStart() {
@@ -107,7 +112,15 @@ function TryoutStartSignInButton({
 /** Starts or resumes a free try-out from the current page. */
 function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
   const navigate = useNavigate();
-  const navigateToHref = useHrefNavigate();
+  /** Navigates to one try-out page. A page that names no route leaves the page on screen. */
+  function navigateTo(
+    address: TryoutPageAddress,
+    options: { readonly replace?: boolean } = {}
+  ) {
+    Option.map(getTryoutPageTarget(address), (target) =>
+      navigate({ ...target, replace: options.replace ?? false })
+    );
+  }
   const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);
   const isLoading = useConvexAuth((auth) => auth.isLoading);
   const startAttempt = useMutation(tryouts.mutations.attempts.startAttempt);
@@ -147,7 +160,7 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
   const buttonLabel = activeAttempt
     ? t("continue-cta")
     : t(finishedAttempt ? "restart-cta" : "start-cta");
-  const authRedirect = `/${request.locale}${request.authRedirectHref}`;
+  const authRedirect = `/${request.locale}${getTryoutPageHref(request.authRedirect)}`;
 
   /** Opens the correct decision or continues an already-active runtime. */
   function onStart() {
@@ -216,15 +229,15 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
       onSuccess: (result) =>
         Effect.sync(() => {
           dialog.close();
-          const href = getTryoutAttemptHref(
-            result.navigation.publicPath,
-            result.attemptId
-          );
+          const destination = {
+            attemptId: result.attemptId,
+            publicPath: result.navigation.publicPath,
+          };
           if (request.successNavigation === "stay") {
-            navigateToHref(href, { replace: true });
+            navigateTo(destination, { replace: true });
             return;
           }
-          navigateToHref(href);
+          navigateTo(destination);
         }),
     });
     startTransition(() =>
@@ -274,9 +287,9 @@ function ResumeTryoutLink({
 }) {
   const t = useTranslations("Tryouts");
   return (
-    <HrefLink className={buttonVariants()} href={request.destinationHref}>
+    <TryoutPageLink className={buttonVariants()} {...request.destination}>
       <HugeIcons icon={Rocket01Icon} />
       {t("continue-cta")}
-    </HrefLink>
+    </TryoutPageLink>
   );
 }

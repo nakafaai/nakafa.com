@@ -19,6 +19,7 @@ import { getQuranSurahName } from "@/lib/content/quran/navigation";
 import { getPublishedQuranCatalog } from "@/lib/content/quran/publication";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getAppSocialArtwork } from "@/lib/og/app";
+import { quranSurahTarget } from "@/lib/routing/target";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { createSeoHead, toRouterHead } from "@/lib/seo/head";
 
@@ -97,8 +98,8 @@ function QuranIndexPage() {
           <CardLinks>
             {Arr.map(page.surahs, (surah) => (
               <CardLink
-                href={`/quran/${surah.number}`}
                 key={surah.number}
+                target={quranSurahTarget(surah.number)}
                 title={surah.title}
               >
                 <QuranSurahRow

@@ -62,9 +62,9 @@ export function TryoutSetEntry({
     <TryoutPage>
       <TryoutSetPageHeader
         action={<TryoutEntryAction value={value} />}
-        currentHref={value.currentHref}
+        currentPath={value.currentPath}
         page={value.page}
-        returnHref={value.returnHref}
+        returnPath={value.returnPath}
       />
       <TryoutPageBody>
         <TryoutEntryResult value={value} />
@@ -141,7 +141,7 @@ function TryoutEntryAction({ value }: { value: TryoutSetEntryProps["value"] }) {
           ? {}
           : { attempt: value.actionAttempt }),
         locale: value.route.locale,
-        returnHref: value.returnHref,
+        returnAddress: { publicPath: value.returnPath },
         section: startEntrySection,
         sectionFinished,
         set: value.start.set,
@@ -149,7 +149,7 @@ function TryoutEntryAction({ value }: { value: TryoutSetEntryProps["value"] }) {
           ? { startAttemptSectionKey: startEntrySection.sectionKey }
           : {}),
         startDestination: {
-          href: startDestination.href,
+          address: startDestination.address,
           successNavigation:
             startEntrySection.visibility === "internal-entry"
               ? "stay"

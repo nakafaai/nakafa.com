@@ -10,6 +10,7 @@ import {
   TILE_ROWS,
 } from "@/components/tenant/home/tile";
 import { schoolWeekdayTimeText } from "@/components/tenant/settings/clock";
+import { schoolExamTarget } from "@/lib/routing/school/target";
 
 /** One room that opens soon, as the school home holds it. */
 type Room = (typeof HomeView.Type)["next"][number];
@@ -52,10 +53,10 @@ export function NextTile({
 
 /** One room that opens soon, as a row that opens its exam. */
 function NextRow({ locale, room }: { locale: string; room: Room }) {
+  const tenant = useTenant();
   return (
     <CardLink
-      href={`/exams/${room.examId}`}
-      localized={false}
+      target={schoolExamTarget(tenant.slug, room.examId)}
       title={room.examTitle}
     >
       <RowText detail={room.room} title={room.examTitle} />

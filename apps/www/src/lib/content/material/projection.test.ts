@@ -44,9 +44,7 @@ describe("published material context projection", () => {
         group,
         mapping,
         parent: testProgramSubject,
-        href: expect.stringContaining(
-          "/en/curriculum/merdeka/class-11/mathematics#"
-        ),
+        hash: expect.any(String),
         label: "Function Composition and Inverses",
         resolvedCanonicalPath: mapping.canonicalPath,
       });

@@ -1,4 +1,5 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
+import { Option } from "effect";
 import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/frame";
@@ -7,6 +8,8 @@ import { TryoutExamSelector } from "@/components/tryout/catalog/selector";
 import { readTryoutExamFn } from "@/components/tryout/route/catalog.functions";
 import { createTryoutHead } from "@/components/tryout/route/head";
 import { readTryoutCatalogHeaders } from "@/components/tryout/route/headers";
+import { getTryoutCrumbTarget } from "@/components/tryout/route/path";
+import { HOME_TARGET } from "@/lib/routing/target";
 
 /** One exam of the try-out catalog: its tracks, each a year or a series. */
 export const Route = createFileRoute("/$locale/_main/try-out/$country/$exam/")({
@@ -54,13 +57,15 @@ function TryoutExamPage() {
                 options={route.examOptions}
               />
             ),
-            homeHref: "/home",
+            home: HOME_TARGET,
             homeLabel: route.labels.home,
             items: [
               {
-                href: route.countryHref,
                 label: route.labels.tryOut,
                 menuLabel: route.labels.tryOutShort,
+                target: Option.getOrUndefined(
+                  getTryoutCrumbTarget(route.countryPath)
+                ),
               },
               { label: route.exam.exam.title },
             ],

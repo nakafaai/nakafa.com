@@ -7,29 +7,37 @@ import {
   BreadcrumbSeparator,
 } from "@repo/design-system/components/ui/breadcrumb";
 import { cn } from "cn";
-import { Array as Arr, Schema } from "effect";
+import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import { BreadcrumbAnchor } from "@/components/shared/breadcrumb/anchor";
 import { BreadcrumbHeaderFrame } from "@/components/shared/breadcrumb/frame";
 import { BreadcrumbMenu } from "@/components/shared/breadcrumb/menu";
+import type { LinkTarget } from "@/lib/routing/link";
 
-const BreadcrumbHeaderItemSchema = Schema.Struct({
-  href: Schema.optional(Schema.String),
-  label: Schema.String,
+/**
+ * Builds one segment of a breadcrumb path. A segment without a target is the
+ * current page. Its type is the parameter of this builder, so every segment has
+ * the one shape the breadcrumb renders.
+ */
+function breadcrumbItem(item: {
+  readonly label: string;
   /** BCP 47 language of the label when it differs from the page. */
-  language: Schema.optionalKey(Schema.String),
-  menuLabel: Schema.optionalKey(Schema.String),
-});
+  readonly language?: string | undefined;
+  readonly menuLabel?: string | undefined;
+  readonly target?: LinkTarget | undefined;
+}) {
+  return item;
+}
 
-export type BreadcrumbHeaderItem = typeof BreadcrumbHeaderItemSchema.Type;
+export type BreadcrumbHeaderItem = ReturnType<typeof breadcrumbItem>;
 
 /** Props of one sticky, bounded breadcrumb header. */
 interface BreadcrumbHeaderProps {
   /** Complete render value for one sticky, bounded breadcrumb header. */
   value: {
     action?: ReactNode;
-    homeHref: string;
+    home: LinkTarget;
     homeLabel: string;
     items: readonly BreadcrumbHeaderItem[];
     menuLabel: string;
@@ -44,15 +52,15 @@ type BreadcrumbHeaderValue = BreadcrumbHeaderProps["value"];
  * row at every width: the header is one row, so an action stays compact on a phone.
  */
 export function BreadcrumbHeader({ value }: BreadcrumbHeaderProps) {
-  const { action, homeHref, homeLabel, items, menuLabel, title } = value;
+  const { action, home, homeLabel, items, menuLabel, title } = value;
   return (
     <BreadcrumbHeaderFrame contentClassName="flex-nowrap">
       <h1 className="sr-only">{title}</h1>
       <BreadcrumbHeaderPath
-        homeHref={homeHref}
+        home={home}
         homeLabel={homeLabel}
         items={Arr.map(items, (item, index) =>
-          index === items.length - 1 ? { ...item, href: undefined } : item
+          index === items.length - 1 ? { ...item, target: undefined } : item
         )}
         menuLabel={menuLabel}
       />
@@ -71,15 +79,12 @@ export function BreadcrumbHeader({ value }: BreadcrumbHeaderProps) {
  */
 export function BreadcrumbHeaderPath({
   children,
-  homeHref,
+  home,
   homeLabel,
   items,
   menuLabel,
   visibleItemCount = 2,
-}: Pick<
-  BreadcrumbHeaderValue,
-  "homeHref" | "homeLabel" | "items" | "menuLabel"
-> & {
+}: Pick<BreadcrumbHeaderValue, "home" | "homeLabel" | "items" | "menuLabel"> & {
   children?: ReactNode;
   visibleItemCount?: 1 | 2;
 }) {
@@ -94,7 +99,7 @@ export function BreadcrumbHeaderPath({
           <BreadcrumbMenu
             className="sm:hidden"
             items={[
-              { href: homeHref, label: homeLabel },
+              { label: homeLabel, target: home },
               ...Arr.dropRight(items, 1),
             ]}
             menuLabel={menuLabel}
@@ -105,7 +110,7 @@ export function BreadcrumbHeaderPath({
         >
           <BreadcrumbLink
             render={
-              <BreadcrumbAnchor href={homeHref}>{homeLabel}</BreadcrumbAnchor>
+              <BreadcrumbAnchor target={home}>{homeLabel}</BreadcrumbAnchor>
             }
           />
         </BreadcrumbItem>
@@ -125,7 +130,7 @@ export function BreadcrumbHeaderPath({
               foldsOnPhone && index < visibleItems.length - 1 && "max-sm:hidden"
             )}
             item={item}
-            key={`${item.label}:${item.href ?? "current"}`}
+            key={`${item.label}:${item.target === undefined ? "current" : "link"}`}
           />
         ))}
         {children}
@@ -142,14 +147,11 @@ export function BreadcrumbHeaderPath({
  */
 export function BreadcrumbHeaderFold({
   className,
-  homeHref,
+  home,
   homeLabel,
   items,
   menuLabel,
-}: Pick<
-  BreadcrumbHeaderValue,
-  "homeHref" | "homeLabel" | "items" | "menuLabel"
-> & {
+}: Pick<BreadcrumbHeaderValue, "home" | "homeLabel" | "items" | "menuLabel"> & {
   className: string;
 }) {
   const tCommon = useTranslations("Common");
@@ -162,7 +164,7 @@ export function BreadcrumbHeaderFold({
       <BreadcrumbList className="flex-nowrap">
         <BreadcrumbMenu
           className=""
-          items={[{ href: homeHref, label: homeLabel }, ...items]}
+          items={[{ label: homeLabel, target: home }, ...items]}
           menuLabel={menuLabel}
         />
       </BreadcrumbList>
@@ -181,7 +183,7 @@ export function BreadcrumbHeaderSegment({
   className?: string;
   item: BreadcrumbHeaderItem;
 }) {
-  if (!item.href) {
+  if (item.target === undefined) {
     return (
       <>
         <BreadcrumbSeparator className={cn("shrink-0", className)} />
@@ -201,7 +203,9 @@ export function BreadcrumbHeaderSegment({
         <BreadcrumbLink
           className="truncate"
           render={
-            <BreadcrumbAnchor href={item.href}>{item.label}</BreadcrumbAnchor>
+            <BreadcrumbAnchor target={item.target}>
+              {item.label}
+            </BreadcrumbAnchor>
           }
         />
       </BreadcrumbItem>

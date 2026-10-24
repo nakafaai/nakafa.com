@@ -23,9 +23,9 @@ import {
 } from "@repo/design-system/components/ui/command";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
-import { useHrefNavigate } from "@repo/internationalization/src/link";
+import { useNavigate } from "@tanstack/react-router";
 import { cn } from "cn";
-import { Array as Arr } from "effect";
+import { Array as Arr, Option } from "effect";
 import type { ComponentProps, ReactElement, ReactNode } from "react";
 import { Fragment, useLayoutEffect, useTransition } from "react";
 import { useLocale, useTranslations } from "use-intl";
@@ -36,11 +36,14 @@ import { useArticleNavigation } from "@/components/search/navigation";
 import { holyMenu } from "@/components/sidebar/data/holy";
 import {
   getSubjectMenuHref,
+  getSubjectMenuTarget,
   subjectMenu,
 } from "@/components/sidebar/data/subject";
 import { EmptyNina } from "@/components/state/empty";
 import type { ArticleNavigationItem } from "@/lib/content/article/navigation";
 import { getErrorMessage } from "@/lib/failure";
+import type { LinkTarget } from "@/lib/routing/link";
+import { articleCategoryTarget, publicPathTarget } from "@/lib/routing/target";
 import type { ContentSearchResultItem } from "@/lib/search/answer";
 import { useSearch } from "@/lib/search/context";
 import { useSearchQuery } from "@/lib/search/query";
@@ -55,18 +58,18 @@ interface SearchListProps {
     items: (
       | {
           excerpt: string;
-          href: string;
           key: string;
+          publicPath: string;
           label: string;
           query: string;
           type: "content";
           value: string;
         }
       | {
-          href: string;
           icon: SearchCommandIcon;
           key: string;
           label: string;
+          target: LinkTarget;
           type: "navigation";
           value: string;
         }
@@ -217,15 +220,24 @@ function SearchEmpty({
 }
 
 function SearchList({ groups }: SearchListProps) {
-  const navigateToHref = useHrefNavigate();
+  const navigate = useNavigate();
   const setOpen = useSearch((state) => state.setOpen);
   const [isPending, startTransition] = useTransition();
 
-  function navigate(href: string) {
+  function navigateTo(target: LinkTarget) {
     startTransition(() => {
       setOpen(false);
-      navigateToHref(href);
+      navigate(target);
     });
+  }
+
+  /** Opens a navigation row at its target, and a content row at its public path. */
+  function navigateToItem(item: SearchCommandItem) {
+    if (item.type === "navigation") {
+      navigateTo(item.target);
+      return;
+    }
+    Option.map(publicPathTarget(item.publicPath), navigateTo);
   }
 
   return (
@@ -240,7 +252,7 @@ function SearchList({ groups }: SearchListProps) {
                   isPending={isPending}
                   item={item}
                   key={item.key}
-                  onClick={() => navigate(item.href)}
+                  onClick={() => navigateToItem(item)}
                 />
               )}
             </CommandCollection>
@@ -314,12 +326,12 @@ function useDefaultSearchGroups(
         const href = getSubjectMenuHref(subItem, locale);
 
         return {
-          href,
           icon: subItem.icon,
           key: href,
           label,
+          target: getSubjectMenuTarget(subItem, locale),
           type: "navigation" as const,
-          value: `${groupTitle} ${label} ${href}`,
+          value: `${groupTitle} ${label}`,
         };
       }),
       value: groupTitle,
@@ -333,12 +345,12 @@ function useDefaultSearchGroups(
         articleNavigation,
         getArticleCategoryIcons(articleNavigation),
         (item, icon): SearchCommandItem => ({
-          href: item.href,
           icon,
-          key: item.href,
+          key: item.route,
           label: item.title,
+          target: articleCategoryTarget(item.route),
           type: "navigation",
-          value: `${tArticles("articles")} ${item.title} ${item.href}`,
+          value: `${tArticles("articles")} ${item.title}`,
         })
       ),
       value: tArticles("articles"),
@@ -348,12 +360,12 @@ function useDefaultSearchGroups(
         const label = tHoly(item.title);
 
         return {
-          href: item.href,
           icon: item.icon,
-          key: item.href,
+          key: `holy:${item.title}`,
           label,
+          target: item.target,
           type: "navigation" as const,
-          value: `${tHoly("holy")} ${label} ${item.href}`,
+          value: `${tHoly("holy")} ${label}`,
         };
       }),
       value: tHoly("holy"),
@@ -374,9 +386,9 @@ function getResultGroups(
         Arr.filter(results, (result) => result.section === section),
         (result): SearchCommandItem => ({
           excerpt: result.excerpt,
-          href: `/${result.route}`,
           key: result.content_id,
           label: result.title,
+          publicPath: result.route,
           query,
           type: "content",
           value: `${result.title} ${result.description} ${result.route}`,

@@ -8,7 +8,6 @@ import { MemberStatus } from "@repo/backend/confect/tenancy/roster";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { Link } from "@repo/internationalization/src/link";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, Option } from "effect";
 import { createContext, startTransition, use } from "react";
@@ -29,6 +28,7 @@ import {
   type PreloadedPage,
   usePaginatedPreloaded,
 } from "@/lib/data/paginated";
+import { Link } from "@/lib/routing/link";
 
 const SOURCE = "components/tenant/settings/members";
 

@@ -20,18 +20,10 @@ describe("curriculum route helpers", () => {
     ).toBe("/kurikulum/amerika-serikat");
   });
 
-  it("types a curriculum program root as its route target", () => {
-    expect(
-      getCurriculumProgramTarget({
-        locale: "de",
-        publicSlug: "vereinigte-staaten",
-      })
-    ).toEqual({
-      params: {
-        _splat: "",
-        curriculum: "vereinigte-staaten",
-        locale: "de",
-      },
+  it("types a curriculum program root as its route target, on the locale of the page", () => {
+    expect(getCurriculumProgramTarget("vereinigte-staaten")).toEqual({
+      from: "/$locale",
+      params: { _splat: "", curriculum: "vereinigte-staaten" },
       to: "/$locale/curricula/$curriculum/$",
     });
   });

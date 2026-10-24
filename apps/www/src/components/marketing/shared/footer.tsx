@@ -8,27 +8,34 @@ import {
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Nina } from "@repo/design-system/components/ui/nina";
-import {
-  EXACT_ACTIVE_OPTIONS,
-  HrefLink,
-  Link,
-  useCurrentLocale,
-} from "@repo/internationalization/src/link";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { cva } from "class-variance-authority";
 import { Array as Arr, Option } from "effect";
-import type { ComponentProps } from "react";
 import { useTranslations } from "use-intl";
 import { PageConsentFooterItem } from "@/components/analytics/consent/mount";
 import { FooterAction } from "@/components/marketing/shared/footer/action";
 import { FooterArt } from "@/components/marketing/shared/footer/art";
 import { holyMenu } from "@/components/sidebar/data/holy";
 import {
-  getSubjectMenuHref,
+  getSubjectMenuTarget,
   subjectMenu,
 } from "@/components/sidebar/data/subject";
 import type { ArticleNavigationItem } from "@/lib/content/article/navigation";
 import type { PageNavigation } from "@/lib/content/page/navigation";
+import {
+  Link,
+  type LinkPreload,
+  type LinkTarget,
+  TargetLink,
+  useCurrentLocale,
+} from "@/lib/routing/link";
+import { PublicPathLink } from "@/lib/routing/public/link";
+import {
+  articleCategoryTarget,
+  LANDING_TARGET,
+  PRICING_TARGET,
+} from "@/lib/routing/target";
+import { EXACT_ACTIVE_OPTIONS } from "@/lib/routing/tree";
 
 const highSchoolSubjects = Option.getOrElse(
   Option.map(
@@ -70,9 +77,9 @@ export function Footer({
               <ul className="flex flex-col gap-2">
                 {Arr.map(highSchoolSubjects, (subject) => (
                   <li key={subject.value}>
-                    <LinkItem
-                      href={getSubjectMenuHref(subject, locale)}
+                    <FooterLink
                       label={tSubject(subject.title, { grade: subject.value })}
+                      target={getSubjectMenuTarget(subject, locale)}
                     />
                   </li>
                 ))}
@@ -86,7 +93,10 @@ export function Footer({
               <ul className="flex flex-col gap-2">
                 {Arr.map(holyMenu, (holy) => (
                   <li key={holy.title}>
-                    <LinkItem href={holy.href} label={tHoly(holy.title)} />
+                    <FooterLink
+                      label={tHoly(holy.title)}
+                      target={holy.target}
+                    />
                   </li>
                 ))}
               </ul>
@@ -99,7 +109,10 @@ export function Footer({
               <ul className="flex flex-col gap-2">
                 {Arr.map(articleNavigation, (article) => (
                   <li key={article.category}>
-                    <LinkItem href={article.href} label={article.title} />
+                    <FooterLink
+                      label={article.title}
+                      target={articleCategoryTarget(article.route)}
+                    />
                   </li>
                 ))}
               </ul>
@@ -111,23 +124,28 @@ export function Footer({
               </span>
               <ul className="flex flex-col gap-2">
                 <li>
-                  <LinkItem href="/" label={t("about-us")} />
+                  <FooterLink label={t("about-us")} target={LANDING_TARGET} />
                 </li>
                 <li>
-                  <LinkItem href="/pricing" label={tMarketing("pricing")} />
-                </li>
-                <li>
-                  <LinkItem
-                    href={COMPANY_IDENTITY.socialProfiles.discord}
-                    label={t("community")}
+                  <FooterLink
+                    label={tMarketing("pricing")}
+                    target={PRICING_TARGET}
                   />
+                </li>
+                <li>
+                  <a
+                    className={linkItemVariants()}
+                    href={COMPANY_IDENTITY.socialProfiles.discord}
+                  >
+                    {t("community")}
+                  </a>
                 </li>
                 {pageNavigation ? (
                   <li>
-                    <LinkItem
-                      href={pageNavigation.developerItem.href}
+                    <FooterPageLink
                       label={pageNavigation.developerItem.title}
                       preload={false}
+                      publicPath={pageNavigation.developerItem.publicPath}
                     />
                   </li>
                 ) : null}
@@ -142,10 +160,10 @@ export function Footer({
                 {pageNavigation &&
                   Arr.map(pageNavigation.legalItems, (page) => (
                     <li key={page.pageKey}>
-                      <LinkItem
-                        href={page.href}
+                      <FooterPageLink
                         label={page.title}
                         preload={false}
+                        publicPath={page.publicPath}
                       />
                     </li>
                   ))}
@@ -159,7 +177,6 @@ export function Footer({
       <Link
         activeOptions={EXACT_ACTIVE_OPTIONS}
         className="mx-auto flex w-full max-w-7xl px-6 py-16 transition-colors ease-out hover:text-primary"
-        params={{ locale }}
         to="/$locale"
       >
         <span className="mx-auto font-bold text-7xl transition-colors duration-300 ease-out hover:text-primary sm:text-8xl md:text-9xl lg:text-[12rem] xl:text-[18rem]">
@@ -215,29 +232,38 @@ export function Footer({
   );
 }
 
-interface LinkItemProps {
-  href: string;
-  label: string;
-  preload?: ComponentProps<typeof HrefLink>["preload"];
-}
-
 /** The text treatment that every footer destination shares. */
 const linkItemVariants = cva(
   "text-sm transition-colors ease-out hover:text-primary"
 );
 
-/**
- * Renders one locale-aware footer destination with the shared text treatment.
- */
-function LinkItem({ href, label, preload }: LinkItemProps) {
+/** One footer link of the app, at a route target that the app chose. */
+function FooterLink({ target, label }: { target: LinkTarget; label: string }) {
   return (
-    <HrefLink
+    <TargetLink className={linkItemVariants()} target={target}>
+      {label}
+    </TargetLink>
+  );
+}
+
+/** One footer destination of the signed Pages, which the reader may preload only on intent. */
+function FooterPageLink({
+  label,
+  preload,
+  publicPath,
+}: {
+  label: string;
+  preload?: LinkPreload | undefined;
+  publicPath: string;
+}) {
+  return (
+    <PublicPathLink
       className={linkItemVariants()}
-      href={href}
-      {...(preload !== undefined && { preload })}
+      publicPath={publicPath}
+      {...(preload === undefined ? {} : { preload })}
     >
       {label}
-    </HrefLink>
+    </PublicPathLink>
   );
 }
 

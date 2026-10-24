@@ -25,7 +25,7 @@ let status = {
 };
 let pages: Pick<
   PageNavigation,
-  "privacyPolicyHref" | "termsOfServiceHref"
+  "privacyPolicyPath" | "termsOfServicePath"
 > | null = null;
 
 vi.mock("@tanstack/react-start/server", () => ({
@@ -153,8 +153,8 @@ describe("school start page", () => {
   it("links the policy pages of the locale for a signed-in visitor", async () => {
     session = { convexToken: signedIn(), setCookies: [] };
     pages = {
-      privacyPolicyHref: "/privacy-policy",
-      termsOfServiceHref: "/terms-of-service",
+      privacyPolicyPath: "privacy-policy",
+      termsOfServicePath: "terms-of-service",
     };
     await expect(
       schoolStartPageHandler({ data: { locale: "id" } })

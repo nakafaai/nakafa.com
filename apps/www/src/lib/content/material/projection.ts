@@ -88,7 +88,7 @@ export const decodePublishedMaterialContext = Effect.fn(
   return {
     context,
     group,
-    href: `/${locale}/${parent.publicPath}#${toAnchorSlug(label)}`,
+    hash: toAnchorSlug(label),
     label,
     mapping,
     parent,

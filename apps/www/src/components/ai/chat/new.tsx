@@ -1,5 +1,4 @@
 import { Particles } from "@repo/design-system/components/ui/particles";
-import { useCurrentLocale } from "@repo/internationalization/src/link";
 import { useNavigate } from "@tanstack/react-router";
 import { cn } from "cn";
 import type { ComponentProps, ReactNode } from "react";
@@ -9,6 +8,7 @@ import { NinaInput } from "@/components/ai/input";
 import { ConvexIsland } from "@/components/providers/island";
 import { useLiveSession } from "@/components/providers/live";
 import { useCurrentAuthNavigation } from "@/lib/auth/location";
+import { useCurrentLocale } from "@/lib/routing/link";
 
 /**
  * Moves directly from the welcome screen into the final conversation layout. Only

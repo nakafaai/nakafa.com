@@ -20,7 +20,6 @@ import {
   TableRow,
 } from "@repo/design-system/components/ui/table";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { Link } from "@repo/internationalization/src/link";
 import { Array as Arr, Option, Schema } from "effect";
 import { createContext, startTransition, use, useState } from "react";
 import { useLocale, useTranslations } from "use-intl";
@@ -43,6 +42,7 @@ import { schoolDateTimeText } from "@/components/tenant/settings/clock";
 import { saveSchool } from "@/components/tenant/settings/save";
 import { usePaginatedPreloaded } from "@/lib/data/paginated";
 import { usePreloadedQueryResult } from "@/lib/data/preloaded";
+import { Link } from "@/lib/routing/link";
 import type { readExamRoomsFn } from "@/lib/tenant/exams.functions";
 
 const SOURCE = "components/tenant/exams/rooms";

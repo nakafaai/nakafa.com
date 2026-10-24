@@ -11,6 +11,7 @@ import {
   RowText,
   TILE_ROWS,
 } from "@/components/tenant/home/tile";
+import { schoolExamSittingTarget } from "@/lib/routing/school/target";
 
 /** One room that runs now, as the school home holds it. */
 type Room = (typeof HomeView.Type)["live"][number];
@@ -53,12 +54,12 @@ export function LiveTile({
 
 /** One room that runs now, as a row that opens its proctor page. */
 function LiveRow({ now, room }: { now: number; room: Room }) {
+  const tenant = useTenant();
   const t = useTranslations("School");
 
   return (
     <CardLink
-      href={`/exams/${room.examId}/sittings/${room.id}`}
-      localized={false}
+      target={schoolExamSittingTarget(tenant.slug, room.examId, room.id)}
       title={room.examTitle}
     >
       <RowText detail={room.room} title={room.examTitle} />

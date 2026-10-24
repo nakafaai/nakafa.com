@@ -4,7 +4,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
-import { HrefLink } from "@repo/internationalization/src/link";
 import { useTranslations } from "use-intl";
 
 export function CommentsButton() {
@@ -13,7 +12,7 @@ export function CommentsButton() {
   return (
     <SidebarMenuItem>
       <SidebarMenuButton
-        render={<HrefLink href="#comments" title={t("comments")} />}
+        render={<a href="#comments" title={t("comments")} />}
         tooltip={t("comments")}
       >
         <HugeIcons className="shrink-0" icon={MessageMultiple01Icon} />

@@ -5,17 +5,13 @@ import {
   SidebarMenuItem,
   SidebarMenuSeparator,
 } from "@repo/design-system/components/ui/sidebar-menu";
-import {
-  EXACT_ACTIVE_OPTIONS,
-  Link,
-  useCurrentLocale,
-} from "@repo/internationalization/src/link";
 import { useTranslations } from "use-intl";
 import type { CurrentUser } from "@/lib/identity/client";
+import { Link } from "@/lib/routing/link";
+import { EXACT_ACTIVE_OPTIONS } from "@/lib/routing/tree";
 
 /** Links a sidebar footer to the localized pricing page. */
 export function PricingItem() {
-  const locale = useCurrentLocale();
   const t = useTranslations("Auth");
   const label = t("pricing-cta");
 
@@ -25,7 +21,6 @@ export function PricingItem() {
         render={
           <Link
             activeOptions={EXACT_ACTIVE_OPTIONS}
-            params={{ locale }}
             title={label}
             to="/$locale/pricing"
           />

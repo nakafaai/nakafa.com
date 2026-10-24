@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
+import { useTenant } from "@/components/tenant/context";
 import { SchoolHeader } from "@/components/tenant/header";
-import { useSchoolPath } from "@/lib/routing/school/link";
+import { useLeafRoutePath } from "@/lib/routing/link";
 import { getSchoolSettingsSection } from "@/lib/settings/school";
 
 /**
@@ -10,15 +11,19 @@ import { getSchoolSettingsSection } from "@/lib/settings/school";
  * section's own action at its end.
  */
 export function SchoolSettingsHeader({ children }: { children?: ReactNode }) {
-  const pathname = useSchoolPath();
+  const leafPath = useLeafRoutePath();
+  const tenant = useTenant();
   const t = useTranslations("SchoolSettings");
-  const section = getSchoolSettingsSection(pathname);
+  const section = getSchoolSettingsSection(tenant.slug, leafPath);
   const label = t(section.labelKey);
 
   return (
     <SchoolHeader
       items={[
-        { href: section.group.href, label: t(section.group.key) },
+        {
+          label: t(section.group.key),
+          target: section.group.target,
+        },
         { label },
       ]}
       title={label}

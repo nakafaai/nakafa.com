@@ -10,6 +10,7 @@ import { TryoutCountrySelector } from "@/components/tryout/catalog/selector";
 import { readTryoutCountryFn } from "@/components/tryout/route/catalog.functions";
 import { createTryoutHead } from "@/components/tryout/route/head";
 import { readTryoutCatalogHeaders } from "@/components/tryout/route/headers";
+import { HOME_TARGET } from "@/lib/routing/target";
 
 /** One country of the try-out catalog: its exam families. */
 export const Route = createFileRoute("/$locale/_main/try-out/$country/")({
@@ -53,7 +54,7 @@ function TryoutCountryPage() {
                   options={route.countryOptions}
                 />
               ) : undefined,
-            homeHref: "/home",
+            home: HOME_TARGET,
             homeLabel: route.labels.home,
             items: [{ label: route.labels.tryOut }],
             menuLabel: route.labels.more,

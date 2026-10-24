@@ -7,7 +7,9 @@ describe("curriculum presentation data", () => {
       readMaterialCardChapters([
         {
           description: "Composition and inverse functions",
-          href: "/en/subjects/mathematics/functions/function-concept",
+          link: {
+            publicPath: "subjects/mathematics/functions/function-concept",
+          },
           items: [],
           title: "Function Composition and Inverses",
         },

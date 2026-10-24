@@ -22,7 +22,7 @@ export const redirectToAuth = Effect.fn("www.account.redirect")(function* (
   locale: Locale
 ) {
   return yield* Effect.die(
-    redirect({ to: "/$locale/auth", params: { locale }, statusCode: 307 })
+    redirect({ params: { locale }, to: "/$locale/auth", statusCode: 307 })
   );
 });
 

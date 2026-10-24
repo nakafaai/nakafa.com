@@ -3,10 +3,6 @@ import { Array as Arr, HashSet, Tuple } from "effect";
 import { useTranslations } from "use-intl";
 import { getTryoutSubjectIcons } from "@/components/tryout/catalog/icons";
 import { TryoutList } from "@/components/tryout/catalog/list";
-import {
-  getTryoutAttemptHref,
-  getTryoutPublicPathHref,
-} from "@/components/tryout/route/path";
 import type { CurrentAttempt, SetPage } from "@/components/tryout/set/model";
 
 type SetSection = Pick<
@@ -61,9 +57,9 @@ export function TryoutSectionRows({
           description: tTryouts("set-duration-minutes", {
             minutes: section.timeLimitSeconds / 60,
           }),
-          href: attempt
-            ? getTryoutAttemptHref(publicPath, attempt.attemptId)
-            : getTryoutPublicPathHref(publicPath),
+          address: attempt
+            ? { attemptId: attempt.attemptId, publicPath }
+            : { publicPath },
           key: section.sectionKey,
           ...(status === undefined ? {} : { status }),
           title: section.title,

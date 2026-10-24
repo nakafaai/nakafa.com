@@ -40,6 +40,11 @@ import {
 import { getAksaraUrl } from "@/lib/content/repository";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getLlmsMarkdownPath } from "@/lib/llms/format";
+import {
+  ARTICLES_TARGET,
+  articleCategoryTarget,
+  HOME_TARGET,
+} from "@/lib/routing/target";
 import { createResolvedRouteAlternates } from "@/lib/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { resolveSEOMetadata } from "@/lib/seo/generator";
@@ -228,13 +233,16 @@ function ArticlePage() {
             <ContentHeader
               breadcrumb={
                 <BreadcrumbHeaderPath
-                  homeHref="/home"
+                  home={HOME_TARGET}
                   homeLabel={labels.home}
                   items={[
-                    { href: "/articles", label: labels.articles },
                     {
-                      href: `/articles/${article.category}`,
+                      label: labels.articles,
+                      target: ARTICLES_TARGET,
+                    },
+                    {
                       label: article.categoryLabel,
+                      target: articleCategoryTarget(article.category),
                     },
                   ]}
                   menuLabel={labels.more}

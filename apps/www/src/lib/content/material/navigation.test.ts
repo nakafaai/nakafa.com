@@ -50,7 +50,7 @@ const previewPage = {
   siblings: [previewProjection, previewNextProjection],
   sourceUrl: null,
 };
-const emptyItem = { href: "", title: "" };
+const emptyItem = { publicPath: "", title: "" };
 
 /** Builds one verified context response for the current signed material. */
 function publishedContext(
@@ -65,7 +65,7 @@ function publishedContext(
   return {
     context,
     group,
-    href: "/en/curriculum/merdeka#functions",
+    hash: "functions",
     label: "Functions",
     mapping: { ...mapping, canonicalPath },
     parent: testProgramSubject,
@@ -118,10 +118,9 @@ describe("material lesson navigation", () => {
     };
 
     expect(readMaterialNavigation(publishedPage, null)).toMatchObject({
-      currentHref: toMaterialHref(previewProjection),
       pagination: {
         next: {
-          href: toMaterialHref(previewNextProjection),
+          publicPath: previewNextProjection.publicPath,
           title: previewNextProjection.metadata.title,
         },
         prev: emptyItem,
@@ -136,10 +135,9 @@ describe("material lesson navigation", () => {
         null
       )
     ).toMatchObject({
-      currentHref: toMaterialHref(previewNextProjection),
       pagination: {
         next: emptyItem,
-        prev: { href: toMaterialHref(previewProjection) },
+        prev: { publicPath: previewProjection.publicPath },
       },
     });
     expect(
@@ -151,7 +149,6 @@ describe("material lesson navigation", () => {
         null
       )
     ).toMatchObject({
-      currentHref: toMaterialHref(missingRoute),
       pagination: { next: emptyItem, prev: emptyItem },
     });
   });
@@ -168,7 +165,7 @@ describe("material lesson navigation", () => {
         null
       )
     ).toMatchObject({
-      pagination: { next: { href: toMaterialHref(tiedNext) } },
+      pagination: { next: { publicPath: tiedNext.publicPath } },
     });
   });
 
@@ -184,7 +181,7 @@ describe("material lesson navigation", () => {
         null
       )
     ).toMatchObject({
-      pagination: { next: { href: toMaterialHref(tiedNext) } },
+      pagination: { next: { publicPath: tiedNext.publicPath } },
     });
   });
 
@@ -211,10 +208,9 @@ describe("material lesson navigation", () => {
       )
     ).toMatchObject({
       context: undefined,
-      currentHref: toMaterialHref(previewProjection),
       link: undefined,
       pagination: {
-        next: { href: toMaterialHref(previewNextProjection) },
+        next: { publicPath: previewNextProjection.publicPath },
       },
     });
   });
@@ -227,13 +223,13 @@ describe("material lesson navigation", () => {
       )
     ).toMatchObject({
       context,
-      currentHref: `${toMaterialHref(previewProjection)}?ctx=merdeka~${context.nodeKey}`,
       link: {
-        href: "/en/curriculum/merdeka#functions",
+        hash: "functions",
+        publicPath: "curriculum/merdeka/class-11/mathematics",
         label: "Functions",
       },
       pagination: {
-        next: { href: expect.stringContaining("?ctx=merdeka~") },
+        next: { context: expect.stringContaining("merdeka~") },
       },
     });
   });
@@ -245,17 +241,15 @@ describe("material lesson navigation", () => {
         publishedContext(previewProjection.publicPath)
       )
     ).toMatchObject({
-      currentHref: `${toMaterialHref(previewProjection)}?ctx=merdeka~${context.nodeKey}`,
       pagination: {
-        next: { href: toMaterialHref(previewNextProjection) },
+        next: { publicPath: previewNextProjection.publicPath },
       },
     });
     expect(readMaterialNavigation(publishedPage, null)).toMatchObject({
       context: undefined,
-      currentHref: toMaterialHref(previewProjection),
       link: undefined,
       pagination: {
-        next: { href: toMaterialHref(previewNextProjection) },
+        next: { publicPath: previewNextProjection.publicPath },
       },
     });
   });
@@ -286,7 +280,6 @@ describe("material lesson navigation", () => {
         resolvedCanonicalPath:
           scope === "parent" ? parentPath : route.publicPath,
       };
-      const suffix = `?ctx=merdeka~${context.nodeKey}`;
 
       expect(
         readMaterialNavigation(
@@ -295,10 +288,12 @@ describe("material lesson navigation", () => {
         )
       ).toMatchObject({
         context,
-        currentHref: `${toMaterialHref(route)}${suffix}`,
         pagination: {
           next: {
-            href: `${toMaterialHref(next)}${scope === "parent" ? suffix : ""}`,
+            ...(scope === "parent"
+              ? { context: `merdeka~${context.nodeKey}` }
+              : {}),
+            publicPath: next.publicPath,
           },
         },
       });

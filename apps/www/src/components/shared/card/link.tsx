@@ -1,9 +1,10 @@
 import { ArrowRight02Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { HrefLink } from "@repo/internationalization/src/link";
 import { cva, type VariantProps } from "class-variance-authority";
+import { Option } from "effect";
 import type { ReactNode } from "react";
-import { SchoolHrefLink } from "@/lib/routing/school/link";
+import { type LinkTarget, TargetLink } from "@/lib/routing/link";
+import { publicPathTarget } from "@/lib/routing/target";
 
 /**
  * The frame of a row in a card's list: the row's padding, and the card's spacing on the list's first row when the
@@ -37,6 +38,34 @@ const cardArrow = cva("size-4 shrink-0 transition-opacity ease-out", {
   },
 });
 
+/**
+ * One page link of a card, addressed by a signed public path of the content. A
+ * path that names no page renders no row.
+ */
+export function PublicPathCardLink({
+  arrow,
+  children,
+  context,
+  publicPath,
+  title,
+}: {
+  arrow?: VariantProps<typeof cardArrow>["arrow"];
+  children: ReactNode;
+  context?: string | undefined;
+  publicPath: string;
+  title: string;
+}) {
+  const target = publicPathTarget(publicPath, context);
+  if (Option.isNone(target)) {
+    return null;
+  }
+  return (
+    <CardLink arrow={arrow} target={target.value} title={title}>
+      {children}
+    </CardLink>
+  );
+}
+
 /** Lists a card's page links as rows divided by rules. */
 export function CardLinks({ children }: { children: ReactNode }) {
   return <ul className="divide-y">{children}</ul>;
@@ -47,45 +76,30 @@ export function CardLinks({ children }: { children: ReactNode }) {
  * toward the page it opens. The last row takes the card's bottom spacing, so
  * its highlight reaches the bottom edge, and the first row takes the card's
  * top spacing when the list opens the card. Rows prefetch on intent, since a
- * card can list many pages. A school host's paths carry no locale, so its rows
- * pass `localized={false}`.
+ * card can list many pages.
  */
 export function CardLink({
   arrow,
   children,
-  href,
-  localized,
+  target,
   title,
 }: {
   /** When the arrow shows: on hover, which is the default, or always. */
   arrow?: VariantProps<typeof cardArrow>["arrow"];
   children: ReactNode;
-  href: string;
-  /** Whether `href` gets the reader's locale prefix. Left out, it does. */
-  localized?: boolean;
+  target: LinkTarget;
   title: string;
 }) {
+  const className = cardRow({ linked: true });
+  const arrowIcon = (
+    <HugeIcons className={cardArrow({ arrow })} icon={ArrowRight02Icon} />
+  );
   return (
     <li className="group/list">
-      {localized === false ? (
-        <SchoolHrefLink
-          className={cardRow({ linked: true })}
-          href={href}
-          title={title}
-        >
-          {children}
-          <HugeIcons className={cardArrow({ arrow })} icon={ArrowRight02Icon} />
-        </SchoolHrefLink>
-      ) : (
-        <HrefLink
-          className={cardRow({ linked: true })}
-          href={href}
-          title={title}
-        >
-          {children}
-          <HugeIcons className={cardArrow({ arrow })} icon={ArrowRight02Icon} />
-        </HrefLink>
-      )}
+      <TargetLink className={className} target={target} title={title}>
+        {children}
+        {arrowIcon}
+      </TargetLink>
     </li>
   );
 }

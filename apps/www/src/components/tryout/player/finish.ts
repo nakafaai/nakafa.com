@@ -2,10 +2,14 @@ import { useMutation } from "@confect/react";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { toast } from "@repo/design-system/lib/toast/notify";
-import { useHrefNavigate } from "@repo/internationalization/src/link";
+import { useNavigate } from "@tanstack/react-router";
 import { useConvex } from "convex/react";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 import { useOptimistic, useTransition } from "react";
+import {
+  getTryoutPageTarget,
+  type TryoutPageAddress,
+} from "@/components/tryout/route/path";
 import { requireConvexOnline } from "@/lib/convex/online";
 
 /** What a running section needs to finish itself. */
@@ -13,7 +17,7 @@ export interface TryoutFinish {
   /** A finish is on its way to the server or to the page that follows it. */
   readonly pending: boolean;
   /** The page a finish leads to, which back leads to as well. */
-  readonly returnHref: string;
+  readonly returnAddress: TryoutPageAddress;
   /** Finishes one section, once; a second call while it runs does nothing. */
   readonly run: (target: {
     attemptId: Id<"tryoutAttempts">;
@@ -29,18 +33,22 @@ export interface TryoutFinish {
  * navigation commits. `shown` is that state.
  */
 export function useTryoutFinish<State>(input: {
-  returnHref: string;
+  returnAddress: TryoutPageAddress;
   state: State;
 }): TryoutFinish & { readonly shown: State } {
   const [shown, hold] = useOptimistic(input.state);
   const [pending, startTransition] = useTransition();
-  const navigateToHref = useHrefNavigate();
+  const navigate = useNavigate();
+  /** Leaves for one try-out page. A page that names no route leaves the page on screen. */
+  function navigateTo(address: TryoutPageAddress) {
+    Option.map(getTryoutPageTarget(address), (target) => navigate(target));
+  }
   const convex = useConvex();
   const completeSection = useMutation(tryouts.mutations.sections.complete);
 
   return {
     pending,
-    returnHref: input.returnHref,
+    returnAddress: input.returnAddress,
     run: (target) => {
       if (pending) {
         return;
@@ -57,7 +65,7 @@ export function useTryoutFinish<State>(input: {
                 Effect.tap(() =>
                   Effect.sync(() => {
                     startTransition(() => {
-                      navigateToHref(input.returnHref);
+                      navigateTo(input.returnAddress);
                     });
                   })
                 )

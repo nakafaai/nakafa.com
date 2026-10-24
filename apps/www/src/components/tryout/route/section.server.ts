@@ -13,11 +13,10 @@ import { readTryoutQuestionPreview } from "@/components/tryout/preview/read";
 import { readTryoutRouteHead } from "@/components/tryout/route/catalog.server";
 import { readCurrentTryoutSection } from "@/components/tryout/route/current";
 import { readAddressIntent } from "@/components/tryout/route/intent";
-import { selectTryoutSectionReturnHref } from "@/components/tryout/route/owner";
+import { selectTryoutSectionReturnPath } from "@/components/tryout/route/owner";
 import {
   getTryoutAttemptAuthHref,
-  getTryoutHref,
-  getTryoutPublicPathHref,
+  getTryoutPublicPath,
   type TryoutRouteSearchParams,
 } from "@/components/tryout/route/path";
 import { keepPersonalResponse } from "@/components/tryout/route/response.server";
@@ -41,14 +40,11 @@ type SectionAttempt = Option.Option.Value<
  */
 const readSectionBinding = Effect.fn("www.tryout.route.readSectionBinding")(
   function* (attempt: SectionAttempt, view: PlayerModeParam) {
-    const startHref = Option.fromNullishOr(
-      attempt.activeSectionPublicPath
-    ).pipe(Option.map(getTryoutPublicPathHref));
     return {
       attemptId: attempt.attemptId,
       initialState: attempt.initialState,
       mode: yield* Effect.sync(() => readPlayerMode(view)),
-      startHref: Option.getOrNull(startHref),
+      startPath: attempt.activeSectionPublicPath ?? null,
     };
   }
 );
@@ -82,8 +78,8 @@ export const readTryoutSectionRoute = Effect.fn("www.tryout.route.readSection")(
       set: input.set,
       track: input.track,
     };
-    const sectionPath = getTryoutHref(route).slice(1);
-    const setHref = getTryoutHref({
+    const sectionPath = getTryoutPublicPath(route);
+    const setPath = getTryoutPublicPath({
       country: input.country,
       exam: input.exam,
       set: input.set,
@@ -97,7 +93,7 @@ export const readTryoutSectionRoute = Effect.fn("www.tryout.route.readSection")(
           locale,
           publicPath: sectionPath,
           route,
-          setHref,
+          setPath,
           token,
         },
         intent.value.view
@@ -158,9 +154,9 @@ export const readTryoutSectionRoute = Effect.fn("www.tryout.route.readSection")(
       }),
       review: Option.getOrUndefined(review),
       route,
-      setHref: selectTryoutSectionReturnHref({
+      setPath: selectTryoutSectionReturnPath({
         attemptPage: attempt,
-        publicHref: setHref,
+        publicPath: setPath,
       }),
       view: intent.value.view,
     };
@@ -183,7 +179,7 @@ const RetainedSectionRequestSchema = Schema.Struct({
   locale: LocaleSchema,
   publicPath: Schema.String,
   route: SectionRouteSchema,
-  setHref: Schema.String,
+  setPath: Schema.String,
   token: Schema.Option(Schema.String),
 });
 
@@ -231,9 +227,9 @@ const readRetainedSectionRoute = Effect.fn(
       })
     ),
     route: input.route,
-    setHref: selectTryoutSectionReturnHref({
+    setPath: selectTryoutSectionReturnPath({
       attemptPage: Option.some(attempt),
-      publicHref: input.setHref,
+      publicPath: input.setPath,
     }),
     view,
   };

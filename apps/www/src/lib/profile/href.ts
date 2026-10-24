@@ -1,7 +1,6 @@
-import type { LinkTarget } from "@repo/internationalization/src/link";
-import type { Locale } from "@repo/internationalization/src/locale";
-import { linkOptions } from "@tanstack/react-router";
 import { Match, Schema } from "effect";
+import type { LinkTarget } from "@/lib/routing/link";
+import { LOCALE_ROUTE } from "@/lib/routing/tree";
 
 /** The sign that opens the address of a profile: `/@username`. */
 export const PROFILE_SIGN = "@";
@@ -28,31 +27,37 @@ export function profileHref(username: string) {
 }
 
 /** The route of a profile's posts, which the router matches as `/{locale}/user/{username}`. */
-export function profileTarget(username: string, locale: Locale): LinkTarget {
-  return linkOptions({
-    params: { locale, username },
+export function profileTarget(username: string): LinkTarget {
+  return {
+    from: LOCALE_ROUTE,
+    params: { username },
     to: "/$locale/user/$username",
-  });
+  } satisfies LinkTarget;
 }
 
 /** The route of one tab of a profile: its chat or its comments. */
 export function profileTabTarget(
   tab: typeof ProfileTab.Type,
-  username: string,
-  locale: Locale
+  username: string
 ): LinkTarget {
   return Match.value(tab).pipe(
-    Match.when("chat", () =>
-      linkOptions({
-        params: { locale, username },
-        to: "/$locale/user/$username/chat",
-      })
+    Match.when(
+      "chat",
+      () =>
+        ({
+          from: LOCALE_ROUTE,
+          params: { username },
+          to: "/$locale/user/$username/chat",
+        }) satisfies LinkTarget
     ),
-    Match.when("comments", () =>
-      linkOptions({
-        params: { locale, username },
-        to: "/$locale/user/$username/comments",
-      })
+    Match.when(
+      "comments",
+      () =>
+        ({
+          from: LOCALE_ROUTE,
+          params: { username },
+          to: "/$locale/user/$username/comments",
+        }) satisfies LinkTarget
     ),
     Match.exhaustive
   );
@@ -64,11 +69,8 @@ export function profileTabTarget(
  * `username` optional, and an account made before usernames has none until the
  * migration names it, so it has no profile address to go to.
  */
-export function ownChatsTarget(
-  username: string | undefined,
-  locale: Locale
-): LinkTarget {
+export function ownChatsTarget(username: string | undefined): LinkTarget {
   return username === undefined
-    ? linkOptions({ params: { locale }, to: "/$locale/chat" })
-    : profileTabTarget("chat", username, locale);
+    ? ({ from: LOCALE_ROUTE, to: "/$locale/chat" } satisfies LinkTarget)
+    : profileTabTarget("chat", username);
 }

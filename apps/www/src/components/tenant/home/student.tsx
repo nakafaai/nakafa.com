@@ -22,6 +22,7 @@ import { HomeFailure, HomeTitle } from "@/components/tenant/home/title";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { schoolDateTimeText } from "@/components/tenant/settings/clock";
 import { enterableSitting, orderSittings } from "@/components/tenant/sittings";
+import { schoolSittingTarget } from "@/lib/routing/school/target";
 
 /** One sitting of the student, as the student's list holds it. */
 type Sitting = typeof StudentSittingRow.Type;
@@ -160,10 +161,10 @@ function StudentSittingsTile({
 
 /** One sitting that the student may still take part in, as a row that opens it, with its state or its opening. */
 function SittingRow({ sitting }: { sitting: Sitting }) {
+  const tenant = useTenant();
   return (
     <CardLink
-      href={`/sittings/${sitting.id}`}
-      localized={false}
+      target={schoolSittingTarget(tenant.slug, sitting.id)}
       title={sitting.examTitle}
     >
       <RowText detail={sitting.room} title={sitting.examTitle} />
@@ -230,13 +231,13 @@ function StudentResultsTile({
 
 /** One closed sitting, as a row that opens it and says whether its results are released. */
 function ResultRow({ sitting }: { sitting: Sitting }) {
+  const tenant = useTenant();
   const t = useTranslations("School");
   const te = useTranslations("Exams");
 
   return (
     <CardLink
-      href={`/sittings/${sitting.id}`}
-      localized={false}
+      target={schoolSittingTarget(tenant.slug, sitting.id)}
       title={sitting.examTitle}
     >
       <RowText detail={sitting.room} title={sitting.examTitle} />

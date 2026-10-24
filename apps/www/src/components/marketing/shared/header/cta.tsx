@@ -1,10 +1,7 @@
 import { Button } from "@repo/design-system/components/ui/button";
-import {
-  EXACT_ACTIVE_OPTIONS,
-  Link,
-  useCurrentLocale,
-} from "@repo/internationalization/src/link";
 import { useTranslations } from "use-intl";
+import { Link } from "@/lib/routing/link";
+import { EXACT_ACTIVE_OPTIONS } from "@/lib/routing/tree";
 
 /**
  * The name of the header, written as text: the identity's Header card keeps the
@@ -13,15 +10,12 @@ import { useTranslations } from "use-intl";
  * root picks the one that shows, so the first paint needs no account state.
  */
 export function LogoCta() {
-  const locale = useCurrentLocale();
-
   return (
     <>
       <span className="contents" data-account="visitor">
         <Link
           activeOptions={EXACT_ACTIVE_OPTIONS}
           className="font-medium"
-          params={{ locale }}
           to="/$locale"
         >
           Nakafa
@@ -31,7 +25,6 @@ export function LogoCta() {
         <Link
           activeOptions={EXACT_ACTIVE_OPTIONS}
           className="font-medium"
-          params={{ locale }}
           to="/$locale/home"
         >
           Nakafa
@@ -47,7 +40,6 @@ export function LogoCta() {
  */
 export function HeaderCta() {
   const t = useTranslations("Marketing");
-  const locale = useCurrentLocale();
 
   return (
     <>
@@ -55,11 +47,7 @@ export function HeaderCta() {
         <Button
           nativeButton={false}
           render={
-            <Link
-              activeOptions={EXACT_ACTIVE_OPTIONS}
-              params={{ locale }}
-              to="/$locale/auth"
-            >
+            <Link activeOptions={EXACT_ACTIVE_OPTIONS} to="/$locale/auth">
               {t("try-nakafa")}
             </Link>
           }
@@ -70,11 +58,7 @@ export function HeaderCta() {
         <Button
           nativeButton={false}
           render={
-            <Link
-              activeOptions={EXACT_ACTIVE_OPTIONS}
-              params={{ locale }}
-              to="/$locale/home"
-            >
+            <Link activeOptions={EXACT_ACTIVE_OPTIONS} to="/$locale/home">
               {t("try-nakafa")}
             </Link>
           }

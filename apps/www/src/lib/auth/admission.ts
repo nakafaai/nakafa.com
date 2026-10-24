@@ -1,12 +1,12 @@
-import type { LinkTarget } from "@repo/internationalization/src/link";
 import {
   DEFAULT_LOCALE,
   LOCALES,
   type Locale,
 } from "@repo/internationalization/src/locale";
-import { linkOptions } from "@tanstack/react-router";
+
 import { Option, Schema } from "effect";
 import { hasLocale } from "use-intl";
+import type { LinkTarget } from "@/lib/routing/link";
 import { withoutShareToken } from "@/lib/share/fragment";
 
 const URL_PARSE_BASE = "https://internal.invalid";
@@ -259,13 +259,13 @@ export function getPostAuthSignInTarget(
 ): LinkTarget {
   const resolution = resolvePostAuthIntent(source, locale);
   if (resolution.kind === "none") {
-    return linkOptions({ params: { locale }, to: "/$locale/auth" });
+    return { params: { locale }, to: "/$locale/auth" } satisfies LinkTarget;
   }
-  return linkOptions({
+  return {
     params: { locale },
     search: { [REDIRECT_PARAM]: resolution.intent },
     to: "/$locale/auth",
-  });
+  } satisfies LinkTarget;
 }
 
 /** Returns the localized-auth input needed when continuation has no session. */

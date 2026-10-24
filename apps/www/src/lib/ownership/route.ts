@@ -40,7 +40,7 @@ function isUserPath(segments: readonly string[]) {
     segments[0] === "settings" &&
     Arr.some(
       userSettingsSections,
-      ({ href }) => href === `/user/${Arr.join(segments, "/")}`
+      ({ target }) => target.to === `/$locale/user/${Arr.join(segments, "/")}`
     )
   );
 }

@@ -3,7 +3,7 @@ import {
   MaterialLessonProjectionSchema,
 } from "@nakafa/aksara-contracts/projection/material";
 import type { ContentPagination } from "@repo/contents/content";
-import { toContextualMaterialHref } from "@repo/contents/route/material/context";
+import { encodeMaterialContextHint } from "@repo/contents/route/material/context";
 import { Array as Arr, Option, Order, Schema } from "effect";
 import type { PublishedMaterialContext } from "@/lib/content/material/projection";
 
@@ -59,7 +59,7 @@ export function toMaterialNavigationPage(page: MaterialNavigationSource) {
   };
 }
 
-const emptyItem = { href: "", title: "" };
+const emptyItem = { publicPath: "", title: "" };
 
 /** Canonical localized URL for one signed material route. */
 export function toMaterialHref(route: {
@@ -88,7 +88,7 @@ const compareMaterialRoute = Order.combine(
 function readRoutePagination(
   current: MaterialNavigationPage["route"],
   siblings: readonly MaterialNavigationRoute[],
-  toHref?: (target: MaterialNavigationRoute) => string
+  toContext?: (target: MaterialNavigationRoute) => string | undefined
 ): ContentPagination {
   const ordered = Arr.sort(siblings, compareMaterialRoute);
   const currentIndex = Arr.findFirstIndex(
@@ -103,9 +103,11 @@ function readRoutePagination(
     if (!target) {
       return emptyItem;
     }
+    const context = toContext?.(target);
     return {
-      href: toHref?.(target) ?? toMaterialHref(target),
+      publicPath: target.publicPath,
       title: target.metadata.title,
+      ...(context === undefined ? {} : { context }),
     };
   };
   const next = ordered[currentIndex.value + 1];
@@ -132,31 +134,22 @@ export function readMaterialNavigation(
     };
   }
 
-  const toHref = (
-    target: Pick<
-      MaterialNavigationRoute,
-      "appLocale" | "parentPath" | "publicPath"
-    >
-  ) => {
-    const href = toMaterialHref(target);
-    if (
-      !(
-        published.resolvedCanonicalPath === target.publicPath ||
-        published.resolvedCanonicalPath === target.parentPath
-      )
-    ) {
-      return href;
-    }
-    return toContextualMaterialHref({
-      href,
-      ref: published.context,
-    });
-  };
+  const toContext = (
+    target: Pick<MaterialNavigationRoute, "parentPath" | "publicPath">
+  ) =>
+    published.resolvedCanonicalPath === target.publicPath ||
+    published.resolvedCanonicalPath === target.parentPath
+      ? encodeMaterialContextHint(published.context)
+      : undefined;
 
   return {
     context: published.context,
-    currentHref: toHref(page.route),
-    link: { href: published.href, label: published.label },
-    pagination: readRoutePagination(page.route, page.siblings, toHref),
+    currentContext: toContext(page.route),
+    link: {
+      hash: published.hash,
+      label: published.label,
+      publicPath: published.parent.publicPath,
+    },
+    pagination: readRoutePagination(page.route, page.siblings, toContext),
   };
 }

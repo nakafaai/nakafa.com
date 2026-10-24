@@ -11,7 +11,7 @@ import { hasPreviewConfig } from "@/lib/content/preview/config";
 
 const ArticleNavigationItemSchema = Schema.Struct({
   category: ArticleCategorySchema,
-  href: Schema.String,
+  route: Schema.String,
   title: ArticleCategoryTitleSchema,
 });
 
@@ -24,7 +24,7 @@ export const readArticleNavigation = Effect.fn("www.articles.readNavigation")(
     const { categories } = yield* readPublishedArticleCategories(locale);
     return Arr.map(categories, ({ category, route, title }) => ({
       category,
-      href: `/articles/${route}`,
+      route,
       title,
     }));
   }

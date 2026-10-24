@@ -1,4 +1,6 @@
 import { QueryResult } from "@confect/react";
+import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
+
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import { CardLink, CardLinks } from "@/components/shared/card/link";
@@ -7,13 +9,35 @@ import { homeSetupRead, useHomeSetup } from "@/components/tenant/home/query";
 import { missingSteps, type SetupStep } from "@/components/tenant/home/steps";
 import { HomeTile, RowText, TILE_ROWS } from "@/components/tenant/home/tile";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
+import type { LinkTarget } from "@/lib/routing/link";
+import { LOCALE_ROUTE } from "@/lib/routing/tree";
 
-/** The settings page where each step is completed. */
-const STEP_HREF: Record<SetupStep, string> = {
-  invites: "/settings/invites",
-  students: "/settings/students",
-  teacher: "/settings/invites",
-  unit: "/settings/units",
+/** The settings page where each step is completed, under the school's slug. */
+const STEP_TARGET: Record<SetupStep, (slug: TenantSlug) => LinkTarget> = {
+  invites: (slug) =>
+    ({
+      from: LOCALE_ROUTE,
+      params: { slug },
+      to: "/school/$slug/settings/invites",
+    }) satisfies LinkTarget,
+  students: (slug) =>
+    ({
+      from: LOCALE_ROUTE,
+      params: { slug },
+      to: "/school/$slug/settings/students",
+    }) satisfies LinkTarget,
+  teacher: (slug) =>
+    ({
+      from: LOCALE_ROUTE,
+      params: { slug },
+      to: "/school/$slug/settings/invites",
+    }) satisfies LinkTarget,
+  unit: (slug) =>
+    ({
+      from: LOCALE_ROUTE,
+      params: { slug },
+      to: "/school/$slug/settings/units",
+    }) satisfies LinkTarget,
 };
 
 /**
@@ -114,14 +138,14 @@ function SetupRows({ className }: { className?: string | undefined }) {
  * row has no other text, and without the arrow it would read as plain text.
  */
 function SetupRow({ step }: { step: SetupStep }) {
+  const tenant = useTenant();
   const t = useTranslations("School");
   const title = t(`setup-${step}`);
 
   return (
     <CardLink
       arrow="always"
-      href={STEP_HREF[step]}
-      localized={false}
+      target={STEP_TARGET[step](tenant.slug)}
       title={title}
     >
       <RowText title={title} />

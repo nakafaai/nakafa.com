@@ -9,7 +9,6 @@ import {
 } from "@repo/design-system/components/ui/card";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Nina } from "@repo/design-system/components/ui/nina";
-import { Link, useCurrentLocale } from "@repo/internationalization/src/link";
 import { Array as Arr } from "effect";
 import type { ComponentType, ReactNode } from "react";
 import { useTranslations } from "use-intl";
@@ -18,6 +17,7 @@ import {
   PricingPrice,
 } from "@/components/marketing/about/pricing/price";
 import { freePlanFeatures, proPlanFeatures } from "@/lib/marketing/plan";
+import { Link } from "@/lib/routing/link";
 
 interface PricingPlanCardsProps {
   headingLevel: "h2" | "h3";
@@ -49,7 +49,6 @@ export function PricingCards({
   proAction,
 }: PricingPlanCardsProps) {
   const t = useTranslations("Pricing");
-  const locale = useCurrentLocale();
   const PlanHeading = headingLevel;
   const credits = getPlanCreditConfig("pro").amount;
 
@@ -84,7 +83,6 @@ export function PricingCards({
             nativeButton={false}
             render={
               <Link
-                params={{ locale }}
                 rel="noopener noreferrer"
                 target="_blank"
                 to="/$locale/auth"

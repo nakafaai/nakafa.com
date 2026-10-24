@@ -2,6 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Array as Arr } from "effect";
 import {
   getSubjectMenuHref,
+  getSubjectMenuTarget,
   subjectMenu,
 } from "@/components/sidebar/data/subject";
 import { CURRICULUM_NAVIGATION_ICONS } from "@/lib/curriculum/icons";
@@ -45,5 +46,16 @@ describe("subject menu", () => {
         id: "/kurikulum/merdeka/kelas-12",
       },
     ]);
+  });
+
+  it("targets each grade's curriculum page on its own locale", () => {
+    const [item] = Arr.flatMap(subjectMenu, (category) => category.items);
+
+    expect(getSubjectMenuTarget(item, "en")).toEqual(
+      expect.objectContaining({
+        params: { _splat: "class-10", curriculum: "merdeka" },
+        to: "/$locale/curricula/$curriculum/$",
+      })
+    );
   });
 });

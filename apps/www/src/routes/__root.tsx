@@ -21,6 +21,7 @@ import { MotionConfig } from "motion/react";
 import type { ReactNode } from "react";
 import { DeferredPreviewRefresh } from "@/components/dev/deferred";
 import { Announcer } from "@/components/navigation/announcer";
+import { ContentPageAnchorProvider } from "@/components/shared/content/anchor";
 import {
   LocalizedError,
   LocalizedNotFound,
@@ -123,7 +124,9 @@ function RootDocument({ children }: { children: ReactNode }) {
         )}
         <ThemeProvider>
           <Announcer />
-          <MotionConfig reducedMotion="user">{children}</MotionConfig>
+          <MotionConfig reducedMotion="user">
+            <ContentPageAnchorProvider>{children}</ContentPageAnchorProvider>
+          </MotionConfig>
         </ThemeProvider>
         <Scripts />
       </body>

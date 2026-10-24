@@ -2,7 +2,6 @@ import type { Ref } from "@confect/core";
 
 import type tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { getTileShifts } from "@repo/design-system/lib/look";
-import { HrefLink } from "@repo/internationalization/src/link";
 import { Array as Arr, Effect, Predicate } from "effect";
 import type { Locale } from "use-intl";
 import { useTranslations } from "use-intl";
@@ -16,7 +15,7 @@ import {
 import { CountryFlagIcon } from "@/components/shared/flag";
 import { ComingSoon } from "@/components/shared/upcoming";
 import { saveTryoutPreference } from "@/components/tryout/catalog/preference";
-import { getTryoutPublicPathHref } from "@/components/tryout/route/path";
+import { TryoutPageLink } from "@/components/tryout/route/link";
 import { getTryoutCountryCatalogArtwork } from "@/lib/tryout/artwork";
 import { useSetPreferredTryoutMutation } from "@/lib/tryout/mutation";
 
@@ -120,9 +119,9 @@ function TryoutHubCountries({
       {Arr.map(Arr.zip(countries, visuals), ([country, visual], index) => (
         <CatalogCard
           action={
-            <HrefLink
-              href={getTryoutPublicPathHref(country.publicPath)}
+            <TryoutPageLink
               onClick={onPick === undefined ? undefined : () => onPick(country)}
+              publicPath={country.publicPath}
             />
           }
           actionLabel={tTryouts("open-country-cta")}

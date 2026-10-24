@@ -10,11 +10,11 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
-import { HrefLink } from "@repo/internationalization/src/link";
 import { toAnchorSlug } from "@repo/utilities/slug";
 import { useTranslations } from "use-intl";
 import type { PublishedArticleSummary } from "@/lib/content/article/catalog";
 import { formatPublished } from "@/lib/i18n/date";
+import { PublicPathLink } from "@/lib/routing/public/link";
 
 interface Props {
   readonly article: Pick<
@@ -29,9 +29,9 @@ export function CardArticle({ article }: Props) {
   const id = toAnchorSlug(article.title);
 
   return (
-    <HrefLink
+    <PublicPathLink
       className="group"
-      href={`/${article.publicPath}`}
+      publicPath={article.publicPath}
       title={article.title}
     >
       <Card className="relative h-full overflow-hidden">
@@ -69,6 +69,6 @@ export function CardArticle({ article }: Props) {
           </Tooltip>
         </CardFooter>
       </Card>
-    </HrefLink>
+    </PublicPathLink>
   );
 }

@@ -7,11 +7,6 @@ import {
   Timer02Icon,
 } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import {
-  DestinationLink,
-  type LinkTarget,
-  useCurrentLocale,
-} from "@repo/internationalization/src/link";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
@@ -20,6 +15,11 @@ import {
   getForYouNavigationTarget,
 } from "@/components/sidebar/data/navigation";
 import { usePreferredCurriculumTarget } from "@/lib/curriculum/preferences";
+import {
+  type LinkTarget,
+  TargetLink,
+  useCurrentLocale,
+} from "@/lib/routing/link";
 import { usePreferredTryoutTarget } from "@/lib/tryout/preferences";
 
 function SubjectIcon() {
@@ -123,8 +123,8 @@ export function HomeExplore() {
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 md:gap-6">
         {Arr.map(items, (item) => (
           <ExploreCard
-            destination={getForYouNavigationTarget(item, locale, preferences)}
             key={item.id}
+            target={getForYouNavigationTarget(item, preferences)}
             title={exploreCards[item.id].title}
           >
             {exploreCards[item.id].icon}
@@ -137,22 +137,22 @@ export function HomeExplore() {
 
 function ExploreCard({
   children,
-  destination,
+  target,
   title,
 }: {
   children: ReactNode;
-  destination: LinkTarget;
+  target: LinkTarget;
   title: string;
 }) {
   return (
-    <DestinationLink
+    <TargetLink
       className="group flex flex-col items-center gap-2"
-      destination={destination}
+      target={target}
     >
       <div className="flex aspect-[1/0.95] w-full items-center justify-center rounded-xl border bg-card">
         {children}
       </div>
       <h2>{title}</h2>
-    </DestinationLink>
+    </TargetLink>
   );
 }

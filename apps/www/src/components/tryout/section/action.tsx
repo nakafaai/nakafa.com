@@ -1,11 +1,12 @@
 import { ArrowLeft02Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { HrefLink } from "@repo/internationalization/src/link";
+
 import { cn } from "cn";
 import type { Locale } from "use-intl";
 import { useTranslations } from "use-intl";
-import { getTryoutAttemptHref } from "@/components/tryout/route/path";
+import { TryoutPageLink } from "@/components/tryout/route/link";
+import type { TryoutPageAddress } from "@/components/tryout/route/path";
 import type { TryoutSectionAttempt } from "@/components/tryout/runtime/types";
 import { StartSectionButton } from "@/components/tryout/section/start";
 import type { TryoutSummarySection } from "@/components/tryout/section/summary";
@@ -24,7 +25,7 @@ interface TryoutSummaryActionProps {
     attempt?: CurrentAttempt;
     completedAction: CompletedAction;
     locale: Locale;
-    returnHref: string;
+    returnAddress: TryoutPageAddress;
     section: TryoutSummarySection;
     sectionFinished: boolean;
     set: {
@@ -35,7 +36,7 @@ interface TryoutSummaryActionProps {
     };
     startAttemptSectionKey?: string;
     startDestination: {
-      href: string;
+      address: TryoutPageAddress;
       successNavigation: StartTryoutRequest["successNavigation"];
     } | null;
   };
@@ -50,7 +51,7 @@ export type TryoutStartDestination = NonNullable<
 interface StartOrResumeSectionCtaProps {
   value: {
     activeAttempt: NonNullable<CurrentAttempt>;
-    returnHref: string;
+    returnAddress: TryoutPageAddress;
     section: TryoutSummarySection;
   };
 }
@@ -69,7 +70,7 @@ export function TryoutSummaryAction({ value }: TryoutSummaryActionProps) {
       <StartOrResumeSectionCta
         value={{
           activeAttempt: value.activeAttempt,
-          returnHref: value.returnHref,
+          returnAddress: value.returnAddress,
           section: value.section,
         }}
       />
@@ -82,9 +83,9 @@ export function TryoutSummaryAction({ value }: TryoutSummaryActionProps) {
     return <TryoutReturnAction value={value} />;
   }
   const request: StartTryoutRequest = {
-    authRedirectHref: startDestination.href,
+    authRedirect: startDestination.address,
     countryKey: value.set.countryKey,
-    destinationHref: startDestination.href,
+    destination: startDestination.address,
     destinationSectionKey: value.section.sectionKey,
     ...(value.startAttemptSectionKey === undefined
       ? {}
@@ -106,34 +107,34 @@ function TryoutReturnAction({
 }: {
   value: Pick<
     TryoutSummaryActionProps["value"],
-    "activeAttempt" | "returnHref"
+    "activeAttempt" | "returnAddress"
   >;
 }) {
   const tTryouts = useTranslations("Tryouts");
   return (
-    <HrefLink
+    <TryoutPageLink
       className={cn(buttonVariants(), "w-full sm:w-auto")}
-      href={value.returnHref}
+      {...value.returnAddress}
     >
       <HugeIcons className="size-4" icon={ArrowLeft02Icon} />
       {tTryouts("back-to-set-cta")}
-    </HrefLink>
+    </TryoutPageLink>
   );
 }
 
 /** Starts a ready section or links to the active section already in progress. */
 function StartOrResumeSectionCta({ value }: StartOrResumeSectionCtaProps) {
   const tTryouts = useTranslations("Tryouts");
-  const resumeHref = getResumeHref(value);
+  const resumeAddress = getResumeAddress(value);
   const resumeSectionKey = value.activeAttempt.resumeSectionKey;
-  if (resumeHref && resumeSectionKey) {
+  if (resumeAddress && resumeSectionKey) {
     return (
-      <HrefLink
+      <TryoutPageLink
         className={cn(buttonVariants(), "w-full sm:w-auto")}
-        href={resumeHref}
+        {...resumeAddress}
       >
         {tTryouts("continue-cta")}
-      </HrefLink>
+      </TryoutPageLink>
     );
   }
   return (
@@ -144,8 +145,10 @@ function StartOrResumeSectionCta({ value }: StartOrResumeSectionCtaProps) {
   );
 }
 
-/** Returns the active attempt target when it belongs to another section. */
-function getResumeHref(value: StartOrResumeSectionCtaProps["value"]) {
+/** Returns the address of the active attempt when it belongs to another section. */
+function getResumeAddress(
+  value: StartOrResumeSectionCtaProps["value"]
+): TryoutPageAddress | null {
   const { activeAttempt, section } = value;
   if (!activeAttempt.resumeSectionKey) {
     return null;
@@ -154,10 +157,10 @@ function getResumeHref(value: StartOrResumeSectionCtaProps["value"]) {
     return null;
   }
   if (activeAttempt.resumeSectionPublicPath) {
-    return getTryoutAttemptHref(
-      activeAttempt.resumeSectionPublicPath,
-      activeAttempt.attemptId
-    );
+    return {
+      attemptId: activeAttempt.attemptId,
+      publicPath: activeAttempt.resumeSectionPublicPath,
+    };
   }
-  return value.returnHref;
+  return value.returnAddress;
 }

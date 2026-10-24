@@ -8,7 +8,6 @@ import {
   CardTitle,
 } from "@repo/design-system/components/ui/card";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { Link, useCurrentLocale } from "@repo/internationalization/src/link";
 import type { Locale } from "@repo/internationalization/src/locale";
 import { readServerTranslator } from "@repo/internationalization/src/translator";
 import { Array as Arr, Effect } from "effect";
@@ -31,6 +30,7 @@ import {
 } from "@/components/tryout/runtime/question/shell";
 import { TryoutReviewedResponse } from "@/components/tryout/runtime/response/review";
 import type { TryoutSectionRuntime } from "@/components/tryout/runtime/types";
+import { Link } from "@/lib/routing/link";
 
 /**
  * Loads the leading questions the backend previews to a free learner, with
@@ -158,7 +158,6 @@ function TryoutReviewOffer({
   readonly period: string;
   readonly title: string;
 }) {
-  const locale = useCurrentLocale();
   return (
     <CardSection className="relative w-full shadow-lg/5 max-md:rounded-t-2xl max-md:rounded-b-none max-md:border-t max-md:ring-0 md:max-w-md">
       <CardHeader>
@@ -174,7 +173,6 @@ function TryoutReviewOffer({
         <CardSectionActions share>
           <Link
             className={buttonVariants({ variant: "outline" })}
-            params={{ locale }}
             to="/$locale/pricing"
           >
             {compare}

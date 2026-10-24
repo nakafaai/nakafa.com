@@ -13,7 +13,6 @@ import {
 } from "@repo/design-system/components/ui/questionnaire";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { localizeInternalHref } from "@repo/internationalization/src/href";
-import { useCurrentLocale } from "@repo/internationalization/src/link";
 import { redirect, useNavigate } from "@tanstack/react-router";
 import { cn } from "cn";
 import { useConvex } from "convex/react";
@@ -52,6 +51,7 @@ import {
   type PostAuthIntentResolution,
 } from "@/lib/auth/admission";
 import { requireConvexOnline } from "@/lib/convex/online";
+import { useCurrentLocale } from "@/lib/routing/link";
 
 /** Runs the complete resumable questionnaire inside the shared entry shell. */
 export function OnboardingQuestionnaire({

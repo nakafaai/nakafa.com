@@ -113,34 +113,34 @@ describe("signed Page navigation", () => {
 
         expect(navigation).toEqual({
           developerItem: {
-            href: "/developers",
+            publicPath: "developers",
             pageKey: "developers",
             title: "Entwicklerressourcen",
           },
           legalItems: [
             {
-              href: "/imprint",
+              publicPath: "imprint",
               pageKey: "imprint",
               title: "Impressum",
             },
             {
-              href: "/privacy-policy",
+              publicPath: "privacy-policy",
               pageKey: "privacy-policy",
               title: "Datenschutzrichtlinie",
             },
             {
-              href: "/security-policy",
+              publicPath: "security-policy",
               pageKey: "security-policy",
               title: "Sicherheitsrichtlinie",
             },
             {
-              href: "/terms-of-service",
+              publicPath: "terms-of-service",
               pageKey: "terms-of-service",
               title: "Nutzungsbedingungen",
             },
           ],
-          privacyPolicyHref: "/privacy-policy",
-          termsOfServiceHref: "/terms-of-service",
+          privacyPolicyPath: "privacy-policy",
+          termsOfServicePath: "terms-of-service",
         });
       })
   );
@@ -222,8 +222,8 @@ describe("signed Page navigation", () => {
         );
 
         expect(navigation).toMatchObject({
-          privacyPolicyHref: "/privacy-policy",
-          termsOfServiceHref: "/terms-of-service",
+          privacyPolicyPath: "privacy-policy",
+          termsOfServicePath: "terms-of-service",
         });
       })
   );

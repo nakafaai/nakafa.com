@@ -11,13 +11,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
-import {
-  DestinationLink,
-  EXACT_ACTIVE_OPTIONS,
-  type LinkTarget,
-  useCurrentLocale,
-} from "@repo/internationalization/src/link";
-import { useMatchRoute, useRouter } from "@tanstack/react-router";
+import { useRouter } from "@tanstack/react-router";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import { ConvexIsland } from "@/components/providers/island";
@@ -26,6 +20,13 @@ import {
   getForYouNavigationTarget,
 } from "@/components/sidebar/data/navigation";
 import { usePreferredCurriculumTarget } from "@/lib/curriculum/preferences";
+import {
+  Link,
+  type LinkTarget,
+  useCurrentLocale,
+  useRouteMatched,
+} from "@/lib/routing/link";
+import { EXACT_ACTIVE_OPTIONS } from "@/lib/routing/tree";
 import { usePreferredTryoutTarget } from "@/lib/tryout/preferences";
 
 type ForYouItem = ReturnType<typeof getForYouNavigationItems>[number];
@@ -54,15 +55,10 @@ export function NavForYou() {
 
 /** One shortcut, whose destination reads the learner's preferences on the page's Convex island. */
 function ForYouMenuItem({ item }: { item: ForYouItem }) {
-  const locale = useCurrentLocale();
-
   return (
     <ConvexIsland
       fallback={
-        <ForYouLink
-          destination={getForYouNavigationTarget(item, locale)}
-          item={item}
-        />
+        <ForYouLink destination={getForYouNavigationTarget(item)} item={item} />
       }
     >
       <LearnerForYouMenuItem item={item} />
@@ -78,7 +74,7 @@ function LearnerForYouMenuItem({ item }: { item: ForYouItem }) {
 
   return (
     <ForYouLink
-      destination={getForYouNavigationTarget(item, locale, {
+      destination={getForYouNavigationTarget(item, {
         preferredCurriculumTarget,
         preferredTryoutTarget,
       })}
@@ -96,7 +92,6 @@ function ForYouLink({
   item: ForYouItem;
 }) {
   const router = useRouter();
-  const matchRoute = useMatchRoute();
   const tAi = useTranslations("Ai");
   const tCommon = useTranslations("Common");
   const label =
@@ -107,20 +102,20 @@ function ForYouLink({
   const prefetchAskNina = isAskNina
     ? () => router.preloadRoute(destination)
     : undefined;
-  const isActive = matchRoute({ ...destination, fuzzy: true }) !== false;
+  const isActive = useRouteMatched(destination.to, { exact: false });
 
   return (
     <SidebarMenuItem>
       <SidebarMenuButton
         isActive={isActive}
         render={
-          <DestinationLink
+          <Link
             activeOptions={EXACT_ACTIVE_OPTIONS}
-            destination={destination}
+            {...destination}
             onFocus={prefetchAskNina}
             onPointerEnter={prefetchAskNina}
             onTouchStart={prefetchAskNina}
-            preload={isAskNina ? false : undefined}
+            {...(isAskNina && { preload: false })}
             title={label}
           />
         }

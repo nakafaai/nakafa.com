@@ -101,11 +101,11 @@ const readSchoolStartPage = Effect.fn("www.entry.schoolStart")(function* (
     legal: pages
       ? {
           privacy: new URL(
-            `/${input.locale}${pages.privacyPolicyHref}`,
+            `/${input.locale}/${pages.privacyPolicyPath}`,
             SITE_ORIGIN
           ).href,
           terms: new URL(
-            `/${input.locale}${pages.termsOfServiceHref}`,
+            `/${input.locale}/${pages.termsOfServicePath}`,
             SITE_ORIGIN
           ).href,
         }

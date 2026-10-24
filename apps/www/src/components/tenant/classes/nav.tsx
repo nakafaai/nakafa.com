@@ -4,7 +4,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
-import { Link } from "@repo/internationalization/src/link";
 import { useMatchRoute } from "@tanstack/react-router";
 import { Array as Arr } from "effect";
 import { use } from "react";
@@ -16,6 +15,7 @@ import { useTenant } from "@/components/tenant/context";
 import { TenantSidebarGroup } from "@/components/tenant/group";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { usePreloadedQueryResult } from "@/lib/data/preloaded";
+import { Link } from "@/lib/routing/link";
 
 /**
  * The Classes group of the school sidebar: one entry per class the viewer teaches or

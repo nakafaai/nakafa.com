@@ -5,7 +5,6 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { InputGroupTextarea } from "@repo/design-system/components/ui/input-group";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { Link } from "@repo/internationalization/src/link";
 import { cn } from "cn";
 import { Effect, Option, Result } from "effect";
 import type { FocusEvent, FormEvent, KeyboardEvent } from "react";
@@ -16,6 +15,7 @@ import { FeedAvatar, FeedForm } from "@/components/user/feed";
 import { remainingToShow } from "@/components/user/posts/remaining";
 import { useCurrentAuthNavigation } from "@/lib/auth/location";
 import { useViewer } from "@/lib/identity/client";
+import { Link } from "@/lib/routing/link";
 
 /** Props of the composer: whose words it holds, how it posts, and how it closes when it is a reply. */
 interface Props {

@@ -54,7 +54,7 @@ export function BreadcrumbMenu({
             {Arr.map(items, (item) => (
               <BreadcrumbMenuItem
                 item={item}
-                key={`${item.label}:${item.href ?? "current"}`}
+                key={`${item.label}:${item.target === undefined ? "current" : "link"}`}
                 onChoose={() => setOpen(false)}
               />
             ))}
@@ -75,14 +75,14 @@ function BreadcrumbMenuItem({
 }) {
   const label = item.menuLabel ?? item.label;
 
-  if (!item.href) {
+  if (item.target === undefined) {
     return <DropdownMenuItem render={<span>{label}</span>} />;
   }
 
   return (
     <DropdownMenuItem
       onClick={onChoose}
-      render={<BreadcrumbAnchor href={item.href}>{label}</BreadcrumbAnchor>}
+      render={<BreadcrumbAnchor target={item.target}>{label}</BreadcrumbAnchor>}
     />
   );
 }

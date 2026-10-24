@@ -4,7 +4,6 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { toast } from "@repo/design-system/lib/toast/notify";
-import { useCurrentLocale } from "@repo/internationalization/src/link";
 import { useNavigate, useRouter } from "@tanstack/react-router";
 import { useConvex } from "convex/react";
 import { Effect } from "effect";
@@ -33,7 +32,6 @@ export function ChatDeletion({
   const t = useTranslations("Ai");
   const router = useRouter();
   const navigate = useNavigate();
-  const locale = useCurrentLocale();
   const user = useViewer((s) => s.account);
   const deleteChat = useDeleteChatMutation();
   const leaving = useChatStore((state) => state.leaving);
@@ -56,8 +54,7 @@ export function ChatDeletion({
         close: () => onOpenChange(false),
         convex,
         deleteChat,
-        deleted: () =>
-          navigate({ ...ownChatsTarget(username, locale), replace: true }),
+        deleted: () => navigate({ ...ownChatsTarget(username), replace: true }),
         leave,
         refused: () => {
           stay();

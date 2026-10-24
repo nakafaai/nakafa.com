@@ -8,6 +8,7 @@ import {
   type BreadcrumbHeaderItem,
   BreadcrumbHeaderPath,
 } from "@/components/shared/breadcrumb/header";
+import { HOME_TARGET, TRYOUT_TARGET } from "@/lib/routing/target";
 
 /**
  * Keeps navigation, heading, and the primary action in one row at every width. On a
@@ -24,8 +25,11 @@ export function TryoutPageHeader({
   title: string;
 }) {
   const tCommon = useTranslations("Common");
-  const path = [
-    { href: "/try-out", label: tCommon("try-out-short") },
+  const path: readonly BreadcrumbHeaderItem[] = [
+    {
+      label: tCommon("try-out-short"),
+      target: TRYOUT_TARGET,
+    },
     ...items,
   ];
   return (
@@ -33,14 +37,14 @@ export function TryoutPageHeader({
       <div className="min-w-0">
         <BreadcrumbHeaderFold
           className="md:hidden"
-          homeHref="/home"
+          home={HOME_TARGET}
           homeLabel={tCommon("home")}
           items={path}
           menuLabel={tCommon("more")}
         />
         <div className="min-w-0 max-md:hidden">
           <BreadcrumbHeaderPath
-            homeHref="/home"
+            home={HOME_TARGET}
             homeLabel={tCommon("home")}
             items={path}
             menuLabel={tCommon("more")}

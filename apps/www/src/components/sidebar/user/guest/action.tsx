@@ -1,9 +1,9 @@
 import { Login03Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { Link } from "@repo/internationalization/src/link";
 import { useTranslations } from "use-intl";
 import { useCurrentAuthNavigation } from "@/lib/auth/location";
+import { Link } from "@/lib/routing/link";
 
 /** Renders the primary guest login action for a sidebar footer. */
 export function NavUserGuestButton() {

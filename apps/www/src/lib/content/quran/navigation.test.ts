@@ -25,11 +25,11 @@ describe("quran page helpers", () => {
       })
     ).toEqual({
       next: {
-        href: "/quran/2",
+        publicPath: "quran/2",
         title: "Al-Baqarah",
       },
       prev: {
-        href: "",
+        publicPath: "",
         title: "",
       },
     });
@@ -40,11 +40,11 @@ describe("quran page helpers", () => {
       })
     ).toEqual({
       next: {
-        href: "",
+        publicPath: "",
         title: "",
       },
       prev: {
-        href: "/quran/2",
+        publicPath: "quran/2",
         title: "Al-Baqarah",
       },
     });

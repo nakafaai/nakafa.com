@@ -52,6 +52,7 @@ import { getMaterialPublication } from "@/lib/content/material/publication";
 import { getAksaraUrl } from "@/lib/content/repository";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getLlmsMarkdownPath } from "@/lib/llms/format";
+import { HOME_TARGET } from "@/lib/routing/target";
 import { createResolvedRouteAlternates } from "@/lib/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { createSeoHead, toHeadAlternates, toRouterHead } from "@/lib/seo/head";
@@ -233,7 +234,7 @@ function MaterialPage() {
           <ContentHeader
             breadcrumb={
               <BreadcrumbHeaderPath
-                homeHref="/home"
+                home={HOME_TARGET}
                 homeLabel={labels.home}
                 items={[]}
                 menuLabel={labels.more}
@@ -281,7 +282,7 @@ function MaterialPage() {
           header={
             <SidebarRightHeader
               description={metadata.description ?? metadata.subject}
-              href={route.href}
+              publicPath={route.publicPath}
               title={metadata.title}
             />
           }

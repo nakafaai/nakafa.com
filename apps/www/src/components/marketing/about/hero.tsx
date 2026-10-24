@@ -1,14 +1,9 @@
 import { Button } from "@repo/design-system/components/ui/button";
 import { Nina } from "@repo/design-system/components/ui/nina";
-import {
-  EXACT_ACTIVE_OPTIONS,
-  HrefLink,
-  Link,
-  useCurrentLocale,
-} from "@repo/internationalization/src/link";
 import { useTranslations } from "use-intl";
 import { HERO_NINA_ID } from "@/components/marketing/about/hero/id";
-import { getCurriculumIndexHref } from "@/lib/curriculum/routes";
+import { Link } from "@/lib/routing/link";
+import { EXACT_ACTIVE_OPTIONS } from "@/lib/routing/tree";
 
 /**
  * The first part of the home page, in the middle of the screen: one sentence,
@@ -19,7 +14,6 @@ import { getCurriculumIndexHref } from "@/lib/curriculum/routes";
  */
 export function Hero() {
   const t = useTranslations("Landing");
-  const locale = useCurrentLocale();
 
   return (
     <section
@@ -38,24 +32,13 @@ export function Hero() {
         <div className="flex flex-wrap items-center justify-center gap-3">
           <Button
             nativeButton={false}
-            render={
-              <HrefLink
-                activeOptions={EXACT_ACTIVE_OPTIONS}
-                href={getCurriculumIndexHref(locale)}
-              >
-                {t("hero-start")}
-              </HrefLink>
-            }
+            render={<Link to="/$locale/curricula">{t("hero-start")}</Link>}
             size="lg"
           />
           <Button
             nativeButton={false}
             render={
-              <Link
-                activeOptions={EXACT_ACTIVE_OPTIONS}
-                params={{ locale }}
-                to="/$locale/try-out"
-              >
+              <Link activeOptions={EXACT_ACTIVE_OPTIONS} to="/$locale/try-out">
                 {t("hero-tryout")}
               </Link>
             }

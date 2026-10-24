@@ -3,7 +3,6 @@ import { CancelCircleIcon, Key01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { Link } from "@repo/internationalization/src/link";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
 import {
@@ -16,6 +15,11 @@ import {
 } from "@/components/exams/sitting/dialogs";
 import { useTenant } from "@/components/tenant/context";
 import { SchoolHeader } from "@/components/tenant/header";
+import { Link } from "@/lib/routing/link";
+import {
+  schoolExamsTarget,
+  schoolExamTarget,
+} from "@/lib/routing/school/target";
 
 /**
  * The one header of the dashboard: the sidebar's trigger, the path from the exams through the
@@ -39,8 +43,18 @@ export function SittingHeader({
   return (
     <SchoolHeader
       items={[
-        ...(tenant.canOpenExams ? [{ href: "/exams", label: t("title") }] : []),
-        { href: `/exams/${examId}`, label: value.sitting.examTitle },
+        ...(tenant.canOpenExams
+          ? [
+              {
+                label: t("title"),
+                target: schoolExamsTarget(tenant.slug),
+              },
+            ]
+          : []),
+        {
+          label: value.sitting.examTitle,
+          target: schoolExamTarget(tenant.slug, examId),
+        },
         { label: value.sitting.room },
       ]}
       title={value.sitting.room}
