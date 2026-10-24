@@ -40,7 +40,20 @@ test("a visitor's profile opens no socket, sends no session read, loads more pos
         yield* Effect.promise(() =>
           page.goto(`/en/@${learner.username}`, { waitUntil: "load" })
         );
+        yield* Effect.promise(() =>
+          expect(page.locator('[data-slot="feed-row"]').first()).toBeVisible()
+        );
+        // The loader's first page is on the screen, so the scroll must add a page read.
+        yield* Effect.promise(() => page.waitForLoadState("networkidle"));
+        const loadedCalls = yield* Effect.sync(
+          () => MutableList.toArray(serverCalls).length
+        );
         yield* Effect.promise(() => scrollRows(page));
+        yield* Effect.promise(() =>
+          expect
+            .poll(() => MutableList.toArray(serverCalls).length)
+            .toBeGreaterThan(loadedCalls)
+        );
         yield* Effect.promise(() => likeFirstRow(page));
         yield* Effect.promise(() => expect(page).toHaveURL(AUTH_URL));
         yield* Effect.sync(() => {

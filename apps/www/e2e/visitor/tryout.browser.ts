@@ -39,11 +39,16 @@ test("a visitor's try-out track opens no socket, sends no session read, and load
         yield* Effect.promise(() =>
           expect(page.getByRole("table").first()).toBeVisible()
         );
+        // The loader's own window read is already counted, so the scroll must add one.
+        yield* Effect.promise(() => page.waitForLoadState("networkidle"));
+        const loadedCalls = yield* Effect.sync(
+          () => MutableList.toArray(serverCalls).length
+        );
         yield* Effect.promise(() => scrollRows(page));
         yield* Effect.promise(() =>
           expect
             .poll(() => MutableList.toArray(serverCalls).length)
-            .toBeGreaterThan(0)
+            .toBeGreaterThan(loadedCalls)
         );
         yield* Effect.sync(() => {
           expect(MutableList.toArray(sockets)).toStrictEqual([]);

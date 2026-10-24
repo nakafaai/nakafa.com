@@ -36,8 +36,9 @@ test("a visitor's curricula open no socket and send no session read, and a curri
           .filter({ hasText: ANY_TEXT })
           .nth(1);
         yield* Effect.promise(() => first.click());
+        // A visitor's link opens one curriculum's page, a path below the catalog.
         yield* Effect.promise(() =>
-          expect(page).not.toHaveURL(new RegExp(`${CURRICULA_PATH}$`))
+          expect(page).toHaveURL(new RegExp(`${CURRICULA_PATH}/[^/?#]+`))
         );
         yield* Effect.sync(() => {
           expect(MutableList.toArray(sockets)).toStrictEqual([]);

@@ -39,12 +39,13 @@ test("a visitor's new chat opens no socket, and sending from its composer asks f
         yield* Effect.promise(() =>
           composer.fill("Explain the quadratic formula")
         );
-        yield* Effect.promise(() => composer.press("Enter"));
-        yield* Effect.promise(() => expect(page).toHaveURL(AUTH_URL));
+        // The chat page itself opens no socket and reads no session, before the send.
         yield* Effect.sync(() => {
           expect(MutableList.toArray(sockets)).toStrictEqual([]);
           expect(MutableList.toArray(sessionReads)).toStrictEqual([]);
         });
+        yield* Effect.promise(() => composer.press("Enter"));
+        yield* Effect.promise(() => expect(page).toHaveURL(AUTH_URL));
       })
     )
   );

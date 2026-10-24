@@ -15,7 +15,8 @@ test("a visitor's search opens no socket, sends no session read, and reads its r
 }) => {
   const sockets = MutableList.make<string>();
   const sessionReads = MutableList.make<string>();
-  const serverCalls = MutableList.make<string>();
+  // The typed query travels in the POST body, so only the read of that query counts.
+  const searchCalls = MutableList.make<string>();
   page.on("websocket", (socket) => {
     MutableList.append(sockets, socket.url());
   });
@@ -23,8 +24,11 @@ test("a visitor's search opens no socket, sends no session read, and reads its r
     if (request.url().includes(SESSION_READ)) {
       MutableList.append(sessionReads, request.url());
     }
-    if (request.url().includes(SERVER_FUNCTION_PATH)) {
-      MutableList.append(serverCalls, request.url());
+    if (
+      request.url().includes(SERVER_FUNCTION_PATH) &&
+      (request.postData() ?? "").includes("geometry")
+    ) {
+      MutableList.append(searchCalls, request.url());
     }
   });
 
@@ -37,8 +41,11 @@ test("a visitor's search opens no socket, sends no session read, and reads its r
         );
         yield* Effect.promise(() =>
           expect
-            .poll(() => MutableList.toArray(serverCalls).length)
+            .poll(() => MutableList.toArray(searchCalls).length)
             .toBeGreaterThan(0)
+        );
+        yield* Effect.promise(() =>
+          expect(page.locator("#results a").first()).toBeVisible()
         );
         yield* Effect.sync(() => {
           expect(MutableList.toArray(sockets)).toStrictEqual([]);
