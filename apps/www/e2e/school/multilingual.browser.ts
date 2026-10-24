@@ -1,4 +1,11 @@
-import { expect, type Locator, type Page, test } from "@playwright/test";
+import {
+  type Browser,
+  expect,
+  type Locator,
+  type Page,
+  type TestInfo,
+  test,
+} from "@playwright/test";
 import { Array as Arr, Effect } from "effect";
 import {
   createSchool,
@@ -69,93 +76,104 @@ function fitsTheViewport(page: Page) {
   );
 }
 
-test("a question that mixes Indonesian, Arabic and English reads in each paragraph's direction, in the editor and the student's sitting, at a phone and a desktop width", async ({
-  baseURL,
-  browser,
-}) => {
-  for (const viewport of VIEWPORTS) {
-    const school = await Effect.runPromise(createSchool());
-    const host = `${school.slug}.localhost`;
-    const address = (path: string) => hostAddress(baseURL, host, path);
-    const learner = `student-${school.slug}@acceptance.example.test`;
+/**
+ * One school with an exam whose second question mixes three languages, read in the editor and in the
+ * student's sitting at one viewport, plus the school's home, which shows no Arabic.
+ */
+async function expectMixedQuestionAt(
+  browser: Browser,
+  baseURL: string | undefined,
+  viewport: (typeof VIEWPORTS)[number],
+  testInfo: TestInfo
+) {
+  const school = await Effect.runPromise(createSchool());
+  const host = `${school.slug}.localhost`;
+  const address = (path: string) => hostAddress(baseURL, host, path);
+  const learner = `student-${school.slug}@acceptance.example.test`;
 
-    const studentContext = await browser.newContext();
-    await Effect.runPromise(
-      inviteLearner({
-        address: learner,
-        baseURL: address("/"),
-        context: studentContext,
-        slug: school.slug,
-      })
-    );
-    const ownerContext = await browser.newContext();
-    await Effect.runPromise(
-      signInOwner(ownerContext, school.slug, address("/"))
-    );
-    const sitting = await Effect.runPromise(seedSitting(school.slug, learner));
+  const studentContext = await browser.newContext();
+  await Effect.runPromise(
+    inviteLearner({
+      address: learner,
+      baseURL: address("/"),
+      context: studentContext,
+      slug: school.slug,
+    })
+  );
+  const ownerContext = await browser.newContext();
+  await Effect.runPromise(signInOwner(ownerContext, school.slug, address("/")));
+  const sitting = await Effect.runPromise(seedSitting(school.slug, learner));
 
-    // The editor: the owner opens the exam, and reads the second question's prompt in place.
-    const owner = await ownerContext.newPage();
-    await owner.setViewportSize(viewport);
-    await owner.goto(address(`/exams/${sitting.examId}/edit`));
-    const editorPrompt = owner.getByRole("textbox", {
-      name: "Question 2 text",
-    });
-    await expect(editorPrompt).toBeVisible({
+  // The editor: the owner opens the exam, and reads the second question's prompt in place.
+  const owner = await ownerContext.newPage();
+  await owner.setViewportSize(viewport);
+  await owner.goto(address(`/exams/${sitting.examId}/edit`));
+  const editorPrompt = owner.getByRole("textbox", { name: "Question 2 text" });
+  await expect(editorPrompt).toBeVisible({
+    timeout: readinessTimeoutMilliseconds,
+  });
+  await expectParagraphsInTheirDirection(editorPrompt);
+  await expect
+    .poll(() => amiriDrawsArabic(owner), {
       timeout: readinessTimeoutMilliseconds,
-    });
-    await expectParagraphsInTheirDirection(editorPrompt);
-    await expect
-      .poll(() => amiriDrawsArabic(owner), {
-        timeout: readinessTimeoutMilliseconds,
-      })
-      .toBe(true);
-    expect(await fitsTheViewport(owner)).toBe(true);
-    await owner.screenshot({
-      fullPage: true,
-      path: test.info().outputPath(`multilingual-editor-${viewport.name}.png`),
-    });
+    })
+    .toBe(true);
+  expect(await fitsTheViewport(owner)).toBe(true);
+  await owner.screenshot({
+    fullPage: true,
+    path: testInfo.outputPath(`multilingual-editor-${viewport.name}.png`),
+  });
 
-    // The student's sitting: the learner enters with the token and reads the same question.
-    const student = await studentContext.newPage();
-    await student.setViewportSize(viewport);
-    await student.goto(address(`/sittings/${sitting.sittingId}`));
-    await student
-      .getByPlaceholder("Enter the token from your proctor")
-      .fill(sitting.token);
-    await student.getByRole("button", { name: "Enter sitting" }).click();
-    await expect(
-      student.getByRole("heading", { name: "Question 2" })
-    ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
-    const studentPrompt = student
-      .getByRole("textbox", { name: "Question text" })
-      .nth(1);
-    await expectParagraphsInTheirDirection(studentPrompt);
-    await expect
-      .poll(() => amiriDrawsArabic(student), {
-        timeout: readinessTimeoutMilliseconds,
-      })
-      .toBe(true);
-    expect(await fitsTheViewport(student)).toBe(true);
-    await student.screenshot({
-      fullPage: true,
-      path: test.info().outputPath(`multilingual-student-${viewport.name}.png`),
-    });
-
-    // A page that shows no Arabic loads no Amiri face: the school's home has only Latin text.
-    const home = await ownerContext.newPage();
-    await home.setViewportSize(viewport);
-    await home.goto(address("/"));
-    await expect(home.locator('[data-sidebar="sidebar"]:visible')).toBeVisible({
+  // The student's sitting: the learner enters with the token and reads the same question.
+  const student = await studentContext.newPage();
+  await student.setViewportSize(viewport);
+  await student.goto(address(`/sittings/${sitting.sittingId}`));
+  await student
+    .getByPlaceholder("Enter the token from your proctor")
+    .fill(sitting.token);
+  await student.getByRole("button", { name: "Enter sitting" }).click();
+  await expect(
+    student.getByRole("heading", { name: "Question 2" })
+  ).toBeVisible({
+    timeout: readinessTimeoutMilliseconds,
+  });
+  const studentPrompt = student
+    .getByRole("textbox", { name: "Question text" })
+    .nth(1);
+  await expectParagraphsInTheirDirection(studentPrompt);
+  await expect
+    .poll(() => amiriDrawsArabic(student), {
       timeout: readinessTimeoutMilliseconds,
-    });
-    const amiriLoaded = await home.evaluate(
-      () =>
-        Array.from(document.fonts).filter(
-          (face) => face.family.includes("Amiri") && face.status === "loaded"
-        ).length
-    );
-    expect(amiriLoaded).toBe(0);
-    await Promise.all([studentContext.close(), ownerContext.close()]);
-  }
-});
+    })
+    .toBe(true);
+  expect(await fitsTheViewport(student)).toBe(true);
+  await student.screenshot({
+    fullPage: true,
+    path: testInfo.outputPath(`multilingual-student-${viewport.name}.png`),
+  });
+
+  // A page that shows no Arabic loads no Amiri face: the school's home has only Latin text.
+  const home = await ownerContext.newPage();
+  await home.setViewportSize(viewport);
+  await home.goto(address("/"));
+  await expect(home.locator('[data-sidebar="sidebar"]:visible')).toBeVisible({
+    timeout: readinessTimeoutMilliseconds,
+  });
+  const amiriLoaded = await home.evaluate(
+    () =>
+      Array.from(document.fonts).filter(
+        (face) => face.family.includes("Amiri") && face.status === "loaded"
+      ).length
+  );
+  expect(amiriLoaded).toBe(0);
+  await Promise.all([studentContext.close(), ownerContext.close()]);
+}
+
+for (const viewport of VIEWPORTS) {
+  test(`a question that mixes Indonesian, Arabic and English reads in each paragraph's direction at ${viewport.name} px, in the editor and the student's sitting`, async ({
+    baseURL,
+    browser,
+  }, testInfo) => {
+    await expectMixedQuestionAt(browser, baseURL, viewport, testInfo);
+  });
+}
