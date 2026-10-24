@@ -1,7 +1,8 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Sha256HashSchema } from "@nakafa/aksara-contracts/ids";
-import { Effect, Result } from "effect";
+import { Effect, Option, Result } from "effect";
+import { ACTIVE_POINTER_TAG } from "@/lib/content/published/active";
 import {
   QuranSnapshotRecoveryError,
   recoverStalePublishedQuranSnapshot,
@@ -59,16 +60,30 @@ describe("stale published Quran snapshot recovery", () => {
     })
   );
 
-  it.effect("immediately expires only the captured stale snapshot tag", () =>
-    Effect.gen(function* () {
-      const recovered =
-        yield* recoverStalePublishedQuranSnapshot(staleSnapshotId);
+  it.effect(
+    "drops the stored release pointer and keeps every other entry",
+    () =>
+      Effect.gen(function* () {
+        testRuntimeCache.set("pointer", "stored", {
+          expiresAt: 1000,
+          now: 0,
+          tags: [ACTIVE_POINTER_TAG],
+        });
+        testRuntimeCache.set("release", "kept", {
+          expiresAt: 1000,
+          now: 0,
+          tags: ["content-release:release-a"],
+        });
 
-      expect(recovered).toBe(true);
-      expect(testRuntimeCache.expireTag).toHaveBeenCalledExactlyOnceWith(
-        `content-artifact:${staleSnapshotId}`
-      );
-    })
+        const recovered =
+          yield* recoverStalePublishedQuranSnapshot(staleSnapshotId);
+
+        expect(recovered).toBe(true);
+        expect(testRuntimeCache.get("pointer")).toStrictEqual(Option.none());
+        expect(testRuntimeCache.get("release")).toStrictEqual(
+          Option.some("kept")
+        );
+      })
   );
 
   it.effect(

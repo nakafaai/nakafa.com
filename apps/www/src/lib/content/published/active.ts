@@ -28,7 +28,8 @@ export type ActiveContentReleaseId =
   NonNullable<ActiveContentIdentity>["releaseId"];
 
 /** Store tag of the active release pointer, expired in the isolate that activates a release. */
-const ACTIVE_POINTER_TAG = "content-active";
+/** The store tag of the stored release pointer, which expires it. */
+export const ACTIVE_POINTER_TAG = "content-active";
 const ACTIVE_POINTER_PARTS = ["active"];
 /**
  * How long an isolate trusts its stored pointer when nothing drops it.
