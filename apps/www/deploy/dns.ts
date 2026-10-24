@@ -209,20 +209,21 @@ export const deployNakafaIdZone = Effect.fn("deploy.nakafaIdZone")(
     }).pipe(adopt(true));
     const zoneId = zone.zoneId;
 
+    // Both placeholder records were set up by hand before the stack owned the zone, so the stack adopts them.
     yield* DNS.Record("NakafaIdApex", {
       zoneId,
       name: "@",
       type: "A",
       content: EDGE_PLACEHOLDER_ADDRESS,
       proxied: true,
-    });
+    }).pipe(adopt(true));
     yield* DNS.Record("NakafaIdWildcard", {
       zoneId,
       name: "*",
       type: "A",
       content: EDGE_PLACEHOLDER_ADDRESS,
       proxied: true,
-    });
+    }).pipe(adopt(true));
 
     yield* Ruleset.Ruleset("NakafaIdRedirect", {
       zone,

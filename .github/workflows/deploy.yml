@@ -28,7 +28,9 @@ jobs:
     # The GitHub environment of the stage holds that stage's values and nothing else.
     environment: ${{ github.event_name == 'workflow_dispatch' && inputs.stage == 'staging' && 'staging' || 'production' }}
     env:
-      STAGE: ${{ github.event_name == 'workflow_dispatch' && inputs.stage || 'prod' }}
+      # The one name of the deploy identity. The build reads it too: the prerender and the
+      # static artifacts run in this process, before any Worker binding exists.
+      NAKAFA_DEPLOY_STAGE: ${{ github.event_name == 'workflow_dispatch' && inputs.stage || 'prod' }}
       NAKAFA_RELEASE_SHA: ${{ github.sha }}
     steps:
       - name: Check out the commit
@@ -39,7 +41,7 @@ jobs:
       - name: Guard the stage
         shell: bash
         run: |
-          case "$STAGE" in
+          case "$NAKAFA_DEPLOY_STAGE" in
             prod)
               if [ "$GITHUB_REF" != "refs/heads/main" ]; then
                 echo "Production deploys run only from main." >&2
@@ -48,7 +50,7 @@ jobs:
               ;;
             staging) ;;
             *)
-              echo "Unknown stage: $STAGE" >&2
+              echo "Unknown stage: $NAKAFA_DEPLOY_STAGE" >&2
               exit 1
               ;;
           esac
@@ -81,4 +83,4 @@ jobs:
 
       - name: Deploy the Cloudflare stack
         working-directory: apps/www
-        run: pnpm exec alchemy deploy --stage "$STAGE" --yes
+        run: pnpm exec alchemy deploy --stage "$NAKAFA_DEPLOY_STAGE" --yes
