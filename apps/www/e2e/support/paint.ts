@@ -61,14 +61,22 @@ export const recordPaints = (
         ].filter((candidate) => (candidate.textContent ?? "").includes(needle));
         // A shown match is the one a reader sees, so a hidden twin never stands in for it.
         const element =
-          matches.find((candidate) => candidate.checkVisibility()) ??
-          matches[0];
+          matches.find((candidate) =>
+            candidate.checkVisibility({
+              checkOpacity: true,
+              checkVisibilityCSS: true,
+            })
+          ) ?? matches[0];
         samples.push({
           at: now - start,
           controls: element?.querySelectorAll(controlQuery).length ?? 0,
           height: element?.offsetHeight ?? 0,
+          // An opacity-0 frame, such as the first frame of an open animation, is not shown.
           shown:
-            element?.checkVisibility({ checkVisibilityCSS: true }) ?? false,
+            element?.checkVisibility({
+              checkOpacity: true,
+              checkVisibilityCSS: true,
+            }) ?? false,
           text: element?.textContent?.length ?? 0,
         });
         if (now - start < span) {
