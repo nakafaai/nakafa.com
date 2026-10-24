@@ -20,6 +20,7 @@ import { useSidebar } from "@repo/design-system/lib/sidebar/context";
 import type { Mascot } from "@repo/mascot/code";
 import { type ReactNode, useLayoutEffect } from "react";
 import { useTranslations } from "use-intl";
+import { useMenuWarm } from "@/components/sidebar/menu/warm";
 
 /**
  * The account menu every sidebar shares: the account button, the account at the
@@ -27,6 +28,12 @@ import { useTranslations } from "use-intl";
  * sign-out at its bottom. Each sidebar gives the name and the
  * second line of its button, the account it shows, and its own sign-out, and
  * composes its own sections between them.
+ *
+ * The popup stays mounted while closed, and its sections mount once the reader
+ * shows intent on the button or the browser is idle after hydration. So the first
+ * frame of an open menu already has its sections, the schools included: the
+ * school list subscribes in an effect, and a hidden Activity would hold that effect
+ * back until the menu opens.
  */
 export function AccountMenu({
   account,
@@ -53,6 +60,7 @@ export function AccountMenu({
 }) {
   const t = useTranslations("Auth");
   const [open, { close, set }] = useDisclosure(false);
+  const { warm, warmed } = useMenuWarm();
   const side = useSidebar((sidebar) => (sidebar.isMobile ? "bottom" : "right"));
 
   useLayoutEffect(() => close, [close]);
@@ -64,6 +72,9 @@ export function AccountMenu({
           render={
             <SidebarMenuButton
               className="data-popup-open:bg-sidebar-accent data-popup-open:text-sidebar-accent-foreground"
+              onFocus={warm}
+              onPointerDown={warm}
+              onPointerEnter={warm}
               size="lg"
             >
               <PersonAvatar mascot={account.mascot} photo={account.photo} />
@@ -80,6 +91,7 @@ export function AccountMenu({
         <DropdownMenuContent
           align="end"
           className="w-(--anchor-width) min-w-56 max-w-[calc(100vw-2rem)] rounded-lg"
+          keepMounted
           side={side}
           sideOffset={4}
         >
@@ -101,8 +113,12 @@ export function AccountMenu({
             </DropdownMenuLabel>
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
-          {children}
-          <DropdownMenuSeparator />
+          {warmed ? (
+            <>
+              {children}
+              <DropdownMenuSeparator />
+            </>
+          ) : null}
           <DropdownMenuGroup>
             <DropdownMenuItem className="cursor-pointer" onClick={onSignOut}>
               <HugeIcons icon={Logout01Icon} />
