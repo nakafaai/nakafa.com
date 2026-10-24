@@ -112,7 +112,7 @@ describe("content store query", () => {
       expect(testRuntimeCache.set).toHaveBeenCalledWith(
         expect.stringMatching(STORE_KEY_PATTERN),
         { value: found },
-        expect.objectContaining({ name: "contentRelease/ownership:resolve" })
+        expect.objectContaining({ tags: [expect.any(String)] })
       );
     })
   );

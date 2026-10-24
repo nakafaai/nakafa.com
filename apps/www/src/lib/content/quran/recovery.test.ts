@@ -92,26 +92,4 @@ describe("stale published Quran snapshot recovery", () => {
         );
       })
   );
-
-  it.effect(
-    "keeps cache invalidation failures in the typed error channel",
-    () =>
-      Effect.gen(function* () {
-        testRuntimeCache.expireTag.mockImplementationOnce(() => {
-          throw new Error("cache unavailable");
-        });
-
-        const result = yield* recoverStalePublishedQuranSnapshot(
-          staleSnapshotId
-        ).pipe(Effect.result);
-
-        expect(Result.isFailure(result)).toBe(true);
-        if (Result.isFailure(result)) {
-          expect(result.failure).toMatchObject({
-            _tag: "QuranSnapshotRecoveryError",
-            reason: "cache-invalidation",
-          });
-        }
-      })
-  );
 });

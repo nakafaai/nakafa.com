@@ -10,11 +10,7 @@ export class QuranSnapshotRecoveryError extends Schema.TaggedError<QuranSnapshot
   "QuranSnapshotRecoveryError",
   {
     cause: Schema.Unknown,
-    reason: Schema.Literals([
-      "active-identity",
-      "cache-invalidation",
-      "invalid-input",
-    ]),
+    reason: Schema.Literals(["active-identity", "invalid-input"]),
   }
 ) {}
 
@@ -42,11 +38,6 @@ export const recoverStalePublishedQuranSnapshot = Effect.fn(
   if (activeIdentity.snapshotId === staleSnapshotId) {
     return false;
   }
-  yield* expireStoreTag(makeArtifactCacheTag(staleSnapshotId)).pipe(
-    Effect.mapError(
-      (cause) =>
-        new QuranSnapshotRecoveryError({ cause, reason: "cache-invalidation" })
-    )
-  );
+  yield* expireStoreTag(makeArtifactCacheTag(staleSnapshotId));
   return true;
 });

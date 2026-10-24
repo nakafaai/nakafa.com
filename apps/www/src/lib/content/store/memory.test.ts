@@ -1,7 +1,7 @@
 // @vitest-environment node
 
 import { describe, expect, it } from "@effect/vitest";
-import { Array as Arr } from "effect";
+import { Array as Arr, Option } from "effect";
 import { makeMemoryStore } from "@/lib/content/store/memory";
 
 const LARGE_TEXT = "x".repeat(3_000_000);
@@ -11,7 +11,7 @@ describe("memory store", () => {
     const store = makeMemoryStore();
     store.set("key", "value", { expiresAt: 100, now: 0, tags: [] });
 
-    expect(store.get("key", 99)).toMatchObject({ value: "value" });
+    expect(store.get("key", 99)).toStrictEqual(Option.some("value"));
     expect(store.get("key", 100)._tag).toBe("None");
     expect(store.get("key", 0)._tag).toBe("None");
   });
@@ -21,7 +21,7 @@ describe("memory store", () => {
     store.set("key", "first", { expiresAt: 100, now: 0, tags: [] });
     store.set("key", "second", { expiresAt: 100, now: 0, tags: [] });
 
-    expect(store.get("key", 1)).toMatchObject({ value: "second" });
+    expect(store.get("key", 1)).toStrictEqual(Option.some("second"));
   });
 
   it("drops every entry that carries a tag and keeps the others", () => {
@@ -32,7 +32,7 @@ describe("memory store", () => {
     store.expireTag("pointer");
 
     expect(store.get("tagged", 1)._tag).toBe("None");
-    expect(store.get("kept", 1)).toMatchObject({ value: 2 });
+    expect(store.get("kept", 1)).toStrictEqual(Option.some(2));
   });
 
   it("keeps the store within its byte budget by dropping the surplus", () => {
@@ -55,6 +55,6 @@ describe("memory store", () => {
     store.set("new", 2, { expiresAt: 100, now: 20, tags: [] });
 
     expect(store.get("old", 0)._tag).toBe("None");
-    expect(store.get("new", 20)).toMatchObject({ value: 2 });
+    expect(store.get("new", 20)).toStrictEqual(Option.some(2));
   });
 });

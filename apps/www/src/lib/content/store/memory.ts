@@ -1,6 +1,6 @@
 import "@tanstack/react-start/server-only";
 
-import { encodeJsonText } from "@repo/utilities/json";
+import { encodeJsonText, JsonTextSchema } from "@repo/utilities/json";
 import { Array as Arr, MutableHashMap, Option, Schema } from "effect";
 
 /**
@@ -9,18 +9,25 @@ import { Array as Arr, MutableHashMap, Option, Schema } from "effect";
  */
 const MAX_STORE_BYTES = 16 * 1024 * 1024;
 
-/** One stored value, its tags, its size, and the instant it stops being fresh. */
+/**
+ * One stored value as JSON text, with its tags, its size and the instant it stops
+ * being fresh. The text is what the platform's cache keeps, so a value reads back
+ * as JSON does: no field survives that JSON drops.
+ */
 const MemoryEntrySchema = Schema.Struct({
   bytes: Schema.Finite,
   expiresAt: Schema.Finite,
   tags: Schema.Array(Schema.String),
-  value: Schema.Unknown,
+  text: Schema.String,
 });
 type MemoryEntry = typeof MemoryEntrySchema.Type;
 
-/** The byte size of one value as JSON, which is what the store budgets. */
-function sizeOf(value: unknown) {
-  return new TextEncoder().encode(encodeJsonText(value)).byteLength;
+/** Reads one stored text back as the JSON value it holds. */
+const decodeStoredText = Schema.decodeUnknownOption(JsonTextSchema);
+
+/** The UTF-8 byte size of one text, which is what the store budgets. */
+function sizeOf(text: string) {
+  return new TextEncoder().encode(text).byteLength;
 }
 
 /**
@@ -67,7 +74,7 @@ export function makeMemoryStore() {
         MutableHashMap.remove(entries, key);
         return Option.none();
       }
-      return Option.some(found.value.value);
+      return decodeStoredText(found.value.text);
     },
     /** Stores one value under its key for `expiresAt`, replacing any earlier value. */
     set(
@@ -79,11 +86,12 @@ export function makeMemoryStore() {
         readonly tags: readonly string[];
       }
     ) {
+      const text = encodeJsonText(value);
       MutableHashMap.set(entries, key, {
-        bytes: sizeOf(value),
+        bytes: sizeOf(text),
         expiresAt: input.expiresAt,
         tags: [...input.tags],
-        value,
+        text,
       });
       trim(input.now);
     },

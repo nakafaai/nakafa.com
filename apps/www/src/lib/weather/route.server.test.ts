@@ -74,6 +74,24 @@ describe("weather route", () => {
     });
   });
 
+  it("uses the default location when the platform's location is malformed", async () => {
+    isCorsRequestAllowedMock.mockReturnValue(Effect.succeed(true));
+    getCurrentWeatherMock.mockReturnValue(Effect.succeed(summary));
+
+    const response = await serveWeather({
+      request: Object.assign(
+        new Request("https://nakafa.com/api/weather", { method: "POST" }),
+        { cf: { latitude: 1 } }
+      ),
+    });
+
+    expect(response.status).toBe(200);
+    expect(getCurrentWeatherMock).toHaveBeenCalledWith({
+      latitude: DEFAULT_LATITUDE,
+      longitude: DEFAULT_LONGITUDE,
+    });
+  });
+
   it("refuses a request from an origin that is not allowed", async () => {
     isCorsRequestAllowedMock.mockReturnValue(Effect.succeed(false));
 

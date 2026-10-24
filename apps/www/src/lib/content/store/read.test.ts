@@ -197,6 +197,18 @@ describe("content store reads", () => {
     })
   );
 
+  it.effect(
+    "fails with a mismatch when no release is active after the load",
+    () =>
+      Effect.gen(function* () {
+        activeMocks.load.mockReturnValue(Effect.succeed(null));
+
+        const error = yield* Effect.flip(readContentStore(input(makeLoader())));
+
+        expect(error).toBeInstanceOf(PublishedReleaseMismatchError);
+      })
+  );
+
   it.effect("loads without storing while no release is active", () =>
     Effect.gen(function* () {
       activeMocks.read.mockReturnValue(Effect.succeed(null));

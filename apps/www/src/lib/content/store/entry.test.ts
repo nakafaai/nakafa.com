@@ -2,7 +2,6 @@
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Array as Arr, Data, Effect, Option, Schema } from "effect";
-import { TestClock } from "effect/testing";
 import {
   expireStoreTag,
   readStoreEntry,
@@ -130,24 +129,6 @@ describe("content store entries", () => {
 
       expect(
         yield* readStoreEntry({ parts, schema: Schema.Finite })
-      ).toStrictEqual(Option.none());
-    })
-  );
-
-  it.effect("forgets an entry when its lifetime ends", () =>
-    Effect.gen(function* () {
-      yield* writeStoreEntry({
-        parts,
-        schema: TextSchema,
-        tags: [],
-        ttl: "10 seconds",
-        value: "text",
-      });
-
-      yield* TestClock.adjust("11 seconds");
-
-      expect(
-        yield* readStoreEntry({ parts, schema: TextSchema })
       ).toStrictEqual(Option.none());
     })
   );

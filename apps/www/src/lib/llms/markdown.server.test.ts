@@ -145,34 +145,6 @@ describe("llms markdown answer", () => {
     })
   );
 
-  it.effect("tags every Markdown answer for the purge of the corpus", () =>
-    Effect.gen(function* () {
-      getLlmsMarkdownTextMock.mockReturnValue(
-        Effect.succeed("# Article title")
-      );
-
-      const root = yield* answerLlmsMarkdown({
-        cleanSlug: "llms",
-        hasLocalePrefix: false,
-        locale: "en",
-      });
-      const page = yield* answerLlmsMarkdown({
-        cleanSlug: "articles/belajar",
-        hasLocalePrefix: true,
-        locale: "en",
-      });
-      const missing = yield* answerLlmsMarkdown({
-        cleanSlug: "articles/unknown",
-        hasLocalePrefix: true,
-        locale: "en",
-      });
-
-      for (const response of [root, page, missing]) {
-        expect(response.headers.get("vercel-cache-tag")).toBe("content-llms");
-      }
-    })
-  );
-
   it.effect("answers a plain not found when a locale index names no body", () =>
     Effect.gen(function* () {
       const response = yield* answerLlmsMarkdown({

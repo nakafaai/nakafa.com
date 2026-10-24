@@ -141,6 +141,90 @@ describe("content runtime target", () => {
   );
 });
 
+describe("content runtime refusals", () => {
+  it.effect("refuses a production stage with anonymous Agent Mode", () =>
+    Effect.gen(function* () {
+      expect(
+        yield* refusalOf(
+          targetOf({
+            agent: "anonymous",
+            deploy: { stage: "production" },
+            query: PRODUCTION_QUERY,
+            site: PRODUCTION_SITE,
+          })
+        )
+      ).toBe("anonymous-production");
+    })
+  );
+
+  it.effect("allows anonymous Agent Mode against a loopback deployment", () =>
+    Effect.gen(function* () {
+      expect(
+        yield* refusalOf(
+          targetOf({
+            agent: "anonymous",
+            query: LOOPBACK_QUERY,
+            site: LOOPBACK_SITE,
+          })
+        )
+      ).toBeUndefined();
+    })
+  );
+
+  it.effect("refuses a deployment that mixes production and development", () =>
+    Effect.gen(function* () {
+      expect(
+        yield* refusalOf(
+          targetOf({ query: PRODUCTION_QUERY, site: DEVELOPMENT_SITE })
+        )
+      ).toBe("mixed-production");
+    })
+  );
+
+  it.effect("refuses a host that is neither loopback nor a deployment", () =>
+    Effect.gen(function* () {
+      expect(
+        yield* refusalOf(
+          targetOf({ query: "https://example.com", site: undefined })
+        )
+      ).toBe("untrusted-production");
+    })
+  );
+});
+
+describe("content runtime host names", () => {
+  it.effect("accepts a trailing dot on a deployment host", () =>
+    Effect.gen(function* () {
+      expect(
+        yield* refusalOf(
+          targetOf({
+            query: "https://helpful-capybara-123.convex.cloud.",
+            site: undefined,
+          })
+        )
+      ).toBeUndefined();
+    })
+  );
+
+  it.effect("refuses a Convex host whose deployment name is dotted", () =>
+    Effect.gen(function* () {
+      expect(
+        yield* refusalOf(
+          targetOf({ query: "https://a.b.convex.cloud", site: undefined })
+        )
+      ).toBe("untrusted-production");
+    })
+  );
+
+  it.effect("refuses a site address that is not a Convex site", () =>
+    Effect.gen(function* () {
+      expect(yield* refusalOf(targetOf({ site: "https://example.com" }))).toBe(
+        "untrusted-production"
+      );
+    })
+  );
+});
+
 describe("runtime environment", () => {
   it("returns the loopback target from the Convex URL alone", () => {
     stubRuntimeEnvironment({ VITE_CONVEX_URL: LOOPBACK_QUERY });

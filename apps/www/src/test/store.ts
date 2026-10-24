@@ -1,17 +1,22 @@
+import { encodeJsonText, JsonTextSchema } from "@repo/utilities/json";
 import { Array as Arr, MutableHashMap, Option, Schema } from "effect";
+
+/** Reads one stored text back as the JSON value it holds, as the platform cache does. */
+const decodeJsonText = Schema.decodeUnknownOption(JsonTextSchema);
 
 /** One value that the test store keeps, with its tags and its end of life. */
 const TestEntrySchema = Schema.Struct({
   expiresAt: Schema.Finite,
   tags: Schema.Array(Schema.String),
-  value: Schema.Unknown,
+  text: Schema.String,
 });
 type TestEntry = typeof TestEntrySchema.Type;
 
 /**
  * A stand-in for the isolate's content store. It mirrors the store's contract
  * without importing it, because a test mocks the store's module and this file
- * must still load.
+ * must still load. Lifetimes are not modelled: a test's clock and the real clock
+ * of an awaited Promise differ, and the store's lifetimes are tested on their own.
  */
 function makeTestStore() {
   const entries = MutableHashMap.empty<string, TestEntry>();
@@ -23,9 +28,9 @@ function makeTestStore() {
         }
       }
     },
-    get(key: string, now: number) {
+    get(key: string) {
       return Option.flatMap(MutableHashMap.get(entries, key), (entry) =>
-        entry.expiresAt > now ? Option.some(entry.value) : Option.none()
+        decodeJsonText(entry.text)
       );
     },
     set(
@@ -40,7 +45,7 @@ function makeTestStore() {
       MutableHashMap.set(entries, key, {
         expiresAt: options.expiresAt,
         tags: options.tags,
-        value,
+        text: encodeJsonText(value),
       });
     },
   };
@@ -52,7 +57,7 @@ let store = makeTestStore();
 /** Every call of the store, recorded for the test to read. */
 export const testRuntimeCache = {
   expireTag: vi.fn((tag: string) => store.expireTag(tag)),
-  get: vi.fn((key: string, now: number) => store.get(key, now)),
+  get: vi.fn((key: string) => store.get(key)),
   set: vi.fn(
     (key: string, value: unknown, options: Parameters<typeof store.set>[2]) =>
       store.set(key, value, options)

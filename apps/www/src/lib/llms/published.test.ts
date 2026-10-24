@@ -326,7 +326,7 @@ it.effect("keeps the signed source in the store and no derived text", () =>
           sourceRevision,
         },
       },
-      expect.objectContaining({ name: "markdown.source" })
+      expect.objectContaining({ tags: [expect.any(String)] })
     );
   })
 );
