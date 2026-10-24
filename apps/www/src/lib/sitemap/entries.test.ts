@@ -83,6 +83,14 @@ beforeEach(() => {
   );
 });
 
+/** The alternates every base URL of `/search` names: each locale's address, and x-default at the default locale. */
+const SEARCH_ALTERNATES = [
+  { hreflang: "en", href: "https://nakafa.com/en/search" },
+  { hreflang: "id", href: "https://nakafa.com/id/search" },
+  { hreflang: "de", href: "https://nakafa.com/de/search" },
+  { hreflang: "x-default", href: "https://nakafa.com/en/search" },
+];
+
 describe("sitemap entries", () => {
   it.effect("generates sitemap entries from route and locale inputs", () =>
     Effect.gen(function* () {
@@ -98,22 +106,21 @@ describe("sitemap entries", () => {
       expect(urls).toContain(
         "https://nakafa.com/en/subjects/chemistry/green-chemistry/definition"
       );
-      expect(entries).toContainEqual({
-        lastModified: "2024-01-02",
-        url: "https://nakafa.com/en/articles/politics/dynastic-politics-asian-values",
-      });
-      expect(entries).toContainEqual({
-        url: "https://nakafa.com/en/subjects/chemistry/green-chemistry/definition",
-      });
+      expect(entries).toContainEqual(
+        expect.objectContaining({
+          lastModified: "2024-01-02",
+          url: "https://nakafa.com/en/articles/politics/dynastic-politics-asian-values",
+        })
+      );
+      expect(entries).toContainEqual(
+        expect.objectContaining({
+          url: "https://nakafa.com/en/subjects/chemistry/green-chemistry/definition",
+        })
+      );
       expect(
         Arr.every(
           entries,
-          (entry) =>
-            !(
-              "changeFrequency" in entry ||
-              "priority" in entry ||
-              "alternates" in entry
-            )
+          (entry) => !("changeFrequency" in entry || "priority" in entry)
         )
       ).toBe(true);
     })
@@ -211,8 +218,8 @@ describe("sitemap entries", () => {
         "https://nakafa.com/id/search",
         "https://nakafa.com/de/search",
       ]);
-      expect(Arr.every(entries, (entry) => !("alternates" in entry))).toBe(
-        true
+      expect(Arr.map(entries, (entry) => entry.alternates)).toEqual(
+        Arr.map(entries, () => SEARCH_ALTERNATES)
       );
     })
   );
@@ -234,6 +241,13 @@ describe("sitemap entries", () => {
           "https://nakafa.com/en/curriculum",
           "https://nakafa.com/id/kurikulum",
           "https://nakafa.com/de/lehrplaene",
+        ]);
+        // Each alternate is the URL of the same route in its own locale.
+        expect(entries[0]?.alternates).toEqual([
+          { hreflang: "en", href: "https://nakafa.com/en/curriculum" },
+          { hreflang: "id", href: "https://nakafa.com/id/kurikulum" },
+          { hreflang: "de", href: "https://nakafa.com/de/lehrplaene" },
+          { hreflang: "x-default", href: "https://nakafa.com/en/curriculum" },
         ]);
       })
   );
@@ -358,6 +372,7 @@ describe("sitemap entries", () => {
         const entries = yield* getSitemapEntries({ pageId: "base" });
 
         expect(entries).toContainEqual({
+          alternates: SEARCH_ALTERNATES,
           lastModified: "2024-01-02T00:00:00.000Z",
           url: "https://nakafa.com/en/search",
         });

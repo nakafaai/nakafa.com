@@ -5,6 +5,7 @@ import { languages } from "@repo/internationalization/data/lang";
 import { Crypto, Effect } from "effect";
 import { Hex } from "effect/encoding";
 import { getNakafaAgentSkillIndex, getNakafaSkillText } from "@/lib/llms/skill";
+import { CONTENT_LICENSE_NAME, CONTENT_LICENSE_URL } from "@/lib/seo/license";
 
 describe("Nakafa public agent skill", () => {
   it("builds a skill.md document with required frontmatter and retrieval rules", () => {
@@ -15,7 +16,9 @@ describe("Nakafa public agent skill", () => {
     expect(text).toContain(
       "description: Use Nakafa to retrieve multilingual educational lessons"
     );
-    expect(text).toContain("license: MIT");
+    expect(text).toContain(
+      `license: ${CONTENT_LICENSE_NAME} (${CONTENT_LICENSE_URL})`
+    );
     expect(text).toContain("# Nakafa Agent Skill");
     expect(text).toContain("https://nakafa.com/llms.txt");
     expect(text).toContain("bounded page-index links");

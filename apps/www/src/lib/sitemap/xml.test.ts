@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from "@effect/vitest";
-import { DateTime } from "effect";
+import { Array as Arr, DateTime } from "effect";
 import { buildSitemapIndexXml, buildSitemapUrlSetXml } from "@/lib/sitemap/xml";
 
 describe("sitemap XML serialization", () => {
@@ -29,14 +29,36 @@ describe("sitemap XML serialization", () => {
     ]);
 
     expect(xml).toContain(
-      '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+      '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">'
     );
     expect(xml).toContain("<loc>https://nakafa.com/en/articles/example</loc>");
     expect(xml).toContain("<lastmod>2025-01-01</lastmod>");
     expect(xml).not.toContain("changefreq");
     expect(xml).not.toContain("priority");
-    expect(xml).not.toContain("xhtml");
-    expect(xml).not.toContain("hreflang");
+    expect(xml).not.toContain("<xhtml:link");
+  });
+
+  it("lists each alternate of a URL as an xhtml link after its location", () => {
+    const xml = buildSitemapUrlSetXml([
+      {
+        alternates: [
+          { hreflang: "en", href: "https://nakafa.com/en/search" },
+          { hreflang: "x-default", href: "https://nakafa.com/en/search" },
+        ],
+        url: "https://nakafa.com/en/search",
+      },
+    ]);
+
+    expect(xml).toContain(
+      Arr.join(
+        [
+          "    <loc>https://nakafa.com/en/search</loc>",
+          '    <xhtml:link rel="alternate" hreflang="en" href="https://nakafa.com/en/search" />',
+          '    <xhtml:link rel="alternate" hreflang="x-default" href="https://nakafa.com/en/search" />',
+        ],
+        "\n"
+      )
+    );
   });
 
   it("writes a Date modification time as an ISO timestamp", () => {
