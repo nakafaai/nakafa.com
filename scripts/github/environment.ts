@@ -49,7 +49,7 @@ const decodeContext = Effect.fn("github.decodeEnvironmentContext")(function* (
   context: string,
   json: string
 ) {
-  return yield* Schema.decodeUnknownEffect(TextValuesSchema)(json).pipe(
+  return yield* Schema.decodeEffect(TextValuesSchema)(json).pipe(
     Effect.mapError(() => new EnvironmentContextError({ context }))
   );
 });
