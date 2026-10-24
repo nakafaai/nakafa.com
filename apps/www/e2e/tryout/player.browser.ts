@@ -18,6 +18,7 @@ import {
   shownQuestions,
   sidebarOf,
 } from "@/e2e/support/player";
+import { SERVER_FUNCTION_PATH } from "@/e2e/support/requests";
 import {
   expectStillShell,
   readPageTime,
@@ -155,20 +156,19 @@ const verifyRollback = Effect.fn("NakafaE2E.verifyPlayerRollback")(function* (
   yield* runFirstSection(page, hasTouch, baseURL);
   yield* expectView(page, "List");
 
-  const sectionPath = new URL(page.url()).pathname;
   const failSave = yield* Deferred.make<void>();
   const services = yield* Effect.context<never>();
   yield* Effect.promise(() =>
     page.route(
-      (url) => url.pathname === sectionPath,
+      (url) => url.pathname.startsWith(SERVER_FUNCTION_PATH),
       (route) =>
-        route.request().headers()["next-action"] === undefined
-          ? route.continue()
-          : Effect.runPromiseWith(services)(
+        route.request().method() === "POST"
+          ? Effect.runPromiseWith(services)(
               Deferred.await(failSave).pipe(
                 Effect.andThen(() => Effect.promise(() => route.abort()))
               )
             )
+          : route.continue()
     )
   );
 

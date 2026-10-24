@@ -1,5 +1,3 @@
-"use client";
-
 import type { Point3 } from "@repo/design-system/lib/geometry/point";
 import { triangulatePolygon } from "@repo/design-system/lib/geometry/polygon";
 import { Array as Arr } from "effect";

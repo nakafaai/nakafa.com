@@ -34,8 +34,6 @@ function createFetchFailure(code?: string) {
   return new TypeError("fetch failed", { cause });
 }
 
-vi.mock("server-only", () => ({}));
-
 /** Creates one response with the immutable network URL populated. */
 function createResponse(
   body: BodyInit | null,

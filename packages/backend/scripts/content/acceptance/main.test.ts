@@ -16,7 +16,7 @@ import { Array as Arr, Effect, FileSystem, Layer } from "effect";
 
 /** The usage line, which names every mode with its arguments in the registry's order. */
 const USAGE =
-  "Usage: acceptance <prepare|build|start|clean|learner <cookie-file>|school <school-file>|owner <school-slug> <cookie-file>|teacher <school-slug> <cookie-file>|invite <school-slug> <learner-address> <cookie-file>|sitting <school-slug> <learner-email> <sitting-file> [crowd]|import <table> <rows-file>|profile <auth-user-id> <profile-json-file>>";
+  "Usage: acceptance <prepare|build|start|clean|learner <cookie-file>|school <school-file>|owner <school-slug> <cookie-file>|teacher <school-slug> <cookie-file>|class-teacher <school-slug> <cookie-file>|invite <school-slug> <learner-address> <cookie-file>|sitting <school-slug> <learner-email> <sitting-file> [crowd]|card <school-slug> <card-file>|student <school-slug> <learner-address>|import <table> <rows-file>|profile <auth-user-id> <profile-json-file>>";
 
 /** The mode words of the registry, in the order that the usage lists them. */
 const MODE_WORDS = [
@@ -28,8 +28,11 @@ const MODE_WORDS = [
   "school",
   "owner",
   "teacher",
+  "class-teacher",
   "invite",
   "sitting",
+  "card",
+  "student",
   "import",
   "profile",
 ];

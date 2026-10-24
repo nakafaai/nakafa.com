@@ -1,21 +1,17 @@
-import type { GenericId } from "@confect/core";
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import { HOUR, RateLimiter } from "@convex-dev/rate-limiter";
 import { components } from "@repo/backend/confect/_generated/components";
-import type { TenantInvitesDoc } from "@repo/backend/confect/_generated/docs";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   DatabaseReader,
   MutationCtx,
 } from "@repo/backend/confect/_generated/services";
 import { tenantAccess } from "@repo/backend/confect/access/authority";
-import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { startInviteEmail } from "@repo/backend/confect/emails/invite/workflow";
 import member from "@repo/backend/confect/middleware/member.impl";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import session from "@repo/backend/confect/middleware/session.impl";
 import { noteInvite } from "@repo/backend/confect/notifications/inbox";
-import { purgeInvite } from "@repo/backend/confect/notifications/purge";
 import { Person } from "@repo/backend/confect/tenancy/access";
 import { personActor } from "@repo/backend/confect/tenancy/actor";
 import {
@@ -32,12 +28,17 @@ import {
 } from "@repo/backend/confect/tenancy/errors";
 import {
   expireInvite,
-  replaceInviteState,
   writeInvite,
 } from "@repo/backend/confect/tenancy/invite";
 import spec from "@repo/backend/confect/tenancy/invites.spec";
+import {
+  list,
+  loadInvite,
+  revoke,
+  viewOf,
+} from "@repo/backend/confect/tenancy/invites.table";
 import { admitsAddress } from "@repo/backend/confect/tenancy/policy";
-import { Clock, Effect, Layer, Option, Struct } from "effect";
+import { Clock, Effect, Layer, Option } from "effect";
 
 /** Sends one Person's invite again at most this many times in any hour: the school's named rate. */
 const INVITE_RESENDS_PER_HOUR = 3;
@@ -56,65 +57,6 @@ const inviteResends = new RateLimiter(components.agentRateLimiter, {
     rate: INVITE_RESENDS_PER_HOUR,
   },
 });
-
-/** One invite as the wire shows it, with the name of the Person it invites. */
-const viewOf = (invite: TenantInvitesDoc, name: string) => ({
-  email: invite.channel.email,
-  expiresAt: invite.expiresAt,
-  id: invite._id,
-  name,
-  personId: invite.personId,
-});
-
-/**
- * Loads one invite by ID. An invite that does not exist is denied the way an
- * invite of another school is, so an ID probe reveals nothing.
- */
-const loadInvite = Effect.fnUntraced(function* (
-  inviteId: GenericId.GenericId<"tenantInvites">
-) {
-  return yield* (yield* DatabaseReader)
-    .table("tenantInvites")
-    .get(inviteId)
-    .pipe(
-      Effect.catchTags({
-        DocumentDecodeError: Effect.die,
-        GetByIdFailure: () =>
-          new AccessDenied({ action: "person.invite", reason: "resource" }),
-      })
-    );
-});
-
-/** The pending invites of one school, a page at a time, each with the name of its Person. */
-const list = FunctionImpl.make(
-  databaseSchema,
-  spec,
-  "list",
-  Effect.fn("tenancy.invites.list")(function* ({ paginationOpts }) {
-    const { tenant } = yield* Member;
-    const reader = yield* DatabaseReader;
-    const page = yield* reader
-      .table("tenantInvites")
-      .index("by_tenantId_and_state_status", (query) =>
-        query.eq("tenantId", tenant._id).eq("state.status", "pending")
-      )
-      .paginate(paginationOpts)
-      .pipe(Effect.orDie);
-    const rows = yield* Effect.forEach(
-      page.page,
-      (invite) =>
-        reader
-          .table("tenantPeople")
-          .get(invite.personId)
-          .pipe(
-            Effect.orDie,
-            Effect.map((person) => viewOf(invite, person.name))
-          ),
-      { concurrency: "unbounded" }
-    );
-    return Struct.assign(page, { page: rows });
-  })
-);
 
 /**
  * Invites one unclaimed Person to the school at an address. The address must be
@@ -154,34 +96,7 @@ const invite = FunctionImpl.make(
       email,
       locale
     );
-    return viewOf(written, person.name);
-  })
-);
-
-/** Revokes a pending invite. An invite that is no longer pending changes nothing. */
-const revoke = FunctionImpl.make(
-  databaseSchema,
-  spec,
-  "revoke",
-  Effect.fn("tenancy.invites.revoke")(function* ({ inviteId }) {
-    const { person: actor } = yield* Member;
-    const stored = yield* loadInvite(inviteId);
-    const person = yield* personAuthority.authorize(
-      "person.invite",
-      stored.personId
-    );
-    if (stored.state.status === "pending") {
-      yield* replaceInviteState(stored, {
-        at: yield* Clock.currentTimeMillis,
-        status: "revoked",
-      });
-      yield* purgeInvite(stored.personId, stored._id);
-      yield* personAuthority.record(personActor(actor), person, {
-        invite: stored._id,
-        type: "invite.revoked",
-      });
-    }
-    return null;
+    return yield* viewOf(written, person);
   })
 );
 
@@ -201,6 +116,9 @@ const resend = FunctionImpl.make(
       "person.invite",
       stored.personId
     );
+    if (person.account.state === "claimed") {
+      return yield* new PersonClaimed();
+    }
     const now = yield* Clock.currentTimeMillis;
     if (
       stored.state.status === "expired" ||
@@ -228,7 +146,7 @@ const resend = FunctionImpl.make(
       type: "person.invited",
     });
     yield* noteInvite(person.tenantId, entryId);
-    return viewOf(stored, person.name);
+    return yield* viewOf(stored, person);
   })
 );
 

@@ -18,6 +18,7 @@ import {
   FoldPending,
 } from "@repo/backend/confect/editor/errors";
 import { SinceReply } from "@repo/backend/confect/editor/view";
+import { ExamFrozen } from "@repo/backend/confect/exams/errors";
 import RequireMember from "@repo/backend/confect/middleware/member.spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
@@ -63,6 +64,7 @@ export default GroupSpec.make()
           ClientTaken,
           DocumentInvalid,
           DocumentTooLarge,
+          ExamFrozen,
           FoldPending,
           VersionStale,
         ]),

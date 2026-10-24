@@ -8,6 +8,7 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
+import { freezeExam } from "@repo/backend/confect/exams/freeze";
 import { keyFits } from "@repo/backend/confect/exams/key";
 import { questionView } from "@repo/backend/confect/exams/question";
 import { sittingAuthority } from "@repo/backend/confect/exams/sittings/authority";
@@ -47,7 +48,8 @@ type Place = Pick<ExamSittingsDoc, "cohortId" | "unitId">;
 /**
  * The unit and the cohort that a sitting holds. A unit sitting holds no cohort. A cohort
  * sitting takes its unit from the cohort. The caller must be allowed to edit the unit, and
- * the cohort must be active.
+ * the cohort must be active in an active period, so a planned or an archived period takes
+ * no sitting.
  */
 const placeOf = Effect.fn("exams.sittings.schedule.place")(function* (
   group: typeof SittingGroup.Type,
@@ -69,7 +71,11 @@ const placeOf = Effect.fn("exams.sittings.schedule.place")(function* (
     kind: "unit",
     unitId: cohort.value.unitId,
   });
-  if (cohort.value.status !== "active") {
+  const period = yield* (yield* DatabaseReader)
+    .table("tenantPeriods")
+    .get(cohort.value.periodId)
+    .pipe(Effect.orDie);
+  if (cohort.value.status !== "active" || period.status !== "active") {
     return yield* new ScheduleInvalid({ reason: "cohort" });
   }
   return { cohortId: cohort.value._id, unitId: cohort.value.unitId };
@@ -101,7 +107,8 @@ const keysFit = Effect.fn("exams.sittings.schedule.keys")(function* (
  * Writes one sitting of an exam in its place, with a new token, and schedules its opening
  * and its closing. The caller checks the times and the place. The token is hashed and
  * sealed under the school key, and the journal records the schedule under the actor that
- * asked for it: a Person, or the system for acceptance seeds (ADR 0013, ADR 0030).
+ * asked for it: a Person, or the system for acceptance seeds (ADR 0013, ADR 0030). The
+ * exam is frozen in the same transaction, so its questions stay as this sitting holds them.
  */
 export const createSitting = Effect.fn("exams.sittings.create")(
   function* (args: {
@@ -126,6 +133,7 @@ export const createSitting = Effect.fn("exams.sittings.create")(
         jobs: [],
         opensAt: args.opensAt,
         room: args.room,
+        ...(args.actor.kind === "person" ? { scheduledBy: args.actor.id } : {}),
         state: "scheduled",
         tenantId: args.tenantId,
         tokenHash: "",
@@ -148,6 +156,7 @@ export const createSitting = Effect.fn("exams.sittings.create")(
         tokenSealed: sealed,
       })
       .pipe(Effect.orDie);
+    yield* freezeExam(args.exam);
     const row = yield* (yield* DatabaseReader)
       .table("examSittings")
       .get(id)

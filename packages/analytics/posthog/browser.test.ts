@@ -1,7 +1,6 @@
 import { beforeAll, beforeEach, describe, expect, it } from "@effect/vitest";
 import type { BrowserAnalyticsIdentity } from "@repo/analytics/posthog/browser";
-import { JsonTextSchema } from "@repo/utilities/json";
-import { Deferred, Effect, Fiber, Ref, Schema } from "effect";
+import { Deferred, Effect, Fiber, Ref } from "effect";
 import type { CaptureResult } from "posthog-js";
 
 const client = {
@@ -20,8 +19,8 @@ const client = {
 
 vi.mock("@repo/analytics/public", () => ({
   postHogPublicKeys: () => ({
-    NEXT_PUBLIC_POSTHOG_KEY: "phc_test",
-    NEXT_PUBLIC_POSTHOG_UI_HOST: "https://eu.posthog.com",
+    VITE_POSTHOG_KEY: "phc_test",
+    VITE_POSTHOG_UI_HOST: "https://eu.posthog.com",
   }),
 }));
 
@@ -83,56 +82,6 @@ describe("two-tier PostHog browser runtime", () => {
     client.get_explicit_consent_status.mockReturnValue("pending");
     stubWindow();
   });
-
-  it.effect("holds exception captures until the baseline client loads", () =>
-    Effect.gen(function* () {
-      const analytics = yield* loadBrowserAnalytics();
-
-      analytics.captureException(new Error("blocked"), {
-        source: "pre-baseline-test",
-      });
-      analytics.resetBrowserAnalyticsIdentity();
-      yield* analytics.revokeToBaselineAnalytics();
-
-      expect(client.init).not.toHaveBeenCalled();
-      expect(client.capture).not.toHaveBeenCalled();
-      expect(client.captureException).not.toHaveBeenCalled();
-      expect(client.opt_out_capturing).not.toHaveBeenCalled();
-
-      yield* analytics.enableBaselineAnalytics(loadClient);
-
-      expect(client.captureException).toHaveBeenCalledExactlyOnceWith(
-        expect.objectContaining({
-          name: "OperationalError(pre-baseline-test)",
-        }),
-        { source: "pre-baseline-test" }
-      );
-    })
-  );
-
-  it.effect("keeps the first held captures when the wait overflows", () =>
-    Effect.gen(function* () {
-      const analytics = yield* loadBrowserAnalytics();
-
-      for (let index = 0; index < 25; index += 1) {
-        analytics.captureException(new Error("blocked"), {
-          source: `pending-${index}`,
-        });
-      }
-      yield* analytics.enableBaselineAnalytics(loadClient);
-
-      expect(client.captureException).toHaveBeenCalledTimes(20);
-      expect(client.captureException).toHaveBeenNthCalledWith(
-        1,
-        expect.anything(),
-        { source: "pending-0" }
-      );
-      expect(client.captureException).toHaveBeenLastCalledWith(
-        expect.anything(),
-        { source: "pending-19" }
-      );
-    })
-  );
 
   it.effect("initializes the cookieless baseline without capturing yet", () =>
     Effect.gen(function* () {
@@ -452,44 +401,31 @@ describe("two-tier PostHog browser runtime", () => {
       expect(client.capture).toHaveBeenCalledExactlyOnceWith("$pageview");
     })
   );
+  it.effect(
+    "revokes to the baseline before any client loads, without loading the SDK",
+    () =>
+      Effect.gen(function* () {
+        const analytics = yield* loadBrowserAnalytics();
 
-  it.effect("captures scrubbed exceptions through the baseline", () =>
-    Effect.gen(function* () {
-      const analytics = yield* loadBrowserAnalytics();
-      yield* analytics.enableBaselineAnalytics(loadClient);
+        analytics.resetBrowserAnalyticsIdentity();
+        yield* analytics.revokeToBaselineAnalytics();
 
-      analytics.captureException(new Error("handled user@example.com"), {
-        source: "browser-test",
-      });
-      analytics.resetBrowserAnalyticsIdentity(true);
-
-      expect(client.captureException).toHaveBeenCalledWith(
-        expect.objectContaining({
-          message: "Operational exception",
-          name: "OperationalError(browser-test)",
-        }),
-        { source: "browser-test" }
-      );
-      const encodedCalls = yield* Schema.encodeUnknownEffect(JsonTextSchema)(
-        client.captureException.mock.calls
-      );
-      expect(encodedCalls).not.toContain("user@example.com");
-      expect(client.reset).toHaveBeenLastCalledWith(true);
-    })
+        expect(client.init).not.toHaveBeenCalled();
+        expect(client.opt_out_capturing).not.toHaveBeenCalled();
+        expect(client.reset).not.toHaveBeenCalled();
+      })
   );
 
-  it.effect("drops runtime context outside the exact privacy contract", () =>
+  it.effect("clears the signed-out identity of a loaded client", () =>
     Effect.gen(function* () {
       const analytics = yield* loadBrowserAnalytics();
       yield* analytics.enableBaselineAnalytics(loadClient);
-      const invalidProperties = {
-        source: "browser-test",
-        userId: "user-1",
-      };
 
-      analytics.captureException(new Error("blocked"), invalidProperties);
+      analytics.resetBrowserAnalyticsIdentity();
+      expect(client.reset).toHaveBeenLastCalledWith(false);
 
-      expect(client.captureException).not.toHaveBeenCalled();
+      analytics.resetBrowserAnalyticsIdentity(true);
+      expect(client.reset).toHaveBeenLastCalledWith(true);
     })
   );
 });

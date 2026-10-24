@@ -10,6 +10,7 @@ import {
   CLOSES_AT,
   deviceOf,
   keyedExam,
+  keyedSchool,
   OPENS_AT,
   openedSitting,
   type SittingFixture,
@@ -68,6 +69,60 @@ describe("exams/sittings authority", () => {
     vi.useFakeTimers();
     vi.setSystemTime(TENANCY_NOW);
   });
+
+  it.effect(
+    "locks a cohort sitting once its period is archived, so a proctor's write is refused as a locked subject",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        yield* keyedSchool(fixture);
+        const examId = yield* keyedExam(fixture, "Kelas Arsip");
+        const { cohortId, periodId } = yield* fixture.run(
+          Effect.gen(function* () {
+            const writer = yield* DatabaseWriter;
+            const period = yield* writer.table("tenantPeriods").insert({
+              end: "2026-12-19",
+              name: "Ganjil",
+              start: "2026-07-13",
+              status: "active",
+              tenantId: fixture.tenants.nf,
+              unitId: fixture.units.smp,
+            });
+            const cohort = yield* writer.table("tenantCohorts").insert({
+              grade: 10,
+              name: "10A",
+              nameKey: "10a",
+              periodId: period,
+              status: "active",
+              tenantId: fixture.tenants.nf,
+              unitId: fixture.units.smp,
+            });
+            return { cohortId: cohort, periodId: period };
+          })
+        );
+        const made = yield* scheduleSitting(fixture, {
+          closesAt: CLOSES_AT,
+          examId,
+          group: { cohortId, kind: "cohort" },
+          opensAt: OPENS_AT,
+        });
+        yield* fixture.run(
+          Effect.flatMap(DatabaseWriter, (writer) =>
+            writer
+              .table("tenantPeriods")
+              .patch(periodId, { status: "archived" })
+          )
+        );
+        const refused = yield* fixture
+          .as("teacher")
+          .mutation(close, { sittingId: made.id, slug: nf })
+          .pipe(Effect.flip);
+        expect(refused).toMatchObject({
+          _tag: "AccessDenied",
+          reason: "condition",
+        });
+      })
+  );
 
   it.effect(
     "refuses a proctor action to a student, a principal, and a counselor, by role",

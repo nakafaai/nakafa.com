@@ -17,7 +17,7 @@ import {
 import { withBrowserContext } from "@/e2e/support/context";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import { signInLearner } from "@/e2e/support/learner";
-import { NEXT_CHUNK_PATH } from "@/e2e/support/route";
+import { APP_CHUNK_PATH } from "@/e2e/support/route";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 import { EXPECTED_SESSION, KNOWN_SESSION_KEY } from "@/lib/auth/keys";
 
@@ -128,7 +128,7 @@ test("a sign-in on its way hides the prompt before the page hydrates, then shows
 
           // The page learns the session and the account's choice, and then the
           // account with no choice gets its prompt.
-          yield* Effect.promise(() => page.unroute(NEXT_CHUNK_PATH));
+          yield* Effect.promise(() => page.unroute(APP_CHUNK_PATH));
           yield* Effect.promise(() => page.reload({ waitUntil: "load" }));
 
           yield* Effect.promise(() =>

@@ -3,7 +3,7 @@ import { Array as Arr, Effect } from "effect";
 import { inspectModuleSize } from "#scripts/check/size";
 import { parseSources } from "#scripts/check/source";
 
-const MODULE = "apps/www/lib/example.ts";
+const MODULE = "apps/www/src/lib/example.ts";
 
 /** Builds a module of `count` lines, each one a statement. */
 function moduleOf(count: number, header = "") {

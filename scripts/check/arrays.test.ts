@@ -411,7 +411,7 @@ describe("array findings by scope", () => {
             "apps/www/tsconfig.json": PROJECT,
             "packages/backend/tsconfig.json": PROJECT,
             "scripts/tsconfig.json": PROJECT,
-            "apps/www/lib/list.ts": CALL,
+            "apps/www/src/lib/list.ts": CALL,
             "packages/backend/confect/users/list.test.ts": CALL,
             "packages/backend/confect/users/list.ts": CALL,
             "packages/backend/convex/users.ts": CALL,
@@ -421,7 +421,7 @@ describe("array findings by scope", () => {
             "scripts/vitest.config.ts": `import { defineConfig } from "vitest/config";\n${CALL}`,
           }),
           [
-            "apps/www/lib/list.ts:2 array-method",
+            "apps/www/src/lib/list.ts:2 array-method",
             "packages/backend/confect/users/list.test.ts:2 array-method",
             "packages/backend/confect/users/list.ts:2 array-method",
             "packages/backend/convex/users.ts:2 array-method",

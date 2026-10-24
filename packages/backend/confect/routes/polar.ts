@@ -1,6 +1,6 @@
 import { webhooks } from "@polar-sh/sdk/2026-10";
-import { PolarPayloadError } from "@repo/backend/confect/customers/polar/payload";
-import { processPolarWebhookEvent } from "@repo/backend/confect/customers/polar/webhook";
+import { PolarPayloadError } from "@repo/backend/confect/billing/polar/payload";
+import { processPolarWebhookEvent } from "@repo/backend/confect/billing/polar/webhook";
 import { getUnknownErrorMessage } from "@repo/backend/confect/failure";
 import {
   HTTP_ACCEPTED,

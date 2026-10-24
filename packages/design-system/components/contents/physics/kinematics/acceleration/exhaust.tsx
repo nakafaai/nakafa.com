@@ -1,5 +1,3 @@
-"use client";
-
 import { useFrame } from "@react-three/fiber";
 import type { RocketExhaust } from "@repo/design-system/components/contents/physics/kinematics/acceleration/data";
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";

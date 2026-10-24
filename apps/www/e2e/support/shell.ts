@@ -49,7 +49,7 @@ const ShellObservation = Schema.Struct({
    */
   marked: Schema.Boolean,
   /**
-   * Frames whose document held a lock marker anywhere, a page Next.js keeps
+   * Frames whose document held a lock marker anywhere, a page the router keeps
    * hidden after navigation included, so a client navigation has none.
    */
   markedFrames: Schema.Int,

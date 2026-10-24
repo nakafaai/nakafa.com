@@ -1,0 +1,65 @@
+import type { QuestionResponse } from "@nakafa/aksara-contracts/question/response";
+import { MarkdownContent } from "@repo/design-system/components/markdown/content";
+import { Array as Arr, Record as Rec } from "effect";
+import type { ReactNode } from "react";
+import {
+  categoryLabelId,
+  optionLabelId,
+  statementLabelId,
+} from "@/components/tryout/runtime/response/id";
+
+type LabelEntry = readonly [id: string, label: string];
+
+/** Renders authored response labels on the server before client interaction. */
+export function renderTryoutResponseLabels(
+  responseId: string,
+  response: QuestionResponse
+): Readonly<Record<string, ReactNode>> {
+  return Rec.fromEntries(
+    Arr.map(readLabelEntries(responseId, response), ([id, label]) => [
+      id,
+      <MarkdownContent
+        className="wrap-anywhere h-auto whitespace-normal"
+        id={`${id}-label-content`}
+        key={id}
+      >
+        {label}
+      </MarkdownContent>,
+    ])
+  );
+}
+
+/** Lists the option, statement, and category labels the fields render. */
+function readLabelEntries(
+  responseId: string,
+  response: QuestionResponse
+): readonly LabelEntry[] {
+  if (response.kind === "category") {
+    return Arr.flatMap(response.statements, (statement) => [
+      [
+        statementLabelId(responseId, statement.statementKey),
+        statement.label,
+      ] as const,
+      ...Arr.map(
+        response.categories,
+        (category) =>
+          [
+            categoryLabelId(
+              responseId,
+              statement.statementKey,
+              category.categoryKey
+            ),
+            category.label,
+          ] as const
+      ),
+    ]);
+  }
+  if (response.kind === "short-answer" || response.kind === "rubric") {
+    return [];
+  }
+  return Arr.map(
+    response.options,
+    (option) =>
+      [optionLabelId(responseId, option.optionKey), option.label] as const
+  );
+}

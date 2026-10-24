@@ -67,8 +67,6 @@ describe("auth/cleanup", () => {
             slug: "material/algebra",
             userId,
             text: "Deleted personal comment",
-            upvoteCount: 0,
-            downvoteCount: 0,
             replyCount: 1,
           });
           const replyId = await ctx.db.insert("comments", {
@@ -77,9 +75,6 @@ describe("auth/cleanup", () => {
             text: "Reply by another user",
             parentId: commentId,
             replyToUserId: userId,
-            replyToText: "Deleted personal comment",
-            upvoteCount: 0,
-            downvoteCount: 0,
             replyCount: 0,
           });
           return {
@@ -167,8 +162,6 @@ describe("auth/cleanup", () => {
               slug: "material/algebra",
               userId,
               text: "Deleted personal comment",
-              upvoteCount: 0,
-              downvoteCount: 0,
               replyCount: 1,
             });
             const referencedCommentId = await ctx.db.insert("comments", {
@@ -177,8 +170,6 @@ describe("auth/cleanup", () => {
               text: "Reply without retained personal preview",
               parentId: deletedCommentId,
               replyToUserId: userId,
-              upvoteCount: 0,
-              downvoteCount: 0,
               replyCount: 0,
             });
             let hasMore = true;

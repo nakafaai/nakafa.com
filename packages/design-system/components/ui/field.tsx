@@ -1,5 +1,3 @@
-"use client";
-
 import { Label } from "@repo/design-system/components/ui/label";
 import { Separator } from "@repo/design-system/components/ui/separator";
 import { cva, type VariantProps } from "class-variance-authority";

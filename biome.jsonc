@@ -3,7 +3,7 @@
   "extends": [
     "ultracite/biome/core",
     "ultracite/biome/react",
-    "ultracite/biome/next"
+    "ultracite/biome/tanstack"
   ],
   "assist": {
     "actions": {
@@ -14,8 +14,8 @@
   },
   "overrides": [
     {
-      // The shared Next config compiles these React surfaces with React Compiler.
-      // Preserve compiler-managed callbacks and Next.js Server Action references.
+      // The Vite build compiles these React surfaces with React Compiler.
+      // Preserve compiler-managed callbacks and TanStack server function references.
       "includes": ["apps/www/**/*.tsx", "packages/design-system/**/*.tsx"],
       "linter": {
         "rules": {
@@ -112,17 +112,6 @@
       }
     },
     {
-      // Next.js requires this PostCSS entrypoint to expose the shared config.
-      "includes": ["apps/www/postcss.config.mjs"],
-      "linter": {
-        "rules": {
-          "performance": {
-            "noBarrelFile": "off"
-          }
-        }
-      }
-    },
-    {
       // Three Fiber uses renderer attributes that the DOM-only rule cannot recognize.
       "includes": [
         "packages/design-system/components/contents/mathematics/function/diagram.tsx",
@@ -190,6 +179,22 @@
               "options": {
                 "filenameCases": ["camelCase", "kebab-case"],
                 "requireAscii": true
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      // TanStack Router names a splat route `$`, which no case convention accepts.
+      "includes": ["apps/www/src/routes/**/$.{ts,tsx}"],
+      "linter": {
+        "rules": {
+          "style": {
+            "useFilenamingConvention": {
+              "level": "error",
+              "options": {
+                "match": "[$].tsx?"
               }
             }
           }

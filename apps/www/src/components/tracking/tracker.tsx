@@ -1,0 +1,111 @@
+"use client";
+
+import type { LearningContextInput } from "@repo/backend/confect/contents/context";
+import type { RecordContentViewArgs } from "@repo/backend/confect/contents/views/spec";
+import type { Locale } from "@repo/backend/confect/lib/validators/contents";
+import type { PropsWithChildren } from "react";
+import type { Locale as RouteLocale } from "use-intl";
+import { SignedInIsland } from "@/components/providers/island";
+import { useRecordContentView } from "@/lib/content/views/record";
+import { isActiveLocale } from "@/lib/i18n/active";
+
+/** Graph content-view tracking inputs for a rendered learning page. */
+interface Props {
+  contentId?: string | null | undefined;
+  context?: LearningContextInput | undefined;
+  delay?: number | undefined;
+  enabled?: boolean;
+  locale: RouteLocale;
+  publicPath: string;
+  section: RecordContentViewArgs["section"];
+}
+
+/**
+ * Records a delayed graph content view when a runtime content identity exists.
+ *
+ * Rendering remains children-first so route modules can compose one explicit
+ * page tree while this tracking seam becomes inert for untracked content.
+ */
+export function ContentViewTracker({
+  contentId,
+  context,
+  locale,
+  publicPath,
+  section,
+  children,
+  delay = 3000,
+  enabled = true,
+}: PropsWithChildren<Props>) {
+  if (!(enabled && isActiveLocale(locale))) {
+    return children;
+  }
+
+  return (
+    <ActiveContentViewTracker
+      contentId={contentId}
+      context={context}
+      delay={delay}
+      locale={locale}
+      publicPath={publicPath}
+      section={section}
+    >
+      {children}
+    </ActiveContentViewTracker>
+  );
+}
+
+/**
+ * Keeps the locale narrowed for the recorder. The recorder reads Convex, so it
+ * mounts on the page's signed-in island: a visitor's page has no client, and a
+ * page without a signed-in session records nothing. The children render either way.
+ */
+function ActiveContentViewTracker({
+  contentId,
+  context,
+  locale,
+  publicPath,
+  section,
+  children,
+  delay,
+}: PropsWithChildren<RecorderProps>) {
+  return (
+    <>
+      <SignedInIsland>
+        <ContentViewRecorder
+          contentId={contentId}
+          context={context}
+          delay={delay}
+          locale={locale}
+          publicPath={publicPath}
+          section={section}
+        />
+      </SignedInIsland>
+      {children}
+    </>
+  );
+}
+
+/** The inputs that the view recorder reads, with the route locale narrowed. */
+type RecorderProps = Omit<Props, "enabled" | "locale"> & { locale: Locale };
+
+/** Records one view of the page on the page's Convex client. */
+function ContentViewRecorder({
+  contentId,
+  context,
+  locale,
+  publicPath,
+  section,
+  delay,
+}: RecorderProps) {
+  // Keeps hooks unconditional after the route locale has been narrowed.
+  useRecordContentView({
+    ...(contentId === undefined ? {} : { contentId }),
+    ...(context === undefined ? {} : { context }),
+    locale,
+    ...(delay === undefined ? {} : { delay }),
+    publicPath,
+    section,
+  });
+
+  return null;
+}

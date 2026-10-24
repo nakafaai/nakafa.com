@@ -121,7 +121,7 @@ test("a visitor reads the profile of a learner but finds neither its chats nor t
               .getByText(LEARNER_NAME, { exact: true })
           ).toBeVisible({ timeout: readinessTimeoutMilliseconds });
           // Its chats are its owner's alone, and the answer is a real 404,
-          // decided before the page renders. `next start` draws the
+          // decided before the page renders. The Start server draws the
           // framework's own 404 for an address the proxy rewrites, where
           // Vercel draws the app's page, so the status is the contract here.
           const chats = await visitor.goto(`/en/@${learner.username}/chat`);

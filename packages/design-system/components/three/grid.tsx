@@ -1,5 +1,3 @@
-"use client";
-
 import { Grid, Line } from "@react-three/drei";
 import {
   type CoordinateFrame,

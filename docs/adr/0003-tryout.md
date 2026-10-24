@@ -187,8 +187,8 @@ navigation destinations. Terminal pages stop their mutable subscriptions.
 
 ### Player
 
-A running section renders in one player, `apps/www/components/player`, which
-try-out binds in `apps/www/components/tryout/player`. The player knows
+A running section renders in one player, `apps/www/src/components/player`, which
+try-out binds in `apps/www/src/components/tryout/player`. The player knows
 questions, answers, and time. It does not know try-out routes or Convex
 functions, so a School assessment can bind the same parts.
 

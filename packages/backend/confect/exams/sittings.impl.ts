@@ -1,11 +1,18 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
+import { Sitting } from "@repo/backend/confect/exams/sittings/access";
 import { answer } from "@repo/backend/confect/exams/sittings/answer";
 import { heldAttempt } from "@repo/backend/confect/exams/sittings/attempt";
 import { sittingAccess } from "@repo/backend/confect/exams/sittings/authority";
-import { dashboard } from "@repo/backend/confect/exams/sittings/dashboard";
+import { cancelRoom } from "@repo/backend/confect/exams/sittings/cancel";
+import {
+  dashboard,
+  lastAnswer,
+} from "@repo/backend/confect/exams/sittings/dashboard";
 import { enter } from "@repo/backend/confect/exams/sittings/enter";
+import { expectedSeats } from "@repo/backend/confect/exams/sittings/expected";
 import { finish } from "@repo/backend/confect/exams/sittings/finish";
+import { images } from "@repo/backend/confect/exams/sittings/images";
 import { mine } from "@repo/backend/confect/exams/sittings/mine";
 import { paper } from "@repo/backend/confect/exams/sittings/paper";
 import {
@@ -52,12 +59,40 @@ const mineFunction = FunctionImpl.make(
   })
 );
 
+const expectedFunction = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "expected",
+  Effect.fn("exams.sittings.expected.function")(function* (args) {
+    const sitting = yield* Sitting;
+    return yield* expectedSeats(sitting, args.paginationOpts);
+  })
+);
+
+const cancelFunction = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "cancel",
+  Effect.fn("exams.sittings.cancel.function")(function* () {
+    return yield* cancelRoom();
+  })
+);
+
 const dashboardFunction = FunctionImpl.make(
   databaseSchema,
   spec,
   "dashboard",
   Effect.fn("exams.sittings.dashboard.function")(function* (args) {
     return yield* dashboard(args);
+  })
+);
+
+const lastAnswerFunction = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "lastAnswer",
+  Effect.fn("exams.sittings.lastAnswer.function")(function* (args) {
+    return yield* lastAnswer(args.attemptId);
   })
 );
 
@@ -160,6 +195,15 @@ const promptFunction = FunctionImpl.make(
   })
 );
 
+const imagesFunction = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "images",
+  Effect.fn("exams.sittings.images.function")(function* (args) {
+    return yield* images(args);
+  })
+);
+
 const answerFunction = FunctionImpl.make(
   databaseSchema,
   spec,
@@ -179,25 +223,34 @@ const finishFunction = FunctionImpl.make(
 );
 
 /**
- * Implements the sittings group of `sittings.spec.ts`: entry, signals, reads, the six proctor
- * actions, and the student's paper, answers, and finish.
+ * Implements the sittings group of `sittings.spec.ts`: entry, signals, reads, a room's cancel,
+ * the six proctor actions, and the student's paper, answers, and finish.
  */
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(enterFunction),
   Layer.provide(signalFunction),
   Layer.provide(mineFunction),
   Layer.provide(dashboardFunction),
-  Layer.provide(lockFunction),
-  Layer.provide(unlockFunction),
-  Layer.provide(addMinutesFunction),
-  Layer.provide(allowDeviceFunction),
-  Layer.provide(changeTokenFunction),
-  Layer.provide(closeFunction),
+  Layer.provide(lastAnswerFunction),
+  Layer.provide(cancelFunction),
+  Layer.provide(expectedFunction),
+  // The six proctor actions in one step, so the group stays within one pipe.
+  Layer.provide(
+    Layer.mergeAll(
+      lockFunction,
+      unlockFunction,
+      addMinutesFunction,
+      allowDeviceFunction,
+      changeTokenFunction,
+      closeFunction
+    )
+  ),
   Layer.provide(attemptFunction),
   Layer.provide(studentFunction),
   Layer.provide(signalsFunction),
   Layer.provide(paperFunction),
   Layer.provide(promptFunction),
+  Layer.provide(imagesFunction),
   Layer.provide(answerFunction),
   Layer.provide(finishFunction),
   // The three middlewares in one step, so the group stays within one pipe.

@@ -9,13 +9,20 @@ import accountDeletionReceipts from "./tables/accountDeletionReceipts";
 import articleBuckets from "./tables/articleBuckets";
 import articleCatalog from "./tables/articleCatalog";
 import articleCategories from "./tables/articleCategories";
+import billingAccounts from "./tables/billingAccounts";
+import billingCounters from "./tables/billingCounters";
+import billingEvents from "./tables/billingEvents";
+import billingGrants from "./tables/billingGrants";
+import billingInvoices from "./tables/billingInvoices";
+import billingPayments from "./tables/billingPayments";
+import billingSubscriptions from "./tables/billingSubscriptions";
 import chatShares from "./tables/chatShares";
 import chats from "./tables/chats";
 import classGrades from "./tables/classGrades";
 import classTeachers from "./tables/classTeachers";
 import classes from "./tables/classes";
+import classroomChannels from "./tables/classroomChannels";
 import commentLikes from "./tables/commentLikes";
-import commentVotes from "./tables/commentVotes";
 import comments from "./tables/comments";
 import connectorConnections from "./tables/connectorConnections";
 import connectorKeys from "./tables/connectorKeys";
@@ -47,8 +54,10 @@ import editorDocuments from "./tables/editorDocuments";
 import editorSnapshots from "./tables/editorSnapshots";
 import editorSteps from "./tables/editorSteps";
 import examAnswers from "./tables/examAnswers";
+import examAssets from "./tables/examAssets";
 import examAttempts from "./tables/examAttempts";
 import examQuestions from "./tables/examQuestions";
+import examResults from "./tables/examResults";
 import examSignals from "./tables/examSignals";
 import examSittings from "./tables/examSittings";
 import exams from "./tables/exams";
@@ -126,13 +135,20 @@ export default $defineSchema({
   articleBuckets: $Table.tableDefinition(articleBuckets),
   articleCatalog: $Table.tableDefinition(articleCatalog),
   articleCategories: $Table.tableDefinition(articleCategories),
+  billingAccounts: $Table.tableDefinition(billingAccounts),
+  billingCounters: $Table.tableDefinition(billingCounters),
+  billingEvents: $Table.tableDefinition(billingEvents),
+  billingGrants: $Table.tableDefinition(billingGrants),
+  billingInvoices: $Table.tableDefinition(billingInvoices),
+  billingPayments: $Table.tableDefinition(billingPayments),
+  billingSubscriptions: $Table.tableDefinition(billingSubscriptions),
   chatShares: $Table.tableDefinition(chatShares),
   chats: $Table.tableDefinition(chats),
   classGrades: $Table.tableDefinition(classGrades),
   classTeachers: $Table.tableDefinition(classTeachers),
   classes: $Table.tableDefinition(classes),
+  classroomChannels: $Table.tableDefinition(classroomChannels),
   commentLikes: $Table.tableDefinition(commentLikes),
-  commentVotes: $Table.tableDefinition(commentVotes),
   comments: $Table.tableDefinition(comments),
   connectorConnections: $Table.tableDefinition(connectorConnections),
   connectorKeys: $Table.tableDefinition(connectorKeys),
@@ -164,8 +180,10 @@ export default $defineSchema({
   editorSnapshots: $Table.tableDefinition(editorSnapshots),
   editorSteps: $Table.tableDefinition(editorSteps),
   examAnswers: $Table.tableDefinition(examAnswers),
+  examAssets: $Table.tableDefinition(examAssets),
   examAttempts: $Table.tableDefinition(examAttempts),
   examQuestions: $Table.tableDefinition(examQuestions),
+  examResults: $Table.tableDefinition(examResults),
   examSignals: $Table.tableDefinition(examSignals),
   examSittings: $Table.tableDefinition(examSittings),
   exams: $Table.tableDefinition(exams),

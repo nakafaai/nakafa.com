@@ -1,5 +1,3 @@
-"use client";
-
 import {
   ATOM_SHELL_SAMPLE_IDS,
   ATOM_SHELL_SAMPLES,
@@ -25,9 +23,9 @@ import {
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { Array as Arr } from "effect";
-import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { useState } from "react";
+import { useTranslations } from "use-intl";
 import { useStore } from "zustand";
 
 interface AtomShellLabProps {

@@ -1,5 +1,3 @@
-"use client";
-
 import { Line } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
@@ -22,11 +20,11 @@ import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { getColor } from "@repo/design-system/lib/color";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
+import { useTheme } from "@repo/design-system/providers/theme";
 import { Array as Arr, Option } from "effect";
-import { useTranslations } from "next-intl";
-import { useTheme } from "next-themes";
 import type { ReactNode } from "react";
 import { Suspense } from "react";
+import { useTranslations } from "use-intl";
 
 type Point = readonly [number, number, number];
 type ElementSymbol = "C" | "H" | "O";
@@ -147,7 +145,7 @@ export function MethaneCombustionEquationLab({
   labels,
   title,
 }: MethaneCombustionEquationLabProps) {
-  const { resolvedTheme } = useTheme();
+  const resolvedTheme = useTheme((state) => state.resolvedTheme);
   const colors = getCombustionColors(resolvedTheme);
   const t = useTranslations("Common");
 

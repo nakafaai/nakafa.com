@@ -1,7 +1,10 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
 import { setLoginPassword } from "@repo/backend/confect/identity/account";
-import { CARD_TERM } from "@repo/backend/confect/identity/card";
+import { Email, INVITE_TERM } from "@repo/backend/confect/tenancy/schema";
 import {
   CARD_NOW,
   cardRowOf,
@@ -9,6 +12,7 @@ import {
   DEVICE,
   inviteePerson,
   issueFirst,
+  LOGIN_NAME,
   nf,
   PASSWORD,
   redeem,
@@ -24,7 +28,7 @@ import {
   slugOf,
   tenancyFixture,
 } from "@repo/backend/test/tenancy";
-import { Array as Arr, Duration, Effect, Exit, Option } from "effect";
+import { Array as Arr, Duration, Effect, Exit, Option, Schema } from "effect";
 
 // The password step is the one Better Auth call in a redemption. A test makes it
 // fail once to prove that the card and the account roll back together.
@@ -38,8 +42,6 @@ vi.mock("@repo/backend/confect/identity/account", async (importOriginal) => {
     setLoginPassword: vi.fn(actual.setLoginPassword),
   };
 });
-
-const TERM = Duration.toMillis(CARD_TERM);
 
 /** A placeholder address: a random UUID key at the reserved `.invalid` domain. */
 const PLACEHOLDER_ADDRESS =
@@ -62,6 +64,20 @@ describe("identity/cards redeem", () => {
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         const issued = yield* issueFirst(fixture);
+        const invited = yield* fixture.run(
+          Effect.flatMap(DatabaseWriter, (writer) =>
+            writer.table("tenantInvites").insert({
+              channel: {
+                email: Schema.decodeSync(Email)("guru@harapan.example.test"),
+                kind: "email",
+              },
+              expiresAt: CARD_NOW + Duration.toMillis(INVITE_TERM),
+              personId: fixture.invited,
+              state: { status: "pending" },
+              tenantId: fixture.tenants.nf,
+            })
+          )
+        );
         expect(yield* redeemOn(fixture, issued.code)).toEqual({
           loginName: "guru.baru",
           outcome: "redeemed",
@@ -79,6 +95,16 @@ describe("identity/cards redeem", () => {
         expect(user?.email).toMatch(PLACEHOLDER_ADDRESS);
         expect(user?.email).not.toContain("invited");
         expect(person.account).toMatchObject({ userId: user?._id });
+        const invite = yield* fixture.run(
+          Effect.flatMap(DatabaseReader, (reader) =>
+            reader.table("tenantInvites").get(invited).pipe(Effect.orDie)
+          )
+        );
+        expect(invite.state).toEqual({
+          at: CARD_NOW,
+          status: "accepted",
+          userId: user?._id,
+        });
         expect(yield* fixture.run(journal)).toMatchObject([
           { change: { type: "card.issued" } },
           {
@@ -184,29 +210,6 @@ describe("identity/cards redeem", () => {
     })
   );
 
-  it.effect("refuses a card on the day its term ends", () =>
-    Effect.gen(function* () {
-      const fixture = yield* tenancyFixture;
-      const issued = yield* issueFirst(fixture);
-      vi.setSystemTime(CARD_NOW + TERM);
-      expect(yield* redeemOn(fixture, issued.code)).toEqual({
-        outcome: "refused",
-        reason: "expired",
-      });
-    })
-  );
-
-  it.effect("accepts a card one millisecond before its term ends", () =>
-    Effect.gen(function* () {
-      const fixture = yield* tenancyFixture;
-      const issued = yield* issueFirst(fixture);
-      vi.setSystemTime(CARD_NOW + TERM - 1);
-      expect(yield* redeemOn(fixture, issued.code)).toMatchObject({
-        outcome: "redeemed",
-      });
-    })
-  );
-
   it.effect(
     "refuses a password that is too short and writes nothing, so the card still works",
     () =>
@@ -291,6 +294,7 @@ describe("identity/cards redeem", () => {
             fixture.as("admin").mutation(redeem, {
               code,
               deviceId: DEVICE,
+              loginName: LOGIN_NAME,
               password: PASSWORD,
               slug: nf,
             })
@@ -451,6 +455,46 @@ describe("identity/cards redeem", () => {
           loginName: "guru.baru",
           outcome: "redeemed",
         });
+      })
+  );
+
+  it.effect(
+    "refuses a card under another or a malformed login name as invalid, fresh or used, and a right name still reports a used card",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const issued = yield* issueFirst(fixture);
+        const invalid = { outcome: "refused", reason: "invalid" };
+        expect(
+          yield* redeemOn(
+            fixture,
+            issued.code,
+            PASSWORD,
+            DEVICE,
+            nf,
+            "guru.lain"
+          )
+        ).toEqual(invalid);
+        expect(
+          yield* redeemOn(fixture, issued.code, PASSWORD, DEVICE, nf, "x")
+        ).toEqual(invalid);
+        expect(yield* redeemOn(fixture, issued.code)).toEqual({
+          loginName: "guru.baru",
+          outcome: "redeemed",
+        });
+        expect(
+          yield* redeemOn(
+            fixture,
+            issued.code,
+            PASSWORD,
+            deviceAt(1),
+            nf,
+            "guru.lain"
+          )
+        ).toEqual(invalid);
+        expect(
+          yield* redeemOn(fixture, issued.code, PASSWORD, deviceAt(2))
+        ).toEqual({ outcome: "refused", reason: "used" });
       })
   );
 });

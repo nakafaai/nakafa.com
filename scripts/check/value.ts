@@ -91,19 +91,16 @@ const EFFECT_HANDLE_MODULES = HashSet.make(
 );
 
 /**
- * The platform and framework types that a module names without an import and
- * that hold a value no Schema describes: a pending result, a request or a
- * response and its options, a stream, a DOM node, and the route props that
- * Next.js declares globally. A module that binds one of these names itself
- * means its own type.
+ * The platform types that a module names without an import and that hold a
+ * value no Schema describes: a pending result, a request or a response and its
+ * options, a stream, a DOM node, and the JSX namespace. A module that binds one
+ * of these names itself means its own type.
  */
 const PLATFORM_VALUE_TYPES = HashSet.make(
   "AbortSignal",
   "Element",
   "HTMLElement",
   "JSX",
-  "LayoutProps",
-  "PageProps",
   "Promise",
   "PromiseLike",
   "React",
@@ -111,8 +108,7 @@ const PLATFORM_VALUE_TYPES = HashSet.make(
   "Request",
   "RequestInit",
   "Response",
-  "ResponseInit",
-  "RouteContext"
+  "ResponseInit"
 );
 
 /** Returns the local names that one import clause binds, such as `React` in `import type * as React from "react"`. */

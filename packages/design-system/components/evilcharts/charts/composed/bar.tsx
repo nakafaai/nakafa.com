@@ -1,5 +1,3 @@
-"use client";
-
 import { useReducedMotion } from "@mantine/hooks";
 import {
   BarGlowFilter,

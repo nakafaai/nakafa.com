@@ -81,6 +81,7 @@ const TIPTAP_DECLARATIONS: readonly (readonly [string, readonly string[]])[] = [
       "@tiptap/extension-list",
       "@tiptap/extension-subscript",
       "@tiptap/extension-superscript",
+      "@tiptap/extension-table",
       "@tiptap/extension-underline",
       "@tiptap/starter-kit",
     ],
@@ -93,6 +94,7 @@ const TIPTAP_DECLARATIONS: readonly (readonly [string, readonly string[]])[] = [
       "@tiptap/extension-highlight",
       "@tiptap/extension-list",
       "@tiptap/extension-paragraph",
+      "@tiptap/extension-table",
       "@tiptap/extension-text",
       "@tiptap/extension-underline",
       "@tiptap/extensions",
@@ -100,6 +102,7 @@ const TIPTAP_DECLARATIONS: readonly (readonly [string, readonly string[]])[] = [
       "@tiptap/pm",
       "@tiptap/react",
       "@tiptap/starter-kit",
+      "@tiptap/suggestion",
     ],
   ],
   [
@@ -113,6 +116,7 @@ const TIPTAP_DECLARATIONS: readonly (readonly [string, readonly string[]])[] = [
       "@tiptap/extension-list",
       "@tiptap/extension-subscript",
       "@tiptap/extension-superscript",
+      "@tiptap/extension-table",
       "@tiptap/extension-underline",
       "@tiptap/pm",
       "@tiptap/starter-kit",
@@ -169,12 +173,6 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
   {
     allowed: ["7.0.2", "catalog:", "npm:typescript@7.0.2"],
     dependency: "typescript",
-    minimumDeclarations: 1,
-  },
-  { approved: "16.4.2", dependency: "next", minimumDeclarations: 1 },
-  {
-    approved: "16.4.2",
-    dependency: "@next/third-parties",
     minimumDeclarations: 1,
   },
   { approved: "1.47.0", dependency: "convex", minimumDeclarations: 1 },
@@ -263,6 +261,14 @@ export const DEPENDENCY_HOLDS: readonly DependencyHold[] = [
     approved: "1.12.2",
     declarationPaths: ["packages/backend/package.json"],
     dependency: "prosemirror-transform",
+  },
+  // The math input of the exam editor. It is MIT, and it loads only when a formula
+  // popover opens, so no page's first JavaScript holds it. Its version moves only when
+  // a reviewed release is adopted.
+  {
+    approved: "0.111.1",
+    declarationPaths: ["packages/design-system/package.json"],
+    dependency: "mathlive",
   },
   ...Arr.map(TIPTAP_PACKAGES, (dependency) => ({
     approved: TIPTAP_COHORT_VERSION,
@@ -360,11 +366,6 @@ export const REGISTRY_REVIEWS = [
   ],
   ["typescript@latest", "7.0.2", "The native compiler is pinned exactly."],
   [
-    "next@latest",
-    "16.4.2",
-    "Next.js 16.4 recommends Cache Components with partial prefetching for every app, which Nakafa already runs, adds `ensureStatic` and the `navigation()` and `prefetch()` deferral APIs, and ships one shared Turbopack runtime chunk with export mangling. It follows the 16.3.8 security release. 16.4.1 fixes three advisories that affect 16.4.0: GHSA-673q-mjm6-r5xr (typed arrays returned from `use cache` functions, critical, with no workaround), GHSA-2464-fhr4-w9xw (Image Optimization with SVG inputs, critical, fixed by sharp 0.35.5 or later, which the lock resolves), and GHSA-p3m5-59mp-jv5r (Server Actions in the App Router, high). 16.4.2 fixes Turbopack and Pages Router issues, and its release notes name no App Router, caching, prefetching or config change.",
-  ],
-  [
     "convex@latest",
     "1.47.0",
     "Convex 1.47 adds `.staged()` schema validation, `ctx.meta.getSnapshotTs()` and `getServiceUrl`, all additive. Its `convex deploy` asks before it creates or changes a non-staged index on a table of 100,000 documents or more, and a non-interactive deploy fails there unless `--skip-large-indexes-check` is passed, so a production build that adds such an index fails without that flag. Acceptance uses an isolated deployment.",
@@ -456,6 +457,7 @@ export const OBSOLETE_DEPENDENCIES = {
   "@effect/sql": IN_EFFECT,
   "@effect/workflow": IN_EFFECT,
   "date-fns":
-    "Intl.DateTimeFormat and Intl.RelativeTimeFormat with DateTime and Duration from effect, as apps/www/lib/i18n/date.ts does",
+    "Intl.DateTimeFormat and Intl.RelativeTimeFormat with DateTime and Duration from effect, as apps/www/src/lib/i18n/date.ts does",
   nanoid: "randomUuid from @repo/utilities/uuid",
+  next: "TanStack Start and TanStack Router, which the www app runs on",
 };

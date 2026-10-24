@@ -372,4 +372,17 @@ describe("exams/sittings entry", () => {
         expect(failure).toMatchObject({ _tag: "AttemptClosed" });
       })
   );
+
+  it.effect("returns the server's clock with each admission", () =>
+    Effect.gen(function* () {
+      const fixture = yield* tenancyFixture;
+      const made = yield* openedSitting(fixture, "PTS");
+      const entered = yield* enterOk(fixture, {
+        deviceId: deviceOf(1),
+        sittingId: made.id,
+        token: made.token,
+      });
+      expect(entered.serverNow).toBe(OPENS);
+    })
+  );
 });

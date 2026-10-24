@@ -1,6 +1,6 @@
-"use client";
 import { Alert02Icon, ArrowDown01Icon } from "@hugeicons/core-free-icons";
-import { captureException } from "@repo/analytics/posthog/browser";
+import { captureException } from "@repo/analytics/posthog/capture";
+import { operationalErrorName } from "@repo/analytics/posthog/exception";
 import { CodeBlockText } from "@repo/design-system/components/code-block/text";
 import {
   Collapsible,
@@ -15,13 +15,13 @@ import {
   renderMermaid,
 } from "@repo/design-system/lib/mermaid/render";
 import { getThemeAppearance } from "@repo/design-system/lib/theme/registry";
+import { useTheme } from "@repo/design-system/providers/theme";
 import { createStableId } from "@repo/utilities/id";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "cn";
 import { Effect, Fiber } from "effect";
-import { useTranslations } from "next-intl";
-import { useTheme } from "next-themes";
 import { useEffect, useId, useRef, useState } from "react";
+import { useTranslations } from "use-intl";
 
 /**
  * How a rendered diagram sits in its box. Auto margins center a smaller
@@ -73,7 +73,7 @@ export function Mermaid({
   const t = useTranslations("Ai");
   const tCommon = useTranslations("Common");
   const componentId = useId();
-  const { resolvedTheme } = useTheme();
+  const resolvedTheme = useTheme((state) => state.resolvedTheme);
   const renderId = createStableId(
     `mermaid-${componentId.replaceAll(":", "")}`,
     chart
@@ -102,6 +102,7 @@ export function Mermaid({
             Effect.sync(() => {
               const svg = lastValidSvg.current;
               captureException(error.cause, {
+                error_name: operationalErrorName(error.cause),
                 has_cached_svg: !!svg,
                 operation: error.operation,
                 source: "mermaid-render",

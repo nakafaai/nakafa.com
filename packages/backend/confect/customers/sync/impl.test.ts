@@ -23,7 +23,7 @@ const polarGateway = vi.hoisted(() => ({
   updateCustomer: vi.fn(),
   updateCustomerMetadata: vi.fn(),
 }));
-vi.mock("@repo/backend/confect/customers/polar/live", () => ({
+vi.mock("@repo/backend/confect/billing/polar/live", () => ({
   polarGateway,
 }));
 

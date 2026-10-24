@@ -1,0 +1,39 @@
+import { useDebouncedValue } from "@mantine/hooks";
+import { useQueryStates } from "nuqs";
+import { SearchResults } from "@/components/search/list";
+import { getErrorMessage } from "@/lib/failure";
+import { searchParsers } from "@/lib/nuqs/search";
+import { useSearchQuery } from "@/lib/search/query";
+
+const DEBOUNCE_TIME = 500;
+
+/** Connects the search page query string to Convex search results. */
+export function SearchListItems() {
+  const [{ q }] = useQueryStates(searchParsers);
+
+  const [debouncedQuery] = useDebouncedValue(q, DEBOUNCE_TIME);
+
+  const {
+    data: results = [],
+    isError,
+    error,
+    isLoading,
+  } = useSearchQuery({
+    query: debouncedQuery,
+    enabled: Boolean(debouncedQuery),
+  });
+
+  const hasError = isError;
+  const displayError = error ? getErrorMessage(error) : "";
+  const queryLoading = isLoading && !hasError;
+
+  return (
+    <SearchResults
+      error={displayError}
+      isError={hasError}
+      isLoading={queryLoading}
+      query={debouncedQuery}
+      results={results}
+    />
+  );
+}

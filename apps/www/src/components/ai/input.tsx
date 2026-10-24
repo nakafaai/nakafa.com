@@ -1,0 +1,282 @@
+import {
+  ArrowRight02Icon,
+  ArrowUp02Icon,
+  AttachmentIcon,
+  BookOpenTextIcon,
+  LeftToRightListBulletIcon,
+  Quiz03Icon,
+  StopIcon,
+} from "@hugeicons/core-free-icons";
+import {
+  NINA_FILE_COUNT,
+  NINA_FILE_SIZE,
+  NinaFileType,
+} from "@repo/backend/client/nina/uploads";
+import {
+  PromptInput,
+  PromptInputTextarea,
+} from "@repo/design-system/components/ai/input";
+import { Button } from "@repo/design-system/components/ui/button";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+} from "@repo/design-system/components/ui/input-group";
+import { runPromptInputProgram } from "@repo/design-system/lib/prompt-input/boundary";
+import { usePromptInputAttachments } from "@repo/design-system/lib/prompt-input/context";
+import {
+  type PromptInputMessage,
+  submitPromptInput,
+} from "@repo/design-system/lib/prompt-input/submission";
+import type { ChatStatus } from "ai";
+import { cn } from "cn";
+import { Array as Arr, Effect, Function as Fn, Option } from "effect";
+import { lazy, type ReactNode, Suspense, useState } from "react";
+import { useTranslations } from "use-intl";
+import { NinaAttach } from "@/components/ai/attachment";
+import { useAi } from "@/components/ai/context";
+import { promptRefusal, reportNinaFailure } from "@/components/ai/feedback";
+
+/**
+ * The file tray and the attach button load with their upload code, which
+ * reaches Convex. A composer that takes no files, such as a visitor's or a
+ * page's first composer before its focus, never loads them.
+ */
+const NinaAttachments = lazy(() =>
+  import("@/components/ai/tray").then((loaded) => ({
+    default: loaded.NinaAttachments,
+  }))
+);
+
+interface Props {
+  /** Whether the composer takes files. Uploads belong to a signed-in account, so a visitor's composer takes none. */
+  attachments?: boolean;
+  autoFocus?: boolean | undefined;
+  children?: ReactNode;
+  className?: string;
+  disabled?: boolean;
+  /** The attach button of a composer that takes no files: a visitor's press asks for sign-in. */
+  onAttachRequest?: (() => void) | undefined;
+  /** Runs on the first focus or input, so a composer can load what sending needs. */
+  onEngage?: (() => void) | undefined;
+  onStop?: () => void;
+  onSubmit: (message: PromptInputMessage) => boolean | Promise<boolean>;
+  status?: ChatStatus;
+}
+
+/**
+ * One attachment-capable composer for Nina's home, conversation and sheet. While
+ * Nina streams, the button stops the answer through `onStop` and never submits,
+ * so a key press in the text field cannot stop it.
+ */
+export function NinaInput({
+  attachments = true,
+  autoFocus,
+  children,
+  className,
+  disabled,
+  onAttachRequest,
+  onEngage,
+  onStop,
+  onSubmit,
+  status,
+}: Props) {
+  const t = useTranslations("Ai");
+  const composerKey = useAi((state) => state.composerKey);
+  const text = useAi((state) => state.text);
+  const setText = useAi((state) => state.setText);
+  const [submittedFiles, setSubmittedFiles] = useState<readonly string[]>([]);
+  // While Nina answers, the button stops the reply and a press sends no text.
+  const answering = status === "streaming";
+  const stopping = answering && !disabled;
+
+  function handleSubmit(message: PromptInputMessage) {
+    const refusal = promptRefusal(message.text, answering);
+    if (Option.isSome(refusal)) {
+      Effect.runFork(
+        reportNinaFailure(refusal.value, {
+          description: "failure-message-size.description",
+          title: "failure-message-size.title",
+        })
+      );
+      return false;
+    }
+    const admission = onSubmit(message);
+    if (admission === false) {
+      return false;
+    }
+    // The submitted files leave the tray while the message is admitted, and
+    // come back if it is refused. No transition holds them: one that waits for
+    // the admission would hold every navigation the learner makes meanwhile.
+    setSubmittedFiles(Arr.map(message.files ?? [], (file) => file.id));
+    return Promise.resolve(admission).finally(() => setSubmittedFiles([]));
+  }
+
+  // The files of a composer live in the state of its PromptInput, and a new key
+  // is how React starts that state over. The key changes with the text of the
+  // draft, when the draft stops belonging to the learner who is signed in, so
+  // every surface of this composer drops the files the previous learner picked.
+  return (
+    <PromptInput
+      accept={Arr.join(NinaFileType.literals, ",")}
+      fileInputLabel={t("attach-files")}
+      key={composerKey}
+      maxFileSize={NINA_FILE_SIZE}
+      maxFiles={NINA_FILE_COUNT}
+      multiple
+      onSubmit={handleSubmit}
+    >
+      {children}
+      <InputGroup
+        className={cn(
+          "rounded-3xl bg-muted/50 text-chat shadow-none",
+          className
+        )}
+      >
+        {attachments ? (
+          <Suspense fallback={null}>
+            <NinaAttachments submittedFiles={submittedFiles} />
+          </Suspense>
+        ) : null}
+        <PromptInputTextarea
+          aria-label={t("text-placeholder")}
+          autoFocus={autoFocus}
+          className="text-(length:--text-chat) md:text-(length:--text-chat) max-h-[min(12rem,35dvh)] px-3 py-3"
+          dir="auto"
+          onChange={(event) => {
+            setText(event.target.value);
+            onEngage?.();
+          }}
+          onFocus={() => {
+            onEngage?.();
+            // Load the stylesheet's math faces before streamed formulas arrive.
+            Effect.runPromise(
+              Effect.tryPromise(() =>
+                Promise.all([
+                  document.fonts.load("16px KaTeX_Main"),
+                  document.fonts.load("italic 16px KaTeX_Math"),
+                ])
+              ).pipe(Effect.ignore)
+            );
+          }}
+          placeholder={t("text-placeholder")}
+          value={text}
+        />
+        <InputGroupAddon
+          align="block-end"
+          className="justify-between gap-2 group-has-[>[data-slot=input-group-control]]/input-group:pb-3"
+        >
+          {attachments ? (
+            <Suspense fallback={null}>
+              <NinaAttach />
+            </Suspense>
+          ) : null}
+          {attachments ? null : (
+            <InputGroupButton
+              aria-label={t("attach-files")}
+              className="rounded-full"
+              disabled={disabled}
+              onClick={onAttachRequest}
+              size="icon"
+              type="button"
+              variant="outline"
+            >
+              <HugeIcons icon={AttachmentIcon} />
+            </InputGroupButton>
+          )}
+          <div className="flex items-center gap-1">
+            <InputGroupButton
+              aria-label={stopping ? t("stop-response") : t("send-message")}
+              className="rounded-full"
+              disabled={disabled}
+              onClick={stopping ? onStop : undefined}
+              size="icon"
+              type={stopping ? "button" : "submit"}
+              variant="default"
+            >
+              <HugeIcons icon={stopping ? StopIcon : ArrowUp02Icon} />
+            </InputGroupButton>
+          </div>
+        </InputGroupAddon>
+      </InputGroup>
+    </PromptInput>
+  );
+}
+
+/** Offers page-specific first prompts only in the empty conversation. */
+export function NinaSuggestions({
+  disabled,
+  onSubmit,
+}: Pick<Props, "disabled" | "onSubmit">) {
+  const t = useTranslations("Ai");
+  const contextTitle = useAi((state) => state.contextTitle);
+  const text = useAi((state) => state.text);
+  const hasFiles = usePromptInputAttachments(
+    (attachments) => attachments.files.length > 0
+  );
+  const dismissRefusals = usePromptInputAttachments(
+    (attachments) => attachments.dismissRefusals
+  );
+  const refusals = usePromptInputAttachments(
+    (attachments) => attachments.refusals
+  );
+  if (text.trim() || hasFiles) {
+    return null;
+  }
+  const title = contextTitle?.trim() || t("suggestion-current-material");
+  const suggestions = [
+    {
+      icon: BookOpenTextIcon,
+      label: t("suggestion-explain"),
+      prompt: t("suggestion-explain-prompt", { title }),
+    },
+    {
+      icon: Quiz03Icon,
+      label: t("suggestion-example"),
+      prompt: t("suggestion-example-prompt", { title }),
+    },
+    {
+      icon: LeftToRightListBulletIcon,
+      label: t("suggestion-summary"),
+      prompt: t("suggestion-summary-prompt", { title }),
+    },
+  ];
+  return (
+    <div className="flex flex-col gap-2 pb-4">
+      {Arr.map(suggestions, (suggestion) => (
+        <Button
+          className="group h-auto min-h-9 w-full justify-start whitespace-normal py-1.5 font-normal shadow-none"
+          disabled={disabled}
+          key={suggestion.label}
+          onClick={(event) => {
+            // A suggestion is a send from this composer, so it takes the refused
+            // chips in the tray the same way the composer's own Send does.
+            runPromptInputProgram(
+              submitPromptInput({
+                dismissRefusals,
+                event,
+                files: [],
+                onSubmit,
+                onSuccess: Fn.constVoid,
+                refusals,
+                text: suggestion.prompt,
+              })
+            );
+          }}
+          type="button"
+          variant="outline"
+        >
+          <HugeIcons data-icon="inline-start" icon={suggestion.icon} />
+          <span className="flex-1 text-left">{suggestion.label}</span>
+          <HugeIcons
+            aria-hidden="true"
+            className="opacity-0 transition-opacity ease-out group-hover:opacity-100"
+            data-icon="inline-end"
+            icon={ArrowRight02Icon}
+          />
+        </Button>
+      ))}
+    </div>
+  );
+}

@@ -8,7 +8,7 @@ import {
 const PACKAGE = "@repo/typescript-config";
 const BASE = "packages/typescript-config/base.json";
 const LIBRARY = "packages/typescript-config/library.json";
-const NEXT = "packages/typescript-config/nextjs.json";
+const APP = "packages/typescript-config/app.json";
 const RULES = {
   diagnosticSeverity: { instanceOfSchema: "error" },
   name: "@effect/language-service",
@@ -58,7 +58,7 @@ describe("compiler configuration policy", () => {
         [
           {
             file: "apps/www/tsconfig.json",
-            sourceText: config("@repo/typescript-config/nextjs.json"),
+            sourceText: config("@repo/typescript-config/app.json"),
           },
           {
             file: "packages/backend/convex/tsconfig.json",
@@ -70,7 +70,7 @@ describe("compiler configuration policy", () => {
           },
           { file: BASE, sourceText: config(undefined, [RULES]) },
           { file: LIBRARY, sourceText: config("./base.json") },
-          { file: NEXT, sourceText: config("./base.json") },
+          { file: APP, sourceText: config("./base.json") },
           {
             file: "scripts/tsconfig.json",
             sourceText: config("../packages/typescript-config/base.json"),
@@ -89,15 +89,15 @@ describe("compiler configuration policy", () => {
         [
           { file: BASE, sourceText: config(undefined, [RULES]) },
           {
-            file: NEXT,
-            sourceText: config("./base.json", [{ name: "next" }, RULES]),
+            file: APP,
+            sourceText: config("./base.json", [{ name: "vite" }, RULES]),
           },
           { file: LIBRARY, sourceText: config("./base.json", []) },
         ],
         PLUGIN_RULES
       ),
       [
-        `${NEXT}: remove its plugins array and inherit the one in ${BASE}, so the @effect/language-service block is written once.`,
+        `${APP}: remove its plugins array and inherit the one in ${BASE}, so the @effect/language-service block is written once.`,
         `${LIBRARY}: remove its plugins array and inherit the one in ${BASE}, so the @effect/language-service block is written once.`,
       ]
     );
@@ -142,11 +142,11 @@ describe("compiler configuration policy", () => {
           },
           {
             file: "apps/www/tsconfig.json",
-            sourceText: config("@repo/typescript-config/nextjs.json"),
+            sourceText: config("@repo/typescript-config/app.json"),
           },
           { file: BASE, sourceText: config(undefined) },
           { file: LIBRARY, sourceText: config("./base.json") },
-          { file: NEXT, sourceText: config("./base.json", [{ name: "next" }]) },
+          { file: APP, sourceText: config("./base.json", [{ name: "vite" }]) },
         ],
         PLUGIN_RULES
       ),
@@ -155,7 +155,7 @@ describe("compiler configuration policy", () => {
         unreached("apps/www/tsconfig.json"),
         unreached(BASE),
         unreached(LIBRARY),
-        `${NEXT}: add the @effect/language-service block to its plugins array, because a plugins array replaces the one it extends.`,
+        `${APP}: add the @effect/language-service block to its plugins array, because a plugins array replaces the one it extends.`,
       ]
     );
   });
@@ -168,7 +168,7 @@ describe("compiler configuration policy", () => {
           {
             file: "apps/www/tsconfig.json",
             sourceText: config("@repo/typescript-config/base.json", [
-              { name: "next" },
+              { name: "vite" },
             ]),
           },
           { file: BASE, sourceText: config(undefined, [RULES]) },
@@ -219,12 +219,12 @@ describe("compiler configuration policy", () => {
           },
           {
             file: "apps/www/tsconfig.json",
-            sourceText: config("@repo/typescript-config/nextjs.json"),
+            sourceText: config("@repo/typescript-config/app.json"),
           },
           { file: BASE, sourceText: config(undefined, [RULES]) },
           {
-            file: NEXT,
-            sourceText: '{ // Next.js\n  "extends": "./base.json",\n}',
+            file: APP,
+            sourceText: '{ // Application\n  "extends": "./base.json",\n}',
           },
           {
             file: "packages/seo/tsconfig.json",
@@ -239,7 +239,7 @@ describe("compiler configuration policy", () => {
         unreached("apps/email/tsconfig.json"),
         unreached("apps/mcp/tsconfig.json"),
         unreached("apps/www/tsconfig.json"),
-        `${NEXT}: write this compiler configuration as plain JSON, without comments or trailing commas, so the check can read its plugins.`,
+        `${APP}: write this compiler configuration as plain JSON, without comments or trailing commas, so the check can read its plugins.`,
         unreached("packages/seo/tsconfig.json"),
       ]
     );

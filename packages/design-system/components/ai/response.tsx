@@ -1,5 +1,3 @@
-"use client";
-
 import {
   MarkdownBlock,
   type MarkdownContentProps,

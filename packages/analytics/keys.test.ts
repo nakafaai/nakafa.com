@@ -3,8 +3,8 @@ import { deploymentKeys, keys, postHogProxyKeys } from "@repo/analytics/keys";
 
 /** Installs one complete analytics environment for each assertion. */
 function stubAnalyticsEnvironment() {
-  vi.stubEnv("NEXT_PUBLIC_POSTHOG_KEY", "phc_test");
-  vi.stubEnv("NEXT_PUBLIC_POSTHOG_UI_HOST", "https://eu.posthog.com");
+  vi.stubEnv("VITE_POSTHOG_KEY", "phc_test");
+  vi.stubEnv("VITE_POSTHOG_UI_HOST", "https://eu.posthog.com");
   vi.stubEnv("POSTHOG_PROXY_HOST", "https://t.nakafa.com");
 }
 
@@ -20,7 +20,7 @@ describe("analytics environment contracts", () => {
       POSTHOG_PROXY_HOST: "https://t.nakafa.com",
     });
     expect(keys()).toMatchObject({
-      NEXT_PUBLIC_POSTHOG_KEY: "phc_test",
+      VITE_POSTHOG_KEY: "phc_test",
       POSTHOG_PROXY_HOST: "https://t.nakafa.com",
     });
   });
@@ -29,40 +29,43 @@ describe("analytics environment contracts", () => {
 describe("deployment keys for server reporting", () => {
   it("reads the deployment fields without the PostHog configuration", () => {
     vi.stubEnv("VERCEL_ENV", "production");
-    vi.stubEnv("NEXT_PHASE", "phase-production-server");
-    vi.stubEnv("NEXT_PUBLIC_POSTHOG_KEY", undefined);
-    vi.stubEnv("NEXT_PUBLIC_POSTHOG_UI_HOST", undefined);
+    vi.stubEnv("TSS_PRERENDERING", "false");
+    vi.stubEnv("VITE_POSTHOG_KEY", undefined);
+    vi.stubEnv("VITE_POSTHOG_UI_HOST", undefined);
     vi.stubEnv("POSTHOG_PROXY_HOST", undefined);
 
     expect(deploymentKeys()).toMatchObject({
-      NEXT_PHASE: "phase-production-server",
+      TSS_PRERENDERING: "false",
       VERCEL_ENV: "production",
     });
   });
 
   it("accepts any deployment text and keeps absent fields undefined", () => {
     vi.stubEnv("VERCEL_ENV", "unknown-environment");
-    vi.stubEnv("NEXT_PHASE", undefined);
+    vi.stubEnv("TSS_PRERENDERING", undefined);
 
     expect(deploymentKeys().VERCEL_ENV).toBe("unknown-environment");
-    expect(deploymentKeys().NEXT_PHASE).toBeUndefined();
+    expect(deploymentKeys().TSS_PRERENDERING).toBeUndefined();
   });
 
   it("keeps an unset VERCEL_ENV undefined", () => {
     vi.stubEnv("VERCEL_ENV", undefined);
-    vi.stubEnv("NEXT_PHASE", undefined);
+    vi.stubEnv("TSS_PRERENDERING", undefined);
 
     expect(deploymentKeys()).toStrictEqual({
-      NEXT_PHASE: undefined,
+      TSS_PRERENDERING: undefined,
       VERCEL_ENV: undefined,
     });
   });
 
   it("keeps empty deployment fields as set empty strings", () => {
     vi.stubEnv("VERCEL_ENV", "");
-    vi.stubEnv("NEXT_PHASE", "");
+    vi.stubEnv("TSS_PRERENDERING", "");
 
-    expect(deploymentKeys()).toStrictEqual({ NEXT_PHASE: "", VERCEL_ENV: "" });
+    expect(deploymentKeys()).toStrictEqual({
+      TSS_PRERENDERING: "",
+      VERCEL_ENV: "",
+    });
   });
 });
 
@@ -87,7 +90,7 @@ describe("required PostHog values", () => {
     expect(keys).toThrow();
 
     stubAnalyticsEnvironment();
-    vi.stubEnv("NEXT_PUBLIC_POSTHOG_UI_HOST", undefined);
+    vi.stubEnv("VITE_POSTHOG_UI_HOST", undefined);
     expect(keys).toThrow();
   });
 });

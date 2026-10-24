@@ -1,5 +1,3 @@
-"use client";
-
 import { MinusSignIcon, PlusSignIcon } from "@hugeicons/core-free-icons";
 import { stepperVariants } from "@repo/design-system/components/contents/mathematics/stepper";
 import {
@@ -33,9 +31,14 @@ import {
   getTan,
 } from "@repo/math/angles";
 import { Option } from "effect";
-import dynamic from "next/dynamic";
-import { useFormatter, useLocale, useTranslations } from "next-intl";
-import { createContext, type ReactNode, use, useState } from "react";
+import {
+  createContext,
+  lazy,
+  type ReactNode,
+  Suspense,
+  use,
+  useState,
+} from "react";
 import {
   Button,
   Group,
@@ -44,14 +47,13 @@ import {
   Label,
   NumberField,
 } from "react-aria-components";
+import { useFormatter, useLocale, useTranslations } from "use-intl";
 
 /** The scene loads once the card asks for it, and its frame holds the place meanwhile. */
-const UnitCircleStage = dynamic(
-  () =>
-    import("@repo/design-system/components/three/unit-circle").then(
-      ({ UnitCircleStage }) => UnitCircleStage
-    ),
-  { loading: ScenePlaceholder }
+const UnitCircleStage = lazy(() =>
+  import("@repo/design-system/components/three/unit-circle").then((module) => ({
+    default: module.UnitCircleStage,
+  }))
 );
 
 interface CardProps {
@@ -247,7 +249,9 @@ function Content() {
       {/* The loading frame and the stage share this band, so nothing moves when the stage mounts. */}
       <VisualCardBody className="group-data-fullscreen/visual:justify-center">
         {live ? (
-          <UnitCircleStage angle={angleValue} viewLabel={viewLabel} />
+          <Suspense fallback={<ScenePlaceholder />}>
+            <UnitCircleStage angle={angleValue} viewLabel={viewLabel} />
+          </Suspense>
         ) : (
           <div aria-hidden="true" className={threeSceneFrameVariants()} />
         )}

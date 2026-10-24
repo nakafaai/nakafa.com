@@ -1,0 +1,81 @@
+import { HttpClient } from "@confect/js";
+import { NETWORK_ATTEMPT_DEADLINE } from "@repo/backend/client/network";
+import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
+import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
+import { negotiateLocale } from "@repo/internationalization/src/negotiate";
+import { isSharedPath } from "@repo/internationalization/src/rewrite";
+import { Data, Effect, Option } from "effect";
+import { clientEnv } from "@/env.public";
+import { readSessionToken } from "@/lib/auth/token";
+import { httpSingleAttemptLayer } from "@/lib/convex/http";
+import { readSchoolSlug } from "@/lib/routing/school/host";
+
+/**
+ * The gate did not answer within NETWORK_ATTEMPT_DEADLINE, the bound that every
+ * attempt of a network read takes. The page goes on without the answer, as it
+ * does for every failed read.
+ */
+class SchoolReadDeadline extends Data.TaggedError("SchoolReadDeadline") {}
+
+/**
+ * Reads whether the school refuses the viewer, in one query: the backend decides
+ * the school's existence and the caller's view of it together
+ * (`tenancy.profile.refusal`). A visitor's query carries no session, and a signed-in
+ * caller's carries its token, so the backend reads the same identity the layout reads.
+ */
+const readRefusal = Effect.fn("www.routing.school.refusal")(function* (
+  slug: TenantSlug,
+  headers: Headers
+) {
+  const token = yield* readSessionToken(
+    clientEnv.VITE_CONVEX_SITE_URL,
+    headers
+  );
+  return yield* HttpClient.HttpClient.pipe(
+    Effect.flatMap((client) => client.query(tenancy.profile.refusal, { slug })),
+    Effect.provide(
+      httpSingleAttemptLayer(token === undefined ? undefined : { auth: token })
+    )
+  );
+});
+
+/**
+ * Decides, before a school page streams, whether the school refuses the request
+ * (ADR 0026). The answer is the locale of the not-found page, negotiated from the
+ * request, or none when the school tree answers. A request whose host names no
+ * school has none, and so has a method that is not a document read: only a GET or
+ * HEAD request is a page.
+ *
+ * The whole gate waits at most NETWORK_ATTEMPT_DEADLINE, so a school that does not
+ * answer holds the page for that long at most (ADR 0026). A failed or late read
+ * goes on to the school tree, and the full cause is logged, so an outage never
+ * answers a page with not found.
+ */
+export const readSchoolRefusal = Effect.fn("www.routing.school.pageRefusal")(
+  function* (request: Request) {
+    const url = new URL(request.url);
+    const slug = readSchoolSlug(url.hostname);
+    if (
+      Option.isNone(slug) ||
+      isSharedPath(url.pathname) ||
+      (request.method !== "GET" && request.method !== "HEAD")
+    ) {
+      return Option.none();
+    }
+    const refused = yield* readRefusal(slug.value, request.headers).pipe(
+      Effect.timeoutOrElse({
+        duration: NETWORK_ATTEMPT_DEADLINE,
+        orElse: () => Effect.fail(new SchoolReadDeadline()),
+      }),
+      Effect.catchCause((cause) =>
+        Effect.logError(
+          "A school address could not be read, so its page goes on to the school tree.",
+          cause
+        ).pipe(Effect.as(false))
+      )
+    );
+    return refused
+      ? Option.some(negotiateLocale(request.headers))
+      : Option.none();
+  }
+);

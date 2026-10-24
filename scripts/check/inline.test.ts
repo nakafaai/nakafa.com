@@ -6,7 +6,7 @@ import { parseSources } from "#scripts/check/source";
 /** Lists the lines of the data shapes that one module writes, as the shape rule reports them. */
 const shapes = Effect.fn("InlinePolicyTest.shapes")(function* (
   sourceText: string,
-  file = "apps/www/lib/example.ts"
+  file = "apps/www/src/lib/example.ts"
 ) {
   const found = yield* effectFindings(
     yield* parseSources([{ file, sourceText }])
@@ -99,7 +99,7 @@ let empty: {};
         yield* shapes(`import type { ReactNode } from "react";
 let watch: { readonly onDone: () => void };
 let frame: { readonly children: ReactNode };
-let route: { params: PageProps<"/[locale]">["params"] };
+let route: { readonly response: Response };
 let stop: { readonly signal: AbortSignal; readonly pending: Promise<void> };
 let init: ResponseInit & { readonly url?: string };
 let widen: (Base & { readonly extra: string }) | null;
@@ -195,14 +195,14 @@ class Panel {
   render(input: { rows: { id: string }[] }) {}
 }
 `,
-            "apps/www/components/card.tsx"
+            "apps/www/src/components/card.tsx"
           ),
           [5, 6, 7, 8, 9, 11]
         );
         assert.deepStrictEqual(
           yield* shapes(
             "export function Card({ rows }: { rows: { id: string }[] }) {}\n",
-            "apps/www/lib/card.ts"
+            "apps/www/src/lib/card.ts"
           ),
           [1]
         );
@@ -216,7 +216,7 @@ class Panel {
         assert.deepStrictEqual(
           yield* shapes(
             'export const settings: { mode: string } = { mode: "a" };\n',
-            "apps/www/next.config.ts"
+            "apps/www/vite.config.ts"
           ),
           []
         );

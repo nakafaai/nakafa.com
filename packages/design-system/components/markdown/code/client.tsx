@@ -1,10 +1,18 @@
 "use client";
 
-import dynamic from "next/dynamic";
+import { type ComponentProps, lazy, Suspense } from "react";
 
 /** Defers the interactive highlighter until an authored code block renders. */
-export const CodeBlockMdx = dynamic(() =>
+const LazyCodeBlockMdx = lazy(() =>
   import("@repo/design-system/components/markdown/code/block").then(
-    ({ CodeBlockMdx }) => CodeBlockMdx
+    (module) => ({ default: module.CodeBlockMdx })
   )
 );
+
+export function CodeBlockMdx(props: ComponentProps<typeof LazyCodeBlockMdx>) {
+  return (
+    <Suspense fallback={null}>
+      <LazyCodeBlockMdx {...props} />
+    </Suspense>
+  );
+}

@@ -14,7 +14,7 @@ import { TestClock } from "effect/testing";
 
 const provider = ConfigProvider.fromEnvRecord({
   MATH_CAS_API_KEY: "secret",
-  NEXT_PUBLIC_CAS_URL: "https://cas.nakafa.test",
+  VITE_CAS_URL: "https://cas.nakafa.test",
 });
 /** The fetch that Effect's client calls in place of the global one. */
 const fetcher = vi.fn<typeof fetch>();

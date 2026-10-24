@@ -1,5 +1,3 @@
-"use client";
-
 import { BiologyCallouts } from "@repo/design-system/components/contents/biology/callouts";
 import { useBiologyColors } from "@repo/design-system/components/contents/biology/context";
 import type { BiologyScenePoint } from "@repo/design-system/components/contents/biology/data";

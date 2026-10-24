@@ -5,7 +5,11 @@ import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { TenantAccess } from "@repo/backend/confect/access/tenant";
 import RequireMember from "@repo/backend/confect/middleware/member.spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
-import { NpsnInvalid, NpsnTaken } from "@repo/backend/confect/tenancy/errors";
+import {
+  NpsnInvalid,
+  NpsnTaken,
+  UnitLimit,
+} from "@repo/backend/confect/tenancy/errors";
 import { NewTimeZone, TimeZone } from "@repo/backend/confect/tenancy/locale";
 import {
   Npsn,
@@ -72,6 +76,20 @@ export default GroupSpec.make()
         }),
       error: () => AccessDenied,
     })
+  )
+  .addFunction(
+    FunctionSpec.publicMutation({
+      name: "create",
+      args: () => ({
+        contentLanguage: AppLocaleCodeSchema,
+        level: UnitLevel,
+        name: UnitName,
+        slug: TenantSlug,
+        timeZone: NewTimeZone,
+      }),
+      returns: () => UnitView,
+      error: () => Schema.Union([AccessDenied, UnitLimit]),
+    }).middleware(TenantAccess, { action: "tenant.manage" })
   )
   .addFunction(
     FunctionSpec.publicMutation({

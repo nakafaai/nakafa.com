@@ -9,7 +9,7 @@ import {
 } from "@effect/vitest";
 import schema from "@repo/backend/confect/_generated/schema";
 import usersTable from "@repo/backend/confect/_generated/tables/users";
-import { products } from "@repo/backend/confect/customers/polar/products";
+import { products } from "@repo/backend/confect/billing/polar/products";
 import {
   refundCredits,
   reserveCredits,
@@ -56,7 +56,7 @@ describe("Nina credit transactions", () => {
     const hold = await reserve();
     await t.mutation((ctx) =>
       Effect.runPromise(
-        refundCredits(hold, "settled-turn").pipe(
+        refundCredits(hold, "settled-turn", 4).pipe(
           Effect.provide(RegisteredConvexFunction.mutationLayer(schema, ctx))
         )
       )
@@ -65,17 +65,17 @@ describe("Nina credit transactions", () => {
       user: await ctx.db.get("users", identity.userId),
       ledger: await ctx.db.query("creditTransactions").collect(),
     }));
-    expect(result.user?.credits).toBe(25);
+    expect(result.user?.credits).toBe(4);
     expect(
       Arr.map(result.ledger, ({ type, amount }) => [type, amount])
     ).toEqual([
-      ["daily-grant", 25],
-      ["usage", -5],
-      ["refund", 5],
+      ["daily-grant", 10],
+      ["usage", -10],
+      ["refund", 4],
     ]);
   });
 
-  it("holds five credits for one response and refuses less", async () => {
+  it("holds up to fifty credits for one response, the whole balance when less, and refuses an empty balance", async () => {
     const priced = await fixture(5);
     const hold = await priced.reserve();
     const state = await priced.t.query(async (ctx) => ({
@@ -87,9 +87,33 @@ describe("Nina credit transactions", () => {
     expect(Arr.map(state.ledger, (row) => row.metadata)).toEqual([
       { phase: "reserved" },
     ]);
-    await expect((await fixture(4)).reserve()).rejects.toMatchObject({
+    const capped = await fixture(80);
+    expect(await capped.reserve()).toMatchObject({ credits: 50 });
+    const cappedUser = await capped.t.query((ctx) =>
+      ctx.db.get("users", capped.identity.userId)
+    );
+    expect(cappedUser?.credits).toBe(30);
+    await expect((await fixture(0)).reserve()).rejects.toMatchObject({
       code: "INSUFFICIENT_CREDITS",
     });
+  });
+
+  it("gives nothing back when an answer's cost holds the whole reservation", async () => {
+    const { t, identity, reserve } = await fixture(5);
+    const hold = await reserve();
+    await t.mutation((ctx) =>
+      Effect.runPromise(
+        refundCredits(hold, "answered-turn", 0).pipe(
+          Effect.provide(RegisteredConvexFunction.mutationLayer(schema, ctx))
+        )
+      )
+    );
+    const result = await t.query(async (ctx) => ({
+      user: await ctx.db.get("users", identity.userId),
+      ledger: await ctx.db.query("creditTransactions").collect(),
+    }));
+    expect(result.user?.credits).toBe(0);
+    expect(result.ledger).toHaveLength(1);
   });
 
   it.each(["ledger", "state", "quota"] as const)(
@@ -151,7 +175,7 @@ describe("Nina credit transactions", () => {
             });
           }
           return Effect.runPromise(
-            refundCredits(hold, "failed-turn").pipe(
+            refundCredits(hold, "failed-turn", hold.credits).pipe(
               Effect.provide(
                 RegisteredConvexFunction.mutationLayer(schema, ctx)
               )
@@ -167,6 +191,57 @@ describe("Nina credit transactions", () => {
       expect(result.ledger).toHaveLength(1);
     }
   );
+
+  it("refuses the sixth start within a minute", async () => {
+    const { reserve } = await fixture(1000);
+    for (let start = 0; start < 5; start += 1) {
+      await reserve();
+    }
+    await expect(reserve()).rejects.toMatchObject({ code: "RATE_LIMITED" });
+  });
+
+  it("gives nothing back when the turn's user is gone", async () => {
+    const { t, identity, reserve } = await fixture(5);
+    const hold = await reserve();
+    await t.mutation((ctx) => ctx.db.delete("users", identity.userId));
+    await t.mutation((ctx) =>
+      Effect.runPromise(
+        refundCredits(hold, "gone-turn", hold.credits).pipe(
+          Effect.provide(RegisteredConvexFunction.mutationLayer(schema, ctx))
+        )
+      )
+    );
+    const ledger = await t.query((ctx) =>
+      ctx.db.query("creditTransactions").collect()
+    );
+    expect(ledger).toHaveLength(1);
+  });
+
+  it("does not return a hold from an earlier credit period into the next one", async () => {
+    const { t, identity, reserve } = await fixture(0, NOW - 86_400_000);
+    const hold = await reserve();
+    vi.setSystemTime(NOW + 86_400_000);
+    await t.mutation((ctx) =>
+      Effect.runPromise(
+        refundCredits(hold, "late-turn", hold.credits).pipe(
+          Effect.provide(RegisteredConvexFunction.mutationLayer(schema, ctx))
+        )
+      )
+    );
+    const result = await t.query(async (ctx) => ({
+      user: await ctx.db.get("users", identity.userId),
+      ledger: await ctx.db.query("creditTransactions").collect(),
+    }));
+    expect(result.user?.credits).toBe(10);
+    expect(
+      Arr.map(result.ledger, ({ type, amount }) => [type, amount])
+    ).toEqual([
+      ["daily-grant", 10],
+      ["usage", -10],
+      ["daily-grant", 10],
+      ["refund", 0],
+    ]);
+  });
 
   it.each([false, true])(
     "does not refund into a replacement plan grant (resubscribe %s)",
@@ -212,7 +287,7 @@ describe("Nina credit transactions", () => {
       }
       await t.mutation((ctx) =>
         Effect.runPromise(
-          refundCredits(hold, "old-grant-turn").pipe(
+          refundCredits(hold, "old-grant-turn", hold.credits).pipe(
             Effect.provide(RegisteredConvexFunction.mutationLayer(schema, ctx))
           )
         )
@@ -221,7 +296,7 @@ describe("Nina credit transactions", () => {
         user: await ctx.db.get("users", identity.userId),
         ledger: await ctx.db.query("creditTransactions").collect(),
       }));
-      expect(result.user?.credits).toBe(resubscribe ? 3000 : 25);
+      expect(result.user?.credits).toBe(resubscribe ? 1000 : 10);
       expect(result.user?.planCreditGrantId).not.toBe(hold.planCreditGrantId);
       expect(Option.getOrThrow(Arr.last(result.ledger))).toMatchObject({
         type: "refund",

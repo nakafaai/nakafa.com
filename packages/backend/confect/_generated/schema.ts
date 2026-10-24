@@ -8,13 +8,20 @@ import accountDeletionReceipts from "./tables/accountDeletionReceipts";
 import articleBuckets from "./tables/articleBuckets";
 import articleCatalog from "./tables/articleCatalog";
 import articleCategories from "./tables/articleCategories";
+import billingAccounts from "./tables/billingAccounts";
+import billingCounters from "./tables/billingCounters";
+import billingEvents from "./tables/billingEvents";
+import billingGrants from "./tables/billingGrants";
+import billingInvoices from "./tables/billingInvoices";
+import billingPayments from "./tables/billingPayments";
+import billingSubscriptions from "./tables/billingSubscriptions";
 import chatShares from "./tables/chatShares";
 import chats from "./tables/chats";
 import classGrades from "./tables/classGrades";
 import classTeachers from "./tables/classTeachers";
 import classes from "./tables/classes";
+import classroomChannels from "./tables/classroomChannels";
 import commentLikes from "./tables/commentLikes";
-import commentVotes from "./tables/commentVotes";
 import comments from "./tables/comments";
 import connectorConnections from "./tables/connectorConnections";
 import connectorKeys from "./tables/connectorKeys";
@@ -46,8 +53,10 @@ import editorDocuments from "./tables/editorDocuments";
 import editorSnapshots from "./tables/editorSnapshots";
 import editorSteps from "./tables/editorSteps";
 import examAnswers from "./tables/examAnswers";
+import examAssets from "./tables/examAssets";
 import examAttempts from "./tables/examAttempts";
 import examQuestions from "./tables/examQuestions";
+import examResults from "./tables/examResults";
 import examSignals from "./tables/examSignals";
 import examSittings from "./tables/examSittings";
 import exams from "./tables/exams";
@@ -125,13 +134,20 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly articleBuckets: typeof articleBuckets;
   readonly articleCatalog: typeof articleCatalog;
   readonly articleCategories: typeof articleCategories;
+  readonly billingAccounts: typeof billingAccounts;
+  readonly billingCounters: typeof billingCounters;
+  readonly billingEvents: typeof billingEvents;
+  readonly billingGrants: typeof billingGrants;
+  readonly billingInvoices: typeof billingInvoices;
+  readonly billingPayments: typeof billingPayments;
+  readonly billingSubscriptions: typeof billingSubscriptions;
   readonly chatShares: typeof chatShares;
   readonly chats: typeof chats;
   readonly classGrades: typeof classGrades;
   readonly classTeachers: typeof classTeachers;
   readonly classes: typeof classes;
+  readonly classroomChannels: typeof classroomChannels;
   readonly commentLikes: typeof commentLikes;
-  readonly commentVotes: typeof commentVotes;
   readonly comments: typeof comments;
   readonly connectorConnections: typeof connectorConnections;
   readonly connectorKeys: typeof connectorKeys;
@@ -163,8 +179,10 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly editorSnapshots: typeof editorSnapshots;
   readonly editorSteps: typeof editorSteps;
   readonly examAnswers: typeof examAnswers;
+  readonly examAssets: typeof examAssets;
   readonly examAttempts: typeof examAttempts;
   readonly examQuestions: typeof examQuestions;
+  readonly examResults: typeof examResults;
   readonly examSignals: typeof examSignals;
   readonly examSittings: typeof examSittings;
   readonly exams: typeof exams;
@@ -241,13 +259,20 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   articleBuckets,
   articleCatalog,
   articleCategories,
+  billingAccounts,
+  billingCounters,
+  billingEvents,
+  billingGrants,
+  billingInvoices,
+  billingPayments,
+  billingSubscriptions,
   chatShares,
   chats,
   classGrades,
   classTeachers,
   classes,
+  classroomChannels,
   commentLikes,
-  commentVotes,
   comments,
   connectorConnections,
   connectorKeys,
@@ -279,8 +304,10 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   editorSnapshots,
   editorSteps,
   examAnswers,
+  examAssets,
   examAttempts,
   examQuestions,
+  examResults,
   examSignals,
   examSittings,
   exams,

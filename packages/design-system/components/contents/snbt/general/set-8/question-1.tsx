@@ -1,5 +1,3 @@
-"use client";
-
 import { ChartDataProvider } from "@repo/design-system/components/contents/mathematics/chart/context";
 import { ChartSeriesFacts } from "@repo/design-system/components/contents/mathematics/chart/facts";
 import { Bar } from "@repo/design-system/components/evilcharts/charts/bar/series";

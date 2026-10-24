@@ -1,5 +1,3 @@
-"use client";
-
 import { Number as Num, Schema } from "effect";
 import { useCallback, useEffect, useEffectEvent, useState } from "react";
 

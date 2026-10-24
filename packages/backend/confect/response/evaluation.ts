@@ -50,7 +50,7 @@ const pending: Outcome = { status: "pending" };
  * It returns a `Result`, not an Effect, because www calls this check and
  * `select` from synchronous helpers that AGENTS.md forbids to run an Effect:
  * `TryoutResponsePreview` evaluates the authored preview while React renders,
- * and `submit.client.ts` selects inside a Convex optimistic update, whose
+ * and `submit.ts` selects inside a Convex optimistic update, whose
  * handler must be synchronous. A `Result` needs no runner; the answer mutation
  * lifts it with `Effect.fromResult`.
  */

@@ -1,0 +1,109 @@
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
+import { DEFAULT_LOCALE, LOCALES } from "@repo/internationalization/src/locale";
+import { Array as Arr, Effect, MutableList } from "effect";
+import { readPublishedArticleBuckets } from "@/lib/content/article/sitemap";
+import { readPublishedMaterialBuckets } from "@/lib/content/material/sitemap";
+import { readPublishedPageCatalog } from "@/lib/content/page/catalog";
+import { readPublishedProgramBuckets } from "@/lib/content/program/sitemap";
+import { readActiveContentIdentity } from "@/lib/content/published/active";
+import { PublishedProjectionError } from "@/lib/content/published/errors";
+import {
+  decodeContentReleasePin,
+  verifyContentReleasePin,
+} from "@/lib/content/published/release";
+import { readPublishedQuranCatalog } from "@/lib/content/quran/publication";
+import { readPublishedTryoutSitemapCount } from "@/lib/content/tryout/sitemap";
+import {
+  formatPagePage,
+  formatQuranPage,
+  formatTryoutPage,
+  SITEMAP_BASE_ID,
+  type SitemapPage,
+} from "@/lib/sitemap/identity";
+import { describeSitemapPartitions } from "@/lib/sitemap/partition";
+
+/**
+ * Reads sitemap page descriptors without loading route rows. Every Convex read
+ * behind them goes through the content store, so an instance that starts empty
+ * rebuilds the index from stored answers and not from Convex. The index is derived
+ * on every read, so a deploy that changes the locales or the partition size takes
+ * effect at once, and the final release check runs on every read.
+ */
+export const readSitemapPageDescriptors = Effect.fn(
+  "www.sitemap.pageDescriptors"
+)(function* () {
+  const descriptors = MutableList.make<SitemapPage>();
+  MutableList.append(descriptors, { id: SITEMAP_BASE_ID });
+  const identity = {
+    appLocale: AppLocaleSchema.make(DEFAULT_LOCALE),
+    publicPath: "sitemap.xml",
+  };
+  const active = yield* readActiveContentIdentity();
+  if (!active) {
+    return yield* new PublishedProjectionError(identity);
+  }
+  const activeReleaseId = active.releaseId;
+  const [pageCatalog, quranCatalog] = yield* Effect.all([
+    readPublishedPageCatalog(),
+    readPublishedQuranCatalog(),
+  ]);
+  yield* decodeContentReleasePin(
+    pageCatalog.activeReleaseId,
+    activeReleaseId,
+    identity
+  );
+  yield* decodeContentReleasePin(
+    quranCatalog.activeReleaseId,
+    activeReleaseId,
+    identity
+  );
+
+  for (const locale of LOCALES) {
+    const [articleBuckets, materialBuckets, programBuckets, tryoutCount] =
+      yield* Effect.all(
+        [
+          readPublishedArticleBuckets(locale, activeReleaseId),
+          readPublishedMaterialBuckets(locale, activeReleaseId),
+          readPublishedProgramBuckets(locale),
+          readPublishedTryoutSitemapCount(locale),
+        ],
+        { concurrency: "unbounded" }
+      );
+
+    if (quranCatalog.surahs.length > 0) {
+      MutableList.append(descriptors, {
+        id: formatQuranPage(locale),
+        kind: "quran",
+        locale,
+      });
+    }
+
+    if (
+      Arr.some(pageCatalog.projections, ({ appLocale }) => appLocale === locale)
+    ) {
+      MutableList.append(descriptors, {
+        id: formatPagePage(locale),
+        kind: "page",
+        locale,
+      });
+    }
+
+    MutableList.appendAll(descriptors, [
+      ...describeSitemapPartitions("article", locale, articleBuckets.buckets),
+      ...describeSitemapPartitions("material", locale, materialBuckets.buckets),
+      ...describeSitemapPartitions("program", locale, programBuckets.buckets),
+    ]);
+    for (let page = 0; page < tryoutCount.pageCount; page += 1) {
+      MutableList.append(descriptors, {
+        id: formatTryoutPage(locale, page),
+        kind: "tryout",
+        locale,
+        page,
+      });
+    }
+  }
+
+  yield* verifyContentReleasePin(activeReleaseId, identity);
+
+  return MutableList.toArray(descriptors);
+});

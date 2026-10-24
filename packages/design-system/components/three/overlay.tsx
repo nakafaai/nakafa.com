@@ -1,5 +1,3 @@
-"use client";
-
 import type { Size } from "@react-three/fiber";
 import { useFrame, useThree } from "@react-three/fiber";
 import {

@@ -3,7 +3,7 @@ import { Array as Arr, Effect } from "effect";
 import { effectFindings } from "#scripts/check/effect";
 import { parseSources } from "#scripts/check/source";
 
-const CODE = "apps/www/lib/example.ts";
+const CODE = "apps/www/src/lib/example.ts";
 
 /** Lists the Effect-native findings of one module as `line rule`. */
 const findings = Effect.fn("NativePolicyTest.findings")(function* (

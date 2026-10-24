@@ -4,7 +4,7 @@ import { Schema } from "effect";
 
 const optionalStringSchema = Schema.UndefinedOr(Schema.String);
 /**
- * Validates the PostHog managed reverse proxy host read by Next config. Server
+ * Validates the PostHog managed reverse proxy host read by the app configuration. Server
  * code only: the browser reads `@repo/analytics/public`.
  */
 export const postHogProxyKeys = () =>
@@ -31,11 +31,11 @@ export const keys = () => ({
 export const deploymentKeys = () =>
   readEnvironment(
     {
-      NEXT_PHASE: optionalStringSchema,
+      TSS_PRERENDERING: optionalStringSchema,
       VERCEL_ENV: optionalStringSchema,
     },
     {
-      NEXT_PHASE: process.env.NEXT_PHASE,
+      TSS_PRERENDERING: process.env.TSS_PRERENDERING,
       VERCEL_ENV: process.env.VERCEL_ENV,
     }
   );

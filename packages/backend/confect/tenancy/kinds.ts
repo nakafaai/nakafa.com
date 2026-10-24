@@ -15,6 +15,7 @@ import {
   ClaimMethod,
   Npsn,
   PersonReason,
+  TenantName,
 } from "@repo/backend/confect/tenancy/schema";
 import { SchoolSize } from "@repo/backend/confect/tenancy/start";
 import { Schema } from "effect";
@@ -88,6 +89,10 @@ export const tenant = Kind.make("tenant", "tenants", {
     Schema.Struct({
       key: PolicyKey,
       type: Schema.Literal("tenant.policy.set"),
+    }),
+    Schema.Struct({
+      name: TenantName,
+      type: Schema.Literal("tenant.name.set"),
     }),
   ],
   published: [],
@@ -210,6 +215,10 @@ export const person = Kind.make("person", "tenantPeople", {
       card: Id("loginCards"),
       type: Schema.Literal("card.redeemed"),
     }),
+    Schema.Struct({
+      card: Id("loginCards"),
+      type: Schema.Literal("card.printed"),
+    }),
   ],
   published: [
     "person.created",
@@ -242,6 +251,7 @@ export const period = Kind.make("period", "tenantPeriods", {
     Schema.Struct({ type: Schema.Literal("period.created") }),
     Schema.Struct({ type: Schema.Literal("period.opened") }),
     Schema.Struct({ type: Schema.Literal("period.archived") }),
+    Schema.Struct({ type: Schema.Literal("period.restored") }),
     Schema.Struct({ type: Schema.Literal("period.rename") }),
   ],
   published: [],
@@ -272,6 +282,7 @@ export const cohort = Kind.make("cohort", "tenantCohorts", {
     Schema.Struct({ type: Schema.Literal("cohort.created") }),
     Schema.Struct({ type: Schema.Literal("cohort.renamed") }),
     Schema.Struct({ type: Schema.Literal("cohort.archived") }),
+    Schema.Struct({ type: Schema.Literal("cohort.restored") }),
     Schema.Struct({
       assignment: AssignmentKind,
       person: Id("tenantPeople"),

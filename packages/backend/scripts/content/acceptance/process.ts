@@ -54,7 +54,7 @@ export const runBuildCommand = Effect.fn("contentAcceptance.runBuildCommand")(
       extendEnv: true,
       // Turbo's wrapper forwards SIGTERM, duplicating the process-group signal.
       killSignal: "SIGINT",
-      // Let Portless finish its 10-second descendant shutdown before escalating.
+      // Let the build and the served app stop their children before escalating.
       forceKillAfter: "15 seconds",
       stdin: "inherit",
       stdout: "inherit",

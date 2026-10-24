@@ -14,7 +14,7 @@ import {
 } from "#scripts/check/handler";
 import { descendants, parseSources } from "#scripts/check/source";
 
-const CODE = "apps/www/lib/example.ts";
+const CODE = "apps/www/src/lib/example.ts";
 
 /** Returns the one-based line where a node starts. */
 function lineOf(sourceFile: SourceFile, node: Node) {

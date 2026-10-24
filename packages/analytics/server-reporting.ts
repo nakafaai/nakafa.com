@@ -1,20 +1,44 @@
 import { deploymentKeys } from "@repo/analytics/keys";
-
-const PRODUCTION_BUILD_PHASE = "phase-production-build";
+import { Effect } from "effect";
 
 /**
  * Allows provider-backed server reporting only in the deployed request runtime.
  *
- * The gate reads two optional deployment fields through deploymentKeys, which
- * cannot fail validation, so it stays safe when Next.js imports instrumentation
- * from inside a static prerender error context. Full analytics configuration is
- * validated lazily after this gate passes.
+ * Start sets TSS_PRERENDERING to "true" in the build process while it prerenders
+ * pages, so a prerender error never reaches production reporting. Start owns the
+ * variable name, and a test pins it to the installed Start version. The gate
+ * reads two optional deployment fields through deploymentKeys, which cannot fail
+ * validation. Full analytics configuration is validated lazily after this gate
+ * passes.
  *
  * References:
  * https://vercel.com/docs/environment-variables/system-environment-variables
- * https://nextjs.org/docs/app/api-reference/file-conventions/instrumentation
  */
 export function isServerExceptionReportingEnabled() {
-  const { NEXT_PHASE, VERCEL_ENV } = deploymentKeys();
-  return VERCEL_ENV === "production" && NEXT_PHASE !== PRODUCTION_BUILD_PHASE;
+  const { TSS_PRERENDERING, VERCEL_ENV } = deploymentKeys();
+  return VERCEL_ENV === "production" && TSS_PRERENDERING !== "true";
 }
+
+/**
+ * Captures one exception that escaped the Start request handler. Reporting runs
+ * behind a dynamic import, so the Node-only provider stays out of the browser
+ * graph, and a failed capture never replaces the error response.
+ */
+export const reportUncaughtRequestError = Effect.fn(
+  "analytics.reportUncaughtRequestError"
+)(function* (error: unknown, request: Request) {
+  if (!isServerExceptionReportingEnabled()) {
+    return;
+  }
+
+  yield* Effect.tryPromise(() => import("@repo/analytics/posthog/server")).pipe(
+    Effect.flatMap((reporting) =>
+      reporting.captureServerException(
+        error,
+        { method: request.method, source: "start-uncaught-request" },
+        request.headers.get("user-agent") ?? undefined
+      )
+    ),
+    Effect.ignore
+  );
+});

@@ -1,5 +1,3 @@
-"use client";
-
 import { CameraBounds } from "@repo/design-system/components/three/camera/framing";
 import { getColor } from "@repo/design-system/lib/color";
 import { Array as Arr } from "effect";

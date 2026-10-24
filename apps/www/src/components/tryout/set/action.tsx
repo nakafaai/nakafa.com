@@ -1,0 +1,57 @@
+import type { Locale } from "use-intl";
+import type {
+  CurrentAttempt,
+  SetEntrySection,
+  SetPage,
+  TryoutSetDestination,
+} from "@/components/tryout/set/model";
+import {
+  StartTryoutButton,
+  type StartTryoutRequest,
+} from "@/components/tryout/set/start";
+import { isActiveLocale } from "@/lib/i18n/active";
+
+interface TryoutSetActionProps {
+  value: {
+    activeAttempt: CurrentAttempt | null;
+    currentAttempt?: CurrentAttempt | null;
+    currentPath: string;
+    destination: TryoutSetDestination | null;
+    entrySection: SetEntrySection | null;
+    locale: Locale;
+    set: Pick<SetPage["set"], "countryKey" | "examKey" | "setKey" | "trackKey">;
+  };
+}
+
+/** Renders the only valid set-page action for the current attempt state. */
+export function TryoutSetAction({ value }: TryoutSetActionProps) {
+  if (
+    !(value.entrySection && value.destination && isActiveLocale(value.locale))
+  ) {
+    return null;
+  }
+
+  const entrySectionKey =
+    value.entrySection.visibility === "internal-entry"
+      ? value.entrySection.sectionKey
+      : undefined;
+  const request: StartTryoutRequest = {
+    authRedirect: { publicPath: value.currentPath },
+    countryKey: value.set.countryKey,
+    destination: value.destination.address,
+    destinationSectionKey: value.destination.sectionKey,
+    ...(entrySectionKey === undefined ? {} : { entrySectionKey }),
+    examKey: value.set.examKey,
+    locale: value.locale,
+    setKey: value.set.setKey,
+    successNavigation: "destination",
+    trackKey: value.set.trackKey,
+  };
+
+  return (
+    <StartTryoutButton
+      attempt={value.activeAttempt ?? value.currentAttempt}
+      request={request}
+    />
+  );
+}

@@ -180,7 +180,7 @@ describe("Nina conversation visibility", () => {
     // The owner is told everything, by the chat id and through the share link.
     for (const access of [{}, { shareToken }]) {
       const { conversation, page } = await read(f.owner, access);
-      const known = { ...where, credits: 5, ...ownerFacts };
+      const known = { ...where, credits: 10, ...ownerFacts };
       expect(conversation.turn).toEqual(known);
       expect(page.page).toHaveLength(1);
     }
@@ -307,7 +307,7 @@ describe("Nina conversation visibility", () => {
       promptMessageId: f.promptMessageId,
       promptedAt: NOW,
       state: { status: "cancelled", finishedAt: NOW + 5000 },
-      credits: 5,
+      credits: 10,
       usage: [],
     });
 

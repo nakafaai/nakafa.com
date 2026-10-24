@@ -1,5 +1,3 @@
-"use client";
-
 import { Schema } from "effect";
 import { createContext, use, useMemo } from "react";
 

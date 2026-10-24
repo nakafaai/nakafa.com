@@ -3,7 +3,7 @@ import { Array as Arr, Option, Schema } from "effect";
 const ThemeAppearanceSchema = Schema.Literals(["light", "dark"]);
 
 /** Concrete visual appearance used by runtime renderers and integrations. */
-type ThemeAppearance = typeof ThemeAppearanceSchema.Type;
+export type ThemeAppearance = typeof ThemeAppearanceSchema.Type;
 
 const ThemeShaderColorSchema = Schema.TemplateLiteral([
   "rgb(",
@@ -193,23 +193,52 @@ export const themes = [
   },
 ] as const satisfies readonly ThemeDefinition[];
 
-/** Theme identifier accepted by the shared next-themes runtime. */
-type ThemeValue = (typeof themes)[number]["value"];
+/** Every selectable theme, the system choice included. */
+const ThemeChoiceSchema = Schema.Literals(
+  Arr.map(themes, (theme) => theme.value)
+);
 
-/** Local-storage key owned by the shared next-themes runtime. */
+/** The visitor's choice: a named theme, or system to follow the system appearance. */
+export type ThemeChoice = typeof ThemeChoiceSchema.Type;
+
+/** Local-storage key that holds the visitor's theme choice. */
 export const THEME_STORAGE_KEY = "theme";
 
-/** First-visit theme applied by the shared next-themes runtime. */
-export const DEFAULT_THEME = "system" satisfies ThemeValue;
+/** First-visit choice, and the choice of a stored value that names no theme. */
+export const DEFAULT_THEME = "system" satisfies ThemeChoice;
 
 /** Concrete class names managed on the document root. */
 export const concreteThemeValues = Arr.flatMap(themes, (theme) =>
   theme.appearance === "dynamic" ? [] : [theme.value]
 );
 
+/** A theme shown as itself: every choice except system. */
+export type ConcreteTheme = (typeof concreteThemeValues)[number];
+
+const decodeThemeChoice = Schema.decodeUnknownOption(ThemeChoiceSchema);
+
 /**
- * Resolves a next-themes runtime value to the concrete appearance consumers
- * should render. Unknown and pre-hydration values use Nakafa's light default.
+ * Reads a stored choice. A missing value and a value that names no theme are
+ * the system choice, so the pre-paint script and the theme store agree.
+ */
+export function parseThemeChoice(stored: Option.Option<string>): ThemeChoice {
+  return Option.getOrElse(
+    Option.flatMap(stored, decodeThemeChoice),
+    () => DEFAULT_THEME
+  );
+}
+
+/** Resolves a choice to the theme it shows: system shows the system appearance. */
+export function resolveThemeChoice(
+  choice: ThemeChoice,
+  systemAppearance: ThemeAppearance
+): ConcreteTheme {
+  return choice === "system" ? systemAppearance : choice;
+}
+
+/**
+ * Resolves a theme name to the concrete appearance consumers should render.
+ * Unknown and pre-hydration values use Nakafa's light default.
  */
 export function getThemeAppearance(
   resolvedTheme: string | undefined

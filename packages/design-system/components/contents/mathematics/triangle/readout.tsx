@@ -1,5 +1,3 @@
-"use client";
-
 import { useTriangle } from "@repo/design-system/components/contents/mathematics/triangle/context";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import { TRIANGLE_SIDES } from "@repo/design-system/components/three/triangle/sides";
@@ -10,7 +8,7 @@ import {
 } from "@repo/design-system/components/visual/fact";
 import { getCos, getRadians, getSin, getTan } from "@repo/math/angles";
 import { Array as Arr } from "effect";
-import { useFormatter, useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "use-intl";
 
 /** Two decimals, with no grouping, for the ratios and the radians. */
 const RATIO_FORMAT = {

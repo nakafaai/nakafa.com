@@ -146,5 +146,5 @@ The first rule is live. The other two are targets.
 | Self-serve founding defaults (K42) | Interim. `countryDefaults` in `packages/backend/confect/tenancy/start.ts` names the five countries a founder can pick, with each one's currency, content language, school-year start and time zones. The country profile replaces it, and the questionnaire then reads the countries from the profile |
 | Signed Aksara profile for Indonesia | Planned, program wave A |
 | The four locale settings stored on the organisation and the school | Live. The interface language stays in the `NEXT_LOCALE` cookie |
-| Text direction through one helper | Live. `textDirection` in `packages/internationalization/src/direction.ts` gives the direction. The root layout, `apps/www/app/[locale]/layout.tsx`, sets `dir` on `<html>` and passes it to `DesignSystemProvider`, which renders the `DirectionProvider` of Base UI |
+| Text direction through one helper | Live. `textDirection` in `packages/internationalization/src/direction.ts` gives the direction. The root layout, `apps/www/src/[locale]/layout.tsx`, sets `dir` on `<html>` and passes it to `DesignSystemProvider`, which renders the `DirectionProvider` of Base UI |
 | School time through one formatter | Built. `formatSchoolTime` in `packages/internationalization/src/school/time.ts`. No screen uses it yet |

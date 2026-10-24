@@ -40,20 +40,24 @@ export const loginCardValidator = Schema.Struct({
   tenantId: Id("tenants"),
 });
 
-/** One issued card as the school's Admin sees it: the plain code, shown once, with its login name and expiry. */
+/** One issued card as the school's Admin sees it: the plain code, shown once, with its login name, its expiry, and its Person. */
 export const IssuedCard = Schema.Struct({
   code: Schema.String,
   expiresAt: Schema.Finite,
   loginName: LoginName,
+  personId: Id("tenantPeople"),
 });
 
 /**
- * What a student sends to redeem a card: the code as typed, the device that
- * types it, the new password, and the school's host, which names the school.
+ * What a student sends to redeem a card: the school login name and the code as
+ * typed, the device that types it, the new password, and the school's host, which
+ * names the school. The login name must be the card's own, so a card typed with
+ * another name does not open.
  */
 export const RedeemRequest = Schema.Struct({
   code: Schema.String,
   deviceId: Schema.String.check(Schema.isUUID()),
+  loginName: Schema.String,
   password: Schema.String,
   slug: TenantSlug,
 });
@@ -67,6 +71,22 @@ export const RedeemRefusal = Schema.Literals([
   "rateLimited",
   "used",
 ]);
+
+/**
+ * The Better Auth username that a school login signs in with on its school's
+ * host, or none. `missing` covers an unknown name, a Person who is removed or has
+ * no account yet, and a login name that the school cannot hold, so the answer
+ * never tells a visitor which of them held.
+ */
+export const LoginUsername = Schema.Union([
+  Schema.Struct({
+    outcome: Schema.Literal("found"),
+    username: Schema.String,
+  }),
+  Schema.Struct({
+    outcome: Schema.Literal("missing"),
+  }),
+]).pipe(Schema.toTaggedUnion("outcome"));
 
 /**
  * What redeeming a card answers. A refusal is a value, not an error, so that

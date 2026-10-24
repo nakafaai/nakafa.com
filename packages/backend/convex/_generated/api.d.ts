@@ -330,7 +330,7 @@ export declare const api: {
       mine: FunctionReference<
         "query",
         "public",
-        { periodId: Id<"tenantPeriods">; slug: string },
+        { slug: string },
         Array<{
           cohortId: Id<"tenantCohorts">;
           id: Id<"classes">;
@@ -360,6 +360,14 @@ export declare const api: {
         "public",
         { classSlug: string; slug: string },
         {
+          can: Array<
+            | "class.manage"
+            | "class.view"
+            | "forum.manage"
+            | "forum.read"
+            | "grade.enter"
+            | "grade.list"
+          >;
           cohortId: Id<"tenantCohorts">;
           id: Id<"classes">;
           name: string;
@@ -369,6 +377,47 @@ export declare const api: {
           subject?: string;
         }
       >;
+    };
+    forum: {
+      channels: {
+        add: FunctionReference<
+          "mutation",
+          "public",
+          { classId: Id<"classes">; name: string; slug: string },
+          {
+            id: Id<"classroomChannels">;
+            kind: "general" | "topic";
+            name: string;
+          }
+        >;
+        list: FunctionReference<
+          "query",
+          "public",
+          {
+            classId: Id<"classes">;
+            paginationOpts: {
+              cursor: string | null;
+              endCursor?: string | null;
+              id?: number;
+              maximumBytesRead?: number;
+              maximumRowsRead?: number;
+              numItems: number;
+            };
+            slug: string;
+          },
+          {
+            continueCursor: string;
+            isDone: boolean;
+            page: Array<{
+              id: Id<"classroomChannels">;
+              kind: "general" | "topic";
+              name: string;
+            }>;
+            pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+            splitCursor?: string | null;
+          }
+        >;
+      };
     };
     teachers: {
       assign: FunctionReference<
@@ -456,7 +505,6 @@ export declare const api: {
           page: Array<{
             _creationTime: number;
             _id: Id<"comments">;
-            downvoteCount: number;
             likeCount: number;
             liked: boolean;
             parentId?: Id<"comments">;
@@ -472,7 +520,6 @@ export declare const api: {
             slug: string;
             text: string;
             threadId?: Id<"comments">;
-            upvoteCount: number;
             user: {
               _id: Id<"users">;
               image?: string | null;
@@ -481,7 +528,6 @@ export declare const api: {
               picture?: "animal" | "photo";
             } | null;
             userId: Id<"users">;
-            viewerVote: -1 | 1 | null;
           }>;
           pageStatus?: "SplitRecommended" | "SplitRequired" | null;
           splitCursor?: string | null;
@@ -507,7 +553,6 @@ export declare const api: {
           page: Array<{
             _creationTime: number;
             _id: Id<"comments">;
-            downvoteCount: number;
             likeCount: number;
             liked: boolean;
             parentId?: Id<"comments">;
@@ -523,7 +568,6 @@ export declare const api: {
             slug: string;
             text: string;
             threadId?: Id<"comments">;
-            upvoteCount: number;
             user: {
               _id: Id<"users">;
               image?: string | null;
@@ -532,7 +576,6 @@ export declare const api: {
               picture?: "animal" | "photo";
             } | null;
             userId: Id<"users">;
-            viewerVote: -1 | 1 | null;
           }>;
           pageStatus?: "SplitRecommended" | "SplitRequired" | null;
           splitCursor?: string | null;
@@ -558,7 +601,6 @@ export declare const api: {
           page: Array<{
             _creationTime: number;
             _id: Id<"comments">;
-            downvoteCount: number;
             likeCount: number;
             liked: boolean;
             parentId?: Id<"comments">;
@@ -567,9 +609,7 @@ export declare const api: {
             slug: string;
             text: string;
             threadId?: Id<"comments">;
-            upvoteCount: number;
             userId: Id<"users">;
-            viewerVote: -1 | 1 | null;
           }>;
           pageStatus?: "SplitRecommended" | "SplitRequired" | null;
           splitCursor?: string | null;
@@ -2788,7 +2828,45 @@ export declare const api: {
     };
   };
   exams: {
+    assets: {
+      canAdd: FunctionReference<
+        "query",
+        "public",
+        { examId: Id<"exams">; slug: string },
+        {}
+      >;
+      register: FunctionReference<
+        "action",
+        "public",
+        {
+          examId: Id<"exams">;
+          height: number;
+          slug: string;
+          storageId: Id<"_storage">;
+          width: number;
+        },
+        { id: Id<"examAssets"> }
+      >;
+      uploadUrl: FunctionReference<
+        "mutation",
+        "public",
+        { examId: Id<"exams">; slug: string },
+        string
+      >;
+      urls: FunctionReference<
+        "query",
+        "public",
+        { assets: Array<Id<"examAssets">>; examId: Id<"exams">; slug: string },
+        Array<{ id: Id<"examAssets">; url: string }>
+      >;
+    };
     exams: {
+      cohorts: FunctionReference<
+        "query",
+        "public",
+        { slug: string; unitId: Id<"tenantUnits"> },
+        Array<{ id: Id<"tenantCohorts">; name: string }>
+      >;
       create: FunctionReference<
         "mutation",
         "public",
@@ -2800,6 +2878,62 @@ export declare const api: {
           title: string;
         },
         { id: Id<"exams"> }
+      >;
+      home: FunctionReference<
+        "query",
+        "public",
+        { slug: string },
+        {
+          canManageSetup: boolean;
+          closed: Array<{
+            canRelease: boolean;
+            closesAt: number;
+            cohortId: Id<"tenantCohorts"> | null;
+            examId: Id<"exams">;
+            examTitle: string;
+            id: Id<"examSittings">;
+            opensAt: number;
+            resultsReleased: boolean;
+            room: string;
+            state: "scheduled" | "open" | "closed";
+            timeZone: string;
+            unitId: Id<"tenantUnits">;
+          }>;
+          drafts: Array<{
+            id: Id<"exams">;
+            language: "en" | "id" | "de";
+            title: string;
+          }>;
+          live: Array<{
+            closesAt: number;
+            cohortId: Id<"tenantCohorts"> | null;
+            examId: Id<"exams">;
+            examTitle: string;
+            id: Id<"examSittings">;
+            opensAt: number;
+            room: string;
+            state: "scheduled" | "open" | "closed";
+            timeZone: string;
+            unitId: Id<"tenantUnits">;
+          }>;
+          next: Array<{
+            closesAt: number;
+            cohortId: Id<"tenantCohorts"> | null;
+            examId: Id<"exams">;
+            examTitle: string;
+            id: Id<"examSittings">;
+            opensAt: number;
+            room: string;
+            state: "scheduled" | "open" | "closed";
+            timeZone: string;
+            unitId: Id<"tenantUnits">;
+          }>;
+          setup?: {
+            hasPendingInvite: boolean;
+            hasStudent: boolean;
+            hasTeacher: boolean;
+          };
+        }
       >;
       list: FunctionReference<
         "query",
@@ -2832,6 +2966,8 @@ export declare const api: {
         "public",
         { examId: Id<"exams">; slug: string },
         {
+          archived: boolean;
+          frozenAt?: number;
           id: Id<"exams">;
           language: "en" | "id" | "de";
           questions: Array<{
@@ -4087,6 +4223,176 @@ export declare const api: {
         { questions: Array<Id<"examQuestions">> }
       >;
     };
+    results: {
+      results: {
+        byQuestion: FunctionReference<
+          "query",
+          "public",
+          {
+            paginationOpts: {
+              cursor: string | null;
+              endCursor?: string | null;
+              id?: number;
+              maximumBytesRead?: number;
+              maximumRowsRead?: number;
+              numItems: number;
+            };
+            questionId: Id<"examQuestions">;
+            sittingId: Id<"examSittings">;
+            slug: string;
+          },
+          {
+            continueCursor: string;
+            isDone: boolean;
+            page: Array<{
+              attemptId: Id<"examAttempts">;
+              name: string;
+              response: Array<string>;
+              verdict: "correct" | "incorrect" | "pending";
+            }>;
+            pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+            splitCursor?: string | null;
+          }
+        >;
+        byStudent: FunctionReference<
+          "query",
+          "public",
+          {
+            paginationOpts: {
+              cursor: string | null;
+              endCursor?: string | null;
+              id?: number;
+              maximumBytesRead?: number;
+              maximumRowsRead?: number;
+              numItems: number;
+            };
+            sittingId: Id<"examSittings">;
+            slug: string;
+            state?: "inProgress" | "locked" | "closing" | "submitted";
+          },
+          {
+            continueCursor: string;
+            isDone: boolean;
+            page: Array<{
+              answered: number | null;
+              attemptId: Id<"examAttempts">;
+              name: string;
+              pending: number | null;
+              points: number | null;
+              state: "inProgress" | "locked" | "closing" | "submitted";
+              submittedAt: number | null;
+            }>;
+            pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+            splitCursor?: string | null;
+          }
+        >;
+        mine: FunctionReference<
+          "query",
+          "public",
+          { sittingId: Id<"examSittings">; slug: string },
+          {
+            points: number;
+            questions: Array<{
+              number: number;
+              optionIds: Array<string>;
+              response: Array<string>;
+              verdict: "correct" | "incorrect" | "pending";
+            }>;
+          } | null
+        >;
+        overview: FunctionReference<
+          "query",
+          "public",
+          { sittingId: Id<"examSittings">; slug: string },
+          {
+            can: Array<"result.release" | "result.view">;
+            questions: Array<{
+              id: Id<"examQuestions">;
+              number: number;
+              optionIds: Array<string>;
+            }>;
+            releasedAt: number | null;
+            sitting: {
+              closesAt: number;
+              cohortId: Id<"tenantCohorts"> | null;
+              examId: Id<"exams">;
+              examTitle: string;
+              id: Id<"examSittings">;
+              opensAt: number;
+              room: string;
+              state: "scheduled" | "open" | "closed";
+              timeZone: string;
+              unitId: Id<"tenantUnits">;
+            };
+          }
+        >;
+        questionStats: FunctionReference<
+          "query",
+          "public",
+          {
+            questionId: Id<"examQuestions">;
+            sittingId: Id<"examSittings">;
+            slug: string;
+          },
+          {
+            answered: number;
+            complete: boolean;
+            correct: number;
+            counted: number;
+            incorrect: number;
+            optionCounts: Array<{ count: number; optionId: string }>;
+            pending: number;
+          }
+        >;
+        release: FunctionReference<
+          "mutation",
+          "public",
+          { sittingId: Id<"examSittings">; slug: string },
+          null
+        >;
+      };
+    };
+    rooms: {
+      exam: FunctionReference<
+        "query",
+        "public",
+        { examId: Id<"exams">; slug: string },
+        { id: Id<"exams">; language: "en" | "id" | "de"; title: string }
+      >;
+      list: FunctionReference<
+        "query",
+        "public",
+        {
+          examId: Id<"exams">;
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          slug: string;
+          state?: "scheduled" | "open" | "closed";
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            canCancel: boolean;
+            closesAt: number;
+            group: { kind: "cohort" | "unit"; name: string };
+            id: Id<"examSittings">;
+            opensAt: number;
+            room: string;
+            state: "scheduled" | "open" | "closed";
+            timeZone: string;
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
+    };
     sittings: {
       addMinutes: FunctionReference<
         "mutation",
@@ -4139,6 +4445,12 @@ export declare const api: {
           state: "inProgress" | "locked" | "closing" | "submitted";
         } | null
       >;
+      cancel: FunctionReference<
+        "mutation",
+        "public",
+        { sittingId: Id<"examSittings">; slug: string },
+        null
+      >;
       changeToken: FunctionReference<
         "mutation",
         "public",
@@ -4174,6 +4486,7 @@ export declare const api: {
               away: boolean;
               deadline: number;
               id: Id<"examAttempts">;
+              lastActiveAt: number;
               latestSignal: {
                 at: number;
                 kind:
@@ -4192,6 +4505,7 @@ export declare const api: {
             }>;
           };
           can: Array<"sitting.proctor" | "sitting.view">;
+          canViewResults: boolean;
           sitting: {
             closesAt: number;
             cohortId: Id<"tenantCohorts"> | null;
@@ -4220,15 +4534,64 @@ export declare const api: {
             attempt: Id<"examAttempts">;
             deadline: number;
             outcome: "admitted";
+            serverNow: number;
             state: "inProgress" | "locked" | "closing" | "submitted";
           }
         | { outcome: "refused"; reason: "TokenRefused" | "TooManyTries" }
+      >;
+      expected: FunctionReference<
+        "query",
+        "public",
+        {
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          sittingId: Id<"examSittings">;
+          slug: string;
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            id: Id<"tenantPeople">;
+            mascot: string | null;
+            name: string;
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
       >;
       finish: FunctionReference<
         "mutation",
         "public",
         { deviceId: string; sittingId: Id<"examSittings">; slug: string },
         null
+      >;
+      images: FunctionReference<
+        "query",
+        "public",
+        {
+          assets: Array<Id<"examAssets">>;
+          deviceId: string;
+          sittingId: Id<"examSittings">;
+          slug: string;
+        },
+        Array<{ id: Id<"examAssets">; url: string }>
+      >;
+      lastAnswer: FunctionReference<
+        "query",
+        "public",
+        {
+          attemptId: Id<"examAttempts">;
+          sittingId: Id<"examSittings">;
+          slug: string;
+        },
+        number | null
       >;
       lock: FunctionReference<
         "mutation",
@@ -4252,12 +4615,15 @@ export declare const api: {
         "public",
         { slug: string },
         Array<{
+          attempt: "inProgress" | "locked" | "closing" | "submitted" | null;
+          attemptId: Id<"examAttempts"> | null;
           closesAt: number;
           cohortId: Id<"tenantCohorts"> | null;
           examId: Id<"exams">;
           examTitle: string;
           id: Id<"examSittings">;
           opensAt: number;
+          resultsReleased: boolean;
           room: string;
           state: "scheduled" | "open" | "closed";
           timeZone: string;
@@ -4564,16 +4930,44 @@ export declare const api: {
   };
   identity: {
     cards: {
+      enroll: FunctionReference<
+        "mutation",
+        "public",
+        { loginName: string; name: string; slug: string },
+        {
+          code: string;
+          expiresAt: number;
+          loginName: string;
+          personId: Id<"tenantPeople">;
+        }
+      >;
       issue: FunctionReference<
         "mutation",
         "public",
         { loginName: string; personId: Id<"tenantPeople">; slug: string },
-        { code: string; expiresAt: number; loginName: string }
+        {
+          code: string;
+          expiresAt: number;
+          loginName: string;
+          personId: Id<"tenantPeople">;
+        }
+      >;
+      print: FunctionReference<
+        "mutation",
+        "public",
+        { personId: Id<"tenantPeople">; slug: string },
+        null
       >;
       redeem: FunctionReference<
         "mutation",
         "public",
-        { code: string; deviceId: string; password: string; slug: string },
+        {
+          code: string;
+          deviceId: string;
+          loginName: string;
+          password: string;
+          slug: string;
+        },
         | { loginName: string; outcome: "redeemed" }
         | {
             outcome: "refused";
@@ -4590,7 +4984,12 @@ export declare const api: {
         "mutation",
         "public",
         { personId: Id<"tenantPeople">; slug: string },
-        { code: string; expiresAt: number; loginName: string }
+        {
+          code: string;
+          expiresAt: number;
+          loginName: string;
+          personId: Id<"tenantPeople">;
+        }
       >;
     };
     logins: {
@@ -4654,15 +5053,20 @@ export declare const api: {
             | "connection.view"
             | "class.manage"
             | "class.view"
+            | "forum.manage"
+            | "forum.read"
             | "grade.release"
             | "grade.view"
             | "visit.end"
             | "document.edit"
             | "document.view"
             | "exam.edit"
+            | "exam.rooms"
             | "exam.view"
             | "sitting.proctor"
             | "sitting.view"
+            | "result.release"
+            | "result.view"
             | "invite.view"
             | "person.manage"
             | "person.view"
@@ -4685,8 +5089,10 @@ export declare const api: {
             | "document.edit"
             | "document.edit"
             | "exam.edit"
+            | "exam.rooms"
             | "exam.view"
             | "exam.edit"
+            | "exam.rooms"
             | "exam.view"
           >;
           name: string;
@@ -4740,15 +5146,20 @@ export declare const api: {
               | "connection.view"
               | "class.manage"
               | "class.view"
+              | "forum.manage"
+              | "forum.read"
               | "grade.release"
               | "grade.view"
               | "visit.end"
               | "document.edit"
               | "document.view"
               | "exam.edit"
+              | "exam.rooms"
               | "exam.view"
               | "sitting.proctor"
               | "sitting.view"
+              | "result.release"
+              | "result.view"
               | "invite.view"
               | "person.manage"
               | "person.view"
@@ -4771,8 +5182,10 @@ export declare const api: {
               | "document.edit"
               | "document.edit"
               | "exam.edit"
+              | "exam.rooms"
               | "exam.view"
               | "exam.edit"
+              | "exam.rooms"
               | "exam.view"
             >;
             createdAt: number;
@@ -4804,6 +5217,12 @@ export declare const api: {
   };
   journal: {
     audit: {
+      actors: FunctionReference<
+        "query",
+        "public",
+        { slug: string },
+        Array<{ id: Id<"tenantPeople">; name: string }>
+      >;
       list: FunctionReference<
         "query",
         "public",
@@ -4836,6 +5255,7 @@ export declare const api: {
               | { type: "cohort.created" }
               | { type: "cohort.renamed" }
               | { type: "cohort.archived" }
+              | { type: "cohort.restored" }
               | {
                   assignment: "homeroom";
                   person: Id<"tenantPeople">;
@@ -4904,6 +5324,7 @@ export declare const api: {
               | { type: "period.created" }
               | { type: "period.opened" }
               | { type: "period.archived" }
+              | { type: "period.restored" }
               | { type: "period.rename" }
               | { type: "person.created" }
               | {
@@ -4931,6 +5352,7 @@ export declare const api: {
               | { card: Id<"loginCards">; type: "card.issued" }
               | { card: Id<"loginCards">; type: "card.reissued" }
               | { card: Id<"loginCards">; type: "card.redeemed" }
+              | { card: Id<"loginCards">; type: "card.printed" }
               | {
                   grant: Id<"tenantGrants">;
                   role: {
@@ -4980,6 +5402,7 @@ export declare const api: {
                   step: "archive" | "cohorts" | "place" | "homeroom";
                   type: "promotion.undone";
                 }
+              | { type: "exam.results.released" }
               | { type: "sitting.schedule" }
               | {
                   attempt: Id<"examAttempts">;
@@ -5019,6 +5442,7 @@ export declare const api: {
               | { attempt: Id<"examAttempts">; type: "sitting.allowDevice" }
               | { attempt: Id<"examAttempts">; type: "sitting.finish" }
               | { type: "sitting.close" }
+              | { type: "sitting.cancel" }
               | {
                   contract: {
                     contentLicense: string;
@@ -5038,6 +5462,7 @@ export declare const api: {
                   key: "emailDomains" | "nina" | "studentThreads";
                   type: "tenant.policy.set";
                 }
+              | { name: string; type: "tenant.name.set" }
               | { scheme: Id<"gradingSchemes">; type: "scheme.stored" }
               | { type: "tenant.suspended" }
               | { type: "tenant.reactivated" }
@@ -5080,6 +5505,7 @@ export declare const api: {
               | { id: Id<"editorDocuments">; kind: "document" }
               | { id: Id<"exams">; kind: "exam" }
               | { id: Id<"examSittings">; kind: "sitting" }
+              | { id: Id<"examSittings">; kind: "result" }
               | { kind: string };
             subjectName: string | null;
           }>;
@@ -5570,6 +5996,7 @@ export declare const api: {
               | { id: Id<"editorDocuments">; kind: "document" }
               | { id: Id<"exams">; kind: "exam" }
               | { id: Id<"examSittings">; kind: "sitting" }
+              | { id: Id<"examSittings">; kind: "result" }
               | { kind: string };
             tenant: {
               kind: "school" | "foundation";
@@ -5609,6 +6036,7 @@ export declare const api: {
             | { id: Id<"editorDocuments">; kind: "document" }
             | { id: Id<"exams">; kind: "exam" }
             | { id: Id<"examSittings">; kind: "sitting" }
+            | { id: Id<"examSittings">; kind: "result" }
             | { kind: string };
           tenant: {
             kind: "school" | "foundation";
@@ -6236,6 +6664,12 @@ export declare const api: {
       >;
     };
     cohorts: {
+      activePeriod: FunctionReference<
+        "query",
+        "public",
+        { slug: string; unitId: Id<"tenantUnits"> },
+        Id<"tenantPeriods"> | null
+      >;
       archive: FunctionReference<
         "mutation",
         "public",
@@ -6260,6 +6694,19 @@ export declare const api: {
           grade: number;
           id: Id<"tenantCohorts">;
           name: string;
+          status: "active" | "archived";
+        }
+      >;
+      get: FunctionReference<
+        "query",
+        "public",
+        { cohortId: Id<"tenantCohorts">; slug: string },
+        {
+          grade: number;
+          homeroom: { id: Id<"tenantPeople">; name: string } | null;
+          id: Id<"tenantCohorts">;
+          name: string;
+          periodId: Id<"tenantPeriods">;
           status: "active" | "archived";
         }
       >;
@@ -6308,6 +6755,25 @@ export declare const api: {
           status: "active" | "archived";
         }
       >;
+      restore: FunctionReference<
+        "mutation",
+        "public",
+        { cohortId: Id<"tenantCohorts">; slug: string },
+        {
+          grade: number;
+          id: Id<"tenantCohorts">;
+          name: string;
+          status: "active" | "archived";
+        }
+      >;
+    };
+    home: {
+      setup: FunctionReference<
+        "query",
+        "public",
+        { slug: string },
+        { hasPendingInvite: boolean; hasStudent: boolean; hasTeacher: boolean }
+      >;
     };
     invites: {
       invite: FunctionReference<
@@ -6325,6 +6791,21 @@ export declare const api: {
           id: Id<"tenantInvites">;
           name: string;
           personId: Id<"tenantPeople">;
+          roles: Array<
+            | "owner"
+            | "admin"
+            | "principal"
+            | "deputy"
+            | "teacher"
+            | "counselor"
+            | "staff"
+            | "student"
+            | "guardian"
+            | "proctor"
+            | "auditor"
+            | "integration"
+          >;
+          status: "expired" | "pending";
         }
       >;
       list: FunctionReference<
@@ -6350,6 +6831,21 @@ export declare const api: {
             id: Id<"tenantInvites">;
             name: string;
             personId: Id<"tenantPeople">;
+            roles: Array<
+              | "owner"
+              | "admin"
+              | "principal"
+              | "deputy"
+              | "teacher"
+              | "counselor"
+              | "staff"
+              | "student"
+              | "guardian"
+              | "proctor"
+              | "auditor"
+              | "integration"
+            >;
+            status: "expired" | "pending";
           }>;
           pageStatus?: "SplitRecommended" | "SplitRequired" | null;
           splitCursor?: string | null;
@@ -6369,6 +6865,21 @@ export declare const api: {
           id: Id<"tenantInvites">;
           name: string;
           personId: Id<"tenantPeople">;
+          roles: Array<
+            | "owner"
+            | "admin"
+            | "principal"
+            | "deputy"
+            | "teacher"
+            | "counselor"
+            | "staff"
+            | "student"
+            | "guardian"
+            | "proctor"
+            | "auditor"
+            | "integration"
+          >;
+          status: "expired" | "pending";
         }
       >;
       revoke: FunctionReference<
@@ -6498,6 +7009,34 @@ export declare const api: {
           status: "active" | "suspended" | "removed";
         }
       >;
+      students: FunctionReference<
+        "query",
+        "public",
+        {
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          slug: string;
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            account: "claimed" | "unclaimed";
+            id: Id<"tenantPeople">;
+            kind: "member" | "operator";
+            name: string;
+            status: "active" | "suspended" | "removed";
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
     };
     periods: {
       archive: FunctionReference<
@@ -6583,6 +7122,18 @@ export declare const api: {
           status: "planned" | "active" | "archived";
         }
       >;
+      restore: FunctionReference<
+        "mutation",
+        "public",
+        { periodId: Id<"tenantPeriods">; slug: string },
+        {
+          end: string;
+          id: Id<"tenantPeriods">;
+          name: string;
+          start: string;
+          status: "planned" | "active" | "archived";
+        }
+      >;
     };
     placements: {
       move: FunctionReference<
@@ -6628,6 +7179,7 @@ export declare const api: {
           status: "active" | "suspended";
         }
       >;
+      refusal: FunctionReference<"query", "public", { slug: string }, boolean>;
     };
     promotion: {
       apply: {
@@ -7209,12 +7761,72 @@ export declare const api: {
         >;
       };
     };
+    roster: {
+      invite: FunctionReference<
+        "mutation",
+        "public",
+        {
+          email: string;
+          locale: "en" | "id" | "de";
+          name: string;
+          role: "admin" | "teacher";
+          slug: string;
+        },
+        { invite: Id<"tenantInvites">; person: Id<"tenantPeople"> }
+      >;
+      members: FunctionReference<
+        "query",
+        "public",
+        {
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          slug: string;
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            id: Id<"tenantPeople">;
+            name: string;
+            roles: Array<
+              | "owner"
+              | "admin"
+              | "principal"
+              | "deputy"
+              | "teacher"
+              | "counselor"
+              | "staff"
+              | "student"
+              | "guardian"
+              | "proctor"
+              | "auditor"
+              | "integration"
+            >;
+            status: "cardIssued" | "invited" | "joined" | "notInvited";
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        }
+      >;
+    };
     settings: {
       setLocale: FunctionReference<
         "mutation",
         "public",
         { country: string; currency: string; slug: string },
         { country: string; currency: string }
+      >;
+      setName: FunctionReference<
+        "mutation",
+        "public",
+        { name: string; slug: string },
+        string
       >;
       setPolicy: FunctionReference<
         "mutation",
@@ -7344,6 +7956,46 @@ export declare const api: {
         "public",
         { slug: string; unitId: Id<"tenantUnits"> },
         "active" | "archived"
+      >;
+      create: FunctionReference<
+        "mutation",
+        "public",
+        {
+          contentLanguage: "en" | "id" | "de";
+          level:
+            | "paud"
+            | "sd"
+            | "mi"
+            | "smp"
+            | "mts"
+            | "sma"
+            | "ma"
+            | "smk"
+            | "slb"
+            | "other";
+          name: string;
+          slug: string;
+          timeZone: string;
+        },
+        {
+          contentLanguage: "en" | "id" | "de";
+          id: Id<"tenantUnits">;
+          level:
+            | "paud"
+            | "sd"
+            | "mi"
+            | "smp"
+            | "mts"
+            | "sma"
+            | "ma"
+            | "smk"
+            | "slb"
+            | "other";
+          name: string;
+          npsn: string | null;
+          status: "active" | "archived";
+          timeZone: string;
+        }
       >;
       list: FunctionReference<
         "query",
@@ -7891,6 +8543,328 @@ export declare const api: {
                 };
               };
             }
+        >;
+        getSectionWithBodies: FunctionReference<
+          "query",
+          "public",
+          {
+            request:
+              | {
+                  countryKey: string;
+                  examKey: string;
+                  kind: "current";
+                  locale: "en" | "id" | "de";
+                  sectionKey: string;
+                  setKey: string;
+                  trackKey: string;
+                }
+              | {
+                  attemptId: string;
+                  kind: "retained";
+                  locale: "en" | "id" | "de";
+                  publicPath: string;
+                };
+          },
+          null | {
+            attempt: {
+              activeSectionPublicPath: string | null;
+              activeSetPublicPath: string | null;
+              attemptId: Id<"tryoutAttempts">;
+              content:
+                | { kind: "none" }
+                | {
+                    answers: Array<{
+                      appLocale: "en" | "id" | "de";
+                      artifactHash: string;
+                      bundleHash: string;
+                      contentHash: string;
+                      contentKey: string;
+                      delivery: "entitled";
+                      questionOrder: number;
+                      sectionKey: string;
+                      snapshotId: string;
+                      snapshotReleaseId: string;
+                      sourcePath: string;
+                      sourceRevision: string;
+                    }>;
+                    kind: "signed";
+                    previewAnswers: Array<{
+                      appLocale: "en" | "id" | "de";
+                      artifactHash: string;
+                      bundleHash: string;
+                      contentHash: string;
+                      contentKey: string;
+                      delivery: "entitled";
+                      questionOrder: number;
+                      sectionKey: string;
+                      snapshotId: string;
+                      snapshotReleaseId: string;
+                      sourcePath: string;
+                      sourceRevision: string;
+                    }>;
+                    questions: Array<{
+                      appLocale: "en" | "id" | "de";
+                      artifactHash: string;
+                      bundleHash: string;
+                      contentHash: string;
+                      contentKey: string;
+                      delivery: "authenticated";
+                      questionOrder: number;
+                      sectionKey: string;
+                      snapshotId: string;
+                      snapshotReleaseId: string;
+                      sourcePath: string;
+                      sourceRevision: string;
+                    }>;
+                  };
+              initialState: {
+                attempt: {
+                  activeSectionKey: string | null;
+                  attemptId: Id<"tryoutAttempts">;
+                  attemptNumber: number;
+                  completedSectionKeys: Array<string>;
+                  expiresAt: number;
+                  resumeSectionKey: string | null;
+                  resumeSectionPublicPath: string | null;
+                  score: {
+                    publishedScore: number;
+                    rawScore: number;
+                    scoreStatus: "provisional" | "official";
+                    scoringStrategy: "irt" | "penalized" | "raw" | "weighted";
+                    theta?: number;
+                    thetaSE?: number;
+                    totalCorrect: number;
+                    totalQuestions: number;
+                  } | null;
+                  section: {
+                    answeredCount: number;
+                    completedAt: number | null;
+                    endReason: "submitted" | "time-expired" | null;
+                    expiresAt: number;
+                    score: {
+                      publishedScore: number;
+                      rawScore: number;
+                      scoreStatus: "provisional" | "official";
+                      scoringStrategy: "irt" | "penalized" | "raw" | "weighted";
+                      theta?: number;
+                      thetaSE?: number;
+                      totalCorrect: number;
+                      totalQuestions: number;
+                    } | null;
+                    sectionKey: string;
+                    startedAt: number;
+                    status: "in-progress" | "completed" | "expired";
+                    totalQuestions: number;
+                  } | null;
+                  startedAt: number;
+                  status: "in-progress" | "completed" | "expired";
+                };
+                runtime: null | {
+                  attemptId: Id<"tryoutAttempts">;
+                  expiresAt: number;
+                  questions: Array<{
+                    contentHash: string;
+                    placementId: Id<"tryoutAttemptPlacements">;
+                    questionOrder: number;
+                    response: {
+                      answeredAt: number;
+                      isComplete: boolean;
+                      outcome?:
+                        | { status: "correct" }
+                        | { status: "incorrect" }
+                        | { points: number; status: "partial" }
+                        | { status: "pending" };
+                      selection:
+                        | { kind: "single-choice"; optionKey: string }
+                        | { kind: "multiple-choice"; optionKeys: Array<string> }
+                        | {
+                            assignments: Array<{
+                              categoryKey: string;
+                              statementKey: string;
+                            }>;
+                            kind: "category";
+                          }
+                        | {
+                            kind: "short-answer";
+                            number?: string;
+                            text: string;
+                          }
+                        | {
+                            finalAnswers: Array<{
+                              criterionKey: string;
+                              number?: string;
+                              text: string;
+                            }>;
+                            kind: "rubric";
+                            text: string;
+                          };
+                      updatedAt: number;
+                    } | null;
+                    responseSpec:
+                      | {
+                          kind: "single-choice";
+                          options: Array<{
+                            isCorrect?: boolean;
+                            label: string;
+                            optionKey: string;
+                            order: number;
+                          }>;
+                        }
+                      | {
+                          kind: "multiple-choice";
+                          options: Array<{
+                            isCorrect?: boolean;
+                            label: string;
+                            optionKey: string;
+                            order: number;
+                          }>;
+                        }
+                      | {
+                          categories: Array<{
+                            categoryKey: string;
+                            label: string;
+                            order: number;
+                          }>;
+                          kind: "category";
+                          statements: Array<{
+                            correctCategoryKey?: string;
+                            label: string;
+                            order: number;
+                            statementKey: string;
+                          }>;
+                        }
+                      | {
+                          key?:
+                            | {
+                                acceptsFractions: boolean;
+                                kind: "number";
+                                tolerance?: {
+                                  kind: "absolute" | "relative";
+                                  value: string;
+                                };
+                                value: string;
+                              }
+                            | {
+                                acceptedAnswers: Array<string>;
+                                collapseWhitespace: boolean;
+                                ignoreCase: boolean;
+                                kind: "text";
+                              };
+                          kind: "short-answer";
+                          language: "en" | "id" | "de";
+                        }
+                      | {
+                          criteria: Array<{
+                            criterionKey: string;
+                            final: boolean;
+                            finalAnswer?:
+                              | {
+                                  acceptsFractions: boolean;
+                                  kind: "number";
+                                  tolerance?: {
+                                    kind: "absolute" | "relative";
+                                    value: string;
+                                  };
+                                  value: string;
+                                }
+                              | {
+                                  acceptedAnswers: Array<string>;
+                                  collapseWhitespace: boolean;
+                                  ignoreCase: boolean;
+                                  kind: "text";
+                                };
+                            label?: { de: string; en: string; id: string };
+                            levels?: Array<{
+                              label: { de: string; en: string; id: string };
+                              levelKey: string;
+                              order: number;
+                              points: number;
+                            }>;
+                            order: number;
+                          }>;
+                          kind: "rubric";
+                          language: "en" | "id" | "de";
+                        };
+                    sourcePath: string;
+                    sourceRevision: string;
+                    version?: number;
+                  }>;
+                  section: {
+                    answeredCount: number;
+                    completedAt: number | null;
+                    endReason: "submitted" | "time-expired" | null;
+                    expiresAt: number;
+                    score: {
+                      publishedScore: number;
+                      rawScore: number;
+                      scoreStatus: "provisional" | "official";
+                      scoringStrategy: "irt" | "penalized" | "raw" | "weighted";
+                      theta?: number;
+                      thetaSE?: number;
+                      totalCorrect: number;
+                      totalQuestions: number;
+                    } | null;
+                    sectionKey: string;
+                    startedAt: number;
+                    status: "in-progress" | "completed" | "expired";
+                    totalQuestions: number;
+                  };
+                };
+              };
+              kind: "retained";
+              page: {
+                exam: {
+                  description?: string;
+                  examKey: string;
+                  publicPath: string;
+                  scoringStrategy: "irt" | "penalized" | "raw";
+                  title: string;
+                };
+                section: {
+                  description?: string;
+                  publicPath?: string;
+                  questionCount: number;
+                  sectionKey: string;
+                  timeLimitSeconds: number;
+                  title: string;
+                  visibility: "internal-entry" | "visible";
+                };
+                set: {
+                  countryKey: string;
+                  description?: string;
+                  examKey: string;
+                  publicPath: string;
+                  readyQuestionCount: number;
+                  readyVisibleSectionCount: number;
+                  scoringStrategy: "irt" | "penalized" | "raw";
+                  sectionCount: number;
+                  setKey: string;
+                  title: string;
+                  totalQuestionCount: number;
+                  trackKey: string;
+                  visibleSectionCount: number;
+                };
+                track: {
+                  description?: string;
+                  publicPath: string;
+                  readyQuestionCount: number;
+                  readyVisibleSectionCount: number;
+                  title: string;
+                  trackKey: string;
+                  trackKind: "institution" | "subject" | "year";
+                };
+              };
+            };
+            bodies: Array<{
+              bundleJson: string;
+              items: Array<{
+                artifactJson: string;
+                delivery: "authenticated" | "entitled";
+                sourcePath: string;
+              }>;
+              rendererJson: string;
+            } | null>;
+          }
         >;
         getSet: FunctionReference<
           "query",
@@ -9699,17 +10673,97 @@ export declare const internal: {
       >;
     };
   };
-  comments: {
-    migration: {
-      run: FunctionReference<
+  billing: {
+    contracts: {
+      recordSchoolContract: FunctionReference<
         "mutation",
         "internal",
-        { cursor?: string },
         {
-          done: boolean;
-          scanned: number;
-          stripped: number;
-          votesRemoved: number;
+          contractId: string;
+          seats: number;
+          tenantSlug: string;
+          validFrom: number;
+          validTo: number;
+        },
+        { accountId: Id<"billingAccounts">; grantId: Id<"billingGrants"> }
+      >;
+    };
+    events: {
+      cleanup: FunctionReference<"mutation", "internal", {}, number>;
+      process: FunctionReference<
+        "mutation",
+        "internal",
+        { eventId: Id<"billingEvents"> },
+        null
+      >;
+      record: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          key: string;
+          payload: string;
+          providerTime: number;
+          rail: "polar" | "xendit";
+          type: string;
+        },
+        { eventId: Id<"billingEvents">; kind: "accepted" | "duplicate" }
+      >;
+    };
+    grants: {
+      project: FunctionReference<
+        "mutation",
+        "internal",
+        { userId: Id<"users"> },
+        null
+      >;
+      projectSchool: FunctionReference<
+        "mutation",
+        "internal",
+        { cursor: string | null; tenantId: Id<"tenants"> },
+        null
+      >;
+    };
+    migration: {
+      copyPolarSubscriptionsPage: FunctionReference<
+        "mutation",
+        "internal",
+        { cursor: string | null; numItems: number },
+        {
+          continueCursor: string;
+          copied: number;
+          isDone: boolean;
+          skipped: number;
+        }
+      >;
+    };
+  };
+  classroom: {
+    forum: {
+      backfill: {
+        general: FunctionReference<
+          "mutation",
+          "internal",
+          { cursor?: string },
+          { continueCursor: string; created: number; done: boolean }
+        >;
+      };
+    };
+    seed: {
+      teacher: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          email: string;
+          locale: "en" | "id" | "de";
+          name: string;
+          slug: string;
+          subject: string;
+        },
+        {
+          classId: Id<"classes">;
+          invite: Id<"tenantInvites">;
+          periodId: Id<"tenantPeriods">;
+          person: Id<"tenantPeople">;
         }
       >;
     };
@@ -12182,12 +13236,45 @@ export declare const internal: {
     };
   };
   exams: {
+    assets: {
+      commit: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          byteSize: number;
+          contentType: "image/png" | "image/jpeg" | "image/webp" | "image/gif";
+          examId: Id<"exams">;
+          height: number;
+          storageId: Id<"_storage">;
+          userId: Id<"users">;
+          width: number;
+        },
+        { id: Id<"examAssets"> }
+      >;
+      discard: FunctionReference<
+        "mutation",
+        "internal",
+        { storageId: Id<"_storage"> },
+        {}
+      >;
+      stored: FunctionReference<
+        "query",
+        "internal",
+        { storageId: Id<"_storage"> },
+        { size: number }
+      >;
+    };
     seed: {
       sitting: FunctionReference<
         "mutation",
         "internal",
         { crowd?: number; email: string; slug: string },
-        { examId: Id<"exams">; sittingId: Id<"examSittings">; token: string }
+        {
+          examId: Id<"exams">;
+          sittingId: Id<"examSittings">;
+          title: string;
+          token: string;
+        }
       >;
     };
     sittings: {
@@ -12217,6 +13304,24 @@ export declare const internal: {
           null
         >;
       };
+    };
+  };
+  identity: {
+    logins: {
+      usernameOf: FunctionReference<
+        "query",
+        "internal",
+        { loginName: string; slug: string },
+        { outcome: "found"; username: string } | { outcome: "missing" }
+      >;
+    };
+    seed: {
+      card: FunctionReference<
+        "mutation",
+        "internal",
+        { slug: string },
+        { code: string; loginName: string }
+      >;
     };
   };
   nina: {
@@ -13515,6 +14620,12 @@ export declare const internal: {
       >;
     };
     seed: {
+      student: FunctionReference<
+        "mutation",
+        "internal",
+        { email: string; slug: string },
+        null
+      >;
       teacher: FunctionReference<
         "mutation",
         "internal",

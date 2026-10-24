@@ -1,4 +1,3 @@
-import path from "node:path";
 import config from "@repo/testing/react";
 import { configDefaults, mergeConfig } from "vitest/config";
 
@@ -12,12 +11,17 @@ import { configDefaults, mergeConfig } from "vitest/config";
  */
 export default mergeConfig(config, {
   resolve: {
-    alias: {
+    alias: [
+      /** The scripts folder sits beside src, so its tests keep the `@/` alias to it. */
+      {
+        find: /^@\/scripts\//u,
+        replacement: `${import.meta.dirname}/scripts/`,
+      },
+      { find: /^@\/e2e\//u, replacement: `${import.meta.dirname}/e2e/` },
+      { find: /^@\/public\//u, replacement: `${import.meta.dirname}/public/` },
       /** Match the app's `@/` import alias inside tests. */
-      "@": import.meta.dirname,
-      /** Replace Next's import guard with one shared server-test boundary. */
-      "server-only": path.resolve(import.meta.dirname, "./test/server-only.ts"),
-    },
+      { find: /^@\//u, replacement: `${import.meta.dirname}/src/` },
+    ],
   },
   test: {
     /** Production AFDocs checks run only against an already-started site. */
@@ -25,8 +29,8 @@ export default mergeConfig(config, {
     /** Prepare the React test environment before each suite loads. */
     setupFiles: ["./vitest.setup.ts"],
     coverage: {
-      /** Client lazy boundaries are verified by analyzer and browser gates. */
-      exclude: ["lib/content/renderer/client/**"],
+      /** React components are verified by production-mode browser acceptance, not unit coverage (AGENTS.md). */
+      exclude: ["src/**/*.tsx"],
     },
   },
 });

@@ -1,5 +1,3 @@
-"use client";
-
 import { ThreeLabel } from "@repo/design-system/components/three/label";
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";

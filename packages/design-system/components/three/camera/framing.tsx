@@ -1,5 +1,3 @@
-"use client";
-
 import type { CoordinateFrame } from "@repo/design-system/components/three/frame";
 import type {
   CameraLabelBounds,

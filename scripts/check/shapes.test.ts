@@ -6,7 +6,7 @@ import { parseSources } from "#scripts/check/source";
 /** Lists the lines of one module's hand-written data shapes. */
 const shapes = Effect.fn("ShapePolicyTest.shapes")(function* (
   sourceText: string,
-  file = "apps/www/lib/example.ts"
+  file = "apps/www/src/lib/example.ts"
 ) {
   const found = yield* effectFindings(
     yield* parseSources([{ file, sourceText }])
@@ -85,12 +85,12 @@ interface CardValue {
 }
 `;
         assert.deepStrictEqual(
-          yield* shapes(source, "apps/www/components/card.tsx"),
+          yield* shapes(source, "apps/www/src/components/card.tsx"),
           [5]
         );
         assert.deepStrictEqual(yield* shapes(source), [1, 4, 5]);
         assert.deepStrictEqual(
-          yield* shapes(source, "apps/www/next.config.ts"),
+          yield* shapes(source, "apps/www/vite.config.ts"),
           []
         );
       })

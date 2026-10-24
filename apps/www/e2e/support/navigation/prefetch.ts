@@ -1,9 +1,9 @@
-import { instant } from "@next/playwright";
-import { expect, type Locator, type Page } from "@playwright/test";
-import { Effect } from "effect";
+import { expect, type Locator, type Page, test } from "@playwright/test";
+import { Array as Arr, Clock, Effect } from "effect";
 import { loadMathFonts } from "@/e2e/support/fonts";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
-import { settlePrefetch } from "@/e2e/support/navigation/settle";
+import { settleRouter } from "@/e2e/support/navigation/settle";
+import { recordServerFunctionCalls } from "@/e2e/support/requests";
 import {
   expectStillShell,
   observeShell,
@@ -29,7 +29,7 @@ export const openObservedRoute = Effect.fn("NakafaE2E.openObservedRoute")(
 );
 
 /** Reads the path a link opens. */
-export const readPathname = Effect.fn("NakafaE2E.readLinkPathname")(function* (
+const readPathname = Effect.fn("NakafaE2E.readLinkPathname")(function* (
   link: Locator
 ) {
   const href = yield* Effect.promise(() => link.getAttribute("href")).pipe(
@@ -43,27 +43,43 @@ const articleText = (page: Page) =>
   page.getByRole("article").locator("p").first();
 
 /**
- * Opens `link` while Next.js holds back everything a prefetch did not load, so
- * the destination's heading and its text have to come from the link's own
- * prefetch. The reader's sign of intent comes first and its prefetch and
- * scripts land before the press, as they would for a reader who pauses on the
- * link: a touch press starts with a touch, otherwise the link is focused, the
- * keyboard's sign of intent, and opened with Enter. Every frame from the press
- * on must show the one app shell and a page heading: first the current page's,
- * then the destination's, with no empty frame and no layout shift between
- * them.
+ * Records the time from a press to the content it reveals on the test report,
+ * so every navigation's click-to-content time is visible in the run's output.
  */
-export const openPrefetched = Effect.fn("NakafaE2E.openPrefetched")(function* (
+const recordClickToContent = Effect.fn("NakafaE2E.recordClickToContent")(
+  function* (milliseconds: number) {
+    yield* Effect.sync(() => {
+      const info = test.info();
+      info.annotations = Arr.append(info.annotations, {
+        description: `${Math.round(milliseconds)} ms`,
+        type: "click-to-content",
+      });
+    });
+  }
+);
+
+/**
+ * Shows the reader's intent toward `link`, waits until the router has loaded
+ * what the link preloads, then runs `press` and `arrive`. The press is the
+ * reader's own gesture. Its destination must show through `arrive`, and the
+ * router must make no data request for it: the loader data came with the
+ * preload. Every frame from the press on keeps the one app shell, with no empty
+ * frame and no layout shift.
+ */
+export const pressPreloaded = Effect.fn("NakafaE2E.pressPreloaded")(function* <
+  PressError,
+  PressRequirements,
+  ArriveError,
+  ArriveRequirements,
+>(
   page: Page,
   link: Locator,
-  hasTouch: boolean
+  hasTouch: boolean,
+  press: Effect.Effect<void, PressError, PressRequirements>,
+  arrive: Effect.Effect<void, ArriveError, ArriveRequirements>
 ) {
-  const pathname = yield* readPathname(link);
-  const heading = page.getByRole("heading", { level: 1 });
-  const source = yield* Effect.promise(() => heading.innerText());
-  yield* settlePrefetch(
+  yield* settleRouter(
     page,
-    pathname,
     Effect.promise(() =>
       link
         .scrollIntoViewIfNeeded()
@@ -74,18 +90,44 @@ export const openPrefetched = Effect.fn("NakafaE2E.openPrefetched")(function* (
   );
   yield* loadMathFonts(page);
   const since = yield* readPageTime(page);
-  // @next/playwright owns this native Promise callback while its lock is held.
-  yield* Effect.promise(() =>
-    instant(page, () =>
-      (hasTouch
+  const dataCalls = recordServerFunctionCalls(page);
+  const pressedAt = yield* Clock.currentTimeMillis;
+  yield* press;
+  yield* arrive;
+  const shownAt = yield* Clock.currentTimeMillis;
+  yield* Effect.sync(() => expect(dataCalls.length).toBe(0));
+  yield* recordClickToContent(shownAt - pressedAt);
+  const observation = yield* readShellObservation(page, since);
+  yield* Effect.sync(() => expectStillShell(observation, [false]));
+});
+
+/**
+ * Opens a link that the reader showed intent toward, and checks the destination
+ * paints from that preload: its own heading replaces the source heading, and its
+ * article shows, with the contract of `pressPreloaded`.
+ */
+export const openPrefetched = Effect.fn("NakafaE2E.openPrefetched")(function* (
+  page: Page,
+  link: Locator,
+  hasTouch: boolean
+) {
+  const pathname = yield* readPathname(link);
+  const heading = page.getByRole("heading", { level: 1 });
+  const source = yield* Effect.promise(() => heading.innerText());
+  yield* pressPreloaded(
+    page,
+    link,
+    hasTouch,
+    Effect.promise(() =>
+      hasTouch
         ? link.tap({ noWaitAfter: true })
         : link.press("Enter", { noWaitAfter: true })
-      )
-        .then(() =>
-          page.waitForURL((url) => url.pathname === pathname, {
-            timeout: readinessTimeoutMilliseconds,
-          })
-        )
+    ),
+    Effect.promise(() =>
+      page
+        .waitForURL((url) => url.pathname === pathname, {
+          timeout: readinessTimeoutMilliseconds,
+        })
         .then(() =>
           expect(heading).toHaveCount(1, {
             timeout: readinessTimeoutMilliseconds,
@@ -99,6 +141,4 @@ export const openPrefetched = Effect.fn("NakafaE2E.openPrefetched")(function* (
         )
     )
   );
-  const observation = yield* readShellObservation(page, since);
-  yield* Effect.sync(() => expectStillShell(observation, [false]));
 });

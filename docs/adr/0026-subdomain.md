@@ -65,9 +65,11 @@ finds the right data.
   school is configuration, so a request never reads the database to find its
   school. A request that reads nothing has a target of under 1 ms, which no run has
   measured yet. A page request on a school host makes the one Convex query of the
-  next bullets, and only to decide the page's status.
+  next bullets, and only to decide the page's status. The Convex site trusts
+  `x-forwarded-host` for the school host gate, and credentials and the slug-scoped
+  lookup, not the header, protect sign-in.
 - The proxy's redirects name the host and port that the visitor asked for, read
-  from the Host header (`lib/routing/visitor.ts`): the port of the header, or the
+  from the Host header (`apps/www/src/lib/routing/school/host.ts`): the port of the header, or the
   default port of the protocol when the header names none. Only the protocol comes
   from the request URL. Its rewrites name the request URL, the origin of the
   server, because Next proxies a rewrite to any other origin: a
@@ -78,17 +80,19 @@ finds the right data.
   still name that address. Vercel builds the request URL from the Host header, so
   that limit applies to a local or self-hosted run only.
 - A school page's status is decided by the proxy before the page streams, in
-  `lib/routing/school/refusal.ts`, as the profile page already decides its 404 in
-  the proxy (`lib/routing/public/profile.ts`). A visitor with no session is refused
-  when the school does not exist: `tenancy.profile.get` answers `TenantNotFound`. A
-  signed-in viewer is refused when `tenancy.viewer.get` answers `NotMember`, which
-  it gives for a school that does not exist and for a school the viewer does not
-  belong to alike, or `AccessDenied`. The refused page answers with the app's
-  not-found page and a 404 status, through a rewrite to the not-found route, in
-  the locale that the school page negotiates. The school layout cannot answer 404
-  itself: Next sends the static shell of the route with status 200 first, and a
-  `notFound()` call after that keeps the 200 (the installed docs, `loading.md`,
-  "Status codes").
+  `apps/www/src/lib/routing/school/refusal.ts`, as the profile page already decides its 404 in
+  the proxy (`apps/www/src/lib/routing/public/profile.ts`). The gate reads one query,
+  `tenancy.profile.refusal` (`packages/backend/confect/tenancy/profile.impl.ts`),
+  which decides the school's existence and the caller's view of it together: a
+  school that no one has the address of is refused for every caller, and a signed-in
+  member whom the school does not admit (`tenant.view` denied) is refused. A visitor,
+  and a signed-in non-member of an existing school, reach the layout, which renders
+  the outsider page (`apps/www/src/components/tenant/outsider.tsx`) with a 200 status. The refused page answers
+  with the app's not-found page and a 404 status, through a rewrite to the
+  not-found route, in the locale that the school page negotiates. The school
+  layout cannot answer 404 itself: Next sends the static shell of the route with
+  status 200 first, and a `notFound()` call after that keeps the 200 (the
+  installed docs, `loading.md`, "Status codes").
 - A page request is a GET or HEAD document that is not a Flight request. A client
   navigation and a prefetch both carry `rsc: 1`, so they pay no read, and the
   layout still refuses a membership that has ended. A read that fails goes on to
@@ -99,10 +103,11 @@ finds the right data.
   one. A 404 for a refused visitor alone would tell the two apart, so the refusal
   does not apply to such a path.
 - A school page request costs two or three Convex query calls. The proxy makes one:
-  `tenancy.profile.get`, which reads one school row by its slug, or
-  `tenancy.viewer.get`, which reads a few indexed rows and at most `UNIT_LIMIT`
-  units. The layout reads its profile and, for a signed-in viewer, its viewer
-  again, because it still renders the name and the role. A signed-in viewer also
+  `tenancy.profile.refusal`, which reads one school row by its slug and, for a
+  signed-in caller, the caller's Person and grants, so a non-member costs the same
+  one call as a member. The layout reads its profile and, for a signed-in viewer,
+  its viewer once per request (`apps/www/src/lib/tenant/read.ts`), because it still renders the
+  name and the role. A signed-in viewer also
   reads the session token twice, once in the proxy and once in the layout, because
   React's `cache` does not span the two. Each read of the layout, token or query,
   is retried within the shared network budget, so one read answers or fails
@@ -110,7 +115,7 @@ finds the right data.
   makes one attempt per query, and the whole gate, its session read included,
   waits at most one deadline: `NETWORK_ATTEMPT_DEADLINE`, 10 seconds, the bound
   that every attempt of a network read already has (`packages/backend/client/network.ts`,
-  used by `lib/routing/school/refusal.ts`). A gate that misses the deadline or
+  used by `apps/www/src/lib/routing/school/refusal.ts`). A gate that misses the deadline or
   fails goes on to the page, with its full cause logged. So a school that does not
   answer holds a page request for at most 10 seconds in the proxy and then up to
   31.5 seconds in the layout, before the error boundary. Before this change the
@@ -292,10 +297,10 @@ A move runs in this order:
   identity of a person in the `eu` cell inside the `us` cell, which is what a
   cell exists to prevent.
 - One `www` project for every cell, with a resolver that picks the deployment by
-  host. The auth handler (`apps/www/lib/auth/server.ts`) takes both
+  host. The auth handler (`apps/www/src/lib/auth/forward.server.ts`) takes both
   `NEXT_PUBLIC_CONVEX_URL` and `NEXT_PUBLIC_CONVEX_SITE_URL`, the session token
   read in the same file takes the site URL, and the Convex provider
-  (`apps/www/components/providers/app.tsx`) takes the query URL, besides the
+  (`apps/www/src/components/providers/app.tsx`) takes the query URL, besides the
   readers of signed content and try-outs. A resolver would have to replace every
   one of them, and one miss would send a session cookie to the wrong cell's
   deployment.
@@ -307,7 +312,7 @@ A move runs in this order:
 | The routes of the old School and `readSchoolAuthRedirect` in `apps/www/proxy.ts` | Deleted from the web app in #1051 (K11). Its backend stays until the observation of ADR 0011 passes |
 | Host rewrite for school subdomains | Live |
 | Shared sign-in cookie across the school hosts of the `us` cell (ADR 0009) | Live |
-| Shared sign-in cookie on a local run (`SITE_URL` on `localhost`) | Proven on `localhost` alone. Chromium sends a `Domain=localhost` cookie to `localhost` and not to `school.localhost`, so sign-in sharing across school hosts is proven only on a real domain (`nakafa.com`, `local.nakafa.com`) |
+| Shared sign-in cookie on a local run (`SITE_URL` on `localhost`) | Chromium sends a `Domain=localhost` cookie to `localhost` and not to `school.localhost`, so a sign-in on a school host of a local run keeps its cookies on that host alone (`hostOwnSchoolCookies` in `packages/backend/confect/auth/host.ts`), and the auth proxy hands Better Auth the browser's host (`apps/www/src/lib/auth/relay.ts`), because a local `next start` builds the request URL from its own address. Sharing one sign-in across school hosts is proven only on a real domain (`nakafa.com`, `local.nakafa.com`) |
 | School URL tree, root (`/`, Beranda) | Live |
 | The proxy decides the 404 of a school page (Hosts) | Live |
 | School URL tree, every other address | Planned |

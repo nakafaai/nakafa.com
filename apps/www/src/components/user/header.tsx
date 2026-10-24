@@ -1,0 +1,69 @@
+import { PencilEdit02Icon } from "@hugeicons/core-free-icons";
+import { DeferredLearnerText } from "@repo/design-system/components/markdown/deferred";
+import { Button } from "@repo/design-system/components/ui/button";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { PersonAvatar } from "@repo/design-system/components/ui/person";
+import { useTranslations } from "use-intl";
+import { ShareProfileButton } from "@/components/user/share";
+import type { PublicProfile } from "@/lib/profile/public";
+import { Link } from "@/lib/routing/link";
+import { EXACT_ACTIVE_OPTIONS } from "@/lib/routing/tree";
+
+/**
+ * The header of a profile: the name and the address on the left, the picture on
+ * the right, the bio under them, and one row of buttons. The owner edits the
+ * profile, and everyone shares it.
+ */
+export function UserHeader({
+  isOwner,
+  profile,
+}: {
+  isOwner: boolean;
+  profile: PublicProfile;
+}) {
+  const t = useTranslations("Auth");
+
+  return (
+    <section className="grid gap-4 pb-6">
+      <header className="flex items-start justify-between gap-4">
+        <div className="grid min-w-0 gap-1">
+          <h1 className="wrap-anywhere text-balance font-semibold text-2xl sm:text-3xl">
+            {profile.name}
+          </h1>
+          <p className="truncate text-base text-muted-foreground">
+            @{profile.username}
+          </p>
+        </div>
+        <PersonAvatar
+          className="size-14 shrink-0 md:size-21"
+          mascot={profile.mascot}
+          photo={profile.image}
+        />
+      </header>
+      {profile.bio ? (
+        <DeferredLearnerText className="text-base">
+          {profile.bio}
+        </DeferredLearnerText>
+      ) : null}
+      <div className="flex items-center gap-2">
+        {isOwner && (
+          <Button
+            className="flex-1"
+            nativeButton={false}
+            render={
+              <Link
+                activeOptions={EXACT_ACTIVE_OPTIONS}
+                to="/$locale/user/settings"
+              >
+                <HugeIcons icon={PencilEdit02Icon} />
+                {t("edit-profile")}
+              </Link>
+            }
+            variant="outline"
+          />
+        )}
+        <ShareProfileButton username={profile.username} />
+      </div>
+    </section>
+  );
+}

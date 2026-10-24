@@ -2,7 +2,7 @@ import { Config } from "effect";
 
 const CAS_ENV = {
   apiKey: "MATH_CAS_API_KEY",
-  url: "NEXT_PUBLIC_CAS_URL",
+  url: "VITE_CAS_URL",
 } as const;
 
 /**

@@ -5,9 +5,9 @@ import {
 import type usersTable from "@repo/backend/confect/_generated/tables/users";
 import { captureProductEvent } from "@repo/backend/confect/analytics/capture";
 import { isAccountDeletionPending } from "@repo/backend/confect/auth/deletion/state";
+import { products } from "@repo/backend/confect/billing/polar/products";
 import { getPlanCreditConfig } from "@repo/backend/confect/credits/constants";
 import { resolveCurrentCreditResetTimestamp } from "@repo/backend/confect/credits/state";
-import { products } from "@repo/backend/confect/customers/polar/products";
 import { getUnknownErrorMessage } from "@repo/backend/confect/failure";
 import {
   SubscriptionPlanSyncIoError,
@@ -67,13 +67,18 @@ const loadActiveProSubscription = Effect.fn(
   Effect.catchDefect(flow(toSubscriptionPlanSyncIoError, Effect.fail))
 );
 
+/** The fields of the plan source that a plan change records: its ID, its product, and its status. */
+export type PlanSource = Pick<SubscriptionDoc, "id" | "productId" | "status">;
+
 /** Applies one durable user plan update and the matching credit transaction. */
-const applyPlanChange = Effect.fn("triggers.subscriptions.applyPlanChange")(
+export const applyPlanChange = Effect.fn(
+  "triggers.subscriptions.applyPlanChange"
+)(
   function* (
     user: UserDoc,
     newPlan: UserPlan,
     now: number,
-    subscription: SubscriptionDoc
+    subscription: PlanSource
   ) {
     const writer = yield* DatabaseWriter;
     const previousPlan = user.plan;

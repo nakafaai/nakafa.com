@@ -39,7 +39,7 @@ const hasAgentKey =
   agentEnvironment.AKSARA_AGENT_SIGNING_KEY_ID !== undefined ||
   agentEnvironment.AKSARA_AGENT_SIGNING_PUBLIC_KEY !== undefined;
 const agentKey = hasAgentKey
-  ? // Convex and Next load this immutable trust configuration at module startup.
+  ? // Convex and the web server load this immutable trust configuration at module startup.
     // Synchronous schema validation fails before any publication or artifact read.
     Schema.decodeUnknownSync(AgentTrustSchema)({
       key: {
@@ -47,8 +47,7 @@ const agentKey = hasAgentKey
         publicKeyPem: agentEnvironment.AKSARA_AGENT_SIGNING_PUBLIC_KEY,
       },
       target:
-        agentEnvironment.CONVEX_CLOUD_URL ??
-        agentEnvironment.NEXT_PUBLIC_CONVEX_URL,
+        agentEnvironment.CONVEX_CLOUD_URL ?? agentEnvironment.VITE_CONVEX_URL,
       vercel: agentEnvironment.VERCEL_ENV,
     }).key
   : undefined;
@@ -63,3 +62,6 @@ export const activeContentSigningKeyId =
 
 /** Resolves only content keys retained by the reviewed contracts package. */
 export const contentKeyResolver = makeTrustedKeyResolver(trustedContentKeys);
+
+/** The content keys this deployment verifies with, which a stored verdict names in its key. */
+export const contentTrustedKeys = trustedContentKeys;

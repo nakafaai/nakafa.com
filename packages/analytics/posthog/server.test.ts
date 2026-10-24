@@ -6,7 +6,7 @@ const postHogMocks = vi.hoisted(() => ({
   captureExceptionImmediate: vi.fn(),
   constructor: vi.fn(),
   keys: vi.fn(() => ({
-    NEXT_PUBLIC_POSTHOG_KEY: "phc_test",
+    VITE_POSTHOG_KEY: "phc_test",
     POSTHOG_PROXY_HOST: "https://t.nakafa.com",
   })),
 }));
@@ -25,8 +25,6 @@ vi.mock("posthog-node", () => ({
     }
   },
 }));
-
-vi.mock("server-only", () => ({}));
 
 /** Time for one cold import of the module graph on a slow CI runner. */
 const COLD_IMPORT_TIMEOUT_MS = 60_000;
@@ -59,7 +57,7 @@ describe("PostHog server reporting", () => {
   it.effect("does not initialize the SDK when reporting is disabled", () =>
     Effect.gen(function* () {
       vi.stubEnv("VERCEL_ENV", "preview");
-      vi.stubEnv("NEXT_PHASE", "phase-production-server");
+      vi.stubEnv("TSS_PRERENDERING", "false");
       const { captureServerException } = yield* Effect.promise(
         () => import("@repo/analytics/posthog/server")
       );
@@ -76,7 +74,7 @@ describe("PostHog server reporting", () => {
   it.effect("initializes once and sends enabled production exceptions", () =>
     Effect.gen(function* () {
       vi.stubEnv("VERCEL_ENV", "production");
-      vi.stubEnv("NEXT_PHASE", "phase-production-server");
+      vi.stubEnv("TSS_PRERENDERING", "false");
       const { captureServerException } = yield* Effect.promise(
         () => import("@repo/analytics/posthog/server")
       );
@@ -133,7 +131,7 @@ describe("PostHog server reporting", () => {
   it.effect("forwards the request user agent for traffic classification", () =>
     Effect.gen(function* () {
       vi.stubEnv("VERCEL_ENV", "production");
-      vi.stubEnv("NEXT_PHASE", "phase-production-server");
+      vi.stubEnv("TSS_PRERENDERING", "false");
       const { captureServerException } = yield* Effect.promise(
         () => import("@repo/analytics/posthog/server")
       );
@@ -158,7 +156,7 @@ describe("PostHog server reporting", () => {
   it.effect("drops invalid runtime context before initializing the SDK", () =>
     Effect.gen(function* () {
       vi.stubEnv("VERCEL_ENV", "production");
-      vi.stubEnv("NEXT_PHASE", "phase-production-server");
+      vi.stubEnv("TSS_PRERENDERING", "false");
       const { captureServerException } = yield* Effect.promise(
         () => import("@repo/analytics/posthog/server")
       );
@@ -178,7 +176,7 @@ describe("PostHog server reporting", () => {
   it.effect("surfaces provider failures through the typed error channel", () =>
     Effect.gen(function* () {
       vi.stubEnv("VERCEL_ENV", "production");
-      vi.stubEnv("NEXT_PHASE", "phase-production-server");
+      vi.stubEnv("TSS_PRERENDERING", "false");
       postHogMocks.captureExceptionImmediate.mockRejectedValueOnce(
         new Error("provider unavailable")
       );

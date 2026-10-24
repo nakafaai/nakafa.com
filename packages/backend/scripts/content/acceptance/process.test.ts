@@ -431,7 +431,7 @@ writeFileSync("ready", "ready");`
             exit: Effect.succeed(ChildProcessSpawner.ExitCode(code)),
           });
           const result = yield* runBuildCommand("/tmp", ["pnpm", "build"], {
-            NEXT_PUBLIC_CONVEX_URL: "https://production.convex.cloud",
+            VITE_CONVEX_URL: "https://production.convex.cloud",
             AKSARA_ACCEPTANCE_PRIVATE_KEY: "private",
             AKSARA_SIGNING_PRIVATE_KEY: "private",
           }).pipe(
@@ -446,7 +446,7 @@ writeFileSync("ready", "ready");`
             expect.objectContaining({
               options: expect.objectContaining({
                 env: expect.objectContaining({
-                  NEXT_PUBLIC_CONVEX_URL: "https://production.convex.cloud",
+                  VITE_CONVEX_URL: "https://production.convex.cloud",
                   AKSARA_ACCEPTANCE_PRIVATE_KEY: undefined,
                   AKSARA_SIGNING_PRIVATE_KEY: undefined,
                   CONVEX_DEPLOY_KEY: undefined,

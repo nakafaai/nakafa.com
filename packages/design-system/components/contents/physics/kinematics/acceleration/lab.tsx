@@ -1,5 +1,3 @@
-"use client";
-
 import {
   ACCELERATION_CASES,
   ACCELERATION_LAB_SCENE,

@@ -1,5 +1,3 @@
-"use client";
-
 import { type ThreeElements, useFrame, useThree } from "@react-three/fiber";
 import { useCameraFraming } from "@repo/design-system/components/three/camera/framing";
 import {

@@ -302,8 +302,6 @@ it("removes the learner's likes on comments with their counts, and keeps the res
       replyCount: 0,
       slug: "material/algebra",
       text: "Shared comment",
-      upvoteCount: 0,
-      downvoteCount: 0,
       userId: retained,
     });
     // A like on a comment that is already gone must not stop the cleanup.
@@ -312,8 +310,6 @@ it("removes the learner's likes on comments with their counts, and keeps the res
       replyCount: 0,
       slug: "material/algebra",
       text: "Gone comment",
-      upvoteCount: 0,
-      downvoteCount: 0,
       userId: retained,
     });
     await ctx.db.delete(goneComment);

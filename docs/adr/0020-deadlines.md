@@ -22,7 +22,7 @@ answer's body as well as its headers.
   as a push to a push service (ADR 0027), does not call the helper. A caller also
   repeats what it knows to be safe for its own request, such as a 5xx answer to
   the session token read and to the browser's read of the session (`readSession`
-  in `apps/www/lib/auth/request.ts`), which Better Auth does not ask for again
+  in `apps/www/src/lib/auth/request.ts`), which Better Auth does not ask for again
   after a first read that failed until the learner returns to the tab.
 - A caller keeps its own status rules, its decoder, and its error type. The
   shared part is the deadline, the retry, and the unwrap.
@@ -45,7 +45,7 @@ Convex React hook calls get no client deadline.
   decision interrupts the older save.
 - A hook call whose answer starts a navigation, a clock, or a redirect starts
   only on a connected socket. `requireConvexOnline` in
-  `apps/www/lib/convex/online.ts` stands in front of the call. It refuses at
+  `apps/www/src/lib/convex/online.ts` stands in front of the call. It refuses at
   once when the browser reports no network. When the client has no connected
   socket it waits up to five seconds for one, because the first connection, a
   session refresh, and a first reconnect usually end within that time, and

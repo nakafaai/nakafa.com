@@ -5,6 +5,8 @@ import {
   prepareMode,
   startMode,
 } from "@repo/backend/scripts/content/acceptance/build";
+import { cardMode } from "@repo/backend/scripts/content/acceptance/card";
+import { classTeacherMode } from "@repo/backend/scripts/content/acceptance/classes";
 import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
 import { importMode } from "@repo/backend/scripts/content/acceptance/import";
 import { inviteMode } from "@repo/backend/scripts/content/acceptance/invite";
@@ -16,6 +18,7 @@ import { withTerminal } from "@repo/backend/scripts/content/acceptance/process";
 import { profileMode } from "@repo/backend/scripts/content/acceptance/profile";
 import { schoolMode } from "@repo/backend/scripts/content/acceptance/school";
 import { sittingMode } from "@repo/backend/scripts/content/acceptance/sitting";
+import { studentMode } from "@repo/backend/scripts/content/acceptance/student";
 import { teacherMode } from "@repo/backend/scripts/content/acceptance/teacher";
 import { FetchClient } from "@repo/utilities/http/client";
 import {
@@ -40,8 +43,11 @@ export const acceptanceModes: readonly AcceptanceMode[] = [
   schoolMode,
   ownerMode,
   teacherMode,
+  classTeacherMode,
   inviteMode,
   sittingMode,
+  cardMode,
+  studentMode,
   importMode,
   profileMode,
 ];

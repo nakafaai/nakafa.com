@@ -1,4 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
+import type { ContentDocumentSchema } from "@nakafa/aksara-contracts/assessment/document";
 import { InteractionSchema } from "@nakafa/aksara-contracts/assessment/interaction";
 import refs from "@repo/backend/confect/_generated/refs";
 import { CONVEX_DOCUMENT_LIMIT } from "@repo/backend/confect/editor/size";
@@ -8,6 +9,29 @@ import { tenancyFixture } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect, Schema } from "effect";
 
 const { answer } = refs.public.exams.questions;
+
+/** A label of one empty paragraph, which the contract allows in an option. */
+const emptyLabel: typeof ContentDocumentSchema.Type = {
+  content: [{ type: "paragraph" }],
+  type: "doc",
+};
+
+/** The answers of a question with its choice holding `count` options, labelled A to E in order. */
+const withOptionCount = (
+  answers: Arr.NonEmptyReadonlyArray<typeof InteractionSchema.Type>,
+  count: number
+) =>
+  Arr.map(answers, (interaction) =>
+    interaction.kind === "choice"
+      ? {
+          ...interaction,
+          options: Arr.makeBy(count, (index) => ({
+            id: `option-${index + 1}`,
+            label: emptyLabel,
+          })),
+        }
+      : interaction
+  );
 
 describe("exams/questions/answer", () => {
   it.effect(
@@ -318,6 +342,65 @@ describe("exams/questions/answer", () => {
           _tag: "NotMember",
           code: "NOT_MEMBER",
         });
+      })
+  );
+});
+
+describe("exams/questions/answer options", () => {
+  it.effect(
+    "saves a choice of two to five options, and refuses a choice of one option, which the contract refuses, or of six",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const teacher = fixture.as("teacher");
+        const exam = yield* teacherExam(fixture, "Opsi");
+        const [question] = exam.questions;
+        const two = yield* teacher.mutation(answer, {
+          answers: withOptionCount(question.answers, 2),
+          examId: exam.id,
+          key: null,
+          questionId: question.id,
+          revision: 0,
+          slug: nf,
+        });
+        const five = yield* teacher.mutation(answer, {
+          answers: withOptionCount(question.answers, 5),
+          examId: exam.id,
+          key: null,
+          questionId: question.id,
+          revision: 1,
+          slug: nf,
+        });
+        expect(two.answers[0]).toMatchObject({
+          options: [{ id: "option-1" }, { id: "option-2" }],
+        });
+        expect(five.answers[0]).toMatchObject({
+          options: [
+            { id: "option-1" },
+            { id: "option-2" },
+            { id: "option-3" },
+            { id: "option-4" },
+            { id: "option-5" },
+          ],
+        });
+        const refused = yield* Effect.forEach([1, 6], (count) =>
+          teacher
+            .mutation(answer, {
+              answers: withOptionCount(question.answers, count),
+              examId: exam.id,
+              key: null,
+              questionId: question.id,
+              revision: 2,
+              slug: nf,
+            })
+            .pipe(Effect.flip)
+        );
+        expect(refused).toMatchObject([
+          { _tag: "SchemaError" },
+          { _tag: "AnswersDoNotFit" },
+        ]);
+        const [row] = yield* fixture.run(questionRows);
+        expect(row.revision).toBe(2);
       })
   );
 });

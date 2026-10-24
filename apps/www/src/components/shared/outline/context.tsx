@@ -1,0 +1,160 @@
+import type { ParsedHeading } from "@repo/contents/toc";
+import { extractAllHeadingIds } from "@repo/contents/toc";
+import {
+  Array as Arr,
+  Equal,
+  HashSet,
+  MutableHashSet,
+  Option,
+  Schema,
+} from "effect";
+import { createContext, type ReactNode, use, useEffect, useState } from "react";
+import { createStore, type StoreApi, useStore } from "zustand";
+
+const TocStateSchema = Schema.Struct({
+  activeHeadings: Schema.Array(Schema.String),
+});
+
+/** The headings currently in the reading band, in the order they entered it. */
+type TocState = typeof TocStateSchema.Type;
+
+type TocStore = StoreApi<TocState>;
+
+const TocContext = createContext<TocStore | null>(null);
+
+/** Distance from the end of the page that still counts as its end. */
+const SCROLL_BOTTOM_TOLERANCE = 6;
+
+/** Keeps heading ids a stable primitive for the effect that observes them. */
+const WATCH_SEPARATOR = "\n";
+
+/**
+ * Tracks the headings in the reading band with one observer for the whole
+ * outline and publishes them to the store only when they change. The headings
+ * are already in the page when the outline mounts, so the observer watches each
+ * one once. At the end of the page, the headings still in view stay active, or
+ * the last heading when none is.
+ */
+function observeHeadings(store: TocStore, watch: readonly string[]) {
+  /**
+   * The headings in the reading band, in the order they entered it. Two
+   * headings can share one id, so the set holds the elements, and each element
+   * is marked for reference equality before it reaches the set: Effect would
+   * otherwise compare two elements by their structure.
+   */
+  const visible = MutableHashSet.empty<Element>();
+
+  function enter(heading: Element) {
+    MutableHashSet.add(visible, Equal.byReferenceUnsafe(heading));
+  }
+
+  function leave(heading: Element) {
+    MutableHashSet.remove(visible, Equal.byReferenceUnsafe(heading));
+  }
+
+  function visibleIds() {
+    return Arr.map(Arr.fromIterable(visible), (heading) => heading.id);
+  }
+
+  function publish(activeHeadings: readonly string[]) {
+    const current = store.getState().activeHeadings;
+    if (
+      current.length === activeHeadings.length &&
+      Arr.every(current, (id, index) => id === activeHeadings[index])
+    ) {
+      return;
+    }
+    store.setState({ activeHeadings });
+  }
+
+  /** Publishes the headings in the band, keeping the last ones between them. */
+  function publishVisible() {
+    if (MutableHashSet.size(visible) > 0) {
+      publish(visibleIds());
+    }
+  }
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) {
+          enter(entry.target);
+        } else {
+          leave(entry.target);
+        }
+      }
+      publishVisible();
+    },
+    { rootMargin: "-20px 0% -40% 0%", threshold: 1 }
+  );
+
+  function onScroll() {
+    const element = document.scrollingElement;
+    if (
+      !element ||
+      element.scrollTop + element.clientHeight <
+        element.scrollHeight - SCROLL_BOTTOM_TOLERANCE
+    ) {
+      return;
+    }
+    const ids = HashSet.fromIterable(visibleIds());
+    const inView = Arr.filter(watch, (id) => HashSet.has(ids, id));
+    const lastId = Arr.last(watch);
+    if (inView.length > 0) {
+      publish(inView);
+    } else if (Option.isSome(lastId) && lastId.value) {
+      publish([lastId.value]);
+    }
+  }
+
+  publish([]);
+  for (const id of watch) {
+    const heading = document.getElementById(id);
+    if (heading) {
+      observer.observe(heading);
+    }
+  }
+  window.addEventListener("scroll", onScroll, { passive: true });
+
+  return () => {
+    window.removeEventListener("scroll", onScroll);
+    observer.disconnect();
+  };
+}
+
+/**
+ * Owns the outline's active headings in a store, so each entry subscribes to
+ * its own active state and only the entries that change re-render.
+ */
+export function TocProvider({
+  toc,
+  children,
+}: {
+  toc: ParsedHeading[];
+  children: ReactNode;
+}) {
+  const [store] = useState(() =>
+    createStore<TocState>()(() => ({ activeHeadings: [] }))
+  );
+  const watchKey = Arr.join(extractAllHeadingIds(toc), WATCH_SEPARATOR);
+
+  useEffect(
+    () =>
+      observeHeadings(
+        store,
+        watchKey.length === 0 ? [] : watchKey.split(WATCH_SEPARATOR)
+      ),
+    [store, watchKey]
+  );
+
+  return <TocContext value={store}>{children}</TocContext>;
+}
+
+/** Selects one value from the outline state; it re-renders only when that value changes. */
+export function useToc<T>(selector: (state: TocState) => T): T {
+  const store = use(TocContext);
+  if (!store) {
+    throw new Error("useToc must be used within a TocProvider.");
+  }
+  return useStore(store, selector);
+}

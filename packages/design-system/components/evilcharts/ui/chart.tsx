@@ -1,5 +1,3 @@
-"use client";
-
 import type { EvilBrushCurveType } from "@repo/design-system/components/evilcharts/ui/brush-preview";
 import {
   type AtLeastOneThemeColor,

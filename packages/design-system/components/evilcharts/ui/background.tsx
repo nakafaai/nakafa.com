@@ -1,5 +1,3 @@
-"use client";
-
 import { Match } from "effect";
 import { useId } from "react";
 import { ZIndexLayer } from "recharts";

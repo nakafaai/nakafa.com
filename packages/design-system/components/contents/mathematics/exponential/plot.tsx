@@ -1,5 +1,3 @@
-"use client";
-
 import type { resolveExponential } from "@repo/design-system/components/contents/mathematics/exponential";
 import { Line } from "@repo/design-system/components/evilcharts/charts/composed/line";
 import { Scatter } from "@repo/design-system/components/evilcharts/charts/composed/scatter";
@@ -17,7 +15,7 @@ import {
 } from "@repo/design-system/components/evilcharts/ui/tooltip";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import type { Effect } from "effect";
-import { useFormatter } from "next-intl";
+import { useFormatter } from "use-intl";
 
 const CHART_CONFIG = {
   y: {

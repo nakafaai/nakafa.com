@@ -9,4 +9,5 @@ const definitions = ConvexFunctionDefinitions.buildForGroup<typeof import("../..
 export default {
 ["getSet"]: RegisteredConvexFunction.register({ ...definitions["getSet"], handler: forward(definitions["getSet"].handler) }),
 ["getSection"]: RegisteredConvexFunction.register({ ...definitions["getSection"], handler: forward(definitions["getSection"].handler) }),
+["getSectionWithBodies"]: RegisteredConvexFunction.register({ ...definitions["getSectionWithBodies"], handler: forward(definitions["getSectionWithBodies"].handler) }),
 } as RegisteredFunctions.RegisteredFunctionsForGroupSpec<typeof import("../../../../tryouts/queries/attemptPage.spec")["default"]>;

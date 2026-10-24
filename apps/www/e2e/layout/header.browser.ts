@@ -93,11 +93,15 @@ const twoFrames = (page: Page) =>
       })
   );
 
-/** Narrows the window through every width and checks that each header stays one row. */
+/**
+ * Narrows the window through every width and checks that each header stays one row. React draws
+ * a streamed page's boundaries on a timer after their markup arrives, and a boundary that has not
+ * drawn yet hides its header, so the first heading must be visible before the window narrows.
+ */
 const expectOneRowHeaders = Effect.fn("NakafaE2E.expectOneRowHeaders")(
   function* (page: Page, label: string) {
     yield* Effect.promise(() =>
-      expect(page.locator("h1").first()).toBeAttached({ timeout: 30_000 })
+      expect(page.locator("h1").first()).toBeVisible({ timeout: 30_000 })
     );
     yield* Effect.forEach(
       widths,

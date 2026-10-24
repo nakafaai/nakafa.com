@@ -1,5 +1,3 @@
-"use client";
-
 import { Sad02Icon } from "@hugeicons/core-free-icons";
 import {
   useIntersection,
@@ -25,16 +23,17 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { getPowerPreference } from "@repo/design-system/lib/device";
+import { ClientOnly } from "@tanstack/react-router";
 import { cn } from "cn";
-import dynamic from "next/dynamic";
-import { useTranslations } from "next-intl";
 import {
+  type ComponentProps,
   type ReactNode,
   useLayoutEffect,
   useRef,
   useState,
   useSyncExternalStore,
 } from "react";
+import { useTranslations } from "use-intl";
 
 function ErrorFallback({
   error,
@@ -160,7 +159,6 @@ function ThreeCanvasComponent({
   frameloop?: "always" | "demand";
 } & Omit<CanvasProps, "camera" | "orthographic">) {
   const powerPreference = getPowerPreference();
-  const [canvasKey, setCanvasKey] = useState(0);
   const { entry, ref } = useIntersection<HTMLDivElement>({
     rootMargin: `${THREE_RENDER_MARGIN}px`,
   });
@@ -174,24 +172,6 @@ function ThreeCanvasComponent({
     subscribeToInert,
     () => Boolean(frame?.closest("[inert]")),
     () => false
-  );
-
-  /**
-   * Next.js Cache Components can preserve recently visited routes with React
-   * Activity. Activity keeps the DOM hidden, but it disconnects effects while
-   * hidden and reconnects them when visible again. WebGL renderers are external
-   * resources owned by React Three Fiber, so the safest shared behavior is to
-   * remount only the Canvas after a route has been hidden.
-   *
-   * @see https://nextjs.org/docs/app/guides/preserving-ui-state
-   * @see https://react.dev/reference/react/Activity
-   * @see https://r3f.docs.pmnd.rs/api/canvas
-   */
-  useLayoutEffect(
-    () => () => {
-      setCanvasKey((key) => key + 1);
-    },
-    []
   );
 
   return (
@@ -230,7 +210,6 @@ function ThreeCanvasComponent({
               powerPreference,
               alpha: true,
             }}
-            key={canvasKey}
             performance={{
               min: 0.8,
               max: 1.0,
@@ -250,14 +229,22 @@ function ThreeCanvasComponent({
   );
 }
 
-export const ThreeCanvas = dynamic(
-  () => Promise.resolve(ThreeCanvasComponent),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="flex h-full w-full items-center justify-center">
-        <Spinner aria-hidden="true" className="size-6" />
-      </div>
-    ),
-  }
-);
+/**
+ * Mounts the canvas on the client only. The canvas lives in this module, so it
+ * needs no lazy boundary of its own; the spinner holds the place until mount.
+ */
+export function ThreeCanvas(
+  props: ComponentProps<typeof ThreeCanvasComponent>
+) {
+  return (
+    <ClientOnly
+      fallback={
+        <div className="flex h-full w-full items-center justify-center">
+          <Spinner aria-hidden="true" className="size-6" />
+        </div>
+      }
+    >
+      <ThreeCanvasComponent {...props} />
+    </ClientOnly>
+  );
+}

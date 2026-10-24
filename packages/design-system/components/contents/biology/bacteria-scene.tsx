@@ -1,5 +1,3 @@
-"use client";
-
 import { BacterialShapes } from "@repo/design-system/components/contents/biology/bacteria-shapes";
 import { BacterialStructure } from "@repo/design-system/components/contents/biology/bacteria-structure";
 import { GramWallComparison } from "@repo/design-system/components/contents/biology/bacteria-wall";

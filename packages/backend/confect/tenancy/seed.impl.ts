@@ -59,7 +59,67 @@ const teacher = FunctionImpl.make(
   })
 );
 
+/**
+ * Gives the learner who holds the address a student grant in the school's first active
+ * unit, so an acceptance run can place the learner in a cohort. The learner must already
+ * be a member of the school, because the account that holds the address claims the invite
+ * when it signs in, and a missing account or member ends the seed with a defect that names it.
+ */
+const student = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "student",
+  Effect.fn("tenancy.seed.student")(function* ({ email, slug }) {
+    yield* requireAcceptanceSeed();
+    const reader = yield* DatabaseReader;
+    const tenant = yield* reader
+      .table("tenants")
+      .index("by_slug", (query) => query.eq("slug", slug))
+      .first()
+      .pipe(Effect.orDie);
+    if (Option.isNone(tenant)) {
+      return yield* new TenantNotFound();
+    }
+    const unit = yield* reader
+      .table("tenantUnits")
+      .index("by_tenantId_and_status", (query) =>
+        query.eq("tenantId", tenant.value._id).eq("status", "active")
+      )
+      .first()
+      .pipe(Effect.orDie);
+    if (Option.isNone(unit)) {
+      return yield* Effect.die("The school has no active unit.");
+    }
+    const user = yield* reader
+      .table("users")
+      .index("by_email", (query) => query.eq("email", email))
+      .first()
+      .pipe(Effect.orDie);
+    if (Option.isNone(user)) {
+      return yield* Effect.die("No account holds this address.");
+    }
+    const learner = yield* reader
+      .table("tenantPeople")
+      .index("by_tenantId_and_account_userId", (query) =>
+        query
+          .eq("tenantId", tenant.value._id)
+          .eq("account.userId", user.value._id)
+      )
+      .first()
+      .pipe(Effect.orDie);
+    if (Option.isNone(learner)) {
+      return yield* Effect.die("This address is not a member of the school.");
+    }
+    yield* assignRole(systemActor, learner.value, "student", {
+      kind: "unit",
+      unitId: unit.value._id,
+    }).pipe(Effect.orDie);
+    return null;
+  })
+);
+
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(teacher),
+  Layer.provide(student),
   GroupImpl.finalize
 );

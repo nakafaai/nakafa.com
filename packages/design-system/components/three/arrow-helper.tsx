@@ -1,5 +1,3 @@
-"use client";
-
 import { Line } from "@react-three/drei";
 import {
   THREE_DIAGRAM_MINIMUM_FONT_SIZE,

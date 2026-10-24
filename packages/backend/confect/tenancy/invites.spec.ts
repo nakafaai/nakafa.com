@@ -2,6 +2,7 @@ import { FunctionSpec, GroupSpec } from "@confect/core";
 import { ActiveAppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
+import { BuiltinRole } from "@repo/backend/confect/access/schema";
 import { TenantAccess } from "@repo/backend/confect/access/tenant";
 import RequireMember from "@repo/backend/confect/middleware/member.spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
@@ -18,13 +19,18 @@ import { Email, PersonName } from "@repo/backend/confect/tenancy/schema";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Schema } from "effect";
 
-/** One pending invite as the school's list and each invite mutation show it. */
+/**
+ * One invite as the school's list and each invite mutation show it: the Person it invites,
+ * the roles that Person holds, and whether the invite is still pending or has expired.
+ */
 const InviteView = Schema.Struct({
   email: Email,
   expiresAt: Schema.Finite,
   id: Id("tenantInvites"),
   name: PersonName,
   personId: Id("tenantPeople"),
+  roles: Schema.Array(BuiltinRole),
+  status: Schema.Literals(["expired", "pending"]),
 });
 
 /**
@@ -84,6 +90,7 @@ export default GroupSpec.make()
           InviteExpired,
           InviteNotPending,
           InviteRateLimited,
+          PersonClaimed,
         ]),
     })
   );

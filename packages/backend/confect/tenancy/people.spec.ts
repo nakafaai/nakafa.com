@@ -29,7 +29,7 @@ const PersonView = Schema.Struct({
  * The people of one school. Its Admin creates, renames, and removes them. The
  * roles that read the school's people list them one status at a time, and may
  * narrow the list to the people who hold no account; a cohort's members are
- * listed by `cohorts:members`.
+ * listed by `cohorts:members`. Members and invites live in `roster`.
  */
 export default GroupSpec.make()
   .middleware(Session)
@@ -42,6 +42,14 @@ export default GroupSpec.make()
         slug: TenantSlug,
         status: PersonStatus,
       }),
+      item: () => PersonView,
+      error: () => AccessDenied,
+    }).middleware(TenantAccess, { action: "person.view" })
+  )
+  .addFunction(
+    FunctionSpec.publicPaginatedQuery({
+      name: "students",
+      args: () => ({ slug: TenantSlug }),
       item: () => PersonView,
       error: () => AccessDenied,
     }).middleware(TenantAccess, { action: "person.view" })

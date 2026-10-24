@@ -14,6 +14,12 @@ describe("exams/kinds", () => {
     ).toEqual(["admin", "teacher"]);
   });
 
+  it("opens exam.rooms to the editors and to the sitting viewers, the Principal and the Deputy, and to no other role", () => {
+    expect(
+      Arr.filter(RuleRole.literals, (role) => opensTo("exam.rooms", role))
+    ).toEqual(["admin", "principal", "deputy", "teacher"]);
+  });
+
   it("names exam.view as a capability of the tenant and of a unit, so the viewer reads it on both", () => {
     expect(Schema.decodeSync(TenantCapabilities)(["exam.view"])).toEqual([
       "exam.view",

@@ -1,8 +1,7 @@
 import { expect, type Locator, type Page } from "@playwright/test";
-import { Effect, MutableHashSet } from "effect";
+import { Effect, type MutableList } from "effect";
 import { activate, visibleLink } from "@/e2e/support/input";
 import { waitForCommittedAppRouter } from "@/e2e/support/navigation/readiness";
-import { NEXT_ROUTER_PREFETCH_HEADER } from "@/e2e/support/requests";
 import { appRoutes } from "@/e2e/support/route";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
@@ -25,24 +24,6 @@ export function sectionLink(page: Page) {
 }
 
 /**
- * Records every pathname the page asks for beyond its shared shell. A try-out
- * link in view only asks for the shell, which Next.js marks with "1"; it asks
- * for the rest once intent reaches React. Start recording before the link can
- * render, because a pointer that rests where the link appears shows intent on
- * its own.
- */
-export function recordIntentRequests(page: Page) {
-  const pathnames = MutableHashSet.empty<string>();
-  page.on("request", (request) => {
-    const headers = request.headers();
-    if (headers.rsc === "1" && headers[NEXT_ROUTER_PREFETCH_HEADER] !== "1") {
-      MutableHashSet.add(pathnames, new URL(request.url()).pathname);
-    }
-  });
-  return pathnames;
-}
-
-/**
  * Rests on a link the way a pointer or a finger does before it presses, and
  * waits until the link has asked for more than the shell. Playwright presses
  * in the same instant as intent arrives, so a press without this step can
@@ -50,15 +31,16 @@ export function recordIntentRequests(page: Page) {
  */
 export const intend = Effect.fn("NakafaE2E.intendTryoutLink")(function* (
   link: Locator,
-  target: { hasTouch: boolean; pathname: string },
-  requested: MutableHashSet.MutableHashSet<string>
+  target: { hasTouch: boolean },
+  calls: MutableList.MutableList<string>
 ) {
+  const callsBefore = calls.length;
   yield* Effect.promise(() =>
     target.hasTouch ? link.dispatchEvent("touchstart") : link.hover()
   );
   yield* Effect.promise(() =>
     expect
-      .poll(() => MutableHashSet.has(requested, target.pathname), {
+      .poll(() => calls.length > callsBefore, {
         timeout: readinessTimeoutMilliseconds,
       })
       .toBe(true)

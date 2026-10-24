@@ -93,11 +93,15 @@ Scopes name the modules a rule inspects:
 ### Constructions the engine recognizes
 
 A React module is a `.tsx` file, a module that loads `react` or `react-dom` at
-run time, or a module that starts with `"use client"` as its first statement.
+run time, a module that starts with `"use client"` as its first statement, or a
+module that exports a hook: an exported name that starts with `use` followed by a
+capital letter or a digit. Only a component may call a hook, and a hook throws a
+failed query during render so that the nearest error boundary receives it, the
+one channel React offers, so the module that holds a hook is React code.
 
 A test file is named `*.test.ts`, `*.test.tsx`, or `test.<name>.ts`, such as
 `test.setup.ts` or `test.helpers.ts`, which only tests load. Any other module
-that supports tests, such as `apps/www/test/content-page.ts`, is product code.
+that supports tests, such as `apps/www/src/test/content-page.ts`, is product code.
 
 A framework configuration file is named `*.config.ts`, `.mts`, `.cts`, or
 `.tsx`, imports the Vitest or Vercel configuration API, or has a default export

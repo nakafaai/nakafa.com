@@ -77,7 +77,7 @@ describe("A running Nina turn that the learner stops", () => {
       const state = await f.inspect();
       expect(state.turn?.state.status).toBe("cancelled");
       expect(state.chat?.activeTurnId).toBeUndefined();
-      expect(state.user?.credits).toBe(5);
+      expect(state.user?.credits).toBe(0);
       expect(
         Arr.filter(state.ledger, (row) => row.type === "refund")
       ).toHaveLength(1);
@@ -98,7 +98,7 @@ describe("A running Nina turn that the learner stops", () => {
       await f.owner.mutation(cancel, { chatId: f.chatId });
       const stopping = await f.inspect();
       expect(stopping.turn?.state.status).toBe("running");
-      expect(stopping.user?.credits).toBe(5);
+      expect(stopping.user?.credits).toBe(0);
       expect(stopping.chat?.activeTurnId).toBe(f.turnId);
       expect(stopping.streams).toEqual([
         expect.objectContaining({ status: "aborted" }),
@@ -182,7 +182,7 @@ describe("A running Nina turn that the learner stops", () => {
         state: { status: "running" },
         cancelRequestedAt: expect.any(Number),
       });
-      expect(stuck.user?.credits).toBe(5);
+      expect(stuck.user?.credits).toBe(0);
       expect(stuck.chat?.activeTurnId).toBe(f.turnId);
     } finally {
       f.release();

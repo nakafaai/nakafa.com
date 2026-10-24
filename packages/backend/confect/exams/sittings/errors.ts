@@ -31,6 +31,12 @@ export class AttemptClosed extends Schema.TaggedError<AttemptClosed>()(
   { ...refusal("ATTEMPT_CLOSED", "This attempt has closed.") }
 ) {}
 
+/** An attempt that a proctor has locked before its deadline, which takes no answer until it is unlocked. */
+export class AttemptLocked extends Schema.TaggedError<AttemptLocked>()(
+  "AttemptLocked",
+  { ...refusal("ATTEMPT_LOCKED", "A proctor has locked this attempt.") }
+) {}
+
 /** A device that does not own the attempt. A proctor can allow a second device. */
 export class SecondDevice extends Schema.TaggedError<SecondDevice>()(
   "SecondDevice",
@@ -103,6 +109,14 @@ export class ScheduleInvalid extends Schema.TaggedError<ScheduleInvalid>()(
     ),
     reason: Schema.Literals(["closesAt", "cohort", "opensAt"]),
   }
+) {}
+
+/**
+ * A room that has opened, or closed: its students sat it, so it stays and cannot be cancelled.
+ */
+export class RoomOpened extends Schema.TaggedError<RoomOpened>()(
+  "RoomOpened",
+  refusal("ROOM_OPENED", "This room has opened, so it stays.")
 ) {}
 
 /**

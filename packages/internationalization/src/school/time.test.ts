@@ -35,6 +35,13 @@ const DATE_AND_TIME = {
   id: "6 Okt 2026, 22.30",
 };
 
+/** How each locale writes the weekday and the time of `EVENING` in Jakarta. */
+const WEEKDAY_AND_TIME = {
+  de: "Di., 22:30",
+  en: "Tue 10:30 PM",
+  id: "Sel 22.30",
+};
+
 /**
  * How each locale names the day of `ACROSS_MIDNIGHT` in Jakarta when that day is
  * today, when it is yesterday, and as a date when it is neither.
@@ -136,6 +143,16 @@ describe("formatSchoolTime", () => {
         expect(
           yield* schoolTime("dateTime", locale, "Asia/Jakarta", EVENING)
         ).toBe(DATE_AND_TIME[locale]);
+      })
+  );
+
+  it.effect.each(ACTIVE_APP_LOCALE_CODES)(
+    "writes the weekday and the time of the school in %s",
+    (locale) =>
+      Effect.gen(function* () {
+        expect(
+          yield* schoolTime("weekdayTime", locale, "Asia/Jakarta", EVENING)
+        ).toBe(WEEKDAY_AND_TIME[locale]);
       })
   );
 

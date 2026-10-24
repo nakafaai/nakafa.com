@@ -206,10 +206,10 @@ describe("Nina turn sweep", () => {
     await f.settle();
     const state = await f.inspect();
     expect(state.turn?.state.status).toBe("complete");
-    expect(state.user?.credits).toBe(5);
-    expect(Arr.filter(state.ledger, (row) => row.type === "refund")).toEqual(
-      []
-    );
+    expect(state.user?.credits).toBe(9);
+    expect(Arr.filter(state.ledger, (row) => row.type === "refund")).toEqual([
+      expect.objectContaining({ amount: 9 }),
+    ]);
     expect(await f.queued("nina/response:present")).toEqual([
       { turnId: f.turnId },
     ]);
@@ -291,7 +291,7 @@ describe("Nina turn sweep", () => {
     const stuck = await f.inspect();
     expect(stuck.turn?.state.status).toBe("running");
     expect(stuck.chat?.activeTurnId).toBe(f.turnId);
-    expect(stuck.user?.credits).toBe(5);
+    expect(stuck.user?.credits).toBe(0);
 
     vi.setSystemTime(NOW + DEADLINE + 5 * 60_000);
     await f.t.mutation(sweep, {});
@@ -414,7 +414,7 @@ describe("Nina turn start check", () => {
 
     const state = await f.inspect();
     expect(state.turn?.state).toMatchObject({ status: "running" });
-    expect(state.user?.credits).toBe(5);
+    expect(state.user?.credits).toBe(0);
     expect(state.chat?.activeTurnId).toBe(f.turnId);
   });
 

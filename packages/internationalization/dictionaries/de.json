@@ -1,14 +1,25 @@
 {
+  "DataTable": {
+    "no-results": "Keine Treffer.",
+    "reset": "Zurücksetzen"
+  },
   "School": {
     "account-settings": "Kontoeinstellungen",
     "back-to-learning": "Zurück zu Nakafa",
+    "classes": "Klassen",
     "for-you": "Für dich",
     "home": "Startseite",
-    "next-exam-title": "Prüfungen deiner Schule",
-    "next-exam-description": "Schreib Fragen, plane eine Sitzung und verfolge sie live.",
-    "next-exam-footer": "Schüler sehen eine Prüfung erst, wenn sie geplant ist.",
-    "next-exam-action": "Prüfungen öffnen",
-    "language": "Sprache",
+    "greeting-morning": "Guten Morgen, {name}",
+    "greeting-afternoon": "Guten Tag, {name}",
+    "greeting-evening": "Guten Abend, {name}",
+    "tile-live": "Läuft gerade",
+    "tile-live-footer": "Öffne einen Raum, um die Schüler zu beobachten.",
+    "tile-next": "Als Nächstes",
+    "tile-next-footer": "Jeder Raum öffnet zur geplanten Zeit.",
+    "tile-drafts": "Weiter schreiben",
+    "tile-drafts-footer": "Prüfungen, die du begonnen hast und noch bearbeiten kannst.",
+    "tile-all-exams": "Alle Prüfungen",
+    "tile-minutes-left": "{count, plural, one {# Minute übrig} other {# Minuten übrig}}",
     "role": {
       "admin": "Admin",
       "auditor": "Prüfer:in",
@@ -24,8 +35,51 @@
       "teacher": "Lehrkraft"
     },
     "sign-in-title": "Anmelden bei {school}",
-    "signed-in": "Du bist angemeldet.",
-    "signed-in-as": "Du bist als {role} angemeldet."
+    "tile-student": "Deine Prüfungen",
+    "sittings-empty": "Deine Lehrkraft hat noch keine Sitzung geplant.",
+    "sittings-next": "Die nächste Sitzung beginnt {time}.",
+    "refused-title": "Dein Zugang zu dieser Schule hat sich geändert.",
+    "refused-description": "Frag einen Admin der Schule, deinen Zugang zu prüfen, oder geh zurück zu Nakafa.",
+    "answers-saved": "Antworten gespeichert",
+    "quiet-staff": "Gerade läuft keine Sitzung, und in den nächsten 14 Tagen beginnt keine.",
+    "setup-invites": "Offene Einladungen prüfen",
+    "setup-students": "Schüler einladen",
+    "setup-teacher": "Lehrkraft einladen",
+    "setup-unit": "Eine Schule hinzufügen",
+    "sitting-open-now": "Jetzt geöffnet",
+    "tile-result-pending": "Nicht freigegeben",
+    "tile-result-released": "Freigegeben",
+    "tile-results": "Ergebnisse",
+    "tile-results-footer": "Ergebnisse erscheinen hier, nachdem eine Sitzung beendet ist.",
+    "tile-results-release-footer": "Gib Ergebnisse frei, nachdem eine Sitzung beendet ist.",
+    "tile-setup": "Einrichtung",
+    "tile-setup-footer": "Schließe diese Schritte ab, damit Lehrkräfte und Schüler beitreten können."
+  },
+  "SchoolEntry": {
+    "card-code-description": "Nur für die erste Anmeldung oder nach dem Druck einer neuen Karte.",
+    "card-code-label": "Kartencode",
+    "card-expired": "Diese Karte ist abgelaufen. Bitte deine Lehrkraft oder einen Admin um eine neue Karte.",
+    "card-invalid": "Benutzername oder Kartencode stimmen nicht.",
+    "card-rate-limited": "Zu viele Versuche von diesem Gerät. Warte einige Minuten und versuche es erneut.",
+    "card-used": "Diese Karte wurde schon benutzt. Bitte deine Lehrkraft oder einen Admin um eine neue Karte.",
+    "failed": "Anmeldung fehlgeschlagen. Versuche es erneut.",
+    "outsider-card": "Mit Karte anmelden",
+    "outsider-description": "{account} ist kein Mitglied von {school}.",
+    "outsider-card-hint": "Keine Google-Adresse? Frag den Admin deiner Schule, wie du dich anmeldest.",
+    "outsider-switch": "Konto wechseln",
+    "outsider-title": "Kein Mitglied",
+    "password-description": "Mindestens 8 Zeichen.",
+    "password-label": "Passwort",
+    "password-too-long": "Das Passwort ist zu lang.",
+    "password-too-short": "Das Passwort ist zu kurz.",
+    "sign-in-refused": "Benutzername oder Passwort stimmen nicht, daher prüfe beides oder frag deine Lehrkraft, wenn es weiter scheitert.",
+    "submit": "Anmelden",
+    "submitting": "Anmeldung läuft...",
+    "username-action": "Mit Benutzername anmelden",
+    "username-footer": "Der Kartencode gilt nur einmal und legt dein Passwort fest.",
+    "username-label": "Schul-Benutzername",
+    "outsider-hint": "Wenn ein Admin diese Adresse eingeladen hat, kann die Einladung einen Moment brauchen. Prüfe erneut, oder bitte einen Admin, sie noch einmal zu senden. Wurde die Einladung an eine andere Adresse geschickt, melde dich mit dieser an.",
+    "outsider-check-again": "Erneut prüfen"
   },
   "Exams": {
     "token": "Token",
@@ -36,7 +90,8 @@
     "filter-needs-attention": "Braucht Aufmerksamkeit",
     "filter-finished": "Abgeschlossen",
     "seats-label": "Plätze der Schüler",
-    "seats-empty": "Bisher hat niemand diese Sitzung betreten.",
+    "seats-empty": "In diesem Termin wird keine Schülerin und kein Schüler erwartet.",
+    "seat-waiting": "Noch nicht eingetreten.",
     "filter-empty": "Kein Schüler passt zu diesem Filter.",
     "panel-label": "Sitzung des Schülers",
     "state-in-progress": "In Bearbeitung",
@@ -91,34 +146,46 @@
     "student-enter": "Sitzung betreten",
     "student-enter-footer": "Die Aufsicht gibt dir den Token.",
     "student-token-placeholder": "Token von der Aufsicht eingeben",
-    "student-token-refused": "Das Token passt nicht. Prüfe es und versuche es erneut.",
-    "student-too-many-tries": "Zu viele Versuche. Warte eine Minute und versuche es erneut.",
-    "student-not-in-sitting": "Du bist nicht in dieser Sitzung.",
-    "student-not-open": "Diese Sitzung hat noch nicht begonnen.",
-    "student-closed": "Diese Sitzung ist beendet.",
-    "student-locked-school": "Diese Sitzung ist gesperrt, daher nimmt sie keine Teilnehmer auf und erfasst keine Ereignisse.",
-    "student-attempt-closed": "Dieser Versuch ist beendet.",
-    "student-second-device": "Dieser Versuch gehört zu einem anderen Gerät. Bitte die Aufsicht, ein zweites Gerät zu erlauben.",
-    "student-device-retired": "Die Aufsicht hat dieses Gerät aus dem Versuch entfernt.",
-    "student-locked": "Die Aufsicht hat diese Sitzung gesperrt, daher kannst du nicht antworten.",
-    "student-unavailable": "Diese Sitzung ist für dich nicht geöffnet.",
+    "student-token-refused": "Das Token passt nicht, daher prüfe es und versuche es erneut.",
+    "student-too-many-tries": "Zu viele Versuche, daher warte eine Minute und versuche es erneut.",
+    "student-not-in-sitting": "Du bist nicht in dieser Sitzung, daher frag deine Aufsicht, wenn du meinst, dass das falsch ist.",
+    "student-not-open": "Diese Sitzung hat noch nicht begonnen, daher komm zur Startzeit wieder.",
+    "student-closed": "Diese Sitzung ist beendet, daher frag deine Lehrkraft nach einer anderen Sitzung.",
+    "student-locked-school": "Diese Sitzung ist gesperrt, daher frag deine Lehrkraft, was du als Nächstes tun sollst.",
+    "student-no-answer": "Nicht beantwortet",
+    "student-attempt-closed": "Dieser Versuch ist beendet, daher frag deine Aufsicht, wenn du meinst, dass die Zeit falsch war.",
+    "student-second-device": "Dieser Versuch gehört zu einem anderen Gerät. Frag deine Aufsicht, ob ein zweites Gerät erlaubt werden kann.",
+    "student-device-retired": "Die Aufsicht hat dieses Gerät entfernt, daher frag die Aufsicht, welches Gerät du nutzen darfst.",
+    "student-locked": "Die Aufsicht hat diesen Versuch gesperrt, daher warte mit deinen Antworten, bis er wieder freigegeben ist.",
+    "student-unavailable": "Diese Sitzung ist für dich nicht geöffnet, daher frag deine Lehrkraft, wenn du meinst, dass das falsch ist.",
     "finish-title": "Prüfung beenden?",
     "finish-description": "Du kannst deine Antworten nach dem Beenden nicht mehr ändern.",
     "answers-in": "Deine Antworten sind gespeichert.",
     "title": "Prüfungen",
     "empty": "Es gibt noch keine Prüfungen.",
+    "exams-search": "Prüfung suchen",
     "untitled": "Prüfung ohne Titel",
     "title-label": "Prüfungstitel",
     "unavailable": "Diese Prüfung ist nicht verfügbar.",
+    "frozen-note": "Diese Prüfung ist geplant, darum sind ihre Fragen fest.",
+    "archived-note": "Diese Schule ist archiviert, daher sind ihre Prüfungen nur lesbar, bis sie wiederhergestellt wird.",
+    "room-cancel": "Raum absagen",
+    "room-cancel-title": "Diesen Raum absagen?",
+    "room-cancel-description": "Schüler können ihn nicht betreten. Die Fragen der Prüfung können sich wieder ändern, sobald kein Raum mehr dafür besteht.",
+    "room-cancel-confirm": "Raum absagen",
     "questions": "Fragen",
     "question": "Frage {number}",
     "option": "Option {letter}",
-    "correct": "Richtige Antwort",
-    "correct-option": "Option {letter} als richtige Antwort markieren",
+    "option-of": "Frage {number}, Option {letter}",
+    "option-add": "Option hinzufügen",
     "no-key": "Diese Frage hat noch keinen Lösungsschlüssel.",
     "move-up": "Nach oben verschieben",
+    "move-up-of": "Frage {number} nach oben verschieben",
     "move-down": "Nach unten verschieben",
+    "move-down-of": "Frage {number} nach unten verschieben",
+    "more-actions-of": "Weitere Aktionen für Frage {number}",
     "remove": "Frage entfernen",
+    "remove-of": "Frage {number} entfernen",
     "remove-title": "Diese Frage entfernen?",
     "remove-description": "Die Frage und ihre Antworten werden aus dieser Prüfung entfernt.",
     "create": "Prüfung erstellen",
@@ -128,11 +195,46 @@
     "language": "Sprache",
     "add-question": "Frage hinzufügen",
     "copy": "Frage kopieren",
+    "copy-of": "Frage {number} kopieren",
     "prompt-label": "Fragetext",
     "prompt-placeholder": "Frage hier schreiben.",
+    "results-title": "Ergebnisse",
+    "results-name": "Name",
+    "results-status": "Status",
+    "results-score": "Punkte",
+    "results-search": "Nach Namen suchen",
+    "results-answered": "Beantwortet",
+    "results-pending": "Offen",
+    "results-finished": "Abgegeben",
+    "results-empty-title": "Noch keine Ergebnisse",
+    "results-empty": "Ergebnisse erscheinen hier, sobald Lernende die Sitzung abgeben.",
+    "results-unavailable": "Du kannst diese Ergebnisse nicht ansehen.",
+    "results-share": "{share} % richtig",
+    "results-counted": "Grundlage sind {counted} Antworten.",
+    "results-incomplete": "Nur die ersten {counted} Antworten werden gezählt.",
+    "results-answers": "Antworten",
+    "results-no-answers": "Bisher hat niemand diese Frage beantwortet.",
+    "results-no-match": "Keine passenden Lernenden",
+    "verdict-correct": "Richtig",
+    "verdict-incorrect": "Falsch",
+    "verdict-pending": "Wartet auf Bewertung",
+    "release-title": "Ergebnisse den Lernenden freigeben?",
+    "release-description": "Jede Lernende und jeder Lernende sieht nach der Freigabe die eigene Punktzahl und die eigenen Antworten.",
+    "release-action": "Ergebnisse freigeben",
+    "release-footer": "Lernende sehen ihre Ergebnisse nach der Freigabe.",
+    "release-wait-footer": "Die Administration oder der Autor der Prüfung gibt die Ergebnisse frei, sobald die Sitzung geschlossen ist.",
+    "released-footer": "Die Lernenden können ihre Ergebnisse sehen.",
+    "student-results-title": "Dein Ergebnis",
+    "student-score": "{points} von {total} richtig",
+    "student-results-footer": "Deine Lehrkraft gibt die Ergebnisse nach Ende der Sitzung frei.",
+    "student-answer": "Deine Antwort: {letters}",
+    "student-answers": "Deine Antworten",
+    "student-results-released": "Deine Lehrkraft hat diese Ergebnisse freigegeben.",
     "schedule": "Planen",
     "schedule-title": "Prüfung planen",
-    "schedule-description": "Die Schüler der Einheit schreiben sie im Raum ab dem Beginn, für ihre Dauer.",
+    "schedule-description": "Die Schüler der Einheit oder der Klasse, die du wählst, schreiben sie im Raum ab dem Beginn, für ihre Dauer.",
+    "audience": "Wer schreibt",
+    "audience-unit": "Die ganze Einheit",
     "room": "Raum",
     "room-placeholder": "Labor 2",
     "starts": "Beginnt",
@@ -140,9 +242,55 @@
     "length-minutes": "{count, plural, one {# Minute} other {# Minuten}}",
     "schedule-keys": "Markiere zuerst die richtige Antwort jeder Frage.",
     "schedule-past": "Der Beginn ist vorbei. Wähle eine spätere Zeit.",
+    "rooms-title": "Räume",
+    "rooms-empty": "Noch keine Räume",
+    "rooms-empty-description": "Jeder Raum erscheint hier, sobald die Prüfung geplant ist.",
+    "rooms-empty-action": "Prüfung öffnen",
+    "rooms-filter-empty": "Kein Raum hat diesen Status",
+    "rooms-filter-empty-description": "Wähle einen anderen Status, um die übrigen Räume zu sehen.",
+    "rooms-unavailable": "Du kannst die Räume dieser Prüfung nicht sehen.",
+    "rooms-group": "Gruppe",
+    "rooms-opens": "Beginn",
+    "rooms-closes": "Ende",
+    "rooms-state": "Status",
+    "room-state-scheduled": "Geplant",
+    "room-state-open": "Offen",
+    "room-state-closed": "Geschlossen",
+    "state-all": "Alle Status",
     "try-action": "Als Schüler testen",
     "try-finish": "Test beenden",
-    "try-note": "Antworten hier werden nicht gespeichert."
+    "try-note": "Antworten hier werden nicht gespeichert.",
+    "pages": "Seiten",
+    "pages-label": "Seiten der Prüfung",
+    "page-no-key": "Noch ohne Schlüssel",
+    "add-below": "Frage darunter hinzufügen",
+    "add-below-of": "Frage unter Frage {number} hinzufügen",
+    "question-text": "Text von Frage {number}",
+    "option-placeholder": "Optionstext",
+    "key-option": "Option {letter} von Frage {number} als richtig markieren",
+    "option-remove-of": "Option {letter} von Frage {number} entfernen",
+    "grid": "Rasteransicht",
+    "fullscreen": "Vollbild",
+    "fullscreen-exit": "Vollbild beenden",
+    "zoom": "Zoom",
+    "student-retry": "Diese Sitzung konnte nicht geladen werden, daher versuche es gleich noch einmal.",
+    "student-opens-at": "Diese Sitzung beginnt {time}.",
+    "student-scheduled-footer": "Das Tokenfeld öffnet mit der Sitzung.",
+    "student-back-home": "Zur Startseite",
+    "flag-question": "Zur Überprüfung markieren",
+    "student-view-results": "Ergebnisse ansehen",
+    "seat-last-activity": "Letzte Aktivität {time}.",
+    "title-needed": "Die Prüfung braucht einen Titel, bevor sie angelegt werden kann.",
+    "title-too-long": "Der Titel darf höchstens {count} Zeichen lang sein.",
+    "no-unit-description": "Eine Prüfung gehört zu einer Einheit. Lege zuerst in den Einstellungen eine an oder stelle eine wieder her.",
+    "no-unit-action": "Einheiten öffnen",
+    "no-unit-member": "Eine Prüfung gehört zu einer Einheit. Frag einen Admin der Schule, eine anzulegen.",
+    "schedule-keys-numbered": "{count, plural, one {Markiere zuerst die richtige Antwort bei Frage {questions}.} other {Markiere zuerst die richtigen Antworten bei den Fragen {questions}.}}",
+    "room-needed": "Gib zuerst einen Namen für den Raum an.",
+    "starts-needed": "Wähle, wann die Sitzung beginnt.",
+    "seats-empty-title": "Noch kein Platz belegt",
+    "seats-filter-title": "Kein Platz passt zum Filter",
+    "signals-empty-title": "Noch kein Ereignis"
   },
   "SchoolSettings": {
     "school": "Schule",
@@ -153,6 +301,7 @@
     "periods": "Perioden",
     "units": "Einheiten",
     "roles": "Rollen und Zugriff",
+    "members": "Mitglieder",
     "invites": "Einladungen",
     "students": "Schülerkonten",
     "clients": "API-Clients",
@@ -172,6 +321,11 @@
     "logo-remove-title": "Logo entfernen?",
     "logo-remove-description": "Die Schule zeigt wieder ihr Tier, bis ein neues Logo hochgeladen wird.",
     "logo-remove-confirm": "Logo entfernen",
+    "name-title": "Schulname",
+    "name-description": "Jede Seite dieser Schule und ihre Einladungs-E-Mails zeigen diesen Namen.",
+    "name-label": "Name",
+    "name-invalid": "Verwende 3 bis 120 Zeichen in einer Zeile.",
+    "name-footer": "Jede Änderung des Namens wird im Prüfprotokoll festgehalten.",
     "policy-students": "Schüler",
     "policy-students-description": "Was Schüler in dieser Schule dürfen.",
     "policy-students-footer": "Jede Änderung einer Richtlinie wird im Prüfprotokoll festgehalten.",
@@ -187,6 +341,13 @@
     "level-other": "Sonstige",
     "unit-level-line": "Stufe {level}.",
     "unit-archived-description": "Diese Schule ist archiviert und nimmt Änderungen erst wieder an, wenn sie wiederhergestellt wird.",
+    "unit-add": "Schule hinzufügen",
+    "unit-add-title": "Eine Schule hinzufügen",
+    "unit-add-description": "Jede Schule hat ihre eigene Stufe, eigene Zeiträume und eigene Klassen.",
+    "unit-add-name": "Name",
+    "unit-add-level": "Stufe",
+    "unit-add-submit": "Schule hinzufügen",
+    "unit-add-footer": "Eine neue Schule hat noch keinen Zeitraum. Lege einen auf der Seite Zeiträume an.",
     "unit-time-zone": "Zeitzone",
     "unit-content-language": "Inhaltssprache",
     "unit-archive-footer": "Eine archivierte Schule bleibt lesbar.",
@@ -214,11 +375,58 @@
     "period-rename": "Umbenennen",
     "period-rename-save": "Speichern",
     "periods-empty": "Noch kein Zeitraum.",
+    "periods-search": "Zeitraum suchen",
+    "cohorts": "Klassen",
+    "cohorts-description": "Die Klassen jeder Periode, in denen Schülerinnen und Schüler gemeinsam lernen.",
+    "cohort-create": "Klasse hinzufügen",
+    "cohort-name": "Name",
+    "cohort-name-placeholder": "7A",
+    "cohort-grade": "Klassenstufe",
+    "cohort-grade-placeholder": "Klassenstufe wählen",
+    "cohort-status": "Status",
+    "cohort-active": "Aktiv",
+    "cohort-archived": "Archiviert",
+    "cohort-rename": "Umbenennen",
+    "cohort-rename-save": "Speichern",
+    "cohort-archive": "Archivieren",
+    "cohort-add-footer": "Eine neue Klasse ist sofort aktiv.",
+    "cohorts-empty": "Noch keine Klasse.",
+    "cohorts-search": "Klasse suchen",
+    "cohorts-no-period-title": "Keine aktive Periode.",
+    "cohorts-no-period": "Öffne zuerst eine Periode, dann erscheinen hier ihre Klassen.",
+    "cohorts-unavailable": "Die Klassen dieser Einheit können nicht angezeigt werden.",
+    "cohorts-unavailable-description": "Wähle eine andere Einheit, um ihre Klassen zu sehen.",
+    "cohort-unavailable": "Diese Klasse kann hier nicht geöffnet werden.",
+    "cohort-unavailable-description": "Diese Klasse gehört vielleicht zu einer anderen Schule oder gibt es nicht mehr. Wähle eine Klasse aus der Liste.",
+    "placement-add": "Schüler hinzufügen",
+    "placement-add-footer": "Eine Schülerin oder ein Schüler gehört pro Periode zu einer Klasse.",
+    "placement-student": "Schüler",
+    "placement-move": "Verschieben",
+    "placement-move-footer": "Die Schülerin oder der Schüler wechselt in die gewählte Klasse.",
+    "placement-move-to": "Wechseln zu",
+    "placement-move-save": "Verschieben",
+    "cohort-members-search": "Schüler suchen",
+    "cohort-members-description": "Hier erscheinen die Schülerinnen und Schüler dieser Klasse.",
+    "cohort-members-empty": "Noch keine Schülerin und kein Schüler.",
+    "homeroom-title": "Klassenlehrkraft",
+    "homeroom-teacher": "Lehrkraft",
+    "homeroom-none": "Noch keine.",
+    "homeroom-footer": "Wähle die Lehrkraft, die diese Klasse leitet.",
+    "homeroom-remove-footer": "Ohne Lehrkraft hat die Klasse keine Leitung.",
+    "homeroom-archived": "Eine archivierte Klasse behält ihre Klassenlehrkraft, wie sie war.",
+    "homeroom-save": "Speichern",
+    "homeroom-remove": "Entfernen",
     "invites-description": "Die Einladungen, die noch angenommen werden müssen, und ihr Ablauf.",
     "invite-name": "Name",
     "invite-email": "E-Mail",
     "invite-expires": "Läuft ab",
     "invite-resend": "Erneut senden",
+    "invite-expired": "Abgelaufen",
+    "invite-card": "Login-Karte ausstellen",
+    "invite-card-description": "Die eingeladene Person meldet sich mit diesem Anmeldenamen und dem Kartencode an, den die Schule nur einmal zeigt.",
+    "invite-card-submit": "Karte ausstellen",
+    "invite-google-note": "Eine Adresse ohne Google meldet sich mit einer Login-Karte des Admins an.",
+    "invite-google-admin-note": "Ein Admin braucht eine Google-Adresse, weil Admins keine Login-Karte bekommen.",
     "invite-revoke": "Widerrufen",
     "invite-revoke-title": "Diese Einladung widerrufen?",
     "invite-revoke-description": "Die Adresse kann diese Einladung nicht mehr annehmen.",
@@ -233,7 +441,7 @@
     "client-revoke-description": "Die App funktioniert mit dieser Schule sofort nicht mehr.",
     "client-revoke-confirm": "Widerrufen",
     "client-secret-title": "Neues Geheimnis",
-    "client-secret-description": "Kopieren Sie es jetzt, denn es wird nicht noch einmal angezeigt.",
+    "client-secret-description": "Kopiere es jetzt, denn es wird nicht noch einmal angezeigt.",
     "audit-description": "Wer in dieser Schule was geändert hat, und wann.",
     "audit-footer": "Werte von Richtlinien werden nicht ins Protokoll übernommen.",
     "audit-view": "Protokoll ansehen",
@@ -241,6 +449,7 @@
     "audit-who": "Wer",
     "audit-change": "Änderung",
     "audit-empty": "Noch hat sich nichts geändert.",
+    "audit-search": "Änderung suchen",
     "audit-operator": "Nakafa-Team",
     "audit-system": "System",
     "audit-label": {
@@ -251,7 +460,8 @@
       "card": {
         "issued": "Anmeldekarte ausgestellt",
         "reissued": "Anmeldekarte neu ausgestellt",
-        "redeemed": "Anmeldekarte eingelöst"
+        "redeemed": "Anmeldekarte eingelöst",
+        "printed": "Anmeldekarte gedruckt"
       },
       "class": {
         "created": "Lerngruppe angelegt",
@@ -269,7 +479,8 @@
       "cohort": {
         "created": "Klasse angelegt",
         "renamed": "Klasse umbenannt",
-        "archived": "Klasse archiviert"
+        "archived": "Klasse archiviert",
+        "restored": "Klasse wiederhergestellt"
       },
       "connection": {
         "connected": "Verbindung hinzugefügt",
@@ -294,7 +505,8 @@
         "created": "Zeitraum angelegt",
         "opened": "Zeitraum geöffnet",
         "archived": "Zeitraum archiviert",
-        "rename": "Zeitraum umbenannt"
+        "rename": "Zeitraum umbenannt",
+        "restored": "Zeitraum wiederhergestellt"
       },
       "person": {
         "claimed": "Konto übernommen",
@@ -329,7 +541,13 @@
         "changeToken": "Token des Prüfungstermins geändert",
         "allowDevice": "Zweites Gerät für einen Prüfungsversuch erlaubt",
         "finish": "Prüfungsversuch abgegeben",
-        "close": "Prüfungstermin geschlossen"
+        "close": "Prüfungstermin geschlossen",
+        "cancel": "Prüfungsraum abgesagt"
+      },
+      "exam": {
+        "results": {
+          "released": "Prüfungsergebnisse freigegeben"
+        }
       },
       "tenant": {
         "provisioned": "Schule eröffnet",
@@ -340,6 +558,9 @@
         "logo": {
           "removed": "Logo entfernt",
           "set": "Logo geändert"
+        },
+        "name": {
+          "set": "Schulname geändert"
         },
         "policy": {
           "set": "Einstellung geändert"
@@ -393,19 +614,36 @@
     "login-person": "Person",
     "login-issued": "Ausgestellt",
     "logins-empty": "Noch keine Anmeldekarte ausgegeben.",
+    "logins-search": "Anmeldenamen suchen",
+    "members-empty": "Noch niemand ist der Schule beigetreten.",
+    "members-empty-description": "Lade auf der Einladungsseite Lehrkräfte oder Administratoren ein, oder lege einen Schüler an.",
+    "members-search": "Name suchen",
+    "member-name": "Name",
+    "member-status": "Status",
+    "member-roles": "Rollen",
+    "member-status-label": {
+      "cardIssued": "Karte ausgestellt",
+      "invited": "Eingeladen",
+      "joined": "Beigetreten",
+      "notInvited": "Nicht eingeladen"
+    },
+    "member-remove": "Entfernen",
+    "member-remove-title": "Dieses Mitglied entfernen?",
+    "member-remove-description": "Die Person verlässt die Schule, und ihre Rollen enden.",
+    "member-remove-confirm": "Entfernen",
     "invite-action": "Einladen",
     "invites-footer": "Eine Person ohne Konto einladen.",
     "invite-dialog-title": "Person einladen",
     "invite-dialog-description": "Die Person erhält die Einladung an diese E-Mail-Adresse und meldet sich mit ihr an.",
-    "invite-person": "Person",
-    "invite-person-placeholder": "Person wählen",
-    "invite-none-left": "Alle aktiven Personen dieser Schule haben bereits ein Konto.",
+    "invite-role": "Rolle",
+    "invite-footer": "Die Einladung wartet an dieser Adresse, bis sie genutzt wird.",
     "invite-locale": "Sprache der E-Mail",
     "invite-submit": "Einladen",
     "grant-person": "Person",
     "client-add": "Client erstellen",
     "client-add-description": "Ein Client verbindet ein anderes System mit dieser Schule.",
     "clients-empty": "Noch ist kein Client verbunden.",
+    "clients-search": "Client suchen",
     "client-create": "Erstellen",
     "client-scope": "Gilt für",
     "client-name-placeholder": "Name des Systems",
@@ -437,17 +675,57 @@
     "roles-guide": "Rollen",
     "roles-assign-dialog": "Rolle vergeben",
     "roles-assign-description": "Die Person hat die Rolle in der ganzen Schule.",
+    "roles-search": "Person suchen",
     "roles-empty": "Noch hat niemand eine Rolle.",
-    "card-issue": "Karte ausstellen",
     "card-issue-title": "Anmeldekarte",
-    "card-issue-description": "Eine Anmeldekarte erlaubt einem Schüler die Anmeldung mit Anmeldename und Code.",
     "card-login-name": "Anmeldename",
     "card-login-name-placeholder": "Anmeldename",
-    "card-issue-footer": "Der Code wird nur einmal angezeigt.",
     "card-reissue": "Karte neu ausstellen",
-    "card-code-title": "Code der Anmeldekarte",
-    "card-code-description": "Geben Sie den Code an den Schüler weiter, denn er wird nicht noch einmal angezeigt.",
-    "invites-empty": "Keine Einladung wartet."
+    "card-code-description": "Gib den Code an den Schüler weiter, denn er wird nicht noch einmal angezeigt.",
+    "card-student": "Schüler",
+    "card-username": "Anmeldename",
+    "card-code": "Code",
+    "card-expires": "Gültig bis",
+    "card-qr-label": "QR-Code mit dem Kartencode",
+    "card-copy": "Code kopieren",
+    "card-copied": "Kopiert",
+    "card-print": "Karte drucken",
+    "card-print-footer": "Drucken sendet die Karte an deinen Drucker.",
+    "student-add": "Schüler hinzufügen",
+    "student-add-title": "Schüler hinzufügen",
+    "student-add-description": "Der Schüler erhält einen Anmeldenamen und eine erste Anmeldekarte, beides in einem Schritt.",
+    "student-add-name": "Name",
+    "student-add-footer": "Drucke die Karte, bevor du schließt, denn der Code wird nur einmal angezeigt.",
+    "student-add-submit": "Schüler hinzufügen",
+    "invites-empty": "Keine Einladung wartet.",
+    "invites-search": "Eingeladene suchen",
+    "cohort-restore": "Wiederherstellen",
+    "period-restore": "Wiederherstellen",
+    "no-unit-title": "Noch keine aktive Einheit",
+    "no-unit-description": "Perioden und Kohorten gehören zu einer aktiven Einheit. Stelle zuerst eine wieder her oder lege eine an.",
+    "no-unit-action": "Einheiten öffnen",
+    "cohorts-no-period-action": "Perioden öffnen",
+    "members-empty-action": "Einladungen öffnen",
+    "student-login-rule": "Nutze 3 bis 32 Zeichen: a bis z, 0 bis 9, Punkt, Unterstrich, Bindestrich.",
+    "policy-domains-invalid": "Prüfe diese Domains: {domains}. Schreibe jede Domain in eine eigene Zeile.",
+    "policy-domains-limit": "Verwende höchstens {limit} verschiedene Domains, jede in einer eigenen Zeile."
+  },
+  "Classroom": {
+    "tabs-home": "Start",
+    "tabs-forum": "Forum",
+    "general-channel": "Allgemein",
+    "channels-title": "Kanal",
+    "channels-empty": "Noch kein Kanal",
+    "channels-empty-description": "Diese Klasse hat noch keinen Kanal.",
+    "add-channel": "Kanal hinzufügen",
+    "add-channel-title": "Themenkanal hinzufügen",
+    "add-channel-description": "Alle in der Klasse lesen einen Themenkanal, und sein Name steht in der Liste.",
+    "channel-name": "Kanalname",
+    "channel-name-taken": "Ein anderer Kanal dieser Klasse hat diesen Namen bereits.",
+    "channel-limit-reached": "Diese Klasse hat die maximale Anzahl an Kanälen erreicht.",
+    "add-submit": "Hinzufügen",
+    "channel-name-needed": "Gib dem Kanal zuerst einen Namen.",
+    "channel-name-too-long": "Der Name darf höchstens {count} Zeichen lang sein."
   },
   "SchoolStart": {
     "metadata-title": "Eigene Schule eröffnen",
@@ -456,7 +734,7 @@
     "name-title": "Wie heißt deine Schule?",
     "name-label": "Name der Schule",
     "name-placeholder": "Harapan Bangsa",
-    "name-error": "Gib einen Namen mit mindestens 2 Zeichen ein.",
+    "name-error": "Gib einen Namen mit mindestens 3 Zeichen ein.",
     "address-label": "Adresse",
     "address-free": "Frei",
     "address-taken": "Diese Adresse nutzt schon eine andere Schule.",
@@ -561,7 +839,9 @@
     "founder-link": "Mit dem Gründer sprechen",
     "consent": "Mit der Eröffnung akzeptierst du die <terms>Nutzungsbedingungen</terms> und die <privacy>Datenschutzerklärung</privacy>.",
     "finish": "Schule eröffnen",
-    "required-error": "Wähle eine Antwort."
+    "required-error": "Wähle eine Antwort.",
+    "school-limit-line": "Für weitere Schulen brauchst du zuerst ein Gespräch mit dem Gründer.",
+    "address-check-failed": "Diese Adresse konnte nicht geprüft werden. Gib sie noch einmal ein, um sie zu prüfen."
   },
   "Metadata": {
     "title": "Nakafa: Kostenlose Lerninhalte von der Grundschule bis zur Universität",
@@ -574,6 +854,7 @@
   "Common": {
     "load-error": "Diese Daten konnten nicht geladen werden. Bitte versuche es erneut.",
     "load-error-retry": "Diese Daten konnten nicht geladen werden.",
+    "part-denied": "Dieser Teil der Schule ist nicht offen.",
     "loading": "Wird geladen",
     "breadcrumb": "Navigationspfad",
     "sidebar": "Seitenleiste",
@@ -694,7 +975,6 @@
     "former-official": "Früher offiziell",
     "chat": "Chat",
     "no-chats": "Noch keine Chats.",
-    "chats-by-link": "Ein geteilter Chat öffnet sich über seinen Link.",
     "try-out": "Probetest",
     "try-out-short": "Probetest",
     "search-country-placeholder": "Land suchen...",
@@ -959,7 +1239,8 @@
     "time-one": "Noch 1 Minute",
     "shortcut-step": "Vorherige oder nächste Aufgabe",
     "shortcut-pick": "Option wählen",
-    "shortcut-navigator": "Aufgabenübersicht"
+    "shortcut-navigator": "Aufgabenübersicht",
+    "cell-flagged": "{state, select, answered {Aufgabe {number}, beantwortet, zur Überprüfung markiert} other {Aufgabe {number}, offen, zur Überprüfung markiert}}"
   },
   "Utils": {
     "clear-search": "Suche löschen",
@@ -1032,7 +1313,7 @@
     "chat": "Chat",
     "chat-description": "Nutze die KI-Lernassistenz für Hausaufgaben, verständliche Erklärungen und Lerngespräche.",
     "subscriptions": "Abonnements",
-    "subscriptions-description": "Verwalte Nakafa Pro, 3.000 monatliche KI-Credits und dein Zahlungsportal.",
+    "subscriptions-description": "Verwalte Nakafa Pro, {credits, number} monatliche KI-Credits und dein Zahlungsportal.",
     "manage": "Verwalten",
     "plan-free": "Kostenlos",
     "plan-pro": "Pro",
@@ -1113,7 +1394,32 @@
     "divider": "Trennlinie",
     "more": "Mehr",
     "style": "Textstil",
-    "text": "Normaler Text"
+    "text": "Normaler Text",
+    "insert": "Block einfügen",
+    "subscript": "Tiefgestellt",
+    "superscript": "Hochgestellt",
+    "table": "Tabelle",
+    "table-actions": "Tabellenaktionen",
+    "row-before": "Zeile darüber",
+    "row-after": "Zeile darunter",
+    "row-delete": "Zeile löschen",
+    "column-before": "Spalte links",
+    "column-after": "Spalte rechts",
+    "column-delete": "Spalte löschen",
+    "table-delete": "Tabelle löschen",
+    "formula": "Formel",
+    "equation": "Gleichung",
+    "formula-edit": "Formel bearbeiten",
+    "formula-invalid": "Diese Formel kann nicht gezeichnet werden:",
+    "latex": "LaTeX",
+    "image": "Bild",
+    "image-add": "Bild hinzufügen",
+    "image-alt": "Alternativtext",
+    "image-alt-hint": "Was ein Schüler wissen muss, der das Bild nicht sehen kann",
+    "image-cancel": "Abbrechen",
+    "image-delete": "Bild löschen",
+    "image-edit": "Alternativtext ändern",
+    "image-save": "Speichern"
   },
   "Memory": {
     "remember": "Nina darf Erinnerungen speichern und nutzen",
@@ -1142,19 +1448,63 @@
     "count": "{count, number} / {limit, number}"
   },
   "Toast": {
+    "image-refused-size": {
+      "title": "Das Bild wurde nicht hinzugefügt.",
+      "description": "Wähle ein Bild von höchstens 2 MB."
+    },
+    "image-refused-type": {
+      "title": "Das Bild wurde nicht hinzugefügt.",
+      "description": "Wähle ein PNG-, JPEG-, WebP- oder GIF-Bild."
+    },
     "school-logo-size": {
       "title": "Das Logo wurde nicht gespeichert.",
-      "description": "Wählen Sie ein Logo mit höchstens 1 MB."
+      "description": "Wähle ein Logo mit höchstens 1 MB."
     },
     "school-logo-type": {
       "title": "Das Logo wurde nicht gespeichert.",
-      "description": "Wählen Sie ein PNG- oder SVG-Bild."
+      "description": "Wähle ein PNG- oder SVG-Bild."
     },
     "school-logo-refused": {
       "title": "Das Logo wurde nicht gespeichert."
     },
     "school-address-copied": {
       "title": "Die Adresse wurde kopiert."
+    },
+    "school-refusal-not-student": {
+      "title": "Kein Schüler dieser Schule.",
+      "description": "Nur Schülerinnen und Schüler dieser Schule kommen in eine Klasse."
+    },
+    "school-refusal-graduated": {
+      "title": "Bereits abgeschlossen.",
+      "description": "Diese Person kann nicht erneut in eine Klasse."
+    },
+    "school-refusal-unit-limit": {
+      "title": "Kein Platz für eine weitere Schule.",
+      "description": "Eine Organisation hat eine feste Anzahl an Schulen."
+    },
+    "school-refusal-address-member": {
+      "title": "Die Person gehört schon zur Schule.",
+      "description": "Ändere ihre Rolle unter Rollen und Zugriff."
+    },
+    "school-refusal-already-placed": {
+      "title": "Schon einer Klasse zugeordnet.",
+      "description": "Die Schülerin oder der Schüler wechselt stattdessen die Klasse."
+    },
+    "school-refusal-placement-limit": {
+      "title": "Höchstgrenze für Klassen erreicht.",
+      "description": "Diese Person hat bereits die höchstmögliche Zahl an Klassen."
+    },
+    "school-refusal-not-teacher": {
+      "title": "Keine aktive Lehrkraft der Schule.",
+      "description": "Nur aktive Lehrkräfte dieser Schule können Klassenlehrkraft sein."
+    },
+    "school-refusal-teacher-has-homeroom": {
+      "title": "Leitet schon eine andere Klasse.",
+      "description": "Jede Lehrkraft leitet pro Periode nur eine Klasse."
+    },
+    "school-refusal-cohort-has-homeroom": {
+      "title": "Klasse hat schon eine Lehrkraft.",
+      "description": "Die aktuelle Lehrkraft muss zuerst entfernt werden."
     },
     "action-error": {
       "title": "Aktion nicht abgeschlossen.",
@@ -1338,9 +1688,182 @@
       "title": "Heute zu viele Schulen.",
       "description": "Versuch es morgen noch einmal."
     },
+    "school-login-account": {
+      "title": "Ein Schul-Login öffnet keine Schule.",
+      "description": "Melde dich mit einem eigenen Konto an, um eine Schule zu eröffnen."
+    },
     "school-save-error": {
       "title": "Antwort nicht gespeichert.",
       "description": "Versuch es noch einmal."
+    },
+    "undo": {
+      "title": "Archivierung rückgängig"
+    },
+    "school-cohort-archived": {
+      "title": "Klasse archiviert."
+    },
+    "school-period-archived": {
+      "title": "Zeitraum archiviert."
+    },
+    "sitting-not-in": {
+      "title": "Nicht in dieser Sitzung.",
+      "description": "Frag deine Aufsicht, wenn du meinst, dass das falsch ist."
+    },
+    "sitting-locked": {
+      "title": "Diese Sitzung ist gesperrt.",
+      "description": "Frag deine Lehrkraft, was du als Nächstes tun sollst."
+    },
+    "sitting-attempt-closed": {
+      "title": "Dieser Versuch ist beendet.",
+      "description": "Frag deine Aufsicht, wenn du meinst, dass die Zeit falsch war."
+    },
+    "sitting-attempt-locked": {
+      "title": "Der Versuch ist gesperrt.",
+      "description": "Warte, bis die Aufsicht ihn freigibt, und versuche es dann erneut."
+    },
+    "sitting-second-device": {
+      "title": "Versuch gehört anderem Gerät.",
+      "description": "Bitte die Aufsicht, ein zweites Gerät zu erlauben."
+    },
+    "sitting-device-retired": {
+      "title": "Gerät wurde entfernt.",
+      "description": "Frag die Aufsicht, welches Gerät du nutzen darfst."
+    },
+    "sitting-response-refused": {
+      "title": "Diese Antwort passt nicht.",
+      "description": "Wähle die Optionen erneut."
+    },
+    "sitting-question-missing": {
+      "title": "Aufgabe gehört nicht dazu.",
+      "description": "Lade die Sitzung neu, um die Aufgaben zu sehen."
+    },
+    "school-refusal-period-dates": {
+      "title": "Die Zeitraumdaten sind ungültig.",
+      "description": "Wähle zwei Daten, und lege den Beginn vor das Ende."
+    },
+    "school-refusal-period-overlaps": {
+      "title": "Diese Periode überschneidet sich.",
+      "description": "Wähle Daten, die keine andere Periode dieser Schule nutzt."
+    },
+    "school-refusal-period-active": {
+      "title": "Eine andere Periode ist schon aktiv.",
+      "description": "Archiviere die aktive Periode, bevor du diese öffnest."
+    },
+    "school-refusal-period-not-active": {
+      "title": "Diese Periode ist nicht aktiv.",
+      "description": "Nur eine aktive Periode kann archiviert werden."
+    },
+    "school-refusal-cohort-name-taken": {
+      "title": "Diesen Namen gibt es schon.",
+      "description": "Wähle für diese Periode einen anderen Namen."
+    },
+    "school-refusal-cohort-limit": {
+      "title": "Diese Periode ist voll.",
+      "description": "Lege die Kohorte stattdessen in einer anderen Periode an."
+    },
+    "school-refusal-address-invited": {
+      "title": "Diese Adresse ist schon eingeladen.",
+      "description": "Sende die offene Einladung auf der Seite Einladungen erneut."
+    },
+    "school-refusal-invite-domain": {
+      "title": "Diese E-Mail-Domain ist gesperrt.",
+      "description": "Nutze eine Adresse von einer Domain, die diese Schule zulässt."
+    },
+    "school-refusal-invite-pending": {
+      "title": "Diese Person ist schon eingeladen.",
+      "description": "Sende die offene Einladung erneut, statt eine neue anzulegen."
+    },
+    "school-refusal-invite-expired": {
+      "title": "Diese Einladung ist abgelaufen.",
+      "description": "Lade die Person erneut ein, um eine neue zu senden."
+    },
+    "school-refusal-invite-not-pending": {
+      "title": "Diese Einladung wartet nicht mehr.",
+      "description": "Lade die Einladungen neu, um den aktuellen Stand zu sehen."
+    },
+    "school-refusal-invite-rate-limited": {
+      "title": "Die Einladung wurde zu oft gesendet.",
+      "description": "Warte eine Weile und sende diese Einladung dann erneut."
+    },
+    "school-refusal-person-claimed": {
+      "title": "Diese Person hat schon ein Konto.",
+      "description": "Bitte die Person, sich mit diesem Konto anzumelden."
+    },
+    "school-refusal-access": {
+      "title": "Dein Schulzugang hat sich geändert.",
+      "description": "Frag einen Admin dieser Schule, deinen Zugang zu prüfen."
+    },
+    "school-refusal-action-closed": {
+      "title": "Aktion für API-Clients gesperrt.",
+      "description": "Entferne sie vom Client und lege ihn dann neu an."
+    },
+    "school-refusal-promotion-state": {
+      "title": "Diese Periode öffnet noch nicht.",
+      "description": "Wende zuerst die Versetzung in diese Periode an."
+    },
+    "school-refusal-last-owner": {
+      "title": "Der letzte Eigentümer bleibt.",
+      "description": "Gib die Rolle Eigentümer zuerst einer anderen Person."
+    },
+    "school-refusal-grant-role": {
+      "title": "Diese Rolle kann man nicht vergeben.",
+      "description": "Wähle für diese Person eine andere Rolle."
+    },
+    "school-refusal-grant-scope": {
+      "title": "Eigentümer gelten für alles.",
+      "description": "Wähle die ganze Schule als Geltungsbereich dieser Rolle."
+    },
+    "school-refusal-grant-limit": {
+      "title": "Diese Person hat genug Rollen.",
+      "description": "Entferne zuerst eine Rolle, bevor du eine weitere gibst."
+    },
+    "school-refusal-person-inactive": {
+      "title": "Diese Person ist nicht mehr aktiv.",
+      "description": "Lade die Person erneut ein, um den Zugang wiederherzustellen."
+    },
+    "school-refusal-person-kind": {
+      "title": "Diese Rolle passt nicht dazu.",
+      "description": "Wähle eine Rolle, die zu dieser Art Person passt."
+    },
+    "school-refusal-temporary-role": {
+      "title": "Diese Rolle gibt es nur dauerhaft.",
+      "description": "Gib Eigentümern und Admins einen dauerhaften Zugang."
+    },
+    "school-refusal-login-name-refused": {
+      "title": "Dieser Anmeldename ist ungültig.",
+      "description": "Nutze 3 bis 32 Zeichen: a bis z, 0 bis 9, Punkt, _ oder -."
+    },
+    "school-refusal-login-name-taken": {
+      "title": "Diesen Anmeldenamen gibt es schon.",
+      "description": "Wähle für diese Person einen anderen Anmeldenamen."
+    },
+    "school-refusal-login-exists": {
+      "title": "Diese Person hat schon einen Login.",
+      "description": "Ändere den Namen auf der Seite der Person."
+    },
+    "school-refusal-login-missing": {
+      "title": "Diese Person hat noch keinen Login.",
+      "description": "Vergib zuerst einen Anmeldenamen für diese Person."
+    },
+    "school-refusal-person-not-placed": {
+      "title": "Nicht in dieser Periode eingeteilt.",
+      "description": "Teile die Person zuerst in eine Kohorte dieser Periode ein."
+    },
+    "school-refusal-card-missing": {
+      "title": "Noch keine Karte zum Drucken.",
+      "description": "Stelle zuerst eine Anmeldekarte für diese Person aus."
+    },
+    "school-refusal-card-role": {
+      "title": "Nur Lernende bekommen eine Karte.",
+      "description": "Karten gibt es nur für Lernende."
+    },
+    "school-refusal-npsn-invalid": {
+      "title": "Die NPSN ist ungültig.",
+      "description": "Eine NPSN hat acht Ziffern."
+    },
+    "school-refusal-npsn-taken": {
+      "title": "Diese NPSN ist schon vergeben.",
+      "description": "Eine andere Einheit dieser Schule hat sie schon."
     }
   },
   "Ai": {

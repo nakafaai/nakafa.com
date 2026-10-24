@@ -91,7 +91,7 @@ describe("content trust", () => {
       vi.stubEnv("AKSARA_AGENT_SIGNING_KEY_ID", "");
       vi.stubEnv("AKSARA_AGENT_SIGNING_PUBLIC_KEY", undefined);
       vi.stubEnv("CONVEX_CLOUD_URL", "http://127.0.0.1:3210");
-      vi.stubEnv("NEXT_PUBLIC_CONVEX_URL", undefined);
+      vi.stubEnv("VITE_CONVEX_URL", undefined);
       vi.stubEnv("VERCEL_ENV", undefined);
       vi.resetModules();
 
@@ -112,7 +112,7 @@ describe("content trust", () => {
         vi.stubEnv("AKSARA_AGENT_SIGNING_KEY_ID", agentKeyId);
         vi.stubEnv("AKSARA_AGENT_SIGNING_PUBLIC_KEY", key.publicKeyPem);
         vi.stubEnv("CONVEX_CLOUD_URL", "");
-        vi.stubEnv("NEXT_PUBLIC_CONVEX_URL", "http://127.0.0.1:3210");
+        vi.stubEnv("VITE_CONVEX_URL", "http://127.0.0.1:3210");
         vi.stubEnv("VERCEL_ENV", undefined);
         vi.resetModules();
 
@@ -141,7 +141,7 @@ describe("content trust", () => {
           "http://127.0.0.1:3210",
         ]) {
           vi.stubEnv("CONVEX_CLOUD_URL", target);
-          vi.stubEnv("NEXT_PUBLIC_CONVEX_URL", undefined);
+          vi.stubEnv("VITE_CONVEX_URL", undefined);
           vi.stubEnv(
             "VERCEL_ENV",
             target === "http://127.0.0.1:3210" ? "production" : undefined
@@ -159,7 +159,7 @@ const AGENT_TRUST_NAMES = [
   "AKSARA_AGENT_SIGNING_KEY_ID",
   "AKSARA_AGENT_SIGNING_PUBLIC_KEY",
   "CONVEX_CLOUD_URL",
-  "NEXT_PUBLIC_CONVEX_URL",
+  "VITE_CONVEX_URL",
   "VERCEL_ENV",
 ] as const;
 
@@ -234,7 +234,7 @@ describe("Agent Mode trust inputs", () => {
         stubAgentTrust({
           AKSARA_AGENT_SIGNING_KEY_ID: agentKeyId,
           AKSARA_AGENT_SIGNING_PUBLIC_KEY: key.publicKeyPem,
-          NEXT_PUBLIC_CONVEX_URL: "",
+          VITE_CONVEX_URL: "",
         });
         vi.resetModules();
 

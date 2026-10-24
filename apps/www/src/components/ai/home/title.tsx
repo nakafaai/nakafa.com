@@ -1,0 +1,22 @@
+import { cn } from "cn";
+import { useTranslations } from "use-intl";
+
+interface Props {
+  className?: string;
+}
+
+export function HomeTitle({ className }: Props) {
+  const t = useTranslations("Home");
+
+  return (
+    <h1
+      className={cn(
+        "mb-8 text-pretty text-center font-medium text-4xl leading-none tracking-tight",
+        className
+      )}
+    >
+      <span className="hidden md:inline">{t("title")}</span>
+      <span className="inline md:hidden">Nakafa</span>
+    </h1>
+  );
+}

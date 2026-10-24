@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
-import { agentTrustKeys } from "@repo/backend/keys";
+import { agentTrustKeys, polarKeys } from "@repo/backend/keys";
 
 afterEach(() => {
   vi.unstubAllEnvs();
@@ -20,7 +20,7 @@ describe("Agent Mode trust keys", () => {
     vi.stubEnv("AKSARA_AGENT_SIGNING_KEY_ID", undefined);
     vi.stubEnv("AKSARA_AGENT_SIGNING_PUBLIC_KEY", undefined);
     vi.stubEnv("CONVEX_CLOUD_URL", undefined);
-    vi.stubEnv("NEXT_PUBLIC_CONVEX_URL", undefined);
+    vi.stubEnv("VITE_CONVEX_URL", undefined);
     vi.stubEnv("VERCEL_ENV", undefined);
 
     const keys = agentTrustKeys();
@@ -28,7 +28,7 @@ describe("Agent Mode trust keys", () => {
     expect(keys.AKSARA_AGENT_SIGNING_KEY_ID).toBeUndefined();
     expect(keys.AKSARA_AGENT_SIGNING_PUBLIC_KEY).toBeUndefined();
     expect(keys.CONVEX_CLOUD_URL).toBeUndefined();
-    expect(keys.NEXT_PUBLIC_CONVEX_URL).toBeUndefined();
+    expect(keys.VITE_CONVEX_URL).toBeUndefined();
     expect(keys.VERCEL_ENV).toBeUndefined();
   });
 
@@ -36,27 +36,49 @@ describe("Agent Mode trust keys", () => {
     vi.stubEnv("AKSARA_AGENT_SIGNING_KEY_ID", "agent-key-id");
     vi.stubEnv("AKSARA_AGENT_SIGNING_PUBLIC_KEY", "agent-public-key");
     vi.stubEnv("CONVEX_CLOUD_URL", "https://example.convex.cloud");
-    vi.stubEnv("NEXT_PUBLIC_CONVEX_URL", "https://example.convex.cloud");
+    vi.stubEnv("VITE_CONVEX_URL", "https://example.convex.cloud");
     vi.stubEnv("VERCEL_ENV", "preview");
 
     expect(agentTrustKeys()).toStrictEqual({
       AKSARA_AGENT_SIGNING_KEY_ID: "agent-key-id",
       AKSARA_AGENT_SIGNING_PUBLIC_KEY: "agent-public-key",
       CONVEX_CLOUD_URL: "https://example.convex.cloud",
-      NEXT_PUBLIC_CONVEX_URL: "https://example.convex.cloud",
+      VITE_CONVEX_URL: "https://example.convex.cloud",
       VERCEL_ENV: "preview",
     });
   });
 
   it("keeps an empty public key, Convex URL and deployment environment as set values", () => {
     vi.stubEnv("AKSARA_AGENT_SIGNING_PUBLIC_KEY", "");
-    vi.stubEnv("NEXT_PUBLIC_CONVEX_URL", "");
+    vi.stubEnv("VITE_CONVEX_URL", "");
     vi.stubEnv("VERCEL_ENV", "");
 
     expect(agentTrustKeys()).toMatchObject({
       AKSARA_AGENT_SIGNING_PUBLIC_KEY: "",
-      NEXT_PUBLIC_CONVEX_URL: "",
+      VITE_CONVEX_URL: "",
       VERCEL_ENV: "",
     });
+  });
+});
+
+describe("Polar server key", () => {
+  it("leaves an absent server selection undefined", () => {
+    vi.stubEnv("VITE_POLAR_SERVER", undefined);
+
+    expect(polarKeys().VITE_POLAR_SERVER).toBeUndefined();
+  });
+
+  it("passes the server selection through without limiting it to known values", () => {
+    vi.stubEnv("VITE_POLAR_SERVER", "unknown-server");
+
+    expect(polarKeys().VITE_POLAR_SERVER).toBe("unknown-server");
+  });
+
+  it("passes the production selection and an empty selection through unchanged", () => {
+    vi.stubEnv("VITE_POLAR_SERVER", "production");
+    expect(polarKeys().VITE_POLAR_SERVER).toBe("production");
+
+    vi.stubEnv("VITE_POLAR_SERVER", "");
+    expect(polarKeys().VITE_POLAR_SERVER).toBe("");
   });
 });

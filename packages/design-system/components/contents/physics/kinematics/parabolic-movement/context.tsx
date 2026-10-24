@@ -1,5 +1,3 @@
-"use client";
-
 import type { ParabolicMotionState } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement/data";
 import { createContext, type ReactNode, use } from "react";
 

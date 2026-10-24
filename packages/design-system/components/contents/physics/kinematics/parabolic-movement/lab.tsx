@@ -1,5 +1,3 @@
-"use client";
-
 import type { DecimalSeparator } from "@repo/design-system/components/contents/physics/kinematics/number";
 import { ParabolicMotionProvider } from "@repo/design-system/components/contents/physics/kinematics/parabolic-movement/context";
 import {
@@ -29,16 +27,13 @@ import {
 import { VisualFactTabular } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { Array as Arr } from "effect";
-import dynamic from "next/dynamic";
-import { type ReactNode, useMemo, useState } from "react";
+import { lazy, type ReactNode, Suspense, useMemo, useState } from "react";
 
 /** The scene loads once the lab asks for it, and its frame holds the place meanwhile. */
-const ParabolicMovementStage = dynamic(
-  () =>
-    import(
-      "@repo/design-system/components/contents/physics/kinematics/parabolic-movement/stage"
-    ).then(({ ParabolicMovementStage }) => ParabolicMovementStage),
-  { loading: SceneSpinner }
+const ParabolicMovementStage = lazy(() =>
+  import(
+    "@repo/design-system/components/contents/physics/kinematics/parabolic-movement/stage"
+  ).then((module) => ({ default: module.ParabolicMovementStage }))
 );
 
 interface ParabolicMovementLabProps {
@@ -118,7 +113,9 @@ export function ParabolicMovementLab({
       >
         {live ? (
           <ParabolicMotionProvider motion={motion}>
-            <ParabolicMovementStage />
+            <Suspense fallback={<SceneSpinner />}>
+              <ParabolicMovementStage />
+            </Suspense>
           </ParabolicMotionProvider>
         ) : null}
       </VisualCardBody>

@@ -13,17 +13,15 @@ import { withBrowserContext } from "@/e2e/support/context";
 import { signInLearner } from "@/e2e/support/learner";
 import {
   formatRequestFailure,
-  NEXT_ROUTER_PREFETCH_HEADER,
-  RequestFailureSchema,
   type RequestTracker,
   requestFailureFields,
+  SERVER_FUNCTION_HEADER,
   type TrackedRequestKind,
   withRequestTracker,
 } from "@/e2e/support/requests";
 import { readinessTimeoutMilliseconds } from "@/e2e/support/timeout";
 
-const JAVASCRIPT_RESOURCE_PATTERN =
-  /^\/_next\/static\/(?:immutable\/)?chunks\/.+\.js$/;
+const JAVASCRIPT_RESOURCE_PATTERN = /^\/assets\/.+\.js$/;
 const RESOURCE_IDLE_MILLISECONDS = 1000;
 // Resource settling keeps its own budget, apart from readiness.
 const RESOURCE_SETTLE_TIMEOUT_MILLISECONDS = readinessTimeoutMilliseconds;
@@ -40,8 +38,8 @@ const createResourceRequestClassifier = (applicationOrigin: string) =>
     if (JAVASCRIPT_RESOURCE_PATTERN.test(resourceUrl.pathname)) {
       return "javascript";
     }
-    if (request.headers()[NEXT_ROUTER_PREFETCH_HEADER] !== undefined) {
-      return "prefetch";
+    if (request.headers()[SERVER_FUNCTION_HEADER] === "true") {
+      return "data";
     }
   };
 
@@ -73,23 +71,6 @@ class JavascriptResourceRequestError extends Schema.TaggedError<JavascriptResour
 ) {
   get message() {
     return `JavaScript resource request failed: href=${this.href} ${formatRequestFailure(this)}`;
-  }
-}
-
-/** Next.js did not register a visible-link prefetch within the fixed window. */
-class JavascriptPrefetchReadinessTimeout extends Schema.TaggedError<JavascriptPrefetchReadinessTimeout>()(
-  "JavascriptPrefetchReadinessTimeout",
-  {
-    href: Schema.String,
-    lastFailure: Schema.optional(RequestFailureSchema),
-    timeoutMilliseconds: Schema.Finite,
-  }
-) {
-  get message() {
-    const failure = this.lastFailure
-      ? ` lastFailure=${formatRequestFailure(this.lastFailure)}`
-      : "";
-    return `JavaScript prefetch readiness timed out: href=${this.href} timeoutMilliseconds=${this.timeoutMilliseconds}${failure}`;
   }
 }
 
@@ -183,12 +164,7 @@ const readStableJavascriptRun = Effect.fn("NakafaE2E.readStableJavascriptRun")(
 
 const readSettledJavascriptRun = Effect.fn(
   "NakafaE2E.readSettledJavascriptRun"
-)(function* (
-  page: Page,
-  href: string,
-  requestTracker: RequestTracker,
-  awaitsPrefetch: boolean
-) {
+)(function* (page: Page, href: string, requestTracker: RequestTracker) {
   const startedAt = yield* Clock.currentTimeMillis;
   let lastChangeAt = startedAt;
   let previousCount = -1;
@@ -211,17 +187,6 @@ const readSettledJavascriptRun = Effect.fn(
       previousCount = currentCount;
       previousRevision = requestTracker.revision;
       lastChangeAt = observedAt;
-    }
-    if (awaitsPrefetch && requestTracker.successfulCount("prefetch") === 0) {
-      if (observedAt - startedAt > RESOURCE_SETTLE_TIMEOUT_MILLISECONDS) {
-        return yield* new JavascriptPrefetchReadinessTimeout({
-          href,
-          lastFailure: requestTracker.getFailure("prefetch"),
-          timeoutMilliseconds: RESOURCE_SETTLE_TIMEOUT_MILLISECONDS,
-        });
-      }
-      yield* Effect.sleep(Duration.millis(RESOURCE_POLL_MILLISECONDS));
-      continue;
     }
     if (
       requestTracker.pendingCount === 0 &&
@@ -260,7 +225,6 @@ export const measureRouteJavascript = Effect.fn(
   browser: Browser,
   baseURL: string,
   href: string,
-  awaitsPrefetch: boolean,
   options: { readonly signedIn?: boolean } = {}
 ) {
   const runs = MutableList.make<JavascriptRun>();
@@ -312,8 +276,7 @@ export const measureRouteJavascript = Effect.fn(
                 return yield* readSettledJavascriptRun(
                   page,
                   href,
-                  requestTracker,
-                  awaitsPrefetch
+                  requestTracker
                 );
               })
           );

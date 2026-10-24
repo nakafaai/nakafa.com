@@ -1,0 +1,226 @@
+// @vitest-environment node
+
+import { beforeEach, describe, expect, it } from "@effect/vitest";
+import {
+  ContentKeySchema,
+  CorpusSourcePathSchema,
+  PublicPathSchema,
+} from "@nakafa/aksara-contracts/ids";
+import {
+  AppLocaleSchema,
+  ArtifactLocaleSchema,
+} from "@nakafa/aksara-contracts/locale";
+import {
+  PageKeySchema,
+  PublicPageProjectionSchema,
+} from "@nakafa/aksara-contracts/projection/page";
+import { Array as Arr, Effect } from "effect";
+import {
+  getShellPageNavigation,
+  PageNavigationMissingError,
+  readPageNavigation,
+} from "@/lib/content/page/navigation";
+import { testPageProjection } from "@/test/content-page";
+
+const catalogMock = vi.hoisted(() => vi.fn());
+const previewMock = vi.hoisted(() => vi.fn());
+
+function makeGermanPage({
+  pageKey,
+  publicPath,
+  title,
+}: {
+  pageKey:
+    | "developers"
+    | "imprint"
+    | "privacy-policy"
+    | "security-policy"
+    | "terms-of-service";
+  publicPath: string;
+  title: string;
+}) {
+  return PublicPageProjectionSchema.make({
+    ...testPageProjection,
+    appLocale: AppLocaleSchema.make("de"),
+    artifactLocale: ArtifactLocaleSchema.make("de"),
+    contentKey: ContentKeySchema.make(`pages/${pageKey}`),
+    metadata: {
+      ...testPageProjection.metadata,
+      title,
+    },
+    pageKey: PageKeySchema.make(pageKey),
+    publicPath: PublicPathSchema.make(publicPath),
+    sourcePath: CorpusSourcePathSchema.make(
+      `packages/corpus/pages/${pageKey}/de.mdx`
+    ),
+  });
+}
+
+const germanPages = [
+  makeGermanPage({
+    pageKey: "developers",
+    publicPath: "developers",
+    title: "Entwicklerressourcen",
+  }),
+  makeGermanPage({
+    pageKey: "imprint",
+    publicPath: "imprint",
+    title: "Impressum",
+  }),
+  makeGermanPage({
+    pageKey: "privacy-policy",
+    publicPath: "privacy-policy",
+    title: "Datenschutzrichtlinie",
+  }),
+  makeGermanPage({
+    pageKey: "security-policy",
+    publicPath: "security-policy",
+    title: "Sicherheitsrichtlinie",
+  }),
+  makeGermanPage({
+    pageKey: "terms-of-service",
+    publicPath: "terms-of-service",
+    title: "Nutzungsbedingungen",
+  }),
+];
+
+vi.mock("@/lib/content/page/catalog", () => ({
+  readPublishedPageCatalog: catalogMock,
+}));
+
+vi.mock("@/lib/content/preview/config", () => ({
+  hasPreviewConfig: previewMock,
+}));
+
+vi.mock("@/lib/content/cache", () => ({}));
+
+beforeEach(() => {
+  previewMock.mockReset().mockReturnValue(false);
+  catalogMock.mockReset().mockReturnValue(
+    Effect.succeed({
+      activeReleaseId: "release-pages",
+      projections: [testPageProjection, ...germanPages],
+    })
+  );
+});
+
+describe("signed Page navigation", () => {
+  it.effect(
+    "selects route and title metadata from the locale-owned catalog",
+    () =>
+      Effect.gen(function* () {
+        const navigation = yield* readPageNavigation("de");
+
+        expect(navigation).toEqual({
+          developerItem: {
+            publicPath: "developers",
+            pageKey: "developers",
+            title: "Entwicklerressourcen",
+          },
+          legalItems: [
+            {
+              publicPath: "imprint",
+              pageKey: "imprint",
+              title: "Impressum",
+            },
+            {
+              publicPath: "privacy-policy",
+              pageKey: "privacy-policy",
+              title: "Datenschutzrichtlinie",
+            },
+            {
+              publicPath: "security-policy",
+              pageKey: "security-policy",
+              title: "Sicherheitsrichtlinie",
+            },
+            {
+              publicPath: "terms-of-service",
+              pageKey: "terms-of-service",
+              title: "Nutzungsbedingungen",
+            },
+          ],
+          privacyPolicyPath: "privacy-policy",
+          termsOfServicePath: "terms-of-service",
+        });
+      })
+  );
+
+  it.effect("fails closed when the developer destination is absent", () =>
+    Effect.gen(function* () {
+      catalogMock.mockReturnValue(
+        Effect.succeed({
+          activeReleaseId: "release-pages",
+          projections: Arr.filter(
+            germanPages,
+            ({ pageKey }) => pageKey !== "developers"
+          ),
+        })
+      );
+
+      const failure = yield* readPageNavigation("de").pipe(Effect.flip);
+
+      expect(failure).toEqual(
+        new PageNavigationMissingError({
+          locale: "de",
+          pageKey: PageKeySchema.make("developers"),
+        })
+      );
+    })
+  );
+
+  it.effect("fails closed when a required legal destination is absent", () =>
+    Effect.gen(function* () {
+      for (const pageKey of [
+        "imprint",
+        "privacy-policy",
+        "security-policy",
+        "terms-of-service",
+      ] as const) {
+        catalogMock.mockReturnValue(
+          Effect.succeed({
+            activeReleaseId: "release-pages",
+            projections: Arr.filter(
+              germanPages,
+              (projection) => projection.pageKey !== pageKey
+            ),
+          })
+        );
+
+        const failure = yield* readPageNavigation("de").pipe(Effect.flip);
+
+        expect(failure).toEqual(
+          new PageNavigationMissingError({
+            locale: "de",
+            pageKey: PageKeySchema.make(pageKey),
+          })
+        );
+      }
+    })
+  );
+
+  it.effect(
+    "keeps isolated document previews independent from full Page state",
+    () =>
+      Effect.gen(function* () {
+        previewMock.mockReturnValue(true);
+
+        const navigation = yield* getShellPageNavigation("de");
+
+        expect(navigation).toBeNull();
+        expect(catalogMock).not.toHaveBeenCalled();
+      })
+  );
+
+  it.effect(
+    "loads and caches complete signed navigation for the product shell",
+    () =>
+      Effect.gen(function* () {
+        const navigation = yield* getShellPageNavigation("de");
+
+        expect(navigation).toMatchObject({
+          privacyPolicyPath: "privacy-policy",
+          termsOfServicePath: "terms-of-service",
+        });
+      })
+  );
+});

@@ -3,8 +3,8 @@ import {
   MutationRunner,
   QueryRunner,
 } from "@repo/backend/confect/_generated/services";
+import { polarGateway } from "@repo/backend/confect/billing/polar/live";
 import { deleteLocalCustomer } from "@repo/backend/confect/customers/deletion/billingState";
-import { polarGateway } from "@repo/backend/confect/customers/polar/live";
 import {
   CustomerSyncIoError,
   customerSyncIoError,

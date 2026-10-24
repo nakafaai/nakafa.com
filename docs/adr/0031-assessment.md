@@ -31,7 +31,7 @@ that the model must change:
   `Mermaid` in 12, and `UnitCircle` in 3. This change checked those counts with
   `git grep -l -F` on the tags. The per-set components, `Set<N>Question<M>` and
   their kinds, appear in 87 files with 93 uses, counted with `git grep`. Their
-  definitions are in `apps/www/lib/content/renderer/client/snbt/general`.
+  definitions are in `apps/www/src/lib/content/renderer/client/snbt/general`.
   `packages/contracts/src` of the Aksara repository holds no image or media type
   schema.
 - A reading passage is not an entity. Each item copies it into its body, and
@@ -49,11 +49,11 @@ that the model must change:
   (`packages/backend/confect/tryouts/runtime/estimate.ts`).
 - Multiple choice and category answers are all or nothing in code
   (`packages/backend/confect/response/evaluation.ts`).
-- The player (`apps/www/components/player`) has no calculator, formula sheet,
+- The player (`apps/www/src/components/player`) has no calculator, formula sheet,
   option elimination, highlighter, notes, line reader, or accommodations. It
   shows a section as a list or one item at a time, and a learner can end a
   section before its time runs out, from a confirmation dialog
-  (`apps/www/components/player/finish.tsx`).
+  (`apps/www/src/components/player/finish.tsx`).
 - `packages/backend/confect/response` rewrites the option, category, statement,
   and rubric shapes that the Aksara contract already holds. One shape then has
   two sources of truth.
@@ -359,9 +359,9 @@ has exactly one owner.
 | `@convex-dev/presence` | Not installed. Planned for wave B. |
 | The other `confect/assessment` modules | Planned |
 | Assessment document and its compiler | Planned, program wave A |
-| `apps/www/components/player` (list or one item, navigator, keys), bound to try-outs | Live. A School binding is planned for wave B. |
+| `apps/www/src/components/player` (list or one item, navigator, keys), bound to try-outs | Live. A School binding is planned for wave B. |
 | Player tool registry | Planned, program wave B |
 | Grading queue and Nina suggestions | Planned, program wave B, after K6 passes |
-| School exam drafts: the tables `exams` and `examQuestions` and the functions of `confect/exams`, with single-answer choice questions only | In code and tested in convex-test, not live. A draft stays a draft in these two tables until scheduling freezes it (the CBT lane). An answer or a key whose complete row reaches one document's limit is refused as `DocumentTooLarge` before the write, the same rule as for an item version above. Each later question template adds its member to `QuestionTemplate` in `confect/exams/question.ts`. |
+| School exam drafts: the tables `exams` and `examQuestions` and the functions of `confect/exams`, with single-answer choice questions only | In code and tested in convex-test, not live. A draft stays a draft in these two tables until scheduling freezes it (the CBT lane): the first schedule sets `exams.frozenAt` in its transaction, and from then on every question change and every step pushed to a question's prompt document is refused as `ExamFrozen`, so each result scores the paper its students sat. The editor of a frozen exam opens read-only and says why. An answer or a key whose complete row reaches one document's limit is refused as `DocumentTooLarge` before the write, the same rule as for an item version above. Each later question template adds its member to `QuestionTemplate` in `confect/exams/question.ts`. |
 | The answer-key fit check of a school exam (`keyFits` in `confect/exams/key.ts`) | In code and tested. `@nakafa/aksara-contracts` 0.49.0 has no check that a key names this question's options (`hasPlacedInteractions`, `hasFittingRules`, and `ItemKeySchema` do not cover it), so the exam functions carry one. |
 | The school exam editor page and its client mount of the sync loop | Not built. The first caller of `confect/exams` and of the document functions of ADR 0028. |

@@ -41,7 +41,7 @@ export const MATERIAL_IDENTITY = {
   releaseId: TEST_RELEASE_ID,
   sequence: 1,
 } satisfies TestIdentity;
-const NEXT_MATERIAL_IDENTITY = {
+const FOLLOWING_MATERIAL_IDENTITY = {
   manifestHash: Sha256HashSchema.make(`sha256:${"3".repeat(64)}`),
   releaseId: ReleaseIdSchema.make("release-next"),
   sequence: 2,
@@ -140,7 +140,7 @@ export const advanceMaterialCatalog = Effect.fn("TestMaterial.advanceCatalog")(
     const writer = yield* DatabaseWriter;
     yield* Effect.promise(() =>
       insertZeroRelease(ctx, {
-        ...NEXT_MATERIAL_IDENTITY,
+        ...FOLLOWING_MATERIAL_IDENTITY,
         activeAppLocales: ACTIVE_APP_LOCALE_CODES,
         base: MATERIAL_IDENTITY,
         ownership: { base: ["material"], result: ["material"] },
@@ -150,12 +150,12 @@ export const advanceMaterialCatalog = Effect.fn("TestMaterial.advanceCatalog")(
     );
     const state = yield* reader.table("contentState").get("by_key", "primary");
     yield* writer.table("contentState").patch(state._id, {
-      activeManifestHash: NEXT_MATERIAL_IDENTITY.manifestHash,
-      activeReleaseId: NEXT_MATERIAL_IDENTITY.releaseId,
-      activeSequence: NEXT_MATERIAL_IDENTITY.sequence,
-      materialManifestHash: NEXT_MATERIAL_IDENTITY.manifestHash,
-      materialReleaseId: NEXT_MATERIAL_IDENTITY.releaseId,
-      materialSequence: NEXT_MATERIAL_IDENTITY.sequence,
+      activeManifestHash: FOLLOWING_MATERIAL_IDENTITY.manifestHash,
+      activeReleaseId: FOLLOWING_MATERIAL_IDENTITY.releaseId,
+      activeSequence: FOLLOWING_MATERIAL_IDENTITY.sequence,
+      materialManifestHash: FOLLOWING_MATERIAL_IDENTITY.manifestHash,
+      materialReleaseId: FOLLOWING_MATERIAL_IDENTITY.releaseId,
+      materialSequence: FOLLOWING_MATERIAL_IDENTITY.sequence,
       nextSequence: 3,
     });
   }

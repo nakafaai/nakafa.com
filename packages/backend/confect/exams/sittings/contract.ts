@@ -10,6 +10,7 @@ import {
   SignalKind,
   SittingState,
 } from "@repo/backend/confect/exams/sittings/schema";
+import { CohortName } from "@repo/backend/confect/tenancy/cohort";
 import { TimeZone } from "@repo/backend/confect/tenancy/locale";
 import { PersonName } from "@repo/backend/confect/tenancy/schema";
 import { MascotCode } from "@repo/mascot/code";
@@ -30,6 +31,8 @@ export const EnterOutcome = Schema.Union([
     attempt: Id("examAttempts"),
     deadline: Schema.Finite,
     outcome: Schema.Literal("admitted"),
+    /** The server's clock when it admitted the device, so the screen can count down on server time. */
+    serverNow: Schema.Finite,
     state: AttemptState,
   }),
   Schema.Struct({
@@ -58,11 +61,26 @@ export const SittingView = Schema.Struct({
   unitId: Id("tenantUnits"),
 });
 
-/** One attempt on the dashboard: its student, its state and deadline, and whether the student is away. */
+/**
+ * One student the sitting expects, who has not entered it yet: the seat that the proctor sees before
+ * the student's attempt exists.
+ */
+export const ExpectedSeat = Schema.Struct({
+  id: Id("tenantPeople"),
+  mascot: Schema.NullOr(MascotCode),
+  name: PersonName,
+});
+
+/**
+ * One attempt on the dashboard: its student, its state and deadline, whether the student is away, and
+ * the time of the student's start or latest signal. The latest answer is read per seat, through
+ * `lastAnswer`, so the page re-runs for signals only.
+ */
 const DashboardAttempt = Schema.Struct({
   away: Schema.Boolean,
   deadline: Schema.Finite,
   id: Id("examAttempts"),
+  lastActiveAt: Schema.Finite,
   latestSignal: Schema.NullOr(
     Schema.Struct({ at: Schema.Finite, kind: SignalKind })
   ),
@@ -73,8 +91,9 @@ const DashboardAttempt = Schema.Struct({
 
 /**
  * One page of a sitting's attempts, with the sitting itself. `can` lists the sitting actions
- * that the caller may take, and `token` is the sitting's token, which only a proctor sees
- * (`null` for a caller who may only view the sitting).
+ * that the caller may take, `canViewResults` tells whether the caller may read the sitting's
+ * results, and `token` is the sitting's token, which only a proctor sees (`null` for a caller
+ * who may only view the sitting).
  */
 export const DashboardView = Schema.Struct({
   attempts: Schema.Struct({
@@ -83,8 +102,15 @@ export const DashboardView = Schema.Struct({
     page: Schema.mutable(Schema.Array(DashboardAttempt)),
   }),
   can: Schema.Array(SittingAction),
+  canViewResults: Schema.Boolean,
   sitting: SittingView,
   token: Schema.NullOr(Schema.String),
+});
+
+/** One active cohort that a sitting of its unit may run for, as the scheduling dialog lists it. */
+export const ScheduleCohort = Schema.Struct({
+  id: Id("tenantCohorts"),
+  name: CohortName,
 });
 
 /** What scheduling returns: the sitting, and its token, which only the proctor sees. */
@@ -112,6 +138,18 @@ export const HeldAttempt = Schema.Struct({
 export const StudentSittingView = Schema.Struct({
   attempt: Schema.NullOr(HeldAttempt),
   sitting: SittingView,
+});
+
+/**
+ * One sitting in a student's list: the sitting as `SittingView` shows it, the student's own attempt and its
+ * state in it (both `null` before entry), and whether the teacher has released its results. A closed sitting
+ * stays in the list while the student's attempt in it is closing or submitted, so the results stay reachable.
+ */
+export const StudentSittingRow = Schema.Struct({
+  ...SittingView.fields,
+  attempt: Schema.NullOr(AttemptState),
+  attemptId: Schema.NullOr(Id("examAttempts")),
+  resultsReleased: Schema.Boolean,
 });
 
 /** One integrity signal of an attempt, as a proctor reads it, newest first in its pages. */

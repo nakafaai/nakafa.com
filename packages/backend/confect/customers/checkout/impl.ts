@@ -1,4 +1,5 @@
 import { isAccountDeletionPending } from "@repo/backend/confect/auth/deletion/state";
+import { products } from "@repo/backend/confect/billing/polar/products";
 import { getPolarCheckoutLocale } from "@repo/backend/confect/customers/checkout/localization";
 import {
   type CheckoutAdmission,
@@ -8,7 +9,6 @@ import {
   InvalidCheckoutSuccessUrl,
   invalidCheckoutSuccessUrlCode,
 } from "@repo/backend/confect/customers/checkout/spec";
-import { products } from "@repo/backend/confect/customers/polar/products";
 import { readSiteUrl } from "@repo/backend/confect/site/config";
 import { Effect } from "effect";
 

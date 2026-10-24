@@ -223,15 +223,18 @@ Workspace account.
 ### As built: login cards and the password store
 
 `confect/identity` builds the login card, the school login, the password store,
-and the placeholder address. The school host, its sign-in endpoint with the
-Workspace domain check, and its card page are not built yet, so the username
-sign-in stays closed on every host.
+and the placeholder address. The school host's username sign-in is built on that
+host alone (`auth/login`), and the card code is typed on the school's entry page
+for now, not yet on the card page of `/kartu`. The Workspace domain check is not
+built yet.
 
 - **Password store.** `emailAndPassword` is enabled only as the store of school
   passwords, with `disableSignUp`, so Better Auth refuses a public sign-up even
-  from server code. Sign-in with a password is closed on every host: the router
-  answers 404 (`disabledPaths`), and server code gets the same refusal from
-  `auth/routes`, because `auth.api` runs an endpoint without the router's check.
+  from server code. Sign-in with an email and a password is closed on every host:
+  the router answers 404 (`disabledPaths`), and server code gets the same refusal
+  from `auth/routes`, because `auth.api` runs an endpoint without the router's
+  check. Sign-in with a school username is served on the school host alone, and a
+  server call to it is refused, because a server call names no host.
   The minimum length is Better Auth's default, 8 (`context/create-context`). A
   password reset ends the sessions it replaces (`revokeSessionsOnPasswordReset`).
 - **Username.** The `username` plugin holds the global username of the account,
@@ -239,9 +242,11 @@ sign-in stays closed on every host.
   `users.username` are one value. A rename changes both in one transaction
   (`auth/username`, which changes only an account that holds a Better Auth
   username). `update-user` refuses a username field (`usernameUpdatesDisabled`),
-  so the app's rename is the only writer. `/sign-in/username` and
-  `/is-username-available` stay closed. The second one would tell any visitor
-  which usernames exist.
+  so the app's rename is the only writer. `/is-username-available` stays closed,
+  because it would tell any visitor which usernames exist. `/sign-in/username`
+  answers on a school host only: the school login name it reads maps to the
+  account's username (`usernameOf`), and a name that is not a login of that school
+  is refused with the same error as a wrong password.
 - **Login name.** A school login name is 3 to 32 characters of lowercase letters,
   digits, dots, underscores, and hyphens, unique within its school. It refuses
   the names that could pass for Nakafa, the one list in `users/reserved.ts` that
@@ -263,8 +268,9 @@ sign-in stays closed on every host.
   for one reads as `invalid`.
 - **Redeem.** `identity/cards:redeem` is one mutation, in this order: it
   refuses a request that carries a signed-in identity as `invalid` before any
-  limit is spent, counts the attempt against the device limit, reads the code,
-  reads the Person and refuses one that is removed or that the card rule
+  limit is spent, counts the attempt against the device limit, reads the code and
+  the typed login name, which must be the card's own (`invalid`, before `used`
+  and `expired`), reads the Person and refuses one that is removed or that the card rule
   refuses (the Owner or Admin role, or an account that a card did not make) as
   `invalid` whatever the card says, opens the card on the school's host (`used`,
   then `expired`), refuses a password outside Better Auth's length before any
@@ -286,6 +292,14 @@ sign-in stays closed on every host.
   average. That figure is computed from the alphabet, not measured. A bucket shared
   by every device would add no protection against that guessing, and it would let
   one person block another's card, so there is no limit per code prefix.
+- **Username attempts.** Per school login, on the school host: ten sign-in attempts
+  at once, then ten more every 15 minutes. The count belongs to the account that the
+  login names, so one login's attempts never refuse another login. An attempt takes
+  one before the password is checked, so parallel guesses cannot all pass a limit
+  that none of them has reached. A successful sign-in clears the count, so a success
+  never counts against the login. A refused attempt answers the same 401 as a wrong
+  password, whether or not the limit refused it, so the answer reveals nothing about
+  a login name. These are design choices, not measurements.
 - **Placeholder address.** An account made from a school login holds
   `<random key>@login.nakafa.invalid`, where the key is a random UUID drawn for that
   account, so the address names no one. The Convex adapter writes the Better Auth
@@ -321,7 +335,7 @@ never a second one.
   `@repo/contents/route/root`, every namespace of a public route surface, and
   the few roots that answer outside the route tree) or could pass for Nakafa,
   its people, or its help (`users/reserved.ts`). A test reads the route tree of
-  `apps/www/app` and fails when a root that could be a username is not
+  `apps/www/src` and fails when a root that could be a username is not
   reserved.
 - A new account gets its username in the transaction that makes the row: the
   letters and digits of its name, then the name with 2 up to 9, then the name
@@ -358,10 +372,10 @@ nothing. So no profile is public yet.
   answer only a signed-in account: a visitor's check is refused with
   `SessionRequired`.)
   The proxy decides before the page renders (`readProfileRefusal` in
-  `apps/www/lib/routing/public/profile.ts`): it reads the signed-in account and
+  `apps/www/src/lib/routing/public/profile.ts`): it reads the signed-in account and
   answers any other request with the app's not-found page and a 404 status, so
-  no stream starts that would have to end as not found. `readProfile` in
-  `apps/www/lib/profile/server.ts` reads the same account for the page and
+  no stream starts that would have to end as not found. `readProfileOrNotFound` in
+  `apps/www/src/lib/account/access.server.ts` reads the same account for the page and
   repeats the rule. The backend holds no public lookup of a profile by username.
 - A comment shows no link to the profile of its author.
 - The retired address `/{locale}/user/{id}` and its `chat` tab answer 308 to the

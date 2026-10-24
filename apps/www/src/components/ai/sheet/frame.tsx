@@ -1,0 +1,182 @@
+"use client";
+
+import nina from "@repo/backend/confect/_generated/refs/nina";
+import { Sheet, SheetContent } from "@repo/design-system/components/ui/sheet";
+import { useResizable } from "@repo/design-system/hooks/use-resizable";
+import { ClientOnly } from "@tanstack/react-router";
+import { cn } from "cn";
+import { Array as Arr, Option } from "effect";
+import { Activity, lazy, Suspense, useRef, useState } from "react";
+import { useTranslations } from "use-intl";
+import { readChatArgs } from "@/components/ai/chat/access";
+import { useAi } from "@/components/ai/context";
+import { AiSheetHeader } from "@/components/ai/sheet/header";
+import { Authenticated, Unauthenticated } from "@/components/auth/gate";
+import { ConvexIsland } from "@/components/providers/island";
+
+const MIN_WIDTH = 384;
+const MAX_WIDTH = 672;
+
+const SheetNew = lazy(() =>
+  import("@/components/ai/sheet/new").then((module) => ({
+    default: module.SheetNew,
+  }))
+);
+
+const SheetConversation = lazy(() =>
+  import("@/components/ai/sheet/conversation").then((module) => ({
+    default: module.SheetConversation,
+  }))
+);
+
+// The boundary holds the failure card, whose sign-in chain only a signed-out
+// visitor who cannot read a chat needs. It loads with the body, so the shell's
+// first JavaScript does not carry it on every page. Its own Suspense keeps the
+// route on screen while the chunk loads.
+const ChatBoundary = lazy(() =>
+  import("@/components/ai/chat/boundary").then((module) => ({
+    default: module.ChatBoundary,
+  }))
+);
+
+/**
+ * Nina's resizable side sheet. The frame is part of the app shell and stays
+ * mounted while closed, so a press opens it in the same frame. Its content
+ * sits in a hidden Activity: once the reader shows intent, React renders the
+ * body ahead of the press, without its effects, so a warmed sheet only has to
+ * be revealed. A sheet opened cold shows its frame at once and its body when
+ * the body's code arrives.
+ */
+export function AiSheet() {
+  const t = useTranslations("Ai");
+  const open = useAi((state) => state.open);
+  const setOpen = useAi((state) => state.setOpen);
+  const warmed = useAi((state) => state.warmed);
+  const content = useRef<HTMLDivElement>(null);
+  // True from the end of the opening slide to the end of the closing one, so
+  // the content stays in the sheet while it slides out.
+  const [settledOpen, setSettledOpen] = useState(false);
+
+  const { width, isResizing, resizerProps, setWidth } = useResizable({
+    initialWidth: MIN_WIDTH,
+    maxWidth: MAX_WIDTH,
+    minWidth: MIN_WIDTH,
+  });
+  const expanded = width === MAX_WIDTH;
+
+  /** Toggles Nina sheet between compact and expanded widths. */
+  function handleResizeToggle() {
+    setWidth(expanded ? MIN_WIDTH : MAX_WIDTH);
+  }
+
+  /**
+   * Opening lands in the composer that is showing, not on a header button. The
+   * body holds two composers once a chat is open, and one of them is hidden.
+   */
+  function focusComposer() {
+    return Option.getOrElse(
+      Arr.findFirst(
+        content.current?.querySelectorAll("textarea") ?? [],
+        (composer) => composer.getClientRects().length > 0
+      ),
+      () => true
+    );
+  }
+
+  return (
+    <Sheet
+      disablePointerDismissal
+      modal={false}
+      onOpenChange={setOpen}
+      onOpenChangeComplete={setSettledOpen}
+      open={open}
+    >
+      <SheetContent
+        className={cn(
+          "w-full max-w-none gap-0 border-l-0 sm:w-(--nina-width) sm:max-w-none sm:border-l",
+          !!isResizing && "transition-none"
+        )}
+        initialFocus={focusComposer}
+        keepMounted
+        showCloseButton={false}
+        style={{ "--nina-width": `${width}px` }}
+      >
+        <Activity mode={open || settledOpen ? "visible" : "hidden"}>
+          <button
+            aria-label={t("resize")}
+            className={cn(
+              "absolute top-0 bottom-0 left-0 z-10 hidden w-1 cursor-col-resize outline-0 ring-0 transition-colors hover:bg-ring focus-visible:bg-ring sm:block",
+              !!isResizing && "bg-ring"
+            )}
+            onKeyDown={resizerProps.onKeyDown}
+            onMouseDown={resizerProps.onMouseDown}
+            type="button"
+          />
+          <AiSheetHeader
+            expanded={expanded}
+            onResizeToggle={handleResizeToggle}
+          />
+          <div className="flex min-h-0 flex-1 flex-col" ref={content}>
+            {warmed ? <SheetBody /> : null}
+          </div>
+        </Activity>
+      </SheetContent>
+    </Sheet>
+  );
+}
+
+/**
+ * The new-chat body, or the open chat once the learner has one. A chat that
+ * could not open shows its failure card, and the learner picks another chat or
+ * starts a new one. Each chat gets a boundary of its own, because `resetKeys`
+ * cannot reset this one: a boundary reads them in `componentDidUpdate`, and
+ * React runs no `componentDidUpdate` in an update that hides its Activity,
+ * which is the update that forgets the chat. The boundary kept its error, and
+ * the sheet showed nothing for every chat after it.
+ */
+function SheetBody() {
+  const activeChatId = useAi((state) => state.activeChatId);
+  // The open chat is read as SheetConversation reads it, with no share token.
+  const read = activeChatId
+    ? {
+        args: readChatArgs(activeChatId, undefined),
+        ref: nina.conversation.get,
+      }
+    : undefined;
+
+  return (
+    <>
+      <Activity mode={activeChatId ? "hidden" : "visible"}>
+        <Suspense fallback={null}>
+          <ClientOnly fallback={null}>
+            <SheetNew />
+          </ClientOnly>
+        </Suspense>
+      </Activity>
+      <Activity mode={activeChatId ? "visible" : "hidden"}>
+        <ConvexIsland>
+          <Suspense fallback={null}>
+            <ChatBoundary key={activeChatId} read={read}>
+              <Authenticated>
+                {!!activeChatId && (
+                  <Suspense fallback={null}>
+                    <ClientOnly fallback={null}>
+                      <SheetConversation chatId={activeChatId} />
+                    </ClientOnly>
+                  </Suspense>
+                )}
+              </Authenticated>
+              <Unauthenticated>
+                <Suspense fallback={null}>
+                  <ClientOnly fallback={null}>
+                    <SheetNew />
+                  </ClientOnly>
+                </Suspense>
+              </Unauthenticated>
+            </ChatBoundary>
+          </Suspense>
+        </ConvexIsland>
+      </Activity>
+    </>
+  );
+}

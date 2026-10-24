@@ -1,5 +1,3 @@
-"use client";
-
 import type { TRIANGLE_SIDES } from "@repo/design-system/components/three/triangle/sides";
 import { createContext, type ReactNode, use } from "react";
 

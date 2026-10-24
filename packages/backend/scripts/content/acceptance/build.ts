@@ -2,7 +2,7 @@ import { withAnalyticsSink } from "@repo/backend/scripts/content/acceptance/anal
 import { acceptanceRuntimeError } from "@repo/backend/scripts/content/acceptance/error";
 import { leaseLocalRuntime } from "@repo/backend/scripts/content/acceptance/lease";
 import {
-  discardSignedResponses,
+  ACCEPTANCE_ORIGIN,
   initializeLocalRuntime,
   leaseReservedLocalRuntime,
   localApplicationEnvironment,
@@ -48,8 +48,18 @@ export const prepareAcceptance = Effect.fn("acceptance.prepare")(function* (
  */
 const applicationCommands = {
   build: ["nice", "-n", "10", "pnpm", "exec", "turbo", "run", "build"],
-  start: ["pnpm", "run", "start"],
+  start: ["node", "apps/www/.output/server/index.mjs"],
 } as const;
+
+/**
+ * The served app takes the port that the browser suites open, and never a port
+ * that a developer's Nitro environment sets. Portless is for developer servers,
+ * so the acceptance start serves the Nitro output directly.
+ */
+const servedPort = {
+  NITRO_PORT: undefined,
+  PORT: new URL(ACCEPTANCE_ORIGIN).port,
+};
 
 /** Starts only the owned native database for a normal app build or start. */
 export const runAcceptance = Effect.fn("acceptance.run")(function* (
@@ -64,18 +74,14 @@ export const runAcceptance = Effect.fn("acceptance.run")(function* (
     );
   }
   const runtime = reserved.value;
+  const environment = localApplicationEnvironment(runtime);
   const command = runBuildCommand(
     root,
     [...applicationCommands[operation], ...args],
-    localApplicationEnvironment(runtime)
+    operation === "start" ? { ...environment, ...servedPort } : environment
   );
   if (operation === "build") {
-    // The cache is cleared once the backend is ready, right before the build
-    // reads it, so nothing written while the backend started can survive.
-    return yield* withLocalBackend(
-      runtime,
-      discardSignedResponses(root).pipe(Effect.andThen(command))
-    );
+    return yield* withLocalBackend(runtime, command);
   }
   // The served app proxies analytics to the stand-in reserved at prepare. It
   // claims its port first, so an occupied port fails before Convex starts.

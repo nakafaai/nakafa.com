@@ -10,7 +10,11 @@ import {
   ExamTitle,
   ExamView,
 } from "@repo/backend/confect/exams/exam";
-import { ScheduleResult } from "@repo/backend/confect/exams/sittings/contract";
+import { HomeView } from "@repo/backend/confect/exams/home/contract";
+import {
+  ScheduleCohort,
+  ScheduleResult,
+} from "@repo/backend/confect/exams/sittings/contract";
 import {
   KeysMissing,
   ScheduleInvalid,
@@ -54,6 +58,14 @@ export default GroupSpec.make()
   )
   .addFunction(
     FunctionSpec.publicQuery({
+      name: "home",
+      args: () => ({ slug: TenantSlug }),
+      returns: () => HomeView,
+      error: () => Schema.Never,
+    })
+  )
+  .addFunction(
+    FunctionSpec.publicQuery({
       name: "open",
       args: () => ({ examId: Id("exams"), slug: TenantSlug }),
       returns: () => ExamView,
@@ -86,4 +98,12 @@ export default GroupSpec.make()
       returns: () => ScheduleResult,
       error: () => Schema.Union([AccessDenied, KeysMissing, ScheduleInvalid]),
     }).middleware(ExamAccess, { action: "exam.edit", arg: "examId" })
+  )
+  .addFunction(
+    FunctionSpec.publicQuery({
+      name: "cohorts",
+      args: () => ({ slug: TenantSlug, unitId: Id("tenantUnits") }),
+      returns: () => Schema.Array(ScheduleCohort),
+      error: () => AccessDenied,
+    })
   );

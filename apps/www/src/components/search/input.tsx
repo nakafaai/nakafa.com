@@ -1,0 +1,59 @@
+import { Cancel01Icon, Search02Icon } from "@hugeicons/core-free-icons";
+import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
+} from "@repo/design-system/components/ui/input-group";
+import { cn } from "cn";
+import { useQueryStates } from "nuqs";
+import { useTranslations } from "use-intl";
+import { searchParsers } from "@/lib/nuqs/search";
+import { useSearch } from "@/lib/search/context";
+
+export function InputSearch() {
+  const t = useTranslations("Utils");
+  const setQuery = useSearch((state) => state.setQuery);
+
+  const [{ q }, setSearch] = useQueryStates(searchParsers);
+
+  const setValue = (value: string) => {
+    setSearch({ q: value });
+    setQuery(value);
+  };
+
+  return (
+    <div className="sticky top-20 lg:top-4">
+      <Field>
+        <FieldLabel className="sr-only" htmlFor="search-input">
+          Search
+        </FieldLabel>
+        <InputGroup className="bg-background">
+          <InputGroupInput
+            id="search-input"
+            onChange={(e) => setValue(e.target.value)}
+            placeholder={t("search-bar-placeholder")}
+            value={q}
+          />
+          <InputGroupAddon align="inline-start">
+            <HugeIcons className="size-4" icon={Search02Icon} />
+          </InputGroupAddon>
+          <InputGroupAddon
+            align="inline-end"
+            className={cn("opacity-0", q && "opacity-100")}
+          >
+            <InputGroupButton
+              aria-label={t("clear-search")}
+              onClick={() => setValue("")}
+              size="icon-xs"
+            >
+              <HugeIcons className="size-4" icon={Cancel01Icon} />
+            </InputGroupButton>
+          </InputGroupAddon>
+        </InputGroup>
+      </Field>
+    </div>
+  );
+}

@@ -1,4 +1,4 @@
-import "server-only";
+import "@tanstack/react-start/server-only";
 
 import { keys } from "@repo/analytics/keys";
 import {
@@ -48,7 +48,7 @@ function getServerAnalytics() {
   }
 
   const runtimeKeys = getAnalyticsKeys();
-  serverAnalytics = new PostHog(runtimeKeys.NEXT_PUBLIC_POSTHOG_KEY, {
+  serverAnalytics = new PostHog(runtimeKeys.VITE_POSTHOG_KEY, {
     disableGeoip: true,
     disableSurveys: true,
     enableExceptionAutocapture: false,

@@ -1,6 +1,7 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
+import { TenantAccess } from "@repo/backend/confect/access/tenant";
 import RequireMember from "@repo/backend/confect/middleware/member.spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
 import { PeriodAccess } from "@repo/backend/confect/tenancy/access";
@@ -70,6 +71,14 @@ export default GroupSpec.make()
       returns: () => PeriodView,
       error: () => Schema.Union([AccessDenied, PeriodNotActive]),
     }).middleware(PeriodAccess, { action: "period.manage", arg: "periodId" })
+  )
+  .addFunction(
+    FunctionSpec.publicMutation({
+      name: "restore",
+      args: () => ({ periodId: Id("tenantPeriods"), slug: TenantSlug }),
+      returns: () => PeriodView,
+      error: () => Schema.Union([AccessDenied, PeriodActive]),
+    }).middleware(TenantAccess, { action: "tenant.manage" })
   )
   .addFunction(
     FunctionSpec.publicMutation({

@@ -1,5 +1,3 @@
-"use client";
-
 import { Line } from "@react-three/drei";
 import type { BiologyScenePoint } from "@repo/design-system/components/contents/biology/data";
 import { Array as Arr } from "effect";

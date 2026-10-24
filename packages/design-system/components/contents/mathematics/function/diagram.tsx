@@ -1,5 +1,3 @@
-"use client";
-
 import { createCircleOutlinePoints } from "@repo/design-system/components/contents/mathematics/circle";
 import {
   type RelationMapping,

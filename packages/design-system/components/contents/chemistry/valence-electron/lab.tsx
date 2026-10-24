@@ -1,5 +1,3 @@
-"use client";
-
 import { ShellModelCanvas } from "@repo/design-system/components/contents/chemistry/shell-model/canvas";
 import { createShellModelSampleStore } from "@repo/design-system/components/contents/chemistry/shell-model/store";
 import {
@@ -25,9 +23,9 @@ import {
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
 import { Array as Arr, Result } from "effect";
-import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { useState } from "react";
+import { useTranslations } from "use-intl";
 import { useStore } from "zustand";
 
 interface ValenceElectronLabProps {

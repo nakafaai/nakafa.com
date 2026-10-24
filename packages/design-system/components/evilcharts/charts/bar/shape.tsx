@@ -1,5 +1,3 @@
-"use client";
-
 import type { BarVariant } from "@repo/design-system/components/evilcharts/charts/bar/paint";
 import type { BarAnimationType } from "@repo/design-system/components/evilcharts/charts/bar-chart";
 import {

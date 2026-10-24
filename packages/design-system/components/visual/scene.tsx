@@ -1,5 +1,3 @@
-"use client";
-
 import {
   CenterFocusIcon,
   PauseIcon,
@@ -12,8 +10,8 @@ import {
   VisualCardActions,
   VisualCardFullscreen,
 } from "@repo/design-system/components/visual/card";
-import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
+import { useTranslations } from "use-intl";
 
 /**
  * Starts the scene moving by itself, or stops it. It has the look of every other

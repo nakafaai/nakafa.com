@@ -61,6 +61,7 @@
     "@tiptap/extension-list": "3.32.0",
     "@tiptap/extension-subscript": "3.32.0",
     "@tiptap/extension-superscript": "3.32.0",
+    "@tiptap/extension-table": "3.32.0",
     "@tiptap/extension-underline": "3.32.0",
     "@tiptap/starter-kit": "3.32.0",
     "@vercel/config": "catalog:",
@@ -78,7 +79,6 @@
     "react-email": "catalog:",
     "remark-mdx": "catalog:",
     "remark-parse": "catalog:",
-    "server-only": "catalog:",
     "strip-ansi": "^7.2.0",
     "unified": "catalog:"
   },

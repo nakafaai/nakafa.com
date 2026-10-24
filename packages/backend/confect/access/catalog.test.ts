@@ -87,6 +87,7 @@ describe("access/catalog", () => {
       "document",
       "exam",
       "sitting",
+      "result",
     ]);
     expect(Schema.is(ObjectRef)({ id: "id", kind: "person" })).toBe(true);
     expect(Schema.is(ObjectRef)({ id: "id", kind: "invoice" })).toBe(false);
@@ -141,6 +142,7 @@ describe("access/catalog", () => {
           "tenant.locale.set",
           "tenant.logo.removed",
           "tenant.logo.set",
+          "tenant.name.set",
           "tenant.policy.set",
           "unit.created",
           "unit.locale.set",
@@ -162,13 +164,16 @@ describe("access/catalog", () => {
           "card.issued",
           "card.reissued",
           "card.redeemed",
+          "card.printed",
           "period.created",
           "period.opened",
           "period.archived",
+          "period.restored",
           "period.rename",
           "cohort.created",
           "cohort.renamed",
           "cohort.archived",
+          "cohort.restored",
           "assignment.created",
           "assignment.removed",
           "promotion.applied",
@@ -211,7 +216,9 @@ describe("access/catalog", () => {
           "sitting.changeToken",
           "sitting.allowDevice",
           "sitting.finish",
+          "sitting.cancel",
           "sitting.close",
+          "exam.results.released",
         ],
         Order.String
       )
@@ -282,6 +289,7 @@ describe("access/catalog", () => {
       "visit.approve",
       "document.edit",
       "exam.edit",
+      "exam.rooms",
       "exam.view",
     ]);
   });

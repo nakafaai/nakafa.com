@@ -270,7 +270,7 @@ describe("editor/document snapshot", () => {
     () =>
       Effect.gen(function* () {
         const text = encodeJsonText({
-          content: [{ attrs: { latex: "x" }, type: "mathBlock" }],
+          content: [{ attrs: { interaction: "pilihan" }, type: "interaction" }],
           type: "doc",
         });
         // The contract accepts this text, so the refusal below comes from the types the editor reads.

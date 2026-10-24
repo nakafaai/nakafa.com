@@ -1,5 +1,3 @@
-"use client";
-
 import type { BarVariant } from "@repo/design-system/components/evilcharts/charts/composed/bars";
 import type { ComposedAnimationType } from "@repo/design-system/components/evilcharts/charts/composed-chart";
 import { getChartColorVariable } from "@repo/design-system/components/evilcharts/ui/chart-config";

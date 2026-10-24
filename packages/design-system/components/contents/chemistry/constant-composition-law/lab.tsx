@@ -1,5 +1,3 @@
-"use client";
-
 import { useThree } from "@react-three/fiber";
 import {
   CONSTANT_COMPOSITION_MODE_IDS,
@@ -30,11 +28,11 @@ import {
 } from "@repo/design-system/components/visual/card";
 import { VisualFact } from "@repo/design-system/components/visual/fact";
 import { VisualCardSceneActions } from "@repo/design-system/components/visual/scene";
+import { useTheme } from "@repo/design-system/providers/theme";
 import { Array as Arr } from "effect";
-import { useTranslations } from "next-intl";
-import { useTheme } from "next-themes";
 import type { ReactNode } from "react";
 import { Suspense, useState } from "react";
+import { useTranslations } from "use-intl";
 
 const NARROW_CANVAS_ASPECT_RATIO = 1.28;
 
@@ -68,7 +66,7 @@ export function ConstantCompositionLab({
   description,
   labels,
 }: ConstantCompositionLabProps) {
-  const { resolvedTheme } = useTheme();
+  const resolvedTheme = useTheme((state) => state.resolvedTheme);
   const [selectedModeId, setSelectedModeId] =
     useState<ConstantCompositionModeId>(EXACT_RATIO_MODE_ID);
   const selectedLabels = labels.modes[selectedModeId];

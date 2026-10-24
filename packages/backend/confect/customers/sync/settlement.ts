@@ -1,5 +1,5 @@
+import type { PolarDeleteError } from "@repo/backend/confect/billing/polar/spec";
 import type { CustomerUpsertResult } from "@repo/backend/confect/customers/mutations/spec";
-import type { PolarDeleteError } from "@repo/backend/confect/customers/polar/spec";
 import {
   type CustomerSyncIoError,
   UserNotFound,

@@ -2,6 +2,7 @@ import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { Exam } from "@repo/backend/confect/exams/access";
 import { examAccess } from "@repo/backend/confect/exams/authority";
+import { requireUnfrozen } from "@repo/backend/confect/exams/freeze";
 import { answerQuestion } from "@repo/backend/confect/exams/questions/answer";
 import { copyQuestion } from "@repo/backend/confect/exams/questions/copy";
 import { moveQuestion } from "@repo/backend/confect/exams/questions/move";
@@ -23,6 +24,7 @@ const add = FunctionImpl.make(
   "add",
   Effect.fn("exams.questions.add")(function* ({ after }) {
     const exam = yield* Exam;
+    yield* requireUnfrozen(exam);
     const questionId = yield* addQuestion(exam, after);
     return yield* readQuestion(questionId);
   })
@@ -35,6 +37,7 @@ const copy = FunctionImpl.make(
   "copy",
   Effect.fn("exams.questions.copy")(function* ({ questionId }) {
     const exam = yield* Exam;
+    yield* requireUnfrozen(exam);
     const original = yield* questionOf(exam, questionId);
     const copied = yield* copyQuestion(exam, original);
     return yield* readQuestion(copied);
@@ -48,6 +51,7 @@ const remove = FunctionImpl.make(
   "remove",
   Effect.fn("exams.questions.remove")(function* ({ questionId }) {
     const exam = yield* Exam;
+    yield* requireUnfrozen(exam);
     const question = yield* questionOf(exam, questionId);
     return yield* removeQuestion(exam, question);
   })
@@ -60,6 +64,7 @@ const move = FunctionImpl.make(
   "move",
   Effect.fn("exams.questions.move")(function* ({ index, questionId }) {
     const exam = yield* Exam;
+    yield* requireUnfrozen(exam);
     yield* questionOf(exam, questionId);
     return yield* moveQuestion(exam, questionId, index);
   })
@@ -77,6 +82,7 @@ const answer = FunctionImpl.make(
     revision,
   }) {
     const exam = yield* Exam;
+    yield* requireUnfrozen(exam);
     const question = yield* questionOf(exam, questionId);
     yield* answerQuestion(question, { answers, key, revision });
     return yield* readQuestion(questionId);

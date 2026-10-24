@@ -12,6 +12,17 @@ export class ExamEmpty extends Schema.TaggedError<ExamEmpty>()("ExamEmpty", {
 }) {}
 
 /**
+ * A change to the questions of an exam that a sitting has scheduled. The questions, their order, and
+ * their keys stay as the sitting was scheduled, so each result scores the exam that the student sat.
+ */
+export class ExamFrozen extends Schema.TaggedError<ExamFrozen>()("ExamFrozen", {
+  ...refusal(
+    "EXAM_FROZEN",
+    "A sitting of this exam is scheduled, so its questions can no longer change."
+  ),
+}) {}
+
+/**
  * Answers that are not the interactions of a question of this kind: a question takes
  * distinct single-answer choices, and any other interaction is refused. The reply names
  * no part of the answers.

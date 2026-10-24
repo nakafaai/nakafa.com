@@ -1,6 +1,7 @@
 import { layer as nodeServicesLayer } from "@effect/platform-node/NodeServices";
 import type { BrowserContext } from "@playwright/test";
 import {
+  CardFixture,
   SchoolFixture,
   SessionCookie,
   SittingFixture,
@@ -43,7 +44,7 @@ export const createSchool = Effect.fn("NakafaE2E.createSchool")(
  * command runs once per school: a second run would open the same account again.
  */
 const createMemberCookie = Effect.fn("NakafaE2E.createMemberCookie")(
-  function* (kind: "owner" | "teacher", slug: string) {
+  function* (kind: "owner" | "teacher" | "class-teacher", slug: string) {
     const fs = yield* FileSystem.FileSystem;
     const directory = yield* fs.makeTempDirectoryScoped({
       prefix: `nakafa-${kind}-`,
@@ -83,6 +84,19 @@ export const signInTeacher = Effect.fn("NakafaE2E.signInTeacher")(function* (
 });
 
 /**
+ * Signs the Teacher of one class into one browser context, for the school host at `address`.
+ * The acceptance runtime opens the school's active period, creates the class `Fisika X-1` in
+ * it, and makes the Teacher teach that class, so the Teacher sees the class in the sidebar.
+ * The command runs once per school, because a second run would add another class.
+ */
+export const signInClassTeacher = Effect.fn("NakafaE2E.signInClassTeacher")(
+  function* (context: BrowserContext, slug: string, address: string) {
+    const cookie = yield* createMemberCookie("class-teacher", slug);
+    yield* addSessionCookie(context, cookie, address);
+  }
+);
+
+/**
  * Invites a learner into a school that `createSchool` opened, and signs the learner into
  * one browser context. The local acceptance runtime invites the address into the school,
  * creates the learner's account with that address, claims the invitation for the account,
@@ -117,6 +131,18 @@ export const inviteLearner = Effect.fn("NakafaE2E.inviteLearner")(
 );
 
 /**
+ * Gives a learner that `inviteLearner` invited a student grant in the first active unit of a
+ * school, so the school can place the learner in a cohort. An invite gives no grant by itself,
+ * and the learner must already be a member of the school.
+ */
+export const grantStudent = Effect.fn("NakafaE2E.grantStudent")(function* (
+  slug: string,
+  learnerAddress: string
+) {
+  yield* runAcceptanceCommand("student", slug, learnerAddress);
+});
+
+/**
  * Seeds one proctored sitting of a keyed exam in a school that `createSchool` opened, for a
  * learner who is already a member of it, and returns the exam, the sitting, and its token. The
  * sitting opens now and closes an hour later, and the learner gets a student grant in the
@@ -141,6 +167,27 @@ export const seedSitting = Effect.fn("NakafaE2E.seedSitting")(
     return yield* fs
       .readFileString(output)
       .pipe(Effect.flatMap(Schema.decodeEffect(SittingFixture)));
+  },
+  Effect.scoped,
+  Effect.provide(nodeServicesLayer)
+);
+
+/**
+ * Seeds one new student in a school that `createSchool` opened, with a student grant and a login card,
+ * and returns the school login name that the student types and the card's plain code. The card is
+ * not redeemed yet, so a browser test redeems it through the school's own form.
+ */
+export const seedCard = Effect.fn("NakafaE2E.seedCard")(
+  function* (slug: string) {
+    const fs = yield* FileSystem.FileSystem;
+    const directory = yield* fs.makeTempDirectoryScoped({
+      prefix: "nakafa-card-",
+    });
+    const output = `${directory}/card.json`;
+    yield* runAcceptanceCommand("card", slug, output);
+    return yield* fs
+      .readFileString(output)
+      .pipe(Effect.flatMap(Schema.decodeEffect(CardFixture)));
   },
   Effect.scoped,
   Effect.provide(nodeServicesLayer)

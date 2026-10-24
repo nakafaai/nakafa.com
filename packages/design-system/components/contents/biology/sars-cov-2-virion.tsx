@@ -1,5 +1,3 @@
-"use client";
-
 import { useGLTF } from "@react-three/drei";
 import { SARS_COV_2_VIRION_ASSET } from "@repo/design-system/components/contents/biology/assets";
 import {

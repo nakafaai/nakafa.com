@@ -1,5 +1,3 @@
-"use client";
-
 import { useTriangle } from "@repo/design-system/components/contents/mathematics/triangle/context";
 import { CoordinateSystem } from "@repo/design-system/components/three/coordinate-system";
 import { Triangle } from "@repo/design-system/components/three/triangle";

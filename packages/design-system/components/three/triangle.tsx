@@ -1,5 +1,3 @@
-"use client";
-
 import { Instance, Instances, Line } from "@react-three/drei";
 import { InlineMath } from "@repo/design-system/components/markdown/math";
 import {

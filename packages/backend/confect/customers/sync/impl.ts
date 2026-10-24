@@ -7,16 +7,16 @@ import {
 } from "@repo/backend/confect/_generated/services";
 import customersTable from "@repo/backend/confect/_generated/tables/customers";
 import { isAccountDeletionPending } from "@repo/backend/confect/auth/deletion/state";
-import { deleteLocalCustomer } from "@repo/backend/confect/customers/deletion/billingState";
 import {
   ensureCustomer,
   normalizeStoredCustomer,
-} from "@repo/backend/confect/customers/polar/impl";
-import { polarGateway } from "@repo/backend/confect/customers/polar/live";
+} from "@repo/backend/confect/billing/polar/impl";
+import { polarGateway } from "@repo/backend/confect/billing/polar/live";
 import {
   customerIdMetadataKey,
   type PolarMetadata,
-} from "@repo/backend/confect/customers/polar/spec";
+} from "@repo/backend/confect/billing/polar/spec";
+import { deleteLocalCustomer } from "@repo/backend/confect/customers/deletion/billingState";
 import { convertToDatabaseCustomer } from "@repo/backend/confect/customers/records";
 import { settleCustomerSync } from "@repo/backend/confect/customers/sync/settlement";
 import {

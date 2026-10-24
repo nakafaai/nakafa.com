@@ -58,7 +58,7 @@ export const isStalled = (
   now - progress.movedAt >= Duration.toMillis(PROMOTION_RUN_LEASE);
 
 /** The step that follows each step; the last step has none. */
-const NEXT_STEP: Record<
+const FOLLOWING_STEP: Record<
   typeof PromotionStep.Type,
   typeof PromotionStep.Type | undefined
 > = {
@@ -70,7 +70,7 @@ const NEXT_STEP: Record<
 
 /** The step that follows another in applying a promotion, if any. */
 export const nextStepOf = (step: typeof PromotionStep.Type) =>
-  Option.fromUndefinedOr(NEXT_STEP[step]);
+  Option.fromUndefinedOr(FOLLOWING_STEP[step]);
 
 /**
  * Whether a run has stopped: it stopped with a typed failure, or it stalled. A

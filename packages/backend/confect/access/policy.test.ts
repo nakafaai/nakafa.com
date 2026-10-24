@@ -176,6 +176,7 @@ describe("access/policy authority", () => {
             "connection.view",
             "document.edit",
             "exam.edit",
+            "exam.rooms",
             "exam.view",
             "grant.manage",
             "integration.manage",

@@ -1,5 +1,3 @@
-"use client";
-
 import { totalOf } from "@repo/design-system/components/contents/mathematics/chart/summary";
 import {
   formatInterval,
@@ -40,8 +38,8 @@ import {
 } from "@repo/design-system/lib/charts/regression";
 import { getPointSeriesCue } from "@repo/design-system/lib/charts/series-cue";
 import { Array as Arr, Option, Record as Rec } from "effect";
-import { useFormatter, useLocale, useTranslations } from "next-intl";
 import type { ReactNode } from "react";
+import { useFormatter, useLocale, useTranslations } from "use-intl";
 
 const REGRESSION_DATA_KEY = "regression";
 const DEFAULT_REGRESSION_COLOR = "var(--chart-5)";

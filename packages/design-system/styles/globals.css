@@ -200,7 +200,8 @@
 @theme inline {
   --text-chat: 15px;
   --text-chat--line-height: 1.625;
-  --font-sans: var(--font-inter);
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-quran: "Amiri", ui-serif, serif;
   /* Geist Mono's variable exists only inside a scope that applies it. Outside
    * every scope, a monospace element falls back to the system stack. Tailwind
    * inlines --default-mono-font-family into preflight's bare code, keyboard keys
@@ -311,6 +312,15 @@
       height: 0;
     }
   }
+}
+
+/*
+ * Geist Mono is defined by @fontsource-variable/geist-mono. Applying this class defines
+ * `--font-geist-mono` for the element and every descendant, so the shared monospace
+ * token resolves to the face only where the class applies.
+ */
+.geist-mono {
+  --font-geist-mono: "Geist Mono Variable", ui-monospace, monospace;
 }
 
 @layer base {

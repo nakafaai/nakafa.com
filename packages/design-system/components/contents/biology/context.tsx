@@ -1,5 +1,3 @@
-"use client";
-
 import type { BiologySceneColors } from "@repo/design-system/components/contents/biology/data";
 import { createContext, type ReactNode, use, useMemo } from "react";
 import { createStore, type ExtractState, useStore } from "zustand";

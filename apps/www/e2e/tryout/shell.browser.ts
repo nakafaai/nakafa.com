@@ -1,9 +1,10 @@
-import { instant } from "@next/playwright";
 import { expect, type Locator, type Page, test } from "@playwright/test";
-import { Effect, type MutableHashSet } from "effect";
+import { Effect, type MutableList } from "effect";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { activate, press, visibleLink } from "@/e2e/support/input";
+import { pressPreloaded } from "@/e2e/support/navigation/prefetch";
 import { withObservedPageErrors } from "@/e2e/support/observe";
+import { recordServerFunctionCalls } from "@/e2e/support/requests";
 import {
   expectStillShell,
   observeShell,
@@ -18,7 +19,6 @@ import {
   openHub,
   openTrack,
   readSectionHref,
-  recordIntentRequests,
   sectionLink,
   setHref,
   settledSection,
@@ -27,9 +27,9 @@ import {
 import { tryoutViewports } from "@/e2e/support/viewport";
 
 /**
- * Opens a set or section while Next.js holds back request-time data, so its
- * heading and its catalog content have to come from the link's prefetch. The
- * learner's attempt streams in once the hold ends.
+ * Opens a set or section from a link that the reader showed intent toward, so
+ * its heading and its catalog content come from the router's preload. The
+ * learner's attempt streams in after the page shows.
  */
 const openPrefetched = Effect.fn("NakafaE2E.openPrefetchedTryoutPage")(
   function* (
@@ -41,22 +41,25 @@ const openPrefetched = Effect.fn("NakafaE2E.openPrefetchedTryoutPage")(
       pathname: string;
       title: string;
     },
-    requested: MutableHashSet.MutableHashSet<string>
+    calls: MutableList.MutableList<string>
   ) {
     yield* Effect.promise(() => link.scrollIntoViewIfNeeded());
-    yield* intend(link, target, requested);
-    // @next/playwright owns this native Promise callback while its lock is held.
-    yield* Effect.promise(() =>
-      instant(page, () =>
+    yield* intend(link, target, calls);
+    yield* pressPreloaded(
+      page,
+      link,
+      target.hasTouch,
+      Effect.promise(() =>
         press(link, target.hasTouch, { noWaitAfter: true })
           // A pointer that rests where it pressed would show intent on
           // whatever the next page puts there, before the test asks for it.
           .then(() => page.mouse.move(-1, -1))
-          .then(() =>
-            page.waitForURL((url) => url.pathname === target.pathname, {
-              timeout: readinessTimeoutMilliseconds,
-            })
-          )
+      ),
+      Effect.promise(() =>
+        page
+          .waitForURL((url) => url.pathname === target.pathname, {
+            timeout: readinessTimeoutMilliseconds,
+          })
           .then(() =>
             expect(
               page.getByRole("heading", {
@@ -114,16 +117,16 @@ const verifyTryoutShell = Effect.fn("NakafaE2E.verifyTryoutShell")(function* (
 });
 
 /**
- * Opens a set and then one of its sections while Next.js holds back
- * request-time data, so each heading, the set's section list, and the
- * section's question count and time have to come from the link's prefetch
- * instead of waiting for the learner's attempt.
+ * Opens a set and then one of its sections from links that the reader showed
+ * intent toward, so each heading, the set's section list, and the section's
+ * question count and time come from the router's preload instead of waiting for
+ * the learner's attempt.
  */
 const verifyPrefetchedHeadings = Effect.fn(
   "NakafaE2E.verifyPrefetchedTryoutHeadings"
 )(function* (page: Page, hasTouch: boolean) {
   yield* seedAnalyticsConsent(page, "denied");
-  const requested = recordIntentRequests(page);
+  const requested = recordServerFunctionCalls(page);
   yield* openHub(page);
   yield* openTrack(page, hasTouch);
 

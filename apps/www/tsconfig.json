@@ -1,21 +1,21 @@
 {
-  "extends": "@repo/typescript-config/nextjs.json",
+  "extends": "@repo/typescript-config/react-library.json",
   "compilerOptions": {
-    "types": ["@repo/internationalization/i18n.d.ts", "vitest/globals"],
+    "jsx": "react-jsx",
+    "types": [
+      "vite/client",
+      "@repo/internationalization/i18n.d.ts",
+      "vitest/globals"
+    ],
     "paths": {
-      "@/*": ["./*"],
+      "@/e2e/*": ["./e2e/*"],
+      "@/checks/*": ["./checks/*"],
+      "@/scripts/*": ["./scripts/*"],
+      "@/public/*": ["./public/*"],
+      "@/*": ["./src/*"],
       "@repo/*": ["../../packages/*"]
     }
   },
-  "include": [
-    "next-env.d.ts",
-    "next.config.ts",
-    "app/.well-known/**/*.ts",
-    "**/*.ts",
-    "**/*.tsx",
-    "scripts/**/*.mts",
-    "*.mts",
-    ".next/types/**/*.ts"
-  ],
-  "exclude": ["node_modules", ".next", "out", "dist", "build"]
+  "include": ["**/*.ts", "**/*.tsx", "scripts/**/*.mts", "*.mts"],
+  "exclude": ["node_modules", ".output", ".vercel", "out", "dist", "build"]
 }

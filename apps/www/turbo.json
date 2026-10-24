@@ -7,7 +7,6 @@
       "cache": false,
       "env": [
         "CONVEX_AGENT_MODE",
-        "NEXT_EXPOSE_TESTING_API",
         "AKSARA_AGENT_SIGNING_KEY_ID",
         "AKSARA_AGENT_SIGNING_PUBLIC_KEY"
       ]

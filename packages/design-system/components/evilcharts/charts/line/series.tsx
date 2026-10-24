@@ -1,5 +1,3 @@
-"use client";
-
 import { useReducedMotion } from "@mantine/hooks";
 import { bufferLineShape } from "@repo/design-system/components/evilcharts/charts/line/buffer";
 import {

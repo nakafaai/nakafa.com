@@ -88,7 +88,10 @@ describe("Vercel deployment policy", () => {
   it.effect("judges only the Vercel configuration of an app", () =>
     Effect.gen(function* () {
       assert.deepStrictEqual(
-        yield* inspect("export const config = {};\n", "apps/www/lib/vercel.ts"),
+        yield* inspect(
+          "export const config = {};\n",
+          "apps/www/src/lib/vercel.ts"
+        ),
         []
       );
       assert.deepStrictEqual(

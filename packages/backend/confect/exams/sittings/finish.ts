@@ -1,5 +1,6 @@
 import type { ExamSittingsDoc } from "@repo/backend/confect/_generated/docs";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
+import { recordResults } from "@repo/backend/confect/exams/results/record";
 import {
   boundAttempt,
   requireOpen,
@@ -37,6 +38,7 @@ export const finish = Effect.fn("exams.sittings.finish")(function* (args: {
     .table("examAttempts")
     .patch(attempt._id, { state: "submitted", submittedAt: now })
     .pipe(Effect.orDie);
+  yield* recordResults(attempt, sitting);
   yield* sittingAuthority.record(personActor(member.person), sitting, {
     attempt: attempt._id,
     type: "sitting.finish",

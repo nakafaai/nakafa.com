@@ -291,6 +291,9 @@ describe("a turn in which Nina searches what the learner told her", () => {
     const languageModel = ninaRecallModel("ujian", 2);
     provider.languageModel.mockReturnValue(languageModel);
     const f = await createMemoryTest({ prompt: "Explain a function limit." });
+    await f.t.mutation((ctx) =>
+      ctx.db.patch("users", f.identity.userId, { credits: 100 })
+    );
     // Three newer memories fill the turn's list, so the exam date is in front
     // of Nina only when she searches for it.
     const exam = await f.seed({ confirmedAt: 1, text: words });
