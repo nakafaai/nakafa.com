@@ -53,14 +53,11 @@ test("the exam list's first HTML holds the exams of a member who may open them",
   );
   await learnerContext.close();
   // The seed records its exam as made by the school's Owner, who must have signed in first.
-  const ownerContext = await browser.newContext();
-  await Effect.runPromise(signInOwner(ownerContext, school.slug, address("/")));
+  const context = await browser.newContext();
+  await Effect.runPromise(signInOwner(context, school.slug, address("/")));
   const sitting = await Effect.runPromise(seedSitting(school.slug, learner));
-  await ownerContext.close();
 
   const examsPage = address("/exams");
-  const context = await browser.newContext();
-  await Effect.runPromise(signInOwner(context, school.slug, examsPage));
   const withoutScript = await browser.newContext({ javaScriptEnabled: false });
   await withoutScript.addCookies(await context.cookies());
   const page = await withoutScript.newPage();

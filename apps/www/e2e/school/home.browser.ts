@@ -24,6 +24,9 @@ const QUIET_STAFF =
 /** The one sentence of the quiet state of a student's home, while the teacher has scheduled no sitting. */
 const QUIET_STUDENT = "Your teacher has not scheduled a sitting yet.";
 
+/** The address of the setup row that invites a teacher: the school path, which the school host shows as the settings page. */
+const SETUP_INVITES_HREF = /\/settings\/invites$/u;
+
 test("the owner's Beranda shows the page's one action, the quiet state, and the setup", async ({
   baseURL,
   browser,
@@ -47,7 +50,7 @@ test("the owner's Beranda shows the page's one action, the quiet state, and the 
   await expect(page.getByText("Setup", { exact: true })).toBeVisible();
   await expect(
     page.getByRole("link", { name: "Invite a teacher" })
-  ).toHaveAttribute("href", "/settings/invites");
+  ).toHaveAttribute("href", SETUP_INVITES_HREF);
   // A setup row has no other text, so its arrow shows without a hover.
   await expect(
     page.getByRole("link", { name: "Invite a teacher" }).locator("svg")
@@ -179,7 +182,7 @@ test("a sitting that runs now appears in the owner's In progress tile, and its r
   await expect(row).toContainText(SEEDED_EXAM);
   await expect(row).toHaveAttribute(
     "href",
-    `/exams/${sitting.examId}/sittings/${sitting.sittingId}`
+    new RegExp(`/exams/${sitting.examId}/sittings/${sitting.sittingId}$`, "u")
   );
   await context.close();
   await learnerContext.close();
@@ -276,7 +279,10 @@ test("an upcoming room shows as a bar in the owner's schedule, and the bar opens
   await page.goto(address("/"));
 
   const bar = page.getByRole("link", { name: UPCOMING_BAR });
-  await expect(bar).toHaveAttribute("href", `/exams/${sitting.examId}`);
+  await expect(bar).toHaveAttribute(
+    "href",
+    new RegExp(`/exams/${sitting.examId}$`, "u")
+  );
   await context.close();
   await learnerContext.close();
 });

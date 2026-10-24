@@ -2900,6 +2900,7 @@ export declare const api: {
             unitId: Id<"tenantUnits">;
           }>;
           drafts: Array<{
+            createdAt: number;
             id: Id<"exams">;
             language: "en" | "id" | "de";
             title: string;
@@ -4625,6 +4626,7 @@ export declare const api: {
           opensAt: number;
           resultsReleased: boolean;
           room: string;
+          score: { points: number; total: number } | null;
           state: "scheduled" | "open" | "closed";
           timeZone: string;
           unitId: Id<"tenantUnits">;
@@ -12882,7 +12884,7 @@ export declare const internal: {
       sitting: FunctionReference<
         "mutation",
         "internal",
-        { crowd?: number; email: string; slug: string },
+        { crowd?: number; email: string; slug: string; upcoming?: boolean },
         {
           examId: Id<"exams">;
           sittingId: Id<"examSittings">;
