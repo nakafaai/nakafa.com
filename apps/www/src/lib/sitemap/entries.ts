@@ -78,7 +78,7 @@ export const getSitemapEntries = Effect.fn("www.sitemap.entries.page")(
 );
 
 /** Selects all locales for base pages and one locale for content pages. */
-function getSitemapEntryLocales(pageId: string) {
+export function getSitemapEntryLocales(pageId: string) {
   return Option.match(getSitemapPageDescriptor(pageId), {
     onNone: () => LOCALES,
     onSome: (descriptor) =>

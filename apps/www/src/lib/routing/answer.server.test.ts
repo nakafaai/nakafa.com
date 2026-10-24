@@ -386,33 +386,36 @@ describe("locale redirects after the negotiation", () => {
 });
 
 describe("social image aliases", () => {
-  it.effect("serves a social image alias through the OG route", () =>
-    Effect.gen(function* () {
-      const { handle, response } = yield* served(
-        "/en/articles/aljabar.png?ref=share",
-        { accept: "image/png" }
-      );
-
-      expect(response.status).toBe(200);
-      expect(routedRequest(handle).url).toBe(
-        `${ORIGIN}/og/en/articles/aljabar?ref=share`
-      );
-      expect(routedRequest(handle).headers.get("accept")).toBe("image/png");
-      expect(markdown.hasSource).not.toHaveBeenCalled();
-    })
+  it.effect(
+    "redirects a social image alias to the image that the build wrote for its route",
+    () =>
+      Effect.gen(function* () {
+        const { handle, response } = yield* served(
+          "/en/articles/aljabar.png?ref=share",
+          { accept: "image/png" }
+        );
+        expect(response.status).toBe(308);
+        expect(response.headers.get("location")).toBe(
+          `${ORIGIN}/en/og/articles/aljabar/image.png?ref=share`
+        );
+        expect(handle).not.toHaveBeenCalled();
+        expect(markdown.hasSource).not.toHaveBeenCalled();
+      })
   );
 
-  it.effect("answers a localized OG image without negotiating it", () =>
-    Effect.gen(function* () {
-      const { handle } = yield* served("/en/og/articles/aljabar/image.png", {
-        accept: "image/png",
-      });
+  it.effect(
+    "routes a localized OG address to the router without negotiating it",
+    () =>
+      Effect.gen(function* () {
+        const { handle } = yield* served("/en/og/articles/aljabar/image.png", {
+          accept: "image/png",
+        });
 
-      expect(routedRequest(handle).url).toBe(
-        `${ORIGIN}/en/og/articles/aljabar/image.png`
-      );
-      expect(markdown.hasSource).not.toHaveBeenCalled();
-    })
+        expect(routedRequest(handle).url).toBe(
+          `${ORIGIN}/en/og/articles/aljabar/image.png`
+        );
+        expect(markdown.hasSource).not.toHaveBeenCalled();
+      })
   );
 });
 

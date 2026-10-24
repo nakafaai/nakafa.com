@@ -1,99 +1,89 @@
-// @vitest-environment node
-
 import { describe, expect, it } from "@effect/vitest";
 import { Option } from "effect";
 import {
   isUnservedLocaleShape,
   readImageSuffix,
-  readOgAliasRequest,
+  readOgAliasRedirect,
   readOgAliasUrl,
 } from "@/lib/og/alias";
 
 const ORIGIN = "https://nakafa.com";
 
-/** Reads the rewritten address of one request URL, or none when it is not an alias. */
-function readAlias(path: string) {
-  return Option.map(readOgAliasUrl(new URL(path, ORIGIN)), (url) => url.href);
+/** The alias target of one address, as a path with its query. */
+function targetOf(address: string) {
+  const target = readOgAliasUrl(new URL(address, ORIGIN));
+  return Option.map(target, (url) => `${url.pathname}${url.search}`);
 }
 
 describe("social image suffix", () => {
   it("names the png and og alias of a route, ignoring case", () => {
-    expect(readImageSuffix("en/articles/x/image.png")).toEqual(
+    expect(readImageSuffix("/en/articles/aljabar.PNG")).toEqual(
       Option.some(".png")
     );
-    expect(readImageSuffix("en/articles/x.PNG")).toEqual(Option.some(".png"));
-    expect(readImageSuffix("en/articles/x.og")).toEqual(Option.some(".og"));
-    expect(readImageSuffix("en/articles/x")).toEqual(Option.none());
+    expect(readImageSuffix("/en/articles/aljabar.og")).toEqual(
+      Option.some(".og")
+    );
+    expect(readImageSuffix("/en/articles/aljabar")).toEqual(Option.none());
   });
 
   it("recognises a locale shape that no locale is served by", () => {
-    expect(isUnservedLocaleShape("fr")).toBe(true);
+    expect(isUnservedLocaleShape("xx")).toBe(true);
     expect(isUnservedLocaleShape("en")).toBe(false);
-    expect(isUnservedLocaleShape("articles")).toBe(false);
     expect(isUnservedLocaleShape(undefined)).toBe(false);
+    expect(isUnservedLocaleShape("english")).toBe(false);
   });
 });
 
 describe("public social image aliases", () => {
-  it("rewrites a png alias to the og route of the route it names, keeping the query", () => {
-    expect(readAlias("/en/articles/aljabar.png?ref=share")).toEqual(
-      Option.some(`${ORIGIN}/og/en/articles/aljabar?ref=share`)
+  it("names the static image of the route that a png alias names, keeping the query", () => {
+    expect(targetOf("/en/articles/aljabar.png?ref=share")).toEqual(
+      Option.some("/en/og/articles/aljabar/image.png?ref=share")
     );
   });
 
-  it("rewrites a png alias and an og alias without a locale prefix", () => {
-    expect(readAlias("/articles/aljabar.png")).toEqual(
-      Option.some(`${ORIGIN}/og/articles/aljabar`)
-    );
-    expect(readAlias("/articles/aljabar.og")).toEqual(
-      Option.some(`${ORIGIN}/og/articles/aljabar`)
+  it("names the default locale's image for an alias without a locale prefix", () => {
+    expect(targetOf("/articles/aljabar.og")).toEqual(
+      Option.some("/en/og/articles/aljabar/image.png")
     );
   });
 
-  it("rewrites an image file under a served locale to the OG route of its own path", () => {
-    expect(readAlias("/de/articles/aljabar/image.png")).toEqual(
-      Option.some(`${ORIGIN}/og/de/articles/aljabar/image`)
-    );
+  it("names the home image for an alias of a locale alone", () => {
+    expect(targetOf("/de.png")).toEqual(Option.some("/de/og/image.png"));
+  });
+
+  it("names the default locale's home image for an alias of the suffix alone", () => {
+    expect(targetOf("/.png")).toEqual(Option.some("/en/og/image.png"));
   });
 
   it("leaves an address under an unserved locale shape to the router", () => {
-    expect(readAlias("/fr/articles/aljabar.png")).toEqual(Option.none());
+    expect(targetOf("/xx/articles/aljabar.png")).toEqual(Option.none());
   });
 
-  it("leaves the og route itself and a path without an image suffix alone", () => {
-    expect(readAlias("/og/en/articles/aljabar.png")).toEqual(Option.none());
-    expect(readAlias("/en/articles/aljabar")).toEqual(Option.none());
-  });
-
-  it("leaves a localized og route alone, so its image is not aliased twice", () => {
-    expect(readAlias("/en/og/articles/aljabar/image.png")).toEqual(
+  it("leaves the og tree itself and a path without an image suffix alone", () => {
+    expect(targetOf("/og/en/articles/aljabar")).toEqual(Option.none());
+    expect(targetOf("/en/og/articles/aljabar/image.png")).toEqual(
       Option.none()
     );
-    expect(readAlias("/en/og/articles/aljabar.png")).toEqual(Option.none());
+    expect(targetOf("/en/articles/aljabar")).toEqual(Option.none());
   });
 
-  it("serves an og alias of a path without a locale, since no public file ends in .og", () => {
-    expect(readAlias("/open-graph/app/de-pricing.og")).toEqual(
-      Option.some(`${ORIGIN}/og/open-graph/app/de-pricing`)
-    );
-  });
-
-  it("rejects an upper-case locale in a PNG alias, as the router rejects it", () => {
-    expect(readAlias("/EN/articles/aljabar.png")).toEqual(Option.none());
+  it("leaves an upper-case locale in a png alias to the router, as the router rejects it", () => {
+    expect(targetOf("/EN/articles/aljabar.png")).toEqual(Option.none());
   });
 });
 
-describe("social image requests", () => {
-  it("serves a read of an image alias as the OG route's request, with its headers and query", () => {
+describe("social image redirects", () => {
+  it("redirects a read of an image alias to the image of its route, keeping the query", () => {
     const request = new Request(`${ORIGIN}/en/articles/aljabar.png?ref=share`, {
       headers: { accept: "image/png" },
     });
 
-    const alias = Option.getOrThrow(readOgAliasRequest(request));
+    const redirect = readOgAliasRedirect(request);
 
-    expect(alias.url).toBe(`${ORIGIN}/og/en/articles/aljabar?ref=share`);
-    expect(alias.method).toBe("GET");
-    expect(alias.headers.get("accept")).toBe("image/png");
+    expect(Option.isSome(redirect) && redirect.value.status).toBe(308);
+    expect(
+      Option.isSome(redirect) && redirect.value.headers.get("location")
+    ).toBe(`${ORIGIN}/en/og/articles/aljabar/image.png?ref=share`);
   });
 
   it("leaves a write to an image alias to the router", () => {
@@ -101,12 +91,12 @@ describe("social image requests", () => {
       method: "POST",
     });
 
-    expect(Option.isNone(readOgAliasRequest(request))).toBe(true);
+    expect(readOgAliasRedirect(request)).toEqual(Option.none());
   });
 
   it("leaves a path that is not an alias to the router", () => {
     const request = new Request(`${ORIGIN}/en/articles/aljabar`);
 
-    expect(Option.isNone(readOgAliasRequest(request))).toBe(true);
+    expect(readOgAliasRedirect(request)).toEqual(Option.none());
   });
 });
