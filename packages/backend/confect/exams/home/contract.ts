@@ -20,6 +20,15 @@ export const ClosedView = Schema.Struct({
 });
 
 /**
+ * One draft that the school home lists: the exam, and when its author created it, which the home shows as the time
+ * since. Exams keep no edit time, so the creation time is the only time of a draft.
+ */
+export const HomeDraft = Schema.Struct({
+  ...ExamSummary.fields,
+  createdAt: Schema.Finite,
+});
+
+/**
  * What the school home shows a viewer about exams: the viewer's own drafts that the viewer may
  * still edit, the rooms the viewer may watch that run now, the rooms that open within the next
  * fourteen days, and the closed sittings whose results the viewer may view. A viewer who holds none
@@ -29,7 +38,7 @@ export const ClosedView = Schema.Struct({
 export const HomeView = Schema.Struct({
   canManageSetup: Schema.Boolean,
   closed: Schema.Array(ClosedView),
-  drafts: Schema.Array(ExamSummary),
+  drafts: Schema.Array(HomeDraft),
   live: Schema.Array(SittingView),
   next: Schema.Array(SittingView),
   setup: Schema.optionalKey(HomeSetup),

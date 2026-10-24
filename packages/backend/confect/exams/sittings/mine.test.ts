@@ -24,6 +24,7 @@ import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect, Option } from "effect";
 
 const { close, finish, mine } = refs.public.exams.sittings;
+const { release } = refs.public.exams.results.results;
 
 /** The opening time of the rooms that open a day after the room that opens soon. */
 const FOLLOWING_DAY = OPENS + 86_400_000;
@@ -280,6 +281,44 @@ describe("exams/sittings mine", () => {
             resultsReleased: false,
             state: "closed",
           }),
+        ]);
+      })
+  );
+
+  it.effect(
+    "shows the student's score in a closed sitting only once the teacher releases its results",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* tenancyFixture;
+        const made = yield* openedSitting(fixture, "PTS");
+        yield* enterOk(fixture, {
+          deviceId: deviceOf(1),
+          sittingId: made.id,
+          token: made.token,
+        });
+        yield* fixture.as("student").mutation(finish, {
+          deviceId: deviceOf(1),
+          sittingId: made.id,
+          slug: nf,
+        });
+        yield* fixture.as("teacher").mutation(close, {
+          sittingId: made.id,
+          slug: nf,
+        });
+        expect(
+          yield* fixture.as("student").query(mine, { slug: nf })
+        ).toMatchObject([{ resultsReleased: false, score: null }]);
+        yield* fixture.as("teacher").mutation(release, {
+          sittingId: made.id,
+          slug: nf,
+        });
+        expect(
+          yield* fixture.as("student").query(mine, { slug: nf })
+        ).toMatchObject([
+          {
+            resultsReleased: true,
+            score: { points: 0, total: expect.any(Number) },
+          },
         ]);
       })
   );
