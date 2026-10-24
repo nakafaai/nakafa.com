@@ -154,7 +154,7 @@ describe("useConvexAuth", () => {
     probe.unmount();
   });
 
-  it("serves a visitor's page the signed-out session, with no request", () => {
+  it("serves a visitor's page the signed-out session", () => {
     const probe = mount(
       createElement(
         SignedOutSessionProvider,
