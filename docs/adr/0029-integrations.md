@@ -1,5 +1,7 @@
 # ADR 0029: Integrations Are Projections Of The Access Catalog, Served Through Effect HttpApi
 
+> Superseded in part by [ADR 0037](0037-cloudflare.md): the Vercel hosting, delivery, and deployment decisions of this record no longer apply.
+
 ## Status
 
 Accepted on 13 October 2026 with the owner's approval of the School blueprint,

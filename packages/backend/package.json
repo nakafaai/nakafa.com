@@ -64,7 +64,6 @@
     "@tiptap/extension-table": "3.32.0",
     "@tiptap/extension-underline": "3.32.0",
     "@tiptap/starter-kit": "3.32.0",
-    "@vercel/config": "catalog:",
     "ai": "catalog:",
     "better-auth": "1.6.33",
     "convex": "1.47.0",

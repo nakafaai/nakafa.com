@@ -1,5 +1,7 @@
 # ADR 0008: Admit And Bound Paid Work
 
+> Superseded in part by [ADR 0037](0037-cloudflare.md): the Vercel hosting, delivery, and deployment decisions of this record no longer apply.
+
 ## Decision
 
 Convex reserves a chat turn's model credits in the same transaction that creates

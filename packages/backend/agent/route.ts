@@ -2,13 +2,14 @@ import {
   type AgentEdgeContract,
   NAKAFA_API_EDGE_CONTRACT,
 } from "@repo/backend/agent/edge";
-import { Array as Arr, Option } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 
 /** One public request path and the suffix that it rewrites to under the protected origin path. */
-export interface AgentEdgePath {
-  readonly source: string;
-  readonly suffix: string;
-}
+const AgentEdgePathSchema = Schema.Struct({
+  source: Schema.String,
+  suffix: Schema.String,
+});
+export type AgentEdgePath = typeof AgentEdgePathSchema.Type;
 
 /** Versioned public API paths and their stable protected-runtime destinations. */
 export const NAKAFA_API_EDGE_PATHS = [

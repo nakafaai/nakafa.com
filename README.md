@@ -129,21 +129,20 @@ changed. To refresh the fixture, clean it and repeat preparation. Update the
 pinned Aksara revision deliberately when the acceptance contract needs new
 reviewed examples.
 
-Protected Vercel builds run only after a protected main merge. The web build command
-deploys Convex functions before building Next.js because prerendering queries
-those functions. Vercel supplies `NEXT_PUBLIC_CONVEX_URL`, which the runtime
-guard verifies against the protected production deployment. Convex's `--cmd`
-runs before the backend deployment and cannot be used for this ordering.
-Builds query bounded real published samples and verify the signed content with
-the current renderer. App builds do not export or import production tables or
-release history. Full corpus validation remains in Aksara's publication and
-renderer compatibility checks.
+Production deploys run from GitHub Actions only after a merge to `main`. The
+deploy workflow deploys the Convex backend with its deploy key, then runs
+`alchemy deploy` for the stage. The Alchemy stack in `apps/www/alchemy.run.ts`
+builds the web app and deploys it to Cloudflare Workers. App builds query bounded
+real published samples and verify the signed content with the current renderer.
+They do not export or import production tables or release history. Full corpus
+validation remains in Aksara's publication and renderer compatibility checks.
+See ADR 0037.
 
 ## Repository layout
 
 - `apps/www`: main Next.js application at `https://nakafa.local.nakafa.com`
-- `apps/mcp`: frameworkless Vercel ingress for the Convex MCP runtime
-- `apps/api`: frameworkless Vercel ingress for the Convex REST runtime
+- `apps/mcp`: Cloudflare Worker edge for the Convex MCP runtime
+- `apps/api`: Cloudflare Worker edge for the Convex REST runtime
 - `apps/cas`: Python CAS service at `https://cas.nakafa.local.nakafa.com`
 - `apps/email`: email preview application at `https://email.nakafa.local.nakafa.com`
 - `packages/backend`: Confect schema, functions, workflows, native Agent capabilities, and integrations

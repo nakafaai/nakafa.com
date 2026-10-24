@@ -1,22 +1,21 @@
 import type {
-  WorkerAccessConfig,
-  WorkerDomainConfig,
   WorkerObservability,
   WorkerPlacement,
   WorkerRouteConfig,
 } from "@alchemy.run/cloudflare";
+import { Array as Arr } from "effect";
 
 /** The stage that serves nakafa.com to every visitor. */
 export const PRODUCTION_STAGE = "prod";
 
 /** The stage that serves staging.nakafa.com behind Cloudflare Access. */
-export const STAGING_STAGE = "staging";
+const STAGING_STAGE = "staging";
 
 /** The zone that holds every public hostname of Nakafa, School hosts included. */
 export const NAKAFA_ZONE = "nakafa.com";
 
 /** The only accounts that may open staging through Cloudflare Access. */
-export const STAGING_OWNER_EMAILS = [
+const STAGING_OWNER_EMAILS = [
   "nabilakbarazzima@gmail.com",
   "nakafaai@gmail.com",
 ] as const;
@@ -36,14 +35,6 @@ export const WORKER_OBSERVABILITY: WorkerObservability = {
   logs: { enabled: true, invocationLogs: true },
 };
 
-/** How one Worker is reachable from the internet at one stage. */
-export interface WorkerExposure {
-  access?: WorkerAccessConfig;
-  domain?: WorkerDomainConfig;
-  routes: WorkerRouteConfig[];
-  workersDev: boolean;
-}
-
 /**
  * A route for one hostname. Cloudflare sends a request to the most specific
  * matching route, so an exact host route beats the School wildcard of the web
@@ -58,7 +49,7 @@ function hostRoute(host: string): WorkerRouteConfig {
  * host through one proxied wildcard route. Staging is one exact host behind
  * Access. Every other stage (a pull request, for example) gets workers.dev.
  */
-export function webExposure(stage: string): WorkerExposure {
+export function webExposure(stage: string) {
   if (stage === PRODUCTION_STAGE) {
     return {
       domain: { name: NAKAFA_ZONE, zoneName: NAKAFA_ZONE },
@@ -73,8 +64,8 @@ export function webExposure(stage: string): WorkerExposure {
       access: {
         policies: [
           {
-            decision: "allow",
-            include: STAGING_OWNER_EMAILS.map((email) => ({ email })),
+            decision: "allow" as const,
+            include: Arr.map(STAGING_OWNER_EMAILS, (email) => ({ email })),
           },
         ],
       },
@@ -87,6 +78,6 @@ export function webExposure(stage: string): WorkerExposure {
  * A production API or MCP Worker on its own exact host. Other stages do not
  * deploy these Workers, so they get no route.
  */
-export function productionHostExposure(host: string): WorkerExposure {
+export function productionHostExposure(host: string) {
   return { routes: [hostRoute(host)], workersDev: false };
 }

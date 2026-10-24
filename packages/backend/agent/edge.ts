@@ -28,7 +28,7 @@ const McpEdgeContractSchema = Schema.Struct({
   secretHeader: Schema.Literal(MCP_EDGE_SECRET_HEADER),
 });
 /** Protected origin contract accepted by the edge Workers and the Convex origin. */
-export const AgentEdgeContractSchema = Schema.Union([
+const AgentEdgeContractSchema = Schema.Union([
   ApiEdgeContractSchema,
   McpEdgeContractSchema,
 ]);

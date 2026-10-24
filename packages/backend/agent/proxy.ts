@@ -26,13 +26,7 @@ export class AgentEdgeUpstreamError extends Data.TaggedError(
 }> {}
 
 /** The bindings of one edge Worker, keyed by the names the contract declares. */
-export type AgentEdgeBindings = Readonly<Record<string, string | undefined>>;
-
-/** One edge Worker's contract and the public paths that it owns. */
-export interface AgentEdgeOptions {
-  readonly contract: AgentEdgeContract;
-  readonly paths: readonly AgentEdgePath[];
-}
+type AgentEdgeBindings = Readonly<Record<string, string | undefined>>;
 
 function readBinding(bindings: AgentEdgeBindings, name: string) {
   const value = bindings[name];
@@ -48,11 +42,11 @@ function readBinding(bindings: AgentEdgeBindings, name: string) {
  * the response names the release that served it.
  */
 export const forwardAgentEdge = Effect.fn("agent.edge.forward")(function* (
-  options: AgentEdgeOptions,
+  contract: AgentEdgeContract,
+  paths: readonly AgentEdgePath[],
   request: Request,
   bindings: AgentEdgeBindings
 ) {
-  const { contract, paths } = options;
   const url = new URL(request.url);
   const originPath = agentEdgeOriginPath(contract, paths, url.pathname);
   if (originPath === undefined) {
@@ -94,11 +88,14 @@ export const forwardAgentEdge = Effect.fn("agent.edge.forward")(function* (
  * configuration error, and an unreachable origin answers as a bad gateway.
  * Neither response names a binding or the origin URL.
  */
-export function agentEdgeWorker(options: AgentEdgeOptions) {
+export function agentEdgeWorker(
+  contract: AgentEdgeContract,
+  paths: readonly AgentEdgePath[]
+) {
   return {
     fetch(request: Request, bindings: AgentEdgeBindings): Promise<Response> {
       return Effect.runPromise(
-        forwardAgentEdge(options, request, bindings).pipe(
+        forwardAgentEdge(contract, paths, request, bindings).pipe(
           Effect.catchTags({
             AgentEdgeBindingError: () =>
               Effect.succeed(

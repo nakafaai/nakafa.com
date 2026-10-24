@@ -44,14 +44,17 @@ const DEPLOY_PERMISSION_GROUPS = [
  * environment leaves unset are not written.
  */
 const serverSecretNames = () =>
-  Arr.dedupe([
-    ...Record.keys(
-      Record.filter(workerEnvironment(), (value) => value !== undefined)
-    ),
-    "NAKAFA_CONVEX_SITE_URL",
-    "NAKAFA_API_EDGE_SECRET",
-    "NAKAFA_MCP_EDGE_SECRET",
-  ]).filter((name) => !name.startsWith("VITE_"));
+  Arr.filter(
+    Arr.dedupe([
+      ...Record.keys(
+        Record.filter(workerEnvironment(), (value) => value !== undefined)
+      ),
+      "NAKAFA_CONVEX_SITE_URL",
+      "NAKAFA_API_EDGE_SECRET",
+      "NAKAFA_MCP_EDGE_SECRET",
+    ]),
+    (name) => !name.startsWith("VITE_")
+  );
 
 export default Stack(
   "NakafaGitHub",

@@ -1,5 +1,7 @@
 # ADR 0007: Static Public Lessons And Reactive Learner Context
 
+> Superseded in part by [ADR 0037](0037-cloudflare.md): the Vercel hosting, delivery, and deployment decisions of this record no longer apply.
+
 ## Decision
 
 Public lesson content, metadata, structured data, canonical links, and Markdown

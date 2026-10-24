@@ -30,11 +30,6 @@ const bindings = {
   NAKAFA_RELEASE_SHA: "abc123",
 };
 
-const apiOptions = {
-  contract: NAKAFA_API_EDGE_CONTRACT,
-  paths: NAKAFA_API_EDGE_PATHS,
-};
-
 describe("forwardAgentEdge", () => {
   it.effect(
     "sends a runtime request to the protected origin with the edge secret",
@@ -56,7 +51,8 @@ describe("forwardAgentEdge", () => {
         );
 
         const response = yield* forwardAgentEdge(
-          apiOptions,
+          NAKAFA_API_EDGE_CONTRACT,
+          NAKAFA_API_EDGE_PATHS,
           request,
           bindings
         ).pipe(Effect.provideService(FetchHttpClient.Fetch, fetcher));
@@ -84,9 +80,12 @@ describe("forwardAgentEdge", () => {
       fetcher.mockResolvedValue(new Response("{}"));
       const request = new Request("https://api.nakafa.com/openapi.json");
 
-      yield* forwardAgentEdge(apiOptions, request, bindings).pipe(
-        Effect.provideService(FetchHttpClient.Fetch, fetcher)
-      );
+      yield* forwardAgentEdge(
+        NAKAFA_API_EDGE_CONTRACT,
+        NAKAFA_API_EDGE_PATHS,
+        request,
+        bindings
+      ).pipe(Effect.provideService(FetchHttpClient.Fetch, fetcher));
 
       expect(String(fetcher.mock.calls[0]?.[0])).toBe(
         "https://origin.convex.site/internal/agent/openapi"
@@ -100,7 +99,8 @@ describe("forwardAgentEdge", () => {
       const request = new Request("https://mcp.nakafa.com/mcp");
 
       yield* forwardAgentEdge(
-        { contract: NAKAFA_MCP_EDGE_CONTRACT, paths: NAKAFA_MCP_EDGE_PATHS },
+        NAKAFA_MCP_EDGE_CONTRACT,
+        NAKAFA_MCP_EDGE_PATHS,
         request,
         {
           NAKAFA_CONVEX_SITE_URL: "https://origin.convex.site",
@@ -122,7 +122,8 @@ describe("forwardAgentEdge", () => {
         const request = new Request("https://api.nakafa.com/health");
 
         const response = yield* forwardAgentEdge(
-          apiOptions,
+          NAKAFA_API_EDGE_CONTRACT,
+          NAKAFA_API_EDGE_PATHS,
           request,
           bindings
         ).pipe(Effect.provideService(FetchHttpClient.Fetch, fetcher));
@@ -139,10 +140,15 @@ describe("forwardAgentEdge", () => {
         const request = new Request("https://api.nakafa.com/v1");
 
         const error = yield* Effect.flip(
-          forwardAgentEdge(apiOptions, request, {
-            ...bindings,
-            NAKAFA_API_EDGE_SECRET: "",
-          }).pipe(Effect.provideService(FetchHttpClient.Fetch, fetcher))
+          forwardAgentEdge(
+            NAKAFA_API_EDGE_CONTRACT,
+            NAKAFA_API_EDGE_PATHS,
+            request,
+            {
+              ...bindings,
+              NAKAFA_API_EDGE_SECRET: "",
+            }
+          ).pipe(Effect.provideService(FetchHttpClient.Fetch, fetcher))
         );
 
         expect(error).toMatchObject({
@@ -161,9 +167,12 @@ describe("forwardAgentEdge", () => {
         const request = new Request("https://api.nakafa.com/v1");
 
         const error = yield* Effect.flip(
-          forwardAgentEdge(apiOptions, request, bindings).pipe(
-            Effect.provideService(FetchHttpClient.Fetch, fetcher)
-          )
+          forwardAgentEdge(
+            NAKAFA_API_EDGE_CONTRACT,
+            NAKAFA_API_EDGE_PATHS,
+            request,
+            bindings
+          ).pipe(Effect.provideService(FetchHttpClient.Fetch, fetcher))
         );
 
         expect(error).toMatchObject({ _tag: "AgentEdgeUpstreamError" });
@@ -174,7 +183,10 @@ describe("forwardAgentEdge", () => {
 describe("agentEdgeWorker", () => {
   it("answers the Worker fetch with the forwarded response", async () => {
     fetcher.mockResolvedValue(new Response("pong"));
-    const worker = agentEdgeWorker(apiOptions);
+    const worker = agentEdgeWorker(
+      NAKAFA_API_EDGE_CONTRACT,
+      NAKAFA_API_EDGE_PATHS
+    );
 
     const response = await worker.fetch(
       new Request("https://api.nakafa.com/v1"),
@@ -185,7 +197,10 @@ describe("agentEdgeWorker", () => {
   });
 
   it("answers 500 without naming the binding when the Worker is not configured", async () => {
-    const worker = agentEdgeWorker(apiOptions);
+    const worker = agentEdgeWorker(
+      NAKAFA_API_EDGE_CONTRACT,
+      NAKAFA_API_EDGE_PATHS
+    );
 
     const response = await worker.fetch(
       new Request("https://api.nakafa.com/v1"),
@@ -198,7 +213,10 @@ describe("agentEdgeWorker", () => {
 
   it("answers 502 when the origin cannot be reached", async () => {
     fetcher.mockRejectedValue(new TypeError("connection reset"));
-    const worker = agentEdgeWorker(apiOptions);
+    const worker = agentEdgeWorker(
+      NAKAFA_API_EDGE_CONTRACT,
+      NAKAFA_API_EDGE_PATHS
+    );
 
     const response = await worker.fetch(
       new Request("https://api.nakafa.com/v1"),
