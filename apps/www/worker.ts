@@ -7,6 +7,7 @@ import {
   siteUrlKeys,
 } from "@repo/site/keys";
 import { Array as Arr, Record, Redacted } from "effect";
+import { setValues } from "#www/deploy/environment";
 import { weatherKeys } from "#www/src/lib/weather/keys";
 
 /**
@@ -55,20 +56,21 @@ export const workerEnvironment = () => ({
 
 /**
  * The bindings of the deployed Worker, which `alchemy.run.ts` passes to Alchemy.
- * A `VITE_` name is public and the client bundle inlines it, so Alchemy binds
- * it as plain text. Every other value is a secret, which the dashboard never shows.
+ * A reader refuses a required value that is missing or empty, and an unset
+ * optional value is never bound. A `VITE_` name is public and the client bundle
+ * inlines it, so Alchemy binds it as plain text. Every other value is a secret,
+ * which the dashboard never shows.
  */
 export const deployedWorkerBindings = () =>
   Record.fromEntries(
-    Arr.flatMap(
-      Record.toEntries({ ...workerEnvironment(), NODE_ENV: "production" }),
-      ([name, value]) => {
-        if (value === undefined) {
-          return [];
-        }
-        return [
-          [name, name.startsWith("VITE_") ? value : Redacted.make(value)],
-        ];
-      }
+    Arr.map(
+      Record.toEntries({
+        ...setValues(workerEnvironment()),
+        NODE_ENV: "production",
+      }),
+      ([name, value]) => [
+        name,
+        name.startsWith("VITE_") ? value : Redacted.make(value),
+      ]
     )
   );

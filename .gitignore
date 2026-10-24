@@ -290,3 +290,6 @@ packages/database/generated
 
 # Alchemy's local state and logs for `alchemy dev`
 .alchemy/
+
+# Operator values for the GitHub environments, written by apps/www/stacks/github.ts. Never commit them.
+/apps/www/.operator/

@@ -69,9 +69,9 @@ export const GITHUB_ACTION_REVIEWS = Schema.decodeSync(
       "package-manager-cache": "false",
     },
     expectedTag: "v7.0.0",
-    expectedUsages: 2,
+    expectedUsages: 3,
     reason:
-      "CLI publication and verification pin Node without dependency caching.",
+      "CLI publication, its verification, and the deploy job pin Node without dependency caching. The deploy job runs the environment loader on that Node.",
   },
 ]);
 

@@ -4,28 +4,49 @@ import {
   providers as cloudflareProviders,
   state as cloudflareState,
 } from "@alchemy.run/cloudflare";
-import { providers as githubProviders, Secret } from "@alchemy.run/github";
+import {
+  Environment,
+  providers as githubProviders,
+  Secret,
+  Variable,
+} from "@alchemy.run/github";
 import { Stack } from "alchemy";
-import { Config, Effect, Layer, Redacted } from "effect";
-import { serverSecretNames } from "#www/deploy/secrets";
-import { workerEnvironment } from "#www/worker";
+import {
+  Config,
+  ConfigProvider,
+  Effect,
+  FileSystem,
+  Layer,
+  Record as Rec,
+  Redacted,
+  Schema,
+} from "effect";
+import {
+  EnvironmentValuesSchema,
+  isPublicName,
+  setValues,
+} from "#www/deploy/environment";
 
 /**
- * The GitHub stack. The operator deploys it once from a local shell that holds
- * the server values, and it writes them to the repository as Actions secrets.
- * The deploy workflow reads those secrets, so no value is written anywhere else.
+ * The GitHub stack. The operator deploys it once from a local shell. It creates
+ * the two GitHub environments, production and staging, and writes each one's
+ * values from its own operator file, so staging never receives a production value.
+ * The deploy workflow loads the values of the environment it deploys.
  */
 
 const REPOSITORY = { owner: "nakafaai", repository: "nakafa.com" } as const;
 
-/** The Actions secret of the Cloudflare account, which the deploy workflow reads. */
+/** The repository secret of the Cloudflare account, which the deploy workflow reads. */
 const CLOUDFLARE_ACCOUNT_SECRET = "CLOUDFLARE_ACCOUNT_ID";
 
-/** The Actions secret of the production Convex deploy key. */
-const CONVEX_PRODUCTION_KEY = "CONVEX_DEPLOY_KEY";
-
-/** The Actions secret of the staging Convex deploy key, which the staging deploy reads. */
-const CONVEX_STAGING_KEY = "CONVEX_STAGING_DEPLOY_KEY";
+/**
+ * The GitHub environments. Production deploys only from `main`. Each environment
+ * reads its values from one operator file, a JSON object of names and text values
+ * that stays on the operator's machine (see .gitignore).
+ */
+/** The operator file of each environment. The values in it are the only source of that environment's values. */
+const PRODUCTION_VALUES = "apps/www/.operator/github-production.json";
+const STAGING_VALUES = "apps/www/.operator/github-staging.json";
 
 /**
  * Cloudflare names both Access groups "Access: Apps and Policies Write", so each
@@ -61,6 +82,52 @@ const ZONE_PERMISSION_GROUPS = [
   "Dynamic URL Redirects Write",
   ACCESS_ZONE_PERMISSION,
 ] as const;
+
+/** Reads one environment's operator file, which holds only the values the operator set. */
+const readEnvironmentValues = Effect.fn("GitHubStack.readEnvironmentValues")(
+  function* (file: string) {
+    const fileSystem = yield* FileSystem.FileSystem;
+    const text = yield* fileSystem.readFileString(file).pipe(
+      Effect.mapError(
+        (cause) =>
+          new Config.ConfigError(
+            new ConfigProvider.SourceError({
+              cause,
+              message: `Unable to read the operator values in ${file}.`,
+            })
+          )
+      )
+    );
+    const values = yield* Schema.decodeEffect(EnvironmentValuesSchema)(
+      text
+    ).pipe(Effect.mapError((cause) => new Config.ConfigError(cause)));
+    return setValues(values);
+  }
+);
+
+/** Writes one environment's values as its secrets and its variables, from that environment's own operator file. */
+const writeEnvironmentValues = Effect.fn("GitHubStack.writeEnvironmentValues")(
+  function* (environment: Environment, file: string) {
+    const values = yield* readEnvironmentValues(file);
+    for (const [name, value] of Rec.toEntries(values)) {
+      if (isPublicName(name)) {
+        yield* Variable(`${environment.name}-${name}`, {
+          ...REPOSITORY,
+          environment,
+          name,
+          value,
+        });
+      } else {
+        yield* Secret(`${environment.name}-${name}`, {
+          ...REPOSITORY,
+          environment,
+          name,
+          value: Redacted.make(value),
+        });
+      }
+    }
+  }
+);
 
 export default Stack(
   "NakafaGitHub",
@@ -102,22 +169,17 @@ export default Stack(
       value: Redacted.make(accountId),
     });
 
-    yield* Effect.forEach(serverSecretNames(workerEnvironment()), (name) =>
-      Effect.gen(function* () {
-        const value = yield* Config.Redacted(name);
-        return yield* Secret(`Server-${name}`, { ...REPOSITORY, name, value });
-      })
-    );
+    const production = yield* Environment("production", {
+      ...REPOSITORY,
+      name: "production",
+      deploymentBranchPolicy: { customBranchPolicies: ["main"] },
+    });
+    yield* writeEnvironmentValues(production, PRODUCTION_VALUES);
 
-    yield* Secret("ConvexProductionDeployKey", {
+    const staging = yield* Environment("staging", {
       ...REPOSITORY,
-      name: CONVEX_PRODUCTION_KEY,
-      value: yield* Config.Redacted(CONVEX_PRODUCTION_KEY),
+      name: "staging",
     });
-    yield* Secret("ConvexStagingDeployKey", {
-      ...REPOSITORY,
-      name: CONVEX_STAGING_KEY,
-      value: yield* Config.Redacted(CONVEX_STAGING_KEY),
-    });
+    yield* writeEnvironmentValues(staging, STAGING_VALUES);
   })
 );

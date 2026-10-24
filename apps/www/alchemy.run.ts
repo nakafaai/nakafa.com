@@ -2,7 +2,6 @@ import { providers, state, Website, Worker } from "@alchemy.run/cloudflare";
 import { PRODUCTION_DEPLOY_STAGE } from "@repo/utilities/stage";
 import { RemovalPolicy, Stack, Stage } from "alchemy";
 import { Effect } from "effect";
-import { requireNonEmptyBindings } from "#www/deploy/bindings";
 import { deployNakafaDns, deployNakafaIdZone } from "#www/deploy/dns";
 import { edgeWorkerBindings } from "#www/deploy/edge";
 import {
@@ -13,7 +12,6 @@ import {
 } from "#www/deploy/stage";
 import {
   deployedWorkerBindings,
-  workerEnvironment,
   workerSettings,
 } from "#www/worker";
 
@@ -42,8 +40,8 @@ export default Stack(
     const stage = yield* Stage;
     const isProduction = stage === PRODUCTION_DEPLOY_STAGE;
 
-    // An empty bound value fails the deploy here, before any Worker changes.
-    yield* requireNonEmptyBindings(workerEnvironment());
+    // Reads every bound value before any resource changes, so a required value that a reader refuses fails the deploy here.
+    const bindings = deployedWorkerBindings();
 
     // Production declares the zones first: the web Worker attaches nakafa.com by zone name.
     if (isProduction) {
@@ -56,7 +54,7 @@ export default Stack(
         date: workerSettings.compatibilityDate,
         flags: workerSettings.compatibilityFlags,
       },
-      env: { ...deployedWorkerBindings(), NAKAFA_DEPLOY_STAGE: stage },
+      env: { ...bindings, NAKAFA_DEPLOY_STAGE: stage },
       viteEnvironments: workerSettings.viteEnvironments,
       observability: WORKER_OBSERVABILITY,
       placement: WORKER_PLACEMENT,

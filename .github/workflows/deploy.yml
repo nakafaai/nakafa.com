@@ -25,6 +25,8 @@ jobs:
     name: Deploy ${{ github.event_name == 'workflow_dispatch' && inputs.stage || 'prod' }}
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    # The GitHub environment of the stage holds that stage's values and nothing else.
+    environment: ${{ github.event_name == 'workflow_dispatch' && inputs.stage == 'staging' && 'staging' || 'production' }}
     env:
       STAGE: ${{ github.event_name == 'workflow_dispatch' && inputs.stage || 'prod' }}
       NAKAFA_RELEASE_SHA: ${{ github.sha }}
@@ -51,51 +53,27 @@ jobs:
               ;;
           esac
 
+      - name: Setup Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24.21.0
+          package-manager-cache: false
+
       - name: Install dependencies
         uses: ./.github/actions/install
 
-      - name: Deploy Convex to production
-        if: env.STAGE == 'prod'
+      - name: Load the environment's values
+        env:
+          ENVIRONMENT_SECRETS: ${{ toJSON(secrets) }}
+          ENVIRONMENT_VARIABLES: ${{ toJSON(vars) }}
+        run: node scripts/github/environment.ts
+
+      - name: Deploy Convex
         working-directory: packages/backend
         env:
           CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
         run: pnpm codegen && pnpm exec convex deploy --yes
 
-      - name: Deploy Convex to staging
-        if: env.STAGE == 'staging'
-        working-directory: packages/backend
-        env:
-          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_STAGING_DEPLOY_KEY }}
-        run: pnpm codegen && pnpm exec convex deploy --yes
-
       - name: Deploy the Cloudflare stack
         working-directory: apps/www
-        env:
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          AKSARA_AGENT_SIGNING_KEY_ID: ${{ secrets.AKSARA_AGENT_SIGNING_KEY_ID }}
-          AKSARA_AGENT_SIGNING_PUBLIC_KEY: ${{ secrets.AKSARA_AGENT_SIGNING_PUBLIC_KEY }}
-          AKSARA_PREVIEW_EVENTS_PATH: ${{ secrets.AKSARA_PREVIEW_EVENTS_PATH }}
-          AKSARA_PREVIEW_KEY_ID: ${{ secrets.AKSARA_PREVIEW_KEY_ID }}
-          AKSARA_PREVIEW_MANIFEST_PATH: ${{ secrets.AKSARA_PREVIEW_MANIFEST_PATH }}
-          AKSARA_PREVIEW_ORIGIN: ${{ secrets.AKSARA_PREVIEW_ORIGIN }}
-          AKSARA_PREVIEW_PROVIDER_TOKEN: ${{ secrets.AKSARA_PREVIEW_PROVIDER_TOKEN }}
-          AKSARA_PREVIEW_PUBLIC_KEY: ${{ secrets.AKSARA_PREVIEW_PUBLIC_KEY }}
-          AKSARA_PREVIEW_RENDERER_SECRET: ${{ secrets.AKSARA_PREVIEW_RENDERER_SECRET }}
-          AKSARA_PREVIEW_RENDERER_TOKEN: ${{ secrets.AKSARA_PREVIEW_RENDERER_TOKEN }}
-          AKSARA_PUBLICATION_TOKEN: ${{ secrets.AKSARA_PUBLICATION_TOKEN }}
-          CONTENT_RUNTIME_TOKEN: ${{ secrets.CONTENT_RUNTIME_TOKEN }}
-          CONVEX_CLOUD_URL: ${{ secrets.CONVEX_CLOUD_URL }}
-          NAKAFA_API_EDGE_SECRET: ${{ secrets.NAKAFA_API_EDGE_SECRET }}
-          NAKAFA_CONVEX_SITE_URL: ${{ secrets.NAKAFA_CONVEX_SITE_URL }}
-          NAKAFA_MCP_EDGE_SECRET: ${{ secrets.NAKAFA_MCP_EDGE_SECRET }}
-          OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}
-          SITE_URL: ${{ secrets.SITE_URL }}
-          VITE_APP_URL: ${{ vars.VITE_APP_URL }}
-          VITE_CONVEX_SITE_URL: ${{ vars.VITE_CONVEX_SITE_URL }}
-          VITE_CONVEX_URL: ${{ vars.VITE_CONVEX_URL }}
-          VITE_POLAR_SERVER: ${{ vars.VITE_POLAR_SERVER }}
-          VITE_POSTHOG_KEY: ${{ vars.VITE_POSTHOG_KEY }}
-          VITE_POSTHOG_PROXY_HOST: ${{ vars.VITE_POSTHOG_PROXY_HOST }}
-          VITE_POSTHOG_UI_HOST: ${{ vars.VITE_POSTHOG_UI_HOST }}
         run: pnpm exec alchemy deploy --stage "$STAGE" --yes
