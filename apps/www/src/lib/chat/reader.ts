@@ -38,22 +38,25 @@ const ReaderPage = <Item extends Schema.Top>(item: Item) =>
  * metadata, which the transcript never reads. TanStack serializes the answer by
  * its type, and an optional `unknown` metadata field is not serializable.
  */
-export type ReaderMessageShape = Omit<NinaMessage, "metadata">;
+type ReaderMessageShape = Omit<NinaMessage, "metadata">;
 
 /**
  * A message of the transcript: Agent's UI message, whose parts are an AI SDK
  * shape that no Schema describes as data. The predicate checks the fields the
  * transcript reads, and the server decodes each message it returns through it.
  */
+const ReaderMessageFields = Schema.Struct({
+  key: Schema.String,
+  order: Schema.Finite,
+  parts: Schema.Array(Schema.Unknown),
+  role: Schema.String,
+  stepOrder: Schema.Finite,
+});
+
+/** A message of the transcript, as its guard reads it. */
 export const ReaderMessage = Schema.declare(
   (input: unknown): input is ReaderMessageShape =>
-    typeof input === "object" &&
-    input !== null &&
-    "key" in input &&
-    "order" in input &&
-    "parts" in input &&
-    "role" in input &&
-    "stepOrder" in input
+    Schema.is(ReaderMessageFields)(input)
 );
 
 /**

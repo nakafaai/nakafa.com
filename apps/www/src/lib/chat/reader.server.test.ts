@@ -5,7 +5,9 @@ import { NINA_MESSAGES_PAGE_SIZE } from "@repo/backend/client/nina/presentation"
 import { Id } from "@repo/backend/confect/_generated/id";
 import nina from "@repo/backend/confect/_generated/refs/nina";
 import { ChatAccessError } from "@repo/backend/confect/chats/access/spec";
-import { Effect, Schema } from "effect";
+import type { NinaMessage } from "@repo/backend/confect/nina/schema";
+import { Array as Arr, Effect, Option, Schema } from "effect";
+import { ReaderMessagePage } from "@/lib/chat/reader";
 import {
   readReaderHandler,
   readReaderOlderHandler,
@@ -48,7 +50,7 @@ const turn = {
   state: { finishedAt: 1, status: "complete" },
   usage: [],
 };
-const message = {
+const message: NinaMessage = {
   _creationTime: 1,
   id: "user_0",
   key: `${threadId}-0-0`,
@@ -73,11 +75,20 @@ type ScriptedAnswer = Effect.Effect<
 
 /** Answers each Convex query with its value, and dies on any other query. */
 function answer(answers: ReadonlyArray<readonly [unknown, ScriptedAnswer]>) {
-  mocks.query.mockImplementation((ref: unknown) => {
-    const found = answers.find(([query]) => query === ref);
-    return found ? found[1] : Effect.die("unexpected query");
-  });
+  mocks.query.mockImplementation((ref: unknown) =>
+    Option.match(
+      Arr.findFirst(answers, ([query]) => query === ref),
+      {
+        onNone: () => Effect.die("unexpected query"),
+        onSome: ([, value]) => value,
+      }
+    )
+  );
 }
+
+/** One page of messages, encoded as the server sends it. */
+const messagesJson = (messages: readonly NinaMessage[]) =>
+  Schema.encodeSync(ReaderMessagePage)(messages);
 
 const request = { chatId, shareToken };
 
@@ -100,7 +111,7 @@ describe("reading a shared chat", () => {
       messages: {
         continueCursor: "",
         isDone: true,
-        json: JSON.stringify([message]),
+        json: messagesJson([message]),
       },
       status: "ready",
       turn,
@@ -176,7 +187,7 @@ describe("reading a shared chat", () => {
       messages: {
         continueCursor: "",
         isDone: true,
-        json: JSON.stringify([message]),
+        json: messagesJson([message]),
       },
       turns: null,
     });
@@ -197,7 +208,7 @@ describe("reading a shared chat", () => {
       messages: {
         continueCursor: "",
         isDone: true,
-        json: JSON.stringify([message]),
+        json: messagesJson([message]),
       },
       turns: { continueCursor: "", isDone: true, page: [turn] },
     });

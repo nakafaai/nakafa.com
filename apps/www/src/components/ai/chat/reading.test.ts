@@ -2,7 +2,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import type { NinaTurnSummary } from "@repo/backend/confect/nina/contract/turn";
 import type { NinaMessage } from "@repo/backend/confect/nina/schema";
-import { Schema } from "effect";
+import { Array as Arr, Schema } from "effect";
 import { readerView, withOlderPage } from "@/components/ai/chat/reading";
 import { ReaderMessagePage, ReaderOlder, ReaderReady } from "@/lib/chat/reader";
 
@@ -33,23 +33,21 @@ function turn(order: number): typeof NinaTurnSummary.Type {
   };
 }
 
-/** One page of messages, as the JSON text the server sends. */
+/** A page of messages as the server sends it: the JSON text that encodes them. */
 function messagesJson(messages: readonly NinaMessage[]) {
   return Schema.encodeSync(ReaderMessagePage)(messages);
 }
 
-/** The first read of a chat that has more pages to read, decoded as the client decodes it. */
-function firstRead({
-  messages,
+/**
+ * The first read of a chat, decoded as the client decodes it. Its messages and
+ * turns are the first pages, and each list says whether it has more.
+ */
+function firstRead(
+  messages: readonly NinaMessage[],
+  turns: readonly (typeof NinaTurnSummary.Type)[],
   messagesDone = false,
-  turns,
-  turnsDone = false,
-}: {
-  messages: readonly NinaMessage[];
-  messagesDone?: boolean;
-  turns: readonly (typeof NinaTurnSummary.Type)[];
-  turnsDone?: boolean;
-}) {
+  turnsDone = false
+) {
   return Schema.decodeUnknownSync(ReaderReady)({
     chat: {
       _creationTime: 1,
@@ -74,19 +72,16 @@ function firstRead({
   });
 }
 
-/** An older page the reader loaded, decoded as the client decodes it. */
-function olderPage({
-  messages,
+/**
+ * An older page the reader loaded, decoded as the client decodes it. Its turns
+ * come only when the reader asked for them, which `turns === null` says not.
+ */
+function olderPage(
+  messages: readonly NinaMessage[],
+  turns: readonly (typeof NinaTurnSummary.Type)[] | null,
   messagesDone = false,
-  turns,
-}: {
-  messages: readonly NinaMessage[];
-  messagesDone?: boolean;
-  turns: null | {
-    isDone: boolean;
-    page: readonly (typeof NinaTurnSummary.Type)[];
-  };
-}) {
+  turnsDone = false
+) {
   return Schema.decodeUnknownSync(ReaderOlder)({
     messages: {
       continueCursor: "messages-3",
@@ -96,31 +91,22 @@ function olderPage({
     turns:
       turns === null
         ? null
-        : { continueCursor: "turns-3", isDone: turns.isDone, page: turns.page },
+        : { continueCursor: "turns-3", isDone: turnsDone, page: turns },
   });
 }
 
 describe("reader view", () => {
   it("shows the messages of every page oldest first, whatever order the server sends them", () => {
-    const view = readerView(
-      firstRead({ messages: [message(2), message(1)], turns: [turn(1)] })
-    );
+    const view = readerView(firstRead([message(2), message(1)], [turn(1)]));
 
-    expect(view.messages.map((item) => item.order)).toStrictEqual([1, 2]);
+    expect(Arr.map(view.messages, (item) => item.order)).toStrictEqual([1, 2]);
     expect(view.messagesCursor).toBe("messages-2");
     expect(view.turnsCursor).toBe("turns-2");
     expect(view.endedTurns).toStrictEqual([turn(1)]);
   });
 
   it("holds no cursor for a list that has no page left", () => {
-    const view = readerView(
-      firstRead({
-        messages: [message(1)],
-        messagesDone: true,
-        turns: [],
-        turnsDone: true,
-      })
-    );
+    const view = readerView(firstRead([message(1)], [], true, true));
 
     expect(view.messagesCursor).toBeUndefined();
     expect(view.turnsCursor).toBeUndefined();
@@ -129,34 +115,25 @@ describe("reader view", () => {
 
 describe("older pages of a reader's view", () => {
   it("puts an older page before the messages shown, and keeps each message once", () => {
-    const view = readerView(
-      firstRead({ messages: [message(3), message(2)], turns: [turn(2)] })
-    );
+    const view = readerView(firstRead([message(3), message(2)], [turn(2)]));
 
     const next = withOlderPage(
       view,
-      olderPage({
-        messages: [message(2), message(1)],
-        messagesDone: true,
-        turns: { isDone: false, page: [turn(1)] },
-      })
+      olderPage([message(2), message(1)], [turn(1)], true)
     );
 
-    expect(next.messages.map((item) => item.order)).toStrictEqual([1, 2, 3]);
+    expect(Arr.map(next.messages, (item) => item.order)).toStrictEqual([
+      1, 2, 3,
+    ]);
     expect(next.endedTurns).toStrictEqual([turn(2), turn(1)]);
     expect(next.messagesCursor).toBeUndefined();
     expect(next.turnsCursor).toBe("turns-3");
   });
 
   it("keeps the turns it has when the older page asks for none", () => {
-    const view = readerView(
-      firstRead({ messages: [message(2)], turns: [turn(2)] })
-    );
+    const view = readerView(firstRead([message(2)], [turn(2)]));
 
-    const next = withOlderPage(
-      view,
-      olderPage({ messages: [message(1)], turns: null })
-    );
+    const next = withOlderPage(view, olderPage([message(1)], null));
 
     expect(next.endedTurns).toStrictEqual([turn(2)]);
     expect(next.turnsCursor).toBe("turns-2");
@@ -164,16 +141,11 @@ describe("older pages of a reader's view", () => {
   });
 
   it("ends the turns once an older page reads the last of them", () => {
-    const view = readerView(
-      firstRead({ messages: [message(2)], turns: [turn(2)] })
-    );
+    const view = readerView(firstRead([message(2)], [turn(2)]));
 
     const next = withOlderPage(
       view,
-      olderPage({
-        messages: [message(1)],
-        turns: { isDone: true, page: [turn(1)] },
-      })
+      olderPage([message(1)], [turn(1)], false, true)
     );
 
     expect(next.turnsCursor).toBeUndefined();
