@@ -62,3 +62,6 @@ export const activeContentSigningKeyId =
 
 /** Resolves only content keys retained by the reviewed contracts package. */
 export const contentKeyResolver = makeTrustedKeyResolver(trustedContentKeys);
+
+/** The content keys this deployment verifies with, which a stored verdict names in its key. */
+export const contentTrustedKeys = trustedContentKeys;

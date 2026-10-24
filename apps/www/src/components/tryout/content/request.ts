@@ -53,6 +53,11 @@ export const makeTryoutRuntimeRequest = Effect.fn(
   };
 });
 
+/** The one coherent request that `makeTryoutRuntimeRequest` builds. */
+export type TryoutRuntimeRequest = Effect.Success<
+  ReturnType<typeof makeTryoutRuntimeRequest>
+>;
+
 /** Creates one consistent signed runtime verification failure. */
 function runtimeIntegrity(cause: string) {
   return new ContentRuntimeVerificationError({ cause });

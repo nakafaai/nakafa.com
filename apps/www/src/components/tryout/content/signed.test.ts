@@ -24,6 +24,7 @@ import {
   it,
 } from "@effect/vitest";
 import { compile } from "@mdx-js/mdx";
+import { createRendererManifest } from "@nakafa/aksara-contracts/renderer/manifest";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import { createTestPublication } from "@repo/backend/test/content/publication";
 import { insertHistoryAttempt } from "@repo/backend/test/tryout/history";
@@ -40,6 +41,7 @@ import {
   renderSignedTryoutRows,
 } from "@/components/tryout/content/signed";
 import { ContentRuntimeConfigurationError } from "@/lib/content/published/errors";
+import { rendererManifest } from "@/lib/content/renderer/manifest";
 import { activateTestRelease } from "@/test/active";
 import { resetTestRuntimeCache } from "@/test/store";
 
@@ -49,6 +51,8 @@ const runtimeKeysMock = vi.hoisted(() => vi.fn());
 const runtimeSiteMock = vi.hoisted(() => vi.fn());
 const fetchMock = vi.hoisted(() => vi.fn<typeof fetch>());
 const sessionMock = vi.hoisted(() => vi.fn());
+const liveRendererMock = vi.hoisted(() => vi.fn<() => unknown>());
+const trustedKeysMock = vi.hoisted(() => vi.fn<() => unknown>());
 const queryMock = vi.hoisted(() =>
   vi.fn<
     (
@@ -121,6 +125,18 @@ vi.mock("@repo/backend/content/trust", async () => {
   );
   return {
     contentKeyResolver: TEST_KEY_RESOLVER,
+    get contentTrustedKeys() {
+      return trustedKeysMock() ?? [];
+    },
+  };
+});
+vi.mock("@/lib/content/renderer/manifest", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@/lib/content/renderer/manifest")>();
+  return {
+    get rendererManifest() {
+      return liveRendererMock() ?? actual.rendererManifest;
+    },
   };
 });
 type AttemptContentModule =
@@ -210,6 +226,8 @@ beforeEach(() => {
   vi.setSystemTime(TRYOUT_TEST_NOW);
   fetchMock.mockReset();
   queryMock.mockReset();
+  liveRendererMock.mockReset();
+  trustedKeysMock.mockReset();
   sessionMock
     .mockReset()
     .mockReturnValue(
@@ -491,6 +509,65 @@ describe("signed try-out execution", () => {
           )
         );
         expect(verifyAttemptSpy).toHaveBeenCalledOnce();
+      })
+  );
+
+  it.effect("does not keep a batch that fails verification", () =>
+    Effect.gen(function* () {
+      const fixture = yield* readOwnedFixture();
+      const row = yield* Effect.promise(() =>
+        fixture.owned.query(
+          Ref.getFunctionReference(attemptQuery),
+          fixture.seed.request
+        )
+      );
+      const found = yield* Effect.fromNullishOr(row);
+      const truncated = { ...found, items: Arr.take(found.items, 1) };
+      verifyAttemptSpy.mockClear();
+      const first = yield* renderSignedTryoutRows(fixture.access, [
+        truncated,
+      ]).pipe(Effect.flip);
+      const second = yield* renderSignedTryoutRows(fixture.access, [
+        truncated,
+      ]).pipe(Effect.flip);
+      expect(first).toMatchObject({ _tag: "ContentRuntimeVerificationError" });
+      expect(second).toMatchObject({ _tag: "ContentRuntimeVerificationError" });
+      // A failed verdict is never kept, so the second read verifies again.
+      expect(verifyAttemptSpy).toHaveBeenCalledTimes(2);
+    })
+  );
+
+  it.effect(
+    "verifies again when the live renderer or the trusted keys change",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* readOwnedFixture({
+          compiledCode:
+            'return { default: function Content() { return "Re-verified batch"; } };',
+        });
+        const row = yield* Effect.promise(() =>
+          fixture.owned.query(
+            Ref.getFunctionReference(attemptQuery),
+            fixture.seed.request
+          )
+        );
+        const found = yield* Effect.fromNullishOr(row);
+        const current = yield* rendererManifest;
+        const widened = yield* createRendererManifest({
+          base: [...current.base, "VerificationProbe"],
+          domains: current.domains,
+          publishedDomains: current.publishedDomains,
+        });
+        verifyAttemptSpy.mockClear();
+        yield* renderSignedTryoutRows(fixture.access, [found]);
+        liveRendererMock.mockReturnValue(Effect.succeed(widened));
+        yield* renderSignedTryoutRows(fixture.access, [found]);
+        expect(verifyAttemptSpy).toHaveBeenCalledTimes(2);
+        trustedKeysMock.mockReturnValue([
+          { keyId: "retired-probe-key", publicKeyPem: "retired-probe-key" },
+        ]);
+        yield* renderSignedTryoutRows(fixture.access, [found]);
+        expect(verifyAttemptSpy).toHaveBeenCalledTimes(3);
       })
   );
 });

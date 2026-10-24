@@ -154,8 +154,9 @@ const readAttemptBatch = Effect.fn("NakafaContent.readAttemptBatch")(
 );
 
 /**
- * Verifies and renders one attempt batch on every request. Nothing caches the
- * result, so each load verifies the signed bodies and evaluates them again.
+ * Verifies one attempt batch through the verified-batch cache, then renders it on
+ * every request. The rendered tree is React, which the store cannot hold, so each
+ * load evaluates the verified bodies again.
  */
 const renderAttemptBatch = Effect.fn("NakafaContent.renderAttemptBatch")(
   function* (
@@ -170,8 +171,10 @@ const renderAttemptBatch = Effect.fn("NakafaContent.renderAttemptBatch")(
 );
 
 /**
- * Reads, verifies, and renders one protected batch. The rendered tree is React,
- * which the content store cannot hold, so each call reads the runtime again.
+ * Reads, verifies, and renders one featured batch. The runtime answer is kept as
+ * received and verified on every read, and it is read again only when the store
+ * has no kept answer. The rendered tree is React, which the store cannot hold, so
+ * each call renders it again.
  */
 const readBatch = Effect.fn("NakafaContent.readTryoutBatch")(function* (
   selectors: readonly TryoutSelector[]
