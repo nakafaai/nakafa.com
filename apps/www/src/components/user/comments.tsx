@@ -10,10 +10,10 @@ import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import {
   EXACT_ACTIVE_OPTIONS,
-  HrefLink,
+  Link,
 } from "@repo/internationalization/src/link";
-import { withLeadingSlash } from "@repo/utilities/path";
-import { Array as Arr, type Option } from "effect";
+import { publicPathTarget } from "@repo/internationalization/src/target";
+import { Array as Arr, Option } from "effect";
 import { useTranslations } from "use-intl";
 import { CommentsProvider } from "@/components/comments/provider";
 import { CommentRow } from "@/components/comments/row";
@@ -77,15 +77,11 @@ export function UserComments({
             comment={comment}
             key={comment._id}
             replyAction={
-              <HrefLink
-                activeOptions={EXACT_ACTIVE_OPTIONS}
-                aria-label={tCommon("reply")}
-                className={buttonVariants({ size: "sm", variant: "ghost" })}
-                href={withLeadingSlash(comment.slug)}
-              >
-                <HugeIcons icon={ArrowTurnBackwardIcon} />
-                <FeedCount value={comment.replyCount} />
-              </HrefLink>
+              <ReplyLink
+                label={tCommon("reply")}
+                replyCount={comment.replyCount}
+                slug={comment.slug}
+              />
             }
           />
         ))}
@@ -97,4 +93,30 @@ export function UserComments({
       </div>
     </CommentsProvider>
   );
+}
+
+/** The reply link of one comment: the page the comment belongs to, with its reply count. */
+function ReplyLink({
+  label,
+  replyCount,
+  slug,
+}: {
+  label: string;
+  replyCount: number;
+  slug: string;
+}) {
+  return Option.match(Option.fromNullishOr(publicPathTarget(slug)), {
+    onNone: () => null,
+    onSome: (target) => (
+      <Link
+        activeOptions={EXACT_ACTIVE_OPTIONS}
+        aria-label={label}
+        className={buttonVariants({ size: "sm", variant: "ghost" })}
+        {...target}
+      >
+        <HugeIcons icon={ArrowTurnBackwardIcon} />
+        <FeedCount value={replyCount} />
+      </Link>
+    ),
+  });
 }

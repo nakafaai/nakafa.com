@@ -7,10 +7,7 @@ import {
   useReducedMotion,
 } from "@mantine/hooks";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import {
-  EXACT_ACTIVE_OPTIONS,
-  HrefLink,
-} from "@repo/internationalization/src/link";
+import { PublicPathLink } from "@repo/internationalization/src/public";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
 import { animate } from "motion";
@@ -25,7 +22,7 @@ const LIGHT_FOR_MS = 1800;
 /** One curriculum of the catalog, as the page links to it. */
 type CurriculumLink = Pick<
   ReturnType<typeof readRuntimeCurriculumOptions>[number],
-  "countryCode" | "href" | "programKey" | "title"
+  "countryCode" | "programKey" | "publicPath" | "title"
 >;
 
 interface CurriculumListProps {
@@ -81,16 +78,15 @@ export function CurriculumList({ curricula, label }: CurriculumListProps) {
   return (
     <nav aria-label={label} className="grid gap-4" ref={ref}>
       {Arr.map(curricula, (curriculum, position) => (
-        <HrefLink
-          activeOptions={EXACT_ACTIVE_OPTIONS}
+        <PublicPathLink
           className={cn(
             "flex w-fit items-center gap-4 text-xl tracking-tight transition-opacity duration-300 sm:text-3xl",
             position === bright ? "opacity-100" : "opacity-60"
           )}
-          href={curriculum.href}
           key={curriculum.programKey}
           onFocus={() => light(position)}
           onPointerEnter={() => light(position)}
+          publicPath={curriculum.publicPath}
         >
           <CountryFlagIcon
             className="h-auto w-6 shrink-0 rounded-xs ring-1 ring-foreground/10"
@@ -100,7 +96,7 @@ export function CurriculumList({ curricula, label }: CurriculumListProps) {
             }
           />
           {curriculum.title}
-        </HrefLink>
+        </PublicPathLink>
       ))}
     </nav>
   );

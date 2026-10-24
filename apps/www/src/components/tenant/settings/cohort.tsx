@@ -15,7 +15,7 @@ import { SchoolHomeroomCard } from "@/components/tenant/settings/homeroom";
 import { SchoolPlacementAdd } from "@/components/tenant/settings/placement";
 import type { CohortDetail } from "@/components/tenant/settings/state";
 import { usePreloadedQueryResult } from "@/lib/data/preloaded";
-import { SchoolHrefLink } from "@/lib/routing/school/link";
+import { SchoolDestinationLink } from "@/lib/routing/school/link";
 import { getSchoolSettingsSection } from "@/lib/settings/school";
 import type { readCohortFn } from "@/lib/tenant/settings.functions";
 
@@ -62,13 +62,16 @@ export function SchoolCohortSettings({
 /** The header of a cohort page whose read failed: the path to the cohorts, and the failure in the body. */
 function CohortFailure({ children }: { children: ReactNode }) {
   const t = useTranslations("SchoolSettings");
-  const section = getSchoolSettingsSection("/settings/cohorts");
+  const section = getSchoolSettingsSection("/school/$slug/settings/cohorts");
 
   return (
     <>
       <SchoolHeader
         items={[
-          { href: section.group.href, label: t(section.group.key) },
+          {
+            label: t(section.group.key),
+            target: { host: "school", target: section.group.target },
+          },
           { label: t(section.labelKey) },
         ]}
         title={t(section.labelKey)}
@@ -84,13 +87,16 @@ function CohortFailure({ children }: { children: ReactNode }) {
  */
 function CohortUnavailable() {
   const t = useTranslations("SchoolSettings");
-  const section = getSchoolSettingsSection("/settings/cohorts");
+  const section = getSchoolSettingsSection("/school/$slug/settings/cohorts");
 
   return (
     <>
       <SchoolHeader
         items={[
-          { href: section.group.href, label: t(section.group.key) },
+          {
+            label: t(section.group.key),
+            target: { host: "school", target: section.group.target },
+          },
           { label: t(section.labelKey) },
         ]}
         title={t(section.labelKey)}
@@ -99,12 +105,12 @@ function CohortUnavailable() {
         <TableEmpty
           act="pointing"
           action={
-            <SchoolHrefLink
+            <SchoolDestinationLink
               className={buttonVariants({ variant: "outline" })}
-              href={section.href}
+              destination={section.target}
             >
               {t(section.labelKey)}
-            </SchoolHrefLink>
+            </SchoolDestinationLink>
           }
           description={t("cohort-unavailable-description")}
           title={t("cohort-unavailable")}
@@ -141,14 +147,20 @@ function SchoolCohortPage({
   }
   const detail = cohort.value;
   const isArchived = detail.status === "archived";
-  const section = getSchoolSettingsSection("/settings/cohorts");
+  const section = getSchoolSettingsSection("/school/$slug/settings/cohorts");
 
   return (
     <>
       <SchoolHeader
         items={[
-          { href: section.group.href, label: t(section.group.key) },
-          { href: section.href, label: t(section.labelKey) },
+          {
+            label: t(section.group.key),
+            target: { host: "school", target: section.group.target },
+          },
+          {
+            label: t(section.labelKey),
+            target: { host: "school", target: section.target },
+          },
           { label: detail.name },
         ]}
         title={detail.name}

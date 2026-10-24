@@ -74,10 +74,16 @@ export function shouldResetArticlePublicationCursor(page: ArticlePageCursor) {
   );
 }
 /** Builds the next release-bound catalog URL when another page exists. */
-export function getArticleNextHref(
-  path: string,
+/** The continuation of one article catalog page: its cursor and the release that issued it. */
+interface ArticleNextSearch {
+  readonly cursor: string;
+  readonly manifest: string;
+  readonly release: string;
+}
+
+export function getArticleNextSearch(
   page: ArticleNextPage
-): Option.Option<string> {
+): Option.Option<ArticleNextSearch> {
   if (
     page.nextCursor === null ||
     page.activeManifestHash === null ||
@@ -85,10 +91,9 @@ export function getArticleNextHref(
   ) {
     return Option.none();
   }
-  const query = new URLSearchParams({
+  return Option.some({
     cursor: page.nextCursor,
     manifest: page.activeManifestHash,
     release: page.activeReleaseId,
   });
-  return Option.some(`${path}?${query}`);
 }

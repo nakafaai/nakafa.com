@@ -30,8 +30,5 @@ export function usePreferredCurriculumTarget(
     return null;
   }
 
-  return getCurriculumProgramTarget({
-    locale,
-    publicSlug: preference.value.program.publicSlug,
-  });
+  return getCurriculumProgramTarget(preference.value.program.publicSlug);
 }

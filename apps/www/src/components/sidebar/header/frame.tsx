@@ -1,6 +1,6 @@
 "use client";
 
-import { useCanonicalPath } from "@repo/internationalization/src/link";
+import { useRouteMatched } from "@repo/internationalization/src/link";
 import {
   domAnimation,
   LazyMotion,
@@ -22,11 +22,12 @@ const BORDER_OPACITY_THRESHOLD_MAX = 50;
  * phone shows one header row.
  */
 export function HeaderContainer({ children }: { children: ReactNode }) {
-  const pathname = useCanonicalPath();
   const { scrollY } = useScroll();
 
-  //chat page not using window scroll
-  const isChat = pathname.includes("/chat");
+  // The chat pages do not scroll the window, so the header keeps its border.
+  const isChatPage = useRouteMatched("/$locale/chat");
+  const isProfileChatPage = useRouteMatched("/$locale/user/$username/chat");
+  const isChat = isChatPage || isProfileChatPage;
 
   const borderOpacity = useTransform(
     scrollY,

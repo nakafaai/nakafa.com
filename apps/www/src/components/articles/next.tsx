@@ -3,28 +3,35 @@
 import { ArrowRight02Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import {
-  EXACT_ACTIVE_OPTIONS,
-  HrefLink,
-} from "@repo/internationalization/src/link";
+import { DestinationLink } from "@repo/internationalization/src/link";
+import { articleNextTarget } from "@/lib/routing/public/article";
 import { useTranslations } from "use-intl";
 
 /** Links one article catalog page to its release-bound continuation. */
-export function ArticleNext({ href }: { readonly href: string }) {
+export function ArticleNext({
+  category,
+  search,
+}: {
+  /** The category whose next page this is; the article index has none. */
+  readonly category?: string | undefined;
+  readonly search: {
+    readonly cursor: string;
+    readonly manifest: string;
+    readonly release: string;
+  };
+}) {
   const t = useTranslations("Common");
   const label = t("next");
-
   return (
     <nav aria-label={label} className="mt-10 flex justify-center">
-      <HrefLink
-        activeOptions={EXACT_ACTIVE_OPTIONS}
+      <DestinationLink
         className={buttonVariants({ variant: "outline" })}
-        href={href}
+        destination={articleNextTarget({ category, search })}
         title={label}
       >
         <span>{label}</span>
         <HugeIcons aria-hidden="true" icon={ArrowRight02Icon} />
-      </HrefLink>
+      </DestinationLink>
     </nav>
   );
 }

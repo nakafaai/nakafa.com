@@ -15,26 +15,29 @@ describe("profile href", () => {
   });
 
   it("routes a profile and its tabs to the router's profile segment", () => {
-    expect(profileTarget("nabilfatih", "id")).toEqual({
-      params: { locale: "id", username: "nabilfatih" },
+    expect(profileTarget("nabilfatih")).toEqual({
+      from: "/$locale",
+      params: { username: "nabilfatih" },
       to: "/$locale/user/$username",
     });
-    expect(profileTabTarget("comments", "nabilfatih", "en")).toEqual({
-      params: { locale: "en", username: "nabilfatih" },
+    expect(profileTabTarget("comments", "nabilfatih")).toEqual({
+      from: "/$locale",
+      params: { username: "nabilfatih" },
       to: "/$locale/user/$username/comments",
     });
   });
 
   it("sends a person to their own chats at the chat tab of their profile", () => {
-    expect(ownChatsTarget("nabilfatih", "id")).toEqual({
-      params: { locale: "id", username: "nabilfatih" },
+    expect(ownChatsTarget("nabilfatih")).toEqual({
+      from: "/$locale",
+      params: { username: "nabilfatih" },
       to: "/$locale/user/$username/chat",
     });
   });
 
   it("sends an account that holds no username to the page of a new chat", () => {
-    expect(ownChatsTarget(undefined, "id")).toEqual({
-      params: { locale: "id" },
+    expect(ownChatsTarget(undefined)).toEqual({
+      from: "/$locale",
       to: "/$locale/chat",
     });
   });

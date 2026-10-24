@@ -1,6 +1,7 @@
 import { AllahIcon } from "@hugeicons/core-free-icons";
 import { Card } from "@repo/design-system/components/ui/card";
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
+import { quranSurahTarget } from "@repo/internationalization/src/target";
 import { makeBreadcrumbNodes } from "@repo/seo/json-ld/node";
 import { createFileRoute } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
@@ -97,8 +98,11 @@ function QuranIndexPage() {
           <CardLinks>
             {Arr.map(page.surahs, (surah) => (
               <CardLink
-                href={`/quran/${surah.number}`}
                 key={surah.number}
+                target={{
+                  host: "app",
+                  target: quranSurahTarget(surah.number),
+                }}
                 title={surah.title}
               >
                 <QuranSurahRow

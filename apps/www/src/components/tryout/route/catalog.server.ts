@@ -18,7 +18,7 @@ import {
 } from "@/components/tryout/catalog/source.server";
 import { readCatalogQuery } from "@/components/tryout/catalog/table/query";
 import { TRYOUT_SET_PAGE_SIZE } from "@/components/tryout/catalog/table/types";
-import { getTryoutHref } from "@/components/tryout/route/path";
+import { getTryoutPublicPath } from "@/components/tryout/route/path";
 import { keepPersonalResponse } from "@/components/tryout/route/response.server";
 import type { TrackListRequestSchema } from "@/components/tryout/route/search";
 import { readRequestToken } from "@/components/tryout/route/token.server";
@@ -168,7 +168,7 @@ export const readTryoutHubRoute = Effect.fn("www.tryout.route.readHub")(
 /** A country page: its exam families, each with the artwork the catalog names. */
 export const readTryoutCountryRoute = Effect.fn("www.tryout.route.readCountry")(
   function* (input: { readonly country: string; readonly locale: Locale }) {
-    const countryPath = getTryoutHref({ country: input.country }).slice(1);
+    const countryPath = getTryoutPublicPath({ country: input.country });
     const [page, hub, head, labels, tTryouts] = yield* Effect.all([
       readTryoutCountryPage(input.locale, countryPath),
       readTryoutHubPage(input.locale),
@@ -201,7 +201,7 @@ export const readTryoutCountryRoute = Effect.fn("www.tryout.route.readCountry")(
     );
     return {
       actionLabel: tTryouts("open-exam-cta"),
-      countryOptions: buildTryoutCountryOptions(input.locale, hub.countries),
+      countryOptions: buildTryoutCountryOptions(hub.countries),
       countryPath,
       exams,
       head: head.value,
@@ -223,11 +223,11 @@ export const readTryoutExamRoute = Effect.fn("www.tryout.route.readExam")(
     readonly exam: string;
     readonly locale: Locale;
   }) {
-    const countryPath = getTryoutHref({ country: input.country }).slice(1);
-    const examPath = getTryoutHref({
+    const countryPath = getTryoutPublicPath({ country: input.country });
+    const examPath = getTryoutPublicPath({
       country: input.country,
       exam: input.exam,
-    }).slice(1);
+    });
     const [page, countryPage, head, labels, tTryouts] = yield* Effect.all([
       readTryoutExamPage(input.locale, examPath),
       readTryoutCountryPage(input.locale, countryPath),
@@ -245,12 +245,9 @@ export const readTryoutExamRoute = Effect.fn("www.tryout.route.readExam")(
       return { kind: "notFound" as const };
     }
     return {
-      countryHref: getTryoutHref({ country: input.country }),
+      countryPath: getTryoutPublicPath({ country: input.country }),
       exam: page,
-      examOptions: buildTryoutExamOptions(
-        input.locale,
-        countryPage.value.exams
-      ),
+      examOptions: buildTryoutExamOptions(countryPage.value.exams),
       examPath,
       head: head.value,
       kind: "found" as const,
@@ -268,16 +265,16 @@ export const readTryoutTrackRoute = Effect.fn("www.tryout.route.readTrack")(
     readonly locale: Locale;
     readonly track: string;
   }) {
-    const countryPath = getTryoutHref({ country: input.country }).slice(1);
-    const examPath = getTryoutHref({
+    const countryPath = getTryoutPublicPath({ country: input.country });
+    const examPath = getTryoutPublicPath({
       country: input.country,
       exam: input.exam,
-    }).slice(1);
-    const trackPath = getTryoutHref({
+    });
+    const trackPath = getTryoutPublicPath({
       country: input.country,
       exam: input.exam,
       track: input.track,
-    }).slice(1);
+    });
     const [page, countryPage, head, labels, tTryouts] = yield* Effect.all([
       readTryoutTrackPage(input.locale, trackPath),
       readTryoutCountryPage(input.locale, countryPath),
@@ -295,12 +292,8 @@ export const readTryoutTrackRoute = Effect.fn("www.tryout.route.readTrack")(
       return { kind: "notFound" as const };
     }
     return {
-      countryHref: getTryoutHref({ country: input.country }),
-      examHref: getTryoutHref({ country: input.country, exam: input.exam }),
-      examOptions: buildTryoutExamOptions(
-        input.locale,
-        countryPage.value.exams
-      ),
+      countryPath: getTryoutPublicPath({ country: input.country }),
+      examOptions: buildTryoutExamOptions(countryPage.value.exams),
       examPath,
       head: head.value,
       kind: "found" as const,

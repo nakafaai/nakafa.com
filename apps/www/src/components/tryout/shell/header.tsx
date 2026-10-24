@@ -1,5 +1,9 @@
 "use client";
 
+import {
+  HOME_TARGET,
+  TRYOUT_TARGET,
+} from "@repo/internationalization/src/target";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import { BreadcrumbHeaderFrame } from "@/components/shared/breadcrumb/frame";
@@ -24,8 +28,11 @@ export function TryoutPageHeader({
   title: string;
 }) {
   const tCommon = useTranslations("Common");
-  const path = [
-    { href: "/try-out", label: tCommon("try-out-short") },
+  const path: readonly BreadcrumbHeaderItem[] = [
+    {
+      label: tCommon("try-out-short"),
+      target: { host: "app", target: TRYOUT_TARGET },
+    },
     ...items,
   ];
   return (
@@ -33,14 +40,14 @@ export function TryoutPageHeader({
       <div className="min-w-0">
         <BreadcrumbHeaderFold
           className="md:hidden"
-          homeHref="/home"
+          home={{ host: "app", target: HOME_TARGET }}
           homeLabel={tCommon("home")}
           items={path}
           menuLabel={tCommon("more")}
         />
         <div className="min-w-0 max-md:hidden">
           <BreadcrumbHeaderPath
-            homeHref="/home"
+            home={{ host: "app", target: HOME_TARGET }}
             homeLabel={tCommon("home")}
             items={path}
             menuLabel={tCommon("more")}

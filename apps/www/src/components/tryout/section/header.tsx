@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { getTryoutPublicPathHref } from "@/components/tryout/route/path";
+import { getTryoutCrumbTarget } from "@/components/tryout/route/path";
 import type { TryoutSectionPage } from "@/components/tryout/section/model";
 import { TryoutPageHeader } from "@/components/tryout/shell/header";
 
@@ -12,32 +12,32 @@ export function TryoutSectionPageHeader({
   action,
   page,
   parents,
-  setHref,
+  setPath,
 }: {
   action: ReactNode;
   page: TryoutSectionPage;
   parents: "linked" | "unlinked";
-  setHref: string;
+  setPath: string;
 }) {
   return (
     <TryoutPageHeader
       action={action}
       items={[
         {
-          href:
-            parents === "linked"
-              ? getTryoutPublicPathHref(page.exam.publicPath)
-              : undefined,
           label: page.exam.title,
+          target:
+            parents === "linked"
+              ? getTryoutCrumbTarget(page.exam.publicPath)
+              : undefined,
         },
         {
-          href:
-            parents === "linked"
-              ? getTryoutPublicPathHref(page.track.publicPath)
-              : undefined,
           label: page.track.title,
+          target:
+            parents === "linked"
+              ? getTryoutCrumbTarget(page.track.publicPath)
+              : undefined,
         },
-        { href: setHref, label: page.set.title },
+        { label: page.set.title, target: getTryoutCrumbTarget(setPath) },
       ]}
       title={page.section.title}
     />

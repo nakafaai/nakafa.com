@@ -1,15 +1,16 @@
 import { CheckmarkCircle02Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { TableCell, TableRow } from "@repo/design-system/components/ui/table";
-import { HrefLink, useHrefNavigate } from "@repo/internationalization/src/link";
+import { useNavigate } from "@tanstack/react-router";
 import { cn } from "cn";
-import { Array as Arr } from "effect";
+import { Array as Arr, Option } from "effect";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
 import type { TryoutSetRow } from "@/components/tryout/catalog/table/types";
+import { TryoutPageLink } from "@/components/tryout/route/link";
 import {
-  getTryoutAttemptHref,
-  getTryoutPublicPathHref,
+  getTryoutPageTarget,
+  type TryoutPageAddress,
 } from "@/components/tryout/route/path";
 import { TryoutStatus } from "@/components/tryout/status";
 
@@ -42,20 +43,20 @@ export function TryoutTableRows({
  * Opens a set, or the page its running attempt continues on directly: through
  * the public set the learner would pass a second page on the way.
  */
-function getTryoutSetRowHref(row: TryoutSetRow) {
+function getTryoutSetRowAddress(row: TryoutSetRow): TryoutPageAddress {
   return row.runningAttempt
-    ? getTryoutAttemptHref(
-        row.runningAttempt.publicPath,
-        row.runningAttempt.attemptId
-      )
-    : getTryoutPublicPathHref(row.publicPath);
+    ? {
+        attemptId: row.runningAttempt.attemptId,
+        publicPath: row.runningAttempt.publicPath,
+      }
+    : { publicPath: row.publicPath };
 }
 
 /** Preserves the existing row-wide navigation and intent prefetch. */
 function TryoutSetRowContent({ row }: { row: TryoutSetRow }) {
-  const navigateToHref = useHrefNavigate();
+  const navigate = useNavigate();
   const [intentActive, setIntentActive] = useState(false);
-  const href = getTryoutSetRowHref(row);
+  const address = getTryoutSetRowAddress(row);
   return (
     <TableRow
       className="cursor-pointer"
@@ -64,14 +65,21 @@ function TryoutSetRowContent({ row }: { row: TryoutSetRow }) {
           return;
         }
         setIntentActive(true);
-        navigateToHref(href);
+        Option.map(
+          Option.fromNullishOr(getTryoutPageTarget(address)),
+          (target) => navigate(target)
+        );
       }}
       onFocusCapture={() => setIntentActive(true)}
       onMouseEnter={() => setIntentActive(true)}
       onTouchStart={() => setIntentActive(true)}
     >
       <TableCell className="px-2 sm:px-4">
-        <TryoutSetName href={href} intentActive={intentActive} row={row} />
+        <TryoutSetName
+          address={address}
+          intentActive={intentActive}
+          row={row}
+        />
       </TableCell>
       <TableCell className="px-2 text-center sm:px-4">
         <TryoutStatus status={row.attemptStatus} />
@@ -91,19 +99,20 @@ function TryoutSetRowContent({ row }: { row: TryoutSetRow }) {
 
 /** The completion mark and score both describe the latest persisted attempt. */
 function TryoutSetName({
-  href,
+  address,
   row,
   intentActive,
 }: {
-  href: string;
+  address: TryoutPageAddress;
   row: TryoutSetRow;
   intentActive: boolean;
 }) {
+  const preload: "intent" | "render" = intentActive ? "render" : "intent";
   return (
-    <HrefLink
+    <TryoutPageLink
       className="flex min-w-0 items-center gap-2 underline-offset-4 hover:underline"
-      href={href}
-      preload={intentActive ? "render" : "intent"}
+      preload={preload}
+      {...address}
     >
       <span
         aria-hidden="true"
@@ -121,7 +130,7 @@ function TryoutSetName({
       <span className="truncate" title={row.title}>
         {row.title}
       </span>
-    </HrefLink>
+    </TryoutPageLink>
   );
 }
 

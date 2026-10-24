@@ -1,38 +1,46 @@
-import { Array as Arr } from "effect";
-import type { Locale } from "use-intl";
+import {
+  CURRICULA_TARGET,
+  curriculumPublicPathTarget,
+  HOME_TARGET,
+} from "@repo/internationalization/src/target";
+import { Array as Arr, Option } from "effect";
 import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
 import type { CurriculumViewRoute } from "@/lib/curriculum/model";
-import { getCurriculumIndexHref } from "@/lib/curriculum/routes";
 
 /** Renders one nested curriculum route with breadcrumb context only. */
 export function CurriculumNestedHeader({
   ancestors,
   currentRoute,
   homeLabel,
-  locale,
   menuLabel,
   subjectLabel,
 }: {
   ancestors: readonly CurriculumViewRoute[];
   currentRoute: CurriculumViewRoute;
   homeLabel: string;
-  locale: Locale;
   menuLabel: string;
   subjectLabel: string;
 }) {
   return (
     <BreadcrumbHeader
       value={{
-        homeHref: "/home",
+        home: { host: "app", target: HOME_TARGET },
         homeLabel,
         items: [
           {
-            href: getCurriculumIndexHref(locale),
             label: subjectLabel,
+            target: { host: "app", target: CURRICULA_TARGET },
           },
           ...Arr.map(ancestors, (ancestor) => ({
-            href: `/${ancestor.publicPath}`,
             label: ancestor.title,
+            target: Option.getOrUndefined(
+              Option.map(
+                Option.fromNullishOr(
+                  curriculumPublicPathTarget(ancestor.publicPath)
+                ),
+                (target) => ({ host: "app" as const, target })
+              )
+            ),
           })),
           { label: currentRoute.title },
         ],

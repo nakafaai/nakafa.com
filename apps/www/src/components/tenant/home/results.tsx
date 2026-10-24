@@ -9,6 +9,7 @@ import {
   RowText,
   TILE_ROWS,
 } from "@/components/tenant/home/tile";
+import { schoolExamSittingResultsTarget } from "@/lib/routing/school/target";
 
 /** One closed sitting whose results the viewer may view, as the school home holds it. */
 type Result = (typeof HomeView.Type)["closed"][number];
@@ -58,8 +59,10 @@ function ResultRow({ result }: { result: Result }) {
 
   return (
     <CardLink
-      href={`/exams/${result.examId}/sittings/${result.id}/results`}
-      localized={false}
+      target={{
+        host: "school",
+        target: schoolExamSittingResultsTarget(result.examId, result.id),
+      }}
       title={result.examTitle}
     >
       <RowText detail={result.room} title={result.examTitle} />

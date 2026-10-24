@@ -1,72 +1,142 @@
+import { linkOptions } from "@tanstack/react-router";
 import { Array as Arr, Option, Schema } from "effect";
+import { SCHOOL_ROUTE, type SchoolLinkTarget } from "@/lib/routing/school/link";
 
-const SchoolSettingsSectionSchema = Schema.Struct({
-  href: Schema.String,
+const SchoolSettingsLabelKeySchema = Schema.Literals([
+  "profile",
+  "periods",
+  "cohorts",
+  "units",
+  "members",
+  "roles",
+  "invites",
+  "students",
+  "clients",
+  "policies",
+  "audit",
+]);
+
+/** One addressable section of the school settings surface, with its typed link target. */
+interface SchoolSettingsSection {
   /** Message key owned by the `SchoolSettings` dictionary. */
-  labelKey: Schema.Literals([
-    "profile",
-    "periods",
-    "cohorts",
-    "units",
-    "members",
-    "roles",
-    "invites",
-    "students",
-    "clients",
-    "policies",
-    "audit",
-  ]),
-});
+  readonly labelKey: typeof SchoolSettingsLabelKeySchema.Type;
+  readonly target: SchoolLinkTarget;
+}
 
 /** One labelled group of addressable sections of the school settings surface. */
-const SchoolSettingsGroupSchema = Schema.Struct({
+interface SchoolSettingsGroup {
   /** Message key owned by the `SchoolSettings` dictionary, which labels the group. */
-  key: Schema.Literals(["school", "people", "integrations", "security"]),
-  sections: Schema.NonEmptyArray(SchoolSettingsSectionSchema),
-});
-/** Every group of the school settings surface, in sidebar order. */
-const SchoolSettingsGroupsSchema = Schema.NonEmptyArray(
-  SchoolSettingsGroupSchema
-);
-
-/** Root route of the school settings surface, on a school host. */
-const schoolSettingsRootHref = "/settings";
+  readonly key: "integrations" | "people" | "school" | "security";
+  readonly sections: readonly [
+    SchoolSettingsSection,
+    ...SchoolSettingsSection[],
+  ];
+}
 
 /**
  * The one table of the school settings surface: every group, in sidebar order,
  * with the sections it holds. The sidebar, the breadcrumb header, and the section
  * metadata all derive from it, so a new section has exactly one declaration.
  */
-export const schoolSettingsGroups: typeof SchoolSettingsGroupsSchema.Type = [
+export const schoolSettingsGroups: readonly [
+  SchoolSettingsGroup,
+  ...SchoolSettingsGroup[],
+] = [
   {
     key: "school",
     sections: [
-      { href: `${schoolSettingsRootHref}/profile`, labelKey: "profile" },
-      { href: `${schoolSettingsRootHref}/periods`, labelKey: "periods" },
-      { href: `${schoolSettingsRootHref}/cohorts`, labelKey: "cohorts" },
-      { href: `${schoolSettingsRootHref}/units`, labelKey: "units" },
+      {
+        labelKey: "profile",
+        target: linkOptions({
+          from: SCHOOL_ROUTE,
+          to: "/school/$slug/settings/profile",
+        }),
+      },
+      {
+        labelKey: "periods",
+        target: linkOptions({
+          from: SCHOOL_ROUTE,
+          to: "/school/$slug/settings/periods",
+        }),
+      },
+      {
+        labelKey: "cohorts",
+        target: linkOptions({
+          from: SCHOOL_ROUTE,
+          to: "/school/$slug/settings/cohorts",
+        }),
+      },
+      {
+        labelKey: "units",
+        target: linkOptions({
+          from: SCHOOL_ROUTE,
+          to: "/school/$slug/settings/units",
+        }),
+      },
     ],
   },
   {
     key: "people",
     sections: [
-      { href: `${schoolSettingsRootHref}/members`, labelKey: "members" },
-      { href: `${schoolSettingsRootHref}/roles`, labelKey: "roles" },
-      { href: `${schoolSettingsRootHref}/invites`, labelKey: "invites" },
-      { href: `${schoolSettingsRootHref}/students`, labelKey: "students" },
+      {
+        labelKey: "members",
+        target: linkOptions({
+          from: SCHOOL_ROUTE,
+          to: "/school/$slug/settings/members",
+        }),
+      },
+      {
+        labelKey: "roles",
+        target: linkOptions({
+          from: SCHOOL_ROUTE,
+          to: "/school/$slug/settings/roles",
+        }),
+      },
+      {
+        labelKey: "invites",
+        target: linkOptions({
+          from: SCHOOL_ROUTE,
+          to: "/school/$slug/settings/invites",
+        }),
+      },
+      {
+        labelKey: "students",
+        target: linkOptions({
+          from: SCHOOL_ROUTE,
+          to: "/school/$slug/settings/students",
+        }),
+      },
     ],
   },
   {
     key: "integrations",
     sections: [
-      { href: `${schoolSettingsRootHref}/clients`, labelKey: "clients" },
+      {
+        labelKey: "clients",
+        target: linkOptions({
+          from: SCHOOL_ROUTE,
+          to: "/school/$slug/settings/clients",
+        }),
+      },
     ],
   },
   {
     key: "security",
     sections: [
-      { href: `${schoolSettingsRootHref}/policies`, labelKey: "policies" },
-      { href: `${schoolSettingsRootHref}/audit`, labelKey: "audit" },
+      {
+        labelKey: "policies",
+        target: linkOptions({
+          from: SCHOOL_ROUTE,
+          to: "/school/$slug/settings/policies",
+        }),
+      },
+      {
+        labelKey: "audit",
+        target: linkOptions({
+          from: SCHOOL_ROUTE,
+          to: "/school/$slug/settings/audit",
+        }),
+      },
     ],
   },
 ];
@@ -79,8 +149,8 @@ export const schoolSettingsSections = Arr.flatMap(
   schoolSettingsGroups,
   (group) => {
     const parent = {
-      href: Arr.headNonEmpty(group.sections).href,
       key: group.key,
+      target: Arr.headNonEmpty(group.sections).target,
     };
 
     return Arr.map(group.sections, (section) => ({
@@ -90,36 +160,24 @@ export const schoolSettingsSections = Arr.flatMap(
   }
 );
 
-/** Returns whether one school pathname belongs to the school settings surface. */
-export function isSchoolSettingsPath(pathname: string) {
-  return (
-    pathname === schoolSettingsRootHref ||
-    pathname.startsWith(`${schoolSettingsRootHref}/`)
-  );
-}
-
-/** The editor route of one exam: `/exams/<id>/edit`, with or without a trailing slash. */
-const examEditorPathPattern = /^\/exams\/[^/]+\/edit\/?$/;
+/** The first section of the school settings, which the root and every undeclared path belong to. */
+const FIRST_SECTION = (() => {
+  const group = Arr.headNonEmpty(schoolSettingsGroups);
+  const section = Arr.headNonEmpty(group.sections);
+  return { ...section, group: { key: group.key, target: section.target } };
+})();
 
 /**
- * Returns whether one school pathname is the editor of an exam. The editor draws its
- * own frame in place of the school sidebar.
+ * Resolves the settings section that owns the page on screen, given the leaf
+ * route path. The settings root and every path this table does not declare
+ * belong to the first section, so the breadcrumb is never blank.
  */
-export function isExamEditorPath(pathname: string) {
-  return examEditorPathPattern.test(pathname);
-}
-
-/**
- * Resolves the settings section that owns one school pathname. The settings
- * root and every path this table does not declare belong to the first section,
- * so the breadcrumb is never blank.
- */
-export function getSchoolSettingsSection(pathname: string) {
+export function getSchoolSettingsSection(leafPath: string) {
   return Option.getOrElse(
     Arr.findFirst(
       schoolSettingsSections,
-      (section) => section.href === pathname
+      (section) => section.target.to === leafPath
     ),
-    () => Arr.headNonEmpty(schoolSettingsSections)
+    () => FIRST_SECTION
   );
 }

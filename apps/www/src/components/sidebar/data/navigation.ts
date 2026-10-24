@@ -3,8 +3,10 @@ import {
   Books02Icon,
   Target01Icon,
 } from "@hugeicons/core-free-icons";
-import type { LinkTarget } from "@repo/internationalization/src/link";
-import type { Locale } from "@repo/internationalization/src/locale";
+import {
+  type LinkTarget,
+  LOCALE_ROUTE,
+} from "@repo/internationalization/src/link";
 import { linkOptions } from "@tanstack/react-router";
 
 const forYouNavigationItems = {
@@ -13,24 +15,21 @@ const forYouNavigationItems = {
     id: "subject",
     labelKey: "subject",
     labelNamespace: "Common",
-    target: (locale: Locale): LinkTarget =>
-      linkOptions({ params: { locale }, to: "/$locale/curricula" }),
+    target: linkOptions({ from: LOCALE_ROUTE, to: "/$locale/curricula" }),
   },
   tryOut: {
     icon: Target01Icon,
     id: "tryOut",
     labelKey: "try-out",
     labelNamespace: "Common",
-    target: (locale: Locale): LinkTarget =>
-      linkOptions({ params: { locale }, to: "/$locale/try-out" }),
+    target: linkOptions({ from: LOCALE_ROUTE, to: "/$locale/try-out" }),
   },
   askNina: {
     icon: AiChat02Icon,
     id: "askNina",
     labelKey: "ask-nina",
     labelNamespace: "Ai",
-    target: (locale: Locale): LinkTarget =>
-      linkOptions({ params: { locale }, to: "/$locale/chat" }),
+    target: linkOptions({ from: LOCALE_ROUTE, to: "/$locale/chat" }),
   },
 } as const;
 
@@ -60,7 +59,6 @@ export function getForYouNavigationItems() {
  */
 export function getForYouNavigationTarget(
   item: ForYouNavigationItem,
-  locale: Locale,
   preferences: {
     preferredCurriculumTarget?: LinkTarget | null;
     preferredTryoutTarget?: LinkTarget | null;
@@ -74,5 +72,5 @@ export function getForYouNavigationTarget(
     return preferences.preferredTryoutTarget;
   }
 
-  return item.target(locale);
+  return item.target;
 }

@@ -109,7 +109,7 @@ describe("signed curriculum runtime", () => {
     const catalog = await readRuntimeCurriculumCatalog("en");
 
     expect(catalog.entries).toHaveLength(1);
-    expect(readRuntimeCurriculumOptions(catalog, "en")).toEqual([
+    expect(readRuntimeCurriculumOptions(catalog)).toEqual([
       {
         countryCode: "ID",
         href: "/en/curriculum/merdeka",
@@ -138,7 +138,7 @@ describe("signed curriculum runtime", () => {
       sourceRevision: revision,
     });
     const catalog = await readRuntimeCurriculumCatalog("en");
-    expect(readRuntimeCurriculumOptions(catalog, "en")[0]).not.toHaveProperty(
+    expect(readRuntimeCurriculumOptions(catalog)[0]).not.toHaveProperty(
       "countryCode"
     );
   });

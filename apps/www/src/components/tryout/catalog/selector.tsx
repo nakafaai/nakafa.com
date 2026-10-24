@@ -8,7 +8,6 @@ import {
   SelectTrigger,
 } from "@repo/design-system/components/ui/select";
 import { getTileLooks } from "@repo/design-system/lib/look";
-import { HrefLink } from "@repo/internationalization/src/link";
 import { Array as Arr, Effect, Option, Tuple } from "effect";
 import { useLocale } from "use-intl";
 import { useConvexAuth } from "@/components/providers/convex";
@@ -19,6 +18,7 @@ import type {
   TryoutExamSelectorOption,
 } from "@/components/tryout/catalog/options";
 import { saveTryoutPreference } from "@/components/tryout/catalog/preference";
+import { TryoutPageLink } from "@/components/tryout/route/link";
 import { useSetPreferredTryoutMutation } from "@/lib/tryout/mutation";
 
 /** Renders the try-out country selector used by country-level pages. */
@@ -118,7 +118,7 @@ export function TryoutCountrySelector({
           {Arr.map(options, (option) => (
             <SelectItem
               key={option.value}
-              render={<HrefLink href={option.href} />}
+              render={<TryoutPageLink publicPath={option.value} />}
               value={option.value}
             >
               <CountryFlagIcon countryCode={option.countryCode} />
@@ -192,7 +192,7 @@ export function TryoutExamSelector({
           {Arr.map(entries, ({ icon, option }) => (
             <SelectItem
               key={option.value}
-              render={<HrefLink href={option.href} />}
+              render={<TryoutPageLink publicPath={option.value} />}
               value={option.value}
             >
               <HugeIcons className="size-4 shrink-0" icon={icon} />

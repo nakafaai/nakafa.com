@@ -10,10 +10,8 @@ import {
 } from "@repo/design-system/components/ui/empty";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Separator } from "@repo/design-system/components/ui/separator";
-import {
-  EXACT_ACTIVE_OPTIONS,
-  HrefLink,
-} from "@repo/internationalization/src/link";
+import { EXACT_ACTIVE_OPTIONS } from "@repo/internationalization/src/link";
+import { PublicPathLink } from "@repo/internationalization/src/public";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
 import { createContext, Fragment, type ReactElement, use } from "react";
@@ -116,13 +114,13 @@ function ResultGroup({ group }: { group: SearchResultGroup }) {
       </h2>
       <div className="flex flex-col gap-1">
         {Arr.map(group.items, (result) => (
-          <HrefLink
+          <PublicPathLink
             activeOptions={EXACT_ACTIVE_OPTIONS}
             className={cn(
               "group flex flex-col gap-2 p-2 px-4 text-sm transition-colors ease-out hover:bg-accent hover:text-accent-foreground"
             )}
-            href={`/${result.route}`}
             key={result.content_id}
+            publicPath={result.route}
           >
             <div className="flex items-center gap-2">
               <HugeIcons
@@ -136,7 +134,7 @@ function ResultGroup({ group }: { group: SearchResultGroup }) {
               excerpt={result.excerpt}
               query={query}
             />
-          </HrefLink>
+          </PublicPathLink>
         ))}
       </div>
     </div>

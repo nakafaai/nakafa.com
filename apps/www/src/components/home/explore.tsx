@@ -123,7 +123,7 @@ export function HomeExplore() {
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 md:gap-6">
         {Arr.map(items, (item) => (
           <ExploreCard
-            destination={getForYouNavigationTarget(item, locale, preferences)}
+            destination={getForYouNavigationTarget(item, preferences)}
             key={item.id}
             title={exploreCards[item.id].title}
           >

@@ -5,6 +5,7 @@ import {
 import {
   EXACT_ACTIVE_OPTIONS,
   Link,
+  useRouteMatched,
 } from "@repo/internationalization/src/link";
 import { useMatchRoute } from "@tanstack/react-router";
 import { useTranslations } from "use-intl";
@@ -12,8 +13,6 @@ import { TenantClassesGroup } from "@/components/tenant/classes/nav";
 import { useTenant } from "@/components/tenant/context";
 import { TenantSidebarGroup } from "@/components/tenant/group";
 import { SchoolSettingsNav } from "@/components/tenant/settings/nav";
-import { useSchoolPath } from "@/lib/routing/school/link";
-import { isSchoolSettingsPath } from "@/lib/settings/school";
 
 /**
  * Renders the navigation of the school sidebar. The settings sections replace it
@@ -25,13 +24,13 @@ import { isSchoolSettingsPath } from "@/lib/settings/school";
  */
 export function TenantNavigation() {
   const { canManage, canOpenExams, slug } = useTenant();
-  const pathname = useSchoolPath();
+  const isSettings = useRouteMatched("/school/$slug/settings");
   const matchRoute = useMatchRoute();
   const t = useTranslations("School");
   const tExams = useTranslations("Exams");
   const tSettings = useTranslations("SchoolSettings");
 
-  if (canManage && isSchoolSettingsPath(pathname)) {
+  if (canManage && isSettings) {
     return <SchoolSettingsNav />;
   }
 

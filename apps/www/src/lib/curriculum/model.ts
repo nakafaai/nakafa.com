@@ -115,15 +115,12 @@ export async function readRuntimeCurriculumCatalog(
 }
 
 /** Builds localized selector options from the signed catalog. */
-export function readRuntimeCurriculumOptions(
-  catalog: CurriculumCatalogModel,
-  locale: Locale
-) {
+export function readRuntimeCurriculumOptions(catalog: CurriculumCatalogModel) {
   return Arr.map(catalog.entries, ({ program, route, translation }) => ({
     ...(program.provider.homeCountry === undefined
       ? {}
       : { countryCode: program.provider.homeCountry }),
-    href: `/${locale}/${route.publicPath}`,
+    publicPath: route.publicPath,
     programKey: route.programKey,
     publicSlug: translation.publicSlug,
     title: route.title,
@@ -156,7 +153,7 @@ export function readRuntimeCurriculumToc(model: CurriculumRouteModel) {
   const parent = Arr.last(model.ancestors);
   return {
     ...(Option.isSome(parent) ? { description: parent.value.title } : {}),
-    href: `/${model.locale}/${model.route.publicPath}`,
+    publicPath: model.route.publicPath,
     title: model.route.title,
   };
 }

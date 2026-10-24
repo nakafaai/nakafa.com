@@ -2,17 +2,17 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { Nina } from "@repo/design-system/components/ui/nina";
 import { Thing } from "@repo/design-system/components/ui/thing";
 import {
+  DestinationLink,
   EXACT_ACTIVE_OPTIONS,
-  HrefLink,
   Link,
   useCurrentLocale,
 } from "@repo/internationalization/src/link";
+import { CURRICULA_TARGET } from "@repo/internationalization/src/target";
 import type { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import { ClosingQuestion } from "@/components/marketing/about/closing/question";
 import { NINA_SLOT } from "@/components/marketing/about/toys/slot";
 import { MarketingSection } from "@/components/marketing/shared/section";
-import { getCurriculumIndexHref } from "@/lib/curriculum/routes";
 
 /**
  * The last part before the footer: a question that types its own topics, the
@@ -37,12 +37,9 @@ export function Closing() {
           <Button
             nativeButton={false}
             render={
-              <HrefLink
-                activeOptions={EXACT_ACTIVE_OPTIONS}
-                href={getCurriculumIndexHref(locale)}
-              >
+              <DestinationLink destination={CURRICULA_TARGET}>
                 {t("hero-start")}
-              </HrefLink>
+              </DestinationLink>
             }
             size="lg"
             variant="secondary"

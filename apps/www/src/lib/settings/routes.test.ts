@@ -2,7 +2,6 @@ import { describe, expect, it } from "@effect/vitest";
 import { Array as Arr } from "effect";
 import {
   getUserSettingsSection,
-  isUserSettingsPath,
   userSettingsGroups,
   userSettingsSections,
 } from "@/lib/settings/routes";
@@ -11,15 +10,15 @@ describe("user settings routes", () => {
   it("declares each section under its group in sidebar order", () => {
     expect(
       Arr.map(userSettingsSections, (section) => [
-        section.href,
+        section.target.to,
         section.labelKey,
         section.group.key,
       ])
     ).toEqual([
-      ["/user/settings", "account", "personal"],
-      ["/user/settings/learning", "learning", "personal"],
-      ["/user/settings/subscriptions", "billing", "personal"],
-      ["/user/settings/memory", "memory", "ai"],
+      ["/$locale/user/settings", "account", "personal"],
+      ["/$locale/user/settings/learning", "learning", "personal"],
+      ["/$locale/user/settings/subscriptions", "billing", "personal"],
+      ["/$locale/user/settings/memory", "memory", "ai"],
     ]);
   });
 
@@ -37,39 +36,33 @@ describe("user settings routes", () => {
 
   it("links each group to the first section it holds", () => {
     expect(
-      Arr.map(userSettingsSections, (section) => section.group.href)
+      Arr.map(userSettingsSections, (section) => section.group.target.to)
     ).toEqual([
-      "/user/settings",
-      "/user/settings",
-      "/user/settings",
-      "/user/settings/memory",
+      "/$locale/user/settings",
+      "/$locale/user/settings",
+      "/$locale/user/settings",
+      "/$locale/user/settings/memory",
     ]);
   });
 
-  it("resolves each declared settings path to its own section", () => {
+  it("resolves each declared settings route to its own section", () => {
     expect(
-      getUserSettingsSection("/user/settings/subscriptions").labelKey
+      getUserSettingsSection("/$locale/user/settings/subscriptions").labelKey
     ).toBe("billing");
-    expect(getUserSettingsSection("/user/settings/learning").labelKey).toBe(
-      "learning"
-    );
-    expect(getUserSettingsSection("/user/settings/memory").labelKey).toBe(
-      "memory"
-    );
-    expect(getUserSettingsSection("/user/settings").labelKey).toBe("account");
-  });
-
-  it("keeps the settings root as the owner of any undeclared settings path", () => {
-    expect(getUserSettingsSection("/user/settings/unknown").labelKey).toBe(
+    expect(
+      getUserSettingsSection("/$locale/user/settings/learning").labelKey
+    ).toBe("learning");
+    expect(
+      getUserSettingsSection("/$locale/user/settings/memory").labelKey
+    ).toBe("memory");
+    expect(getUserSettingsSection("/$locale/user/settings").labelKey).toBe(
       "account"
     );
   });
 
-  it("recognizes only the settings surface as a settings path", () => {
-    expect(isUserSettingsPath("/user/settings")).toBe(true);
-    expect(isUserSettingsPath("/user/settings/subscriptions")).toBe(true);
-    expect(isUserSettingsPath("/user/settings/memory")).toBe(true);
-    expect(isUserSettingsPath("/user/507f1f77bcf86cd799439011")).toBe(false);
-    expect(isUserSettingsPath("/user/settings-archive")).toBe(false);
+  it("keeps the settings root as the owner of any undeclared settings route", () => {
+    expect(
+      getUserSettingsSection("/$locale/user/settings/unknown").labelKey
+    ).toBe("account");
   });
 });

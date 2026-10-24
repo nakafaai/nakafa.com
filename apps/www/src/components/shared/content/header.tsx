@@ -1,9 +1,6 @@
 import type { IconSvgElement } from "@hugeicons/react";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import {
-  EXACT_ACTIVE_OPTIONS,
-  HrefLink,
-} from "@repo/internationalization/src/link";
+import { PublicPathLink } from "@repo/internationalization/src/public";
 
 interface Props {
   /** The description of the content */
@@ -14,7 +11,8 @@ interface Props {
   icon?: IconSvgElement;
   /** The link to go some where, it will be shown as a button on top of the title */
   link?: {
-    href: string;
+    hash: string;
+    publicPath: string;
     label: string;
   };
   /** The title of the content */
@@ -34,15 +32,15 @@ export function HeaderContent({
       <div className="z-10 mx-auto max-w-3xl space-y-6 px-6">
         <div className="flex flex-col gap-3">
           {!!link && (
-            <HrefLink
-              activeOptions={EXACT_ACTIVE_OPTIONS}
+            <PublicPathLink
               aria-label={link.label}
               className="w-fit font-medium text-primary text-sm underline-offset-4 hover:underline"
-              href={link.href}
+              hash={link.hash}
+              publicPath={link.publicPath}
               title={link.label}
             >
               {link.label}
-            </HrefLink>
+            </PublicPathLink>
           )}
           <div className="flex items-start gap-2">
             {!!Icon && (

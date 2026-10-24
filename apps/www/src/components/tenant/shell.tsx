@@ -29,6 +29,7 @@ import {
 import {
   EXACT_ACTIVE_OPTIONS,
   Link,
+  useRouteMatched,
 } from "@repo/internationalization/src/link";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { ClientOnly } from "@tanstack/react-router";
@@ -52,8 +53,7 @@ import type { Greeting } from "@/components/tenant/home/greeting";
 import { SchoolMark } from "@/components/tenant/mark";
 import { TenantNavigation } from "@/components/tenant/navigation";
 import { signOutSchoolAccount } from "@/components/tenant/signout";
-import { useSchoolPath } from "@/lib/routing/school/link";
-import { isExamEditorPath } from "@/lib/settings/school";
+
 import type { SchoolViewer } from "@/lib/tenant/frame";
 
 /**
@@ -202,10 +202,10 @@ function TenantFrame({
   personName: string;
   role: TenantValue["role"];
 }) {
-  const pathname = useSchoolPath();
+  const isEditor = useRouteMatched("/school/$slug/exams/$exam/edit");
   const tCommon = useTranslations("Common");
 
-  if (isExamEditorPath(pathname)) {
+  if (isEditor) {
     return children;
   }
 

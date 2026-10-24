@@ -1,7 +1,7 @@
 import { Alert02Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { HrefLink } from "@repo/internationalization/src/link";
+import { PublicPathLink } from "@repo/internationalization/src/public";
 import { useTranslations } from "use-intl";
 import type { AnalyticsConsentContextValue } from "@/lib/analytics/consent/context";
 import { usePageNavigation } from "@/lib/content/page/context";
@@ -55,11 +55,11 @@ export function ConsentDetails({
  */
 function PrivacyPolicyLink() {
   const t = useTranslations("AnalyticsConsent");
-  const href = usePageNavigation(
-    (navigation) => navigation?.privacyPolicyHref ?? null
+  const publicPath = usePageNavigation(
+    (navigation) => navigation?.privacyPolicyPath ?? null
   );
 
-  if (!href) {
+  if (!publicPath) {
     return null;
   }
 
@@ -67,13 +67,13 @@ function PrivacyPolicyLink() {
     <p className="text-muted-foreground text-sm">
       {t.rich("policy", {
         "privacy-policy": (chunks) => (
-          <HrefLink
+          <PublicPathLink
             className="text-foreground underline underline-offset-4"
-            href={href}
             preload={false}
+            publicPath={publicPath}
           >
             {chunks}
-          </HrefLink>
+          </PublicPathLink>
         ),
       })}
     </p>

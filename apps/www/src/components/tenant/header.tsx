@@ -9,11 +9,11 @@ import { SidebarTrigger } from "@repo/design-system/components/ui/sidebar-shell"
 import { Array as Arr } from "effect";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
-import { BreadcrumbHost } from "@/components/shared/breadcrumb/anchor";
 import {
   type BreadcrumbHeaderItem,
   BreadcrumbHeaderPath,
 } from "@/components/shared/breadcrumb/header";
+import { SCHOOL_HOME_TARGET } from "@/lib/routing/school/link";
 
 /**
  * The one header of a school page, one row high: the sidebar's trigger, the page's path
@@ -40,41 +40,39 @@ export function SchoolHeader({
   const tCommon = useTranslations("Common");
 
   return (
-    <BreadcrumbHost host="school">
-      <header
-        className="sticky top-0 z-10 flex h-14 shrink-0 items-center gap-2 border-b bg-background px-4"
-        data-slot="page-header"
-      >
-        <SidebarTrigger
-          className="-ms-1 shrink-0"
-          label={tCommon("toggle-sidebar")}
+    <header
+      className="sticky top-0 z-10 flex h-14 shrink-0 items-center gap-2 border-b bg-background px-4"
+      data-slot="page-header"
+    >
+      <SidebarTrigger
+        className="-ms-1 shrink-0"
+        label={tCommon("toggle-sidebar")}
+      />
+      <Separator className="me-1 h-4" orientation="vertical" />
+      {title === undefined ? null : <h1 className="sr-only">{title}</h1>}
+      {Arr.isReadonlyArrayEmpty(items) ? (
+        <Breadcrumb aria-label={tCommon("breadcrumb")} className="min-w-0">
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbPage>{tCommon("home")}</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+      ) : (
+        <BreadcrumbHeaderPath
+          home={{ host: "school", target: SCHOOL_HOME_TARGET }}
+          homeLabel={tCommon("home")}
+          items={Arr.map(items, (item, index) =>
+            index === items.length - 1 ? { ...item, target: undefined } : item
+          )}
+          menuLabel={tCommon("more")}
         />
-        <Separator className="me-1 h-4" orientation="vertical" />
-        {title === undefined ? null : <h1 className="sr-only">{title}</h1>}
-        {Arr.isReadonlyArrayEmpty(items) ? (
-          <Breadcrumb aria-label={tCommon("breadcrumb")} className="min-w-0">
-            <BreadcrumbList>
-              <BreadcrumbItem>
-                <BreadcrumbPage>{tCommon("home")}</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
-        ) : (
-          <BreadcrumbHeaderPath
-            homeHref="/"
-            homeLabel={tCommon("home")}
-            items={Arr.map(items, (item, index) =>
-              index === items.length - 1 ? { ...item, href: undefined } : item
-            )}
-            menuLabel={tCommon("more")}
-          />
-        )}
-        {children === undefined ? null : (
-          <div className="ms-auto flex shrink-0 items-center gap-2">
-            {children}
-          </div>
-        )}
-      </header>
-    </BreadcrumbHost>
+      )}
+      {children === undefined ? null : (
+        <div className="ms-auto flex shrink-0 items-center gap-2">
+          {children}
+        </div>
+      )}
+    </header>
   );
 }

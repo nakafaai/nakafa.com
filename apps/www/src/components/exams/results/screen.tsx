@@ -18,6 +18,7 @@ import { SchoolHeader } from "@/components/tenant/header";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { isDenied, isLostAccess } from "@/components/tenant/refusal";
 import { usePreloadedQueryResult } from "@/lib/data/preloaded";
+import { schoolExamsTarget } from "@/lib/routing/school/target";
 import type { readResultsFn } from "@/lib/tenant/exams.functions";
 
 /** The first screen of the results, which the results page's loader read on the server. */
@@ -185,7 +186,16 @@ function ExamsCrumbHeader() {
 
   return (
     <SchoolHeader
-      items={tenant.canOpenExams ? [{ href: "/exams", label: t("title") }] : []}
+      items={
+        tenant.canOpenExams
+          ? [
+              {
+                label: t("title"),
+                target: { host: "school", target: schoolExamsTarget() },
+              },
+            ]
+          : []
+      }
       title={t("results-title")}
     />
   );

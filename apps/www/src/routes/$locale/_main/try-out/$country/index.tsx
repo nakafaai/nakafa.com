@@ -1,3 +1,4 @@
+import { HOME_TARGET } from "@repo/internationalization/src/target";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
 import { FooterContent } from "@/components/shared/content/footer";
@@ -53,7 +54,7 @@ function TryoutCountryPage() {
                   options={route.countryOptions}
                 />
               ) : undefined,
-            homeHref: "/home",
+            home: { host: "app", target: HOME_TARGET },
             homeLabel: route.labels.home,
             items: [{ label: route.labels.tryOut }],
             menuLabel: route.labels.more,

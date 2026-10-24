@@ -1,24 +1,24 @@
 import { ArrowRight02Icon } from "@hugeicons/core-free-icons";
 import type { IconSvgElement } from "@hugeicons/react";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { HrefLink } from "@repo/internationalization/src/link";
+import { Link, type LinkTarget } from "@repo/internationalization/src/link";
 
 type SubjectItemProps = Readonly<{
-  href: string;
   icon: IconSvgElement;
   label: string;
   labelElement?: "h2" | "span";
+  target: LinkTarget;
 }>;
 
 /** Renders one title-only chooser row for domains whose row contract has no description. */
 export function SubjectItem({
   icon,
   label,
-  href,
   labelElement: Label = "h2",
+  target,
 }: SubjectItemProps) {
   return (
-    <HrefLink className="group block min-w-0" href={href} title={label}>
+    <Link className="group block min-w-0" title={label} {...target}>
       <div className="relative overflow-hidden p-6 transition-colors ease-out group-hover:bg-accent group-hover:text-accent-foreground">
         <div className="flex items-center gap-2">
           <HugeIcons className="size-4 shrink-0" icon={icon} />
@@ -31,6 +31,6 @@ export function SubjectItem({
           />
         </div>
       </div>
-    </HrefLink>
+    </Link>
   );
 }

@@ -1,4 +1,8 @@
 import type { Locale } from "@repo/internationalization/src/locale";
+import {
+  LANDING_TARGET,
+  SEARCH_TARGET,
+} from "@repo/internationalization/src/target";
 import { Missing } from "@/components/state/missing";
 import { ActionNavigation } from "@/components/state/navigation";
 import { Stage } from "@/components/state/stage";
@@ -19,13 +23,13 @@ export function AppNotFound({ locale }: { readonly locale: Locale }) {
         title={messages.NotFound.title}
       >
         <ActionNavigation
-          href="/"
           label={messages.State["home-button"]}
+          target={LANDING_TARGET}
           variant="default"
         />
         <ActionNavigation
-          href="/search"
           label={messages.NotFound["search-button"]}
+          target={SEARCH_TARGET}
           variant="ghost"
         />
       </Missing>

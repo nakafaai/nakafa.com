@@ -1,14 +1,13 @@
+import { ArrowLeft01Icon } from "@hugeicons/core-free-icons";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
+import { buttonVariants } from "@repo/design-system/lib/button";
 import { Array as Arr } from "effect";
 import { Suspense } from "react";
 import { useTranslations } from "use-intl";
 import { PlayerFinish } from "@/components/player/finish";
 import { PlayerFooter, PlayerOpener } from "@/components/player/footer";
 import { PlayerMain } from "@/components/player/frame";
-import {
-  PlayerBack,
-  PlayerHeader,
-  PlayerTitle,
-} from "@/components/player/header";
+import { PlayerHeader, PlayerTitle } from "@/components/player/header";
 import { PlayerKeys } from "@/components/player/keys";
 import type { PlayerMode } from "@/components/player/mode";
 import { PlayerGrid } from "@/components/player/navigator/grid";
@@ -23,6 +22,7 @@ import { TryoutArticles } from "@/components/tryout/player/articles";
 import type { TryoutFinish } from "@/components/tryout/player/finish";
 import { projectTryoutQuestions } from "@/components/tryout/player/model";
 import { TryoutPlayerTimer } from "@/components/tryout/player/timer";
+import { TryoutPageLink } from "@/components/tryout/route/link";
 import { useTryoutResponseSubmit } from "@/components/tryout/runtime/response/submit";
 import type { TryoutSectionRuntime } from "@/components/tryout/runtime/types";
 
@@ -49,6 +49,7 @@ export function TryoutPlayer({
   runtime: TryoutSectionRuntime;
   title: string;
 }) {
+  const tCommon = useTranslations("Common");
   const tTryouts = useTranslations("Tryouts");
   const answer = useTryoutResponseSubmit();
   const questions = projectTryoutQuestions({
@@ -64,7 +65,13 @@ export function TryoutPlayer({
     >
       <PlayerKeys locked={locked} questions={questions} />
       <PlayerHeader>
-        <PlayerBack href={finish.returnHref} />
+        <TryoutPageLink
+          aria-label={tCommon("back")}
+          className={buttonVariants({ size: "icon", variant: "ghost" })}
+          {...finish.returnAddress}
+        >
+          <HugeIcons icon={ArrowLeft01Icon} />
+        </TryoutPageLink>
         <PlayerTitle>{title}</PlayerTitle>
         <TryoutPlayerTimer expiresAt={runtime.expiresAt} />
         <PlayerFinish

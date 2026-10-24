@@ -2,6 +2,11 @@ import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
 import { ArticleRouteSlugSchema } from "@nakafa/aksara-contracts/projection/article";
 import { getHeadings } from "@repo/contents/toc";
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
+import {
+  ARTICLES_TARGET,
+  articleCategoryTarget,
+  HOME_TARGET,
+} from "@repo/internationalization/src/target";
 import { makeArticleJsonLd } from "@repo/seo/json-ld/article";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
@@ -228,13 +233,19 @@ function ArticlePage() {
             <ContentHeader
               breadcrumb={
                 <BreadcrumbHeaderPath
-                  homeHref="/home"
+                  home={{ host: "app", target: HOME_TARGET }}
                   homeLabel={labels.home}
                   items={[
-                    { href: "/articles", label: labels.articles },
                     {
-                      href: `/articles/${article.category}`,
+                      label: labels.articles,
+                      target: { host: "app", target: ARTICLES_TARGET },
+                    },
+                    {
                       label: article.categoryLabel,
+                      target: {
+                        host: "app",
+                        target: articleCategoryTarget(article.category),
+                      },
                     },
                   ]}
                   menuLabel={labels.more}

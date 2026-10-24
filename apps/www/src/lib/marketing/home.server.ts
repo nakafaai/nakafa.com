@@ -23,7 +23,7 @@ const readHomeCurriculaEffect = Effect.fn("www.marketing.readHomeCurricula")(
     const catalog = yield* Effect.promise(() =>
       readRuntimeCurriculumCatalog(locale)
     );
-    return readRuntimeCurriculumOptions(catalog, locale);
+    return readRuntimeCurriculumOptions(catalog);
   }
 );
 

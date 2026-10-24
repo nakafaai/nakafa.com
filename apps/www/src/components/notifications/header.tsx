@@ -4,6 +4,7 @@ import notifications from "@repo/backend/confect/_generated/refs/notifications";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { toast } from "@repo/design-system/lib/toast/notify";
+import { HOME_TARGET } from "@repo/internationalization/src/target";
 import { Effect, type Option } from "effect";
 import { useTranslations } from "use-intl";
 import {
@@ -74,7 +75,7 @@ export function NotificationsHeader({
               <span className="max-sm:sr-only">{t("mark-all-read")}</span>
             </Button>
           ) : undefined,
-        homeHref: "/home",
+        home: { host: "app", target: HOME_TARGET },
         homeLabel: tCommon("home"),
         items: [{ label: t("title") }],
         menuLabel: tCommon("more"),

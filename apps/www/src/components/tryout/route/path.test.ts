@@ -2,9 +2,9 @@ import { describe, expect, it } from "@effect/vitest";
 import {
   getTryoutAttemptAuthHref,
   getTryoutAttemptHref,
-  getTryoutCountryTarget,
   getTryoutHref,
   getTryoutPublicPathHref,
+  getTryoutPublicPathTarget,
   hasTryoutAttemptCapability,
   readTryoutRouteAttemptCapability,
 } from "@/components/tryout/route/path";
@@ -63,11 +63,11 @@ describe("tryout route paths", () => {
   });
 
   it("types a country path as its route target and refuses any other shape", () => {
-    expect(getTryoutCountryTarget("id", "try-out/indonesia")).toEqual({
-      params: { country: "indonesia", locale: "id" },
+    expect(getTryoutPublicPathTarget("try-out/indonesia")).toEqual({
+      from: "/$locale",
+      params: { country: "indonesia" },
       to: "/$locale/try-out/$country",
     });
-    expect(getTryoutCountryTarget("id", "try-out")).toBeNull();
-    expect(getTryoutCountryTarget("id", "curricula/indonesia")).toBeNull();
+    expect(getTryoutPublicPathTarget("curricula/indonesia")).toBeNull();
   });
 });

@@ -3,6 +3,7 @@ import { AppLocaleCodeSchema } from "@nakafa/aksara-contracts/locale";
 import type tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 
 import { Schema } from "effect";
+import { TryoutPageAddressSchema } from "@/components/tryout/route/path";
 
 /** Convex query contract for the set discovery page. */
 type SetPageQuery = typeof tryouts.queries.catalog.getSetPage;
@@ -47,7 +48,7 @@ const TryoutSetRouteSchema = Schema.Struct({
 export type TryoutSetRoute = typeof TryoutSetRouteSchema.Type;
 
 const TryoutSetDestinationSchema = Schema.Struct({
-  href: Schema.String,
+  address: TryoutPageAddressSchema,
   sectionKey: Schema.String,
 });
 

@@ -14,8 +14,8 @@ import {
   useTryoutFinish,
 } from "@/components/tryout/player/finish";
 import {
-  getTryoutAttemptHref,
-  getTryoutHref,
+  getTryoutPublicPath,
+  type TryoutPageAddress,
 } from "@/components/tryout/route/path";
 import { useTryoutClock } from "@/components/tryout/runtime/clock";
 import {
@@ -48,14 +48,14 @@ interface TryoutSectionPageClientProps {
     initialState: TryoutSectionInitialState;
     /** The player view the server resolved from the address and the saved view. */
     mode: PlayerMode;
-    startHref: string | null;
+    startPath: string | null;
   } | null;
   children: ReactNode;
   /** The signed questions of a running section, rendered on the server. */
   content: TryoutRunningContent | null;
   page: TryoutSectionPage;
   route: TryoutSectionRoute;
-  setHref: string;
+  setPath: string;
 }
 
 /** Renders one stable page with an active-only mutable subscription. */
@@ -65,7 +65,7 @@ export function TryoutSectionPageClient({
   content,
   page,
   route,
-  setHref,
+  setPath,
 }: TryoutSectionPageClientProps) {
   if (!binding) {
     return (
@@ -75,7 +75,7 @@ export function TryoutSectionPageClient({
         finish={null}
         page={page}
         route={route}
-        setHref={setHref}
+        setPath={setPath}
         state={null}
       >
         {children}
@@ -91,7 +91,7 @@ export function TryoutSectionPageClient({
         finish={null}
         page={page}
         route={route}
-        setHref={setHref}
+        setPath={setPath}
         state={binding.initialState}
       >
         {children}
@@ -106,7 +106,7 @@ export function TryoutSectionPageClient({
       key={`${binding.attemptId}:${page.section.sectionKey}`}
       page={page}
       route={route}
-      setHref={setHref}
+      setPath={setPath}
     >
       {children}
     </LiveTryoutSectionPage>
@@ -120,7 +120,7 @@ function LiveTryoutSectionPage({
   content,
   page,
   route,
-  setHref,
+  setPath,
 }: TryoutSectionPageClientProps & {
   binding: NonNullable<TryoutSectionPageClientProps["binding"]>;
 }) {
@@ -158,7 +158,10 @@ function LiveTryoutSectionPage({
   }
   // The finish holds the running state, so it reads the state before any early exit.
   const finish = useTryoutFinish({
-    returnHref: getTryoutAttemptHref(page.set.publicPath, binding.attemptId),
+    returnAddress: {
+      attemptId: binding.attemptId,
+      publicPath: page.set.publicPath,
+    },
     state,
   });
 
@@ -173,7 +176,7 @@ function LiveTryoutSectionPage({
       finish={finish}
       page={page}
       route={route}
-      setHref={setHref}
+      setPath={setPath}
       state={finish.shown}
     >
       {children}
@@ -194,7 +197,7 @@ function ResolvedTryoutSectionPage({
   finish,
   page,
   route,
-  setHref,
+  setPath,
   state,
 }: TryoutSectionPageClientProps & {
   /** The finish of a live attempt; a page without a live attempt has none. */
@@ -252,7 +255,7 @@ function ResolvedTryoutSectionPage({
         page={page}
         route={route}
         sectionStatus={sectionStatus}
-        setHref={setHref}
+        setPath={setPath}
       />
       <TryoutPageBody>
         <TryoutSectionSummary
@@ -278,26 +281,27 @@ function TryoutSectionHeader({
   page,
   route,
   sectionStatus,
-  setHref,
+  setPath,
 }: Pick<
   TryoutSectionPageClientProps,
-  "binding" | "page" | "route" | "setHref"
+  "binding" | "page" | "route" | "setPath"
 > & {
   activeAttempt: NonNullable<SectionState>["attempt"] | null;
   actionAttempt: NonNullable<SectionState>["attempt"] | null;
   sectionStatus: ReturnType<typeof getTryoutFinishedSectionStatus>;
 }) {
   const startDestination = getStartDestination(binding, route);
-  const attemptSetHref = binding
-    ? getTryoutAttemptHref(page.set.publicPath, binding.attemptId)
-    : setHref;
+  const attemptSetAddress: TryoutPageAddress = binding
+    ? { attemptId: binding.attemptId, publicPath: page.set.publicPath }
+    : { publicPath: setPath };
   // While this page's attempt runs, its set stays bound to that attempt: the
   // public set would only lead back to it through a second page.
-  const returnHref =
+  const returnAddress: TryoutPageAddress =
     binding?.initialState.attempt.status === "in-progress"
-      ? attemptSetHref
-      : setHref;
-  const hasCurrentPath = !binding || binding.startHref === getTryoutHref(route);
+      ? attemptSetAddress
+      : { publicPath: setPath };
+  const hasCurrentPath =
+    !binding || binding.startPath === getTryoutPublicPath(route);
   return (
     <TryoutSectionPageHeader
       action={
@@ -307,7 +311,7 @@ function TryoutSectionHeader({
             attempt: actionAttempt,
             completedAction: "return",
             locale: route.locale,
-            returnHref,
+            returnAddress,
             section: page.section,
             sectionFinished: sectionStatus !== null,
             set: page.set,
@@ -317,7 +321,7 @@ function TryoutSectionHeader({
       }
       page={page}
       parents={hasCurrentPath ? "linked" : "unlinked"}
-      setHref={returnHref}
+      setPath={returnAddress.publicPath}
     />
   );
 }
@@ -345,17 +349,17 @@ function getStartDestination(
 ): TryoutStartDestination | null {
   if (!binding) {
     return {
-      href: getTryoutHref(route),
+      address: { publicPath: getTryoutPublicPath(route) },
       successNavigation: "stay",
     };
   }
 
-  if (!binding.startHref) {
+  if (!binding.startPath) {
     return null;
   }
 
   return {
-    href: binding.startHref,
+    address: { publicPath: binding.startPath },
     successNavigation: "destination",
   };
 }

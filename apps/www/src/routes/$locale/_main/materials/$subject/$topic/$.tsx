@@ -3,6 +3,7 @@ import { getHeadings } from "@repo/contents/toc";
 import { LocalizedPath } from "@repo/internationalization/src/alternates";
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
 import { toCanonicalPath } from "@repo/internationalization/src/rewrite";
+import { HOME_TARGET } from "@repo/internationalization/src/target";
 import { makeArticleJsonLd } from "@repo/seo/json-ld/article";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
@@ -233,7 +234,7 @@ function MaterialPage() {
           <ContentHeader
             breadcrumb={
               <BreadcrumbHeaderPath
-                homeHref="/home"
+                home={{ host: "app", target: HOME_TARGET }}
                 homeLabel={labels.home}
                 items={[]}
                 menuLabel={labels.more}
@@ -281,7 +282,7 @@ function MaterialPage() {
           header={
             <SidebarRightHeader
               description={metadata.description ?? metadata.subject}
-              href={route.href}
+              publicPath={route.publicPath}
               title={metadata.title}
             />
           }

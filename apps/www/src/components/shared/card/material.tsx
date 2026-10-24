@@ -19,7 +19,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { toAnchorSlug } from "@repo/utilities/slug";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
-import { CardLink, CardLinks } from "@/components/shared/card/link";
+import { CardLinks, PublicPathCardLink } from "@/components/shared/card/link";
 
 interface Props {
   material: MaterialList[number];
@@ -88,9 +88,14 @@ export function CardMaterial({ material }: Props) {
           <CardContent className="border-t px-0">
             <CardLinks>
               {Arr.map(material.items, (item) => (
-                <CardLink href={item.href} key={item.href} title={item.title}>
+                <PublicPathCardLink
+                  context={item.link.context}
+                  key={item.link.publicPath}
+                  publicPath={item.link.publicPath}
+                  title={item.title}
+                >
                   <h3 className="flex-1">{item.title}</h3>
-                </CardLink>
+                </PublicPathCardLink>
               ))}
             </CardLinks>
           </CardContent>

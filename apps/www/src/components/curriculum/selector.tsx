@@ -12,8 +12,9 @@ import {
   SelectTrigger,
 } from "@repo/design-system/components/ui/select";
 import { type ToastCopy, toast } from "@repo/design-system/lib/toast/notify";
-import { useHrefNavigate } from "@repo/internationalization/src/link";
 import type { Locale } from "@repo/internationalization/src/locale";
+import { publicPathTarget } from "@repo/internationalization/src/target";
+import { useNavigate } from "@tanstack/react-router";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 import { useLocale } from "use-intl";
 import { useConvexAuth } from "@/components/providers/convex";
@@ -54,7 +55,7 @@ export function CurriculumSelector({
   options: readonly CurriculumSelectorOption[];
 }) {
   const locale = useLocale();
-  const navigateToHref = useHrefNavigate();
+  const navigate = useNavigate();
   const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);
   const isLoading = useConvexAuth((auth) => auth.isLoading);
   const setPreferredCurriculum = useSetPreferredCurriculumMutation(
@@ -95,7 +96,10 @@ export function CurriculumSelector({
     if (isLoading) {
       return;
     }
-    navigateToHref(selectedOption.value.href);
+    Option.map(
+      Option.fromNullishOr(publicPathTarget(selectedOption.value.publicPath)),
+      (target) => navigate(target)
+    );
     if (!(isAuthenticated && isActiveLocale(locale))) {
       return;
     }

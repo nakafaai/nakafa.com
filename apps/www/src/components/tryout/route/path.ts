@@ -1,8 +1,12 @@
-import type { LinkTarget } from "@repo/internationalization/src/link";
+import {
+  type LinkTarget,
+  LOCALE_ROUTE,
+} from "@repo/internationalization/src/link";
+import { TRYOUT_TARGET } from "@repo/internationalization/src/target";
 import { linkOptions } from "@tanstack/react-router";
 import { Array as Arr, Schema } from "effect";
-import type { Locale } from "use-intl";
 import type { TryoutSectionRoute } from "@/components/tryout/section/model";
+import type { HostTarget } from "@/lib/routing/school/link";
 
 /** Route coordinates of an href; each one is optional because a href can omit any of them. */
 type TryoutHrefInput = Partial<
@@ -23,8 +27,8 @@ const TryoutAttemptCapabilitySchema = Schema.Union([
 
 type TryoutAttemptCapability = typeof TryoutAttemptCapabilitySchema.Type;
 
-/** Builds a public try-out href from already-localized route segments. */
-export function getTryoutHref({
+/** The public path of a try-out address, such as `try-out/indonesia/snbt`, without its leading slash. */
+export function getTryoutPublicPath({
   country,
   exam,
   section,
@@ -36,7 +40,12 @@ export function getTryoutHref({
     (segment): segment is string => Boolean(segment)
   );
 
-  return `/${Arr.join(segments, "/")}`;
+  return Arr.join(segments, "/");
+}
+
+/** Builds a public try-out href from already-localized route segments. */
+export function getTryoutHref(input: TryoutHrefInput = {}) {
+  return `/${getTryoutPublicPath(input)}`;
 }
 
 /** Converts a Convex publicPath row into the href expected by localized links. */
@@ -45,27 +54,139 @@ export function getTryoutPublicPathHref(publicPath: string) {
 }
 
 /**
- * Returns the typed target of a try-out country page. The public path names it
- * as `try-out/{country}`; a path of any other shape has no target.
+ * The typed target of a try-out public path. Its segments after `try-out` name
+ * the country, exam, track, set and section, in that order, so the depth of the
+ * path picks the route. A path of any other shape has no target.
  */
-export function getTryoutCountryTarget(
-  locale: Locale,
+export function getTryoutPublicPathTarget(
   publicPath: string
 ): LinkTarget | null {
-  const [root, country] = publicPath.split("/");
-  if (root !== "try-out" || !country) {
+  const [root, country, exam, track, set, section, ...rest] =
+    publicPath.split("/");
+  if (root !== "try-out" || rest.length > 0) {
     return null;
   }
+  if (!country) {
+    return TRYOUT_TARGET;
+  }
+  if (!exam) {
+    return linkOptions({
+      from: LOCALE_ROUTE,
+      params: { country },
+      to: "/$locale/try-out/$country",
+    });
+  }
+  if (!track) {
+    return linkOptions({
+      from: LOCALE_ROUTE,
+      params: { country, exam },
+      to: "/$locale/try-out/$country/$exam",
+    });
+  }
+  if (!set) {
+    return linkOptions({
+      from: LOCALE_ROUTE,
+      params: { country, exam, track },
+      to: "/$locale/try-out/$country/$exam/$track",
+    });
+  }
+  if (!section) {
+    return linkOptions({
+      from: LOCALE_ROUTE,
+      params: { country, exam, set, track },
+      to: "/$locale/try-out/$country/$exam/$track/$set",
+    });
+  }
   return linkOptions({
-    params: { country, locale },
-    to: "/$locale/try-out/$country",
+    from: LOCALE_ROUTE,
+    params: { country, exam, section, set, track },
+    to: "/$locale/try-out/$country/$exam/$track/$set/$section",
   });
+}
+
+/**
+ * The typed target of a set or a section of try-out, carrying the attempt that
+ * binds navigation to one owned attempt. Only those two routes accept the
+ * attempt capability as a search param, so any other path has no target.
+ */
+function getTryoutAttemptTarget(
+  publicPath: string,
+  attemptId: string
+): LinkTarget | null {
+  const [root, country, exam, track, set, section, ...rest] =
+    publicPath.split("/");
+  if (
+    root !== "try-out" ||
+    !country ||
+    !exam ||
+    !track ||
+    !set ||
+    rest.length > 0
+  ) {
+    return null;
+  }
+  if (!section) {
+    return linkOptions({
+      from: LOCALE_ROUTE,
+      params: { country, exam, set, track },
+      search: { [ATTEMPT_ID_PARAM]: attemptId },
+      to: "/$locale/try-out/$country/$exam/$track/$set",
+    });
+  }
+  return linkOptions({
+    from: LOCALE_ROUTE,
+    params: { country, exam, section, set, track },
+    search: { [ATTEMPT_ID_PARAM]: attemptId },
+    to: "/$locale/try-out/$country/$exam/$track/$set/$section",
+  });
+}
+
+/**
+ * The breadcrumb target of one try-out public path, or none when the path names
+ * no try-out page. A breadcrumb with no target is the current page.
+ */
+export function getTryoutCrumbTarget(
+  publicPath: string
+): HostTarget | undefined {
+  const target = getTryoutPublicPathTarget(publicPath);
+  return target === null ? undefined : { host: "app", target };
+}
+
+/** The address of one try-out page: its public path, and the attempt that binds the page when one is open. */
+export const TryoutPageAddressSchema = Schema.Struct({
+  attemptId: Schema.optionalKey(Schema.String),
+  publicPath: Schema.String,
+});
+
+export type TryoutPageAddress = typeof TryoutPageAddressSchema.Type;
+
+/** The typed target of a try-out page address, or none when the address names no page. */
+export function getTryoutPageTarget({
+  attemptId,
+  publicPath,
+}: {
+  readonly attemptId?: string | undefined;
+  readonly publicPath: string;
+}): LinkTarget | null {
+  return attemptId === undefined
+    ? getTryoutPublicPathTarget(publicPath)
+    : getTryoutAttemptTarget(publicPath, attemptId);
 }
 
 /** Builds a route capability that binds navigation to one owned attempt. */
 export function getTryoutAttemptHref(publicPath: string, attemptId: string) {
   const searchParams = new URLSearchParams({ [ATTEMPT_ID_PARAM]: attemptId });
   return `${getTryoutPublicPathHref(publicPath)}?${searchParams.toString()}`;
+}
+
+/** The address-bar href of one try-out page, for a URL that carries the page as text, such as an auth redirect. */
+export function getTryoutPageHref({
+  attemptId,
+  publicPath,
+}: TryoutPageAddress) {
+  return attemptId === undefined
+    ? getTryoutPublicPathHref(publicPath)
+    : getTryoutAttemptHref(publicPath, attemptId);
 }
 
 /** Preserves an exact attempt capability through localized authentication. */

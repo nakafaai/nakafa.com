@@ -22,6 +22,7 @@ import { HomeFailure, HomeTitle } from "@/components/tenant/home/title";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { schoolDateTimeText } from "@/components/tenant/settings/clock";
 import { enterableSitting, orderSittings } from "@/components/tenant/sittings";
+import { schoolSittingTarget } from "@/lib/routing/school/target";
 
 /** One sitting of the student, as the student's list holds it. */
 type Sitting = typeof StudentSittingRow.Type;
@@ -162,8 +163,7 @@ function StudentSittingsTile({
 function SittingRow({ sitting }: { sitting: Sitting }) {
   return (
     <CardLink
-      href={`/sittings/${sitting.id}`}
-      localized={false}
+      target={{ host: "school", target: schoolSittingTarget(sitting.id) }}
       title={sitting.examTitle}
     >
       <RowText detail={sitting.room} title={sitting.examTitle} />
@@ -235,8 +235,7 @@ function ResultRow({ sitting }: { sitting: Sitting }) {
 
   return (
     <CardLink
-      href={`/sittings/${sitting.id}`}
-      localized={false}
+      target={{ host: "school", target: schoolSittingTarget(sitting.id) }}
       title={sitting.examTitle}
     >
       <RowText detail={sitting.room} title={sitting.examTitle} />

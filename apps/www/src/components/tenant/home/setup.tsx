@@ -1,4 +1,5 @@
 import { QueryResult } from "@confect/react";
+import { linkOptions } from "@tanstack/react-router";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import { CardLink, CardLinks } from "@/components/shared/card/link";
@@ -7,13 +8,23 @@ import { homeSetupRead, useHomeSetup } from "@/components/tenant/home/query";
 import { missingSteps, type SetupStep } from "@/components/tenant/home/steps";
 import { HomeTile, RowText, TILE_ROWS } from "@/components/tenant/home/tile";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
+import { SCHOOL_ROUTE, type SchoolLinkTarget } from "@/lib/routing/school/link";
 
 /** The settings page where each step is completed. */
-const STEP_HREF: Record<SetupStep, string> = {
-  invites: "/settings/invites",
-  students: "/settings/students",
-  teacher: "/settings/invites",
-  unit: "/settings/units",
+const STEP_TARGET: Record<SetupStep, SchoolLinkTarget> = {
+  invites: linkOptions({
+    from: SCHOOL_ROUTE,
+    to: "/school/$slug/settings/invites",
+  }),
+  students: linkOptions({
+    from: SCHOOL_ROUTE,
+    to: "/school/$slug/settings/students",
+  }),
+  teacher: linkOptions({
+    from: SCHOOL_ROUTE,
+    to: "/school/$slug/settings/invites",
+  }),
+  unit: linkOptions({ from: SCHOOL_ROUTE, to: "/school/$slug/settings/units" }),
 };
 
 /**
@@ -120,8 +131,7 @@ function SetupRow({ step }: { step: SetupStep }) {
   return (
     <CardLink
       arrow="always"
-      href={STEP_HREF[step]}
-      localized={false}
+      target={{ host: "school", target: STEP_TARGET[step] }}
       title={title}
     >
       <RowText title={title} />

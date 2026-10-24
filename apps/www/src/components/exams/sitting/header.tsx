@@ -16,6 +16,10 @@ import {
 } from "@/components/exams/sitting/dialogs";
 import { useTenant } from "@/components/tenant/context";
 import { SchoolHeader } from "@/components/tenant/header";
+import {
+  schoolExamsTarget,
+  schoolExamTarget,
+} from "@/lib/routing/school/target";
 
 /**
  * The one header of the dashboard: the sidebar's trigger, the path from the exams through the
@@ -39,8 +43,21 @@ export function SittingHeader({
   return (
     <SchoolHeader
       items={[
-        ...(tenant.canOpenExams ? [{ href: "/exams", label: t("title") }] : []),
-        { href: `/exams/${examId}`, label: value.sitting.examTitle },
+        ...(tenant.canOpenExams
+          ? [
+              {
+                label: t("title"),
+                target: {
+                  host: "school" as const,
+                  target: schoolExamsTarget(),
+                },
+              },
+            ]
+          : []),
+        {
+          label: value.sitting.examTitle,
+          target: { host: "school", target: schoolExamTarget(examId) },
+        },
         { label: value.sitting.room },
       ]}
       title={value.sitting.room}

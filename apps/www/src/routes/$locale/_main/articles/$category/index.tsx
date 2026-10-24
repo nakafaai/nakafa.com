@@ -27,7 +27,7 @@ import {
 } from "@/lib/content/article/category";
 import {
   ArticlePageSearchSchema,
-  getArticleNextHref,
+  getArticleNextSearch,
   readArticlePageCursor,
   shouldResetArticlePublicationCursor,
 } from "@/lib/content/article/query";
@@ -119,7 +119,8 @@ const readArticleCategory = createServerFn({ method: "GET" })
       description: tArticles("description"),
       label: model.title,
       locale,
-      nextHref: Option.getOrNull(getArticleNextHref(categoryPath, catalog)),
+      nextSearch: Option.getOrNull(getArticleNextSearch(catalog)),
+      routeSlug: model.route,
       sourceUrl: catalog.sourceRevision
         ? getAksaraTreeUrl({
             path: `${ARTICLE_SOURCE_ROOT}/${model.category}`,
@@ -207,7 +208,9 @@ function ArticleCategoryPage() {
           ))}
         </ContainerList>
       </LayoutContent>
-      {page.nextHref ? <ArticleNext href={page.nextHref} /> : null}
+      {page.nextSearch ? (
+        <ArticleNext category={page.routeSlug} search={page.nextSearch} />
+      ) : null}
       {page.sourceUrl ? (
         <FooterContent className="mt-0">
           <RefContent githubUrl={page.sourceUrl} />

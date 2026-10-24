@@ -1,3 +1,4 @@
+import { HOME_TARGET } from "@repo/internationalization/src/target";
 import {
   Await,
   createFileRoute,
@@ -17,6 +18,7 @@ import {
 } from "@/components/tryout/route/catalog.functions";
 import { createTryoutHead } from "@/components/tryout/route/head";
 import { readTryoutPersonalHeaders } from "@/components/tryout/route/headers";
+import { getTryoutCrumbTarget } from "@/components/tryout/route/path";
 import { TryoutTrackSearch } from "@/components/tryout/route/search";
 
 /**
@@ -88,15 +90,18 @@ function TryoutTrackPage() {
                 options={route.examOptions}
               />
             ),
-            homeHref: "/home",
+            home: { host: "app", target: HOME_TARGET },
             homeLabel: route.labels.home,
             items: [
               {
-                href: route.countryHref,
                 label: route.labels.tryOut,
                 menuLabel: route.labels.tryOutShort,
+                target: getTryoutCrumbTarget(route.countryPath),
               },
-              { href: route.examHref, label: route.page.exam.title },
+              {
+                label: route.page.exam.title,
+                target: getTryoutCrumbTarget(route.examPath),
+              },
               { label: route.page.track.title },
             ],
             menuLabel: route.labels.more,

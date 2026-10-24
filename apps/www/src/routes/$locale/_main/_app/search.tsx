@@ -36,7 +36,6 @@ function SearchScreen() {
           <div className="flex flex-col gap-2">
             <BackButton
               className="w-fit p-0 text-muted-foreground"
-              defaultHref="/home"
               variant="link"
             />
             <div className="grid gap-6">

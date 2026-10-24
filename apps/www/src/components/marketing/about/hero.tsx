@@ -1,14 +1,14 @@
 import { Button } from "@repo/design-system/components/ui/button";
 import { Nina } from "@repo/design-system/components/ui/nina";
 import {
+  DestinationLink,
   EXACT_ACTIVE_OPTIONS,
-  HrefLink,
   Link,
   useCurrentLocale,
 } from "@repo/internationalization/src/link";
+import { CURRICULA_TARGET } from "@repo/internationalization/src/target";
 import { useTranslations } from "use-intl";
 import { HERO_NINA_ID } from "@/components/marketing/about/hero/id";
-import { getCurriculumIndexHref } from "@/lib/curriculum/routes";
 
 /**
  * The first part of the home page, in the middle of the screen: one sentence,
@@ -39,12 +39,9 @@ export function Hero() {
           <Button
             nativeButton={false}
             render={
-              <HrefLink
-                activeOptions={EXACT_ACTIVE_OPTIONS}
-                href={getCurriculumIndexHref(locale)}
-              >
+              <DestinationLink destination={CURRICULA_TARGET}>
                 {t("hero-start")}
-              </HrefLink>
+              </DestinationLink>
             }
             size="lg"
           />

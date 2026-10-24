@@ -17,8 +17,9 @@ import {
 } from "@repo/design-system/components/ui/sidebar-menu";
 import {
   EXACT_ACTIVE_OPTIONS,
-  HrefLink,
-  useCanonicalPath,
+  Link,
+  type LinkTarget,
+  useRouteMatched,
 } from "@repo/internationalization/src/link";
 import { Array as Arr } from "effect";
 import type { ComponentProps } from "react";
@@ -59,7 +60,6 @@ function UserSettingsNavGroup({
 }: {
   group: (typeof userSettingsGroups)[number];
 }) {
-  const pathname = useCanonicalPath();
   const t = useTranslations("Auth");
 
   return (
@@ -67,30 +67,48 @@ function UserSettingsNavGroup({
       <SidebarGroupLabel>{t(group.key)}</SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu>
-          {Arr.map(group.sections, (section) => {
-            const label = t(section.labelKey);
-
-            return (
-              <SidebarMenuItem key={section.href}>
-                <SidebarMenuButton
-                  isActive={pathname === section.href}
-                  render={
-                    <HrefLink
-                      activeOptions={EXACT_ACTIVE_OPTIONS}
-                      href={section.href}
-                      title={label}
-                    />
-                  }
-                  tooltip={label}
-                >
-                  <HugeIcons icon={sectionIcons[section.labelKey]} />
-                  <span className="truncate">{label}</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            );
-          })}
+          {Arr.map(group.sections, (section) => (
+            <UserSettingsNavItem
+              key={section.target.to}
+              label={t(section.labelKey)}
+              labelKey={section.labelKey}
+              target={section.target}
+            />
+          ))}
         </SidebarMenu>
       </SidebarGroupContent>
     </SidebarGroup>
+  );
+}
+
+/** One settings section, active on its own page as the router's match says. */
+function UserSettingsNavItem({
+  label,
+  labelKey,
+  target,
+}: {
+  label: string;
+  labelKey: UserSettingsLabelKey;
+  target: LinkTarget;
+}) {
+  const isActive = useRouteMatched(target.to, { exact: true });
+
+  return (
+    <SidebarMenuItem>
+      <SidebarMenuButton
+        isActive={isActive}
+        render={
+          <Link
+            activeOptions={EXACT_ACTIVE_OPTIONS}
+            {...target}
+            title={label}
+          />
+        }
+        tooltip={label}
+      >
+        <HugeIcons icon={sectionIcons[labelKey]} />
+        <span className="truncate">{label}</span>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
   );
 }

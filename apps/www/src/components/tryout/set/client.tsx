@@ -14,9 +14,8 @@ import {
 } from "@/components/tryout/player/finish";
 import { selectTryoutSetLinks } from "@/components/tryout/route/owner";
 import {
-  getTryoutAttemptHref,
-  getTryoutHref,
-  getTryoutPublicPathHref,
+  getTryoutPublicPath,
+  type TryoutPageAddress,
 } from "@/components/tryout/route/path";
 import { useTryoutClock } from "@/components/tryout/runtime/clock";
 import {
@@ -150,7 +149,10 @@ function LiveTryoutSetPage({
   }
   // The finish holds the running state, so it reads the state before any early exit.
   const finish = useTryoutFinish({
-    returnHref: getTryoutAttemptHref(page.set.publicPath, binding.attemptId),
+    returnAddress: {
+      attemptId: binding.attemptId,
+      publicPath: page.set.publicPath,
+    },
     state,
   });
 
@@ -212,15 +214,15 @@ function ResolvedTryoutSetPage({
     activeAttempt,
     page,
     startEntrySection,
-    setHref: activeAttempt ? getTryoutHref(route) : links.currentHref,
+    setPath: activeAttempt ? getTryoutPublicPath(route) : links.currentPath,
   });
   const view: TryoutSetOverviewProps["value"] = {
     actionAttempt,
     activeAttempt,
-    currentHref: links.currentHref,
+    currentPath: links.currentPath,
     entrySection,
     page,
-    returnHref: links.returnHref,
+    returnPath: links.returnPath,
     route,
     sectionRoutes: binding?.sectionRoutes ?? page.sections,
     start: {
@@ -291,19 +293,15 @@ function TryoutInternalSet({
   );
 }
 
-/** Builds the href for either a visible public section or an internal set entry. */
-function getEntrySectionHref({
+/** Addresses either a visible public section or an internal set entry. */
+function getEntrySectionAddress({
   entrySection,
-  setHref,
+  setPath,
 }: {
   entrySection: SetEntrySection;
-  setHref: string;
-}) {
-  if (entrySection.publicPath) {
-    return getTryoutPublicPathHref(entrySection.publicPath);
-  }
-
-  return setHref;
+  setPath: string;
+}): TryoutPageAddress {
+  return { publicPath: entrySection.publicPath ?? setPath };
 }
 
 /** Resolves the start or resume destination without mixing route policy with rendering. */
@@ -311,22 +309,22 @@ function getStartDestination({
   activeAttempt,
   page,
   startEntrySection,
-  setHref,
+  setPath,
 }: {
   activeAttempt: TryoutSetOverviewProps["value"]["activeAttempt"];
   page: SetPage;
   startEntrySection: SetEntrySection | null;
-  setHref: string;
+  setPath: string;
 }) {
   if (
     activeAttempt?.resumeSectionKey &&
     activeAttempt.resumeSectionPublicPath
   ) {
     return {
-      href: getTryoutAttemptHref(
-        activeAttempt.resumeSectionPublicPath,
-        activeAttempt.attemptId
-      ),
+      address: {
+        attemptId: activeAttempt.attemptId,
+        publicPath: activeAttempt.resumeSectionPublicPath,
+      },
       sectionKey: activeAttempt.resumeSectionKey,
     };
   }
@@ -342,7 +340,7 @@ function getStartDestination({
     return null;
   }
   return {
-    href: getEntrySectionHref({ entrySection: section, setHref }),
+    address: getEntrySectionAddress({ entrySection: section, setPath }),
     sectionKey: section.sectionKey,
   };
 }

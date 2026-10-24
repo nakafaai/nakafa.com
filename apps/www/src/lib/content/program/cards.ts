@@ -3,7 +3,7 @@ import "@tanstack/react-start/server-only";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import type { MaterialLessonProjection } from "@nakafa/aksara-contracts/projection/material";
 import type { MaterialList } from "@repo/contents/curriculum/list";
-import { toContextualMaterialHref } from "@repo/contents/route/material/context";
+import { encodeMaterialContextHint } from "@repo/contents/route/material/context";
 import {
   Array as Arr,
   Effect,
@@ -16,20 +16,18 @@ import type { Locale } from "use-intl";
 import type { PublishedCurriculumRoute } from "@/lib/content/program/decode";
 import { PublishedProjectionError } from "@/lib/content/published/errors";
 
-/** Builds one stable contextual lesson URL from source-owned identities. */
-function toMaterialHref(
-  locale: Locale,
+/** The link of one lesson, carrying the context hint of its curriculum node. */
+function toMaterialLink(
   material: MaterialLessonProjection,
   group: PublishedCurriculumRoute
 ) {
-  const context = {
-    nodeKey: group.nodeKey,
-    programKey: group.programKey,
+  return {
+    context: encodeMaterialContextHint({
+      nodeKey: group.nodeKey,
+      programKey: group.programKey,
+    }),
+    publicPath: material.publicPath,
   };
-  return toContextualMaterialHref({
-    href: `/${locale}/${material.publicPath}`,
-    ref: context,
-  });
 }
 
 /** Selects current material routes for one immutable curriculum mapping. */
@@ -154,7 +152,7 @@ export const readPublishedMaterialCards = Effect.fn(
         MutableHashSet.has(selected, material.publicPath)
       ),
       (material) => ({
-        href: toMaterialHref(locale, material, group),
+        link: toMaterialLink(material, group),
         title: material.metadata.title,
       })
     );
@@ -172,8 +170,8 @@ export const readPublishedMaterialCards = Effect.fn(
     }
     MutableList.append(cards, {
       description,
-      href: firstItem.value.href,
       items,
+      link: firstItem.value.link,
       title,
     });
   }

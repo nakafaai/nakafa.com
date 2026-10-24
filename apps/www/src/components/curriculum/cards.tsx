@@ -1,5 +1,5 @@
 import type { TileLook } from "@repo/design-system/lib/look";
-import { HrefLink } from "@repo/internationalization/src/link";
+import { PublicPathLink } from "@repo/internationalization/src/public";
 import { Array as Arr } from "effect";
 import {
   CatalogCard,
@@ -52,7 +52,7 @@ function CurriculumCard({
 }) {
   return (
     <CatalogCard
-      action={<HrefLink href={`/${route.publicPath}`} />}
+      action={<PublicPathLink publicPath={route.publicPath} />}
       actionLabel={actionLabel}
       title={route.title}
     >

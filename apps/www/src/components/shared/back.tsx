@@ -1,19 +1,17 @@
 import { ArrowLeft02Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { useHrefNavigate } from "@repo/internationalization/src/link";
-import { useRouter } from "@tanstack/react-router";
+import { LANDING_TARGET } from "@repo/internationalization/src/target";
+import { useNavigate, useRouter } from "@tanstack/react-router";
 import type { ComponentProps } from "react";
 import { useTranslations } from "use-intl";
 
-interface BackButtonProps extends ComponentProps<typeof Button> {
-  defaultHref?: string;
-}
+type BackButtonProps = ComponentProps<typeof Button>;
 
-export function BackButton({ defaultHref = "/", ...props }: BackButtonProps) {
+export function BackButton({ ...props }: BackButtonProps) {
   const t = useTranslations("Common");
   const router = useRouter();
-  const navigateToHref = useHrefNavigate();
+  const navigate = useNavigate();
 
   const handleBack = () => {
     // Check if there's no meaningful history or if we're in a new tab
@@ -24,7 +22,7 @@ export function BackButton({ defaultHref = "/", ...props }: BackButtonProps) {
       (window.history.length <= 2 || document.referrer === "")
     ) {
       // Navigate to the public homepage instead of going back to avoid redirect loops.
-      navigateToHref(defaultHref);
+      navigate(LANDING_TARGET);
     } else {
       router.history.back();
     }

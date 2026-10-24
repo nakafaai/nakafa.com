@@ -17,7 +17,7 @@ vi.mock("@tanstack/react-start/server", () => ({
 
 let pages: Pick<
   PageNavigation,
-  "privacyPolicyHref" | "termsOfServiceHref"
+  "privacyPolicyPath" | "termsOfServicePath"
 > | null = null;
 
 vi.mock("@/lib/content/page/navigation", () => ({
@@ -35,8 +35,8 @@ describe("sign-in legal links", () => {
     () =>
       Effect.gen(function* () {
         pages = {
-          privacyPolicyHref: "/privacy-policy",
-          termsOfServiceHref: "/terms-of-service",
+          privacyPolicyPath: "privacy-policy",
+          termsOfServicePath: "terms-of-service",
         };
         const links = yield* readAuthLegalLinks("id");
         expect(Option.getOrNull(links)).toStrictEqual(signedLinks);
@@ -54,8 +54,8 @@ describe("sign-in legal links", () => {
 
   it("answers the links of the locale the request names, or of the one it negotiates", async () => {
     pages = {
-      privacyPolicyHref: "/privacy-policy",
-      termsOfServiceHref: "/terms-of-service",
+      privacyPolicyPath: "privacy-policy",
+      termsOfServicePath: "terms-of-service",
     };
     await expect(readAuthLegalHandler("id")).resolves.toStrictEqual(
       signedLinks
@@ -69,8 +69,8 @@ describe("sign-in legal links", () => {
 
   it("answers the links on the wire, or null when none", async () => {
     pages = {
-      privacyPolicyHref: "/privacy-policy",
-      termsOfServiceHref: "/terms-of-service",
+      privacyPolicyPath: "privacy-policy",
+      termsOfServicePath: "terms-of-service",
     };
     await expect(readAuthLegalAnswer("id")).resolves.toStrictEqual(signedLinks);
     pages = null;

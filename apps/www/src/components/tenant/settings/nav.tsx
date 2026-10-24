@@ -20,13 +20,12 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "@repo/design-system/components/ui/sidebar-submenu";
-import { useMatchRoute } from "@tanstack/react-router";
+import { useLeafRoutePath } from "@repo/internationalization/src/link";
 import { Array as Arr } from "effect";
 import type { ComponentProps } from "react";
 import { useTranslations } from "use-intl";
-import { useTenant } from "@/components/tenant/context";
 import { TenantSidebarGroup } from "@/components/tenant/group";
-import { SchoolHrefLink } from "@/lib/routing/school/link";
+import { SchoolDestinationLink } from "@/lib/routing/school/link";
 import { schoolSettingsGroups } from "@/lib/settings/school";
 
 /** The icon of each group. A group added without one does not compile. */
@@ -68,15 +67,11 @@ function SchoolSettingsNavGroup({
 }: {
   group: (typeof schoolSettingsGroups)[number];
 }) {
-  const matchRoute = useMatchRoute();
-  const { slug } = useTenant();
+  const leafPath = useLeafRoutePath();
   const t = useTranslations("SchoolSettings");
   const label = t(group.key);
   const isSectionActive = (section: (typeof group.sections)[number]) =>
-    matchRoute({
-      params: { slug },
-      to: `/school/$slug/settings/${section.labelKey}` as const,
-    }) !== false;
+    section.target.to === leafPath;
   const holdsCurrent = Arr.some(group.sections, isSectionActive);
 
   // A new key starts the group again from its default when the current section
@@ -99,10 +94,10 @@ function SchoolSettingsNavGroup({
       <CollapsiblePanel>
         <SidebarMenuSub>
           {Arr.map(group.sections, (section) => (
-            <SidebarMenuSubItem key={section.href}>
+            <SidebarMenuSubItem key={section.target.to}>
               <SidebarMenuSubButton
                 isActive={isSectionActive(section)}
-                render={<SchoolHrefLink href={section.href} />}
+                render={<SchoolDestinationLink destination={section.target} />}
               >
                 <span className="truncate">{t(section.labelKey)}</span>
               </SidebarMenuSubButton>

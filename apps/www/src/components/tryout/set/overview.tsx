@@ -18,10 +18,10 @@ export interface TryoutSetOverviewProps {
   value: {
     actionAttempt?: CurrentAttempt | null;
     activeAttempt: CurrentAttempt | null;
-    currentHref: string;
+    currentPath: string;
     entrySection: SetEntrySection | null;
     page: SetPage;
-    returnHref: string;
+    returnPath: string;
     route: TryoutSetRoute;
     sectionRoutes: readonly SetPage["sections"][number][];
     start: {
@@ -45,7 +45,7 @@ export function TryoutSetOverview({ value }: TryoutSetOverviewProps) {
           <TryoutSetAction
             value={{
               activeAttempt: value.activeAttempt,
-              currentHref: value.currentHref,
+              currentPath: value.currentPath,
               ...(value.actionAttempt === undefined
                 ? {}
                 : { currentAttempt: value.actionAttempt }),
@@ -56,9 +56,9 @@ export function TryoutSetOverview({ value }: TryoutSetOverviewProps) {
             }}
           />
         }
-        currentHref={value.currentHref}
+        currentPath={value.currentPath}
         page={value.page}
-        returnHref={value.returnHref}
+        returnPath={value.returnPath}
       />
       <TryoutPageBody>
         <TryoutSectionRows

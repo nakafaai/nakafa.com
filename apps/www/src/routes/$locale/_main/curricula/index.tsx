@@ -1,4 +1,5 @@
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
+import { HOME_TARGET } from "@repo/internationalization/src/target";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
 import {
   makeBreadcrumbNodes,
@@ -146,7 +147,7 @@ function CurriculumIndexPage() {
       <LayoutMaterialContent>
         <BreadcrumbHeader
           value={{
-            homeHref: "/home",
+            home: { host: "app", target: HOME_TARGET },
             homeLabel: page.labels.home,
             items: [{ label: page.title }],
             menuLabel: page.labels.more,

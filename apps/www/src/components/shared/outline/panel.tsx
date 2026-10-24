@@ -15,10 +15,7 @@ import {
   Sidebar,
   SidebarTrigger,
 } from "@repo/design-system/components/ui/sidebar-shell";
-import {
-  EXACT_ACTIVE_OPTIONS,
-  HrefLink,
-} from "@repo/internationalization/src/link";
+import { PublicPathLink } from "@repo/internationalization/src/public";
 import type { ComponentProps, ReactNode } from "react";
 import { useTranslations } from "use-intl";
 
@@ -31,30 +28,33 @@ type SidebarRightProps = {
 
 /** Outline heading slot, which can resolve independently from the panel. */
 export function SidebarRightHeader({
-  title,
-  href,
   description,
   descriptionLanguage,
+  href,
+  publicPath,
+  title,
 }: {
-  title: string;
-  href: string;
   description?: string | undefined;
   descriptionLanguage?: string;
+  /** An address outside the app, such as the source of the page. */
+  href?: string | undefined;
+  /** The signed public path of the page the header names, which the router opens. */
+  publicPath?: string | undefined;
+  title: string;
 }) {
+  const link =
+    publicPath === undefined ? (
+      <a aria-label={title} href={href} title={title}>
+        {title}
+      </a>
+    ) : (
+      <PublicPathLink publicPath={publicPath} title={title} />
+    );
   return (
     <SidebarHeader>
       <SidebarMenu>
         <SidebarMenuItem>
-          <SidebarMenuButton
-            render={
-              <HrefLink
-                activeOptions={EXACT_ACTIVE_OPTIONS}
-                href={href}
-                title={title}
-              />
-            }
-            size="lg"
-          >
+          <SidebarMenuButton render={link} size="lg">
             <div className="grid flex-1 text-left text-sm leading-tight">
               <span className="truncate font-medium">{title}</span>
               {!!description && (

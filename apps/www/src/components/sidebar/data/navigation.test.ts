@@ -4,7 +4,7 @@ import {
   getForYouNavigationItems,
   getForYouNavigationTarget,
 } from "@/components/sidebar/data/navigation";
-import { getTryoutCountryTarget } from "@/components/tryout/route/path";
+import { getTryoutPublicPathTarget } from "@/components/tryout/route/path";
 import { getCurriculumProgramTarget } from "@/lib/curriculum/routes";
 
 describe("sidebar navigation", () => {
@@ -16,54 +16,42 @@ describe("sidebar navigation", () => {
     ]);
   });
 
-  it("routes each primary action to its own route on the locale", () => {
+  it("routes each primary action to its own route, on the locale of the page", () => {
     const [subject, tryOut, askNina] = getForYouNavigationItems();
 
-    expect(subject).toBeDefined();
-    expect(tryOut).toBeDefined();
-    expect(askNina).toBeDefined();
-    expect(getForYouNavigationTarget(subject, "id")).toEqual({
-      params: { locale: "id" },
+    expect(getForYouNavigationTarget(subject)).toEqual({
+      from: "/$locale",
       to: "/$locale/curricula",
     });
-    expect(getForYouNavigationTarget(tryOut, "en")).toEqual({
-      params: { locale: "en" },
+    expect(getForYouNavigationTarget(tryOut)).toEqual({
+      from: "/$locale",
       to: "/$locale/try-out",
     });
-    expect(getForYouNavigationTarget(askNina, "id")).toEqual({
-      params: { locale: "id" },
+    expect(getForYouNavigationTarget(askNina)).toEqual({
+      from: "/$locale",
       to: "/$locale/chat",
     });
   });
 
   it("uses a learner's stored target only for the row that it names", () => {
     const [subject, tryOut, askNina] = getForYouNavigationItems();
-    const curriculumTarget = getCurriculumProgramTarget({
-      locale: "id",
-      publicSlug: "amerika-serikat",
-    });
-    const tryoutTarget = getTryoutCountryTarget("id", "try-out/indonesia");
+    const curriculumTarget = getCurriculumProgramTarget("amerika-serikat");
+    const tryoutTarget = getTryoutPublicPathTarget("try-out/indonesia");
 
     expect(
-      getForYouNavigationTarget(subject, "id", {
+      getForYouNavigationTarget(subject, {
         preferredCurriculumTarget: curriculumTarget,
       })
-    ).toEqual({
-      params: { _splat: "", curriculum: "amerika-serikat", locale: "id" },
-      to: "/$locale/curricula/$curriculum/$",
-    });
+    ).toEqual(curriculumTarget);
     expect(
-      getForYouNavigationTarget(tryOut, "id", {
+      getForYouNavigationTarget(tryOut, {
         preferredTryoutTarget: tryoutTarget,
       })
-    ).toEqual({
-      params: { country: "indonesia", locale: "id" },
-      to: "/$locale/try-out/$country",
-    });
+    ).toEqual(tryoutTarget);
     expect(
-      getForYouNavigationTarget(askNina, "id", {
+      getForYouNavigationTarget(askNina, {
         preferredCurriculumTarget: curriculumTarget,
       })
-    ).toEqual({ params: { locale: "id" }, to: "/$locale/chat" });
+    ).toEqual({ from: "/$locale", to: "/$locale/chat" });
   });
 });

@@ -20,7 +20,8 @@ import { ExamTryQuestion } from "@/components/tenant/exams/try/question";
 import { createExamTry } from "@/components/tenant/exams/try/store";
 import { ExamUnavailable } from "@/components/tenant/exams/unavailable";
 import { usePreloadedQueryResult } from "@/lib/data/preloaded";
-import { SchoolHrefLink } from "@/lib/routing/school/link";
+import { SchoolDestinationLink } from "@/lib/routing/school/link";
+import { schoolExamEditTarget } from "@/lib/routing/school/target";
 
 /**
  * One exam as its students will meet it, for its teacher to try: the same player and the same
@@ -55,16 +56,19 @@ export function ExamTryPaper({
     return null;
   }
   const exam = result.value;
-  const editorPath = `/exams/${examId}/edit`;
+  const editor = schoolExamEditTarget(examId);
 
   return (
     <TrySlugContext value={slug}>
       <TryStoreContext value={store}>
         <PlayerHeader>
           <PlayerTitle>{exam.title || t("untitled")}</PlayerTitle>
-          <SchoolHrefLink className={buttonVariants()} href={editorPath}>
+          <SchoolDestinationLink
+            className={buttonVariants()}
+            destination={editor}
+          >
             {t("try-finish")}
-          </SchoolHrefLink>
+          </SchoolDestinationLink>
         </PlayerHeader>
         <PlayerMain navigator={null}>
           <p className="text-muted-foreground text-sm">{t("try-note")}</p>

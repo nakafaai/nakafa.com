@@ -1,3 +1,4 @@
+import { HOME_TARGET } from "@repo/internationalization/src/target";
 import { makeBreadcrumbNodes } from "@repo/seo/json-ld/node";
 import { createFileRoute } from "@tanstack/react-router";
 import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
@@ -38,7 +39,7 @@ function TryoutHubPage() {
       <LayoutMaterialContent>
         <BreadcrumbHeader
           value={{
-            homeHref: "/home",
+            home: { host: "app", target: HOME_TARGET },
             homeLabel: labels.home,
             items: [{ label: labels.tryOut }],
             menuLabel: labels.more,

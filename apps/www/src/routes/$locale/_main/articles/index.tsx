@@ -1,5 +1,6 @@
 import { BookOpen02Icon } from "@hugeicons/core-free-icons";
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
+import { articleCategoryTarget } from "@repo/internationalization/src/target";
 import { makeBreadcrumbNodes } from "@repo/seo/json-ld/node";
 import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
@@ -19,7 +20,7 @@ import {
 } from "@/lib/content/article/catalog";
 import {
   ArticlePageSearchSchema,
-  getArticleNextHref,
+  getArticleNextSearch,
   readArticlePageCursor,
 } from "@/lib/content/article/query";
 import {
@@ -81,7 +82,7 @@ const readArticleIndex = createServerFn({ method: "GET" })
       categories: catalog.categories,
       description: tArticles("description"),
       locale,
-      nextHref: Option.getOrNull(getArticleNextHref("/articles", catalog)),
+      nextSearch: Option.getOrNull(getArticleNextSearch(catalog)),
       sourceUrl,
       title: tCommon("articles"),
     };
@@ -151,16 +152,16 @@ function ArticleIndexPage() {
             getArticleCategoryIcons(page.categories),
             ({ route, title }, icon) => (
               <SubjectItem
-                href={`/articles/${route}`}
                 icon={icon}
                 key={route}
                 label={title}
+                target={articleCategoryTarget(route)}
               />
             )
           )}
         </SubjectList>
       </LayoutContent>
-      {page.nextHref ? <ArticleNext href={page.nextHref} /> : null}
+      {page.nextSearch ? <ArticleNext search={page.nextSearch} /> : null}
       {page.sourceUrl ? (
         <FooterContent className="mt-0">
           <RefContent githubUrl={page.sourceUrl} />

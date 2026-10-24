@@ -6,6 +6,10 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
+import {
+  HOME_TARGET,
+  QURAN_TARGET,
+} from "@repo/internationalization/src/target";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import { BreadcrumbHeaderFrame } from "@/components/shared/breadcrumb/frame";
@@ -46,16 +50,26 @@ export function QuranSurahHeader({
       <div className="col-start-1 row-start-1 min-w-0">
         <BreadcrumbHeaderFold
           className="md:hidden"
-          homeHref="/home"
+          home={{ host: "app", target: HOME_TARGET }}
           homeLabel={tCommon("home")}
-          items={[{ href: "/quran", label: quranLabel }]}
+          items={[
+            {
+              label: quranLabel,
+              target: { host: "app", target: QURAN_TARGET },
+            },
+          ]}
           menuLabel={tCommon("more")}
         />
         <div className="min-w-0 max-md:hidden">
           <BreadcrumbHeaderPath
-            homeHref="/home"
+            home={{ host: "app", target: HOME_TARGET }}
             homeLabel={tCommon("home")}
-            items={[{ href: "/quran", label: quranLabel }]}
+            items={[
+              {
+                label: quranLabel,
+                target: { host: "app", target: QURAN_TARGET },
+              },
+            ]}
             menuLabel={tCommon("more")}
           />
         </div>

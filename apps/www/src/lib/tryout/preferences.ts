@@ -3,7 +3,7 @@ import learningPreferences from "@repo/backend/confect/_generated/refs/learningP
 import type { LinkTarget } from "@repo/internationalization/src/link";
 import type { Locale } from "use-intl";
 import { useConvexAuth } from "@/components/providers/convex";
-import { getTryoutCountryTarget } from "@/components/tryout/route/path";
+import { getTryoutPublicPathTarget } from "@/components/tryout/route/path";
 import { isActiveLocale } from "@/lib/i18n/active";
 
 /** Reads the current user's preferred try-out country as a typed link target. */
@@ -28,5 +28,5 @@ export function usePreferredTryoutTarget(locale: Locale): LinkTarget | null {
     return null;
   }
 
-  return getTryoutCountryTarget(locale, preference.value.country.publicPath);
+  return getTryoutPublicPathTarget(preference.value.country.publicPath);
 }

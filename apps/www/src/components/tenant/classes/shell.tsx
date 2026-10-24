@@ -22,6 +22,7 @@ import { SchoolHeader } from "@/components/tenant/header";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { isDenied, isLostAccess } from "@/components/tenant/refusal";
 import { usePreloadedQueryResult } from "@/lib/data/preloaded";
+import { schoolClassTarget } from "@/lib/routing/school/target";
 import type { readClassForumFn } from "@/lib/tenant/classes.functions";
 
 /** The tabs of a class that have a page. The other tabs join with the slices that build them. */
@@ -109,7 +110,10 @@ function ClassPage({
 
   const klass = resolved.value;
   const canManageForum = Arr.contains(klass.can, "forum.manage");
-  const classItem = { href: `/classes/${classSlug}`, label: klass.name };
+  const classItem = {
+    label: klass.name,
+    target: { host: "school" as const, target: schoolClassTarget(classSlug) },
+  };
   const path =
     tab === "home"
       ? [{ label: klass.name }]

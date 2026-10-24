@@ -2,7 +2,6 @@ import type { Ref } from "@confect/core";
 
 import type tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import { getTileLooks } from "@repo/design-system/lib/look";
-import { HrefLink } from "@repo/internationalization/src/link";
 
 import { Array as Arr, Tuple } from "effect";
 import type { Locale } from "use-intl";
@@ -13,7 +12,7 @@ import {
 } from "@/components/shared/catalog/card";
 import { ComingSoon } from "@/components/shared/upcoming";
 import { getTryoutTrackIcons } from "@/components/tryout/catalog/icons";
-import { getTryoutPublicPathHref } from "@/components/tryout/route/path";
+import { TryoutPageLink } from "@/components/tryout/route/link";
 import { getTryoutTrackCatalogArtwork } from "@/lib/tryout/artwork";
 
 type ExamPageQuery = typeof tryouts.queries.catalog.getExamPage;
@@ -54,9 +53,7 @@ export function TryoutExamPageClient({
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {Arr.map(Arr.zip(page.tracks, visuals), ([track, visual], index) => (
           <CatalogCard
-            action={
-              <HrefLink href={getTryoutPublicPathHref(track.publicPath)} />
-            }
+            action={<TryoutPageLink publicPath={track.publicPath} />}
             actionLabel={tTryouts("open-set-cta")}
             key={track.trackKey}
             title={track.title}
