@@ -30,13 +30,7 @@ import { makeTryoutRuntimeSource } from "@repo/backend/test/tryout/serving";
 import { TRYOUT_TEST_NOW } from "@repo/backend/test/tryouts";
 import { encodeJsonText, JsonTextSchema } from "@repo/utilities/json";
 import type { FunctionReference } from "convex/server";
-import {
-  Array as Arr,
-  Effect,
-  Layer,
-  Option,
-  Schema,
-} from "effect";
+import { Array as Arr, Effect, Layer, Option, Schema } from "effect";
 import { renderToStaticMarkup } from "react-dom/server";
 import { makeTryoutRuntimeRequest } from "@/components/tryout/content/request";
 import { loadTryoutQuestion } from "@/components/tryout/content/signed";

@@ -3,11 +3,11 @@ import type { HomeView } from "@repo/backend/confect/exams/home/contract";
 import { Dashboard } from "@repo/design-system/components/ui/dashboard";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
+import { useTenant } from "@/components/tenant/context";
 import type { CellSpan } from "@/components/tenant/home/cells";
 import { useHomeNow } from "@/components/tenant/home/clock";
 import { minutesLeft } from "@/components/tenant/home/left";
 import { progressPercent } from "@/components/tenant/home/progress";
-import { useTenant } from "@/components/tenant/context";
 import { TargetLink } from "@/lib/routing/link";
 import { schoolExamSittingTarget } from "@/lib/routing/school/target";
 

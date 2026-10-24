@@ -6,6 +6,7 @@ import {
   UserAdd01Icon,
   UserGroupIcon,
 } from "@hugeicons/core-free-icons";
+import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Dashboard } from "@repo/design-system/components/ui/dashboard";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Array as Arr } from "effect";
@@ -23,7 +24,6 @@ import { ReadBoundary } from "@/components/tenant/read/boundary";
 import type { LinkTarget } from "@/lib/routing/link";
 import { TargetLink } from "@/lib/routing/link";
 import { LOCALE_ROUTE } from "@/lib/routing/tree";
-import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 
 /** The settings page where each step is completed, under the school's slug. */
 const STEP_TARGET: Record<SetupStep, (slug: TenantSlug) => LinkTarget> = {

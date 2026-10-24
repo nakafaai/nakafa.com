@@ -73,5 +73,4 @@ describe("deployedWorkerBindings", () => {
     expect(bindings).not.toHaveProperty("OPENWEATHER_API_KEY");
     expect(Record.values(bindings)).not.toContain(undefined);
   });
-
 });

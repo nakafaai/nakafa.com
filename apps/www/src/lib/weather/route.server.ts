@@ -68,9 +68,9 @@ export const serveWeather = Effect.fn("www.weather.serve")(function* ({
       return createCorsForbiddenResponse();
     }
 
-      const location = yield* readVisitorLocation(request);
-      let latitude = location.latitude;
-      let longitude = location.longitude;
+    const location = yield* readVisitorLocation(request);
+    let latitude = location.latitude;
+    let longitude = location.longitude;
 
     if (!(latitude && longitude)) {
       latitude = DEFAULT_LATITUDE;

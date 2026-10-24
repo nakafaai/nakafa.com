@@ -1,8 +1,8 @@
 import { Dashboard } from "@repo/design-system/components/ui/dashboard";
-import { TargetLink } from "@/lib/routing/link";
-import { schoolExamsTarget } from "@/lib/routing/school/target";
 import { useTenant } from "@/components/tenant/context";
 import type { CellSpan } from "@/components/tenant/home/cells";
+import { TargetLink } from "@/lib/routing/link";
+import { schoolExamsTarget } from "@/lib/routing/school/target";
 
 /**
  * One number of the strip at the top of a staff home, as a cell that links to the exams list, where the rooms, results

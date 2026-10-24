@@ -5,11 +5,11 @@ import { Array as Arr } from "effect";
 import { useMemo } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { type StoreApi, useStore } from "zustand";
+import { useTenant } from "@/components/tenant/context";
 import type { ExamDrafts } from "@/components/tenant/exams/drafts";
 import type { CellSpan } from "@/components/tenant/home/cells";
 import { useHomeNow } from "@/components/tenant/home/clock";
 import { formatAge } from "@/lib/i18n/date";
-import { useTenant } from "@/components/tenant/context";
 import { TargetLink } from "@/lib/routing/link";
 import { schoolExamEditTarget } from "@/lib/routing/school/target";
 

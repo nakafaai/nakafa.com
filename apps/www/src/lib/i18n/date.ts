@@ -1,4 +1,4 @@
-import { type ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
+import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { decodeLocale } from "@repo/internationalization/src/locale";
 import { Array as Arr, DateTime, Duration, Option } from "effect";
 

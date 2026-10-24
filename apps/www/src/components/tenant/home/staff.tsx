@@ -4,6 +4,7 @@ import {
   HOME_ROOM_LIMIT,
 } from "@repo/backend/confect/exams/home/bounds";
 import type { HomeView } from "@repo/backend/confect/exams/home/contract";
+import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Dashboard } from "@repo/design-system/components/ui/dashboard";
 import { Array as Arr } from "effect";
 import { Fragment } from "react";
@@ -27,7 +28,6 @@ import { SetupCell, useSetupShown } from "@/components/tenant/home/setup";
 import { staffShown } from "@/components/tenant/home/shown";
 import { waitingOf } from "@/components/tenant/home/waiting";
 import { schoolWeekdayTimeText } from "@/components/tenant/settings/clock";
-import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { schoolExamSittingTarget } from "@/lib/routing/school/target";
 
 /** A room that the staff home lists as upcoming. */
@@ -146,7 +146,9 @@ export function StaffHome({
       draw: (span) => (
         <ScheduleCell
           bound={nextBound ? HOME_ROOM_LIMIT : null}
-          items={Arr.map(next, (room) => scheduleItemOf(room, locale, tenant.slug))}
+          items={Arr.map(next, (room) =>
+            scheduleItemOf(room, locale, tenant.slug)
+          )}
           span={span}
         />
       ),
@@ -214,7 +216,11 @@ export function StaffHome({
 }
 
 /** The room of the schedule, which its bar and its row open at the room's proctor page, and says when it opens. */
-function scheduleItemOf(room: Room, locale: string, slug: TenantSlug): ScheduleItem {
+function scheduleItemOf(
+  room: Room,
+  locale: string,
+  slug: TenantSlug
+): ScheduleItem {
   return {
     target: schoolExamSittingTarget(slug, room.examId, room.id),
     id: room.id,

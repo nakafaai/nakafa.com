@@ -1,6 +1,6 @@
 import { decodeLocale } from "@repo/internationalization/src/locale";
 import { Array as Arr, Effect, Option } from "effect";
-import { type Locale } from "use-intl/core";
+import type { Locale } from "use-intl/core";
 import { BASE_URL, type LlmsSection } from "@/lib/llms/constants";
 import { getContentPageLlmsEntries } from "@/lib/llms/content/entries";
 import { getContentListingLlmsEntries } from "@/lib/llms/content/listing";

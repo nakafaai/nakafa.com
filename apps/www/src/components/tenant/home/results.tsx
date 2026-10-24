@@ -101,7 +101,11 @@ function ResultRow({
       icon={Certificate01Icon}
       render={
         <TargetLink
-          target={schoolExamSittingResultsTarget(slug, result.examId, result.id)}
+          target={schoolExamSittingResultsTarget(
+            slug,
+            result.examId,
+            result.id
+          )}
           title={result.examTitle}
         />
       }

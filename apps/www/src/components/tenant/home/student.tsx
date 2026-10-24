@@ -2,6 +2,7 @@ import { QueryResult } from "@confect/react";
 import { Certificate01Icon, Clock01Icon } from "@hugeicons/core-free-icons";
 import { HOME_RESULT_LIMIT } from "@repo/backend/confect/exams/home/bounds";
 import type { StudentSittingRow } from "@repo/backend/confect/exams/sittings/contract";
+import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Dashboard } from "@repo/design-system/components/ui/dashboard";
 import { Array as Arr, Option } from "effect";
 import { Fragment, useEffect } from "react";
@@ -26,7 +27,6 @@ import { schoolDateTimeText } from "@/components/tenant/settings/clock";
 import { enterableSitting, orderSittings } from "@/components/tenant/sittings";
 import { TargetLink } from "@/lib/routing/link";
 import { schoolSittingTarget } from "@/lib/routing/school/target";
-import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 
 /** One sitting of the student, as the student's list holds it. */
 type Sitting = typeof StudentSittingRow.Type;
@@ -98,7 +98,9 @@ function StudentCells() {
       draw: (span) => (
         <ScheduleCell
           bound={null}
-          items={Arr.map(upcoming, (sitting) => scheduleItemOf(sitting, tenant.slug))}
+          items={Arr.map(upcoming, (sitting) =>
+            scheduleItemOf(sitting, tenant.slug)
+          )}
           span={span}
         />
       ),
