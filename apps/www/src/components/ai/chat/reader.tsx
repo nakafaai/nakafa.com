@@ -158,7 +158,8 @@ function ReaderTranscript({
         catch: (cause) => new ReaderReadError({ cause }),
       }).pipe(
         Effect.matchEffect({
-          onFailure: () => Effect.void,
+          onFailure: () =>
+            Effect.logWarning("An older page of a shared chat did not load."),
           onSuccess: (older) =>
             Effect.sync(() => {
               setView((previous) => withOlderPage(previous, older));
