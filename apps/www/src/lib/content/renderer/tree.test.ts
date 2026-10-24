@@ -70,12 +70,7 @@ function root(children: readonly ContentTreeChild[]): ContentTreeElement {
 
 /** Renders one tree through the component map used by every artifact. */
 function renderTree(tree: ContentTreeElement) {
-  return renderContentTree({
-    components,
-    contentKey,
-    rendererDomain: "site",
-    tree,
-  });
+  return renderContentTree(components, contentKey, "site", tree);
 }
 
 describe("content tree rendering", () => {

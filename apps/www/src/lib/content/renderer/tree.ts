@@ -1,14 +1,13 @@
-import { ContentKeySchema } from "@nakafa/aksara-contracts/ids";
-import { RendererDomainSchema } from "@nakafa/aksara-contracts/renderer/domain";
+import type { ContentKey } from "@nakafa/aksara-contracts/ids";
+import type { RendererDomain } from "@nakafa/aksara-contracts/renderer/domain";
 import {
   type ContentTreeElement,
   type ContentTreeProps,
-  ContentTreeSchema,
   type ContentTreeValue,
   contentTreeComponentNames,
 } from "@nakafa/aksara-contracts/tree";
 import type { MDXComponents } from "@repo/design-system/types/markdown";
-import { Array as Arr, Effect, Predicate, Record as Rec, Schema } from "effect";
+import { Array as Arr, Effect, Predicate, Record as Rec } from "effect";
 import { createElement, Fragment, type ReactElement } from "react";
 import { RendererImplementationMissing } from "@/lib/content/renderer/selection";
 
@@ -73,20 +72,6 @@ function renderElement(
   return createElement(type, props, ...children);
 }
 
-/** The component map is a React value, which no Schema describes, so only its object shape is checked. */
-const MDXComponentsSchema = Schema.declare(
-  (value: unknown): value is MDXComponents => Predicate.isObject(value)
-);
-
-/** One verified tree with the component map its requirements resolved to. */
-const RenderTreeInputSchema = Schema.Struct({
-  components: MDXComponentsSchema,
-  contentKey: ContentKeySchema,
-  rendererDomain: RendererDomainSchema,
-  tree: ContentTreeSchema,
-});
-type RenderTreeInput = typeof RenderTreeInputSchema.Type;
-
 /**
  * Renders the signed content tree as React elements with the resolved component
  * map. Nothing is evaluated: every node is data the verifier already authenticated.
@@ -94,16 +79,21 @@ type RenderTreeInput = typeof RenderTreeInputSchema.Type;
  * missing-implementation error before any element is created.
  */
 export const renderContentTree = Effect.fn("NakafaContent.renderContentTree")(
-  function* (input: RenderTreeInput) {
-    for (const componentName of contentTreeComponentNames(input.tree)) {
-      if (input.components[componentName] === undefined) {
+  function* (
+    components: MDXComponents,
+    contentKey: ContentKey,
+    rendererDomain: RendererDomain,
+    tree: ContentTreeElement
+  ) {
+    for (const componentName of contentTreeComponentNames(tree)) {
+      if (components[componentName] === undefined) {
         return yield* new RendererImplementationMissing({
           componentName,
-          contentKey: input.contentKey,
-          rendererDomain: input.rendererDomain,
+          contentKey,
+          rendererDomain,
         });
       }
     }
-    return renderElement(input.tree, input.components);
+    return renderElement(tree, components);
   }
 );
