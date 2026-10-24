@@ -1,24 +1,26 @@
 import { providers, state, Website } from "@alchemy.run/cloudflare";
-import { Stack } from "alchemy";
+import { Stack, Stage } from "alchemy";
 import { Effect } from "effect";
+import { deployNakafaDns } from "#www/deploy/dns";
+import {
+  PRODUCTION_STAGE,
+  WORKER_OBSERVABILITY,
+  WORKER_PLACEMENT,
+  webExposure,
+} from "#www/deploy/stage";
 import { deployedWorkerBindings, workerSettings } from "#www/worker";
 
 /**
- * The Start app. Alchemy builds it with this app's own vite.config.ts, uploads the
- * client build as static assets, and makes the SSR bundle the Worker entry. The
- * React Server Components environment ships beside that entry. The runtime
+ * The Nakafa stack. The stage decides who reaches the web Worker: production
+ * serves nakafa.com and every School host and owns the zone's records, staging
+ * serves staging.nakafa.com behind Cloudflare Access, and any other stage gets
+ * only its workers.dev URL.
+ *
+ * Alchemy builds the app with this app's own vite.config.ts, uploads the client
+ * build as static assets, and makes the SSR bundle the Worker entry. The runtime
  * settings and the bindings come from worker.ts, the same owner that
  * vite.config.ts reads.
  */
-const Web = Website.Vite("Web", {
-  compatibility: {
-    date: workerSettings.compatibilityDate,
-    flags: workerSettings.compatibilityFlags,
-  },
-  env: deployedWorkerBindings(),
-  viteEnvironments: workerSettings.viteEnvironments,
-});
-
 export default Stack(
   "Nakafa",
   {
@@ -26,7 +28,23 @@ export default Stack(
     state: state(),
   },
   Effect.gen(function* () {
-    const web = yield* Web;
+    const stage = yield* Stage;
+
+    const web = yield* Website.Vite("Web", {
+      compatibility: {
+        date: workerSettings.compatibilityDate,
+        flags: workerSettings.compatibilityFlags,
+      },
+      env: deployedWorkerBindings(),
+      viteEnvironments: workerSettings.viteEnvironments,
+      observability: WORKER_OBSERVABILITY,
+      placement: WORKER_PLACEMENT,
+      ...webExposure(stage),
+    });
+
+    if (stage === PRODUCTION_STAGE) {
+      yield* deployNakafaDns();
+    }
 
     return { url: web.url.as<string>() };
   })
