@@ -53,12 +53,15 @@ never invoke a Worker.
    the account id, the Convex production and staging deploy keys, and every server
    value that a Worker binds to GitHub Actions secrets, each read through an Effect
    `Config` at run time. CI never runs that stack.
-7. **CAS runs as Durable Objects.** The math engine in `apps/cas` is a Python
-   Durable Object (`entry.py`, `cas/compute.py`), and a TypeScript front on
-   `cas.nakafa.com` (`apps/cas/front`) checks the bearer key and forwards each
-   call to one of a fixed pool of engine objects. Each object runs one calculation
-   at a time under the platform's CPU limit. The measurement that decided this
-   design is recorded in the pull request that introduced it.
+7. **CAS runs as Durable Objects, and its cutover waits for a passing probe.** The
+   math engine in `apps/cas` is a Python Durable Object (`entry.py`,
+   `cas/compute.py`), and a TypeScript front on `cas.nakafa.com` (`apps/cas/front`)
+   checks the bearer key and forwards each call to one of a fixed pool of engine
+   objects. The probe on Workers Free (24 October 2026) passed the corpus bar and
+   failed the heavy-request bar: a request that reached the engine's CPU limit left
+   one pooled object unresponsive for more than 20 minutes, and requests routed to
+   it did not complete. The production route and the removal of the Vercel record
+   for `cas.nakafa.com` must not ship until a repeated probe passes that bar.
 
 ## Consequences
 
@@ -89,8 +92,16 @@ never invoke a Worker.
 - Upgrading to a paid Workers plan needs a measured limit that is hit, recorded
   first in the goals.
 - The CAS engine has no subprocess: a Python Worker cannot start one, so the
-  engine runs in a Durable Object with SQLite storage, the only storage a Free
-  Durable Object has.
+  engine runs in a Durable Object, and the platform's CPU limit replaces the
+  subprocess timeout.
+- Measured on Workers Free in the probe stage, then removed. The engine uploads
+  33.29 MB uncompressed, under the 64 MiB limit. SymPy loads on the first request,
+  because a Worker may not draw randomness while it starts, so the first call on a
+  fresh object takes 6 to 16 seconds. The 1,015 corpus calls (203 requests, five
+  rounds) returned only 200 or 422, with no 1102 or exceeded-resource outcome. The
+  front used a median of 1 ms CPU (P99 5 ms). The engine used a median of 11 ms
+  CPU, P99 12.5 seconds, and up to 32.5 seconds for the request that reached the
+  limit.
 
 ## Sources
 
