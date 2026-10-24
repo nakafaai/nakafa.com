@@ -22,11 +22,14 @@ export function isServerExceptionReportingEnabled() {
 /**
  * Captures one exception that escaped the Start request handler. Reporting runs
  * behind a dynamic import, so the Node-only provider stays out of the browser
- * graph, and a failed capture never replaces the error response.
+ * graph, and a failed capture never replaces the error response. Every error is
+ * logged first, so a deployment outside production still shows its cause in the
+ * platform logs.
  */
 export const reportUncaughtRequestError = Effect.fn(
   "analytics.reportUncaughtRequestError"
 )(function* (error: unknown, request: Request) {
+  yield* Effect.logError("The request failed with an uncaught error.", error);
   if (!isServerExceptionReportingEnabled()) {
     return;
   }

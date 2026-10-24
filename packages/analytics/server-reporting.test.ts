@@ -3,7 +3,7 @@ import {
   isServerExceptionReportingEnabled,
   reportUncaughtRequestError,
 } from "@repo/analytics/server-reporting";
-import { Data, Effect } from "effect";
+import { Data, Effect, Logger, MutableList } from "effect";
 
 /** The provider failure that a capture may meet, so the test names its error type. */
 class ProviderUnavailable extends Data.TaggedError("ProviderUnavailable")<{
@@ -100,6 +100,36 @@ describe("uncaught request error reporting", () => {
         undefined
       );
     })
+  );
+
+  it.effect(
+    "logs the error outside production, where no provider reports it",
+    () =>
+      Effect.gen(function* () {
+        vi.stubEnv("VERCEL_ENV", "preview");
+        vi.stubEnv("TSS_PRERENDERING", undefined);
+        mockProvider();
+        const messages = MutableList.make<unknown>();
+        const error = new Error("render failed");
+
+        yield* reportUncaughtRequestError(
+          error,
+          new Request("https://nakafa.com/")
+        ).pipe(
+          Effect.provide(
+            Logger.layer([
+              Logger.make(({ message }) => {
+                MutableList.append(messages, message);
+              }),
+            ])
+          )
+        );
+
+        const logged = MutableList.toArray(messages);
+        expect(logged).toHaveLength(1);
+        expect(logged[0]).toStrictEqual(expect.arrayContaining([error]));
+        expect(captureServerException).not.toHaveBeenCalled();
+      })
   );
 
   it.effect("skips the provider outside production", () =>
