@@ -120,6 +120,26 @@ const writeRobotsFile: Plugin = {
   name: "www:write-robots-file",
 };
 
+/**
+ * Answers robots.txt in `vite dev`, where the build writer does not run. The
+ * middleware sits before Vite's own handlers, so the router never sees the request.
+ */
+const serveRobotsFile: Plugin = {
+  apply: "serve",
+  configureServer: (server) => {
+    server.middlewares.use((request, response, next) => {
+      const { pathname } = new URL(request.url ?? "/", "http://localhost");
+      if (pathname !== "/robots.txt") {
+        next();
+        return;
+      }
+      response.setHeader("Content-Type", "text/plain; charset=utf-8");
+      response.end(renderRobotsTxt());
+    });
+  },
+  name: "www:serve-robots-file",
+};
+
 const verifyPrerenderedPages: Plugin = {
   apply: "build",
   // TanStack's prerender is a post plugin too; this check must run after it.
@@ -270,6 +290,7 @@ export default defineConfig(({ command, isPreview }) => ({
     bundleCommonJsReactPeers,
     writeHeadersFile,
     writeRobotsFile,
+    serveRobotsFile,
     verifyPrerenderedPages,
     // `vite dev` runs the Worker as Node runs a development server. `vite build`
     // and `vite preview`, the acceptance server and the prerender included, run

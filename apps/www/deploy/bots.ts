@@ -10,8 +10,10 @@ import {
  * The bot policy of the nakafa.com zone, deployed from production only. The AI
  * search, user and training classes all allow at the edge, so answer services can
  * read and cite, and training is refused by robots.txt and one WAF rule. Bot
- * Preference Sync, Bot Fight Mode and AI Labyrinth stay off. The Free plan accepts
- * `fightMode` and the shared fields that this resource sets, and no other field.
+ * Preference Sync, Bot Fight Mode and AI Labyrinth stay off. Alchemy documents
+ * `fightMode` as the Free plan's field and the other fields set here as shared
+ * across plans. Some accounts still reject a shared field, and then that field is
+ * dropped from this resource.
  */
 export const deployNakafaBots = Effect.fn("deploy.nakafaBots")(function* (
   zone: Zone.Zone
