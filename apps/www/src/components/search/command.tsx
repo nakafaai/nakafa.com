@@ -103,6 +103,8 @@ export function SearchCommand() {
     <CommandDialog onOpenChange={setOpen} open={open}>
       <CommandDialogPopup
         description={t("search-description")}
+        initialFocus
+        portalProps={{ keepMounted: true }}
         title={tCommon("search")}
       >
         <SearchMain />

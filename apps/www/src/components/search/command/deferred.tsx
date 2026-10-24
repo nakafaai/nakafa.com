@@ -2,11 +2,10 @@
 
 import { useHotkeys } from "@mantine/hooks";
 import { ClientOnly } from "@tanstack/react-router";
-import { lazy, Suspense, useEffect } from "react";
+import { lazy, Suspense } from "react";
 import { loadSearchCommandModule } from "@/components/search/command/module";
 import { ArticleNavigationContext } from "@/components/search/navigation";
 import type { ArticleNavigationItem } from "@/lib/content/article/navigation";
-import { warmWhenIdle } from "@/lib/idle";
 import { useSearch } from "@/lib/search/context";
 
 const LazySearchCommand = lazy(() =>
@@ -17,8 +16,9 @@ const LazySearchCommand = lazy(() =>
 
 /**
  * Registers lightweight shortcuts and mounts search once the reader shows intent
- * on a trigger, or in the browser's idle time. The palette stays mounted while
- * closed, so the press that opens it reveals a body that is already there.
+ * on a trigger or presses a shortcut, so pages that never open it load none of its
+ * code. The palette stays mounted while closed, so the press that opens it reveals
+ * a body that is already there.
  */
 export function DeferredSearchCommand({
   articleNavigation,
@@ -27,14 +27,11 @@ export function DeferredSearchCommand({
 }) {
   const activated = useSearch((state) => state.activated);
   const setOpen = useSearch((state) => state.setOpen);
-  const warm = useSearch((state) => state.warm);
 
   useHotkeys([
     ["/", () => setOpen(true)],
     ["mod+K", () => setOpen(true)],
   ]);
-
-  useEffect(() => warmWhenIdle(warm), [warm]);
 
   if (!activated) {
     return null;
