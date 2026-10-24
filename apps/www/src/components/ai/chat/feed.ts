@@ -8,7 +8,14 @@ import type {
   FunctionReference,
   FunctionReturnType,
 } from "convex/server";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import {
+  createContext,
+  use,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { readChatArgs } from "@/components/ai/chat/access";
 import { useChat } from "@/components/ai/chat/context";
 import { mergeMessages } from "@/components/ai/chat/messages";
@@ -33,17 +40,33 @@ const messagesQuery: MessagesQuery = Ref.getFunctionReference(
 );
 
 /**
- * The transcript's messages, streamed by Agent. Only the transcript calls it:
- * every streamed batch renders the component that does, and no control that
- * reads the chat's state. A chat the learner just started shows its first
- * prompt from the receipt, and a prompt they just sent shows at once, until
- * the feed carries the saved ones. A reader who came by a share link proves
- * access with its token, as the conversation does. The messages carry nothing
- * of their turns, which the conversation tells, so the transcript waits for
- * the first page of those too, and an older page of messages loads with an
- * older page of turns.
+ * The messages a transcript shows and the way to load older ones. A learner's
+ * chat streams them from Agent (`LiveChatFeed`). A reader's chat holds the pages
+ * the server read (`ReaderChatPage`), so the message components read one shape
+ * whichever it is.
  */
+export const ChatFeedContext = createContext<ReturnType<
+  typeof useLiveChatFeed
+> | null>(null);
+
+/** The messages of the chat the transcript shows, from whichever feed provides them. */
 export function useChatFeed() {
+  const feed = use(ChatFeedContext);
+  if (!feed) {
+    throw new Error("useChatFeed must be used within a chat feed");
+  }
+  return feed;
+}
+
+/**
+ * The transcript's messages, streamed by Agent. A chat the learner just started
+ * shows its first prompt from the receipt, and a prompt they just sent shows at
+ * once, until the feed carries the saved ones. The messages carry nothing of
+ * their turns, which the conversation tells, so the transcript waits for the
+ * first page of those too, and an older page of messages loads with an older
+ * page of turns.
+ */
+export function useLiveChatFeed() {
   const chatId = useChat((state) => state.chatId);
   const shareToken = useChat((state) => state.shareToken);
   const chat = useChat((state) => state.chat);

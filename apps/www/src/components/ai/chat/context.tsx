@@ -28,7 +28,12 @@ import { type NinaDraft, useNinaSubmission } from "@/components/ai/submission";
 import { useAuthSessionStore } from "@/components/auth/session";
 import { useViewer } from "@/lib/identity/client";
 
-const ChatContext = createContext<ChatContextValue | null>(null);
+/**
+ * The conversation's state and actions. A learner's chat provides it from the
+ * live conversation (`ChatProvider`), and a reader's chat from the server's read
+ * (`ReaderChatProvider`), so every message control reads one shape.
+ */
+export const ChatContext = createContext<ChatContextValue | null>(null);
 
 /**
  * Owns one conversation's state and actions. It never reads the streamed
@@ -251,7 +256,7 @@ function useChatState(
  * or fails, never with a streamed token, so the controls that read it stay
  * still while Nina writes.
  */
-type ChatContextValue = ReturnType<typeof useChatState>;
+export type ChatContextValue = ReturnType<typeof useChatState>;
 
 /**
  * One reactive conversation shared by the route, sheet and message controls.

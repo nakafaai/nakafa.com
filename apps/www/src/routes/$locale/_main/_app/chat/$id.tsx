@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useSyncExternalStore } from "react";
 import { ChatHeader } from "@/components/ai/chat/header";
 import { readShareToken } from "@/components/ai/chat/link";
+import { ReaderChatPage } from "@/components/ai/chat/reader";
 import { AiChatPage } from "@/components/ai/chat/screen";
 import { ConvexIsland } from "@/components/providers/island";
 import { chatScreenFn } from "@/lib/account/home.functions";
@@ -41,13 +42,12 @@ function ChatRoute() {
   if (fragment === null) {
     return <ChatHeader />;
   }
+  const shareToken = fragment === "" ? undefined : fragment;
   return (
-    <ConvexIsland fallback={<ChatHeader />}>
-      <AiChatPage
-        chatId={chatId}
-        key={chatId}
-        shareToken={fragment === "" ? undefined : fragment}
-      />
+    <ConvexIsland
+      fallback={<ReaderChatPage chatId={chatId} shareToken={shareToken} />}
+    >
+      <AiChatPage chatId={chatId} key={chatId} shareToken={shareToken} />
     </ConvexIsland>
   );
 }
