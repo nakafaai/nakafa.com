@@ -103,15 +103,16 @@ export const readStoreEntry = Effect.fn("www.content.store.readEntry")(
     readonly schema: Schema.Codec<A, I, never, never>;
   }) {
     const key = yield* makeStoreKey(input.parts).pipe(
+      Effect.asSome,
       Effect.catchTag("ContentStoreUnavailableError", (error) =>
-        warnUnavailable(error).pipe(Effect.as(undefined))
+        warnUnavailable(error).pipe(Effect.as(Option.none<string>()))
       )
     );
-    if (key === undefined) {
+    if (Option.isNone(key)) {
       return Option.none<A>();
     }
     const now = yield* Clock.currentTimeMillis;
-    const stored = runtimeCache.get(key, now);
+    const stored = runtimeCache.get(key.value, now);
     return Option.flatMap(stored, (value) =>
       Schema.decodeUnknownOption(makeEntryCodec(input.schema))(value)
     ).pipe(Option.map(({ value }) => value));

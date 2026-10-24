@@ -55,7 +55,7 @@ export const decodeContentReleasePin = Effect.fn(
   const decoded = decodeReleasePin(actual, expected, identity);
   if (Result.isFailure(decoded)) {
     if (decoded.failure._tag === "PublishedReleaseMismatchError") {
-      yield* expireActiveContentIdentity().pipe(Effect.ignore({ log: "Warn" }));
+      yield* expireActiveContentIdentity();
     }
     return yield* decoded.failure;
   }

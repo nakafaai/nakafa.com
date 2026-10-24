@@ -62,7 +62,7 @@ const loadUnderRelease = Effect.fn("www.content.store.load")(function* <
     });
     return Result.succeed(value);
   }
-  yield* expireActiveContentIdentity().pipe(Effect.ignore({ log: "Warn" }));
+  yield* expireActiveContentIdentity();
   if (Result.isFailure(loaded)) {
     return yield* Effect.fail(loaded.failure);
   }
