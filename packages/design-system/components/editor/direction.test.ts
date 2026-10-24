@@ -45,7 +45,12 @@ describe("blockDirections", () => {
     });
     editor.commands.setContent("<p>مرحبا</p>");
 
-    expect(JSON.stringify(editor.getJSON())).not.toContain("dir");
+    expect(editor.getJSON()).toEqual({
+      content: [
+        { content: [{ text: "مرحبا", type: "text" }], type: "paragraph" },
+      ],
+      type: "doc",
+    });
     editor.destroy();
   });
 });

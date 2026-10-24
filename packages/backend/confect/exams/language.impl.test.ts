@@ -23,7 +23,8 @@ describe("exams/language clear", () => {
             })
           ).pipe(Effect.orDie)
         );
-        const holding = (yield* fixture.run(examRows)).filter(
+        const holding = Arr.filter(
+          yield* fixture.run(examRows),
           (row) => row.language !== undefined
         );
 
@@ -34,7 +35,7 @@ describe("exams/language clear", () => {
         const again = yield* fixture.internal.mutation(clear, {});
         const rows = yield* fixture.run(examRows);
 
-        expect(holding.map((row) => row._id)).toEqual([legacy.id]);
+        expect(Arr.map(holding, (row) => row._id)).toEqual([legacy.id]);
         expect(first).toEqual({
           cleared: 1,
           continueCursor: expect.any(String),
@@ -46,7 +47,7 @@ describe("exams/language clear", () => {
           done: true,
         });
         expect(again.cleared).toBe(0);
-        expect(rows.some((row) => row.language !== undefined)).toBe(false);
+        expect(Arr.some(rows, (row) => row.language !== undefined)).toBe(false);
         expect(Arr.map(rows, (row) => row._id)).toEqual([
           legacy.id,
           current.id,
