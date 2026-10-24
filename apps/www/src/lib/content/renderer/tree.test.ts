@@ -8,30 +8,43 @@ import type {
   ContentTreeProps,
 } from "@nakafa/aksara-contracts/tree";
 import { semanticMdxComponents } from "@repo/design-system/lib/markdown/semantic";
-import { Effect } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 import { createElement, type ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { renderContentTree } from "@/lib/content/renderer/tree";
 
 const contentKey = ContentKeySchema.make("test:tree");
 
+/** Any React child, which the test passes through unchanged. */
+const ReactNodeSchema = Schema.declare(
+  (value: unknown): value is ReactNode => value !== undefined
+);
+
+const ProbeProps = Schema.Struct({
+  icon: ReactNodeSchema,
+  label: Schema.String,
+});
+
+const ValuesProps = Schema.Struct({
+  count: Schema.Number,
+  flag: Schema.Boolean,
+  items: Schema.Array(Schema.Unknown),
+  meta: Schema.Struct({ a: Schema.Number }),
+  none: Schema.Null,
+});
+
 /** Test component that renders its label followed by one nested element. */
-function Probe(props: { readonly icon: ReactNode; readonly label: string }) {
+function Probe(props: typeof ProbeProps.Type) {
   return createElement("span", null, props.label, props.icon);
 }
 
 /** Test component that renders JSON data props exactly as they arrived. */
-function Values(props: {
-  readonly count: number;
-  readonly flag: boolean;
-  readonly items: readonly unknown[];
-  readonly meta: { readonly a: number };
-  readonly none: null;
-}) {
+function Values(props: typeof ValuesProps.Type) {
+  const items = Arr.join(Arr.map(props.items, String), ",");
   return createElement(
     "span",
     null,
-    `${props.count}|${props.flag}|${props.none}|${props.items.join(",")}|${props.meta.a}`
+    `${props.count}|${props.flag}|${props.none}|${items}|${props.meta.a}`
   );
 }
 
@@ -121,7 +134,7 @@ describe("content tree rendering", () => {
         );
 
         expect(renderToStaticMarkup(element)).toBe(
-          "<span>Label<em>nested</em></span><span>3|true|null|a,1,|7</span>"
+          "<span>Label<em>nested</em></span><span>3|true|null|a,1,null|7</span>"
         );
       })
   );

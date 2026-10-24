@@ -1,4 +1,4 @@
-import type { Curve } from "@repo/design-system/components/contents/mathematics/line/curve";
+import { CurveSchema } from "@repo/design-system/components/contents/mathematics/line/curve";
 import type { CircleArcLineProps } from "@repo/design-system/components/contents/mathematics/line/equation";
 import type {
   Props as LineEquationProps,
@@ -104,9 +104,11 @@ type CircleSegmentLine = Omit<CircleArcLineProps, "kind"> &
  * One curve declared by its formula. Its points are computed from `curve`, one
  * branch per resolved line, so the line carries no points or smoothing of its own.
  */
-export type CurveLine = Omit<ResolvedLine, "points" | "smooth"> & {
-  readonly curve: Curve;
-};
+const CurveLineFieldsSchema = Schema.Struct({
+  curve: CurveSchema,
+});
+export type CurveLine = Omit<ResolvedLine, "points" | "smooth"> &
+  typeof CurveLineFieldsSchema.Type;
 
 /** Declarative or already-resolved line accepted by the public card. */
 export type AuthoredLine =

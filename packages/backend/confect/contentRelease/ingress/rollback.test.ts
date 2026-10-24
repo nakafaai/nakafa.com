@@ -1,11 +1,8 @@
 import { RegisteredConvexFunction, RegisteredFunction } from "@confect/server";
 import { describe, expect, it } from "@effect/vitest";
-import { SignedContentArtifactSchema } from "@nakafa/aksara-contracts/content";
 import {
-  isRollbackUpsert,
   MAX_ROLLBACK_PAGE_BYTES,
   RollbackPageSchema,
-  type RollbackRecord,
 } from "@nakafa/aksara-contracts/release/rollback/spec";
 import { RoutePageSchema } from "@nakafa/aksara-contracts/release/route/page";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
@@ -20,11 +17,12 @@ import {
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
-import { testTextTree } from "@repo/backend/test/content/artifact";
 import { TEST_KEY_RESOLVER } from "@repo/backend/test/content/proof";
 import { TEST_RELEASE_ID } from "@repo/backend/test/content/release";
 import {
   activateAuthenticatedRelease,
+  decodeRollbackResponse,
+  inflateRecord,
   insertRollbackItems,
   insertRollbackRoutes,
   readRollbackEnvelope,
@@ -77,19 +75,6 @@ const makeRouteRequest = Effect.fn("test.contentRelease.makeRouteRequest")(
       );
     }
     return request;
-  }
-);
-
-/**
- * Decodes one rollback response from the JSON text its action returns. Decoded
- * artifacts hold tree elements, whose `$node` key a Convex value may not name, so
- * the action returns text and the test decodes it outside the Convex boundary.
- */
-const decodeRollbackResponse = Effect.fn("test.contentRelease.decodeResponse")(
-  function* (text: string) {
-    return yield* Schema.decodeEffect(
-      Schema.fromJsonString(Schema.Union([RollbackPageSchema, RoutePageSchema]))
-    )(text).pipe(Effect.orDie);
   }
 );
 
@@ -215,26 +200,6 @@ const readBodySource = Effect.fn("test.contentRelease.readBodySource")(
   }
 );
 
-/** Inflates one authenticated artifact so its record crosses the page ceiling. */
-function inflateRecord(record: RollbackRecord, byteLength: number) {
-  const { current } = record;
-  if (!isRollbackUpsert(current)) {
-    throw new Error("Expected an authenticated rollback upsert state.");
-  }
-  return {
-    ...record,
-    current: {
-      ...current,
-      artifact: Schema.decodeSync(SignedContentArtifactSchema)({
-        ...current.artifact,
-        payload: {
-          ...current.artifact.payload,
-          contentTree: testTextTree("x".repeat(byteLength)),
-        },
-      }),
-    },
-  } satisfies RollbackRecord;
-}
 describe("content publication rollback reads", () => {
   it.effect(
     "aggregates safe body query transactions into one external page",
@@ -421,7 +386,7 @@ describe("content publication rollback reads", () => {
         Schema.fromJsonString(RollbackPageSchema)
       )({
         ...page,
-        records: [inflateRecord(record, MAX_ROLLBACK_PAGE_BYTES)],
+        records: [yield* inflateRecord(record, MAX_ROLLBACK_PAGE_BYTES)],
       });
       const message = yield* rollbackFailure(
         readRollbackPages(t, request, envelope, [oversized])
@@ -474,7 +439,10 @@ describe("content publication rollback reads", () => {
           Schema.fromJsonString(RollbackPageSchema)
         )({
           ...page,
-          records: [first, inflateRecord(second, MAX_ROLLBACK_PAGE_BYTES)],
+          records: [
+            first,
+            yield* inflateRecord(second, MAX_ROLLBACK_PAGE_BYTES),
+          ],
         });
         const response = yield* readRollbackPages(t, request, envelope, [
           inflated,

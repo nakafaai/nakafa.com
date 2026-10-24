@@ -17,7 +17,7 @@ import type { Schema } from "effect";
 type ArtifactLocaleCode = Schema.Codec.Encoded<typeof ArtifactLocaleSchema>;
 
 /** The smallest valid content tree: a fragment with no children. */
-export const TEST_CONTENT_TREE: ContentTreeElement = {
+const TEST_CONTENT_TREE: ContentTreeElement = {
   $node: "element",
   name: "fragment",
   props: {},

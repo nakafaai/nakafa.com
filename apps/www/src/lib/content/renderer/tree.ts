@@ -1,12 +1,14 @@
-import type { ContentKey } from "@nakafa/aksara-contracts/ids";
-import type { RendererDomain } from "@nakafa/aksara-contracts/renderer/domain";
-import type {
-  ContentTreeElement,
-  ContentTreeValue,
+import { ContentKeySchema } from "@nakafa/aksara-contracts/ids";
+import { RendererDomainSchema } from "@nakafa/aksara-contracts/renderer/domain";
+import {
+  type ContentTreeElement,
+  type ContentTreeProps,
+  ContentTreeSchema,
+  type ContentTreeValue,
+  contentTreeComponentNames,
 } from "@nakafa/aksara-contracts/tree";
-import { contentTreeComponentNames } from "@nakafa/aksara-contracts/tree";
 import type { MDXComponents } from "@repo/design-system/types/markdown";
-import { Array as Arr, Effect, Record as Rec } from "effect";
+import { Array as Arr, Effect, Predicate, Record as Rec, Schema } from "effect";
 import { createElement, Fragment, type ReactElement } from "react";
 import { RendererImplementationMissing } from "@/lib/content/renderer/selection";
 
@@ -16,23 +18,20 @@ const FRAGMENT = "fragment";
 /** Checks whether one tree value is an element rather than JSON data or a list. */
 function isElement(value: ContentTreeValue): value is ContentTreeElement {
   return (
-    typeof value === "object" &&
-    value !== null &&
-    !Array.isArray(value) &&
-    "$node" in value
+    Predicate.isObject(value) &&
+    !Arr.isArray(value) &&
+    Predicate.hasProperty(value, "$node")
   );
 }
 
 /** Checks whether one tree value is a list of tree values. */
 function isList(value: ContentTreeValue): value is readonly ContentTreeValue[] {
-  return Array.isArray(value);
+  return Arr.isArray(value);
 }
 
 /** Checks whether one tree value is a plain props object, never an element or a list. */
-function isRecord(
-  value: ContentTreeValue
-): value is { readonly [key: string]: ContentTreeValue } {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
+function isRecord(value: ContentTreeValue): value is ContentTreeProps {
+  return Predicate.isObject(value) && !Arr.isArray(value);
 }
 
 /** Renders one prop value: nested elements become React elements, JSON data passes through. */
@@ -74,13 +73,19 @@ function renderElement(
   return createElement(type, props, ...children);
 }
 
+/** The component map is a React value, which no Schema describes, so only its object shape is checked. */
+const MDXComponentsSchema = Schema.declare(
+  (value: unknown): value is MDXComponents => Predicate.isObject(value)
+);
+
 /** One verified tree with the component map its requirements resolved to. */
-interface RenderTreeInput {
-  readonly components: MDXComponents;
-  readonly contentKey: ContentKey;
-  readonly rendererDomain: RendererDomain;
-  readonly tree: ContentTreeElement;
-}
+const RenderTreeInputSchema = Schema.Struct({
+  components: MDXComponentsSchema,
+  contentKey: ContentKeySchema,
+  rendererDomain: RendererDomainSchema,
+  tree: ContentTreeSchema,
+});
+type RenderTreeInput = typeof RenderTreeInputSchema.Type;
 
 /**
  * Renders the signed content tree as React elements with the resolved component

@@ -35,22 +35,26 @@ describe("authored mathematical lines", () => {
     ]);
 
     expect(lines).toHaveLength(3);
-    expect(lines.map((line) => line.color)).toEqual([
+    expect(Arr.map(lines, (line) => line.color)).toEqual([
       "green",
       "green",
       "green",
     ]);
-    expect(lines.map((line) => line.smooth)).toEqual([false, false, false]);
-    expect(lines.map((line) => line.labels)).toEqual([
+    expect(Arr.map(lines, (line) => line.smooth)).toEqual([
+      false,
+      false,
+      false,
+    ]);
+    expect(Arr.map(lines, (line) => line.labels)).toEqual([
       undefined,
       [{ text: "tan" }],
       undefined,
     ]);
-    expect(lines.every((line) => line.points.length >= 200)).toBe(true);
+    expect(Arr.every(lines, (line) => line.points.length >= 200)).toBe(true);
   });
 
   it("resolves a sine curve into one line that keeps its style", () => {
-    const [line, ...rest] = resolveAuthoredLines([
+    const lines = resolveAuthoredLines([
       {
         color: "teal",
         curve: {
@@ -65,9 +69,8 @@ describe("authored mathematical lines", () => {
       },
     ]);
 
-    expect(rest).toEqual([]);
-    expect(line?.labels).toEqual([{ text: "sin" }]);
-    expect(line?.points).toHaveLength(400);
+    expect(Arr.map(lines, (line) => line.labels)).toEqual([[{ text: "sin" }]]);
+    expect(Arr.map(lines, (line) => line.points.length)).toEqual([400]);
   });
 
   it("preserves concrete line data and resolves every declarative primitive", () => {

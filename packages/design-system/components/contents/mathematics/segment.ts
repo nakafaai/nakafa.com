@@ -1,10 +1,12 @@
 import type { Interval } from "@repo/design-system/components/contents/mathematics/interval";
+import { Schema } from "effect";
 
 /** The bounds of one number-line segment, where an infinite bound is a ray to the axis edge. */
-export interface SegmentBounds {
-  readonly end: number;
-  readonly start: number;
-}
+const SegmentBoundsSchema = Schema.Struct({
+  end: Schema.Number,
+  start: Schema.Number,
+});
+export type SegmentBounds = typeof SegmentBoundsSchema.Type;
 
 /**
  * Reads the bounds of one number-line segment. A missing bound is infinite, so an
@@ -21,11 +23,7 @@ export function segmentBounds(segment: {
 }
 
 /** The end-cap shape of one segment: a ray is open on its infinite side. */
-export type SegmentEdge =
-  | "bothInfinity"
-  | "endInfinity"
-  | "finite"
-  | "startInfinity";
+type SegmentEdge = "bothInfinity" | "endInfinity" | "finite" | "startInfinity";
 
 /** Selects the end-cap shape of one segment from its infinite bounds. */
 export function segmentEdge({ end, start }: SegmentBounds): SegmentEdge {

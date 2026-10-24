@@ -9,7 +9,7 @@ import {
   TANGENT_Y_LIMIT,
 } from "@repo/design-system/components/contents/mathematics/line/curve";
 import type { Point3 } from "@repo/design-system/lib/geometry/point";
-import { Schema } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 
 const TWO_PI = 2 * Math.PI;
 const CLOSE_ENOUGH = 1e-9;
@@ -18,6 +18,21 @@ const CLOSE_ENOUGH = 1e-9;
 function closedForm(curve: Curve, f: (argument: number) => number) {
   return (x: number) =>
     curve.amplitude * f(curve.frequency * x + curve.phase) + curve.shift;
+}
+
+/** The first point of one branch, which every branch of these tests has. */
+function firstOf(points: readonly Point3[]) {
+  return Option.getOrThrow(Arr.head(points));
+}
+
+/** The last point of one branch, which every branch of these tests has. */
+function lastOf(points: readonly Point3[]) {
+  return Option.getOrThrow(Arr.last(points));
+}
+
+/** The branch at one position, which the tests name by its order in x. */
+function branchAt(branches: readonly (readonly Point3[])[], index: number) {
+  return Option.getOrThrow(Arr.get(branches, index));
 }
 
 /** The sine of the lesson, `y = 2 sin x` over two periods. */
@@ -40,31 +55,27 @@ const TANGENT: Curve = {
   shift: 0,
 };
 
-/** The largest gap between one chord and the curve at the chord's middle. */
+/** The largest gap between one chord and the sine at the chord's middle. */
 function maximumChordDeviation(points: readonly Point3[], curve: Curve) {
   const at = closedForm(curve, Math.sin);
-  return points.slice(1).reduce((largest, next, index) => {
-    const previous = points[index];
-    if (previous === undefined) {
-      return largest;
-    }
-    const middleX = (previous.x + next.x) / 2;
-    const middleY = (previous.y + next.y) / 2;
-    return Math.max(largest, Math.abs(middleY - at(middleX)));
-  }, 0);
+  const chords = Arr.zip(points, Arr.drop(points, 1));
+  const gaps = Arr.map(chords, ([previous, next]) =>
+    Math.abs((previous.y + next.y) / 2 - at((previous.x + next.x) / 2))
+  );
+  return Arr.reduce(gaps, 0, (largest, gap) => Math.max(largest, gap));
 }
 
 describe("curve sampling", () => {
   it("samples a sine as one branch of at least 200 points on its closed form", () => {
     const branches = sampleCurve(SINE);
-    const [branch] = branches;
+    const branch = branchAt(branches, 0);
 
     expect(branches).toHaveLength(1);
-    expect(branch?.length).toBe(CURVE_SAMPLES_PER_BRANCH);
+    expect(branch).toHaveLength(CURVE_SAMPLES_PER_BRANCH);
     expect(CURVE_SAMPLES_PER_BRANCH).toBeGreaterThanOrEqual(200);
-    expect(branch?.[0]?.x).toBe(-TWO_PI);
-    expect(branch?.at(-1)?.x).toBe(TWO_PI);
-    for (const point of branch ?? []) {
+    expect(firstOf(branch).x).toBe(-TWO_PI);
+    expect(lastOf(branch).x).toBe(TWO_PI);
+    for (const point of branch) {
       expect(point.z).toBe(0);
       expect(Math.abs(point.y - 2 * Math.sin(point.x))).toBeLessThan(
         CLOSE_ENOUGH
@@ -73,9 +84,9 @@ describe("curve sampling", () => {
   });
 
   it("keeps every chord of a shallow sine within 0.01 axis units of the curve", () => {
-    const [branch] = sampleCurve(SINE);
+    const branch = branchAt(sampleCurve(SINE), 0);
 
-    expect(maximumChordDeviation(branch ?? [], SINE)).toBeLessThan(0.01);
+    expect(maximumChordDeviation(branch, SINE)).toBeLessThan(0.01);
   });
 
   it("applies phase, shift and a negative amplitude of a cosine", () => {
@@ -87,11 +98,11 @@ describe("curve sampling", () => {
       phase: Math.PI / 2,
       shift: 3,
     };
-    const [branch] = sampleCurve(curve);
+    const branch = branchAt(sampleCurve(curve), 0);
     const at = closedForm(curve, Math.cos);
 
-    expect(branch?.at(-1)?.x).toBe(3);
-    for (const point of branch ?? []) {
+    expect(lastOf(branch).x).toBe(3);
+    for (const point of branch) {
       expect(Math.abs(point.y - at(point.x))).toBeLessThan(CLOSE_ENOUGH);
     }
   });
@@ -110,13 +121,15 @@ describe("curve sampling", () => {
         );
       }
     }
-    const [left, middle, right] = branches;
-    expect(left?.[0]?.x).toBe(-Math.PI);
-    expect(left?.at(-1)?.y).toBeCloseTo(TANGENT_Y_LIMIT, 9);
-    expect(middle?.[0]?.y).toBeCloseTo(-TANGENT_Y_LIMIT, 9);
-    expect(middle?.at(-1)?.y).toBeCloseTo(TANGENT_Y_LIMIT, 9);
-    expect(right?.[0]?.y).toBeCloseTo(-TANGENT_Y_LIMIT, 9);
-    expect(right?.at(-1)?.x).toBe(Math.PI);
+    const left = branchAt(branches, 0);
+    const middle = branchAt(branches, 1);
+    const right = branchAt(branches, 2);
+    expect(firstOf(left).x).toBe(-Math.PI);
+    expect(lastOf(left).y).toBeCloseTo(TANGENT_Y_LIMIT, 9);
+    expect(firstOf(middle).y).toBeCloseTo(-TANGENT_Y_LIMIT, 9);
+    expect(lastOf(middle).y).toBeCloseTo(TANGENT_Y_LIMIT, 9);
+    expect(firstOf(right).y).toBeCloseTo(-TANGENT_Y_LIMIT, 9);
+    expect(lastOf(right).x).toBe(Math.PI);
   });
 
   it("follows a tangent with frequency, phase and a negative amplitude", () => {

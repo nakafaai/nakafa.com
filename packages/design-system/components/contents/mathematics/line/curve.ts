@@ -22,7 +22,7 @@ const NonZeroFiniteSchema = Schema.Finite.check(
 );
 
 /** The family of one curve: its sine, its cosine or its tangent. */
-export const CurveKindSchema = Schema.Literals(["sin", "cos", "tan"]);
+const CurveKindSchema = Schema.Literals(["sin", "cos", "tan"]);
 
 /**
  * One curve `y = amplitude * f(frequency * x + phase) + shift` over its domain,
