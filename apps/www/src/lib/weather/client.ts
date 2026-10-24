@@ -1,6 +1,7 @@
 import { getCountryName } from "@repo/design-system/lib/locale/country";
 import { timeOperation } from "@repo/utilities/logging/effect";
-import { Array as Arr, Config, Effect, Option, Redacted, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
+import { weatherKeys } from "@/lib/weather/keys";
 import {
   type CurrentWeatherSummary,
   OpenWeatherCurrentResponseSchema,
@@ -28,15 +29,7 @@ export const getCurrentWeather = Effect.fn("weather.getCurrentWeather")(
     return yield* timeOperation(
       "fetch_current_weather",
       Effect.gen(function* () {
-        const key = yield* Config.Redacted("OPENWEATHER_API_KEY").pipe(
-          Effect.mapError(
-            () =>
-              new WeatherConfigurationError({
-                message: "Weather is not configured.",
-              })
-          )
-        );
-        const apiKey = Redacted.value(key);
+        const apiKey = weatherKeys().OPENWEATHER_API_KEY ?? "";
         if (!apiKey.trim()) {
           return yield* new WeatherConfigurationError({
             message: "Weather is not configured.",

@@ -1,3 +1,4 @@
+import { urlSchema } from "@repo/backend/public";
 import { readEnvironment } from "@repo/utilities/env";
 import { Schema } from "effect";
 
@@ -25,6 +26,16 @@ export const agentTrustKeys = () =>
       VITE_CONVEX_URL: process.env.VITE_CONVEX_URL,
       VERCEL_ENV: process.env.VERCEL_ENV,
     }
+  );
+/**
+ * Reads the Convex site address that server code calls for Better Auth, the
+ * session and the token routes. The browser reads the same public name through
+ * `@repo/backend/public`, so the Worker binds this key with the other server values.
+ */
+export const convexSiteServerKeys = () =>
+  readEnvironment(
+    { VITE_CONVEX_SITE_URL: urlSchema },
+    { VITE_CONVEX_SITE_URL: process.env.VITE_CONVEX_SITE_URL }
   );
 /** Reads the Polar server selection that Convex functions read. A missing or unknown value means sandbox. */
 export const polarKeys = () =>

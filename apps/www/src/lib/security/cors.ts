@@ -7,14 +7,9 @@ const developmentOrigins = HashSet.make(
   "http://localhost:3001",
   "http://localhost:3002"
 );
-const corsEnvironment = Config.all({
-  nodeEnvironment: Config.String("NODE_ENV").pipe(
-    Config.withDefault("production")
-  ),
-  vercelTargetEnvironment: Config.String("VERCEL_TARGET_ENV").pipe(
-    Config.withDefault("")
-  ),
-});
+const corsNodeEnvironment = Config.String("NODE_ENV").pipe(
+  Config.withDefault("production")
+);
 const decodeUrl = Schema.decodeUnknownOption(Schema.URLFromString);
 
 /** Reports whether one parsed URL belongs to an allowed Nakafa origin. */
@@ -47,10 +42,8 @@ function isAllowedHeader(value: string, allowDevelopmentOrigins: boolean) {
  */
 export const isCorsRequestAllowed = Effect.fn("security.cors.isRequestAllowed")(
   function* (request: Request) {
-    const environment = yield* corsEnvironment;
     const allowDevelopmentOrigins =
-      environment.nodeEnvironment === DEVELOPMENT_ENVIRONMENT ||
-      environment.vercelTargetEnvironment === DEVELOPMENT_ENVIRONMENT;
+      (yield* corsNodeEnvironment) === DEVELOPMENT_ENVIRONMENT;
     const origin = request.headers.get("origin");
     if (origin !== null) {
       return isAllowedHeader(origin, allowDevelopmentOrigins);

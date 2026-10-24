@@ -1,5 +1,7 @@
+// @vitest-environment node
+
 import { afterEach, assert, describe, expect, it } from "@effect/vitest";
-import { ConfigProvider, Effect, Layer, Result } from "effect";
+import { Effect, Layer, Result } from "effect";
 import {
   HttpClient,
   type HttpClientRequest,
@@ -79,13 +81,8 @@ describe("getCurrentWeather", () => {
       Effect.gen(function* () {
         for (const key of [undefined, "   "]) {
           const request = vi.fn(() => Response.json(currentWeatherResponse));
-          const result = yield* runWeather(request).pipe(
-            Effect.provide(
-              ConfigProvider.layer(
-                ConfigProvider.fromUnknown({ OPENWEATHER_API_KEY: key })
-              )
-            )
-          );
+          vi.stubEnv("OPENWEATHER_API_KEY", key);
+          const result = yield* runWeather(request);
           expect(Result.isFailure(result) && result.failure._tag).toBe(
             "WeatherConfigurationError"
           );
