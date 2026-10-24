@@ -1,4 +1,8 @@
 import { Id } from "@repo/backend/confect/_generated/id";
+import {
+  BillingCurrency,
+  BillingOfferKey,
+} from "@repo/backend/confect/billing/catalog";
 import { Space } from "@repo/backend/confect/space";
 import { Schema } from "effect";
 
@@ -6,14 +10,11 @@ import { Schema } from "effect";
 export const BillingRail = Schema.Literals(["polar", "xendit"]);
 export type BillingRail = typeof BillingRail.Type;
 
-/** The currency an account bills in: IDR in Indonesia, EUR in the euro territories, USD elsewhere. */
-export const BillingCurrency = Schema.Literals(["EUR", "IDR", "USD"]);
-export type BillingCurrency = typeof BillingCurrency.Type;
-
 /** An ISO 3166-1 alpha-2 country code in uppercase. */
 export const BillingCountry = Schema.String.check(
   Schema.isPattern(/^[A-Z]{2}$/u)
 );
+export type BillingCountry = typeof BillingCountry.Type;
 
 /** The Xendit channels a recurring Pro or School subscription can be linked through. */
 export const XenditChannel = Schema.Literals([
@@ -62,8 +63,8 @@ export const billingSubscriptionStatusValidator = Schema.Literals([
 /** A recurring subscription. Quantity counts seats, one for a Pro consumer. */
 export const billingSubscriptionValidator = Schema.Struct({
   accountId: Id("billingAccounts"),
-  /** The catalog offer key, such as `pro.monthly`. */
-  offer: Schema.String,
+  /** The catalog offer this subscription bills. */
+  offer: BillingOfferKey,
   quantity: Schema.Int.check(Schema.isGreaterThanOrEqualTo(1)),
   status: billingSubscriptionStatusValidator,
   currentPeriodStart: Schema.Finite,
@@ -188,3 +189,13 @@ export const billingCounterValidator = Schema.Struct({
   year: Schema.Int,
   next: Schema.Int.check(Schema.isGreaterThanOrEqualTo(1)),
 });
+
+/** One webhook delivery as its route receives it, before the inbox stores it. */
+export const billingEventDeliveryValidator = Schema.Struct({
+  rail: BillingRail,
+  key: Schema.String,
+  type: Schema.String,
+  providerTime: Schema.Finite,
+  payload: Schema.String,
+});
+export type BillingEventDelivery = typeof billingEventDeliveryValidator.Type;
