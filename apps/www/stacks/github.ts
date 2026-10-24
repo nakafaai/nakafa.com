@@ -42,11 +42,11 @@ const CLOUDFLARE_ACCOUNT_SECRET = "CLOUDFLARE_ACCOUNT_ID";
 /**
  * The GitHub environments. Production deploys only from `main`. Each environment
  * reads its values from one operator file, a JSON object of names and text values
- * that stays on the operator's machine (see .gitignore).
+ * that stays on the operator's machine (see .gitignore). The paths are relative to apps/www, where the stack runs.
  */
 /** The operator file of each environment. The values in it are the only source of that environment's values. */
-const PRODUCTION_VALUES = "apps/www/.operator/github-production.json";
-const STAGING_VALUES = "apps/www/.operator/github-staging.json";
+const PRODUCTION_VALUES = ".operator/github-production.json";
+const STAGING_VALUES = ".operator/github-staging.json";
 
 /**
  * Cloudflare names both Access groups "Access: Apps and Policies Write", so each

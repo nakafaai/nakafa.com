@@ -41,11 +41,8 @@ describe("appendEnvironmentValues", () => {
         const file = yield* fileSystem.makeTempFileScoped();
         yield* appendEnvironmentValues(
           file,
-          JSON.stringify({
-            CONVEX_DEPLOY_KEY: "deploy-key",
-            github_token: "token",
-          }),
-          JSON.stringify({ VITE_CONVEX_URL: "https://example.convex.cloud" })
+          '{"CONVEX_DEPLOY_KEY":"deploy-key","github_token":"token"}',
+          '{"VITE_CONVEX_URL":"https://example.convex.cloud"}'
         );
 
         const written = yield* fileSystem.readFileString(file);
@@ -84,13 +81,10 @@ describe("loadDeployEnvironment", () => {
         const fileSystem = yield* FileSystem.FileSystem;
         const file = yield* fileSystem.makeTempFileScoped();
         vi.stubEnv("GITHUB_ENV", file);
-        vi.stubEnv(
-          "ENVIRONMENT_SECRETS",
-          JSON.stringify({ SITE_URL: "https://nakafa.com" })
-        );
+        vi.stubEnv("ENVIRONMENT_SECRETS", '{"SITE_URL":"https://nakafa.com"}');
         vi.stubEnv(
           "ENVIRONMENT_VARIABLES",
-          JSON.stringify({ VITE_APP_URL: "https://nakafa.com" })
+          '{"VITE_APP_URL":"https://nakafa.com"}'
         );
 
         expect(yield* loadDeployEnvironment).toBe(0);
