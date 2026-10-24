@@ -16,6 +16,7 @@ import {
   readWwwHeaderOrigins,
   renderHeadersFile,
 } from "#www/src/lib/security/headers";
+import { renderRobotsTxt } from "#www/src/lib/seo/robots";
 import { workerEnvironment, workerSettings } from "#www/worker";
 
 /**
@@ -98,6 +99,45 @@ const writeHeadersFile: Plugin = {
       ),
   },
   name: "www:write-headers-file",
+};
+
+/**
+ * Writes robots.txt into the client output, so the static assets serve it and it
+ * costs no Worker request. Its rules come from the crawler registry.
+ */
+const writeRobotsFile: Plugin = {
+  apply: "build",
+  buildApp: {
+    order: "post",
+    handler: (builder) =>
+      Promise.resolve(
+        writeFileSync(
+          join(builder.environments.client.config.build.outDir, "robots.txt"),
+          renderRobotsTxt()
+        )
+      ),
+  },
+  name: "www:write-robots-file",
+};
+
+/**
+ * Answers robots.txt in `vite dev`, where the build writer does not run. The
+ * middleware sits before Vite's own handlers, so the router never sees the request.
+ */
+const serveRobotsFile: Plugin = {
+  apply: "serve",
+  configureServer: (server) => {
+    server.middlewares.use((request, response, next) => {
+      const { pathname } = new URL(request.url ?? "/", "http://localhost");
+      if (pathname !== "/robots.txt") {
+        next();
+        return;
+      }
+      response.setHeader("Content-Type", "text/plain; charset=utf-8");
+      response.end(renderRobotsTxt());
+    });
+  },
+  name: "www:serve-robots-file",
 };
 
 const verifyPrerenderedPages: Plugin = {
@@ -249,6 +289,8 @@ export default defineConfig(({ command, isPreview }) => ({
     babel({ presets: [reactCompilerPreset()] }),
     bundleCommonJsReactPeers,
     writeHeadersFile,
+    writeRobotsFile,
+    serveRobotsFile,
     verifyPrerenderedPages,
     // `vite dev` runs the Worker as Node runs a development server. `vite build`
     // and `vite preview`, the acceptance server and the prerender included, run

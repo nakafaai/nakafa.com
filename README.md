@@ -226,9 +226,9 @@ Open Source Definition.
 
 | Area | License or policy |
 | --- | --- |
-| Software source code | [Nakafa Source Available License 1.0](LICENSE) |
-| Educational content, articles, exercises, datasets, and media | [Nakafa Content License 1.0](CONTENT_LICENSE.md) |
-| Names, logos, domains, product names, UI identity, and brand assets | [Nakafa Trademark and Brand Policy](TRADEMARKS.md) |
+| Software source code | [Nakafa Source Available License 2.0](LICENSE) |
+| Educational content, articles, exercises, datasets, and media | [Nakafa Content License 2.0](CONTENT_LICENSE.md) |
+| Names, logos, domains, product names, UI identity, and brand assets | [Nakafa Trademark and Brand Policy 2.0](TRADEMARKS.md) |
 
 Commercial, hosted, redistribution, modification, white-label, rebrand, and
 AI-training uses require prior written permission from PT. Nakafa Tekno

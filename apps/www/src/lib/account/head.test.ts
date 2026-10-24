@@ -22,7 +22,7 @@ describe("signedInHead", () => {
       expect.objectContaining({ rel: "canonical" })
     );
     expect(head.meta).toContainEqual({
-      content: "index,follow",
+      content: "index,follow,max-snippet:-1,max-image-preview:large",
       name: "robots",
     });
   });

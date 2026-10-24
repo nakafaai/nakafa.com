@@ -6,6 +6,7 @@ import {
 } from "@repo/site";
 import { AGENT_DISCOVERY_HEADERS } from "@repo/site/discovery";
 import { Array as Arr, Option, Result, Schema } from "effect";
+import { CONTENT_LICENSE_URL } from "#www/src/lib/seo/license";
 
 const WwwHeaderSchema = Schema.Struct({
   key: Schema.String,
@@ -37,9 +38,11 @@ export class WwwHeaderLineTooLong extends Schema.TaggedError<WwwHeaderLineTooLon
 ) {}
 
 /**
- * Builds the headers of every www answer: the security policy and the agent
- * discovery links. A loopback Convex deployment joins the policy only while it
- * runs on this machine, and the PostHog proxy host is the one analytics origin.
+ * Builds the headers of every www answer: the security policy, the agent
+ * discovery links and the TDM reservation, which reserves model training on
+ * every page under the content license. A loopback Convex deployment joins the
+ * policy only while it runs on this machine, and the PostHog proxy host is the
+ * one analytics origin.
  */
 export function createWwwHeaders(origins: WwwHeaderOrigins): WwwHeader[] {
   const convexOrigins = Arr.flatMap(
@@ -60,6 +63,8 @@ export function createWwwHeaders(origins: WwwHeaderOrigins): WwwHeader[] {
       ),
     }),
     ...AGENT_DISCOVERY_HEADERS,
+    { key: "tdm-reservation", value: "1" },
+    { key: "tdm-policy", value: CONTENT_LICENSE_URL },
   ];
 }
 

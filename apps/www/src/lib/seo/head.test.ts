@@ -23,7 +23,9 @@ describe("page head", () => {
     const head = createSeoHead(facts);
     expect(head.title).toBe("Aljabar Dasar - Matematika - Nakafa");
     expect(head.canonical).toBe("https://nakafa.com/en/subjects/aljabar");
-    expect(head.robots).toBe("index,follow");
+    expect(head.robots).toBe(
+      "index,follow,max-snippet:-1,max-image-preview:large"
+    );
   });
 
   it("uses an absolute title as it is, without the site suffix", () => {
@@ -154,7 +156,10 @@ describe("router head", () => {
     expect(Arr.take(routed.meta, 3)).toStrictEqual([
       { title: "Aljabar Dasar - Matematika - Nakafa" },
       { content: "Pengantar aljabar dasar.", name: "description" },
-      { content: "index,follow", name: "robots" },
+      {
+        content: "index,follow,max-snippet:-1,max-image-preview:large",
+        name: "robots",
+      },
     ]);
     expect(routed.meta).toContainEqual({
       content: "article",
