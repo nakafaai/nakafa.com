@@ -270,4 +270,77 @@ describe("attempt page authorization and frozen routes", () => {
         ).toBeNull();
       })
   );
+
+  it.effect(
+    "answers a running section with its bodies in the same read as its page",
+    () =>
+      Effect.gen(function* () {
+        const { client, started } = yield* startFixture("visible");
+        const request = {
+          ...identity,
+          kind: "current" as const,
+          sectionKey: TRYOUT_START_SECTION,
+        };
+        const [section, redirected] = yield* Effect.promise(() =>
+          Promise.all([
+            client.query(api.tryouts.queries.attemptPage.getSectionWithBodies, {
+              request,
+            }),
+            client.query(api.tryouts.queries.attemptPage.getSection, {
+              request,
+            }),
+          ])
+        );
+        expect(redirected).toMatchObject({
+          attemptId: started.attemptId,
+          kind: "redirect",
+        });
+        expect(section).toMatchObject({
+          attempt: {
+            attemptId: started.attemptId,
+            kind: "retained",
+            page: { section: { sectionKey: TRYOUT_START_SECTION } },
+          },
+        });
+        expect(section?.bodies).toHaveLength(1);
+        expect(section?.bodies[0]).toMatchObject({
+          items: expect.any(Array),
+        });
+      })
+  );
+
+  it.effect(
+    "keeps a running section with its bodies private to its owner",
+    () =>
+      Effect.gen(function* () {
+        const { started, t } = yield* startFixture("visible");
+        const other = yield* Effect.promise(() =>
+          t.mutation((ctx) =>
+            seedAuthenticatedUser(ctx, {
+              now: TRYOUT_START_NOW,
+              suffix: "other-section-bodies",
+            })
+          )
+        );
+        const otherClient = t.withIdentity({
+          subject: other.authUserId,
+          sessionId: other.sessionId,
+        });
+        expect(
+          yield* Effect.promise(() =>
+            otherClient.query(
+              api.tryouts.queries.attemptPage.getSectionWithBodies,
+              {
+                request: {
+                  attemptId: started.attemptId,
+                  kind: "retained",
+                  locale: "id",
+                  publicPath: sectionPath,
+                },
+              }
+            )
+          )
+        ).toBeNull();
+      })
+  );
 });

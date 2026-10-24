@@ -1,4 +1,5 @@
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
+import { MAX_PROTECTED_RUNTIME_SELECTORS } from "@nakafa/aksara-contracts/runtime/protected/limits";
 import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { QueryCtx as QueryCtxService } from "@repo/backend/confect/_generated/services";
 import { getOptionalAppUserForRead } from "@repo/backend/confect/auth/session";
@@ -22,6 +23,7 @@ import {
   readAttemptSectionPage,
   readAttemptSetPage,
 } from "@repo/backend/confect/tryouts/runtime/attempt/page";
+import { readTryoutHistory } from "@repo/backend/confect/tryouts/runtime/history/read";
 import {
   readAttemptSetIdentity,
   readLatestProgressAttempt,
@@ -252,3 +254,61 @@ const readRetainedAttempt = Effect.fn(
   }
   return yield* readOwnedAttemptById(normalized, userId);
 });
+
+/**
+ * Reads a section page and the signed bodies of its content in one call. A
+ * current request resolves the learner's running attempt through the section:
+ * its redirect names the retained page, which the same call reads. A running
+ * attempt on another page, or none, answers null, as the two reads of the web
+ * do. Bodies come only for a running attempt with signed content.
+ */
+export const readSectionWithBodies = Effect.fn(
+  "tryouts.attemptPage.readSectionWithBodies"
+)(function* (request: TryoutSectionAttemptPageRequest) {
+  const page =
+    request.kind === "current"
+      ? yield* readRedirectedSection(request)
+      : yield* readSectionAttemptPage(request);
+  if (page?.kind !== "retained") {
+    return null;
+  }
+  return { attempt: page, bodies: yield* readRunningBodies(page) };
+});
+
+/** Reads the retained page that a current request's redirect names, if any. */
+const readRedirectedSection = Effect.fn(
+  "tryouts.attemptPage.readRedirectedSection"
+)(function* (request: TryoutSectionAttemptPageRequest) {
+  const current = yield* readSectionAttemptPage(request);
+  if (current?.kind !== "redirect") {
+    return null;
+  }
+  return yield* readSectionAttemptPage({
+    attemptId: current.attemptId,
+    kind: "retained",
+    locale: request.locale,
+    publicPath: current.publicPath,
+  });
+});
+
+/**
+ * Reads the signed bodies of a running attempt in the batches that the web
+ * plans from the same selectors, so each body answers the batch it renders.
+ * A finished attempt, or content that is not signed, has none.
+ */
+const readRunningBodies = Effect.fn("tryouts.attemptPage.readRunningBodies")(
+  function* (attempt: RetainedSectionPageResult) {
+    const { attemptId, content, initialState } = attempt;
+    if (
+      content.kind !== "signed" ||
+      initialState.attempt.status !== "in-progress"
+    ) {
+      return [];
+    }
+    const selectors = [...content.questions, ...content.answers];
+    return yield* Effect.forEach(
+      Arr.chunksOf(selectors, MAX_PROTECTED_RUNTIME_SELECTORS),
+      (batch) => readTryoutHistory({ attemptId, selectors: batch })
+    );
+  }
+);
