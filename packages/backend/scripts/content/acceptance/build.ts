@@ -46,20 +46,26 @@ export const prepareAcceptance = Effect.fn("acceptance.prepare")(function* (
  * commit.
  * @see https://man7.org/linux/man-pages/man1/nice.1.html
  */
+/**
+ * The start serves the build through Vite's preview server, which runs the Worker
+ * in workerd (the Alchemy plugin of apps/www/vite.config.ts). The served app takes
+ * the port that the browser suites open. `--strictPort` fails an occupied port
+ * instead of moving to another, and Portless stays out of acceptance.
+ */
 const applicationCommands = {
   build: ["nice", "-n", "10", "pnpm", "exec", "turbo", "run", "build"],
-  start: ["node", "apps/www/.output/server/index.mjs"],
+  start: [
+    "pnpm",
+    "--dir",
+    "apps/www",
+    "exec",
+    "vite",
+    "preview",
+    "--strictPort",
+    "--port",
+    new URL(ACCEPTANCE_ORIGIN).port,
+  ],
 } as const;
-
-/**
- * The served app takes the port that the browser suites open, and never a port
- * that a developer's Nitro environment sets. Portless is for developer servers,
- * so the acceptance start serves the Nitro output directly.
- */
-const servedPort = {
-  NITRO_PORT: undefined,
-  PORT: new URL(ACCEPTANCE_ORIGIN).port,
-};
 
 /** Starts only the owned native database for a normal app build or start. */
 export const runAcceptance = Effect.fn("acceptance.run")(function* (
@@ -78,7 +84,7 @@ export const runAcceptance = Effect.fn("acceptance.run")(function* (
   const command = runBuildCommand(
     root,
     [...applicationCommands[operation], ...args],
-    operation === "start" ? { ...environment, ...servedPort } : environment
+    environment
   );
   if (operation === "build") {
     return yield* withLocalBackend(runtime, command);

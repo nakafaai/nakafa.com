@@ -147,7 +147,20 @@ layer(services)("signed acceptance lifecycle", (it) => {
 
   for (const [operation, command] of [
     ["build", ["nice", "-n", "10", "pnpm", "exec", "turbo", "run", "build"]],
-    ["start", ["node", "apps/www/.output/server/index.mjs"]],
+    [
+      "start",
+      [
+        "pnpm",
+        "--dir",
+        "apps/www",
+        "exec",
+        "vite",
+        "preview",
+        "--strictPort",
+        "--port",
+        "3000",
+      ],
+    ],
   ] as const) {
     it.effect(
       `runs normal ${operation} with the retained local selection and arguments`,
@@ -251,8 +264,19 @@ layer(services)("signed acceptance lifecycle", (it) => {
         expect(mocks.command).toHaveBeenNthCalledWith(
           2,
           "/test",
-          ["node", "apps/www/.output/server/index.mjs", "--filter=www"],
-          expect.objectContaining({ NITRO_PORT: undefined, PORT: "3000" })
+          [
+            "pnpm",
+            "--dir",
+            "apps/www",
+            "exec",
+            "vite",
+            "preview",
+            "--strictPort",
+            "--port",
+            "3000",
+            "--filter=www",
+          ],
+          expect.objectContaining({ VITE_CONVEX_URL: runtime.query })
         );
       })
   );
