@@ -6,7 +6,8 @@ import {
 } from "@alchemy.run/cloudflare";
 import { providers as githubProviders, Secret } from "@alchemy.run/github";
 import { Stack } from "alchemy";
-import { Array as Arr, Config, Effect, Layer, Record, Redacted } from "effect";
+import { Config, Effect, Layer, Redacted } from "effect";
+import { serverSecretNames } from "#www/deploy/secrets";
 import { workerEnvironment } from "#www/worker";
 
 /**
@@ -23,38 +24,43 @@ const CLOUDFLARE_ACCOUNT_SECRET = "CLOUDFLARE_ACCOUNT_ID";
 /** The Actions secret of the production Convex deploy key. */
 const CONVEX_PRODUCTION_KEY = "CONVEX_DEPLOY_KEY";
 
+/** The Actions secret of the staging Convex deploy key, which the staging deploy reads. */
+const CONVEX_STAGING_KEY = "CONVEX_STAGING_DEPLOY_KEY";
+
 /**
- * The permissions that the deploy token needs: Workers scripts and routes for
- * the Workers, zone reads and DNS for the nakafa.com records, zone settings,
- * Access for the staging policy, and account settings for the Workers subdomain.
+ * Cloudflare names both Access groups "Access: Apps and Policies Write", so each
+ * one is named by its id: the account group for the account resource, and the
+ * zone group for the zone resources.
  */
-const DEPLOY_PERMISSION_GROUPS = [
+const ACCESS_ACCOUNT_PERMISSION = { id: "1e13c5124ca64b72b1969a67e8829049" };
+const ACCESS_ZONE_PERMISSION = { id: "959972745952452f8be2452be8cbb9f2" };
+
+/**
+ * The account permissions of the deploy token: Workers scripts and the account
+ * settings for the Workers subdomain, Secrets Store for the Alchemy state login,
+ * and Access for the staging policy.
+ */
+const ACCOUNT_PERMISSION_GROUPS = [
   "Workers Scripts Write",
-  "Workers Routes Write",
-  "Zone Read",
-  "DNS Write",
-  "Zone Settings Write",
-  "Access: Apps and Policies Write",
   "Account Settings Read",
+  "Secrets Store Read",
+  "Secrets Store Write",
+  ACCESS_ACCOUNT_PERMISSION,
 ] as const;
 
 /**
- * The server values that the Workers bind. A `VITE_` name is public and the
- * client bundle inlines it, so it is not a secret. Optional values that the
- * environment leaves unset are not written.
+ * The zone permissions of the deploy token, for nakafa.com and nakafa.id: zone
+ * reads and settings, DNS records, Worker routes, Access, and the Dynamic URL
+ * Redirects that the nakafa.id rule uses.
  */
-const serverSecretNames = () =>
-  Arr.filter(
-    Arr.dedupe([
-      ...Record.keys(
-        Record.filter(workerEnvironment(), (value) => value !== undefined)
-      ),
-      "NAKAFA_CONVEX_SITE_URL",
-      "NAKAFA_API_EDGE_SECRET",
-      "NAKAFA_MCP_EDGE_SECRET",
-    ]),
-    (name) => !name.startsWith("VITE_")
-  );
+const ZONE_PERMISSION_GROUPS = [
+  "Zone Read",
+  "DNS Write",
+  "Workers Routes Write",
+  "Zone Settings Write",
+  "Dynamic URL Redirects Write",
+  ACCESS_ZONE_PERMISSION,
+] as const;
 
 export default Stack(
   "NakafaGitHub",
@@ -70,8 +76,17 @@ export default Stack(
       policies: [
         {
           effect: "allow",
-          permissionGroups: [...DEPLOY_PERMISSION_GROUPS],
+          permissionGroups: [...ACCOUNT_PERMISSION_GROUPS],
           resources: { [`com.cloudflare.api.account.${accountId}`]: "*" },
+        },
+        {
+          effect: "allow",
+          permissionGroups: [...ZONE_PERMISSION_GROUPS],
+          resources: {
+            [`com.cloudflare.api.account.${accountId}`]: {
+              "com.cloudflare.api.account.zone.*": "*",
+            },
+          },
         },
       ],
     });
@@ -87,7 +102,7 @@ export default Stack(
       value: Redacted.make(accountId),
     });
 
-    yield* Effect.forEach(serverSecretNames(), (name) =>
+    yield* Effect.forEach(serverSecretNames(workerEnvironment()), (name) =>
       Effect.gen(function* () {
         const value = yield* Config.Redacted(name);
         return yield* Secret(`Server-${name}`, { ...REPOSITORY, name, value });
@@ -98,6 +113,11 @@ export default Stack(
       ...REPOSITORY,
       name: CONVEX_PRODUCTION_KEY,
       value: yield* Config.Redacted(CONVEX_PRODUCTION_KEY),
+    });
+    yield* Secret("ConvexStagingDeployKey", {
+      ...REPOSITORY,
+      name: CONVEX_STAGING_KEY,
+      value: yield* Config.Redacted(CONVEX_STAGING_KEY),
     });
   })
 );

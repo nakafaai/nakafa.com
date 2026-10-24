@@ -50,23 +50,40 @@ never invoke a Worker.
    tests, because verification runs locally on the exact head.
 6. **Secrets come from one operator stack.** `apps/www/stacks/github.ts` is run
    once by an operator with local credentials. It writes a scoped Cloudflare token,
-   the account id, the Convex production deploy key, and every server value that a
-   Worker binds to GitHub Actions secrets, each read through an Effect `Config` at
-   run time. CI never runs that stack.
+   the account id, the Convex production and staging deploy keys, and every server
+   value that a Worker binds to GitHub Actions secrets, each read through an Effect
+   `Config` at run time. CI never runs that stack.
 7. **Python CAS waits for measurement.** `apps/cas` keeps its FastAPI service. Its
    CPU per request is measured by `scripts/cpu_budget.py` against the 10 ms Free
    limit before any Worker is written for it.
 
 ## Consequences
 
-- Vercel project files, `@vercel/config` packages outside `apps/www`, the Vercel
-  deployment policy check, and the Vercel ignore entries are removed. The
-  remaining Vercel code in `apps/www` is removed with that app's Worker runtime.
+- Vercel stays for two hosts until their Cloudflare replacements ship. `apps/cas`
+  keeps `vercel.ts`, its `[tool.vercel]` entry, and its `@vercel/config`
+  devDependency, and the `apps/www` Vercel project keeps serving www until the
+  cutover. The Vercel Preview prohibition in `AGENTS.md` stays until then. Every
+  other Vercel file, package, and ignore entry is removed.
+- The production identity is the deploy stage. Each Worker binds the stage that
+  its stack deploys as `NAKAFA_DEPLOY_STAGE`. The production checks in
+  `packages/backend/content`, the runtime check in `apps/www/src/runtime.ts`, and
+  the server error reporting in `packages/analytics` read it. `VERCEL_ENV` is no
+  longer read.
 - Preview deployments are not a merge gate. Verification stays local on the exact
   head, so no previews are created for pull requests.
-- A production run needs the secrets written by `stacks/github.ts` and the public
-  `VITE_` repository variables. A missing secret fails the deploy before any
-  Worker changes.
+- Every value that a Worker binds must be set. GitHub passes an unset secret as an
+  empty string, so the stack refuses an empty bound value before any Worker
+  changes. The error names the binding and never its value.
+- Production DNS records, the production Workers, and the nakafa.id zone with its
+  redirect rule are retained (`RemovalPolicy.retain`). A stack change that drops
+  one leaves the cloud object in place. A plan check in CI is not in place yet.
+- The nakafa.id zone, its placeholder records, and its redirect rule are adopted,
+  never recreated. `cas.nakafa.com` keeps a DNS-only record to its Vercel target
+  until the CAS Worker replaces it.
+- The deploy token holds its account permissions and its zone permissions in two
+  policies. Alchemy keeps the token value in its encrypted state. The owner must
+  confirm this accepted risk, and the alternative is a token created outside
+  Alchemy.
 - Production never runs `alchemy destroy`. The workflow passes no destroy flag.
 - Upgrading to a paid Workers plan needs a measured limit that is hit, recorded
   first in the goals.

@@ -1,16 +1,21 @@
 import { providers, state, Website, Worker } from "@alchemy.run/cloudflare";
-import { Stack, Stage } from "alchemy";
+import { PRODUCTION_DEPLOY_STAGE } from "@repo/utilities/stage";
+import { RemovalPolicy, Stack, Stage } from "alchemy";
 import { Effect } from "effect";
-import { deployNakafaDns } from "#www/deploy/dns";
+import { requireNonEmptyBindings } from "#www/deploy/bindings";
+import { deployNakafaDns, deployNakafaIdZone } from "#www/deploy/dns";
 import { edgeWorkerBindings } from "#www/deploy/edge";
 import {
-  PRODUCTION_STAGE,
   productionHostExposure,
   WORKER_OBSERVABILITY,
   WORKER_PLACEMENT,
   webExposure,
 } from "#www/deploy/stage";
-import { deployedWorkerBindings, workerSettings } from "#www/worker";
+import {
+  deployedWorkerBindings,
+  workerEnvironment,
+  workerSettings,
+} from "#www/worker";
 
 /**
  * The Nakafa stack. The stage decides who reaches the web Worker: production
@@ -21,7 +26,11 @@ import { deployedWorkerBindings, workerSettings } from "#www/worker";
  * Alchemy builds the app with this app's own vite.config.ts, uploads the client
  * build as static assets, and makes the SSR bundle the Worker entry. The runtime
  * settings and the bindings come from worker.ts, the same owner that
- * vite.config.ts reads.
+ * vite.config.ts reads. Every Worker binds the stage it deploys as
+ * NAKAFA_DEPLOY_STAGE, which is the production identity of the runtime.
+ *
+ * Production Workers and the DNS records are retained: a stack change that drops
+ * one leaves the cloud object in place, and never deletes it.
  */
 export default Stack(
   "Nakafa",
@@ -31,10 +40,15 @@ export default Stack(
   },
   Effect.gen(function* () {
     const stage = yield* Stage;
+    const isProduction = stage === PRODUCTION_DEPLOY_STAGE;
 
-    // Production declares the zone first: the web Worker attaches nakafa.com by zone name.
-    if (stage === PRODUCTION_STAGE) {
-      yield* deployNakafaDns();
+    // An empty bound value fails the deploy here, before any Worker changes.
+    yield* requireNonEmptyBindings(workerEnvironment());
+
+    // Production declares the zones first: the web Worker attaches nakafa.com by zone name.
+    if (isProduction) {
+      yield* deployNakafaDns().pipe(RemovalPolicy.retain());
+      yield* deployNakafaIdZone().pipe(RemovalPolicy.retain());
     }
 
     const web = yield* Website.Vite("Web", {
@@ -42,14 +56,14 @@ export default Stack(
         date: workerSettings.compatibilityDate,
         flags: workerSettings.compatibilityFlags,
       },
-      env: deployedWorkerBindings(),
+      env: { ...deployedWorkerBindings(), NAKAFA_DEPLOY_STAGE: stage },
       viteEnvironments: workerSettings.viteEnvironments,
       observability: WORKER_OBSERVABILITY,
       placement: WORKER_PLACEMENT,
       ...webExposure(stage),
-    });
+    }).pipe(RemovalPolicy.retain(isProduction));
 
-    if (stage === PRODUCTION_STAGE) {
+    if (isProduction) {
       yield* Worker("Api", {
         main: "../api/worker.ts",
         assets: "../api/public",
@@ -58,7 +72,7 @@ export default Stack(
         observability: WORKER_OBSERVABILITY,
         placement: WORKER_PLACEMENT,
         ...productionHostExposure("api.nakafa.com"),
-      });
+      }).pipe(RemovalPolicy.retain());
       yield* Worker("Mcp", {
         main: "../mcp/worker.ts",
         assets: "../mcp/public",
@@ -67,7 +81,7 @@ export default Stack(
         observability: WORKER_OBSERVABILITY,
         placement: WORKER_PLACEMENT,
         ...productionHostExposure("mcp.nakafa.com"),
-      });
+      }).pipe(RemovalPolicy.retain());
     }
 
     return { url: web.url.as<string>() };

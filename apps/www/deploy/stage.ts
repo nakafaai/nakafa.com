@@ -3,10 +3,8 @@ import type {
   WorkerPlacement,
   WorkerRouteConfig,
 } from "@alchemy.run/cloudflare";
+import { PRODUCTION_DEPLOY_STAGE } from "@repo/utilities/stage";
 import { Array as Arr } from "effect";
-
-/** The stage that serves nakafa.com to every visitor. */
-export const PRODUCTION_STAGE = "prod";
 
 /** The stage that serves staging.nakafa.com behind Cloudflare Access. */
 const STAGING_STAGE = "staging";
@@ -50,7 +48,7 @@ function hostRoute(host: string): WorkerRouteConfig {
  * Access. Every other stage (a pull request, for example) gets workers.dev.
  */
 export function webExposure(stage: string) {
-  if (stage === PRODUCTION_STAGE) {
+  if (stage === PRODUCTION_DEPLOY_STAGE) {
     return {
       domain: { name: NAKAFA_ZONE, zoneName: NAKAFA_ZONE },
       routes: [{ pattern: `*.${NAKAFA_ZONE}/*`, zoneName: NAKAFA_ZONE }],
