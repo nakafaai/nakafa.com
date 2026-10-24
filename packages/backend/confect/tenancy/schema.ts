@@ -196,9 +196,11 @@ export const TenantSettings = tenantValidator.mapFields(
 export const tenantSettings = (tenant: typeof tenantValidator.Type) =>
   Struct.pick(tenant, Struct.keys(TenantSettings.fields));
 /**
- * The fields of a unit that its school sets: the language of its content and
- * the time zone of its clocks. The language of the interface is not stored; it
- * follows the learner's `NAKAFA_LOCALE` cookie (ADR 0032).
+ * The fields of a unit that its school sets: the default language of the school's
+ * pages and the time zone of its clocks. The language of the interface is not
+ * stored; it follows the learner's `NAKAFA_LOCALE` cookie (ADR 0032). The stored
+ * name `contentLanguage` stays: the `unit.locale.set` journal entries hold it, so a
+ * rename would have to keep both names readable in the journal.
  */
 export const unitFields = {
   contentLanguage: AppLocaleCodeSchema,
