@@ -14,13 +14,17 @@ export function HomeTitle({ action }: { action?: ReactNode }) {
   const { greeting } = useTenant();
 
   return (
-    <div className="flex min-h-10 items-center gap-3">
-      <Nina act={DAY_PART_ACT[greeting.part]} label="" size={40} whole />
-      <h2 className="min-w-0 font-medium text-2xl">
-        {t(`greeting-${greeting.part}`, { name: greeting.firstName })}
-      </h2>
+    <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
+      <div className="flex min-w-0 max-w-full items-center gap-3">
+        <Nina act={DAY_PART_ACT[greeting.part]} label="" size={40} whole />
+        <h2 className="min-w-0 truncate font-medium text-2xl">
+          {t(`greeting-${greeting.part}`, { name: greeting.firstName })}
+        </h2>
+      </div>
       {action === undefined ? null : (
-        <div className="ms-auto flex shrink-0 items-center gap-2">{action}</div>
+        <div className="flex shrink-0 items-center gap-2 sm:ms-auto">
+          {action}
+        </div>
       )}
     </div>
   );

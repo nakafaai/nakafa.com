@@ -131,7 +131,7 @@ function HomePage({
     <>
       <SchoolHeader items={[]} title={tCommon("home")} />
       <LayoutContent className="w-full max-w-6xl py-6">
-        <div className="grid gap-6">
+        <div className="grid grid-cols-1 gap-6">
           <HomeTitle action={action} />
           {children}
         </div>

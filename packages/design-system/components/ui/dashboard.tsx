@@ -261,11 +261,9 @@ function DashboardEmpty({
   children: ReactNode;
 }) {
   return (
-    <div className="flex flex-col items-center gap-3 px-6 text-center">
+    <div className="flex flex-col items-start gap-3 px-6 text-left">
       <Nina act={act} label="" size={64} whole />
-      <p className="max-w-sm text-balance text-muted-foreground text-sm">
-        {children}
-      </p>
+      <p className="max-w-sm text-muted-foreground text-sm">{children}</p>
     </div>
   );
 }
