@@ -1,6 +1,7 @@
 {
   "extends": "@repo/typescript-config/react-library.json",
   "compilerOptions": {
+    "allowImportingTsExtensions": true,
     "jsx": "react-jsx",
     "types": [
       "vite/client",

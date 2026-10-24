@@ -1,14 +1,20 @@
 import { providers, state, Website } from "@alchemy.run/cloudflare";
 import { Stack } from "alchemy";
 import { Effect } from "effect";
+import { workerSettings } from "#www/worker";
 
 /**
  * The Start app. Alchemy builds it with this app's own vite.config.ts, uploads the
  * client build as static assets, and makes the SSR bundle the Worker entry. The
- * React Server Components environment ships beside that entry.
+ * React Server Components environment ships beside that entry. The runtime
+ * settings come from worker.ts, the same owner that vite.config.ts reads.
  */
 const Web = Website.Vite("Web", {
-  viteEnvironments: { entry: "ssr", children: ["rsc"] },
+  compatibility: {
+    date: workerSettings.compatibilityDate,
+    flags: workerSettings.compatibilityFlags,
+  },
+  viteEnvironments: workerSettings.viteEnvironments,
 });
 
 export default Stack(

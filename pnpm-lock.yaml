@@ -9,6 +9,9 @@ catalogs:
     '@alchemy.run/cloudflare':
       specifier: 2.0.0-beta.84
       version: 2.0.0-beta.84
+    '@alchemy.run/cloudflare-runtime':
+      specifier: 2.0.0-beta.84
+      version: 2.0.0-beta.84
     '@confect/core':
       specifier: 10.3.1
       version: 10.3.1
@@ -415,6 +418,9 @@ importers:
       '@alchemy.run/cloudflare':
         specifier: 'catalog:'
         version: 2.0.0-beta.84(@effect/platform-bun@4.0.5(effect@4.0.5))(@effect/platform-node@4.0.5(effect@4.0.5)(redis@6.2.1))(@types/node@24.19.2)(alchemy@2.0.0-beta.84(@effect/platform-bun@4.0.5(effect@4.0.5))(@effect/platform-node@4.0.5(effect@4.0.5)(redis@6.2.1))(@effect/vitest@4.0.5(effect@4.0.5)(vitest@5.0.5))(@types/react@19.3.0)(effect@4.0.5)(vite@8.3.4(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))(ws@8.22.0))(effect@4.0.5)(typescript@7.0.2)(vite@8.3.4(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
+      '@alchemy.run/cloudflare-runtime':
+        specifier: 'catalog:'
+        version: 2.0.0-beta.84(@distilled.cloud/cloudflare@1.0.0-rc.17(effect@4.0.5))(@effect/platform-bun@4.0.5(effect@4.0.5))(@effect/platform-node@4.0.5(effect@4.0.5)(redis@6.2.1))(@types/node@24.19.2)(effect@4.0.5)(rolldown@1.2.13)(typescript@7.0.2)(vite@8.3.4(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
       '@babel/core':
         specifier: 7.29.7
         version: 7.29.7(supports-color@8.1.1)

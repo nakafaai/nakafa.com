@@ -1,6 +1,8 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { basename, join } from "node:path";
+import { local as textBinding } from "@alchemy.run/cloudflare-runtime/core/bindings/Text";
+import cloudflare from "@alchemy.run/cloudflare-runtime/vite";
 import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import babel from "@rolldown/plugin-babel";
 import tailwindcss from "@tailwindcss/vite";
@@ -8,6 +10,7 @@ import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import react, { reactCompilerPreset } from "@vitejs/plugin-react";
 import rsc from "@vitejs/plugin-rsc";
 import { defineConfig, type Plugin } from "vite";
+import { workerEnvironment, workerSettings } from "#www/worker";
 
 /**
  * The marketing pages that prerender in every active locale. Their first HTML is
@@ -128,6 +131,31 @@ const bundleCommonJsReactPeers: Plugin = {
 /** The font files that the font-src policy must load from this origin, never inline. */
 const FONT_FILE_PATTERN = /\.woff2?$/;
 
+/**
+ * Alchemy's Cloudflare plugin runs the Worker in workerd under `vite dev`,
+ * `vite build` (prerender included) and `vite preview`, with the server
+ * environment that `workerEnvironment` reads as plain-text bindings. When Alchemy
+ * runs the build itself, it sets ALCHEMY_CLOUDFLARE_VITE_INJECTED and adds its
+ * own copy, so this one stands down.
+ */
+const alchemyWorker =
+  process.env.ALCHEMY_CLOUDFLARE_VITE_INJECTED === "1"
+    ? []
+    : [
+        cloudflare({
+          compatibilityDate: workerSettings.compatibilityDate,
+          compatibilityFlags: workerSettings.compatibilityFlags,
+          viteEnvironments: workerSettings.viteEnvironments,
+          worker: {
+            bindings: Object.entries(workerEnvironment()).flatMap(
+              ([name, value]) =>
+                value === undefined ? [] : [textBinding(name, value)]
+            ),
+            name: workerSettings.name,
+          },
+        }),
+      ];
+
 export default defineConfig({
   build: {
     // The font-src policy allows only this origin, so a font file stays a file
@@ -190,5 +218,6 @@ export default defineConfig({
     babel({ presets: [reactCompilerPreset()] }),
     bundleCommonJsReactPeers,
     verifyPrerenderedPages,
+    ...alchemyWorker,
   ],
 });

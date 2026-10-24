@@ -3,6 +3,9 @@
   "version": "2.1.0",
   "private": true,
   "type": "module",
+  "imports": {
+    "#www/*": "./*.ts"
+  },
   "scripts": {
     "build": "pnpm verify:featured-renderer && vite build",
     "build:vercel": "pnpm --dir ../../packages/backend run deploy --yes --typecheck enable && pnpm --dir ../.. run build --filter=www",
@@ -12,7 +15,7 @@
     "google-index": "node --env-file=.env.local --import tsx scripts/google-index.ts",
     "index-now": "node --env-file=.env.local --import tsx scripts/index-now.ts",
     "renderer:manifest": "tsx --conditions=import --conditions=react-server scripts/content/renderer.ts",
-    "start": "portless run --name nakafa node .output/server/index.mjs",
+    "start": "portless run --name nakafa vite preview",
     "test": "vitest run",
     "test:browser": "playwright test",
     "test:ui": "vitest --ui",
@@ -75,6 +78,7 @@
   },
   "devDependencies": {
     "@alchemy.run/cloudflare": "catalog:",
+    "@alchemy.run/cloudflare-runtime": "catalog:",
     "@babel/core": "7.29.7",
     "@effect/platform-bun": "catalog:",
     "@effect/platform-node": "catalog:",
