@@ -21,7 +21,10 @@ import {
   ContentRuntimeVerificationError,
   ContentTransportError,
 } from "@repo/backend/client/content/errors";
-import { readProtectedContent } from "@repo/backend/client/content/protected";
+import {
+  decodeProtectedResponseInput,
+  readProtectedContent,
+} from "@repo/backend/client/content/protected";
 import {
   CONTENT_RUNTIME_RESPONSE_HEADER,
   CONTENT_RUNTIME_RESPONSE_MARKER,
@@ -256,5 +259,25 @@ describe("protected content runtime client", () => {
         ).toEqual(new ContentTransportError({ reason: "response-contract" }));
         expect(verifyProtectedContentRuntimeExchange).not.toHaveBeenCalled();
       })
+  );
+
+  it.effect("decodes a kept answer only with the status that gave it", () =>
+    Effect.gen(function* () {
+      const { found } = yield* protectedFixture();
+      expect(yield* decodeProtectedResponseInput(found, 200)).toMatchObject({
+        kind: "found",
+      });
+      expect(
+        yield* decodeProtectedResponseInput({ kind: "missing" }, 404)
+      ).toEqual({ kind: "missing" });
+      expect(
+        yield* decodeProtectedResponseInput({ kind: "unknown" }, 200).pipe(
+          Effect.flip
+        )
+      ).toEqual(new ContentTransportError({ reason: "response-contract" }));
+      expect(
+        yield* decodeProtectedResponseInput(found, 404).pipe(Effect.flip)
+      ).toBeDefined();
+    })
   );
 });

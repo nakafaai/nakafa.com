@@ -385,4 +385,58 @@ describe("attempt page authorization and frozen routes", () => {
         });
       })
   );
+
+  it.effect(
+    "answers the composed section for a retained URL and nothing for other URLs",
+    () =>
+      Effect.gen(function* () {
+        const { client, started } = yield* startFixture("visible");
+        yield* Effect.promise(() =>
+          client.mutation(api.tryouts.mutations.sections.start, {
+            attemptId: started.attemptId,
+            sectionKey: TRYOUT_START_SECTION,
+          })
+        );
+        const body = {
+          bundleJson: "bundle",
+          items: [],
+          rendererJson: "renderer",
+        };
+        readTryoutHistoryMock.mockReturnValue(Effect.succeed(body));
+        const retained = yield* Effect.promise(() =>
+          client.query(api.tryouts.queries.attemptPage.getSectionWithBodies, {
+            request: {
+              attemptId: started.attemptId,
+              kind: "retained",
+              locale: "id",
+              publicPath: sectionPath,
+            },
+          })
+        );
+        expect(retained?.bodies).toEqual([body]);
+        expect(
+          yield* Effect.promise(() =>
+            client.query(api.tryouts.queries.attemptPage.getSectionWithBodies, {
+              request: {
+                ...identity,
+                kind: "current",
+                sectionKey: `${TRYOUT_START_SECTION}-other`,
+              },
+            })
+          )
+        ).toBeNull();
+        expect(
+          yield* Effect.promise(() =>
+            client.query(api.tryouts.queries.attemptPage.getSectionWithBodies, {
+              request: {
+                attemptId: started.attemptId,
+                kind: "retained",
+                locale: "id",
+                publicPath: `${setPath}/${TRYOUT_START_SECTION}-other`,
+              },
+            })
+          )
+        ).toBeNull();
+      })
+  );
 });
