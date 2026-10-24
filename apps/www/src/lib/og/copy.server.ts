@@ -69,10 +69,10 @@ const readArticleCopy = Effect.fn("www.og.copy.article")(function* (
     locale,
     PublicPathSchema.make(`articles/${category}/${articleSlug}`)
   );
-  if (!publication?.model.projection) {
+  if (Option.isNone(publication) || !publication.value.model.projection) {
     return Option.none<OgCopy>();
   }
-  const { metadata } = publication.model.projection;
+  const { metadata } = publication.value.model.projection;
   return Option.some({
     description: metadata.description ?? metadata.title,
     title: metadata.title,
@@ -86,12 +86,12 @@ const readMaterialCopy = Effect.fn("www.og.copy.material")(function* (
 ) {
   const publicPath = PublicPathSchema.make(Arr.join(slug, "/"));
   const publication = yield* getMaterialModel(locale, publicPath);
-  if (!publication?.model.projection) {
+  if (Option.isNone(publication) || !publication.value.model.projection) {
     return Option.none<OgCopy>();
   }
   return Option.some(
     toMaterialMetadataCopy({
-      metadata: publication.model.projection.metadata,
+      metadata: publication.value.model.projection.metadata,
     })
   );
 });

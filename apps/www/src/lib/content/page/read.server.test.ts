@@ -20,9 +20,7 @@ const signedPage = (projection: typeof testPageProjection) => ({
 let currentPage: Option.Option<ReturnType<typeof signedPage>> = Option.none();
 
 vi.mock("@/lib/content/page/published", () => ({
-  renderCurrentPublishedPage: vi.fn(() =>
-    Effect.succeed(Option.getOrNull(currentPage))
-  ),
+  renderCurrentPublishedPage: vi.fn(() => Effect.succeed(currentPage)),
 }));
 
 vi.mock("@/lib/content/page/catalog", () => ({

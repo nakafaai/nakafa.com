@@ -31,12 +31,12 @@ const readLegalPage = Effect.fn("www.pages.readLegal")(function* ({
     appLocale: AppLocaleSchema.make(locale),
     publicPath: path.value,
   });
-  if (!page) {
+  if (Option.isNone(page)) {
     return MISSING_LEGAL_PAGE;
   }
   const catalog = yield* readPublishedPageCatalog();
-  const counterparts = yield* verifyPublishedPageCatalog(catalog, page);
-  const { projection } = page;
+  const counterparts = yield* verifyPublishedPageCatalog(catalog, page.value);
+  const { projection } = page.value;
   const canonicalPath: LocalizedPath = `/${locale}/${projection.publicPath}`;
   return {
     _tag: "Legal" as const,
@@ -45,7 +45,7 @@ const readLegalPage = Effect.fn("www.pages.readLegal")(function* ({
         "text/markdown": `/${projection.appLocale}/${projection.publicPath}.md`,
       },
     }),
-    body: page.body,
+    body: page.value.body,
     canonicalPath,
     description: projection.metadata.description,
     title: projection.metadata.title,

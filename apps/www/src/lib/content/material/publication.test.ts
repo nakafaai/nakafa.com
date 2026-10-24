@@ -6,7 +6,7 @@ import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { ContentRuntimeVerificationError } from "@repo/backend/client/content/errors";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
-import { Effect, Layer } from "effect";
+import { Effect, Layer, Option } from "effect";
 import { getMaterialModel } from "@/lib/content/material/model";
 import { getMaterialPublication } from "@/lib/content/material/publication";
 import { activateTestRelease, advanceTestRelease } from "@/test/active";
@@ -18,6 +18,10 @@ import {
 } from "@/test/content-material";
 import { previewProjection as projection } from "@/test/content-preview";
 import { resetTestRuntimeCache } from "@/test/store";
+
+/** Reads one delivery that the test expects to exist. */
+const readDelivery = (publicPath: string) =>
+  getMaterialPublication("en", publicPath).pipe(Effect.map(Option.getOrThrow));
 
 const queryMock = vi.hoisted(() => vi.fn());
 const deliveryMock = vi.hoisted(() => vi.fn());
@@ -134,9 +138,7 @@ describe("coherent material publication", () => {
             activeReleaseId: nextRelease,
           })
         );
-        expect(
-          yield* getMaterialPublication("en", projection.publicPath)
-        ).toMatchObject({
+        expect(yield* readDelivery(projection.publicPath)).toMatchObject({
           model: {
             activeReleaseId: nextRelease,
           },
@@ -243,7 +245,7 @@ describe("coherent material publication", () => {
     "reads the lesson and its navigation once for the page and the social image",
     () =>
       Effect.gen(function* () {
-        yield* getMaterialPublication("en", projection.publicPath);
+        yield* readDelivery(projection.publicPath);
         yield* getMaterialModel("en", projection.publicPath);
 
         expect(queryMock).toHaveBeenCalledTimes(2);
@@ -253,9 +255,7 @@ describe("coherent material publication", () => {
     "reads the shell and body once and verifies them before rendering",
     () =>
       Effect.gen(function* () {
-        expect(
-          yield* getMaterialPublication("en", projection.publicPath)
-        ).toMatchObject({
+        expect(yield* readDelivery(projection.publicPath)).toMatchObject({
           model: {
             activeReleaseId,
             projection,
@@ -303,8 +303,10 @@ describe("coherent material publication", () => {
         })
       );
       expect(
-        yield* getMaterialPublication("en", projection.publicPath)
-      ).toBeNull();
+        Option.isNone(
+          yield* getMaterialPublication("en", projection.publicPath)
+        )
+      ).toBe(true);
       expect(deliveryMock).not.toHaveBeenCalled();
       expect(renderMock).not.toHaveBeenCalled();
     })

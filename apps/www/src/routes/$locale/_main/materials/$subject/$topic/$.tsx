@@ -93,11 +93,11 @@ const readMaterial = createServerFn({ method: "GET" })
           "/"
         );
         const publication = yield* getMaterialPublication(locale, publicPath);
-        if (!publication?.model.projection) {
+        if (Option.isNone(publication) || !publication.value.model.projection) {
           return outcome("NotFound", {});
         }
-        const { model, published } = publication;
-        const route = model.projection;
+        const { model, published } = publication.value;
+        const route = publication.value.model.projection;
         const canonicalPath = Schema.decodeUnknownOption(LocalizedPath)(
           toCanonicalPath(`/${locale}/${route.publicPath}`)
         );

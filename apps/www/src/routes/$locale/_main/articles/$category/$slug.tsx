@@ -5,7 +5,7 @@ import { loadLocaleMessages } from "@repo/internationalization/src/messages";
 import { makeArticleJsonLd } from "@repo/seo/json-ld/article";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
-import { Effect, Match, Schema } from "effect";
+import { Effect, Match, Option, Schema } from "effect";
 import { createTranslator } from "use-intl";
 import { SheetEntry } from "@/components/ai/sheet/entry";
 import { AiMenuItem } from "@/components/ai/sheet/menu";
@@ -79,10 +79,10 @@ const readArticle = createServerFn({ method: "GET" })
           `articles/${data.category}/${data.slug}`
         );
         const publication = yield* getArticlePublication(locale, publicPath);
-        if (!publication) {
+        if (Option.isNone(publication)) {
           return outcome("NotFound", {});
         }
-        const { model, published } = publication;
+        const { model, published } = publication.value;
         const filePath = `/${publicPath}`;
         const [seo, messages] = yield* Effect.all(
           [
@@ -112,7 +112,13 @@ const readArticle = createServerFn({ method: "GET" })
         return outcome("Found", {
           page: {
             alternates: toHeadAlternates(
-              createResolvedRouteAlternates(model.projection, model.alternates)
+              createResolvedRouteAlternates(
+                model.projection,
+                model.alternates,
+                {
+                  types: { "text/markdown": `/${locale}${filePath}.md` },
+                }
+              )
             ),
             cacheTags: readContentCacheTags(["article"]),
             categoryLabel,

@@ -3,7 +3,7 @@
 import type { HttpClient } from "@confect/js";
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
-import { Effect, Layer } from "effect";
+import { Effect, Layer, Option } from "effect";
 import { getMaterialModel } from "@/lib/content/material/model";
 import { activateTestRelease } from "@/test/active";
 import {
@@ -14,6 +14,10 @@ import {
 } from "@/test/content-material";
 import { previewProjection as projection } from "@/test/content-preview";
 import { resetTestRuntimeCache } from "@/test/store";
+
+/** Reads one model that the test expects to exist. */
+const readModel = (publicPath: string) =>
+  getMaterialModel("en", publicPath).pipe(Effect.map(Option.getOrThrow));
 
 const queryMock = vi.hoisted(() => vi.fn());
 const deliveryMock = vi.hoisted(() => vi.fn());
@@ -84,9 +88,7 @@ beforeEach(() => {
 describe("verified material metadata", () => {
   it.effect("resolves the verified model without rendering the body", () =>
     Effect.gen(function* () {
-      expect(
-        yield* getMaterialModel("en", projection.publicPath)
-      ).toMatchObject({
+      expect(yield* readModel(projection.publicPath)).toMatchObject({
         model: {
           activeReleaseId,
           projection,
@@ -95,7 +97,7 @@ describe("verified material metadata", () => {
       expect(renderMock).not.toHaveBeenCalled();
     })
   );
-  it.effect("returns null for a withdrawn release without rendering", () =>
+  it.effect("returns none for a withdrawn release without rendering", () =>
     Effect.gen(function* () {
       queryMock.mockReturnValueOnce(
         Effect.succeed({
@@ -108,7 +110,9 @@ describe("verified material metadata", () => {
           runtimeJson: null,
         })
       );
-      expect(yield* getMaterialModel("en", projection.publicPath)).toBeNull();
+      expect(
+        Option.isNone(yield* getMaterialModel("en", projection.publicPath))
+      ).toBe(true);
       expect(renderMock).not.toHaveBeenCalled();
     })
   );

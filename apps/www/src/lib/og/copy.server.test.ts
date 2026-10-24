@@ -57,10 +57,10 @@ beforeEach(() => {
     .mockReturnValue(Effect.succeedSome({ title: "Belajar" }));
   getArticleModelMock
     .mockReset()
-    .mockReturnValue(Effect.succeed(projection("Aljabar", "Dasar")));
+    .mockReturnValue(Effect.succeedSome(projection("Aljabar", "Dasar")));
   getMaterialModelMock
     .mockReset()
-    .mockReturnValue(Effect.succeed(projection("Integral")));
+    .mockReturnValue(Effect.succeedSome(projection("Integral")));
   getCachedMetadataFromSlugMock
     .mockReset()
     .mockReturnValue(
@@ -116,7 +116,7 @@ describe("og copy of articles", () => {
           ARTICLE,
         ]);
         getArticleModelMock.mockReturnValue(
-          Effect.succeed(projection("Aljabar"))
+          Effect.succeedSome(projection("Aljabar"))
         );
         const titleOnly = yield* readOgCopy("en", [
           "articles",
@@ -137,7 +137,7 @@ describe("og copy of articles", () => {
 
   it.effect("answers none for a missing article or a malformed path", () =>
     Effect.gen(function* () {
-      getArticleModelMock.mockReturnValue(Effect.succeed(null));
+      getArticleModelMock.mockReturnValue(Effect.succeedNone);
       const missing = yield* readOgCopy("en", ["articles", CATEGORY, ARTICLE]);
       const deeper = yield* readOgCopy("en", [
         "articles",
@@ -196,7 +196,7 @@ describe("og copy of materials", () => {
 
   it.effect("answers none for an unpublished lesson", () =>
     Effect.gen(function* () {
-      getMaterialModelMock.mockReturnValue(Effect.succeed(null));
+      getMaterialModelMock.mockReturnValue(Effect.succeedNone);
 
       const copy = yield* readOgCopy("en", [
         SUBJECT,

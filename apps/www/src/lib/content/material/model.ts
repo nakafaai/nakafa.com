@@ -1,6 +1,6 @@
 import "@tanstack/react-start/server-only";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 import type { Locale } from "use-intl";
 import {
   makeMaterialProjectionError,
@@ -37,7 +37,7 @@ export const decodeMaterialModel = Effect.fn("NakafaMaterial.decodeModel")(
       if (source.runtimeJson !== null) {
         return yield* makeMaterialProjectionError(input);
       }
-      return null;
+      return Option.none();
     }
     if (source.runtimeJson === null) {
       return yield* makeMaterialProjectionError(input);
@@ -51,10 +51,10 @@ export const decodeMaterialModel = Effect.fn("NakafaMaterial.decodeModel")(
       },
       narrowed
     );
-    return {
+    return Option.some({
       model,
       narrowed,
-    };
+    });
   }
 );
 

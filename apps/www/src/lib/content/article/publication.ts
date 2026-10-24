@@ -3,7 +3,7 @@ import { HttpClient } from "@confect/js";
 import "@tanstack/react-start/server-only";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 import type { Locale } from "use-intl";
 import {
   makeArticleProjectionError,
@@ -39,7 +39,7 @@ const decodeArticleModel = Effect.fn("NakafaArticle.decodeModel")(function* (
     if (source.runtimeJson !== null) {
       return yield* makeArticleProjectionError(input);
     }
-    return null;
+    return Option.none();
   }
   if (source.runtimeJson === null) {
     return yield* makeArticleProjectionError(input);
@@ -53,10 +53,10 @@ const decodeArticleModel = Effect.fn("NakafaArticle.decodeModel")(function* (
     },
     narrowed
   );
-  return {
+  return Option.some({
     model,
     narrowed,
-  };
+  });
 });
 
 /** Verifies the complete query result before evaluating its immutable body. */
@@ -67,14 +67,14 @@ const decodeArticleDelivery = Effect.fn("NakafaArticle.decodeDelivery")(
     publicPath: string
   ) {
     const decoded = yield* decodeArticleModel(source, locale, publicPath);
-    if (!decoded) {
-      return null;
+    if (Option.isNone(decoded)) {
+      return Option.none();
     }
-    const published = yield* renderArticleArtifact(decoded.narrowed);
-    return {
-      model: decoded.model,
+    const published = yield* renderArticleArtifact(decoded.value.narrowed);
+    return Option.some({
+      model: decoded.value.model,
       published,
-    };
+    });
   }
 );
 

@@ -2,7 +2,7 @@ import type { Ref } from "@confect/core";
 import "@tanstack/react-start/server-only";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
-import { Effect, Schema } from "effect";
+import { Effect, Option, Schema } from "effect";
 import type { Locale } from "use-intl";
 import {
   decodeMaterialJson,
@@ -14,7 +14,9 @@ import { queryContentStore } from "@/lib/content/store/query";
 const assembleMaterialSource = Effect.fn("NakafaMaterial.assembleSource")(
   function* (
     source: Ref.Returns<typeof contentRelease.material.lesson>,
-    navigation: Ref.Returns<typeof contentRelease.material.navigation> | null,
+    navigation: Option.Option<
+      Ref.Returns<typeof contentRelease.material.navigation>
+    >,
     locale: Locale,
     publicPath: string
   ) {
@@ -23,15 +25,15 @@ const assembleMaterialSource = Effect.fn("NakafaMaterial.assembleSource")(
       publicPath,
     };
     if (source.materialKey === null) {
-      if (source.model.projectionJson !== null || navigation !== null) {
+      if (source.model.projectionJson !== null || Option.isSome(navigation)) {
         return yield* makeMaterialProjectionError(input);
       }
     } else {
       if (
         source.model.projectionJson === null ||
-        navigation === null ||
-        navigation.activeReleaseId !== source.model.activeReleaseId ||
-        navigation.activeManifestHash !== source.model.activeManifestHash
+        Option.isNone(navigation) ||
+        navigation.value.activeReleaseId !== source.model.activeReleaseId ||
+        navigation.value.activeManifestHash !== source.model.activeManifestHash
       ) {
         return yield* makeMaterialProjectionError(input);
       }
@@ -46,7 +48,7 @@ const assembleMaterialSource = Effect.fn("NakafaMaterial.assembleSource")(
     return {
       model: {
         ...source.model,
-        siblingJson: navigation?.siblingJson ?? [],
+        siblingJson: Option.getOrUndefined(navigation)?.siblingJson ?? [],
       },
       runtimeJson: source.runtimeJson,
     };
@@ -97,16 +99,18 @@ const completeMaterialSource = Effect.fn("NakafaMaterial.completeSource")(
     const { activeReleaseId } = source.model;
     const navigation =
       materialKey !== null && activeReleaseId !== null
-        ? yield* readMaterialNavigation(
-            locale,
-            materialKey,
-            activeReleaseId
-          ).pipe(
-            Effect.mapError(
-              (cause) => new MaterialReadError({ cause, stage: "navigation" })
+        ? Option.some(
+            yield* readMaterialNavigation(
+              locale,
+              materialKey,
+              activeReleaseId
+            ).pipe(
+              Effect.mapError(
+                (cause) => new MaterialReadError({ cause, stage: "navigation" })
+              )
             )
           )
-        : null;
+        : Option.none();
     return yield* assembleMaterialSource(
       source,
       navigation,

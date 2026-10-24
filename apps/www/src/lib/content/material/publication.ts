@@ -1,5 +1,5 @@
 import "@tanstack/react-start/server-only";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 import type { Locale } from "use-intl";
 import { decodeMaterialModel } from "@/lib/content/material/model";
 import {
@@ -16,14 +16,14 @@ const decodeMaterialDelivery = Effect.fn("NakafaMaterial.decodeDelivery")(
     publicPath: string
   ) {
     const decoded = yield* decodeMaterialModel(source, locale, publicPath);
-    if (!decoded) {
-      return null;
+    if (Option.isNone(decoded)) {
+      return Option.none();
     }
-    const published = yield* renderMaterialArtifact(decoded.narrowed);
-    return {
-      model: decoded.model,
+    const published = yield* renderMaterialArtifact(decoded.value.narrowed);
+    return Option.some({
+      model: decoded.value.model,
       published,
-    };
+    });
   }
 );
 

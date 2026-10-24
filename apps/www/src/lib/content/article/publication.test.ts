@@ -7,7 +7,7 @@ import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { ArticleProjectionSchema } from "@nakafa/aksara-contracts/projection/article";
 import { ContentRuntimeVerificationError } from "@repo/backend/client/content/errors";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
-import { Array as Arr, Effect, Layer, Schema } from "effect";
+import { Array as Arr, Effect, Layer, Option, Schema } from "effect";
 import {
   getArticleModel,
   getArticlePublication,
@@ -19,6 +19,13 @@ import {
   testArticleProjection as projection,
   testArticleSourcePath as sourcePath,
 } from "@/test/content-article";
+
+/** Reads one delivery that the test expects to exist. */
+const readArticleDelivery = (publicPath: string) =>
+  getArticlePublication("en", publicPath).pipe(Effect.map(Option.getOrThrow));
+/** Reads one model that the test expects to exist. */
+const readArticleModel = (publicPath: string) =>
+  getArticleModel("en", publicPath).pipe(Effect.map(Option.getOrThrow));
 
 const queryMock = vi.hoisted(() => vi.fn());
 const deliveryMock = vi.hoisted(() => vi.fn());
@@ -99,15 +106,15 @@ describe("coherent article publication", () => {
     "reads the shell and body once and verifies them before rendering",
     () =>
       Effect.gen(function* () {
-        expect(
-          yield* getArticlePublication("en", projection.publicPath)
-        ).toMatchObject({
-          model: {
-            activeReleaseId,
-            projection,
-          },
-          published,
-        });
+        expect(yield* readArticleDelivery(projection.publicPath)).toMatchObject(
+          {
+            model: {
+              activeReleaseId,
+              projection,
+            },
+            published,
+          }
+        );
         expect(queryMock).toHaveBeenCalledExactlyOnceWith(
           contentRelease.article.delivery,
           {
@@ -139,8 +146,8 @@ describe("coherent article publication", () => {
         })
       );
       expect(
-        yield* getArticlePublication("en", projection.publicPath)
-      ).toBeNull();
+        Option.isNone(yield* getArticlePublication("en", projection.publicPath))
+      ).toBe(true);
       expect(deliveryMock).not.toHaveBeenCalled();
       expect(renderMock).not.toHaveBeenCalled();
     })
@@ -215,18 +222,16 @@ describe("coherent article publication", () => {
 describe("verified article metadata", () => {
   it.effect("resolves the verified model without rendering the body", () =>
     Effect.gen(function* () {
-      expect(yield* getArticleModel("en", projection.publicPath)).toMatchObject(
-        {
-          model: {
-            activeReleaseId,
-            projection,
-          },
-        }
-      );
+      expect(yield* readArticleModel(projection.publicPath)).toMatchObject({
+        model: {
+          activeReleaseId,
+          projection,
+        },
+      });
       expect(renderMock).not.toHaveBeenCalled();
     })
   );
-  it.effect("returns null for a withdrawn release without rendering", () =>
+  it.effect("returns none for a withdrawn release without rendering", () =>
     Effect.gen(function* () {
       queryMock.mockReturnValueOnce(
         Effect.succeed({
@@ -238,7 +243,9 @@ describe("verified article metadata", () => {
           runtimeJson: null,
         })
       );
-      expect(yield* getArticleModel("en", projection.publicPath)).toBeNull();
+      expect(
+        Option.isNone(yield* getArticleModel("en", projection.publicPath))
+      ).toBe(true);
       expect(renderMock).not.toHaveBeenCalled();
     })
   );
