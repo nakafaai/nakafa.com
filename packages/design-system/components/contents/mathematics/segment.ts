@@ -2,9 +2,17 @@ import type { Interval } from "@repo/design-system/components/contents/mathemati
 import { Schema } from "effect";
 
 /** The bounds of one number-line segment, where an infinite bound is a ray to the axis edge. */
+/**
+ * One bound, which is finite or infinite: a missing bound is infinite, so no finite
+ * Schema describes it. The guard names the JavaScript number type, and the bounds
+ * never come from JSON, so no decoded input can reach this shape.
+ */
+const BoundSchema = Schema.declare(
+  (value: unknown): value is number => typeof value === "number"
+);
 const SegmentBoundsSchema = Schema.Struct({
-  end: Schema.Number,
-  start: Schema.Number,
+  end: BoundSchema,
+  start: BoundSchema,
 });
 export type SegmentBounds = typeof SegmentBoundsSchema.Type;
 
