@@ -14,6 +14,7 @@ import {
   VisualCardFooter,
   VisualCardHeader,
 } from "@repo/design-system/components/visual/card";
+import { Effect } from "effect";
 import type { ReactNode } from "react";
 
 /**
@@ -30,8 +31,9 @@ interface SceneProps {
   /**
    * The lines of the scene. A line may declare its `curve` instead of its points:
    * `y = amplitude * f(frequency * x + phase) + shift` over a domain, where `f` is
-   * sin, cos or tan. Its points are computed here, at least 200 per branch, and a tangent
-   * is split at each asymptote and clipped to its y limit (see `line/curve.ts`).
+   * sin, cos or tan. Its points are computed here on a grid of `samples` (at least 200,
+   * default 200), and a tangent is split at each asymptote and clipped to its y limit
+   * (see `line/curve.ts`). A label's `at` on a curve indexes that grid.
    */
   data: readonly AuthoredLine[];
   showZAxis?: boolean;
@@ -70,12 +72,14 @@ export function LineEquationCard({
   header,
   showZAxis,
 }: CardProps) {
-  const config = resolveLineScene({
-    cameraPosition,
-    cameraTarget,
-    data,
-    showZAxis,
-  });
+  const config = Effect.runSync(
+    resolveLineScene({
+      cameraPosition,
+      cameraTarget,
+      data,
+      showZAxis,
+    })
+  );
 
   return (
     <LineEquationProvider config={config}>

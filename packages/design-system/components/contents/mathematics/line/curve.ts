@@ -1,17 +1,19 @@
-import type { Point3 } from "@repo/design-system/lib/geometry/point";
+import {
+  type Point3,
+  Point3Schema,
+} from "@repo/design-system/lib/geometry/point";
 import { Array as Arr, Schema } from "effect";
 
 /**
- * The samples of one branch. Decision 42 requires at least 200; 400 keeps the
- * chord between neighbouring samples of a sine within 0.01 axis units even at
- * amplitude 2 over two periods.
+ * The samples of a curve whose declaration names none. Decision 44 sets this as the
+ * default, and as the least count that `samples` accepts.
  */
-export const CURVE_SAMPLES_PER_BRANCH = 400;
+const DEFAULT_CURVE_SAMPLES = 200;
 
 /**
- * The y limit that a tangent branch is clipped to. A tangent has no finite value
- * at its asymptotes, so the drawn branch stops at the vertical extent of the
- * lesson's asymptote guides, which span from -6 to 6.
+ * The y limit that a tangent branch is clipped to: the height of the asymptote guides
+ * that the lessons draw, which run from -6 to 6. The limit is the graph's and is shared
+ * by every tangent, so a lesson with other guides needs the limit declared in the Schema.
  */
 export const TANGENT_Y_LIMIT = 6;
 
@@ -24,10 +26,16 @@ const NonZeroFiniteSchema = Schema.Finite.check(
 /** The family of one curve: its sine, its cosine or its tangent. */
 const CurveKindSchema = Schema.Literals(["sin", "cos", "tan"]);
 
+/** The grid of one curve: a whole number of samples, at least the default. */
+const CurveSamplesSchema = Schema.Int.check(
+  Schema.isGreaterThanOrEqualTo(DEFAULT_CURVE_SAMPLES)
+);
+
 /**
- * One curve `y = amplitude * f(frequency * x + phase) + shift` over its domain,
- * where `f` is named by `kind`. The component computes every point from this
- * formula in the browser, so a lesson carries the formula instead of its samples.
+ * One curve `y = amplitude * f(frequency * x + phase) + shift` over its domain, where `f` is
+ * named by `kind`. The component computes every point from this formula in the browser, so a
+ * lesson carries the formula instead of its samples. `samples` sets the grid that the points
+ * sit on, and a label's anchor indexes that grid.
  */
 export const CurveSchema = Schema.Struct({
   amplitude: NonZeroFiniteSchema,
@@ -39,11 +47,30 @@ export const CurveSchema = Schema.Struct({
   frequency: NonZeroFiniteSchema,
   kind: CurveKindSchema,
   phase: Schema.Finite,
+  samples: Schema.optionalKey(CurveSamplesSchema),
   shift: Schema.Finite,
 });
 
 /** One curve declared by its formula. */
 export type Curve = typeof CurveSchema.Type;
+
+/** A curve that cannot be drawn: its declaration is invalid, or a label anchor is on no drawn branch. */
+export class CurveError extends Schema.TaggedError<CurveError>()("CurveError", {
+  message: Schema.String,
+}) {}
+
+/**
+ * One drawn branch of a curve: a polyline in x order, with the grid index of each point.
+ * A clip point, where the y limit cuts a segment between two samples, has no index,
+ * because a label anchor names a grid sample only.
+ */
+const CurveBranchSchema = Schema.Struct({
+  indices: Schema.Array(Schema.UndefinedOr(Schema.Int)),
+  points: Schema.mutable(Schema.Array(Point3Schema)),
+});
+
+/** One drawn branch of a curve. */
+export type CurveBranch = typeof CurveBranchSchema.Type;
 
 /** The function `f` of each curve kind, in radians. */
 const FAMILY_FUNCTION: Record<Curve["kind"], (argument: number) => number> = {
@@ -62,87 +89,135 @@ function curvePoint(curve: Curve, x: number): Point3 {
   };
 }
 
-/** Evenly spaced x values across one interval, with both of its ends included. */
-function evenSamples(from: number, to: number): number[] {
-  const last = CURVE_SAMPLES_PER_BRANCH - 1;
-  return Arr.makeBy(CURVE_SAMPLES_PER_BRANCH, (index) =>
+/**
+ * The x of each grid sample: `samples` values evenly spaced across the domain, with both
+ * ends included. Decision 44 spaces a tangent evenly in `frequency * x + phase`, which is
+ * affine in x, so the same x values form the even grid of every family.
+ */
+function gridXs(curve: Curve, samples: number): number[] {
+  const [from, to] = curve.domain;
+  const last = samples - 1;
+  return Arr.makeBy(samples, (index) =>
     index === last ? to : from + ((to - from) * index) / last
   );
 }
 
-/** The sine or cosine as one branch over its whole domain. */
-function sampleSmooth(curve: Curve): Point3[][] {
-  const [from, to] = curve.domain;
-  return [Arr.map(evenSamples(from, to), (x) => curvePoint(curve, x))];
+/** The sine or cosine as one branch over its whole domain, with every sample indexed. */
+function sampleSmooth(curve: Curve, samples: number): CurveBranch[] {
+  return [
+    {
+      indices: Arr.makeBy(samples, (index) => index),
+      points: Arr.map(gridXs(curve, samples), (x) => curvePoint(curve, x)),
+    },
+  ];
 }
 
-/**
- * The argument interval of the tangent branch that stays within the y limit. The
- * branch reaches the limit where `amplitude * tan(u) + shift` equals plus or minus
- * the limit, so `u` runs between the two arctangents of those values.
- */
-function clippedArgument(curve: Curve): readonly [number, number] {
-  const lower = (-TANGENT_Y_LIMIT - curve.shift) / curve.amplitude;
-  const upper = (TANGENT_Y_LIMIT - curve.shift) / curve.amplitude;
-  return [Math.atan(Math.min(lower, upper)), Math.atan(Math.max(lower, upper))];
-}
+/** One sample of a tangent grid, with the asymptote period that holds it. */
+const TangentSampleSchema = Schema.Struct({
+  index: Schema.Int,
+  period: Schema.Int,
+  point: Point3Schema,
+});
+
+/** One sample of a tangent grid. */
+type TangentSample = typeof TangentSampleSchema.Type;
 
 /**
- * The clipped branch of one period of the tangent, or undefined when the domain
- * does not reach it. The branch lies between two asymptotes, so it never crosses one.
+ * The asymptote period of one x. The tangent is monotonic within a period, which runs from
+ * one asymptote to the next, so the samples inside the y limit of a period form one run.
  */
-function tangentBranch(
-  curve: Curve,
-  period: number,
-  [clipStart, clipEnd]: readonly [number, number]
-): Point3[] | undefined {
-  const [from, to] = curve.domain;
-  const offset = period * Math.PI;
-  const inverse = (argument: number) =>
-    (argument - curve.phase) / curve.frequency;
-  const first = inverse(offset + clipStart);
-  const second = inverse(offset + clipEnd);
-  const lower = Math.max(from, Math.min(first, second));
-  const upper = Math.min(to, Math.max(first, second));
-  if (!(lower < upper)) {
-    return undefined;
-  }
-  return Arr.map(evenSamples(lower, upper), (x) => curvePoint(curve, x));
-}
-
-/**
- * The tangent as one branch per stretch between asymptotes inside its domain.
- * Each branch is clipped to the y limit, so the first and last points of a branch
- * that leaves the limit lie exactly on it.
- */
-function sampleTangent(curve: Curve): Point3[][] {
-  const [from, to] = curve.domain;
-  const clip = clippedArgument(curve);
-  const argumentFrom = curve.frequency * from + curve.phase;
-  const argumentTo = curve.frequency * to + curve.phase;
-  const lowest = Math.min(argumentFrom, argumentTo);
-  const highest = Math.max(argumentFrom, argumentTo);
-  const firstPeriod = Math.floor((lowest - clip[1]) / Math.PI);
-  const lastPeriod = Math.ceil((highest - clip[0]) / Math.PI);
-  const periods = Arr.makeBy(
-    lastPeriod - firstPeriod + 1,
-    (index) => firstPeriod + index
+function periodOf(curve: Curve, x: number): number {
+  return Math.floor(
+    (curve.frequency * x + curve.phase + Math.PI / 2) / Math.PI
   );
-  return Arr.flatMap(periods, (period) => {
-    const branch = tangentBranch(curve, period, clip);
-    return branch === undefined ? [] : [branch];
-  });
 }
 
 /**
- * Samples one curve into its branches, each a polyline of computed points. A sine
- * or cosine is one branch over its domain. A tangent is one branch per stretch
- * between asymptotes, clipped to the y limit, and a domain that stays beyond the
- * limit yields no branch.
+ * The exact point where the tangent of one period reaches a y bound. Its argument solves
+ * `amplitude * tan(u) + shift = bound` on that period, and the point is computed from the
+ * formula like every other point of the curve.
  */
-export function sampleCurve(curve: Curve): Point3[][] {
+function boundPoint(curve: Curve, period: number, bound: number): Point3 {
+  const argument =
+    period * Math.PI + Math.atan((bound - curve.shift) / curve.amplitude);
+  return curvePoint(curve, (argument - curve.phase) / curve.frequency);
+}
+
+/**
+ * The branch of one period from its run of samples inside the y limit. The tangent enters
+ * the limit at one bound and leaves it at the other, so a run that begins after the domain's
+ * first sample starts at an exact clip point, and a run that ends before the last sample
+ * ends at one.
+ */
+function clipRun(
+  curve: Curve,
+  samples: number,
+  period: number,
+  run: Arr.NonEmptyReadonlyArray<TangentSample>
+): CurveBranch {
+  // The tangent rises with x when its amplitude and frequency share a sign.
+  const rising = curve.amplitude * curve.frequency > 0;
+  const entering = rising ? -TANGENT_Y_LIMIT : TANGENT_Y_LIMIT;
+  const leaving = -entering;
+  const startClip =
+    Arr.headNonEmpty(run).index > 0
+      ? [boundPoint(curve, period, entering)]
+      : [];
+  const endClip =
+    Arr.lastNonEmpty(run).index < samples - 1
+      ? [boundPoint(curve, period, leaving)]
+      : [];
+  return {
+    indices: [
+      ...Arr.map(startClip, () => undefined),
+      ...Arr.map(run, (sample) => sample.index),
+      ...Arr.map(endClip, () => undefined),
+    ],
+    points: [
+      ...startClip,
+      ...Arr.map(run, (sample) => sample.point),
+      ...endClip,
+    ],
+  };
+}
+
+/**
+ * The tangent as one branch per stretch between asymptotes inside its domain. Every branch
+ * keeps the grid index of its samples, and each end the y limit cuts is an exact clip point.
+ */
+function sampleTangent(curve: Curve, samples: number): CurveBranch[] {
+  const grid: TangentSample[] = Arr.map(gridXs(curve, samples), (x, index) => ({
+    index,
+    period: periodOf(curve, x),
+    point: curvePoint(curve, x),
+  }));
+  const periods = Arr.dedupe(Arr.map(grid, (sample) => sample.period));
+  return Arr.flatMap(periods, (period) =>
+    Arr.match(
+      Arr.filter(
+        grid,
+        (sample) =>
+          sample.period === period &&
+          Math.abs(sample.point.y) <= TANGENT_Y_LIMIT
+      ),
+      {
+        onEmpty: () => [],
+        onNonEmpty: (run) => [clipRun(curve, samples, period, run)],
+      }
+    )
+  );
+}
+
+/**
+ * Samples one curve into its branches, each a polyline of computed points on the curve's grid
+ * of `samples` values (decision 44). A sine or cosine is one branch over its domain. A tangent
+ * is one branch per stretch between asymptotes, clipped to the y limit, and a domain that stays
+ * beyond the limit yields no branch.
+ */
+export function sampleCurve(curve: Curve): CurveBranch[] {
+  const samples = curve.samples ?? DEFAULT_CURVE_SAMPLES;
   if (curve.kind === "tan") {
-    return sampleTangent(curve);
+    return sampleTangent(curve, samples);
   }
-  return sampleSmooth(curve);
+  return sampleSmooth(curve, samples);
 }
