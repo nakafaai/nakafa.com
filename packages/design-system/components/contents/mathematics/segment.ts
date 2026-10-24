@@ -1,20 +1,4 @@
 import type { Interval } from "@repo/design-system/components/contents/mathematics/interval";
-import { Schema } from "effect";
-
-/** The bounds of one number-line segment, where an infinite bound is a ray to the axis edge. */
-/**
- * One bound, which is finite or infinite: a missing bound is infinite, so no finite
- * Schema describes it. The guard names the JavaScript number type, and the bounds
- * never come from JSON, so no decoded input can reach this shape.
- */
-const BoundSchema = Schema.declare(
-  (value: unknown): value is number => typeof value === "number"
-);
-const SegmentBoundsSchema = Schema.Struct({
-  end: BoundSchema,
-  start: BoundSchema,
-});
-export type SegmentBounds = typeof SegmentBoundsSchema.Type;
 
 /**
  * Reads the bounds of one number-line segment. A missing bound is infinite, so an
@@ -23,12 +7,15 @@ export type SegmentBounds = typeof SegmentBoundsSchema.Type;
 export function segmentBounds(segment: {
   readonly end?: number | undefined;
   readonly start?: number | undefined;
-}): SegmentBounds {
+}) {
   return {
     end: segment.end ?? Number.POSITIVE_INFINITY,
     start: segment.start ?? Number.NEGATIVE_INFINITY,
   };
 }
+
+/** The bounds of one segment, which may be infinite: a missing bound is one of them. */
+export type SegmentBounds = ReturnType<typeof segmentBounds>;
 
 /** The end-cap shape of one segment: a ray is open on its infinite side. */
 type SegmentEdge = "bothInfinity" | "endInfinity" | "finite" | "startInfinity";
