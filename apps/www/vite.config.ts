@@ -16,6 +16,7 @@ import {
   readWwwHeaderOrigins,
   renderHeadersFile,
 } from "#www/src/lib/security/headers";
+import { renderRobotsTxt } from "#www/src/lib/seo/robots";
 import { workerEnvironment, workerSettings } from "#www/worker";
 
 /**
@@ -98,6 +99,25 @@ const writeHeadersFile: Plugin = {
       ),
   },
   name: "www:write-headers-file",
+};
+
+/**
+ * Writes robots.txt into the client output, so the static assets serve it and it
+ * costs no Worker request. Its rules come from the crawler registry.
+ */
+const writeRobotsFile: Plugin = {
+  apply: "build",
+  buildApp: {
+    order: "post",
+    handler: (builder) =>
+      Promise.resolve(
+        writeFileSync(
+          join(builder.environments.client.config.build.outDir, "robots.txt"),
+          renderRobotsTxt()
+        )
+      ),
+  },
+  name: "www:write-robots-file",
 };
 
 const verifyPrerenderedPages: Plugin = {
@@ -249,6 +269,7 @@ export default defineConfig(({ command, isPreview }) => ({
     babel({ presets: [reactCompilerPreset()] }),
     bundleCommonJsReactPeers,
     writeHeadersFile,
+    writeRobotsFile,
     verifyPrerenderedPages,
     // `vite dev` runs the Worker as Node runs a development server. `vite build`
     // and `vite preview`, the acceptance server and the prerender included, run
