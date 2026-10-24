@@ -178,7 +178,7 @@ describe("answer", () => {
   );
 
   it.effect(
-    "answers a busy engine object with a retryable unavailable status",
+    "answers a busy engine object with an unavailable status and no retry",
     () =>
       Effect.gen(function* () {
         const busy: CasSolverStub = {
@@ -222,9 +222,8 @@ describe("answer", () => {
         answer(mathRequest(), environment(silent, KEY)),
         { startImmediately: true }
       );
-      // Each of the two objects holds its call for the 25-second deadline.
-      yield* TestClock.adjust("25 seconds");
-      yield* TestClock.adjust("25 seconds");
+      // The one deadline of the call covers the whole call, so the wait ends at 20 seconds.
+      yield* TestClock.adjust("20 seconds");
       const response = yield* Fiber.join(fiber);
 
       expect(response.status).toBe(503);

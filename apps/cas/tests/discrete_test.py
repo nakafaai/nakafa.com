@@ -2,7 +2,7 @@ import pytest
 
 from cas import discrete
 from cas.engine import run
-from cas.schema import MathRequest
+from cas.schema import MAX_COUNT_OPERAND, MathRequest
 
 
 @pytest.mark.parametrize(
@@ -111,3 +111,28 @@ def test_permutation_rejects_invalid_bounds(math_request: MathRequest) -> None:
 def test_unknown_discrete_operation_raises() -> None:
     with pytest.raises(ValueError, match="Unsupported discrete operation"):
         discrete.run(MathRequest(kind="math", operation="unknown"))
+
+
+def test_combination_refuses_an_operand_beyond_the_count_bound() -> None:
+    with pytest.raises(ValueError, match="Combination operands may be at most"):
+        discrete.run(
+            MathRequest(
+                kind="math",
+                operation="combination",
+                n=str(MAX_COUNT_OPERAND + 1),
+                k="2",
+            )
+        )
+
+
+def test_permutation_accepts_operands_at_the_count_bound() -> None:
+    result = discrete.run(
+        MathRequest(
+            kind="math",
+            operation="permutation",
+            n=str(MAX_COUNT_OPERAND),
+            k=str(MAX_COUNT_OPERAND),
+        )
+    )
+
+    assert result.status == "verified"

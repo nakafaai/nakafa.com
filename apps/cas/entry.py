@@ -13,14 +13,18 @@ the calls that the import makes.
 https://developers.cloudflare.com/durable-objects/get-started/
 """
 
-from _cloudflare.allow_entropy import allow_bad_entropy_calls
+from _cloudflare.allow_entropy import (  # pyright: ignore[reportMissingModuleSource]
+    allow_bad_entropy_calls,
+)
 from workers import DurableObject, Response, WorkerEntrypoint
 
 # SymPy seeds three unseeded random generators when it is imported: two in
-# sympy.core.random and one in sympy.core.symbol. Each generator reads 2,496 bytes,
-# which Pyodide 0.28.3 requests from getentropy in 256-byte chunks, so the import
-# makes 3 x 10 = 30 calls. The runtime fails the import when the count is short or
-# over. Measured with SymPy 1.14.0 and mpmath 1.3.0, the versions the engine vendors.
+# sympy.core.random and one in sympy.core.symbol. tests/entropy_test.py counts them.
+# Each generator reads 2,496 bytes, which Pyodide 0.28.3 requests from getentropy in
+# 256-byte chunks, so the import makes 3 x 10 = 30 calls. The allowance is the
+# runtime's internal context that workers-py uses for packages that seed at import
+# (packages/runtime-sdk/src/_workers_sdk_entropy_import_context.py); no Cloudflare
+# page documents it. Measured with SymPy 1.14.0 and mpmath 1.3.0, the vendored versions.
 SYMPY_IMPORT_ENTROPY_CALLS = 30
 
 JSON_HEADERS = {"content-type": "application/json; charset=utf-8"}

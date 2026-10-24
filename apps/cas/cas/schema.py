@@ -12,32 +12,48 @@ from pydantic import (
     model_validator,
 )
 
-# Complexity bounds. Each one is ten times the largest value that the test suite
-# sends, which scripts/cpu_budget.py collects. The corpus maxima are 3 digits in
-# one integer, exponent 7, 20 tokens in one expression, a 3 by 3 matrix, derivative
-# order 2, and series order 6, so no corpus request is refused. SymPy computes
-# powers, series, and derivatives eagerly, so a request beyond a bound is refused
-# here, before any SymPy call.
+# Complexity bounds. A bound limits the work that a request causes, not only the
+# length of its text. SymPy computes powers, factorials, sums, series, expansions,
+# and determinants eagerly, so a request beyond a bound is refused before SymPy
+# runs: here for text and tokens, in cas/work.py for computed integers, exponents,
+# degrees, and expansions, and in the operation that owns the value. The corpus
+# maxima are 3 digits in one integer, exponent 7, 20 tokens, a 3 by 3 matrix,
+# derivative order 2, series order 6, count operand 5, binomial trials 10, summation
+# terms 4, degree 7, and two equations with two unknowns and two symbols, so no
+# corpus request is refused. docs/adr/0037-cloudflare.md records each measurement
+# behind the bounds that sit below ten times the corpus.
 MAX_INTEGER_DIGITS = 30
 MAX_EXPONENT = 70
+MAX_DEGREE = 70
+MAX_DENOMINATOR_DEGREE = 6
+MAX_EXPANSION_TERMS = 2000
 MAX_EXPRESSION_TOKENS = 200
 MAX_MATRIX_DIMENSION = 30
+MAX_SYMBOLIC_MATRIX_DIMENSION = 3
 MAX_DERIVATIVE_ORDER = 20
 MAX_SERIES_ORDER = 60
+MAX_TRANSCENDENTAL_SERIES_ORDER = 8
+MAX_COUNT_OPERAND = 50
+MAX_BINOMIAL_TRIALS = 100
+MAX_POISSON_BOUND = 100
+MAX_SUMMATION_TERMS = 40
+MAX_SYSTEM_WORK = 40
+MAX_NONLINEAR_UNKNOWNS = 2
 
 DIGIT_RUN = re.compile(r"\d+")
-POWER_EXPONENT = re.compile(r"(?:\*\*|\^)\s*\(?\s*-?(\d+)")
 # A token is one number, name, or operator, so the count approximates the node
 # count of the expression without parsing it.
 EXPRESSION_TOKEN = re.compile(r"\d+(?:\.\d+)?|[A-Za-z_]\w*|\*\*|[-+*/^!=<>(),]")
 
 
 def _refuse_beyond_bounds(text: str) -> str:
-    """Refuse a text value whose integers, exponents, or size exceed a bound."""
+    """Refuse a text value whose digit runs or token count exceed a bound."""
+    # A lexical digit rule suffices for a literal. Exponents and computed integers
+    # need their values, which cas/parse.py reads from the tree.
     if any(len(run) > MAX_INTEGER_DIGITS for run in DIGIT_RUN.findall(text)):
-        raise ValueError(f"Integers may have at most {MAX_INTEGER_DIGITS} digits.")
-    if any(int(power) > MAX_EXPONENT for power in POWER_EXPONENT.findall(text)):
-        raise ValueError(f"Exponents may be at most {MAX_EXPONENT}.")
+        raise ValueError(
+            f"A number may have at most {MAX_INTEGER_DIGITS} digits in each part."
+        )
     if len(EXPRESSION_TOKEN.findall(text)) > MAX_EXPRESSION_TOKENS:
         raise ValueError(
             f"An expression may have at most {MAX_EXPRESSION_TOKENS} tokens."

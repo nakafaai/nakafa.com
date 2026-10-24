@@ -1,11 +1,14 @@
 import json
+import re
+from pathlib import Path
 
 import pytest
 
-from cas import compute
+from cas import compute, parse
 from cas.schema import MathRequest
 
 REQUEST = {"kind": "math", "operation": "evaluate", "expression": "2 + 2"}
+ANSWER = Path(__file__).parents[1] / "front" / "answer.ts"
 
 
 def body_of(source: dict) -> bytes:
@@ -56,17 +59,27 @@ def test_calculate_bounds_a_domain_message(monkeypatch) -> None:
     assert json.loads(body)["detail"] == "x" * compute.DETAIL_CHARACTERS
 
 
-def test_calculate_refuses_a_bound_breach_before_sympy_runs(monkeypatch) -> None:
-    def fail_if_run(_request: MathRequest) -> None:
-        raise AssertionError("SymPy ran for a request beyond a complexity bound")
+def test_calculate_refuses_a_bound_breach_before_sympy_builds_it(monkeypatch) -> None:
+    def fail_if_built(*_arguments, **_options) -> None:
+        raise AssertionError("SymPy built a request beyond a complexity bound")
 
-    monkeypatch.setattr(compute, "run", fail_if_run)
+    monkeypatch.setattr(parse, "_parse_node", fail_if_built)
     source = body_of({"kind": "math", "operation": "evaluate", "expression": "x^71"})
 
     status, body = compute.calculate(source)
 
     assert status == compute.INVALID_INPUT
     assert "Exponents may be at most 70." in json.loads(body)["detail"]
+
+
+def test_front_reads_the_same_request_limit_as_the_engine() -> None:
+    # The front and the engine are two languages, so one test reads both sources.
+    match = re.search(
+        r"MAX_REQUEST_BYTES = (\d+) \* (\d+);", ANSWER.read_text(encoding="utf-8")
+    )
+
+    assert match is not None
+    assert int(match[1]) * int(match[2]) == compute.MAX_REQUEST_BYTES
 
 
 def test_calculate_refuses_result_over_the_response_budget(monkeypatch) -> None:

@@ -47,11 +47,17 @@ function namespaceAnswering(reply: (attempt: number) => Promise<Response>): {
 /** An object that holds its call and never answers. */
 const silent = (): Promise<Response> => new Promise<Response>(() => undefined);
 
-/** An object that answers with the overloaded error of the runtime. */
+/** An object that refuses the call because it is overloaded, so nothing ran. */
 const overloaded = (): Promise<Response> =>
-  Promise.reject(Object.assign(new Error("busy"), { overloaded: true }));
+  Promise.reject(
+    Object.assign(new Error("busy"), { overloaded: true, retryable: false })
+  );
 
-/** An object that fails without the overloaded flag. */
+/** An object that was reset by the platform, which a retry can recover from. */
+const reset = (): Promise<Response> =>
+  Promise.reject(Object.assign(new Error("reset"), { retryable: true }));
+
+/** An object that fails without a platform flag, so the front must not retry it. */
 const failed = (): Promise<Response> =>
   Promise.reject(new Error("exceeded resource limits"));
 
@@ -87,10 +93,10 @@ describe("forwardMath", () => {
     })
   );
 
-  it.effect("asks a different object once when an object is overloaded", () =>
+  it.effect("asks a different object once after the platform resets one", () =>
     Effect.gen(function* () {
       const { namespace, calls } = namespaceAnswering((attempt) =>
-        attempt === 1 ? overloaded() : answered()
+        attempt === 1 ? reset() : answered()
       );
 
       const response = yield* forwardMath(namespace, new Uint8Array(0));
@@ -103,22 +109,7 @@ describe("forwardMath", () => {
     })
   );
 
-  it.effect("asks a different object once after another engine failure", () =>
-    Effect.gen(function* () {
-      const { namespace, calls } = namespaceAnswering((attempt) =>
-        attempt === 1 ? failed() : answered()
-      );
-
-      const response = yield* forwardMath(namespace, new Uint8Array(0));
-
-      const [first, second] = namesOf(calls);
-      expect(response.status).toBe(200);
-      expect(namesOf(calls)).toHaveLength(2);
-      expect(second).not.toBe(first);
-    })
-  );
-
-  it.effect("reports the second object's failure when both objects fail", () =>
+  it.effect("does not ask another object when the object is overloaded", () =>
     Effect.gen(function* () {
       const { namespace, calls } = namespaceAnswering(overloaded);
 
@@ -129,15 +120,40 @@ describe("forwardMath", () => {
       expect(Result.isFailure(result)).toBe(true);
       if (Result.isFailure(result)) {
         expect(result.failure).toBeInstanceOf(CasEngineFailed);
-        expect(result.failure).toMatchObject({ overloaded: true });
+        expect(result.failure).toMatchObject({
+          overloaded: true,
+          retryable: false,
+        });
       }
-      expect(namesOf(calls)).toHaveLength(2);
+      expect(namesOf(calls)).toHaveLength(1);
     })
   );
 
-  it.effect("reports other engine failures as not overloaded", () =>
+  it.effect(
+    "does not ask another object after a failure without a retry flag",
+    () =>
+      Effect.gen(function* () {
+        const { namespace, calls } = namespaceAnswering(failed);
+
+        const result = yield* Effect.result(
+          forwardMath(namespace, new Uint8Array(0))
+        );
+
+        expect(Result.isFailure(result)).toBe(true);
+        if (Result.isFailure(result)) {
+          expect(result.failure).toBeInstanceOf(CasEngineFailed);
+          expect(result.failure).toMatchObject({
+            overloaded: false,
+            retryable: false,
+          });
+        }
+        expect(namesOf(calls)).toHaveLength(1);
+      })
+  );
+
+  it.effect("reports the second object's failure when both objects reset", () =>
     Effect.gen(function* () {
-      const { namespace } = namespaceAnswering(failed);
+      const { namespace, calls } = namespaceAnswering(reset);
 
       const result = yield* Effect.result(
         forwardMath(namespace, new Uint8Array(0))
@@ -146,49 +162,50 @@ describe("forwardMath", () => {
       expect(Result.isFailure(result)).toBe(true);
       if (Result.isFailure(result)) {
         expect(result.failure).toBeInstanceOf(CasEngineFailed);
-        expect(result.failure).toMatchObject({ overloaded: false });
+        expect(result.failure).toMatchObject({ retryable: true });
       }
+      expect(namesOf(calls)).toHaveLength(2);
     })
   );
 
   it.effect(
-    "asks a different object once when the first misses its deadline",
+    "does not ask another object once the first misses the call deadline",
     () =>
       Effect.gen(function* () {
-        const { namespace, calls } = namespaceAnswering((attempt) =>
-          attempt === 1 ? silent() : answered()
-        );
+        const { namespace, calls } = namespaceAnswering(silent);
 
         const fiber = yield* Effect.forkChild(
-          forwardMath(namespace, new Uint8Array(0)),
+          Effect.result(forwardMath(namespace, new Uint8Array(0))),
           { startImmediately: true }
         );
-        yield* TestClock.adjust("25 seconds");
-        const response = yield* Fiber.join(fiber);
+        yield* TestClock.adjust("20 seconds");
+        const result = yield* Fiber.join(fiber);
 
-        const [first, second] = namesOf(calls);
-        expect(response.status).toBe(200);
-        expect(namesOf(calls)).toHaveLength(2);
-        expect(second).not.toBe(first);
+        expect(Result.isFailure(result)).toBe(true);
+        if (Result.isFailure(result)) {
+          expect(result.failure).toBeInstanceOf(CasEngineTimedOut);
+          expect(result.failure).toMatchObject({ budget: "20 seconds" });
+        }
+        expect(namesOf(calls)).toHaveLength(1);
       })
   );
 
-  it.effect("gives up once both objects miss their deadline", () =>
+  it.effect("gives the retry only the time left in the one call deadline", () =>
     Effect.gen(function* () {
-      const { namespace, calls } = namespaceAnswering(silent);
+      const { namespace, calls } = namespaceAnswering((attempt) =>
+        attempt === 1 ? reset() : silent()
+      );
 
       const fiber = yield* Effect.forkChild(
         Effect.result(forwardMath(namespace, new Uint8Array(0))),
         { startImmediately: true }
       );
-      yield* TestClock.adjust("25 seconds");
-      yield* TestClock.adjust("25 seconds");
+      yield* TestClock.adjust("20 seconds");
       const result = yield* Fiber.join(fiber);
 
       expect(Result.isFailure(result)).toBe(true);
       if (Result.isFailure(result)) {
         expect(result.failure).toBeInstanceOf(CasEngineTimedOut);
-        expect(result.failure).toMatchObject({ budget: "25 seconds" });
       }
       expect(namesOf(calls)).toHaveLength(2);
     })

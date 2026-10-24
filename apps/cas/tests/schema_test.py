@@ -59,16 +59,10 @@ def test_integer_beyond_the_digit_bound_is_refused() -> None:
         evaluate(expression="1" * (MAX_INTEGER_DIGITS + 1))
 
 
-def test_exponent_at_the_bound_is_accepted_in_both_spellings() -> None:
-    assert evaluate(expression=f"x^{MAX_EXPONENT}").expression
-    assert evaluate(expression=f"x**-{MAX_EXPONENT}").expression
-
-
-def test_exponent_beyond_the_bound_is_refused_in_both_spellings() -> None:
-    with pytest.raises(ValidationError, match=f"at most {MAX_EXPONENT}"):
-        evaluate(expression=f"x^{MAX_EXPONENT + 1}")
-    with pytest.raises(ValidationError, match=f"at most {MAX_EXPONENT}"):
-        evaluate(expression=f"x**(-{MAX_EXPONENT + 1})")
+def test_exponent_text_is_left_to_the_parser_that_reads_its_value() -> None:
+    # A lexical exponent rule would miss `x**+71`, so cas/work.py reads the value.
+    assert evaluate(expression=f"x^{MAX_EXPONENT + 1}").expression
+    assert evaluate(expression="x**+71").expression
 
 
 def test_expression_at_the_token_bound_is_accepted() -> None:

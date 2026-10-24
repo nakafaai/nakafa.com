@@ -4,7 +4,7 @@ import sympy as sp
 
 from cas import parse
 from cas.format import expression_text, item, result, step
-from cas.schema import MathExpression, MathRequest, MathResult
+from cas.schema import MAX_COUNT_OPERAND, MathExpression, MathRequest, MathResult
 
 EQUALS = expression_text("equals", "=")
 
@@ -126,6 +126,9 @@ def _bounded_count(
     k = _integer(k_value)
     if n < 0 or k < 0 or k > n:
         raise ValueError(f"{name} requires integer operands with 0 <= k <= n.")
+    # SymPy computes the exact count, whose size grows with n, so n has a bound.
+    if n > MAX_COUNT_OPERAND:
+        raise ValueError(f"{name} operands may be at most {MAX_COUNT_OPERAND}.")
 
     return n, k
 

@@ -85,9 +85,10 @@ export class MathService extends Context.Service<
             )
           );
         },
-        // CAS terminates its worker after 20 seconds. This outer budget
-        // includes transport and response decoding, and interrupting the
-        // request aborts it instead of leaving it alive.
+        // The CAS front answers within its 20-second call deadline, so this
+        // outer budget of 25 seconds receives that answer. It also includes
+        // transport and response decoding, and interrupting the request aborts
+        // it instead of leaving it alive.
         Effect.timeoutOrElse({
           duration: "25 seconds",
           orElse: () =>

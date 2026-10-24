@@ -2,7 +2,7 @@ import pytest
 
 from cas import probability
 from cas.engine import run
-from cas.schema import MathRequest
+from cas.schema import MAX_BINOMIAL_TRIALS, MAX_POISSON_BOUND, MathRequest
 
 
 def test_binomial_expected_value() -> None:
@@ -419,3 +419,59 @@ def test_unknown_probability_operation_raises() -> None:
                 variable="X",
             )
         )
+
+
+def test_binomial_refuses_trials_beyond_the_bound() -> None:
+    with pytest.raises(ValueError, match="Binomial trials may be at most"):
+        run(
+            MathRequest(
+                distribution="binomial",
+                kind="math",
+                operation="expected_value",
+                parameters={"n": str(MAX_BINOMIAL_TRIALS + 1), "p": "1/2"},
+                variable="X",
+            )
+        )
+
+
+def test_binomial_accepts_trials_at_the_bound() -> None:
+    result = run(
+        MathRequest(
+            distribution="binomial",
+            kind="math",
+            operation="expected_value",
+            parameters={"n": str(MAX_BINOMIAL_TRIALS), "p": "1/2"},
+            variable="X",
+        )
+    )
+
+    assert result.status == "verified"
+
+
+def test_poisson_refuses_an_event_bound_beyond_the_bound() -> None:
+    with pytest.raises(ValueError, match="Poisson event bounds may be at most"):
+        run(
+            MathRequest(
+                distribution="poisson",
+                kind="math",
+                operation="cumulative_probability",
+                parameters={"lambda": "4"},
+                variable="X",
+                upper=str(MAX_POISSON_BOUND + 1),
+            )
+        )
+
+
+def test_poisson_accepts_an_event_bound_at_the_bound() -> None:
+    result = run(
+        MathRequest(
+            distribution="poisson",
+            kind="math",
+            operation="cumulative_probability",
+            parameters={"lambda": "4"},
+            variable="X",
+            upper=str(MAX_POISSON_BOUND),
+        )
+    )
+
+    assert result.status == "verified"

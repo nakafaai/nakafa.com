@@ -197,7 +197,7 @@ def _line_equation(
 
 def _difference(left: object, right: object) -> sp.Expr:
     """Subtract two SymPy-compatible values through the shared parser."""
-    left_expr = parse.expression(str(left))
-    right_expr = parse.expression(str(right))
+    left_expr = parse.expression(str(left), bounded=False)
+    right_expr = parse.expression(str(right), bounded=False)
 
     return sp.expand(sp.Add(left_expr, sp.Mul(-1, right_expr)))
