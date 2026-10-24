@@ -222,7 +222,9 @@ describe("answer", () => {
         answer(mathRequest(), environment(silent, KEY)),
         { startImmediately: true }
       );
-      yield* TestClock.adjust("20 seconds");
+      // Each of the two objects holds its call for the 25-second deadline.
+      yield* TestClock.adjust("25 seconds");
+      yield* TestClock.adjust("25 seconds");
       const response = yield* Fiber.join(fiber);
 
       expect(response.status).toBe(503);
