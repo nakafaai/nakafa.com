@@ -54,7 +54,9 @@ export const captureServerExceptionSafely = Effect.fn(
     Effect.flatMap((reporting) =>
       reporting.captureServerException(error, properties, requestUserAgent)
     ),
-    Effect.ignore
+    Effect.catch((cause) =>
+      Effect.logWarning("Server exception capture failed.", cause)
+    )
   );
 });
 
@@ -92,5 +94,9 @@ export const scheduleServerExceptionCapture = Effect.fn(
       waitUntil(
         captureServerExceptionSafely(error, properties).pipe(runPromise)
       ),
-  }).pipe(Effect.ignore);
+  }).pipe(
+    Effect.catchTag("ServerExceptionScheduleError", (failure) =>
+      Effect.logWarning(failure.message, failure)
+    )
+  );
 });

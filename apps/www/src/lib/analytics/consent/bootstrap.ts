@@ -10,6 +10,7 @@ import {
   CONSENT_NOTICE_VERSIONS,
 } from "@repo/analytics/consent";
 import { Effect, Option, Schema } from "effect";
+import { reportClientException } from "@/lib/analytics/client";
 import type { BrowserPrivacySignal } from "@/lib/analytics/consent/signal";
 import { KNOWN_SESSION_KEY } from "@/lib/auth/keys";
 
@@ -201,9 +202,17 @@ export const markAnalyticsConsentRoot = Effect.fn(
       readRecord: readStoredRecord,
       vocabulary: ANALYTICS_CONSENT_BOOTSTRAP_VOCABULARY,
     });
-  }).pipe(Effect.orElseSucceed(() => null));
+  }).pipe(
+    Effect.map(Option.fromNullishOr),
+    Effect.catch((cause) =>
+      reportClientException(cause, {
+        operation: "resolveConsentMark",
+        source: "analytics.consentRoot",
+      }).pipe(Effect.as(Option.none()))
+    )
+  );
 
-  if (mark !== null) {
-    root.setAttribute(ANALYTICS_CONSENT_ROOT_ATTRIBUTE, mark);
+  if (Option.isSome(mark)) {
+    root.setAttribute(ANALYTICS_CONSENT_ROOT_ATTRIBUTE, mark.value);
   }
 });

@@ -82,7 +82,9 @@ export function serveWeather({ request }: { readonly request: Request }) {
           const err = error instanceof Error ? error : new Error(String(error));
           const duration = Math.round(performance.now() - startedAt);
 
-          yield* scheduleServerExceptionCapture(err, { source: "weather-api" });
+          yield* scheduleServerExceptionCapture(error, {
+            source: "weather-api",
+          });
 
           yield* logError(err, logContext);
           yield* logHttpRequest(

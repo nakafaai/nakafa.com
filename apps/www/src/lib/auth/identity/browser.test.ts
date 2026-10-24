@@ -17,6 +17,15 @@ import {
 const authClient = vi.hoisted(() => ({ signOut: vi.fn() }));
 vi.mock("@/lib/auth/client", () => ({ readAuthClient: () => authClient }));
 
+import type { reportClientException } from "@/lib/analytics/client";
+
+const reportClientExceptionMock = vi.hoisted(() =>
+  vi.fn<typeof reportClientException>(() => Effect.void)
+);
+vi.mock("@/lib/analytics/client", () => ({
+  reportClientException: reportClientExceptionMock,
+}));
+
 vi.mock(import("@repo/analytics/posthog/browser"), async (importOriginal) => ({
   ...(await importOriginal()),
   revokeToBaselineAnalytics: vi.fn(() => Effect.void),
@@ -105,6 +114,57 @@ describe("account browser identity", () => {
         expect(denyAnonymousAnalytics.mock.invocationCallOrder[0]).toBeLessThan(
           resetAnalytics.mock.invocationCallOrder[0] ?? 0
         );
+      })
+  );
+
+  it.effect(
+    "reports a failed cleanup step with its cause and runs the others",
+    () =>
+      Effect.gen(function* () {
+        const failure = new Error("storage refused");
+        const resetAnalytics = vi.fn();
+
+        yield* clearAccountBrowserIdentity({
+          removePersistedAccountState: () => {
+            throw failure;
+          },
+          resetAnalytics,
+        });
+
+        expect(resetAnalytics).toHaveBeenCalledOnce();
+        expect(reportClientExceptionMock).toHaveBeenCalledWith(
+          expect.objectContaining({ cause: failure }),
+          {
+            operation: "removePersistedAccountState",
+            source: "auth.identityCleanup",
+          }
+        );
+      })
+  );
+
+  it.effect(
+    "reports a failed analytics step after a committed deletion and keeps clearing",
+    () =>
+      Effect.gen(function* () {
+        const failure = new AnalyticsConsentStorageFailed({
+          code: "ANALYTICS_CONSENT_STORAGE_FAILED",
+        });
+        const removePersistedAccountState = vi.fn();
+        const resetAnalytics = vi.fn();
+
+        yield* clearDeletedAccountBrowserIdentity({
+          denyAnonymousAnalytics: () => Effect.fail(failure),
+          revokeAnalytics: () => Effect.void,
+          removePersistedAccountState,
+          resetAnalytics,
+        });
+
+        expect(removePersistedAccountState).toHaveBeenCalledOnce();
+        expect(resetAnalytics).toHaveBeenCalledOnce();
+        expect(reportClientExceptionMock).toHaveBeenCalledWith(failure, {
+          operation: "denyAnonymousAnalytics",
+          source: "auth.identityCleanup",
+        });
       })
   );
 

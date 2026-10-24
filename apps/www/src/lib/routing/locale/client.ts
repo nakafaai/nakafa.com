@@ -2,6 +2,7 @@ import { useRouter } from "@repo/internationalization/src/navigation";
 import { Data, Effect } from "effect";
 import { useTransition } from "react";
 import type { Locale } from "use-intl";
+import { reportClientException } from "@/lib/analytics/client";
 
 /** Raised when the browser cannot load the language-switch request module. */
 class LocalizedHrefModuleError extends Data.TaggedError(
@@ -42,7 +43,12 @@ export function useLocalizedRouteSwitch() {
               router.replace(href, { locale });
             })
           ),
-          Effect.catch(() => Effect.void)
+          Effect.catch((cause) =>
+            reportClientException(cause, {
+              locale,
+              source: "routing.localeSwitch",
+            })
+          )
         )
       );
     });

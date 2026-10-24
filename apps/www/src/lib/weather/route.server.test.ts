@@ -110,7 +110,7 @@ describe("weather route", () => {
     });
   });
 
-  it("reports a non-error failure as an error", async () => {
+  it("reports a non-error failure with its original value", async () => {
     isCorsRequestAllowedMock.mockReturnValue(Effect.succeed(true));
     geolocationMock.mockReturnValue({ latitude: "1", longitude: "2" });
     getCurrentWeatherMock.mockReturnValue(Effect.fail("timeout"));
@@ -119,7 +119,7 @@ describe("weather route", () => {
     const response = await weather();
 
     expect(response.status).toBe(500);
-    expect(scheduleCaptureMock).toHaveBeenCalledWith(new Error("timeout"), {
+    expect(scheduleCaptureMock).toHaveBeenCalledWith("timeout", {
       source: "weather-api",
     });
   });

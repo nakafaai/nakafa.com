@@ -1,7 +1,7 @@
 // @vitest-environment node
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { Effect, Option } from "effect";
+import { Effect } from "effect";
 import { readTryoutSetHandler } from "@/components/tryout/route/attempt.server";
 import { readTryoutSectionHandler } from "@/components/tryout/route/section.server";
 
@@ -50,9 +50,7 @@ const NOT_FOUND = { kind: "notFound" };
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.readRequestToken.mockReturnValue(Effect.succeedSome("token-1"));
-  mocks.readTryoutQuestionPreview.mockReturnValue(
-    Effect.succeed(Option.none())
-  );
+  mocks.readTryoutQuestionPreview.mockReturnValue(Effect.succeedNone);
 });
 
 describe("try-out attempt server functions", () => {

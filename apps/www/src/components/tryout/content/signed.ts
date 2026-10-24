@@ -97,38 +97,33 @@ const renderContentPlan = Effect.fn("NakafaContent.renderTryoutContentPlan")(
 );
 
 /** Authorizes one attempt batch on every request: getBatch checks the session and the attempt. */
-const readAttemptBatch = Effect.fn("NakafaContent.readAttemptBatch")(function* (
-  attemptId: Id<"tryoutAttempts">,
-  token: string,
-  selectors: readonly TryoutSelector[]
-) {
-  const row = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
-    client.query(tryouts.queries.content.getBatch, {
-      attemptId,
-      selectors: [...selectors],
-    })
-  ).pipe(
-    Effect.provide(
-      httpLayer({
-        auth: token,
+const readAttemptBatch = Effect.fn("NakafaContent.readAttemptBatch")(
+  function* (
+    attemptId: Id<"tryoutAttempts">,
+    token: string,
+    selectors: readonly TryoutSelector[]
+  ) {
+    const row = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
+      client.query(tryouts.queries.content.getBatch, {
+        attemptId,
+        selectors: [...selectors],
       })
-    ),
-    Effect.mapError(
-      (cause) =>
-        new ContentRuntimeVerificationError({
-          cause,
+    ).pipe(
+      Effect.provide(
+        httpLayer({
+          auth: token,
         })
-    )
-  );
-  return yield* renderAttemptBatch(selectors, row).pipe(
-    Effect.mapError(
-      (cause) =>
-        new ContentRuntimeVerificationError({
-          cause,
-        })
-    )
-  );
-});
+      )
+    );
+    return yield* renderAttemptBatch(selectors, row);
+  },
+  Effect.mapError(
+    (cause) =>
+      new ContentRuntimeVerificationError({
+        cause,
+      })
+  )
+);
 
 /**
  * Verifies and renders one attempt batch on every request. Nothing caches the
