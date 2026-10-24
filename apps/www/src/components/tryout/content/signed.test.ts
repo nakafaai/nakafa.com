@@ -25,7 +25,6 @@ import {
 } from "@effect/vitest";
 import { compile } from "@mdx-js/mdx";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
-import { PROTECTED_CONTENT_RUNTIME_PATH } from "@repo/backend/content/endpoint";
 import { createTestPublication } from "@repo/backend/test/content/publication";
 import { insertHistoryAttempt } from "@repo/backend/test/tryout/history";
 import { makeLandingSource } from "@repo/backend/test/tryout/landing";
@@ -59,7 +58,6 @@ const queryMock = vi.hoisted(() =>
   >()
 );
 const siteUrl = "https://runtime.example.test";
-const endpoint = `${siteUrl}${PROTECTED_CONTENT_RUNTIME_PATH}`;
 const attemptQuery = refs.public.tryouts.queries.content.getBatch;
 vi.mock("@confect/js", async (importOriginal) => {
   const { HttpClient } = await importOriginal<typeof import("@confect/js")>();

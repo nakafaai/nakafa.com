@@ -26,7 +26,6 @@ import {
   it,
 } from "@effect/vitest";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
-import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import {
   CONTENT_RUNTIME_RESPONSE_HEADER,
   CONTENT_RUNTIME_RESPONSE_MARKER,
@@ -35,20 +34,15 @@ import {
 import { decodeProtectedRuntimeRow } from "@repo/backend/content/tryout/exchange";
 import { TEST_KEY_RESOLVER } from "@repo/backend/test/content/proof";
 import { createTestPublication } from "@repo/backend/test/content/publication";
-import { insertHistoryAttempt } from "@repo/backend/test/tryout/history";
 import { makeLandingSource } from "@repo/backend/test/tryout/landing";
 import { makeTryoutRuntimeSource } from "@repo/backend/test/tryout/serving";
 import { TRYOUT_TEST_NOW } from "@repo/backend/test/tryouts";
 import { encodeJsonText, JsonTextSchema } from "@repo/utilities/json";
 import type { FunctionReference } from "convex/server";
-import { Array as Arr, Effect, Layer, Option, Predicate, Schema } from "effect";
+import { Effect, Layer, Option, Schema } from "effect";
 import { renderToStaticMarkup } from "react-dom/server";
-import type { SignedContentAccess } from "@/components/tryout/content/model";
 import { makeTryoutRuntimeRequest } from "@/components/tryout/content/request";
-import {
-  loadSignedTryoutContent,
-  loadTryoutQuestion,
-} from "@/components/tryout/content/signed";
+import { loadTryoutQuestion } from "@/components/tryout/content/signed";
 import { ContentRuntimeConfigurationError } from "@/lib/content/published/errors";
 import { activateTestRelease } from "@/test/active";
 import { resetTestRuntimeCache } from "@/test/store";
@@ -69,7 +63,6 @@ const queryMock = vi.hoisted(() =>
 );
 const siteUrl = "https://runtime.example.test";
 const endpoint = `${siteUrl}${PROTECTED_CONTENT_RUNTIME_PATH}`;
-const attemptQuery = refs.public.tryouts.queries.content.getBatch;
 vi.mock("@confect/js", async (importOriginal) => {
   const { HttpClient } = await importOriginal<typeof import("@confect/js")>();
   return {
@@ -155,55 +148,6 @@ const readFixture = Effect.fn("TryoutExecutionTest.fixture")(function* (
     question: featured.question,
   };
 });
-
-/** Routes the app transport into real session and retained membership queries. */
-const readOwnedFixture = Effect.fn("TryoutExecutionTest.ownedFixture")(
-  function* (options?: Parameters<typeof insertHistoryAttempt>[2]) {
-    const t = createConvexTestWithBetterAuth();
-    const seed = yield* Effect.promise(() =>
-      t.mutation((ctx) => insertHistoryAttempt(ctx, true, options))
-    );
-    const owned = t.withIdentity({
-      subject: seed.identity.authUserId,
-      sessionId: seed.identity.sessionId,
-    });
-    const access: SignedContentAccess = {
-      answers: Arr.filter(
-        seed.request.selectors,
-        (selector) => selector.delivery === "entitled"
-      ),
-      kind: "signed",
-      previewAnswers: [],
-      questions: Arr.filter(
-        seed.request.selectors,
-        (selector) => selector.delivery === "authenticated"
-      ),
-    };
-    queryMock.mockImplementation((functionReference, encodedArgs) => {
-      expect(layerMock).toHaveBeenLastCalledWith("https://test.convex.cloud", {
-        auth: "technical-session-token",
-      });
-      assert(Predicate.isObject(encodedArgs));
-      return owned.query(functionReference, encodedArgs);
-    });
-    const question = yield* Effect.fromNullishOr(access.questions[0]);
-    const answer = yield* Effect.fromNullishOr(access.answers[0]);
-    return {
-      access,
-      answer,
-      attemptId: seed.request.attemptId,
-      owned,
-      question,
-      seed,
-      t,
-    };
-  }
-);
-/** Loads the attempt's signed content and returns the failure it must end in. */
-const loadFailure = (
-  fixture: Effect.Success<ReturnType<typeof readOwnedFixture>>
-) =>
-  loadSignedTryoutContent(fixture.attemptId, fixture.access).pipe(Effect.flip);
 
 beforeEach(() => {
   resetTestRuntimeCache();
