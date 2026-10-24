@@ -1,42 +1,13 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { createRequire } from "node:module";
 import { basename, join } from "node:path";
 import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
-import { POSTHOG_PROXY_PATH } from "@repo/analytics/posthog/config";
-import { securityHeaders } from "@repo/site";
-import { AGENT_DISCOVERY_HEADERS } from "@repo/site/discovery";
 import babel from "@rolldown/plugin-babel";
 import tailwindcss from "@tailwindcss/vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import react, { reactCompilerPreset } from "@vitejs/plugin-react";
 import rsc from "@vitejs/plugin-rsc";
-import { nitro } from "nitro/vite";
 import { defineConfig, type Plugin } from "vite";
-
-/**
- * The origin of the PostHog proxy that the build names. An unset host installs no
- * proxy route, so analytics requests never leave the app for an unset provider.
- * A set host must parse as a URL, which fails the config load otherwise, and the
- * proxy routes to its origin. The dev Aksara preview child installs no proxy.
- * This file does not import the analytics keys module, because that module imports
- * its own package by name, and the config loader cannot resolve that name.
- */
-function readPostHogProxyOrigin(): string | undefined {
-  const host = process.env.POSTHOG_PROXY_HOST;
-  if (process.env.VITE_AKSARA_PREVIEW_CHILD === "true" || host === undefined) {
-    return undefined;
-  }
-  return new URL(host).origin;
-}
-
-const POSTHOG_PROXY_ORIGIN = readPostHogProxyOrigin();
-
-/** Every response carries the security headers and the agent discovery links. */
-const SHARED_HEADERS = Object.fromEntries(
-  [...securityHeaders, ...AGENT_DISCOVERY_HEADERS].map(({ key, value }) => [
-    key,
-    value,
-  ])
-);
 
 /**
  * The marketing pages that prerender in every active locale. Their first HTML is
@@ -109,6 +80,22 @@ const verifyPrerenderedPages: Plugin = {
   name: "www:verify-prerendered-pages",
 };
 
+/** The signature verifiers that `@nakafa/aksara-contracts` exports under `node` only. */
+const NODE_ONLY_CONTRACT_PATHS = [
+  "artifact/verify",
+  "preview/auth",
+  "runtime/protected/verify",
+  "runtime/verify",
+  "tryout/runtime/verify",
+];
+
+const contractsRequire = createRequire(import.meta.url);
+
+const NODE_ONLY_CONTRACT_ALIASES = NODE_ONLY_CONTRACT_PATHS.map((path) => ({
+  find: `@nakafa/aksara-contracts/${path}`,
+  replacement: contractsRequire.resolve(`@nakafa/aksara-contracts/${path}`),
+}));
+
 /** The font files that the font-src policy must load from this origin, never inline. */
 const FONT_FILE_PATTERN = /\.woff2?$/;
 
@@ -125,12 +112,20 @@ export default defineConfig({
     ),
   },
   resolve: {
+    // `@nakafa/aksara-contracts` ships its signature verifiers under the `node`
+    // condition only. Workers resolve them by file, since the `workerd` condition
+    // does not match and the `node` condition would select posthog-node's Node build.
+    alias: NODE_ONLY_CONTRACT_ALIASES,
     tsconfigPaths: true,
   },
   // takumi-js loads its native `@takumi-rs/core` addon at runtime. A bundled copy
   // cannot find its platform binary, so the server pass keeps the package external.
   environments: {
+    // The workerd dev server loads server modules without pre-bundling, so a
+    // pre-bundled chunk cannot resolve the transitive packages that pnpm does not
+    // hoist. Only CommonJS `@vercel/functions` needs the ESM conversion.
     ssr: {
+      optimizeDeps: { include: ["@vercel/functions"], noDiscovery: true },
       resolve: { external: ["@takumi-rs/core"] },
     },
   },
@@ -163,24 +158,6 @@ export default defineConfig({
     }),
     // Decision 14: no skew route (__vdpl). Server-function calls carry the
     // pinned deployment through Start's client fetch seam instead.
-    nitro({
-      routeRules: {
-        ...(POSTHOG_PROXY_ORIGIN === undefined
-          ? {}
-          : {
-              [`${POSTHOG_PROXY_PATH}/**`]: {
-                proxy: `${POSTHOG_PROXY_ORIGIN}/**`,
-              },
-            }),
-        "/**": { headers: SHARED_HEADERS },
-      },
-      // The server bundle has no WebAssembly module. Nitro's wasm support adds
-      // the `unwasm` export condition, which selects takumi-js's wasm backend,
-      // since its `#backend` map lists `unwasm` before `node`. Without it,
-      // takumi-js loads its native Node backend, as Next did before.
-      wasm: false,
-      vercel: { skewProtection: false },
-    }),
     rsc(),
     tailwindcss(),
     react(),
