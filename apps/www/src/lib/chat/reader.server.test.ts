@@ -189,7 +189,6 @@ describe("reading a shared chat", () => {
         isDone: true,
         json: messagesJson([message]),
       },
-      turns: null,
     });
     expect(mocks.query).not.toHaveBeenCalledWith(
       nina.conversation.turns,

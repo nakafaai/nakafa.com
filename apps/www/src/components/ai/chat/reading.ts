@@ -1,5 +1,5 @@
 import type { NinaMessage } from "@repo/backend/confect/nina/schema";
-import { Array as Arr, Number as Num, Order, Schema } from "effect";
+import { Array as Arr, Number as Num, Order, Result, Schema } from "effect";
 import {
   ReaderMessagePage,
   type ReaderOlder,
@@ -12,13 +12,14 @@ export class ReaderReadError extends Schema.TaggedError<ReaderReadError>()(
   { cause: Schema.Unknown }
 ) {}
 
-/** The messages of one page, decoded from the JSON text the server sent. */
+/**
+ * The messages of one page, decoded from the JSON text the server sent. A page
+ * that does not decode is a failed read, which shows its failure card, so the
+ * reader is not thrown into the error page of the route.
+ */
 function decodeMessages(json: string) {
-  return Schema.decodeSync(ReaderMessagePage)(json);
+  return Schema.decodeResult(ReaderMessagePage)(json);
 }
-
-/** The chat a reader sees: its chat and turns, and every page loaded so far. */
-export type ReaderView = ReturnType<typeof readerView>;
 
 /** The transcript's messages in the order a conversation reads them: by prompt, then by step. */
 const byStep = Order.combine(
@@ -42,38 +43,48 @@ function cursorAfter(list: {
   return list.isDone ? undefined : list.continueCursor;
 }
 
-/** The view of a chat the server answered as readable: its first pages. */
-export function readerView(read: ReaderReady) {
+/** The first pages of a chat, with the messages of the first page decoded. */
+function firstView(read: ReaderReady, messages: readonly NinaMessage[]) {
   return {
     chat: read.chat,
     endedTurns: read.turns.page,
-    messages: orderMessages(decodeMessages(read.messages.json)),
+    messages: orderMessages(messages),
     messagesCursor: cursorAfter(read.messages),
     turn: read.turn,
     turnsCursor: cursorAfter(read.turns),
   };
 }
 
+/** The chat a reader sees: its chat and turns, and every page loaded so far. */
+export type ReaderView = ReturnType<typeof firstView>;
+
+/**
+ * The view of a chat the server answered as readable: its first pages. A page of
+ * messages that does not decode fails the view.
+ */
+export function readerView(read: ReaderReady) {
+  return Result.map(decodeMessages(read.messages.json), (messages) =>
+    firstView(read, messages)
+  );
+}
+
 /**
  * Adds an older page to the view. Its messages come before those shown, and its
- * turns join the ended turns when the reader asked for them.
+ * turns join the ended turns when the reader asked for them, each turn once.
  */
-export function withOlderPage(
-  view: ReaderView,
-  older: ReaderOlder
-): ReaderView {
+export function withOlderPage(view: ReaderView, older: ReaderOlder) {
   const turns = older.turns;
-  return {
+  return Result.map(decodeMessages(older.messages.json), (messages) => ({
     ...view,
     endedTurns:
-      turns === null
+      turns === undefined
         ? view.endedTurns
-        : Arr.appendAll(view.endedTurns, turns.page),
-    messages: orderMessages([
-      ...decodeMessages(older.messages.json),
-      ...view.messages,
-    ]),
+        : Arr.dedupeWith(
+            [...view.endedTurns, ...turns.page],
+            (left, right) => left.order === right.order
+          ),
+    messages: orderMessages([...messages, ...view.messages]),
     messagesCursor: cursorAfter(older.messages),
-    turnsCursor: turns === null ? view.turnsCursor : cursorAfter(turns),
-  };
+    turnsCursor: turns === undefined ? view.turnsCursor : cursorAfter(turns),
+  }));
 }

@@ -19,7 +19,6 @@ import { draftMessage } from "@/components/ai/chat/messages";
 import {
   type ChatStoreApi,
   ChatStoreContext,
-  createChatStore,
 } from "@/components/ai/chat/store";
 import { useAi } from "@/components/ai/context";
 import { NinaConnectionError } from "@/components/ai/feedback";
@@ -33,8 +32,8 @@ const ChatContext = createContext<ChatContextValue | null>(null);
 /**
  * Provides one conversation's state and actions, with the store of its
  * controls, to the controls below it. A learner's chat builds them from the live
- * conversation (`ChatProvider`), and a reader's chat from the server's read, so
- * every message control reads one shape.
+ * conversation (`LearnerChatProvider`), and a reader's chat from the server's
+ * read, so every message control reads one shape.
  */
 export function ChatValueProvider({
   children,
@@ -54,7 +53,7 @@ export function ChatValueProvider({
  * streams. Each action is one function for the life of the provider and
  * reads the latest render when it runs.
  */
-function useChatState(
+export function useChatState(
   chatId: Id<"chats">,
   shareToken: string | undefined,
   store: ChatStoreApi
@@ -82,7 +81,10 @@ function useChatState(
   const opening = useAi(
     (state) => state.openingChat?.receipt.chatId === chatId
   );
-  const viewerId = useViewer((state) => state.viewer?.id);
+  const { isPending: isViewerPending, viewerId } = useViewer((viewer) => ({
+    isPending: viewer.isPending,
+    viewerId: viewer.viewer?.id,
+  }));
   const cancelChat = useMutation(nina.lifecycle.cancel);
 
   const loading = !current;
@@ -244,59 +246,39 @@ function useChatState(
   }));
 
   return {
-    busy,
-    cancel: actions.cancel,
-    canWrite,
-    chat,
-    chatId,
-    draft,
-    isLoading: loading,
-    isPending,
-    loadMoreTurns,
-    owner,
-    retry: actions.retry,
-    send: actions.send,
-    shareToken,
-    turn,
-    turnAt,
-    turnsLoading,
-    turnsStatus,
+    paging: { loadMoreTurns, turnsLoading, turnsStatus },
+    value: {
+      busy,
+      cancel: actions.cancel,
+      canWrite,
+      chat,
+      chatId,
+      draft,
+      isLoading: loading,
+      isPending,
+      isViewerPending,
+      owner,
+      retry: actions.retry,
+      send: actions.send,
+      shareToken,
+      turn,
+      turnAt,
+    },
   };
 }
 
 /**
  * The conversation's state and actions. It changes when a turn starts, ends
  * or fails, never with a streamed token, so the controls that read it stay
- * still while Nina writes.
+ * still while Nina writes. A reader's chat provides the same value.
  */
-export type ChatContextValue = ReturnType<typeof useChatState>;
+export type ChatContextValue = ReturnType<typeof useChatState>["value"];
 
 /**
- * One reactive conversation shared by the route, sheet and message controls.
- * Each chat gets its own state and its own subtree, so choosing another chat
- * starts with none of the previous chat's error, stop, send or pending prompt,
- * whichever surface renders the provider. The caller gives the provider a key
- * of the chat's id: the state of one chat lives and ends with that key. The text
- * the learner is typing is not part of it: that draft is one for every chat.
- * `shareToken` is the one a shared link carries, for a reader who is not the
- * owner.
+ * The paging of the turns that ended, which only a learner's live feed reads.
+ * A reader's chat pages its turns with its messages, so it has none of it.
  */
-export function ChatProvider({
-  chatId,
-  children,
-  shareToken,
-}: PropsWithChildren<{
-  chatId: Id<"chats">;
-  shareToken?: string | undefined;
-}>) {
-  const [store] = useState(createChatStore);
-  const value = useChatState(chatId, shareToken, store);
-  return (
-    <ChatValueProvider store={store} value={value}>
-      {children}
-    </ChatValueProvider>
-  );
-}
+export type ChatPaging = ReturnType<typeof useChatState>["paging"];
 
 /** Selects one part of the conversation's state and actions. */
 export function useChat<T>(selector: (state: ChatContextValue) => T) {

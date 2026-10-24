@@ -17,7 +17,7 @@ import {
   useState,
 } from "react";
 import { readChatArgs } from "@/components/ai/chat/access";
-import { useChat } from "@/components/ai/chat/context";
+import { type ChatPaging, useChat } from "@/components/ai/chat/context";
 import { mergeMessages } from "@/components/ai/chat/messages";
 import { canLoadOlderMessages } from "@/components/ai/chat/turns";
 import { useAi } from "@/components/ai/context";
@@ -66,14 +66,15 @@ export function useChatFeed() {
  * first page of those too, and an older page of messages loads with an older
  * page of turns.
  */
-export function useLiveChatFeed() {
+export function useLiveChatFeed({
+  loadMoreTurns,
+  turnsLoading,
+  turnsStatus,
+}: ChatPaging) {
   const chatId = useChat((state) => state.chatId);
   const shareToken = useChat((state) => state.shareToken);
   const chat = useChat((state) => state.chat);
   const draft = useChat((state) => state.draft);
-  const loadMoreTurns = useChat((state) => state.loadMoreTurns);
-  const turnsLoading = useChat((state) => state.turnsLoading);
-  const turnsStatus = useChat((state) => state.turnsStatus);
   const openingChat = useAi((state) => state.openingChat);
   const setOpeningChat = useAi((state) => state.setOpeningChat);
   const feed = useUIMessages(

@@ -43,16 +43,17 @@ import { ChatSharing } from "@/components/ai/chat/sharing";
 import { useChatRename } from "@/components/ai/chat/title";
 import { BreadcrumbHeaderFrame } from "@/components/shared/breadcrumb/frame";
 
-/** Render the current chat header or its stable empty placeholder. */
 /**
  * The header of the chat a viewer reads. Only the owner's header mounts the
  * Convex hooks of the controls that write, so a reader's header shows the title
- * alone, with no client.
+ * alone, with no client. The header waits for the viewer, since only then is it
+ * known whether the viewer owns the chat.
  */
 export function AiChatHeader() {
   const chat = useChat((s) => s.chat);
   const isOwner = useChat((state) => state.owner);
-  if (!chat) {
+  const isViewerPending = useChat((state) => state.isViewerPending);
+  if (!chat || isViewerPending) {
     return <ChatHeader />;
   }
   if (!isOwner) {

@@ -56,14 +56,7 @@ export function ChatBoundary<Query extends Ref.AnyPublicQuery>({
               reset={resetErrorBoundary}
             />
           ) : (
-            <Suspense fallback={null}>
-              <ClientOnly fallback={null}>
-                <ChatFailure
-                  kind={readChatFailureKind(error)}
-                  onRetry={resetErrorBoundary}
-                />
-              </ClientOnly>
-            </Suspense>
+            <ChatFailureCard error={error} onRetry={resetErrorBoundary} />
           )}
         </div>
       )}
@@ -71,6 +64,33 @@ export function ChatBoundary<Query extends Ref.AnyPublicQuery>({
     >
       {children}
     </ErrorBoundary>
+  );
+}
+
+/**
+ * The failure card of a failed read. An access failure shows the card with no
+ * retry. Any other failure shows it with a retry, which is disabled while
+ * `isPending` is true.
+ */
+function ChatFailureCard({
+  error,
+  isPending = false,
+  onRetry,
+}: {
+  error: unknown;
+  isPending?: boolean;
+  onRetry: () => void;
+}) {
+  return (
+    <Suspense fallback={null}>
+      <ClientOnly fallback={null}>
+        {readChatFailureKind(error) === "access" ? (
+          <ChatFailure kind="access" />
+        ) : (
+          <ChatFailure isPending={isPending} kind="retry" onRetry={onRetry} />
+        )}
+      </ClientOnly>
+    </Suspense>
   );
 }
 
@@ -88,15 +108,5 @@ function ChatReadFailure<Query extends Ref.AnyPublicQuery>({
   reset: () => void;
 }) {
   const { retry, waiting } = useAnswerRetry(read.ref, read.args, reset);
-  return (
-    <Suspense fallback={null}>
-      <ClientOnly fallback={null}>
-        <ChatFailure
-          isPending={waiting}
-          kind={readChatFailureKind(error)}
-          onRetry={retry}
-        />
-      </ClientOnly>
-    </Suspense>
-  );
+  return <ChatFailureCard error={error} isPending={waiting} onRetry={retry} />;
 }

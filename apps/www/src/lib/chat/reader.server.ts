@@ -106,7 +106,7 @@ const readOlderPages = Effect.fn("www.chat.reader.older")(function* (
     json,
   };
   if (request.turnsCursor === undefined) {
-    return { messages: messagesPage, turns: null } satisfies ReaderOlder;
+    return { messages: messagesPage } satisfies ReaderOlder;
   }
   const turns = yield* client.query(nina.conversation.turns, {
     chatId,

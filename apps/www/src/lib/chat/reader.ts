@@ -42,15 +42,20 @@ type ReaderMessageShape = Omit<NinaMessage, "metadata">;
 
 /**
  * A message of the transcript: Agent's UI message, whose parts are an AI SDK
- * shape that no Schema describes as data. The predicate checks the fields the
- * transcript reads, and the server decodes each message it returns through it.
+ * shape that no Schema describes as data. The predicate checks every typed field
+ * of the message, and only the list of its parts, whose items no Schema
+ * describes. The server decodes each message it returns through it.
  */
 const ReaderMessageFields = Schema.Struct({
+  _creationTime: Schema.Finite,
+  id: Schema.String,
   key: Schema.String,
   order: Schema.Finite,
   parts: Schema.Array(Schema.Unknown),
-  role: Schema.String,
+  role: Schema.Literals(["system", "user", "assistant"]),
+  status: Schema.Literals(["streaming", "pending", "success", "failed"]),
   stepOrder: Schema.Finite,
+  text: Schema.String,
 });
 
 /** A message of the transcript, as its guard reads it. */
@@ -97,9 +102,12 @@ export const ReaderRead = Schema.Union([
 ]);
 export type ReaderRead = typeof ReaderRead.Type;
 
-/** An older page of a shared chat: its messages, and its turns when they were asked for. */
+/**
+ * An older page of a shared chat: its messages, and its turns when they were
+ * asked for. The answer leaves `turns` out when they were not asked for.
+ */
 export const ReaderOlder = Schema.Struct({
   messages: ReaderMessagesPage,
-  turns: Schema.NullOr(ReaderPage(NinaTurnSummary)),
+  turns: Schema.optionalKey(ReaderPage(NinaTurnSummary)),
 });
 export type ReaderOlder = typeof ReaderOlder.Type;

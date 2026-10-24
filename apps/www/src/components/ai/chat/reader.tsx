@@ -3,14 +3,14 @@ import { Button } from "@repo/design-system/components/ui/button";
 import { useCurrentLocale } from "@repo/internationalization/src/link";
 import { useNavigate } from "@tanstack/react-router";
 import { Effect, Fiber, Option, Result } from "effect";
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { useTranslations } from "use-intl";
 import {
   type ChatContextValue,
   ChatValueProvider,
 } from "@/components/ai/chat/context";
 import { ChatFeedContext } from "@/components/ai/chat/feed";
-import { AiChatHeader, ChatHeader } from "@/components/ai/chat/header";
+import { ChatHeader } from "@/components/ai/chat/header";
 import {
   ReaderReadError,
   type ReaderView,
@@ -19,10 +19,10 @@ import {
 } from "@/components/ai/chat/reading";
 import { createChatStore } from "@/components/ai/chat/store";
 import { turnOf, turnsByOrder } from "@/components/ai/chat/turns";
-import { NinaTranscript } from "@/components/ai/transcript";
+import { AiChat } from "@/components/ai/chat/view";
 import { useLiveSession } from "@/components/providers/live";
 import { getPostAuthSignInTarget } from "@/lib/auth/admission";
-import type { ReaderRead, ReaderReady } from "@/lib/chat/reader";
+import type { ReaderRead } from "@/lib/chat/reader";
 import { readReaderFn, readReaderOlderFn } from "@/lib/chat/reader.functions";
 
 // The failure card holds the sign-in chain, which only a reader who cannot open
@@ -116,33 +116,44 @@ function ReaderLoad({
   if (read.status === "unavailable") {
     return <ReaderUnavailable />;
   }
+  const initial = readerView(read);
+  if (Result.isFailure(initial)) {
+    return <ReaderFailure onRetry={onRetry} />;
+  }
   return (
-    <ReaderTranscript chatId={chatId} read={read} shareToken={shareToken} />
+    <ReaderTranscript
+      chatId={chatId}
+      initial={initial.success}
+      shareToken={shareToken}
+    />
   );
 }
 
 /**
  * The transcript of a readable chat. It keeps every page it has loaded, and the
  * message components read the same contexts a learner's chat provides, with
- * every write turned off.
+ * every write turned off. One older page loads at a time, so a scroll during a
+ * load does not ask for the same page twice.
  */
 function ReaderTranscript({
   chatId,
-  read,
+  initial,
   shareToken,
 }: {
   chatId: Id<"chats">;
-  read: ReaderReady;
+  initial: ReaderView;
   shareToken: string;
 }) {
-  const [view, setView] = useState<ReaderView>(() => readerView(read));
+  const [view, setView] = useState<ReaderView>(initial);
   const [store] = useState(createChatStore);
+  const loadingOlder = useRef(false);
 
   function loadOlder() {
     const { messagesCursor, turnsCursor } = view;
-    if (messagesCursor === undefined) {
+    if (messagesCursor === undefined || loadingOlder.current) {
       return;
     }
+    loadingOlder.current = true;
     Effect.runFork(
       Effect.tryPromise({
         try: () =>
@@ -157,14 +168,22 @@ function ReaderTranscript({
           }),
         catch: (cause) => new ReaderReadError({ cause }),
       }).pipe(
+        Effect.flatMap((older) =>
+          Effect.fromResult(withOlderPage(view, older))
+        ),
         Effect.matchEffect({
           onFailure: () =>
             Effect.logWarning("An older page of a shared chat did not load."),
-          onSuccess: (older) =>
+          onSuccess: (next) =>
             Effect.sync(() => {
-              setView((previous) => withOlderPage(previous, older));
+              setView(next);
             }),
-        })
+        }),
+        Effect.ensuring(
+          Effect.sync(() => {
+            loadingOlder.current = false;
+          })
+        )
       )
     );
   }
@@ -179,15 +198,13 @@ function ReaderTranscript({
     draft: null,
     isLoading: false,
     isPending: false,
-    loadMoreTurns: undefined,
+    isViewerPending: false,
     owner: false,
     retry: ignore,
     send: refuse,
     shareToken,
     turn: view.turn,
     turnAt: (order) => turnOf(view.turn, ended, order),
-    turnsLoading: false,
-    turnsStatus: view.turnsCursor === undefined ? "Exhausted" : "CanLoadMore",
   };
 
   return (
@@ -199,20 +216,9 @@ function ReaderTranscript({
           messages: view.messages,
         }}
       >
-        <ReaderScreen />
+        <AiChat footer={<ReaderAction />} />
       </ChatFeedContext>
     </ChatValueProvider>
-  );
-}
-
-/** A reader's page: the chat's header, its transcript, and the one action a reader has. */
-function ReaderScreen() {
-  return (
-    <div className="relative flex size-full min-w-0 flex-col overflow-hidden text-chat">
-      <AiChatHeader />
-      <NinaTranscript />
-      <ReaderAction />
-    </div>
   );
 }
 
@@ -242,7 +248,7 @@ function ReaderAction() {
 function ReaderUnavailable() {
   return (
     <Suspense fallback={null}>
-      <ChatFailure kind="access" onRetry={ignore} />
+      <ChatFailure kind="access" />
     </Suspense>
   );
 }
