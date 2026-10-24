@@ -4,6 +4,7 @@ import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
 import { DeliveryLanguageSchema } from "@nakafa/aksara-contracts/locale";
 import { Id } from "@repo/backend/confect/_generated/id";
 import exams from "@repo/backend/confect/_generated/refs/exams";
+import type { HomeDraft } from "@repo/backend/confect/exams/home/contract";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Array as Arr, Option, Schema } from "effect";
 import {
@@ -340,7 +341,8 @@ describe("the optimistic updates of the new questions", () => {
 
   it("show a new exam first in the first page of each list the store holds", () => {
     const examIdOf = Schema.decodeUnknownSync(Id("exams"));
-    const draft: ExamSummary = {
+    const draft: typeof HomeDraft.Type = {
+      createdAt: 1,
       id: examIdOf("draft-exam"),
       language: Schema.decodeSync(DeliveryLanguageSchema)("id"),
       title: "Draf",
@@ -378,7 +380,8 @@ describe("the optimistic updates of the new questions", () => {
 
   it("show a new exam first among the drafts of the school home the store holds", () => {
     const examIdOf = Schema.decodeUnknownSync(Id("exams"));
-    const draft: ExamSummary = {
+    const draft: typeof HomeDraft.Type = {
+      createdAt: 1,
       id: examIdOf("draft-exam"),
       language: Schema.decodeSync(DeliveryLanguageSchema)("id"),
       title: "Draf",
@@ -408,7 +411,8 @@ describe("the optimistic updates of the new questions", () => {
 
   it("write nothing to the school home the store does not hold", () => {
     const examIdOf = Schema.decodeUnknownSync(Id("exams"));
-    const draft: ExamSummary = {
+    const draft: typeof HomeDraft.Type = {
+      createdAt: 1,
       id: examIdOf("draft-exam"),
       language: Schema.decodeSync(DeliveryLanguageSchema)("id"),
       title: "Draf",

@@ -1,78 +1,161 @@
+import { Certificate01Icon } from "@hugeicons/core-free-icons";
 import type { HomeView } from "@repo/backend/confect/exams/home/contract";
+import { Button } from "@repo/design-system/components/ui/button";
+import { Dashboard } from "@repo/design-system/components/ui/dashboard";
+import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Array as Arr } from "effect";
+import type { ReactNode } from "react";
+import { useState } from "react";
 import { useTranslations } from "use-intl";
-import { CardLink, CardLinks } from "@/components/shared/card/link";
+import { type StoreApi, useStore } from "zustand";
+import { runSittingCall } from "@/components/exams/sitting/actions";
+import { ConfirmActions } from "@/components/exams/sitting/dialogs";
 import { useTenant } from "@/components/tenant/context";
+import type { CellSpan } from "@/components/tenant/home/cells";
+import { useReleaseHomeResult } from "@/components/tenant/home/query";
+import type { HomeReleases } from "@/components/tenant/home/release";
+import { TargetLink } from "@/lib/routing/link";
 import {
-  AllExamsAction,
-  HomeTile,
-  RowText,
-  TILE_ROWS,
-} from "@/components/tenant/home/tile";
-import { schoolExamSittingResultsTarget } from "@/lib/routing/school/target";
+  schoolExamSittingResultsTarget,
+  schoolExamsTarget,
+} from "@/lib/routing/school/target";
 
 /** One closed sitting whose results the viewer may view, as the school home holds it. */
 type Result = (typeof HomeView.Type)["closed"][number];
 
 /**
- * The results of the closed sittings that the viewer may view, newest first, each with its exam, its room, and
- * whether its results are released. A row opens the sitting's results page. The footer names the action of the
- * viewer when some row may be released, and otherwise says when results appear. A tile with more results than it
- * shows ends with All exams.
+ * The results of the closed sittings that the viewer may view, newest first, each with its exam, its room, and whether
+ * its results are released. A row opens the sitting's results page. A sitting whose results may be released shows the
+ * release in its row, which asks first, because students see their answers once it is done. A list that reached its
+ * bound links to every exam, where the rest of the results live.
  */
-export function ResultsTile({
-  className,
+export function ResultsCell({
+  bound,
+  releases,
   results,
+  span,
 }: {
-  className?: string | undefined;
+  /** Whether the list reached its bound, so older results may exist. */
+  bound: boolean;
+  releases: StoreApi<HomeReleases>;
   results: readonly Result[];
+  span: CellSpan;
 }) {
   const t = useTranslations("School");
-  const tenant = useTenant();
-  const canRelease = Arr.some(results, (result) => result.canRelease);
+  const { slug } = useTenant();
+  const pending = useStore(releases, (state) => state.ids);
 
   return (
-    <HomeTile
-      action={
-        results.length > TILE_ROWS && tenant.canOpenExams ? (
-          <AllExamsAction />
-        ) : undefined
-      }
-      className={className}
-      hint={
-        canRelease ? t("tile-results-release-footer") : t("tile-results-footer")
-      }
-      title={t("tile-results")}
-    >
-      <CardLinks>
-        {Arr.map(Arr.take(results, TILE_ROWS), (result) => (
-          <ResultRow key={result.id} result={result} />
-        ))}
-      </CardLinks>
-    </HomeTile>
+    <Dashboard.Cell narrow={span.narrow} wide={span.wide}>
+      <Dashboard.CellHeader title={t("tile-results")}>
+        {bound ? (
+          <TargetLink
+            className="shrink-0 text-muted-foreground text-sm underline underline-offset-4 hover:text-foreground"
+            target={schoolExamsTarget(slug)}
+          >
+            {t("all-exams")}
+          </TargetLink>
+        ) : null}
+      </Dashboard.CellHeader>
+      <Dashboard.List>
+        {Arr.map(results, (result) => {
+          const releasing = Arr.contains(pending, result.id);
+          return (
+            <ResultRow
+              action={
+                result.canRelease && !releasing ? (
+                  <ReleaseAction releases={releases} sittingId={result.id} />
+                ) : undefined
+              }
+              key={result.id}
+              released={result.resultsReleased || releasing}
+              result={result}
+            />
+          );
+        })}
+      </Dashboard.List>
+    </Dashboard.Cell>
   );
 }
 
-/** One closed sitting, as a row that opens its results page and names whether they are released. */
-function ResultRow({ result }: { result: Result }) {
-  const tenant = useTenant();
+/**
+ * One closed sitting, as a row that opens its results page, with the release in the row while it may be released. The
+ * status shows as the row's end text whenever the row has no release to offer.
+ */
+function ResultRow({
+  action,
+  released,
+  result,
+}: {
+  action: ReactNode;
+  released: boolean;
+  result: Result;
+}) {
+  const { slug } = useTenant();
   const t = useTranslations("School");
 
   return (
-    <CardLink
-      target={schoolExamSittingResultsTarget(
-        tenant.slug,
-        result.examId,
-        result.id
-      )}
+    <Dashboard.Row
+      action={action}
+      detail={result.room}
+      icon={Certificate01Icon}
+      render={
+        <TargetLink
+          target={schoolExamSittingResultsTarget(slug, result.examId, result.id)}
+          title={result.examTitle}
+        />
+      }
       title={result.examTitle}
-    >
-      <RowText detail={result.room} title={result.examTitle} />
-      <span className="shrink-0 text-muted-foreground text-sm">
-        {result.resultsReleased
-          ? t("tile-result-released")
-          : t("tile-result-pending")}
-      </span>
-    </CardLink>
+      trailing={
+        action === undefined
+          ? t(released ? "tile-result-released" : "tile-result-pending")
+          : undefined
+      }
+    />
+  );
+}
+
+/**
+ * The release of one sitting's results, as a button in its row. The button asks first, then releases the results at
+ * once: the row shows the release while the server answers, and a refused release shows the release again.
+ */
+function ReleaseAction({
+  releases,
+  sittingId,
+}: {
+  releases: StoreApi<HomeReleases>;
+  sittingId: Result["id"];
+}) {
+  const t = useTranslations("Exams");
+  const { slug } = useTenant();
+  const release = useReleaseHomeResult();
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
+      <Button onClick={() => setOpen(true)} type="button" variant="outline">
+        {t("release-action")}
+      </Button>
+      <ResponsiveDialog
+        description={t("release-description")}
+        footer={
+          <ConfirmActions
+            confirm={t("release-action")}
+            onCancel={() => setOpen(false)}
+            onConfirm={() => {
+              setOpen(false);
+              const { end, start } = releases.getState();
+              start(sittingId);
+              runSittingCall(() => release({ sittingId, slug })).finally(() =>
+                end(sittingId)
+              );
+            }}
+          />
+        }
+        open={open}
+        setOpen={setOpen}
+        title={t("release-title")}
+      />
+    </>
   );
 }

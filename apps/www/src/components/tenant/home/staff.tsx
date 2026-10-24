@@ -1,39 +1,64 @@
 import { QueryResult } from "@confect/react";
+import {
+  HOME_RESULT_LIMIT,
+  HOME_ROOM_LIMIT,
+} from "@repo/backend/confect/exams/home/bounds";
+import type { HomeView } from "@repo/backend/confect/exams/home/contract";
+import { Dashboard } from "@repo/design-system/components/ui/dashboard";
 import { Array as Arr } from "effect";
-import type { ReactNode } from "react";
-import { useTranslations } from "use-intl";
+import { Fragment } from "react";
+import { useLocale, useTranslations } from "use-intl";
 import type { StoreApi } from "zustand";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import type { ExamDrafts } from "@/components/tenant/exams/drafts";
-import { Bento, type BentoTile } from "@/components/tenant/home/bento";
-import { DraftsTile } from "@/components/tenant/home/drafts";
-import { LiveTile } from "@/components/tenant/home/live";
-import { NextTile } from "@/components/tenant/home/next";
-import { type StaffTile, staffPlan } from "@/components/tenant/home/plan";
+import { type CellSpan, placeCells } from "@/components/tenant/home/cells";
+import { countLabel, reachesBound } from "@/components/tenant/home/count";
+import { DraftsCell } from "@/components/tenant/home/drafts";
+import { LiveCell } from "@/components/tenant/home/live";
+import { MetricCell } from "@/components/tenant/home/metrics";
 import { useHomeExams, useHomeSetup } from "@/components/tenant/home/query";
-import { ResultsTile } from "@/components/tenant/home/results";
-import { SetupTile, useSetupShown } from "@/components/tenant/home/setup";
-import { HomeTitle } from "@/components/tenant/home/title";
+import type { HomeReleases } from "@/components/tenant/home/release";
+import { ResultsCell } from "@/components/tenant/home/results";
+import {
+  ScheduleCell,
+  type ScheduleItem,
+} from "@/components/tenant/home/schedule";
+import { SetupCell, useSetupShown } from "@/components/tenant/home/setup";
+import { staffShown } from "@/components/tenant/home/shown";
+import { waitingOf } from "@/components/tenant/home/waiting";
+import { schoolWeekdayTimeText } from "@/components/tenant/settings/clock";
+import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
+import { schoolExamSittingTarget } from "@/lib/routing/school/target";
+
+/** A room that the staff home lists as upcoming. */
+type Room = (typeof HomeView.Type)["next"][number];
 
 /**
- * The title, the quiet line, and the tiles of a staff home, in the order and the places the plan gives them. One
- * read brings the rooms, the results, and the drafts, and the setup tile reads the school's setup on its own. Until
- * the reads that its tiles need have answered, only the title shows, and then the quiet line and every tile appear
- * at once, so no tile that is shown moves when another arrives. The home reads these tiles inside the read's
- * boundary, and the boundary's failure keeps the title.
+ * The strip of four numbers and the cells of a staff home, on one connected dashboard. One read brings the rooms, the
+ * results, and the drafts, and the setup cell reads the school's setup on its own. Until the reads that the cells need
+ * have answered, nothing shows below the header, and then every cell appears at once, so no cell that is shown moves
+ * when another arrives. The cells lay out in rows that fill the dashboard at each width, so a cell that is not shown
+ * leaves no gap.
  */
-export function StaffTiles({ drafts }: { drafts: StoreApi<ExamDrafts> }) {
-  const t = useTranslations("School");
+export function StaffHome({
+  drafts,
+  releases,
+}: {
+  drafts: StoreApi<ExamDrafts>;
+  releases: StoreApi<HomeReleases>;
+}) {
   const tenant = useTenant();
   const exams = useHomeExams();
   const setup = useHomeSetup();
   const viewer = useViewerQuery();
   const setupShown = useSetupShown();
+  const locale = useLocale();
+  const t = useTranslations("School");
 
   if (QueryResult.isFailure(exams)) {
     throw exams.error;
   }
-  // A failed read counts as an answer, because its tile shows its own failure. The owner's and the admin's setup
+  // A failed read counts as an answer, because its cell shows its own failure. The owner's and the admin's setup
   // also waits for the viewer's units, which decide its first step.
   const setupAnswered =
     QueryResult.isSuccess(setup) || QueryResult.isFailure(setup);
@@ -43,41 +68,175 @@ export function StaffTiles({ drafts }: { drafts: StoreApi<ExamDrafts> }) {
     QueryResult.isSuccess(exams) &&
     (!tenant.canManage || (setupAnswered && viewerAnswered));
   if (!ready) {
-    return <HomeTitle />;
+    return null;
   }
-  const { closed, drafts: draftRows, live, next } = exams.value;
-  const plan = staffPlan({
+  const { closed, drafts: draftRows, draftsBounded, live, next } = exams.value;
+  const shown = staffShown({
     canCreate: tenant.home.canCreate,
     canWatch: tenant.home.canWatch,
     closed: closed.length,
     drafts: draftRows.length,
     live: live.length,
     next: next.length,
-    setup: setupShown,
+    setupShown,
   });
-  const nodes: Record<StaffTile, ReactNode> = {
-    drafts: <DraftsTile className="h-full" drafts={draftRows} store={drafts} />,
-    live: <LiveTile className="h-full" rooms={live} />,
-    next: <NextTile className="h-full" rooms={next} />,
-    results: <ResultsTile className="h-full" results={closed} />,
-    setup: <SetupTile className="h-full" />,
+  const nextBound = reachesBound(next.length, HOME_ROOM_LIMIT);
+  const closedBound = reachesBound(closed.length, HOME_RESULT_LIMIT);
+  const cells = placeCells([
+    {
+      draw: (span) => (
+        <MetricCell
+          count={countLabel(
+            live.length,
+            reachesBound(live.length, HOME_ROOM_LIMIT)
+          )}
+          period={t("metric-live-period")}
+          span={span}
+          title={t("metric-live")}
+        />
+      ),
+      key: "count-live",
+      narrow: 1,
+      shown: shown["count-live"],
+      wide: 3,
+    },
+    {
+      draw: (span) => (
+        <MetricCell
+          count={countLabel(next.length, nextBound)}
+          period={t("metric-next-period")}
+          span={span}
+          title={t("metric-next")}
+        />
+      ),
+      key: "count-next",
+      narrow: 1,
+      shown: shown["count-next"],
+      wide: 3,
+    },
+    {
+      draw: (span) => (
+        <MetricCell
+          count={countLabel(waitingOf(closed), closedBound)}
+          period={t("metric-waiting-period")}
+          span={span}
+          title={t("metric-waiting")}
+        />
+      ),
+      key: "count-waiting",
+      narrow: 1,
+      shown: shown["count-waiting"],
+      wide: 3,
+    },
+    {
+      draw: (span) => (
+        <MetricCell
+          count={countLabel(draftRows.length, draftsBounded)}
+          period={t("metric-drafts-period")}
+          span={span}
+          title={t("metric-drafts")}
+        />
+      ),
+      key: "count-drafts",
+      narrow: 1,
+      shown: shown["count-drafts"],
+      wide: 3,
+    },
+    {
+      draw: (span) => (
+        <ScheduleCell
+          bound={nextBound ? HOME_ROOM_LIMIT : null}
+          items={Arr.map(next, (room) => scheduleItemOf(room, locale, tenant.slug))}
+          span={span}
+        />
+      ),
+      key: "schedule",
+      narrow: 2,
+      shown: shown.schedule,
+      wide: 8,
+    },
+    {
+      draw: (span) => <LiveCell rooms={live} span={span} />,
+      key: "live",
+      narrow: 1,
+      shown: shown.live,
+      wide: 4,
+    },
+    {
+      draw: (span) => <QuietCell span={span} />,
+      key: "quiet",
+      narrow: 2,
+      shown: shown.quiet,
+      wide: 12,
+    },
+    {
+      draw: (span) => (
+        <ResultsCell
+          bound={closedBound}
+          releases={releases}
+          results={closed}
+          span={span}
+        />
+      ),
+      key: "results",
+      narrow: 1,
+      shown: shown.results,
+      wide: 8,
+    },
+    {
+      draw: (span) => (
+        <DraftsCell drafts={draftRows} span={span} store={drafts} />
+      ),
+      key: "drafts",
+      narrow: 1,
+      shown: shown.drafts,
+      wide: 4,
+    },
+    {
+      draw: (span) => <SetupCell span={span} />,
+      key: "setup",
+      narrow: 2,
+      shown: shown.setup,
+      wide: 12,
+    },
+  ]);
+
+  if (Arr.isReadonlyArrayEmpty(cells)) {
+    return null;
+  }
+  return (
+    <Dashboard>
+      {Arr.map(cells, (cell) => (
+        <Fragment key={cell.key}>{cell.draw(cell)}</Fragment>
+      ))}
+    </Dashboard>
+  );
+}
+
+/** The room of the schedule, which its bar and its row open at the room's proctor page, and says when it opens. */
+function scheduleItemOf(room: Room, locale: string, slug: TenantSlug): ScheduleItem {
+  return {
+    target: schoolExamSittingTarget(slug, room.examId, room.id),
+    id: room.id,
+    opensAt: room.opensAt,
+    room: room.room,
+    timeZone: room.timeZone,
+    title: room.examTitle,
+    trailing: schoolWeekdayTimeText({
+      at: room.opensAt,
+      locale,
+      timeZone: room.timeZone,
+    }),
   };
+}
+
+/** The quiet state of a staff home, which takes the place of the schedule and the rooms while none run or open soon. */
+function QuietCell({ span }: { span: CellSpan }) {
+  const t = useTranslations("School");
 
   return (
-    <>
-      <HomeTitle
-        quiet={
-          plan.quiet
-            ? { act: "sleeping", sentence: t("quiet-staff") }
-            : undefined
-        }
-      />
-      <Bento
-        tiles={Arr.map(
-          plan.tiles,
-          (tile): BentoTile => ({ key: tile, node: nodes[tile] })
-        )}
-      />
-    </>
+    <Dashboard.Cell narrow={span.narrow} wide={span.wide}>
+      <Dashboard.Empty act="sleeping">{t("quiet-staff")}</Dashboard.Empty>
+    </Dashboard.Cell>
   );
 }

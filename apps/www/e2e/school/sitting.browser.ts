@@ -188,12 +188,12 @@ test("a proctor lists the rooms of an exam and opens one from the list, and a st
   const student = await studentContext.newPage();
   await student.goto(address("/"));
   await expect(
-    student.getByText("Your sittings", { exact: true })
+    student.getByRole("heading", { name: "Now", exact: true })
   ).toBeVisible();
   // The open room comes first in the tile, and its row enters the sitting.
   await expect(
     student.getByRole("link", { name: OPEN_ROOM_ROW }).first()
-  ).toHaveAttribute("href", `/sittings/${sitting.sittingId}`);
+  ).toHaveAttribute("href", new RegExp(`/sittings/${sitting.sittingId}$`, "u"));
 
   await studentContext.close();
   await proctorContext.close();

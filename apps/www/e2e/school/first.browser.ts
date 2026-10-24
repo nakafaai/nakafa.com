@@ -30,6 +30,15 @@ test("the school home's first HTML holds the home for a member", async ({
 
   expect(response?.status()).toBe(200);
   await expect(page.getByRole("button", { name: "Create exam" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Live now", exact: true })
+  ).toBeVisible();
+  await expect(
+    page.getByText(
+      "No sitting is running, and none opens in the next 14 days.",
+      { exact: true }
+    )
+  ).toBeVisible();
   await context.close();
   await withoutScript.close();
 });

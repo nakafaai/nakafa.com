@@ -7,6 +7,10 @@ import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { requireAuth } from "@repo/backend/confect/auth/session";
 import { examAuthority } from "@repo/backend/confect/exams/authority";
 import { examSummary } from "@repo/backend/confect/exams/exam";
+import {
+  HOME_DRAFT_LIMIT,
+  HOME_ROOM_LIMIT,
+} from "@repo/backend/confect/exams/home/bounds";
 import { closedResults } from "@repo/backend/confect/exams/home/results";
 import {
   sittingAuthority,
@@ -21,16 +25,6 @@ import {
 } from "@repo/backend/confect/tenancy/authority";
 import { readSetup } from "@repo/backend/confect/tenancy/setup";
 import { Array as Arr, Clock, Duration, Effect, Order } from "effect";
-
-/**
- * The most sittings that one tile of the school home lists. Each unit is read for at most this many
- * rooms of each state, and the earliest ones of all units are kept, so the bound never hides a room
- * that the tile would show.
- */
-const HOME_ROWS = 5;
-
-/** The most drafts that the school home lists: the viewer's newest created exams, which the viewer may still edit. */
-const HOME_DRAFTS = 4;
 
 /**
  * The most exams of the viewer that the drafts read examines, newest created first. A draft older than
@@ -71,7 +65,7 @@ const openRows = Effect.fn("exams.home.openRows")(function* (
     .index("by_unitId_and_state_and_opensAt", (query) =>
       query.eq("unitId", unitId).eq("state", "open")
     )
-    .take(HOME_ROWS)
+    .take(HOME_ROOM_LIMIT)
     .pipe(Effect.orDie);
 });
 
@@ -92,7 +86,7 @@ const upcomingRows = Effect.fn("exams.home.upcomingRows")(function* (
         .gte("opensAt", now)
         .lte("opensAt", now + UPCOMING_WINDOW_MS)
     )
-    .take(HOME_ROWS)
+    .take(HOME_ROOM_LIMIT)
     .pipe(Effect.orDie);
 });
 
@@ -108,22 +102,22 @@ const canView = Effect.fn("exams.home.canView")(function* (
 
 /**
  * The first rooms of the candidates that the viewer may view, earliest opening first, at most
- * `HOME_ROWS`. Each candidate is decided by its own sitting authority, so no room reaches a viewer
+ * `HOME_ROOM_LIMIT`. Each candidate is decided by its own sitting authority, so no room reaches a viewer
  * who may not see it.
  */
 const firstViewable = Effect.fn("exams.home.firstViewable")(function* (
   rows: readonly ExamSittingsDoc[]
 ) {
   const viewable = yield* Effect.filter(rows, canView);
-  return Arr.take(Arr.sort(viewable, byOpening), HOME_ROWS);
+  return Arr.take(Arr.sort(viewable, byOpening), HOME_ROOM_LIMIT);
 });
 
 /**
  * The exams of one school that the author created and may still edit, newest created first. The author
  * is the account that `exams.create` records, so a draft is the author's own exam. The index reads the
  * author's newest `HOME_DRAFT_SCAN` exams and keeps the ones the author may edit. Convex allows one
- * paginated read per function, so the scan is one bounded read, and an older draft is left out only when
- * the list is full or more than `HOME_DRAFT_SCAN` of the author's exams come before it.
+ * paginated read per function, so the scan is one bounded read. The result tells whether the read stopped
+ * at a bound, because an older draft may then exist beyond the drafts listed.
  */
 const draftsOf = Effect.fn("exams.home.drafts")(function* (
   tenantId: GenericId.GenericId<"tenants">,
@@ -143,7 +137,14 @@ const draftsOf = Effect.fn("exams.home.drafts")(function* (
       .allowed(row)
       .pipe(Effect.map((actions) => Arr.contains(actions, "exam.edit")))
   );
-  return Arr.map(Arr.take(editable, HOME_DRAFTS), examSummary);
+  const kept = Arr.take(editable, HOME_DRAFT_LIMIT);
+  return {
+    bounded: rows.length >= HOME_DRAFT_SCAN || kept.length >= HOME_DRAFT_LIMIT,
+    drafts: Arr.map(kept, (row) => ({
+      ...examSummary(row),
+      createdAt: row.createdAt,
+    })),
+  };
 });
 
 /**
@@ -176,10 +177,12 @@ export const readHome = Effect.fn("exams.home.read")(function* () {
   );
   const next = yield* firstViewable(upcoming);
   const can = yield* tenantAuthority.allowed(member.tenant);
+  const drafts = yield* draftsOf(member.tenant._id, appUser._id);
   const home = {
     canManageSetup: Arr.contains(can, "tenant.manage"),
     closed: yield* closedResults(watched),
-    drafts: yield* draftsOf(member.tenant._id, appUser._id),
+    draftsBounded: drafts.bounded,
+    drafts: drafts.drafts,
     live: yield* sittingViews(live),
     next: yield* sittingViews(next),
   };

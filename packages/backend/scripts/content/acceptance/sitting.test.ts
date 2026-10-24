@@ -191,7 +191,6 @@ describe("acceptance sitting", () => {
           "learner@acceptance.example.test",
           `${root}/mode.json`,
           "101",
-          "ignored",
         ]);
 
         const [spec] = MutableList.toArray(specs);
@@ -258,7 +257,7 @@ describe("acceptance sitting", () => {
         ).toMatchObject({
           _tag: "AcceptanceRuntimeError",
           message:
-            "Usage: acceptance sitting <school-slug> <learner-email> <sitting-file> [crowd]",
+            "Usage: acceptance sitting <school-slug> <learner-email> <sitting-file> [crowd] [upcoming]",
         });
         expect(mocks.read).not.toHaveBeenCalled();
         expect(mocks.command).not.toHaveBeenCalled();
@@ -282,7 +281,7 @@ describe("acceptance sitting", () => {
         ).toMatchObject({
           _tag: "AcceptanceRuntimeError",
           message:
-            "Usage: acceptance sitting <school-slug> <learner-email> <sitting-file> [crowd]",
+            "Usage: acceptance sitting <school-slug> <learner-email> <sitting-file> [crowd] [upcoming]",
         });
         expect(mocks.read).not.toHaveBeenCalled();
         expect(mocks.command).not.toHaveBeenCalled();

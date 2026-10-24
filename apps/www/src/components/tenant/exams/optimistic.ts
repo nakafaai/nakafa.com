@@ -4,6 +4,8 @@ import type {
   OptimisticUpdate,
 } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
+import { HOME_DRAFT_LIMIT } from "@repo/backend/confect/exams/home/bounds";
+import type { HomeDraft } from "@repo/backend/confect/exams/home/contract";
 import { insertIndex, placeAt } from "@repo/backend/confect/exams/order";
 import { Array as Arr, Option } from "effect";
 
@@ -216,7 +218,7 @@ export const copyQuestionUpdate =
  * page keeps its pages, as the server's answer shows.
  */
 export const insertDraftExam =
-  (draft: ExamSummary): OptimisticUpdate<typeof exams.exams.create> =>
+  (draft: typeof HomeDraft.Type): OptimisticUpdate<typeof exams.exams.create> =>
   (localStore, args) => {
     for (const query of localStore.getAllQueries(exams.exams.list)) {
       if (
@@ -240,7 +242,7 @@ export const insertDraftExam =
         { slug: args.slug },
         Option.some({
           ...home.value,
-          drafts: [draft, ...home.value.drafts],
+          drafts: Arr.take([draft, ...home.value.drafts], HOME_DRAFT_LIMIT),
         })
       );
     }

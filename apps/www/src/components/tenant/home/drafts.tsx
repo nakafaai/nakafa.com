@@ -1,43 +1,37 @@
+import { PencilEdit02Icon } from "@hugeicons/core-free-icons";
 import type { HomeView } from "@repo/backend/confect/exams/home/contract";
+import { Dashboard } from "@repo/design-system/components/ui/dashboard";
 import { Array as Arr } from "effect";
 import { useMemo } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { type StoreApi, useStore } from "zustand";
-import {
-  CardLink,
-  CardLinks,
-  CardRowText,
-} from "@/components/shared/card/link";
-import { useTenant } from "@/components/tenant/context";
 import type { ExamDrafts } from "@/components/tenant/exams/drafts";
-import {
-  AllExamsAction,
-  HomeTile,
-  RowText,
-  TILE_ROWS,
-} from "@/components/tenant/home/tile";
+import type { CellSpan } from "@/components/tenant/home/cells";
+import { useHomeNow } from "@/components/tenant/home/clock";
+import { formatAge } from "@/lib/i18n/date";
+import { useTenant } from "@/components/tenant/context";
+import { TargetLink } from "@/lib/routing/link";
 import { schoolExamEditTarget } from "@/lib/routing/school/target";
 
 /** One draft of the viewer, as the school home holds it. */
 type Draft = (typeof HomeView.Type)["drafts"][number];
 
 /**
- * The exams the viewer started and may still edit, newest created first, each with its language. A row opens its
- * editor, and a draft the server is still saving shows its title without a link. A tile with more drafts than it
- * shows ends with All exams.
+ * The exams the viewer started and may still edit, newest created first, each with its language and the time since it
+ * was created. A row opens its editor, and a draft the server is still saving shows its title without a link.
  */
-export function DraftsTile({
-  className,
+export function DraftsCell({
   drafts,
+  span,
   store,
 }: {
-  className?: string | undefined;
   drafts: readonly Draft[];
+  span: CellSpan;
   store: StoreApi<ExamDrafts>;
 }) {
   const t = useTranslations("School");
-  const tenant = useTenant();
   const locale = useLocale();
+  const now = useHomeNow();
   const saving = useStore(store, (state) => state.ids);
   const names = useMemo(
     () => new Intl.DisplayNames([locale], { type: "language" }),
@@ -45,57 +39,60 @@ export function DraftsTile({
   );
 
   return (
-    <HomeTile
-      action={
-        drafts.length > TILE_ROWS && tenant.canOpenExams ? (
-          <AllExamsAction />
-        ) : undefined
-      }
-      className={className}
-      hint={t("tile-drafts-footer")}
-      title={t("tile-drafts")}
-    >
-      <CardLinks>
-        {Arr.map(Arr.take(drafts, TILE_ROWS), (draft) => (
+    <Dashboard.Cell narrow={span.narrow} wide={span.wide}>
+      <Dashboard.CellHeader title={t("tile-drafts")} />
+      <Dashboard.List>
+        {Arr.map(drafts, (draft) => (
           <DraftRow
             draft={draft}
             key={draft.id}
+            locale={locale}
             names={names}
+            now={now}
             saving={Arr.contains(saving, draft.id)}
           />
         ))}
-      </CardLinks>
-    </HomeTile>
+      </Dashboard.List>
+    </Dashboard.Cell>
   );
 }
 
 /**
- * One draft, as a row that opens its editor. A draft the server is still saving has a placeholder ID that no
- * editor can open, so its title shows without a link until the server answers.
+ * One draft, as a row that opens its editor. A draft the server is still saving has a placeholder ID that no editor
+ * can open, so its row shows without a link until the server answers.
  */
 function DraftRow({
   draft,
+  locale,
   names,
+  now,
   saving,
 }: {
   draft: Draft;
+  locale: string;
   names: Intl.DisplayNames;
+  now: number;
   saving: boolean;
 }) {
   const tenant = useTenant();
-  if (saving) {
-    return (
-      <CardRowText>
-        <RowText detail={names.of(draft.language)} title={draft.title} />
-      </CardRowText>
-    );
-  }
+  const t = useTranslations("School");
+
   return (
-    <CardLink
-      target={schoolExamEditTarget(tenant.slug, draft.id)}
+    <Dashboard.Row
+      detail={names.of(draft.language)}
+      icon={PencilEdit02Icon}
+      render={
+        saving ? undefined : (
+          <TargetLink
+            target={schoolExamEditTarget(tenant.slug, draft.id)}
+            title={draft.title}
+          />
+        )
+      }
       title={draft.title}
-    >
-      <RowText detail={names.of(draft.language)} title={draft.title} />
-    </CardLink>
+      trailing={t("draft-created", {
+        age: formatAge(draft.createdAt, locale, now),
+      })}
+    />
   );
 }

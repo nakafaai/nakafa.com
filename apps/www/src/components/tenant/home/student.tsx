@@ -1,55 +1,56 @@
 import { QueryResult } from "@confect/react";
+import { Certificate01Icon, Clock01Icon } from "@hugeicons/core-free-icons";
+import { HOME_RESULT_LIMIT } from "@repo/backend/confect/exams/home/bounds";
 import type { StudentSittingRow } from "@repo/backend/confect/exams/sittings/contract";
+import { Dashboard } from "@repo/design-system/components/ui/dashboard";
 import { Array as Arr, Option } from "effect";
-import { type ReactNode, useEffect } from "react";
+import { Fragment, useEffect } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { forgetSubmittedKept } from "@/components/exams/sitting/forget";
-import { CardLink, CardLinks } from "@/components/shared/card/link";
 import { useTenant } from "@/components/tenant/context";
-import { Bento, type BentoTile } from "@/components/tenant/home/bento";
-import { type StudentTile, studentPlan } from "@/components/tenant/home/plan";
+import { type CellSpan, placeCells } from "@/components/tenant/home/cells";
+import { useHomeNow } from "@/components/tenant/home/clock";
+import { reachesBound } from "@/components/tenant/home/count";
+import { minutesLeft } from "@/components/tenant/home/left";
 import {
   studentSittingsRead,
   useStudentSittings,
 } from "@/components/tenant/home/query";
 import {
-  AllExamsAction,
-  HomeTile,
-  RowText,
-  TILE_ROWS,
-} from "@/components/tenant/home/tile";
-import { HomeFailure, HomeTitle } from "@/components/tenant/home/title";
+  ScheduleCell,
+  type ScheduleItem,
+} from "@/components/tenant/home/schedule";
+import { studentShown } from "@/components/tenant/home/shown";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { schoolDateTimeText } from "@/components/tenant/settings/clock";
 import { enterableSitting, orderSittings } from "@/components/tenant/sittings";
+import { TargetLink } from "@/lib/routing/link";
 import { schoolSittingTarget } from "@/lib/routing/school/target";
+import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 
 /** One sitting of the student, as the student's list holds it. */
 type Sitting = typeof StudentSittingRow.Type;
 
 /**
- * The home of a student: the sittings that are open or scheduled, then the results of the sittings that closed.
- * A student with neither sees Nina searching and one sentence under the title, with no card. While the list loads,
- * only the title shows, and a failed read shows its own sentence and Try again below the title.
+ * The cells of a student's home on one connected dashboard: the sitting that is open now or the next one, with its
+ * countdown and its action, the student's schedule for the next fourteen days with each sitting as a row, and the
+ * results of the sittings that closed, with the student's score once it is released. A student with no sitting and no
+ * result sees Nina searching and one sentence, with no cell. While the list loads nothing shows below the header, and
+ * a failed read shows its own sentence and Try again.
  */
 export function StudentHome() {
   const tenant = useTenant();
 
   return (
-    <ReadBoundary
-      fallback={(failure) => <HomeFailure failure={failure} />}
-      read={studentSittingsRead(tenant.slug)}
-    >
-      <StudentTiles />
+    <ReadBoundary read={studentSittingsRead(tenant.slug)}>
+      <StudentCells />
     </ReadBoundary>
   );
 }
 
-/** The student's tiles and quiet state, from the list the student's sittings read returns. */
-function StudentTiles() {
-  const t = useTranslations("School");
-  const te = useTranslations("Exams");
-  const locale = useLocale();
+/** The student's cells, from the list that the student's sittings read returns. */
+function StudentCells() {
+  const tenant = useTenant();
   const listed = useStudentSittings();
 
   useEffect(() => {
@@ -62,7 +63,7 @@ function StudentTiles() {
     throw listed.error;
   }
   if (!QueryResult.isSuccess(listed)) {
-    return <HomeTitle />;
+    return null;
   }
   const sittings = orderSittings(listed.value);
   const upcoming = Arr.filter(
@@ -73,179 +74,210 @@ function StudentTiles() {
   const finished = Arr.reverse(
     Arr.filter(sittings, (sitting) => sitting.state === "closed")
   );
-  const plan = studentPlan({
-    results: finished.length,
-    sittings: upcoming.length,
+  const next = Option.orElse(enterableSitting(sittings), () =>
+    Arr.findFirst(upcoming, (sitting) => sitting.state === "scheduled")
+  );
+  const shown = studentShown({
+    finished: finished.length,
+    hasNow: Option.isSome(next),
+    upcoming: upcoming.length,
   });
-  const open = enterableSitting(sittings);
-  const scheduled = Arr.findFirst(
-    upcoming,
-    (sitting) => sitting.state === "scheduled"
+  const cells = placeCells([
+    {
+      draw: (span) =>
+        Option.match(next, {
+          onNone: () => null,
+          onSome: (sitting) => <NowCell sitting={sitting} span={span} />,
+        }),
+      key: "now",
+      narrow: 2,
+      shown: shown.now,
+      wide: 8,
+    },
+    {
+      draw: (span) => (
+        <ScheduleCell
+          bound={null}
+          items={Arr.map(upcoming, (sitting) => scheduleItemOf(sitting, tenant.slug))}
+          span={span}
+        />
+      ),
+      key: "schedule",
+      narrow: 2,
+      shown: shown.schedule,
+      wide: 4,
+    },
+    {
+      draw: (span) => (
+        <StudentResultsCell
+          bound={reachesBound(finished.length, HOME_RESULT_LIMIT)}
+          sittings={finished}
+          span={span}
+        />
+      ),
+      key: "results",
+      narrow: 1,
+      shown: shown.results,
+      wide: 4,
+    },
+    {
+      draw: (span) => <QuietCell span={span} />,
+      key: "quiet",
+      narrow: 2,
+      shown: shown.quiet,
+      wide: 12,
+    },
+  ]);
+
+  return (
+    <Dashboard>
+      {Arr.map(cells, (cell) => (
+        <Fragment key={cell.key}>{cell.draw(cell)}</Fragment>
+      ))}
+    </Dashboard>
   );
-  const footer = Option.isSome(open)
-    ? te("student-enter-footer")
-    : Option.match(scheduled, {
-        onNone: () => te("student-results-footer"),
-        onSome: (next) =>
-          t("sittings-next", {
-            time:
-              schoolDateTimeText({
-                at: next.opensAt,
-                locale,
-                timeZone: next.timeZone,
-              }) ?? "",
-          }),
-      });
-  const nodes: Record<StudentTile, ReactNode> = {
-    results: <StudentResultsTile className="h-full" sittings={finished} />,
-    sittings: (
-      <StudentSittingsTile
-        className="h-full"
-        footer={footer}
-        sittings={upcoming}
-      />
-    ),
+}
+
+/** A sitting as a schedule row, which opens the sitting for the student and says what the sitting is now. */
+function scheduleItemOf(sitting: Sitting, slug: TenantSlug): ScheduleItem {
+  return {
+    target: schoolSittingTarget(slug, sitting.id),
+    id: sitting.id,
+    opensAt: sitting.opensAt,
+    room: sitting.room,
+    timeZone: sitting.timeZone,
+    title: sitting.examTitle,
+    trailing: <SittingStatus sitting={sitting} />,
   };
-
-  return (
-    <>
-      <HomeTitle
-        quiet={
-          plan.quiet
-            ? { act: "searching", sentence: t("sittings-empty") }
-            : undefined
-        }
-      />
-      <Bento
-        tiles={Arr.map(
-          plan.tiles,
-          (tile): BentoTile => ({ key: tile, node: nodes[tile] })
-        )}
-      />
-    </>
-  );
 }
 
-/** The sittings the student may still take part in, as rows that open each sitting, with the footer's sentence. */
-function StudentSittingsTile({
-  className,
-  footer,
-  sittings,
-}: {
-  className?: string | undefined;
-  footer: string;
-  sittings: readonly Sitting[];
-}) {
-  const t = useTranslations("School");
-  const tenant = useTenant();
-
-  return (
-    <HomeTile
-      action={
-        sittings.length > TILE_ROWS && tenant.canOpenExams ? (
-          <AllExamsAction />
-        ) : undefined
-      }
-      className={className}
-      hint={footer}
-      title={t("tile-student")}
-    >
-      <CardLinks>
-        {Arr.map(Arr.take(sittings, TILE_ROWS), (sitting) => (
-          <SittingRow key={sitting.id} sitting={sitting} />
-        ))}
-      </CardLinks>
-    </HomeTile>
-  );
-}
-
-/** One sitting that the student may still take part in, as a row that opens it, with its state or its opening. */
-function SittingRow({ sitting }: { sitting: Sitting }) {
-  const tenant = useTenant();
-  return (
-    <CardLink
-      target={schoolSittingTarget(tenant.slug, sitting.id)}
-      title={sitting.examTitle}
-    >
-      <RowText detail={sitting.room} title={sitting.examTitle} />
-      <span className="shrink-0 text-muted-foreground text-sm">
-        <SittingAction sitting={sitting} />
-      </span>
-    </CardLink>
-  );
-}
-
-/** The end of a sitting's row: its answers once saved, its state while it is open, or the time it opens. */
-function SittingAction({ sitting }: { sitting: Sitting }) {
+/**
+ * What a sitting is now, as the text at the end of its row: whether the student's answers are saved, that it is open,
+ * or the time it opens.
+ */
+function SittingStatus({ sitting }: { sitting: Sitting }) {
   const t = useTranslations("School");
   const locale = useLocale();
 
-  if (sitting.attempt === "submitted") {
-    return <>{t("answers-saved")}</>;
-  }
   if (sitting.state === "open") {
-    return <>{t("sitting-open-now")}</>;
+    return sitting.attempt === "submitted"
+      ? t("answers-saved")
+      : t("sitting-open-now");
   }
+  return schoolDateTimeText({
+    at: sitting.opensAt,
+    locale,
+    timeZone: sitting.timeZone,
+  });
+}
+
+/**
+ * The sitting that is open now, with the minutes left before it closes, or the next sitting, with the minutes until it
+ * opens and its time at the end of its row. Its row opens the sitting. The cell keeps one structure in both states, so
+ * it does not change height when the sitting opens.
+ */
+function NowCell({ sitting, span }: { sitting: Sitting; span: CellSpan }) {
+  const tenant = useTenant();
+  const t = useTranslations("School");
+  const now = useHomeNow();
+  const open = sitting.state === "open";
+  const left = minutesLeft(open ? sitting.closesAt : sitting.opensAt, now);
+
   return (
-    <>
-      {schoolDateTimeText({
-        at: sitting.opensAt,
-        locale,
-        timeZone: sitting.timeZone,
-      })}
-    </>
+    <Dashboard.Cell narrow={span.narrow} wide={span.wide}>
+      <Dashboard.CellHeader title={t("tile-now")} />
+      <Dashboard.Value>{left}</Dashboard.Value>
+      <Dashboard.Period>
+        {open
+          ? t("now-left", { count: left })
+          : t("now-until-open", { count: left })}
+      </Dashboard.Period>
+      <Dashboard.List>
+        <Dashboard.Row
+          detail={sitting.room}
+          icon={Clock01Icon}
+          render={
+            <TargetLink
+              target={schoolSittingTarget(tenant.slug, sitting.id)}
+              title={sitting.examTitle}
+            />
+          }
+          title={sitting.examTitle}
+          trailing={open ? undefined : <SittingStatus sitting={sitting} />}
+        />
+      </Dashboard.List>
+    </Dashboard.Cell>
   );
 }
 
-/** The results of the sittings that closed, as rows that open each sitting, with whether the results are released. */
-function StudentResultsTile({
-  className,
+/**
+ * The results of the sittings that closed, newest first, each with the student's score once it is released. A list
+ * that reached its bound says so, because the student's older results are not listed.
+ */
+function StudentResultsCell({
+  bound,
   sittings,
+  span,
 }: {
-  className?: string | undefined;
+  bound: boolean;
   sittings: readonly Sitting[];
+  span: CellSpan;
 }) {
   const t = useTranslations("School");
-  const te = useTranslations("Exams");
-  const tenant = useTenant();
 
   return (
-    <HomeTile
-      action={
-        sittings.length > TILE_ROWS && tenant.canOpenExams ? (
-          <AllExamsAction />
-        ) : undefined
-      }
-      className={className}
-      hint={te("student-results-footer")}
-      title={t("tile-results")}
-    >
-      <CardLinks>
-        {Arr.map(Arr.take(sittings, TILE_ROWS), (sitting) => (
-          <ResultRow key={sitting.id} sitting={sitting} />
+    <Dashboard.Cell narrow={span.narrow} wide={span.wide}>
+      <Dashboard.CellHeader title={t("tile-results")} />
+      <Dashboard.List>
+        {Arr.map(sittings, (sitting) => (
+          <StudentResultRow key={sitting.id} sitting={sitting} />
         ))}
-      </CardLinks>
-    </HomeTile>
+      </Dashboard.List>
+      {bound ? (
+        <Dashboard.Period>
+          {t("results-bound", { count: HOME_RESULT_LIMIT })}
+        </Dashboard.Period>
+      ) : null}
+    </Dashboard.Cell>
   );
 }
 
-/** One closed sitting, as a row that opens it and says whether its results are released. */
-function ResultRow({ sitting }: { sitting: Sitting }) {
+/** One closed sitting, as a row that opens it, with the student's score as its end text once it is released. */
+function StudentResultRow({ sitting }: { sitting: Sitting }) {
   const tenant = useTenant();
   const t = useTranslations("School");
   const te = useTranslations("Exams");
 
   return (
-    <CardLink
-      target={schoolSittingTarget(tenant.slug, sitting.id)}
+    <Dashboard.Row
+      detail={sitting.room}
+      icon={Certificate01Icon}
+      render={
+        <TargetLink
+          target={schoolSittingTarget(tenant.slug, sitting.id)}
+          title={sitting.examTitle}
+        />
+      }
       title={sitting.examTitle}
-    >
-      <RowText detail={sitting.room} title={sitting.examTitle} />
-      <span className="shrink-0 text-muted-foreground text-sm">
-        {sitting.resultsReleased
-          ? te("student-view-results")
-          : t("answers-saved")}
-      </span>
-    </CardLink>
+      trailing={
+        sitting.score === null
+          ? t("answers-saved")
+          : te("student-score", {
+              points: sitting.score.points,
+              total: sitting.score.total,
+            })
+      }
+    />
+  );
+}
+
+/** The quiet state of a student who has no sitting and no result yet. */
+function QuietCell({ span }: { span: CellSpan }) {
+  const t = useTranslations("School");
+
+  return (
+    <Dashboard.Cell narrow={span.narrow} wide={span.wide}>
+      <Dashboard.Empty act="searching">{t("sittings-empty")}</Dashboard.Empty>
+    </Dashboard.Cell>
   );
 }

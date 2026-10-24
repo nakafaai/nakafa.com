@@ -1,15 +1,26 @@
 import type {
   ExamAttemptsDoc,
+  ExamSittingsDoc,
   TenantPeopleDoc,
 } from "@repo/backend/confect/_generated/docs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { covers } from "@repo/backend/confect/access/decision";
+import { HOME_RESULT_LIMIT } from "@repo/backend/confect/exams/home/bounds";
+import { attemptResults } from "@repo/backend/confect/exams/results/rows";
 import { attemptOf } from "@repo/backend/confect/exams/sittings/attempt";
 import type { SittingState } from "@repo/backend/confect/exams/sittings/schema";
 import { sittingViews } from "@repo/backend/confect/exams/sittings/view";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import { PERSON_PLACEMENT_LIMIT } from "@repo/backend/confect/tenancy/placement";
-import { Array as Arr, Effect, HashMap, Option, Tuple } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  HashMap,
+  Number as Num,
+  Option,
+  Order,
+  Tuple,
+} from "effect";
 
 /** The most units a tenant holds (ADR 0011), so the units a student may reach are bounded. */
 export const TENANT_UNIT_LIMIT = 24;
@@ -128,12 +139,43 @@ const closedSittings = Effect.fn("exams.sittings.mine.closed")(function* (
   return Arr.filter(sittings, (sitting) => sitting.state === "closed");
 });
 
+/** The closed sittings with the newest opening first, which the student's results list shows first. */
+const byNewestOpening = Order.flip(
+  Order.mapInput(
+    Order.Number,
+    (sitting: Pick<ExamSittingsDoc, "opensAt">) => sitting.opensAt
+  )
+);
+
+/**
+ * The student's points in a sitting, with the questions of its exam, once the teacher releases the results. A
+ * sitting whose results wait for the teacher has no score, so the read reads nothing for it.
+ */
+const scoreOf = Effect.fn("exams.sittings.mine.score")(function* (
+  sitting: ExamSittingsDoc,
+  personId: TenantPeopleDoc["_id"]
+) {
+  if (sitting.resultsReleasedAt === undefined) {
+    return null;
+  }
+  const reader = yield* DatabaseReader;
+  const exam = yield* reader
+    .table("exams")
+    .get(sitting.examId)
+    .pipe(Effect.orDie);
+  const results = yield* attemptResults(sitting._id, personId);
+  return {
+    points: Num.sumAll(Arr.map(results, (result) => result.points)),
+    total: exam.questions.length,
+  };
+});
+
 /**
  * The sittings of a student who may take part in them, each with the student's own attempt, its state,
  * and whether its results are released. The live sittings come from the units and cohorts that the
  * student may reach, and each one reads its own attempt, so no window hides it. The closed sittings come
- * from the student's closing and submitted attempts. Every read is bounded, and no sitting holds a token
- * or a token hash.
+ * from the student's closing and submitted attempts, and the newest `HOME_RESULT_LIMIT` of them are listed,
+ * so only those are scored. Every read is bounded, and no sitting holds a token or a token hash.
  */
 export const mine = Effect.fn("exams.sittings.mine")(function* () {
   const member = yield* Member;
@@ -144,7 +186,10 @@ export const mine = Effect.fn("exams.sittings.mine")(function* () {
     { concurrency: "unbounded" }
   );
   const closing = yield* closedAttempts(member.person._id);
-  const closed = yield* closedSittings(closing);
+  const closed = Arr.take(
+    Arr.sort(yield* closedSittings(closing), byNewestOpening),
+    HOME_RESULT_LIMIT
+  );
   const rows = [...live, ...closed];
   const held = HashMap.fromIterable(
     Arr.map([...Arr.getSomes(liveAttempts), ...closing], (attempt) =>
@@ -152,13 +197,19 @@ export const mine = Effect.fn("exams.sittings.mine")(function* () {
     )
   );
   const views = yield* sittingViews(rows);
-  return Arr.zipWith(rows, views, (row, view) => {
+  const scores = yield* Effect.forEach(
+    rows,
+    (row) => scoreOf(row, member.person._id),
+    { concurrency: "unbounded" }
+  );
+  return Arr.zipWith(rows, Arr.zip(views, scores), (row, [view, score]) => {
     const attempt = Option.getOrNull(HashMap.get(held, row._id));
     return {
       ...view,
       attempt: attempt?.state ?? null,
       attemptId: attempt?._id ?? null,
       resultsReleased: row.resultsReleasedAt !== undefined,
+      score,
     };
   });
 });

@@ -141,15 +141,26 @@ export const StudentSittingView = Schema.Struct({
 });
 
 /**
+ * The student's points in a sitting whose results are released, out of the questions of its exam. A student sees
+ * no score before the release, so the row holds `null` until then.
+ */
+const StudentScore = Schema.Struct({
+  points: Schema.Int,
+  total: Schema.Int,
+});
+
+/**
  * One sitting in a student's list: the sitting as `SittingView` shows it, the student's own attempt and its
- * state in it (both `null` before entry), and whether the teacher has released its results. A closed sitting
- * stays in the list while the student's attempt in it is closing or submitted, so the results stay reachable.
+ * state in it (both `null` before entry), whether the teacher has released its results, and the student's score
+ * once they are released. A closed sitting stays in the list while the student's attempt in it is closing or
+ * submitted, so the results stay reachable.
  */
 export const StudentSittingRow = Schema.Struct({
   ...SittingView.fields,
   attempt: Schema.NullOr(AttemptState),
   attemptId: Schema.NullOr(Id("examAttempts")),
   resultsReleased: Schema.Boolean,
+  score: Schema.NullOr(StudentScore),
 });
 
 /** One integrity signal of an attempt, as a proctor reads it, newest first in its pages. */

@@ -147,11 +147,17 @@ export const grantStudent = Effect.fn("NakafaE2E.grantStudent")(function* (
  * learner who is already a member of it, and returns the exam, the sitting, and its token. The
  * sitting opens now and closes an hour later, and the learner gets a student grant in the
  * school's first active unit. A `crowd` seats that many extra students with attempts in
- * progress first, so the learner's own attempt lands on a later dashboard page. Each call
+ * progress first, so the learner's own attempt lands on a later dashboard page. `upcoming` also
+ * schedules a room of the same exam for the next day, which the owner's home lists as upcoming. Each call
  * seeds a new exam and sitting.
  */
 export const seedSitting = Effect.fn("NakafaE2E.seedSitting")(
-  function* (slug: string, learnerAddress: string, crowd = 0) {
+  function* (
+    slug: string,
+    learnerAddress: string,
+    crowd = 0,
+    upcoming = false
+  ) {
     const fs = yield* FileSystem.FileSystem;
     const directory = yield* fs.makeTempDirectoryScoped({
       prefix: "nakafa-sitting-",
@@ -162,7 +168,8 @@ export const seedSitting = Effect.fn("NakafaE2E.seedSitting")(
       slug,
       learnerAddress,
       output,
-      String(crowd)
+      String(crowd),
+      ...(upcoming ? ["upcoming"] : [])
     );
     return yield* fs
       .readFileString(output)

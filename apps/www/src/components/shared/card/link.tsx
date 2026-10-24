@@ -103,15 +103,3 @@ export function CardLink({
     </li>
   );
 }
-
-/**
- * One row of a card's list that opens no page, such as a draft the server is still saving. It takes the frame of a
- * `CardLink` row, so it keeps the same height as the linked rows, including the card's bottom spacing on the last.
- */
-export function CardRowText({ children }: { children: ReactNode }) {
-  return (
-    <li className="group/list">
-      <div className={cardRow({ linked: false })}>{children}</div>
-    </li>
-  );
-}
