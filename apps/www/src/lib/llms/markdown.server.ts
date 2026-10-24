@@ -7,10 +7,7 @@ import {
 import { AGENT_DISCOVERY_HEADERS } from "@repo/site/discovery";
 import { Array as Arr, Effect, Option, Record as Rec, Schema } from "effect";
 import { hasLocale } from "use-intl/core";
-import {
-  CONTENT_LLMS_CACHE_TAG,
-  LLMS_CACHE_CONTROL,
-} from "@/lib/llms/constants";
+import { LLMS_CACHE_CONTROL } from "@/lib/llms/constants";
 import { getLlmsMarkdownText } from "@/lib/llms/content/markdown";
 import { stripLlmsRouteExtension } from "@/lib/llms/format";
 import { getLlmsSectionIndexText } from "@/lib/llms/index/generate";
@@ -33,18 +30,16 @@ const AGENT_HEADERS = Rec.fromEntries(
   Arr.map(AGENT_DISCOVERY_HEADERS, ({ key, value }) => [key, value] as const)
 );
 
-/** Every answer depends on the release, so the CDN purges it with the corpus. */
+/** Every answer depends on the active release. */
 const MARKDOWN_HEADERS = {
   "Cache-Control": LLMS_CACHE_CONTROL,
   "Content-Type": LLMS_MARKDOWN_MEDIA_TYPE,
-  "Vercel-Cache-Tag": CONTENT_LLMS_CACHE_TAG,
   Vary: VARY,
 };
 
 const TEXT_HEADERS = {
   "Cache-Control": LLMS_CACHE_CONTROL,
   "Content-Type": "text/plain; charset=utf-8",
-  "Vercel-Cache-Tag": CONTENT_LLMS_CACHE_TAG,
   Vary: VARY,
 };
 

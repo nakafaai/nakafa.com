@@ -109,15 +109,15 @@ beforeEach(() => {
 });
 
 describe("rss feed route", () => {
-  it("answers the feed of every signed route, newest first, with its cache scopes", async () => {
+  it("answers the feed of every signed route, newest first, with its cache policy", async () => {
     const response = await serveRssFeed();
 
     expect(response.status).toBe(200);
     expect(response.headers.get("content-type")).toBe(
       "application/rss+xml; charset=utf-8"
     );
-    expect(response.headers.get("vercel-cache-tag")).toBe(
-      RSS_HEADERS["Vercel-Cache-Tag"]
+    expect(response.headers.get("cache-control")).toBe(
+      RSS_HEADERS["Cache-Control"]
     );
     const xml = await response.text();
     expect(titles(xml)).toEqual(["Geometri", "Integral", "Aljabar"]);

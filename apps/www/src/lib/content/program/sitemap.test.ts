@@ -13,7 +13,7 @@ import { resetTestRuntimeCache } from "@/test/store";
 
 const readQueryMock = vi.hoisted(() => vi.fn());
 vi.mock(
-  "@vercel/functions",
+  "@/lib/content/store/memory",
   async () => (await import("@/test/store")).testRuntimeCacheModule
 );
 vi.mock(

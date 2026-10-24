@@ -1,14 +1,11 @@
 import {
   ContentCacheReceiptSchema,
   ContentCacheRequestSchema,
-  type ContentCacheScope,
-  makeContentCacheTag,
 } from "@nakafa/aksara-contracts/cache/content";
 import { parseContentLength, readBoundedBody } from "@repo/utilities/body";
 import { isJsonContentType } from "@repo/utilities/mime";
 import { Effect, Schema } from "effect";
 import { env } from "@/env";
-import { invalidateContentCache } from "@/lib/content/cache";
 import { isInternalContentAuthorized } from "@/lib/content/internal/authorization";
 import {
   type ActiveContentReleaseId,
@@ -16,10 +13,6 @@ import {
   expireActiveContentIdentity,
   loadActiveContentIdentity,
 } from "@/lib/content/published/active";
-import { invalidateStoreTag } from "@/lib/content/store/entry";
-import { invalidateLlmsCache } from "@/lib/llms/cache";
-import { invalidateOgCache } from "@/lib/og/cache";
-import { invalidateSitemapCache } from "@/lib/sitemap/cache";
 
 const PRIVATE_RESPONSE_HEADERS = { "Cache-Control": "private, no-store" };
 const MAX_CACHE_REQUEST_BYTES = 32 * 1024;
@@ -89,34 +82,24 @@ const readCacheRequest = Effect.fn("NakafaContent.readCacheRequest")(function* (
 });
 
 /**
- * Expires the stored release pointer and proves the expiry, then purges one
- * content scope from the store and from the CDN, then purges the shared
- * sitemap response and the Markdown answers once for the release, then the
- * social images, then expires the pointer again. The pointer goes first: a
- * page that refills after the purge must read the release that this call
- * activates and not the one it replaces. The Runtime Cache client resolves even when an expiry failed, so
- * the call reads the pointer back and stops before it purges anything when the
- * pointer still names the previous release. The last expiry drops a pointer
+ * Makes the activated release the one this isolate reads. The stored pointer goes
+ * first and is proved gone, so a read that refills the pointer after this call
+ * reads the release that this call activates. The last expiry drops a pointer
  * that a read which began before the activation wrote after the first one, so
- * a sitemap that regenerates after the purge asks Convex. The publisher repeats
- * a call that answers 503. A social image that stays at the CDN is stale for at
- * most its lifetime and is cosmetic, so a purge of the images that fails is
- * logged and never fails the activation.
+ * the next read asks Convex.
+ *
+ * Nothing else is cached: every other read goes to Convex, and the prerendered
+ * pages come from the release build, so there is no CDN copy to purge.
  */
-const invalidateContentRuntime = Effect.fn("NakafaContent.invalidateRuntime")(
-  function* (scope: ContentCacheScope, releaseId: ActiveContentReleaseId) {
+const refreshActiveRelease = Effect.fn("NakafaContent.refreshActiveRelease")(
+  function* (releaseId: ActiveContentReleaseId) {
     yield* expireActiveContentIdentity();
     yield* confirmActiveContentIdentity(releaseId);
-    yield* invalidateContentCache(scope);
-    yield* invalidateStoreTag(makeContentCacheTag(scope));
-    yield* invalidateSitemapCache(releaseId);
-    yield* invalidateLlmsCache(releaseId);
-    yield* invalidateOgCache(releaseId).pipe(Effect.ignore({ log: "Warn" }));
     yield* expireActiveContentIdentity();
   }
 );
 
-/** Answers one receipt request: bearer, body, active release, purge, readback. */
+/** Answers one receipt request: bearer, body, active release, refresh. */
 const answerCacheRequest = Effect.fn("NakafaContent.receiveCache")(function* (
   request: Request
 ) {
@@ -140,11 +123,10 @@ const answerCacheRequest = Effect.fn("NakafaContent.receiveCache")(function* (
   if (active?.releaseId !== decoded.success.releaseId) {
     return privateJson({ error: "Content release is not active." }, 409);
   }
-  const invalidation = yield* invalidateContentRuntime(
-    decoded.success.scope,
-    decoded.success.releaseId
-  ).pipe(Effect.result);
-  if (invalidation._tag === "Failure") {
+  const refresh = yield* refreshActiveRelease(decoded.success.releaseId).pipe(
+    Effect.result
+  );
+  if (refresh._tag === "Failure") {
     return privateJson({ error: "Content cache invalidation failed." }, 503);
   }
   return privateJson(
@@ -156,7 +138,7 @@ const answerCacheRequest = Effect.fn("NakafaContent.receiveCache")(function* (
   );
 });
 
-/** Revalidates the Convex-backed content cache for one release, for the Aksara publisher. */
+/** Answers the publisher's receipt for one activated release, the publisher's activation call. */
 export function receiveContentCache({
   request,
 }: {

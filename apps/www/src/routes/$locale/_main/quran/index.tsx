@@ -10,11 +10,7 @@ import { CardLink, CardLinks } from "@/components/shared/card/link";
 import { LayoutContent } from "@/components/shared/content/frame";
 import { HeaderContent } from "@/components/shared/content/header";
 import { QuranSurahRow } from "@/components/shared/quran/surah";
-import {
-  LEARN_SHELL_CACHE_SCOPES,
-  publicContentHeaders,
-  readContentCacheTags,
-} from "@/lib/content/delivery";
+import { PUBLIC_CONTENT_HEADERS } from "@/lib/content/delivery";
 import { getQuranSurahName } from "@/lib/content/quran/navigation";
 import { getPublishedQuranCatalog } from "@/lib/content/quran/publication";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
@@ -42,7 +38,6 @@ const readQuranIndex = createServerFn({ method: "GET" })
         { name: tCommon("home"), path: "" },
         { name: title, path: "/quran" },
       ]),
-      cacheTags: readContentCacheTags([...LEARN_SHELL_CACHE_SCOPES, "quran"]),
       description: t("quran-description"),
       image: getAppSocialArtwork({ key: "quran", locale, publicPath: "quran" }),
       locale,
@@ -77,9 +72,7 @@ export const Route = createFileRoute("/$locale/_main/quran/")({
     );
   },
   headers: ({ loaderData }) =>
-    loaderData === undefined
-      ? undefined
-      : publicContentHeaders(loaderData.cacheTags),
+    loaderData === undefined ? undefined : PUBLIC_CONTENT_HEADERS,
   component: QuranIndexPage,
 });
 

@@ -2,58 +2,28 @@ import "@tanstack/react-start/server-only";
 
 import { sha256Hex } from "@repo/utilities/digest";
 import { encodeJsonText } from "@repo/utilities/json";
-import { getCache, invalidateByTag } from "@vercel/functions";
-import {
-  Array as Arr,
-  Duration,
-  Effect,
-  Option,
-  Record as Rec,
-  Schema,
-} from "effect";
+import { Clock, Duration, Effect, Option, Schema } from "effect";
+import { makeMemoryStore } from "@/lib/content/store/memory";
 
-/** The Runtime Cache or the digest of a key failed, so the store cannot answer. */
-export class ContentStoreUnavailableError extends Schema.TaggedError<ContentStoreUnavailableError>()(
+/** The digest of a key failed, or a value could not be encoded, so the store cannot answer. */
+class ContentStoreUnavailableError extends Schema.TaggedError<ContentStoreUnavailableError>()(
   "ContentStoreUnavailableError",
   {
     cause: Schema.Unknown,
-    operation: Schema.Literals([
-      "digest",
-      "expire",
-      "invalidate",
-      "read",
-      "write",
-    ]),
+    operation: Schema.Literals(["digest", "write"]),
   }
 ) {}
 
-/** The most bytes one entry may take as JSON. The Runtime Cache documents 2 MB. */
+/** The most bytes one entry may take as JSON, so one value never fills the isolate's store. */
 const MAX_ENTRY_BYTES = 2_000_000;
 
-/** The most tags one entry may carry. */
-const MAX_ENTRY_TAGS = 128;
-
-/** The most UTF-8 bytes one tag may take. */
-const MAX_TAG_BYTES = 256;
-
-/** A write that the Runtime Cache refuses by its limits, so it is never sent. */
-export class ContentStoreLimitError extends Schema.TaggedError<ContentStoreLimitError>()(
+/** A write that the store refuses by its limit, so it is never kept. */
+class ContentStoreLimitError extends Schema.TaggedError<ContentStoreLimitError>()(
   "ContentStoreLimitError",
   {
-    limit: Schema.Literals([
-      "entry-bytes",
-      "tag-bytes",
-      "tag-comma",
-      "tag-count",
-    ]),
+    limit: Schema.Literals(["entry-bytes"]),
   }
 ) {}
-
-/** The repeats of a purge that the platform rate-limits, after its first call. */
-const PURGE_REPEATS = 3;
-
-/** The wait of a rate-limited purge that does not name one. */
-const DEFAULT_RETRY_AFTER = Duration.seconds(1);
 
 /**
  * Version of every stored shape. Bump it whenever a stored schema changes in a
@@ -67,17 +37,12 @@ const DEFAULT_RETRY_AFTER = Duration.seconds(1);
 const CONTENT_STORE_VERSION = "1";
 
 /**
- * The Vercel Runtime Cache for content. Every key reaches it already digested,
- * so the default 32 bit key hash is replaced by the identity: that hash is
- * cheap to collide from a request path, and a collision would serve one route
- * the stored answer of another.
+ * The store of this isolate. Every key reaches it already digested, so the
+ * store never compares keys that a request path could shape.
  */
-const runtimeCache = getCache({
-  keyHashFunction: (key) => key,
-  namespace: "content",
-});
+const runtimeCache = makeMemoryStore();
 
-/** Digests one key into the opaque text that the Runtime Cache stores it under. */
+/** Digests one key into the opaque text that the store keeps it under. */
 const makeStoreKey = Effect.fn("www.content.store.key")(function* (
   parts: readonly string[]
 ) {
@@ -93,12 +58,18 @@ const makeStoreKey = Effect.fn("www.content.store.key")(function* (
 
 /**
  * Wraps one value in a JSON codec derived from its schema. The wrapper keeps a
- * stored `null` apart from a miss, because the Runtime Cache answers a miss
- * with `null`.
+ * stored `null` apart from a miss.
  */
 function makeEntryCodec<A, I>(schema: Schema.Codec<A, I, never, never>) {
   return Schema.toCodecJson(Schema.Struct({ value: schema }));
 }
+
+/** Reports a value that the store skips because it is over the entry limit. */
+const warnLimit = (error: ContentStoreLimitError) =>
+  Effect.logWarning(
+    "The content store skipped a value over its entry limit.",
+    error.limit
+  );
 
 /** Reports a store failure that the caller survives by going to the source. */
 const warnUnavailable = (error: ContentStoreUnavailableError) =>
@@ -108,77 +79,52 @@ const warnUnavailable = (error: ContentStoreUnavailableError) =>
     error.cause
   );
 
-/** Reports a value that the store skips because the Runtime Cache would refuse it. */
-const warnLimit = (error: ContentStoreLimitError) =>
-  Effect.logWarning(
-    "The content store skipped a value over a Runtime Cache limit.",
-    error.limit
-  );
-
 /** The UTF-8 length of a text. */
 function byteLength(text: string) {
   return new TextEncoder().encode(text).byteLength;
 }
 
-/**
- * Refuses one entry before any call when it breaks a platform limit: a tag with
- * a comma, too many tags, a tag over 256 bytes, or an entry over 2 MB as JSON.
- */
-const checkStoreLimits = Effect.fn("www.content.store.limits")(function* (
-  entry: unknown,
-  tags: readonly string[]
+/** Refuses one entry before it is kept when it is over the entry limit. */
+const checkStoreLimit = Effect.fn("www.content.store.limit")(function* (
+  entry: unknown
 ) {
-  if (Arr.some(tags, (tag) => tag.includes(","))) {
-    return yield* new ContentStoreLimitError({ limit: "tag-comma" });
-  }
-  if (tags.length > MAX_ENTRY_TAGS) {
-    return yield* new ContentStoreLimitError({ limit: "tag-count" });
-  }
-  if (Arr.some(tags, (tag) => byteLength(tag) > MAX_TAG_BYTES)) {
-    return yield* new ContentStoreLimitError({ limit: "tag-bytes" });
-  }
   if (byteLength(encodeJsonText(entry)) > MAX_ENTRY_BYTES) {
     return yield* new ContentStoreLimitError({ limit: "entry-bytes" });
   }
 });
 
 /**
- * Reads one stored value. A missing, expired or undecodable entry and an
- * unavailable store are all a miss, so the caller loads the value again.
+ * Reads one stored value. A missing or expired entry and an entry that does not
+ * decode are all a miss, so the caller loads the value again.
  */
 export const readStoreEntry = Effect.fn("www.content.store.readEntry")(
   function* <A, I>(input: {
     readonly parts: readonly string[];
     readonly schema: Schema.Codec<A, I, never, never>;
   }) {
-    const read = Effect.gen(function* () {
-      const key = yield* makeStoreKey(input.parts);
-      const stored = yield* Effect.tryPromise({
-        catch: (cause) =>
-          new ContentStoreUnavailableError({ cause, operation: "read" }),
-        try: () => runtimeCache.get(key),
-      });
-      return Option.map(
-        Schema.decodeUnknownOption(makeEntryCodec(input.schema))(stored),
-        ({ value }) => value
-      );
-    });
-    return yield* read.pipe(
+    const key = yield* makeStoreKey(input.parts).pipe(
       Effect.catchTag("ContentStoreUnavailableError", (error) =>
-        warnUnavailable(error).pipe(Effect.as(Option.none<A>()))
+        warnUnavailable(error).pipe(Effect.as(undefined))
       )
     );
+    if (key === undefined) {
+      return Option.none<A>();
+    }
+    const now = yield* Clock.currentTimeMillis;
+    const stored = runtimeCache.get(key, now);
+    return Option.flatMap(stored, (value) =>
+      Schema.decodeUnknownOption(makeEntryCodec(input.schema))(value)
+    ).pipe(Option.map(({ value }) => value));
   }
 );
 
 /**
- * Writes one value under its tags for its lifetime. A write that fails, or one
- * that the platform limits refuse, leaves the value uncached and never fails the
- * caller, which already holds the value.
+ * Keeps one value under its tags for its lifetime. A write that fails, or one
+ * that the limit refuses, leaves the value uncached and never fails the caller,
+ * which already holds the value.
  */
 export const writeStoreEntry = Effect.fn("www.content.store.writeEntry")(
   function* <A, I>(input: {
-    readonly name: string;
     readonly parts: readonly string[];
     readonly schema: Schema.Codec<A, I, never, never>;
     readonly tags: readonly string[];
@@ -195,16 +141,12 @@ export const writeStoreEntry = Effect.fn("www.content.store.writeEntry")(
             new ContentStoreUnavailableError({ cause, operation: "write" })
         )
       );
-      yield* checkStoreLimits(entry, input.tags);
-      yield* Effect.tryPromise({
-        catch: (cause) =>
-          new ContentStoreUnavailableError({ cause, operation: "write" }),
-        try: () =>
-          runtimeCache.set(key, entry, {
-            name: input.name,
-            tags: [...input.tags],
-            ttl: Duration.toSeconds(input.ttl),
-          }),
+      yield* checkStoreLimit(entry);
+      const now = yield* Clock.currentTimeMillis;
+      runtimeCache.set(key, entry, {
+        expiresAt: now + Duration.toMillis(input.ttl),
+        now,
+        tags: input.tags,
       });
     });
     yield* write.pipe(
@@ -216,79 +158,11 @@ export const writeStoreEntry = Effect.fn("www.content.store.writeEntry")(
   }
 );
 
-/** The answer of a purge that the platform rate-limits, with its headers. */
-const RateLimited = Schema.Struct({
-  headers: Schema.Record(Schema.String, Schema.String),
-  status: Schema.Literal(429),
-});
-
-const isRateLimited = Schema.is(RateLimited);
-
 /**
- * The wait that a rate-limited purge asks for in its `retry-after` header, in
- * seconds. A failure that is not a rate limit has no wait. A rate limit without
- * a usable header waits for the default.
- */
-function readRetryAfter(cause: unknown): Option.Option<Duration.Duration> {
-  if (!isRateLimited(cause)) {
-    return Option.none();
-  }
-  return Option.some(
-    Option.match(Rec.get(cause.headers, "retry-after"), {
-      onNone: () => DEFAULT_RETRY_AFTER,
-      onSome: (value) => {
-        const seconds = Number(value);
-        return Number.isFinite(seconds) && seconds >= 0
-          ? Duration.seconds(seconds)
-          : DEFAULT_RETRY_AFTER;
-      },
-    })
-  );
-}
-
-/**
- * Runs one purge call. A rate-limited call waits for its `retry-after` and
- * repeats, up to `repeats` times. Any other failure, or one more rate limit
- * after the last repeat, fails with the cause.
- */
-function purge(
-  operation: "expire" | "invalidate",
-  run: () => Promise<void>,
-  repeats: number
-): Effect.Effect<void, ContentStoreUnavailableError> {
-  return Effect.tryPromise({
-    catch: (cause) => new ContentStoreUnavailableError({ cause, operation }),
-    try: run,
-  }).pipe(
-    Effect.catch((failure) => {
-      const wait = readRetryAfter(failure.cause);
-      if (Option.isSome(wait) && repeats > 0) {
-        return Effect.sleep(wait.value).pipe(
-          Effect.andThen(purge(operation, run, repeats - 1))
-        );
-      }
-      return Effect.fail(failure);
-    })
-  );
-}
-
-/**
- * Expires every entry that carries one tag, in every region. The Runtime Cache
- * client reports a failed request to the console and resolves, so only a client
- * that throws fails here, after a rate-limited call has waited and repeated.
+ * Drops every entry of this isolate that carries one tag. The other isolates
+ * drop theirs when each entry's lifetime ends, so a lifetime bounds how long any
+ * isolate can keep a value that a tag was meant to drop.
  */
 export const expireStoreTag = Effect.fn("www.content.store.expireTag")(
-  function* (tag: string) {
-    yield* purge("expire", () => runtimeCache.expireTag(tag), PURGE_REPEATS);
-  }
-);
-
-/**
- * Marks every CDN response that carries one tag as stale, so the next request
- * serves it and revalidates in the background.
- */
-export const invalidateStoreTag = Effect.fn("www.content.store.invalidateTag")(
-  function* (tag: string) {
-    yield* purge("invalidate", () => invalidateByTag(tag), PURGE_REPEATS);
-  }
+  (tag: string) => Effect.sync(() => runtimeCache.expireTag(tag))
 );

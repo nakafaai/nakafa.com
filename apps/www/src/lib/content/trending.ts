@@ -48,7 +48,6 @@ export const readHomeTrendingSubjects = Effect.fn("www.content.trending.read")(
     }
     const subjects = yield* loadTrendingSubjects(locale);
     yield* writeStoreEntry({
-      name: "content.trending",
       parts,
       schema: TrendingSubjectsSchema,
       tags: [TRENDING_TAG],

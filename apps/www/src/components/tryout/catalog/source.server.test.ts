@@ -75,7 +75,7 @@ vi.mock("@confect/js", async (importOriginal) => {
   };
 });
 vi.mock(
-  "@vercel/functions",
+  "@/lib/content/store/memory",
   async () => (await import("@/test/store")).testRuntimeCacheModule
 );
 vi.mock("@/lib/content/cache", () => ({}));

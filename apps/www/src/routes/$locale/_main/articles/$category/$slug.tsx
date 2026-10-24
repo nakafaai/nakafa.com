@@ -33,10 +33,7 @@ import { ReportButton } from "@/components/sidebar/actions/report";
 import { ShareButton } from "@/components/sidebar/actions/share";
 import { ContentViewTracker } from "@/components/tracking/tracker";
 import { getArticlePublication } from "@/lib/content/article/publication";
-import {
-  publicContentHeaders,
-  readContentCacheTags,
-} from "@/lib/content/delivery";
+import { PUBLIC_CONTENT_HEADERS } from "@/lib/content/delivery";
 import { getAksaraUrl } from "@/lib/content/repository";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getLlmsMarkdownPath } from "@/lib/llms/format";
@@ -115,7 +112,6 @@ const readArticle = createServerFn({ method: "GET" })
             createResolvedRouteAlternates(model.projection, model.alternates)
           ),
           kind: "found" as const,
-          cacheTags: readContentCacheTags(["article"]),
           categoryLabel,
           content: published.sourceRevision ? undefined : published.rawMdx,
           contentId: published.contentId,
@@ -204,9 +200,7 @@ export const Route = createFileRoute("/$locale/_main/articles/$category/$slug")(
       );
     },
     headers: ({ loaderData }) =>
-      loaderData === undefined
-        ? undefined
-        : publicContentHeaders(loaderData.cacheTags),
+      loaderData === undefined ? undefined : PUBLIC_CONTENT_HEADERS,
     component: ArticlePage,
   }
 );

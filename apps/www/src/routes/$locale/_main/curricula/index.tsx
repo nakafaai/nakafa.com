@@ -16,11 +16,7 @@ import { RefContent } from "@/components/shared/content/references";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/frame";
 import { ComingSoon } from "@/components/shared/upcoming";
-import {
-  LEARN_SHELL_CACHE_SCOPES,
-  publicContentHeaders,
-  readContentCacheTags,
-} from "@/lib/content/delivery";
+import { PUBLIC_CONTENT_HEADERS } from "@/lib/content/delivery";
 import { getAksaraTreeUrl } from "@/lib/content/repository";
 import {
   getCurriculumIndexSocialImage,
@@ -69,7 +65,6 @@ const readCurriculumIndex = createServerFn({ method: "GET" })
         { name: tCommon("home"), path: "" },
         { name: title, path: indexHref },
       ]),
-      cacheTags: readContentCacheTags([...LEARN_SHELL_CACHE_SCOPES, "program"]),
       cards: Arr.zipWith(routes, visuals, (route, visual) => ({
         route,
         visual,
@@ -133,9 +128,7 @@ export const Route = createFileRoute("/$locale/_main/curricula/")({
     );
   },
   headers: ({ loaderData }) =>
-    loaderData === undefined
-      ? undefined
-      : publicContentHeaders(loaderData.cacheTags),
+    loaderData === undefined ? undefined : PUBLIC_CONTENT_HEADERS,
   component: CurriculumIndexPage,
 });
 

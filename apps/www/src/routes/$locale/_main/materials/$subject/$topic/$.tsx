@@ -37,11 +37,7 @@ import { GithubButton } from "@/components/sidebar/actions/github";
 import { ReportButton } from "@/components/sidebar/actions/report";
 import { ShareButton } from "@/components/sidebar/actions/share";
 import { ContentViewTracker } from "@/components/tracking/tracker";
-import {
-  LEARN_SHELL_CACHE_SCOPES,
-  publicContentHeaders,
-  readContentCacheTags,
-} from "@/lib/content/delivery";
+import { PUBLIC_CONTENT_HEADERS } from "@/lib/content/delivery";
 import { toMaterialMetadataCopy } from "@/lib/content/material/metadata";
 import {
   readMaterialNavigation,
@@ -116,10 +112,6 @@ const readMaterial = createServerFn({ method: "GET" })
       kind: "found" as const,
       breadcrumbs: createBreadcrumbItems(locale, [
         { name: tCommon("home"), path: "" },
-      ]),
-      cacheTags: readContentCacheTags([
-        ...LEARN_SHELL_CACHE_SCOPES,
-        "material",
       ]),
       canonicalPath: canonicalPath.value,
       content: published.sourceRevision ? undefined : published.rawMdx,
@@ -210,9 +202,7 @@ export const Route = createFileRoute(
     );
   },
   headers: ({ loaderData }) =>
-    loaderData === undefined
-      ? undefined
-      : publicContentHeaders(loaderData.cacheTags),
+    loaderData === undefined ? undefined : PUBLIC_CONTENT_HEADERS,
   component: MaterialPage,
 });
 

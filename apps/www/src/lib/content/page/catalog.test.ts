@@ -76,7 +76,7 @@ vi.mock(
   async () => (await import("@/test/active")).testActiveModule
 );
 vi.mock(
-  "@vercel/functions",
+  "@/lib/content/store/memory",
   async () => (await import("@/test/store")).testRuntimeCacheModule
 );
 describe("published Page catalog", () => {

@@ -31,10 +31,7 @@ import {
   readArticlePageCursor,
   shouldResetArticlePublicationCursor,
 } from "@/lib/content/article/query";
-import {
-  publicContentHeaders,
-  readContentCacheTags,
-} from "@/lib/content/delivery";
+import { PUBLIC_CONTENT_HEADERS } from "@/lib/content/delivery";
 import { getAksaraTreeUrl } from "@/lib/content/repository";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
@@ -113,7 +110,6 @@ const readArticleCategory = createServerFn({ method: "GET" })
       kind: "found" as const,
       articles: catalog.articles,
       breadcrumbs,
-      cacheTags: readContentCacheTags(["article"]),
       category: model.category,
       categoryPath,
       description: tArticles("description"),
@@ -185,9 +181,7 @@ export const Route = createFileRoute("/$locale/_main/articles/$category/")({
     );
   },
   headers: ({ loaderData }) =>
-    loaderData === undefined
-      ? undefined
-      : publicContentHeaders(loaderData.cacheTags),
+    loaderData === undefined ? undefined : PUBLIC_CONTENT_HEADERS,
   component: ArticleCategoryPage,
 });
 

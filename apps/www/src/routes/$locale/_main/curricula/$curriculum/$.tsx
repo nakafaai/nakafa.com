@@ -27,11 +27,7 @@ import { ComingSoon } from "@/components/shared/upcoming";
 import { GithubButton } from "@/components/sidebar/actions/github";
 import { ReportButton } from "@/components/sidebar/actions/report";
 import { ShareButton } from "@/components/sidebar/actions/share";
-import {
-  LEARN_SHELL_CACHE_SCOPES,
-  publicContentHeaders,
-  readContentCacheTags,
-} from "@/lib/content/delivery";
+import { PUBLIC_CONTENT_HEADERS } from "@/lib/content/delivery";
 import { getAksaraTreeUrl } from "@/lib/content/repository";
 import {
   getCurriculumRouteSocialImage,
@@ -127,11 +123,6 @@ const readCurriculumRoute = createServerFn({ method: "GET" })
             locale,
             readRuntimeCurriculumBreadcrumbs(homeLabel, subjectLabel, model)
           ),
-          cacheTags: readContentCacheTags([
-            ...LEARN_SHELL_CACHE_SCOPES,
-            "program",
-            "material",
-          ]),
           canonicalPath: canonicalPath.value,
           chapters: readMaterialCardChapters(model.materialCards),
           childCards: Arr.zipWith(
@@ -215,9 +206,7 @@ export const Route = createFileRoute("/$locale/_main/curricula/$curriculum/$")({
     );
   },
   headers: ({ loaderData }) =>
-    loaderData === undefined
-      ? undefined
-      : publicContentHeaders(loaderData.cacheTags),
+    loaderData === undefined ? undefined : PUBLIC_CONTENT_HEADERS,
   component: CurriculumRoutePage,
 });
 

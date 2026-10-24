@@ -16,9 +16,9 @@ vi.mock("@/lib/content/quran/publication", () => ({
   readPublishedQuranIdentity: readIdentityMock,
 }));
 
-vi.mock("@vercel/functions", async () => {
+vi.mock("@/lib/content/store/memory", async () => {
   const { testRuntimeCache: cache } = await import("@/test/store");
-  return { getCache: () => cache };
+  return { makeMemoryStore: () => cache };
 });
 
 beforeEach(() => {

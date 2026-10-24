@@ -1,14 +1,11 @@
-import {
-  publicContentHeaders,
-  readContentCacheTags,
-} from "@/lib/content/delivery";
+import { PUBLIC_CONTENT_HEADERS } from "@/lib/content/delivery";
 
 /**
  * The response headers of a public catalog page. Its document holds no
  * learner's progress, so the CDN keeps it and the try-out release tag purges it.
  */
 export function readTryoutCatalogHeaders() {
-  return publicContentHeaders(readContentCacheTags(["tryout"]));
+  return PUBLIC_CONTENT_HEADERS;
 }
 
 /**

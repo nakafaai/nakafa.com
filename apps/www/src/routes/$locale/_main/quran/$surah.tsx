@@ -25,7 +25,7 @@ import { QuranVerseList } from "@/components/shared/quran/verses/list";
 import { ReferenceButton } from "@/components/sidebar/actions/reference";
 import { ReportButton } from "@/components/sidebar/actions/report";
 import { ShareButton } from "@/components/sidebar/actions/share";
-import { publicContentHeaders } from "@/lib/content/delivery";
+import { PUBLIC_CONTENT_HEADERS } from "@/lib/content/delivery";
 import {
   readSurahFn,
   recoverQuranSnapshotFn,
@@ -78,9 +78,7 @@ export const Route = createFileRoute("/$locale/_main/quran/$surah")({
     );
   },
   headers: ({ loaderData }) =>
-    loaderData === undefined
-      ? undefined
-      : publicContentHeaders(loaderData.cacheTags),
+    loaderData === undefined ? undefined : PUBLIC_CONTENT_HEADERS,
   component: QuranSurahPage,
 });
 
