@@ -1,4 +1,3 @@
-import type { TryoutBodyBatch } from "@repo/backend/confect/tryouts/runtime/body";
 import type { Locale } from "@repo/internationalization/src/locale";
 import { readServerTranslator } from "@repo/internationalization/src/translator";
 import { Effect, Option } from "effect";
@@ -7,7 +6,10 @@ import {
   renderSignedTryoutRows,
 } from "@/components/tryout/content/signed";
 import { renderTryoutQuestionBody } from "@/components/tryout/route/body.server";
-import type { readCurrentTryoutSet } from "@/components/tryout/route/current";
+import type {
+  readCurrentTryoutSection,
+  readCurrentTryoutSet,
+} from "@/components/tryout/route/current";
 import {
   renderTryoutPreview,
   renderTryoutReview,
@@ -135,9 +137,9 @@ const renderQuestionBodies = Effect.fn("www.tryout.route.renderQuestionBodies")(
 );
 
 /** A section attempt with the signed rows of its content that its page read returned. */
-type RunningSection = SurfaceAttempt & {
-  readonly bodies: readonly (TryoutBodyBatch | null)[];
-};
+type RunningSection = Option.Option.Value<
+  Effect.Success<ReturnType<typeof readCurrentTryoutSection>>
+>;
 
 /** The server-rendered review tree of one finished attempt. */
 type RenderedReview = Awaited<ReturnType<typeof renderTryoutReview>>;

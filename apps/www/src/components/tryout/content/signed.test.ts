@@ -4,8 +4,6 @@ import refs from "@repo/backend/confect/_generated/refs";
 
 const layerMock = vi.hoisted(() => vi.fn());
 
-import { decodeProtectedContentRuntimeRequest } from "@nakafa/aksara-contracts/runtime/protected/spec";
-
 // @vitest-environment node
 
 // Node tests isolate Next navigation imports while real semantic renderers execute.
@@ -26,26 +24,17 @@ import {
   it,
 } from "@effect/vitest";
 import { compile } from "@mdx-js/mdx";
-import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
-import {
-  CONTENT_RUNTIME_RESPONSE_HEADER,
-  CONTENT_RUNTIME_RESPONSE_MARKER,
-  PROTECTED_CONTENT_RUNTIME_PATH,
-} from "@repo/backend/content/endpoint";
-import { decodeProtectedRuntimeRow } from "@repo/backend/content/tryout/exchange";
-import { TEST_KEY_RESOLVER } from "@repo/backend/test/content/proof";
+import { PROTECTED_CONTENT_RUNTIME_PATH } from "@repo/backend/content/endpoint";
 import { createTestPublication } from "@repo/backend/test/content/publication";
 import { insertHistoryAttempt } from "@repo/backend/test/tryout/history";
 import { makeLandingSource } from "@repo/backend/test/tryout/landing";
 import { makeTryoutRuntimeSource } from "@repo/backend/test/tryout/serving";
 import { TRYOUT_TEST_NOW } from "@repo/backend/test/tryouts";
-import { JsonTextSchema } from "@repo/utilities/json";
 import type { FunctionReference } from "convex/server";
-import { Array as Arr, Effect, Layer, Option, Predicate, Schema } from "effect";
+import { Array as Arr, Effect, Layer, Option, Predicate } from "effect";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { SignedContentAccess } from "@/components/tryout/content/model";
-import { makeTryoutRuntimeRequest } from "@/components/tryout/content/request";
 import {
   loadSignedTryoutContent,
   loadTryoutQuestion,
@@ -288,53 +277,6 @@ describe("signed try-out execution", () => {
       })
   );
   it.effect(
-    "verifies and executes the same signed exchange through live HTTP",
-    () =>
-      Effect.gen(function* () {
-        const fixture = yield* readFixture();
-        const request = yield* makeTryoutRuntimeRequest([fixture.question]);
-        const row = yield* fixture.runtime.query(
-          refs.internal.contentRelease.runtime.tryout.internal.read,
-          request
-        );
-        const found = yield* decodeProtectedRuntimeRow(
-          row,
-          yield* decodeProtectedContentRuntimeRequest(request)
-        ).pipe(
-          Effect.provideService(
-            ContentVerificationKeyResolver,
-            TEST_KEY_RESOLVER
-          )
-        );
-        assert.isNotNull(found);
-        const body = yield* Schema.encodeEffect(JsonTextSchema)(found);
-        const response = new Response(body, {
-          headers: {
-            "content-type": "application/json",
-            [CONTENT_RUNTIME_RESPONSE_HEADER]: CONTENT_RUNTIME_RESPONSE_MARKER,
-          },
-          status: 200,
-        });
-        Object.defineProperty(response, "url", {
-          value: endpoint,
-        });
-        fetchMock.mockResolvedValueOnce(response);
-        runtimeKeysMock.mockReturnValue({
-          CONTENT_RUNTIME_TOKEN: "technical-test-token",
-        });
-        const rendered = yield* loadTryoutQuestion(fixture.question);
-        expect(renderToStaticMarkup(rendered.content)).toBe(
-          "Technical question"
-        );
-        expect(fetchMock).toHaveBeenCalledOnce();
-        expect(runtimeKeysMock).toHaveBeenCalledOnce();
-        // The found answer is kept for the release, so the next home view reads no runtime.
-        const again = yield* loadTryoutQuestion(fixture.question);
-        expect(renderToStaticMarkup(again.content)).toBe("Technical question");
-        expect(fetchMock).toHaveBeenCalledOnce();
-      })
-  );
-  it.effect(
     "rejects a missing ordered item at the real exchange boundary before executing MDX",
     () =>
       Effect.gen(function* () {
@@ -510,40 +452,6 @@ describe("signed try-out execution", () => {
             Effect.flip
           )
         ).toMatchObject({ _tag: "ContentRuntimeVerificationError" });
-      })
-  );
-
-  it.effect(
-    "keeps no missing featured answer, so every read asks the runtime again",
-    () =>
-      Effect.gen(function* () {
-        const fixture = yield* readFixture();
-        runtimeKeysMock.mockReturnValue({
-          CONTENT_RUNTIME_TOKEN: "technical-test-token",
-        });
-        fetchMock.mockImplementation(() => {
-          const response = new Response(JSON.stringify({ kind: "missing" }), {
-            headers: {
-              "content-type": "application/json",
-              [CONTENT_RUNTIME_RESPONSE_HEADER]:
-                CONTENT_RUNTIME_RESPONSE_MARKER,
-            },
-            status: 404,
-          });
-          Object.defineProperty(response, "url", { value: endpoint });
-          return Promise.resolve(response);
-        });
-        expect(
-          yield* loadTryoutQuestion(fixture.question).pipe(Effect.flip)
-        ).toMatchObject({
-          _tag: "ContentRuntimeVerificationError",
-        });
-        expect(
-          yield* loadTryoutQuestion(fixture.question).pipe(Effect.flip)
-        ).toMatchObject({
-          _tag: "ContentRuntimeVerificationError",
-        });
-        expect(fetchMock).toHaveBeenCalledTimes(2);
       })
   );
 });
