@@ -79,6 +79,7 @@
   "devDependencies": {
     "@alchemy.run/cloudflare": "catalog:",
     "@alchemy.run/cloudflare-runtime": "catalog:",
+    "@alchemy.run/github": "catalog:",
     "@babel/core": "7.29.7",
     "@effect/platform-bun": "catalog:",
     "@effect/platform-node": "catalog:",
