@@ -39,13 +39,20 @@ import { makeTryoutRuntimeSource } from "@repo/backend/test/tryout/serving";
 import { TRYOUT_TEST_NOW } from "@repo/backend/test/tryouts";
 import { encodeJsonText, JsonTextSchema } from "@repo/utilities/json";
 import type { FunctionReference } from "convex/server";
-import { Effect, Layer, Option, Schema } from "effect";
+import {
+  Array as Arr,
+  Effect,
+  Layer,
+  MutableHashMap,
+  Option,
+  Schema,
+} from "effect";
 import { renderToStaticMarkup } from "react-dom/server";
 import { makeTryoutRuntimeRequest } from "@/components/tryout/content/request";
 import { loadTryoutQuestion } from "@/components/tryout/content/signed";
 import { ContentRuntimeConfigurationError } from "@/lib/content/published/errors";
 import { activateTestRelease } from "@/test/active";
-import { resetTestRuntimeCache } from "@/test/store";
+import { resetTestRuntimeCache, testRuntimeCache } from "@/test/store";
 
 const TEST_RELEASE_ID = "release-signed-test";
 
@@ -125,6 +132,7 @@ vi.mock("@repo/backend/content/trust", async () => {
   );
   return {
     contentKeyResolver: TEST_KEY_RESOLVER,
+    contentTrustedKeys: [],
   };
 });
 
@@ -174,39 +182,48 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
+/** Encodes the signed found answer of the fixture question as the runtime route sends it. */
+const readFoundBody = Effect.fn("TryoutFeaturedTest.foundBody")(function* (
+  fixture: Effect.Success<ReturnType<typeof readFixture>>
+) {
+  const request = yield* makeTryoutRuntimeRequest([fixture.question]);
+  const row = yield* fixture.runtime.query(
+    refs.internal.contentRelease.runtime.tryout.internal.read,
+    request
+  );
+  const found = yield* decodeProtectedRuntimeRow(
+    row,
+    yield* decodeProtectedContentRuntimeRequest(request)
+  ).pipe(
+    Effect.provideService(ContentVerificationKeyResolver, TEST_KEY_RESOLVER)
+  );
+  assert.isNotNull(found);
+  return yield* Schema.encodeEffect(JsonTextSchema)(found);
+});
+
+/** The HTTP answer of the runtime route for one found body. */
+function makeFoundResponse(body: string) {
+  const response = new Response(body, {
+    headers: {
+      "content-type": "application/json",
+      [CONTENT_RUNTIME_RESPONSE_HEADER]: CONTENT_RUNTIME_RESPONSE_MARKER,
+    },
+    status: 200,
+  });
+  Object.defineProperty(response, "url", {
+    value: endpoint,
+  });
+  return response;
+}
+
 describe("featured try-out question", () => {
   it.effect(
     "verifies and executes the same signed exchange through live HTTP",
     () =>
       Effect.gen(function* () {
         const fixture = yield* readFixture();
-        const request = yield* makeTryoutRuntimeRequest([fixture.question]);
-        const row = yield* fixture.runtime.query(
-          refs.internal.contentRelease.runtime.tryout.internal.read,
-          request
-        );
-        const found = yield* decodeProtectedRuntimeRow(
-          row,
-          yield* decodeProtectedContentRuntimeRequest(request)
-        ).pipe(
-          Effect.provideService(
-            ContentVerificationKeyResolver,
-            TEST_KEY_RESOLVER
-          )
-        );
-        assert.isNotNull(found);
-        const body = yield* Schema.encodeEffect(JsonTextSchema)(found);
-        const response = new Response(body, {
-          headers: {
-            "content-type": "application/json",
-            [CONTENT_RUNTIME_RESPONSE_HEADER]: CONTENT_RUNTIME_RESPONSE_MARKER,
-          },
-          status: 200,
-        });
-        Object.defineProperty(response, "url", {
-          value: endpoint,
-        });
-        fetchMock.mockResolvedValueOnce(response);
+        const body = yield* readFoundBody(fixture);
+        fetchMock.mockResolvedValueOnce(makeFoundResponse(body));
         runtimeKeysMock.mockReturnValue({
           CONTENT_RUNTIME_TOKEN: "technical-test-token",
         });
@@ -253,6 +270,39 @@ describe("featured try-out question", () => {
         ).toMatchObject({
           _tag: "ContentRuntimeVerificationError",
         });
+        expect(fetchMock).toHaveBeenCalledTimes(2);
+      })
+  );
+
+  it.effect(
+    "reads the runtime again when a kept answer no longer decodes",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* readFixture();
+        const body = yield* readFoundBody(fixture);
+        runtimeKeysMock.mockReturnValue({
+          CONTENT_RUNTIME_TOKEN: "technical-test-token",
+        });
+        fetchMock.mockImplementation(() =>
+          Promise.resolve(makeFoundResponse(body))
+        );
+        const first = yield* loadTryoutQuestion(fixture.question);
+        expect(renderToStaticMarkup(first.content)).toBe("Technical question");
+        // An entry of an older shape stays under the key that the store reads.
+        const [key, entry] = Option.getOrThrow(
+          Arr.findFirst(
+            Arr.fromIterable(testRuntimeCache.entries),
+            ([, stored]) => stored.name === "tryout.featured.protectedAnswer"
+          )
+        );
+        MutableHashMap.set(testRuntimeCache.entries, key, {
+          ...entry,
+          text: encodeJsonText({
+            value: { input: { kind: "found" }, status: 200 },
+          }),
+        });
+        const again = yield* loadTryoutQuestion(fixture.question);
+        expect(renderToStaticMarkup(again.content)).toBe("Technical question");
         expect(fetchMock).toHaveBeenCalledTimes(2);
       })
   );
