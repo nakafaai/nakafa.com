@@ -1,185 +1,240 @@
-# Nakafa Source Available License 1.0
+# Nakafa Source Available License 2.0
 
-Effective date: April 24, 2026
+Effective date: October 24, 2026
 
 Copyright (c) 2026 PT NAKAFA TEKNO KREATIF. All rights reserved.
 
-This is not an open-source license. Nakafa source code is public so people can
-inspect it, learn from it, review it, and propose improvements. The public
-source code does not grant permission to rebrand, redistribute, host, sell,
-monetize, or turn Nakafa into another product without written permission.
+Nakafa is source available. It is not open source, and it is not free to
+reuse. The source is public for one reason: so that anyone can read it, audit
+it, and understand how Nakafa works. It is not public so that anyone can copy
+it, fork it, rebrand it, publish it, or gain anything from it.
+
+By reading, cloning, downloading, forking, running, or otherwise using Nakafa,
+you accept this license. If you do not accept it, do not use Nakafa.
 
 ## 1. Definitions
 
-`Nakafa` means the software, source code, build files, configuration, scripts,
-database schema, prompts, UI, and related code made available in this repository.
+`Nakafa` means the software in this repository, in the Aksara repository, and
+in every earlier version of them: source code, build files, configuration,
+scripts, database schema, prompts, tests, documentation, user interface,
+design, and the material the software produces or the official services serve.
 
-`You` means the individual or entity receiving or using Nakafa.
+`Official services` means `https://nakafa.com`, its subdomains, and the
+official Nakafa apps and APIs.
 
-`Personal use` means use by one individual for that individual's own learning,
-research, testing, security review, or hobby evaluation. Personal use does not
-include use for an employer, client, school, organization, product, service,
-team, or business purpose.
+`You` means the person or entity that receives, reads, or uses Nakafa.
 
-`Local use` means use on a device or development environment controlled by you,
-without making Nakafa available to any other person over the internet, an
-intranet, a private network, a shared server, or any hosted environment.
+`Benefit` means any advantage, with or without money, for you or for anyone
+else. It includes revenue, payment, salary, sponsorship, advertising or
+affiliate income, donations, grants, prizes, followers, subscribers, views,
+likes, audience growth, attention, virality, reputation, portfolio or career
+value, hiring, investment, traffic, leads, data, and any product or
+competitive advantage. These are not a Benefit: learning that stays private to
+one person; a grade, score, or certificate that a school, university, or exam
+body gives you for your own work; and submitting a contribution to an official
+Nakafa repository under `.github/CONTRIBUTING.md`, with the public record of
+that submission.
 
-`Written permission` means a separate written agreement signed by PT NAKAFA
-TEKNO KREATIF, or a written approval sent from an official Nakafa email address.
+`Personal private use` means use by one natural person, alone, for that
+person's own learning, audit, or evaluation, that produces no Benefit and is
+not done for, shown to, or shared with any employer, client, school,
+organization, team, community, channel, or social media account. Using the
+official services with your own account under their terms is personal private
+use.
+
+`Publish` means to make something available to, or perceivable by, anyone other
+than you, by any means. It includes repositories, forks, mirrors, archives,
+packages, releases, hosted or deployed instances whether public or private,
+screenshots, recordings, live streams, videos, posts, articles, courses,
+slides, talks, demos, datasets, and output of AI systems.
+
+`Copy` means a reproduction of Nakafa in whole or in part, or a modified
+version, translation, port, or reimplementation that reproduces Nakafa's code
+or content, whether made by hand or with AI tools. Ideas, methods, and
+functions are not protected by this license; work that does not reproduce
+Nakafa's code or content is not a copy, even if it covers the same subject.
+
+`Written permission` means a written agreement signed by an authorized
+representative of PT NAKAFA TEKNO KREATIF, or a written approval sent from the
+official address in Section 15 that names you and the exact use it allows. A
+written permission given before the effective date stays valid for the use it
+covers.
 
 ## 2. Scope
 
-This license applies to the software source code in this repository unless a
-file says that a different license applies.
+This license applies to Nakafa unless a license file names a different license
+for a file. It does not apply to:
 
-This license does not apply to:
-
-- Third-party dependencies, packages, services, fonts, or libraries, which keep
+- Third-party dependencies, packages, services, fonts, and libraries, which keep
   their own licenses.
 - Educational content, articles, exercises, explanations, datasets, copy,
-  images, video, audio, and other non-code materials, which are covered by
-  `CONTENT_LICENSE.md` unless a file says otherwise.
-- The Nakafa name, logos, domains, product names, visual identity, and other
-  brand assets, which are covered by `TRADEMARKS.md`.
-- Prior copies of Nakafa that were lawfully received under a previous license.
-  Those older copies remain under the license terms that applied when they were
-  received. New changes published after the effective date above are covered by
-  this license.
+  images, video, audio, and other non-code material, which `CONTENT_LICENSE.md`
+  covers.
+- The Nakafa name, logos, domains, product names, mascot, characters, and visual
+  identity, which `TRADEMARKS.md` covers.
 
-All rights not expressly granted by this license are reserved by PT NAKAFA TEKNO
-KREATIF.
+All rights that this license does not expressly grant are reserved by
+PT NAKAFA TEKNO KREATIF.
 
-## 3. Allowed Use Without Written Permission
+## 3. What You May Do
 
-You may do only the following without written permission from PT NAKAFA TEKNO
-KREATIF:
+Without written permission, you may do only the following:
 
-- View, read, inspect, and audit the source code.
-- Clone or download one copy for personal review.
-- Create a GitHub fork only to prepare and submit contributions back to Nakafa,
-  as long as the fork is not used as a standalone project, hosted service,
-  mirror, product, rebrand, or distribution channel.
-- Run the unmodified software locally for your own personal, non-commercial
-  learning, research, testing, security review, or hobby evaluation.
-- Make temporary technical copies that are necessary for the allowed personal
-  local use above.
-- Submit issues, suggestions, or pull requests under the contribution terms in
-  `.github/CONTRIBUTING.md`.
+- Use the official services under their terms.
+- Read, view, inspect, audit, and study the source code, including how it works,
+  only within personal private use.
+- Keep one copy of Nakafa, plus any backup copy that applicable law lets you
+  make, run it, and change it, only within personal private use.
+- Ask an AI system to explain or review Nakafa that you lawfully have, for your
+  own personal private use, with a setting that does not keep or train on your
+  input where your provider offers one, without publishing the output.
+- Create a fork on GitHub only to prepare and submit a pull request to an
+  official Nakafa repository. The fork may not be used for anything else: no
+  releases, packages, pages, deployments, promotion, or independent
+  development. Delete it within 7 days after the pull request is merged or
+  closed, and in any case when it has had no open pull request for 14 days.
+  GitHub's terms let any user create a fork of a public repository; this
+  license grants no other right in that fork.
+- Report security issues privately as `SECURITY.md` describes, and open issues
+  and pull requests under `.github/CONTRIBUTING.md`, without pasting Nakafa's
+  code into them beyond the lines needed to show the problem.
+- Mention Nakafa by name and link to an official repository or to
+  `https://nakafa.com`, truthfully, without reproducing Nakafa, as
+  `TRADEMARKS.md` allows.
 
 These permissions are personal, limited, non-exclusive, non-transferable, and
-revocable if you violate this license.
+non-sublicensable.
 
-## 4. Permission Required
+## 4. What Is Forbidden
 
-You must get prior written permission from PT NAKAFA TEKNO KREATIF before doing
-anything not listed in Section 3.
+Everything that Section 3 does not list is forbidden without written
+permission. In particular, you may not:
 
-The following uses always require prior written permission:
+- Publish Nakafa or any copy, in whole or in part.
+- Fork, mirror, redistribute, package, sublicense, sell, rent, lend, host, or
+  deploy Nakafa or any copy, for anyone, including on a private network or for
+  a team, school, or organization.
+- Rebrand, rename, or white-label Nakafa or any copy, or present it as your own
+  work, as someone else's work, or as a new or independent project.
+- Use Nakafa or any copy to obtain any Benefit, for you or for anyone else,
+  except the search and answer use that `CONTENT_LICENSE.md` Section 4 allows.
+- Use Nakafa's code, content, structure, or output, or anything you learned
+  from them, in any work shown to or shared with anyone other than you,
+  including an explanation, review, walkthrough, tutorial, talk, slide deck,
+  course, quiz, lesson, or rewritten text, whether or not it copies the words
+  or code.
+- Use Nakafa for or within any employer, client, school, organization, team,
+  community, product, service, course, competition, hackathon, channel, or
+  account, other than your own use of the official services.
+- Show, record, stream, or post Nakafa's source code, your copy, your changed
+  version, or their screens or output.
+- Train, fine-tune, evaluate, or benchmark an AI model with Nakafa; build a
+  dataset, embedding store, or retrieval index from it; have an AI system or
+  another person rewrite, translate, port, or reimplement Nakafa from your
+  reading of it; or give Nakafa to an AI system except as Section 3 allows.
+- Remove, hide, or change any copyright, license, attribution, source, or
+  brand notice.
+- Get around any access control or technical protection of the official
+  services.
 
-- Commercial use.
-- Revenue-generating use.
-- Use in a product, service, course, school system, learning management system,
-  SaaS, API, internal company tool, agency project, client project, consulting
-  work, paid training, or paid content.
-- Use by a company, school, institution, nonprofit organization, government
-  organization, team, or other entity outside personal local evaluation.
-- Any hosted deployment outside your own local machine, whether public or
-  private, and whether or not anyone else can access it.
-- Distribution, redistribution, mirroring, publishing, uploading, packaging,
-  reselling, sublicensing, or sharing copies of the software.
-- Modification, forked product development, derivative works, white-label use,
-  private-label use, rebranding, or presenting Nakafa as your own project.
-- Removing, hiding, or changing copyright, license, attribution, source,
-  trademark, or brand notices.
-- Using Nakafa code, content, structure, datasets, or outputs to train,
-  fine-tune, benchmark, evaluate, seed, or improve AI models, search indexes,
-  datasets, embeddings, retrieval systems, or competing educational products.
+## 5. Credit Is Not Permission
 
-Commercial or revenue-generating use includes use connected to subscriptions,
-ads, sponsorships, affiliate revenue, lead generation, paid access, paid
-support, paid tutoring, paid courses, paid school services, sales enablement,
-customer acquisition, investor demos, or any other direct or indirect business
-benefit.
+Credit, attribution, or a link to Nakafa does not make a forbidden use allowed.
+This is true whether the credit comes before, during, or after the use,
+including after a post has spread or gone viral. Deleting a post or
+apologizing later does not undo a breach or the Benefit already obtained.
 
-## 5. Brand Rights
+## 6. Brand, Content, Hosting, and Contributions
 
-This license grants no trademark, service mark, trade name, domain name, logo,
-design, or brand rights. You may not use the Nakafa brand in a way that suggests
-ownership, endorsement, partnership, official status, or source confusion.
+This license grants no right in the Nakafa brand; see `TRADEMARKS.md`. It grants
+no right in Nakafa content; see `CONTENT_LICENSE.md`.
 
-See `TRADEMARKS.md` for the brand rules.
+Nakafa's repositories are hosted by a third-party platform whose own terms may
+let that platform use hosted content. This license grants no such right to
+anyone else.
 
-## 6. Content Rights
+Contributions are made under `.github/CONTRIBUTING.md`; do not contribute if you
+cannot grant the rights it describes.
 
-This license grants no rights to copy, redistribute, sell, mirror, scrape,
-repackage, rebrand, or monetize Nakafa educational content.
+## 7. Termination and Remedies
 
-See `CONTENT_LICENSE.md` for the content rules.
+Sections 3, 4, and 5 are conditions of your rights. If you breach a condition,
+your rights end automatically, without notice. For any other breach,
+PT NAKAFA TEKNO KREATIF may give written notice, and your rights end if you do
+not cure the breach within 30 days after it. Where copyright or another right
+protects a use, using it after your rights end is infringement.
 
-## 7. Contributions
+When your rights end, you must stop using Nakafa, delete every copy, fork,
+clone, mirror, deployment, recording, and post under your control within two
+business days, except copies you must keep to comply with law, and confirm the
+deletion in writing when PT NAKAFA TEKNO KREATIF asks.
 
-By submitting a contribution, you agree to the contribution terms in
-`.github/CONTRIBUTING.md`.
+PT NAKAFA TEKNO KREATIF may seek every remedy the law allows, including
+takedowns, injunctions, damages, and the value of any Benefit obtained through
+the breach. Only PT NAKAFA TEKNO KREATIF can reinstate your rights, and only by
+written permission. Sections 5 and 7 to 14 continue after your rights end.
 
-If you cannot grant those contribution rights, do not submit the contribution.
+## 8. Rights the Law Gives You
 
-## 8. Termination
+This license does not limit any right that applicable law gives you and that a
+contract cannot remove. Nothing in it stops you, while you lawfully use Nakafa,
+from making a backup copy you need, from observing, studying, or testing how a
+program works, or from decompiling it for interoperability, to the extent the
+law does not let a contract stop these acts; nor does it remove statutory
+exceptions for quotation, education, and research. It does not expand those
+rights either, and any use under them must name Nakafa as the source.
 
-Your rights under this license end immediately if you violate any term.
+## 9. Moral Rights
 
-After termination, you must stop using the software and delete all copies under
-your control, except copies you are required to keep for legal compliance.
-
-PT NAKAFA TEKNO KREATIF may reinstate your rights only in writing.
-
-## 9. Mandatory Legal Rights
-
-This license does not limit rights that applicable law says cannot be waived,
-limited, or conditioned by contract.
+The authors' moral rights, including the right to be named and the right to
+object to distortion, are not waived.
 
 ## 10. No Warranty
 
 Nakafa is provided "as is" and "as available", without warranties or conditions
-of any kind, whether express, implied, statutory, or otherwise.
-
-PT NAKAFA TEKNO KREATIF does not warrant that Nakafa is accurate, secure,
-complete, uninterrupted, error-free, fit for a particular purpose, or
-non-infringing.
+of any kind, whether express, implied, statutory, or otherwise. PT NAKAFA TEKNO
+KREATIF does not warrant that Nakafa is accurate, secure, complete,
+uninterrupted, error-free, fit for a particular purpose, or non-infringing.
 
 ## 11. Limitation of Liability
 
-To the fullest extent permitted by law, PT NAKAFA TEKNO KREATIF will not be
-liable for any indirect, incidental, special, consequential, exemplary, punitive,
-or similar damages, or for any loss of profits, revenue, data, goodwill, or
+To the fullest extent the law allows, PT NAKAFA TEKNO KREATIF is not liable for
+any indirect, incidental, special, consequential, exemplary, punitive, or
+similar damages, or for any loss of profits, revenue, data, goodwill, or
 business opportunity, arising from or related to Nakafa or this license.
 
 ## 12. Governing Law and Venue
 
-This license is governed by the laws of the Republic of Indonesia, without
-regard to conflict of law principles.
+This license's contract terms are governed by the laws of the Republic of
+Indonesia, without regard to conflict of law principles. Copyright and trademark
+infringement is governed by the law of each country where protection is sought.
+Nothing in this license removes a consumer's right to bring a claim at home or
+to rely on the mandatory protections of their home law. Other disputes are
+decided by the courts of the Republic of Indonesia, except where the law
+forbids this. PT NAKAFA TEKNO KREATIF may also seek an injunction or other
+relief in any court where the infringing use takes place or that has
+jurisdiction over you.
 
-Except where prohibited by applicable law, any dispute arising out of or related
-to this license or Nakafa must be brought exclusively in the courts of the
-Republic of Indonesia.
+## 13. Earlier Versions
 
-## 13. No Waiver
+A copy that you lawfully received before the effective date under version 1.0
+stays under version 1.0 for that copy, and only for the acts version 1.0
+allowed. Every act you start on or after the effective date, including a fork,
+publication, recording, post, Benefit, or AI use, is under this version.
+Version 1.0 is the text at commit ec5cb15359fcab334397fe0dc42730d52a2330d3 of
+the nakafa.com repository and commit 9b8cbbd9cc82704d9d7e36af04eb6bb439953fcd
+of the Aksara repository.
 
-If PT NAKAFA TEKNO KREATIF does not enforce a term immediately, that does not
-waive the right to enforce that term later.
+## 14. No Waiver and Severability
 
-Any waiver must be in writing and signed by PT NAKAFA TEKNO KREATIF.
+If PT NAKAFA TEKNO KREATIF does not enforce a term at once, it keeps the right
+to enforce it later. A waiver counts only as written permission.
 
-## 14. Severability
+If a court finds any part of this license unenforceable, the rest stays in
+effect, and that part is read as narrowly as needed to be enforceable while
+keeping its purpose.
 
-If any part of this license is found unenforceable, the rest remains in effect.
-The unenforceable part will be interpreted as narrowly as possible so it becomes
-enforceable while preserving the original intent.
+## 15. Contact
 
-## 15. Written Permission
-
-Commercial, hosted, institutional, redistribution, modification, white-label,
-private-label, rebrand, AI-training, or other non-personal use requires a
-separate written agreement.
-
-Contact: nakafaai@gmail.com
+Written permission, licensing questions, and reports of misuse:
+nakafaai@gmail.com
