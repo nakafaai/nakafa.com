@@ -27,6 +27,7 @@ import { placeQuestion } from "@repo/backend/confect/exams/questions/place";
 import { openSitting } from "@repo/backend/confect/exams/sittings/closing";
 import { createSitting } from "@repo/backend/confect/exams/sittings/schedule";
 import { systemActor } from "@repo/backend/confect/tenancy/actor";
+import { encodeJsonText } from "@repo/utilities/json";
 import { Array as Arr, Clock, Effect } from "effect";
 
 /** The title of the seeded exam. */
@@ -54,12 +55,17 @@ const MIXED_PARAGRAPHS: Arr.NonEmptyReadonlyArray<string> = [
 ];
 
 /** One paragraph of a prompt, in the stored form that the editor writes. */
-const paragraphText = (text: string) =>
-  `{"type":"paragraph","content":[{"type":"text","text":"${text}"}]}`;
+const paragraphNode = (text: string) => ({
+  content: [{ text, type: "text" }],
+  type: "paragraph",
+});
 
 /** A prompt of paragraphs with their text, in the stored form that the editor writes. */
 const promptText = (paragraphs: Arr.NonEmptyReadonlyArray<string>) =>
-  `{"type":"doc","content":[${Arr.join(Arr.map(paragraphs, paragraphText), ",")}]}`;
+  encodeJsonText({
+    content: Arr.map(paragraphs, paragraphNode),
+    type: "doc",
+  });
 
 /**
  * Seats a crowd of extra students in a sitting, each an unclaimed Person named by their
