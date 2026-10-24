@@ -7,7 +7,7 @@ import { verifyAttemptContent } from "@repo/backend/client/content/attempt";
 import type { TryoutBodyBatch } from "@repo/backend/confect/tryouts/runtime/body";
 import {
   contentKeyResolver,
-  contentTrustedKeys,
+  trustedContentKeys,
 } from "@repo/backend/content/trust";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Effect } from "effect";
@@ -50,7 +50,7 @@ export const readVerifiedAttemptBatch = Effect.fn(
       encodeJsonText(request),
       encodeJsonText(row),
       liveRenderer.hash,
-      encodeJsonText(contentTrustedKeys),
+      encodeJsonText(trustedContentKeys),
       VERIFICATION_VERSION,
     ],
     schema: ProtectedContentRuntimeFoundSchema,

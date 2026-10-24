@@ -92,7 +92,7 @@ describe("content trust", () => {
       vi.stubEnv("AKSARA_AGENT_SIGNING_PUBLIC_KEY", undefined);
       vi.stubEnv("CONVEX_CLOUD_URL", "http://127.0.0.1:3210");
       vi.stubEnv("VITE_CONVEX_URL", undefined);
-      vi.stubEnv("DEPLOY_STAGE", undefined);
+      vi.stubEnv("NAKAFA_DEPLOY_STAGE", undefined);
       vi.resetModules();
 
       return Effect.promise(() =>
@@ -113,7 +113,7 @@ describe("content trust", () => {
         vi.stubEnv("AKSARA_AGENT_SIGNING_PUBLIC_KEY", key.publicKeyPem);
         vi.stubEnv("CONVEX_CLOUD_URL", "");
         vi.stubEnv("VITE_CONVEX_URL", "http://127.0.0.1:3210");
-        vi.stubEnv("DEPLOY_STAGE", undefined);
+        vi.stubEnv("NAKAFA_DEPLOY_STAGE", undefined);
         vi.resetModules();
 
         yield* Effect.promise(() =>
@@ -143,8 +143,8 @@ describe("content trust", () => {
           vi.stubEnv("CONVEX_CLOUD_URL", target);
           vi.stubEnv("VITE_CONVEX_URL", undefined);
           vi.stubEnv(
-            "DEPLOY_STAGE",
-            target === "http://127.0.0.1:3210" ? "production" : undefined
+            "NAKAFA_DEPLOY_STAGE",
+            target === "http://127.0.0.1:3210" ? "prod" : undefined
           );
           vi.resetModules();
           yield* Effect.promise(() =>
@@ -160,7 +160,7 @@ const AGENT_TRUST_NAMES = [
   "AKSARA_AGENT_SIGNING_PUBLIC_KEY",
   "CONVEX_CLOUD_URL",
   "VITE_CONVEX_URL",
-  "DEPLOY_STAGE",
+  "NAKAFA_DEPLOY_STAGE",
 ] as const;
 
 /** Sets every Agent Mode trust input, so each case names only the values it changes. */
@@ -187,7 +187,7 @@ describe("Agent Mode trust inputs", () => {
   );
 
   it.effect(
-    "accepts a complete loopback pair whose DEPLOY_STAGE is empty",
+    "accepts a complete loopback pair whose NAKAFA_DEPLOY_STAGE is empty",
     () =>
       Effect.gen(function* () {
         const key = TRUSTED_CONTENT_KEYS[0];
@@ -198,7 +198,7 @@ describe("Agent Mode trust inputs", () => {
           AKSARA_AGENT_SIGNING_KEY_ID: agentKeyId,
           AKSARA_AGENT_SIGNING_PUBLIC_KEY: key.publicKeyPem,
           CONVEX_CLOUD_URL: "http://127.0.0.1:3210",
-          DEPLOY_STAGE: "",
+          NAKAFA_DEPLOY_STAGE: "",
         });
         vi.resetModules();
 

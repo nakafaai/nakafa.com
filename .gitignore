@@ -83,10 +83,6 @@ yarn-error.log*
 # local env files
 .env*.local
 
-# vercel
-.vercel
-**/.vercel
-
 # typescript
 *.tsbuildinfo
 next-env.d.ts
@@ -248,8 +244,6 @@ storybook-static/
 ### Turbo ###
 # Turborepo task cache
 .turbo
-
-### Vercel ###
 
 ### Windows ###
 # Windows thumbnail cache files

@@ -34,8 +34,9 @@ export const GITHUB_ACTION_REVIEWS = Schema.decodeSync(
     action: "actions/checkout",
     approvedSha: "3d3c42e5aac5ba805825da76410c181273ba90b1",
     expectedTag: "v7.0.1",
-    expectedUsages: 1,
-    reason: "Checkout is pinned to the latest reviewed stable release.",
+    expectedUsages: 2,
+    reason:
+      "Checkout is pinned to the latest reviewed stable release. The CLI publication and the deploy workflow each check out the commit.",
   },
   {
     action: "pnpm/setup",

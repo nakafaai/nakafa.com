@@ -22,7 +22,7 @@ This guide is a map. It states each Nakafa decision once and names the file, com
 | Authored content and its rules | the Aksara repository and its `nakafa-content` skill |
 
 - Read the owner, the touched package's manifest and configuration, and nearby code before changing behavior. Skim recent `git log` before structural work so old patterns are not reintroduced.
-- Use the enabled official Convex and Vercel plugin skills, and globally installed upstream skills when their scope matches. Do not add repository-local skill copies or new app-local `AGENTS.md` or `CLAUDE.md` files; the Convex-managed backend files are the only exception.
+- Use the enabled official Convex and Cloudflare plugin skills, and globally installed upstream skills when their scope matches. Do not add repository-local skill copies or new app-local `AGENTS.md` or `CLAUDE.md` files; the Convex-managed backend files are the only exception.
 
 ## Ownership
 
@@ -119,9 +119,13 @@ This guide is a map. It states each Nakafa decision once and names the file, com
 
 ## Deployment
 
-- Vercel Preview deployments are prohibited for every Nakafa project. Never create one through a connector or the CLI, never require a Preview URL as a gate, and cancel and clean up any accidental one at once. Keep Vercel branch configuration restricted to `main`.
-- Verify feature work on its exact head locally: the typechecks, the unit suites at 100% per-file coverage, `pnpm check:tests`, Ultracite, React Doctor for changed React code, and every browser suite on a local production build and start through Browser or Playwright, plus isolated Convex Agent Mode deployments where needed.
-- Production deploys only through the existing Git integration after a protected merge to `main`. An operator who holds a production deploy key may also deploy Convex functions directly with `pnpm --dir packages/backend exec convex deploy --yes`.
+- Vercel Preview deployments are prohibited for every Nakafa project. Never create one through a connector or the CLI, never require a Preview URL as a gate, and cancel and clean up any accidental one at once. Keep Vercel branch configuration restricted to `main`. Vercel still hosts CAS (`apps/cas/vercel.ts`) until its Python Worker replaces it, so this rule covers it.
+- Hosting is Cloudflare Workers on the Free plan through Alchemy (ADR 0037). Every Worker stays on Workers Free: no paid compute, and no service that bills per use. Upgrading to a paid plan needs a measured limit that is hit.
+- The Alchemy stack is `apps/www/alchemy.run.ts`, with its modules in `apps/www/deploy`. The stage decides what is deployed: `prod` serves `nakafa.com`, the School wildcard, and the API and MCP hosts; `staging` serves `staging.nakafa.com` behind Cloudflare Access for the owner accounts; any other stage gets only its workers.dev URL. The zones `nakafa.com` and `nakafa.id` are adopted, never recreated.
+- `.github/workflows/deploy.yml` is the only deploy path and it runs no tests. A push to `main` and an Aksara release dispatch deploy production; a manual run deploys the chosen stage. Production deploys run only from `main`. Each run deploys Convex with its deploy key (`CONVEX_DEPLOY_KEY` for production, `CONVEX_STAGING_DEPLOY_KEY` for staging), then runs `alchemy deploy --stage <stage> --yes`.
+- `apps/www/stacks/github.ts` is run once by an operator with local credentials. It writes the scoped Cloudflare token, the account id, the production and staging Convex deploy keys, and every server value that a Worker binds to GitHub Actions secrets. Never run it from CI, and never print or write a secret value.
+- Production never runs `alchemy destroy`, and no workflow passes a destroy flag. Remove a stage only from an operator shell after a reviewed plan.
+- Preview deployments do not gate merges. Verify feature work on its exact head locally: the typechecks, the unit suites at 100% per-file coverage, `pnpm check:tests`, Ultracite, React Doctor for changed React code, and every browser suite on a local production build and start through Browser or Playwright, plus isolated Convex Agent Mode deployments where needed.
 - Do not enable external Turborepo Remote Cache for the signed `www` production build until every server-side environment input and signed-content generation input is included in the task hash.
 
 ## Git And Release

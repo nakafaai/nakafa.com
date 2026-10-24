@@ -1,21 +1,17 @@
 import {
-  AgentEdgeContractSchema,
+  type AgentEdgeContract,
   NAKAFA_API_EDGE_CONTRACT,
-  NAKAFA_EDGE_RELEASE_SHA_HEADER,
-  VERCEL_GIT_COMMIT_SHA_ENVIRONMENT,
+  NAKAFA_EDGE_CLIENT_IP_HEADER,
+  NAKAFA_EDGE_CLIENT_SOURCE_HEADER,
 } from "@repo/backend/agent/edge";
-import { createRoutes, deploymentEnv } from "@vercel/config/v1";
-import { Schema } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 
+/** One public request path and the suffix that it rewrites to under the protected origin path. */
 const AgentEdgePathSchema = Schema.Struct({
   source: Schema.String,
   suffix: Schema.String,
 });
-const AgentEdgeRouteOptionsSchema = Schema.Struct({
-  contract: AgentEdgeContractSchema,
-  paths: Schema.Array(AgentEdgePathSchema),
-});
-type AgentEdgeRouteOptions = typeof AgentEdgeRouteOptionsSchema.Type;
+export type AgentEdgePath = typeof AgentEdgePathSchema.Type;
 
 /** Versioned public API paths and their stable protected-runtime destinations. */
 export const NAKAFA_API_EDGE_PATHS = [
@@ -31,64 +27,58 @@ export const NAKAFA_API_EDGE_PATHS = [
     source: `^${NAKAFA_API_EDGE_CONTRACT.publicPath}/(.*)$`,
     suffix: `${NAKAFA_API_EDGE_CONTRACT.runtimePath}/$1`,
   },
-] as const;
+] as const satisfies readonly AgentEdgePath[];
 
-/** Builds credential-stripping Vercel routes into one protected Convex runtime. */
-export function createAgentEdgeRoutes({
-  contract,
-  paths,
-}: AgentEdgeRouteOptions) {
-  const routes = createRoutes();
-  for (const path of paths) {
-    routes.route({
-      src: path.source,
-      dest: `${deploymentEnv(contract.originEnvironment)}${contract.originPath}${path.suffix}`,
-      env: [contract.originEnvironment],
-      // Only discovery is public cacheable data; runtime responses stay live.
-      respectOriginCacheControl:
-        "documentPath" in contract && path.suffix === contract.documentPath,
-      transforms: [
-        {
-          type: "request.headers",
-          op: "delete",
-          target: {
-            key: "authorization",
-          },
-        },
-        {
-          type: "request.headers",
-          op: "delete",
-          target: {
-            key: "cookie",
-          },
-        },
-        {
-          type: "request.headers",
-          op: "delete",
-          target: {
-            key: contract.secretHeader,
-          },
-        },
-        {
-          type: "request.headers",
-          op: "set",
-          target: {
-            key: contract.secretHeader,
-          },
-          args: deploymentEnv(contract.secretEnvironment),
-          env: [contract.secretEnvironment],
-        },
-        {
-          type: "response.headers",
-          op: "set",
-          target: {
-            key: NAKAFA_EDGE_RELEASE_SHA_HEADER,
-          },
-          args: deploymentEnv(VERCEL_GIT_COMMIT_SHA_ENVIRONMENT),
-          env: [VERCEL_GIT_COMMIT_SHA_ENVIRONMENT],
-        },
-      ],
-    });
+/** The public MCP transport path and its protected-transport destination. */
+export const NAKAFA_MCP_EDGE_PATHS = [
+  {
+    source: "^/mcp$",
+    suffix: "",
+  },
+] as const satisfies readonly AgentEdgePath[];
+
+/**
+ * The protected origin URL path for one public path, or undefined when no
+ * declared path owns it. The first declared path that matches wins.
+ */
+export function agentEdgeOriginPath(
+  contract: AgentEdgeContract,
+  paths: readonly AgentEdgePath[],
+  pathname: string
+): string | undefined {
+  const match = Arr.findFirst(paths, ({ source }) =>
+    new RegExp(source, "u").test(pathname)
+  );
+  return Option.getOrUndefined(
+    Option.map(
+      match,
+      ({ source, suffix }) =>
+        `${contract.originPath}${pathname.replace(new RegExp(source, "u"), suffix)}`
+    )
+  );
+}
+
+/**
+ * The headers that the protected origin receives. Browser credentials never
+ * reach it, the edge secret replaces whatever the caller sent, and the client
+ * address comes only from Cloudflare. A caller's own forwarding header is
+ * dropped, so it cannot choose the address that the origin quotas. Without a
+ * Cloudflare address the origin receives none and fails closed.
+ */
+export function agentEdgeRequestHeaders(
+  headers: Headers,
+  contract: AgentEdgeContract,
+  secret: string
+): Headers {
+  const forwarded = new Headers(headers);
+  forwarded.delete("authorization");
+  forwarded.delete("cookie");
+  forwarded.delete("host");
+  forwarded.delete(NAKAFA_EDGE_CLIENT_IP_HEADER);
+  const clientAddress = headers.get(NAKAFA_EDGE_CLIENT_SOURCE_HEADER);
+  if (clientAddress !== null) {
+    forwarded.set(NAKAFA_EDGE_CLIENT_IP_HEADER, clientAddress);
   }
-  return routes.getConfig();
+  forwarded.set(contract.secretHeader, secret);
+  return forwarded;
 }

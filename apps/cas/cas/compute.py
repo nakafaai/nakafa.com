@@ -7,7 +7,8 @@ from threading import BoundedSemaphore
 from cas.schema import MathRequest, MathResult
 
 # Responses repeat input as evidence and add LaTeX and steps. The result budget
-# allows four times the 64 KiB input budget, below Vercel's 4.5 MB payload limit.
+# allows four times the 64 KiB input budget, below the 4.5 MB payload limit of
+# the hosting platform.
 MAX_REQUEST_BYTES = 64 * 1024
 MAX_RESPONSE_BYTES = 256 * 1024
 INVALID_INPUT = 2
@@ -35,7 +36,7 @@ def compute(request: MathRequest) -> MathResult:
     try:
         # subprocess.run kills and waits for the child on TimeoutExpired.
         # A shared-process signal or a cancelled thread cannot provide that
-        # per-request guarantee under Vercel Fluid concurrency.
+        # per-request guarantee under concurrent requests on one instance.
         # https://docs.python.org/3/library/subprocess.html#subprocess.run
         completed = subprocess.run(
             [sys.executable, "-m", "cas.worker"],

@@ -26,17 +26,18 @@ export const keys = () => ({
   ...postHogPublicKeys(),
 });
 /**
- * Reads the deployment fields that decide whether server reporting runs. Both
- * accept any text, and this owner never validates the PostHog configuration.
+ * Reads the deployment fields that decide whether server reporting runs. The
+ * Alchemy stack binds `NAKAFA_DEPLOY_STAGE` to the Worker at deploy time. Both
+ * fields accept any text, and this owner never validates the PostHog configuration.
  */
 export const deploymentKeys = () =>
   readEnvironment(
     {
+      NAKAFA_DEPLOY_STAGE: optionalStringSchema,
       TSS_PRERENDERING: optionalStringSchema,
-      DEPLOY_STAGE: optionalStringSchema,
     },
     {
+      NAKAFA_DEPLOY_STAGE: process.env.NAKAFA_DEPLOY_STAGE,
       TSS_PRERENDERING: process.env.TSS_PRERENDERING,
-      DEPLOY_STAGE: process.env.DEPLOY_STAGE,
     }
   );

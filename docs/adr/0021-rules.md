@@ -462,11 +462,9 @@ count and found no further variable.
 
 ### Vercel deployment policy
 
-Each app's `vercel.ts` sets `git.deploymentEnabled` to exactly
-`{ "**": false, main: true }`, and the check reports any other form. The four
-files repeat the policy on purpose: each Vercel project reads only its own
-file, and the Python app cannot import a shared value. The check, not an
-import, keeps them equal.
+Superseded by [ADR 0037](0037-cloudflare.md). The Vercel project files and the
+deployment check that judged them are gone, so no rule judges a deployment
+configuration.
 
 ## Consequences
 

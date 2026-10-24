@@ -28,7 +28,7 @@ describe("analytics environment contracts", () => {
 
 describe("deployment keys for server reporting", () => {
   it("reads the deployment fields without the PostHog configuration", () => {
-    vi.stubEnv("DEPLOY_STAGE", "production");
+    vi.stubEnv("NAKAFA_DEPLOY_STAGE", "prod");
     vi.stubEnv("TSS_PRERENDERING", "false");
     vi.stubEnv("VITE_POSTHOG_KEY", undefined);
     vi.stubEnv("VITE_POSTHOG_UI_HOST", undefined);
@@ -36,35 +36,35 @@ describe("deployment keys for server reporting", () => {
 
     expect(deploymentKeys()).toMatchObject({
       TSS_PRERENDERING: "false",
-      DEPLOY_STAGE: "production",
+      NAKAFA_DEPLOY_STAGE: "prod",
     });
   });
 
   it("accepts any deployment text and keeps absent fields undefined", () => {
-    vi.stubEnv("DEPLOY_STAGE", "unknown-environment");
+    vi.stubEnv("NAKAFA_DEPLOY_STAGE", "unknown-stage");
     vi.stubEnv("TSS_PRERENDERING", undefined);
 
-    expect(deploymentKeys().DEPLOY_STAGE).toBe("unknown-environment");
+    expect(deploymentKeys().NAKAFA_DEPLOY_STAGE).toBe("unknown-stage");
     expect(deploymentKeys().TSS_PRERENDERING).toBeUndefined();
   });
 
-  it("keeps an unset DEPLOY_STAGE undefined", () => {
-    vi.stubEnv("DEPLOY_STAGE", undefined);
+  it("keeps an unset NAKAFA_DEPLOY_STAGE undefined", () => {
+    vi.stubEnv("NAKAFA_DEPLOY_STAGE", undefined);
     vi.stubEnv("TSS_PRERENDERING", undefined);
 
     expect(deploymentKeys()).toStrictEqual({
       TSS_PRERENDERING: undefined,
-      DEPLOY_STAGE: undefined,
+      NAKAFA_DEPLOY_STAGE: undefined,
     });
   });
 
   it("keeps empty deployment fields as set empty strings", () => {
-    vi.stubEnv("DEPLOY_STAGE", "");
+    vi.stubEnv("NAKAFA_DEPLOY_STAGE", "");
     vi.stubEnv("TSS_PRERENDERING", "");
 
     expect(deploymentKeys()).toStrictEqual({
       TSS_PRERENDERING: "",
-      DEPLOY_STAGE: "",
+      NAKAFA_DEPLOY_STAGE: "",
     });
   });
 });

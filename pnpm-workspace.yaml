@@ -67,6 +67,7 @@ update:
 catalog:
   '@alchemy.run/cloudflare': 2.0.0-beta.84
   '@alchemy.run/cloudflare-runtime': 2.0.0-beta.84
+  '@alchemy.run/github': 2.0.0-beta.84
   '@confect/core': 10.3.1
   '@convex-dev/agent': 0.7.8
   '@convex-dev/ai-sdk-provider': 0.3.0

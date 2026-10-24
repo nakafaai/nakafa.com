@@ -25,7 +25,7 @@ describe("Agent Mode trust keys", () => {
     vi.stubEnv("AKSARA_AGENT_SIGNING_PUBLIC_KEY", undefined);
     vi.stubEnv("CONVEX_CLOUD_URL", undefined);
     vi.stubEnv("VITE_CONVEX_URL", undefined);
-    vi.stubEnv("DEPLOY_STAGE", undefined);
+    vi.stubEnv("NAKAFA_DEPLOY_STAGE", undefined);
 
     const keys = agentTrustKeys();
 
@@ -33,7 +33,7 @@ describe("Agent Mode trust keys", () => {
     expect(keys.AKSARA_AGENT_SIGNING_PUBLIC_KEY).toBeUndefined();
     expect(keys.CONVEX_CLOUD_URL).toBeUndefined();
     expect(keys.VITE_CONVEX_URL).toBeUndefined();
-    expect(keys.DEPLOY_STAGE).toBeUndefined();
+    expect(keys.NAKAFA_DEPLOY_STAGE).toBeUndefined();
   });
 
   it("keeps every set value unchanged", () => {
@@ -41,26 +41,26 @@ describe("Agent Mode trust keys", () => {
     vi.stubEnv("AKSARA_AGENT_SIGNING_PUBLIC_KEY", "agent-public-key");
     vi.stubEnv("CONVEX_CLOUD_URL", "https://example.convex.cloud");
     vi.stubEnv("VITE_CONVEX_URL", "https://example.convex.cloud");
-    vi.stubEnv("DEPLOY_STAGE", "preview");
+    vi.stubEnv("NAKAFA_DEPLOY_STAGE", "staging");
 
     expect(agentTrustKeys()).toStrictEqual({
       AKSARA_AGENT_SIGNING_KEY_ID: "agent-key-id",
       AKSARA_AGENT_SIGNING_PUBLIC_KEY: "agent-public-key",
       CONVEX_CLOUD_URL: "https://example.convex.cloud",
       VITE_CONVEX_URL: "https://example.convex.cloud",
-      DEPLOY_STAGE: "preview",
+      NAKAFA_DEPLOY_STAGE: "staging",
     });
   });
 
   it("keeps an empty public key, Convex URL and deployment environment as set values", () => {
     vi.stubEnv("AKSARA_AGENT_SIGNING_PUBLIC_KEY", "");
     vi.stubEnv("VITE_CONVEX_URL", "");
-    vi.stubEnv("DEPLOY_STAGE", "");
+    vi.stubEnv("NAKAFA_DEPLOY_STAGE", "");
 
     expect(agentTrustKeys()).toMatchObject({
       AKSARA_AGENT_SIGNING_PUBLIC_KEY: "",
       VITE_CONVEX_URL: "",
-      DEPLOY_STAGE: "",
+      NAKAFA_DEPLOY_STAGE: "",
     });
   });
 });

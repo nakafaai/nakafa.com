@@ -57,18 +57,11 @@ export const workerEnvironment = () => ({
  * The bindings of the deployed Worker, which `alchemy.run.ts` passes to Alchemy.
  * A `VITE_` name is public and the client bundle inlines it, so Alchemy binds
  * it as plain text. Every other value is a secret, which the dashboard never shows.
- * `deployStage` is the Alchemy stage that ships the Worker. It replaces any
- * `DEPLOY_STAGE` that the deploying shell carries, so the stage always decides
- * whether server error reporting runs.
  */
-export const deployedWorkerBindings = (deployStage: string) =>
+export const deployedWorkerBindings = () =>
   Record.fromEntries(
     Arr.flatMap(
-      Record.toEntries({
-        ...workerEnvironment(),
-        DEPLOY_STAGE: deployStage,
-        NODE_ENV: "production",
-      }),
+      Record.toEntries({ ...workerEnvironment(), NODE_ENV: "production" }),
       ([name, value]) => {
         if (value === undefined) {
           return [];

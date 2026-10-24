@@ -5,6 +5,7 @@ import {
 import { readEnvironment } from "@repo/utilities/env";
 import { Effect, Schema } from "effect";
 
+/** The deploy identity: the Alchemy stage that the stack binds when it deploys this Worker. */
 const DeployIdentitySchema = Schema.Struct({
   stage: Schema.UndefinedOr(Schema.String),
 });
@@ -24,7 +25,7 @@ const messages = {
   "mixed-production":
     "The content runtime query and HTTP targets cannot mix deployments.",
   "untrusted-production":
-    "Production content is restricted to the production deploy stage. Use an isolated Convex deployment for local builds.",
+    "Production content is restricted to the protected production stage. Use an isolated Convex deployment for local builds.",
 } satisfies Record<Failure, string>;
 
 /** One server process attempted to cross the protected production-content seam. */
@@ -120,7 +121,7 @@ export const assertRuntimeTarget = Effect.fn("www.runtime.assertTarget")(
     const siteDeployment =
       siteHost === undefined ? undefined : deployment(siteHost, ".convex.site");
 
-    if (isProtectedProduction(target.deploy.stage)) {
+    if (isProtectedProduction(target.deploy)) {
       return yield* validateProtectedTarget(
         target,
         queryDeployment,
@@ -165,22 +166,22 @@ export function readRuntimeConfig() {
   const env = readEnvironment(
     {
       CONVEX_AGENT_MODE: Schema.UndefinedOr(Schema.Literal("anonymous")),
-      DEPLOY_STAGE: optionalText,
+      NAKAFA_DEPLOY_STAGE: optionalText,
       VITE_CONVEX_SITE_URL: optionalText,
       VITE_CONVEX_URL: Schema.String,
     },
     {
       CONVEX_AGENT_MODE: process.env.CONVEX_AGENT_MODE,
-      DEPLOY_STAGE: process.env.DEPLOY_STAGE,
+      NAKAFA_DEPLOY_STAGE: process.env.NAKAFA_DEPLOY_STAGE,
       VITE_CONVEX_SITE_URL: process.env.VITE_CONVEX_SITE_URL,
       VITE_CONVEX_URL: process.env.VITE_CONVEX_URL,
     }
   );
   const target = {
     agent: env.CONVEX_AGENT_MODE,
-    deploy: { stage: env.DEPLOY_STAGE },
     query: env.VITE_CONVEX_URL,
     site: env.VITE_CONVEX_SITE_URL,
+    deploy: { stage: env.NAKAFA_DEPLOY_STAGE },
   } satisfies RuntimeTarget;
   Effect.runSync(assertRuntimeTarget(target));
   return {

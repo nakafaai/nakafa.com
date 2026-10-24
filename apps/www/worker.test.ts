@@ -58,7 +58,7 @@ describe("workerEnvironment", () => {
 
 describe("deployedWorkerBindings", () => {
   it("binds a public VITE_ value as text and every server value as a secret", () => {
-    const bindings = deployedWorkerBindings("production");
+    const bindings = deployedWorkerBindings();
 
     expect(bindings.VITE_CONVEX_SITE_URL).toBe("https://example.convex.site");
     expect(bindings.VITE_POSTHOG_PROXY_HOST).toBe("https://t.nakafa.com");
@@ -67,18 +67,11 @@ describe("deployedWorkerBindings", () => {
   });
 
   it("deploys in production and drops every unset value", () => {
-    const bindings = deployedWorkerBindings("production");
+    const bindings = deployedWorkerBindings();
 
     expect(revealed(bindings.NODE_ENV)).toBe("production");
     expect(bindings).not.toHaveProperty("OPENWEATHER_API_KEY");
     expect(Record.values(bindings)).not.toContain(undefined);
   });
 
-  it("binds the Alchemy stage as the deploy stage, whatever the shell carries", () => {
-    vi.stubEnv("DEPLOY_STAGE", "production");
-
-    const bindings = deployedWorkerBindings("preview");
-
-    expect(revealed(bindings.DEPLOY_STAGE)).toBe("preview");
-  });
 });

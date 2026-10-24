@@ -101,7 +101,7 @@ vi.mock("@repo/backend/content/trust", async () => {
   );
   return {
     contentKeyResolver: TEST_KEY_RESOLVER,
-    contentTrustedKeys: [],
+    trustedContentKeys: [],
   };
 });
 vi.mock("@/lib/content/renderer/manifest", async () => {

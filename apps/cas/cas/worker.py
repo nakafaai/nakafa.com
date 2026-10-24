@@ -12,8 +12,8 @@ from cas.compute import (
 from cas.engine import run
 from cas.schema import MathRequest
 
-# The production project uses Vercel's standard 2 GiB Fluid instance. Two
-# 512 MiB workers leave at least 1 GiB for FastAPI and platform overhead.
+# The production instance has a 2 GiB memory budget. Two 512 MiB workers leave
+# at least 1 GiB for FastAPI and platform overhead.
 # RLIMIT_AS bounds intermediate allocations, before serialized output exists.
 # https://docs.python.org/3/library/resource.html#resource.RLIMIT_AS
 MAX_WORKER_BYTES = 512 * 1024 * 1024

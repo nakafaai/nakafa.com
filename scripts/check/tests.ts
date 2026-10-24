@@ -14,7 +14,6 @@ import {
   ownerBlock,
   sharedPackageName,
 } from "#scripts/check/compiler";
-import { inspectDeploySource } from "#scripts/check/deploy";
 import { inspectDictionaries } from "#scripts/check/dictionary";
 import {
   effectFindings,
@@ -102,7 +101,6 @@ const inspectSources = Effect.fn("RepositoryPolicy.inspectSources")(function* (
         inspectRefsSource(file, sourceFile),
         inspectSealedSource(file, sourceFile),
         inspectModuleSize(file, sourceFile),
-        inspectDeploySource(file, sourceFile),
       ])
     ),
     inspectExports(parsed.modules, otherModules, unjudged),
