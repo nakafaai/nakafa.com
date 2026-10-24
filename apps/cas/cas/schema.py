@@ -1,16 +1,55 @@
 """Pydantic contracts for the Nakafa CAS HTTP API."""
 
+import re
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_serializer
+from pydantic import (
+    AfterValidator,
+    BaseModel,
+    ConfigDict,
+    Field,
+    field_serializer,
+    model_validator,
+)
+
+# Complexity bounds. Each one is ten times the largest value that the test suite
+# sends, which scripts/cpu_budget.py collects. The corpus maxima are 3 digits in
+# one integer, exponent 7, 20 tokens in one expression, a 3 by 3 matrix, derivative
+# order 2, and series order 6, so no corpus request is refused. SymPy computes
+# powers, series, and derivatives eagerly, so a request beyond a bound is refused
+# here, before any SymPy call.
+MAX_INTEGER_DIGITS = 30
+MAX_EXPONENT = 70
+MAX_EXPRESSION_TOKENS = 200
+MAX_MATRIX_DIMENSION = 30
+MAX_DERIVATIVE_ORDER = 20
+MAX_SERIES_ORDER = 60
+
+DIGIT_RUN = re.compile(r"\d+")
+POWER_EXPONENT = re.compile(r"(?:\*\*|\^)\s*\(?\s*-?(\d+)")
+# A token is one number, name, or operator, so the count approximates the node
+# count of the expression without parsing it.
+EXPRESSION_TOKEN = re.compile(r"\d+(?:\.\d+)?|[A-Za-z_]\w*|\*\*|[-+*/^!=<>(),]")
+
+
+def _refuse_beyond_bounds(text: str) -> str:
+    """Refuse a text value whose integers, exponents, or size exceed a bound."""
+    if any(len(run) > MAX_INTEGER_DIGITS for run in DIGIT_RUN.findall(text)):
+        raise ValueError(f"Integers may have at most {MAX_INTEGER_DIGITS} digits.")
+    if any(int(power) > MAX_EXPONENT for power in POWER_EXPONENT.findall(text)):
+        raise ValueError(f"Exponents may be at most {MAX_EXPONENT}.")
+    if len(EXPRESSION_TOKEN.findall(text)) > MAX_EXPRESSION_TOKENS:
+        raise ValueError(
+            f"An expression may have at most {MAX_EXPRESSION_TOKENS} tokens."
+        )
+    return text
+
 
 # School calculations keep each operand readable and each collection modest.
-# These shape limits complement the process deadline: short expressions can still
-# expand into expensive symbolic work, so shape validation is not a CPU budget.
-MathText = Annotated[str, Field(max_length=2048)]
+MathText = Annotated[str, Field(max_length=2048), AfterValidator(_refuse_beyond_bounds)]
 MathValues = Annotated[list[MathText], Field(max_length=128)]
-MathMatrixRow = Annotated[list[MathText], Field(max_length=16)]
-MathMatrix = Annotated[list[MathMatrixRow], Field(max_length=16)]
+MathMatrixRow = Annotated[list[MathText], Field(max_length=MAX_MATRIX_DIMENSION)]
+MathMatrix = Annotated[list[MathMatrixRow], Field(max_length=MAX_MATRIX_DIMENSION)]
 
 MathStatus = Literal["verified", "contradicted", "inconclusive"]
 MathSource = Literal["math"]
@@ -68,7 +107,7 @@ class MathRequest(BaseModel):
     variable: MathText | None = None
     variables: MathValues = Field(default_factory=list)
     point: MathText | None = None
-    order: int | None = Field(default=None, le=100)
+    order: int | None = None
     lower: MathText | None = None
     lowerInclusive: bool | None = None
     upper: MathText | None = None
@@ -83,6 +122,17 @@ class MathRequest(BaseModel):
     modulus: MathText | None = None
     n: MathText | None = None
     k: MathText | None = None
+
+    @model_validator(mode="after")
+    def refuse_order_beyond_bound(self) -> "MathRequest":
+        """Refuse a derivative or series order beyond the bound of its operation."""
+        if self.order is None:
+            return self
+        if self.operation == "differentiate" and self.order > MAX_DERIVATIVE_ORDER:
+            raise ValueError(f"Derivative order may be at most {MAX_DERIVATIVE_ORDER}.")
+        if self.operation == "series" and self.order > MAX_SERIES_ORDER:
+            raise ValueError(f"Series order may be at most {MAX_SERIES_ORDER}.")
+        return self
 
 
 class MathExpression(BaseModel):

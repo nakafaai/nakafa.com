@@ -56,6 +56,19 @@ def test_calculate_bounds_a_domain_message(monkeypatch) -> None:
     assert json.loads(body)["detail"] == "x" * compute.DETAIL_CHARACTERS
 
 
+def test_calculate_refuses_a_bound_breach_before_sympy_runs(monkeypatch) -> None:
+    def fail_if_run(_request: MathRequest) -> None:
+        raise AssertionError("SymPy ran for a request beyond a complexity bound")
+
+    monkeypatch.setattr(compute, "run", fail_if_run)
+    source = body_of({"kind": "math", "operation": "evaluate", "expression": "x^71"})
+
+    status, body = compute.calculate(source)
+
+    assert status == compute.INVALID_INPUT
+    assert "Exponents may be at most 70." in json.loads(body)["detail"]
+
+
 def test_calculate_refuses_result_over_the_response_budget(monkeypatch) -> None:
     monkeypatch.setattr(compute, "MAX_RESPONSE_BYTES", 1)
 
