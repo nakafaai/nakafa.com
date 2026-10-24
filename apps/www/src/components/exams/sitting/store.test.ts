@@ -51,4 +51,40 @@ describe("createSittingStore", () => {
 
     expect(second.getState().filter).toBe("all");
   });
+
+  it("warms the seat the reader is on without choosing it", () => {
+    const store = createSittingStore();
+    const seat = { attemptId: attemptId("attempt-a"), cursor: null };
+
+    store.getState().warm(seat);
+
+    expect(store.getState().onSeat).toEqual(seat);
+    expect(store.getState().selected).toBeNull();
+  });
+
+  it("keeps the state when the reader is still on the warmed seat", () => {
+    const store = createSittingStore();
+    store
+      .getState()
+      .warm({ attemptId: attemptId("attempt-a"), cursor: "page-2" });
+    const before = store.getState();
+
+    store
+      .getState()
+      .warm({ attemptId: attemptId("attempt-a"), cursor: "page-2" });
+
+    expect(store.getState()).toBe(before);
+  });
+
+  it("moves the warmed seat to the seat the reader reaches next", () => {
+    const store = createSittingStore();
+    store.getState().warm({ attemptId: attemptId("attempt-a"), cursor: null });
+
+    store.getState().warm({ attemptId: attemptId("attempt-b"), cursor: null });
+
+    expect(store.getState().onSeat).toEqual({
+      attemptId: attemptId("attempt-b"),
+      cursor: null,
+    });
+  });
 });
