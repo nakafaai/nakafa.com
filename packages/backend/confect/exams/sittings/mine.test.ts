@@ -1,10 +1,15 @@
+import type { GenericId } from "@confect/core";
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import type {
   ExamAttemptsDoc,
   ExamSittingsDoc,
 } from "@repo/backend/confect/_generated/docs";
 import refs from "@repo/backend/confect/_generated/refs";
-import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
+import {
+  DatabaseReader,
+  DatabaseWriter,
+} from "@repo/backend/confect/_generated/services";
+import { HOME_RESULT_LIMIT } from "@repo/backend/confect/exams/home/bounds";
 import { nf } from "@repo/backend/test/editor";
 import {
   CLOSES_AT as CLOSES,
@@ -23,8 +28,31 @@ import {
 import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect, Option } from "effect";
 
-const { close, finish, mine } = refs.public.exams.sittings;
+const { answer, close, finish, mine } = refs.public.exams.sittings;
 const { release } = refs.public.exams.results.results;
+
+/** The first question of a sitting's exam, which the student answers, and how many questions the exam has. */
+const firstQuestionOf = (
+  fixture: SittingFixture,
+  sittingId: GenericId.GenericId<"examSittings">
+) =>
+  fixture.run(
+    Effect.gen(function* () {
+      const reader = yield* DatabaseReader;
+      const sitting = yield* reader
+        .table("examSittings")
+        .get(sittingId)
+        .pipe(Effect.orDie);
+      const exam = yield* reader
+        .table("exams")
+        .get(sitting.examId)
+        .pipe(Effect.orDie);
+      return {
+        questionId: yield* Effect.fromOption(Arr.head(exam.questions)),
+        total: exam.questions.length,
+      };
+    })
+  );
 
 /** The opening time of the rooms that open a day after the room that opens soon. */
 const FOLLOWING_DAY = OPENS + 86_400_000;
@@ -296,6 +324,14 @@ describe("exams/sittings mine", () => {
           sittingId: made.id,
           token: made.token,
         });
+        const { questionId, total } = yield* firstQuestionOf(fixture, made.id);
+        yield* fixture.as("student").mutation(answer, {
+          deviceId: deviceOf(1),
+          questionId,
+          response: ["option-1"],
+          sittingId: made.id,
+          slug: nf,
+        });
         yield* fixture.as("student").mutation(finish, {
           deviceId: deviceOf(1),
           sittingId: made.id,
@@ -317,7 +353,7 @@ describe("exams/sittings mine", () => {
         ).toMatchObject([
           {
             resultsReleased: true,
-            score: { points: 0, total: expect.any(Number) },
+            score: { points: 1, total },
           },
         ]);
       })
@@ -382,7 +418,8 @@ describe("exams/sittings mine", () => {
           person: fixture.people.student.personId,
         });
         const listed = yield* fixture.as("student").query(mine, { slug: nf });
-        expect(listed).toHaveLength(101);
+        // The live sitting, and the newest closed sittings the home lists.
+        expect(listed).toHaveLength(HOME_RESULT_LIMIT + 1);
         expect(
           Option.getOrNull(Arr.findFirst(listed, (row) => row.id === made.id))
         ).toMatchObject({

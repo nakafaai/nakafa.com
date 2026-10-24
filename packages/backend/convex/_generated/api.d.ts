@@ -2905,6 +2905,7 @@ export declare const api: {
             language: "en" | "id" | "de";
             title: string;
           }>;
+          draftsBounded: boolean;
           live: Array<{
             closesAt: number;
             cohortId: Id<"tenantCohorts"> | null;

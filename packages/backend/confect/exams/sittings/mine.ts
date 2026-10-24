@@ -5,6 +5,7 @@ import type {
 } from "@repo/backend/confect/_generated/docs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { covers } from "@repo/backend/confect/access/decision";
+import { HOME_RESULT_LIMIT } from "@repo/backend/confect/exams/home/bounds";
 import { attemptResults } from "@repo/backend/confect/exams/results/rows";
 import { attemptOf } from "@repo/backend/confect/exams/sittings/attempt";
 import type { SittingState } from "@repo/backend/confect/exams/sittings/schema";
@@ -17,6 +18,7 @@ import {
   HashMap,
   Number as Num,
   Option,
+  Order,
   Tuple,
 } from "effect";
 
@@ -137,6 +139,14 @@ const closedSittings = Effect.fn("exams.sittings.mine.closed")(function* (
   return Arr.filter(sittings, (sitting) => sitting.state === "closed");
 });
 
+/** The closed sittings with the newest opening first, which the student's results list shows first. */
+const byNewestOpening = Order.flip(
+  Order.mapInput(
+    Order.Number,
+    (sitting: Pick<ExamSittingsDoc, "opensAt">) => sitting.opensAt
+  )
+);
+
 /**
  * The student's points in a sitting, with the questions of its exam, once the teacher releases the results. A
  * sitting whose results wait for the teacher has no score, so the read reads nothing for it.
@@ -164,8 +174,8 @@ const scoreOf = Effect.fn("exams.sittings.mine.score")(function* (
  * The sittings of a student who may take part in them, each with the student's own attempt, its state,
  * and whether its results are released. The live sittings come from the units and cohorts that the
  * student may reach, and each one reads its own attempt, so no window hides it. The closed sittings come
- * from the student's closing and submitted attempts. Every read is bounded, and no sitting holds a token
- * or a token hash.
+ * from the student's closing and submitted attempts, and the newest `HOME_RESULT_LIMIT` of them are listed,
+ * so only those are scored. Every read is bounded, and no sitting holds a token or a token hash.
  */
 export const mine = Effect.fn("exams.sittings.mine")(function* () {
   const member = yield* Member;
@@ -176,7 +186,10 @@ export const mine = Effect.fn("exams.sittings.mine")(function* () {
     { concurrency: "unbounded" }
   );
   const closing = yield* closedAttempts(member.person._id);
-  const closed = yield* closedSittings(closing);
+  const closed = Arr.take(
+    Arr.sort(yield* closedSittings(closing), byNewestOpening),
+    HOME_RESULT_LIMIT
+  );
   const rows = [...live, ...closed];
   const held = HashMap.fromIterable(
     Arr.map([...Arr.getSomes(liveAttempts), ...closing], (attempt) =>
