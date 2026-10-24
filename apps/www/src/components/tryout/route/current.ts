@@ -4,7 +4,7 @@ import type {
 } from "@repo/backend/confect/tryouts/attemptPage/spec";
 import { Effect, Option } from "effect";
 import {
-  readTryoutSectionAttemptPage,
+  readTryoutSectionWithBodies,
   readTryoutSetAttemptPage,
 } from "@/components/tryout/catalog/source.server";
 
@@ -44,24 +44,15 @@ export const readCurrentTryoutSet = Effect.fn(
 });
 
 /**
- * Reads the attempt a public section URL shows: a running attempt through this
- * section as the exact page it continues on, rendered in place like a set's.
+ * Reads the attempt a public section URL shows in one Convex read: a running
+ * attempt through this section as the exact page it continues on, rendered in
+ * place like a set's, with the signed bodies of its content.
  */
 export const readCurrentTryoutSection = Effect.fn(
   "www.tryout.route.readCurrentSection"
 )(function* (token: string, request: CurrentSectionRequest) {
-  const current = yield* readTryoutSectionAttemptPage(token, {
+  return yield* readTryoutSectionWithBodies(token, {
     ...request,
     kind: "current",
   });
-  if (current?.kind !== "redirect") {
-    return Option.fromNullishOr(current);
-  }
-  const running = yield* readTryoutSectionAttemptPage(token, {
-    attemptId: current.attemptId,
-    kind: "retained",
-    locale: request.locale,
-    publicPath: current.publicPath,
-  });
-  return running?.kind === "retained" ? Option.some(running) : Option.none();
 });

@@ -1,7 +1,11 @@
+import type { TryoutBodyBatch } from "@repo/backend/confect/tryouts/runtime/body";
 import type { Locale } from "@repo/internationalization/src/locale";
 import { readServerTranslator } from "@repo/internationalization/src/translator";
 import { Effect, Option } from "effect";
-import { loadSignedTryoutContent } from "@/components/tryout/content/signed";
+import {
+  loadSignedTryoutContent,
+  renderSignedTryoutRows,
+} from "@/components/tryout/content/signed";
 import { renderTryoutQuestionBody } from "@/components/tryout/route/body.server";
 import type { readCurrentTryoutSet } from "@/components/tryout/route/current";
 import {
@@ -73,6 +77,10 @@ export const readPreviewRoute = Effect.fn("www.tryout.route.readPreview")(
  * The signed question bodies of a running attempt, verified and rendered on the
  * server. A finished attempt, or one without signed content, has none.
  */
+/**
+ * The signed question bodies of a running attempt, verified and rendered on the
+ * server. A finished attempt, or one without signed content, has none.
+ */
 export const readAttemptContent = Effect.fn("www.tryout.route.readContent")(
   function* (input: { readonly attempt: SurfaceAttempt }) {
     const { content, initialState } = input.attempt;
@@ -86,14 +94,50 @@ export const readAttemptContent = Effect.fn("www.tryout.route.readContent")(
       input.attempt.attemptId,
       content
     );
-    const questions = yield* Effect.forEach(
-      signed.questions,
+    return Option.some({
+      questions: yield* renderQuestionBodies(signed.questions),
+    });
+  }
+);
+
+/**
+ * The signed question bodies of a running section, rendered from the rows its
+ * page read already returned, so the section reads Convex once. A finished
+ * attempt, or one without signed content, has none.
+ */
+export const readRunningSectionContent = Effect.fn(
+  "www.tryout.route.readSectionContent"
+)(function* (input: { readonly attempt: RunningSection }) {
+  const { bodies, content, initialState } = input.attempt;
+  if (
+    content.kind !== "signed" ||
+    initialState.attempt.status !== "in-progress"
+  ) {
+    return Option.none();
+  }
+  const signed = yield* renderSignedTryoutRows(content, bodies);
+  return Option.some({
+    questions: yield* renderQuestionBodies(signed.questions),
+  });
+});
+
+/** Renders the question bodies of one verified content set for the page. */
+const renderQuestionBodies = Effect.fn("www.tryout.route.renderQuestionBodies")(
+  function* (
+    questions: readonly Parameters<typeof renderTryoutQuestionBody>[0][]
+  ) {
+    return yield* Effect.forEach(
+      questions,
       (question) => Effect.promise(() => renderTryoutQuestionBody(question)),
       { concurrency: "unbounded" }
     );
-    return Option.some({ questions });
   }
 );
+
+/** A section attempt with the signed rows of its content that its page read returned. */
+type RunningSection = SurfaceAttempt & {
+  readonly bodies: readonly (TryoutBodyBatch | null)[];
+};
 
 /** The server-rendered review tree of one finished attempt. */
 type RenderedReview = Awaited<ReturnType<typeof renderTryoutReview>>;

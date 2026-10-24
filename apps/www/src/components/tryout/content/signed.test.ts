@@ -49,8 +49,13 @@ import { makeTryoutRuntimeRequest } from "@/components/tryout/content/request";
 import {
   loadSignedTryoutContent,
   loadTryoutQuestion,
+  renderSignedTryoutRows,
 } from "@/components/tryout/content/signed";
 import { ContentRuntimeConfigurationError } from "@/lib/content/published/errors";
+import { activateTestRelease } from "@/test/active";
+import { resetTestRuntimeCache } from "@/test/store";
+
+const TEST_RELEASE_ID = "release-signed-test";
 
 const runtimeKeysMock = vi.hoisted(() => vi.fn());
 const runtimeSiteMock = vi.hoisted(() => vi.fn());
@@ -96,6 +101,14 @@ vi.mock("@confect/js", async (importOriginal) => {
     },
   };
 });
+vi.mock(
+  "@vercel/functions",
+  async () => (await import("@/test/store")).testRuntimeCacheModule
+);
+vi.mock(
+  "@/lib/content/published/active",
+  async () => (await import("@/test/active")).testActiveModule
+);
 vi.mock("@tanstack/react-start/server", () => ({
   getRequest: () => new Request("https://nakafa.test/en/try-out"),
 }));
@@ -195,6 +208,8 @@ const loadFailure = (
   loadSignedTryoutContent(fixture.attemptId, fixture.access).pipe(Effect.flip);
 
 beforeEach(() => {
+  resetTestRuntimeCache();
+  activateTestRelease(TEST_RELEASE_ID);
   vi.setSystemTime(TRYOUT_TEST_NOW);
   fetchMock.mockReset();
   queryMock.mockReset();
@@ -313,6 +328,10 @@ describe("signed try-out execution", () => {
         );
         expect(fetchMock).toHaveBeenCalledOnce();
         expect(runtimeKeysMock).toHaveBeenCalledOnce();
+        // The found answer is kept for the release, so the next home view reads no runtime.
+        const again = yield* loadTryoutQuestion(fixture.question);
+        expect(renderToStaticMarkup(again.content)).toBe("Technical question");
+        expect(fetchMock).toHaveBeenCalledOnce();
       })
   );
   it.effect(
@@ -461,6 +480,65 @@ describe("signed try-out execution", () => {
           _tag: "ContentRuntimeVerificationError",
           cause,
         });
+      })
+  );
+
+  it.effect(
+    "renders the rows a section read returned without a second Convex read",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* readOwnedFixture({
+          compiledCode:
+            'return { default: function Content() { return "Read once body"; } };',
+        });
+        const row = yield* Effect.promise(() =>
+          fixture.owned.query(
+            Ref.getFunctionReference(attemptQuery),
+            fixture.seed.request
+          )
+        );
+        const found = yield* Effect.fromNullishOr(row);
+        queryMock.mockClear();
+        const rendered = yield* renderSignedTryoutRows(fixture.access, [found]);
+        expect(queryMock).not.toHaveBeenCalled();
+        expect(rendered.questions).toHaveLength(1);
+        expect(
+          yield* renderSignedTryoutRows(fixture.access, []).pipe(Effect.flip)
+        ).toMatchObject({ _tag: "ContentRuntimeVerificationError" });
+      })
+  );
+
+  it.effect(
+    "keeps no missing featured answer, so every read asks the runtime again",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* readFixture();
+        runtimeKeysMock.mockReturnValue({
+          CONTENT_RUNTIME_TOKEN: "technical-test-token",
+        });
+        fetchMock.mockImplementation(() => {
+          const response = new Response(JSON.stringify({ kind: "missing" }), {
+            headers: {
+              "content-type": "application/json",
+              [CONTENT_RUNTIME_RESPONSE_HEADER]:
+                CONTENT_RUNTIME_RESPONSE_MARKER,
+            },
+            status: 404,
+          });
+          Object.defineProperty(response, "url", { value: endpoint });
+          return Promise.resolve(response);
+        });
+        expect(
+          yield* loadTryoutQuestion(fixture.question).pipe(Effect.flip)
+        ).toMatchObject({
+          _tag: "ContentRuntimeVerificationError",
+        });
+        expect(
+          yield* loadTryoutQuestion(fixture.question).pipe(Effect.flip)
+        ).toMatchObject({
+          _tag: "ContentRuntimeVerificationError",
+        });
+        expect(fetchMock).toHaveBeenCalledTimes(2);
       })
   );
 });

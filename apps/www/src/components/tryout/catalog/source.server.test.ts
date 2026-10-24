@@ -42,8 +42,8 @@ import {
   readTryoutExamPage,
   readTryoutHubPage,
   readTryoutMetadata,
-  readTryoutSectionAttemptPage,
   readTryoutSectionPage,
+  readTryoutSectionWithBodies,
   readTryoutSetAttemptPage,
   readTryoutSetList,
   readTryoutSetPage,
@@ -450,11 +450,11 @@ describe("immutable try-out application catalog", () => {
           yield* readTryoutSetAttemptPage("technical-token", request)
         ).toBeNull();
         expect(
-          yield* readTryoutSectionAttemptPage("technical-token", {
+          yield* readTryoutSectionWithBodies("technical-token", {
             ...request,
             publicPath: SECTION,
           })
-        ).toBeNull();
+        ).toStrictEqual(Option.none());
         fetchQueryMock.mockReturnValue(
           Effect.fail(
             new HttpClient.HttpClientError({
@@ -474,7 +474,7 @@ describe("immutable try-out application catalog", () => {
           },
         });
         expect(
-          yield* readTryoutSectionAttemptPage("technical-token", {
+          yield* readTryoutSectionWithBodies("technical-token", {
             ...request,
             publicPath: SECTION,
           }).pipe(Effect.flip)

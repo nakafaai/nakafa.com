@@ -205,15 +205,21 @@ export const readTryoutSectionPage = Effect.fn(
   });
 });
 
-/** Fetches one authenticated section bootstrap without subscribing. */
-export const readTryoutSectionAttemptPage = Effect.fn(
-  "www.tryout.catalog.readSectionAttemptPage"
+/**
+ * Reads one authenticated section page with the signed bodies of its running
+ * content, in one Convex read. A running attempt on another page answers none, and
+ * an attempt read that is not retained answers none too.
+ */
+export const readTryoutSectionWithBodies = Effect.fn(
+  "www.tryout.catalog.readSectionWithBodies"
 )(function* (
   token: string,
-  request: Ref.Args<typeof tryouts.queries.attemptPage.getSection>["request"]
+  request: Ref.Args<
+    typeof tryouts.queries.attemptPage.getSectionWithBodies
+  >["request"]
 ) {
-  return yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
-    client.query(tryouts.queries.attemptPage.getSection, {
+  const page = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
+    client.query(tryouts.queries.attemptPage.getSectionWithBodies, {
       request,
     })
   ).pipe(
@@ -229,4 +235,8 @@ export const readTryoutSectionAttemptPage = Effect.fn(
         })
     )
   );
+  return Option.map(Option.fromNullishOr(page), ({ attempt, bodies }) => ({
+    ...attempt,
+    bodies,
+  }));
 });

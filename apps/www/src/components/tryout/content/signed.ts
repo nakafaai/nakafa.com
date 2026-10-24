@@ -3,7 +3,6 @@ import "@tanstack/react-start/server-only";
 import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
 import { verifyAttemptContent } from "@repo/backend/client/content/attempt";
 import { ContentRuntimeVerificationError } from "@repo/backend/client/content/errors";
-import { readProtectedContent } from "@repo/backend/client/content/protected";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import type { TryoutBodyBatch } from "@repo/backend/confect/tryouts/runtime/body";
 import { contentKeyResolver } from "@repo/backend/content/trust";
@@ -17,6 +16,7 @@ import {
   restoreTryoutContentOrder,
   type TryoutContentBatchPlan,
 } from "@/components/tryout/content/batch";
+import { readFeaturedProtectedContent } from "@/components/tryout/content/featured";
 import {
   projectTryoutRuntimeContent,
   type RenderedTryoutContentEntry,
@@ -50,6 +50,35 @@ export const loadSignedTryoutContent = Effect.fn(
   );
 });
 
+/**
+ * Verifies and renders the signed bodies that a section read already returned,
+ * one row for each batch the content plans. Nothing reads Convex here, so the
+ * page read is the only Convex read of a running section.
+ */
+export const renderSignedTryoutRows = Effect.fn(
+  "NakafaContent.renderSignedTryoutRows"
+)(function* (
+  access: SignedContentAccess,
+  rows: readonly (TryoutBodyBatch | null)[]
+) {
+  const plan = planTryoutContentBatches(access.questions, access.answers);
+  if (rows.length !== plan.batches.length) {
+    return yield* new ContentRuntimeVerificationError({
+      cause: "Signed try-out rows do not match the content batch plan.",
+    });
+  }
+  return yield* renderContentPlan(plan, (selectors, index) =>
+    renderAttemptBatch(selectors, rows[index]).pipe(
+      Effect.mapError(
+        (cause) =>
+          new ContentRuntimeVerificationError({
+            cause,
+          })
+      )
+    )
+  );
+});
+
 /** Renders the public featured question through its exact signed source. */
 export const loadTryoutQuestion = Effect.fn("NakafaContent.loadTryoutQuestion")(
   function* (question: TryoutQuestionSelector) {
@@ -76,7 +105,8 @@ const renderContentPlan = Effect.fn("NakafaContent.renderTryoutContentPlan")(
   function* <Selector, Error>(
     plan: TryoutContentBatchPlan<Selector>,
     renderBatch: (
-      selectors: readonly Selector[]
+      selectors: readonly Selector[],
+      index: number
     ) => Effect.Effect<readonly RenderedTryoutContentEntry[], Error>
   ) {
     if (plan.selectorCount === 0) {
@@ -152,7 +182,7 @@ const readBatch = Effect.fn("NakafaContent.readTryoutBatch")(function* (
 ) {
   const request = yield* makeTryoutRuntimeRequest(selectors);
   const liveRenderer = yield* rendererManifest;
-  const found = yield* readProtectedContent(
+  const found = yield* readFeaturedProtectedContent(
     yield* readRuntimeTarget,
     request,
     liveRenderer
