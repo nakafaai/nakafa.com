@@ -23,11 +23,6 @@ import {
 } from "@repo/design-system/components/ui/command";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
-import type { LinkTarget } from "@repo/internationalization/src/link";
-import {
-  articleCategoryTarget,
-  publicPathTarget,
-} from "@repo/internationalization/src/target";
 import { useNavigate } from "@tanstack/react-router";
 import { cn } from "cn";
 import { Array as Arr, Option } from "effect";
@@ -47,6 +42,8 @@ import {
 import { EmptyNina } from "@/components/state/empty";
 import type { ArticleNavigationItem } from "@/lib/content/article/navigation";
 import { getErrorMessage } from "@/lib/failure";
+import type { LinkTarget } from "@/lib/routing/link";
+import { articleCategoryTarget, publicPathTarget } from "@/lib/routing/target";
 import { useSearch } from "@/lib/search/context";
 import {
   type ContentSearchResultItem,
@@ -242,10 +239,7 @@ function SearchList({ groups }: SearchListProps) {
       navigateTo(item.target);
       return;
     }
-    Option.map(
-      Option.fromNullishOr(publicPathTarget(item.publicPath)),
-      navigateTo
-    );
+    Option.map(publicPathTarget(item.publicPath), navigateTo);
   }
 
   return (

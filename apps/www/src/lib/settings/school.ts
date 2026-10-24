@@ -1,6 +1,8 @@
+import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { linkOptions } from "@tanstack/react-router";
 import { Array as Arr, Option, Schema } from "effect";
-import { SCHOOL_ROUTE, type SchoolLinkTarget } from "@/lib/routing/school/link";
+import type { LinkTarget } from "@/lib/routing/link";
+import { LOCALE_ROUTE } from "@/lib/routing/tree";
 
 const SchoolSettingsLabelKeySchema = Schema.Literals([
   "profile",
@@ -16,21 +18,16 @@ const SchoolSettingsLabelKeySchema = Schema.Literals([
   "audit",
 ]);
 
-/** One addressable section of the school settings surface, with its typed link target. */
-interface SchoolSettingsSection {
-  /** Message key owned by the `SchoolSettings` dictionary. */
-  readonly labelKey: typeof SchoolSettingsLabelKeySchema.Type;
-  readonly target: SchoolLinkTarget;
-}
-
-/** One labelled group of addressable sections of the school settings surface. */
-interface SchoolSettingsGroup {
-  /** Message key owned by the `SchoolSettings` dictionary, which labels the group. */
-  readonly key: "integrations" | "people" | "school" | "security";
-  readonly sections: readonly [
-    SchoolSettingsSection,
-    ...SchoolSettingsSection[],
-  ];
+/**
+ * One addressable section of the school settings surface. Its message key is
+ * owned by the `SchoolSettings` dictionary, and its target takes the school's
+ * slug, which the settings page on screen reads from its tenant.
+ */
+function settingsSection(
+  labelKey: typeof SchoolSettingsLabelKeySchema.Type,
+  target: (slug: TenantSlug) => LinkTarget
+) {
+  return { labelKey, target };
 }
 
 /**
@@ -38,116 +35,128 @@ interface SchoolSettingsGroup {
  * with the sections it holds. The sidebar, the breadcrumb header, and the section
  * metadata all derive from it, so a new section has exactly one declaration.
  */
-export const schoolSettingsGroups: readonly [
-  SchoolSettingsGroup,
-  ...SchoolSettingsGroup[],
-] = [
+const SCHOOL_SETTINGS_GROUPS = [
   {
     key: "school",
     sections: [
-      {
-        labelKey: "profile",
-        target: linkOptions({
-          from: SCHOOL_ROUTE,
+      settingsSection("profile", (slug) =>
+        linkOptions({
+          from: LOCALE_ROUTE,
+          params: { slug },
           to: "/school/$slug/settings/profile",
-        }),
-      },
-      {
-        labelKey: "periods",
-        target: linkOptions({
-          from: SCHOOL_ROUTE,
+        })
+      ),
+      settingsSection("periods", (slug) =>
+        linkOptions({
+          from: LOCALE_ROUTE,
+          params: { slug },
           to: "/school/$slug/settings/periods",
-        }),
-      },
-      {
-        labelKey: "cohorts",
-        target: linkOptions({
-          from: SCHOOL_ROUTE,
+        })
+      ),
+      settingsSection("cohorts", (slug) =>
+        linkOptions({
+          from: LOCALE_ROUTE,
+          params: { slug },
           to: "/school/$slug/settings/cohorts",
-        }),
-      },
-      {
-        labelKey: "units",
-        target: linkOptions({
-          from: SCHOOL_ROUTE,
+        })
+      ),
+      settingsSection("units", (slug) =>
+        linkOptions({
+          from: LOCALE_ROUTE,
+          params: { slug },
           to: "/school/$slug/settings/units",
-        }),
-      },
+        })
+      ),
     ],
   },
   {
     key: "people",
     sections: [
-      {
-        labelKey: "members",
-        target: linkOptions({
-          from: SCHOOL_ROUTE,
+      settingsSection("members", (slug) =>
+        linkOptions({
+          from: LOCALE_ROUTE,
+          params: { slug },
           to: "/school/$slug/settings/members",
-        }),
-      },
-      {
-        labelKey: "roles",
-        target: linkOptions({
-          from: SCHOOL_ROUTE,
+        })
+      ),
+      settingsSection("roles", (slug) =>
+        linkOptions({
+          from: LOCALE_ROUTE,
+          params: { slug },
           to: "/school/$slug/settings/roles",
-        }),
-      },
-      {
-        labelKey: "invites",
-        target: linkOptions({
-          from: SCHOOL_ROUTE,
+        })
+      ),
+      settingsSection("invites", (slug) =>
+        linkOptions({
+          from: LOCALE_ROUTE,
+          params: { slug },
           to: "/school/$slug/settings/invites",
-        }),
-      },
-      {
-        labelKey: "students",
-        target: linkOptions({
-          from: SCHOOL_ROUTE,
+        })
+      ),
+      settingsSection("students", (slug) =>
+        linkOptions({
+          from: LOCALE_ROUTE,
+          params: { slug },
           to: "/school/$slug/settings/students",
-        }),
-      },
+        })
+      ),
     ],
   },
   {
     key: "integrations",
     sections: [
-      {
-        labelKey: "clients",
-        target: linkOptions({
-          from: SCHOOL_ROUTE,
+      settingsSection("clients", (slug) =>
+        linkOptions({
+          from: LOCALE_ROUTE,
+          params: { slug },
           to: "/school/$slug/settings/clients",
-        }),
-      },
+        })
+      ),
     ],
   },
   {
     key: "security",
     sections: [
-      {
-        labelKey: "policies",
-        target: linkOptions({
-          from: SCHOOL_ROUTE,
+      settingsSection("policies", (slug) =>
+        linkOptions({
+          from: LOCALE_ROUTE,
+          params: { slug },
           to: "/school/$slug/settings/policies",
-        }),
-      },
-      {
-        labelKey: "audit",
-        target: linkOptions({
-          from: SCHOOL_ROUTE,
+        })
+      ),
+      settingsSection("audit", (slug) =>
+        linkOptions({
+          from: LOCALE_ROUTE,
+          params: { slug },
           to: "/school/$slug/settings/audit",
-        }),
-      },
+        })
+      ),
     ],
   },
-];
+] as const;
+
+/** The school's settings groups, in sidebar order, with the targets of its own slug. */
+export function schoolSettingsGroups(slug: TenantSlug) {
+  return Arr.map(SCHOOL_SETTINGS_GROUPS, (group) => ({
+    key: group.key,
+    sections: Arr.map(group.sections, (section) => ({
+      labelKey: section.labelKey,
+      target: section.target(slug),
+    })),
+  }));
+}
+
+/** One group of the school settings, as `schoolSettingsGroups` returns it. */
+export type SchoolSettingsGroup = ReturnType<
+  typeof schoolSettingsGroups
+>[number];
 
 /**
  * Every section in sidebar order, each with the group that holds it. A group
  * links to its first section, which is where its breadcrumb leads.
  */
-export const schoolSettingsSections = Arr.flatMap(
-  schoolSettingsGroups,
-  (group) => {
+export function schoolSettingsSections(slug: TenantSlug) {
+  return Arr.flatMap(schoolSettingsGroups(slug), (group) => {
     const parent = {
       key: group.key,
       target: Arr.headNonEmpty(group.sections).target,
@@ -157,27 +166,18 @@ export const schoolSettingsSections = Arr.flatMap(
       ...section,
       group: parent,
     }));
-  }
-);
-
-/** The first section of the school settings, which the root and every undeclared path belong to. */
-const FIRST_SECTION = (() => {
-  const group = Arr.headNonEmpty(schoolSettingsGroups);
-  const section = Arr.headNonEmpty(group.sections);
-  return { ...section, group: { key: group.key, target: section.target } };
-})();
+  });
+}
 
 /**
  * Resolves the settings section that owns the page on screen, given the leaf
  * route path. The settings root and every path this table does not declare
  * belong to the first section, so the breadcrumb is never blank.
  */
-export function getSchoolSettingsSection(leafPath: string) {
+export function getSchoolSettingsSection(slug: TenantSlug, leafPath: string) {
+  const sections = schoolSettingsSections(slug);
   return Option.getOrElse(
-    Arr.findFirst(
-      schoolSettingsSections,
-      (section) => section.target.to === leafPath
-    ),
-    () => FIRST_SECTION
+    Arr.findFirst(sections, (section) => section.target.to === leafPath),
+    () => Arr.headNonEmpty(sections)
   );
 }

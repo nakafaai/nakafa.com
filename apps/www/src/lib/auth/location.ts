@@ -1,8 +1,8 @@
-import type { LinkTarget } from "@repo/internationalization/src/link";
-import { useCurrentLocale } from "@repo/internationalization/src/link";
 import { useLocation, useNavigate, useRouter } from "@tanstack/react-router";
 import type { MouseEvent, SyntheticEvent } from "react";
 import { getPostAuthSignInTarget } from "@/lib/auth/admission";
+import type { LinkTarget } from "@/lib/routing/link";
+import { useCurrentLocale } from "@/lib/routing/link";
 
 /** Returns whether a link click must retain native browser navigation. */
 function isModifiedLinkClick(event: MouseEvent<HTMLAnchorElement>) {

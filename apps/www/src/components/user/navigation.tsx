@@ -3,8 +3,8 @@ import {
   TabsList,
   TabsTab,
 } from "@repo/design-system/components/ui/tabs";
-import { Link, type LinkTarget } from "@repo/internationalization/src/link";
 import { Array as Arr } from "effect";
+import { Link, type LinkTarget } from "@/lib/routing/link";
 
 interface Props {
   tabs: readonly {

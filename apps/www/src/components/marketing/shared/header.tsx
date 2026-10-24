@@ -1,16 +1,13 @@
 import { Button } from "@repo/design-system/components/ui/button";
 import { Nina } from "@repo/design-system/components/ui/nina";
-import {
-  EXACT_ACTIVE_OPTIONS,
-  Link,
-  useCurrentLocale,
-} from "@repo/internationalization/src/link";
 import { useMatchRoute } from "@tanstack/react-router";
 import { useTranslations } from "use-intl";
 import { LESSON_SECTION_ID } from "@/components/marketing/about/lesson/id";
 import { HeaderCta, LogoCta } from "@/components/marketing/shared/header/cta";
 import { scrollToLessonSection } from "@/components/marketing/shared/header/features";
 import { Language } from "@/components/marketing/shared/language";
+import { Link, useCurrentLocale } from "@/lib/routing/link";
+import { EXACT_ACTIVE_OPTIONS } from "@/lib/routing/tree";
 
 /**
  * The marketing header in three parts, as the identity's Header card draws it:
@@ -40,11 +37,7 @@ export function Header() {
             <Button
               nativeButton={false}
               render={
-                <Link
-                  activeOptions={EXACT_ACTIVE_OPTIONS}
-                  params={{ locale }}
-                  to="/$locale"
-                >
+                <Link activeOptions={EXACT_ACTIVE_OPTIONS} to="/$locale">
                   {t("about")}
                 </Link>
               }
@@ -62,7 +55,6 @@ export function Header() {
                       scrollToLessonSection();
                     }
                   }}
-                  params={{ locale }}
                   resetScroll={!onHome}
                   to="/$locale"
                 >
@@ -76,7 +68,6 @@ export function Header() {
               render={
                 <Link
                   activeOptions={EXACT_ACTIVE_OPTIONS}
-                  params={{ locale }}
                   to="/$locale/pricing"
                 >
                   {t("pricing")}

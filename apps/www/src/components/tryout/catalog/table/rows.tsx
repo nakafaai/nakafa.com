@@ -65,10 +65,7 @@ function TryoutSetRowContent({ row }: { row: TryoutSetRow }) {
           return;
         }
         setIntentActive(true);
-        Option.map(
-          Option.fromNullishOr(getTryoutPageTarget(address)),
-          (target) => navigate(target)
-        );
+        Option.map(getTryoutPageTarget(address), (target) => navigate(target));
       }}
       onFocusCapture={() => setIntentActive(true)}
       onMouseEnter={() => setIntentActive(true)}

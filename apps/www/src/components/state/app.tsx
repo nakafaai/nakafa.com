@@ -1,12 +1,9 @@
 import type { Locale } from "@repo/internationalization/src/locale";
-import {
-  LANDING_TARGET,
-  SEARCH_TARGET,
-} from "@repo/internationalization/src/target";
 import { Missing } from "@/components/state/missing";
 import { ActionNavigation } from "@/components/state/navigation";
 import { Stage } from "@/components/state/stage";
 import { readStandaloneMessages } from "@/lib/i18n/standalone";
+import { LANDING_TARGET, SEARCH_TARGET } from "@/lib/routing/target";
 
 /**
  * The not-found state of a page inside the app. Its two ways on navigate in the

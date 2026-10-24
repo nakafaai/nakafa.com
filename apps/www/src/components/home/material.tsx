@@ -3,7 +3,7 @@ import type { Ref } from "@confect/core";
 import type contents from "@repo/backend/confect/_generated/refs/contents";
 import { Tile, TileIcon } from "@repo/design-system/components/ui/tile";
 import type { TileLook } from "@repo/design-system/lib/look";
-import { AddressLink } from "@repo/internationalization/src/public";
+import { AddressLink } from "@/lib/routing/public/link";
 
 /**
  * The fields one home list row renders.

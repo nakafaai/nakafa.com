@@ -7,7 +7,6 @@ import {
   useReducedMotion,
 } from "@mantine/hooks";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { PublicPathLink } from "@repo/internationalization/src/public";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
 import { animate } from "motion";
@@ -15,6 +14,7 @@ import { useMotionValue, useMotionValueEvent } from "motion/react";
 import { useEffect, useState } from "react";
 import { CountryFlagIcon } from "@/components/shared/flag";
 import type { readRuntimeCurriculumOptions } from "@/lib/curriculum/model";
+import { PublicPathLink } from "@/lib/routing/public/link";
 
 /** How long one curriculum stays bright before the next one lights up. */
 const LIGHT_FOR_MS = 1800;

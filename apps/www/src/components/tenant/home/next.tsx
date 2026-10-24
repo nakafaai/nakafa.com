@@ -53,9 +53,10 @@ export function NextTile({
 
 /** One room that opens soon, as a row that opens its exam. */
 function NextRow({ locale, room }: { locale: string; room: Room }) {
+  const tenant = useTenant();
   return (
     <CardLink
-      target={{ host: "school", target: schoolExamTarget(room.examId) }}
+      target={schoolExamTarget(tenant.slug, room.examId)}
       title={room.examTitle}
     >
       <RowText detail={room.room} title={room.examTitle} />

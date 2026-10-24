@@ -1,9 +1,9 @@
 "use client";
 
-import { Link, type LinkPreload } from "@repo/internationalization/src/link";
 import { Option } from "effect";
 import type { ComponentProps } from "react";
 import { getTryoutPageTarget } from "@/components/tryout/route/path";
+import { Link, type LinkPreload } from "@/lib/routing/link";
 
 /**
  * A link to one try-out page, which carries the attempt of the page when one is
@@ -20,17 +20,14 @@ export function TryoutPageLink({
   readonly preload?: LinkPreload | undefined;
   readonly publicPath: string;
 }) {
-  return Option.match(
-    Option.fromNullishOr(getTryoutPageTarget({ attemptId, publicPath })),
-    {
-      onNone: () => null,
-      onSome: (target) => (
-        <Link
-          {...anchor}
-          {...(preload === undefined ? {} : { preload })}
-          {...target}
-        />
-      ),
-    }
-  );
+  return Option.match(getTryoutPageTarget({ attemptId, publicPath }), {
+    onNone: () => null,
+    onSome: (target) => (
+      <Link
+        {...anchor}
+        {...(preload === undefined ? {} : { preload })}
+        {...target}
+      />
+    ),
+  });
 }

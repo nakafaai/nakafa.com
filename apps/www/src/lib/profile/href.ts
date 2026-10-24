@@ -1,9 +1,7 @@
-import {
-  type LinkTarget,
-  LOCALE_ROUTE,
-} from "@repo/internationalization/src/link";
 import { linkOptions } from "@tanstack/react-router";
 import { Match, Schema } from "effect";
+import type { LinkTarget } from "@/lib/routing/link";
+import { LOCALE_ROUTE } from "@/lib/routing/tree";
 
 /** The sign that opens the address of a profile: `/@username`. */
 export const PROFILE_SIGN = "@";

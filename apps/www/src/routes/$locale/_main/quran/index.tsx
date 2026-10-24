@@ -1,7 +1,6 @@
 import { AllahIcon } from "@hugeicons/core-free-icons";
 import { Card } from "@repo/design-system/components/ui/card";
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
-import { quranSurahTarget } from "@repo/internationalization/src/target";
 import { makeBreadcrumbNodes } from "@repo/seo/json-ld/node";
 import { createFileRoute } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
@@ -20,6 +19,7 @@ import { getQuranSurahName } from "@/lib/content/quran/navigation";
 import { getPublishedQuranCatalog } from "@/lib/content/quran/publication";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getAppSocialArtwork } from "@/lib/og/app";
+import { quranSurahTarget } from "@/lib/routing/target";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { createSeoHead, toRouterHead } from "@/lib/seo/head";
 
@@ -99,10 +99,7 @@ function QuranIndexPage() {
             {Arr.map(page.surahs, (surah) => (
               <CardLink
                 key={surah.number}
-                target={{
-                  host: "app",
-                  target: quranSurahTarget(surah.number),
-                }}
+                target={quranSurahTarget(surah.number)}
                 title={surah.title}
               >
                 <QuranSurahRow

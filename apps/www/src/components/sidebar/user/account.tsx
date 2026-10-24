@@ -14,11 +14,6 @@ import {
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { localizeInternalHref } from "@repo/internationalization/src/href";
-import {
-  LOCALE_ROUTE,
-  useCurrentLocale,
-} from "@repo/internationalization/src/link";
-import { publicPathTarget } from "@repo/internationalization/src/target";
 import { ClientOnly, useNavigate } from "@tanstack/react-router";
 import { Effect, Option, Result } from "effect";
 import { lazy, Suspense } from "react";
@@ -31,6 +26,9 @@ import { signOutAccountBrowserIdentity } from "@/lib/auth/identity/browser";
 import { usePageNavigation } from "@/lib/content/page/context";
 import type { CurrentUser } from "@/lib/identity/client";
 import { profileTarget } from "@/lib/profile/href";
+import { useCurrentLocale } from "@/lib/routing/link";
+import { publicPathTarget } from "@/lib/routing/target";
+import { LOCALE_ROUTE } from "@/lib/routing/tree";
 
 /**
  * The account's schools, loaded when the menu opens: the list brings the school
@@ -52,9 +50,7 @@ export function NavUserAccount({ user }: { user: CurrentUser }) {
   const locale = useCurrentLocale();
   /** Opens one signed Page of the account menu inside the app. */
   function openPage(publicPath: string) {
-    Option.map(Option.fromNullishOr(publicPathTarget(publicPath)), (target) =>
-      navigate(target)
-    );
+    Option.map(publicPathTarget(publicPath), (target) => navigate(target));
   }
   const { username } = user.appUser;
   const planLabelByPlan = {

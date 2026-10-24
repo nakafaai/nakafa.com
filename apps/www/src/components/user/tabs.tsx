@@ -1,13 +1,12 @@
-import { useLeafRoutePath } from "@repo/internationalization/src/link";
 import { Array as Arr, Option } from "effect";
 import { useTranslations } from "use-intl";
-
 import { SharedTabs } from "@/components/user/navigation";
 import {
   ProfileTab,
   profileTabTarget,
   profileTarget,
 } from "@/lib/profile/href";
+import { useLeafRoutePath } from "@/lib/routing/link";
 
 export function UserTabs({
   isOwner,

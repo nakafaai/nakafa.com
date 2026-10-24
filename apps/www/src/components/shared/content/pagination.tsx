@@ -3,10 +3,11 @@ import type { IconSvgElement } from "@hugeicons/react";
 import type { ContentPagination } from "@repo/contents/content";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { Link } from "@repo/internationalization/src/link";
-import { publicPathTarget } from "@repo/internationalization/src/target";
 import { cn } from "cn";
+import { Option } from "effect";
 import { useTranslations } from "use-intl";
+import { TargetLink } from "@/lib/routing/link";
+import { publicPathTarget } from "@/lib/routing/target";
 
 interface Props {
   className?: string;
@@ -76,9 +77,8 @@ function PaginationItem({
     </>
   );
 
-  const target = publicPathTarget(publicPath, context);
-  if (target === null) {
-    return (
+  return Option.match(publicPathTarget(publicPath, context), {
+    onNone: () => (
       <div
         aria-hidden="true"
         className={cn(
@@ -88,19 +88,18 @@ function PaginationItem({
       >
         {content}
       </div>
-    );
-  }
-
-  return (
-    <Link
-      className={itemClassName}
-      preload={prefetch ? "render" : "intent"}
-      title={title}
-      {...target}
-    >
-      {content}
-    </Link>
-  );
+    ),
+    onSome: (target) => (
+      <TargetLink
+        className={itemClassName}
+        preload={prefetch ? "render" : "intent"}
+        target={target}
+        title={title}
+      >
+        {content}
+      </TargetLink>
+    ),
+  });
 }
 
 /**

@@ -1,7 +1,7 @@
 import { ArrowRight02Icon } from "@hugeicons/core-free-icons";
 import type { IconSvgElement } from "@hugeicons/react";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Link, type LinkTarget } from "@repo/internationalization/src/link";
+import { Link, type LinkTarget } from "@/lib/routing/link";
 
 type SubjectItemProps = Readonly<{
   icon: IconSvgElement;

@@ -1,15 +1,11 @@
 "use client";
 
-import { DestinationLink } from "@repo/internationalization/src/link";
 import type { ReactNode } from "react";
-import {
-  type HostTarget,
-  SchoolDestinationLink,
-} from "@/lib/routing/school/link";
+import { type LinkTarget, TargetLink } from "@/lib/routing/link";
 
 /**
- * One link of a breadcrumb, drawn the way its host's routes need. The breadcrumb
- * link renders it and gives it only its classes, so those are what it passes on.
+ * One link of a breadcrumb. The breadcrumb link renders it and gives it only its
+ * classes, so those are what it passes on.
  */
 export function BreadcrumbAnchor({
   children,
@@ -18,18 +14,11 @@ export function BreadcrumbAnchor({
 }: {
   children?: ReactNode;
   className?: string;
-  target: HostTarget;
+  target: LinkTarget;
 }) {
-  if (target.host === "school") {
-    return (
-      <SchoolDestinationLink className={className} destination={target.target}>
-        {children}
-      </SchoolDestinationLink>
-    );
-  }
   return (
-    <DestinationLink className={className} destination={target.target}>
+    <TargetLink className={className} target={target}>
       {children}
-    </DestinationLink>
+    </TargetLink>
   );
 }

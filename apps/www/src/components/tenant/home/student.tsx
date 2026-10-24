@@ -161,9 +161,10 @@ function StudentSittingsTile({
 
 /** One sitting that the student may still take part in, as a row that opens it, with its state or its opening. */
 function SittingRow({ sitting }: { sitting: Sitting }) {
+  const tenant = useTenant();
   return (
     <CardLink
-      target={{ host: "school", target: schoolSittingTarget(sitting.id) }}
+      target={schoolSittingTarget(tenant.slug, sitting.id)}
       title={sitting.examTitle}
     >
       <RowText detail={sitting.room} title={sitting.examTitle} />
@@ -230,12 +231,13 @@ function StudentResultsTile({
 
 /** One closed sitting, as a row that opens it and says whether its results are released. */
 function ResultRow({ sitting }: { sitting: Sitting }) {
+  const tenant = useTenant();
   const t = useTranslations("School");
   const te = useTranslations("Exams");
 
   return (
     <CardLink
-      target={{ host: "school", target: schoolSittingTarget(sitting.id) }}
+      target={schoolSittingTarget(tenant.slug, sitting.id)}
       title={sitting.examTitle}
     >
       <RowText detail={sitting.room} title={sitting.examTitle} />

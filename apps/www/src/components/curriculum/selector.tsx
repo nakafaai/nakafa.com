@@ -13,7 +13,6 @@ import {
 } from "@repo/design-system/components/ui/select";
 import { type ToastCopy, toast } from "@repo/design-system/lib/toast/notify";
 import type { Locale } from "@repo/internationalization/src/locale";
-import { publicPathTarget } from "@repo/internationalization/src/target";
 import { useNavigate } from "@tanstack/react-router";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 import { useLocale } from "use-intl";
@@ -23,6 +22,7 @@ import { reportClientException } from "@/lib/analytics/client";
 import type { readRuntimeCurriculumOptions } from "@/lib/curriculum/model";
 import { useSetPreferredCurriculumMutation } from "@/lib/curriculum/mutation";
 import { isActiveLocale } from "@/lib/i18n/active";
+import { publicPathTarget } from "@/lib/routing/target";
 
 type CurriculumSelectorOption = ReturnType<
   typeof readRuntimeCurriculumOptions
@@ -96,9 +96,8 @@ export function CurriculumSelector({
     if (isLoading) {
       return;
     }
-    Option.map(
-      Option.fromNullishOr(publicPathTarget(selectedOption.value.publicPath)),
-      (target) => navigate(target)
+    Option.map(publicPathTarget(selectedOption.value.publicPath), (target) =>
+      navigate(target)
     );
     if (!(isAuthenticated && isActiveLocale(locale))) {
       return;

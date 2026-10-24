@@ -1,6 +1,6 @@
 import type { IconSvgElement } from "@hugeicons/react";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { PublicPathLink } from "@repo/internationalization/src/public";
+import { PublicPathLink } from "@/lib/routing/public/link";
 
 interface Props {
   /** The description of the content */

@@ -8,20 +8,6 @@ import {
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Nina } from "@repo/design-system/components/ui/nina";
-import {
-  DestinationLink,
-  EXACT_ACTIVE_OPTIONS,
-  Link,
-  type LinkPreload,
-  type LinkTarget,
-  useCurrentLocale,
-} from "@repo/internationalization/src/link";
-import { PublicPathLink } from "@repo/internationalization/src/public";
-import {
-  articleCategoryTarget,
-  LANDING_TARGET,
-  PRICING_TARGET,
-} from "@repo/internationalization/src/target";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { cva } from "class-variance-authority";
 import { Array as Arr, Option } from "effect";
@@ -36,6 +22,20 @@ import {
 } from "@/components/sidebar/data/subject";
 import type { ArticleNavigationItem } from "@/lib/content/article/navigation";
 import type { PageNavigation } from "@/lib/content/page/navigation";
+import {
+  Link,
+  type LinkPreload,
+  type LinkTarget,
+  TargetLink,
+  useCurrentLocale,
+} from "@/lib/routing/link";
+import { PublicPathLink } from "@/lib/routing/public/link";
+import {
+  articleCategoryTarget,
+  LANDING_TARGET,
+  PRICING_TARGET,
+} from "@/lib/routing/target";
+import { EXACT_ACTIVE_OPTIONS } from "@/lib/routing/tree";
 
 const highSchoolSubjects = Option.getOrElse(
   Option.map(
@@ -78,8 +78,8 @@ export function Footer({
                 {Arr.map(highSchoolSubjects, (subject) => (
                   <li key={subject.value}>
                     <FooterLink
-                      destination={getSubjectMenuTarget(subject, locale)}
                       label={tSubject(subject.title, { grade: subject.value })}
+                      target={getSubjectMenuTarget(subject, locale)}
                     />
                   </li>
                 ))}
@@ -94,8 +94,8 @@ export function Footer({
                 {Arr.map(holyMenu, (holy) => (
                   <li key={holy.title}>
                     <FooterLink
-                      destination={holy.target}
                       label={tHoly(holy.title)}
+                      target={holy.target}
                     />
                   </li>
                 ))}
@@ -110,8 +110,8 @@ export function Footer({
                 {Arr.map(articleNavigation, (article) => (
                   <li key={article.category}>
                     <FooterLink
-                      destination={articleCategoryTarget(article.route)}
                       label={article.title}
+                      target={articleCategoryTarget(article.route)}
                     />
                   </li>
                 ))}
@@ -124,15 +124,12 @@ export function Footer({
               </span>
               <ul className="flex flex-col gap-2">
                 <li>
-                  <FooterLink
-                    destination={LANDING_TARGET}
-                    label={t("about-us")}
-                  />
+                  <FooterLink label={t("about-us")} target={LANDING_TARGET} />
                 </li>
                 <li>
                   <FooterLink
-                    destination={PRICING_TARGET}
                     label={tMarketing("pricing")}
+                    target={PRICING_TARGET}
                   />
                 </li>
                 <li>
@@ -180,7 +177,6 @@ export function Footer({
       <Link
         activeOptions={EXACT_ACTIVE_OPTIONS}
         className="mx-auto flex w-full max-w-7xl px-6 py-16 transition-colors ease-out hover:text-primary"
-        params={{ locale }}
         to="/$locale"
       >
         <span className="mx-auto font-bold text-7xl transition-colors duration-300 ease-out hover:text-primary sm:text-8xl md:text-9xl lg:text-[12rem] xl:text-[18rem]">
@@ -241,18 +237,12 @@ const linkItemVariants = cva(
   "text-sm transition-colors ease-out hover:text-primary"
 );
 
-/** One footer destination of the app, at a route target that the app chose. */
-function FooterLink({
-  destination,
-  label,
-}: {
-  destination: LinkTarget;
-  label: string;
-}) {
+/** One footer link of the app, at a route target that the app chose. */
+function FooterLink({ target, label }: { target: LinkTarget; label: string }) {
   return (
-    <DestinationLink className={linkItemVariants()} destination={destination}>
+    <TargetLink className={linkItemVariants()} target={target}>
       {label}
-    </DestinationLink>
+    </TargetLink>
   );
 }
 

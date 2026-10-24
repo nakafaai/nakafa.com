@@ -20,17 +20,20 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "@repo/design-system/components/ui/sidebar-submenu";
-import { useLeafRoutePath } from "@repo/internationalization/src/link";
 import { Array as Arr } from "effect";
 import type { ComponentProps } from "react";
 import { useTranslations } from "use-intl";
+import { useTenant } from "@/components/tenant/context";
 import { TenantSidebarGroup } from "@/components/tenant/group";
-import { SchoolDestinationLink } from "@/lib/routing/school/link";
-import { schoolSettingsGroups } from "@/lib/settings/school";
+import { TargetLink, useLeafRoutePath } from "@/lib/routing/link";
+import {
+  type SchoolSettingsGroup,
+  schoolSettingsGroups,
+} from "@/lib/settings/school";
 
 /** The icon of each group. A group added without one does not compile. */
 const groupIcons: Record<
-  (typeof schoolSettingsGroups)[number]["key"],
+  SchoolSettingsGroup["key"],
   ComponentProps<typeof HugeIcons>["icon"]
 > = {
   integrations: Link01Icon,
@@ -50,11 +53,12 @@ const groupIcons: Record<
  * school's own navigation.
  */
 export function SchoolSettingsNav() {
+  const { slug } = useTenant();
   const t = useTranslations("SchoolSettings");
 
   return (
     <TenantSidebarGroup label={t("manage-settings")}>
-      {Arr.map(schoolSettingsGroups, (group) => (
+      {Arr.map(schoolSettingsGroups(slug), (group) => (
         <SchoolSettingsNavGroup group={group} key={group.key} />
       ))}
     </TenantSidebarGroup>
@@ -62,11 +66,7 @@ export function SchoolSettingsNav() {
 }
 
 /** One group of school settings: its name, which folds open into its sections. */
-function SchoolSettingsNavGroup({
-  group,
-}: {
-  group: (typeof schoolSettingsGroups)[number];
-}) {
+function SchoolSettingsNavGroup({ group }: { group: SchoolSettingsGroup }) {
   const leafPath = useLeafRoutePath();
   const t = useTranslations("SchoolSettings");
   const label = t(group.key);
@@ -97,7 +97,7 @@ function SchoolSettingsNavGroup({
             <SidebarMenuSubItem key={section.target.to}>
               <SidebarMenuSubButton
                 isActive={isSectionActive(section)}
-                render={<SchoolDestinationLink destination={section.target} />}
+                render={<TargetLink target={section.target} />}
               >
                 <span className="truncate">{t(section.labelKey)}</span>
               </SidebarMenuSubButton>

@@ -1,14 +1,10 @@
 import { ArrowRight02Icon } from "@hugeicons/core-free-icons";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { DestinationLink } from "@repo/internationalization/src/link";
-import { publicPathTarget } from "@repo/internationalization/src/target";
 import { cva, type VariantProps } from "class-variance-authority";
 import { Option } from "effect";
 import type { ReactNode } from "react";
-import {
-  type HostTarget,
-  SchoolDestinationLink,
-} from "@/lib/routing/school/link";
+import { type LinkTarget, TargetLink } from "@/lib/routing/link";
+import { publicPathTarget } from "@/lib/routing/target";
 
 /**
  * The frame of a row in a card's list: the row's padding, and the card's spacing on the list's first row when the
@@ -59,16 +55,14 @@ export function PublicPathCardLink({
   publicPath: string;
   title: string;
 }) {
-  return Option.match(
-    Option.fromNullishOr(publicPathTarget(publicPath, context)),
-    {
-      onNone: () => null,
-      onSome: (target) => (
-        <CardLink arrow={arrow} target={{ host: "app", target }} title={title}>
-          {children}
-        </CardLink>
-      ),
-    }
+  const target = publicPathTarget(publicPath, context);
+  if (Option.isNone(target)) {
+    return null;
+  }
+  return (
+    <CardLink arrow={arrow} target={target.value} title={title}>
+      {children}
+    </CardLink>
   );
 }
 
@@ -82,8 +76,7 @@ export function CardLinks({ children }: { children: ReactNode }) {
  * toward the page it opens. The last row takes the card's bottom spacing, so
  * its highlight reaches the bottom edge, and the first row takes the card's
  * top spacing when the list opens the card. Rows prefetch on intent, since a
- * card can list many pages. The target names the host of its page: a school
- * page's route lives in the school tree.
+ * card can list many pages.
  */
 export function CardLink({
   arrow,
@@ -94,7 +87,7 @@ export function CardLink({
   /** When the arrow shows: on hover, which is the default, or always. */
   arrow?: VariantProps<typeof cardArrow>["arrow"];
   children: ReactNode;
-  target: HostTarget;
+  target: LinkTarget;
   title: string;
 }) {
   const className = cardRow({ linked: true });
@@ -103,25 +96,10 @@ export function CardLink({
   );
   return (
     <li className="group/list">
-      {target.host === "school" ? (
-        <SchoolDestinationLink
-          className={className}
-          destination={target.target}
-          title={title}
-        >
-          {children}
-          {arrowIcon}
-        </SchoolDestinationLink>
-      ) : (
-        <DestinationLink
-          className={className}
-          destination={target.target}
-          title={title}
-        >
-          {children}
-          {arrowIcon}
-        </DestinationLink>
-      )}
+      <TargetLink className={className} target={target} title={title}>
+        {children}
+        {arrowIcon}
+      </TargetLink>
     </li>
   );
 }

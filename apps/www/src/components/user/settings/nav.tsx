@@ -15,15 +15,11 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
-import {
-  EXACT_ACTIVE_OPTIONS,
-  Link,
-  type LinkTarget,
-  useRouteMatched,
-} from "@repo/internationalization/src/link";
 import { Array as Arr } from "effect";
 import type { ComponentProps } from "react";
 import { useTranslations } from "use-intl";
+import { Link, type LinkTarget, useRouteMatched } from "@/lib/routing/link";
+import { EXACT_ACTIVE_OPTIONS } from "@/lib/routing/tree";
 import {
   type UserSettingsLabelKey,
   userSettingsGroups,

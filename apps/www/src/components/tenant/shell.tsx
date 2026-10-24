@@ -26,11 +26,6 @@ import {
   Sidebar,
   SidebarInset,
 } from "@repo/design-system/components/ui/sidebar-shell";
-import {
-  EXACT_ACTIVE_OPTIONS,
-  Link,
-  useRouteMatched,
-} from "@repo/internationalization/src/link";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { ClientOnly } from "@tanstack/react-router";
 import { Effect, Option } from "effect";
@@ -53,6 +48,8 @@ import type { Greeting } from "@/components/tenant/home/greeting";
 import { SchoolMark } from "@/components/tenant/mark";
 import { TenantNavigation } from "@/components/tenant/navigation";
 import { signOutSchoolAccount } from "@/components/tenant/signout";
+import { Link, useRouteMatched } from "@/lib/routing/link";
+import { EXACT_ACTIVE_OPTIONS } from "@/lib/routing/tree";
 
 import type { SchoolViewer } from "@/lib/tenant/frame";
 
@@ -202,7 +199,9 @@ function TenantFrame({
   personName: string;
   role: TenantValue["role"];
 }) {
-  const isEditor = useRouteMatched("/school/$slug/exams/$exam/edit");
+  const isEditor = useRouteMatched("/school/$slug/exams/$exam/edit", {
+    exact: true,
+  });
   const tCommon = useTranslations("Common");
 
   if (isEditor) {

@@ -10,8 +10,6 @@ import {
 } from "@repo/design-system/components/ui/empty";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Separator } from "@repo/design-system/components/ui/separator";
-import { EXACT_ACTIVE_OPTIONS } from "@repo/internationalization/src/link";
-import { PublicPathLink } from "@repo/internationalization/src/public";
 import { cn } from "cn";
 import { Array as Arr } from "effect";
 import { createContext, Fragment, type ReactElement, use } from "react";
@@ -19,6 +17,8 @@ import { useTranslations } from "use-intl";
 import { SearchExcerpt } from "@/components/search/excerpt";
 import { useSearchSectionLabels } from "@/components/search/labels";
 import { EmptyNina } from "@/components/state/empty";
+import { PublicPathLink } from "@/lib/routing/public/link";
+import { EXACT_ACTIVE_OPTIONS } from "@/lib/routing/tree";
 import type { ContentSearchResultItem } from "@/lib/search/query";
 
 interface Props {

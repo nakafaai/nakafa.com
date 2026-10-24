@@ -1,7 +1,6 @@
 import { LocalizedPath } from "@repo/internationalization/src/alternates";
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
 import { toCanonicalPath } from "@repo/internationalization/src/rewrite";
-import { HOME_TARGET } from "@repo/internationalization/src/target";
 import { makeBreadcrumbNodes } from "@repo/seo/json-ld/node";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
@@ -49,6 +48,7 @@ import {
 } from "@/lib/curriculum/model";
 import { readCurriculumSeoContext } from "@/lib/curriculum/seo";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
+import { HOME_TARGET } from "@/lib/routing/target";
 import { createResolvedRouteAlternates } from "@/lib/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { resolveSEOMetadata } from "@/lib/seo/generator";
@@ -238,7 +238,7 @@ function CurriculumRoutePage() {
                   options={page.options}
                 />
               ),
-              home: { host: "app", target: HOME_TARGET },
+              home: HOME_TARGET,
               homeLabel: labels.home,
               items: [{ label: labels.subject }],
               menuLabel: labels.more,

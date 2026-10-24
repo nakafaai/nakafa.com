@@ -5,10 +5,10 @@ import type contents from "@repo/backend/confect/_generated/refs/contents";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import type { TileLook } from "@repo/design-system/lib/look";
-import { Link, useCurrentLocale } from "@repo/internationalization/src/link";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import { MaterialRow } from "@/components/home/material";
+import { Link } from "@/lib/routing/link";
 
 type RecentlyViewedSubject = Ref.Returns<
   typeof contents.queries.recent.getRecentlyViewed
@@ -31,7 +31,6 @@ export function HomeContinueLearning({
   subjects: readonly RecentlyViewedSubject[];
 }) {
   const t = useTranslations("Home");
-  const locale = useCurrentLocale();
 
   if (subjects.length === 0) {
     return null;
@@ -57,7 +56,7 @@ export function HomeContinueLearning({
         className="w-fit"
         nativeButton={false}
         render={
-          <Link params={{ locale }} to="/$locale/search">
+          <Link to="/$locale/search">
             <HugeIcons className="size-4" icon={Search02Icon} />
             {t("explore-materials")}
           </Link>

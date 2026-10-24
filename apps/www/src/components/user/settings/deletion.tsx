@@ -21,7 +21,6 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { localizeInternalHref } from "@repo/internationalization/src/href";
-import { useCurrentLocale } from "@repo/internationalization/src/link";
 import { useRouter } from "@tanstack/react-router";
 import { useConvex } from "convex/react";
 import { Effect, Result } from "effect";
@@ -45,6 +44,7 @@ import {
 import { useCurrentAuthNavigation } from "@/lib/auth/location";
 import { httpLayer } from "@/lib/convex/http";
 import { requireConvexOnline } from "@/lib/convex/online";
+import { useCurrentLocale } from "@/lib/routing/link";
 
 const dialogError = {
   generic: "generic",

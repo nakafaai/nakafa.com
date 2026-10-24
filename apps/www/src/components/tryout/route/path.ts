@@ -1,12 +1,9 @@
-import {
-  type LinkTarget,
-  LOCALE_ROUTE,
-} from "@repo/internationalization/src/link";
-import { TRYOUT_TARGET } from "@repo/internationalization/src/target";
 import { linkOptions } from "@tanstack/react-router";
-import { Array as Arr, Schema } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 import type { TryoutSectionRoute } from "@/components/tryout/section/model";
-import type { HostTarget } from "@/lib/routing/school/link";
+import type { LinkTarget } from "@/lib/routing/link";
+import { TRYOUT_TARGET } from "@/lib/routing/target";
+import { LOCALE_ROUTE } from "@/lib/routing/tree";
 
 /** Route coordinates of an href; each one is optional because a href can omit any of them. */
 type TryoutHrefInput = Partial<
@@ -34,7 +31,7 @@ export function getTryoutPublicPath({
   section,
   set,
   track,
-}: TryoutHrefInput = {}) {
+}: TryoutHrefInput) {
   const segments = Arr.filter(
     ["try-out", country, exam, track, set, section],
     (segment): segment is string => Boolean(segment)
@@ -56,52 +53,67 @@ export function getTryoutPublicPathHref(publicPath: string) {
 /**
  * The typed target of a try-out public path. Its segments after `try-out` name
  * the country, exam, track, set and section, in that order, so the depth of the
- * path picks the route. A path of any other shape has no target.
+ * path picks the route. An empty segment, or a path of any other shape, names no
+ * try-out page and has no target.
  */
 export function getTryoutPublicPathTarget(
   publicPath: string
-): LinkTarget | null {
+): Option.Option<LinkTarget> {
   const [root, country, exam, track, set, section, ...rest] =
     publicPath.split("/");
-  if (root !== "try-out" || rest.length > 0) {
-    return null;
+  if (
+    root !== "try-out" ||
+    rest.length > 0 ||
+    Arr.some([country, exam, track, set, section], (segment) => segment === "")
+  ) {
+    return Option.none();
   }
-  if (!country) {
-    return TRYOUT_TARGET;
+  if (country === undefined) {
+    return Option.some(TRYOUT_TARGET);
   }
-  if (!exam) {
-    return linkOptions({
+  if (exam === undefined) {
+    return Option.some(
+      linkOptions({
+        from: LOCALE_ROUTE,
+        params: { country },
+        to: "/$locale/try-out/$country",
+      })
+    );
+  }
+  if (track === undefined) {
+    return Option.some(
+      linkOptions({
+        from: LOCALE_ROUTE,
+        params: { country, exam },
+        to: "/$locale/try-out/$country/$exam",
+      })
+    );
+  }
+  if (set === undefined) {
+    return Option.some(
+      linkOptions({
+        from: LOCALE_ROUTE,
+        params: { country, exam, track },
+        to: "/$locale/try-out/$country/$exam/$track",
+      })
+    );
+  }
+  if (section === undefined) {
+    return Option.some(
+      linkOptions({
+        from: LOCALE_ROUTE,
+        params: { country, exam, set, track },
+        to: "/$locale/try-out/$country/$exam/$track/$set",
+      })
+    );
+  }
+  return Option.some(
+    linkOptions({
       from: LOCALE_ROUTE,
-      params: { country },
-      to: "/$locale/try-out/$country",
-    });
-  }
-  if (!track) {
-    return linkOptions({
-      from: LOCALE_ROUTE,
-      params: { country, exam },
-      to: "/$locale/try-out/$country/$exam",
-    });
-  }
-  if (!set) {
-    return linkOptions({
-      from: LOCALE_ROUTE,
-      params: { country, exam, track },
-      to: "/$locale/try-out/$country/$exam/$track",
-    });
-  }
-  if (!section) {
-    return linkOptions({
-      from: LOCALE_ROUTE,
-      params: { country, exam, set, track },
-      to: "/$locale/try-out/$country/$exam/$track/$set",
-    });
-  }
-  return linkOptions({
-    from: LOCALE_ROUTE,
-    params: { country, exam, section, set, track },
-    to: "/$locale/try-out/$country/$exam/$track/$set/$section",
-  });
+      params: { country, exam, section, set, track },
+      to: "/$locale/try-out/$country/$exam/$track/$set/$section",
+    })
+  );
 }
 
 /**
@@ -112,7 +124,7 @@ export function getTryoutPublicPathTarget(
 function getTryoutAttemptTarget(
   publicPath: string,
   attemptId: string
-): LinkTarget | null {
+): Option.Option<LinkTarget> {
   const [root, country, exam, track, set, section, ...rest] =
     publicPath.split("/");
   if (
@@ -123,22 +135,26 @@ function getTryoutAttemptTarget(
     !set ||
     rest.length > 0
   ) {
-    return null;
+    return Option.none();
   }
   if (!section) {
-    return linkOptions({
-      from: LOCALE_ROUTE,
-      params: { country, exam, set, track },
-      search: { [ATTEMPT_ID_PARAM]: attemptId },
-      to: "/$locale/try-out/$country/$exam/$track/$set",
-    });
+    return Option.some(
+      linkOptions({
+        from: LOCALE_ROUTE,
+        params: { country, exam, set, track },
+        search: { [ATTEMPT_ID_PARAM]: attemptId },
+        to: "/$locale/try-out/$country/$exam/$track/$set",
+      })
+    );
   }
-  return linkOptions({
-    from: LOCALE_ROUTE,
-    params: { country, exam, section, set, track },
-    search: { [ATTEMPT_ID_PARAM]: attemptId },
-    to: "/$locale/try-out/$country/$exam/$track/$set/$section",
-  });
+  return Option.some(
+    linkOptions({
+      from: LOCALE_ROUTE,
+      params: { country, exam, section, set, track },
+      search: { [ATTEMPT_ID_PARAM]: attemptId },
+      to: "/$locale/try-out/$country/$exam/$track/$set/$section",
+    })
+  );
 }
 
 /**
@@ -147,9 +163,8 @@ function getTryoutAttemptTarget(
  */
 export function getTryoutCrumbTarget(
   publicPath: string
-): HostTarget | undefined {
-  const target = getTryoutPublicPathTarget(publicPath);
-  return target === null ? undefined : { host: "app", target };
+): Option.Option<LinkTarget> {
+  return getTryoutPublicPathTarget(publicPath);
 }
 
 /** The address of one try-out page: its public path, and the attempt that binds the page when one is open. */
@@ -167,7 +182,7 @@ export function getTryoutPageTarget({
 }: {
   readonly attemptId?: string | undefined;
   readonly publicPath: string;
-}): LinkTarget | null {
+}): Option.Option<LinkTarget> {
   return attemptId === undefined
     ? getTryoutPublicPathTarget(publicPath)
     : getTryoutAttemptTarget(publicPath, attemptId);

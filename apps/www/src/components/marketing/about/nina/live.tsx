@@ -1,5 +1,4 @@
 import type { PromptInputMessage } from "@repo/design-system/lib/prompt-input/submission";
-import { useCurrentLocale } from "@repo/internationalization/src/link";
 import { useNavigate } from "@tanstack/react-router";
 import { ConvexProvider } from "convex/react";
 import { Option } from "effect";
@@ -8,6 +7,7 @@ import { useChatAdmission } from "@/components/ai/chat/admission";
 import { NinaInput } from "@/components/ai/input";
 import { NinaPromptTurn } from "@/components/marketing/about/nina/composer";
 import { useLiveSession } from "@/components/providers/live";
+import { useCurrentLocale } from "@/lib/routing/link";
 
 /**
  * A signed-in account's composer: its prompt starts a chat through admission. Its

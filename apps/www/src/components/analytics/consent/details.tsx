@@ -1,10 +1,10 @@
 import { Alert02Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { PublicPathLink } from "@repo/internationalization/src/public";
 import { useTranslations } from "use-intl";
 import type { AnalyticsConsentContextValue } from "@/lib/analytics/consent/context";
 import { usePageNavigation } from "@/lib/content/page/context";
+import { PublicPathLink } from "@/lib/routing/public/link";
 
 /** The decline and allow buttons, shared by the first prompt and the preferences dialog. */
 export function ConsentActions({

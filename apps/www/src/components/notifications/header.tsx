@@ -4,7 +4,6 @@ import notifications from "@repo/backend/confect/_generated/refs/notifications";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { toast } from "@repo/design-system/lib/toast/notify";
-import { HOME_TARGET } from "@repo/internationalization/src/target";
 import { Effect, type Option } from "effect";
 import { useTranslations } from "use-intl";
 import {
@@ -14,6 +13,7 @@ import {
 import { markAllReadInLists } from "@/components/notifications/mutation";
 import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
 import { reportClientException } from "@/lib/analytics/client";
+import { HOME_TARGET } from "@/lib/routing/target";
 
 /**
  * The sticky breadcrumb header of the inbox, as every account page has it, with the
@@ -75,7 +75,7 @@ export function NotificationsHeader({
               <span className="max-sm:sr-only">{t("mark-all-read")}</span>
             </Button>
           ) : undefined,
-        home: { host: "app", target: HOME_TARGET },
+        home: HOME_TARGET,
         homeLabel: tCommon("home"),
         items: [{ label: t("title") }],
         menuLabel: tCommon("more"),

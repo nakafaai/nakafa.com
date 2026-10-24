@@ -1,7 +1,8 @@
-import { useLeafRoutePath } from "@repo/internationalization/src/link";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
+import { useTenant } from "@/components/tenant/context";
 import { SchoolHeader } from "@/components/tenant/header";
+import { useLeafRoutePath } from "@/lib/routing/link";
 import { getSchoolSettingsSection } from "@/lib/settings/school";
 
 /**
@@ -11,8 +12,9 @@ import { getSchoolSettingsSection } from "@/lib/settings/school";
  */
 export function SchoolSettingsHeader({ children }: { children?: ReactNode }) {
   const leafPath = useLeafRoutePath();
+  const tenant = useTenant();
   const t = useTranslations("SchoolSettings");
-  const section = getSchoolSettingsSection(leafPath);
+  const section = getSchoolSettingsSection(tenant.slug, leafPath);
   const label = t(section.labelKey);
 
   return (
@@ -20,7 +22,7 @@ export function SchoolSettingsHeader({ children }: { children?: ReactNode }) {
       items={[
         {
           label: t(section.group.key),
-          target: { host: "school", target: section.group.target },
+          target: section.group.target,
         },
         { label },
       ]}

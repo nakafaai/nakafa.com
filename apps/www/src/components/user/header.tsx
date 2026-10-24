@@ -3,14 +3,11 @@ import { DeferredLearnerText } from "@repo/design-system/components/markdown/def
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { PersonAvatar } from "@repo/design-system/components/ui/person";
-import {
-  EXACT_ACTIVE_OPTIONS,
-  Link,
-  useCurrentLocale,
-} from "@repo/internationalization/src/link";
 import { useTranslations } from "use-intl";
 import { ShareProfileButton } from "@/components/user/share";
 import type { PublicProfile } from "@/lib/profile/public";
+import { Link } from "@/lib/routing/link";
+import { EXACT_ACTIVE_OPTIONS } from "@/lib/routing/tree";
 
 /**
  * The header of a profile: the name and the address on the left, the picture on
@@ -24,7 +21,6 @@ export function UserHeader({
   isOwner: boolean;
   profile: PublicProfile;
 }) {
-  const locale = useCurrentLocale();
   const t = useTranslations("Auth");
 
   return (
@@ -57,7 +53,6 @@ export function UserHeader({
             render={
               <Link
                 activeOptions={EXACT_ACTIVE_OPTIONS}
-                params={{ locale }}
                 to="/$locale/user/settings"
               >
                 <HugeIcons icon={PencilEdit02Icon} />

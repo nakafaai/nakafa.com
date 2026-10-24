@@ -75,11 +75,13 @@ export function shouldResetArticlePublicationCursor(page: ArticlePageCursor) {
 }
 /** Builds the next release-bound catalog URL when another page exists. */
 /** The continuation of one article catalog page: its cursor and the release that issued it. */
-interface ArticleNextSearch {
-  readonly cursor: string;
-  readonly manifest: string;
-  readonly release: string;
-}
+const ArticleNextSearchSchema = Schema.Struct({
+  cursor: Schema.String,
+  manifest: Schema.String,
+  release: Schema.String,
+});
+
+export type ArticleNextSearch = typeof ArticleNextSearchSchema.Type;
 
 export function getArticleNextSearch(
   page: ArticleNextPage

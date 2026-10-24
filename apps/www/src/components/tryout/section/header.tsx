@@ -1,3 +1,4 @@
+import { Option } from "effect";
 import type { ReactNode } from "react";
 import { getTryoutCrumbTarget } from "@/components/tryout/route/path";
 import type { TryoutSectionPage } from "@/components/tryout/section/model";
@@ -27,17 +28,24 @@ export function TryoutSectionPageHeader({
           label: page.exam.title,
           target:
             parents === "linked"
-              ? getTryoutCrumbTarget(page.exam.publicPath)
+              ? Option.getOrUndefined(
+                  getTryoutCrumbTarget(page.exam.publicPath)
+                )
               : undefined,
         },
         {
           label: page.track.title,
           target:
             parents === "linked"
-              ? getTryoutCrumbTarget(page.track.publicPath)
+              ? Option.getOrUndefined(
+                  getTryoutCrumbTarget(page.track.publicPath)
+                )
               : undefined,
         },
-        { label: page.set.title, target: getTryoutCrumbTarget(setPath) },
+        {
+          label: page.set.title,
+          target: Option.getOrUndefined(getTryoutCrumbTarget(setPath)),
+        },
       ]}
       title={page.section.title}
     />

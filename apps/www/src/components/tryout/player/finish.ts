@@ -41,9 +41,7 @@ export function useTryoutFinish<State>(input: {
   const navigate = useNavigate();
   /** Leaves for one try-out page. A page that names no route leaves the page on screen. */
   function navigateTo(address: TryoutPageAddress) {
-    Option.map(Option.fromNullishOr(getTryoutPageTarget(address)), (target) =>
-      navigate(target)
-    );
+    Option.map(getTryoutPageTarget(address), (target) => navigate(target));
   }
   const convex = useConvex();
   const completeSection = useMutation(tryouts.mutations.sections.complete);

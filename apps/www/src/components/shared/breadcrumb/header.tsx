@@ -13,23 +13,31 @@ import { useTranslations } from "use-intl";
 import { BreadcrumbAnchor } from "@/components/shared/breadcrumb/anchor";
 import { BreadcrumbHeaderFrame } from "@/components/shared/breadcrumb/frame";
 import { BreadcrumbMenu } from "@/components/shared/breadcrumb/menu";
-import type { HostTarget } from "@/lib/routing/school/link";
+import type { LinkTarget } from "@/lib/routing/link";
 
-/** One segment of a breadcrumb path. A segment without a target is the current page. */
-export interface BreadcrumbHeaderItem {
+/**
+ * Builds one segment of a breadcrumb path. A segment without a target is the
+ * current page. Its type is the parameter of this builder, so every segment has
+ * the one shape the breadcrumb renders.
+ */
+function breadcrumbItem(item: {
   readonly label: string;
   /** BCP 47 language of the label when it differs from the page. */
   readonly language?: string | undefined;
   readonly menuLabel?: string | undefined;
-  readonly target?: HostTarget | undefined;
+  readonly target?: LinkTarget | undefined;
+}) {
+  return item;
 }
+
+export type BreadcrumbHeaderItem = ReturnType<typeof breadcrumbItem>;
 
 /** Props of one sticky, bounded breadcrumb header. */
 interface BreadcrumbHeaderProps {
   /** Complete render value for one sticky, bounded breadcrumb header. */
   value: {
     action?: ReactNode;
-    home: HostTarget;
+    home: LinkTarget;
     homeLabel: string;
     items: readonly BreadcrumbHeaderItem[];
     menuLabel: string;

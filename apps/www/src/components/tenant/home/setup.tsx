@@ -1,4 +1,5 @@
 import { QueryResult } from "@confect/react";
+import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { linkOptions } from "@tanstack/react-router";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
@@ -8,23 +9,35 @@ import { homeSetupRead, useHomeSetup } from "@/components/tenant/home/query";
 import { missingSteps, type SetupStep } from "@/components/tenant/home/steps";
 import { HomeTile, RowText, TILE_ROWS } from "@/components/tenant/home/tile";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
-import { SCHOOL_ROUTE, type SchoolLinkTarget } from "@/lib/routing/school/link";
+import type { LinkTarget } from "@/lib/routing/link";
+import { LOCALE_ROUTE } from "@/lib/routing/tree";
 
-/** The settings page where each step is completed. */
-const STEP_TARGET: Record<SetupStep, SchoolLinkTarget> = {
-  invites: linkOptions({
-    from: SCHOOL_ROUTE,
-    to: "/school/$slug/settings/invites",
-  }),
-  students: linkOptions({
-    from: SCHOOL_ROUTE,
-    to: "/school/$slug/settings/students",
-  }),
-  teacher: linkOptions({
-    from: SCHOOL_ROUTE,
-    to: "/school/$slug/settings/invites",
-  }),
-  unit: linkOptions({ from: SCHOOL_ROUTE, to: "/school/$slug/settings/units" }),
+/** The settings page where each step is completed, under the school's slug. */
+const STEP_TARGET: Record<SetupStep, (slug: TenantSlug) => LinkTarget> = {
+  invites: (slug) =>
+    linkOptions({
+      from: LOCALE_ROUTE,
+      params: { slug },
+      to: "/school/$slug/settings/invites",
+    }),
+  students: (slug) =>
+    linkOptions({
+      from: LOCALE_ROUTE,
+      params: { slug },
+      to: "/school/$slug/settings/students",
+    }),
+  teacher: (slug) =>
+    linkOptions({
+      from: LOCALE_ROUTE,
+      params: { slug },
+      to: "/school/$slug/settings/invites",
+    }),
+  unit: (slug) =>
+    linkOptions({
+      from: LOCALE_ROUTE,
+      params: { slug },
+      to: "/school/$slug/settings/units",
+    }),
 };
 
 /**
@@ -125,13 +138,14 @@ function SetupRows({ className }: { className?: string | undefined }) {
  * row has no other text, and without the arrow it would read as plain text.
  */
 function SetupRow({ step }: { step: SetupStep }) {
+  const tenant = useTenant();
   const t = useTranslations("School");
   const title = t(`setup-${step}`);
 
   return (
     <CardLink
       arrow="always"
-      target={{ host: "school", target: STEP_TARGET[step] }}
+      target={STEP_TARGET[step](tenant.slug)}
       title={title}
     >
       <RowText title={title} />

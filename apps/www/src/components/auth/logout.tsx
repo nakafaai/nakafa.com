@@ -2,11 +2,11 @@ import { Logout01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { localizeInternalHref } from "@repo/internationalization/src/href";
-import { useCurrentLocale } from "@repo/internationalization/src/link";
 import { Effect, Result } from "effect";
 import { useTranslations } from "use-intl";
 import { clearAiDraftText } from "@/components/ai/store/draft";
 import { signOutAccountBrowserIdentity } from "@/lib/auth/identity/browser";
+import { useCurrentLocale } from "@/lib/routing/link";
 export function AuthLogout() {
   const t = useTranslations("Auth");
   const locale = useCurrentLocale();

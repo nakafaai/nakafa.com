@@ -1,5 +1,4 @@
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
-import { HOME_TARGET } from "@repo/internationalization/src/target";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
 import {
   makeBreadcrumbNodes,
@@ -31,6 +30,7 @@ import { getCurriculumLooks } from "@/lib/curriculum/look";
 import { readRuntimeCurriculumCatalog } from "@/lib/curriculum/model";
 import { getCurriculumIndexHref } from "@/lib/curriculum/routes";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
+import { HOME_TARGET } from "@/lib/routing/target";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { createSeoHead, toRouterHead } from "@/lib/seo/head";
 
@@ -147,7 +147,7 @@ function CurriculumIndexPage() {
       <LayoutMaterialContent>
         <BreadcrumbHeader
           value={{
-            home: { host: "app", target: HOME_TARGET },
+            home: HOME_TARGET,
             homeLabel: page.labels.home,
             items: [{ label: page.title }],
             menuLabel: page.labels.more,

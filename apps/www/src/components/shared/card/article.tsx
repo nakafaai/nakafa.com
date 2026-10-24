@@ -10,11 +10,11 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
-import { PublicPathLink } from "@repo/internationalization/src/public";
 import { toAnchorSlug } from "@repo/utilities/slug";
 import { useTranslations } from "use-intl";
 import type { PublishedArticleSummary } from "@/lib/content/article/catalog";
 import { formatPublished } from "@/lib/i18n/date";
+import { PublicPathLink } from "@/lib/routing/public/link";
 
 interface Props {
   readonly article: Pick<

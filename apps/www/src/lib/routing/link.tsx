@@ -18,24 +18,17 @@ import {
 } from "@tanstack/react-router";
 import { Array as Arr, Option } from "effect";
 import type { ComponentProps } from "react";
+import { EXACT_ACTIVE_OPTIONS, type LOCALE_ROUTE } from "@/lib/routing/tree";
 
 /**
  * Every full path of the app's route tree, as the router spells a `to`. The
- * generated tree augments `FileRoutesByPath`, so this union is empty until the
- * app registers its router. A package that links nothing types nothing.
+ * generated tree augments `FileRoutesByPath`, which the app's router registers.
  */
-export type AppRoutePath = RemoveTrailingSlashes<
+type AppRoutePath = RemoveTrailingSlashes<
   {
     [Id in keyof FileRoutesByPath]: FileRoutesByPath[Id]["fullPath"];
   }[keyof FileRoutesByPath]
 >;
-
-/**
- * The route that holds the locale of every page. It is the `from` of every
- * link, so TanStack types the locale of a target of this tree as optional, and
- * a link that names no locale inherits the one of the page on screen.
- */
-export const LOCALE_ROUTE = "/$locale";
 
 /**
  * A typed link target of the app: `linkOptions` of one route, with its params
@@ -64,12 +57,6 @@ export type LinkPreload = NonNullable<
   LinkOptions<RegisteredRouter, typeof LOCALE_ROUTE, string>["preload"]
 >;
 
-/** The active rule of a link to one page: that page only, whatever its search. */
-export const EXACT_ACTIVE_OPTIONS = {
-  exact: true,
-  includeSearch: false,
-} satisfies ActiveOptions;
-
 /** A route path without its trailing slash, the one spelling the router compares. */
 function withoutTrailingSlash(path: string) {
   return path.length > 1 && path.endsWith("/") ? path.slice(0, -1) : path;
@@ -77,12 +64,13 @@ function withoutTrailingSlash(path: string) {
 
 /**
  * Whether the page on screen sits on a route, or on one below it. The router's
- * own matches decide it, so a caller never compares paths. `exact` asks for the
- * page itself, not for a section that holds it.
+ * own matches decide it, so a caller never compares paths. The caller names the
+ * rule: `exact` asks for the page itself, and `exact: false` also accepts a
+ * section that holds it.
  */
 export function useRouteMatched(
   to: string | undefined,
-  { exact = false }: { readonly exact?: boolean } = {}
+  { exact }: { readonly exact: boolean }
 ) {
   return useMatches({
     select: (matches) => {
@@ -112,7 +100,7 @@ export function useLeafRoutePath() {
 }
 
 /** The anchor that every app link renders. The router sets its href, active state and preload handlers. */
-export function LinkAnchor(props: ComponentProps<"a">) {
+function LinkAnchor(props: ComponentProps<"a">) {
   return <a {...props} />;
 }
 
@@ -131,25 +119,32 @@ export function Link<const TTo extends string | undefined = undefined>(
 }
 
 /**
- * A link to a target that the app chose at runtime, such as a breadcrumb or a row
- * of a list. The target spreads into the one link, which keeps its own typing.
+ * A link to a target that a producer chose at runtime, such as a breadcrumb,
+ * a card row or a search result. The producer's target is a typed union of
+ * `linkOptions`, which the router's Link cannot take in one JSX spread, so this
+ * one component spreads it into the router's Link. Each member keeps the typing
+ * of the route it names, and no caller writes a path string.
  */
-export function DestinationLink({
+export function TargetLink({
   activeOptions = EXACT_ACTIVE_OPTIONS,
-  destination,
+  hash,
   preload,
+  target,
   ...anchor
 }: Omit<ComponentProps<"a">, "href" | "target"> & {
   readonly activeOptions?: ActiveOptions | undefined;
-  readonly destination: LinkTarget;
+  /** The fragment of the page that the link opens, without its `#`. */
+  readonly hash?: string | undefined;
   readonly preload?: LinkPreload | undefined;
+  readonly target: LinkTarget;
 }) {
   return (
     <Link
       {...anchor}
       activeOptions={activeOptions}
+      {...(hash === undefined ? {} : { hash })}
       {...(preload === undefined ? {} : { preload })}
-      {...destination}
+      {...target}
     />
   );
 }

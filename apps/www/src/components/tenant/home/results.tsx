@@ -55,14 +55,16 @@ export function ResultsTile({
 
 /** One closed sitting, as a row that opens its results page and names whether they are released. */
 function ResultRow({ result }: { result: Result }) {
+  const tenant = useTenant();
   const t = useTranslations("School");
 
   return (
     <CardLink
-      target={{
-        host: "school",
-        target: schoolExamSittingResultsTarget(result.examId, result.id),
-      }}
+      target={schoolExamSittingResultsTarget(
+        tenant.slug,
+        result.examId,
+        result.id
+      )}
       title={result.examTitle}
     >
       <RowText detail={result.room} title={result.examTitle} />

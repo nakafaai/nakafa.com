@@ -1,6 +1,5 @@
 import { BookOpen02Icon } from "@hugeicons/core-free-icons";
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
-import { articleCategoryTarget } from "@repo/internationalization/src/target";
 import { makeBreadcrumbNodes } from "@repo/seo/json-ld/node";
 import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
@@ -29,6 +28,7 @@ import {
 } from "@/lib/content/delivery";
 import { getAksaraTreeUrl } from "@/lib/content/repository";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
+import { articleCategoryTarget } from "@/lib/routing/target";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { createSeoHead, toRouterHead } from "@/lib/seo/head";
 import { getOgUrl } from "@/lib/seo/social";

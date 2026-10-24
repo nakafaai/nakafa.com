@@ -1,11 +1,11 @@
 import type { TileLook } from "@repo/design-system/lib/look";
-import { PublicPathLink } from "@repo/internationalization/src/public";
 import { Array as Arr } from "effect";
 import {
   CatalogCard,
   CatalogCardVisual,
 } from "@/components/shared/catalog/card";
 import type { CurriculumViewRoute } from "@/lib/curriculum/model";
+import { PublicPathLink } from "@/lib/routing/public/link";
 
 /**
  * Renders one grid of curriculum cards with explicit actions. Each card carries

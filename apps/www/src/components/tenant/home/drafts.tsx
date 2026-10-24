@@ -82,6 +82,7 @@ function DraftRow({
   names: Intl.DisplayNames;
   saving: boolean;
 }) {
+  const tenant = useTenant();
   if (saving) {
     return (
       <CardRowText>
@@ -91,7 +92,7 @@ function DraftRow({
   }
   return (
     <CardLink
-      target={{ host: "school", target: schoolExamEditTarget(draft.id) }}
+      target={schoolExamEditTarget(tenant.slug, draft.id)}
       title={draft.title}
     >
       <RowText detail={names.of(draft.language)} title={draft.title} />

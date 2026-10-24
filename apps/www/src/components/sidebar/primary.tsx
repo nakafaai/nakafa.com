@@ -11,13 +11,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
-import {
-  EXACT_ACTIVE_OPTIONS,
-  Link,
-  type LinkTarget,
-  useCurrentLocale,
-  useRouteMatched,
-} from "@repo/internationalization/src/link";
 import { useRouter } from "@tanstack/react-router";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
@@ -27,6 +20,13 @@ import {
   getForYouNavigationTarget,
 } from "@/components/sidebar/data/navigation";
 import { usePreferredCurriculumTarget } from "@/lib/curriculum/preferences";
+import {
+  Link,
+  type LinkTarget,
+  useCurrentLocale,
+  useRouteMatched,
+} from "@/lib/routing/link";
+import { EXACT_ACTIVE_OPTIONS } from "@/lib/routing/tree";
 import { usePreferredTryoutTarget } from "@/lib/tryout/preferences";
 
 type ForYouItem = ReturnType<typeof getForYouNavigationItems>[number];
@@ -102,7 +102,7 @@ function ForYouLink({
   const prefetchAskNina = isAskNina
     ? () => router.preloadRoute(destination)
     : undefined;
-  const isActive = useRouteMatched(destination.to);
+  const isActive = useRouteMatched(destination.to, { exact: false });
 
   return (
     <SidebarMenuItem>

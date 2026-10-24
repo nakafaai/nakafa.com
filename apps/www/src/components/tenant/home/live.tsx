@@ -54,14 +54,12 @@ export function LiveTile({
 
 /** One room that runs now, as a row that opens its proctor page. */
 function LiveRow({ now, room }: { now: number; room: Room }) {
+  const tenant = useTenant();
   const t = useTranslations("School");
 
   return (
     <CardLink
-      target={{
-        host: "school",
-        target: schoolExamSittingTarget(room.examId, room.id),
-      }}
+      target={schoolExamSittingTarget(tenant.slug, room.examId, room.id)}
       title={room.examTitle}
     >
       <RowText detail={room.room} title={room.examTitle} />

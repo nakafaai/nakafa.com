@@ -1,4 +1,3 @@
-import { HOME_TARGET } from "@repo/internationalization/src/target";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
 import { FooterContent } from "@/components/shared/content/footer";
@@ -11,6 +10,7 @@ import { TryoutCountrySelector } from "@/components/tryout/catalog/selector";
 import { readTryoutCountryFn } from "@/components/tryout/route/catalog.functions";
 import { createTryoutHead } from "@/components/tryout/route/head";
 import { readTryoutCatalogHeaders } from "@/components/tryout/route/headers";
+import { HOME_TARGET } from "@/lib/routing/target";
 
 /** One country of the try-out catalog: its exam families. */
 export const Route = createFileRoute("/$locale/_main/try-out/$country/")({
@@ -54,7 +54,7 @@ function TryoutCountryPage() {
                   options={route.countryOptions}
                 />
               ) : undefined,
-            home: { host: "app", target: HOME_TARGET },
+            home: HOME_TARGET,
             homeLabel: route.labels.home,
             items: [{ label: route.labels.tryOut }],
             menuLabel: route.labels.more,

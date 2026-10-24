@@ -1,6 +1,6 @@
 import { PATHNAMES } from "@repo/internationalization/src/pathnames";
-import { curriculumTarget } from "@repo/internationalization/src/target";
 import type { Locale } from "use-intl";
+import { curriculumTarget } from "@/lib/routing/target";
 
 const curriculumPathnames = PATHNAMES["/curricula"];
 

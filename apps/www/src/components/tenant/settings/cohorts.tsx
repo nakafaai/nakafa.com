@@ -25,7 +25,6 @@ import {
   SelectValue,
 } from "@repo/design-system/components/ui/select";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { Link } from "@repo/internationalization/src/link";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, Option, Schema } from "effect";
 import {
@@ -58,6 +57,7 @@ import {
 } from "@/components/tenant/settings/unit";
 import { NoActiveUnit } from "@/components/tenant/settings/unitless";
 import { usePreloadedQueryResult } from "@/lib/data/preloaded";
+import { Link } from "@/lib/routing/link";
 import type { readCohortsFn } from "@/lib/tenant/settings.functions";
 
 const SOURCE = "components/tenant/settings/cohorts";

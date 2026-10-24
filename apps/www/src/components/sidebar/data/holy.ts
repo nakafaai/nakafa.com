@@ -1,6 +1,6 @@
 import { AllahIcon } from "@hugeicons/core-free-icons";
-import { LOCALE_ROUTE } from "@repo/internationalization/src/link";
 import { linkOptions } from "@tanstack/react-router";
+import { LOCALE_ROUTE } from "@/lib/routing/tree";
 
 export const holyMenu = [
   {

@@ -1,8 +1,9 @@
-import type { LinkTarget } from "@repo/internationalization/src/link";
 import type { Locale } from "@repo/internationalization/src/locale";
 import { PATHNAMES } from "@repo/internationalization/src/pathnames";
-import { curriculumTarget } from "@repo/internationalization/src/target";
+import { Array as Arr } from "effect";
 import { CURRICULUM_NAVIGATION_ICONS } from "@/lib/curriculum/icons";
+import type { LinkTarget } from "@/lib/routing/link";
+import { curriculumTarget } from "@/lib/routing/target";
 
 /**
  * The high school grades of the subject menu. Each grade draws the icon of its
@@ -58,7 +59,7 @@ type SubjectMenuItem = (typeof subjectMenu)[number]["items"][number];
  */
 export function getSubjectMenuHref(item: SubjectMenuItem, locale: Locale) {
   const curriculum = PATHNAMES["/curricula"][locale];
-  return `/${curriculum}/${item.curriculum}/${item.path[locale].join("/")}`;
+  return `${curriculum}/${item.curriculum}/${Arr.join(item.path[locale], "/")}`;
 }
 
 /** The typed link target of a subject menu row on one locale. */

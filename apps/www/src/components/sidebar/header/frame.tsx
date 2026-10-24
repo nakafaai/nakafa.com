@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouteMatched } from "@repo/internationalization/src/link";
 import {
   domAnimation,
   LazyMotion,
@@ -10,6 +9,7 @@ import {
 // biome-ignore lint/performance/noNamespaceImport: Motion documents this namespace for the smaller LazyMotion entrypoint.
 import * as m from "motion/react-m";
 import type { ReactNode } from "react";
+import { useRouteMatched } from "@/lib/routing/link";
 
 const BORDER_OPACITY_MIN = 0;
 const BORDER_OPACITY_MAX = 1;
@@ -25,8 +25,10 @@ export function HeaderContainer({ children }: { children: ReactNode }) {
   const { scrollY } = useScroll();
 
   // The chat pages do not scroll the window, so the header keeps its border.
-  const isChatPage = useRouteMatched("/$locale/chat");
-  const isProfileChatPage = useRouteMatched("/$locale/user/$username/chat");
+  const isChatPage = useRouteMatched("/$locale/chat", { exact: false });
+  const isProfileChatPage = useRouteMatched("/$locale/user/$username/chat", {
+    exact: false,
+  });
   const isChat = isChatPage || isProfileChatPage;
 
   const borderOpacity = useTransform(

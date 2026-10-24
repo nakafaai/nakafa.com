@@ -1,7 +1,7 @@
-import { useLeafRoutePath } from "@repo/internationalization/src/link";
-import { HOME_TARGET } from "@repo/internationalization/src/target";
 import { useTranslations } from "use-intl";
 import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
+import { useLeafRoutePath } from "@/lib/routing/link";
+import { HOME_TARGET } from "@/lib/routing/target";
 import { getUserSettingsSection } from "@/lib/settings/routes";
 
 /**
@@ -18,12 +18,12 @@ export function UserSettingsHeader() {
   return (
     <BreadcrumbHeader
       value={{
-        home: { host: "app", target: HOME_TARGET },
+        home: HOME_TARGET,
         homeLabel: tCommon("home"),
         items: [
           {
             label: t(section.group.key),
-            target: { host: "app", target: section.group.target },
+            target: section.group.target,
           },
           { label },
         ],

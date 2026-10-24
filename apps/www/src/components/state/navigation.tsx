@@ -1,9 +1,6 @@
 import { buttonVariants } from "@repo/design-system/lib/button";
-import {
-  EXACT_ACTIVE_OPTIONS,
-  Link,
-  type LinkTarget,
-} from "@repo/internationalization/src/link";
+import { Link, type LinkTarget } from "@/lib/routing/link";
+import { EXACT_ACTIVE_OPTIONS } from "@/lib/routing/tree";
 
 interface ActionNavigationProps {
   label: string;

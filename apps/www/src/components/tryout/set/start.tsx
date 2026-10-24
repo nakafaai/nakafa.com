@@ -73,7 +73,7 @@ function TryoutStartAction({ attempt, request }: StartTryoutButtonProps) {
     address: TryoutPageAddress,
     options: { readonly replace?: boolean } = {}
   ) {
-    Option.map(Option.fromNullishOr(getTryoutPageTarget(address)), (target) =>
+    Option.map(getTryoutPageTarget(address), (target) =>
       navigate({ ...target, replace: options.replace ?? false })
     );
   }

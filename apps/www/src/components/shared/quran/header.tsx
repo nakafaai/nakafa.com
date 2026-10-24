@@ -6,10 +6,6 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@repo/design-system/components/ui/tooltip";
-import {
-  HOME_TARGET,
-  QURAN_TARGET,
-} from "@repo/internationalization/src/target";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import { BreadcrumbHeaderFrame } from "@/components/shared/breadcrumb/frame";
@@ -17,6 +13,7 @@ import {
   BreadcrumbHeaderFold,
   BreadcrumbHeaderPath,
 } from "@/components/shared/breadcrumb/header";
+import { HOME_TARGET, QURAN_TARGET } from "@/lib/routing/target";
 
 /**
  * Keeps surah navigation, name, and outline actions in one row at every width. On a
@@ -50,24 +47,24 @@ export function QuranSurahHeader({
       <div className="col-start-1 row-start-1 min-w-0">
         <BreadcrumbHeaderFold
           className="md:hidden"
-          home={{ host: "app", target: HOME_TARGET }}
+          home={HOME_TARGET}
           homeLabel={tCommon("home")}
           items={[
             {
               label: quranLabel,
-              target: { host: "app", target: QURAN_TARGET },
+              target: QURAN_TARGET,
             },
           ]}
           menuLabel={tCommon("more")}
         />
         <div className="min-w-0 max-md:hidden">
           <BreadcrumbHeaderPath
-            home={{ host: "app", target: HOME_TARGET }}
+            home={HOME_TARGET}
             homeLabel={tCommon("home")}
             items={[
               {
                 label: quranLabel,
-                target: { host: "app", target: QURAN_TARGET },
+                target: QURAN_TARGET,
               },
             ]}
             menuLabel={tCommon("more")}

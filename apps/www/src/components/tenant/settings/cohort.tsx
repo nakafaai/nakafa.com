@@ -7,6 +7,7 @@ import { useTranslations } from "use-intl";
 import { useConvexAuth } from "@/components/providers/convex";
 import { LayoutContent } from "@/components/shared/content/frame";
 import { TableEmpty } from "@/components/shared/table/frame";
+import { useTenant } from "@/components/tenant/context";
 import { SchoolHeader } from "@/components/tenant/header";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { isDenied } from "@/components/tenant/refusal";
@@ -15,7 +16,7 @@ import { SchoolHomeroomCard } from "@/components/tenant/settings/homeroom";
 import { SchoolPlacementAdd } from "@/components/tenant/settings/placement";
 import type { CohortDetail } from "@/components/tenant/settings/state";
 import { usePreloadedQueryResult } from "@/lib/data/preloaded";
-import { SchoolDestinationLink } from "@/lib/routing/school/link";
+import { TargetLink } from "@/lib/routing/link";
 import { getSchoolSettingsSection } from "@/lib/settings/school";
 import type { readCohortFn } from "@/lib/tenant/settings.functions";
 
@@ -62,7 +63,11 @@ export function SchoolCohortSettings({
 /** The header of a cohort page whose read failed: the path to the cohorts, and the failure in the body. */
 function CohortFailure({ children }: { children: ReactNode }) {
   const t = useTranslations("SchoolSettings");
-  const section = getSchoolSettingsSection("/school/$slug/settings/cohorts");
+  const { slug } = useTenant();
+  const section = getSchoolSettingsSection(
+    slug,
+    "/school/$slug/settings/cohorts"
+  );
 
   return (
     <>
@@ -70,7 +75,7 @@ function CohortFailure({ children }: { children: ReactNode }) {
         items={[
           {
             label: t(section.group.key),
-            target: { host: "school", target: section.group.target },
+            target: section.group.target,
           },
           { label: t(section.labelKey) },
         ]}
@@ -87,7 +92,11 @@ function CohortFailure({ children }: { children: ReactNode }) {
  */
 function CohortUnavailable() {
   const t = useTranslations("SchoolSettings");
-  const section = getSchoolSettingsSection("/school/$slug/settings/cohorts");
+  const { slug } = useTenant();
+  const section = getSchoolSettingsSection(
+    slug,
+    "/school/$slug/settings/cohorts"
+  );
 
   return (
     <>
@@ -95,7 +104,7 @@ function CohortUnavailable() {
         items={[
           {
             label: t(section.group.key),
-            target: { host: "school", target: section.group.target },
+            target: section.group.target,
           },
           { label: t(section.labelKey) },
         ]}
@@ -105,12 +114,12 @@ function CohortUnavailable() {
         <TableEmpty
           act="pointing"
           action={
-            <SchoolDestinationLink
+            <TargetLink
               className={buttonVariants({ variant: "outline" })}
-              destination={section.target}
+              target={section.target}
             >
               {t(section.labelKey)}
-            </SchoolDestinationLink>
+            </TargetLink>
           }
           description={t("cohort-unavailable-description")}
           title={t("cohort-unavailable")}
@@ -147,7 +156,10 @@ function SchoolCohortPage({
   }
   const detail = cohort.value;
   const isArchived = detail.status === "archived";
-  const section = getSchoolSettingsSection("/school/$slug/settings/cohorts");
+  const section = getSchoolSettingsSection(
+    slug,
+    "/school/$slug/settings/cohorts"
+  );
 
   return (
     <>
@@ -155,11 +167,11 @@ function SchoolCohortPage({
         items={[
           {
             label: t(section.group.key),
-            target: { host: "school", target: section.group.target },
+            target: section.group.target,
           },
           {
             label: t(section.labelKey),
-            target: { host: "school", target: section.target },
+            target: section.target,
           },
           { label: detail.name },
         ]}

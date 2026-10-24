@@ -1,16 +1,10 @@
 "use client";
 
-import {
-  DestinationLink,
-  type LinkPreload,
-} from "@repo/internationalization/src/link";
-import {
-  addressTarget,
-  publicPathTarget,
-} from "@repo/internationalization/src/target";
 import type { ActiveOptions } from "@tanstack/react-router";
 import { Option } from "effect";
 import type { ComponentProps } from "react";
+import { type LinkPreload, TargetLink } from "@/lib/routing/link";
+import { addressTarget, publicPathTarget } from "@/lib/routing/target";
 
 /**
  * A link to one signed public path of the content: an article, a curriculum page,
@@ -32,21 +26,18 @@ export function PublicPathLink({
   readonly preload?: LinkPreload | undefined;
   readonly publicPath: string;
 }) {
-  return Option.match(
-    Option.fromNullishOr(publicPathTarget(publicPath, context)),
-    {
-      onNone: () => null,
-      onSome: (target) => (
-        <DestinationLink
-          {...anchor}
-          {...(activeOptions === undefined ? {} : { activeOptions })}
-          {...(preload === undefined ? {} : { preload })}
-          {...(hash === undefined ? {} : { hash })}
-          destination={target}
-        />
-      ),
-    }
-  );
+  return Option.match(publicPathTarget(publicPath, context), {
+    onNone: () => null,
+    onSome: (target) => (
+      <TargetLink
+        {...anchor}
+        {...(activeOptions === undefined ? {} : { activeOptions })}
+        {...(hash === undefined ? {} : { hash })}
+        {...(preload === undefined ? {} : { preload })}
+        target={target}
+      />
+    ),
+  });
 }
 
 /**
@@ -59,8 +50,8 @@ export function AddressLink({
 }: Omit<ComponentProps<"a">, "href" | "target"> & {
   readonly address: string;
 }) {
-  return Option.match(Option.fromNullishOr(addressTarget(address)), {
+  return Option.match(addressTarget(address), {
     onNone: () => null,
-    onSome: (target) => <DestinationLink {...anchor} destination={target} />,
+    onSome: (target) => <TargetLink {...anchor} target={target} />,
   });
 }

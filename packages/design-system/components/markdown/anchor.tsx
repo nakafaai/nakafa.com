@@ -1,8 +1,36 @@
+"use client";
+
 import type { AnchorProps } from "@repo/design-system/types/markdown";
-import { DestinationLink } from "@repo/internationalization/src/link";
-import { PublicPathLink } from "@repo/internationalization/src/public";
-import { LANDING_TARGET } from "@repo/internationalization/src/target";
 import { cn } from "cn";
+import { Data } from "effect";
+import { type ComponentType, createContext, use } from "react";
+
+/** The props of an authored path that names a page of the app, such as `/articles/x/y#z`. */
+export type MarkdownPageLinkProps = AnchorProps & { readonly href: string };
+
+/**
+ * The app's link for the authored paths that name one of its pages. The design
+ * system knows no route of its own, so the app provides this link once for every
+ * document it renders.
+ */
+export const MarkdownPageLink = createContext<
+  ComponentType<MarkdownPageLinkProps> | undefined
+>(undefined);
+
+/** Raised when an authored path renders without the app's page link. */
+class MarkdownPageLinkMissingError extends Data.TaggedError(
+  "MarkdownPageLinkMissingError"
+)<{
+  readonly href: string;
+}> {}
+
+/**
+ * Whether an authored href names a path of this site. A protocol-relative
+ * address such as `//example.com/x` names another host, so it is not one.
+ */
+function isPagePath(href: string) {
+  return href.startsWith("/") && !href.startsWith("//");
+}
 
 export function Anchor({
   href,
@@ -11,6 +39,7 @@ export function Anchor({
   className,
   ...props
 }: AnchorProps) {
+  const PageLink = use(MarkdownPageLink);
   if (!href) {
     return null;
   }
@@ -20,33 +49,14 @@ export function Anchor({
     className
   );
 
-  if (href.startsWith("/")) {
-    // An authored path names a signed page without its locale; the page on
-    // screen supplies the locale, and the fragment stays with the link.
-    const url = new URL(href, "https://nakafa.invalid");
-    const hash = url.hash === "" ? undefined : url.hash.slice(1);
-    if (url.pathname === "/") {
-      return (
-        <DestinationLink
-          className={anchorClassName}
-          destination={LANDING_TARGET}
-          title={href}
-          {...props}
-        >
-          {children}
-        </DestinationLink>
-      );
+  if (isPagePath(href)) {
+    if (PageLink === undefined) {
+      throw new MarkdownPageLinkMissingError({ href });
     }
     return (
-      <PublicPathLink
-        className={anchorClassName}
-        hash={hash}
-        publicPath={url.pathname.slice(1)}
-        title={href}
-        {...props}
-      >
+      <PageLink className={anchorClassName} href={href} title={href} {...props}>
         {children}
-      </PublicPathLink>
+      </PageLink>
     );
   }
 

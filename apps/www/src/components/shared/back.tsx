@@ -1,10 +1,10 @@
 import { ArrowLeft02Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { LANDING_TARGET } from "@repo/internationalization/src/target";
 import { useNavigate, useRouter } from "@tanstack/react-router";
 import type { ComponentProps } from "react";
 import { useTranslations } from "use-intl";
+import { LANDING_TARGET } from "@/lib/routing/target";
 
 type BackButtonProps = ComponentProps<typeof Button>;
 

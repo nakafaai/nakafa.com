@@ -3,7 +3,6 @@ import { getHeadings } from "@repo/contents/toc";
 import { LocalizedPath } from "@repo/internationalization/src/alternates";
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
 import { toCanonicalPath } from "@repo/internationalization/src/rewrite";
-import { HOME_TARGET } from "@repo/internationalization/src/target";
 import { makeArticleJsonLd } from "@repo/seo/json-ld/article";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
@@ -53,6 +52,7 @@ import { getMaterialPublication } from "@/lib/content/material/publication";
 import { getAksaraUrl } from "@/lib/content/repository";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { getLlmsMarkdownPath } from "@/lib/llms/format";
+import { HOME_TARGET } from "@/lib/routing/target";
 import { createResolvedRouteAlternates } from "@/lib/seo/alternates";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { createSeoHead, toHeadAlternates, toRouterHead } from "@/lib/seo/head";
@@ -234,7 +234,7 @@ function MaterialPage() {
           <ContentHeader
             breadcrumb={
               <BreadcrumbHeaderPath
-                home={{ host: "app", target: HOME_TARGET }}
+                home={HOME_TARGET}
                 homeLabel={labels.home}
                 items={[]}
                 menuLabel={labels.more}

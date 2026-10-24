@@ -1,9 +1,5 @@
 "use client";
 
-import {
-  HOME_TARGET,
-  TRYOUT_TARGET,
-} from "@repo/internationalization/src/target";
 import type { ReactNode } from "react";
 import { useTranslations } from "use-intl";
 import { BreadcrumbHeaderFrame } from "@/components/shared/breadcrumb/frame";
@@ -12,6 +8,7 @@ import {
   type BreadcrumbHeaderItem,
   BreadcrumbHeaderPath,
 } from "@/components/shared/breadcrumb/header";
+import { HOME_TARGET, TRYOUT_TARGET } from "@/lib/routing/target";
 
 /**
  * Keeps navigation, heading, and the primary action in one row at every width. On a
@@ -31,7 +28,7 @@ export function TryoutPageHeader({
   const path: readonly BreadcrumbHeaderItem[] = [
     {
       label: tCommon("try-out-short"),
-      target: { host: "app", target: TRYOUT_TARGET },
+      target: TRYOUT_TARGET,
     },
     ...items,
   ];
@@ -40,14 +37,14 @@ export function TryoutPageHeader({
       <div className="min-w-0">
         <BreadcrumbHeaderFold
           className="md:hidden"
-          home={{ host: "app", target: HOME_TARGET }}
+          home={HOME_TARGET}
           homeLabel={tCommon("home")}
           items={path}
           menuLabel={tCommon("more")}
         />
         <div className="min-w-0 max-md:hidden">
           <BreadcrumbHeaderPath
-            home={{ host: "app", target: HOME_TARGET }}
+            home={HOME_TARGET}
             homeLabel={tCommon("home")}
             items={path}
             menuLabel={tCommon("more")}

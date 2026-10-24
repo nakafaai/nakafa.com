@@ -1,10 +1,10 @@
 import { CURRICULUM_NAMESPACES } from "@nakafa/aksara-contracts/program/curriculum";
-import {
-  LOCALE_ROUTE,
-} from "@repo/internationalization/src/link";
 import { PATHNAMES } from "@repo/internationalization/src/pathnames";
+import { SITE_ORIGIN } from "@repo/seo/origin";
 import { linkOptions } from "@tanstack/react-router";
-import { Array as Arr, Record as Rec } from "effect";
+import { Array as Arr, Option, Record as Rec } from "effect";
+import type { LinkTarget } from "@/lib/routing/link";
+import { LOCALE_ROUTE } from "@/lib/routing/tree";
 
 /**
  * The typed target of one signed Page, which the locale's catch-all page route
@@ -48,7 +48,7 @@ export function curriculumTarget({
 }) {
   return linkOptions({
     from: LOCALE_ROUTE,
-    params: { _splat: path.join("/"), curriculum },
+    params: { _splat: Arr.join(path, "/"), curriculum },
     to: "/$locale/curricula/$curriculum/$",
   });
 }
@@ -103,10 +103,31 @@ const CURRICULUM_NAMESPACE_LIST: readonly string[] = Rec.values(
   CURRICULUM_NAMESPACES
 );
 
+/** Whether a public path's first segment is the curriculum namespace of a locale. */
+function isCurriculumNamespace(namespace: string | undefined): boolean {
+  return Option.exists(Option.fromNullishOr(namespace), (value) =>
+    Arr.contains(CURRICULUM_NAMESPACE_LIST, value)
+  );
+}
+
+/** Whether a public path's first segment is the materials namespace of a locale. */
+function isMaterialNamespace(namespace: string | undefined): boolean {
+  return Option.exists(Option.fromNullishOr(namespace), (value) =>
+    Arr.contains(MATERIAL_NAMESPACES, value)
+  );
+}
+
 /** The spelling of the materials namespace in every locale, which the route map owns. */
-const MATERIAL_NAMESPACES: readonly string[] = Rec.values(
-  PATHNAMES["/materials/[subject]/[topic]/[[...lesson]]"]
-).map((template) => template.split("/")[1] ?? "");
+const MATERIAL_NAMESPACES: readonly string[] = Arr.flatMap(
+  Rec.values(PATHNAMES["/materials/[subject]/[topic]/[[...lesson]]"]),
+  (template) => Option.toArray(Option.fromNullishOr(template.split("/")[1]))
+);
+
+/** The article index, which the article breadcrumb starts from. */
+export const ARTICLES_TARGET = linkOptions({
+  from: LOCALE_ROUTE,
+  to: "/$locale/articles",
+});
 
 /**
  * The typed target of one curriculum public path, such as `curriculum/merdeka`
@@ -116,24 +137,16 @@ const MATERIAL_NAMESPACES: readonly string[] = Rec.values(
  */
 export function curriculumPublicPathTarget(
   publicPath: string
-) {
+): Option.Option<LinkTarget> {
   const [namespace, curriculum, ...path] = publicPath.split("/");
-  if (
-    !(namespace && Arr.contains(Rec.values(CURRICULUM_NAMESPACES), namespace))
-  ) {
-    return null;
+  if (!isCurriculumNamespace(namespace)) {
+    return Option.none();
   }
   if (!curriculum) {
-    return CURRICULA_TARGET;
+    return Option.some(CURRICULA_TARGET);
   }
-  return curriculumTarget({ curriculum, path });
+  return Option.some(curriculumTarget({ curriculum, path }));
 }
-
-/** The article index, which the article breadcrumb starts from. */
-export const ARTICLES_TARGET = linkOptions({
-  from: LOCALE_ROUTE,
-  to: "/$locale/articles",
-});
 
 /**
  * The typed target of one material public path, such as
@@ -145,61 +158,69 @@ export const ARTICLES_TARGET = linkOptions({
 function materialPublicPathTarget(
   publicPath: string,
   context?: string
-) {
-  const [namespace, subject, topic, ...lesson] = publicPath.split("/");
-  if (!(namespace && Arr.contains(MATERIAL_NAMESPACES, namespace))) {
-    return null;
-  }
+): Option.Option<LinkTarget> {
+  const [, subject, topic, ...lesson] = publicPath.split("/");
   if (!(subject && topic)) {
-    return null;
+    return Option.none();
   }
   const search = context === undefined ? {} : { ctx: context };
-  return linkOptions({
-    from: LOCALE_ROUTE,
-    params: { _splat: lesson.join("/"), subject, topic },
-    search,
-    to: "/$locale/materials/$subject/$topic/$",
-  });
+  return Option.some(
+    linkOptions({
+      from: LOCALE_ROUTE,
+      params: { _splat: Arr.join(lesson, "/"), subject, topic },
+      search,
+      to: "/$locale/materials/$subject/$topic/$",
+    })
+  );
 }
 
 /**
  * The typed target of any signed public path of the content: an article, a
  * curriculum page, a material, a Quran surah, or a signed Page, which the Page
- * route serves as its catch-all. Only the empty path has no target. A material
- * takes the context hint of its curriculum, and the other paths ignore it.
+ * route serves as its catch-all. The empty path and a malformed article, Quran
+ * or curriculum shape name no page, so they have no target. A material takes
+ * the context hint of its curriculum, and the other paths ignore it.
  */
 export function publicPathTarget(
   publicPath: string,
   context?: string
-) {
+): Option.Option<LinkTarget> {
   if (publicPath === "") {
-    return null;
+    return Option.none();
   }
   const [namespace, first, second, ...rest] = publicPath.split("/");
   if (namespace === "articles") {
-    if (first && second && rest.length === 0) {
-      return articleTarget({ category: first, slug: second });
+    if (!first) {
+      return Option.some(ARTICLES_TARGET);
     }
-    return first && rest.length === 0 && second === undefined
-      ? articleCategoryTarget(first)
-      : ARTICLES_TARGET;
+    if (second === undefined) {
+      return Option.some(articleCategoryTarget(first));
+    }
+    return rest.length === 0 && second
+      ? Option.some(articleTarget({ category: first, slug: second }))
+      : Option.none();
   }
   if (namespace === "quran") {
-    return first && second === undefined
-      ? linkOptions({
-          from: LOCALE_ROUTE,
-          params: { surah: first },
-          to: "/$locale/quran/$surah",
-        })
-      : QURAN_TARGET;
+    if (!first) {
+      return Option.some(QURAN_TARGET);
+    }
+    return second === undefined
+      ? Option.some(
+          linkOptions({
+            from: LOCALE_ROUTE,
+            params: { surah: first },
+            to: "/$locale/quran/$surah",
+          })
+        )
+      : Option.none();
   }
-  if (Arr.contains(CURRICULUM_NAMESPACE_LIST, namespace ?? "")) {
+  if (isCurriculumNamespace(namespace)) {
     return curriculumPublicPathTarget(publicPath);
   }
-  if (Arr.contains(MATERIAL_NAMESPACES, namespace ?? "")) {
+  if (isMaterialNamespace(namespace)) {
     return materialPublicPathTarget(publicPath, context);
   }
-  return pageTarget(publicPath);
+  return Option.some(pageTarget(publicPath));
 }
 
 /**
@@ -208,14 +229,14 @@ export function publicPathTarget(
  * the address was built for, the rest is the signed public path, and the query
  * carries the material context hint. An address that names no page has no target.
  */
-export function addressTarget(address: string) {
-  const url = new URL(address, "https://nakafa.invalid");
+export function addressTarget(address: string): Option.Option<LinkTarget> {
+  const url = new URL(address, SITE_ORIGIN);
   const [, , ...publicSegments] = url.pathname.split("/");
   if (publicSegments.length === 0) {
-    return null;
+    return Option.none();
   }
   const context = url.searchParams.get("ctx") ?? undefined;
-  return publicPathTarget(publicSegments.join("/"), context);
+  return publicPathTarget(Arr.join(publicSegments, "/"), context);
 }
 
 /** The typed target of one Quran surah, which the Quran route names by its number. */

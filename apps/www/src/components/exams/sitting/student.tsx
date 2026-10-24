@@ -13,7 +13,6 @@ import {
 import { Field, FieldLabel } from "@repo/design-system/components/ui/field";
 import { Input } from "@repo/design-system/components/ui/input";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import { Link } from "@repo/internationalization/src/link";
 import { Effect, Option } from "effect";
 import {
   type FormEvent,
@@ -47,6 +46,7 @@ import { useTenant } from "@/components/tenant/context";
 import { isDenied, isLostAccess } from "@/components/tenant/refusal";
 import { schoolDateTimeText } from "@/components/tenant/settings/clock";
 import { usePreloadedQueryResult } from "@/lib/data/preloaded";
+import { Link } from "@/lib/routing/link";
 
 /** An admission that lets the student into the sitting, with the attempt it opened. */
 type Admitted = Extract<Admission, { readonly _tag: "admitted" }>;

@@ -1,8 +1,8 @@
 "use client";
 
-import { useRouteMatched } from "@repo/internationalization/src/link";
 import type { ReactNode } from "react";
 import { UserSettingsNav } from "@/components/user/settings/nav";
+import { useRouteMatched } from "@/lib/routing/link";
 
 /**
  * Renders the navigation owned by the current route surface.
@@ -13,7 +13,9 @@ import { UserSettingsNav } from "@/components/user/settings/nav";
  * so this chooser never carries data it does not render itself.
  */
 export function SidebarNavigation({ browse }: { browse: ReactNode }) {
-  const isSettings = useRouteMatched("/$locale/user/settings");
+  const isSettings = useRouteMatched("/$locale/user/settings", {
+    exact: false,
+  });
 
   if (isSettings) {
     return <UserSettingsNav />;

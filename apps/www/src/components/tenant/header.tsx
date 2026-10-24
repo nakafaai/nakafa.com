@@ -13,7 +13,8 @@ import {
   type BreadcrumbHeaderItem,
   BreadcrumbHeaderPath,
 } from "@/components/shared/breadcrumb/header";
-import { SCHOOL_HOME_TARGET } from "@/lib/routing/school/link";
+import { useTenant } from "@/components/tenant/context";
+import { schoolHomeTarget } from "@/lib/routing/school/target";
 
 /**
  * The one header of a school page, one row high: the sidebar's trigger, the page's path
@@ -37,6 +38,7 @@ export function SchoolHeader({
   /** The page's heading, unless the page's body draws its own. */
   title?: string;
 }) {
+  const { slug } = useTenant();
   const tCommon = useTranslations("Common");
 
   return (
@@ -60,7 +62,7 @@ export function SchoolHeader({
         </Breadcrumb>
       ) : (
         <BreadcrumbHeaderPath
-          home={{ host: "school", target: SCHOOL_HOME_TARGET }}
+          home={schoolHomeTarget(slug)}
           homeLabel={tCommon("home")}
           items={Arr.map(items, (item, index) =>
             index === items.length - 1 ? { ...item, target: undefined } : item

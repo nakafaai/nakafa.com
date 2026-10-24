@@ -21,7 +21,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@repo/design-system/components/ui/select";
-import { useCurrentLocale } from "@repo/internationalization/src/link";
 import { useNavigate } from "@tanstack/react-router";
 import {
   Array as Arr,
@@ -44,6 +43,7 @@ import {
 import type { ExamDrafts } from "@/components/tenant/exams/drafts";
 import { insertDraftExam } from "@/components/tenant/exams/optimistic";
 import { placeholderExamId } from "@/components/tenant/exams/placeholder";
+import { useCurrentLocale } from "@/lib/routing/link";
 
 /** A language an exam takes, as the create mutation names it. */
 type Language = ReturnType<typeof unitLanguages>[number];

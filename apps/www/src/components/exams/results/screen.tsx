@@ -191,7 +191,7 @@ function ExamsCrumbHeader() {
           ? [
               {
                 label: t("title"),
-                target: { host: "school", target: schoolExamsTarget() },
+                target: schoolExamsTarget(tenant.slug),
               },
             ]
           : []

@@ -8,11 +8,6 @@ import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { buttonVariants } from "@repo/design-system/lib/button";
-import {
-  EXACT_ACTIVE_OPTIONS,
-  Link,
-} from "@repo/internationalization/src/link";
-import { publicPathTarget } from "@repo/internationalization/src/target";
 import { Array as Arr, Option } from "effect";
 import { useTranslations } from "use-intl";
 import { CommentsProvider } from "@/components/comments/provider";
@@ -20,6 +15,9 @@ import { CommentRow } from "@/components/comments/row";
 import { DataFailure } from "@/components/shared/failure";
 import { FeedCount, FeedEmpty, FeedNotice } from "@/components/user/feed";
 import { usePaginatedPreloaded } from "@/lib/data/paginated";
+import { TargetLink } from "@/lib/routing/link";
+import { publicPathTarget } from "@/lib/routing/target";
+import { EXACT_ACTIVE_OPTIONS } from "@/lib/routing/tree";
 
 /**
  * Renders the comments of one user profile, newest first. The loader reads the author and
@@ -105,18 +103,18 @@ function ReplyLink({
   replyCount: number;
   slug: string;
 }) {
-  return Option.match(Option.fromNullishOr(publicPathTarget(slug)), {
+  return Option.match(publicPathTarget(slug), {
     onNone: () => null,
     onSome: (target) => (
-      <Link
+      <TargetLink
         activeOptions={EXACT_ACTIVE_OPTIONS}
         aria-label={label}
         className={buttonVariants({ size: "sm", variant: "ghost" })}
-        {...target}
+        target={target}
       >
         <HugeIcons icon={ArrowTurnBackwardIcon} />
         <FeedCount value={replyCount} />
-      </Link>
+      </TargetLink>
     ),
   });
 }

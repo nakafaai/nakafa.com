@@ -1,11 +1,10 @@
-import { HOME_TARGET } from "@repo/internationalization/src/target";
 import {
   Await,
   createFileRoute,
   defer,
   notFound,
 } from "@tanstack/react-router";
-import { Schema } from "effect";
+import { Option, Schema } from "effect";
 import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
 import { LayoutMaterialContent } from "@/components/shared/material/content";
 import { LayoutMaterial } from "@/components/shared/material/frame";
@@ -20,6 +19,7 @@ import { createTryoutHead } from "@/components/tryout/route/head";
 import { readTryoutPersonalHeaders } from "@/components/tryout/route/headers";
 import { getTryoutCrumbTarget } from "@/components/tryout/route/path";
 import { TryoutTrackSearch } from "@/components/tryout/route/search";
+import { HOME_TARGET } from "@/lib/routing/target";
 
 /**
  * One track of the try-out catalog: its heading and exam selector come first,
@@ -90,17 +90,21 @@ function TryoutTrackPage() {
                 options={route.examOptions}
               />
             ),
-            home: { host: "app", target: HOME_TARGET },
+            home: HOME_TARGET,
             homeLabel: route.labels.home,
             items: [
               {
                 label: route.labels.tryOut,
                 menuLabel: route.labels.tryOutShort,
-                target: getTryoutCrumbTarget(route.countryPath),
+                target: Option.getOrUndefined(
+                  getTryoutCrumbTarget(route.countryPath)
+                ),
               },
               {
                 label: route.page.exam.title,
-                target: getTryoutCrumbTarget(route.examPath),
+                target: Option.getOrUndefined(
+                  getTryoutCrumbTarget(route.examPath)
+                ),
               },
               { label: route.page.track.title },
             ],

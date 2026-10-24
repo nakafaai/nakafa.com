@@ -1,4 +1,3 @@
-import type { LinkTarget } from "@repo/internationalization/src/link";
 import {
   DEFAULT_LOCALE,
   LOCALES,
@@ -7,6 +6,7 @@ import {
 import { linkOptions } from "@tanstack/react-router";
 import { Option, Schema } from "effect";
 import { hasLocale } from "use-intl";
+import type { LinkTarget } from "@/lib/routing/link";
 import { withoutShareToken } from "@/lib/share/fragment";
 
 const URL_PARSE_BASE = "https://internal.invalid";

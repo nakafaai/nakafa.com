@@ -15,9 +15,9 @@ import {
   Sidebar,
   SidebarTrigger,
 } from "@repo/design-system/components/ui/sidebar-shell";
-import { PublicPathLink } from "@repo/internationalization/src/public";
 import type { ComponentProps, ReactNode } from "react";
 import { useTranslations } from "use-intl";
+import { PublicPathLink } from "@/lib/routing/public/link";
 
 /** The outline panel: its heading slot, the outline, and the page's actions. */
 type SidebarRightProps = {

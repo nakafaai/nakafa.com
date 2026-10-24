@@ -1,4 +1,3 @@
-import { HOME_TARGET } from "@repo/internationalization/src/target";
 import { makeBreadcrumbNodes } from "@repo/seo/json-ld/node";
 import { createFileRoute } from "@tanstack/react-router";
 import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
@@ -11,6 +10,7 @@ import { TryoutHubClient } from "@/components/tryout/catalog/hub";
 import { readTryoutHubFn } from "@/components/tryout/route/catalog.functions";
 import { createTryoutHead } from "@/components/tryout/route/head";
 import { readTryoutCatalogHeaders } from "@/components/tryout/route/headers";
+import { HOME_TARGET } from "@/lib/routing/target";
 
 /** The try-out hub: every exam family the catalog publishes, grouped by country. */
 export const Route = createFileRoute("/$locale/_main/try-out/")({
@@ -39,7 +39,7 @@ function TryoutHubPage() {
       <LayoutMaterialContent>
         <BreadcrumbHeader
           value={{
-            home: { host: "app", target: HOME_TARGET },
+            home: HOME_TARGET,
             homeLabel: labels.home,
             items: [{ label: labels.tryOut }],
             menuLabel: labels.more,

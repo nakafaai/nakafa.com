@@ -1,4 +1,4 @@
-import { Array as Arr } from "effect";
+import { Array as Arr, Option } from "effect";
 import type { ReactNode } from "react";
 import { getTryoutCrumbTarget } from "@/components/tryout/route/path";
 import {
@@ -32,17 +32,23 @@ export function TryoutQuestionPreview({
         items={[
           {
             label: exam.title,
-            target: getTryoutCrumbTarget(exam.publicPath),
+            target: Option.getOrUndefined(
+              getTryoutCrumbTarget(exam.publicPath)
+            ),
           },
           {
             label: track.title,
-            target: getTryoutCrumbTarget(track.publicPath),
+            target: Option.getOrUndefined(
+              getTryoutCrumbTarget(track.publicPath)
+            ),
           },
           ...(section.publicPath
             ? [
                 {
                   label: set.title,
-                  target: getTryoutCrumbTarget(set.publicPath),
+                  target: Option.getOrUndefined(
+                    getTryoutCrumbTarget(set.publicPath)
+                  ),
                 },
               ]
             : []),

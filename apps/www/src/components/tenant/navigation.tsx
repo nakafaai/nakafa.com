@@ -2,17 +2,14 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
-import {
-  EXACT_ACTIVE_OPTIONS,
-  Link,
-  useRouteMatched,
-} from "@repo/internationalization/src/link";
 import { useMatchRoute } from "@tanstack/react-router";
 import { useTranslations } from "use-intl";
 import { TenantClassesGroup } from "@/components/tenant/classes/nav";
 import { useTenant } from "@/components/tenant/context";
 import { TenantSidebarGroup } from "@/components/tenant/group";
 import { SchoolSettingsNav } from "@/components/tenant/settings/nav";
+import { Link, useRouteMatched } from "@/lib/routing/link";
+import { EXACT_ACTIVE_OPTIONS } from "@/lib/routing/tree";
 
 /**
  * Renders the navigation of the school sidebar. The settings sections replace it
@@ -24,7 +21,9 @@ import { SchoolSettingsNav } from "@/components/tenant/settings/nav";
  */
 export function TenantNavigation() {
   const { canManage, canOpenExams, slug } = useTenant();
-  const isSettings = useRouteMatched("/school/$slug/settings");
+  const isSettings = useRouteMatched("/school/$slug/settings", {
+    exact: false,
+  });
   const matchRoute = useMatchRoute();
   const t = useTranslations("School");
   const tExams = useTranslations("Exams");

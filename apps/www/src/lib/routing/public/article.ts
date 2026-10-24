@@ -1,5 +1,7 @@
-import { LOCALE_ROUTE, type LinkTarget } from "@repo/internationalization/src/link";
 import { linkOptions } from "@tanstack/react-router";
+import type { ArticleNextSearch } from "@/lib/content/article/query";
+import type { LinkTarget } from "@/lib/routing/link";
+import { LOCALE_ROUTE } from "@/lib/routing/tree";
 
 /**
  * The typed target of the next page of an article catalog: the category page, or
@@ -11,11 +13,7 @@ export function articleNextTarget({
   search,
 }: {
   readonly category?: string | undefined;
-  readonly search: {
-    readonly cursor: string;
-    readonly manifest: string;
-    readonly release: string;
-  };
+  readonly search: ArticleNextSearch;
 }): LinkTarget {
   return category === undefined
     ? linkOptions({ from: LOCALE_ROUTE, search, to: "/$locale/articles" })

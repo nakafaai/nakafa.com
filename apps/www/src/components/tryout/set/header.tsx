@@ -1,3 +1,4 @@
+import { Option } from "effect";
 import type { ReactNode } from "react";
 import { getTryoutCrumbTarget } from "@/components/tryout/route/path";
 import type { SetPage } from "@/components/tryout/set/model";
@@ -26,12 +27,14 @@ export function TryoutSetPageHeader({
           label: page.exam.title,
           target:
             currentPath === page.set.publicPath
-              ? getTryoutCrumbTarget(page.exam.publicPath)
+              ? Option.getOrUndefined(
+                  getTryoutCrumbTarget(page.exam.publicPath)
+                )
               : undefined,
         },
         {
           label: page.track.title,
-          target: getTryoutCrumbTarget(returnPath),
+          target: Option.getOrUndefined(getTryoutCrumbTarget(returnPath)),
         },
       ]}
       title={page.set.title}

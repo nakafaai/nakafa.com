@@ -2,10 +2,6 @@ import { QueryResult } from "@confect/react";
 import classroom from "@repo/backend/confect/_generated/refs/classroom";
 import { ClassAmbiguous } from "@repo/backend/confect/classroom/errors";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import {
-  EXACT_ACTIVE_OPTIONS,
-  Link,
-} from "@repo/internationalization/src/link";
 import { cva } from "class-variance-authority";
 import { Array as Arr, Option, Schema } from "effect";
 import { createContext, use, useState } from "react";
@@ -22,7 +18,9 @@ import { SchoolHeader } from "@/components/tenant/header";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { isDenied, isLostAccess } from "@/components/tenant/refusal";
 import { usePreloadedQueryResult } from "@/lib/data/preloaded";
+import { Link } from "@/lib/routing/link";
 import { schoolClassTarget } from "@/lib/routing/school/target";
+import { EXACT_ACTIVE_OPTIONS } from "@/lib/routing/tree";
 import type { readClassForumFn } from "@/lib/tenant/classes.functions";
 
 /** The tabs of a class that have a page. The other tabs join with the slices that build them. */
@@ -112,7 +110,7 @@ function ClassPage({
   const canManageForum = Arr.contains(klass.can, "forum.manage");
   const classItem = {
     label: klass.name,
-    target: { host: "school" as const, target: schoolClassTarget(classSlug) },
+    target: schoolClassTarget(slug, classSlug),
   };
   const path =
     tab === "home"

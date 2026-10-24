@@ -19,11 +19,6 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { toast } from "@repo/design-system/lib/toast/notify";
-import {
-  EXACT_ACTIVE_OPTIONS,
-  Link,
-  useCurrentLocale,
-} from "@repo/internationalization/src/link";
 import { Array as Arr, Effect, Option, pipe, String as Str } from "effect";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
@@ -47,6 +42,8 @@ import {
 import { reportClientException } from "@/lib/analytics/client";
 import { usePaginatedPreloaded } from "@/lib/data/paginated";
 import type { PublicProfile } from "@/lib/profile/public";
+import { Link, useCurrentLocale } from "@/lib/routing/link";
+import { EXACT_ACTIVE_OPTIONS } from "@/lib/routing/tree";
 
 /**
  * The study chats of the profile's owner, in the anatomy every row of the profile shares.

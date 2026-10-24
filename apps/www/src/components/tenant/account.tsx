@@ -17,7 +17,6 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useSidebar } from "@repo/design-system/lib/sidebar/context";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { languages } from "@repo/internationalization/data/lang";
-import { Link } from "@repo/internationalization/src/link";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { useRouter } from "@tanstack/react-router";
 import { Array as Arr, Effect } from "effect";
@@ -29,6 +28,7 @@ import { SidebarThemeSubmenu } from "@/components/sidebar/menu/preference";
 import { useTenant } from "@/components/tenant/context";
 import { changeSchoolLanguage } from "@/components/tenant/locale";
 import { profileHref } from "@/lib/profile/href";
+import { Link } from "@/lib/routing/link";
 
 /**
  * Changes the language that the account menu chose at once, and saves it. The page shows the new language

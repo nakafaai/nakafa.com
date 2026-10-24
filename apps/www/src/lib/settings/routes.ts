@@ -1,9 +1,7 @@
-import {
-  type LinkTarget,
-  LOCALE_ROUTE,
-} from "@repo/internationalization/src/link";
 import { linkOptions } from "@tanstack/react-router";
 import { Array as Arr, Option, Schema } from "effect";
+import type { LinkTarget } from "@/lib/routing/link";
+import { LOCALE_ROUTE } from "@/lib/routing/tree";
 
 const UserSettingsLabelKeySchema = Schema.Literals([
   "account",
@@ -16,15 +14,22 @@ const UserSettingsLabelKeySchema = Schema.Literals([
 export type UserSettingsLabelKey = typeof UserSettingsLabelKeySchema.Type;
 
 /** One addressable section of the private settings surface, with its typed link target. */
-interface UserSettingsSection {
-  readonly labelKey: UserSettingsLabelKey;
-  readonly target: LinkTarget;
+function userSettingsSection(
+  labelKey: UserSettingsLabelKey,
+  target: LinkTarget
+) {
+  return { labelKey, target };
 }
 
 /** One labelled group of addressable sections. The `Auth` dictionary owns its label. */
-interface UserSettingsGroup {
-  readonly key: "ai" | "personal";
-  readonly sections: readonly [UserSettingsSection, ...UserSettingsSection[]];
+function userSettingsGroup(
+  key: "ai" | "personal",
+  sections: readonly [
+    ReturnType<typeof userSettingsSection>,
+    ...ReturnType<typeof userSettingsSection>[],
+  ]
+) {
+  return { key, sections };
 }
 
 /**
@@ -32,49 +37,31 @@ interface UserSettingsGroup {
  * the sections it holds. The sidebar, the breadcrumb header, and the section
  * metadata all derive from it, so a new section has exactly one declaration.
  */
-export const userSettingsGroups: readonly [
-  UserSettingsGroup,
-  ...UserSettingsGroup[],
-] = [
-  {
-    key: "personal",
-    sections: [
-      {
-        labelKey: "account",
-        target: linkOptions({
-          from: LOCALE_ROUTE,
-          to: "/$locale/user/settings",
-        }),
-      },
-      {
-        labelKey: "learning",
-        target: linkOptions({
-          from: LOCALE_ROUTE,
-          to: "/$locale/user/settings/learning",
-        }),
-      },
-      {
-        labelKey: "billing",
-        target: linkOptions({
-          from: LOCALE_ROUTE,
-          to: "/$locale/user/settings/subscriptions",
-        }),
-      },
-    ],
-  },
-  {
-    key: "ai",
-    sections: [
-      {
-        labelKey: "memory",
-        target: linkOptions({
-          from: LOCALE_ROUTE,
-          to: "/$locale/user/settings/memory",
-        }),
-      },
-    ],
-  },
-];
+export const userSettingsGroups = [
+  userSettingsGroup("personal", [
+    userSettingsSection(
+      "account",
+      linkOptions({ from: LOCALE_ROUTE, to: "/$locale/user/settings" })
+    ),
+    userSettingsSection(
+      "learning",
+      linkOptions({ from: LOCALE_ROUTE, to: "/$locale/user/settings/learning" })
+    ),
+    userSettingsSection(
+      "billing",
+      linkOptions({
+        from: LOCALE_ROUTE,
+        to: "/$locale/user/settings/subscriptions",
+      })
+    ),
+  ]),
+  userSettingsGroup("ai", [
+    userSettingsSection(
+      "memory",
+      linkOptions({ from: LOCALE_ROUTE, to: "/$locale/user/settings/memory" })
+    ),
+  ]),
+] as const;
 
 /**
  * Every section in sidebar order, each with the group that holds it. A group

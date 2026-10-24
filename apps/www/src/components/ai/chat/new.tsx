@@ -1,11 +1,11 @@
 import { Particles } from "@repo/design-system/components/ui/particles";
-import { useCurrentLocale } from "@repo/internationalization/src/link";
 import { useNavigate } from "@tanstack/react-router";
 import { cn } from "cn";
 import type { ReactNode } from "react";
 import { ChatHeader } from "@/components/ai/chat/header";
 import { StartPrompt, useStartChat } from "@/components/ai/chat/start";
 import { NinaInput } from "@/components/ai/input";
+import { useCurrentLocale } from "@/lib/routing/link";
 
 /** Moves directly from the welcome screen into the final conversation layout. */
 export function ChatNew({

@@ -6,11 +6,6 @@ import {
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { MessageScrollerItem } from "@repo/design-system/components/ui/scroller";
-import {
-  EXACT_ACTIVE_OPTIONS,
-  Link,
-  useCurrentLocale,
-} from "@repo/internationalization/src/link";
 import { useTranslations } from "use-intl";
 import { readStopFailure } from "@/components/ai/chat/cancel";
 import { useChat } from "@/components/ai/chat/context";
@@ -22,6 +17,8 @@ import {
 } from "@/components/ai/feedback";
 import { useMessage } from "@/components/ai/message/context";
 import { useCurrentAuthNavigation } from "@/lib/auth/location";
+import { Link } from "@/lib/routing/link";
+import { EXACT_ACTIVE_OPTIONS } from "@/lib/routing/tree";
 
 /** Read the turn attached to this message, including older failed responses. */
 export function AiChatPersistedError() {
@@ -75,7 +72,6 @@ function FailureActions({
   retry: () => void;
 }) {
   const t = useTranslations("Ai");
-  const locale = useCurrentLocale();
   const authNavigation = useCurrentAuthNavigation();
   return (
     <>
@@ -95,7 +91,6 @@ function FailureActions({
           render={
             <Link
               activeOptions={EXACT_ACTIVE_OPTIONS}
-              params={{ locale }}
               to="/$locale/user/settings/subscriptions"
             />
           }
@@ -119,11 +114,7 @@ function FailureActions({
         <Button
           nativeButton={false}
           render={
-            <Link
-              activeOptions={EXACT_ACTIVE_OPTIONS}
-              params={{ locale }}
-              to="/$locale/chat"
-            />
+            <Link activeOptions={EXACT_ACTIVE_OPTIONS} to="/$locale/chat" />
           }
           size="sm"
           variant="outline"

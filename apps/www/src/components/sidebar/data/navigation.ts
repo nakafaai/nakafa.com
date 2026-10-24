@@ -3,11 +3,10 @@ import {
   Books02Icon,
   Target01Icon,
 } from "@hugeicons/core-free-icons";
-import {
-  type LinkTarget,
-  LOCALE_ROUTE,
-} from "@repo/internationalization/src/link";
 import { linkOptions } from "@tanstack/react-router";
+import { Option } from "effect";
+import type { LinkTarget } from "@/lib/routing/link";
+import { LOCALE_ROUTE } from "@/lib/routing/tree";
 
 const forYouNavigationItems = {
   subject: {
@@ -60,16 +59,22 @@ export function getForYouNavigationItems() {
 export function getForYouNavigationTarget(
   item: ForYouNavigationItem,
   preferences: {
-    preferredCurriculumTarget?: LinkTarget | null;
-    preferredTryoutTarget?: LinkTarget | null;
+    preferredCurriculumTarget?: Option.Option<LinkTarget> | undefined;
+    preferredTryoutTarget?: Option.Option<LinkTarget> | undefined;
   } = {}
 ): LinkTarget {
-  if (item.id === "subject" && preferences.preferredCurriculumTarget) {
-    return preferences.preferredCurriculumTarget;
+  if (item.id === "subject") {
+    return Option.getOrElse(
+      preferences.preferredCurriculumTarget ?? Option.none(),
+      () => item.target
+    );
   }
 
-  if (item.id === "tryOut" && preferences.preferredTryoutTarget) {
-    return preferences.preferredTryoutTarget;
+  if (item.id === "tryOut") {
+    return Option.getOrElse(
+      preferences.preferredTryoutTarget ?? Option.none(),
+      () => item.target
+    );
   }
 
   return item.target;
