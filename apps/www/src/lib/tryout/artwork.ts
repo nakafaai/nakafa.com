@@ -65,7 +65,6 @@ const decodeTryoutExamArtworkIdentity = Schema.decodeUnknownResult(
  * Resolves reviewed card and social artwork from one signed exam identity.
  * The direct Effect values preserve the static-prerender fast path at the
  * framework runner boundary.
- * https://nextjs.org/docs/messages/next-prerender-current-time
  */
 export function resolveTryoutExamArtwork(
   input: unknown

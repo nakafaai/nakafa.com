@@ -1,5 +1,7 @@
 # ADR 0001: Native Agent conversations with Confect domain operations
 
+> Superseded in part by [ADR 0037](0037-cloudflare.md) and [ADR 0036](0036-boundary.md): the Vercel and Next.js statements of this record describe the earlier stack. Cloudflare Workers through Alchemy and the TanStack Start boundary replace them.
+
 ## Status
 
 Accepted architecture for Nina and learning engagement.

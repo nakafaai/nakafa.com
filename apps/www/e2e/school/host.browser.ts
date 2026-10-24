@@ -72,7 +72,7 @@ test("the not-found page of an unknown school links to Nakafa, because the schoo
   baseURL,
 }) => {
   // The proxy rewrites the unknown school to the standalone not-found page.
-  // On Vercel the rewrite reaches the app's page; a local production build
+  // On the edge the rewrite reaches the app's page; a local production build
   // draws the app's page only at its own address and answers the rewrite with
   // the framework's built-in page. So the page is opened at its address on the
   // school host, with the language header the proxy sets.

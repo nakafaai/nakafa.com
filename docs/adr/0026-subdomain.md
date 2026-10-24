@@ -1,5 +1,7 @@
 # ADR 0026: School Hosts, One URL Tree, And Data Cells
 
+> Superseded in part by [ADR 0037](0037-cloudflare.md) and [ADR 0036](0036-boundary.md): the Vercel and Next.js statements of this record describe the earlier stack. Cloudflare Workers through Alchemy and the TanStack Start boundary replace them.
+
 ## Status
 
 Accepted on 13 October 2026 with owner decisions K5, K11, and K15. The owner

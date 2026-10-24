@@ -43,7 +43,6 @@ const loadMessagesByLocale = {
 /**
  * Loads one reviewed dictionary, with the words of the standalone pages in it,
  * at the framework Promise boundary.
- * https://nextjs.org/docs/messages/next-prerender-current-time
  */
 export async function loadLocaleMessages(locale: AppLocaleCode) {
   const [messages, standalone] = await loadMessagesByLocale[locale]();

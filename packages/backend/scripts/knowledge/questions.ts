@@ -13,7 +13,7 @@ import { Array as Arr } from "effect";
  * its heading in each language. The model test checks the heading against the
  * stored section before it counts a question, so a lesson that was edited since
  * the labels were written leaves its questions out, with the reason, and does
- * not skew the result.
+ * not bias the result.
  *
  * Most questions use other words than the heading of their section, so that
  * finding the section takes meaning and not only matching words.

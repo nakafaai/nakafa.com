@@ -241,7 +241,7 @@ export default defineConfig(({ command, isPreview }) => ({
         failOnError: true,
       },
     }),
-    // Decision 34: no skew route and no deployment pin. A client that asks for a
+    // Decision 34: no deployment pin and no skew route. A client that asks for a
     // chunk the deploy replaced reloads the document once.
     rsc(),
     tailwindcss(),

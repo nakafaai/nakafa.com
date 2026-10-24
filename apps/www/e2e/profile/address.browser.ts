@@ -123,7 +123,7 @@ test("a visitor reads the profile of a learner but finds neither its chats nor t
           // Its chats are its owner's alone, and the answer is a real 404,
           // decided before the page renders. The Start server draws the
           // framework's own 404 for an address the proxy rewrites, where
-          // Vercel draws the app's page, so the status is the contract here.
+          // The edge draws the app's page, so the status is the contract here.
           const chats = await visitor.goto(`/en/@${learner.username}/chat`);
           expect(chats?.status()).toBe(404);
         })

@@ -29,7 +29,6 @@ interface Props {
  * link. Without it the link loads that content once the reader hovers,
  * focuses, or touches it.
  *
- * https://nextjs.org/docs/app/guides/optimizing-prefetching
  */
 function PaginationItem({
   context,

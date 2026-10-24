@@ -1,5 +1,7 @@
 # ADR 0031: One Assessment Model For Try-Outs And School Exams
 
+> Superseded in part by [ADR 0037](0037-cloudflare.md) and [ADR 0036](0036-boundary.md): the Vercel and Next.js statements of this record describe the earlier stack. Cloudflare Workers through Alchemy and the TanStack Start boundary replace them.
+
 ## Status
 
 Accepted on 13 October 2026 with owner decisions K1, K6, K7, K12, K14, K16, and

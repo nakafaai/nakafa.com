@@ -6,7 +6,7 @@ Nakafa is a source-available educational platform for structured learning,
 assessments, Quran study, and political analysis. The production site is
 [nakafa.com](https://nakafa.com).
 
-This repository owns the React and Next.js applications, design system,
+This repository owns the React applications on TanStack Start, design system,
 transactional Convex backend, renderer implementations, user state, and
 product integrations. The separate
 [Aksara repository](https://github.com/nakafaai/aksara) owns authored content
@@ -21,7 +21,7 @@ authored content source or publication path.
 - Node.js 24
 - pnpm 11.28.5
 - Turborepo
-- Next.js 16 and React 19
+- TanStack Start and React 19
 - Native TypeScript 7
 - Convex
 - Vitest
@@ -66,8 +66,8 @@ receive separate names. Use `pnpm exec portless list` to inspect active routes,
 `pnpm exec portless doctor` to check the proxy, DNS, and certificate trust.
 
 Set `SITE_URL` in `apps/www/.env.local` and the selected development backend
-to that exact web origin. Set `NEXT_PUBLIC_CONVEX_URL` and
-`NEXT_PUBLIC_CONVEX_SITE_URL` to the same main dev deployment. The shared
+to that exact web origin. Set `VITE_CONVEX_URL` and
+`VITE_CONVEX_SITE_URL` to the same main dev deployment. The shared
 deployment carries one `SITE_URL`, which backs auth and checkout, so a
 worktree on its own origin must use an isolated development deployment
 instead of the shared one. Google's client configuration must include the
@@ -140,7 +140,7 @@ See ADR 0037.
 
 ## Repository layout
 
-- `apps/www`: main Next.js application at `https://nakafa.local.nakafa.com`
+- `apps/www`: main TanStack Start application at `https://nakafa.local.nakafa.com`
 - `apps/mcp`: Cloudflare Worker edge for the Convex MCP runtime
 - `apps/api`: Cloudflare Worker edge for the Convex REST runtime
 - `apps/cas`: Python CAS service at `https://cas.nakafa.local.nakafa.com`
@@ -198,7 +198,7 @@ Nakafa consumes only authenticated current Aksara contracts and signed
 publication artifacts.
 
 The shared `@nakafa/aksara-contracts/locale` module is the only locale source
-of truth. English, Indonesian, and German are active. Next.js routing, API
+of truth. English, Indonesian, and German are active. TanStack Start routing, API
 validation, Convex validators, AI language handling, date formatting, checkout
 localization, and sitemap generation derive from that contract. Do not add a
 second app-local locale list.

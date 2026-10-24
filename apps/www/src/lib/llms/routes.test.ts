@@ -340,7 +340,6 @@ describe("localized llms route classification", () => {
     expect(isLocalizedLlmsRoute("/")).toBe(true);
     expect(isLocalizedLlmsRoute("/en/articles/x.md")).toBe(true);
     expect(isLocalizedLlmsRoute("/api/weather")).toBe(false);
-    expect(isLocalizedLlmsRoute("/_nakafa/e")).toBe(false);
   });
 
   it("leaves a localized social image route out of the documents", () => {

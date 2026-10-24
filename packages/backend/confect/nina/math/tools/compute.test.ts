@@ -64,7 +64,7 @@ const result = {
 } satisfies MathResult;
 const provider = ConfigProvider.fromEnvRecord({
   MATH_CAS_API_KEY: "secret",
-  VITE_CAS_URL: "https://cas.nakafa.test",
+  MATH_CAS_URL: "https://cas.nakafa.test",
 });
 /** Creates a stream publish harness that records math data parts for assertions. */
 function createProgress() {

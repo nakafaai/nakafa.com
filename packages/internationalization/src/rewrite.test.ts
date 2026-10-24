@@ -13,7 +13,6 @@ describe("shared paths", () => {
   it.each([
     "/api/ping",
     "/_serverFn/abc",
-    "/_nakafa/i/v0/e/",
     "/_missing",
     "/assets/app.js",
     "/.well-known/llms.txt",

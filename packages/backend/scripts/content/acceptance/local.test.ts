@@ -106,7 +106,6 @@ describe("owned signed acceptance runtime", () => {
           AKSARA_PUBLICATION_TOKEN: runtime.publicationToken,
           AKSARA_ACCEPTANCE_PRIVATE_KEY: undefined,
           AKSARA_SIGNING_PRIVATE_KEY: undefined,
-          VERCEL: undefined,
         });
         expect(mocks.command).toHaveBeenCalledTimes(2);
         expect(yield* fs.readFileString(`${runtime.backend}/convex.json`)).toBe(

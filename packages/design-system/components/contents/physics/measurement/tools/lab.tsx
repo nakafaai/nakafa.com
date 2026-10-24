@@ -59,7 +59,6 @@ interface MeasurementToolsLabProps {
  * camera movement.
  *
  * @see https://r3f.docs.pmnd.rs/advanced/scaling-performance
- * @see https://nextjs.org/docs/app/getting-started/server-and-client-components
  */
 export function MeasurementToolsLab({
   title,

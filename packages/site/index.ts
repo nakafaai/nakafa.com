@@ -56,7 +56,6 @@ export function createLoopbackConnectSources(source: URL) {
  *
  * References:
  * https://posthog.com/docs/advanced/content-security-policy
- * https://posthog.com/docs/advanced/proxy/nextjs
  */
 export function createSecurityHeaders({
   additionalConnectSources = [],

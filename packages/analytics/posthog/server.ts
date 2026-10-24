@@ -75,7 +75,6 @@ function getServerAnalytics() {
  *
  * Docs:
  * https://posthog.com/docs/error-tracking/capture
- * https://posthog.com/docs/error-tracking/installation/nextjs
  * https://posthog.com/docs/web-analytics/bot-detection
  */
 export const captureServerException = Effect.fn(

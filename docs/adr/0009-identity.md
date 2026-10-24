@@ -1,5 +1,7 @@
 # ADR 0009: Token-Verified Reads, Session-Validated Writes, And School Sign-In
 
+> Superseded in part by [ADR 0037](0037-cloudflare.md) and [ADR 0036](0036-boundary.md): the Vercel and Next.js statements of this record describe the earlier stack. Cloudflare Workers through Alchemy and the TanStack Start boundary replace them.
+
 ## Decision
 
 The session middleware resolves one caller identity per Convex function and

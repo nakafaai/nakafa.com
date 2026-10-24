@@ -66,7 +66,6 @@ import {
   siTailwindcss,
   siToml,
   siTypescript,
-  siVercel,
   siVite,
   siVuedotjs,
   siWebassembly,
@@ -148,7 +147,6 @@ export const filenameIconMap = {
   "storybook.config.*": siStorybook,
   "stylelint.config.*": siStylelint,
   "tailwind.config.*": siTailwindcss,
-  "vercel.json": siVercel,
   "vite.config.*": siVite,
 } satisfies Record<string, ProgrammingIcon>;
 

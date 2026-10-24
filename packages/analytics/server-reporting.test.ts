@@ -49,8 +49,8 @@ describe("server exception reporting runtime", () => {
     [undefined, "false"],
   ])(
     "fails closed for NAKAFA_DEPLOY_STAGE=%s and TSS_PRERENDERING=%s",
-    (vercelEnvironment, prerendering) => {
-      vi.stubEnv("NAKAFA_DEPLOY_STAGE", vercelEnvironment);
+    (deployStage, prerendering) => {
+      vi.stubEnv("NAKAFA_DEPLOY_STAGE", deployStage);
       vi.stubEnv("TSS_PRERENDERING", prerendering);
 
       expect(isServerExceptionReportingEnabled()).toBe(false);

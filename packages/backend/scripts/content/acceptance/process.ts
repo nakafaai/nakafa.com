@@ -91,7 +91,6 @@ export const localConvexEnvironment = {
   CONVEX_URL: undefined,
   NAKAFA_DEPLOY_STAGE: undefined,
   NETLIFY: undefined,
-  VERCEL: undefined,
   VITE_CONVEX_SITE_URL: undefined,
   VITE_CONVEX_URL: undefined,
   WORKERS_CI: undefined,

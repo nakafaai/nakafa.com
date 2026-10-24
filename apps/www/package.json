@@ -8,7 +8,6 @@
   },
   "scripts": {
     "build": "pnpm verify:featured-renderer && vite build",
-    "build:vercel": "pnpm --dir ../../packages/backend run deploy --yes --typecheck enable && pnpm --dir ../.. run build --filter=www",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "dev": "portless run --name nakafa vite dev",
     "doctor": "pnpm --config.minimum-release-age=1440 dlx react-doctor@0.9.18",
@@ -91,7 +90,6 @@
     "@tanstack/router-cli": "1.167.45",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
-    "@vercel/config": "catalog:",
     "@vitejs/plugin-react": "6.1.2",
     "@vitejs/plugin-rsc": "0.5.38",
     "@vitest/coverage-istanbul": "catalog:",

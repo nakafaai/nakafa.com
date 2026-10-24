@@ -54,7 +54,6 @@ Temporary Items
 # iCloud generated files
 *.icloud
 
-### NextJS ###
 # dependencies
 /node_modules
 /.pnpm-store
@@ -64,8 +63,6 @@ Temporary Items
 # testing
 /coverage
 
-# next.js
-/.next/
 /out/
 
 # production
@@ -85,7 +82,6 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
-next-env.d.ts
 
 ### Node ###
 # Logs
@@ -168,8 +164,6 @@ web_modules/
 .cache
 .parcel-cache
 
-# Next.js build output
-.next
 out
 
 # Nuxt.js build / generate output
@@ -178,8 +172,6 @@ dist
 
 # Gatsby files
 .cache/
-# Comment in the public line in if your project uses Gatsby and not Next.js
-# https://nextjs.org/blog/next-9-1#public-directory-support
 # public
 
 # vuepress build output
@@ -271,7 +263,7 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
-# End of https://www.toptal.com/developers/gitignore/api/macos,windows,node,nextjs,vercel,turbo,storybookjs,react
+# End of https://www.toptal.com/developers/gitignore/api/macos,windows,node,vercel,turbo,storybookjs,react
 
 # Sentry Config File
 .env.sentry-build-plugin

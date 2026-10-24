@@ -1,5 +1,4 @@
 // CoordinateSystem renders a dynamic WebGL canvas with SSR disabled.
-// https://nextjs.org/docs/app/guides/lazy-loading#skipping-ssr
 
 import {
   CoordinateControls,
