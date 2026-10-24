@@ -76,9 +76,13 @@ export function RowText({
 }) {
   return (
     <span className="grid min-w-0 flex-1 gap-0.5">
-      <span className="truncate font-medium">{title}</span>
+      <span className="truncate font-medium" dir="auto">
+        {title}
+      </span>
       {detail === undefined ? null : (
-        <span className="truncate text-muted-foreground text-xs">{detail}</span>
+        <span className="truncate text-muted-foreground text-xs" dir="auto">
+          {detail}
+        </span>
       )}
     </span>
   );

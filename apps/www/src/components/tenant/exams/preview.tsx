@@ -1,6 +1,7 @@
 import { QueryResult, useQuery } from "@confect/react";
 import { useInViewport } from "@mantine/hooks";
 import editors from "@repo/backend/confect/_generated/refs/editor";
+import { markBlockDirections } from "@repo/design-system/components/editor/direction";
 import {
   editorContent,
   editorDocument,
@@ -92,8 +93,9 @@ export function usePromptDocument({
 /**
  * A rich text drawn without an editor: the schema's own rendering of each node, which is what the
  * editor draws, in the wrapper and the document classes the editor gives its text, so the text takes
- * the same box and spacing as it does once the editor mounts. A text that changes while the teacher
- * types is drawn when the browser has time.
+ * the same box and spacing as it does once the editor mounts, and each block takes the direction of
+ * its own words, as the editor gives it. A text that changes while the teacher types is drawn when
+ * the browser has time.
  */
 function PreviewProse({ doc, size }: { doc: Node; size: "line" | "page" }) {
   const shown = useDeferredValue(doc);
@@ -110,6 +112,7 @@ function PreviewProse({ doc, size }: { doc: Node; size: "line" | "page" }) {
           shown.content
         )
       );
+      markBlockDirections(element);
       if (size === "line") {
         return;
       }

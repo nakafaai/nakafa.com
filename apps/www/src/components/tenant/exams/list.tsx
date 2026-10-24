@@ -159,7 +159,7 @@ function ExamTable({
   const columns = examColumns.columns([
     examColumns.accessor((exam) => exam.title, {
       cell: (info) => (
-        <span className="font-medium">
+        <span className="font-medium" dir="auto">
           {Arr.contains(saving, info.row.original.id) ? (
             <span className="text-muted-foreground">{info.getValue()}</span>
           ) : (

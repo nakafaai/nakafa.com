@@ -146,6 +146,7 @@ export function CreateExam({
           <Field>
             <FieldLabel htmlFor={`${id}-title`}>{t("title-label")}</FieldLabel>
             <Input
+              dir="auto"
               id={`${id}-title`}
               onChange={(event) => setTitle(event.target.value)}
               placeholder={t("untitled")}
