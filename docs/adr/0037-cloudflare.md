@@ -30,15 +30,17 @@ never invoke a Worker.
    stage decides what is deployed:
    - `prod`: the web Worker owns `nakafa.com` as a custom domain and every School
      host through the route `*.nakafa.com/*`. The API and MCP Workers own
-     `api.nakafa.com` and `mcp.nakafa.com` through exact routes. The zone and its
-     records come from `apps/www/deploy/dns.ts`, with the zone adopted.
+     `api.nakafa.com` and `mcp.nakafa.com` through exact routes. The CAS front
+     owns `cas.nakafa.com` through an exact route only after its cutover ships
+     (decision 7). The zone and its records come from `apps/www/deploy/dns.ts`,
+     with the zone adopted.
    - `staging`: the web Worker serves `staging.nakafa.com` behind Cloudflare
      Access for the two owner accounts. Workers.dev is off.
    - any other stage: only the workers.dev URL, with no custom domain.
 3. **Exact routes beat the wildcard.** Cloudflare sends a request to the most
    specific route. The School wildcard never shadows another Worker's host,
    because each such host has its own exact route. Routes win over custom
-   domains, so the API, MCP, and staging hosts use routes, not custom domains.
+   domains, so the API, MCP, CAS, and staging hosts use routes, not custom domains.
 4. **Edge Workers keep the contract.** The API and MCP Workers forward their
    declared paths to the Convex site with the edge secret. They strip browser
    credentials and name the release in `x-nakafa-release-sha`. The path table and
@@ -55,19 +57,24 @@ never invoke a Worker.
    `Config` at run time. CI never runs that stack.
 7. **CAS runs as Durable Objects, and its cutover waits for a passing probe.** The
    math engine in `apps/cas` is a Python Durable Object (`entry.py`,
-   `cas/compute.py`), and a TypeScript front on `cas.nakafa.com` (`apps/cas/front`)
-   checks the bearer key and forwards each call to one of a fixed pool of engine
-   objects. The probe on Workers Free (24 October 2026) passed the corpus bar and
-   failed the heavy-request bar: a request that reached the engine's CPU limit left
-   one pooled object unresponsive for more than 20 minutes, and requests routed to
-   it did not complete. The production route and the removal of the Vercel record
-   for `cas.nakafa.com` must not ship until a repeated probe passes that bar.
+   `cas/compute.py`), and a TypeScript front (`apps/cas/front`) checks the bearer
+   key and forwards each call to one of a fixed pool of engine objects. The front
+   waits at most 20 seconds for an object, the budget of the previous engine, and
+   answers 503 when it stops waiting. The first probe on Workers Free (24 October
+   2026) passed the corpus bar and failed the heavy-request bar: a request that
+   reached the engine's CPU limit returned 503 after 43 seconds, and calls routed
+   to the pool then timed out at 90 seconds for at least eight minutes. A second
+   probe with the 20-second budget passed the same bar in one run (see Measured
+   below). The production route for `cas.nakafa.com` and the removal of its Vercel
+   record wait for the owner's decision on that run.
 
 ## Consequences
 
 - Vercel serves `www` until its cutover, and the Vercel Preview prohibition in
-  `AGENTS.md` stays until then. CAS runs on Cloudflare, and no Vercel file or
-  package remains in `apps/cas`.
+  `AGENTS.md` stays until then. Until the CAS cutover ships, `cas.nakafa.com`
+  still answers from Vercel. This branch deletes `apps/cas/vercel.ts`, the
+  FastAPI entry, and the subprocess worker, so the branch is held until the owner
+  accepts the cutover.
 - The production identity is the deploy stage. Each Worker binds the stage that
   its stack deploys as `NAKAFA_DEPLOY_STAGE`. The production checks in
   `packages/backend/content`, the runtime check in `apps/www/src/runtime.ts`, and
@@ -82,8 +89,10 @@ never invoke a Worker.
   redirect rule are retained (`RemovalPolicy.retain`). A stack change that drops
   one leaves the cloud object in place. A plan check in CI is not in place yet.
 - The nakafa.id zone, its placeholder records, and its redirect rule are adopted,
-  never recreated. `cas.nakafa.com` has no record of its own: the proxied wildcard
-  answers it, and the CAS front's route wins over the wildcard.
+  never recreated. This branch removes the DNS-only `cas` CNAME to Vercel and
+  adds the CAS front's production route. The route wins over the proxied
+  wildcard for `cas.nakafa.com`. Both steps are the cutover, so they wait for the
+  probe.
 - The deploy token holds its account permissions and its zone permissions in two
   policies. Alchemy keeps the token value in its encrypted state. The owner must
   confirm this accepted risk, and the alternative is a token created outside
@@ -94,14 +103,30 @@ never invoke a Worker.
 - The CAS engine has no subprocess: a Python Worker cannot start one, so the
   engine runs in a Durable Object, and the platform's CPU limit replaces the
   subprocess timeout.
-- Measured on Workers Free in the probe stage, then removed. The engine uploads
-  33.29 MB uncompressed, under the 64 MiB limit. SymPy loads on the first request,
-  because a Worker may not draw randomness while it starts, so the first call on a
-  fresh object takes 6 to 16 seconds. The 1,015 corpus calls (203 requests, five
-  rounds) returned only 200 or 422, with no 1102 or exceeded-resource outcome. The
-  front used a median of 1 ms CPU (P99 5 ms). The engine used a median of 11 ms
-  CPU, P99 12.5 seconds, and up to 32.5 seconds for the request that reached the
-  limit.
+- The engine pins pydantic 2.10.6 instead of 2.13.5, because the Pyodide index for
+  Python 3.13 ships only pydantic-core 2.27.2, which Pydantic 2.10 requires
+  (`apps/cas/pyproject.toml`). Its results matched the Vercel engine's on the test
+  corpus. The size bound applies to the canonical request, as the Vercel engine's
+  did. The front reads at most 64 KiB of the raw body, so a compact body above that
+  limit is refused even when its canonical form is smaller; the Vercel engine
+  accepted such a body when its canonical form fit.
+- Measured on Workers Free in two probe stages, each removed afterwards. The engine
+  uploads about 33.3 MB uncompressed, under the 64 MiB limit. SymPy loads on the
+  first request, because a Worker may not draw randomness while it starts, so the
+  first call on a fresh object takes 6 to 16 seconds and about 7 seconds of CPU.
+  Probe 1 (commit 667d981b3e, no front budget): the 1,015 corpus calls (203 requests,
+  five rounds) returned 750 with 200 and 265 with 422, with no 1102 or
+  exceeded-resource outcome. A 59-digit semiprime returned 503 after 43 seconds, and
+  calls routed to the same pool then timed out at 90 seconds for at least eight
+  minutes.
+  Probe 2 (commit 3f4a147b87, a 20-second front budget and the canonical size bound):
+  the same corpus returned the same 750 and 265, with a client p95 of 1.9 seconds and
+  no call over 9 seconds. The same semiprime returned 503 at 20 seconds, and one
+  small call sent alongside it got the same 503 at 20 seconds. The engine's
+  one exception invocation used 32.5 seconds of CPU, and the calls after it and a
+  24-call burst all returned 200. The front used a median of 2 ms CPU (P99 5 ms). The
+  engine used a median of 6 ms CPU, and its successful invocations peaked at 7.2
+  seconds of CPU.
 
 ## Sources
 
