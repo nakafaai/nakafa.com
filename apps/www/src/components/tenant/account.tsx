@@ -30,6 +30,7 @@ import {
   SiteAboutMenuItem,
 } from "@/components/sidebar/menu/learn";
 import { SidebarThemeSubmenu } from "@/components/sidebar/menu/preference";
+import { selectMenuSide } from "@/components/sidebar/menu/side";
 import { useTenant } from "@/components/tenant/context";
 import { changeSchoolLanguage } from "@/components/tenant/locale";
 import { profileHref } from "@/lib/profile/href";
@@ -153,7 +154,7 @@ function TenantLanguageSubmenu() {
   const t = useTranslations("Common");
   const locale = useLocale();
   const router = useRouter();
-  const side = useSidebar((sidebar) => (sidebar.isMobile ? "top" : "right"));
+  const side = useSidebar(selectMenuSide);
 
   return (
     <DropdownMenuSub>
