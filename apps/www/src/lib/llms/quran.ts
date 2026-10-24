@@ -5,7 +5,7 @@ import { parseQuranSurahNumber } from "@repo/backend/client/quran/route";
 import { formatQuranMeaning } from "@repo/backend/content/quran/contract";
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
 import { Array as Arr, Effect, Option, Schema } from "effect";
-import { createTranslator, type Locale } from "use-intl";
+import { createTranslator, type Locale } from "use-intl/core";
 import { getQuranSurahName } from "@/lib/content/quran/navigation";
 import {
   readPublishedQuranCatalog,

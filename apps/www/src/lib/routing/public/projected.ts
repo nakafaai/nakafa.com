@@ -7,7 +7,7 @@ import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/route/surface";
 import type { Locale } from "@repo/internationalization/src/locale";
 import { Array as Arr, Effect, Option, Schema } from "effect";
-import { hasLocale } from "use-intl";
+import { hasLocale } from "use-intl/core";
 import { matchesPreviewRoute } from "@/lib/content/preview/route";
 import { readPublishedProgramPath } from "@/lib/content/program/path";
 import { readActiveContentRoute } from "@/lib/content/published/route";

@@ -2,7 +2,7 @@
 
 import { describe, expect, it } from "@effect/vitest";
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
-import { createTranslator } from "use-intl";
+import { createTranslator } from "use-intl/core";
 import {
   currencySymbol,
   drinkKey,

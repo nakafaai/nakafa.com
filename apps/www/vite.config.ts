@@ -96,6 +96,35 @@ const NODE_ONLY_CONTRACT_ALIASES = NODE_ONLY_CONTRACT_PATHS.map((path) => ({
   replacement: contractsRequire.resolve(`@nakafa/aksara-contracts/${path}`),
 }));
 
+/** The Worker environments: `ssr` is the Worker entry and `rsc` its child. */
+const WORKER_ENVIRONMENTS = ["ssr", "rsc"];
+
+/**
+ * `@vitejs/plugin-rsc` excludes every package that peers on React from
+ * pre-bundling, so client references keep their own modules. A CommonJS package
+ * in that list stays a bare import inside the pre-bundled chunks, which Node
+ * resolves but the workerd module runner cannot. These have no client
+ * references, so the Worker environments pre-bundle them again.
+ */
+const COMMONJS_REACT_PEERS = ["use-sync-external-store"];
+
+const bundleCommonJsReactPeers: Plugin = {
+  name: "www:bundle-commonjs-react-peers",
+  configEnvironment: {
+    order: "post",
+    handler: (name, config) => {
+      if (!WORKER_ENVIRONMENTS.includes(name)) {
+        return;
+      }
+      const exclude = config.optimizeDeps?.exclude ?? [];
+      config.optimizeDeps = {
+        ...config.optimizeDeps,
+        exclude: exclude.filter((name) => !COMMONJS_REACT_PEERS.includes(name)),
+      };
+    },
+  },
+};
+
 /** The font files that the font-src policy must load from this origin, never inline. */
 const FONT_FILE_PATTERN = /\.woff2?$/;
 
@@ -121,11 +150,8 @@ export default defineConfig({
   // takumi-js loads its native `@takumi-rs/core` addon at runtime. A bundled copy
   // cannot find its platform binary, so the server pass keeps the package external.
   environments: {
-    // The workerd dev server loads server modules without pre-bundling, so a
-    // pre-bundled chunk cannot resolve the transitive packages that pnpm does not
-    // hoist. Only CommonJS `@vercel/functions` needs the ESM conversion.
     ssr: {
-      optimizeDeps: { include: ["@vercel/functions"], noDiscovery: true },
+      optimizeDeps: { include: ["@vercel/functions"] },
       resolve: { external: ["@takumi-rs/core"] },
     },
   },
@@ -162,6 +188,7 @@ export default defineConfig({
     tailwindcss(),
     react(),
     babel({ presets: [reactCompilerPreset()] }),
+    bundleCommonJsReactPeers,
     verifyPrerenderedPages,
   ],
 });

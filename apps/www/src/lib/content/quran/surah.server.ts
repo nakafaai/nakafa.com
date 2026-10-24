@@ -3,7 +3,7 @@ import { selectQuranMeaning } from "@repo/backend/content/quran/contract";
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
 import { toAnchorSlug } from "@repo/utilities/slug";
 import { Array as Arr, Effect, Option } from "effect";
-import { createTranslator } from "use-intl";
+import { createTranslator } from "use-intl/core";
 import {
   LEARN_SHELL_CACHE_SCOPES,
   readContentCacheTags,

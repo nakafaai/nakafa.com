@@ -8,7 +8,7 @@ import {
 import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { Array as Arr, Option, Schema } from "effect";
-import { createTranslator } from "use-intl";
+import { createTranslator } from "use-intl/core";
 import { getArticleCategoryIcon } from "@/components/articles/category";
 import { ArticleNext } from "@/components/articles/next";
 import { CardArticle } from "@/components/shared/card/article";

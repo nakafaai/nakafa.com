@@ -7,7 +7,7 @@ import {
 import { createFileRoute } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { Array as Arr, Schema } from "effect";
-import { createTranslator } from "use-intl";
+import { createTranslator } from "use-intl/core";
 import { CurriculumCardGrid } from "@/components/curriculum/cards";
 import { BreadcrumbHeader } from "@/components/shared/breadcrumb/header";
 import { FooterContent } from "@/components/shared/content/footer";

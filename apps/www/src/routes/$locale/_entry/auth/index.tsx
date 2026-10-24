@@ -1,7 +1,8 @@
 import { Nina } from "@repo/design-system/components/ui/nina";
 import { createFileRoute } from "@tanstack/react-router";
 import { Schema } from "effect";
-import { createTranslator, useTranslations } from "use-intl";
+import { useTranslations } from "use-intl";
+import { createTranslator } from "use-intl/core";
 import { Auth } from "@/components/auth";
 import { SignInScreen } from "@/components/auth/screen";
 import { EntryShellHeader } from "@/components/entry/shell";

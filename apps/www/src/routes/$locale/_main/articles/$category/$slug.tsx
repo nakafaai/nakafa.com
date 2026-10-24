@@ -6,7 +6,7 @@ import { makeArticleJsonLd } from "@repo/seo/json-ld/article";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { Effect, Schema } from "effect";
-import { createTranslator } from "use-intl";
+import { createTranslator } from "use-intl/core";
 import { SheetEntry } from "@/components/ai/sheet/entry";
 import { AiMenuItem } from "@/components/ai/sheet/menu";
 import { DeferredComments } from "@/components/comments/deferred";

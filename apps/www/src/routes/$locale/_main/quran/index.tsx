@@ -5,7 +5,7 @@ import { makeBreadcrumbNodes } from "@repo/seo/json-ld/node";
 import { createFileRoute } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { Array as Arr, Schema } from "effect";
-import { createTranslator } from "use-intl";
+import { createTranslator } from "use-intl/core";
 import { CardLink, CardLinks } from "@/components/shared/card/link";
 import { LayoutContent } from "@/components/shared/content/frame";
 import { HeaderContent } from "@/components/shared/content/header";

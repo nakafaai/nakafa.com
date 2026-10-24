@@ -1,7 +1,7 @@
 import type { AppLocaleCode } from "@nakafa/aksara-contracts/locale";
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
 import { Effect } from "effect";
-import { createTranslator, type IntlError } from "use-intl";
+import { createTranslator, type IntlError } from "use-intl/core";
 
 /** The no-break space, which keeps a number with its unit on one line. */
 export const NO_BREAK = " ";

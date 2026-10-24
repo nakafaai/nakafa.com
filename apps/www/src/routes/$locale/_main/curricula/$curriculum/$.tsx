@@ -5,7 +5,7 @@ import { makeBreadcrumbNodes } from "@repo/seo/json-ld/node";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { Array as Arr, Effect, Option, Schema } from "effect";
-import { createTranslator } from "use-intl";
+import { createTranslator } from "use-intl/core";
 import { CurriculumCardGrid } from "@/components/curriculum/cards";
 import { CurriculumNestedHeader } from "@/components/curriculum/header";
 import { CurriculumSelector } from "@/components/curriculum/selector";

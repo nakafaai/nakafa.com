@@ -5,7 +5,7 @@ import subscriptions from "@repo/backend/confect/_generated/refs/subscriptions";
 import { products } from "@repo/backend/confect/customers/polar/products";
 import { notFound } from "@tanstack/react-router";
 import { Clock, Effect } from "effect";
-import { createTranslator } from "use-intl";
+import { createTranslator } from "use-intl/core";
 import { MEMORY_PAGE } from "@/components/user/settings/memory/list";
 import {
   accountHandler,

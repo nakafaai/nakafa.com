@@ -6,7 +6,7 @@ import {
 } from "@repo/internationalization/src/locale";
 import { AGENT_DISCOVERY_HEADERS } from "@repo/site/discovery";
 import { Array as Arr, Effect, Option, Record as Rec, Schema } from "effect";
-import { hasLocale } from "use-intl";
+import { hasLocale } from "use-intl/core";
 import {
   CONTENT_LLMS_CACHE_TAG,
   LLMS_CACHE_CONTROL,

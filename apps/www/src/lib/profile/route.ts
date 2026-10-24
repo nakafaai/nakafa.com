@@ -1,7 +1,7 @@
 import { readUsername } from "@repo/backend/confect/users/username";
 import { LOCALES } from "@repo/internationalization/src/locale";
 import { Array as Arr, Option, Result, Schema, String as Str } from "effect";
-import { hasLocale } from "use-intl";
+import { hasLocale } from "use-intl/core";
 import { PROFILE_SIGN, ProfileTab } from "@/lib/profile/href";
 
 /** Whether the segments below a profile name one of its tabs: none, which is Posts, or one of `ProfileTab`. */

@@ -6,7 +6,7 @@ import {
 } from "@repo/internationalization/src/locale";
 import { linkOptions } from "@tanstack/react-router";
 import { Option, Schema } from "effect";
-import { hasLocale } from "use-intl";
+import { hasLocale } from "use-intl/core";
 import { withoutShareToken } from "@/lib/share/fragment";
 
 const URL_PARSE_BASE = "https://internal.invalid";

@@ -7,7 +7,7 @@ import comments from "@repo/backend/confect/_generated/refs/comments";
 import posts from "@repo/backend/confect/_generated/refs/posts";
 import { notFound } from "@tanstack/react-router";
 import { Clock, Effect, String as Str } from "effect";
-import { createTranslator } from "use-intl";
+import { createTranslator } from "use-intl/core";
 import {
   accountHandler,
   messagesFor,

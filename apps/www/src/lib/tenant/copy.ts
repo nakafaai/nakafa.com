@@ -1,6 +1,6 @@
 import type { Locale } from "@repo/internationalization/src/locale";
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
-import { createTranslator } from "use-intl";
+import { createTranslator } from "use-intl/core";
 
 /** The sign-in line of a school's entry surface, in the reader's locale. */
 export async function readSchoolSignInTitle(locale: Locale, school: string) {
