@@ -63,7 +63,9 @@ test.describe("A reader's shared chat at 1440px", () => {
               await offersNoWriting(reader);
             });
             yield* Effect.promise(async () => {
-              await reader.getByRole("button", { exact: true, name: NEW_CHAT }).click();
+              await reader
+                .getByRole("button", { exact: true, name: NEW_CHAT })
+                .click();
               await expect(reader).toHaveURL(SIGN_IN);
             });
             yield* Effect.sync(() => {
