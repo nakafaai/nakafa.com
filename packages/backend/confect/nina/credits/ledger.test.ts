@@ -65,11 +65,11 @@ describe("Nina credit transactions", () => {
       user: await ctx.db.get("users", identity.userId),
       ledger: await ctx.db.query("creditTransactions").collect(),
     }));
-    expect(result.user?.credits).toBe(25);
+    expect(result.user?.credits).toBe(10);
     expect(
       Arr.map(result.ledger, ({ type, amount }) => [type, amount])
     ).toEqual([
-      ["daily-grant", 25],
+      ["daily-grant", 10],
       ["usage", -5],
       ["refund", 5],
     ]);
@@ -221,7 +221,7 @@ describe("Nina credit transactions", () => {
         user: await ctx.db.get("users", identity.userId),
         ledger: await ctx.db.query("creditTransactions").collect(),
       }));
-      expect(result.user?.credits).toBe(resubscribe ? 3000 : 25);
+      expect(result.user?.credits).toBe(resubscribe ? 1000 : 10);
       expect(result.user?.planCreditGrantId).not.toBe(hold.planCreditGrantId);
       expect(Option.getOrThrow(Arr.last(result.ledger))).toMatchObject({
         type: "refund",

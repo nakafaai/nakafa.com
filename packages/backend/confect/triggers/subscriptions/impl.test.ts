@@ -193,14 +193,14 @@ describe("triggers/subscriptions/impl", () => {
       };
     });
     expect(result.user).toMatchObject({
-      credits: 3000,
+      credits: 1000,
       plan: "pro",
       creditsResetAt: Date.UTC(2026, 3, 1, 0, 0, 0),
     });
     expect(result.creditTransactions).toEqual([
       expect.objectContaining({
-        amount: 3000,
-        balanceAfter: 3000,
+        amount: 1000,
+        balanceAfter: 1000,
         type: "purchase",
         metadata: expect.objectContaining({
           reason: "plan-upgrade",
@@ -415,13 +415,13 @@ describe("triggers/subscriptions/impl", () => {
       };
     });
     expect(result.user).toMatchObject({
-      credits: 3000,
+      credits: 1000,
       plan: "pro",
       creditsResetAt: Date.UTC(2026, 3, 1, 0, 0, 0),
     });
     expect(result.creditTransactions).toHaveLength(1);
     expect(result.creditTransactions[0]).toMatchObject({
-      amount: 3000,
+      amount: 1000,
       type: "purchase",
       metadata: expect.objectContaining({
         "subscription-id": "sub-highest-plan-pro",

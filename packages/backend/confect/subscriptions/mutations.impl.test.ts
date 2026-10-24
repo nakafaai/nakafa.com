@@ -298,12 +298,12 @@ describe("subscriptions/mutations", () => {
     }));
 
     expect(state.user).toMatchObject({
-      credits: 3000,
+      credits: 1000,
       plan: "pro",
     });
     expect(state.creditTransactions).toEqual([
       expect.objectContaining({
-        amount: 3000,
+        amount: 1000,
         metadata: expect.objectContaining({
           "subscription-id": "sub-trigger-create",
         }),
@@ -352,7 +352,7 @@ describe("subscriptions/mutations", () => {
     });
     expect(state.creditTransactions).toEqual([
       expect.objectContaining({
-        amount: 3000,
+        amount: 1000,
         type: "purchase",
       }),
       expect.objectContaining({

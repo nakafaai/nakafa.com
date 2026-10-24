@@ -408,7 +408,11 @@ const ASK = {
 async function learner() {
   const t = createConvexTestWithBetterAuth();
   const identity = await t.mutation((ctx) =>
-    seedAuthenticatedUser(ctx, { now: Date.UTC(2026, 9, 11), credits: 40 })
+    seedAuthenticatedUser(ctx, {
+      now: Date.UTC(2026, 9, 11),
+      credits: 40,
+      plan: "pro",
+    })
   );
   const owner = t.withIdentity({
     subject: identity.authUserId,

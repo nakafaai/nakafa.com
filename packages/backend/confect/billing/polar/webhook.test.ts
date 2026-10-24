@@ -85,13 +85,13 @@ it.effect("grants the complete Pro entitlement from one Polar webhook", () =>
       status: "active",
     });
     expect(state.user).toMatchObject({
-      credits: 3000,
+      credits: 1000,
       plan: "pro",
     });
     expect(state.creditTransactions).toEqual([
       expect.objectContaining({
-        amount: 3000,
-        balanceAfter: 3000,
+        amount: 1000,
+        balanceAfter: 1000,
         metadata: {
           "new-plan": "pro",
           "previous-plan": "free",

@@ -197,7 +197,7 @@ describe("native Nina stop and resend", () => {
       "usage",
     ]);
     expect(state.ledger[2]).toMatchObject({ type: "refund", amount: 0 });
-    expect(state.user?.credits).toBe(20);
+    expect(state.user?.credits).toBe(5);
   });
 
   it("settles a stopped turn when the next prompt starts a new chat, so the credits it held are free for that prompt", async () => {

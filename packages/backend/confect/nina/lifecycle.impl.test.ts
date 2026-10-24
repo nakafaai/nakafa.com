@@ -400,7 +400,7 @@ describe("native Nina settlement", () => {
     await f.t.mutation(recover, { turnId: f.turnId });
     const state = await f.inspect();
     expect(state.turn?.state.status).toBe("failed");
-    expect(state.user?.credits).toBe(25);
+    expect(state.user?.credits).toBe(10);
     expect(Option.getOrThrow(Arr.last(state.ledger))).toMatchObject({
       type: "refund",
       amount: 0,

@@ -11,11 +11,11 @@ import type { UserPlan } from "@repo/backend/confect/users/schema";
  */
 const PLAN_CREDIT_CONFIG: Record<UserPlan, typeof planCreditValidator.Type> = {
   free: {
-    amount: 25,
+    amount: 10,
     grantType: "daily-grant",
   },
   pro: {
-    amount: 3000,
+    amount: 1000,
     grantType: "monthly-grant",
   },
 };
@@ -44,3 +44,25 @@ export const DEFAULT_USER_PLAN: UserPlan = "free";
  */
 export const DEFAULT_USER_CREDITS =
   PLAN_CREDIT_CONFIG[DEFAULT_USER_PLAN].amount;
+
+/** The dollar value of one credit: the model cost the gateway reports, divided into 2,000 parts. */
+const CREDIT_UNIT_USD = 0.002;
+
+/** The most credits one answer may hold, so an answer never costs more than this in models. */
+const MAX_CREDITS_PER_RESPONSE = 50;
+
+/** Credits one answer costs for its reported model cost: rounded up, at least one, at most the cap. */
+export function creditsForCost(costUsd: number): number {
+  const credits = Math.ceil(costUsd / CREDIT_UNIT_USD);
+  return Math.min(MAX_CREDITS_PER_RESPONSE, Math.max(1, credits));
+}
+
+/** The shared daily budget of free answers: 5% of last month's net product revenue, divided by 30, in credits. */
+const FREE_BUDGET_SHARE = 0.05;
+
+/** Free credits shared by every free account on one day, from last month's net product revenue in dollars. */
+export function freeDailyBudgetCredits(lastMonthNetRevenueUsd: number): number {
+  return Math.floor(
+    (FREE_BUDGET_SHARE * lastMonthNetRevenueUsd) / 30 / CREDIT_UNIT_USD
+  );
+}
