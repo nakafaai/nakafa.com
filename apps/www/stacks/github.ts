@@ -105,20 +105,24 @@ const readEnvironmentValues = Effect.fn("GitHubStack.readEnvironmentValues")(
   }
 );
 
-/** Writes one environment's values as its secrets and its variables, from that environment's own operator file. */
+/**
+ * Writes one environment's values as its secrets and its variables, from that environment's own operator file. The
+ * logical IDs start with the environment's name as the stack declares it, because the resource's own name is an
+ * Output that is unknown while the stack plans.
+ */
 const writeEnvironmentValues = Effect.fn("GitHubStack.writeEnvironmentValues")(
-  function* (environment: Environment, file: string) {
+  function* (key: string, environment: Environment, file: string) {
     const values = yield* readEnvironmentValues(file);
     for (const [name, value] of Rec.toEntries(values)) {
       if (isPublicName(name)) {
-        yield* Variable(`${environment.name}-${name}`, {
+        yield* Variable(`${key}-${name}`, {
           ...REPOSITORY,
           environment,
           name,
           value,
         });
       } else {
-        yield* Secret(`${environment.name}-${name}`, {
+        yield* Secret(`${key}-${name}`, {
           ...REPOSITORY,
           environment,
           name,
@@ -174,12 +178,12 @@ export default Stack(
       name: "production",
       deploymentBranchPolicy: { customBranchPolicies: ["main"] },
     });
-    yield* writeEnvironmentValues(production, PRODUCTION_VALUES);
+    yield* writeEnvironmentValues("production", production, PRODUCTION_VALUES);
 
     const staging = yield* Environment("staging", {
       ...REPOSITORY,
       name: "staging",
     });
-    yield* writeEnvironmentValues(staging, STAGING_VALUES);
+    yield* writeEnvironmentValues("staging", staging, STAGING_VALUES);
   })
 );
