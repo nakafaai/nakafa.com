@@ -2,7 +2,10 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { basename, join } from "node:path";
 import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import { POSTHOG_PROXY_PATH } from "@repo/analytics/posthog/config";
-import { securityHeaders } from "@repo/site";
+import {
+  createLoopbackConnectSources,
+  createSecurityHeaders,
+} from "@repo/site";
 import { AGENT_DISCOVERY_HEADERS } from "@repo/site/discovery";
 import babel from "@rolldown/plugin-babel";
 import tailwindcss from "@tailwindcss/vite";
@@ -30,12 +33,32 @@ function readPostHogProxyOrigin(): string | undefined {
 
 const POSTHOG_PROXY_ORIGIN = readPostHogProxyOrigin();
 
-/** Every response carries the security headers and the agent discovery links. */
+/**
+ * The loopback Convex origins that a local build connects to, the acceptance build's
+ * included. A production build names an https Convex URL, which adds no source, and an
+ * unset URL adds none either. An invalid URL fails the config load.
+ */
+function readLocalConvexSources(): readonly string[] {
+  const url = process.env.VITE_CONVEX_URL;
+  return url === undefined ? [] : createLoopbackConnectSources(new URL(url));
+}
+
+const LOCAL_CONVEX_SOURCES = readLocalConvexSources();
+
+/**
+ * Every response carries the security headers and the agent discovery links. The
+ * local Convex origins join the connect and image sources, as the Next config did.
+ */
 const SHARED_HEADERS = Object.fromEntries(
-  [...securityHeaders, ...AGENT_DISCOVERY_HEADERS].map(({ key, value }) => [
-    key,
-    value,
-  ])
+  [
+    ...createSecurityHeaders({
+      additionalConnectSources: LOCAL_CONVEX_SOURCES,
+      additionalImageSources: LOCAL_CONVEX_SOURCES.filter((source) =>
+        source.startsWith("http:")
+      ),
+    }),
+    ...AGENT_DISCOVERY_HEADERS,
+  ].map(({ key, value }) => [key, value])
 );
 
 /**
