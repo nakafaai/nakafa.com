@@ -5,9 +5,9 @@ import {
 import type usersTable from "@repo/backend/confect/_generated/tables/users";
 import { captureProductEvent } from "@repo/backend/confect/analytics/capture";
 import { isAccountDeletionPending } from "@repo/backend/confect/auth/deletion/state";
+import { products } from "@repo/backend/confect/billing/polar/products";
 import { getPlanCreditConfig } from "@repo/backend/confect/credits/constants";
 import { resolveCurrentCreditResetTimestamp } from "@repo/backend/confect/credits/state";
-import { products } from "@repo/backend/confect/customers/polar/products";
 import { getUnknownErrorMessage } from "@repo/backend/confect/failure";
 import {
   SubscriptionPlanSyncIoError,

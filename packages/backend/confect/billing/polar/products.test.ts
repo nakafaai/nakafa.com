@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it } from "@effect/vitest";
 
 async function loadProducts() {
   vi.resetModules();
-  return await import("@repo/backend/confect/customers/polar/products");
+  return await import("@repo/backend/confect/billing/polar/products");
 }
 
 const expectedMonthlyPrices = {
@@ -13,7 +13,7 @@ const expectedMonthlyPrices = {
     locale: "de-DE",
   },
   IDR: {
-    amount: 69_000,
+    amount: 79_000,
     currency: "IDR",
     fractionDigits: 0,
     locale: "id-ID",
@@ -31,7 +31,7 @@ afterEach(() => {
   vi.resetModules();
 });
 
-describe("customers/polar/products", () => {
+describe("billing/polar/products", () => {
   it("uses sandbox product IDs outside production Polar mode", async () => {
     vi.stubEnv("VITE_POLAR_SERVER", "sandbox");
 

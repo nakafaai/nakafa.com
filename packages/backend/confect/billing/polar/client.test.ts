@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
-import { readPolarClient } from "@repo/backend/confect/customers/polar/client";
+import { readPolarClient } from "@repo/backend/confect/billing/polar/client";
 import { ConfigProvider, Effect } from "effect";
 
 const polarFetch = vi.hoisted(() => vi.fn<typeof fetch>());

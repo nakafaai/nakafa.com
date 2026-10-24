@@ -5,7 +5,7 @@ import {
 import {
   PolarCustomerWebhookTargetIoError,
   type polarCustomerWebhookTargetValidator,
-} from "@repo/backend/confect/customers/polar/spec";
+} from "@repo/backend/confect/billing/polar/spec";
 import { getUnknownErrorMessage } from "@repo/backend/confect/failure";
 import { Effect, flow, Schema } from "effect";
 

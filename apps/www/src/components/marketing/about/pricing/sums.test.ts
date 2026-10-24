@@ -1,11 +1,11 @@
 // @vitest-environment node
 
 import { describe, expect, it } from "@effect/vitest";
+import { products } from "@repo/backend/confect/billing/polar/products";
 import {
   getPlanCreditConfig,
   NINA_RESPONSE_CREDITS,
 } from "@repo/backend/confect/credits/constants";
-import { products } from "@repo/backend/confect/customers/polar/products";
 import { pricingSums } from "@/components/marketing/about/pricing/sums";
 import { getProMonthlyPricing } from "@/lib/pricing/monthly";
 

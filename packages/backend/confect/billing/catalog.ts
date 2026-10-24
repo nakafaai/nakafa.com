@@ -5,7 +5,7 @@
  * float. Browser code imports this module, so it reads no secret and no server
  * setting.
  */
-import { proProductIds } from "@repo/backend/confect/customers/polar/catalog";
+import { proProductIds } from "@repo/backend/confect/billing/polar/catalog";
 import { HashSet, Schema } from "effect";
 
 /** The currencies an account bills in: IDR in Indonesia, EUR in the euro territories, USD elsewhere. */

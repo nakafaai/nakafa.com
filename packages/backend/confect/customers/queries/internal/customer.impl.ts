@@ -1,7 +1,7 @@
 import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
-import { resolvePolarCustomerWebhookTarget } from "@repo/backend/confect/customers/polar/target";
+import { resolvePolarCustomerWebhookTarget } from "@repo/backend/confect/billing/polar/target";
 import spec from "@repo/backend/confect/customers/queries/internal/customer.spec";
 import { Effect, Layer } from "effect";
 

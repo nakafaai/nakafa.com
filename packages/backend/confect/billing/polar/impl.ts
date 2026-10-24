@@ -1,4 +1,4 @@
-import type { PolarCustomerSource } from "@repo/backend/confect/customers/polar/payload";
+import type { PolarCustomerSource } from "@repo/backend/confect/billing/polar/payload";
 import {
   type EnsurePolarCustomerInput,
   PolarCustomerEmailConflict,
@@ -8,7 +8,7 @@ import {
   polarCustomerEmailConflictCode,
   polarCustomerErrorCode,
   type StoredPolarCustomer,
-} from "@repo/backend/confect/customers/polar/spec";
+} from "@repo/backend/confect/billing/polar/spec";
 import { encodeJsonText } from "@repo/utilities/json";
 import { Effect, Result } from "effect";
 

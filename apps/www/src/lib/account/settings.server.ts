@@ -2,7 +2,7 @@ import auth from "@repo/backend/confect/_generated/refs/auth";
 import learningPreferences from "@repo/backend/confect/_generated/refs/learningPreferences";
 import nina from "@repo/backend/confect/_generated/refs/nina";
 import subscriptions from "@repo/backend/confect/_generated/refs/subscriptions";
-import { products } from "@repo/backend/confect/customers/polar/products";
+import { products } from "@repo/backend/confect/billing/polar/products";
 import { notFound } from "@tanstack/react-router";
 import { Clock, Effect } from "effect";
 import { createTranslator } from "use-intl";

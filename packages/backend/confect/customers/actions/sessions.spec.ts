@@ -1,12 +1,6 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { AuthFailure } from "@repo/backend/confect/auth/spec";
 import {
-  CheckoutSessionIoErrorWire,
-  CheckoutUnavailable,
-  checkoutRequestInputValidator,
-  InvalidCheckoutSuccessUrl,
-} from "@repo/backend/confect/customers/checkout/spec";
-import {
   PolarCheckoutErrorWire,
   PolarCustomerEmailConflictWire,
   PolarCustomerErrorWire,
@@ -14,7 +8,13 @@ import {
   PolarDuplicateEmailErrorWire,
   PolarPortalErrorWire,
   PolarUpdateErrorWire,
-} from "@repo/backend/confect/customers/polar/spec";
+} from "@repo/backend/confect/billing/polar/spec";
+import {
+  CheckoutSessionIoErrorWire,
+  CheckoutUnavailable,
+  checkoutRequestInputValidator,
+  InvalidCheckoutSuccessUrl,
+} from "@repo/backend/confect/customers/checkout/spec";
 import {
   CustomerSyncIoErrorWire,
   UserNotFound,

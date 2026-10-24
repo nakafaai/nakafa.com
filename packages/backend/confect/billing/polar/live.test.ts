@@ -1,12 +1,12 @@
 import { assert, beforeEach, describe, expect, it } from "@effect/vitest";
-import { polarGateway } from "@repo/backend/confect/customers/polar/live";
+import { polarGateway } from "@repo/backend/confect/billing/polar/live";
 import type {
   EnsurePolarCustomerInput,
   PolarCheckoutInput,
   PolarCustomerErrorUnion,
   PolarDuplicateEmailError,
   StoredPolarCustomer,
-} from "@repo/backend/confect/customers/polar/spec";
+} from "@repo/backend/confect/billing/polar/spec";
 import { ConfigProvider, Effect, Record as Rec, Result } from "effect";
 
 const polarFetch = vi.hoisted(() => vi.fn<typeof fetch>());

@@ -1,8 +1,8 @@
 import {
   monthlyPrices,
   proProductIds,
-} from "@repo/backend/confect/customers/polar/catalog";
-import { isPolarProduction } from "@repo/backend/confect/customers/polar/environment";
+} from "@repo/backend/confect/billing/polar/catalog";
+import { isPolarProduction } from "@repo/backend/confect/billing/polar/environment";
 
 /**
  * The Polar products of the server that runs this code. Convex and server code

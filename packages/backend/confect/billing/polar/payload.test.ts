@@ -8,7 +8,7 @@ import {
   decodePolarCustomerSession,
   decodePolarSubscription,
   PolarPayloadError,
-} from "@repo/backend/confect/customers/polar/payload";
+} from "@repo/backend/confect/billing/polar/payload";
 import { DateTime, Effect, Struct } from "effect";
 
 const individual = {

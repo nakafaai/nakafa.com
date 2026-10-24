@@ -2,7 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import {
   ensureCustomer,
   normalizeStoredCustomer,
-} from "@repo/backend/confect/customers/polar/impl";
+} from "@repo/backend/confect/billing/polar/impl";
 import {
   type EnsurePolarCustomerInput,
   PolarCustomerEmailConflict,
@@ -12,7 +12,7 @@ import {
   PolarDuplicateEmailError,
   polarCustomerErrorCode,
   polarDuplicateEmailCode,
-} from "@repo/backend/confect/customers/polar/spec";
+} from "@repo/backend/confect/billing/polar/spec";
 import { Array as Arr, Effect } from "effect";
 
 const input: EnsurePolarCustomerInput = {
@@ -38,7 +38,7 @@ function createGateway(overrides: Partial<PolarCustomerGateway>) {
   };
   return { ...gateway, ...overrides };
 }
-describe("customers/polar/impl", () => {
+describe("billing/polar/impl", () => {
   it.effect("normalizes an absent Polar external ID to null", () =>
     Effect.gen(function* () {
       const customer = yield* normalizeStoredCustomer({

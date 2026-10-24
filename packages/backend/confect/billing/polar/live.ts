@@ -3,14 +3,14 @@ import { errors, type PolarCore } from "@polar-sh/sdk/2026-10";
 import { createCheckoutsService } from "@polar-sh/sdk/2026-10/services/checkouts";
 import { createCustomerSessionsService } from "@polar-sh/sdk/2026-10/services/customer_sessions";
 import { createCustomersService } from "@polar-sh/sdk/2026-10/services/customers";
-import { readPolarClient } from "@repo/backend/confect/customers/polar/client";
+import { readPolarClient } from "@repo/backend/confect/billing/polar/client";
 import {
   decodePolarCheckout,
   decodePolarCustomer,
   decodePolarCustomerPage,
   decodePolarCustomerSession,
   type PolarPayloadError,
-} from "@repo/backend/confect/customers/polar/payload";
+} from "@repo/backend/confect/billing/polar/payload";
 import {
   type EnsurePolarCustomerInput,
   PolarCheckoutError,
@@ -28,7 +28,7 @@ import {
   polarDuplicateEmailCode,
   polarPortalErrorCode,
   polarUpdateErrorCode,
-} from "@repo/backend/confect/customers/polar/spec";
+} from "@repo/backend/confect/billing/polar/spec";
 import { Array as Arr, Data, Effect, Option } from "effect";
 
 class PolarRequestError extends Data.TaggedError("PolarRequestError")<{

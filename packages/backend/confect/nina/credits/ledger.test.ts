@@ -9,7 +9,7 @@ import {
 } from "@effect/vitest";
 import schema from "@repo/backend/confect/_generated/schema";
 import usersTable from "@repo/backend/confect/_generated/tables/users";
-import { products } from "@repo/backend/confect/customers/polar/products";
+import { products } from "@repo/backend/confect/billing/polar/products";
 import {
   refundCredits,
   reserveCredits,

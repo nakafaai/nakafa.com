@@ -4,15 +4,15 @@ import {
   MutationRunner,
   QueryRunner,
 } from "@repo/backend/confect/_generated/services";
-import { normalizeStoredCustomer } from "@repo/backend/confect/customers/polar/impl";
-import { polarGateway } from "@repo/backend/confect/customers/polar/live";
+import { normalizeStoredCustomer } from "@repo/backend/confect/billing/polar/impl";
+import { polarGateway } from "@repo/backend/confect/billing/polar/live";
 import {
   decodePolarCustomer,
   decodePolarCustomerId,
   decodePolarSubscription,
   type PolarCustomerSource,
   PolarPayloadError,
-} from "@repo/backend/confect/customers/polar/payload";
+} from "@repo/backend/confect/billing/polar/payload";
 import { convertToDatabaseCustomer } from "@repo/backend/confect/customers/records";
 import { getUnknownErrorMessage } from "@repo/backend/confect/failure";
 import type { SubscriptionRecord } from "@repo/backend/confect/subscriptions/records/spec";

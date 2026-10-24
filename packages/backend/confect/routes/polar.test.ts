@@ -7,8 +7,8 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
-import { polarGateway } from "@repo/backend/confect/customers/polar/live";
-import { PolarPayloadError } from "@repo/backend/confect/customers/polar/payload";
+import { polarGateway } from "@repo/backend/confect/billing/polar/live";
+import { PolarPayloadError } from "@repo/backend/confect/billing/polar/payload";
 import { Confect, confectLayer } from "@repo/backend/confect/test.setup";
 import { polarCustomer, polarSubscription } from "@repo/backend/test/polar";
 import { encodeJsonText } from "@repo/utilities/json";
@@ -36,11 +36,11 @@ vi.mock("@polar-sh/sdk/2026-10", async (importOriginal) => {
   };
 });
 
-vi.mock("@repo/backend/confect/customers/polar/webhook", () => ({
+vi.mock("@repo/backend/confect/billing/polar/webhook", () => ({
   processPolarWebhookEvent: mocks.processEvent,
 }));
 
-vi.mock("@repo/backend/confect/customers/polar/live", () => ({
+vi.mock("@repo/backend/confect/billing/polar/live", () => ({
   polarGateway: { getCustomerById: vi.fn() },
 }));
 
@@ -355,8 +355,8 @@ describe("Polar webhook route", () => {
 describe("Polar webhook decoding at the route", () => {
   beforeEach(async () => {
     const { processPolarWebhookEvent } = await vi.importActual<
-      typeof import("@repo/backend/confect/customers/polar/webhook")
-    >("@repo/backend/confect/customers/polar/webhook");
+      typeof import("@repo/backend/confect/billing/polar/webhook")
+    >("@repo/backend/confect/billing/polar/webhook");
     mocks.processEvent.mockImplementation(processPolarWebhookEvent);
     vi.mocked(polarGateway.getCustomerById).mockReturnValue(
       Effect.succeed(null)

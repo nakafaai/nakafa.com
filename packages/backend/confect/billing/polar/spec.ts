@@ -1,6 +1,6 @@
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
+import type { polarGateway } from "@repo/backend/confect/billing/polar/live";
 import { polarCheckoutLocaleValidator } from "@repo/backend/confect/customers/checkout/localization";
-import type { polarGateway } from "@repo/backend/confect/customers/polar/live";
 import { polarMetadataValidator } from "@repo/backend/confect/customers/schema";
 import { publicFailure } from "@repo/backend/confect/failure";
 import { Schema, Struct } from "effect";

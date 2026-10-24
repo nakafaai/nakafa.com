@@ -1,61 +1,11 @@
-import { monthlyPrices } from "@repo/backend/confect/customers/polar/catalog";
+import { billingEuroTerritoryCodes } from "@repo/backend/confect/billing/catalog";
+import { monthlyPrices } from "@repo/backend/confect/billing/polar/catalog";
 import { HashSet, Schema } from "effect";
 
 /** The currencies that the monthly pro price is shown in, as the Polar catalog names them. */
 export const PricingCurrencySchema = Schema.Literals(["EUR", "IDR", "USD"]);
 
 export type PricingCurrency = typeof PricingCurrencySchema.Type;
-
-/**
- * Territory codes that Polar currently maps to EUR through Babel's territory
- * currency data. Keeping the same mapping prevents the marketing price from
- * disagreeing with the checkout currency selected from the forwarded IP.
- *
- * References:
- * - https://github.com/polarsource/polar/blob/11d0edae5ebad634a21c8fbe6bafc5626055951e/server/polar/kit/currency.py
- * - https://github.com/polarsource/polar/blob/11d0edae5ebad634a21c8fbe6bafc5626055951e/server/tests/kit/test_currency.py
- */
-const polarEuroTerritoryCodes = HashSet.fromIterable([
-  "AD",
-  "AT",
-  "AX",
-  "BE",
-  "BL",
-  "CY",
-  "DE",
-  "EA",
-  "EE",
-  "ES",
-  "EU",
-  "FI",
-  "FR",
-  "GF",
-  "GP",
-  "GR",
-  "HR",
-  "IC",
-  "IE",
-  "IT",
-  "LT",
-  "LU",
-  "LV",
-  "MC",
-  "ME",
-  "MF",
-  "MQ",
-  "MT",
-  "NL",
-  "PM",
-  "PT",
-  "RE",
-  "SI",
-  "SK",
-  "SM",
-  "TF",
-  "VA",
-  "XK",
-  "YT",
-]);
 
 type MonthlyPrice = (typeof monthlyPrices)[keyof typeof monthlyPrices];
 
@@ -109,7 +59,7 @@ export function getProMonthlyPricing(countryCode: string | null) {
 
   if (
     normalizedCountryCode &&
-    HashSet.has(polarEuroTerritoryCodes, normalizedCountryCode)
+    HashSet.has(billingEuroTerritoryCodes, normalizedCountryCode)
   ) {
     return eurPricing;
   }

@@ -1,12 +1,12 @@
 import { actionLayer } from "@confect/server/RegisteredFunction";
 import { beforeEach, expect, it } from "@effect/vitest";
 import confectSchema from "@repo/backend/confect/_generated/schema";
-import { products } from "@repo/backend/confect/customers/polar/products";
+import { products } from "@repo/backend/confect/billing/polar/products";
 import {
   processPolarWebhookEvent,
   upsertPolarCustomerWebhook,
   upsertPolarSubscriptionWebhook,
-} from "@repo/backend/confect/customers/polar/webhook";
+} from "@repo/backend/confect/billing/polar/webhook";
 import type { SubscriptionRecord } from "@repo/backend/confect/subscriptions/records/spec";
 import {
   buildSubscription,
@@ -26,7 +26,7 @@ import { Effect } from "effect";
 const polarGateway = vi.hoisted(() => ({
   getCustomerById: vi.fn(),
 }));
-vi.mock("@repo/backend/confect/customers/polar/live", () => ({
+vi.mock("@repo/backend/confect/billing/polar/live", () => ({
   polarGateway,
 }));
 const NOW = Date.UTC(2026, 6, 29, 0, 0, 0);

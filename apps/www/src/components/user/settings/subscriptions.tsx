@@ -2,7 +2,7 @@ import type { Ref } from "@confect/core";
 import { QueryResult, useQuery } from "@confect/react";
 import { PartyIcon, Settings01Icon } from "@hugeicons/core-free-icons";
 import subscriptions from "@repo/backend/confect/_generated/refs/subscriptions";
-import { proProductIdFor } from "@repo/backend/confect/customers/polar/catalog";
+import { proProductIdFor } from "@repo/backend/confect/billing/polar/catalog";
 import { polarPublicKeys } from "@repo/backend/public";
 import { Button } from "@repo/design-system/components/ui/button";
 import {

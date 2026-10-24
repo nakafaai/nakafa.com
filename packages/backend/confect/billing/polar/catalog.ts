@@ -24,7 +24,7 @@ export const monthlyPrices = {
     locale: "de-DE",
   },
   IDR: {
-    amount: 69_000,
+    amount: 79_000,
     currency: "IDR",
     fractionDigits: 0,
     locale: "id-ID",

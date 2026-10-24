@@ -1,9 +1,9 @@
 import { mutationLayer } from "@confect/server/RegisteredConvexFunction";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import confectSchema from "@repo/backend/confect/_generated/schema";
+import { products } from "@repo/backend/confect/billing/polar/products";
 import { DEFAULT_USER_CREDITS } from "@repo/backend/confect/credits/constants";
 import { getStoredCreditResetTimestamp } from "@repo/backend/confect/credits/state";
-import { products } from "@repo/backend/confect/customers/polar/products";
 import { seedAnalyticsConsent } from "@repo/backend/confect/test.helpers";
 import { syncCustomerPlan } from "@repo/backend/confect/triggers/subscriptions/impl";
 import { createWebhookTestConvex } from "@repo/backend/test/polar";

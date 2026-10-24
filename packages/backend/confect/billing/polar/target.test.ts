@@ -14,7 +14,7 @@ const NOW = Date.UTC(2026, 6, 29, 0, 0, 0);
 const target =
   refs.internal.customers.queries.internal.customer.resolveWebhookTarget;
 
-describe("customers/polar/target", () => {
+describe("billing/polar/target", () => {
   it.effect(
     "preserves a typed failure when the external identity is ambiguous",
     () =>

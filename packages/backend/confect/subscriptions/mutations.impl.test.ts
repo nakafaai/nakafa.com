@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import posthogTest from "@posthog/convex/test";
+import { products } from "@repo/backend/confect/billing/polar/products";
 import { DEFAULT_USER_CREDITS } from "@repo/backend/confect/credits/constants";
-import { products } from "@repo/backend/confect/customers/polar/products";
 import type { SubscriptionRecord } from "@repo/backend/confect/subscriptions/records/spec";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { internal } from "@repo/backend/convex/_generated/api";
