@@ -96,9 +96,11 @@ export function ChatSharing({
   return (
     <>
       {/* The link is read once the reader shows intent on the share item, so the dialog's first frame
-      already has its copy action enabled, or the link's error, and not a copy action that waits. */}
+      already has its copy action enabled, or the link's error, and not a copy action that waits.
+      The warm read lets go while the dialog is open: the dialog's readers then hold the link alone,
+      so a retry asks the server, as it does without the warm read. */}
       <ErrorBoundary fallback={null} key={chat._id} report={false}>
-        <ChatShareWarm chatId={chat._id} skip={isPrivate || !warmed} />
+        <ChatShareWarm chatId={chat._id} skip={isPrivate || !warmed || open} />
       </ErrorBoundary>
       <ResponsiveDialog
         description={
