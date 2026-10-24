@@ -46,3 +46,6 @@ testpaths = ["tests"]
 [tool.basedpyright]
 include = ["cas", "tests", "entry.py"]
 typeCheckingMode = "standard"
+# typings/_cloudflare declares the runtime module that only the Workers Python runtime
+# provides, so its stub has no source to check.
+reportMissingModuleSource = "none"
