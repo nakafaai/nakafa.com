@@ -17,6 +17,8 @@ const coverageExcludes = [
   "confect/http.ts",
   "confect/test.*.ts",
   "test/**",
+  // Declarative: one page size that the web app reads, with no executable behavior.
+  "client/comments/list.ts",
 ];
 
 export default mergeConfig(config, {
