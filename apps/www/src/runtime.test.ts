@@ -393,3 +393,22 @@ describe("runtime environment parity", () => {
     );
   });
 });
+
+describe("content runtime host names", () => {
+  it.effect("accepts a trailing dot on a deployment host", () =>
+    expectSuccess(
+      target({
+        query: `${TASK_QUERY}.`,
+        site: undefined,
+        deploy: unsetIdentity,
+      })
+    )
+  );
+
+  it.effect("refuses a site address that is not a Convex site", () =>
+    expectFailure(
+      target({ query: TASK_QUERY, site: "https://example.com" }),
+      "untrusted-production"
+    )
+  );
+});

@@ -21,8 +21,8 @@ const NAKAFA_ID_ZONE = "nakafa.id";
 /**
  * The nakafa.com zone and its records, deployed from production only. The zone
  * is adopted, because Cloudflare keeps no ownership marker on a zone. Every
- * mail, verification and analytics record is DNS only, with the exact value of
- * the Vercel inventory (ops/tss/dns-nakafa-com.md). The apex is the web Worker's
+ * mail, verification and analytics record is DNS only, with the value that the
+ * existing host already serves. The apex is the web Worker's
  * custom domain, and the API and MCP hosts are exact Worker routes. The proxied
  * wildcard catches every other host under the zone, School hosts included. CAS
  * has no Worker yet, so its own DNS-only record keeps it on Vercel, and that

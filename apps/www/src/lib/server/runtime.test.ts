@@ -30,7 +30,10 @@ describe("server runtime startup", () => {
   it("refuses to load a non-production stage that points at the production content runtime", async () => {
     vi.stubEnv("NAKAFA_DEPLOY_STAGE", "staging");
     vi.stubEnv("VITE_CONVEX_URL", "https://dapper-antelope-269.convex.cloud");
-    vi.stubEnv("VITE_CONVEX_SITE_URL", "https://dapper-antelope-269.convex.site");
+    vi.stubEnv(
+      "VITE_CONVEX_SITE_URL",
+      "https://dapper-antelope-269.convex.site"
+    );
     vi.resetModules();
 
     await expect(import("@/lib/server/runtime")).rejects.toThrow(

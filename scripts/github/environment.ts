@@ -60,7 +60,11 @@ const decodeContext = Effect.fn("github.decodeEnvironmentContext")(function* (
  */
 export const appendEnvironmentValues = Effect.fn(
   "github.appendEnvironmentValues"
-)(function* (githubEnvPath: string, secretsJson: string, variablesJson: string) {
+)(function* (
+  githubEnvPath: string,
+  secretsJson: string,
+  variablesJson: string
+) {
   const secrets = yield* decodeContext("secrets", secretsJson);
   const variables = yield* decodeContext("variables", variablesJson);
   const delimiter = `NAKAFA_ENV_${yield* randomUuid}`;
@@ -71,7 +75,8 @@ export const appendEnvironmentValues = Effect.fn(
   });
 });
 
-const loadDeployEnvironment = Effect.gen(function* () {
+/** Reads the job's context values from the environment that GitHub Actions sets, and appends them to GITHUB_ENV. */
+export const loadDeployEnvironment = Effect.gen(function* () {
   const githubEnvPath = yield* Config.String("GITHUB_ENV");
   const secretsJson = yield* Config.String("ENVIRONMENT_SECRETS");
   const variablesJson = yield* Config.String("ENVIRONMENT_VARIABLES");

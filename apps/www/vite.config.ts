@@ -241,7 +241,7 @@ export default defineConfig(({ command, isPreview }) => ({
         failOnError: true,
       },
     }),
-    // Decision 34: no deployment pin route. A client that asks for a
+    // No deployment pin route: a client that asks for a
     // chunk the deploy replaced reloads the document once.
     rsc(),
     tailwindcss(),
