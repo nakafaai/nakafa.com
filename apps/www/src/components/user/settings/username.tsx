@@ -28,7 +28,7 @@ import { MAIN_DOMAIN } from "@repo/site/domains";
 import { Effect, Option, Result } from "effect";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
-import { useConvexAuth } from "@/components/providers/convex";
+import { useConvexAuth } from "@/components/auth/convex";
 import {
   CardSection,
   CardSectionFooter,

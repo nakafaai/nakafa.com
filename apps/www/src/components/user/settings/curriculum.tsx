@@ -23,7 +23,7 @@ import { useForm } from "@tanstack/react-form";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 import { useRef } from "react";
 import { useLocale, useTranslations } from "use-intl";
-import { useConvexAuth } from "@/components/providers/convex";
+import { useConvexAuth } from "@/components/auth/convex";
 import { CardSection } from "@/components/shared/card/section";
 import { CountryFlagIcon } from "@/components/shared/flag";
 import { SettingsFormFooter } from "@/components/user/settings/save";

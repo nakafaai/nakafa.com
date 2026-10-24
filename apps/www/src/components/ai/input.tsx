@@ -172,10 +172,11 @@ export function NinaInput({
               <NinaAttach />
             </Suspense>
           ) : null}
-          {attachments || onAttachRequest === undefined ? null : (
+          {attachments ? null : (
             <InputGroupButton
               aria-label={t("attach-files")}
               className="rounded-full"
+              disabled={disabled}
               onClick={onAttachRequest}
               size="icon"
               type="button"

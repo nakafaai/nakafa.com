@@ -9,7 +9,7 @@ import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, Option } from "effect";
 import { useTranslations } from "use-intl";
-import { useConvexAuth } from "@/components/providers/convex";
+import { useConvexAuth } from "@/components/auth/convex";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import { DataTable } from "@/components/shared/table/data";

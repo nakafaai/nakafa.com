@@ -7,11 +7,11 @@ import { buttonVariants } from "@repo/design-system/lib/button";
 import { Array as Arr } from "effect";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
+import { useConvexAuth } from "@/components/auth/convex";
 import { PlayerMain } from "@/components/player/frame";
 import { PlayerHeader, PlayerTitle } from "@/components/player/header";
 import { PlayerProvider } from "@/components/player/provider";
 import { PlayerQuestions } from "@/components/player/questions";
-import { useConvexAuth } from "@/components/providers/convex";
 import {
   TrySlugContext,
   TryStoreContext,

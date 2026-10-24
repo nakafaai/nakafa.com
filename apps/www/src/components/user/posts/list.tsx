@@ -4,14 +4,20 @@ import { POST_PAGE_SIZE } from "@repo/backend/client/posts/list";
 import posts from "@repo/backend/confect/_generated/refs/posts";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
+import { useRouter } from "@tanstack/react-router";
 import { Array as Arr, Option } from "effect";
 import { useCallback, useState } from "react";
-import { useTranslations } from "use-intl";
-import { useConvexAuth } from "@/components/providers/convex";
+import { useLocale, useTranslations } from "use-intl";
+import { useConvexAuth } from "@/components/auth/convex";
+import { ConvexIsland, SignedInIsland } from "@/components/providers/island";
 import { DataFailure } from "@/components/shared/failure";
 import { useAgeClock } from "@/components/user/ages";
 import { FeedEmpty, FeedNotice } from "@/components/user/feed";
-import { PostComposer } from "@/components/user/posts/composer";
+import { useVisitorList } from "@/components/user/paging";
+import {
+  PostComposer,
+  PostComposerFrame,
+} from "@/components/user/posts/composer";
 import {
   failedView,
   livePostsArgs,
@@ -24,6 +30,8 @@ import {
   usePostsContext,
 } from "@/components/user/posts/provider";
 import { PostRow } from "@/components/user/posts/row";
+import { visitorListView } from "@/components/user/visitor";
+import { profilePostsPageFn } from "@/lib/account/profile.functions";
 import type { PublicProfile } from "@/lib/profile/public";
 
 /**
@@ -46,12 +54,17 @@ export function UserPosts({
   profile: PublicProfile;
 }) {
   const clock = useAgeClock(serverNow);
-  // A Retry changes the key, which remounts the list so that it asks the server
-  // again. The draft lives in the provider above the list, so it stays. The
-  // boundary catches an error the list throws, so the header and the tabs stay
-  // on the screen and the failure shows above the server's page.
+  // A Retry reads the loader again, which hands the list its first page, and
+  // changes the key, which remounts the list so that it asks the server again.
+  // The draft lives in the provider above the list, so it stays. The boundary
+  // catches an error the list throws, so the header and the tabs stay on the
+  // screen and the failure shows above the server's page.
+  const router = useRouter();
   const [attempt, setAttempt] = useState(0);
-  const onRetry = useCallback(() => setAttempt((count) => count + 1), []);
+  const onRetry = useCallback(() => {
+    setAttempt((count) => count + 1);
+    router.invalidate();
+  }, [router]);
 
   return (
     <PostDraftProvider>
@@ -69,10 +82,51 @@ export function UserPosts({
           )}
           key={attempt}
         >
-          <PostsFeed first={first} />
+          <PostsFeed first={first} key={profile._id} />
         </ErrorBoundary>
       </PostsProvider>
     </PostDraftProvider>
+  );
+}
+
+/**
+ * The posts of one profile for every viewer. A visitor has no client, so the list
+ * reads its next pages through the server. A signed-in viewer's live list takes
+ * its place once the page holds a client.
+ */
+function PostsFeed({
+  first,
+}: {
+  first: Option.Option<Ref.Returns<typeof posts.queries.list>>;
+}) {
+  return (
+    <ConvexIsland fallback={<VisitorPostsFeed first={first} />}>
+      <LivePostsFeed first={first} />
+    </ConvexIsland>
+  );
+}
+
+/** A visitor's list: the loader's first page, then the next pages the server reads by their cursor. */
+function VisitorPostsFeed({
+  first,
+}: {
+  first: Option.Option<Ref.Returns<typeof posts.queries.list>>;
+}) {
+  const { profile } = usePostsContext();
+  const locale = useLocale();
+  const { list, loadMore } = useVisitorList({
+    first: Option.getOrUndefined(first),
+    readPage: (cursor) =>
+      profilePostsPageFn({
+        data: { cursor, locale, username: profile.username },
+      }),
+  });
+
+  return (
+    <PostsPanel
+      onLoadMore={list.isDone || list.pending ? undefined : loadMore}
+      view={visitorListView(list)}
+    />
   );
 }
 
@@ -81,7 +135,7 @@ export function UserPosts({
  * the session, and `postsView` decides what it shows from the answer and the
  * server's first page.
  */
-function PostsFeed({
+function LivePostsFeed({
   first,
 }: {
   first: Option.Option<Ref.Returns<typeof posts.queries.list>>;
@@ -127,7 +181,11 @@ function PostsPanel({
 
   return (
     <div className="flex flex-col">
-      {isOwner && <PostComposer disabled={!view.ready} profile={profile} />}
+      {isOwner && (
+        <SignedInIsland fallback={<PostComposerFrame profile={profile} />}>
+          <PostComposer disabled={!view.ready} profile={profile} />
+        </SignedInIsland>
+      )}
       {view.failed && (
         <FeedNotice>
           <DataFailure onRetry={onRetry} />
@@ -138,7 +196,9 @@ function PostsPanel({
           <PostRow key={post._id} post={post} />
         ))}
         {view.empty && <FeedEmpty>{t("empty")}</FeedEmpty>}
-        {onLoadMore && <Intersection onIntersect={onLoadMore} />}
+        {onLoadMore && (
+          <Intersection key={view.rows.length} onIntersect={onLoadMore} />
+        )}
       </div>
     </div>
   );

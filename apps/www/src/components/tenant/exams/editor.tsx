@@ -6,7 +6,7 @@ import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Effect } from "effect";
 import { KeyValueStore } from "effect/persistence";
 import { useEffect, useRef } from "react";
-import { useConvexAuth } from "@/components/providers/convex";
+import { useConvexAuth } from "@/components/auth/convex";
 import { ExamCanvas } from "@/components/tenant/exams/canvas";
 import { ExamFooter } from "@/components/tenant/exams/footer";
 import { ExamHeader, ExamLockedNote } from "@/components/tenant/exams/header";

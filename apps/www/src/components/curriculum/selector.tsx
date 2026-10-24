@@ -16,7 +16,8 @@ import { useHrefNavigate } from "@repo/internationalization/src/link";
 import type { Locale } from "@repo/internationalization/src/locale";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 import { useLocale } from "use-intl";
-import { useConvexAuth } from "@/components/providers/convex";
+import { useConvexAuth } from "@/components/auth/convex";
+import { ConvexIsland } from "@/components/providers/island";
 import { CountryFlagIcon } from "@/components/shared/flag";
 import { reportClientException } from "@/lib/analytics/client";
 import type { readRuntimeCurriculumOptions } from "@/lib/curriculum/model";
@@ -39,20 +40,75 @@ class CurriculumPreferenceSaveError extends Schema.TaggedError<CurriculumPrefere
     cause: Schema.Unknown,
   }
 ) {}
+
+/** The props of the selector and of its two variants. */
+interface CurriculumSelectorProps {
+  currentValue: string;
+  label: string;
+  options: readonly CurriculumSelectorOption[];
+}
+
 /**
  * Renders the root curriculum selector and navigates to the selected root. It shares
  * the header's one row: on a phone the trigger shows the curriculum's flag alone, named
  * for assistive technology, and from the small breakpoint it shows the title too.
+ * A learner's choice is saved through the page's client, which mounts only once the
+ * page holds one. A visitor's choice navigates alone.
  */
-export function CurriculumSelector({
+export function CurriculumSelector(props: CurriculumSelectorProps) {
+  return (
+    <ConvexIsland fallback={<VisitorCurriculumSelector {...props} />}>
+      <SignedCurriculumSelector {...props} />
+    </ConvexIsland>
+  );
+}
+
+/** The selected option of a change, when the change names another curriculum. */
+function pickCurriculum(
+  options: readonly CurriculumSelectorOption[],
+  currentValue: string,
+  value: string | null
+) {
+  if (!value || value === currentValue) {
+    return Option.none<CurriculumSelectorOption>();
+  }
+  return Arr.findFirst(options, (option) => option.value === value);
+}
+
+/** A visitor's selector: a change navigates to the curriculum, and nothing is saved. */
+function VisitorCurriculumSelector({
   currentValue,
   label,
   options,
-}: {
-  currentValue: string;
-  label: string;
-  options: readonly CurriculumSelectorOption[];
-}) {
+}: CurriculumSelectorProps) {
+  const navigateToHref = useHrefNavigate();
+
+  /** Navigate to a selected curriculum. */
+  function handleValueChange(value: string | null) {
+    const selectedOption = pickCurriculum(options, currentValue, value);
+    if (Option.isNone(selectedOption)) {
+      return;
+    }
+    navigateToHref(selectedOption.value.href);
+  }
+
+  return (
+    <CurriculumSelect
+      currentValue={currentValue}
+      disabled={false}
+      label={label}
+      onValueChange={handleValueChange}
+      options={options}
+    />
+  );
+}
+
+/** A learner's selector: a change navigates, and then saves the curriculum as the learner's choice. */
+function SignedCurriculumSelector({
+  currentValue,
+  label,
+  options,
+}: CurriculumSelectorProps) {
   const locale = useLocale();
   const navigateToHref = useHrefNavigate();
   const isAuthenticated = useConvexAuth((auth) => auth.isAuthenticated);
@@ -73,26 +129,11 @@ export function CurriculumSelector({
         : []
     )
   );
-  const items = Arr.map(options, (option) => ({
-    label: option.title,
-    value: option.value,
-  }));
-  const currentOption = Option.getOrUndefined(
-    Arr.findFirst(options, (option) => option.value === currentValue)
-  );
+
   /** Navigate to a selected curriculum and persist it for signed-in viewers. */
   async function handleValueChange(value: string | null) {
-    if (!value || value === currentValue) {
-      return;
-    }
-    const selectedOption = Arr.findFirst(
-      options,
-      (option) => option.value === value
-    );
-    if (Option.isNone(selectedOption)) {
-      return;
-    }
-    if (isLoading) {
+    const selectedOption = pickCurriculum(options, currentValue, value);
+    if (Option.isNone(selectedOption) || isLoading) {
       return;
     }
     navigateToHref(selectedOption.value.href);
@@ -111,16 +152,43 @@ export function CurriculumSelector({
       })
     );
   }
+
   return (
-    <Select
-      items={items}
+    <CurriculumSelect
+      currentValue={currentValue}
+      disabled={isLoading}
+      label={label}
       onValueChange={handleValueChange}
-      value={currentValue}
-    >
+      options={options}
+    />
+  );
+}
+
+/** The curriculum menu that both variants share. */
+function CurriculumSelect({
+  currentValue,
+  disabled,
+  label,
+  onValueChange,
+  options,
+}: CurriculumSelectorProps & {
+  disabled: boolean;
+  onValueChange: (value: string | null) => void;
+}) {
+  const items = Arr.map(options, (option) => ({
+    label: option.title,
+    value: option.value,
+  }));
+  const currentOption = Option.getOrUndefined(
+    Arr.findFirst(options, (option) => option.value === currentValue)
+  );
+
+  return (
+    <Select items={items} onValueChange={onValueChange} value={currentValue}>
       <SelectTrigger
         aria-label={label}
         className="w-auto min-w-0 shrink-0 sm:max-w-[min(32rem,calc(100vw-2rem))]"
-        disabled={isLoading}
+        disabled={disabled}
       >
         <span
           className="flex min-w-0 items-center gap-2"
@@ -152,6 +220,7 @@ export function CurriculumSelector({
     </Select>
   );
 }
+
 /** Persists curriculum selection without blocking route navigation. */
 function saveCurriculumPreference({
   errorMessage,

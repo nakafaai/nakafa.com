@@ -18,11 +18,14 @@ export const Route = createFileRoute(
 
 function UserCommentsPage() {
   const { author, first, userId } = Route.useLoaderData();
+  const { username } = Route.useParams();
   return (
     <UserComments
       author={author}
       first={Option.fromUndefinedOr(first)}
+      key={username}
       userId={userId}
+      username={username}
     />
   );
 }

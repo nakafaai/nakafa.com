@@ -4,7 +4,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useNavigate } from "@tanstack/react-router";
 import { cn } from "cn";
 import { useTranslations } from "use-intl";
-import { useConvexAuth } from "@/components/providers/convex";
+import { useConvexAuth } from "@/components/auth/convex";
 import { FeedCount } from "@/components/user/feed";
 import { useCurrentAuthNavigation } from "@/lib/auth/location";
 

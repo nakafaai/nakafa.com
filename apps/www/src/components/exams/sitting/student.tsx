@@ -25,6 +25,7 @@ import {
   useTransition,
 } from "react";
 import { useLocale, useTranslations } from "use-intl";
+import { useConvexAuth } from "@/components/auth/convex";
 import {
   type Admission,
   useEnterSitting,
@@ -36,7 +37,6 @@ import type { EntryMessage } from "@/components/exams/sitting/entry";
 import { StudentOutcome } from "@/components/exams/sitting/outcome";
 import { StudentPlayer } from "@/components/exams/sitting/player";
 import { SittingRetry } from "@/components/exams/sitting/retry";
-import { useConvexAuth } from "@/components/providers/convex";
 import {
   CardSection,
   CardSectionActions,

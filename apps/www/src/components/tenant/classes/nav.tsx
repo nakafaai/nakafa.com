@@ -9,7 +9,7 @@ import { useMatchRoute } from "@tanstack/react-router";
 import { Array as Arr } from "effect";
 import { use } from "react";
 import { useTranslations } from "use-intl";
-import { useConvexAuth } from "@/components/providers/convex";
+import { useConvexAuth } from "@/components/auth/convex";
 import { ClassesPreloadContext } from "@/components/tenant/classes/preload";
 import type { TenantValue } from "@/components/tenant/context";
 import { useTenant } from "@/components/tenant/context";

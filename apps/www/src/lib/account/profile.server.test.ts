@@ -1,5 +1,7 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it } from "@effect/vitest";
+import { COMMENT_PAGE_SIZE } from "@repo/backend/client/comments/list";
+import { POST_PAGE_SIZE } from "@repo/backend/client/posts/list";
 import auth from "@repo/backend/confect/_generated/refs/auth";
 import chats from "@repo/backend/confect/_generated/refs/chats";
 import comments from "@repo/backend/confect/_generated/refs/comments";
@@ -10,7 +12,9 @@ import { Array as Arr, Effect, Option } from "effect";
 import {
   profileChatHandler,
   profileCommentsHandler,
+  profileCommentsPageHandler,
   profilePostsHandler,
+  profilePostsPageHandler,
   profileScreenHandler,
 } from "@/lib/account/profile.server";
 
@@ -221,5 +225,63 @@ describe("profileCommentsHandler", () => {
       seo: { canonicalPath: "/en/@nabil/comments", indexable: false },
       userId: "users-owner",
     });
+  });
+});
+
+describe("profilePostsPageHandler", () => {
+  it("answers the next page of posts after the cursor of the page before", async () => {
+    sessionWith(Option.none());
+    answerQueries([
+      [users.queries.getProfileByUsername, profile],
+      [
+        posts.queries.list,
+        { continueCursor: "cursor-2", isDone: true, page: ["post-2"] },
+      ],
+    ]);
+    const page = await profilePostsPageHandler({
+      data: { cursor: "cursor-1", locale: "en", username: "Nabil" },
+    });
+    expect(page).toEqual({
+      continueCursor: "cursor-2",
+      isDone: true,
+      page: ["post-2"],
+    });
+    expect(mocks.preloadConfectQuery).toHaveBeenCalledWith(
+      posts.queries.list,
+      {
+        authorId: profile._id,
+        paginationOpts: { cursor: "cursor-1", numItems: POST_PAGE_SIZE },
+      },
+      undefined
+    );
+  });
+});
+
+describe("profileCommentsPageHandler", () => {
+  it("answers the next page of comments after the cursor of the page before", async () => {
+    sessionWith(Option.none());
+    answerQueries([
+      [users.queries.getProfileByUsername, profile],
+      [
+        comments.queries.getCommentsByUserId,
+        { continueCursor: "cursor-2", isDone: false, page: ["comment-2"] },
+      ],
+    ]);
+    const page = await profileCommentsPageHandler({
+      data: { cursor: "cursor-1", locale: "en", username: "Nabil" },
+    });
+    expect(page).toEqual({
+      continueCursor: "cursor-2",
+      isDone: false,
+      page: ["comment-2"],
+    });
+    expect(mocks.preloadConfectQuery).toHaveBeenCalledWith(
+      comments.queries.getCommentsByUserId,
+      {
+        paginationOpts: { cursor: "cursor-1", numItems: COMMENT_PAGE_SIZE },
+        userId: profile._id,
+      },
+      undefined
+    );
   });
 });

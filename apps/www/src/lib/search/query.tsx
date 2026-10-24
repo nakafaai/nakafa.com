@@ -1,16 +1,22 @@
-import type { Ref } from "@confect/core";
-import { QueryResult, useQuery } from "@confect/react";
-import contents from "@repo/backend/confect/_generated/refs/contents";
-import { NAKAFA_AGENT_DEFAULT_LIMIT } from "@repo/contents/agent/search";
-
+import { Effect, Fiber, Option, Result } from "effect";
+import { useEffect, useState } from "react";
 import { useLocale } from "use-intl";
 import { isActiveLocale } from "@/lib/i18n/active";
+import {
+  type ContentSearchResultItem,
+  requestSearch,
+  type SearchAnswers,
+  SearchReadError,
+  settleSearch,
+  startSearch,
+} from "@/lib/search/answer";
+import { readSearchFn } from "@/lib/search/search.functions";
 
-type ContentSearchResponse = Ref.Returns<typeof contents.queries.search.search>;
-
-export type ContentSearchResultItem = ContentSearchResponse["items"][number];
-
-/** Runs the public Convex content search query for the active locale. */
+/**
+ * Runs the public content search for the active locale. Every viewer reads it
+ * through the server function, so a search opens no Convex client or socket.
+ * Only the newest query's results show: a response for an older text is dropped.
+ */
 export function useSearchQuery({
   enabled,
   query,
@@ -22,49 +28,65 @@ export function useSearchQuery({
   const normalizedQuery = query.trim();
   const shouldSearch =
     enabled && normalizedQuery.length > 0 && isActiveLocale(locale);
-  const state = useQuery(
-    contents.queries.search.search,
-    shouldSearch
-      ? {
-          limit: NAKAFA_AGENT_DEFAULT_LIMIT,
-          locale,
-          offset: 0,
-          queries: [normalizedQuery],
-        }
-      : "skip"
+  const key = `${locale}\n${normalizedQuery}`;
+  const [stored, setAnswers] = useState<SearchAnswers<ContentSearchResultItem>>(
+    () => startSearch(key)
   );
-
-  if (!shouldSearch) {
-    return {
-      data: [],
-      error: null,
-      isError: false,
-      isLoading: false,
-    };
+  const answers = requestSearch(stored, key);
+  if (answers !== stored) {
+    setAnswers(answers);
   }
 
-  if (QueryResult.isFailure(state)) {
+  useEffect(() => {
+    if (!(shouldSearch && isActiveLocale(locale))) {
+      return;
+    }
+    const fiber = Effect.runFork(
+      Effect.tryPromise({
+        try: () => readSearchFn({ data: { locale, query: normalizedQuery } }),
+        catch: (cause) => new SearchReadError({ cause }),
+      }).pipe(
+        Effect.matchEffect({
+          onFailure: (error) =>
+            Effect.sync(() => {
+              setAnswers((previous) =>
+                settleSearch(previous, key, Result.fail(error))
+              );
+            }),
+          onSuccess: (items) =>
+            Effect.sync(() => {
+              setAnswers((previous) =>
+                settleSearch(previous, key, Result.succeed(items))
+              );
+            }),
+        })
+      )
+    );
+    return () => {
+      Effect.runFork(Fiber.interrupt(fiber));
+    };
+  }, [key, locale, normalizedQuery, shouldSearch]);
+
+  if (!shouldSearch) {
+    return { data: [], error: undefined, isError: false, isLoading: false };
+  }
+
+  const answer = answers.key === key ? answers.answer : Option.none();
+  if (Option.isNone(answer)) {
+    return { data: [], error: undefined, isError: false, isLoading: true };
+  }
+  if (Result.isFailure(answer.value)) {
     return {
       data: [],
-      error: state.error,
+      error: answer.value.failure,
       isError: true,
       isLoading: false,
     };
   }
-
-  if (QueryResult.isSuccess(state)) {
-    return {
-      data: state.value.items,
-      error: null,
-      isError: false,
-      isLoading: false,
-    };
-  }
-
   return {
-    data: [],
-    error: null,
+    data: answer.value.success,
+    error: undefined,
     isError: false,
-    isLoading: true,
+    isLoading: false,
   };
 }

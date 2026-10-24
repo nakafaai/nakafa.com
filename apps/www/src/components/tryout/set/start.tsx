@@ -13,7 +13,8 @@ import { useConvex } from "convex/react";
 import { Effect, Schema } from "effect";
 import { useTransition } from "react";
 import { useTranslations } from "use-intl";
-import { useConvexAuth } from "@/components/providers/convex";
+import { useConvexAuth } from "@/components/auth/convex";
+import { ConvexIsland } from "@/components/providers/island";
 import { getTryoutAttemptHref } from "@/components/tryout/route/path";
 import { useTryoutClock } from "@/components/tryout/runtime/clock";
 import { START_ERROR, START_PART_ERROR } from "@/components/tryout/set/copy";
@@ -48,7 +49,11 @@ interface StartTryoutButtonProps {
   request: StartTryoutRequest;
 }
 
-/** Composes the active attempt link or the transactional start action. */
+/**
+ * Composes the active attempt link or the transactional start action. A visitor
+ * has no client, so the start action mounts once the page holds one, and until
+ * then the visitor's button sends the visitor to sign in.
+ */
 export function StartTryoutButton(props: StartTryoutButtonProps) {
   if (
     props.attempt?.status === "in-progress" &&
@@ -56,7 +61,47 @@ export function StartTryoutButton(props: StartTryoutButtonProps) {
   ) {
     return <ResumeTryoutLink request={props.request} />;
   }
-  return <TryoutStartAction {...props} />;
+  return (
+    <ConvexIsland
+      fallback={
+        <TryoutStartSignInButton
+          finished={Boolean(props.attempt)}
+          request={props.request}
+        />
+      }
+    >
+      <TryoutStartAction {...props} />
+    </ConvexIsland>
+  );
+}
+
+/** A visitor's start button: it sends the visitor to sign in with the page as the return address. */
+function TryoutStartSignInButton({
+  finished,
+  request,
+}: {
+  readonly finished: boolean;
+  readonly request: StartTryoutRequest;
+}) {
+  const navigate = useNavigate();
+  const t = useTranslations("Tryouts");
+  const authRedirect = `/${request.locale}${request.authRedirectHref}`;
+
+  /** Sends a visitor to sign in before any attempt starts. */
+  function onStart() {
+    navigate({
+      params: { locale: request.locale },
+      search: { redirect: authRedirect },
+      to: "/$locale/auth",
+    });
+  }
+
+  return (
+    <Button onClick={onStart}>
+      <HugeIcons icon={Rocket01Icon} />
+      {t(finished ? "restart-cta" : "start-cta")}
+    </Button>
+  );
 }
 
 /** Starts or resumes a free try-out from the current page. */

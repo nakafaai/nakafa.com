@@ -25,7 +25,7 @@ import {
   useTransition,
 } from "react";
 import { useTranslations } from "use-intl";
-import { useConvexAuth } from "@/components/providers/convex";
+import { useConvexAuth } from "@/components/auth/convex";
 import { QuestionnaireSteps } from "@/components/shared/questionnaire";
 import {
   StartCountryQuestion,

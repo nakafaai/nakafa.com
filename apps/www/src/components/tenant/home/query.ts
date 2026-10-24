@@ -2,7 +2,7 @@ import exams from "@repo/backend/confect/_generated/refs/exams";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { use } from "react";
-import { useConvexAuth } from "@/components/providers/convex";
+import { useConvexAuth } from "@/components/auth/convex";
 import { useTenant } from "@/components/tenant/context";
 import { HomePreloadContext } from "@/components/tenant/home/data";
 import { usePreloadedQueryResult } from "@/lib/data/preloaded";

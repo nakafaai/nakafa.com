@@ -24,6 +24,7 @@ import type {
   CommentAuthor,
   CommentRow as CommentItem,
 } from "@/components/comments/state";
+import { ConvexIsland, SignedInIsland } from "@/components/providers/island";
 import { MoreMenu } from "@/components/shared/more";
 import { formatShortAge } from "@/components/user/age";
 import {
@@ -87,7 +88,6 @@ export function CommentRow({
   const saving = useCommentDraft((draft) =>
     HashSet.has(draft.saving, comment._id)
   );
-  const viewerId = useViewer((state) => state.account?.appUser._id);
   return (
     <div id={comment._id}>
       <FeedRow>
@@ -98,20 +98,9 @@ export function CommentRow({
             <FeedAge at={comment._creationTime}>
               {formatShortAge(comment._creationTime, now, locale)}
             </FeedAge>
-            {viewerId === comment.userId && (
-              <FeedEnd>
-                <MoreMenu inert={saving}>
-                  <Suspense fallback={null}>
-                    <ClientOnly fallback={null}>
-                      <CommentDeletion
-                        commentId={comment._id}
-                        isReply={comment.threadId !== undefined}
-                      />
-                    </ClientOnly>
-                  </Suspense>
-                </MoreMenu>
-              </FeedEnd>
-            )}
+            <SignedInIsland>
+              <CommentOwnerMenu comment={comment} saving={saving} />
+            </SignedInIsland>
           </FeedHeader>
           {replyTo}
           <DeferredLearnerText>{comment.text}</DeferredLearnerText>
@@ -125,8 +114,60 @@ export function CommentRow({
   );
 }
 
-/** The like toggle of a comment, which changes it at once and tells the learner when the server refuses. */
+/** The More menu of a comment the viewer owns, which deletes it. Any other viewer sees no menu. */
+function CommentOwnerMenu({
+  comment,
+  saving,
+}: {
+  comment: RowComment;
+  saving: boolean;
+}) {
+  const viewerId = useViewer((state) => state.account?.appUser._id);
+  if (viewerId !== comment.userId) {
+    return null;
+  }
+  return (
+    <FeedEnd>
+      <MoreMenu inert={saving}>
+        <Suspense fallback={null}>
+          <ClientOnly fallback={null}>
+            <CommentDeletion
+              commentId={comment._id}
+              isReply={comment.threadId !== undefined}
+            />
+          </ClientOnly>
+        </Suspense>
+      </MoreMenu>
+    </FeedEnd>
+  );
+}
+
+/**
+ * The like toggle of a comment. A learner's toggle changes it through the page's
+ * client, and a visitor's toggle sends the visitor to sign in.
+ */
 function CommentLikeButton({ comment }: { comment: RowComment }) {
+  return (
+    <ConvexIsland fallback={<VisitorCommentLikeButton comment={comment} />}>
+      <LiveCommentLikeButton comment={comment} />
+    </ConvexIsland>
+  );
+}
+
+/** A visitor's like toggle: it asks for sign-in, and changes nothing. */
+function VisitorCommentLikeButton({ comment }: { comment: RowComment }) {
+  const whenSignedIn = useWhenSignedIn();
+  return (
+    <LikeButton
+      likeCount={comment.likeCount}
+      liked={comment.liked}
+      onToggle={() => whenSignedIn(() => undefined)}
+    />
+  );
+}
+
+/** A learner's like toggle, which changes the comment at once and tells the learner when the server refuses. */
+function LiveCommentLikeButton({ comment }: { comment: RowComment }) {
   const like = useMutation(comments.mutations.likeComment).withOptimisticUpdate(
     likeInLists
   );

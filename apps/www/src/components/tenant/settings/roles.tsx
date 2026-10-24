@@ -18,7 +18,7 @@ import {
 import { Array as Arr, Option } from "effect";
 import { createContext, use, useState } from "react";
 import { useTranslations } from "use-intl";
-import { useConvexAuth } from "@/components/providers/convex";
+import { useConvexAuth } from "@/components/auth/convex";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import { ReadBoundary } from "@/components/tenant/read/boundary";

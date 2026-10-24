@@ -327,7 +327,10 @@ export const readTryoutTrackSetList = Effect.fn(
     examKey: input.track.examKey,
     filter: selection.status,
     locale: input.locale,
-    paginationOpts: { cursor: null, numItems: TRYOUT_SET_PAGE_SIZE },
+    paginationOpts: {
+      cursor: null,
+      numItems: input.numItems ?? TRYOUT_SET_PAGE_SIZE,
+    },
     sort: { direction: selection.direction, field: selection.sort },
     trackKey: input.track.trackKey,
   };

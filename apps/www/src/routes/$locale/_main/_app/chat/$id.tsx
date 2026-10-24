@@ -3,6 +3,7 @@ import { useSyncExternalStore } from "react";
 import { ChatHeader } from "@/components/ai/chat/header";
 import { readShareToken } from "@/components/ai/chat/link";
 import { AiChatPage } from "@/components/ai/chat/screen";
+import { ConvexIsland } from "@/components/providers/island";
 import { chatScreenFn } from "@/lib/account/home.functions";
 
 export const Route = createFileRoute("/$locale/_main/_app/chat/$id")({
@@ -41,10 +42,12 @@ function ChatRoute() {
     return <ChatHeader />;
   }
   return (
-    <AiChatPage
-      chatId={chatId}
-      key={chatId}
-      shareToken={fragment === "" ? undefined : fragment}
-    />
+    <ConvexIsland fallback={<ChatHeader />}>
+      <AiChatPage
+        chatId={chatId}
+        key={chatId}
+        shareToken={fragment === "" ? undefined : fragment}
+      />
+    </ConvexIsland>
   );
 }

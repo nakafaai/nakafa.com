@@ -2,7 +2,7 @@ import { QueryResult, useQuery } from "@confect/react";
 import learningPreferences from "@repo/backend/confect/_generated/refs/learningPreferences";
 import type { LinkTarget } from "@repo/internationalization/src/link";
 import type { Locale } from "use-intl";
-import { useConvexAuth } from "@/components/providers/convex";
+import { useConvexAuth } from "@/components/auth/convex";
 import { getTryoutCountryTarget } from "@/components/tryout/route/path";
 import { isActiveLocale } from "@/lib/i18n/active";
 

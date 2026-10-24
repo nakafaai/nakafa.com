@@ -2,7 +2,7 @@ import { useMutation, useQuery } from "@confect/react";
 import { ANALYTICS_CONSENT_CATEGORY } from "@repo/analytics/consent";
 import consents from "@repo/backend/confect/_generated/refs/consents";
 import { useStore } from "zustand";
-import { useConvexAuth } from "@/components/providers/convex";
+import { useConvexAuth } from "@/components/auth/convex";
 import { readAccountConsentQuery } from "@/lib/analytics/consent/account";
 import {
   type AnalyticsConsentContextValue,

@@ -10,7 +10,7 @@ const mocks = vi.hoisted(() => ({
   usePaginatedQuery: vi.fn<(...args: unknown[]) => unknown>(),
 }));
 
-vi.mock("@/components/providers/convex", () => ({
+vi.mock("@/components/auth/convex", () => ({
   useConvexAuth: (select: (auth: { isLoading: boolean }) => boolean) =>
     select(mocks.settled),
 }));
