@@ -18,6 +18,17 @@ import {
 } from "@repo/backend/test/tryout/source";
 import { Effect } from "effect";
 
+const readTryoutHistoryMock = vi.hoisted(() => vi.fn());
+vi.mock(
+  "@repo/backend/confect/tryouts/runtime/history/read",
+  async (importOriginal) => ({
+    ...(await importOriginal<
+      typeof import("@repo/backend/confect/tryouts/runtime/history/read")
+    >()),
+    readTryoutHistory: readTryoutHistoryMock,
+  })
+);
+
 const identity = {
   countryKey: TRYOUT_START_COUNTRY,
   examKey: TRYOUT_START_EXAM,
@@ -272,7 +283,7 @@ describe("attempt page authorization and frozen routes", () => {
   );
 
   it.effect(
-    "answers a running section with its bodies in the same read as its page",
+    "answers a running section without bodies when its content is not signed",
     () =>
       Effect.gen(function* () {
         const { client, started } = yield* startFixture("visible");
@@ -302,10 +313,7 @@ describe("attempt page authorization and frozen routes", () => {
             page: { section: { sectionKey: TRYOUT_START_SECTION } },
           },
         });
-        expect(section?.bodies).toHaveLength(1);
-        expect(section?.bodies[0]).toMatchObject({
-          items: expect.any(Array),
-        });
+        expect(section?.bodies).toEqual([]);
       })
   );
 
@@ -341,6 +349,40 @@ describe("attempt page authorization and frozen routes", () => {
             )
           )
         ).toBeNull();
+      })
+  );
+
+  it.effect(
+    "answers a running section with the signed bodies its history read returns",
+    () =>
+      Effect.gen(function* () {
+        const { client, started } = yield* startFixture("visible");
+        yield* Effect.promise(() =>
+          client.mutation(api.tryouts.mutations.sections.start, {
+            attemptId: started.attemptId,
+            sectionKey: TRYOUT_START_SECTION,
+          })
+        );
+        const body = {
+          bundleJson: "bundle",
+          items: [],
+          rendererJson: "renderer",
+        };
+        readTryoutHistoryMock.mockReturnValue(Effect.succeed(body));
+        const page = yield* Effect.promise(() =>
+          client.query(api.tryouts.queries.attemptPage.getSectionWithBodies, {
+            request: {
+              ...identity,
+              kind: "current",
+              sectionKey: TRYOUT_START_SECTION,
+            },
+          })
+        );
+        expect(page?.bodies).toEqual([body]);
+        expect(readTryoutHistoryMock).toHaveBeenCalledExactlyOnceWith({
+          attemptId: started.attemptId,
+          selectors: expect.any(Array),
+        });
       })
   );
 });
