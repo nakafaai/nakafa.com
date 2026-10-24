@@ -6,6 +6,7 @@ import { negotiateLocale } from "@repo/internationalization/src/negotiate";
 import { mergeVaryHeader } from "@repo/utilities/http/accept";
 import { Array as Arr, Option } from "effect";
 import { readSchoolSlug } from "@/lib/routing/school/host";
+import { createWwwHeaders, readWwwHeaderOrigins } from "@/lib/security/headers";
 
 /** The segment of the router tree that holds every school page (ADR 0026). */
 const SCHOOL_SEGMENT = "school";
@@ -78,17 +79,19 @@ export function readSchoolTreeGate(request: Request): Option.Option<Locale> {
 }
 
 /**
- * Sets the headers that every school page and every not-found answer carry: the
- * page is not indexed, and its answer depends on the language and the session.
- * Other responses of a main host pass through unchanged.
+ * Sets the headers that every answer carries: the security policy and the agent
+ * discovery links. A school page and every not-found answer are also not indexed,
+ * and a school page's answer depends on the language and the session.
  */
 export function withPageHeaders(request: Request, response: Response) {
   const isSchoolHost = Option.isSome(readRequestSchool(request.headers));
-  if (!isSchoolHost && response.status !== 404) {
-    return response;
-  }
   const headers = new Headers(response.headers);
-  headers.set("x-robots-tag", "noindex");
+  for (const { key, value } of createWwwHeaders(readWwwHeaderOrigins())) {
+    headers.set(key, value);
+  }
+  if (isSchoolHost || response.status === 404) {
+    headers.set("x-robots-tag", "noindex");
+  }
   if (isSchoolHost) {
     headers.set(
       "vary",

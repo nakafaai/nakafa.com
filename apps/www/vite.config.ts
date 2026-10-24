@@ -1,4 +1,4 @@
-import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { basename, join } from "node:path";
 import { local as textBinding } from "@alchemy.run/cloudflare-runtime/core/bindings/Text";
@@ -9,7 +9,13 @@ import tailwindcss from "@tailwindcss/vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import react, { reactCompilerPreset } from "@vitejs/plugin-react";
 import rsc from "@vitejs/plugin-rsc";
-import { defineConfig, type Plugin } from "vite";
+import { Result } from "effect";
+import { defineConfig, type Plugin, type PluginOption } from "vite";
+import {
+  createWwwHeaders,
+  readWwwHeaderOrigins,
+  renderHeadersFile,
+} from "#www/src/lib/security/headers";
 import { workerEnvironment, workerSettings } from "#www/worker";
 
 /**
@@ -32,9 +38,9 @@ const SERVER_FAILURE_MARKER = "<!--$!-->";
 /**
  * TanStack runs each prerender task in a queue whose failures nobody awaits: a
  * page that fails only logs an unhandled rejection, and the build still exits 0.
- * This check throws unless the client output directory, the output that Nitro's
- * preset sets and TanStack prerenders into, holds exactly the listed pages and
- * none of them carries a server failure marker.
+ * This check throws unless the client output directory, the directory that
+ * TanStack prerenders into, holds exactly the listed pages and none of them
+ * carries a server failure marker.
  */
 function assertPrerenderedPages(clientOutputDirectory: string) {
   const expected = PRERENDERED_PAGES.map(({ path }) =>
@@ -67,6 +73,32 @@ function assertPrerenderedPages(clientOutputDirectory: string) {
     );
   }
 }
+
+/**
+ * Writes the `_headers` file of the client output, so the static assets, the
+ * prerendered pages included, carry the headers that the Worker sets on its own
+ * answers. Both read the same list from `src/lib/security/headers.ts`.
+ */
+const writeHeadersFile: Plugin = {
+  apply: "build",
+  buildApp: {
+    order: "post",
+    handler: (builder) =>
+      Promise.resolve(
+        writeFileSync(
+          join(builder.environments.client.config.build.outDir, "_headers"),
+          Result.getOrThrowWith(
+            renderHeadersFile(createWwwHeaders(readWwwHeaderOrigins())),
+            (error) =>
+              new Error(
+                `A _headers line is over the platform limit: ${error.prefix}...`
+              )
+          )
+        )
+      ),
+  },
+  name: "www:write-headers-file",
+};
 
 const verifyPrerenderedPages: Plugin = {
   apply: "build",
@@ -131,32 +163,44 @@ const bundleCommonJsReactPeers: Plugin = {
 /** The font files that the font-src policy must load from this origin, never inline. */
 const FONT_FILE_PATTERN = /\.woff2?$/;
 
+/** The Node built-in specifiers, which have no browser build. */
+const NODE_BUILTIN_SPECIFIER = /^node:/;
+
 /**
  * Alchemy's Cloudflare plugin runs the Worker in workerd under `vite dev`,
  * `vite build` (prerender included) and `vite preview`, with the server
- * environment that `workerEnvironment` reads as plain-text bindings. When Alchemy
- * runs the build itself, it sets ALCHEMY_CLOUDFLARE_VITE_INJECTED and adds its
- * own copy, so this one stands down.
+ * environment of `workerEnvironment` as plain-text bindings. Alchemy's own build
+ * sets ALCHEMY_CLOUDFLARE_VITE_INJECTED and adds its plugin, so this copy stands
+ * down there. TanStack's prerender preview reloads this file with
+ * TSS_PRERENDERING set and no Alchemy plugin, so this copy runs for it.
  */
-const alchemyWorker =
-  process.env.ALCHEMY_CLOUDFLARE_VITE_INJECTED === "1"
-    ? []
-    : [
-        cloudflare({
-          compatibilityDate: workerSettings.compatibilityDate,
-          compatibilityFlags: workerSettings.compatibilityFlags,
-          viteEnvironments: workerSettings.viteEnvironments,
-          worker: {
-            bindings: Object.entries(workerEnvironment()).flatMap(
-              ([name, value]) =>
-                value === undefined ? [] : [textBinding(name, value)]
-            ),
-            name: workerSettings.name,
-          },
-        }),
-      ];
+function alchemyWorker(
+  nodeEnvironment: "development" | "production"
+): PluginOption[] {
+  const isAlchemyBuild = process.env.ALCHEMY_CLOUDFLARE_VITE_INJECTED === "1";
+  const isPrerendering = process.env.TSS_PRERENDERING === "true";
+  if (isAlchemyBuild && !isPrerendering) {
+    return [];
+  }
+  return [
+    cloudflare({
+      compatibilityDate: workerSettings.compatibilityDate,
+      compatibilityFlags: workerSettings.compatibilityFlags,
+      viteEnvironments: workerSettings.viteEnvironments,
+      worker: {
+        bindings: Object.entries({
+          ...workerEnvironment(),
+          NODE_ENV: nodeEnvironment,
+        }).flatMap(([name, value]) =>
+          value === undefined ? [] : [textBinding(name, value)]
+        ),
+        name: workerSettings.name,
+      },
+    }),
+  ];
+}
 
-export default defineConfig({
+export default defineConfig(({ command, isPreview }) => ({
   build: {
     // The font-src policy allows only this origin, so a font file stays a file
     // even when it is smaller than the inline limit. Other assets keep the limit.
@@ -175,12 +219,9 @@ export default defineConfig({
     alias: NODE_ONLY_CONTRACT_ALIASES,
     tsconfigPaths: true,
   },
-  // takumi-js loads its native `@takumi-rs/core` addon at runtime. A bundled copy
-  // cannot find its platform binary, so the server pass keeps the package external.
   environments: {
     ssr: {
       optimizeDeps: { include: ["@vercel/functions"] },
-      resolve: { external: ["@takumi-rs/core"] },
     },
   },
   plugins: [
@@ -193,7 +234,7 @@ export default defineConfig({
         behavior: { dev: "error", build: "error" },
         // Node built-ins have no browser build. The default client specifiers
         // stay, and this one adds every `node:` specifier, subpaths included.
-        client: { specifiers: [/^node:/] },
+        client: { specifiers: [NODE_BUILTIN_SPECIFIER] },
       },
       pages: PRERENDERED_PAGES,
       // Server Components: content bodies render on the server, and only "use
@@ -217,7 +258,13 @@ export default defineConfig({
     react(),
     babel({ presets: [reactCompilerPreset()] }),
     bundleCommonJsReactPeers,
+    writeHeadersFile,
     verifyPrerenderedPages,
-    ...alchemyWorker,
+    // `vite dev` runs the Worker as Node runs a development server. `vite build`
+    // and `vite preview`, the acceptance server and the prerender included, run
+    // it as the deployed Worker does.
+    ...alchemyWorker(
+      command === "serve" && !isPreview ? "development" : "production"
+    ),
   ],
-});
+}));
