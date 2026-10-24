@@ -6,18 +6,19 @@ import {
 } from "@nakafa/aksara-contracts/signature/trusted";
 import { CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT } from "@repo/backend/content/deployment";
 import { agentTrustKeys } from "@repo/backend/keys";
+import { PRODUCTION_DEPLOY_STAGE } from "@repo/utilities/stage";
 import { Array as Arr, Schema } from "effect";
 
 const TRAILING_DOT = /\.$/;
 const CLOUD_HOST = /^[a-z0-9-]+\.convex\.cloud$/;
 const AgentTrustSchema = Schema.Struct({
   key: TrustedKeySchema,
+  stage: Schema.UndefinedOr(Schema.String),
   target: Schema.URLFromString,
-  vercel: Schema.UndefinedOr(Schema.String),
 }).check(
-  Schema.makeFilter(({ target, vercel }) => {
+  Schema.makeFilter(({ stage, target }) => {
     if (
-      vercel === "production" ||
+      stage === PRODUCTION_DEPLOY_STAGE ||
       target.username.length > 0 ||
       target.password.length > 0
     ) {
@@ -46,9 +47,9 @@ const agentKey = hasAgentKey
         keyId: agentEnvironment.AKSARA_AGENT_SIGNING_KEY_ID,
         publicKeyPem: agentEnvironment.AKSARA_AGENT_SIGNING_PUBLIC_KEY,
       },
+      stage: agentEnvironment.NAKAFA_DEPLOY_STAGE,
       target:
         agentEnvironment.CONVEX_CLOUD_URL ?? agentEnvironment.VITE_CONVEX_URL,
-      vercel: agentEnvironment.VERCEL_ENV,
     }).key
   : undefined;
 const trustedContentKeys =

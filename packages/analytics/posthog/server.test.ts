@@ -56,7 +56,7 @@ describe("PostHog server reporting", () => {
 
   it.effect("does not initialize the SDK when reporting is disabled", () =>
     Effect.gen(function* () {
-      vi.stubEnv("VERCEL_ENV", "preview");
+      vi.stubEnv("NAKAFA_DEPLOY_STAGE", "staging");
       vi.stubEnv("TSS_PRERENDERING", "false");
       const { captureServerException } = yield* Effect.promise(
         () => import("@repo/analytics/posthog/server")
@@ -73,7 +73,7 @@ describe("PostHog server reporting", () => {
 
   it.effect("initializes once and sends enabled production exceptions", () =>
     Effect.gen(function* () {
-      vi.stubEnv("VERCEL_ENV", "production");
+      vi.stubEnv("NAKAFA_DEPLOY_STAGE", "prod");
       vi.stubEnv("TSS_PRERENDERING", "false");
       const { captureServerException } = yield* Effect.promise(
         () => import("@repo/analytics/posthog/server")
@@ -130,7 +130,7 @@ describe("PostHog server reporting", () => {
 
   it.effect("forwards the request user agent for traffic classification", () =>
     Effect.gen(function* () {
-      vi.stubEnv("VERCEL_ENV", "production");
+      vi.stubEnv("NAKAFA_DEPLOY_STAGE", "prod");
       vi.stubEnv("TSS_PRERENDERING", "false");
       const { captureServerException } = yield* Effect.promise(
         () => import("@repo/analytics/posthog/server")
@@ -155,7 +155,7 @@ describe("PostHog server reporting", () => {
 
   it.effect("drops invalid runtime context before initializing the SDK", () =>
     Effect.gen(function* () {
-      vi.stubEnv("VERCEL_ENV", "production");
+      vi.stubEnv("NAKAFA_DEPLOY_STAGE", "prod");
       vi.stubEnv("TSS_PRERENDERING", "false");
       const { captureServerException } = yield* Effect.promise(
         () => import("@repo/analytics/posthog/server")
@@ -175,7 +175,7 @@ describe("PostHog server reporting", () => {
 
   it.effect("surfaces provider failures through the typed error channel", () =>
     Effect.gen(function* () {
-      vi.stubEnv("VERCEL_ENV", "production");
+      vi.stubEnv("NAKAFA_DEPLOY_STAGE", "prod");
       vi.stubEnv("TSS_PRERENDERING", "false");
       postHogMocks.captureExceptionImmediate.mockRejectedValueOnce(
         new Error("provider unavailable")

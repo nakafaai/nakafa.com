@@ -15,16 +15,16 @@ export const agentTrustKeys = () =>
       AKSARA_AGENT_SIGNING_KEY_ID: optionalStringSchema,
       AKSARA_AGENT_SIGNING_PUBLIC_KEY: optionalStringSchema,
       CONVEX_CLOUD_URL: optionalStringSchema,
+      NAKAFA_DEPLOY_STAGE: optionalStringSchema,
       VITE_CONVEX_URL: optionalStringSchema,
-      VERCEL_ENV: optionalStringSchema,
     },
     {
       AKSARA_AGENT_SIGNING_KEY_ID: process.env.AKSARA_AGENT_SIGNING_KEY_ID,
       AKSARA_AGENT_SIGNING_PUBLIC_KEY:
         process.env.AKSARA_AGENT_SIGNING_PUBLIC_KEY,
       CONVEX_CLOUD_URL: process.env.CONVEX_CLOUD_URL,
+      NAKAFA_DEPLOY_STAGE: process.env.NAKAFA_DEPLOY_STAGE,
       VITE_CONVEX_URL: process.env.VITE_CONVEX_URL,
-      VERCEL_ENV: process.env.VERCEL_ENV,
     }
   );
 /**

@@ -1,8 +1,13 @@
 import { deploymentKeys } from "@repo/analytics/keys";
+import { PRODUCTION_DEPLOY_STAGE } from "@repo/utilities/stage";
 import { Effect } from "effect";
 
 /**
- * Allows provider-backed server reporting only in the deployed request runtime.
+ * Allows provider-backed server reporting only in the production deploy stage,
+ * and only in the deployed request runtime.
+ *
+ * The Alchemy stack binds the stage it deploys as NAKAFA_DEPLOY_STAGE, so a
+ * preview or staging Worker never reports to production.
  *
  * Start sets TSS_PRERENDERING to "true" in the build process while it prerenders
  * pages, so a prerender error never reaches production reporting. Start owns the
@@ -10,13 +15,13 @@ import { Effect } from "effect";
  * reads two optional deployment fields through deploymentKeys, which cannot fail
  * validation. Full analytics configuration is validated lazily after this gate
  * passes.
- *
- * References:
- * https://vercel.com/docs/environment-variables/system-environment-variables
  */
 export function isServerExceptionReportingEnabled() {
-  const { TSS_PRERENDERING, VERCEL_ENV } = deploymentKeys();
-  return VERCEL_ENV === "production" && TSS_PRERENDERING !== "true";
+  const { NAKAFA_DEPLOY_STAGE, TSS_PRERENDERING } = deploymentKeys();
+  return (
+    NAKAFA_DEPLOY_STAGE === PRODUCTION_DEPLOY_STAGE &&
+    TSS_PRERENDERING !== "true"
+  );
 }
 
 /**

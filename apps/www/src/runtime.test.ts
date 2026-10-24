@@ -2,7 +2,7 @@
 
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import { CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT } from "@repo/backend/content/deployment";
-import { Array as Arr, Effect, Record as Rec, String as Str } from "effect";
+import { Effect, Record as Rec } from "effect";
 import {
   assertRuntimeTarget,
   readRuntimeConfig,
@@ -14,54 +14,26 @@ type RuntimeTarget = Parameters<typeof assertRuntimeTarget>[0];
 const TASK_QUERY = "https://helpful-capybara-123.convex.cloud";
 const TASK_SITE = "https://helpful-capybara-123.convex.site";
 const OTHER_SITE = "https://different-capybara-456.convex.site";
-const emptyIdentity = {
-  deployment: undefined,
-  environment: undefined,
-  git: {
-    branch: undefined,
-    commit: undefined,
-    owner: undefined,
-    provider: undefined,
-    repository: undefined,
-  },
-  marker: undefined,
-  project: undefined,
-  target: undefined,
-} satisfies RuntimeTarget["vercel"];
+const LOOPBACK_QUERY = "http://127.0.0.1:3210";
+const LOOPBACK_SITE = "http://127.0.0.1:3211";
+
+const unsetIdentity = { stage: undefined } satisfies RuntimeTarget["deploy"];
 
 const productionIdentity = {
-  deployment: "dpl_CRMGPNJvKacYy5e7i77WkJXLS3FK",
-  environment: "production",
-  git: {
-    branch: "main",
-    commit: "c0730ceec243abd58cf8e0cc98bd04f2da5164c2",
-    owner: "nakafaai",
-    provider: "github",
-    repository: "nakafa.com",
-  },
-  marker: "1",
-  project: "prj_QfxvXBST46wuSTOXPn4PE32NqbF4",
-  target: "production",
-} as const satisfies RuntimeTarget["vercel"];
+  stage: "prod",
+} as const satisfies RuntimeTarget["deploy"];
 
 const productionTarget = {
   agent: undefined,
   query: `https://${CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT}.convex.cloud`,
   site: `https://${CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT}.convex.site`,
-  vercel: emptyIdentity,
+  deploy: unsetIdentity,
 } satisfies RuntimeTarget;
 
 afterEach(() => vi.unstubAllEnvs());
 
-function identity(
-  value: Partial<Omit<RuntimeTarget["vercel"], "git">> = {},
-  git: Partial<RuntimeTarget["vercel"]["git"]> = {}
-) {
-  return {
-    ...productionIdentity,
-    ...value,
-    git: { ...productionIdentity.git, ...git },
-  } satisfies RuntimeTarget["vercel"];
+function identity(stage: string | undefined) {
+  return { stage } satisfies RuntimeTarget["deploy"];
 }
 
 function target(value: Partial<RuntimeTarget>) {
@@ -86,22 +58,21 @@ function expectSuccess(target: RuntimeTarget) {
 }
 
 describe("content runtime target", () => {
-  it("accepts an isolated environment at the Next configuration boundary", () => {
+  it("accepts an isolated environment at the configuration boundary", () => {
     vi.stubEnv("CONVEX_AGENT_MODE", "anonymous");
-    vi.stubEnv("VITE_CONVEX_URL", "http://127.0.0.1:3210");
-    vi.stubEnv("VITE_CONVEX_SITE_URL", "http://127.0.0.1:3211");
+    vi.stubEnv("VITE_CONVEX_URL", LOOPBACK_QUERY);
+    vi.stubEnv("VITE_CONVEX_SITE_URL", LOOPBACK_SITE);
 
     expect(readRuntimeConfig).not.toThrow();
   });
 
-  it("blocks Preview production while reading the runtime configuration", () => {
-    vi.stubEnv("VERCEL", "1");
-    vi.stubEnv("VERCEL_ENV", "preview");
+  it("blocks a non-production stage from production content while reading the runtime configuration", () => {
+    vi.stubEnv("NAKAFA_DEPLOY_STAGE", "staging");
     vi.stubEnv("VITE_CONVEX_SITE_URL", productionTarget.site);
     vi.stubEnv("VITE_CONVEX_URL", productionTarget.query);
 
     expect(readRuntimeConfig).toThrow(
-      "Production content is restricted to the protected Vercel production build"
+      "Production content is restricted to the protected production stage"
     );
   });
 
@@ -143,7 +114,7 @@ describe("content runtime target", () => {
     { name: "query and HTTP", site: productionTarget.site },
     { name: "query only", site: undefined },
   ])("accepts protected production with $name", ({ site }) =>
-    expectSuccess(target({ site, vercel: productionIdentity }))
+    expectSuccess(target({ site, deploy: productionIdentity }))
   );
 
   it.effect.each([
@@ -176,29 +147,18 @@ describe("content runtime target", () => {
 
   it.effect("rejects anonymous production", () =>
     expectFailure(
-      target({ agent: "anonymous", vercel: productionIdentity }),
+      target({ agent: "anonymous", deploy: productionIdentity }),
       "anonymous-production"
     )
   );
 
   it.effect.each([
-    ["marker", identity({ marker: undefined })] as const,
-    ["deployment", identity({ deployment: undefined })] as const,
-    [
-      "deployment format",
-      identity({ deployment: "not-a-deployment" }),
-    ] as const,
-    ["environment", identity({ environment: "preview" })] as const,
-    ["target", identity({ target: "preview" })] as const,
-    ["project", identity({ project: "prj_other" })] as const,
-    ["Git provider", identity({}, { provider: "gitlab" })] as const,
-    ["Git owner", identity({}, { owner: "other" })] as const,
-    ["Git repository", identity({}, { repository: "other" })] as const,
-    ["Git branch", identity({}, { branch: "feature/cost" })] as const,
-    ["commit", identity({}, { commit: undefined })] as const,
-    ["commit format", identity({}, { commit: "not-a-commit" })] as const,
-  ])("rejects production when the %s credential is wrong", ([, vercel]) =>
-    expectFailure(target({ vercel }), "untrusted-production")
+    ["an unset stage", identity(undefined)] as const,
+    ["an empty stage", identity("")] as const,
+    ["a staging stage", identity("staging")] as const,
+    ["a preview stage", identity("preview")] as const,
+  ])("rejects production when the deploy has %s", ([, deploy]) =>
+    expectFailure(target({ deploy }), "untrusted-production")
   );
 
   it.effect.each([
@@ -219,7 +179,7 @@ describe("content runtime target", () => {
     },
   ])("rejects protected production with $name", ({ query, site }) =>
     expectFailure(
-      target({ query, site, vercel: productionIdentity }),
+      target({ query, site, deploy: productionIdentity }),
       "untrusted-production"
     )
   );
@@ -278,35 +238,18 @@ describe("content runtime target", () => {
   );
 });
 
-const LOOPBACK_QUERY = "http://127.0.0.1:3210";
-const LOOPBACK_SITE = "http://127.0.0.1:3211";
 const PROTECTED_ENVIRONMENT = {
+  NAKAFA_DEPLOY_STAGE: "prod",
   VITE_CONVEX_SITE_URL: productionTarget.site,
   VITE_CONVEX_URL: productionTarget.query,
-  VERCEL: "1",
-  VERCEL_DEPLOYMENT_ID: "dpl_CRMGPNJvKacYy5e7i77WkJXLS3FK",
-  VERCEL_ENV: "production",
-  VERCEL_GIT_COMMIT_REF: "main",
-  VERCEL_GIT_COMMIT_SHA: "c0730ceec243abd58cf8e0cc98bd04f2da5164c2",
-  VERCEL_GIT_PROVIDER: "github",
-  VERCEL_GIT_REPO_OWNER: "nakafaai",
-  VERCEL_GIT_REPO_SLUG: "nakafa.com",
-  VERCEL_PROJECT_ID: "prj_QfxvXBST46wuSTOXPn4PE32NqbF4",
-  VERCEL_TARGET_ENV: "production",
 };
 /** Every name the runtime reader reads. */
 const RUNTIME_ENVIRONMENT_NAMES = [
   "CONVEX_AGENT_MODE",
   ...Rec.keys(PROTECTED_ENVIRONMENT),
 ] as const;
-/**
- * The free-text Vercel identity names that the protected production check
- * compares. The `VERCEL` marker is a literal and has its own case.
- */
-const PROTECTED_IDENTITY_NAMES = Arr.filter(
-  Rec.keys(PROTECTED_ENVIRONMENT),
-  Str.startsWith("VERCEL_")
-);
+/** The deploy stage is the only identity that the protected production check compares. */
+const PROTECTED_IDENTITY_NAMES = ["NAKAFA_DEPLOY_STAGE"] as const;
 
 /** Sets the whole runtime environment, so an unnamed key never inherits a shell value. */
 function stubRuntimeEnvironment(
@@ -327,7 +270,7 @@ describe("runtime environment parity", () => {
       agent: undefined,
       query: LOOPBACK_QUERY,
       site: undefined,
-      vercel: undefined,
+      stage: undefined,
     });
   });
 
@@ -393,24 +336,15 @@ describe("runtime environment parity", () => {
     expect(readRuntimeConfig).toThrow();
   });
 
-  it("reads the Vercel marker literal and rejects an empty or other value", () => {
+  it("reads the deploy stage as text and keeps an unset stage undefined", () => {
     stubRuntimeEnvironment({
+      NAKAFA_DEPLOY_STAGE: "staging",
       VITE_CONVEX_URL: LOOPBACK_QUERY,
-      VERCEL: "1",
     });
-    expect(readRuntimeConfig().vercel).toBe("1");
+    expect(readRuntimeConfig().stage).toBe("staging");
 
-    stubRuntimeEnvironment({
-      VITE_CONVEX_URL: LOOPBACK_QUERY,
-      VERCEL: "",
-    });
-    expect(readRuntimeConfig).toThrow();
-
-    stubRuntimeEnvironment({
-      VITE_CONVEX_URL: LOOPBACK_QUERY,
-      VERCEL: "0",
-    });
-    expect(readRuntimeConfig).toThrow();
+    stubRuntimeEnvironment({ VITE_CONVEX_URL: LOOPBACK_QUERY });
+    expect(readRuntimeConfig().stage).toBeUndefined();
   });
 
   it("accepts the complete protected production environment", () => {
@@ -420,7 +354,7 @@ describe("runtime environment parity", () => {
       agent: undefined,
       query: productionTarget.query,
       site: productionTarget.site,
-      vercel: "1",
+      stage: "prod",
     });
   });
 

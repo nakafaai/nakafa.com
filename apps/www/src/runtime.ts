@@ -5,19 +5,9 @@ import {
 import { readEnvironment } from "@repo/utilities/env";
 import { Effect, Schema } from "effect";
 
-const VercelIdentitySchema = Schema.Struct({
-  deployment: Schema.UndefinedOr(Schema.String),
-  environment: Schema.UndefinedOr(Schema.String),
-  git: Schema.Struct({
-    branch: Schema.UndefinedOr(Schema.String),
-    commit: Schema.UndefinedOr(Schema.String),
-    owner: Schema.UndefinedOr(Schema.String),
-    provider: Schema.UndefinedOr(Schema.String),
-    repository: Schema.UndefinedOr(Schema.String),
-  }),
-  marker: Schema.UndefinedOr(Schema.Literal("1")),
-  project: Schema.UndefinedOr(Schema.String),
-  target: Schema.UndefinedOr(Schema.String),
+/** The deploy identity: the Alchemy stage that the stack binds when it deploys this Worker. */
+const DeployIdentitySchema = Schema.Struct({
+  stage: Schema.UndefinedOr(Schema.String),
 });
 
 const FailureSchema = Schema.Literals([
@@ -35,7 +25,7 @@ const messages = {
   "mixed-production":
     "The content runtime query and HTTP targets cannot mix deployments.",
   "untrusted-production":
-    "Production content is restricted to the protected Vercel production build. Use an isolated Convex deployment for local builds.",
+    "Production content is restricted to the protected production stage. Use an isolated Convex deployment for local builds.",
 } satisfies Record<Failure, string>;
 
 /** One server process attempted to cross the protected production-content seam. */
@@ -52,7 +42,7 @@ const RuntimeTargetSchema = Schema.Struct({
   agent: Schema.UndefinedOr(Schema.Literal("anonymous")),
   query: Schema.String,
   site: Schema.UndefinedOr(Schema.String),
-  vercel: VercelIdentitySchema,
+  deploy: DeployIdentitySchema,
 });
 type RuntimeTarget = typeof RuntimeTargetSchema.Type;
 
@@ -131,7 +121,7 @@ export const assertRuntimeTarget = Effect.fn("www.runtime.assertTarget")(
     const siteDeployment =
       siteHost === undefined ? undefined : deployment(siteHost, ".convex.site");
 
-    if (isProtectedProduction(target.vercel)) {
+    if (isProtectedProduction(target.deploy)) {
       return yield* validateProtectedTarget(
         target,
         queryDeployment,
@@ -176,59 +166,28 @@ export function readRuntimeConfig() {
   const env = readEnvironment(
     {
       CONVEX_AGENT_MODE: Schema.UndefinedOr(Schema.Literal("anonymous")),
+      NAKAFA_DEPLOY_STAGE: optionalText,
       VITE_CONVEX_SITE_URL: optionalText,
       VITE_CONVEX_URL: Schema.String,
-      VERCEL: Schema.UndefinedOr(Schema.Literal("1")),
-      VERCEL_DEPLOYMENT_ID: optionalText,
-      VERCEL_ENV: optionalText,
-      VERCEL_GIT_COMMIT_REF: optionalText,
-      VERCEL_GIT_COMMIT_SHA: optionalText,
-      VERCEL_GIT_PROVIDER: optionalText,
-      VERCEL_GIT_REPO_OWNER: optionalText,
-      VERCEL_GIT_REPO_SLUG: optionalText,
-      VERCEL_PROJECT_ID: optionalText,
-      VERCEL_TARGET_ENV: optionalText,
     },
     {
       CONVEX_AGENT_MODE: process.env.CONVEX_AGENT_MODE,
+      NAKAFA_DEPLOY_STAGE: process.env.NAKAFA_DEPLOY_STAGE,
       VITE_CONVEX_SITE_URL: process.env.VITE_CONVEX_SITE_URL,
       VITE_CONVEX_URL: process.env.VITE_CONVEX_URL,
-      VERCEL: process.env.VERCEL,
-      VERCEL_DEPLOYMENT_ID: process.env.VERCEL_DEPLOYMENT_ID,
-      VERCEL_ENV: process.env.VERCEL_ENV,
-      VERCEL_GIT_COMMIT_REF: process.env.VERCEL_GIT_COMMIT_REF,
-      VERCEL_GIT_COMMIT_SHA: process.env.VERCEL_GIT_COMMIT_SHA,
-      VERCEL_GIT_PROVIDER: process.env.VERCEL_GIT_PROVIDER,
-      VERCEL_GIT_REPO_OWNER: process.env.VERCEL_GIT_REPO_OWNER,
-      VERCEL_GIT_REPO_SLUG: process.env.VERCEL_GIT_REPO_SLUG,
-      VERCEL_PROJECT_ID: process.env.VERCEL_PROJECT_ID,
-      VERCEL_TARGET_ENV: process.env.VERCEL_TARGET_ENV,
     }
   );
   const target = {
     agent: env.CONVEX_AGENT_MODE,
     query: env.VITE_CONVEX_URL,
     site: env.VITE_CONVEX_SITE_URL,
-    vercel: {
-      deployment: env.VERCEL_DEPLOYMENT_ID,
-      environment: env.VERCEL_ENV,
-      git: {
-        branch: env.VERCEL_GIT_COMMIT_REF,
-        commit: env.VERCEL_GIT_COMMIT_SHA,
-        owner: env.VERCEL_GIT_REPO_OWNER,
-        provider: env.VERCEL_GIT_PROVIDER,
-        repository: env.VERCEL_GIT_REPO_SLUG,
-      },
-      marker: env.VERCEL,
-      project: env.VERCEL_PROJECT_ID,
-      target: env.VERCEL_TARGET_ENV,
-    },
+    deploy: { stage: env.NAKAFA_DEPLOY_STAGE },
   } satisfies RuntimeTarget;
   Effect.runSync(assertRuntimeTarget(target));
   return {
     agent: target.agent,
     query: target.query,
     site: target.site,
-    vercel: target.vercel.marker,
+    stage: target.deploy.stage,
   };
 }
