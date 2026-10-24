@@ -54,7 +54,6 @@
     "@tanstack/react-start": "1.169.3",
     "@tanstack/react-table": "^9.3.1",
     "@tiptap/pm": "3.32.0",
-    "@vercel/functions": "^3.10.1",
     "ai": "catalog:",
     "any-ascii": "^0.3.3",
     "babel-plugin-react-compiler": "^1.0.0",

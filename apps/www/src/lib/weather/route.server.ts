@@ -1,7 +1,6 @@
 import { FetchClient } from "@repo/utilities/http/client";
 import { logError, logHttpRequest } from "@repo/utilities/logging/effect";
-import { geolocation } from "@vercel/functions";
-import { Cause, Effect } from "effect";
+import { Cause, Effect, Option, Schema } from "effect";
 import { scheduleServerExceptionCapture } from "@/lib/analytics/exception.server";
 import {
   createCorsForbiddenResponse,
@@ -18,6 +17,24 @@ const logContext = {
   endpoint: "/api/weather",
 };
 
+/** The request properties that Cloudflare sets from the visitor's address, when it knows the location. */
+const CloudflareRequest = Schema.Struct({
+  cf: Schema.optionalKey(
+    Schema.Struct({
+      latitude: Schema.optionalKey(Schema.String),
+      longitude: Schema.optionalKey(Schema.String),
+    })
+  ),
+});
+
+/** The visitor's coordinates as Cloudflare reports them; both are absent when the platform has none. */
+function readVisitorLocation(request: Request) {
+  return Option.match(Schema.decodeUnknownOption(CloudflareRequest)(request), {
+    onNone: () => ({ latitude: undefined, longitude: undefined }),
+    onSome: ({ cf }) => ({ latitude: cf?.latitude, longitude: cf?.longitude }),
+  });
+}
+
 /**
  * Answers the weather of the visitor's location, or of the default location
  * when the platform has no geolocation. A handled failure is reported and
@@ -33,9 +50,9 @@ export function serveWeather({ request }: { readonly request: Request }) {
         return createCorsForbiddenResponse();
       }
 
-      const geo = geolocation(request);
-      let latitude = geo.latitude;
-      let longitude = geo.longitude;
+      const location = readVisitorLocation(request);
+      let latitude = location.latitude;
+      let longitude = location.longitude;
 
       if (!(latitude && longitude)) {
         latitude = DEFAULT_LATITUDE;

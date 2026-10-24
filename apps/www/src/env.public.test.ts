@@ -24,7 +24,6 @@ describe("browser environment", () => {
       VITE_AKSARA_PREVIEW_CHILD: undefined,
       VITE_CONVEX_SITE_URL: "https://example.convex.site",
       VITE_CONVEX_URL: "https://example.convex.cloud",
-      VITE_VERCEL_DEPLOYMENT_ID: undefined,
     });
   });
 

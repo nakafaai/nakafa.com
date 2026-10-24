@@ -207,22 +207,12 @@ export default defineConfig(({ command, isPreview }) => ({
     assetsInlineLimit: (filePath) =>
       FONT_FILE_PATTERN.test(filePath) ? false : undefined,
   },
-  define: {
-    "import.meta.env.VITE_VERCEL_DEPLOYMENT_ID": JSON.stringify(
-      process.env.VERCEL_DEPLOYMENT_ID ?? ""
-    ),
-  },
   resolve: {
     // `@nakafa/aksara-contracts` ships its signature verifiers under the `node`
     // condition only. Workers resolve them by file, since the `workerd` condition
     // does not match and the `node` condition would select posthog-node's Node build.
     alias: NODE_ONLY_CONTRACT_ALIASES,
     tsconfigPaths: true,
-  },
-  environments: {
-    ssr: {
-      optimizeDeps: { include: ["@vercel/functions"] },
-    },
   },
   plugins: [
     tanstackStart({
@@ -251,8 +241,8 @@ export default defineConfig(({ command, isPreview }) => ({
         failOnError: true,
       },
     }),
-    // Decision 14: no skew route (__vdpl). Server-function calls carry the
-    // pinned deployment through Start's client fetch seam instead.
+    // Decision 34: no skew route and no deployment pin. A client that asks for a
+    // chunk the deploy replaced reloads the document once.
     rsc(),
     tailwindcss(),
     react(),

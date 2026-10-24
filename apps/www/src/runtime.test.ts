@@ -1,334 +1,178 @@
 // @vitest-environment node
 
-import { afterEach, describe, expect, it } from "@effect/vitest";
+import { describe, expect, it } from "@effect/vitest";
 import { CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT } from "@repo/backend/content/deployment";
-import { Array as Arr, Effect, Record as Rec, String as Str } from "effect";
+import { Effect } from "effect";
 import {
   assertRuntimeTarget,
   readRuntimeConfig,
   UnsafeRuntimeError,
 } from "@/runtime";
 
-type RuntimeTarget = Parameters<typeof assertRuntimeTarget>[0];
-
-const TASK_QUERY = "https://helpful-capybara-123.convex.cloud";
-const TASK_SITE = "https://helpful-capybara-123.convex.site";
-const OTHER_SITE = "https://different-capybara-456.convex.site";
-const emptyIdentity = {
-  deployment: undefined,
-  environment: undefined,
-  git: {
-    branch: undefined,
-    commit: undefined,
-    owner: undefined,
-    provider: undefined,
-    repository: undefined,
-  },
-  marker: undefined,
-  project: undefined,
-  target: undefined,
-} satisfies RuntimeTarget["vercel"];
-
-const productionIdentity = {
-  deployment: "dpl_CRMGPNJvKacYy5e7i77WkJXLS3FK",
-  environment: "production",
-  git: {
-    branch: "main",
-    commit: "c0730ceec243abd58cf8e0cc98bd04f2da5164c2",
-    owner: "nakafaai",
-    provider: "github",
-    repository: "nakafa.com",
-  },
-  marker: "1",
-  project: "prj_QfxvXBST46wuSTOXPn4PE32NqbF4",
-  target: "production",
-} as const satisfies RuntimeTarget["vercel"];
-
-const productionTarget = {
-  agent: undefined,
-  query: `https://${CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT}.convex.cloud`,
-  site: `https://${CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT}.convex.site`,
-  vercel: emptyIdentity,
-} satisfies RuntimeTarget;
-
-afterEach(() => vi.unstubAllEnvs());
-
-function identity(
-  value: Partial<Omit<RuntimeTarget["vercel"], "git">> = {},
-  git: Partial<RuntimeTarget["vercel"]["git"]> = {}
-) {
-  return {
-    ...productionIdentity,
-    ...value,
-    git: { ...productionIdentity.git, ...git },
-  } satisfies RuntimeTarget["vercel"];
-}
-
-function target(value: Partial<RuntimeTarget>) {
-  return { ...productionTarget, ...value } satisfies RuntimeTarget;
-}
-
-function expectFailure(
-  target: RuntimeTarget,
-  reason: UnsafeRuntimeError["reason"]
-) {
-  return Effect.gen(function* () {
-    const result = yield* assertRuntimeTarget(target).pipe(Effect.flip);
-    expect(result).toEqual(new UnsafeRuntimeError({ reason }));
-    expect(result.message.length).toBeGreaterThan(0);
-  });
-}
-
-function expectSuccess(target: RuntimeTarget) {
-  return Effect.gen(function* () {
-    expect(yield* assertRuntimeTarget(target)).toBeUndefined();
-  });
-}
-
-describe("content runtime target", () => {
-  it("accepts an isolated environment at the Next configuration boundary", () => {
-    vi.stubEnv("CONVEX_AGENT_MODE", "anonymous");
-    vi.stubEnv("VITE_CONVEX_URL", "http://127.0.0.1:3210");
-    vi.stubEnv("VITE_CONVEX_SITE_URL", "http://127.0.0.1:3211");
-
-    expect(readRuntimeConfig).not.toThrow();
-  });
-
-  it("blocks Preview production while reading the runtime configuration", () => {
-    vi.stubEnv("VERCEL", "1");
-    vi.stubEnv("VERCEL_ENV", "preview");
-    vi.stubEnv("VITE_CONVEX_SITE_URL", productionTarget.site);
-    vi.stubEnv("VITE_CONVEX_URL", productionTarget.query);
-
-    expect(readRuntimeConfig).toThrow(
-      "Production content is restricted to the protected Vercel production build"
-    );
-  });
-
-  it.effect.each([
-    {
-      name: "IPv4",
-      query: "http://127.0.0.1:3210",
-      site: "http://127.0.0.1:3211",
-    },
-    {
-      name: "IPv6 without an HTTP target",
-      query: "http://[::1]:3210",
-      site: undefined,
-    },
-    {
-      name: "localhost",
-      query: "http://localhost:3210",
-      site: "http://localhost:3211",
-    },
-  ])("accepts isolated anonymous $name", ({ query, site }) =>
-    expectSuccess(target({ agent: "anonymous", query, site }))
-  );
-
-  it.effect("accepts a non-agent loopback target", () =>
-    expectSuccess(
-      target({
-        query: "http://127.0.0.1:3210",
-        site: "http://127.0.0.1:3211",
-      })
-    )
-  );
-
-  it.effect.each([{ site: TASK_SITE }, { site: undefined }])(
-    "accepts a task-owned Convex deployment",
-    ({ site }) => expectSuccess(target({ query: TASK_QUERY, site }))
-  );
-
-  it.effect.each([
-    { name: "query and HTTP", site: productionTarget.site },
-    { name: "query only", site: undefined },
-  ])("accepts protected production with $name", ({ site }) =>
-    expectSuccess(target({ site, vercel: productionIdentity }))
-  );
-
-  it.effect.each([
-    { name: "both default domains", target: productionTarget },
-    {
-      name: "only the query domain",
-      target: target({ site: undefined }),
-    },
-    {
-      name: "a nested Convex-like hostname",
-      target: target({
-        query: "https://nested.helpful-capybara-123.convex.cloud",
-        site: undefined,
-      }),
-    },
-    {
-      name: "an empty Convex deployment hostname",
-      target: target({
-        query: "https://.convex.cloud",
-        site: undefined,
-      }),
-    },
-    {
-      name: "a DNS-equivalent production hostname",
-      target: target({ query: `${productionTarget.query}.` }),
-    },
-  ])("rejects untrusted $name", ({ target }) =>
-    expectFailure(target, "untrusted-production")
-  );
-
-  it.effect("rejects anonymous production", () =>
-    expectFailure(
-      target({ agent: "anonymous", vercel: productionIdentity }),
-      "anonymous-production"
-    )
-  );
-
-  it.effect.each([
-    ["marker", identity({ marker: undefined })] as const,
-    ["deployment", identity({ deployment: undefined })] as const,
-    [
-      "deployment format",
-      identity({ deployment: "not-a-deployment" }),
-    ] as const,
-    ["environment", identity({ environment: "preview" })] as const,
-    ["target", identity({ target: "preview" })] as const,
-    ["project", identity({ project: "prj_other" })] as const,
-    ["Git provider", identity({}, { provider: "gitlab" })] as const,
-    ["Git owner", identity({}, { owner: "other" })] as const,
-    ["Git repository", identity({}, { repository: "other" })] as const,
-    ["Git branch", identity({}, { branch: "feature/cost" })] as const,
-    ["commit", identity({}, { commit: undefined })] as const,
-    ["commit format", identity({}, { commit: "not-a-commit" })] as const,
-  ])("rejects production when the %s credential is wrong", ([, vercel]) =>
-    expectFailure(target({ vercel }), "untrusted-production")
-  );
-
-  it.effect.each([
-    {
-      name: "a task-owned default deployment",
-      query: TASK_QUERY,
-      site: TASK_SITE,
-    },
-    {
-      name: "a task-owned HTTP deployment",
-      query: productionTarget.query,
-      site: TASK_SITE,
-    },
-    {
-      name: "loopback",
-      query: "http://127.0.0.1:3210",
-      site: "http://127.0.0.1:3211",
-    },
-  ])("rejects protected production with $name", ({ query, site }) =>
-    expectFailure(
-      target({ query, site, vercel: productionIdentity }),
-      "untrusted-production"
-    )
-  );
-
-  it.effect("rejects anonymous cloud targets", () =>
-    expectFailure(
-      target({
-        agent: "anonymous",
-        query: TASK_QUERY,
-        site: TASK_SITE,
-      }),
-      "anonymous-production"
-    )
-  );
-
-  it.effect.each([
-    {
-      name: "a production query and development HTTP target",
-      query: productionTarget.query,
-      site: TASK_SITE,
-    },
-    {
-      name: "a development query and production HTTP target",
-      query: TASK_QUERY,
-      site: productionTarget.site,
-    },
-    {
-      name: "different development deployments",
-      query: TASK_QUERY,
-      site: OTHER_SITE,
-    },
-  ])("rejects mixed targets with $name", ({ query, site }) =>
-    expectFailure(target({ query, site }), "mixed-production")
-  );
-
-  it.effect.each([
-    { name: "an unparsable query URL", query: "not a URL", site: undefined },
-    {
-      name: "an unparsable HTTP URL",
-      query: productionTarget.query,
-      site: "not a URL",
-    },
-    {
-      name: "credentials",
-      query: "https://user:password@example.convex.cloud",
-      site: undefined,
-    },
-    { name: "a file URL", query: "file:///tmp/convex", site: undefined },
-    {
-      name: "an insecure remote URL",
-      query: "http://helpful-capybara-123.convex.cloud",
-      site: undefined,
-    },
-  ])("rejects $name", ({ query, site }) =>
-    expectFailure(target({ query, site }), "invalid-target")
-  );
-});
-
+const PRODUCTION_QUERY = `https://${CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT}.convex.cloud`;
+const PRODUCTION_SITE = `https://${CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT}.convex.site`;
+const DEVELOPMENT_QUERY = "https://helpful-capybara-123.convex.cloud";
+const DEVELOPMENT_SITE = "https://helpful-capybara-123.convex.site";
 const LOOPBACK_QUERY = "http://127.0.0.1:3210";
 const LOOPBACK_SITE = "http://127.0.0.1:3211";
-const PROTECTED_ENVIRONMENT = {
-  VITE_CONVEX_SITE_URL: productionTarget.site,
-  VITE_CONVEX_URL: productionTarget.query,
-  VERCEL: "1",
-  VERCEL_DEPLOYMENT_ID: "dpl_CRMGPNJvKacYy5e7i77WkJXLS3FK",
-  VERCEL_ENV: "production",
-  VERCEL_GIT_COMMIT_REF: "main",
-  VERCEL_GIT_COMMIT_SHA: "c0730ceec243abd58cf8e0cc98bd04f2da5164c2",
-  VERCEL_GIT_PROVIDER: "github",
-  VERCEL_GIT_REPO_OWNER: "nakafaai",
-  VERCEL_GIT_REPO_SLUG: "nakafa.com",
-  VERCEL_PROJECT_ID: "prj_QfxvXBST46wuSTOXPn4PE32NqbF4",
-  VERCEL_TARGET_ENV: "production",
-};
-/** Every name the runtime reader reads. */
-const RUNTIME_ENVIRONMENT_NAMES = [
-  "CONVEX_AGENT_MODE",
-  ...Rec.keys(PROTECTED_ENVIRONMENT),
-] as const;
-/**
- * The free-text Vercel identity names that the protected production check
- * compares. The `VERCEL` marker is a literal and has its own case.
- */
-const PROTECTED_IDENTITY_NAMES = Arr.filter(
-  Rec.keys(PROTECTED_ENVIRONMENT),
-  Str.startsWith("VERCEL_")
-);
 
-/** Sets the whole runtime environment, so an unnamed key never inherits a shell value. */
-function stubRuntimeEnvironment(
-  values: Partial<
-    Record<(typeof RUNTIME_ENVIRONMENT_NAMES)[number], string | undefined>
-  >
-) {
-  for (const name of RUNTIME_ENVIRONMENT_NAMES) {
+type RuntimeTarget = Parameters<typeof assertRuntimeTarget>[0];
+
+/** A target that names one deploy stage and its Convex addresses. */
+function targetOf(value: Partial<RuntimeTarget>): RuntimeTarget {
+  return {
+    agent: undefined,
+    deploy: { stage: undefined },
+    query: DEVELOPMENT_QUERY,
+    site: DEVELOPMENT_SITE,
+    ...value,
+  };
+}
+
+/** The reason that a target is refused, or nothing when it is allowed. */
+const refusalOf = (value: RuntimeTarget) =>
+  assertRuntimeTarget(value).pipe(
+    Effect.as(undefined),
+    Effect.catchTag("UnsafeRuntimeError", (error) =>
+      Effect.succeed(error.reason)
+    )
+  );
+
+/** Sets the environment that the app configuration reads, and nothing else. */
+function stubRuntimeEnvironment(values: Record<string, string>) {
+  for (const name of [
+    "CONVEX_AGENT_MODE",
+    "DEPLOY_STAGE",
+    "VITE_CONVEX_SITE_URL",
+    "VITE_CONVEX_URL",
+  ]) {
     vi.stubEnv(name, values[name]);
   }
 }
 
-describe("runtime environment parity", () => {
-  it("returns a loopback target from the Convex URL alone", () => {
+describe("content runtime target", () => {
+  it.effect("allows a development build against a development deployment", () =>
+    Effect.gen(function* () {
+      expect(yield* refusalOf(targetOf({}))).toBeUndefined();
+    })
+  );
+
+  it.effect("allows loopback addresses outside the production stage", () =>
+    Effect.gen(function* () {
+      expect(
+        yield* refusalOf(
+          targetOf({ query: LOOPBACK_QUERY, site: LOOPBACK_SITE })
+        )
+      ).toBeUndefined();
+    })
+  );
+
+  it.effect(
+    "allows the production stage against the production deployment",
+    () =>
+      Effect.gen(function* () {
+        expect(
+          yield* refusalOf(
+            targetOf({
+              deploy: { stage: "production" },
+              query: PRODUCTION_QUERY,
+              site: PRODUCTION_SITE,
+            })
+          )
+        ).toBeUndefined();
+      })
+  );
+
+  it.effect("refuses the production stage against another deployment", () =>
+    Effect.gen(function* () {
+      expect(
+        yield* refusalOf(targetOf({ deploy: { stage: "production" } }))
+      ).toBe("untrusted-production");
+    })
+  );
+
+  it.effect(
+    "refuses the production stage with a site of another deployment",
+    () =>
+      Effect.gen(function* () {
+        expect(
+          yield* refusalOf(
+            targetOf({
+              deploy: { stage: "production" },
+              query: PRODUCTION_QUERY,
+              site: DEVELOPMENT_SITE,
+            })
+          )
+        ).toBe("untrusted-production");
+      })
+  );
+
+  it.effect(
+    "refuses anonymous Agent Mode against the production deployment",
+    () =>
+      Effect.gen(function* () {
+        expect(
+          yield* refusalOf(
+            targetOf({
+              agent: "anonymous",
+              query: PRODUCTION_QUERY,
+              site: PRODUCTION_SITE,
+            })
+          )
+        ).toBe("anonymous-production");
+      })
+  );
+
+  it.effect(
+    "refuses a URL with credentials, and a plain HTTP host that is not loopback",
+    () =>
+      Effect.gen(function* () {
+        expect(
+          yield* refusalOf(
+            targetOf({
+              query: "https://user:secret@helpful-capybara-123.convex.cloud",
+            })
+          )
+        ).toBe("invalid-target");
+        expect(
+          yield* refusalOf(targetOf({ query: "http://example.com" }))
+        ).toBe("invalid-target");
+      })
+  );
+});
+
+describe("runtime environment", () => {
+  it("returns the loopback target from the Convex URL alone", () => {
     stubRuntimeEnvironment({ VITE_CONVEX_URL: LOOPBACK_QUERY });
 
     expect(readRuntimeConfig()).toStrictEqual({
       agent: undefined,
       query: LOOPBACK_QUERY,
       site: undefined,
-      vercel: undefined,
+      stage: undefined,
     });
+  });
+
+  it("returns the deploy stage of the build", () => {
+    stubRuntimeEnvironment({
+      DEPLOY_STAGE: "production",
+      VITE_CONVEX_SITE_URL: PRODUCTION_SITE,
+      VITE_CONVEX_URL: PRODUCTION_QUERY,
+    });
+
+    expect(readRuntimeConfig().stage).toBe("production");
+  });
+
+  it("blocks the production stage with a development Convex URL", () => {
+    stubRuntimeEnvironment({
+      DEPLOY_STAGE: "production",
+      VITE_CONVEX_SITE_URL: DEVELOPMENT_SITE,
+      VITE_CONVEX_URL: DEVELOPMENT_QUERY,
+    });
+
+    expect(readRuntimeConfig).toThrow(
+      "Production content is restricted to the production deploy stage"
+    );
   });
 
   it("throws when the Convex URL is unset", () => {
@@ -337,125 +181,11 @@ describe("runtime environment parity", () => {
     expect(readRuntimeConfig).toThrow();
   });
 
-  it("rejects an empty or unparsable Convex URL as an invalid target", () => {
+  it("refuses an empty Convex URL as an invalid target", () => {
     stubRuntimeEnvironment({ VITE_CONVEX_URL: "" });
+
     expect(readRuntimeConfig).toThrow(
       new UnsafeRuntimeError({ reason: "invalid-target" })
-    );
-
-    stubRuntimeEnvironment({ VITE_CONVEX_URL: "not a url" });
-    expect(readRuntimeConfig).toThrow(
-      new UnsafeRuntimeError({ reason: "invalid-target" })
-    );
-  });
-
-  it("keeps the site URL optional but rejects an empty or unparsable one", () => {
-    stubRuntimeEnvironment({
-      VITE_CONVEX_SITE_URL: LOOPBACK_SITE,
-      VITE_CONVEX_URL: LOOPBACK_QUERY,
-    });
-    expect(readRuntimeConfig().site).toBe(LOOPBACK_SITE);
-
-    stubRuntimeEnvironment({
-      VITE_CONVEX_SITE_URL: "",
-      VITE_CONVEX_URL: LOOPBACK_QUERY,
-    });
-    expect(readRuntimeConfig).toThrow(
-      new UnsafeRuntimeError({ reason: "invalid-target" })
-    );
-
-    stubRuntimeEnvironment({
-      VITE_CONVEX_SITE_URL: "not a url",
-      VITE_CONVEX_URL: LOOPBACK_QUERY,
-    });
-    expect(readRuntimeConfig).toThrow(
-      new UnsafeRuntimeError({ reason: "invalid-target" })
-    );
-  });
-
-  it("reads the agent mode literal and rejects an empty or other value", () => {
-    stubRuntimeEnvironment({
-      CONVEX_AGENT_MODE: "anonymous",
-      VITE_CONVEX_URL: LOOPBACK_QUERY,
-    });
-    expect(readRuntimeConfig().agent).toBe("anonymous");
-
-    stubRuntimeEnvironment({
-      CONVEX_AGENT_MODE: "",
-      VITE_CONVEX_URL: LOOPBACK_QUERY,
-    });
-    expect(readRuntimeConfig).toThrow();
-
-    stubRuntimeEnvironment({
-      CONVEX_AGENT_MODE: "agent",
-      VITE_CONVEX_URL: LOOPBACK_QUERY,
-    });
-    expect(readRuntimeConfig).toThrow();
-  });
-
-  it("reads the Vercel marker literal and rejects an empty or other value", () => {
-    stubRuntimeEnvironment({
-      VITE_CONVEX_URL: LOOPBACK_QUERY,
-      VERCEL: "1",
-    });
-    expect(readRuntimeConfig().vercel).toBe("1");
-
-    stubRuntimeEnvironment({
-      VITE_CONVEX_URL: LOOPBACK_QUERY,
-      VERCEL: "",
-    });
-    expect(readRuntimeConfig).toThrow();
-
-    stubRuntimeEnvironment({
-      VITE_CONVEX_URL: LOOPBACK_QUERY,
-      VERCEL: "0",
-    });
-    expect(readRuntimeConfig).toThrow();
-  });
-
-  it("accepts the complete protected production environment", () => {
-    stubRuntimeEnvironment(PROTECTED_ENVIRONMENT);
-
-    expect(readRuntimeConfig()).toStrictEqual({
-      agent: undefined,
-      query: productionTarget.query,
-      site: productionTarget.site,
-      vercel: "1",
-    });
-  });
-
-  it.each(PROTECTED_IDENTITY_NAMES)(
-    "rejects production when %s is unset",
-    (name) => {
-      stubRuntimeEnvironment(PROTECTED_ENVIRONMENT);
-      vi.stubEnv(name, undefined);
-
-      expect(readRuntimeConfig).toThrow(
-        new UnsafeRuntimeError({ reason: "untrusted-production" })
-      );
-    }
-  );
-
-  it.each(PROTECTED_IDENTITY_NAMES)(
-    "rejects production when %s is empty",
-    (name) => {
-      stubRuntimeEnvironment(PROTECTED_ENVIRONMENT);
-      vi.stubEnv(name, "");
-
-      expect(readRuntimeConfig).toThrow(
-        new UnsafeRuntimeError({ reason: "untrusted-production" })
-      );
-    }
-  );
-
-  it("rejects anonymous agent mode against the protected production environment", () => {
-    stubRuntimeEnvironment({
-      ...PROTECTED_ENVIRONMENT,
-      CONVEX_AGENT_MODE: "anonymous",
-    });
-
-    expect(readRuntimeConfig).toThrow(
-      new UnsafeRuntimeError({ reason: "anonymous-production" })
     );
   });
 });

@@ -33,10 +33,10 @@ export const deploymentKeys = () =>
   readEnvironment(
     {
       TSS_PRERENDERING: optionalStringSchema,
-      VERCEL_ENV: optionalStringSchema,
+      DEPLOY_STAGE: optionalStringSchema,
     },
     {
       TSS_PRERENDERING: process.env.TSS_PRERENDERING,
-      VERCEL_ENV: process.env.VERCEL_ENV,
+      DEPLOY_STAGE: process.env.DEPLOY_STAGE,
     }
   );

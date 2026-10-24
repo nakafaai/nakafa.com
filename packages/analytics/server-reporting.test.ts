@@ -35,7 +35,7 @@ describe("server exception reporting runtime", () => {
   it.each([undefined, "false", "unknown-phase"])(
     "enables deployed production reporting for TSS_PRERENDERING=%s",
     (prerendering) => {
-      vi.stubEnv("VERCEL_ENV", "production");
+      vi.stubEnv("DEPLOY_STAGE", "production");
       vi.stubEnv("TSS_PRERENDERING", prerendering);
 
       expect(isServerExceptionReportingEnabled()).toBe(true);
@@ -48,9 +48,9 @@ describe("server exception reporting runtime", () => {
     ["development", "false"],
     [undefined, "false"],
   ])(
-    "fails closed for VERCEL_ENV=%s and TSS_PRERENDERING=%s",
+    "fails closed for DEPLOY_STAGE=%s and TSS_PRERENDERING=%s",
     (vercelEnvironment, prerendering) => {
-      vi.stubEnv("VERCEL_ENV", vercelEnvironment);
+      vi.stubEnv("DEPLOY_STAGE", vercelEnvironment);
       vi.stubEnv("TSS_PRERENDERING", prerendering);
 
       expect(isServerExceptionReportingEnabled()).toBe(false);
@@ -63,7 +63,7 @@ describe("uncaught request error reporting", () => {
     "captures the error with its method and user agent in production",
     () =>
       Effect.gen(function* () {
-        vi.stubEnv("VERCEL_ENV", "production");
+        vi.stubEnv("DEPLOY_STAGE", "production");
         vi.stubEnv("TSS_PRERENDERING", undefined);
         mockProvider();
         const error = new Error("render failed");
@@ -84,7 +84,7 @@ describe("uncaught request error reporting", () => {
 
   it.effect("captures without a user agent when the request has none", () =>
     Effect.gen(function* () {
-      vi.stubEnv("VERCEL_ENV", "production");
+      vi.stubEnv("DEPLOY_STAGE", "production");
       vi.stubEnv("TSS_PRERENDERING", undefined);
       mockProvider();
       const error = new Error("render failed");
@@ -106,7 +106,7 @@ describe("uncaught request error reporting", () => {
     "logs the error outside production, where no provider reports it",
     () =>
       Effect.gen(function* () {
-        vi.stubEnv("VERCEL_ENV", "preview");
+        vi.stubEnv("DEPLOY_STAGE", "preview");
         vi.stubEnv("TSS_PRERENDERING", undefined);
         mockProvider();
         const messages = MutableList.make<unknown>();
@@ -134,7 +134,7 @@ describe("uncaught request error reporting", () => {
 
   it.effect("skips the provider outside production", () =>
     Effect.gen(function* () {
-      vi.stubEnv("VERCEL_ENV", "preview");
+      vi.stubEnv("DEPLOY_STAGE", "preview");
       vi.stubEnv("TSS_PRERENDERING", undefined);
       mockProvider();
 
@@ -151,7 +151,7 @@ describe("uncaught request error reporting", () => {
     "ignores a failed capture so the error response still answers",
     () =>
       Effect.gen(function* () {
-        vi.stubEnv("VERCEL_ENV", "production");
+        vi.stubEnv("DEPLOY_STAGE", "production");
         vi.stubEnv("TSS_PRERENDERING", undefined);
         mockProvider();
         captureServerException.mockReturnValueOnce(

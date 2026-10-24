@@ -6,17 +6,15 @@ import { Effect } from "effect";
  *
  * Start sets TSS_PRERENDERING to "true" in the build process while it prerenders
  * pages, so a prerender error never reaches production reporting. Start owns the
- * variable name, and a test pins it to the installed Start version. The gate
- * reads two optional deployment fields through deploymentKeys, which cannot fail
+ * variable name, and a test pins it to the installed Start version. The deploy
+ * stage (DEPLOY_STAGE) is set by the deploy that ships production. The gate reads
+ * two optional deployment fields through deploymentKeys, which cannot fail
  * validation. Full analytics configuration is validated lazily after this gate
  * passes.
- *
- * References:
- * https://vercel.com/docs/environment-variables/system-environment-variables
  */
 export function isServerExceptionReportingEnabled() {
-  const { TSS_PRERENDERING, VERCEL_ENV } = deploymentKeys();
-  return VERCEL_ENV === "production" && TSS_PRERENDERING !== "true";
+  const { DEPLOY_STAGE, TSS_PRERENDERING } = deploymentKeys();
+  return DEPLOY_STAGE === "production" && TSS_PRERENDERING !== "true";
 }
 
 /**
