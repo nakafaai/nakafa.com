@@ -94,7 +94,7 @@ function largestBatch() {
     Array.from({ length: MAX_ARTIFACT_BATCH_COUNT }, (_, index) =>
       testArtifactJson({
         artifactHash: batchArtifactHash(index),
-        compiledCode: "x".repeat(codeLength),
+        bodyText: "x".repeat(codeLength),
         contentKey: `test:head-${index}`,
       })
     );
@@ -298,7 +298,7 @@ describe("contentRelease/artifacts", () => {
       stage(t, [testArtifactJson(), testArtifactJson()])
     ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_CONFLICT" } });
     await expect(
-      stage(t, [testArtifactJson({ compiledCode: "x".repeat(491_000) })])
+      stage(t, [testArtifactJson({ bodyText: "x".repeat(491_000) })])
     ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_SIZE" } });
 
     const count = convexTest(schema, convexModules);

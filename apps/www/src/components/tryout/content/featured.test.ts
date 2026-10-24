@@ -122,12 +122,9 @@ vi.mock("@repo/backend/content/trust", async () => {
 
 /** Selects a public question through the real active Convex catalog query. */
 const readFixture = Effect.fn("TryoutExecutionTest.fixture")(function* (
-  compiledCode?: string
+  bodyText?: string
 ) {
-  const source = yield* makeTryoutRuntimeSource(
-    compiledCode,
-    makeLandingSource()
-  );
+  const source = yield* makeTryoutRuntimeSource(bodyText, makeLandingSource());
   const runtime = yield* createTestPublication(source.source);
   const featured = yield* runtime.query(
     refs.public.tryouts.queries.catalog.getFeaturedQuestion,

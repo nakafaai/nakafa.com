@@ -1,11 +1,12 @@
 import { mathNumber } from "@repo/design-system/components/contents/mathematics/number";
 import type { NumberLineSegment } from "@repo/design-system/components/contents/mathematics/number-line";
+import { segmentBounds } from "@repo/design-system/components/contents/mathematics/segment";
 import { Array as Arr } from "effect";
 
 /**
  * The part of a number-line segment that its solution set reads. Its bounds may
- * be infinite, which no finite Schema number describes, so it keeps the type of
- * the number line's own segment.
+ * be missing, which means infinite, so it keeps the type of the number line's own
+ * segment.
  */
 type SolutionSegment = Pick<
   NumberLineSegment,
@@ -29,14 +30,15 @@ function segmentMath(
   formatNumber: (value: number) => string,
   separator: string
 ) {
+  const bounds = segmentBounds(segment);
   const open =
-    segment.startInclusive === true && Number.isFinite(segment.start)
+    segment.startInclusive === true && Number.isFinite(bounds.start)
       ? "["
       : "(";
   const close =
-    segment.endInclusive === true && Number.isFinite(segment.end) ? "]" : ")";
-  const start = boundMath(segment.start, formatNumber);
-  const end = boundMath(segment.end, formatNumber);
+    segment.endInclusive === true && Number.isFinite(bounds.end) ? "]" : ")";
+  const start = boundMath(bounds.start, formatNumber);
+  const end = boundMath(bounds.end, formatNumber);
   return `${open}${start}${separator}${end}${close}`;
 }
 

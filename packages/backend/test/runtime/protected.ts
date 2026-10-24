@@ -5,6 +5,7 @@ import {
   ProtectedContentRuntimeRequestSchema,
   ProtectedContentRuntimeSelectorSchema,
 } from "@nakafa/aksara-contracts/runtime/protected/spec";
+import type { ContentTreeElement } from "@nakafa/aksara-contracts/tree";
 import {
   type TryoutPlacement,
   TryoutPlacementSchema,
@@ -62,9 +63,10 @@ function insertArtifact(
 export async function insertProtectedRuntime(
   ctx: MutationCtx,
   options?: {
-    readonly answerCompiledCode?: string;
+    readonly answerBodyText?: string;
+    readonly answerContentTree?: ContentTreeElement;
     readonly answerRawMdx?: string;
-    readonly compiledCode?: string;
+    readonly bodyText?: string;
     readonly questionCount?: number;
     readonly rawMdx?: string;
   }
@@ -78,9 +80,9 @@ export async function insertProtectedRuntime(
             const questionKey = `question-bank/tryout/indonesia/snbt/quantitative-knowledge/set-1/question-${index + 1}`;
             const question = yield* testSignedArtifact("snbt-quant", {
               artifactLocale: appLocale,
-              ...(options?.compiledCode === undefined
+              ...(options?.bodyText === undefined
                 ? {}
-                : { compiledCode: options?.compiledCode }),
+                : { bodyText: options?.bodyText }),
               contentKey: `${questionKey}/question`,
               rawMdx:
                 appLocale === "en"
@@ -89,8 +91,8 @@ export async function insertProtectedRuntime(
             });
             const answer = yield* testSignedArtifact("snbt-quant", {
               artifactLocale: appLocale,
-              compiledCode:
-                options?.answerCompiledCode ?? options?.compiledCode,
+              bodyText: options?.answerBodyText ?? options?.bodyText,
+              contentTree: options?.answerContentTree,
               contentKey: `${questionKey}/answer`,
               rawMdx:
                 appLocale === "en"

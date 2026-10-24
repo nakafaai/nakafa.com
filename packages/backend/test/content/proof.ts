@@ -2,8 +2,10 @@ import { generateKeyPairSync, sign as signBytes } from "node:crypto";
 import { assert } from "@effect/vitest";
 import { hashCompiledContentPayload } from "@nakafa/aksara-contracts/artifact/integrity";
 import {
+  AKSARA_COMPILER_VERSION,
   CompiledContentPayloadSchema,
   canonicalizeContentArtifactSigningInput,
+  MDX_COMPILER_VERSION,
   SignedContentArtifactSchema,
 } from "@nakafa/aksara-contracts/content";
 import {
@@ -45,6 +47,7 @@ import {
   ContentVerificationKeyResolver,
   SigningKeyNotFoundError,
 } from "@nakafa/aksara-contracts/signature/spec";
+import type { ContentTreeElement } from "@nakafa/aksara-contracts/tree";
 import {
   canonicalizeTryoutRuntimeBundlePayload,
   canonicalizeTryoutRuntimeBundleSigningInput,
@@ -58,6 +61,7 @@ import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   insertTestArtifact,
   testArtifactJson,
+  testTree,
 } from "@repo/backend/test/content/artifact";
 import {
   testMaterialPublicPath,
@@ -224,29 +228,29 @@ export const testSignedArtifact = Effect.fn("test.content.signedArtifact")(
     rendererDomain: RendererDomain = "mathematics",
     options?: {
       readonly artifactLocale?: ArtifactLocaleCode;
-      readonly compiledCode?: string | undefined;
+      readonly bodyText?: string | undefined;
       readonly contentKey?: string;
+      readonly contentTree?: ContentTreeElement | undefined;
       readonly plainText?: string;
       readonly rawMdx?: string;
+      readonly requiredComponents?: readonly string[] | undefined;
     }
   ) {
     const rawMdx = options?.rawMdx ?? "## Technical proof";
-    const compiledCode = options?.compiledCode ?? "return {};";
     const payload = CompiledContentPayloadSchema.make({
       artifactLocale: ArtifactLocaleSchema.make(
         options?.artifactLocale ?? "en"
       ),
-      byteLength: new TextEncoder().encode(compiledCode).byteLength,
-      compiledCode,
       compilerConfigHash: digest,
-      compilerVersion: "0.1.0",
+      compilerVersion: AKSARA_COMPILER_VERSION,
       contentKey: ContentKeySchema.make(options?.contentKey ?? "test:head-0"),
-      format: "mdx-function-body",
-      mdxCompilerVersion: "3.1.1",
+      contentTree: testTree(options),
+      format: "content-tree",
+      mdxCompilerVersion: MDX_COMPILER_VERSION,
       plainText: options?.plainText ?? "Technical proof",
       rawMdx,
       rendererDomain,
-      requiredComponents: [],
+      requiredComponents: options?.requiredComponents ?? [],
       sourceHash: testTextHash(rawMdx),
     });
     const artifactHash = yield* hashCompiledContentPayload(payload);

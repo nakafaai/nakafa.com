@@ -158,10 +158,10 @@ async function insertVersion(
     readonly sourceHash?: typeof Sha256HashSchema.Type;
     readonly sourcePath: string;
   },
-  compiledCode: string,
+  bodyText: string,
   artifactJson = testArtifactJson({
     artifactHash: options.artifactHash,
-    compiledCode,
+    bodyText,
     contentKey: options.contentKey,
     rendererDomain: options.rendererDomain,
   })
@@ -194,7 +194,7 @@ export async function insertRollbackItem(
   ctx: MutationCtx,
   index: number,
   previousExists: boolean,
-  compiledCode = "return {};",
+  bodyText = "Technical fixture",
   options?: {
     readonly authenticatedArtifact?: boolean;
     readonly contentKey?: typeof ContentKeySchema.Type;
@@ -214,7 +214,7 @@ export async function insertRollbackItem(
   const rendererDomain = options?.rendererDomain ?? "mathematics";
   const signedArtifact = options?.authenticatedArtifact
     ? await Effect.runPromise(
-        testSignedArtifact(rendererDomain, { compiledCode, contentKey })
+        testSignedArtifact(rendererDomain, { bodyText, contentKey })
       )
     : undefined;
   const currentHash =
@@ -304,7 +304,7 @@ export async function insertRollbackItem(
         : { sourceHash: signedArtifact?.payload.sourceHash }),
       sourcePath: currentSourcePath,
     },
-    compiledCode,
+    bodyText,
     signedArtifact ? encodeJsonText(signedArtifact) : undefined
   );
   if (previousExists) {
@@ -322,7 +322,7 @@ export async function insertRollbackItem(
         sequence: 0,
         sourcePath: priorSourcePath,
       },
-      compiledCode
+      bodyText
     );
   }
 }

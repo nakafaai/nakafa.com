@@ -171,7 +171,7 @@ describe("contentRelease/runtime/publication/batch", () => {
     await t.mutation(async (ctx) => {
       await insertRuntimeRelease(ctx);
       await insertRuntimeHead(ctx, "public", runtimeContentKey("public"), {
-        compiledCode: "x".repeat(MAX_PUBLIC_RUNTIME_RESPONSE_BYTES / 2 + 1),
+        bodyText: "x".repeat(MAX_PUBLIC_RUNTIME_RESPONSE_BYTES / 2 + 1),
         projectionJson: testProjectionJson({
           contentKey: runtimeContentKey("public"),
           publicPath: TEST_RUNTIME_PATH,

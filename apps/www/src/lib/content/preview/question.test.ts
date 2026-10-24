@@ -2,6 +2,7 @@
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Array as Arr, Effect, Option } from "effect";
+import { createElement } from "react";
 import { executePreviewArtifact } from "@/lib/content/preview/artifact";
 import { readPreviewSnapshot } from "@/lib/content/preview/manifest";
 import { readQuestionPreview } from "@/lib/content/preview/question";
@@ -36,13 +37,8 @@ const input: QuestionPreviewInput = {
   publicPath: questionPreviewTarget.section.publicPath ?? "",
 };
 
-function QuestionContent() {
-  return null;
-}
-
-function AnswerContent() {
-  return null;
-}
+const QUESTION_ELEMENT = createElement("p", null, "question");
+const ANSWER_ELEMENT = createElement("p", null, "answer");
 
 /** Runs one preview while preserving its typed domain failures. */
 function runPreview(request = input) {
@@ -69,10 +65,10 @@ beforeEach(() => {
   executeMock.mockImplementation(({ previewArtifact }) =>
     Effect.succeed({
       artifact: previewWireArtifact,
-      Content:
+      element:
         previewArtifact.artifactHash === questionAnswerHash
-          ? AnswerContent
-          : QuestionContent,
+          ? ANSWER_ELEMENT
+          : QUESTION_ELEMENT,
     })
   );
 });
@@ -141,7 +137,7 @@ describe("local question preview", () => {
 
       expect(result).toMatchObject({
         Answer: null,
-        Question: QuestionContent,
+        Question: QUESTION_ELEMENT,
         response: {
           kind: "single-choice",
           options: [
@@ -249,8 +245,8 @@ describe("local question preview", () => {
       const result = Option.getOrThrow(yield* runPreview());
 
       expect(result).toMatchObject({
-        Answer: AnswerContent,
-        Question: QuestionContent,
+        Answer: ANSWER_ELEMENT,
+        Question: QUESTION_ELEMENT,
         selectedBodyKind: "answer",
       });
       expect(executeMock).toHaveBeenCalledTimes(2);

@@ -81,8 +81,7 @@ const readOwnedRow = Effect.fn("TryoutVerifiedTest.ownedRow")(function* () {
   const seed = yield* Effect.promise(() =>
     t.mutation((ctx) =>
       insertHistoryAttempt(ctx, true, {
-        compiledCode:
-          'return { default: function Content() { return "Verified batch"; } };',
+        bodyText: "Verified batch",
       })
     )
   );

@@ -1,5 +1,10 @@
+import {
+  AKSARA_COMPILER_VERSION,
+  MDX_COMPILER_VERSION,
+} from "@nakafa/aksara-contracts/content";
 import type { ArtifactLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import type { RendererDomain } from "@nakafa/aksara-contracts/renderer/domain";
+import type { ContentTreeElement } from "@nakafa/aksara-contracts/tree";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   TEST_ARTIFACT_HASH,
@@ -10,6 +15,19 @@ import { encodeJsonText } from "@repo/utilities/json";
 import type { Schema } from "effect";
 
 type ArtifactLocaleCode = Schema.Codec.Encoded<typeof ArtifactLocaleSchema>;
+
+/** The smallest valid content tree: a fragment with no children. */
+const TEST_CONTENT_TREE: ContentTreeElement = {
+  $node: "element",
+  name: "fragment",
+  props: {},
+  children: [],
+};
+
+/** A fragment whose only child is one text node, the tree that a text fixture carries. */
+export function testTextTree(text: string): ContentTreeElement {
+  return { $node: "element", name: "fragment", props: {}, children: [text] };
+}
 
 /** Stores one artifact body with the facts that staging writes beside it. */
 export async function insertTestArtifact(
@@ -36,25 +54,24 @@ export async function insertTestArtifact(
 export function testArtifactJson(options?: {
   readonly artifactHash?: string | undefined;
   readonly artifactLocale?: ArtifactLocaleCode | undefined;
-  readonly compiledCode?: string | undefined;
+  readonly bodyText?: string | undefined;
   readonly contentKey?: string | undefined;
+  readonly contentTree?: ContentTreeElement | undefined;
   readonly plainText?: string | undefined;
   readonly rawMdx?: string | undefined;
   readonly rendererDomain?: RendererDomain | undefined;
 }) {
-  const compiledCode = options?.compiledCode ?? "return {};";
   return encodeJsonText({
     artifactHash: options?.artifactHash ?? TEST_ARTIFACT_HASH,
     keyId: "test-key",
     payload: {
       artifactLocale: options?.artifactLocale ?? "en",
-      byteLength: new TextEncoder().encode(compiledCode).byteLength,
-      compiledCode,
       compilerConfigHash: TEST_DIGEST,
-      compilerVersion: "0.1.0",
+      compilerVersion: AKSARA_COMPILER_VERSION,
       contentKey: options?.contentKey ?? "test:head-0",
-      format: "mdx-function-body",
-      mdxCompilerVersion: "3.1.1",
+      contentTree: testTree(options),
+      format: "content-tree",
+      mdxCompilerVersion: MDX_COMPILER_VERSION,
       plainText: options?.plainText ?? "Technical fixture",
       rawMdx: options?.rawMdx ?? "## Technical fixture",
       rendererDomain: options?.rendererDomain ?? "mathematics",
@@ -63,4 +80,17 @@ export function testArtifactJson(options?: {
     },
     signature: "A".repeat(86),
   });
+}
+
+/** The tree a fixture carries: an explicit tree, else its text, else the empty tree. */
+export function testTree(options?: {
+  readonly bodyText?: string | undefined;
+  readonly contentTree?: ContentTreeElement | undefined;
+}): ContentTreeElement {
+  if (options?.contentTree !== undefined) {
+    return options.contentTree;
+  }
+  return options?.bodyText === undefined
+    ? TEST_CONTENT_TREE
+    : testTextTree(options.bodyText);
 }

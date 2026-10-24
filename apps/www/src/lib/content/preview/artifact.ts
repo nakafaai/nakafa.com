@@ -15,7 +15,7 @@ import { Effect } from "effect";
 import type { PreviewConfig } from "@/lib/content/preview/config";
 import { PreviewIntegrityError } from "@/lib/content/preview/errors";
 import { fetchPreviewJson } from "@/lib/content/preview/request";
-import { executeSignedArtifact } from "@/lib/content/published/artifact";
+import { renderSignedArtifact } from "@/lib/content/published/artifact";
 import { rendererManifest } from "@/lib/content/renderer/manifest";
 
 type ReadyPreviewManifest = typeof PreviewReadySchema.Type;
@@ -65,7 +65,7 @@ export const executePreviewArtifact = Effect.fn(
     previewArtifact.artifactPath,
     MAX_SIGNED_ARTIFACT_BYTES
   );
-  const rendered = yield* executeSignedArtifact({
+  const rendered = yield* renderSignedArtifact({
     artifact: wireArtifact,
     rendererManifest: activeManifest,
   }).pipe(

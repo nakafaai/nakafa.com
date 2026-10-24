@@ -6,17 +6,17 @@ import type {
   RenderedTryoutContentEntry,
   TryoutSelector,
 } from "@/components/tryout/content/model";
-import { evaluateVerifiedArtifact } from "@/lib/content/published/artifact";
+import { renderVerifiedArtifact } from "@/lib/content/published/artifact";
 
 /** Renders one live item only after its exchange was verified. */
 export const renderLiveItem = Effect.fn("NakafaContent.renderLiveTryoutItem")(
   function* (item: ProtectedContentRuntimeItem, selector: TryoutSelector) {
-    const rendered = yield* evaluateVerifiedArtifact({
+    const rendered = yield* renderVerifiedArtifact({
       artifact: item.artifact,
     });
     return {
       artifactHash: rendered.artifact.artifactHash,
-      body: <rendered.Content />,
+      body: rendered.element,
       contentHash: selector.contentHash,
       sourcePath: selector.sourcePath,
       sourceRevision: selector.sourceRevision,

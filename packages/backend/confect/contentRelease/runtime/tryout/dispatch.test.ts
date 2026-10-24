@@ -146,7 +146,7 @@ describe("contentRelease/runtime/tryout/dispatch", () => {
     const t = createConvexTestWithBetterAuth();
     const fixture = await t.mutation((ctx) =>
       insertProtectedRuntime(ctx, {
-        compiledCode: "x".repeat(
+        bodyText: "x".repeat(
           Math.ceil(MAX_PROTECTED_RUNTIME_RESPONSE_BYTES / 6)
         ),
         questionCount: 3,

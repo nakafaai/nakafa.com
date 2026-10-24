@@ -15,7 +15,6 @@ import {
   expect,
   it,
 } from "@effect/vitest";
-import { compile } from "@mdx-js/mdx";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import { createTestPublication } from "@repo/backend/test/content/publication";
 import { insertHistoryAttempt } from "@repo/backend/test/tryout/history";
@@ -129,12 +128,9 @@ vi.mock("@repo/backend/client/content/attempt", async (importOriginal) => {
 
 /** Selects a public question through the real active Convex catalog query. */
 const readFixture = Effect.fn("TryoutExecutionTest.fixture")(function* (
-  compiledCode?: string
+  bodyText?: string
 ) {
-  const source = yield* makeTryoutRuntimeSource(
-    compiledCode,
-    makeLandingSource()
-  );
+  const source = yield* makeTryoutRuntimeSource(bodyText, makeLandingSource());
   const runtime = yield* createTestPublication(source.source);
   const featured = yield* runtime.query(
     refs.public.tryouts.queries.catalog.getFeaturedQuestion,
@@ -231,19 +227,10 @@ describe("signed try-out execution", () => {
           "Question opening.\n\nAll original conditions.\n\nFinal question paragraph.";
         const answerMdx =
           "Answer opening.\n\nEvery original explanation step.\n\nFinal answer paragraph.";
-        const [questionCode, answerCode] = yield* Effect.promise(() =>
-          Promise.all(
-            Arr.map([rawMdx, answerMdx], (body) =>
-              compile(body, {
-                outputFormat: "function-body",
-              })
-            )
-          )
-        );
         const fixture = yield* readOwnedFixture({
-          answerCompiledCode: String(answerCode),
+          answerBodyText: answerMdx,
           answerRawMdx: answerMdx,
-          compiledCode: String(questionCode),
+          bodyText: rawMdx,
           rawMdx,
         });
         const rendered = yield* loadSignedTryoutContent(
@@ -282,8 +269,7 @@ describe("signed try-out execution", () => {
     () =>
       Effect.gen(function* () {
         const fixture = yield* readOwnedFixture({
-          compiledCode:
-            "throw new TypeError('must not execute an incomplete exchange');",
+          bodyText: "Incomplete exchange body",
         });
         const row = yield* Effect.promise(() =>
           fixture.owned.query(
@@ -347,10 +333,24 @@ describe("signed try-out execution", () => {
       })
   );
   it.effect(
-    "preserves authenticated module failures and never caches incomplete rendering",
+    "rejects an authenticated body whose tree uses an unlisted component before caching it",
     () =>
       Effect.gen(function* () {
-        const fixture = yield* readOwnedFixture();
+        const fixture = yield* readOwnedFixture({
+          answerContentTree: {
+            $node: "element",
+            children: [
+              {
+                $node: "element",
+                children: [],
+                name: "NoSuchComponent",
+                props: {},
+              },
+            ],
+            name: "fragment",
+            props: {},
+          },
+        });
         expect(
           yield* loadSignedTryoutContent(fixture.attemptId, {
             kind: "signed",
@@ -361,9 +361,12 @@ describe("signed try-out execution", () => {
         ).toMatchObject({
           _tag: "ContentRuntimeVerificationError",
           cause: {
-            _tag: "ContentExecutionError",
-            stage: "module",
-            contentKey: fixture.answer.contentKey,
+            _tag: "ContentRuntimeVerificationError",
+            cause: {
+              _tag: "ArtifactTreeComponentUnlistedError",
+              componentName: "NoSuchComponent",
+              contentKey: fixture.answer.contentKey,
+            },
           },
         });
       })
@@ -371,8 +374,7 @@ describe("signed try-out execution", () => {
   it.effect("rechecks attempt access on every load after rendering", () =>
     Effect.gen(function* () {
       const fixture = yield* readOwnedFixture({
-        compiledCode:
-          'return { default: function Content() { return "Complete retained body"; } };',
+        bodyText: "Complete retained body",
       });
       yield* loadSignedTryoutContent(fixture.attemptId, fixture.access);
       // Access is read again for every load, so a revoked attempt never renders.
@@ -431,8 +433,7 @@ describe("signed try-out execution", () => {
     () =>
       Effect.gen(function* () {
         const fixture = yield* readOwnedFixture({
-          compiledCode:
-            'return { default: function Content() { return "Read once body"; } };',
+          bodyText: "Read once body",
         });
         const row = yield* Effect.promise(() =>
           fixture.owned.query(
@@ -461,8 +462,7 @@ describe("signed try-out execution", () => {
     () =>
       Effect.gen(function* () {
         const fixture = yield* readOwnedFixture({
-          compiledCode:
-            'return { default: function Content() { return "Kept batch"; } };',
+          bodyText: "Kept batch",
         });
         const row = yield* Effect.promise(() =>
           fixture.owned.query(

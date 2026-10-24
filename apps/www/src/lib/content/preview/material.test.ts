@@ -15,6 +15,7 @@ import {
   SigningKeyNotFoundError,
 } from "@nakafa/aksara-contracts/signature/spec";
 import { Context, Effect, Layer, Option, Result, Schema } from "effect";
+import { createElement } from "react";
 import {
   decodePreviewEnvironment,
   hasPreviewConfig,
@@ -24,7 +25,7 @@ import {
   readMaterialPreview,
 } from "@/lib/content/preview/material";
 import { fetchPreviewJson } from "@/lib/content/preview/request";
-import { executeSignedArtifact } from "@/lib/content/published/artifact";
+import { renderSignedArtifact } from "@/lib/content/published/artifact";
 import { rendererManifest } from "@/lib/content/renderer/manifest";
 import {
   previewWireArtifact as artifact,
@@ -65,7 +66,7 @@ vi.mock("@/lib/content/preview/request", () => ({
   MAX_PREVIEW_MANIFEST_BYTES: 128 * 1024,
 }));
 vi.mock("@/lib/content/published/artifact", () => ({
-  executeSignedArtifact: vi.fn(),
+  renderSignedArtifact: vi.fn(),
 }));
 
 const input: MaterialPreviewInput = makePreviewInput();
@@ -74,7 +75,7 @@ const configMock = vi.mocked(hasPreviewConfig);
 const decodeConfigMock = vi.mocked(decodePreviewEnvironment);
 const fetchMock = vi.mocked(fetchPreviewJson);
 const prerenderFetchMock = vi.mocked(fetchPreviewJson);
-const executeMock = vi.mocked(executeSignedArtifact);
+const executeMock = vi.mocked(renderSignedArtifact);
 
 type ReadyMaterialManifestValue = ReturnType<typeof makeReadyManifest>;
 
@@ -114,7 +115,7 @@ beforeEach(() => {
     Effect.gen(function* () {
       const resolver = yield* ContentVerificationKeyResolver;
       yield* resolver.resolve(keyId);
-      return { artifact, Content: () => null };
+      return { artifact, element: createElement("p", null, "body") };
     })
   );
 });
@@ -249,7 +250,10 @@ layer(ReadyMaterialManifest.layer)("local material preview", (it) => {
       );
       fetchMock.mockReturnValueOnce(Effect.succeed(newArtifact));
       executeMock.mockReturnValueOnce(
-        Effect.succeed({ artifact: newArtifact, Content: () => null })
+        Effect.succeed({
+          artifact: newArtifact,
+          element: createElement("p", null, "body"),
+        })
       );
 
       const result = yield* runPreview({
@@ -391,7 +395,10 @@ layer(ReadyMaterialManifest.layer)("local material preview", (it) => {
       prerenderFetchMock.mockReturnValueOnce(Effect.succeed(manifest));
       fetchMock.mockReturnValueOnce(Effect.succeed(changedArtifact));
       executeMock.mockReturnValueOnce(
-        Effect.succeed({ artifact: changedArtifact, Content: () => null })
+        Effect.succeed({
+          artifact: changedArtifact,
+          element: createElement("p", null, "body"),
+        })
       );
 
       expect(yield* runFailure()).toMatchObject({
@@ -411,7 +418,7 @@ layer(ReadyMaterialManifest.layer)("local material preview", (it) => {
         Effect.gen(function* () {
           const resolver = yield* ContentVerificationKeyResolver;
           yield* resolver.resolve(foreignKey);
-          return { artifact, Content: () => null };
+          return { artifact, element: createElement("p", null, "body") };
         })
       );
 

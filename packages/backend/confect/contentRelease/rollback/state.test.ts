@@ -12,6 +12,7 @@ import {
   testDeleteJson,
 } from "@repo/backend/test/content/release";
 import { insertRollbackItem } from "@repo/backend/test/content/rollback";
+import { encodeJsonText } from "@repo/utilities/json";
 import { convexTest } from "convex-test";
 import { Effect, Match, Schema } from "effect";
 
@@ -142,13 +143,21 @@ describe("immutable rollback transition reconstruction", () => {
       });
     });
     await expect(
-      t.query(async (ctx) =>
-        Effect.runPromise(
-          rollbackRecord(await item(ctx)).pipe(
-            Effect.provide(ConfectDatabaseReader.layer(confectSchema, ctx.db))
+      t
+        .query(async (ctx) =>
+          encodeJsonText(
+            await Effect.runPromise(
+              rollbackRecord(await item(ctx)).pipe(
+                Effect.provide(
+                  ConfectDatabaseReader.layer(confectSchema, ctx.db)
+                )
+              )
+            )
           )
         )
-      )
+        .then((text) =>
+          Schema.decodeSync(Schema.fromJsonString(Schema.Unknown))(text)
+        )
     ).resolves.toMatchObject({
       current: {
         change: {

@@ -38,7 +38,7 @@ const RuntimeHeadOptionsSchema = Schema.Struct({
   artifactLocale: Schema.optional(ArtifactLocaleSchema),
   bindingReleaseId: Schema.optional(Schema.String),
   bindingSequence: Schema.optional(Schema.Finite),
-  compiledCode: Schema.optional(Schema.String),
+  bodyText: Schema.optional(Schema.String),
   headReleaseId: Schema.optional(Schema.String),
   headSequence: Schema.optional(Schema.Finite),
   plainText: Schema.optional(Schema.String),
@@ -77,11 +77,7 @@ async function insertRuntimeArtifact(
   contentKey: string,
   options?: Pick<
     RuntimeHeadOptions,
-    | "artifactLocale"
-    | "compiledCode"
-    | "plainText"
-    | "rawMdx"
-    | "rendererDomain"
+    "artifactLocale" | "bodyText" | "plainText" | "rawMdx" | "rendererDomain"
   >
 ) {
   await insertTestArtifact(ctx, {
@@ -89,10 +85,10 @@ async function insertRuntimeArtifact(
     artifactJson: testArtifactJson({
       artifactHash,
       artifactLocale: options?.artifactLocale,
-      ...(options?.compiledCode === undefined
+      ...(options?.bodyText === undefined
         ? {}
         : {
-            compiledCode: options?.compiledCode,
+            bodyText: options?.bodyText,
           }),
       contentKey,
       ...(options?.plainText === undefined
@@ -321,7 +317,7 @@ export async function insertSignedHead(
   options?: Pick<
     RuntimeHeadOptions,
     | "artifactLocale"
-    | "compiledCode"
+    | "bodyText"
     | "projectionJson"
     | "publicPath"
     | "rendererDomain"
@@ -340,17 +336,17 @@ export async function insertSignedHead(
         : {
             artifactLocale: options?.artifactLocale,
           }),
-      ...(options?.compiledCode === undefined
+      ...(options?.bodyText === undefined
         ? {}
         : {
-            compiledCode: options?.compiledCode,
+            bodyText: options?.bodyText,
           }),
       contentKey,
     })
   );
   await insertRuntimeHead(ctx, delivery, contentKey, {
     artifactHash: artifact.artifactHash,
-    compiledCode: options?.compiledCode,
+    bodyText: options?.bodyText,
     projectionJson,
     publicPath: options?.publicPath,
     rendererDomain,

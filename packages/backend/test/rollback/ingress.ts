@@ -1,11 +1,19 @@
 import { RegisteredConvexFunction } from "@confect/server";
+import { SignedContentArtifactSchema } from "@nakafa/aksara-contracts/content";
 import { SignedContentReleaseSchema } from "@nakafa/aksara-contracts/release";
+import {
+  isRollbackUpsert,
+  RollbackPageSchema,
+  type RollbackRecord,
+} from "@nakafa/aksara-contracts/release/rollback/spec";
+import { RoutePageSchema } from "@nakafa/aksara-contracts/release/route/page";
 import confectSchema from "@repo/backend/confect/_generated/schema";
 import contentReleases from "@repo/backend/confect/_generated/tables/contentReleases";
 import type { stageEnvelopeValidator } from "@repo/backend/confect/contentRelease/envelope.spec";
 import { makePublicationReceipt } from "@repo/backend/confect/contentRelease/receipt";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import type schema from "@repo/backend/convex/schema";
+import { testTextTree } from "@repo/backend/test/content/artifact";
 import {
   TEST_PROOF_RENDERER,
   testSignedRelease,
@@ -166,3 +174,41 @@ export const readRollbackEnvelope = Effect.fn(
     role: stored.role,
   } satisfies StoredRollbackEnvelope;
 });
+
+/**
+ * Decodes one rollback response from the JSON text its action returns. Decoded
+ * artifacts hold tree elements, whose `$node` key a Convex value may not name, so
+ * the action returns text and the test decodes it outside the Convex boundary.
+ */
+export const decodeRollbackResponse = Effect.fn(
+  "test.contentRelease.decodeResponse"
+)(function* (text: string) {
+  return yield* Schema.decodeEffect(
+    Schema.fromJsonString(Schema.Union([RollbackPageSchema, RoutePageSchema]))
+  )(text).pipe(Effect.orDie);
+});
+
+/** Inflates one authenticated artifact so its record crosses the page ceiling. */
+export const inflateRecord = Effect.fn("test.contentRelease.inflateRecord")(
+  function* (record: RollbackRecord, byteLength: number) {
+    const { current } = record;
+    if (!isRollbackUpsert(current)) {
+      return yield* new UnexpectedRollbackTestState({
+        operation: "select-body-record",
+      });
+    }
+    return {
+      ...record,
+      current: {
+        ...current,
+        artifact: yield* Schema.decodeEffect(SignedContentArtifactSchema)({
+          ...current.artifact,
+          payload: {
+            ...current.artifact.payload,
+            contentTree: testTextTree("x".repeat(byteLength)),
+          },
+        }).pipe(Effect.orDie),
+      },
+    } satisfies RollbackRecord;
+  }
+);
