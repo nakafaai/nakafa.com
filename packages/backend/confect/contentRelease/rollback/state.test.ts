@@ -156,7 +156,7 @@ describe("immutable rollback transition reconstruction", () => {
           )
         )
         .then((text) =>
-          Schema.decodeUnknownSync(Schema.fromJsonString(Schema.Unknown))(text)
+          Schema.decodeSync(Schema.fromJsonString(Schema.Unknown))(text)
         )
     ).resolves.toMatchObject({
       current: {

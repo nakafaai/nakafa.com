@@ -87,9 +87,9 @@ const makeRouteRequest = Effect.fn("test.contentRelease.makeRouteRequest")(
  */
 const decodeRollbackResponse = Effect.fn("test.contentRelease.decodeResponse")(
   function* (text: string) {
-    return yield* Schema.decodeUnknownEffect(
+    return yield* Schema.decodeEffect(
       Schema.fromJsonString(Schema.Union([RollbackPageSchema, RoutePageSchema]))
-    )(text);
+    )(text).pipe(Effect.orDie);
   }
 );
 
