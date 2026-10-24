@@ -143,6 +143,37 @@ never invoke a Worker.
   engine used a median of 6 ms CPU, and its successful invocations peaked at 7.2
   seconds of CPU.
 
+- Measured in round 2 (commit 9957fced29, decision 41) in a third probe stage, which
+  was destroyed afterwards. The corpus returned the same 750 calls with 200 and 265
+  with 422, and no other status. Client wall time over the corpus was 0.19 s p50,
+  2.1 s p95 and 15.8 s max. The seven requests beyond a bound answered 422 in 0.15 to
+  0.45 seconds. A burst of 24 concurrent calls returned 24 times 200. 160 calls made
+  20 minutes after the heavy calls all returned 200. A 30-digit semiprime answered 200
+  in 1.1 seconds. The 7-digit `combination(10^6, 5*10^5)` and the 30-digit
+  `combination(10^29, 5*10^14)` each returned 503 after 50 seconds, which is two
+  25-second attempts. The probe misses two bars: the warm p95 is 2.1 seconds against
+  1.5, and the first 48 calls on fresh objects reached 3.7 seconds against 2. The
+  corpus integral of `a + x^x` on [0, 1] costs about 4 to 5 seconds of CPU in
+  Pyodide, so the warm p95 is set by the corpus itself.
+- Inside the bounds, Pyodide 0.28.3 (one process per case, 90-second limit) finished
+  these in more than two seconds of CPU or did not finish: a 7-digit `combination`
+  (69 seconds; the 6-digit case takes 0.6 seconds), a 30-digit `combination` with
+  k = 5*10^14 (over 90 seconds), a binomial CDF with n = 10^6 (over 90 seconds), a
+  harmonic summation to 10^9 (over 90 seconds), a 30 by 30 symbolic determinant (over
+  90 seconds), `series(exp(sin(x)))` to order 60 (over 90 seconds),
+  `series(log(1+x)/(1+x^2))` to order 60 (6.3 seconds), and a 200-token rational
+  integral (2.7 seconds). Every other measured in-bound family finished in 1.2 seconds
+  or less. Workers telemetry for the probe (approximate counts): the engine's CPU
+  median was 9 ms, its P99 4.1 seconds and its max 32.5 seconds. Seven engine
+  invocations ended with outcome `exception`. Four stopped at the platform CPU limit
+  near 32 seconds of CPU, which are the four attempts of the two heavy calls, so the
+  limit ended that work and the objects kept answering. One used 0.6 seconds during
+  corpus round 1, and two ended within 1 ms. The events record no error text. The
+  front answered 503 for the two heavy calls after both attempts, and no corpus or
+  late-check call got a 503, so its retry absorbed the other failures. The front's
+  CPU median was 2 ms and its P99 11 ms, with no exception. The probe data is in the owner's ops notes
+  (`cas-probe-3.json`).
+
 ## Sources
 
 - Alchemy Cloudflare custom domains, routes, and Access documentation, read from
