@@ -13,9 +13,6 @@ import {
 import { RendererDomainSchema } from "@nakafa/aksara-contracts/renderer/domain";
 import { Data, Effect, Option, Schema } from "effect";
 import {
-  getPublishedArticleCategory,
-  getPublishedCategoryAlternates,
-  getPublishedCategoryPage,
   hasPublishedArticleCategory,
   readPublishedArticleCategory,
   readPublishedCategoryAlternates,
@@ -118,9 +115,7 @@ describe("published article category", () => {
         expect(yield* hasPublishedArticleCategory("politik", "de")).toBe(true);
         expect(yield* hasPublishedArticleCategory("missing", "de")).toBe(false);
         yield* readPublishedArticleCategory("politik", "de");
-        yield* Effect.tryPromise(() =>
-          getPublishedArticleCategory("politik", "de")
-        );
+        yield* readPublishedArticleCategory("politik", "de");
         expect(categoryReaderMock).toHaveBeenCalledTimes(1);
 
         yield* hasPublishedArticleCategory("politik", "en");
@@ -138,9 +133,7 @@ describe("published article category", () => {
       Effect.gen(function* () {
         categoryReaderMock.mockReturnValue(Effect.succeed(categoryPage()));
 
-        const category = yield* Effect.tryPromise(() =>
-          getPublishedArticleCategory("politik", "de")
-        );
+        const category = yield* readPublishedArticleCategory("politik", "de");
         expect(category).toMatchObject({
           _tag: "Some",
           value: { category: "politics", route: "politik" },
@@ -179,9 +172,7 @@ describe("published article category", () => {
         Effect.succeed(categoryPage({ route: "wissenschaft" }))
       );
 
-      const category = yield* Effect.tryPromise(() =>
-        getPublishedArticleCategory("politik", "de")
-      );
+      const category = yield* readPublishedArticleCategory("politik", "de");
       expect(Option.isNone(category)).toBe(true);
       expect(yield* hasPublishedArticleCategory("politik", "de")).toBe(false);
     })
@@ -197,8 +188,8 @@ describe("published article category", () => {
         )
       );
 
-      const alternates = yield* Effect.tryPromise(() =>
-        getPublishedCategoryAlternates(categoryModel())
+      const alternates = yield* readPublishedCategoryAlternates(
+        categoryModel()
       );
       expect(alternates).toEqual([
         { appLocale: "en", publicPath: "articles/politics" },
@@ -344,13 +335,11 @@ describe("published article category", () => {
         };
         articleReaderMock.mockReturnValue(Effect.succeed(page));
 
-        const category = yield* Effect.tryPromise(() =>
-          getPublishedCategoryPage(model, {
-            cursor: null,
-            expectedManifestHash: null,
-            expectedReleaseId: null,
-          })
-        );
+        const category = yield* readPublishedCategoryPage(model, {
+          cursor: null,
+          expectedManifestHash: null,
+          expectedReleaseId: null,
+        });
         expect(category).toEqual(page);
 
         const stalePage = { ...page, stale: true };

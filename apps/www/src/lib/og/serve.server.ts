@@ -46,12 +46,12 @@ const renderOgImage = Effect.fn("www.og.render")(function* (
 
 /** The splat of an `/og/...` path. */
 const OgImageParamsSchema = Schema.Struct({
-  _splat: Schema.optionalKey(Schema.String),
+  _splat: Schema.optional(Schema.String),
 });
 
 /** The splat of a localized `/<locale>/og/...` path. */
 const LocaleOgImageParamsSchema = Schema.Struct({
-  _splat: Schema.optionalKey(Schema.String),
+  _splat: Schema.optional(Schema.String),
   lang: Schema.String,
 });
 
@@ -61,7 +61,7 @@ const LocaleOgImageParamsSchema = Schema.Struct({
  * fallback with 404, because that shape names no route, and the public alias of
  * the same address answers not found.
  */
-export function serveOgImage({
+export const serveOgImage = Effect.fn("www.og.serveImage")(function* ({
   params,
 }: {
   readonly params: typeof OgImageParamsSchema.Type;
@@ -72,32 +72,32 @@ export function serveOgImage({
     isUnservedLocaleShape(segments[0]) &&
     Option.isSome(readImageSuffix(splat))
   ) {
-    return Effect.runPromise(generateFallbackImage(DEFAULT_LOCALE));
+    return yield* generateFallbackImage(DEFAULT_LOCALE);
   }
   const prefix = decodeLocale(segments[0]);
   const locale = Option.getOrElse(prefix, () => DEFAULT_LOCALE);
   const slug = Option.isSome(prefix) ? Arr.drop(segments, 1) : segments;
-  return Effect.runPromise(renderOgImage(locale, readContentSlug(slug)));
-}
+  return yield* renderOgImage(locale, readContentSlug(slug));
+});
 
 /**
  * Serves the social image of a localized route. The route validates its own
  * locale and does not use the `$locale` route: that route's parser throws the
  * router's not-found, which a server route answers as an error instead of 404.
  */
-export function serveLocaleOgImage({
-  params,
-}: {
-  readonly params: typeof LocaleOgImageParamsSchema.Type;
-}) {
-  const locale = decodeLocale(params.lang);
-  if (Option.isNone(locale)) {
-    return Effect.runPromise(generateFallbackImage(DEFAULT_LOCALE));
-  }
-  return Effect.runPromise(
-    renderOgImage(
+export const serveLocaleOgImage = Effect.fn("www.og.serveLocaleImage")(
+  function* ({
+    params,
+  }: {
+    readonly params: typeof LocaleOgImageParamsSchema.Type;
+  }) {
+    const locale = decodeLocale(params.lang);
+    if (Option.isNone(locale)) {
+      return yield* generateFallbackImage(DEFAULT_LOCALE);
+    }
+    return yield* renderOgImage(
       locale.value,
       readContentSlug(readSegments(params._splat ?? ""))
-    )
-  );
-}
+    );
+  }
+);

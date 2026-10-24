@@ -7,7 +7,7 @@ import {
 } from "@repo/seo/json-ld/node";
 import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
-import { Array as Arr, Option, Schema } from "effect";
+import { Array as Arr, Effect, Match, Option, Schema } from "effect";
 import { createTranslator } from "use-intl";
 import { getArticleCategoryIcon } from "@/components/articles/category";
 import { ArticleNext } from "@/components/articles/next";
@@ -22,8 +22,8 @@ import {
   type ArticlePageCursor,
 } from "@/lib/content/article/catalog";
 import {
-  getPublishedArticleCategory,
-  getPublishedCategoryPage,
+  readPublishedArticleCategory,
+  readPublishedCategoryPage,
 } from "@/lib/content/article/category";
 import {
   ArticlePageSearchSchema,
@@ -35,11 +35,13 @@ import {
   publicContentHeaders,
   readContentCacheTags,
 } from "@/lib/content/delivery";
+import { outcome } from "@/lib/content/outcome";
 import { getAksaraTreeUrl } from "@/lib/content/repository";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { createSeoHead, toRouterHead } from "@/lib/seo/head";
 import { getOgUrl } from "@/lib/seo/social";
+import { serverHandler } from "@/lib/server/fn";
 
 /** The first page of a category, which the reader needs before it can answer. */
 const FIRST_PAGE: ArticlePageCursor = {
@@ -53,82 +55,96 @@ const FIRST_PAGE: ArticlePageCursor = {
  * category, an empty one or a malformed cursor is a 404; a stale or reset cursor
  * is a redirect to the category's first page.
  */
+const ArticleCategoryInput = Schema.Struct({
+  ...ArticlePageSearchSchema.fields,
+  category: Schema.String,
+  locale: Schema.String,
+});
+
 const readArticleCategory = createServerFn({ method: "GET" })
-  .validator(
-    Schema.toStandardSchemaV1(
-      Schema.Struct({
-        ...ArticlePageSearchSchema.fields,
-        category: Schema.String,
-        locale: Schema.String,
+  .validator(Schema.toStandardSchemaV1(ArticleCategoryInput))
+  .handler(
+    serverHandler(
+      Effect.fn("www.articles.category.read")(function* (
+        data: typeof ArticleCategoryInput.Type
+      ) {
+        const locale = getLocaleOrThrow(data.locale);
+        if (!Schema.is(ArticleRouteSlugSchema)(data.category)) {
+          return outcome("NotFound", {});
+        }
+        const selected = yield* readPublishedArticleCategory(
+          data.category,
+          locale
+        );
+        if (Option.isNone(selected)) {
+          return outcome("NotFound", {});
+        }
+        const model = selected.value;
+        const first = yield* readPublishedCategoryPage(model, FIRST_PAGE);
+        if (first.articles.length === 0) {
+          return outcome("NotFound", {});
+        }
+        const cursor = readArticlePageCursor(data);
+        if (Option.isNone(cursor)) {
+          return outcome("NotFound", {});
+        }
+        if (shouldResetArticlePublicationCursor(cursor.value)) {
+          return outcome("Redirect", {});
+        }
+        // The default URL asks for the first page, which the first read holds.
+        const catalog =
+          cursor.value.cursor === null
+            ? first
+            : yield* readPublishedCategoryPage(model, cursor.value);
+        if (catalog.stale) {
+          return outcome("Redirect", {});
+        }
+        if (catalog.articles.length === 0) {
+          return outcome("NotFound", {});
+        }
+        const messages = yield* Effect.promise(() =>
+          loadLocaleMessages(locale)
+        );
+        const tCommon = createTranslator({
+          locale,
+          messages,
+          namespace: "Common",
+        });
+        const tArticles = createTranslator({
+          locale,
+          messages,
+          namespace: "Articles",
+        });
+        const categoryPath = `/articles/${model.route}`;
+        const breadcrumbs = createBreadcrumbItems(locale, [
+          { name: tCommon("home"), path: "" },
+          { name: tCommon("articles"), path: "/articles" },
+          { name: model.title, path: categoryPath },
+        ]);
+
+        return outcome("Found", {
+          page: {
+            articles: catalog.articles,
+            breadcrumbs,
+            cacheTags: readContentCacheTags(["article"]),
+            category: model.category,
+            categoryPath,
+            description: tArticles("description"),
+            label: model.title,
+            locale,
+            nextSearch: Option.getOrNull(getArticleNextSearch(catalog)),
+            routeSlug: model.route,
+            sourceUrl: catalog.sourceRevision
+              ? getAksaraTreeUrl({
+                  path: `${ARTICLE_SOURCE_ROOT}/${model.category}`,
+                  revision: catalog.sourceRevision,
+                })
+              : null,
+          },
+        });
       })
     )
-  )
-  .handler(async ({ data }) => {
-    const locale = getLocaleOrThrow(data.locale);
-    if (!Schema.is(ArticleRouteSlugSchema)(data.category)) {
-      return { kind: "notFound" as const };
-    }
-    const selected = await getPublishedArticleCategory(data.category, locale);
-    if (Option.isNone(selected)) {
-      return { kind: "notFound" as const };
-    }
-    const model = selected.value;
-    const first = await getPublishedCategoryPage(model, FIRST_PAGE);
-    if (first.articles.length === 0) {
-      return { kind: "notFound" as const };
-    }
-    const cursor = readArticlePageCursor(data);
-    if (Option.isNone(cursor)) {
-      return { kind: "notFound" as const };
-    }
-    if (shouldResetArticlePublicationCursor(cursor.value)) {
-      return { kind: "redirect" as const };
-    }
-    // The default URL asks for the first page, which the first read holds.
-    const catalog =
-      cursor.value.cursor === null
-        ? first
-        : await getPublishedCategoryPage(model, cursor.value);
-    if (catalog.stale) {
-      return { kind: "redirect" as const };
-    }
-    if (catalog.articles.length === 0) {
-      return { kind: "notFound" as const };
-    }
-    const messages = await loadLocaleMessages(locale);
-    const tCommon = createTranslator({ locale, messages, namespace: "Common" });
-    const tArticles = createTranslator({
-      locale,
-      messages,
-      namespace: "Articles",
-    });
-    const categoryPath = `/articles/${model.route}`;
-    const breadcrumbs = createBreadcrumbItems(locale, [
-      { name: tCommon("home"), path: "" },
-      { name: tCommon("articles"), path: "/articles" },
-      { name: model.title, path: categoryPath },
-    ]);
-
-    return {
-      kind: "found" as const,
-      articles: catalog.articles,
-      breadcrumbs,
-      cacheTags: readContentCacheTags(["article"]),
-      category: model.category,
-      categoryPath,
-      description: tArticles("description"),
-      label: model.title,
-      locale,
-      nextSearch: Option.getOrNull(getArticleNextSearch(catalog)),
-      routeSlug: model.route,
-      sourceUrl: catalog.sourceRevision
-        ? getAksaraTreeUrl({
-            path: `${ARTICLE_SOURCE_ROOT}/${model.category}`,
-            revision: catalog.sourceRevision,
-          })
-        : null,
-    };
-  });
+  );
 
 /** One article category: its cards, its pages and its collection data. */
 export const Route = createFileRoute("/$locale/_main/articles/$category/")({
@@ -139,20 +155,24 @@ export const Route = createFileRoute("/$locale/_main/articles/$category/")({
     release: search.release,
   }),
   loader: async ({ params, deps }) => {
-    const page = await readArticleCategory({
+    const read = await readArticleCategory({
       data: { ...deps, category: params.category, locale: params.locale },
     });
-    if (page.kind === "notFound") {
-      throw notFound();
-    }
-    if (page.kind === "redirect") {
-      throw redirect({
-        params: { category: params.category, locale: params.locale },
-        statusCode: 307,
-        to: "/$locale/articles/$category",
-      });
-    }
-    return page;
+    return Match.value(read).pipe(
+      Match.tagsExhaustive({
+        Found: ({ page }) => page,
+        NotFound: () => {
+          throw notFound();
+        },
+        Redirect: () => {
+          throw redirect({
+            params: { category: params.category, locale: params.locale },
+            statusCode: 307,
+            to: "/$locale/articles/$category",
+          });
+        },
+      })
+    );
   },
   head: ({ loaderData }) => {
     if (loaderData === undefined) {

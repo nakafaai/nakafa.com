@@ -10,6 +10,7 @@ import {
   CONSENT_NOTICE_VERSIONS,
 } from "@repo/analytics/consent";
 import { Effect, Option, Schema } from "effect";
+import { reportClientException } from "@/lib/analytics/client";
 import type { BrowserPrivacySignal } from "@/lib/analytics/consent/signal";
 import { KNOWN_SESSION_KEY } from "@/lib/auth/keys";
 
@@ -173,7 +174,10 @@ export const ANALYTICS_CONSENT_BOOTSTRAP_SCRIPT = `(function () {
       document.documentElement.setAttribute(${literal(ANALYTICS_CONSENT_ROOT_ATTRIBUTE)}, mark);
     }
   } catch (error) {
-    // Storage that cannot be read keeps the prompt shown.
+    // Deliberate silent exception: this script runs before the app modules load
+    // and before paint, so it cannot reach the analytics leaf. Storage that cannot
+    // be read keeps the prompt shown. markAnalyticsConsentRoot reads the same
+    // storage on mount and reports that failure with its cause.
   }
 })();`;
 
@@ -201,9 +205,17 @@ export const markAnalyticsConsentRoot = Effect.fn(
       readRecord: readStoredRecord,
       vocabulary: ANALYTICS_CONSENT_BOOTSTRAP_VOCABULARY,
     });
-  }).pipe(Effect.orElseSucceed(() => null));
+  }).pipe(
+    Effect.map(Option.fromNullishOr),
+    Effect.catch((cause) =>
+      reportClientException(cause, {
+        operation: "resolveConsentMark",
+        source: "analytics.consentRoot",
+      }).pipe(Effect.as(Option.none()))
+    )
+  );
 
-  if (mark !== null) {
-    root.setAttribute(ANALYTICS_CONSENT_ROOT_ATTRIBUTE, mark);
+  if (Option.isSome(mark)) {
+    root.setAttribute(ANALYTICS_CONSENT_ROOT_ATTRIBUTE, mark.value);
   }
 });

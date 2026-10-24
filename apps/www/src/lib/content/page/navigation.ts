@@ -103,19 +103,14 @@ export const readPageNavigation = Effect.fn("www.pages.readNavigation")(
 );
 
 /**
- * Reads the complete Page navigation. The catalog comes from the content store
- * for the active release.
+ * The Page navigation of the application shell. An isolated document preview
+ * answers none, so the shell reads no complete publication while one is previewed.
  */
-async function getPageNavigation(locale: Locale) {
-  const navigation = await Effect.runPromise(readPageNavigation(locale));
-  return navigation;
-}
-
-/** Keeps isolated document previews independent from a complete publication. */
-export function getShellPageNavigation(locale: Locale) {
-  if (hasPreviewConfig()) {
-    return Promise.resolve<PageNavigation | null>(null);
+export const getShellPageNavigation = Effect.fn("www.pages.shellNavigation")(
+  function* (locale: Locale) {
+    if (hasPreviewConfig()) {
+      return null;
+    }
+    return yield* readPageNavigation(locale);
   }
-
-  return getPageNavigation(locale);
-}
+);

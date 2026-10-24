@@ -1,6 +1,6 @@
 import { LocaleSchema } from "@repo/internationalization/src/locale";
 import { createServerFn } from "@tanstack/react-start";
-import { Schema } from "effect";
+import { Effect, Option, Schema } from "effect";
 
 /** The absolute privacy and terms addresses of the sign-in sentence. */
 const AuthLegalLinksSchema = Schema.Struct({
@@ -22,6 +22,12 @@ export const readAuthLegalFn = createServerFn({ method: "GET" })
     )
   )
   .handler(async ({ data }) => {
-    const { readAuthLegalHandler } = await import("@/lib/auth/legal.server");
-    return readAuthLegalHandler(data.locale);
+    const [{ readAuthLegalHandler }, { runServerEffect }] = await Promise.all([
+      import("@/lib/auth/legal.server"),
+      import("@/lib/server/fn"),
+    ]);
+    // The null exists only at this serialization boundary.
+    return runServerEffect(
+      readAuthLegalHandler(data.locale).pipe(Effect.map(Option.getOrNull))
+    );
   });

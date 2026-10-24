@@ -87,7 +87,7 @@ describe("article navigation", () => {
 
       yield* readArticleNavigation("en");
       yield* readArticleNavigation("en");
-      yield* Effect.tryPromise(() => getShellArticleNavigation("en"));
+      yield* getShellArticleNavigation("en");
       expect(categoryReaderMock).toHaveBeenCalledTimes(1);
 
       yield* readArticleNavigation("id");
@@ -121,9 +121,7 @@ describe("article navigation", () => {
           )
         );
 
-      const navigation = yield* Effect.tryPromise(() =>
-        getShellArticleNavigation("en")
-      );
+      const navigation = yield* getShellArticleNavigation("en");
 
       expect(navigation).toEqual([
         {
@@ -160,9 +158,7 @@ describe("article navigation", () => {
           )
         );
 
-        const navigation = yield* Effect.tryPromise(() =>
-          getShellArticleNavigation(locale)
-        );
+        const navigation = yield* getShellArticleNavigation(locale);
 
         expect(navigation).toEqual([
           {
@@ -198,9 +194,7 @@ describe("article navigation", () => {
       Effect.gen(function* () {
         previewConfigMock.mockReturnValue(true);
 
-        const navigation = yield* Effect.tryPromise(() =>
-          getShellArticleNavigation("de")
-        );
+        const navigation = yield* getShellArticleNavigation("de");
 
         expect(navigation).toEqual([]);
         expect(categoryReaderMock).not.toHaveBeenCalled();

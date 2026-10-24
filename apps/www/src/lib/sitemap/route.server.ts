@@ -52,13 +52,11 @@ const buildSitemapIndexResponse = Effect.fn("www.sitemap.index.response")(
 );
 
 /** Serves the conventional sitemap index that points at bounded sitemap pages. */
-export function serveSitemapIndex() {
-  return Effect.runPromise(
-    buildSitemapIndexResponse().pipe(
-      Effect.catchCause((cause) => reportSitemapFailure("sitemap-index", cause))
-    )
-  );
-}
+export const serveSitemapIndex = Effect.fn("www.sitemap.index.serve")(() =>
+  buildSitemapIndexResponse().pipe(
+    Effect.catchCause((cause) => reportSitemapFailure("sitemap-index", cause))
+  )
+);
 
 /** Extracts the materialized page id from a `.xml` sitemap route segment. */
 function parseSitemapPageId(segment: string): Option.Option<string> {
@@ -102,7 +100,7 @@ const buildSitemapPageResponse = Effect.fn("www.sitemap.page.response")(
 const SitemapPageParamsSchema = Schema.Struct({ id: Schema.String });
 
 /** Serves one bounded sitemap page from materialized Convex route rows. */
-export function serveSitemapPage({
+export const serveSitemapPage = Effect.fn("www.sitemap.page.serve")(function* ({
   params,
 }: {
   readonly params: typeof SitemapPageParamsSchema.Type;
@@ -112,12 +110,9 @@ export function serveSitemapPage({
     Option.isNone(pageId) ||
     Option.isNone(getSitemapPageDescriptor(pageId.value))
   ) {
-    return Promise.resolve(createNotFoundResponse());
+    return createNotFoundResponse();
   }
-
-  return Effect.runPromise(
-    buildSitemapPageResponse(pageId.value).pipe(
-      Effect.catchCause((cause) => reportSitemapFailure("sitemap-page", cause))
-    )
+  return yield* buildSitemapPageResponse(pageId.value).pipe(
+    Effect.catchCause((cause) => reportSitemapFailure("sitemap-page", cause))
   );
-}
+});

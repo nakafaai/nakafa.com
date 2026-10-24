@@ -4,7 +4,6 @@ import { SITE_ORIGIN } from "@repo/seo/origin";
 import { getRequestHeaders } from "@tanstack/react-start/server";
 import { Effect, Option } from "effect";
 import { getShellPageNavigation } from "@/lib/content/page/navigation";
-import { runServerEffect } from "@/lib/server/fn";
 
 /**
  * The absolute privacy and terms addresses of one locale on the main site. None
@@ -13,7 +12,7 @@ import { runServerEffect } from "@/lib/server/fn";
 export const readAuthLegalLinks = Effect.fn("www.auth.legalLinks")(function* (
   locale: Locale
 ) {
-  const pages = yield* Effect.promise(() => getShellPageNavigation(locale));
+  const pages = yield* getShellPageNavigation(locale);
   return Option.map(Option.fromNullishOr(pages), (page) => ({
     privacy: new URL(`/${locale}/${page.privacyPolicyPath}`, SITE_ORIGIN).href,
     terms: new URL(`/${locale}/${page.termsOfServicePath}`, SITE_ORIGIN).href,
@@ -21,17 +20,13 @@ export const readAuthLegalLinks = Effect.fn("www.auth.legalLinks")(function* (
 });
 
 /**
- * The sign-in answer on the wire: the links, or null when no signed page
- * answers. The null exists only at this serialization boundary.
- */
-export function readAuthLegalAnswer(locale: Locale) {
-  return runServerEffect(readAuthLegalLinks(locale)).then(Option.getOrNull);
-}
-
-/**
  * The sign-in answer for the locale that the request names, or for the locale
  * that the request negotiates when it names none.
  */
-export function readAuthLegalHandler(requested: Locale | undefined) {
-  return readAuthLegalAnswer(requested ?? negotiateLocale(getRequestHeaders()));
-}
+export const readAuthLegalHandler = Effect.fn("www.auth.legalHandler")(
+  function* (requested: Locale | undefined) {
+    return yield* readAuthLegalLinks(
+      requested ?? negotiateLocale(getRequestHeaders())
+    );
+  }
+);

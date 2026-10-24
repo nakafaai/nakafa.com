@@ -3,7 +3,6 @@ import { describe, expect, it } from "@effect/vitest";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { Effect, Option } from "effect";
 import {
-  readAuthLegalAnswer,
   readAuthLegalHandler,
   readAuthLegalLinks,
 } from "@/lib/auth/legal.server";
@@ -21,7 +20,7 @@ let pages: Pick<
 > | null = null;
 
 vi.mock("@/lib/content/page/navigation", () => ({
-  getShellPageNavigation: vi.fn(() => Promise.resolve(pages)),
+  getShellPageNavigation: vi.fn(() => Effect.succeed(pages)),
 }));
 
 const signedLinks = {
@@ -52,28 +51,31 @@ describe("sign-in legal links", () => {
     })
   );
 
-  it("answers the links of the locale the request names, or of the one it negotiates", async () => {
-    pages = {
-      privacyPolicyPath: "privacy-policy",
-      termsOfServicePath: "terms-of-service",
-    };
-    await expect(readAuthLegalHandler("id")).resolves.toStrictEqual(
-      signedLinks
-    );
-    await expect(readAuthLegalHandler(undefined)).resolves.toStrictEqual({
-      privacy: new URL("/de/privacy-policy", SITE_ORIGIN).href,
-      terms: new URL("/de/terms-of-service", SITE_ORIGIN).href,
-    });
-    expect(getShellPageNavigation).toHaveBeenLastCalledWith("de");
-  });
+  it.effect(
+    "answers the links of the locale the request names, or of the one it negotiates",
+    () =>
+      Effect.gen(function* () {
+        pages = {
+          privacyPolicyPath: "privacy-policy",
+          termsOfServicePath: "terms-of-service",
+        };
+        expect(
+          Option.getOrNull(yield* readAuthLegalHandler("id"))
+        ).toStrictEqual(signedLinks);
+        expect(
+          Option.getOrNull(yield* readAuthLegalHandler(undefined))
+        ).toStrictEqual({
+          privacy: new URL("/de/privacy-policy", SITE_ORIGIN).href,
+          terms: new URL("/de/terms-of-service", SITE_ORIGIN).href,
+        });
+        expect(getShellPageNavigation).toHaveBeenLastCalledWith("de");
+      })
+  );
 
-  it("answers the links on the wire, or null when none", async () => {
-    pages = {
-      privacyPolicyPath: "privacy-policy",
-      termsOfServicePath: "terms-of-service",
-    };
-    await expect(readAuthLegalAnswer("id")).resolves.toStrictEqual(signedLinks);
-    pages = null;
-    await expect(readAuthLegalAnswer("id")).resolves.toBeNull();
-  });
+  it.effect("answers no links when no signed page answers", () =>
+    Effect.gen(function* () {
+      pages = null;
+      expect(Option.isNone(yield* readAuthLegalHandler("id"))).toBe(true);
+    })
+  );
 });

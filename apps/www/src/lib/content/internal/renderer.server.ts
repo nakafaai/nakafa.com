@@ -22,53 +22,47 @@ function privateJson(body: object, status = 200) {
  * publication token opens the manifest; a preview renderer token with its nonce
  * opens the manifest with a proof that binds it to that nonce.
  */
-export function serveContentRenderer({
-  request,
-}: {
-  readonly request: Request;
-}) {
-  return Effect.runPromise(
-    Effect.gen(function* () {
-      const authorization = request.headers.get("Authorization");
-      const isInternalAuthorized = yield* isInternalContentAuthorized(
-        authorization,
-        env.AKSARA_PUBLICATION_TOKEN
-      );
+export const serveContentRenderer = Effect.fn("www.content.internal.renderer")(
+  function* ({ request }: { readonly request: Request }) {
+    const authorization = request.headers.get("Authorization");
+    const isInternalAuthorized = yield* isInternalContentAuthorized(
+      authorization,
+      env.AKSARA_PUBLICATION_TOKEN
+    );
 
-      if (isInternalAuthorized) {
-        const manifest = yield* rendererManifest;
-        return privateJson(manifest);
-      }
-
-      const previewConfig = yield* readPreviewRendererConfig();
-      const nonce = Schema.decodeUnknownOption(PreviewRendererNonceSchema)(
-        request.headers.get(PREVIEW_NONCE_HEADER)
-      );
-
-      if (Option.isNone(previewConfig) || Option.isNone(nonce)) {
-        return privateJson({ error: "Unauthorized" }, 401);
-      }
-
-      const isPreviewAuthorized = yield* isInternalContentAuthorized(
-        authorization,
-        Redacted.value(previewConfig.value.token)
-      );
-      if (!isPreviewAuthorized) {
-        return privateJson({ error: "Unauthorized" }, 401);
-      }
-
+    if (isInternalAuthorized) {
       const manifest = yield* rendererManifest;
-      const proof = yield* computePreviewRendererProof({
-        manifestHash: manifest.hash,
-        nonce: nonce.value,
-        secret: previewConfig.value.secret,
-      });
+      return privateJson(manifest);
+    }
 
-      return privateJson({
-        format: PREVIEW_RENDERER_AUTH_FORMAT,
-        manifest,
-        proof,
-      });
-    })
-  );
-}
+    const previewConfig = yield* readPreviewRendererConfig();
+    const nonce = Schema.decodeUnknownOption(PreviewRendererNonceSchema)(
+      request.headers.get(PREVIEW_NONCE_HEADER)
+    );
+
+    if (Option.isNone(previewConfig) || Option.isNone(nonce)) {
+      return privateJson({ error: "Unauthorized" }, 401);
+    }
+
+    const isPreviewAuthorized = yield* isInternalContentAuthorized(
+      authorization,
+      Redacted.value(previewConfig.value.token)
+    );
+    if (!isPreviewAuthorized) {
+      return privateJson({ error: "Unauthorized" }, 401);
+    }
+
+    const manifest = yield* rendererManifest;
+    const proof = yield* computePreviewRendererProof({
+      manifestHash: manifest.hash,
+      nonce: nonce.value,
+      secret: previewConfig.value.secret,
+    });
+
+    return privateJson({
+      format: PREVIEW_RENDERER_AUTH_FORMAT,
+      manifest,
+      proof,
+    });
+  }
+);

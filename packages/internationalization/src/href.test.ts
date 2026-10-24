@@ -6,8 +6,6 @@ import {
   splitLocalePathname,
 } from "@repo/internationalization/src/href";
 
-const TEST_LOCALES = ["de", "en", "id"] as const;
-
 describe("localized internal href normalization", () => {
   it.each([
     ["", ""],
@@ -44,7 +42,7 @@ describe("splitLocalePathname", () => {
   ])(
     "splits pathname %s at its leading locale",
     (pathname, locale, segments) => {
-      expect(splitLocalePathname(pathname, TEST_LOCALES)).toEqual({
+      expect(splitLocalePathname(pathname)).toEqual({
         locale,
         publicSegments: segments,
       });

@@ -32,7 +32,7 @@ vi.mock("@/lib/llms/index/generate", () => ({
 }));
 
 vi.mock("@/lib/llms/published", () => ({
-  getCachedPublishedText: mockGetCachedPublishedText,
+  readPublishedText: mockGetCachedPublishedText,
 }));
 
 vi.mock("@/lib/llms/quran", () => ({
@@ -91,7 +91,7 @@ describe("llms markdown content resolver", () => {
       .mockReturnValue(Effect.succeed(null));
     mockGetCachedPublishedText
       .mockReset()
-      .mockResolvedValue("Published markdown");
+      .mockReturnValue(Effect.succeed("Published markdown"));
     mockClassifyQuranLlmsRoute.mockReset().mockReturnValue(Option.none());
     mockGetQuranLlmsText.mockReset().mockReturnValue(Effect.succeed(null));
     mockIsPublicLlmsLocaleIndexRoute.mockReset().mockReturnValue(false);
@@ -112,7 +112,9 @@ describe("llms markdown content resolver", () => {
 
   it.effect("reads migrated public material markdown only from Aksara", () =>
     Effect.gen(function* () {
-      mockGetCachedPublishedText.mockResolvedValue("Aksara markdown");
+      mockGetCachedPublishedText.mockReturnValue(
+        Effect.succeed("Aksara markdown")
+      );
 
       expect(yield* readMarkdown(PUBLISHED_PATH)).toBe("Aksara markdown");
       expect(mockGetCachedPublishedText).toHaveBeenCalledWith({
@@ -127,7 +129,7 @@ describe("llms markdown content resolver", () => {
   it.effect("types cached Aksara markdown failures", () =>
     Effect.gen(function* () {
       const error = new Error("Aksara markdown failed");
-      mockGetCachedPublishedText.mockRejectedValue(error);
+      mockGetCachedPublishedText.mockReturnValue(Effect.fail(error));
 
       yield* expectCacheFailure(PUBLISHED_PATH, error, "published");
       expect(mockGetLlmsSectionIndexText).not.toHaveBeenCalled();
@@ -162,7 +164,9 @@ describe("llms markdown content resolver", () => {
         mockReadActiveContentRoute.mockReturnValueOnce(
           Effect.succeed({ activeReleaseId, kind: "found" })
         );
-        mockGetCachedPublishedText.mockResolvedValue("New markdown");
+        mockGetCachedPublishedText.mockReturnValue(
+          Effect.succeed("New markdown")
+        );
 
         expect(yield* readMarkdown(NEW_PATH)).toBe("New markdown");
         expect(mockGetCachedPublishedText).toHaveBeenCalledWith({
@@ -189,7 +193,9 @@ describe("llms markdown content resolver", () => {
     "reads an owned article body from the generic Aksara markdown seam",
     () =>
       Effect.gen(function* () {
-        mockGetCachedPublishedText.mockResolvedValue("Published article");
+        mockGetCachedPublishedText.mockReturnValue(
+          Effect.succeed("Published article")
+        );
 
         expect(yield* readMarkdown(PUBLISHED_ARTICLE_PATH)).toBe(
           "Published article"
@@ -277,7 +283,9 @@ describe("llms markdown content resolver", () => {
     "reads a reviewed Page body through the same signed markdown seam",
     () =>
       Effect.gen(function* () {
-        mockGetCachedPublishedText.mockResolvedValue("Signed Page markdown");
+        mockGetCachedPublishedText.mockReturnValue(
+          Effect.succeed("Signed Page markdown")
+        );
 
         expect(yield* readMarkdown("terms-of-service")).toBe(
           "Signed Page markdown"
@@ -296,8 +304,8 @@ describe("llms markdown content resolver", () => {
     "reads a nested reviewed Page without assuming one route segment",
     () =>
       Effect.gen(function* () {
-        mockGetCachedPublishedText.mockResolvedValue(
-          "Nested signed Page markdown"
+        mockGetCachedPublishedText.mockReturnValue(
+          Effect.succeed("Nested signed Page markdown")
         );
 
         expect(yield* readMarkdown(PUBLISHED_NESTED_PAGE_PATH)).toBe(

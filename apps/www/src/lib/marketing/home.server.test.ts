@@ -1,5 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from "@effect/vitest";
+import { Effect } from "effect";
 import { readFeaturedTryout } from "@/components/tryout/catalog/source.server";
 import {
   readRuntimeCurriculumCatalog,
@@ -15,12 +16,12 @@ vi.mock("@tanstack/react-start/server", () => ({
 }));
 
 vi.mock("@/components/tryout/catalog/source.server", () => ({
-  readFeaturedTryout: vi.fn(() => Promise.resolve({ title: "Featured" })),
+  readFeaturedTryout: vi.fn(() => Effect.succeed({ title: "Featured" })),
 }));
 
 vi.mock("@/lib/curriculum/model", () => ({
   readRuntimeCurriculumCatalog: vi.fn(() =>
-    Promise.resolve({ entries: [], sourceRevision: "rev" })
+    Effect.succeed({ entries: [], sourceRevision: "rev" })
   ),
   readRuntimeCurriculumOptions: vi.fn(() => [
     { href: "/en/curricula/math", title: "Math", value: "math" },

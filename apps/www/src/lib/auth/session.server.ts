@@ -255,14 +255,16 @@ const appendSetCookies = (session: RequestSession) =>
  * once, however many readers run.
  */
 export const readSessionMemo = (request: Request) =>
-  Effect.suspend(() => {
-    const existing = sessionMemos.get(request);
-    if (existing !== undefined) {
-      return Effect.succeed(existing);
-    }
-    return createSessionMemo(request).pipe(
-      Effect.tap((memo) => Effect.sync(() => sessionMemos.set(request, memo)))
-    );
+  Effect.gen(function* () {
+    const created = yield* createSessionMemo(request);
+    return yield* Effect.sync(() => {
+      const existing = sessionMemos.get(request);
+      if (existing !== undefined) {
+        return existing;
+      }
+      sessionMemos.set(request, created);
+      return created;
+    });
   });
 
 /**

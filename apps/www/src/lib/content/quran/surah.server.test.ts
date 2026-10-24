@@ -1,10 +1,11 @@
 // @vitest-environment node
 import { describe, expect, it } from "@effect/vitest";
 import { makeQuranSurah } from "@repo/backend/test/quran/rows";
+import { loadLocaleMessages } from "@repo/internationalization/src/messages";
 import { Effect } from "effect";
 import {
-  getPublishedQuranCatalog,
-  getPublishedQuranView,
+  readPublishedQuranCatalog,
+  readPublishedQuranView,
 } from "@/lib/content/quran/publication";
 import { recoverStalePublishedQuranSnapshot } from "@/lib/content/quran/recovery";
 import {
@@ -49,11 +50,11 @@ function publishedView() {
 let nextView: ReturnType<typeof publishedView> | null = null;
 
 vi.mock("@/lib/content/quran/publication", () => ({
-  getPublishedQuranCatalog: vi.fn(() =>
-    Promise.resolve({ surahs: catalogSurahs })
+  readPublishedQuranCatalog: vi.fn(() =>
+    Effect.succeed({ surahs: catalogSurahs })
   ),
-  getPublishedQuranView: vi.fn(() =>
-    Promise.resolve(nextView ?? publishedView())
+  readPublishedQuranView: vi.fn(() =>
+    Effect.succeed(nextView ?? publishedView())
   ),
 }));
 
@@ -68,7 +69,7 @@ describe("surah route read", () => {
     await expect(
       readSurahHandler({ data: { locale: "en", surah: "first" } })
     ).resolves.toStrictEqual({ kind: "notFound" });
-    expect(getPublishedQuranCatalog).not.toHaveBeenCalled();
+    expect(readPublishedQuranCatalog).not.toHaveBeenCalled();
   });
 
   it("answers not found for a surah that the catalog does not hold", async () => {
@@ -76,8 +77,17 @@ describe("surah route read", () => {
     await expect(
       readSurahHandler({ data: { locale: "en", surah: "1" } })
     ).resolves.toStrictEqual({ kind: "notFound" });
-    expect(getPublishedQuranView).not.toHaveBeenCalled();
+    expect(readPublishedQuranView).not.toHaveBeenCalled();
     catalogSurahs = [makeQuranSurah(1)];
+  });
+
+  it("fails the surah with its messages error when the locale messages cannot load", async () => {
+    vi.mocked(loadLocaleMessages).mockRejectedValueOnce(
+      new Error("Messages failed.")
+    );
+    await expect(
+      readSurahHandler({ data: { locale: "en", surah: "1" } })
+    ).rejects.toMatchObject({ _tag: "QuranMessagesUnavailableError" });
   });
 
   it("reads the surah with its verses and hides the bismillah when none is published", async () => {
@@ -93,7 +103,7 @@ describe("surah route read", () => {
       surah: "1",
       surahNumber: 1,
     });
-    expect(getPublishedQuranView).toHaveBeenCalledWith("en", 1);
+    expect(readPublishedQuranView).toHaveBeenCalledWith("en", 1);
   });
 
   it("shows the bismillah of the surah when the publication names one", async () => {

@@ -5,6 +5,7 @@ import { encodeJsonText } from "@repo/utilities/json";
 import { getCache, invalidateByTag } from "@vercel/functions";
 import {
   Array as Arr,
+  Cause,
   Duration,
   Effect,
   Option,
@@ -105,7 +106,7 @@ const warnUnavailable = (error: ContentStoreUnavailableError) =>
   Effect.logWarning(
     "The content store is unavailable.",
     error.operation,
-    error.cause
+    Cause.fail(error.cause)
   );
 
 /** Reports a value that the store skips because the Runtime Cache would refuse it. */

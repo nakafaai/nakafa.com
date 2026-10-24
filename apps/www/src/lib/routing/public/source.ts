@@ -3,9 +3,12 @@ import { PublicPathSchema } from "@nakafa/aksara-contracts/ids";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { ArticleRouteSlugSchema } from "@nakafa/aksara-contracts/projection/article";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/route/surface";
-import { DEFAULT_LOCALE, LOCALES } from "@repo/internationalization/src/locale";
+import {
+  DEFAULT_LOCALE,
+  type LOCALES,
+  LocaleSchema,
+} from "@repo/internationalization/src/locale";
 import { Array as Arr, Effect, HashSet, Record as Rec, Schema } from "effect";
-import { hasLocale } from "use-intl";
 import { hasPublishedArticleCategory } from "@/lib/content/article/category";
 import { matchesPreviewRoute } from "@/lib/content/preview/route";
 import { readActiveContentRoute } from "@/lib/content/published/route";
@@ -50,7 +53,7 @@ function readRejectedPublicRouteLocale(pathname: string) {
 
   const [locale, namespace] = Arr.filter(pathname.split("/"), Boolean);
 
-  if (!(namespace && hasLocale(LOCALES, locale))) {
+  if (!(namespace && Schema.is(LocaleSchema)(locale))) {
     return null;
   }
 
@@ -78,8 +81,8 @@ function readRejectedPublicRouteLocale(pathname: string) {
  * Reads finite public HTML routes that should 404 before app rendering.
  *
  * Quran, signed Article, and signed Page routes have finite inventories.
- * Rejecting impossible shapes here prevents streamed not-found responses
- * from looking like successful soft 404s to agents and crawlers.
+ * Rejecting impossible shapes here prevents streamed not-found responses from
+ * looking like successful soft 404s to agents and crawlers.
  */
 function readMissingHtmlRouteLocale({
   method,
@@ -94,7 +97,7 @@ function readMissingHtmlRouteLocale({
 
   const [locale, root, ...segments] = Arr.filter(pathname.split("/"), Boolean);
 
-  if (!(root && hasLocale(LOCALES, locale))) {
+  if (!(root && Schema.is(LocaleSchema)(locale))) {
     return Effect.succeed(null);
   }
 

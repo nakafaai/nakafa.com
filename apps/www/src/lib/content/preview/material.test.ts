@@ -23,10 +23,7 @@ import {
   type MaterialPreviewInput,
   readMaterialPreview,
 } from "@/lib/content/preview/material";
-import {
-  fetchPreviewJson,
-  fetchPreviewJsonForPrerender,
-} from "@/lib/content/preview/request";
+import { fetchPreviewJson } from "@/lib/content/preview/request";
 import { executeSignedArtifact } from "@/lib/content/published/artifact";
 import { rendererManifest } from "@/lib/content/renderer/manifest";
 import {
@@ -47,6 +44,13 @@ import {
 } from "@/test/content-preview";
 import { articlePendingManifest } from "@/test/preview-article";
 
+/** The request the readers of one document share; each test starts a new one. */
+const request = vi.hoisted(() => ({
+  current: new Request("http://127.0.0.1/"),
+}));
+vi.mock("@tanstack/react-start/server", () => ({
+  getRequest: () => request.current,
+}));
 vi.mock("use-intl", () => ({
   /** Keeps route rendering independent from navigation runtime behavior. */
   useTranslations: () => () => "",
@@ -58,7 +62,6 @@ vi.mock("@/lib/content/preview/config", async (importOriginal) => ({
 }));
 vi.mock("@/lib/content/preview/request", () => ({
   fetchPreviewJson: vi.fn(),
-  fetchPreviewJsonForPrerender: vi.fn(),
   MAX_PREVIEW_MANIFEST_BYTES: 128 * 1024,
 }));
 vi.mock("@/lib/content/published/artifact", () => ({
@@ -70,7 +73,7 @@ const input: MaterialPreviewInput = makePreviewInput();
 const configMock = vi.mocked(hasPreviewConfig);
 const decodeConfigMock = vi.mocked(decodePreviewEnvironment);
 const fetchMock = vi.mocked(fetchPreviewJson);
-const prerenderFetchMock = vi.mocked(fetchPreviewJsonForPrerender);
+const prerenderFetchMock = vi.mocked(fetchPreviewJson);
 const executeMock = vi.mocked(executeSignedArtifact);
 
 type ReadyMaterialManifestValue = ReturnType<typeof makeReadyManifest>;
@@ -99,6 +102,7 @@ function runFailure(request = input) {
 }
 
 beforeEach(() => {
+  request.current = new Request("http://127.0.0.1/");
   configMock.mockReset();
   decodeConfigMock.mockReset();
   fetchMock.mockReset();
@@ -120,8 +124,8 @@ layer(ReadyMaterialManifest.layer)("local material preview", (it) => {
     "rejects a malformed provider manifest before route selection",
     () =>
       Effect.gen(function* () {
-        prerenderFetchMock.mockResolvedValueOnce(
-          Result.succeed({ status: "ready" })
+        prerenderFetchMock.mockReturnValueOnce(
+          Effect.succeed({ status: "ready" })
         );
         expect(yield* runFailure()).toMatchObject({
           _tag: "PreviewIntegrityError",
@@ -138,7 +142,7 @@ layer(ReadyMaterialManifest.layer)("local material preview", (it) => {
         configMock.mockReturnValueOnce(false);
         expect(yield* runPreview()).toEqual(Option.none());
 
-        prerenderFetchMock.mockResolvedValueOnce(Result.succeed(manifest));
+        prerenderFetchMock.mockReturnValueOnce(Effect.succeed(manifest));
         expect(
           yield* runPreview({
             ...input,
@@ -151,8 +155,8 @@ layer(ReadyMaterialManifest.layer)("local material preview", (it) => {
 
   it.effect("leaves a selected article on its own preview renderer", () =>
     Effect.gen(function* () {
-      prerenderFetchMock.mockResolvedValueOnce(
-        Result.succeed(articlePendingManifest)
+      prerenderFetchMock.mockReturnValueOnce(
+        Effect.succeed(articlePendingManifest)
       );
 
       expect(yield* runPreview()).toEqual(Option.none());
@@ -165,13 +169,14 @@ layer(ReadyMaterialManifest.layer)("local material preview", (it) => {
     () =>
       Effect.gen(function* () {
         prerenderFetchMock
-          .mockResolvedValueOnce(Result.succeed(makePendingManifest()))
-          .mockResolvedValueOnce(Result.succeed(makeFailedManifest()));
+          .mockReturnValueOnce(Effect.succeed(makePendingManifest()))
+          .mockReturnValueOnce(Effect.succeed(makeFailedManifest()));
 
         expect(yield* runFailure()).toMatchObject({
           _tag: "PreviewPendingError",
           revision: 1,
         });
+        request.current = new Request("http://127.0.0.1/next");
         expect(yield* runFailure()).toMatchObject({
           _tag: "PreviewCompileError",
           code: "MDX_PARSE",
@@ -185,7 +190,7 @@ layer(ReadyMaterialManifest.layer)("local material preview", (it) => {
     () =>
       Effect.gen(function* () {
         const manifest = yield* ReadyMaterialManifest;
-        prerenderFetchMock.mockResolvedValueOnce(Result.succeed(manifest));
+        prerenderFetchMock.mockReturnValueOnce(Effect.succeed(manifest));
         fetchMock.mockReturnValueOnce(Effect.succeed(artifact));
 
         const result = yield* runPreview();
@@ -193,7 +198,7 @@ layer(ReadyMaterialManifest.layer)("local material preview", (it) => {
           metadata,
           rawMdx: previewWireMdx,
         });
-        expect(fetchMock).toHaveBeenCalledExactlyOnceWith(
+        expect(fetchMock).toHaveBeenCalledWith(
           config,
           `/artifacts/${encodeURIComponent(artifactHash)}`,
           expect.any(Number)
@@ -230,8 +235,8 @@ layer(ReadyMaterialManifest.layer)("local material preview", (it) => {
         ...artifact,
         payload: { ...artifact.payload, contentKey: newRoute.contentKey },
       });
-      prerenderFetchMock.mockResolvedValueOnce(
-        Result.succeed({
+      prerenderFetchMock.mockReturnValueOnce(
+        Effect.succeed({
           ...manifest,
           document: { ...manifest.document, route: newRoute },
           artifacts: [
@@ -351,8 +356,8 @@ layer(ReadyMaterialManifest.layer)("local material preview", (it) => {
   ] as const)("rejects an incoherent %s field", ([_label, check, makeChange]) =>
     Effect.gen(function* () {
       const manifest = yield* ReadyMaterialManifest;
-      prerenderFetchMock.mockResolvedValueOnce(
-        Result.succeed({ ...manifest, ...makeChange(manifest) })
+      prerenderFetchMock.mockReturnValueOnce(
+        Effect.succeed({ ...manifest, ...makeChange(manifest) })
       );
       expect(yield* runFailure()).toMatchObject({
         _tag: "PreviewIntegrityError",
@@ -383,7 +388,7 @@ layer(ReadyMaterialManifest.layer)("local material preview", (it) => {
       const changedArtifact = yield* Schema.decodeEffect(
         SignedContentArtifactSchema
       )({ ...artifact, ...change });
-      prerenderFetchMock.mockResolvedValueOnce(Result.succeed(manifest));
+      prerenderFetchMock.mockReturnValueOnce(Effect.succeed(manifest));
       fetchMock.mockReturnValueOnce(Effect.succeed(changedArtifact));
       executeMock.mockReturnValueOnce(
         Effect.succeed({ artifact: changedArtifact, Content: () => null })
@@ -400,7 +405,7 @@ layer(ReadyMaterialManifest.layer)("local material preview", (it) => {
     Effect.gen(function* () {
       const manifest = yield* ReadyMaterialManifest;
       const foreignKey = SigningKeyIdSchema.make("foreign-preview");
-      prerenderFetchMock.mockResolvedValueOnce(Result.succeed(manifest));
+      prerenderFetchMock.mockReturnValueOnce(Effect.succeed(manifest));
       fetchMock.mockReturnValueOnce(Effect.succeed(artifact));
       executeMock.mockReturnValueOnce(
         Effect.gen(function* () {

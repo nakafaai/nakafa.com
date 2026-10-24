@@ -5,10 +5,7 @@ import { createTestPublication } from "@repo/backend/test/content/publication";
 import { makeTryoutRuntimeSource } from "@repo/backend/test/tryout/serving";
 import { NakafaAgentDataReadError } from "@repo/contents/agent/errors";
 import { Effect, Layer } from "effect";
-import {
-  getCachedMetadataFromSlug,
-  getMetadataFromSlug,
-} from "@/lib/og/metadata";
+import { getMetadataFromSlug } from "@/lib/og/metadata";
 import { activateTestRelease } from "@/test/active";
 import { resetTestRuntimeCache } from "@/test/store";
 
@@ -184,11 +181,9 @@ describe("current content reference metadata", () => {
     () =>
       Effect.gen(function* () {
         routeMocks.read.mockReturnValueOnce(Effect.succeed(null));
-        expect(
-          yield* Effect.promise(() =>
-            getCachedMetadataFromSlug("en", ["pricing"])
-          )
-        ).toEqual(translatedDefaults);
+        expect(yield* getMetadataFromSlug("en", ["pricing"])).toEqual(
+          translatedDefaults
+        );
       })
   );
 });

@@ -3,7 +3,7 @@ import { HttpClient } from "@confect/js";
 import "@tanstack/react-start/server-only";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 import type { Locale } from "use-intl";
 import {
   makeArticleProjectionError,
@@ -39,7 +39,7 @@ const decodeArticleModel = Effect.fn("NakafaArticle.decodeModel")(function* (
     if (source.runtimeJson !== null) {
       return yield* makeArticleProjectionError(input);
     }
-    return null;
+    return Option.none();
   }
   if (source.runtimeJson === null) {
     return yield* makeArticleProjectionError(input);
@@ -53,10 +53,10 @@ const decodeArticleModel = Effect.fn("NakafaArticle.decodeModel")(function* (
     },
     narrowed
   );
-  return {
+  return Option.some({
     model,
     narrowed,
-  };
+  });
 });
 
 /** Verifies the complete query result before evaluating its immutable body. */
@@ -67,47 +67,46 @@ const decodeArticleDelivery = Effect.fn("NakafaArticle.decodeDelivery")(
     publicPath: string
   ) {
     const decoded = yield* decodeArticleModel(source, locale, publicPath);
-    if (!decoded) {
-      return null;
+    if (Option.isNone(decoded)) {
+      return Option.none();
     }
-    const published = yield* renderArticleArtifact(decoded.narrowed);
-    return {
-      model: decoded.model,
+    const published = yield* renderArticleArtifact(decoded.value.narrowed);
+    return Option.some({
+      model: decoded.value.model,
       published,
-    };
+    });
   }
 );
 
 /** Fetches one signed delivery row shared by body and metadata readers. */
-async function fetchArticleSource(locale: Locale, publicPath: string) {
-  return await Effect.runPromise(
-    Effect.flatMap(HttpClient.HttpClient, (client) =>
-      client.query(contentRelease.article.delivery, {
-        appLocale: AppLocaleSchema.make(locale),
-        publicPath,
-      })
-    ).pipe(Effect.provide(httpLayer()))
-  );
-}
-
-/** Reads and verifies one signed article delivery for the article page. */
-export async function getArticlePublication(
+const fetchArticleSource = Effect.fn("NakafaArticle.fetchSource")(function* (
   locale: Locale,
   publicPath: string
 ) {
-  const source = await fetchArticleSource(locale, publicPath);
-  return await Effect.runPromise(
-    decodeArticleDelivery(source, locale, publicPath)
-  );
-}
+  return yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
+    client.query(contentRelease.article.delivery, {
+      appLocale: AppLocaleSchema.make(locale),
+      publicPath,
+    })
+  ).pipe(Effect.provide(httpLayer()));
+});
+
+/** Reads and verifies one signed article delivery for the article page. */
+export const getArticlePublication = Effect.fn("NakafaArticle.getPublication")(
+  function* (locale: Locale, publicPath: string) {
+    const source = yield* fetchArticleSource(locale, publicPath);
+    return yield* decodeArticleDelivery(source, locale, publicPath);
+  }
+);
 
 /** Reads and verifies signed release metadata without rendering its body.
  *
  * Social images resolve copy through this seam so a missing release falls
  * back to brand artwork instead of rendering the application shell. */
-export async function getArticleModel(locale: Locale, publicPath: string) {
-  const source = await fetchArticleSource(locale, publicPath);
-  return await Effect.runPromise(
-    decodeArticleModel(source, locale, publicPath)
-  );
-}
+export const getArticleModel = Effect.fn("NakafaArticle.getModel")(function* (
+  locale: Locale,
+  publicPath: string
+) {
+  const source = yield* fetchArticleSource(locale, publicPath);
+  return yield* decodeArticleModel(source, locale, publicPath);
+});

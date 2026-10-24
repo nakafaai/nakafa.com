@@ -27,13 +27,9 @@ function mapFailure(error: { readonly _tag: string }) {
 }
 
 /** Proxies sanitized local preview updates without exposing provider secrets. */
-export function serveContentPreview({
-  request,
-}: {
-  readonly request: Request;
-}) {
-  return Effect.runPromise(
-    openPreviewEvents(request.signal).pipe(
+export const serveContentPreview = Effect.fn("www.content.internal.preview")(
+  function* ({ request }: { readonly request: Request }) {
+    return yield* openPreviewEvents(request.signal).pipe(
       Effect.match({
         onFailure: mapFailure,
         onSuccess: (stream) =>
@@ -45,6 +41,6 @@ export function serveContentPreview({
             },
           }),
       })
-    )
-  );
-}
+    );
+  }
+);

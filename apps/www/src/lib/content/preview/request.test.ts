@@ -8,7 +8,6 @@ import { TestClock } from "effect/testing";
 import type { PreviewConfig } from "@/lib/content/preview/config";
 import {
   fetchPreviewJson,
-  fetchPreviewJsonForPrerender,
   MAX_PREVIEW_MANIFEST_BYTES,
 } from "@/lib/content/preview/request";
 
@@ -112,18 +111,6 @@ describe("local preview JSON requests", () => {
       expect(fetcher).not.toHaveBeenCalled();
     })
   );
-
-  it("rejects an invalid path at the Next prerender boundary", () =>
-    expect(
-      fetchPreviewJsonForPrerender(
-        config,
-        "//attacker.test/steal",
-        MAX_PREVIEW_MANIFEST_BYTES
-      )
-    ).resolves.toMatchObject({
-      _tag: "Failure",
-      failure: { _tag: "PreviewConfigError" },
-    }));
 
   it.effect(
     "sends the bearer token only to an exact content-addressed artifact",

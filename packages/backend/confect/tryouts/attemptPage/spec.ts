@@ -10,6 +10,7 @@ import {
   tryoutRouteKeyValidator,
   tryoutSetIdentityValidator,
 } from "@repo/backend/confect/tryouts/route";
+import { tryoutBodyBatchValidator } from "@repo/backend/confect/tryouts/runtime/body";
 import {
   tryoutRuntimeStateValidator,
   tryoutSectionContentAccessValidator,
@@ -106,4 +107,18 @@ export const tryoutSectionAttemptPageResultValidator = Schema.Union([
   Schema.Null,
   redirectResultValidator,
   retainedSectionResultValidator,
+]);
+
+/**
+ * A section page with the signed bodies of its content, in the batches that the
+ * web plans for it. A finished attempt, or content that is not signed, has none.
+ */
+export const sectionWithBodiesResultValidator = Schema.Union([
+  Schema.Null,
+  Schema.Struct({
+    attempt: retainedSectionResultValidator,
+    bodies: Schema.mutable(
+      Schema.Array(Schema.Union([tryoutBodyBatchValidator, Schema.Null]))
+    ),
+  }),
 ]);

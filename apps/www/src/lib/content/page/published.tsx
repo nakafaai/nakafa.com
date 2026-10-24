@@ -66,28 +66,23 @@ const renderPageArtifact = Effect.fn("NakafaContent.renderPageArtifact")(
   }
 );
 
-/** Caches one current Page while preserving a truthful signed absence. */
-async function getCurrentPublishedPage(input: CurrentPublishedPageInput) {
-  const result = await Effect.runPromise(
-    readCurrentPublishedPage(input).pipe(
-      Effect.asSome,
-      Effect.catchTag("ContentRuntimeMissingError", () => Effect.succeedNone)
-    )
-  );
-  if (Option.isNone(result)) {
-    return null;
-  }
-  return result.value;
-}
-
-/** Caches current Page JSX resolved without a second runtime lookup. */
-export async function renderCurrentPublishedPage(
+/** Reads one current Page, or none for a truthful signed absence. */
+const readCurrentPublished = Effect.fn("www.pages.current")(function* (
   input: CurrentPublishedPageInput
 ) {
-  const data = await getCurrentPublishedPage(input);
-  if (!data) {
-    return null;
+  return yield* readCurrentPublishedPage(input).pipe(
+    Effect.asSome,
+    Effect.catchTag("ContentRuntimeMissingError", () => Effect.succeedNone)
+  );
+});
+
+/** Renders the current Page JSX, resolved without a second runtime lookup. */
+export const renderCurrentPublishedPage = Effect.fn("www.pages.renderCurrent")(
+  function* (input: CurrentPublishedPageInput) {
+    const data = yield* readCurrentPublished(input);
+    if (Option.isNone(data)) {
+      return Option.none();
+    }
+    return Option.some(yield* renderPageArtifact(data.value));
   }
-  const rendered = await Effect.runPromise(renderPageArtifact(data));
-  return rendered;
-}
+);

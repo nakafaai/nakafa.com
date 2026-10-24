@@ -1,21 +1,12 @@
 import "@tanstack/react-start/server-only";
-import {
-  APP_LOCALE_CODES,
-  type AppLocale,
-  AppLocaleSchema,
-} from "@nakafa/aksara-contracts/locale";
+import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { previewDocumentRoute } from "@nakafa/aksara-contracts/preview/document";
 import type { LocalPreviewManifest } from "@nakafa/aksara-contracts/preview/spec";
-import { ArticleRouteSlugSchema } from "@nakafa/aksara-contracts/projection/article";
 import { materialPublicNamespace } from "@nakafa/aksara-contracts/projection/material";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/route/surface";
-import { Array as Arr, Effect, Option, Result, Schema } from "effect";
-import { hasLocale } from "use-intl";
-import { PreviewIntegrityError } from "@/lib/content/preview/errors";
-import {
-  readPreviewManifestForPrerender,
-  readPreviewSnapshot,
-} from "@/lib/content/preview/manifest";
+import { LocaleSchema } from "@repo/internationalization/src/locale";
+import { Array as Arr, Effect, Option, Schema } from "effect";
+import { readPreviewSnapshot } from "@/lib/content/preview/manifest";
 
 /** Exact public route identity checked before Convex route rejection. */
 const PreviewRouteInputSchema = Schema.Struct({
@@ -40,29 +31,6 @@ const MaterialPreviewRouteInputSchema = Schema.Struct({
 });
 export type MaterialPreviewRouteInput =
   typeof MaterialPreviewRouteInputSchema.Type;
-/** Runtime contract for one concrete material preview route. */
-const MaterialPreviewStaticParamsSchema = Schema.Struct({
-  lesson: Schema.NonEmptyArray(Schema.Trimmed.check(Schema.isNonEmpty())),
-  subject: Schema.Trimmed.check(Schema.isNonEmpty()),
-  topic: Schema.Trimmed.check(Schema.isNonEmpty()),
-});
-/** Runtime contract for one concrete article preview route. */
-const ArticlePreviewStaticParamsSchema = Schema.Struct({
-  category: ArticleRouteSlugSchema,
-  slug: ArticleRouteSlugSchema,
-});
-/** Concrete child params that prerender one selected Page preview. */
-const PagePreviewStaticParamsSchema = Schema.Struct({
-  page: Schema.Array(Schema.String),
-});
-type PagePreviewStaticParams = typeof PagePreviewStaticParamsSchema.Type;
-/** Reads the single selected locale used to prerender the preview app shell. */
-export function readPreviewStaticLocaleParams() {
-  return readPreviewManifestForPrerender().then((manifest) => {
-    const route = previewDocumentRoute(manifest.document);
-    return [{ locale: route.appLocale }];
-  });
-}
 /** Checks whether two route segment collections are byte-for-byte equal. */
 function hasSameSegments(left: readonly string[], right: readonly string[]) {
   return (
@@ -93,102 +61,13 @@ export function matchesMaterialPreviewRoute(
   }
   return true;
 }
-/** Decodes one canonical material path without starting a runtime. */
-function decodeMaterialPreviewStaticParams({
-  appLocale,
-  publicPath,
-}: {
-  readonly appLocale: AppLocale;
-  readonly publicPath: string;
-}) {
-  const [namespace, subject, topic, ...lesson] = publicPath.split("/");
-  if (namespace !== materialPublicNamespace(appLocale)) {
-    return Result.fail(new PreviewIntegrityError({ check: "projection" }));
-  }
-  return Result.mapError(
-    Schema.decodeUnknownResult(MaterialPreviewStaticParamsSchema)({
-      lesson,
-      subject,
-      topic,
-    }),
-    () => new PreviewIntegrityError({ check: "projection" })
-  );
-}
-/** Parses one canonical material path into route params. */
-export const parseMaterialPreviewStaticParams = Effect.fn(
-  "NakafaContent.parseMaterialPreviewStaticParams"
-)(function* (input: {
-  readonly appLocale: AppLocale;
-  readonly publicPath: string;
-}) {
-  const decoded = decodeMaterialPreviewStaticParams(input);
-  if (Result.isFailure(decoded)) {
-    return yield* decoded.failure;
-  }
-  return decoded.success;
-});
-/** Reads the selected material route so its page shell can be built. */
-export function readMaterialPreviewStaticParams(appLocale: AppLocale) {
-  return readPreviewManifestForPrerender().then((manifest) => {
-    const document = manifest.document;
-    if (document.family !== "material") {
-      return [];
-    }
-    if (document.route.appLocale !== appLocale) {
-      return Promise.reject(new PreviewIntegrityError({ check: "projection" }));
-    }
-    const decoded = decodeMaterialPreviewStaticParams({
-      appLocale,
-      publicPath: document.route.publicPath,
-    });
-    if (Result.isFailure(decoded)) {
-      return Promise.reject(decoded.failure);
-    }
-    return [decoded.success];
-  });
-}
-/** Reads the selected article route so its page shell can be built. */
-export function readArticlePreviewStaticParams(appLocale: AppLocale) {
-  return readPreviewManifestForPrerender().then((manifest) => {
-    const document = manifest.document;
-    if (document.family !== "article") {
-      return [];
-    }
-    if (document.route.appLocale !== appLocale) {
-      return Promise.reject(new PreviewIntegrityError({ check: "projection" }));
-    }
-    return [
-      ArticlePreviewStaticParamsSchema.make({
-        category: document.route.categoryRouteSlug,
-        slug: document.route.articleRouteSlug,
-      }),
-    ];
-  });
-}
-/** Reads the selected Page route so its page shell can be built. */
-export function readPagePreviewStaticParams(appLocale: AppLocale) {
-  return readPreviewManifestForPrerender().then((manifest) => {
-    const document = manifest.document;
-    if (document.family !== "page") {
-      return [];
-    }
-    if (document.route.appLocale !== appLocale) {
-      return Promise.reject(new PreviewIntegrityError({ check: "projection" }));
-    }
-    return [
-      {
-        page: document.route.publicPath.split("/"),
-      } satisfies PagePreviewStaticParams,
-    ];
-  });
-}
 /** Resolves a the locale seam material rewrite back to its canonical public path. */
 function resolveInternalRoute({ localeHint, pathname }: InternalRouteInput) {
   const [locale, appSegment, ...segments] = Arr.filter(
     pathname.split("/"),
     Boolean
   );
-  if (!(hasLocale(APP_LOCALE_CODES, locale) && localeHint === locale)) {
+  if (!(Schema.is(LocaleSchema)(locale) && localeHint === locale)) {
     return Option.none<PreviewRouteInput>();
   }
   const surface = Arr.findFirst(
@@ -227,7 +106,7 @@ export const matchesPreviewPathname = Effect.fn(
   "NakafaContent.matchesPreviewPathname"
 )(function* (pathname: string) {
   const [locale, ...segments] = Arr.filter(pathname.split("/"), Boolean);
-  if (!(hasLocale(APP_LOCALE_CODES, locale) && segments.length > 0)) {
+  if (!(Schema.is(LocaleSchema)(locale) && segments.length > 0)) {
     return false;
   }
   return yield* matchesPreviewRoute({

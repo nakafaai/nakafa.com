@@ -8,6 +8,7 @@ import {
   revokeToBaselineAnalytics,
 } from "@repo/analytics/posthog/browser";
 import { Clock, Effect, Schema } from "effect";
+import { reportClientException } from "@/lib/analytics/client";
 import { saveAnonymousAnalyticsConsent } from "@/lib/analytics/consent/storage";
 import { readAuthClient } from "@/lib/auth/client";
 
@@ -66,7 +67,10 @@ const defaultDeletedAccountIdentityCleanup = {
 type DeletedAccountIdentityCleanup =
   typeof defaultDeletedAccountIdentityCleanup;
 
-/** Clears account state before another browser identity can take over. */
+/**
+ * Clears account state before another browser identity can take over. A step
+ * that fails is reported with its cause, and the other step still runs.
+ */
 export const clearAccountBrowserIdentity = Effect.fn(
   "www.auth.clearAccountBrowserIdentity"
 )(function* (
@@ -74,8 +78,22 @@ export const clearAccountBrowserIdentity = Effect.fn(
 ) {
   yield* Effect.all(
     [
-      Effect.try(cleanup.resetAnalytics).pipe(Effect.ignore),
-      Effect.try(cleanup.removePersistedAccountState).pipe(Effect.ignore),
+      Effect.try(cleanup.resetAnalytics).pipe(
+        Effect.catch((cause) =>
+          reportClientException(cause, {
+            operation: "resetAnalytics",
+            source: "auth.identityCleanup",
+          })
+        )
+      ),
+      Effect.try(cleanup.removePersistedAccountState).pipe(
+        Effect.catch((cause) =>
+          reportClientException(cause, {
+            operation: "removePersistedAccountState",
+            source: "auth.identityCleanup",
+          })
+        )
+      ),
     ],
     { discard: true }
   );
@@ -83,15 +101,30 @@ export const clearAccountBrowserIdentity = Effect.fn(
 
 /**
  * Disables analytics and clears browser identity after a committed deletion.
- * Cleanup is best-effort because the server-side deletion is irreversible.
+ * Cleanup is best-effort because the server-side deletion is irreversible, so
+ * each failed step is reported with its cause and the rest still runs.
  */
 export const clearDeletedAccountBrowserIdentity = Effect.fn(
   "www.auth.clearDeletedAccountBrowserIdentity"
 )(function* (
   cleanup: DeletedAccountIdentityCleanup = defaultDeletedAccountIdentityCleanup
 ) {
-  yield* cleanup.revokeAnalytics().pipe(Effect.ignore);
-  yield* cleanup.denyAnonymousAnalytics().pipe(Effect.ignore);
+  yield* cleanup.revokeAnalytics().pipe(
+    Effect.catch((cause) =>
+      reportClientException(cause, {
+        operation: "revokeAnalytics",
+        source: "auth.identityCleanup",
+      })
+    )
+  );
+  yield* cleanup.denyAnonymousAnalytics().pipe(
+    Effect.catch((cause) =>
+      reportClientException(cause, {
+        operation: "denyAnonymousAnalytics",
+        source: "auth.identityCleanup",
+      })
+    )
+  );
 
   yield* clearAccountBrowserIdentity(cleanup);
 });

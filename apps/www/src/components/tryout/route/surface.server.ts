@@ -1,15 +1,40 @@
 import type { Locale } from "@repo/internationalization/src/locale";
-import { readServerTranslator } from "@repo/internationalization/src/translator";
-import { Effect, Option } from "effect";
-import { loadSignedTryoutContent } from "@/components/tryout/content/signed";
+import { Effect, Option, Schema } from "effect";
+import {
+  loadSignedTryoutContent,
+  renderSignedTryoutRows,
+} from "@/components/tryout/content/signed";
 import { renderTryoutQuestionBody } from "@/components/tryout/route/body.server";
-import type { readCurrentTryoutSet } from "@/components/tryout/route/current";
+import type {
+  readCurrentTryoutSection,
+  readCurrentTryoutSet,
+} from "@/components/tryout/route/current";
 import {
   renderTryoutPreview,
   renderTryoutReview,
 } from "@/components/tryout/route/rendered.server";
 import type { QuestionPreviewContent } from "@/lib/content/preview/question";
+import { readCopy } from "@/lib/i18n/copy.server";
 import { getOgUrl } from "@/lib/seo/social";
+
+/** Expected failure while one rendered part of the try-out surface cannot render. */
+class TryoutSurfaceRenderError extends Schema.TaggedError<TryoutSurfaceRenderError>()(
+  "TryoutSurfaceRenderError",
+  {
+    cause: Schema.Unknown,
+    stage: Schema.Literals(["preview", "question", "review"]),
+  }
+) {}
+
+/** Renders one part of the surface, as a typed failure that names its stage when the render rejects. */
+const renderStage = <A>(
+  stage: "preview" | "question" | "review",
+  render: () => Promise<A>
+) =>
+  Effect.tryPromise({
+    try: render,
+    catch: (cause) => new TryoutSurfaceRenderError({ cause, stage }),
+  });
 
 /**
  * The parts of an attempt that its running content and its review read: its ID,
@@ -32,9 +57,10 @@ export const readRetainedHead = Effect.fn("www.tryout.route.readRetainedHead")(
     readonly publicPath: string;
     readonly title: string;
   }) {
-    const tTryouts = yield* Effect.promise(() =>
-      readServerTranslator({ locale: input.locale, namespace: "Tryouts" })
-    );
+    const tTryouts = yield* readCopy({
+      locale: input.locale,
+      namespace: "Tryouts",
+    });
     return {
       canonicalPath: `/${input.locale}/${input.publicPath}` as const,
       description: input.description ?? tTryouts("metadata-description"),
@@ -64,7 +90,9 @@ export const readPreviewRoute = Effect.fn("www.tryout.route.readPreview")(
         title: section.title,
       }),
       kind: "preview" as const,
-      preview: yield* Effect.promise(() => renderTryoutPreview(input.preview)),
+      preview: yield* renderStage("preview", () =>
+        renderTryoutPreview(input.preview)
+      ),
     };
   }
 );
@@ -86,14 +114,51 @@ export const readAttemptContent = Effect.fn("www.tryout.route.readContent")(
       input.attempt.attemptId,
       content
     );
-    const questions = yield* Effect.forEach(
-      signed.questions,
-      (question) => Effect.promise(() => renderTryoutQuestionBody(question)),
-      { concurrency: "unbounded" }
-    );
-    return Option.some({ questions });
+    return Option.some({
+      questions: yield* renderQuestionBodies(signed.questions),
+    });
   }
 );
+
+/**
+ * The signed question bodies of a running section, rendered from the rows its
+ * page read already returned, so the section reads Convex once. A finished
+ * attempt, or one without signed content, has none.
+ */
+export const readRunningSectionContent = Effect.fn(
+  "www.tryout.route.readSectionContent"
+)(function* (input: { readonly attempt: RunningSection }) {
+  const { bodies, content, initialState } = input.attempt;
+  if (
+    content.kind !== "signed" ||
+    initialState.attempt.status !== "in-progress"
+  ) {
+    return Option.none();
+  }
+  const signed = yield* renderSignedTryoutRows(content, bodies);
+  return Option.some({
+    questions: yield* renderQuestionBodies(signed.questions),
+  });
+});
+
+/** Renders the question bodies of one verified content set for the page. */
+const renderQuestionBodies = Effect.fn("www.tryout.route.renderQuestionBodies")(
+  function* (
+    questions: readonly Parameters<typeof renderTryoutQuestionBody>[0][]
+  ) {
+    return yield* Effect.forEach(
+      questions,
+      (question) =>
+        renderStage("question", () => renderTryoutQuestionBody(question)),
+      { concurrency: "unbounded" }
+    );
+  }
+);
+
+/** A section attempt with the signed rows of its content that its page read returned. */
+type RunningSection = Option.Option.Value<
+  Effect.Success<ReturnType<typeof readCurrentTryoutSection>>
+>;
 
 /** The server-rendered review tree of one finished attempt. */
 type RenderedReview = Awaited<ReturnType<typeof renderTryoutReview>>;
@@ -121,7 +186,7 @@ export const readAttemptReview = Effect.fn("www.tryout.route.readReview")(
       return Option.none<RenderedReview>();
     }
     return Option.some(
-      yield* Effect.promise(() =>
+      yield* renderStage("review", () =>
         renderTryoutReview({
           access: content,
           attemptId: attempt.attemptId,

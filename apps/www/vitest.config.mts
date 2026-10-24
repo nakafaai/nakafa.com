@@ -29,8 +29,8 @@ export default mergeConfig(config, {
     /** Prepare the React test environment before each suite loads. */
     setupFiles: ["./vitest.setup.ts"],
     coverage: {
-      /** Client lazy boundaries are verified by analyzer and browser gates. */
-      exclude: ["src/lib/content/renderer/client/**"],
+      /** React components are verified by production-mode browser acceptance, not unit coverage (AGENTS.md). */
+      exclude: ["src/**/*.tsx"],
     },
   },
 });

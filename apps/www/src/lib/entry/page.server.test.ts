@@ -42,7 +42,7 @@ vi.mock("@/lib/onboarding/status.server", () => ({
 }));
 
 vi.mock("@/lib/content/page/navigation", () => ({
-  getShellPageNavigation: vi.fn(() => Promise.resolve(pages)),
+  getShellPageNavigation: vi.fn(() => Effect.succeed(pages)),
 }));
 
 const signedIn = () => Option.some("convex-token");
@@ -128,13 +128,13 @@ describe("onboarding page", () => {
 describe("onboarding admission", () => {
   it("records the admission of the signed-in account", async () => {
     session = { convexToken: signedIn(), setCookies: [] };
-    await admitOnboardingHandler();
+    await admitOnboardingHandler({ data: undefined });
     expect(recordOnboardingAdmission).toHaveBeenCalledWith("convex-token");
   });
 
   it("records nothing for a request without a session", async () => {
     session = { convexToken: Option.none(), setCookies: [] };
-    await admitOnboardingHandler();
+    await admitOnboardingHandler({ data: undefined });
     expect(recordOnboardingAdmission).not.toHaveBeenCalled();
   });
 });

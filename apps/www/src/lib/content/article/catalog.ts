@@ -271,22 +271,3 @@ export const readPublishedCategories = Effect.fn(
     stale,
   };
 });
-/** Caches one bounded article page under exact article release tags. */
-export async function getPublishedArticlePage(
-  input: ArticlePageCursor & {
-    readonly category: ArticleCategory;
-    readonly locale: Locale;
-  }
-) {
-  const page = await Effect.runPromise(readPublishedArticlePage(input));
-  return page;
-}
-/** Caches one bounded category page under exact article release tags. */
-export async function getPublishedCategories(
-  input: ArticlePageCursor & {
-    readonly locale: Locale;
-  }
-) {
-  const page = await Effect.runPromise(readPublishedCategories(input));
-  return page;
-}

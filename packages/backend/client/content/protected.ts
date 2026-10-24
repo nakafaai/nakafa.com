@@ -50,25 +50,19 @@ const readProtectedRuntimeResponse = Effect.fn(
     Effect.mapError(() => createContentContractError(response))
   );
   yield* validateContentRuntimeStatus(decoded, response.status);
-  return decoded;
+  return { decoded, input };
 });
 
-/** Reads and authenticates one retained-snapshot protected artifact batch. */
-export const readProtectedContent = Effect.fn(
-  "NakafaContent.readProtectedContent"
+/**
+ * One protected response as the runtime answered it, before its signed exchange
+ * is verified, with the HTTP status that answered it.
+ */
+export const fetchProtectedResponse = Effect.fn(
+  "NakafaContent.fetchProtectedResponse"
 )(function* (
   target: ContentHttpTarget,
-  input: unknown,
-  rendererManifest: unknown
+  request: ProtectedContentRuntimeRequest
 ) {
-  const request = yield* decodeProtectedContentRuntimeRequest(input).pipe(
-    Effect.mapError(
-      () =>
-        new ContentTransportError({
-          reason: "request",
-        })
-    )
-  );
   const source = yield* encodeContentRequest(
     request,
     MAX_PROTECTED_RUNTIME_REQUEST_BYTES
@@ -77,7 +71,7 @@ export const readProtectedContent = Effect.fn(
     target.siteUrl,
     PROTECTED_CONTENT_RUNTIME_PATH
   );
-  const { response, value: decoded } = yield* requestContentResponse(
+  const { response, value } = yield* requestContentResponse(
     {
       endpoint,
       source,
@@ -85,16 +79,50 @@ export const readProtectedContent = Effect.fn(
     },
     readProtectedRuntimeResponse
   );
+  return {
+    input: value.input,
+    response: value.decoded,
+    status: response.status,
+  };
+});
+
+/** Decodes one protected batch request, or fails as a request transport error. */
+export const decodeProtectedRequest = Effect.fn(
+  "NakafaContent.decodeProtectedRequest"
+)(function* (input: unknown) {
+  return yield* decodeProtectedContentRuntimeRequest(input).pipe(
+    Effect.mapError(
+      () =>
+        new ContentTransportError({
+          reason: "request",
+        })
+    )
+  );
+});
+
+/**
+ * Reads and authenticates one retained-snapshot protected artifact batch: it
+ * decodes the request, fetches the runtime response, and verifies its signed exchange.
+ */
+export const readProtectedContent = Effect.fn(
+  "NakafaContent.readProtectedContent"
+)(function* (
+  target: ContentHttpTarget,
+  input: unknown,
+  rendererManifest: unknown
+) {
+  const request = yield* decodeProtectedRequest(input);
+  const fetched = yield* fetchProtectedResponse(target, request);
   return yield* verifyProtectedResponse(
     request,
-    decoded,
+    fetched.response,
     rendererManifest,
-    response.status
+    fetched.status
   );
 });
 
 /** Verifies the signed protected exchange and preserves typed failures. */
-const verifyProtectedResponse = Effect.fn(
+export const verifyProtectedResponse = Effect.fn(
   "NakafaContent.verifyProtectedResponse"
 )(function* (
   request: ProtectedContentRuntimeRequest,
@@ -127,4 +155,24 @@ const verifyProtectedResponse = Effect.fn(
     });
   }
   return verified;
+});
+
+/**
+ * Decodes a protected answer that was kept as received, with the HTTP status that
+ * gave it. A kept answer decoded before, so a decode failure here is a contract
+ * failure of the stored bytes.
+ */
+export const decodeProtectedResponseInput = Effect.fn(
+  "NakafaContent.decodeProtectedResponseInput"
+)(function* (input: unknown, status: number) {
+  const decoded = yield* decodeProtectedContentRuntimeResponse(input).pipe(
+    Effect.mapError(
+      () =>
+        new ContentTransportError({
+          reason: "response-contract",
+        })
+    )
+  );
+  yield* validateContentRuntimeStatus(decoded, status);
+  return decoded;
 });

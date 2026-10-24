@@ -5,13 +5,13 @@ import {
 import { Clock, Effect, Option, Schema } from "effect";
 import type { PlayerModeParam } from "@/components/player/mode";
 import { readPlayerMode } from "@/components/player/mode.server";
-import {
-  readTryoutSectionAttemptPage,
-  readTryoutSectionPage,
-} from "@/components/tryout/catalog/source.server";
+import { readTryoutSectionPage } from "@/components/tryout/catalog/source.server";
 import { readTryoutQuestionPreview } from "@/components/tryout/preview/read";
 import { readTryoutRouteHead } from "@/components/tryout/route/catalog.server";
-import { readCurrentTryoutSection } from "@/components/tryout/route/current";
+import {
+  readCurrentTryoutSection,
+  readRetainedTryoutSection,
+} from "@/components/tryout/route/current";
 import { readAddressIntent } from "@/components/tryout/route/intent";
 import { selectTryoutSectionReturnPath } from "@/components/tryout/route/owner";
 import {
@@ -21,10 +21,10 @@ import {
 } from "@/components/tryout/route/path";
 import { keepPersonalResponse } from "@/components/tryout/route/response.server";
 import {
-  readAttemptContent,
   readAttemptReview,
   readPreviewRoute,
   readRetainedHead,
+  readRunningSectionContent,
 } from "@/components/tryout/route/surface.server";
 import { readRequestToken } from "@/components/tryout/route/token.server";
 import { serverHandler } from "@/lib/server/fn";
@@ -99,9 +99,7 @@ export const readTryoutSectionRoute = Effect.fn("www.tryout.route.readSection")(
         intent.value.view
       );
     }
-    const preview = yield* Effect.promise(() =>
-      readTryoutQuestionPreview(locale, sectionPath)
-    );
+    const preview = yield* readTryoutQuestionPreview(locale, sectionPath);
     if (Option.isSome(preview)) {
       return yield* readPreviewRoute({
         locale,
@@ -137,7 +135,7 @@ export const readTryoutSectionRoute = Effect.fn("www.tryout.route.readSection")(
       )
     );
     const content = Option.isSome(attempt)
-      ? yield* readAttemptContent({ attempt: attempt.value })
+      ? yield* readRunningSectionContent({ attempt: attempt.value })
       : Option.none();
     const review = Option.isSome(attempt)
       ? yield* readAttemptReview({ attempt: attempt.value, locale })
@@ -199,18 +197,18 @@ const readRetainedSectionRoute = Effect.fn(
       kind: "signIn" as const,
     };
   }
-  const attempt = yield* readTryoutSectionAttemptPage(input.token.value, {
+  const running = yield* readRetainedTryoutSection(input.token.value, {
     attemptId: input.attemptId,
-    kind: "retained",
     locale: input.locale,
     publicPath: input.publicPath,
   });
-  if (attempt?.kind !== "retained") {
+  if (Option.isNone(running)) {
     return { kind: "notFound" as const };
   }
+  const attempt = running.value;
   return {
     binding: yield* readSectionBinding(attempt, view),
-    content: Option.getOrNull(yield* readAttemptContent({ attempt })),
+    content: Option.getOrNull(yield* readRunningSectionContent({ attempt })),
     head: yield* readRetainedHead({
       description: attempt.page.section.description,
       locale: input.locale,

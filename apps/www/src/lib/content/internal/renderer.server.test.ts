@@ -4,6 +4,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { PREVIEW_RENDERER_AUTH_FORMAT } from "@nakafa/aksara-contracts/preview/auth";
 import { Effect, Redacted } from "effect";
 import { serveContentRenderer } from "@/lib/content/internal/renderer.server";
+import { runServerEffect } from "@/lib/server/fn";
 
 const readPreviewRendererConfigMock = vi.hoisted(() => vi.fn());
 
@@ -24,11 +25,13 @@ const NONCE = "N".repeat(43);
 
 /** Creates one renderer request with an optional bearer token and nonce. */
 function renderer(headers: Record<string, string> = {}) {
-  return serveContentRenderer({
-    request: new Request("https://nakafa.com/api/internal/content/renderer", {
-      headers,
-    }),
-  });
+  return runServerEffect(
+    serveContentRenderer({
+      request: new Request("https://nakafa.com/api/internal/content/renderer", {
+        headers,
+      }),
+    })
+  );
 }
 
 describe("content renderer route", () => {

@@ -25,7 +25,6 @@ import {
   Schema,
 } from "effect";
 import {
-  getPublishedPageCatalog,
   readPublishedPageCatalog,
   readPublishedPageLocalePath,
   verifyPublishedPageCatalog,
@@ -142,7 +141,7 @@ describe("published Page catalog", () => {
     Effect.gen(function* () {
       yield* readPublishedPageCatalog();
       yield* readPublishedPageCatalog();
-      yield* Effect.tryPromise(() => getPublishedPageCatalog());
+      yield* readPublishedPageCatalog();
       expect(runtimeQueryMock).toHaveBeenCalledTimes(1);
 
       activateTestRelease("release-pages-next");
@@ -153,7 +152,7 @@ describe("published Page catalog", () => {
   );
   it.effect("caches the complete signed Page catalog", () =>
     Effect.gen(function* () {
-      const catalog = yield* Effect.tryPromise(() => getPublishedPageCatalog());
+      const catalog = yield* readPublishedPageCatalog();
       expect(catalog).toEqual({
         activeReleaseId,
         projections: [testPageProjection],

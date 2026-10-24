@@ -29,25 +29,23 @@ export function serveSkill() {
 }
 
 /** Serves the agent-skills discovery manifest. A failed digest is a defect. */
-export function serveAgentSkills() {
-  return Effect.runPromise(
-    Effect.map(getNakafaAgentSkillIndex(), (index) =>
-      Response.json(index, {
-        headers: {
-          "Cache-Control": LLMS_CACHE_CONTROL,
-        },
-      })
-    ).pipe(Effect.orDie)
-  );
-}
+export const serveAgentSkills = Effect.fn("www.llms.agentSkills")(() =>
+  Effect.map(getNakafaAgentSkillIndex(), (index) =>
+    Response.json(index, {
+      headers: {
+        "Cache-Control": LLMS_CACHE_CONTROL,
+      },
+    })
+  ).pipe(Effect.orDie)
+);
 
 /** The splat of a `/llms.mdx/...` path. */
 const LlmsMarkdownParamsSchema = Schema.Struct({
-  _splat: Schema.optionalKey(Schema.String),
+  _splat: Schema.optionalKey(Schema.UndefinedOr(Schema.String)),
 });
 
 /** Serves the Markdown of one `/llms.mdx/...` path, with the splat as its segments. */
-export function serveLlmsMarkdown({
+export const serveLlmsMarkdown = Effect.fn("www.llms.markdown")(function* ({
   params,
 }: {
   readonly params: typeof LlmsMarkdownParamsSchema.Type;
@@ -56,7 +54,5 @@ export function serveLlmsMarkdown({
     (params._splat ?? "").split("/"),
     (segment) => segment !== ""
   );
-  return Effect.runPromise(
-    answerLlmsMarkdown(readLlmsMarkdownTarget(segments))
-  );
-}
+  return yield* answerLlmsMarkdown(readLlmsMarkdownTarget(segments));
+});

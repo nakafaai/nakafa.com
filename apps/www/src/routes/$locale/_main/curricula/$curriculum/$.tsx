@@ -74,13 +74,11 @@ const readCurriculumRoute = createServerFn({ method: "GET" })
         data: typeof CurriculumInput.Type
       ) {
         const locale = getLocaleOrThrow(data.locale);
-        const model = yield* Effect.promise(() =>
-          resolveRuntimeCurriculumRoute({
-            curriculum: data.curriculum,
-            locale,
-            path: data.path,
-          })
-        );
+        const model = yield* resolveRuntimeCurriculumRoute({
+          curriculum: data.curriculum,
+          locale,
+          path: data.path,
+        });
         const { program, route } = model;
         const canonicalPath = Schema.decodeUnknownOption(LocalizedPath)(
           toCanonicalPath(`/${locale}/${route.publicPath}`)
@@ -90,7 +88,7 @@ const readCurriculumRoute = createServerFn({ method: "GET" })
         }
         const [catalog, messages, seo] = yield* Effect.all(
           [
-            Effect.promise(() => readRuntimeCurriculumCatalog(locale)),
+            readRuntimeCurriculumCatalog(locale),
             Effect.promise(() => loadLocaleMessages(locale)),
             resolveSEOMetadata(
               readCurriculumSeoContext(route, model.ancestors),

@@ -68,39 +68,16 @@ export const readPublishedQuranMarkdown = Effect.fn(
  * Reads one complete signed Quran web projection. The content store holds the
  * query result once for each release, locale and surah.
  */
-const readPublishedQuranView = Effect.fn("NakafaQuran.readPublishedView")(
-  function* (locale: Locale, surahNumber: number) {
-    const appLocale = AppLocaleSchema.make(locale);
-    const result = yield* queryContentStore(contentRelease.quran.page, {
-      appLocale,
-      surahNumber,
-    });
-    return yield* decodePublishedQuranView(result, {
-      appLocale,
-      surahNumber,
-    });
-  }
-);
-
-/**
- * Caches the complete signed Quran metadata catalog by active release. The `use
- * cache` boundary stays so that the Quran pages prerender and the Quran tag
- * still expires them.
- */
-export async function getPublishedQuranCatalog() {
-  const catalog = await Effect.runPromise(readPublishedQuranCatalog());
-  return catalog;
-}
-
-/**
- * Reads one narrow signed Quran web projection by locale and active release.
- */
-export async function getPublishedQuranView(
-  locale: Locale,
-  surahNumber: number
-) {
-  const view = await Effect.runPromise(
-    readPublishedQuranView(locale, surahNumber)
-  );
-  return view;
-}
+export const readPublishedQuranView = Effect.fn(
+  "NakafaQuran.readPublishedView"
+)(function* (locale: Locale, surahNumber: number) {
+  const appLocale = AppLocaleSchema.make(locale);
+  const result = yield* queryContentStore(contentRelease.quran.page, {
+    appLocale,
+    surahNumber,
+  });
+  return yield* decodePublishedQuranView(result, {
+    appLocale,
+    surahNumber,
+  });
+});

@@ -37,6 +37,6 @@ export const readSchoolStartPageFn = createServerFn({ method: "GET" })
 export const admitOnboardingFn = createServerFn({ method: "POST" }).handler(
   async () => {
     const { admitOnboardingHandler } = await import("@/lib/entry/page.server");
-    return admitOnboardingHandler();
+    return admitOnboardingHandler({ data: undefined });
   }
 );

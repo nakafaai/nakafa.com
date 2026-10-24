@@ -1,6 +1,7 @@
 // @vitest-environment node
 import { describe, expect, it } from "@effect/vitest";
-import { readPreviewRefreshHandler } from "@/lib/content/preview/refresh.server";
+import { Effect, Option } from "effect";
+import { readPreviewRefresh } from "@/lib/content/preview/refresh.server";
 
 let previewConfigured = false;
 
@@ -9,23 +10,28 @@ vi.mock("@/lib/content/preview/config", () => ({
 }));
 
 vi.mock("@/lib/content/preview/manifest", () => ({
-  readPreviewManifestForPrerender: () =>
-    Promise.resolve({ revision: 7, status: "ready" }),
+  readPreviewManifest: () => Effect.succeed({ revision: 7, status: "ready" }),
 }));
 
-describe("readPreviewRefreshHandler", () => {
-  it("answers nothing without a local preview, so no listener renders", async () => {
-    previewConfigured = false;
+describe("readPreviewRefresh", () => {
+  it.effect(
+    "answers nothing without a local preview, so no listener renders",
+    () =>
+      Effect.gen(function* () {
+        previewConfigured = false;
 
-    await expect(readPreviewRefreshHandler()).resolves.toBeUndefined();
-  });
+        expect(Option.isNone(yield* readPreviewRefresh())).toBe(true);
+      })
+  );
 
-  it("answers the revision and status of the local preview", async () => {
-    previewConfigured = true;
+  it.effect("answers the revision and status of the local preview", () =>
+    Effect.gen(function* () {
+      previewConfigured = true;
 
-    await expect(readPreviewRefreshHandler()).resolves.toStrictEqual({
-      revision: 7,
-      status: "ready",
-    });
-  });
+      expect(Option.getOrThrow(yield* readPreviewRefresh())).toStrictEqual({
+        revision: 7,
+        status: "ready",
+      });
+    })
+  );
 });

@@ -5,10 +5,7 @@ import { canonicalizeMaterialProjection } from "@nakafa/aksara-contracts/project
 import { createTestPublication } from "@repo/backend/test/content/publication";
 import { makeProgramRuntimeSource } from "@repo/backend/test/program/runtime";
 import { Array as Arr, Effect, Layer } from "effect";
-import {
-  getPublishedProgramRoute,
-  readPublishedProgramRoute,
-} from "@/lib/content/program/route";
+import { readPublishedProgramRoute } from "@/lib/content/program/route";
 import { activateTestRelease } from "@/test/active";
 import { previewIdProjection, previewProjection } from "@/test/content-preview";
 import {
@@ -107,7 +104,7 @@ describe("published program route", () => {
       const path = testProgramSubject.publicPath;
 
       yield* readPublishedProgramRoute("en", path);
-      yield* Effect.tryPromise(() => getPublishedProgramRoute("en", path));
+      yield* readPublishedProgramRoute("en", path);
       expect(runtimeQueryMock).toHaveBeenCalledTimes(1);
 
       // The response does not describe another path, so that read fails its
@@ -159,8 +156,9 @@ describe("published program route", () => {
   it.effect("decodes one complete real curriculum route model", () =>
     Effect.gen(function* () {
       runtimeQueryMock.mockReturnValueOnce(Effect.succeed(routeResponse()));
-      const model = yield* Effect.tryPromise(() =>
-        getPublishedProgramRoute("en", testProgramSubject.publicPath)
+      const model = yield* readPublishedProgramRoute(
+        "en",
+        testProgramSubject.publicPath
       );
       expect(model).toMatchObject({
         activeReleaseId: "program-release",

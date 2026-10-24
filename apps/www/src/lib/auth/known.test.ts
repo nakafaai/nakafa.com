@@ -1,11 +1,19 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
+import type { reportClientException } from "@/lib/analytics/client";
 import {
   expectSession,
   loadKnownSession,
   saveKnownSession,
 } from "@/lib/auth/known";
 import type { AuthSession } from "@/lib/auth/session";
+
+const reportClientExceptionMock = vi.hoisted(() =>
+  vi.fn<typeof reportClientException>(() => Effect.void)
+);
+vi.mock("@/lib/analytics/client", () => ({
+  reportClientException: reportClientExceptionMock,
+}));
 
 const signedOut = {
   hasError: false,
@@ -95,15 +103,29 @@ describe("the session the browser last had", () => {
 
   it.effect("knows nothing and keeps nothing where storage is refused", () =>
     Effect.gen(function* () {
+      reportClientExceptionMock.mockClear();
+
       expect(yield* loadKnownSession(refusing)).toBeNull();
       yield* saveKnownSession(signedIn, refusing);
       yield* expectSession(refusing);
       expect(yield* loadKnownSession()).toBeNull();
+
+      expect(
+        Arr.map(
+          reportClientExceptionMock.mock.calls,
+          ([, properties]) => properties
+        )
+      ).toEqual([
+        { operation: "load", source: "auth.knownSession" },
+        { operation: "save", source: "auth.knownSession" },
+        { operation: "expect", source: "auth.knownSession" },
+      ]);
     })
   );
 
   it.effect("knows nothing where the browser hands out no storage", () =>
     Effect.gen(function* () {
+      reportClientExceptionMock.mockClear();
       vi.spyOn(window, "localStorage", "get").mockImplementation(() => {
         throw new DOMException("denied", "SecurityError");
       });
@@ -112,6 +134,11 @@ describe("the session the browser last had", () => {
       yield* expectSession();
       vi.restoreAllMocks();
       expect(yield* loadKnownSession()).toBeNull();
+
+      expect(reportClientExceptionMock).toHaveBeenCalledWith(
+        expect.anything(),
+        { operation: "load", source: "auth.knownSession" }
+      );
     })
   );
 });

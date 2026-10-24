@@ -2,8 +2,18 @@ import { parseQuranSurahNumber } from "@repo/backend/client/quran/route";
 import { selectQuranMeaning } from "@repo/backend/content/quran/contract";
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
 import { toAnchorSlug } from "@repo/utilities/slug";
-import { Array as Arr, Effect, Option } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 import { createTranslator } from "use-intl";
+
+/** Expected failure while the messages of one locale load for a surah page. */
+class QuranMessagesUnavailableError extends Schema.TaggedError<QuranMessagesUnavailableError>()(
+  "QuranMessagesUnavailableError",
+  {
+    cause: Schema.Unknown,
+    locale: Schema.String,
+  }
+) {}
+
 import {
   LEARN_SHELL_CACHE_SCOPES,
   readContentCacheTags,
@@ -13,8 +23,8 @@ import {
   getQuranSurahName,
 } from "@/lib/content/quran/navigation";
 import {
-  getPublishedQuranCatalog,
-  getPublishedQuranView,
+  readPublishedQuranCatalog,
+  readPublishedQuranView,
 } from "@/lib/content/quran/publication";
 import { recoverStalePublishedQuranSnapshot } from "@/lib/content/quran/recovery";
 import { getQuranReferences } from "@/lib/content/quran/references";
@@ -38,7 +48,7 @@ const readSurahPage = Effect.fn("www.content.quran.readSurah")(function* (
     return { kind: "notFound" as const };
   }
   const surahNumber = parsedNumber.value;
-  const catalog = yield* Effect.promise(() => getPublishedQuranCatalog());
+  const catalog = yield* readPublishedQuranCatalog();
   const surahData = Arr.findFirst(
     catalog.surahs,
     ({ number }) => number === surahNumber
@@ -48,8 +58,11 @@ const readSurahPage = Effect.fn("www.content.quran.readSurah")(function* (
   }
   const [view, messages, seo] = yield* Effect.all(
     [
-      Effect.promise(() => getPublishedQuranView(locale, surahNumber)),
-      Effect.promise(() => loadLocaleMessages(locale)),
+      readPublishedQuranView(locale, surahNumber),
+      Effect.tryPromise({
+        try: () => loadLocaleMessages(locale),
+        catch: (cause) => new QuranMessagesUnavailableError({ cause, locale }),
+      }),
       resolveSEOMetadata({ surah: surahData.value, type: "quran" }, locale),
     ],
     { concurrency: "unbounded" }

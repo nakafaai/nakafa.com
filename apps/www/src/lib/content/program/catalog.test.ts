@@ -6,8 +6,6 @@ import { createTestPublication } from "@repo/backend/test/content/publication";
 import { makeProgramRuntimeSource } from "@repo/backend/test/program/runtime";
 import { Array as Arr, Effect, Layer } from "effect";
 import {
-  getPublishedProgramCatalog,
-  getPublishedProgramSubjects,
   readPublishedProgramCatalog,
   readPublishedProgramPrerenderRoute,
   readPublishedProgramSubjects,
@@ -85,7 +83,7 @@ describe("published program catalog", () => {
       Effect.gen(function* () {
         runtimeQueryMock.mockReturnValue(Effect.succeed(catalogResponse()));
         yield* readPublishedProgramCatalog("en");
-        yield* Effect.tryPromise(() => getPublishedProgramCatalog("en"));
+        yield* readPublishedProgramCatalog("en");
         yield* readPublishedProgramPrerenderRoute("en");
         expect(runtimeQueryMock).toHaveBeenCalledTimes(1);
 
@@ -98,7 +96,7 @@ describe("published program catalog", () => {
           Effect.succeed({ managed: true, routeJson: [] })
         );
         yield* readPublishedProgramSubjects("en");
-        yield* Effect.tryPromise(() => getPublishedProgramSubjects("en"));
+        yield* readPublishedProgramSubjects("en");
         expect(runtimeQueryMock).toHaveBeenCalledTimes(3);
 
         activateTestRelease("program-release-next");
@@ -182,9 +180,7 @@ describe("published program catalog", () => {
   it.effect("decodes real program roots and applies the runtime cache", () =>
     Effect.gen(function* () {
       runtimeQueryMock.mockReturnValueOnce(Effect.succeed(catalogResponse()));
-      const catalog = yield* Effect.tryPromise(() =>
-        getPublishedProgramCatalog("en")
-      );
+      const catalog = yield* readPublishedProgramCatalog("en");
       expect(catalog).toMatchObject({
         entries: [
           {
@@ -258,9 +254,9 @@ describe("published program catalog", () => {
           routeJson: [testCurriculumRowJson(testProgramSubject)],
         })
       );
-      expect(
-        yield* Effect.promise(() => getPublishedProgramSubjects("en"))
-      ).toEqual([testProgramSubject]);
+      expect(yield* readPublishedProgramSubjects("en")).toEqual([
+        testProgramSubject,
+      ]);
       expect(runtimeQueryMock).toHaveBeenCalledExactlyOnceWith(
         expect.anything(),
         {

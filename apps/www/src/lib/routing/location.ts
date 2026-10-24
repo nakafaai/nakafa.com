@@ -3,11 +3,7 @@ import {
   MATERIAL_CONTEXT_QUERY_PARAM,
 } from "@repo/contents/route/material/context";
 import { splitLocalePathname } from "@repo/internationalization/src/href";
-import {
-  DEFAULT_LOCALE,
-  LOCALES,
-  LocaleSchema,
-} from "@repo/internationalization/src/locale";
+import { DEFAULT_LOCALE, LocaleSchema } from "@repo/internationalization/src/locale";
 import { toPublicPath } from "@repo/internationalization/src/rewrite";
 import { Array as Arr, Option, Schema } from "effect";
 
@@ -35,10 +31,7 @@ const RouterPage = Schema.Struct({
 export function readRouterPage(
   location: RouterPageLocation
 ): typeof RouterPage.Type {
-  const { locale, publicSegments } = splitLocalePathname(
-    toPublicPath(location.pathname),
-    LOCALES
-  );
+  const { locale, publicSegments } = splitLocalePathname(toPublicPath(location.pathname));
   const hint = Option.fromNullishOr(
     new URLSearchParams(location.searchStr).get(MATERIAL_CONTEXT_QUERY_PARAM)
   );

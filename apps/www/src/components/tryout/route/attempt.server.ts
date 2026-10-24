@@ -92,9 +92,7 @@ export const readTryoutSetRoute = Effect.fn("www.tryout.route.readSet")(
         intent.value.view
       );
     }
-    const preview = yield* Effect.promise(() =>
-      readTryoutQuestionPreview(locale, setPath)
-    );
+    const preview = yield* readTryoutQuestionPreview(locale, setPath);
     if (Option.isSome(preview)) {
       return yield* readPreviewRoute({
         locale,

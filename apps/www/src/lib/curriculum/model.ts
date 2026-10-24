@@ -10,11 +10,11 @@ import {
   ProgramTranslationSchema,
 } from "@nakafa/aksara-contracts/program/spec";
 import { notFound } from "@tanstack/react-router";
-import { Array as Arr, Option, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 import type { Locale } from "use-intl";
-import { getPublishedMaterialCards } from "@/lib/content/program/cards";
-import { getPublishedProgramCatalog } from "@/lib/content/program/catalog";
-import { getPublishedProgramRoute } from "@/lib/content/program/route";
+import { readPublishedMaterialCards } from "@/lib/content/program/cards";
+import { readPublishedProgramCatalog } from "@/lib/content/program/catalog";
+import { readPublishedProgramRoute } from "@/lib/content/program/route";
 import { getCurriculumIndexHref } from "@/lib/curriculum/routes";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 
@@ -49,7 +49,7 @@ type CurriculumCatalogModel = typeof CurriculumCatalogModelSchema.Type;
  * The material cards come from a list schema owned by the contents package, so
  * the model takes the resolver's inferred return type.
  */
-export type CurriculumRouteModel = Awaited<
+export type CurriculumRouteModel = Effect.Success<
   ReturnType<typeof resolveRuntimeCurriculumRoute>
 >;
 
@@ -59,9 +59,9 @@ export function isRenderableCurriculumView(route: CurriculumViewRoute) {
 }
 
 /** Resolves one route through the signed Aksara owner. */
-export async function resolveRuntimeCurriculumRoute(
-  resolved: CurriculumParams
-) {
+export const resolveRuntimeCurriculumRoute = Effect.fn(
+  "www.curriculum.resolveRoute"
+)(function* (resolved: CurriculumParams) {
   const locale = getLocaleOrThrow(resolved.locale);
   const publicPath = Arr.join(
     [
@@ -71,17 +71,17 @@ export async function resolveRuntimeCurriculumRoute(
     ],
     "/"
   );
-  const published = await getPublishedProgramRoute(locale, publicPath);
+  const published = yield* readPublishedProgramRoute(locale, publicPath);
   const { program, route } = published;
   if (!(program && route && isRenderableCurriculumView(route))) {
-    throw notFound();
+    return yield* Effect.die(notFound());
   }
 
   const childRoutes = Arr.filter(
     published.children,
     isRenderableCurriculumView
   );
-  const materialCards = await getPublishedMaterialCards({
+  const materialCards = yield* readPublishedMaterialCards({
     contexts: published.contexts,
     groups: published.groups,
     locale,
@@ -99,20 +99,20 @@ export async function resolveRuntimeCurriculumRoute(
     sourcePath: route.sourcePath,
     sourceRevision: published.sourceRevision,
   };
-}
+});
 
 /** Reads root curriculum cards from the signed Aksara catalog. */
-export async function readRuntimeCurriculumCatalog(
-  locale: Locale
-): Promise<CurriculumCatalogModel> {
-  const published = await getPublishedProgramCatalog(locale);
+export const readRuntimeCurriculumCatalog = Effect.fn(
+  "www.curriculum.readCatalog"
+)(function* (locale: Locale) {
+  const published = yield* readPublishedProgramCatalog(locale);
   return {
     entries: Arr.filter(published.entries, ({ route }) =>
       isRenderableCurriculumView(route)
     ),
     sourceRevision: published.sourceRevision,
   };
-}
+});
 
 /** Builds localized selector options from the signed catalog. */
 export function readRuntimeCurriculumOptions(catalog: CurriculumCatalogModel) {

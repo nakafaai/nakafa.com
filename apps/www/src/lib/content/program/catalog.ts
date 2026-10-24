@@ -151,21 +151,3 @@ export const readPublishedProgramSubjects = Effect.fn(
     })
   );
 });
-
-/**
- * Reads the featured subjects, one per subject, for the active release.
- */
-export async function getPublishedProgramSubjects(locale: Locale) {
-  const subjects = await Effect.runPromise(
-    readPublishedProgramSubjects(locale)
-  );
-  return subjects;
-}
-
-/**
- * Reads the bounded program catalog for the active release.
- */
-export async function getPublishedProgramCatalog(locale: Locale) {
-  const result = await Effect.runPromise(readPublishedProgramCatalog(locale));
-  return result;
-}

@@ -3,9 +3,7 @@ import { encodeJsonText } from "@repo/utilities/json";
 import { Array as Arr, Option } from "effect";
 import { resolveVisualGeometry } from "@/lib/content/renderer/client/base/visual/geometry";
 import type {
-  PlaneObject,
   PlaneVisual,
-  SpaceObject,
   SpaceVisual,
 } from "@/lib/content/renderer/client/base/visual/scene";
 import {
@@ -13,32 +11,7 @@ import {
   resolveVisualProjection,
 } from "@/lib/content/renderer/client/base/visual/transform";
 
-function plane(first: PlaneObject, ...rest: PlaneObject[]): PlaneVisual {
-  return {
-    frame: {
-      kind: "cartesian",
-      x: { max: 5, min: -5 },
-      y: { max: 4, min: -4 },
-    },
-    objects: [first, ...rest],
-    space: "plane",
-    view: { kind: "fit" },
-  };
-}
-
-function space(first: SpaceObject, ...rest: SpaceObject[]): SpaceVisual {
-  return {
-    frame: {
-      kind: "cartesian",
-      x: { max: 6, min: -6 },
-      y: { max: 5, min: -5 },
-      z: { max: 4, min: -4 },
-    },
-    objects: [first, ...rest],
-    space: "space",
-    view: { kind: "fit" },
-  };
-}
+import { plane, space } from "@/test/scene";
 
 describe("MathVisual geometry", () => {
   it("clips plane lines and preserves their direction", () => {

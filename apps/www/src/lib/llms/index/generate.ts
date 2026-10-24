@@ -1,6 +1,6 @@
-import { LOCALES } from "@repo/internationalization/src/locale";
+import { decodeLocale } from "@repo/internationalization/src/locale";
 import { Array as Arr, Effect, Option } from "effect";
-import { hasLocale, type Locale } from "use-intl";
+import type { Locale } from "use-intl";
 import { BASE_URL, type LlmsSection } from "@/lib/llms/constants";
 import { getContentPageLlmsEntries } from "@/lib/llms/content/entries";
 import { getContentListingLlmsEntries } from "@/lib/llms/content/listing";
@@ -111,8 +111,8 @@ function parseLlmsIndexSlug(cleanSlug: string) {
     return null;
   }
 
-  const rawLocale = parts[1];
-  if (!hasLocale(LOCALES, rawLocale)) {
+  const decodedLocale = decodeLocale(parts[1]);
+  if (Option.isNone(decodedLocale)) {
     return null;
   }
 
@@ -125,7 +125,7 @@ function parseLlmsIndexSlug(cleanSlug: string) {
     : segments;
 
   return {
-    locale: rawLocale,
+    locale: decodedLocale.value,
     prefixParts,
   };
 }

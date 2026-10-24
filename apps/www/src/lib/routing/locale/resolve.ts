@@ -43,7 +43,7 @@ const URL_BASE = COMPANY_IDENTITY.url;
  */
 function parseLocalizedHref(href: string): ParsedLocalizedHref {
   const url = new URL(href, URL_BASE);
-  const { locale, publicSegments } = splitLocalePathname(url.pathname, LOCALES);
+  const { locale, publicSegments } = splitLocalePathname(url.pathname);
 
   return {
     currentLocale: locale,

@@ -5,7 +5,6 @@ import {
   LOCALES,
   type Locale,
 } from "@repo/internationalization/src/locale";
-import { readServerTranslator } from "@repo/internationalization/src/translator";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { Array as Arr, DateTime, Effect, Order, Schema } from "effect";
 import { Feed, type Item } from "feed";
@@ -18,6 +17,7 @@ import {
   type ContentReleasePin,
   decodeContentReleasePin,
 } from "@/lib/content/published/release";
+import { readCopy } from "@/lib/i18n/copy.server";
 
 const baseUrl = COMPANY_IDENTITY.url;
 const FEED_ERROR = "Internal Server Error";
@@ -58,31 +58,19 @@ function reportFeedFailure(cause: unknown) {
 }
 
 /** Serves the RSS feed of the latest signed articles and materials. */
-export function serveRssFeed() {
-  return Effect.runPromise(
-    readFeed().pipe(
-      Effect.map((xml) => new Response(xml, { headers: RSS_HEADERS })),
-      Effect.catch(reportFeedFailure)
-    )
-  );
-}
+export const serveRssFeed = Effect.fn("www.rss.serve")(() =>
+  readFeed().pipe(
+    Effect.map((xml) => new Response(xml, { headers: RSS_HEADERS })),
+    Effect.catch(reportFeedFailure)
+  )
+);
 
 /** Builds the RSS document from the latest signed routes of every locale. */
 const readFeed = Effect.fn("www.rss.readFeed")(function* () {
   const [t, tCommon, routes] = yield* Effect.all(
     [
-      Effect.promise(() =>
-        readServerTranslator({
-          locale: DEFAULT_LOCALE,
-          namespace: "Metadata",
-        })
-      ),
-      Effect.promise(() =>
-        readServerTranslator({
-          locale: DEFAULT_LOCALE,
-          namespace: "Common",
-        })
-      ),
+      readCopy({ locale: DEFAULT_LOCALE, namespace: "Metadata" }),
+      readCopy({ locale: DEFAULT_LOCALE, namespace: "Common" }),
       getFeedContentRoutes(),
     ],
     { concurrency: "unbounded" }

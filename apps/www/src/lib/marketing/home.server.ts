@@ -10,7 +10,7 @@ import { serverHandler } from "@/lib/server/fn";
 /** Reads the featured try-out of the home page for one locale from the tagged content cache. */
 const readHomeTryoutEffect = Effect.fn("www.marketing.readHomeTryout")(
   function* ({ locale }: HomeInput) {
-    return yield* Effect.promise(() => readFeaturedTryout(locale));
+    return yield* readFeaturedTryout(locale);
   }
 );
 
@@ -20,9 +20,7 @@ export const readHomeTryoutHandler = serverHandler(readHomeTryoutEffect);
 /** Reads the curricula that the home page lists, from the signed catalog of its locale. */
 const readHomeCurriculaEffect = Effect.fn("www.marketing.readHomeCurricula")(
   function* ({ locale }: HomeInput) {
-    const catalog = yield* Effect.promise(() =>
-      readRuntimeCurriculumCatalog(locale)
-    );
+    const catalog = yield* readRuntimeCurriculumCatalog(locale);
     return readRuntimeCurriculumOptions(catalog);
   }
 );

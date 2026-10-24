@@ -1,12 +1,11 @@
 import {
   DEFAULT_LOCALE,
-  LOCALES,
+  decodeLocale,
   type Locale,
   LocaleSchema,
 } from "@repo/internationalization/src/locale";
 import { AGENT_DISCOVERY_HEADERS } from "@repo/site/discovery";
 import { Array as Arr, Effect, Option, Record as Rec, Schema } from "effect";
-import { hasLocale } from "use-intl";
 import {
   CONTENT_LLMS_CACHE_TAG,
   LLMS_CACHE_CONTROL,
@@ -155,10 +154,9 @@ export function readLlmsMarkdownTarget(
   segments: readonly string[]
 ): LlmsMarkdownTarget {
   const [requestedLocale] = segments;
-  const hasLocalePrefix = hasLocale(LOCALES, requestedLocale);
-  const locale: Locale = hasLocale(LOCALES, requestedLocale)
-    ? requestedLocale
-    : DEFAULT_LOCALE;
+  const decodedLocale = decodeLocale(requestedLocale);
+  const hasLocalePrefix = Option.isSome(decodedLocale);
+  const locale: Locale = Option.getOrElse(decodedLocale, () => DEFAULT_LOCALE);
   const slugParts = hasLocalePrefix ? Arr.drop(segments, 1) : segments;
 
   return {

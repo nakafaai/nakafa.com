@@ -2,6 +2,7 @@ import "@tanstack/react-start/server-only";
 
 import { encodeJsonText } from "@repo/utilities/json";
 import {
+  Cause,
   Deferred,
   Duration,
   Effect,
@@ -124,7 +125,7 @@ const loadUnderRelease = Effect.fn("www.content.store.load")(function* <
   if (Result.isFailure(checked)) {
     yield* Effect.logWarning(
       "The content store could not check the active release.",
-      checked.failure
+      Cause.fail(checked.failure)
     );
     return Result.succeed(yield* Effect.fromResult(loaded));
   }

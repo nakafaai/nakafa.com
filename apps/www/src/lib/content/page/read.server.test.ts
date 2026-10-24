@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Option } from "effect";
-import { getPublishedPageCatalog } from "@/lib/content/page/catalog";
+import { readPublishedPageCatalog } from "@/lib/content/page/catalog";
 import { renderCurrentPublishedPage } from "@/lib/content/page/published";
 import { readLegalPageHandler } from "@/lib/content/page/read.server";
 import { testPageProjection } from "@/test/content-page";
@@ -20,13 +20,11 @@ const signedPage = (projection: typeof testPageProjection) => ({
 let currentPage: Option.Option<ReturnType<typeof signedPage>> = Option.none();
 
 vi.mock("@/lib/content/page/published", () => ({
-  renderCurrentPublishedPage: vi.fn(() =>
-    Promise.resolve(Option.getOrNull(currentPage))
-  ),
+  renderCurrentPublishedPage: vi.fn(() => Effect.succeed(currentPage)),
 }));
 
 vi.mock("@/lib/content/page/catalog", () => ({
-  getPublishedPageCatalog: vi.fn(() => Promise.resolve({})),
+  readPublishedPageCatalog: vi.fn(() => Effect.succeed({})),
   verifyPublishedPageCatalog: vi.fn(() => Effect.succeed([])),
 }));
 
@@ -44,7 +42,7 @@ describe("legal page head facts", () => {
         data: { locale: "en", publicPath: "privacy-policy" },
       })
     ).resolves.toStrictEqual({ _tag: "Missing" });
-    expect(getPublishedPageCatalog).not.toHaveBeenCalled();
+    expect(readPublishedPageCatalog).not.toHaveBeenCalled();
   });
 
   it("returns the title, the description and the alternates of a signed page", async () => {

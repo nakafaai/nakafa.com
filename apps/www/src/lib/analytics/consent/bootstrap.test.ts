@@ -10,6 +10,7 @@ import {
   resolveAnalyticsConsentState,
 } from "@repo/analytics/consent";
 import { Effect, Option, Schema } from "effect";
+import type { reportClientException } from "@/lib/analytics/client";
 import {
   ANALYTICS_CONSENT_BOOTSTRAP_SCRIPT,
   ANALYTICS_CONSENT_BOOTSTRAP_VOCABULARY,
@@ -18,6 +19,13 @@ import {
   resolveAnalyticsConsentMark,
 } from "@/lib/analytics/consent/bootstrap";
 import { EXPECTED_SESSION, KNOWN_SESSION_KEY } from "@/lib/auth/keys";
+
+const reportClientExceptionMock = vi.hoisted(() =>
+  vi.fn<typeof reportClientException>(() => Effect.void)
+);
+vi.mock("@/lib/analytics/client", () => ({
+  reportClientException: reportClientExceptionMock,
+}));
 
 const CURRENT = ANALYTICS_CONSENT_NOTICE_VERSION;
 const OLDER = CONSENT_NOTICE_VERSIONS[1];
@@ -289,6 +297,32 @@ describe("analytics consent bootstrap decision", () => {
       `(${resolveAnalyticsConsentMark.toString()})({`
     );
   });
+
+  it("keeps the prompt shown and writes no mark when the store cannot be read", () => {
+    let wroteMark = false;
+    const runScript = new Function(
+      "localStorage",
+      "navigator",
+      "document",
+      ANALYTICS_CONSENT_BOOTSTRAP_SCRIPT
+    );
+    runScript(
+      {
+        getItem: () => {
+          throw new TypeError("Storage is blocked.");
+        },
+      },
+      { doNotTrack: "1" },
+      {
+        documentElement: {
+          setAttribute: () => {
+            wroteMark = true;
+          },
+        },
+      }
+    );
+    expect(wroteMark).toBe(false);
+  });
 });
 
 /** Stores one case's values in this browser and makes the navigator report its signals. */
@@ -376,6 +410,8 @@ describe("analytics consent bootstrap in the document", () => {
         },
       };
 
+      reportClientExceptionMock.mockClear();
+
       yield* markAnalyticsConsentRoot(
         document.documentElement,
         { doNotTrack: null, globalPrivacyControl: undefined },
@@ -383,6 +419,13 @@ describe("analytics consent bootstrap in the document", () => {
       );
 
       expect(rootMark()).toBeNull();
+      expect(reportClientExceptionMock).toHaveBeenCalledWith(
+        expect.anything(),
+        {
+          operation: "resolveConsentMark",
+          source: "analytics.consentRoot",
+        }
+      );
     })
   );
 });

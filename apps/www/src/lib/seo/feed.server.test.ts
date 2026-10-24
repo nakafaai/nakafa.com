@@ -3,7 +3,14 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { Array as Arr, Effect } from "effect";
-import { RSS_HEADERS, serveRssFeed } from "@/lib/seo/feed.server";
+import {
+  RSS_HEADERS,
+  serveRssFeed as serveRssFeedEffect,
+} from "@/lib/seo/feed.server";
+import { runServerEffect } from "@/lib/server/fn";
+
+/** Runs the feed as its route does. */
+const serveRssFeed = () => runServerEffect(serveRssFeedEffect());
 
 const readPublishedLatestArticlesMock = vi.hoisted(() => vi.fn());
 const readPublishedLatestMaterialsMock = vi.hoisted(() => vi.fn());

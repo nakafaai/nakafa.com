@@ -145,7 +145,7 @@ beforeEach(() => {
   mocks.readServerTranslator.mockImplementation(() =>
     Promise.resolve((key: string) => key)
   );
-  mocks.readTryoutQuestionPreview.mockResolvedValue(Option.none());
+  mocks.readTryoutQuestionPreview.mockReturnValue(Effect.succeedNone);
   mocks.renderTryoutPreview.mockResolvedValue("preview-tree");
   mocks.renderTryoutReview.mockResolvedValue("review-tree");
   mocks.loadSignedTryoutContent.mockReturnValue(
@@ -290,7 +290,9 @@ describe("readTryoutSetRoute", () => {
 
   it.effect("answers a public set with its question preview", () =>
     Effect.gen(function* () {
-      mocks.readTryoutQuestionPreview.mockResolvedValue(Option.some(preview));
+      mocks.readTryoutQuestionPreview.mockReturnValue(
+        Effect.succeedSome(preview)
+      );
 
       expect(yield* readSet()).toMatchObject({
         kind: "preview",

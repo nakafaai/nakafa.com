@@ -17,6 +17,7 @@ import {
 import { bufferResponse } from "@/lib/auth/body";
 import { SESSION_PATH } from "@/lib/auth/session";
 import { readRequestHost } from "@/lib/routing/school/host";
+import { runServerEffect } from "@/lib/server/fn";
 
 /** One method of the Better Auth route handler that the proxy forwards to. */
 type AuthHandlerMethod = (request: Request) => Promise<Response>;
@@ -220,7 +221,7 @@ function withBrowserHost(request: Request): Request {
 export function createAuthProxy(handler: AuthRouteHandler) {
   return {
     GET: (request: Request) =>
-      Effect.runPromise(
+      runServerEffect(
         isSignedOutSessionRead(request)
           ? Effect.succeed(answerSignedOutSession())
           : readAuthResponse(handler, withBrowserHost(request)).pipe(
@@ -228,7 +229,7 @@ export function createAuthProxy(handler: AuthRouteHandler) {
             )
       ),
     POST: (request: Request) =>
-      Effect.runPromise(
+      runServerEffect(
         writeAuthResponse(handler, withBrowserHost(request)).pipe(
           answerAuthDeadline
         )

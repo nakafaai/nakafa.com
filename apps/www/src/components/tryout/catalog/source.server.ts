@@ -36,26 +36,25 @@ class TryoutCatalogReadError extends Schema.TaggedError<TryoutCatalogReadError>(
  * holds it once for each release and locale. The signed body is verified and
  * rendered again on each call, because nothing caches the rendered tree.
  */
-export async function readFeaturedTryout(locale: Locale) {
-  const featured = await Effect.runPromise(
-    queryContentStore(tryouts.queries.catalog.getFeaturedQuestion, {
-      appLocale: AppLocaleSchema.make(locale),
-    })
-  );
-  return await Effect.runPromise(
-    Effect.gen(function* () {
-      const question = yield* loadTryoutQuestion(featured.question);
-      // The question is a server component tree, so it crosses to the page as Flight data.
-      const content = yield* Effect.promise(() =>
-        renderServerComponent(question.content)
-      );
-      return {
-        question: content,
-        response: featured.response,
-      };
-    })
-  );
-}
+export const readFeaturedTryout = Effect.fn("www.tryout.catalog.readFeatured")(
+  function* (locale: Locale) {
+    const featured = yield* queryContentStore(
+      tryouts.queries.catalog.getFeaturedQuestion,
+      {
+        appLocale: AppLocaleSchema.make(locale),
+      }
+    );
+    const question = yield* loadTryoutQuestion(featured.question);
+    // The question is a server component tree, so it crosses to the page as Flight data.
+    const content = yield* Effect.promise(() =>
+      renderServerComponent(question.content)
+    );
+    return {
+      question: content,
+      response: featured.response,
+    };
+  }
+);
 
 /**
  * Reads exact signed route metadata from the tagged content cache. The `use
@@ -206,15 +205,21 @@ export const readTryoutSectionPage = Effect.fn(
   });
 });
 
-/** Fetches one authenticated section bootstrap without subscribing. */
-export const readTryoutSectionAttemptPage = Effect.fn(
-  "www.tryout.catalog.readSectionAttemptPage"
+/**
+ * Reads one authenticated section page with the signed bodies of its running
+ * content, in one Convex read. A running attempt on another page answers none, and
+ * an attempt read that is not retained answers none too.
+ */
+export const readTryoutSectionWithBodies = Effect.fn(
+  "www.tryout.catalog.readSectionWithBodies"
 )(function* (
   token: string,
-  request: Ref.Args<typeof tryouts.queries.attemptPage.getSection>["request"]
+  request: Ref.Args<
+    typeof tryouts.queries.attemptPage.getSectionWithBodies
+  >["request"]
 ) {
-  return yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
-    client.query(tryouts.queries.attemptPage.getSection, {
+  const page = yield* Effect.flatMap(HttpClient.HttpClient, (client) =>
+    client.query(tryouts.queries.attemptPage.getSectionWithBodies, {
       request,
     })
   ).pipe(
@@ -230,4 +235,5 @@ export const readTryoutSectionAttemptPage = Effect.fn(
         })
     )
   );
+  return page;
 });

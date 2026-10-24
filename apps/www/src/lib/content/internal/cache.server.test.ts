@@ -17,6 +17,7 @@ import {
   type invalidateOgCache,
   OgCacheInvalidationError,
 } from "@/lib/og/cache";
+import { runServerEffect } from "@/lib/server/fn";
 import {
   type invalidateSitemapCache,
   SitemapCacheInvalidationError,
@@ -118,9 +119,11 @@ beforeEach(() => {
 
 /** Posts one request to the receiver with the given headers and body. */
 function post(body: BodyInit | null, headers: HeadersInit = {}) {
-  return receiveContentCache({
-    request: new Request(CACHE_URL, { body, headers, method: "POST" }),
-  });
+  return runServerEffect(
+    receiveContentCache(
+      new Request(CACHE_URL, { body, headers, method: "POST" })
+    )
+  );
 }
 
 /** Posts one authenticated JSON body to the receiver. */

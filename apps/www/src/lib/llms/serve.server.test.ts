@@ -3,12 +3,21 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import {
-  serveAgentSkills,
+  serveAgentSkills as serveAgentSkillsEffect,
   serveLlmsIndex,
-  serveLlmsMarkdown,
+  serveLlmsMarkdown as serveLlmsMarkdownEffect,
   serveSkill,
 } from "@/lib/llms/serve.server";
 import { getNakafaSkillText } from "@/lib/llms/skill";
+import { runServerEffect } from "@/lib/server/fn";
+
+/** Runs the agent-skills manifest as its route does. */
+const serveAgentSkills = () => runServerEffect(serveAgentSkillsEffect());
+
+/** Runs one Markdown path as its route does. */
+const serveLlmsMarkdown = (
+  input: Parameters<typeof serveLlmsMarkdownEffect>[0]
+) => runServerEffect(serveLlmsMarkdownEffect(input));
 
 const DIGEST_PATTERN = /^sha256:[0-9a-f]{64}$/u;
 const getLlmsMarkdownTextMock = vi.hoisted(() => vi.fn());

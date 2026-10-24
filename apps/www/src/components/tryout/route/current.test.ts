@@ -3,10 +3,11 @@ import { Data, Effect, Option } from "effect";
 import {
   readCurrentTryoutSection,
   readCurrentTryoutSet,
+  readRetainedTryoutSection,
 } from "@/components/tryout/route/current";
 
 const catalogMocks = vi.hoisted(() => ({
-  readTryoutSectionAttemptPage: vi.fn(),
+  readTryoutSectionWithBodies: vi.fn(),
   readTryoutSetAttemptPage: vi.fn(),
 }));
 
@@ -36,7 +37,7 @@ const readFailure = new TryoutCatalogReadError({
 });
 
 beforeEach(() => {
-  catalogMocks.readTryoutSectionAttemptPage.mockReset();
+  catalogMocks.readTryoutSectionWithBodies.mockReset();
   catalogMocks.readTryoutSetAttemptPage.mockReset();
 });
 
@@ -82,37 +83,49 @@ describe("the attempt a public try-out URL shows", () => {
     })
   );
 
-  it.effect("reads a running section attempt where it continues", () =>
+  it.effect("reads a running section attempt and its bodies in one read", () =>
     Effect.gen(function* () {
       const section = { ...keys, sectionKey: "quantitative" };
-      catalogMocks.readTryoutSectionAttemptPage
+      const bodies = [null];
+      catalogMocks.readTryoutSectionWithBodies
         .mockReturnValueOnce(Effect.succeed(null))
-        .mockReturnValueOnce(Effect.succeed(running))
-        .mockReturnValueOnce(Effect.succeed(retained))
-        .mockReturnValueOnce(Effect.succeed(running))
-        .mockReturnValueOnce(Effect.succeed(null));
+        .mockReturnValueOnce(Effect.succeed({ attempt: retained, bodies }));
       expect(yield* readCurrentTryoutSection("token", section)).toEqual(
         Option.none()
       );
       expect(yield* readCurrentTryoutSection("token", section)).toEqual(
-        Option.some(retained)
+        Option.some({ ...retained, bodies })
       );
-      // The attempt can finish and lose its page between the two reads.
-      expect(yield* readCurrentTryoutSection("token", section)).toEqual(
-        Option.none()
+      expect(catalogMocks.readTryoutSectionWithBodies.mock.calls).toEqual([
+        ["token", { ...section, kind: "current" }],
+        ["token", { ...section, kind: "current" }],
+      ]);
+    })
+  );
+
+  it.effect("reads a retained section attempt with its bodies", () =>
+    Effect.gen(function* () {
+      const bodies = [null];
+      catalogMocks.readTryoutSectionWithBodies.mockReturnValueOnce(
+        Effect.succeed({ attempt: retained, bodies })
       );
-      const retainedRequest = {
-        attemptId: running.attemptId,
-        kind: "retained",
-        locale: section.locale,
-        publicPath: running.publicPath,
-      };
-      expect(catalogMocks.readTryoutSectionAttemptPage.mock.calls).toEqual([
-        ["token", { ...section, kind: "current" }],
-        ["token", { ...section, kind: "current" }],
-        ["token", retainedRequest],
-        ["token", { ...section, kind: "current" }],
-        ["token", retainedRequest],
+      expect(
+        yield* readRetainedTryoutSection("token", {
+          attemptId: retained.attemptId,
+          locale: keys.locale,
+          publicPath: running.publicPath,
+        })
+      ).toEqual(Option.some({ ...retained, bodies }));
+      expect(catalogMocks.readTryoutSectionWithBodies.mock.calls).toEqual([
+        [
+          "token",
+          {
+            attemptId: retained.attemptId,
+            kind: "retained",
+            locale: keys.locale,
+            publicPath: running.publicPath,
+          },
+        ],
       ]);
     })
   );
@@ -122,9 +135,9 @@ describe("the attempt a public try-out URL shows", () => {
       catalogMocks.readTryoutSetAttemptPage.mockReturnValueOnce(
         Effect.fail(readFailure)
       );
-      catalogMocks.readTryoutSectionAttemptPage
-        .mockReturnValueOnce(Effect.succeed(running))
-        .mockReturnValueOnce(Effect.fail(readFailure));
+      catalogMocks.readTryoutSectionWithBodies.mockReturnValueOnce(
+        Effect.fail(readFailure)
+      );
       expect(yield* Effect.flip(readCurrentTryoutSet("token", keys))).toBe(
         readFailure
       );

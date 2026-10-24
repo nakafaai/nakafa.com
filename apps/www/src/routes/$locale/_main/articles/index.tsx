@@ -3,7 +3,7 @@ import { loadLocaleMessages } from "@repo/internationalization/src/messages";
 import { makeBreadcrumbNodes } from "@repo/seo/json-ld/node";
 import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
-import { Array as Arr, Option, Schema } from "effect";
+import { Array as Arr, Effect, Match, Option, Schema } from "effect";
 import { createTranslator } from "use-intl";
 import { getArticleCategoryIcons } from "@/components/articles/category";
 import { ArticleNext } from "@/components/articles/next";
@@ -15,7 +15,7 @@ import { SubjectItem } from "@/components/shared/subject/item";
 import { SubjectList } from "@/components/shared/subject/list";
 import {
   ARTICLE_SOURCE_ROOT,
-  getPublishedCategories,
+  readPublishedCategories,
 } from "@/lib/content/article/catalog";
 import {
   ArticlePageSearchSchema,
@@ -26,67 +26,83 @@ import {
   publicContentHeaders,
   readContentCacheTags,
 } from "@/lib/content/delivery";
+import { outcome } from "@/lib/content/outcome";
 import { getAksaraTreeUrl } from "@/lib/content/repository";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { articleCategoryTarget } from "@/lib/routing/target";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { createSeoHead, toRouterHead } from "@/lib/seo/head";
 import { getOgUrl } from "@/lib/seo/social";
+import { serverHandler } from "@/lib/server/fn";
 
 /**
  * Reads the article categories of one locale on the server. The decision to
  * answer 404 or redirect is returned, and the route loader acts on it, so the
  * status is set before the stream starts.
  */
+const ArticleIndexInput = Schema.Struct({
+  ...ArticlePageSearchSchema.fields,
+  locale: Schema.String,
+});
+
 const readArticleIndex = createServerFn({ method: "GET" })
-  .validator(
-    Schema.toStandardSchemaV1(
-      Schema.Struct({
-        ...ArticlePageSearchSchema.fields,
-        locale: Schema.String,
+  .validator(Schema.toStandardSchemaV1(ArticleIndexInput))
+  .handler(
+    serverHandler(
+      Effect.fn("www.articles.index.read")(function* (
+        data: typeof ArticleIndexInput.Type
+      ) {
+        const locale = getLocaleOrThrow(data.locale);
+        const cursor = readArticlePageCursor(data);
+        if (Option.isNone(cursor)) {
+          return outcome("NotFound", {});
+        }
+        const catalog = yield* readPublishedCategories({
+          ...cursor.value,
+          locale,
+        });
+        if (catalog.stale) {
+          return outcome("Redirect", {});
+        }
+        const messages = yield* Effect.promise(() =>
+          loadLocaleMessages(locale)
+        );
+        const tCommon = createTranslator({
+          locale,
+          messages,
+          namespace: "Common",
+        });
+        const tArticles = createTranslator({
+          locale,
+          messages,
+          namespace: "Articles",
+        });
+        const sourceUrl = catalog.sourceRevision
+          ? getAksaraTreeUrl({
+              path: ARTICLE_SOURCE_ROOT,
+              revision: catalog.sourceRevision,
+            })
+          : null;
+        const breadcrumbs = createBreadcrumbItems(locale, [
+          { name: tCommon("home"), path: "" },
+          { name: tCommon("articles"), path: "/articles" },
+        ]);
+
+        return outcome("Found", {
+          page: {
+            breadcrumbs,
+            cacheTags: readContentCacheTags(["article"]),
+            categories: catalog.categories,
+            description: tArticles("description"),
+            locale,
+            nextSearch: Option.getOrNull(getArticleNextSearch(catalog)),
+            sourceUrl,
+            title: tCommon("articles"),
+          },
+        });
       })
     )
-  )
-  .handler(async ({ data }) => {
-    const locale = getLocaleOrThrow(data.locale);
-    const cursor = readArticlePageCursor(data);
-    if (Option.isNone(cursor)) {
-      return { kind: "notFound" as const };
-    }
-    const catalog = await getPublishedCategories({ ...cursor.value, locale });
-    if (catalog.stale) {
-      return { kind: "redirect" as const };
-    }
-    const messages = await loadLocaleMessages(locale);
-    const tCommon = createTranslator({ locale, messages, namespace: "Common" });
-    const tArticles = createTranslator({
-      locale,
-      messages,
-      namespace: "Articles",
-    });
-    const sourceUrl = catalog.sourceRevision
-      ? getAksaraTreeUrl({
-          path: ARTICLE_SOURCE_ROOT,
-          revision: catalog.sourceRevision,
-        })
-      : null;
-    const breadcrumbs = createBreadcrumbItems(locale, [
-      { name: tCommon("home"), path: "" },
-      { name: tCommon("articles"), path: "/articles" },
-    ]);
-
-    return {
-      kind: "found" as const,
-      breadcrumbs,
-      cacheTags: readContentCacheTags(["article"]),
-      categories: catalog.categories,
-      description: tArticles("description"),
-      locale,
-      nextSearch: Option.getOrNull(getArticleNextSearch(catalog)),
-      sourceUrl,
-      title: tCommon("articles"),
-    };
-  });
+  );
 
 /** The article categories of one locale, with the cursor the reader asks for. */
 export const Route = createFileRoute("/$locale/_main/articles/")({
@@ -97,20 +113,24 @@ export const Route = createFileRoute("/$locale/_main/articles/")({
     release: search.release,
   }),
   loader: async ({ params, deps }) => {
-    const page = await readArticleIndex({
+    const read = await readArticleIndex({
       data: { ...deps, locale: params.locale },
     });
-    if (page.kind === "notFound") {
-      throw notFound();
-    }
-    if (page.kind === "redirect") {
-      throw redirect({
-        params: { locale: params.locale },
-        statusCode: 307,
-        to: "/$locale/articles",
-      });
-    }
-    return page;
+    return Match.value(read).pipe(
+      Match.tagsExhaustive({
+        Found: ({ page }) => page,
+        NotFound: () => {
+          throw notFound();
+        },
+        Redirect: () => {
+          throw redirect({
+            params: { locale: params.locale },
+            statusCode: 307,
+            to: "/$locale/articles",
+          });
+        },
+      })
+    );
   },
   head: ({ loaderData }) => {
     if (loaderData === undefined) {

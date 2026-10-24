@@ -8,19 +8,11 @@ import {
   AppLocaleSchema,
   ArtifactLocaleSchema,
 } from "@nakafa/aksara-contracts/locale";
-import { PagePreviewDocumentSchema } from "@nakafa/aksara-contracts/preview/document";
-import {
-  LOCAL_PREVIEW_FORMAT,
-  PreviewPendingSchema,
-} from "@nakafa/aksara-contracts/preview/spec";
 import {
   PageKeySchema,
   PublicPageProjectionSchema,
 } from "@nakafa/aksara-contracts/projection/page";
-import {
-  previewRepositories,
-  previewWireArtifact,
-} from "@/test/content-preview";
+import { previewWireArtifact } from "@/test/content-preview";
 
 /** Exact signed Page projection used by runtime adapter tests. */
 export const testPageProjection = PublicPageProjectionSchema.make({
@@ -51,25 +43,3 @@ export const testPageArtifact = SignedContentArtifactSchema.make({
 });
 
 /** Exact reviewed Page selected by local preview tests. */
-const testPagePreviewDocument = PagePreviewDocumentSchema.make({
-  delivery: "public",
-  family: "page",
-  rendererDomain: "site",
-  route: {
-    appLocale: testPageProjection.appLocale,
-    artifactLocale: testPageProjection.artifactLocale,
-    contentKey: testPageProjection.contentKey,
-    pageKey: testPageProjection.pageKey,
-    publicPath: testPageProjection.publicPath,
-  },
-  sourcePath: testPageProjection.sourcePath,
-});
-
-/** Pending state for one real Page that other routes must ignore. */
-export const testPagePendingManifest = PreviewPendingSchema.make({
-  document: testPagePreviewDocument,
-  format: LOCAL_PREVIEW_FORMAT,
-  repositories: previewRepositories,
-  revision: 1,
-  status: "pending",
-});

@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { Effect, Option } from "effect";
 
 /**
  * Reads the local preview revision for the root document, on the server. The
@@ -7,9 +8,13 @@ import { createServerFn } from "@tanstack/react-start";
  */
 export const readPreviewRefreshFn = createServerFn({ method: "GET" }).handler(
   async () => {
-    const { readPreviewRefreshHandler } = await import(
-      "@/lib/content/preview/refresh.server"
+    const [{ readPreviewRefresh }, { runServerEffect }] = await Promise.all([
+      import("@/lib/content/preview/refresh.server"),
+      import("@/lib/server/fn"),
+    ]);
+    // The undefined exists only at this serialization boundary.
+    return runServerEffect(
+      readPreviewRefresh().pipe(Effect.map(Option.getOrUndefined))
     );
-    return readPreviewRefreshHandler();
   }
 );

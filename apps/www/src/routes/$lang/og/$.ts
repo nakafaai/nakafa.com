@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { serveLocaleOgImage } from "@/lib/og/serve.server";
 import { methodNotAllowed } from "@/lib/routing/method";
+import { runServerEffect } from "@/lib/server/fn";
 
 /**
  * The social image of one localized route. The parameter is not `$locale`: the
@@ -9,6 +10,9 @@ import { methodNotAllowed } from "@/lib/routing/method";
  */
 export const Route = createFileRoute("/$lang/og/$")({
   server: {
-    handlers: { ANY: methodNotAllowed("GET, HEAD"), GET: serveLocaleOgImage },
+    handlers: {
+      ANY: methodNotAllowed("GET, HEAD"),
+      GET: ({ params }) => runServerEffect(serveLocaleOgImage({ params })),
+    },
   },
 });
