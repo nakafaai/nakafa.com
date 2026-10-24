@@ -1,5 +1,6 @@
 import { postHogPublicKeys, urlSchema } from "@repo/analytics/public";
 import { readEnvironment } from "@repo/utilities/env";
+import { deployStageKeys } from "@repo/utilities/stage";
 import { Schema } from "effect";
 
 const optionalStringSchema = Schema.UndefinedOr(Schema.String);
@@ -27,17 +28,14 @@ export const keys = () => ({
 });
 /**
  * Reads the deployment fields that decide whether server reporting runs. The
- * Alchemy stack binds `NAKAFA_DEPLOY_STAGE` to the Worker at deploy time. Both
- * fields accept any text, and this owner never validates the PostHog configuration.
+ * stage comes from the one deploy stage reader, which the Alchemy stack binds
+ * as `NAKAFA_DEPLOY_STAGE`. Both fields accept any text, and this owner never
+ * validates the PostHog configuration.
  */
-export const deploymentKeys = () =>
-  readEnvironment(
-    {
-      NAKAFA_DEPLOY_STAGE: optionalStringSchema,
-      TSS_PRERENDERING: optionalStringSchema,
-    },
-    {
-      NAKAFA_DEPLOY_STAGE: process.env.NAKAFA_DEPLOY_STAGE,
-      TSS_PRERENDERING: process.env.TSS_PRERENDERING,
-    }
-  );
+export const deploymentKeys = () => ({
+  ...deployStageKeys(),
+  ...readEnvironment(
+    { TSS_PRERENDERING: optionalStringSchema },
+    { TSS_PRERENDERING: process.env.TSS_PRERENDERING }
+  ),
+});

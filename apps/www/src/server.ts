@@ -8,6 +8,7 @@ import {
 import { Effect } from "effect";
 import { answerRequest } from "@/lib/routing/answer.server";
 import { logRouteFailures } from "@/lib/routing/failures.server";
+import "@/lib/server/runtime";
 import { withPageHeaders } from "@/lib/tenant/gate";
 
 /**

@@ -6,14 +6,17 @@ import {
 } from "@nakafa/aksara-contracts/signature/trusted";
 import { CONTENT_RUNTIME_PRODUCTION_DEPLOYMENT } from "@repo/backend/content/deployment";
 import { agentTrustKeys } from "@repo/backend/keys";
-import { PRODUCTION_DEPLOY_STAGE } from "@repo/utilities/stage";
+import {
+  DeployStageSchema,
+  PRODUCTION_DEPLOY_STAGE,
+} from "@repo/utilities/stage";
 import { Array as Arr, Schema } from "effect";
 
 const TRAILING_DOT = /\.$/;
 const CLOUD_HOST = /^[a-z0-9-]+\.convex\.cloud$/;
 const AgentTrustSchema = Schema.Struct({
   key: TrustedKeySchema,
-  stage: Schema.UndefinedOr(Schema.String),
+  stage: DeployStageSchema,
   target: Schema.URLFromString,
 }).check(
   Schema.makeFilter(({ stage, target }) => {

@@ -3,11 +3,12 @@ import {
   isProtectedProduction,
 } from "@repo/backend/content/deployment";
 import { readEnvironment } from "@repo/utilities/env";
+import { DeployStageSchema, deployStageKeys } from "@repo/utilities/stage";
 import { Effect, Schema } from "effect";
 
 /** The deploy identity: the Alchemy stage that the stack binds when it deploys this Worker. */
 const DeployIdentitySchema = Schema.Struct({
-  stage: Schema.UndefinedOr(Schema.String),
+  stage: DeployStageSchema,
 });
 
 const FailureSchema = Schema.Literals([
@@ -163,16 +164,15 @@ const optionalText = Schema.UndefinedOr(Schema.String);
 
 /** Reads and validates the content runtime used by the app configuration. */
 export function readRuntimeConfig() {
+  const { NAKAFA_DEPLOY_STAGE } = deployStageKeys();
   const env = readEnvironment(
     {
       CONVEX_AGENT_MODE: Schema.UndefinedOr(Schema.Literal("anonymous")),
-      NAKAFA_DEPLOY_STAGE: optionalText,
       VITE_CONVEX_SITE_URL: optionalText,
       VITE_CONVEX_URL: Schema.String,
     },
     {
       CONVEX_AGENT_MODE: process.env.CONVEX_AGENT_MODE,
-      NAKAFA_DEPLOY_STAGE: process.env.NAKAFA_DEPLOY_STAGE,
       VITE_CONVEX_SITE_URL: process.env.VITE_CONVEX_SITE_URL,
       VITE_CONVEX_URL: process.env.VITE_CONVEX_URL,
     }
@@ -181,7 +181,7 @@ export function readRuntimeConfig() {
     agent: env.CONVEX_AGENT_MODE,
     query: env.VITE_CONVEX_URL,
     site: env.VITE_CONVEX_SITE_URL,
-    deploy: { stage: env.NAKAFA_DEPLOY_STAGE },
+    deploy: { stage: NAKAFA_DEPLOY_STAGE },
   } satisfies RuntimeTarget;
   Effect.runSync(assertRuntimeTarget(target));
   return {

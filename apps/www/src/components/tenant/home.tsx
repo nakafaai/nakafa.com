@@ -28,7 +28,8 @@ import { StudentHome } from "@/components/tenant/home/student";
 import { HomeGreeting } from "@/components/tenant/home/title";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { enterableSitting, orderSittings } from "@/components/tenant/sittings";
-import { Link } from "@/lib/routing/link";
+import { TargetLink } from "@/lib/routing/link";
+import { schoolSittingTarget } from "@/lib/routing/school/target";
 
 /**
  * The home of a school: a header row with the greeting as its heading and the page's one end-goal action at its end,
@@ -117,13 +118,12 @@ function StudentAction() {
     return null;
   }
   return (
-    <Link
+    <TargetLink
       className={buttonVariants()}
-      params={{ sitting: open.value.id, slug }}
-      to="/school/$slug/sittings/$sitting"
+      target={schoolSittingTarget(slug, open.value.id)}
     >
       {open.value.attempt === null ? te("student-start") : tCommon("continue")}
-    </Link>
+    </TargetLink>
   );
 }
 

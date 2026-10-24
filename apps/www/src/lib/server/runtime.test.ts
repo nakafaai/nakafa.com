@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { describe, expect, it } from "@effect/vitest";
+import { afterEach, describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import { FetchHttpClient, HttpClient } from "effect/http";
 import { runtime } from "@/lib/server/runtime";
@@ -18,5 +18,23 @@ describe("server runtime", () => {
     const headers = new Headers(fetcher.mock.calls[0]?.[1]?.headers);
     expect(headers.has("traceparent")).toBe(false);
     expect(headers.has("b3")).toBe(false);
+  });
+});
+
+describe("server runtime startup", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.resetModules();
+  });
+
+  it("refuses to load a non-production stage that points at the production content runtime", async () => {
+    vi.stubEnv("NAKAFA_DEPLOY_STAGE", "staging");
+    vi.stubEnv("VITE_CONVEX_URL", "https://dapper-antelope-269.convex.cloud");
+    vi.stubEnv("VITE_CONVEX_SITE_URL", "https://dapper-antelope-269.convex.site");
+    vi.resetModules();
+
+    await expect(import("@/lib/server/runtime")).rejects.toThrow(
+      "Production content is restricted to the protected production stage"
+    );
   });
 });

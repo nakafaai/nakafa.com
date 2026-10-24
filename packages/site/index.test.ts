@@ -2,7 +2,6 @@ import { describe, expect, it } from "@effect/vitest";
 import {
   createLoopbackConnectSources,
   createSecurityHeaders,
-  securityHeaders,
 } from "@repo/site";
 import { Array as Arr, Option } from "effect";
 
@@ -79,7 +78,6 @@ describe("createSecurityHeaders", () => {
       "img-src 'self' blob: data: https: https://*.googleusercontent.com http://127.0.0.1:3212;"
     );
     expect(csp?.value).not.toContain("ws://127.0.0.1:3212");
-    expect(createSecurityHeaders()).toEqual(securityHeaders);
-    expect(securityHeaders[0]?.value).not.toContain("127.0.0.1");
+    expect(createSecurityHeaders()[0]?.value).not.toContain("127.0.0.1");
   });
 });

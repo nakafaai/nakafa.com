@@ -131,9 +131,3 @@ export function createSecurityHeaders({
     },
   ];
 }
-
-/**
- * Security headers configuration
- * Implements best practices for web security
- */
-export const securityHeaders = createSecurityHeaders();

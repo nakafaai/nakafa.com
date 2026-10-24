@@ -1,6 +1,15 @@
 import "@tanstack/react-start/server-only";
 import { FetchClient } from "@repo/utilities/http/client";
 import { Config, Layer, ManagedRuntime } from "effect";
+import { readRuntimeConfig } from "@/runtime";
+
+/**
+ * Checks the content runtime target as this module loads, which the Worker entry
+ * does before it answers any request. A target that the deploy identity forbids
+ * throws here, so the Worker fails at startup instead of serving production
+ * content from a stage that must not reach it.
+ */
+readRuntimeConfig();
 
 /**
  * The address of the Convex deployment, read by server code at runtime. The
