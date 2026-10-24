@@ -231,7 +231,10 @@ function ReaderAction() {
   const locale = useCurrentLocale();
   const navigate = useNavigate();
   return (
-    <div className="mx-auto flex w-full max-w-3xl justify-center px-4 pb-4">
+    <div
+      className="mx-auto flex w-full max-w-3xl justify-center px-4 pb-4"
+      data-slot="reader-action"
+    >
       <Button
         onClick={() =>
           navigate(getPostAuthSignInTarget(`/${locale}/chat`, locale))

@@ -62,15 +62,18 @@ test.describe("A reader's shared chat at 1440px", () => {
               await readsChat(reader, TITLE, PROMPT);
               await offersNoWriting(reader);
             });
-            yield* Effect.promise(async () => {
-              await reader
-                .getByRole("button", { exact: true, name: NEW_CHAT })
-                .click();
-              await expect(reader).toHaveURL(SIGN_IN);
-            });
+            // The page is read before its one action, so the sign-in page that the
+            // action opens does not count against it.
             yield* Effect.sync(() => {
               expect(MutableList.toArray(sockets)).toStrictEqual([]);
               expect(MutableList.toArray(sessionReads)).toStrictEqual([]);
+            });
+            yield* Effect.promise(async () => {
+              await reader
+                .locator('[data-slot="reader-action"]')
+                .getByRole("button", { exact: true, name: NEW_CHAT })
+                .click();
+              await expect(reader).toHaveURL(SIGN_IN);
             });
           })
         );
