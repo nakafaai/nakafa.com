@@ -1,7 +1,11 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
+import { Array as Arr } from "effect";
 import { act, createElement, useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import { useMenuWarm } from "@/components/sidebar/menu/warm";
+
+/** The idle callbacks that the menus under test have asked the browser for. */
+let idleCallbacks: readonly (() => void)[] = [];
 
 /** Renders the warm flag as text, and hands the warm action of the menu to `onWarm`. */
 function Probe({ onWarm }: { onWarm: (warm: () => void) => void }) {
@@ -30,10 +34,10 @@ function mountProbe(onWarm: (warm: () => void) => void) {
   };
 }
 
-/** Gives the window an idle callback, and returns the stub that records the callbacks it is given. */
+/** Gives the window an idle callback that records each callback it is given. */
 function stubIdleCallback() {
   const requestIdleCallback = (callback: () => void) => {
-    idleCallbacks.push(callback);
+    idleCallbacks = Arr.append(idleCallbacks, callback);
     return 1;
   };
   Object.defineProperty(window, "requestIdleCallback", {
@@ -46,12 +50,9 @@ function stubIdleCallback() {
   });
 }
 
-/** The idle callbacks the probe's menu has asked the browser for. */
-const idleCallbacks: (() => void)[] = [];
-
 describe("the warm state of a menu body", () => {
   afterEach(() => {
-    idleCallbacks.length = 0;
+    idleCallbacks = [];
     Reflect.deleteProperty(window, "requestIdleCallback");
     Reflect.deleteProperty(window, "cancelIdleCallback");
   });

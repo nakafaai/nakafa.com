@@ -4,7 +4,12 @@ import { runOnPage } from "@/e2e/support/chat";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import { withBrowserContext } from "@/e2e/support/context";
 import { signInLearner } from "@/e2e/support/learner";
-import { readPaints, recordPaints, summarizePaints } from "@/e2e/support/paint";
+import {
+  readPaints,
+  recordedMilliseconds,
+  recordPaints,
+  summarizePaints,
+} from "@/e2e/support/paint";
 import { createSchool, hostAddress, signInOwner } from "@/e2e/support/school";
 import { ownedChat } from "@/e2e/support/share";
 import { desktopViewport, viewportSize } from "@/e2e/support/viewport";
@@ -31,7 +36,7 @@ test.use({ viewport: viewportSize(desktopViewport) });
 /** Waits until a recording has run its whole length, so its samples are complete. */
 async function untilRecorded(page: Page) {
   await expect
-    .poll(async () => (await readPaints(page)).at(-1)?.at ?? 0, {
+    .poll(() => recordedMilliseconds(page), {
       timeout: RECORD_MILLISECONDS * 4,
     })
     .toBeGreaterThanOrEqual(RECORD_MILLISECONDS);

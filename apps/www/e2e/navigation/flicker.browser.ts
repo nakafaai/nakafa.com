@@ -1,5 +1,5 @@
 import { expect, type Page, test } from "@playwright/test";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import { runOnPage } from "@/e2e/support/chat";
 import { seedAnalyticsConsent } from "@/e2e/support/consent";
 import {
@@ -7,7 +7,12 @@ import {
   recordLayoutShifts,
 } from "@/e2e/support/layout";
 import { signInLearner } from "@/e2e/support/learner";
-import { readPaints, recordPaints, summarizePaints } from "@/e2e/support/paint";
+import {
+  readPaints,
+  recordedMilliseconds,
+  recordPaints,
+  summarizePaints,
+} from "@/e2e/support/paint";
 import { TOASTER } from "@/e2e/support/selector";
 import { desktopViewport, viewportSize } from "@/e2e/support/viewport";
 
@@ -54,7 +59,7 @@ async function pressAccountItem(page: Page, item: string, path: RegExp) {
   await menuItem.click();
   await expect(page).toHaveURL(path);
   await expect
-    .poll(async () => (await readPaints(page)).at(-1)?.at ?? 0, {
+    .poll(() => recordedMilliseconds(page), {
       timeout: RECORD_MILLISECONDS * 4,
     })
     .toBeGreaterThanOrEqual(RECORD_MILLISECONDS);
@@ -82,9 +87,14 @@ for (const destination of destinations) {
         expect(summary?.emptyFrames).toBe(0);
 
         const shifts = yield* readRecordedLayoutShifts(page, SHIFTS);
-        const moved = shifts
-          .filter((shift) => !shift.hadRecentInput && shift.time >= pressedAt)
-          .reduce((total, shift) => total + shift.value, 0);
+        const moved = Arr.reduce(
+          Arr.filter(
+            shifts,
+            (shift) => !shift.hadRecentInput && shift.time >= pressedAt
+          ),
+          0,
+          (total, shift) => total + shift.value
+        );
         expect(moved).toBe(0);
       })
     );

@@ -1,11 +1,11 @@
 import type { Page } from "@playwright/test";
-import { Schema } from "effect";
+import { Array as Arr, Option, Schema } from "effect";
 
 /** The page global that holds the samples of one recording. */
 const PAINTS = "nakafaPaints";
 
 /** The controls a popup or a page holds, which a reader can press, type into or pick. */
-export const CONTROLS =
+const CONTROLS =
   'button, a, input, textarea, [role="menuitem"], [role="switch"], [role="option"]';
 
 /**
@@ -23,7 +23,7 @@ const PaintSample = Schema.Struct({
 });
 
 /** One frame the recorder sampled. */
-export type PaintSample = typeof PaintSample.Type;
+type PaintSample = typeof PaintSample.Type;
 
 /**
  * Starts sampling, in every animation frame for `duration` milliseconds, the first
@@ -93,31 +93,45 @@ export const readPaints = async (page: Page) =>
   );
 
 /**
+ * The moment, in milliseconds since the recording started, of the last frame that
+ * the recorder sampled. Zero when it sampled none.
+ */
+export const recordedMilliseconds = async (page: Page) =>
+  Option.getOrElse(
+    Option.map(Arr.last(await readPaints(page)), (sample) => sample.at),
+    () => 0
+  );
+
+/**
  * What a recording says about the first frame a reader could see the element in,
  * against the frame the recording ends on. `drift` is the largest change in
  * height that a shown frame after the first one makes, in pixels. A recording
  * that never showed the element has no first frame.
  */
 export function summarizePaints(samples: readonly PaintSample[]) {
-  const first = samples.find((sample) => sample.shown);
-  const last = samples.at(-1);
-  if (first === undefined || last === undefined) {
+  const first = Arr.findFirst(samples, (sample) => sample.shown);
+  const last = Arr.last(samples);
+  if (Option.isNone(first) || Option.isNone(last)) {
     return;
   }
-  const drift = samples
-    .filter((sample) => sample.shown && sample.at >= first.at)
-    .reduce(
-      (largest, sample) =>
-        Math.max(largest, Math.abs(sample.height - first.height)),
-      0
-    );
+  const {
+    at: firstAt,
+    controls: firstControls,
+    height: firstHeight,
+  } = first.value;
+  const drift = Arr.reduce(
+    Arr.filter(samples, (sample) => sample.shown && sample.at >= firstAt),
+    0,
+    (largest, sample) =>
+      Math.max(largest, Math.abs(sample.height - firstHeight))
+  );
   return {
     drift,
-    finalControls: last.controls,
-    finalHeight: last.height,
-    firstControls: first.controls,
-    firstHeight: first.height,
     /** Frames, from the first sample on, in which the element held no text at all: a reader sees a blank. */
-    emptyFrames: samples.filter((sample) => sample.text === 0).length,
+    emptyFrames: Arr.filter(samples, (sample) => sample.text === 0).length,
+    finalControls: last.value.controls,
+    finalHeight: last.value.height,
+    firstControls,
+    firstHeight,
   };
 }
