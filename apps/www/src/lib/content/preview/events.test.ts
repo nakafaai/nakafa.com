@@ -282,7 +282,7 @@ describe("local preview events", () => {
               accept: "text/event-stream",
               authorization: "Bearer test-token",
             },
-            redirect: "error",
+            redirect: "manual",
             referrerPolicy: "no-referrer",
           })
         );

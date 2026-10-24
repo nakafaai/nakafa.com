@@ -83,7 +83,7 @@ describe("local preview JSON requests", () => {
             accept: "application/json",
             authorization: "Bearer secret-token",
           },
-          redirect: "error",
+          redirect: "manual",
           referrerPolicy: "no-referrer",
         })
       );
@@ -147,7 +147,7 @@ describe("local preview JSON requests", () => {
             headers: expect.objectContaining({
               authorization: "Bearer secret-token",
             }),
-            redirect: "error",
+            redirect: "manual",
             referrerPolicy: "no-referrer",
           })
         );

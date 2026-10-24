@@ -25,7 +25,7 @@ export const MAX_PREVIEW_MANIFEST_BYTES = 128 * 1024;
 const PREVIEW_PHASE_TIMEOUT_MS = 5000;
 /**
  * The loopback transport: the Fetch client, kept uncached and free of cookies,
- * redirects, and referrers. Only that client honors these options, so the
+ * referrers, and followed redirects (a redirect answers as it arrives). Only that client honors these options, so the
  * preview modules provide it themselves instead of accepting any HTTP client.
  */
 export const PreviewHttpClient = FetchClient.pipe(
@@ -33,7 +33,7 @@ export const PreviewHttpClient = FetchClient.pipe(
     Layer.succeed(FetchHttpClient.RequestInit, {
       cache: "no-store",
       credentials: "omit",
-      redirect: "error",
+      redirect: "manual",
       referrerPolicy: "no-referrer",
     })
   )
