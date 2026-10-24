@@ -1,9 +1,11 @@
-import { providers, state, Website } from "@alchemy.run/cloudflare";
+import { providers, state, Website, Worker } from "@alchemy.run/cloudflare";
 import { Stack, Stage } from "alchemy";
 import { Effect } from "effect";
 import { deployNakafaDns } from "#www/deploy/dns";
+import { edgeWorkerBindings } from "#www/deploy/edge";
 import {
   PRODUCTION_STAGE,
+  productionHostExposure,
   WORKER_OBSERVABILITY,
   WORKER_PLACEMENT,
   webExposure,
@@ -44,6 +46,25 @@ export default Stack(
 
     if (stage === PRODUCTION_STAGE) {
       yield* deployNakafaDns();
+
+      yield* Worker("Api", {
+        main: "../api/worker.ts",
+        assets: "../api/public",
+        compatibility: { date: workerSettings.compatibilityDate },
+        env: edgeWorkerBindings("NAKAFA_API_EDGE_SECRET"),
+        observability: WORKER_OBSERVABILITY,
+        placement: WORKER_PLACEMENT,
+        ...productionHostExposure("api.nakafa.com"),
+      });
+      yield* Worker("Mcp", {
+        main: "../mcp/worker.ts",
+        assets: "../mcp/public",
+        compatibility: { date: workerSettings.compatibilityDate },
+        env: edgeWorkerBindings("NAKAFA_MCP_EDGE_SECRET"),
+        observability: WORKER_OBSERVABILITY,
+        placement: WORKER_PLACEMENT,
+        ...productionHostExposure("mcp.nakafa.com"),
+      });
     }
 
     return { url: web.url.as<string>() };
