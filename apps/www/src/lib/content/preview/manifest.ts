@@ -63,19 +63,22 @@ type PreviewSnapshotMemo = Effect.Success<
 const snapshotMemos = new WeakMap<Request, PreviewSnapshotMemo>();
 
 /**
- * The snapshot memo of one request. The first reader of a request creates it,
- * and every later reader of that request awaits the same memo, so the manifest
- * is fetched once per request however many readers run.
+ * The snapshot memo of one request. Every reader of a request awaits the same
+ * memo, so the manifest is fetched once per request however many readers run.
+ * The lookup and the store happen in one synchronous step, so readers that start
+ * together never keep two memos.
  */
 const readSnapshotMemo = (request: Request) =>
-  Effect.suspend(() => {
-    const existing = snapshotMemos.get(request);
-    if (existing !== undefined) {
-      return Effect.succeed(existing);
-    }
-    return createSnapshotMemo().pipe(
-      Effect.tap((memo) => Effect.sync(() => snapshotMemos.set(request, memo)))
-    );
+  Effect.gen(function* () {
+    const created = yield* createSnapshotMemo();
+    return yield* Effect.sync(() => {
+      const existing = snapshotMemos.get(request);
+      if (existing !== undefined) {
+        return existing;
+      }
+      snapshotMemos.set(request, created);
+      return created;
+    });
   });
 
 /** Reads the snapshot of the current request, shared with every other reader of that request. */

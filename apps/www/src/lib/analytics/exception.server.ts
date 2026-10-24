@@ -2,7 +2,7 @@ import type { OperationalExceptionProperties } from "@repo/analytics/posthog/exc
 import { isServerExceptionReportingEnabled } from "@repo/analytics/server-reporting";
 import { getRequestHeader } from "@tanstack/react-start/server";
 import { waitUntil } from "@vercel/functions";
-import { Effect, Schema } from "effect";
+import { Cause, Effect, Schema } from "effect";
 
 /** The request has no user agent to read, because no request scope is active. */
 class RequestUserAgentUnavailable extends Schema.TaggedError<RequestUserAgentUnavailable>()(
@@ -55,7 +55,7 @@ export const captureServerExceptionSafely = Effect.fn(
       reporting.captureServerException(error, properties, requestUserAgent)
     ),
     Effect.catch((cause) =>
-      Effect.logWarning("Server exception capture failed.", cause)
+      Effect.logWarning("Server exception capture failed.", Cause.fail(cause))
     )
   );
 });
