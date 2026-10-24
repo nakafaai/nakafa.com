@@ -10351,6 +10351,70 @@ export declare const internal: {
       >;
     };
   };
+  billing: {
+    contracts: {
+      recordSchoolContract: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          contractId: string;
+          seats: number;
+          tenantSlug: string;
+          validFrom: number;
+          validTo: number;
+        },
+        { accountId: Id<"billingAccounts">; grantId: Id<"billingGrants"> }
+      >;
+    };
+    events: {
+      cleanup: FunctionReference<"mutation", "internal", {}, number>;
+      process: FunctionReference<
+        "mutation",
+        "internal",
+        { eventId: Id<"billingEvents"> },
+        null
+      >;
+      record: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          key: string;
+          payload: string;
+          providerTime: number;
+          rail: "polar" | "xendit";
+          type: string;
+        },
+        { eventId: Id<"billingEvents">; kind: "accepted" | "duplicate" }
+      >;
+    };
+    grants: {
+      project: FunctionReference<
+        "mutation",
+        "internal",
+        { userId: Id<"users"> },
+        null
+      >;
+      projectSchool: FunctionReference<
+        "mutation",
+        "internal",
+        { cursor: string | null; tenantId: Id<"tenants"> },
+        null
+      >;
+    };
+    migration: {
+      copyPolarSubscriptionsPage: FunctionReference<
+        "mutation",
+        "internal",
+        { cursor: string | null; numItems: number },
+        {
+          continueCursor: string;
+          copied: number;
+          isDone: boolean;
+          skipped: number;
+        }
+      >;
+    };
+  };
   classroom: {
     forum: {
       backfill: {
