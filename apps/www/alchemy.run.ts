@@ -3,6 +3,7 @@ import { PRODUCTION_DEPLOY_STAGE } from "@repo/utilities/stage";
 import { RemovalPolicy, Stack, Stage } from "alchemy";
 import { Effect } from "effect";
 import { requireNonEmptyBindings } from "#www/deploy/bindings";
+import { deployNakafaBots } from "#www/deploy/bots";
 import { deployNakafaDns, deployNakafaIdZone } from "#www/deploy/dns";
 import { edgeWorkerBindings } from "#www/deploy/edge";
 import {
@@ -47,7 +48,8 @@ export default Stack(
 
     // Production declares the zones first: the web Worker attaches nakafa.com by zone name.
     if (isProduction) {
-      yield* deployNakafaDns().pipe(RemovalPolicy.retain());
+      const zone = yield* deployNakafaDns().pipe(RemovalPolicy.retain());
+      yield* deployNakafaBots(zone).pipe(RemovalPolicy.retain());
       yield* deployNakafaIdZone().pipe(RemovalPolicy.retain());
     }
 
