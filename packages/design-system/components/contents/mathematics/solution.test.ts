@@ -70,6 +70,22 @@ describe("solution sets", () => {
     ).toBe("(0{,}5; 2)");
   });
 
+  it("reads a missing bound as a ray to the edge of the axis", () => {
+    expect(
+      solutionSetMath(
+        [{ end: 2, endInclusive: true, startInclusive: true }],
+        writeNumber,
+        ", "
+      )
+    ).toBe("(-\\infty, 2]");
+    expect(
+      solutionSetMath([{ start: 5, startInclusive: true }], writeNumber, ", ")
+    ).toBe("[5, \\infty)");
+    expect(solutionSetMath([{}], writeNumber, ", ")).toBe(
+      "(-\\infty, \\infty)"
+    );
+  });
+
   it("is empty when no segment is shaded", () => {
     expect(
       solutionSetMath([{ end: 1, shaded: false, start: 0 }], writeNumber, ", ")
