@@ -7,6 +7,9 @@ const EDGE_SECRET_NAMES = [
   "NAKAFA_MCP_EDGE_SECRET",
 ] as const;
 
+/** The CAS front reads its bearer key through its own Config, so the GitHub stack always writes it. */
+const CAS_SECRET_NAMES = ["MATH_CAS_API_KEY"] as const;
+
 /**
  * The server values that the GitHub stack writes as Actions secrets: every bound
  * value that the environment sets, plus the edge values. A `VITE_` name is public,
@@ -19,6 +22,7 @@ export const serverSecretNames = (
     Arr.dedupe([
       ...Rec.keys(Rec.filter(environment, (value) => value !== undefined)),
       ...EDGE_SECRET_NAMES,
+      ...CAS_SECRET_NAMES,
     ]),
     (name) => !name.startsWith("VITE_")
   );

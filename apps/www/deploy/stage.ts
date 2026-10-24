@@ -79,3 +79,14 @@ export function webExposure(stage: string) {
 export function productionHostExposure(host: string) {
   return { routes: [hostRoute(host)], workersDev: false };
 }
+
+/**
+ * The CAS front. Production serves its own host, and every other stage gets only
+ * its workers.dev URL, so a probe stage never touches the zone.
+ */
+export function casFrontExposure(stage: string) {
+  if (stage === PRODUCTION_DEPLOY_STAGE) {
+    return productionHostExposure("cas.nakafa.com");
+  }
+  return { routes: [], workersDev: true };
+}

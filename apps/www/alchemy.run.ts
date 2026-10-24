@@ -3,6 +3,7 @@ import { PRODUCTION_DEPLOY_STAGE } from "@repo/utilities/stage";
 import { RemovalPolicy, Stack, Stage } from "alchemy";
 import { Effect } from "effect";
 import { requireNonEmptyBindings } from "#www/deploy/bindings";
+import { deployCas } from "#www/deploy/cas";
 import { deployNakafaDns, deployNakafaIdZone } from "#www/deploy/dns";
 import { edgeWorkerBindings } from "#www/deploy/edge";
 import {
@@ -21,7 +22,8 @@ import {
  * The Nakafa stack. The stage decides who reaches the web Worker: production
  * serves nakafa.com and every School host and owns the zone's records, staging
  * serves staging.nakafa.com behind Cloudflare Access, and any other stage gets
- * only its workers.dev URL.
+ * only its workers.dev URL. The CAS math service deploys in every stage, and
+ * production gives it cas.nakafa.com.
  *
  * Alchemy builds the app with this app's own vite.config.ts, uploads the client
  * build as static assets, and makes the SSR bundle the Worker entry. The runtime
@@ -83,6 +85,8 @@ export default Stack(
         ...productionHostExposure("mcp.nakafa.com"),
       }).pipe(RemovalPolicy.retain());
     }
+
+    yield* deployCas(stage, isProduction);
 
     return { url: web.url.as<string>() };
   })

@@ -9,12 +9,6 @@ import { NAKAFA_ZONE } from "#www/deploy/stage";
  */
 const EDGE_PLACEHOLDER_ADDRESS = "192.0.2.1";
 
-/**
- * The Vercel alias target that serves cas.nakafa.com today through the wildcard.
- * CAS stays on Vercel until its Python Worker exists, so its host keeps this target.
- */
-const VERCEL_CAS_TARGET = "5e1269fc8b51736b.vercel-dns-016.com";
-
 /** The domain that redirects every request to nakafa.com, and its zone. */
 const NAKAFA_ID_ZONE = "nakafa.id";
 
@@ -23,10 +17,8 @@ const NAKAFA_ID_ZONE = "nakafa.id";
  * is adopted, because Cloudflare keeps no ownership marker on a zone. Every
  * mail, verification and analytics record is DNS only, with the exact value of
  * the Vercel inventory (ops/tss/dns-nakafa-com.md). The apex is the web Worker's
- * custom domain, and the API and MCP hosts are exact Worker routes. The proxied
- * wildcard catches every other host under the zone, School hosts included. CAS
- * has no Worker yet, so its own DNS-only record keeps it on Vercel, and that
- * record wins over the wildcard.
+ * custom domain, and the API, MCP and CAS hosts are exact Worker routes. The
+ * proxied wildcard catches every other host under the zone, School hosts included.
  */
 export const deployNakafaDns = Effect.fn("deploy.nakafaDns")(function* () {
   const zone = yield* Zone.Zone("NakafaZone", {
@@ -40,15 +32,6 @@ export const deployNakafaDns = Effect.fn("deploy.nakafaDns")(function* () {
     type: "A",
     content: EDGE_PLACEHOLDER_ADDRESS,
     proxied: true,
-  });
-
-  // CAS stays on Vercel until its Python Worker replaces it.
-  yield* DNS.Record("CasHost", {
-    zoneId,
-    name: "cas",
-    type: "CNAME",
-    content: VERCEL_CAS_TARGET,
-    comment: "CAS on Vercel until the Python Worker replaces it",
   });
 
   // Google Workspace mail.

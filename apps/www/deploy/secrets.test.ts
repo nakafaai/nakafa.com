@@ -17,14 +17,16 @@ describe("serverSecretNames", () => {
       "NAKAFA_CONVEX_SITE_URL",
       "NAKAFA_API_EDGE_SECRET",
       "NAKAFA_MCP_EDGE_SECRET",
+      "MATH_CAS_API_KEY",
     ]);
   });
 
-  it("keeps the edge values even when the environment does not set them", () => {
+  it("keeps the edge and CAS values even when the environment does not set them", () => {
     expect(serverSecretNames({})).toEqual([
       "NAKAFA_CONVEX_SITE_URL",
       "NAKAFA_API_EDGE_SECRET",
       "NAKAFA_MCP_EDGE_SECRET",
+      "MATH_CAS_API_KEY",
     ]);
   });
 });

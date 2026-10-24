@@ -53,17 +53,18 @@ never invoke a Worker.
    the account id, the Convex production and staging deploy keys, and every server
    value that a Worker binds to GitHub Actions secrets, each read through an Effect
    `Config` at run time. CI never runs that stack.
-7. **Python CAS waits for measurement.** `apps/cas` keeps its FastAPI service. Its
-   CPU per request is measured by `scripts/cpu_budget.py` against the 10 ms Free
-   limit before any Worker is written for it.
+7. **CAS runs as Durable Objects.** The math engine in `apps/cas` is a Python
+   Durable Object (`entry.py`, `cas/compute.py`), and a TypeScript front on
+   `cas.nakafa.com` (`apps/cas/front`) checks the bearer key and forwards each
+   call to one of a fixed pool of engine objects. Each object runs one calculation
+   at a time under the platform's CPU limit. The measurement that decided this
+   design is recorded in the pull request that introduced it.
 
 ## Consequences
 
-- Vercel stays for two hosts until their Cloudflare replacements ship. `apps/cas`
-  keeps `vercel.ts`, its `[tool.vercel]` entry, and its `@vercel/config`
-  devDependency, and the `apps/www` Vercel project keeps serving www until the
-  cutover. The Vercel Preview prohibition in `AGENTS.md` stays until then. Every
-  other Vercel file, package, and ignore entry is removed.
+- Vercel serves `www` until its cutover, and the Vercel Preview prohibition in
+  `AGENTS.md` stays until then. CAS runs on Cloudflare, and no Vercel file or
+  package remains in `apps/cas`.
 - The production identity is the deploy stage. Each Worker binds the stage that
   its stack deploys as `NAKAFA_DEPLOY_STAGE`. The production checks in
   `packages/backend/content`, the runtime check in `apps/www/src/runtime.ts`, and
@@ -78,8 +79,8 @@ never invoke a Worker.
   redirect rule are retained (`RemovalPolicy.retain`). A stack change that drops
   one leaves the cloud object in place. A plan check in CI is not in place yet.
 - The nakafa.id zone, its placeholder records, and its redirect rule are adopted,
-  never recreated. `cas.nakafa.com` keeps a DNS-only record to its Vercel target
-  until the CAS Worker replaces it.
+  never recreated. `cas.nakafa.com` has no record of its own: the proxied wildcard
+  answers it, and the CAS front's route wins over the wildcard.
 - The deploy token holds its account permissions and its zone permissions in two
   policies. Alchemy keeps the token value in its encrypted state. The owner must
   confirm this accepted risk, and the alternative is a token created outside
@@ -87,8 +88,9 @@ never invoke a Worker.
 - Production never runs `alchemy destroy`. The workflow passes no destroy flag.
 - Upgrading to a paid Workers plan needs a measured limit that is hit, recorded
   first in the goals.
-- The Python CAS Worker is not deployed yet. Its compute runs a subprocess, which a
-  Python Worker cannot start, so the measurement decides the next step.
+- The CAS engine has no subprocess: a Python Worker cannot start one, so the
+  engine runs in a Durable Object with SQLite storage, the only storage a Free
+  Durable Object has.
 
 ## Sources
 
