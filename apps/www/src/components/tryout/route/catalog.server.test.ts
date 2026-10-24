@@ -362,12 +362,11 @@ describe("readTryoutExamRoute", () => {
       });
 
       expect(route).toMatchObject({
-        countryHref: "/try-out/id",
+        countryPath: "try-out/id",
         examPath: EXAM,
         kind: "found",
       });
       expect(catalog.buildTryoutExamOptions).toHaveBeenCalledExactlyOnceWith(
-        "en",
         countryPage.exams
       );
     })
@@ -421,7 +420,6 @@ describe("readTryoutTrackRoute", () => {
       });
 
       expect(route).toMatchObject({
-        examHref: "/try-out/id/snbt",
         examPath: EXAM,
         kind: "found",
         page: trackPage,

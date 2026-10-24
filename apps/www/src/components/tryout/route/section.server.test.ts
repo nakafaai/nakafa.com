@@ -237,7 +237,7 @@ describe("readTryoutSectionRoute", () => {
 
         expect(route).toMatchObject({
           kind: "attempt",
-          setHref: "/try-out/id/snbt/2027/set-2",
+          setPath: "try-out/id/snbt/2027/set-2",
           head: {
             description: "Section",
             title: { absolute: "Section 1" },
@@ -294,7 +294,7 @@ describe("readTryoutSectionRoute", () => {
           binding: null,
           content: null,
           kind: "catalog",
-          setHref: "/try-out/id/snbt/2027/set-1",
+          setPath: "try-out/id/snbt/2027/set-1",
         });
       })
   );
@@ -315,9 +315,9 @@ describe("readTryoutSectionRoute", () => {
         const route = yield* readSection();
 
         expect(route).toMatchObject({
-          binding: { startHref: `/${SECTION}` },
+          binding: { startPath: SECTION },
           kind: "catalog",
-          setHref: "/try-out/id/snbt/2027/set-2",
+          setPath: "try-out/id/snbt/2027/set-2",
         });
       })
   );
@@ -333,9 +333,9 @@ describe("readTryoutSectionRoute", () => {
         const route = yield* readSection();
 
         expect(route).toMatchObject({
-          binding: { startHref: null },
+          binding: { startPath: null },
           content: null,
-          setHref: "/try-out",
+          setPath: "try-out",
         });
       })
   );

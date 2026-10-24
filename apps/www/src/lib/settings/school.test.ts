@@ -1,15 +1,18 @@
 import { describe, expect, it } from "@effect/vitest";
-import { Array as Arr } from "effect";
+import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
+import { Array as Arr, Schema } from "effect";
 import {
   getSchoolSettingsSection,
   schoolSettingsGroups,
   schoolSettingsSections,
 } from "@/lib/settings/school";
 
+const slug = Schema.decodeSync(TenantSlug)("harapan");
+
 describe("school settings routes", () => {
   it("declares each section under its group in sidebar order", () => {
     expect(
-      Arr.map(schoolSettingsSections, (section) => [
+      Arr.map(schoolSettingsSections(slug), (section) => [
         section.target.to,
         section.labelKey,
         section.group.key,
@@ -31,7 +34,7 @@ describe("school settings routes", () => {
 
   it("groups the sidebar by the table without repeating a section", () => {
     expect(
-      Arr.map(schoolSettingsGroups, (group) => [
+      Arr.map(schoolSettingsGroups(slug), (group) => [
         group.key,
         Arr.map(group.sections, (section) => section.labelKey),
       ])
@@ -43,21 +46,42 @@ describe("school settings routes", () => {
     ]);
   });
 
+  it("links each group to the first section it holds", () => {
+    expect(
+      Arr.map(
+        schoolSettingsSections(slug),
+        (section) => section.group.target.to
+      )
+    ).toEqual([
+      "/school/$slug/settings/profile",
+      "/school/$slug/settings/profile",
+      "/school/$slug/settings/profile",
+      "/school/$slug/settings/profile",
+      "/school/$slug/settings/members",
+      "/school/$slug/settings/members",
+      "/school/$slug/settings/members",
+      "/school/$slug/settings/members",
+      "/school/$slug/settings/clients",
+      "/school/$slug/settings/policies",
+      "/school/$slug/settings/policies",
+    ]);
+  });
+
   it("resolves each declared settings route to its own section", () => {
     expect(
-      getSchoolSettingsSection("/school/$slug/settings/cohorts").labelKey
+      getSchoolSettingsSection(slug, "/school/$slug/settings/cohorts").labelKey
     ).toBe("cohorts");
     expect(
-      getSchoolSettingsSection("/school/$slug/settings/audit").labelKey
+      getSchoolSettingsSection(slug, "/school/$slug/settings/audit").labelKey
     ).toBe("audit");
   });
 
   it("keeps the first section as the owner of the settings root and of any undeclared route", () => {
-    expect(getSchoolSettingsSection("/school/$slug/settings").labelKey).toBe(
-      "profile"
-    );
     expect(
-      getSchoolSettingsSection("/school/$slug/settings/unknown").labelKey
+      getSchoolSettingsSection(slug, "/school/$slug/settings").labelKey
+    ).toBe("profile");
+    expect(
+      getSchoolSettingsSection(slug, "/school/$slug/settings/unknown").labelKey
     ).toBe("profile");
   });
 });

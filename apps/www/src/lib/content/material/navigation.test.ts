@@ -225,7 +225,7 @@ describe("material lesson navigation", () => {
       context,
       link: {
         hash: "functions",
-        publicPath: "curriculum/merdeka",
+        publicPath: "curriculum/merdeka/class-11/mathematics",
         label: "Functions",
       },
       pagination: {
@@ -290,7 +290,9 @@ describe("material lesson navigation", () => {
         context,
         pagination: {
           next: {
-            context: scope === "parent" ? context.nodeKey : undefined,
+            ...(scope === "parent"
+              ? { context: `merdeka~${context.nodeKey}` }
+              : {}),
             publicPath: next.publicPath,
           },
         },

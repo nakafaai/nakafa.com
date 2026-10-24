@@ -128,12 +128,12 @@ describe("article navigation", () => {
       expect(navigation).toEqual([
         {
           category: "politics",
-          href: "/articles/politics",
+          route: "politics",
           title: "Politics",
         },
         {
           category: "science",
-          href: "/articles/science",
+          route: "science",
           title: "Science",
         },
       ]);
@@ -167,7 +167,7 @@ describe("article navigation", () => {
         expect(navigation).toEqual([
           {
             category: "politics",
-            href: `/articles/${route}`,
+            route,
             title,
           },
         ]);

@@ -112,8 +112,8 @@ describe("signed curriculum runtime", () => {
     expect(readRuntimeCurriculumOptions(catalog)).toEqual([
       {
         countryCode: "ID",
-        href: "/en/curriculum/merdeka",
         programKey: "merdeka",
+        publicPath: "curriculum/merdeka",
         publicSlug: "merdeka",
         title: "Kurikulum Merdeka",
         value: "curriculum/merdeka",
@@ -165,7 +165,7 @@ describe("signed curriculum runtime", () => {
     );
     expect(readRuntimeCurriculumToc(model)).toEqual({
       description: "Class 11",
-      href: "/en/curriculum/merdeka/class-11/mathematics",
+      publicPath: "curriculum/merdeka/class-11/mathematics",
       title: "Mathematics",
     });
   });
@@ -188,7 +188,7 @@ describe("signed curriculum runtime", () => {
       isRenderableCurriculumView({ ...testProgramRoot, sitemap: false })
     ).toBe(false);
     expect(readRuntimeCurriculumToc(model)).toEqual({
-      href: "/en/curriculum/merdeka",
+      publicPath: "curriculum/merdeka",
       title: "Kurikulum Merdeka",
     });
   });

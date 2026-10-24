@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import { Array as Arr } from "effect";
+import { Array as Arr, Option } from "effect";
 import {
   getForYouNavigationItems,
   getForYouNavigationTarget,
@@ -40,17 +40,17 @@ describe("sidebar navigation", () => {
 
     expect(
       getForYouNavigationTarget(subject, {
-        preferredCurriculumTarget: curriculumTarget,
+        preferredCurriculumTarget: Option.some(curriculumTarget),
       })
     ).toEqual(curriculumTarget);
     expect(
       getForYouNavigationTarget(tryOut, {
         preferredTryoutTarget: tryoutTarget,
       })
-    ).toEqual(tryoutTarget);
+    ).toEqual(Option.getOrThrow(tryoutTarget));
     expect(
       getForYouNavigationTarget(askNina, {
-        preferredCurriculumTarget: curriculumTarget,
+        preferredCurriculumTarget: Option.some(curriculumTarget),
       })
     ).toEqual({ from: "/$locale", to: "/$locale/chat" });
   });

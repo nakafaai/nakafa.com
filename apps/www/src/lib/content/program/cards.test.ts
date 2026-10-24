@@ -48,15 +48,23 @@ describe("published program material cards", () => {
         expect(cards).toEqual([
           {
             description: "Operate on functions and domains.",
-            href: expect.stringContaining(
-              "/en/subjects/mathematics/function-composition-inverse-function/function-concept?ctx=merdeka~"
-            ),
             items: [
               {
-                href: expect.stringContaining("?ctx=merdeka~"),
+                link: {
+                  context: expect.stringContaining("merdeka~"),
+                  publicPath: expect.stringContaining(
+                    "subjects/mathematics/function-composition-inverse-function/function-concept"
+                  ),
+                },
                 title: "Function Concept",
               },
             ],
+            link: {
+              context: expect.stringContaining("merdeka~"),
+              publicPath: expect.stringContaining(
+                "subjects/mathematics/function-composition-inverse-function/function-concept"
+              ),
+            },
             title: "Function Composition and Inverses",
           },
         ]);
@@ -220,7 +228,9 @@ describe("published program material cards", () => {
         {
           items: [
             {
-              href: expect.stringContaining(renamed.publicPath),
+              link: {
+                publicPath: expect.stringContaining(renamed.publicPath),
+              },
               title: renamed.metadata.title,
             },
           ],

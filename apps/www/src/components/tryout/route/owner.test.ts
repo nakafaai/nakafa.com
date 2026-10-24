@@ -33,18 +33,18 @@ describe("try-out route ownership", () => {
         Option.some({ setPublicPath: "try-out/indonesia/tka/2027/renamed-set" })
       )
     ).toEqual({
-      currentHref: "/try-out/indonesia/tka/2027/renamed-set",
-      returnHref: "/try-out/indonesia/tka/2027",
+      currentPath: "try-out/indonesia/tka/2027/renamed-set",
+      returnPath: "try-out/indonesia/tka/2027",
     });
     expect(selectTryoutSetLinks(Option.none())).toEqual({
-      currentHref: "/try-out",
-      returnHref: "/try-out",
+      currentPath: "try-out",
+      returnPath: "try-out",
     });
     expect(
       selectTryoutSetLinks(Option.some({ setPublicPath: "malformed" }))
     ).toEqual({
-      currentHref: "/malformed",
-      returnHref: "/try-out",
+      currentPath: "malformed",
+      returnPath: "try-out",
     });
   });
 
