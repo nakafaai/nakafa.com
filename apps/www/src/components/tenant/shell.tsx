@@ -33,6 +33,7 @@ import { Effect, Option } from "effect";
 import { lazy, type ReactNode, Suspense, useTransition } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { AccountMenu } from "@/components/sidebar/menu/account";
+import { useMenuWarm } from "@/components/sidebar/menu/warm";
 import { TenantAccountItems } from "@/components/tenant/account";
 import {
   type ClassesPreload,
@@ -126,11 +127,14 @@ function TenantAccount({
 /**
  * The school switcher at the top of the sidebar: the school's mark and name open the
  * viewer's schools, with the school's home and the way back to Nakafa beneath them.
+ * The schools mount once the reader shows intent on the switcher, as the account
+ * menu's do, so the menu opens with them in place.
  */
 function TenantSwitcher() {
   const t = useTranslations("School");
   const locale = useLocale();
   const tenant = useTenant();
+  const { warm, warmed } = useMenuWarm();
 
   return (
     <SidebarMenuItem>
@@ -139,6 +143,9 @@ function TenantSwitcher() {
           render={
             <SidebarMenuButton
               className="data-popup-open:bg-sidebar-accent data-popup-open:text-sidebar-accent-foreground"
+              onFocus={warm}
+              onPointerDown={warm}
+              onPointerEnter={warm}
               size="lg"
             >
               <SchoolMark logo={tenant.logo} mascot={tenant.mascot} />
@@ -151,12 +158,19 @@ function TenantSwitcher() {
             </SidebarMenuButton>
           }
         />
-        <DropdownMenuContent align="start" className="min-w-56" sideOffset={4}>
-          <Suspense fallback={null}>
-            <ClientOnly fallback={null}>
-              <SidebarSchoolMenuItems canOpenSchool={false} />
-            </ClientOnly>
-          </Suspense>
+        <DropdownMenuContent
+          align="start"
+          className="min-w-56"
+          keepMounted
+          sideOffset={4}
+        >
+          {warmed ? (
+            <Suspense fallback={null}>
+              <ClientOnly fallback={null}>
+                <SidebarSchoolMenuItems canOpenSchool={false} />
+              </ClientOnly>
+            </Suspense>
+          ) : null}
           <DropdownMenuGroup>
             <DropdownMenuItem
               render={

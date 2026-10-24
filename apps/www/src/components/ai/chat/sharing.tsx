@@ -39,10 +39,13 @@ export function ChatSharing({
   chat,
   open,
   onOpenChange,
+  warmed,
 }: {
   chat: ChatView;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Whether the reader has shown intent on the item that shares the chat. */
+  warmed: boolean;
 }) {
   const t = useTranslations("Ai");
   const updateChatVisibility = useUpdateChatVisibilityMutation();
@@ -92,82 +95,103 @@ export function ChatSharing({
   };
 
   return (
-    <ResponsiveDialog
-      description={
-        <ErrorBoundary
-          fallbackRender={() => t("share-link-error")}
-          key={attempt}
-        >
-          <ChatShareDescription chatId={chat._id} isPrivate={isPrivate} />
-        </ErrorBoundary>
-      }
-      footer={
-        // The description's boundary reports an undeclared failure of the read
-        // that both of them make, so this boundary recovers it without a report.
-        <ErrorBoundary
-          fallbackRender={() => (
-            <ChatShareRetry isPending={waiting} onRetry={retry} />
-          )}
-          key={attempt}
-          report={false}
-        >
-          <ChatShareAction
-            chatId={chat._id}
-            isPrivate={isPrivate}
-            onCreate={() => handleUpdateVisibility("public")}
-            onRetry={remount}
-          />
-        </ErrorBoundary>
-      }
-      open={open}
-      setOpen={onOpenChange}
-      title={t("share-chat")}
-    >
-      <div className="flex flex-col divide-y">
-        {Arr.map(["public", "private"] as const, (visibility) => {
-          const isSelected = visibility === chat.visibility;
-          const isPublic = visibility === "public";
-          return (
-            <button
-              className="group flex cursor-pointer items-start gap-4 p-4 transition-colors ease-out hover:bg-accent hover:text-accent-foreground"
-              key={visibility}
-              onClick={() => handleUpdateVisibility(visibility)}
-              type="button"
-            >
-              <div className="flex flex-1 flex-col items-start justify-start gap-1">
-                <div className="flex items-center gap-2">
-                  <HugeIcons
-                    className="size-4 shrink-0"
-                    icon={isPublic ? Globe02Icon : SquareLock01Icon}
-                  />
-                  <span className="text-sm">{t(visibility)}</span>
+    <>
+      {/* The link is read once the reader shows intent on the share item, so the dialog's first frame
+      already has its copy action enabled, or the link's error, and not a copy action that waits.
+      The warm read lets go while the dialog is open: the dialog's readers then hold the link alone,
+      so a retry asks the server, as it does without the warm read. */}
+      <ErrorBoundary fallback={null} key={chat._id} report={false}>
+        <ChatShareWarm chatId={chat._id} skip={isPrivate || !warmed || open} />
+      </ErrorBoundary>
+      <ResponsiveDialog
+        description={
+          <ErrorBoundary
+            fallbackRender={() => t("share-link-error")}
+            key={attempt}
+          >
+            <ChatShareDescription chatId={chat._id} isPrivate={isPrivate} />
+          </ErrorBoundary>
+        }
+        footer={
+          // The description's boundary reports an undeclared failure of the read
+          // that both of them make, so this boundary recovers it without a report.
+          <ErrorBoundary
+            fallbackRender={() => (
+              <ChatShareRetry isPending={waiting} onRetry={retry} />
+            )}
+            key={attempt}
+            report={false}
+          >
+            <ChatShareAction
+              chatId={chat._id}
+              isPrivate={isPrivate}
+              onCreate={() => handleUpdateVisibility("public")}
+              onRetry={remount}
+            />
+          </ErrorBoundary>
+        }
+        open={open}
+        setOpen={onOpenChange}
+        title={t("share-chat")}
+      >
+        <div className="flex flex-col divide-y">
+          {Arr.map(["public", "private"] as const, (visibility) => {
+            const isSelected = visibility === chat.visibility;
+            const isPublic = visibility === "public";
+            return (
+              <button
+                className="group flex cursor-pointer items-start gap-4 p-4 transition-colors ease-out hover:bg-accent hover:text-accent-foreground"
+                key={visibility}
+                onClick={() => handleUpdateVisibility(visibility)}
+                type="button"
+              >
+                <div className="flex flex-1 flex-col items-start justify-start gap-1">
+                  <div className="flex items-center gap-2">
+                    <HugeIcons
+                      className="size-4 shrink-0"
+                      icon={isPublic ? Globe02Icon : SquareLock01Icon}
+                    />
+                    <span className="text-sm">{t(visibility)}</span>
+                  </div>
+                  <p className="text-start text-muted-foreground text-sm group-hover:text-accent-foreground">
+                    {t(`${visibility}-description`)}
+                  </p>
                 </div>
-                <p className="text-start text-muted-foreground text-sm group-hover:text-accent-foreground">
-                  {t(`${visibility}-description`)}
-                </p>
-              </div>
 
-              <HugeIcons
-                className={cn(
-                  "size-4 shrink-0 text-primary opacity-0 transition-opacity ease-out group-hover:text-accent-foreground",
-                  !!isSelected && "opacity-100"
-                )}
-                icon={Tick01Icon}
-              />
-            </button>
-          );
-        })}
-      </div>
-    </ResponsiveDialog>
+                <HugeIcons
+                  className={cn(
+                    "size-4 shrink-0 text-primary opacity-0 transition-opacity ease-out group-hover:text-accent-foreground",
+                    !!isSelected && "opacity-100"
+                  )}
+                  icon={Tick01Icon}
+                />
+              </button>
+            );
+          })}
+        </div>
+      </ResponsiveDialog>
+    </>
   );
 }
 
 /**
  * Reads the share token of a chat that is public. A private chat has no token
- * to read, so its query is skipped.
+ * to read, so its query is skipped, and so is a read that waits for intent.
  */
-function useChatShareToken(chatId: ChatView["_id"], isPrivate: boolean) {
-  return useQuery(chats.queries.getShareToken, isPrivate ? "skip" : { chatId });
+function useChatShareToken(chatId: ChatView["_id"], skip: boolean) {
+  return useQuery(chats.queries.getShareToken, skip ? "skip" : { chatId });
+}
+
+/** Holds the share token's read while the dialog is closed, so the dialog opens with it. */
+function ChatShareWarm({
+  chatId,
+  skip,
+}: {
+  chatId: ChatView["_id"];
+  skip: boolean;
+}) {
+  useChatShareToken(chatId, skip);
+  return null;
 }
 
 /** The tag of the failure that one read of the link shows, or null when it did not fail. */

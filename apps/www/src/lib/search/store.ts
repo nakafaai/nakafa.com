@@ -13,6 +13,7 @@ type State = typeof StateSchema.Type;
 interface Actions {
   setOpen: (open: boolean) => void;
   setQuery: (query: string) => void;
+  warm: () => void;
 }
 
 export type SearchStore = State & Actions;
@@ -31,6 +32,11 @@ export const createSearchStore = () =>
 
         setQuery: (query: string) => {
           set((state) => (state.query === query ? state : { query }));
+        },
+        // The reader showed intent on the trigger: command search mounts now,
+        // hidden, so the press that opens it finds its body ready.
+        warm: () => {
+          set((state) => (state.activated ? state : { activated: true }));
         },
         setOpen: (open: boolean) => {
           set((state) => {

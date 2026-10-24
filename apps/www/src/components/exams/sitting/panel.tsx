@@ -1,13 +1,9 @@
-import {
-  PaginatedQueryResult,
-  QueryResult,
-  usePaginatedQuery,
-  useQuery,
-} from "@confect/react";
+import { PaginatedQueryResult, QueryResult, useQuery } from "@confect/react";
 import { Cancel01Icon } from "@hugeicons/core-free-icons";
 import { useMediaQuery } from "@mantine/hooks";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import { Button } from "@repo/design-system/components/ui/button";
+import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { PersonAvatar } from "@repo/design-system/components/ui/person";
@@ -40,6 +36,7 @@ import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { isLostAccess } from "@/components/tenant/refusal";
+import { usePaginatedPreloaded } from "@/lib/data/paginated";
 
 /** The dialog of a panel action that is open, or none. */
 type PanelDialog = "add-minutes" | "allow-device" | "lock" | "unlock";
@@ -84,9 +81,20 @@ const signalLabels: Record<
  * The panel of the selected student: a pane along the page's right edge on a wide screen, beside
  * the seats it leaves in view, and a sheet on a phone.
  * It shows the student's state, the latest signal, and the actions that the proctor may take.
- * The panel stays closed until a seat is selected.
+ * The panel stays closed until a seat is selected. The seat the reader is on reads the panel's
+ * data first, so the panel opens with its signals already on screen.
  */
 export function SittingPanel() {
+  return (
+    <>
+      <WarmedSeat />
+      <SelectedPanel />
+    </>
+  );
+}
+
+/** The panel of the seat that is selected, which holds the seat's panel data as it opens. */
+function SelectedPanel() {
   const t = useTranslations("Exams");
   const { sittingId, slug, value } = useSittingData();
   const selected = useSittingStore((state) => state.selected);
@@ -135,7 +143,7 @@ export function SittingPanel() {
       }}
       open={current !== undefined}
     >
-      <SheetPopup side="bottom">
+      <SheetPopup keepMounted side="bottom">
         <SheetHeader>
           <SheetTitle>{t("panel-label")}</SheetTitle>
         </SheetHeader>
@@ -264,7 +272,57 @@ function StudentPanel({
 }
 
 /**
- * The signals of one attempt, newest first. A page loads as the list reaches its end, through an
+ * The seat the reader is on reads what its panel shows, so the panel's first frame has it. A seat
+ * on a later page reads that page too, which the panel reads when it opens.
+ */
+function WarmedSeat() {
+  const onSeat = useSittingStore((state) => state.onSeat);
+  if (onSeat === null) {
+    return null;
+  }
+  // A read that fails here stays out of the page: the panel reads the same data when it opens.
+  return (
+    <ErrorBoundary fallback={null} key={onSeat.attemptId} report={false}>
+      <SeatPanelData attemptId={onSeat.attemptId} cursor={onSeat.cursor} />
+    </ErrorBoundary>
+  );
+}
+
+/** Subscribes to one seat's panel data without rendering it. */
+function SeatPanelData({
+  attemptId,
+  cursor,
+}: {
+  readonly attemptId: DashboardAttempt["id"];
+  readonly cursor: string | null;
+}) {
+  const { sittingId, slug } = useSittingData();
+  useQuery(
+    exams.sittings.dashboard,
+    cursor === null ? "skip" : dashboardArgs({ sittingId, slug }, cursor)
+  );
+  useFirstSignalPage(attemptId);
+  return null;
+}
+
+/**
+ * The first page of one attempt's signals, read by a plain query. A plain query with the same
+ * arguments shares its subscription, so a seat that warmed it already has the page when the panel
+ * reads it. A paginated query keeps its own page per instance, so the list cannot share it.
+ */
+function useFirstSignalPage(attemptId: DashboardAttempt["id"]) {
+  const { slug, value } = useSittingData();
+  return useQuery(exams.sittings.signals, {
+    attemptId,
+    paginationOpts: { cursor: null, numItems: SIGNAL_PAGE_SIZE },
+    sittingId: value.sitting.id,
+    slug,
+  });
+}
+
+/**
+ * The signals of one attempt, newest first. The first page is the one the seat read on intent, so
+ * the list is complete when the panel opens. A page loads as the list reaches its end, through an
  * intersection sentinel rather than a button, so the list grows as the proctor scrolls.
  */
 function SignalList({
@@ -274,10 +332,14 @@ function SignalList({
 }) {
   const t = useTranslations("Exams");
   const { slug, value } = useSittingData();
-  const signals = usePaginatedQuery(
+  const firstPage = useFirstSignalPage(attemptId);
+  const signals = usePaginatedPreloaded(
     exams.sittings.signals,
     { attemptId, sittingId: value.sitting.id, slug },
-    { initialNumItems: SIGNAL_PAGE_SIZE }
+    { initialNumItems: SIGNAL_PAGE_SIZE },
+    QueryResult.isSuccess(firstPage)
+      ? Option.some(firstPage.value)
+      : Option.none()
   );
 
   if (PaginatedQueryResult.isFailure(signals) && isLostAccess(signals.error)) {

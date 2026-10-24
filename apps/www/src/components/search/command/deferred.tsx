@@ -14,7 +14,12 @@ const LazySearchCommand = lazy(() =>
   }))
 );
 
-/** Registers lightweight shortcuts and mounts search after first activation. */
+/**
+ * Registers lightweight shortcuts and mounts search once the reader shows intent
+ * on a trigger or presses a shortcut, so pages that never open it load none of its
+ * code. The palette stays mounted while closed, so the press that opens it reveals
+ * a body that is already there.
+ */
 export function DeferredSearchCommand({
   articleNavigation,
 }: {

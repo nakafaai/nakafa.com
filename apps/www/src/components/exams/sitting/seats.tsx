@@ -260,6 +260,8 @@ function SeatButton({
     (state) => state.selected?.attemptId === attempt.id
   );
   const choose = useSittingStore((state) => state.choose);
+  const warm = useSittingStore((state) => state.warm);
+  const onWarm = () => warm({ attemptId: attempt.id, cursor });
 
   return (
     <button
@@ -271,6 +273,9 @@ function SeatButton({
       })}
       data-frame={seatFrame(attempt)}
       onClick={() => choose({ attemptId: attempt.id, cursor })}
+      onFocus={onWarm}
+      onPointerDown={onWarm}
+      onPointerEnter={onWarm}
       type="button"
     >
       <PersonAvatar className="size-6" mascot={attempt.mascot ?? undefined} />

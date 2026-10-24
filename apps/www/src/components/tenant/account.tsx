@@ -17,7 +17,6 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useSidebar } from "@repo/design-system/lib/sidebar/context";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { languages } from "@repo/internationalization/data/lang";
-import { textDirection } from "@repo/internationalization/src/direction";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { useRouter } from "@tanstack/react-router";
 import { Array as Arr, Effect } from "effect";
@@ -25,7 +24,13 @@ import { startTransition } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { ActiveBadge } from "@/components/shared/active";
 import { CountryFlagIcon } from "@/components/shared/flag";
+import {
+  CommunityMenuItem,
+  LearnMoreSubmenu,
+  SiteAboutMenuItem,
+} from "@/components/sidebar/menu/learn";
 import { SidebarThemeSubmenu } from "@/components/sidebar/menu/preference";
+import { selectMenuSide } from "@/components/sidebar/menu/side";
 import { useTenant } from "@/components/tenant/context";
 import { changeSchoolLanguage } from "@/components/tenant/locale";
 import { profileHref } from "@/lib/profile/href";
@@ -61,12 +66,12 @@ function changeLanguage(
 }
 
 /**
- * The items of the school's account menu, between the account and sign-out, in the
- * groups and with the icons of the Nakafa account menu: the person, the school,
- * the preferences, and the way back to Nakafa. The person's links open the pages
- * of the Nakafa account on the main site, where the same session signs the viewer
- * in. The profile link is listed only for an account with a username, as the
- * Nakafa account menu lists it.
+ * The items of the school's account menu, between the account and sign-out, in at
+ * most three groups with the icons of the Nakafa account menu: the person, the
+ * school, then the preferences, Learn more and the way back to Nakafa. The
+ * person's links open the pages of the Nakafa account on the main site, where the
+ * same session signs the viewer in. The profile link is listed only for an account
+ * with a username, as the Nakafa account menu lists it.
  */
 export function TenantAccountItems({
   username,
@@ -123,9 +128,10 @@ export function TenantAccountItems({
       <DropdownMenuGroup>
         <TenantLanguageSubmenu />
         <SidebarThemeSubmenu />
-      </DropdownMenuGroup>
-      <DropdownMenuSeparator />
-      <DropdownMenuGroup>
+        <LearnMoreSubmenu>
+          <SiteAboutMenuItem />
+          <CommunityMenuItem />
+        </LearnMoreSubmenu>
         <DropdownMenuItem
           render={
             <a href={new URL(`/${locale}`, SITE_ORIGIN).href}>
@@ -148,13 +154,7 @@ function TenantLanguageSubmenu() {
   const t = useTranslations("Common");
   const locale = useLocale();
   const router = useRouter();
-  const isRtl = textDirection(locale) === "rtl";
-  const side = useSidebar((sidebar) => {
-    if (sidebar.isMobile) {
-      return "top";
-    }
-    return isRtl ? "left" : "right";
-  });
+  const side = useSidebar(selectMenuSide);
 
   return (
     <DropdownMenuSub>

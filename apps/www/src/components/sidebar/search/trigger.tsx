@@ -13,12 +13,21 @@ import { useTranslations } from "use-intl";
 import { preloadSearchCommand } from "@/components/search/command/module";
 import { useSearch } from "@/lib/search/context";
 
-/** Preloads the search command module ahead of the first open. */
+/**
+ * Warms command search on the reader's intent: its module loads, and the palette
+ * mounts hidden, so the press that opens it finds its body ready.
+ */
 function usePreloadSearchCommand() {
+  const warm = useSearch((state) => state.warm);
+  function preload() {
+    warm();
+    Effect.runFork(preloadSearchCommand());
+  }
+
   return {
-    onFocus: () => Effect.runFork(preloadSearchCommand()),
-    onMouseEnter: () => Effect.runFork(preloadSearchCommand()),
-    onTouchStart: () => Effect.runFork(preloadSearchCommand()),
+    onFocus: preload,
+    onMouseEnter: preload,
+    onTouchStart: preload,
   };
 }
 

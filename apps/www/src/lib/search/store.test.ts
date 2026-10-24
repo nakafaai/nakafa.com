@@ -37,6 +37,18 @@ describe("search store", () => {
     expect(store.getState().query).toBe("algebra");
   });
 
+  it("activates command search on intent without opening it, once", () => {
+    const store = createSearchStore();
+
+    store.getState().warm();
+    expect(store.getState().activated).toBe(true);
+    expect(store.getState().open).toBe(false);
+
+    const before = store.getState();
+    store.getState().warm();
+    expect(store.getState()).toBe(before);
+  });
+
   it("changes nothing when the query and open state are set to their current values", () => {
     const store = createSearchStore();
     const before = store.getState();

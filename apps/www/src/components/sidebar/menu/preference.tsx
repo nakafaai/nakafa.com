@@ -18,10 +18,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar-menu";
-import {
-  type SidebarContextValue,
-  useSidebar,
-} from "@repo/design-system/lib/sidebar/context";
+import { useSidebar } from "@repo/design-system/lib/sidebar/context";
 import { languages } from "@repo/internationalization/data/lang";
 import { ClientOnly } from "@tanstack/react-router";
 import { Array as Arr } from "effect";
@@ -29,6 +26,7 @@ import { lazy, Suspense } from "react";
 import { type Locale, useLocale, useTranslations } from "use-intl";
 import { ActiveBadge } from "@/components/shared/active";
 import { CountryFlagIcon } from "@/components/shared/flag";
+import { selectMenuSide } from "@/components/sidebar/menu/side";
 import { useLocalizedRouteSwitch } from "@/lib/routing/locale/client";
 
 /**
@@ -40,11 +38,6 @@ const ThemeSubmenuContent = lazy(() =>
     default: module.ThemeSubmenuContent,
   }))
 );
-
-/** Opens menus beside the sidebar, or above their trigger on phones, where the sidebar fills the screen. */
-function selectMenuSide(sidebar: SidebarContextValue) {
-  return sidebar.isMobile ? "top" : "right";
-}
 
 /** Keeps the language control label identical across guest and account menus. */
 function LanguageMenuTriggerContent({ label }: { label: string }) {
@@ -121,19 +114,25 @@ export function GuestLanguageMenu() {
   );
 }
 
-/** Renders language options inside the account preference submenu. */
-function LanguageSubmenuContent() {
+/** The language submenu of an account menu, shared by the Nakafa and the school menus. */
+export function SidebarLanguageSubmenu() {
+  const t = useTranslations("Common");
   const side = useSidebar(selectMenuSide);
 
   return (
-    <DropdownMenuSubContent
-      className="w-max max-w-[calc(100vw-2rem)]"
-      side={side}
-    >
-      <DropdownMenuGroup>
-        <LanguageMenuItems />
-      </DropdownMenuGroup>
-    </DropdownMenuSubContent>
+    <DropdownMenuSub>
+      <DropdownMenuSubTrigger className="cursor-pointer">
+        <LanguageMenuTriggerContent label={t("language")} />
+      </DropdownMenuSubTrigger>
+      <DropdownMenuSubContent
+        className="w-max max-w-[calc(100vw-2rem)]"
+        side={side}
+      >
+        <DropdownMenuGroup>
+          <LanguageMenuItems />
+        </DropdownMenuGroup>
+      </DropdownMenuSubContent>
+    </DropdownMenuSub>
   );
 }
 
@@ -154,23 +153,5 @@ export function SidebarThemeSubmenu() {
         </ClientOnly>
       </Suspense>
     </DropdownMenuSub>
-  );
-}
-
-/** Provides preference submenus that can be mounted from account menu surfaces. */
-export function SidebarPreferenceSubmenus() {
-  const t = useTranslations("Common");
-
-  return (
-    <DropdownMenuGroup>
-      <DropdownMenuSub>
-        <DropdownMenuSubTrigger className="cursor-pointer">
-          <LanguageMenuTriggerContent label={t("language")} />
-        </DropdownMenuSubTrigger>
-        <LanguageSubmenuContent />
-      </DropdownMenuSub>
-
-      <SidebarThemeSubmenu />
-    </DropdownMenuGroup>
   );
 }
