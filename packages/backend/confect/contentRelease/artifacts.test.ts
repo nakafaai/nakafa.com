@@ -291,6 +291,9 @@ describe("contentRelease/artifacts", () => {
     await expect(stage(t, ["not-json"])).rejects.toMatchObject({
       data: { code: "CONTENT_RELEASE_INTEGRITY" },
     });
+    await expect(stage(t, ['{"payload":{}}'])).rejects.toMatchObject({
+      data: { code: "CONTENT_RELEASE_INTEGRITY" },
+    });
     await expect(stage(t, [testArtifactJson()], -1)).rejects.toMatchObject({
       data: { code: "CONTENT_RELEASE_INTEGRITY" },
     });

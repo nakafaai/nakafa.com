@@ -19,7 +19,7 @@ import { SignedTryoutRuntimeBundleSchema } from "@nakafa/aksara-contracts/tryout
 import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
 import { decodeStoredSnapshotRow } from "@repo/backend/confect/contentRelease/tryout/row";
 import { JsonTextSchema } from "@repo/utilities/json";
-import { Array as Arr, Effect, Schema } from "effect";
+import { Array as Arr, Effect, Schema, Struct } from "effect";
 
 const CurrentContentSnapshotManifestSchema = ContentSnapshotManifestSchema.pipe(
   Schema.check(
@@ -110,6 +110,42 @@ export const decodeRouteJson = Effect.fn("contentRelease.decodeRouteJson")(
       )
     )
 );
+/**
+ * The fields of a signed artifact that staging checks against its staged item. The Node ingress
+ * action has already decoded, authenticated and canonicalized the whole artifact, and activation
+ * authenticates it again in Node, so a staging mutation reads only these fields and never decodes
+ * the content tree inside its one second limit.
+ */
+const SignedArtifactHeaderSchema = Schema.Struct({
+  artifactHash: SignedContentArtifactSchema.fields.artifactHash,
+  payload: Schema.Struct(
+    Struct.pick(SignedContentArtifactSchema.fields.payload.fields, [
+      "artifactLocale",
+      "contentKey",
+      "rendererDomain",
+    ])
+  ),
+});
+
+/** The staged identity of one signed artifact. */
+export type SignedArtifactHeader = typeof SignedArtifactHeaderSchema.Type;
+
+/** Decodes the staged identity of one signed artifact from its canonical JSON, ignoring the payload body. */
+export const decodeArtifactHeaderJson = Effect.fn(
+  "contentRelease.decodeArtifactHeaderJson"
+)((source: string) =>
+  parseStoredJson(source, "Signed artifact").pipe(
+    Effect.flatMap(Schema.decodeUnknownEffect(SignedArtifactHeaderSchema)),
+    Effect.mapError(
+      () =>
+        new ReleaseError({
+          code: "CONTENT_RELEASE_INTEGRITY",
+          message: "Signed artifact does not satisfy its exact contract.",
+        })
+    )
+  )
+);
+
 /** Strictly decodes one signed artifact from canonical storage JSON. */
 export const decodeArtifactJson = Effect.fn(
   "contentRelease.decodeArtifactJson"
