@@ -2871,7 +2871,6 @@ export declare const api: {
         "mutation",
         "public",
         {
-          language?: "en" | "id" | "de";
           scope:
             { kind: "tenant" } | { kind: "unit"; unitId: Id<"tenantUnits"> };
           slug: string;
