@@ -1,6 +1,5 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Button } from "@repo/design-system/components/ui/button";
-import { useCurrentLocale } from "@repo/internationalization/src/link";
 import { useNavigate } from "@tanstack/react-router";
 import { Effect, Fiber, Option, Result } from "effect";
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
@@ -24,6 +23,7 @@ import { useLiveSession } from "@/components/providers/live";
 import { getPostAuthSignInTarget } from "@/lib/auth/admission";
 import type { ReaderRead } from "@/lib/chat/reader";
 import { readReaderFn, readReaderOlderFn } from "@/lib/chat/reader.functions";
+import { useCurrentLocale } from "@/lib/routing/link";
 
 // The failure card holds the sign-in chain, which only a reader who cannot open
 // the chat needs, so it loads when the card is needed.

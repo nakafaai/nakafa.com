@@ -1,7 +1,6 @@
 import { DurableObject, Worker } from "@alchemy.run/cloudflare";
 import { RemovalPolicy } from "alchemy";
-import { Config, Effect, Redacted } from "effect";
-import { requireNonEmptyBindings } from "#www/deploy/bindings";
+import { Config, Effect, Schema } from "effect";
 import {
   casFrontExposure,
   WORKER_OBSERVABILITY,
@@ -27,10 +26,11 @@ export const deployCas = Effect.fn("deploy.cas")(function* (
   stage: string,
   isProduction: boolean
 ) {
-  const apiKey = yield* Config.Redacted("MATH_CAS_API_KEY");
-  yield* requireNonEmptyBindings({
-    MATH_CAS_API_KEY: Redacted.value(apiKey),
-  });
+  // An unset or empty key fails the deploy here, before either Worker changes.
+  const apiKey = yield* Config.schema(
+    Schema.Redacted(Schema.NonEmptyString),
+    "MATH_CAS_API_KEY"
+  );
 
   const engine = yield* Worker("CasEngine", {
     main: "../cas/entry.py",

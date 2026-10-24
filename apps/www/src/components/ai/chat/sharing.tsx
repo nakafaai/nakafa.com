@@ -17,7 +17,6 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { toast } from "@repo/design-system/lib/toast/notify";
-import { useCurrentLocale } from "@repo/internationalization/src/link";
 import { cn } from "cn";
 import { Array as Arr, Effect } from "effect";
 import { useEffect, useRef, useState } from "react";
@@ -26,6 +25,7 @@ import { shareLink } from "@/components/ai/chat/link";
 import { useUpdateChatVisibilityMutation } from "@/components/ai/chat/mutation";
 import { reportClientException } from "@/lib/analytics/client";
 import { useAnswerRetry } from "@/lib/convex/requery";
+import { useCurrentLocale } from "@/lib/routing/link";
 import { isNewLinkFailure } from "@/lib/share/failure";
 
 /**

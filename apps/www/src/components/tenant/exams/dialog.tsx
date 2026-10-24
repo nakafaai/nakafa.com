@@ -43,7 +43,6 @@ import {
 import type { ExamDrafts } from "@/components/tenant/exams/drafts";
 import { insertDraftExam } from "@/components/tenant/exams/optimistic";
 import { placeholderExamId } from "@/components/tenant/exams/placeholder";
-import { useCurrentLocale } from "@/lib/routing/link";
 
 /**
  * The button and the dialog that create an exam. The dialog asks for the title and the place.
