@@ -58,6 +58,15 @@ describe("createWwwHeaders", () => {
       "127.0.0.1"
     );
   });
+
+  it("reserves model training on every page with the TDM headers", () => {
+    const headers = createWwwHeaders(production);
+
+    expect(headerValue(headers, "tdm-reservation")).toBe("1");
+    expect(headerValue(headers, "tdm-policy")).toBe(
+      "https://github.com/nakafaai/aksara/blob/main/CONTENT_LICENSE.md"
+    );
+  });
 });
 
 describe("renderHeadersFile", () => {
