@@ -76,8 +76,9 @@ export function readRequestHost(headers: Headers) {
  * The hostname that the visitor asked for, read from the `host` header and not
  * from the request URL. A local run, or any server that builds its request URL
  * from its own address, names that address for every host, so only the header
- * tells the school hosts apart. On Vercel, the platform builds the URL from this
- * same header, so production reads the same host here. The port is dropped, and
+ * tells the school hosts apart. A platform that builds the request URL from this
+ * same header, as the deployed Worker does, gives production the same host here.
+ * The port is dropped, and
  * a missing header or a value that is not a host names no host.
  */
 export function readRequestHostname(headers: Headers) {
