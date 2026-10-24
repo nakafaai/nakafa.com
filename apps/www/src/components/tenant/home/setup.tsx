@@ -1,5 +1,11 @@
 import { QueryResult } from "@confect/react";
-import { ArrowRight02Icon } from "@hugeicons/core-free-icons";
+import {
+  ArrowRight02Icon,
+  Mail01Icon,
+  School01Icon,
+  UserAdd01Icon,
+  UserGroupIcon,
+} from "@hugeicons/core-free-icons";
 import { Dashboard } from "@repo/design-system/components/ui/dashboard";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Array as Arr } from "effect";
@@ -23,6 +29,14 @@ const STEP_HREF: Record<SetupStep, string> = {
   teacher: "/settings/invites",
   unit: "/settings/units",
 };
+
+/** The icon of each step, which its row shows at its start. */
+const STEP_ICON = {
+  invites: Mail01Icon,
+  students: UserGroupIcon,
+  teacher: UserAdd01Icon,
+  unit: School01Icon,
+} as const;
 
 /**
  * The steps that the school still lacks, once both the setup read and the viewer's units have answered. Until
@@ -74,7 +88,7 @@ export function SetupCell({ span }: { span: CellSpan }) {
   return (
     <ReadBoundary
       fallback={(failure) => (
-        <Dashboard.Cell three={span.three} two={span.two}>
+        <Dashboard.Cell narrow={span.narrow} wide={span.wide}>
           <Dashboard.CellHeader title={t("tile-setup")} />
           {failure}
         </Dashboard.Cell>
@@ -102,7 +116,7 @@ function SetupRows({ span }: { span: CellSpan }) {
   const progress = t("setup-progress", { done, total: SETUP_STEP_COUNT });
 
   return (
-    <Dashboard.Cell three={span.three} two={span.two}>
+    <Dashboard.Cell narrow={span.narrow} wide={span.wide}>
       <Dashboard.CellHeader title={t("tile-setup")}>
         <span className="text-muted-foreground text-sm tabular-nums">
           {progress}
@@ -130,11 +144,10 @@ function SetupRow({ step }: { step: SetupStep }) {
 
   return (
     <Dashboard.Row
+      icon={STEP_ICON[step]}
       render={<SchoolHrefLink href={STEP_HREF[step]} title={title} />}
       title={title}
-      trailing={
-        <HugeIcons className="size-4 shrink-0" icon={ArrowRight02Icon} />
-      }
+      trailing={<HugeIcons className="size-4" icon={ArrowRight02Icon} />}
     />
   );
 }

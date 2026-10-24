@@ -2,11 +2,12 @@ import { useMutation } from "@confect/react";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { Array as Arr, Option } from "effect";
+import { Option } from "effect";
 import { use } from "react";
 import { useConvexAuth } from "@/components/auth/convex";
 import { useTenant } from "@/components/tenant/context";
 import { HomePreloadContext } from "@/components/tenant/home/data";
+import { releaseInRows } from "@/components/tenant/home/release";
 import { usePreloadedQueryResult } from "@/lib/data/preloaded";
 
 /** The exams and rooms the school home lists for the viewer, read in one bounded call. */
@@ -27,9 +28,10 @@ export function homeExamsRead(slug: TenantSlug) {
 }
 
 /**
- * Releases a closed sitting's results from the school home at once. The row shows the release before the server
- * answers, and a refused release rolls the guess back, because the local store drops an optimistic update when its
- * call fails.
+ * Releases a closed sitting's results from the school home at once. The row shows the release as soon as the server
+ * is asked, through the releases in flight, and once the live home is held, the local copy of the home shows it too.
+ * A refused release gives the row back its release, because the local store drops an optimistic update when its call
+ * fails.
  */
 export function useReleaseHomeResult() {
   return useMutation(exams.results.results.release).withOptimisticUpdate(
@@ -42,11 +44,7 @@ export function useReleaseHomeResult() {
           key,
           Option.some({
             ...current.value,
-            closed: Arr.map(current.value.closed, (row) =>
-              row.id === args.sittingId
-                ? { ...row, canRelease: false, resultsReleased: true }
-                : row
-            ),
+            closed: releaseInRows(current.value.closed, args.sittingId),
           })
         );
       }

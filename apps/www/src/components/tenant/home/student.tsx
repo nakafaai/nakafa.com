@@ -1,4 +1,6 @@
 import { QueryResult } from "@confect/react";
+import { Certificate01Icon, Clock01Icon } from "@hugeicons/core-free-icons";
+import { HOME_RESULT_LIMIT } from "@repo/backend/confect/exams/home/bounds";
 import type { StudentSittingRow } from "@repo/backend/confect/exams/sittings/contract";
 import { Dashboard } from "@repo/design-system/components/ui/dashboard";
 import { Array as Arr, Option } from "effect";
@@ -8,17 +10,17 @@ import { forgetSubmittedKept } from "@/components/exams/sitting/forget";
 import { useTenant } from "@/components/tenant/context";
 import { type CellSpan, placeCells } from "@/components/tenant/home/cells";
 import { useHomeNow } from "@/components/tenant/home/clock";
+import { reachesBound } from "@/components/tenant/home/count";
 import { minutesLeft } from "@/components/tenant/home/left";
 import {
   studentSittingsRead,
   useStudentSittings,
 } from "@/components/tenant/home/query";
-import { ScheduleCell } from "@/components/tenant/home/schedule";
-import { studentShown } from "@/components/tenant/home/shown";
 import {
-  type ScheduleRoom,
-  scheduleDays,
-} from "@/components/tenant/home/strip";
+  ScheduleCell,
+  type ScheduleItem,
+} from "@/components/tenant/home/schedule";
+import { studentShown } from "@/components/tenant/home/shown";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
 import { schoolDateTimeText } from "@/components/tenant/settings/clock";
 import { enterableSitting, orderSittings } from "@/components/tenant/sittings";
@@ -28,10 +30,11 @@ import { SchoolHrefLink } from "@/lib/routing/school/link";
 type Sitting = typeof StudentSittingRow.Type;
 
 /**
- * The cells of a student's home: the sitting that is open now or the next one, with its countdown, the student's
- * schedule for the next fourteen days, and the results of the sittings that closed, with the student's score once it
- * is released. A student with no sitting and no result sees Nina searching and one sentence, with no cell. While the
- * list loads nothing shows below the header, and a failed read shows its own sentence and Try again.
+ * The cells of a student's home on one connected dashboard: the sitting that is open now or the next one, with its
+ * countdown and its action, the student's schedule for the next fourteen days with each sitting as a row, and the
+ * results of the sittings that closed, with the student's score once it is released. A student with no sitting and no
+ * result sees Nina searching and one sentence, with no cell. While the list loads nothing shows below the header, and
+ * a failed read shows its own sentence and Try again.
  */
 export function StudentHome() {
   const tenant = useTenant();
@@ -45,7 +48,6 @@ export function StudentHome() {
 
 /** The student's cells, from the list that the student's sittings read returns. */
 function StudentCells() {
-  const now = useHomeNow();
   const listed = useStudentSittings();
 
   useEffect(() => {
@@ -72,11 +74,9 @@ function StudentCells() {
   const next = Option.orElse(enterableSitting(sittings), () =>
     Arr.findFirst(upcoming, (sitting) => sitting.state === "scheduled")
   );
-  const days = scheduleDays(Arr.map(upcoming, scheduleRoomOf), now);
   const shown = studentShown({
     finished: finished.length,
     hasNow: Option.isSome(next),
-    scheduled: Arr.flatMap(days, (day) => day.rooms).length,
     upcoming: upcoming.length,
   });
   const cells = placeCells([
@@ -84,35 +84,45 @@ function StudentCells() {
       draw: (span) =>
         Option.match(next, {
           onNone: () => null,
-          onSome: (sitting) => (
-            <NowCell now={now} sitting={sitting} span={span} />
-          ),
+          onSome: (sitting) => <NowCell sitting={sitting} span={span} />,
         }),
       key: "now",
+      narrow: 2,
       shown: shown.now,
-      three: 2,
-      two: 2,
+      wide: 8,
     },
     {
-      draw: (span) => <ScheduleCell days={days} span={span} />,
+      draw: (span) => (
+        <ScheduleCell
+          bound={null}
+          items={Arr.map(upcoming, scheduleItemOf)}
+          span={span}
+        />
+      ),
       key: "schedule",
+      narrow: 2,
       shown: shown.schedule,
-      three: 2,
-      two: 2,
+      wide: 4,
     },
     {
-      draw: (span) => <StudentResultsCell sittings={finished} span={span} />,
+      draw: (span) => (
+        <StudentResultsCell
+          bound={reachesBound(finished.length, HOME_RESULT_LIMIT)}
+          sittings={finished}
+          span={span}
+        />
+      ),
       key: "results",
+      narrow: 1,
       shown: shown.results,
-      three: 1,
-      two: 1,
+      wide: 4,
     },
     {
       draw: (span) => <QuietCell span={span} />,
       key: "quiet",
+      narrow: 2,
       shown: shown.quiet,
-      three: 3,
-      two: 2,
+      wide: 12,
     },
   ]);
 
@@ -125,8 +135,8 @@ function StudentCells() {
   );
 }
 
-/** A sitting as a schedule bar, which opens the sitting for the student. */
-function scheduleRoomOf(sitting: Sitting): ScheduleRoom {
+/** A sitting as a schedule row, which opens the sitting for the student and says what the sitting is now. */
+function scheduleItemOf(sitting: Sitting): ScheduleItem {
   return {
     href: `/sittings/${sitting.id}`,
     id: sitting.id,
@@ -134,50 +144,54 @@ function scheduleRoomOf(sitting: Sitting): ScheduleRoom {
     room: sitting.room,
     timeZone: sitting.timeZone,
     title: sitting.examTitle,
+    trailing: <SittingStatus sitting={sitting} />,
   };
 }
 
 /**
- * The sitting that is open now, with the minutes left before it closes, or the next sitting, with the time it opens.
- * Its row opens the sitting.
+ * What a sitting is now, as the text at the end of its row: whether the student's answers are saved, that it is open,
+ * or the time it opens.
  */
-function NowCell({
-  now,
-  sitting,
-  span,
-}: {
-  now: number;
-  sitting: Sitting;
-  span: CellSpan;
-}) {
+function SittingStatus({ sitting }: { sitting: Sitting }) {
   const t = useTranslations("School");
   const locale = useLocale();
-  const opening = schoolDateTimeText({
+
+  if (sitting.state === "open") {
+    return sitting.attempt === "submitted"
+      ? t("answers-saved")
+      : t("sitting-open-now");
+  }
+  return schoolDateTimeText({
     at: sitting.opensAt,
     locale,
     timeZone: sitting.timeZone,
   });
+}
+
+/**
+ * The sitting that is open now, with the minutes left before it closes, or the next sitting, with the minutes until it
+ * opens and its time at the end of its row. Its row opens the sitting. The cell keeps one structure in both states, so
+ * it does not change height when the sitting opens.
+ */
+function NowCell({ sitting, span }: { sitting: Sitting; span: CellSpan }) {
+  const t = useTranslations("School");
+  const now = useHomeNow();
+  const open = sitting.state === "open";
+  const left = minutesLeft(open ? sitting.closesAt : sitting.opensAt, now);
 
   return (
-    <Dashboard.Cell three={span.three} two={span.two}>
+    <Dashboard.Cell narrow={span.narrow} wide={span.wide}>
       <Dashboard.CellHeader title={t("tile-now")} />
-      {sitting.state === "open" ? (
-        <>
-          <Dashboard.Value>
-            {minutesLeft(sitting.closesAt, now)}
-          </Dashboard.Value>
-          <Dashboard.Period>
-            {t("now-left", { count: minutesLeft(sitting.closesAt, now) })}
-          </Dashboard.Period>
-        </>
-      ) : (
-        <Dashboard.Period>
-          {t("sittings-next", { time: opening ?? "" })}
-        </Dashboard.Period>
-      )}
+      <Dashboard.Value>{left}</Dashboard.Value>
+      <Dashboard.Period>
+        {open
+          ? t("now-left", { count: left })
+          : t("now-until-open", { count: left })}
+      </Dashboard.Period>
       <Dashboard.List>
         <Dashboard.Row
           detail={sitting.room}
+          icon={Clock01Icon}
           render={
             <SchoolHrefLink
               href={`/sittings/${sitting.id}`}
@@ -185,35 +199,46 @@ function NowCell({
             />
           }
           title={sitting.examTitle}
+          trailing={open ? undefined : <SittingStatus sitting={sitting} />}
         />
       </Dashboard.List>
     </Dashboard.Cell>
   );
 }
 
-/** The results of the sittings that closed, newest first, each with the student's score once it is released. */
+/**
+ * The results of the sittings that closed, newest first, each with the student's score once it is released. A list
+ * that reached its bound says so, because the student's older results are not listed.
+ */
 function StudentResultsCell({
+  bound,
   sittings,
   span,
 }: {
+  bound: boolean;
   sittings: readonly Sitting[];
   span: CellSpan;
 }) {
   const t = useTranslations("School");
 
   return (
-    <Dashboard.Cell three={span.three} two={span.two}>
+    <Dashboard.Cell narrow={span.narrow} wide={span.wide}>
       <Dashboard.CellHeader title={t("tile-results")} />
       <Dashboard.List>
         {Arr.map(sittings, (sitting) => (
           <StudentResultRow key={sitting.id} sitting={sitting} />
         ))}
       </Dashboard.List>
+      {bound ? (
+        <Dashboard.Period>
+          {t("results-bound", { count: HOME_RESULT_LIMIT })}
+        </Dashboard.Period>
+      ) : null}
     </Dashboard.Cell>
   );
 }
 
-/** One closed sitting, as a row that opens it, with the student's score as its trailing value once it is released. */
+/** One closed sitting, as a row that opens it, with the student's score as its end text once it is released. */
 function StudentResultRow({ sitting }: { sitting: Sitting }) {
   const t = useTranslations("School");
   const te = useTranslations("Exams");
@@ -221,6 +246,7 @@ function StudentResultRow({ sitting }: { sitting: Sitting }) {
   return (
     <Dashboard.Row
       detail={sitting.room}
+      icon={Certificate01Icon}
       render={
         <SchoolHrefLink
           href={`/sittings/${sitting.id}`}
@@ -229,14 +255,12 @@ function StudentResultRow({ sitting }: { sitting: Sitting }) {
       }
       title={sitting.examTitle}
       trailing={
-        <span className="shrink-0 text-muted-foreground text-sm">
-          {sitting.score === null
-            ? t("answers-saved")
-            : te("student-score", {
-                points: sitting.score.points,
-                total: sitting.score.total,
-              })}
-        </span>
+        sitting.score === null
+          ? t("answers-saved")
+          : te("student-score", {
+              points: sitting.score.points,
+              total: sitting.score.total,
+            })
       }
     />
   );
@@ -247,7 +271,7 @@ function QuietCell({ span }: { span: CellSpan }) {
   const t = useTranslations("School");
 
   return (
-    <Dashboard.Cell three={span.three} two={span.two}>
+    <Dashboard.Cell narrow={span.narrow} wide={span.wide}>
       <Dashboard.Empty act="searching">{t("sittings-empty")}</Dashboard.Empty>
     </Dashboard.Cell>
   );

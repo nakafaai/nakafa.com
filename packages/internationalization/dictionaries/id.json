@@ -13,7 +13,7 @@
     "greeting-afternoon": "Selamat siang, {name}",
     "greeting-evening": "Selamat malam, {name}",
     "tile-live": "Sedang berlangsung",
-    "tile-drafts": "Lanjutkan menulis",
+    "tile-drafts": "Draf",
     "tile-minutes-left": "{count} menit lagi",
     "role": {
       "admin": "Admin",
@@ -30,8 +30,7 @@
       "teacher": "Guru"
     },
     "sign-in-title": "Masuk ke {school}",
-    "sittings-empty": "Guru Anda belum menjadwalkan sesi.",
-    "sittings-next": "Sesi berikutnya dibuka {time}.",
+    "sittings-empty": "Guru kamu belum menjadwalkan sesi.",
     "refused-title": "Akses Anda ke sekolah ini telah berubah.",
     "refused-description": "Minta admin sekolah ini memeriksa akses Anda, atau kembali ke Nakafa.",
     "answers-saved": "Jawaban tersimpan",
@@ -44,8 +43,8 @@
     "tile-result-released": "Sudah dirilis",
     "tile-results": "Hasil",
     "tile-setup": "Persiapan",
-    "metric-live": "Sedang berjalan",
-    "metric-live-period": "Ruang yang berjalan",
+    "metric-live": "Sedang berlangsung",
+    "metric-live-period": "Ruang yang sedang berlangsung",
     "metric-next": "14 hari ke depan",
     "metric-next-period": "Ruang yang segera dibuka",
     "metric-waiting": "Menunggu rilis",
@@ -56,7 +55,13 @@
     "tile-now": "Sekarang",
     "now-left": "{count, plural, other {menit lagi}}",
     "live-progress": "{percent}% waktu sudah berlalu",
-    "setup-progress": "{done} dari {total} langkah"
+    "setup-progress": "{done} dari {total} langkah",
+    "now-until-open": "{count, plural, other {menit lagi sebelum dibuka}}",
+    "sitting-open-now": "Sedang dibuka",
+    "draft-created": "Dibuat {age}",
+    "schedule-bound": "Jadwal hanya menggambar {count} ruang pertama.",
+    "results-bound": "Hanya {count} hasil terbaru yang tercantum.",
+    "all-exams": "Semua ujian"
   },
   "SchoolEntry": {
     "card-code-description": "Hanya untuk masuk pertama kali atau setelah kartu baru dicetak.",
@@ -281,7 +286,6 @@
     "student-scheduled-footer": "Kolom token terbuka bersama sesi.",
     "student-back-home": "Kembali ke beranda",
     "flag-question": "Tandai untuk ditinjau",
-    "student-view-results": "Lihat hasil",
     "seat-last-activity": "Aktivitas terakhir {time}.",
     "title-needed": "Ujian perlu judul sebelum dapat dibuat.",
     "title-too-long": "Judul paling banyak {count} karakter.",

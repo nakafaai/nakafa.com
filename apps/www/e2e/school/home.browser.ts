@@ -40,9 +40,13 @@ test("the owner's Beranda shows the page's one action, the quiet state, and the 
 
   await page.goto(address("/"));
 
-  await expect(page.getByRole("button", { name: "Create exam" })).toBeVisible();
+  // The greeting is the heading of the one header row, and the action sits in that row at its end.
+  const header = page.locator('[data-slot="page-header"]');
+  await expect(header.getByRole("heading", { level: 1 })).toBeVisible();
+  await expect(
+    header.getByRole("button", { name: "Create exam" })
+  ).toBeVisible();
   await expect(page.getByText(QUIET_STAFF, { exact: true })).toBeVisible();
-  await expect(page.getByText("In progress", { exact: true })).toHaveCount(0);
   await expect(
     page.getByRole("heading", { name: "Now", exact: true })
   ).toHaveCount(0);
@@ -52,8 +56,9 @@ test("the owner's Beranda shows the page's one action, the quiet state, and the 
     page.getByRole("link", { name: "Invite a teacher" })
   ).toHaveAttribute("href", SETUP_INVITES_HREF);
   // A setup row has no other text, so its arrow shows without a hover.
+  // The row's icon comes first and its arrow last, so the arrow is the last icon of the link.
   await expect(
-    page.getByRole("link", { name: "Invite a teacher" }).locator("svg")
+    page.getByRole("link", { name: "Invite a teacher" }).locator("svg").last()
   ).toHaveCSS("opacity", "1");
   await context.close();
 });
@@ -113,7 +118,7 @@ test("a student's Beranda shows the student's sittings and no action of the page
   await expect(page.getByRole("button", { name: "Create exam" })).toHaveCount(
     0
   );
-  await expect(page.getByText("In progress", { exact: true })).toHaveCount(0);
+  await expect(page.getByText("Live now", { exact: true })).toHaveCount(0);
   await context.close();
 });
 
@@ -151,7 +156,7 @@ test("a student with no sitting sees the quiet state and no action", async ({
   await context.close();
 });
 
-test("a sitting that runs now appears in the owner's In progress tile, and its row opens the proctor's room", async ({
+test("a sitting that runs now appears in the owner's Live now cell, and its row opens the proctor's room", async ({
   baseURL,
   browser,
 }) => {
@@ -176,8 +181,8 @@ test("a sitting that runs now appears in the owner's In progress tile, and its r
 
   await page.goto(address("/"));
 
-  // The seeded exam is also a draft of its author, so its title shows in the drafts tile too. The
-  // In progress row is the one that names the room, and it opens the room.
+  // The seeded exam is also a draft of its author, so its title shows in the drafts cell too. The
+  // live row is the one that names the room, and it opens the room.
   const row = page.getByRole("link", { name: SEEDED_ROOM }).first();
   await expect(row).toContainText(SEEDED_EXAM);
   await expect(row).toHaveAttribute(
@@ -251,7 +256,7 @@ test("Beranda fits a 320 px phone without a sideways scroll", async ({
   await context.close();
 });
 
-test("an upcoming room shows as a bar in the owner's schedule, and the bar opens its exam", async ({
+test("an upcoming room shows as a bar in the owner's schedule, and the bar opens its room", async ({
   baseURL,
   browser,
 }) => {
@@ -278,10 +283,11 @@ test("an upcoming room shows as a bar in the owner's schedule, and the bar opens
 
   await page.goto(address("/"));
 
+  // The seed's upcoming room is a second room of the exam, so the bar must open a room of that exam.
   const bar = page.getByRole("link", { name: UPCOMING_BAR });
   await expect(bar).toHaveAttribute(
     "href",
-    new RegExp(`/exams/${sitting.examId}$`, "u")
+    new RegExp(`/exams/${sitting.examId}/sittings/[^/]+$`, "u")
   );
   await context.close();
   await learnerContext.close();

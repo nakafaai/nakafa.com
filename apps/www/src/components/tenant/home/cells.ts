@@ -1,20 +1,30 @@
 import { Array as Arr, Option, Schema } from "effect";
 import type { ReactNode } from "react";
 
+/** How many of the two columns a cell takes from 600 pixels. */
+const NarrowSpan = Schema.Literals([1, 2]);
+
+/** How many twelfths of the row a cell takes from 960 pixels. */
+const WideSpan = Schema.Literals([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
+
+/** The columns of the dashboard from 600 pixels, and the twelfths of its row from 960 pixels. */
+const NARROW_COLUMNS = 2;
+const WIDE_COLUMNS = 12;
+
 /**
- * The columns a cell takes in the bento of a home: one or two of two columns from 600 pixels, and one to three of
- * three columns from 960 pixels. A cell that is not shown takes no room, so the others fill it.
+ * The span of a cell on the dashboard: its share of the two columns from 600 pixels, and of the twelve from 960.
+ * A cell that is not shown takes no room, so the others fill it.
  */
 export const CellSpan = Schema.Struct({
-  three: Schema.Literals([1, 2, 3]),
-  two: Schema.Literals([1, 2]),
+  narrow: NarrowSpan,
+  wide: WideSpan,
 });
 
-/** The span of a cell at two columns and at three. */
+/** The span of a cell, with the type of its schema. */
 export type CellSpan = typeof CellSpan.Type;
 
 /**
- * A cell of the bento: the key that names it, whether it is shown, its preferred span, and the function that draws
+ * A cell of the dashboard: the key that names it, whether it is shown, its preferred span, and the function that draws
  * it at the span it takes once the row is filled.
  */
 interface CellEntry<Key extends string> extends CellSpan {
@@ -64,40 +74,29 @@ export const fillRows = (
     return [...before, columns - widthOf(before)];
   });
 
-/** A span at two columns, which is one or two. */
-const twoSpan = (width: number): 1 | 2 => (width >= 2 ? 2 : 1);
-
-/** A span at three columns, which is one, two or three. */
-const threeSpan = (width: number): 1 | 2 | 3 => {
-  if (width >= 3) {
-    return 3;
-  }
-  return width >= 2 ? 2 : 1;
-};
-
 /**
- * The shown cells of a bento, in their order, each with the span it takes at two columns and at three. The rows fill
- * at each width, so the bento has no empty space at any width.
+ * The shown cells of a dashboard, in their order, each with the span it takes at two columns and at twelve. The rows
+ * fill at each width, so the dashboard has no empty space at any width.
  */
 export const placeCells = <Key extends string>(
   entries: readonly CellEntry<Key>[]
 ): readonly PlacedCell<Key>[] => {
   const shown = Arr.filter(entries, (entry) => entry.shown);
-  const two = fillRows(
-    Arr.map(shown, (entry) => entry.two),
-    2
+  const narrow = fillRows(
+    Arr.map(shown, (entry) => entry.narrow),
+    NARROW_COLUMNS
   );
-  const three = fillRows(
-    Arr.map(shown, (entry) => entry.three),
-    3
+  const wide = fillRows(
+    Arr.map(shown, (entry) => entry.wide),
+    WIDE_COLUMNS
   );
   return Arr.map(
-    Arr.zip(shown, Arr.zip(two, three)),
-    ([entry, [twoWidth, threeWidth]]) => ({
+    Arr.zip(shown, Arr.zip(narrow, wide)),
+    ([entry, [narrowWidth, wideWidth]]) => ({
       draw: entry.draw,
       key: entry.key,
-      three: threeSpan(threeWidth),
-      two: twoSpan(twoWidth),
+      narrow: Schema.decodeUnknownSync(NarrowSpan)(narrowWidth),
+      wide: Schema.decodeUnknownSync(WideSpan)(wideWidth),
     })
   );
 };

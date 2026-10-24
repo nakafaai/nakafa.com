@@ -1,41 +1,57 @@
 import { QueryResult } from "@confect/react";
+import {
+  HOME_RESULT_LIMIT,
+  HOME_ROOM_LIMIT,
+} from "@repo/backend/confect/exams/home/bounds";
 import type { HomeView } from "@repo/backend/confect/exams/home/contract";
 import { Dashboard } from "@repo/design-system/components/ui/dashboard";
 import { Array as Arr } from "effect";
 import { Fragment } from "react";
-import { useTranslations } from "use-intl";
+import { useLocale, useTranslations } from "use-intl";
 import type { StoreApi } from "zustand";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import type { ExamDrafts } from "@/components/tenant/exams/drafts";
 import { type CellSpan, placeCells } from "@/components/tenant/home/cells";
-import { useHomeNow } from "@/components/tenant/home/clock";
+import { countLabel, reachesBound } from "@/components/tenant/home/count";
 import { DraftsCell } from "@/components/tenant/home/drafts";
 import { LiveCell } from "@/components/tenant/home/live";
-import { HomeMetrics } from "@/components/tenant/home/metrics";
+import { MetricCell } from "@/components/tenant/home/metrics";
 import { useHomeExams, useHomeSetup } from "@/components/tenant/home/query";
+import type { HomeReleases } from "@/components/tenant/home/release";
 import { ResultsCell } from "@/components/tenant/home/results";
-import { ScheduleCell } from "@/components/tenant/home/schedule";
+import {
+  ScheduleCell,
+  type ScheduleItem,
+} from "@/components/tenant/home/schedule";
 import { SetupCell, useSetupShown } from "@/components/tenant/home/setup";
 import { staffShown } from "@/components/tenant/home/shown";
-import type { ScheduleRoom } from "@/components/tenant/home/strip";
-import { scheduleDays } from "@/components/tenant/home/strip";
+import { waitingOf } from "@/components/tenant/home/waiting";
+import { schoolWeekdayTimeText } from "@/components/tenant/settings/clock";
 
-/** The rooms of the staff home, which the schedule draws. */
+/** A room that the staff home lists as upcoming. */
 type Room = (typeof HomeView.Type)["next"][number];
 
 /**
- * The strip of numbers and the cells of a staff home. One read brings the rooms, the results, and the drafts, and
- * the setup cell reads the school's setup on its own. Until the reads that the cells need have answered, nothing
- * shows below the header, and then every cell appears at once, so no cell that is shown moves when another arrives.
- * The cells lay out in rows that fill the grid at each width, so a cell that is not shown leaves no gap.
+ * The strip of four numbers and the cells of a staff home, on one connected dashboard. One read brings the rooms, the
+ * results, and the drafts, and the setup cell reads the school's setup on its own. Until the reads that the cells need
+ * have answered, nothing shows below the header, and then every cell appears at once, so no cell that is shown moves
+ * when another arrives. The cells lay out in rows that fill the dashboard at each width, so a cell that is not shown
+ * leaves no gap.
  */
-export function StaffHome({ drafts }: { drafts: StoreApi<ExamDrafts> }) {
+export function StaffHome({
+  drafts,
+  releases,
+}: {
+  drafts: StoreApi<ExamDrafts>;
+  releases: StoreApi<HomeReleases>;
+}) {
   const tenant = useTenant();
   const exams = useHomeExams();
   const setup = useHomeSetup();
   const viewer = useViewerQuery();
   const setupShown = useSetupShown();
-  const now = useHomeNow();
+  const locale = useLocale();
+  const t = useTranslations("School");
 
   if (QueryResult.isFailure(exams)) {
     throw exams.error;
@@ -52,8 +68,7 @@ export function StaffHome({ drafts }: { drafts: StoreApi<ExamDrafts> }) {
   if (!ready) {
     return null;
   }
-  const { closed, drafts: draftRows, live, next } = exams.value;
-  const days = scheduleDays(Arr.map(next, scheduleRoomOf), now);
+  const { closed, drafts: draftRows, draftsBounded, live, next } = exams.value;
   const shown = staffShown({
     canCreate: tenant.home.canCreate,
     canWatch: tenant.home.canWatch,
@@ -63,83 +78,153 @@ export function StaffHome({ drafts }: { drafts: StoreApi<ExamDrafts> }) {
     next: next.length,
     setupShown,
   });
+  const nextBound = reachesBound(next.length, HOME_ROOM_LIMIT);
+  const closedBound = reachesBound(closed.length, HOME_RESULT_LIMIT);
   const cells = placeCells([
     {
-      draw: (span) => <ScheduleCell days={days} span={span} />,
-      key: "schedule",
-      shown: shown.schedule,
-      three: 2,
-      two: 2,
+      draw: (span) => (
+        <MetricCell
+          count={countLabel(
+            live.length,
+            reachesBound(live.length, HOME_ROOM_LIMIT)
+          )}
+          period={t("metric-live-period")}
+          span={span}
+          title={t("metric-live")}
+        />
+      ),
+      key: "count-live",
+      narrow: 1,
+      shown: shown["count-live"],
+      wide: 3,
     },
     {
-      draw: (span) => <LiveCell now={now} rooms={live} span={span} />,
+      draw: (span) => (
+        <MetricCell
+          count={countLabel(next.length, nextBound)}
+          period={t("metric-next-period")}
+          span={span}
+          title={t("metric-next")}
+        />
+      ),
+      key: "count-next",
+      narrow: 1,
+      shown: shown["count-next"],
+      wide: 3,
+    },
+    {
+      draw: (span) => (
+        <MetricCell
+          count={countLabel(waitingOf(closed), closedBound)}
+          period={t("metric-waiting-period")}
+          span={span}
+          title={t("metric-waiting")}
+        />
+      ),
+      key: "count-waiting",
+      narrow: 1,
+      shown: shown["count-waiting"],
+      wide: 3,
+    },
+    {
+      draw: (span) => (
+        <MetricCell
+          count={countLabel(draftRows.length, draftsBounded)}
+          period={t("metric-drafts-period")}
+          span={span}
+          title={t("metric-drafts")}
+        />
+      ),
+      key: "count-drafts",
+      narrow: 1,
+      shown: shown["count-drafts"],
+      wide: 3,
+    },
+    {
+      draw: (span) => (
+        <ScheduleCell
+          bound={nextBound ? HOME_ROOM_LIMIT : null}
+          items={Arr.map(next, (room) => scheduleItemOf(room, locale))}
+          span={span}
+        />
+      ),
+      key: "schedule",
+      narrow: 2,
+      shown: shown.schedule,
+      wide: 8,
+    },
+    {
+      draw: (span) => <LiveCell rooms={live} span={span} />,
       key: "live",
+      narrow: 1,
       shown: shown.live,
-      three: 1,
-      two: 1,
+      wide: 4,
     },
     {
       draw: (span) => <QuietCell span={span} />,
       key: "quiet",
+      narrow: 2,
       shown: shown.quiet,
-      three: 3,
-      two: 2,
-    },
-    {
-      draw: (span) => <ResultsCell results={closed} span={span} />,
-      key: "results",
-      shown: shown.results,
-      three: 2,
-      two: 1,
+      wide: 12,
     },
     {
       draw: (span) => (
-        <DraftsCell drafts={draftRows} now={now} span={span} store={drafts} />
+        <ResultsCell
+          bound={closedBound}
+          releases={releases}
+          results={closed}
+          span={span}
+        />
+      ),
+      key: "results",
+      narrow: 1,
+      shown: shown.results,
+      wide: 8,
+    },
+    {
+      draw: (span) => (
+        <DraftsCell drafts={draftRows} span={span} store={drafts} />
       ),
       key: "drafts",
+      narrow: 1,
       shown: shown.drafts,
-      three: 1,
-      two: 1,
+      wide: 4,
     },
     {
       draw: (span) => <SetupCell span={span} />,
       key: "setup",
+      narrow: 2,
       shown: shown.setup,
-      three: 3,
-      two: 2,
+      wide: 12,
     },
   ]);
 
+  if (Arr.isReadonlyArrayEmpty(cells)) {
+    return null;
+  }
   return (
-    <>
-      {tenant.home.canWatch || tenant.home.canCreate ? (
-        <HomeMetrics
-          closed={closed}
-          drafts={draftRows}
-          live={live}
-          next={next}
-        />
-      ) : null}
-      {Arr.isReadonlyArrayEmpty(cells) ? null : (
-        <Dashboard>
-          {Arr.map(cells, (cell) => (
-            <Fragment key={cell.key}>{cell.draw(cell)}</Fragment>
-          ))}
-        </Dashboard>
-      )}
-    </>
+    <Dashboard>
+      {Arr.map(cells, (cell) => (
+        <Fragment key={cell.key}>{cell.draw(cell)}</Fragment>
+      ))}
+    </Dashboard>
   );
 }
 
-/** The schedule's room of one room that the home lists, which its bar opens at the exam's proctor page. */
-function scheduleRoomOf(room: Room): ScheduleRoom {
+/** The room of the schedule, which its bar and its row open at the room's proctor page, and says when it opens. */
+function scheduleItemOf(room: Room, locale: string): ScheduleItem {
   return {
-    href: `/exams/${room.examId}`,
+    href: `/exams/${room.examId}/sittings/${room.id}`,
     id: room.id,
     opensAt: room.opensAt,
     room: room.room,
     timeZone: room.timeZone,
     title: room.examTitle,
+    trailing: schoolWeekdayTimeText({
+      at: room.opensAt,
+      locale,
+      timeZone: room.timeZone,
+    }),
   };
 }
 
@@ -148,7 +233,7 @@ function QuietCell({ span }: { span: CellSpan }) {
   const t = useTranslations("School");
 
   return (
-    <Dashboard.Cell three={span.three} two={span.two}>
+    <Dashboard.Cell narrow={span.narrow} wide={span.wide}>
       <Dashboard.Empty act="sleeping">{t("quiet-staff")}</Dashboard.Empty>
     </Dashboard.Cell>
   );

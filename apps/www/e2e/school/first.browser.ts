@@ -30,6 +30,15 @@ test("the school home's first HTML holds the home for a member", async ({
 
   expect(response?.status()).toBe(200);
   await expect(page.getByRole("button", { name: "Create exam" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Live now", exact: true })
+  ).toBeVisible();
+  await expect(
+    page.getByText(
+      "No sitting is running, and none opens in the next 14 days.",
+      { exact: true }
+    )
+  ).toBeVisible();
   await context.close();
   await withoutScript.close();
 });
@@ -53,11 +62,14 @@ test("the exam list's first HTML holds the exams of a member who may open them",
   );
   await learnerContext.close();
   // The seed records its exam as made by the school's Owner, who must have signed in first.
-  const context = await browser.newContext();
-  await Effect.runPromise(signInOwner(context, school.slug, address("/")));
+  const ownerContext = await browser.newContext();
+  await Effect.runPromise(signInOwner(ownerContext, school.slug, address("/")));
   const sitting = await Effect.runPromise(seedSitting(school.slug, learner));
+  await ownerContext.close();
 
   const examsPage = address("/exams");
+  const context = await browser.newContext();
+  await Effect.runPromise(signInOwner(context, school.slug, examsPage));
   const withoutScript = await browser.newContext({ javaScriptEnabled: false });
   await withoutScript.addCookies(await context.cookies());
   const page = await withoutScript.newPage();

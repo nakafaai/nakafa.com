@@ -1,80 +1,121 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Array as Arr } from "effect";
-import { fillRows, placeCells } from "@/components/tenant/home/cells";
+import {
+  type CellSpan,
+  fillRows,
+  placeCells,
+} from "@/components/tenant/home/cells";
 
-/** The keys and spans of the placed cells, in order, so each test names only what it checks. */
+/** A cell that is shown, with its preferred spans, which the tests draw as nothing. */
+const cell = (
+  key: string,
+  narrow: 1 | 2,
+  wide: CellSpan["wide"],
+  shown = true
+) => ({
+  draw: () => null,
+  key,
+  narrow,
+  shown,
+  wide,
+});
+
+/** The spans that the placed cells take, by their keys, in their order. */
 const spansOf = (cells: ReturnType<typeof placeCells>) =>
-  Arr.map(cells, ({ key, three, two }) => ({ key, three, two }));
+  Arr.map(cells, (placed) => [placed.key, placed.narrow, placed.wide]);
 
 describe("tenant home cells", () => {
   it("keeps every cell at its preferred width when the rows fill exactly", () => {
-    expect(fillRows([2, 1, 2, 1, 3], 3)).toEqual([2, 1, 2, 1, 3]);
+    expect(fillRows([3, 3, 3, 3], 12)).toStrictEqual([3, 3, 3, 3]);
   });
 
   it("lets the last cell of a row take the columns that the row has left", () => {
-    expect(fillRows([1, 1, 1], 4)).toEqual([1, 1, 2]);
-    expect(fillRows([1, 1, 1, 1], 4)).toEqual([1, 1, 1, 1]);
+    expect(fillRows([8, 3], 12)).toStrictEqual([8, 4]);
   });
 
   it("makes a lone cell take the whole row", () => {
-    expect(fillRows([2], 3)).toEqual([3]);
-    expect(fillRows([2, 2], 3)).toEqual([3, 3]);
+    expect(fillRows([8], 12)).toStrictEqual([12]);
   });
 
   it("starts a new row when the next cell no longer fits the row above", () => {
-    expect(fillRows([2, 2, 1], 3)).toEqual([3, 2, 1]);
+    expect(fillRows([8, 8], 12)).toStrictEqual([12, 12]);
   });
 
-  it("has no widths for an empty bento", () => {
-    expect(fillRows([], 3)).toEqual([]);
+  it("has no widths for an empty dashboard", () => {
+    expect(fillRows([], 12)).toStrictEqual([]);
   });
 
-  it("places the shown staff cells in rows with the schedule beside the live rooms", () => {
+  it("places the four counts in one row, and the schedule beside the live rooms", () => {
     const placed = placeCells([
-      {
-        draw: () => null,
-        key: "schedule",
-        shown: true,
-        three: 2,
-        two: 2,
-      },
-      { draw: () => null, key: "live", shown: true, three: 1, two: 1 },
-      { draw: () => null, key: "quiet", shown: false, three: 3, two: 2 },
-      { draw: () => null, key: "results", shown: true, three: 2, two: 1 },
-      { draw: () => null, key: "drafts", shown: true, three: 1, two: 1 },
-      { draw: () => null, key: "setup", shown: true, three: 3, two: 2 },
+      cell("count-live", 1, 3),
+      cell("count-next", 1, 3),
+      cell("count-waiting", 1, 3),
+      cell("count-drafts", 1, 3),
+      cell("schedule", 2, 8),
+      cell("live", 1, 4),
     ]);
-
-    expect(spansOf(placed)).toEqual([
-      { key: "schedule", three: 2, two: 2 },
-      { key: "live", three: 1, two: 1 },
-      { key: "results", three: 2, two: 1 },
-      { key: "drafts", three: 1, two: 2 },
-      { key: "setup", three: 3, two: 2 },
+    // The live rooms are alone in their narrow row, so they take both of its columns.
+    expect(spansOf(placed)).toStrictEqual([
+      ["count-live", 1, 3],
+      ["count-next", 1, 3],
+      ["count-waiting", 1, 3],
+      ["count-drafts", 1, 3],
+      ["schedule", 2, 8],
+      ["live", 2, 4],
     ]);
   });
 
-  it("gives the quiet state the whole first row when the schedule and the rooms are left out", () => {
+  it("gives the last count of a row the columns it has left when a count is not shown", () => {
     const placed = placeCells([
-      { draw: () => null, key: "schedule", shown: false, three: 2, two: 2 },
-      { draw: () => null, key: "live", shown: false, three: 1, two: 1 },
-      { draw: () => null, key: "quiet", shown: true, three: 3, two: 2 },
-      { draw: () => null, key: "results", shown: true, three: 2, two: 1 },
+      cell("count-live", 1, 3),
+      cell("count-next", 1, 3),
+      cell("count-waiting", 1, 3, false),
+      cell("count-drafts", 1, 3),
     ]);
+    expect(spansOf(placed)).toStrictEqual([
+      ["count-live", 1, 3],
+      ["count-next", 1, 3],
+      ["count-drafts", 2, 6],
+    ]);
+  });
 
-    expect(spansOf(placed)).toEqual([
-      { key: "quiet", three: 3, two: 2 },
-      { key: "results", three: 3, two: 2 },
+  it("gives the quiet state its own row when the schedule and the rooms are left out", () => {
+    const placed = placeCells([
+      cell("count-live", 1, 3),
+      cell("count-next", 1, 3),
+      cell("count-waiting", 1, 3),
+      cell("count-drafts", 1, 3),
+      cell("schedule", 2, 8, false),
+      cell("live", 1, 4, false),
+      cell("quiet", 2, 12),
     ]);
+    expect(spansOf(placed)).toStrictEqual([
+      ["count-live", 1, 3],
+      ["count-next", 1, 3],
+      ["count-waiting", 1, 3],
+      ["count-drafts", 1, 3],
+      ["quiet", 2, 12],
+    ]);
+  });
+
+  it("gives a lone count the whole row, as a lone cell takes the row it is in", () => {
+    const placed = placeCells([cell("count-live", 1, 3)]);
+    expect(spansOf(placed)).toStrictEqual([["count-live", 2, 12]]);
   });
 
   it("keeps the order of the cells that are shown", () => {
     const placed = placeCells([
-      { draw: () => null, key: "results", shown: true, three: 2, two: 1 },
-      { draw: () => null, key: "schedule", shown: false, three: 2, two: 2 },
-      { draw: () => null, key: "drafts", shown: true, three: 1, two: 1 },
+      cell("results", 1, 8),
+      cell("drafts", 1, 4, false),
+      cell("setup", 2, 12),
     ]);
+    expect(Arr.map(placed, (entry) => entry.key)).toStrictEqual([
+      "results",
+      "setup",
+    ]);
+  });
 
-    expect(Arr.map(placed, (cell) => cell.key)).toEqual(["results", "drafts"]);
+  it("has no cells when none is shown", () => {
+    expect(placeCells([cell("drafts", 1, 4, false)])).toStrictEqual([]);
   });
 });

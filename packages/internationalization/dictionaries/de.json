@@ -12,8 +12,8 @@
     "greeting-morning": "Guten Morgen, {name}",
     "greeting-afternoon": "Guten Tag, {name}",
     "greeting-evening": "Guten Abend, {name}",
-    "tile-live": "Läuft gerade",
-    "tile-drafts": "Weiter schreiben",
+    "tile-live": "Läuft jetzt",
+    "tile-drafts": "Entwürfe",
     "tile-minutes-left": "{count, plural, one {# Minute übrig} other {# Minuten übrig}}",
     "role": {
       "admin": "Admin",
@@ -31,7 +31,6 @@
     },
     "sign-in-title": "Anmelden bei {school}",
     "sittings-empty": "Deine Lehrkraft hat noch keine Sitzung geplant.",
-    "sittings-next": "Die nächste Sitzung beginnt {time}.",
     "refused-title": "Dein Zugang zu dieser Schule hat sich geändert.",
     "refused-description": "Frag einen Admin der Schule, deinen Zugang zu prüfen, oder geh zurück zu Nakafa.",
     "answers-saved": "Antworten gespeichert",
@@ -56,7 +55,13 @@
     "tile-now": "Jetzt",
     "now-left": "{count, plural, one {Minute übrig} other {Minuten übrig}}",
     "live-progress": "{percent} % der Zeit vergangen",
-    "setup-progress": "{done} von {total} Schritten"
+    "setup-progress": "{done} von {total} Schritten",
+    "now-until-open": "{count, plural, one {Minute bis zum Beginn} other {Minuten bis zum Beginn}}",
+    "sitting-open-now": "Jetzt geöffnet",
+    "draft-created": "Erstellt {age}",
+    "schedule-bound": "Der Zeitplan zeigt nur die ersten {count} Räume.",
+    "results-bound": "Nur die neuesten {count} Ergebnisse sind aufgeführt.",
+    "all-exams": "Alle Prüfungen"
   },
   "SchoolEntry": {
     "card-code-description": "Nur für die erste Anmeldung oder nach dem Druck einer neuen Karte.",
@@ -281,7 +286,6 @@
     "student-scheduled-footer": "Das Tokenfeld öffnet mit der Sitzung.",
     "student-back-home": "Zur Startseite",
     "flag-question": "Zur Überprüfung markieren",
-    "student-view-results": "Ergebnisse ansehen",
     "seat-last-activity": "Letzte Aktivität {time}.",
     "title-needed": "Die Prüfung braucht einen Titel, bevor sie angelegt werden kann.",
     "title-too-long": "Der Titel darf höchstens {count} Zeichen lang sein.",

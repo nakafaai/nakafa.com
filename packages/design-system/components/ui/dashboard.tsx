@@ -1,5 +1,10 @@
 import { mergeProps } from "@base-ui/react/merge-props";
 import { useRender } from "@base-ui/react/use-render";
+import {
+  EmptyDescription,
+  EmptyMedia,
+} from "@repo/design-system/components/ui/empty";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Nina } from "@repo/design-system/components/ui/nina";
 import type { ActSchema } from "@repo/mascot/nina/act";
 import { cva, type VariantProps } from "class-variance-authority";
@@ -8,46 +13,54 @@ import type { ComponentProps, ReactElement, ReactNode } from "react";
 
 /**
  * The connected surface of a dashboard: its cells share one rounded border and one-pixel dividers. Its columns
- * follow the width of the container, not the viewport: one column below 600 pixels, two from 600, and three from
- * 960, or four from 960 for a strip of numbers.
+ * follow the width of the container, not the viewport: one column below 600 pixels, two from 600, and twelve from
+ * 960, so a cell's wide span is its share of twelfths.
  */
 const dashboardVariants = cva(
-  "grid gap-px overflow-hidden rounded-xl bg-foreground/10 shadow-xs ring-1 ring-foreground/10",
-  {
-    defaultVariants: { columns: "three" },
-    variants: {
-      columns: {
-        four: "@min-[960px]:grid-cols-4 grid-cols-2",
-        three: "@min-[600px]:grid-cols-2 @min-[960px]:grid-cols-3 grid-cols-1",
-      },
-    },
-  }
+  "grid @min-[600px]:grid-cols-2 @min-[960px]:grid-cols-12 grid-cols-1 gap-px overflow-hidden rounded-xl bg-foreground/10 shadow-xs ring-1 ring-foreground/10"
 );
 
+/** The number of columns that a cell's wide span counts in, from 960 pixels. */
+export type WideColumns = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
+
 /**
- * A cell's span. `two` is how many of two columns it takes from 600 pixels, and `three` how many of three from 960
- * pixels. Below 600 pixels every cell takes the one column, so a span shows only from its breakpoint.
+ * A cell's span. `narrow` is how many of the two columns it takes from 600 pixels, and `wide` how many twelfths of the
+ * row it takes from 960 pixels. Below 600 pixels every cell takes the one column, so a span shows only from its
+ * breakpoint.
  */
 const cellVariants = cva(
   "flex min-w-0 flex-col gap-4 bg-card py-6 text-card-foreground",
   {
-    defaultVariants: { three: 1, two: 1 },
+    defaultVariants: { linked: false, narrow: 1, wide: 12 },
     variants: {
-      three: {
+      linked: {
+        false: "",
+        true: "group outline-none transition-colors ease-out hover:bg-accent hover:text-accent-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:ring-inset",
+      },
+      narrow: {
+        1: "",
+        2: "@min-[600px]:col-span-2",
+      },
+      wide: {
         1: "@min-[960px]:col-span-1",
         2: "@min-[960px]:col-span-2",
         3: "@min-[960px]:col-span-3",
-      },
-      two: {
-        1: "",
-        2: "@min-[600px]:col-span-2",
+        4: "@min-[960px]:col-span-4",
+        5: "@min-[960px]:col-span-5",
+        6: "@min-[960px]:col-span-6",
+        7: "@min-[960px]:col-span-7",
+        8: "@min-[960px]:col-span-8",
+        9: "@min-[960px]:col-span-9",
+        10: "@min-[960px]:col-span-10",
+        11: "@min-[960px]:col-span-11",
+        12: "@min-[960px]:col-span-12",
       },
     },
   }
 );
 
 /** A row of a list. A row that opens a page lights up on hover, the way a link row does. */
-const rowVariants = cva("flex min-w-0 items-center gap-3 px-6 py-3", {
+const rowVariants = cva("group flex min-w-0 items-center gap-3 px-6 py-3", {
   defaultVariants: { linked: false },
   variants: {
     linked: {
@@ -58,44 +71,44 @@ const rowVariants = cva("flex min-w-0 items-center gap-3 px-6 py-3", {
 });
 
 /**
- * The connected surface of a dashboard. Its cells hold numbers, charts and lists, each with a title, and a cell
- * with nothing to show is left out, so the grid closes its gap. The parts compose directly: a `Dashboard.Cell`
- * holds a `Dashboard.CellHeader`, then its `Dashboard.Value`, `Dashboard.Period`, `Dashboard.List` or
- * `Dashboard.Empty`. A cell that opens a page passes its link through `render`.
+ * The connected surface of a dashboard. Its cells hold numbers, charts and lists, each with a title, and a cell with
+ * nothing to show is left out, so the grid closes its gap. The parts compose directly: a `Dashboard.Cell` holds a
+ * `Dashboard.CellHeader`, then its `Dashboard.Value`, `Dashboard.Period`, `Dashboard.List` or `Dashboard.Empty`. A
+ * cell that opens a page passes its link through `render`, which lights the whole cell up on hover and focus.
  */
-function DashboardRoot({
-  children,
-  className,
-  columns,
-}: ComponentProps<"div"> & VariantProps<typeof dashboardVariants>) {
+function DashboardRoot({ children, className }: ComponentProps<"div">) {
   return (
     <div className="@container">
-      <div
-        className={cn(dashboardVariants({ columns }), className)}
-        data-slot="dashboard"
-      >
+      <div className={cn(dashboardVariants(), className)} data-slot="dashboard">
         {children}
       </div>
     </div>
   );
 }
 
-/** One cell of a dashboard. It takes its spans from `two` and `three`, and `render` makes the whole cell a link. */
+/** One cell of a dashboard. It takes its spans from `narrow` and `wide`, and `render` makes the whole cell a link. */
 function DashboardCell({
   className,
+  narrow,
   render,
-  three,
-  two,
+  wide,
   ...props
 }: ComponentProps<"div"> &
-  VariantProps<typeof cellVariants> & {
+  Omit<VariantProps<typeof cellVariants>, "linked"> & {
+    /** The span of the cell from 960 pixels, in twelfths of the row. */
+    wide?: WideColumns;
     /** The element that the cell renders as, such as a link that holds the whole cell. */
     render?: ReactElement;
   }) {
   return useRender({
     defaultTagName: "div",
     props: mergeProps<"div">(
-      { className: cn(cellVariants({ three, two }), className) },
+      {
+        className: cn(
+          cellVariants({ linked: render !== undefined, narrow, wide }),
+          className
+        ),
+      },
       props
     ),
     render,
@@ -103,7 +116,7 @@ function DashboardCell({
   });
 }
 
-/** The title of a cell at its top left, and one meta or link at its right. */
+/** The title of a cell at its top left, and one meta or link at its right. A long title wraps rather than cuts off. */
 function DashboardCellHeader({
   children,
   title,
@@ -114,7 +127,7 @@ function DashboardCellHeader({
 }) {
   return (
     <div className="flex min-w-0 items-center justify-between gap-4 px-6">
-      <h3 className="min-w-0 truncate font-medium text-base">{title}</h3>
+      <h3 className="min-w-0 text-balance font-medium text-base">{title}</h3>
       {children}
     </div>
   );
@@ -131,7 +144,11 @@ function DashboardValue({ children }: { children: ReactNode }) {
 
 /** The muted line under a figure, which says what the figure counts. */
 function DashboardPeriod({ children }: { children: ReactNode }) {
-  return <p className="px-6 text-muted-foreground text-sm">{children}</p>;
+  return (
+    <p className="px-6 text-muted-foreground text-sm group-hover:text-accent-foreground">
+      {children}
+    </p>
+  );
 }
 
 /** A thin bar that shows how far along a span of time is, from none to the whole. */
@@ -166,10 +183,14 @@ function DashboardList({ children }: { children: ReactNode }) {
   return <ul className="divide-y border-t">{children}</ul>;
 }
 
+/** The icon data of a row's icon, which the design system's icon takes. */
+type RowIcon = ComponentProps<typeof HugeIcons>["icon"];
+
 /**
- * One row of a list: an optional icon or avatar, two lines that truncate, an optional trailing value such as a
- * relative time, and an optional action. `render` makes the row's text a link to the page it shows. `footer` sits
- * under the two lines, for a bar of progress. The action stays outside the link, so a row may hold a button.
+ * One row of a list: an icon in a tile, two lines that truncate, an optional trailing value such as a relative time,
+ * and an optional action. `render` makes the row's text a link to the page it shows. `footer` sits under the two
+ * lines, for a bar of progress. The action stays outside the link, so a row may hold a button. The trailing value and
+ * the detail take the muted colour, and the accent colour on hover, so they read on a lit row.
  */
 function DashboardRow({
   action,
@@ -186,8 +207,8 @@ function DashboardRow({
   detail?: string | undefined;
   /** Anything under the two lines, such as a bar of progress. */
   footer?: ReactNode;
-  /** The icon or avatar at the row's start. */
-  icon?: ReactNode;
+  /** The icon of the row, which sits in a tile at its start. */
+  icon?: RowIcon;
   /** The element that the row's text renders as, such as a link to the page it opens. */
   render?: ReactElement | undefined;
   title: string;
@@ -220,7 +241,7 @@ function DashboardRowText({
 }: {
   detail: string | undefined;
   footer: ReactNode;
-  icon: ReactNode;
+  icon: RowIcon | undefined;
   render: ReactElement | undefined;
   title: string;
   trailing: ReactNode;
@@ -230,17 +251,25 @@ function DashboardRowText({
     props: {
       children: (
         <>
-          {icon}
+          {icon === undefined ? null : (
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-muted">
+              <HugeIcons className="size-4" icon={icon} />
+            </span>
+          )}
           <span className="grid min-w-0 flex-1 gap-1">
             <span className="truncate font-medium">{title}</span>
             {detail === undefined ? null : (
-              <span className="truncate text-muted-foreground text-xs">
+              <span className="truncate text-muted-foreground text-xs group-hover:text-accent-foreground">
                 {detail}
               </span>
             )}
             {footer}
           </span>
-          {trailing}
+          {trailing === undefined || trailing === null ? null : (
+            <span className="shrink-0 text-muted-foreground text-sm group-hover:text-accent-foreground">
+              {trailing}
+            </span>
+          )}
         </>
       ),
       className:
@@ -250,7 +279,10 @@ function DashboardRowText({
   });
 }
 
-/** The state of a cell that has nothing to show yet: Nina doing what fits, and one sentence that says why. */
+/**
+ * The state of a cell that has nothing to show yet: Nina doing what fits, and one sentence that says why. Nina stands
+ * at 64 pixels, because a cell is a share of the page and not the page itself.
+ */
 function DashboardEmpty({
   act,
   children,
@@ -261,9 +293,11 @@ function DashboardEmpty({
   children: ReactNode;
 }) {
   return (
-    <div className="flex flex-col items-start gap-3 px-6 text-left">
-      <Nina act={act} label="" size={64} whole />
-      <p className="max-w-sm text-muted-foreground text-sm">{children}</p>
+    <div className="flex flex-col items-start gap-3 px-6 text-start">
+      <EmptyMedia className="mb-0">
+        <Nina act={act} label="" size={64} whole />
+      </EmptyMedia>
+      <EmptyDescription className="max-w-sm">{children}</EmptyDescription>
     </div>
   );
 }

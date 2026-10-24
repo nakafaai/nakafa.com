@@ -1,3 +1,4 @@
+import { PencilEdit02Icon } from "@hugeicons/core-free-icons";
 import type { HomeView } from "@repo/backend/confect/exams/home/contract";
 import { Dashboard } from "@repo/design-system/components/ui/dashboard";
 import { Array as Arr } from "effect";
@@ -6,6 +7,7 @@ import { useLocale, useTranslations } from "use-intl";
 import { type StoreApi, useStore } from "zustand";
 import type { ExamDrafts } from "@/components/tenant/exams/drafts";
 import type { CellSpan } from "@/components/tenant/home/cells";
+import { useHomeNow } from "@/components/tenant/home/clock";
 import { formatAge } from "@/lib/i18n/date";
 import { SchoolHrefLink } from "@/lib/routing/school/link";
 
@@ -13,22 +15,21 @@ import { SchoolHrefLink } from "@/lib/routing/school/link";
 type Draft = (typeof HomeView.Type)["drafts"][number];
 
 /**
- * The exams the viewer started and may still edit, newest created first, each with its language and the time since
- * it was created. A row opens its editor, and a draft the server is still saving shows its title without a link.
+ * The exams the viewer started and may still edit, newest created first, each with its language and the time since it
+ * was created. A row opens its editor, and a draft the server is still saving shows its title without a link.
  */
 export function DraftsCell({
   drafts,
-  now,
   span,
   store,
 }: {
   drafts: readonly Draft[];
-  now: number;
   span: CellSpan;
   store: StoreApi<ExamDrafts>;
 }) {
   const t = useTranslations("School");
   const locale = useLocale();
+  const now = useHomeNow();
   const saving = useStore(store, (state) => state.ids);
   const names = useMemo(
     () => new Intl.DisplayNames([locale], { type: "language" }),
@@ -36,7 +37,7 @@ export function DraftsCell({
   );
 
   return (
-    <Dashboard.Cell three={span.three} two={span.two}>
+    <Dashboard.Cell narrow={span.narrow} wide={span.wide}>
       <Dashboard.CellHeader title={t("tile-drafts")} />
       <Dashboard.List>
         {Arr.map(drafts, (draft) => (
@@ -71,9 +72,12 @@ function DraftRow({
   now: number;
   saving: boolean;
 }) {
+  const t = useTranslations("School");
+
   return (
     <Dashboard.Row
       detail={names.of(draft.language)}
+      icon={PencilEdit02Icon}
       render={
         saving ? undefined : (
           <SchoolHrefLink
@@ -83,11 +87,9 @@ function DraftRow({
         )
       }
       title={draft.title}
-      trailing={
-        <span className="shrink-0 text-muted-foreground text-sm">
-          {formatAge(draft.createdAt, locale, now)}
-        </span>
-      }
+      trailing={t("draft-created", {
+        age: formatAge(draft.createdAt, locale, now),
+      })}
     />
   );
 }
