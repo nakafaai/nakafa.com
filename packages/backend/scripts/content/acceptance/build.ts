@@ -44,13 +44,12 @@ export const prepareAcceptance = Effect.fn("acceptance.prepare")(function* (
  * checks first, which prove nothing about the built app, and every browser
  * suite run would repeat what the local verification already runs on the same
  * commit.
- * @see https://man7.org/linux/man-pages/man1/nice.1.html
- */
-/**
+ *
  * The start serves the build through Vite's preview server, which runs the Worker
  * in workerd (the Alchemy plugin of apps/www/vite.config.ts). The served app takes
  * the port that the browser suites open. `--strictPort` fails an occupied port
  * instead of moving to another, and Portless stays out of acceptance.
+ * @see https://man7.org/linux/man-pages/man1/nice.1.html
  */
 const applicationCommands = {
   build: ["nice", "-n", "10", "pnpm", "exec", "turbo", "run", "build"],
