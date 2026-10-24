@@ -25,6 +25,11 @@ def calculate(source: bytes) -> tuple[int, str]:
 
     try:
         request = MathRequest.model_validate_json(source)
+        # The budget applies to this canonical form. Omitted list fields take
+        # their defaults here, so a compact body under the limit can exceed it.
+        canonical = request.model_dump_json(exclude_none=True).encode("utf-8")
+        if len(canonical) > MAX_REQUEST_BYTES:
+            return INVALID_INPUT, _detail("Math request exceeds the supported size.")
         output = run(request).model_dump_json(exclude_none=True)
     except ValueError as error:
         # Domain messages are actionable for the learner, so they are kept and

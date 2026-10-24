@@ -73,16 +73,18 @@ const answerRequest = Effect.fn("cas.answer.request")(function* (
  * Answers one request of the public CAS host. Every failure becomes a response
  * with a status, so the caller never sees a stack trace or a binding name.
  */
-export const answer = (
+export const answer = Effect.fn("cas.answer")(function* (
   request: Request,
   env: CasFrontEnv
-): Effect.Effect<Response> =>
-  answerRequest(request, env).pipe(
+) {
+  return yield* answerRequest(request, env).pipe(
     Effect.catchTags({
       CasRequestTooLarge: () =>
         detail(422, "Math request exceeds the supported size."),
       CasRequestUnreadable: () =>
         detail(400, "Math request could not be read."),
+      CasEngineTimedOut: () =>
+        detail(503, "Math calculation exceeded its execution budget."),
       CasEngineFailed: (failure) =>
         detail(
           503,
@@ -92,3 +94,4 @@ export const answer = (
         ),
     })
   );
+});

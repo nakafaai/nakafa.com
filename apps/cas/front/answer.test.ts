@@ -1,5 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { Effect, Fiber } from "effect";
+import { TestClock } from "effect/testing";
 import { answer, MAX_REQUEST_BYTES } from "@/front/answer";
 import type { CasFrontEnv, CasSolverStub } from "@/front/forward";
 
@@ -207,6 +208,26 @@ describe("answer", () => {
       expect(response.status).toBe(503);
       expect(yield* Effect.promise(() => response.json())).toEqual({
         detail: "Math calculation could not complete.",
+      });
+    })
+  );
+
+  it.effect("answers an engine that never answers with a timeout status", () =>
+    Effect.gen(function* () {
+      const silent: CasSolverStub = {
+        fetch: () => new Promise<Response>(() => undefined),
+      };
+
+      const fiber = yield* Effect.forkChild(
+        answer(mathRequest(), environment(silent, KEY)),
+        { startImmediately: true }
+      );
+      yield* TestClock.adjust("20 seconds");
+      const response = yield* Fiber.join(fiber);
+
+      expect(response.status).toBe(503);
+      expect(yield* Effect.promise(() => response.json())).toEqual({
+        detail: "Math calculation exceeded its execution budget.",
       });
     })
   );

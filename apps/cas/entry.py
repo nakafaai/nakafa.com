@@ -25,7 +25,7 @@ class CasSolver(DurableObject):
         # Imported here, not at module level: see the module docstring.
         from cas.compute import calculate
 
-        status, body = calculate((await request.text()).encode("utf-8"))
+        status, body = calculate(await request.bytes())
         return Response(body, status=status, headers=JSON_HEADERS)
 
 

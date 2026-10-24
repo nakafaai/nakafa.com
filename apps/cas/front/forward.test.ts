@@ -1,7 +1,9 @@
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Result } from "effect";
+import { Effect, Fiber, Result } from "effect";
+import { TestClock } from "effect/testing";
 import {
   CasEngineFailed,
+  CasEngineTimedOut,
   type CasSolverNamespace,
   forwardMath,
 } from "@/front/forward";
@@ -79,7 +81,7 @@ describe("forwardMath", () => {
       expect(Result.isFailure(result)).toBe(true);
       if (Result.isFailure(result)) {
         expect(result.failure).toBeInstanceOf(CasEngineFailed);
-        expect(result.failure.overloaded).toBe(true);
+        expect(result.failure).toMatchObject({ overloaded: true });
       }
     })
   );
@@ -97,7 +99,30 @@ describe("forwardMath", () => {
 
       expect(Result.isFailure(result)).toBe(true);
       if (Result.isFailure(result)) {
-        expect(result.failure.overloaded).toBe(false);
+        expect(result.failure).toBeInstanceOf(CasEngineFailed);
+        expect(result.failure).toMatchObject({ overloaded: false });
+      }
+    })
+  );
+
+  it.effect("gives up on an object that never answers within its budget", () =>
+    Effect.gen(function* () {
+      const namespace = namespaceReplying(
+        () => new Promise<Response>(() => undefined),
+        {}
+      );
+
+      const fiber = yield* Effect.forkChild(
+        Effect.result(forwardMath(namespace, new Uint8Array(0))),
+        { startImmediately: true }
+      );
+      yield* TestClock.adjust("20 seconds");
+      const result = yield* Fiber.join(fiber);
+
+      expect(Result.isFailure(result)).toBe(true);
+      if (Result.isFailure(result)) {
+        expect(result.failure).toBeInstanceOf(CasEngineTimedOut);
+        expect(result.failure).toMatchObject({ budget: "20 seconds" });
       }
     })
   );

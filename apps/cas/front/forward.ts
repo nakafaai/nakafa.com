@@ -4,9 +4,17 @@ import { CAS_MATH_PATH } from "@/front/route";
 /** Warm engine objects that serve concurrent calls; each call picks one at random. */
 const CAS_POOL_SIZE = 8;
 
+/** The longest the front waits for one engine object: the budget the caller documents. */
+const CAS_ENGINE_BUDGET = "20 seconds";
+
 /** The engine could not answer: its object was overloaded, or it failed. */
 export class CasEngineFailed extends Data.TaggedError("CasEngineFailed")<{
   readonly overloaded: boolean;
+}> {}
+
+/** The engine did not answer within its budget, so the front stopped waiting. */
+export class CasEngineTimedOut extends Data.TaggedError("CasEngineTimedOut")<{
+  readonly budget: string;
 }> {}
 
 /** One engine object, which answers a request with a response. */
@@ -52,5 +60,12 @@ export const forwardMath = Effect.fn("cas.forward.math")(function* (
       ),
     catch: (cause) =>
       new CasEngineFailed({ overloaded: Schema.is(Overloaded)(cause) }),
-  });
+  }).pipe(
+    // The object keeps running after the front stops waiting, and the platform's
+    // CPU limit still ends that work. The caller never waits past the budget.
+    Effect.timeoutOrElse({
+      duration: CAS_ENGINE_BUDGET,
+      orElse: () => new CasEngineTimedOut({ budget: CAS_ENGINE_BUDGET }),
+    })
+  );
 });

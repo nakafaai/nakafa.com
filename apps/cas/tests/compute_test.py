@@ -73,3 +73,24 @@ def test_calculate_propagates_unexpected_failures(monkeypatch) -> None:
 
     with pytest.raises(RuntimeError, match="engine failure"):
         compute.calculate(body_of(REQUEST))
+
+
+def test_calculate_bounds_the_canonical_request_not_the_raw_body() -> None:
+    # Omitted list fields take their defaults in the canonical form, so this
+    # compact body fits the limit as sent but not once validated.
+    values = ["x" * 2048] * 31 + ["x" * 1810]
+    source = json.dumps(
+        {"kind": "math", "operation": "evaluate", "values": values},
+        separators=(",", ":"),
+    ).encode("utf-8")
+    canonical = (
+        MathRequest.model_validate_json(source)
+        .model_dump_json(exclude_none=True)
+        .encode("utf-8")
+    )
+    assert len(source) <= compute.MAX_REQUEST_BYTES < len(canonical)
+
+    assert compute.calculate(source) == (
+        compute.INVALID_INPUT,
+        json.dumps({"detail": "Math request exceeds the supported size."}),
+    )

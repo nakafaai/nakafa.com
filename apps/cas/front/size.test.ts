@@ -70,7 +70,7 @@ describe("readBoundedBody", () => {
     })
   );
 
-  it.effect("reports a stream that fails when it is cancelled", () =>
+  it.effect("keeps reporting the body as too large when cancelling fails", () =>
     Effect.gen(function* () {
       const failing = new ReadableStream<Uint8Array>({
         pull(controller) {
