@@ -26,6 +26,7 @@ import {
   Sidebar,
   SidebarInset,
 } from "@repo/design-system/components/ui/sidebar-shell";
+import { textDirection } from "@repo/internationalization/src/direction";
 import {
   EXACT_ACTIVE_OPTIONS,
   Link,
@@ -145,7 +146,9 @@ function TenantSwitcher() {
             >
               <SchoolMark logo={tenant.logo} mascot={tenant.mascot} />
               <div className="grid min-w-0 flex-1 text-start text-sm leading-tight">
-                <span className="truncate font-medium">{tenant.name}</span>
+                <span className="truncate font-medium" dir="auto">
+                  {tenant.name}
+                </span>
               </div>
               <HugeIcons className="ms-auto" icon={UnfoldMoreIcon} />
             </SidebarMenuButton>
@@ -204,6 +207,9 @@ function TenantFrame({
 }) {
   const pathname = useSchoolPath();
   const tCommon = useTranslations("Common");
+  const locale = useLocale();
+  // The sidebar sits at the start edge of the page: left for every left-to-right language.
+  const side = textDirection(locale) === "rtl" ? "right" : "left";
 
   if (isExamEditorPath(pathname)) {
     return children;
@@ -211,7 +217,7 @@ function TenantFrame({
 
   return (
     <SidebarProvider>
-      <Sidebar label={tCommon("sidebar")} side="left">
+      <Sidebar label={tCommon("sidebar")} side={side}>
         <SidebarHeader className="border-b">
           <SidebarMenu>
             <TenantSwitcher />
