@@ -26,10 +26,10 @@ const ProbeProps = Schema.Struct({
 });
 
 const ValuesProps = Schema.Struct({
-  count: Schema.Number,
+  count: Schema.Finite,
   flag: Schema.Boolean,
   items: Schema.Array(Schema.Unknown),
-  meta: Schema.Struct({ a: Schema.Number }),
+  meta: Schema.Struct({ a: Schema.Finite }),
   none: Schema.Null,
 });
 
