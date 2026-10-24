@@ -80,10 +80,17 @@ never invoke a Worker.
 - The nakafa.id zone, its placeholder records, and its redirect rule are adopted,
   never recreated. `cas.nakafa.com` keeps a DNS-only record to its Vercel target
   until the CAS Worker replaces it.
+- The CAS Python Durable Object moves in its own lane (`nabil/start-cas`), which
+  merges after the integration. The CAS files stay as `start-deploy` left them.
 - The deploy token holds its account permissions and its zone permissions in two
-  policies. Alchemy keeps the token value in its encrypted state. The owner must
-  confirm this accepted risk, and the alternative is a token created outside
-  Alchemy.
+  policies. Alchemy keeps the token value in its state, which is accepted: the
+  state store writes every resource's state through AES-CTR (`crypto.subtle`
+  in `@alchemy.run/cloudflare`, `StateStore/Store.ts`), and that key lives in the
+  account Secrets Store, outside the state. The token is never written to the
+  repository or to a log.
+- The nakafa.id redirect ruleset owns the whole `http_request_dynamic_redirect`
+  phase. The stack replaces the rule the operator created by hand with the same
+  rule, which is accepted. No other rule may sit in that phase.
 - Production never runs `alchemy destroy`. The workflow passes no destroy flag.
 - Upgrading to a paid Workers plan needs a measured limit that is hit, recorded
   first in the goals.
