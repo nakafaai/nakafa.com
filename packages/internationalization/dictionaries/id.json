@@ -13,12 +13,7 @@
     "greeting-afternoon": "Selamat siang, {name}",
     "greeting-evening": "Selamat malam, {name}",
     "tile-live": "Sedang berlangsung",
-    "tile-live-footer": "Buka ruang untuk memantau siswanya.",
-    "tile-next": "Berikutnya",
-    "tile-next-footer": "Setiap ruang dibuka sesuai jadwalnya.",
     "tile-drafts": "Lanjutkan menulis",
-    "tile-drafts-footer": "Ujian yang kamu mulai dan masih bisa kamu ubah.",
-    "tile-all-exams": "Semua ujian",
     "tile-minutes-left": "{count} menit lagi",
     "role": {
       "admin": "Admin",
@@ -35,7 +30,6 @@
       "teacher": "Guru"
     },
     "sign-in-title": "Masuk ke {school}",
-    "tile-student": "Ujianmu",
     "sittings-empty": "Guru Anda belum menjadwalkan sesi.",
     "sittings-next": "Sesi berikutnya dibuka {time}.",
     "refused-title": "Akses Anda ke sekolah ini telah berubah.",
@@ -46,14 +40,23 @@
     "setup-students": "Undang siswa",
     "setup-teacher": "Undang guru",
     "setup-unit": "Tambah sekolah",
-    "sitting-open-now": "Sedang dibuka",
     "tile-result-pending": "Belum dirilis",
     "tile-result-released": "Sudah dirilis",
     "tile-results": "Hasil",
-    "tile-results-footer": "Hasil muncul di sini setelah sesi selesai.",
-    "tile-results-release-footer": "Rilis hasil setelah sesi selesai.",
     "tile-setup": "Persiapan",
-    "tile-setup-footer": "Selesaikan langkah ini agar guru dan siswa bisa bergabung."
+    "metric-live": "Sedang berjalan",
+    "metric-live-period": "Ruang yang berjalan",
+    "metric-next": "14 hari ke depan",
+    "metric-next-period": "Ruang yang segera dibuka",
+    "metric-waiting": "Menunggu rilis",
+    "metric-waiting-period": "Hasil yang bisa dirilis",
+    "metric-drafts": "Draf",
+    "metric-drafts-period": "Ujian yang bisa kamu edit",
+    "tile-schedule": "Jadwal",
+    "tile-now": "Sekarang",
+    "now-left": "{count, plural, other {menit lagi}}",
+    "live-progress": "{percent}% waktu sudah berlalu",
+    "setup-progress": "{done} dari {total} langkah"
   },
   "SchoolEntry": {
     "card-code-description": "Hanya untuk masuk pertama kali atau setelah kartu baru dicetak.",
@@ -290,7 +293,8 @@
     "starts-needed": "Pilih kapan sesi dimulai.",
     "seats-empty-title": "Belum ada kursi terisi",
     "seats-filter-title": "Tidak ada kursi yang cocok",
-    "signals-empty-title": "Belum ada peristiwa"
+    "signals-empty-title": "Belum ada peristiwa",
+    "student-start": "Mulai ujian"
   },
   "SchoolSettings": {
     "school": "Sekolah",

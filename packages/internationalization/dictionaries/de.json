@@ -13,12 +13,7 @@
     "greeting-afternoon": "Guten Tag, {name}",
     "greeting-evening": "Guten Abend, {name}",
     "tile-live": "Läuft gerade",
-    "tile-live-footer": "Öffne einen Raum, um die Schüler zu beobachten.",
-    "tile-next": "Als Nächstes",
-    "tile-next-footer": "Jeder Raum öffnet zur geplanten Zeit.",
     "tile-drafts": "Weiter schreiben",
-    "tile-drafts-footer": "Prüfungen, die du begonnen hast und noch bearbeiten kannst.",
-    "tile-all-exams": "Alle Prüfungen",
     "tile-minutes-left": "{count, plural, one {# Minute übrig} other {# Minuten übrig}}",
     "role": {
       "admin": "Admin",
@@ -35,7 +30,6 @@
       "teacher": "Lehrkraft"
     },
     "sign-in-title": "Anmelden bei {school}",
-    "tile-student": "Deine Prüfungen",
     "sittings-empty": "Deine Lehrkraft hat noch keine Sitzung geplant.",
     "sittings-next": "Die nächste Sitzung beginnt {time}.",
     "refused-title": "Dein Zugang zu dieser Schule hat sich geändert.",
@@ -46,14 +40,23 @@
     "setup-students": "Schüler einladen",
     "setup-teacher": "Lehrkraft einladen",
     "setup-unit": "Eine Schule hinzufügen",
-    "sitting-open-now": "Jetzt geöffnet",
     "tile-result-pending": "Nicht freigegeben",
     "tile-result-released": "Freigegeben",
     "tile-results": "Ergebnisse",
-    "tile-results-footer": "Ergebnisse erscheinen hier, nachdem eine Sitzung beendet ist.",
-    "tile-results-release-footer": "Gib Ergebnisse frei, nachdem eine Sitzung beendet ist.",
     "tile-setup": "Einrichtung",
-    "tile-setup-footer": "Schließe diese Schritte ab, damit Lehrkräfte und Schüler beitreten können."
+    "metric-live": "Läuft jetzt",
+    "metric-live-period": "Räume laufen",
+    "metric-next": "Nächste 14 Tage",
+    "metric-next-period": "Räume öffnen bald",
+    "metric-waiting": "Wartet auf Freigabe",
+    "metric-waiting-period": "Ergebnisse zur Freigabe",
+    "metric-drafts": "Entwürfe",
+    "metric-drafts-period": "Prüfungen, die du bearbeiten kannst",
+    "tile-schedule": "Zeitplan",
+    "tile-now": "Jetzt",
+    "now-left": "{count, plural, one {Minute übrig} other {Minuten übrig}}",
+    "live-progress": "{percent} % der Zeit vergangen",
+    "setup-progress": "{done} von {total} Schritten"
   },
   "SchoolEntry": {
     "card-code-description": "Nur für die erste Anmeldung oder nach dem Druck einer neuen Karte.",
@@ -290,7 +293,8 @@
     "starts-needed": "Wähle, wann die Sitzung beginnt.",
     "seats-empty-title": "Noch kein Platz belegt",
     "seats-filter-title": "Kein Platz passt zum Filter",
-    "signals-empty-title": "Noch kein Ereignis"
+    "signals-empty-title": "Noch kein Ereignis",
+    "student-start": "Prüfung starten"
   },
   "SchoolSettings": {
     "school": "Schule",

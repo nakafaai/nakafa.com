@@ -13,12 +13,7 @@
     "greeting-afternoon": "Good afternoon, {name}",
     "greeting-evening": "Good evening, {name}",
     "tile-live": "In progress",
-    "tile-live-footer": "Open a room to watch its students.",
-    "tile-next": "Up next",
-    "tile-next-footer": "Each room opens at its scheduled time.",
     "tile-drafts": "Keep writing",
-    "tile-drafts-footer": "Exams you started that you can still edit.",
-    "tile-all-exams": "All exams",
     "tile-minutes-left": "{count, plural, one {# minute left} other {# minutes left}}",
     "role": {
       "admin": "Admin",
@@ -35,7 +30,6 @@
       "teacher": "Teacher"
     },
     "sign-in-title": "Sign in to {school}",
-    "tile-student": "Your sittings",
     "sittings-empty": "Your teacher has not scheduled a sitting yet.",
     "sittings-next": "The next sitting opens {time}.",
     "refused-title": "Your access to this school has changed.",
@@ -46,14 +40,23 @@
     "setup-students": "Invite students",
     "setup-teacher": "Invite a teacher",
     "setup-unit": "Add a school",
-    "sitting-open-now": "Open now",
     "tile-result-pending": "Not released",
     "tile-result-released": "Released",
     "tile-results": "Results",
-    "tile-results-footer": "Results appear here after a sitting closes.",
-    "tile-results-release-footer": "Release results after a sitting closes.",
     "tile-setup": "Setup",
-    "tile-setup-footer": "Finish these steps so teachers and students can join."
+    "metric-live": "Live now",
+    "metric-live-period": "Rooms running",
+    "metric-next": "Next 14 days",
+    "metric-next-period": "Rooms opening soon",
+    "metric-waiting": "Waiting for release",
+    "metric-waiting-period": "Results to release",
+    "metric-drafts": "Drafts",
+    "metric-drafts-period": "Exams you may edit",
+    "tile-schedule": "Schedule",
+    "tile-now": "Now",
+    "now-left": "{count, plural, one {minute left} other {minutes left}}",
+    "live-progress": "{percent}% of the time has passed",
+    "setup-progress": "{done} of {total} steps"
   },
   "SchoolEntry": {
     "card-code-description": "Only for your first sign-in or after a new card is printed.",
@@ -290,7 +293,8 @@
     "starts-needed": "Choose when the sitting starts.",
     "seats-empty-title": "No seat yet",
     "seats-filter-title": "No seat matches",
-    "signals-empty-title": "No signal yet"
+    "signals-empty-title": "No signal yet",
+    "student-start": "Start exam"
   },
   "SchoolSettings": {
     "school": "School",
