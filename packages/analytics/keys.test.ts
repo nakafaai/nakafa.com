@@ -5,7 +5,7 @@ import { deploymentKeys, keys, postHogProxyKeys } from "@repo/analytics/keys";
 function stubAnalyticsEnvironment() {
   vi.stubEnv("VITE_POSTHOG_KEY", "phc_test");
   vi.stubEnv("VITE_POSTHOG_UI_HOST", "https://eu.posthog.com");
-  vi.stubEnv("POSTHOG_PROXY_HOST", "https://t.nakafa.com");
+  vi.stubEnv("VITE_POSTHOG_PROXY_HOST", "https://t.nakafa.com");
 }
 
 afterEach(() => {
@@ -17,11 +17,11 @@ describe("analytics environment contracts", () => {
     stubAnalyticsEnvironment();
 
     expect(postHogProxyKeys()).toEqual({
-      POSTHOG_PROXY_HOST: "https://t.nakafa.com",
+      VITE_POSTHOG_PROXY_HOST: "https://t.nakafa.com",
     });
     expect(keys()).toMatchObject({
       VITE_POSTHOG_KEY: "phc_test",
-      POSTHOG_PROXY_HOST: "https://t.nakafa.com",
+      VITE_POSTHOG_PROXY_HOST: "https://t.nakafa.com",
     });
   });
 });
@@ -32,7 +32,7 @@ describe("deployment keys for server reporting", () => {
     vi.stubEnv("TSS_PRERENDERING", "false");
     vi.stubEnv("VITE_POSTHOG_KEY", undefined);
     vi.stubEnv("VITE_POSTHOG_UI_HOST", undefined);
-    vi.stubEnv("POSTHOG_PROXY_HOST", undefined);
+    vi.stubEnv("VITE_POSTHOG_PROXY_HOST", undefined);
 
     expect(deploymentKeys()).toMatchObject({
       TSS_PRERENDERING: "false",
@@ -72,13 +72,13 @@ describe("deployment keys for server reporting", () => {
 describe("required PostHog values", () => {
   it("requires a URL proxy host that is set, non-empty and parseable", () => {
     stubAnalyticsEnvironment();
-    vi.stubEnv("POSTHOG_PROXY_HOST", undefined);
+    vi.stubEnv("VITE_POSTHOG_PROXY_HOST", undefined);
     expect(postHogProxyKeys).toThrow();
 
-    vi.stubEnv("POSTHOG_PROXY_HOST", "");
+    vi.stubEnv("VITE_POSTHOG_PROXY_HOST", "");
     expect(postHogProxyKeys).toThrow();
 
-    vi.stubEnv("POSTHOG_PROXY_HOST", "not a url");
+    vi.stubEnv("VITE_POSTHOG_PROXY_HOST", "not a url");
     expect(postHogProxyKeys).toThrow();
   });
 
@@ -86,7 +86,7 @@ describe("required PostHog values", () => {
     stubAnalyticsEnvironment();
     expect(keys).not.toThrow();
 
-    vi.stubEnv("POSTHOG_PROXY_HOST", "");
+    vi.stubEnv("VITE_POSTHOG_PROXY_HOST", "");
     expect(keys).toThrow();
 
     stubAnalyticsEnvironment();

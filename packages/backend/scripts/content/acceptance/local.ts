@@ -115,7 +115,7 @@ export function localApplicationEnvironment(runtime: LocalRuntime) {
     VITE_CONVEX_URL: runtime.query,
     VITE_POSTHOG_KEY: "phc_local_acceptance",
     VITE_POSTHOG_UI_HOST: ACCEPTANCE_ORIGIN,
-    POSTHOG_PROXY_HOST: runtime.analytics,
+    VITE_POSTHOG_PROXY_HOST: runtime.analytics,
     SITE_URL: localEnvironment.SITE_URL,
     [NAKAFA_API_EDGE_CONTRACT.secretEnvironment]:
       localEnvironment[NAKAFA_API_EDGE_CONTRACT.secretEnvironment],

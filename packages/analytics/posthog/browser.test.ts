@@ -20,12 +20,9 @@ const client = {
 vi.mock("@repo/analytics/public", () => ({
   postHogPublicKeys: () => ({
     VITE_POSTHOG_KEY: "phc_test",
+    VITE_POSTHOG_PROXY_HOST: "https://t.nakafa.com",
     VITE_POSTHOG_UI_HOST: "https://eu.posthog.com",
   }),
-}));
-
-vi.mock("@repo/analytics/posthog/config", () => ({
-  POSTHOG_PROXY_PATH: "/ingest",
 }));
 
 vi.mock("posthog-js", () => ({ default: client }));
@@ -92,7 +89,7 @@ describe("two-tier PostHog browser runtime", () => {
       expect(client.init).toHaveBeenCalledWith(
         "phc_test",
         expect.objectContaining({
-          api_host: "/ingest",
+          api_host: "https://t.nakafa.com",
           before_send: expect.any(Function),
           capture_pageview: false,
           cookieless_mode: "on_reject",

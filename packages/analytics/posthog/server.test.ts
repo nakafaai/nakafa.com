@@ -7,7 +7,7 @@ const postHogMocks = vi.hoisted(() => ({
   constructor: vi.fn(),
   keys: vi.fn(() => ({
     VITE_POSTHOG_KEY: "phc_test",
-    POSTHOG_PROXY_HOST: "https://t.nakafa.com",
+    VITE_POSTHOG_PROXY_HOST: "https://t.nakafa.com",
   })),
 }));
 

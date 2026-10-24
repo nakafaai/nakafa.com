@@ -29,11 +29,16 @@ describe("acceptance analytics stand-in", () => {
             body: HttpBody.jsonUnsafe({ event: "$pageview" }),
           });
           const asset = yield* HttpClient.get(`${origin}/static/array.js`);
-          return [capture.status, yield* capture.json, asset.status];
+          return [
+            capture.status,
+            yield* capture.json,
+            capture.headers["access-control-allow-origin"],
+            asset.status,
+          ];
         })
       );
 
-      expect(replies).toEqual([200, { status: 1 }, 200]);
+      expect(replies).toEqual([200, { status: 1 }, "*", 200]);
       expect(yield* isListening(origin)).toBe(false);
     }).pipe(Effect.provide(FetchClient))
   );
