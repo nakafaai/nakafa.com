@@ -43,9 +43,23 @@ const FIRST_OPTION_KEY: Arr.NonEmptyReadonlyArray<InteractionKey> = [
   { correct: ["option-1"], interaction: "choice", kind: "choice" },
 ];
 
-/** A prompt of one paragraph with the text, in the stored form that the editor writes. */
-const promptText = (text: string) =>
-  `{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"${text}"}]}]}`;
+/**
+ * The paragraphs of the second question's prompt. They mix Indonesian, Arabic and English, so a
+ * browser test reads each paragraph in its own direction (e2e/school/multilingual.browser.ts).
+ */
+const MIXED_PARAGRAPHS: Arr.NonEmptyReadonlyArray<string> = [
+  "Soal kedua: baca teks berikut dengan cermat.",
+  "مرحبا بكم في الامتحان، اقرأ النص بعناية.",
+  "Read the passage and answer the question below.",
+];
+
+/** One paragraph of a prompt, in the stored form that the editor writes. */
+const paragraphText = (text: string) =>
+  `{"type":"paragraph","content":[{"type":"text","text":"${text}"}]}`;
+
+/** A prompt of paragraphs with their text, in the stored form that the editor writes. */
+const promptText = (paragraphs: Arr.NonEmptyReadonlyArray<string>) =>
+  `{"type":"doc","content":[${Arr.join(Arr.map(paragraphs, paragraphText), ",")}]}`;
 
 /**
  * Seats a crowd of extra students in a sitting, each an unclaimed Person named by their
@@ -119,12 +133,12 @@ const ownerUserId = Effect.fn("exams.seed.owner")(function* (
 const seedQuestion = Effect.fn("exams.seed.question")(function* (
   exam: Pick<ExamsDoc, "_id" | "questions" | "scope" | "tenantId">,
   after: ExamQuestionsDoc["_id"] | null,
-  text: string
+  paragraphs: Arr.NonEmptyReadonlyArray<string>
 ) {
   const prompt = yield* createDocument({
     scope: exam.scope,
     tenantId: exam.tenantId,
-    text: yield* storedDocument(promptText(text)).pipe(Effect.orDie),
+    text: yield* storedDocument(promptText(paragraphs)).pipe(Effect.orDie),
   }).pipe(Effect.orDie);
   const answers = yield* encodeAnswers(newChoiceAnswers());
   const key = yield* encodeKey(FIRST_OPTION_KEY);
@@ -186,12 +200,12 @@ export const seedSitting = Effect.fn("exams.seed.sitting")(function* (args: {
   const first = yield* seedQuestion(
     { _id: examId, questions: [], scope, tenantId: tenant._id },
     null,
-    "Soal pertama."
+    ["Soal pertama."]
   );
   yield* seedQuestion(
     { _id: examId, questions: [first], scope, tenantId: tenant._id },
     first,
-    "Soal kedua."
+    MIXED_PARAGRAPHS
   );
   const exam = yield* reader.table("exams").get(examId).pipe(Effect.orDie);
   const made = yield* createSitting({
