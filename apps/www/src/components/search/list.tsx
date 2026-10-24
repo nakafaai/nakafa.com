@@ -94,14 +94,17 @@ export function SearchResults({
 
   return (
     <ResultsQueryContext value={query}>
-      <div className="flex flex-col gap-3 rounded-xl border py-4 shadow-sm">
+      <section
+        aria-label={t("search-results")}
+        className="flex flex-col gap-3 rounded-xl border py-4 shadow-sm"
+      >
         {Arr.map(groups, (group, index) => (
           <Fragment key={group.title}>
             <ResultGroup group={group} />
             {index !== groups.length - 1 && <Separator />}
           </Fragment>
         ))}
-      </div>
+      </section>
     </ResultsQueryContext>
   );
 }

@@ -1251,6 +1251,7 @@
     "search-help": "Type to start searching...",
     "search-error": "An error occurred while searching.",
     "search-title": "Search Learning Materials",
+    "search-results": "Search results",
     "search-description": "Search free learning materials, educational articles, practice exercises, and study resources. Find the topic you are studying."
   },
   "Home": {

@@ -1,10 +1,13 @@
 import { expect, test } from "@playwright/test";
+import app from "@repo/internationalization/dictionaries/en.json" with {
+  type: "json",
+};
 import { Effect, MutableList } from "effect";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 import { SERVER_FUNCTION_PATH } from "@/e2e/support/requests";
 
 const SESSION_READ = "/api/auth/get-session";
-const SEARCH_PATH = "/en/search?q=geometry#results";
+const SEARCH_PATH = "/en/search?q=geometry";
 
 /**
  * A visitor's search opens no WebSocket and sends no session read. The results of
@@ -46,7 +49,10 @@ test("a visitor's search opens no socket, sends no session read, and reads its r
         );
         yield* Effect.promise(() =>
           expect(
-            page.locator("main a[href*='/subjects/']").first()
+            page
+              .getByRole("region", { name: app.Utils["search-results"] })
+              .locator("a[href*='/subjects/']")
+              .first()
           ).toBeVisible()
         );
         yield* Effect.sync(() => {
