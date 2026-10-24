@@ -24,6 +24,11 @@ import { startTransition } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { ActiveBadge } from "@/components/shared/active";
 import { CountryFlagIcon } from "@/components/shared/flag";
+import {
+  CommunityMenuItem,
+  LearnMoreSubmenu,
+  SiteAboutMenuItem,
+} from "@/components/sidebar/menu/learn";
 import { SidebarThemeSubmenu } from "@/components/sidebar/menu/preference";
 import { useTenant } from "@/components/tenant/context";
 import { changeSchoolLanguage } from "@/components/tenant/locale";
@@ -60,12 +65,12 @@ function changeLanguage(
 }
 
 /**
- * The items of the school's account menu, between the account and sign-out, in the
- * groups and with the icons of the Nakafa account menu: the person, the school,
- * the preferences, and the way back to Nakafa. The person's links open the pages
- * of the Nakafa account on the main site, where the same session signs the viewer
- * in. The profile link is listed only for an account with a username, as the
- * Nakafa account menu lists it.
+ * The items of the school's account menu, between the account and sign-out, in at
+ * most three groups with the icons of the Nakafa account menu: the person, the
+ * school, then the preferences, Learn more and the way back to Nakafa. The
+ * person's links open the pages of the Nakafa account on the main site, where the
+ * same session signs the viewer in. The profile link is listed only for an account
+ * with a username, as the Nakafa account menu lists it.
  */
 export function TenantAccountItems({
   username,
@@ -122,9 +127,10 @@ export function TenantAccountItems({
       <DropdownMenuGroup>
         <TenantLanguageSubmenu />
         <SidebarThemeSubmenu />
-      </DropdownMenuGroup>
-      <DropdownMenuSeparator />
-      <DropdownMenuGroup>
+        <LearnMoreSubmenu>
+          <SiteAboutMenuItem />
+          <CommunityMenuItem />
+        </LearnMoreSubmenu>
         <DropdownMenuItem
           render={
             <a href={new URL(`/${locale}`, SITE_ORIGIN).href}>

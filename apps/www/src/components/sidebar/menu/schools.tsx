@@ -67,13 +67,14 @@ function SidebarStartSchoolMenuItem() {
 }
 
 /**
- * The account's schools in its menu, one link each under a heading, and the item
- * that opens a new one when the account may open a school: a school login
- * account may not. The menu loads this part, and with it the school
- * contracts, when it opens, so no page carries them in its first JavaScript. The
- * item that opens a school shows at once; the schools follow once their first
- * page loads, and a failed read shows one disabled line, so the list is never
- * silently empty. The next page loads as the end of the list comes into view.
+ * The account's group of schools in its menu, under the heading "Your schools": one
+ * link for each school, then the item that opens a new one when the account may
+ * open a school (a school login account may not). The group is shown only when the
+ * account has a school or may open one, so an account with neither sees no empty
+ * heading. The menu loads this part, and with it the school contracts, once the
+ * menu warms, so no page carries them in its first JavaScript. A failed read shows
+ * one disabled line, so the group is never silently empty. The next page loads as
+ * the end of the list comes into view.
  */
 export function SidebarSchoolMenuItems({
   canOpenSchool,
@@ -86,12 +87,17 @@ export function SidebarSchoolMenuItems({
     {},
     { initialNumItems: SCHOOL_PAGE }
   );
+  const isFailed = PaginatedQueryResult.isFailure(memberships);
+
+  if (!(isFailed || canOpenSchool) && memberships.results.length === 0) {
+    return null;
+  }
 
   return (
     <>
       <DropdownMenuGroup>
         <DropdownMenuLabel>{t("your-schools")}</DropdownMenuLabel>
-        {PaginatedQueryResult.isFailure(memberships) ? (
+        {isFailed ? (
           <DropdownMenuItem disabled>{t("load-error")}</DropdownMenuItem>
         ) : (
           Arr.map(memberships.results, ({ tenant }) => (

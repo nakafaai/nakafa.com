@@ -90,12 +90,15 @@ for (const viewport of sidebarViewports) {
               })
             ).toBeVisible()
           );
+          const learnMoreButton = footer.getByRole("button", {
+            exact: true,
+            name: "Learn more",
+          });
+          yield* Effect.promise(() => expect(learnMoreButton).toBeVisible());
+          yield* Effect.promise(() => learnMoreButton.hover());
           yield* Effect.promise(() =>
             expect(
-              footer.getByRole("button", {
-                exact: true,
-                name: "Usage data",
-              })
+              page.getByRole("menuitem", { exact: true, name: "Usage data" })
             ).toBeVisible()
           );
           yield* Effect.promise(() => expect(loginLink).toBeVisible());
