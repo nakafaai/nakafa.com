@@ -3,7 +3,7 @@ import refs from "@repo/backend/confect/_generated/refs";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import type { GrantScope } from "@repo/backend/confect/access/schema";
 import { denied, nf, otherSchoolTeacher } from "@repo/backend/test/editor";
-import { archiveUnit, examRows, LANGUAGE } from "@repo/backend/test/exams";
+import { archiveUnit, examRows } from "@repo/backend/test/exams";
 import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
 import { Array as Arr, Effect } from "effect";
 
@@ -28,7 +28,6 @@ describe("exams/exams", () => {
         const fixture = yield* tenancyFixture;
         const teacher = fixture.as("teacher");
         const made = yield* teacher.mutation(create, {
-          language: LANGUAGE,
           scope: { kind: "unit", unitId: fixture.units.smp },
           slug: nf,
           title: "PTS Matematika",
@@ -38,7 +37,6 @@ describe("exams/exams", () => {
           slug: nf,
         });
         expect(opened).toMatchObject({
-          language: LANGUAGE,
           title: "PTS Matematika",
         });
         expect(opened.questions).toHaveLength(1);
@@ -75,7 +73,6 @@ describe("exams/exams", () => {
         const other = yield* fixture
           .as("teacher")
           .mutation(create, {
-            language: LANGUAGE,
             scope,
             slug: nf,
             title: "Lain",
@@ -84,7 +81,6 @@ describe("exams/exams", () => {
         const student = yield* fixture
           .as("student")
           .mutation(create, {
-            language: LANGUAGE,
             scope: { kind: "tenant" },
             slug: nf,
             title: "Siswa",
@@ -108,21 +104,18 @@ describe("exams/exams", () => {
           slug: nf,
         };
         yield* fixture.as("admin").mutation(create, {
-          language: LANGUAGE,
           scope: { kind: "tenant" },
           slug: nf,
           title: "Seluruh sekolah",
         });
         vi.setSystemTime(LATER);
         yield* fixture.as("teacher").mutation(create, {
-          language: LANGUAGE,
           scope: { kind: "unit", unitId: fixture.units.smp },
           slug: nf,
           title: "Kelas SMP",
         });
         vi.setSystemTime(LATEST);
         yield* fixture.as("admin").mutation(create, {
-          language: LANGUAGE,
           scope: { kind: "unit", unitId: fixture.units.sma },
           slug: nf,
           title: "Kelas SMA",
@@ -150,7 +143,6 @@ describe("exams/exams", () => {
         const teacher = fixture.as("teacher");
         for (let index = 0; index < 21; index += 1) {
           yield* teacher.mutation(create, {
-            language: LANGUAGE,
             scope: { kind: "unit", unitId: fixture.units.smp },
             slug: nf,
             title: `Ujian ${index + 1}`,
@@ -171,13 +163,11 @@ describe("exams/exams", () => {
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         const school = yield* fixture.as("admin").mutation(create, {
-          language: LANGUAGE,
           scope: { kind: "tenant" },
           slug: nf,
           title: "Seluruh sekolah",
         });
         const unit = yield* fixture.as("teacher").mutation(create, {
-          language: LANGUAGE,
           scope: { kind: "unit", unitId: fixture.units.smp },
           slug: nf,
           title: "Kelas SMP",
@@ -201,13 +191,11 @@ describe("exams/exams", () => {
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         const school = yield* fixture.as("admin").mutation(create, {
-          language: LANGUAGE,
           scope: { kind: "tenant" },
           slug: nf,
           title: "Seluruh sekolah",
         });
         const outside = yield* fixture.as("admin").mutation(create, {
-          language: LANGUAGE,
           scope: { kind: "unit", unitId: fixture.units.sma },
           slug: nf,
           title: "Kelas SMA",
@@ -246,7 +234,6 @@ describe("exams/exams", () => {
         const fixture = yield* tenancyFixture;
         const teacher = fixture.as("teacher");
         const made = yield* teacher.mutation(create, {
-          language: LANGUAGE,
           scope: { kind: "unit", unitId: fixture.units.smp },
           slug: nf,
           title: "Ulangan",
@@ -272,7 +259,6 @@ describe("exams/exams", () => {
         const fixture = yield* tenancyFixture;
         const teacher = fixture.as("teacher");
         const live = yield* teacher.mutation(create, {
-          language: LANGUAGE,
           scope: { kind: "unit", unitId: fixture.units.smp },
           slug: nf,
           title: "Hidup",

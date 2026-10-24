@@ -63,6 +63,7 @@ export function ExamHeader() {
       <Input
         aria-label={t("title-label")}
         className="min-w-0 flex-1 truncate border-0 font-semibold text-lg shadow-none md:text-lg"
+        dir="auto"
         onBlur={save}
         onChange={(event) => setDraft(event.target.value)}
         onKeyDown={(event) => {

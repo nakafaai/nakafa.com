@@ -95,7 +95,6 @@ function HomeAction({
     <CreateExam
       choices={tenant.home.choices}
       drafts={drafts}
-      languages={tenant.home.languages}
       slug={tenant.slug}
     />
   );

@@ -100,7 +100,7 @@ function TenantClassItem({ name, slug }: { name: string; slug: string }) {
         isActive={isActive}
         render={<Link params={params} to="/school/$slug/classes/$classSlug" />}
       >
-        {name}
+        <span dir="auto">{name}</span>
       </SidebarMenuButton>
     </SidebarMenuItem>
   );

@@ -2,7 +2,6 @@ import { PencilEdit02Icon } from "@hugeicons/core-free-icons";
 import type { HomeView } from "@repo/backend/confect/exams/home/contract";
 import { Dashboard } from "@repo/design-system/components/ui/dashboard";
 import { Array as Arr } from "effect";
-import { useMemo } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { type StoreApi, useStore } from "zustand";
 import { useTenant } from "@/components/tenant/context";
@@ -17,8 +16,8 @@ import { schoolExamEditTarget } from "@/lib/routing/school/target";
 type Draft = (typeof HomeView.Type)["drafts"][number];
 
 /**
- * The exams the viewer started and may still edit, newest created first, each with its language and the time since it
- * was created. A row opens its editor, and a draft the server is still saving shows its title without a link.
+ * The exams the viewer started and may still edit, newest created first, each with the time since it was created. A
+ * row opens its editor, and a draft the server is still saving shows its title without a link.
  */
 export function DraftsCell({
   drafts,
@@ -33,10 +32,6 @@ export function DraftsCell({
   const locale = useLocale();
   const now = useHomeNow();
   const saving = useStore(store, (state) => state.ids);
-  const names = useMemo(
-    () => new Intl.DisplayNames([locale], { type: "language" }),
-    [locale]
-  );
 
   return (
     <Dashboard.Cell narrow={span.narrow} wide={span.wide}>
@@ -47,7 +42,6 @@ export function DraftsCell({
             draft={draft}
             key={draft.id}
             locale={locale}
-            names={names}
             now={now}
             saving={Arr.contains(saving, draft.id)}
           />
@@ -64,13 +58,11 @@ export function DraftsCell({
 function DraftRow({
   draft,
   locale,
-  names,
   now,
   saving,
 }: {
   draft: Draft;
   locale: string;
-  names: Intl.DisplayNames;
   now: number;
   saving: boolean;
 }) {
@@ -79,7 +71,6 @@ function DraftRow({
 
   return (
     <Dashboard.Row
-      detail={names.of(draft.language)}
       icon={PencilEdit02Icon}
       render={
         saving ? undefined : (

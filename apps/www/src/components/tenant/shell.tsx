@@ -26,6 +26,7 @@ import {
   Sidebar,
   SidebarInset,
 } from "@repo/design-system/components/ui/sidebar-shell";
+import { textDirection } from "@repo/internationalization/src/direction";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { ClientOnly } from "@tanstack/react-router";
 import { Effect, Option } from "effect";
@@ -141,10 +142,12 @@ function TenantSwitcher() {
               size="lg"
             >
               <SchoolMark logo={tenant.logo} mascot={tenant.mascot} />
-              <div className="grid min-w-0 flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{tenant.name}</span>
+              <div className="grid min-w-0 flex-1 text-start text-sm leading-tight">
+                <span className="truncate font-medium" dir="auto">
+                  {tenant.name}
+                </span>
               </div>
-              <HugeIcons className="ml-auto" icon={UnfoldMoreIcon} />
+              <HugeIcons className="ms-auto" icon={UnfoldMoreIcon} />
             </SidebarMenuButton>
           }
         />
@@ -203,6 +206,9 @@ function TenantFrame({
     exact: true,
   });
   const tCommon = useTranslations("Common");
+  const locale = useLocale();
+  // The sidebar sits at the start edge of the page: left for every left-to-right language.
+  const side = textDirection(locale) === "rtl" ? "right" : "left";
 
   if (isEditor) {
     return children;
@@ -210,7 +216,7 @@ function TenantFrame({
 
   return (
     <SidebarProvider>
-      <Sidebar label={tCommon("sidebar")} side="left">
+      <Sidebar label={tCommon("sidebar")} side={side}>
         <SidebarHeader className="border-b">
           <SidebarMenu>
             <TenantSwitcher />

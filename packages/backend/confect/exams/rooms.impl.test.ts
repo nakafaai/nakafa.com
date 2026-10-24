@@ -2,7 +2,6 @@ import type { GenericId } from "@confect/core";
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import refs from "@repo/backend/confect/_generated/refs";
 import { denied, nf } from "@repo/backend/test/editor";
-import { LANGUAGE } from "@repo/backend/test/exams";
 import {
   CLOSES_AT as CLOSES,
   keyedExam,
@@ -303,7 +302,6 @@ describe("exams/rooms", () => {
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
         const schoolExam = yield* fixture.as("admin").mutation(create, {
-          language: LANGUAGE,
           scope: { kind: "tenant" },
           slug: nf,
           title: "PTS Sekolah",

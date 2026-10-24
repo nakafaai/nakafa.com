@@ -67,7 +67,7 @@ test("a teacher creates an exam, adds questions, writes one, and finds it all wh
     page.getByRole("button", { name: "Toggle Sidebar" })
   ).toHaveCount(1);
 
-  // The dialog preselects the school's unit, whose language it shows.
+  // The dialog preselects the school's unit, so the exam needs no other choice.
   await page.getByRole("button", { name: "Create exam" }).click();
   const dialog = page.getByRole("dialog");
   await dialog

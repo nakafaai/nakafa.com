@@ -1,4 +1,5 @@
 import { ASSESSMENT_RULES } from "@repo/backend/confect/editor/model";
+import { blockDirections } from "@repo/design-system/components/editor/direction";
 import { DocumentEditor } from "@repo/design-system/components/editor/document";
 import {
   FORMULA_VIEWS,
@@ -16,11 +17,17 @@ import { SittingPictures } from "@/components/exams/sitting/pictures";
 import { assessmentSchema } from "@/lib/editor/assessment";
 import { useDocumentLabels } from "@/lib/editor/labels";
 
-/** The extensions of a read-only document: the ones the exam canvas edits the same document with. */
-const READER_EXTENSIONS = documentExtensions(ASSESSMENT_RULES, {
-  ...FORMULA_VIEWS,
-  image: PICTURE_VIEW,
-});
+/**
+ * The extensions of a read-only document: the ones the exam canvas edits the same document with, and
+ * the direction of each block from its own words, as the canvas gives it.
+ */
+const READER_EXTENSIONS = [
+  ...documentExtensions(ASSESSMENT_RULES, {
+    ...FORMULA_VIEWS,
+    image: PICTURE_VIEW,
+  }),
+  blockDirections,
+];
 
 /** A prompt reads as the published article reads: its paragraphs take the article's classes. */
 const PAGE_EXTENSIONS = [...READER_EXTENSIONS, articleParagraphs];

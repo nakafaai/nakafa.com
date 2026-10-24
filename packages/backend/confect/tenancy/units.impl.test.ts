@@ -35,7 +35,7 @@ const makassar = (
 
 describe("tenancy/units setLocale", () => {
   it.effect(
-    "sets the time zone and the content language of a school, and records it",
+    "sets the time zone and the page language of a school, and records it",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;

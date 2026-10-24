@@ -200,7 +200,9 @@
 @theme inline {
   --text-chat: 15px;
   --text-chat--line-height: 1.625;
-  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  /* Amiri follows Inter so an Arabic glyph takes its face in the same line, and each Arabic subset
+   * loads only when a page draws an Arabic character (its unicode-range), so a Latin page loads none. */
+  --font-sans: "Inter Variable", "Amiri", ui-sans-serif, system-ui, sans-serif;
   --font-quran: "Amiri", ui-serif, serif;
   /* Geist Mono's variable exists only inside a scope that applies it. Outside
    * every scope, a monospace element falls back to the system stack. Tailwind

@@ -356,13 +356,14 @@ function RoomItem({
       <TableCell className="font-medium">
         <Link
           className="underline-offset-4 hover:underline"
+          dir="auto"
           params={{ exam: examId, slug, sitting: room.id }}
           to="/school/$slug/exams/$exam/sittings/$sitting"
         >
           {room.room}
         </Link>
       </TableCell>
-      <TableCell>{room.group.name}</TableCell>
+      <TableCell dir="auto">{room.group.name}</TableCell>
       <TableCell className="text-muted-foreground">
         {schoolDateTimeText({
           at: room.opensAt,

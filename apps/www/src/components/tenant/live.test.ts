@@ -9,7 +9,7 @@ const rendered: TenantValue = {
   canManage: true,
   canOpenExams: true,
   greeting: { firstName: "Sari", part: "morning" },
-  home: { canCreate: false, canWatch: false, choices: [], languages: [] },
+  home: { canCreate: false, canWatch: false, choices: [] },
   logo: "https://files.example.com/rendered.png",
   mascot: Schema.decodeSync(MascotCode)("cat.0.243e66.right.open"),
   name: "Yayasan Lama",

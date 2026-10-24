@@ -229,7 +229,7 @@ export const addUnitChange: OptimisticUpdate<typeof tenancy.units.create> = (
   patchUnitList(localStore, slug, (units) => Arr.append(units, draft));
 };
 
-/** Shows the new time zone and content language of a unit at once. */
+/** Shows the new time zone and page language of a unit at once. */
 export const setUnitLocaleChange: OptimisticUpdate<
   typeof tenancy.units.setLocale
 > = (localStore, { contentLanguage, slug, timeZone, unitId }) => {

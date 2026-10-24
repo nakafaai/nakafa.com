@@ -92,7 +92,7 @@ export function SchoolUnitsSettings({
   );
 }
 
-/** Renders one card per unit of the school, with its time zone and content language, and its NPSN card. */
+/** Renders one card per unit of the school, with its time zone and page language, and its NPSN card. */
 function SchoolUnitsBody({ slug }: { slug: TenantSlug }) {
   const preload = use(UnitsPreloadContext);
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
@@ -181,7 +181,7 @@ function SchoolUnitNpsnCard({ slug, unit }: { slug: TenantSlug; unit: Unit }) {
   );
 }
 
-/** Renders one unit: its level, its time zone and content language, and its archive action. */
+/** Renders one unit: its level, its time zone and page language, and its archive action. */
 function SchoolUnitCard({ slug, unit }: { slug: TenantSlug; unit: Unit }) {
   const t = useTranslations("SchoolSettings");
   const common = useTranslations("Common");
@@ -234,7 +234,7 @@ function SchoolUnitCard({ slug, unit }: { slug: TenantSlug; unit: Unit }) {
   return (
     <CardSection>
       <CardHeader>
-        <CardTitle>{unit.name}</CardTitle>
+        <CardTitle dir="auto">{unit.name}</CardTitle>
         <CardDescription>
           {isArchived
             ? t("unit-archived-description")
@@ -277,7 +277,7 @@ function SchoolUnitCard({ slug, unit }: { slug: TenantSlug; unit: Unit }) {
             </Field>
             <Field>
               <FieldLabel htmlFor={`unit-language-${unit.id}`}>
-                {t("unit-content-language")}
+                {t("unit-page-language")}
               </FieldLabel>
               <Select
                 items={languageItems}

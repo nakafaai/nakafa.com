@@ -1,14 +1,9 @@
 import type { Ref } from "@confect/core";
-import { DeliveryLanguageSchema } from "@nakafa/aksara-contracts/locale";
 import type tenancy from "@repo/backend/confect/_generated/refs/tenancy";
 import type { BuiltinRole } from "@repo/backend/confect/access/schema";
 import { Array as Arr, Option, Schema } from "effect";
 import { canOpenRooms } from "@/components/tenant/exams/access";
-import {
-  ScopeChoice,
-  scopeChoices,
-  unitLanguages,
-} from "@/components/tenant/exams/create";
+import { ScopeChoice, scopeChoices } from "@/components/tenant/exams/create";
 
 /** The viewer's view of the school, as the school layout and the home read it. */
 type Viewer = Ref.Returns<typeof tenancy.viewer.get>;
@@ -22,7 +17,6 @@ export const HomeAccessSchema = Schema.Struct({
   canCreate: Schema.Boolean,
   canWatch: Schema.Boolean,
   choices: Schema.Array(ScopeChoice),
-  languages: Schema.Array(DeliveryLanguageSchema),
 });
 
 /** What the viewer may do with exams in the school, as the school layout carries it. */
@@ -31,7 +25,7 @@ export type HomeAccess = typeof HomeAccessSchema.Type;
 /**
  * What the school home lets the viewer do with exams, decided from the viewer's own actions. A viewer
  * may create an exam where the server lets the viewer edit exams, and may watch the rooms where the
- * server lets the viewer open them. The choices and languages feed the create dialog.
+ * server lets the viewer open them. The choices feed the create dialog.
  */
 export const homeAccess = (
   viewer: Pick<Viewer, "can" | "units">
@@ -44,7 +38,6 @@ export const homeAccess = (
     canCreate: Arr.isReadonlyArrayNonEmpty(choices),
     canWatch: canOpenRooms(viewer),
     choices,
-    languages: unitLanguages(viewer.units),
   };
 };
 

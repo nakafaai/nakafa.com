@@ -12,7 +12,7 @@ import { Array as Arr, Option } from "effect";
 /** One exam with its questions in order, as the editor reads it. */
 export type ExamView = Ref.Returns<typeof exams.exams.open>;
 
-/** One exam as the list shows it: its ID, its title, and its language. */
+/** One exam as the list shows it: its ID and its title. */
 export type ExamSummary = Ref.Returns<typeof exams.exams.list>["page"][number];
 
 /** One question of an exam, as the editor reads it. */

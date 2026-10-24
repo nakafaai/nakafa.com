@@ -6,8 +6,8 @@ import { Intersection } from "@repo/design-system/components/ui/intersection";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, Option } from "effect";
-import { useMemo, useState } from "react";
-import { useLocale, useTranslations } from "use-intl";
+import { useState } from "react";
+import { useTranslations } from "use-intl";
 import { useStore } from "zustand";
 import { useConvexAuth } from "@/components/auth/convex";
 import { LayoutContent } from "@/components/shared/content/frame";
@@ -36,12 +36,12 @@ type ExamListFirstPage = Pick<
 const examColumns = createColumnHelper<typeof dataTableFeatures, ExamSummary>();
 
 /**
- * The exams of the school, newest first, each with its title and its language. An exam that
- * the server has not saved yet is disabled until it answers. The next page loads when the end of
- * the list comes into view, so the list has no button. The create action sits in the school's
- * one header, and shows when the viewer can create an exam in at least one place. A failed read
- * of the list shows its own sentence and a retry, and a viewer who lost the school's access is
- * sent to the refused page.
+ * The exams of the school, newest first, each with its title. An exam that the server has not
+ * saved yet is disabled until it answers. The next page loads when the end of the list comes
+ * into view, so the list has no button. The create action sits in the school's one header, and
+ * shows when the viewer can create an exam in at least one place. A failed read of the list shows
+ * its own sentence and a retry, and a viewer who lost the school's access is sent to the refused
+ * page.
  */
 export function ExamList({
   first,
@@ -52,7 +52,6 @@ export function ExamList({
 }) {
   const t = useTranslations("Exams");
   const tenant = useTenant();
-  const locale = useLocale();
   // The list needs the session, which Convex learns a moment after the page draws.
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const pagination = usePaginatedPreloaded(
@@ -67,10 +66,6 @@ export function ExamList({
     ? pagination.loadMore
     : null;
 
-  const names = useMemo(
-    () => new Intl.DisplayNames([locale], { type: "language" }),
-    [locale]
-  );
   if (
     PaginatedQueryResult.isFailure(pagination) &&
     isLostAccess(pagination.error)
@@ -84,7 +79,6 @@ export function ExamList({
           <CreateExam
             choices={tenant.home.choices}
             drafts={drafts}
-            languages={tenant.home.languages}
             slug={slug}
           />
         ) : null}
@@ -95,7 +89,6 @@ export function ExamList({
           exams={pagination.results}
           failed={PaginatedQueryResult.isFailure(pagination)}
           loadingFirst={pagination._tag === "LoadingFirstPage"}
-          names={names}
           saving={saving}
         />
         {loadMore !== null && (
@@ -115,14 +108,12 @@ function ExamListRows({
   exams: rows,
   failed,
   loadingFirst,
-  names,
   saving,
 }: {
   canManage: boolean;
   exams: readonly ExamSummary[];
   failed: boolean;
   loadingFirst: boolean;
-  names: Intl.DisplayNames;
   saving: readonly ExamSummary["id"][];
 }) {
   if (loadingFirst) {
@@ -134,31 +125,23 @@ function ExamListRows({
   return (
     <>
       {failed ? <DataFailure onRetry={reloadPage} /> : null}
-      <ExamTable
-        canManage={canManage}
-        exams={rows}
-        names={names}
-        saving={saving}
-      />
+      <ExamTable canManage={canManage} exams={rows} saving={saving} />
     </>
   );
 }
 
 /**
- * The exams in a data table: the title links to its editor, the language filters the list by
- * the languages the rows hold, and the last column links to the exam's rooms. An exam that the
- * server is still saving shows its title without a link and no rooms link, so it is inert. With
- * no exam, the table's empty state shows instead.
+ * The exams in a data table: the title links to its editor, and the last column links to the
+ * exam's rooms. An exam that the server is still saving shows its title without a link and no
+ * rooms link, so it is inert. With no exam, the table's empty state shows instead.
  */
 function ExamTable({
   canManage,
   exams: rows,
-  names,
   saving,
 }: {
   canManage: boolean;
   exams: readonly ExamSummary[];
-  names: Intl.DisplayNames;
   saving: readonly ExamSummary["id"][];
 }) {
   const t = useTranslations("Exams");
@@ -173,17 +156,10 @@ function ExamTable({
     );
   }
 
-  /** The language of one exam by its name in the reader's language. */
-  const languageLabel = (exam: ExamSummary) => names.of(exam.language);
-  const languages = Arr.dedupe(
-    Arr.getSomes(
-      Arr.map(rows, (exam) => Option.fromNullishOr(languageLabel(exam)))
-    )
-  );
   const columns = examColumns.columns([
     examColumns.accessor((exam) => exam.title, {
       cell: (info) => (
-        <span className="font-medium">
+        <span className="font-medium" dir="auto">
           {Arr.contains(saving, info.row.original.id) ? (
             <span className="text-muted-foreground">{info.getValue()}</span>
           ) : (
@@ -200,15 +176,6 @@ function ExamTable({
       filterFn: "includesString",
       header: t("title-label"),
       id: "title",
-      sortFn: "text",
-    }),
-    examColumns.accessor(languageLabel, {
-      cell: (info) => (
-        <span className="text-muted-foreground">{info.getValue()}</span>
-      ),
-      filterFn: "oneOf",
-      header: t("language"),
-      id: "language",
       sortFn: "text",
     }),
     examColumns.display({
@@ -231,13 +198,6 @@ function ExamTable({
     <DataTable
       columns={columns}
       data={rows}
-      facets={[
-        {
-          column: "language",
-          options: Arr.map(languages, (label) => ({ label, value: label })),
-          title: t("language"),
-        },
-      ]}
       rowId={(exam) => exam.id}
       search={{ column: "title", placeholder: t("exams-search") }}
     />

@@ -1,5 +1,4 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
-import { DeliveryLanguageSchema } from "@nakafa/aksara-contracts/locale";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { GrantScope } from "@repo/backend/confect/access/schema";
@@ -40,7 +39,6 @@ export default GroupSpec.make()
     FunctionSpec.publicMutation({
       name: "create",
       args: () => ({
-        language: DeliveryLanguageSchema,
         scope: GrantScope,
         slug: TenantSlug,
         title: ExamTitle,

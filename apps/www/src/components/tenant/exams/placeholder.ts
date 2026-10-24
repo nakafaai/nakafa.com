@@ -4,7 +4,7 @@ import { Effect, Schema } from "effect";
 
 /**
  * The placeholder ID of an exam the server has not saved yet. The create mutation sends
- * only the title and the language, so the server never sees this ID, and the saved exam
+ * only the scope and the title, so the server never sees this ID, and the saved exam
  * replaces the placeholder in the list.
  */
 export const placeholderExamId = randomUuid.pipe(

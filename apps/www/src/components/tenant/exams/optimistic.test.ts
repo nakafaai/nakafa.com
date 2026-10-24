@@ -1,7 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import type { Interaction } from "@nakafa/aksara-contracts/assessment/interaction";
 import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
-import { DeliveryLanguageSchema } from "@nakafa/aksara-contracts/locale";
 import { Id } from "@repo/backend/confect/_generated/id";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { HomeDraft } from "@repo/backend/confect/exams/home/contract";
@@ -73,7 +72,6 @@ const third = question("q3");
 const viewOf = (questions: readonly Question[]): ExamView => ({
   archived: false,
   id: examId,
-  language: Schema.decodeSync(DeliveryLanguageSchema)("id"),
   questions,
   title: "Matematika",
 });
@@ -344,12 +342,10 @@ describe("the optimistic updates of the new questions", () => {
     const draft: typeof HomeDraft.Type = {
       createdAt: 1,
       id: examIdOf("draft-exam"),
-      language: Schema.decodeSync(DeliveryLanguageSchema)("id"),
       title: "Draf",
     };
     const existing: ExamSummary = {
       id: examIdOf("exam-old"),
-      language: Schema.decodeSync(DeliveryLanguageSchema)("en"),
       title: "Lama",
     };
     const firstArgs = { paginationOpts: { cursor: null, numItems: 20 }, slug };
@@ -364,7 +360,6 @@ describe("the optimistic updates of the new questions", () => {
     ]);
 
     insertDraftExam(draft)(localStore, {
-      language: draft.language,
       scope: { kind: "tenant" },
       slug,
       title: draft.title,
@@ -383,19 +378,16 @@ describe("the optimistic updates of the new questions", () => {
     const draft: typeof HomeDraft.Type = {
       createdAt: 1,
       id: examIdOf("draft-exam"),
-      language: Schema.decodeSync(DeliveryLanguageSchema)("id"),
       title: "Draf",
     };
     const existing: ExamSummary = {
       id: examIdOf("exam-old"),
-      language: Schema.decodeSync(DeliveryLanguageSchema)("en"),
       title: "Lama",
     };
     const home = { drafts: [existing], live: [], next: [] };
     const { localStore, setQuery } = listStore([], Option.some(home));
 
     insertDraftExam(draft)(localStore, {
-      language: draft.language,
       scope: { kind: "tenant" },
       slug,
       title: draft.title,
@@ -414,13 +406,11 @@ describe("the optimistic updates of the new questions", () => {
     const draft: typeof HomeDraft.Type = {
       createdAt: 1,
       id: examIdOf("draft-exam"),
-      language: Schema.decodeSync(DeliveryLanguageSchema)("id"),
       title: "Draf",
     };
     const { localStore, setQuery } = listStore([]);
 
     insertDraftExam(draft)(localStore, {
-      language: draft.language,
       scope: { kind: "tenant" },
       slug,
       title: draft.title,

@@ -78,7 +78,7 @@ export function SchoolCardDialog({
       description={t("card-code-description")}
       footer={
         <>
-          <p className="mr-auto text-muted-foreground text-sm">
+          <p className="me-auto text-muted-foreground text-sm">
             {t("card-print-footer")}
           </p>
           <Button

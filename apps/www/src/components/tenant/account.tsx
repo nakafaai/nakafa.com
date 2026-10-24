@@ -17,6 +17,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { useSidebar } from "@repo/design-system/lib/sidebar/context";
 import { toast } from "@repo/design-system/lib/toast/notify";
 import { languages } from "@repo/internationalization/data/lang";
+import { textDirection } from "@repo/internationalization/src/direction";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { useRouter } from "@tanstack/react-router";
 import { Array as Arr, Effect } from "effect";
@@ -147,7 +148,13 @@ function TenantLanguageSubmenu() {
   const t = useTranslations("Common");
   const locale = useLocale();
   const router = useRouter();
-  const side = useSidebar((sidebar) => (sidebar.isMobile ? "top" : "right"));
+  const isRtl = textDirection(locale) === "rtl";
+  const side = useSidebar((sidebar) => {
+    if (sidebar.isMobile) {
+      return "top";
+    }
+    return isRtl ? "left" : "right";
+  });
 
   return (
     <DropdownMenuSub>

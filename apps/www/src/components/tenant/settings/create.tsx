@@ -47,7 +47,7 @@ const levelsIn = (country: string): readonly Level[] =>
 
 /**
  * The dialog that adds a school to the organisation: its name, its level, its time zone, and its
- * content language. The first choices are those of the school the organisation holds first. The
+ * page language. The first choices are those of the school the organisation holds first. The
  * dialog waits for the school's units and its country, so it opens with real choices.
  */
 export function SchoolUnitCreateDialog({
@@ -149,7 +149,7 @@ function SchoolUnitCreateForm({
       description={t("unit-add-description")}
       footer={
         <>
-          <p className="mr-auto text-muted-foreground text-sm">
+          <p className="me-auto text-muted-foreground text-sm">
             {t("unit-add-footer")}
           </p>
           <Button
@@ -227,7 +227,7 @@ function SchoolUnitCreateForm({
         </Field>
         <Field>
           <FieldLabel htmlFor={`${id}-language`}>
-            {t("unit-content-language")}
+            {t("unit-page-language")}
           </FieldLabel>
           <Select
             items={languageItems}
