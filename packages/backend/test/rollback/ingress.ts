@@ -201,13 +201,13 @@ export const inflateRecord = Effect.fn("test.contentRelease.inflateRecord")(
       ...record,
       current: {
         ...current,
-        artifact: Schema.decodeSync(SignedContentArtifactSchema)({
+        artifact: yield* Schema.decodeEffect(SignedContentArtifactSchema)({
           ...current.artifact,
           payload: {
             ...current.artifact.payload,
             contentTree: testTextTree("x".repeat(byteLength)),
           },
-        }),
+        }).pipe(Effect.orDie),
       },
     } satisfies RollbackRecord;
   }
