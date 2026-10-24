@@ -48,6 +48,15 @@ export const GITHUB_ACTION_REVIEWS = Schema.decodeSync(
       "The signed successor action owns Node and pnpm. The store stays uncached because a cold install beats restoring it on hosted runners.",
   },
   {
+    action: "astral-sh/setup-uv",
+    approvedSha: "07a047e608db84b3d8c06cd9a7c7dcc9c355c18e",
+    expectedInputs: { version: "0.13.5" },
+    expectedTag: "v10.3.2",
+    expectedUsages: 1,
+    reason:
+      "The CAS engine's Python dependencies are vendored with uv for the Pyodide runtime, so the deploy job installs the pinned uv release before the stack deploys.",
+  },
+  {
     action: "actions/upload-artifact",
     approvedSha: "043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
     expectedTag: "v7.0.1",
