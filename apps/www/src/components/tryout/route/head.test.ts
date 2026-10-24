@@ -18,7 +18,7 @@ describe("createTryoutHead", () => {
       title: expect.stringContaining("Indonesia"),
     });
     expect(head.meta).toContainEqual({
-      content: "index,follow",
+      content: "index,follow,max-snippet:-1,max-image-preview:large",
       name: "robots",
     });
     expect(head.meta).toContainEqual({

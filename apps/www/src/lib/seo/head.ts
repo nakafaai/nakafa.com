@@ -17,6 +17,12 @@ import { createSEOTitle } from "@/lib/seo/titles";
 /** The social card format that every page uses, with its large image. */
 const TWITTER_CARD = "summary_large_image";
 
+/**
+ * The robots rule of a page that search engines and answer services may index.
+ * Its snippet and image limits are the widest, so every crawler may quote the page.
+ */
+const ROBOTS_INDEXABLE = "index,follow,max-snippet:-1,max-image-preview:large";
+
 /** The googlebot rule of a page that search engines may index, with the image and snippet limits they read. */
 const GOOGLEBOT_INDEXABLE =
   "index,follow,max-video-preview:-1,max-image-preview:large,max-snippet:-1";
@@ -41,7 +47,7 @@ const SeoHead = Schema.Struct({
   description: Schema.String,
   googlebot: Schema.Literals([GOOGLEBOT_INDEXABLE, GOOGLEBOT_PRIVATE]),
   jsonLd: Schema.Array(Schema.Record(Schema.String, Schema.Unknown)),
-  robots: Schema.Literals(["index,follow", "noindex,nofollow"]),
+  robots: Schema.Literals([ROBOTS_INDEXABLE, "noindex,nofollow"]),
   social: Schema.Record(Schema.String, Schema.String),
   title: Schema.String,
 });
@@ -95,7 +101,7 @@ export function createSeoHead(facts: PageFacts): SeoHead {
     description: facts.description,
     googlebot: facts.indexable ? GOOGLEBOT_INDEXABLE : GOOGLEBOT_PRIVATE,
     jsonLd: [...facts.jsonLd],
-    robots: facts.indexable ? "index,follow" : "noindex,nofollow",
+    robots: facts.indexable ? ROBOTS_INDEXABLE : "noindex,nofollow",
     social: {
       "og:description": facts.description,
       "og:image": image.url,
