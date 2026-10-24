@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Fiber, Result } from "effect";
+import { Effect, Fiber, MutableList, Result } from "effect";
 import { TestClock } from "effect/testing";
 import {
   CasEngineFailed,
@@ -12,9 +12,12 @@ const POOLED_NAME = /^cas-(1[0-5]|[0-9])$/;
 
 /** The objects that each call reached, in order, and the request each one received. */
 interface Calls {
-  readonly names: string[];
-  readonly requests: Request[];
+  readonly names: MutableList.MutableList<string>;
+  readonly requests: MutableList.MutableList<Request>;
 }
+
+/** The names of the objects that the calls reached, in the order of the calls. */
+const namesOf = (calls: Calls): string[] => MutableList.toArray(calls.names);
 
 /**
  * A namespace whose objects answer with `reply`. `reply` receives the number of
@@ -24,14 +27,17 @@ function namespaceAnswering(reply: (attempt: number) => Promise<Response>): {
   readonly namespace: CasSolverNamespace;
   readonly calls: Calls;
 } {
-  const calls: Calls = { names: [], requests: [] };
+  const calls: Calls = {
+    names: MutableList.make<string>(),
+    requests: MutableList.make<Request>(),
+  };
   const namespace: CasSolverNamespace = {
     idFromName: (name) => name,
     get: (id) => ({
       fetch: (request) => {
-        calls.names.push(String(id));
-        calls.requests.push(request);
-        return reply(calls.names.length);
+        MutableList.append(calls.names, String(id));
+        MutableList.append(calls.requests, request);
+        return reply(namesOf(calls).length);
       },
     }),
   };
@@ -67,9 +73,10 @@ describe("forwardMath", () => {
       expect(yield* Effect.promise(() => response.text())).toBe(
         '{"status":"verified"}'
       );
-      expect(calls.names).toHaveLength(1);
-      expect(calls.names[0]).toMatch(POOLED_NAME);
-      const sent = calls.requests[0];
+      const names = namesOf(calls);
+      expect(names).toHaveLength(1);
+      expect(names[0]).toMatch(POOLED_NAME);
+      const [sent] = MutableList.toArray(calls.requests);
       expect(sent?.url).toBe("https://cas.internal/api/math");
       expect(sent?.method).toBe("POST");
       expect(
@@ -88,9 +95,9 @@ describe("forwardMath", () => {
 
       const response = yield* forwardMath(namespace, new Uint8Array(0));
 
-      const [first, second] = calls.names;
+      const [first, second] = namesOf(calls);
       expect(response.status).toBe(200);
-      expect(calls.names).toHaveLength(2);
+      expect(namesOf(calls)).toHaveLength(2);
       expect(second).toMatch(POOLED_NAME);
       expect(second).not.toBe(first);
     })
@@ -104,9 +111,9 @@ describe("forwardMath", () => {
 
       const response = yield* forwardMath(namespace, new Uint8Array(0));
 
-      const [first, second] = calls.names;
+      const [first, second] = namesOf(calls);
       expect(response.status).toBe(200);
-      expect(calls.names).toHaveLength(2);
+      expect(namesOf(calls)).toHaveLength(2);
       expect(second).not.toBe(first);
     })
   );
@@ -124,7 +131,7 @@ describe("forwardMath", () => {
         expect(result.failure).toBeInstanceOf(CasEngineFailed);
         expect(result.failure).toMatchObject({ overloaded: true });
       }
-      expect(calls.names).toHaveLength(2);
+      expect(namesOf(calls)).toHaveLength(2);
     })
   );
 
@@ -159,9 +166,9 @@ describe("forwardMath", () => {
         yield* TestClock.adjust("25 seconds");
         const response = yield* Fiber.join(fiber);
 
-        const [first, second] = calls.names;
+        const [first, second] = namesOf(calls);
         expect(response.status).toBe(200);
-        expect(calls.names).toHaveLength(2);
+        expect(namesOf(calls)).toHaveLength(2);
         expect(second).not.toBe(first);
       })
   );
@@ -183,7 +190,7 @@ describe("forwardMath", () => {
         expect(result.failure).toBeInstanceOf(CasEngineTimedOut);
         expect(result.failure).toMatchObject({ budget: "25 seconds" });
       }
-      expect(calls.names).toHaveLength(2);
+      expect(namesOf(calls)).toHaveLength(2);
     })
   );
 });
