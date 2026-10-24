@@ -1,4 +1,3 @@
-import { DeliveryLanguageSchema } from "@nakafa/aksara-contracts/locale";
 import type { ExamsDoc } from "@repo/backend/confect/_generated/docs";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { GrantScope } from "@repo/backend/confect/access/schema";
@@ -40,12 +39,6 @@ export const examValidator = Schema.Struct({
   createdBy: Id("users"),
   /** When the first sitting of the exam was scheduled. From then on its questions, their order, and their keys cannot change. */
   frozenAt: Schema.optionalKey(Schema.Finite),
-  /**
-   * The language that exams stored before the exam language was removed hold. No exam
-   * is written with it, and the one-off `exams.language.clear` removes it from each row.
-   * The contract step deletes this field.
-   */
-  language: Schema.optionalKey(DeliveryLanguageSchema),
   questions: Schema.Array(Id("examQuestions")).check(
     Schema.isMaxLength(MAX_EXAM_QUESTIONS)
   ),

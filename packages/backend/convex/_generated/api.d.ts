@@ -13256,14 +13256,6 @@ export declare const internal: {
         { size: number }
       >;
     };
-    language: {
-      clear: FunctionReference<
-        "mutation",
-        "internal",
-        { cursor?: string },
-        { cleared: number; continueCursor: string; done: boolean }
-      >;
-    };
     seed: {
       sitting: FunctionReference<
         "mutation",
