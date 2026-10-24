@@ -185,7 +185,7 @@ export function BreadcrumbHeaderSegment({
     return (
       <>
         <BreadcrumbSeparator className={cn("shrink-0", className)} />
-        <BreadcrumbItem className={cn("min-w-0", className)}>
+        <BreadcrumbItem className={cn("min-w-0", className)} dir="auto">
           <BreadcrumbPage className="truncate" lang={item.language}>
             {item.label}
           </BreadcrumbPage>
@@ -197,7 +197,7 @@ export function BreadcrumbHeaderSegment({
   return (
     <>
       <BreadcrumbSeparator className={cn("shrink-0", className)} />
-      <BreadcrumbItem className={cn("min-w-0", className)}>
+      <BreadcrumbItem className={cn("min-w-0", className)} dir="auto">
         <BreadcrumbLink
           className="truncate"
           render={

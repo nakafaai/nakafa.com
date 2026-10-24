@@ -50,7 +50,11 @@ export function SchoolHeader({
           label={tCommon("toggle-sidebar")}
         />
         <Separator className="me-1 h-4" orientation="vertical" />
-        {title === undefined ? null : <h1 className="sr-only">{title}</h1>}
+        {title === undefined ? null : (
+          <h1 className="sr-only" dir="auto">
+            {title}
+          </h1>
+        )}
         {Arr.isReadonlyArrayEmpty(items) ? (
           <Breadcrumb aria-label={tCommon("breadcrumb")} className="min-w-0">
             <BreadcrumbList>

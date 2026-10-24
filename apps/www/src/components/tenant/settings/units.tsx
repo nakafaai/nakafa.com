@@ -234,7 +234,7 @@ function SchoolUnitCard({ slug, unit }: { slug: TenantSlug; unit: Unit }) {
   return (
     <CardSection>
       <CardHeader>
-        <CardTitle>{unit.name}</CardTitle>
+        <CardTitle dir="auto">{unit.name}</CardTitle>
         <CardDescription>
           {isArchived
             ? t("unit-archived-description")
