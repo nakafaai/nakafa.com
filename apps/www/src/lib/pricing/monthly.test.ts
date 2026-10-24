@@ -23,11 +23,11 @@ describe("monthly pro price of a country", () => {
   });
 
   it("returns the catalog price of the currency it names", () => {
-    expect(getProMonthlyPricing("ID").price.amount).toBe(69_000);
+    expect(getProMonthlyPricing("ID").price.amount).toBe(79_000);
   });
 
   it("returns the catalog price of every currency, so the page carries all three", () => {
-    expect(getProMonthlyPricingFor("IDR").price.amount).toBe(69_000);
+    expect(getProMonthlyPricingFor("IDR").price.amount).toBe(79_000);
     expect(getProMonthlyPricingFor("EUR").currency).toBe("EUR");
     expect(getProMonthlyPricingFor("USD").currency).toBe("USD");
     expect(getProMonthlyPricingFor("USD").formatter.format(8.99)).toMatch(

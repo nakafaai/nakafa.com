@@ -1313,7 +1313,7 @@
     "chat": "Chat",
     "chat-description": "Nutze die KI-Lernassistenz für Hausaufgaben, verständliche Erklärungen und Lerngespräche.",
     "subscriptions": "Abonnements",
-    "subscriptions-description": "Verwalte Nakafa Pro, 3.000 monatliche KI-Credits und dein Zahlungsportal.",
+    "subscriptions-description": "Verwalte Nakafa Pro, {credits, number} monatliche KI-Credits und dein Zahlungsportal.",
     "manage": "Verwalten",
     "plan-free": "Kostenlos",
     "plan-pro": "Pro",

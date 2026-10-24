@@ -1313,7 +1313,7 @@
     "chat": "Obrolan",
     "chat-description": "Terhubung dengan asisten AI belajar untuk bimbingan personal, bantuan PR, penjelasan konsep, dan percakapan edukasi interaktif yang disesuaikan dengan kebutuhan belajarmu.",
     "subscriptions": "Langganan",
-    "subscriptions-description": "Kelola Nakafa Pro, 3.000 kredit AI bulanan, dan portal pembayaranmu.",
+    "subscriptions-description": "Kelola Nakafa Pro, {credits, number} kredit AI bulanan, dan portal pembayaranmu.",
     "manage": "Kelola",
     "plan-free": "Free",
     "plan-pro": "Pro",

@@ -3,6 +3,7 @@ import { QueryResult, useQuery } from "@confect/react";
 import { PartyIcon, Settings01Icon } from "@hugeicons/core-free-icons";
 import subscriptions from "@repo/backend/confect/_generated/refs/subscriptions";
 import { proProductIdFor } from "@repo/backend/confect/billing/polar/catalog";
+import { getPlanCreditConfig } from "@repo/backend/confect/credits/constants";
 import { polarPublicKeys } from "@repo/backend/public";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
@@ -76,7 +77,11 @@ export function UserSettingsSubscriptions({
     <CardSection>
       <CardHeader>
         <CardTitle>{t("subscriptions")}</CardTitle>
-        <CardDescription>{t("subscriptions-description")}</CardDescription>
+        <CardDescription>
+          {t("subscriptions-description", {
+            credits: getPlanCreditConfig("pro").amount,
+          })}
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="flex items-center gap-4">

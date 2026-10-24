@@ -3,6 +3,7 @@ import learningPreferences from "@repo/backend/confect/_generated/refs/learningP
 import nina from "@repo/backend/confect/_generated/refs/nina";
 import subscriptions from "@repo/backend/confect/_generated/refs/subscriptions";
 import { products } from "@repo/backend/confect/billing/polar/products";
+import { getPlanCreditConfig } from "@repo/backend/confect/credits/constants";
 import { notFound } from "@tanstack/react-router";
 import { Clock, Effect } from "effect";
 import { createTranslator } from "use-intl";
@@ -141,7 +142,9 @@ export const subscriptionsScreenHandler = accountHandler(
       });
       const seo: ScreenSeo = {
         canonicalPath: `/${locale}`,
-        description: t("subscriptions-description"),
+        description: t("subscriptions-description", {
+          credits: getPlanCreditConfig("pro").amount,
+        }),
         indexable: false,
         locale,
         title: t("subscriptions"),
