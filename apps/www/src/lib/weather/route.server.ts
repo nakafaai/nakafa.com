@@ -27,13 +27,28 @@ const CloudflareRequest = Schema.Struct({
   ),
 });
 
-/** The visitor's coordinates as Cloudflare reports them; both are absent when the platform has none. */
-function readVisitorLocation(request: Request) {
-  return Option.match(Schema.decodeUnknownOption(CloudflareRequest)(request), {
-    onNone: () => ({ latitude: undefined, longitude: undefined }),
-    onSome: ({ cf }) => ({ latitude: cf?.latitude, longitude: cf?.longitude }),
-  });
-}
+/**
+ * The visitor's coordinates as Cloudflare reports them; both are absent when the
+ * platform has none. A report that does not decode is logged and treated as none,
+ * so the default location answers and the cause stays in the logs.
+ */
+const readVisitorLocation = Effect.fn("www.weather.readVisitorLocation")(
+  function* (request: Request) {
+    const decoded = yield* Schema.decodeUnknownEffect(CloudflareRequest)(
+      request
+    ).pipe(Effect.option);
+    if (Option.isNone(decoded)) {
+      yield* Effect.logWarning(
+        "The platform's visitor location is malformed, so the default location answers."
+      ).pipe(Effect.annotateLogs(logContext));
+      return { latitude: undefined, longitude: undefined };
+    }
+    return {
+      latitude: decoded.value.cf?.latitude,
+      longitude: decoded.value.cf?.longitude,
+    };
+  }
+);
 
 /**
  * Answers the weather of the visitor's location, or of the default location
@@ -50,7 +65,7 @@ export function serveWeather({ request }: { readonly request: Request }) {
         return createCorsForbiddenResponse();
       }
 
-      const location = readVisitorLocation(request);
+      const location = yield* readVisitorLocation(request);
       let latitude = location.latitude;
       let longitude = location.longitude;
 
