@@ -4,16 +4,20 @@ import { POST_PAGE_SIZE } from "@repo/backend/client/posts/list";
 import posts from "@repo/backend/confect/_generated/refs/posts";
 import { ErrorBoundary } from "@repo/design-system/components/ui/error-boundary";
 import { Intersection } from "@repo/design-system/components/ui/intersection";
+import { useRouter } from "@repo/internationalization/src/navigation";
 import { Array as Arr, Option } from "effect";
 import { useCallback, useState } from "react";
 import { useLocale, useTranslations } from "use-intl";
-import { useConvexAuth } from "@/components/providers/convex";
+import { useConvexAuth } from "@/components/auth/convex";
 import { ConvexIsland, SignedInIsland } from "@/components/providers/island";
 import { DataFailure } from "@/components/shared/failure";
 import { useAgeClock } from "@/components/user/ages";
 import { FeedEmpty, FeedNotice } from "@/components/user/feed";
 import { useVisitorList } from "@/components/user/paging";
-import { PostComposer } from "@/components/user/posts/composer";
+import {
+  PostComposer,
+  PostComposerFrame,
+} from "@/components/user/posts/composer";
 import {
   failedView,
   livePostsArgs,
@@ -50,12 +54,17 @@ export function UserPosts({
   profile: PublicProfile;
 }) {
   const clock = useAgeClock(serverNow);
-  // A Retry changes the key, which remounts the list so that it asks the server
-  // again. The draft lives in the provider above the list, so it stays. The
-  // boundary catches an error the list throws, so the header and the tabs stay
-  // on the screen and the failure shows above the server's page.
+  // A Retry reads the loader again, which hands the list its first page, and
+  // changes the key, which remounts the list so that it asks the server again.
+  // The draft lives in the provider above the list, so it stays. The boundary
+  // catches an error the list throws, so the header and the tabs stay on the
+  // screen and the failure shows above the server's page.
+  const router = useRouter();
   const [attempt, setAttempt] = useState(0);
-  const onRetry = useCallback(() => setAttempt((count) => count + 1), []);
+  const onRetry = useCallback(() => {
+    setAttempt((count) => count + 1);
+    router.refresh();
+  }, [router]);
 
   return (
     <PostDraftProvider>
@@ -173,7 +182,7 @@ function PostsPanel({
   return (
     <div className="flex flex-col">
       {isOwner && (
-        <SignedInIsland>
+        <SignedInIsland fallback={<PostComposerFrame profile={profile} />}>
           <PostComposer disabled={!view.ready} profile={profile} />
         </SignedInIsland>
       )}
@@ -187,7 +196,9 @@ function PostsPanel({
           <PostRow key={post._id} post={post} />
         ))}
         {view.empty && <FeedEmpty>{t("empty")}</FeedEmpty>}
-        {onLoadMore && <Intersection onIntersect={onLoadMore} />}
+        {onLoadMore && (
+          <Intersection key={view.rows.length} onIntersect={onLoadMore} />
+        )}
       </div>
     </div>
   );

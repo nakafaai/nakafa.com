@@ -1,23 +1,18 @@
-import { Effect, Schema } from "effect";
+import { Effect } from "effect";
 import { useState } from "react";
 import {
-  appendVisitorPage,
-  failNextVisitorPage,
+  readVisitorPage,
   requestNextVisitorPage,
   startVisitorList,
+  syncVisitorList,
   type VisitorListPage,
 } from "@/components/user/visitor";
 
-/** A visitor's next page could not be read, so the list shows the failure above its rows. */
-class VisitorPageReadError extends Schema.TaggedError<VisitorPageReadError>()(
-  "VisitorPageReadError",
-  { cause: Schema.Unknown }
-) {}
-
 /**
  * A visitor's profile list. The loader's first page starts it, and `loadMore`
- * reads the next page by its cursor through the server. A new profile remounts
- * the list, so a list never shows another profile's rows.
+ * reads the next page by its cursor through the server. A new first page from the
+ * loader starts the list again, which is how a Retry shows a failed first read. A
+ * new profile remounts the list, so a list never shows another profile's rows.
  */
 export function useVisitorList<Item>({
   first,
@@ -26,31 +21,20 @@ export function useVisitorList<Item>({
   first: VisitorListPage<Item> | undefined;
   readPage: (cursor: string) => Promise<VisitorListPage<Item>>;
 }) {
-  const [list, setList] = useState(() => startVisitorList(first));
+  const [stored, setStored] = useState(() => startVisitorList(first));
+  const list = syncVisitorList(stored, first);
+  if (list !== stored) {
+    setStored(list);
+  }
 
   /** Reads the next page below the rows, unless a read is pending or the list is done. */
   function loadMore() {
     if (list.isDone || list.pending) {
       return;
     }
-    const { cursor } = list;
-    setList((previous) => requestNextVisitorPage(previous));
+    setStored((previous) => requestNextVisitorPage(previous));
     Effect.runFork(
-      Effect.tryPromise({
-        try: () => readPage(cursor),
-        catch: (cause) => new VisitorPageReadError({ cause }),
-      }).pipe(
-        Effect.matchEffect({
-          onFailure: () =>
-            Effect.sync(() => {
-              setList((previous) => failNextVisitorPage(previous));
-            }),
-          onSuccess: (next) =>
-            Effect.sync(() => {
-              setList((previous) => appendVisitorPage(previous, next));
-            }),
-        })
-      )
+      readVisitorPage({ commit: setStored, cursor: list.cursor, readPage })
     );
   }
 

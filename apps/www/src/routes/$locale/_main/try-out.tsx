@@ -1,8 +1,6 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
-import { ConvexProvider } from "convex/react";
-import { clientEnv } from "@/env.public";
+import { lazy, Suspense } from "react";
 import { readSignedInHintFn } from "@/lib/auth/hint.functions";
-import { readConvexClient } from "@/lib/convex/client";
 
 /**
  * The try-out subtree mounts the page's one Convex client only for a signed-in
@@ -12,9 +10,19 @@ import { readConvexClient } from "@/lib/convex/client";
  * the server decides from the hint cookie and the first HTML and the client agree.
  */
 export const Route = createFileRoute("/$locale/_main/try-out")({
+  // The hint changes only with a full document visit, so a navigation between
+  // try-out pages reads it once rather than on every change of page.
+  staleTime: Number.POSITIVE_INFINITY,
   loader: () => readSignedInHintFn(),
   component: TryoutLayout,
 });
+
+/** The provider loads with a signed-in hint only, so a visitor's page never loads the client module. */
+const RouteConvexProvider = lazy(() =>
+  import("@/components/providers/route").then(({ RouteConvexProvider }) => ({
+    default: RouteConvexProvider,
+  }))
+);
 
 /** Mounts the one client that a signed-in learner's try-out pages read. */
 function TryoutLayout() {
@@ -23,8 +31,10 @@ function TryoutLayout() {
     return <Outlet />;
   }
   return (
-    <ConvexProvider client={readConvexClient(clientEnv.VITE_CONVEX_URL)}>
-      <Outlet />
-    </ConvexProvider>
+    <Suspense fallback={null}>
+      <RouteConvexProvider>
+        <Outlet />
+      </RouteConvexProvider>
+    </Suspense>
   );
 }

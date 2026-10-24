@@ -23,6 +23,7 @@ function UserCommentsPage() {
     <UserComments
       author={author}
       first={Option.fromUndefinedOr(first)}
+      key={username}
       userId={userId}
       username={username}
     />

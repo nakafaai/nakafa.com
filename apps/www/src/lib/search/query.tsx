@@ -1,20 +1,16 @@
-import type { Ref } from "@confect/core";
-import type contents from "@repo/backend/confect/_generated/refs/contents";
-import { Effect, Fiber, Result, Schema } from "effect";
+import { Effect, Fiber, Option, Result } from "effect";
 import { useEffect, useState } from "react";
 import { useLocale } from "use-intl";
 import { isActiveLocale } from "@/lib/i18n/active";
+import {
+  type ContentSearchResultItem,
+  requestSearch,
+  type SearchAnswers,
+  SearchReadError,
+  settleSearch,
+  startSearch,
+} from "@/lib/search/answer";
 import { readSearchFn } from "@/lib/search/search.functions";
-
-type ContentSearchResponse = Ref.Returns<typeof contents.queries.search.search>;
-
-export type ContentSearchResultItem = ContentSearchResponse["items"][number];
-
-/** A content search could not be read, so the results show the failure. */
-class SearchReadError extends Schema.TaggedError<SearchReadError>()(
-  "SearchReadError",
-  { cause: Schema.Unknown }
-) {}
 
 /**
  * Runs the public content search for the active locale. Every viewer reads it
@@ -33,10 +29,13 @@ export function useSearchQuery({
   const shouldSearch =
     enabled && normalizedQuery.length > 0 && isActiveLocale(locale);
   const key = `${locale}\n${normalizedQuery}`;
-  const [answer, setAnswer] = useState<{
-    readonly key: string;
-    readonly result: Result.Result<ContentSearchResultItem[], SearchReadError>;
-  } | null>(null);
+  const [stored, setAnswers] = useState<SearchAnswers<ContentSearchResultItem>>(
+    () => startSearch(key)
+  );
+  const answers = requestSearch(stored, key);
+  if (answers !== stored) {
+    setAnswers(answers);
+  }
 
   useEffect(() => {
     if (!(shouldSearch && isActiveLocale(locale))) {
@@ -50,11 +49,15 @@ export function useSearchQuery({
         Effect.matchEffect({
           onFailure: (error) =>
             Effect.sync(() => {
-              setAnswer({ key, result: Result.fail(error) });
+              setAnswers((previous) =>
+                settleSearch(previous, key, Result.fail(error))
+              );
             }),
           onSuccess: (items) =>
             Effect.sync(() => {
-              setAnswer({ key, result: Result.succeed(items) });
+              setAnswers((previous) =>
+                settleSearch(previous, key, Result.succeed(items))
+              );
             }),
         })
       )
@@ -65,35 +68,24 @@ export function useSearchQuery({
   }, [key, locale, normalizedQuery, shouldSearch]);
 
   if (!shouldSearch) {
-    return {
-      data: [],
-      error: null,
-      isError: false,
-      isLoading: false,
-    };
+    return { data: [], error: undefined, isError: false, isLoading: false };
   }
 
-  if (answer === null || answer.key !== key) {
-    return {
-      data: [],
-      error: null,
-      isError: false,
-      isLoading: true,
-    };
+  const answer = answers.key === key ? answers.answer : Option.none();
+  if (Option.isNone(answer)) {
+    return { data: [], error: undefined, isError: false, isLoading: true };
   }
-
-  if (Result.isFailure(answer.result)) {
+  if (Result.isFailure(answer.value)) {
     return {
       data: [],
-      error: answer.result.failure,
+      error: answer.value.failure,
       isError: true,
       isLoading: false,
     };
   }
-
   return {
-    data: answer.result.success,
-    error: null,
+    data: answer.value.success,
+    error: undefined,
     isError: false,
     isLoading: false,
   };

@@ -1,9 +1,13 @@
 import { describe, expect, it } from "@effect/vitest";
+import { Effect } from "effect";
 import {
   appendVisitorPage,
   failNextVisitorPage,
+  readVisitorPage,
   requestNextVisitorPage,
   startVisitorList,
+  syncVisitorList,
+  type VisitorListState,
   visitorListView,
 } from "@/components/user/visitor";
 
@@ -21,6 +25,7 @@ describe("visitor profile list", () => {
       isDone: false,
       pending: false,
       rows: ["a", "b"],
+      source: first,
     });
   });
 
@@ -32,6 +37,7 @@ describe("visitor profile list", () => {
       isDone: true,
       pending: false,
       rows: [],
+      source: undefined,
     });
     expect(visitorListView(state)).toStrictEqual({
       empty: false,
@@ -39,6 +45,29 @@ describe("visitor profile list", () => {
       ready: true,
       rows: [],
     });
+  });
+
+  it("rebuilds a failed start from the first page that a retry hands over", () => {
+    const failed = startVisitorList<string>(undefined);
+    expect(syncVisitorList(failed, undefined)).toBe(failed);
+    const retried = syncVisitorList(failed, first);
+    expect(retried).toStrictEqual(startVisitorList(first));
+    expect(visitorListView(retried)).toMatchObject({
+      failed: false,
+      rows: ["a", "b"],
+    });
+  });
+
+  it("keeps the pages it has read while the loader hands over the same first page", () => {
+    const read = appendVisitorPage(
+      requestNextVisitorPage(startVisitorList(first)),
+      {
+        continueCursor: "cursor-2",
+        isDone: true,
+        page: ["c"],
+      }
+    );
+    expect(syncVisitorList(read, first)).toBe(read);
   });
 
   it("reads one next page at a time and appends it", () => {
@@ -56,6 +85,7 @@ describe("visitor profile list", () => {
       isDone: true,
       pending: false,
       rows: ["a", "b", "c"],
+      source: first,
     });
     expect(requestNextVisitorPage(appended)).toBe(appended);
   });
@@ -98,4 +128,51 @@ describe("visitor profile list", () => {
       failed: false,
     });
   });
+
+  it.effect("commits the page a read returns to the list it started from", () =>
+    Effect.gen(function* () {
+      let state: VisitorListState<string> = requestNextVisitorPage(
+        startVisitorList(first)
+      );
+      yield* readVisitorPage<string>({
+        commit: (update) => {
+          state = update(state);
+        },
+        cursor: state.cursor,
+        readPage: (cursor) =>
+          Promise.resolve({
+            continueCursor: `${cursor}-next`,
+            isDone: true,
+            page: ["c"],
+          }),
+      });
+      expect(state).toMatchObject({
+        cursor: "cursor-1-next",
+        failed: false,
+        isDone: true,
+        pending: false,
+        rows: ["a", "b", "c"],
+      });
+    })
+  );
+
+  it.effect("commits a failed read as a failed next page", () =>
+    Effect.gen(function* () {
+      let state: VisitorListState<string> = requestNextVisitorPage(
+        startVisitorList(first)
+      );
+      yield* readVisitorPage<string>({
+        commit: (update) => {
+          state = update(state);
+        },
+        cursor: state.cursor,
+        readPage: () => Promise.reject(new Error("offline")),
+      });
+      expect(state).toMatchObject({
+        failed: true,
+        pending: false,
+        rows: ["a", "b"],
+      });
+    })
+  );
 });

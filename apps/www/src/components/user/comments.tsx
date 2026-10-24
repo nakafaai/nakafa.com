@@ -11,6 +11,7 @@ import NavigationLink from "@repo/design-system/components/ui/navigation-link";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { withLeadingSlash } from "@repo/utilities/path";
 import { Array as Arr, Option } from "effect";
+import { createContext, use } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { CommentsProvider } from "@/components/comments/provider";
 import { CommentRow } from "@/components/comments/row";
@@ -26,6 +27,13 @@ type ProfileComment = Ref.Returns<
   typeof comments.queries.getCommentsByUserId
 >["page"][number];
 
+type ProfileAuthor = Ref.Returns<typeof auth.queries.getUserById>;
+
+/** The profile's author, which the picture and the name of every comment row show. */
+const ProfileAuthorContext = createContext<ProfileAuthor | undefined>(
+  undefined
+);
+
 /**
  * Renders the comments of one user profile, newest first. The loader reads the author and
  * the first page, so both are on the screen before the browser connects. A visitor reads
@@ -38,7 +46,7 @@ export function UserComments({
   username,
 }: {
   /** The profile's author, as each comment row shows it. */
-  author: Ref.Returns<typeof auth.queries.getUserById>;
+  author: ProfileAuthor;
   first: Option.Option<
     Ref.Returns<typeof comments.queries.getCommentsByUserId>
   >;
@@ -46,23 +54,21 @@ export function UserComments({
   username: string;
 }) {
   return (
-    <ConvexIsland
-      fallback={
-        <VisitorComments author={author} first={first} username={username} />
-      }
-    >
-      <LiveComments author={author} first={first} userId={userId} />
-    </ConvexIsland>
+    <ProfileAuthorContext value={author}>
+      <ConvexIsland
+        fallback={<VisitorComments first={first} username={username} />}
+      >
+        <LiveComments first={first} userId={userId} />
+      </ConvexIsland>
+    </ProfileAuthorContext>
   );
 }
 
 /** A visitor's comments: the loader's first page, then the next pages the server reads by their cursor. */
 function VisitorComments({
-  author,
   first,
   username,
 }: {
-  author: Ref.Returns<typeof auth.queries.getUserById>;
   first: Option.Option<
     Ref.Returns<typeof comments.queries.getCommentsByUserId>
   >;
@@ -76,7 +82,6 @@ function VisitorComments({
   });
   return (
     <CommentsList
-      author={author}
       failed={list.failed}
       onLoadMore={list.isDone || list.pending ? undefined : loadMore}
       results={visitorListView(list).rows}
@@ -86,11 +91,9 @@ function VisitorComments({
 
 /** A learner's comments: the live list, which starts from the loader's first page. */
 function LiveComments({
-  author,
   first,
   userId,
 }: {
-  author: Ref.Returns<typeof auth.queries.getUserById>;
   first: Option.Option<
     Ref.Returns<typeof comments.queries.getCommentsByUserId>
   >;
@@ -107,7 +110,6 @@ function LiveComments({
   }
   return (
     <CommentsList
-      author={author}
       failed={PaginatedQueryResult.isFailure(pagination)}
       onLoadMore={
         PaginatedQueryResult.isCanLoadMore(pagination)
@@ -120,20 +122,19 @@ function LiveComments({
 }
 
 /**
- * The rows of one profile\x27s comments, with the failure and the end trigger that
+ * The rows of one profile's comments, with the failure and the end trigger that
  * loads the next page as it comes into view.
  */
 function CommentsList({
-  author,
   failed,
   onLoadMore,
   results,
 }: {
-  author: Ref.Returns<typeof auth.queries.getUserById>;
   failed: boolean;
   onLoadMore: (() => void) | undefined;
   results: readonly ProfileComment[];
 }) {
+  const author = use(ProfileAuthorContext);
   const t = useTranslations("Comments");
   const tCommon = useTranslations("Common");
   if (failed && results.length === 0) {
@@ -171,7 +172,9 @@ function CommentsList({
             }
           />
         ))}
-        {onLoadMore && <Intersection onIntersect={onLoadMore} />}
+        {onLoadMore && (
+          <Intersection key={results.length} onIntersect={onLoadMore} />
+        )}
       </div>
     </CommentsProvider>
   );

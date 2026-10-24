@@ -24,6 +24,16 @@ describe("try-out set list keys", () => {
     );
   });
 
+  it("keeps the selections of two tracks apart, even with the same filter and sort", () => {
+    const { paginationOpts: _window, ...selection } = args;
+    expect(selectionKey({ ...selection, trackKey: "soshum" })).not.toBe(
+      selectionKey(args)
+    );
+    expect(selectionKey({ ...selection, locale: "en" })).not.toBe(
+      selectionKey(args)
+    );
+  });
+
   it("identifies a request by its selection and its window", () => {
     expect(requestKey(args)).not.toBe(
       requestKey({ ...args, paginationOpts: { cursor: null, numItems: 50 } })

@@ -12,11 +12,9 @@ import type {
   TryoutSetRequest,
   TryoutSetSelectionChange,
 } from "@/components/tryout/catalog/table/types";
-import { TRYOUT_SET_PAGE_SIZE } from "@/components/tryout/catalog/table/types";
 import {
-  failVisitorSets,
+  commitVisitorWindow,
   requestVisitorSets,
-  settleVisitorSets,
   startVisitorSets,
   syncVisitorSets,
   VisitorSetReadError,
@@ -127,9 +125,10 @@ const readVisitorWindow = Effect.fn("www.tryout.catalog.readVisitorWindow")(
 );
 
 /**
- * A visitor's table. The loader's first page is the first rows, and a change of
- * filter, sort or window reads its own window. The pure state in `visitor.ts`
- * decides which response may commit.
+ * A visitor's table. The loader's first page is the first rows. A change of filter
+ * or sort navigates, so the loader reads the window of the new selection once, and
+ * the table reads a window of its own only to load more. The pure state in
+ * `visitor.ts` decides which response may commit.
  */
 function TryoutSetVisitorCatalog({
   bootstrap,
@@ -143,41 +142,22 @@ function TryoutSetVisitorCatalog({
     setStored(state);
   }
 
-  function load(next: TryoutSetRequest, numItems: number) {
-    const key = visitorWindowKey(next, numItems);
+  /** Reads the next window of the request on screen, and commits it when it arrives. */
+  function loadMore(numItems: number) {
+    const key = visitorWindowKey(request, numItems);
     setStored((previous) =>
-      requestVisitorSets(syncVisitorSets(previous, bootstrap), next, numItems)
-    );
-    Effect.runFork(
-      readVisitorWindow(next, numItems).pipe(
-        Effect.matchEffect({
-          onFailure: () =>
-            Effect.sync(() => {
-              setStored((previous) => failVisitorSets(previous, key));
-            }),
-          onSuccess: (loaded) =>
-            Effect.sync(() => {
-              setStored((previous) =>
-                settleVisitorSets(previous, key, loaded.result)
-              );
-            }),
-        })
+      requestVisitorSets(
+        syncVisitorSets(previous, bootstrap),
+        request,
+        numItems
       )
     );
-  }
-
-  function changeSelection(change: TryoutSetSelectionChange) {
-    select(change);
-    load(
-      {
-        ...request,
-        filter: change.status ?? request.filter,
-        sort: {
-          direction: change.direction ?? request.sort.direction,
-          field: change.sort ?? request.sort.field,
-        },
-      },
-      TRYOUT_SET_PAGE_SIZE
+    Effect.runFork(
+      commitVisitorWindow({
+        commit: setStored,
+        key,
+        read: readVisitorWindow(request, numItems),
+      })
     );
   }
 
@@ -188,16 +168,14 @@ function TryoutSetVisitorCatalog({
         busy: view.busy,
         error: view.error,
         hasMore: view.hasMore,
-        loadMore: () => load(request, view.nextSize),
+        loadMore: () => loadMore(view.nextSize),
         offline: view.offline,
         rows: view.rows,
         snapshotId: view.snapshotId,
       }}
       filter={request.filter}
-      onFilter={(filter) => changeSelection({ status: filter })}
-      onSort={(sort) =>
-        changeSelection({ direction: sort.direction, sort: sort.field })
-      }
+      onFilter={(filter) => select({ status: filter })}
+      onSort={(sort) => select({ direction: sort.direction, sort: sort.field })}
       sort={request.sort}
       title={title}
     />

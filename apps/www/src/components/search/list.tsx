@@ -18,7 +18,7 @@ import { useTranslations } from "use-intl";
 import { SearchExcerpt } from "@/components/search/excerpt";
 import { useSearchSectionLabels } from "@/components/search/labels";
 import { EmptyNina } from "@/components/state/empty";
-import type { ContentSearchResultItem } from "@/lib/search/query";
+import type { ContentSearchResultItem } from "@/lib/search/answer";
 
 interface Props {
   error: string | ReactElement;

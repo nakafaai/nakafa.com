@@ -41,11 +41,9 @@ import {
 import { EmptyNina } from "@/components/state/empty";
 import type { ArticleNavigationItem } from "@/lib/content/article/navigation";
 import { getErrorMessage } from "@/lib/failure";
+import type { ContentSearchResultItem } from "@/lib/search/answer";
 import { useSearch } from "@/lib/search/context";
-import {
-  type ContentSearchResultItem,
-  useSearchQuery,
-} from "@/lib/search/query";
+import { useSearchQuery } from "@/lib/search/query";
 
 const DEBOUNCE_TIME = 500;
 

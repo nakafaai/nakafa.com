@@ -1,5 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { TRYOUT_CATALOG_LIMIT } from "@repo/backend/confect/contentRelease/tryout/limits";
+import { Effect, Option } from "effect";
 import { selectionKey } from "@/components/tryout/catalog/table/keys";
 import type {
   TryoutSetListArgs,
@@ -7,12 +8,12 @@ import type {
   TryoutSetRequest,
 } from "@/components/tryout/catalog/table/types";
 import {
+  commitVisitorWindow,
   failVisitorSets,
   requestVisitorSets,
   settleVisitorSets,
   startVisitorSets,
   syncVisitorSets,
-  VisitorSetReadError,
   visitorReadInput,
   visitorSetView,
   visitorWindowKey,
@@ -56,8 +57,8 @@ describe("visitor set list state", () => {
       key: visitorWindowKey(request, 25),
       page: bootstrap.result,
     });
-    expect(state.pendingKey).toBeNull();
-    expect(state.failedKey).toBeNull();
+    expect(state.pendingKey).toStrictEqual(Option.none());
+    expect(state.failedKey).toStrictEqual(Option.none());
     expect(visitorSetView(state, request)).toMatchObject({
       busy: false,
       error: false,
@@ -80,6 +81,17 @@ describe("visitor set list state", () => {
     });
   });
 
+  it("drops a response for another track once the loader hands over that track", () => {
+    const state = requestVisitorSets(startVisitorSets(bootstrap), request, 50);
+    const rebuilt = syncVisitorSets(state, {
+      args: args({ ...request, trackKey: "soshum" }, 25),
+      result: page(true, "snapshot-2"),
+    });
+    expect(
+      settleVisitorSets(rebuilt, visitorWindowKey(request, 50), page(false))
+    ).toBe(rebuilt);
+  });
+
   it("commits the response for the request the state waits for", () => {
     const key = visitorWindowKey(request, 50);
     const waiting = requestVisitorSets(
@@ -92,7 +104,7 @@ describe("visitor set list state", () => {
       error: false,
     });
     const settled = settleVisitorSets(waiting, key, page(true, "snapshot-3"));
-    expect(settled.pendingKey).toBeNull();
+    expect(settled.pendingKey).toStrictEqual(Option.none());
     expect(settled.committed).toStrictEqual({
       key,
       page: page(true, "snapshot-3"),
@@ -125,14 +137,14 @@ describe("visitor set list state", () => {
       50
     );
     const failed = failVisitorSets(waiting, key);
-    expect(failed.pendingKey).toBeNull();
-    expect(failed.failedKey).toBe(key);
+    expect(failed.pendingKey).toStrictEqual(Option.none());
+    expect(failed.failedKey).toStrictEqual(Option.some(key));
     expect(visitorSetView(failed, request)).toMatchObject({
       busy: false,
       error: true,
     });
     const retried = requestVisitorSets(failed, request, 50);
-    expect(retried.failedKey).toBeNull();
+    expect(retried.failedKey).toStrictEqual(Option.none());
   });
 
   it("restarts the window on a new selection and stops at the catalog limit", () => {
@@ -150,6 +162,41 @@ describe("visitor set list state", () => {
     });
   });
 
+  it.effect("commits the page that a window read returns for its request", () =>
+    Effect.gen(function* () {
+      const key = visitorWindowKey(request, 50);
+      let state = requestVisitorSets(startVisitorSets(bootstrap), request, 50);
+      yield* commitVisitorWindow({
+        commit: (update) => {
+          state = update(state);
+        },
+        key,
+        read: Effect.succeed({ result: page(true, "snapshot-2") }),
+      });
+      expect(state.committed).toStrictEqual({
+        key,
+        page: page(true, "snapshot-2"),
+      });
+      expect(state.pendingKey).toStrictEqual(Option.none());
+    })
+  );
+
+  it.effect("records a failed window read for the request it asked for", () =>
+    Effect.gen(function* () {
+      const key = visitorWindowKey(request, 50);
+      let state = requestVisitorSets(startVisitorSets(bootstrap), request, 50);
+      yield* commitVisitorWindow({
+        commit: (update) => {
+          state = update(state);
+        },
+        key,
+        read: Effect.fail("offline"),
+      });
+      expect(state.failedKey).toStrictEqual(Option.some(key));
+      expect(state.pendingKey).toStrictEqual(Option.none());
+    })
+  );
+
   it("maps a request to the server function input", () => {
     expect(visitorReadInput(request, 75)).toStrictEqual({
       locale: "id",
@@ -157,11 +204,5 @@ describe("visitor set list state", () => {
       search: { direction: "asc", sort: "order", status: "all" },
       track: { countryKey: "id", examKey: "utbk", trackKey: "saintek" },
     });
-  });
-
-  it("names a read error with its cause", () => {
-    const error = new VisitorSetReadError({ cause: "offline" });
-    expect(error._tag).toBe("VisitorSetReadError");
-    expect(error.cause).toBe("offline");
   });
 });

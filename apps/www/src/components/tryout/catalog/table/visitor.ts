@@ -3,7 +3,7 @@ import {
   listArgsValidator,
   trackSetPageValidator,
 } from "@repo/backend/confect/tryouts/sets/spec";
-import { Schema } from "effect";
+import { Effect, Option, Schema } from "effect";
 import {
   requestKey,
   selectionKey,
@@ -38,8 +38,8 @@ const VisitorSetState = Schema.Struct({
     key: Schema.String,
     page: trackSetPageValidator,
   }),
-  failedKey: Schema.Union([Schema.String, Schema.Null]),
-  pendingKey: Schema.Union([Schema.String, Schema.Null]),
+  failedKey: Schema.Option(Schema.String),
+  pendingKey: Schema.Option(Schema.String),
   /** The selection the window belongs to, and the rows it reads for that selection. */
   window: Schema.Struct({
     selection: Schema.String,
@@ -83,8 +83,8 @@ export function startVisitorSets(
   return {
     bootstrapKey: key,
     committed: { key, page: bootstrap.result },
-    failedKey: null,
-    pendingKey: null,
+    failedKey: Option.none(),
+    pendingKey: Option.none(),
     window: {
       selection: selectionKey(bootstrap.args),
       size: bootstrap.args.paginationOpts.numItems,
@@ -118,10 +118,15 @@ export function requestVisitorSets(
 ): VisitorSetState {
   return {
     ...state,
-    failedKey: null,
-    pendingKey: visitorWindowKey(request, numItems),
+    failedKey: Option.none(),
+    pendingKey: Option.some(visitorWindowKey(request, numItems)),
     window: { selection: selectionKey(request), size: numItems },
   };
+}
+
+/** Whether the read with this key is the one the state waits for. */
+function isPendingRead(state: VisitorSetState, key: string) {
+  return Option.exists(state.pendingKey, (pending) => pending === key);
 }
 
 /** Commits the page of a read, unless a later request has replaced it. */
@@ -130,10 +135,14 @@ export function settleVisitorSets(
   key: string,
   page: TryoutSetPage
 ): VisitorSetState {
-  if (state.pendingKey !== key) {
+  if (!isPendingRead(state, key)) {
     return state;
   }
-  return { ...state, committed: { key, page }, pendingKey: null };
+  return {
+    ...state,
+    committed: { key, page },
+    pendingKey: Option.none(),
+  };
 }
 
 /** Records a failed read, unless a later request has replaced it. */
@@ -141,10 +150,40 @@ export function failVisitorSets(
   state: VisitorSetState,
   key: string
 ): VisitorSetState {
-  if (state.pendingKey !== key) {
+  if (!isPendingRead(state, key)) {
     return state;
   }
-  return { ...state, failedKey: key, pendingKey: null };
+  return { ...state, failedKey: Option.some(key), pendingKey: Option.none() };
+}
+
+/**
+ * Reads one window through `read` and commits its outcome for `key`: the page when
+ * the read returns, the failure when it fails. A response for a request that a later
+ * one replaced changes nothing.
+ */
+export function commitVisitorWindow<E>({
+  commit,
+  key,
+  read,
+}: {
+  readonly commit: (
+    update: (state: VisitorSetState) => VisitorSetState
+  ) => void;
+  readonly key: string;
+  readonly read: Effect.Effect<Pick<VisitorSetBootstrap, "result">, E>;
+}) {
+  return read.pipe(
+    Effect.matchEffect({
+      onFailure: () =>
+        Effect.sync(() => {
+          commit((previous) => failVisitorSets(previous, key));
+        }),
+      onSuccess: (loaded) =>
+        Effect.sync(() => {
+          commit((previous) => settleVisitorSets(previous, key, loaded.result));
+        }),
+    })
+  );
 }
 
 /**
@@ -157,8 +196,11 @@ export function visitorSetView(
 ) {
   const size = readWindowSize(state, request);
   return {
-    busy: state.pendingKey !== null,
-    error: state.failedKey === visitorWindowKey(request, size),
+    busy: Option.isSome(state.pendingKey),
+    error: Option.exists(
+      state.failedKey,
+      (failed) => failed === visitorWindowKey(request, size)
+    ),
     hasMore: !state.committed.page.isDone && size < TRYOUT_CATALOG_LIMIT,
     nextSize: Math.min(size + TRYOUT_SET_PAGE_SIZE, TRYOUT_CATALOG_LIMIT),
     offline: false,

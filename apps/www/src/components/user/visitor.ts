@@ -1,16 +1,18 @@
-import { Array as Arr } from "effect";
+import { Array as Arr, Effect, Schema } from "effect";
 
 /**
  * A visitor's profile list. The loader's first page starts it, and each next page
  * is read by its cursor through the server. Only one read is in flight, and a page
- * that arrives while none is pending changes nothing.
+ * that arrives while none is pending changes nothing. The state keeps the first
+ * page it started from, so a new first page from the loader starts the list again.
  */
-interface VisitorListState<Item> {
+export interface VisitorListState<Item> {
   readonly cursor: string;
   readonly failed: boolean;
   readonly isDone: boolean;
   readonly pending: boolean;
   readonly rows: readonly Item[];
+  readonly source: VisitorListPage<Item> | undefined;
 }
 
 /** One page of a profile list as the server reads it. */
@@ -20,12 +22,25 @@ export interface VisitorListPage<Item> {
   readonly page: readonly Item[];
 }
 
+/** A visitor's next page could not be read, so the list shows the failure above its rows. */
+class VisitorPageReadError extends Schema.TaggedError<VisitorPageReadError>()(
+  "VisitorPageReadError",
+  { cause: Schema.Unknown }
+) {}
+
 /** Starts a visitor's list from the loader's first page, or from a failed read when the server could not read one. */
 export function startVisitorList<Item>(
   first: VisitorListPage<Item> | undefined
 ): VisitorListState<Item> {
   if (first === undefined) {
-    return { cursor: "", failed: true, isDone: true, pending: false, rows: [] };
+    return {
+      cursor: "",
+      failed: true,
+      isDone: true,
+      pending: false,
+      rows: [],
+      source: first,
+    };
   }
   return {
     cursor: first.continueCursor,
@@ -33,7 +48,22 @@ export function startVisitorList<Item>(
     isDone: first.isDone,
     pending: false,
     rows: first.page,
+    source: first,
   };
+}
+
+/**
+ * Rebuilds the list when the loader hands over another first page, such as after a
+ * Retry of a failed first read. The same first page keeps the list as it is.
+ */
+export function syncVisitorList<Item>(
+  state: VisitorListState<Item>,
+  first: VisitorListPage<Item> | undefined
+): VisitorListState<Item> {
+  if (state.source === first) {
+    return state;
+  }
+  return startVisitorList(first);
 }
 
 /** Marks the next page as read, unless the list has no next page or a read is pending. */
@@ -60,6 +90,7 @@ export function appendVisitorPage<Item>(
     isDone: next.isDone,
     pending: false,
     rows: Arr.appendAll(state.rows, next.page),
+    source: state.source,
   };
 }
 
@@ -71,6 +102,39 @@ export function failNextVisitorPage<Item>(
     return state;
   }
   return { ...state, failed: true, pending: false };
+}
+
+/**
+ * Reads the page after `cursor` through the server and commits its outcome to the
+ * list: the page when it arrives, or the failure when the read fails. The commit
+ * receives each change as a function of the list it is applied to.
+ */
+export function readVisitorPage<Item>({
+  commit,
+  cursor,
+  readPage,
+}: {
+  readonly commit: (
+    update: (state: VisitorListState<Item>) => VisitorListState<Item>
+  ) => void;
+  readonly cursor: string;
+  readonly readPage: (cursor: string) => Promise<VisitorListPage<Item>>;
+}) {
+  return Effect.tryPromise({
+    try: () => readPage(cursor),
+    catch: (cause) => new VisitorPageReadError({ cause }),
+  }).pipe(
+    Effect.matchEffect({
+      onFailure: () =>
+        Effect.sync(() => {
+          commit(failNextVisitorPage);
+        }),
+      onSuccess: (next) =>
+        Effect.sync(() => {
+          commit((previous) => appendVisitorPage(previous, next));
+        }),
+    })
+  );
 }
 
 /** The state the rows view shows for a visitor's list. */
