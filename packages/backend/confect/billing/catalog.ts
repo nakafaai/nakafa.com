@@ -14,7 +14,6 @@ export type BillingCurrency = typeof BillingCurrency.Type;
 
 /** The rails that sell an offer. Polar is merchant of record outside Indonesia. */
 export const BillingOfferRailSchema = Schema.Literals(["polar", "xendit"]);
-type BillingOfferRail = typeof BillingOfferRailSchema.Type;
 
 /** The Polar product of one offer on each Polar server. Null until the product exists in Polar. */
 const PolarOfferProduct = Schema.Struct({

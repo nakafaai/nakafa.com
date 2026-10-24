@@ -42,8 +42,7 @@ describe("billing/accounts", () => {
         accounts: accounts.length,
         customer: Option.getOrUndefined(
           Arr.findFirst(accounts, (account) => account._id === first)
-        )
-          ?.providerCustomerId,
+        )?.providerCustomerId,
         reused: first === again,
         separate: first !== onXendit,
       };

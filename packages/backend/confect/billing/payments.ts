@@ -1,9 +1,9 @@
+import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import type { billingPaymentValidator } from "@repo/backend/confect/billing/schema";
-import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import { Effect, Option, Schema } from "effect";
 
 type BillingPaymentInput = typeof billingPaymentValidator.Type;

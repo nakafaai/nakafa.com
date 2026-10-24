@@ -1,10 +1,10 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
+import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import type { BillingEventDelivery } from "@repo/backend/confect/billing/schema";
-import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import { Effect, Option, Schema } from "effect";
 
 /** A webhook row is kept this long, beyond every provider retry window. */

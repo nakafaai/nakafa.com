@@ -10,7 +10,6 @@ import { Array as Arr, Config, Effect, HashSet, Option, Schema } from "effect";
 
 /** The value of the Indonesia rail switch. It is read only by this module. */
 const IndonesiaRail = Schema.Literals(["polar", "xendit"]);
-type IndonesiaRail = typeof IndonesiaRail.Type;
 
 /** An offer the chosen rail or currency does not sell, so no checkout can start. */
 export class OfferUnavailable extends Schema.TaggedError<OfferUnavailable>()(
