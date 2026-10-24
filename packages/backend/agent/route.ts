@@ -1,6 +1,8 @@
 import {
   type AgentEdgeContract,
   NAKAFA_API_EDGE_CONTRACT,
+  NAKAFA_EDGE_CLIENT_IP_HEADER,
+  NAKAFA_EDGE_CLIENT_SOURCE_HEADER,
 } from "@repo/backend/agent/edge";
 import { Array as Arr, Option, Schema } from "effect";
 
@@ -58,7 +60,10 @@ export function agentEdgeOriginPath(
 
 /**
  * The headers that the protected origin receives. Browser credentials never
- * reach it, and the edge secret replaces whatever the caller sent.
+ * reach it, the edge secret replaces whatever the caller sent, and the client
+ * address comes only from Cloudflare. A caller's own forwarding header is
+ * dropped, so it cannot choose the address that the origin quotas. Without a
+ * Cloudflare address the origin receives none and fails closed.
  */
 export function agentEdgeRequestHeaders(
   headers: Headers,
@@ -68,6 +73,12 @@ export function agentEdgeRequestHeaders(
   const forwarded = new Headers(headers);
   forwarded.delete("authorization");
   forwarded.delete("cookie");
+  forwarded.delete("host");
+  forwarded.delete(NAKAFA_EDGE_CLIENT_IP_HEADER);
+  const clientAddress = headers.get(NAKAFA_EDGE_CLIENT_SOURCE_HEADER);
+  if (clientAddress !== null) {
+    forwarded.set(NAKAFA_EDGE_CLIENT_IP_HEADER, clientAddress);
+  }
   forwarded.set(contract.secretHeader, secret);
   return forwarded;
 }

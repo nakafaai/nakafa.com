@@ -96,4 +96,29 @@ describe("agentEdgeRequestHeaders", () => {
     expect(headers.get("x-nakafa-api-edge-secret")).toBe("edge-secret");
     expect(headers.get("accept")).toBe("application/json");
   });
+
+  it("takes the client address from Cloudflare and drops the caller's host and forwarded address", () => {
+    const headers = agentEdgeRequestHeaders(
+      new Headers({
+        host: "caller.example",
+        "cf-connecting-ip": "203.0.113.9",
+        "x-forwarded-for": "198.51.100.1",
+      }),
+      NAKAFA_API_EDGE_CONTRACT,
+      "edge-secret"
+    );
+
+    expect(headers.get("host")).toBeNull();
+    expect(headers.get("x-forwarded-for")).toBe("203.0.113.9");
+  });
+
+  it("leaves the origin no client address when Cloudflare sent none", () => {
+    const headers = agentEdgeRequestHeaders(
+      new Headers({ "x-forwarded-for": "198.51.100.1" }),
+      NAKAFA_API_EDGE_CONTRACT,
+      "edge-secret"
+    );
+
+    expect(headers.get("x-forwarded-for")).toBeNull();
+  });
 });

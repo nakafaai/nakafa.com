@@ -8,8 +8,16 @@ import {
   agentEdgeOriginPath,
   agentEdgeRequestHeaders,
 } from "@repo/backend/agent/route";
+import { FetchClient } from "@repo/utilities/http/client";
 import { Data, Effect } from "effect";
-import { FetchHttpClient } from "effect/http";
+import {
+  FetchHttpClient,
+  HttpBody,
+  HttpClient,
+  HttpClientRequest,
+  HttpMethod,
+  HttpServerResponse,
+} from "effect/http";
 
 /** The Worker lacks one binding that it must read, so it refuses to forward. */
 export class AgentEdgeBindingError extends Data.TaggedError(
@@ -52,6 +60,10 @@ export const forwardAgentEdge = Effect.fn("agent.edge.forward")(function* (
   if (originPath === undefined) {
     return new Response(null, { status: 404 });
   }
+  const method = request.method;
+  if (!HttpMethod.isHttpMethod(method)) {
+    return new Response(null, { status: 405 });
+  }
 
   const origin = yield* readBinding(bindings, contract.originEnvironment);
   const secret = yield* readBinding(bindings, contract.secretEnvironment);
@@ -61,26 +73,25 @@ export const forwardAgentEdge = Effect.fn("agent.edge.forward")(function* (
   );
 
   const target = new URL(`${originPath}${url.search}`, origin);
-  const init: RequestInit & { duplex: "half" } = {
-    method: request.method,
-    headers: agentEdgeRequestHeaders(request.headers, contract, secret),
-    body: request.body,
-    redirect: "manual",
-    duplex: "half",
-  };
-  const fetcher = yield* FetchHttpClient.Fetch;
-  const upstream = yield* Effect.tryPromise({
-    try: () => fetcher(target, init),
-    catch: (cause) => new AgentEdgeUpstreamError({ cause }),
-  });
+  const upstream = yield* HttpClient.execute(
+    HttpClientRequest.make(method)(target, {
+      body: request.body === null ? HttpBody.empty : HttpBody.raw(request.body),
+      headers: agentEdgeRequestHeaders(request.headers, contract, secret),
+    })
+  ).pipe(
+    // A redirect returns to the caller unfollowed. Only Fetch honors this option.
+    Effect.provideService(FetchHttpClient.RequestInit, { redirect: "manual" }),
+    Effect.mapError((cause) => new AgentEdgeUpstreamError({ cause }))
+  );
 
   const headers = new Headers(upstream.headers);
   headers.set(NAKAFA_EDGE_RELEASE_SHA_HEADER, releaseSha);
-  return new Response(upstream.body, {
-    headers,
-    status: upstream.status,
-    statusText: upstream.statusText,
-  });
+  return HttpServerResponse.toWeb(
+    HttpServerResponse.stream(upstream.stream, {
+      headers,
+      status: upstream.status,
+    })
+  );
 });
 
 /**
@@ -96,6 +107,7 @@ export function agentEdgeWorker(
     fetch(request: Request, bindings: AgentEdgeBindings): Promise<Response> {
       return Effect.runPromise(
         forwardAgentEdge(contract, paths, request, bindings).pipe(
+          Effect.provide(FetchClient),
           Effect.catchTags({
             AgentEdgeBindingError: () =>
               Effect.succeed(

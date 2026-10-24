@@ -10,6 +10,7 @@ import {
   NAKAFA_API_EDGE_PATHS,
   NAKAFA_MCP_EDGE_PATHS,
 } from "@repo/backend/agent/route";
+import { FetchClient } from "@repo/utilities/http/client";
 import { Effect } from "effect";
 import { FetchHttpClient } from "effect/http";
 
@@ -55,7 +56,10 @@ describe("forwardAgentEdge", () => {
           NAKAFA_API_EDGE_PATHS,
           request,
           bindings
-        ).pipe(Effect.provideService(FetchHttpClient.Fetch, fetcher));
+        ).pipe(
+          Effect.provide(FetchClient),
+          Effect.provideService(FetchHttpClient.Fetch, fetcher)
+        );
 
         const [target, init] = fetcher.mock.calls[0] ?? [];
         const sent = new Headers(init?.headers);
@@ -85,7 +89,10 @@ describe("forwardAgentEdge", () => {
         NAKAFA_API_EDGE_PATHS,
         request,
         bindings
-      ).pipe(Effect.provideService(FetchHttpClient.Fetch, fetcher));
+      ).pipe(
+        Effect.provide(FetchClient),
+        Effect.provideService(FetchHttpClient.Fetch, fetcher)
+      );
 
       expect(String(fetcher.mock.calls[0]?.[0])).toBe(
         "https://origin.convex.site/internal/agent/openapi"
@@ -107,7 +114,10 @@ describe("forwardAgentEdge", () => {
           NAKAFA_MCP_EDGE_SECRET: "mcp-secret",
           NAKAFA_RELEASE_SHA: "abc123",
         }
-      ).pipe(Effect.provideService(FetchHttpClient.Fetch, fetcher));
+      ).pipe(
+        Effect.provide(FetchClient),
+        Effect.provideService(FetchHttpClient.Fetch, fetcher)
+      );
 
       expect(String(fetcher.mock.calls[0]?.[0])).toBe(
         "https://origin.convex.site/internal/mcp"
@@ -126,11 +136,35 @@ describe("forwardAgentEdge", () => {
           NAKAFA_API_EDGE_PATHS,
           request,
           bindings
-        ).pipe(Effect.provideService(FetchHttpClient.Fetch, fetcher));
+        ).pipe(
+          Effect.provide(FetchClient),
+          Effect.provideService(FetchHttpClient.Fetch, fetcher)
+        );
 
         expect(response.status).toBe(404);
         expect(fetcher).not.toHaveBeenCalled();
       })
+  );
+
+  it.effect("answers 405 for a method that HTTP does not define", () =>
+    Effect.gen(function* () {
+      const request = new Request("https://api.nakafa.com/v1", {
+        method: "FOO",
+      });
+
+      const response = yield* forwardAgentEdge(
+        NAKAFA_API_EDGE_CONTRACT,
+        NAKAFA_API_EDGE_PATHS,
+        request,
+        bindings
+      ).pipe(
+        Effect.provide(FetchClient),
+        Effect.provideService(FetchHttpClient.Fetch, fetcher)
+      );
+
+      expect(response.status).toBe(405);
+      expect(fetcher).not.toHaveBeenCalled();
+    })
   );
 
   it.effect(
@@ -148,7 +182,10 @@ describe("forwardAgentEdge", () => {
               ...bindings,
               NAKAFA_API_EDGE_SECRET: "",
             }
-          ).pipe(Effect.provideService(FetchHttpClient.Fetch, fetcher))
+          ).pipe(
+            Effect.provide(FetchClient),
+            Effect.provideService(FetchHttpClient.Fetch, fetcher)
+          )
         );
 
         expect(error).toMatchObject({
@@ -172,11 +209,85 @@ describe("forwardAgentEdge", () => {
             NAKAFA_API_EDGE_PATHS,
             request,
             bindings
-          ).pipe(Effect.provideService(FetchHttpClient.Fetch, fetcher))
+          ).pipe(
+            Effect.provide(FetchClient),
+            Effect.provideService(FetchHttpClient.Fetch, fetcher)
+          )
         );
 
         expect(error).toMatchObject({ _tag: "AgentEdgeUpstreamError" });
       })
+  );
+
+  it.effect(
+    "sets the client address from Cloudflare and drops the caller's forwarded address",
+    () =>
+      Effect.gen(function* () {
+        fetcher.mockResolvedValue(new Response("{}"));
+        const request = new Request("https://api.nakafa.com/v1", {
+          headers: {
+            "cf-connecting-ip": "203.0.113.9",
+            "x-forwarded-for": "198.51.100.1",
+          },
+        });
+
+        yield* forwardAgentEdge(
+          NAKAFA_API_EDGE_CONTRACT,
+          NAKAFA_API_EDGE_PATHS,
+          request,
+          bindings
+        ).pipe(
+          Effect.provide(FetchClient),
+          Effect.provideService(FetchHttpClient.Fetch, fetcher)
+        );
+
+        const sent = new Headers(fetcher.mock.calls[0]?.[1]?.headers);
+        expect(sent.get("x-forwarded-for")).toBe("203.0.113.9");
+      })
+  );
+
+  it.effect("sends no client address when Cloudflare sent none", () =>
+    Effect.gen(function* () {
+      fetcher.mockResolvedValue(new Response("{}"));
+      const request = new Request("https://api.nakafa.com/v1", {
+        headers: { "x-forwarded-for": "198.51.100.1" },
+      });
+
+      yield* forwardAgentEdge(
+        NAKAFA_API_EDGE_CONTRACT,
+        NAKAFA_API_EDGE_PATHS,
+        request,
+        bindings
+      ).pipe(
+        Effect.provide(FetchClient),
+        Effect.provideService(FetchHttpClient.Fetch, fetcher)
+      );
+
+      const sent = new Headers(fetcher.mock.calls[0]?.[1]?.headers);
+      expect(sent.get("x-forwarded-for")).toBeNull();
+    })
+  );
+
+  it.effect("passes the origin's cache policy through to the caller", () =>
+    Effect.gen(function* () {
+      fetcher.mockResolvedValue(
+        new Response("{}", {
+          headers: { "cache-control": "public, max-age=300" },
+        })
+      );
+
+      const response = yield* forwardAgentEdge(
+        NAKAFA_API_EDGE_CONTRACT,
+        NAKAFA_API_EDGE_PATHS,
+        new Request("https://api.nakafa.com/openapi.json"),
+        bindings
+      ).pipe(
+        Effect.provide(FetchClient),
+        Effect.provideService(FetchHttpClient.Fetch, fetcher)
+      );
+
+      expect(response.headers.get("cache-control")).toBe("public, max-age=300");
+    })
   );
 });
 

@@ -64,8 +64,15 @@ export const NAKAFA_DEFAULT_MCP_BROWSER_ORIGINS = [
   "https://www.nakafa.com",
 ] as const;
 
-/** Trusted Vercel-provided client address used for pseudonymous quotas. */
+/**
+ * The header that the Convex origin reads for the client address of a quota. The
+ * edge Worker sets it from the Cloudflare header below, and never copies it from
+ * the caller.
+ */
 export const NAKAFA_EDGE_CLIENT_IP_HEADER = "x-forwarded-for";
+
+/** The header that Cloudflare sets to the connecting client address, which a caller cannot choose. */
+export const NAKAFA_EDGE_CLIENT_SOURCE_HEADER = "cf-connecting-ip";
 
 /** Public deployment identity attached by each canonical edge Worker. */
 export const NAKAFA_EDGE_RELEASE_SHA_HEADER = "x-nakafa-release-sha";
