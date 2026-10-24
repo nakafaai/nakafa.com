@@ -8,10 +8,10 @@ import { Effect, Option } from "effect";
  */
 export const readPreviewRefreshFn = createServerFn({ method: "GET" }).handler(
   async () => {
-    const { readPreviewRefresh } = await import(
-      "@/lib/content/preview/refresh.server"
-    );
-    const { runServerEffect } = await import("@/lib/server/fn");
+    const [{ readPreviewRefresh }, { runServerEffect }] = await Promise.all([
+      import("@/lib/content/preview/refresh.server"),
+      import("@/lib/server/fn"),
+    ]);
     // The undefined exists only at this serialization boundary.
     return runServerEffect(
       readPreviewRefresh().pipe(Effect.map(Option.getOrUndefined))

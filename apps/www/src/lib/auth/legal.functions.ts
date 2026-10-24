@@ -22,8 +22,10 @@ export const readAuthLegalFn = createServerFn({ method: "GET" })
     )
   )
   .handler(async ({ data }) => {
-    const { readAuthLegalHandler } = await import("@/lib/auth/legal.server");
-    const { runServerEffect } = await import("@/lib/server/fn");
+    const [{ readAuthLegalHandler }, { runServerEffect }] = await Promise.all([
+      import("@/lib/auth/legal.server"),
+      import("@/lib/server/fn"),
+    ]);
     // The null exists only at this serialization boundary.
     return runServerEffect(
       readAuthLegalHandler(data.locale).pipe(Effect.map(Option.getOrNull))
