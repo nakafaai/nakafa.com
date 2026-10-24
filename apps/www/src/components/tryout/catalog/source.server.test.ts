@@ -454,7 +454,7 @@ describe("immutable try-out application catalog", () => {
             ...request,
             publicPath: SECTION,
           })
-        ).toStrictEqual(Option.none());
+        ).toBeNull();
         fetchQueryMock.mockReturnValue(
           Effect.fail(
             new HttpClient.HttpClientError({

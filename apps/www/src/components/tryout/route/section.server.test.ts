@@ -14,7 +14,7 @@ const mocks = vi.hoisted(() => ({
   readServerTranslator: vi.fn(),
   readTryoutQuestionPreview: vi.fn(),
   readTryoutRouteHead: vi.fn(),
-  readTryoutSectionWithBodies: vi.fn(),
+  readRetainedTryoutSection: vi.fn(),
   readTryoutSectionPage: vi.fn(),
   readTryoutSetAttemptPage: vi.fn(),
   readTryoutSetPage: vi.fn(),
@@ -31,7 +31,6 @@ vi.mock("@/components/player/mode.server", () => ({
   readPlayerMode: mocks.readPlayerMode,
 }));
 vi.mock("@/components/tryout/catalog/source.server", () => ({
-  readTryoutSectionWithBodies: mocks.readTryoutSectionWithBodies,
   readTryoutSectionPage: mocks.readTryoutSectionPage,
   readTryoutSetAttemptPage: mocks.readTryoutSetAttemptPage,
   readTryoutSetPage: mocks.readTryoutSetPage,
@@ -48,6 +47,7 @@ vi.mock("@/components/tryout/route/catalog.server", () => ({
 }));
 vi.mock("@/components/tryout/route/current", () => ({
   readCurrentTryoutSection: mocks.readCurrentTryoutSection,
+  readRetainedTryoutSection: mocks.readRetainedTryoutSection,
   readCurrentTryoutSet: mocks.readCurrentTryoutSet,
 }));
 vi.mock("@/components/tryout/route/body.server", () => ({
@@ -165,7 +165,7 @@ beforeEach(() => {
   mocks.readTryoutSetAttemptPage.mockReturnValue(
     Effect.succeed(attemptOf("retained"))
   );
-  mocks.readTryoutSectionWithBodies.mockReturnValue(
+  mocks.readRetainedTryoutSection.mockReturnValue(
     Effect.succeedSome(attemptOf("retained"))
   );
   mocks.readCurrentTryoutSet.mockReturnValue(Effect.succeedNone);
@@ -195,7 +195,7 @@ describe("readTryoutSectionRoute", () => {
     "answers not found when the attempt section is not the learner's own",
     () =>
       Effect.gen(function* () {
-        mocks.readTryoutSectionWithBodies.mockReturnValue(Effect.succeedNone);
+        mocks.readRetainedTryoutSection.mockReturnValue(Effect.succeedNone);
 
         expect(yield* readSection(attemptSearch)).toEqual(NOT_FOUND);
       })
@@ -205,7 +205,7 @@ describe("readTryoutSectionRoute", () => {
     "renders a running retained section with its signed questions",
     () =>
       Effect.gen(function* () {
-        mocks.readTryoutSectionWithBodies.mockReturnValue(
+        mocks.readRetainedTryoutSection.mockReturnValue(
           Effect.succeedSome(attemptOf("retained", runningSigned))
         );
 
@@ -229,7 +229,7 @@ describe("readTryoutSectionRoute", () => {
     "renders the retained section with its set as the return link",
     () =>
       Effect.gen(function* () {
-        mocks.readTryoutSectionWithBodies.mockReturnValue(
+        mocks.readRetainedTryoutSection.mockReturnValue(
           Effect.succeedSome(
             attemptOf("retained", {
               activeSetPublicPath: "try-out/id/snbt/2027/set-2",
@@ -252,7 +252,7 @@ describe("readTryoutSectionRoute", () => {
 
   it.effect("renders the review of a finished retained section", () =>
     Effect.gen(function* () {
-      mocks.readTryoutSectionWithBodies.mockReturnValue(
+      mocks.readRetainedTryoutSection.mockReturnValue(
         Effect.succeedSome(attemptOf("retained", finishedSigned))
       );
 

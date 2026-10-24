@@ -3,6 +3,7 @@ import { Data, Effect, Option } from "effect";
 import {
   readCurrentTryoutSection,
   readCurrentTryoutSet,
+  readRetainedTryoutSection,
 } from "@/components/tryout/route/current";
 
 const catalogMocks = vi.hoisted(() => ({
@@ -87,8 +88,8 @@ describe("the attempt a public try-out URL shows", () => {
       const section = { ...keys, sectionKey: "quantitative" };
       const bodies = [null];
       catalogMocks.readTryoutSectionWithBodies
-        .mockReturnValueOnce(Effect.succeedNone)
-        .mockReturnValueOnce(Effect.succeedSome({ ...retained, bodies }));
+        .mockReturnValueOnce(Effect.succeed(null))
+        .mockReturnValueOnce(Effect.succeed({ attempt: retained, bodies }));
       expect(yield* readCurrentTryoutSection("token", section)).toEqual(
         Option.none()
       );
@@ -98,6 +99,33 @@ describe("the attempt a public try-out URL shows", () => {
       expect(catalogMocks.readTryoutSectionWithBodies.mock.calls).toEqual([
         ["token", { ...section, kind: "current" }],
         ["token", { ...section, kind: "current" }],
+      ]);
+    })
+  );
+
+  it.effect("reads a retained section attempt with its bodies", () =>
+    Effect.gen(function* () {
+      const bodies = [null];
+      catalogMocks.readTryoutSectionWithBodies.mockReturnValueOnce(
+        Effect.succeed({ attempt: retained, bodies })
+      );
+      expect(
+        yield* readRetainedTryoutSection("token", {
+          attemptId: retained.attemptId,
+          locale: keys.locale,
+          publicPath: running.publicPath,
+        })
+      ).toEqual(Option.some({ ...retained, bodies }));
+      expect(catalogMocks.readTryoutSectionWithBodies.mock.calls).toEqual([
+        [
+          "token",
+          {
+            attemptId: retained.attemptId,
+            kind: "retained",
+            locale: keys.locale,
+            publicPath: running.publicPath,
+          },
+        ],
       ]);
     })
   );

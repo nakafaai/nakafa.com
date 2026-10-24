@@ -1,11 +1,9 @@
 import "@tanstack/react-start/server-only";
 
-import {
-  decodeProtectedContentRuntimeRequest,
-  type ProtectedContentRuntimeRequest,
-} from "@nakafa/aksara-contracts/runtime/protected/spec";
+import type { ProtectedContentRuntimeRequest } from "@nakafa/aksara-contracts/runtime/protected/spec";
 import type { ContentHttpTarget } from "@repo/backend/client/content/endpoint";
 import {
+  decodeProtectedRequest,
   decodeProtectedResponseInput,
   fetchProtectedResponse,
   verifyProtectedResponse,
@@ -52,9 +50,7 @@ export const readFeaturedProtectedContent = Effect.fn(
   input: unknown,
   rendererManifest: unknown
 ) {
-  const request = yield* decodeProtectedContentRuntimeRequest(input).pipe(
-    Effect.mapError(() => new Error("Featured request is invalid."))
-  );
+  const request = yield* decodeProtectedRequest(input);
   const kept = yield* readContentStore({
     kind: "tryout.featured.protectedAnswer",
     load: fetchFoundAnswer(target, request),

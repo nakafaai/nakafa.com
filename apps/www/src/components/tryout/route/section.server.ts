@@ -5,13 +5,13 @@ import {
 import { Clock, Effect, Option, Schema } from "effect";
 import type { PlayerModeParam } from "@/components/player/mode";
 import { readPlayerMode } from "@/components/player/mode.server";
-import {
-  readTryoutSectionPage,
-  readTryoutSectionWithBodies,
-} from "@/components/tryout/catalog/source.server";
+import { readTryoutSectionPage } from "@/components/tryout/catalog/source.server";
 import { readTryoutQuestionPreview } from "@/components/tryout/preview/read";
 import { readTryoutRouteHead } from "@/components/tryout/route/catalog.server";
-import { readCurrentTryoutSection } from "@/components/tryout/route/current";
+import {
+  readCurrentTryoutSection,
+  readRetainedTryoutSection,
+} from "@/components/tryout/route/current";
 import { readAddressIntent } from "@/components/tryout/route/intent";
 import { selectTryoutSectionReturnHref } from "@/components/tryout/route/owner";
 import {
@@ -201,9 +201,8 @@ const readRetainedSectionRoute = Effect.fn(
       kind: "signIn" as const,
     };
   }
-  const running = yield* readTryoutSectionWithBodies(input.token.value, {
+  const running = yield* readRetainedTryoutSection(input.token.value, {
     attemptId: input.attemptId,
-    kind: "retained",
     locale: input.locale,
     publicPath: input.publicPath,
   });

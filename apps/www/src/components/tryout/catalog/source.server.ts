@@ -235,8 +235,5 @@ export const readTryoutSectionWithBodies = Effect.fn(
         })
     )
   );
-  return Option.map(Option.fromNullishOr(page), ({ attempt, bodies }) => ({
-    ...attempt,
-    bodies,
-  }));
+  return page;
 });

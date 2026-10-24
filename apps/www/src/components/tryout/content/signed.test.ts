@@ -505,6 +505,11 @@ describe("signed try-out execution", () => {
         expect(
           yield* renderSignedTryoutRows(fixture.access, []).pipe(Effect.flip)
         ).toMatchObject({ _tag: "ContentRuntimeVerificationError" });
+        expect(
+          yield* renderSignedTryoutRows(fixture.access, [null]).pipe(
+            Effect.flip
+          )
+        ).toMatchObject({ _tag: "ContentRuntimeVerificationError" });
       })
   );
 

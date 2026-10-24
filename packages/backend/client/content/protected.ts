@@ -88,14 +88,11 @@ export const fetchProtectedResponse = Effect.fn(
 });
 
 /** Reads one protected batch and verifies its signed exchange. */
-export const readProtectedContent = Effect.fn(
-  "NakafaContent.readProtectedContent"
-)(function* (
-  target: ContentHttpTarget,
-  input: unknown,
-  rendererManifest: unknown
-) {
-  const request = yield* decodeProtectedContentRuntimeRequest(input).pipe(
+/** Decodes one protected batch request, or fails as a request transport error. */
+export const decodeProtectedRequest = Effect.fn(
+  "NakafaContent.decodeProtectedRequest"
+)(function* (input: unknown) {
+  return yield* decodeProtectedContentRuntimeRequest(input).pipe(
     Effect.mapError(
       () =>
         new ContentTransportError({
@@ -103,6 +100,16 @@ export const readProtectedContent = Effect.fn(
         })
     )
   );
+});
+
+export const readProtectedContent = Effect.fn(
+  "NakafaContent.readProtectedContent"
+)(function* (
+  target: ContentHttpTarget,
+  input: unknown,
+  rendererManifest: unknown
+) {
+  const request = yield* decodeProtectedRequest(input);
   const fetched = yield* fetchProtectedResponse(target, request);
   return yield* verifyProtectedResponse(
     request,
