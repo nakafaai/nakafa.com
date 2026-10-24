@@ -2871,7 +2871,7 @@ export declare const api: {
         "mutation",
         "public",
         {
-          language: "en" | "id" | "de";
+          language?: "en" | "id" | "de";
           scope:
             { kind: "tenant" } | { kind: "unit"; unitId: Id<"tenantUnits"> };
           slug: string;
@@ -2899,11 +2899,7 @@ export declare const api: {
             timeZone: string;
             unitId: Id<"tenantUnits">;
           }>;
-          drafts: Array<{
-            id: Id<"exams">;
-            language: "en" | "id" | "de";
-            title: string;
-          }>;
+          drafts: Array<{ id: Id<"exams">; title: string }>;
           live: Array<{
             closesAt: number;
             cohortId: Id<"tenantCohorts"> | null;
@@ -2952,11 +2948,7 @@ export declare const api: {
         {
           continueCursor: string;
           isDone: boolean;
-          page: Array<{
-            id: Id<"exams">;
-            language: "en" | "id" | "de";
-            title: string;
-          }>;
+          page: Array<{ id: Id<"exams">; title: string }>;
           pageStatus?: "SplitRecommended" | "SplitRequired" | null;
           splitCursor?: string | null;
         }
@@ -2969,7 +2961,6 @@ export declare const api: {
           archived: boolean;
           frozenAt?: number;
           id: Id<"exams">;
-          language: "en" | "id" | "de";
           questions: Array<{
             answers: Array<
               | {
@@ -3224,7 +3215,7 @@ export declare const api: {
         "mutation",
         "public",
         { examId: Id<"exams">; slug: string; title: string },
-        { id: Id<"exams">; language: "en" | "id" | "de"; title: string }
+        { id: Id<"exams">; title: string }
       >;
       schedule: FunctionReference<
         "mutation",
@@ -4357,7 +4348,7 @@ export declare const api: {
         "query",
         "public",
         { examId: Id<"exams">; slug: string },
-        { id: Id<"exams">; language: "en" | "id" | "de"; title: string }
+        { id: Id<"exams">; title: string }
       >;
       list: FunctionReference<
         "query",
@@ -12876,6 +12867,14 @@ export declare const internal: {
         "internal",
         { storageId: Id<"_storage"> },
         { size: number }
+      >;
+    };
+    language: {
+      clear: FunctionReference<
+        "mutation",
+        "internal",
+        { cursor?: string },
+        { cleared: number; continueCursor: string; done: boolean }
       >;
     };
     seed: {
