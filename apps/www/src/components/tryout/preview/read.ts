@@ -10,18 +10,14 @@ import {
 } from "@/lib/content/preview/question";
 
 /** Reads a question only inside the explicitly configured development child. */
-export async function readTryoutQuestionPreview(
-  locale: Locale,
-  publicPath: string
-) {
+export const readTryoutQuestionPreview = Effect.fn(
+  "www.tryout.preview.readQuestion"
+)(function* (locale: Locale, publicPath: string) {
   if (!hasPreviewConfig()) {
     return Option.none<QuestionPreviewContent>();
   }
-
-  return await Effect.runPromise(
-    readQuestionPreview({
-      appLocale: AppLocaleSchema.make(locale),
-      publicPath,
-    })
-  );
-}
+  return yield* readQuestionPreview({
+    appLocale: AppLocaleSchema.make(locale),
+    publicPath,
+  });
+});

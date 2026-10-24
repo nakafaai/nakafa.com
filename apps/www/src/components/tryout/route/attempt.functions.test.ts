@@ -50,7 +50,9 @@ const NOT_FOUND = { kind: "notFound" };
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.readRequestToken.mockReturnValue(Effect.succeedSome("token-1"));
-  mocks.readTryoutQuestionPreview.mockResolvedValue(Option.none());
+  mocks.readTryoutQuestionPreview.mockReturnValue(
+    Effect.succeed(Option.none())
+  );
 });
 
 describe("try-out attempt server functions", () => {

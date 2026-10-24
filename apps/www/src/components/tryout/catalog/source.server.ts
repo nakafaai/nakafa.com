@@ -36,26 +36,25 @@ class TryoutCatalogReadError extends Schema.TaggedError<TryoutCatalogReadError>(
  * holds it once for each release and locale. The signed body is verified and
  * rendered again on each call, because nothing caches the rendered tree.
  */
-export async function readFeaturedTryout(locale: Locale) {
-  const featured = await Effect.runPromise(
-    queryContentStore(tryouts.queries.catalog.getFeaturedQuestion, {
-      appLocale: AppLocaleSchema.make(locale),
-    })
-  );
-  return await Effect.runPromise(
-    Effect.gen(function* () {
-      const question = yield* loadTryoutQuestion(featured.question);
-      // The question is a server component tree, so it crosses to the page as Flight data.
-      const content = yield* Effect.promise(() =>
-        renderServerComponent(question.content)
-      );
-      return {
-        question: content,
-        response: featured.response,
-      };
-    })
-  );
-}
+export const readFeaturedTryout = Effect.fn("www.tryout.catalog.readFeatured")(
+  function* (locale: Locale) {
+    const featured = yield* queryContentStore(
+      tryouts.queries.catalog.getFeaturedQuestion,
+      {
+        appLocale: AppLocaleSchema.make(locale),
+      }
+    );
+    const question = yield* loadTryoutQuestion(featured.question);
+    // The question is a server component tree, so it crosses to the page as Flight data.
+    const content = yield* Effect.promise(() =>
+      renderServerComponent(question.content)
+    );
+    return {
+      question: content,
+      response: featured.response,
+    };
+  }
+);
 
 /**
  * Reads exact signed route metadata from the tagged content cache. The `use

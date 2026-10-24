@@ -14,6 +14,31 @@ import {
 } from "@/components/tryout/runtime/question/shell";
 import { TryoutReviewedResponse } from "@/components/tryout/runtime/response/review";
 import type { TryoutSectionRuntime } from "@/components/tryout/runtime/types";
+import { runServerEffect } from "@/lib/server/fn";
+
+/**
+ * Loads the signed content of one terminal review and projects its questions.
+ * A projection that fails closed yields null, so the screen asks for a refresh.
+ */
+const readTryoutReviewQuestions = Effect.fn("TryoutReview.readQuestions")(
+  function* (
+    attemptId: Id<"tryoutAttempts">,
+    access: SignedContentAccess,
+    runtime: TryoutSectionRuntime
+  ) {
+    const content = yield* loadSignedTryoutContent(attemptId, access);
+    return yield* projectTryoutReview({
+      content,
+      questions: runtime.questions,
+    }).pipe(
+      Effect.catchTag("TryoutReviewProjectionError", () =>
+        Effect.logWarning(
+          "Terminal try-out review projection failed closed."
+        ).pipe(Effect.as(null))
+      )
+    );
+  }
+);
 
 /** Renders one immutable terminal review outside the active runtime Module. */
 export async function TryoutReview({
@@ -37,20 +62,8 @@ export async function TryoutReview({
       />
     );
   }
-  const resolvedContent = await Effect.runPromise(
-    loadSignedTryoutContent(attemptId, access)
-  );
-  const questions = await Effect.runPromise(
-    projectTryoutReview({
-      content: resolvedContent,
-      questions: runtime.questions,
-    }).pipe(
-      Effect.catchTag("TryoutReviewProjectionError", () =>
-        Effect.logWarning(
-          "Terminal try-out review projection failed closed."
-        ).pipe(Effect.as(null))
-      )
-    )
+  const questions = await runServerEffect(
+    readTryoutReviewQuestions(attemptId, access, runtime)
   );
 
   if (!questions) {

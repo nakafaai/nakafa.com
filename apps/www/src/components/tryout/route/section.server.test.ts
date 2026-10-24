@@ -145,7 +145,9 @@ beforeEach(() => {
   mocks.readServerTranslator.mockImplementation(() =>
     Promise.resolve((key: string) => key)
   );
-  mocks.readTryoutQuestionPreview.mockResolvedValue(Option.none());
+  mocks.readTryoutQuestionPreview.mockReturnValue(
+    Effect.succeed(Option.none())
+  );
   mocks.renderTryoutPreview.mockResolvedValue("preview-tree");
   mocks.renderTryoutReview.mockResolvedValue("review-tree");
   mocks.loadSignedTryoutContent.mockReturnValue(
@@ -261,7 +263,9 @@ describe("readTryoutSectionRoute", () => {
 
   it.effect("answers a public section with its question preview", () =>
     Effect.gen(function* () {
-      mocks.readTryoutQuestionPreview.mockResolvedValue(Option.some(preview));
+      mocks.readTryoutQuestionPreview.mockReturnValue(
+        Effect.succeed(Option.some(preview))
+      );
 
       expect(yield* readSection()).toMatchObject({
         kind: "preview",

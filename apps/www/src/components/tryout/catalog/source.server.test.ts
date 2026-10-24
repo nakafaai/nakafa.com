@@ -379,7 +379,7 @@ describe("immutable try-out application catalog", () => {
     () =>
       Effect.gen(function* () {
         yield* serveFeaturedQuestion();
-        const featured = yield* Effect.promise(() => readFeaturedTryout("id"));
+        const featured = yield* readFeaturedTryout("id");
         expect(renderToStaticMarkup(featured.question)).toBe(
           "Technical question"
         );
@@ -400,8 +400,8 @@ describe("immutable try-out application catalog", () => {
     Effect.gen(function* () {
       yield* serveFeaturedQuestion();
 
-      const first = yield* Effect.promise(() => readFeaturedTryout("id"));
-      const second = yield* Effect.promise(() => readFeaturedTryout("id"));
+      const first = yield* readFeaturedTryout("id");
+      const second = yield* readFeaturedTryout("id");
 
       expect(renderToStaticMarkup(second.question)).toBe(
         renderToStaticMarkup(first.question)

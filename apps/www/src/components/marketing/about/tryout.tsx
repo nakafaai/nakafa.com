@@ -1,3 +1,4 @@
+import type { Effect } from "effect";
 import { useTranslations } from "use-intl";
 import {
   TryoutDemo,
@@ -15,7 +16,7 @@ import type { readFeaturedTryout } from "@/components/tryout/catalog/source.serv
 import { renderTryoutResponseLabels } from "@/components/tryout/runtime/response/labels";
 
 /** The featured question and its response, as the catalog reads them. */
-type FeaturedTryout = Awaited<ReturnType<typeof readFeaturedTryout>>;
+type FeaturedTryout = Effect.Success<ReturnType<typeof readFeaturedTryout>>;
 
 /**
  * The practice test row: its words on one side, and on the other a card with a

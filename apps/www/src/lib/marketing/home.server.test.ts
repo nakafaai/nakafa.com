@@ -16,7 +16,7 @@ vi.mock("@tanstack/react-start/server", () => ({
 }));
 
 vi.mock("@/components/tryout/catalog/source.server", () => ({
-  readFeaturedTryout: vi.fn(() => Promise.resolve({ title: "Featured" })),
+  readFeaturedTryout: vi.fn(() => Effect.succeed({ title: "Featured" })),
 }));
 
 vi.mock("@/lib/curriculum/model", () => ({

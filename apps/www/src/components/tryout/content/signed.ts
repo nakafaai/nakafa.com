@@ -55,13 +55,14 @@ export const loadTryoutQuestion = Effect.fn("NakafaContent.loadTryoutQuestion")(
   function* (question: TryoutQuestionSelector) {
     const plan = planTryoutContentBatches([question], []);
     const rendered = yield* renderContentPlan(plan, (selectors) =>
-      Effect.tryPromise({
-        catch: (cause) =>
-          new ContentRuntimeVerificationError({
-            cause,
-          }),
-        try: () => renderBatch(selectors),
-      })
+      readBatch(selectors).pipe(
+        Effect.mapError(
+          (cause) =>
+            new ContentRuntimeVerificationError({
+              cause,
+            })
+        )
+      )
     );
     // Successful ordered rendering preserves this one-question partition.
     return yield* Effect.fromNullishOr(rendered.questions[0]).pipe(
@@ -119,54 +120,38 @@ const readAttemptBatch = Effect.fn("NakafaContent.readAttemptBatch")(function* (
         })
     )
   );
-  return yield* Effect.tryPromise({
-    catch: (cause) =>
-      new ContentRuntimeVerificationError({
-        cause,
-      }),
-    try: () => renderAttemptBatch(selectors, row),
-  });
+  return yield* renderAttemptBatch(selectors, row).pipe(
+    Effect.mapError(
+      (cause) =>
+        new ContentRuntimeVerificationError({
+          cause,
+        })
+    )
+  );
 });
 
 /**
  * Verifies and renders one attempt batch on every request. Nothing caches the
  * result, so each load verifies the signed bodies and evaluates them again.
  */
-async function renderAttemptBatch(
-  selectors: readonly TryoutSelector[],
-  row: TryoutBodyBatch | null
-) {
-  const content = await Effect.runPromise(
-    Effect.gen(function* () {
-      const request = yield* makeTryoutRuntimeRequest(selectors);
-      const liveRenderer = yield* rendererManifest;
-      const found = yield* verifyAttemptContent(
-        request,
-        row,
-        liveRenderer
-      ).pipe(
-        Effect.provideService(
-          ContentVerificationKeyResolver,
-          contentKeyResolver
-        )
-      );
-      return yield* renderFoundItems(selectors, found.items);
-    })
-  );
-  return content;
-}
+const renderAttemptBatch = Effect.fn("NakafaContent.renderAttemptBatch")(
+  function* (
+    selectors: readonly TryoutSelector[],
+    row: TryoutBodyBatch | null
+  ) {
+    const request = yield* makeTryoutRuntimeRequest(selectors);
+    const liveRenderer = yield* rendererManifest;
+    const found = yield* verifyAttemptContent(request, row, liveRenderer).pipe(
+      Effect.provideService(ContentVerificationKeyResolver, contentKeyResolver)
+    );
+    return yield* renderFoundItems(selectors, found.items);
+  }
+);
 
 /**
- * Reads, verifies and renders one public batch on every call. Nothing caches the
- * result: the rendered tree is React, which the content store cannot hold, so
- * each call reads the runtime again.
+ * Reads, verifies, and renders one protected batch. The rendered tree is React,
+ * which the content store cannot hold, so each call reads the runtime again.
  */
-async function renderBatch(selectors: readonly TryoutSelector[]) {
-  const content = await Effect.runPromise(readBatch(selectors));
-  return content;
-}
-
-/** Reads, verifies, and renders one protected batch. */
 const readBatch = Effect.fn("NakafaContent.readTryoutBatch")(function* (
   selectors: readonly TryoutSelector[]
 ) {
