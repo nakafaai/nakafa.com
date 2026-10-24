@@ -29,7 +29,7 @@ import {
 const PROMPT = "Why is the derivative of sine the cosine?";
 const TITLE = "The derivative of sine";
 
-/** The link the dialog copies: the chat id alone in the path, and a token of 43 characters in the fragment. */
+/** The link the dialog copies: the locale and the chat id in the path, and a token of 43 characters in the fragment. */
 const copiesALink = Effect.fn("NakafaE2E.copiesALink")(function* (
   page: Page,
   changes: Changes,
@@ -39,7 +39,7 @@ const copiesALink = Effect.fn("NakafaE2E.copiesALink")(function* (
   const { fragment, path, query, token } = readLink(link);
 
   yield* Effect.sync(() => {
-    expect(path).toBe(`/chat/${chatId}`);
+    expect(path).toBe(`/en/chat/${chatId}`);
     expect(query).toBe("");
     expect(token).toMatch(SHARE_TOKEN);
     expect(fragment).toBe(`#share=${token}`);
