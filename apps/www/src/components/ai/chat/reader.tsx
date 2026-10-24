@@ -6,8 +6,8 @@ import { Effect, Fiber, Option, Result } from "effect";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { useTranslations } from "use-intl";
 import {
-  ChatContext,
   type ChatContextValue,
+  ChatValueProvider,
 } from "@/components/ai/chat/context";
 import { ChatFeedContext } from "@/components/ai/chat/feed";
 import { AiChatHeader, ChatHeader } from "@/components/ai/chat/header";
@@ -17,7 +17,7 @@ import {
   readerView,
   withOlderPage,
 } from "@/components/ai/chat/reading";
-import { ChatStoreContext, createChatStore } from "@/components/ai/chat/store";
+import { createChatStore } from "@/components/ai/chat/store";
 import { turnOf, turnsByOrder } from "@/components/ai/chat/turns";
 import { NinaTranscript } from "@/components/ai/transcript";
 import { useLiveSession } from "@/components/providers/live";
@@ -81,7 +81,7 @@ function ReaderLoad({
 }) {
   const [answer, setAnswer] = useState<
     Option.Option<Result.Result<ReaderRead, ReaderReadError>>
-  >(Option.none());
+  >(() => Option.none());
 
   useEffect(() => {
     const fiber = Effect.runFork(
@@ -190,19 +190,17 @@ function ReaderTranscript({
   };
 
   return (
-    <ChatStoreContext value={store}>
-      <ChatContext value={chat}>
-        <ChatFeedContext
-          value={{
-            canLoadMore: view.messagesCursor !== undefined,
-            loadMore: loadOlder,
-            messages: view.messages,
-          }}
-        >
-          <ReaderScreen />
-        </ChatFeedContext>
-      </ChatContext>
-    </ChatStoreContext>
+    <ChatValueProvider store={store} value={chat}>
+      <ChatFeedContext
+        value={{
+          canLoadMore: view.messagesCursor !== undefined,
+          loadMore: loadOlder,
+          messages: view.messages,
+        }}
+      >
+        <ReaderScreen />
+      </ChatFeedContext>
+    </ChatValueProvider>
   );
 }
 

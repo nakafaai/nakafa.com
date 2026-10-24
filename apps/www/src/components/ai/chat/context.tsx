@@ -28,12 +28,25 @@ import { type NinaDraft, useNinaSubmission } from "@/components/ai/submission";
 import { useAuthSessionStore } from "@/components/auth/session";
 import { useViewer } from "@/lib/identity/client";
 
+const ChatContext = createContext<ChatContextValue | null>(null);
+
 /**
- * The conversation's state and actions. A learner's chat provides it from the
- * live conversation (`ChatProvider`), and a reader's chat from the server's read
- * (`ReaderChatProvider`), so every message control reads one shape.
+ * Provides one conversation's state and actions, with the store of its
+ * controls, to the controls below it. A learner's chat builds them from the live
+ * conversation (`ChatProvider`), and a reader's chat from the server's read, so
+ * every message control reads one shape.
  */
-export const ChatContext = createContext<ChatContextValue | null>(null);
+export function ChatValueProvider({
+  children,
+  store,
+  value,
+}: PropsWithChildren<{ store: ChatStoreApi; value: ChatContextValue }>) {
+  return (
+    <ChatStoreContext value={store}>
+      <ChatContext value={value}>{children}</ChatContext>
+    </ChatStoreContext>
+  );
+}
 
 /**
  * Owns one conversation's state and actions. It never reads the streamed
@@ -279,9 +292,9 @@ export function ChatProvider({
   const [store] = useState(createChatStore);
   const value = useChatState(chatId, shareToken, store);
   return (
-    <ChatStoreContext value={store}>
-      <ChatContext value={value}>{children}</ChatContext>
-    </ChatStoreContext>
+    <ChatValueProvider store={store} value={value}>
+      {children}
+    </ChatValueProvider>
   );
 }
 
