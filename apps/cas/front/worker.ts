@@ -1,5 +1,6 @@
 import { Effect } from "effect";
-import { answer, type CasFrontEnv } from "@/front/answer";
+import { answer } from "@/front/answer";
+import type { CasFrontEnv } from "@/front/forward";
 
 /**
  * The fetch handler of the CAS front. Every failure is already a response, so

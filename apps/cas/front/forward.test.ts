@@ -13,16 +13,16 @@ interface Call {
   readonly request: Request;
 }
 
-/** A namespace whose objects answer with `reply`, and record each call. */
+/** A namespace whose objects answer with `reply`, and which records each call. */
 function namespaceReplying(
   reply: (request: Request) => Promise<Response>,
-  calls: Call[]
+  record: { call?: Call }
 ): CasSolverNamespace {
   return {
     idFromName: (name) => name,
     get: (id) => ({
       fetch: (request) => {
-        calls.push({ name: String(id), request });
+        record.call = { name: String(id), request };
         return reply(request);
       },
     }),
@@ -32,13 +32,13 @@ function namespaceReplying(
 describe("forwardMath", () => {
   it.effect("sends the body to a pooled object and returns its response", () =>
     Effect.gen(function* () {
-      const calls: Call[] = [];
+      const record: { call?: Call } = {};
       const namespace = namespaceReplying(
         () =>
           Promise.resolve(
             new Response('{"status":"verified"}', { status: 200 })
           ),
-        calls
+        record
       );
 
       const response = yield* forwardMath(
@@ -50,14 +50,15 @@ describe("forwardMath", () => {
       expect(yield* Effect.promise(() => response.text())).toBe(
         '{"status":"verified"}'
       );
-      expect(calls).toHaveLength(1);
-      const [call] = calls;
-      expect(call?.name).toMatch(POOLED_NAME);
-      expect(call?.request.url).toBe("https://cas.internal/api/math");
-      expect(call?.request.method).toBe("POST");
-      expect(yield* Effect.promise(() => call.request.text())).toBe(
-        '{"kind":"math"}'
-      );
+      const sent = record.call?.request;
+      expect(record.call?.name).toMatch(POOLED_NAME);
+      expect(sent?.url).toBe("https://cas.internal/api/math");
+      expect(sent?.method).toBe("POST");
+      expect(
+        yield* Effect.promise(() =>
+          sent === undefined ? Promise.resolve("") : sent.text()
+        )
+      ).toBe('{"kind":"math"}');
     })
   );
 
@@ -68,11 +69,11 @@ describe("forwardMath", () => {
           Promise.reject(
             Object.assign(new Error("busy"), { overloaded: true })
           ),
-        []
+        {}
       );
 
       const result = yield* Effect.result(
-        forwardMath(namespace, new Uint8Array())
+        forwardMath(namespace, new Uint8Array(0))
       );
 
       expect(Result.isFailure(result)).toBe(true);
@@ -87,11 +88,11 @@ describe("forwardMath", () => {
     Effect.gen(function* () {
       const namespace = namespaceReplying(
         () => Promise.reject(new Error("exceeded resource limits")),
-        []
+        {}
       );
 
       const result = yield* Effect.result(
-        forwardMath(namespace, new Uint8Array())
+        forwardMath(namespace, new Uint8Array(0))
       );
 
       expect(Result.isFailure(result)).toBe(true);

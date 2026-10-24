@@ -13,8 +13,9 @@ export class CasRequestUnreadable extends Data.TaggedError(
 }> {}
 
 /**
- * Reads a request body up to `limit` bytes. The first chunk that crosses the
- * limit cancels the stream, so an oversized body is never read in full.
+ * Reads a request body up to `limit` bytes into one buffer of that size. The
+ * first chunk that crosses the limit cancels the stream, so an oversized body
+ * is never read in full.
  */
 export const readBoundedBody = Effect.fn("cas.size.readBoundedBody")(function* (
   body: ReadableStream<Uint8Array> | null,
@@ -24,7 +25,7 @@ export const readBoundedBody = Effect.fn("cas.size.readBoundedBody")(function* (
     return new Uint8Array(0);
   }
   const reader = body.getReader();
-  const chunks: Uint8Array[] = [];
+  const buffer = new Uint8Array(limit);
   let size = 0;
   for (;;) {
     const next = yield* Effect.tryPromise({
@@ -32,7 +33,7 @@ export const readBoundedBody = Effect.fn("cas.size.readBoundedBody")(function* (
       catch: (cause) => new CasRequestUnreadable({ cause }),
     });
     if (next.done) {
-      return join(chunks, size);
+      return buffer.slice(0, size);
     }
     size += next.value.byteLength;
     if (size > limit) {
@@ -44,19 +45,6 @@ export const readBoundedBody = Effect.fn("cas.size.readBoundedBody")(function* (
       );
       return yield* new CasRequestTooLarge({ limit });
     }
-    chunks.push(next.value);
+    buffer.set(next.value, size - next.value.byteLength);
   }
 });
-
-function join(
-  chunks: readonly Uint8Array[],
-  size: number
-): Uint8Array<ArrayBuffer> {
-  const body = new Uint8Array(size);
-  let offset = 0;
-  for (const chunk of chunks) {
-    body.set(chunk, offset);
-    offset += chunk.byteLength;
-  }
-  return body;
-}

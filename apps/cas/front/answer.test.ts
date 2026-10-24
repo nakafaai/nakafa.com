@@ -1,14 +1,14 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
-import { answer, type CasFrontEnv, MAX_REQUEST_BYTES } from "@/front/answer";
-import type { CasSolverStub } from "@/front/forward";
+import { answer, MAX_REQUEST_BYTES } from "@/front/answer";
+import type { CasFrontEnv, CasSolverStub } from "@/front/forward";
 
 const KEY = "front-test-key";
 const MATH_URL = "https://cas.nakafa.test/api/math";
 
 function environment(
   stub: CasSolverStub,
-  key: string | undefined = KEY
+  key: string | undefined
 ): CasFrontEnv {
   return {
     CAS_SOLVER: { idFromName: (name) => name, get: () => stub },
@@ -39,154 +39,175 @@ function mathRequest(
   return new Request(MATH_URL, { method: "POST", headers, body });
 }
 
-function send(request: Request, env: CasFrontEnv): Promise<Response> {
-  return Effect.runPromise(answer(request, env));
-}
-
 describe("answer", () => {
-  it("answers the health path without the bearer key", async () => {
-    const response = await send(
-      new Request("https://cas.nakafa.test/health"),
-      environment(engineReplying(500, ""), undefined)
-    );
+  it.effect("answers the health path without the bearer key", () =>
+    Effect.gen(function* () {
+      const response = yield* answer(
+        new Request("https://cas.nakafa.test/health"),
+        environment(engineReplying(500, ""), undefined)
+      );
 
-    expect(response.status).toBe(200);
-    expect(await response.json()).toEqual({ status: "ok" });
-  });
+      expect(response.status).toBe(200);
+      expect(yield* Effect.promise(() => response.json())).toEqual({
+        status: "ok",
+      });
+    })
+  );
 
-  it("refuses a method that the path does not accept", async () => {
-    const health = await send(
-      new Request("https://cas.nakafa.test/health", { method: "POST" }),
-      environment(engineReplying(500, ""))
-    );
-    const math = await send(
-      new Request(MATH_URL, { method: "GET" }),
-      environment(engineReplying(500, ""))
-    );
+  it.effect("refuses a method that the path does not accept", () =>
+    Effect.gen(function* () {
+      const env = environment(engineReplying(500, ""), KEY);
+      const health = yield* answer(
+        new Request("https://cas.nakafa.test/health", { method: "POST" }),
+        env
+      );
+      const math = yield* answer(new Request(MATH_URL, { method: "GET" }), env);
 
-    expect(health.status).toBe(405);
-    expect(health.headers.get("allow")).toBe("GET");
-    expect(math.status).toBe(405);
-    expect(math.headers.get("allow")).toBe("POST");
-  });
+      expect(health.status).toBe(405);
+      expect(health.headers.get("allow")).toBe("GET");
+      expect(math.status).toBe(405);
+      expect(math.headers.get("allow")).toBe("POST");
+    })
+  );
 
-  it("answers any other path as not found", async () => {
-    const response = await send(
-      new Request("https://cas.nakafa.test/"),
-      environment(engineReplying(500, ""))
-    );
+  it.effect("answers any other path as not found", () =>
+    Effect.gen(function* () {
+      const response = yield* answer(
+        new Request("https://cas.nakafa.test/"),
+        environment(engineReplying(500, ""), KEY)
+      );
 
-    expect(response.status).toBe(404);
-    expect(await response.json()).toEqual({ detail: "Not found." });
-  });
+      expect(response.status).toBe(404);
+      expect(yield* Effect.promise(() => response.json())).toEqual({
+        detail: "Not found.",
+      });
+    })
+  );
 
-  it("answers the math path as unconfigured when no key is bound", async () => {
-    const response = await send(
-      mathRequest(),
-      environment(engineReplying(500, ""), "")
-    );
+  it.effect("answers the math path as unconfigured when no key is bound", () =>
+    Effect.gen(function* () {
+      const response = yield* answer(
+        mathRequest(),
+        environment(engineReplying(500, ""), "")
+      );
 
-    expect(response.status).toBe(500);
-    expect(await response.json()).toEqual({
-      detail: "The math service is not configured.",
-    });
-  });
+      expect(response.status).toBe(500);
+      expect(yield* Effect.promise(() => response.json())).toEqual({
+        detail: "The math service is not configured.",
+      });
+    })
+  );
 
-  it("refuses a missing or wrong bearer key before it reads the body", async () => {
-    const missing = await send(
-      mathRequest('{"kind":"math"}', null),
-      environment(engineReplying(200, "{}"))
-    );
-    const wrong = await send(
-      mathRequest('{"kind":"math"}', "Bearer not-the-key"),
-      environment(engineReplying(200, "{}"))
-    );
+  it.effect("refuses a missing or wrong bearer key", () =>
+    Effect.gen(function* () {
+      const env = environment(engineReplying(200, "{}"), KEY);
+      const missing = yield* answer(mathRequest(undefined, null), env);
+      const wrong = yield* answer(mathRequest(undefined, "Bearer nope"), env);
 
-    expect(missing.status).toBe(401);
-    expect(wrong.status).toBe(401);
-    expect(await wrong.json()).toEqual({ detail: "Invalid CAS API key." });
-  });
+      expect(missing.status).toBe(401);
+      expect(wrong.status).toBe(401);
+      expect(yield* Effect.promise(() => wrong.json())).toEqual({
+        detail: "Invalid CAS API key.",
+      });
+    })
+  );
 
-  it("forwards an authorized body and returns the engine's response", async () => {
-    const response = await send(
-      mathRequest(),
-      environment(engineReplying(200, '{"status":"verified"}'))
-    );
+  it.effect(
+    "forwards an authorized body and returns the engine's response",
+    () =>
+      Effect.gen(function* () {
+        const response = yield* answer(
+          mathRequest(),
+          environment(engineReplying(200, '{"status":"verified"}'), KEY)
+        );
 
-    expect(response.status).toBe(200);
-    expect(await response.json()).toEqual({ status: "verified" });
-  });
+        expect(response.status).toBe(200);
+        expect(yield* Effect.promise(() => response.json())).toEqual({
+          status: "verified",
+        });
+      })
+  );
 
-  it("refuses a body over the limit before the engine runs", async () => {
-    let calls = 0;
-    const counting: CasSolverStub = {
-      fetch: () => {
-        calls += 1;
-        return Promise.resolve(new Response("{}"));
-      },
-    };
+  it.effect("refuses a body over the limit before the engine runs", () =>
+    Effect.gen(function* () {
+      const counter = { calls: 0 };
+      const counting: CasSolverStub = {
+        fetch: () => {
+          counter.calls += 1;
+          return Promise.resolve(new Response("{}"));
+        },
+      };
 
-    const response = await send(
-      mathRequest("x".repeat(MAX_REQUEST_BYTES + 1)),
-      environment(counting)
-    );
+      const response = yield* answer(
+        mathRequest("x".repeat(MAX_REQUEST_BYTES + 1)),
+        environment(counting, KEY)
+      );
 
-    expect(response.status).toBe(422);
-    expect(await response.json()).toEqual({
-      detail: "Math request exceeds the supported size.",
-    });
-    expect(calls).toBe(0);
-  });
+      expect(response.status).toBe(422);
+      expect(yield* Effect.promise(() => response.json())).toEqual({
+        detail: "Math request exceeds the supported size.",
+      });
+      expect(counter.calls).toBe(0);
+    })
+  );
 
-  it("answers an unreadable body with a bad request", async () => {
-    const failing = new ReadableStream<Uint8Array>({
-      pull(controller) {
-        controller.error(new Error("connection reset"));
-      },
-    });
-    const init = { method: "POST", body: failing, duplex: "half" };
-    const request = new Request(MATH_URL, {
-      ...init,
-      headers: { authorization: `Bearer ${KEY}` },
-    });
+  it.effect("answers an unreadable body with a bad request", () =>
+    Effect.gen(function* () {
+      const failing = new ReadableStream<Uint8Array>({
+        pull(controller) {
+          controller.error(new Error("connection reset"));
+        },
+      });
+      const init = { method: "POST", body: failing, duplex: "half" };
+      const request = new Request(MATH_URL, {
+        ...init,
+        headers: { authorization: `Bearer ${KEY}` },
+      });
 
-    const response = await send(
-      request,
-      environment(engineReplying(200, "{}"))
-    );
+      const response = yield* answer(
+        request,
+        environment(engineReplying(200, "{}"), KEY)
+      );
 
-    expect(response.status).toBe(400);
-    expect(await response.json()).toEqual({
-      detail: "Math request could not be read.",
-    });
-  });
+      expect(response.status).toBe(400);
+      expect(yield* Effect.promise(() => response.json())).toEqual({
+        detail: "Math request could not be read.",
+      });
+    })
+  );
 
-  it("answers a busy engine object with a retryable unavailable status", async () => {
-    const busy: CasSolverStub = {
-      fetch: () =>
-        Promise.reject(
-          Object.assign(new Error("overloaded"), { overloaded: true })
-        ),
-    };
+  it.effect(
+    "answers a busy engine object with a retryable unavailable status",
+    () =>
+      Effect.gen(function* () {
+        const busy: CasSolverStub = {
+          fetch: () =>
+            Promise.reject(
+              Object.assign(new Error("overloaded"), { overloaded: true })
+            ),
+        };
 
-    const response = await send(mathRequest(), environment(busy));
+        const response = yield* answer(mathRequest(), environment(busy, KEY));
 
-    expect(response.status).toBe(503);
-    expect(await response.json()).toEqual({
-      detail: "Math service is busy. Please retry shortly.",
-    });
-  });
+        expect(response.status).toBe(503);
+        expect(yield* Effect.promise(() => response.json())).toEqual({
+          detail: "Math service is busy. Please retry shortly.",
+        });
+      })
+  );
 
-  it("answers an engine failure with an unavailable status", async () => {
-    const failing: CasSolverStub = {
-      fetch: () => Promise.reject(new Error("exceeded resource limits")),
-    };
+  it.effect("answers an engine failure with an unavailable status", () =>
+    Effect.gen(function* () {
+      const failing: CasSolverStub = {
+        fetch: () => Promise.reject(new Error("exceeded resource limits")),
+      };
 
-    const response = await send(mathRequest(), environment(failing));
+      const response = yield* answer(mathRequest(), environment(failing, KEY));
 
-    expect(response.status).toBe(503);
-    expect(await response.json()).toEqual({
-      detail: "Math calculation could not complete.",
-    });
-  });
+      expect(response.status).toBe(503);
+      expect(yield* Effect.promise(() => response.json())).toEqual({
+        detail: "Math calculation could not complete.",
+      });
+    })
+  );
 });

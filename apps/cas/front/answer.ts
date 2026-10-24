@@ -1,17 +1,11 @@
 import { Effect, Schema } from "effect";
 import { isAuthorized } from "@/front/auth";
-import { type CasSolverNamespace, forwardMath } from "@/front/forward";
+import { type CasFrontEnv, forwardMath } from "@/front/forward";
 import { CAS_HEALTH_PATH, routeOf } from "@/front/route";
 import { readBoundedBody } from "@/front/size";
 
 /** The largest request body that the engine accepts: 64 KiB. */
 export const MAX_REQUEST_BYTES = 64 * 1024;
-
-/** The bindings of the front Worker: the engine namespace and the bearer key. */
-export interface CasFrontEnv {
-  readonly CAS_SOLVER: CasSolverNamespace;
-  readonly MATH_CAS_API_KEY?: string | undefined;
-}
 
 const JSON_HEADERS = { "content-type": "application/json; charset=utf-8" };
 const DetailJson = Schema.fromJsonString(
