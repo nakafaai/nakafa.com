@@ -144,10 +144,10 @@ function TenantSwitcher() {
               size="lg"
             >
               <SchoolMark logo={tenant.logo} mascot={tenant.mascot} />
-              <div className="grid min-w-0 flex-1 text-left text-sm leading-tight">
+              <div className="grid min-w-0 flex-1 text-start text-sm leading-tight">
                 <span className="truncate font-medium">{tenant.name}</span>
               </div>
-              <HugeIcons className="ml-auto" icon={UnfoldMoreIcon} />
+              <HugeIcons className="ms-auto" icon={UnfoldMoreIcon} />
             </SidebarMenuButton>
           }
         />

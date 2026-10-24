@@ -310,7 +310,7 @@ function SchoolStudentDialog({
       description={t("student-add-description")}
       footer={
         <>
-          <p className="mr-auto text-muted-foreground text-sm">
+          <p className="me-auto text-muted-foreground text-sm">
             {t("student-add-footer")}
           </p>
           <Button
