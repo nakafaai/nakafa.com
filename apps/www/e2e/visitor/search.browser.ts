@@ -45,7 +45,9 @@ test("a visitor's search opens no socket, sends no session read, and reads its r
             .toBeGreaterThan(0)
         );
         yield* Effect.promise(() =>
-          expect(page.locator("#results a").first()).toBeVisible()
+          expect(
+            page.locator("main a[href*='/subjects/']").first()
+          ).toBeVisible()
         );
         yield* Effect.sync(() => {
           expect(MutableList.toArray(sockets)).toStrictEqual([]);

@@ -3,8 +3,10 @@ import { Effect, MutableList } from "effect";
 import { withObservedPageErrors } from "@/e2e/support/observe";
 
 const SESSION_READ = "/api/auth/get-session";
-const CURRICULA_PATH = "/en/curricula";
-const ANY_TEXT = /./;
+/** The canonical catalog path: the plural spelling answers with a redirect to it. */
+const CURRICULA_PATH = "/en/curriculum";
+const CHOOSE_LEVEL = /Choose a level/u;
+const VIEW_OPTIONS = /View options/u;
 
 /**
  * A visitor's curricula open no WebSocket and send no session read. The curriculum
@@ -31,12 +33,13 @@ test("a visitor's curricula open no socket and send no session read, and a curri
         yield* Effect.promise(() =>
           page.goto(CURRICULA_PATH, { waitUntil: "load" })
         );
-        const first = page
-          .getByRole("link")
-          .filter({ hasText: ANY_TEXT })
-          .nth(1);
-        yield* Effect.promise(() => first.click());
-        // A visitor's link opens one curriculum's page, a path below the catalog.
+        // A card opens its level list, and a visitor's choice of a level navigates to it.
+        yield* Effect.promise(() =>
+          page.getByRole("button", { name: CHOOSE_LEVEL }).first().click()
+        );
+        yield* Effect.promise(() =>
+          page.getByRole("button", { name: VIEW_OPTIONS }).first().click()
+        );
         yield* Effect.promise(() =>
           expect(page).toHaveURL(new RegExp(`${CURRICULA_PATH}/[^/?#]+`))
         );
