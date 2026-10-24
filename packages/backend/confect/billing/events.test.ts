@@ -5,6 +5,7 @@ import {
   markEventProcessed,
   recordEvent,
 } from "@repo/backend/confect/billing/events";
+import { Array as Arr } from "effect";
 import {
   createBillingTestConvex,
   runInMutation,
@@ -79,7 +80,7 @@ describe("billing/events", () => {
       await runInMutation(ctx, recordEvent({ ...delivery, key: "old" }, old));
       await runInMutation(ctx, recordEvent({ ...delivery, key: "fresh" }, NOW));
       const deleted = await runInMutation(ctx, cleanupEvents(NOW));
-      const keys = (await ctx.db.query("billingEvents").collect()).map(
+      const keys = Arr.map(await ctx.db.query("billingEvents").collect(), 
         (event) => event.key
       );
       return { deleted, keys };

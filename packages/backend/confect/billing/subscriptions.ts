@@ -1,4 +1,5 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
+import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import {
   DatabaseReader,
   DatabaseWriter,
@@ -7,16 +8,24 @@ import type {
   billingProviderValidator,
   billingSubscriptionValidator,
 } from "@repo/backend/confect/billing/schema";
-import { Effect, Option } from "effect";
+import { Effect, Option, Schema } from "effect";
 
-export type BillingSubscriptionId = Docs["billingSubscriptions"]["_id"];
+type BillingSubscriptionId = Docs["billingSubscriptions"]["_id"];
 export type BillingSubscriptionState = typeof billingSubscriptionValidator.Type;
 type BillingProvider = typeof billingProviderValidator.Type;
 
 /** What applying one state did: the row it wrote, or the stale state it refused. */
-export type SubscriptionApplied =
-  | { readonly kind: "applied"; readonly subscriptionId: BillingSubscriptionId }
-  | { readonly kind: "stale"; readonly subscriptionId: BillingSubscriptionId };
+const SubscriptionApplied = Schema.Union([
+  Schema.Struct({
+    kind: Schema.Literal("applied"),
+    subscriptionId: IdSchema("billingSubscriptions"),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("stale"),
+    subscriptionId: IdSchema("billingSubscriptions"),
+  }),
+]).pipe(Schema.toTaggedUnion("kind"));
+type SubscriptionApplied = typeof SubscriptionApplied.Type;
 
 /** Finds the row a provider reference names, on the index that reference is unique in. */
 const findByProvider = Effect.fn("billing.subscriptions.findByProvider")(

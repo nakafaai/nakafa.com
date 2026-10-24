@@ -1,18 +1,25 @@
-import type { Docs } from "@repo/backend/confect/_generated/docs";
 import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import type { billingPaymentValidator } from "@repo/backend/confect/billing/schema";
-import { Effect, Option } from "effect";
+import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
+import { Effect, Option, Schema } from "effect";
 
-export type BillingPaymentId = Docs["billingPayments"]["_id"];
-export type BillingPaymentInput = typeof billingPaymentValidator.Type;
+type BillingPaymentInput = typeof billingPaymentValidator.Type;
 
 /** Whether a payment was written now, or was already recorded by an earlier delivery. */
-export type PaymentRecorded =
-  | { readonly kind: "recorded"; readonly paymentId: BillingPaymentId }
-  | { readonly kind: "duplicate"; readonly paymentId: BillingPaymentId };
+const PaymentRecorded = Schema.Union([
+  Schema.Struct({
+    kind: Schema.Literal("recorded"),
+    paymentId: IdSchema("billingPayments"),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("duplicate"),
+    paymentId: IdSchema("billingPayments"),
+  }),
+]).pipe(Schema.toTaggedUnion("kind"));
+type PaymentRecorded = typeof PaymentRecorded.Type;
 
 /**
  * Records one payment that arrived. The provider's payment ID is unique per

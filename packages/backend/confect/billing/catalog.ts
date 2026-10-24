@@ -13,26 +13,31 @@ export const BillingCurrency = Schema.Literals(["EUR", "IDR", "USD"]);
 export type BillingCurrency = typeof BillingCurrency.Type;
 
 /** The rails that sell an offer. Polar is merchant of record outside Indonesia. */
-export type BillingOfferRail = "polar" | "xendit";
+export const BillingOfferRailSchema = Schema.Literals(["polar", "xendit"]);
+type BillingOfferRail = typeof BillingOfferRailSchema.Type;
 
 /** The Polar product of one offer on each Polar server. Null until the product exists in Polar. */
-export interface PolarOfferProduct {
-  readonly production: string | null;
-  readonly sandbox: string | null;
-}
+const PolarOfferProduct = Schema.Struct({
+  production: Schema.NullOr(Schema.String),
+  sandbox: Schema.NullOr(Schema.String),
+});
 
 /** One offer: what it grants, how it bills, what it costs, and where it is sold. */
-export interface BillingOffer {
+const BillingOffer = Schema.Struct({
   /** `month` and `year` recur. `pass` is paid once for `months` months. */
-  readonly interval: "month" | "pass" | "year";
-  readonly months: number;
+  interval: Schema.Literals(["month", "pass", "year"]),
+  months: Schema.Int,
   /** Null for an offer Polar does not sell, or whose Polar product is not created yet. */
-  readonly polarProduct: PolarOfferProduct | null;
-  readonly prices: Partial<Record<BillingCurrency, number>>;
-  readonly product: "credits" | "pro" | "school";
-  readonly rails: readonly BillingOfferRail[];
-}
-
+  polarProduct: Schema.NullOr(PolarOfferProduct),
+  prices: Schema.Struct({
+    EUR: Schema.optionalKey(Schema.Int),
+    IDR: Schema.optionalKey(Schema.Int),
+    USD: Schema.optionalKey(Schema.Int),
+  }),
+  product: Schema.Literals(["credits", "pro", "school"]),
+  rails: Schema.Array(BillingOfferRailSchema),
+});
+type BillingOffer = typeof BillingOffer.Type;
 /** The key of every offer, the value a stored subscription or grant names. */
 export const BillingOfferKey = Schema.Literals([
   "pro.monthly",
@@ -46,7 +51,7 @@ export const BillingOfferKey = Schema.Literals([
 ]);
 export type BillingOfferKey = typeof BillingOfferKey.Type;
 
-export const billingOffers = {
+const billingOffers = {
   "pro.monthly": {
     interval: "month",
     months: 1,

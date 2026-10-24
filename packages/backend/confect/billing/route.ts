@@ -1,16 +1,16 @@
 import {
-  type BillingCurrency,
+  BillingCurrency,
   type BillingOfferKey,
-  type BillingOfferRail,
+  BillingOfferRailSchema,
   billingEuroTerritoryCodes,
   billingOffer,
   billingOfferPrice,
 } from "@repo/backend/confect/billing/catalog";
-import { Config, Effect, HashSet, Option, Schema } from "effect";
+import { Array as Arr, Config, Effect, HashSet, Option, Schema } from "effect";
 
 /** The value of the Indonesia rail switch. It is read only by this module. */
-export const IndonesiaRail = Schema.Literals(["polar", "xendit"]);
-export type IndonesiaRail = typeof IndonesiaRail.Type;
+const IndonesiaRail = Schema.Literals(["polar", "xendit"]);
+type IndonesiaRail = typeof IndonesiaRail.Type;
 
 /** An offer the chosen rail or currency does not sell, so no checkout can start. */
 export class OfferUnavailable extends Schema.TaggedError<OfferUnavailable>()(
@@ -32,11 +32,12 @@ export class XenditNotConfigured extends Schema.TaggedError<XenditNotConfigured>
 ) {}
 
 /** The routed checkout: the rail that takes the money, the currency, and the amount in minor units. */
-export interface BillingRoute {
-  readonly amount: number;
-  readonly currency: BillingCurrency;
-  readonly rail: BillingOfferRail;
-}
+const BillingRoute = Schema.Struct({
+  rail: BillingOfferRailSchema,
+  currency: BillingCurrency,
+  amount: Schema.Int,
+});
+type BillingRoute = typeof BillingRoute.Type;
 
 /** The Indonesia switch from `BILLING_INDONESIA_RAIL`, which stays `polar` until Xendit is live. */
 export const readIndonesiaRail = Config.schema(
@@ -76,7 +77,7 @@ export const routeOffer = Effect.fn("billing.route.routeOffer")(function* (
   const preferred =
     country === "ID" ? yield* readIndonesiaRail : ("polar" as const);
   const keysConfigured = yield* isXenditConfigured();
-  const sellsOnPolar = billingOffer(offer).rails.includes("polar");
+  const sellsOnPolar = Arr.contains(billingOffer(offer).rails, "polar");
   const rail =
     preferred === "xendit" && !keysConfigured && sellsOnPolar
       ? "polar"
@@ -87,7 +88,7 @@ export const routeOffer = Effect.fn("billing.route.routeOffer")(function* (
     });
   }
   const amount = billingOfferPrice(offer, currency);
-  if (!billingOffer(offer).rails.includes(rail) || amount === null) {
+  if (!Arr.contains(billingOffer(offer).rails, rail) || amount === null) {
     return yield* new OfferUnavailable({
       offer,
       rail,

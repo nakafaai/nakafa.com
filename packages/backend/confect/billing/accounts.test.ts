@@ -8,6 +8,7 @@ import {
   runInMutation,
 } from "@repo/backend/test/billing";
 import { MASCOT_CODE } from "@repo/backend/test/mascot";
+import { Array as Arr, Option } from "effect";
 
 describe("billing/accounts", () => {
   it("makes one account per owner and rail and reuses it", async () => {
@@ -39,7 +40,9 @@ describe("billing/accounts", () => {
       const accounts = await ctx.db.query("billingAccounts").collect();
       return {
         accounts: accounts.length,
-        customer: accounts.find((account) => account._id === first)
+        customer: Option.getOrUndefined(
+          Arr.findFirst(accounts, (account) => account._id === first)
+        )
           ?.providerCustomerId,
         reused: first === again,
         separate: first !== onXendit,

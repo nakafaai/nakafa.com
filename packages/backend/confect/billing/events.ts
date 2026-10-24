@@ -4,19 +4,28 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import type { BillingEventDelivery } from "@repo/backend/confect/billing/schema";
-import { Effect, Option } from "effect";
+import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
+import { Effect, Option, Schema } from "effect";
 
 /** A webhook row is kept this long, beyond every provider retry window. */
 export const BILLING_EVENT_RETENTION_MS = 90 * 24 * 60 * 60 * 1000;
 /** Rows one cleanup run deletes, so a run never reads an unbounded set. */
-export const BILLING_EVENT_CLEANUP_BATCH = 100;
+const BILLING_EVENT_CLEANUP_BATCH = 100;
 
-export type BillingEventId = Docs["billingEvents"]["_id"];
+type BillingEventId = Docs["billingEvents"]["_id"];
 
 /** Whether a delivery was stored now, or was already stored by an earlier delivery of the same key. */
-export type EventRecorded =
-  | { readonly kind: "accepted"; readonly eventId: BillingEventId }
-  | { readonly kind: "duplicate"; readonly eventId: BillingEventId };
+const EventRecorded = Schema.Union([
+  Schema.Struct({
+    kind: Schema.Literal("accepted"),
+    eventId: IdSchema("billingEvents"),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("duplicate"),
+    eventId: IdSchema("billingEvents"),
+  }),
+]).pipe(Schema.toTaggedUnion("kind"));
+type EventRecorded = typeof EventRecorded.Type;
 
 /**
  * Stores one webhook delivery before anything processes it. A delivery whose

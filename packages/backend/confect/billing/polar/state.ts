@@ -1,31 +1,33 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
-import type {
+import {
   BillingCurrency,
   BillingOfferKey,
 } from "@repo/backend/confect/billing/catalog";
 import { products } from "@repo/backend/confect/billing/polar/products";
-import type { billingSubscriptionStatusValidator } from "@repo/backend/confect/billing/schema";
-import type { WithoutSystemFields } from "convex/server";
-import { DateTime, Match, Option } from "effect";
+import { billingSubscriptionStatusValidator } from "@repo/backend/confect/billing/schema";
 
 type BillingSubscriptionStatus = typeof billingSubscriptionStatusValidator.Type;
+
+import type { WithoutSystemFields } from "convex/server";
+import { DateTime, Match, Option, Schema } from "effect";
 
 /** A stored Polar subscription row, without the system fields a fixture need not carry. */
 export type PolarSubscriptionRow = WithoutSystemFields<Docs["subscriptions"]>;
 
 /** One stored Polar subscription as the billing model holds it, before its account is known. */
-export interface PolarBillingState {
-  readonly cancelAtPeriodEnd: boolean;
-  readonly currency: BillingCurrency;
-  readonly currentPeriodEnd: number | null;
-  readonly currentPeriodStart: number;
-  readonly offer: BillingOfferKey;
-  readonly priceId: string | null;
-  readonly productId: string;
-  readonly providerUpdatedAt: number;
-  readonly status: BillingSubscriptionStatus;
-  readonly subscriptionId: string;
-}
+const PolarBillingState = Schema.Struct({
+  offer: BillingOfferKey,
+  currency: BillingCurrency,
+  status: billingSubscriptionStatusValidator,
+  currentPeriodStart: Schema.Finite,
+  currentPeriodEnd: Schema.NullOr(Schema.Finite),
+  cancelAtPeriodEnd: Schema.Boolean,
+  providerUpdatedAt: Schema.Finite,
+  subscriptionId: Schema.String,
+  productId: Schema.String,
+  priceId: Schema.NullOr(Schema.String),
+});
+type PolarBillingState = typeof PolarBillingState.Type;
 
 /** Polar's subscription statuses in the billing lifecycle. A status not listed stays pending. */
 function statusOf(row: PolarSubscriptionRow): BillingSubscriptionStatus {

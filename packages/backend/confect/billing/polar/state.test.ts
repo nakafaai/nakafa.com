@@ -1,7 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import { polarBillingState } from "@repo/backend/confect/billing/polar/state";
 import { polarSubscriptionRow } from "@repo/backend/test/billing";
-import { Option } from "effect";
+import { Array as Arr, Option } from "effect";
 
 /** The mapped state of one row, or null when the row maps to nothing. */
 function mapped(overrides: Parameters<typeof polarSubscriptionRow>[0]) {
@@ -20,10 +20,11 @@ describe("billing/polar/state", () => {
       ["incomplete_expired", "ended"],
       ["a status Polar may add later", "pending"],
     ] as const;
-    const mappedStatuses = statuses.map(
+    const mappedStatuses = Arr.map(
+      statuses,
       ([polar]) => mapped({ status: polar })?.status
     );
-    expect(mappedStatuses).toEqual(statuses.map(([, billing]) => billing));
+    expect(mappedStatuses).toEqual(Arr.map(statuses, ([, billing]) => billing));
   });
 
   it("ends a canceled subscription once Polar records its end", () => {

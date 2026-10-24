@@ -14,7 +14,7 @@ import {
   runInMutation,
 } from "@repo/backend/test/billing";
 import { MASCOT_CODE } from "@repo/backend/test/mascot";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 
 const START = Date.UTC(2026, 9, 1);
 const PERIOD_END = Date.UTC(2026, 10, 1);
@@ -279,7 +279,7 @@ describe("billing/grants", () => {
         syncSubscriptionGrant(applied.subscriptionId, START)
       );
       const grants = await ctx.db.query("billingGrants").collect();
-      return grants.map((grant) => ({
+      return Arr.map(grants, (grant) => ({
         product: grant.product,
         seats: grant.product === "school" ? grant.seats : null,
       }));
