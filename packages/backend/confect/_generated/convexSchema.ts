@@ -9,6 +9,13 @@ import accountDeletionReceipts from "./tables/accountDeletionReceipts";
 import articleBuckets from "./tables/articleBuckets";
 import articleCatalog from "./tables/articleCatalog";
 import articleCategories from "./tables/articleCategories";
+import billingAccounts from "./tables/billingAccounts";
+import billingCounters from "./tables/billingCounters";
+import billingEvents from "./tables/billingEvents";
+import billingGrants from "./tables/billingGrants";
+import billingInvoices from "./tables/billingInvoices";
+import billingPayments from "./tables/billingPayments";
+import billingSubscriptions from "./tables/billingSubscriptions";
 import chatShares from "./tables/chatShares";
 import chats from "./tables/chats";
 import classGrades from "./tables/classGrades";
@@ -128,6 +135,13 @@ export default $defineSchema({
   articleBuckets: $Table.tableDefinition(articleBuckets),
   articleCatalog: $Table.tableDefinition(articleCatalog),
   articleCategories: $Table.tableDefinition(articleCategories),
+  billingAccounts: $Table.tableDefinition(billingAccounts),
+  billingCounters: $Table.tableDefinition(billingCounters),
+  billingEvents: $Table.tableDefinition(billingEvents),
+  billingGrants: $Table.tableDefinition(billingGrants),
+  billingInvoices: $Table.tableDefinition(billingInvoices),
+  billingPayments: $Table.tableDefinition(billingPayments),
+  billingSubscriptions: $Table.tableDefinition(billingSubscriptions),
   chatShares: $Table.tableDefinition(chatShares),
   chats: $Table.tableDefinition(chats),
   classGrades: $Table.tableDefinition(classGrades),

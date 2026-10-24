@@ -1,0 +1,190 @@
+import { Id } from "@repo/backend/confect/_generated/id";
+import { Space } from "@repo/backend/confect/space";
+import { Schema } from "effect";
+
+/** The rail an account pays through. An account keeps the rail it was made with. */
+export const BillingRail = Schema.Literals(["polar", "xendit"]);
+export type BillingRail = typeof BillingRail.Type;
+
+/** The currency an account bills in: IDR in Indonesia, EUR in the euro territories, USD elsewhere. */
+export const BillingCurrency = Schema.Literals(["EUR", "IDR", "USD"]);
+export type BillingCurrency = typeof BillingCurrency.Type;
+
+/** An ISO 3166-1 alpha-2 country code in uppercase. */
+export const BillingCountry = Schema.String.check(
+  Schema.isPattern(/^[A-Z]{2}$/u)
+);
+
+/** The Xendit channels a recurring Pro or School subscription can be linked through. */
+export const XenditChannel = Schema.Literals([
+  "CARDS",
+  "DANA",
+  "GOPAY_RECURRING",
+  "OVO",
+  "SHOPEEPAY",
+]);
+export type XenditChannel = typeof XenditChannel.Type;
+
+/** A payer. The owner is the person or the school, never both. */
+export const billingAccountValidator = Schema.Struct({
+  owner: Space,
+  rail: BillingRail,
+  country: BillingCountry,
+  currency: BillingCurrency,
+  /** The customer ID the rail knows this payer by, once the rail has created one. */
+  providerCustomerId: Schema.NullOr(Schema.String),
+});
+
+/** Where a recurring subscription lives at its provider. Each rail names its own references. */
+export const billingProviderValidator = Schema.Union([
+  Schema.Struct({
+    kind: Schema.Literal("polar"),
+    subscriptionId: Schema.String,
+    productId: Schema.String,
+    priceId: Schema.NullOr(Schema.String),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("xendit"),
+    planId: Schema.String,
+    tokenId: Schema.NullOr(Schema.String),
+    channel: XenditChannel,
+  }),
+]).pipe(Schema.toTaggedUnion("kind"));
+
+export const billingSubscriptionStatusValidator = Schema.Literals([
+  "pending",
+  "active",
+  "pastDue",
+  "canceled",
+  "ended",
+]);
+
+/** A recurring subscription. Quantity counts seats, one for a Pro consumer. */
+export const billingSubscriptionValidator = Schema.Struct({
+  accountId: Id("billingAccounts"),
+  /** The catalog offer key, such as `pro.monthly`. */
+  offer: Schema.String,
+  quantity: Schema.Int.check(Schema.isGreaterThanOrEqualTo(1)),
+  status: billingSubscriptionStatusValidator,
+  currentPeriodStart: Schema.Finite,
+  currentPeriodEnd: Schema.NullOr(Schema.Finite),
+  cancelAtPeriodEnd: Schema.Boolean,
+  provider: billingProviderValidator,
+  /** The provider's own update time. A webhook older than this never overwrites the row. */
+  providerUpdatedAt: Schema.Finite,
+});
+
+export const billingPaymentKindValidator = Schema.Literals([
+  "cycle",
+  "pass",
+  "invoice",
+]);
+
+/** One payment that arrived. `amount` is in the currency's minor unit. */
+export const billingPaymentValidator = Schema.Struct({
+  accountId: Id("billingAccounts"),
+  subscriptionId: Schema.NullOr(Id("billingSubscriptions")),
+  invoiceId: Schema.NullOr(Id("billingInvoices")),
+  kind: billingPaymentKindValidator,
+  status: Schema.Literals(["succeeded", "failed", "refunded"]),
+  amount: Schema.Int.check(Schema.isGreaterThanOrEqualTo(0)),
+  currency: BillingCurrency,
+  rail: BillingRail,
+  providerPaymentId: Schema.String,
+  method: Schema.String,
+  paidAt: Schema.Finite,
+});
+
+/** One line of an invoice. `amount` is `quantity` times `unitAmount`, in minor units. */
+export const billingInvoiceLineValidator = Schema.Struct({
+  description: Schema.String,
+  quantity: Schema.Int.check(Schema.isGreaterThanOrEqualTo(1)),
+  unitAmount: Schema.Int.check(Schema.isGreaterThanOrEqualTo(0)),
+  amount: Schema.Int.check(Schema.isGreaterThanOrEqualTo(0)),
+});
+
+/** A school or Enterprise invoice, numbered `NKF-YYYY-NNNNNN` in issue order. */
+export const billingInvoiceValidator = Schema.Struct({
+  accountId: Id("billingAccounts"),
+  number: Schema.String.check(Schema.isPattern(/^NKF-\d{4}-\d{6}$/u)),
+  status: Schema.Literals(["draft", "open", "paid", "void"]),
+  currency: BillingCurrency,
+  lines: Schema.NonEmptyArray(billingInvoiceLineValidator),
+  total: Schema.Int.check(Schema.isGreaterThanOrEqualTo(0)),
+  periodStart: Schema.Finite,
+  periodEnd: Schema.Finite,
+  dueAt: Schema.Finite,
+  paymentLink: Schema.NullOr(Schema.String),
+  /** The buyer's tax number, when the buyer gave one. Tax invoices are issued outside Xendit. */
+  buyerTaxId: Schema.NullOr(Schema.String),
+});
+
+/** Where a grant's time came from: a subscription cycle, a pass, an invoice, or a signed contract. */
+export const billingGrantSourceValidator = Schema.Union([
+  Schema.Struct({
+    kind: Schema.Literal("subscription"),
+    subscriptionId: Id("billingSubscriptions"),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("pass"),
+    paymentId: Id("billingPayments"),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("invoice"),
+    invoiceId: Id("billingInvoices"),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("contract"),
+    contractId: Schema.String,
+  }),
+]).pipe(Schema.toTaggedUnion("kind"));
+
+/** Which units of a school a school grant covers. */
+export const schoolGrantScopeValidator = Schema.Union([
+  Schema.Struct({ kind: Schema.Literal("tenant") }),
+  Schema.Struct({ kind: Schema.Literal("unit"), unitId: Id("tenantUnits") }),
+]).pipe(Schema.toTaggedUnion("kind"));
+
+/** A time-bounded right to Pro for one person. `users.plan` is projected from these. */
+export const proBillingGrantValidator = Schema.Struct({
+  product: Schema.Literal("pro"),
+  userId: Id("users"),
+  source: billingGrantSourceValidator,
+  validFrom: Schema.Finite,
+  validTo: Schema.Finite,
+});
+
+/** A time-bounded right to Pro for the enrolled students of a school or one unit of it. */
+export const schoolBillingGrantValidator = Schema.Struct({
+  product: Schema.Literal("school"),
+  tenantId: Id("tenants"),
+  scope: schoolGrantScopeValidator,
+  seats: Schema.Int.check(Schema.isGreaterThanOrEqualTo(0)),
+  source: billingGrantSourceValidator,
+  validFrom: Schema.Finite,
+  validTo: Schema.Finite,
+});
+
+export const billingGrantValidator = Schema.Union([
+  proBillingGrantValidator,
+  schoolBillingGrantValidator,
+]).pipe(Schema.toTaggedUnion("product"));
+
+/** One webhook as received. `key` is unique per rail, so a redelivery is recognized. */
+export const billingEventValidator = Schema.Struct({
+  rail: BillingRail,
+  key: Schema.String,
+  type: Schema.String,
+  /** The provider's own timestamp for the object the event describes. */
+  providerTime: Schema.Finite,
+  /** The body exactly as the provider sent it. */
+  payload: Schema.String,
+  receivedAt: Schema.Finite,
+  processedAt: Schema.NullOr(Schema.Finite),
+});
+
+/** The last invoice number issued in one year. */
+export const billingCounterValidator = Schema.Struct({
+  year: Schema.Int,
+  next: Schema.Int.check(Schema.isGreaterThanOrEqualTo(1)),
+});
