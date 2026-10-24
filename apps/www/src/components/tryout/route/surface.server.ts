@@ -26,6 +26,16 @@ class TryoutSurfaceRenderError extends Schema.TaggedError<TryoutSurfaceRenderErr
   }
 ) {}
 
+/** Renders one part of the surface, as a typed failure that names its stage when the render rejects. */
+const renderStage = <A>(
+  stage: "preview" | "question" | "review",
+  render: () => Promise<A>
+) =>
+  Effect.tryPromise({
+    try: render,
+    catch: (cause) => new TryoutSurfaceRenderError({ cause, stage }),
+  });
+
 /**
  * The parts of an attempt that its running content and its review read: its ID,
  * its signed content, and its state.
@@ -80,11 +90,9 @@ export const readPreviewRoute = Effect.fn("www.tryout.route.readPreview")(
         title: section.title,
       }),
       kind: "preview" as const,
-      preview: yield* Effect.tryPromise({
-        try: () => renderTryoutPreview(input.preview),
-        catch: (cause) =>
-          new TryoutSurfaceRenderError({ cause, stage: "preview" }),
-      }),
+      preview: yield* renderStage("preview", () =>
+        renderTryoutPreview(input.preview)
+      ),
     };
   }
 );
@@ -141,11 +149,7 @@ const renderQuestionBodies = Effect.fn("www.tryout.route.renderQuestionBodies")(
     return yield* Effect.forEach(
       questions,
       (question) =>
-        Effect.tryPromise({
-          try: () => renderTryoutQuestionBody(question),
-          catch: (cause) =>
-            new TryoutSurfaceRenderError({ cause, stage: "question" }),
-        }),
+        renderStage("question", () => renderTryoutQuestionBody(question)),
       { concurrency: "unbounded" }
     );
   }
@@ -182,17 +186,14 @@ export const readAttemptReview = Effect.fn("www.tryout.route.readReview")(
       return Option.none<RenderedReview>();
     }
     return Option.some(
-      yield* Effect.tryPromise({
-        try: () =>
-          renderTryoutReview({
-            access: content,
-            attemptId: attempt.attemptId,
-            locale: input.locale,
-            runtime: runtime.value,
-          }),
-        catch: (cause) =>
-          new TryoutSurfaceRenderError({ cause, stage: "review" }),
-      })
+      yield* renderStage("review", () =>
+        renderTryoutReview({
+          access: content,
+          attemptId: attempt.attemptId,
+          locale: input.locale,
+          runtime: runtime.value,
+        })
+      )
     );
   }
 );

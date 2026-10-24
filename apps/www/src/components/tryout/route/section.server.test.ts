@@ -363,4 +363,22 @@ describe("readTryoutSectionRoute", () => {
       });
     })
   );
+
+  it.effect(
+    "fails the running section with a typed render error when a question cannot render",
+    () =>
+      Effect.gen(function* () {
+        mocks.readCurrentTryoutSection.mockReturnValue(
+          Effect.succeedSome(attemptOf("current", runningSigned))
+        );
+        mocks.renderTryoutQuestionBody.mockRejectedValueOnce(
+          new Error("Body failed.")
+        );
+
+        expect(yield* readSection().pipe(Effect.flip)).toMatchObject({
+          _tag: "TryoutSurfaceRenderError",
+          stage: "question",
+        });
+      })
+  );
 });

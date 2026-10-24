@@ -299,7 +299,7 @@ describe("analytics consent bootstrap decision", () => {
   });
 
   it("keeps the prompt shown and writes no mark when the store cannot be read", () => {
-    const marks = new Map<string, string>();
+    let wroteMark = false;
     const runScript = new Function(
       "localStorage",
       "navigator",
@@ -315,13 +315,13 @@ describe("analytics consent bootstrap decision", () => {
       { doNotTrack: "1" },
       {
         documentElement: {
-          setAttribute: (name: string, value: string) => {
-            marks.set(name, value);
+          setAttribute: () => {
+            wroteMark = true;
           },
         },
       }
     );
-    expect(marks.size).toBe(0);
+    expect(wroteMark).toBe(false);
   });
 });
 

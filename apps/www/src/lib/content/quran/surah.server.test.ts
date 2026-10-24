@@ -1,6 +1,7 @@
 // @vitest-environment node
 import { describe, expect, it } from "@effect/vitest";
 import { makeQuranSurah } from "@repo/backend/test/quran/rows";
+import { loadLocaleMessages } from "@repo/internationalization/src/messages";
 import { Effect } from "effect";
 import {
   readPublishedQuranCatalog,
@@ -78,6 +79,15 @@ describe("surah route read", () => {
     ).resolves.toStrictEqual({ kind: "notFound" });
     expect(readPublishedQuranView).not.toHaveBeenCalled();
     catalogSurahs = [makeQuranSurah(1)];
+  });
+
+  it("fails the surah with its messages error when the locale messages cannot load", async () => {
+    vi.mocked(loadLocaleMessages).mockRejectedValueOnce(
+      new Error("Messages failed.")
+    );
+    await expect(
+      readSurahHandler({ data: { locale: "en", surah: "1" } })
+    ).rejects.toMatchObject({ _tag: "QuranMessagesUnavailableError" });
   });
 
   it("reads the surah with its verses and hides the bismillah when none is published", async () => {

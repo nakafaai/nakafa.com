@@ -2,7 +2,7 @@ import { readServerTranslator } from "@repo/internationalization/src/translator"
 import { Effect, Schema } from "effect";
 
 /** Expected failure while the copy of one translator namespace loads. */
-export class CopyUnavailableError extends Schema.TaggedError<CopyUnavailableError>()(
+class CopyUnavailableError extends Schema.TaggedError<CopyUnavailableError>()(
   "CopyUnavailableError",
   {
     cause: Schema.Unknown,
