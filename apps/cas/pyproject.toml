@@ -2,22 +2,25 @@
 name = "nakafa-cas"
 version = "0.1.0"
 requires-python = ">=3.12"
+# The Cloudflare Python Worker vendors these with uv for its runtime (Python 3.13,
+# Pyodide 0.28.3). That Pyodide index ships pydantic-core 2.27.2 as its only
+# WebAssembly build, and Pydantic 2.10 is the release that requires it. SymPy 1.14
+# is the version that basedpyright checks here; the index ships 1.13.3, and the
+# Worker takes 1.14.0 from PyPI, which is pure Python.
 dependencies = [
-  "fastapi>=0.124.0",
-  "pydantic>=2.12.0",
-  "python-dotenv>=1.2.2",
-  "sympy>=1.14.0",
-  "uvicorn>=0.38.0",
+  "pydantic==2.10.6",
+  "sympy==1.14.0",
 ]
 
 [dependency-groups]
 dev = [
   # 1.40 widens SymPy 1.14 factor(Expr) to Basic, rejecting valid scalar algebra.
   "basedpyright==1.39.10",
-  "httpx2>=2.2.0",
   "pytest>=9.0.0",
   "pytest-cov>=7.0.0",
   "ruff>=0.14.0",
+  # Types for the `workers` module of entry.py, which exists only in the Worker runtime.
+  "workers-runtime-sdk",
 ]
 
 [tool.ruff]
@@ -31,7 +34,6 @@ select = ["E", "F", "I", "UP", "B", "SIM"]
 addopts = [
   "-p",
   "no:cacheprovider",
-  "--cov=api",
   "--cov=cas",
   "--cov-branch",
   "--cov-fail-under=100",
@@ -41,9 +43,6 @@ python_files = ["*_test.py"]
 pythonpath = ["."]
 testpaths = ["tests"]
 
-[tool.vercel]
-entrypoint = "api.index:app"
-
 [tool.basedpyright]
-include = ["api", "cas", "tests"]
+include = ["cas", "tests", "entry.py"]
 typeCheckingMode = "standard"
