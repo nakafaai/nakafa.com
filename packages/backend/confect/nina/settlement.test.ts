@@ -65,16 +65,18 @@ describe("native Nina stop and resend", () => {
   });
 
   it.each([
-    ["exactly one response's credits", 5],
+    ["exactly one response's credits", 0],
     ["credits to spare", 10],
   ])(
     "settles the turn a learner stopped when they send the next prompt, with %s, so a stop and resend never meets a busy chat",
-    async (_balance, credits) => {
-      // With exactly one response's credits the next prompt can only be paid for
-      // by the stopped turn's hold coming back first. With more, the new hold
-      // must start from the refunded balance and not undo the refund.
+    async (_balance, leftAfterHold) => {
+      // The first turn holds the whole balance it starts with (ten credits), so
+      // `leftAfterHold` is what the learner keeps after that hold. With nothing left,
+      // the next prompt can only be paid for by the stopped turn's hold coming back
+      // first. With more, the new hold must start from the refunded balance and not
+      // undo the refund.
       const f = await fixture();
-      await f.setCredits(credits - 5);
+      await f.setCredits(leftAfterHold);
       await f.t.mutation(claim, { turnId: f.turnId });
       await f.owner.mutation(cancel, { chatId: f.chatId });
 
@@ -88,7 +90,7 @@ describe("native Nina stop and resend", () => {
           cancelRequestedAt: NOW,
         }),
       ]);
-      expect(stopped.user?.credits).toBe(credits - 5);
+      expect(stopped.user?.credits).toBe(leftAfterHold);
       expect(stopped.chats[0]?.activeTurnId).toBe(f.turnId);
 
       vi.setSystemTime(NOW + 1000);
@@ -127,11 +129,11 @@ describe("native Nina stop and resend", () => {
         }),
       ]);
       // The old hold came back once and the new prompt took a hold of its own.
-      expect(admitted.user?.credits).toBe(credits - 5);
+      expect(admitted.user?.credits).toBe(0);
       expect(admitted.ledger).toEqual([
         expect.objectContaining({
           type: "usage",
-          amount: -5,
+          amount: -10,
           metadata: expect.objectContaining({
             phase: "cancelled",
             turnId: f.turnId,
@@ -139,13 +141,13 @@ describe("native Nina stop and resend", () => {
         }),
         expect.objectContaining({
           type: "refund",
-          amount: 5,
-          balanceAfter: credits,
+          amount: 10,
+          balanceAfter: leftAfterHold + 10,
         }),
         expect.objectContaining({
           type: "usage",
-          amount: -5,
-          balanceAfter: credits - 5,
+          amount: -(leftAfterHold + 10),
+          balanceAfter: 0,
           metadata: { phase: "reserved" },
         }),
       ]);
@@ -197,7 +199,7 @@ describe("native Nina stop and resend", () => {
       "usage",
     ]);
     expect(state.ledger[2]).toMatchObject({ type: "refund", amount: 0 });
-    expect(state.user?.credits).toBe(5);
+    expect(state.user?.credits).toBe(0);
   });
 
   it("settles a stopped turn when the next prompt starts a new chat, so the credits it held are free for that prompt", async () => {
@@ -256,13 +258,13 @@ describe("native Nina stop and resend", () => {
       ["settled", "cancelled"],
       ["active", "queued"],
     ]);
-    expect(state.user?.credits).toBe(10);
+    expect(state.user?.credits).toBe(0);
     expect(
       Arr.map(
         Arr.filter(state.ledger, (row) => row.type === "refund"),
         (row) => row.balanceAfter
       )
-    ).toEqual([10, 15]);
+    ).toEqual([10, 20]);
   });
 
   it("admits a prompt in a new chat while a stopped turn's journal cannot be read, and settles that turn once it can", async () => {
@@ -297,7 +299,7 @@ describe("native Nina stop and resend", () => {
       [other.turnId, "settled"],
       [next.turnId, "active"],
     ]);
-    expect(admitted.user?.credits).toBe(5);
+    expect(admitted.user?.credits).toBe(0);
     expect(
       Arr.filter(admitted.ledger, (row) => row.type === "refund")
     ).toHaveLength(1);
@@ -331,7 +333,7 @@ describe("native Nina stop and resend", () => {
       state: { status: "cancelled", finishedAt: NOW },
     });
     expect(settled.chats[0]?.activeTurnId).toBe(again.turnId);
-    expect(settled.user?.credits).toBe(5);
+    expect(settled.user?.credits).toBe(0);
     expect(
       Arr.filter(settled.ledger, (row) => row.type === "refund")
     ).toHaveLength(2);
@@ -344,7 +346,7 @@ describe("native Nina stop and resend", () => {
     "settles a stopped turn before it counts the open turns for a prompt %s, so the limit still holds around it",
     async (_where, sameChat) => {
       const f = await fixture();
-      await f.setCredits(30);
+      await f.setCredits(60);
       await f.t.mutation(claim, { turnId: f.turnId });
       await f.owner.mutation(cancel, { chatId: f.chatId });
       await f.owner.mutation(start, { ...args, requestId: "other-chat" });
@@ -379,7 +381,7 @@ describe("native Nina stop and resend", () => {
       f.owner.mutation(start, { ...args, chatId: f.chatId })
     ).rejects.toMatchObject({ data: { code: "NINA_BUSY" } });
     const state = await f.inspect();
-    expect(state.user?.credits).toBe(5);
+    expect(state.user?.credits).toBe(0);
     expect(state.ledger).toHaveLength(1);
     expect(state.turns).toHaveLength(1);
     expect(state.turns[0]).toMatchObject({
@@ -397,7 +399,7 @@ describe("native Nina stop and resend", () => {
       f.owner.mutation(start, { ...args, chatId: f.chatId })
     ).rejects.toMatchObject({ data: { code: "NINA_BUSY" } });
     const state = await f.inspect();
-    expect(state.user?.credits).toBe(5);
+    expect(state.user?.credits).toBe(0);
     expect(state.ledger).toHaveLength(1);
   });
 

@@ -139,7 +139,7 @@ describe("A Nina turn that cannot be settled", () => {
       await f.owner.mutation(start, { ...args, chatId: f.chatId })
     );
     expect(next.chatId).toBe(f.chatId);
-    expect((await f.inspect()).user?.credits).toBe(5);
+    expect((await f.inspect()).user?.credits).toBe(0);
   });
 
   it("ends by itself: the sweep schedules the last try and the scheduler runs it", async () => {
@@ -202,10 +202,10 @@ describe("A Nina turn that cannot be settled", () => {
 
     const state = await f.inspect();
     expect(state.turns[0]).toMatchObject({ state: { status: "complete" } });
-    expect(state.user?.credits).toBe(5);
-    expect(Arr.filter(state.ledger, (row) => row.type === "refund")).toEqual(
-      []
-    );
+    expect(state.user?.credits).toBe(9);
+    expect(Arr.filter(state.ledger, (row) => row.type === "refund")).toEqual([
+      expect.objectContaining({ amount: 9 }),
+    ]);
     // The learner got the answer, so nothing was lost.
     expect(report).not.toHaveBeenCalled();
   });
@@ -260,7 +260,7 @@ describe("A Nina turn that cannot be settled", () => {
       phase: "active",
       state: { status: "running" },
     });
-    expect(kept.user?.credits).toBe(5);
+    expect(kept.user?.credits).toBe(0);
     expect(kept.chats[0]?.activeTurnId).toBe(f.turnId);
     expect(Arr.filter(kept.ledger, (row) => row.type === "refund")).toEqual([]);
     expect(await promptStatus()).toBe(before);

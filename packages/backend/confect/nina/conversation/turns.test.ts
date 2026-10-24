@@ -112,7 +112,7 @@ describe("Nina conversation turns", () => {
     // The owner is told everything, by the chat id and through the share link.
     for (const access of [{}, { shareToken }]) {
       const { conversation, ended } = await read(f.owner, access);
-      const known = { ...where, credits: 5, ...ownerFacts };
+      const known = { ...where, credits: 10, ...ownerFacts };
       expect(conversation.turn).toEqual(known);
       expect(ended).toEqual([known]);
     }

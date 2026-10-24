@@ -6,6 +6,7 @@ import {
   Scheduler,
 } from "@repo/backend/confect/_generated/services";
 import { captureProductEvent } from "@repo/backend/confect/analytics/capture";
+import { creditsCharged } from "@repo/backend/confect/credits/constants";
 import { activeTurns } from "@repo/backend/confect/nina/capacity";
 import type {
   NinaFailureReason,
@@ -45,9 +46,11 @@ export const closeTurn = Effect.fn("nina.settlement.close")(function* (
 ) {
   const reader = yield* DatabaseReader;
   const writer = yield* DatabaseWriter;
-  if (status !== "complete") {
-    yield* refundCredits(turn, turn._id);
-  }
+  // An answer costs what its model calls reported, and the rest of the hold comes back.
+  // A turn that did not answer costs nothing, so all of its hold comes back.
+  const charged =
+    status === "complete" ? creditsCharged(turn.usage, turn.credits) : 0;
+  yield* refundCredits(turn, turn._id, turn.credits - charged);
   yield* writer
     .table("creditTransactions")
     .patch(turn.transactionId, {
@@ -129,7 +132,7 @@ export const closeTurn = Effect.fn("nina.settlement.close")(function* (
               name: "chat response completed",
               properties: {
                 chat_type: chat.type,
-                credits: turn.credits,
+                credits: charged,
                 input_tokens: input,
                 output_tokens: output,
                 total_tokens: input + output,

@@ -174,7 +174,7 @@ describe("native Nina settlement", () => {
     await f.t.mutation(recover, { turnId: f.turnId });
     const state = await f.inspect();
     expect(state.turn?.state.status).toBe("complete");
-    expect(state.user?.credits).toBe(5);
+    expect(state.user?.credits).toBe(0);
     expect(state.ledger).toHaveLength(1);
     expect(state.ledger[0]?.metadata).toMatchObject({
       phase: "complete",
@@ -213,7 +213,7 @@ describe("native Nina settlement", () => {
           event: "chat response completed",
           properties: encodeJsonText({
             chat_type: "study",
-            credits: 5,
+            credits: 10,
             input_tokens: 48,
             output_tokens: 16,
             total_tokens: 64,
@@ -289,7 +289,7 @@ describe("native Nina settlement", () => {
       state: { status: "running" },
       cancelRequestedAt: NOW,
     });
-    expect(stopping.user?.credits).toBe(5);
+    expect(stopping.user?.credits).toBe(0);
     expect(stopping.chat?.activeTurnId).toBe(f.turnId);
     expect(Arr.filter(stopping.ledger, (row) => row.type === "refund")).toEqual(
       []
@@ -356,7 +356,7 @@ describe("native Nina settlement", () => {
     // The run is gone, so until then the turn stays open with its credits held.
     const waiting = await f.inspect();
     expect(waiting.chat?.activeTurnId).toBe(f.turnId);
-    expect(waiting.user?.credits).toBe(5);
+    expect(waiting.user?.credits).toBe(0);
 
     await f.t.finishAllScheduledFunctions(() => vi.runAllTimers());
     const state = await f.inspect();
@@ -478,7 +478,7 @@ describe("native Nina settlement", () => {
     await expect(
       f.owner.mutation(cancel, { chatId: f.chatId })
     ).rejects.toMatchObject({ data: { code: "NINA_WRITE_FAILED" } });
-    expect((await f.inspect()).user?.credits).toBe(5);
+    expect((await f.inspect()).user?.credits).toBe(0);
     await f.owner.mutation(cancel, { chatId: f.chatId });
     await t.mutation((ctx) =>
       ctx.db.patch("chats", f.chatId, { activeTurnId: f.turnId })

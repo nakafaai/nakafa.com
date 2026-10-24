@@ -372,7 +372,7 @@ describe("native Nina deletion lifecycle", () => {
     const kept = await read();
     expect(kept.chat?.activeTurnId).toBe(receipt.turnId);
     expect(kept.turn).toMatchObject({ phase: "active" });
-    expect(kept.user?.credits).toBe(5);
+    expect(kept.user?.credits).toBe(0);
   });
 
   it("keeps the chat, its open turn and the hold when the Agent journal cannot be deleted, so a deleted chat never leaves its words behind", async () => {
@@ -393,7 +393,7 @@ describe("native Nina deletion lifecycle", () => {
     const kept = await read();
     expect(kept.chat?.activeTurnId).toBe(receipt.turnId);
     expect(kept.turn).toMatchObject({ phase: "active" });
-    expect(kept.user?.credits).toBe(5);
+    expect(kept.user?.credits).toBe(0);
   });
 
   it("account cleanup removes owned pending grants and Agent threads while preserving another owner's journal", async () => {
