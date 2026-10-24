@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { Array as Arr, Effect } from "effect";
 import type { reportClientException } from "@/lib/analytics/client";
 import {
   expectSession,
@@ -111,7 +111,10 @@ describe("the session the browser last had", () => {
       expect(yield* loadKnownSession()).toBeNull();
 
       expect(
-        reportClientExceptionMock.mock.calls.map(([, properties]) => properties)
+        Arr.map(
+          reportClientExceptionMock.mock.calls,
+          ([, properties]) => properties
+        )
       ).toEqual([
         { operation: "load", source: "auth.knownSession" },
         { operation: "save", source: "auth.knownSession" },

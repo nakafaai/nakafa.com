@@ -9,7 +9,7 @@ import { Array as Arr, Effect, Option, Schema } from "effect";
 import { readPublishedArticleCategory } from "@/lib/content/article/category";
 import { getArticleModel } from "@/lib/content/article/publication";
 import { toMaterialMetadataCopy } from "@/lib/content/material/metadata";
-import { getMaterialModel } from "@/lib/content/material/publication";
+import { getMaterialModel } from "@/lib/content/material/model";
 import { queryContentStore } from "@/lib/content/store/query";
 import { getMetadataFromSlug } from "@/lib/og/metadata";
 

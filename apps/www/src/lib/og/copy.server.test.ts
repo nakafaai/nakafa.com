@@ -21,7 +21,7 @@ vi.mock("@/lib/content/article/publication", () => ({
   getArticleModel: getArticleModelMock,
 }));
 
-vi.mock("@/lib/content/material/publication", () => ({
+vi.mock("@/lib/content/material/model", () => ({
   /** Controls the published material model. */
   getMaterialModel: getMaterialModelMock,
 }));

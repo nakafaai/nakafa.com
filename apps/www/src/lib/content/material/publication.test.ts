@@ -3,59 +3,25 @@
 import { HttpClient } from "@confect/js";
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
-import { MaterialLessonProjectionSchema } from "@nakafa/aksara-contracts/projection/material";
 import { ContentRuntimeVerificationError } from "@repo/backend/client/content/errors";
 import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease";
 import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
-import { Array as Arr, Effect, Layer, Schema } from "effect";
-import {
-  getMaterialModel,
-  getMaterialPublication,
-} from "@/lib/content/material/publication";
+import { Effect, Layer } from "effect";
+import { getMaterialModel } from "@/lib/content/material/model";
+import { getMaterialPublication } from "@/lib/content/material/publication";
 import { activateTestRelease, advanceTestRelease } from "@/test/active";
 import {
-  previewWireArtifact as artifact,
-  previewDeProjection as deProjection,
-  previewIdProjection as idProjection,
-  previewProjection as projection,
-  previewSourcePath as sourcePath,
-} from "@/test/content-preview";
+  activeReleaseId,
+  data,
+  model,
+  published,
+} from "@/test/content-material";
+import { previewProjection as projection } from "@/test/content-preview";
 import { resetTestRuntimeCache } from "@/test/store";
 
 const queryMock = vi.hoisted(() => vi.fn());
 const deliveryMock = vi.hoisted(() => vi.fn());
 const renderMock = vi.hoisted(() => vi.fn());
-const activeReleaseId = ReleaseIdSchema.make("release-material");
-const encodeProjection = Schema.encodeSync(
-  Schema.fromJsonString(MaterialLessonProjectionSchema)
-);
-const model = {
-  activeReleaseId,
-  activeAppLocales: ["en", "id", "de"],
-  alternateJson: Arr.map([projection, idProjection, deProjection], (value) =>
-    encodeProjection(value)
-  ),
-  projectionJson: encodeProjection(projection),
-  activeManifestHash: `sha256:${"a".repeat(64)}`,
-  rendererDomain: "mathematics",
-  siblingJson: [encodeProjection(projection)],
-  sourcePath,
-  sourceRevision: "a".repeat(40),
-};
-const data = {
-  activeReleaseId,
-  artifact,
-  projection,
-  sourcePath,
-  sourceRevision: "a".repeat(40),
-  rendererManifest: {},
-};
-const published = {
-  activeReleaseId,
-  artifactHash: artifact.artifactHash,
-  projection,
-  body: "rendered",
-};
 vi.mock("@/lib/content/published/body", () => ({
   readRenderedBody: vi.fn(),
 }));
@@ -485,37 +451,5 @@ describe("coherent material publication", () => {
         });
         expect(renderMock).not.toHaveBeenCalled();
       })
-  );
-});
-describe("verified material metadata", () => {
-  it.effect("resolves the verified model without rendering the body", () =>
-    Effect.gen(function* () {
-      expect(
-        yield* getMaterialModel("en", projection.publicPath)
-      ).toMatchObject({
-        model: {
-          activeReleaseId,
-          projection,
-        },
-      });
-      expect(renderMock).not.toHaveBeenCalled();
-    })
-  );
-  it.effect("returns null for a withdrawn release without rendering", () =>
-    Effect.gen(function* () {
-      queryMock.mockReturnValueOnce(
-        Effect.succeed({
-          materialKey: null,
-          model: {
-            ...model,
-            alternateJson: [],
-            projectionJson: null,
-          },
-          runtimeJson: null,
-        })
-      );
-      expect(yield* getMaterialModel("en", projection.publicPath)).toBeNull();
-      expect(renderMock).not.toHaveBeenCalled();
-    })
   );
 });
