@@ -55,18 +55,16 @@ never invoke a Worker.
    the account id, the Convex production and staging deploy keys, and every server
    value that a Worker binds to GitHub Actions secrets, each read through an Effect
    `Config` at run time. CI never runs that stack.
-7. **CAS runs as Durable Objects, and its cutover waits for a passing probe.** The
-   math engine in `apps/cas` is a Python Durable Object (`entry.py`,
-   `cas/compute.py`), and a TypeScript front (`apps/cas/front`) checks the bearer
-   key and forwards each call to one of a fixed pool of engine objects. The front
-   waits at most 20 seconds for an object, the budget of the previous engine, and
-   answers 503 when it stops waiting. The first probe on Workers Free (24 October
-   2026) passed the corpus bar and failed the heavy-request bar: a request that
-   reached the engine's CPU limit returned 503 after 43 seconds, and calls routed
-   to the pool then timed out at 90 seconds for at least eight minutes. A second
-   probe with the 20-second budget passed the same bar in one run (see Measured
-   below). The production route for `cas.nakafa.com` and the removal of its Vercel
-   record wait for the owner's decision on that run.
+7. **CAS runs as Durable Objects, and its cutover waits for the owner.** The math
+   engine in `apps/cas` is a Python Durable Object (`entry.py`, `cas/compute.py`)
+   that imports SymPy at deploy time inside the runtime's entropy allowance of 30
+   calls. A TypeScript front (`apps/cas/front`) checks the bearer key and forwards
+   each call to one of a fixed pool of 16 engine objects. The front waits at most
+   25 seconds for an object. After a 503 or a missed deadline it asks one other
+   object once, and it answers 503 when both fail. The request Schema refuses a
+   request beyond a complexity bound with 422 before SymPy runs. The production
+   route for `cas.nakafa.com` and the removal of its Vercel record wait for the
+   owner's decision on the measured results under Measured.
 
 ## Consequences
 
@@ -110,6 +108,23 @@ never invoke a Worker.
   did. The front reads at most 64 KiB of the raw body, so a compact body above that
   limit is refused even when its canonical form is smaller; the Vercel engine
   accepted such a body when its canonical form fit.
+- The complexity bounds in `cas/schema.py` are ten times the largest value in the
+  test corpus: 30 digits in one integer (corpus 3), exponent 70 (corpus 7), 200
+  expression tokens (corpus 20), matrix dimension 30 (corpus 3), derivative order
+  20 (corpus 2), and series order 60 (corpus 6). A request beyond a bound answers
+  422 before SymPy runs. The bounds limit the length of an input, not the work it
+  causes: the in-bound inputs listed under Measured round 2 exceed two seconds of
+  engine CPU, so the derivation's worst-case claim does not hold for them.
+- The SymPy import allowance is 30 `getentropy` calls, measured with Pyodide 0.28.3
+  (the runtime pinned by workerd) on the engine's import chain. SymPy creates three
+  unseeded generators at import: two in `sympy.core.random` and one in
+  `sympy.core.symbol`. Each reads 2,496 bytes, which CPython requests in 256-byte
+  chunks, so each generator costs 10 calls. The runtime fails the import when the
+  count is short or over.
+- The caller's outer budget in `packages/math/service.ts` is 25 seconds, equal to
+  the front's deadline. A retry after a missed deadline therefore starts after the
+  caller has stopped waiting, so only the 503 path is retried in time. That
+  service's comment still names a 20-second engine limit.
 - Measured on Workers Free in two probe stages, each removed afterwards. The engine
   uploads about 33.3 MB uncompressed, under the 64 MiB limit. SymPy loads on the
   first request, because a Worker may not draw randomness while it starts, so the
