@@ -75,6 +75,7 @@ describe("staff home first screen", () => {
         live: [],
         next: [],
       },
+      serverNow: expect.any(Number),
     });
     expect(mocks.preloadConfectQuery).toHaveBeenCalledExactlyOnceWith(
       exams.exams.home,
@@ -120,7 +121,10 @@ describe("student home first screen", () => {
 
     const screen = await studentHomeHandler({ data: { slug: SLUG } });
 
-    expect(screen).toStrictEqual({ sittings: [{ id: "sitting-1" }] });
+    expect(screen).toStrictEqual({
+      serverNow: expect.any(Number),
+      sittings: [{ id: "sitting-1" }],
+    });
     expect(mocks.preloadConfectQuery).toHaveBeenCalledExactlyOnceWith(
       exams.sittings.mine,
       { slug: SLUG },

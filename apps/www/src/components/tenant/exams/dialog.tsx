@@ -25,6 +25,7 @@ import { useCurrentLocale } from "@repo/internationalization/src/link";
 import { useNavigate } from "@tanstack/react-router";
 import {
   Array as Arr,
+  Clock,
   Effect,
   Function as Fn,
   Option,
@@ -125,16 +126,25 @@ export function CreateExam({
     startTransition(() =>
       runExamAction(
         placeholderExamId.pipe(
-          Effect.flatMap((draftId) => {
-            drafts.getState().start(draftId);
-            return sentAction(() =>
-              create.withOptimisticUpdate(
-                insertDraftExam({ id: draftId, language: chosen, title: name })
-              )({ language: chosen, scope, slug, title: name })
-            ).pipe(
-              Effect.ensuring(Effect.sync(() => drafts.getState().end(draftId)))
-            );
-          }),
+          Effect.flatMap((draftId) =>
+            Effect.flatMap(Clock.currentTimeMillis, (createdAt) => {
+              drafts.getState().start(draftId);
+              return sentAction(() =>
+                create.withOptimisticUpdate(
+                  insertDraftExam({
+                    createdAt,
+                    id: draftId,
+                    language: chosen,
+                    title: name,
+                  })
+                )({ language: chosen, scope, slug, title: name })
+              ).pipe(
+                Effect.ensuring(
+                  Effect.sync(() => drafts.getState().end(draftId))
+                )
+              );
+            })
+          ),
           Effect.tap((saved) =>
             Effect.sync(() => {
               navigate({

@@ -1,12 +1,20 @@
 import { QueryResult } from "@confect/react";
+import { ArrowRight02Icon } from "@hugeicons/core-free-icons";
+import { Dashboard } from "@repo/design-system/components/ui/dashboard";
+import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
-import { CardLink, CardLinks } from "@/components/shared/card/link";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
+import type { CellSpan } from "@/components/tenant/home/cells";
+import { progressPercent } from "@/components/tenant/home/progress";
 import { homeSetupRead, useHomeSetup } from "@/components/tenant/home/query";
-import { missingSteps, type SetupStep } from "@/components/tenant/home/steps";
-import { HomeTile, RowText, TILE_ROWS } from "@/components/tenant/home/tile";
+import {
+  missingSteps,
+  SETUP_STEP_COUNT,
+  type SetupStep,
+} from "@/components/tenant/home/steps";
 import { ReadBoundary } from "@/components/tenant/read/boundary";
+import { SchoolHrefLink } from "@/lib/routing/school/link";
 
 /** The settings page where each step is completed. */
 const STEP_HREF: Record<SetupStep, string> = {
@@ -18,7 +26,7 @@ const STEP_HREF: Record<SetupStep, string> = {
 
 /**
  * The steps that the school still lacks, once both the setup read and the viewer's units have answered. Until
- * then no step shows, so the tile is absent rather than a guess.
+ * then no step shows, so the cell is absent rather than a guess.
  */
 function stepsOf(
   setup: ReturnType<typeof useHomeSetup>,
@@ -39,8 +47,8 @@ function stepsOf(
 }
 
 /**
- * Whether the setup tile shows on the staff home. Only the owner and the admin see it, while a step is missing or
- * the setup read has failed, so the failure shows inside the tile with its own Try again.
+ * Whether the setup cell shows on the staff home. Only the owner and the admin see it, while a step is missing or
+ * the setup read has failed, so the failure shows inside the cell with its own Try again.
  */
 export function useSetupShown() {
   const tenant = useTenant();
@@ -56,34 +64,30 @@ export function useSetupShown() {
 }
 
 /**
- * The setup tile: one row for each step that the school still lacks, up to the rows a tile shows, each opening
- * the settings page that completes it. A failed read shows its own sentence and Try again inside this tile,
- * which keeps its title and footer.
+ * The setup cell: a bar of the steps the school has done, and the next step as one row that opens the settings page
+ * which completes it. A failed read shows its own sentence and Try again inside this cell, which keeps its title.
  */
-export function SetupTile({ className }: { className?: string | undefined }) {
+export function SetupCell({ span }: { span: CellSpan }) {
   const t = useTranslations("School");
   const tenant = useTenant();
 
   return (
     <ReadBoundary
       fallback={(failure) => (
-        <HomeTile
-          className={className}
-          hint={t("tile-setup-footer")}
-          title={t("tile-setup")}
-        >
+        <Dashboard.Cell three={span.three} two={span.two}>
+          <Dashboard.CellHeader title={t("tile-setup")} />
           {failure}
-        </HomeTile>
+        </Dashboard.Cell>
       )}
       read={homeSetupRead(tenant.slug)}
     >
-      <SetupRows className={className} />
+      <SetupRows span={span} />
     </ReadBoundary>
   );
 }
 
-/** The setup tile's rows, read from the setup read and the viewer's units. */
-function SetupRows({ className }: { className?: string | undefined }) {
+/** The setup cell's rows, read from the setup read and the viewer's units. */
+function SetupRows({ span }: { span: CellSpan }) {
   const t = useTranslations("School");
   const setup = useHomeSetup();
   const viewer = useViewerQuery();
@@ -94,37 +98,43 @@ function SetupRows({ className }: { className?: string | undefined }) {
   if (Arr.isReadonlyArrayEmpty(steps)) {
     return null;
   }
+  const done = SETUP_STEP_COUNT - steps.length;
+  const progress = t("setup-progress", { done, total: SETUP_STEP_COUNT });
+
   return (
-    <HomeTile
-      className={className}
-      hint={t("tile-setup-footer")}
-      title={t("tile-setup")}
-    >
-      <CardLinks>
-        {Arr.map(Arr.take(steps, TILE_ROWS), (step) => (
+    <Dashboard.Cell three={span.three} two={span.two}>
+      <Dashboard.CellHeader title={t("tile-setup")}>
+        <span className="text-muted-foreground text-sm tabular-nums">
+          {progress}
+        </span>
+      </Dashboard.CellHeader>
+      <div className="px-6">
+        <Dashboard.Meter
+          label={progress}
+          percent={progressPercent(0, SETUP_STEP_COUNT, done)}
+        />
+      </div>
+      <Dashboard.List>
+        {Arr.map(Arr.take(steps, 1), (step) => (
           <SetupRow key={step} step={step} />
         ))}
-      </CardLinks>
-    </HomeTile>
+      </Dashboard.List>
+    </Dashboard.Cell>
   );
 }
 
-/**
- * One missing step, as a row that opens the settings page that completes it. Its arrow shows at all times, since the
- * row has no other text, and without the arrow it would read as plain text.
- */
+/** The next step that the school lacks, as a row that opens the settings page which completes it. */
 function SetupRow({ step }: { step: SetupStep }) {
   const t = useTranslations("School");
   const title = t(`setup-${step}`);
 
   return (
-    <CardLink
-      arrow="always"
-      href={STEP_HREF[step]}
-      localized={false}
+    <Dashboard.Row
+      render={<SchoolHrefLink href={STEP_HREF[step]} title={title} />}
       title={title}
-    >
-      <RowText title={title} />
-    </CardLink>
+      trailing={
+        <HugeIcons className="size-4 shrink-0" icon={ArrowRight02Icon} />
+      }
+    />
   );
 }

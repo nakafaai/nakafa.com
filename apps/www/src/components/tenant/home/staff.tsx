@@ -1,39 +1,45 @@
 import { QueryResult } from "@confect/react";
+import type { HomeView } from "@repo/backend/confect/exams/home/contract";
+import { Dashboard } from "@repo/design-system/components/ui/dashboard";
 import { Array as Arr } from "effect";
-import type { ReactNode } from "react";
+import { Fragment } from "react";
 import { useTranslations } from "use-intl";
 import type { StoreApi } from "zustand";
 import { useTenant, useViewerQuery } from "@/components/tenant/context";
 import type { ExamDrafts } from "@/components/tenant/exams/drafts";
-import { Bento, type BentoTile } from "@/components/tenant/home/bento";
-import { DraftsTile } from "@/components/tenant/home/drafts";
-import { LiveTile } from "@/components/tenant/home/live";
-import { NextTile } from "@/components/tenant/home/next";
-import { type StaffTile, staffPlan } from "@/components/tenant/home/plan";
+import { type CellSpan, placeCells } from "@/components/tenant/home/cells";
+import { useHomeNow } from "@/components/tenant/home/clock";
+import { DraftsCell } from "@/components/tenant/home/drafts";
+import { LiveCell } from "@/components/tenant/home/live";
+import { HomeMetrics } from "@/components/tenant/home/metrics";
 import { useHomeExams, useHomeSetup } from "@/components/tenant/home/query";
-import { ResultsTile } from "@/components/tenant/home/results";
-import { SetupTile, useSetupShown } from "@/components/tenant/home/setup";
-import { HomeTitle } from "@/components/tenant/home/title";
+import { ResultsCell } from "@/components/tenant/home/results";
+import { ScheduleCell } from "@/components/tenant/home/schedule";
+import { SetupCell, useSetupShown } from "@/components/tenant/home/setup";
+import type { ScheduleRoom } from "@/components/tenant/home/strip";
+import { scheduleDays } from "@/components/tenant/home/strip";
+
+/** The rooms of the staff home, which the schedule draws. */
+type Room = (typeof HomeView.Type)["next"][number];
 
 /**
- * The title, the quiet line, and the tiles of a staff home, in the order and the places the plan gives them. One
- * read brings the rooms, the results, and the drafts, and the setup tile reads the school's setup on its own. Until
- * the reads that its tiles need have answered, only the title shows, and then the quiet line and every tile appear
- * at once, so no tile that is shown moves when another arrives. The home reads these tiles inside the read's
- * boundary, and the boundary's failure keeps the title.
+ * The strip of numbers and the cells of a staff home. One read brings the rooms, the results, and the drafts, and
+ * the setup cell reads the school's setup on its own. Until the reads that the cells need have answered, nothing
+ * shows below the header, and then every cell appears at once, so no cell that is shown moves when another arrives.
+ * The cells lay out in rows that fill the grid at each width, so a cell that is not shown leaves no gap.
  */
-export function StaffTiles({ drafts }: { drafts: StoreApi<ExamDrafts> }) {
-  const t = useTranslations("School");
+export function StaffHome({ drafts }: { drafts: StoreApi<ExamDrafts> }) {
   const tenant = useTenant();
   const exams = useHomeExams();
   const setup = useHomeSetup();
   const viewer = useViewerQuery();
   const setupShown = useSetupShown();
+  const now = useHomeNow();
 
   if (QueryResult.isFailure(exams)) {
     throw exams.error;
   }
-  // A failed read counts as an answer, because its tile shows its own failure. The owner's and the admin's setup
+  // A failed read counts as an answer, because its cell shows its own failure. The owner's and the admin's setup
   // also waits for the viewer's units, which decide its first step.
   const setupAnswered =
     QueryResult.isSuccess(setup) || QueryResult.isFailure(setup);
@@ -43,41 +49,98 @@ export function StaffTiles({ drafts }: { drafts: StoreApi<ExamDrafts> }) {
     QueryResult.isSuccess(exams) &&
     (!tenant.canManage || (setupAnswered && viewerAnswered));
   if (!ready) {
-    return <HomeTitle />;
+    return null;
   }
   const { closed, drafts: draftRows, live, next } = exams.value;
-  const plan = staffPlan({
-    canCreate: tenant.home.canCreate,
-    canWatch: tenant.home.canWatch,
-    closed: closed.length,
-    drafts: draftRows.length,
-    live: live.length,
-    next: next.length,
-    setup: setupShown,
-  });
-  const nodes: Record<StaffTile, ReactNode> = {
-    drafts: <DraftsTile className="h-full" drafts={draftRows} store={drafts} />,
-    live: <LiveTile className="h-full" rooms={live} />,
-    next: <NextTile className="h-full" rooms={next} />,
-    results: <ResultsTile className="h-full" results={closed} />,
-    setup: <SetupTile className="h-full" />,
-  };
+  const days = scheduleDays(Arr.map(next, scheduleRoomOf), now);
+  const quiet = tenant.home.canWatch && live.length === 0 && next.length === 0;
+  const cells = placeCells([
+    {
+      draw: (span) => <ScheduleCell days={days} span={span} />,
+      key: "schedule",
+      shown: Arr.some(days, (day) => Arr.isReadonlyArrayNonEmpty(day.rooms)),
+      three: 2,
+      two: 2,
+    },
+    {
+      draw: (span) => <LiveCell now={now} rooms={live} span={span} />,
+      key: "live",
+      shown: live.length > 0,
+      three: 1,
+      two: 1,
+    },
+    {
+      draw: (span) => <QuietCell span={span} />,
+      key: "quiet",
+      shown: quiet,
+      three: 3,
+      two: 2,
+    },
+    {
+      draw: (span) => <ResultsCell results={closed} span={span} />,
+      key: "results",
+      shown: closed.length > 0,
+      three: 2,
+      two: 1,
+    },
+    {
+      draw: (span) => (
+        <DraftsCell drafts={draftRows} now={now} span={span} store={drafts} />
+      ),
+      key: "drafts",
+      shown: tenant.home.canCreate && draftRows.length > 0,
+      three: 1,
+      two: 1,
+    },
+    {
+      draw: (span) => <SetupCell span={span} />,
+      key: "setup",
+      shown: setupShown,
+      three: 3,
+      two: 2,
+    },
+  ]);
 
   return (
     <>
-      <HomeTitle
-        quiet={
-          plan.quiet
-            ? { act: "sleeping", sentence: t("quiet-staff") }
-            : undefined
-        }
-      />
-      <Bento
-        tiles={Arr.map(
-          plan.tiles,
-          (tile): BentoTile => ({ key: tile, node: nodes[tile] })
-        )}
-      />
+      {tenant.home.canWatch || tenant.home.canCreate ? (
+        <HomeMetrics
+          closed={closed}
+          drafts={draftRows}
+          live={live}
+          next={next}
+        />
+      ) : null}
+      {Arr.isReadonlyArrayEmpty(cells) ? null : (
+        <Dashboard>
+          {Arr.map(cells, (cell) => (
+            <Fragment key={cell.key}>{cell.draw(cell)}</Fragment>
+          ))}
+        </Dashboard>
+      )}
     </>
+  );
+}
+
+/** The schedule's room of one room that the home lists, which its bar opens at the exam's proctor page. */
+function scheduleRoomOf(room: Room): ScheduleRoom {
+  return {
+    href: `/exams/${room.examId}`,
+    id: room.id,
+    opensAt: room.opensAt,
+    room: room.room,
+    timeZone: room.timeZone,
+    title: room.examTitle,
+  };
+}
+
+/** The quiet state of a staff home, which takes the place of the schedule and the rooms while none run or open soon. */
+function QuietCell({ span }: { span: CellSpan }) {
+  const t = useTranslations("School");
+
+  return (
+    <Dashboard.Cell three={span.three} two={span.two}>
+      <Dashboard.Empty act="sleeping">{t("quiet-staff")}</Dashboard.Empty>
+    </Dashboard.Cell>
   );
 }

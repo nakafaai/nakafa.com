@@ -14,6 +14,9 @@ import {
 const SEEDED_EXAM = "Ujian Acceptance";
 const SEEDED_ROOM = /Lab 2/u;
 
+/** The accessible name of the upcoming room's bar in the owner's schedule: its exam, then its room. */
+const UPCOMING_BAR = /Ujian Acceptance, Lab 3/u;
+
 /** The one sentence of the quiet state of a staff home, while no room runs and none opens soon. */
 const QUIET_STAFF =
   "No sitting is running, and none opens in the next 14 days.";
@@ -37,7 +40,9 @@ test("the owner's Beranda shows the page's one action, the quiet state, and the 
   await expect(page.getByRole("button", { name: "Create exam" })).toBeVisible();
   await expect(page.getByText(QUIET_STAFF, { exact: true })).toBeVisible();
   await expect(page.getByText("In progress", { exact: true })).toHaveCount(0);
-  await expect(page.getByText("Your sittings", { exact: true })).toHaveCount(0);
+  await expect(
+    page.getByRole("heading", { name: "Now", exact: true })
+  ).toHaveCount(0);
   // A new school has no teacher, so the owner's setup links the step that completes it.
   await expect(page.getByText("Setup", { exact: true })).toBeVisible();
   await expect(
@@ -95,9 +100,13 @@ test("a student's Beranda shows the student's sittings and no action of the page
 
   await page.goto(address("/"));
 
-  await expect(page.getByText("Your sittings", { exact: true })).toBeVisible();
-  // The one action of a student's page is Enter sitting, while the seeded sitting is open.
-  await expect(page.getByRole("link", { name: "Enter sitting" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Now", exact: true })
+  ).toBeVisible();
+  // The one action of a student's page is Start exam, while the seeded sitting is open.
+  await expect(
+    page.getByRole("link", { name: "Start exam", exact: true })
+  ).toBeVisible();
   await expect(page.getByRole("button", { name: "Create exam" })).toHaveCount(
     0
   );
@@ -127,13 +136,15 @@ test("a student with no sitting sees the quiet state and no action", async ({
   await page.goto(address("/"));
 
   await expect(page.getByText(QUIET_STUDENT, { exact: true })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Enter sitting" })).toHaveCount(
-    0
-  );
+  await expect(
+    page.getByRole("link", { name: "Start exam", exact: true })
+  ).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Create exam" })).toHaveCount(
     0
   );
-  await expect(page.getByText("Your sittings", { exact: true })).toHaveCount(0);
+  await expect(
+    page.getByRole("heading", { name: "Now", exact: true })
+  ).toHaveCount(0);
   await context.close();
 });
 
@@ -235,4 +246,37 @@ test("Beranda fits a 320 px phone without a sideways scroll", async ({
   );
   expect(overflow).toBeLessThanOrEqual(0);
   await context.close();
+});
+
+test("an upcoming room shows as a bar in the owner's schedule, and the bar opens its exam", async ({
+  baseURL,
+  browser,
+}) => {
+  const school = await Effect.runPromise(createSchool());
+  const address = (path: string) =>
+    hostAddress(baseURL, `${school.slug}.localhost`, path);
+  const learner = `home-upcoming-${school.slug}@acceptance.example.test`;
+  const learnerContext = await browser.newContext();
+  await Effect.runPromise(
+    inviteLearner({
+      address: learner,
+      baseURL: address("/"),
+      context: learnerContext,
+      slug: school.slug,
+    })
+  );
+  const context = await browser.newContext();
+  // The seed records its exam as made by the school's Owner, who must have signed in first.
+  await Effect.runPromise(signInOwner(context, school.slug, address("/")));
+  const sitting = await Effect.runPromise(
+    seedSitting(school.slug, learner, 0, true)
+  );
+  const page = await context.newPage();
+
+  await page.goto(address("/"));
+
+  const bar = page.getByRole("link", { name: UPCOMING_BAR });
+  await expect(bar).toHaveAttribute("href", `/exams/${sitting.examId}`);
+  await context.close();
+  await learnerContext.close();
 });
