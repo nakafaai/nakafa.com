@@ -15,13 +15,10 @@ from pydantic import (
 # Complexity bounds. A bound limits the work that a request causes, not only the
 # length of its text. SymPy computes powers, factorials, sums, series, expansions,
 # and determinants eagerly, so a request beyond a bound is refused before SymPy
-# runs: here for text and tokens, in cas/work.py for computed integers, exponents,
-# degrees, and expansions, and in the operation that owns the value. The corpus
-# maxima are 3 digits in one integer, exponent 7, 20 tokens, a 3 by 3 matrix,
-# derivative order 2, series order 6, count operand 5, binomial trials 10, summation
-# terms 4, degree 7, and two equations with two unknowns and two symbols, so no
-# corpus request is refused. docs/adr/0037-cloudflare.md records each measurement
-# behind the bounds that sit below ten times the corpus.
+# builds the value: here for text and tokens, in cas/work.py for computed values and
+# shapes, and in the operation that owns the value. The bounds follow the corpus at
+# ten times its largest value where a measured Pyodide worst case allows it, and
+# docs/adr/0037-cloudflare.md records the measurement behind every other bound.
 MAX_INTEGER_DIGITS = 30
 MAX_EXPONENT = 70
 MAX_DEGREE = 70
