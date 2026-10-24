@@ -10,14 +10,36 @@ import {
   IntervalSchema,
   intervalOf,
 } from "@repo/design-system/components/contents/mathematics/interval";
+import { sampleCurve } from "@repo/design-system/components/contents/mathematics/line/curve";
 import type {
   AuthoredLine,
+  CurveLine,
   ResolvedLine,
 } from "@repo/design-system/components/contents/mathematics/line/spec";
 import { Array as Arr, Option, Schema } from "effect";
 
+/**
+ * Expands one curve into one resolved line per branch. Every branch keeps the
+ * style of the curve, and its labels go on the middle branch in x order, so a
+ * tangent with several branches labels its central one.
+ */
+function resolveCurveLine({ curve, ...line }: CurveLine): ResolvedLine[] {
+  const { labels, ...style } = line;
+  const branches = sampleCurve(curve);
+  const middle = Math.floor(branches.length / 2);
+  return Arr.map(branches, (points, index) => ({
+    ...style,
+    ...(index === middle && labels !== undefined ? { labels } : {}),
+    points,
+    smooth: false,
+  }));
+}
+
 /** Expands one declarative circle line into the concrete WebGL contract. */
 function resolveLine(line: AuthoredLine): ResolvedLine[] {
+  if ("curve" in line) {
+    return resolveCurveLine(line);
+  }
   if (!("kind" in line)) {
     return [line];
   }

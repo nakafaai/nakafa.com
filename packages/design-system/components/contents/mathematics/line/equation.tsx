@@ -27,6 +27,12 @@ export interface CircleArcLineProps extends CircleArcFields {
 interface SceneProps {
   cameraPosition?: [number, number, number];
   cameraTarget?: [number, number, number];
+  /**
+   * The lines of the scene. A line may declare its `curve` instead of its points:
+   * `y = amplitude * f(frequency * x + phase) + shift` over a domain, where `f` is
+   * sin, cos or tan. Its points are computed here, at least 200 per branch, and a tangent
+   * is split at each asymptote and clipped to its y limit (see `line/curve.ts`).
+   */
   data: readonly AuthoredLine[];
   showZAxis?: boolean;
 }

@@ -17,6 +17,59 @@ const rawLine = {
 };
 
 describe("authored mathematical lines", () => {
+  it("resolves a curve into one smooth-free line per branch, labelling the middle one", () => {
+    const lines = resolveAuthoredLines([
+      {
+        color: "green",
+        curve: {
+          amplitude: 1,
+          domain: [-Math.PI, Math.PI],
+          frequency: 1,
+          kind: "tan",
+          phase: 0,
+          shift: 0,
+        },
+        labels: [{ text: "tan" }],
+        showPoints: false,
+      },
+    ]);
+
+    expect(lines).toHaveLength(3);
+    expect(lines.map((line) => line.color)).toEqual([
+      "green",
+      "green",
+      "green",
+    ]);
+    expect(lines.map((line) => line.smooth)).toEqual([false, false, false]);
+    expect(lines.map((line) => line.labels)).toEqual([
+      undefined,
+      [{ text: "tan" }],
+      undefined,
+    ]);
+    expect(lines.every((line) => line.points.length >= 200)).toBe(true);
+  });
+
+  it("resolves a sine curve into one line that keeps its style", () => {
+    const [line, ...rest] = resolveAuthoredLines([
+      {
+        color: "teal",
+        curve: {
+          amplitude: 2,
+          domain: [0, 4],
+          frequency: 1,
+          kind: "sin",
+          phase: 0,
+          shift: 0,
+        },
+        labels: [{ text: "sin" }],
+      },
+    ]);
+
+    expect(rest).toEqual([]);
+    expect(line?.labels).toEqual([{ text: "sin" }]);
+    expect(line?.points).toHaveLength(400);
+  });
+
   it("preserves concrete line data and resolves every declarative primitive", () => {
     const lines = resolveAuthoredLines([
       rawLine,
