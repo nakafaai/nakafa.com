@@ -114,7 +114,7 @@ describe("components/tenant/settings/mutation", () => {
       expect(shown).toHaveLength(3);
     });
 
-    it("shows the time zone and content language of a unit in the viewer and the list at once", () => {
+    it("shows the time zone and page language of a unit in the viewer and the list at once", () => {
       const local = createLocalStore();
       local.seed(tenancy.viewer.get, { slug }, viewer());
       local.seed(tenancy.units.list, { slug }, [unit(smp), unit(sma)]);

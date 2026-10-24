@@ -348,7 +348,7 @@
     "unit-add-submit": "Schule hinzufügen",
     "unit-add-footer": "Eine neue Schule hat noch keinen Zeitraum. Lege einen auf der Seite Zeiträume an.",
     "unit-time-zone": "Zeitzone",
-    "unit-content-language": "Inhaltssprache",
+    "unit-page-language": "Seitensprache",
     "unit-archive-footer": "Eine archivierte Schule bleibt lesbar.",
     "unit-restore-footer": "Wiederherstellen macht die Schule wieder bearbeitbar.",
     "unit-restore": "Wiederherstellen",

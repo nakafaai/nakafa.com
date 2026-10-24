@@ -13,7 +13,7 @@ describe("components/tenant/settings/choices", () => {
     });
   });
 
-  it("offers each content language of the platform under its label", () => {
+  it("offers each page language of the platform under its label", () => {
     expect(languageItems).toContainEqual(
       expect.objectContaining({ value: "id" })
     );

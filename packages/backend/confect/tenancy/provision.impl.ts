@@ -31,7 +31,7 @@ import { Array as Arr, Effect, Layer } from "effect";
  * `actor`, which is the system for Nakafa staff's command and the operator for
  * the console. The school's key is written in the same transaction but is not
  * journaled, because ADR 0016 lists what the journal records and a key is not
- * among them. The invitation email starts with the transaction, in the content language of the
+ * among them. The invitation email starts with the transaction, in the page language of the
  * first school, and an account that already holds the address claims the Person
  * moments later.
  */

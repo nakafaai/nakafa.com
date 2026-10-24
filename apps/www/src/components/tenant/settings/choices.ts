@@ -7,7 +7,7 @@ export const timeZoneItems = Arr.map(
   (zone) => ({ label: zone, value: zone })
 );
 
-/** The content languages a unit may choose, from the platform's list of languages. */
+/** The page languages a unit may choose, from the platform's list of languages. */
 export const languageItems = Arr.map(languages, (language) => ({
   label: language.label,
   value: language.value,

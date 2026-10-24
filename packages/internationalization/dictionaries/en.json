@@ -348,7 +348,7 @@
     "unit-add-submit": "Add school",
     "unit-add-footer": "A new school opens with no period. Add one on the Periods page.",
     "unit-time-zone": "Time zone",
-    "unit-content-language": "Content language",
+    "unit-page-language": "Page language",
     "unit-archive-footer": "An archived school stays readable.",
     "unit-restore-footer": "Restoring the school makes it editable again.",
     "unit-restore": "Restore",

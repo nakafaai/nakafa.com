@@ -348,7 +348,7 @@
     "unit-add-submit": "Tambah sekolah",
     "unit-add-footer": "Sekolah baru belum punya periode. Tambahkan satu di halaman Periode.",
     "unit-time-zone": "Zona waktu",
-    "unit-content-language": "Bahasa konten",
+    "unit-page-language": "Bahasa halaman",
     "unit-archive-footer": "Sekolah yang diarsipkan tetap dapat dibaca.",
     "unit-restore-footer": "Memulihkan sekolah membuatnya dapat diubah lagi.",
     "unit-restore": "Pulihkan",

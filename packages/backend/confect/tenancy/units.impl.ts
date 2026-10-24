@@ -56,7 +56,7 @@ const list = FunctionImpl.make(
 
 /**
  * Adds one active school to the member's organisation, with its level, its name,
- * its time zone, and its content language. The school opens with no period, which
+ * its time zone, and its page language. The school opens with no period, which
  * its periods page opens. An organisation holds at most `UNIT_LIMIT` schools, so a
  * school past that limit is refused and nothing is written.
  */
@@ -129,7 +129,7 @@ const setNpsn = FunctionImpl.make(
 );
 
 /**
- * Sets the time zone and the content language of one school. The school must
+ * Sets the time zone and the page language of one school. The school must
  * be in the member's tenant and not archived (`unit.manage`, ADR 0012), and an
  * Admin may change a school they hold the role for. A value that is already
  * stored writes and records nothing.

@@ -8,7 +8,7 @@ const { create, list } = refs.public.tenancy.units;
 
 describe("tenancy/units create", () => {
   it.effect(
-    "lets an Admin add a school with its level, time zone, and content language, and records it",
+    "lets an Admin add a school with its level, time zone, and page language, and records it",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
