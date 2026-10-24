@@ -91,6 +91,7 @@ jobs:
           AKSARA_PUBLICATION_TOKEN: ${{ secrets.AKSARA_PUBLICATION_TOKEN }}
           CONTENT_RUNTIME_TOKEN: ${{ secrets.CONTENT_RUNTIME_TOKEN }}
           CONVEX_CLOUD_URL: ${{ secrets.CONVEX_CLOUD_URL }}
+          MATH_CAS_API_KEY: ${{ secrets.MATH_CAS_API_KEY }}
           NAKAFA_API_EDGE_SECRET: ${{ secrets.NAKAFA_API_EDGE_SECRET }}
           NAKAFA_CONVEX_SITE_URL: ${{ secrets.NAKAFA_CONVEX_SITE_URL }}
           NAKAFA_MCP_EDGE_SECRET: ${{ secrets.NAKAFA_MCP_EDGE_SECRET }}
