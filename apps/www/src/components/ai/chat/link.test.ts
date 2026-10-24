@@ -9,14 +9,16 @@ const token = "abcdefghijklmnopqrstuvwxyz0123456789-_ABCDE";
 
 describe("chat share link", () => {
   it("carries the token in the fragment, so the path alone is the chat id", () => {
-    const link = new URL(shareLink(chatId, token));
-    expect(link.pathname).toBe("/chat/chat-1");
+    const link = new URL(shareLink(chatId, token, "en"));
+    expect(link.pathname).toBe("/en/chat/chat-1");
     expect(link.search).toBe("");
     expect(link.hash).toBe(`#share=${token}`);
   });
 
   it("reads back the token that a link carries", () => {
-    expect(readShareToken(new URL(shareLink(chatId, token)).hash)).toBe(token);
+    expect(readShareToken(new URL(shareLink(chatId, token, "en")).hash)).toBe(
+      token
+    );
     expect(readShareToken(`#other=1&share=${token}`)).toBe(token);
   });
 

@@ -3,7 +3,8 @@ import nina from "@repo/backend/confect/_generated/refs/nina";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { readChatArgs } from "@/components/ai/chat/access";
 import { ChatBoundary } from "@/components/ai/chat/boundary";
-import { ChatProvider, useChat } from "@/components/ai/chat/context";
+import { useChat } from "@/components/ai/chat/context";
+import { LearnerChatProvider } from "@/components/ai/chat/learner";
 import { AiChat } from "@/components/ai/chat/view";
 
 /**
@@ -27,9 +28,9 @@ export function AiChatPage({
       }}
       resetKeys={[shareToken]}
     >
-      <ChatProvider chatId={chatId} key={chatId} shareToken={shareToken}>
+      <LearnerChatProvider chatId={chatId} key={chatId} shareToken={shareToken}>
         <AiChatMain />
-      </ChatProvider>
+      </LearnerChatProvider>
     </ChatBoundary>
   );
 }

@@ -43,22 +43,46 @@ import { ChatSharing } from "@/components/ai/chat/sharing";
 import { useChatRename } from "@/components/ai/chat/title";
 import { BreadcrumbHeaderFrame } from "@/components/shared/breadcrumb/frame";
 
-/** Render the current chat header or its stable empty placeholder. */
+/**
+ * The header of the chat a viewer reads. Only the owner's header mounts the
+ * Convex hooks of the controls that write, so a reader's header shows the title
+ * alone, with no client. The header waits for the viewer, since only then is it
+ * known whether the viewer owns the chat.
+ */
 export function AiChatHeader() {
   const chat = useChat((s) => s.chat);
-  if (!chat) {
+  const isOwner = useChat((state) => state.owner);
+  const isViewerPending = useChat((state) => state.isViewerPending);
+  if (!chat || isViewerPending) {
     return <ChatHeader />;
   }
-  return <AiChatHeaderContent chat={chat} />;
+  if (!isOwner) {
+    return <ReaderChatHeader chat={chat} />;
+  }
+  return <OwnerChatHeader chat={chat} />;
 }
 
-/** Render title, visibility, sharing, and deletion controls for one chat. */
-function AiChatHeaderContent({ chat }: { chat: ChatView }) {
+/** A reader's header: the chat's title, and no control that writes. */
+function ReaderChatHeader({ chat }: { chat: ChatView }) {
+  return (
+    <ChatHeader>
+      <h1 className="flex items-center gap-2 px-1.5">
+        <HugeIcons
+          className="size-4 shrink-0"
+          icon={chat.visibility === "private" ? SquareLock01Icon : Globe02Icon}
+        />
+        <span className="line-clamp-1 text-sm">{chat.title}</span>
+      </h1>
+    </ChatHeader>
+  );
+}
+
+/** The owner's header: the title, visibility, sharing, and deletion controls for one chat. */
+function OwnerChatHeader({ chat }: { chat: ChatView }) {
   const tCommon = useTranslations("Common");
   const t = useTranslations("Ai");
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [confirmShare, setConfirmShare] = useState(false);
-  const isOwner = useChat((state) => state.owner);
   const {
     chatTitle,
     closeEditor,
@@ -102,56 +126,54 @@ function AiChatHeaderContent({ chat }: { chat: ChatView }) {
               </>
             ) : null}
 
-            {isOwner ? (
-              <DropdownMenu onOpenChange={onMenuOpenChange}>
-                <DropdownMenuTrigger
-                  render={
-                    <Button
-                      aria-label={tCommon("more-actions")}
-                      ref={moreActions}
-                      size="icon"
-                      variant="outline"
-                    >
-                      <HugeIcons icon={MoreHorizontalIcon} />
-                      <span className="sr-only">{tCommon("more-actions")}</span>
-                    </Button>
-                  }
-                />
-                <DropdownMenuContent
-                  align="end"
-                  className="w-56"
-                  finalFocus={menuFinalFocus}
-                >
-                  <DropdownMenuGroup>
-                    <DropdownMenuItem
-                      className="cursor-pointer"
-                      onClick={handleEdit}
-                    >
-                      <HugeIcons icon={Edit01Icon} />
-                      {t("rename-chat")}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      className="cursor-pointer"
-                      onClick={() => setConfirmShare(true)}
-                    >
-                      <HugeIcons icon={LinkForwardIcon} />
-                      {t("share-chat")}
-                    </DropdownMenuItem>
-                  </DropdownMenuGroup>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuGroup>
-                    <DropdownMenuItem
-                      className="cursor-pointer"
-                      onClick={() => setConfirmDelete(true)}
-                      variant="destructive"
-                    >
-                      <HugeIcons icon={Delete02Icon} />
-                      {t("delete-chat")}
-                    </DropdownMenuItem>
-                  </DropdownMenuGroup>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : null}
+            <DropdownMenu onOpenChange={onMenuOpenChange}>
+              <DropdownMenuTrigger
+                render={
+                  <Button
+                    aria-label={tCommon("more-actions")}
+                    ref={moreActions}
+                    size="icon"
+                    variant="outline"
+                  >
+                    <HugeIcons icon={MoreHorizontalIcon} />
+                    <span className="sr-only">{tCommon("more-actions")}</span>
+                  </Button>
+                }
+              />
+              <DropdownMenuContent
+                align="end"
+                className="w-56"
+                finalFocus={menuFinalFocus}
+              >
+                <DropdownMenuGroup>
+                  <DropdownMenuItem
+                    className="cursor-pointer"
+                    onClick={handleEdit}
+                  >
+                    <HugeIcons icon={Edit01Icon} />
+                    {t("rename-chat")}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="cursor-pointer"
+                    onClick={() => setConfirmShare(true)}
+                  >
+                    <HugeIcons icon={LinkForwardIcon} />
+                    {t("share-chat")}
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup>
+                  <DropdownMenuItem
+                    className="cursor-pointer"
+                    onClick={() => setConfirmDelete(true)}
+                    variant="destructive"
+                  >
+                    <HugeIcons icon={Delete02Icon} />
+                    {t("delete-chat")}
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </>
         }
       >
@@ -185,13 +207,12 @@ function AiChatHeaderContent({ chat }: { chat: ChatView }) {
         </Activity>
       </ChatHeader>
 
-      {isOwner ? (
-        <ChatSharing
-          chat={chat}
-          onOpenChange={setConfirmShare}
-          open={confirmShare}
-        />
-      ) : null}
+      <ChatSharing
+        chat={chat}
+        onOpenChange={setConfirmShare}
+        open={confirmShare}
+      />
+
       <ChatDeletion
         chat={chat}
         onOpenChange={setConfirmDelete}

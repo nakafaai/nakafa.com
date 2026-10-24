@@ -17,6 +17,7 @@ import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { toast } from "@repo/design-system/lib/toast/notify";
+import { useCurrentLocale } from "@repo/internationalization/src/link";
 import { cn } from "cn";
 import { Array as Arr, Effect } from "effect";
 import { useEffect, useRef, useState } from "react";
@@ -215,6 +216,7 @@ function ChatShareAction({
 }) {
   const t = useTranslations("Ai");
   const clipboard = useClipboard({ timeout: 500 });
+  const locale = useCurrentLocale();
   const link = useChatShareToken(chatId, isPrivate);
   const failure = linkFailure(link);
   // The failure at the mount is the cache's answer, which a retry shows until the
@@ -251,7 +253,7 @@ function ChatShareAction({
     if (token === null) {
       return;
     }
-    clipboard.copy(shareLink(chatId, token));
+    clipboard.copy(shareLink(chatId, token, locale));
     toast.success(
       { title: "link-copied.title" },
       { position: "bottom-center" }

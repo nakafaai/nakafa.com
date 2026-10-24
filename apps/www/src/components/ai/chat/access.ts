@@ -18,7 +18,7 @@ const UnavailableChatSchema = Schema.Union([
 ]);
 
 /** The card a chat that could not be read shows: its access, or Nakafa's own failure. */
-export type ChatFailureKind = "access" | "retry";
+type ChatFailureKind = "access" | "retry";
 
 /**
  * Reads the card of a failed read from the typed failure it threw. Only a

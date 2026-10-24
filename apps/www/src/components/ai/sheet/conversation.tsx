@@ -1,6 +1,6 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { ChatComposer } from "@/components/ai/chat/composer";
-import { ChatProvider } from "@/components/ai/chat/context";
+import { LearnerChatProvider } from "@/components/ai/chat/learner";
 import { NinaTranscript } from "@/components/ai/transcript";
 
 /**
@@ -10,12 +10,12 @@ import { NinaTranscript } from "@/components/ai/transcript";
  */
 export function SheetConversation({ chatId }: { chatId: Id<"chats"> }) {
   return (
-    <ChatProvider chatId={chatId}>
+    <LearnerChatProvider chatId={chatId}>
       <div className="relative flex size-full min-w-0 flex-col overflow-hidden text-chat">
         <NinaTranscript />
 
         <ChatComposer autoFocus className="px-2 pb-2" />
       </div>
-    </ChatProvider>
+    </LearnerChatProvider>
   );
 }
