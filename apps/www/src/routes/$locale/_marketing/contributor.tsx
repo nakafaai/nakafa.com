@@ -1,6 +1,7 @@
 import { LoveKoreanFingerIcon } from "@hugeicons/core-free-icons";
 import { createFileRoute } from "@tanstack/react-router";
-import { createTranslator, useTranslations } from "use-intl";
+import { useTranslations } from "use-intl";
+import { createTranslator } from "use-intl/core";
 import { ContributorGallery } from "@/components/contributor/gallery";
 import { LayoutContent } from "@/components/shared/content/frame";
 import { HeaderContent } from "@/components/shared/content/header";

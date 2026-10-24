@@ -23,7 +23,6 @@ const releaseId = "release-article";
 vi.mock("@/lib/content/article/catalog", () => ({
   readPublishedCategories: categoryReaderMock,
 }));
-vi.mock("@/lib/content/cache", () => ({}));
 vi.mock("@/lib/content/preview/config", () => ({
   hasPreviewConfig: previewConfigMock,
 }));
@@ -32,7 +31,7 @@ vi.mock(
   async () => (await import("@/test/active")).testActiveModule
 );
 vi.mock(
-  "@vercel/functions",
+  "@/lib/content/store/memory",
   async () => (await import("@/test/store")).testRuntimeCacheModule
 );
 

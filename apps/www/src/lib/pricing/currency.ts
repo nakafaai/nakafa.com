@@ -103,8 +103,8 @@ export function readCurrencyCookie(
   );
 }
 
-/** The request header that names the visitor's country, as the hosting platform sets it. */
-const PRICING_COUNTRY_HEADER = "x-vercel-ip-country";
+/** The request header that names the visitor's country, as Cloudflare sets it. */
+const PRICING_COUNTRY_HEADER = "CF-IPCountry";
 
 /**
  * The lifetime of the currency cookie. The country of each function-handled

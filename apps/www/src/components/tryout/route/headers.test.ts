@@ -5,11 +5,10 @@ import {
 } from "@/components/tryout/route/headers";
 
 describe("try-out response headers", () => {
-  it("caches a public catalog page at the CDN under the try-out release tag", () => {
-    const headers = readTryoutCatalogHeaders();
-
-    expect(headers["Cache-Control"]).toContain("s-maxage=3600");
-    expect(headers["Vercel-Cache-Tag"]).toContain("content-scope:tryout");
+  it("caches a public catalog page at the CDN for an hour", () => {
+    expect(readTryoutCatalogHeaders()["Cache-Control"]).toContain(
+      "s-maxage=3600"
+    );
   });
 
   it("never stores a page that holds one learner's progress", () => {

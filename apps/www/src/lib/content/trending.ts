@@ -10,7 +10,7 @@ import { httpLayer } from "@/lib/convex/http";
 /** The ranking of one locale, as the home page lists it. */
 const TrendingSubjectsSchema = Schema.Array(trendingSubjectValidator);
 
-/** The tag of every stored ranking, so one purge drops all of them. */
+/** The tag of every stored ranking. Nothing expires it: each ranking leaves the store when its lifetime ends. */
 const TRENDING_TAG = "trending";
 
 /**
@@ -48,7 +48,6 @@ export const readHomeTrendingSubjects = Effect.fn("www.content.trending.read")(
     }
     const subjects = yield* loadTrendingSubjects(locale);
     yield* writeStoreEntry({
-      name: "content.trending",
       parts,
       schema: TrendingSubjectsSchema,
       tags: [TRENDING_TAG],

@@ -17,7 +17,7 @@ const coverageExcludes = [
   "confect/http.ts",
   "confect/test.*.ts",
   "test/**",
-  // Declarative: one page size that the web app reads, with no executable behavior.
+  // A declarative constant with no executable behavior to cover.
   "client/comments/list.ts",
 ];
 

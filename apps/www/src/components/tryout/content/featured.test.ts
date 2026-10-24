@@ -34,7 +34,6 @@ import {
   Array as Arr,
   Effect,
   Layer,
-  MutableHashMap,
   Option,
   Schema,
 } from "effect";
@@ -91,7 +90,7 @@ vi.mock("@confect/js", async (importOriginal) => {
   };
 });
 vi.mock(
-  "@vercel/functions",
+  "@/lib/content/store/memory",
   async () => (await import("@/test/store")).testRuntimeCacheModule
 );
 vi.mock(
@@ -280,18 +279,14 @@ describe("featured try-out question", () => {
         const first = yield* loadTryoutQuestion(fixture.question);
         expect(renderToStaticMarkup(first.content)).toBe("Technical question");
         // An entry of an older shape stays under the key that the store reads.
-        const [key, entry] = Option.getOrThrow(
-          Arr.findFirst(
-            Arr.fromIterable(testRuntimeCache.entries),
-            ([, stored]) => stored.name === "tryout.featured.protectedAnswer"
-          )
+        const [key] = Option.getOrThrow(
+          Arr.head(testRuntimeCache.set.mock.calls)
         );
-        MutableHashMap.set(testRuntimeCache.entries, key, {
-          ...entry,
-          text: encodeJsonText({
-            value: { input: { kind: "found" }, status: 200 },
-          }),
-        });
+        testRuntimeCache.set(
+          key,
+          { value: { input: { kind: "found" }, status: 200 } },
+          { expiresAt: Number.MAX_SAFE_INTEGER, now: 0, tags: [] }
+        );
         const again = yield* loadTryoutQuestion(fixture.question);
         expect(renderToStaticMarkup(again.content)).toBe("Technical question");
         expect(fetchMock).toHaveBeenCalledTimes(2);

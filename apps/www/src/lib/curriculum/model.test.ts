@@ -29,7 +29,6 @@ const revision = GitCommitShaSchema.make("a".repeat(40));
 vi.mock("@/lib/content/program/catalog", () => ({
   readPublishedProgramCatalog: catalogMock,
 }));
-vi.mock("@/lib/content/cache", () => ({}));
 vi.mock("@/lib/content/program/route", () => ({
   readPublishedProgramRoute: routeMock,
 }));

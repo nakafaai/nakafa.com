@@ -33,7 +33,7 @@ vi.mock("@tanstack/react-start/server", () => ({
   getRequestHeader: analyticsMocks.getRequestHeader,
 }));
 
-vi.mock("@vercel/functions", () => ({
+vi.mock("cloudflare:workers", () => ({
   waitUntil: analyticsMocks.waitUntil,
 }));
 

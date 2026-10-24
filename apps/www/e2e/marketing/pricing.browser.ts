@@ -176,7 +176,7 @@ const verifyPricingNavigation = Effect.fn("NakafaE2E.verifyPricingNavigation")(
 const loadPricingPageFrom = Effect.fn("NakafaE2E.loadPricingPageFrom")(
   function* (page: Page, href: string, country: string) {
     yield* Effect.promise(() =>
-      page.setExtraHTTPHeaders({ "x-vercel-ip-country": country })
+      page.setExtraHTTPHeaders({ "CF-IPCountry": country })
     );
     yield* loadMarketingPage(page, href);
     yield* Effect.promise(() => page.reload({ waitUntil: "domcontentloaded" }));

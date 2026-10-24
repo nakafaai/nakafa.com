@@ -197,8 +197,7 @@ function answerSignedOutSession() {
  * address, so every school would read as `localhost`, and the Better Auth handler
  * would forward that name as the browser host. The school of a sign-in would be
  * lost. The `host` header carries the browser's host, as the school routing reads
- * it, and on Vercel the URL already names that host, so the rewrite changes nothing
- * there.
+ * it, and where the URL already names that host, the rewrite changes nothing.
  */
 function withBrowserHost(request: Request): Request {
   return Option.match(readRequestHost(request.headers), {

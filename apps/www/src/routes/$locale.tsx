@@ -21,7 +21,8 @@ import {
   useParams,
 } from "@tanstack/react-router";
 import { Option } from "effect";
-import { createTranslator, IntlProvider, useTranslations } from "use-intl";
+import { IntlProvider, useTranslations } from "use-intl";
+import { createTranslator } from "use-intl/core";
 import { AppNotFound } from "@/components/state/app";
 import { LocalizedError } from "@/components/state/localized";
 import { readRouteMessages } from "@/lib/i18n/messages.functions";

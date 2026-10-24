@@ -63,7 +63,6 @@ describe("sitemap index route", () => {
     expect(response.headers.get("content-type")).toBe(
       "application/xml; charset=utf-8"
     );
-    expect(response.headers.get("vercel-cache-tag")).toBe("content-sitemap");
     const body = await response.text();
     expect(body).toContain("https://nakafa.com/sitemap/article_en_p0.xml");
   });

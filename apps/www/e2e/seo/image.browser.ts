@@ -2,11 +2,9 @@ import { expect, test } from "@playwright/test";
 import { Effect } from "effect";
 
 /**
- * The image route answers from the served build and its headers. The Start
- * server reads the logo from disk on each request, so the response shows only
- * that the served process finds the logo. No check here reads the Vercel
- * function's files, so the response does not prove that the deployed function
- * ships the logo.
+ * The image route answers from the served build and its headers. The logo is
+ * bundled with the server code, so a rendered image shows that the served build
+ * carries the logo it draws.
  */
 test("the image routes render and ship the logo they read", async ({
   request,
@@ -19,11 +17,8 @@ test("the image routes render and ship the logo they read", async ({
       yield* Effect.sync(() => {
         expect(response.status()).toBe(200);
         expect(response.headers()["content-type"]).toBe("image/png");
-        // The CDN keeps a known route's image for an hour, as long as the
-        // content it is rendered from, and the activation of a release purges
-        // the tag.
+        // The CDN keeps a known route's image for an hour.
         expect(response.headers()["cache-control"]).toContain("s-maxage=3600");
-        expect(response.headers()["vercel-cache-tag"]).toBe("content-og");
       });
     })
   );

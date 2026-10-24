@@ -32,8 +32,8 @@ export function isUnservedLocaleShape(segment: string | undefined) {
 /**
  * Reads the `/og` address that a public social image alias serves. The alias
  * drops its suffix, so the image route answers the route that it names. A path
- * that the public folder serves, such as `/og.png`, is answered by Nitro before
- * the server entry runs, so the alias never sees it. An alias under a locale shape
+ * that the static assets serve, such as `/og.png`, is answered before the server
+ * entry runs, so the alias never sees it. An alias under a locale shape
  * that the site does not serve is not rewritten, so the router answers it with not
  * found. A path that already names the OG route, bare or under a served locale, is
  * not rewritten either.

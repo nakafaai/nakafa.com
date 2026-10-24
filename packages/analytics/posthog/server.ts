@@ -52,7 +52,7 @@ function getServerAnalytics() {
     disableGeoip: true,
     disableSurveys: true,
     enableExceptionAutocapture: false,
-    host: runtimeKeys.POSTHOG_PROXY_HOST,
+    host: runtimeKeys.VITE_POSTHOG_PROXY_HOST,
     flushAt: 1,
     flushInterval: 0,
     personProfiles: "never",

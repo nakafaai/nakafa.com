@@ -1,7 +1,7 @@
+import { waitUntil } from "cloudflare:workers";
 import type { OperationalExceptionProperties } from "@repo/analytics/posthog/exception";
 import { isServerExceptionReportingEnabled } from "@repo/analytics/server-reporting";
 import { getRequestHeader } from "@tanstack/react-start/server";
-import { waitUntil } from "@vercel/functions";
 import { Cause, Effect, Schema } from "effect";
 
 /** The request has no user agent to read, because no request scope is active. */

@@ -166,7 +166,7 @@ describe("pricing currency script", () => {
 describe("pricing currency cookie", () => {
   it("sets the currency of the request country when no cookie is set yet", () => {
     const cookie = pricingCurrencyCookieFor(
-      new Headers({ "x-vercel-ip-country": "ID" })
+      new Headers({ "CF-IPCountry": "ID" })
     );
     expect(Option.getOrUndefined(cookie)).toBe(
       "pricing_currency=IDR; Path=/; SameSite=Lax; Max-Age=86400"
@@ -177,7 +177,7 @@ describe("pricing currency cookie", () => {
     const cookie = pricingCurrencyCookieFor(
       new Headers({
         cookie: "pricing_currency=IDR",
-        "x-vercel-ip-country": "ID",
+        "CF-IPCountry": "ID",
       })
     );
     expect(Option.isNone(cookie)).toBe(true);
@@ -187,7 +187,7 @@ describe("pricing currency cookie", () => {
     const cookie = pricingCurrencyCookieFor(
       new Headers({
         cookie: "pricing_currency=EUR",
-        "x-vercel-ip-country": "ID",
+        "CF-IPCountry": "ID",
       })
     );
     expect(Option.getOrUndefined(cookie)).toBe(
@@ -199,7 +199,7 @@ describe("pricing currency cookie", () => {
     const cookie = pricingCurrencyCookieFor(
       new Headers({
         cookie: "pricing_currency=XYZ",
-        "x-vercel-ip-country": "DE",
+        "CF-IPCountry": "DE",
       })
     );
     expect(Option.getOrUndefined(cookie)).toContain(

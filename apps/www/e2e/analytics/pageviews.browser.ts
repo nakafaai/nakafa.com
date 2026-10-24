@@ -47,13 +47,16 @@ const observeIngest = Effect.fn("NakafaE2E.observeIngest")(function* (
 ) {
   const captured = MutableList.make<CapturedIngest>();
   yield* Effect.promise(() =>
-    page.route("**/_nakafa/**", (route) => {
-      const ingest = readIngestBody(route.request());
-      if (ingest) {
-        MutableList.append(captured, ingest);
+    page.route(
+      (url) => url.pathname === "/e/" || url.pathname === "/batch/",
+      (route) => {
+        const ingest = readIngestBody(route.request());
+        if (ingest) {
+          MutableList.append(captured, ingest);
+        }
+        return route.abort();
       }
-      return route.abort();
-    })
+    )
   );
   return captured;
 });

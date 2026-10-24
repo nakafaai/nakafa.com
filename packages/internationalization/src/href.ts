@@ -5,7 +5,7 @@ import {
 } from "@repo/internationalization/src/rewrite";
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { Array as Arr, Option, Schema } from "effect";
-import type { Locale } from "use-intl";
+import { type Locale } from "use-intl/core";
 
 const ABSOLUTE_URL_REGEX = /^https?:\/\//;
 const NOT_INTERNAL_REGEX = /^(#|mailto:|tel:|\/\/)/;

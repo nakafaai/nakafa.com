@@ -4,13 +4,14 @@ import { Schema } from "effect";
 
 const optionalStringSchema = Schema.UndefinedOr(Schema.String);
 /**
- * Validates the PostHog managed reverse proxy host read by the app configuration. Server
- * code only: the browser reads `@repo/analytics/public`.
+ * Validates the first-party PostHog proxy host, the managed reverse proxy that
+ * both the browser and server reporting send events to. The browser reads the
+ * same name through `@repo/analytics/public`, and the Worker binds it from here.
  */
 export const postHogProxyKeys = () =>
   readEnvironment(
-    { POSTHOG_PROXY_HOST: urlSchema },
-    { POSTHOG_PROXY_HOST: process.env.POSTHOG_PROXY_HOST }
+    { VITE_POSTHOG_PROXY_HOST: urlSchema },
+    { VITE_POSTHOG_PROXY_HOST: process.env.VITE_POSTHOG_PROXY_HOST }
   );
 /**
  * Validate the shared PostHog environment contract used by server analytics.
@@ -32,10 +33,10 @@ export const deploymentKeys = () =>
   readEnvironment(
     {
       TSS_PRERENDERING: optionalStringSchema,
-      VERCEL_ENV: optionalStringSchema,
+      DEPLOY_STAGE: optionalStringSchema,
     },
     {
       TSS_PRERENDERING: process.env.TSS_PRERENDERING,
-      VERCEL_ENV: process.env.VERCEL_ENV,
+      DEPLOY_STAGE: process.env.DEPLOY_STAGE,
     }
   );

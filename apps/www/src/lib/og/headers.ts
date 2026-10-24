@@ -1,12 +1,7 @@
-/** One CDN-only tag shared by every social image response. */
-export const OG_CACHE_TAG = "content-og";
-
 /**
  * Lets the CDN keep a social image for an hour, and serve a stale one for a
  * day while it renders the next. An image changes only when its route changes,
- * and a route changes only with a release, so the activation of a release
- * purges this tag. A deployment has its own CDN cache key, so it needs no
- * purge.
+ * and a route changes only with a release.
  *
  * The hour is the longest that a CDN copy of an image may outlive its source
  * without a purge. The first request after it gets the stale image at once and
@@ -17,7 +12,6 @@ export const OG_CACHE_TAG = "content-og";
 export const OG_IMAGE_HEADERS = {
   "Cache-Control":
     "public, max-age=0, s-maxage=3600, stale-while-revalidate=86400",
-  "Vercel-Cache-Tag": OG_CACHE_TAG,
 } as const;
 
 /**

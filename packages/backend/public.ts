@@ -1,7 +1,7 @@
 import { readEnvironment } from "@repo/utilities/env";
 import { Schema } from "effect";
 
-const urlSchema = Schema.String.pipe(
+export const urlSchema = Schema.String.pipe(
   Schema.check(
     Schema.makeFilter((value) => URL.canParse(value), {
       message: "Expected a valid URL.",

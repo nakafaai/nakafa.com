@@ -1,42 +1,22 @@
-import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { createRequire } from "node:module";
 import { basename, join } from "node:path";
+import { local as textBinding } from "@alchemy.run/cloudflare-runtime/core/bindings/Text";
+import cloudflare from "@alchemy.run/cloudflare-runtime/vite";
 import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
-import { POSTHOG_PROXY_PATH } from "@repo/analytics/posthog/config";
-import { securityHeaders } from "@repo/site";
-import { AGENT_DISCOVERY_HEADERS } from "@repo/site/discovery";
 import babel from "@rolldown/plugin-babel";
 import tailwindcss from "@tailwindcss/vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
 import react, { reactCompilerPreset } from "@vitejs/plugin-react";
 import rsc from "@vitejs/plugin-rsc";
-import { nitro } from "nitro/vite";
-import { defineConfig, type Plugin } from "vite";
-
-/**
- * The origin of the PostHog proxy that the build names. An unset host installs no
- * proxy route, so analytics requests never leave the app for an unset provider.
- * A set host must parse as a URL, which fails the config load otherwise, and the
- * proxy routes to its origin. The dev Aksara preview child installs no proxy.
- * This file does not import the analytics keys module, because that module imports
- * its own package by name, and the config loader cannot resolve that name.
- */
-function readPostHogProxyOrigin(): string | undefined {
-  const host = process.env.POSTHOG_PROXY_HOST;
-  if (process.env.VITE_AKSARA_PREVIEW_CHILD === "true" || host === undefined) {
-    return undefined;
-  }
-  return new URL(host).origin;
-}
-
-const POSTHOG_PROXY_ORIGIN = readPostHogProxyOrigin();
-
-/** Every response carries the security headers and the agent discovery links. */
-const SHARED_HEADERS = Object.fromEntries(
-  [...securityHeaders, ...AGENT_DISCOVERY_HEADERS].map(({ key, value }) => [
-    key,
-    value,
-  ])
-);
+import { Result } from "effect";
+import { defineConfig, type Plugin, type PluginOption } from "vite";
+import {
+  createWwwHeaders,
+  readWwwHeaderOrigins,
+  renderHeadersFile,
+} from "#www/src/lib/security/headers";
+import { workerEnvironment, workerSettings } from "#www/worker";
 
 /**
  * The marketing pages that prerender in every active locale. Their first HTML is
@@ -58,9 +38,9 @@ const SERVER_FAILURE_MARKER = "<!--$!-->";
 /**
  * TanStack runs each prerender task in a queue whose failures nobody awaits: a
  * page that fails only logs an unhandled rejection, and the build still exits 0.
- * This check throws unless the client output directory, the output that Nitro's
- * preset sets and TanStack prerenders into, holds exactly the listed pages and
- * none of them carries a server failure marker.
+ * This check throws unless the client output directory, the directory that
+ * TanStack prerenders into, holds exactly the listed pages and none of them
+ * carries a server failure marker.
  */
 function assertPrerenderedPages(clientOutputDirectory: string) {
   const expected = PRERENDERED_PAGES.map(({ path }) =>
@@ -94,6 +74,32 @@ function assertPrerenderedPages(clientOutputDirectory: string) {
   }
 }
 
+/**
+ * Writes the `_headers` file of the client output, so the static assets, the
+ * prerendered pages included, carry the headers that the Worker sets on its own
+ * answers. Both read the same list from `src/lib/security/headers.ts`.
+ */
+const writeHeadersFile: Plugin = {
+  apply: "build",
+  buildApp: {
+    order: "post",
+    handler: (builder) =>
+      Promise.resolve(
+        writeFileSync(
+          join(builder.environments.client.config.build.outDir, "_headers"),
+          Result.getOrThrowWith(
+            renderHeadersFile(createWwwHeaders(readWwwHeaderOrigins())),
+            (error) =>
+              new Error(
+                `A _headers line is over the platform limit: ${error.prefix}...`
+              )
+          )
+        )
+      ),
+  },
+  name: "www:write-headers-file",
+};
+
 const verifyPrerenderedPages: Plugin = {
   apply: "build",
   // TanStack's prerender is a post plugin too; this check must run after it.
@@ -109,30 +115,104 @@ const verifyPrerenderedPages: Plugin = {
   name: "www:verify-prerendered-pages",
 };
 
+/** The signature verifiers that `@nakafa/aksara-contracts` exports under `node` only. */
+const NODE_ONLY_CONTRACT_PATHS = [
+  "artifact/verify",
+  "preview/auth",
+  "runtime/protected/verify",
+  "runtime/verify",
+  "tryout/runtime/verify",
+];
+
+const contractsRequire = createRequire(import.meta.url);
+
+const NODE_ONLY_CONTRACT_ALIASES = NODE_ONLY_CONTRACT_PATHS.map((path) => ({
+  find: `@nakafa/aksara-contracts/${path}`,
+  replacement: contractsRequire.resolve(`@nakafa/aksara-contracts/${path}`),
+}));
+
+/** The Worker environments: `ssr` is the Worker entry and `rsc` its child. */
+const WORKER_ENVIRONMENTS = ["ssr", "rsc"];
+
+/**
+ * `@vitejs/plugin-rsc` excludes every package that peers on React from
+ * pre-bundling, so client references keep their own modules. A CommonJS package
+ * in that list stays a bare import inside the pre-bundled chunks, which Node
+ * resolves but the workerd module runner cannot. These have no client
+ * references, so the Worker environments pre-bundle them again.
+ */
+const COMMONJS_REACT_PEERS = ["use-sync-external-store"];
+
+const bundleCommonJsReactPeers: Plugin = {
+  name: "www:bundle-commonjs-react-peers",
+  configEnvironment: {
+    order: "post",
+    handler: (name, config) => {
+      if (!WORKER_ENVIRONMENTS.includes(name)) {
+        return;
+      }
+      const exclude = config.optimizeDeps?.exclude ?? [];
+      config.optimizeDeps = {
+        ...config.optimizeDeps,
+        exclude: exclude.filter((name) => !COMMONJS_REACT_PEERS.includes(name)),
+      };
+    },
+  },
+};
+
 /** The font files that the font-src policy must load from this origin, never inline. */
 const FONT_FILE_PATTERN = /\.woff2?$/;
 
-export default defineConfig({
+/** The Node built-in specifiers, which have no browser build. */
+const NODE_BUILTIN_SPECIFIER = /^node:/;
+
+/**
+ * Alchemy's Cloudflare plugin runs the Worker in workerd under `vite dev`,
+ * `vite build` (prerender included) and `vite preview`, with the server
+ * environment of `workerEnvironment` as plain-text bindings. Alchemy's own build
+ * sets ALCHEMY_CLOUDFLARE_VITE_INJECTED and adds its plugin, so this copy stands
+ * down there. TanStack's prerender preview reloads this file with
+ * TSS_PRERENDERING set and no Alchemy plugin, so this copy runs for it.
+ */
+function alchemyWorker(
+  nodeEnvironment: "development" | "production"
+): PluginOption[] {
+  const isAlchemyBuild = process.env.ALCHEMY_CLOUDFLARE_VITE_INJECTED === "1";
+  const isPrerendering = process.env.TSS_PRERENDERING === "true";
+  if (isAlchemyBuild && !isPrerendering) {
+    return [];
+  }
+  return [
+    cloudflare({
+      compatibilityDate: workerSettings.compatibilityDate,
+      compatibilityFlags: workerSettings.compatibilityFlags,
+      viteEnvironments: workerSettings.viteEnvironments,
+      worker: {
+        bindings: Object.entries({
+          ...workerEnvironment(),
+          NODE_ENV: nodeEnvironment,
+        }).flatMap(([name, value]) =>
+          value === undefined ? [] : [textBinding(name, value)]
+        ),
+        name: workerSettings.name,
+      },
+    }),
+  ];
+}
+
+export default defineConfig(({ command, isPreview }) => ({
   build: {
     // The font-src policy allows only this origin, so a font file stays a file
     // even when it is smaller than the inline limit. Other assets keep the limit.
     assetsInlineLimit: (filePath) =>
       FONT_FILE_PATTERN.test(filePath) ? false : undefined,
   },
-  define: {
-    "import.meta.env.VITE_VERCEL_DEPLOYMENT_ID": JSON.stringify(
-      process.env.VERCEL_DEPLOYMENT_ID ?? ""
-    ),
-  },
   resolve: {
+    // `@nakafa/aksara-contracts` ships its signature verifiers under the `node`
+    // condition only. Workers resolve them by file, since the `workerd` condition
+    // does not match and the `node` condition would select posthog-node's Node build.
+    alias: NODE_ONLY_CONTRACT_ALIASES,
     tsconfigPaths: true,
-  },
-  // takumi-js loads its native `@takumi-rs/core` addon at runtime. A bundled copy
-  // cannot find its platform binary, so the server pass keeps the package external.
-  environments: {
-    ssr: {
-      resolve: { external: ["@takumi-rs/core"] },
-    },
   },
   plugins: [
     tanstackStart({
@@ -144,7 +224,7 @@ export default defineConfig({
         behavior: { dev: "error", build: "error" },
         // Node built-ins have no browser build. The default client specifiers
         // stay, and this one adds every `node:` specifier, subpaths included.
-        client: { specifiers: [/^node:/] },
+        client: { specifiers: [NODE_BUILTIN_SPECIFIER] },
       },
       pages: PRERENDERED_PAGES,
       // Server Components: content bodies render on the server, and only "use
@@ -161,30 +241,20 @@ export default defineConfig({
         failOnError: true,
       },
     }),
-    // Decision 14: no skew route (__vdpl). Server-function calls carry the
-    // pinned deployment through Start's client fetch seam instead.
-    nitro({
-      routeRules: {
-        ...(POSTHOG_PROXY_ORIGIN === undefined
-          ? {}
-          : {
-              [`${POSTHOG_PROXY_PATH}/**`]: {
-                proxy: `${POSTHOG_PROXY_ORIGIN}/**`,
-              },
-            }),
-        "/**": { headers: SHARED_HEADERS },
-      },
-      // The server bundle has no WebAssembly module. Nitro's wasm support adds
-      // the `unwasm` export condition, which selects takumi-js's wasm backend,
-      // since its `#backend` map lists `unwasm` before `node`. Without it,
-      // takumi-js loads its native Node backend, as Next did before.
-      wasm: false,
-      vercel: { skewProtection: false },
-    }),
+    // Decision 34: no skew route and no deployment pin. A client that asks for a
+    // chunk the deploy replaced reloads the document once.
     rsc(),
     tailwindcss(),
     react(),
     babel({ presets: [reactCompilerPreset()] }),
+    bundleCommonJsReactPeers,
+    writeHeadersFile,
     verifyPrerenderedPages,
+    // `vite dev` runs the Worker as Node runs a development server. `vite build`
+    // and `vite preview`, the acceptance server and the prerender included, run
+    // it as the deployed Worker does.
+    ...alchemyWorker(
+      command === "serve" && !isPreview ? "development" : "production"
+    ),
   ],
-});
+}));

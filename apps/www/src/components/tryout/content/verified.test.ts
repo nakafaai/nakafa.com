@@ -67,7 +67,7 @@ vi.mock("@repo/backend/client/content/attempt", async (importOriginal) => {
   return { ...actual, verifyAttemptContent: verifyAttemptSpy };
 });
 vi.mock(
-  "@vercel/functions",
+  "@/lib/content/store/memory",
   async () => (await import("@/test/store")).testRuntimeCacheModule
 );
 vi.mock(

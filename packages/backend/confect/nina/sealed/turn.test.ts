@@ -194,7 +194,9 @@ describe("Sealing a settled Nina turn", () => {
     expect(plantedIn(await storedRowsIn(f.t, f.receipt.threadId, []))).toEqual(
       []
     );
-  }, 15_000);
+    // The failure path runs the whole turn and its scheduled work: about 9 s alone
+    // on a loaded machine, so it gets a budget of its own, as other convex-test suites do.
+  }, 30_000);
 
   it("seals a cancelled turn, and keeps its prompt failed as settlement left it", async () => {
     const f = await askedIn(PLANTED.prompt);

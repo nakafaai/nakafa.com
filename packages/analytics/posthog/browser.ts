@@ -9,7 +9,6 @@ import {
   publishAnalyticsClient,
   readAnalyticsClient,
 } from "@repo/analytics/posthog/capture";
-import { POSTHOG_PROXY_PATH } from "@repo/analytics/posthog/config";
 import {
   type AnalyticsIdentityAuthorization,
   type AnalyticsTier,
@@ -134,7 +133,7 @@ export const enableBaselineAnalytics = Effect.fn(
       try: () => {
         client.init(runtimeKeys.VITE_POSTHOG_KEY, {
           advanced_disable_flags: true,
-          api_host: POSTHOG_PROXY_PATH,
+          api_host: runtimeKeys.VITE_POSTHOG_PROXY_HOST,
           autocapture: false,
           before_send: (event) =>
             filterAuthorizedAnalyticsEvent(

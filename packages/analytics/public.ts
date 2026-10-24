@@ -13,10 +13,12 @@ export const postHogPublicKeys = () =>
   readEnvironment(
     {
       VITE_POSTHOG_KEY: Schema.String.check(Schema.isStartingWith("phc_")),
+      VITE_POSTHOG_PROXY_HOST: urlSchema,
       VITE_POSTHOG_UI_HOST: urlSchema,
     },
     {
       VITE_POSTHOG_KEY: import.meta.env.VITE_POSTHOG_KEY,
+      VITE_POSTHOG_PROXY_HOST: import.meta.env.VITE_POSTHOG_PROXY_HOST,
       VITE_POSTHOG_UI_HOST: import.meta.env.VITE_POSTHOG_UI_HOST,
     }
   );

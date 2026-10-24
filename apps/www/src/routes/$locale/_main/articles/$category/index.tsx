@@ -8,7 +8,7 @@ import {
 import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { Array as Arr, Effect, Match, Option, Schema } from "effect";
-import { createTranslator } from "use-intl";
+import { createTranslator } from "use-intl/core";
 import { getArticleCategoryIcon } from "@/components/articles/category";
 import { ArticleNext } from "@/components/articles/next";
 import { CardArticle } from "@/components/shared/card/article";
@@ -31,10 +31,7 @@ import {
   readArticlePageCursor,
   shouldResetArticlePublicationCursor,
 } from "@/lib/content/article/query";
-import {
-  publicContentHeaders,
-  readContentCacheTags,
-} from "@/lib/content/delivery";
+import { PUBLIC_CONTENT_HEADERS } from "@/lib/content/delivery";
 import { outcome } from "@/lib/content/outcome";
 import { getAksaraTreeUrl } from "@/lib/content/repository";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
@@ -126,7 +123,6 @@ const readArticleCategory = createServerFn({ method: "GET" })
           page: {
             articles: catalog.articles,
             breadcrumbs,
-            cacheTags: readContentCacheTags(["article"]),
             category: model.category,
             categoryPath,
             description: tArticles("description"),
@@ -206,9 +202,7 @@ export const Route = createFileRoute("/$locale/_main/articles/$category/")({
     );
   },
   headers: ({ loaderData }) =>
-    loaderData === undefined
-      ? undefined
-      : publicContentHeaders(loaderData.cacheTags),
+    loaderData === undefined ? undefined : PUBLIC_CONTENT_HEADERS,
   component: ArticleCategoryPage,
 });
 

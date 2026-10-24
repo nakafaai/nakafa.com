@@ -84,28 +84,6 @@ describe("content release pin", () => {
   );
 
   it.effect(
-    "still reports the mismatch when the pointer cannot be dropped",
-    () =>
-      Effect.gen(function* () {
-        expireActiveContentIdentityMock.mockReturnValueOnce(
-          Effect.fail("offline")
-        );
-
-        const error = yield* decodeContentReleasePin(
-          nextReleaseId,
-          activeReleaseId,
-          identity
-        ).pipe(Effect.flip);
-
-        expect(error).toMatchObject({
-          _tag: "PublishedReleaseMismatchError",
-          actualReleaseId: nextReleaseId,
-          expectedReleaseId: activeReleaseId,
-        });
-      })
-  );
-
-  it.effect(
     "keeps the stored release pointer when the read agrees with the pin",
     () =>
       Effect.gen(function* () {

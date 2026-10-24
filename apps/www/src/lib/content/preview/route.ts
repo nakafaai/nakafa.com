@@ -4,9 +4,9 @@ import { previewDocumentRoute } from "@nakafa/aksara-contracts/preview/document"
 import type { LocalPreviewManifest } from "@nakafa/aksara-contracts/preview/spec";
 import { materialPublicNamespace } from "@nakafa/aksara-contracts/projection/material";
 import { PUBLIC_ROUTE_SURFACES } from "@repo/contents/route/surface";
+import { readPreviewSnapshot } from "@/lib/content/preview/manifest";
 import { LocaleSchema } from "@repo/internationalization/src/locale";
 import { Array as Arr, Effect, Option, Schema } from "effect";
-import { readPreviewSnapshot } from "@/lib/content/preview/manifest";
 
 /** Exact public route identity checked before Convex route rejection. */
 const PreviewRouteInputSchema = Schema.Struct({

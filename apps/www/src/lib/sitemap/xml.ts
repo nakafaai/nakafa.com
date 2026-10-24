@@ -1,5 +1,4 @@
 import { Array as Arr, Schema } from "effect";
-import { CONTENT_SITEMAP_CACHE_TAG } from "@/lib/sitemap/cache";
 
 /** One sitemap URL, with the modification date that the XML writes when it is known. */
 const SitemapEntry = Schema.Struct({
@@ -13,7 +12,6 @@ export const sitemapXmlHeaders = {
   "Cache-Control":
     "public, max-age=0, s-maxage=86400, stale-while-revalidate=86400",
   "Content-Type": "application/xml; charset=utf-8",
-  "Vercel-Cache-Tag": CONTENT_SITEMAP_CACHE_TAG,
 } as const;
 
 const xmlHeader = '<?xml version="1.0" encoding="UTF-8"?>';

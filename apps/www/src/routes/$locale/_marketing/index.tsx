@@ -6,7 +6,7 @@ import {
 } from "@repo/seo/json-ld/node";
 import { createFileRoute } from "@tanstack/react-router";
 import { Array as Arr } from "effect";
-import { createTranslator } from "use-intl";
+import { createTranslator } from "use-intl/core";
 import { Closing } from "@/components/marketing/about/closing";
 import { Community } from "@/components/marketing/about/community";
 import { Curricula } from "@/components/marketing/about/curricula";

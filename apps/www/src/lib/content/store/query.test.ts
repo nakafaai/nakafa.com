@@ -38,9 +38,9 @@ vi.mock("@confect/js", async (importOriginal) => {
   };
 });
 
-vi.mock("@vercel/functions", async () => {
+vi.mock("@/lib/content/store/memory", async () => {
   const { testRuntimeCache: cache } = await import("@/test/store");
-  return { getCache: () => cache };
+  return { makeMemoryStore: () => cache };
 });
 
 vi.mock("@/lib/content/published/active", () => ({
@@ -112,7 +112,7 @@ describe("content store query", () => {
       expect(testRuntimeCache.set).toHaveBeenCalledWith(
         expect.stringMatching(STORE_KEY_PATTERN),
         { value: found },
-        expect.objectContaining({ name: "contentRelease/ownership:resolve" })
+        expect.objectContaining({ tags: [expect.any(String)] })
       );
     })
   );

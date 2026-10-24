@@ -1,6 +1,6 @@
 import { Nina } from "@repo/design-system/components/ui/nina";
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { createTranslator } from "use-intl";
+import { createTranslator } from "use-intl/core";
 import { EntryShellBody, EntryShellHeader } from "@/components/entry/shell";
 import { ThemePicker } from "@/components/shared/theme/picker";
 import { SchoolStart } from "@/components/tenant/start/questionnaire";

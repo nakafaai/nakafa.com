@@ -2,6 +2,7 @@
   "name": "@repo/site",
   "version": "2.0.0",
   "private": true,
+  "type": "module",
   "exports": {
     ".": "./index.ts",
     "./*": "./*.ts"

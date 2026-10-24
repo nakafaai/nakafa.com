@@ -30,7 +30,6 @@ const generation = {
 type ArticleRow = Ref.Returns<
   typeof contentRelease.article.publications
 >["result"]["page"][number];
-vi.mock("@/lib/content/cache", () => ({}));
 vi.mock("@confect/js", async (importOriginal) => {
   const { HttpClient } = await importOriginal<typeof import("@confect/js")>();
   return {

@@ -3,7 +3,7 @@ import { selectQuranMeaning } from "@repo/backend/content/quran/contract";
 import { loadLocaleMessages } from "@repo/internationalization/src/messages";
 import { toAnchorSlug } from "@repo/utilities/slug";
 import { Array as Arr, Effect, Option, Schema } from "effect";
-import { createTranslator } from "use-intl";
+import { createTranslator } from "use-intl/core";
 
 /** Expected failure while the messages of one locale load for a surah page. */
 class QuranMessagesUnavailableError extends Schema.TaggedError<QuranMessagesUnavailableError>()(
@@ -14,10 +14,6 @@ class QuranMessagesUnavailableError extends Schema.TaggedError<QuranMessagesUnav
   }
 ) {}
 
-import {
-  LEARN_SHELL_CACHE_SCOPES,
-  readContentCacheTags,
-} from "@/lib/content/delivery";
 import {
   getQuranPagination,
   getQuranSurahName,
@@ -95,10 +91,6 @@ const readSurahPage = Effect.fn("www.content.quran.readSurah")(function* (
       { name: t("quran"), path: "/quran" },
       { name: title, path: `/quran/${data.surah}` },
     ]),
-    cacheTags: readContentCacheTags(
-      [...LEARN_SHELL_CACHE_SCOPES, "quran"],
-      [view.snapshotId]
-    ),
     copySourceUrl: getLlmsMarkdownPath({
       locale,
       publicPath: `quran/${data.surah}`,

@@ -64,7 +64,6 @@ function routeResponse(overrides?: {
     sourceRevision: revision,
   };
 }
-vi.mock("@/lib/content/cache", () => ({}));
 vi.mock("@confect/js", async (importOriginal) => {
   const { HttpClient } = await importOriginal<typeof import("@confect/js")>();
   return {
@@ -89,7 +88,7 @@ vi.mock(
   async () => (await import("@/test/active")).testActiveModule
 );
 vi.mock(
-  "@vercel/functions",
+  "@/lib/content/store/memory",
   async () => (await import("@/test/store")).testRuntimeCacheModule
 );
 describe("published program route", () => {

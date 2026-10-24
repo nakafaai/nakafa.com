@@ -7,9 +7,17 @@ import {
 } from "@tanstack/react-start/server";
 import { Effect } from "effect";
 import { answerRequest } from "@/lib/routing/answer.server";
+import { logRouteFailures } from "@/lib/routing/failures.server";
 import { withPageHeaders } from "@/lib/tenant/gate";
 
-const startHandler = createStartHandler(defaultStreamHandler);
+/**
+ * Renders the route tree after the router loads it. The router answers a failed
+ * route with its own error page, so the log of each failed route is written here.
+ */
+const startHandler = createStartHandler((context) => {
+  Effect.runSync(logRouteFailures(context.router.stores.matches.get()));
+  return defaultStreamHandler(context);
+});
 
 /**
  * Start's server entry. The address and the headers decide each answer before the

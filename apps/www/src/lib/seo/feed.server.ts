@@ -1,4 +1,3 @@
-import { makeContentCacheTag } from "@nakafa/aksara-contracts/cache/content";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import {
   DEFAULT_LOCALE,
@@ -24,18 +23,11 @@ const FEED_ERROR = "Internal Server Error";
 const PLAIN_TEXT = { "Content-Type": "text/plain; charset=utf-8" };
 const RSS_CONTENT_ROUTE_LIMIT = 100;
 
-/**
- * The feed lives on the CDN for a day. Its two content scopes name it, so a
- * release that changes an article or a material purges it with the content.
- */
+/** The feed may live on a CDN for a day, and its headers name no cache tag. */
 export const RSS_HEADERS = {
   "Cache-Control":
     "public, max-age=0, s-maxage=86400, stale-while-revalidate=86400",
   "Content-Type": "application/rss+xml; charset=utf-8",
-  "Vercel-Cache-Tag": Arr.join(
-    [makeContentCacheTag("article"), makeContentCacheTag("material")],
-    ","
-  ),
 };
 
 /** One feed entry, read from a signed article or material of one locale. */

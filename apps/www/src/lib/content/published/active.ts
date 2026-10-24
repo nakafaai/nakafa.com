@@ -27,21 +27,21 @@ type ActiveContentIdentity = typeof ActiveContentIdentitySchema.Type;
 export type ActiveContentReleaseId =
   NonNullable<ActiveContentIdentity>["releaseId"];
 
-/** Store tag of the active release pointer, expired when a release goes live. */
-const ACTIVE_POINTER_TAG = "content-active";
+/** Store tag of the active release pointer, expired in the isolate that activates a release. */
+/** The store tag of the stored release pointer, which expires it. */
+export const ACTIVE_POINTER_TAG = "content-active";
 const ACTIVE_POINTER_PARTS = ["active"];
 /**
- * How long a region trusts its stored pointer when nothing drops it.
+ * How long an isolate trusts its stored pointer when nothing drops it.
  *
- * The activation route expires the pointer the moment a release goes live and
- * reads it back to prove the expiry, because the Runtime Cache client logs a
- * failed expiry and resolves. Every read that finds Convex naming another
- * release than the pointer drops it too. This lifetime covers what is left: a
- * read that began before the activation and writes the previous pointer after
- * the expiry. A minute bounds how long a region keeps showing the previous
- * release, and it bounds the Convex reads of the pointer to one a minute per
- * region, below the 115 thousand a month that the unstored read made. A longer
- * lifetime would save little more and would delay a release longer.
+ * The activation route expires the pointer in the isolate that serves it and
+ * reads it back to prove the expiry. Every other isolate drops its pointer when
+ * this lifetime ends, and every read that finds Convex naming another release
+ * than the pointer drops it too. A minute bounds how long an isolate keeps
+ * showing the previous release, and it bounds the Convex reads of the pointer
+ * to one a minute per isolate, below the 115 thousand a month that the unstored
+ * read made. A longer lifetime would save little more and would delay a release
+ * longer.
  */
 const ACTIVE_POINTER_LIFETIME = Duration.seconds(60);
 
@@ -61,7 +61,7 @@ export const loadActiveContentIdentity = Effect.fn(
 
 /**
  * Reads the active content release identity that the content store keys every
- * entry by. Each region keeps it for a short time, so a document request reads
+ * entry by. Each isolate keeps it for a short time, so a document request reads
  * Convex for the pointer once a minute and not once per request.
  */
 export const readActiveContentIdentity = Effect.fn(
@@ -76,7 +76,6 @@ export const readActiveContentIdentity = Effect.fn(
   }
   const identity = yield* loadActiveContentIdentity();
   yield* writeStoreEntry({
-    name: "content.active",
     parts: ACTIVE_POINTER_PARTS,
     schema: ActiveContentIdentitySchema,
     tags: [ACTIVE_POINTER_TAG],
@@ -86,7 +85,7 @@ export const readActiveContentIdentity = Effect.fn(
   return identity;
 });
 
-/** Makes every region read the active release pointer from Convex again. */
+/** Makes this isolate read the active release pointer from Convex again. */
 export const expireActiveContentIdentity = Effect.fn(
   "NakafaContent.expireActiveContentIdentity"
 )(function* () {
@@ -94,15 +93,12 @@ export const expireActiveContentIdentity = Effect.fn(
 });
 
 /**
- * Proves that the stored pointer names the release that was just activated.
- *
- * The Runtime Cache client logs an expiry that failed or timed out and
- * resolves, so a call to `expireActiveContentIdentity` cannot tell the caller
- * that it did nothing. Reading the pointer back can: it must now name
- * `releaseId`, and the read stores the fresh pointer for the next reader. A
- * pointer that still names the previous release fails with the mismatch, so
- * the activation route can answer 503 before it revalidates anything, and the
- * publisher repeats the call.
+ * Proves that the stored pointer of this isolate names the release that was just
+ * activated. Reading the pointer back shows whether the expiry took effect here:
+ * the pointer must now name `releaseId`, and the read stores the fresh pointer
+ * for the next reader. A pointer that still names the previous release fails
+ * with the mismatch, so the activation route can answer 503, and the publisher
+ * repeats the call.
  */
 export const confirmActiveContentIdentity = Effect.fn(
   "NakafaContent.confirmActiveContentIdentity"

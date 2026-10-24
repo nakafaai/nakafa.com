@@ -5,23 +5,9 @@ import { ContentCacheRequestSchema } from "@nakafa/aksara-contracts/cache/conten
 import { ReleaseIdSchema } from "@nakafa/aksara-contracts/ids";
 import { BodyReadError } from "@repo/utilities/body";
 import { Effect } from "effect";
-import {
-  ContentCacheInvalidationError,
-  type invalidateContentCache,
-} from "@/lib/content/cache";
 import { receiveContentCache } from "@/lib/content/internal/cache.server";
 import { PublishedReleaseMismatchError } from "@/lib/content/published/errors";
-import { ContentStoreUnavailableError } from "@/lib/content/store/entry";
-import type { invalidateLlmsCache } from "@/lib/llms/cache";
-import {
-  type invalidateOgCache,
-  OgCacheInvalidationError,
-} from "@/lib/og/cache";
 import { runServerEffect } from "@/lib/server/fn";
-import {
-  type invalidateSitemapCache,
-  SitemapCacheInvalidationError,
-} from "@/lib/sitemap/cache";
 import { encodeCacheRequest, invalidBodies, releaseId } from "@/test/cache";
 
 const CACHE_URL = "https://nakafa.com/api/internal/content/cache";
@@ -32,20 +18,7 @@ const exactBody = encodeCacheRequest(
 const loadActiveContentIdentityMock = vi.hoisted(() => vi.fn());
 const expireActiveContentIdentityMock = vi.hoisted(() => vi.fn());
 const confirmActiveContentIdentityMock = vi.hoisted(() => vi.fn());
-const invalidateContentCacheMock = vi.hoisted(() =>
-  vi.fn<typeof invalidateContentCache>()
-);
-const invalidateStoreTagMock = vi.hoisted(() => vi.fn());
 const readBoundedBodyMock = vi.hoisted(() => vi.fn());
-const invalidateSitemapCacheMock = vi.hoisted(() =>
-  vi.fn<typeof invalidateSitemapCache>()
-);
-const invalidateOgCacheMock = vi.hoisted(() =>
-  vi.fn<typeof invalidateOgCache>()
-);
-const invalidateLlmsCacheMock = vi.hoisted(() =>
-  vi.fn<typeof invalidateLlmsCache>()
-);
 
 vi.mock("@repo/utilities/body", async (importOriginal) => {
   const original =
@@ -60,35 +33,6 @@ vi.mock("@/env", () => ({
   env: { AKSARA_PUBLICATION_TOKEN: "test-key" },
 }));
 
-vi.mock("@/lib/content/cache", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@/lib/content/cache")>()),
-  /** Records the content store expiry of one scope. */
-  invalidateContentCache: invalidateContentCacheMock,
-}));
-
-vi.mock("@/lib/content/store/entry", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@/lib/content/store/entry")>()),
-  /** Records the CDN purge of one scope without calling Vercel. */
-  invalidateStoreTag: invalidateStoreTagMock,
-}));
-
-vi.mock("@/lib/sitemap/cache", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@/lib/sitemap/cache")>()),
-  /** Records the shared sitemap invalidation without calling Vercel. */
-  invalidateSitemapCache: invalidateSitemapCacheMock,
-}));
-
-vi.mock("@/lib/og/cache", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@/lib/og/cache")>()),
-  /** Records the social image invalidation without calling Vercel. */
-  invalidateOgCache: invalidateOgCacheMock,
-}));
-
-vi.mock("@/lib/llms/cache", () => ({
-  /** Records the Markdown corpus invalidation without calling Vercel. */
-  invalidateLlmsCache: invalidateLlmsCacheMock,
-}));
-
 vi.mock("@/lib/content/published/active", () => ({
   /** Answers whether the stored release pointer names the activated release. */
   confirmActiveContentIdentity: confirmActiveContentIdentityMock,
@@ -98,23 +42,18 @@ vi.mock("@/lib/content/published/active", () => ({
   loadActiveContentIdentity: loadActiveContentIdentityMock,
 }));
 
+const activeIdentity = (activeReleaseId: string) => ({
+  manifestHash: `sha256:${"a".repeat(64)}`,
+  releaseId: activeReleaseId,
+  sequence: 1,
+});
+
 beforeEach(() => {
-  loadActiveContentIdentityMock.mockReset().mockReturnValue(
-    Effect.succeed({
-      manifestHash: `sha256:${"a".repeat(64)}`,
-      releaseId,
-      sequence: 1,
-    })
-  );
+  loadActiveContentIdentityMock
+    .mockReset()
+    .mockReturnValue(Effect.succeed(activeIdentity(releaseId)));
   expireActiveContentIdentityMock.mockReset().mockReturnValue(Effect.void);
   confirmActiveContentIdentityMock.mockReset().mockReturnValue(Effect.void);
-  invalidateContentCacheMock
-    .mockReset()
-    .mockImplementation((scope) => Effect.succeed(scope));
-  invalidateStoreTagMock.mockReset().mockReturnValue(Effect.void);
-  invalidateSitemapCacheMock.mockReset().mockReturnValue(Effect.void);
-  invalidateLlmsCacheMock.mockReset().mockReturnValue(Effect.void);
-  invalidateOgCacheMock.mockReset().mockReturnValue(Effect.void);
 });
 
 /** Posts one request to the receiver with the given headers and body. */
@@ -155,7 +94,6 @@ describe("content cache receiver authorization", () => {
         error: "Unauthorized",
       });
     }
-    expect(invalidateContentCacheMock).not.toHaveBeenCalled();
   });
 
   it("rejects an empty bearer token", async () => {
@@ -191,71 +129,54 @@ describe("content cache receiver body", () => {
     const response = await postAuthorized(exactBody);
 
     expect(response.status).toBe(400);
-    expect(invalidateContentCacheMock).not.toHaveBeenCalled();
   });
 
   it("rejects an authenticated request without a body", async () => {
     const response = await postAuthorized(null);
 
     expect(response.status).toBe(400);
-    expect(invalidateContentCacheMock).not.toHaveBeenCalled();
   });
 });
 
 describe("content cache receiver release", () => {
-  it("answers 409 and invalidates nothing when the active release differs", async () => {
+  it("answers 409 and expires nothing when the active release differs", async () => {
     loadActiveContentIdentityMock.mockReturnValue(
-      Effect.succeed({
-        manifestHash: `sha256:${"b".repeat(64)}`,
-        releaseId: ReleaseIdSchema.make("release-other"),
-        sequence: 2,
-      })
+      Effect.succeed(activeIdentity(ReleaseIdSchema.make("release-other")))
     );
 
     const response = await postAuthorized(exactBody);
 
     expect(response.status).toBe(409);
-    await expect(response.json()).resolves.toEqual({
-      error: "Content release is not active.",
-    });
-    expect(invalidateContentCacheMock).not.toHaveBeenCalled();
-    expect(invalidateStoreTagMock).not.toHaveBeenCalled();
+    expect(expireActiveContentIdentityMock).not.toHaveBeenCalled();
   });
 
   it("answers 409 when Convex holds no active release", async () => {
-    loadActiveContentIdentityMock.mockReturnValue(Effect.void);
+    loadActiveContentIdentityMock.mockReturnValue(Effect.succeed(null));
 
     const response = await postAuthorized(exactBody);
 
     expect(response.status).toBe(409);
   });
 
-  it("invalidates the scope in order and echoes one receipt", async () => {
+  it("expires the pointer, confirms the activated release, and echoes one receipt", async () => {
     const response = await postAuthorized(exactBody);
 
     expect(response.status).toBe(200);
     expect(response.headers.get("Cache-Control")).toBe("private, no-store");
-    await expect(response.json()).resolves.toEqual({
+    expect(await response.json()).toStrictEqual({
       releaseId,
       revalidated: true,
       scope: "material",
     });
     expect(expireActiveContentIdentityMock).toHaveBeenCalledTimes(2);
     expect(confirmActiveContentIdentityMock).toHaveBeenCalledWith(releaseId);
-    expect(invalidateContentCacheMock).toHaveBeenCalledWith("material");
-    expect(invalidateStoreTagMock).toHaveBeenCalledWith(
-      "content-scope:material"
-    );
-    expect(invalidateSitemapCacheMock).toHaveBeenCalledWith(releaseId);
-    expect(invalidateLlmsCacheMock).toHaveBeenCalledWith(releaseId);
-    expect(invalidateOgCacheMock).toHaveBeenCalledWith(releaseId);
   });
 
-  it("confirms the pointer before any purge runs", async () => {
+  it("answers 503 without a receipt when the pointer still names another release", async () => {
     confirmActiveContentIdentityMock.mockReturnValue(
       Effect.fail(
         new PublishedReleaseMismatchError({
-          actualReleaseId: ReleaseIdSchema.make("release-old"),
+          actualReleaseId: ReleaseIdSchema.make("release-other"),
           expectedReleaseId: releaseId,
         })
       )
@@ -264,93 +185,8 @@ describe("content cache receiver release", () => {
     const response = await postAuthorized(exactBody);
 
     expect(response.status).toBe(503);
-    await expect(response.json()).resolves.toEqual({
+    expect(await response.json()).toStrictEqual({
       error: "Content cache invalidation failed.",
-    });
-    expect(invalidateContentCacheMock).not.toHaveBeenCalled();
-    expect(invalidateStoreTagMock).not.toHaveBeenCalled();
-  });
-
-  it("answers 503 without a receipt when the pointer expiry fails", async () => {
-    expireActiveContentIdentityMock.mockReturnValue(
-      Effect.fail(
-        new ContentStoreUnavailableError({ cause: "down", operation: "expire" })
-      )
-    );
-
-    const response = await postAuthorized(exactBody);
-
-    expect(response.status).toBe(503);
-    expect(invalidateSitemapCacheMock).not.toHaveBeenCalled();
-  });
-
-  it("answers 503 without a receipt when the store expiry fails", async () => {
-    invalidateContentCacheMock.mockReturnValue(
-      Effect.fail(new ContentCacheInvalidationError())
-    );
-
-    const response = await postAuthorized(exactBody);
-
-    expect(response.status).toBe(503);
-    expect(invalidateStoreTagMock).not.toHaveBeenCalled();
-    expect(invalidateSitemapCacheMock).not.toHaveBeenCalled();
-  });
-
-  it("answers 503 without a receipt when the CDN purge fails", async () => {
-    invalidateStoreTagMock.mockReturnValue(
-      Effect.fail(
-        new ContentStoreUnavailableError({
-          cause: "offline",
-          operation: "invalidate",
-        })
-      )
-    );
-
-    const response = await postAuthorized(exactBody);
-
-    expect(response.status).toBe(503);
-    expect(invalidateSitemapCacheMock).not.toHaveBeenCalled();
-  });
-
-  it("answers 503 without a receipt when the sitemap purge fails", async () => {
-    invalidateSitemapCacheMock.mockReturnValue(
-      Effect.fail(new SitemapCacheInvalidationError())
-    );
-
-    const response = await postAuthorized(exactBody);
-
-    expect(response.status).toBe(503);
-    expect(invalidateOgCacheMock).not.toHaveBeenCalled();
-  });
-
-  it("answers 503 without a receipt when the Markdown purge fails", async () => {
-    invalidateLlmsCacheMock.mockReturnValue(
-      Effect.fail(
-        new ContentStoreUnavailableError({
-          cause: new Error("offline"),
-          operation: "invalidate",
-        })
-      )
-    );
-
-    const response = await postAuthorized(exactBody);
-
-    expect(response.status).toBe(503);
-    expect(invalidateOgCacheMock).not.toHaveBeenCalled();
-  });
-
-  it("answers with a receipt when the social images could not be purged", async () => {
-    invalidateOgCacheMock.mockReturnValue(
-      Effect.fail(new OgCacheInvalidationError())
-    );
-
-    const response = await postAuthorized(exactBody);
-
-    expect(response.status).toBe(200);
-    await expect(response.json()).resolves.toEqual({
-      releaseId,
-      revalidated: true,
-      scope: "material",
     });
   });
 });

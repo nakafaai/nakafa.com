@@ -92,7 +92,6 @@ vi.mock("@/lib/content/preview/config", () => ({
   hasPreviewConfig: previewMock,
 }));
 
-vi.mock("@/lib/content/cache", () => ({}));
 
 beforeEach(() => {
   previewMock.mockReset().mockReturnValue(false);

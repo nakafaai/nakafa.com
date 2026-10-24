@@ -8,7 +8,7 @@ import notifications from "@repo/backend/confect/_generated/refs/notifications";
 import onboarding from "@repo/backend/confect/_generated/refs/onboarding";
 import { redirect } from "@tanstack/react-router";
 import { Clock, Effect, Option, Schema } from "effect";
-import { createTranslator } from "use-intl";
+import { createTranslator } from "use-intl/core";
 import { getMaterialLooks } from "@/components/home/look";
 import {
   accountHandler,

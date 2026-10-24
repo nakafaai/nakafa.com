@@ -4,7 +4,7 @@ import { makeBreadcrumbNodes } from "@repo/seo/json-ld/node";
 import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { Array as Arr, Effect, Match, Option, Schema } from "effect";
-import { createTranslator } from "use-intl";
+import { createTranslator } from "use-intl/core";
 import { getArticleCategoryIcons } from "@/components/articles/category";
 import { ArticleNext } from "@/components/articles/next";
 import { FooterContent } from "@/components/shared/content/footer";
@@ -22,10 +22,7 @@ import {
   getArticleNextSearch,
   readArticlePageCursor,
 } from "@/lib/content/article/query";
-import {
-  publicContentHeaders,
-  readContentCacheTags,
-} from "@/lib/content/delivery";
+import { PUBLIC_CONTENT_HEADERS } from "@/lib/content/delivery";
 import { outcome } from "@/lib/content/outcome";
 import { getAksaraTreeUrl } from "@/lib/content/repository";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
@@ -91,7 +88,6 @@ const readArticleIndex = createServerFn({ method: "GET" })
         return outcome("Found", {
           page: {
             breadcrumbs,
-            cacheTags: readContentCacheTags(["article"]),
             categories: catalog.categories,
             description: tArticles("description"),
             locale,
@@ -150,9 +146,7 @@ export const Route = createFileRoute("/$locale/_main/articles/")({
     );
   },
   headers: ({ loaderData }) =>
-    loaderData === undefined
-      ? undefined
-      : publicContentHeaders(loaderData.cacheTags),
+    loaderData === undefined ? undefined : PUBLIC_CONTENT_HEADERS,
   component: ArticleIndexPage,
 });
 

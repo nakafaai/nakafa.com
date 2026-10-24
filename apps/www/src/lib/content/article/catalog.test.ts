@@ -39,7 +39,6 @@ const initialCursor = {
 };
 const staleManifestHash = Sha256HashSchema.make(`sha256:${"c".repeat(64)}`);
 const staleReleaseId = ReleaseIdSchema.make("release-old");
-vi.mock("@/lib/content/cache", () => ({}));
 vi.mock("@confect/js", async (importOriginal) => {
   const { HttpClient } = await importOriginal<typeof import("@confect/js")>();
   return {

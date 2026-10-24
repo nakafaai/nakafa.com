@@ -3,7 +3,7 @@ import { Nina } from "@repo/design-system/components/ui/nina";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { Schema } from "effect";
 import { useEffect } from "react";
-import { createTranslator } from "use-intl";
+import { createTranslator } from "use-intl/core";
 import { AuthLegal } from "@/components/auth/legal";
 import { EntryShellBody, EntryShellHeader } from "@/components/entry/shell";
 import { OnboardingQuestionnaire } from "@/components/programs/onboarding/questionnaire";

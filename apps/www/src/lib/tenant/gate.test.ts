@@ -116,10 +116,18 @@ describe("withPageHeaders", () => {
     expect(response.headers.get("vary")).toBeNull();
   });
 
-  it("passes a main host's other answer through unchanged", () => {
-    const response = new Response("home");
-    expect(withPageHeaders(requestTo("/", "nakafa.test"), response)).toBe(
-      response
+  it("gives a main host's other answer the security policy and the agent links", async () => {
+    const response = withPageHeaders(
+      requestTo("/", "nakafa.test"),
+      new Response("home")
     );
+    expect(response.status).toBe(200);
+    expect(response.headers.get("x-robots-tag")).toBeNull();
+    expect(response.headers.get("x-frame-options")).toBe("DENY");
+    expect(response.headers.get("content-security-policy")).toContain(
+      "https://t.nakafa.com"
+    );
+    expect(response.headers.get("x-llms-txt")).toBe("/llms.txt");
+    expect(await response.text()).toBe("home");
   });
 });

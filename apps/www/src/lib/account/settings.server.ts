@@ -6,7 +6,7 @@ import { products } from "@repo/backend/confect/billing/polar/products";
 import { getPlanCreditConfig } from "@repo/backend/confect/credits/constants";
 import { notFound } from "@tanstack/react-router";
 import { Clock, Effect } from "effect";
-import { createTranslator } from "use-intl";
+import { createTranslator } from "use-intl/core";
 import { MEMORY_PAGE } from "@/components/user/settings/memory/list";
 import {
   accountHandler,

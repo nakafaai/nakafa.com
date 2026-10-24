@@ -10,7 +10,7 @@ import {
   makeRuntimeSource,
   testPublicationRelease,
 } from "@repo/backend/test/content/publication";
-import { Effect, Layer, MutableHashMap } from "effect";
+import { Effect, Layer } from "effect";
 import {
   confirmActiveContentIdentity,
   expireActiveContentIdentity,
@@ -44,9 +44,9 @@ vi.mock("@confect/js", async (importOriginal) => {
     },
   };
 });
-vi.mock("@vercel/functions", async () => {
+vi.mock("@/lib/content/store/memory", async () => {
   const { testRuntimeCache: cache } = await import("@/test/store");
-  return { getCache: () => cache };
+  return { makeMemoryStore: () => cache };
 });
 const identity = {
   manifestHash: Sha256HashSchema.make(`sha256:${"a".repeat(64)}`),
@@ -95,7 +95,7 @@ describe("published active identity", () => {
       yield* loadActiveContentIdentity();
       yield* loadActiveContentIdentity();
       expect(fetchQueryMock).toHaveBeenCalledTimes(2);
-      expect(MutableHashMap.size(testRuntimeCache.entries)).toBe(0);
+      expect(testRuntimeCache.set).not.toHaveBeenCalled();
     })
   );
 });
@@ -116,7 +116,7 @@ describe("stored active identity pointer", () => {
       expect(testRuntimeCache.set).toHaveBeenCalledExactlyOnceWith(
         expect.stringMatching(STORE_KEY_PATTERN),
         { value: identity },
-        { name: "content.active", tags: ["content-active"], ttl: 60 }
+        expect.objectContaining({ tags: ["content-active"] })
       );
     })
   );

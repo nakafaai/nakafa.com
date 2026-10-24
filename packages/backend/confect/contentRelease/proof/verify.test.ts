@@ -336,7 +336,10 @@ describe("contentRelease/proof/verify", () => {
           upsertHeads: 129,
         });
       }
-    )
+    ),
+    // Staging 129 pages through convex-test took 5.1 to 5.4 s alone on a loaded
+    // machine, so the replay gets a budget of its own, as other convex-test suites do.
+    30_000
   );
   it.effect(
     "rejects renderer and durable counter drift",

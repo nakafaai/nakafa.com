@@ -114,7 +114,7 @@ vi.mock(
   async () => (await import("@/test/active")).testActiveModule
 );
 vi.mock(
-  "@vercel/functions",
+  "@/lib/content/store/memory",
   async () => (await import("@/test/store")).testRuntimeCacheModule
 );
 beforeEach(() => {
@@ -313,7 +313,7 @@ it.effect("keeps the signed source in the store and no derived text", () =>
           sourceRevision,
         },
       },
-      expect.objectContaining({ name: "markdown.source" })
+      expect.objectContaining({ tags: [expect.any(String)] })
     );
   })
 );
