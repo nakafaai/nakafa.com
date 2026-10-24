@@ -1,7 +1,6 @@
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { Array as Arr, Cause, Effect, Option, Schema } from "effect";
 import { captureServerExceptionSafely } from "@/lib/analytics/exception.server";
-import { runServerEffect } from "@/lib/server/fn";
 import { readSitemapPageDescriptors } from "@/lib/sitemap/catalog";
 import { getSitemapEntries } from "@/lib/sitemap/entries";
 import { getSitemapPageDescriptor } from "@/lib/sitemap/identity";
@@ -53,13 +52,11 @@ const buildSitemapIndexResponse = Effect.fn("www.sitemap.index.response")(
 );
 
 /** Serves the conventional sitemap index that points at bounded sitemap pages. */
-export function serveSitemapIndex() {
-  return runServerEffect(
-    buildSitemapIndexResponse().pipe(
-      Effect.catchCause((cause) => reportSitemapFailure("sitemap-index", cause))
-    )
-  );
-}
+export const serveSitemapIndex = Effect.fn("www.sitemap.index.serve")(() =>
+  buildSitemapIndexResponse().pipe(
+    Effect.catchCause((cause) => reportSitemapFailure("sitemap-index", cause))
+  )
+);
 
 /** Extracts the materialized page id from a `.xml` sitemap route segment. */
 function parseSitemapPageId(segment: string): Option.Option<string> {
@@ -103,7 +100,7 @@ const buildSitemapPageResponse = Effect.fn("www.sitemap.page.response")(
 const SitemapPageParamsSchema = Schema.Struct({ id: Schema.String });
 
 /** Serves one bounded sitemap page from materialized Convex route rows. */
-export function serveSitemapPage({
+export const serveSitemapPage = Effect.fn("www.sitemap.page.serve")(function* ({
   params,
 }: {
   readonly params: typeof SitemapPageParamsSchema.Type;
@@ -113,12 +110,9 @@ export function serveSitemapPage({
     Option.isNone(pageId) ||
     Option.isNone(getSitemapPageDescriptor(pageId.value))
   ) {
-    return Promise.resolve(createNotFoundResponse());
+    return createNotFoundResponse();
   }
-
-  return runServerEffect(
-    buildSitemapPageResponse(pageId.value).pipe(
-      Effect.catchCause((cause) => reportSitemapFailure("sitemap-page", cause))
-    )
+  return yield* buildSitemapPageResponse(pageId.value).pipe(
+    Effect.catchCause((cause) => reportSitemapFailure("sitemap-page", cause))
   );
-}
+});

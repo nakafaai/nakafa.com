@@ -1,14 +1,14 @@
 import { decodeLocale } from "@repo/internationalization/src/locale";
 import { Effect } from "effect";
 import { resolveLocalizedNavigationHref } from "@/lib/routing/locale/resolve";
-import { runServerEffect } from "@/lib/server/fn";
 
 /**
- * Maps one browser href to the selected locale's route-owned href and converts
+ * Resolves the active browser URL to the selected locale's projected href. It
+ * maps one browser href to the selected locale's route-owned href and converts
  * typed projection failures into route-handler HTTP responses.
  */
-const readLocaleRouteResponse = Effect.fn("www.routing.locale.route")(
-  function* (request: Request) {
+export const serveLocalizedHref = Effect.fn("www.routing.locale.serve")(
+  function* ({ request }: { readonly request: Request }) {
     const url = new URL(request.url);
     const href = url.searchParams.get("href");
     const locale = decodeLocale(url.searchParams.get("locale"));
@@ -44,8 +44,3 @@ const readLocaleRouteResponse = Effect.fn("www.routing.locale.route")(
     );
   }
 );
-
-/** Resolves the active browser URL to the selected locale's projected href. */
-export function serveLocalizedHref({ request }: { readonly request: Request }) {
-  return runServerEffect(readLocaleRouteResponse(request));
-}

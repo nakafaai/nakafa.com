@@ -18,7 +18,6 @@ import {
   type ContentReleasePin,
   decodeContentReleasePin,
 } from "@/lib/content/published/release";
-import { runServerEffect } from "@/lib/server/fn";
 
 const baseUrl = COMPANY_IDENTITY.url;
 const FEED_ERROR = "Internal Server Error";
@@ -58,32 +57,40 @@ function reportFeedFailure(cause: unknown) {
   );
 }
 
+/** The copy of the feed could not load from the translator. */
+class FeedCopyUnavailableError extends Schema.TaggedError<FeedCopyUnavailableError>()(
+  "FeedCopyUnavailableError",
+  { cause: Schema.Unknown }
+) {}
+
 /** Serves the RSS feed of the latest signed articles and materials. */
-export function serveRssFeed() {
-  return runServerEffect(
-    readFeed().pipe(
-      Effect.map((xml) => new Response(xml, { headers: RSS_HEADERS })),
-      Effect.catch(reportFeedFailure)
-    )
-  );
-}
+export const serveRssFeed = Effect.fn("www.rss.serve")(() =>
+  readFeed().pipe(
+    Effect.map((xml) => new Response(xml, { headers: RSS_HEADERS })),
+    Effect.catch(reportFeedFailure)
+  )
+);
 
 /** Builds the RSS document from the latest signed routes of every locale. */
 const readFeed = Effect.fn("www.rss.readFeed")(function* () {
   const [t, tCommon, routes] = yield* Effect.all(
     [
-      Effect.promise(() =>
-        readServerTranslator({
-          locale: DEFAULT_LOCALE,
-          namespace: "Metadata",
-        })
-      ),
-      Effect.promise(() =>
-        readServerTranslator({
-          locale: DEFAULT_LOCALE,
-          namespace: "Common",
-        })
-      ),
+      Effect.tryPromise({
+        try: () =>
+          readServerTranslator({
+            locale: DEFAULT_LOCALE,
+            namespace: "Metadata",
+          }),
+        catch: (cause) => new FeedCopyUnavailableError({ cause }),
+      }),
+      Effect.tryPromise({
+        try: () =>
+          readServerTranslator({
+            locale: DEFAULT_LOCALE,
+            namespace: "Common",
+          }),
+        catch: (cause) => new FeedCopyUnavailableError({ cause }),
+      }),
       getFeedContentRoutes(),
     ],
     { concurrency: "unbounded" }

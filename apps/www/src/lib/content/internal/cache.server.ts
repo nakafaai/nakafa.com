@@ -19,7 +19,6 @@ import {
 import { invalidateStoreTag } from "@/lib/content/store/entry";
 import { invalidateLlmsCache } from "@/lib/llms/cache";
 import { invalidateOgCache } from "@/lib/og/cache";
-import { runServerEffect } from "@/lib/server/fn";
 import { invalidateSitemapCache } from "@/lib/sitemap/cache";
 
 const PRIVATE_RESPONSE_HEADERS = { "Cache-Control": "private, no-store" };
@@ -117,51 +116,45 @@ const invalidateContentRuntime = Effect.fn("NakafaContent.invalidateRuntime")(
   }
 );
 
-/** Answers one receipt request: bearer, body, active release, purge, readback. */
-const answerCacheRequest = Effect.fn("NakafaContent.receiveCache")(function* (
-  request: Request
-) {
-  const isAuthorized = yield* isInternalContentAuthorized(
-    request.headers.get("Authorization"),
-    env.AKSARA_PUBLICATION_TOKEN
-  );
-  if (!isAuthorized) {
-    return privateJson({ error: "Unauthorized" }, 401);
-  }
-  const decoded = yield* readCacheRequest(request).pipe(Effect.result);
-  if (decoded._tag === "Failure") {
+/**
+ * Revalidates the Convex-backed content cache for one release, for the Aksara
+ * publisher: bearer, body, active release, purge, readback.
+ */
+export const receiveContentCache = Effect.fn("NakafaContent.receiveCache")(
+  function* (request: Request) {
+    const isAuthorized = yield* isInternalContentAuthorized(
+      request.headers.get("Authorization"),
+      env.AKSARA_PUBLICATION_TOKEN
+    );
+    if (!isAuthorized) {
+      return privateJson({ error: "Unauthorized" }, 401);
+    }
+    const decoded = yield* readCacheRequest(request).pipe(Effect.result);
+    if (decoded._tag === "Failure") {
+      return privateJson(
+        { error: "Invalid cache invalidation request." },
+        cacheRequestStatus(decoded.failure)
+      );
+    }
+    // The stored pointer may still name the previous release, so the check asks
+    // Convex.
+    const active = yield* loadActiveContentIdentity();
+    if (active?.releaseId !== decoded.success.releaseId) {
+      return privateJson({ error: "Content release is not active." }, 409);
+    }
+    const invalidation = yield* invalidateContentRuntime(
+      decoded.success.scope,
+      decoded.success.releaseId
+    ).pipe(Effect.result);
+    if (invalidation._tag === "Failure") {
+      return privateJson({ error: "Content cache invalidation failed." }, 503);
+    }
     return privateJson(
-      { error: "Invalid cache invalidation request." },
-      cacheRequestStatus(decoded.failure)
+      ContentCacheReceiptSchema.make({
+        releaseId: decoded.success.releaseId,
+        revalidated: true,
+        scope: decoded.success.scope,
+      })
     );
   }
-  // The stored pointer may still name the previous release, so the check asks
-  // Convex.
-  const active = yield* loadActiveContentIdentity();
-  if (active?.releaseId !== decoded.success.releaseId) {
-    return privateJson({ error: "Content release is not active." }, 409);
-  }
-  const invalidation = yield* invalidateContentRuntime(
-    decoded.success.scope,
-    decoded.success.releaseId
-  ).pipe(Effect.result);
-  if (invalidation._tag === "Failure") {
-    return privateJson({ error: "Content cache invalidation failed." }, 503);
-  }
-  return privateJson(
-    ContentCacheReceiptSchema.make({
-      releaseId: decoded.success.releaseId,
-      revalidated: true,
-      scope: decoded.success.scope,
-    })
-  );
-});
-
-/** Revalidates the Convex-backed content cache for one release, for the Aksara publisher. */
-export function receiveContentCache({
-  request,
-}: {
-  readonly request: Request;
-}) {
-  return runServerEffect(answerCacheRequest(request));
-}
+);

@@ -1,6 +1,5 @@
 import { Effect } from "effect";
 import { openPreviewEvents } from "@/lib/content/preview/events";
-import { runServerEffect } from "@/lib/server/fn";
 
 /** Maps a disabled preview child to an intentionally unavailable endpoint. */
 function unavailableResponse() {
@@ -28,13 +27,9 @@ function mapFailure(error: { readonly _tag: string }) {
 }
 
 /** Proxies sanitized local preview updates without exposing provider secrets. */
-export function serveContentPreview({
-  request,
-}: {
-  readonly request: Request;
-}) {
-  return runServerEffect(
-    openPreviewEvents(request.signal).pipe(
+export const serveContentPreview = Effect.fn("www.content.internal.preview")(
+  function* ({ request }: { readonly request: Request }) {
+    return yield* openPreviewEvents(request.signal).pipe(
       Effect.match({
         onFailure: mapFailure,
         onSuccess: (stream) =>
@@ -46,6 +41,6 @@ export function serveContentPreview({
             },
           }),
       })
-    )
-  );
-}
+    );
+  }
+);

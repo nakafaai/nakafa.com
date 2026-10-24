@@ -7,6 +7,7 @@ import {
   PreviewEventError,
   PreviewUnavailableError,
 } from "@/lib/content/preview/errors";
+import { runServerEffect } from "@/lib/server/fn";
 
 const openPreviewEventsMock = vi.hoisted(() => vi.fn());
 
@@ -26,7 +27,9 @@ describe("content preview route", () => {
       Effect.succeed(new ReadableStream<Uint8Array>())
     );
 
-    const response = await serveContentPreview({ request: request() });
+    const response = await runServerEffect(
+      serveContentPreview({ request: request() })
+    );
 
     expect(response.status).toBe(200);
     expect(response.headers.get("content-type")).toBe(
@@ -43,7 +46,9 @@ describe("content preview route", () => {
       Effect.fail(new PreviewUnavailableError())
     );
 
-    const response = await serveContentPreview({ request: request() });
+    const response = await runServerEffect(
+      serveContentPreview({ request: request() })
+    );
 
     expect(response.status).toBe(404);
     expect(response.headers.get("cache-control")).toBe("private, no-store");
@@ -55,7 +60,9 @@ describe("content preview route", () => {
       Effect.fail(new PreviewEventError({ stage: "event" }))
     );
 
-    const response = await serveContentPreview({ request: request() });
+    const response = await runServerEffect(
+      serveContentPreview({ request: request() })
+    );
 
     expect(response.status).toBe(502);
     expect(response.headers.get("cache-control")).toBe("private, no-store");

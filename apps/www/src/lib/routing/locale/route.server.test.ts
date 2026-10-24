@@ -3,7 +3,8 @@
 import { describe, expect, it } from "@effect/vitest";
 import { Data, Effect } from "effect";
 import { MissingLocalizedRouteProjectionError } from "@/lib/routing/locale/missing";
-import { serveLocalizedHref } from "@/lib/routing/locale/route.server";
+import { serveLocalizedHref as serveLocalizedHrefEffect } from "@/lib/routing/locale/route.server";
+import { runServerEffect } from "@/lib/server/fn";
 
 const resolveLocalizedNavigationHrefMock = vi.hoisted(() => vi.fn());
 
@@ -19,11 +20,13 @@ class InvalidLocalizedHrefError extends Data.TaggedError(
 
 /** Creates one locale endpoint request for the given query. */
 function localeRequest(query: string) {
-  return serveLocalizedHref({
-    request: new Request(
-      `https://nakafa.com/api/internal/routing/locale?${query}`
-    ),
-  });
+  return runServerEffect(
+    serveLocalizedHrefEffect({
+      request: new Request(
+        `https://nakafa.com/api/internal/routing/locale?${query}`
+      ),
+    })
+  );
 }
 
 describe("localized href route", () => {

@@ -2,8 +2,9 @@
 
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Schema } from "effect";
+import { runServerEffect } from "@/lib/server/fn";
 import { DEFAULT_LATITUDE, DEFAULT_LONGITUDE } from "@/lib/weather/client";
-import { serveWeather } from "@/lib/weather/route.server";
+import { serveWeather as serveWeatherEffect } from "@/lib/weather/route.server";
 
 const getCurrentWeatherMock = vi.hoisted(() => vi.fn());
 const geolocationMock = vi.hoisted(() => vi.fn());
@@ -44,9 +45,13 @@ class WeatherProviderDown extends Schema.TaggedError<WeatherProviderDown>()(
 
 /** Posts one weather request to the route. */
 function weather() {
-  return serveWeather({
-    request: new Request("https://nakafa.com/api/weather", { method: "POST" }),
-  });
+  return runServerEffect(
+    serveWeatherEffect({
+      request: new Request("https://nakafa.com/api/weather", {
+        method: "POST",
+      }),
+    })
+  );
 }
 
 describe("weather route", () => {

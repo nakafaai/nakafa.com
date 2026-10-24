@@ -7,7 +7,6 @@ import {
   createCorsForbiddenResponse,
   isCorsRequestAllowed,
 } from "@/lib/security/cors";
-import { runServerEffect } from "@/lib/server/fn";
 import {
   DEFAULT_LATITUDE,
   DEFAULT_LONGITUDE,
@@ -24,86 +23,88 @@ const logContext = {
  * when the platform has no geolocation. A handled failure is reported and
  * answers 500 without its details.
  */
-export function serveWeather({ request }: { readonly request: Request }) {
+export const serveWeather = Effect.fn("www.weather.serve")(function* ({
+  request,
+}: {
+  readonly request: Request;
+}) {
   const startedAt = performance.now();
 
-  return runServerEffect(
-    Effect.gen(function* () {
-      const isAllowedOrigin = yield* isCorsRequestAllowed(request);
-      if (!isAllowedOrigin) {
-        return createCorsForbiddenResponse();
-      }
+  return yield* Effect.gen(function* () {
+    const isAllowedOrigin = yield* isCorsRequestAllowed(request);
+    if (!isAllowedOrigin) {
+      return createCorsForbiddenResponse();
+    }
 
-      const geo = geolocation(request);
-      let latitude = geo.latitude;
-      let longitude = geo.longitude;
+    const geo = geolocation(request);
+    let latitude = geo.latitude;
+    let longitude = geo.longitude;
 
-      if (!(latitude && longitude)) {
-        latitude = DEFAULT_LATITUDE;
-        longitude = DEFAULT_LONGITUDE;
+    if (!(latitude && longitude)) {
+      latitude = DEFAULT_LATITUDE;
+      longitude = DEFAULT_LONGITUDE;
 
-        yield* Effect.logInfo(
-          "Geolocation unavailable, using default coordinates."
-        ).pipe(
-          Effect.annotateLogs({
-            ...logContext,
-            latitude,
-            longitude,
-          })
-        );
-      }
-
-      yield* Effect.logInfo("Processing weather request").pipe(
+      yield* Effect.logInfo(
+        "Geolocation unavailable, using default coordinates."
+      ).pipe(
         Effect.annotateLogs({
           ...logContext,
           latitude,
           longitude,
         })
       );
+    }
 
-      const weather = yield* getCurrentWeather({ latitude, longitude });
-      const duration = Math.round(performance.now() - startedAt);
+    yield* Effect.logInfo("Processing weather request").pipe(
+      Effect.annotateLogs({
+        ...logContext,
+        latitude,
+        longitude,
+      })
+    );
 
-      yield* logHttpRequest(
-        {
-          method: "POST",
-          url: "/api/weather",
-          statusCode: 200,
-          duration,
-        },
-        logContext
-      );
+    const weather = yield* getCurrentWeather({ latitude, longitude });
+    const duration = Math.round(performance.now() - startedAt);
 
-      return Response.json(weather);
-    }).pipe(
-      Effect.catchCause((cause) =>
-        Effect.gen(function* () {
-          const error = Cause.squash(cause);
-          const err = error instanceof Error ? error : new Error(String(error));
-          const duration = Math.round(performance.now() - startedAt);
+    yield* logHttpRequest(
+      {
+        method: "POST",
+        url: "/api/weather",
+        statusCode: 200,
+        duration,
+      },
+      logContext
+    );
 
-          yield* scheduleServerExceptionCapture(error, {
-            source: "weather-api",
-          });
+    return Response.json(weather);
+  }).pipe(
+    Effect.catchCause((cause) =>
+      Effect.gen(function* () {
+        const error = Cause.squash(cause);
+        const err = error instanceof Error ? error : new Error(String(error));
+        const duration = Math.round(performance.now() - startedAt);
 
-          yield* logError(err, logContext);
-          yield* logHttpRequest(
-            {
-              method: "POST",
-              url: "/api/weather",
-              statusCode: 500,
-              duration,
-            },
-            logContext
-          );
+        yield* scheduleServerExceptionCapture(error, {
+          source: "weather-api",
+        });
 
-          return Response.json(
-            { error: "Failed to fetch weather data" },
-            { status: 500 }
-          );
-        })
-      ),
-      Effect.provide(FetchClient)
-    )
+        yield* logError(err, logContext);
+        yield* logHttpRequest(
+          {
+            method: "POST",
+            url: "/api/weather",
+            statusCode: 500,
+            duration,
+          },
+          logContext
+        );
+
+        return Response.json(
+          { error: "Failed to fetch weather data" },
+          { status: 500 }
+        );
+      })
+    ),
+    Effect.provide(FetchClient)
   );
-}
+});

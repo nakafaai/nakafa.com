@@ -2,7 +2,11 @@
 
 import { describe, expect, it } from "@effect/vitest";
 import { THEME_COMPATIBILITY_COLORS } from "@repo/design-system/lib/theme/compatibility";
-import { serveManifest } from "@/lib/seo/manifest.server";
+import { serveManifest as serveManifestEffect } from "@/lib/seo/manifest.server";
+import { runServerEffect } from "@/lib/server/fn";
+
+/** Runs the manifest as its route does. */
+const serveManifest = () => runServerEffect(serveManifestEffect());
 
 const readServerTranslatorMock = vi.hoisted(() => vi.fn());
 

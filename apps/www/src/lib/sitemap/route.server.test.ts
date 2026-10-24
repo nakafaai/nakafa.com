@@ -2,11 +2,20 @@
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Effect, Schema } from "effect";
+import { runServerEffect } from "@/lib/server/fn";
 import { SitemapPageNotFoundError } from "@/lib/sitemap/identity";
 import {
-  serveSitemapIndex,
-  serveSitemapPage,
+  serveSitemapIndex as serveSitemapIndexEffect,
+  serveSitemapPage as serveSitemapPageEffect,
 } from "@/lib/sitemap/route.server";
+
+/** Runs the sitemap index as its route does. */
+const serveSitemapIndex = () => runServerEffect(serveSitemapIndexEffect());
+
+/** Runs one sitemap page as its route does. */
+const serveSitemapPage = (
+  input: Parameters<typeof serveSitemapPageEffect>[0]
+) => runServerEffect(serveSitemapPageEffect(input));
 
 class SitemapStoreUnavailable extends Schema.TaggedError<SitemapStoreUnavailable>()(
   "SitemapStoreUnavailable",
