@@ -17,14 +17,13 @@ export const BillingCountry = Schema.String.check(
 export type BillingCountry = typeof BillingCountry.Type;
 
 /** The Xendit channels a recurring Pro or School subscription can be linked through. */
-export const XenditChannel = Schema.Literals([
+const XenditChannel = Schema.Literals([
   "CARDS",
   "DANA",
   "GOPAY_RECURRING",
   "OVO",
   "SHOPEEPAY",
 ]);
-export type XenditChannel = typeof XenditChannel.Type;
 
 /** A payer. The owner is the person or the school, never both. */
 export const billingAccountValidator = Schema.Struct({
@@ -75,7 +74,7 @@ export const billingSubscriptionValidator = Schema.Struct({
   providerUpdatedAt: Schema.Finite,
 });
 
-export const billingPaymentKindValidator = Schema.Literals([
+const billingPaymentKindValidator = Schema.Literals([
   "cycle",
   "pass",
   "invoice",
@@ -121,7 +120,7 @@ export const billingInvoiceValidator = Schema.Struct({
 });
 
 /** Where a grant's time came from: a subscription cycle, a pass, an invoice, or a signed contract. */
-export const billingGrantSourceValidator = Schema.Union([
+const billingGrantSourceValidator = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("subscription"),
     subscriptionId: Id("billingSubscriptions"),
@@ -141,13 +140,13 @@ export const billingGrantSourceValidator = Schema.Union([
 ]).pipe(Schema.toTaggedUnion("kind"));
 
 /** Which units of a school a school grant covers. */
-export const schoolGrantScopeValidator = Schema.Union([
+const schoolGrantScopeValidator = Schema.Union([
   Schema.Struct({ kind: Schema.Literal("tenant") }),
   Schema.Struct({ kind: Schema.Literal("unit"), unitId: Id("tenantUnits") }),
 ]).pipe(Schema.toTaggedUnion("kind"));
 
 /** A time-bounded right to Pro for one person. `users.plan` is projected from these. */
-export const proBillingGrantValidator = Schema.Struct({
+const proBillingGrantValidator = Schema.Struct({
   product: Schema.Literal("pro"),
   userId: Id("users"),
   source: billingGrantSourceValidator,
@@ -155,12 +154,18 @@ export const proBillingGrantValidator = Schema.Struct({
   validTo: Schema.Finite,
 });
 
-/** A time-bounded right to Pro for the enrolled students of a school or one unit of it. */
-export const schoolBillingGrantValidator = Schema.Struct({
+/**
+ * A time-bounded right to Pro for the enrolled students of a school or one unit of it.
+ * `seats` counts the students the grant covers. `ninaSeats` counts the students whose
+ * shared Nina pool the school draws on: a contract grant has none, so its AI cost
+ * stays where its price was set.
+ */
+const schoolBillingGrantValidator = Schema.Struct({
   product: Schema.Literal("school"),
   tenantId: Id("tenants"),
   scope: schoolGrantScopeValidator,
   seats: Schema.Int.check(Schema.isGreaterThanOrEqualTo(0)),
+  ninaSeats: Schema.Int.check(Schema.isGreaterThanOrEqualTo(0)),
   source: billingGrantSourceValidator,
   validFrom: Schema.Finite,
   validTo: Schema.Finite,

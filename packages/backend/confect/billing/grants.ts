@@ -10,6 +10,7 @@ import {
   type BillingOfferKey,
   billingOffer,
 } from "@repo/backend/confect/billing/catalog";
+import { GrantOwnerMismatch } from "@repo/backend/confect/billing/spec";
 import { readSubscription } from "@repo/backend/confect/billing/subscriptions";
 import type { Space } from "@repo/backend/confect/space";
 import {
@@ -17,15 +18,7 @@ import {
   type PlanSource,
 } from "@repo/backend/confect/triggers/subscriptions/impl";
 import type { UserPlan } from "@repo/backend/confect/users/schema";
-import { DateTime, Effect, Option, Schema } from "effect";
-
-/** A subscription's offer is for one kind of owner, and the account it bills names another. */
-export class GrantOwnerMismatch extends Schema.TaggedError<GrantOwnerMismatch>()(
-  "GrantOwnerMismatch",
-  {
-    message: Schema.String,
-  }
-) {}
+import { DateTime, Effect, Option } from "effect";
 
 /** The grant a subscription writes: the owner's kind follows the offer's product. */
 const grantFor = Effect.fn("billing.grants.grantFor")(function* (
@@ -58,6 +51,7 @@ const grantFor = Effect.fn("billing.grants.grantFor")(function* (
       tenantId: owner.tenantId,
       scope: { kind: "tenant" as const },
       seats: subscription.seats,
+      ninaSeats: subscription.seats,
       source,
       validFrom: subscription.validFrom,
       validTo: subscription.validTo,

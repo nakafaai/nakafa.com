@@ -17,3 +17,11 @@ export class TenantNotFound extends Schema.TaggedError<TenantNotFound>()(
     message: Schema.String,
   }
 ) {}
+
+/** A subscription's offer is for one kind of owner, and the account it bills names another. */
+export class GrantOwnerMismatch extends Schema.TaggedError<GrantOwnerMismatch>()(
+  "GrantOwnerMismatch",
+  {
+    message: Schema.String,
+  }
+) {}
