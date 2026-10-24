@@ -91,3 +91,15 @@ export const readSubscription = Effect.fn("billing.subscriptions.read")(
       );
   }
 );
+
+/** The subscription a Xendit recurring plan belongs to, or none when Nakafa holds no row for that plan. */
+export const readSubscriptionByXenditPlan = Effect.fn(
+  "billing.subscriptions.readByXenditPlan"
+)(function* (planId: string) {
+  const reader = yield* DatabaseReader;
+  return yield* reader
+    .table("billingSubscriptions")
+    .index("by_xendit_planId", (query) => query.eq("provider.planId", planId))
+    .first()
+    .pipe(Effect.orDie);
+});

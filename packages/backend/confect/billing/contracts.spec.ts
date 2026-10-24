@@ -1,6 +1,9 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
-import { TenantNotFound } from "@repo/backend/confect/billing/spec";
+import {
+  ContractWindowInvalid,
+  TenantNotFound,
+} from "@repo/backend/confect/billing/spec";
 import Atomic from "@repo/backend/confect/middleware/atomic.spec";
 import { Schema } from "effect";
 
@@ -23,6 +26,6 @@ export default GroupSpec.make().addFunction(
         accountId: IdSchema("billingAccounts"),
         grantId: IdSchema("billingGrants"),
       }),
-    error: () => TenantNotFound,
+    error: () => Schema.Union([TenantNotFound, ContractWindowInvalid]),
   }).middleware(Atomic)
 );

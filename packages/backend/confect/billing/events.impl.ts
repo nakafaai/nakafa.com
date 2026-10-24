@@ -2,6 +2,7 @@ import { FunctionImpl, GroupImpl } from "@confect/server";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   cleanupEvents,
+  processEvent,
   recordEvent,
 } from "@repo/backend/confect/billing/events";
 import spec from "@repo/backend/confect/billing/events.spec";
@@ -17,6 +18,16 @@ const record = FunctionImpl.make(
   })
 );
 
+const process = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "process",
+  Effect.fn("billing.events.impl.process")(function* (args) {
+    yield* processEvent(args.eventId, yield* Clock.currentTimeMillis);
+    return null;
+  })
+);
+
 const cleanup = FunctionImpl.make(
   databaseSchema,
   spec,
@@ -28,6 +39,7 @@ const cleanup = FunctionImpl.make(
 
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(record),
+  Layer.provide(process),
   Layer.provide(cleanup),
   Layer.provide(atomic),
   GroupImpl.finalize

@@ -74,29 +74,40 @@ export const billingSubscriptionValidator = Schema.Struct({
   providerUpdatedAt: Schema.Finite,
 });
 
-const billingPaymentKindValidator = Schema.Literals([
-  "cycle",
-  "pass",
-  "invoice",
-]);
-
-/** One payment that arrived. `amount` is in the currency's minor unit. */
-export const billingPaymentValidator = Schema.Struct({
+/** The fields every payment shares, whatever it pays for. `amount` is in the currency's minor unit. */
+const billingPaymentFields = {
   accountId: Id("billingAccounts"),
-  subscriptionId: Schema.NullOr(Id("billingSubscriptions")),
-  invoiceId: Schema.NullOr(Id("billingInvoices")),
-  kind: billingPaymentKindValidator,
   status: Schema.Literals(["succeeded", "failed", "refunded"]),
   amount: Schema.Int.check(Schema.isGreaterThanOrEqualTo(0)),
   currency: BillingCurrency,
   rail: BillingRail,
   providerPaymentId: Schema.String,
+  /** The provider's own update time. A payment update older than this never overwrites the row. */
+  providerUpdatedAt: Schema.Finite,
   method: Schema.String,
   paidAt: Schema.Finite,
-});
+};
+
+/** One payment that arrived. Each kind names the one thing it pays for, so no kind holds a reference it lacks. */
+export const billingPaymentValidator = Schema.Union([
+  Schema.Struct({
+    ...billingPaymentFields,
+    kind: Schema.Literal("cycle"),
+    subscriptionId: Id("billingSubscriptions"),
+  }),
+  Schema.Struct({
+    ...billingPaymentFields,
+    kind: Schema.Literal("pass"),
+  }),
+  Schema.Struct({
+    ...billingPaymentFields,
+    kind: Schema.Literal("invoice"),
+    invoiceId: Id("billingInvoices"),
+  }),
+]).pipe(Schema.toTaggedUnion("kind"));
 
 /** One line of an invoice. `amount` is `quantity` times `unitAmount`, in minor units. */
-export const billingInvoiceLineValidator = Schema.Struct({
+const billingInvoiceLineValidator = Schema.Struct({
   description: Schema.String,
   quantity: Schema.Int.check(Schema.isGreaterThanOrEqualTo(1)),
   unitAmount: Schema.Int.check(Schema.isGreaterThanOrEqualTo(0)),

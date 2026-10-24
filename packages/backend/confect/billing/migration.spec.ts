@@ -1,5 +1,8 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
-import { GrantOwnerMismatch } from "@repo/backend/confect/billing/spec";
+import {
+  BillingRowMissing,
+  GrantOwnerMismatch,
+} from "@repo/backend/confect/billing/spec";
 import Atomic from "@repo/backend/confect/middleware/atomic.spec";
 import { Schema } from "effect";
 
@@ -22,6 +25,6 @@ export default GroupSpec.make().addFunction(
         copied: Schema.Int,
         skipped: Schema.Int,
       }),
-    error: () => GrantOwnerMismatch,
+    error: () => Schema.Union([GrantOwnerMismatch, BillingRowMissing]),
   }).middleware(Atomic)
 );

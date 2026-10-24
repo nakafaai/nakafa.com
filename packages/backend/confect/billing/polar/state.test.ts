@@ -68,4 +68,10 @@ describe("billing/polar/state", () => {
     );
     expect(mapped({})?.priceId).toBeNull();
   });
+
+  it("maps nothing when a stored time is not a time", () => {
+    expect(mapped({ currentPeriodStart: "not a time" })).toBeNull();
+    expect(mapped({ currentPeriodEnd: "not a time" })).toBeNull();
+    expect(mapped({ modifiedAt: "not a time" })).toBeNull();
+  });
 });

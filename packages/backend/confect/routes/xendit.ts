@@ -2,6 +2,7 @@ import refs from "@repo/backend/confect/_generated/refs";
 import { MutationRunner } from "@repo/backend/confect/_generated/services";
 import {
   sameCallbackToken,
+  XenditTokenRejected,
   XenditWebhookEnvelope,
   xenditDeliveryKey,
 } from "@repo/backend/confect/billing/xendit/webhook";
@@ -14,13 +15,7 @@ import {
 import { Config, DateTime, Effect, Redacted, Schema } from "effect";
 import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/http";
 
-/** The callback token of the request is not the deployment's token, so the request is not Xendit's. */
-class XenditRouteForbidden extends Schema.TaggedError<XenditRouteForbidden>()(
-  "XenditRouteForbidden",
-  {}
-) {}
-
-/** The body is not a Xendit webhook envelope. */
+/** The body could not be read, or it is not a Xendit webhook envelope. */
 class XenditRouteMalformed extends Schema.TaggedError<XenditRouteMalformed>()(
   "XenditRouteMalformed",
   {
@@ -30,8 +25,8 @@ class XenditRouteMalformed extends Schema.TaggedError<XenditRouteMalformed>()(
 
 /**
  * Receives one Xendit webhook. The route checks the callback token, stores the
- * delivery in the inbox once, and answers 2xx, so Xendit stops retrying. A
- * redelivery of a stored delivery changes nothing.
+ * delivery in the inbox and schedules its processing, and answers 2xx, so Xendit
+ * stops retrying. A redelivery of a stored delivery changes nothing.
  */
 export const xenditRoutes = HttpRouter.add(
   "POST",
@@ -46,8 +41,10 @@ export const xenditRoutes = HttpRouter.add(
     );
     const received = request.headers.get("x-callback-token") ?? "";
     if (!sameCallbackToken(received, Redacted.value(expected))) {
-      return yield* new XenditRouteForbidden({});
+      return yield* new XenditTokenRejected({});
     }
+    // A body that cannot be read is a transport failure, not a malformed webhook. It is a
+    // defect: the catch below logs its cause and answers 500, so Xendit retries the delivery.
     const body = yield* Effect.promise(() => request.text());
     const envelope = yield* Schema.decodeEffect(
       Schema.fromJsonString(XenditWebhookEnvelope)
@@ -56,33 +53,42 @@ export const xenditRoutes = HttpRouter.add(
         (error) => new XenditRouteMalformed({ message: String(error) })
       )
     );
+    const key = yield* xenditDeliveryKey(envelope, body).pipe(Effect.orDie);
     const { runMutation } = yield* MutationRunner;
     yield* runMutation(refs.internal.billing.events.record, {
       rail: "xendit",
-      key: xenditDeliveryKey(envelope),
+      key,
       type: envelope.event,
-      providerTime: DateTime.toEpochMillis(
-        DateTime.makeUnsafe(envelope.created)
-      ),
+      providerTime: DateTime.toEpochMillis(envelope.created),
       payload: body,
     }).pipe(Effect.orDie);
     return HttpServerResponse.text("Accepted", { status: HTTP_ACCEPTED });
   }).pipe(
     Effect.catchTags({
-      XenditRouteForbidden: () =>
-        Effect.succeed(
-          HttpServerResponse.text("Forbidden", { status: HTTP_FORBIDDEN })
+      XenditTokenRejected: () =>
+        Effect.logWarning(
+          "Xendit webhook refused: the callback token does not match."
+        ).pipe(
+          Effect.as(
+            HttpServerResponse.text("Forbidden", { status: HTTP_FORBIDDEN })
+          )
         ),
-      XenditRouteMalformed: () =>
-        Effect.succeed(
-          HttpServerResponse.text("Bad Request", { status: HTTP_BAD_REQUEST })
+      XenditRouteMalformed: (error) =>
+        Effect.logWarning("Xendit webhook refused: the request is malformed.", {
+          message: error.message,
+        }).pipe(
+          Effect.as(
+            HttpServerResponse.text("Bad Request", { status: HTTP_BAD_REQUEST })
+          )
         ),
     }),
-    Effect.catchCause(() =>
-      Effect.succeed(
-        HttpServerResponse.text("Internal server error", {
-          status: HTTP_INTERNAL_ERROR,
-        })
+    Effect.catchCause((cause) =>
+      Effect.logError("Xendit webhook processing failed", cause).pipe(
+        Effect.as(
+          HttpServerResponse.text("Internal server error", {
+            status: HTTP_INTERNAL_ERROR,
+          })
+        )
       )
     )
   )

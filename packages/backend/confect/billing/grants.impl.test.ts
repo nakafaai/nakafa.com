@@ -55,7 +55,7 @@ describe("billing/grants.impl", () => {
               },
               providerUpdatedAt: START,
             });
-            yield* syncSubscriptionGrant(applied.subscriptionId, START);
+            yield* syncSubscriptionGrant(applied.subscriptionId);
             return userId;
           }),
           IdSchema("users")

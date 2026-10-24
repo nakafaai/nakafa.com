@@ -25,3 +25,30 @@ export class GrantOwnerMismatch extends Schema.TaggedError<GrantOwnerMismatch>()
     message: Schema.String,
   }
 ) {}
+
+/** A row the billing model points at is gone, which means an invariant broke. The write it guards does not happen. */
+export class BillingRowMissing extends Schema.TaggedError<BillingRowMissing>()(
+  "BillingRowMissing",
+  {
+    table: Schema.String,
+    message: Schema.String,
+  }
+) {}
+
+/** A provider event names a row on another rail than the one that sent it, so the event is not applied. */
+export class RailMismatch extends Schema.TaggedError<RailMismatch>()(
+  "RailMismatch",
+  {
+    rail: Schema.String,
+    message: Schema.String,
+  }
+) {}
+
+/** A school contract ends no later than it starts, so it grants no time. */
+export class ContractWindowInvalid extends Schema.TaggedError<ContractWindowInvalid>()(
+  "ContractWindowInvalid",
+  {
+    contractId: Schema.String,
+    message: Schema.String,
+  }
+) {}

@@ -30,14 +30,13 @@ describe("billing/payments", () => {
         accountId,
         amount: 79_000,
         currency: "IDR" as const,
-        invoiceId: null,
         kind: "pass" as const,
         method: "QRIS",
         paidAt: 1000,
         providerPaymentId: "py_1",
+        providerUpdatedAt: 1000,
         rail: "xendit" as const,
         status: "succeeded" as const,
-        subscriptionId: null,
       };
       const first = await runInMutation(ctx, recordPayment(payment));
       const replay = await runInMutation(ctx, recordPayment(payment));
@@ -59,6 +58,73 @@ describe("billing/payments", () => {
       replayKind: "duplicate",
       rows: 2,
       sameRow: true,
+    });
+  });
+
+  it("moves a stored payment to a newer provider state and keeps the time the money arrived", async () => {
+    const t = createBillingTestConvex();
+    const result = await t.run(async (ctx) => {
+      const userId = await ctx.db.insert("users", {
+        authId: "auth-billing-payment-state",
+        credits: 0,
+        creditsResetAt: 0,
+        email: "billing-payment-state@example.com",
+        mascot: MASCOT_CODE,
+        name: "Billing Payment State",
+        plan: "free",
+      });
+      const accountId = await ctx.db.insert("billingAccounts", {
+        owner: { kind: "personal", userId },
+        rail: "xendit",
+        country: "ID",
+        currency: "IDR",
+        providerCustomerId: null,
+      });
+      const payment = {
+        accountId,
+        amount: 79_000,
+        currency: "IDR" as const,
+        kind: "pass" as const,
+        method: "QRIS",
+        paidAt: 1000,
+        providerPaymentId: "py_state",
+        providerUpdatedAt: 1000,
+        rail: "xendit" as const,
+        status: "succeeded" as const,
+      };
+      const first = await runInMutation(ctx, recordPayment(payment));
+      const refund = await runInMutation(
+        ctx,
+        recordPayment({
+          ...payment,
+          paidAt: 2000,
+          providerUpdatedAt: 2000,
+          status: "refunded",
+        })
+      );
+      const older = await runInMutation(
+        ctx,
+        recordPayment({
+          ...payment,
+          providerUpdatedAt: 1500,
+          status: "failed",
+        })
+      );
+      const stored = await ctx.db.get(first.paymentId);
+      return {
+        refundKind: refund.kind,
+        olderKind: older.kind,
+        status: stored?.status,
+        paidAt: stored?.paidAt,
+        providerUpdatedAt: stored?.providerUpdatedAt,
+      };
+    });
+    expect(result).toEqual({
+      olderKind: "duplicate",
+      paidAt: 1000,
+      providerUpdatedAt: 2000,
+      refundKind: "updated",
+      status: "refunded",
     });
   });
 });

@@ -3,13 +3,13 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
-import type { BillingCurrency } from "@repo/backend/confect/billing/catalog";
-import type {
+import { BillingCurrency } from "@repo/backend/confect/billing/catalog";
+import {
   BillingCountry,
   BillingRail,
 } from "@repo/backend/confect/billing/schema";
-import type { Space } from "@repo/backend/confect/space";
-import { Effect, Option } from "effect";
+import { Space } from "@repo/backend/confect/space";
+import { Effect, Option, Schema } from "effect";
 
 export type BillingAccountId = Docs["billingAccounts"]["_id"];
 
@@ -37,35 +37,38 @@ const findAccount = Effect.fn("billing.accounts.find")(function* (
     .pipe(Effect.orDie);
 });
 
+/** The owner, rail, country and currency one account is made with. */
+const EnsureAccountInput = Schema.Struct({
+  owner: Space,
+  rail: BillingRail,
+  country: BillingCountry,
+  currency: BillingCurrency,
+});
+
 /**
  * Returns the account of `owner` on `rail`, making it on first use. The country
  * and the currency are fixed when the account is made, so a later move does
  * not change what an existing subscription is billed in.
  */
-export const ensureAccount = Effect.fn("billing.accounts.ensure")(
-  function* (input: {
-    readonly owner: Space;
-    readonly rail: BillingRail;
-    readonly country: BillingCountry;
-    readonly currency: BillingCurrency;
-  }) {
-    const existing = yield* findAccount(input.owner, input.rail);
-    if (Option.isSome(existing)) {
-      return existing.value._id;
-    }
-    const writer = yield* DatabaseWriter;
-    return yield* writer
-      .table("billingAccounts")
-      .insert({
-        owner: input.owner,
-        rail: input.rail,
-        country: input.country,
-        currency: input.currency,
-        providerCustomerId: null,
-      })
-      .pipe(Effect.orDie);
+export const ensureAccount = Effect.fn("billing.accounts.ensure")(function* (
+  input: typeof EnsureAccountInput.Type
+) {
+  const existing = yield* findAccount(input.owner, input.rail);
+  if (Option.isSome(existing)) {
+    return existing.value._id;
   }
-);
+  const writer = yield* DatabaseWriter;
+  return yield* writer
+    .table("billingAccounts")
+    .insert({
+      owner: input.owner,
+      rail: input.rail,
+      country: input.country,
+      currency: input.currency,
+      providerCustomerId: null,
+    })
+    .pipe(Effect.orDie);
+});
 
 /** Stores the customer the rail created for the account, so later calls reuse it. */
 export const recordProviderCustomer = Effect.fn(

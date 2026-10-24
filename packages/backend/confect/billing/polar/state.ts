@@ -60,9 +60,9 @@ function currencyOf(row: PolarSubscriptionRow): BillingCurrency | null {
   return code === "IDR" || code === "EUR" || code === "USD" ? code : null;
 }
 
-/** An ISO time the old tables stored, as epoch milliseconds. */
-function millisOf(iso: string): number {
-  return DateTime.toEpochMillis(DateTime.makeUnsafe(iso));
+/** An ISO time the old tables stored, as epoch milliseconds, or none when the text is not a time. */
+function millisOf(iso: string): Option.Option<number> {
+  return Option.map(DateTime.make(iso), DateTime.toEpochMillis);
 }
 
 /**
@@ -78,15 +78,28 @@ export function polarBillingState(
   if (offer === null || currency === null) {
     return Option.none();
   }
+  const periodStart = millisOf(row.currentPeriodStart);
+  // A row Polar never modified has no modifiedAt, so its creation is its last change.
+  const providerUpdatedAt = millisOf(row.modifiedAt ?? row.createdAt);
+  const periodEnd =
+    row.currentPeriodEnd === null
+      ? Option.some(null)
+      : millisOf(row.currentPeriodEnd);
+  if (
+    Option.isNone(periodStart) ||
+    Option.isNone(providerUpdatedAt) ||
+    Option.isNone(periodEnd)
+  ) {
+    return Option.none();
+  }
   return Option.some({
     offer,
     currency,
     status: statusOf(row),
-    currentPeriodStart: millisOf(row.currentPeriodStart),
-    currentPeriodEnd:
-      row.currentPeriodEnd === null ? null : millisOf(row.currentPeriodEnd),
+    currentPeriodStart: periodStart.value,
+    currentPeriodEnd: periodEnd.value,
     cancelAtPeriodEnd: row.cancelAtPeriodEnd,
-    providerUpdatedAt: millisOf(row.modifiedAt ?? row.createdAt),
+    providerUpdatedAt: providerUpdatedAt.value,
     subscriptionId: row.id,
     productId: row.productId,
     priceId: row.priceId ?? null,

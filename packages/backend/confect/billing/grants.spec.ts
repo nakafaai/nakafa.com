@@ -5,16 +5,29 @@ import { SubscriptionPlanSyncIoError } from "@repo/backend/confect/triggers/subs
 import { Schema } from "effect";
 
 /**
- * Recomputes one user's plan from their Pro grants. The scheduler runs it at the
- * end of each grant, and a subscription write runs it when the grant changes.
+ * Recomputes the plans of one user, or of one page of a school's members, from
+ * their Pro grants. The scheduler runs them when a grant is written and at the
+ * end of each grant, and a school projection pages through every member.
  */
-export default GroupSpec.make().addFunction(
-  FunctionSpec.internalMutation({
-    name: "project",
-    args: () => ({
-      userId: IdSchema("users"),
-    }),
-    returns: () => Schema.Null,
-    error: () => SubscriptionPlanSyncIoError,
-  }).middleware(Atomic)
-);
+export default GroupSpec.make()
+  .addFunction(
+    FunctionSpec.internalMutation({
+      name: "project",
+      args: () => ({
+        userId: IdSchema("users"),
+      }),
+      returns: () => Schema.Null,
+      error: () => SubscriptionPlanSyncIoError,
+    }).middleware(Atomic)
+  )
+  .addFunction(
+    FunctionSpec.internalMutation({
+      name: "projectSchool",
+      args: () => ({
+        tenantId: IdSchema("tenants"),
+        cursor: Schema.NullOr(Schema.String),
+      }),
+      returns: () => Schema.Null,
+      error: () => SubscriptionPlanSyncIoError,
+    }).middleware(Atomic)
+  );

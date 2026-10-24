@@ -1,7 +1,4 @@
-import {
-  monthlyPrices,
-  proProductIds,
-} from "@repo/backend/confect/billing/polar/catalog";
+import { proProductIds } from "@repo/backend/confect/billing/polar/catalog";
 import { isPolarProduction } from "@repo/backend/confect/billing/polar/environment";
 
 /**
@@ -12,7 +9,6 @@ import { isPolarProduction } from "@repo/backend/confect/billing/polar/environme
 export const products = {
   pro: {
     id: isPolarProduction ? proProductIds.production : proProductIds.sandbox,
-    monthlyPrices,
     slug: "pro",
   },
 };

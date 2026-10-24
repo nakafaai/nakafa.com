@@ -2,22 +2,23 @@ import { describe, expect, it } from "@effect/vitest";
 import {
   BILLING_EVENT_RETENTION_MS,
   cleanupEvents,
-  markEventProcessed,
+  processEvent,
   recordEvent,
 } from "@repo/backend/confect/billing/events";
 import {
   createBillingTestConvex,
+  exitInMutation,
   runInMutation,
 } from "@repo/backend/test/billing";
-import { Array as Arr } from "effect";
+import { Array as Arr, Exit } from "effect";
 
 const NOW = Date.UTC(2026, 9, 24);
 const delivery = {
-  key: "recurring.cycle.succeeded:recy_1:2026-10-24",
-  payload: '{"event":"recurring.cycle.succeeded"}',
+  key: "recurring.cycle.created:recy_1:SCHEDULED:2026-10-24",
+  payload: '{"event":"recurring.cycle.created","data":{}}',
   providerTime: NOW,
   rail: "xendit" as const,
-  type: "recurring.cycle.succeeded",
+  type: "recurring.cycle.created",
 };
 
 describe("billing/events", () => {
@@ -50,34 +51,73 @@ describe("billing/events", () => {
     });
   });
 
-  it("marks a stored delivery processed once, keeping its first time", async () => {
+  it("applies a stored delivery once and keeps its first processed time", async () => {
     const t = createBillingTestConvex();
-    const result = await t.run(async (ctx) => {
+    const processedAt = await t.run(async (ctx) => {
       const { eventId } = await runInMutation(ctx, recordEvent(delivery, NOW));
-      await runInMutation(ctx, markEventProcessed(eventId, NOW + 1));
-      await runInMutation(ctx, markEventProcessed(eventId, NOW + 2));
-      const missing = await ctx.db.insert("billingEvents", {
-        key: "gone",
-        payload: "{}",
-        providerTime: NOW,
-        rail: "polar",
-        receivedAt: NOW,
-        processedAt: null,
-        type: "gone",
-      });
-      await ctx.db.delete(missing);
-      await runInMutation(ctx, markEventProcessed(missing, NOW + 3));
-      const stored = await ctx.db.get(eventId);
-      return stored?.processedAt;
+      await runInMutation(ctx, processEvent(eventId, NOW + 1));
+      await runInMutation(ctx, processEvent(eventId, NOW + 2));
+      return (await ctx.db.get(eventId))?.processedAt;
     });
-    expect(result).toBe(NOW + 1);
+    expect(processedAt).toBe(NOW + 1);
   });
 
-  it("deletes rows received before the retention window and keeps the rest", async () => {
+  it("refuses to process a row that is gone", async () => {
+    const t = createBillingTestConvex();
+    const failed = await t.run(async (ctx) => {
+      const { eventId } = await runInMutation(ctx, recordEvent(delivery, NOW));
+      await ctx.db.delete(eventId);
+      const exit = await exitInMutation(ctx, processEvent(eventId, NOW + 1));
+      return Exit.isFailure(exit);
+    });
+    expect(failed).toBe(true);
+  });
+
+  it("marks a delivery it cannot read as processed, so it never blocks the rows behind it", async () => {
+    const t = createBillingTestConvex();
+    const processedAt = await t.run(async (ctx) => {
+      const { eventId } = await runInMutation(
+        ctx,
+        recordEvent(
+          { ...delivery, key: "unreadable", payload: "not json" },
+          NOW
+        )
+      );
+      await runInMutation(ctx, processEvent(eventId, NOW + 1));
+      return (await ctx.db.get(eventId))?.processedAt;
+    });
+    expect(processedAt).toBe(NOW + 1);
+  });
+
+  it("marks a Polar row processed without reading its body", async () => {
+    const t = createBillingTestConvex();
+    const processedAt = await t.run(async (ctx) => {
+      const { eventId } = await runInMutation(
+        ctx,
+        recordEvent(
+          { ...delivery, key: "polar-row", rail: "polar", payload: "{}" },
+          NOW
+        )
+      );
+      await runInMutation(ctx, processEvent(eventId, NOW + 1));
+      return (await ctx.db.get(eventId))?.processedAt;
+    });
+    expect(processedAt).toBe(NOW + 1);
+  });
+
+  it("deletes processed rows past the retention window and keeps the fresh and unprocessed ones", async () => {
     const t = createBillingTestConvex();
     const result = await t.run(async (ctx) => {
       const old = NOW - BILLING_EVENT_RETENTION_MS - 1;
-      await runInMutation(ctx, recordEvent({ ...delivery, key: "old" }, old));
+      const done = await runInMutation(
+        ctx,
+        recordEvent({ ...delivery, key: "old-done" }, old)
+      );
+      await runInMutation(ctx, processEvent(done.eventId, old));
+      await runInMutation(
+        ctx,
+        recordEvent({ ...delivery, key: "old-open" }, old)
+      );
       await runInMutation(ctx, recordEvent({ ...delivery, key: "fresh" }, NOW));
       const deleted = await runInMutation(ctx, cleanupEvents(NOW));
       const keys = Arr.map(
@@ -86,6 +126,9 @@ describe("billing/events", () => {
       );
       return { deleted, keys };
     });
-    expect(result).toEqual({ deleted: 1, keys: ["fresh"] });
+    expect(result.deleted).toBe(1);
+    expect(result.keys).toHaveLength(2);
+    expect(result.keys).toContain("old-open");
+    expect(result.keys).toContain("fresh");
   });
 });

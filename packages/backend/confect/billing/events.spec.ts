@@ -1,13 +1,18 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
 import { billingEventDeliveryValidator } from "@repo/backend/confect/billing/schema";
-import { BillingStateError } from "@repo/backend/confect/billing/spec";
+import {
+  BillingRowMissing,
+  BillingStateError,
+  GrantOwnerMismatch,
+} from "@repo/backend/confect/billing/spec";
 import Atomic from "@repo/backend/confect/middleware/atomic.spec";
 import { Schema } from "effect";
 
 /**
- * The webhook inbox. Provider routes store each delivery through `record`, and
- * the daily cron deletes the expired rows through `cleanup`.
+ * The webhook inbox. Provider routes store each delivery through `record`, which
+ * schedules `process` to apply it, and the daily cron deletes the expired rows
+ * through `cleanup`.
  */
 export default GroupSpec.make()
   .addFunction(
@@ -20,6 +25,16 @@ export default GroupSpec.make()
           eventId: IdSchema("billingEvents"),
         }),
       error: () => BillingStateError,
+    }).middleware(Atomic)
+  )
+  .addFunction(
+    FunctionSpec.internalMutation({
+      name: "process",
+      args: () => ({
+        eventId: IdSchema("billingEvents"),
+      }),
+      returns: () => Schema.Null,
+      error: () => Schema.Union([BillingRowMissing, GrantOwnerMismatch]),
     }).middleware(Atomic)
   )
   .addFunction(

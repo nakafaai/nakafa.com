@@ -46,15 +46,19 @@ export const BillingOfferKey = Schema.Literals([
   "pro.pass.12",
   "pro.topup",
   "school.seat.month",
+  "school.seat.semester",
   "school.seat.year",
 ]);
 export type BillingOfferKey = typeof BillingOfferKey.Type;
+
+/** The monthly Pro price in each currency, in minor units. The catalog and the pages both read this one fact. */
+export const proMonthlyPrices = { EUR: 899, IDR: 79_000, USD: 899 } as const;
 
 const billingOffers = {
   "pro.monthly": {
     interval: "month",
     months: 1,
-    prices: { EUR: 899, IDR: 79_000, USD: 899 },
+    prices: proMonthlyPrices,
     product: "pro",
     rails: ["polar", "xendit"],
     polarProduct: proProductIds,
@@ -102,9 +106,17 @@ const billingOffers = {
   "school.seat.month": {
     interval: "month",
     months: 1,
-    prices: { EUR: 100, IDR: 10_000, USD: 100 },
+    prices: { EUR: 100, USD: 100 },
     product: "school",
-    rails: ["polar", "xendit"],
+    rails: ["polar"],
+    polarProduct: null,
+  },
+  "school.seat.semester": {
+    interval: "pass",
+    months: 6,
+    prices: { IDR: 60_000 },
+    product: "school",
+    rails: ["xendit"],
     polarProduct: null,
   },
   "school.seat.year": {

@@ -121,4 +121,31 @@ describe("billing/contracts", () => {
       expect(error._tag).toBe("TenantNotFound");
     }).pipe(Effect.provide(confectLayer))
   );
+
+  it("refuses a contract that ends no later than it starts", async () => {
+    const t = createBillingTestConvex();
+    const tag = await t.run(async (ctx) => {
+      await insertSchool(ctx);
+      const error = await runInMutation(
+        ctx,
+        recordSchoolContract({ ...CONTRACT, validTo: TERM_START }).pipe(
+          Effect.flip
+        )
+      );
+      return error._tag;
+    });
+    expect(tag).toBe("ContractWindowInvalid");
+  });
+
+  it("returns the grant the first call wrote when the same contract is recorded again", async () => {
+    const t = createBillingTestConvex();
+    const result = await t.run(async (ctx) => {
+      await insertSchool(ctx);
+      const first = await runInMutation(ctx, recordSchoolContract(CONTRACT));
+      const again = await runInMutation(ctx, recordSchoolContract(CONTRACT));
+      const grants = await ctx.db.query("billingGrants").collect();
+      return { grants: grants.length, same: first.grantId === again.grantId };
+    });
+    expect(result).toEqual({ grants: 1, same: true });
+  });
 });

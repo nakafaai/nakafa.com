@@ -40,7 +40,7 @@ describe("billing/events.impl", () => {
           yield* writer.table("billingEvents").insert({
             ...delivery,
             key: "expired",
-            processedAt: null,
+            processedAt: NOW - BILLING_EVENT_RETENTION_MS - 1,
             receivedAt: NOW - BILLING_EVENT_RETENTION_MS - 1,
           });
         })

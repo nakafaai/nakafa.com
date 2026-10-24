@@ -1,6 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
 import type { BillingAccountId } from "@repo/backend/confect/billing/accounts";
 import {
+  projectSchoolPage,
   projectUserPlan,
   syncSubscriptionGrant,
 } from "@repo/backend/confect/billing/grants";
@@ -11,13 +12,18 @@ import {
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
   createBillingTestConvex,
+  exitInMutation,
+  insertMember,
+  insertSchool,
+  insertSchoolGrant,
   runInMutation,
 } from "@repo/backend/test/billing";
 import { MASCOT_CODE } from "@repo/backend/test/mascot";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Exit } from "effect";
 
 const START = Date.UTC(2026, 9, 1);
 const PERIOD_END = Date.UTC(2026, 10, 1);
+const DECEMBER_END = Date.UTC(2026, 11, 1);
 
 /** Inserts a person with a free plan and a Polar account for them. */
 async function insertPerson(ctx: MutationCtx) {
@@ -72,10 +78,7 @@ describe("billing/grants", () => {
         ctx,
         applySubscriptionState(proState(accountId))
       );
-      await runInMutation(
-        ctx,
-        syncSubscriptionGrant(applied.subscriptionId, START)
-      );
+      await runInMutation(ctx, syncSubscriptionGrant(applied.subscriptionId));
       const plan = await runInMutation(ctx, projectUserPlan(userId, START + 1));
       const user = await ctx.db.get(userId);
       return { plan, userPlan: user?.plan };
@@ -93,7 +96,7 @@ describe("billing/grants", () => {
       );
       const grantId = await runInMutation(
         ctx,
-        syncSubscriptionGrant(first.subscriptionId, START)
+        syncSubscriptionGrant(first.subscriptionId)
       );
       const renewedEnd = Date.UTC(2026, 11, 1);
       await runInMutation(
@@ -105,7 +108,7 @@ describe("billing/grants", () => {
       );
       const renewedId = await runInMutation(
         ctx,
-        syncSubscriptionGrant(first.subscriptionId, START + 2)
+        syncSubscriptionGrant(first.subscriptionId)
       );
       const grants = await ctx.db.query("billingGrants").collect();
       return {
@@ -129,10 +132,7 @@ describe("billing/grants", () => {
         ctx,
         applySubscriptionState(proState(accountId))
       );
-      await runInMutation(
-        ctx,
-        syncSubscriptionGrant(applied.subscriptionId, START)
-      );
+      await runInMutation(ctx, syncSubscriptionGrant(applied.subscriptionId));
       await runInMutation(ctx, projectUserPlan(userId, START + 1));
       const afterEnd = await runInMutation(
         ctx,
@@ -152,10 +152,7 @@ describe("billing/grants", () => {
         ctx,
         applySubscriptionState(proState(accountId, PERIOD_END))
       );
-      await runInMutation(
-        ctx,
-        syncSubscriptionGrant(first.subscriptionId, START)
-      );
+      await runInMutation(ctx, syncSubscriptionGrant(first.subscriptionId));
       const second = await runInMutation(
         ctx,
         applySubscriptionState({
@@ -168,10 +165,7 @@ describe("billing/grants", () => {
           },
         })
       );
-      await runInMutation(
-        ctx,
-        syncSubscriptionGrant(second.subscriptionId, START)
-      );
+      await runInMutation(ctx, syncSubscriptionGrant(second.subscriptionId));
       const midway = await runInMutation(
         ctx,
         projectUserPlan(userId, PERIOD_END + 1)
@@ -193,10 +187,7 @@ describe("billing/grants", () => {
         ctx,
         applySubscriptionState(proState(accountId))
       );
-      await runInMutation(
-        ctx,
-        syncSubscriptionGrant(applied.subscriptionId, START)
-      );
+      await runInMutation(ctx, syncSubscriptionGrant(applied.subscriptionId));
       const first = await runInMutation(
         ctx,
         projectUserPlan(userId, START + 1)
@@ -212,7 +203,7 @@ describe("billing/grants", () => {
     expect(result).toEqual({ again: "pro", credits: 1, first: "pro" });
   });
 
-  it("grants until the cancellation when a subscription has no period end", async () => {
+  it("writes no grant for a subscription with no period end, so its plan stays free", async () => {
     const t = createBillingTestConvex();
     const result = await t.run(async (ctx) => {
       const { accountId, userId } = await insertPerson(ctx);
@@ -224,21 +215,18 @@ describe("billing/grants", () => {
           status: "canceled",
         })
       );
-      await runInMutation(
+      const grantId = await runInMutation(
         ctx,
-        syncSubscriptionGrant(applied.subscriptionId, START + 100)
+        syncSubscriptionGrant(applied.subscriptionId)
       );
-      const during = await runInMutation(
+      const grants = await ctx.db.query("billingGrants").collect();
+      const plan = await runInMutation(
         ctx,
         projectUserPlan(userId, START + 50)
       );
-      const after = await runInMutation(
-        ctx,
-        projectUserPlan(userId, START + 200)
-      );
-      return { after, during };
+      return { grantId, grants: grants.length, plan };
     });
-    expect(result).toEqual({ after: "free", during: "pro" });
+    expect(result).toEqual({ grantId: null, grants: 0, plan: "free" });
   });
 
   it("writes a school grant of seats for a school subscription and leaves the person's plan alone", async () => {
@@ -274,10 +262,7 @@ describe("billing/grants", () => {
           },
         })
       );
-      await runInMutation(
-        ctx,
-        syncSubscriptionGrant(applied.subscriptionId, START)
-      );
+      await runInMutation(ctx, syncSubscriptionGrant(applied.subscriptionId));
       const grants = await ctx.db.query("billingGrants").collect();
       return Arr.map(grants, (grant) => ({
         product: grant.product,
@@ -300,7 +285,7 @@ describe("billing/grants", () => {
       );
       const error = await runInMutation(
         ctx,
-        syncSubscriptionGrant(applied.subscriptionId, START).pipe(Effect.flip)
+        syncSubscriptionGrant(applied.subscriptionId).pipe(Effect.flip)
       );
       return error._tag;
     });
@@ -316,16 +301,13 @@ describe("billing/grants", () => {
         ctx,
         applySubscriptionState(proState(accountId))
       );
-      await runInMutation(
-        ctx,
-        syncSubscriptionGrant(applied.subscriptionId, START)
-      );
+      await runInMutation(ctx, syncSubscriptionGrant(applied.subscriptionId));
       return runInMutation(ctx, projectUserPlan(userId, START + 1));
     });
     expect(result).toBeNull();
   });
 
-  it("returns nothing for a subscription or a user that no longer exists", async () => {
+  it("refuses a sync for a subscription or an account that is gone, and returns nothing for a user that is gone", async () => {
     const t = createBillingTestConvex();
     const result = await t.run(async (ctx) => {
       const { accountId, userId } = await insertPerson(ctx);
@@ -334,9 +316,9 @@ describe("billing/grants", () => {
         applySubscriptionState(proState(accountId))
       );
       await ctx.db.delete(applied.subscriptionId);
-      const missingSubscription = await runInMutation(
+      const missingSubscription = await exitInMutation(
         ctx,
-        syncSubscriptionGrant(applied.subscriptionId, START)
+        syncSubscriptionGrant(applied.subscriptionId)
       );
       await ctx.db.delete(userId);
       const missingUser = await runInMutation(
@@ -349,16 +331,144 @@ describe("billing/grants", () => {
         applySubscriptionState(proState(accountOnly.accountId))
       );
       await ctx.db.delete(accountOnly.accountId);
-      const missingAccount = await runInMutation(
+      const missingAccount = await exitInMutation(
         ctx,
-        syncSubscriptionGrant(orphaned.subscriptionId, START)
+        syncSubscriptionGrant(orphaned.subscriptionId)
       );
-      return { missingAccount, missingSubscription, missingUser };
+      return {
+        missingAccount: Exit.isFailure(missingAccount),
+        missingSubscription: Exit.isFailure(missingSubscription),
+        missingUser,
+      };
     });
     expect(result).toEqual({
-      missingAccount: null,
-      missingSubscription: null,
+      missingAccount: true,
+      missingSubscription: true,
       missingUser: null,
     });
+  });
+
+  it("schedules the owner's plan to be recomputed when a grant is written", async () => {
+    const t = createBillingTestConvex();
+    const jobs = await t.run(async (ctx) => {
+      const { accountId } = await insertPerson(ctx);
+      const applied = await runInMutation(
+        ctx,
+        applySubscriptionState(proState(accountId))
+      );
+      await runInMutation(ctx, syncSubscriptionGrant(applied.subscriptionId));
+      return ctx.db.system.query("_scheduled_functions").collect();
+    });
+    expect(jobs).toHaveLength(1);
+  });
+
+  it("projects a school's grant onto its claimed active members and ends it at its validTo", async () => {
+    const t = createBillingTestConvex();
+    const result = await t.run(async (ctx) => {
+      const tenantId = await insertSchool(ctx);
+      const student = await insertPerson(ctx);
+      await insertMember(ctx, tenantId, student.userId);
+      await insertMember(ctx, tenantId, null);
+      await insertMember(ctx, tenantId, null, "operator");
+      await insertSchoolGrant(ctx, tenantId, START, PERIOD_END);
+      await runInMutation(ctx, projectSchoolPage(tenantId, null, START + 1));
+      const during = (await ctx.db.get(student.userId))?.plan;
+      const after = await runInMutation(
+        ctx,
+        projectUserPlan(student.userId, PERIOD_END + 1)
+      );
+      return { after, during };
+    });
+    expect(result).toEqual({ after: "free", during: "pro" });
+  });
+
+  it("keeps a student's Pro after their own grant ends, while the school grant runs longer", async () => {
+    const t = createBillingTestConvex();
+    const result = await t.run(async (ctx) => {
+      const student = await insertPerson(ctx);
+      const applied = await runInMutation(
+        ctx,
+        applySubscriptionState(proState(student.accountId))
+      );
+      await runInMutation(ctx, syncSubscriptionGrant(applied.subscriptionId));
+      const tenantId = await insertSchool(ctx);
+      await insertMember(ctx, tenantId, student.userId);
+      await insertSchoolGrant(ctx, tenantId, START, DECEMBER_END);
+      return runInMutation(
+        ctx,
+        projectUserPlan(student.userId, PERIOD_END + 1)
+      );
+    });
+    expect(result).toBe("pro");
+  });
+
+  it("keeps a student's Pro through their own grant when the school grant runs longer", async () => {
+    const t = createBillingTestConvex();
+    const result = await t.run(async (ctx) => {
+      const student = await insertPerson(ctx);
+      const applied = await runInMutation(
+        ctx,
+        applySubscriptionState(proState(student.accountId))
+      );
+      await runInMutation(ctx, syncSubscriptionGrant(applied.subscriptionId));
+      const tenantId = await insertSchool(ctx);
+      await insertMember(ctx, tenantId, student.userId);
+      await insertSchoolGrant(ctx, tenantId, START, DECEMBER_END);
+      return runInMutation(ctx, projectUserPlan(student.userId, START + 2000));
+    });
+    expect(result).toBe("pro");
+  });
+
+  it("keeps a student's Pro through their own grant while the school grant ends sooner, and drops it once both have ended", async () => {
+    const t = createBillingTestConvex();
+    const result = await t.run(async (ctx) => {
+      const student = await insertPerson(ctx);
+      const applied = await runInMutation(
+        ctx,
+        applySubscriptionState(proState(student.accountId))
+      );
+      await runInMutation(ctx, syncSubscriptionGrant(applied.subscriptionId));
+      const tenantId = await insertSchool(ctx);
+      await insertMember(ctx, tenantId, student.userId);
+      await insertSchoolGrant(ctx, tenantId, START, PERIOD_END - 1000);
+      const during = await runInMutation(
+        ctx,
+        projectUserPlan(student.userId, START + 2000)
+      );
+      const after = await runInMutation(
+        ctx,
+        projectUserPlan(student.userId, PERIOD_END + 1)
+      );
+      return { after, during };
+    });
+    expect(result).toEqual({ after: "free", during: "pro" });
+  });
+
+  it("pages through a school's members, scheduling the next page while members remain", async () => {
+    const t = createBillingTestConvex();
+    const jobs = await t.run(async (ctx) => {
+      const tenantId = await insertSchool(ctx);
+      await insertSchoolGrant(ctx, tenantId, START, PERIOD_END);
+      const userIds = await Promise.all(
+        Arr.makeBy(51, (index) =>
+          ctx.db.insert("users", {
+            authId: `auth-school-member-${index}`,
+            credits: 0,
+            creditsResetAt: START,
+            email: `school-member-${index}@example.com`,
+            mascot: MASCOT_CODE,
+            name: `School Member ${index}`,
+            plan: "free",
+          })
+        )
+      );
+      await Promise.all(
+        Arr.map(userIds, (userId) => insertMember(ctx, tenantId, userId))
+      );
+      await runInMutation(ctx, projectSchoolPage(tenantId, null, START + 1));
+      return ctx.db.system.query("_scheduled_functions").collect();
+    });
+    // One plan recomputation per member of the page, and one job for the next page.
+    expect(jobs).toHaveLength(51);
   });
 });

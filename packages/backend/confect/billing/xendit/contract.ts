@@ -24,6 +24,16 @@ const XenditSubscriptionSchedule = Schema.Struct({
   total_recurrence: Schema.optionalKey(positiveInt),
 });
 
+/**
+ * Create Session reads a PAY or SUBSCRIPTION amount as above zero and a SAVE
+ * amount as exactly zero (INVALID_AMOUNT), so the request names the rule once.
+ */
+const amountFitsSessionType = (request: {
+  readonly session_type: typeof XenditSessionType.Type;
+  readonly amount: number;
+}): boolean =>
+  request.session_type === "SAVE" ? request.amount === 0 : request.amount > 0;
+
 /** The fields of Create Session that Nakafa sends for an Indonesian Pro or School checkout. */
 export const XenditSessionRequest = Schema.Struct({
   reference_id: Schema.String.check(
@@ -48,7 +58,7 @@ export const XenditSessionRequest = Schema.Struct({
       ),
     })
   ),
-});
+}).check(Schema.makeFilter(amountFitsSessionType));
 export type XenditSessionRequest = typeof XenditSessionRequest.Type;
 
 /** The fields of the 201 answer that the checkout and the billing row need. */
@@ -85,6 +95,40 @@ export const XenditPlan = Schema.Struct({
   updated: Schema.String,
 });
 export type XenditPlan = typeof XenditPlan.Type;
+
+/** The plan a `recurring.plan.*` webhook carries, with the fields the processor reads. */
+export const XenditPlanEvent = Schema.Struct({
+  id: Schema.String,
+  status: XenditPlanStatus,
+  updated: Schema.DateTimeUtcFromString,
+});
+
+/** One attempt to charge a cycle. Only the fields the billing row reads are named. */
+const XenditCycleAttempt = Schema.Struct({
+  status: Schema.Literals(["SUCCEEDED", "FAILED", "PENDING"]),
+  payment_id: Schema.NullOr(Schema.String),
+  created: Schema.DateTimeUtcFromString,
+});
+
+/** The cycle a `recurring.cycle.*` webhook carries, with the fields the processor reads. */
+export const XenditCycle = Schema.Struct({
+  id: Schema.String,
+  status: Schema.Literals([
+    "SCHEDULED",
+    "PENDING",
+    "RETRYING",
+    "FAILED",
+    "SUCCEEDED",
+    "CANCELLED",
+  ]),
+  plan_id: Schema.String,
+  currency: Schema.String,
+  amount: Schema.Int.check(Schema.isGreaterThanOrEqualTo(0)),
+  scheduled_timestamp: Schema.DateTimeUtcFromString,
+  attempt_details: Schema.Array(XenditCycleAttempt),
+  updated: Schema.DateTimeUtcFromString,
+});
+export type XenditCycle = typeof XenditCycle.Type;
 
 /** A Xendit error body: a code and a message, as every 4xx and 5xx answer carries them. */
 export const XenditErrorBody = Schema.Struct({
