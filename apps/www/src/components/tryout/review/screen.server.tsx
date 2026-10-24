@@ -1,6 +1,6 @@
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { Locale } from "@repo/internationalization/src/locale";
-import { Array as Arr, Effect } from "effect";
+import { Array as Arr, Effect, Option } from "effect";
 import { NinaAskProvider } from "@/components/ai/ask";
 import type { SignedContentAccess } from "@/components/tryout/content/model";
 import { TryoutContentRefresh } from "@/components/tryout/content/refresh";
@@ -14,11 +14,13 @@ import {
 } from "@/components/tryout/runtime/question/shell";
 import { TryoutReviewedResponse } from "@/components/tryout/runtime/response/review";
 import type { TryoutSectionRuntime } from "@/components/tryout/runtime/types";
+import { scheduleCurrentServerExceptionCapture } from "@/lib/analytics/exception.server";
 import { runServerEffect } from "@/lib/server/fn";
 
 /**
  * Loads the signed content of one terminal review and projects its questions.
- * A projection that fails closed yields null, so the screen asks for a refresh.
+ * A projection that fails closed is reported with its cause and yields none, so
+ * the screen asks for a refresh.
  */
 const readTryoutReviewQuestions = Effect.fn("TryoutReview.readQuestions")(
   function* (
@@ -31,10 +33,11 @@ const readTryoutReviewQuestions = Effect.fn("TryoutReview.readQuestions")(
       content,
       questions: runtime.questions,
     }).pipe(
-      Effect.catchTag("TryoutReviewProjectionError", () =>
-        Effect.logWarning(
-          "Terminal try-out review projection failed closed."
-        ).pipe(Effect.as(null))
+      Effect.asSome,
+      Effect.catchTag("TryoutReviewProjectionError", (error) =>
+        scheduleCurrentServerExceptionCapture(error, {
+          source: "tryout.review",
+        }).pipe(Effect.as(Option.none()))
       )
     );
   }
@@ -62,18 +65,18 @@ export async function TryoutReview({
       />
     );
   }
-  const questions = await runServerEffect(
+  const review = await runServerEffect(
     readTryoutReviewQuestions(attemptId, access, runtime)
   );
 
-  if (!questions) {
+  if (Option.isNone(review)) {
     return <TryoutContentRefresh />;
   }
 
   return (
     <NinaAskProvider>
       <section className="space-y-12">
-        {Arr.map(questions, (question) => (
+        {Arr.map(review.value, (question) => (
           <TryoutReviewQuestionShell
             action={
               <TryoutAskButton
