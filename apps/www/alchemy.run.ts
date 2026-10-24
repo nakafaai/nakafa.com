@@ -32,6 +32,11 @@ export default Stack(
   Effect.gen(function* () {
     const stage = yield* Stage;
 
+    // Production declares the zone first: the web Worker attaches nakafa.com by zone name.
+    if (stage === PRODUCTION_STAGE) {
+      yield* deployNakafaDns();
+    }
+
     const web = yield* Website.Vite("Web", {
       compatibility: {
         date: workerSettings.compatibilityDate,
@@ -45,8 +50,6 @@ export default Stack(
     });
 
     if (stage === PRODUCTION_STAGE) {
-      yield* deployNakafaDns();
-
       yield* Worker("Api", {
         main: "../api/worker.ts",
         assets: "../api/public",
