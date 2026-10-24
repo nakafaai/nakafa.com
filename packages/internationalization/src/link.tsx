@@ -106,16 +106,23 @@ export function HrefLink({
 
 /**
  * Navigates to a path of the app that the route tree cannot type, on the locale
- * of the page on screen. A replace takes the place of the current entry.
+ * of the page on screen. A replace takes the place of the current entry. An href
+ * that leaves the app loads as a full document, as a plain link does.
  */
 export function useHrefNavigate() {
   const locale = useCurrentLocale();
   const navigate = useNavigate();
   return (href: string, options?: { readonly replace?: boolean }) => {
-    navigate({
-      href: localizeInternalHref(href, locale),
-      replace: options?.replace ?? false,
-    });
+    const replace = options?.replace ?? false;
+    if (!isInternalHref(href)) {
+      if (replace) {
+        window.location.replace(href);
+      } else {
+        window.location.assign(href);
+      }
+      return;
+    }
+    navigate({ href: localizeInternalHref(href, locale), replace });
   };
 }
 

@@ -1,8 +1,6 @@
 import { useMutation } from "@confect/react";
 import notifications from "@repo/backend/confect/_generated/refs/notifications";
 import { toast } from "@repo/design-system/lib/toast/notify";
-import { isInternalHref } from "@repo/internationalization/src/href";
-import { useRouter } from "@tanstack/react-router";
 import { cn } from "cn";
 import { Effect, Match, Option } from "effect";
 import { type MouseEvent, type ReactNode, use } from "react";
@@ -54,7 +52,6 @@ export function NotificationRow({
 }) {
   const t = useTranslations("Notifications");
   const locale = useLocale();
-  const router = useRouter();
   const now = useNotificationsNow();
   const readOne = useMutation(notifications.inbox.read).withOptimisticUpdate(
     markReadInLists
@@ -110,15 +107,10 @@ export function NotificationRow({
     Effect.runPromise(
       markRead.pipe(
         Effect.flatMap((taken) =>
-          Effect.promise(async () => {
-            if (!taken) {
-              return;
+          Effect.sync(() => {
+            if (taken) {
+              window.location.assign(href);
             }
-            if (isInternalHref(href)) {
-              await router.navigate({ href });
-              return;
-            }
-            window.location.assign(href);
           })
         )
       )
