@@ -4,13 +4,13 @@ import contentRelease from "@repo/backend/confect/_generated/refs/contentRelease
 import { resolveReferenceInput } from "@repo/backend/confect/contentRelease/reference/input";
 import { readNamespaceSegment } from "@repo/contents/route/surface";
 import type { Locale } from "@repo/internationalization/src/locale";
-import { readServerTranslator } from "@repo/internationalization/src/translator";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 import { readPublishedArticleCategory } from "@/lib/content/article/category";
 import { getArticleModel } from "@/lib/content/article/publication";
 import { toMaterialMetadataCopy } from "@/lib/content/material/metadata";
 import { getMaterialModel } from "@/lib/content/material/model";
 import { queryContentStore } from "@/lib/content/store/query";
+import { readCopy } from "@/lib/i18n/copy.server";
 import { getMetadataFromSlug } from "@/lib/og/metadata";
 
 /** The title and description that one social image shows. */
@@ -28,13 +28,9 @@ const readArticleIndexCopy = Effect.fn("www.og.copy.articleIndex")(function* (
   locale: Locale,
   category: string | undefined
 ) {
-  const tArticles = yield* Effect.promise(() =>
-    readServerTranslator({ locale, namespace: "Articles" })
-  );
+  const tArticles = yield* readCopy({ locale, namespace: "Articles" });
   if (category === undefined) {
-    const tCommon = yield* Effect.promise(() =>
-      readServerTranslator({ locale, namespace: "Common" })
-    );
+    const tCommon = yield* readCopy({ locale, namespace: "Common" });
     return Option.some({
       description: tArticles("description"),
       title: tCommon("articles"),

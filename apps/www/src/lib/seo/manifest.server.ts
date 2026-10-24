@@ -1,26 +1,13 @@
 import { THEME_COMPATIBILITY_COLORS } from "@repo/design-system/lib/theme/compatibility";
-import { readServerTranslator } from "@repo/internationalization/src/translator";
-import { Effect, Schema } from "effect";
+import { Effect } from "effect";
+import { readCopy } from "@/lib/i18n/copy.server";
 
 /** The manifest describes the app in English, the locale the install prompt shows. */
 const MANIFEST_LOCALE = "en";
 
-/** The copy of the manifest could not load from the translator. */
-class ManifestCopyUnavailableError extends Schema.TaggedError<ManifestCopyUnavailableError>()(
-  "ManifestCopyUnavailableError",
-  { cause: Schema.Unknown }
-) {}
-
 /** Serves the web app manifest that lets visitors install Nakafa. */
 export const serveManifest = Effect.fn("www.seo.manifest")(function* () {
-  const t = yield* Effect.tryPromise({
-    try: () =>
-      readServerTranslator({
-        locale: MANIFEST_LOCALE,
-        namespace: "Metadata",
-      }),
-    catch: (cause) => new ManifestCopyUnavailableError({ cause }),
-  });
+  const t = yield* readCopy({ locale: MANIFEST_LOCALE, namespace: "Metadata" });
 
   return Response.json(
     {

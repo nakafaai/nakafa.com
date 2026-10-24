@@ -1,6 +1,5 @@
 import type { Locale } from "@repo/internationalization/src/locale";
-import { readServerTranslator } from "@repo/internationalization/src/translator";
-import { Effect, Option } from "effect";
+import { Effect, Option, Schema } from "effect";
 import {
   loadSignedTryoutContent,
   renderSignedTryoutRows,
@@ -15,7 +14,17 @@ import {
   renderTryoutReview,
 } from "@/components/tryout/route/rendered.server";
 import type { QuestionPreviewContent } from "@/lib/content/preview/question";
+import { readCopy } from "@/lib/i18n/copy.server";
 import { getOgUrl } from "@/lib/seo/social";
+
+/** Expected failure while one rendered part of the try-out surface cannot render. */
+class TryoutSurfaceRenderError extends Schema.TaggedError<TryoutSurfaceRenderError>()(
+  "TryoutSurfaceRenderError",
+  {
+    cause: Schema.Unknown,
+    stage: Schema.Literals(["preview", "question", "review"]),
+  }
+) {}
 
 /**
  * The parts of an attempt that its running content and its review read: its ID,
@@ -38,9 +47,10 @@ export const readRetainedHead = Effect.fn("www.tryout.route.readRetainedHead")(
     readonly publicPath: string;
     readonly title: string;
   }) {
-    const tTryouts = yield* Effect.promise(() =>
-      readServerTranslator({ locale: input.locale, namespace: "Tryouts" })
-    );
+    const tTryouts = yield* readCopy({
+      locale: input.locale,
+      namespace: "Tryouts",
+    });
     return {
       canonicalPath: `/${input.locale}/${input.publicPath}` as const,
       description: input.description ?? tTryouts("metadata-description"),
@@ -70,15 +80,15 @@ export const readPreviewRoute = Effect.fn("www.tryout.route.readPreview")(
         title: section.title,
       }),
       kind: "preview" as const,
-      preview: yield* Effect.promise(() => renderTryoutPreview(input.preview)),
+      preview: yield* Effect.tryPromise({
+        try: () => renderTryoutPreview(input.preview),
+        catch: (cause) =>
+          new TryoutSurfaceRenderError({ cause, stage: "preview" }),
+      }),
     };
   }
 );
 
-/**
- * The signed question bodies of a running attempt, verified and rendered on the
- * server. A finished attempt, or one without signed content, has none.
- */
 /**
  * The signed question bodies of a running attempt, verified and rendered on the
  * server. A finished attempt, or one without signed content, has none.
@@ -130,7 +140,12 @@ const renderQuestionBodies = Effect.fn("www.tryout.route.renderQuestionBodies")(
   ) {
     return yield* Effect.forEach(
       questions,
-      (question) => Effect.promise(() => renderTryoutQuestionBody(question)),
+      (question) =>
+        Effect.tryPromise({
+          try: () => renderTryoutQuestionBody(question),
+          catch: (cause) =>
+            new TryoutSurfaceRenderError({ cause, stage: "question" }),
+        }),
       { concurrency: "unbounded" }
     );
   }
@@ -167,14 +182,17 @@ export const readAttemptReview = Effect.fn("www.tryout.route.readReview")(
       return Option.none<RenderedReview>();
     }
     return Option.some(
-      yield* Effect.promise(() =>
-        renderTryoutReview({
-          access: content,
-          attemptId: attempt.attemptId,
-          locale: input.locale,
-          runtime: runtime.value,
-        })
-      )
+      yield* Effect.tryPromise({
+        try: () =>
+          renderTryoutReview({
+            access: content,
+            attemptId: attempt.attemptId,
+            locale: input.locale,
+            runtime: runtime.value,
+          }),
+        catch: (cause) =>
+          new TryoutSurfaceRenderError({ cause, stage: "review" }),
+      })
     );
   }
 );

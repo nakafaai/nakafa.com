@@ -5,7 +5,6 @@ import {
   LOCALES,
   type Locale,
 } from "@repo/internationalization/src/locale";
-import { readServerTranslator } from "@repo/internationalization/src/translator";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { Array as Arr, DateTime, Effect, Order, Schema } from "effect";
 import { Feed, type Item } from "feed";
@@ -18,6 +17,7 @@ import {
   type ContentReleasePin,
   decodeContentReleasePin,
 } from "@/lib/content/published/release";
+import { readCopy } from "@/lib/i18n/copy.server";
 
 const baseUrl = COMPANY_IDENTITY.url;
 const FEED_ERROR = "Internal Server Error";
@@ -57,12 +57,6 @@ function reportFeedFailure(cause: unknown) {
   );
 }
 
-/** The copy of the feed could not load from the translator. */
-class FeedCopyUnavailableError extends Schema.TaggedError<FeedCopyUnavailableError>()(
-  "FeedCopyUnavailableError",
-  { cause: Schema.Unknown }
-) {}
-
 /** Serves the RSS feed of the latest signed articles and materials. */
 export const serveRssFeed = Effect.fn("www.rss.serve")(() =>
   readFeed().pipe(
@@ -75,22 +69,8 @@ export const serveRssFeed = Effect.fn("www.rss.serve")(() =>
 const readFeed = Effect.fn("www.rss.readFeed")(function* () {
   const [t, tCommon, routes] = yield* Effect.all(
     [
-      Effect.tryPromise({
-        try: () =>
-          readServerTranslator({
-            locale: DEFAULT_LOCALE,
-            namespace: "Metadata",
-          }),
-        catch: (cause) => new FeedCopyUnavailableError({ cause }),
-      }),
-      Effect.tryPromise({
-        try: () =>
-          readServerTranslator({
-            locale: DEFAULT_LOCALE,
-            namespace: "Common",
-          }),
-        catch: (cause) => new FeedCopyUnavailableError({ cause }),
-      }),
+      readCopy({ locale: DEFAULT_LOCALE, namespace: "Metadata" }),
+      readCopy({ locale: DEFAULT_LOCALE, namespace: "Common" }),
       getFeedContentRoutes(),
     ],
     { concurrency: "unbounded" }

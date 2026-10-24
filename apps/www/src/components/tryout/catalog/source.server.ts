@@ -46,9 +46,10 @@ export const readFeaturedTryout = Effect.fn("www.tryout.catalog.readFeatured")(
     );
     const question = yield* loadTryoutQuestion(featured.question);
     // The question is a server component tree, so it crosses to the page as Flight data.
-    const content = yield* Effect.promise(() =>
-      renderServerComponent(question.content)
-    );
+    const content = yield* Effect.tryPromise({
+      try: () => renderServerComponent(question.content),
+      catch: (cause) => new TryoutCatalogReadError({ cause }),
+    });
     return {
       question: content,
       response: featured.response,
