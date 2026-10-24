@@ -1,5 +1,4 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
-import { DeliveryLanguageSchema } from "@nakafa/aksara-contracts/locale";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
 import { GrantScope } from "@repo/backend/confect/access/schema";
@@ -40,10 +39,6 @@ export default GroupSpec.make()
     FunctionSpec.publicMutation({
       name: "create",
       args: () => ({
-        // Accepted and ignored until the contract step: a browser built before the exam
-        // language was removed still sends it for the 12-hour skew window (the rollout
-        // contract of packages/backend/AGENTS.md).
-        language: Schema.optionalKey(DeliveryLanguageSchema),
         scope: GrantScope,
         slug: TenantSlug,
         title: ExamTitle,
