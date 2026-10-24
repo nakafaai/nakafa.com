@@ -1,5 +1,9 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
-import { agentTrustKeys, polarKeys } from "@repo/backend/keys";
+import {
+  agentTrustKeys,
+  convexSiteServerKeys,
+  polarKeys,
+} from "@repo/backend/keys";
 
 afterEach(() => {
   vi.unstubAllEnvs();
@@ -58,6 +62,22 @@ describe("Agent Mode trust keys", () => {
       VITE_CONVEX_URL: "",
       DEPLOY_STAGE: "",
     });
+  });
+});
+
+describe("Convex site server key", () => {
+  it("passes the site address through for the server calls", () => {
+    vi.stubEnv("VITE_CONVEX_SITE_URL", "https://example.convex.site");
+
+    expect(convexSiteServerKeys()).toStrictEqual({
+      VITE_CONVEX_SITE_URL: "https://example.convex.site",
+    });
+  });
+
+  it("refuses an address that is not a URL", () => {
+    vi.stubEnv("VITE_CONVEX_SITE_URL", "not a url");
+
+    expect(() => convexSiteServerKeys()).toThrow();
   });
 });
 

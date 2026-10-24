@@ -43,6 +43,23 @@ describe("acceptance analytics stand-in", () => {
     }).pipe(Effect.provide(FetchClient))
   );
 
+  it.live(
+    "answers a browser preflight with an empty answer that permits it",
+    () =>
+      Effect.gen(function* () {
+        const origin = yield* reserveAnalyticsOrigin();
+
+        const preflight = yield* withAnalyticsSink(
+          origin,
+          HttpClient.options(`${origin}/e/`)
+        );
+
+        expect(preflight.status).toBe(204);
+        expect(preflight.headers["access-control-allow-origin"]).toBe("*");
+        expect(yield* preflight.text).toBe("");
+      }).pipe(Effect.provide(FetchClient))
+  );
+
   it.live("stops when the start fails", () =>
     Effect.gen(function* () {
       const origin = yield* reserveAnalyticsOrigin();
