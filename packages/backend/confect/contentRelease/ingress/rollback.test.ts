@@ -30,6 +30,7 @@ import {
   readRollbackEnvelope,
   UnexpectedRollbackTestState,
 } from "@repo/backend/test/rollback/ingress";
+import { encodeJsonText } from "@repo/utilities/json";
 import { convexTest, type TestConvex } from "convex-test";
 import { Cause, Effect, Exit, Schema } from "effect";
 
@@ -79,16 +80,30 @@ const makeRouteRequest = Effect.fn("test.contentRelease.makeRouteRequest")(
   }
 );
 
+/**
+ * Decodes one rollback response from the JSON text its action returns. Decoded
+ * artifacts hold tree elements, whose `$node` key a Convex value may not name, so
+ * the action returns text and the test decodes it outside the Convex boundary.
+ */
+const decodeRollbackResponse = Effect.fn("test.contentRelease.decodeResponse")(
+  function* (text: string) {
+    return yield* Schema.decodeUnknownEffect(
+      Schema.fromJsonString(Schema.Union([RollbackPageSchema, RoutePageSchema]))
+    )(text);
+  }
+);
+
 /** Runs one rollback read through the real Convex action boundary. */
 const runRollback = Effect.fn("test.contentRelease.runRollback")(function* (
   target: TestConvex<typeof schema>,
   request: RollbackReadRequest
 ) {
   const runtimeServices = yield* Effect.context<never>();
-  return yield* Effect.promise(() =>
+  const text = yield* Effect.promise(() =>
     target.action((ctx) =>
       Effect.runPromiseWith(runtimeServices)(
         readRollback(request).pipe(
+          Effect.map((page) => encodeJsonText(page)),
           Effect.provideService(
             ContentVerificationKeyResolver,
             TEST_KEY_RESOLVER
@@ -98,6 +113,7 @@ const runRollback = Effect.fn("test.contentRelease.runRollback")(function* (
       )
     )
   );
+  return yield* decodeRollbackResponse(text);
 });
 
 /** Runs one rollback read against caller-supplied query chunk bytes. */
@@ -109,7 +125,7 @@ const readRollbackPages = Effect.fn("test.contentRelease.readRollbackPages")(
     pages: readonly string[]
   ) {
     const runtimeServices = yield* Effect.context<never>();
-    return yield* Effect.promise(() =>
+    const text = yield* Effect.promise(() =>
       target.action((ctx) => {
         const runQuery = vi.spyOn(ctx, "runQuery");
         runQuery.mockResolvedValueOnce(envelope);
@@ -118,6 +134,7 @@ const readRollbackPages = Effect.fn("test.contentRelease.readRollbackPages")(
         }
         return Effect.runPromiseWith(runtimeServices)(
           readRollback(request).pipe(
+            Effect.map((page) => encodeJsonText(page)),
             Effect.provideService(
               ContentVerificationKeyResolver,
               TEST_KEY_RESOLVER
@@ -127,6 +144,7 @@ const readRollbackPages = Effect.fn("test.contentRelease.readRollbackPages")(
         );
       })
     );
+    return yield* decodeRollbackResponse(text);
   }
 );
 

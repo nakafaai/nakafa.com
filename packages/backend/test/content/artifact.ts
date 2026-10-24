@@ -19,14 +19,14 @@ type ArtifactLocaleCode = Schema.Codec.Encoded<typeof ArtifactLocaleSchema>;
 /** The smallest valid content tree: a fragment with no children. */
 export const TEST_CONTENT_TREE: ContentTreeElement = {
   $node: "element",
-  children: [],
   name: "fragment",
   props: {},
+  children: [],
 };
 
 /** A fragment whose only child is one text node, the tree that a text fixture carries. */
 export function testTextTree(text: string): ContentTreeElement {
-  return { $node: "element", children: [text], name: "fragment", props: {} };
+  return { $node: "element", name: "fragment", props: {}, children: [text] };
 }
 
 /** Stores one artifact body with the facts that staging writes beside it. */
