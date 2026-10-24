@@ -5,7 +5,6 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import { nf, otherSchoolTeacher } from "@repo/backend/test/editor";
-import { LANGUAGE } from "@repo/backend/test/exams";
 import { storeFile } from "@repo/backend/test/logo";
 import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
 import { IMAGE_BYTE_LIMIT } from "@repo/editor/image";
@@ -40,7 +39,6 @@ describe("exams/assets", () => {
         const fixture = yield* tenancyFixture;
         const teacher = fixture.as("teacher");
         const made = yield* teacher.mutation(create, {
-          language: LANGUAGE,
           scope: { kind: "unit", unitId: fixture.units.smp },
           slug: nf,
           title: "PTS Matematika",
@@ -65,7 +63,6 @@ describe("exams/assets", () => {
         const fixture = yield* tenancyFixture;
         const teacher = fixture.as("teacher");
         const made = yield* teacher.mutation(create, {
-          language: LANGUAGE,
           scope: { kind: "unit", unitId: fixture.units.smp },
           slug: nf,
           title: "PTS Matematika",
@@ -96,7 +93,6 @@ describe("exams/assets", () => {
         const fixture = yield* tenancyFixture;
         const teacher = fixture.as("teacher");
         const made = yield* teacher.mutation(create, {
-          language: LANGUAGE,
           scope: { kind: "unit", unitId: fixture.units.smp },
           slug: nf,
           title: "PTS Matematika",
@@ -126,7 +122,6 @@ describe("exams/assets", () => {
         const fixture = yield* tenancyFixture;
         const teacher = fixture.as("teacher");
         const made = yield* teacher.mutation(create, {
-          language: LANGUAGE,
           scope: { kind: "unit", unitId: fixture.units.smp },
           slug: nf,
           title: "PTS Matematika",
@@ -158,7 +153,6 @@ describe("exams/assets", () => {
         const fixture = yield* tenancyFixture;
         const teacher = fixture.as("teacher");
         const made = yield* teacher.mutation(create, {
-          language: LANGUAGE,
           scope: { kind: "unit", unitId: fixture.units.smp },
           slug: nf,
           title: "PTS Matematika",
@@ -200,13 +194,11 @@ describe("exams/assets", () => {
         const teacher = fixture.as("teacher");
         const scope = { kind: "unit" as const, unitId: fixture.units.smp };
         const first = yield* teacher.mutation(create, {
-          language: LANGUAGE,
           scope,
           slug: nf,
           title: "PTS Matematika",
         });
         const second = yield* teacher.mutation(create, {
-          language: LANGUAGE,
           scope,
           slug: nf,
           title: "PTS Biologi",

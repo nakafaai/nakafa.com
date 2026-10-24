@@ -14,7 +14,6 @@ import {
 import {
   archiveUnit,
   fillExam,
-  LANGUAGE,
   questionRows,
   teacherExam,
 } from "@repo/backend/test/exams";
@@ -335,7 +334,6 @@ describe("exams/questions", () => {
         const mine = yield* teacherExam(fixture, "Milik saya");
         const [mineFirst] = mine.questions;
         const outside = yield* fixture.as("admin").mutation(create, {
-          language: LANGUAGE,
           scope: { kind: "unit", unitId: fixture.units.sma },
           slug: nf,
           title: "Kelas SMA",

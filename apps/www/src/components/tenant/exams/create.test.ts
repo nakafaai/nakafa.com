@@ -6,7 +6,6 @@ import {
   creatableUnits,
   defaultChoice,
   scopeChoices,
-  unitLanguages,
   type ViewerUnit,
 } from "@/components/tenant/exams/create";
 
@@ -54,19 +53,16 @@ describe("scopeChoices", () => {
   it("offers the whole school first and then each unit when the viewer may edit the school", () => {
     expect(scopeChoices(units, true)).toEqual([
       {
-        language: null,
         scope: { kind: "tenant" },
         unitId: null,
         unitName: null,
       },
       {
-        language: "id",
         scope: { kind: "unit", unitId: kelas.id },
         unitId: kelas.id,
         unitName: kelas.name,
       },
       {
-        language: "en",
         scope: { kind: "unit", unitId: grade.id },
         unitId: grade.id,
         unitName: grade.name,
@@ -83,7 +79,7 @@ describe("scopeChoices", () => {
     ).toEqual([kelas.id, grade.id]);
   });
 
-  it("offers no whole-school choice when no unit is creatable, since the school takes its language from a unit", () => {
+  it("offers no whole-school choice when no unit is creatable, so the dialog always has a unit to show first", () => {
     expect(scopeChoices([closed, reader], true)).toEqual([]);
   });
 });
@@ -112,13 +108,12 @@ describe("defaultChoice", () => {
 });
 
 describe("a unit teacher", () => {
-  it("creates in the one unit where they may edit exams, and that unit's language is the only one offered", () => {
+  it("creates in the one unit where they may edit exams", () => {
     const teacherUnits = [reader, kelas];
 
     expect(Arr.map(scopeChoices(teacherUnits, false), choiceKey)).toEqual([
       kelas.id,
     ]);
-    expect(unitLanguages(teacherUnits)).toEqual(["id"]);
   });
 });
 
@@ -127,14 +122,5 @@ describe("choiceKey", () => {
     const choices = scopeChoices(units, true);
 
     expect(Arr.map(choices, choiceKey)).toEqual(["school", kelas.id, grade.id]);
-  });
-});
-
-describe("unitLanguages", () => {
-  it("lists each language of the units a new exam can be created in once", () => {
-    expect(unitLanguages([kelas, grade, unit("kedua", "id")])).toEqual([
-      "id",
-      "en",
-    ]);
   });
 });

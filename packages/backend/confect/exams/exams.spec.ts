@@ -40,7 +40,10 @@ export default GroupSpec.make()
     FunctionSpec.publicMutation({
       name: "create",
       args: () => ({
-        language: DeliveryLanguageSchema,
+        // Accepted and ignored until the contract step: a browser built before the exam
+        // language was removed still sends it for the 12-hour skew window (the rollout
+        // contract of packages/backend/AGENTS.md).
+        language: Schema.optionalKey(DeliveryLanguageSchema),
         scope: GrantScope,
         slug: TenantSlug,
         title: ExamTitle,

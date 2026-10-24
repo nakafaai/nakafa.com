@@ -3,7 +3,6 @@ import type { ExamSittingsDoc } from "@repo/backend/confect/_generated/docs";
 import refs from "@repo/backend/confect/_generated/refs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { nf } from "@repo/backend/test/editor";
-import { LANGUAGE } from "@repo/backend/test/exams";
 import { storeFile } from "@repo/backend/test/logo";
 import {
   deviceOf,
@@ -86,7 +85,6 @@ describe("exams/sittings images", () => {
         const made = yield* openedSitting(fixture, "PTS");
         const teacher = fixture.as("teacher");
         const other = yield* teacher.mutation(create, {
-          language: LANGUAGE,
           scope: { kind: "unit", unitId: fixture.units.smp },
           slug: nf,
           title: "PTS Biologi",

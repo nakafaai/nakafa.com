@@ -23,7 +23,6 @@ describe("homeAccess", () => {
       canCreate: false,
       canWatch: false,
       choices: [],
-      languages: [],
     });
   });
 
@@ -35,13 +34,11 @@ describe("homeAccess", () => {
       canWatch: true,
       choices: [
         {
-          language: "id",
           scope: { kind: "unit", unitId: smp.id },
           unitId: smp.id,
           unitName: smp.name,
         },
       ],
-      languages: ["id"],
     });
   });
 

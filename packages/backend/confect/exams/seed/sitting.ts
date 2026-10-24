@@ -1,5 +1,4 @@
 import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
-import { DeliveryLanguageSchema } from "@nakafa/aksara-contracts/locale";
 import type {
   ExamQuestionsDoc,
   ExamSittingsDoc,
@@ -28,7 +27,7 @@ import { placeQuestion } from "@repo/backend/confect/exams/questions/place";
 import { openSitting } from "@repo/backend/confect/exams/sittings/closing";
 import { createSitting } from "@repo/backend/confect/exams/sittings/schedule";
 import { systemActor } from "@repo/backend/confect/tenancy/actor";
-import { Array as Arr, Clock, Effect, Schema } from "effect";
+import { Array as Arr, Clock, Effect } from "effect";
 
 /** The title of the seeded exam. */
 const EXAM_TITLE = "Ujian Acceptance";
@@ -173,15 +172,11 @@ export const seedSitting = Effect.fn("exams.seed.sitting")(function* (args: {
   }).pipe(Effect.orDie);
   const now = yield* Clock.currentTimeMillis;
   const scope: GrantScope = { kind: "unit", unitId: unit._id };
-  const language = yield* Schema.decodeEffect(DeliveryLanguageSchema)(
-    unit.contentLanguage
-  ).pipe(Effect.orDie);
   const examId = yield* (yield* DatabaseWriter)
     .table("exams")
     .insert({
       createdAt: now,
       createdBy: yield* ownerUserId(tenant._id),
-      language,
       questions: [],
       scope,
       tenantId: tenant._id,

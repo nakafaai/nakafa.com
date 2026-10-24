@@ -1,7 +1,6 @@
 import type { HomeView } from "@repo/backend/confect/exams/home/contract";
 import { Array as Arr } from "effect";
-import { useMemo } from "react";
-import { useLocale, useTranslations } from "use-intl";
+import { useTranslations } from "use-intl";
 import { type StoreApi, useStore } from "zustand";
 import {
   CardLink,
@@ -21,8 +20,8 @@ import {
 type Draft = (typeof HomeView.Type)["drafts"][number];
 
 /**
- * The exams the viewer started and may still edit, newest created first, each with its language. A row opens its
- * editor, and a draft the server is still saving shows its title without a link. A tile with more drafts than it
+ * The exams the viewer started and may still edit, newest created first. A row opens its editor, and
+ * a draft the server is still saving shows its title without a link. A tile with more drafts than it
  * shows ends with All exams.
  */
 export function DraftsTile({
@@ -36,12 +35,7 @@ export function DraftsTile({
 }) {
   const t = useTranslations("School");
   const tenant = useTenant();
-  const locale = useLocale();
   const saving = useStore(store, (state) => state.ids);
-  const names = useMemo(
-    () => new Intl.DisplayNames([locale], { type: "language" }),
-    [locale]
-  );
 
   return (
     <HomeTile
@@ -59,7 +53,6 @@ export function DraftsTile({
           <DraftRow
             draft={draft}
             key={draft.id}
-            names={names}
             saving={Arr.contains(saving, draft.id)}
           />
         ))}
@@ -72,19 +65,11 @@ export function DraftsTile({
  * One draft, as a row that opens its editor. A draft the server is still saving has a placeholder ID that no
  * editor can open, so its title shows without a link until the server answers.
  */
-function DraftRow({
-  draft,
-  names,
-  saving,
-}: {
-  draft: Draft;
-  names: Intl.DisplayNames;
-  saving: boolean;
-}) {
+function DraftRow({ draft, saving }: { draft: Draft; saving: boolean }) {
   if (saving) {
     return (
       <CardRowText>
-        <RowText detail={names.of(draft.language)} title={draft.title} />
+        <RowText title={draft.title} />
       </CardRowText>
     );
   }
@@ -94,7 +79,7 @@ function DraftRow({
       localized={false}
       title={draft.title}
     >
-      <RowText detail={names.of(draft.language)} title={draft.title} />
+      <RowText title={draft.title} />
     </CardLink>
   );
 }

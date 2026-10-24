@@ -42,7 +42,7 @@ const create = FunctionImpl.make(
   databaseSchema,
   spec,
   "create",
-  Effect.fn("exams.create")(function* ({ language, scope, title }) {
+  Effect.fn("exams.create")(function* ({ scope, title }) {
     const { tenant } = yield* Member;
     const { appUser } = yield* requireAuth().pipe(Effect.orDie);
     yield* authorizeScope("exam.edit", scope);
@@ -52,7 +52,6 @@ const create = FunctionImpl.make(
       .insert({
         createdAt: at,
         createdBy: appUser._id,
-        language,
         questions: [],
         scope,
         tenantId: tenant._id,
@@ -138,14 +137,13 @@ const open = FunctionImpl.make(
       archived: place.locked,
       ...(exam.frozenAt === undefined ? {} : { frozenAt: exam.frozenAt }),
       id: exam._id,
-      language: exam.language,
       questions,
       title: exam.title,
     };
   })
 );
 
-/** Renames an exam. Its scope, language, and questions stay as they are. */
+/** Renames an exam. Its scope and questions stay as they are. */
 const rename = FunctionImpl.make(
   databaseSchema,
   spec,
@@ -156,7 +154,7 @@ const rename = FunctionImpl.make(
       .table("exams")
       .patch(exam._id, { title })
       .pipe(Effect.orDie);
-    return { id: exam._id, language: exam.language, title };
+    return { id: exam._id, title };
   })
 );
 

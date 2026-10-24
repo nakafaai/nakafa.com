@@ -31,16 +31,21 @@ export const ExamTitle = Schema.String.check(
 
 /**
  * One school exam draft: its tenant, the scope that decides who may read and edit
- * it, its title and content language, and its questions in order. The order lives
- * in this one array, so a reorder is one patch. A draft is not a publication:
- * scheduling its first sitting freezes it, and `frozenAt` records when (ADR 0031).
+ * it, its title, and its questions in order. The order lives in this one array, so a
+ * reorder is one patch. A draft is not a publication: scheduling its first sitting
+ * freezes it, and `frozenAt` records when (ADR 0031).
  */
 export const examValidator = Schema.Struct({
   createdAt: Schema.Finite,
   createdBy: Id("users"),
   /** When the first sitting of the exam was scheduled. From then on its questions, their order, and their keys cannot change. */
   frozenAt: Schema.optionalKey(Schema.Finite),
-  language: DeliveryLanguageSchema,
+  /**
+   * The language that exams stored before the exam language was removed hold. No exam
+   * is written with it, and the one-off `exams.language.clear` removes it from each row.
+   * The contract step deletes this field.
+   */
+  language: Schema.optionalKey(DeliveryLanguageSchema),
   questions: Schema.Array(Id("examQuestions")).check(
     Schema.isMaxLength(MAX_EXAM_QUESTIONS)
   ),
@@ -49,17 +54,15 @@ export const examValidator = Schema.Struct({
   title: ExamTitle,
 });
 
-/** One exam as the list shows it: its ID, its title, and its content language. */
+/** One exam as the list shows it: its ID and its title. */
 export const ExamSummary = Schema.Struct({
   id: Id("exams"),
-  language: DeliveryLanguageSchema,
   title: ExamTitle,
 });
 
 /** The summary of a stored exam. */
 export const examSummary = (row: ExamsDoc) => ({
   id: row._id,
-  language: row.language,
   title: row.title,
 });
 
@@ -72,7 +75,6 @@ export const ExamView = Schema.Struct({
   archived: Schema.Boolean,
   frozenAt: examValidator.fields.frozenAt,
   id: Id("exams"),
-  language: DeliveryLanguageSchema,
   questions: Schema.Array(QuestionView),
   title: ExamTitle,
 });

@@ -3,7 +3,7 @@ import refs from "@repo/backend/confect/_generated/refs";
 import { DatabaseWriter } from "@repo/backend/confect/_generated/services";
 import type { ExamSummary } from "@repo/backend/confect/exams/exam";
 import { nf } from "@repo/backend/test/editor";
-import { archiveUnit, LANGUAGE, teacherExam } from "@repo/backend/test/exams";
+import { archiveUnit, teacherExam } from "@repo/backend/test/exams";
 import { homeOf, insertRoom, roomsOf } from "@repo/backend/test/home";
 import { OPENS_AT, seedPlacement } from "@repo/backend/test/sittings";
 import { TENANCY_NOW, tenancyFixture } from "@repo/backend/test/tenancy";
@@ -351,7 +351,6 @@ describe("exams home", () => {
           writer.table("exams").insert({
             createdAt: TENANCY_NOW,
             createdBy: fixture.users.otherOwner.userId,
-            language: LANGUAGE,
             questions: [],
             scope: { kind: "tenant" },
             tenantId: fixture.tenants.other,
@@ -388,7 +387,6 @@ describe("exams home", () => {
           { discard: true }
         );
         yield* fixture.as("admin").mutation(create, {
-          language: LANGUAGE,
           scope: { kind: "tenant" },
           slug: nf,
           title: "Milik admin",
@@ -433,7 +431,6 @@ describe("exams home", () => {
                     writer.table("exams").insert({
                       createdAt: TENANCY_NOW + index,
                       createdBy: fixture.users.teacher.userId,
-                      language: LANGUAGE,
                       questions: [],
                       scope: { kind: "unit", unitId: fixture.units.smk },
                       tenantId: fixture.tenants.nf,
