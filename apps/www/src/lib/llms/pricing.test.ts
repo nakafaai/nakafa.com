@@ -1,6 +1,7 @@
 // @vitest-environment node
 
 import { describe, expect, it } from "@effect/vitest";
+import { getPlanCreditConfig } from "@repo/backend/confect/credits/constants";
 import { Effect } from "effect";
 import { BASE_URL } from "@/lib/llms/constants";
 import { AGENT_MARKDOWN_DIRECTIVE } from "@/lib/llms/format";
@@ -46,7 +47,9 @@ describe("pricing Markdown", () => {
       const text = yield* getPricingLlmsText("en");
 
       expect(text).toContain("## Free really means free");
-      expect(text).toContain("- 3,000 credits every month to ask Nina");
+      expect(text).toContain(
+        `- ${getPlanCreditConfig("pro").amount.toLocaleString("en-US")} credits every month to ask Nina`
+      );
       expect(text).toContain("## Frequently asked");
       expect(text).toContain("One answer uses 5 credits.");
       expect(text).toContain(

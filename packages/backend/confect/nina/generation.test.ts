@@ -8,6 +8,7 @@ import { deployment, failures, provider } from "@repo/backend/test/gateway";
 import {
   appendNinaTurn,
   createNinaTest,
+  fundLearner,
   ninaModel,
   ninaModelFor,
   ninaStream,
@@ -197,7 +198,7 @@ describe("Nina generation through the real Agent component", () => {
     ]);
     expect(state.chat?.activeTurnId).toBeUndefined();
     expect(languageModel.doGenerateCalls).toHaveLength(0);
-    expect(state.user?.credits).toBe(5);
+    expect(state.user?.credits).toBe(0);
     expect(state.messages.page).toHaveLength(2);
     const answer = Option.getOrUndefined(
       Arr.findFirst(
@@ -449,6 +450,7 @@ describe("Nina generation with what the learner told her", () => {
     const languageModel = ninaModelFor(2);
     provider.languageModel.mockReturnValue(languageModel);
     const f = await createPortraitTest();
+    await fundLearner(f);
     await f.seedPortrait({ text: "Duduk di kelas 12 dan suka contoh soal." });
     await f.seed({ confirmedAt: 1, text: "Bingung limit." });
     await f.seed({ confirmedAt: 2, text: "Suka main gitar." });
@@ -474,7 +476,6 @@ describe("Nina generation with what the learner told her", () => {
     expect(two?.newest).toContain("- Suka main gitar. (1970-01-01)");
     expect(two?.newest).not.toContain("Bingung limit.");
   });
-
   it.each([
     ["on", false, ["nakafa", "deepResearch", "math", "memory"]],
     ["paused", true, ["nakafa", "deepResearch", "math"]],

@@ -102,7 +102,7 @@ describe("native Nina attachment ownership", () => {
       }),
     }));
     expect(state.grant).toBeNull();
-    expect(state.user?.credits).toBe(5);
+    expect(state.user?.credits).toBe(0);
     expect(state.file).toMatchObject({ refcount: 1, mediaType: "image/png" });
     // The component holds the message sealed: no text, and the learner reads it back.
     expect(state.prompt[0]).toMatchObject({ fileIds: [fileId] });

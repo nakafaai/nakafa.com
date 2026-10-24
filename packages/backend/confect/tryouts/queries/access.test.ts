@@ -1,5 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import { products } from "@repo/backend/confect/customers/polar/products";
+import { products } from "@repo/backend/confect/billing/polar/products";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,

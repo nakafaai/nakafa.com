@@ -8,6 +8,13 @@ import accountDeletionReceipts from "./tables/accountDeletionReceipts";
 import articleBuckets from "./tables/articleBuckets";
 import articleCatalog from "./tables/articleCatalog";
 import articleCategories from "./tables/articleCategories";
+import billingAccounts from "./tables/billingAccounts";
+import billingCounters from "./tables/billingCounters";
+import billingEvents from "./tables/billingEvents";
+import billingGrants from "./tables/billingGrants";
+import billingInvoices from "./tables/billingInvoices";
+import billingPayments from "./tables/billingPayments";
+import billingSubscriptions from "./tables/billingSubscriptions";
 import chatShares from "./tables/chatShares";
 import chats from "./tables/chats";
 import classGrades from "./tables/classGrades";
@@ -127,6 +134,13 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly articleBuckets: typeof articleBuckets;
   readonly articleCatalog: typeof articleCatalog;
   readonly articleCategories: typeof articleCategories;
+  readonly billingAccounts: typeof billingAccounts;
+  readonly billingCounters: typeof billingCounters;
+  readonly billingEvents: typeof billingEvents;
+  readonly billingGrants: typeof billingGrants;
+  readonly billingInvoices: typeof billingInvoices;
+  readonly billingPayments: typeof billingPayments;
+  readonly billingSubscriptions: typeof billingSubscriptions;
   readonly chatShares: typeof chatShares;
   readonly chats: typeof chats;
   readonly classGrades: typeof classGrades;
@@ -245,6 +259,13 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   articleBuckets,
   articleCatalog,
   articleCategories,
+  billingAccounts,
+  billingCounters,
+  billingEvents,
+  billingGrants,
+  billingInvoices,
+  billingPayments,
+  billingSubscriptions,
   chatShares,
   chats,
   classGrades,

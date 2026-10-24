@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from "@effect/vitest";
 import {
   PolarCheckoutError,
   polarCheckoutErrorCode,
-} from "@repo/backend/confect/customers/polar/spec";
+} from "@repo/backend/confect/billing/polar/spec";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
@@ -19,7 +19,7 @@ const polarGateway = vi.hoisted(() => ({
   getCustomerByExternalId: vi.fn(),
   getCustomerById: vi.fn(),
 }));
-vi.mock("@repo/backend/confect/customers/polar/live", () => ({ polarGateway }));
+vi.mock("@repo/backend/confect/billing/polar/live", () => ({ polarGateway }));
 
 const route = api.customers.actions.sessions;
 const request = {

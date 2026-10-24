@@ -4,7 +4,7 @@ import {
 } from "@confect/server";
 import { afterEach, describe, expect, it } from "@effect/vitest";
 import confectSchema from "@repo/backend/confect/_generated/schema";
-import { products } from "@repo/backend/confect/customers/polar/products";
+import { products } from "@repo/backend/confect/billing/polar/products";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import {
   getIncludedAttemptAccess,

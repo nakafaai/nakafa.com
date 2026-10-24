@@ -1313,7 +1313,7 @@
     "chat": "Chat",
     "chat-description": "Use the AI learning assistant for homework help, concept explanations, and study conversations.",
     "subscriptions": "Subscriptions",
-    "subscriptions-description": "Manage Nakafa Pro, 3,000 monthly AI credits, and your payment portal.",
+    "subscriptions-description": "Manage Nakafa Pro, {credits, number} monthly AI credits, and your payment portal.",
     "manage": "Manage",
     "plan-free": "Free",
     "plan-pro": "Pro",

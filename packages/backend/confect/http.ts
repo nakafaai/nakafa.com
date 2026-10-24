@@ -17,6 +17,7 @@ import { requestIdentity } from "@repo/backend/confect/routes/middleware/identit
 import { requestLogger } from "@repo/backend/confect/routes/middleware/logger";
 import { polarRoutes } from "@repo/backend/confect/routes/polar";
 import { registerResendRoutes } from "@repo/backend/confect/routes/resend";
+import { xenditRoutes } from "@repo/backend/confect/routes/xendit";
 import { Effect, Layer } from "effect";
 
 const http = ConfectHttpRouter.make(
@@ -25,6 +26,7 @@ const http = ConfectHttpRouter.make(
     agentApiRoutes,
     agentMcpRoutes,
     polarRoutes,
+    xenditRoutes,
     publicationRoutes,
     batchRuntimeRoutes,
     publicRuntimeRoutes,

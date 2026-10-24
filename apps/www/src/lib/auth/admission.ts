@@ -1,8 +1,8 @@
 import {
   DEFAULT_LOCALE,
   decodeLocale,
-  LocaleSchema,
   type Locale,
+  LocaleSchema,
 } from "@repo/internationalization/src/locale";
 import { Option, Schema } from "effect";
 import type { LinkTarget } from "@/lib/routing/link";

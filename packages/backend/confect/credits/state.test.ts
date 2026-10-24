@@ -121,7 +121,7 @@ describe("credit period and balance", () => {
         day
       )
     ).toEqual({
-      credits: 25,
+      credits: 10,
       creditsResetAt: day,
     });
   });
@@ -188,7 +188,7 @@ describe("credit period and balance", () => {
             expect(
               yield* resolveEffectiveCreditState(user, day + 36_000_000)
             ).toEqual({
-              credits: 22,
+              credits: 7,
               creditsResetAt: day,
             });
             expect(yield* getStoredCreditResetTimestamp("free")).toBe(day);
@@ -196,7 +196,7 @@ describe("credit period and balance", () => {
             expect(
               yield* resolveEffectiveCreditState(user, day + 36_000_000)
             ).toEqual({
-              credits: 22,
+              credits: 7,
               creditsResetAt: day,
             });
           })
@@ -212,14 +212,14 @@ describe("credit period and balance", () => {
           plan: "free",
         },
         {
-          credits: 22,
+          credits: 7,
           creditsResetAt: day,
         }
       )
     ).toEqual({
-      amount: 25,
+      amount: 10,
       type: "daily-grant",
-      balanceAfter: 22,
+      balanceAfter: 7,
       metadata: {
         "previous-balance": -3,
         "previous-reset-at": previousDay,

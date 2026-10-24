@@ -9,6 +9,13 @@ export type AccountDeletionReceiptsDoc = Document.Document<typeof schemaDefiniti
 export type ArticleBucketsDoc = Document.Document<typeof schemaDefinition, "articleBuckets">;
 export type ArticleCatalogDoc = Document.Document<typeof schemaDefinition, "articleCatalog">;
 export type ArticleCategoriesDoc = Document.Document<typeof schemaDefinition, "articleCategories">;
+export type BillingAccountsDoc = Document.Document<typeof schemaDefinition, "billingAccounts">;
+export type BillingCountersDoc = Document.Document<typeof schemaDefinition, "billingCounters">;
+export type BillingEventsDoc = Document.Document<typeof schemaDefinition, "billingEvents">;
+export type BillingGrantsDoc = Document.Document<typeof schemaDefinition, "billingGrants">;
+export type BillingInvoicesDoc = Document.Document<typeof schemaDefinition, "billingInvoices">;
+export type BillingPaymentsDoc = Document.Document<typeof schemaDefinition, "billingPayments">;
+export type BillingSubscriptionsDoc = Document.Document<typeof schemaDefinition, "billingSubscriptions">;
 export type ChatSharesDoc = Document.Document<typeof schemaDefinition, "chatShares">;
 export type ChatsDoc = Document.Document<typeof schemaDefinition, "chats">;
 export type ClassGradesDoc = Document.Document<typeof schemaDefinition, "classGrades">;
@@ -128,6 +135,13 @@ export interface Docs {
   articleBuckets: ArticleBucketsDoc;
   articleCatalog: ArticleCatalogDoc;
   articleCategories: ArticleCategoriesDoc;
+  billingAccounts: BillingAccountsDoc;
+  billingCounters: BillingCountersDoc;
+  billingEvents: BillingEventsDoc;
+  billingGrants: BillingGrantsDoc;
+  billingInvoices: BillingInvoicesDoc;
+  billingPayments: BillingPaymentsDoc;
+  billingSubscriptions: BillingSubscriptionsDoc;
   chatShares: ChatSharesDoc;
   chats: ChatsDoc;
   classGrades: ClassGradesDoc;

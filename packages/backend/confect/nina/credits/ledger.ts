@@ -7,7 +7,7 @@ import {
   MutationCtx as MutationCtxService,
 } from "@repo/backend/confect/_generated/services";
 import { isAccountDeletionPending } from "@repo/backend/confect/auth/deletion/state";
-import { NINA_RESPONSE_CREDITS } from "@repo/backend/confect/credits/constants";
+import { MAX_CREDITS_PER_RESPONSE } from "@repo/backend/confect/credits/constants";
 import {
   getCreditResetGrantTransaction,
   resolveEffectiveCreditState,
@@ -43,7 +43,9 @@ export const reserveCredits = Effect.fn("nina.credits.reserve")(
           })
       )
     );
-    if (state.credits < NINA_RESPONSE_CREDITS) {
+    // A turn holds the cap, or the whole balance when that is less. Its real cost settles at the end.
+    const hold = Math.min(MAX_CREDITS_PER_RESPONSE, state.credits);
+    if (hold < 1) {
       return yield* new NinaCreditError({
         code: "INSUFFICIENT_CREDITS",
         message: "Not enough credits to start this response.",
@@ -78,7 +80,7 @@ export const reserveCredits = Effect.fn("nina.credits.reserve")(
         })
         .pipe(Effect.orDie);
     }
-    const balance = state.credits - NINA_RESPONSE_CREDITS;
+    const balance = state.credits - hold;
     yield* database
       .table("users")
       .patch(user._id, {
@@ -90,7 +92,7 @@ export const reserveCredits = Effect.fn("nina.credits.reserve")(
       .table("creditTransactions")
       .insert({
         userId: user._id,
-        amount: -NINA_RESPONSE_CREDITS,
+        amount: -hold,
         type: "usage",
         balanceAfter: balance,
         metadata: {
@@ -100,7 +102,7 @@ export const reserveCredits = Effect.fn("nina.credits.reserve")(
       .pipe(Effect.orDie);
     return {
       userId: user._id,
-      credits: NINA_RESPONSE_CREDITS,
+      credits: hold,
       creditsResetAt: state.creditsResetAt,
       transactionId,
       ...Struct.pick(user, ["planCreditGrantId"]),
@@ -117,9 +119,20 @@ export const reserveCredits = Effect.fn("nina.credits.reserve")(
   )
 );
 
-/** Refund a failed or abandoned turn at most once, within its credit period. */
+/**
+ * Gives back `refund` credits of a turn's hold, at most once, within its credit
+ * period. A turn that answers keeps what its real cost charged, so it refunds the
+ * rest; a turn that does not answer refunds all of its hold.
+ */
 export const refundCredits = Effect.fn("nina.credits.refund")(
-  function* (turn: typeof NinaCreditHold.Type, reservationId: string) {
+  function* (
+    turn: typeof NinaCreditHold.Type,
+    reservationId: string,
+    refund: number
+  ) {
+    if (refund <= 0) {
+      return;
+    }
     const now = yield* Clock.currentTimeMillis;
     const reader = yield* DatabaseReader;
     const writer = yield* DatabaseWriter;
@@ -154,7 +167,7 @@ export const refundCredits = Effect.fn("nina.credits.refund")(
       const credits =
         state.creditsResetAt === turn.creditsResetAt &&
         user.planCreditGrantId === turn.planCreditGrantId
-          ? turn.credits
+          ? refund
           : 0;
       const balance = state.credits + credits;
       yield* writer

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
+import { products } from "@repo/backend/confect/billing/polar/products";
 import { validateCheckoutRequest } from "@repo/backend/confect/customers/checkout/impl";
 import { InvalidCheckoutSuccessUrl } from "@repo/backend/confect/customers/checkout/spec";
-import { products } from "@repo/backend/confect/customers/polar/products";
 import { SiteConfigError } from "@repo/backend/confect/site/spec";
 import { ConfigProvider, Effect } from "effect";
 

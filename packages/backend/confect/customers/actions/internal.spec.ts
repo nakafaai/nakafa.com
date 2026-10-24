@@ -8,7 +8,7 @@ import {
   PolarDuplicateEmailErrorWire,
   PolarPortalErrorWire,
   PolarUpdateErrorWire,
-} from "@repo/backend/confect/customers/polar/spec";
+} from "@repo/backend/confect/billing/polar/spec";
 import {
   CustomerSyncIoErrorWire,
   UserNotFound,

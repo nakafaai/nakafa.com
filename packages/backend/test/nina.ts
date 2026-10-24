@@ -479,3 +479,12 @@ export function ninaModel(
     },
   });
 }
+
+/** Gives a fixture's learner the credits for turns after the first, which a fixture starts with its ten. */
+export async function fundLearner(
+  f: Pick<Awaited<ReturnType<typeof createNinaTest>>, "identity" | "t">
+) {
+  await f.t.mutation((ctx) =>
+    ctx.db.patch("users", f.identity.userId, { credits: 100 })
+  );
+}

@@ -5,7 +5,6 @@ import {
   getPlanCreditConfig,
   NINA_RESPONSE_CREDITS,
 } from "@repo/backend/confect/credits/constants";
-import { products } from "@repo/backend/confect/customers/polar/products";
 import { pricingSums } from "@/components/marketing/about/pricing/sums";
 import { getProMonthlyPricing } from "@/lib/pricing/monthly";
 
@@ -25,7 +24,7 @@ describe("marketing/about/pricing-sums", () => {
     const rupiah = getProMonthlyPricing("ID").price;
     const sums = pricingSums(rupiah);
 
-    expect(sums.pricePerDay).toBe(products.pro.monthlyPrices.IDR.amount / 30);
+    expect(sums.pricePerDay).toBe(getProMonthlyPricing("ID").price.amount / 30);
     expect(pricingSums({ ...rupiah, amount: 300 }).pricePerDay).toBe(10);
     expect(sums.answersPerMonth).toBe(
       getPlanCreditConfig("pro").amount / NINA_RESPONSE_CREDITS
@@ -38,10 +37,10 @@ describe("marketing/about/pricing-sums", () => {
 
     expect(sums.drinks).toBe(3);
     expect(sums.pricePerDay).toBeCloseTo(
-      products.pro.monthlyPrices.EUR.amount / 30,
+      getProMonthlyPricing("DE").price.amount / 30,
       10
     );
-    expect(sums.answersPerMonth).toBe(600);
+    expect(sums.answersPerMonth).toBe(200);
   });
 
   it("gives the dollar price its lattes and its price per day", () => {
@@ -49,9 +48,9 @@ describe("marketing/about/pricing-sums", () => {
 
     expect(sums.drinks).toBe(2);
     expect(sums.pricePerDay).toBeCloseTo(
-      products.pro.monthlyPrices.USD.amount / 30,
+      getProMonthlyPricing(null).price.amount / 30,
       10
     );
-    expect(sums.answersPerDay).toBe(20);
+    expect(sums.answersPerDay).toBe(7);
   });
 });

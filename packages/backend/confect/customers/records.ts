@@ -1,5 +1,5 @@
 import type { Docs } from "@repo/backend/confect/_generated/docs";
-import type { PolarMetadata } from "@repo/backend/confect/customers/polar/spec";
+import type { PolarMetadata } from "@repo/backend/confect/billing/polar/spec";
 
 /**
  * Convert one normalized Polar customer to the local database row shape.

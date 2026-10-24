@@ -36,7 +36,7 @@ const verifyPricingPage = Effect.fn("NakafaE2E.verifyPricingPage")(function* (
       page.getByRole("region", {
         name: "Free really means free",
       })
-    ).toContainText("3,000 credits every month to ask Nina")
+    ).toContainText("1,000 credits every month to ask Nina")
   );
   yield* Effect.promise(() =>
     expect(
@@ -50,7 +50,7 @@ const verifyPricingPage = Effect.fn("NakafaE2E.verifyPricingPage")(function* (
     expect(page.locator("#comparison")).toContainText("$0.30 a day")
   );
   yield* Effect.promise(() =>
-    expect(page.locator("#comparison")).toContainText("600 answers from Nina")
+    expect(page.locator("#comparison")).toContainText("200 answers from Nina")
   );
   yield* Effect.promise(() =>
     expect(page.getByRole("button", { name: "Get Pro" })).toBeEnabled()
@@ -200,7 +200,7 @@ const verifyGermanPricingComparisons = Effect.fn(
     expect(page.locator("#comparison")).toContainText("$0.30 am Tag")
   );
   yield* Effect.promise(() =>
-    expect(page.locator("#comparison")).toContainText("600 Antworten von Nina")
+    expect(page.locator("#comparison")).toContainText("200 Antworten von Nina")
   );
 });
 
@@ -243,7 +243,7 @@ const verifyRupiahPricingComparisons = Effect.fn(
     expect(page.locator("#comparison")).toContainText(RUPIAH_PER_DAY_PATTERN)
   );
   yield* Effect.promise(() =>
-    expect(page.locator("#comparison")).toContainText("600 jawaban Nina")
+    expect(page.locator("#comparison")).toContainText("200 jawaban Nina")
   );
 });
 

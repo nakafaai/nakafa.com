@@ -27,7 +27,7 @@ const polarGateway = vi.hoisted(() => ({
   deleteCustomer: vi.fn(),
   getCustomerByExternalId: vi.fn(),
 }));
-vi.mock("@repo/backend/confect/customers/polar/live", () => ({
+vi.mock("@repo/backend/confect/billing/polar/live", () => ({
   polarGateway,
 }));
 const insertDeletedUser = Effect.fn(

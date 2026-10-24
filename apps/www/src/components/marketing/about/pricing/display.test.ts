@@ -51,10 +51,10 @@ describe("marketing/about/pricing-display", () => {
 
     expect(price.pro).toMatchObject({
       locales: "id-ID",
-      value: 69_000,
+      value: 79_000,
     });
     expect(price.free.text.replace(/\s+/g, " ")).toBe("Rp 0");
-    expect(price.pro.text.replace(/\s+/g, " ")).toBe("Rp 69.000");
+    expect(price.pro.text.replace(/\s+/g, " ")).toBe("Rp 79.000");
   });
 
   it("formats euro pricing in the German locale", () => {
