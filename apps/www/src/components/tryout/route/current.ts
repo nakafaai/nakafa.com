@@ -32,7 +32,7 @@ type CurrentSectionRequest = Omit<
  * the set, and a running one as the exact page it continues on, or nothing once
  * that attempt has no page left. The public URL then renders the running
  * attempt in place. A redirect there would empty the page until the attempt
- * URL loads, because Next.js replaces a redirecting page with nothing while it
+ * URL loads, because a page that redirects renders nothing while the router
  * navigates.
  */
 export const readCurrentTryoutSet = Effect.fn(
