@@ -85,6 +85,7 @@ export function SchoolUnitsSettings({
       </ReadBoundary>
       <SchoolUnitCreateDialog
         open={isAdding}
+        preload={preload}
         setOpen={setIsAdding}
         slug={slug}
       />

@@ -58,6 +58,9 @@ function AiChatHeaderContent({ chat }: { chat: ChatView }) {
   const t = useTranslations("Ai");
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [confirmShare, setConfirmShare] = useState(false);
+  // The share link is read once the reader shows intent on the share item.
+  const [shareWarmed, setShareWarmed] = useState(false);
+  const warmShare = () => setShareWarmed(true);
   const isOwner = useChat((state) => state.owner);
   const {
     chatTitle,
@@ -133,6 +136,9 @@ function AiChatHeaderContent({ chat }: { chat: ChatView }) {
                     <DropdownMenuItem
                       className="cursor-pointer"
                       onClick={() => setConfirmShare(true)}
+                      onFocus={warmShare}
+                      onPointerDown={warmShare}
+                      onPointerEnter={warmShare}
                     >
                       <HugeIcons icon={LinkForwardIcon} />
                       {t("share-chat")}
@@ -190,6 +196,7 @@ function AiChatHeaderContent({ chat }: { chat: ChatView }) {
           chat={chat}
           onOpenChange={setConfirmShare}
           open={confirmShare}
+          warmed={shareWarmed}
         />
       ) : null}
       <ChatDeletion
