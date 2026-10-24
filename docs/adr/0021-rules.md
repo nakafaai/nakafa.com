@@ -1,4 +1,5 @@
 # ADR 0021: Which Check Owns A Rule, And Which Compiler Rules Stay Off
+> Superseded in part by [ADR 0037](0037-cloudflare.md) and [ADR 0036](0036-boundary.md): the Next.js examples of this record describe the retired build, and the Start stack on Cloudflare owns the framework rules now.
 
 ## Decision
 
@@ -19,14 +20,14 @@ It never gets an allowlist, a baseline, or a suppression.
 
 | Rule | Sites measured | Why it stays off |
 | --- | --- | --- |
-| `asyncFunction` | 2,969 | Next.js requires `async` for `'use cache'` functions and Server Functions. The source rule `promise` judges the domain folders instead |
+| `asyncFunction` | 2,969 | The framework requires `async` for cached functions and Server Functions. The source rule `promise` judges the domain folders instead |
 | `strictBooleanExpressions` | 2,604 | The plugin files it under style. Its fixes are plain comparisons, not Effect, across 1,051 files |
 | `missingPipeableSignature` | 479 | 11 framework exports can never take a data-last form |
 | `newPromise` | 30 | 28 are test doubles that must be Promises at a Promise-typed seam, and 2 run in the browser page. The source rule `new-promise` judges the rest of the code |
 | `newSchemaClass` | 1,104 | `X.make(...)` builds a tagged error nine frames deeper than `new X(...)`. With the engine's limit of ten frames the stack keeps 1 application frame of 5 (measured) |
 | `strictEffectProvide` | 1,576 | The rule expects a disable comment at every real entry point. Each Convex function, route handler, script main, and test provides its layer at its own entry point (412 files), and this repository has no disable comments. `multipleEffectProvide` is an error |
 | `schemaSync` | 531 | 486 are test fixtures, where no Effect runner may run, and the rest sit in a synchronous render, a module-level constant, or a plain helper, where the Result form would only spell the same throw differently. `schemaSyncInEffect` is an error, so a synchronous codec inside an Effect is rejected |
-| `processEnv` | 89 | Next.js inlines only a literal `process.env.NAME` read into the browser bundle and defines `NEXT_RUNTIME` per compile, so the environment contract modules pass literal reads to `readEnvironment`. The source rule `env` judges every other read |
+| `processEnv` | 89 | The bundler inlines only a literal `NAME` read of an environment object into the browser bundle, so the environment contract modules pass literal reads to `readEnvironment`. The source rule `env` judges every other read |
 | `nodeBuiltinImport` | | Framework configuration needs a Node path, a platform HTTP server needs Node's `createServer`, and a fixture that signs synchronously needs Node's Ed25519 `sign`. The source rule `node-module` judges nine Node modules and keeps those three places by construction |
 | `unstableApiUsage`, `experimentalApiUsage`, `apiStabilityLeak` | | Effect moves as one exact cohort that is reviewed at every upgrade, so an unstable Effect module in a signature is not a leak here |
 

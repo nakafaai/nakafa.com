@@ -8,7 +8,7 @@
 "@repo/email": patch
 "@repo/internationalization": patch
 "@repo/math": patch
-"@repo/next-config": patch
+"@repo/site": patch
 "@repo/seo": patch
 "@repo/utilities": patch
 ---

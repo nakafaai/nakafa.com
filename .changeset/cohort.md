@@ -9,7 +9,7 @@
 "@repo/internationalization": patch
 "@repo/math": patch
 "@repo/mascot": patch
-"@repo/next-config": patch
+"@repo/site": patch
 "@repo/seo": patch
 "@repo/typescript-config": patch
 "@repo/utilities": patch

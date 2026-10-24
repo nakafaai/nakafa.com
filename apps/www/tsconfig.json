@@ -18,5 +18,5 @@
     }
   },
   "include": ["**/*.ts", "**/*.tsx", "scripts/**/*.mts", "*.mts"],
-  "exclude": ["node_modules", ".output", ".vercel", "out", "dist", "build"]
+  "exclude": ["node_modules", ".output", "out", "dist", "build"]
 }

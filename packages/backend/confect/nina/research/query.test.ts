@@ -7,18 +7,18 @@ describe("search query planning", () => {
       planSearchQueries({
         maxQueries: 3,
         queries: [
-          "  Next.js 16 Cache Components  ",
+          "  React 19 Server Components  ",
           "   ",
-          "NEXT.JS 16 CACHE COMPONENTS",
+          "REACT 19 SERVER COMPONENTS",
           "Cache Components 移行ガイド",
-          "nextjs.org blog next-16",
-          "Next.js 16 リリースノート",
+          "react.dev blog react-19",
+          "React 19 リリースノート",
         ],
       })
     ).toEqual([
-      "Next.js 16 Cache Components",
+      "React 19 Server Components",
       "Cache Components 移行ガイド",
-      "nextjs.org blog next-16",
+      "react.dev blog react-19",
     ]);
   });
 

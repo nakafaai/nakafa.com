@@ -40,8 +40,8 @@ const HARD_ADDRESS = "quran/999";
 
 /**
  * Where the standalone page itself answers, and the request header in which
- * the proxy names the language when it rewrites an address to it. On Vercel
- * the rewrite reaches the page. The server of a local production build, which
+ * the proxy names the language when it rewrites an address to it. The rewrite
+ * reaches the page. The server of a local production build, which
  * these tests run against, draws the app's own document only at this address
  * and answers the rewrite with the framework's built-in page; `main` did the
  * same when this was measured on 13 October 2026. So the tests ask for the

@@ -159,8 +159,8 @@ describe("research web search tool", () => {
           readsPages({ "https://example.com/research": "Main source content." })
         );
         const { output, parts } = yield* search({
-          queries: ["Next.js 16 Cache Components"],
-          words: "Next.js 16 Cache Components",
+          queries: ["React 19 Server Components"],
+          words: "React 19 Server Components",
           toolCallId: "web-search-1",
         });
 
