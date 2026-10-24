@@ -5,11 +5,21 @@
   "scripts": {
     "build": "UV_NO_DEV=0 PYTHONDONTWRITEBYTECODE=1 uv run --dev basedpyright",
     "bump-deps": "uv lock --upgrade",
-    "clean": "rm -rf .coverage .pytest_cache .ruff_cache .turbo .venv && find . -name __pycache__ -type d -prune -exec rm -rf {} +",
+    "clean": "rm -rf .coverage .pytest_cache .ruff_cache .turbo .venv coverage && find . -name __pycache__ -type d -prune -exec rm -rf {} +",
     "format": "UV_NO_DEV=0 uv run --dev ruff check --fix --no-cache . && UV_NO_DEV=0 uv run --dev ruff format --no-cache .",
     "lint": "UV_NO_DEV=0 uv run --dev ruff check --no-cache .",
     "setup": "uv sync",
-    "test": "UV_NO_DEV=0 PYTHONDONTWRITEBYTECODE=1 uv run --dev pytest",
-    "typecheck": "UV_NO_DEV=0 PYTHONDONTWRITEBYTECODE=1 uv run --dev basedpyright"
+    "test": "vitest run && UV_NO_DEV=0 PYTHONDONTWRITEBYTECODE=1 uv run --dev pytest",
+    "typecheck": "tsc --noEmit --emitDeclarationOnly false && UV_NO_DEV=0 PYTHONDONTWRITEBYTECODE=1 uv run --dev basedpyright"
+  },
+  "dependencies": {
+    "effect": "catalog:"
+  },
+  "devDependencies": {
+    "@effect/vitest": "catalog:",
+    "@repo/testing": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "@vitest/coverage-istanbul": "catalog:",
+    "vitest": "catalog:"
   }
 }
