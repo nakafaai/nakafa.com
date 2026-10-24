@@ -1,0 +1,11 @@
+{
+  "extends": "@repo/typescript-config/library.json",
+  "compilerOptions": {
+    "paths": {
+      "@/*": ["./*"]
+    },
+    "types": ["node", "vitest/globals"]
+  },
+  "include": ["**/*.ts", "*.mts"],
+  "exclude": ["node_modules", "coverage"]
+}

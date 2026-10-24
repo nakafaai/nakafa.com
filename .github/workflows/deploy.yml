@@ -74,6 +74,11 @@ jobs:
           CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
         run: pnpm codegen && pnpm exec convex deploy --yes
 
+      - name: Set up uv for the CAS engine
+        uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
+        with:
+          version: "0.13.5"
+
       - name: Deploy the Cloudflare stack
         working-directory: apps/www
         run: pnpm exec alchemy deploy --stage "$STAGE" --yes

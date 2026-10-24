@@ -1,16 +1,68 @@
 """Pydantic contracts for the Nakafa CAS HTTP API."""
 
+import re
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_serializer
+from pydantic import (
+    AfterValidator,
+    BaseModel,
+    ConfigDict,
+    Field,
+    field_serializer,
+    model_validator,
+)
+
+# Complexity bounds. A bound limits the work that a request causes, not only the
+# length of its text. SymPy computes powers, factorials, sums, series, expansions,
+# and determinants eagerly, so a request beyond a bound is refused before SymPy
+# builds the value: here for text and tokens, in cas/work.py for computed values and
+# shapes, and in the operation that owns the value. The bounds follow the corpus at
+# ten times its largest value where a measured Pyodide worst case allows it, and
+# docs/adr/0037-cloudflare.md records the measurement behind every other bound.
+MAX_INTEGER_DIGITS = 30
+MAX_EXPONENT = 70
+MAX_DEGREE = 70
+MAX_DENOMINATOR_DEGREE = 6
+MAX_EXPANSION_TERMS = 2000
+MAX_EXPRESSION_TOKENS = 200
+MAX_MATRIX_DIMENSION = 30
+MAX_SYMBOLIC_MATRIX_DIMENSION = 3
+MAX_DERIVATIVE_ORDER = 20
+MAX_SERIES_ORDER = 60
+MAX_TRANSCENDENTAL_SERIES_ORDER = 8
+MAX_COUNT_OPERAND = 50
+MAX_BINOMIAL_TRIALS = 100
+MAX_POISSON_BOUND = 100
+MAX_SUMMATION_TERMS = 40
+MAX_SYSTEM_WORK = 40
+MAX_NONLINEAR_UNKNOWNS = 2
+
+DIGIT_RUN = re.compile(r"\d+")
+# A token is one number, name, or operator, so the count approximates the node
+# count of the expression without parsing it.
+EXPRESSION_TOKEN = re.compile(r"\d+(?:\.\d+)?|[A-Za-z_]\w*|\*\*|[-+*/^!=<>(),]")
+
+
+def _refuse_beyond_bounds(text: str) -> str:
+    """Refuse a text value whose digit runs or token count exceed a bound."""
+    # A lexical digit rule suffices for a literal. Exponents and computed integers
+    # need their values, which cas/parse.py reads from the tree.
+    if any(len(run) > MAX_INTEGER_DIGITS for run in DIGIT_RUN.findall(text)):
+        raise ValueError(
+            f"A number may have at most {MAX_INTEGER_DIGITS} digits in each part."
+        )
+    if len(EXPRESSION_TOKEN.findall(text)) > MAX_EXPRESSION_TOKENS:
+        raise ValueError(
+            f"An expression may have at most {MAX_EXPRESSION_TOKENS} tokens."
+        )
+    return text
+
 
 # School calculations keep each operand readable and each collection modest.
-# These shape limits complement the process deadline: short expressions can still
-# expand into expensive symbolic work, so shape validation is not a CPU budget.
-MathText = Annotated[str, Field(max_length=2048)]
+MathText = Annotated[str, Field(max_length=2048), AfterValidator(_refuse_beyond_bounds)]
 MathValues = Annotated[list[MathText], Field(max_length=128)]
-MathMatrixRow = Annotated[list[MathText], Field(max_length=16)]
-MathMatrix = Annotated[list[MathMatrixRow], Field(max_length=16)]
+MathMatrixRow = Annotated[list[MathText], Field(max_length=MAX_MATRIX_DIMENSION)]
+MathMatrix = Annotated[list[MathMatrixRow], Field(max_length=MAX_MATRIX_DIMENSION)]
 
 MathStatus = Literal["verified", "contradicted", "inconclusive"]
 MathSource = Literal["math"]
@@ -68,7 +120,7 @@ class MathRequest(BaseModel):
     variable: MathText | None = None
     variables: MathValues = Field(default_factory=list)
     point: MathText | None = None
-    order: int | None = Field(default=None, le=100)
+    order: int | None = None
     lower: MathText | None = None
     lowerInclusive: bool | None = None
     upper: MathText | None = None
@@ -83,6 +135,17 @@ class MathRequest(BaseModel):
     modulus: MathText | None = None
     n: MathText | None = None
     k: MathText | None = None
+
+    @model_validator(mode="after")
+    def refuse_order_beyond_bound(self) -> "MathRequest":
+        """Refuse a derivative or series order beyond the bound of its operation."""
+        if self.order is None:
+            return self
+        if self.operation == "differentiate" and self.order > MAX_DERIVATIVE_ORDER:
+            raise ValueError(f"Derivative order may be at most {MAX_DERIVATIVE_ORDER}.")
+        if self.operation == "series" and self.order > MAX_SERIES_ORDER:
+            raise ValueError(f"Series order may be at most {MAX_SERIES_ORDER}.")
+        return self
 
 
 class MathExpression(BaseModel):

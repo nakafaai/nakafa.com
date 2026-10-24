@@ -1,7 +1,12 @@
 import pytest
 
 from cas.engine import run
-from cas.schema import MathRequest
+from cas.schema import (
+    MAX_SERIES_ORDER,
+    MAX_SUMMATION_TERMS,
+    MAX_TRANSCENDENTAL_SERIES_ORDER,
+    MathRequest,
+)
 
 
 def test_series_expansion() -> None:
@@ -118,3 +123,87 @@ def test_summation_and_product() -> None:
     assert summation.secondary.expression == "10"
     assert product.secondary
     assert product.secondary.expression == "24"
+
+
+def test_series_refuses_a_transcendental_order_beyond_the_bound() -> None:
+    with pytest.raises(ValueError, match="transcendental function may be at most"):
+        run(
+            MathRequest(
+                kind="math",
+                operation="series",
+                expression="exp(sin(x))",
+                order=MAX_TRANSCENDENTAL_SERIES_ORDER + 1,
+            )
+        )
+
+
+def test_series_accepts_a_transcendental_order_at_the_bound() -> None:
+    result = run(
+        MathRequest(
+            kind="math",
+            operation="series",
+            expression="sin(x)",
+            order=MAX_TRANSCENDENTAL_SERIES_ORDER,
+        )
+    )
+
+    assert result.status == "verified"
+
+
+def test_series_keeps_a_rational_order_at_the_series_bound() -> None:
+    result = run(
+        MathRequest(
+            kind="math",
+            operation="series",
+            expression="1/(1+x^2+x^3)",
+            order=MAX_SERIES_ORDER,
+        )
+    )
+
+    assert result.status == "verified"
+
+
+def test_summation_accepts_a_range_at_the_term_bound() -> None:
+    result = run(
+        MathRequest(
+            kind="math",
+            operation="summation",
+            expression="x",
+            variable="x",
+            lower="1",
+            upper=str(MAX_SUMMATION_TERMS),
+        )
+    )
+
+    assert result.secondary is not None
+    assert result.secondary.expression == str(
+        MAX_SUMMATION_TERMS * (MAX_SUMMATION_TERMS + 1) // 2
+    )
+
+
+def test_summation_refuses_a_range_beyond_the_term_bound() -> None:
+    with pytest.raises(ValueError, match="summation or product may have at most"):
+        run(
+            MathRequest(
+                kind="math",
+                operation="summation",
+                expression="1/x",
+                variable="x",
+                lower="1",
+                upper=str(MAX_SUMMATION_TERMS + 1),
+            )
+        )
+
+
+def test_product_refuses_a_range_beyond_the_term_bound() -> None:
+    with pytest.raises(ValueError, match="summation or product may have at most"):
+        run(
+            MathRequest(
+                kind="math",
+                operation="product",
+                expression="1+1/x",
+                variable="x",
+                lower="1",
+                upper=str(MAX_SUMMATION_TERMS + 1),
+            )
+        )

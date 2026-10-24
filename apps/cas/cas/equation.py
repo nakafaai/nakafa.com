@@ -6,7 +6,12 @@ from sympy.logic.boolalg import And, Boolean
 
 from cas import parse
 from cas.format import expression_text, item, result, step
-from cas.schema import MathRequest, MathResult
+from cas.schema import (
+    MAX_NONLINEAR_UNKNOWNS,
+    MAX_SYSTEM_WORK,
+    MathRequest,
+    MathResult,
+)
 
 EQUALS = expression_text("equals", "=")
 IMPLIES = expression_text("becomes", "\\Rightarrow")
@@ -21,6 +26,8 @@ def solve(request: MathRequest) -> MathResult:
     """Solve equations, inequalities, or systems for requested variables."""
     equations = request.expressions or [request.expression or ""]
     variables, parsed = _solve_variables(request, equations)
+    _refuse_large_system(parsed)
+    _refuse_nonlinear_system(parsed, variables)
     domain = _solution_domain(request)
 
     if (
@@ -96,6 +103,49 @@ def solve(request: MathRequest) -> MathResult:
         primary=parsed,
         reason="The system was solved exactly.",
         items=[item("solution", solution) for solution in solved],
+    )
+
+
+def _refuse_large_system(relations: list[sp.Expr | sp.Equality | Relational]) -> None:
+    """Refuse a system whose equations times distinct symbols exceed the work bound."""
+    # SymPy eliminates symbolic coefficients, and its cost grows with both counts.
+    symbols = {symbol for relation in relations for symbol in relation.free_symbols}
+    if len(relations) * len(symbols) > MAX_SYSTEM_WORK:
+        raise ValueError(
+            f"A system may have at most {MAX_SYSTEM_WORK} equations times symbols."
+        )
+
+
+def _refuse_nonlinear_system(
+    relations: list[sp.Expr | sp.Equality | Relational], variables: list[sp.Symbol]
+) -> None:
+    """Refuse a nonlinear system with other symbols, or with too many unknowns."""
+    # Measured: two nonlinear equations with symbolic coefficients did not finish in
+    # 120 s, and three nonlinear equations in three unknowns did not either. A single
+    # unknown is solved as a polynomial, and linear systems stay under the work bound.
+    if len(variables) < 2 or not any(
+        _is_nonlinear(relation, variables) for relation in relations
+    ):
+        return
+
+    symbols = {symbol for relation in relations for symbol in relation.free_symbols}
+    if len(variables) > MAX_NONLINEAR_UNKNOWNS or symbols - set(variables):
+        raise ValueError(
+            "A nonlinear system may have at most "
+            f"{MAX_NONLINEAR_UNKNOWNS} unknowns and no other symbols."
+        )
+
+
+def _is_nonlinear(
+    relation: sp.Expr | sp.Equality | Relational, variables: list[sp.Symbol]
+) -> bool:
+    """Return whether an equation or inequality is nonlinear in its unknowns."""
+    expression = (
+        _equality_expression(relation) if isinstance(relation, Relational) else relation
+    )
+    return (
+        not expression.is_polynomial(*variables)
+        or sp.Poly(expression, *variables).total_degree() > 1
     )
 
 
@@ -365,10 +415,10 @@ def _is_inside_domain(value: sp.Expr, domain: sp.Set) -> bool:
     raise SolutionSetUnavailable(SOLUTION_SET_UNAVAILABLE)
 
 
-def _equality_expression(relation: sp.Equality) -> sp.Expr:
-    """Move one equality to a single expression equal to zero."""
-    left = parse.expression(str(relation.lhs))
-    right = parse.expression(str(relation.rhs))
+def _equality_expression(relation: Relational) -> sp.Expr:
+    """Move one equality or inequality to a single expression on its left side."""
+    left = parse.expression(str(relation.lhs), bounded=False)
+    right = parse.expression(str(relation.rhs), bounded=False)
 
     return sp.expand(left - right)
 

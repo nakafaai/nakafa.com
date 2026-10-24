@@ -220,10 +220,26 @@ importers:
         version: 7.0.2
 
   apps/cas:
-    devDependencies:
-      '@vercel/config':
+    dependencies:
+      effect:
         specifier: 'catalog:'
-        version: 0.12.0
+        version: 4.0.5
+    devDependencies:
+      '@effect/vitest':
+        specifier: 'catalog:'
+        version: 4.0.5(effect@4.0.5)(vitest@5.0.5)
+      '@repo/testing':
+        specifier: workspace:*
+        version: link:../../packages/testing
+      '@repo/typescript-config':
+        specifier: workspace:*
+        version: link:../../packages/typescript-config
+      '@vitest/coverage-istanbul':
+        specifier: 'catalog:'
+        version: 5.0.5(vitest@5.0.5)
+      vitest:
+        specifier: 'catalog:'
+        version: 5.0.5(@edge-runtime/vm@5.0.0)(@types/node@24.19.2)(@vitest/coverage-istanbul@5.0.5)(@vitest/ui@5.0.5)(jsdom@30.1.3(@noble/hashes@2.3.0))(vite@8.3.4(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
 
   apps/email:
     dependencies:

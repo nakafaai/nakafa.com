@@ -2,6 +2,7 @@
 
 import { describe, expect, it } from "@effect/vitest";
 import {
+  casFrontExposure,
   NAKAFA_ZONE,
   productionHostExposure,
   webExposure,
@@ -39,6 +40,22 @@ describe("webExposure", () => {
 
   it("gives every other stage only its workers.dev URL", () => {
     expect(webExposure("pr-42")).toEqual({ routes: [], workersDev: true });
+  });
+});
+
+describe("casFrontExposure", () => {
+  it("serves production on cas.nakafa.com with workers.dev off", () => {
+    expect(casFrontExposure("prod")).toEqual({
+      routes: [{ pattern: "cas.nakafa.com/*", zoneName: NAKAFA_ZONE }],
+      workersDev: false,
+    });
+  });
+
+  it("gives a probe stage only its workers.dev URL and no zone route", () => {
+    expect(casFrontExposure("cas-probe")).toEqual({
+      routes: [],
+      workersDev: true,
+    });
   });
 });
 

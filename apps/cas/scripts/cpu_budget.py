@@ -1,22 +1,21 @@
 """Measure the CPU that each CAS test-corpus request costs, against the Free budget.
 
-The corpus is every request that the test suite sends. A pytest plugin records
-each call that the suite makes to `cas.engine.run`, and the literal bodies that
-the suite posts to /api/math are read from the sources. Each request runs
-through `cas.engine.run`, the calculation that `cas.worker` performs in its
-subprocess, and the script records the process CPU time of each call: the first
-call of a request is cold, and the later rounds are warm.
+The corpus is every request that the test suite sends to `cas.engine.run`. A
+pytest plugin records each call, so the corpus is exactly what the suite runs.
+Each request runs through `cas.engine.run`, the calculation that the Durable
+Object runs through `cas.compute`, and the script records the process CPU time
+of each call: the first call of a request is cold, and the later rounds are warm.
 
-Cloudflare Workers on the Free plan allow 10 ms of CPU per request. This script
-runs on CPython, not Pyodide, so its numbers estimate the cost of the same code
-rather than measure the deployed Worker. Measure the deployed Worker with
-Workers Logs (`cpuTime`) before deciding.
+Cloudflare Workers on the Free plan allow 10 ms of CPU per request for the
+Worker itself. This script runs on CPython, not Pyodide, so its numbers estimate
+the cost of the same code. Measure the deployed Durable Object with Workers Logs
+(`cpuTime`) before deciding.
 
 Run from apps/cas: `PYTHONPATH=. uv run python scripts/cpu_budget.py --rounds 5`.
+Add `--corpus PATH` to write the corpus as JSON request bodies for a replay.
 """
 
 import argparse
-import ast
 import contextlib
 import json
 import sys
@@ -30,7 +29,6 @@ from cas import engine
 from cas.schema import MathRequest, MathResult
 
 CPU_BUDGET_MS = 10.0
-MATH_PATH = "/api/math"
 ROOT = Path(__file__).resolve().parent.parent
 ORIGINAL_RUN = engine.run
 
@@ -79,39 +77,6 @@ def record_suite(tests_dir: Path) -> list[MathRequest]:
     return recorder.requests
 
 
-def is_math_post(node: ast.AST) -> bool:
-    """Whether a node is a `.post("/api/math", ...)` call."""
-    return (
-        isinstance(node, ast.Call)
-        and isinstance(node.func, ast.Attribute)
-        and node.func.attr == "post"
-        and bool(node.args)
-        and isinstance(node.args[0], ast.Constant)
-        and node.args[0].value == MATH_PATH
-    )
-
-
-def read_api_bodies(tests_dir: Path) -> list[MathRequest]:
-    """Return the literal /api/math bodies of the API tests as requests."""
-    requests: list[MathRequest] = []
-    for path in sorted(tests_dir.glob("*_test.py")):
-        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-        for node in ast.walk(tree):
-            if not is_math_post(node):
-                continue
-            body = next(
-                (keyword.value for keyword in node.keywords if keyword.arg == "json"),
-                None,
-            )
-            if body is None:
-                continue
-            try:
-                requests.append(MathRequest.model_validate(ast.literal_eval(body)))
-            except (ValueError, SyntaxError):
-                continue
-    return requests
-
-
 def time_requests(
     requests: list[MathRequest], rounds: int
 ) -> tuple[list[float], list[float]]:
@@ -150,14 +115,22 @@ def summarize(request_count: int, cold: list[float], warm: list[float]) -> Summa
     )
 
 
+def write_corpus(path: Path, requests: list[MathRequest]) -> None:
+    """Write each recorded request as the JSON body a client posts to the engine."""
+    bodies = [request.model_dump(exclude_none=True) for request in requests]
+    path.write_text(json.dumps(bodies, indent=2) + "\n", encoding="utf-8")
+
+
 def main() -> None:
-    """Print the corpus CPU summary as JSON."""
+    """Print the corpus CPU summary as JSON, and optionally write the corpus."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--rounds", type=int, default=5)
+    parser.add_argument("--corpus", type=Path)
     arguments = parser.parse_args()
 
-    tests_dir = ROOT / "tests"
-    requests = record_suite(tests_dir) + read_api_bodies(tests_dir)
+    requests = record_suite(ROOT / "tests")
+    if arguments.corpus is not None:
+        write_corpus(arguments.corpus, requests)
     cold, warm = time_requests(requests, arguments.rounds)
     print(json.dumps(asdict(summarize(len(requests), cold, warm)), indent=2))
 

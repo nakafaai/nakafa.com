@@ -10,6 +10,7 @@ import sympy as sp
 from sympy.core.relational import Relational
 
 from cas.schema import MathRequest, PointInput
+from cas.work import refuse_beyond_work_bounds
 
 CONSTANTS = {
     "E": sp.E,
@@ -77,8 +78,14 @@ def symbol_from_equations(
     return _single_symbol_or_default(parsed), parsed
 
 
-def expression(value: str | None, *, evaluate: bool = True) -> sp.Expr:
-    """Parse a user expression with a small math-only AST."""
+def expression(
+    value: str | None, *, evaluate: bool = True, bounded: bool = True
+) -> sp.Expr:
+    """Parse a user expression with a small math-only AST.
+
+    `bounded=False` is for text that SymPy itself printed a moment earlier. Its
+    work already happened, so only user text needs the work bounds before SymPy.
+    """
     if not value:
         raise ValueError("Expression is required.")
 
@@ -90,6 +97,14 @@ def expression(value: str | None, *, evaluate: bool = True) -> sp.Expr:
         # https://docs.sympy.org/latest/modules/parsing.html#sympy.parsing.sympy_parser.parse_expr
         source = _prepare_expression_source(normalized_value)
         parsed_ast = ast.parse(source, mode="eval")
+    except (SyntaxError, TypeError, ValueError, tokenize.TokenError) as error:
+        raise ValueError("Expression could not be parsed.") from error
+
+    # SymPy evaluates a constant power or factorial as it builds it, so the bounds
+    # read the tree before any SymPy value exists.
+    if bounded:
+        refuse_beyond_work_bounds(parsed_ast.body)
+    try:
         parsed = _parse_node(parsed_ast.body, symbols, evaluate)
     except (SyntaxError, TypeError, ValueError, tokenize.TokenError) as error:
         raise ValueError("Expression could not be parsed.") from error

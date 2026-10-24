@@ -60,8 +60,8 @@ certificate authority, and registers local DNS entries for running apps.
 
 Run `pnpm dev` for hot reload. The canonical checkout serves
 `https://nakafa.local.nakafa.com`; worktrees receive their own prefix, such as
-`https://ci.nakafa.local.nakafa.com`. The web, CAS, and email preview servers
-receive separate names. Use `pnpm exec portless list` to inspect active routes,
+`https://ci.nakafa.local.nakafa.com`. The web and email preview servers
+receive separate names. CAS runs as Cloudflare Workers, so it has no local server. Use `pnpm exec portless list` to inspect active routes,
 `pnpm exec portless get nakafa` to obtain this checkout's web URL, and
 `pnpm exec portless doctor` to check the proxy, DNS, and certificate trust.
 
@@ -143,7 +143,7 @@ See ADR 0037.
 - `apps/www`: main TanStack Start application at `https://nakafa.local.nakafa.com`
 - `apps/mcp`: Cloudflare Worker edge for the Convex MCP runtime
 - `apps/api`: Cloudflare Worker edge for the Convex REST runtime
-- `apps/cas`: Python CAS service at `https://cas.nakafa.local.nakafa.com`
+- `apps/cas`: CAS math engine, a Python Durable Object behind a TypeScript front at `https://cas.nakafa.com`
 - `apps/email`: email preview application at `https://email.nakafa.local.nakafa.com`
 - `packages/backend`: Confect schema, functions, workflows, native Agent capabilities, and integrations
 - `packages/design-system`: shared React components and renderer implementations
