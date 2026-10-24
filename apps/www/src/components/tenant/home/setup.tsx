@@ -1,6 +1,6 @@
 import { QueryResult } from "@confect/react";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { linkOptions } from "@tanstack/react-router";
+
 import { Array as Arr } from "effect";
 import { useTranslations } from "use-intl";
 import { CardLink, CardLinks } from "@/components/shared/card/link";
@@ -15,29 +15,29 @@ import { LOCALE_ROUTE } from "@/lib/routing/tree";
 /** The settings page where each step is completed, under the school's slug. */
 const STEP_TARGET: Record<SetupStep, (slug: TenantSlug) => LinkTarget> = {
   invites: (slug) =>
-    linkOptions({
+    ({
       from: LOCALE_ROUTE,
       params: { slug },
       to: "/school/$slug/settings/invites",
-    }),
+    }) satisfies LinkTarget,
   students: (slug) =>
-    linkOptions({
+    ({
       from: LOCALE_ROUTE,
       params: { slug },
       to: "/school/$slug/settings/students",
-    }),
+    }) satisfies LinkTarget,
   teacher: (slug) =>
-    linkOptions({
+    ({
       from: LOCALE_ROUTE,
       params: { slug },
       to: "/school/$slug/settings/invites",
-    }),
+    }) satisfies LinkTarget,
   unit: (slug) =>
-    linkOptions({
+    ({
       from: LOCALE_ROUTE,
       params: { slug },
       to: "/school/$slug/settings/units",
-    }),
+    }) satisfies LinkTarget,
 };
 
 /**

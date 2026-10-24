@@ -1,4 +1,3 @@
-import { linkOptions } from "@tanstack/react-router";
 import type { ArticleNextSearch } from "@/lib/content/article/query";
 import type { LinkTarget } from "@/lib/routing/link";
 import { LOCALE_ROUTE } from "@/lib/routing/tree";
@@ -16,11 +15,15 @@ export function articleNextTarget({
   readonly search: ArticleNextSearch;
 }): LinkTarget {
   return category === undefined
-    ? linkOptions({ from: LOCALE_ROUTE, search, to: "/$locale/articles" })
-    : linkOptions({
+    ? ({
+        from: LOCALE_ROUTE,
+        search,
+        to: "/$locale/articles",
+      } satisfies LinkTarget)
+    : ({
         from: LOCALE_ROUTE,
         params: { category },
         search,
         to: "/$locale/articles/$category",
-      });
+      } satisfies LinkTarget);
 }

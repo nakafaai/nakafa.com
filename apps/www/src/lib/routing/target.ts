@@ -1,7 +1,7 @@
 import { CURRICULUM_NAMESPACES } from "@nakafa/aksara-contracts/program/curriculum";
 import { PATHNAMES } from "@repo/internationalization/src/pathnames";
 import { SITE_ORIGIN } from "@repo/seo/origin";
-import { linkOptions } from "@tanstack/react-router";
+
 import { Array as Arr, Option, Record as Rec } from "effect";
 import type { LinkTarget } from "@/lib/routing/link";
 import { LOCALE_ROUTE } from "@/lib/routing/tree";
@@ -12,11 +12,11 @@ import { LOCALE_ROUTE } from "@/lib/routing/tree";
  * the one of the page on screen.
  */
 function pageTarget(publicPath: string) {
-  return linkOptions({
+  return {
     from: LOCALE_ROUTE,
     params: { _splat: publicPath },
     to: "/$locale/$",
-  });
+  } satisfies LinkTarget;
 }
 
 /** The typed target of one article, from the category and slug that the catalog verified. */
@@ -27,11 +27,11 @@ function articleTarget({
   readonly category: string;
   readonly slug: string;
 }) {
-  return linkOptions({
+  return {
     from: LOCALE_ROUTE,
     params: { category, slug },
     to: "/$locale/articles/$category/$slug",
-  });
+  } satisfies LinkTarget;
 }
 
 /**
@@ -46,57 +46,57 @@ export function curriculumTarget({
   readonly curriculum: string;
   readonly path: readonly string[];
 }) {
-  return linkOptions({
+  return {
     from: LOCALE_ROUTE,
     params: { _splat: Arr.join(path, "/"), curriculum },
     to: "/$locale/curricula/$curriculum/$",
-  });
+  } satisfies LinkTarget;
 }
 
 /** The typed target of one article category's page, which the route names by its route slug. */
 export function articleCategoryTarget(route: string) {
-  return linkOptions({
+  return {
     from: LOCALE_ROUTE,
     params: { category: route },
     to: "/$locale/articles/$category",
-  });
+  } satisfies LinkTarget;
 }
 
 /** The locale's landing page, the one a visitor reaches from the app's own links. */
-export const LANDING_TARGET = linkOptions({
+export const LANDING_TARGET = {
   from: LOCALE_ROUTE,
   to: "/$locale",
-});
+} satisfies LinkTarget;
 
 /** The home page of the signed-in account, which the app's breadcrumbs start from. */
-export const HOME_TARGET = linkOptions({
+export const HOME_TARGET = {
   from: LOCALE_ROUTE,
   to: "/$locale/home",
-});
+} satisfies LinkTarget;
 
 /** The search page of the app. */
-export const SEARCH_TARGET = linkOptions({
+export const SEARCH_TARGET = {
   from: LOCALE_ROUTE,
   to: "/$locale/search",
-});
+} satisfies LinkTarget;
 
 /** The try-out catalog, the first page of every try-out path. */
-export const TRYOUT_TARGET = linkOptions({
+export const TRYOUT_TARGET = {
   from: LOCALE_ROUTE,
   to: "/$locale/try-out",
-});
+} satisfies LinkTarget;
 
 /** The Quran index, which the Quran breadcrumb starts from. */
-export const QURAN_TARGET = linkOptions({
+export const QURAN_TARGET = {
   from: LOCALE_ROUTE,
   to: "/$locale/quran",
-});
+} satisfies LinkTarget;
 
 /** The curriculum index, which the subject breadcrumb starts from. */
-export const CURRICULA_TARGET = linkOptions({
+export const CURRICULA_TARGET = {
   from: LOCALE_ROUTE,
   to: "/$locale/curricula",
-});
+} satisfies LinkTarget;
 
 /** The namespaces of the curriculum in every locale, which the route map spells. */
 const CURRICULUM_NAMESPACE_LIST: readonly string[] = Rec.values(
@@ -124,10 +124,10 @@ const MATERIAL_NAMESPACES: readonly string[] = Arr.flatMap(
 );
 
 /** The article index, which the article breadcrumb starts from. */
-export const ARTICLES_TARGET = linkOptions({
+export const ARTICLES_TARGET = {
   from: LOCALE_ROUTE,
   to: "/$locale/articles",
-});
+} satisfies LinkTarget;
 
 /**
  * The typed target of one curriculum public path, such as `curriculum/merdeka`
@@ -164,14 +164,12 @@ function materialPublicPathTarget(
     return Option.none();
   }
   const search = context === undefined ? {} : { ctx: context };
-  return Option.some(
-    linkOptions({
-      from: LOCALE_ROUTE,
-      params: { _splat: Arr.join(lesson, "/"), subject, topic },
-      search,
-      to: "/$locale/materials/$subject/$topic/$",
-    })
-  );
+  return Option.some({
+    from: LOCALE_ROUTE,
+    params: { _splat: Arr.join(lesson, "/"), subject, topic },
+    search,
+    to: "/$locale/materials/$subject/$topic/$",
+  } satisfies LinkTarget);
 }
 
 /**
@@ -205,13 +203,11 @@ export function publicPathTarget(
       return Option.some(QURAN_TARGET);
     }
     return second === undefined
-      ? Option.some(
-          linkOptions({
-            from: LOCALE_ROUTE,
-            params: { surah: first },
-            to: "/$locale/quran/$surah",
-          })
-        )
+      ? Option.some({
+          from: LOCALE_ROUTE,
+          params: { surah: first },
+          to: "/$locale/quran/$surah",
+        } satisfies LinkTarget)
       : Option.none();
   }
   if (isCurriculumNamespace(namespace)) {
@@ -241,15 +237,15 @@ export function addressTarget(address: string): Option.Option<LinkTarget> {
 
 /** The typed target of one Quran surah, which the Quran route names by its number. */
 export function quranSurahTarget(surah: number) {
-  return linkOptions({
+  return {
     from: LOCALE_ROUTE,
     params: { surah: String(surah) },
     to: "/$locale/quran/$surah",
-  });
+  } satisfies LinkTarget;
 }
 
 /** The pricing page of the locale, which the footer and the marketing pages link to. */
-export const PRICING_TARGET = linkOptions({
+export const PRICING_TARGET = {
   from: LOCALE_ROUTE,
   to: "/$locale/pricing",
-});
+} satisfies LinkTarget;

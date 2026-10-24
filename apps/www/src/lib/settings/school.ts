@@ -1,5 +1,5 @@
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { linkOptions } from "@tanstack/react-router";
+
 import { Array as Arr, Option, Schema } from "effect";
 import type { LinkTarget } from "@/lib/routing/link";
 import { LOCALE_ROUTE } from "@/lib/routing/tree";
@@ -39,97 +39,119 @@ const SCHOOL_SETTINGS_GROUPS = [
   {
     key: "school",
     sections: [
-      settingsSection("profile", (slug) =>
-        linkOptions({
-          from: LOCALE_ROUTE,
-          params: { slug },
-          to: "/school/$slug/settings/profile",
-        })
+      settingsSection(
+        "profile",
+        (slug) =>
+          ({
+            from: LOCALE_ROUTE,
+            params: { slug },
+            to: "/school/$slug/settings/profile",
+          }) satisfies LinkTarget
       ),
-      settingsSection("periods", (slug) =>
-        linkOptions({
-          from: LOCALE_ROUTE,
-          params: { slug },
-          to: "/school/$slug/settings/periods",
-        })
+      settingsSection(
+        "periods",
+        (slug) =>
+          ({
+            from: LOCALE_ROUTE,
+            params: { slug },
+            to: "/school/$slug/settings/periods",
+          }) satisfies LinkTarget
       ),
-      settingsSection("cohorts", (slug) =>
-        linkOptions({
-          from: LOCALE_ROUTE,
-          params: { slug },
-          to: "/school/$slug/settings/cohorts",
-        })
+      settingsSection(
+        "cohorts",
+        (slug) =>
+          ({
+            from: LOCALE_ROUTE,
+            params: { slug },
+            to: "/school/$slug/settings/cohorts",
+          }) satisfies LinkTarget
       ),
-      settingsSection("units", (slug) =>
-        linkOptions({
-          from: LOCALE_ROUTE,
-          params: { slug },
-          to: "/school/$slug/settings/units",
-        })
+      settingsSection(
+        "units",
+        (slug) =>
+          ({
+            from: LOCALE_ROUTE,
+            params: { slug },
+            to: "/school/$slug/settings/units",
+          }) satisfies LinkTarget
       ),
     ],
   },
   {
     key: "people",
     sections: [
-      settingsSection("members", (slug) =>
-        linkOptions({
-          from: LOCALE_ROUTE,
-          params: { slug },
-          to: "/school/$slug/settings/members",
-        })
+      settingsSection(
+        "members",
+        (slug) =>
+          ({
+            from: LOCALE_ROUTE,
+            params: { slug },
+            to: "/school/$slug/settings/members",
+          }) satisfies LinkTarget
       ),
-      settingsSection("roles", (slug) =>
-        linkOptions({
-          from: LOCALE_ROUTE,
-          params: { slug },
-          to: "/school/$slug/settings/roles",
-        })
+      settingsSection(
+        "roles",
+        (slug) =>
+          ({
+            from: LOCALE_ROUTE,
+            params: { slug },
+            to: "/school/$slug/settings/roles",
+          }) satisfies LinkTarget
       ),
-      settingsSection("invites", (slug) =>
-        linkOptions({
-          from: LOCALE_ROUTE,
-          params: { slug },
-          to: "/school/$slug/settings/invites",
-        })
+      settingsSection(
+        "invites",
+        (slug) =>
+          ({
+            from: LOCALE_ROUTE,
+            params: { slug },
+            to: "/school/$slug/settings/invites",
+          }) satisfies LinkTarget
       ),
-      settingsSection("students", (slug) =>
-        linkOptions({
-          from: LOCALE_ROUTE,
-          params: { slug },
-          to: "/school/$slug/settings/students",
-        })
+      settingsSection(
+        "students",
+        (slug) =>
+          ({
+            from: LOCALE_ROUTE,
+            params: { slug },
+            to: "/school/$slug/settings/students",
+          }) satisfies LinkTarget
       ),
     ],
   },
   {
     key: "integrations",
     sections: [
-      settingsSection("clients", (slug) =>
-        linkOptions({
-          from: LOCALE_ROUTE,
-          params: { slug },
-          to: "/school/$slug/settings/clients",
-        })
+      settingsSection(
+        "clients",
+        (slug) =>
+          ({
+            from: LOCALE_ROUTE,
+            params: { slug },
+            to: "/school/$slug/settings/clients",
+          }) satisfies LinkTarget
       ),
     ],
   },
   {
     key: "security",
     sections: [
-      settingsSection("policies", (slug) =>
-        linkOptions({
-          from: LOCALE_ROUTE,
-          params: { slug },
-          to: "/school/$slug/settings/policies",
-        })
+      settingsSection(
+        "policies",
+        (slug) =>
+          ({
+            from: LOCALE_ROUTE,
+            params: { slug },
+            to: "/school/$slug/settings/policies",
+          }) satisfies LinkTarget
       ),
-      settingsSection("audit", (slug) =>
-        linkOptions({
-          from: LOCALE_ROUTE,
-          params: { slug },
-          to: "/school/$slug/settings/audit",
-        })
+      settingsSection(
+        "audit",
+        (slug) =>
+          ({
+            from: LOCALE_ROUTE,
+            params: { slug },
+            to: "/school/$slug/settings/audit",
+          }) satisfies LinkTarget
       ),
     ],
   },

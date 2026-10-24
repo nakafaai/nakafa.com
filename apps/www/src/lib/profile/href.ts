@@ -1,4 +1,3 @@
-import { linkOptions } from "@tanstack/react-router";
 import { Match, Schema } from "effect";
 import type { LinkTarget } from "@/lib/routing/link";
 import { LOCALE_ROUTE } from "@/lib/routing/tree";
@@ -29,11 +28,11 @@ export function profileHref(username: string) {
 
 /** The route of a profile's posts, which the router matches as `/{locale}/user/{username}`. */
 export function profileTarget(username: string): LinkTarget {
-  return linkOptions({
+  return {
     from: LOCALE_ROUTE,
     params: { username },
     to: "/$locale/user/$username",
-  });
+  } satisfies LinkTarget;
 }
 
 /** The route of one tab of a profile: its chat or its comments. */
@@ -42,19 +41,23 @@ export function profileTabTarget(
   username: string
 ): LinkTarget {
   return Match.value(tab).pipe(
-    Match.when("chat", () =>
-      linkOptions({
-        from: LOCALE_ROUTE,
-        params: { username },
-        to: "/$locale/user/$username/chat",
-      })
+    Match.when(
+      "chat",
+      () =>
+        ({
+          from: LOCALE_ROUTE,
+          params: { username },
+          to: "/$locale/user/$username/chat",
+        }) satisfies LinkTarget
     ),
-    Match.when("comments", () =>
-      linkOptions({
-        from: LOCALE_ROUTE,
-        params: { username },
-        to: "/$locale/user/$username/comments",
-      })
+    Match.when(
+      "comments",
+      () =>
+        ({
+          from: LOCALE_ROUTE,
+          params: { username },
+          to: "/$locale/user/$username/comments",
+        }) satisfies LinkTarget
     ),
     Match.exhaustive
   );
@@ -68,6 +71,6 @@ export function profileTabTarget(
  */
 export function ownChatsTarget(username: string | undefined): LinkTarget {
   return username === undefined
-    ? linkOptions({ from: LOCALE_ROUTE, to: "/$locale/chat" })
+    ? ({ from: LOCALE_ROUTE, to: "/$locale/chat" } satisfies LinkTarget)
     : profileTabTarget("chat", username);
 }

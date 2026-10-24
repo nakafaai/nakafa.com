@@ -3,7 +3,7 @@ import {
   Books02Icon,
   Target01Icon,
 } from "@hugeicons/core-free-icons";
-import { linkOptions } from "@tanstack/react-router";
+
 import { Option } from "effect";
 import type { LinkTarget } from "@/lib/routing/link";
 import { LOCALE_ROUTE } from "@/lib/routing/tree";
@@ -14,21 +14,24 @@ const forYouNavigationItems = {
     id: "subject",
     labelKey: "subject",
     labelNamespace: "Common",
-    target: linkOptions({ from: LOCALE_ROUTE, to: "/$locale/curricula" }),
+    target: {
+      from: LOCALE_ROUTE,
+      to: "/$locale/curricula",
+    } satisfies LinkTarget,
   },
   tryOut: {
     icon: Target01Icon,
     id: "tryOut",
     labelKey: "try-out",
     labelNamespace: "Common",
-    target: linkOptions({ from: LOCALE_ROUTE, to: "/$locale/try-out" }),
+    target: { from: LOCALE_ROUTE, to: "/$locale/try-out" } satisfies LinkTarget,
   },
   askNina: {
     icon: AiChat02Icon,
     id: "askNina",
     labelKey: "ask-nina",
     labelNamespace: "Ai",
-    target: linkOptions({ from: LOCALE_ROUTE, to: "/$locale/chat" }),
+    target: { from: LOCALE_ROUTE, to: "/$locale/chat" } satisfies LinkTarget,
   },
 } as const;
 

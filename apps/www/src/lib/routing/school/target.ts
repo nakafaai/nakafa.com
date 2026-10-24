@@ -1,5 +1,5 @@
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
-import { linkOptions } from "@tanstack/react-router";
+
 import type { LinkTarget } from "@/lib/routing/link";
 import { LOCALE_ROUTE } from "@/lib/routing/tree";
 
@@ -12,29 +12,29 @@ import { LOCALE_ROUTE } from "@/lib/routing/tree";
 
 /** The home of one school. */
 export function schoolHomeTarget(slug: TenantSlug): LinkTarget {
-  return linkOptions({
+  return {
     from: LOCALE_ROUTE,
     params: { slug },
     to: "/school/$slug",
-  });
+  } satisfies LinkTarget;
 }
 
 /** The school's exam list, which the school's exams page owns. */
 export function schoolExamsTarget(slug: TenantSlug): LinkTarget {
-  return linkOptions({
+  return {
     from: LOCALE_ROUTE,
     params: { slug },
     to: "/school/$slug/exams",
-  });
+  } satisfies LinkTarget;
 }
 
 /** The page of one exam. */
 export function schoolExamTarget(slug: TenantSlug, exam: string): LinkTarget {
-  return linkOptions({
+  return {
     from: LOCALE_ROUTE,
     params: { exam, slug },
     to: "/school/$slug/exams/$exam",
-  });
+  } satisfies LinkTarget;
 }
 
 /** The editor of one exam. */
@@ -42,11 +42,11 @@ export function schoolExamEditTarget(
   slug: TenantSlug,
   exam: string
 ): LinkTarget {
-  return linkOptions({
+  return {
     from: LOCALE_ROUTE,
     params: { exam, slug },
     to: "/school/$slug/exams/$exam/edit",
-  });
+  } satisfies LinkTarget;
 }
 
 /** One sitting of an exam, which its own page shows. */
@@ -55,11 +55,11 @@ export function schoolExamSittingTarget(
   exam: string,
   sitting: string
 ): LinkTarget {
-  return linkOptions({
+  return {
     from: LOCALE_ROUTE,
     params: { exam, sitting, slug },
     to: "/school/$slug/exams/$exam/sittings/$sitting",
-  });
+  } satisfies LinkTarget;
 }
 
 /** The results of one sitting of an exam. */
@@ -68,11 +68,11 @@ export function schoolExamSittingResultsTarget(
   exam: string,
   sitting: string
 ): LinkTarget {
-  return linkOptions({
+  return {
     from: LOCALE_ROUTE,
     params: { exam, sitting, slug },
     to: "/school/$slug/exams/$exam/sittings/$sitting/results",
-  });
+  } satisfies LinkTarget;
 }
 
 /** One sitting of a student, which the sitting's own route owns. */
@@ -80,11 +80,11 @@ export function schoolSittingTarget(
   slug: TenantSlug,
   sitting: string
 ): LinkTarget {
-  return linkOptions({
+  return {
     from: LOCALE_ROUTE,
     params: { sitting, slug },
     to: "/school/$slug/sittings/$sitting",
-  });
+  } satisfies LinkTarget;
 }
 
 /** One class of the school, by its class slug. */
@@ -92,9 +92,9 @@ export function schoolClassTarget(
   slug: TenantSlug,
   classSlug: string
 ): LinkTarget {
-  return linkOptions({
+  return {
     from: LOCALE_ROUTE,
     params: { classSlug, slug },
     to: "/school/$slug/classes/$classSlug",
-  });
+  } satisfies LinkTarget;
 }

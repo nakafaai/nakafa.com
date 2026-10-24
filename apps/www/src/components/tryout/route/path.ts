@@ -1,4 +1,3 @@
-import { linkOptions } from "@tanstack/react-router";
 import { Array as Arr, Option, Schema } from "effect";
 import type { TryoutSectionRoute } from "@/components/tryout/section/model";
 import type { LinkTarget } from "@/lib/routing/link";
@@ -72,48 +71,38 @@ export function getTryoutPublicPathTarget(
     return Option.some(TRYOUT_TARGET);
   }
   if (exam === undefined) {
-    return Option.some(
-      linkOptions({
-        from: LOCALE_ROUTE,
-        params: { country },
-        to: "/$locale/try-out/$country",
-      })
-    );
+    return Option.some({
+      from: LOCALE_ROUTE,
+      params: { country },
+      to: "/$locale/try-out/$country",
+    } satisfies LinkTarget);
   }
   if (track === undefined) {
-    return Option.some(
-      linkOptions({
-        from: LOCALE_ROUTE,
-        params: { country, exam },
-        to: "/$locale/try-out/$country/$exam",
-      })
-    );
+    return Option.some({
+      from: LOCALE_ROUTE,
+      params: { country, exam },
+      to: "/$locale/try-out/$country/$exam",
+    } satisfies LinkTarget);
   }
   if (set === undefined) {
-    return Option.some(
-      linkOptions({
-        from: LOCALE_ROUTE,
-        params: { country, exam, track },
-        to: "/$locale/try-out/$country/$exam/$track",
-      })
-    );
+    return Option.some({
+      from: LOCALE_ROUTE,
+      params: { country, exam, track },
+      to: "/$locale/try-out/$country/$exam/$track",
+    } satisfies LinkTarget);
   }
   if (section === undefined) {
-    return Option.some(
-      linkOptions({
-        from: LOCALE_ROUTE,
-        params: { country, exam, set, track },
-        to: "/$locale/try-out/$country/$exam/$track/$set",
-      })
-    );
-  }
-  return Option.some(
-    linkOptions({
+    return Option.some({
       from: LOCALE_ROUTE,
-      params: { country, exam, section, set, track },
-      to: "/$locale/try-out/$country/$exam/$track/$set/$section",
-    })
-  );
+      params: { country, exam, set, track },
+      to: "/$locale/try-out/$country/$exam/$track/$set",
+    } satisfies LinkTarget);
+  }
+  return Option.some({
+    from: LOCALE_ROUTE,
+    params: { country, exam, section, set, track },
+    to: "/$locale/try-out/$country/$exam/$track/$set/$section",
+  } satisfies LinkTarget);
 }
 
 /**
@@ -138,23 +127,19 @@ function getTryoutAttemptTarget(
     return Option.none();
   }
   if (!section) {
-    return Option.some(
-      linkOptions({
-        from: LOCALE_ROUTE,
-        params: { country, exam, set, track },
-        search: { [ATTEMPT_ID_PARAM]: attemptId },
-        to: "/$locale/try-out/$country/$exam/$track/$set",
-      })
-    );
-  }
-  return Option.some(
-    linkOptions({
+    return Option.some({
       from: LOCALE_ROUTE,
-      params: { country, exam, section, set, track },
+      params: { country, exam, set, track },
       search: { [ATTEMPT_ID_PARAM]: attemptId },
-      to: "/$locale/try-out/$country/$exam/$track/$set/$section",
-    })
-  );
+      to: "/$locale/try-out/$country/$exam/$track/$set",
+    } satisfies LinkTarget);
+  }
+  return Option.some({
+    from: LOCALE_ROUTE,
+    params: { country, exam, section, set, track },
+    search: { [ATTEMPT_ID_PARAM]: attemptId },
+    to: "/$locale/try-out/$country/$exam/$track/$set/$section",
+  } satisfies LinkTarget);
 }
 
 /**

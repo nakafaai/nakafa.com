@@ -1,4 +1,3 @@
-import { linkOptions } from "@tanstack/react-router";
 import { Array as Arr, Option, Schema } from "effect";
 import type { LinkTarget } from "@/lib/routing/link";
 import { LOCALE_ROUTE } from "@/lib/routing/tree";
@@ -39,27 +38,24 @@ function userSettingsGroup(
  */
 export const userSettingsGroups = [
   userSettingsGroup("personal", [
-    userSettingsSection(
-      "account",
-      linkOptions({ from: LOCALE_ROUTE, to: "/$locale/user/settings" })
-    ),
-    userSettingsSection(
-      "learning",
-      linkOptions({ from: LOCALE_ROUTE, to: "/$locale/user/settings/learning" })
-    ),
-    userSettingsSection(
-      "billing",
-      linkOptions({
-        from: LOCALE_ROUTE,
-        to: "/$locale/user/settings/subscriptions",
-      })
-    ),
+    userSettingsSection("account", {
+      from: LOCALE_ROUTE,
+      to: "/$locale/user/settings",
+    } satisfies LinkTarget),
+    userSettingsSection("learning", {
+      from: LOCALE_ROUTE,
+      to: "/$locale/user/settings/learning",
+    } satisfies LinkTarget),
+    userSettingsSection("billing", {
+      from: LOCALE_ROUTE,
+      to: "/$locale/user/settings/subscriptions",
+    } satisfies LinkTarget),
   ]),
   userSettingsGroup("ai", [
-    userSettingsSection(
-      "memory",
-      linkOptions({ from: LOCALE_ROUTE, to: "/$locale/user/settings/memory" })
-    ),
+    userSettingsSection("memory", {
+      from: LOCALE_ROUTE,
+      to: "/$locale/user/settings/memory",
+    } satisfies LinkTarget),
   ]),
 ] as const;
 
