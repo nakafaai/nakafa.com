@@ -1,7 +1,7 @@
 import { SITE_ORIGIN } from "@repo/seo/origin";
 import { Array as Arr } from "effect";
-import { TRAINING_CRAWLERS } from "@/lib/seo/crawlers";
-import { CONTENT_LICENSE_URL, TDMREP_PATH } from "@/lib/seo/license";
+import { TRAINING_CRAWLERS } from "#www/src/lib/seo/crawlers";
+import { CONTENT_LICENSE_URL, TDMREP_PATH } from "#www/src/lib/seo/license";
 
 /**
  * Renders the robots.txt of the production origin. The `*` group allows every
