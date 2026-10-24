@@ -1,5 +1,7 @@
 import {
+  AKSARA_COMPILER_VERSION,
   CompiledContentPayloadSchema,
+  MDX_COMPILER_VERSION,
   SignedContentArtifactSchema,
 } from "@nakafa/aksara-contracts/content";
 import { makeLearningGraphIdentity } from "@nakafa/aksara-contracts/graph/identity";
@@ -251,21 +253,24 @@ export function makePreviewInput(): MaterialPreviewInput {
 
 /** Empty MDX source used only to exercise preview protocol wiring. */
 export const previewWireMdx = "";
-const previewWireCode = "return { default: () => null }";
 
 /** Signed-wire sample that deliberately does not claim educational fidelity. */
 export const previewWireArtifact = SignedContentArtifactSchema.make({
   artifactHash: previewArtifactHash,
   keyId: previewKeyId,
   payload: CompiledContentPayloadSchema.make({
-    byteLength: new TextEncoder().encode(previewWireCode).byteLength,
-    compiledCode: previewWireCode,
     compilerConfigHash: configHash,
-    compilerVersion: "0.1.0",
+    compilerVersion: AKSARA_COMPILER_VERSION,
     contentKey: previewRoute.contentKey,
     artifactLocale: previewRoute.artifactLocale,
-    format: "mdx-function-body",
-    mdxCompilerVersion: "3.1.1",
+    contentTree: {
+      $node: "element",
+      children: [],
+      name: "fragment",
+      props: {},
+    },
+    format: "content-tree",
+    mdxCompilerVersion: MDX_COMPILER_VERSION,
     plainText: "",
     rawMdx: previewWireMdx,
     rendererDomain: "mathematics",

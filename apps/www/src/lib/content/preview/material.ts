@@ -33,7 +33,7 @@ const readReadyContent = Effect.fn("NakafaContent.readReadyPreview")(function* (
     previewArtifact,
   });
   return {
-    Content: rendered.Content,
+    body: rendered.element,
     appLocale: projection.appLocale,
     metadata: projection.metadata,
     projection,

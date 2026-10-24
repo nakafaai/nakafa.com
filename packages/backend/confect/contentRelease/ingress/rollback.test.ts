@@ -20,6 +20,7 @@ import {
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
+import { testTextTree } from "@repo/backend/test/content/artifact";
 import { TEST_KEY_RESOLVER } from "@repo/backend/test/content/proof";
 import { TEST_RELEASE_ID } from "@repo/backend/test/content/release";
 import {
@@ -210,7 +211,7 @@ function inflateRecord(record: RollbackRecord, byteLength: number) {
         ...current.artifact,
         payload: {
           ...current.artifact.payload,
-          compiledCode: "x".repeat(byteLength),
+          contentTree: testTextTree("x".repeat(byteLength)),
         },
       }),
     },

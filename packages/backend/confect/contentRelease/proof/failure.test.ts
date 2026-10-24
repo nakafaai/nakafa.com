@@ -54,7 +54,7 @@ describe("contentRelease/proof/failure", () => {
         new ArtifactPayloadFieldByteLimitError({
           actualBytes: 2,
           contentKey,
-          field: "compiledCode",
+          field: "contentTree",
           maxBytes: 1,
         }),
         "CONTENT_RELEASE_SIZE",

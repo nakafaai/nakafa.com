@@ -20,8 +20,7 @@ vi.mock("@/lib/analytics/exception.server", () => ({
   captureServerExceptionSafely: captureMock,
 }));
 
-const VALID_BODY =
-  'return { default: function Content() { return "Verified body"; } };';
+const VERIFIED_BODY_TEXT = "Verified body";
 
 beforeEach(() => {
   renderServerComponentMock.mockReset().mockResolvedValue("server markup");
@@ -32,8 +31,8 @@ describe("published body reader", () => {
   it.effect("returns the server markup of a verified body", () =>
     Effect.gen(function* () {
       const artifact = yield* testSignedArtifact("site", {
-        compiledCode: VALID_BODY,
-        rawMdx: "Verified body",
+        bodyText: VERIFIED_BODY_TEXT,
+        rawMdx: VERIFIED_BODY_TEXT,
       });
 
       expect(yield* readRenderedBody(artifact)).toBe("server markup");
@@ -43,22 +42,22 @@ describe("published body reader", () => {
   );
 
   it.effect(
-    "reports an evaluation failure with its cause and fails without it",
+    "fails with the renderer's missing implementation before any render starts",
     () =>
       Effect.gen(function* () {
         const artifact = yield* testSignedArtifact("site", {
-          compiledCode: "throw new TypeError('evaluation boom');",
+          requiredComponents: ["NoSuchComponent"],
           rawMdx: "Broken body",
         });
 
         expect(
           yield* readRenderedBody(artifact).pipe(Effect.flip)
         ).toMatchObject({
-          _tag: "ContentExecutionError",
+          _tag: "RendererImplementationMissing",
+          componentName: "NoSuchComponent",
           contentKey: artifact.payload.contentKey,
-          stage: "evaluate",
         });
-        expect(captureMock).toHaveBeenCalledOnce();
+        expect(captureMock).not.toHaveBeenCalled();
         expect(renderServerComponentMock).not.toHaveBeenCalled();
       })
   );
@@ -66,8 +65,8 @@ describe("published body reader", () => {
   it.effect("reports a render failure with its cause", () =>
     Effect.gen(function* () {
       const artifact = yield* testSignedArtifact("site", {
-        compiledCode: VALID_BODY,
-        rawMdx: "Verified body",
+        bodyText: VERIFIED_BODY_TEXT,
+        rawMdx: VERIFIED_BODY_TEXT,
       });
       const cause = new TypeError("render boom");
       renderServerComponentMock.mockRejectedValueOnce(cause);
@@ -76,7 +75,7 @@ describe("published body reader", () => {
         {
           _tag: "ContentExecutionError",
           contentKey: artifact.payload.contentKey,
-          stage: "evaluate",
+          stage: "render",
         }
       );
       expect(captureMock).toHaveBeenCalledWith(cause, {

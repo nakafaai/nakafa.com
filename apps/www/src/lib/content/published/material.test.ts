@@ -197,7 +197,7 @@ describe("published material delivery", () => {
       const found = yield* makeFound();
       const failure = new ContentExecutionError({
         contentKey: found.artifact.payload.contentKey,
-        stage: "evaluate",
+        stage: "render",
       });
       bodyMock.mockReturnValueOnce(Effect.fail(failure));
 

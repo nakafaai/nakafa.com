@@ -188,7 +188,7 @@ describe("published article delivery", () => {
       const data = yield* readPublishedArticle(input);
       const failure = new ContentExecutionError({
         contentKey: found.artifact.payload.contentKey,
-        stage: "evaluate",
+        stage: "render",
       });
       bodyMock.mockReturnValueOnce(Effect.fail(failure));
 

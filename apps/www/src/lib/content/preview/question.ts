@@ -84,7 +84,7 @@ const readReadyAnswer = Effect.fn("NakafaContent.readReadyQuestionAnswer")(
       manifest,
       answerArtifact
     );
-    return renderedAnswer.Content;
+    return renderedAnswer.element;
   }
 );
 /** Authenticates one ready prompt or the ordered prompt-answer closure. */
@@ -105,7 +105,7 @@ const readReadyQuestion = Effect.fn("NakafaContent.readReadyQuestionPreview")(
     const Answer = yield* readReadyAnswer(manifest, document, config);
     return {
       Answer,
-      Question: renderedPrompt.Content,
+      Question: renderedPrompt.element,
       appLocale: document.target.section.appLocale,
       metadata: promptProjection.metadata,
       response: promptProjection.response,

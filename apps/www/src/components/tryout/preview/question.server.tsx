@@ -24,7 +24,7 @@ export function TryoutQuestionPreview({
   readonly content: QuestionPreviewContent;
 }) {
   const { exam, section, set, track } = content.target;
-  const Question = content.Question;
+  const question = content.Question;
   return (
     <TryoutPage>
       <TryoutPageHeader
@@ -56,9 +56,7 @@ export function TryoutQuestionPreview({
         title={section.title}
       />
       <TryoutPageBody>
-        <QuestionPreviewBody content={content}>
-          <Question />
-        </QuestionPreviewBody>
+        <QuestionPreviewBody content={content}>{question}</QuestionPreviewBody>
       </TryoutPageBody>
     </TryoutPage>
   );
@@ -73,9 +71,9 @@ function QuestionPreviewBody({
   readonly content: QuestionPreviewContent;
 }) {
   const questionOrder = content.target.placement.questionOrder;
-  const Answer = content.Answer;
+  const answer = content.Answer;
 
-  if (Answer === null) {
+  if (answer === null) {
     const responseId = `preview-question-${questionOrder}`;
     return (
       <TryoutActiveQuestionShell questionOrder={questionOrder}>
@@ -102,7 +100,7 @@ function QuestionPreviewBody({
         />
       </section>
       <TryoutReviewQuestionExplanation questionOrder={questionOrder}>
-        <Answer />
+        {answer}
       </TryoutReviewQuestionExplanation>
     </TryoutReviewQuestionShell>
   );

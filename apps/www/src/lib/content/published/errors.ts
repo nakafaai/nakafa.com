@@ -4,12 +4,12 @@ import {
 } from "@nakafa/aksara-contracts/ids";
 import { AppLocaleSchema } from "@nakafa/aksara-contracts/locale";
 import { Schema } from "effect";
-/** Authenticated MDX code could not produce its expected React module. */
+/** A verified content tree could not be rendered into React elements. */
 export class ContentExecutionError extends Schema.TaggedError<ContentExecutionError>()(
   "ContentExecutionError",
   {
     contentKey: ContentKeySchema,
-    stage: Schema.Literals(["evaluate", "module"]),
+    stage: Schema.Literal("render"),
   }
 ) {}
 /** Published content was selected without its private runtime credential. */
