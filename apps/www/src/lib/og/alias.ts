@@ -10,6 +10,9 @@ import { Array as Arr, Option } from "effect";
  */
 const IMAGE_SUFFIXES = [".png", ".og"] as const;
 
+/** The status of a permanent redirect that keeps the method of the request. */
+const PERMANENT_REDIRECT = 308;
+
 /** Two ASCII letters, the shape of every locale code. */
 const LOCALE_SHAPE = /^[A-Za-z]{2}$/;
 
@@ -84,16 +87,15 @@ function readImagePath(aliasPath: string) {
 }
 
 /**
- * The read of the static image that a social image alias names, as a request for
- * that file. Only a read is an alias, so any other method reaches the router
- * unchanged.
+ * The permanent redirect of a read of a social image alias to the image that the
+ * build wrote for its route. The method and the query are kept. Only a read is an
+ * alias, so any other method reaches the router unchanged.
  */
-export function readOgAliasRequest(request: Request): Option.Option<Request> {
+export function readOgAliasRedirect(request: Request): Option.Option<Response> {
   if (request.method !== "GET" && request.method !== "HEAD") {
     return Option.none();
   }
-  return Option.map(
-    readOgAliasUrl(new URL(request.url)),
-    (alias) => new Request(alias, request)
+  return Option.map(readOgAliasUrl(new URL(request.url)), (target) =>
+    Response.redirect(target.href, PERMANENT_REDIRECT)
   );
 }

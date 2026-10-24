@@ -3,7 +3,7 @@ import { Option } from "effect";
 import {
   isUnservedLocaleShape,
   readImageSuffix,
-  readOgAliasRequest,
+  readOgAliasRedirect,
   readOgAliasUrl,
 } from "@/lib/og/alias";
 
@@ -72,20 +72,18 @@ describe("public social image aliases", () => {
   });
 });
 
-describe("social image requests", () => {
-  it("reads an image alias as a request for the static image, with its headers", () => {
-    const request = new Request(`${ORIGIN}/en/articles/aljabar.png`, {
+describe("social image redirects", () => {
+  it("redirects a read of an image alias to the image of its route, keeping the query", () => {
+    const request = new Request(`${ORIGIN}/en/articles/aljabar.png?ref=share`, {
       headers: { accept: "image/png" },
     });
 
-    const asset = readOgAliasRequest(request);
+    const redirect = readOgAliasRedirect(request);
 
-    expect(Option.isSome(asset)).toBe(true);
-    if (Option.isNone(asset)) {
-      return;
-    }
-    expect(asset.value.url).toBe(`${ORIGIN}/en/og/articles/aljabar/image.png`);
-    expect(asset.value.headers.get("accept")).toBe("image/png");
+    expect(Option.isSome(redirect) && redirect.value.status).toBe(308);
+    expect(
+      Option.isSome(redirect) && redirect.value.headers.get("location")
+    ).toBe(`${ORIGIN}/en/og/articles/aljabar/image.png?ref=share`);
   });
 
   it("leaves a write to an image alias to the router", () => {
@@ -93,12 +91,12 @@ describe("social image requests", () => {
       method: "POST",
     });
 
-    expect(readOgAliasRequest(request)).toEqual(Option.none());
+    expect(readOgAliasRedirect(request)).toEqual(Option.none());
   });
 
   it("leaves a path that is not an alias to the router", () => {
     const request = new Request(`${ORIGIN}/en/articles/aljabar`);
 
-    expect(readOgAliasRequest(request)).toEqual(Option.none());
+    expect(readOgAliasRedirect(request)).toEqual(Option.none());
   });
 });

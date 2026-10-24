@@ -6,8 +6,12 @@ import { readSitemapPageDescriptors } from "@/lib/sitemap/catalog";
 import { getSitemapEntryLocales } from "@/lib/sitemap/entries";
 import { readSitemapRoutePage } from "@/lib/sitemap/routes";
 
-/** The section image that no sitemap page lists: the articles index. */
-const SECTION_SLUGS = ["articles"] as const;
+/**
+ * The section images that no sitemap route names under the same path: the articles
+ * index, and the curriculum index, whose route is `curricula` while its image is
+ * written under `curriculum`.
+ */
+const SECTION_SLUGS = ["articles", "curriculum"] as const;
 
 /** The home image, whose route slug is empty. */
 const HOME_SLUG = "";

@@ -4,7 +4,7 @@ import { handleStartError } from "@tanstack/react-start/server";
 import { Effect, Option, Schema } from "effect";
 import { hasTryoutAttemptCapability } from "@/components/tryout/route/path";
 import { negotiateDocument } from "@/lib/llms/negotiate.server";
-import { readOgAliasRequest } from "@/lib/og/alias";
+import { readOgAliasRedirect } from "@/lib/og/alias";
 import { readProfileGate } from "@/lib/profile/gate";
 import {
   createNotFoundRequest,
@@ -22,7 +22,6 @@ import {
   readSpellingRedirectResponse,
 } from "@/lib/routing/redirect";
 import { readSchoolRefusal } from "@/lib/routing/school/refusal";
-import { StaticAssets } from "@/lib/static/assets";
 import { readSchoolTreeGate } from "@/lib/tenant/gate";
 
 /** The router's answer to one request, which may fail with the error Start throws. */
@@ -103,8 +102,9 @@ const answerRouter = Effect.fn("www.routing.answer.router")(function* (
 /**
  * Answers one request before the router runs. The address and the headers alone
  * decide each answer, in this order: a host under the production domain that
- * names no school moves to the main site, a social image alias answers the static
- * image of its route, a non-canonical slash spelling moves to its canonical address, and a
+ * names no school moves to the main site, a social image alias moves to the image
+ * that the build wrote for its route, a non-canonical slash spelling moves to its
+ * canonical address, and a
  * non-public spelling moves to its public address. A school tree path, a refused
  * school page and a removed address answer not found, and a migrated or moved
  * address moves to its successor. A raw user address answers not found, and a
@@ -122,13 +122,9 @@ export const answerRequest = Effect.fn("www.routing.answer.request")(function* (
     return mainSite.value;
   }
 
-  const image = readOgAliasRequest(request);
+  const image = readOgAliasRedirect(request);
   if (Option.isSome(image)) {
-    const assets = yield* StaticAssets;
-    const asset = yield* Effect.promise(() => assets.fetch(image.value));
-    if (asset.ok) {
-      return asset;
-    }
+    return image.value;
   }
 
   const slash = readSlashRedirectResponse(request);

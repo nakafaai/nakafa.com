@@ -22,13 +22,14 @@ vi.mock("@/lib/sitemap/routes", () => ({
 }));
 
 describe("social image sources", () => {
-  it("lists the home image and the articles index of every locale when no page is listed", () => {
+  it("lists the home image and the section images of every locale when no page is listed", () => {
     const sources = listSocialImageSources([]);
 
-    expect(sources).toHaveLength(LOCALES.length * 2);
+    expect(sources).toHaveLength(LOCALES.length * 3);
     for (const locale of LOCALES) {
       expect(sources).toContainEqual({ locale, slug: "" });
       expect(sources).toContainEqual({ locale, slug: "articles" });
+      expect(sources).toContainEqual({ locale, slug: "curriculum" });
     }
   });
 
