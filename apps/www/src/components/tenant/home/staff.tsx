@@ -16,6 +16,7 @@ import { useHomeExams, useHomeSetup } from "@/components/tenant/home/query";
 import { ResultsCell } from "@/components/tenant/home/results";
 import { ScheduleCell } from "@/components/tenant/home/schedule";
 import { SetupCell, useSetupShown } from "@/components/tenant/home/setup";
+import { staffShown } from "@/components/tenant/home/shown";
 import type { ScheduleRoom } from "@/components/tenant/home/strip";
 import { scheduleDays } from "@/components/tenant/home/strip";
 
@@ -53,33 +54,41 @@ export function StaffHome({ drafts }: { drafts: StoreApi<ExamDrafts> }) {
   }
   const { closed, drafts: draftRows, live, next } = exams.value;
   const days = scheduleDays(Arr.map(next, scheduleRoomOf), now);
-  const quiet = tenant.home.canWatch && live.length === 0 && next.length === 0;
+  const shown = staffShown({
+    canCreate: tenant.home.canCreate,
+    canWatch: tenant.home.canWatch,
+    closed: closed.length,
+    drafts: draftRows.length,
+    live: live.length,
+    next: next.length,
+    setupShown,
+  });
   const cells = placeCells([
     {
       draw: (span) => <ScheduleCell days={days} span={span} />,
       key: "schedule",
-      shown: Arr.some(days, (day) => Arr.isReadonlyArrayNonEmpty(day.rooms)),
+      shown: shown.schedule,
       three: 2,
       two: 2,
     },
     {
       draw: (span) => <LiveCell now={now} rooms={live} span={span} />,
       key: "live",
-      shown: live.length > 0,
+      shown: shown.live,
       three: 1,
       two: 1,
     },
     {
       draw: (span) => <QuietCell span={span} />,
       key: "quiet",
-      shown: quiet,
+      shown: shown.quiet,
       three: 3,
       two: 2,
     },
     {
       draw: (span) => <ResultsCell results={closed} span={span} />,
       key: "results",
-      shown: closed.length > 0,
+      shown: shown.results,
       three: 2,
       two: 1,
     },
@@ -88,14 +97,14 @@ export function StaffHome({ drafts }: { drafts: StoreApi<ExamDrafts> }) {
         <DraftsCell drafts={draftRows} now={now} span={span} store={drafts} />
       ),
       key: "drafts",
-      shown: tenant.home.canCreate && draftRows.length > 0,
+      shown: shown.drafts,
       three: 1,
       two: 1,
     },
     {
       draw: (span) => <SetupCell span={span} />,
       key: "setup",
-      shown: setupShown,
+      shown: shown.setup,
       three: 3,
       two: 2,
     },

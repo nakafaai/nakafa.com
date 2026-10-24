@@ -14,6 +14,7 @@ import {
   useStudentSittings,
 } from "@/components/tenant/home/query";
 import { ScheduleCell } from "@/components/tenant/home/schedule";
+import { studentShown } from "@/components/tenant/home/shown";
 import {
   type ScheduleRoom,
   scheduleDays,
@@ -72,6 +73,12 @@ function StudentCells() {
     Arr.findFirst(upcoming, (sitting) => sitting.state === "scheduled")
   );
   const days = scheduleDays(Arr.map(upcoming, scheduleRoomOf), now);
+  const shown = studentShown({
+    finished: finished.length,
+    hasNow: Option.isSome(next),
+    scheduled: Arr.flatMap(days, (day) => day.rooms).length,
+    upcoming: upcoming.length,
+  });
   const cells = placeCells([
     {
       draw: (span) =>
@@ -82,28 +89,28 @@ function StudentCells() {
           ),
         }),
       key: "now",
-      shown: Option.isSome(next),
+      shown: shown.now,
       three: 2,
       two: 2,
     },
     {
       draw: (span) => <ScheduleCell days={days} span={span} />,
       key: "schedule",
-      shown: Arr.some(days, (day) => Arr.isReadonlyArrayNonEmpty(day.rooms)),
+      shown: shown.schedule,
       three: 2,
       two: 2,
     },
     {
       draw: (span) => <StudentResultsCell sittings={finished} span={span} />,
       key: "results",
-      shown: finished.length > 0,
+      shown: shown.results,
       three: 1,
       two: 1,
     },
     {
       draw: (span) => <QuietCell span={span} />,
       key: "quiet",
-      shown: upcoming.length === 0 && finished.length === 0,
+      shown: shown.quiet,
       three: 3,
       two: 2,
     },
