@@ -128,13 +128,13 @@ describe("onboarding page", () => {
 describe("onboarding admission", () => {
   it("records the admission of the signed-in account", async () => {
     session = { convexToken: signedIn(), setCookies: [] };
-    await admitOnboardingHandler();
+    await admitOnboardingHandler({ data: undefined });
     expect(recordOnboardingAdmission).toHaveBeenCalledWith("convex-token");
   });
 
   it("records nothing for a request without a session", async () => {
     session = { convexToken: Option.none(), setCookies: [] };
-    await admitOnboardingHandler();
+    await admitOnboardingHandler({ data: undefined });
     expect(recordOnboardingAdmission).not.toHaveBeenCalled();
   });
 });

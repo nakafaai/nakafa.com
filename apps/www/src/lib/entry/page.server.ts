@@ -1,4 +1,3 @@
-import { SITE_ORIGIN } from "@repo/seo/origin";
 import { getRequest } from "@tanstack/react-start/server";
 import { Effect, Option } from "effect";
 import {
@@ -7,8 +6,8 @@ import {
   resolvePostAuthIntent,
   startsSchool,
 } from "@/lib/auth/admission";
+import { readAuthLegalLinks } from "@/lib/auth/legal.server";
 import { readSessionMemo } from "@/lib/auth/session.server";
-import { getShellPageNavigation } from "@/lib/content/page/navigation";
 import type {
   OnboardingPageInput,
   SchoolStartPageInput,
@@ -17,7 +16,7 @@ import {
   readOnboardingStatus,
   recordOnboardingAdmission,
 } from "@/lib/onboarding/status.server";
-import { runServerEffect, serverHandler } from "@/lib/server/fn";
+import { serverHandler } from "@/lib/server/fn";
 
 /** The page where an account opens its own school, which its first sign-in can resume. */
 const SCHOOL_START_INTENT_PATH = "/school/new";
@@ -93,21 +92,11 @@ const readSchoolStartPage = Effect.fn("www.entry.schoolStart")(function* (
     );
     return redirectTo(`/${input.locale}${getPostAuthSignInHref(intent)}`);
   }
-  const pages = yield* getShellPageNavigation(input.locale);
+  const links = yield* readAuthLegalLinks(input.locale);
   return {
     _tag: "Start" as const,
-    legal: pages
-      ? {
-          privacy: new URL(
-            `/${input.locale}${pages.privacyPolicyHref}`,
-            SITE_ORIGIN
-          ).href,
-          terms: new URL(
-            `/${input.locale}${pages.termsOfServiceHref}`,
-            SITE_ORIGIN
-          ).href,
-        }
-      : null,
+    // The null exists only at this serialization boundary.
+    legal: Option.getOrNull(links),
   };
 });
 
@@ -118,5 +107,4 @@ export const onboardingPageHandler = serverHandler(readOnboardingPage);
 export const schoolStartPageHandler = serverHandler(readSchoolStartPage);
 
 /** The handler of the admission write, which the questionnaire calls once it mounts. */
-export const admitOnboardingHandler = () =>
-  runServerEffect(admitOnboarding(), { signal: getRequest().signal });
+export const admitOnboardingHandler = serverHandler(admitOnboarding);
