@@ -13,8 +13,5 @@
     "start": "portless run --name cas.nakafa sh -c 'PYTHONDONTWRITEBYTECODE=1 uv run uvicorn api.index:app --host 127.0.0.1 --port \"${PORT:-3003}\"'",
     "test": "UV_NO_DEV=0 PYTHONDONTWRITEBYTECODE=1 uv run --dev pytest",
     "typecheck": "UV_NO_DEV=0 PYTHONDONTWRITEBYTECODE=1 uv run --dev basedpyright"
-  },
-  "devDependencies": {
-    "@vercel/config": "catalog:"
   }
 }
