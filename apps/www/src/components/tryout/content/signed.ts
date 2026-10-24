@@ -1,11 +1,8 @@
 import { HttpClient } from "@confect/js";
 import "@tanstack/react-start/server-only";
-import { ContentVerificationKeyResolver } from "@nakafa/aksara-contracts/signature/spec";
-import { verifyAttemptContent } from "@repo/backend/client/content/attempt";
 import { ContentRuntimeVerificationError } from "@repo/backend/client/content/errors";
 import tryouts from "@repo/backend/confect/_generated/refs/tryouts";
 import type { TryoutBodyBatch } from "@repo/backend/confect/tryouts/runtime/body";
-import { contentKeyResolver } from "@repo/backend/content/trust";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { contentRuntimeKeys } from "@repo/site/keys";
 import { getRequest } from "@tanstack/react-start/server";
@@ -25,6 +22,7 @@ import {
   type TryoutSelector,
 } from "@/components/tryout/content/model";
 import { makeTryoutRuntimeRequest } from "@/components/tryout/content/request";
+import { readVerifiedAttemptBatch } from "@/components/tryout/content/verified";
 import { env } from "@/env";
 import { readSessionMemo } from "@/lib/auth/session.server";
 import { ContentRuntimeConfigurationError } from "@/lib/content/published/errors";
@@ -166,9 +164,7 @@ const renderAttemptBatch = Effect.fn("NakafaContent.renderAttemptBatch")(
   ) {
     const request = yield* makeTryoutRuntimeRequest(selectors);
     const liveRenderer = yield* rendererManifest;
-    const found = yield* verifyAttemptContent(request, row, liveRenderer).pipe(
-      Effect.provideService(ContentVerificationKeyResolver, contentKeyResolver)
-    );
+    const found = yield* readVerifiedAttemptBatch(request, row, liveRenderer);
     return yield* renderFoundItems(selectors, found.items);
   }
 );
@@ -193,7 +189,7 @@ const readBatch = Effect.fn("NakafaContent.readTryoutBatch")(function* (
 /** Renders only the ordered items accepted by signed exchange verification. */
 const renderFoundItems = Effect.fn("NakafaContent.renderFoundItems")(function* (
   selectors: readonly TryoutSelector[],
-  items: Effect.Success<ReturnType<typeof verifyAttemptContent>>["items"]
+  items: Effect.Success<ReturnType<typeof readVerifiedAttemptBatch>>["items"]
 ) {
   return yield* Effect.forEach(
     // Exchange verification already checks equal counts and ordered identities.

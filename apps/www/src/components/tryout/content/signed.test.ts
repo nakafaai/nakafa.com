@@ -123,6 +123,16 @@ vi.mock("@repo/backend/content/trust", async () => {
     contentKeyResolver: TEST_KEY_RESOLVER,
   };
 });
+type AttemptContentModule =
+  typeof import("@repo/backend/client/content/attempt");
+const verifyAttemptSpy = vi.hoisted(() =>
+  vi.fn<AttemptContentModule["verifyAttemptContent"]>()
+);
+vi.mock("@repo/backend/client/content/attempt", async (importOriginal) => {
+  const actual = await importOriginal<AttemptContentModule>();
+  verifyAttemptSpy.mockImplementation(actual.verifyAttemptContent);
+  return { ...actual, verifyAttemptContent: verifyAttemptSpy };
+});
 
 /** Selects a public question through the real active Convex catalog query. */
 const readFixture = Effect.fn("TryoutExecutionTest.fixture")(function* (
@@ -450,6 +460,37 @@ describe("signed try-out execution", () => {
             Effect.flip
           )
         ).toMatchObject({ _tag: "ContentRuntimeVerificationError" });
+      })
+  );
+
+  it.effect(
+    "verifies the same rows once and keeps the verified batch for those bytes",
+    () =>
+      Effect.gen(function* () {
+        const fixture = yield* readOwnedFixture({
+          compiledCode:
+            'return { default: function Content() { return "Kept batch"; } };',
+        });
+        const row = yield* Effect.promise(() =>
+          fixture.owned.query(
+            Ref.getFunctionReference(attemptQuery),
+            fixture.seed.request
+          )
+        );
+        const found = yield* Effect.fromNullishOr(row);
+        verifyAttemptSpy.mockClear();
+        const first = yield* renderSignedTryoutRows(fixture.access, [found]);
+        const second = yield* renderSignedTryoutRows(fixture.access, [found]);
+        expect(
+          renderToStaticMarkup(
+            Arr.head(second.questions).pipe(Option.getOrThrow).content
+          )
+        ).toBe(
+          renderToStaticMarkup(
+            Arr.head(first.questions).pipe(Option.getOrThrow).content
+          )
+        );
+        expect(verifyAttemptSpy).toHaveBeenCalledOnce();
       })
   );
 });
