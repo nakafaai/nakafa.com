@@ -61,22 +61,34 @@ describe("createWwwHeaders", () => {
 });
 
 describe("renderHeadersFile", () => {
-  it("writes one rule for every path with each header indented beneath it", () => {
+  it("writes each rule's path with its headers indented beneath it, in rule order", () => {
     const file = renderHeadersFile([
-      { key: "X-Frame-Options", value: "DENY" },
-      { key: "Link", value: '</llms.txt>; rel="llms-txt"' },
+      {
+        headers: [
+          { key: "X-Frame-Options", value: "DENY" },
+          { key: "Link", value: '</llms.txt>; rel="llms-txt"' },
+        ],
+        path: "/*",
+      },
+      {
+        headers: [{ key: "Content-Type", value: "application/xml" }],
+        path: "/sitemap/*",
+      },
     ]);
 
     expect(file).toStrictEqual(
       Result.succeed(
-        '/*\n  X-Frame-Options: DENY\n  Link: </llms.txt>; rel="llms-txt"\n'
+        '/*\n  X-Frame-Options: DENY\n  Link: </llms.txt>; rel="llms-txt"\n/sitemap/*\n  Content-Type: application/xml\n'
       )
     );
   });
 
   it("fails rather than write a line over the static asset limit", () => {
     const failed = renderHeadersFile([
-      { key: "X-Long", value: "a".repeat(2000) },
+      {
+        headers: [{ key: "X-Long", value: "a".repeat(2000) }],
+        path: "/*",
+      },
     ]);
 
     expect(Result.isFailure(failed)).toBe(true);

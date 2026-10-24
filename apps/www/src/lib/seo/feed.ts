@@ -7,7 +7,6 @@ import {
 import { COMPANY_IDENTITY } from "@repo/seo/company";
 import { Array as Arr, DateTime, Effect, Order, Schema } from "effect";
 import { Feed, type Item } from "feed";
-import { captureServerExceptionSafely } from "@/lib/analytics/exception.server";
 import { readPublishedLatestArticles } from "@/lib/content/article/discovery";
 import { readPublishedLatestMaterials } from "@/lib/content/material/discovery";
 import { loadActiveContentIdentity } from "@/lib/content/published/active";
@@ -19,16 +18,7 @@ import {
 import { readCopy } from "@/lib/i18n/copy.server";
 
 const baseUrl = COMPANY_IDENTITY.url;
-const FEED_ERROR = "Internal Server Error";
-const PLAIN_TEXT = { "Content-Type": "text/plain; charset=utf-8" };
 const RSS_CONTENT_ROUTE_LIMIT = 100;
-
-/** The feed may live on a CDN for a day, and its headers name no cache tag. */
-export const RSS_HEADERS = {
-  "Cache-Control":
-    "public, max-age=0, s-maxage=86400, stale-while-revalidate=86400",
-  "Content-Type": "application/rss+xml; charset=utf-8",
-};
 
 /** One feed entry, read from a signed article or material of one locale. */
 const FeedContentRouteSchema = Schema.Struct({
@@ -42,23 +32,8 @@ const FeedContentRouteSchema = Schema.Struct({
 });
 type FeedContentRoute = typeof FeedContentRouteSchema.Type;
 
-/** Reports one failed feed, then answers the plain-text 500 without its details. */
-function reportFeedFailure(cause: unknown) {
-  return captureServerExceptionSafely(cause, { source: "rss-feed" }).pipe(
-    Effect.as(new Response(FEED_ERROR, { headers: PLAIN_TEXT, status: 500 }))
-  );
-}
-
-/** Serves the RSS feed of the latest signed articles and materials. */
-export const serveRssFeed = Effect.fn("www.rss.serve")(() =>
-  readFeed().pipe(
-    Effect.map((xml) => new Response(xml, { headers: RSS_HEADERS })),
-    Effect.catch(reportFeedFailure)
-  )
-);
-
-/** Builds the RSS document from the latest signed routes of every locale. */
-const readFeed = Effect.fn("www.rss.readFeed")(function* () {
+/** Renders the RSS feed of the latest signed articles and materials, for the build to write. */
+export const readRssText = Effect.fn("www.rss.readText")(function* () {
   const [t, tCommon, routes] = yield* Effect.all(
     [
       readCopy({ locale: DEFAULT_LOCALE, namespace: "Metadata" }),

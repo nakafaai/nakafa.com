@@ -72,16 +72,24 @@ export function readWwwHeaderOrigins(): WwwHeaderOrigins {
   };
 }
 
+const HeaderRuleSchema = Schema.Struct({
+  headers: Schema.Array(WwwHeaderSchema),
+  path: Schema.String,
+});
+
+/** One address pattern of the `_headers` file, with the headers that its addresses carry. */
+export type HeaderRule = typeof HeaderRuleSchema.Type;
+
 /**
- * Writes the headers as one `_headers` rule for every path. Each header is an
- * indented line under the rule, the form that the static assets read. A line
- * over the platform limit fails, so no header is dropped silently.
+ * Writes the rules as the `_headers` file. Each header is an indented line under
+ * its address pattern, the form that the static assets read. A line over the
+ * platform limit fails, so no header is dropped silently.
  */
-export function renderHeadersFile(headers: readonly WwwHeader[]) {
-  const lines = [
-    "/*",
+export function renderHeadersFile(rules: readonly HeaderRule[]) {
+  const lines = Arr.flatMap(rules, ({ path, headers }) => [
+    path,
     ...Arr.map(headers, ({ key, value }) => `  ${key}: ${value}`),
-  ];
+  ]);
   const tooLong = Arr.findFirst(
     lines,
     (line) => line.length > MAX_HEADERS_LINE_LENGTH

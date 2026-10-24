@@ -3,6 +3,7 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Data, Effect } from "effect";
 import { answerRequest, type RouterHandler } from "@/lib/routing/answer.server";
+import { StaticAssets } from "@/lib/static/assets";
 
 /** A failure that one of the readers of the server entry reports. */
 class ReaderFailure extends Data.TaggedError("ReaderFailure") {}
@@ -19,6 +20,7 @@ const refusal = vi.hoisted(() => ({ read: vi.fn() }));
 const reporting = vi.hoisted(() => ({ report: vi.fn() }));
 const retired = vi.hoisted(() => ({ read: vi.fn() }));
 const source = vi.hoisted(() => ({ read: vi.fn() }));
+const assets = vi.fn<(request: Request) => Promise<Response>>();
 
 vi.mock("@/lib/llms/content/markdown", () => ({
   hasLlmsMarkdownSource: markdown.hasSource,
@@ -91,7 +93,7 @@ function answer(
       method: options.method ?? "GET",
     }),
     handle
-  );
+  ).pipe(Effect.provideService(StaticAssets, { fetch: assets }));
 }
 
 /** Answers one request and returns the answer with the router that received it. */
@@ -311,7 +313,7 @@ describe("decisions before the negotiation", () => {
           headers: { accept: "text/html" },
         }),
         handle
-      );
+      ).pipe(Effect.provideService(StaticAssets, { fetch: assets }));
 
       expect(routedRequest(handle).url).toBe(
         "https://harapan.nakafa.com/_missing"
@@ -386,32 +388,32 @@ describe("locale redirects after the negotiation", () => {
 });
 
 describe("social image aliases", () => {
-  it.effect("serves a social image alias through the OG route", () =>
+  it.effect("serves an alias with the static image that the build wrote", () =>
     Effect.gen(function* () {
-      const { handle, response } = yield* served(
-        "/en/articles/aljabar.png?ref=share",
-        { accept: "image/png" }
+      const image = new Response(new Uint8Array([137, 80, 78, 71]));
+      assets.mockResolvedValue(image);
+      const { response } = yield* served("/en/articles/aljabar.png?ref=share", {
+        accept: "image/png",
+      });
+      expect(response).toBe(image);
+      expect(assets).toHaveBeenCalledWith(
+        expect.objectContaining({
+          url: `${ORIGIN}/en/og/articles/aljabar/image.png?ref=share`,
+        })
       );
-
-      expect(response.status).toBe(200);
-      expect(routedRequest(handle).url).toBe(
-        `${ORIGIN}/og/en/articles/aljabar?ref=share`
-      );
-      expect(routedRequest(handle).headers.get("accept")).toBe("image/png");
-      expect(markdown.hasSource).not.toHaveBeenCalled();
     })
   );
 
-  it.effect("answers a localized OG image without negotiating it", () =>
+  it.effect("routes an alias with no built image to the router", () =>
     Effect.gen(function* () {
-      const { handle } = yield* served("/en/og/articles/aljabar/image.png", {
-        accept: "image/png",
+      assets.mockResolvedValue(new Response(null, { status: 404 }));
+      const { handle } = yield* served("/en/articles/belajar.png?ref=share", {
+        accept: "text/html",
       });
 
       expect(routedRequest(handle).url).toBe(
-        `${ORIGIN}/en/og/articles/aljabar/image.png`
+        `${ORIGIN}/en/articles/belajar.png?ref=share`
       );
-      expect(markdown.hasSource).not.toHaveBeenCalled();
     })
   );
 });

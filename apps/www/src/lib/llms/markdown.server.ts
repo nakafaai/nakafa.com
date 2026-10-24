@@ -6,7 +6,7 @@ import {
 } from "@repo/internationalization/src/locale";
 import { AGENT_DISCOVERY_HEADERS } from "@repo/site/discovery";
 import { Array as Arr, Effect, Option, Record as Rec, Schema } from "effect";
-import { LLMS_CACHE_CONTROL } from "@/lib/llms/constants";
+import { LLMS_CACHE_CONTROL } from "@/lib/llms/cache";
 import { getLlmsMarkdownText } from "@/lib/llms/content/markdown";
 import { stripLlmsRouteExtension } from "@/lib/llms/format";
 import { getLlmsSectionIndexText } from "@/lib/llms/index/generate";

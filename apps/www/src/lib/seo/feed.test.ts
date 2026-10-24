@@ -2,21 +2,14 @@
 
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { COMPANY_IDENTITY } from "@repo/seo/company";
-import { Array as Arr, Effect } from "effect";
-import {
-  RSS_HEADERS,
-  serveRssFeed as serveRssFeedEffect,
-} from "@/lib/seo/feed.server";
-import { runServerEffect } from "@/lib/server/fn";
-
-/** Runs the feed as its route does. */
-const serveRssFeed = () => runServerEffect(serveRssFeedEffect());
+import { Array as Arr, Effect, Exit } from "effect";
+import { PublishedProjectionError } from "@/lib/content/published/errors";
+import { readRssText } from "@/lib/seo/feed";
 
 const readPublishedLatestArticlesMock = vi.hoisted(() => vi.fn());
 const readPublishedLatestMaterialsMock = vi.hoisted(() => vi.fn());
 const loadActiveContentIdentityMock = vi.hoisted(() => vi.fn());
 const readServerTranslatorMock = vi.hoisted(() => vi.fn());
-const captureMock = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/content/article/discovery", () => ({
   /** Controls the latest signed articles of one locale. */
@@ -38,11 +31,6 @@ vi.mock("@repo/internationalization/src/translator", () => ({
   readServerTranslator: readServerTranslatorMock,
 }));
 
-vi.mock("@/lib/analytics/exception.server", () => ({
-  /** Records every feed failure that the route reports. */
-  captureServerExceptionSafely: captureMock,
-}));
-
 const RELEASE = "release-feed";
 const BASE = COMPANY_IDENTITY.url;
 
@@ -62,7 +50,6 @@ beforeEach(() => {
       sequence: 1,
     })
   );
-  captureMock.mockReset().mockReturnValue(Effect.void);
   readServerTranslatorMock.mockReset().mockImplementation(
     async ({ namespace }: { readonly namespace: string }) =>
       (key: string) =>
@@ -115,66 +102,60 @@ beforeEach(() => {
     );
 });
 
-describe("rss feed route", () => {
-  it("answers the feed of every signed route, newest first, with its cache policy", async () => {
-    const response = await serveRssFeed();
+describe("rss feed text", () => {
+  it.effect(
+    "renders the feed of every signed route, newest first, under its own links",
+    () =>
+      Effect.gen(function* () {
+        const xml = yield* readRssText();
 
-    expect(response.status).toBe(200);
-    expect(response.headers.get("content-type")).toBe(
-      "application/rss+xml; charset=utf-8"
-    );
-    expect(response.headers.get("cache-control")).toBe(
-      RSS_HEADERS["Cache-Control"]
-    );
-    const xml = await response.text();
-    expect(titles(xml)).toEqual(["Geometri", "Integral", "Aljabar"]);
-    expect(xml).toContain(`${BASE}/en/articles/aljabar`);
-    expect(xml).toContain(`${BASE}/en/og/articles/aljabar/image.png`);
-    expect(xml).toContain("Metadata.title");
-  });
+        expect(titles(xml)).toEqual(["Geometri", "Integral", "Aljabar"]);
+        expect(xml).toContain(`${BASE}/en/articles/aljabar`);
+        expect(xml).toContain(`${BASE}/en/og/articles/aljabar/image.png`);
+        expect(xml).toContain("Metadata.title");
+      })
+  );
 
-  it("answers an empty feed when no content is published", async () => {
-    readPublishedLatestArticlesMock.mockReturnValue(
-      Effect.succeed({ articles: [] })
-    );
-    readPublishedLatestMaterialsMock.mockReturnValue(
-      Effect.succeed({ materials: [] })
-    );
+  it.effect("renders an empty feed when no content is published", () =>
+    Effect.gen(function* () {
+      readPublishedLatestArticlesMock.mockReturnValue(
+        Effect.succeed({ articles: [] })
+      );
+      readPublishedLatestMaterialsMock.mockReturnValue(
+        Effect.succeed({ materials: [] })
+      );
 
-    const xml = await (await serveRssFeed()).text();
+      const xml = yield* readRssText();
 
-    expect(titles(xml)).toEqual([]);
-  });
+      expect(titles(xml)).toEqual([]);
+    })
+  );
 
-  it("reports a feed without an active release and answers 500 without details", async () => {
-    loadActiveContentIdentityMock.mockReturnValue(Effect.void);
+  it.effect("fails without an active release, so the build stops", () =>
+    Effect.gen(function* () {
+      loadActiveContentIdentityMock.mockReturnValue(Effect.void);
 
-    const response = await serveRssFeed();
+      const error = yield* Effect.flip(readRssText());
 
-    expect(response.status).toBe(500);
-    expect(response.headers.get("content-type")).toBe(
-      "text/plain; charset=utf-8"
-    );
-    await expect(response.text()).resolves.toBe("Internal Server Error");
-    expect(captureMock).toHaveBeenCalledWith(expect.any(Error), {
-      source: "rss-feed",
-    });
-  });
+      expect(error).toBeInstanceOf(PublishedProjectionError);
+    })
+  );
 
-  it("reports a feed whose release changes during the read and answers 500", async () => {
-    loadActiveContentIdentityMock
-      .mockReturnValueOnce(
-        Effect.succeed({
-          manifestHash: `sha256:${"a".repeat(64)}`,
-          releaseId: RELEASE,
-          sequence: 1,
-        })
-      )
-      .mockReturnValueOnce(Effect.void);
+  it.effect("fails when the release changes during the read", () =>
+    Effect.gen(function* () {
+      loadActiveContentIdentityMock
+        .mockReturnValueOnce(
+          Effect.succeed({
+            manifestHash: `sha256:${"a".repeat(64)}`,
+            releaseId: RELEASE,
+            sequence: 1,
+          })
+        )
+        .mockReturnValueOnce(Effect.void);
 
-    const response = await serveRssFeed();
+      const exit = yield* Effect.exit(readRssText());
 
-    expect(response.status).toBe(500);
-    expect(captureMock).toHaveBeenCalledTimes(1);
-  });
+      expect(Exit.isFailure(exit)).toBe(true);
+    })
+  );
 });

@@ -1,4 +1,7 @@
-import { decodeLocale } from "@repo/internationalization/src/locale";
+import {
+  DEFAULT_LOCALE,
+  decodeLocale,
+} from "@repo/internationalization/src/locale";
 import { Array as Arr, Option } from "effect";
 
 /**
@@ -30,13 +33,13 @@ export function isUnservedLocaleShape(segment: string | undefined) {
 }
 
 /**
- * Reads the `/og` address that a public social image alias serves. The alias
- * drops its suffix, so the image route answers the route that it names. A path
- * that the static assets serve, such as `/og.png`, is answered before the server
- * entry runs, so the alias never sees it. An alias under a locale shape
- * that the site does not serve is not rewritten, so the router answers it with not
- * found. A path that already names the OG route, bare or under a served locale, is
- * not rewritten either.
+ * Reads the static social image that an alias names. The alias drops its suffix,
+ * and the address of the image that the build wrote for that route takes its
+ * place, with the locale that the path names or the default locale for a path
+ * without one. The query is kept. A path that the static assets serve, such as
+ * `/og.png`, is answered before the server entry runs, so the alias never sees
+ * it. An alias under a locale shape that the site does not serve is not
+ * rewritten, and neither is a path that already names an image of the OG tree.
  */
 export function readOgAliasUrl(url: URL): Option.Option<URL> {
   const { pathname } = url;
@@ -55,15 +58,35 @@ export function readOgAliasUrl(url: URL): Option.Option<URL> {
       return Option.none();
     }
     const alias = new URL(url);
-    alias.pathname = `/og/${pathname.slice(1, -suffix.length)}`;
+    alias.pathname = `/${readImagePath(pathname.slice(1, -suffix.length))}`;
     return Option.some(alias);
   });
 }
 
 /**
- * The request that a social image alias serves, as the OG route receives it: the
- * same method, headers and query on the route's address. Only a read of the
- * image is an alias, so any other method reaches the router unchanged.
+ * The path of the image file that the build wrote for an alias path, such as
+ * `en/og/subject/biology/image.png`. The home image has no route segments.
+ */
+function readImagePath(aliasPath: string) {
+  const segments = Arr.filter(aliasPath.split("/"), (part) => part !== "");
+  const [first = "", ...rest] = segments;
+  const locale = decodeLocale(first);
+  const slug = Option.isSome(locale) ? rest : segments;
+  return Arr.join(
+    [
+      Option.getOrElse(locale, () => DEFAULT_LOCALE),
+      "og",
+      ...slug,
+      "image.png",
+    ],
+    "/"
+  );
+}
+
+/**
+ * The read of the static image that a social image alias names, as a request for
+ * that file. Only a read is an alias, so any other method reaches the router
+ * unchanged.
  */
 export function readOgAliasRequest(request: Request): Option.Option<Request> {
   if (request.method !== "GET" && request.method !== "HEAD") {

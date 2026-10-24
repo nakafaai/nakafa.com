@@ -1,22 +1,10 @@
 import { Array as Arr, Effect, Schema } from "effect";
-import { LLMS_CACHE_CONTROL } from "@/lib/llms/constants";
-import { buildRootLlmsIndexText } from "@/lib/llms/index/public";
+import { LLMS_CACHE_CONTROL } from "@/lib/llms/cache";
 import {
   answerLlmsMarkdown,
   readLlmsMarkdownTarget,
 } from "@/lib/llms/markdown.server";
 import { getNakafaAgentSkillIndex, getNakafaSkillText } from "@/lib/llms/skill";
-
-/** Serves the small root llms index. */
-export function serveLlmsIndex() {
-  return new Response(buildRootLlmsIndexText(), {
-    headers: {
-      "Cache-Control": LLMS_CACHE_CONTROL,
-      "Content-Type": "text/markdown; charset=utf-8",
-      Vary: "Accept",
-    },
-  });
-}
 
 /** Serves Nakafa's public skill.md guide for agents. */
 export function serveSkill() {

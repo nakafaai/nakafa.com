@@ -2,7 +2,7 @@ import { THEME_COMPATIBILITY_COLORS } from "@repo/design-system/lib/theme/compat
 import anyAscii from "any-ascii";
 import type { CSSProperties, ReactNode } from "react";
 
-export interface OgImageProps {
+interface OgImageProps {
   description?: ReactNode;
   icon?: ReactNode;
   primaryColor?: string;

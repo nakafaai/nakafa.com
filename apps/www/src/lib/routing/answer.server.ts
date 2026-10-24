@@ -22,6 +22,7 @@ import {
   readSpellingRedirectResponse,
 } from "@/lib/routing/redirect";
 import { readSchoolRefusal } from "@/lib/routing/school/refusal";
+import { StaticAssets } from "@/lib/static/assets";
 import { readSchoolTreeGate } from "@/lib/tenant/gate";
 
 /** The router's answer to one request, which may fail with the error Start throws. */
@@ -102,8 +103,8 @@ const answerRouter = Effect.fn("www.routing.answer.router")(function* (
 /**
  * Answers one request before the router runs. The address and the headers alone
  * decide each answer, in this order: a host under the production domain that
- * names no school moves to the main site, a social image alias reaches the OG
- * route, a non-canonical slash spelling moves to its canonical address, and a
+ * names no school moves to the main site, a social image alias answers the static
+ * image of its route, a non-canonical slash spelling moves to its canonical address, and a
  * non-public spelling moves to its public address. A school tree path, a refused
  * school page and a removed address answer not found, and a migrated or moved
  * address moves to its successor. A raw user address answers not found, and a
@@ -123,7 +124,11 @@ export const answerRequest = Effect.fn("www.routing.answer.request")(function* (
 
   const image = readOgAliasRequest(request);
   if (Option.isSome(image)) {
-    return yield* answerRouted(image.value, route);
+    const assets = yield* StaticAssets;
+    const asset = yield* Effect.promise(() => assets.fetch(image.value));
+    if (asset.ok) {
+      return asset;
+    }
   }
 
   const slash = readSlashRedirectResponse(request);

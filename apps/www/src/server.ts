@@ -1,3 +1,4 @@
+import { env } from "cloudflare:workers";
 import { reportUncaughtRequestError } from "@repo/analytics/server-reporting";
 import {
   createServerEntry,
@@ -8,6 +9,7 @@ import {
 import { Effect } from "effect";
 import { answerRequest } from "@/lib/routing/answer.server";
 import { logRouteFailures } from "@/lib/routing/failures.server";
+import { StaticAssets } from "@/lib/static/assets";
 import { withPageHeaders } from "@/lib/tenant/gate";
 
 /**
@@ -34,6 +36,9 @@ export default createServerEntry({
     // its caller: every layer that the answer uses is provided where it is used.
     return Effect.runPromise(
       answerRequest(request, async (routed) => startHandler(routed, opts)).pipe(
+        Effect.provideService(StaticAssets, {
+          fetch: (asset) => env.ASSETS.fetch(asset),
+        }),
         Effect.catchTag("UncaughtRequestError", (error) =>
           reportUncaughtRequestError(error.cause, request).pipe(
             Effect.as(handleStartError(error.cause))

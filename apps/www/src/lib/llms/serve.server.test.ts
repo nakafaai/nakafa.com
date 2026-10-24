@@ -4,7 +4,6 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import {
   serveAgentSkills as serveAgentSkillsEffect,
-  serveLlmsIndex,
   serveLlmsMarkdown as serveLlmsMarkdownEffect,
   serveSkill,
 } from "@/lib/llms/serve.server";
@@ -31,20 +30,6 @@ vi.mock("@/lib/llms/index/generate", () => ({
   /** Controls section indexes; none exist for these routes. */
   getLlmsSectionIndexText: () => Effect.succeed(null),
 }));
-
-describe("llms index endpoint", () => {
-  it("serves the root index as markdown that varies by Accept", async () => {
-    const response = serveLlmsIndex();
-
-    expect(response.status).toBe(200);
-    expect(response.headers.get("content-type")).toBe(
-      "text/markdown; charset=utf-8"
-    );
-    expect(response.headers.get("vary")).toBe("Accept");
-    expect(response.headers.get("cache-control")).toContain("s-maxage");
-    await expect(response.text()).resolves.toContain("Nakafa");
-  });
-});
 
 describe("skill endpoint", () => {
   it("serves the Nakafa skill guide as markdown", async () => {

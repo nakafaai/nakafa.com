@@ -1,3 +1,4 @@
+import { spawn } from "node:child_process";
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { basename, join } from "node:path";
@@ -16,6 +17,7 @@ import {
   readWwwHeaderOrigins,
   renderHeadersFile,
 } from "#www/src/lib/security/headers";
+import { STATIC_HEADER_RULES } from "#www/src/lib/static/headers";
 import { workerEnvironment, workerSettings } from "#www/worker";
 
 /**
@@ -88,7 +90,13 @@ const writeHeadersFile: Plugin = {
         writeFileSync(
           join(builder.environments.client.config.build.outDir, "_headers"),
           Result.getOrThrowWith(
-            renderHeadersFile(createWwwHeaders(readWwwHeaderOrigins())),
+            renderHeadersFile([
+              {
+                headers: createWwwHeaders(readWwwHeaderOrigins()),
+                path: "/*",
+              },
+              ...STATIC_HEADER_RULES,
+            ]),
             (error) =>
               new Error(
                 `A _headers line is over the platform limit: ${error.prefix}...`
@@ -98,6 +106,43 @@ const writeHeadersFile: Plugin = {
       ),
   },
   name: "www:write-headers-file",
+};
+
+/**
+ * Writes the static artifacts of the release into the client output: the sitemap,
+ * the feeds and the indexes, and every social image. The runner renders them with
+ * the app's own modules in Node, after the client build, so the Worker answers
+ * none of these addresses.
+ */
+const writeStaticArtifacts: Plugin = {
+  apply: "build",
+  buildApp: {
+    order: "post",
+    handler: (builder) =>
+      new Promise<void>((resolve, reject) => {
+        const runner = spawn(
+          process.execPath,
+          [
+            join(import.meta.dirname, "scripts/static/run.mjs"),
+            builder.environments.client.config.build.outDir,
+          ],
+          { cwd: import.meta.dirname, env: process.env, stdio: "inherit" }
+        );
+        runner.on("error", reject);
+        runner.on("exit", (code, signal) => {
+          if (code === 0) {
+            resolve();
+            return;
+          }
+          reject(
+            new Error(
+              `The static artifacts failed with exit ${code ?? signal}.`
+            )
+          );
+        });
+      }),
+  },
+  name: "www:write-static-artifacts",
 };
 
 const verifyPrerenderedPages: Plugin = {
@@ -130,6 +175,22 @@ const NODE_ONLY_CONTRACT_ALIASES = NODE_ONLY_CONTRACT_PATHS.map((path) => ({
   find: `@nakafa/aksara-contracts/${path}`,
   replacement: contractsRequire.resolve(`@nakafa/aksara-contracts/${path}`),
 }));
+
+/**
+ * The static runner executes the app's modules in Node to write the static
+ * artifacts. It runs without the Worker plugin, and `cloudflare:workers` resolves
+ * to the build's stand-in for that run only.
+ */
+const STATIC_RUNNER = process.env.NAKAFA_STATIC_RUNNER === "1";
+
+const STATIC_RUNNER_ALIASES = STATIC_RUNNER
+  ? [
+      {
+        find: "cloudflare:workers",
+        replacement: join(import.meta.dirname, "scripts/static/workers.ts"),
+      },
+    ]
+  : [];
 
 /** The Worker environments: `ssr` is the Worker entry and `rsc` its child. */
 const WORKER_ENVIRONMENTS = ["ssr", "rsc"];
@@ -179,7 +240,7 @@ function alchemyWorker(
 ): PluginOption[] {
   const isAlchemyBuild = process.env.ALCHEMY_CLOUDFLARE_VITE_INJECTED === "1";
   const isPrerendering = process.env.TSS_PRERENDERING === "true";
-  if (isAlchemyBuild && !isPrerendering) {
+  if (STATIC_RUNNER || (isAlchemyBuild && !isPrerendering)) {
     return [];
   }
   return [
@@ -211,7 +272,7 @@ export default defineConfig(({ command, isPreview }) => ({
     // `@nakafa/aksara-contracts` ships its signature verifiers under the `node`
     // condition only. Workers resolve them by file, since the `workerd` condition
     // does not match and the `node` condition would select posthog-node's Node build.
-    alias: NODE_ONLY_CONTRACT_ALIASES,
+    alias: [...NODE_ONLY_CONTRACT_ALIASES, ...STATIC_RUNNER_ALIASES],
     tsconfigPaths: true,
   },
   plugins: [
@@ -249,6 +310,7 @@ export default defineConfig(({ command, isPreview }) => ({
     babel({ presets: [reactCompilerPreset()] }),
     bundleCommonJsReactPeers,
     writeHeadersFile,
+    writeStaticArtifacts,
     verifyPrerenderedPages,
     // `vite dev` runs the Worker as Node runs a development server. `vite build`
     // and `vite preview`, the acceptance server and the prerender included, run

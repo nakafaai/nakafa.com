@@ -8,12 +8,6 @@ const SitemapEntry = Schema.Struct({
 
 type SitemapEntry = typeof SitemapEntry.Type;
 
-export const sitemapXmlHeaders = {
-  "Cache-Control":
-    "public, max-age=0, s-maxage=86400, stale-while-revalidate=86400",
-  "Content-Type": "application/xml; charset=utf-8",
-} as const;
-
 const xmlHeader = '<?xml version="1.0" encoding="UTF-8"?>';
 
 /** Serializes bounded sitemap page URLs into a sitemap index document. */
