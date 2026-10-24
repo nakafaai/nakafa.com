@@ -42,24 +42,34 @@ function sizeOf(text: string) {
  */
 export function makeMemoryStore() {
   const entries = MutableHashMap.empty<string, MemoryEntry>();
+  /** The bytes of every kept entry, so a write never sums the whole store. */
+  let storedBytes = 0;
 
-  /** Drops every entry whose lifetime has ended, then the oldest surplus until the budget holds. */
+  /** Drops one entry and releases its bytes from the running total. */
+  function forget(key: string, entry: MemoryEntry) {
+    MutableHashMap.remove(entries, key);
+    storedBytes -= entry.bytes;
+  }
+
+  /**
+   * Runs only when the budget is exceeded: drops the entries whose lifetime has
+   * ended, then the oldest surplus in insertion order until the budget holds. An
+   * expired entry is never answered, so one kept under the budget costs nothing.
+   */
   function trim(now: number) {
+    if (storedBytes <= MAX_STORE_BYTES) {
+      return;
+    }
     for (const [key, entry] of Arr.fromIterable(entries)) {
       if (entry.expiresAt <= now) {
-        MutableHashMap.remove(entries, key);
+        forget(key, entry);
       }
-    }
-    let total = 0;
-    for (const [, entry] of Arr.fromIterable(entries)) {
-      total += entry.bytes;
     }
     for (const [key, entry] of Arr.fromIterable(entries)) {
-      if (total <= MAX_STORE_BYTES) {
+      if (storedBytes <= MAX_STORE_BYTES) {
         return;
       }
-      MutableHashMap.remove(entries, key);
-      total -= entry.bytes;
+      forget(key, entry);
     }
   }
 
@@ -71,7 +81,7 @@ export function makeMemoryStore() {
         return Option.none();
       }
       if (found.value.expiresAt <= now) {
-        MutableHashMap.remove(entries, key);
+        forget(key, found.value);
         return Option.none();
       }
       return decodeStoredText(found.value.text);
@@ -87,19 +97,25 @@ export function makeMemoryStore() {
       }
     ) {
       const text = encodeJsonText(value);
+      const replaced = MutableHashMap.get(entries, key);
+      if (Option.isSome(replaced)) {
+        storedBytes -= replaced.value.bytes;
+      }
+      const bytes = sizeOf(text);
       MutableHashMap.set(entries, key, {
-        bytes: sizeOf(text),
+        bytes,
         expiresAt: input.expiresAt,
         tags: [...input.tags],
         text,
       });
+      storedBytes += bytes;
       trim(input.now);
     },
     /** Drops every entry of this isolate that carries one tag. */
     expireTag(tag: string) {
       for (const [key, entry] of Arr.fromIterable(entries)) {
         if (Arr.contains(entry.tags, tag)) {
-          MutableHashMap.remove(entries, key);
+          forget(key, entry);
         }
       }
     },

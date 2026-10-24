@@ -49,12 +49,30 @@ describe("memory store", () => {
     expect(kept.length).toBeGreaterThan(0);
   });
 
-  it("drops the entries whose lifetime ended when another value is stored", () => {
+  it("drops the entries whose lifetime ended first when the budget is exceeded", () => {
     const store = makeMemoryStore();
-    store.set("old", 1, { expiresAt: 10, now: 0, tags: [] });
-    store.set("new", 2, { expiresAt: 100, now: 20, tags: [] });
+    store.set("live", LARGE_TEXT, { expiresAt: 100, now: 0, tags: [] });
+    store.set("old", LARGE_TEXT, { expiresAt: 10, now: 0, tags: [] });
+    for (const key of ["later", "latest", "newer"]) {
+      store.set(key, LARGE_TEXT, { expiresAt: 100, now: 0, tags: [] });
+    }
+    store.set("newest", LARGE_TEXT, { expiresAt: 100, now: 20, tags: [] });
 
-    expect(store.get("old", 0)._tag).toBe("None");
-    expect(store.get("new", 20)).toStrictEqual(Option.some(2));
+    expect(store.get("old", 20)._tag).toBe("None");
+    expect(store.get("live", 20)._tag).toBe("Some");
+    expect(store.get("newest", 20)._tag).toBe("Some");
+  });
+
+  it("releases the bytes of a replaced value before it judges the budget", () => {
+    const store = makeMemoryStore();
+    for (const attempt of Arr.makeBy(10, (index) => index)) {
+      store.set("key", `${attempt}${LARGE_TEXT}`, {
+        expiresAt: 100,
+        now: 0,
+        tags: [],
+      });
+    }
+
+    expect(store.get("key", 1)._tag).toBe("Some");
   });
 });
