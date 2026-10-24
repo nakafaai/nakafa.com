@@ -39,6 +39,12 @@ const ROOM = "Lab 2";
 /** One hour, the length of the seeded sitting after it opens. */
 const SITTING_LENGTH_MS = 60 * 60 * 1000;
 
+/** The room of the seeded upcoming sitting, which opens the next day. */
+const UPCOMING_ROOM = "Lab 3";
+
+/** One day, how far ahead the seeded upcoming sitting opens. */
+const DAY_MS = 24 * 60 * 60 * 1000;
+
 /** The key of a seeded question: its first option is the correct answer. */
 const FIRST_OPTION_KEY: Arr.NonEmptyReadonlyArray<InteractionKey> = [
   { correct: ["option-1"], interaction: "choice", kind: "choice" },
@@ -144,6 +150,7 @@ export const seedSitting = Effect.fn("exams.seed.sitting")(function* (args: {
   readonly crowd?: number;
   readonly email: string;
   readonly slug: string;
+  readonly upcoming?: boolean;
 }) {
   yield* requireAcceptanceSeed();
   const reader = yield* DatabaseReader;
@@ -216,6 +223,17 @@ export const seedSitting = Effect.fn("exams.seed.sitting")(function* (args: {
     sittingId: made.id,
     tenantId: tenant._id,
   });
+  if (args.upcoming === true) {
+    yield* createSitting({
+      actor: systemActor,
+      closesAt: now + DAY_MS + SITTING_LENGTH_MS,
+      exam,
+      opensAt: now + DAY_MS,
+      place: { cohortId: null, unitId: unit._id },
+      room: UPCOMING_ROOM,
+      tenantId: tenant._id,
+    }).pipe(Effect.orDie);
+  }
   return {
     examId,
     sittingId: made.id,

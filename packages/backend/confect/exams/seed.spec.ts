@@ -33,6 +33,8 @@ export default GroupSpec.make().addFunction(
       ),
       email: Email,
       slug: TenantSlug,
+      /** Whether the seed also schedules a room for the next day, which a browser test reads as an upcoming room. */
+      upcoming: Schema.optionalKey(Schema.Boolean),
     }),
     returns: () => SittingSeed,
     error: () => SeedRefused,
