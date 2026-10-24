@@ -8,7 +8,7 @@ import { decodeProtectedContentRuntimeRequest } from "@nakafa/aksara-contracts/r
 
 // @vitest-environment node
 
-// Node tests isolate Next navigation imports while real semantic renderers execute.
+// Node tests isolate the router navigation imports while real semantic renderers execute.
 vi.mock("@repo/internationalization/src/navigation", () => ({
   getPathname: vi.fn(),
   Link: vi.fn(),

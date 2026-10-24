@@ -53,7 +53,6 @@ const readProtectedRuntimeResponse = Effect.fn(
   return { decoded, input };
 });
 
-/** Reads and authenticates one retained-snapshot protected artifact batch. */
 /**
  * One protected response as the runtime answered it, before its signed exchange
  * is verified, with the HTTP status that answered it.
@@ -87,7 +86,6 @@ export const fetchProtectedResponse = Effect.fn(
   };
 });
 
-/** Reads one protected batch and verifies its signed exchange. */
 /** Decodes one protected batch request, or fails as a request transport error. */
 export const decodeProtectedRequest = Effect.fn(
   "NakafaContent.decodeProtectedRequest"
@@ -102,6 +100,10 @@ export const decodeProtectedRequest = Effect.fn(
   );
 });
 
+/**
+ * Reads and authenticates one retained-snapshot protected artifact batch: it
+ * decodes the request, fetches the runtime response, and verifies its signed exchange.
+ */
 export const readProtectedContent = Effect.fn(
   "NakafaContent.readProtectedContent"
 )(function* (

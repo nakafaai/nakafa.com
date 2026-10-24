@@ -174,7 +174,10 @@ export const ANALYTICS_CONSENT_BOOTSTRAP_SCRIPT = `(function () {
       document.documentElement.setAttribute(${literal(ANALYTICS_CONSENT_ROOT_ATTRIBUTE)}, mark);
     }
   } catch (error) {
-    // Storage that cannot be read keeps the prompt shown.
+    // Deliberate silent exception: this script runs before the app modules load
+    // and before paint, so it cannot reach the analytics leaf. Storage that cannot
+    // be read keeps the prompt shown. markAnalyticsConsentRoot reads the same
+    // storage on mount and reports that failure with its cause.
   }
 })();`;
 

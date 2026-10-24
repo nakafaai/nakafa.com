@@ -297,6 +297,32 @@ describe("analytics consent bootstrap decision", () => {
       `(${resolveAnalyticsConsentMark.toString()})({`
     );
   });
+
+  it("keeps the prompt shown and writes no mark when the store cannot be read", () => {
+    const marks = new Map<string, string>();
+    const runScript = new Function(
+      "localStorage",
+      "navigator",
+      "document",
+      ANALYTICS_CONSENT_BOOTSTRAP_SCRIPT
+    );
+    runScript(
+      {
+        getItem: () => {
+          throw new TypeError("Storage is blocked.");
+        },
+      },
+      { doNotTrack: "1" },
+      {
+        documentElement: {
+          setAttribute: (name: string, value: string) => {
+            marks.set(name, value);
+          },
+        },
+      }
+    );
+    expect(marks.size).toBe(0);
+  });
 });
 
 /** Stores one case's values in this browser and makes the navigator report its signals. */
