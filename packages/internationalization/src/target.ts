@@ -1,0 +1,234 @@
+import { CURRICULUM_NAMESPACES } from "@nakafa/aksara-contracts/program/curriculum";
+import {
+  LOCALE_ROUTE,
+} from "@repo/internationalization/src/link";
+import { PATHNAMES } from "@repo/internationalization/src/pathnames";
+import { linkOptions } from "@tanstack/react-router";
+import { Array as Arr, Record as Rec } from "effect";
+
+/**
+ * The typed target of one signed Page, which the locale's catch-all page route
+ * serves by its public path. The path is the route's splat, and the locale is
+ * the one of the page on screen.
+ */
+function pageTarget(publicPath: string) {
+  return linkOptions({
+    from: LOCALE_ROUTE,
+    params: { _splat: publicPath },
+    to: "/$locale/$",
+  });
+}
+
+/** The typed target of one article, from the category and slug that the catalog verified. */
+function articleTarget({
+  category,
+  slug,
+}: {
+  readonly category: string;
+  readonly slug: string;
+}) {
+  return linkOptions({
+    from: LOCALE_ROUTE,
+    params: { category, slug },
+    to: "/$locale/articles/$category/$slug",
+  });
+}
+
+/**
+ * The typed target of one curriculum program or of a page inside it. The first
+ * public segment after the curriculum namespace names the program, and the rest
+ * is the page's splat, which is empty for the program's own page.
+ */
+export function curriculumTarget({
+  curriculum,
+  path,
+}: {
+  readonly curriculum: string;
+  readonly path: readonly string[];
+}) {
+  return linkOptions({
+    from: LOCALE_ROUTE,
+    params: { _splat: path.join("/"), curriculum },
+    to: "/$locale/curricula/$curriculum/$",
+  });
+}
+
+/** The typed target of one article category's page, which the route names by its route slug. */
+export function articleCategoryTarget(route: string) {
+  return linkOptions({
+    from: LOCALE_ROUTE,
+    params: { category: route },
+    to: "/$locale/articles/$category",
+  });
+}
+
+/** The locale's landing page, the one a visitor reaches from the app's own links. */
+export const LANDING_TARGET = linkOptions({
+  from: LOCALE_ROUTE,
+  to: "/$locale",
+});
+
+/** The home page of the signed-in account, which the app's breadcrumbs start from. */
+export const HOME_TARGET = linkOptions({
+  from: LOCALE_ROUTE,
+  to: "/$locale/home",
+});
+
+/** The search page of the app. */
+export const SEARCH_TARGET = linkOptions({
+  from: LOCALE_ROUTE,
+  to: "/$locale/search",
+});
+
+/** The try-out catalog, the first page of every try-out path. */
+export const TRYOUT_TARGET = linkOptions({
+  from: LOCALE_ROUTE,
+  to: "/$locale/try-out",
+});
+
+/** The Quran index, which the Quran breadcrumb starts from. */
+export const QURAN_TARGET = linkOptions({
+  from: LOCALE_ROUTE,
+  to: "/$locale/quran",
+});
+
+/** The curriculum index, which the subject breadcrumb starts from. */
+export const CURRICULA_TARGET = linkOptions({
+  from: LOCALE_ROUTE,
+  to: "/$locale/curricula",
+});
+
+/** The namespaces of the curriculum in every locale, which the route map spells. */
+const CURRICULUM_NAMESPACE_LIST: readonly string[] = Rec.values(
+  CURRICULUM_NAMESPACES
+);
+
+/** The spelling of the materials namespace in every locale, which the route map owns. */
+const MATERIAL_NAMESPACES: readonly string[] = Rec.values(
+  PATHNAMES["/materials/[subject]/[topic]/[[...lesson]]"]
+).map((template) => template.split("/")[1] ?? "");
+
+/**
+ * The typed target of one curriculum public path, such as `curriculum/merdeka`
+ * or `curriculum/merdeka/class-11/mathematics`. The first segment is the
+ * curriculum namespace of a locale, the second the program, and the rest the
+ * page inside it. A path outside the curriculum namespace has no target.
+ */
+export function curriculumPublicPathTarget(
+  publicPath: string
+) {
+  const [namespace, curriculum, ...path] = publicPath.split("/");
+  if (
+    !(namespace && Arr.contains(Rec.values(CURRICULUM_NAMESPACES), namespace))
+  ) {
+    return null;
+  }
+  if (!curriculum) {
+    return CURRICULA_TARGET;
+  }
+  return curriculumTarget({ curriculum, path });
+}
+
+/** The article index, which the article breadcrumb starts from. */
+export const ARTICLES_TARGET = linkOptions({
+  from: LOCALE_ROUTE,
+  to: "/$locale/articles",
+});
+
+/**
+ * The typed target of one material public path, such as
+ * `subjects/mathematics/algebra/lesson`. The first segment is the materials
+ * namespace of a locale, the second the subject, the third the topic, and the rest
+ * the lesson, which the catch-all route takes as its splat. The optional context
+ * hint rides in the search of the route. A path outside the namespace has no target.
+ */
+function materialPublicPathTarget(
+  publicPath: string,
+  context?: string
+) {
+  const [namespace, subject, topic, ...lesson] = publicPath.split("/");
+  if (!(namespace && Arr.contains(MATERIAL_NAMESPACES, namespace))) {
+    return null;
+  }
+  if (!(subject && topic)) {
+    return null;
+  }
+  const search = context === undefined ? {} : { ctx: context };
+  return linkOptions({
+    from: LOCALE_ROUTE,
+    params: { _splat: lesson.join("/"), subject, topic },
+    search,
+    to: "/$locale/materials/$subject/$topic/$",
+  });
+}
+
+/**
+ * The typed target of any signed public path of the content: an article, a
+ * curriculum page, a material, a Quran surah, or a signed Page, which the Page
+ * route serves as its catch-all. Only the empty path has no target. A material
+ * takes the context hint of its curriculum, and the other paths ignore it.
+ */
+export function publicPathTarget(
+  publicPath: string,
+  context?: string
+) {
+  if (publicPath === "") {
+    return null;
+  }
+  const [namespace, first, second, ...rest] = publicPath.split("/");
+  if (namespace === "articles") {
+    if (first && second && rest.length === 0) {
+      return articleTarget({ category: first, slug: second });
+    }
+    return first && rest.length === 0 && second === undefined
+      ? articleCategoryTarget(first)
+      : ARTICLES_TARGET;
+  }
+  if (namespace === "quran") {
+    return first && second === undefined
+      ? linkOptions({
+          from: LOCALE_ROUTE,
+          params: { surah: first },
+          to: "/$locale/quran/$surah",
+        })
+      : QURAN_TARGET;
+  }
+  if (Arr.contains(CURRICULUM_NAMESPACE_LIST, namespace ?? "")) {
+    return curriculumPublicPathTarget(publicPath);
+  }
+  if (Arr.contains(MATERIAL_NAMESPACES, namespace ?? "")) {
+    return materialPublicPathTarget(publicPath, context);
+  }
+  return pageTarget(publicPath);
+}
+
+/**
+ * The typed target of an app address that a backend query returns as a URL, such
+ * as `/en/curriculum/merdeka/class-11?ctx=...`. The first segment is the locale
+ * the address was built for, the rest is the signed public path, and the query
+ * carries the material context hint. An address that names no page has no target.
+ */
+export function addressTarget(address: string) {
+  const url = new URL(address, "https://nakafa.invalid");
+  const [, , ...publicSegments] = url.pathname.split("/");
+  if (publicSegments.length === 0) {
+    return null;
+  }
+  const context = url.searchParams.get("ctx") ?? undefined;
+  return publicPathTarget(publicSegments.join("/"), context);
+}
+
+/** The typed target of one Quran surah, which the Quran route names by its number. */
+export function quranSurahTarget(surah: number) {
+  return linkOptions({
+    from: LOCALE_ROUTE,
+    params: { surah: String(surah) },
+    to: "/$locale/quran/$surah",
+  });
+}
+
+/** The pricing page of the locale, which the footer and the marketing pages link to. */
+export const PRICING_TARGET = linkOptions({
+  from: LOCALE_ROUTE,
+  to: "/$locale/pricing",
+});

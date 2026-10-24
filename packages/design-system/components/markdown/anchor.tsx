@@ -1,5 +1,7 @@
 import type { AnchorProps } from "@repo/design-system/types/markdown";
-import { HrefLink } from "@repo/internationalization/src/link";
+import { DestinationLink } from "@repo/internationalization/src/link";
+import { PublicPathLink } from "@repo/internationalization/src/public";
+import { LANDING_TARGET } from "@repo/internationalization/src/target";
 import { cn } from "cn";
 
 export function Anchor({
@@ -19,10 +21,32 @@ export function Anchor({
   );
 
   if (href.startsWith("/")) {
+    // An authored path names a signed page without its locale; the page on
+    // screen supplies the locale, and the fragment stays with the link.
+    const url = new URL(href, "https://nakafa.invalid");
+    const hash = url.hash === "" ? undefined : url.hash.slice(1);
+    if (url.pathname === "/") {
+      return (
+        <DestinationLink
+          className={anchorClassName}
+          destination={LANDING_TARGET}
+          title={href}
+          {...props}
+        >
+          {children}
+        </DestinationLink>
+      );
+    }
     return (
-      <HrefLink className={anchorClassName} href={href} title={href} {...props}>
+      <PublicPathLink
+        className={anchorClassName}
+        hash={hash}
+        publicPath={url.pathname.slice(1)}
+        title={href}
+        {...props}
+      >
         {children}
-      </HrefLink>
+      </PublicPathLink>
     );
   }
 
