@@ -29,7 +29,7 @@ import {
 import { Array as Arr, Option, Schema } from "effect";
 import { createContext, Fragment, startTransition, use, useState } from "react";
 import { useTranslations } from "use-intl";
-import { useConvexAuth } from "@/components/providers/convex";
+import { useConvexAuth } from "@/components/auth/convex";
 import {
   CardSection,
   CardSectionActions,

@@ -4,7 +4,7 @@ import type { BuiltinRole } from "@repo/backend/confect/access/schema";
 import type { TenantProfile } from "@repo/backend/confect/tenancy/schema";
 import type { Option } from "effect";
 import { createContext, use } from "react";
-import { useConvexAuth } from "@/components/providers/convex";
+import { useConvexAuth } from "@/components/auth/convex";
 import type { HomeAccess } from "@/components/tenant/home/access";
 import type { Greeting } from "@/components/tenant/home/greeting";
 import { liveTenant } from "@/components/tenant/live";

@@ -28,7 +28,7 @@ import { cn } from "cn";
 import { Array as Arr, Option } from "effect";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
-import { useConvexAuth } from "@/components/providers/convex";
+import { useConvexAuth } from "@/components/auth/convex";
 import { DataFailure } from "@/components/shared/failure";
 import { TryoutScoreCard } from "@/components/tryout/score/card";
 import { formatMoment } from "@/lib/i18n/date";

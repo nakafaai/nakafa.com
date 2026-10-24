@@ -9,7 +9,7 @@ import { usePathname } from "@repo/internationalization/src/navigation";
 import { Array as Arr, String as Str } from "effect";
 import { use } from "react";
 import { useTranslations } from "use-intl";
-import { useConvexAuth } from "@/components/providers/convex";
+import { useConvexAuth } from "@/components/auth/convex";
 import { ClassesPreloadContext } from "@/components/tenant/classes/preload";
 import type { TenantValue } from "@/components/tenant/context";
 import { useTenant } from "@/components/tenant/context";

@@ -13,7 +13,7 @@ import { useConvex } from "convex/react";
 import { Effect, Schema } from "effect";
 import { useTransition } from "react";
 import { useTranslations } from "use-intl";
-import { useConvexAuth } from "@/components/providers/convex";
+import { useConvexAuth } from "@/components/auth/convex";
 import { ConvexIsland } from "@/components/providers/island";
 import { getTryoutAttemptHref } from "@/components/tryout/route/path";
 import { useTryoutClock } from "@/components/tryout/runtime/clock";

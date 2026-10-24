@@ -7,7 +7,9 @@ import { useLiveSession } from "@/components/providers/live";
  * Gives its children the page's one Convex client once the live session holds it,
  * and renders `fallback` until then. A visitor's page holds no client, so a leaf
  * that reads Convex mounts here and the visitor's variant shows instead. The
- * client is the store's, so every island of a page shares one socket.
+ * client is the store's, so every island of a page shares one socket. While a
+ * learner's session still loads, the variant is inert, so a click waits for the
+ * client instead of acting as a visitor's click.
  */
 export function ConvexIsland({
   children,
@@ -17,8 +19,13 @@ export function ConvexIsland({
   fallback?: ReactNode;
 }) {
   const client = useLiveSession((state) => state.client);
+  const isSessionPending = useLiveSession((state) => state.isPending);
   if (Option.isNone(client)) {
-    return fallback;
+    return (
+      <div className="contents" inert={isSessionPending}>
+        {fallback}
+      </div>
+    );
   }
   return <ConvexProvider client={client.value}>{children}</ConvexProvider>;
 }

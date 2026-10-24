@@ -2,7 +2,7 @@ import { Id } from "@repo/backend/confect/_generated/id";
 import { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Schema } from "effect";
 import { createContext, use } from "react";
-import { useConvexAuth } from "@/components/providers/convex";
+import { useConvexAuth } from "@/components/auth/convex";
 
 /** The sitting whose results a screen reads, and the school that holds it. */
 const ResultsScope = Schema.Struct({

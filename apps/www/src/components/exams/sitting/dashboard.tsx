@@ -4,6 +4,7 @@ import exams from "@repo/backend/confect/_generated/refs/exams";
 import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
+import { useConvexAuth } from "@/components/auth/convex";
 import { dashboardArgs } from "@/components/exams/sitting/change";
 import {
   type SittingData,
@@ -15,7 +16,6 @@ import { SittingPanel } from "@/components/exams/sitting/panel";
 import { SittingSeats } from "@/components/exams/sitting/seats";
 import { createSittingStore } from "@/components/exams/sitting/store";
 import { SittingToolbar } from "@/components/exams/sitting/toolbar";
-import { useConvexAuth } from "@/components/providers/convex";
 import { useTenant } from "@/components/tenant/context";
 import { SchoolHeader } from "@/components/tenant/header";
 import { usePreloadedQueryResult } from "@/lib/data/preloaded";

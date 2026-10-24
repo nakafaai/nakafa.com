@@ -7,22 +7,19 @@ import {
 import { Effect, Exit, Function as Fn, Option, Scope } from "effect";
 import {
   type ReactNode,
-  use,
   useEffect,
   useState,
   useSyncExternalStore,
 } from "react";
 import { AuthSessionProvider } from "@/components/auth/follow";
-import { useAuthSession, useAuthSessionStore } from "@/components/auth/session";
+import { useAuthSession } from "@/components/auth/session";
 import { readAuthClient } from "@/lib/auth/client";
 import {
   authenticateConvex,
-  type ConvexAuth,
   ConvexAuthContext,
   type ConvexAuthStore,
   ConvexTokenReadError,
   createConvexAuthStore,
-  readConvexAuth,
   readConvexSessionId,
 } from "@/lib/auth/convex";
 import { loadKnownSession, saveKnownSession } from "@/lib/auth/known";
@@ -201,42 +198,5 @@ export function ConvexProvider({
         <ConvexClientProvider client={convex}>{children}</ConvexClientProvider>
       </ConvexAuthProvider>
     </AuthSessionProvider>
-  );
-}
-
-/**
- * Selects one part of the Convex authentication state.
- *
- * The state is derived from the session and Convex's latest answer inside one
- * subscription to both stores, so a reader runs only when its selection
- * changes, and the server snapshot is the state the server rendered.
- */
-export function useConvexAuth<T>(selector: (auth: ConvexAuth) => T) {
-  const store = use(ConvexAuthContext);
-  if (!store) {
-    throw new TypeError("useConvexAuth must be used within ConvexProvider");
-  }
-  const session = useAuthSessionStore();
-
-  return useSyncExternalStore(
-    (onChange) => {
-      const stopSession = session.subscribe(onChange);
-      const stopStore = store.subscribe(onChange);
-      return () => {
-        stopSession();
-        stopStore();
-      };
-    },
-    () =>
-      selector(
-        readConvexAuth(session.getState(), store.getState().confirmation)
-      ),
-    () =>
-      selector(
-        readConvexAuth(
-          session.getInitialState(),
-          store.getInitialState().confirmation
-        )
-      )
   );
 }

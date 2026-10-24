@@ -37,7 +37,7 @@ import { type ComponentProps, createContext, use, useState } from "react";
 import { useTranslations } from "use-intl";
 import { type ChatFirstPage, useChatList } from "@/components/ai/chat/chats";
 import { useAi } from "@/components/ai/context";
-import { useConvexAuth } from "@/components/providers/convex";
+import { useConvexAuth } from "@/components/auth/convex";
 import { ConvexIsland } from "@/components/providers/island";
 import { usePaginatedPreloaded } from "@/lib/data/paginated";
 import { useViewer } from "@/lib/identity/client";
@@ -120,7 +120,7 @@ export function AiChatSidebar({
       <SidebarContent>
         <ChatFirstPageContext value={first}>
           <ChatSearchContext value={debouncedQ}>
-            <ConvexIsland>
+            <ConvexIsland fallback={<AiChatSidebarFallback />}>
               <AiChatSidebarHistory />
             </ConvexIsland>
           </ChatSearchContext>
@@ -146,13 +146,6 @@ function AiChatSidebarHistory() {
   );
 }
 function AiChatSidebarChats() {
-  const t = useTranslations("Ai");
-  const drafts = useAi((state) => state.chatDrafts);
-  const setOpenMobile = useSidebar((sidebar) => sidebar.setOpenMobile);
-  const params: Readonly<Record<string, string | undefined>> = useParams({
-    strict: false,
-  });
-  const id = params.id;
   const searchQuery = useChatSearch().trim();
   const firstPage = use(ChatFirstPageContext);
   // The loader's page stands in until the session settles, and the live list subscribes after that.
@@ -178,9 +171,41 @@ function AiChatSidebarChats() {
     searchQuery
   );
   return (
+    <SidebarChatRows
+      chats={results}
+      loadMore={loadMore}
+      searchFurther={searchFurther}
+      showDrafts={!searchQuery}
+    />
+  );
+}
+
+/**
+ * The learner's chat rows in the sidebar, with the chats not sent yet first. The
+ * live list and the loader's first page draw these same rows.
+ */
+function SidebarChatRows({
+  chats,
+  loadMore,
+  searchFurther,
+  showDrafts,
+}: {
+  chats: ChatFirstPage["page"];
+  loadMore?: (() => void) | undefined;
+  searchFurther?: (() => void) | undefined;
+  showDrafts: boolean;
+}) {
+  const t = useTranslations("Ai");
+  const drafts = useAi((state) => state.chatDrafts);
+  const setOpenMobile = useSidebar((sidebar) => sidebar.setOpenMobile);
+  const params: Readonly<Record<string, string | undefined>> = useParams({
+    strict: false,
+  });
+  const id = params.id;
+  return (
     <>
       <SidebarMenu>
-        {!searchQuery &&
+        {showDrafts &&
           Arr.map(drafts, (key) => (
             <SidebarMenuItem key={key}>
               <SidebarMenuButton disabled isActive={!id}>
@@ -189,7 +214,7 @@ function AiChatSidebarChats() {
               </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
-        {Arr.map(results, (chat) => {
+        {Arr.map(chats, (chat) => {
           const isPrivate = chat.visibility === "private";
           return (
             <SidebarMenuItem key={chat._id}>
@@ -214,7 +239,9 @@ function AiChatSidebarChats() {
           keeps asking while its end is in view and another page can load. After
           several pages in a row without a match it stops, and the learner asks
           for the next one. */}
-      {loadMore ? <Intersection onIntersect={loadMore} /> : null}
+      {loadMore ? (
+        <Intersection key={chats.length} onIntersect={loadMore} />
+      ) : null}
       {searchFurther ? (
         <Button
           className="w-full"
@@ -227,4 +254,19 @@ function AiChatSidebarChats() {
       ) : null}
     </>
   );
+}
+
+/** The loader's first page as the sidebar's rows, before the client arrives. */
+function AiChatSidebarFallback() {
+  const firstPage = use(ChatFirstPageContext);
+  return Option.match(firstPage, {
+    onNone: () => null,
+    onSome: (page) => (
+      <SidebarGroup>
+        <SidebarGroupContent>
+          <SidebarChatRows chats={page.page} showDrafts />
+        </SidebarGroupContent>
+      </SidebarGroup>
+    ),
+  });
 }

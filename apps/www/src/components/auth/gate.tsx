@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { useConvexAuth } from "@/components/providers/convex";
+import { useConvexAuth } from "@/components/auth/convex";
 
 /** Renders its children once Convex has confirmed a signed-in session. */
 export function Authenticated({ children }: { children: ReactNode }) {

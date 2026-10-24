@@ -4,7 +4,7 @@ import { captureException } from "@repo/analytics/posthog/capture";
 import contents from "@repo/backend/confect/_generated/refs/contents";
 import { Effect, Option, Result } from "effect";
 import { useEffect } from "react";
-import { useConvexAuth } from "@/components/providers/convex";
+import { useConvexAuth } from "@/components/auth/convex";
 import { useAnalyticsConsent } from "@/lib/analytics/consent/facts";
 import { useContentViews } from "@/lib/content/views/context";
 import {

@@ -14,7 +14,7 @@ import {
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { Activity } from "react";
 import { useLocale, useTranslations } from "use-intl";
-import { useConvexAuth } from "@/components/providers/convex";
+import { useConvexAuth } from "@/components/auth/convex";
 import { CardSection } from "@/components/shared/card/section";
 import { useBillingNavigation } from "@/lib/billing/checkout";
 import { isActiveLocale } from "@/lib/i18n/active";

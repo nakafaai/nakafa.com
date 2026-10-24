@@ -6,7 +6,7 @@ import { readChatArgs } from "@/components/ai/chat/access";
 import { useChatTurns } from "@/components/ai/chat/closing";
 import { nextAnswer, shownAnswer } from "@/components/ai/chat/kept";
 import { turnOf } from "@/components/ai/chat/turns";
-import { useConvexAuth } from "@/components/providers/convex";
+import { useConvexAuth } from "@/components/auth/convex";
 
 /**
  * Reads the authorized facts of one conversation: its chat, its latest turn,

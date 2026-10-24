@@ -4,8 +4,8 @@ import { TRYOUT_CATALOG_LIMIT } from "@repo/backend/confect/contentRelease/tryou
 import { encodeJsonText } from "@repo/utilities/json";
 import { useConvexConnectionState } from "convex/react";
 import { useState } from "react";
+import { useConvexAuth } from "@/components/auth/convex";
 import { useAuthSession } from "@/components/auth/session";
-import { useConvexAuth } from "@/components/providers/convex";
 import {
   requestKey,
   selectionKey,

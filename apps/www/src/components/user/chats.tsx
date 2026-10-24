@@ -26,7 +26,7 @@ import { useLocale, useTranslations } from "use-intl";
 import type { StoreApi } from "zustand";
 import { type ChatFirstPage, useChatList } from "@/components/ai/chat/chats";
 import { useDeleteChatMutation } from "@/components/ai/chat/mutation";
-import { useConvexAuth } from "@/components/providers/convex";
+import { useConvexAuth } from "@/components/auth/convex";
 import { SignedInIsland } from "@/components/providers/island";
 import { formatShortAge } from "@/components/user/age";
 import { useAgeClock, useAgeNow } from "@/components/user/ages";
@@ -46,24 +46,62 @@ import { usePaginatedPreloaded } from "@/lib/data/paginated";
 import type { PublicProfile } from "@/lib/profile/public";
 
 /**
- * The study chats of the profile's owner, in the anatomy every row of the profile shares.
- * The profile is the owner's alone, because its loader answers anyone else with not found,
- * so the list needs no viewer check. The loader's first page is on the screen before the
- * browser connects, and the live list takes its place once the session settles. The next
- * page loads as the end of the list comes into view.
- */
-/**
- * The owner's chats of a profile. Only the owner holds a client on this page, so
- * the list mounts once the page has one, and no visitor reads it.
+ * The owner's chats of a profile, in the anatomy every row of the profile shares.
+ * The profile is the owner's alone, because its loader answers anyone else with not
+ * found, so the list needs no viewer check. Only the owner holds a client on this
+ * page, so the list mounts once the page has one, and no visitor reads it.
  */
 export function UserChats(props: ComponentProps<typeof LiveUserChats>) {
   return (
-    <SignedInIsland>
+    <SignedInIsland
+      fallback={
+        <StaticUserChats
+          first={props.first}
+          now={props.now}
+          profile={props.profile}
+        />
+      }
+    >
       <LiveUserChats {...props} />
     </SignedInIsland>
   );
 }
 
+/**
+ * The loader's first page as the rows of the profile, before the client arrives.
+ * The rows hold their final size, with a frame where each menu will be, and mount
+ * no client. A failed first read shows nothing, because no page is known.
+ */
+function StaticUserChats({
+  first,
+  now: serverNow,
+  profile,
+}: {
+  first: Option.Option<ChatFirstPage>;
+  now: number;
+  profile: PublicProfile;
+}) {
+  const clock = useAgeClock(serverNow);
+  return Option.match(first, {
+    onNone: () => null,
+    onSome: (page) => (
+      <ChatRows
+        chats={page.page}
+        clock={clock}
+        live={false}
+        loadMore={undefined}
+        profile={profile}
+      />
+    ),
+  });
+}
+
+/**
+ * The live list of the owner's chats, which starts from the loader's first page.
+ * The loader's page is on the screen before the browser connects, and the list
+ * takes its place once the session settles. The next page loads as the end of the
+ * list comes into view.
+ */
 function LiveUserChats({
   first,
   now: serverNow,
@@ -73,7 +111,6 @@ function LiveUserChats({
   now: number;
   profile: PublicProfile;
 }) {
-  const t = useTranslations("Common");
   // The list subscribes once Convex has settled the session, as the sidebar's list does.
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const pagination = usePaginatedPreloaded(
@@ -90,15 +127,53 @@ function LiveUserChats({
   if (PaginatedQueryResult.isLoadingFirstPage(pagination)) {
     return null;
   }
-  if (results.length === 0) {
+  return (
+    <ChatRows
+      chats={results}
+      clock={clock}
+      live
+      loadMore={loadMore}
+      profile={profile}
+    />
+  );
+}
+
+/**
+ * The rows of the owner's chats, with the end trigger that loads the next page as
+ * it comes into view. Only a live row mounts its menu, because the menu needs the
+ * client.
+ */
+function ChatRows({
+  chats,
+  clock,
+  live,
+  loadMore,
+  profile,
+}: {
+  chats: readonly ChatView[];
+  clock: StoreApi<AgeClock>;
+  live: boolean;
+  loadMore: (() => void) | undefined;
+  profile: PublicProfile;
+}) {
+  const t = useTranslations("Common");
+  if (chats.length === 0) {
     return <FeedEmpty>{t("no-chats")}</FeedEmpty>;
   }
   return (
     <div className="flex flex-col">
-      {Arr.map(results, (chat) => (
-        <ChatRow chat={chat} clock={clock} key={chat._id} profile={profile} />
+      {Arr.map(chats, (chat) => (
+        <ChatRow
+          chat={chat}
+          clock={clock}
+          key={chat._id}
+          live={live}
+          profile={profile}
+        />
       ))}
-      {loadMore ? <Intersection onIntersect={loadMore} /> : null}
+      {loadMore ? (
+        <Intersection key={chats.length} onIntersect={loadMore} />
+      ) : null}
     </div>
   );
 }
@@ -112,10 +187,12 @@ function LiveUserChats({
 function ChatRow({
   chat,
   clock,
+  live,
   profile,
 }: {
   chat: ChatView;
   clock: StoreApi<AgeClock>;
+  live: boolean;
   profile: PublicProfile;
 }) {
   const tAi = useTranslations("Ai");
@@ -144,7 +221,7 @@ function ChatRow({
             role="img"
           />
           <FeedEnd>
-            <UserChatsListActions chat={chat} />
+            {live ? <UserChatsListActions chat={chat} /> : <ChatActionsFrame />}
           </FeedEnd>
         </FeedHeader>
         <NavigationLink
@@ -237,5 +314,20 @@ function UserChatsListActions({ chat }: { chat: ChatView }) {
         title={tAi("delete-chat")}
       />
     </>
+  );
+}
+
+/** The More button's place before the client arrives: the same size, with no menu behind it. */
+function ChatActionsFrame() {
+  const t = useTranslations("Common");
+  return (
+    <Button
+      aria-label={t("more-actions")}
+      disabled
+      size="icon-sm"
+      variant="ghost"
+    >
+      <HugeIcons icon={MoreHorizontalIcon} />
+    </Button>
   );
 }

@@ -24,7 +24,7 @@ import { Link } from "@repo/internationalization/src/navigation";
 import { Array as Arr, Option, Schema } from "effect";
 import { createContext, startTransition, use, useState } from "react";
 import { useLocale, useTranslations } from "use-intl";
-import { useConvexAuth } from "@/components/providers/convex";
+import { useConvexAuth } from "@/components/auth/convex";
 import { LayoutContent } from "@/components/shared/content/frame";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";

@@ -33,15 +33,12 @@ export function PostComposer({
   disabled: boolean;
   profile: PublicProfile;
 }) {
-  const t = useTranslations("Posts");
   const text = usePostDraft((draft) => draft.text);
-  const setText = usePostDraft((draft) => draft.setText);
   const startSaving = usePostDraft((draft) => draft.startSaving);
   const finishSaving = usePostDraft((draft) => draft.finishSaving);
   const refuseSaving = usePostDraft((draft) => draft.refuseSaving);
   const startPost = useMutation(posts.mutations.create);
   const body = readLearnerText(text);
-  const remaining = remainingToShow(text);
 
   /** Sends the trimmed text, and shows the post in the list while the server saves it. */
   const handleSubmit: SubmitEventHandler<HTMLFormElement> = (event) => {
@@ -94,7 +91,46 @@ export function PostComposer({
   };
 
   return (
-    <FeedForm onSubmit={handleSubmit}>
+    <PostComposerFields
+      disabled={disabled}
+      onSubmit={handleSubmit}
+      profile={profile}
+    />
+  );
+}
+
+/**
+ * The composer before the client arrives: the same fields, disabled, with nothing
+ * to send. The server renders it, so the owner's first HTML keeps the composer.
+ */
+export function PostComposerFrame({ profile }: { profile: PublicProfile }) {
+  return (
+    <PostComposerFields disabled onSubmit={ignoreSubmit} profile={profile} />
+  );
+}
+
+/** A frame has nothing to send, so its submit only stops the browser from navigating. */
+const ignoreSubmit: SubmitEventHandler<HTMLFormElement> = (event) => {
+  event.preventDefault();
+};
+
+/** The composer's fields and send button, which read the draft and need no client. */
+function PostComposerFields({
+  disabled,
+  onSubmit,
+  profile,
+}: {
+  disabled: boolean;
+  onSubmit: SubmitEventHandler<HTMLFormElement>;
+  profile: PublicProfile;
+}) {
+  const t = useTranslations("Posts");
+  const text = usePostDraft((draft) => draft.text);
+  const setText = usePostDraft((draft) => draft.setText);
+  const body = readLearnerText(text);
+  const remaining = remainingToShow(text);
+  return (
+    <FeedForm onSubmit={onSubmit}>
       <FeedAvatar mascot={profile.mascot} photo={profile.image} />
       <InputGroupTextarea
         aria-label={t("placeholder")}

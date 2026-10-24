@@ -17,7 +17,7 @@ import type { Locale } from "@repo/internationalization/src/locale";
 import { useRouter } from "@repo/internationalization/src/navigation";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 import { useLocale } from "use-intl";
-import { useConvexAuth } from "@/components/providers/convex";
+import { useConvexAuth } from "@/components/auth/convex";
 import { ConvexIsland } from "@/components/providers/island";
 import { CountryFlagIcon } from "@/components/shared/flag";
 import { reportClientException } from "@/lib/analytics/client";

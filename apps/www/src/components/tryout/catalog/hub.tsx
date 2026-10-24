@@ -6,7 +6,7 @@ import { getTileShifts } from "@repo/design-system/lib/look";
 import { Array as Arr, Effect, Predicate } from "effect";
 import type { Locale } from "use-intl";
 import { useTranslations } from "use-intl";
-import { useConvexAuth } from "@/components/providers/convex";
+import { useConvexAuth } from "@/components/auth/convex";
 import { ConvexIsland } from "@/components/providers/island";
 import {
   CatalogCard,
@@ -39,10 +39,6 @@ type HubCountry = HubCountries[number];
  * which mounts only once the page holds one.
  */
 export function TryoutHubClient({ locale, page }: TryoutHubClientProps) {
-  if (!page) {
-    return null;
-  }
-
   if (page.countries.length === 0) {
     return <ComingSoon />;
   }

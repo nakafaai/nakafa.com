@@ -11,7 +11,7 @@ import {
 import { getTileLooks } from "@repo/design-system/lib/look";
 import { Array as Arr, Effect, Option, Tuple } from "effect";
 import { useLocale } from "use-intl";
-import { useConvexAuth } from "@/components/providers/convex";
+import { useConvexAuth } from "@/components/auth/convex";
 import { ConvexIsland } from "@/components/providers/island";
 import { CountryFlagIcon } from "@/components/shared/flag";
 import { getTryoutExamIcons } from "@/components/tryout/catalog/icons";

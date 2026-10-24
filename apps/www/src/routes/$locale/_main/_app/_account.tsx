@@ -1,8 +1,6 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
-import { ConvexProvider } from "convex/react";
-import { clientEnv } from "@/env.public";
+import { lazy, Suspense } from "react";
 import { sessionFn } from "@/lib/auth/session.functions";
-import { readConvexClient } from "@/lib/convex/client";
 
 /**
  * Admits a signed-in visitor to the account screens (home, notifications and
@@ -24,14 +22,23 @@ export const Route = createFileRoute("/$locale/_main/_app/_account")({
   component: AccountLayout,
 });
 
+/** The provider loads after the gate, so the client module loads for a signed-in viewer only. */
+const RouteConvexProvider = lazy(() =>
+  import("@/components/providers/route").then(({ RouteConvexProvider }) => ({
+    default: RouteConvexProvider,
+  }))
+);
+
 /**
  * Mounts the one client that the account screens read. The gate above runs before
  * this layout renders and admits only a signed-in viewer, so no visitor reaches it.
  */
 function AccountLayout() {
   return (
-    <ConvexProvider client={readConvexClient(clientEnv.VITE_CONVEX_URL)}>
-      <Outlet />
-    </ConvexProvider>
+    <Suspense fallback={null}>
+      <RouteConvexProvider>
+        <Outlet />
+      </RouteConvexProvider>
+    </Suspense>
   );
 }

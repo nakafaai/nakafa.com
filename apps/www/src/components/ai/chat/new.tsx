@@ -4,15 +4,15 @@ import { cn } from "cn";
 import type { ComponentProps, ReactNode } from "react";
 import { ChatHeader } from "@/components/ai/chat/header";
 import { StartPrompt, useStartChat } from "@/components/ai/chat/start";
-import { NinaInput, NinaSuggestions } from "@/components/ai/input";
+import { NinaInput } from "@/components/ai/input";
 import { ConvexIsland } from "@/components/providers/island";
 import { useLiveSession } from "@/components/providers/live";
 import { useCurrentAuthNavigation } from "@/lib/auth/location";
 
 /**
  * Moves directly from the welcome screen into the final conversation layout. Only
- * a signed-in learner\x27s composer reads Convex, so a visitor\x27s composer loads no
- * admission code and opens no client. A visitor\x27s composer sends to sign-in.
+ * a signed-in learner's composer reads Convex, so a visitor's composer loads no
+ * admission code and opens no client. A visitor's composer sends to sign-in.
  */
 export function ChatNew({
   children,
@@ -46,7 +46,7 @@ function NewChatLayout({
 }: {
   children: ReactNode;
   composer: ReactNode;
-  prompt: ComponentProps<typeof StartPrompt>["prompt"];
+  prompt?: ComponentProps<typeof StartPrompt>["prompt"];
   title: ReactNode;
 }) {
   return (
@@ -87,7 +87,7 @@ function NewChatLayout({
   );
 }
 
-/** A learner\x27s composer, whose admission and submission run on the page\x27s client. */
+/** A learner's composer, whose admission and submission run on the page's client. */
 function SignedInChatNew({
   children,
   title,
@@ -111,7 +111,7 @@ function SignedInChatNew({
   );
 }
 
-/** A visitor\x27s composer: its attach button and its send both ask for sign-in. */
+/** A visitor's composer: its attach button and its send both ask for sign-in. */
 function VisitorChatNew({
   children,
   title,
@@ -134,11 +134,8 @@ function VisitorChatNew({
           attachments={false}
           onAttachRequest={signIn}
           onSubmit={signIn}
-        >
-          <NinaSuggestions onSubmit={signIn} />
-        </NinaInput>
+        />
       }
-      prompt={null}
       title={title}
     >
       {children}
@@ -159,7 +156,6 @@ function PendingChatNew({
       composer={
         <NinaInput attachments={false} disabled onSubmit={() => false} />
       }
-      prompt={null}
       title={title}
     >
       {children}

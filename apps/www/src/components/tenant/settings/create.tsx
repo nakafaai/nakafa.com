@@ -22,7 +22,7 @@ import {
 import { Array as Arr, Option, Schema } from "effect";
 import { startTransition, useId, useState } from "react";
 import { useTranslations } from "use-intl";
-import { useConvexAuth } from "@/components/providers/convex";
+import { useConvexAuth } from "@/components/auth/convex";
 import { useViewerQuery } from "@/components/tenant/context";
 import {
   languageItems,

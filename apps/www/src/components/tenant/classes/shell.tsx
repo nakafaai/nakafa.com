@@ -8,7 +8,7 @@ import { Array as Arr, Option, Schema } from "effect";
 import type { ReactNode } from "react";
 import { createContext, use, useState } from "react";
 import { useTranslations } from "use-intl";
-import { useConvexAuth } from "@/components/providers/convex";
+import { useConvexAuth } from "@/components/auth/convex";
 import { LayoutContent } from "@/components/shared/content/frame";
 import { ActionLink } from "@/components/state/action";
 import { Missing } from "@/components/state/missing";

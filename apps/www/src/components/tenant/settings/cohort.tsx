@@ -5,7 +5,7 @@ import { buttonVariants } from "@repo/design-system/lib/button";
 import { Link } from "@repo/internationalization/src/navigation";
 import { createContext, type ReactNode, use } from "react";
 import { useTranslations } from "use-intl";
-import { useConvexAuth } from "@/components/providers/convex";
+import { useConvexAuth } from "@/components/auth/convex";
 import { LayoutContent } from "@/components/shared/content/frame";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { SchoolHeader } from "@/components/tenant/header";

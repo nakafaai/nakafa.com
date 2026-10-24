@@ -4,8 +4,8 @@ import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import { Array as Arr, Option } from "effect";
 import { type ReactNode, useState } from "react";
 import { useLocale } from "use-intl";
+import { useConvexAuth } from "@/components/auth/convex";
 import type { PlayerMode } from "@/components/player/mode";
-import { useConvexAuth } from "@/components/providers/convex";
 import { ShellLock } from "@/components/sidebar/lock";
 import type { TryoutRunningContent } from "@/components/tryout/content/model";
 import {

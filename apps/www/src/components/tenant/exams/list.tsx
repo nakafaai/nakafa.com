@@ -10,7 +10,7 @@ import { Array as Arr, Option } from "effect";
 import { useMemo, useState } from "react";
 import { useLocale, useTranslations } from "use-intl";
 import { useStore } from "zustand";
-import { useConvexAuth } from "@/components/providers/convex";
+import { useConvexAuth } from "@/components/auth/convex";
 import { LayoutContent } from "@/components/shared/content/frame";
 import { DataFailure } from "@/components/shared/failure";
 import { reloadPage } from "@/components/shared/reload";
