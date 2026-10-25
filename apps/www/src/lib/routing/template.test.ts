@@ -1,5 +1,9 @@
 import { describe, expect, it } from "@effect/vitest";
-import { isRenderedPath, matchesRouteTemplate } from "@/lib/routing/template";
+import {
+  isBarePath,
+  isRenderedPath,
+  matchesRouteTemplate,
+} from "@/lib/routing/template";
 
 describe("route templates", () => {
   it("matches static segments, parameters and a trailing slash", () => {
@@ -22,13 +26,36 @@ describe("route templates", () => {
   });
 });
 
-describe("rendered paths", () => {
-  const rendered = ["/$locale/chat/$id", "/$locale/search"];
+describe("bare paths", () => {
+  const templates = ["/", "/$locale/search", "/api/weather", "/school/$slug"];
 
-  it("renders the paths of the router's own routes and of a bare profile", () => {
+  it("names a path outside the root, the locales and the Worker's own routes", () => {
+    expect(isBarePath("/subjects/physics", templates)).toBe(true);
+    expect(isBarePath("/@nabil", templates)).toBe(true);
+    expect(isBarePath("/wp-login.php", templates)).toBe(true);
+  });
+
+  it("leaves the root, a locale path, a server function and a Worker route", () => {
+    expect(isBarePath("/", templates)).toBe(false);
+    expect(isBarePath("/en/anything", templates)).toBe(false);
+    expect(isBarePath("/_serverFn/abc", templates)).toBe(false);
+    expect(isBarePath("/api/other", templates)).toBe(false);
+    expect(isBarePath("/school/harapan/exams", templates)).toBe(false);
+  });
+});
+
+describe("rendered paths", () => {
+  const rendered = ["/$locale/chat/$id", "/$locale/search", "/school/$slug"];
+
+  it("renders the root and the paths of the router's own routes", () => {
     expect(isRenderedPath("/", rendered)).toBe(true);
     expect(isRenderedPath("/_serverFn/abc", rendered)).toBe(true);
-    expect(isRenderedPath("/@nabil", rendered)).toBe(true);
+    expect(isRenderedPath("/school/harapan/exams", rendered)).toBe(true);
+  });
+
+  it("leaves a bare path to the static not-found page", () => {
+    expect(isRenderedPath("/@nabil", rendered)).toBe(false);
+    expect(isRenderedPath("/.env", rendered)).toBe(false);
   });
 
   it("renders a locale path only when a rendered template names it", () => {
