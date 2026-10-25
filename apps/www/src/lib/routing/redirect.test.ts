@@ -9,11 +9,12 @@ import {
 } from "@effect/vitest";
 import { Effect, Option } from "effect";
 import {
+  readBareRedirect,
   readMainSiteRedirect,
   readMigrationResponse,
   readMovedResponse,
-  readRedirectResponse,
   readRemovedAddressNotFound,
+  readRootRedirectResponse,
   readSlashRedirectResponse,
   readSpellingRedirectResponse,
 } from "@/lib/routing/redirect";
@@ -37,58 +38,35 @@ const request = (address: string, acceptLanguage?: string) =>
       : { headers: { "accept-language": acceptLanguage } }
   );
 
-describe("readRedirectResponse", () => {
+describe("readRootRedirectResponse", () => {
   it("answers the root with the negotiated locale, a 307 and its Vary headers", () => {
-    const response = readRedirectResponse(
-      request("https://nakafa.com/", "id-ID,id;q=0.9")
+    const found = Option.getOrThrow(
+      readRootRedirectResponse(request("https://nakafa.com/", "id-ID,id;q=0.9"))
     );
 
-    expect(Option.isSome(response)).toBe(true);
-    const found = Option.getOrThrow(response);
     expect(found.status).toBe(307);
     expect(found.headers.get("location")).toBe("/id");
     expect(found.headers.get("vary")).toBe("Accept-Language, Cookie");
   });
 
-  it("leaves the root of a school host to the school home, which the router serves", () => {
+  it("leaves a school host's home and every other path to the next decision", () => {
     expect(
       Option.isNone(
-        readRedirectResponse(request("https://harapan.nakafa.com/"))
+        readRootRedirectResponse(request("https://harapan.nakafa.com/"))
+      )
+    ).toBe(true);
+    expect(
+      Option.isNone(
+        readRootRedirectResponse(request("https://nakafa.com/en/curriculum"))
       )
     ).toBe(true);
   });
+});
 
-  it("leaves a canonical path and a shared path to the router", () => {
-    expect(
-      Option.isNone(
-        readRedirectResponse(request("https://nakafa.com/en/curriculum"))
-      )
-    ).toBe(true);
-    expect(
-      Option.isNone(
-        readRedirectResponse(request("https://nakafa.com/api/ping/"))
-      )
-    ).toBe(true);
-  });
-
-  it("keeps a school host without a locale redirect on its home", () => {
-    expect(
-      Option.isNone(
-        readRedirectResponse(request("https://harapan.nakafa.com/"))
-      )
-    ).toBe(true);
-  });
-  it("leaves an address that moved to the moved-address decision, which runs before the negotiation", () => {
-    expect(
-      Option.isNone(
-        readRedirectResponse(request("https://nakafa.com/community?ref=app"))
-      )
-    ).toBe(true);
-  });
-
-  it("opens a bare profile address and its tab in the negotiated locale, with a 307 and its Vary headers", () => {
+describe("readBareRedirect", () => {
+  it("opens a bare page address and its query in the negotiated locale, with a 307 and its Vary headers", () => {
     const found = Option.getOrThrow(
-      readRedirectResponse(
+      readBareRedirect(
         request("https://nakafa.com/@nobody_has_this/chat?tab=1", "id-ID")
       )
     );
@@ -100,14 +78,25 @@ describe("readRedirectResponse", () => {
     expect(found.headers.get("vary")).toBe("Accept-Language, Cookie");
   });
 
-  it("leaves a bare profile address of a school host to the router", () => {
+  it("opens a bare page address in English when the visitor names no served language", () => {
     expect(
-      Option.isNone(
-        readRedirectResponse(
-          request("https://harapan.nakafa.com/@nobody_has_this")
-        )
-      )
-    ).toBe(true);
+      Option.getOrThrow(
+        readBareRedirect(request("https://nakafa.com/quran/2", "fr-FR,ja"))
+      ).headers.get("location")
+    ).toBe("/en/quran/2");
+  });
+
+  it("leaves a file and a locale-shaped first segment missing", () => {
+    for (const address of [
+      "https://nakafa.com/wp-login.php",
+      "https://nakafa.com/sitemap/missing.xml",
+      "https://nakafa.com/fr/subjects",
+      "https://nakafa.com/EN",
+    ]) {
+      expect(Option.isNone(readBareRedirect(request(address, "id")))).toBe(
+        true
+      );
+    }
   });
 });
 

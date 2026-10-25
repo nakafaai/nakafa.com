@@ -11,7 +11,7 @@ import { siteUrlKeys } from "@repo/site/keys";
 import { Array as Arr, Effect, Option } from "effect";
 import { hasTryoutAttemptCapability } from "@/components/tryout/route/path";
 import { readLlmsMarkdownPathname } from "@/lib/llms/routes";
-import { readProfileIdAddress, readProfileRoot } from "@/lib/profile/route";
+import { readProfileIdAddress } from "@/lib/profile/route";
 import { readMovedRedirect } from "@/lib/routing/moved";
 import { readPublicUrlMigrationRedirect } from "@/lib/routing/public/migration";
 import { readRetiredPublicRoute } from "@/lib/routing/public/retired";
@@ -110,28 +110,36 @@ export const readRemovedAddressNotFound = Effect.fn(
     : Option.none();
 });
 
+/** A first path segment shaped like a locale code, such as `fr` or `EN`. */
+const LOCALE_SHAPED_SEGMENT = /^[a-z]{2}$/iu;
+
 /**
- * The redirect of a profile address that names no locale, such as `/@username`
- * or `/@username/chat`: the same address opens in the negotiated locale, with a
- * 307 because the answer depends on the request. A school host has no profile
- * address, so its paths keep their own rules.
+ * The redirect of a bare page address, such as `/subjects/physics` or
+ * `/@username/chat`: the same address opens in the negotiated locale, which is
+ * English when the visitor's languages name none that Nakafa serves, with a 307
+ * because the answer depends on the request. The server entry asks this only for
+ * a bare address, after the moved addresses. A first segment shaped like a locale
+ * code names a locale that Nakafa does not serve, and a last segment with a dot
+ * names a file (`/wp-login.php`), so neither names a page and both stay missing.
  */
-function readBareProfileRedirect(
-  url: URL,
-  headers: Headers,
-  isSchoolHost: boolean
-): Option.Option<Response> {
-  const profile = Option.flatMap(
-    Arr.get(url.pathname.split("/"), 1),
-    readProfileRoot
+export function readBareRedirect(request: Request): Option.Option<Response> {
+  const url = new URL(request.url);
+  const segments = Arr.filter(
+    url.pathname.split("/"),
+    (segment) => segment !== ""
   );
-  if (isSchoolHost || Option.isNone(profile)) {
+  const isPage =
+    Option.exists(
+      Arr.head(segments),
+      (first) => !LOCALE_SHAPED_SEGMENT.test(first)
+    ) && Option.exists(Arr.last(segments), (last) => !last.includes("."));
+  if (!isPage) {
     return Option.none();
   }
   return Option.some(
     new Response(null, {
       headers: {
-        location: `/${negotiateLocale(headers)}${url.pathname}${url.search}`,
+        location: `/${negotiateLocale(request.headers)}${url.pathname}${url.search}`,
         vary: LOCALE_VARY,
       },
       status: 307,
@@ -203,23 +211,17 @@ export function readMovedResponse(request: Request): Option.Option<Response> {
 }
 
 /**
- * The locale redirect that answers a request before the router runs, as a
- * Response, or none: a bare profile address opens in the negotiated locale, and
- * the root opens in the negotiated locale. The server entry asks this after the
- * negotiation, because the answer to a Markdown request does not depend on the
- * locale.
+ * The redirect of the main site's root to the negotiated locale, as a Response,
+ * or none. The server entry asks this after the negotiation, because the answer
+ * to a Markdown request does not depend on the locale.
  */
-export function readRedirectResponse(
+export function readRootRedirectResponse(
   request: Request
 ): Option.Option<Response> {
   const url = new URL(request.url);
   const isSchoolHost = Option.isSome(readSchoolSlug(url.hostname));
-  return Option.orElse(
-    readBareProfileRedirect(url, request.headers, isSchoolHost),
-    () =>
-      Option.map(
-        decideRootRedirect({ headers: request.headers, isSchoolHost, url }),
-        toRedirectResponse
-      )
+  return Option.map(
+    decideRootRedirect({ headers: request.headers, isSchoolHost, url }),
+    toRedirectResponse
   );
 }
