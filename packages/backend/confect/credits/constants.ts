@@ -96,3 +96,12 @@ export function freeDailyBudgetCredits(lastMonthNetRevenueUsd: number): number {
     (FREE_BUDGET_SHARE * lastMonthNetRevenueUsd) / 30 / CREDIT_UNIT_USD
   );
 }
+
+/** Credits one top-up pack grants, bought as one Polar order. */
+export const TOP_UP_PACK_CREDITS = 1000;
+
+/** Months a top-up pack's credits last from the payment that bought them. */
+export const TOP_UP_VALIDITY_MONTHS = 12;
+
+/** The most top-up packs one read takes, soonest expiring first, so every read stays bounded. */
+export const MAX_CREDIT_LOTS = 100;

@@ -1343,7 +1343,7 @@
     "credits": "Nina credits",
     "credits-description": "Nina uses credits when she answers your questions.",
     "credits-free-footer": "Extra credits come with Pro.",
-    "credits-pro-footer": "Unused credits expire when a new period starts.",
+    "credits-pro-footer": "A pack of {credits, number} credits costs {price} and lasts up to {months, number} months while Pro is active.",
     "balance": "Balance",
     "allowance": "Allowance",
     "next-reset": "Next reset",
@@ -1404,7 +1404,10 @@
     "developers": "Developers",
     "create": "Create",
     "never": "Never",
-    "delete": "Delete"
+    "delete": "Delete",
+    "top-up-balance": "Top-up credits",
+    "top-up-ends": "Top-up expires",
+    "buy-credits": "Buy credits"
   },
   "Editor": {
     "undo": "Undo",

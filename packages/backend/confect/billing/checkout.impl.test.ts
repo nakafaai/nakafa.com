@@ -129,12 +129,14 @@ describe("billing/checkout internal steps", () => {
     expect(
       await t.mutation(internal.billing.checkout.admitCheckout, {
         event,
+        requiresPro: false,
         userId: active,
       })
     ).toEqual({ kind: "admitted" });
     expect(
       await t.mutation(internal.billing.checkout.admitCheckout, {
         event,
+        requiresPro: false,
         userId: deleting,
       })
     ).toEqual({ kind: "unavailable" });
@@ -159,6 +161,7 @@ describe("billing/checkout internal steps", () => {
             product_id: "product_1",
           },
         },
+        requiresPro: false,
         userId,
       })
     ).toEqual({ kind: "unavailable" });

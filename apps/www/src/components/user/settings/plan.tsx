@@ -102,6 +102,7 @@ function SubscribedPlanCard({ state }: { state: SubscribedState }) {
           <Button
             disabled={billing.isPending || !isActiveLocale(locale)}
             onClick={handleManage}
+            variant="outline"
           >
             <Spinner icon={Settings01Icon} isLoading={billing.isPending} />
             {t("manage-billing")}

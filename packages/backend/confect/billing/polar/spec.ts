@@ -20,6 +20,7 @@ export const polarCustomerErrorCode = "POLAR_CUSTOMER_ERROR";
 export const polarDeleteErrorCode = "POLAR_DELETE_ERROR";
 export const polarDuplicateEmailCode = "POLAR_DUPLICATE_EMAIL";
 export const polarPortalErrorCode = "POLAR_PORTAL_ERROR";
+export const polarRefundErrorCode = "POLAR_REFUND_ERROR";
 export const polarUpdateErrorCode = "POLAR_UPDATE_ERROR";
 export const polarSubscriptionListErrorCode = "POLAR_SUBSCRIPTION_LIST_ERROR";
 
@@ -107,6 +108,19 @@ export class PolarPortalError extends Schema.TaggedError<PolarPortalError>()(
   declare readonly message: string;
 }
 export const PolarPortalErrorWire = publicFailure(PolarPortalError);
+
+export class PolarRefundError extends Schema.TaggedError<PolarRefundError>()(
+  "PolarRefundError",
+  {
+    code: Schema.Literal(polarRefundErrorCode),
+    cause: Schema.optional(Schema.Unknown),
+    message: Schema.String,
+  }
+) {
+  declare readonly code: typeof polarRefundErrorCode;
+  declare readonly message: string;
+}
+export const PolarRefundErrorWire = publicFailure(PolarRefundError);
 
 export class PolarUpdateError extends Schema.TaggedError<PolarUpdateError>()(
   "PolarUpdateError",

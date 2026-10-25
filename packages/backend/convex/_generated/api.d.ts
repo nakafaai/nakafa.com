@@ -173,7 +173,12 @@ export declare const api: {
         "public",
         {},
         {
-          credits: { allowance: number; balance: number; resetAt: number };
+          credits: {
+            allowance: number;
+            balance: number;
+            lots: { balance: number; expiresAt: number | null };
+            resetAt: number;
+          };
           plan: "free" | "pro";
           subscription: {
             cancelAtPeriodEnd: boolean;
@@ -206,6 +211,12 @@ export declare const api: {
         "action",
         "public",
         {},
+        { url: string }
+      >;
+      generateTopupCheckoutLink: FunctionReference<
+        "action",
+        "public",
+        { locale: "en" | "id" | "de"; successUrl: string },
         { url: string }
       >;
     };
@@ -10901,6 +10912,7 @@ export declare const internal: {
                   previous_plan: "free" | "pro";
                 };
               };
+          requiresPro: boolean;
           timestamp?: number;
           userId: Id<"users">;
         },
@@ -12950,6 +12962,14 @@ export declare const internal: {
     };
   };
   credits: {
+    lots: {
+      expire: FunctionReference<
+        "mutation",
+        "internal",
+        { lotId: Id<"creditLots"> },
+        null
+      >;
+    };
     mutations: {
       syncAllCreditResetPeriods: FunctionReference<
         "mutation",
@@ -13469,6 +13489,7 @@ export declare const internal: {
             creditsResetAt: number;
             fingerprint: string;
             history?: { tokens: number; turns: number; unread?: number };
+            lots?: Array<{ credits: number; lotId: Id<"creditLots"> }>;
             order: number;
             page: {
               locale: "en" | "id" | "de";
@@ -13688,6 +13709,7 @@ export declare const internal: {
             creditsResetAt: number;
             fingerprint: string;
             history?: { tokens: number; turns: number; unread?: number };
+            lots?: Array<{ credits: number; lotId: Id<"creditLots"> }>;
             order: number;
             page: {
               locale: "en" | "id" | "de";

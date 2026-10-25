@@ -17,6 +17,35 @@ const currencyBranchVariants = cva("", {
   },
 });
 
+/** The inline layout of one currency's text, for a price inside a sentence. */
+const currencyTextVariants = cva("", {
+  variants: {
+    currency: {
+      EUR: "in-data-[currency=EUR]:inline hidden",
+      IDR: "in-data-[currency=IDR]:inline hidden",
+      USD: "in-data-[currency=EUR]:hidden in-data-[currency=IDR]:hidden",
+    },
+  },
+});
+
+/** One price currency's text inside a sentence. The visitor's currency shows, and the others take no room. */
+export function CurrencyText({
+  children,
+  currency,
+}: {
+  children: ReactNode;
+  currency: PricingCurrency;
+}) {
+  return (
+    <span
+      className={currencyTextVariants({ currency })}
+      data-price-currency={currency}
+    >
+      {children}
+    </span>
+  );
+}
+
 /**
  * One price currency's branch. A page renders one branch per currency, so the
  * static page carries every price, and the visitor's currency is chosen by the

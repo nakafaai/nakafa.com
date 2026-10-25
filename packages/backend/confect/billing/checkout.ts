@@ -13,7 +13,7 @@ import {
   getPolarCheckoutLocale,
   polarCheckoutLocaleValidator,
 } from "@repo/backend/confect/billing/locale";
-import { polarProductIdFor } from "@repo/backend/confect/billing/polar/catalog";
+import { PolarServer } from "@repo/backend/confect/billing/polar/catalog";
 import { readPolarServer } from "@repo/backend/confect/billing/polar/client";
 import {
   type PolarCheckoutError,
@@ -30,7 +30,7 @@ import {
   invalidCheckoutSuccessUrlCode,
 } from "@repo/backend/confect/billing/spec";
 import { readSiteUrl } from "@repo/backend/confect/site/config";
-import { Array as Arr, Effect, Option, Schema } from "effect";
+import { Effect, Option, Schema } from "effect";
 
 type CheckoutAdmissionUser = Parameters<typeof isAccountDeletionPending>[0];
 
@@ -40,20 +40,15 @@ const invalidSuccessUrl = (message: string) =>
     message,
   });
 
-/** A checkout request once it is checked: the Pro products, the Polar language, and the return URL. */
+/** A checkout request once it is checked: the Polar server, the Polar language, and the return URL. */
 const validCheckoutRequestValidator = Schema.Struct({
   locale: checkoutLocaleValidator,
   polarLocale: polarCheckoutLocaleValidator,
-  productIds: Schema.Array(Schema.String),
+  server: PolarServer,
   successUrl: Schema.String,
 });
 
-/**
- * The Pro offers one checkout sells. Polar lets the learner switch between
- * them in its checkout and selects the first, so monthly is the default and
- * yearly, at the price of 10 months, is one tap away.
- */
-const PRO_CHECKOUT_OFFERS = ["pro.monthly", "pro.yearly"] as const;
+export type ValidCheckoutRequest = typeof validCheckoutRequestValidator.Type;
 
 /** Validates the redirect a caller controls before Polar is contacted. The success URL stays on the primary site. */
 export const validateCheckoutRequest = Effect.fn(
@@ -82,11 +77,9 @@ export const validateCheckoutRequest = Effect.fn(
   return {
     locale: input.locale,
     polarLocale: getPolarCheckoutLocale(input.locale),
-    productIds: Arr.map(PRO_CHECKOUT_OFFERS, (offer) =>
-      polarProductIdFor(offer, server)
-    ),
+    server,
     successUrl: input.successUrl,
-  } satisfies typeof validCheckoutRequestValidator.Type;
+  } satisfies ValidCheckoutRequest;
 });
 
 /** Revalidates account access after Polar IO without gating sales on analytics. */

@@ -82,6 +82,38 @@ const polarSubscriptionValidator = Schema.Struct({
 );
 export type PolarSubscriptionSource = typeof polarSubscriptionValidator.Type;
 
+/**
+ * The order fields the top-up handler reads. An order's amount is in the
+ * currency's minor unit. `refundableAmount` is what a refund may take: the net
+ * amount before taxes, which Polar refunds the tax on. `subscriptionId` names the
+ * subscription a recurring order renews, and it is null for a one-time order such
+ * as a top-up pack.
+ */
+const polarOrderValidator = Schema.Struct({
+  createdAt: Schema.DateFromString,
+  currency: Schema.String,
+  customerId: Schema.String,
+  id: Schema.String,
+  modifiedAt: Schema.NullOr(Schema.DateFromString),
+  paid: Schema.Boolean,
+  productId: Schema.NullOr(Schema.String),
+  refundableAmount: Schema.Int,
+  refundedAmount: Schema.Int,
+  subscriptionId: Schema.NullOr(Schema.String),
+  totalAmount: Schema.Int,
+}).pipe(
+  Schema.encodeKeys({
+    createdAt: "created_at",
+    customerId: "customer_id",
+    modifiedAt: "modified_at",
+    productId: "product_id",
+    refundableAmount: "refundable_amount",
+    refundedAmount: "refunded_amount",
+    subscriptionId: "subscription_id",
+    totalAmount: "total_amount",
+  })
+);
+
 /** The envelope of every Polar webhook. The handler decodes `data` by the type it names. */
 const polarEnvelopeValidator = Schema.Struct({
   data: Schema.Unknown,
@@ -140,4 +172,12 @@ export const decodePolarSubscription = Effect.fn(
   Schema.decodeUnknownEffect(polarSubscriptionValidator)(input).pipe(
     Effect.mapError(payloadFailure("subscription"))
   )
+);
+
+/** Decodes one order from an order webhook's `data`. */
+export const decodePolarOrder = Effect.fn("billing.polar.decodeOrder")(
+  (input: unknown) =>
+    Schema.decodeUnknownEffect(polarOrderValidator)(input).pipe(
+      Effect.mapError(payloadFailure("order"))
+    )
 );

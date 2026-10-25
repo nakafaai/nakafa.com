@@ -19,7 +19,12 @@ const SUBSCRIPTION: BillingSubscription = {
 };
 
 const FREE: BillingOverview = {
-  credits: { allowance: 10, balance: 10, resetAt: Date.UTC(2026, 9, 26) },
+  credits: {
+    allowance: 10,
+    balance: 10,
+    lots: { balance: 0, expiresAt: null },
+    resetAt: Date.UTC(2026, 9, 26),
+  },
   plan: "free",
   subscription: null,
 };

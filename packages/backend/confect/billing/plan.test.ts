@@ -8,6 +8,7 @@ import { PlanSyncIoError } from "@repo/backend/confect/billing/spec";
 import {
   createBillingTestConvex,
   exitInMutation,
+  insertTopUpPack,
   runInMutation,
 } from "@repo/backend/test/billing";
 import { MASCOT_CODE } from "@repo/backend/test/mascot";
@@ -123,5 +124,49 @@ describe("billing/plan", () => {
         : "none";
     });
     expect(failure).toBe("PlanSyncIoError");
+  });
+});
+
+describe("billing/plan top-up packs", () => {
+  it("ends the running top-up packs when the plan drops to free, and keeps their record", async () => {
+    capture.mockReset();
+    capture.mockImplementation(() => Effect.void);
+    const t = createBillingTestConvex();
+    const userId = await t.mutation(async (ctx) => {
+      const id = await ctx.db.insert("users", {
+        authId: "auth-plan-packs",
+        credits: 0,
+        creditsResetAt: NOW,
+        email: "plan-packs@example.com",
+        mascot: MASCOT_CODE,
+        name: "Plan packs",
+        plan: "pro",
+      });
+      await insertTopUpPack(ctx, id, {
+        expiresAt: NOW + 30 * 24 * 60 * 60 * 1000,
+        providerPaymentId: "order_plan_packs",
+        remaining: 400,
+      });
+      return id;
+    });
+    const user = await t.run((ctx) => ctx.db.get("users", userId));
+    if (user === null) {
+      throw new Error("The seeded learner is missing.");
+    }
+    await t.mutation((ctx) =>
+      runInMutation(
+        ctx,
+        Effect.gen(function* () {
+          const reader = yield* DatabaseReader;
+          const stored = yield* reader
+            .table("users")
+            .get(user._id)
+            .pipe(Effect.orDie);
+          return yield* applyPlanChange(stored, "free", NOW, expired);
+        })
+      )
+    );
+    const lots = await t.run((ctx) => ctx.db.query("creditLots").collect());
+    expect(lots).toMatchObject([{ remaining: 0, state: "forfeited" }]);
   });
 });

@@ -12,6 +12,7 @@ import {
   holdsPro,
 } from "@repo/backend/confect/billing/checkout";
 import spec from "@repo/backend/confect/billing/checkout.spec";
+import { hasActiveProGrant } from "@repo/backend/confect/billing/grants";
 import { billingCurrencyFor } from "@repo/backend/confect/billing/route";
 import { checkoutSessionIoError } from "@repo/backend/confect/billing/spec";
 import atomic from "@repo/backend/confect/middleware/atomic.impl";
@@ -74,6 +75,14 @@ const admitCheckout = FunctionImpl.make(
   "admitCheckout",
   Effect.fn("billing.checkout.admit")(function* (args) {
     const reader = yield* DatabaseReader;
+    const now = yield* Clock.currentTimeMillis;
+    // A pack's checkout is withheld when the Pro grant ended during Polar's answer.
+    const holdsRequiredPlan = args.requiresPro
+      ? yield* hasActiveProGrant(args.userId, now)
+      : true;
+    if (!holdsRequiredPlan) {
+      return { kind: "unavailable" as const };
+    }
     return yield* admitCheckoutProgram({
       captureEvent: () =>
         captureProductEvent({

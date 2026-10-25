@@ -1343,7 +1343,7 @@
     "credits": "Kredit Nina",
     "credits-description": "Nina memakai kredit saat menjawab pertanyaanmu.",
     "credits-free-footer": "Kredit tambahan hadir bersama Pro.",
-    "credits-pro-footer": "Kredit yang tidak terpakai hangus saat periode baru dimulai.",
+    "credits-pro-footer": "Satu paket {credits, number} kredit harganya {price} dan berlaku sampai {months, number} bulan selama Pro aktif.",
     "balance": "Saldo",
     "allowance": "Jatah",
     "next-reset": "Reset berikutnya",
@@ -1404,7 +1404,10 @@
     "developers": "Developer",
     "create": "Buat",
     "never": "Tidak pernah",
-    "delete": "Hapus"
+    "delete": "Hapus",
+    "top-up-balance": "Kredit tambahan",
+    "top-up-ends": "Kredit tambahan berakhir",
+    "buy-credits": "Beli kredit"
   },
   "Editor": {
     "undo": "Urungkan",
