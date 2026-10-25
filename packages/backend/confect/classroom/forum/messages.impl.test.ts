@@ -17,6 +17,7 @@ import {
   TENANCY_NOW,
   tenancyFixture,
 } from "@repo/backend/test/tenancy";
+import { encodeJsonText } from "@repo/utilities/json";
 import { Array as Arr, Effect, Option } from "effect";
 
 const { edit, hide, page, send } = refs.public.classroom.forum.messages;
@@ -116,7 +117,7 @@ describe("classroom/forum messages", () => {
           true,
         ]);
         const stored = yield* fixture.run(messageRow(first.id));
-        expect(JSON.stringify(stored.sealedText)).not.toContain("tugasnya");
+        expect(encodeJsonText(stored.sealedText)).not.toContain("tugasnya");
       })
   );
 
@@ -210,7 +211,7 @@ describe("classroom/forum messages", () => {
         const entries = yield* fixture.run(journal);
         expect(
           Arr.filter(entries, (entry) =>
-            JSON.stringify(entry).includes("message.hidden")
+            encodeJsonText(entry).includes("message.hidden")
           )
         ).toHaveLength(1);
         const edited = yield* student

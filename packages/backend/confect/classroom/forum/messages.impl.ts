@@ -87,15 +87,11 @@ const messageViews = Effect.fn("classroom.forum.messages.views")(function* (
           authors,
           (candidate) => candidate._id === message.authorId
         )
-      ).pipe(Effect.orDie);
+      );
       const text =
         message.sealedText === null
           ? null
-          : yield* openText(
-              keys,
-              messageField(message),
-              message.sealedText
-            ).pipe(Effect.orDie);
+          : yield* openText(keys, messageField(message), message.sealedText);
       return {
         author: { id: message.authorId, name: author.name },
         createdAt: message.createdAt,
@@ -104,7 +100,7 @@ const messageViews = Effect.fn("classroom.forum.messages.views")(function* (
         mine: message.authorId === person._id,
         text,
       };
-    })
+    }).pipe(Effect.orDie)
   );
 });
 
