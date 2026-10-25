@@ -344,10 +344,11 @@ state. Varying the hash seed (40 values), the assumption RNG seed (3,300 fresh a
 warm trials, the only generator the call draws from), and the recursion limit (60 for
 one call, 90 across the seed search) changed nothing. So the failure does not follow
 from this body under any history that these replays reached. Two more checks on
-CPython ruled out two Workers constraints: after the SymPy import, the call drew no
-entropy, which entry.py says a Worker may not do outside the import allowance, and one
-call peaked at 0.43 MB of Python heap, far below the Worker's memory limit. The cause
-is either a Workers runtime event or a state the replays do not reach. A later probe
+CPython found no sign of a Workers constraint: after the SymPy import, the call drew
+no entropy, so a draw during a request cannot explain the failure (entry.py records
+the entropy limit only for start-up), and one call peaked at 0.43 MB of Python heap,
+far below the Worker's 128 MB memory limit. The cause is either a Workers runtime
+event or a state the replays do not reach. A later probe
 should record the exception type and message at the engine boundary before it names a
 cause. Probe 3
 recorded one engine exception in corpus round one (567 ms of CPU) and
