@@ -39,7 +39,7 @@ D6. Content pages navigate by document load and are prefetched on intent with Sp
 
 D7. Static pages set no cookies and no per-request headers. Security headers and the CSP come from _headers. The root path picks a locale with Single Redirect rules on the Accept-Language header (id, then de, otherwise en), declared in apps/www/deploy.
 
-D8. A build reads the active release once in bulk, renders every public URL, writes the .md twins, the feeds and the OG images, and fails when a page fails or when the emitted files differ from the expected URL set. An Aksara activation sends repository_dispatch with the event type aksara-release, in place of the cache POST. In the same change the replaced request-time paths are deleted: the content store, Accept negotiation, request-time content readers, server functions with no caller, the nine-page prerender list, and Set-Cookie on content.
+D8. A build reads the active release once in bulk, renders every public URL, writes the .md twins, the feeds and the OG images, and fails when a page fails or when the emitted files differ from the expected URL set. An Aksara activation starts deploy.yml with a workflow dispatch for stage prod and ref main, in place of the cache POST. In the same change the replaced request-time paths are deleted: the content store, Accept negotiation, request-time content readers, server functions with no caller, the nine-page prerender list, and Set-Cookie on content.
 
 D9. Workers Free only. No backward compatibility, no legacy path and no temporary function. Effect v4 and Confect v10 as AGENTS.md states. 100% per-file coverage. Browser suites run on a production build.
 
@@ -72,10 +72,13 @@ D9. Workers Free only. No backward compatibility, no legacy path and no temporar
 - **Cheap not-found.** A request whose first segment is neither a locale nor a
   Worker route answers the static `404.html` from assets before any redirect or
   render. Assets answer 404 with `notFoundHandling: "404-page"`.
-- **Release dispatch.** Aksara sends `repository_dispatch` with the event type
-  `aksara-release` to `nakafaai/nakafa.com` after the commit of a production
-  release that changes content. Targets with `AKSARA_CACHE_SURFACE=none` dispatch
-  nothing. The cache POST and its receipt are deleted.
+- **Release dispatch.** After the commit of a production release that changes
+  content, Aksara starts `deploy.yml` on `nakafaai/nakafa.com` with a workflow
+  dispatch (`inputs.stage` `prod`, `ref` `main`). It authenticates with a GitHub App
+  token that its release steps create, and that token carries only actions write
+  on that repository. A target with `AKSARA_CACHE_SURFACE=none` starts nothing. The
+  cache POST and its receipt are deleted. The Nakafa deploy workflow has no
+  repository dispatch trigger.
 
 Not in Phase A: the `/api` relay and the School shell (Phase B), shards and the
 stable loader (Phase C), and per-request cookies for the pricing currency, which

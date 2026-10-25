@@ -3,8 +3,6 @@ name: Deploy
 on:
   push:
     branches: [main]
-  repository_dispatch:
-    types: [aksara-release]
   workflow_dispatch:
     inputs:
       stage:
