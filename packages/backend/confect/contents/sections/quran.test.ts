@@ -181,7 +181,7 @@ describe("section Quran passages", () => {
       )
     );
     expect(versions).toHaveLength(1);
-    expect(versions[0]).toContain("1:google/gemini-embedding-2:sha256:");
+    expect(versions[0]).toContain("2:google/gemini-embedding-2:sha256:");
   });
 
   it("passes over the surahs whose documents the index holds at that version, and says how many documents it passed over", async () => {

@@ -100,7 +100,7 @@ describe("section lessons", () => {
       rawMdx: knowledgeLesson(1, "id"),
       section: "material",
       title: "ID Section 1",
-      version: expect.stringContaining("1:google/gemini-embedding-2:sha256:"),
+      version: expect.stringContaining("2:google/gemini-embedding-2:sha256:"),
     });
   });
 
