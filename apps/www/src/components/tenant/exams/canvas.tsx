@@ -1,5 +1,5 @@
 import { Add01Icon } from "@hugeicons/core-free-icons";
-import { useMediaQuery } from "@mantine/hooks";
+import { useCallbackRef, useMediaQuery } from "@mantine/hooks";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
@@ -7,6 +7,7 @@ import { Array as Arr, Option } from "effect";
 import { type RefObject, useEffect } from "react";
 import { useTranslations } from "use-intl";
 import { useQuestionActions } from "@/components/tenant/exams/actions";
+import { useQuestionReorder } from "@/components/tenant/exams/drag";
 import { isLocked } from "@/components/tenant/exams/freeze";
 import { pageAt } from "@/components/tenant/exams/pages";
 import { ExamPage } from "@/components/tenant/exams/paper";
@@ -46,11 +47,19 @@ export function ExamCanvas({
   // The canvas reads the selection from its store when it runs, so a change of the choice draws no page.
   const selection = useExamSelectionStore();
   const actions = useQuestionActions();
+  // A stable move keeps the listeners of the reorder attached across the renders of the canvas.
+  const moveQuestion = useCallbackRef(actions.moveQuestion);
   const percent = useExamZoom((zoom) => zoom.percent);
   // The chosen zoom applies from the medium width up, where the footer shows its slider. A phone
   // keeps the default, since it pinches to zoom and has no slider to undo a stored zoom.
   const wide = useMediaQuery(TAILWIND_MEDIA_QUERIES.mdAndUp);
   const drawnZoom = wide ? percent : ZOOM_DEFAULT;
+  useQuestionReorder({
+    canvas,
+    moveQuestion,
+    questions: exam.questions,
+    zoom: drawnZoom / 100,
+  });
 
   // The teacher's hand ends the hold of a page the footer chose, so the page in view is chosen again.
   useEffect(() => {
