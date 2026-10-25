@@ -40,11 +40,6 @@ const RetiredFormatArtifactSchema = Schema.Struct({
   }),
 });
 
-/** The retired-format marker read from stored artifact JSON. */
-const RetiredFormatArtifactJsonSchema = Schema.fromJsonString(
-  RetiredFormatArtifactSchema
-);
-
 /** Older retired artifact marker: component requirements carry explicit versions. */
 const VersionedComponentArtifactSchema = Schema.Struct({
   payload: Schema.Struct({
@@ -64,13 +59,6 @@ const RetiredReleaseSchema = Schema.fromJsonString(
     }),
   })
 );
-
-/** Whether one stored artifact is signed in the retired compiled-body format. */
-export function isRetiredFormatArtifact(source: string) {
-  return Option.isSome(
-    Schema.decodeOption(RetiredFormatArtifactJsonSchema)(source)
-  );
-}
 
 /** Fails one parsed rollback artifact signed under a retired content contract. */
 export const requireCurrentArtifact = Effect.fn(

@@ -62,13 +62,12 @@ signed and are in no publication, and the last point below says how they render.
   production alone cannot prove development has migrated. Keep the
   implementation through paired publication and acceptance, and remove it only
   after every active artifact's requirements exclude it.
-- The publication state records the generation of its active release. The
-  one-off `contentRelease.migration.markRetiredGeneration` records the retired
-  generation on a deployment whose active release has no recorded generation,
-  and only when a stored artifact of that release carries the retired format.
-  Any other result leaves the state unchanged. Run it once on dev and prod
-  before the bootstrap is staged, then remove it and its tests after both
-  deployments are verified.
+- The publication state records the generation of its active release, and
+  every activation records the current one. On 25 Oct 2026 a one-off migration
+  recorded the retired generation on dev and on production, each after reading a
+  stored artifact of its active release in the retired format; it was then
+  removed with its tests. A later generation change records its retired
+  generation the same way.
 - The undo of the bootstrap is a forward release of the last 0.51-era source,
   not a restore. The publication state cannot return to the retired generation.
 
