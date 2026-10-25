@@ -57,7 +57,9 @@ const LanguageModel = Schema.Struct({
    * admits, five suggestions of 300 characters each, which the estimator prices
    * at 716 tokens, with room for its error and for reasoning. The presentation
    * cap covers a title, which the schema holds to 80 characters. No Claude
-   * measurement of either exists yet (ADR 0020).
+   * measurement of either exists yet (ADR 0020). The import cap covers five
+   * dense exam pages: about 50 questions of about 250 tokens each, with room for
+   * reasoning; it is not measured yet.
    */
   output: Schema.Struct({
     chat: Schema.Int,
@@ -65,6 +67,7 @@ const LanguageModel = Schema.Struct({
     background: Schema.Int,
     suggestion: Schema.Int,
     presentation: Schema.Int,
+    import: Schema.Int,
   }),
   /**
    * What one piece of text costs in the estimator of `confect/nina/budget.ts`,
@@ -140,6 +143,7 @@ export const languageModel = {
     background: 7168,
     suggestion: 1024,
     presentation: 512,
+    import: 16_384,
   },
   tokens: {
     latinLettersPerToken: 2.25,

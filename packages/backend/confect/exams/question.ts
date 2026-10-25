@@ -162,23 +162,34 @@ const emptyLabel: typeof ContentDocumentSchema.Type = {
  */
 const NEW_CHOICE_LABEL = "Answer";
 
+/** A single-answer choice, the one interaction a question of this kind holds. */
+type ChoiceInteraction = Extract<Interaction, { kind: "choice" }>;
+
 /**
- * The interactions of a new question: a single-answer choice with `NEW_QUESTION_OPTIONS`
- * empty options and no correct option marked. `maxChoices` and `minChoices` are 1, and
- * the shuffle is off.
+ * The interactions of a question with these option labels: one single-answer choice whose
+ * options are numbered from one in order. `maxChoices` and `minChoices` are 1, and the
+ * shuffle is off.
  */
-export const newChoiceAnswers = (): Arr.NonEmptyReadonlyArray<Interaction> => {
-  const choice: Interaction = {
+export const choiceAnswers = (
+  labels: Arr.NonEmptyReadonlyArray<typeof ContentDocumentSchema.Type>
+): readonly [ChoiceInteraction] => [
+  {
     id: "choice",
     kind: "choice",
     label: NEW_CHOICE_LABEL,
     maxChoices: 1,
     minChoices: 1,
-    options: Arr.makeBy(NEW_QUESTION_OPTIONS, (index) => ({
+    options: Arr.map(labels, (label, index) => ({
       id: `option-${index + 1}`,
-      label: emptyLabel,
+      label,
     })),
     shuffle: false,
-  };
-  return [choice];
-};
+  },
+];
+
+/**
+ * The interactions of a new question: a single-answer choice with `NEW_QUESTION_OPTIONS`
+ * empty options and no correct option marked.
+ */
+export const newChoiceAnswers = (): Arr.NonEmptyReadonlyArray<Interaction> =>
+  choiceAnswers(Arr.makeBy(NEW_QUESTION_OPTIONS, () => emptyLabel));

@@ -8,6 +8,7 @@ export const Purpose = Schema.Literals([
   "background",
   "suggestion",
   "presentation",
+  "import",
 ]);
 export type Purpose = typeof Purpose.Type;
 
@@ -52,6 +53,9 @@ const Budget = Schema.Struct({
  *     steps make the total, as before (3 x 15 s).
  *   - Suggestion and presentation: their caps take a few seconds, and their
  *     deadlines stay as they were.
+ *   - Import: one step reads five pages and writes their questions. Its cap of
+ *     16,384 tokens takes about 59 s at that rate, so the step and the total are
+ *     75 s, one read at a time from the teacher's browser.
  *
  * @see docs/adr/0020-deadlines.md
  */
@@ -75,6 +79,10 @@ export const purposes = {
   presentation: {
     effort: "fast",
     timeout: { stepMs: 15_000, totalMs: 45_000 },
+  },
+  import: {
+    effort: "fast",
+    timeout: { stepMs: 75_000, totalMs: 75_000 },
   },
 } satisfies Record<Purpose, typeof Budget.Type>;
 
