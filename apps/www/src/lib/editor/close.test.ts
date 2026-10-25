@@ -20,7 +20,7 @@ vi.mock("@/lib/analytics/client", async () => {
   return { reportClientException: vi.fn(() => Eff.void) };
 });
 
-const SOURCE = "components/tenant/exams/prompt";
+const SOURCE = "components/tenant/exams/text";
 
 /** A transport whose reads of the server's steps are counted, so a test sees each round. */
 const countingReads = (transport: SyncTransport) =>

@@ -232,7 +232,7 @@
     "release-wait-footer": "The exam author or the Admin releases the results once the sitting closes.",
     "released-footer": "Students can see their results.",
     "student-results-title": "Your result",
-    "student-score": "{points} of {total} correct",
+    "student-score": "{points} of {total} points",
     "student-results-footer": "Your teacher releases the results after the sitting closes.",
     "student-answer": "Your answer: {letters}",
     "student-answers": "Your answers",

@@ -1,5 +1,8 @@
 import { Effect, Option, Schema } from "effect";
 import katex from "katex";
+// The mhchem extension registers the chemistry commands `\ce` and `\pu` on KaTeX. It loads with this
+// module, so the server and the browser draw chemistry in the first HTML, with no wait for a chunk.
+import "katex/contrib/mhchem";
 
 /** The colour of a formula that cannot be drawn: the destructive token of the theme. */
 const ERROR_COLOR = "var(--destructive)";
@@ -9,19 +12,6 @@ export class FormulaInvalid extends Schema.TaggedError<FormulaInvalid>()(
   "FormulaInvalid",
   { reason: Schema.String }
 ) {}
-
-/**
- * The chemistry commands of KaTeX's mhchem extension, `\ce` and `\pu`, which a whole command name
- * does not extend: `\cell` is no chemistry.
- */
-const CHEMISTRY = /\\(?:ce|pu)(?![a-zA-Z])/u;
-
-/**
- * Whether a formula draws chemistry, which KaTeX draws only once its mhchem extension has loaded. The
- * extension is a separate module, so the view loads it on demand and no page loads it for a formula
- * that holds no chemistry.
- */
-export const needsChemistry = (latex: string): boolean => CHEMISTRY.test(latex);
 
 /**
  * The markup of a formula, drawn by KaTeX. A formula that does not parse is drawn as KaTeX's

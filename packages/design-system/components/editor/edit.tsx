@@ -2,7 +2,6 @@ import { useCallbackRef } from "@mantine/hooks";
 import {
   drawFormula,
   formulaProblem,
-  needsChemistry,
 } from "@repo/design-system/components/editor/render";
 import {
   Popover,
@@ -37,35 +36,6 @@ const loadMathLive = Effect.tryPromise({
   catch: (cause) => new MathLiveUnavailable({ reason: String(cause) }),
   try: () => import("mathlive"),
 });
-
-/** Loads KaTeX's mhchem extension, which registers the chemistry commands when it loads. */
-const loadChemistry = Effect.tryPromise({
-  catch: (cause) => String(cause),
-  try: () => import("katex/contrib/mhchem"),
-});
-
-/**
- * Whether KaTeX knows the chemistry a formula holds. A formula with no chemistry is ready at once, and
- * one with chemistry is ready once the extension loads, which the hook starts only for such a formula. A
- * load that fails is ready too, so KaTeX draws its own error for the chemistry rather than an empty formula.
- */
-function useChemistryReady(latex: string): boolean {
-  const needed = needsChemistry(latex);
-  const [loaded, setLoaded] = useState(false);
-
-  useEffect(() => {
-    if (needed && !loaded) {
-      Effect.runFork(
-        loadChemistry.pipe(
-          Effect.option,
-          Effect.map(() => setLoaded(true))
-        )
-      );
-    }
-  }, [loaded, needed]);
-
-  return !needed || loaded;
-}
 
 /**
  * The MathLive field, made once MathLive has loaded. The field and the LaTeX text show one
@@ -140,13 +110,7 @@ export function FormulaEdit({
     Option.none()
   );
   const discarded = useRef(false);
-  const chemistryReady = useChemistryReady(draft);
-  // The problem follows the draft and the chemistry it holds, so a formula with chemistry is checked once KaTeX knows it.
-  const problem = useMemo(
-    () =>
-      chemistryReady ? Effect.runSync(formulaProblem(draft)) : Option.none(),
-    [chemistryReady, draft]
-  );
+  const problem = useMemo(() => Effect.runSync(formulaProblem(draft)), [draft]);
 
   /** Opens the editor on the saved formula, and loads MathLive for its field. */
   function openEditor(next: boolean) {
@@ -233,9 +197,8 @@ export function FormulaEdit({
 }
 
 /**
- * The drawn formula, which KaTeX draws from its LaTeX and never from any other source. A formula with
- * chemistry draws once KaTeX knows the chemistry, so the drawing waits for the extension and no page
- * holds the extension for a formula that has none.
+ * The drawn formula, which KaTeX draws from its LaTeX and never from any other source. The server and
+ * the browser draw it alike, so the first HTML already shows the formula, chemistry included.
  */
 export function FormulaMarkup({
   block,
@@ -244,11 +207,6 @@ export function FormulaMarkup({
   block: boolean;
   latex: string;
 }) {
-  const chemistryReady = useChemistryReady(latex);
-  if (!chemistryReady) {
-    return null;
-  }
-
   return (
     <span
       // biome-ignore lint/security/noDangerouslySetInnerHtml: KaTeX generates safe HTML while trust remains disabled.

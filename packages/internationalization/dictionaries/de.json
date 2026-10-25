@@ -232,7 +232,7 @@
     "release-wait-footer": "Die Administration oder der Autor der Prüfung gibt die Ergebnisse frei, sobald die Sitzung geschlossen ist.",
     "released-footer": "Die Lernenden können ihre Ergebnisse sehen.",
     "student-results-title": "Dein Ergebnis",
-    "student-score": "{points} von {total} richtig",
+    "student-score": "{points} von {total} Punkten",
     "student-results-footer": "Deine Lehrkraft gibt die Ergebnisse nach Ende der Sitzung frei.",
     "student-answer": "Deine Antwort: {letters}",
     "student-answers": "Deine Antworten",

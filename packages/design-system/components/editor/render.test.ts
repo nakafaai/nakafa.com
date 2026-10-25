@@ -4,20 +4,8 @@ import {
   drawFormula,
   FormulaInvalid,
   formulaProblem,
-  needsChemistry,
 } from "@repo/design-system/components/editor/render";
 import { Effect, Option } from "effect";
-// The formula view loads the mhchem extension on demand; the draw and check cases here load it first.
-import "katex/contrib/mhchem";
-
-describe("needsChemistry", () => {
-  it("names the formulas that draw chemistry, and no other", () => {
-    expect(needsChemistry("\\ce{H2O}")).toBe(true);
-    expect(needsChemistry("\\pu{12 kJ}")).toBe(true);
-    expect(needsChemistry("\\cell")).toBe(false);
-    expect(needsChemistry("x^2")).toBe(false);
-  });
-});
 
 describe("drawFormula", () => {
   it("draws a formula with KaTeX, in the mode it is given", () => {

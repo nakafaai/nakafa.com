@@ -232,7 +232,7 @@
     "release-wait-footer": "Penulis ujian atau Admin merilis hasilnya setelah sesi ditutup.",
     "released-footer": "Siswa sudah dapat melihat hasilnya.",
     "student-results-title": "Hasilmu",
-    "student-score": "{points} dari {total} benar",
+    "student-score": "{points} dari {total} poin",
     "student-results-footer": "Gurumu merilis hasil setelah sesi ditutup.",
     "student-answer": "Jawabanmu: {letters}",
     "student-answers": "Jawabanmu",
