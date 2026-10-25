@@ -14,6 +14,7 @@ import {
 } from "@repo/backend/scripts/content/acceptance/error";
 import { leaseLocalRuntime } from "@repo/backend/scripts/content/acceptance/lease";
 import type { AcceptanceMode } from "@repo/backend/scripts/content/acceptance/mode";
+import { acceptanceOrigin } from "@repo/backend/scripts/content/acceptance/origin";
 import {
   assertLocalPortsFree,
   localConvexEnvironment,
@@ -38,14 +39,21 @@ import {
   Schema,
 } from "effect";
 
+const portInRange = Schema.makeFilter(
+  (value: string) => Number(value.slice(value.lastIndexOf(":") + 1)) <= 65_535
+);
 const LoopbackUrl = Schema.String.check(
   Schema.isPattern(/^http:\/\/127\.0\.0\.1:[1-9][0-9]*$/),
-  Schema.makeFilter(
-    (value) => Number(value.slice(value.lastIndexOf(":") + 1)) <= 65_535
-  )
+  portInRange
+);
+/** The origin of the served app, as `acceptanceOrigin` names it. */
+const AppOrigin = Schema.String.check(
+  Schema.isPattern(/^http:\/\/localhost:[1-9][0-9]*$/),
+  portInRange
 );
 const RuntimeManifest = Schema.Struct({
   analytics: LoopbackUrl,
+  app: AppOrigin,
   backend: Schema.String,
   configurationHash: Schema.String,
   databaseInode: Schema.BigIntFromString,
@@ -63,16 +71,11 @@ export const LocalRuntimeJson = Schema.fromJsonString(RuntimeManifest);
 const LOCAL_RUNTIME_TOKEN = "acceptance-local-runtime";
 
 /**
- * The origin that the served acceptance app listens on. The browser suites
- * open it, and the stand-in analytics and the app's own origin name it.
- */
-export const ACCEPTANCE_ORIGIN = "http://localhost:3000";
-
-/**
  * One inert backend environment for signed reads in local production builds.
  * Google sign-in stays disabled; each runtime adds its own session signing key
- * as `JWKS`, so synthetic learners can sign in locally. The acceptance seeds run
- * only where `ACCEPTANCE_SEED` is set, and only this runtime sets it.
+ * as `JWKS` and its app origin as `SITE_URL`, so synthetic learners can sign in
+ * locally. The acceptance seeds run only where `ACCEPTANCE_SEED` is set, and
+ * only this runtime sets it.
  */
 const localEnvironment = {
   ACCEPTANCE_SEED: "true",
@@ -94,7 +97,6 @@ const localEnvironment = {
   POSTHOG_PROJECT_TOKEN: "build-disabled",
   RESEND_API_KEY: "build-disabled",
   RESEND_WEBHOOK_SECRET: "build-disabled",
-  SITE_URL: ACCEPTANCE_ORIGIN,
   VAULT_ROOT_KEYS: "local:YWNjZXB0YW5jZS1sb2NhbC12YXVsdC1yb290LWtleSE=",
 };
 
@@ -109,13 +111,13 @@ export function localApplicationEnvironment(runtime: LocalRuntime) {
     CONVEX_AGENT_MODE: "anonymous",
     CONVEX_SITE_URL: runtime.site,
     CONVEX_URL: runtime.query,
-    VITE_SITE_URL: localEnvironment.SITE_URL,
+    VITE_SITE_URL: runtime.app,
     VITE_CONVEX_SITE_URL: runtime.site,
     VITE_CONVEX_URL: runtime.query,
     VITE_POSTHOG_PROJECT_TOKEN: "phc_local_acceptance",
-    VITE_POSTHOG_UI_HOST: ACCEPTANCE_ORIGIN,
+    VITE_POSTHOG_UI_HOST: runtime.app,
     VITE_POSTHOG_PROXY_HOST: runtime.analytics,
-    SITE_URL: localEnvironment.SITE_URL,
+    SITE_URL: runtime.app,
     [NAKAFA_API_EDGE_CONTRACT.secretEnvironment]:
       localEnvironment[NAKAFA_API_EDGE_CONTRACT.secretEnvironment],
     [NAKAFA_MCP_EDGE_CONTRACT.secretEnvironment]:
@@ -185,6 +187,7 @@ export const initializeLocalRuntime = Effect.fn(
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const directory = `${root}/.cache/acceptance`;
+  const app = yield* acceptanceOrigin;
   const reserved = yield* directoryIdentity(directory);
   const identity = yield* createLocalSigningIdentity(directory);
   const backend = `${directory}/backend`;
@@ -258,6 +261,7 @@ export const initializeLocalRuntime = Effect.fn(
               AKSARA_AGENT_SIGNING_KEY_ID: identity.signing.keyId,
               AKSARA_AGENT_SIGNING_PUBLIC_KEY: identity.signing.publicKeyPem,
               AKSARA_PUBLICATION_TOKEN: identity.publicationToken,
+              SITE_URL: app,
             }),
             ([key, value]) => `${key}=${encodeJsonText(value)}`
           ),
@@ -280,6 +284,7 @@ export const initializeLocalRuntime = Effect.fn(
     ...reserved,
     ...urls,
     analytics: yield* reserveAnalyticsOrigin(),
+    app,
     backend,
     databaseInode: database.ino.value,
     configurationHash: yield* sha256Hex(

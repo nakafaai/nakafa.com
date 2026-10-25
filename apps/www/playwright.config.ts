@@ -1,12 +1,13 @@
 import { defineConfig, type Project } from "@playwright/test";
-import { Array as Arr, Record as Rec } from "effect";
+import { acceptanceOrigin } from "@repo/backend/scripts/content/acceptance/origin";
+import { Array as Arr, Effect, Record as Rec } from "effect";
 
-// The acceptance runtime serves its origin, localhost on port 3000, as set by
-// ACCEPTANCE_ORIGIN in packages/backend/scripts/content/acceptance/local.ts. The
-// browser tests use that host too: a local session cookie is set for localhost,
-// and the browser never sends it to 127.0.0.1. A developer server under Portless
-// takes its URL from PLAYWRIGHT_BASE_URL, for example `bunx portless get nakafa`.
-const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3000";
+// The browser tests open the acceptance runtime's origin, localhost on the port
+// that ACCEPTANCE_PORT names (3000 by default), so set the same ACCEPTANCE_PORT
+// that prepared the runtime. A developer server under Portless takes its URL
+// from PLAYWRIGHT_BASE_URL, for example `bunx portless get nakafa`.
+const baseURL =
+  process.env.PLAYWRIGHT_BASE_URL ?? Effect.runSync(acceptanceOrigin);
 
 // Projects select files by folder path, so a file that repeats a basename
 // never joins a project by accident.
