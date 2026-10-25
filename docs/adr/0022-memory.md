@@ -819,8 +819,8 @@ nobody tries them again without a new reason.
   the row leaves the list at once; the memory is deleted when the server has
   stored it. No page offers an Undo: a delete
   asks first, with the design system's `ResponsiveDialog`. The `restore` mutation
-  below has no caller, so it is deleted with its restore record in one change,
-  not kept for an older build. Words that
+  below has no caller. Its deletion, with its restore record and the reads of that
+  record, is owner-pending, so the code keeps it until the owner decides. Words that
   an open editor held and had not saved when the learner deleted the memory were
   never part of it. They open in the editor again only when the server does not
   delete the memory. A paste that would take the Markdown past 2,000 characters is

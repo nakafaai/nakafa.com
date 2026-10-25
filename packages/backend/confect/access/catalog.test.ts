@@ -294,7 +294,7 @@ describe("access/catalog", () => {
     ]);
   });
 
-  it("drops capabilities an older client does not know instead of failing", () => {
+  it("drops capabilities the client does not know instead of failing", () => {
     const capabilities = Schema.decodeSync(TenantCapabilities)([
       "tenant.view",
       "classroom.create",

@@ -76,10 +76,11 @@ that the model must change:
 - `Stimulus` stands alone, and one group of items shares it.
 - A teacher's question is school data in the school's own cell. The Aksara
   question schema reads it read-only. It is not signed, it is not in the Aksara
-  catalogue, and each row records the contract version it was written with (K1).
-  No reader dispatches on that version, and no renderer keeps an older shape (ADR
-  0018): readers decode only the current shape, and a major contract release
-  clears the school item rows of the old shape in every cell (section 10).
+  catalogue. Each row also records the contract version it was written with (K1),
+  but no reader uses that version, so whether the field stays is owner-pending.
+  No renderer keeps an older shape (ADR 0018): readers decode only the current
+  shape. The school item rows of the old shape are owner-pending: the owner decides
+  whether they are cleared in every cell (section 10).
 
 ### 2. The item body is a structured document, not code
 
@@ -254,8 +255,9 @@ has exactly one owner.
   it ships in the same deploy, and a brief break during that deploy is accepted.
   No migration, backfill, dual read, adapter, or temporary function runs.
 - School item rows are not in the corpus. A table that the new code no longer
-  reads is removed in the change that stops reading it, after its rows are
-  cleared with the Convex CLI or the owner approves their disposal.
+  reads is removed in the change that stops reading it. Clearing the school item
+  rows of the old shape is owner-pending: school data is cleared only when the
+  owner approves it, with the Convex CLI.
 - Nakafa's engine replaces `confect/tryouts` and `confect/response` in one
   deploy. No adapter, dual read, or compatibility code sits between the old and
   the new.

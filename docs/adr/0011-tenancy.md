@@ -392,12 +392,11 @@ backstop for a job that never ran.
 
 ### Retirement of the first School
 
-The first School was retired in one change, before the new School was built
-(K11). That change deleted every old School row, table, function, component,
-redirect, image, test, and dictionary key, together with the forum viewport
-engine and the School branch of account deletion. It took no backup and no
-production export, because nobody used the old School. A new ADR supersedes ADR
-0005. Retired data is deleted, not kept.
+The first School was retired before the new School was built (K11), in steps:
+#1051 removed its web app, #1037 deleted its backend and erased its rows, and a
+later release dropped its tables. It took no backup and no production export,
+because nobody used the old School. ADR 0025 replaces ADR 0005, which #1037
+deleted. Retired data is deleted, not kept.
 
 ## Implementation Contract
 

@@ -93,8 +93,9 @@ removed`.
 tenant (ADR 0012). Journal subjects, attachments, links, notifications,
 evidence, and the external-reference ledger store the same union, so no stored
 reference changes when a kind is added. Reading a stored reference checks
-permission through its kind. Adding a kind extends the union losslessly;
-removing a kind deletes the rows that reference it in the same change.
+permission through its kind. Adding a kind extends the union losslessly.
+Removing a kind keeps its journal rows as audit records, and deleting the rows
+that reference it is owner-pending.
 
 ### Consumers
 

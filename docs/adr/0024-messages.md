@@ -320,8 +320,8 @@ changes.
    field that the component keeps, is sealed with the learner's key in program
    wave A. The component has no way to change a file's name, and the storage
    sweep deletes a file's bytes with its row, so an attachment written before
-   wave A is retired data: the change removes its row and its bytes, as the sweep
-   removes any unused file, and no copy is written under the sealed name. The module that owns the sealed form opens a file's name too: the
+   wave A is learner data: deleting its row and its bytes is owner-pending, and no
+   copy is written under the sealed name. The module that owns the sealed form opens a file's name too: the
    attachments reader takes the file through it and gets the part with its name
    opened, so neither the model's file part, the admission receipt, nor the page
    sees the sealed form. A file part inside a message row is sealed and opened
@@ -523,9 +523,9 @@ that does not exist. The token's hash, not the owner's key, decides who reads.
 
 Rows written before the change are plain, and the learner's row of each is
 referenced by `ninaTurns.promptMessageId`. Those rows, and the attachments whose
-names predate sealing, are retired data. The change removes them. No temporary
-mutation, dry pass, or cursor migrates them, and no copy is written under a
-sealed name.
+names predate sealing, are learner data. Removing them is owner-pending. No
+temporary mutation, dry pass, or cursor migrates them, and no copy is written
+under a sealed name.
 
 ## Order Of Work
 

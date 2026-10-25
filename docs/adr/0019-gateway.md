@@ -445,7 +445,8 @@ Stored data:
 
 - **Usage provider.** Usage rows now store `provider` as `convexGateway.chat`,
   the id the AI SDK gives the chat models of `convexGateway`. Rows that still
-  store the earlier `gateway` id are retired data: they are deleted, never read.
+  store the earlier `gateway` id are owner-pending: the owner decides whether they are
+  deleted or kept unread, because they are billing records.
   Only the stored value changes: `nina/usage.ts` still stores `event.provider`.
 - **PostHog `gateway_*` properties.** These are the properties that
   `packages/analytics/posthog/exception.ts` declares and `nina/diagnostics.ts`

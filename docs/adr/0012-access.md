@@ -258,10 +258,10 @@ relation and counts only the grants an operator gave for a visit.
 
 ### Wire contracts
 
-Open vocabularies decode tolerantly on the client, because Convex deploys
-before the web app and open tabs keep the previous bundle. `can` drops actions
-the client does not know, audit entries decode an unknown change type or kind
-as `unknown`, and `AccessDenied.action` is a plain string. Closed values, such
+Open vocabularies decode a value that the client does not know. `can` drops an
+action the client does not know, audit entries decode an unknown change type or
+kind as `unknown`, and `AccessDenied.action` is a plain string. Whether a stored
+value that no code produces should fail instead is owner-pending. Closed values, such
 as role keys, scopes, statuses, and unit levels, change in one step with the code
 that reads them.
 

@@ -1,6 +1,6 @@
 # ADR 0007: Static Public Lessons And Reactive Learner Context
 
-> Superseded in part by [ADR 0037](0037-cloudflare.md): the hosting, delivery, and deployment decisions of this record no longer apply. Its caching design belonged to the earlier framework and is removed.
+> Superseded in part by [ADR 0037](0037-cloudflare.md): the hosting, delivery, and deployment decisions of this record no longer apply. Its caching design, restated without the earlier framework, is the Caching decision of ADR 0037.
 
 ## Decision
 

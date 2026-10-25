@@ -186,10 +186,10 @@ key names a root key that the environment lacks. The connector key never changes
 its bytes, so its blinds stay the same across a rotation. Its test: with a
 retired root key, the rewrap reports a count until it has moved every table.
 
-The school key itself is replaced only when a leak is suspected. The replacement
-takes one deploy: the new key seals new text, and no reader tries an older
-generation. Text sealed under the replaced key is retired data. The deploy
-removes it, and no job re-seals it, because a re-seal would be a migration.
+The school key itself is replaced only when a leak is suspected. A school key
+replacement is not implemented. Text sealed under the replaced key is live school
+data, so the owner decides between re-sealing that text under the new key and
+deleting it, before a replacement is built.
 
 ### Deleting a school
 
@@ -239,8 +239,8 @@ does another job.
   and no part of a word.
 - A school key belongs to the tenant, so the units of a foundation share it.
   `decide` separates them, not the cipher.
-- Replacing a school key re-seals the whole school. It is rare and costs one
-  pass over every sealed field.
+- Replacing a school key is owner-pending. Re-sealing a whole school costs one
+  pass over every sealed field, and deleting its text is the alternative.
 - The comment on `VAULT_ROOT_KEYS` in `packages/backend/convex/convex.config.ts`
   says the keys wrap each learner's vault key and each school's key.
 
@@ -265,7 +265,7 @@ does another job.
 | The school key: `tenantKeys`, its creation in `tenancy/provision:open`, `readTenantKeys`, the owner argument of `vault/text.ts`, and `rewrap` for `tenantKeys` | Built, program wave B |
 | `wordsOf` moved into `confect/vault`, and the forum index | Planned, with the forum (ADR 0025) |
 | Shredding a school key, with the deletion of its school | Planned, with the school deletion lane |
-| Replacing a school key by a new generation, on a suspected leak | Planned, in one deploy (Rotation and replacement) |
+| Replacing a school key by a new generation, on a suspected leak | Not implemented. The owner decides how live text sealed under the replaced key is handled (Rotation and replacement) |
 | `examSittings.tokenSealed`, sealed by `schedule` and `changeToken` and opened for a proctor by the dashboard | In code, with version 1 of the sittings. The school-key rotation that reseals it is planned with the rotation. |
 | The connector key: `connectorKeys`, created on first use, wrapped by the current root key, moved by `rewrap`, and never shredded. It blinds each Google account under every owner (`blindGoogleAccount`) | Built, CN1 |
 | `connectorSecrets` | Built, CN1 (ADR 0015) |

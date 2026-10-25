@@ -16,8 +16,8 @@ export const learnerTextValidator = Schema.String.check(
 );
 
 /**
- * Why a text is refused. The codes keep their post names, because `posts.create`
- * answers them to deployed clients, and a rename needs its own rollout.
+ * Why a text is refused. The codes are the names that `posts.create` answers.
+ * A rename changes the code and every reader in one deploy.
  */
 export const LearnerTextRefusal = Schema.Literals([
   "POST_TEXT_EMPTY",

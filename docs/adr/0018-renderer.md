@@ -40,7 +40,9 @@ signed and are in no publication, and the last point below says how they render.
   player that uses them is wave B.
 - The content generation moved once, from the retired Aksara 0.51 compiled-body
   format (`mdx-function-body`) to the content tree (`content-tree`), and never
-  back. The retired generation is not bootstrapped, retained, or restored. A
+  back. The retired generation keeps one path in code, a bootstrap that replaces every
+  head (`isBootstrapCandidate`). Its deletion is owner-pending until no stored
+  release names the retired generation, and no new generation bootstraps. A
   later generation change ships in one step with the renderer that reads it, and
   its retired data is deleted rather than migrated. Nothing may stage or activate
   over an active release whose generation is not recorded.

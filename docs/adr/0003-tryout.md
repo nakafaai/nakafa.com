@@ -136,9 +136,9 @@ number the grader read. A deterministic integrity check defers to the stored
 outcome only where its own evaluation is `pending`.
 
 Responses store their outcome beside the legacy `isCorrect` flag, which stays
-true only for `correct`. In one change, the flag and the read function that maps
-rows written before outcomes are removed, and those rows are cleared rather than
-migrated. Counters count complete answers and correct outcomes, so a
+true only for `correct`. The flag and the read function that maps rows written
+before outcomes are removed in one change, and clearing those learner rows is
+owner-pending. Counters count complete answers and correct outcomes, so a
 pending answer is answered but never correct.
 
 Every strategy reads a question's worth only through the contract's

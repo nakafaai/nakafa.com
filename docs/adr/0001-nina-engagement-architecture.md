@@ -539,8 +539,9 @@ Math is the one capability above the bound: its card nests `data`, `result`,
 `steps`, a step and its `items` below the artifact. Flattening it changes the
 stored shape that the page decodes with `CapabilityOutputSchema`, so the schema,
 the writer, and the page change in one deploy. Stored math messages of the old
-shape are retired data: they are deleted in that same change, never read or
-migrated. Until the flatten, the test holds math at the depth its card has: a
+shape are owner-pending: they are learner chat data, and the owner decides whether
+they are deleted in that same change. No migration reads them.
+Until the flatten, the test holds math at the depth its card has: a
 card that grows fails, and so does one that fits the bound, until the exception
 is deleted.
 

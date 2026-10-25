@@ -73,6 +73,35 @@ never invoke a Worker.
    the parser (`cas/work.py`) refuse a request beyond a bound with 422, and the
    operation that owns a value refuses the rest. Production routes
    `cas.nakafa.com` to the front Worker.
+8. **Caching follows the release.** Every rule below is framework-neutral.
+   - The content store is one memory store in each isolate, capped at 16 MiB of
+     JSON text. An entry over 2 MB is not kept. It holds only what Convex
+     answered, under a digest of the store version, the release, the read, and
+     its arguments. Each entry lives 30 days under the tag of its release, so a
+     new release has new keys and an entry is never stale. A stored `null` stays
+     apart from a miss, so a found answer and a missing one are each kept for
+     their release.
+   - What code derives from an answer, such as a URL or Markdown, is derived after
+     the read and is not stored. A change in a derivation takes effect with its
+     deploy.
+   - The active release pointer is the one read that is not release-keyed. Each
+     isolate keeps it for 60 seconds, and the activation route expires it in the
+     isolate that serves it. A store miss reads it from Convex again, and a hit
+     does not. A pointer that is wrong is dropped by the first read that proves
+     it: a miss that finds Convex naming another release, whether its load
+     succeeded or failed, or a pinned read that names another release than its pin.
+   - Public content documents carry `s-maxage=3600, stale-while-revalidate=86400`,
+     so the CDN keeps a document for an hour and serves the stale copy for a day
+     while it revalidates. Sitemaps and RSS feeds carry `s-maxage=86400` with the
+     same stale day. The sitemap index and pages are derived on every read from
+     stored answers, and each read ends with a check of the release against Convex,
+     which fails on another release instead of keeping a page as missing.
+   - Social images carry `s-maxage=3600, stale-while-revalidate=86400` and no CDN
+     tag. An image changes only when its route changes, and a route changes only
+     with a release, so the hour bounds how long a stale image can last.
+   - A request without a session cookie is a visitor. The route answers it as
+     signed out without a network call, so only a request with a session cookie
+     reaches Convex.
 
 ## Consequences
 
@@ -209,15 +238,20 @@ before SymPy builds it, so it costs well under one second.
 
 ### Corpus replay on Workers (round 3, decision 46; commit b7741ea6b7)
 
-The replay sent 1,070 calls over 214 bodies, which are 36 beyond-bound inputs
-that must answer 422 in under one second and 46 in-bound inputs that must answer
-200 in under twenty seconds. Every bar passed except the corpus bar: one call,
+The replay sent 1,070 calls over 214 bodies. Of its 82 cases, 36 are beyond-bound
+inputs that must answer 422 in under one second, and 46 are in-bound inputs that
+must answer 200 in under twenty seconds. Every bar passed except the corpus bar: one call,
 index 91, `solve` of `x^x * (ln(x) + 1) = 0`, answered 503 after one engine
 exception on Workers. The probe stopped at that bar, its stage was destroyed, and
 no further probe ran on that head. The slowest in-bound input, `H21` (definite
 `1/(x^6+1)` on [0, 1]), took 7.9 seconds, about 2.5 times under the 20-second
 deadline, so it is the first case to watch if the Workers runtime changes its
 speed.
+
+The front Worker's CPU P99 measured 9 ms in the probe telemetry, under the
+10 ms limit of Workers Free. The 14 to 16 ms maxima completed with outcome `ok`,
+so the telemetry does not show the limit that applies to one invocation. The
+margin at P99 is one millisecond: a measured margin, not a proof.
 
 ### Index 91 failure and its fix
 
