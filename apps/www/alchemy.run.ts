@@ -51,13 +51,7 @@ export default Stack(
     }
 
     const web = yield* Website.Vite("Web", {
-      // A prerendered page is `<path>/index.html`, and its URL has no trailing
-      // slash, so the asset answers at `/en` instead of redirecting to `/en/`.
-      // A path with no asset reaches the Worker, which answers the 404 page.
-      assets: {
-        htmlHandling: "drop-trailing-slash",
-        notFoundHandling: "404-page",
-      },
+      assets: workerSettings.assets,
       compatibility: {
         date: workerSettings.compatibilityDate,
         flags: workerSettings.compatibilityFlags,

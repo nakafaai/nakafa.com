@@ -270,6 +270,7 @@ function alchemyWorker(
       compatibilityFlags: workerSettings.compatibilityFlags,
       viteEnvironments: workerSettings.viteEnvironments,
       worker: {
+        assets: workerSettings.assets,
         bindings: Object.entries({
           ...workerEnvironment(),
           NODE_ENV: nodeEnvironment,
