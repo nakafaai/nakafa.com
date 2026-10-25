@@ -64,12 +64,6 @@ jobs:
       - name: Install dependencies
         uses: ./.github/actions/install
 
-      - name: Load the environment's values
-        env:
-          ENVIRONMENT_SECRETS: ${{ toJSON(secrets) }}
-          ENVIRONMENT_VARIABLES: ${{ toJSON(vars) }}
-        run: node scripts/github/environment.ts
-
       - name: Deploy Convex
         working-directory: packages/backend
         env:
@@ -81,6 +75,27 @@ jobs:
         with:
           version: "0.13.5"
 
+      # Each value is named, so this step receives only what the build and the
+      # Worker bindings read. `VITE_` values are variables, every other one a secret.
       - name: Deploy the Cloudflare stack
         working-directory: apps/www
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          AKSARA_PUBLICATION_TOKEN: ${{ secrets.AKSARA_PUBLICATION_TOKEN }}
+          CONTENT_RUNTIME_TOKEN: ${{ secrets.CONTENT_RUNTIME_TOKEN }}
+          CONVEX_CLOUD_URL: ${{ secrets.CONVEX_CLOUD_URL }}
+          MATH_CAS_API_KEY: ${{ secrets.MATH_CAS_API_KEY }}
+          NAKAFA_API_EDGE_SECRET: ${{ secrets.NAKAFA_API_EDGE_SECRET }}
+          NAKAFA_CONVEX_SITE_URL: ${{ secrets.NAKAFA_CONVEX_SITE_URL }}
+          NAKAFA_MCP_EDGE_SECRET: ${{ secrets.NAKAFA_MCP_EDGE_SECRET }}
+          OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}
+          SITE_URL: ${{ secrets.SITE_URL }}
+          VITE_APP_URL: ${{ vars.VITE_APP_URL }}
+          VITE_CONVEX_SITE_URL: ${{ vars.VITE_CONVEX_SITE_URL }}
+          VITE_CONVEX_URL: ${{ vars.VITE_CONVEX_URL }}
+          VITE_POLAR_SERVER: ${{ vars.VITE_POLAR_SERVER }}
+          VITE_POSTHOG_KEY: ${{ vars.VITE_POSTHOG_KEY }}
+          VITE_POSTHOG_PROXY_HOST: ${{ vars.VITE_POSTHOG_PROXY_HOST }}
+          VITE_POSTHOG_UI_HOST: ${{ vars.VITE_POSTHOG_UI_HOST }}
         run: bunx --no-install alchemy deploy --stage "$NAKAFA_DEPLOY_STAGE" --yes
