@@ -72,6 +72,20 @@ beforeEach(() => {
 });
 
 describe("og copy of articles", () => {
+  it.effect("names the curricula section with its index copy", () =>
+    Effect.gen(function* () {
+      const copy = yield* readOgCopy("id", ["curriculum"]);
+
+      expect(copy).toStrictEqual(
+        Option.some({
+          description: "LearningPrograms.curriculum-index-metadata-description",
+          title: "LearningPrograms.curriculum-index-metadata-title",
+        })
+      );
+      expect(getCachedMetadataFromSlugMock).not.toHaveBeenCalled();
+    })
+  );
+
   it.effect("names the articles index with the common and article copy", () =>
     Effect.gen(function* () {
       const copy = yield* readOgCopy("en", ["articles"]);

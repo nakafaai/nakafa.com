@@ -107,8 +107,8 @@ This guide is a map. It states each Nakafa decision once and names the file, com
 ## Content Rendering
 
 - Authored MDX and its editorial rules live only in Aksara; Nakafa owns the renderer. `docs/adr/0018-renderer.md` owns the contract: locale equivalents without fallback, Markdown response labels, heading levels, math component names, one current renderer implementation without version fields or compatibility adapters, and the proof required before a renderer name is removed.
-- Aksara evaluates each document once at publication and signs a content tree of data (`@nakafa/aksara-contracts/tree`). Nakafa renders that tree with its component map in `apps/www/src/lib/content/published/tree.ts` and evaluates no code at request time, because Cloudflare Workers forbid it.
-- Robots.txt comes from the crawler registry in `packages/site/crawlers.ts`. The same list renders the robots groups and the one edge rule in `apps/www/deploy/bots.ts`, so no second list of crawler names exists.
+- Aksara evaluates each document once at publication and signs a content tree of data (`@nakafa/aksara-contracts/tree`). Nakafa renders that tree at build time, when the static prerender writes each public page, and evaluates no code in the Worker, because Cloudflare Workers forbid it. `docs/adr/0038-static.md` owns the static-first path: the build reads the active release once, writes every public page, its `.md` twin, its section social image and the feeds into the client assets, and the Worker renders no prerendered page. The Worker still renders the learner routes that no static page can answer (search, try-out tracks, sets and sections, and signed-in screens) until Phase B and C move them to the browser.
+- Robots.txt comes from the crawler registry in `apps/www/src/lib/seo/crawlers.ts`. The same list renders the robots groups and the one edge rule in `apps/www/deploy/bots.ts`, so no second list of crawler names exists.
 
 ## Commands And Verification
 

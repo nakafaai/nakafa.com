@@ -12,12 +12,8 @@ import {
 } from "@/test/content-article";
 
 describe("createLocalizedAlternates", () => {
-  it("builds canonical, locale, default, and markdown alternates", () => {
-    const result = createLocalizedAlternates("/id/articles/politics/example", {
-      types: {
-        "text/markdown": "/id/articles/politics/example.md",
-      },
-    });
+  it("builds canonical, locale, and default alternates", () => {
+    const result = createLocalizedAlternates("/id/articles/politics/example");
 
     expect(result).toEqual({
       canonical: "/id/articles/politics/example",
@@ -26,9 +22,6 @@ describe("createLocalizedAlternates", () => {
         en: "/en/articles/politics/example",
         id: "/id/articles/politics/example",
         "x-default": "/en/articles/politics/example",
-      },
-      types: {
-        "text/markdown": "/id/articles/politics/example.md",
       },
     });
   });
