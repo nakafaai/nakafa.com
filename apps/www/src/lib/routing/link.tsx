@@ -115,12 +115,7 @@ const RouterLink = createLink(LinkAnchor);
 export function Link<const TTo extends string | undefined = undefined>(
   props: LinkComponentProps<"a", RegisteredRouter, typeof LOCALE_ROUTE, TTo>
 ) {
-  return (
-    <RouterLink
-      activeOptions={EXACT_ACTIVE_OPTIONS}
-      {...props}
-    />
-  );
+  return <RouterLink activeOptions={EXACT_ACTIVE_OPTIONS} {...props} />;
 }
 
 /**

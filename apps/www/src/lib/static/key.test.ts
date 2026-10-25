@@ -2,6 +2,9 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import { staticCallKey } from "@/lib/static/key";
 
+/** A lower-case SHA-256 digest in hexadecimal. */
+const SHA_256_HEX = /^[0-9a-f]{64}$/;
+
 describe("lib/static/key", () => {
   it.effect(
     "keys one call the same way every time, and another input apart",
@@ -17,7 +20,7 @@ describe("lib/static/key", () => {
           locale: "en",
         });
 
-        expect(first).toMatch(/^[0-9a-f]{64}$/);
+        expect(first).toMatch(SHA_256_HEX);
         expect(again).toBe(first);
         expect(other).not.toBe(first);
       })
