@@ -45,10 +45,17 @@ const Claim = Schema.fromJsonString(
   Schema.Struct({ cursor: Schema.NullOr(Schema.String), userId: Schema.String })
 );
 
-/** The text one Convex command prints, as the local backend answers it. */
-function answerOf(args: readonly string[], users: string) {
+/**
+ * The text one Convex command prints, as the local backend answers it. The lookup of the
+ * Owner's address finds the account `user-1` when `existing`, and nothing otherwise, which the
+ * CLI prints as no text.
+ */
+function answerOf(args: readonly string[], users: string, existing: boolean) {
   if (Arr.contains(args, "data")) {
     return users;
+  }
+  if (Arr.contains(args, "adapter:findOne")) {
+    return existing ? '{"_id":"user-1"}' : "";
   }
   if (
     Arr.contains(args, "auth/lifecycle:onCreate") ||
@@ -59,14 +66,17 @@ function answerOf(args: readonly string[], users: string) {
   return '{"_creationTime":1,"_id":"user-1"}';
 }
 
-/** Answers every command and keeps the commands in the order they ran. The new account's Better Auth user is `user-1`. */
-function answerCommands(users: string) {
+/** Answers every command and keeps the commands in the order they ran. The Owner's Better Auth user is `user-1`. */
+function answerCommands(users: string, existing = false) {
   const specs = MutableList.make<CommandSpec>();
   mocks.command.mockImplementation((spec: CommandSpec) =>
     Effect.gen(function* () {
       MutableList.append(specs, spec);
       const fs = yield* FileSystem.FileSystem;
-      yield* fs.writeFileString(spec.stdoutPath, answerOf(spec.args, users));
+      yield* fs.writeFileString(
+        spec.stdoutPath,
+        answerOf(spec.args, users, existing)
+      );
     })
   );
   return specs;
@@ -119,6 +129,31 @@ describe("acceptance owner", () => {
         expect(
           yield* Schema.decodeEffect(Claim)(lastArgument(claimCall))
         ).toEqual({ cursor: null, userId: "app-user-1" });
+        const cookie = yield* fs
+          .readFileString(`${root}/owner.json`)
+          .pipe(Effect.flatMap(Schema.decodeEffect(SessionCookie)));
+        expect(cookie.name).toBe("better-auth.session_token");
+      }).pipe(Effect.scoped, Effect.provide(nodeServicesLayer))
+  );
+
+  it.effect(
+    "signs the same Owner in again as the account that holds the address, with a new session and no second account",
+    () =>
+      Effect.gen(function* () {
+        const { fs, root } = yield* fixture;
+        const specs = answerCommands(
+          '[{"_id":"app-user-1","authId":"user-1"}]',
+          true
+        );
+
+        yield* createAcceptanceOwner(root, SLUG, `${root}/owner.json`);
+
+        const created = Arr.filter(MutableList.toArray(specs), (spec) =>
+          Arr.contains(spec.args, "adapter:create")
+        );
+        expect(Arr.map(created, (spec) => lastArgument(spec))).toEqual([
+          expect.stringContaining('"model":"session"'),
+        ]);
         const cookie = yield* fs
           .readFileString(`${root}/owner.json`)
           .pipe(Effect.flatMap(Schema.decodeEffect(SessionCookie)));
