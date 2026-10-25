@@ -313,6 +313,8 @@
     "import-dialog-description": "Nina puts the questions of a Word or PDF file at the end of this exam.",
     "import-submit": "Import",
     "import-hint": "Word or PDF, up to 20 MB.",
+    "import-drop": "Drop a Word or PDF file here, or choose one.",
+    "import-remove": "Remove file",
     "presence-editor": "{name} is editing",
     "presence-more": "{names} are editing"
   },

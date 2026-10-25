@@ -313,6 +313,8 @@
     "import-dialog-description": "Nina setzt die Fragen einer Word- oder PDF-Datei ans Ende dieser Prüfung.",
     "import-submit": "Importieren",
     "import-hint": "Word oder PDF, höchstens 20 MB.",
+    "import-drop": "Lege eine Word- oder PDF-Datei hier ab oder wähle eine aus.",
+    "import-remove": "Datei entfernen",
     "presence-editor": "{name} bearbeitet gerade",
     "presence-more": "{names} bearbeiten gerade"
   },

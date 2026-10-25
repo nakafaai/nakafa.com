@@ -1,19 +1,13 @@
 import { FileImportIcon } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
-import {
-  Field,
-  FieldDescription,
-  FieldGroup,
-  FieldLabel,
-} from "@repo/design-system/components/ui/field";
+import { FieldGroup } from "@repo/design-system/components/ui/field";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
-import { Input } from "@repo/design-system/components/ui/input";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
 import { Effect } from "effect";
-import { useId, useState } from "react";
+import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { useImportFile } from "@/components/tenant/exams/import/calls";
-import { IMPORT_ACCEPT } from "@/components/tenant/exams/import/file";
+import { ImportFileField } from "@/components/tenant/exams/import/field";
 import { useExam } from "@/components/tenant/exams/provider";
 
 /**
@@ -29,7 +23,6 @@ export function ImportQuestions() {
   const importFile = useImportFile(slug);
   const [open, setOpen] = useState(false);
   const [file, setFile] = useState<File | null>(null);
-  const id = useId();
 
   /** Opens or closes the dialog. A closed dialog forgets its file, so it opens empty again. */
   const show = (next: boolean) => {
@@ -75,16 +68,11 @@ export function ImportQuestions() {
         title={t("import-title")}
       >
         <FieldGroup>
-          <Field>
-            <FieldLabel htmlFor={`${id}-file`}>{t("import-label")}</FieldLabel>
-            <Input
-              accept={IMPORT_ACCEPT}
-              id={`${id}-file`}
-              onChange={(event) => setFile(event.target.files?.item(0) ?? null)}
-              type="file"
-            />
-            <FieldDescription>{t("import-hint")}</FieldDescription>
-          </Field>
+          <ImportFileField
+            description={t("import-hint")}
+            file={file}
+            onFile={setFile}
+          />
         </FieldGroup>
       </ResponsiveDialog>
     </>

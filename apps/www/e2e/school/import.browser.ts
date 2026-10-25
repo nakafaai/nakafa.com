@@ -55,6 +55,11 @@ test("a teacher creates an exam from a Word file: the title follows the file, th
   await expect(dialog.getByRole("textbox", { name: "Exam title" })).toHaveValue(
     "PTS Matematika"
   );
+  // The field names the chosen file, with a way to remove it.
+  await expect(dialog.getByText("PTS Matematika.docx")).toBeVisible();
+  await expect(
+    dialog.getByRole("button", { name: "Remove file" })
+  ).toBeVisible();
   await dialog.getByRole("button", { name: "Create exam" }).click();
 
   // The editor opens at once with the exam's first question while Nina reads. The local backend
@@ -118,9 +123,17 @@ test("the editor imports a Word file into the open exam from its header, as Goog
       name: "Bab 2.docx",
     });
 
-  // A file chosen and then cancelled is gone when the dialog opens again.
+  // A removed file leaves the field empty, and a file chosen and then cancelled is gone when the
+  // dialog opens again.
   await page.getByRole("button", { name: "Import" }).click();
   await chooseFile();
+  await importDialog.getByRole("button", { name: "Remove file" }).click();
+  await expect(importDialog.getByText("Bab 2.docx")).toHaveCount(0);
+  await expect(
+    importDialog.getByRole("button", { name: "Import" })
+  ).toBeDisabled();
+  await chooseFile();
+  await expect(importDialog.getByText("Bab 2.docx")).toBeVisible();
   await importDialog.getByRole("button", { name: "Cancel" }).click();
   await expect(importDialog).toBeHidden();
   await page.getByRole("button", { name: "Import" }).click();

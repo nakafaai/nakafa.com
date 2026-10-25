@@ -313,6 +313,8 @@
     "import-dialog-description": "Nina menaruh soal dari berkas Word atau PDF di akhir ujian ini.",
     "import-submit": "Impor",
     "import-hint": "Word atau PDF, paling besar 20 MB.",
+    "import-drop": "Letakkan berkas Word atau PDF di sini, atau pilih satu.",
+    "import-remove": "Hapus berkas",
     "presence-editor": "{name} sedang mengedit",
     "presence-more": "{names} sedang mengedit"
   },

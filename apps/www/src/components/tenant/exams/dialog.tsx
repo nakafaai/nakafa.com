@@ -31,7 +31,7 @@ import {
   Schema,
   String as Str,
 } from "effect";
-import { useId, useRef, useState, useTransition } from "react";
+import { useId, useState, useTransition } from "react";
 import { useTranslations } from "use-intl";
 import type { StoreApi } from "zustand";
 import { useConvexAuth } from "@/components/auth/convex";
@@ -43,10 +43,8 @@ import {
 } from "@/components/tenant/exams/create";
 import type { ExamDrafts } from "@/components/tenant/exams/drafts";
 import { useImportFile } from "@/components/tenant/exams/import/calls";
-import {
-  IMPORT_ACCEPT,
-  titleOfFile,
-} from "@/components/tenant/exams/import/file";
+import { ImportFileField } from "@/components/tenant/exams/import/field";
+import { titleOfFile } from "@/components/tenant/exams/import/file";
 import { insertDraftExam } from "@/components/tenant/exams/optimistic";
 import { placeholderExamId } from "@/components/tenant/exams/placeholder";
 
@@ -76,9 +74,7 @@ export function CreateExam({
   const isSettled = useConvexAuth((auth) => !auth.isLoading);
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
-  // The file is read from its input when the dialog submits, so a dialog that closed without
-  // creating leaves no file behind for the next exam.
-  const fileInput = useRef<HTMLInputElement>(null);
+  const [file, setFile] = useState<File | null>(null);
   const [picked, setPicked] = useState<string | null>(null);
   const id = useId();
   const [isPending, startTransition] = useTransition();
@@ -96,6 +92,14 @@ export function CreateExam({
   const titleTooLong = name !== "" && !Schema.is(ExamTitle)(name);
   const ready = Option.isSome(choice) && Schema.is(ExamTitle)(name);
 
+  /** Opens or closes the dialog. A closed dialog forgets its file, so the next exam starts without one. */
+  const show = (next: boolean) => {
+    setOpen(next);
+    if (!next) {
+      setFile(null);
+    }
+  };
+
   /**
    * Creates the exam, shows it at once, and goes to its editor once the server saves it. The
    * dialog closes at once, and the create button stays inert until the save settles, so a second
@@ -106,8 +110,7 @@ export function CreateExam({
       return;
     }
     const { scope } = choice.value;
-    const file = fileInput.current?.files?.item(0) ?? null;
-    setOpen(false);
+    show(false);
     startTransition(() =>
       runExamAction(
         placeholderExamId.pipe(
@@ -150,7 +153,7 @@ export function CreateExam({
         description={t("create-description")}
         footer={
           <>
-            <Button onClick={() => setOpen(false)} variant="outline">
+            <Button onClick={() => show(false)} variant="outline">
               {common("cancel")}
             </Button>
             <Button
@@ -163,7 +166,7 @@ export function CreateExam({
           </>
         }
         open={open}
-        setOpen={setOpen}
+        setOpen={show}
         title={t("create")}
       >
         <FieldGroup>
@@ -185,24 +188,16 @@ export function CreateExam({
               </FieldDescription>
             ) : null}
           </Field>
-          <Field>
-            <FieldLabel htmlFor={`${id}-file`}>{t("import-label")}</FieldLabel>
-            <Input
-              accept={IMPORT_ACCEPT}
-              id={`${id}-file`}
-              onChange={(event) => {
-                const chosen = event.target.files?.item(0) ?? null;
-                if (chosen !== null && name === "") {
-                  setTitle(
-                    Option.getOrElse(titleOfFile(chosen.name), () => "")
-                  );
-                }
-              }}
-              ref={fileInput}
-              type="file"
-            />
-            <FieldDescription>{t("import-description")}</FieldDescription>
-          </Field>
+          <ImportFileField
+            description={t("import-description")}
+            file={file}
+            onFile={(chosen) => {
+              setFile(chosen);
+              if (chosen !== null && name === "") {
+                setTitle(Option.getOrElse(titleOfFile(chosen.name), () => ""));
+              }
+            }}
+          />
           <Field>
             <FieldLabel htmlFor={`${id}-unit`}>{t("unit")}</FieldLabel>
             <Select
