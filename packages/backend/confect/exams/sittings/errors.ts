@@ -37,6 +37,12 @@ export class AttemptLocked extends Schema.TaggedError<AttemptLocked>()(
   { ...refusal("ATTEMPT_LOCKED", "A proctor has locked this attempt.") }
 ) {}
 
+/** A write whose answer version is not newer than the one saved, so a newer answer already took its place. */
+export class StaleAnswer extends Schema.TaggedError<StaleAnswer>()(
+  "StaleAnswer",
+  { ...refusal("STALE_ANSWER", "A newer answer is already saved.") }
+) {}
+
 /** A device that does not own the attempt. A proctor can allow a second device. */
 export class SecondDevice extends Schema.TaggedError<SecondDevice>()(
   "SecondDevice",

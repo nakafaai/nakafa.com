@@ -19,7 +19,7 @@ export const PLAYER_MODE_MAX_AGE = Duration.toSeconds(Duration.days(365));
 export const decodePlayerMode = Schema.decodeUnknownOption(PlayerModeSchema);
 
 /** The view search parameter of one request: missing, unknown, or a view. */
-const PlayerModeParamSchema = Schema.Union([
+export const PlayerModeParamSchema = Schema.Union([
   Schema.Struct({ kind: Schema.Literal("absent") }),
   Schema.Struct({ kind: Schema.Literal("invalid") }),
   Schema.Struct({ kind: Schema.Literal("valid"), mode: PlayerModeSchema }),

@@ -6,31 +6,24 @@ import type { TenantSlug } from "@repo/backend/confect/tenancy/slug";
 import { Button } from "@repo/design-system/components/ui/button";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { JsonTextSchema } from "@repo/utilities/json";
-import {
-  Array as Arr,
-  Clock,
-  Effect,
-  Option,
-  Record as Rec,
-  Schema,
-} from "effect";
+import { Array as Arr, Effect, Option, Record as Rec, Schema } from "effect";
 import { useId, useMemo } from "react";
 import { useTranslations } from "use-intl";
 import { sittingCallFailures } from "@/components/exams/sitting/actions";
-import { useSendAnswer } from "@/components/exams/sitting/answer";
+import { useChooseAnswer } from "@/components/exams/sitting/answer";
 import { SittingChoice } from "@/components/exams/sitting/choice";
-import { SittingDocument } from "@/components/exams/sitting/document";
-import { keepAnswer } from "@/components/exams/sitting/keep";
-import { useFlags } from "@/components/exams/sitting/marks";
+import {
+  PromptReserve,
+  SittingDocument,
+} from "@/components/exams/sitting/document";
+import { useMarkFlag } from "@/components/exams/sitting/mark";
 import type { PaperQuestion } from "@/components/exams/sitting/paper";
 import {
   pictureIdsOfDocuments,
   SittingPictures,
 } from "@/components/exams/sitting/pictures";
 import { choiceOf } from "@/components/exams/sitting/response";
-import { sittingStorage } from "@/components/exams/sitting/storage";
 import { PlayerQuestion } from "@/components/player/question";
-import { reportClientException } from "@/lib/analytics/client";
 
 /**
  * One question of the paper: its number, its prompt as the editor holds it now, its options, and the
@@ -41,12 +34,15 @@ import { reportClientException } from "@/lib/analytics/client";
 export function SittingQuestion({
   attemptId,
   deviceId,
+  locked,
   question,
   sittingId,
   slug,
 }: {
   readonly attemptId: GenericId.GenericId<"examAttempts">;
   readonly deviceId: string;
+  /** Whether the paper is read-only, because the attempt is locked. */
+  readonly locked: boolean;
   readonly question: PaperQuestion;
   readonly sittingId: GenericId.GenericId<"examSittings">;
   readonly slug: TenantSlug;
@@ -60,9 +56,8 @@ export function SittingQuestion({
     sittingId,
     slug,
   });
-  const send = useSendAnswer();
-  const flagged = useFlags((state) => Arr.contains(state.flagged, question.id));
-  const toggleFlag = useFlags((state) => state.toggle);
+  const choose = useChooseAnswer();
+  const mark = useMarkFlag();
   const choice = useMemo(
     () => choiceOf(question.interactions),
     [question.interactions]
@@ -101,39 +96,9 @@ export function SittingQuestion({
     [pictures]
   );
 
-  /** Keeps the choice in the browser, then sends it; the send confirms or drops the kept answer. */
+  /** Keeps the choice in the browser, then sends it, numbered one above the saved version. */
   function onChoose(response: readonly string[]) {
-    const answeredAt = Effect.runSync(Clock.currentTimeMillis);
-    Effect.runSync(
-      keepAnswer(sittingId, attemptId, question.id, {
-        answeredAt,
-        response,
-      }).pipe(
-        Effect.provide(sittingStorage),
-        Effect.catchTag("KeyValueStoreError", (error) =>
-          reportClientException(error, {
-            source: "components/exams/sitting/question",
-          })
-        )
-      )
-    );
-    Effect.runPromise(
-      send(
-        {
-          attemptId,
-          deviceId,
-          questionId: question.id,
-          response,
-          sittingId,
-          slug,
-        },
-        answeredAt
-      ).pipe(
-        Effect.flatMap((failure) =>
-          sittingCallFailures(Option.toArray(failure))
-        )
-      )
-    );
+    choose({ attemptId, deviceId, question, response, sittingId, slug });
   }
 
   return (
@@ -147,6 +112,9 @@ export function SittingQuestion({
           {t("question", { number: question.number })}
         </h2>
         <SittingPictures value={addresses}>
+          {promptDocument === null && !QueryResult.isSuccess(prompt) ? (
+            <PromptReserve />
+          ) : null}
           {promptDocument === null ? null : (
             // The reader takes its document once, so a changed prompt remounts it.
             <SittingDocument
@@ -158,6 +126,7 @@ export function SittingQuestion({
           {Option.isSome(choice) ? (
             <SittingChoice
               choice={choice.value}
+              disabled={locked}
               labelledBy={titleId}
               onChoose={onChoose}
               response={question.response ?? []}
@@ -166,10 +135,25 @@ export function SittingQuestion({
         </SittingPictures>
         <div>
           <Button
-            aria-pressed={flagged}
-            onClick={() => toggleFlag(question.id)}
+            aria-pressed={question.flagged}
+            disabled={locked}
+            onClick={() =>
+              Effect.runPromise(
+                mark({
+                  deviceId,
+                  flagged: !question.flagged,
+                  questionId: question.id,
+                  sittingId,
+                  slug,
+                }).pipe(
+                  Effect.flatMap((failure) =>
+                    sittingCallFailures(Option.toArray(failure))
+                  )
+                )
+              )
+            }
             type="button"
-            variant="outline"
+            variant={question.flagged ? "default-outline" : "outline"}
           >
             <HugeIcons icon={Flag01Icon} />
             {t("flag-question")}

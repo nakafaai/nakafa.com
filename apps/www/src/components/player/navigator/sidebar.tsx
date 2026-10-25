@@ -31,7 +31,7 @@ export function PlayerSidebar({ children }: { children: ReactNode }) {
   return (
     <aside
       aria-label={t("navigator")}
-      className="sticky top-16 hidden h-[calc(100svh-8rem-env(safe-area-inset-bottom,0px))] w-64 shrink-0 flex-col gap-4 overflow-y-auto border-l p-4 lg:flex"
+      className="sticky top-16 hidden h-[calc(100svh-8rem-env(safe-area-inset-bottom,0px))] w-64 shrink-0 flex-col gap-4 overflow-y-auto border-l px-6 py-4 lg:flex"
       data-player-sidebar=""
       ref={column}
     >

@@ -1777,6 +1777,10 @@
       "title": "Jawaban ini tidak sesuai soal.",
       "description": "Pilih opsinya lagi."
     },
+    "sitting-stale-answer": {
+      "title": "Jawaban yang lebih baru sudah tersimpan.",
+      "description": "Lembar soal sekarang menampilkan jawaban yang lebih baru."
+    },
     "sitting-question-missing": {
       "title": "Soal ini tidak ada di ujian.",
       "description": "Muat ulang sesi untuk melihat soalnya."

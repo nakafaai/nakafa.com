@@ -1777,6 +1777,10 @@
       "title": "This answer does not fit.",
       "description": "Choose the options again."
     },
+    "sitting-stale-answer": {
+      "title": "A newer answer is saved.",
+      "description": "Your paper now shows the newer answer."
+    },
     "sitting-question-missing": {
       "title": "Question not in this exam.",
       "description": "Reload the sitting to see its questions."
