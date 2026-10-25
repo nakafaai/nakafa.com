@@ -45,10 +45,11 @@ never invoke a Worker.
    declared paths to the Convex site with the edge secret. They strip browser
    credentials and name the release in `x-nakafa-release-sha`. The path table and
    the header rules live in `packages/backend/agent`.
-5. **Deploy-only CI.** `.github/workflows/deploy.yml` runs on a push to `main`, on
-   an Aksara release dispatch, and on a manual run for `staging` or `prod`. The job
-   runs in the GitHub environment of its stage, and a loader step exports that
-   environment's secrets and variables to the job. It deploys Convex with
+5. **Deploy-only CI.** `.github/workflows/deploy.yml` runs on a push to `main` and
+   on a workflow dispatch for `staging` or `prod`; an Aksara production release
+   dispatches `prod` from `main` with the deploy app's installation token. The job
+   runs in the GitHub environment of its stage, and each step names the secrets and
+   variables it reads, never the whole `secrets` context. It deploys Convex with
    `CONVEX_DEPLOY_KEY`, then runs `alchemy deploy --stage` with `--yes`. Production
    deploys run only from `main`. The workflow runs no tests, because verification
    runs locally on the exact head.
