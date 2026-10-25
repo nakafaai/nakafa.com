@@ -7,7 +7,10 @@ import spec from "@repo/backend/confect/tenancy/memberships.spec";
 import { tenantProfile } from "@repo/backend/confect/tenancy/profile";
 import { Effect, Layer, Struct } from "effect";
 
-/** The caller's active member Persons, each tenant read concurrently; operator Persons never appear here. */
+/**
+ * The caller's active member Persons, newest first, so a school the account just opened or
+ * joined leads its list; each tenant is read concurrently, and operator Persons never appear here.
+ */
 const list = FunctionImpl.make(
   databaseSchema,
   spec,
@@ -17,11 +20,14 @@ const list = FunctionImpl.make(
     const reader = yield* DatabaseReader;
     const people = yield* reader
       .table("tenantPeople")
-      .index("by_account_userId_and_kind_and_status", (query) =>
-        query
-          .eq("account.userId", appUser._id)
-          .eq("kind", "member")
-          .eq("status", "active")
+      .index(
+        "by_account_userId_and_kind_and_status",
+        (query) =>
+          query
+            .eq("account.userId", appUser._id)
+            .eq("kind", "member")
+            .eq("status", "active"),
+        "desc"
       )
       .paginate(paginationOpts)
       .pipe(Effect.orDie);

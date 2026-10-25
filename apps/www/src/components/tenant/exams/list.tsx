@@ -8,7 +8,7 @@ import { createColumnHelper } from "@tanstack/react-table";
 import { Array as Arr, Option } from "effect";
 import { useState } from "react";
 import { useTranslations } from "use-intl";
-import { useStore } from "zustand";
+import { type StoreApi, useStore } from "zustand";
 import { useConvexAuth } from "@/components/auth/convex";
 import { LayoutContent } from "@/components/shared/content/frame";
 import { DataFailure } from "@/components/shared/failure";
@@ -18,7 +18,10 @@ import type { dataTableFeatures } from "@/components/shared/table/features";
 import { TableEmpty } from "@/components/shared/table/frame";
 import { useTenant } from "@/components/tenant/context";
 import { CreateExam } from "@/components/tenant/exams/dialog";
-import { createExamDrafts } from "@/components/tenant/exams/drafts";
+import {
+  createExamDrafts,
+  type ExamDrafts,
+} from "@/components/tenant/exams/drafts";
 import type { ExamSummary } from "@/components/tenant/exams/optimistic";
 import { SchoolHeader } from "@/components/tenant/header";
 import { isLostAccess } from "@/components/tenant/refusal";
@@ -38,10 +41,13 @@ const examColumns = createColumnHelper<typeof dataTableFeatures, ExamSummary>();
 /**
  * The exams of the school, newest first, each with its title. An exam that the server has not
  * saved yet is disabled until it answers. The next page loads when the end of the list comes
- * into view, so the list has no button. The create action sits in the school's one header, and
- * shows when the viewer can create an exam in at least one place. A failed read of the list shows
- * its own sentence and a retry, and a viewer who lost the school's access is sent to the refused
- * page.
+ * into view, so the list has no button. The page holds one create action, shown when the viewer
+ * can create an exam in at least one place: in the school's one header beside the exams, or in
+ * the empty state while the school has no saved exam (K27), so a new teacher meets one step in
+ * the middle of the page. An exam that is still saving does not end the empty state, so its
+ * create action stays where it was pressed until the editor opens. A failed read of the list
+ * shows its own sentence and a retry, and a viewer who lost the school's access is sent to the
+ * refused page.
  */
 export function ExamList({
   first,
@@ -72,10 +78,16 @@ export function ExamList({
   ) {
     throw pagination.error;
   }
+  const failed = PaginatedQueryResult.isFailure(pagination);
+  const loadingFirst = pagination._tag === "LoadingFirstPage";
+  // A school whose only exams are still saving has none yet: the empty state keeps its action.
+  const empty =
+    !(loadingFirst || failed) &&
+    Arr.every(pagination.results, (exam) => Arr.contains(saving, exam.id));
   return (
     <>
       <SchoolHeader items={[{ label: t("title") }]} title={t("title")}>
-        {tenant.home.canCreate ? (
+        {tenant.home.canCreate && !(loadingFirst || empty) ? (
           <CreateExam
             choices={tenant.home.choices}
             drafts={drafts}
@@ -84,13 +96,16 @@ export function ExamList({
         ) : null}
       </SchoolHeader>
       <LayoutContent className="flex w-full flex-col gap-6 py-6">
-        <ExamListRows
-          canManage={tenant.canManage}
-          exams={pagination.results}
-          failed={PaginatedQueryResult.isFailure(pagination)}
-          loadingFirst={pagination._tag === "LoadingFirstPage"}
-          saving={saving}
-        />
+        {empty ? (
+          <NoExamEmpty drafts={drafts} />
+        ) : (
+          <ExamListRows
+            exams={pagination.results}
+            failed={failed}
+            loadingFirst={loadingFirst}
+            saving={saving}
+          />
+        )}
         {loadMore !== null && (
           <Intersection onIntersect={() => loadMore(EXAM_PAGE_SIZE)} />
         )}
@@ -104,13 +119,11 @@ export function ExamList({
  * or nothing while the first page loads. A first page that failed shows the failure alone.
  */
 function ExamListRows({
-  canManage,
   exams: rows,
   failed,
   loadingFirst,
   saving,
 }: {
-  canManage: boolean;
   exams: readonly ExamSummary[];
   failed: boolean;
   loadingFirst: boolean;
@@ -125,7 +138,7 @@ function ExamListRows({
   return (
     <>
       {failed ? <DataFailure onRetry={reloadPage} /> : null}
-      <ExamTable canManage={canManage} exams={rows} saving={saving} />
+      <ExamTable exams={rows} saving={saving} />
     </>
   );
 }
@@ -133,28 +146,17 @@ function ExamListRows({
 /**
  * The exams in a data table: the title links to its editor, and the last column links to the
  * exam's rooms. An exam that the server is still saving shows its title without a link and no
- * rooms link, so it is inert. With no exam, the table's empty state shows instead.
+ * rooms link, so it is inert.
  */
 function ExamTable({
-  canManage,
   exams: rows,
   saving,
 }: {
-  canManage: boolean;
   exams: readonly ExamSummary[];
   saving: readonly ExamSummary["id"][];
 }) {
   const t = useTranslations("Exams");
   const tenant = useTenant();
-
-  if (Arr.isReadonlyArrayEmpty(rows)) {
-    return (
-      <NoExamEmpty
-        canManage={canManage}
-        hasUnit={tenant.home.choices.length > 0}
-      />
-    );
-  }
 
   const columns = examColumns.columns([
     examColumns.accessor((exam) => exam.title, {
@@ -205,23 +207,25 @@ function ExamTable({
 }
 
 /**
- * The empty state of the exam list. A viewer with no unit to create an exam in is told why and
+ * The empty state of the exam list. A viewer who can create an exam meets its one step here,
+ * Create exam, with Nina writing. A viewer with no unit to create an exam in is told why and
  * where it is fixed: a manager goes to the units, and anyone else is told to ask an admin.
  */
-function NoExamEmpty({
-  canManage,
-  hasUnit,
-}: {
-  canManage: boolean;
-  hasUnit: boolean;
-}) {
-  const { slug } = useTenant();
+function NoExamEmpty({ drafts }: { drafts: StoreApi<ExamDrafts> }) {
+  const tenant = useTenant();
   const t = useTranslations("Exams");
 
-  if (hasUnit) {
+  if (tenant.home.canCreate) {
     return (
       <TableEmpty
         act="writing"
+        action={
+          <CreateExam
+            choices={tenant.home.choices}
+            drafts={drafts}
+            slug={tenant.slug}
+          />
+        }
         description={t("create-description")}
         title={t("empty")}
       />
@@ -231,17 +235,19 @@ function NoExamEmpty({
     <TableEmpty
       act="pointing"
       action={
-        canManage ? (
+        tenant.canManage ? (
           <Link
             className={buttonVariants({ variant: "outline" })}
-            params={{ slug }}
+            params={{ slug: tenant.slug }}
             to="/school/$slug/settings/units"
           >
             {t("no-unit-action")}
           </Link>
         ) : undefined
       }
-      description={canManage ? t("no-unit-description") : t("no-unit-member")}
+      description={
+        tenant.canManage ? t("no-unit-description") : t("no-unit-member")
+      }
       title={t("empty")}
     />
   );
