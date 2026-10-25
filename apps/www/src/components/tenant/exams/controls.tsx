@@ -4,6 +4,7 @@ import {
   ArrowUp01Icon,
   Copy01Icon,
   Delete02Icon,
+  DragDropVerticalIcon,
   MoreHorizontalIcon,
 } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -16,10 +17,19 @@ import {
 } from "@repo/design-system/components/ui/dropdown-menu";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-dialog";
-import { useState } from "react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@repo/design-system/components/ui/tooltip";
+import { type ComponentProps, useState } from "react";
 import { useTranslations } from "use-intl";
 import { useQuestionActions } from "@/components/tenant/exams/actions";
-import type { Question } from "@/components/tenant/exams/optimistic";
+import type {
+  Question,
+  QuestionId,
+} from "@/components/tenant/exams/optimistic";
+import { useExamSelection } from "@/components/tenant/exams/provider";
 
 /**
  * The actions of a page: move up, move down, copy, add a question below, and remove. A page shows
@@ -39,11 +49,19 @@ export function PageActions({
   const t = useTranslations("Exams");
   const common = useTranslations("Common");
   const actions = useQuestionActions();
+  const requestFocus = useExamSelection((state) => state.requestFocus);
   const [asking, setAsking] = useState(false);
   const number = index + 1;
 
-  const moveUp = () => actions.moveQuestion(question.id, index - 1);
-  const moveDown = () => actions.moveQuestion(question.id, index + 1);
+  // A move keeps the focus on the moved page, so the keyboard user who pressed the button keeps their place.
+  const moveUp = () => {
+    requestFocus(question.id);
+    actions.moveQuestion(question.id, index - 1);
+  };
+  const moveDown = () => {
+    requestFocus(question.id);
+    actions.moveQuestion(question.id, index + 1);
+  };
   const copy = () => actions.copyQuestion(question);
   const addBelow = () => actions.addQuestion(question.id);
   const removeQuestion = () => {
@@ -54,54 +72,39 @@ export function PageActions({
   return (
     <>
       <div className="hidden items-center gap-0.5 md:flex">
-        <Button
-          aria-label={t("move-up-of", { number })}
+        <PageAction
           disabled={index === 0}
+          hint={t("move-up")}
+          icon={ArrowUp01Icon}
+          label={t("move-up-of", { number })}
           onClick={moveUp}
-          size="icon-sm"
-          type="button"
-          variant="ghost"
-        >
-          <HugeIcons aria-hidden="true" icon={ArrowUp01Icon} />
-        </Button>
-        <Button
-          aria-label={t("move-down-of", { number })}
+        />
+        <PageAction
           disabled={index === count - 1}
+          hint={t("move-down")}
+          icon={ArrowDown01Icon}
+          label={t("move-down-of", { number })}
           onClick={moveDown}
-          size="icon-sm"
-          type="button"
-          variant="ghost"
-        >
-          <HugeIcons aria-hidden="true" icon={ArrowDown01Icon} />
-        </Button>
-        <Button
-          aria-label={t("copy-of", { number })}
+        />
+        <PageAction
+          hint={t("copy")}
+          icon={Copy01Icon}
+          label={t("copy-of", { number })}
           onClick={copy}
-          size="icon-sm"
-          type="button"
-          variant="ghost"
-        >
-          <HugeIcons aria-hidden="true" icon={Copy01Icon} />
-        </Button>
-        <Button
-          aria-label={t("add-below-of", { number })}
+        />
+        <PageAction
+          hint={t("add-below")}
+          icon={Add01Icon}
+          label={t("add-below-of", { number })}
           onClick={addBelow}
-          size="icon-sm"
-          type="button"
-          variant="ghost"
-        >
-          <HugeIcons aria-hidden="true" icon={Add01Icon} />
-        </Button>
+        />
         {count > 1 ? (
-          <Button
-            aria-label={t("remove-of", { number })}
+          <PageAction
+            hint={t("remove")}
+            icon={Delete02Icon}
+            label={t("remove-of", { number })}
             onClick={() => setAsking(true)}
-            size="icon-sm"
-            type="button"
-            variant="ghost"
-          >
-            <HugeIcons aria-hidden="true" icon={Delete02Icon} />
-          </Button>
+          />
         ) : null}
       </div>
       <div className="md:hidden">
@@ -119,13 +122,19 @@ export function PageActions({
           />
           <DropdownMenuContent align="end" className="w-44">
             <DropdownMenuItem disabled={index === 0} onClick={moveUp}>
+              <HugeIcons aria-hidden="true" icon={ArrowUp01Icon} />
               {t("move-up")}
             </DropdownMenuItem>
             <DropdownMenuItem disabled={index === count - 1} onClick={moveDown}>
+              <HugeIcons aria-hidden="true" icon={ArrowDown01Icon} />
               {t("move-down")}
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={copy}>{t("copy")}</DropdownMenuItem>
+            <DropdownMenuItem onClick={copy}>
+              <HugeIcons aria-hidden="true" icon={Copy01Icon} />
+              {t("copy")}
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={addBelow}>
+              <HugeIcons aria-hidden="true" icon={Add01Icon} />
               {t("add-below")}
             </DropdownMenuItem>
             {count > 1 ? (
@@ -135,6 +144,7 @@ export function PageActions({
                   onClick={() => setAsking(true)}
                   variant="destructive"
                 >
+                  <HugeIcons aria-hidden="true" icon={Delete02Icon} />
                   {t("remove")}
                 </DropdownMenuItem>
               </>
@@ -159,5 +169,77 @@ export function PageActions({
         title={t("remove-title")}
       />
     </>
+  );
+}
+
+/**
+ * One action of a page as an icon button, named for assistive technology with its question, and
+ * shown in a tooltip by the action alone, since the tooltip stands beside its page.
+ */
+function PageAction({
+  disabled = false,
+  hint,
+  icon,
+  label,
+  onClick,
+}: {
+  disabled?: boolean;
+  hint: string;
+  icon: ComponentProps<typeof HugeIcons>["icon"];
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <Tooltip>
+      <TooltipTrigger
+        render={
+          <Button
+            aria-label={label}
+            disabled={disabled}
+            onClick={onClick}
+            size="icon-sm"
+            type="button"
+            variant="ghost"
+          />
+        }
+      >
+        <HugeIcons aria-hidden="true" icon={icon} />
+      </TooltipTrigger>
+      <TooltipContent>{hint}</TooltipContent>
+    </Tooltip>
+  );
+}
+
+/**
+ * The grip of a page: the handle the teacher drags to move the question, or focuses to move it with
+ * the arrow keys. The canvas reads the handle's question from its `data-grip` attribute, so the grip
+ * holds no handler of its own.
+ */
+export function QuestionGrip({
+  number,
+  questionId,
+}: {
+  number: number;
+  questionId: QuestionId;
+}) {
+  const t = useTranslations("Exams");
+  return (
+    <Tooltip>
+      <TooltipTrigger
+        render={
+          <Button
+            aria-label={t("reorder-of", { number })}
+            className="cursor-grab touch-none active:cursor-grabbing"
+            data-grip={questionId}
+            size="icon-sm"
+            type="button"
+            variant="ghost"
+          />
+        }
+      >
+        <HugeIcons aria-hidden="true" icon={DragDropVerticalIcon} />
+      </TooltipTrigger>
+      <TooltipContent>{t("reorder")}</TooltipContent>
+    </Tooltip>
   );
 }

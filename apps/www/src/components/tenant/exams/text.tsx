@@ -18,7 +18,6 @@ import type { EditorView } from "@tiptap/pm/view";
 import { useConvex } from "convex/react";
 import { Effect, Fiber, Ref } from "effect";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useTranslations } from "use-intl";
 import { type StoreApi, useStore } from "zustand";
 import { RICH_EXTENSIONS } from "@/components/tenant/exams/extensions";
 import { isLocked } from "@/components/tenant/exams/freeze";
@@ -40,16 +39,16 @@ import { FOLD_RETRY, startSync, tickThroughFold } from "@/lib/editor/sync";
 /** The quiet period after a local change, before the editor sends its own steps. */
 const SEND_QUIET_PERIOD = "250 millis";
 
-/** Where the prompt reports its failures and the steps it lost. */
-const SOURCE = "components/tenant/exams/prompt";
+/** Where the text reports its failures and the steps it lost. */
+const SOURCE = "components/tenant/exams/text";
 
 /**
- * The extensions of a question's prompt: the shared assessment document, its collab plugin (the
- * session's client ID comes with the document when it opens), the classes of the published
- * article's paragraphs, and the bounds the server folds with, so the editor refuses what the
- * server would refuse.
+ * The extensions of a question's rich text, the prompt, the rubric, or the explanation: the shared
+ * assessment document, its collab plugin (the session's client ID comes with the document when it
+ * opens), the classes of the published article's paragraphs, and the bounds the server folds with,
+ * so the editor refuses what the server would refuse.
  */
-const PROMPT_EXTENSIONS = [
+const TEXT_EXTENSIONS = [
   ...RICH_EXTENSIONS,
   Collab.configure({ clientId: "", version: 0 }),
   articleParagraphs,
@@ -74,10 +73,10 @@ const replaceWaiting = (
 };
 
 /**
- * One sync round of the prompt. A round that meets a fold waits for it: the batch stays unsent
+ * One sync round of the text. A round that meets a fold waits for it: the batch stays unsent
  * under its id, and `tickThroughFold` runs the round again, so the editor shows no failure
  * while the fold runs (ADR 0028). The waiting ends when the server takes the batch, when the
- * round is replaced, or when the prompt closes, and the closing flush takes over the steps that
+ * round is replaced, or when the text closes, and the closing flush takes over the steps that
  * are left. The steps it lost are reported, and a failure shows the action-error toast. A round
  * that meets a closed editor has nothing left to tell.
  */
@@ -117,28 +116,38 @@ const runRound = (
   );
 };
 
+/** The props of one rich text of a question. */
+interface ExamTextProps {
+  /** The document the text edits, which the question owns. */
+  readonly documentId: Id<"editorDocuments">;
+  /** The accessible name of the text. */
+  readonly label: string;
+  /** The hint shown while the text is empty. */
+  readonly placeholder: string;
+  /** The room the text takes at least: a prompt a page of writing, and a note a line. */
+  readonly size?: "line" | "page";
+}
+
 /**
- * The prompt of one question: the document the teacher writes, edited together with the other
- * editors of the question and synced through the server (ADR 0028). It is read-only until the
- * server opens the document, and it stays read-only once the exam is frozen. A local change
- * schedules a round after `SEND_QUIET_PERIOD`, and the server's steps arrive through a
- * subscription, so the editor takes them without polling. When the prompt closes, the round it
- * waits for stops, and the steps the editor holds are sent.
+ * One rich text of a question, edited together with the other editors of the question and synced
+ * through the server (ADR 0028). It serves the prompt, the rubric, and the explanation alike. It is
+ * read-only until the server opens the document, and it stays read-only once the exam is frozen. A
+ * local change schedules a round after `SEND_QUIET_PERIOD`, and the server's steps arrive through a
+ * subscription, so the editor takes them without polling. When the text closes, the round it waits
+ * for stops, and the steps the editor holds are sent.
  */
-export function ExamPrompt({
-  number,
-  prompt,
-}: {
-  number: number;
-  prompt: Id<"editorDocuments">;
-}) {
-  const t = useTranslations("Exams");
+export function ExamText({
+  documentId,
+  label,
+  placeholder,
+  size = "page",
+}: ExamTextProps) {
   const { exam, slug } = useExam();
   const frozen = isLocked(exam);
   const labels = useDocumentLabels();
   const extensions = useMemo(
     () => [
-      ...PROMPT_EXTENSIONS,
+      ...TEXT_EXTENSIONS,
       slashCommand({ label: labels.insert, labels: labels.slash }),
     ],
     [labels]
@@ -150,7 +159,7 @@ export function ExamPrompt({
   const version = useStore(sync, (state) => state.version);
   const reply = useQuery(
     editors.steps.since,
-    clientId === null ? "skip" : { clientId, documentId: prompt, slug, version }
+    clientId === null ? "skip" : { clientId, documentId, slug, version }
   );
   const session = useRef<SyncSession | null>(null);
   const view = useRef<EditorView | null>(null);
@@ -170,7 +179,7 @@ export function ExamPrompt({
     }
   }, [reply, sync]);
 
-  // The prompt closes: stop the open and the waiting round, then send what the editor holds.
+  // The text closes: stop the open and the waiting round, then send what the editor holds.
   useEffect(
     () => () => {
       const current = session.current;
@@ -208,7 +217,7 @@ export function ExamPrompt({
     opening.current = Effect.runFork(
       startSync(
         viewPort(editor.view),
-        convexTransport(convex, { documentId: prompt, slug })
+        convexTransport(convex, { documentId, slug })
       ).pipe(
         Effect.tap((started) =>
           Effect.sync(() => {
@@ -223,7 +232,7 @@ export function ExamPrompt({
         ),
         Effect.tap(() =>
           Effect.sync(() => {
-            show(prompt, editor.view.state.doc);
+            show(documentId, editor.view.state.doc);
             editor.setEditable(!frozen);
           })
         ),
@@ -251,7 +260,7 @@ export function ExamPrompt({
    * edits no text, such as the editor taking its lock.
    */
   const change = (transaction: Transaction) => {
-    show(prompt, transaction.doc);
+    show(documentId, transaction.doc);
     if (
       !transaction.docChanged ||
       transaction.getMeta("rebased") !== undefined
@@ -271,10 +280,11 @@ export function ExamPrompt({
   return (
     <ExamDocument
       extensions={extensions}
-      label={t("question-text", { number })}
+      label={label}
       onChange={change}
       onEditor={open}
-      placeholder={t("prompt-placeholder")}
+      placeholder={placeholder}
+      size={size}
     />
   );
 }

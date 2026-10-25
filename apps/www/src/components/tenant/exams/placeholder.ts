@@ -20,8 +20,8 @@ export const placeholderQuestionId = randomUuid.pipe(
   )
 );
 
-/** The placeholder ID of the prompt of a question the server has not saved yet. */
-export const placeholderPromptId = randomUuid.pipe(
+/** The placeholder ID of a document a question the server has not saved yet owns: its prompt, rubric, or explanation. */
+export const placeholderDocumentId = randomUuid.pipe(
   Effect.flatMap((uuid) =>
     Schema.decodeUnknownEffect(Id("editorDocuments"))(uuid).pipe(Effect.orDie)
   )

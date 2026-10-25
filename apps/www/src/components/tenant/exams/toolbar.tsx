@@ -123,11 +123,9 @@ export function ExamToolbar() {
         labels={labels.pictures}
         urls={NO_ADDRESSES}
       >
-        <div className="flex justify-center border-b">
-          <fieldset className="min-w-0 max-w-5xl flex-1" disabled={!canEdit}>
-            <DocumentToolbar editor={active} labels={labels.toolbar} />
-          </fieldset>
-        </div>
+        <fieldset className="min-w-0" disabled={!canEdit}>
+          <DocumentToolbar editor={active} labels={labels.toolbar} />
+        </fieldset>
       </PicturesProvider>
       <PictureAltDialog
         alt=""

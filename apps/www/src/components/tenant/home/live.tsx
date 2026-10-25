@@ -1,4 +1,4 @@
-import { Clock01Icon } from "@hugeicons/core-free-icons";
+import { Clock01Icon, LiveStreaming02Icon } from "@hugeicons/core-free-icons";
 import type { HomeView } from "@repo/backend/confect/exams/home/contract";
 import { Dashboard } from "@repo/design-system/components/ui/dashboard";
 import { Array as Arr } from "effect";
@@ -31,7 +31,11 @@ export function LiveCell({
 
   return (
     <Dashboard.Cell narrow={span.narrow} wide={span.wide}>
-      <Dashboard.CellHeader title={t("tile-live")} />
+      <Dashboard.CellHeader
+        icon={LiveStreaming02Icon}
+        title={t("tile-live")}
+        tone="success"
+      />
       <Dashboard.List>
         {Arr.map(rooms, (room) => (
           <LiveRow key={room.id} now={now} room={room} />
@@ -64,6 +68,7 @@ function LiveRow({ now, room }: { now: number; room: Room }) {
         />
       }
       title={room.examTitle}
+      tone="success"
       trailing={t("tile-minutes-left", {
         count: minutesLeft(room.closesAt, now),
       })}

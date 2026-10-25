@@ -56,7 +56,7 @@ it.
   answer. A change made in the first moment after a load is therefore sent
   signed in, and a signed-in page authenticates one request sooner. Readers
   still see the session as pending until Better Auth answers.
-- A lesson renderer that loads with `next/dynamic` goes through
+- A lesson renderer that loads with `React.lazy` goes through
   `withHydrationBoundary` from `@/lib/content/renderer/client/boundary`, whose
   visible `Activity` lets the lesson hydrate, and answer presses, before the
   renderer's code arrives.
@@ -68,8 +68,8 @@ waits for one keep their pending state as plain state, not as a React
 transition. Two facts of the installed packages make a transition wrong for
 them. React entangles every transition that starts while an async action is
 pending with that action (`entangleAsyncAction` in react-dom 19.3.0), and
-Next.js dispatches navigation inside `startTransition`
-(`dist/client/components/app-router-instance.js` in next 16.4.0). A transition
+TanStack Router loads a navigation inside `startTransition`
+(`src/Transitioner.tsx` in `@tanstack/react-router`). A transition
 that held a send would therefore hold the learner's next navigation until the
 server answered. The chat store (`apps/www/src/components/ai/chat/store.ts`)
 holds the pending flags of a send, a stop, or a retry. The admission

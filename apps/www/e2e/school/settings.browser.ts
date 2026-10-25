@@ -8,16 +8,18 @@ import {
   signInOwner,
   signInTeacher,
 } from "@/e2e/support/school";
+import { waitUntilTakenOver } from "@/e2e/support/window";
 
 /** The Owner option of the Role filter, whose name ends with its count. */
 const OWNER_OPTION = /^Owner/;
 
 /** Adds one cohort of grade 7 to the active period, from the cohorts page. */
 async function addCohort(page: Page, name: string) {
-  await page
+  const add = page
     .locator("header")
-    .getByRole("button", { name: "Add cohort" })
-    .click();
+    .getByRole("button", { name: "Add cohort" });
+  await waitUntilTakenOver(add);
+  await add.click();
   const dialog = page.getByRole("dialog");
   await dialog.getByLabel("Name").fill(name);
   await dialog.getByRole("combobox", { name: "Grade" }).click();
@@ -88,10 +90,11 @@ test("an admin opens a period, then creates and renames a cohort of it", async (
 
   // A cohort belongs to the active period, so the admin opens a period first.
   await page.goto(address("/settings/periods"));
-  await page
+  const addPeriod = page
     .locator("header")
-    .getByRole("button", { name: "Add period" })
-    .click();
+    .getByRole("button", { name: "Add period" });
+  await waitUntilTakenOver(addPeriod);
+  await addPeriod.click();
   const periodDialog = page.getByRole("dialog");
   await periodDialog.getByLabel("Name").fill("Semester 1");
   await periodDialog.getByLabel("First day").fill("2027-07-01");
@@ -104,10 +107,11 @@ test("an admin opens a period, then creates and renames a cohort of it", async (
 
   await page.goto(address("/settings/cohorts"));
   await expect(page).toHaveURL(address("/settings/cohorts"));
-  await page
+  const addCohortAction = page
     .locator("header")
-    .getByRole("button", { name: "Add cohort" })
-    .click();
+    .getByRole("button", { name: "Add cohort" });
+  await waitUntilTakenOver(addCohortAction);
+  await addCohortAction.click();
   const cohortDialog = page.getByRole("dialog");
   await cohortDialog.getByLabel("Name").fill("7A");
   await cohortDialog.getByRole("combobox", { name: "Grade" }).click();
@@ -149,10 +153,11 @@ test("an admin places a student in a cohort, then moves the student to another",
   const page = await context.newPage();
 
   await page.goto(address("/settings/periods"));
-  await page
+  const addPeriod = page
     .locator("header")
-    .getByRole("button", { name: "Add period" })
-    .click();
+    .getByRole("button", { name: "Add period" });
+  await waitUntilTakenOver(addPeriod);
+  await addPeriod.click();
   const periodDialog = page.getByRole("dialog");
   await periodDialog.getByLabel("Name").fill("Semester 1");
   await periodDialog.getByLabel("First day").fill("2027-07-01");

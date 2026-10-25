@@ -1,8 +1,7 @@
 import { LocaleSchema } from "@repo/internationalization/src/locale";
 import { createServerFn } from "@tanstack/react-start";
-import type { Effect } from "effect";
 import { Schema } from "effect";
-import type { readTryoutTrackSetList } from "@/components/tryout/route/catalog.server";
+import { CatalogQuery } from "@/components/tryout/catalog/table/query";
 import { TrackListRequestSchema } from "@/components/tryout/route/search";
 
 /** The locale of every catalog request, already decoded by the locale route. */
@@ -21,18 +20,14 @@ const ExamInput = Schema.Struct({
   locale: LocaleSchema,
 });
 
-/** The address segments of a track page. */
+/** The address segments of a track page, and the catalog query of its set list. */
 const TrackInput = Schema.Struct({
   country: Schema.String,
   exam: Schema.String,
   locale: LocaleSchema,
+  search: CatalogQuery,
   track: Schema.String,
 });
-
-/** The learner's set list of one track: its arguments and the page of rows. */
-export type TryoutTrackListResult = Effect.Success<
-  ReturnType<typeof readTryoutTrackSetList>
->;
 
 /** The hub page of one locale, read on the server for a loader. */
 export const readTryoutHubFn = createServerFn({ method: "GET" })
@@ -64,7 +59,7 @@ export const readTryoutExamFn = createServerFn({ method: "GET" })
     return readTryoutExamHandler(options);
   });
 
-/** One track page, read on the server for a loader. */
+/** One track page with the first page of its set list, read on the server for a loader. */
 export const readTryoutTrackFn = createServerFn({ method: "GET" })
   .validator(Schema.toStandardSchemaV1(TrackInput))
   .handler(async (options) => {

@@ -132,16 +132,19 @@ const showsShell = (frame: typeof ShellFrame.Type) =>
  * Expects the frames since one observation to show the app shell throughout: a
  * mounted, visible shell with a heading in every frame, no layout shift, and
  * exactly the expected lock states. A client render locks through the shell
- * alone, so no page, hidden or not, may carry the server's lock marker.
+ * alone, so no page, hidden or not, may carry the server's lock marker. A move
+ * within one shell keeps its `<main>`; a move to the other shell, from the app to
+ * the marketing pages or back, swaps it once, in one frame, so it shows two.
  */
 export function expectStillShell(
   observation: typeof ShellObservation.Type,
-  locks: readonly boolean[]
+  locks: readonly boolean[],
+  shells = 1
 ) {
   expect(observation.frames).toBeGreaterThan(0);
   expect(observation.hiddenFrames).toBe(0);
   expect(observation.headinglessFrames).toBe(0);
-  expect(observation.shells).toBe(1);
+  expect(observation.shells).toBe(shells);
   expect(observation.layoutShifts).toEqual([]);
   expect(observation.locks).toEqual(locks);
   expect(observation.markedFrames).toBe(0);

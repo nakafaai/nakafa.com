@@ -20,21 +20,48 @@ export const requireUnfrozen = Effect.fn("exams.freeze.require")(function* (
 });
 
 /**
- * Refuses an edit of the prompt of a question whose exam a sitting has scheduled, so the paper a
- * student sat cannot change. A document that is no question's prompt belongs to no exam, and it passes.
+ * The question a document belongs to, as its prompt, its rubric, or its explanation. A document
+ * that no question holds belongs to no question, so none is returned.
  */
-export const requirePromptUnfrozen = Effect.fn("exams.freeze.prompt")(
+const questionOwning = Effect.fn("exams.freeze.owner")(function* (
+  documentId: GenericId.GenericId<"editorDocuments">
+) {
+  const reader = yield* DatabaseReader;
+  const prompt = yield* reader
+    .table("examQuestions")
+    .index("by_prompt", (query) => query.eq("prompt", documentId))
+    .first()
+    .pipe(Effect.orDie);
+  if (Option.isSome(prompt)) {
+    return prompt;
+  }
+  const rubric = yield* reader
+    .table("examQuestions")
+    .index("by_rubric", (query) => query.eq("rubric", documentId))
+    .first()
+    .pipe(Effect.orDie);
+  if (Option.isSome(rubric)) {
+    return rubric;
+  }
+  return yield* reader
+    .table("examQuestions")
+    .index("by_explanation", (query) => query.eq("explanation", documentId))
+    .first()
+    .pipe(Effect.orDie);
+});
+
+/**
+ * Refuses an edit of a document a question owns, its prompt, rubric, or explanation, when the exam
+ * of that question has been scheduled, so the paper a student sat, its scoring guide, and its
+ * explanation cannot change. A document that no question owns belongs to no exam, and it passes.
+ */
+export const requireDocumentUnfrozen = Effect.fn("exams.freeze.document")(
   function* (documentId: GenericId.GenericId<"editorDocuments">) {
-    const reader = yield* DatabaseReader;
-    const question = yield* reader
-      .table("examQuestions")
-      .index("by_prompt", (query) => query.eq("prompt", documentId))
-      .first()
-      .pipe(Effect.orDie);
+    const question = yield* questionOwning(documentId);
     if (Option.isNone(question)) {
       return;
     }
-    const exam = yield* reader
+    const exam = yield* (yield* DatabaseReader)
       .table("exams")
       .get(question.value.examId)
       .pipe(Effect.orDie);

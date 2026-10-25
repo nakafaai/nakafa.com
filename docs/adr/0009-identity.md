@@ -430,10 +430,9 @@ repeat it.
 ## References
 
 - https://docs.convex.dev/auth/functions-auth
-- https://nextjs.org/docs/app/api-reference/file-conventions/parallel-routes
-  and https://nextjs.org/docs/app/api-reference/config/next-config-js/rewrites:
-  why a folder named `@username` is not an address, and the rewrite that serves
-  it.
+- https://tanstack.com/router/latest/docs/framework/react/guide/url-rewrites
+  and `apps/www/src/lib/profile/rewrite.ts`: the router path that serves the
+  `@username` address.
 - `@convex-dev/better-auth` `plugins/convex`: the default token lifetime of
   15 minutes (`jwtExpirationSeconds`), which Nakafa does not override.
 - `better-auth` `oauth2/utils` (`setTokenUtil`, `decryptOAuthToken`) and

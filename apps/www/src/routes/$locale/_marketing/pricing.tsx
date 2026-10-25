@@ -19,6 +19,7 @@ import { type MarketingFaqItem, pricingFaqNumbers } from "@/lib/marketing/faq";
 import { getAppSocialArtwork } from "@/lib/og/app";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { createSeoHead, toRouterHead } from "@/lib/seo/head";
+import { readStaticData } from "@/lib/static/data";
 
 /**
  * The pricing page. The loader names the page's title and description, carries
@@ -27,8 +28,9 @@ import { createSeoHead, toRouterHead } from "@/lib/seo/head";
  */
 export const Route = createFileRoute("/$locale/_marketing/pricing")({
   loader: async ({ params }) => {
-    const messages = await readRouteMessages({
-      data: { locale: params.locale, namespaces: ["Common", "PricingPage"] },
+    const messages = await readStaticData(readRouteMessages, {
+      locale: params.locale,
+      namespaces: ["Common", "PricingPage"],
     });
     const t = createTranslator({
       locale: params.locale,

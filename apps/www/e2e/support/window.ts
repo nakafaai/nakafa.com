@@ -55,6 +55,17 @@ export const isTakenOver = (element: Locator) =>
   );
 
 /**
+ * Waits until React has taken over a control that the server drew. Until then the control has no
+ * handler: a press on a button opens nothing, and a press on a form's button submits the form
+ * natively and loads the page again. A form waits before the test fills it, so React holds what
+ * the test types.
+ */
+export const waitUntilTakenOver = (control: Locator) =>
+  expect
+    .poll(() => isTakenOver(control), { timeout: readinessTimeoutMilliseconds })
+    .toBe(true);
+
+/**
  * Loads the page with its scripts held back, so it shows only what the server
  * rendered, notes where the first and the last row of the server's page stand,
  * lets the scripts run, and checks that the rows stand in the same places once

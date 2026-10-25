@@ -1,0 +1,272 @@
+import { useMutation } from "@confect/react";
+import exams from "@repo/backend/confect/_generated/refs/exams";
+import { QUESTION_POINTS_MAX } from "@repo/backend/confect/exams/question";
+import {
+  Field,
+  FieldLabel,
+  FieldTitle,
+} from "@repo/design-system/components/ui/field";
+import { Input } from "@repo/design-system/components/ui/input";
+import {
+  ToggleGroup,
+  ToggleGroupItem,
+} from "@repo/design-system/components/ui/toggle-group";
+import type { Node } from "@tiptap/pm/model";
+import { Array as Arr, Function as Fn, Option, Schema } from "effect";
+import { lazy, Suspense, useId, useState } from "react";
+import { useTranslations } from "use-intl";
+import { runExamAction, sentAction } from "@/components/tenant/exams/action";
+import {
+  choiceOf,
+  markedOption,
+  optionLetter,
+} from "@/components/tenant/exams/answer";
+import { isLocked } from "@/components/tenant/exams/freeze";
+import {
+  pointsUpdate,
+  type Question,
+} from "@/components/tenant/exams/optimistic";
+import { PreviewProse } from "@/components/tenant/exams/preview";
+import { useExam } from "@/components/tenant/exams/provider";
+
+/** The rich texts of the layer load with the page's editors, never with the page. */
+const ExamText = lazy(() =>
+  import("@/components/tenant/exams/text").then((module) => ({
+    default: module.ExamText,
+  }))
+);
+
+/** The props of the points field of one question. */
+interface PointsFieldProps {
+  /** Whether the teacher may change the points now. */
+  readonly editable: boolean;
+  /** The points the server holds, which the field shows. */
+  readonly points: number;
+  /** The question whose points the field sets. */
+  readonly questionId: Question["id"];
+}
+
+/**
+ * The points of a question: a whole number from one to the bound, saved when the teacher leaves the
+ * field or presses Enter. The stored value is shown at once and rolls back when the server refuses
+ * the change. A value outside the bound, or one the teacher did not change, saves nothing.
+ */
+function PointsField({ editable, points, questionId }: PointsFieldProps) {
+  const t = useTranslations("Exams");
+  const { exam, slug } = useExam();
+  const id = useId();
+  const save = useMutation(exams.questions.points).withOptimisticUpdate(
+    pointsUpdate
+  );
+  // The text the teacher types, which stands for the stored points until the field changes.
+  const [draft, setDraft] = useState<string | null>(null);
+
+  const commit = () => {
+    const next = draft === null ? Number.NaN : Number(draft);
+    setDraft(null);
+    if (
+      next === points ||
+      !Number.isInteger(next) ||
+      next < 1 ||
+      next > QUESTION_POINTS_MAX
+    ) {
+      return;
+    }
+    runExamAction(
+      sentAction(() =>
+        save({ examId: exam.id, points: next, questionId, slug })
+      ),
+      { onFailure: Fn.constVoid, onSuccess: Fn.constVoid }
+    );
+  };
+
+  return (
+    <Field orientation="horizontal">
+      <FieldLabel htmlFor={id}>{t("points")}</FieldLabel>
+      <Input
+        className="w-24 text-right"
+        disabled={!editable}
+        id={id}
+        inputMode="numeric"
+        max={QUESTION_POINTS_MAX}
+        min={1}
+        onBlur={commit}
+        onChange={(event) => setDraft(event.currentTarget.value)}
+        onKeyDown={(event) => {
+          if (event.key === "Enter") {
+            event.currentTarget.blur();
+          }
+        }}
+        type="number"
+        value={draft ?? String(points)}
+      />
+    </Field>
+  );
+}
+
+/** One option of a question as the key names it: its ID, and the letter the paper shows it by. */
+const KeyOption = Schema.Struct({
+  /** The ID of the option, which the key marks. */
+  id: Schema.String,
+  /** The letter that names the option by its place. */
+  letter: Schema.String,
+});
+type KeyOption = typeof KeyOption.Type;
+
+/** The props of the answer key of one question. */
+interface AnswerKeyProps {
+  /** Whether the teacher may mark the key now. */
+  readonly editable: boolean;
+  /** The option the key marks correct, or none while the key marks none. */
+  readonly marked: string | null;
+  /** The number of the question, which names each option for assistive technology. */
+  readonly number: number;
+  /** Marks an option as the key of the question, which saves at once. */
+  readonly onMark: (optionId: string) => void;
+  /** The options of the question, in the order the paper shows them. */
+  readonly options: readonly KeyOption[];
+}
+
+/**
+ * The answer key of a question: one toggle per option, named by its letter, and the one the key marks
+ * is pressed. The key holds one correct option, so the group chooses one, and choosing the marked
+ * option again saves nothing.
+ */
+function AnswerKey({
+  editable,
+  marked,
+  number,
+  onMark,
+  options,
+}: AnswerKeyProps) {
+  const t = useTranslations("Exams");
+
+  return (
+    <Field orientation="horizontal">
+      <FieldTitle>{t("answer-key")}</FieldTitle>
+      <ToggleGroup
+        disabled={!editable}
+        onValueChange={(value) => {
+          if (value !== "") {
+            onMark(value);
+          }
+        }}
+        type="single"
+        value={marked ?? ""}
+      >
+        {Arr.map(options, (option) => (
+          <ToggleGroupItem
+            aria-label={t("key-option", { letter: option.letter, number })}
+            key={option.id}
+            value={option.id}
+          >
+            {option.letter}
+          </ToggleGroupItem>
+        ))}
+      </ToggleGroup>
+    </Field>
+  );
+}
+
+/** The props of the teacher's layer of one question. */
+interface TeacherLayerProps {
+  /** Whether the question's editors are mounted, so its fields take changes. */
+  readonly live: boolean;
+  /** The explanation and the rubric as they are drawn while their editors are not mounted. */
+  readonly notes: {
+    readonly explanation: Option.Option<Node>;
+    readonly rubric: Option.Option<Node>;
+  };
+  /** The place of the question in the exam, which names its rich texts for assistive technology. */
+  readonly number: number;
+  /** Marks an option as the key of the question, which saves at once. */
+  readonly onMark: (optionId: string) => void;
+  /** The question the layer belongs to, as the server holds it. */
+  readonly question: Question;
+  /** The answers and the key the page shows, so the key shows a change at once. */
+  readonly shown: Pick<Question, "answers" | "key">;
+}
+
+/**
+ * The teacher's layer of a question, in the editor's panel beside the canvas: the points, the answer
+ * key, then the rubric and the explanation. The paper on the canvas is what the student reads, so the
+ * layer stands on its own screen and never on the canvas. Each rich text keeps its height in both
+ * states: while its editor is not mounted it is drawn from its document, as the editor draws it. A
+ * frozen exam shows its values without changes.
+ */
+export function TeacherLayer({
+  live,
+  notes,
+  number,
+  onMark,
+  question,
+  shown,
+}: TeacherLayerProps) {
+  const t = useTranslations("Exams");
+  const { exam } = useExam();
+  const frozen = isLocked(exam);
+  const editable = live && !frozen;
+  const options = Option.match(choiceOf(shown.answers), {
+    onNone: (): readonly KeyOption[] => [],
+    onSome: (choice) =>
+      Arr.map(choice.options, (option, index) => ({
+        id: option.id,
+        letter: optionLetter(index),
+      })),
+  });
+
+  return (
+    <div className="grid gap-6">
+      <PointsField
+        editable={editable}
+        points={question.points}
+        questionId={question.id}
+      />
+      <AnswerKey
+        editable={editable}
+        marked={markedOption(shown.key)}
+        number={number}
+        onMark={onMark}
+        options={options}
+      />
+      <div className="grid gap-2">
+        <FieldTitle>{t("rubric")}</FieldTitle>
+        {live ? (
+          <Suspense
+            fallback={<PreviewProse article doc={notes.rubric} size="line" />}
+          >
+            <ExamText
+              documentId={question.rubric}
+              key={`${question.rubric}-${frozen}`}
+              label={t("rubric-of", { number })}
+              placeholder={t("rubric-placeholder")}
+              size="line"
+            />
+          </Suspense>
+        ) : (
+          <PreviewProse article doc={notes.rubric} size="line" />
+        )}
+      </div>
+      <div className="grid gap-2">
+        <FieldTitle>{t("explanation")}</FieldTitle>
+        {live ? (
+          <Suspense
+            fallback={
+              <PreviewProse article doc={notes.explanation} size="line" />
+            }
+          >
+            <ExamText
+              documentId={question.explanation}
+              key={`${question.explanation}-${frozen}`}
+              label={t("explanation-of", { number })}
+              placeholder={t("explanation-placeholder")}
+              size="line"
+            />
+          </Suspense>
+        ) : (
+          <PreviewProse article doc={notes.explanation} size="line" />
+        )}
+      </div>
+    </div>
+  );
+}

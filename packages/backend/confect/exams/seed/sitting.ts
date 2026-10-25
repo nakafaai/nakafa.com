@@ -21,9 +21,13 @@ import { storedDocument } from "@repo/backend/confect/editor/document";
 import {
   encodeAnswers,
   encodeKey,
+  NEW_QUESTION_POINTS,
   newChoiceAnswers,
 } from "@repo/backend/confect/exams/question";
-import { placeQuestion } from "@repo/backend/confect/exams/questions/place";
+import {
+  createEmptyDocument,
+  placeQuestion,
+} from "@repo/backend/confect/exams/questions/place";
 import { openSitting } from "@repo/backend/confect/exams/sittings/closing";
 import { createSitting } from "@repo/backend/confect/exams/sittings/schedule";
 import { systemActor } from "@repo/backend/confect/tenancy/actor";
@@ -139,8 +143,8 @@ const ownerUserId = Effect.fn("exams.seed.owner")(function* (
 });
 
 /**
- * Places one seeded question after `after`: a prompt of one paragraph, and one choice whose
- * first option is the correct answer. It returns the question's ID.
+ * Places one seeded question after `after`: a prompt of one paragraph, empty rubric and explanation
+ * documents, and one choice whose first option is the correct answer. It returns the question's ID.
  */
 const seedQuestion = Effect.fn("exams.seed.question")(function* (
   exam: Pick<ExamsDoc, "_id" | "questions" | "scope" | "tenantId">,
@@ -152,11 +156,18 @@ const seedQuestion = Effect.fn("exams.seed.question")(function* (
     tenantId: exam.tenantId,
     text: yield* storedDocument(promptText(paragraphs)).pipe(Effect.orDie),
   }).pipe(Effect.orDie);
+  const rubric = yield* createEmptyDocument(exam).pipe(Effect.orDie);
+  const explanation = yield* createEmptyDocument(exam).pipe(Effect.orDie);
   const answers = yield* encodeAnswers(newChoiceAnswers());
   const key = yield* encodeKey(FIRST_OPTION_KEY);
-  return yield* placeQuestion(exam, after, { answers, key, prompt }).pipe(
-    Effect.orDie
-  );
+  return yield* placeQuestion(exam, after, {
+    answers,
+    explanation,
+    key,
+    points: NEW_QUESTION_POINTS,
+    prompt,
+    rubric,
+  }).pipe(Effect.orDie);
 });
 
 /**
