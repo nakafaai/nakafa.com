@@ -31,7 +31,7 @@ import { Array as Arr, Effect, Option } from "effect";
 const { answer, close, finish, mine } = refs.public.exams.sittings;
 const { release } = refs.public.exams.results.results;
 
-/** The first question of a sitting's exam, which the student answers, and how many questions the exam has. */
+/** The first question of a sitting's exam, which the student answers. */
 const firstQuestionOf = (
   fixture: SittingFixture,
   sittingId: GenericId.GenericId<"examSittings">
@@ -49,7 +49,6 @@ const firstQuestionOf = (
         .pipe(Effect.orDie);
       return {
         questionId: yield* Effect.fromOption(Arr.head(exam.questions)),
-        total: exam.questions.length,
       };
     })
   );
@@ -314,7 +313,7 @@ describe("exams/sittings mine", () => {
   );
 
   it.effect(
-    "shows the student's score in a closed sitting only once the teacher releases its results",
+    "shows the student's weighted score in a closed sitting only once the teacher releases its results",
     () =>
       Effect.gen(function* () {
         const fixture = yield* tenancyFixture;
@@ -324,7 +323,12 @@ describe("exams/sittings mine", () => {
           sittingId: made.id,
           token: made.token,
         });
-        const { questionId, total } = yield* firstQuestionOf(fixture, made.id);
+        const { questionId } = yield* firstQuestionOf(fixture, made.id);
+        yield* fixture.run(
+          Effect.flatMap(DatabaseWriter, (writer) =>
+            writer.table("examQuestions").patch(questionId, { points: 5 })
+          )
+        );
         yield* fixture.as("student").mutation(answer, {
           deviceId: deviceOf(1),
           questionId,
@@ -353,7 +357,7 @@ describe("exams/sittings mine", () => {
         ).toMatchObject([
           {
             resultsReleased: true,
-            score: { points: 1, total },
+            score: { points: 5, total: 5 },
           },
         ]);
       })

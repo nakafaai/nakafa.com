@@ -187,7 +187,11 @@ function NowCell({ sitting, span }: { sitting: Sitting; span: CellSpan }) {
 
   return (
     <Dashboard.Cell narrow={span.narrow} wide={span.wide}>
-      <Dashboard.CellHeader title={t("tile-now")} />
+      <Dashboard.CellHeader
+        icon={Clock01Icon}
+        title={t("tile-now")}
+        tone="success"
+      />
       <Dashboard.Value>{left}</Dashboard.Value>
       <Dashboard.Period>
         {open
@@ -205,6 +209,7 @@ function NowCell({ sitting, span }: { sitting: Sitting; span: CellSpan }) {
             />
           }
           title={sitting.examTitle}
+          tone="success"
           trailing={open ? undefined : <SittingStatus sitting={sitting} />}
         />
       </Dashboard.List>
@@ -229,7 +234,11 @@ function StudentResultsCell({
 
   return (
     <Dashboard.Cell narrow={span.narrow} wide={span.wide}>
-      <Dashboard.CellHeader title={t("tile-results")} />
+      <Dashboard.CellHeader
+        icon={Certificate01Icon}
+        title={t("tile-results")}
+        tone="info"
+      />
       <Dashboard.List>
         {Arr.map(sittings, (sitting) => (
           <StudentResultRow key={sitting.id} sitting={sitting} />
@@ -261,6 +270,7 @@ function StudentResultRow({ sitting }: { sitting: Sitting }) {
         />
       }
       title={sitting.examTitle}
+      tone="info"
       trailing={
         sitting.score === null
           ? t("answers-saved")

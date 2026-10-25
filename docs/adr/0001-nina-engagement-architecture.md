@@ -9,7 +9,7 @@ Accepted architecture for Nina and learning engagement.
 ## Context
 
 Nina needs durable conversations, reconnectable streaming, verified learning
-context, deterministic tools, and credit accounting. Next.js renders the product;
+context, deterministic tools, and credit accounting. The web app renders the product;
 the backend owns conversation execution and persistence.
 
 ## Decision
@@ -42,7 +42,7 @@ Application tables retain product ownership, visibility, credit transactions,
 turn state, and learning context. They do not duplicate the Agent transcript.
 React uses Confect hooks for application functions and the official Agent
 `useUIMessages` hook for stream synchronization. Sending uses the official Agent
-optimistic update contract. There is no Next.js AI transport route or separate AI
+optimistic update contract. There is no web app AI transport route or separate AI
 backend package.
 
 A stored turn holds only what something reads. Its page holds the locale, the
@@ -455,7 +455,7 @@ of a paragraph, a line, or a word.
 Convex deployments own `FIRECRAWL_API_KEY`, `MATH_CAS_API_KEY`, and
 `MATH_CAS_URL`. The CAS key must match the
 production CAS service, and its URL is `https://cas.nakafa.com`. These are
-backend action configuration, not Next.js environment inputs. Resolve CAS
+backend action configuration, not web app environment inputs. Resolve CAS
 configuration before asking the math specialist to generate tool calls, so a
 missing service cannot consume generation tokens or masquerade as checked work.
 No release check runs a real Agent math request yet, so the stored

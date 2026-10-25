@@ -46,7 +46,7 @@ const recordQuestion = Effect.fn("exams.results.record.question")(function* (
     .insert({
       attempt: attempt._id,
       person: attempt.person,
-      points: pointsOf(verdict),
+      points: pointsOf(verdict, view.points),
       question: questionId,
       response,
       sitting: sitting._id,

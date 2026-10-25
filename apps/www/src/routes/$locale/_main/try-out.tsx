@@ -1,6 +1,20 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
+import { createIsomorphicFn } from "@tanstack/react-start";
 import { lazy, Suspense } from "react";
-import { readSignedInHintFn } from "@/lib/auth/hint.functions";
+import { hasSignedInHint } from "@/lib/auth/hint";
+
+/**
+ * Whether the visitor carries the signed-in hint, read where the loader runs: the
+ * request's cookies on the server, and the document's cookies in the browser, so a
+ * navigation into the try-out pages waits on no server request. The hint cookie is
+ * not HttpOnly for this reason.
+ */
+const readSignedInHint = createIsomorphicFn()
+  .server(async () => {
+    const { readRequestSignedInHint } = await import("@/lib/auth/hint.server");
+    return readRequestSignedInHint();
+  })
+  .client(() => Promise.resolve(hasSignedInHint(document.cookie)));
 
 /**
  * The try-out subtree mounts the page's one Convex client only for a signed-in
@@ -13,7 +27,7 @@ export const Route = createFileRoute("/$locale/_main/try-out")({
   // The hint changes only with a full document visit, so a navigation between
   // try-out pages reads it once rather than on every change of page.
   staleTime: Number.POSITIVE_INFINITY,
-  loader: () => readSignedInHintFn(),
+  loader: () => readSignedInHint(),
   component: TryoutLayout,
 });
 

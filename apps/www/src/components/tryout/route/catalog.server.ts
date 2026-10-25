@@ -16,6 +16,7 @@ import {
   readTryoutSetList,
   readTryoutTrackPage,
 } from "@/components/tryout/catalog/source.server";
+import type { CatalogQuery } from "@/components/tryout/catalog/table/query";
 import { TRYOUT_SET_PAGE_SIZE } from "@/components/tryout/catalog/table/types";
 import { getTryoutPublicPath } from "@/components/tryout/route/path";
 import { keepPersonalResponse } from "@/components/tryout/route/response.server";
@@ -64,16 +65,19 @@ export const readTryoutRouteHead = Effect.fn("www.tryout.route.readHead")(
     readonly publicPath: string;
   }) {
     const appLocale = AppLocaleSchema.make(input.locale);
-    const [published, tTryouts] = yield* Effect.all([
-      readTryoutMetadata({
-        appLocale,
-        kind: input.kind,
-        publicPath: input.publicPath,
-      }),
-      Effect.promise(() =>
-        readServerTranslator({ locale: input.locale, namespace: "Tryouts" })
-      ),
-    ]);
+    const [published, tTryouts] = yield* Effect.all(
+      [
+        readTryoutMetadata({
+          appLocale,
+          kind: input.kind,
+          publicPath: input.publicPath,
+        }),
+        Effect.promise(() =>
+          readServerTranslator({ locale: input.locale, namespace: "Tryouts" })
+        ),
+      ],
+      { concurrency: "unbounded" }
+    );
     const source = published.route;
     if (!source) {
       return Option.none<TryoutRouteHead>();
@@ -136,13 +140,16 @@ function readAksaraSourceUrl<
 /** The hub: the country-first catalog, its breadcrumbs and its source tree. */
 export const readTryoutHubRoute = Effect.fn("www.tryout.route.readHub")(
   function* (locale: Locale) {
-    const [page, labels, tTryouts] = yield* Effect.all([
-      readTryoutHubPage(locale),
-      readTryoutRouteLabels(locale),
-      Effect.promise(() =>
-        readServerTranslator({ locale, namespace: "Tryouts" })
-      ),
-    ]);
+    const [page, labels, tTryouts] = yield* Effect.all(
+      [
+        readTryoutHubPage(locale),
+        readTryoutRouteLabels(locale),
+        Effect.promise(() =>
+          readServerTranslator({ locale, namespace: "Tryouts" })
+        ),
+      ],
+      { concurrency: "unbounded" }
+    );
     return {
       breadcrumbs: createBreadcrumbItems(locale, [
         { name: labels.home, path: "" },
@@ -168,19 +175,22 @@ export const readTryoutHubRoute = Effect.fn("www.tryout.route.readHub")(
 export const readTryoutCountryRoute = Effect.fn("www.tryout.route.readCountry")(
   function* (input: { readonly country: string; readonly locale: Locale }) {
     const countryPath = getTryoutPublicPath({ country: input.country });
-    const [page, hub, head, labels, tTryouts] = yield* Effect.all([
-      readTryoutCountryPage(input.locale, countryPath),
-      readTryoutHubPage(input.locale),
-      readTryoutRouteHead({
-        kind: "country",
-        locale: input.locale,
-        publicPath: countryPath,
-      }),
-      readTryoutRouteLabels(input.locale),
-      Effect.promise(() =>
-        readServerTranslator({ locale: input.locale, namespace: "Tryouts" })
-      ),
-    ]);
+    const [page, hub, head, labels, tTryouts] = yield* Effect.all(
+      [
+        readTryoutCountryPage(input.locale, countryPath),
+        readTryoutHubPage(input.locale),
+        readTryoutRouteHead({
+          kind: "country",
+          locale: input.locale,
+          publicPath: countryPath,
+        }),
+        readTryoutRouteLabels(input.locale),
+        Effect.promise(() =>
+          readServerTranslator({ locale: input.locale, namespace: "Tryouts" })
+        ),
+      ],
+      { concurrency: "unbounded" }
+    );
     if (Option.isNone(page) || Option.isNone(head)) {
       return { kind: "notFound" as const };
     }
@@ -227,19 +237,22 @@ export const readTryoutExamRoute = Effect.fn("www.tryout.route.readExam")(
       country: input.country,
       exam: input.exam,
     });
-    const [page, countryPage, head, labels, tTryouts] = yield* Effect.all([
-      readTryoutExamPage(input.locale, examPath),
-      readTryoutCountryPage(input.locale, countryPath),
-      readTryoutRouteHead({
-        kind: "exam",
-        locale: input.locale,
-        publicPath: examPath,
-      }),
-      readTryoutRouteLabels(input.locale),
-      Effect.promise(() =>
-        readServerTranslator({ locale: input.locale, namespace: "Tryouts" })
-      ),
-    ]);
+    const [page, countryPage, head, labels, tTryouts] = yield* Effect.all(
+      [
+        readTryoutExamPage(input.locale, examPath),
+        readTryoutCountryPage(input.locale, countryPath),
+        readTryoutRouteHead({
+          kind: "exam",
+          locale: input.locale,
+          publicPath: examPath,
+        }),
+        readTryoutRouteLabels(input.locale),
+        Effect.promise(() =>
+          readServerTranslator({ locale: input.locale, namespace: "Tryouts" })
+        ),
+      ],
+      { concurrency: "unbounded" }
+    );
     if (!page || Option.isNone(countryPage) || Option.isNone(head)) {
       return { kind: "notFound" as const };
     }
@@ -262,6 +275,7 @@ export const readTryoutTrackRoute = Effect.fn("www.tryout.route.readTrack")(
     readonly country: string;
     readonly exam: string;
     readonly locale: Locale;
+    readonly search: CatalogQuery;
     readonly track: string;
   }) {
     const countryPath = getTryoutPublicPath({ country: input.country });
@@ -274,22 +288,36 @@ export const readTryoutTrackRoute = Effect.fn("www.tryout.route.readTrack")(
       exam: input.exam,
       track: input.track,
     });
-    const [page, countryPage, head, labels, tTryouts] = yield* Effect.all([
-      readTryoutTrackPage(input.locale, trackPath),
-      readTryoutCountryPage(input.locale, countryPath),
-      readTryoutRouteHead({
-        kind: "track",
-        locale: input.locale,
-        publicPath: trackPath,
-      }),
-      readTryoutRouteLabels(input.locale),
-      Effect.promise(() =>
-        readServerTranslator({ locale: input.locale, namespace: "Tryouts" })
-      ),
-    ]);
+    const [page, countryPage, head, labels, tTryouts] = yield* Effect.all(
+      [
+        readTryoutTrackPage(input.locale, trackPath),
+        readTryoutCountryPage(input.locale, countryPath),
+        readTryoutRouteHead({
+          kind: "track",
+          locale: input.locale,
+          publicPath: trackPath,
+        }),
+        readTryoutRouteLabels(input.locale),
+        Effect.promise(() =>
+          readServerTranslator({ locale: input.locale, namespace: "Tryouts" })
+        ),
+      ],
+      { concurrency: "unbounded" }
+    );
     if (!page || Option.isNone(countryPage) || Option.isNone(head)) {
       return { kind: "notFound" as const };
     }
+    // The set list needs the track's keys, so it follows the page here, on the
+    // server beside the database, rather than in a second request from the browser.
+    const list = yield* readTryoutTrackSetList({
+      locale: input.locale,
+      search: input.search,
+      track: {
+        countryKey: page.country.countryKey,
+        examKey: page.exam.examKey,
+        trackKey: page.track.trackKey,
+      },
+    });
     return {
       countryPath: getTryoutPublicPath({ country: input.country }),
       examOptions: buildTryoutExamOptions(countryPage.value.exams),
@@ -297,6 +325,7 @@ export const readTryoutTrackRoute = Effect.fn("www.tryout.route.readTrack")(
       head: head.value,
       kind: "found" as const,
       labels,
+      list,
       page,
       selectorLabel: tTryouts("exam-selector-label"),
     };
