@@ -24,7 +24,7 @@ const post = Effect.fn("routes.xendit.test.post")(function* (
 
 describe("routes/xendit", () => {
   beforeEach(() => {
-    vi.stubEnv("XENDIT_WEBHOOK_TOKEN", TOKEN);
+    vi.stubEnv("XENDIT_WEBHOOK_SECRET", TOKEN);
   });
 
   afterEach(() => {
@@ -83,7 +83,7 @@ describe("routes/xendit", () => {
     "answers with a server error when the callback token is not configured",
     () =>
       Effect.gen(function* () {
-        vi.stubEnv("XENDIT_WEBHOOK_TOKEN", "");
+        vi.stubEnv("XENDIT_WEBHOOK_SECRET", "");
         const response = yield* post(DELIVERY, TOKEN);
         expect(response.status).toBe(500);
       })

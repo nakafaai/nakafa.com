@@ -47,7 +47,7 @@ function answer(status: number, body: unknown) {
 describe("billing/xendit/client", () => {
   beforeEach(() => {
     fetcher.mockReset();
-    vi.stubEnv("XENDIT_SECRET_KEY", "test-secret");
+    vi.stubEnv("XENDIT_API_KEY", "test-secret");
   });
 
   afterEach(() => {

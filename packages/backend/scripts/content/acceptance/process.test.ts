@@ -50,6 +50,7 @@ const fixture = Effect.gen(function* () {
   });
   const runtime: LocalRuntime = {
     analytics: "http://127.0.0.1:43312",
+    app: "http://localhost:3000",
     backend: directory,
     configurationHash: "config",
     databaseInode: 1n,
