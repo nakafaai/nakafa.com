@@ -31,7 +31,7 @@ export function TenantEntryActions({ slug }: { slug: TenantSlug }) {
   const isOpen = masuk === "username";
 
   return (
-    <div className="flex w-full flex-col items-center gap-6">
+    <div className="flex w-full flex-col items-center gap-3">
       <AuthGoogle returnPath="/" variant={isOpen ? "outline" : "default"} />
       {isOpen ? (
         <Suspense fallback={null}>

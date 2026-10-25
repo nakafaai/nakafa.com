@@ -34,7 +34,6 @@ export function TenantEntry({
   return (
     <EntryShell>
       <EntryShellPanel>
-        {" "}
         <EntryShellHeader>
           <div className="ms-auto">
             <ThemePicker variant="ghost" />
