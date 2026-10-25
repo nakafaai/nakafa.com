@@ -1,7 +1,7 @@
 import { readMaterialContextHint } from "@repo/contents/route/material/context";
 import { Effect } from "effect";
 import { readPublishedMaterialContext } from "@/lib/content/material/context";
-import type { MaterialPlacement } from "@/lib/content/material/navigation";
+import { toMaterialPlacement } from "@/lib/content/material/navigation";
 import type { PlacementInput } from "@/lib/content/material/placement.functions";
 import { getLocaleOrThrow } from "@/lib/i18n/params";
 import { serverHandler } from "@/lib/server/fn";
@@ -23,17 +23,7 @@ export const readPlacement = Effect.fn("www.materials.placement.read")(
       data,
       context
     );
-    if (published === null) {
-      return null;
-    }
-    const placement: MaterialPlacement = {
-      context: published.context,
-      hash: published.hash,
-      label: published.label,
-      parent: { publicPath: published.parent.publicPath },
-      resolvedCanonicalPath: published.resolvedCanonicalPath,
-    };
-    return placement;
+    return published === null ? null : toMaterialPlacement(published);
   }
 );
 

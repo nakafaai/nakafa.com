@@ -18,7 +18,7 @@ function initialPlacementState() {
   return { placement: Option.none<MaterialPlacement>() };
 }
 
-export type PlacementState = ReturnType<typeof initialPlacementState>;
+type PlacementState = ReturnType<typeof initialPlacementState>;
 
 export type PlacementStore = StoreApi<PlacementState>;
 

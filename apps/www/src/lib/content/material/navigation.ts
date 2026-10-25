@@ -32,13 +32,22 @@ export type MaterialNavigationPage = Readonly<
   ReturnType<typeof toMaterialNavigationPage>
 >;
 
+/**
+ * Projects a verified curriculum placement to the part that a lesson's links
+ * read, which is all that the server answers the browser.
+ */
+export function toMaterialPlacement(published: PublishedMaterialContext) {
+  return {
+    context: published.context,
+    hash: published.hash,
+    label: published.label,
+    parent: { publicPath: published.parent.publicPath },
+    resolvedCanonicalPath: published.resolvedCanonicalPath,
+  };
+}
+
 /** The part of a verified curriculum placement that a lesson's links read. */
-export type MaterialPlacement = Pick<
-  PublishedMaterialContext,
-  "context" | "hash" | "label" | "resolvedCanonicalPath"
-> & {
-  readonly parent: Pick<PublishedMaterialContext["parent"], "publicPath">;
-};
+export type MaterialPlacement = ReturnType<typeof toMaterialPlacement>;
 
 /** Projects one signed route to the identity and label siblings need. */
 function toMaterialNavigationRoute(route: MaterialLessonProjection) {
