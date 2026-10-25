@@ -1,5 +1,7 @@
 import type { ContentDocumentSchema } from "@nakafa/aksara-contracts/assessment/document";
 import type { InteractionKey } from "@nakafa/aksara-contracts/assessment/key";
+import { Id } from "@repo/backend/confect/_generated/id";
+import { MAX_EXAM_QUESTIONS } from "@repo/backend/confect/exams/exam";
 import {
   CHOICE_OPTIONS_MAX,
   CHOICE_OPTIONS_MIN,
@@ -25,17 +27,50 @@ const MAX_PROMPT_LENGTH = 6000;
 /** The longest text Nina may write for one option. */
 const MAX_OPTION_LENGTH = 1500;
 
+/** The longest alternative text of one figure. */
+const MAX_ALT_LENGTH = 300;
+
+/** The most figures one question carries from its file. */
+const MAX_FIGURES = 6;
+
 /** The most questions one read of five pages returns, which also bounds one placement. */
 export const MAX_IMPORTED_QUESTIONS = 60;
 
+/** A place on a page in thousandths of its width and height, from its top left corner. */
+const Thousandths = Schema.Int.check(
+  Schema.isBetween({ maximum: 1000, minimum: 0 })
+);
+
 /**
- * One question as Nina reads it from a page: the prompt and each option as plain text with
- * formulas written in LaTeX between `\(` and `\)`, or between `\[` and `\]` on a line of their
- * own; the zero-based index of the option the file marks correct, or null when the file marks
- * none. A paragraph ends at a line break.
+ * One figure of a question as Nina finds it: on a page of a PDF, as the box that frames it in
+ * thousandths of the page, or as one of the images a Word file holds, by its number; and the
+ * alternative text that says what it shows. The prompt or an option holds `{{figure:N}}` on a
+ * line of its own where figure N goes, counted from one.
+ */
+export const ImportedFigure = Schema.Struct({
+  alt: Schema.String.check(Schema.isMaxLength(MAX_ALT_LENGTH)),
+  box: Schema.NullOr(
+    Schema.Struct({
+      bottom: Thousandths,
+      left: Thousandths,
+      right: Thousandths,
+      top: Thousandths,
+    })
+  ),
+  image: Schema.NullOr(Schema.Int),
+  page: Schema.NullOr(Schema.Int),
+});
+
+/**
+ * One question as Nina reads it from a page: the number the file gives it, or null; the prompt
+ * and each option as plain text with formulas written in LaTeX between `\(` and `\)`, or between
+ * `\[` and `\]` on a line of their own; the zero-based index of the option the file marks
+ * correct, or null when this part marks none; and its figures. A paragraph ends at a line break.
  */
 export const ImportedQuestion = Schema.Struct({
   answer: Schema.NullOr(Schema.Int),
+  figures: Schema.Array(ImportedFigure).check(Schema.isMaxLength(MAX_FIGURES)),
+  number: Schema.NullOr(Schema.Int),
   options: Schema.Array(
     Schema.String.check(Schema.isMaxLength(MAX_OPTION_LENGTH))
   ),
@@ -43,12 +78,59 @@ export const ImportedQuestion = Schema.Struct({
 });
 export type ImportedQuestion = typeof ImportedQuestion.Type;
 
-/** What Nina returns for one group of pages: its questions in the order the file holds them. */
+/**
+ * What Nina returns for one part of a file: its questions in the order the file holds them, and
+ * the answers of an answer key table in this part, by question number, which may belong to
+ * questions of an earlier part.
+ */
 export const ImportedRead = Schema.Struct({
+  keys: Schema.Array(
+    Schema.Struct({ answer: Schema.Int, number: Schema.Int })
+  ).check(Schema.isMaxLength(MAX_EXAM_QUESTIONS)),
   questions: Schema.Array(ImportedQuestion).check(
     Schema.isMaxLength(MAX_IMPORTED_QUESTIONS)
   ),
 });
+
+/**
+ * One question the browser places after a read: Nina's text, with each of its figures now an
+ * image of the exam and its alternative text, in the order the `{{figure:N}}` marks count them.
+ */
+export const PlacedQuestion = Schema.Struct({
+  answer: Schema.NullOr(Schema.Int),
+  figures: Schema.Array(
+    Schema.Struct({
+      alt: Schema.String.check(Schema.isMaxLength(MAX_ALT_LENGTH)),
+      asset: Id("examAssets"),
+    })
+  ).check(Schema.isMaxLength(MAX_FIGURES)),
+  number: Schema.NullOr(Schema.Int),
+  options: Schema.Array(
+    Schema.String.check(Schema.isMaxLength(MAX_OPTION_LENGTH))
+  ),
+  prompt: Schema.String.check(Schema.isMaxLength(MAX_PROMPT_LENGTH)),
+});
+export type PlacedQuestion = typeof PlacedQuestion.Type;
+
+/** A figure as a document draws it: an image of the exam with its size and alternative text. */
+export const FigureImage = Schema.Struct({
+  alt: Schema.String,
+  asset: Schema.String,
+  height: Schema.Int,
+  width: Schema.Int,
+});
+
+/** The mark Nina writes on its own line where a figure goes: `{{figure:N}}`. */
+const FIGURE_OPEN = "{{figure:";
+const FIGURE_CLOSE = "}}";
+
+/** The number of the figure a line marks, counted from one, or none for any other line. */
+const figureNumberOf = (line: string) =>
+  line.startsWith(FIGURE_OPEN) && line.endsWith(FIGURE_CLOSE)
+    ? Schema.decodeOption(Schema.FiniteFromString)(
+        line.slice(FIGURE_OPEN.length, line.length - FIGURE_CLOSE.length)
+      )
+    : Option.none();
 
 /** The opening and closing marks of an inline formula, and of a formula on its own line. */
 const INLINE_OPEN = "\\(";
@@ -97,11 +179,31 @@ const inlineNodes = (line: string): Arr.NonEmptyArray<InlineNode> => {
 };
 
 /**
- * One block of a document from one line that holds something: a formula alone on its line
- * between `\[` and `\]` becomes a formula block, and any other line a paragraph of its runs
- * and inline formulas.
+ * The blocks of one line that holds something: the figure a `{{figure:N}}` line marks, or
+ * nothing when the question has no figure N; a formula alone on its line between `\[` and `\]`
+ * as a formula block; and any other line as a paragraph of its runs and inline formulas.
  */
-const blockOf = (line: string): ImportedBlock => {
+const blocksOf = (
+  line: string,
+  figures: readonly (typeof FigureImage.Type)[]
+): ImportedBlock[] => {
+  const figure = figureNumberOf(line);
+  if (Option.isSome(figure)) {
+    return Option.match(Arr.get(figures, figure.value - 1), {
+      onNone: () => [],
+      onSome: (image) => [
+        {
+          attrs: {
+            alt: Str.trim(image.alt),
+            asset: image.asset,
+            height: image.height,
+            width: image.width,
+          },
+          type: "image",
+        },
+      ],
+    });
+  }
   const latex = Str.trim(
     line.slice(BLOCK_OPEN.length, line.length - BLOCK_CLOSE.length)
   );
@@ -111,35 +213,41 @@ const blockOf = (line: string): ImportedBlock => {
     line.indexOf(BLOCK_OPEN, BLOCK_OPEN.length) < 0 &&
     latex !== "";
   return isBlock
-    ? { attrs: { latex }, type: "mathBlock" }
-    : { content: inlineNodes(line), type: "paragraph" };
+    ? [{ attrs: { latex }, type: "mathBlock" }]
+    : [{ content: inlineNodes(line), type: "paragraph" }];
 };
 
 /**
- * The document of a text that Nina wrote: one block for each line that holds anything, or one
- * empty paragraph for an empty text, which the contract accepts as an empty prompt.
+ * The document of a text that Nina wrote: the blocks of each line that holds anything, with its
+ * figures as images, or one empty paragraph when nothing is left, which the contract accepts as
+ * an empty prompt.
  */
-export const documentOf = (text: string): ContentDocument => {
+export const documentOf = (
+  text: string,
+  figures: readonly (typeof FigureImage.Type)[] = []
+): ContentDocument => {
   const lines = Arr.filter(
     Arr.map(Str.split(text, "\n"), Str.trim),
-    Str.isNonEmpty
+    (line) => line !== ""
   );
-  return Arr.match(lines, {
+  const blocks = Arr.flatMap(lines, (line) => blocksOf(line, figures));
+  return Arr.match(blocks, {
     onEmpty: () => ({ content: [{ type: "paragraph" }], type: "doc" }),
-    onNonEmpty: (present) => ({
-      content: Arr.map(present, blockOf),
-      type: "doc",
-    }),
+    onNonEmpty: (content) => ({ content, type: "doc" }),
   });
 };
 
 /**
- * The stored parts of one imported question: its prompt document, its single-answer choice
- * with one option for each option Nina read, and its key when the file marks an option that
- * exists. A question with fewer than two or more than five options is not one this kind holds,
- * so it is none, and the import counts it as left out.
+ * The stored parts of one placed question: its prompt document, its single-answer choice with
+ * one option for each option Nina read, and its key when the file marks an option that exists,
+ * each with the question's figures where its marks place them. A question with fewer than two or
+ * more than five options is not one this kind holds, so it is none, and the import counts it as
+ * left out.
  */
-export const importedParts = (question: ImportedQuestion) => {
+export const importedParts = (
+  question: Pick<PlacedQuestion, "answer" | "options" | "prompt">,
+  figures: readonly (typeof FigureImage.Type)[]
+) => {
   const { options } = question;
   if (
     !Arr.isReadonlyArrayNonEmpty(options) ||
@@ -148,22 +256,33 @@ export const importedParts = (question: ImportedQuestion) => {
   ) {
     return Option.none();
   }
-  const answers = choiceAnswers(Arr.map(options, documentOf));
-  const [choice] = answers;
-  const correct = Option.flatMap(Option.fromNullOr(question.answer), (index) =>
-    Arr.get(choice.options, index)
+  const answers = choiceAnswers(
+    Arr.map(options, (option) => documentOf(option, figures))
   );
+  const [choice] = answers;
   return Option.some({
     answers,
-    key: Option.match(correct, {
-      onNone: () => null,
-      onSome: (option): Arr.NonEmptyReadonlyArray<InteractionKey> => [
-        { correct: [option.id], interaction: choice.id, kind: "choice" },
-      ],
-    }),
-    prompt: documentOf(question.prompt),
+    key: keyOf(choice, question.answer),
+    prompt: documentOf(question.prompt, figures),
   });
 };
+
+/** The key that marks option `answer` of a choice correct, or null when the choice has no such option. */
+export const keyOf = (
+  choice: Extract<ReturnType<typeof choiceAnswers>[0], { kind: "choice" }>,
+  answer: number | null
+): Arr.NonEmptyReadonlyArray<InteractionKey> | null =>
+  Option.match(
+    Option.flatMap(Option.fromNullOr(answer), (index) =>
+      Arr.get(choice.options, index)
+    ),
+    {
+      onNone: () => null,
+      onSome: (option) => [
+        { correct: [option.id], interaction: choice.id, kind: "choice" },
+      ],
+    }
+  );
 
 /** The most pages one read sends to Nina, as the blueprint sets: five pages a call. */
 export const PAGES_PER_READ = 5;
@@ -201,13 +320,17 @@ export class ImportPageRefused extends Schema.TaggedError<ImportPageRefused>()(
  * a key comes only from what the file marks, and formulas are LaTeX between the marks
  * `documentOf` reads.
  */
-export const IMPORT_INSTRUCTIONS = `You read part of a school exam that a teacher uploaded: pages of a PDF as images with their text layers, or the text of a Word file in which each equation is written as Office Math XML.
+export const IMPORT_INSTRUCTIONS = `You read part of a school exam that a teacher uploaded, so that each question appears in Nina's exam editor exactly as the file has it. The part is either pages of a PDF, each given as "Page N:" with its text layer followed by the page image, or the text of a Word file in which each equation is Office Math XML and each picture is marked [image N], followed by those pictures as "Image N:".
 
-Return every multiple-choice question in this part, in the order of the file, as the file writes it. Keep each question in its own languages, and never translate, solve, shorten or add to it.
+Return every multiple-choice question in this part, in the order of the file. Copy the words exactly: keep every language the file mixes (Indonesian, English, Arabic and any other), its spelling and punctuation, and never translate, correct, solve, shorten or add to a question. Read the page image to fix what the text layer gets wrong: broken words, symbols, superscripts, subscripts and the order of columns.
 
 For each question:
-- prompt: the question as the student reads it, with any passage, table text or statements that belong to it, and without its number. Put each paragraph on its own line.
-- options: the text of each option in order, without its letter or number.
-- answer: the zero-based index of the option that the file marks as correct, through an answer key, a key table, or a marked option in this part; null when this part marks none.
+- number: the number the file prints before the question, or null when it prints none.
+- prompt: the question as the student reads it, with the passage, table text, statements or data that belong to it, without its number. Put each paragraph on its own line. When several questions share one passage, repeat the passage in each of them.
+- options: the text of each option in order, without its letter or number (A, B, a., 1), أ and the like).
+- answer: the zero-based index of the option that this part marks as correct, through a mark on the option (bold, underline, a tick or a circle) or a key printed right after the question; null when this part marks none. Never guess an answer.
+- figures: every picture, graph, diagram, chart or geometric figure that belongs to the question or to one of its options, in the order they appear. For a PDF page give page (its N) and box, the smallest rectangle around the figure in thousandths of the page width and height from the top left corner, with image null. For a Word picture give image (its N) with page and box null. Give alt, one short sentence in the question's language that says what the figure shows. Put the line {{figure:K}} where figure K of this question goes, on its own line in the prompt or in the option it belongs to, counting from 1.
 
-Write every formula in LaTeX between \\( and \\), or between \\[ and \\] on a line of its own, and turn Office Math XML into LaTeX the same way. Leave out page headers and footers, instructions for students, answer key tables themselves, and questions that are not multiple choice. Return an empty list when this part holds no question.`;
+If this part holds an answer key table (for example "Kunci Jawaban", "Answer key", "Lösungen"), put its entries in keys as { number, answer } with answer the zero-based index of the lettered option; do not turn the table into questions.
+
+Write every formula in LaTeX between \\( and \\), or between \\[ and \\] on a line of its own when the file sets it apart, and turn Office Math XML into the same LaTeX. Chemical formulas and units are LaTeX too. Leave out page headers and footers, page numbers, school names and logos, instructions to students, and questions that are not multiple choice. Return empty lists when this part holds no question and no key.`;

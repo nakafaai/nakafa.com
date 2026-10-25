@@ -97,13 +97,78 @@ describe("exams/import documentOf", () => {
   });
 });
 
+describe("exams/import figures", () => {
+  /** The figure a question carries: an image of the exam with its size and its words. */
+  const triangle = {
+    alt: "  Segitiga siku-siku ABC  ",
+    asset: "asset-1",
+    height: 300,
+    width: 400,
+  };
+
+  it("draws a figure where its mark stands, in the prompt and in an option, and drops a mark that names no figure", () => {
+    expect(
+      documentOf(
+        "Perhatikan gambar.\n{{figure:1}}\n{{figure:2}}\nHitung luasnya.",
+        [triangle]
+      )
+    ).toEqual({
+      content: [
+        {
+          content: [{ text: "Perhatikan gambar.", type: "text" }],
+          type: "paragraph",
+        },
+        {
+          attrs: {
+            alt: "Segitiga siku-siku ABC",
+            asset: "asset-1",
+            height: 300,
+            width: 400,
+          },
+          type: "image",
+        },
+        {
+          content: [{ text: "Hitung luasnya.", type: "text" }],
+          type: "paragraph",
+        },
+      ],
+      type: "doc",
+    });
+    const parts = Option.getOrThrow(
+      importedParts(
+        { answer: null, options: ["{{figure:1}}", "Bukan"], prompt: "Pilih" },
+        [triangle]
+      )
+    );
+    expect(parts.answers[0].options[0]?.label.content[0]).toMatchObject({
+      type: "image",
+    });
+  });
+
+  it("keeps a line that only looks like a mark as text, and writes an empty paragraph when only a missing figure was left", () => {
+    expect(documentOf("{{figure:satu}}").content).toEqual([
+      {
+        content: [{ text: "{{figure:satu}}", type: "text" }],
+        type: "paragraph",
+      },
+    ]);
+    expect(documentOf("{{figure:3}}", [triangle])).toEqual({
+      content: [{ type: "paragraph" }],
+      type: "doc",
+    });
+  });
+});
+
 describe("exams/import importedParts", () => {
   it("makes a single-answer choice with one option for each option read, and the key of the marked option", () => {
-    const parts = importedParts({
-      answer: 1,
-      options: ["4", "\\(5\\)", "6"],
-      prompt: "Berapa 2 + 3?",
-    });
+    const parts = importedParts(
+      {
+        answer: 1,
+        options: ["4", "\\(5\\)", "6"],
+        prompt: "Berapa 2 + 3?",
+      },
+      []
+    );
     expect(Option.getOrThrow(parts)).toEqual({
       answers: [
         {
@@ -126,16 +191,22 @@ describe("exams/import importedParts", () => {
   });
 
   it("leaves the key out when the file marks no option, or marks one that does not exist", () => {
-    const unmarked = importedParts({
-      answer: null,
-      options: ["A", "B"],
-      prompt: "Soal",
-    });
-    const missing = importedParts({
-      answer: 2,
-      options: ["A", "B"],
-      prompt: "Soal",
-    });
+    const unmarked = importedParts(
+      {
+        answer: null,
+        options: ["A", "B"],
+        prompt: "Soal",
+      },
+      []
+    );
+    const missing = importedParts(
+      {
+        answer: 2,
+        options: ["A", "B"],
+        prompt: "Soal",
+      },
+      []
+    );
     expect(Option.map(unmarked, (parts) => parts.key)).toEqual(
       Option.some(null)
     );
@@ -146,17 +217,20 @@ describe("exams/import importedParts", () => {
 
   it("leaves out a question that is not a choice of two to five options", () => {
     expect(
-      importedParts({ answer: 0, options: ["Saja"], prompt: "Satu" })
+      importedParts({ answer: 0, options: ["Saja"], prompt: "Satu" }, [])
     ).toEqual(Option.none());
     expect(
-      importedParts({
-        answer: 0,
-        options: ["A", "B", "C", "D", "E", "F"],
-        prompt: "Enam",
-      })
+      importedParts(
+        {
+          answer: 0,
+          options: ["A", "B", "C", "D", "E", "F"],
+          prompt: "Enam",
+        },
+        []
+      )
     ).toEqual(Option.none());
     expect(
-      importedParts({ answer: null, options: [], prompt: "Uraian" })
+      importedParts({ answer: null, options: [], prompt: "Uraian" }, [])
     ).toEqual(Option.none());
   });
 });

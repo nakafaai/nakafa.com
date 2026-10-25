@@ -10,5 +10,7 @@ export default {
 ["canRead"]: RegisteredConvexFunction.register({ ...definitions["canRead"], handler: forward(definitions["canRead"].handler) }),
 ["read"]: RegisteredConvexFunction.register({ ...definitions["read"], handler: forward(definitions["read"].handler) }),
 ["place"]: RegisteredConvexFunction.register({ ...definitions["place"], handler: forward(definitions["place"].handler) }),
+["keys"]: RegisteredConvexFunction.register({ ...definitions["keys"], handler: forward(definitions["keys"].handler) }),
+["pictures"]: RegisteredConvexFunction.register({ ...definitions["pictures"], handler: forward(definitions["pictures"].handler) }),
 ["discard"]: RegisteredConvexFunction.register({ ...definitions["discard"], handler: forward(definitions["discard"].handler) }),
 } as RegisteredFunctions.RegisteredFunctionsForGroupSpec<typeof import("../../../exams/imports.spec")["default"]>;
