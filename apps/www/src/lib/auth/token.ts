@@ -4,9 +4,9 @@ import {
   retryNetworkAttempt,
 } from "@repo/backend/client/network";
 import { FetchClient } from "@repo/utilities/http/client";
-import { getSessionCookie } from "better-auth/cookies";
 import { Effect, Schema } from "effect";
 import { HttpClient, HttpClientRequest, HttpClientResponse } from "effect/http";
+import { readSessionCookie } from "@/lib/auth/cookie.server";
 
 /**
  * The Better Auth route that issues the Convex token, at the helper's default
@@ -106,7 +106,7 @@ const sendTokenRequest = Effect.fn("www.auth.sendTokenRequest")(function* (
  */
 export const readSessionToken = Effect.fn("www.auth.readSessionToken")(
   function* (siteUrl: string, requestHeaders: Headers) {
-    if (getSessionCookie(requestHeaders) === null) {
+    if (readSessionCookie(requestHeaders) === null) {
       return;
     }
     const site = new URL(siteUrl);
