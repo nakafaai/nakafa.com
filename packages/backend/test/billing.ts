@@ -110,6 +110,7 @@ export function insertProSubscription(
   ctx: MutationCtx,
   accountId: Id<"billingAccounts">,
   overrides: {
+    cancelAtPeriodEnd?: boolean;
     currentPeriodEnd?: number | null;
     status?: "active" | "canceled" | "ended" | "pastDue" | "pending";
     subscriptionId?: string;
@@ -125,7 +126,7 @@ export function insertProSubscription(
       overrides.currentPeriodEnd === undefined
         ? PRO_PERIOD_END
         : overrides.currentPeriodEnd,
-    cancelAtPeriodEnd: false,
+    cancelAtPeriodEnd: overrides.cancelAtPeriodEnd ?? false,
     provider: {
       kind: "polar",
       subscriptionId: overrides.subscriptionId ?? "sub_polar_test",
@@ -136,7 +137,50 @@ export function insertProSubscription(
   });
 }
 
-/** The provider time the seeded subscription already holds. */
+/**
+ * Inserts one top-up pack of a learner, bought by its own payment on the
+ * learner's Polar account. The account is made when the learner has none.
+ */
+export async function insertTopUpPack(
+  ctx: MutationCtx,
+  userId: Id<"users">,
+  pack: {
+    readonly expiresAt: number;
+    readonly providerPaymentId: string;
+    readonly remaining: number;
+    readonly state?: "active" | "expired" | "forfeited" | "refunded";
+  }
+) {
+  const account = await ctx.db
+    .query("billingAccounts")
+    .withIndex("by_userId_and_rail", (query) =>
+      query.eq("owner.userId", userId).eq("rail", "polar")
+    )
+    .first();
+  const accountId = account?._id ?? (await insertPolarAccount(ctx, userId));
+  const paidAt = Date.UTC(2026, 0, 1);
+  const paymentId = await ctx.db.insert("billingPayments", {
+    accountId,
+    amount: 499,
+    currency: "USD",
+    kind: "credits",
+    method: "order",
+    paidAt,
+    providerPaymentId: pack.providerPaymentId,
+    providerUpdatedAt: paidAt,
+    rail: "polar",
+    status: "succeeded",
+  });
+  return ctx.db.insert("creditLots", {
+    expiresAt: pack.expiresAt,
+    granted: 1000,
+    paymentId,
+    remaining: pack.remaining,
+    state: pack.state ?? "active",
+    userId,
+  });
+}
+
 /** The provider time a seeded Xendit subscription already holds. */
 const XENDIT_STORED_AT = Date.UTC(2026, 0, 1);
 

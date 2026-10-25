@@ -1,6 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
 import type { AttemptRefused } from "@repo/backend/confect/assessment/gate/refusal";
-import { rules } from "@repo/backend/confect/assessment/gate/rules";
 import type { ResponseRejected } from "@repo/backend/confect/response/model";
 import { endings, refusals, rejections } from "@repo/backend/test/gate/cases";
 import {
@@ -11,10 +10,12 @@ import {
   type Pick,
   type Target,
 } from "@repo/backend/test/gate/world";
-import { Effect, Match, Option, Struct } from "effect";
+import { Effect, Match, Option } from "effect";
 
 /** A write the gate admits. */
-type Write = keyof typeof rules;
+/** The writes that the shared gate cases run: an answer and a finish. */
+type Write = "answer" | "finish";
+const WRITES: readonly Write[] = ["answer", "finish"];
 
 /** A reason a refusal names. */
 type Reason = AttemptRefused["reason"]["_tag"];
@@ -213,7 +214,7 @@ export function describeGate<
       "refuses an answer and a finish on $case",
       ({ caller, changes, reason, target }) =>
         Effect.gen(function* () {
-          for (const kind of Struct.keys(rules)) {
+          for (const kind of WRITES) {
             const world = yield* fixture.seed;
             yield* Effect.forEach(changes, world.arrange);
             yield* refused(
@@ -339,7 +340,7 @@ export function describeGate<
       Effect.gen(function* () {
         const world = yield* fixture.seed;
         yield* world.arrange("duplicate-section");
-        for (const kind of Struct.keys(rules)) {
+        for (const kind of WRITES) {
           yield* refused(
             world,
             write(world, kind, "learner", "running"),

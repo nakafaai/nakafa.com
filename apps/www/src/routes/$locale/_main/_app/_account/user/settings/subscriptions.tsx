@@ -14,6 +14,6 @@ export const Route = createFileRoute(
 });
 
 function SubscriptionsPage() {
-  const { subscription } = Route.useLoaderData();
-  return <UserSettingsSubscriptions initialSubscription={subscription} />;
+  const { overview } = Route.useLoaderData();
+  return <UserSettingsSubscriptions initialOverview={overview} />;
 }

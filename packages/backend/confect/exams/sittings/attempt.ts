@@ -5,17 +5,7 @@ import type {
 } from "@repo/backend/confect/_generated/docs";
 import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
-import { withExam } from "@repo/backend/confect/exams/sittings/authority";
-import { deviceBinding } from "@repo/backend/confect/exams/sittings/device";
-import { sittingLocked } from "@repo/backend/confect/exams/sittings/eligibility";
-import {
-  AttemptClosed,
-  AttemptLocked,
-  DeviceRetired,
-  NotInSitting,
-  SecondDevice,
-  SittingLocked,
-} from "@repo/backend/confect/exams/sittings/errors";
+import { NotInSitting } from "@repo/backend/confect/exams/sittings/errors";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import { Effect, Option } from "effect";
 
@@ -73,76 +63,6 @@ export const attemptIn = Effect.fn("exams.sittings.attempt.in")(function* (
     return yield* new AccessDenied({ action, reason: "resource" });
   }
   return row.value;
-});
-
-/**
- * The attempt of a signal, when the caller holds it. Another student's attempt and an
- * attempt of another school are both `NotInSitting`, so the reply names no attempt.
- */
-export const ownAttempt = Effect.fn("exams.sittings.attempt.own")(function* (
-  attemptId: ExamAttemptsDoc["_id"],
-  tenantId: ExamAttemptsDoc["tenantId"],
-  personId: TenantPeopleDoc["_id"]
-) {
-  const found = yield* (yield* DatabaseReader)
-    .table("examAttempts")
-    .get(attemptId)
-    .pipe(Effect.catchTag("DocumentDecodeError", Effect.die), Effect.option);
-  const row = Option.filter(
-    found,
-    (attempt) => attempt.tenantId === tenantId && attempt.person === personId
-  );
-  if (Option.isNone(row)) {
-    return yield* new NotInSitting();
-  }
-  return row.value;
-});
-
-/**
- * The caller's attempt in one sitting, after the checks that every student write and read
- * shares, in this order: the sitting is the caller's, its school and unit are not locked,
- * and the device owns the attempt. A retired device and any other device are refused, so
- * only the bound device reads its paper or writes an answer (ADR 0013). The sitting it returns
- * carries its exam, which these reads use, so the exam is read once.
- */
-export const boundAttempt = Effect.fn("exams.sittings.attempt.bound")(
-  function* (sittingId: ExamSittingsDoc["_id"], deviceId: string) {
-    const member = yield* Member;
-    const sitting = yield* sittingOf(sittingId, member.tenant._id);
-    const held = yield* attemptOf(sitting._id, member.person._id);
-    if (Option.isNone(held)) {
-      return yield* new NotInSitting();
-    }
-    if (yield* sittingLocked(sitting)) {
-      return yield* new SittingLocked();
-    }
-    const binding = deviceBinding(held.value, deviceId);
-    if (binding === "retired") {
-      return yield* new DeviceRetired();
-    }
-    if (binding !== "bound") {
-      return yield* new SecondDevice();
-    }
-    return { attempt: held.value, sitting: yield* withExam(sitting) };
-  }
-);
-
-/**
- * Refuses a student's paper, answer, or finish once the attempt is not open to it: it must
- * be in progress and before its deadline, as an entry checks it (ADR 0013). A proctor's lock
- * before the deadline has its own refusal, so the student's screen names the lock and not
- * a closed attempt.
- */
-export const requireOpen = Effect.fn("exams.sittings.attempt.open")(function* (
-  attempt: Pick<ExamAttemptsDoc, "deadline" | "state">,
-  now: number
-) {
-  if (attempt.state === "locked" && now < attempt.deadline) {
-    return yield* new AttemptLocked();
-  }
-  if (attempt.state !== "inProgress" || now >= attempt.deadline) {
-    return yield* new AttemptClosed();
-  }
 });
 
 /** An attempt as its student's screen reads it, or `null` when the student holds none. */

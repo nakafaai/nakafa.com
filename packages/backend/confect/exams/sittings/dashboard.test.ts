@@ -271,6 +271,7 @@ describe("exams/sittings dashboard", () => {
               question: questions[0].id,
               response: [],
               tenantId: fixture.tenants.nf,
+              version: 1,
             })
           )
         );
@@ -315,6 +316,7 @@ describe("exams/sittings dashboard", () => {
                 question: questions[0].id,
                 response: [],
                 tenantId: fixture.tenants.nf,
+                version: 1,
               })
             )
           );

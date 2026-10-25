@@ -4,20 +4,16 @@ import type {
   ExamQuestionsDoc,
   ExamSittingsDoc,
 } from "@repo/backend/confect/_generated/docs";
-import {
-  DatabaseReader,
-  DatabaseWriter,
-} from "@repo/backend/confect/_generated/services";
+import type { Version } from "@repo/backend/confect/assessment/gate/rules";
 import { questionAnswers } from "@repo/backend/confect/exams/question";
 import {
-  boundAttempt,
-  requireOpen,
-} from "@repo/backend/confect/exams/sittings/attempt";
-import {
-  QuestionNotInExam,
   ResponseDoesNotFit,
+  StaleAnswer,
 } from "@repo/backend/confect/exams/sittings/errors";
-import { Array as Arr, Clock, Effect, Option } from "effect";
+import { sittingGate } from "@repo/backend/confect/exams/sittings/gate";
+import { toSittingError } from "@repo/backend/confect/exams/sittings/refusal";
+import { Member } from "@repo/backend/confect/middleware/member.spec";
+import { Array as Arr, Effect, Option } from "effect";
 
 /** The one kind of interaction that a student's response answers. */
 type Choice = Extract<Interaction, { readonly kind: "choice" }>;
@@ -49,62 +45,57 @@ const fitsChoice = (choice: Choice, response: readonly string[]) =>
   );
 
 /**
+ * The response as the question takes it: the caller's response when it fits the question's
+ * one choice, and `ResponseDoesNotFit` for any other. A question of another shape takes no
+ * response, so no response fits it.
+ */
+const fittingResponse = Effect.fn("exams.sittings.answer.fit")(function* (
+  question: ExamQuestionsDoc,
+  response: readonly string[]
+) {
+  const interactions = yield* questionAnswers(question.answers);
+  const fits = Option.exists(oneChoice(interactions), (choice) =>
+    fitsChoice(choice, response)
+  );
+  if (!fits) {
+    return yield* new ResponseDoesNotFit();
+  }
+  return response;
+});
+
+/**
  * Saves the caller's response to one question of its sitting, replacing the response that
- * was saved before. The attempt must be open on the bound device, and the question must
- * belong to the sitting's exam. A student's answer is not journaled, because the answers are
- * the record of the student (ADR 0016).
+ * was saved before. The gate admits the write to the device that owns an open attempt, and
+ * refuses a version that is not newer than the saved one. The question must belong to the
+ * sitting's exam, and a student's answer is not journaled, because the answers are the
+ * record of the student (ADR 0013, ADR 0016).
  */
 export const answer = Effect.fn("exams.sittings.answer")(function* (args: {
   deviceId: string;
   questionId: ExamQuestionsDoc["_id"];
   response: readonly string[];
   sittingId: ExamSittingsDoc["_id"];
+  version: Version;
 }) {
-  const { attempt, sitting } = yield* boundAttempt(
-    args.sittingId,
-    args.deviceId
-  );
-  const now = yield* Clock.currentTimeMillis;
-  yield* requireOpen(attempt, now);
-  if (!Arr.contains(sitting.exam.questions, args.questionId)) {
-    return yield* new QuestionNotInExam();
-  }
-  const reader = yield* DatabaseReader;
-  const question = yield* reader
-    .table("examQuestions")
-    .get(args.questionId)
-    .pipe(Effect.orDie);
-  const interactions = yield* questionAnswers(question.answers);
-  const fits = Option.exists(oneChoice(interactions), (choice) =>
-    fitsChoice(choice, args.response)
-  );
-  if (!fits) {
-    return yield* new ResponseDoesNotFit();
-  }
-  const saved = yield* reader
-    .table("examAnswers")
-    .index("by_attemptId_and_questionId", (query) =>
-      query.eq("attempt", attempt._id).eq("question", args.questionId)
-    )
-    .first()
-    .pipe(Effect.orDie);
-  const writer = yield* DatabaseWriter;
-  if (Option.isSome(saved)) {
-    yield* writer
-      .table("examAnswers")
-      .patch(saved.value._id, { answeredAt: now, response: args.response })
-      .pipe(Effect.orDie);
-    return null;
-  }
-  yield* writer
-    .table("examAnswers")
-    .insert({
-      answeredAt: now,
-      attempt: attempt._id,
-      question: args.questionId,
-      response: args.response,
-      tenantId: attempt.tenantId,
+  const member = yield* Member;
+  yield* sittingGate
+    .answer({
+      device: Option.some(args.deviceId),
+      owner: member.person._id,
+      placement: {
+        person: member.person,
+        questionId: args.questionId,
+        sittingId: args.sittingId,
+        tenantId: member.tenant._id,
+      },
+      value: (live) => fittingResponse(live.question, args.response),
+      version: args.version,
     })
-    .pipe(Effect.orDie);
+    .pipe(
+      Effect.catchTags({
+        AttemptRefused: (refusal) => Effect.fail(toSittingError(refusal)),
+        Stale: () => Effect.fail(new StaleAnswer()),
+      })
+    );
   return null;
 });

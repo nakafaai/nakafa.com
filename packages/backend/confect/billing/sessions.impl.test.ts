@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
+import { polarProductIdFor } from "@repo/backend/confect/billing/polar/catalog";
 import {
   PolarCheckoutError,
   PolarDuplicateEmailError,
@@ -94,7 +95,10 @@ describe("billing/sessions", () => {
           customerId: "polar-billing",
           customerIpAddress: ip,
           locale: "de",
-          productIds: [expect.any(String)],
+          productIds: [
+            polarProductIdFor("pro.monthly", "sandbox"),
+            polarProductIdFor("pro.yearly", "sandbox"),
+          ],
           successUrl: request.successUrl,
         });
       })

@@ -3,6 +3,7 @@ import { PaginationOptions as PaginationOptionsSchema } from "@confect/core/Pagi
 import { LocalIdSchema } from "@nakafa/aksara-contracts/assessment/identity";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
+import { Version } from "@repo/backend/confect/assessment/gate/rules";
 import { FoldPending } from "@repo/backend/confect/editor/errors";
 import {
   AssetAddress,
@@ -22,19 +23,13 @@ import {
   TokenResult,
 } from "@repo/backend/confect/exams/sittings/contract";
 import {
-  AttemptClosed,
-  AttemptLocked,
-  DeviceRetired,
   NotInSitting,
-  QuestionNotInExam,
   ResponseDoesNotFit,
   RetiredDevicesFull,
   RoomOpened,
-  SecondDevice,
-  SittingClosed,
-  SittingLocked,
-  SittingNotOpen,
+  StaleAnswer,
 } from "@repo/backend/confect/exams/sittings/errors";
+import { SITTING_REFUSALS } from "@repo/backend/confect/exams/sittings/refusal";
 import {
   DeviceId,
   Minutes,
@@ -65,16 +60,7 @@ export default GroupSpec.make()
         token: Schema.String,
       }),
       returns: () => EnterOutcome,
-      error: () =>
-        Schema.Union([
-          NotInSitting,
-          SittingNotOpen,
-          SittingClosed,
-          SittingLocked,
-          AttemptClosed,
-          SecondDevice,
-          DeviceRetired,
-        ]),
+      error: () => Schema.Union([...SITTING_REFUSALS]),
     })
   )
   .addFunction(
@@ -87,14 +73,7 @@ export default GroupSpec.make()
         slug: TenantSlug,
       }),
       returns: () => Schema.Null,
-      error: () =>
-        Schema.Union([
-          NotInSitting,
-          SittingLocked,
-          AttemptClosed,
-          SecondDevice,
-          DeviceRetired,
-        ]),
+      error: () => Schema.Union([...SITTING_REFUSALS]),
     })
   )
   .addFunction(
@@ -271,15 +250,7 @@ export default GroupSpec.make()
         slug: TenantSlug,
       }),
       returns: () => PaperView,
-      error: () =>
-        Schema.Union([
-          NotInSitting,
-          SittingLocked,
-          AttemptClosed,
-          AttemptLocked,
-          SecondDevice,
-          DeviceRetired,
-        ]),
+      error: () => Schema.Union([...SITTING_REFUSALS]),
     })
   )
   .addFunction(
@@ -292,17 +263,7 @@ export default GroupSpec.make()
         slug: TenantSlug,
       }),
       returns: () => PromptView,
-      error: () =>
-        Schema.Union([
-          NotInSitting,
-          SittingLocked,
-          AttemptClosed,
-          AttemptLocked,
-          SecondDevice,
-          DeviceRetired,
-          QuestionNotInExam,
-          FoldPending,
-        ]),
+      error: () => Schema.Union([...SITTING_REFUSALS, FoldPending]),
     })
   )
   .addFunction(
@@ -317,16 +278,7 @@ export default GroupSpec.make()
         slug: TenantSlug,
       }),
       returns: () => Schema.Array(AssetAddress),
-      error: () =>
-        Schema.Union([
-          AccessDenied,
-          NotInSitting,
-          SittingLocked,
-          AttemptClosed,
-          AttemptLocked,
-          SecondDevice,
-          DeviceRetired,
-        ]),
+      error: () => Schema.Union([...SITTING_REFUSALS, AccessDenied]),
     })
   )
   .addFunction(
@@ -338,19 +290,25 @@ export default GroupSpec.make()
         response: Schema.Array(LocalIdSchema),
         sittingId: Id("examSittings"),
         slug: TenantSlug,
+        version: Version,
       }),
       returns: () => Schema.Null,
       error: () =>
-        Schema.Union([
-          NotInSitting,
-          SittingLocked,
-          AttemptClosed,
-          AttemptLocked,
-          SecondDevice,
-          DeviceRetired,
-          QuestionNotInExam,
-          ResponseDoesNotFit,
-        ]),
+        Schema.Union([...SITTING_REFUSALS, ResponseDoesNotFit, StaleAnswer]),
+    })
+  )
+  .addFunction(
+    FunctionSpec.publicMutation({
+      name: "flag",
+      args: () => ({
+        deviceId: DeviceId,
+        flagged: Schema.Boolean,
+        questionId: Id("examQuestions"),
+        sittingId: Id("examSittings"),
+        slug: TenantSlug,
+      }),
+      returns: () => Schema.Null,
+      error: () => Schema.Union([...SITTING_REFUSALS]),
     })
   )
   .addFunction(
@@ -362,14 +320,6 @@ export default GroupSpec.make()
         slug: TenantSlug,
       }),
       returns: () => Schema.Null,
-      error: () =>
-        Schema.Union([
-          NotInSitting,
-          SittingLocked,
-          AttemptClosed,
-          AttemptLocked,
-          SecondDevice,
-          DeviceRetired,
-        ]),
+      error: () => Schema.Union([...SITTING_REFUSALS]),
     })
   );

@@ -265,18 +265,20 @@ describe("exams/sittings entry", () => {
   it.effect("refuses a sixth try from one device in a minute, as a value", () =>
     Effect.gen(function* () {
       const fixture = yield* tenancyFixture;
-      const made = yield* openedSitting(fixture, "PTS");
+      const failed = yield* openedSitting(fixture, "PTS");
+      const other = yield* openedSitting(fixture, "PTS");
       for (let index = 0; index < 5; index += 1) {
         yield* entryOf(fixture, {
           deviceId: deviceOf(1),
-          sittingId: made.id,
+          sittingId: failed.id,
           token: WRONG_TOKEN,
         });
       }
+      // The sixth try names another sitting, so only the device's own limit can refuse it.
       const limited = yield* entryOf(fixture, {
         deviceId: deviceOf(1),
-        sittingId: made.id,
-        token: made.token,
+        sittingId: other.id,
+        token: other.token,
       });
       expect(limited).toEqual({ outcome: "refused", reason: "TooManyTries" });
     })

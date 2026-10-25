@@ -8,6 +8,7 @@ import accountDeletionReceipts from "./tables/accountDeletionReceipts";
 import articleBuckets from "./tables/articleBuckets";
 import articleCatalog from "./tables/articleCatalog";
 import articleCategories from "./tables/articleCategories";
+import assessmentFlags from "./tables/assessmentFlags";
 import billingAccounts from "./tables/billingAccounts";
 import billingCounters from "./tables/billingCounters";
 import billingEvents from "./tables/billingEvents";
@@ -43,6 +44,7 @@ import contentSectionState from "./tables/contentSectionState";
 import contentSections from "./tables/contentSections";
 import contentSnapshots from "./tables/contentSnapshots";
 import contentState from "./tables/contentState";
+import creditLots from "./tables/creditLots";
 import creditResetPeriods from "./tables/creditResetPeriods";
 import creditTransactions from "./tables/creditTransactions";
 import curriculumRoutes from "./tables/curriculumRoutes";
@@ -131,6 +133,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly articleBuckets: typeof articleBuckets;
   readonly articleCatalog: typeof articleCatalog;
   readonly articleCategories: typeof articleCategories;
+  readonly assessmentFlags: typeof assessmentFlags;
   readonly billingAccounts: typeof billingAccounts;
   readonly billingCounters: typeof billingCounters;
   readonly billingEvents: typeof billingEvents;
@@ -166,6 +169,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly contentSections: typeof contentSections;
   readonly contentSnapshots: typeof contentSnapshots;
   readonly contentState: typeof contentState;
+  readonly creditLots: typeof creditLots;
   readonly creditResetPeriods: typeof creditResetPeriods;
   readonly creditTransactions: typeof creditTransactions;
   readonly curriculumRoutes: typeof curriculumRoutes;
@@ -253,6 +257,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   articleBuckets,
   articleCatalog,
   articleCategories,
+  assessmentFlags,
   billingAccounts,
   billingCounters,
   billingEvents,
@@ -288,6 +293,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   contentSections,
   contentSnapshots,
   contentState,
+  creditLots,
   creditResetPeriods,
   creditTransactions,
   curriculumRoutes,

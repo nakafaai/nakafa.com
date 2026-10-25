@@ -69,6 +69,7 @@ const answer = (
     response: [optionId],
     sittingId,
     slug: nf,
+    version: 1,
   });
 
 /** The student's Finish, which submits the attempt. */

@@ -101,7 +101,7 @@ const readSubscriptions = FunctionImpl.make(
 );
 
 /**
- * Deletes one batch of a deleted user's billing rows: the grants, the listed
+ * Deletes one batch of a deleted user's billing rows: the grants, the top-up packs, the listed
  * subscriptions that belong to the user's accounts, one batch of payments, and an
  * account once it holds no subscription and no payment. Only the listed subscriptions
  * are deleted, so a subscription that arrived after they were read is kept until its
@@ -125,6 +125,18 @@ const deleteRows = FunctionImpl.make(
       yield* writer.table("billingGrants").delete(grant._id).pipe(Effect.orDie);
     }
     let remaining = grants.length === DELETION_BATCH;
+    // The top-up packs of a deleted learner go with the learner, before their payments do.
+    const lots = yield* reader
+      .table("creditLots")
+      .index("by_userId_and_state_and_expiresAt", (query) =>
+        query.eq("userId", args.userId)
+      )
+      .take(DELETION_BATCH)
+      .pipe(Effect.orDie);
+    for (const lot of lots) {
+      yield* writer.table("creditLots").delete(lot._id).pipe(Effect.orDie);
+    }
+    remaining = remaining || lots.length === DELETION_BATCH;
     const accountIds = Arr.map(
       yield* personalAccounts(args.userId),
       (account) => account._id

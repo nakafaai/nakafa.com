@@ -18,12 +18,15 @@ import { reportClientException } from "@/lib/analytics/client";
 export function useResendKeptAnswers({
   attemptId,
   deviceId,
+  locked,
   paper,
   sittingId,
   slug,
 }: {
   readonly attemptId: GenericId.GenericId<"examAttempts">;
   readonly deviceId: string;
+  /** A locked attempt takes no answers, so the kept ones wait until the attempt is unlocked. */
+  readonly locked: boolean;
   readonly paper: PaperValue;
   readonly sittingId: GenericId.GenericId<"examSittings">;
   readonly slug: TenantSlug;
@@ -32,7 +35,7 @@ export function useResendKeptAnswers({
   const resumed = useRef(false);
 
   useEffect(() => {
-    if (resumed.current) {
+    if (locked || resumed.current) {
       return;
     }
     resumed.current = true;
@@ -54,6 +57,7 @@ export function useResendKeptAnswers({
                   response: answer.response,
                   sittingId,
                   slug,
+                  version: answer.version,
                 },
                 answer.answeredAt
               )
@@ -69,5 +73,5 @@ export function useResendKeptAnswers({
         )
       )
     );
-  }, [attemptId, deviceId, paper, send, sittingId, slug]);
+  }, [attemptId, deviceId, locked, paper, send, sittingId, slug]);
 }
