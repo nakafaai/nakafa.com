@@ -232,3 +232,18 @@ export const unprocessedBillingEventValidator = Schema.Struct({
   receivedAt: Schema.Finite,
   type: Schema.String,
 });
+
+/**
+ * A hosted checkout Nakafa opened at a rail and has not seen end. A Xendit session
+ * names its checkout as its reference, so the end of the session knows the account
+ * and the offer it was opened for.
+ */
+export const billingCheckoutValidator = Schema.Struct({
+  accountId: Id("billingAccounts"),
+  offer: BillingOfferKey,
+  rail: BillingRail,
+  /** The rail's ID of the hosted session. */
+  sessionId: Schema.String,
+  status: Schema.Literals(["open", "completed", "expired"]),
+  openedAt: Schema.Finite,
+});

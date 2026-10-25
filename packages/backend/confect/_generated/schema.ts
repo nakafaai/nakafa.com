@@ -9,6 +9,7 @@ import articleBuckets from "./tables/articleBuckets";
 import articleCatalog from "./tables/articleCatalog";
 import articleCategories from "./tables/articleCategories";
 import billingAccounts from "./tables/billingAccounts";
+import billingCheckouts from "./tables/billingCheckouts";
 import billingCounters from "./tables/billingCounters";
 import billingEvents from "./tables/billingEvents";
 import billingGrants from "./tables/billingGrants";
@@ -132,6 +133,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly articleCatalog: typeof articleCatalog;
   readonly articleCategories: typeof articleCategories;
   readonly billingAccounts: typeof billingAccounts;
+  readonly billingCheckouts: typeof billingCheckouts;
   readonly billingCounters: typeof billingCounters;
   readonly billingEvents: typeof billingEvents;
   readonly billingGrants: typeof billingGrants;
@@ -254,6 +256,7 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   articleCatalog,
   articleCategories,
   billingAccounts,
+  billingCheckouts,
   billingCounters,
   billingEvents,
   billingGrants,

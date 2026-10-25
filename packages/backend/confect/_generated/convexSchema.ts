@@ -10,6 +10,7 @@ import articleBuckets from "./tables/articleBuckets";
 import articleCatalog from "./tables/articleCatalog";
 import articleCategories from "./tables/articleCategories";
 import billingAccounts from "./tables/billingAccounts";
+import billingCheckouts from "./tables/billingCheckouts";
 import billingCounters from "./tables/billingCounters";
 import billingEvents from "./tables/billingEvents";
 import billingGrants from "./tables/billingGrants";
@@ -133,6 +134,7 @@ export default $defineSchema({
   articleCatalog: $Table.tableDefinition(articleCatalog),
   articleCategories: $Table.tableDefinition(articleCategories),
   billingAccounts: $Table.tableDefinition(billingAccounts),
+  billingCheckouts: $Table.tableDefinition(billingCheckouts),
   billingCounters: $Table.tableDefinition(billingCounters),
   billingEvents: $Table.tableDefinition(billingEvents),
   billingGrants: $Table.tableDefinition(billingGrants),

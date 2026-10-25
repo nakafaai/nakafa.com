@@ -10,6 +10,7 @@ export type ArticleBucketsDoc = Document.Document<typeof schemaDefinition, "arti
 export type ArticleCatalogDoc = Document.Document<typeof schemaDefinition, "articleCatalog">;
 export type ArticleCategoriesDoc = Document.Document<typeof schemaDefinition, "articleCategories">;
 export type BillingAccountsDoc = Document.Document<typeof schemaDefinition, "billingAccounts">;
+export type BillingCheckoutsDoc = Document.Document<typeof schemaDefinition, "billingCheckouts">;
 export type BillingCountersDoc = Document.Document<typeof schemaDefinition, "billingCounters">;
 export type BillingEventsDoc = Document.Document<typeof schemaDefinition, "billingEvents">;
 export type BillingGrantsDoc = Document.Document<typeof schemaDefinition, "billingGrants">;
@@ -133,6 +134,7 @@ export interface Docs {
   articleCatalog: ArticleCatalogDoc;
   articleCategories: ArticleCategoriesDoc;
   billingAccounts: BillingAccountsDoc;
+  billingCheckouts: BillingCheckoutsDoc;
   billingCounters: BillingCountersDoc;
   billingEvents: BillingEventsDoc;
   billingGrants: BillingGrantsDoc;
