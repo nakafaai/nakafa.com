@@ -37,8 +37,6 @@ const PlayerStateSchema = Schema.Struct({
   /** The frozen order of the questions of the attempt. */
   keys: Schema.Array(Schema.String),
   mode: PlayerModeSchema,
-  /** The question under the reading line while a jump or a focus holds `current`. */
-  observed: Schema.NullOr(Schema.String),
   overlay: PlayerOverlaySchema,
   /** The question to reveal once the open overlay has closed. */
   pending: Schema.NullOr(Schema.String),
@@ -73,11 +71,16 @@ interface PlayerActions {
   goTo: (key: string) => void;
   /**
    * Reports that the page is at `position`. When that is not where a jump or a
-   * focus left it, the learner moved the page, however they did it, and the
-   * reading line decides `current` again.
+   * focus left it, the page moved away from the hold, and the reading line decides
+   * `current` again from its next observation. A page move while an overlay is open
+   * is the overlay's scroll lock at work, so it never releases the hold.
    */
   moved: (position: number) => void;
-  /** Records the question under the reading line. */
+  /**
+   * Records the question under the reading line. While a jump or a focus holds
+   * `current`, the reading line changes nothing: the held question stays current
+   * until the learner moves the page away from it.
+   */
   observe: (key: string) => void;
   /** Opens one overlay in place of any other. */
   open: (overlay: Exclude<PlayerOverlay, "none">) => void;
@@ -120,7 +123,7 @@ export function createPlayerStore(input: {
     /** Shows a view and reveals the current question in it. */
     function show(mode: PlayerMode) {
       const { current } = get();
-      set({ anchor: null, mode, observed: null, pinned: true });
+      set({ anchor: null, mode, pinned: true });
       if (current !== null) {
         reveal(current);
       }
@@ -147,10 +150,9 @@ export function createPlayerStore(input: {
       }),
       close: () => set({ overlay: "none" }),
       current: Option.getOrNull(Arr.head(input.keys)),
-      focus: (key) =>
-        set({ anchor: null, current: key, observed: null, pinned: true }),
+      focus: (key) => set({ anchor: null, current: key, pinned: true }),
       goTo: (key) => {
-        set({ anchor: null, current: key, observed: null, pinned: true });
+        set({ anchor: null, current: key, pinned: true });
         reveal(key);
       },
       jump: null,
@@ -158,18 +160,15 @@ export function createPlayerStore(input: {
       mode: input.mode,
       moved: (position) =>
         set((state) =>
-          state.pinned && state.anchor !== null && state.anchor !== position
-            ? {
-                anchor: null,
-                current: state.observed ?? state.current,
-                observed: null,
-                pinned: false,
-              }
+          state.pinned &&
+          state.overlay === "none" &&
+          state.anchor !== null &&
+          state.anchor !== position
+            ? { anchor: null, pinned: false }
             : state
         ),
       observe: (key) =>
-        set(get().pinned ? { observed: key } : { current: key }),
-      observed: null,
+        set((state) => (state.pinned ? state : { current: key })),
       open: (overlay) => set({ overlay }),
       overlay: "none",
       pending: null,

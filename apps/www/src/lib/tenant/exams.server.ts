@@ -1,6 +1,7 @@
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import { Effect } from "effect";
 import { dashboardArgs } from "@/components/exams/sitting/change";
+import { readPlayerMode } from "@/components/player/mode.server";
 import { readRequired } from "@/lib/data/read.server";
 import type {
   ExamInput,
@@ -8,6 +9,7 @@ import type {
   ExamRoomsInput,
   ResultsInput,
   SittingInput,
+  StudentSittingInput,
 } from "@/lib/tenant/exams";
 import { memberHandler } from "@/lib/tenant/member.server";
 
@@ -67,8 +69,11 @@ export const sittingDashboardHandler = memberHandler(
 
 /** The student's screen of one sitting. */
 export const studentSittingHandler = memberHandler(
-  ({ sittingId, slug }: typeof SittingInput.Type, token: string) =>
-    readRequired(exams.sittings.student, { sittingId, slug }, token)
+  ({ sittingId, slug, view }: typeof StudentSittingInput.Type, token: string) =>
+    Effect.all({
+      mode: Effect.sync(() => readPlayerMode(view)),
+      preload: readRequired(exams.sittings.student, { sittingId, slug }, token),
+    })
 );
 
 /** The overview of one sitting's results, with the first page of its students, in one bounded call. */

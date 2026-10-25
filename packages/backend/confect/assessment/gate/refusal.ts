@@ -3,7 +3,7 @@ import { Schema } from "effect";
 /** No such target for this learner: it does not exist, or another learner owns it. */
 export class Missing extends Schema.TaggedError<Missing>()("Missing", {}) {}
 
-/** The attempt no longer accepts writes: it was submitted, expired, or ended. */
+/** The attempt no longer accepts writes: it expired, closed, or was submitted. */
 export class AttemptClosed extends Schema.TaggedError<AttemptClosed>()(
   "AttemptClosed",
   {}
@@ -12,9 +12,15 @@ export class AttemptClosed extends Schema.TaggedError<AttemptClosed>()(
 /** A proctor locked the attempt. */
 export class Locked extends Schema.TaggedError<Locked>()("Locked", {}) {}
 
-/** The attempt is bound to another device session than the request's. */
+/** The attempt is bound to another device session than the request's, or to none yet. */
 export class OtherDevice extends Schema.TaggedError<OtherDevice>()(
   "OtherDevice",
+  {}
+) {}
+
+/** A proctor retired the request's device session, which may never write again. */
+export class DeviceRetired extends Schema.TaggedError<DeviceRetired>()(
+  "DeviceRetired",
   {}
 ) {}
 
@@ -29,7 +35,19 @@ export class Expired extends Schema.TaggedError<Expired>()("Expired", {
   deadline: Schema.Finite,
 }) {}
 
-/** The first admission rule that failed for one write to a live attempt. */
+/** The place that holds the target is locked: its school is suspended or its unit archived. */
+export class PlaceLocked extends Schema.TaggedError<PlaceLocked>()(
+  "PlaceLocked",
+  {}
+) {}
+
+/** The target has not opened yet. */
+export class NotOpen extends Schema.TaggedError<NotOpen>()("NotOpen", {}) {}
+
+/** The target has closed for new attempts. */
+export class Closed extends Schema.TaggedError<Closed>()("Closed", {}) {}
+
+/** The first admission rule that failed for one write or entry. */
 export class AttemptRefused extends Schema.TaggedError<AttemptRefused>()(
   "AttemptRefused",
   {
@@ -38,8 +56,12 @@ export class AttemptRefused extends Schema.TaggedError<AttemptRefused>()(
       AttemptClosed,
       Locked,
       OtherDevice,
+      DeviceRetired,
       SectionClosed,
       Expired,
+      PlaceLocked,
+      NotOpen,
+      Closed,
     ]),
   }
 ) {}
@@ -50,3 +72,15 @@ export class AttemptRefused extends Schema.TaggedError<AttemptRefused>()(
  * admission rule, and only an answer carries a version.
  */
 export class Stale extends Schema.TaggedError<Stale>()("Stale", {}) {}
+
+/** The token did not match this sitting, so the device counted one failed try. */
+export class TokenRefused extends Schema.TaggedError<TokenRefused>()(
+  "TokenRefused",
+  {}
+) {}
+
+/** A device or a person ran out of tries for this sitting's token. */
+export class TooManyTries extends Schema.TaggedError<TooManyTries>()(
+  "TooManyTries",
+  {}
+) {}

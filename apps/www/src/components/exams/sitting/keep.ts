@@ -1,9 +1,11 @@
 import { LocalIdSchema } from "@nakafa/aksara-contracts/assessment/identity";
+import { Version } from "@repo/backend/confect/assessment/gate/rules";
 import { Array as Arr, Effect, Option, Record as Rec, Schema } from "effect";
 import { KeyValueStore } from "effect/persistence";
 
 /**
- * The browser's kept state of a sitting attempt, which holds the answers and flags until the server holds them.
+ * The browser's kept state of a sitting attempt, which holds the answers until the server holds them. Flags are
+ * the server's, so the browser keeps none.
  * An entry leaves the browser in one of two ways. The student's finish drops it once the server confirms the
  * finish, and the student's home drops the entries of the attempts that its list shows as submitted, because
  * the list comes from the server. An entry for an attempt that no list shows as submitted stays until the
@@ -12,27 +14,27 @@ import { KeyValueStore } from "effect/persistence";
  */
 
 /**
- * One answer that the browser keeps until the server confirms it: the response the student chose, and the
- * device time it was chosen at, which names the answer when the server confirms it.
+ * One answer that the browser keeps until the server confirms it: the response the student chose, the version
+ * the answer was numbered with, and the device time it was chosen at, which names the answer when the server
+ * confirms it.
  */
 const KeptAnswer = Schema.Struct({
   answeredAt: Schema.Finite,
   response: Schema.Array(LocalIdSchema),
+  version: Version,
 });
 type KeptAnswer = typeof KeptAnswer.Type;
 
 /**
- * What the browser keeps for one attempt: the answers that the server has not confirmed, by question, and
- * the questions that the student flagged for review. Nothing here reaches the server.
+ * What the browser keeps for one attempt: the answers that the server has not confirmed, by question.
  */
 export const KeptAttempt = Schema.Struct({
   answers: Schema.Record(Schema.String, KeptAnswer),
-  flagged: Schema.Array(Schema.String),
 });
 export type KeptAttempt = typeof KeptAttempt.Type;
 
 /** What the browser keeps for an attempt that it keeps nothing for. */
-const NOTHING_KEPT: KeptAttempt = { answers: {}, flagged: [] };
+const NOTHING_KEPT: KeptAttempt = { answers: {} };
 
 /** The stored text of one attempt's kept state, which decodes back to the same value. */
 const KeptJson = Schema.fromJsonString(KeptAttempt);
@@ -84,19 +86,6 @@ export function keptAnswersFor<Question extends string>(
       }))
     )
   );
-}
-
-/** Marks a question flagged or unflagged, with each flagged question listed once. */
-export function flagIn(
-  kept: KeptAttempt,
-  questionId: string,
-  flagged: boolean
-): KeptAttempt {
-  const others = Arr.filter(kept.flagged, (id) => id !== questionId);
-  return {
-    ...kept,
-    flagged: flagged ? Arr.append(others, questionId) : others,
-  };
 }
 
 /**
@@ -155,16 +144,6 @@ export const confirmAnswer = Effect.fn("exams.sitting.keep.confirm")(
     change(sittingId, attemptId, (kept) =>
       confirmAnswerIn(kept, questionId, answeredAt)
     )
-);
-
-/** Keeps whether a question is flagged for review. */
-export const keepFlag = Effect.fn("exams.sitting.keep.flag")(
-  (
-    sittingId: string,
-    attemptId: string,
-    questionId: string,
-    flagged: boolean
-  ) => change(sittingId, attemptId, (kept) => flagIn(kept, questionId, flagged))
 );
 
 /** Drops everything the browser keeps for an attempt, once the attempt is submitted. */
