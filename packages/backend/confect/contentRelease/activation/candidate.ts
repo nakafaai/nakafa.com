@@ -12,6 +12,7 @@ import {
   validateActivationRenderer,
   validateCandidate,
 } from "@repo/backend/confect/contentRelease/activation/validate";
+import { CURRENT_CONTENT_GENERATION } from "@repo/backend/confect/contentRelease/generation";
 import { loadRelease } from "@repo/backend/confect/contentRelease/model";
 import { ensureModelBuild } from "@repo/backend/confect/contentRelease/models/build";
 import {
@@ -20,7 +21,7 @@ import {
 } from "@repo/backend/confect/contentRelease/receipt";
 import { loadReleaseTryoutRuntime } from "@repo/backend/confect/contentRelease/tryout/runtime";
 import { JsonTextSchema } from "@repo/utilities/json";
-import { Clock, Effect, Schema } from "effect";
+import { Clock, Effect, Option, Schema } from "effect";
 
 /** Starts the invisible read-model build after full candidate validation. */
 export const prepareCandidate = Effect.fn("contentRelease.prepareCandidate")(
@@ -39,12 +40,18 @@ export const prepareCandidate = Effect.fn("contentRelease.prepareCandidate")(
         kind: "completed",
       } satisfies PreparationResult;
     }
-    const { recovery, recoverySigned, release, signed, state } =
-      yield* validateCandidate(releaseId, rendererJson, manifestHash);
-    yield* Effect.all([
-      stagedEvidence(release, signed),
-      stagedEvidence(recovery, recoverySigned),
-    ]);
+    const { inverse, release, signed, state } = yield* validateCandidate(
+      releaseId,
+      rendererJson,
+      manifestHash
+    );
+    yield* stagedEvidence(release, signed);
+    if (Option.isSome(inverse)) {
+      yield* stagedEvidence(
+        inverse.value.recovery,
+        inverse.value.recoverySigned
+      );
+    }
     yield* ensureModelBuild(release, signed, state);
     return {
       kind: "prepared",
@@ -70,26 +77,36 @@ export const activateCandidate = Effect.fn("contentRelease.activateCandidate")(
         receipt: yield* completedActivation(releaseId, stored),
       } satisfies ActivationResult;
     }
-    const { recovery, recoverySigned, release, signed, state } =
-      yield* validateCandidate(releaseId, rendererJson, manifestHash);
-    yield* Effect.all([
-      stagedEvidence(release, signed),
-      stagedEvidence(recovery, recoverySigned),
-    ]);
+    const { inverse, release, signed, state } = yield* validateCandidate(
+      releaseId,
+      rendererJson,
+      manifestHash
+    );
+    yield* stagedEvidence(release, signed);
+    if (Option.isSome(inverse)) {
+      yield* stagedEvidence(
+        inverse.value.recovery,
+        inverse.value.recoverySigned
+      );
+    }
     const build = yield* requireReadyModelBuild(release, signed);
-    const [runtime, recoveryRuntime, receipt] = yield* Effect.all([
+    const [runtime, receipt] = yield* Effect.all([
       loadReleaseTryoutRuntime(signed),
-      loadReleaseTryoutRuntime(recoverySigned),
       publicationReceipt(release, signed),
     ]);
     const now = yield* Clock.currentTimeMillis;
-    yield* writer
-      .table("contentReleases")
-      .patch(recovery._id, {
-        tryoutRuntimeBundleHash: recoveryRuntime.result?.bundle.bundleHash,
-        updatedAt: now,
-      })
-      .pipe(Effect.orDie);
+    if (Option.isSome(inverse)) {
+      const recoveryRuntime = yield* loadReleaseTryoutRuntime(
+        inverse.value.recoverySigned
+      );
+      yield* writer
+        .table("contentReleases")
+        .patch(inverse.value.recovery._id, {
+          tryoutRuntimeBundleHash: recoveryRuntime.result?.bundle.bundleHash,
+          updatedAt: now,
+        })
+        .pipe(Effect.orDie);
+    }
     yield* writer
       .table("contentReleases")
       .patch(release._id, {
@@ -105,6 +122,7 @@ export const activateCandidate = Effect.fn("contentRelease.activateCandidate")(
     yield* writer
       .table("contentState")
       .patch(state._id, {
+        activeContentGeneration: CURRENT_CONTENT_GENERATION,
         activeManifestHash: manifestHash,
         activeReleaseId: releaseId,
         activeSequence: release.sequence,

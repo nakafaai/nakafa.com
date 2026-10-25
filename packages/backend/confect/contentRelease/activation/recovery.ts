@@ -94,6 +94,8 @@ export const activateRecovery = Effect.fn("contentRelease.activateRecovery")(
         updatedAt: now,
       })
       .pipe(Effect.orDie);
+    // The active generation is already current: validateRecovery refuses any
+    // other generation, so this activation never changes it.
     yield* writer
       .table("contentState")
       .patch(state._id, {

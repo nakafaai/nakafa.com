@@ -4,6 +4,7 @@ import { ContentFamilySchema } from "@nakafa/aksara-contracts/content";
 import { invertContentSnapshots } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import { activationResultValidator } from "@repo/backend/confect/contentRelease/activation/spec";
 import { ReleaseError } from "@repo/backend/confect/contentRelease/error";
+import { CURRENT_CONTENT_GENERATION } from "@repo/backend/confect/contentRelease/generation";
 import { decodeTryoutRuntimeBundleJson } from "@repo/backend/confect/contentRelease/parse";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { internal } from "@repo/backend/convex/_generated/api";
@@ -178,6 +179,10 @@ describe("contentRelease/recovery", () => {
       assert.strictEqual(state.activeReleaseId, RECOVERY.releaseId);
       assert.strictEqual(state.activeSequence, RECOVERY.sequence);
       assert.strictEqual(state.recoveryReleaseId, undefined);
+      assert.strictEqual(
+        state.activeContentGeneration,
+        CURRENT_CONTENT_GENERATION
+      );
       const runtime = yield* decodeTryoutRuntimeBundleJson(
         publication.tryoutRuntimeBundleJson ?? ""
       );

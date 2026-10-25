@@ -38,6 +38,19 @@ signed and are in no publication, and the last point below says how they render.
   renderer, and it carries no version field. Program wave A (the first School
   delivery wave) builds the contract, the compiler, and this renderer. The
   player that uses them is wave B.
+- The content generation moves once, from the retired Aksara 0.51 compiled-body
+  format (`mdx-function-body`) to the content tree (`content-tree`), and never
+  back. Nakafa owns that transition. A candidate may replace the retired
+  generation only as a bootstrap, and Nakafa decides that from its stored state
+  and the signed counts, never from what the publisher declares. It must extend
+  the active release, that release must be recorded under the retired
+  generation, its result must hold only upserted heads (`resultCount` equals
+  `upsertCount`), every snapshot family must be replaced or empty, and no
+  recovery may be staged. A bootstrap activates with no retained inverse and
+  records the content tree generation. Accept and recover refuse it. Every
+  other candidate or recovery over the retired generation is refused at staging
+  and again at activation, so no retired head survives the switch. Nothing may
+  stage or activate over an active release whose generation is not recorded.
 
 ## Consequences
 
@@ -49,9 +62,23 @@ signed and are in no publication, and the last point below says how they render.
   production alone cannot prove development has migrated. Keep the
   implementation through paired publication and acceptance, and remove it only
   after every active artifact's requirements exclude it.
+- The publication state records the generation of its active release. The
+  one-off `contentRelease.migration.markRetiredGeneration` records the retired
+  generation on a deployment whose active release has no recorded generation,
+  and only when a stored artifact of that release carries the retired format.
+  Any other result leaves the state unchanged. Run it once on dev and prod
+  before the bootstrap is staged, then remove it and its tests after both
+  deployments are verified.
+- The undo of the bootstrap is a forward release of the last 0.51-era source,
+  not a restore. The publication state cannot return to the retired generation.
 
 ## Rejected Alternative
 
 Versioned renderer contracts and compatibility adapters keep two
 implementations alive and let published content drift from the renderer that
 was reviewed with it.
+
+A retained inverse across the generation switch, or a reader that still
+decodes retired bodies, is rejected too. The retired bodies do not decode under
+the current contract, and an inverse would restore content that no current
+reader can render.

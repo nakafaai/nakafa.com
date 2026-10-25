@@ -4,6 +4,11 @@ import {
 } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import {
+  isBootstrapCandidate,
+  requireCurrentBase,
+  requireRollbackable,
+} from "@repo/backend/confect/contentRelease/generation";
+import {
   loadRelease,
   loadState,
 } from "@repo/backend/confect/contentRelease/model";
@@ -13,7 +18,7 @@ import {
 } from "@repo/backend/confect/contentRelease/parse";
 import { validateRecoveryRelation } from "@repo/backend/confect/contentRelease/recovery";
 import { encodeRendererJson } from "@repo/backend/confect/contentRelease/wire";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 
 /** Confirms one activation request uses its frozen live renderer envelope. */
 export const validateActivationRenderer = Effect.fn(
@@ -45,7 +50,12 @@ export const validateActivationRenderer = Effect.fn(
   return signed;
 });
 
-/** Loads and proves one verified candidate plus its retained inverse. */
+/**
+ * Loads and proves one verified candidate and the inverse that activation
+ * needs. A stored bootstrap is re-proven against the live state and carries no
+ * inverse; every other candidate keeps the retained recovery rules, and may not
+ * extend the retired generation at all.
+ */
 export const validateCandidate = Effect.fn("contentRelease.validateCandidate")(
   function* (releaseId: string, rendererJson: string, manifestHash: string) {
     const release = yield* loadRelease(releaseId);
@@ -63,14 +73,11 @@ export const validateCandidate = Effect.fn("contentRelease.validateCandidate")(
       release.status !== "verified" ||
       state.candidateReleaseId !== releaseId ||
       state.candidateManifestHash !== manifestHash ||
-      state.candidateSequence !== release.sequence ||
-      !state.recoveryReleaseId ||
-      !state.recoveryManifestHash ||
-      state.recoverySequence === undefined
+      state.candidateSequence !== release.sequence
     ) {
       return yield* releaseFail(
         "CONTENT_RELEASE_STATE",
-        `Content release ${releaseId} lacks a verified retained recovery.`
+        `Content release ${releaseId} is not the verified candidate.`
       );
     }
     if (
@@ -80,6 +87,29 @@ export const validateCandidate = Effect.fn("contentRelease.validateCandidate")(
       return yield* releaseFail(
         "CONTENT_RELEASE_STALE_BASE",
         `Content release ${releaseId} no longer extends the active release.`
+      );
+    }
+    if (release.bootstrap === true) {
+      if (!isBootstrapCandidate(signed.manifest, state)) {
+        return yield* releaseFail(
+          "CONTENT_RELEASE_STATE",
+          `Content release ${releaseId} no longer meets the bootstrap contract.`
+        );
+      }
+      return {
+        inverse: Option.none(),
+        release,
+        signed,
+        state,
+      };
+    }
+    if (
+      !(state.recoveryReleaseId && state.recoveryManifestHash) ||
+      state.recoverySequence === undefined
+    ) {
+      return yield* releaseFail(
+        "CONTENT_RELEASE_STATE",
+        `Content release ${releaseId} lacks a verified retained recovery.`
       );
     }
     const recovery = yield* loadRelease(state.recoveryReleaseId);
@@ -104,9 +134,9 @@ export const validateCandidate = Effect.fn("contentRelease.validateCandidate")(
         `Recovery ${recovery.releaseId} does not invert candidate ${releaseId}.`
       );
     }
+    yield* requireCurrentBase(releaseId, state);
     return {
-      recovery,
-      recoverySigned,
+      inverse: Option.some({ recovery, recoverySigned }),
       release,
       signed,
       state,
@@ -127,12 +157,17 @@ export const validateRecovery = Effect.fn(
     manifestHash
   );
   const state = yield* loadState();
+  const active = state?.activeReleaseId
+    ? yield* loadRelease(state.activeReleaseId)
+    : undefined;
+  if (active) {
+    yield* requireRollbackable(active);
+  }
   if (
-    !state ||
+    !(state && active) ||
     release.role !== "recovery" ||
     release.status !== "verified" ||
     state.candidateReleaseId !== undefined ||
-    !state.activeReleaseId ||
     state.recoveryReleaseId !== releaseId ||
     state.recoveryManifestHash !== manifestHash ||
     state.recoverySequence !== release.sequence ||
@@ -144,7 +179,7 @@ export const validateRecovery = Effect.fn(
       `Recovery ${releaseId} is not the exact retained inverse.`
     );
   }
-  const active = yield* loadRelease(state.activeReleaseId);
+  yield* requireCurrentBase(releaseId, state);
   yield* validateRecoveryRelation(active, release);
   return {
     release,
