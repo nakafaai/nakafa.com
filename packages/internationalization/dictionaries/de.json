@@ -1355,7 +1355,7 @@
     "credits": "Nina-Credits",
     "credits-description": "Nina verbraucht Credits, wenn sie deine Fragen beantwortet.",
     "credits-free-footer": "Pro gibt dir mehr Credits.",
-    "credits-pro-footer": "Restliche Credits verfallen mit dem Zeitraum.",
+    "credits-pro-footer": "{credits, number} Credits für {price}.",
     "credits-today": "Heute",
     "credits-month": "Diesen Monat",
     "credits-used": "{percent, number} % genutzt",
@@ -1416,7 +1416,11 @@
     "developers": "Entwicklung",
     "create": "Erstellen",
     "never": "Nie",
-    "delete": "Löschen"
+    "delete": "Löschen",
+    "top-up-balance": "Zusatz-Credits",
+    "top-up-expires": "Verfällt am {date}",
+    "top-up-left": "{count, number} übrig",
+    "buy-credits": "Credits kaufen"
   },
   "Editor": {
     "undo": "Rückgängig",
