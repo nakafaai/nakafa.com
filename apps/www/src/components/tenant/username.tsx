@@ -4,6 +4,7 @@ import { getRouteApi } from "@tanstack/react-router";
 import { lazy, Suspense } from "react";
 import { useTranslations } from "use-intl";
 import { AuthGoogle } from "@/components/auth/google";
+import { Link } from "@/lib/routing/link";
 
 /** The school layout's route, whose validated search holds the `masuk` address. */
 const schoolRoute = getRouteApi("/school/$slug");
@@ -20,13 +21,13 @@ const TenantLogin = lazy(() =>
 
 /**
  * The sign-in actions of a school host: Google beside the school username action. The
- * username form opens from its button, and from the address `?masuk=username`, which a
- * visitor who signs out to sign in with a card lands on. While the form is open, Google is the
+ * username action is a link to the address `?masuk=username`, which the server renders with
+ * the form open, so a press before the page hydrates still opens it; a visitor who signs out
+ * to sign in with a card lands on the same address. While the form is open, Google is the
  * outline button, so the form's submit is the one primary action.
  */
 export function TenantEntryActions({ slug }: { slug: TenantSlug }) {
   const t = useTranslations("SchoolEntry");
-  const navigate = schoolRoute.useNavigate();
   const { masuk } = schoolRoute.useSearch();
   const isOpen = masuk === "username";
 
@@ -39,7 +40,14 @@ export function TenantEntryActions({ slug }: { slug: TenantSlug }) {
         </Suspense>
       ) : (
         <Button
-          onClick={() => navigate({ search: { masuk: "username" } })}
+          nativeButton={false}
+          render={
+            <Link
+              params={{ slug }}
+              search={{ masuk: "username" }}
+              to="/school/$slug"
+            />
+          }
           variant="outline"
         >
           {t("username-action")}
