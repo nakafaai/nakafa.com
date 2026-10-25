@@ -1,3 +1,4 @@
+import { DatabaseReader as ConfectDatabaseReader } from "@confect/server";
 import { assert } from "@effect/vitest";
 import type { ContentDeliveryClass } from "@nakafa/aksara-contracts/delivery";
 import {
@@ -11,12 +12,19 @@ import {
   ArtifactLocaleSchema,
 } from "@nakafa/aksara-contracts/locale";
 import {
+  canonicalizeRollbackPage,
   canonicalizeRollbackSnapshotEntry,
+  MAX_ROLLBACK_PAGE_BYTES,
+  type RollbackPage,
+  type RollbackRecord,
   RollbackSnapshotEntrySchema,
 } from "@nakafa/aksara-contracts/release/rollback/spec";
 import { inheritContentSnapshots } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import type { RendererDomain } from "@nakafa/aksara-contracts/renderer/domain";
+import confectSchema from "@repo/backend/confect/_generated/schema";
+import { rollbackRecord } from "@repo/backend/confect/contentRelease/rollback/state";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import type schema from "@repo/backend/convex/schema";
 import {
   insertTestArtifact,
   testArtifactJson,
@@ -37,7 +45,8 @@ import {
 } from "@repo/backend/test/content/release";
 import { insertTestRelease } from "@repo/backend/test/content/stage";
 import { encodeJsonText } from "@repo/utilities/json";
-import { Effect, Schema } from "effect";
+import type { TestConvex } from "convex-test";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 
 const NOW = Date.UTC(2026, 6, 23, 12);
 type RollbackFixtureFamily = "material" | "question";
@@ -325,4 +334,64 @@ export async function insertRollbackItem(
       bodyText
     );
   }
+}
+
+/**
+ * The reference for the page walk that prepareRollback replaced: every candidate page is
+ * canonicalized whole before the next row is considered, and the accepted page once more.
+ */
+function perRowCanonicalPage(
+  afterIndex: number,
+  total: number,
+  rows: readonly RollbackRecord[]
+) {
+  const pageOf = (records: readonly RollbackRecord[]): RollbackPage => {
+    const nextIndex = Option.match(Arr.last(records), {
+      onNone: () => afterIndex,
+      onSome: (record) => record.index,
+    });
+    return {
+      done: nextIndex === total - 1,
+      nextIndex,
+      records,
+      rollbackOf: TEST_RELEASE_ID,
+      rollbackOfManifestHash: TEST_MANIFEST_HASH,
+      total,
+    };
+  };
+  let accepted: RollbackRecord[] = [];
+  for (const record of rows) {
+    const candidate = pageOf([...accepted, record]);
+    const bytes = new TextEncoder().encode(
+      canonicalizeRollbackPage(candidate)
+    ).byteLength;
+    if (bytes > MAX_ROLLBACK_PAGE_BYTES) {
+      break;
+    }
+    accepted = [...accepted, record];
+  }
+  return canonicalizeRollbackPage(pageOf(accepted));
+}
+
+/** Computes the page text prepareRollback must return for the same stored rows. */
+export function expectedRollbackPage(
+  t: TestConvex<typeof schema>,
+  afterIndex: number,
+  limit: number,
+  total: number
+) {
+  return t.query(async (ctx) => {
+    const rows = await ctx.db
+      .query("contentItems")
+      .withIndex("by_releaseId_and_index", (query) =>
+        query.eq("releaseId", TEST_RELEASE_ID).gt("index", afterIndex)
+      )
+      .take(limit);
+    const records = await Effect.runPromise(
+      Effect.forEach(rows, (row) => rollbackRecord(row)).pipe(
+        Effect.provide(ConfectDatabaseReader.layer(confectSchema, ctx.db))
+      )
+    );
+    return perRowCanonicalPage(afterIndex, total, records);
+  });
 }

@@ -1,6 +1,6 @@
 import { ContentKeySchema } from "@nakafa/aksara-contracts/ids";
 import {
-  canonicalizeRollbackPage,
+  canonicalizeRollbackRecord,
   MAX_ROLLBACK_PAGE_BYTES,
   MAX_ROLLBACK_PAGE_RECORDS,
   type RollbackPage,
@@ -21,6 +21,10 @@ import {
 } from "@repo/backend/confect/contentRelease/error";
 import { loadRouteBinding } from "@repo/backend/confect/contentRelease/model";
 import { decodeRouteJson } from "@repo/backend/confect/contentRelease/parse";
+import {
+  rollbackPageBytes,
+  serializeRollbackPage,
+} from "@repo/backend/confect/contentRelease/rollback/page";
 import { rollbackRecord } from "@repo/backend/confect/contentRelease/rollback/state";
 import { loadReadableSnapshot } from "@repo/backend/confect/contentRelease/snapshot";
 import {
@@ -103,8 +107,11 @@ export const rollbackProgram = Effect.fn("contentRelease.prepareRollback")(
       })
       .pipe(Effect.orDie);
     let records: RollbackRecord[] = [];
+    let recordTexts: string[] = [];
+    let recordBytes = 0;
     // The walk stops at the first row that would pass the byte ceiling, so no
-    // later row is read.
+    // later row is read. Each accepted transition is serialized once, here, and
+    // the page is written from that text.
     yield* Effect.findFirst(rowPage.page, (row, offset) =>
       Effect.gen(function* () {
         if (row.index !== request.afterIndex + offset + 1) {
@@ -114,13 +121,15 @@ export const rollbackProgram = Effect.fn("contentRelease.prepareRollback")(
           );
         }
         const record = yield* rollbackRecord(row);
+        const text = canonicalizeRollbackRecord(record);
+        const textBytes = new TextEncoder().encode(text).byteLength;
         const candidate = makeRollbackPage(request, total, [
           ...records,
           record,
         ]);
         if (
-          new TextEncoder().encode(canonicalizeRollbackPage(candidate))
-            .byteLength > MAX_ROLLBACK_PAGE_BYTES
+          rollbackPageBytes(candidate, recordBytes + textBytes) >
+          MAX_ROLLBACK_PAGE_BYTES
         ) {
           if (records.length === 0) {
             return yield* releaseFail(
@@ -131,10 +140,15 @@ export const rollbackProgram = Effect.fn("contentRelease.prepareRollback")(
           return true;
         }
         records = Arr.append(records, record);
+        recordTexts = Arr.append(recordTexts, text);
+        recordBytes += textBytes;
         return false;
       })
     );
-    return canonicalizeRollbackPage(makeRollbackPage(request, total, records));
+    return serializeRollbackPage(
+      makeRollbackPage(request, total, records),
+      recordTexts
+    );
   }
 );
 /** Resolves the owner immediately before one signed route change. */
