@@ -3,6 +3,11 @@ import { ArrowLeft01Icon, ViewIcon } from "@hugeicons/core-free-icons";
 import exams from "@repo/backend/confect/_generated/refs/exams";
 import { HugeIcons } from "@repo/design-system/components/ui/huge-icons";
 import { Input } from "@repo/design-system/components/ui/input";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@repo/design-system/components/ui/tooltip";
 import { buttonVariants } from "@repo/design-system/lib/button";
 import { isComposingKey } from "@repo/utilities/composition";
 import { Function as Fn, Option } from "effect";
@@ -11,6 +16,7 @@ import { useTranslations } from "use-intl";
 import { runExamAction, sentAction } from "@/components/tenant/exams/action";
 import { isLocked } from "@/components/tenant/exams/freeze";
 import { renameUpdate } from "@/components/tenant/exams/optimistic";
+import { ExamPresence } from "@/components/tenant/exams/presence";
 import { useExam } from "@/components/tenant/exams/provider";
 import { ScheduleExam } from "@/components/tenant/exams/schedule";
 import { titleToSave } from "@/components/tenant/exams/title";
@@ -21,10 +27,11 @@ import { Link } from "@/lib/routing/link";
  * which an archived unit's exam does not take. The field shows the saved title until the teacher
  * types, so it follows a co-editor's rename. The title is saved when the field loses focus or the
  * teacher presses Enter, and only a trimmed, changed, valid title is sent. The optimistic change
- * restores the saved title when the server refuses the rename. The row ends with the action that
- * tries the exam as a student and the button that schedules it, and the title takes the room
- * left between them, truncated while the field is not focused. On a phone the actions keep their
- * icons and their names for screen readers, so the title keeps room to read at 375 pixels.
+ * restores the saved title when the server refuses the rename. The row ends with the other teachers
+ * in the exam (ExamPresence), the action that tries the exam as a student, and the button that
+ * schedules it, and the title takes the room left between them, truncated while the field is not
+ * focused. On a phone the actions keep their icons and their names for screen readers, so the
+ * title keeps room to read at 375 pixels.
  * A frozen exam says why its questions are fixed in a line under the header (ExamLockedNote).
  */
 export function ExamHeader() {
@@ -52,14 +59,21 @@ export function ExamHeader() {
 
   return (
     <header className="flex h-14 shrink-0 items-center gap-2 border-b px-2">
-      <Link
-        aria-label={t("title")}
-        className={buttonVariants({ size: "icon", variant: "ghost" })}
-        params={{ slug }}
-        to="/school/$slug/exams"
-      >
-        <HugeIcons icon={ArrowLeft01Icon} />
-      </Link>
+      <Tooltip>
+        <TooltipTrigger
+          render={
+            <Link
+              aria-label={t("title")}
+              className={buttonVariants({ size: "icon", variant: "ghost" })}
+              params={{ slug }}
+              to="/school/$slug/exams"
+            />
+          }
+        >
+          <HugeIcons icon={ArrowLeft01Icon} />
+        </TooltipTrigger>
+        <TooltipContent side="bottom">{t("title")}</TooltipContent>
+      </Tooltip>
       <Input
         aria-label={t("title-label")}
         className="min-w-0 flex-1 truncate border-0 font-semibold text-lg shadow-none md:text-lg"
@@ -76,6 +90,7 @@ export function ExamHeader() {
         readOnly={exam.archived}
         value={draft ?? exam.title}
       />
+      <ExamPresence />
       <Link
         aria-label={t("try-action")}
         className={buttonVariants({ variant: "outline" })}

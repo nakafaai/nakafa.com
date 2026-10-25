@@ -80,7 +80,7 @@ function SchoolNewPage() {
       </EntryShellHeader>
       <EntryShellBody>
         <SchoolStart legal={legal}>
-          <Nina act="waving" label="" size={120} whole />
+          <Nina act="waving" label="" size={88} whole />
         </SchoolStart>
       </EntryShellBody>
     </>

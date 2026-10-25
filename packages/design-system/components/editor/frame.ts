@@ -13,9 +13,21 @@ export const editorFrame = cva("flex min-h-0 flex-1 flex-col");
 /** The bar of controls above the text: the editor's toolbar, and its place while the code loads. */
 export const editorBar = cva("flex items-center gap-1.5 border-b px-2 py-1.5");
 
-/** The row of controls inside the bar, one line high. */
+/**
+ * The row of controls inside the bar, one line high. A document's bar stands across a whole page, so
+ * its controls gather in the middle, over the page the writer edits.
+ */
 export const editorRow = cva(
-  "relative flex h-8 min-w-0 flex-1 flex-wrap content-start items-center gap-x-1.5 overflow-hidden"
+  "relative flex h-8 min-w-0 flex-1 flex-wrap content-start items-center gap-x-1.5 overflow-hidden",
+  {
+    defaultVariants: { align: "start" },
+    variants: {
+      align: {
+        center: "justify-center",
+        start: "",
+      },
+    },
+  }
 );
 
 /**

@@ -34,7 +34,7 @@ import {
   type StepView,
   stepView,
 } from "@repo/backend/confect/editor/view";
-import { requirePromptUnfrozen } from "@repo/backend/confect/exams/freeze";
+import { requireDocumentUnfrozen } from "@repo/backend/confect/exams/freeze";
 import member from "@repo/backend/confect/middleware/member.impl";
 import session from "@repo/backend/confect/middleware/session.impl";
 import { Array as Arr, Duration, Effect, Layer, Option } from "effect";
@@ -122,7 +122,7 @@ const submit = FunctionImpl.make(
     if (Option.isSome(record) && record.value.batch === batch.batch) {
       return null;
     }
-    yield* requirePromptUnfrozen(document._id);
+    yield* requireDocumentUnfrozen(document._id);
     const admitted = yield* admitBatch(document.head, batch);
     const rows = yield* Effect.forEach(admitted.batch.steps, (step) =>
       encodeStoredStep({

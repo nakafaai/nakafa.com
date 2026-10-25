@@ -3,6 +3,7 @@ import { errors, type PolarCore } from "@polar-sh/sdk/2026-10";
 import { createCheckoutsService } from "@polar-sh/sdk/2026-10/services/checkouts";
 import { createCustomerSessionsService } from "@polar-sh/sdk/2026-10/services/customer_sessions";
 import { createCustomersService } from "@polar-sh/sdk/2026-10/services/customers";
+import { createRefundsService } from "@polar-sh/sdk/2026-10/services/refunds";
 import { createSubscriptionsService } from "@polar-sh/sdk/2026-10/services/subscriptions";
 import { readPolarClient } from "@repo/backend/confect/billing/polar/client";
 import {
@@ -19,6 +20,7 @@ import {
   PolarDeleteError,
   PolarDuplicateEmailError,
   PolarPortalError,
+  PolarRefundError,
   PolarSubscriptionListError,
   PolarUpdateError,
   polarCheckoutErrorCode,
@@ -26,6 +28,7 @@ import {
   polarDeleteErrorCode,
   polarDuplicateEmailCode,
   polarPortalErrorCode,
+  polarRefundErrorCode,
   polarSubscriptionListErrorCode,
   polarUpdateErrorCode,
 } from "@repo/backend/confect/billing/polar/spec";
@@ -280,6 +283,33 @@ export const polarGateway = {
       )
     );
     return { items: response.items, maxPage: response.pagination.max_page };
+  }),
+  /**
+   * Refunds the order's net amount, before taxes, and Polar refunds the tax on it.
+   * Polar reports the refund as `order.refunded`, which settles the payment.
+   */
+  refundOrder: Effect.fn("polar.refundOrder")(function* (input: {
+    readonly orderId: string;
+    readonly refundableAmount: number;
+  }) {
+    yield* call((client) =>
+      createRefundsService(client).create({
+        amount: input.refundableAmount,
+        comment: "Top-up paid without an active Pro grant.",
+        order_id: input.orderId,
+        reason: "other",
+      })
+    ).pipe(
+      Effect.mapError(
+        ({ cause }) =>
+          new PolarRefundError({
+            code: polarRefundErrorCode,
+            cause,
+            message: "Failed to refund order in Polar.",
+          })
+      ),
+      Effect.asVoid
+    );
   }),
   updateCustomer: Effect.fn("polar.updateCustomer")(function* (input: {
     readonly customerId: string;

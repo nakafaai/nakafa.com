@@ -270,6 +270,8 @@ has exactly one owner.
   `tryoutSectionAttempts`, `tryoutAttemptPlacements`, `tryoutResponses`,
   `tryoutScores`, `tryoutPlacements`, `tryoutCatalog`, `tryoutRuntimeBundles`,
   and `tryoutSetProgress`) are removed in the cutover change.
+- Every sitting answer and every try-out answer takes its `version` as a required
+  argument. A stored answer without a version is bad data and is deleted.
 - The Convex reset rule of ADR 0003 stays in force, because this ADR supersedes
   ADR 0003 and the rule must not lapse with it. A content reset deletes only
   rebuildable Nakafa read models. It preserves signed snapshot state, attempts,
@@ -280,8 +282,9 @@ has exactly one owner.
   refers to it, and its rows are none or the owner has approved their disposal.
   No export is taken from production, by the working rule of
   `docs/convex/cost.md`.
-- One flag table, `assessmentFlags`, holds every assessment flag. No
-  `tryoutFlags` table ships.
+- One flag table, `assessmentFlags`, holds the assessment flags. No
+  `tryoutFlags` table ships. A sitting writes its flags through the gate
+  (ADR 0013), and try-out flags join the table at the engine cutover.
 - Nina reads each question's raw MDX (`packages/backend/confect/nina/focus.ts`).
   That reader moves to the assessment document in the same release.
 - No Aksara release may contain short-answer or rubric content until the renderer
@@ -324,7 +327,7 @@ has exactly one owner.
 | The nine `tryout*` tables in `packages/backend/confect/tables` | Live. The tables are removed in wave B, and finished attempts are not converted (section 10) |
 | The three `irt*` tables in `packages/backend/confect/tables` | Live, extended in wave C |
 | `@cortex-js/compute-engine` and `mathlive` | Not installed |
-| `@convex-dev/presence` | Not installed. Planned for wave B. |
+| `@convex-dev/presence` | Installed at 0.4.0 for the exam editor (ADR 0028). Its use by sittings is planned for wave B. |
 | The other `confect/assessment` modules | Planned |
 | Assessment document and its compiler | Planned, program wave A |
 | `apps/www/src/components/player` (list or one item, navigator, keys), bound to try-outs | Live. A School binding is planned for wave B. |

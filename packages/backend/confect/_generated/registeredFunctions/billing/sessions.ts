@@ -8,5 +8,6 @@ const definitions = ConvexFunctionDefinitions.buildForGroup<typeof import("../..
 
 export default {
 ["generateCheckoutLink"]: RegisteredConvexFunction.register({ ...definitions["generateCheckoutLink"], handler: forward(definitions["generateCheckoutLink"].handler) }),
+["generateTopupCheckoutLink"]: RegisteredConvexFunction.register({ ...definitions["generateTopupCheckoutLink"], handler: forward(definitions["generateTopupCheckoutLink"].handler) }),
 ["generateCustomerPortalUrl"]: RegisteredConvexFunction.register({ ...definitions["generateCustomerPortalUrl"], handler: forward(definitions["generateCustomerPortalUrl"].handler) }),
 } as RegisteredFunctions.RegisteredFunctionsForGroupSpec<typeof import("../../../billing/sessions.spec")["default"]>;

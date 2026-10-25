@@ -3,6 +3,7 @@ import { InteractionSchema } from "@nakafa/aksara-contracts/assessment/interacti
 import { Id } from "@repo/backend/confect/_generated/id";
 import { entries } from "@repo/backend/confect/access/catalog";
 import { Kind } from "@repo/backend/confect/access/kind";
+import { Version } from "@repo/backend/confect/assessment/gate/rules";
 import { ExamTitle } from "@repo/backend/confect/exams/exam";
 import {
   AttemptState,
@@ -141,8 +142,8 @@ export const StudentSittingView = Schema.Struct({
 });
 
 /**
- * The student's points in a sitting whose results are released, out of the questions of its exam. A student sees
- * no score before the release, so the row holds `null` until then.
+ * The student's points in a sitting whose results are released, out of the points of every question of its exam.
+ * A student sees no score before the release, so the row holds `null` until then.
  */
 const StudentScore = Schema.Struct({
   points: Schema.Int,
@@ -175,10 +176,14 @@ export const SignalView = Schema.Struct({
  * read on its own, by `PromptView`, so the paper stays small.
  */
 const PaperQuestion = Schema.Struct({
+  /** Whether the learner flagged the question for review. */
+  flagged: Schema.Boolean,
   id: Id("examQuestions"),
   interactions: Schema.NonEmptyArray(InteractionSchema),
   number: Schema.Int.check(Schema.isGreaterThan(0)),
   response: Schema.NullOr(Schema.Array(LocalIdSchema)),
+  /** The version of the saved answer, which the next answer of this question numbers one above (ADR 0013). */
+  version: Schema.NullOr(Version),
 });
 
 /** The questions of a student's paper, in the order of the exam. */

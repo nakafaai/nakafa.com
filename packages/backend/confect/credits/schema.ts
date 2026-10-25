@@ -25,7 +25,7 @@ const creditTransactionMetadataValueValidator = Schema.Union([
 ]);
 
 /** Bounded metadata record for credit audit events. */
-const creditTransactionMetadataValidator = Schema.Record(
+export const creditTransactionMetadataValidator = Schema.Record(
   Schema.String,
   creditTransactionMetadataValueValidator
 );
@@ -45,4 +45,26 @@ export const planCreditValidator = Schema.Struct({
   amount: Schema.Finite,
   /** Grant type for transaction logging */
   grantType: creditGrantTypeValidator,
+});
+
+/**
+ * One top-up pack's credits. `remaining` is what the pack still holds, and
+ * `state` says whether it still runs: an `active` lot is spent soonest-expiring
+ * first, and every other state ends it, so `remaining` stays at zero from then.
+ */
+export const creditLotValidator = Schema.Struct({
+  userId: IdSchema("users"),
+  /** The top-up payment that bought the pack. */
+  paymentId: IdSchema("billingPayments"),
+  granted: Schema.Int.check(Schema.isGreaterThanOrEqualTo(1)),
+  remaining: Schema.Int.check(Schema.isGreaterThanOrEqualTo(0)),
+  /** The moment the unused credits stop being usable, in epoch milliseconds. */
+  expiresAt: Schema.Finite,
+  state: Schema.Literals(["active", "expired", "forfeited", "refunded"]),
+});
+
+/** The credits one reservation took from one top-up pack. */
+export const CreditLotDraw = Schema.Struct({
+  lotId: IdSchema("creditLots"),
+  credits: Schema.Int.check(Schema.isGreaterThanOrEqualTo(1)),
 });

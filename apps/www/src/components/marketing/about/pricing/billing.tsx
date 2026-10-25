@@ -49,16 +49,17 @@ function BillingAction({ variant }: { variant: PricingButtonVariant }) {
   const billing = useBillingNavigation();
   const [isAuthPending, startAuthTransition] = useTransition();
 
-  const subscription = useQuery(
-    billingRefs.queries.hasActiveSubscription,
+  const overview = useQuery(
+    billingRefs.queries.overview,
     currentUser ? {} : "skip"
   );
-  if (QueryResult.isFailure(subscription)) {
-    throw subscription.error;
+  if (QueryResult.isFailure(overview)) {
+    throw overview.error;
   }
-  const subscriptionResolved = QueryResult.isSuccess(subscription);
-  const hasSubscription = subscriptionResolved && subscription.value;
-  const billingReady = !currentUser || subscriptionResolved;
+  const overviewResolved = QueryResult.isSuccess(overview);
+  const hasSubscription =
+    overviewResolved && overview.value.subscription !== null;
+  const billingReady = !currentUser || overviewResolved;
 
   const handleBilling = () => {
     if (!isActiveLocale(locale)) {

@@ -11,6 +11,7 @@ export const dashboard = registeredFunctions.dashboard;
 export const enter = registeredFunctions.enter;
 export const expected = registeredFunctions.expected;
 export const finish = registeredFunctions.finish;
+export const flag = registeredFunctions.flag;
 export const images = registeredFunctions.images;
 export const lastAnswer = registeredFunctions.lastAnswer;
 export const lock = registeredFunctions.lock;

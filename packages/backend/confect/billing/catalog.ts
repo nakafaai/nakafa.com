@@ -45,6 +45,12 @@ export type BillingOfferKey = typeof BillingOfferKey.Type;
 /** The monthly Pro price in each currency, in minor units. The catalog and the pages both read this one fact. */
 export const proMonthlyPrices = { EUR: 899, IDR: 79_000, USD: 899 } as const;
 
+/** The yearly Pro price in each currency, in minor units: the price of 10 months. The catalog and the pages both read this one fact. */
+export const proYearlyPrices = { EUR: 8990, IDR: 790_000, USD: 8990 } as const;
+
+/** The price of one top-up pack in each currency, in minor units. The catalog and the pages both read this one fact. */
+export const topUpPrices = { EUR: 499, IDR: 59_000, USD: 499 } as const;
+
 const billingOffers = {
   "pro.monthly": {
     interval: "month",
@@ -56,7 +62,7 @@ const billingOffers = {
   "pro.yearly": {
     interval: "year",
     months: 12,
-    prices: { EUR: 8990, IDR: 790_000, USD: 8990 },
+    prices: proYearlyPrices,
     product: "pro",
     rails: ["polar"],
   },
@@ -84,7 +90,7 @@ const billingOffers = {
   "pro.topup": {
     interval: "pass",
     months: 1,
-    prices: { EUR: 499, IDR: 59_000, USD: 499 },
+    prices: topUpPrices,
     product: "credits",
     rails: ["polar", "xendit"],
   },

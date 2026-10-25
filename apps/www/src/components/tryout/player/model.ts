@@ -1,11 +1,12 @@
 import type { Selection } from "@repo/backend/confect/response/model";
 import { Array as Arr, HashMap, Option } from "effect";
+import { pickOption } from "@/components/player/keyboard";
 import type { PlayerQuestionModel } from "@/components/player/model";
 import type { TryoutRuntimeQuestion } from "@/components/tryout/runtime/types";
 
 /**
  * Projects the questions of a running section into what the player marks in
- * its navigator and answers from the keyboard. Each question answers through
+ * its navigator and picks from the keyboard. Each question answers through
  * the same save that its response fields use.
  */
 export function projectTryoutQuestions(input: {
@@ -16,10 +17,18 @@ export function projectTryoutQuestions(input: {
   questions: readonly TryoutRuntimeQuestion[];
 }): readonly PlayerQuestionModel[] {
   return Arr.map(input.questions, (question) => ({
-    answer: (selection) => input.answer(question, selection),
     answered: question.response?.isComplete ?? false,
+    // Try-outs have no flag path until the engine cutover (ADR 0031 section 10).
+    flagged: false,
     key: question.placementId,
-    responseSpec: question.responseSpec,
+    pick: (index) =>
+      Option.match(pickOption(question.responseSpec, index), {
+        onNone: () => false,
+        onSome: (selection) => {
+          input.answer(question, selection);
+          return true;
+        },
+      }),
   }));
 }
 
