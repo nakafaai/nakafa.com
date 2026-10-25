@@ -46,6 +46,7 @@ export function ImportFileField({
           <span>{t("import-drop")}</span>
           <input
             accept={IMPORT_ACCEPT}
+            aria-label={t("import-label")}
             className="absolute inset-0 cursor-pointer opacity-0"
             id={id}
             onChange={(event) => onFile(event.target.files?.item(0) ?? null)}
