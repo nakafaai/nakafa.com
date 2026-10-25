@@ -1,4 +1,5 @@
 import { Settings01Icon } from "@hugeicons/core-free-icons";
+import { billingOffer } from "@repo/backend/confect/billing/catalog";
 import { Button } from "@repo/design-system/components/ui/button";
 import {
   CardContent,
@@ -91,6 +92,10 @@ function SubscribedPlanCard({ state }: { state: SubscribedState }) {
           <dt className="text-muted-foreground">{t("period-start")}</dt>
           <dd>{formatBillingDate(subscription.currentPeriodStart, locale)}</dd>
           <EndDate ending={ending} subscription={subscription} />
+          <dt className="text-muted-foreground">{t("billing-interval")}</dt>
+          <dd>
+            <BillingInterval offer={subscription.offer} />
+          </dd>
           <dt className="text-muted-foreground">{t("paid-with")}</dt>
           <dd>{providerNameOf(subscription.rail)}</dd>
         </dl>
@@ -138,5 +143,18 @@ function EndDate({
       </dt>
       <dd>{formatBillingDate(subscription.currentPeriodEnd, locale)}</dd>
     </>
+  );
+}
+
+/** How the subscription bills: monthly, yearly, or a pass of some months, read from its offer in the catalog. */
+function BillingInterval({ offer }: { offer: BillingSubscription["offer"] }) {
+  const t = useTranslations("Auth");
+  const { interval, months } = billingOffer(offer);
+
+  return Match.value(interval).pipe(
+    Match.when("month", () => t("billing-month")),
+    Match.when("year", () => t("billing-year")),
+    Match.when("pass", () => t("billing-pass", { months })),
+    Match.exhaustive
   );
 }
