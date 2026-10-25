@@ -208,10 +208,10 @@ const renderFoundItems = Effect.fn("NakafaContent.renderFoundItems")(function* (
 const readRuntimeTarget = Effect.try({
   catch: () =>
     new ContentRuntimeConfigurationError({
-      key: "CONTENT_RUNTIME_TOKEN",
+      key: "CONTENT_READ_TOKEN",
     }),
   try: () => ({
     siteUrl: env.VITE_CONVEX_SITE_URL,
-    token: contentRuntimeKeys().CONTENT_RUNTIME_TOKEN,
+    token: contentRuntimeKeys().CONTENT_READ_TOKEN,
   }),
 });

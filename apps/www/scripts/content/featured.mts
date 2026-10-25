@@ -44,7 +44,7 @@ const verifyFeaturedRenderer = Effect.fn(
   const response = yield* readProtectedContent(
     {
       siteUrl: env.VITE_CONVEX_SITE_URL,
-      token: contentRuntimeKeys().CONTENT_RUNTIME_TOKEN,
+      token: contentRuntimeKeys().CONTENT_READ_TOKEN,
     },
     request,
     manifest

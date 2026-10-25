@@ -209,7 +209,7 @@ beforeEach(() => {
   runtimeSiteMock.mockReset().mockReturnValue(siteUrl);
   runtimeKeysMock.mockReset().mockImplementation(() => {
     throw new ContentRuntimeConfigurationError({
-      key: "CONTENT_RUNTIME_TOKEN",
+      key: "CONTENT_READ_TOKEN",
     });
   });
   vi.stubGlobal("fetch", fetchMock);
@@ -326,7 +326,7 @@ describe("signed try-out execution", () => {
           _tag: "ContentRuntimeVerificationError",
           cause: {
             _tag: "ContentRuntimeConfigurationError",
-            key: "CONTENT_RUNTIME_TOKEN",
+            key: "CONTENT_READ_TOKEN",
           },
         });
         expect(fetchMock).not.toHaveBeenCalled();

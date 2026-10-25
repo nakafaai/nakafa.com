@@ -8,7 +8,7 @@ import {
 
 /** Installs one complete, valid shared Next environment for each test. */
 function stubValidEnvironment() {
-  vi.stubEnv("CONTENT_RUNTIME_TOKEN", "runtime-token");
+  vi.stubEnv("CONTENT_READ_TOKEN", "runtime-token");
   vi.stubEnv("AKSARA_PUBLICATION_TOKEN", "publication-token");
   vi.stubEnv("SITE_URL", "https://nakafa.com");
 }
@@ -25,7 +25,7 @@ describe("shared Next environment keys", () => {
       AKSARA_PUBLICATION_TOKEN: "publication-token",
     });
     expect(contentRuntimeKeys()).toMatchObject({
-      CONTENT_RUNTIME_TOKEN: "runtime-token",
+      CONTENT_READ_TOKEN: "runtime-token",
     });
     expect(siteUrlKeys()).toMatchObject({ SITE_URL: "https://nakafa.com" });
   });
@@ -38,13 +38,13 @@ describe("shared Next environment keys", () => {
 
   it("requires the executable-content values independently", () => {
     stubValidEnvironment();
-    vi.stubEnv("CONTENT_RUNTIME_TOKEN", "");
+    vi.stubEnv("CONTENT_READ_TOKEN", "");
 
     expect(contentRuntimeKeys).toThrow();
 
-    vi.stubEnv("CONTENT_RUNTIME_TOKEN", "runtime-token");
+    vi.stubEnv("CONTENT_READ_TOKEN", "runtime-token");
     expect(contentRuntimeKeys()).toMatchObject({
-      CONTENT_RUNTIME_TOKEN: "runtime-token",
+      CONTENT_READ_TOKEN: "runtime-token",
     });
   });
 });
@@ -93,7 +93,7 @@ describe("required server values", () => {
 
   it("throws when the content runtime token is unset", () => {
     stubValidEnvironment();
-    vi.stubEnv("CONTENT_RUNTIME_TOKEN", undefined);
+    vi.stubEnv("CONTENT_READ_TOKEN", undefined);
 
     expect(contentRuntimeKeys).toThrow();
   });
