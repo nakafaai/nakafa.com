@@ -1,6 +1,6 @@
 # ADR 0008: Admit And Bound Paid Work
 
-> Superseded in part by [ADR 0037](0037-cloudflare.md): the Vercel hosting, delivery, and deployment decisions of this record no longer apply.
+> Superseded in part by [ADR 0037](0037-cloudflare.md): the hosting, delivery, and deployment decisions of this record no longer apply.
 
 ## Decision
 
@@ -233,26 +233,14 @@ forever. Regression tests verify the transaction, window cutoff, delayed queue,
 restart and midnight behavior rather than treating cycle completion as a claim
 of historical data completeness.
 
-The change that narrowed the pipeline to one ranking left temporary contract
-steps, and most are done. On 12 October 2026 the prune found no counter and no
-maintenance watermark of another window or scope on dev or production, so the
-step that retired them is deleted, and counters and watermarks are stored under
-the seven-day window alone. `getTrendingSubjects` takes only the locale. Only
-the web server calls it, from the cached home page, and the last web deployment
-that sent the deleted `windowKey` argument was created on 11 October 2026 at
-18:23 UTC. The project keeps a browser on its own deployment for 12 hours after
-that deployment was created (`skewProtectionMaxAge` 43,200 seconds, read from
-the Vercel project on 12 October 2026), so since 12 October 06:23 UTC no
-deployment that sends the argument takes requests.
-
 One step remains, which this ADR owns. A daily signal, a viewer key or a queued
 view written before the narrowing may still carry the placement scope, and a
 daily signal written before it carries the other windows in `applied`. The
 longest an older signal lives is 8 days, the window plus the day its
-maintenance runs. Once the narrowing has been in production for 8 days, which is
-20 October 2026, one change narrows the stored scope values and the `applied`
+maintenance runs. One change narrows the stored scope values and the `applied`
 windows to the maintained ones, together with the placement check of
-`isRankedPopularityView`.
+`isRankedPopularityView`. The rows that still hold the old values are cleared in
+that same change, never read or rewritten.
 
 Mutations that write only tables without registered triggers use native Convex
 builders. Mutations that own message, subscription, score, or other registered
@@ -277,11 +265,10 @@ and no second user-balance write on successful completion.
 
 Only the HTTP server calls the scheduled persistence actions. The browser sends
 the same chat request through the AI SDK's ordinary fetch transport, without a
-deployment pin. Next.js Skew Protection does not pin these custom fetches. The
-release therefore observes the predecessor server's five-minute maximum
-request lifetime and pending scheduled persistence before removing its optional
-hold contract. Future changes must recheck both transport and scheduler
-ownership instead of treating promotion alone as proof that old callers stopped.
+deployment pin. A change to that transport or to the scheduler ships in one
+deploy with its callers, and a brief break during that deploy is accepted.
+Future changes must recheck both transport and scheduler ownership before they
+change a contract.
 
 ## References
 
@@ -289,7 +276,5 @@ ownership instead of treating promotion alone as proof that old callers stopped.
 - [Convex scheduled mutation guarantees](https://docs.convex.dev/scheduling/scheduled-functions)
 - [Convex best-practice rules](https://docs.convex.dev/eslint)
 - [Convex index ranges](https://docs.convex.dev/database/reading-data/indexes/)
-- [Vercel function duration](https://vercel.com/docs/functions/configuring-functions/duration)
-- [Vercel Skew Protection request ownership](https://vercel.com/docs/skew-protection#how-it-works)
 - [Python subprocess deadline behavior](https://docs.python.org/3/library/subprocess.html#subprocess.run)
 - [Python address-space limits](https://docs.python.org/3/library/resource.html#resource.RLIMIT_AS)

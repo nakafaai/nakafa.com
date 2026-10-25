@@ -14,7 +14,7 @@ const CLIENT =
 const DECISION =
   "take decisions from the Gateway service in confect/gateway instead of the AI SDK's decide";
 const MODEL =
-  "take model handles from the Gateway service instead of a gateway model ID, which the AI SDK resolves through its default Vercel gateway";
+  "take model handles from the Gateway service instead of a gateway model ID, which the AI SDK resolves through its default gateway";
 
 /** Inspects one module with the gateway policy alone. */
 function inspect(sourceText: string, file = NINA) {
@@ -28,7 +28,7 @@ function inspect(sourceText: string, file = NINA) {
 }
 
 describe("Gateway source policy", () => {
-  it.effect("rejects every way of importing the Vercel gateway package", () =>
+  it.effect("rejects every way of importing the @ai-sdk/gateway package", () =>
     Effect.gen(function* () {
       const source = `
 import { createGateway } from "@ai-sdk/gateway";
@@ -199,7 +199,7 @@ const part = { providerOptions: { gateway: { signature: "continuation" } } };`,
     })
   );
 
-  it.effect("rejects the Vercel gateway package even in tests", () =>
+  it.effect("rejects the @ai-sdk/gateway package even in tests", () =>
     Effect.gen(function* () {
       const file = "packages/backend/confect/nina/messages.impl.test.ts";
       const violations = yield* inspect(

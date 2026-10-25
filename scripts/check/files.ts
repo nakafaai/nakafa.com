@@ -27,7 +27,6 @@ const IGNORED_DIRECTORIES = HashSet.make(
   ".output",
   ".react-email",
   ".turbo",
-  ".vercel",
   "coverage",
   "dist",
   "node_modules"

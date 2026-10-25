@@ -6,6 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       stage:
+        # An Aksara production release dispatches stage prod from main with the deploy app's token.
         description: Stage to deploy. Production deploys run only from main.
         type: choice
         options: [staging, prod]
@@ -62,12 +63,6 @@ jobs:
       - name: Install dependencies
         uses: ./.github/actions/install
 
-      - name: Load the environment's values
-        env:
-          ENVIRONMENT_SECRETS: ${{ toJSON(secrets) }}
-          ENVIRONMENT_VARIABLES: ${{ toJSON(vars) }}
-        run: node scripts/github/environment.ts
-
       - name: Deploy Convex
         working-directory: packages/backend
         env:
@@ -79,6 +74,27 @@ jobs:
         with:
           version: "0.13.5"
 
+      # Each value is named, so this step receives only what the build and the
+      # Worker bindings read. `VITE_` values are variables, every other one a secret.
       - name: Deploy the Cloudflare stack
         working-directory: apps/www
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          AKSARA_PUBLICATION_TOKEN: ${{ secrets.AKSARA_PUBLICATION_TOKEN }}
+          CONTENT_READ_TOKEN: ${{ secrets.CONTENT_READ_TOKEN }}
+          CONVEX_CLOUD_URL: ${{ secrets.CONVEX_CLOUD_URL }}
+          MATH_CAS_API_KEY: ${{ secrets.MATH_CAS_API_KEY }}
+          NAKAFA_API_EDGE_SECRET: ${{ secrets.NAKAFA_API_EDGE_SECRET }}
+          CONVEX_SITE_URL: ${{ secrets.CONVEX_SITE_URL }}
+          NAKAFA_MCP_EDGE_SECRET: ${{ secrets.NAKAFA_MCP_EDGE_SECRET }}
+          OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}
+          SITE_URL: ${{ secrets.SITE_URL }}
+          VITE_SITE_URL: ${{ vars.VITE_SITE_URL }}
+          VITE_CONVEX_SITE_URL: ${{ vars.VITE_CONVEX_SITE_URL }}
+          VITE_CONVEX_URL: ${{ vars.VITE_CONVEX_URL }}
+          VITE_POLAR_SERVER: ${{ vars.VITE_POLAR_SERVER }}
+          VITE_POSTHOG_PROJECT_TOKEN: ${{ vars.VITE_POSTHOG_PROJECT_TOKEN }}
+          VITE_POSTHOG_PROXY_HOST: ${{ vars.VITE_POSTHOG_PROXY_HOST }}
+          VITE_POSTHOG_UI_HOST: ${{ vars.VITE_POSTHOG_UI_HOST }}
         run: bunx --no-install alchemy deploy --stage "$NAKAFA_DEPLOY_STAGE" --yes

@@ -179,7 +179,7 @@ describe("journal/audit list", () => {
     })
   );
 
-  it("lets an older client read change types and kinds added after it was built", () => {
+  it("decodes a change type or kind the client does not know as unknown", () => {
     expect(
       Schema.decodeUnknownSync(ChangeView)({ seat: 3, type: "seat.added" })
     ).toEqual({ type: "unknown" });

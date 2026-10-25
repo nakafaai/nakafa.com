@@ -101,23 +101,12 @@ describe("pinned Aksara acceptance publication", () => {
             "--detach",
             source.revision,
           ],
-          [
-            "bunx",
-            "pnpm@11.28.6",
-            "install",
-            "--frozen-lockfile",
-            "--prefer-offline",
-          ],
+          ["bun", "install", "--frozen-lockfile"],
         ]);
         expect(Option.getOrThrow(Arr.last(calls))).toMatchObject({
-          command: "bunx",
+          command: "bun",
           cwd: `${runtime.directory}/source`,
-          args: [
-            "pnpm@11.28.6",
-            "--filter",
-            "@nakafa/aksara-cli",
-            "acceptance",
-          ],
+          args: ["run", "--filter", "@nakafa/aksara-cli", "acceptance"],
           sensitiveValues: [runtime.publicationToken],
           env: {
             AKSARA_ACCEPTANCE_ENDPOINT: `${runtime.site}/internal/content/releases`,
@@ -150,7 +139,7 @@ describe("pinned Aksara acceptance publication", () => {
         );
         expect(mocks.command).toHaveBeenCalledTimes(3);
         expect(mocks.command).not.toHaveBeenCalledWith(
-          expect.objectContaining({ command: "bunx" })
+          expect.objectContaining({ command: "bun" })
         );
       }).pipe(Effect.provide(nodeServicesLayer))
   );

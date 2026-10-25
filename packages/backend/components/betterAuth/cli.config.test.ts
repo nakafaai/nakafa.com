@@ -10,8 +10,8 @@ describe("betterAuth/cli.config", () => {
     Effect.gen(function* () {
       yield* Effect.sync(() => {
         vi.stubEnv("SITE_URL", undefined);
-        vi.stubEnv("AUTH_GOOGLE_ID", undefined);
-        vi.stubEnv("AUTH_GOOGLE_SECRET", undefined);
+        vi.stubEnv("GOOGLE_AUTH_CLIENT_ID", undefined);
+        vi.stubEnv("GOOGLE_AUTH_CLIENT_SECRET", undefined);
       });
       const { auth } = yield* Effect.promise(
         () => import("@repo/backend/components/betterAuth/cli.config")
