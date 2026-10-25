@@ -1,5 +1,5 @@
 import { RegisteredConvexFunction } from "@confect/server";
-import { describe, expect, it } from "@effect/vitest";
+import { assert, describe, expect, it } from "@effect/vitest";
 import { SignedContentReleaseSchema } from "@nakafa/aksara-contracts/release";
 import { inheritContentSnapshots } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import confectSchema from "@repo/backend/confect/_generated/schema";
@@ -14,6 +14,7 @@ import {
 } from "@repo/backend/confect/test.helpers";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import { api } from "@repo/backend/convex/_generated/api";
+import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import schema from "@repo/backend/convex/schema";
 import {
   compactionIdentity,
@@ -21,7 +22,10 @@ import {
 } from "@repo/backend/test/content/compact";
 import { TEST_ARTIFACT_HASH } from "@repo/backend/test/content/release";
 import { insertTestRelease } from "@repo/backend/test/content/stage";
-import { insertZeroRelease } from "@repo/backend/test/content/state";
+import {
+  insertTestState,
+  insertZeroRelease,
+} from "@repo/backend/test/content/state";
 import { makeProgramSnapshotData } from "@repo/backend/test/program/snapshot";
 import { makeTryoutPlacementRow } from "@repo/backend/test/tryout/snapshot";
 import {
@@ -33,8 +37,35 @@ import {
   TRYOUT_START_TRACK,
 } from "@repo/backend/test/tryout/source";
 import { encodeJsonText } from "@repo/utilities/json";
-import { convexTest } from "convex-test";
+import { convexTest, type TestConvex } from "convex-test";
 import { Effect, Schema } from "effect";
+
+/** Loads one stored release row by its release identity. */
+async function storedRelease(ctx: MutationCtx, releaseId: string) {
+  const release = await ctx.db
+    .query("contentReleases")
+    .withIndex("by_releaseId", (query) => query.eq("releaseId", releaseId))
+    .unique();
+  assert.ok(release, `Expected release ${releaseId}.`);
+  return release;
+}
+
+/** Runs the snapshot reference proof for one family in its own mutation. */
+function referenced(
+  t: TestConvex<typeof schema>,
+  family: "program" | "tryout",
+  snapshotId: string
+) {
+  return t.mutation((ctx) =>
+    Effect.runPromise(
+      isSnapshotReferenced(family, snapshotId).pipe(
+        Effect.provide(
+          RegisteredConvexFunction.mutationLayer(confectSchema, ctx)
+        )
+      )
+    )
+  );
+}
 
 describe("contentRelease/snapshot/retention", () => {
   it.effect(
@@ -378,4 +409,77 @@ describe("contentRelease/snapshot/retention", () => {
         });
       })
   );
+  it("does not protect a bootstrap's base snapshot, even when its base release is gone", async () => {
+    const t = convexTest(schema, convexModules);
+    const replacedSnapshotId = `sha256:${"7".repeat(64)}`;
+    const resultSnapshotId = `sha256:${"8".repeat(64)}`;
+    await t.mutation(async (ctx) => {
+      const bootstrap = compactionIdentity(2);
+      await insertCompletedRelease(ctx, bootstrap, compactionIdentity(1));
+      const row = await storedRelease(ctx, bootstrap.releaseId);
+      await ctx.db.patch("contentReleases", row._id, {
+        bootstrap: true,
+        snapshotTransitions: {
+          ...row.snapshotTransitions,
+          tryout: {
+            ...row.snapshotTransitions.tryout,
+            baseSnapshotId: replacedSnapshotId,
+            resultSnapshotId,
+          },
+        },
+      });
+      await insertTestState(ctx, { active: bootstrap, nextSequence: 3 });
+    });
+    await expect(referenced(t, "tryout", replacedSnapshotId)).resolves.toBe(
+      false
+    );
+    await expect(referenced(t, "tryout", resultSnapshotId)).resolves.toBe(true);
+  });
+  it("does not protect a snapshot selected only by a completed release below the bootstrap floor", async () => {
+    const t = convexTest(schema, convexModules);
+    const retiredSnapshotId = `sha256:${"5".repeat(64)}`;
+    await t.mutation(async (ctx) => {
+      const retired = compactionIdentity(1);
+      const bootstrap = compactionIdentity(2);
+      await insertCompletedRelease(ctx, retired);
+      const retiredRow = await storedRelease(ctx, retired.releaseId);
+      await ctx.db.patch("contentReleases", retiredRow._id, {
+        snapshotTransitions: {
+          ...retiredRow.snapshotTransitions,
+          program: {
+            ...retiredRow.snapshotTransitions.program,
+            resultSnapshotId: retiredSnapshotId,
+          },
+        },
+      });
+      await insertCompletedRelease(ctx, bootstrap);
+      const bootstrapRow = await storedRelease(ctx, bootstrap.releaseId);
+      await ctx.db.patch("contentReleases", bootstrapRow._id, {
+        bootstrap: true,
+      });
+      await insertTestState(ctx, { active: bootstrap, nextSequence: 3 });
+    });
+    await expect(referenced(t, "program", retiredSnapshotId)).resolves.toBe(
+      false
+    );
+  });
+  it("still protects the base snapshot of an ordinary active release", async () => {
+    const t = convexTest(schema, convexModules);
+    const baseSnapshotId = `sha256:${"6".repeat(64)}`;
+    await t.mutation(async (ctx) => {
+      const base = compactionIdentity(1);
+      const active = compactionIdentity(2);
+      await insertCompletedRelease(ctx, base);
+      await insertCompletedRelease(ctx, active, base);
+      const row = await storedRelease(ctx, active.releaseId);
+      await ctx.db.patch("contentReleases", row._id, {
+        snapshotTransitions: {
+          ...row.snapshotTransitions,
+          tryout: { ...row.snapshotTransitions.tryout, baseSnapshotId },
+        },
+      });
+      await insertTestState(ctx, { active, nextSequence: 3 });
+    });
+    await expect(referenced(t, "tryout", baseSnapshotId)).resolves.toBe(true);
+  });
 });
