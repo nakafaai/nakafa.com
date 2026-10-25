@@ -102,7 +102,7 @@ const VITE_BUILD_CONSTANTS = HashSet.make(
 );
 /**
  * The module and the function that own the environment seam: the literal reads
- * that the bundler replaces, such as `import.meta.env.VITE_APP_URL` in client
+ * that the bundler replaces, such as `import.meta.env.VITE_SITE_URL` in client
  * code, or `process.env.SITE_URL` in server code.
  */
 const ENV_SEAM_MODULE = "@repo/utilities/env";

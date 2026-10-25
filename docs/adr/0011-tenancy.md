@@ -1,6 +1,6 @@
 # ADR 0011: Schools Are Tenants That Accounts Join Through Persons
 
-> Superseded in part by [ADR 0037](0037-cloudflare.md) and [ADR 0036](0036-boundary.md): the Vercel and Next.js statements of this record describe the earlier stack. Cloudflare Workers through Alchemy and the TanStack Start boundary replace them.
+> Superseded in part by [ADR 0037](0037-cloudflare.md) and [ADR 0036](0036-boundary.md): the hosting and framework statements of this record describe the earlier stack. Cloudflare Workers through Alchemy and the TanStack Start boundary replace them.
 
 ## Status
 
@@ -392,54 +392,11 @@ backstop for a job that never ran.
 
 ### Retirement of the first School
 
-Program wave 0 deletes the first School before the new School is built (K11).
-The deletion removes every old School row, table, function, component, redirect,
-image, test, and dictionary key, together with the forum viewport engine and its
-tests and the School branch of account deletion. It takes no backup and no
-production export, because nobody uses the old School, and its data is deleted,
-not kept (K11). A new ADR supersedes ADR 0005.
-
-The removal follows the rule for public functions in
-`packages/backend/AGENTS.md`: expand, switch, observe, contract. Expand is done:
-the tenancy functions in `packages/backend/confect/tenancy` already exist on main
-beside the old School. Four steps followed, in this order, and all four are done:
-
-1. Switch (merged in #1051): a release makes the web stop calling the old
-   functions. It removes every School route and component that calls an old
-   function, so no new web build calls one. The old functions stay.
-2. Observe: after the switch release is live, production function logs show
-   no call to an old School function for at least 12 hours (the Vercel skew
-   window, `skewProtectionMaxAge` 43,200 seconds, read from the project API on
-   12 October 2026) and across at least one later production deploy, because a
-   loaded or suspended tab calls Convex directly and every deploy re-runs every
-   live subscription. Measured before the switch on 13 October 2026: 2,790
-   production executions between 12:57 and 14:42 UTC, spanning the deploy at
-   14:36, held no call to `schools/*`, `classes/*` or the School triggers.
-   Measured after it: 23,655 production executions between 18:21 UTC on 13
-   October and 07:24 UTC on 14 October, spanning the deploys of #1058, #1026,
-   #1049, #1042, #1054, #1046 and #1031, held none either. This step ships
-   nothing.
-3. Contract (merged in #1037): one release removes the old functions, every writer of the old
-   tables, and the rest of the code listed above, and adds the batched erase
-   migration in the same release. It keeps the definitions of the 16 old tables
-   (the 15 `school*` tables and `accountDeletionSchoolTransfers`), because Convex
-   refuses a schema that drops a table while a row still holds it. The internal
-   migration `retire/school:erase` deletes every row of those tables, every stored
-   file their rows name, every scheduled job that would publish a class material,
-   and every forum post from the two forum aggregates, and it clears the school
-   fields of `accountDeletionPreparations` and the `schoolId` of `subscriptions`,
-   which the Polar webhook no longer writes. The `metadata` of a subscription is
-   Polar's copy and stays whole. The migration runs dry first, which counts the
-   old rows, and then for real, on dev and on production, page by page, until a
-   dry pass reports zero. Run on 14 October 2026: on dev a dry pass counted
-   nothing; on production a dry pass counted 26 rows in 13 tables and no file
-   or scheduled job, the real pass removed the 26, and a dry pass after it
-   counted 0.
-4. Drop (the release after #1037): a last release deletes the tables, those fields, the two forum
-   aggregates of `convex.config.ts`, and the migration. Convex accepts that schema
-   only when no row is left, which is the proof that the rows are gone. The
-   emptied tables and the two unmounted aggregates stay on each deployment until
-   they are deleted in the Convex dashboard.
+The first School was retired before the new School was built (K11), in steps:
+#1051 removed its web app, #1037 deleted its backend and erased its rows, and a
+later release dropped its tables. It took no backup and no production export,
+because nobody used the old School. ADR 0025 replaces ADR 0005, which #1037
+deleted. Retired data is deleted, not kept.
 
 ## Implementation Contract
 

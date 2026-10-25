@@ -1,6 +1,6 @@
 # ADR 0026: School Hosts, One URL Tree, And Data Cells
 
-> Superseded in part by [ADR 0037](0037-cloudflare.md) and [ADR 0036](0036-boundary.md): the Vercel and Next.js statements of this record describe the earlier stack. Cloudflare Workers through Alchemy and the TanStack Start boundary replace them.
+> Superseded in part by [ADR 0037](0037-cloudflare.md) and [ADR 0036](0036-boundary.md): the hosting and framework statements of this record describe the earlier stack. Cloudflare Workers through Alchemy and the TanStack Start boundary replace them.
 
 ## Status
 
@@ -79,8 +79,7 @@ finds the right data.
   reads the request URL and not `nextUrl`, which maps a loopback address to
   `localhost`. A self-hosted run builds the request URL from the server's own
   address, so the redirects of next-intl, such as `/` to `/en` on the main site,
-  still name that address. Vercel builds the request URL from the Host header, so
-  that limit applies to a local or self-hosted run only.
+  still name that address.
 - A school page's status is decided by the proxy before the page streams, in
   `apps/www/src/lib/routing/school/refusal.ts`, as the profile page already decides its 404 in
   the proxy (`apps/www/src/lib/routing/public/profile.ts`). The gate reads one query,
@@ -186,14 +185,13 @@ its own change, before any school code that depends on it lands.
 
 ### Data cells
 
-- The `us` cell is live. Vercel runs `www` in `iad1` (`apps/www/vercel.ts`).
-  The Convex region, `aws-us-east-1`, appears in no repository file, so this
-  record cannot check it. Indonesian schools stay in this cell, because neither
-  Convex nor Vercel has an Indonesian region (K5). The owner asked on 30 September
-  2026 that these regions stay as they are.
-- The `eu` cell is planned. It runs on Convex `aws-eu-west-1` in Dublin, and on
-  Vercel `dub1` only if measured latency calls for it. It is created when the
-  first school in the European Union signs, with its own budget (K5).
+- The `us` cell is live. The Convex region, `aws-us-east-1`, appears in no
+  repository file, so this record cannot check it. Indonesian schools stay in
+  this cell, because Convex has no Indonesian region (K5). The owner asked on 30
+  September 2026 that these regions stay as they are.
+- The `eu` cell is planned. It runs on Convex `aws-eu-west-1` in Dublin. It is
+  created when the first school in the European Union signs, with its own budget
+  (K5).
 - Each cell runs its own `www` project and its own Convex deployment. A cell's
   project has its own `NEXT_PUBLIC_CONVEX_URL` and `NEXT_PUBLIC_CONVEX_SITE_URL`,
   and its deployment has its own `SITE_URL` and cookie domain. The `us` project
@@ -311,7 +309,7 @@ A move runs in this order:
 
 | Part | Status |
 | --- | --- |
-| The routes of the old School and `readSchoolAuthRedirect` in `apps/www/proxy.ts` | Deleted from the web app in #1051 (K11). Its backend stays until the observation of ADR 0011 passes |
+| The routes of the old School and `readSchoolAuthRedirect` in `apps/www/proxy.ts` | Deleted from the web app in #1051 and its backend in #1037 (K11) |
 | Host rewrite for school subdomains | Live |
 | Shared sign-in cookie across the school hosts of the `us` cell (ADR 0009) | Live |
 | Shared sign-in cookie on a local run (`SITE_URL` on `localhost`) | Chromium sends a `Domain=localhost` cookie to `localhost` and not to `school.localhost`, so a sign-in on a school host of a local run keeps its cookies on that host alone (`hostOwnSchoolCookies` in `packages/backend/confect/auth/host.ts`), and the auth proxy hands Better Auth the browser's host (`apps/www/src/lib/auth/relay.ts`), because a local `next start` builds the request URL from its own address. Sharing one sign-in across school hosts is proven only on a real domain (`nakafa.com`, `local.nakafa.com`) |

@@ -18,7 +18,7 @@ import { insertRuntimeRelease } from "@repo/backend/test/content/runtime";
 import { JsonTextSchema } from "@repo/utilities/json";
 
 const RUNTIME_TOKEN = "technical-runtime-token";
-const runtimeTokenName = "CONTENT_RUNTIME_TOKEN";
+const runtimeTokenName = "CONTENT_READ_TOKEN";
 const polarName = "POLAR_WEBHOOK_SECRET";
 const digest = `sha256:${"a".repeat(64)}`;
 const request = {

@@ -12,14 +12,6 @@ const AcceptanceSourceSchema = Schema.Struct({
   revision: GitCommitShaSchema,
 });
 
-/**
- * The package manager of the pinned Aksara revision. That revision is a pnpm
- * workspace: its `packageManager` field names this version and its lockfile is
- * `pnpm-lock.yaml`, so the checkout installs and runs with it. Move this constant
- * with the pin in source.json.
- */
-const AKSARA_PACKAGE_MANAGER = "pnpm@11.28.6";
-
 /** Installs only the reviewed Aksara revision owned by this acceptance reservation. */
 export const prepareAcceptanceSource = Effect.fn("acceptance.prepareSource")(
   function* (runtime: LocalRuntime) {
@@ -62,12 +54,7 @@ export const prepareAcceptanceSource = Effect.fn("acceptance.prepareSource")(
       "--detach",
       selected.revision,
     ]);
-    yield* command("bunx", [
-      AKSARA_PACKAGE_MANAGER,
-      "install",
-      "--frozen-lockfile",
-      "--prefer-offline",
-    ]);
+    yield* command("bun", ["install", "--frozen-lockfile"]);
     return { checkout, revision: selected.revision };
   }
 );
@@ -89,13 +76,8 @@ export const publishAcceptanceSource = Effect.fn("acceptance.publishSource")(
     });
     const pinned = yield* prepareAcceptanceSource(runtime);
     yield* runAcceptanceCommand({
-      command: "bunx",
-      args: [
-        AKSARA_PACKAGE_MANAGER,
-        "--filter",
-        "@nakafa/aksara-cli",
-        "acceptance",
-      ],
+      command: "bun",
+      args: ["run", "--filter", "@nakafa/aksara-cli", "acceptance"],
       cwd: pinned.checkout,
       env: {
         ...localConvexEnvironment,

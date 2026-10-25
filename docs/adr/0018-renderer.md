@@ -32,44 +32,35 @@ signed and are in no publication, and the last point below says how they render.
   headings, lists, tables, math written in LaTeX with MathML, and figures. A
   figure is one of the published components (`MathVisual`, `NumberLine`,
   `LineEquation`, `UnitCircle`, `Mermaid`) or an image with alternative text. ADR
-  0031 says how the other figure kinds of the corpus migrate. Aksara still
+  0031 says how the other figure kinds of the corpus change. Aksara still
   writes MDX, and its compiler produces the document. The renderer draws the
   document and runs no authored code. Nakafa items and school items share this
   renderer, and it carries no version field. Program wave A (the first School
   delivery wave) builds the contract, the compiler, and this renderer. The
   player that uses them is wave B.
-- The content generation moves once, from the retired Aksara 0.51 compiled-body
+- The content generation moved once, from the retired Aksara 0.51 compiled-body
   format (`mdx-function-body`) to the content tree (`content-tree`), and never
-  back. Nakafa owns that transition. A candidate may replace the retired
-  generation only as a bootstrap, and Nakafa decides that from its stored state
-  and the signed counts, never from what the publisher declares. It must extend
-  the active release, that release must be recorded under the retired
-  generation, its result must hold only upserted heads (`resultCount` equals
-  `upsertCount`), every snapshot family must be replaced or empty, and no
-  recovery may be staged. A bootstrap activates with no retained inverse and
-  records the content tree generation. Accept and recover refuse it. Every
-  other candidate or recovery over the retired generation is refused at staging
-  and again at activation, so no retired head survives the switch. Nothing may
-  stage or activate over an active release whose generation is not recorded.
+  back. The retired generation keeps one path in code, a bootstrap that replaces every
+  head (`isBootstrapCandidate`). Its deletion is owner-pending until no stored
+  release names the retired generation, and no new generation bootstraps. A
+  later generation change ships in one step with the renderer that reads it, and
+  its retired data is deleted rather than migrated. Nothing may stage or activate
+  over an active release whose generation is not recorded.
 
 ## Consequences
 
 - Deploy the matching renderer before publishing content that uses it.
 - Preserve compiler provenance, hashes, signatures, and immutable snapshot
   identities.
-- Before removing a renderer name, verify the active signed corpus and the
-  retained inverse in both development and production. Repository source and
-  production alone cannot prove development has migrated. Keep the
-  implementation through paired publication and acceptance, and remove it only
-  after every active artifact's requirements exclude it.
+- Remove a renderer name in the change that stops its use, once every active
+  artifact's requirements exclude it. Repository source alone cannot prove that
+  development holds no artifact that names it, so verify the active signed corpus
+  in development and production first.
 - The publication state records the generation of its active release, and
-  every activation records the current one. On 25 Oct 2026 a one-off migration
-  recorded the retired generation on dev and on production, each after reading a
-  stored artifact of its active release in the retired format; it was then
-  removed with its tests. A later generation change records its retired
-  generation the same way.
-- The undo of the bootstrap is a forward release of the last 0.51-era source,
-  not a restore. The publication state cannot return to the retired generation.
+  every activation records the current one. On 25 October 2026 a one-off
+  migration recorded the retired generation on dev and on production, and it was
+  then removed with its tests.
+- The publication state cannot return to the retired generation.
 
 ## Rejected Alternative
 

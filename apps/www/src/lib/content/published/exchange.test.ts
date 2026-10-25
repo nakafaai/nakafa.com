@@ -85,7 +85,7 @@ beforeEach(() => {
   verifyPublicContentDeliveryMock.mockReset();
   runtimeKeysMock.mockReset();
   runtimeKeysMock.mockReturnValue({
-    CONTENT_RUNTIME_TOKEN: "runtime-token",
+    CONTENT_READ_TOKEN: "runtime-token",
   });
 });
 
@@ -247,7 +247,7 @@ describe("published content exchange", () => {
           yield* readPublishedContent(input).pipe(Effect.flip)
         ).toMatchObject({
           _tag: "ContentRuntimeConfigurationError",
-          key: "CONTENT_RUNTIME_TOKEN",
+          key: "CONTENT_READ_TOKEN",
         });
         expect(contentRuntimeKeys).toHaveBeenCalledOnce();
         expect(readPublicContent).not.toHaveBeenCalled();

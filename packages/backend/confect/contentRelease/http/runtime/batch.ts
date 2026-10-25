@@ -12,7 +12,7 @@ const readPublicRuntimeBatch = Effect.fn(
 )(function* (request: Request) {
   const input = yield* readRuntimeRequest(
     request,
-    yield* Config.String("CONTENT_RUNTIME_TOKEN").pipe(Effect.orDie),
+    yield* Config.String("CONTENT_READ_TOKEN").pipe(Effect.orDie),
     MAX_PUBLIC_RUNTIME_BATCH_REQUEST_BYTES
   );
   if (input.kind === "rejected") {

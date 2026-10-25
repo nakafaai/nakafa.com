@@ -5,17 +5,17 @@
 Accepted on 13 October 2026 with owner decisions K3, K10, and K11. The owner
 approved decisions K1 to K20 on that day. This ADR replaces ADR 0005. The
 classroom module, `confect/classroom`, is planned for program wave B (ADR 0013
-describes the waves). The first School's forum is retired (K11), in the releases
-that ADR 0011 sets: its web app, forum viewport included, is gone from main
-(#1051), and its backend stays until the contract release deletes it. The
+describes the waves). The first School's forum is retired (K11), in the steps that ADR 0011 sets: its
+web app, forum viewport included, is gone from main (#1051), and #1037 deleted its
+backend. The
 design-system parts that the forum uses are live, except the ones its table
 marks as planned.
 
 ## Context
 
 ADR 0005 recorded an Effect-owned viewport for one conversation of the first
-School's forum. The contract release of the retirement (ADR 0011) deletes that
-ADR with the backend of the forum, and this ADR takes its place. Git keeps the
+School's forum. The retirement (ADR 0011) deleted that ADR with the backend of the forum (#1037),
+and this ADR takes its place. Git keeps the
 old text (`git show e8511254af:docs/adr/0005-forum-viewport.md`). The first
 School's forum worked like this. The backend facts were read on main at
 `f8a5610808` on 13 October 2026, and the web facts at `e8511254af`, the commit
@@ -33,9 +33,8 @@ before #1051 deleted the web app:
   in `data/scroll`, 15 of them tests, counted with `git ls-tree`), and its
   transcript used Virtua. Main holds none of these files now.
 
-K11 deletes all of it before the new School is built, and ADR 0011 sets the
-releases that do it, in the rollout order of `packages/backend/AGENTS.md`. The
-new School needs a class that is not a school identity (ADR 0011), numbered
+K11 deletes all of it before the new School is built, in one change (ADR 0011).
+The new School needs a class that is not a school identity (ADR 0011), numbered
 discussions, messages sealed with the school key (ADR 0030), mentions that reach
 the inbox (ADR 0027), files (ADR 0028), tasks, and one scroller that Nina's chat
 also uses.

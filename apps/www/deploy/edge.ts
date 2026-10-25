@@ -8,7 +8,7 @@ import { Config } from "effect";
 export const edgeWorkerBindings = (
   secretEnvironment: "NAKAFA_API_EDGE_SECRET" | "NAKAFA_MCP_EDGE_SECRET"
 ) => ({
-  NAKAFA_CONVEX_SITE_URL: Config.String("NAKAFA_CONVEX_SITE_URL"),
+  CONVEX_SITE_URL: Config.String("CONVEX_SITE_URL"),
   NAKAFA_RELEASE_SHA: Config.String("NAKAFA_RELEASE_SHA"),
   [secretEnvironment]: Config.Redacted(secretEnvironment),
 });
