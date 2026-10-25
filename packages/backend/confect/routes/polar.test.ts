@@ -1,29 +1,13 @@
-import { MASCOT } from "@repo/backend/test/mascot";
 // @vitest-environment edge-runtime
 
 import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
-import { webhooks } from "@polar-sh/sdk/2026-10";
-import {
-  DatabaseReader,
-  DatabaseWriter,
-} from "@repo/backend/confect/_generated/services";
-import { polarGateway } from "@repo/backend/confect/billing/polar/live";
-import { PolarPayloadError } from "@repo/backend/confect/billing/polar/payload";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { Confect, confectLayer } from "@repo/backend/confect/test.setup";
-import { polarCustomer, polarSubscription } from "@repo/backend/test/polar";
 import { encodeJsonText } from "@repo/utilities/json";
-import { DateTime, Effect, Schema } from "effect";
+import { DateTime, Effect, Option, Schema } from "effect";
 
 const WEBHOOK_SECRET = "polar_webhook_route_test";
-
-const mocks = vi.hoisted(() => ({
-  processEvent: vi.fn(),
-}));
-
-class TestProcessingError extends Schema.TaggedError<TestProcessingError>()(
-  "TestProcessingError",
-  { message: Schema.String }
-) {}
+const DELIVERY_ID = "msg_route_test";
 
 vi.mock("@polar-sh/sdk/2026-10", async (importOriginal) => {
   const sdk = await importOriginal<typeof import("@polar-sh/sdk/2026-10")>();
@@ -36,23 +20,14 @@ vi.mock("@polar-sh/sdk/2026-10", async (importOriginal) => {
   };
 });
 
-vi.mock("@repo/backend/confect/billing/polar/webhook", () => ({
-  processPolarWebhookEvent: mocks.processEvent,
-}));
-
-vi.mock("@repo/backend/confect/billing/polar/live", () => ({
-  polarGateway: { getCustomerById: vi.fn() },
-}));
-
 /** Signs a body the way Polar does, so the SDK verifies the signature for real. */
-async function signWebhook(body: string, secret = WEBHOOK_SECRET) {
-  const id = "msg_route_test";
+async function signWebhook(body: string, id = DELIVERY_ID) {
   const timestamp = String(
     Math.floor(DateTime.toEpochMillis(DateTime.nowUnsafe()) / 1000)
   );
   const key = await crypto.subtle.importKey(
     "raw",
-    new TextEncoder().encode(secret),
+    new TextEncoder().encode(WEBHOOK_SECRET),
     { name: "HMAC", hash: "SHA-256" },
     false,
     ["sign"]
@@ -70,11 +45,12 @@ async function signWebhook(body: string, secret = WEBHOOK_SECRET) {
   };
 }
 
-const postWebhook = Effect.fn("routes.polar.test.postWebhook")(function* (
-  body = "{}",
-  headers: Record<string, string> = { "content-type": "application/json" }
+/** Posts one request to the Polar route of the test deployment. */
+const postWebhook = Effect.fn("routes.polar.test.post")(function* (
+  target: TestDeployment,
+  body: string,
+  headers: Record<string, string>
 ) {
-  const target = yield* Confect.pipe(Effect.provide(confectLayer));
   return yield* target.fetch("/polar/events", {
     body,
     headers,
@@ -82,76 +58,58 @@ const postWebhook = Effect.fn("routes.polar.test.postWebhook")(function* (
   });
 });
 
-const postSignedWebhook = Effect.fn("routes.polar.test.postSignedWebhook")(
-  function* (body: string) {
-    const headers = yield* Effect.promise(() => signWebhook(body));
-    return yield* postWebhook(body, headers);
-  }
-);
-
-/** Sends one signed customer deletion through the route, inside the deployment the test provides. */
-const postDeletion = Effect.fn("routes.polar.test.postDeletion")(function* (
-  data: unknown
+/** Posts a body signed with the webhook secret, which the route verifies. */
+const postSigned = Effect.fn("routes.polar.test.postSigned")(function* (
+  target: TestDeployment,
+  body: string,
+  id = DELIVERY_ID
 ) {
-  const target = yield* Confect;
-  const body = encodeJsonText({ data, type: "customer.deleted" });
-  const headers = yield* Effect.promise(() => signWebhook(body));
-  return yield* target.fetch("/polar/events", {
-    body,
-    headers,
-    method: "POST",
-  });
+  const headers = yield* Effect.promise(() => signWebhook(body, id));
+  return yield* postWebhook(target, body, headers);
 });
 
-/** Stores the local customer row that a Polar customer deletion removes. */
-const seedPolarCustomer = Effect.fn("routes.polar.test.seedPolarCustomer")(
-  function* () {
-    const target = yield* Confect;
-    yield* target.run(
-      Effect.gen(function* () {
-        const writer = yield* DatabaseWriter;
-        const userId = yield* writer.table("users").insert({
-          authId: "auth-deletion",
-          credits: 0,
-          creditsResetAt: 1,
-          email: "deletion@example.com",
-          mascot: MASCOT,
-          name: "Deletion",
-          plan: "free",
-        });
-        yield* writer.table("customers").insert({
-          externalId: null,
-          id: polarCustomer.id,
-          metadata: {},
-          userId,
-        });
-      })
-    );
-  }
+/** One subscription webhook body, as Polar sends it. */
+const subscriptionBody = encodeJsonText({
+  data: { id: "sub_route" },
+  timestamp: "2026-10-25T00:00:00.000Z",
+  type: "subscription.created",
+});
+
+type TestDeployment = Effect.Success<typeof Confect>;
+
+const StoredDelivery = Schema.NullOr(
+  Schema.Struct({
+    key: Schema.String,
+    payload: Schema.String,
+    processedAt: Schema.NullOr(Schema.Finite),
+    rail: Schema.String,
+    type: Schema.String,
+  })
 );
 
-/** Counts the customer rows that remain in the deployment. */
-const countCustomers = Effect.fn("routes.polar.test.countCustomers")(
-  function* () {
-    const target = yield* Confect;
-    return yield* target.run(
-      Effect.flatMap(DatabaseReader, (reader) =>
-        reader.table("customers").index("by_polarId").take(10)
-      ).pipe(Effect.map((customers) => customers.length)),
-      Schema.Int
-    );
-  }
-);
-
-const readResponseText = Effect.fn("routes.polar.test.readResponseText")(
-  (response: Response) => Effect.promise(() => response.text())
-);
+/** The stored inbox row of one Polar delivery, or none when the route stored nothing. */
+const storedDelivery = Effect.fn("routes.polar.test.storedDelivery")(function* (
+  target: TestDeployment,
+  key: string
+) {
+  return yield* target.run(
+    Effect.gen(function* () {
+      const reader = yield* DatabaseReader;
+      const found = yield* reader
+        .table("billingEvents")
+        .index("by_rail_and_key", (query) =>
+          query.eq("rail", "polar").eq("key", key)
+        )
+        .first()
+        .pipe(Effect.orDie);
+      return Option.getOrNull(found);
+    }),
+    StoredDelivery
+  );
+});
 
 beforeEach(() => {
   vi.stubEnv("POLAR_WEBHOOK_SECRET", WEBHOOK_SECRET);
-  vi.mocked(webhooks.validateEvent).mockClear();
-  mocks.processEvent.mockReset();
-  mocks.processEvent.mockReturnValue(Effect.succeed(true));
 });
 
 afterEach(() => {
@@ -159,319 +117,133 @@ afterEach(() => {
   vi.unstubAllEnvs();
 });
 
-describe("Polar webhook route", () => {
+describe("routes/polar", () => {
   it.effect(
-    "fails closed when signature verification has no configured secret",
+    "stores a signed delivery in the billing inbox and acknowledges it",
     () =>
       Effect.gen(function* () {
-        vi.stubEnv("POLAR_WEBHOOK_SECRET", "");
-        vi.spyOn(console, "error").mockImplementation(() => undefined);
-        const response = yield* postSignedWebhook(
-          '{"type":"customer.updated"}'
-        );
-        expect(response.status).toBe(500);
-        expect(webhooks.validateEvent).not.toHaveBeenCalled();
-        expect(mocks.processEvent).not.toHaveBeenCalled();
-      })
-  );
-
-  it.effect("accepts one verified and handled event", () =>
-    Effect.gen(function* () {
-      const response = yield* postSignedWebhook('{"type":"customer.updated"}');
-
-      expect(response.status).toBe(202);
-      expect(yield* readResponseText(response)).toBe("Accepted");
-      expect(mocks.processEvent).toHaveBeenCalledWith(
-        expect.objectContaining({ type: "customer.updated" })
-      );
-    })
-  );
-
-  it.effect("returns a retryable bad request for a missing user", () =>
-    Effect.gen(function* () {
-      mocks.processEvent.mockReturnValue(Effect.succeed(false));
-
-      const response = yield* postSignedWebhook('{"type":"customer.updated"}');
-
-      expect(response.status).toBe(400);
-      expect(yield* readResponseText(response)).toBe(
-        "Bad Request: Missing User"
-      );
-    })
-  );
-
-  it.effect("rejects an unsigned event before processing", () =>
-    Effect.gen(function* () {
-      const response = yield* postWebhook('{"type":"customer.updated"}');
-
-      expect(response.status).toBe(403);
-      expect(yield* readResponseText(response)).toBe("Forbidden");
-      expect(mocks.processEvent).not.toHaveBeenCalled();
-    })
-  );
-
-  it.effect(
-    "rejects a signature made with another secret before processing",
-    () =>
-      Effect.gen(function* () {
-        const body = '{"type":"customer.updated"}';
-        const headers = yield* Effect.promise(() =>
-          signWebhook(body, "polar_another_secret")
-        );
-
-        const response = yield* postWebhook(body, headers);
-
-        expect(response.status).toBe(403);
-        expect(yield* readResponseText(response)).toBe("Forbidden");
-        expect(mocks.processEvent).not.toHaveBeenCalled();
-      })
-  );
-
-  it.effect(
-    "checks the signature before the event type, so an unsigned unknown type is forbidden",
-    () =>
-      Effect.gen(function* () {
-        const response = yield* postWebhook('{"type":"unknown.event"}');
-
-        expect(response.status).toBe(403);
-        expect(mocks.processEvent).not.toHaveBeenCalled();
-      })
-  );
-
-  it.effect(
-    "acknowledges a signed event of an unknown type with an empty 202",
-    () =>
-      Effect.gen(function* () {
-        const response = yield* postSignedWebhook('{"type":"unknown.event"}');
-
+        const target = yield* Confect.pipe(Effect.provide(confectLayer));
+        const response = yield* postSigned(target, subscriptionBody);
         expect(response.status).toBe(202);
-        expect(yield* readResponseText(response)).toBe("");
-        expect(mocks.processEvent).not.toHaveBeenCalled();
+        expect(yield* storedDelivery(target, DELIVERY_ID)).toMatchObject({
+          rail: "polar",
+          key: DELIVERY_ID,
+          type: "subscription.created",
+          payload: subscriptionBody,
+          processedAt: null,
+        });
       })
   );
 
-  it.effect.each(["{}", '"abc"', '{"type":123}'])(
-    "rejects a signed body without a string event type: %s",
-    (body) =>
+  it.effect(
+    "acknowledges a redelivery of a stored delivery without storing it twice",
+    () =>
       Effect.gen(function* () {
-        const response = yield* postSignedWebhook(body);
-
-        expect(response.status).toBe(400);
-        expect(yield* readResponseText(response)).toBe("Bad Request");
-        expect(mocks.processEvent).not.toHaveBeenCalled();
+        const target = yield* Confect.pipe(Effect.provide(confectLayer));
+        expect((yield* postSigned(target, subscriptionBody)).status).toBe(202);
+        expect((yield* postSigned(target, subscriptionBody)).status).toBe(202);
+        const count = yield* target.run(
+          Effect.gen(function* () {
+            const reader = yield* DatabaseReader;
+            const rows = yield* reader
+              .table("billingEvents")
+              .index("by_receivedAt")
+              .take(10)
+              .pipe(Effect.orDie);
+            return rows.length;
+          }),
+          Schema.Finite
+        );
+        expect(count).toBe(1);
       })
   );
 
-  it.effect("answers 500 to a signed body that is not JSON", () =>
+  it.effect("refuses a delivery whose signature does not match", () =>
     Effect.gen(function* () {
-      vi.spyOn(console, "error").mockImplementation(() => undefined);
-      const response = yield* postSignedWebhook("not json");
-
-      expect(response.status).toBe(500);
-      expect(yield* readResponseText(response)).toBe("Internal server error");
-      expect(mocks.processEvent).not.toHaveBeenCalled();
+      const target = yield* Confect.pipe(Effect.provide(confectLayer));
+      const headers = yield* Effect.promise(() =>
+        signWebhook(subscriptionBody)
+      );
+      const response = yield* postWebhook(
+        target,
+        encodeJsonText({ data: {}, type: "subscription.updated" }),
+        headers
+      );
+      expect(response.status).toBe(403);
     })
   );
 
-  it.effect("maps a payload rejected during processing to a bad request", () =>
+  it.effect(
+    "acknowledges a signed event type the SDK does not know without storing it",
+    () =>
+      Effect.gen(function* () {
+        const target = yield* Confect.pipe(Effect.provide(confectLayer));
+        const body = encodeJsonText({ data: {}, type: "unknown.future.event" });
+        const response = yield* postSigned(target, body, "msg_unknown_event");
+        expect(response.status).toBe(202);
+        expect(yield* storedDelivery(target, "msg_unknown_event")).toBeNull();
+      })
+  );
+
+  it.effect("rejects a signed body that carries no event type", () =>
     Effect.gen(function* () {
-      vi.spyOn(console, "warn").mockImplementation(() => undefined);
-      mocks.processEvent.mockReturnValue(
-        Effect.fail(
-          new PolarPayloadError({
-            cause: "malformed",
-            message: "Polar customer payload does not match its contract.",
-          })
-        )
+      const target = yield* Confect.pipe(Effect.provide(confectLayer));
+      const response = yield* postSigned(
+        target,
+        encodeJsonText({ data: {} }),
+        "msg_no_type"
       );
-
-      const response = yield* postSignedWebhook('{"type":"customer.updated"}');
-
       expect(response.status).toBe(400);
-      expect(yield* readResponseText(response)).toBe("Bad Request");
     })
   );
 
-  it.effect("maps an unexpected SDK failure to a server response", () =>
+  it.effect("fails a signed body that is not JSON as an SDK failure", () =>
     Effect.gen(function* () {
-      vi.spyOn(console, "error").mockImplementation(() => undefined);
-      vi.mocked(webhooks.validateEvent).mockRejectedValueOnce(
-        new Error("Unexpected SDK failure")
-      );
-
-      const response = yield* postSignedWebhook('{"type":"customer.updated"}');
-
+      const target = yield* Confect.pipe(Effect.provide(confectLayer));
+      const response = yield* postSigned(target, "not json", "msg_not_json");
       expect(response.status).toBe(500);
-      expect(yield* readResponseText(response)).toBe("Internal server error");
-      expect(mocks.processEvent).not.toHaveBeenCalled();
     })
   );
 
-  it.effect("maps a body read failure to a server response", () =>
-    Effect.gen(function* () {
-      vi.spyOn(console, "error").mockImplementation(() => undefined);
-      vi.spyOn(Request.prototype, "text").mockRejectedValue(
-        new Error("Unreadable body")
-      );
-
-      const response = yield* postWebhook();
-
-      expect(response.status).toBe(500);
-      expect(yield* readResponseText(response)).toBe("Internal server error");
-      expect(webhooks.validateEvent).not.toHaveBeenCalled();
-      expect(mocks.processEvent).not.toHaveBeenCalled();
-    })
-  );
-
-  it.effect("maps typed processing failures to a server response", () =>
-    Effect.gen(function* () {
-      vi.spyOn(console, "error").mockImplementation(() => undefined);
-      mocks.processEvent.mockReturnValue(
-        Effect.fail(new TestProcessingError({ message: "Database down" }))
-      );
-
-      const response = yield* postSignedWebhook('{"type":"customer.updated"}');
-
-      expect(response.status).toBe(500);
-      expect(yield* readResponseText(response)).toBe("Internal server error");
-    })
-  );
-
-  it.effect("contains unexpected processing defects at the HTTP boundary", () =>
-    Effect.gen(function* () {
-      vi.spyOn(console, "error").mockImplementation(() => undefined);
-      mocks.processEvent.mockReturnValue(
-        Effect.die(new Error("Unexpected processing defect"))
-      );
-
-      const response = yield* postSignedWebhook('{"type":"customer.updated"}');
-
-      expect(response.status).toBe(500);
-      expect(yield* readResponseText(response)).toBe("Internal server error");
-    })
+  it.effect(
+    "refuses a delivery that arrives without its delivery headers",
+    () =>
+      Effect.gen(function* () {
+        const target = yield* Confect.pipe(Effect.provide(confectLayer));
+        const response = yield* postWebhook(target, subscriptionBody, {
+          "content-type": "application/json",
+        });
+        expect(response.status).toBe(403);
+      })
   );
 });
 
-describe("Polar webhook decoding at the route", () => {
-  beforeEach(async () => {
-    const { processPolarWebhookEvent } = await vi.importActual<
-      typeof import("@repo/backend/confect/billing/polar/webhook")
-    >("@repo/backend/confect/billing/polar/webhook");
-    mocks.processEvent.mockImplementation(processPolarWebhookEvent);
-    vi.mocked(polarGateway.getCustomerById).mockReturnValue(
-      Effect.succeed(null)
-    );
-    vi.spyOn(console, "warn").mockImplementation(() => undefined);
-  });
-
-  it.effect("rejects a customer created without an email", () =>
+describe("routes/polar body", () => {
+  it.effect("answers 500 when the body cannot be read", () =>
     Effect.gen(function* () {
-      const response = yield* postSignedWebhook(
-        encodeJsonText({
-          data: { ...polarCustomer, email: undefined },
-          type: "customer.created",
-        })
+      const target = yield* Confect.pipe(Effect.provide(confectLayer));
+      const headers = yield* Effect.promise(() =>
+        signWebhook(subscriptionBody)
       );
-
-      expect(response.status).toBe(400);
-      expect(yield* readResponseText(response)).toBe("Bad Request");
+      const readBody = vi
+        .spyOn(Request.prototype, "text")
+        .mockRejectedValueOnce(new Error("body stream failed"));
+      const response = yield* postWebhook(target, subscriptionBody, headers);
+      readBody.mockRestore();
+      expect(response.status).toBe(500);
     })
   );
 
-  it.effect("rejects a team customer created without an email", () =>
+  it.effect("answers 500 when the webhook secret is not configured", () =>
     Effect.gen(function* () {
-      const response = yield* postSignedWebhook(
-        encodeJsonText({
-          data: { ...polarCustomer, email: null, type: "team" },
-          type: "customer.created",
-        })
+      const target = yield* Confect.pipe(Effect.provide(confectLayer));
+      vi.stubEnv("POLAR_WEBHOOK_SECRET", "");
+      const response = yield* postSigned(
+        target,
+        subscriptionBody,
+        "msg_no_secret"
       );
-
-      expect(response.status).toBe(400);
-      expect(yield* readResponseText(response)).toBe("Bad Request");
+      expect(response.status).toBe(500);
     })
-  );
-
-  it.effect(
-    "acknowledges a malformed body of a known event type Nakafa does not handle with 202",
-    () =>
-      Effect.gen(function* () {
-        const response = yield* postSignedWebhook(
-          encodeJsonText({ data: {}, type: "order.created" })
-        );
-
-        expect(response.status).toBe(202);
-        expect(yield* readResponseText(response)).toBe("Accepted");
-      })
-  );
-
-  it.effect(
-    "processes a customer deletion whose other fields are malformed and deletes the customer",
-    () =>
-      Effect.gen(function* () {
-        yield* seedPolarCustomer();
-
-        const response = yield* postDeletion({
-          ...polarCustomer,
-          created_at: "2026-09-01",
-        });
-
-        expect(response.status).toBe(202);
-        expect(yield* readResponseText(response)).toBe("Accepted");
-        expect(yield* countCustomers()).toBe(0);
-      }).pipe(Effect.provide(confectLayer))
-  );
-
-  it.effect(
-    "processes a customer deletion that carries only the customer id",
-    () =>
-      Effect.gen(function* () {
-        yield* seedPolarCustomer();
-
-        const response = yield* postDeletion({ id: polarCustomer.id });
-
-        expect(response.status).toBe(202);
-        expect(yield* readResponseText(response)).toBe("Accepted");
-        expect(yield* countCustomers()).toBe(0);
-      }).pipe(Effect.provide(confectLayer))
-  );
-
-  it.effect("rejects a customer deletion without a customer id", () =>
-    Effect.gen(function* () {
-      const response = yield* postDeletion({ email: polarCustomer.email });
-
-      expect(response.status).toBe(400);
-      expect(yield* readResponseText(response)).toBe("Bad Request");
-    }).pipe(Effect.provide(confectLayer))
-  );
-
-  it.effect("rejects a subscription whose amount is not an integer", () =>
-    Effect.gen(function* () {
-      const response = yield* postSignedWebhook(
-        encodeJsonText({
-          data: { ...polarSubscription, amount: 10.5 },
-          type: "subscription.updated",
-        })
-      );
-
-      expect(response.status).toBe(400);
-      expect(yield* readResponseText(response)).toBe("Bad Request");
-    })
-  );
-
-  it.effect(
-    "accepts a subscription that carries a field Nakafa does not read",
-    () =>
-      Effect.gen(function* () {
-        const response = yield* postSignedWebhook(
-          encodeJsonText({
-            data: { ...polarSubscription, prices: "not read" },
-            type: "subscription.updated",
-          })
-        );
-
-        expect(response.status).toBe(202);
-        expect(yield* readResponseText(response)).toBe("Accepted");
-      })
   );
 });

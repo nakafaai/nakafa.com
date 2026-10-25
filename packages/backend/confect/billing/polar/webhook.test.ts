@@ -1,496 +1,219 @@
-import { actionLayer } from "@confect/server/RegisteredFunction";
-import { beforeEach, expect, it } from "@effect/vitest";
-import confectSchema from "@repo/backend/confect/_generated/schema";
-import { products } from "@repo/backend/confect/billing/polar/products";
+import { describe, expect, it } from "@effect/vitest";
+import { proProductIds } from "@repo/backend/confect/billing/polar/catalog";
+import { processPolarEvent } from "@repo/backend/confect/billing/polar/webhook";
+import type { MutationCtx } from "@repo/backend/convex/_generated/server";
 import {
-  processPolarWebhookEvent,
-  upsertPolarCustomerWebhook,
-  upsertPolarSubscriptionWebhook,
-} from "@repo/backend/confect/billing/polar/webhook";
-import type { SubscriptionRecord } from "@repo/backend/confect/subscriptions/records/spec";
-import {
-  buildSubscription,
-  buildWebhookCustomer,
-  buildWebhookEvent,
-  createWebhookTestConvex,
-  insertCustomerTombstone,
-  polarCustomer,
-  polarProduct,
-  polarSubscription,
-  readPurchaseCompletionState,
-  readWebhookState,
-  seedWebhookUser,
-} from "@repo/backend/test/polar";
-import { Effect } from "effect";
+  createBillingTestConvex,
+  insertPolarAccount,
+  runInMutation,
+} from "@repo/backend/test/billing";
+import { MASCOT_CODE } from "@repo/backend/test/mascot";
+import { encodeJsonText } from "@repo/utilities/json";
 
-const polarGateway = vi.hoisted(() => ({
-  getCustomerById: vi.fn(),
-}));
-vi.mock("@repo/backend/confect/billing/polar/live", () => ({
-  polarGateway,
-}));
-const NOW = Date.UTC(2026, 6, 29, 0, 0, 0);
-beforeEach(() => {
-  polarGateway.getCustomerById.mockReset();
-});
-it.effect("grants the complete Pro entitlement from one Polar webhook", () =>
-  Effect.gen(function* () {
-    const runtimeServices = yield* Effect.context<never>();
-    const t = createWebhookTestConvex();
-    const userId = yield* seedWebhookUser(t, "purchase");
-    const subscription = {
-      ...buildSubscription("polar-purchase", "purchase"),
-      productId: products.pro.id,
+const CUSTOMER = "cust_polar_webhook";
+
+/** One subscription webhook body as Polar sends it, with the fields a test changes. */
+function subscriptionEvent(
+  type: string,
+  overrides: Record<string, unknown> = {}
+): string {
+  return encodeJsonText({
+    data: {
+      cancel_at_period_end: false,
+      created_at: "2026-10-01T00:00:00.000Z",
+      current_period_end: "2026-11-01T00:00:00.000Z",
+      current_period_start: "2026-10-01T00:00:00.000Z",
+      customer_id: CUSTOMER,
+      ended_at: null,
+      id: "sub_webhook_1",
+      modified_at: "2026-10-02T00:00:00.000Z",
+      price_id: null,
+      product_id: proProductIds.sandbox,
+      recurring_interval: "month",
       status: "active",
-    } satisfies SubscriptionRecord;
-    polarGateway.getCustomerById.mockReturnValue(
-      Effect.succeed(
-        buildWebhookCustomer("purchase", {
-          metadata: {
-            userId,
-          },
-        })
-      )
-    );
-    const disposition = yield* Effect.promise(() =>
-      t.action((ctx) =>
-        Effect.runPromiseWith(runtimeServices)(
-          upsertPolarSubscriptionWebhook(subscription, "create").pipe(
-            Effect.provide(actionLayer(confectSchema, ctx))
-          )
-        )
-      )
-    );
-    const state = yield* Effect.promise(() =>
-      t.query((ctx) =>
-        Effect.runPromiseWith(runtimeServices)(
-          readPurchaseCompletionState(
-            ctx,
-            userId,
-            subscription.customerId,
-            subscription.id
-          )
-        )
-      )
-    );
-    expect(disposition).toBe("stored");
-    expect(state.customer).toMatchObject({
-      id: subscription.customerId,
-      userId,
+      ...overrides,
+    },
+    timestamp: "2026-10-02T00:00:00.000Z",
+    type,
+  });
+}
+
+/** Seeds a user with a Polar account linked to the webhook customer. */
+async function seed(ctx: MutationCtx, customer = CUSTOMER) {
+  const userId = await ctx.db.insert("users", {
+    authId: "auth-polar-webhook",
+    credits: 0,
+    creditsResetAt: 0,
+    email: "polar-webhook@example.com",
+    mascot: MASCOT_CODE,
+    name: "Polar Webhook",
+    plan: "free",
+  });
+  return insertPolarAccount(ctx, userId, customer);
+}
+
+describe("billing/polar/webhook", () => {
+  it("applies a created subscription to its account and writes the grant of its paid period", async () => {
+    const t = createBillingTestConvex();
+    await t.mutation(async (ctx) => {
+      await seed(ctx);
     });
-    expect(state.subscription).toMatchObject({
-      customerId: subscription.customerId,
-      id: subscription.id,
-      productId: products.pro.id,
-      status: "active",
-    });
-    expect(state.user).toMatchObject({
-      credits: 1000,
-      plan: "pro",
-    });
-    expect(state.creditTransactions).toEqual([
-      expect.objectContaining({
-        amount: 1000,
-        balanceAfter: 1000,
-        metadata: {
-          "new-plan": "pro",
-          "previous-plan": "free",
-          reason: "plan-upgrade",
-          "subscription-id": subscription.id,
-        },
-        type: "purchase",
-        userId,
-      }),
-    ]);
-  })
-);
-it.effect(
-  "resolves the current Polar customer before storing a subscription",
-  () =>
-    Effect.gen(function* () {
-      const runtimeServices = yield* Effect.context<never>();
-      const t = createWebhookTestConvex();
-      const userId = yield* seedWebhookUser(t, "active");
-      const subscription = buildSubscription("polar-active", "active");
-      polarGateway.getCustomerById.mockReturnValue(
-        Effect.succeed(
-          buildWebhookCustomer("active", {
-            metadata: {
-              userId,
-            },
-          })
-        )
-      );
-      const disposition = yield* Effect.promise(() =>
-        t.action((ctx) =>
-          Effect.runPromiseWith(runtimeServices)(
-            upsertPolarSubscriptionWebhook(subscription, "update").pipe(
-              Effect.provide(actionLayer(confectSchema, ctx))
-            )
-          )
-        )
-      );
-      const state = yield* Effect.promise(() =>
-        t.query((ctx) =>
-          Effect.runPromiseWith(runtimeServices)(readWebhookState(ctx))
-        )
-      );
-      expect(polarGateway.getCustomerById).toHaveBeenCalledWith("polar-active");
-      expect(disposition).toBe("stored");
-      expect(state.customers).toMatchObject([
-        {
-          id: "polar-active",
-          userId,
-        },
-      ]);
-      expect(state.subscriptions).toMatchObject([
-        {
-          customerId: "polar-active",
-          id: "subscription-active",
-        },
-      ]);
-    })
-);
-it.effect(
-  "keeps subscription delivery retryable during cancelable preparation",
-  () =>
-    Effect.gen(function* () {
-      const runtimeServices = yield* Effect.context<never>();
-      const t = createWebhookTestConvex();
-      const userId = yield* seedWebhookUser(t, "pending", NOW);
-      const subscription = buildSubscription("polar-pending", "pending");
-      polarGateway.getCustomerById.mockReturnValue(
-        Effect.succeed(
-          buildWebhookCustomer("pending", {
-            metadata: {
-              userId,
-            },
-          })
-        )
-      );
-      const disposition = yield* Effect.promise(() =>
-        t.action((ctx) =>
-          Effect.runPromiseWith(runtimeServices)(
-            upsertPolarSubscriptionWebhook(subscription, "create").pipe(
-              Effect.provide(actionLayer(confectSchema, ctx))
-            )
-          )
-        )
-      );
-      const state = yield* Effect.promise(() =>
-        t.query((ctx) =>
-          Effect.runPromiseWith(runtimeServices)(readWebhookState(ctx))
-        )
-      );
-      expect(disposition).toBe("missing");
-      expect(state).toEqual({
-        customers: [],
-        subscriptions: [],
-      });
-    })
-);
-it.effect(
-  "discards subscription delivery for a durable customer tombstone",
-  () =>
-    Effect.gen(function* () {
-      const runtimeServices = yield* Effect.context<never>();
-      const t = createWebhookTestConvex();
-      const subscription = buildSubscription("polar-deleted", "deleted");
-      yield* Effect.promise(() =>
-        t.mutation((ctx) =>
-          Effect.runPromiseWith(runtimeServices)(
-            insertCustomerTombstone(ctx, subscription.customerId)
-          )
-        )
-      );
-      polarGateway.getCustomerById.mockReturnValue(
-        Effect.succeed(
-          buildWebhookCustomer("deleted", {
-            id: subscription.customerId,
-            metadata: {},
-          })
-        )
-      );
-      const disposition = yield* Effect.promise(() =>
-        t.action((ctx) =>
-          Effect.runPromiseWith(runtimeServices)(
-            upsertPolarSubscriptionWebhook(subscription, "create").pipe(
-              Effect.provide(actionLayer(confectSchema, ctx))
-            )
-          )
-        )
-      );
-      const state = yield* Effect.promise(() =>
-        t.query((ctx) =>
-          Effect.runPromiseWith(runtimeServices)(readWebhookState(ctx))
-        )
-      );
-      expect(disposition).toBe("discarded");
-      expect(state).toEqual({
-        customers: [],
-        subscriptions: [],
-      });
-    })
-);
-it.effect(
-  "discards subscription delivery after Polar removes its customer",
-  () =>
-    Effect.gen(function* () {
-      const runtimeServices = yield* Effect.context<never>();
-      const t = createWebhookTestConvex();
-      const subscription = buildSubscription("polar-missing", "missing");
-      polarGateway.getCustomerById.mockReturnValue(Effect.succeed(null));
-      const disposition = yield* Effect.promise(() =>
-        t.action((ctx) =>
-          Effect.runPromiseWith(runtimeServices)(
-            upsertPolarSubscriptionWebhook(subscription, "create").pipe(
-              Effect.provide(actionLayer(confectSchema, ctx))
-            )
-          )
-        )
-      );
-      const subscriptions = yield* Effect.promise(() =>
-        t.query((ctx) => ctx.db.query("subscriptions").collect())
-      );
-      expect(disposition).toBe("discarded");
-      expect(subscriptions).toEqual([]);
-    })
-);
-it.effect(
-  "keeps an unknown customer retryable but accepts a tombstoned discard",
-  () =>
-    Effect.gen(function* () {
-      const runtimeServices = yield* Effect.context<never>();
-      const t = createWebhookTestConvex();
-      const missing = buildWebhookCustomer("unknown");
-      const missingDisposition = yield* Effect.promise(() =>
-        t.action((ctx) =>
-          Effect.runPromiseWith(runtimeServices)(
-            upsertPolarCustomerWebhook(missing).pipe(
-              Effect.provide(actionLayer(confectSchema, ctx))
-            )
-          )
-        )
-      );
-      yield* Effect.promise(() =>
-        t.mutation((ctx) =>
-          Effect.runPromiseWith(runtimeServices)(
-            insertCustomerTombstone(ctx, missing.id)
-          )
-        )
-      );
-      const discardedDisposition = yield* Effect.promise(() =>
-        t.action((ctx) =>
-          Effect.runPromiseWith(runtimeServices)(
-            upsertPolarCustomerWebhook(missing).pipe(
-              Effect.provide(actionLayer(confectSchema, ctx))
-            )
-          )
-        )
-      );
-      expect(missingDisposition).toBe("missing");
-      expect(discardedDisposition).toBe("discarded");
-    })
-);
-it.effect("keeps a subscription retryable until its app user exists", () =>
-  Effect.gen(function* () {
-    const runtimeServices = yield* Effect.context<never>();
-    const t = createWebhookTestConvex();
-    const subscription = buildSubscription("polar-unknown", "unknown");
-    polarGateway.getCustomerById.mockReturnValue(
-      Effect.succeed(buildWebhookCustomer("unknown"))
-    );
-    const disposition = yield* Effect.promise(() =>
-      t.action((ctx) =>
-        Effect.runPromiseWith(runtimeServices)(
-          upsertPolarSubscriptionWebhook(subscription, "create").pipe(
-            Effect.provide(actionLayer(confectSchema, ctx))
-          )
-        )
+    const outcome = await t.mutation((ctx) =>
+      runInMutation(
+        ctx,
+        processPolarEvent(subscriptionEvent("subscription.created"))
       )
     );
-    const subscriptions = yield* Effect.promise(() =>
-      t.query((ctx) => ctx.db.query("subscriptions").collect())
-    );
-    expect(disposition).toBe("missing");
-    expect(subscriptions).toEqual([]);
-  })
-);
-it.effect(
-  "fails closed when Polar metadata and external identity disagree",
-  () =>
-    Effect.gen(function* () {
-      const runtimeServices = yield* Effect.context<never>();
-      const t = createWebhookTestConvex();
-      const metadataUserId = yield* seedWebhookUser(t, "metadata-owner");
-      yield* seedWebhookUser(t, "external-owner");
-      const disposition = yield* Effect.promise(() =>
-        t.action((ctx) =>
-          Effect.runPromiseWith(runtimeServices)(
-            upsertPolarCustomerWebhook({
-              email: "conflict@example.com",
-              externalId: "auth-external-owner",
-              id: "polar-conflict",
-              metadata: {
-                userId: metadataUserId,
-              },
-              name: "Conflicting User",
-            }).pipe(Effect.provide(actionLayer(confectSchema, ctx)))
-          )
-        )
-      );
-      const customers = yield* Effect.promise(() =>
-        t.query((ctx) => ctx.db.query("customers").collect())
-      );
-      expect(disposition).toBe("missing");
-      expect(customers).toEqual([]);
-    })
-);
-it.effect.each([
-  "customer.created",
-  "customer.updated",
-  "customer.deleted",
-] as const)("dispatches verified %s with lifecycle fencing", (type) =>
-  Effect.gen(function* () {
-    const runtimeServices = yield* Effect.context<never>();
-    const t = createWebhookTestConvex();
-    const userId = yield* seedWebhookUser(t, "dispatch");
-    const data = {
-      ...polarCustomer,
-      email: "dispatch@example.com",
-      external_id: null,
-      metadata: {
-        userId,
-      },
-    };
-    expect(
-      yield* Effect.promise(() =>
-        t.action((ctx) =>
-          Effect.runPromiseWith(runtimeServices)(
-            processPolarWebhookEvent(buildWebhookEvent(type, data)).pipe(
-              Effect.provide(actionLayer(confectSchema, ctx))
-            )
-          )
-        )
-      )
-    ).toBe(true);
-    const state = yield* Effect.promise(() =>
-      t.query((ctx) =>
-        Effect.runPromiseWith(runtimeServices)(readWebhookState(ctx))
-      )
-    );
-    expect(state.customers).toHaveLength(type === "customer.deleted" ? 0 : 1);
-  })
-);
-it.effect.each([
-  "subscription.created",
-  "subscription.updated",
-  "subscription.active",
-  "subscription.canceled",
-  "subscription.past_due",
-  "subscription.uncanceled",
-  "subscription.revoked",
-] as const)("dispatches verified %s through current Polar identity", (type) =>
-  Effect.gen(function* () {
-    const runtimeServices = yield* Effect.context<never>();
-    const t = createWebhookTestConvex();
-    const userId = yield* seedWebhookUser(t, "dispatch");
-    polarGateway.getCustomerById.mockReturnValue(
-      Effect.succeed(
-        buildWebhookCustomer("dispatch", {
-          id: polarSubscription.customer_id,
-          metadata: {
-            userId,
-          },
-        })
-      )
-    );
-    expect(
-      yield* Effect.promise(() =>
-        t.action((ctx) =>
-          Effect.runPromiseWith(runtimeServices)(
-            processPolarWebhookEvent(
-              buildWebhookEvent(type, polarSubscription)
-            ).pipe(Effect.provide(actionLayer(confectSchema, ctx)))
-          )
-        )
-      )
-    ).toBe(true);
-    const state = yield* Effect.promise(() =>
-      t.query((ctx) =>
-        Effect.runPromiseWith(runtimeServices)(readWebhookState(ctx))
-      )
-    );
-    expect(state.subscriptions).toMatchObject([
+    expect(outcome).toBe("applied");
+    const stored = await t.run(async (ctx) => ({
+      grants: await ctx.db.query("billingGrants").collect(),
+      subscriptions: await ctx.db.query("billingSubscriptions").collect(),
+    }));
+    expect(stored.subscriptions).toMatchObject([
       {
-        id: polarSubscription.id,
-        currentPeriodEnd: polarSubscription.current_period_end,
+        offer: "pro.monthly",
+        provider: { kind: "polar", subscriptionId: "sub_webhook_1" },
+        status: "active",
       },
     ]);
-  })
-);
-it("acknowledges unrelated verified product events without billing writes", async () => {
-  const t = createWebhookTestConvex();
-  expect(
-    await t.action((ctx) =>
-      Effect.runPromise(
-        processPolarWebhookEvent(
-          buildWebhookEvent("product.updated", polarProduct)
-        ).pipe(Effect.provide(actionLayer(confectSchema, ctx)))
+    expect(stored.grants).toMatchObject([
+      {
+        product: "pro",
+        validTo: Date.parse("2026-11-01T00:00:00.000Z"),
+      },
+    ]);
+  });
+
+  it("applies a redelivered state once: the subscription and its grant are updated, never duplicated", async () => {
+    const t = createBillingTestConvex();
+    await t.mutation((ctx) => seed(ctx));
+    const body = subscriptionEvent("subscription.updated");
+    expect(
+      await t.mutation((ctx) => runInMutation(ctx, processPolarEvent(body)))
+    ).toBe("applied");
+    expect(
+      await t.mutation((ctx) => runInMutation(ctx, processPolarEvent(body)))
+    ).toBe("applied");
+    const stored = await t.run(async (ctx) => ({
+      grants: await ctx.db.query("billingGrants").collect(),
+      subscriptions: await ctx.db.query("billingSubscriptions").collect(),
+    }));
+    expect(stored.subscriptions).toHaveLength(1);
+    expect(stored.grants).toHaveLength(1);
+  });
+
+  it("refuses a state older than the stored one, so a late delivery never moves a subscription back", async () => {
+    const t = createBillingTestConvex();
+    await t.mutation((ctx) => seed(ctx));
+    await t.mutation((ctx) =>
+      runInMutation(
+        ctx,
+        processPolarEvent(
+          subscriptionEvent("subscription.updated", {
+            modified_at: "2026-10-05T00:00:00.000Z",
+          })
+        )
       )
-    )
-  ).toBe(true);
-  expect(
-    await t.query((ctx) => Effect.runPromise(readWebhookState(ctx)))
-  ).toEqual({
-    customers: [],
-    subscriptions: [],
+    );
+    const late = await t.mutation((ctx) =>
+      runInMutation(
+        ctx,
+        processPolarEvent(
+          subscriptionEvent("subscription.canceled", {
+            modified_at: "2026-10-03T00:00:00.000Z",
+            status: "canceled",
+          })
+        )
+      )
+    );
+    expect(late).toBe("stale");
+    const stored = await t.run((ctx) =>
+      ctx.db.query("billingSubscriptions").first()
+    );
+    expect(stored).toMatchObject({ status: "active" });
+  });
+
+  it("writes no grant for a subscription that is still pending payment", async () => {
+    const t = createBillingTestConvex();
+    await t.mutation((ctx) => seed(ctx));
+    const outcome = await t.mutation((ctx) =>
+      runInMutation(
+        ctx,
+        processPolarEvent(
+          subscriptionEvent("subscription.created", {
+            status: "incomplete",
+          })
+        )
+      )
+    );
+    expect(outcome).toBe("applied");
+    expect(
+      await t.run((ctx) => ctx.db.query("billingGrants").collect())
+    ).toEqual([]);
+  });
+
+  it("names a customer Nakafa holds no account for, and changes nothing", async () => {
+    const t = createBillingTestConvex();
+    await t.mutation((ctx) => seed(ctx));
+    const outcome = await t.mutation((ctx) =>
+      runInMutation(
+        ctx,
+        processPolarEvent(
+          subscriptionEvent("subscription.created", {
+            customer_id: "cust_someone_else",
+          })
+        )
+      )
+    );
+    expect(outcome).toBe("unknownCustomer");
+    expect(
+      await t.run((ctx) => ctx.db.query("billingSubscriptions").collect())
+    ).toEqual([]);
+  });
+
+  it("reports a subscription Nakafa does not sell as unsupported", async () => {
+    const t = createBillingTestConvex();
+    await t.mutation((ctx) => seed(ctx));
+    const outcome = await t.mutation((ctx) =>
+      runInMutation(
+        ctx,
+        processPolarEvent(
+          subscriptionEvent("subscription.created", {
+            product_id: "another-product",
+          })
+        )
+      )
+    );
+    expect(outcome).toBe("unsupported");
+  });
+
+  it("reports a body that does not decode, or a subscription that does not match its contract, as invalid", async () => {
+    const t = createBillingTestConvex();
+    await t.mutation((ctx) => seed(ctx));
+    const notJson = await t.mutation((ctx) =>
+      runInMutation(ctx, processPolarEvent("not json"))
+    );
+    const badData = await t.mutation((ctx) =>
+      runInMutation(
+        ctx,
+        processPolarEvent(
+          encodeJsonText({ data: {}, type: "subscription.created" })
+        )
+      )
+    );
+    expect([notJson, badData]).toEqual(["invalid", "invalid"]);
+  });
+
+  it("ignores an event that changes no subscription", async () => {
+    const t = createBillingTestConvex();
+    const outcome = await t.mutation((ctx) =>
+      runInMutation(
+        ctx,
+        processPolarEvent(
+          encodeJsonText({ data: {}, type: "customer.created" })
+        )
+      )
+    );
+    expect(outcome).toBe("ignored");
   });
 });
-it.effect.each(["prepared", "deleted", "unavailable"] as const)(
-  "honors customer lookup and write outcomes: %s",
-  (kind) =>
-    Effect.gen(function* () {
-      const runtimeServices = yield* Effect.context<never>();
-      const t = createWebhookTestConvex();
-      const userId = yield* seedWebhookUser(t, "race");
-      const result = yield* Effect.promise(() =>
-        t.action((ctx) => {
-          if (kind === "unavailable") {
-            vi.spyOn(ctx, "runQuery").mockRejectedValueOnce(
-              new Error("database unavailable")
-            );
-          } else {
-            vi.spyOn(ctx, "runMutation").mockResolvedValueOnce({
-              kind,
-            });
-          }
-          const program = upsertPolarCustomerWebhook(
-            buildWebhookCustomer("race", { id: "race", metadata: { userId } })
-          );
-          return Effect.runPromiseWith(runtimeServices)(
-            program.pipe(
-              Effect.match({
-                onFailure: (error) => ({
-                  code: error.code,
-                  message: error.message,
-                }),
-                onSuccess: (disposition) => disposition,
-              }),
-              Effect.provide(actionLayer(confectSchema, ctx))
-            )
-          );
-        })
-      );
-      expect(result).toEqual(
-        {
-          unavailable: {
-            code: "POLAR_WEBHOOK_IO_FAILED",
-            message: "database unavailable",
-          },
-          prepared: "missing",
-          deleted: "discarded",
-        }[kind]
-      );
-    })
-);

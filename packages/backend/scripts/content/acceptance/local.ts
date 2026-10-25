@@ -84,7 +84,6 @@ const localEnvironment = {
   LOGIN_CARD_SECRET: "acceptance-local-login-card-secret",
   [NAKAFA_API_EDGE_CONTRACT.secretEnvironment]: "build-api-edge-secret",
   [NAKAFA_MCP_EDGE_CONTRACT.secretEnvironment]: "build-mcp-edge-secret",
-  VITE_POLAR_SERVER: "sandbox",
   OPENWEATHER_API_KEY: "build-disabled",
   POLAR_ACCESS_TOKEN: "build-disabled",
   POLAR_WEBHOOK_SECRET: "build-disabled",

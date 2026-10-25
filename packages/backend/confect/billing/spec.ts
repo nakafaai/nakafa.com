@@ -1,3 +1,8 @@
+import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
+import { productAnalyticsEventValidator } from "@repo/backend/confect/analytics/events";
+import { accountUnavailableCode } from "@repo/backend/confect/auth/spec";
+import { checkoutLocaleValidator } from "@repo/backend/confect/billing/locale";
+import { publicFailure } from "@repo/backend/confect/failure";
 import { Schema } from "effect";
 
 /** The billing state could not be read or changed safely. */
@@ -52,3 +57,93 @@ export class ContractWindowInvalid extends Schema.TaggedError<ContractWindowInva
     message: Schema.String,
   }
 ) {}
+
+/** Raised when Convex IO fails while recomputing one user's plan from its billing grants. */
+export const planSyncIoFailedCode = "PLAN_SYNC_IO_FAILED";
+export class PlanSyncIoError extends Schema.TaggedError<PlanSyncIoError>()(
+  "PlanSyncIoError",
+  {
+    code: Schema.Literal(planSyncIoFailedCode),
+    message: Schema.String,
+  }
+) {}
+
+export const invalidCheckoutSuccessUrlCode = "INVALID_CHECKOUT_SUCCESS_URL";
+const checkoutSessionIoErrorCode = "CHECKOUT_SESSION_IO_FAILED";
+
+/** The learner's checkout request: the locale the page runs in, and where Polar returns the learner. */
+export const checkoutRequestInputValidator = Schema.Struct({
+  locale: checkoutLocaleValidator,
+  successUrl: Schema.String,
+});
+export type CheckoutRequestInput = typeof checkoutRequestInputValidator.Type;
+
+/** The arguments of the admission that revalidates a checkout once Polar has answered. */
+export const checkoutAdmissionArgsValidator = Schema.Struct({
+  event: productAnalyticsEventValidator,
+  timestamp: Schema.optionalKey(Schema.Finite),
+  userId: IdSchema("users"),
+});
+
+/** Whether a checkout still belongs to an account that may buy. */
+export const checkoutAdmissionValidator = Schema.Union([
+  Schema.Struct({ kind: Schema.Literal("admitted") }),
+  Schema.Struct({ kind: Schema.Literal("unavailable") }),
+]).pipe(Schema.toTaggedUnion("kind"));
+export type CheckoutAdmission = typeof checkoutAdmissionValidator.Type;
+
+/** Raised when account revalidation withholds a newly created checkout. */
+export class CheckoutUnavailable extends Schema.TaggedError<CheckoutUnavailable>()(
+  "CheckoutUnavailable",
+  {
+    code: Schema.Literal(accountUnavailableCode),
+    message: Schema.String,
+  }
+) {
+  declare readonly code: typeof accountUnavailableCode;
+  declare readonly message: string;
+}
+
+/** The success URL is not an absolute URL on the primary site. */
+export class InvalidCheckoutSuccessUrl extends Schema.TaggedError<InvalidCheckoutSuccessUrl>()(
+  "InvalidCheckoutSuccessUrl",
+  {
+    code: Schema.Literal(invalidCheckoutSuccessUrlCode),
+    message: Schema.String,
+  }
+) {
+  declare readonly code: typeof invalidCheckoutSuccessUrlCode;
+  declare readonly message: string;
+}
+
+/** A Convex boundary failure while a checkout session is prepared. */
+export class CheckoutSessionIoError extends Schema.TaggedError<CheckoutSessionIoError>()(
+  "CheckoutSessionIoError",
+  {
+    code: Schema.Literal(checkoutSessionIoErrorCode),
+    cause: Schema.optional(Schema.Unknown),
+    message: Schema.String,
+  }
+) {
+  declare readonly code: typeof checkoutSessionIoErrorCode;
+  declare readonly message: string;
+}
+export const CheckoutSessionIoErrorWire = publicFailure(CheckoutSessionIoError);
+
+/** Normalizes one Convex checkout boundary failure. */
+export function checkoutSessionIoError(error: unknown) {
+  return new CheckoutSessionIoError({
+    code: checkoutSessionIoErrorCode,
+    cause: error,
+    message: "Failed to finish checkout session.",
+  });
+}
+
+/** The billing state failure as a public Convex failure. */
+export const BillingStateErrorWire = publicFailure(BillingStateError);
+
+/** The URL of one hosted billing page: a Polar checkout or the customer portal. */
+const billingUrlValidator = Schema.Struct({
+  url: Schema.String,
+});
+export type BillingUrl = typeof billingUrlValidator.Type;

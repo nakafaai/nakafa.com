@@ -9,7 +9,6 @@ const runTrigger = RegisteredFunction.runHandlerPromise(undefined, {
 import { chatsHandler } from "@repo/backend/confect/triggers/chats/chats";
 import { commentsHandler } from "@repo/backend/confect/triggers/comments/comments";
 import { learningViewsHandler } from "@repo/backend/confect/triggers/contents/views";
-import { subscriptionsHandler } from "@repo/backend/confect/triggers/subscriptions/subscriptions";
 import { tryoutScoresHandler } from "@repo/backend/confect/triggers/tryouts/scores";
 import type { DataModel } from "@repo/backend/convex/_generated/dataModel";
 import {
@@ -30,12 +29,6 @@ export const internalMutation = customMutation(
 
 // Active triggers with custom logic. The trigger SDK owns this Promise
 // boundary and the wrapped transaction.
-triggers.register("subscriptions", (ctx, change) =>
-  subscriptionsHandler(change).pipe(
-    Effect.provide(RegisteredConvexFunction.mutationLayer(databaseSchema, ctx)),
-    runTrigger
-  )
-);
 triggers.register("learningViews", (ctx, change) =>
   learningViewsHandler(change).pipe(
     Effect.provide(RegisteredConvexFunction.mutationLayer(databaseSchema, ctx)),

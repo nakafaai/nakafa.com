@@ -1,10 +1,13 @@
 import { describe, expect, it } from "@effect/vitest";
-import { products } from "@repo/backend/confect/billing/polar/products";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
 import { api } from "@repo/backend/convex/_generated/api";
+import {
+  insertPolarAccount,
+  insertProSubscription,
+} from "@repo/backend/test/billing";
 import {
   activateTryoutStartSource,
   TRYOUT_START_COUNTRY,
@@ -15,7 +18,6 @@ import {
   TRYOUT_START_TRACK,
 } from "@repo/backend/test/tryout/source";
 import type { FunctionArgs } from "convex/server";
-import { DateTime } from "effect";
 
 describe("tryouts/start/impl", () => {
   it("records the active subscription without shortening an already admitted attempt", async () => {
@@ -28,34 +30,12 @@ describe("tryouts/start/impl", () => {
         suffix: "paid-attempt",
       });
       await activateTryoutStartSource(ctx, "internal-entry", "raw");
-      await ctx.db.insert("customers", {
-        externalId: null,
-        id: "polar-paid-attempt",
-        metadata: {},
-        userId: user.userId,
+      const accountId = await insertPolarAccount(ctx, user.userId);
+      const subscriptionId = await insertProSubscription(ctx, accountId, {
+        currentPeriodEnd: periodEnd,
+        subscriptionId: "paid-attempt-subscription",
       });
-      const timestamp = DateTime.formatIso(
-        DateTime.makeUnsafe(TRYOUT_START_NOW)
-      );
-      await ctx.db.insert("subscriptions", {
-        amount: null,
-        cancelAtPeriodEnd: true,
-        checkoutId: null,
-        createdAt: timestamp,
-        currency: null,
-        currentPeriodEnd: DateTime.formatIso(DateTime.makeUnsafe(periodEnd)),
-        currentPeriodStart: timestamp,
-        customerId: "polar-paid-attempt",
-        endedAt: null,
-        id: "paid-attempt-subscription",
-        metadata: {},
-        modifiedAt: null,
-        productId: products.pro.id,
-        recurringInterval: null,
-        startedAt: timestamp,
-        status: "active",
-      });
-      return user;
+      return { ...user, subscriptionId };
     });
     const authed = t.withIdentity({
       sessionId: identity.sessionId,
@@ -77,7 +57,7 @@ describe("tryouts/start/impl", () => {
     ).toMatchObject({
       accessEndsAt: periodEnd,
       accessSourceKind: "subscription",
-      accessSubscriptionId: "paid-attempt-subscription",
+      accessSubscriptionId: identity.subscriptionId,
       expiresAt: TRYOUT_START_NOW + 3 * 86_400_000,
       status: "in-progress",
     });

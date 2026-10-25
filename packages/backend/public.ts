@@ -23,12 +23,3 @@ export const convexSiteKeys = () =>
     { VITE_CONVEX_SITE_URL: urlSchema },
     { VITE_CONVEX_SITE_URL: import.meta.env.VITE_CONVEX_SITE_URL }
   );
-/**
- * Defines the Polar server selection that browser code reads. A missing or
- * unknown value means sandbox, as the server reader `polarKeys` decides.
- */
-export const polarPublicKeys = () =>
-  readEnvironment(
-    { VITE_POLAR_SERVER: Schema.UndefinedOr(Schema.String) },
-    { VITE_POLAR_SERVER: import.meta.env.VITE_POLAR_SERVER }
-  );

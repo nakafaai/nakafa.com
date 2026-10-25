@@ -30,7 +30,7 @@ const admitOnboarding = Ref.getFunctionReference(
   refs.public.onboarding.mutations.admit
 );
 const customerPortal = Ref.getFunctionReference(
-  refs.public.customers.actions.sessions.generateCustomerPortalUrl
+  refs.public.billing.sessions.generateCustomerPortalUrl
 );
 
 beforeEach(() => vi.setSystemTime(NOW));

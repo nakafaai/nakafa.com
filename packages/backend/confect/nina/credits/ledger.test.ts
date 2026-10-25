@@ -9,7 +9,7 @@ import {
 } from "@effect/vitest";
 import schema from "@repo/backend/confect/_generated/schema";
 import usersTable from "@repo/backend/confect/_generated/tables/users";
-import { products } from "@repo/backend/confect/billing/polar/products";
+import { projectUserPlan } from "@repo/backend/confect/billing/grants";
 import {
   refundCredits,
   reserveCredits,
@@ -18,8 +18,7 @@ import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
 } from "@repo/backend/confect/test.helpers";
-import { internal } from "@repo/backend/convex/_generated/api";
-import { Array as Arr, DateTime, Effect, Option, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 
 const NOW = Date.UTC(2026, 8, 1);
 /** Reads a raw account the way Confect reads it, so its animal is decoded. */
@@ -247,43 +246,45 @@ describe("Nina credit transactions", () => {
     "does not refund into a replacement plan grant (resubscribe %s)",
     async (resubscribe) => {
       const { t, identity, reserve } = await fixture();
-      await t.mutation((ctx) =>
-        ctx.db.insert("customers", {
-          id: "grant-customer",
-          userId: identity.userId,
-          externalId: null,
-          metadata: {},
-        })
-      );
-      const subscription = {
-        id: "grant-subscription",
-        customerId: "grant-customer",
-        createdAt: DateTime.formatIso(DateTime.makeUnsafe(NOW)),
-        modifiedAt: null,
-        amount: null,
-        currency: null,
-        recurringInterval: null,
-        status: "active",
-        currentPeriodStart: DateTime.formatIso(DateTime.makeUnsafe(NOW)),
-        currentPeriodEnd: null,
-        cancelAtPeriodEnd: false,
-        startedAt: DateTime.formatIso(DateTime.makeUnsafe(NOW)),
-        endedAt: null,
-        productId: products.pro.id,
-        checkoutId: null,
-        metadata: {},
+      const grant = {
+        product: "pro" as const,
+        userId: identity.userId,
+        source: { kind: "contract" as const, contractId: "grant-contract" },
+        validFrom: NOW,
+        validTo: NOW + 30 * 86_400_000,
       };
-      await t.mutation(internal.subscriptions.mutations.createSubscription, {
-        subscription,
-      });
+      const project = () =>
+        t.mutation((ctx) =>
+          Effect.runPromise(
+            projectUserPlan(identity.userId, NOW).pipe(
+              Effect.provide(
+                RegisteredConvexFunction.mutationLayer(schema, ctx)
+              )
+            )
+          )
+        );
+      await t.mutation((ctx) => ctx.db.insert("billingGrants", grant));
+      await project();
       const hold = await reserve();
-      await t.mutation(internal.subscriptions.mutations.updateSubscription, {
-        subscription: { ...subscription, status: "canceled" },
+      await t.mutation(async (ctx) => {
+        const found = await ctx.db
+          .query("billingGrants")
+          .withIndex("by_userId_and_validTo", (query) =>
+            query.eq("userId", identity.userId)
+          )
+          .unique();
+        assert(found);
+        await ctx.db.delete(found._id);
       });
+      await project();
       if (resubscribe) {
-        await t.mutation(internal.subscriptions.mutations.updateSubscription, {
-          subscription,
-        });
+        await t.mutation((ctx) =>
+          ctx.db.insert("billingGrants", {
+            ...grant,
+            source: { kind: "contract", contractId: "grant-contract-renewed" },
+          })
+        );
+        await project();
       }
       await t.mutation((ctx) =>
         Effect.runPromise(

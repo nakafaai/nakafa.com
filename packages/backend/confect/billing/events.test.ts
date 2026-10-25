@@ -89,7 +89,7 @@ describe("billing/events", () => {
     expect(processedAt).toBe(NOW + 1);
   });
 
-  it("marks a Polar row processed without reading its body", async () => {
+  it("marks a Polar row processed even when its body names no event", async () => {
     const t = createBillingTestConvex();
     const processedAt = await t.run(async (ctx) => {
       const { eventId } = await runInMutation(

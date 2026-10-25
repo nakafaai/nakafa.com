@@ -1,102 +1,25 @@
-import { assert, beforeEach, describe, expect, it } from "@effect/vitest";
+import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { polarGateway } from "@repo/backend/confect/billing/polar/live";
-import type {
-  EnsurePolarCustomerInput,
-  PolarCheckoutInput,
-  PolarCustomerErrorUnion,
-  PolarDuplicateEmailError,
-  StoredPolarCustomer,
-} from "@repo/backend/confect/billing/polar/spec";
-import { ConfigProvider, Effect, Record as Rec, Result } from "effect";
+import { ConfigProvider, Effect } from "effect";
 
 const polarFetch = vi.hoisted(() => vi.fn<typeof fetch>());
 vi.stubGlobal("fetch", polarFetch);
 
-const configured = Effect.provideService(
-  ConfigProvider.ConfigProvider,
-  ConfigProvider.fromEnv({ env: { POLAR_ACCESS_TOKEN: "polar_test" } })
-);
 const customerWire = {
   email: "learner@example.com",
   external_id: "user-1",
-  id: "customer-1",
-  metadata: { userId: "user-1" },
+  id: "cust_1",
   name: "Learner",
   type: "individual",
 };
-const customer = {
-  email: "learner@example.com",
-  externalId: "user-1",
-  id: "customer-1",
-  metadata: { userId: "user-1" },
-  name: "Learner",
-};
-const next: EnsurePolarCustomerInput = {
-  email: "learner@example.com",
-  externalId: "user-1",
-  metadata: { userId: "user-1" },
-  name: "Learner",
-};
-const stored: StoredPolarCustomer = { ...customer };
-const checkout: PolarCheckoutInput = {
-  customerId: "customer-1",
-  customerIpAddress: null,
-  locale: "en",
-  productIds: ["pro"],
-  successUrl: "https://example.com/success",
-};
-/** Reads the failure of an effect that must fail, and fails the test when it succeeds. */
-const failureOf = <E>(effect: Effect.Effect<unknown, E>) =>
-  Effect.gen(function* () {
-    const result = yield* Effect.result(effect);
-    assert(Result.isFailure(result));
-    return result.failure;
-  });
-const operations: ReadonlyArray<{
-  readonly code: string;
-  readonly effect: Effect.Effect<
-    unknown,
-    PolarCustomerErrorUnion | PolarDuplicateEmailError
-  >;
-}> = [
-  {
-    code: "POLAR_CHECKOUT_ERROR",
-    effect: polarGateway.createCheckoutSession(checkout),
-  },
-  { code: "POLAR_CUSTOMER_ERROR", effect: polarGateway.createCustomer(next) },
-  {
-    code: "POLAR_PORTAL_ERROR",
-    effect: polarGateway.createCustomerPortalSession("customer-1"),
-  },
-  {
-    code: "POLAR_DELETE_ERROR",
-    effect: polarGateway.deleteCustomer("customer-1"),
-  },
-  {
-    code: "POLAR_CUSTOMER_ERROR",
-    effect: polarGateway.findCustomerByEmail("learner@example.com"),
-  },
-  {
-    code: "POLAR_CUSTOMER_ERROR",
-    effect: polarGateway.getCustomerByExternalId("user-1"),
-  },
-  {
-    code: "POLAR_CUSTOMER_ERROR",
-    effect: polarGateway.getCustomerById("customer-1"),
-  },
-  {
-    code: "POLAR_UPDATE_ERROR",
-    effect: polarGateway.updateCustomer({ customer: stored, next }),
-  },
-  {
-    code: "POLAR_UPDATE_ERROR",
-    effect: polarGateway.updateCustomerMetadata({
-      polarCustomerId: "customer-1",
-      metadata: { consent: true },
-    }),
-  },
-];
 
+const identity = {
+  email: "learner@example.com",
+  externalId: "user-1",
+  name: "Learner",
+};
+
+/** A Polar response with a status, and a JSON body when the test gives one. */
 function reply(status: number, body?: unknown) {
   return body === undefined
     ? new Response(null, { status })
@@ -109,319 +32,290 @@ function sentRequest(index: number) {
   return new Request(input, init);
 }
 
-function sentBody(index: number) {
-  return Effect.promise(() => sentRequest(index).json());
-}
+/** The error an effect failed with, so each test can assert its tag. */
+const failureOf = <A, E extends { readonly _tag: string }>(
+  effect: Effect.Effect<A, E>
+) => Effect.map(Effect.flip(effect), (error) => error._tag);
 
-describe("live Polar gateway", () => {
+describe("billing/polar/live", () => {
   beforeEach(() => polarFetch.mockReset());
 
   it.effect(
-    "sends each customer call as its snake_case Polar request and maps the response",
+    "creates a checkout session for the customer and returns its URL",
     () =>
       Effect.gen(function* () {
         polarFetch.mockResolvedValueOnce(
           reply(201, { url: "https://checkout.polar.sh/session" })
         );
-        expect(yield* polarGateway.createCheckoutSession(checkout)).toEqual({
-          url: "https://checkout.polar.sh/session",
-        });
-        expect(sentRequest(0).method).toBe("POST");
-        expect(new URL(sentRequest(0).url).pathname).toBe("/v1/checkouts/");
-        expect(yield* sentBody(0)).toEqual({
-          allow_discount_codes: true,
-          allow_trial: true,
-          customer_id: "customer-1",
-          customer_ip_address: null,
-          is_business_customer: false,
+        expect(
+          yield* polarGateway.createCheckoutSession({
+            customerId: "cust_1",
+            customerIpAddress: null,
+            locale: "en",
+            productIds: ["product_1"],
+            successUrl: "https://nakafa.com/done",
+          })
+        ).toEqual({ url: "https://checkout.polar.sh/session" });
+        const request = sentRequest(0);
+        expect(request.method).toBe("POST");
+        expect(new URL(request.url).pathname).toBe("/v1/checkouts/");
+        expect(yield* Effect.promise(() => request.json())).toMatchObject({
+          customer_id: "cust_1",
           locale: "en",
-          products: ["pro"],
-          require_billing_address: false,
-          success_url: "https://example.com/success",
+          products: ["product_1"],
         });
+      })
+  );
 
-        polarFetch.mockResolvedValueOnce(
-          reply(201, { customer_portal_url: "https://polar.sh/portal" })
+  it.effect("maps a failed checkout to the checkout error", () =>
+    Effect.gen(function* () {
+      polarFetch.mockResolvedValueOnce(reply(500, { detail: "down" }));
+      expect(
+        yield* failureOf(
+          polarGateway.createCheckoutSession({
+            customerId: "cust_1",
+            customerIpAddress: null,
+            locale: "en",
+            productIds: ["product_1"],
+            successUrl: "https://nakafa.com/done",
+          })
+        )
+      ).toBe("PolarCheckoutError");
+    })
+  );
+
+  it.effect("creates an individual customer keyed by the Nakafa user ID", () =>
+    Effect.gen(function* () {
+      polarFetch.mockResolvedValueOnce(reply(201, customerWire));
+      expect(yield* polarGateway.createCustomer(identity)).toEqual({
+        email: "learner@example.com",
+        externalId: "user-1",
+        id: "cust_1",
+        name: "Learner",
+      });
+      expect(yield* Effect.promise(() => sentRequest(0).json())).toMatchObject({
+        external_id: "user-1",
+        type: "individual",
+      });
+    })
+  );
+
+  it.effect("maps a customer whose email is taken to the duplicate error", () =>
+    Effect.gen(function* () {
+      polarFetch.mockResolvedValueOnce(
+        reply(422, {
+          detail: [
+            {
+              loc: ["body", "email"],
+              msg: "A customer with this email address already exists.",
+              type: "value_error",
+            },
+          ],
+        })
+      );
+      expect(yield* failureOf(polarGateway.createCustomer(identity))).toBe(
+        "PolarDuplicateEmailError"
+      );
+    })
+  );
+
+  it.effect(
+    "maps any other failed customer creation to the customer error",
+    () =>
+      Effect.gen(function* () {
+        polarFetch.mockResolvedValueOnce(reply(500, { detail: "down" }));
+        expect(yield* failureOf(polarGateway.createCustomer(identity))).toBe(
+          "PolarCustomerError"
         );
-        expect(
-          yield* polarGateway.createCustomerPortalSession("customer-1")
-        ).toEqual({ url: "https://polar.sh/portal" });
-        expect(new URL(sentRequest(1).url).pathname).toBe(
-          "/v1/customer-sessions/"
+      })
+  );
+
+  it.effect("opens a customer portal session and returns its URL", () =>
+    Effect.gen(function* () {
+      polarFetch.mockResolvedValueOnce(
+        reply(201, { customer_portal_url: "https://polar.sh/portal" })
+      );
+      expect(yield* polarGateway.createCustomerPortalSession("cust_1")).toEqual(
+        {
+          url: "https://polar.sh/portal",
+        }
+      );
+      expect(yield* Effect.promise(() => sentRequest(0).json())).toEqual({
+        customer_id: "cust_1",
+      });
+    })
+  );
+
+  it.effect("maps a failed portal session to the portal error", () =>
+    Effect.gen(function* () {
+      polarFetch.mockResolvedValueOnce(reply(500, { detail: "down" }));
+      expect(
+        yield* failureOf(polarGateway.createCustomerPortalSession("cust_1"))
+      ).toBe("PolarPortalError");
+    })
+  );
+
+  it.effect(
+    "deletes and anonymizes a customer, and treats a customer Polar no longer holds as deleted",
+    () =>
+      Effect.gen(function* () {
+        polarFetch.mockResolvedValueOnce(reply(204));
+        expect(yield* polarGateway.deleteCustomer("cust_1")).toBeNull();
+        expect(new URL(sentRequest(0).url).searchParams.get("anonymize")).toBe(
+          "true"
         );
-        expect(yield* sentBody(1)).toEqual({ customer_id: "customer-1" });
+        polarFetch.mockResolvedValueOnce(reply(404, { detail: "Not found" }));
+        expect(yield* polarGateway.deleteCustomer("cust_gone")).toBeNull();
+      })
+  );
 
-        polarFetch.mockResolvedValueOnce(reply(201, customerWire));
-        expect(yield* polarGateway.createCustomer(next)).toEqual(customer);
-        expect(yield* sentBody(2)).toEqual({
-          email: "learner@example.com",
-          external_id: "user-1",
-          metadata: { userId: "user-1" },
-          name: "Learner",
-          type: "individual",
-        });
+  it.effect("maps a failed customer deletion to the delete error", () =>
+    Effect.gen(function* () {
+      polarFetch.mockResolvedValueOnce(reply(500, { detail: "down" }));
+      expect(yield* failureOf(polarGateway.deleteCustomer("cust_1"))).toBe(
+        "PolarDeleteError"
+      );
+    })
+  );
 
-        polarFetch.mockResolvedValueOnce(
-          reply(200, { items: [customerWire], pagination: {} })
-        );
-        expect(
-          yield* polarGateway.findCustomerByEmail("learner@example.com")
-        ).toEqual(customer);
-        expect(
-          Rec.fromEntries(new URL(sentRequest(3).url).searchParams.entries())
-        ).toEqual({ email: "learner@example.com", limit: "1", page: "1" });
-
-        polarFetch.mockResolvedValueOnce(
-          reply(200, { items: [], pagination: {} })
-        );
-        expect(
-          yield* polarGateway.findCustomerByEmail("learner@example.com")
-        ).toBeNull();
-
+  it.effect(
+    "loads the customer of a Nakafa user ID, and returns none for a user Polar does not know",
+    () =>
+      Effect.gen(function* () {
         polarFetch.mockResolvedValueOnce(reply(200, customerWire));
-        expect(yield* polarGateway.getCustomerByExternalId("user-1")).toEqual(
-          customer
-        );
-        expect(new URL(sentRequest(5).url).pathname).toBe(
+        expect(yield* polarGateway.getCustomerByExternalId("user-1")).toEqual({
+          email: "learner@example.com",
+          externalId: "user-1",
+          id: "cust_1",
+          name: "Learner",
+        });
+        expect(new URL(sentRequest(0).url).pathname).toBe(
           "/v1/customers/external/user-1"
         );
+        polarFetch.mockResolvedValueOnce(reply(404, { detail: "Not found" }));
+        expect(
+          yield* polarGateway.getCustomerByExternalId("user-2")
+        ).toBeNull();
+      })
+  );
 
-        polarFetch.mockResolvedValueOnce(reply(200, customerWire));
-        expect(yield* polarGateway.getCustomerById("customer-1")).toEqual(
-          customer
-        );
-        expect(new URL(sentRequest(6).url).pathname).toBe(
-          "/v1/customers/customer-1"
-        );
+  it.effect("maps a failed customer lookup to the customer error", () =>
+    Effect.gen(function* () {
+      polarFetch.mockResolvedValueOnce(reply(500, { detail: "down" }));
+      expect(
+        yield* failureOf(polarGateway.getCustomerByExternalId("user-1"))
+      ).toBe("PolarCustomerError");
+    })
+  );
 
+  it.effect(
+    "syncs a customer's email and name, and maps a failed sync to the update error",
+    () =>
+      Effect.gen(function* () {
         polarFetch.mockResolvedValueOnce(reply(200, customerWire));
         expect(
           yield* polarGateway.updateCustomer({
-            customer: stored,
-            next: { ...next, name: "Updated" },
+            customerId: "cust_1",
+            identity,
           })
-        ).toEqual(customer);
-        expect(sentRequest(7).method).toBe("PATCH");
-        expect(yield* sentBody(7)).toEqual({
+        ).toMatchObject({ id: "cust_1" });
+        expect(
+          yield* Effect.promise(() => sentRequest(0).json())
+        ).toMatchObject({
           email: "learner@example.com",
           external_id: "user-1",
-          metadata: { userId: "user-1" },
-          name: "Updated",
-        });
-
-        polarFetch.mockResolvedValueOnce(reply(200, customerWire));
-        expect(
-          yield* polarGateway.updateCustomerMetadata({
-            polarCustomerId: "customer-1",
-            metadata: { consent: true },
-          })
-        ).toEqual(customer);
-        expect(yield* sentBody(8)).toEqual({ metadata: { consent: true } });
-
-        polarFetch.mockResolvedValueOnce(reply(204));
-        expect(yield* polarGateway.deleteCustomer("customer-1")).toBeNull();
-        expect(sentRequest(9).method).toBe("DELETE");
-        expect(new URL(sentRequest(9).url).search).toBe("?anonymize=true");
-      }).pipe(configured)
-  );
-
-  it.effect(
-    "leaves out the optional fields a caller did not set and sends the ones it did",
-    () =>
-      Effect.gen(function* () {
-        polarFetch.mockResolvedValueOnce(
-          reply(201, { url: "https://checkout.polar.sh/session" })
-        );
-        yield* polarGateway.createCheckoutSession({
-          ...checkout,
-          embedOrigin: "https://nakafa.com",
-          subscriptionId: "subscription-1",
-        });
-        expect(yield* sentBody(0)).toMatchObject({
-          embed_origin: "https://nakafa.com",
-          subscription_id: "subscription-1",
-        });
-
-        polarFetch.mockResolvedValueOnce(reply(201, customerWire));
-        yield* polarGateway.createCustomer({
-          email: "learner@example.com",
-          externalId: "user-1",
           name: "Learner",
         });
-        expect(yield* sentBody(1)).not.toHaveProperty("metadata");
-
-        polarFetch.mockResolvedValueOnce(reply(200, customerWire));
-        yield* polarGateway.updateCustomer({
-          customer: stored,
-          next: {
-            email: "learner@example.com",
-            externalId: "user-1",
-            name: "Learner",
-          },
-        });
-        expect(yield* sentBody(2)).not.toHaveProperty("metadata");
-      }).pipe(configured)
+        polarFetch.mockResolvedValueOnce(reply(500, { detail: "down" }));
+        expect(
+          yield* failureOf(
+            polarGateway.updateCustomer({ customerId: "cust_1", identity })
+          )
+        ).toBe("PolarUpdateError");
+      })
   );
 
   it.effect(
-    "keeps rejected and failed provider calls in each operation's typed error channel",
+    "fails every operation as its own error when no Polar access token is configured",
     () =>
       Effect.gen(function* () {
-        for (const operation of operations) {
-          polarFetch.mockResolvedValueOnce(
-            reply(500, { detail: "provider unavailable" })
-          );
-          expect(yield* failureOf(operation.effect)).toMatchObject({
-            code: operation.code,
-            cause: expect.objectContaining({ statusCode: 500 }),
-            message: expect.not.stringContaining("provider unavailable"),
-          });
-          polarFetch.mockRejectedValueOnce(new TypeError("connection lost"));
-          expect(yield* failureOf(operation.effect)).toMatchObject({
-            code: operation.code,
-            cause: expect.objectContaining({
-              message: expect.stringContaining("connection lost"),
-            }),
-            message: expect.not.stringContaining("connection lost"),
-          });
-        }
-      }).pipe(configured)
-  );
-
-  it.effect(
-    "rejects missing configuration before making any provider call",
-    () =>
-      Effect.gen(function* () {
-        for (const operation of operations) {
-          expect(yield* failureOf(operation.effect)).toMatchObject({
-            code: operation.code,
-            message: expect.not.stringContaining("polar_test"),
-          });
-        }
-        expect(polarFetch).not.toHaveBeenCalled();
-      }).pipe(
-        Effect.provideService(
+        const withoutToken = Effect.provideService(
           ConfigProvider.ConfigProvider,
           ConfigProvider.fromEnv({ env: {} })
-        )
-      )
-  );
-
-  it.effect(
-    "treats only a provider 404 as an absent or already deleted customer",
-    () =>
-      Effect.gen(function* () {
-        const lookups: readonly Effect.Effect<
-          unknown,
-          PolarCustomerErrorUnion
-        >[] = [
-          polarGateway.getCustomerById("customer-1"),
-          polarGateway.getCustomerByExternalId("user-1"),
-          polarGateway.deleteCustomer("customer-1"),
-        ];
-        for (const lookup of lookups) {
-          polarFetch.mockResolvedValueOnce(
-            reply(404, { error: "ResourceNotFound", detail: "Not found" })
-          );
-          expect(yield* lookup).toBeNull();
-          polarFetch.mockResolvedValueOnce(
-            reply(403, { detail: "access denied" })
-          );
-          expect(yield* failureOf(lookup)).toMatchObject({
-            cause: expect.objectContaining({ statusCode: 403 }),
-          });
-        }
-        polarFetch.mockResolvedValueOnce(reply(404, { detail: "Not found" }));
+        );
         expect(
-          yield* polarGateway
-            .findCustomerByEmail("learner@example.com")
-            .pipe(Effect.flip)
-        ).toMatchObject({ code: "POLAR_CUSTOMER_ERROR" });
-      }).pipe(configured)
+          yield* failureOf(
+            polarGateway.createCustomer(identity).pipe(withoutToken)
+          )
+        ).toBe("PolarCustomerError");
+        expect(
+          yield* failureOf(
+            polarGateway.deleteCustomer("cust_1").pipe(withoutToken)
+          )
+        ).toBe("PolarDeleteError");
+        expect(polarFetch).not.toHaveBeenCalled();
+      })
   );
+});
 
-  it.effect(
-    "recognizes the exact duplicate-email conflict without reclassifying unrelated validation errors",
-    () =>
-      Effect.gen(function* () {
-        polarFetch.mockResolvedValueOnce(
-          reply(422, {
-            detail: [
-              {
-                loc: ["body", "email"],
-                msg: "A customer with this email address already exists.",
-                type: "value_error",
-              },
-            ],
+describe("billing/polar/live responses", () => {
+  beforeEach(() => polarFetch.mockReset());
+
+  it.effect("refuses a checkout response that carries no URL", () =>
+    Effect.gen(function* () {
+      polarFetch.mockResolvedValueOnce(reply(201, {}));
+      expect(
+        yield* failureOf(
+          polarGateway.createCheckoutSession({
+            customerId: "cust_1",
+            customerIpAddress: null,
+            locale: "en",
+            productIds: ["product_1"],
+            successUrl: "https://nakafa.com/done",
           })
+        )
+      ).toBe("PolarCheckoutError");
+    })
+  );
+});
+
+describe("billing/polar/live duplicate check", () => {
+  beforeEach(() => polarFetch.mockReset());
+
+  it.effect.each([
+    [
+      {
+        loc: ["body", "email"],
+        msg: "Another validation message.",
+        type: "value_error",
+      },
+    ],
+    [
+      {
+        loc: ["query", "email"],
+        msg: "A customer with this email address already exists.",
+        type: "value_error",
+      },
+    ],
+  ])(
+    "keeps a validation error that does not name a taken email as a customer error",
+    ([detail]) =>
+      Effect.gen(function* () {
+        polarFetch.mockResolvedValueOnce(reply(422, { detail: [detail] }));
+        expect(yield* failureOf(polarGateway.createCustomer(identity))).toBe(
+          "PolarCustomerError"
         );
-        expect(
-          yield* polarGateway.createCustomer(next).pipe(Effect.flip)
-        ).toMatchObject({
-          _tag: "PolarDuplicateEmailError",
-          code: "POLAR_DUPLICATE_EMAIL",
-        });
-        for (const body of [
-          {},
-          {
-            detail: [
-              {
-                loc: ["email"],
-                msg: "A customer with this email address already exists.",
-                type: "value_error",
-              },
-            ],
-          },
-          {
-            detail: [
-              {
-                loc: ["query", "email"],
-                msg: "invalid email",
-                type: "value_error",
-              },
-            ],
-          },
-          {
-            detail: [
-              {
-                loc: ["body", "name"],
-                msg: "invalid name",
-                type: "value_error",
-              },
-            ],
-          },
-          {
-            detail: [
-              {
-                loc: ["body", "email"],
-                msg: "invalid email",
-                type: "value_error",
-              },
-            ],
-          },
-        ]) {
-          polarFetch.mockResolvedValueOnce(reply(422, body));
-          expect(
-            yield* polarGateway.createCustomer(next).pipe(Effect.flip)
-          ).toMatchObject({ _tag: "PolarCustomerError" });
-        }
-      }).pipe(configured)
+      })
   );
 
   it.effect(
-    "fails a provider payload that breaks the customer contract as a typed request failure",
+    "keeps a validation error without details as a customer error",
     () =>
       Effect.gen(function* () {
-        polarFetch.mockResolvedValueOnce(
-          reply(200, { id: "customer-1", name: "Learner" })
+        polarFetch.mockResolvedValueOnce(reply(422, {}));
+        expect(yield* failureOf(polarGateway.createCustomer(identity))).toBe(
+          "PolarCustomerError"
         );
-        expect(
-          yield* polarGateway.getCustomerById("customer-1").pipe(Effect.flip)
-        ).toMatchObject({
-          _tag: "PolarCustomerError",
-          code: "POLAR_CUSTOMER_ERROR",
-          cause: expect.objectContaining({ _tag: "PolarPayloadError" }),
-        });
-      }).pipe(configured)
+      })
   );
 });

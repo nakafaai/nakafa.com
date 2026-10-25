@@ -1,6 +1,6 @@
 import { useAction } from "@confect/react";
 import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
-import customers from "@repo/backend/confect/_generated/refs/customers";
+import billing from "@repo/backend/confect/_generated/refs/billing";
 import { type ToastCopy, toast } from "@repo/design-system/lib/toast/notify";
 import { useConvex } from "convex/react";
 import { Effect, Schema } from "effect";
@@ -23,12 +23,8 @@ type BillingSource = typeof BillingSourceSchema.Type;
 export function useBillingNavigation() {
   const [isPending, startTransition] = useTransition();
   const convex = useConvex();
-  const createCheckout = useAction(
-    customers.actions.sessions.generateCheckoutLink
-  );
-  const createPortal = useAction(
-    customers.actions.sessions.generateCustomerPortalUrl
-  );
+  const createCheckout = useAction(billing.sessions.generateCheckoutLink);
+  const createPortal = useAction(billing.sessions.generateCustomerPortalUrl);
 
   function runBillingRequest<E>(
     request: Effect.Effect<BillingDestination, E>,

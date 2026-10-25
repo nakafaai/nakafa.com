@@ -15,6 +15,22 @@ class PolarConfigError extends Schema.TaggedError<PolarConfigError>()(
   { message: Schema.String }
 ) {}
 
+/** The Polar server this deployment bills through, read from POLAR_SERVER. A missing value means sandbox. */
+export const readPolarServer = Effect.fn("polar.readServer")(function* () {
+  return yield* Config.schema(
+    Schema.Literals(["production", "sandbox"]),
+    "POLAR_SERVER"
+  ).pipe(
+    Config.withDefault("sandbox"),
+    Effect.mapError(
+      () =>
+        new PolarConfigError({
+          message: "Unable to read the Polar deployment environment.",
+        })
+    )
+  );
+});
+
 /** Creates the SDK client only when a billing operation needs it. */
 export const readPolarClient = Effect.fn("polar.readClient")(function* () {
   const accessToken = yield* Config.schema(
@@ -28,18 +44,7 @@ export const readPolarClient = Effect.fn("polar.readClient")(function* () {
         })
     )
   );
-  const server = yield* Config.schema(
-    Schema.Literals(["production", "sandbox"]),
-    "VITE_POLAR_SERVER"
-  ).pipe(
-    Config.withDefault("sandbox"),
-    Effect.mapError(
-      () =>
-        new PolarConfigError({
-          message: "Unable to read the Polar deployment environment.",
-        })
-    )
-  );
+  const server = yield* readPolarServer();
   return yield* Effect.sync(
     (): PolarCore =>
       createPolarCore({

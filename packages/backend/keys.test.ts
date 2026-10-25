@@ -1,9 +1,5 @@
 import { afterEach, describe, expect, it } from "@effect/vitest";
-import {
-  agentTrustKeys,
-  convexSiteServerKeys,
-  polarKeys,
-} from "@repo/backend/keys";
+import { agentTrustKeys, convexSiteServerKeys } from "@repo/backend/keys";
 
 afterEach(() => {
   vi.unstubAllEnvs();
@@ -78,27 +74,5 @@ describe("Convex site server key", () => {
     vi.stubEnv("VITE_CONVEX_SITE_URL", "not a url");
 
     expect(() => convexSiteServerKeys()).toThrow();
-  });
-});
-
-describe("Polar server key", () => {
-  it("leaves an absent server selection undefined", () => {
-    vi.stubEnv("VITE_POLAR_SERVER", undefined);
-
-    expect(polarKeys().VITE_POLAR_SERVER).toBeUndefined();
-  });
-
-  it("passes the server selection through without limiting it to known values", () => {
-    vi.stubEnv("VITE_POLAR_SERVER", "unknown-server");
-
-    expect(polarKeys().VITE_POLAR_SERVER).toBe("unknown-server");
-  });
-
-  it("passes the production selection and an empty selection through unchanged", () => {
-    vi.stubEnv("VITE_POLAR_SERVER", "production");
-    expect(polarKeys().VITE_POLAR_SERVER).toBe("production");
-
-    vi.stubEnv("VITE_POLAR_SERVER", "");
-    expect(polarKeys().VITE_POLAR_SERVER).toBe("");
   });
 });

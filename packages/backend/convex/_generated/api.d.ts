@@ -166,6 +166,25 @@ export declare const api: {
       >;
     };
   };
+  billing: {
+    queries: {
+      hasActiveSubscription: FunctionReference<"query", "public", {}, boolean>;
+    };
+    sessions: {
+      generateCheckoutLink: FunctionReference<
+        "action",
+        "public",
+        { locale: "en" | "id" | "de"; successUrl: string },
+        { url: string }
+      >;
+      generateCustomerPortalUrl: FunctionReference<
+        "action",
+        "public",
+        {},
+        { url: string }
+      >;
+    };
+  };
   chats: {
     mutations: {
       deleteChat: FunctionReference<
@@ -2756,24 +2775,6 @@ export declare const api: {
             title: string;
             url: string;
           }>
-        >;
-      };
-    };
-  };
-  customers: {
-    actions: {
-      sessions: {
-        generateCheckoutLink: FunctionReference<
-          "action",
-          "public",
-          { locale: "en" | "id" | "de"; successUrl: string },
-          { url: string }
-        >;
-        generateCustomerPortalUrl: FunctionReference<
-          "action",
-          "public",
-          {},
-          { url: string }
         >;
       };
     };
@@ -6613,16 +6614,6 @@ export declare const api: {
           id: Id<"gradingSchemes">;
           kktp: number;
         }
-      >;
-    };
-  };
-  subscriptions: {
-    queries: {
-      hasActiveSubscription: FunctionReference<
-        "query",
-        "public",
-        { productId: string },
-        boolean
       >;
     };
   };
@@ -10583,6 +10574,92 @@ export declare const internal: {
         { attemptId: string; authId: string },
         "ready" | "temporarily-unavailable"
       >;
+      cleanup: {
+        cleanupDeletedUserAnalytics: FunctionReference<
+          "mutation",
+          "internal",
+          {
+            args?: { userId: Id<"users"> };
+            context?: any;
+            docs?: "To call a workflow directly, nest its arguments: { args: { ...yourWorkflowArgs } }";
+            generationNumber?: number;
+            onComplete?: string;
+            startAsync?: boolean;
+            workflowId?: string;
+          },
+          | string
+          | {
+              kind: "complete";
+              runResult:
+                | { kind: "success"; returnValue: null }
+                | { error: string; kind: "failed" }
+                | { kind: "canceled" };
+            }
+        >;
+        cleanupDeletedUserAuth: FunctionReference<
+          "mutation",
+          "internal",
+          {
+            args?: { authId: string; userId: Id<"users"> };
+            context?: any;
+            docs?: "To call a workflow directly, nest its arguments: { args: { ...yourWorkflowArgs } }";
+            generationNumber?: number;
+            onComplete?: string;
+            startAsync?: boolean;
+            workflowId?: string;
+          },
+          | string
+          | {
+              kind: "complete";
+              runResult:
+                | { kind: "success"; returnValue: null }
+                | { error: string; kind: "failed" }
+                | { kind: "canceled" };
+            }
+        >;
+        cleanupDeletedUserBilling: FunctionReference<
+          "mutation",
+          "internal",
+          {
+            args?: { userId: Id<"users"> };
+            context?: any;
+            docs?: "To call a workflow directly, nest its arguments: { args: { ...yourWorkflowArgs } }";
+            generationNumber?: number;
+            onComplete?: string;
+            startAsync?: boolean;
+            workflowId?: string;
+          },
+          | string
+          | {
+              kind: "complete";
+              runResult:
+                | { kind: "success"; returnValue: null }
+                | { error: string; kind: "failed" }
+                | { kind: "canceled" };
+            }
+        >;
+        cleanupDeletedUserData: FunctionReference<
+          "mutation",
+          "internal",
+          {
+            args?: { userId: Id<"users"> };
+            context?: any;
+            docs?: "To call a workflow directly, nest its arguments: { args: { ...yourWorkflowArgs } }";
+            generationNumber?: number;
+            onComplete?: string;
+            startAsync?: boolean;
+            workflowId?: string;
+          },
+          | string
+          | {
+              kind: "complete";
+              runResult:
+                | { kind: "success"; returnValue: null }
+                | { error: string; kind: "failed" }
+                | { kind: "canceled" };
+            }
+        >;
+      };
       continueAccountDeletionCommit: FunctionReference<
         "mutation",
         "internal",
@@ -10643,6 +10720,27 @@ export declare const internal: {
           null
         >;
       };
+      workflow: {
+        finalizeDeletedUserCleanup: FunctionReference<
+          "mutation",
+          "internal",
+          {
+            authId: string;
+            expectedPreparation?: {
+              attemptId: string;
+              preparationId: Id<"accountDeletionPreparations">;
+              recoveryGeneration: number;
+            };
+          },
+          null
+        >;
+        launchDeletedUserCleanup: FunctionReference<
+          "mutation",
+          "internal",
+          { authId: string; userId: Id<"users"> },
+          null
+        >;
+      };
     };
     lifecycle: {
       onCreate: FunctionReference<
@@ -10666,6 +10764,135 @@ export declare const internal: {
     };
   };
   billing: {
+    checkout: {
+      admitCheckout: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          event:
+            | {
+                name: "content viewed";
+                properties: {
+                  alignment_id: string;
+                  concept_id: string;
+                  content_id: string;
+                  content_type: "article" | "material" | "question";
+                  context_key: string;
+                  is_new_view: boolean;
+                  learning_object_id: string;
+                  lens_id: string;
+                  locale: "en" | "id" | "de";
+                  route: string;
+                };
+              }
+            | {
+                name: "tryout attempt started";
+                properties: {
+                  access_source: "free" | "subscription";
+                  attempt_number: number;
+                  country_key: string;
+                  exam_key: string;
+                  locale: "en" | "id" | "de";
+                  score_status: "provisional" | "official";
+                  set_key: string;
+                  track_key: string;
+                };
+              }
+            | {
+                name: "tryout attempt completed";
+                properties: {
+                  attempt_number: number;
+                  country_key: string;
+                  exam_key: string;
+                  locale: "en" | "id" | "de";
+                  score_status: "provisional" | "official";
+                  set_key: string;
+                  total_questions: number;
+                  track_key: string;
+                };
+              }
+            | {
+                name: "tryout paywall viewed";
+                properties: { source: "review" };
+              }
+            | { name: "chat message sent"; properties: { chat_type: "study" } }
+            | {
+                name: "chat response completed";
+                properties: {
+                  chat_type: "study";
+                  credits?: number;
+                  input_tokens?: number;
+                  output_tokens?: number;
+                  total_tokens?: number;
+                };
+              }
+            | {
+                name: "chat response failed";
+                properties: {
+                  chat_type: "study";
+                  error_code:
+                    | "provider-busy"
+                    | "provider-unavailable"
+                    | "service-configuration"
+                    | "request-rejected"
+                    | "input-too-large"
+                    | "response-timeout"
+                    | "content-blocked"
+                    | "response-limit"
+                    | "interrupted"
+                    | "unknown";
+                };
+              }
+            | {
+                name: "checkout started";
+                properties: {
+                  checkout_locale: "de" | "en";
+                  customer_ip_available: boolean;
+                  locale: "en" | "id" | "de";
+                  product_count: number;
+                  product_id: string;
+                };
+              }
+            | {
+                name: "subscription started";
+                properties: { product_id: string; status: string };
+              }
+            | {
+                name: "subscription canceled";
+                properties: { product_id: string; status: string };
+              }
+            | {
+                name: "plan changed";
+                properties: {
+                  new_plan: "free" | "pro";
+                  previous_plan: "free" | "pro";
+                };
+              };
+          timestamp?: number;
+          userId: Id<"users">;
+        },
+        { kind: "admitted" } | { kind: "unavailable" }
+      >;
+      openAccount: FunctionReference<
+        "mutation",
+        "internal",
+        { userId: Id<"users"> },
+        | {
+            accountId: Id<"billingAccounts">;
+            email: string;
+            kind: "open";
+            name: string;
+            providerCustomerId: string | null;
+          }
+        | { kind: "unavailable" }
+      >;
+      recordCustomer: FunctionReference<
+        "mutation",
+        "internal",
+        { accountId: Id<"billingAccounts">; providerCustomerId: string },
+        null
+      >;
+    };
     contracts: {
       recordSchoolContract: FunctionReference<
         "mutation",
@@ -10678,6 +10905,30 @@ export declare const internal: {
           validTo: number;
         },
         { accountId: Id<"billingAccounts">; grantId: Id<"billingGrants"> }
+      >;
+    };
+    deletion: {
+      cleanupDeletedUserBilling: FunctionReference<
+        "action",
+        "internal",
+        { userId: Id<"users"> },
+        null
+      >;
+      deleteRows: FunctionReference<
+        "mutation",
+        "internal",
+        { userId: Id<"users"> },
+        boolean
+      >;
+      readAccounts: FunctionReference<
+        "query",
+        "internal",
+        { userId: Id<"users"> },
+        Array<{
+          accountId: Id<"billingAccounts">;
+          providerCustomerId: string | null;
+          rail: "polar" | "xendit";
+        }>
       >;
     };
     events: {
@@ -12631,396 +12882,6 @@ export declare const internal: {
       >;
     };
   };
-  customers: {
-    actions: {
-      internal: {
-        cleanupDeletedUserCustomerData: FunctionReference<
-          "action",
-          "internal",
-          { authId: string; userId: Id<"users"> },
-          null
-        >;
-        syncCustomer: FunctionReference<
-          "action",
-          "internal",
-          { userId: Id<"users"> },
-          Id<"customers"> | null
-        >;
-      };
-    };
-    checkout: {
-      admission: {
-        admitCheckoutSession: FunctionReference<
-          "mutation",
-          "internal",
-          {
-            event:
-              | {
-                  name: "content viewed";
-                  properties: {
-                    alignment_id: string;
-                    concept_id: string;
-                    content_id: string;
-                    content_type: "article" | "material" | "question";
-                    context_key: string;
-                    is_new_view: boolean;
-                    learning_object_id: string;
-                    lens_id: string;
-                    locale: "en" | "id" | "de";
-                    route: string;
-                  };
-                }
-              | {
-                  name: "tryout attempt started";
-                  properties: {
-                    access_source: "free" | "subscription";
-                    attempt_number: number;
-                    country_key: string;
-                    exam_key: string;
-                    locale: "en" | "id" | "de";
-                    score_status: "provisional" | "official";
-                    set_key: string;
-                    track_key: string;
-                  };
-                }
-              | {
-                  name: "tryout attempt completed";
-                  properties: {
-                    attempt_number: number;
-                    country_key: string;
-                    exam_key: string;
-                    locale: "en" | "id" | "de";
-                    score_status: "provisional" | "official";
-                    set_key: string;
-                    total_questions: number;
-                    track_key: string;
-                  };
-                }
-              | {
-                  name: "tryout paywall viewed";
-                  properties: { source: "review" };
-                }
-              | {
-                  name: "chat message sent";
-                  properties: { chat_type: "study" };
-                }
-              | {
-                  name: "chat response completed";
-                  properties: {
-                    chat_type: "study";
-                    credits?: number;
-                    input_tokens?: number;
-                    output_tokens?: number;
-                    total_tokens?: number;
-                  };
-                }
-              | {
-                  name: "chat response failed";
-                  properties: {
-                    chat_type: "study";
-                    error_code:
-                      | "provider-busy"
-                      | "provider-unavailable"
-                      | "service-configuration"
-                      | "request-rejected"
-                      | "input-too-large"
-                      | "response-timeout"
-                      | "content-blocked"
-                      | "response-limit"
-                      | "interrupted"
-                      | "unknown";
-                  };
-                }
-              | {
-                  name: "checkout started";
-                  properties: {
-                    checkout_locale: "de" | "en";
-                    customer_ip_available: boolean;
-                    locale: "en" | "id" | "de";
-                    product_count: number;
-                    product_id: string;
-                  };
-                }
-              | {
-                  name: "subscription started";
-                  properties: { product_id: string; status: string };
-                }
-              | {
-                  name: "subscription canceled";
-                  properties: { product_id: string; status: string };
-                }
-              | {
-                  name: "plan changed";
-                  properties: {
-                    new_plan: "free" | "pro";
-                    previous_plan: "free" | "pro";
-                  };
-                };
-            timestamp?: number;
-            userId: Id<"users">;
-          },
-          { kind: "admitted" } | { kind: "unavailable" }
-        >;
-      };
-    };
-    deletion: {
-      cleanup: {
-        cleanupDeletedUserAnalytics: FunctionReference<
-          "mutation",
-          "internal",
-          {
-            args?: { userId: Id<"users"> };
-            context?: any;
-            docs?: "To call a workflow directly, nest its arguments: { args: { ...yourWorkflowArgs } }";
-            generationNumber?: number;
-            onComplete?: string;
-            startAsync?: boolean;
-            workflowId?: string;
-          },
-          | string
-          | {
-              kind: "complete";
-              runResult:
-                | { kind: "success"; returnValue: null }
-                | { error: string; kind: "failed" }
-                | { kind: "canceled" };
-            }
-        >;
-        cleanupDeletedUserAuth: FunctionReference<
-          "mutation",
-          "internal",
-          {
-            args?: { authId: string; userId: Id<"users"> };
-            context?: any;
-            docs?: "To call a workflow directly, nest its arguments: { args: { ...yourWorkflowArgs } }";
-            generationNumber?: number;
-            onComplete?: string;
-            startAsync?: boolean;
-            workflowId?: string;
-          },
-          | string
-          | {
-              kind: "complete";
-              runResult:
-                | { kind: "success"; returnValue: null }
-                | { error: string; kind: "failed" }
-                | { kind: "canceled" };
-            }
-        >;
-        cleanupDeletedUserCustomer: FunctionReference<
-          "mutation",
-          "internal",
-          {
-            args?: { authId: string; userId: Id<"users"> };
-            context?: any;
-            docs?: "To call a workflow directly, nest its arguments: { args: { ...yourWorkflowArgs } }";
-            generationNumber?: number;
-            onComplete?: string;
-            startAsync?: boolean;
-            workflowId?: string;
-          },
-          | string
-          | {
-              kind: "complete";
-              runResult:
-                | { kind: "success"; returnValue: null }
-                | { error: string; kind: "failed" }
-                | { kind: "canceled" };
-            }
-        >;
-        cleanupDeletedUserData: FunctionReference<
-          "mutation",
-          "internal",
-          {
-            args?: { userId: Id<"users"> };
-            context?: any;
-            docs?: "To call a workflow directly, nest its arguments: { args: { ...yourWorkflowArgs } }";
-            generationNumber?: number;
-            onComplete?: string;
-            startAsync?: boolean;
-            workflowId?: string;
-          },
-          | string
-          | {
-              kind: "complete";
-              runResult:
-                | { kind: "success"; returnValue: null }
-                | { error: string; kind: "failed" }
-                | { kind: "canceled" };
-            }
-        >;
-      };
-      workflow: {
-        finalizeDeletedUserCleanup: FunctionReference<
-          "mutation",
-          "internal",
-          {
-            authId: string;
-            expectedPreparation?: {
-              attemptId: string;
-              preparationId: Id<"accountDeletionPreparations">;
-              recoveryGeneration: number;
-            };
-          },
-          null
-        >;
-        launchDeletedUserCleanup: FunctionReference<
-          "mutation",
-          "internal",
-          { authId: string; userId: Id<"users"> },
-          null
-        >;
-      };
-    };
-    integrity: {
-      internal: {
-        listActiveSubscriptionsForIntegrity: FunctionReference<
-          "query",
-          "internal",
-          {
-            paginationOpts: {
-              cursor: string | null;
-              endCursor?: string | null;
-              id?: number;
-              maximumBytesRead?: number;
-              maximumRowsRead?: number;
-              numItems: number;
-            };
-          },
-          {
-            continueCursor: string;
-            isDone: boolean;
-            page: Array<{
-              currentPeriodEnd: string | null;
-              customerId: string;
-              status: string;
-              subscriptionId: string;
-            }>;
-          }
-        >;
-        listCustomersForIntegrity: FunctionReference<
-          "query",
-          "internal",
-          {
-            paginationOpts: {
-              cursor: string | null;
-              endCursor?: string | null;
-              id?: number;
-              maximumBytesRead?: number;
-              maximumRowsRead?: number;
-              numItems: number;
-            };
-          },
-          {
-            continueCursor: string;
-            isDone: boolean;
-            page: Array<{
-              externalId: string | null;
-              localCustomerId: Id<"customers">;
-              polarCustomerId: string;
-              userId: Id<"users">;
-            }>;
-          }
-        >;
-        listUsersForCustomerIntegrity: FunctionReference<
-          "query",
-          "internal",
-          {
-            paginationOpts: {
-              cursor: string | null;
-              endCursor?: string | null;
-              id?: number;
-              maximumBytesRead?: number;
-              maximumRowsRead?: number;
-              numItems: number;
-            };
-          },
-          {
-            continueCursor: string;
-            isDone: boolean;
-            page: Array<{ authId: string; email: string; userId: Id<"users"> }>;
-          }
-        >;
-      };
-    };
-    mutations: {
-      internal: {
-        completeCustomerDeletionCheckpoint: FunctionReference<
-          "mutation",
-          "internal",
-          { polarCustomerId: string; userId: Id<"users"> },
-          null
-        >;
-        deleteCustomerById: FunctionReference<
-          "mutation",
-          "internal",
-          { id: string },
-          boolean
-        >;
-        recordCustomerDeletionCheckpoint: FunctionReference<
-          "mutation",
-          "internal",
-          { polarCustomerId: string; userId: Id<"users"> },
-          null
-        >;
-        upsertCustomer: FunctionReference<
-          "mutation",
-          "internal",
-          {
-            customer: {
-              externalId: string | null;
-              id: string;
-              metadata?: Record<string, string | number | boolean>;
-              userId: Id<"users">;
-            };
-          },
-          | { customerId: Id<"customers">; kind: "stored" }
-          | { kind: "deleted" }
-          | { kind: "missing" }
-          | { kind: "prepared" }
-        >;
-      };
-    };
-    queries: {
-      internal: {
-        customer: {
-          getCustomerByUserId: FunctionReference<
-            "query",
-            "internal",
-            { userId: Id<"users"> },
-            {
-              _creationTime: number;
-              _id: Id<"customers">;
-              externalId: string | null;
-              id: string;
-              metadata?: Record<string, string | number | boolean>;
-              userId: Id<"users">;
-            } | null
-          >;
-          getCustomerDeletionCheckpoint: FunctionReference<
-            "query",
-            "internal",
-            { userId: Id<"users"> },
-            string | null
-          >;
-          resolveWebhookTarget: FunctionReference<
-            "query",
-            "internal",
-            {
-              externalId?: string;
-              metadataUserId?: string;
-              polarCustomerId: string;
-            },
-            | { kind: "active"; userId: Id<"users"> }
-            | { kind: "conflict" }
-            | { kind: "deleted" }
-            | { kind: "missing" }
-            | { kind: "prepared" }
-          >;
-        };
-      };
-    };
-  };
   editor: {
     deletion: {
       document: FunctionReference<
@@ -14437,66 +14298,6 @@ export declare const internal: {
       {},
       { deleted: number; done: boolean; scanned: number }
     >;
-  };
-  subscriptions: {
-    mutations: {
-      createSubscription: FunctionReference<
-        "mutation",
-        "internal",
-        {
-          subscription: {
-            amount: number | null;
-            cancelAtPeriodEnd: boolean;
-            checkoutId: string | null;
-            createdAt: string;
-            currency: string | null;
-            currentPeriodEnd: string | null;
-            currentPeriodStart: string;
-            customerCancellationComment?: string | null;
-            customerCancellationReason?: string | null;
-            customerId: string;
-            endedAt: string | null;
-            id: string;
-            metadata: Record<string, string | number | boolean>;
-            modifiedAt: string | null;
-            priceId?: string;
-            productId: string;
-            recurringInterval: "day" | "week" | "month" | "year" | null;
-            startedAt: string | null;
-            status: string;
-          };
-        },
-        Id<"subscriptions"> | null
-      >;
-      updateSubscription: FunctionReference<
-        "mutation",
-        "internal",
-        {
-          subscription: {
-            amount: number | null;
-            cancelAtPeriodEnd: boolean;
-            checkoutId: string | null;
-            createdAt: string;
-            currency: string | null;
-            currentPeriodEnd: string | null;
-            currentPeriodStart: string;
-            customerCancellationComment?: string | null;
-            customerCancellationReason?: string | null;
-            customerId: string;
-            endedAt: string | null;
-            id: string;
-            metadata: Record<string, string | number | boolean>;
-            modifiedAt: string | null;
-            priceId?: string;
-            productId: string;
-            recurringInterval: "day" | "week" | "month" | "year" | null;
-            startedAt: string | null;
-            status: string;
-          };
-        },
-        null
-      >;
-    };
   };
   tenancy: {
     claims: {

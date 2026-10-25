@@ -3,8 +3,7 @@ import {
   mutationLayer,
 } from "@confect/server/RegisteredConvexFunction";
 import databaseSchema from "@repo/backend/confect/_generated/schema";
-import { products } from "@repo/backend/confect/billing/polar/products";
-import type { PolarSubscriptionRow } from "@repo/backend/confect/billing/polar/state";
+import { proProductIdFor } from "@repo/backend/confect/billing/polar/catalog";
 import { convexModules } from "@repo/backend/confect/test.setup";
 import type { Id } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
@@ -25,33 +24,6 @@ export function runInMutation<A, E>(
   return Effect.runPromise(
     effect.pipe(Effect.provide(mutationLayer(databaseSchema, ctx)))
   );
-}
-
-/** One stored Polar subscription row, a month of Pro in rupiah, with the fields a test changes. */
-export function polarSubscriptionRow(
-  overrides: Partial<PolarSubscriptionRow> = {}
-): PolarSubscriptionRow {
-  return {
-    amount: 79_000,
-    cancelAtPeriodEnd: false,
-    checkoutId: null,
-    createdAt: "2026-10-01T00:00:00.000Z",
-    currency: "idr",
-    currentPeriodEnd: "2026-11-01T00:00:00.000Z",
-    currentPeriodStart: "2026-10-01T00:00:00.000Z",
-    customerCancellationComment: null,
-    customerCancellationReason: null,
-    customerId: "cust_polar_1",
-    endedAt: null,
-    id: "sub_polar_1",
-    metadata: {},
-    modifiedAt: null,
-    productId: products.pro.id,
-    recurringInterval: "month",
-    startedAt: "2026-10-01T00:00:00.000Z",
-    status: "active",
-    ...overrides,
-  };
 }
 
 /** Runs one Confect effect inside a test mutation and returns its exit, so a test can assert a typed failure. */
@@ -112,5 +84,52 @@ export async function insertSchoolGrant(
     source: { kind: "contract", contractId: "contract-grants-test" },
     validFrom,
     validTo,
+  });
+}
+
+/** The personal Polar account a test user pays through, with no provider customer unless the test names one. */
+export function insertPolarAccount(
+  ctx: MutationCtx,
+  userId: Id<"users">,
+  providerCustomerId: string | null = null
+) {
+  return ctx.db.insert("billingAccounts", {
+    owner: { kind: "personal", userId },
+    rail: "polar",
+    country: "ZZ",
+    currency: "USD",
+    providerCustomerId,
+  });
+}
+
+/** One Pro subscription on an account. It is active and ends at `PRO_PERIOD_END` unless the test varies it. */
+export const PRO_PERIOD_END = Date.UTC(2026, 6, 21, 12, 0, 0);
+export function insertProSubscription(
+  ctx: MutationCtx,
+  accountId: Id<"billingAccounts">,
+  overrides: {
+    currentPeriodEnd?: number | null;
+    status?: "active" | "canceled" | "ended" | "pastDue" | "pending";
+    subscriptionId?: string;
+  } = {}
+) {
+  return ctx.db.insert("billingSubscriptions", {
+    accountId,
+    offer: "pro.monthly",
+    quantity: 1,
+    status: overrides.status ?? "active",
+    currentPeriodStart: PRO_PERIOD_END - 30 * 24 * 60 * 60 * 1000,
+    currentPeriodEnd:
+      overrides.currentPeriodEnd === undefined
+        ? PRO_PERIOD_END
+        : overrides.currentPeriodEnd,
+    cancelAtPeriodEnd: false,
+    provider: {
+      kind: "polar",
+      subscriptionId: overrides.subscriptionId ?? "sub_polar_test",
+      productId: proProductIdFor("sandbox"),
+      priceId: null,
+    },
+    providerUpdatedAt: 0,
   });
 }

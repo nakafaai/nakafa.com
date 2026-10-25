@@ -1,63 +1,32 @@
-import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
-import type { polarGateway } from "@repo/backend/confect/billing/polar/live";
-import { polarCheckoutLocaleValidator } from "@repo/backend/confect/customers/checkout/localization";
-import { polarMetadataValidator } from "@repo/backend/confect/customers/schema";
+import { polarCheckoutLocaleValidator } from "@repo/backend/confect/billing/locale";
 import { publicFailure } from "@repo/backend/confect/failure";
-import { Schema, Struct } from "effect";
+import { Schema } from "effect";
+
 export const polarCheckoutErrorCode = "POLAR_CHECKOUT_ERROR";
-export const polarCustomerEmailConflictCode = "POLAR_CUSTOMER_EMAIL_CONFLICT";
 export const polarCustomerErrorCode = "POLAR_CUSTOMER_ERROR";
 export const polarDeleteErrorCode = "POLAR_DELETE_ERROR";
 export const polarDuplicateEmailCode = "POLAR_DUPLICATE_EMAIL";
 export const polarPortalErrorCode = "POLAR_PORTAL_ERROR";
 export const polarUpdateErrorCode = "POLAR_UPDATE_ERROR";
-export const customerIdMetadataKey = "userId";
-const checkoutSessionResultValidator = Schema.Struct({
-  url: Schema.String,
-});
-export type PolarMetadata = typeof polarMetadataValidator.Type;
-export type CheckoutSessionResult = typeof checkoutSessionResultValidator.Type;
-const storedPolarCustomerValidator = Schema.Struct({
-  email: Schema.String,
-  externalId: Schema.NullOr(Schema.String),
-  id: Schema.String,
-  metadata: polarMetadataValidator,
-  name: Schema.NullOr(Schema.String),
-});
-export type StoredPolarCustomer = typeof storedPolarCustomerValidator.Type;
-const ensurePolarCustomerInputValidator = Schema.Struct({
-  email: Schema.String,
-  externalId: Schema.String,
-  localCustomerId: Schema.optionalKey(Schema.String),
-  metadata: Schema.optionalKey(polarMetadataValidator),
-  name: Schema.String,
-});
-export type EnsurePolarCustomerInput =
-  typeof ensurePolarCustomerInputValidator.Type;
+
+/** The checkout a Polar customer starts: the customer, the products, and where the learner returns. */
 const polarCheckoutInputValidator = Schema.Struct({
   customerId: Schema.String,
   customerIpAddress: Schema.NullOr(Schema.String),
-  embedOrigin: Schema.optionalKey(Schema.String),
   locale: polarCheckoutLocaleValidator,
   productIds: Schema.Array(Schema.String),
-  subscriptionId: Schema.optionalKey(Schema.String),
   successUrl: Schema.String,
 });
 export type PolarCheckoutInput = typeof polarCheckoutInputValidator.Type;
-const polarCustomerUpdateInputValidator = Schema.Struct({
-  customer: storedPolarCustomerValidator,
-  next: ensurePolarCustomerInputValidator,
+
+/** The identity Nakafa keeps in step with a Polar customer: the external ID is the Nakafa user ID. */
+const polarCustomerIdentityValidator = Schema.Struct({
+  email: Schema.String,
+  externalId: Schema.String,
+  name: Schema.String,
 });
-export type PolarCustomerUpdateInput =
-  typeof polarCustomerUpdateInputValidator.Type;
-const polarCustomerMetadataUpdateInputValidator = Schema.Struct({
-  metadata: polarMetadataValidator,
-  polarCustomerId: Schema.String,
-});
-export type PolarCustomerMetadataUpdateInput =
-  typeof polarCustomerMetadataUpdateInputValidator.Type;
-/** The Polar operations as live.ts builds them, so the gateway type cannot drift from its implementation. */
-export type PolarCustomerGateway = typeof polarGateway;
+export type PolarCustomerIdentity = typeof polarCustomerIdentityValidator.Type;
+
 export class PolarCheckoutError extends Schema.TaggedError<PolarCheckoutError>()(
   "PolarCheckoutError",
   {
@@ -70,24 +39,7 @@ export class PolarCheckoutError extends Schema.TaggedError<PolarCheckoutError>()
   declare readonly message: string;
 }
 export const PolarCheckoutErrorWire = publicFailure(PolarCheckoutError);
-export class PolarCustomerEmailConflict extends Schema.TaggedError<PolarCustomerEmailConflict>()(
-  "PolarCustomerEmailConflict",
-  {
-    code: Schema.Literal(polarCustomerEmailConflictCode),
-    existingExternalId: Schema.NullOr(Schema.String),
-    message: Schema.String,
-    polarCustomerId: Schema.String,
-  }
-) {
-  declare readonly code: typeof polarCustomerEmailConflictCode;
-  declare readonly existingExternalId: string | null;
-  declare readonly message: string;
-  declare readonly polarCustomerId: string;
-}
-/** Public errors omit customer identifiers while retaining their discriminant. */
-export const PolarCustomerEmailConflictWire = Schema.Struct(
-  Struct.pick(PolarCustomerEmailConflict.fields, ["_tag", "code", "message"])
-);
+
 export class PolarCustomerError extends Schema.TaggedError<PolarCustomerError>()(
   "PolarCustomerError",
   {
@@ -100,6 +52,7 @@ export class PolarCustomerError extends Schema.TaggedError<PolarCustomerError>()
   declare readonly message: string;
 }
 export const PolarCustomerErrorWire = publicFailure(PolarCustomerError);
+
 export class PolarDeleteError extends Schema.TaggedError<PolarDeleteError>()(
   "PolarDeleteError",
   {
@@ -112,6 +65,7 @@ export class PolarDeleteError extends Schema.TaggedError<PolarDeleteError>()(
   declare readonly message: string;
 }
 export const PolarDeleteErrorWire = publicFailure(PolarDeleteError);
+
 export class PolarDuplicateEmailError extends Schema.TaggedError<PolarDuplicateEmailError>()(
   "PolarDuplicateEmailError",
   {
@@ -126,6 +80,7 @@ export class PolarDuplicateEmailError extends Schema.TaggedError<PolarDuplicateE
 export const PolarDuplicateEmailErrorWire = publicFailure(
   PolarDuplicateEmailError
 );
+
 export class PolarPortalError extends Schema.TaggedError<PolarPortalError>()(
   "PolarPortalError",
   {
@@ -138,6 +93,7 @@ export class PolarPortalError extends Schema.TaggedError<PolarPortalError>()(
   declare readonly message: string;
 }
 export const PolarPortalErrorWire = publicFailure(PolarPortalError);
+
 export class PolarUpdateError extends Schema.TaggedError<PolarUpdateError>()(
   "PolarUpdateError",
   {
@@ -150,38 +106,3 @@ export class PolarUpdateError extends Schema.TaggedError<PolarUpdateError>()(
   declare readonly message: string;
 }
 export const PolarUpdateErrorWire = publicFailure(PolarUpdateError);
-export type PolarCustomerErrorUnion =
-  | PolarCheckoutError
-  | PolarCustomerEmailConflict
-  | PolarCustomerError
-  | PolarDeleteError
-  | PolarPortalError
-  | PolarUpdateError;
-export const polarCustomerWebhookTargetValidator = Schema.Union([
-  Schema.Struct({
-    kind: Schema.Literal("active"),
-    userId: IdSchema("users"),
-  }),
-  Schema.Struct({
-    kind: Schema.Literal("conflict"),
-  }),
-  Schema.Struct({
-    kind: Schema.Literal("deleted"),
-  }),
-  Schema.Struct({
-    kind: Schema.Literal("missing"),
-  }),
-  Schema.Struct({
-    kind: Schema.Literal("prepared"),
-  }),
-]);
-export class PolarCustomerWebhookTargetIoError extends Schema.TaggedError<PolarCustomerWebhookTargetIoError>()(
-  "PolarCustomerWebhookTargetIoError",
-  {
-    code: Schema.Literal("POLAR_CUSTOMER_WEBHOOK_TARGET_IO_FAILED"),
-    message: Schema.String,
-  }
-) {}
-
-/** Maps target lookup IO into one typed Convex failure. */
-/** Public failure payload keeps the domain tag while preserving the deployed code/message transport. */

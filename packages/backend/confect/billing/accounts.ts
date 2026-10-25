@@ -14,7 +14,7 @@ import { Effect, Option, Schema } from "effect";
 export type BillingAccountId = Docs["billingAccounts"]["_id"];
 
 /** The account that pays for one owner through one rail. An owner has at most one per rail. */
-const findAccount = Effect.fn("billing.accounts.find")(function* (
+export const findAccount = Effect.fn("billing.accounts.find")(function* (
   owner: Space,
   rail: BillingRail
 ) {
@@ -32,6 +32,20 @@ const findAccount = Effect.fn("billing.accounts.find")(function* (
     .table("billingAccounts")
     .index("by_tenantId_and_rail", (query) =>
       query.eq("owner.tenantId", owner.tenantId).eq("rail", rail)
+    )
+    .first()
+    .pipe(Effect.orDie);
+});
+
+/** The account whose provider customer on `rail` is `providerCustomerId`, or none. A provider webhook names its account this way. */
+export const findAccountByProviderCustomer = Effect.fn(
+  "billing.accounts.findByProviderCustomer"
+)(function* (rail: BillingRail, providerCustomerId: string) {
+  const reader = yield* DatabaseReader;
+  return yield* reader
+    .table("billingAccounts")
+    .index("by_rail_and_providerCustomerId", (query) =>
+      query.eq("rail", rail).eq("providerCustomerId", providerCustomerId)
     )
     .first()
     .pipe(Effect.orDie);

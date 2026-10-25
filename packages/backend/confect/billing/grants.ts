@@ -12,15 +12,15 @@ import {
   billingOffer,
 } from "@repo/backend/confect/billing/catalog";
 import {
+  applyPlanChange,
+  type PlanSource,
+} from "@repo/backend/confect/billing/plan";
+import {
   BillingRowMissing,
   GrantOwnerMismatch,
 } from "@repo/backend/confect/billing/spec";
 import { readSubscription } from "@repo/backend/confect/billing/subscriptions";
 import type { Space } from "@repo/backend/confect/space";
-import {
-  applyPlanChange,
-  type PlanSource,
-} from "@repo/backend/confect/triggers/subscriptions/impl";
 import type { UserPlan } from "@repo/backend/confect/users/schema";
 import {
   Array as Arr,

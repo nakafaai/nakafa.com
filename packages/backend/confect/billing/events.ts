@@ -6,6 +6,7 @@ import {
   DatabaseWriter,
   Scheduler,
 } from "@repo/backend/confect/_generated/services";
+import { processPolarEvent } from "@repo/backend/confect/billing/polar/webhook";
 import type { BillingEventDelivery } from "@repo/backend/confect/billing/schema";
 import { BillingRowMissing } from "@repo/backend/confect/billing/spec";
 import { processXenditEvent } from "@repo/backend/confect/billing/xendit/process";
@@ -99,7 +100,7 @@ export const processEvent = Effect.fn("billing.events.process")(function* (
   const outcome =
     event.rail === "xendit"
       ? yield* processXenditEvent(event.payload)
-      : "ignored";
+      : yield* processPolarEvent(event.payload);
   const writer = yield* DatabaseWriter;
   yield* writer
     .table("billingEvents")

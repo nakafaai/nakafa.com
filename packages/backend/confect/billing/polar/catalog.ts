@@ -1,16 +1,18 @@
 /**
- * The public Polar catalog: the Pro product of each Polar server. Browser code
- * imports only this module and reads the server selection through
- * `polarPublicKeys` in `@repo/backend/public`, so no server key is read in the
- * browser. The Pro prices live in `billing/catalog.ts`, in minor units.
+ * The Polar catalog: the Pro product of each Polar server. The server a deployment
+ * bills through is read from `POLAR_SERVER` on the server, so the browser never
+ * reads it. The Pro prices live in `billing/catalog.ts`, in minor units.
  */
 export const proProductIds = {
   production: "db602388-ef0c-4a88-92fa-c785f3230c45",
   sandbox: "5435bfd4-ca2a-4f97-ae7b-27d65907e49b",
 } as const;
 
-/** The Pro product of a Polar server. A missing or unknown server means sandbox, as `polarKeys` decides. */
-export function proProductIdFor(server: string | undefined): string {
+/** One Polar server: production bills real money, sandbox is the test server. */
+type PolarServer = "production" | "sandbox";
+
+/** The Pro product of one Polar server. */
+export function proProductIdFor(server: PolarServer): string {
   return server === "production"
     ? proProductIds.production
     : proProductIds.sandbox;
