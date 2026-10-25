@@ -1,9 +1,12 @@
 import {
+  readHostOnlySessionCookieName,
+  sharedCookieReaches,
+} from "@repo/backend/confect/auth/cookie";
+import {
   isSchoolLabel,
   NewTenantSlug,
 } from "@repo/backend/confect/tenancy/slug";
 import { isLoopbackHostname, readHostname } from "@repo/utilities/http/host";
-import { getCookies } from "better-auth/cookies";
 import { Array as Arr, Effect, Option, Schema } from "effect";
 
 /**
@@ -89,28 +92,6 @@ export function readSchoolTrustedOrigins(siteUrl: URL) {
         (origin) => isSchoolOrigin(origin, siteUrl)
       )
     );
-}
-
-/**
- * The name of the session cookie that a site without school hosts wrote. Its
- * name is the same as the shared cookie's, but it has no Domain attribute, so
- * the browser keeps it for the site's own host only.
- */
-export function readHostOnlySessionCookieName(siteUrl: URL) {
-  return getCookies({ baseURL: siteUrl.href }).sessionToken.name;
-}
-
-/**
- * Whether the shared session cookie reaches a host. It always reaches the host
- * that its domain names. A subdomain receives it only when the domain has a dot.
- * A single-label domain such as `localhost` names one host: Chromium sends a
- * `Domain=localhost` cookie to `localhost`, and not to `school.localhost`.
- */
-export function sharedCookieReaches(hostname: string, cookieDomain: string) {
-  if (hostname === cookieDomain) {
-    return true;
-  }
-  return cookieDomain.includes(".") && hostname.endsWith(`.${cookieDomain}`);
 }
 
 /**
