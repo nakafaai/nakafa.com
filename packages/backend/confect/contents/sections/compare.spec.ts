@@ -68,9 +68,9 @@ export const compareResultValidator = Schema.Union([
  * The model test: embeds every stored section of a language and every question
  * with one candidate embedding model, and tells where each question's section
  * ranks. The index holds the vectors of the chosen model only, so a candidate
- * is judged on vectors it makes here and keeps nowhere. A section whose text a
- * candidate refuses is counted and ranks last, as a build with that model
- * would leave it out of the index.
+ * is judged on vectors it makes here and keeps nowhere. A section that a
+ * candidate would not embed is counted and ranks last, as a build with that
+ * model would leave it out of the index.
  */
 export default GroupSpec.makeNode().addFunction(
   FunctionSpec.internalNodeAction({

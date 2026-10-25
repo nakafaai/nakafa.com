@@ -1,9 +1,15 @@
 import { RegisteredConvexFunction } from "@confect/server";
-import { afterEach, beforeEach, describe, expect, it } from "@effect/vitest";
+import {
+  afterEach,
+  assert,
+  beforeEach,
+  describe,
+  expect,
+  it,
+} from "@effect/vitest";
 import { ACTIVE_APP_LOCALE_CODES } from "@nakafa/aksara-contracts/locale";
 import { QURAN_SURAH_COUNT } from "@nakafa/aksara-contracts/quran/spec";
 import confectSchema from "@repo/backend/confect/_generated/schema";
-import { EMBED_BATCH_SIZE } from "@repo/backend/confect/contents/sections/limits";
 import { readSurah } from "@repo/backend/confect/contents/sections/quran";
 import { createConvexTestWithBetterAuth } from "@repo/backend/confect/test.helpers";
 import { TEST_RELEASE_ID } from "@repo/backend/test/content/release";
@@ -11,6 +17,7 @@ import { provider } from "@repo/backend/test/gateway";
 import {
   embedWhileAnotherReleaseActivates,
   embedWithKnowledge,
+  embedWithKnowledgeRefusing,
   knowledgeBuild,
 } from "@repo/backend/test/knowledge";
 import { makeQuranChunk, makeQuranSurah } from "@repo/backend/test/quran/rows";
@@ -174,7 +181,7 @@ describe("section Quran passages", () => {
       )
     );
     expect(versions).toHaveLength(1);
-    expect(versions[0]).toContain("1:google/gemini-embedding-2:sha256:");
+    expect(versions[0]).toContain("2:google/gemini-embedding-2:sha256:");
   });
 
   it("passes over the surahs whose documents the index holds at that version, and says how many documents it passed over", async () => {
@@ -276,7 +283,7 @@ describe("section build of the Quran", () => {
     return { ...knowledgeBuild(t), rows, sources, t };
   }
 
-  it("indexes a surah at a time, in bounded batches", async () => {
+  it("indexes a surah at a time, with one request for each passage", async () => {
     const model = embedWithKnowledge();
     const { rows, run, sources, t } = building();
     const verses = 300;
@@ -295,7 +302,7 @@ describe("section build of the Quran", () => {
       ])
     );
     const result = await run({
-      position: { phase: "quran", surah: 2 },
+      position: { missing: 0, phase: "quran", surah: 2 },
       releaseId: TEST_RELEASE_ID,
     });
     const passages = (verses / chunk) * 3;
@@ -308,9 +315,7 @@ describe("section build of the Quran", () => {
       skipped: 0,
       written: passages,
     });
-    expect(model.doEmbedCalls).toHaveLength(
-      Math.ceil(passages / EMBED_BATCH_SIZE)
-    );
+    expect(model.doEmbedCalls).toHaveLength(passages);
     expect(await rows()).toHaveLength(passages);
     expect(await sources()).toHaveLength(3);
   });
@@ -319,15 +324,15 @@ describe("section build of the Quran", () => {
     embedWithKnowledge();
     const { run, t } = building();
     await t.mutation(activateQuranSource);
-    expect(await run({ position: { phase: "quran", surah: 1 } })).toMatchObject(
-      {
-        next: {
-          position: { cursor: null, phase: "prune" },
-          releaseId: TEST_RELEASE_ID,
-        },
-        stale: false,
-      }
-    );
+    expect(
+      await run({ position: { missing: 0, phase: "quran", surah: 1 } })
+    ).toMatchObject({
+      next: {
+        position: { cursor: null, phase: "prune" },
+        releaseId: TEST_RELEASE_ID,
+      },
+      stale: false,
+    });
   });
 
   it("follows the last surah with the clean up", async () => {
@@ -346,7 +351,7 @@ describe("section build of the Quran", () => {
     );
     expect(
       await run({
-        position: { phase: "quran", surah: 114 },
+        position: { missing: 0, phase: "quran", surah: 114 },
         releaseId: TEST_RELEASE_ID,
       })
     ).toMatchObject({
@@ -373,11 +378,35 @@ describe("section build of the Quran", () => {
     embedWhileAnotherReleaseActivates(t);
     expect(
       await run({
-        position: { phase: "quran", surah: 1 },
+        position: { missing: 0, phase: "quran", surah: 1 },
         releaseId: TEST_RELEASE_ID,
       })
     ).toMatchObject({ next: null, stale: true, written: 0 });
     expect(await rows()).toEqual([]);
     expect(await sources()).toEqual([]);
+  });
+
+  it("carries the sections that a surah left out into the position of the next surah", async () => {
+    embedWithKnowledgeRefusing("Technical Surah");
+    const { run, t } = building();
+    await t.mutation((ctx) => activateQuranSnapshot(ctx, surahs));
+    const first = await run({
+      position: { missing: 0, phase: "quran", surah: 1 },
+      releaseId: TEST_RELEASE_ID,
+    });
+    // Surah 1 has six sections, and the model refuses every one of them.
+    assert.ok(first.next, "Expected the next surah.");
+    expect(first.next.position).toEqual({
+      missing: 6,
+      phase: "quran",
+      surah: 2,
+    });
+    const second = await run(first.next);
+    // Surah 2 has three sections, which the model refuses too, so the count goes on.
+    expect(second.next?.position).toEqual({
+      missing: 9,
+      phase: "quran",
+      surah: 3,
+    });
   });
 });

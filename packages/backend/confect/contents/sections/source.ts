@@ -15,9 +15,14 @@ export const findSource = Effect.fn("contents.sections.findSource")(function* (
     );
 });
 
-/** Whether the index holds the sections of a document, made from exactly `version`. */
+/**
+ * Whether the index holds the sections of a document, made from exactly
+ * `version` with none of them left out. A record with a count is read again, so
+ * that the build embeds the sections it still lacks.
+ */
 export const holdsVersion = Effect.fn("contents.sections.holdsVersion")(
   function* (key: Pick<Source, "appLocale" | "contentKey">, version: string) {
-    return (yield* findSource(key))?.version === version;
+    const record = yield* findSource(key);
+    return record?.version === version && record.missing === undefined;
   }
 );
