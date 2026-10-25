@@ -27,7 +27,7 @@ afterEach(() => {
 
 const bindings = {
   NAKAFA_API_EDGE_SECRET: "edge-secret",
-  NAKAFA_CONVEX_SITE_URL: "https://origin.convex.site",
+  CONVEX_SITE_URL: "https://origin.convex.site",
   NAKAFA_RELEASE_SHA: "abc123",
 };
 
@@ -110,7 +110,7 @@ describe("forwardAgentEdge", () => {
         NAKAFA_MCP_EDGE_PATHS,
         request,
         {
-          NAKAFA_CONVEX_SITE_URL: "https://origin.convex.site",
+          CONVEX_SITE_URL: "https://origin.convex.site",
           NAKAFA_MCP_EDGE_SECRET: "mcp-secret",
           NAKAFA_RELEASE_SHA: "abc123",
         }
@@ -122,6 +122,69 @@ describe("forwardAgentEdge", () => {
       expect(String(fetcher.mock.calls[0]?.[0])).toBe(
         "https://origin.convex.site/internal/mcp"
       );
+    })
+  );
+
+  it.effect(
+    "forwards the caller's media type with the JSON-RPC body to the MCP origin",
+    () =>
+      Effect.gen(function* () {
+        fetcher.mockResolvedValue(new Response("{}"));
+        const body = '{"jsonrpc":"2.0","id":1,"method":"server/discover"}';
+        const request = new Request("https://mcp.nakafa.com/mcp", {
+          body,
+          headers: { "content-type": "application/json" },
+          method: "POST",
+        });
+
+        yield* forwardAgentEdge(
+          NAKAFA_MCP_EDGE_CONTRACT,
+          NAKAFA_MCP_EDGE_PATHS,
+          request,
+          {
+            CONVEX_SITE_URL: "https://origin.convex.site",
+            NAKAFA_MCP_EDGE_SECRET: "mcp-secret",
+            NAKAFA_RELEASE_SHA: "abc123",
+          }
+        ).pipe(
+          Effect.provide(FetchClient),
+          Effect.provideService(FetchHttpClient.Fetch, fetcher)
+        );
+
+        const [, init] = fetcher.mock.calls[0] ?? [];
+        expect(new Headers(init?.headers).get("content-type")).toBe(
+          "application/json"
+        );
+        expect(
+          yield* Effect.promise(() => new Response(init?.body).text())
+        ).toBe(body);
+      })
+  );
+
+  it.effect("forwards a body without a media type and invents none", () =>
+    Effect.gen(function* () {
+      fetcher.mockResolvedValue(new Response("{}"));
+      const request = new Request("https://mcp.nakafa.com/mcp", {
+        body: new TextEncoder().encode("{}"),
+        method: "POST",
+      });
+
+      yield* forwardAgentEdge(
+        NAKAFA_MCP_EDGE_CONTRACT,
+        NAKAFA_MCP_EDGE_PATHS,
+        request,
+        {
+          CONVEX_SITE_URL: "https://origin.convex.site",
+          NAKAFA_MCP_EDGE_SECRET: "mcp-secret",
+          NAKAFA_RELEASE_SHA: "abc123",
+        }
+      ).pipe(
+        Effect.provide(FetchClient),
+        Effect.provideService(FetchHttpClient.Fetch, fetcher)
+      );
+
+      const [, init] = fetcher.mock.calls[0] ?? [];
+      expect(new Headers(init?.headers).get("content-type")).toBeNull();
     })
   );
 
@@ -315,11 +378,11 @@ describe("agentEdgeWorker", () => {
 
     const response = await worker.fetch(
       new Request("https://api.nakafa.com/v1"),
-      { ...bindings, NAKAFA_CONVEX_SITE_URL: undefined }
+      { ...bindings, CONVEX_SITE_URL: undefined }
     );
 
     expect(response.status).toBe(500);
-    expect(await response.text()).not.toContain("NAKAFA_CONVEX_SITE_URL");
+    expect(await response.text()).not.toContain("CONVEX_SITE_URL");
   });
 
   it("answers 502 when the origin cannot be reached", async () => {

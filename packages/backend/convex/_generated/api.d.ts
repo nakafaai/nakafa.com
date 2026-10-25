@@ -10976,31 +10976,8 @@ export declare const internal: {
         null
       >;
     };
-    migration: {
-      copyPolarSubscriptionsPage: FunctionReference<
-        "mutation",
-        "internal",
-        { cursor: string | null; numItems: number },
-        {
-          continueCursor: string;
-          copied: number;
-          isDone: boolean;
-          skipped: number;
-        }
-      >;
-    };
   };
   classroom: {
-    forum: {
-      backfill: {
-        general: FunctionReference<
-          "mutation",
-          "internal",
-          { cursor?: string },
-          { continueCursor: string; created: number; done: boolean }
-        >;
-      };
-    };
     seed: {
       teacher: FunctionReference<
         "mutation",

@@ -30,7 +30,7 @@ import { JsonTextSchema } from "@repo/utilities/json";
 import { Effect, Schema } from "effect";
 
 const RUNTIME_TOKEN = "technical-runtime-token";
-const runtimeTokenName = "CONTENT_RUNTIME_TOKEN";
+const runtimeTokenName = "CONTENT_READ_TOKEN";
 const polarName = "POLAR_WEBHOOK_SECRET";
 const publicRequestJson = Schema.fromJsonString(
   PublicContentRuntimeRequestSchema

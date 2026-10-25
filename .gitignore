@@ -263,7 +263,7 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
-# End of https://www.toptal.com/developers/gitignore/api/macos,windows,node,vercel,turbo,storybookjs,react
+# End of https://www.toptal.com/developers/gitignore/api/macos,windows,node,turbo,storybookjs,react
 
 # Sentry Config File
 .env.sentry-build-plugin

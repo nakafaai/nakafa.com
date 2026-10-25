@@ -36,13 +36,11 @@ import { isGenerated, type RepositorySource } from "#scripts/check/source";
 const WORD_BREAK_PATTERN = /[^\w$]+/u;
 /**
  * Modules whose exports a framework reads by name, so no module imports them:
- * the TanStack Start route files and entry modules inside the `app` directory of
- * an app, and the Vercel project configuration.
+ * the TanStack Start route files and entry modules in the `src` directory of
+ * an app.
  */
-const FRAMEWORK_MODULE_PATTERNS = [
-  /^apps\/[^/]+\/src\/(?:routes\/.+|routeTree\.gen|router|server|start)\.tsx?$/u,
-  /^apps\/[^/]+\/vercel\.tsx?$/u,
-];
+const FRAMEWORK_MODULE_PATTERN =
+  /^apps\/[^/]+\/src\/(?:routes\/.+|routeTree\.gen|router|server|start)\.tsx?$/u;
 /**
  * The component sets that a registry ships: shadcn and EvilCharts. Each keeps
  * every part that its upstream ships, so a later update of a component applies
@@ -204,7 +202,7 @@ export function inspectExports(
     Arr.some(COMPONENT_SET_DIRECTORIES, (directory) =>
       Str.startsWith(directory)(file)
     ) ||
-    Arr.some(FRAMEWORK_MODULE_PATTERNS, (pattern) => pattern.test(file)) ||
+    FRAMEWORK_MODULE_PATTERN.test(file) ||
     Arr.some(unjudged, (directory) => Str.startsWith(directory)(file))
       ? []
       : Arr.flatMap(sourceFile.statements, (statement) =>

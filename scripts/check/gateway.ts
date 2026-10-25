@@ -23,8 +23,8 @@ import { descendants, namesModule } from "#scripts/check/source";
 
 /** The one module that calls a model, through the Convex AI gateway provider. */
 const GATEWAY_MODULE = "packages/backend/confect/gateway/";
-/** The Vercel AI Gateway client package, which no module imports. */
-const VERCEL_PACKAGE = "@ai-sdk/gateway";
+/** The AI SDK gateway client package, which no module imports. */
+const GATEWAY_CLIENT_PACKAGE = "@ai-sdk/gateway";
 /** The Convex AI gateway provider, which only the Gateway service imports. */
 const PROVIDER_PACKAGE = "@convex-dev/ai-sdk-provider";
 /** The AI SDK's main entry re-exports its gateway client. */
@@ -46,14 +46,14 @@ const MODEL_PROPERTIES = HashSet.make(
 const MODEL_ID_SEPARATOR = "/";
 const TEST_MODULE_PATTERN = /\.test\.tsx?$/u;
 
-const PACKAGE_RULE = `never import ${VERCEL_PACKAGE}; the Convex AI gateway provider serves every model call`;
+const PACKAGE_RULE = `never import ${GATEWAY_CLIENT_PACKAGE}; the Convex AI gateway provider serves every model call`;
 const PROVIDER_RULE = `import ${PROVIDER_PACKAGE} only inside ${GATEWAY_MODULE}; take model handles from its Gateway service`;
 const CLIENT_RULE =
   "take model handles from the Gateway service in confect/gateway instead of the AI SDK's gateway client";
 const DECISION_RULE =
   "take decisions from the Gateway service in confect/gateway instead of the AI SDK's decide";
 const MODEL_RULE =
-  "take model handles from the Gateway service instead of a gateway model ID, which the AI SDK resolves through its default Vercel gateway";
+  "take model handles from the Gateway service instead of a gateway model ID, which the AI SDK resolves through its default gateway";
 
 /** Whether import or export specifiers name one of some AI SDK exports. */
 function names(
@@ -190,7 +190,7 @@ function brokenRules(
 ): readonly string[] {
   if (isStringLiteralLikeNode(node) && namesModule(node)) {
     return Match.value(node.text).pipe(
-      Match.when(VERCEL_PACKAGE, () => [PACKAGE_RULE]),
+      Match.when(GATEWAY_CLIENT_PACKAGE, () => [PACKAGE_RULE]),
       Match.when(PROVIDER_PACKAGE, () =>
         gatewayModule ? [] : [PROVIDER_RULE]
       ),
@@ -213,7 +213,7 @@ function brokenRules(
 }
 
 /**
- * Reports the gateway rules a module breaks: any import of the Vercel gateway
+ * Reports the gateway rules a module breaks: any import of the @ai-sdk/gateway
  * package, the AI SDK's gateway client, the Convex provider and the AI SDK's
  * decide outside confect/gateway, and, outside tests, a gateway model ID where
  * the AI SDK takes a model.

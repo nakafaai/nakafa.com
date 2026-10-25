@@ -282,17 +282,11 @@ describe("public HTML route rejection", () => {
     })
   );
 
-  it.effect("delegates indexes, markdown, and non-read requests", () =>
+  it.effect("delegates indexes and non-read requests", () =>
     Effect.gen(function* () {
       const requests = [
         { method: "GET", pathname: "/id/quran" },
         { method: "GET", pathname: "/en/articles" },
-        { method: "GET", pathname: "/id/quran/1.md" },
-        {
-          method: "GET",
-          pathname: "/en/articles/politics/published-article.md",
-        },
-        { method: "GET", pathname: "/de/datenschutz.md" },
         {
           method: "POST",
           pathname: "/en/articles/politics/not-a-read-check",

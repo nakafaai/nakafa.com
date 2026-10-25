@@ -18,6 +18,7 @@ import {
 } from "@tanstack/react-router";
 import { Array as Arr, Option } from "effect";
 import type { ComponentProps } from "react";
+import { isPrerenderedRouteTarget } from "@/lib/routing/prerendered";
 import { EXACT_ACTIVE_OPTIONS, type LOCALE_ROUTE } from "@/lib/routing/tree";
 
 /**
@@ -110,12 +111,19 @@ const RouterLink = createLink(LinkAnchor);
  * The one link of the app: the router's typed Link. It takes the `to`, `params`
  * and `search` of the route tree, and fills the locale of a locale route from
  * the page on screen. Its active state is exact unless the caller names another
- * rule, and it is the router's own, so no caller compares paths.
+ * rule, and it is the router's own, so no caller compares paths. A link to a
+ * prerendered page loads the page as a document, so no client loader runs for it.
  */
 export function Link<const TTo extends string | undefined = undefined>(
   props: LinkComponentProps<"a", RegisteredRouter, typeof LOCALE_ROUTE, TTo>
 ) {
-  return <RouterLink activeOptions={EXACT_ACTIVE_OPTIONS} {...props} />;
+  return (
+    <RouterLink
+      activeOptions={EXACT_ACTIVE_OPTIONS}
+      reloadDocument={isPrerenderedRouteTarget(props.to)}
+      {...props}
+    />
+  );
 }
 
 /**

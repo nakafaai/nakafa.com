@@ -178,13 +178,13 @@ describe("array findings by project", () => {
     () =>
       Effect.gen(function* () {
         const failure = yield* judge({
-          "scripts/cas/vercel.ts": "export const config = {};\n",
+          "scripts/cas/worker.ts": "export const config = {};\n",
         }).pipe(Effect.flip);
         assert.deepStrictEqual(
           [failure._tag, failure.message],
           [
             "TestCompilerError",
-            "scripts/cas/vercel.ts has no tsconfig.json up its folder tree, so the array rules cannot read its types.",
+            "scripts/cas/worker.ts has no tsconfig.json up its folder tree, so the array rules cannot read its types.",
           ]
         );
       })
@@ -435,7 +435,6 @@ describe("array findings by scope", () => {
     Effect.gen(function* () {
       assert.deepStrictEqual(
         yield* judge({
-          "apps/cas/vercel.ts": `import type { VercelConfig } from "@vercel/config/v1";\n${CALL}`,
           "apps/www/vitest.config.ts": `import { defineConfig } from "vitest/config";\n${CALL}`,
         }),
         []

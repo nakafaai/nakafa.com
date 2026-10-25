@@ -15,10 +15,10 @@ export class GoogleAuthConfigError extends Schema.TaggedError<GoogleAuthConfigEr
 export const readGoogleAuthConfig = Effect.fn("auth.readGoogleConfig")(
   function* () {
     return yield* Config.all({
-      clientId: Config.schema(GoogleCredential, "AUTH_GOOGLE_ID"),
+      clientId: Config.schema(GoogleCredential, "GOOGLE_AUTH_CLIENT_ID"),
       clientSecret: Config.schema(
         Schema.Redacted(GoogleCredential),
-        "AUTH_GOOGLE_SECRET"
+        "GOOGLE_AUTH_CLIENT_SECRET"
       ),
     }).pipe(
       Effect.mapError(
@@ -26,7 +26,7 @@ export const readGoogleAuthConfig = Effect.fn("auth.readGoogleConfig")(
           new GoogleAuthConfigError({
             code: "AUTH_GOOGLE_CONFIG_INVALID",
             message:
-              "AUTH_GOOGLE_ID and AUTH_GOOGLE_SECRET must be configured as nonempty credentials.",
+              "GOOGLE_AUTH_CLIENT_ID and GOOGLE_AUTH_CLIENT_SECRET must be configured as nonempty credentials.",
           })
       )
     );

@@ -85,13 +85,13 @@ export const readCurrentPublishedContent = Effect.fn(
     try: contentRuntimeKeys,
     catch: () =>
       new ContentRuntimeConfigurationError({
-        key: "CONTENT_RUNTIME_TOKEN",
+        key: "CONTENT_READ_TOKEN",
       }),
   });
   const found = yield* readPublicContent(
     {
       siteUrl: env.VITE_CONVEX_SITE_URL,
-      token: runtimeKeys.CONTENT_RUNTIME_TOKEN,
+      token: runtimeKeys.CONTENT_READ_TOKEN,
     },
     request,
     liveRenderer
