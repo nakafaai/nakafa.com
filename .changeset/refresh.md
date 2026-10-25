@@ -12,4 +12,4 @@ Dependencies move to their latest releases.
 - `@repo/analytics`: posthog-js 1.438.21, posthog-node 5.57.1.
 - `@repo/design-system`: react-resizable-panels 4.14.8, react-aria-components 1.22.1, the AI SDK 7.0.140.
 
-Development tools also move: the package manager moves from pnpm to Bun 1.4.4, vite 8.3.5, @playwright/test 1.64.1, @vercel/config 0.12.0, @scalar/openapi-parser 0.29.16.
+Development tools also move: the package manager moves from pnpm to Bun 1.4.4, vite 8.3.5, @playwright/test 1.64.1, @scalar/openapi-parser 0.29.16.

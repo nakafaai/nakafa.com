@@ -1,18 +1,18 @@
 # ADR 0019: Every Model Call Goes Through The Convex AI Gateway
 
-> Superseded in part by [ADR 0037](0037-cloudflare.md) and [ADR 0036](0036-boundary.md): the Vercel and Next.js statements of this record describe the earlier stack. Cloudflare Workers through Alchemy and the TanStack Start boundary replace them.
+> Superseded in part by [ADR 0037](0037-cloudflare.md) and [ADR 0036](0036-boundary.md): the hosting and framework statements of this record describe the earlier stack. Cloudflare Workers through Alchemy and the TanStack Start boundary replace them.
 
 ## Status
 
-Accepted. Supersedes ADR 0014, which routed every model call through the
-Vercel AI Gateway. The Jev decision route is alpha: no school grade uses a Jev
+Accepted. Supersedes ADR 0014, which routed every model call through the AI SDK
+gateway. The Jev decision route is alpha: no school grade uses a Jev
 judgment until the zero-retention test in Decisions passes on the dev
 deployment.
 
 ## Context
 
 ADR 0014 made `packages/backend/confect/gateway` the only module that reaches a
-model, through the Vercel AI Gateway. Its routing sent Gemini only to Google and
+model, through the AI SDK gateway. Its routing sent Gemini only to Google and
 Vertex, which do not train on prompts, sorted by time to first token. Its spend
 tags split reports by space and purpose, and a tenant space sent its tenant ID
 as the gateway `user`. Google Search grounding ran through the same provider.
@@ -404,10 +404,9 @@ thresholds in the catalog were set from what that command printed on 12 October
 
 Given up:
 
-- **Provider pinning.** Vercel's `only: [google, vertex]` route is gone. Convex
-  selects how each request is served.
-- **Time to first token.** Vercel's sort by time to first token has no Convex
-  equivalent, so that latency is unknown. Purpose deadlines stay under Convex's
+- **Provider pinning.** Convex selects how each request is served.
+- **Time to first token.** Convex has no sort by time to first token, so that
+  latency is unknown. Purpose deadlines stay under Convex's
   30-minute action limit.
 - **Google Search grounding.** The gateway does not pass Google's grounding tool.
   Its own web search, through the `:online` suffix or the `openrouter:web_search`
@@ -422,9 +421,8 @@ Given up:
 
 Changed:
 
-- **Reasoning summaries on fast calls.** Under the Vercel gateway only
-  `interactive` calls asked for summaries (`includeThoughts`). The Convex gateway
-  returns a summary whenever the model writes one: `google/gemini-3.5-flash-lite`
+- **Reasoning summaries on fast calls.** The Convex gateway returns a summary
+  whenever the model writes one: `google/gemini-3.5-flash-lite`
   at `low` returned 239 characters in one plain call (`liteLow.json`) and none in
   a call with a required tool or in a streamed call (`liteLowTool.json`,
   `streamPlainLiteLow.json`). Nothing stores them: specialist and math repair
@@ -435,9 +433,8 @@ Changed:
   build-time check passed, reaches `classify` as an error with no HTTP status,
   which reads as `unknown`. The provider reads the service token inside its own
   fetch, and the `@ai-sdk/provider-utils` that `@ai-sdk/openai-compatible` uses
-  returns that error unchanged. Under the Vercel gateway a rejected key read as
-  `auth`, which Nina stores as `service-configuration`. `GatewayLive` still fails
-  a deployment that cannot call the gateway before any request.
+  returns that error unchanged. `GatewayLive` still fails a deployment that
+  cannot call the gateway before any request.
 - **Duplicate provider packages.** `@convex-dev/ai-sdk-provider` brings its own
   copies of the provider packages beside the AI SDK's: `@ai-sdk/provider` 4.0.3
   and 4.0.7 beside 4.0.24, and `@ai-sdk/provider-utils` 5.0.12 and 5.0.28 beside
@@ -447,10 +444,9 @@ Changed:
 Stored data:
 
 - **Usage provider.** Usage rows now store `provider` as `convexGateway.chat`,
-  the id the AI SDK gives the chat models of `convexGateway`. Rows written before
-  this change store `gateway`, the provider id of the Vercel gateway's language
-  model. Only the stored value changes: `nina/usage.ts` still stores
-  `event.provider`.
+  the id the AI SDK gives the chat models of `convexGateway`. Rows that still
+  store the earlier `gateway` id are retired data: they are deleted, never read.
+  Only the stored value changes: `nina/usage.ts` still stores `event.provider`.
 - **PostHog `gateway_*` properties.** These are the properties that
   `packages/analytics/posthog/exception.ts` declares and `nina/diagnostics.ts`
   sends.

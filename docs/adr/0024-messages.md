@@ -141,8 +141,8 @@ longer than its text.
 The sizes of the average and the heavy turn are assumptions that stay inside
 the code's bounds, not production data: a step limit of 20 (`generation.ts:105`)
 makes 40 rows the most a turn writes, and a tool result is shortened to 6,000
-tokens before the model reads it (`budget.ts:10-11`). The dry pass of the
-migration below reports the real rows and bytes before anything is rewritten.
+tokens before the model reads it (`budget.ts:10-11`). Before the change, a
+count of the real rows and bytes replaces the assumed sizes.
 The measurements cover the cost of the cipher only. The cost of reading and
 writing documents is counted in documents, because the test database says
 nothing about it.
@@ -320,11 +320,8 @@ changes.
    field that the component keeps, is sealed with the learner's key in program
    wave A. The component has no way to change a file's name, and the storage
    sweep deletes a file's bytes with its row, so an attachment written before
-   wave A is copied: the old-message migration (order of work, step 4) stores a
-   copy of its bytes, registers the copy with the sealed name through `addFile`,
-   and writes the replaced message with the new file id. The old row loses its
-   last reference, and the sweep removes it and its bytes as for any unused
-   file. The module that owns the sealed form opens a file's name too: the
+   wave A is retired data: the change removes its row and its bytes, as the sweep
+   removes any unused file, and no copy is written under the sealed name. The module that owns the sealed form opens a file's name too: the
    attachments reader takes the file through it and gets the part with its name
    opened, so neither the model's file part, the admission receipt, nor the page
    sees the sealed form. A file part inside a message row is sealed and opened
@@ -342,8 +339,7 @@ changes.
    for such an upload, and it reads any other name as it is, because a name stored
    before sealing can begin with the prefix. A send reads the learner's keys once,
    and only when a name is sealed. A retry reads no name, because its size check
-   reads the storage entry alone. The dry run reports how many attachments and bytes it
-   would copy. The stored file is removed within two days of its chat's
+   reads the storage entry alone. The stored file is removed within two days of its chat's
    deletion, as
    the live policy already says (ADR 0001). The cleanup runs once a day, and it
    removes a file once no chat refers to it and 24 hours have passed since its
@@ -379,9 +375,9 @@ The stages, and the key that seals each one (owner decisions K2, K3, and K10):
 | The private reply and tool rows, once the turn settles, in one transaction | The learner's key | Live (order of work, step 3) |
 | The reply and tool rows of a failed or cancelled turn, at settlement, the sweep as backstop | The learner's key | Live (step 3). Its prompt is sealed at admission (step 2). |
 | Stream deltas | Not sealed; deleted at settlement by the seal | Live (order of work, step 3) |
-| Old messages, by migration | The learner's key | Planned, wave A |
+| Old messages, removed by the sealing change | The learner's key | Planned (Old Messages) |
 | Chat attachment file names, new uploads | The learner's key | Live (order of work, step 2) |
-| Chat attachment file names, uploads before step 2 | The learner's key | Planned, step 4 (migration) |
+| Chat attachment file names, uploads before step 2 | The learner's key | Planned, removed by the sealing change (Old Messages) |
 | School Nina thread, from the class's creation; no personal memory (K3) | The school's key | Planned |
 
 Cost, in documents: a turn of n rows costs n - 1 deletes and n - 1 inserts at
@@ -526,23 +522,10 @@ that does not exist. The token's hash, not the owner's key, decides who reads.
 ## Old Messages
 
 Rows written before the change are plain, and the learner's row of each is
-referenced by `ninaTurns.promptMessageId`. A temporary internal mutation
-migrates them, with a dry pass, as the migrations before it did:
-
-1. It reads one chat per call, by creation time and a cursor, and one page of
-   its rows. A turn that is still active is skipped.
-2. The learner's row is sealed in place with `updateMessage`, which keeps its
-   id. The assistant and tool rows of the turn are replaced as at settlement.
-3. A row that is sealed already is left alone, so a call can run again.
-4. The dry pass writes nothing. It reports chats, turns, rows and bytes by form,
-   so production can be counted before anything is rewritten, and the assumed
-   sizes above can be replaced with real ones.
-
-Its file names are plain too: a plain row refers only to files whose uploads predate sealing, so the migration reads each name as it is and never opens a name by its prefix. It runs on dev and on production until a whole pass finds no settled turn that
-still has a plain row, and it is deleted afterwards with its tests. The reader
-rule of the Sealed Row section holds through the migration: a plain row of a turn
-that carries `sealedAt` fails the read, and the plain rows of a running turn and
-of a settled turn without the marker pass through.
+referenced by `ninaTurns.promptMessageId`. Those rows, and the attachments whose
+names predate sealing, are retired data. The change removes them. No temporary
+mutation, dry pass, or cursor migrates them, and no copy is written under a
+sealed name.
 
 ## Order Of Work
 
@@ -566,15 +549,8 @@ runs a whole turn and searches every component table.
    sweep and the early deletion of deltas. Gate: after settlement and the
    deletion of the deltas no planted string appears in any table; during the
    turn they appear only in the plain rows and the deltas.
-4. **Old messages.** The migration, run dry, then run for real on dev and on
-   production, then run again until it reports nothing. It also copies each
-   attachment of an old message under its sealed name (Decision, item 4). The dry
-   run counts old attachments only, because every upload since step 2 is sealed at
-   upload. Gate: no file row that a message refers to holds a plain name.
-5. **Contract.** Delete the migration and its tests. The reader rule of the Sealed
-   Row section stays: a plain row of a turn that carries `sealedAt` fails the
-   read, and a running turn or a settled turn without the marker keeps its plain
-   rows readable.
+4. **Old messages.** They are removed in the same change, as Old Messages says.
+   Gate: no file row that a message refers to holds a plain name.
 
 In parallel, a proposal to Convex for a codec hook in the component. If it ships,
 the hook replaces wave 3, and wave 2 too if the hook covers `saveMessage`. The
@@ -612,8 +588,8 @@ module then keeps only the opening.
 - A run that writes a row into a turn after the seal leaves that row plain. A
   cancelled or failed settlement cuts off the turn's streams (`journal.ts`), and
   the seal aborts any stream still open at the turn's order before it reads the
-  streams, which stops the known writers. Step 5 makes a plain row of a sealed
-  turn fail the read. Until step 5, nothing detects such a row.
+  streams, which stops the known writers. The reader fails a plain row of a
+  sealed turn.
 
 ## Implementation Status
 
@@ -621,7 +597,7 @@ module then keeps only the opening.
 | --- | --- |
 | `packages/backend/confect/nina/sealed.ts`: seals a message's content into a skeleton row, and opens it only for its own thread, order and step. The field binds the row through `row` in `vault/text.ts`, so existing learner bindings do not change. | Built in program wave A, order of work step 1 (slice S1a). The readers open through it in S1b and S1c, and the writers seal in wave two. |
 | `packages/backend/confect/nina/sealed/`: the reads of stored rows and files, and the two writers of the row below, `save.ts` (`savePrompt`) and `file.ts` (`sealFileName`). `thread.ts` reads a page of a thread, `message.ts` one message by id, `file.ts` a stored file (`getStoredFile`, `readFile`), whose name opens only when its upload sealed it, `model.ts` converts opened rows to model messages, `action.ts` reads from an action through the module's own internal queries (`sealed.spec.ts`, `sealed.impl.ts`), and `context.ts` gives the recent context of suggestions and the prompt of the title. `open.ts` opens the rows of one read for the owner it is given: a read of plain rows reads no key, and a read with a sealed row reads the owner's key once. | Built in S1b. Each read names the owner whose key opens it: the chat's owner, the turn's learner, or the learner who asks for a memory. |
-| Readers that open through the module. Each has a parity test, in which the same thread gives the same result plain, written by the writers (`writtenThreadIn`), and sealed in place (`sealThreadIn`, `test/nina/seal.ts`). The replay of a turn start and the attachment retry also run a plain copy of the chat (`plainThreadIn`): the page (`messages/page.ts`), the list (`messages.impl.ts`), the next turn's history (`uncovered.ts`), the summary's writer input and its summary (`summary.ts`), memory capture's words of a turn (`memory/said.ts`), the replay of a turn start (`turns.impl.ts`), the settlement check of the newest row (`journal.ts`), retry of a sealed prompt with its attachment (`prompt.ts`, `attachments.ts`), the brief's prompt (`brief.impl.ts`), and the suggestions' and the title's model input (`presentation.ts`, with the sealed window of `sealed/context.ts`). Attachment file names are sealed from step 2 for every new upload; the names stored before step 2 stay plain until the migration (step 4). The admission opens the row that the writer stores, through `savePrompt` (`sealed/save.ts`, the row below). The CLI journal gate (`packages/backend/scripts/nina/deployment.ts`) stays as it is: it reads only the status, the agent name, the finish reason, the usage and the role of each row (`scripts/nina/verdict.ts`), none of them sealed. | Built in S1b and S1c. |
+| Readers that open through the module. Each has a parity test, in which the same thread gives the same result plain, written by the writers (`writtenThreadIn`), and sealed in place (`sealThreadIn`, `test/nina/seal.ts`). The replay of a turn start and the attachment retry also run a plain copy of the chat (`plainThreadIn`): the page (`messages/page.ts`), the list (`messages.impl.ts`), the next turn's history (`uncovered.ts`), the summary's writer input and its summary (`summary.ts`), memory capture's words of a turn (`memory/said.ts`), the replay of a turn start (`turns.impl.ts`), the settlement check of the newest row (`journal.ts`), retry of a sealed prompt with its attachment (`prompt.ts`, `attachments.ts`), the brief's prompt (`brief.impl.ts`), and the suggestions' and the title's model input (`presentation.ts`, with the sealed window of `sealed/context.ts`). Attachment file names are sealed from step 2 for every new upload; the names stored before step 2 are removed by the sealing change (Old Messages). The admission opens the row that the writer stores, through `savePrompt` (`sealed/save.ts`, the row below). The CLI journal gate (`packages/backend/scripts/nina/deployment.ts`) stays as it is: it reads only the status, the agent name, the finish reason, the usage and the role of each row (`scripts/nina/verdict.ts`), none of them sealed. | Built in S1b and S1c. |
 | Agent audit. Suggestions and title set `recentMessages: 0` and take their input from the module through `contextHandler`, as `generation.ts` already did. Every other Agent call (`math/agent.ts`, `math/repair.ts`, `memory/capture.ts`, `nakafa/agent.ts`, `portrait/build.ts`, `repair.ts`, the two calls of `research/agent.ts`, `summary.ts`, and the test helper `test/nina/capability.ts`) passes `userId` and no `threadId`, so its fetch of recent messages cannot run. Every `generateText`, `streamText`, `generateObject` and `streamObject` call of the backend goes through one of these Agents. | Built in S1b. |
 | `scripts/check/sealed.ts`, the source rule of ADR 0021 (Sealed message readers): no load of the Agent package that reaches one of its readers of stored rows and files (an import, a re-export, a namespace import, or a dynamic import), and no read of the component's messages that returns sealed rows as they are (a property, an element, a destructuring, or the messages taken as a value), in every authored module outside the sealed module. Type-only specifiers read nothing. Tests and the helpers under `packages/backend/test/` read the stored form on purpose and are not judged. | Built in S1b, with its tests and a planted violation of each form. |
 | The writers of step 2. `sealed/save.ts` (`savePrompt`) seals a learner's message at its place: it reads the newest row of the thread across every status and tool flag, and takes the next order with step 0, as the Agent does for a user message. It serializes the message, seals it with the learner's key bound to that row, saves it through the Agent's `saveMessage` with the explicit order, and opens the stored row. `turns.start` is its only caller: the admission, and the retry, which sends the stored prompt again. A replayed request reads its row and writes nothing, and `memory/capture.ts` writes no learner message (it reads one through `memory/said.ts`). `sealed/file.ts` (`sealFileName`) seals a new upload's name, and `nina/uploads.impl.ts` seals it inside `reserve`, before `storeFile` stores the file, and records `nameSealed` on the upload, so the component never sees the plain name. `sealed/file.ts` (`readFile`) opens a name only for an upload that sealed it, and the retry's size check reads the storage entry alone. Built in step 2. | Built in step 2. Gates: `turns.impl.test.ts` (no table of the component holds the planted prompt after admission), `uploads.impl.test.ts` (no table holds a planted name, `files` included), `sealed/save.test.ts`, `sealed/file.test.ts`, and `attachments.test.ts` (a retry opens no name, and a send opens a name only for a sealed upload, with one key read). |

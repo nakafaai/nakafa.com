@@ -1,6 +1,6 @@
 # ADR 0031: One Assessment Model For Try-Outs And School Exams
 
-> Superseded in part by [ADR 0037](0037-cloudflare.md) and [ADR 0036](0036-boundary.md): the Vercel and Next.js statements of this record describe the earlier stack. Cloudflare Workers through Alchemy and the TanStack Start boundary replace them.
+> Superseded in part by [ADR 0037](0037-cloudflare.md) and [ADR 0036](0036-boundary.md): the hosting and framework statements of this record describe the earlier stack. Cloudflare Workers through Alchemy and the TanStack Start boundary replace them.
 
 ## Status
 
@@ -77,11 +77,9 @@ that the model must change:
 - A teacher's question is school data in the school's own cell. The Aksara
   question schema reads it read-only. It is not signed, it is not in the Aksara
   catalogue, and each row records the contract version it was written with (K1).
-  That version is migration bookkeeping only: an index lets a contract release
-  find the rows it has not rewritten yet. No reader dispatches on it and no
-  renderer keeps an older shape (ADR 0018): readers decode only the current
-  shape, and a major contract release migrates the school item rows of every cell
-  in the order of section 10.
+  No reader dispatches on that version, and no renderer keeps an older shape (ADR
+  0018): readers decode only the current shape, and a major contract release
+  clears the school item rows of the old shape in every cell (section 10).
 
 ### 2. The item body is a structured document, not code
 
@@ -102,7 +100,7 @@ that the model must change:
   image form has no schema yet, and wave A adds one with the document contract.
   The per-set figure components of the SNBT question bank (`Set<N>Question<M>`,
   with kinds such as `Graph` and `SalesChart`) are not in this list. Each kind
-  takes one of these forms, or it is removed, in the release that migrates the
+  takes one of these forms, or it is removed, in the release that replaces the
   corpus, and its form is recorded here before that release. No release may
   contain a figure outside this list.
 - Aksara still writes MDX. Its compiler produces the document, and Tiptap edits
@@ -246,80 +244,46 @@ has exactly one owner.
 | `gate` | The attempt cycle, sittings, tokens, devices, deadlines, and answer writes | The admission of try-out answers and section finishes is live (#1040). The rest is planned, wave B | `confect/tryouts/start`, `confect/tryouts/mutations`, and the try-out store `confect/tryouts/gate.ts`, wave B |
 | `response` | Answer evaluation as pure functions, shared by the client and the server | Live as `confect/response` (#792) | `confect/response` and `confect/tryouts/response`, across waves A and B |
 | `scoring` | Raw, penalized, IRT, composite, and report scores | The estimator is live in `confect/tryouts/runtime`. The module is planned. | `confect/tryouts/score` and the estimator, wave B |
-| `grading` | The teacher's queue, Nina's suggestions (K6 and K7), grade release, and the frozen results of finished attempts (`assessmentResults`) | Planned, new | The finished rows of the nine `tryout*` tables, converted once (section 10) |
+| `grading` | The teacher's queue, Nina's suggestions (K6 and K7), grade release, and the frozen results of finished attempts (`assessmentResults`) | Planned, new | Nothing. Finished attempts are not converted (section 10) |
 | `calibration` | Offline IRT, DIF, and scale versions | Planned, wave C. Nothing is stored yet | Keeps and extends the `irtScaleVersions`, `irtScaleItems`, and `irtCalibrationRuns` tables, wave C |
 | `analysis` | Item difficulty and discrimination | Planned, new | Nothing |
 
-### 10. Migration without compatibility code
+### 10. Changes without compatibility code
 
-- One major Aksara contract release replaces the 0.x schema. The corpus is
-  rewritten or migrated in the same release.
-- School item rows are not in the corpus. A major contract release migrates them
-  before any reader switches, in the order of the rule for public functions
-  (expand, switch, observe, contract, `packages/backend/AGENTS.md`). In each cell
-  the migration rewrites that cell's rows, counted by the contract-version index
-  and run dry first, the way ADR 0011 counts the rows of the old School. The
-  reader that decodes only the new shape ships last, after the observation:
-  production function logs show no write of the old shape for at least 12 hours
-  (the skew window, ADR 0011) and across one later production deploy, because a
-  tab left open on an older build calls Convex directly, and the count of rows of
-  the old shape then reads zero in every cell. The count follows the observation
-  and never replaces it, because a hold alone does not stop a tab on an older
-  build from writing the old shape.
-- Nakafa's engine replaces `confect/tryouts` and `confect/response` in one release
-  path. No adapter, dual read, or compatibility code sits between the steps.
-- The engine cutover converts every finished try-out attempt once, in a counted
-  and idempotent batch, into result rows that the `grading` module owns
-  (`assessmentResults`). The batch counts the attempts it reads, the rows it
-  writes, and the rows that already exist, and it writes a row only when none
-  exists for the attempt, so a rerun changes nothing. A running attempt is closed
-  and scored first, so it is converted as a finished one.
-- A finished attempt keeps its review (ADR 0003). The conversion writes into the
-  result what that review reads today: the learner's responses with their
-  outcomes, the placements the attempt ran, the scores of the attempt and of each
-  section as `tryoutScores` holds them (the raw and the published score, the
-  score's status, theta, and its standard error,
-  `packages/backend/confect/tryouts/score/result.ts`), and the identity of the
-  signed content it ran on. The old tables are dropped only after every result
-  holds its scores. The signed snapshot and its artifacts stay for as long as a
-  result names them: snapshot retention counts a result as a reference to its
-  snapshot, and the artifact check counts the artifacts of its placements, as
-  they count an attempt and a placement today
+- One major Aksara contract release replaces the 0.x schema. The code that reads
+  it ships in the same deploy, and a brief break during that deploy is accepted.
+  No migration, backfill, dual read, adapter, or temporary function runs.
+- School item rows are not in the corpus. A table that the new code no longer
+  reads is removed in the change that stops reading it, after its rows are
+  cleared with the Convex CLI or the owner approves their disposal.
+- Nakafa's engine replaces `confect/tryouts` and `confect/response` in one
+  deploy. No adapter, dual read, or compatibility code sits between the old and
+  the new.
+- Finished try-out attempts are not converted. They are learner records, so the
+  cutover deploy removes the old tables only after the owner approves their
+  disposal. The signed snapshot and its artifacts stay for as long as an attempt
+  names them, as retention counts an attempt today
   (`packages/backend/confect/contentRelease/snapshot/retention.ts`).
 - The old try-out functions and the nine `tryout*` tables (`tryoutAttempts`,
   `tryoutSectionAttempts`, `tryoutAttemptPlacements`, `tryoutResponses`,
   `tryoutScores`, `tryoutPlacements`, `tryoutCatalog`, `tryoutRuntimeBundles`,
-  and `tryoutSetProgress`) go in the contract step of the rule for public
-  functions (expand, switch, observe, contract, `packages/backend/AGENTS.md`).
-  The tables are dropped only after the counts of the conversion match,
-  acceptance shows the review of a converted attempt reading from its result and
-  the retained signed content alone, and production function logs show no call to
-  an old try-out function across a window that spans at least one production
-  deploy, the check ADR 0011 records for the old School. The 12-hour skew window
-  is only a minimum, and a dev dry run comes first. A reviewed batched deletion
-  then empties the tables, run dry and then for real until every count is zero,
-  and a last release drops the tables, the conversion, and the deletion.
+  and `tryoutSetProgress`) are removed in the cutover change.
 - The Convex reset rule of ADR 0003 stays in force, because this ADR supersedes
   ADR 0003 and the rule must not lapse with it. A content reset deletes only
   rebuildable Nakafa read models. It preserves signed snapshot state, attempts,
   results, progress, placements, responses, scores, access state, entitlements,
   calibration runs, and IRT scales, and each attempt, result, and scale keeps the
   exact signed snapshot that its historical review and scoring need. No table is
-  reset while it holds data. A retired table goes only when no schema or code refers to
-  it and the replacement runtime has passed acceptance, and its rows are none, or
-  verified in the replacement store by the counts above, or approved for disposal
-  by the owner. No export is taken from production, by the working rule of
-  `docs/convex/cost.md`: the conversion is the recoverable copy, because the old
-  tables keep their rows until every count matches.
+  reset while it holds data. A retired table goes only when no schema or code
+  refers to it, and its rows are none or the owner has approved their disposal.
+  No export is taken from production, by the working rule of
+  `docs/convex/cost.md`.
 - One flag table, `assessmentFlags`, holds every assessment flag. No
   `tryoutFlags` table ships.
 - Nina reads each question's raw MDX (`packages/backend/confect/nina/focus.ts`).
   That reader moves to the assessment document in the same release.
 - No Aksara release may contain short-answer or rubric content until the renderer
   and grading are installed. This is a release gate in wave B.
-- The contract step for the version of a try-out answer landed in #1102. The
-  save takes its version as a required argument, and the gate's unversioned
-  branch and its `assessment.gate.unversioned` log line are gone.
 
 ## Consequences
 
@@ -355,7 +319,7 @@ has exactly one owner.
 | `packages/backend/confect/tryouts/runtime/estimate.ts` (2PL with maximum likelihood) | Live |
 | `packages/backend/confect/response` (#792) | Live |
 | `packages/backend/confect/assessment/gate` (admission of try-out answers and section finishes, #1040) | Live. Sittings, tokens, devices, and the offline queue are planned, wave B (ADR 0013) |
-| The nine `tryout*` tables in `packages/backend/confect/tables` | Live. Finished attempts convert to `assessmentResults` and the tables drop in wave B (section 10) |
+| The nine `tryout*` tables in `packages/backend/confect/tables` | Live. The tables are removed in wave B, and finished attempts are not converted (section 10) |
 | The three `irt*` tables in `packages/backend/confect/tables` | Live, extended in wave C |
 | `@cortex-js/compute-engine` and `mathlive` | Not installed |
 | `@convex-dev/presence` | Not installed. Planned for wave B. |

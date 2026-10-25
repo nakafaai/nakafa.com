@@ -1,6 +1,6 @@
 # ADR 0029: Integrations Are Projections Of The Access Catalog, Served Through Effect HttpApi
 
-> Superseded in part by [ADR 0037](0037-cloudflare.md): the Vercel hosting, delivery, and deployment decisions of this record no longer apply.
+> Superseded in part by [ADR 0037](0037-cloudflare.md): the hosting, delivery, and deployment decisions of this record no longer apply.
 
 ## Status
 
@@ -28,9 +28,9 @@ no credential and no school data.
 - `@nakafa/cli` 0.1.1 (`packages/cli`). It is public and read only, and it
   needs no account or key.
 
-The Vercel bridges of the public API (`apps/api/vercel.ts`, `apps/mcp/vercel.ts`)
+The edge Workers of the public API (`apps/api/worker.ts`, `apps/mcp/worker.ts`)
 delete the `authorization` and `cookie` request headers before a request reaches
-Convex (`createAgentEdgeRoutes` in `packages/backend/agent/route.ts`). None of
+Convex (`agentEdgeRequestHeaders` in `packages/backend/agent/route.ts`). None of
 the three surfaces can carry a school's credential.
 
 The HTTP layer is a Confect router. `packages/backend/convex/http.ts`
@@ -103,8 +103,9 @@ and schemas of the school API. Everything else comes from it.
   idempotency record commit together.
 - Errors are RFC 9457 problem details, as in the public API
   (`packages/backend/confect/routes/agent/response.ts`).
-- `/api/v1` is a compatibility namespace like the public `/v1`: a breaking change
-  gets a new namespace and its own decision (ADR 0006).
+- `/api/v1` names the current school contract, not a compatibility namespace (ADR
+  0006): a breaking change ships in one step, with the school clients and the
+  server that they call.
 
 ### Calling the school API: clients, devices, and tokens
 

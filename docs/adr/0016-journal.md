@@ -92,9 +92,9 @@ removed`.
 `ObjectRef` (`{ kind, id }`) is derived from every declared kind, personal and
 tenant (ADR 0012). Journal subjects, attachments, links, notifications,
 evidence, and the external-reference ledger store the same union, so no stored
-reference migrates when a kind is added. Reading a stored reference checks
+reference changes when a kind is added. Reading a stored reference checks
 permission through its kind. Adding a kind extends the union losslessly;
-removing a kind that rows reference is a stored-data migration.
+removing a kind deletes the rows that reference it in the same change.
 
 ### Consumers
 

@@ -262,8 +262,8 @@ Open vocabularies decode tolerantly on the client, because Convex deploys
 before the web app and open tabs keep the previous bundle. `can` drops actions
 the client does not know, audit entries decode an unknown change type or kind
 as `unknown`, and `AccessDenied.action` is a plain string. Closed values, such
-as role keys, scopes, statuses, and unit levels, change through expand, switch,
-observe, and contract.
+as role keys, scopes, statuses, and unit levels, change in one step with the code
+that reads them.
 
 ### Convex actions
 

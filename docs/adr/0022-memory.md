@@ -1,6 +1,6 @@
 # ADR 0022: Nina Memory Is On For Everyone, Typed, Sealed, Searchable, And Independent Of Chats
 
-> Superseded in part by [ADR 0037](0037-cloudflare.md) and [ADR 0036](0036-boundary.md): the Vercel and Next.js statements of this record describe the earlier stack. Cloudflare Workers through Alchemy and the TanStack Start boundary replace them.
+> Superseded in part by [ADR 0037](0037-cloudflare.md) and [ADR 0036](0036-boundary.md): the hosting and framework statements of this record describe the earlier stack. Cloudflare Workers through Alchemy and the TanStack Start boundary replace them.
 
 ## Status
 
@@ -818,9 +818,9 @@ nobody tries them again without a new reason.
   first save is on its way has a row from the moment that save goes out, and
   the row leaves the list at once; the memory is deleted when the server has
   stored it. No page offers an Undo: a delete
-  asks first, with the design system's `ResponsiveDialog`. The `restore`
-  mutation below stays only for an older web build that still calls it during
-  the deploy skew window, and it gives back what that build deleted. Words that
+  asks first, with the design system's `ResponsiveDialog`. The `restore` mutation
+  below has no caller, so it is deleted with its restore record in one change,
+  not kept for an older build. Words that
   an open editor held and had not saved when the learner deleted the memory were
   never part of it. They open in the editor again only when the server does not
   delete the memory. A paste that would take the Markdown past 2,000 characters is

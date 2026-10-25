@@ -40,9 +40,8 @@ or generated Convex URL values out of this checkout. The root guide owns the
 deployment policy; the configured production build deploys Convex before
 building the web app, and a dev command never deploys production. Reach for an
 isolated expiring Agent Mode deployment whenever it is the better tool for
-the job, such as risky schema or function changes, destructive rehearsals, or
-parallel work that must not disturb the main dev loop. No explicit request
-needed.
+the job, such as risky schema or function changes, or parallel work that must not
+disturb the main dev loop. No explicit request needed.
 
 Run one-off inspection and diagnostic queries against the dev or an Agent Mode
 deployment, never production. An ad-hoc query is an unbounded read until it is
@@ -94,8 +93,9 @@ The root development command runs Confect generation and Convex watching
 through Turborepo. Setup, deployment, typechecking, tests, and production
 acceptance generate contracts before consuming them.
 
-A one-off migration, backfill, repair, or maintenance function is finished only
-when dev and prod data are verified and the function and its tests are deleted.
+No migration or backfill function ships, and no temporary function changes data.
+Bad or retired data is deleted instead: cleared with the Convex CLI, or removed
+in the same change that retires it.
 
 History retention and compaction decide which stored releases must stay
 reachable, so they read small stored reachability facts (release identity, base
@@ -117,13 +117,12 @@ the digest of its exact stored bytes, the body ID, and `retainUntil`. They never
 read or rewrite a signed artifact body to prove identity or extend retention;
 only deleting an artifact touches its body, together with its facts.
 
-Every public Convex function used by a deployed client is a rollout contract.
-Renames and removals use expand, switch, observe, contract: deploy the successor
-while the predecessor remains, switch every consumer, verify the predecessor
-has no readers for an explicit migration-owned observation window, then remove
-it and every temporary migration artifact. A promoted web deployment is not
-proof that older browser clients stopped calling the predecessor. Temporary
-compatibility needs an owner, exit criterion, and cleanup change.
+Every public Convex function used by a deployed client changes in one step. The
+backend and the apps deploy together, and a brief break during that deploy is
+accepted. A rename or removal deletes its predecessor in the same change, with
+its tests and comments. No expand or observe window, dual read or write,
+compatibility field, adapter, deprecation period, or temporary function is kept,
+and no older browser client is waited for.
 
 ## Effect-Native Confect
 

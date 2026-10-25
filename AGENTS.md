@@ -11,7 +11,7 @@ This guide is a map. It states each Nakafa decision once and names the file, com
 | Versions, package manager, runtime, dependency holds | `package.json`, `bunfig.toml`, `scripts/dependencies/policy.ts` |
 | Writing Effect v4 | `repos/effect/LLMS.md`, then source and tests under `repos/effect/packages`; https://effect.website/docs/v4/api/effect |
 | Confect v10 | https://confect.dev and the installed `@confect/*` source |
-| Convex architecture, auth, the dev deployment, migrations | `packages/backend/AGENTS.md`; installed API rules in `packages/backend/convex/_generated/ai/guidelines.md` |
+| Convex architecture, auth, the dev deployment, retired data | `packages/backend/AGENTS.md`; installed API rules in `packages/backend/convex/_generated/ai/guidelines.md` |
 | TanStack Start and Router APIs, file conventions | the installed docs under `apps/www/node_modules/@tanstack` |
 | Turborepo | `docs/README.md` inside the installed `turbo` package |
 | Effect-native source rules, their scopes and fixes | `scripts/check/rules.ts` |
@@ -36,7 +36,7 @@ This guide is a map. It states each Nakafa decision once and names the file, com
 
 ## Architecture And TypeScript
 
-- Keep changes cohesive and complete. Remove dead, redundant, obsolete, repair-only, and legacy paths after proving they are unused in every relevant environment.
+- Keep changes cohesive and complete. Remove dead, redundant, obsolete, repair-only, and legacy paths in the same change that makes them unused. No compatibility window, dual path, adapter, or temporary function is kept: a contract changes in one step, and the backend and the apps deploy together.
 - Prefer direct control flow, early returns, and small domain-owned modules over wrapper chains, compatibility facades, catch-all utility folders, and abstractions that do not reduce complexity. Deleting a proposed module should concentrate meaningful complexity, not merely relocate it.
 - Hand-written `.ts` and `.tsx` modules target 300 LOC or less, and the source check rejects one over 500. Before splitting a module, identify its Module, Interface, Implementation, Seam, Depth, Leverage, and Locality, and decompose by real capability.
 - Name new folders and files with one concise domain word per path segment plus conventional suffixes such as `.server` or `.test`: no hyphenated phrases, no repeated parent wording.
@@ -92,7 +92,7 @@ This guide is a map. It states each Nakafa decision once and names the file, com
 
 ## Convex
 
-- `packages/backend/AGENTS.md` owns Convex architecture, the dev deployment, and the rollout contract of public functions; the Deployment section below owns production. Prefer direct Convex queries and mutations for app data; add a server function (`*.functions.ts`) or a server route only for a real framework boundary such as cookies, headers, cache invalidation, or a non-Convex integration, and document that reason at the seam.
+- `packages/backend/AGENTS.md` owns Convex architecture, the dev deployment, and the one-step change rule for public functions; the Deployment section below owns production. Prefer direct Convex queries and mutations for app data; add a server function (`*.functions.ts`) or a server route only for a real framework boundary such as cookies, headers, cache invalidation, or a non-Convex integration, and document that reason at the seam.
 
 ## Testing
 

@@ -205,7 +205,6 @@ export const { tax } = source;
             "apps/www/src/routes/lesson.tsx": text,
             "apps/www/src/routes/api/health.ts": text,
             "apps/www/src/start.ts": text,
-            "apps/www/vercel.ts": text,
             "packages/design-system/components/ui/table.tsx": text,
             "packages/design-system/components/evilcharts/charts/area.tsx":
               text,

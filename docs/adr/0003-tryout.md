@@ -97,8 +97,7 @@ write did before the gate. Each answer carries a version that grows with every
 write of its question, a clear included: deleting an answer deletes its
 version, so the question's placement keeps the version of the clear. The gate
 refuses an answer that is not newer than the latest write of its question
-(`TRYOUT_RESPONSE_STALE`). Since the contract step of ADR 0031 section 10
-(#1102), every answer carries its version, and the server refuses one without
+(`TRYOUT_RESPONSE_STALE`). Since the change of #1102, every answer carries its version, and the server refuses one without
 it, so a page opened before versions must reload. A question of another
 learner reports `TRYOUT_PLACEMENT_NOT_FOUND`, like a
 question that does not exist. The try-out store lives in
@@ -137,9 +136,9 @@ number the grader read. A deterministic integrity check defers to the stored
 outcome only where its own evaluation is `pending`.
 
 Responses store their outcome beside the legacy `isCorrect` flag, which stays
-true only for `correct`; readers map rows written before outcomes through one
-read function. A later migration fills every outcome, then the flag and the read
-function are removed. Counters count complete answers and correct outcomes, so a
+true only for `correct`. In one change, the flag and the read function that maps
+rows written before outcomes are removed, and those rows are cleared rather than
+migrated. Counters count complete answers and correct outcomes, so a
 pending answer is answered but never correct.
 
 Every strategy reads a question's worth only through the contract's
@@ -285,12 +284,11 @@ Attempts and scales retain the exact signed snapshot needed for historical
 review and scoring.
 
 Removing a retired deployment table requires proof that no active schema or
-code reference remains and that the replacement runtime passes acceptance.
-Its data must be empty, independently verified in the replacement store, or
-explicitly approved for disposal by the operator. Preserve a recoverable export
-through cutover acceptance. Use bounded conversion when needed, then remove the
-converter, predecessor schemas, and physical tables. Do not retain permanent
-cleanup functions for retired table names.
+code reference remains and that the replacement runtime passes acceptance. Its
+data must be empty or explicitly approved for
+disposal by the operator. The change that stops reading the table removes it,
+with its predecessor schemas. No conversion, export, or cleanup function is kept
+for retired table names.
 
 ### Completed Physical Retirement
 
