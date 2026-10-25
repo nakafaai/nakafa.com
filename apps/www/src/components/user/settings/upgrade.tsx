@@ -19,6 +19,7 @@ import { Array as Arr } from "effect";
 import { useLocale, useTranslations } from "use-intl";
 import { CurrencyBranch } from "@/components/marketing/about/pricing/currency";
 import { getProPricingDisplay } from "@/components/marketing/about/pricing/display";
+import { PricingYearly } from "@/components/marketing/about/pricing/price";
 import {
   CardSection,
   CardSectionActions,
@@ -53,7 +54,7 @@ function Benefit({ icon, text }: { icon: typeof Tick01Icon; text: string }) {
 /**
  * The Plan card of a free viewer: the Pro offer in the viewer's currency, its
  * benefits, and the Upgrade action that starts checkout here, not on the pricing
- * page. The offer is monthly, the one Polar product that is sold today.
+ * page. The checkout offers monthly and yearly, and the learner picks there.
  */
 export function UpgradePlanCard() {
   const billing = useBillingNavigation();
@@ -90,17 +91,20 @@ export function UpgradePlanCard() {
           </p>
           <p className="text-muted-foreground">{tPricing("pro-description")}</p>
         </div>
-        <div className="flex flex-wrap items-baseline gap-x-2">
-          {Arr.map(PricingCurrencySchema.literals, (currency) => (
-            <CurrencyBranch currency={currency} key={currency}>
-              <span className="font-semibold text-3xl tracking-tight">
-                {getProPricingDisplay(currency).pro.text}
-              </span>
-            </CurrencyBranch>
-          ))}
-          <span className="text-muted-foreground">
-            {tPricing("pro-period")}
-          </span>
+        <div className="grid gap-1">
+          <div className="flex flex-wrap items-baseline gap-x-2">
+            {Arr.map(PricingCurrencySchema.literals, (currency) => (
+              <CurrencyBranch currency={currency} key={currency}>
+                <span className="font-semibold text-3xl tracking-tight">
+                  {getProPricingDisplay(currency).pro.text}
+                </span>
+              </CurrencyBranch>
+            ))}
+            <span className="text-muted-foreground">
+              {tPricing("pro-period")}
+            </span>
+          </div>
+          <PricingYearly />
         </div>
         <ul className="grid gap-x-6 gap-y-3 sm:grid-cols-2">
           {Arr.map(proPlanFeatures, (key) => (

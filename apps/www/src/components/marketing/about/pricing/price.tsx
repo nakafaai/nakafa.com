@@ -1,5 +1,6 @@
 import { Array as Arr } from "effect";
 import type { ComponentType } from "react";
+import { useTranslations } from "use-intl";
 import { CurrencyBranch } from "@/components/marketing/about/pricing/currency";
 import { getProPricingDisplay } from "@/components/marketing/about/pricing/display";
 import { PricingCurrencySchema } from "@/lib/pricing/monthly";
@@ -45,6 +46,26 @@ export function PricingPrice({ period, Price, plan }: PricingPriceProps) {
           <span className="text-muted-foreground">{period}</span>
         ) : null}
       </div>
+    </div>
+  );
+}
+
+/**
+ * The yearly Pro price under the monthly one, in every currency's branch. A
+ * Pro checkout offers both, so the learner picks the interval at checkout.
+ */
+export function PricingYearly() {
+  const t = useTranslations("Pricing");
+
+  return (
+    <div className="text-muted-foreground text-sm" data-pricing-yearly="">
+      {Arr.map(PricingCurrencySchema.literals, (currency) => (
+        <CurrencyBranch currency={currency} key={currency}>
+          {t("pro-yearly", {
+            price: getProPricingDisplay(currency).proYearly.text,
+          })}
+        </CurrencyBranch>
+      ))}
     </div>
   );
 }

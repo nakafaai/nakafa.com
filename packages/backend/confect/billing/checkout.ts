@@ -30,7 +30,7 @@ import {
   invalidCheckoutSuccessUrlCode,
 } from "@repo/backend/confect/billing/spec";
 import { readSiteUrl } from "@repo/backend/confect/site/config";
-import { Effect, Option, Schema } from "effect";
+import { Array as Arr, Effect, Option, Schema } from "effect";
 
 type CheckoutAdmissionUser = Parameters<typeof isAccountDeletionPending>[0];
 
@@ -40,13 +40,20 @@ const invalidSuccessUrl = (message: string) =>
     message,
   });
 
-/** A checkout request once it is checked: the Pro product, the Polar language, and the return URL. */
+/** A checkout request once it is checked: the Pro products, the Polar language, and the return URL. */
 const validCheckoutRequestValidator = Schema.Struct({
   locale: checkoutLocaleValidator,
   polarLocale: polarCheckoutLocaleValidator,
-  productId: Schema.String,
+  productIds: Schema.Array(Schema.String),
   successUrl: Schema.String,
 });
+
+/**
+ * The Pro offers one checkout sells. Polar lets the learner switch between
+ * them in its checkout and selects the first, so monthly is the default and
+ * yearly, at the price of 10 months, is one tap away.
+ */
+const PRO_CHECKOUT_OFFERS = ["pro.monthly", "pro.yearly"] as const;
 
 /** Validates the redirect a caller controls before Polar is contacted. The success URL stays on the primary site. */
 export const validateCheckoutRequest = Effect.fn(
@@ -75,7 +82,9 @@ export const validateCheckoutRequest = Effect.fn(
   return {
     locale: input.locale,
     polarLocale: getPolarCheckoutLocale(input.locale),
-    productId: polarProductIdFor("pro.monthly", server),
+    productIds: Arr.map(PRO_CHECKOUT_OFFERS, (offer) =>
+      polarProductIdFor(offer, server)
+    ),
     successUrl: input.successUrl,
   } satisfies typeof validCheckoutRequestValidator.Type;
 });
