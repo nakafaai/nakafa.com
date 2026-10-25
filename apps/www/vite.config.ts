@@ -308,6 +308,13 @@ export default defineConfig(({ command, isPreview }) => ({
     assetsInlineLimit: (filePath) =>
       FONT_FILE_PATTERN.test(filePath) ? false : undefined,
   },
+  environments: {
+    // Workers Logs maps stack traces without the embedded sources, and the
+    // upload refuses more than 60 MiB of maps: the sources were 47 of 65 MiB.
+    [workerSettings.viteEnvironments.entry]: {
+      build: { rolldownOptions: { output: { sourcemapExcludeSources: true } } },
+    },
+  },
   resolve: {
     // `@nakafa/aksara-contracts` ships its signature verifiers under the `node`
     // condition only. Workers resolve them by file, since the `workerd` condition
