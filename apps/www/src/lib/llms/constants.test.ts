@@ -8,7 +8,7 @@ describe("llms constants", () => {
   });
 
   it("uses the configured public app origin", async () => {
-    vi.stubEnv("VITE_APP_URL", "https://example.test");
+    vi.stubEnv("VITE_SITE_URL", "https://example.test");
     vi.resetModules();
 
     const { BASE_URL } = await import("@/lib/llms/constants");
@@ -17,7 +17,7 @@ describe("llms constants", () => {
   });
 
   it("fails when the public app origin is missing", async () => {
-    vi.stubEnv("VITE_APP_URL", "");
+    vi.stubEnv("VITE_SITE_URL", "");
     vi.resetModules();
 
     await expect(import("@/lib/llms/constants")).rejects.toThrow(

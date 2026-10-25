@@ -10,9 +10,7 @@ import { NAKAFA_PUBLIC_API_PATH } from "@repo/contents/agent/constants";
 
 describe("agent edge contract", () => {
   it("owns one server-only Convex origin environment", () => {
-    expect(NAKAFA_API_EDGE_CONTRACT.originEnvironment).toBe(
-      "NAKAFA_CONVEX_SITE_URL"
-    );
+    expect(NAKAFA_API_EDGE_CONTRACT.originEnvironment).toBe("CONVEX_SITE_URL");
     expect(NAKAFA_MCP_EDGE_CONTRACT.originEnvironment).toBe(
       NAKAFA_API_EDGE_CONTRACT.originEnvironment
     );

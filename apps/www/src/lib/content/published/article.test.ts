@@ -59,7 +59,7 @@ vi.mock("@repo/backend/client/content/public", () => ({
   readPublicContent: readMock,
 }));
 vi.mock("@repo/site/keys", () => ({
-  contentRuntimeKeys: () => ({ CONTENT_RUNTIME_TOKEN: "test-runtime-token" }),
+  contentRuntimeKeys: () => ({ CONTENT_READ_TOKEN: "test-runtime-token" }),
 }));
 vi.mock("@/env", () => ({
   env: { VITE_CONVEX_SITE_URL: "https://test.convex.site" },

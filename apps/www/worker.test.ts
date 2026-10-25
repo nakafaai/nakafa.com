@@ -7,7 +7,7 @@ import { deployedWorkerBindings, workerEnvironment } from "#www/worker";
 /** Installs the server values that every reader requires, so each assertion starts complete. */
 function stubRequiredEnvironment() {
   vi.stubEnv("AKSARA_PUBLICATION_TOKEN", "publication-token");
-  vi.stubEnv("CONTENT_RUNTIME_TOKEN", "runtime-token");
+  vi.stubEnv("CONTENT_READ_TOKEN", "runtime-token");
   vi.stubEnv("POSTHOG_PROXY_HOST", undefined);
   vi.stubEnv("VITE_POSTHOG_PROXY_HOST", "https://t.nakafa.com");
   vi.stubEnv("SITE_URL", "https://nakafa.com");
@@ -38,7 +38,7 @@ describe("workerEnvironment", () => {
     expect(environment.SITE_URL).toBe("https://nakafa.com");
     expect(environment.VITE_POSTHOG_PROXY_HOST).toBe("https://t.nakafa.com");
     expect(environment.AKSARA_PUBLICATION_TOKEN).toBe("publication-token");
-    expect(environment.CONTENT_RUNTIME_TOKEN).toBe("runtime-token");
+    expect(environment.CONTENT_READ_TOKEN).toBe("runtime-token");
   });
 
   it("reads the weather key only when it is set", () => {
@@ -69,7 +69,7 @@ describe("deployedWorkerBindings", () => {
     expect(bindings.VITE_CONVEX_SITE_URL).toBe("https://example.convex.site");
     expect(bindings.VITE_POSTHOG_PROXY_HOST).toBe("https://t.nakafa.com");
     expect(Redacted.isRedacted(bindings.AKSARA_PUBLICATION_TOKEN)).toBe(true);
-    expect(revealed(bindings.CONTENT_RUNTIME_TOKEN)).toBe("runtime-token");
+    expect(revealed(bindings.CONTENT_READ_TOKEN)).toBe("runtime-token");
   });
 
   it("deploys in production and drops every unset value", () => {

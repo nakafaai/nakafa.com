@@ -6,7 +6,7 @@ const postHogMocks = vi.hoisted(() => ({
   captureExceptionImmediate: vi.fn(),
   constructor: vi.fn(),
   keys: vi.fn(() => ({
-    VITE_POSTHOG_KEY: "phc_test",
+    VITE_POSTHOG_PROJECT_TOKEN: "phc_test",
     VITE_POSTHOG_PROXY_HOST: "https://t.nakafa.com",
   })),
 }));

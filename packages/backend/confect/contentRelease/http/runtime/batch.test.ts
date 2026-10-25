@@ -22,7 +22,7 @@ import { insertRuntimeHead } from "@repo/backend/test/runtime/head";
 import { JsonTextSchema } from "@repo/utilities/json";
 
 const RUNTIME_TOKEN = "technical-runtime-token";
-const runtimeTokenName = "CONTENT_RUNTIME_TOKEN";
+const runtimeTokenName = "CONTENT_READ_TOKEN";
 const polarName = "POLAR_WEBHOOK_SECRET";
 /** Encodes one batch through the public contract, so a malformed fixture fails here. */
 const batchJson = Schema.encodeUnknownSync(

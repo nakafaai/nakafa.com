@@ -97,7 +97,7 @@ describe("owned signed acceptance runtime", () => {
         );
         expect(localApplicationEnvironment(runtime)).toMatchObject({
           CONVEX_AGENT_MODE: "anonymous",
-          VITE_APP_URL: "http://localhost:3000",
+          VITE_SITE_URL: "http://localhost:3000",
           VITE_CONVEX_URL: runtime.query,
           VITE_POSTHOG_PROXY_HOST: runtime.analytics,
           SITE_URL: "http://localhost:3000",
