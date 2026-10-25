@@ -20,12 +20,12 @@ import { DateTime, Effect } from "effect";
 const NOW = DateTime.toEpochMillis(DateTime.nowUnsafe());
 
 /** Runs the idle proof for the stored compaction row in its own mutation. */
-function idle(t: TestConvex<typeof schema>) {
+function idle(t: TestConvex<typeof schema>, historyFloor = 0) {
   return t.mutation(async (ctx) => {
     const compaction = await ctx.db.query("contentCompaction").unique();
     assert.ok(compaction);
     return await Effect.runPromise(
-      isCompactionIdle(compaction).pipe(
+      isCompactionIdle(compaction, historyFloor).pipe(
         Effect.provide(mutationLayer(confectSchema, ctx))
       )
     );
@@ -137,5 +137,13 @@ describe("contentRelease/compact/cycle", () => {
     await t.mutation((ctx) => insertCompaction(ctx, { compactedFloor: 3 }));
 
     expect(await idle(t)).toBe(false);
+  });
+  it("is not idle while a bootstrap floor sits above the completed floor", async () => {
+    const t = convexTest(schema, convexModules);
+    await seedReleases(t, [3, 4]);
+    await t.mutation((ctx) => insertCompaction(ctx, { compactedFloor: 3 }));
+
+    expect(await idle(t, 4)).toBe(false);
+    expect(await idle(t, 3)).toBe(true);
   });
 });
