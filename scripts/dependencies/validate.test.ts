@@ -1,5 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
-import { Array as Arr, Option, Order, Record as Rec } from "effect";
+import { Array as Arr, Option, Record as Rec } from "effect";
 import {
   AI_SDK_COHORT,
   DEPENDENCY_HOLDS,
@@ -64,25 +64,16 @@ function validInput(): PolicyInput {
       scripts:
         index === 0
           ? {
-              doctor:
-                "pnpm --config.minimum-release-age=1440 dlx react-doctor@0.9.18",
+              doctor: "bunx --minimum-release-age 86400 react-doctor@0.9.18",
             }
           : undefined,
     },
     path,
   }));
-  const ignoreDeps = Arr.sort(
-    Arr.dedupe([
-      ...Arr.map(DEPENDENCY_HOLDS, ({ dependency }) => dependency),
-      "node",
-      "pnpm",
-    ]),
-    Order.String
-  );
   return {
     manifests,
     rootManifest: {
-      devEngines: { runtime: { version: "24.21.0" } },
+      devEngines: { runtime: { version: "24.22.1" } },
       packageManager: PACKAGE_MANAGER,
     },
     workspace: {
@@ -102,7 +93,6 @@ function validInput(): PolicyInput {
         "@effect/platform-node": EFFECT_COHORT_VERSION,
         "@effect/platform-node-shared": EFFECT_COHORT_VERSION,
       },
-      update: { ignoreDeps },
     },
   };
 }
@@ -265,10 +255,10 @@ describe("dependency policy validation", () => {
       change: (input) =>
         updateWebManifest(input, (manifest) => ({
           ...manifest,
-          scripts: { doctor: "pnpm dlx react-doctor@0.9.5" },
+          scripts: { doctor: "bunx react-doctor@0.9.5" },
         })),
       problem:
-        "apps/www/package.json script doctor is pnpm dlx react-doctor@0.9.5; approved pnpm --config.minimum-release-age=1440 dlx react-doctor@0.9.18.",
+        "apps/www/package.json script doctor is bunx react-doctor@0.9.5; approved bunx --minimum-release-age 86400 react-doctor@0.9.18.",
     },
     {
       name: "a missing reviewed script",
@@ -278,16 +268,7 @@ describe("dependency policy validation", () => {
           scripts: undefined,
         })),
       problem:
-        "apps/www/package.json script doctor is missing; approved pnpm --config.minimum-release-age=1440 dlx react-doctor@0.9.18.",
-    },
-    {
-      name: "missing update ignores",
-      change: (input) => ({
-        ...input,
-        workspace: { ...input.workspace, update: undefined },
-      }),
-      problem:
-        "pnpm update.ignoreDeps does not match the reviewed hold policy.",
+        "apps/www/package.json script doctor is missing; approved bunx --minimum-release-age 86400 react-doctor@0.9.18.",
     },
     {
       name: "an Effect catalog drift",
@@ -395,7 +376,7 @@ describe("dependency policy validation", () => {
           devEngines: { runtime: { version: "24.20.0" } },
         },
       }),
-      problem: "The managed Node runtime must be 24.21.0.",
+      problem: "The managed Node runtime must be 24.22.1.",
     },
   ])("reports $name", ({ change, problem }) => {
     assert.deepStrictEqual(validateDependencyPolicy(change(validInput())), [

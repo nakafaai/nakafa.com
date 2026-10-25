@@ -150,25 +150,25 @@ describe("CLI workflow policy", () => {
       );
 
       const siblingDecoy = source
-        .replace("          pnpm --filter @nakafa/cli build", "          true")
+        .replace("          bun --filter @nakafa/cli build", "          true")
         .concat(
-          "\n  unrelated:\n    runs-on: ubuntu-latest\n    steps:\n      - run: pnpm --filter @nakafa/cli build\n"
+          "\n  unrelated:\n    runs-on: ubuntu-latest\n    steps:\n      - run: bun --filter @nakafa/cli build\n"
         );
       assert.ok(
         Arr.contains(
           yield* validateCliWorkflow(siblingDecoy),
-          "CLI build job is missing required contract: pnpm --filter @nakafa/cli build"
+          "CLI build job is missing required contract: bun --filter @nakafa/cli build"
         )
       );
 
       const shellComment = source.replace(
-        "          pnpm --filter @nakafa/cli typecheck",
-        "          # pnpm --filter @nakafa/cli typecheck"
+        "          bun --filter @nakafa/cli typecheck",
+        "          # bun --filter @nakafa/cli typecheck"
       );
       assert.ok(
         Arr.contains(
           yield* validateCliWorkflow(shellComment),
-          "CLI build job is missing required contract: pnpm --filter @nakafa/cli typecheck"
+          "CLI build job is missing required contract: bun --filter @nakafa/cli typecheck"
         )
       );
 
@@ -277,7 +277,7 @@ describe("CLI workflow policy", () => {
         },
         {
           change: source.replace(
-            "          node-version: 24.21.0",
+            "          node-version: 24.22.1",
             "          node-version: 24.20.0"
           ),
           problem: "CLI publication must use the repository Node runtime.",

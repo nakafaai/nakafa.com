@@ -130,6 +130,7 @@ function TryoutChoiceFrame({
   const labelId = `${id}-label`;
 
   return (
+    // biome-ignore lint/a11y/noLabelWithoutControl: children carries the choice control, and this label wraps it.
     <Label className={choiceFrame(variant)}>
       {children}
       <div className="min-w-0 flex-1" id={labelId}>

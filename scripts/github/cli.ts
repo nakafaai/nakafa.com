@@ -53,19 +53,19 @@ const SETUP_NODE_ACTION =
   "actions/setup-node@820762786026740c76f36085b0efc47a31fe5020";
 const UPLOAD_ACTION =
   "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a";
-/** Digest of the decoded publish job after a complete OIDC boundary review. */
+/** Digest of the decoded publish job after a complete OIDC boundary review, at Node 24.22.1; the reviewed job at 24.21.0 differs only in that version. */
 const TRUSTED_PUBLISH_SHA256 =
-  "d988620486eb3377efba2610c9dd5edbda0146d47c49cbc7a39616bc919924b8";
-/** Digest of the decoded verification job after a complete execution review. */
+  "7d997a44c863215f3fa7baa0c7286ba16f817115b7e1fe17be386904a138d08c";
+/** Digest of the decoded verification job after a complete execution review, at Node 24.22.1; the reviewed job at 24.21.0 differs only in that version. */
 const TRUSTED_VERIFY_SHA256 =
-  "5bd8ae7a5a7be3c859bca497b1b921efc06675325107c07abd5976586c2ff92a";
+  "32e4d57854e1b7a50cd6ae0f1561a2fce11b459a1c5fdc76fe305beeaf7132a9";
 const REQUIRED_BUILD_SOURCE = [
-  "pnpm test:scripts",
-  "pnpm --filter @nakafa/cli typecheck",
-  "pnpm --filter @nakafa/cli test:coverage",
-  "pnpm --filter @nakafa/cli build",
+  "bun run test:scripts",
+  "bun --filter @nakafa/cli typecheck",
+  "bun --filter @nakafa/cli test:coverage",
+  "bun --filter @nakafa/cli build",
   "npm pack ./packages/cli",
-  "pnpm exec esbuild scripts/provenance/main.ts",
+  "bunx --no-install esbuild scripts/provenance/main.ts",
   "createRequire(import.meta.url)",
   "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
   "cli-package",

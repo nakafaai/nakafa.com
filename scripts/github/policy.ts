@@ -39,13 +39,13 @@ export const GITHUB_ACTION_REVIEWS = Schema.decodeSync(
       "Checkout is pinned to the latest reviewed stable release. The CLI publication and the deploy workflow each check out the commit.",
   },
   {
-    action: "pnpm/setup",
-    approvedSha: "fbda4c85fc2e1e08721cd8763afea8f48d60f024",
-    expectedInputs: { cache: "false", install: "false" },
-    expectedTag: "v3.0.0",
+    action: "oven-sh/setup-bun",
+    approvedSha: "0c5077e51419868618aeaa5fe8019c62421857d6",
+    expectedInputs: { "bun-version": "1.4.4", "no-cache": "true" },
+    expectedTag: "v2.2.0",
     expectedUsages: 1,
     reason:
-      "The signed successor action owns Node and pnpm. The store stays uncached because a cold install beats restoring it on hosted runners.",
+      "The install action pins Bun 1.4.4 and installs the workspace from its frozen bun.lock. The cache stays off because a cold install beats restoring it on hosted runners.",
   },
   {
     action: "astral-sh/setup-uv",
@@ -78,9 +78,9 @@ export const GITHUB_ACTION_REVIEWS = Schema.decodeSync(
       "package-manager-cache": "false",
     },
     expectedTag: "v7.0.0",
-    expectedUsages: 3,
+    expectedUsages: 4,
     reason:
-      "CLI publication, its verification, and the deploy job pin Node without dependency caching. The deploy job runs the environment loader on that Node.",
+      "CLI publication, its verification, and the deploy job pin Node without dependency caching, and the install action pins it for every job that installs dependencies, because Bun does not provision the Node runtime that pnpm's devEngines download used to provide. The deploy job runs the environment loader on that Node.",
   },
 ]);
 

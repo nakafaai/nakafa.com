@@ -1,14 +1,20 @@
 name: Install dependencies
-description: Sets up pnpm without a store cache and installs the workspace from its frozen lockfile. The calling job checks out the repository first, because GitHub reads a local action from the checked-out workspace.
+description: Sets up Node 24.22.1 and Bun without a cache, then installs the workspace from its frozen lockfile. The calling job checks out the repository first, because GitHub reads a local action from the checked-out workspace.
 runs:
   using: composite
   steps:
-    - name: Setup toolchain
-      uses: pnpm/setup@fbda4c85fc2e1e08721cd8763afea8f48d60f024 # v3.0.0
+    - name: Setup Node
+      uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
       with:
-        cache: false
-        install: false
+        node-version: 24.22.1
+        package-manager-cache: false
+
+    - name: Setup toolchain
+      uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+      with:
+        bun-version: 1.4.4
+        no-cache: true
 
     - name: Install dependencies
       shell: bash
-      run: pnpm install --frozen-lockfile
+      run: bun install --frozen-lockfile

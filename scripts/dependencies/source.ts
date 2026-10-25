@@ -1,5 +1,4 @@
 import { Array as Arr, Effect, FileSystem, Path, Schema } from "effect";
-import { parse } from "yaml";
 import { validateDependencyPolicy } from "#scripts/dependencies/validate";
 
 const StringMap = Schema.Record(Schema.String, Schema.String);
@@ -14,16 +13,21 @@ const PackageManifest = Schema.Struct({
     })
   ),
   optionalDependencies: Schema.optional(StringMap),
+  overrides: Schema.optional(StringMap),
   packageManager: Schema.optional(Schema.String),
   peerDependencies: Schema.optional(StringMap),
   scripts: Schema.optional(StringMap),
-});
-const WorkspaceManifest = Schema.Struct({
-  catalog: Schema.optional(StringMap),
-  overrides: Schema.optional(StringMap),
-  update: Schema.optional(
-    Schema.Struct({ ignoreDeps: Schema.optional(Schema.Array(Schema.String)) })
+  workspaces: Schema.optional(
+    Schema.Struct({
+      catalog: Schema.optional(StringMap),
+      packages: Schema.optional(Schema.Array(Schema.String)),
+    })
   ),
+});
+/** The catalog and overrides that the root manifest declares for the workspace. */
+const WorkspaceManifest = Schema.Struct({
+  catalog: StringMap,
+  overrides: StringMap,
 });
 
 export type PackageManifest = typeof PackageManifest.Type;
@@ -81,28 +85,15 @@ export const readPackageManifest = Effect.fn(
   );
 });
 
-export const readWorkspaceManifest = Effect.fn(
-  "RepositoryPolicy.readWorkspaceManifest"
-)(function* (workspacePath: string) {
-  const fileSystem = yield* FileSystem.FileSystem;
-  const source = yield* fileSystem
-    .readFileString(workspacePath)
-    .pipe(
-      Effect.mapError((cause) =>
-        readError(`Unable to read ${workspacePath}.`, cause)
-      )
-    );
-  const input = yield* Effect.try({
-    try: () => parse(source),
-    catch: (cause) =>
-      readError(`${workspacePath} does not contain valid YAML.`, cause),
-  });
-  return yield* Schema.decodeUnknownEffect(WorkspaceManifest)(input).pipe(
-    Effect.mapError((cause) =>
-      readError(`${workspacePath} has an invalid workspace manifest.`, cause)
-    )
-  );
-});
+/** Reads the catalogs and overrides from the root manifest, where Bun declares them. */
+export function workspaceManifestOf(
+  manifest: PackageManifest
+): WorkspaceManifest {
+  return {
+    catalog: manifest.workspaces?.catalog ?? {},
+    overrides: manifest.overrides ?? {},
+  };
+}
 
 /** Reads every first-party package manifest without entering vendored source. */
 export const readFirstPartyManifests = Effect.fn(
@@ -160,9 +151,7 @@ export const inspectDependencyPolicy = Effect.fn(
   const rootManifest = yield* readPackageManifest(
     path.join(root, "package.json")
   );
-  const workspace = yield* readWorkspaceManifest(
-    path.join(root, "pnpm-workspace.yaml")
-  );
+  const workspace = workspaceManifestOf(rootManifest);
   const manifests = yield* readFirstPartyManifests(root);
   return validateDependencyPolicy({
     manifests,

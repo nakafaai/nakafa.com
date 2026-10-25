@@ -7,7 +7,8 @@ import {
   readFirstPartyManifests,
 } from "#scripts/dependencies/source";
 
-const WORKSPACE = "packages:\n  - apps/*\n  - packages/*\n";
+const WORKSPACE_MANIFEST =
+  '{ "workspaces": { "packages": ["apps/*", "packages/*"] } }';
 
 /** Writes fixture files below one repository root. */
 const writeFixtures = Effect.fn("DependencySourceTest.writeFixtures")(
@@ -64,9 +65,8 @@ describe("dependency policy sources", () => {
     Effect.gen(function* () {
       const root = yield* makeRepository({
         "apps/web/package.json": "{}",
-        "package.json": '{ "packageManager": "pnpm@11.26.0" }',
+        "package.json": `{ "packageManager": "pnpm@11.26.0", "workspaces": { "packages": ["apps/*", "packages/*"] } }`,
         "packages/core/package.json": "{}",
-        "pnpm-workspace.yaml": WORKSPACE,
       });
 
       const problems = yield* inspectDependencyPolicy(root);
@@ -97,23 +97,17 @@ describe("dependency policy sources", () => {
           message: "{root}/package.json has an invalid package manifest.",
         },
         {
-          files: { "package.json": "{}" },
-          message: "Unable to read {root}/pnpm-workspace.yaml.",
-        },
-        {
-          files: { "package.json": "{}", "pnpm-workspace.yaml": "catalog: [" },
-          message: "{root}/pnpm-workspace.yaml does not contain valid YAML.",
-        },
-        {
           files: {
-            "package.json": "{}",
-            "pnpm-workspace.yaml": "update:\n  ignoreDeps: react\n",
+            "package.json": '{ "workspaces": { "catalog": ["effect"] } }',
           },
-          message:
-            "{root}/pnpm-workspace.yaml has an invalid workspace manifest.",
+          message: "{root}/package.json has an invalid package manifest.",
         },
         {
-          files: { "package.json": "{}", "pnpm-workspace.yaml": WORKSPACE },
+          files: { "package.json": '{ "overrides": { "effect": 1 } }' },
+          message: "{root}/package.json has an invalid package manifest.",
+        },
+        {
+          files: { "package.json": WORKSPACE_MANIFEST },
           message: "Unable to read {root}/apps.",
         },
       ];
@@ -127,8 +121,7 @@ describe("dependency policy sources", () => {
 
       const root = yield* makeRepository({
         ...layout,
-        "package.json": "{}",
-        "pnpm-workspace.yaml": WORKSPACE,
+        "package.json": WORKSPACE_MANIFEST,
       });
       const brokenLink = path.join(root, "apps/broken");
       yield* fileSystem.symlink(path.join(root, "absent"), brokenLink);

@@ -60,6 +60,7 @@ export function FunctionMachine({ title, description, inputLabel }: Props) {
           onChange={setInput}
           value={input}
         >
+          {/* biome-ignore lint/a11y/noLabelWithoutControl: React Aria connects this Label to the NumberField input through context. */}
           <Label className="sr-only">{inputLabel}</Label>
           <Group className="relative inline-flex h-9 w-full items-center overflow-hidden whitespace-nowrap rounded-md border border-input text-sm shadow-xs outline-none transition-[color,box-shadow] data-focus-within:border-ring data-disabled:opacity-50 data-focus-within:ring-3 data-focus-within:ring-ring/50 data-focus-within:has-aria-invalid:border-destructive data-focus-within:has-aria-invalid:ring-destructive/20 dark:data-focus-within:has-aria-invalid:ring-destructive/40">
             <Button

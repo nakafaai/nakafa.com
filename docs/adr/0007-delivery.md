@@ -194,7 +194,7 @@ release workflow `cli-publish.yml` is delivery, not CI, and stays.
 
 Each pull request is verified locally on its exact head instead: every browser
 suite on a local production build, the unit suites at 100% per-file coverage,
-the typechecks, `pnpm check:tests`, Ultracite, and React Doctor. A pull request
+the typechecks, `bun run check:tests`, Ultracite, and React Doctor. A pull request
 merges by squash once that verification passes, as `AGENTS.md` describes.
 
 ## References

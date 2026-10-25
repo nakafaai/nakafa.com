@@ -52,12 +52,11 @@ export const prepareAcceptance = Effect.fn("acceptance.prepare")(function* (
  * @see https://man7.org/linux/man-pages/man1/nice.1.html
  */
 const applicationCommands = {
-  build: ["nice", "-n", "10", "pnpm", "exec", "turbo", "run", "build"],
+  build: ["nice", "-n", "10", "bunx", "turbo", "run", "build"],
   start: [
-    "pnpm",
-    "--dir",
+    "bunx",
+    "--cwd",
     "apps/www",
-    "exec",
     "vite",
     "preview",
     "--strictPort",
@@ -75,7 +74,7 @@ export const runAcceptance = Effect.fn("acceptance.run")(function* (
   const reserved = yield* leaseReservedLocalRuntime(root);
   if (Option.isNone(reserved)) {
     return yield* acceptanceRuntimeError(
-      "Run pnpm acceptance:prepare before building or starting acceptance."
+      "Run bun run acceptance:prepare before building or starting acceptance."
     );
   }
   const runtime = reserved.value;

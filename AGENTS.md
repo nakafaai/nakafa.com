@@ -8,7 +8,7 @@ This guide is a map. It states each Nakafa decision once and names the file, com
 
 | Topic | Owner |
 | --- | --- |
-| Versions, package manager, runtime, dependency holds | `package.json`, `pnpm-workspace.yaml`, `scripts/dependencies/policy.ts` |
+| Versions, package manager, runtime, dependency holds | `package.json`, `bunfig.toml`, `scripts/dependencies/policy.ts` |
 | Writing Effect v4 | `repos/effect/LLMS.md`, then source and tests under `repos/effect/packages`; https://effect.website/docs/v4/api/effect |
 | Confect v10 | https://confect.dev and the installed `@confect/*` source |
 | Convex architecture, auth, the dev deployment, migrations | `packages/backend/AGENTS.md`; installed API rules in `packages/backend/convex/_generated/ai/guidelines.md` |
@@ -26,7 +26,7 @@ This guide is a map. It states each Nakafa decision once and names the file, com
 
 ## Ownership
 
-- Stack: pnpm, Turborepo, TanStack Start on Cloudflare Workers through Alchemy, React, native TypeScript, Confect and Effect on Convex, Biome through Ultracite, Vitest.
+- Stack: Bun, Turborepo, TanStack Start on Cloudflare Workers through Alchemy, React, native TypeScript, Confect and Effect on Convex, Biome through Ultracite, Vitest.
 - Apps: `apps/www`, `apps/api`, `apps/mcp`, `apps/email`. Main packages: `packages/backend`, `packages/design-system`, `packages/contents`, `packages/testing`.
 - Same-app imports use `@/*`, colocated modules and tests included; cross-package imports use `@repo/*`. Import the owning file directly.
 - `packages/testing` owns shared Vitest defaults by runtime, `@repo/testing/node` and `@repo/testing/react`, including the per-file 100% coverage gate. A workspace keeps only local aliases, setup, projects, and its own coverage include and exclude lists.
@@ -43,14 +43,14 @@ This guide is a map. It states each Nakafa decision once and names the file, com
 - Server function wrappers live in `*.functions.ts` modules, and a module that only the server may read takes the `*.server.ts` or `*.server.tsx` suffix. The suffix enforces the boundary, so such a module imports no `server-only` marker. Route file names such as `page`, `layout`, `loading`, and `error` belong to `src/routes` only.
 - Do not create new `index.ts` barrels, facade modules, pass-through re-exports, or generic `utils` or `helpers`. A generated or externally mandated package entrypoint needs an explicit exception.
 - TypeScript is strict. Prefer derived and inferred types, fix the source design when inference is unclear, and avoid `any`, assertions, and workaround casts.
-- The root `typescript` package exposes the Effect-patched native TypeScript 7 compiler as `tsc`; `packages/backend` owns its own because Convex resolves it directly. Verify with `pnpm exec tsc --version` from both. React Doctor manages its own TypeScript. Editors use the same compiler as their language server (`.zed/settings.json`, `.vscode/settings.json`), so Effect diagnostics show while editing.
-- Ultracite owns formatting: run `pnpm format`, never hand-format.
+- The root `typescript` package exposes the Effect-patched native TypeScript 7 compiler as `tsc`; `packages/backend` owns its own because Convex resolves it directly. Verify with `bunx tsc --version` from both. React Doctor manages its own TypeScript. Editors use the same compiler as their language server (`.zed/settings.json`, `.vscode/settings.json`), so Effect diagnostics show while editing.
+- Ultracite owns formatting: run `bun run format`, never hand-format.
 - Keep Tailwind class strings inside styling utilities or component boundaries, with `cva` or existing variant helpers for variants. The policy check rejects a class string kept in a constant and an arbitrary value that a built-in class renders identically; theme-dependent scales such as radius, font size, and tracking are left to review.
 
 ## Effect V4 Standard
 
 - Nakafa is Effect-native: Effect v4 and Confect v10 express every capability. Plain TypeScript remains only where Effect cannot express it, namely React component props in `.tsx`, framework configuration, generated code, ambient declarations, native promise syntax in a Confect workflow handler, the named type of a recursive Schema, the selector argument of `Extract` or `Exclude`, shapes that hold a value no Schema describes as data (a function, a React or MDX value, an AI SDK message part, an Effect runtime handle such as a fiber or a queue, or a parser syntax-tree node), generic shapes that use their type parameters, and code that Playwright serializes into the browser page, where no import reaches. The pull request justifies each one.
-- Before writing code, find the Effect or Confect module that already does the job in the sources above. Unstable Effect v4 modules are welcome, and a dependency that Effect already covers goes. `repos/effect` is a read-only Git subtree pinned to the installed version: never edit, import from, build, lint, or test it. `pnpm effect:source:check` verifies parity; `pnpm effect:source:update` creates the matching reference commit after an Effect update.
+- Before writing code, find the Effect or Confect module that already does the job in the sources above. Unstable Effect v4 modules are welcome, and a dependency that Effect already covers goes. `repos/effect` is a read-only Git subtree pinned to the installed version: never edit, import from, build, lint, or test it. `bun run effect:source:check` verifies parity; `bun run effect:source:update` creates the matching reference commit after an Effect update.
 
 | Instead of | Use |
 | --- | --- |
@@ -71,7 +71,7 @@ This guide is a map. It states each Nakafa decision once and names the file, com
 - A private pure helper is allowed only for a small deterministic transformation after validation that cannot fail, perform IO, access dependencies, mutate shared state, or define a public source of truth.
 - Name shared modules by domain capability, such as `lib/analytics` or `lib/content`, never `lib/effect`.
 - Do not start a non-fast-path Effect runtime inside a statically prerendered route before the request or uncached data exists. Use the framework Promise boundary and document the exception at the seam.
-- Enforcement: `pnpm check:tests`, part of `pnpm lint`, `pnpm test`, and `pnpm build`, runs the source rules, and every workspace typecheck runs the compiler rules. Each violation names its fix. No baseline, allowlist, exceptions file, inline suppression, or `@effect-diagnostics` comment may be added. A rule becomes an error in the pull request that clears its last violation, and the check recognizes by construction the places Effect cannot express, each with a test. A `plugins` array replaces the one it extends, so `base.json` declares the only one and every other configuration inherits it. `docs/adr/0021-rules.md` records which check owns a rule and which compiler rules stay off.
+- Enforcement: `bun run check:tests`, part of `bun run lint`, `bun run test`, and `bun run build`, runs the source rules, and every workspace typecheck runs the compiler rules. Each violation names its fix. No baseline, allowlist, exceptions file, inline suppression, or `@effect-diagnostics` comment may be added. A rule becomes an error in the pull request that clears its last violation, and the check recognizes by construction the places Effect cannot express, each with a test. A `plugins` array replaces the one it extends, so `base.json` declares the only one and every other configuration inherits it. `docs/adr/0021-rules.md` records which check owns a rule and which compiler rules stay off.
 - The source rules read syntax, and the array rules also read the compiler's types. Review what they cannot see: assertions, broad records, `any`, generic errors, raw throws, runners, and silent source fallbacks. Explain every retained framework exception.
 
 ## React And TanStack Start
@@ -102,7 +102,7 @@ This guide is a map. It states each Nakafa decision once and names the file, com
 - Do not unit-test `.tsx` or mock children to verify static markup. Move testable behavior into an owning `.ts` seam with independent production value and verify rendered behavior through production-mode Browser or E2E acceptance.
 - Tests reach HTTP through `FetchHttpClient.Fetch`: one `vi.fn<typeof fetch>()` per file, provided with `Effect.provideService(FetchHttpClient.Fetch, fetcher)`. Effect's client keeps the first global `fetch` it reads, so a fresh global stub per test only works for the first one; a seam that ends in a Promise stubs that one file-level double globally and resets it between tests.
 - No `.only` or `.skip`. Run the nearest test first, then the workspace suite when risk warrants it.
-- React Doctor: `pnpm run doctor --verbose --scope changed --base main --include-untracked --blocking warning` for changed React code, `--scope full` for a whole-codebase audit; not the deprecated `--diff` alias or plain `npx react-doctor@latest`.
+- React Doctor: `bun run doctor --verbose --scope changed --base main --include-untracked --blocking warning` for changed React code, `--scope full` for a whole-codebase audit; not the deprecated `--diff` alias or plain `npx react-doctor@latest`.
 
 ## Content Rendering
 
@@ -112,12 +112,12 @@ This guide is a map. It states each Nakafa decision once and names the file, com
 
 ## Commands And Verification
 
-- Root commands: `pnpm dev`, `pnpm dev:web`, `pnpm dev:all`, `pnpm start`, `pnpm build`, `pnpm test`, `pnpm lint`, `pnpm format`, `pnpm security:audit`, `pnpm analyze`, and `pnpm boundaries`. Prefer `pnpm start` after a build; use `pnpm dev` only for hot reload, development-mode diagnostics, devtools, or Convex live development.
-- There is no root typecheck: run `pnpm --filter <workspace> typecheck` for every changed workspace; the full verification runs `pnpm -r --no-bail run typecheck`. Judge it by its exit code, because the Effect-patched compiler reports suggestions that fail the typecheck and the build without the word "error". The shared configurations turn off `unstableApiUsage` and `experimentalApiUsage`: Effect moves as one exact cohort that is reviewed at every upgrade.
-- The `www` typecheck and build validate environment variables while the Vite build loads its config. Run the build through `pnpm acceptance:build`, which supplies its inert values from `localApplicationEnvironment` in `packages/backend/scripts/content/acceptance/local.ts`. The typecheck takes the same names; where that file takes a URL from the prepared runtime, use a loopback address such as `CONVEX_URL=http://127.0.0.1:3210` and `CONVEX_SITE_URL=http://127.0.0.1:3211`. Never copy deployment values.
-- One test: `pnpm --filter <workspace> exec vitest run <relative-test-path>`. One suite: `pnpm --filter <workspace> test`.
-- Run the smallest useful verification first, then expand by risk: format, `pnpm lint`, affected tests and typechecks, `pnpm build` for build-critical changes, and `pnpm security:audit` after dependency or lockfile changes. Report any verification that could not run.
-- `pnpm security:audit` reads live OSV advisories, so a new advisory can fail it with no code change. Bump the version-keyed override in `pnpm-workspace.yaml` in its own change, then merge `main` into waiting pull requests.
+- Root commands: `bun run dev`, `bun run dev:web`, `bun run dev:all`, `bun run start`, `bun run build`, `bun run test`, `bun run lint`, `bun run format`, `bun run security:audit`, `bun run analyze`, and `bun run boundaries`. Prefer `bun run start` after a build; use `bun run dev` only for hot reload, development-mode diagnostics, devtools, or Convex live development.
+- There is no root typecheck: run `bun --filter <workspace> typecheck` for every changed workspace; the full verification runs `bun run turbo run typecheck --continue=dependencies-successful`, which checks each workspace after its workspace dependencies and skips the dependents of a failed one. Judge it by its exit code, because the Effect-patched compiler reports suggestions that fail the typecheck and the build without the word "error". The shared configurations turn off `unstableApiUsage` and `experimentalApiUsage`: Effect moves as one exact cohort that is reviewed at every upgrade.
+- The `www` typecheck and build validate environment variables while the Vite build loads its config. Run the build through `bun run acceptance:build`, which supplies its inert values from `localApplicationEnvironment` in `packages/backend/scripts/content/acceptance/local.ts`. The typecheck takes the same names; where that file takes a URL from the prepared runtime, use a loopback address such as `CONVEX_URL=http://127.0.0.1:3210` and `CONVEX_SITE_URL=http://127.0.0.1:3211`. Never copy deployment values.
+- One test: `bunx --cwd packages/backend vitest run <relative-test-path>`. One suite: `bun --filter <workspace> test`.
+- Run the smallest useful verification first, then expand by risk: format, `bun run lint`, affected tests and typechecks, `bun run build` for build-critical changes, and `bun run security:audit` after dependency or lockfile changes. Report any verification that could not run.
+- `bun run security:audit` reads live OSV advisories, so a new advisory can fail it with no code change. Bump the version-keyed override in `package.json` in its own change, then merge `main` into waiting pull requests.
 
 ## Deployment
 
@@ -126,7 +126,7 @@ This guide is a map. It states each Nakafa decision once and names the file, com
 - `.github/workflows/deploy.yml` is the only deploy path and it runs no tests. A push to `main` and an Aksara release dispatch deploy production; a manual run deploys the chosen stage. Each run uses the GitHub environment of its stage, `production` or `staging`, and loads that environment's values with `scripts/github/environment.ts`. Production deploys run only from `main`. The job deploys Convex with `CONVEX_DEPLOY_KEY`, then runs `alchemy deploy --stage <stage> --yes`.
 - `apps/www/stacks/github.ts` is run once by an operator with local credentials. It writes the scoped Cloudflare token and the account id to the repository, and declares the `production` and `staging` GitHub environments. Each environment's values come from its own operator file in `apps/www/.operator/` (ignored by git), and every server value is an environment secret while every `VITE_` value is an environment variable. Never run it from CI, and never print or write a secret value.
 - Production never runs `alchemy destroy`, and no workflow passes a destroy flag. Remove a stage only from an operator shell after a reviewed plan.
-- Preview deployments do not gate merges. Verify feature work on its exact head locally: the typechecks, the unit suites at 100% per-file coverage, `pnpm check:tests`, Ultracite, React Doctor for changed React code, and every browser suite on a local production build and start through Browser or Playwright, plus isolated Convex Agent Mode deployments where needed.
+- Preview deployments do not gate merges. Verify feature work on its exact head locally: the typechecks, the unit suites at 100% per-file coverage, `bun run check:tests`, Ultracite, React Doctor for changed React code, and every browser suite on a local production build and start through Browser or Playwright, plus isolated Convex Agent Mode deployments where needed.
 - Do not enable external Turborepo Remote Cache for the signed `www` production build until every server-side environment input and signed-content generation input is included in the task hash.
 
 ## Git And Release
@@ -136,4 +136,4 @@ This guide is a map. It states each Nakafa decision once and names the file, com
 - Automated review findings are evidence, not authority: trace each claim through the current code and authoritative sources. Unresolved review threads, automated reviewers' included, block merging, so fix each verified finding or reply with evidence, then resolve the thread.
 - `main` merges by squash once the pull request's exact head has passed the local verification, with `gh pr merge <number> --squash --match-head-commit <sha>`. Auto-merge stays off.
 - A change that depends on an open pull request goes up as a GitHub stack: `gh stack init <bottom> <top>` tracks the branches locally and `gh stack submit` opens the pull requests. After the bottom merges, `gh stack sync` rebases and pushes the rest. `gh stack link` only links existing pull requests on GitHub, so run `gh stack checkout <stack>` once before syncing a stack made that way.
-- Version packages on demand: on a branch from the latest `main`, run `GITHUB_TOKEN="$(gh auth token)" pnpm version-packages` (the changelog plugin needs the token to link each entry to its pull request), then land that pull request by squash merge.
+- Version packages on demand: on a branch from the latest `main`, run `GITHUB_TOKEN="$(gh auth token)" bun run version-packages` (the changelog plugin needs the token to link each entry to its pull request), then land that pull request by squash merge.

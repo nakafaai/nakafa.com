@@ -16,6 +16,10 @@ function transactionMetrics(bytesRemaining: number, queryRemaining: number) {
     documentsWritten: available,
     functionsScheduled: available,
     scheduledFunctionArgsBytes: available,
+    fileReadBytes: available,
+    fileWriteBytes: available,
+    filesRead: available,
+    filesWritten: available,
   };
 }
 

@@ -20,7 +20,7 @@ Develop directly against the main dev deployment selected in
 `packages/backend/.env.local`. From the repository root:
 
 ```sh
-pnpm --dir packages/backend exec convex dev --once
+bunx --cwd packages/backend convex dev --once
 ```
 
 See [`../AGENTS.md`](../AGENTS.md) for deployment policy. Never print secrets
@@ -29,15 +29,15 @@ or copy Convex deployment identity out of this checkout.
 ## Signed acceptance publication
 
 ```sh
-pnpm acceptance:prepare
-pnpm acceptance:build
-pnpm acceptance:start
+bun run acceptance:prepare
+bun run acceptance:build
+bun run acceptance:start
 ```
 
 The [root README](../../../README.md) describes the pinned Aksara fixture.
 Preparation publishes a fixed, independently signed corpus into a new native
 local database. Build and start reopen that owned database. After stopping its
-services, `pnpm acceptance:clean` removes the exact task-owned reservation.
+services, `bun run acceptance:clean` removes the exact task-owned reservation.
 Each runtime signs with a new key. The Start build keeps no fetch cache on disk:
 without the runtime cache endpoint and headers that the host sets, the Runtime
 Cache is in memory, so a response that one runtime signed is never read by
@@ -47,8 +47,8 @@ These commands never read production tables or use production credentials.
 ## Customer verification
 
 ```sh
-pnpm --filter @repo/backend customers:verify
-pnpm --filter @repo/backend customers:verify:prod
+bun --filter @repo/backend customers:verify
+bun --filter @repo/backend customers:verify:prod
 ```
 
 These commands verify user, customer, and subscription cohesion without
@@ -72,7 +72,7 @@ the scripts read no credential.
 ## Nina release gate
 
 ```sh
-pnpm --filter @repo/backend nina:gate
+bun --filter @repo/backend nina:gate
 ```
 
 This command runs one real Nina turn through the Convex AI gateway, on the dev
@@ -87,7 +87,7 @@ run it and what it proves.
 ## Judgment measurement
 
 ```sh
-pnpm --filter @repo/backend judgment:measure
+bun --filter @repo/backend judgment:measure
 ```
 
 This command sets the thresholds of Nina's judgments (`confect/nina/judgment`)
@@ -139,8 +139,8 @@ labelled set change, and set the new thresholds in
 ## Knowledge search model test
 
 ```sh
-pnpm --filter @repo/backend knowledge:compare
-pnpm --filter @repo/backend knowledge:compare --model=qwen/qwen3-embedding-8b --locale=id
+bun --filter @repo/backend knowledge:compare
+bun --filter @repo/backend knowledge:compare --model=qwen/qwen3-embedding-8b --locale=id
 ```
 
 The test decides which embedding model knowledge search uses. It runs on the

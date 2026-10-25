@@ -25,7 +25,7 @@ export default {
         // Socket scores better-auth 1.6.33 at 25 on its vulnerability axis, but no
         // GitHub advisory affects that version: every one listed for better-auth is
         // patched at 1.6.22 or below (GHSA-qq9h-g4jm-xgf3 and the others, read 19 Oct
-        // 2026), and OSV lists none (pnpm security:audit). 1.6.33 is the last 1.6
+        // 2026), and OSV lists none (bun run security:audit). 1.6.33 is the last 1.6
         // release, and @convex-dev/better-auth 0.12.5 accepts only >=1.6.11 <1.7.0,
         // so no newer release fits (scripts/dependencies/policy.ts). The OSV audit
         // stays the vulnerability gate for every package. Remove this override when

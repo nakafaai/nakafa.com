@@ -79,7 +79,7 @@ export const seedMember = Effect.fn("contentAcceptance.seedMember")(function* (
   const runtime = yield* readLocalRuntime(root);
   if (runtime === undefined) {
     return yield* acceptanceRuntimeError(
-      `Run pnpm acceptance:prepare and start acceptance before creating a ${member.label}.`
+      `Run bun run acceptance:prepare and start acceptance before creating a ${member.label}.`
     );
   }
   yield* runLocalConvex(runtime, `${member.label} seed`, [

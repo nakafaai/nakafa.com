@@ -1,4 +1,5 @@
 import type { TransactionMetrics } from "convex/server";
+import { Array as Arr, Record as Rec } from "effect";
 
 /** Maximum queue bytes loaded before per-identity work begins. */
 export const CONTENT_ANALYTICS_PAGE_BYTES = 2 * 1024 * 1024;
@@ -13,6 +14,10 @@ export const CONTENT_ANALYTICS_HEADROOM = {
   databaseQueries: 512,
   documentsRead: 2048,
   documentsWritten: 512,
+  fileReadBytes: 0,
+  fileWriteBytes: 0,
+  filesRead: 0,
+  filesWritten: 0,
   functionsScheduled: 2,
   scheduledFunctionArgsBytes: 2048,
 } as const satisfies Record<keyof TransactionMetrics, number>;
@@ -24,24 +29,20 @@ export const CONTENT_ANALYTICS_FINALIZATION_RESERVE = {
   databaseQueries: 8,
   documentsRead: 8,
   documentsWritten: 32,
+  fileReadBytes: 0,
+  fileWriteBytes: 0,
+  filesRead: 0,
+  filesWritten: 0,
   functionsScheduled: 1,
   scheduledFunctionArgsBytes: 1024,
 } as const satisfies Record<keyof TransactionMetrics, number>;
 
-/** Stops the drain unless every transaction resource retains its reserve. */
+/** Stops the drain unless every transaction resource retains its reserve. A zero reserve needs no check. */
 export function hasContentAnalyticsHeadroom(metrics: TransactionMetrics) {
-  return (
-    metrics.bytesRead.remaining >= CONTENT_ANALYTICS_HEADROOM.bytesRead &&
-    metrics.bytesWritten.remaining >= CONTENT_ANALYTICS_HEADROOM.bytesWritten &&
-    metrics.databaseQueries.remaining >=
-      CONTENT_ANALYTICS_HEADROOM.databaseQueries &&
-    metrics.documentsRead.remaining >=
-      CONTENT_ANALYTICS_HEADROOM.documentsRead &&
-    metrics.documentsWritten.remaining >=
-      CONTENT_ANALYTICS_HEADROOM.documentsWritten &&
-    metrics.functionsScheduled.remaining >=
-      CONTENT_ANALYTICS_HEADROOM.functionsScheduled &&
-    metrics.scheduledFunctionArgsBytes.remaining >=
-      CONTENT_ANALYTICS_HEADROOM.scheduledFunctionArgsBytes
+  return Arr.every(
+    Rec.keys(CONTENT_ANALYTICS_HEADROOM),
+    (key) =>
+      CONTENT_ANALYTICS_HEADROOM[key] === 0 ||
+      metrics[key].remaining >= CONTENT_ANALYTICS_HEADROOM[key]
   );
 }

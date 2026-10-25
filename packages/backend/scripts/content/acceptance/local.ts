@@ -158,7 +158,7 @@ export const reserveLocalRuntime = Effect.fn(
     .pipe(
       Effect.mapError(() =>
         acceptanceRuntimeError(
-          "The build runtime already exists or is not writable. Stop it and run pnpm acceptance:clean before preparing another fixture."
+          "The build runtime already exists or is not writable. Stop it and run bun run acceptance:clean before preparing another fixture."
         )
       )
     );
@@ -309,7 +309,7 @@ const readReservedLocalRuntime = Effect.fn(
     Effect.flatMap(Schema.decodeEffect(LocalRuntimeJson)),
     Effect.mapError(() =>
       acceptanceRuntimeError(
-        "The build runtime manifest is missing or invalid; existing state is preserved. Stop its services, delete .cache/acceptance, and run pnpm acceptance:prepare."
+        "The build runtime manifest is missing or invalid; existing state is preserved. Stop its services, delete .cache/acceptance, and run bun run acceptance:prepare."
       )
     )
   );

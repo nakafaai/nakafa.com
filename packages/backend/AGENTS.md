@@ -9,7 +9,7 @@ override what you may have learned about Convex from training data.
 
 Use the enabled official Convex plugin for generic workflows and read the
 generated guideline above for installed API facts. Nakafa's repository guides
-still own Effect, auth, pnpm, architecture, and deployment policy. Do not
+still own Effect, auth, Bun, architecture, and deployment policy. Do not
 install standalone repository or package-local Convex skill copies.
 
 <!-- convex-ai-end -->
@@ -20,21 +20,21 @@ Develop directly against the main dev deployment selected in
 `packages/backend/.env.local` (`CONVEX_DEPLOYMENT`). It lives in the same
 Nakafa project as production, so keep the two cohesive: same functions and
 schema as `main`, verified signed content only, no throwaway experiments left
-behind. The normal loop is the repository's pnpm CLI:
+behind. The normal loop is the repository's Bun CLI:
 
 ```sh
-pnpm --dir packages/backend setup
+bun run --cwd packages/backend setup
 ```
 
-Run `pnpm --dir packages/backend codegen` before a Convex binding refresh. Confect
+Run `bun run --cwd packages/backend codegen` before a Convex binding refresh. Confect
 owns the authored contract generation; Convex owns `convex/_generated`, including
-the static client API. `pnpm --filter @repo/backend codegen` also writes the
+the static client API. `bun --filter @repo/backend codegen` also writes the
 per-domain refs under `confect/_generated/refs`, and the web app imports only
-those. `pnpm acceptance:prepare` and `pnpm acceptance:build`
+those. `bun run acceptance:prepare` and `bun run acceptance:build`
 refresh these bindings against the owned local backend. After
-`pnpm --dir packages/backend codegen` and the Convex binding refresh, commit
+`bun run --cwd packages/backend codegen` and the Convex binding refresh, commit
 every change under `confect/_generated` and `convex/_generated`; a branch whose
-bindings are stale is not ready. Use the repository's pnpm CLI
+bindings are stale is not ready. Use the repository's Bun CLI
 and never print secrets. Never copy `CONVEX_DEPLOYMENT`, `CONVEX_DEPLOY_KEY`,
 or generated Convex URL values out of this checkout. The root guide owns the
 deployment policy; the configured production build deploys Convex before

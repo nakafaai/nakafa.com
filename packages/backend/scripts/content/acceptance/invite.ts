@@ -95,7 +95,7 @@ export const createAcceptanceInvite = Effect.fn("contentAcceptance.invite")(
     const runtime = yield* readLocalRuntime(root);
     if (runtime === undefined) {
       return yield* acceptanceRuntimeError(
-        "Run pnpm acceptance:prepare and start acceptance before inviting a learner."
+        "Run bun run acceptance:prepare and start acceptance before inviting a learner."
       );
     }
     const run = (
