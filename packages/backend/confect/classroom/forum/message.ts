@@ -58,11 +58,9 @@ export const MessageView = Schema.Struct({
 });
 
 /** The sealed field of a message's text, bound to the row that names it (ADR 0030). */
-export const messageField = (row: {
-  readonly channelId: string;
-  readonly classId: string;
-  readonly clientKey: string;
-}) => ({
+export const messageField = (
+  row: Pick<typeof messageValidator.Type, "channelId" | "classId" | "clientKey">
+) => ({
   field: "sealedText",
   row: [row.classId, row.channelId, row.clientKey],
   table: "classroomMessages",

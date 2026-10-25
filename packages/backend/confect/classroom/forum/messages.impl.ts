@@ -7,7 +7,6 @@ import {
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
 import { AccessDenied } from "@repo/backend/confect/access/errors";
-import { personActor } from "@repo/backend/confect/tenancy/actor";
 import { Class } from "@repo/backend/confect/classroom/access";
 import {
   classAccess,
@@ -19,6 +18,7 @@ import spec from "@repo/backend/confect/classroom/forum/messages.spec";
 import member from "@repo/backend/confect/middleware/member.impl";
 import { Member } from "@repo/backend/confect/middleware/member.spec";
 import session from "@repo/backend/confect/middleware/session.impl";
+import { personActor } from "@repo/backend/confect/tenancy/actor";
 import { readTenantKeys } from "@repo/backend/confect/vault/keys";
 import { openText, sealText } from "@repo/backend/confect/vault/text";
 import { Array as Arr, Clock, Effect, Layer, Option, Struct } from "effect";
@@ -81,24 +81,23 @@ const messageViews = Effect.fn("classroom.forum.messages.views")(function* (
   );
   return yield* Effect.forEach(rows, (message) =>
     Effect.gen(function* () {
-      const author = Arr.findFirst(
-        authors,
-        (candidate) => candidate._id === message.authorId
-      );
+      // Every author was read above, so a message without its author is a defect.
+      const author = yield* Effect.fromOption(
+        Arr.findFirst(
+          authors,
+          (candidate) => candidate._id === message.authorId
+        )
+      ).pipe(Effect.orDie);
       const text =
         message.sealedText === null
           ? null
-          : yield* openText(keys, messageField(message), message.sealedText).pipe(
-              Effect.orDie
-            );
+          : yield* openText(
+              keys,
+              messageField(message),
+              message.sealedText
+            ).pipe(Effect.orDie);
       return {
-        author: {
-          id: message.authorId,
-          name: Option.match(author, {
-            onNone: () => "",
-            onSome: (found) => found.name,
-          }),
-        },
+        author: { id: message.authorId, name: author.name },
         createdAt: message.createdAt,
         editedAt: message.editedAt ?? null,
         id: message._id,
@@ -129,7 +128,11 @@ const page = FunctionImpl.make(
     yield* classChannel(channelId, "forum.read");
     const found = yield* (yield* DatabaseReader)
       .table("classroomMessages")
-      .index("by_channelId", (query) => query.eq("channelId", channelId), "desc")
+      .index(
+        "by_channelId",
+        (query) => query.eq("channelId", channelId),
+        "desc"
+      )
       .paginate(paginationOpts)
       .pipe(Effect.orDie);
     return Struct.assign(found, { page: yield* messageViews(found.page) });
