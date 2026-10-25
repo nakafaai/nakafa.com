@@ -34,17 +34,30 @@ export const workerSettings = {
    */
   compatibilityDate: "2026-10-19",
   /**
-   * `process.env` reads the Worker's bindings under this flag. `nodejs_compat` is
-   * the default at this date, so it is not listed: naming it prints a warning.
+   * `process.env` reads the Worker's bindings under the first flag.
+   * `nodejs_compat` is the default at this date, so it is not listed: naming it
+   * prints a warning.
+   *
+   * The second flag keeps a browser navigation like any other request: one that
+   * matches no asset reaches the Worker, which renders its routes and answers
+   * every other path with the static 404 page. By default at this date the
+   * assets answer a navigation that misses with `404.html` before the Worker
+   * runs, so a signed-in page such as `/id/auth` answered 404 when a browser
+   * opened or reloaded it.
+   * https://developers.cloudflare.com/workers/configuration/compatibility-flags/#navigation-requests-prefer-asset-serving
    */
-  compatibilityFlags: ["nodejs_compat_populate_process_env"],
+  compatibilityFlags: [
+    "nodejs_compat_populate_process_env",
+    "assets_navigation_has_no_effect",
+  ],
   /** `ssr` is the Worker entry, and `rsc` is the React Server Components environment it loads. */
   viteEnvironments: { entry: "ssr", children: ["rsc"] },
   /**
    * How the static assets answer, in the deployed Worker and in the local preview
    * alike. A prerendered page is `<path>/index.html`, and its URL has no trailing
    * slash, so the asset answers at `/en` instead of redirecting to `/en/`. A path
-   * with no asset reaches the Worker, which answers the nearest `404.html`.
+   * with no asset reaches the Worker, a browser navigation included under the
+   * flag above, and the Worker answers the nearest `404.html`.
    */
   assets: {
     htmlHandling: HTML_HANDLING,

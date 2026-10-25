@@ -51,6 +51,8 @@ export default Stack(
     }
 
     const web = yield* Website.Vite("Web", {
+      // A path with no asset reaches the Worker, a browser navigation included
+      // (worker.ts names the flag and the asset settings).
       assets: workerSettings.assets,
       compatibility: {
         date: workerSettings.compatibilityDate,

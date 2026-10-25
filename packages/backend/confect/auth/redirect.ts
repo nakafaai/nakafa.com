@@ -7,7 +7,8 @@ const providerErrorRoutePathnames = HashSet.fromIterable(
 );
 
 /**
- * Removes provider-owned diagnostics before the redirect crosses into the app.
+ * Removes provider-owned diagnostics before the redirect crosses into one of the
+ * deployment's sites.
  *
  * Better Auth appends `error` and `error_description` to `errorCallbackURL`.
  * The app error landing needs only its validated continuation intent, so every
@@ -15,19 +16,22 @@ const providerErrorRoutePathnames = HashSet.fromIterable(
  */
 export function sanitizeProviderErrorRedirectResponse(
   response: Response,
-  siteUrl: URL
+  sites: Arr.NonEmptyReadonlyArray<URL>
 ) {
   const rawLocation = response.headers.get("location");
   if (!(rawLocation && response.status >= 300 && response.status < 400)) {
     return;
   }
-  if (!URL.canParse(rawLocation, siteUrl)) {
+  const [primary] = sites;
+  if (!URL.canParse(rawLocation, primary)) {
     return;
   }
-  const location = new URL(rawLocation, siteUrl);
+  const location = new URL(rawLocation, primary);
   if (
-    location.origin !== siteUrl.origin ||
-    !HashSet.has(providerErrorRoutePathnames, location.pathname)
+    !(
+      Arr.some(sites, (site) => site.origin === location.origin) &&
+      HashSet.has(providerErrorRoutePathnames, location.pathname)
+    )
   ) {
     return;
   }

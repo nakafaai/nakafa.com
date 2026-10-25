@@ -248,7 +248,7 @@ describe("the judgment measuring command", () => {
     () =>
       Effect.gen(function* () {
         // The child is the real script, started as the package script starts
-        // it (`tsx scripts/judgment/main.ts` in the folder of the package), so
+        // it (`bun scripts/judgment/main.ts` in the folder of the package), so
         // it proves that every module the script imports loads, which no
         // double can fake. The check reads the environment before it reads the
         // `.env.local` of the package, and it looks at the keys before it looks
@@ -259,8 +259,8 @@ describe("the judgment measuring command", () => {
         // writes the refusal to the output, and a module that the runner
         // cannot load shows its own error there instead.
         const child = yield* ChildProcess.make(
-          process.execPath,
-          ["node_modules/tsx/dist/cli.mjs", "scripts/judgment/main.ts"],
+          "bun",
+          ["scripts/judgment/main.ts"],
           {
             cwd: PACKAGE,
             env: { CONVEX_DEPLOY_KEY: "dev:happy-animal-123|top-secret" },
