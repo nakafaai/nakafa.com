@@ -1,8 +1,10 @@
 import { Table } from "@confect/core";
+import { contentGenerationValidator } from "@repo/backend/confect/contentRelease/generation";
 import { modelSlotValidator } from "@repo/backend/confect/contentRelease/models/slot";
 import { Schema } from "effect";
 export default Table.make(() =>
   Schema.Struct({
+    activeContentGeneration: Schema.optionalKey(contentGenerationValidator),
     activeManifestHash: Schema.optionalKey(Schema.String),
     activeReleaseId: Schema.optionalKey(Schema.String),
     activeSequence: Schema.optionalKey(Schema.Finite),

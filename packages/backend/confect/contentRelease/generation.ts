@@ -1,8 +1,9 @@
+import { CompiledContentPayloadSchema } from "@nakafa/aksara-contracts/content";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { Effect, Option, Schema } from "effect";
 
 /**
- * Publication records signed under a retired content contract.
+ * Content generations and the publication records signed under a retired one.
  *
  * A retired generation's records stay unreadable on purpose: the current
  * readers are strict, and the migration that would have re-signed them was
@@ -15,8 +16,30 @@ import { Effect, Option, Schema } from "effect";
  * widens the current contract and never narrows unknown input by hand.
  */
 
-/** Retired artifact marker: component requirements carry explicit versions. */
-const RetiredArtifactSchema = Schema.fromJsonString(
+/** Compiled-body format of the retired Aksara 0.51 contract. */
+export const RETIRED_CONTENT_GENERATION = "mdx-function-body";
+
+/** Compiled-body format of the current contract, read from the installed contract. */
+export const CURRENT_CONTENT_GENERATION =
+  CompiledContentPayloadSchema.fields.format.literal;
+
+/** The content generation that an active release was published under. */
+export const contentGenerationValidator = Schema.Literals([
+  RETIRED_CONTENT_GENERATION,
+  CURRENT_CONTENT_GENERATION,
+]);
+
+/** Retired artifact marker: the payload names the retired compiled-body format. */
+const RetiredFormatArtifactSchema = Schema.fromJsonString(
+  Schema.Struct({
+    payload: Schema.Struct({
+      format: Schema.Literal(RETIRED_CONTENT_GENERATION),
+    }),
+  })
+);
+
+/** Older retired artifact marker: component requirements carry explicit versions. */
+const VersionedComponentArtifactSchema = Schema.fromJsonString(
   Schema.Struct({
     payload: Schema.Struct({
       requiredComponents: Schema.Array(
@@ -41,8 +64,12 @@ const RetiredReleaseSchema = Schema.fromJsonString(
 export const requireCurrentArtifact = Effect.fn(
   "contentRelease.requireCurrentArtifact"
 )(function* (source: string, identity: string, artifactHash: string) {
-  const retired = Schema.decodeOption(RetiredArtifactSchema)(source);
-  if (Option.isNone(retired)) {
+  const retired =
+    Option.isSome(Schema.decodeOption(RetiredFormatArtifactSchema)(source)) ||
+    Option.isSome(
+      Schema.decodeOption(VersionedComponentArtifactSchema)(source)
+    );
+  if (!retired) {
     return;
   }
   return yield* releaseFail(
