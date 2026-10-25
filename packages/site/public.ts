@@ -7,6 +7,6 @@ import { Schema } from "effect";
  */
 export const appUrlKeys = () =>
   readEnvironment(
-    { VITE_APP_URL: Schema.NonEmptyString },
-    { VITE_APP_URL: import.meta.env.VITE_APP_URL }
+    { VITE_SITE_URL: Schema.NonEmptyString },
+    { VITE_SITE_URL: import.meta.env.VITE_SITE_URL }
   );

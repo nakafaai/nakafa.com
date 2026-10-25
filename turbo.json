@@ -12,8 +12,8 @@
     "MATH_CAS_URL",
     "OPENWEATHER_API_KEY",
     "SITE_URL",
-    "AUTH_GOOGLE_ID",
-    "AUTH_GOOGLE_SECRET",
+    "GOOGLE_AUTH_CLIENT_ID",
+    "GOOGLE_AUTH_CLIENT_SECRET",
     "POLAR_ACCESS_TOKEN",
     "POLAR_WEBHOOK_SECRET",
     "CONVEX_URL",
@@ -133,6 +133,10 @@
     "lint": {
       "dependsOn": ["^lint"],
       "outputs": []
+    },
+    "typecheck": {
+      "dependsOn": ["^typecheck"],
+      "cache": false
     },
     "bump-deps": {
       "cache": false,

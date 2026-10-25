@@ -1,6 +1,6 @@
 # ADR 0001: Native Agent conversations with Confect domain operations
 
-> Superseded in part by [ADR 0037](0037-cloudflare.md) and [ADR 0036](0036-boundary.md): the Vercel and Next.js statements of this record describe the earlier stack. Cloudflare Workers through Alchemy and the TanStack Start boundary replace them.
+> Superseded in part by [ADR 0037](0037-cloudflare.md) and [ADR 0036](0036-boundary.md): the hosting and framework statements of this record describe the earlier stack. Cloudflare Workers through Alchemy and the TanStack Start boundary replace them.
 
 ## Status
 
@@ -234,13 +234,6 @@ owner of a chat is not told that it is not their chat because a link did not
 load. `apps/www/e2e/chat/link.browser.ts` proves the late link, and the dialog
 that says so when the query fails with the typed failure and loads the link
 again on Retry, in the production build.
-
-The change that introduced share tokens kept two temporary contract steps,
-`chats/unshare:closeLegacy` and an empty `getChats`, until a dry pass of
-`closeLegacy` found no legacy chat on dev and on production and the release had
-been on production for 12 hours, the project's skew protection window
-(`skewProtectionMaxAge` 43,200 seconds). Both passes found none on 13 October
-2026, and both steps are deleted.
 
 Nina's system prompt leads with stable instructions so provider prompt caching
 reuses them across turns. The current page, which learners share, the learner
@@ -519,12 +512,8 @@ the chat is free:
   deleted chat never leaves its words behind, and the learner tries again.
 - The failed turn stores `unknown`, which the learner reads as a response Nina
   could not finish, with a way to try again and to ask for help. A reason of its
-  own would be a new value of the stored failure reason. Every web build reads
-  that reason with the values it was built with, `ninaResponseFeedback` words
-  each of them, and Skew Protection keeps a browser on its deployment for 12
-  hours ([ADR 0008](./0008-compute.md)). So the web learns and words the value
-  first, and the ending stores it once the older builds are gone. The log of the
-  ending names the turn until then.
+  own would be a new value of the stored failure reason, which the web words and
+  the backend stores in one deploy.
 - A turn the learner stopped settles at their next prompt, in any chat. When its
   journal cannot be read, that settlement is skipped and logged with the turn,
   and the others still settle, so the failure of one thread never refuses a
@@ -548,15 +537,13 @@ memory, and the stream rows 12, 10, 9 and 5.
 
 Math is the one capability above the bound: its card nests `data`, `result`,
 `steps`, a step and its `items` below the artifact. Flattening it changes the
-stored shape that the page decodes with `CapabilityOutputSchema`, so it follows
-the rollout rule of `packages/backend/AGENTS.md`: the schema first accepts both
-shapes and ships to the web, and once no older build is served the writer stores
-the flat one. Rows already stored keep their shape, because each was written
-within the limit and none is written again. The schema keeps reading both
-without an end date, and no migration rewrites Agent messages for a log line.
-Until the flatten, the test holds math at the depth its card has: a card that
-grows fails, and so does one that fits the bound, until the exception is
-deleted.
+stored shape that the page decodes with `CapabilityOutputSchema`, so the schema,
+the writer, and the page change in one deploy. Stored math messages of the old
+shape are owner-pending: they are learner chat data, and the owner decides whether
+they are deleted in that same change. No migration reads them.
+Until the flatten, the test holds math at the depth its card has: a
+card that grows fails, and so does one that fits the bound, until the exception
+is deleted.
 
 ## Adding a capability
 
@@ -582,10 +569,8 @@ with what the compiler enforces at each and what it leaves to the author.
    ledger accepts no other name, and the output caps of the release gate follow
    the table and name no agent. A runner writes its Agent's name with
    `satisfies UsageAgent`, so it does not compile until the line exists. Left
-   to the author: every web build decodes the ledger with the names it was built
-   with, so the web build that knows a new name ships first and the run records
-   under it once the older builds are gone, by the rollout rule of
-   `packages/backend/AGENTS.md`.
+   to the author: the name ships in the same deploy as the runner that records
+   it, so the run records under the new name from that deploy on.
 3. Define it in `<folder>/capability.ts` with `defineCapability`: the
    description the model reads, the Schema of its input, its guideline for the
    tool policy (`entry`, `field` when its input has a field of its own,
@@ -649,7 +634,7 @@ a release of anything under `packages/backend/confect/nina` or
 change. It is not part of CI.
 
 ```sh
-pnpm --filter @repo/backend nina:gate
+bun --filter @repo/backend nina:gate
 ```
 
 The command reads the deployment from the caller's own configuration:

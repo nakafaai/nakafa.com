@@ -16,7 +16,7 @@ export class ContentExecutionError extends Schema.TaggedError<ContentExecutionEr
 export class ContentRuntimeConfigurationError extends Schema.TaggedError<ContentRuntimeConfigurationError>()(
   "ContentRuntimeConfigurationError",
   {
-    key: Schema.Literal("CONTENT_RUNTIME_TOKEN"),
+    key: Schema.Literal("CONTENT_READ_TOKEN"),
   }
 ) {}
 /** A verified projection cannot satisfy its requested public surface. */

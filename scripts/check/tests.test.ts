@@ -231,7 +231,7 @@ describe("test ownership policy", () => {
       files: { "apps/web/lonely.ts": "export const lonely = 1;\n" },
     },
     {
-      category: "the Vercel gateway package",
+      category: "the @ai-sdk/gateway package",
       files: {
         "packages/core/model.ts":
           'import { createGateway } from "@ai-sdk/gateway";\n',

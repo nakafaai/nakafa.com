@@ -39,7 +39,7 @@ const protectedRuntimeRoute = Effect.fn("contentRelease.protectedRuntimeRoute")(
   function* (request: Request) {
     const input = yield* readRuntimeRequest(
       request,
-      yield* Config.String("CONTENT_RUNTIME_TOKEN").pipe(Effect.orDie),
+      yield* Config.String("CONTENT_READ_TOKEN").pipe(Effect.orDie),
       MAX_PROTECTED_RUNTIME_REQUEST_BYTES
     );
     if (input.kind === "rejected") {

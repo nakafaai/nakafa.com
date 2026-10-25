@@ -57,8 +57,8 @@ if [[ "${osv_actual}" != "${osv_checksum}" ]]; then
   exit 1
 fi
 
-# Every argument names one more lockfile, scanned after the pnpm lockfile.
-lockfile_arguments=("--lockfile=pnpm-lock.yaml")
+# Every argument names one more lockfile, scanned after the Bun lockfile.
+lockfile_arguments=("--lockfile=bun.lock")
 for lockfile in "$@"; do
   lockfile_arguments+=("--lockfile=${lockfile}")
 done

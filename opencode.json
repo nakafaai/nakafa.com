@@ -15,10 +15,10 @@
     "convex": {
       "type": "local",
       "command": [
-        "pnpm",
-        "--dir",
+        "bunx",
+        "--no-install",
+        "--cwd",
         "packages/backend",
-        "exec",
         "convex",
         "mcp",
         "start"
@@ -27,8 +27,7 @@
     "shadcn": {
       "type": "local",
       "command": [
-        "pnpm",
-        "dlx",
+        "bunx",
         "shadcn@4.16.1",
         "mcp",
         "--cwd",

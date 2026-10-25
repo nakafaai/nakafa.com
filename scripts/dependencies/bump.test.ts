@@ -19,9 +19,10 @@ import { TestClock } from "effect/testing";
 import { capture, makeCapture } from "#scripts/capture";
 import {
   bumpDependencies,
+  outdatedNames,
   RegistryVersionJson,
 } from "#scripts/dependencies/bump";
-import type { runPnpm } from "#scripts/dependencies/command";
+import type { runBun } from "#scripts/dependencies/command";
 import { REGISTRY_REVIEWS } from "#scripts/dependencies/policy";
 import { GITHUB_ACTION_REVIEWS } from "#scripts/github/policy";
 import {
@@ -29,20 +30,32 @@ import {
   githubActionReleaseReviews,
 } from "#scripts/github/release";
 
-type CommandResult = Effect.Success<ReturnType<typeof runPnpm>>;
+type CommandResult = Effect.Success<ReturnType<typeof runBun>>;
 
-/** Scripts one pnpm command's result from its arguments. */
+/** Scripts one bun command's result from its arguments. */
 type CommandScript = (args: readonly string[]) => CommandResult;
 /** Scripts the policy problems that one inspection reports. */
 type PolicyScript = () => string[];
 /** Scripts the GitHub release response for one reviewed action. */
 type ReleaseScript = (review: GithubActionReleaseReview) => Response;
 
+/** One `bun outdated` table that lists the given package in its only workspace. */
+function outdatedTable(name: string) {
+  return Arr.join(
+    [
+      "bun outdated v1.4.4",
+      "| Package | Current | Update | Latest | Workspace |",
+      `| ${name} | 1.0.0 | 1.0.0 | 2.0.0 | www |`,
+    ],
+    "\n"
+  );
+}
+
 function reviewedDependencies(args: readonly string[]): CommandResult {
   if (args[0] === "update" || args[0] === "outdated") {
     return { exitCode: 0, stderr: "", stdout: "" };
   }
-  assert.strictEqual(args[0], "view");
+  assert.strictEqual(args[0], "info");
   const review = Option.getOrUndefined(
     Arr.findFirst(REGISTRY_REVIEWS, ([registry]) => registry === args[1])
   );
@@ -139,14 +152,10 @@ describe("dependency updates", () => {
         assert.strictEqual(result.status, 0);
         assert.strictEqual(result.inspections, 2);
         assert.deepStrictEqual(result.errors, []);
-        assert.deepStrictEqual(result.commands[0], [
-          "update",
-          "--recursive",
-          "--latest",
-        ]);
+        assert.deepStrictEqual(result.commands[0], ["outdated", "--recursive"]);
         assert.deepStrictEqual(
           Arr.last(result.commands),
-          Option.some(["outdated", "--recursive", "--format", "json"])
+          Option.some(["outdated", "--recursive"])
         );
         assert.ok(
           Option.exists(Arr.last(result.output), (message) =>
@@ -161,7 +170,7 @@ describe("dependency updates", () => {
       })
   );
 
-  it.effect("rejects unsafe policy before running pnpm update", () =>
+  it.effect("rejects unsafe policy before running bun update", () =>
     Effect.gen(function* () {
       const result = yield* runScenario(reviewedDependencies, () => [
         "unsafe dependency policy",
@@ -175,14 +184,21 @@ describe("dependency updates", () => {
 
   it.effect("preserves an update failure without querying registries", () =>
     Effect.gen(function* () {
-      const result = yield* runScenario(() => ({
-        exitCode: 23,
-        stderr: "update failed",
-        stdout: "",
-      }));
+      const result = yield* runScenario((args) =>
+        args[0] === "update"
+          ? { exitCode: 23, stderr: "update failed", stdout: "" }
+          : {
+              exitCode: 1,
+              stderr: "",
+              stdout: outdatedTable("unreviewed-library"),
+            }
+      );
       assert.strictEqual(result.status, 23);
       assert.strictEqual(result.inspections, 1);
-      assert.strictEqual(result.commands.length, 1);
+      assert.deepStrictEqual(result.commands, [
+        ["outdated", "--recursive"],
+        ["update", "--recursive", "--latest", "unreviewed-library"],
+      ]);
       assert.deepStrictEqual(result.output, []);
       assert.deepStrictEqual(result.errors, []);
     })
@@ -202,7 +218,7 @@ describe("dependency updates", () => {
           return {
             exitCode: 1,
             stderr: "",
-            stdout: '{"unreviewed-library":{}}',
+            stdout: outdatedTable("unreviewed-library"),
           };
         }
         if (args[1] === "react@latest") {
@@ -239,16 +255,13 @@ describe("dependency updates", () => {
   it.effect("reports unavailable and drifted action releases", () =>
     Effect.gen(function* () {
       const result = yield* runScenario(
-        (args) =>
-          args[0] === "outdated"
-            ? { exitCode: 1, stderr: "", stdout: "{" }
-            : reviewedDependencies(args),
+        reviewedDependencies,
         () => [],
         (review) => {
           if (review.repository === "actions/checkout") {
             return new Response(null, { status: 404 });
           }
-          return review.repository === "pnpm/setup"
+          return review.repository === "oven-sh/setup-bun"
             ? Response.json({ tag_name: "v99.0.0" })
             : reviewedRelease(review);
         }
@@ -256,8 +269,7 @@ describe("dependency updates", () => {
       assert.strictEqual(result.status, 1);
       assert.deepStrictEqual(result.errors, [
         "Unable to read the latest actions/checkout release.\n" +
-          `pnpm/setup is now v99.0.0; last reviewed ${reviewedTag("pnpm/setup")}.\n` +
-          "pnpm outdated returned invalid JSON.\n",
+          `oven-sh/setup-bun is now v99.0.0; last reviewed ${reviewedTag("oven-sh/setup-bun")}.\n`,
       ]);
       assert.ok(
         Arr.every(
@@ -282,12 +294,12 @@ describe("dependency updates", () => {
       );
       assert.deepStrictEqual(failures, [
         [1, ["network down\n"]],
-        [1, ["pnpm outdated failed.\n"]],
+        [1, ["bun outdated failed.\n"]],
       ]);
     })
   );
 
-  it.effect("inspects the repository before starting pnpm by default", () =>
+  it.effect("inspects the repository before starting bun by default", () =>
     Effect.gen(function* () {
       const fileSystem = yield* FileSystem.FileSystem;
       const root = yield* fileSystem.makeTempDirectoryScoped({
@@ -331,40 +343,63 @@ describe("dependency updates", () => {
     }).pipe(Effect.provide(NodeServices.layer))
   );
 
-  it.effect(
-    "fails the registry review when pnpm view misses its deadline",
-    () =>
-      Effect.gen(function* () {
-        const releases = yield* releaseClient(reviewedRelease);
-        const fiber = yield* Effect.forkChild(
-          bumpDependencies(
-            { root: "/repository" },
-            () => Effect.succeed([]),
-            (_root, args) =>
-              args[0] === "view"
-                ? Effect.never
-                : Effect.succeed({ exitCode: 0, stderr: "", stdout: "" }),
-            () => Effect.void,
-            () => Effect.void
-          ).pipe(
-            Effect.provide(Layer.mergeAll(NodeServices.layer, releases)),
-            Effect.provideService(
-              ConfigProvider.ConfigProvider,
-              ConfigProvider.fromEnvRecord({})
-            ),
-            Effect.flip
-          )
-        );
+  it.effect("fails the registry review when bun info misses its deadline", () =>
+    Effect.gen(function* () {
+      const releases = yield* releaseClient(reviewedRelease);
+      const fiber = yield* Effect.forkChild(
+        bumpDependencies(
+          { root: "/repository" },
+          () => Effect.succeed([]),
+          (_root, args) =>
+            args[0] === "info"
+              ? Effect.never
+              : Effect.succeed({ exitCode: 0, stderr: "", stdout: "" }),
+          () => Effect.void,
+          () => Effect.void
+        ).pipe(
+          Effect.provide(Layer.mergeAll(NodeServices.layer, releases)),
+          Effect.provideService(
+            ConfigProvider.ConfigProvider,
+            ConfigProvider.fromEnvRecord({})
+          ),
+          Effect.flip
+        )
+      );
 
-        yield* TestClock.adjust("10 seconds");
+      yield* TestClock.adjust("10 seconds");
 
-        const failure = yield* Fiber.join(fiber);
-        const registry = REGISTRY_REVIEWS[0]?.[0];
-        assert.strictEqual(failure._tag, "DependencyCommandError");
-        assert.strictEqual(
-          failure.message,
-          `pnpm view ${registry} did not finish within 10 seconds.`
-        );
-      })
+      const failure = yield* Fiber.join(fiber);
+      const registry = REGISTRY_REVIEWS[0]?.[0];
+      assert.strictEqual(failure._tag, "DependencyCommandError");
+      assert.strictEqual(
+        failure.message,
+        `bun info ${registry} did not finish within 10 seconds.`
+      );
+    })
   );
+});
+
+describe("outdated tables", () => {
+  it("names each outdated package once, from its table rows only", () => {
+    const table = Arr.join(
+      [
+        "bun outdated v1.4.4",
+        "| Package | Current | Update | Latest | Workspace |",
+        "|---------|---------|--------|--------|-----------|",
+        "| effect | 4.0.5 | 4.0.5 | 4.0.6 | catalog |",
+        "| @effect/platform-bun (dev) | 4.0.5 | 4.0.5 | 4.0.6 | www |",
+        "| marked-tiptap@npm:marked | 17.0.6 | 17.0.6 | 18.1.1 | @repo/design-system |",
+        "| effect | 4.0.5 | 4.0.5 | 4.0.6 | @repo/backend |",
+        "Use --filter to include more than one workspace.",
+      ],
+      "\n"
+    );
+
+    assert.deepStrictEqual(outdatedNames(table), [
+      "@effect/platform-bun",
+      "effect",
+      "marked-tiptap",
+    ]);
+    assert.deepStrictEqual(outdatedNames(""), []);
+  });
 });

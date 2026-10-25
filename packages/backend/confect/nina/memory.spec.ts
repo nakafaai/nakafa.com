@@ -15,10 +15,9 @@ import { Duration, Schema, Struct } from "effect";
 
 /**
  * How long a deleted memory can be put back with `restore`. No page offers an
- * Undo now: an older web build that still calls `restore` during the deploy
- * deploy window is the only caller, and its Undo lasted this long. Remove
- * `restore`, its record, and this window together once that window has passed.
- * Owner: pull request #1099, which takes the Undo toast out of the Memory page.
+ * Undo now, and no page calls `restore`. Its deletion, with its record and this
+ * window, is owner-pending (ADR 0022). Owner: pull request #1099, which takes
+ * the Undo toast out of the Memory page.
  */
 export const MEMORY_UNDO = Duration.seconds(5);
 /** Characters of one memory's words, their Markdown formatting included. */
@@ -347,7 +346,7 @@ export default GroupSpec.make()
     }).middleware(Session)
   )
   // Deletes one memory, and keeps what it deleted, sealed as stored, for
-  // `MEMORY_UNDO` so that `restore` can give it back to an older web build.
+  // `MEMORY_UNDO` so that `restore` can give it back.
   .addFunction(
     FunctionSpec.publicMutation({
       name: "remove",

@@ -17,10 +17,10 @@ const Tokens = Schema.Int.check(Schema.isGreaterThanOrEqualTo(0));
  * refs, so the registry would bring every runner into the page. A runner is
  * held to the list instead: it names its Agent `satisfies UsageAgent`.
  *
- * A turn's ledger is part of what a client reads (`NinaTurnSummary`), and a web
- * build decodes only the names it was built with, so a name added here is a
- * rollout step (ADR 0001, "Adding a capability"). Work that belongs to no
- * turn's answer is not here: its row keeps the total (`NinaUpkeepCall`).
+ * A turn's ledger is part of what a client reads (`NinaTurnSummary`). A name
+ * added here ships in the same deploy as the runner that records it (ADR 0001,
+ * "Adding a capability"). Work that belongs to no turn's answer is not here:
+ * its row keeps the total (`NinaUpkeepCall`).
  */
 const AGENT_PURPOSES = {
   nina: "chat",

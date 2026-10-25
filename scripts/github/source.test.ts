@@ -56,9 +56,9 @@ describe("GitHub Action sources", () => {
             "    steps:",
             "      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
             "      - uses: ./.github/actions/local",
-            "      - uses: pnpm/setup@84cb39b217b10273981911c288cd62326dc7c6d2",
+            "      - uses: oven-sh/setup-bun@84cb39b217b10273981911c288cd62326dc7c6d2",
             "        with:",
-            "          cache: true",
+            "          no-cache: true",
             "",
           ],
           "\n"
@@ -85,8 +85,9 @@ describe("GitHub Action sources", () => {
           workflowPath: ".github/workflows/release.yml",
         },
         {
-          inputs: { cache: true },
-          reference: "pnpm/setup@84cb39b217b10273981911c288cd62326dc7c6d2",
+          inputs: { "no-cache": true },
+          reference:
+            "oven-sh/setup-bun@84cb39b217b10273981911c288cd62326dc7c6d2",
           workflowPath: ".github/workflows/release.yml",
         },
       ]);
@@ -126,9 +127,9 @@ describe("GitHub Action sources", () => {
             "runs:",
             "  using: composite",
             "  steps:",
-            "    - uses: pnpm/setup@84cb39b217b10273981911c288cd62326dc7c6d2",
+            "    - uses: oven-sh/setup-bun@84cb39b217b10273981911c288cd62326dc7c6d2",
             "      with:",
-            "        cache: false",
+            "        no-cache: false",
             "    - uses: ./.github/actions/local",
             "    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
             "",
@@ -143,8 +144,9 @@ describe("GitHub Action sources", () => {
 
       expect(yield* readCompositeActionUses(root)).toEqual([
         {
-          inputs: { cache: false },
-          reference: "pnpm/setup@84cb39b217b10273981911c288cd62326dc7c6d2",
+          inputs: { "no-cache": false },
+          reference:
+            "oven-sh/setup-bun@84cb39b217b10273981911c288cd62326dc7c6d2",
           workflowPath: ".github/actions/install/action.yml",
         },
         {
@@ -175,10 +177,9 @@ describe("GitHub Action sources", () => {
             "runs:",
             "  using: composite",
             "  steps:",
-            "    - uses: pnpm/setup@0123456789abcdef0123456789abcdef01234567",
+            "    - uses: oven-sh/setup-bun@0123456789abcdef0123456789abcdef01234567",
             "      with:",
-            "        cache: true",
-            "        install: false",
+            "        no-cache: false",
             "",
           ],
           "\n"
@@ -188,8 +189,8 @@ describe("GitHub Action sources", () => {
 
       expect(yield* inspectGithubActionPolicy(root)).toEqual(
         expect.arrayContaining([
-          ".github/actions/install/action.yml pins pnpm/setup to 0123456789abcdef0123456789abcdef01234567; approved fbda4c85fc2e1e08721cd8763afea8f48d60f024.",
-          ".github/actions/install/action.yml configures pnpm/setup cache as true; approved false.",
+          ".github/actions/install/action.yml pins oven-sh/setup-bun to 0123456789abcdef0123456789abcdef01234567; approved 0c5077e51419868618aeaa5fe8019c62421857d6.",
+          ".github/actions/install/action.yml configures oven-sh/setup-bun no-cache as false; approved true.",
         ])
       );
     }).pipe(Effect.provide(NodeServices.layer))

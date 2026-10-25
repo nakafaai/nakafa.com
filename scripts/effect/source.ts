@@ -229,7 +229,7 @@ const checkSource = Effect.fn("EffectSource.check")(function* (
   const state = yield* inspectSource(config);
   if (state.installedVersion !== state.vendoredVersion) {
     return yield* new EffectSourceMismatch({
-      message: `Installed Effect is ${state.installedVersion}, but ${config.sourcePath} is ${state.vendoredVersion}. Commit dependency changes, then run pnpm effect:source:update.`,
+      message: `Installed Effect is ${state.installedVersion}, but ${config.sourcePath} is ${state.vendoredVersion}. Commit dependency changes, then run bun run effect:source:update.`,
     });
   }
   yield* Effect.log(

@@ -110,7 +110,7 @@ describe("page googlebot rule", () => {
 });
 
 describe("head alternates of a resolved route", () => {
-  it("maps each locale and each representation to an absolute link, and skips a locale without a page", () => {
+  it("maps each locale to an absolute link, and skips a locale without a page", () => {
     expect(
       toHeadAlternates({
         languages: {
@@ -119,10 +119,6 @@ describe("head alternates of a resolved route", () => {
           id: "/id/materi/aljabar",
           "x-default": "/en/materials/aljabar",
         },
-        types: {
-          "text/markdown": "/en/materials/aljabar.md",
-          "text/plain": undefined,
-        },
       })
     ).toStrictEqual([
       { hreflang: "en", href: "https://nakafa.com/en/materials/aljabar" },
@@ -130,10 +126,6 @@ describe("head alternates of a resolved route", () => {
       {
         hreflang: "x-default",
         href: "https://nakafa.com/en/materials/aljabar",
-      },
-      {
-        href: "https://nakafa.com/en/materials/aljabar.md",
-        type: "text/markdown",
       },
     ]);
   });
@@ -175,14 +167,24 @@ describe("router head", () => {
   });
 });
 
+describe("page head JSON-LD", () => {
+  it("renders a document of several nodes as one script", () => {
+    const article = { "@type": "Article" };
+    const breadcrumb = { "@type": "BreadcrumbList" };
+    const routed = toRouterHead(
+      createSeoHead({ ...facts, jsonLd: [[article, breadcrumb]] })
+    );
+
+    expect(Arr.last(routed.meta)).toStrictEqual(
+      Option.some({ "script:ld+json": [article, breadcrumb] })
+    );
+  });
+});
+
 describe("page head alternates", () => {
   it("uses the alternates that the content supplies in place of the route map's", () => {
     const alternates = [
       { hreflang: "en", href: "https://nakafa.com/en/materials/aljabar" },
-      {
-        href: "https://nakafa.com/en/materials/aljabar.md",
-        type: "text/markdown",
-      },
     ];
 
     expect(createSeoHead({ ...facts, alternates }).alternates).toStrictEqual(
@@ -194,22 +196,13 @@ describe("page head alternates", () => {
     const routed = toRouterHead(
       createSeoHead({
         ...facts,
-        alternates: [
-          {
-            href: "https://nakafa.com/en/materials/aljabar.md",
-            type: "text/markdown",
-          },
-        ],
+        alternates: [{ href: "https://nakafa.com/en/materials/aljabar" }],
       })
     );
 
     expect(routed.links).toStrictEqual([
       { href: "https://nakafa.com/en/subjects/aljabar", rel: "canonical" },
-      {
-        href: "https://nakafa.com/en/materials/aljabar.md",
-        rel: "alternate",
-        type: "text/markdown",
-      },
+      { href: "https://nakafa.com/en/materials/aljabar", rel: "alternate" },
     ]);
   });
 });

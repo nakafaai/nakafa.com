@@ -3,7 +3,7 @@ import { postHogPublicKeys } from "@repo/analytics/public";
 
 /** Installs the public PostHog values for each assertion. */
 function stubAnalyticsEnvironment() {
-  vi.stubEnv("VITE_POSTHOG_KEY", "phc_test");
+  vi.stubEnv("VITE_POSTHOG_PROJECT_TOKEN", "phc_test");
   vi.stubEnv("VITE_POSTHOG_PROXY_HOST", "https://t.nakafa.com");
   vi.stubEnv("VITE_POSTHOG_UI_HOST", "https://eu.posthog.com");
 }
@@ -17,7 +17,7 @@ describe("public PostHog values", () => {
     stubAnalyticsEnvironment();
 
     expect(postHogPublicKeys()).toEqual({
-      VITE_POSTHOG_KEY: "phc_test",
+      VITE_POSTHOG_PROJECT_TOKEN: "phc_test",
       VITE_POSTHOG_PROXY_HOST: "https://t.nakafa.com",
       VITE_POSTHOG_UI_HOST: "https://eu.posthog.com",
     });
@@ -34,13 +34,13 @@ describe("public PostHog values", () => {
 
   it("requires a project key with the phc_ prefix", () => {
     stubAnalyticsEnvironment();
-    vi.stubEnv("VITE_POSTHOG_KEY", undefined);
+    vi.stubEnv("VITE_POSTHOG_PROJECT_TOKEN", undefined);
     expect(postHogPublicKeys).toThrow();
 
-    vi.stubEnv("VITE_POSTHOG_KEY", "");
+    vi.stubEnv("VITE_POSTHOG_PROJECT_TOKEN", "");
     expect(postHogPublicKeys).toThrow();
 
-    vi.stubEnv("VITE_POSTHOG_KEY", "ph_test");
+    vi.stubEnv("VITE_POSTHOG_PROJECT_TOKEN", "ph_test");
     expect(postHogPublicKeys).toThrow();
   });
 

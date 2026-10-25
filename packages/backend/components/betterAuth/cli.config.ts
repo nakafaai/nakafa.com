@@ -9,7 +9,7 @@ import { betterAuth } from "better-auth/minimal";
  *
  * The tool runs outside a Convex request. The local install guide therefore
  * requires a placeholder context for this static instance. Nothing at run time
- * imports this file. Regenerate with `pnpm --filter @repo/backend
+ * imports this file. Regenerate with `bun --filter @repo/backend
  * generate-schema`, which names this file: the tool's own lookup, and the
  * command in the generated header, do not find it.
  * @see https://labs.convex.dev/better-auth/features/local-install#generate-the-schema

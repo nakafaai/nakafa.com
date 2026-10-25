@@ -147,7 +147,6 @@ export function PictureAltDialog({
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
         {preview === null ? null : (
-          // biome-ignore lint/performance/noImgElement: a local preview of the file the teacher chose, or an address that the image pipeline cannot optimise.
           <img
             alt=""
             className="max-h-64 rounded-md object-contain"
@@ -217,7 +216,6 @@ function PictureNode({
           role="img"
         />
       ) : (
-        // biome-ignore lint/performance/noImgElement: the file is served from Convex storage through its own address.
         <img
           alt={alt}
           className="size-full rounded-md object-contain"

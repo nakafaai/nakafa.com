@@ -1,6 +1,6 @@
 # ADR 0017: Shared Client State Has Two Homes, And Streamed Content Keeps Its Context
 
-> Superseded in part by [ADR 0037](0037-cloudflare.md) and [ADR 0036](0036-boundary.md): the Vercel and Next.js statements of this record describe the earlier stack. Cloudflare Workers through Alchemy and the TanStack Start boundary replace them.
+> Superseded in part by [ADR 0037](0037-cloudflare.md) and [ADR 0036](0036-boundary.md): the hosting and framework statements of this record describe the earlier stack. Cloudflare Workers through Alchemy and the TanStack Start boundary replace them.
 
 ## Status
 
@@ -112,7 +112,7 @@ the same.
 
 ## Consequences
 
-- `scripts/check/react.ts`, run by `pnpm check:tests`, rejects
+- `scripts/check/react.ts`, run by `bun run check:tests`, rejects
   `use-context-selector`, React's `useContext`, and Zustand's module-level
   `create`. Biome's `noRestrictedImports` rejects the context-backed auth APIs
   of `convex/react` and `@convex-dev/better-auth`. Neither looks at

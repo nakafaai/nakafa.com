@@ -20,12 +20,8 @@ import {
 } from "typescript/unstable/ast";
 
 const CONFIGURATION_FILE_PATTERN = /(?:^|\/)[^/]+\.config\.[cm]?tsx?$/u;
-/**
- * The configuration APIs that framework configuration imports: Vitest's, and
- * Vercel's by any of its subpaths.
- */
-const CONFIGURATION_MODULE_PATTERN =
-  /^(?:vitest\/config|@vercel\/config(?:\/.*)?)$/u;
+/** The configuration API that framework configuration imports: Vitest's. */
+const CONFIGURATION_MODULE_PATTERN = /^vitest\/config$/u;
 /** The strict folders, where Confect and script code must compose Effect. */
 export const STRICT_PATTERN = /^(?:packages\/backend\/confect|scripts)\//u;
 /** Tests and the `test.*.ts` modules that set up and support them. */

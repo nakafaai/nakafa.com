@@ -4,7 +4,7 @@ import {
   hasContentAnalyticsHeadroom,
 } from "@repo/backend/confect/contents/analytics/budget";
 import type { TransactionMetrics } from "convex/server";
-import { Record as Rec } from "effect";
+import { Array as Arr, Record as Rec } from "effect";
 
 /** Builds one complete transaction metric fixture at configured reserves. */
 function transactionMetrics(
@@ -21,6 +21,10 @@ function transactionMetrics(
     databaseQueries: metric("databaseQueries"),
     documentsRead: metric("documentsRead"),
     documentsWritten: metric("documentsWritten"),
+    fileReadBytes: metric("fileReadBytes"),
+    fileWriteBytes: metric("fileWriteBytes"),
+    filesRead: metric("filesRead"),
+    filesWritten: metric("filesWritten"),
     functionsScheduled: metric("functionsScheduled"),
     scheduledFunctionArgsBytes: metric("scheduledFunctionArgsBytes"),
   };
@@ -30,7 +34,10 @@ describe("content analytics transaction budget", () => {
   it("continues only while every transaction reserve remains", () => {
     expect(hasContentAnalyticsHeadroom(transactionMetrics())).toBe(true);
 
-    for (const key of Rec.keys(CONTENT_ANALYTICS_HEADROOM)) {
+    for (const key of Arr.filter(
+      Rec.keys(CONTENT_ANALYTICS_HEADROOM),
+      (key) => CONTENT_ANALYTICS_HEADROOM[key] > 0
+    )) {
       expect(
         hasContentAnalyticsHeadroom(
           transactionMetrics({ [key]: CONTENT_ANALYTICS_HEADROOM[key] - 1 })

@@ -37,8 +37,16 @@ const GOOGLEBOT_PRIVATE = "noindex,nofollow,noimageindex";
 const HeadAlternate = Schema.Struct({
   hreflang: Schema.optionalKey(Schema.String),
   href: Schema.String,
-  type: Schema.optionalKey(Schema.String),
 });
+
+/**
+ * One JSON-LD script: a single node, or one document that holds several nodes,
+ * such as an article and its breadcrumb trail.
+ */
+const JsonLdDocument = Schema.Union([
+  Schema.Record(Schema.String, Schema.Unknown),
+  Schema.Array(Schema.Record(Schema.String, Schema.Unknown)),
+]);
 
 /** The head of one page, as the builders decide it on the server. */
 const SeoHead = Schema.Struct({
@@ -46,7 +54,7 @@ const SeoHead = Schema.Struct({
   canonical: Schema.optionalKey(Schema.String),
   description: Schema.String,
   googlebot: Schema.Literals([GOOGLEBOT_INDEXABLE, GOOGLEBOT_PRIVATE]),
-  jsonLd: Schema.Array(Schema.Record(Schema.String, Schema.Unknown)),
+  jsonLd: Schema.Array(JsonLdDocument),
   robots: Schema.Literals([ROBOTS_INDEXABLE, "noindex,nofollow"]),
   social: Schema.Record(Schema.String, Schema.String),
   title: Schema.String,
@@ -62,7 +70,7 @@ const PageFacts = Schema.Struct({
   description: Schema.String,
   image: Schema.String,
   indexable: Schema.Boolean,
-  jsonLd: Schema.Array(Schema.Record(Schema.String, Schema.Unknown)),
+  jsonLd: Schema.Array(JsonLdDocument),
   locale: LocaleSchema,
   parts: Schema.Array(Schema.UndefinedOr(Schema.String)),
   type: SocialOpenGraphType,
@@ -132,23 +140,15 @@ export function createSeoHead(facts: PageFacts): SeoHead {
  */
 export function toHeadAlternates(resolved: {
   readonly languages: Readonly<Record<string, string | undefined>>;
-  readonly types?: Readonly<Record<string, string | undefined>>;
 }): readonly (typeof HeadAlternate.Type)[] {
-  return [
-    ...Arr.filterMap(Rec.toEntries(resolved.languages), ([hreflang, href]) =>
-      href === undefined
-        ? Result.failVoid
-        : Result.succeed({
-            hreflang,
-            href: new URL(href, SITE_ORIGIN).href,
-          })
-    ),
-    ...Arr.filterMap(Rec.toEntries(resolved.types ?? {}), ([type, href]) =>
-      href === undefined
-        ? Result.failVoid
-        : Result.succeed({ href: new URL(href, SITE_ORIGIN).href, type })
-    ),
-  ];
+  return Arr.filterMap(Rec.toEntries(resolved.languages), ([hreflang, href]) =>
+    href === undefined
+      ? Result.failVoid
+      : Result.succeed({
+          hreflang,
+          href: new URL(href, SITE_ORIGIN).href,
+        })
+  );
 }
 
 /**
@@ -171,12 +171,11 @@ export function createPrivateSeoHead(
 }
 
 /** One alternate link of the router, with only the attributes that the head names. */
-function toAlternateLink({ hreflang, href, type }: typeof HeadAlternate.Type) {
+function toAlternateLink({ hreflang, href }: typeof HeadAlternate.Type) {
   return {
     href,
     rel: "alternate",
     ...(hreflang === undefined ? {} : { hreflang }),
-    ...(type === undefined ? {} : { type }),
   };
 }
 

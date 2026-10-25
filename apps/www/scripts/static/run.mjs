@@ -1,6 +1,8 @@
 /**
- * Writes the static artifacts of the release into the client output. It runs after
- * the client build, from `vite.config.ts`, with the output directory as its argument.
+ * Runs the static runner's two jobs from `vite.config.ts`. `pages <file>` writes the
+ * public paths that the build prerenders, before the client build. `artifacts
+ * <outDir> <file>` writes the static artifacts of the release for those paths into
+ * the client output, after the client build.
  *
  * The app's modules read Vite's own environment (`import.meta.env`) and resolve its
  * virtual modules, so the artifacts are rendered by Vite's module runner from the
@@ -9,10 +11,10 @@
  */
 import { createServer } from "vite";
 
-const outDir = process.argv[2];
-if (outDir === undefined) {
+const [job, target, pageListFile] = process.argv.slice(2);
+if (target === undefined || (job !== "pages" && job !== "artifacts")) {
   throw new Error(
-    "Usage: node scripts/static/run.mjs <client output directory>"
+    "Usage: node scripts/static/run.mjs pages <file> | artifacts <client output directory> <page list file>"
   );
 }
 
@@ -27,10 +29,12 @@ const server = await createServer({
 });
 
 try {
-  const { buildStaticArtifacts } = await server.ssrLoadModule(
-    "/scripts/static/build.ts"
-  );
-  await buildStaticArtifacts(outDir);
+  const build = await server.ssrLoadModule("/scripts/static/build.ts");
+  if (job === "pages") {
+    await build.buildStaticPagePaths(target);
+  } else {
+    await build.buildStaticArtifacts(target, pageListFile);
+  }
 } finally {
   await server.close();
 }

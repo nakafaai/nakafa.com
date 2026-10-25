@@ -3,7 +3,7 @@ import { deploymentKeys, keys, postHogProxyKeys } from "@repo/analytics/keys";
 
 /** Installs one complete analytics environment for each assertion. */
 function stubAnalyticsEnvironment() {
-  vi.stubEnv("VITE_POSTHOG_KEY", "phc_test");
+  vi.stubEnv("VITE_POSTHOG_PROJECT_TOKEN", "phc_test");
   vi.stubEnv("VITE_POSTHOG_UI_HOST", "https://eu.posthog.com");
   vi.stubEnv("VITE_POSTHOG_PROXY_HOST", "https://t.nakafa.com");
 }
@@ -20,7 +20,7 @@ describe("analytics environment contracts", () => {
       VITE_POSTHOG_PROXY_HOST: "https://t.nakafa.com",
     });
     expect(keys()).toMatchObject({
-      VITE_POSTHOG_KEY: "phc_test",
+      VITE_POSTHOG_PROJECT_TOKEN: "phc_test",
       VITE_POSTHOG_PROXY_HOST: "https://t.nakafa.com",
     });
   });
@@ -30,7 +30,7 @@ describe("deployment keys for server reporting", () => {
   it("reads the deployment fields without the PostHog configuration", () => {
     vi.stubEnv("NAKAFA_DEPLOY_STAGE", "prod");
     vi.stubEnv("TSS_PRERENDERING", "false");
-    vi.stubEnv("VITE_POSTHOG_KEY", undefined);
+    vi.stubEnv("VITE_POSTHOG_PROJECT_TOKEN", undefined);
     vi.stubEnv("VITE_POSTHOG_UI_HOST", undefined);
     vi.stubEnv("VITE_POSTHOG_PROXY_HOST", undefined);
 

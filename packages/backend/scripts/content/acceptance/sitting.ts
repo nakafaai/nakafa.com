@@ -33,7 +33,7 @@ export const createAcceptanceSitting = Effect.fn(
   const runtime = yield* readLocalRuntime(root);
   if (runtime === undefined) {
     return yield* acceptanceRuntimeError(
-      "Run pnpm acceptance:prepare and start acceptance before creating a sitting."
+      "Run bun run acceptance:prepare and start acceptance before creating a sitting."
     );
   }
   const args = yield* encodeArguments({

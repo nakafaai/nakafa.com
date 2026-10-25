@@ -1,6 +1,6 @@
 # ADR 0031: One Assessment Model For Try-Outs And School Exams
 
-> Superseded in part by [ADR 0037](0037-cloudflare.md) and [ADR 0036](0036-boundary.md): the Vercel and Next.js statements of this record describe the earlier stack. Cloudflare Workers through Alchemy and the TanStack Start boundary replace them.
+> Superseded in part by [ADR 0037](0037-cloudflare.md) and [ADR 0036](0036-boundary.md): the hosting and framework statements of this record describe the earlier stack. Cloudflare Workers through Alchemy and the TanStack Start boundary replace them.
 
 ## Status
 
@@ -76,10 +76,11 @@ that the model must change:
 - `Stimulus` stands alone, and one group of items shares it.
 - A teacher's question is school data in the school's own cell. The Aksara
   question schema reads it read-only. It is not signed, it is not in the Aksara
-  catalogue, and each row records the contract version it was written with (K1).
-  That version is bookkeeping only. No reader dispatches on it and no renderer
-  keeps an older shape (ADR 0018): readers decode only the current shape, and a
-  row of an older shape is deleted, never backfilled (section 10).
+  catalogue. Each row also records the contract version it was written with (K1),
+  but no reader uses that version, so whether the field stays is owner-pending.
+  No renderer keeps an older shape (ADR 0018): readers decode only the current
+  shape. The school item rows of the old shape are owner-pending: the owner decides
+  whether they are cleared in every cell (section 10).
 
 ### 2. The item body is a structured document, not code
 
@@ -100,7 +101,7 @@ that the model must change:
   image form has no schema yet, and wave A adds one with the document contract.
   The per-set figure components of the SNBT question bank (`Set<N>Question<M>`,
   with kinds such as `Graph` and `SalesChart`) are not in this list. Each kind
-  takes one of these forms, or it is removed, in the release that migrates the
+  takes one of these forms, or it is removed, in the release that replaces the
   corpus, and its form is recorded here before that release. No release may
   contain a figure outside this list.
 - Aksara still writes MDX. Its compiler produces the document, and Tiptap edits
@@ -244,20 +245,31 @@ has exactly one owner.
 | `gate` | The attempt cycle, sittings, tokens, devices, deadlines, and answer writes | The admission of try-out answers and section finishes is live (#1040). The rest is planned, wave B | `confect/tryouts/start`, `confect/tryouts/mutations`, and the try-out store `confect/tryouts/gate.ts`, wave B |
 | `response` | Answer evaluation as pure functions, shared by the client and the server | Live as `confect/response` (#792) | `confect/response` and `confect/tryouts/response`, across waves A and B |
 | `scoring` | Raw, penalized, IRT, composite, and report scores | The estimator is live in `confect/tryouts/runtime`. The module is planned. | `confect/tryouts/score` and the estimator, wave B |
-| `grading` | The teacher's queue, Nina's suggestions (K6 and K7), grade release, and the frozen results of finished attempts (`assessmentResults`) | Planned, new | The finished rows of the nine `tryout*` tables, converted once (section 10) |
+| `grading` | The teacher's queue, Nina's suggestions (K6 and K7), grade release, and the frozen results of finished attempts (`assessmentResults`) | Planned, new | Nothing. Finished attempts are not converted (section 10) |
 | `calibration` | Offline IRT, DIF, and scale versions | Planned, wave C. Nothing is stored yet | Keeps and extends the `irtScaleVersions`, `irtScaleItems`, and `irtCalibrationRuns` tables, wave C |
 | `analysis` | Item difficulty and discrimination | Planned, new | Nothing |
 
-### 10. Migration without compatibility code
+### 10. Changes without compatibility code
 
-- One major Aksara contract release replaces the 0.x schema. The corpus is
-  rewritten in the same release, and no reader keeps the old shape alive.
-- Production may break briefly during a maintenance. Rows that the new shape
-  refuses are deleted, not backfilled: the owner's rule is that bad data goes,
-  and no conversion, counted batch, or copy of old rows is written for it.
+- One major Aksara contract release replaces the 0.x schema. The code that reads
+  it ships in the same deploy, and a brief break during that deploy is accepted.
+  No migration, backfill, dual read, adapter, or temporary function runs.
+- School item rows are not in the corpus. A table that the new code no longer
+  reads is removed in the change that stops reading it. Clearing the school item
+  rows of the old shape is owner-pending: school data is cleared only when the
+  owner approves it, with the Convex CLI.
 - Nakafa's engine replaces `confect/tryouts` and `confect/response` in one
-  release. No adapter, dual read, skew window, or compatibility code sits between
-  the steps.
+  deploy. No adapter, dual read, or compatibility code sits between the old and
+  the new.
+- Finished try-out attempts are not converted. They are learner records, so the
+  cutover deploy removes the old tables only after the owner approves their
+  disposal. The signed snapshot and its artifacts stay for as long as an attempt
+  names them, as retention counts an attempt today
+  (`packages/backend/confect/contentRelease/snapshot/retention.ts`).
+- The old try-out functions and the nine `tryout*` tables (`tryoutAttempts`,
+  `tryoutSectionAttempts`, `tryoutAttemptPlacements`, `tryoutResponses`,
+  `tryoutScores`, `tryoutPlacements`, `tryoutCatalog`, `tryoutRuntimeBundles`,
+  and `tryoutSetProgress`) are removed in the cutover change.
 - Every sitting answer and every try-out answer takes its `version` as a required
   argument. A stored answer without a version is bad data and is deleted.
 - The Convex reset rule of ADR 0003 stays in force, because this ADR supersedes
@@ -267,9 +279,9 @@ has exactly one owner.
   calibration runs, and IRT scales, and each attempt, result, and scale keeps the
   exact signed snapshot that its historical review and scoring need. No table is
   reset while it holds data. A retired table goes only when no schema or code
-  refers to it, and its rows are deleted first, with the counts the pull request
-  records, because bad data is deleted and never backfilled. No export is taken
-  from production, by the working rule of `docs/convex/cost.md`.
+  refers to it, and its rows are none or the owner has approved their disposal.
+  No export is taken from production, by the working rule of
+  `docs/convex/cost.md`.
 - One flag table, `assessmentFlags`, holds every assessment flag. No
   `tryoutFlags` table ships. A sitting writes its flags through the gate
   (ADR 0013).
@@ -312,7 +324,7 @@ has exactly one owner.
 | `packages/backend/confect/tryouts/runtime/estimate.ts` (2PL with maximum likelihood) | Live |
 | `packages/backend/confect/response` (#792) | Live |
 | `packages/backend/confect/assessment/gate` (admission of try-out answers and section finishes, #1040) | Live. Sittings, tokens, devices, and the offline queue are planned, wave B (ADR 0013) |
-| The nine `tryout*` tables in `packages/backend/confect/tables` | Live. Finished attempts convert to `assessmentResults` and the tables drop in wave B (section 10) |
+| The nine `tryout*` tables in `packages/backend/confect/tables` | Live. The tables are removed in wave B, and finished attempts are not converted (section 10) |
 | The three `irt*` tables in `packages/backend/confect/tables` | Live, extended in wave C |
 | `@cortex-js/compute-engine` and `mathlive` | Not installed |
 | `@convex-dev/presence` | Not installed. Planned for wave B. |

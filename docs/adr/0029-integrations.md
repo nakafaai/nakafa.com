@@ -1,6 +1,6 @@
 # ADR 0029: Integrations Are Projections Of The Access Catalog, Served Through Effect HttpApi
 
-> Superseded in part by [ADR 0037](0037-cloudflare.md): the Vercel hosting, delivery, and deployment decisions of this record no longer apply.
+> Superseded in part by [ADR 0037](0037-cloudflare.md): the hosting, delivery, and deployment decisions of this record no longer apply.
 
 ## Status
 
@@ -28,9 +28,9 @@ no credential and no school data.
 - `@nakafa/cli` 0.1.1 (`packages/cli`). It is public and read only, and it
   needs no account or key.
 
-The Vercel bridges of the public API (`apps/api/vercel.ts`, `apps/mcp/vercel.ts`)
+The edge Workers of the public API (`apps/api/worker.ts`, `apps/mcp/worker.ts`)
 delete the `authorization` and `cookie` request headers before a request reaches
-Convex (`createAgentEdgeRoutes` in `packages/backend/agent/route.ts`). None of
+Convex (`agentEdgeRequestHeaders` in `packages/backend/agent/route.ts`). None of
 the three surfaces can carry a school's credential.
 
 The HTTP layer is a Confect router. `packages/backend/convex/http.ts`
@@ -103,8 +103,9 @@ and schemas of the school API. Everything else comes from it.
   idempotency record commit together.
 - Errors are RFC 9457 problem details, as in the public API
   (`packages/backend/confect/routes/agent/response.ts`).
-- `/api/v1` is a compatibility namespace like the public `/v1`: a breaking change
-  gets a new namespace and its own decision (ADR 0006).
+- `/api/v1` names the current school contract, not a compatibility namespace (ADR
+  0006): a breaking change ships in one step, with the school clients and the
+  server that they call.
 
 ### Calling the school API: clients, devices, and tokens
 
@@ -312,7 +313,7 @@ The HTTP layer is the Confect router with Effect `HttpApi`. Hono is not part of
 it. No tracked source file or manifest outside `repos/` imports or declares
 `hono` or `zod` (`git grep` on main at `f8a5610808`).
 
-What `pnpm-lock.yaml` holds:
+What `pnpm-lock.yaml` held on 13 October 2026, before the move to `bun.lock`:
 
 - `hono@4.13.13` is in the lock only as the resolved optional peer of
   `convex-helpers@0.1.128` (`peerDependencies` `hono ^4.0.5`, optional; the
@@ -353,15 +354,16 @@ So the lock carries `hono` over, and nothing requires it.
 
 The decision:
 
-- Wave A removes the resolved `hono` from `pnpm-lock.yaml`, which leaves the eight
-  declaration lines, and proves the result with `pnpm install --frozen-lockfile`.
-  No import changes.
-- A check fails when `pnpm-lock.yaml` resolves `hono`, that is, when a
-  `hono@<version>` key stands in `packages` or `snapshots`. It does not match
-  the bare word, because the eight declaration lines stay in a lock without
-  `hono`. The dependency validator (`scripts/dependencies/validate.ts`) reads
-  manifests and `pnpm-workspace.yaml` today and not the lock, so the check is new
-  there and has its own test. It names `hono` only.
+- Wave A removes the resolved `hono` from `bun.lock`, which leaves the declaration
+  lines, and proves the result with `bun install --frozen-lockfile`. The probe above
+  measured the pnpm lock, so wave A measures the counts again on `bun.lock` before
+  it runs. No import changes.
+- A check fails when `bun.lock` resolves `hono`, that is, when a `hono@<version>`
+  key stands in its `packages` section. It does not match the bare word, because
+  the declaration lines stay in a lock without `hono`. The dependency validator
+  (`scripts/dependencies/validate.ts`) reads manifests and the root `package.json`
+  today and not the lock, so the check is new there and has its own test. It names
+  `hono` only.
 - `convex-helpers` and the files that import it stay as they are. The plan said
   to upgrade or replace the package in those files. The probe shows that `hono`
   leaves without that, and the Convex components above keep the package in the
@@ -447,7 +449,7 @@ The 18 files that import `convex-helpers`:
 | Webhooks and exports | Planned, program wave C |
 | LTI, the OneRoster REST service, and the QTI codec | Planned, program wave C |
 | The OneRoster CSV import, which uses the file import checks of ADR 0015 | Planned, program wave C |
-| `hono@4.13.13` in `pnpm-lock.yaml` | Present. Removal and its check are planned, program wave A. |
+| `hono@4.13.13` in `bun.lock` | Present. Removal and its check are planned, program wave A. |
 
 ## Amendment: Decided on 14 October 2026
 

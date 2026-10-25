@@ -101,7 +101,7 @@ below).
 - One XLSX library serves import here and the exports of ADR 0029. The
   blueprint lists `xlsx` and `exceljs`. The `xlsx` package on npm ends at 0.18.5,
   and SheetJS's documentation names its own CDN as the source of newer
-  releases, so the choice is made with the install, after `pnpm security:audit`
+  releases, so the choice is made with the install, after `bun run security:audit`
   and a license check.
 - The blueprint's table of standards lists grades going out to Google Classroom.
   No scope in the approved list can write them: Google describes

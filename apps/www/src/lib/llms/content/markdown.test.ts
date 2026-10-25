@@ -2,10 +2,7 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import { Effect, Option } from "effect";
 import type { Locale } from "use-intl";
-import {
-  getLlmsMarkdownText,
-  hasLlmsMarkdownSource,
-} from "@/lib/llms/content/markdown";
+import { getLlmsMarkdownText } from "@/lib/llms/content/markdown";
 
 const PUBLISHED_PATH =
   "subjects/mathematics/function-composition-inverse-function/function-concept";
@@ -252,9 +249,6 @@ describe("llms markdown content resolver", () => {
 
       expect(text).toContain("# Nakafa Pricing: Free and Pro");
       expect(text?.match(/^### /gm)).toHaveLength(10);
-      expect(
-        yield* hasLlmsMarkdownSource({ cleanSlug: "pricing", locale: "en" })
-      ).toBe(true);
       expect(mockGetQuranLlmsText).not.toHaveBeenCalled();
       expect(mockReadActiveContentRoute).not.toHaveBeenCalled();
       expect(mockGetLlmsSectionIndexText).not.toHaveBeenCalled();
@@ -339,105 +333,6 @@ describe("llms markdown content resolver", () => {
     Effect.gen(function* () {
       expect(yield* readMarkdown("articles/missing")).toBeNull();
     })
-  );
-
-  it.effect("recognizes a route owned by a public Markdown index", () =>
-    Effect.gen(function* () {
-      mockResolvePublicLlmsSectionIndex.mockReturnValueOnce({
-        label: "Curriculum",
-        prefix: "curriculum",
-      });
-
-      expect(
-        yield* hasLlmsMarkdownSource({
-          cleanSlug: "curriculum",
-          locale: "en",
-        })
-      ).toBe(true);
-      expect(mockClassifyQuranLlmsRoute).not.toHaveBeenCalled();
-      expect(mockGetQuranLlmsText).not.toHaveBeenCalled();
-      expect(mockReadActiveContentRoute).not.toHaveBeenCalled();
-    })
-  );
-
-  it.effect.each(["", "llms"])(
-    "recognizes locale index %j without reading its body",
-    (cleanSlug) =>
-      Effect.gen(function* () {
-        mockIsPublicLlmsLocaleIndexRoute.mockReturnValueOnce(true);
-
-        expect(yield* hasLlmsMarkdownSource({ cleanSlug, locale: "en" })).toBe(
-          true
-        );
-        expect(mockIsPublicLlmsLocaleIndexRoute).toHaveBeenCalledWith(
-          cleanSlug
-        );
-        expect(mockResolvePublicLlmsSectionIndex).not.toHaveBeenCalled();
-        expect(mockClassifyQuranLlmsRoute).not.toHaveBeenCalled();
-        expect(mockGetQuranLlmsText).not.toHaveBeenCalled();
-        expect(mockReadActiveContentRoute).not.toHaveBeenCalled();
-        expect(mockGetCachedPublishedText).not.toHaveBeenCalled();
-        expect(mockGetLlmsSectionIndexText).not.toHaveBeenCalled();
-      })
-  );
-
-  it.effect("recognizes Quran ownership without reading its body twice", () =>
-    Effect.gen(function* () {
-      mockClassifyQuranLlmsRoute.mockReturnValueOnce(
-        Option.some({ kind: "surah", surahNumber: 1 })
-      );
-
-      expect(
-        yield* hasLlmsMarkdownSource({ cleanSlug: "quran/1", locale: "en" })
-      ).toBe(true);
-      expect(mockClassifyQuranLlmsRoute).toHaveBeenCalledWith("quran/1");
-      expect(mockGetQuranLlmsText).not.toHaveBeenCalled();
-      expect(mockReadActiveContentRoute).not.toHaveBeenCalled();
-      expect(mockGetCachedPublishedText).not.toHaveBeenCalled();
-      expect(mockGetLlmsSectionIndexText).not.toHaveBeenCalled();
-    })
-  );
-
-  it.effect.each([
-    { cleanSlug: PUBLISHED_ARTICLE_PATH, family: "article" },
-    { cleanSlug: PUBLISHED_PATH, family: "material" },
-    { cleanSlug: PUBLISHED_PAGE_PATH, family: "page" },
-  ])(
-    "recognizes an owned $family without reading its body",
-    ({ cleanSlug, family }) =>
-      Effect.gen(function* () {
-        expect(yield* hasLlmsMarkdownSource({ cleanSlug, locale: "en" })).toBe(
-          true
-        );
-        expect(mockReadActiveContentRoute).toHaveBeenCalledWith({
-          appLocale: "en",
-          family,
-          publicPath: cleanSlug,
-        });
-        expect(mockGetQuranLlmsText).not.toHaveBeenCalled();
-        expect(mockGetCachedPublishedText).not.toHaveBeenCalled();
-        expect(mockGetLlmsSectionIndexText).not.toHaveBeenCalled();
-      })
-  );
-
-  it.effect(
-    "reports availability only when the real source chain returns text",
-    () =>
-      Effect.gen(function* () {
-        mockGetLlmsSectionIndexText
-          .mockReturnValueOnce(Effect.succeed("Index markdown"))
-          .mockReturnValueOnce(Effect.succeed(null));
-
-        expect(
-          yield* hasLlmsMarkdownSource({
-            cleanSlug: "articles/politics",
-            locale: "en",
-          })
-        ).toBe(true);
-        expect(
-          yield* hasLlmsMarkdownSource({ cleanSlug: "search", locale: "en" })
-        ).toBe(false);
-      })
   );
 
   it.effect(

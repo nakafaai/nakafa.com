@@ -49,6 +49,16 @@ source check stays off, and its row names that check as the owner.
 | `preferBarrelImport` | off | Not a duplicate. `base.json` lists no `barrelImportPackages`, so the rule has nothing to check. Authored modules import `effect` by name from its barrel (3,286 files have a one-line named import from `"effect"`), and 146 files import a module path such as `effect/process` |
 | `preferNamespaceImport` | off | Not a duplicate. `base.json` lists no `namespaceImportPackages`, so the rule has nothing to check. No authored module imports `effect` as a namespace |
 
+### Compiler rules that `@effect/tsgo` 0.54 to 0.56 add
+
+`@effect/tsgo` 0.56.0 adds two rules to the 0.53.3 set. `packages/typescript-config/base.json`
+decides each one, in the same way in both repositories.
+
+| Rule | Decision | Owner, or the reason it stays off |
+| --- | --- | --- |
+| `preferEffectString` | off | Stays off. The plugin suggests Effect String APIs for native string calls and notes that their semantics have caveats. No source rule asks for those calls |
+| `schemaClassObjectLiteral` | error | Enforced from the start. The plugin warns when an object literal is checked as a Schema class instance without its prototype. The workspace has no such literal, measured by the all-workspace typecheck on 25 October 2026 |
+
 ### Schema error brands
 
 A missing brand lets a structurally equal value pass for a Schema class instance.
@@ -105,7 +115,7 @@ A test file is named `*.test.ts`, `*.test.tsx`, or `test.<name>.ts`, such as
 that supports tests, such as `apps/www/src/test/content-page.ts`, is product code.
 
 A framework configuration file is named `*.config.ts`, `.mts`, `.cts`, or
-`.tsx`, imports the Vitest or Vercel configuration API, or has a default export
+`.tsx`, imports the Vitest configuration API, or has a default export
 that `satisfies` a `...Config` type which a package imports, such as Convex's
 `AuthConfig`. A configuration file that a product module imports is still
 configuration. Of 29 configuration files measured, one is imported by product
@@ -364,8 +374,8 @@ sweep that followed removed 52 names: the `export` keyword of 44 and 8
 declarations that nothing used.
 
 The check does not judge a module whose exports are read by name from outside
-the repository's imports: the Next.js file conventions of an app, its
-`vercel.ts`, a generated module, and a workspace that is published as a
+the repository's imports: the TanStack Start route files and entry modules of an
+app, a generated module, and a workspace that is published as a
 package. It also leaves `packages/design-system/components/ui` and
 `packages/design-system/components/evilcharts`, which keep every part that
 their registries, shadcn and EvilCharts, ship. A default export has no name to
@@ -461,22 +471,13 @@ found 6 variables, 1 in `apps/www` and 5 in `packages/design-system`. Reading
 calls, shorthand members, string keys, and destructured names raised neither
 count and found no further variable.
 
-### Vercel deployment policy
-
-Superseded by [ADR 0037](0037-cloudflare.md). The Vercel project files and the
-deployment check that judged them are gone, so no rule judges a deployment
-configuration.
-
 ## Consequences
 
 - `packages/typescript-config/base.json` lists every rule the installed plugin
   defines, as `error`, or as `off` for a rule in the tables above. It holds the
   only `plugins` array of the repository: a `plugins` array replaces the one it
   extends, so a second array would have to repeat the whole block. Every other
-  configuration, the Next.js one included, inherits it. Next.js does not need
-  a plugin entry of its own: measured on Next.js 16.4, its type generation, the
-  start of its dev server, and the configuration step of its build leave the
-  app's configuration unchanged without one.
+  configuration inherits it.
 - The source check reads the plugin's own rule list and rejects a rule that has
   no decision, a name the plugin no longer defines, any other severity, and a
   second `plugins` array anywhere. So a plugin upgrade that adds a rule fails
@@ -511,7 +512,7 @@ A change starts in the owner. Change the owner's rule, file, or pin first. Then
 copy the file or move the pin in the other repository, and run its check.
 
 Each repository keeps its own choices: the versions of other tools (Biome,
-Turborepo, esbuild, pnpm), its action pins and their review lists, its advisory
+Turborepo, esbuild, Bun), its action pins and their review lists, its advisory
 exceptions in `osv.toml`, its entry points, its tests, and the service class in
 `scripts/provenance/service.ts`. The Effect deterministic-key rule puts the
 package name in that class's key, so no two repositories can share its text.

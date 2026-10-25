@@ -77,15 +77,15 @@ describe("GitHub Action policy", () => {
     );
     const setupIndex = Option.getOrElse(
       Arr.findFirstIndex(actionUses, ({ reference }) =>
-        reference.startsWith("pnpm/setup@")
+        reference.startsWith("oven-sh/setup-bun@")
       ),
       () => -1
     );
-    const { cache, ...reviewedInputs } =
+    const { "no-cache": cache, ...reviewedInputs } =
       Option.getOrUndefined(
         Arr.findFirst(
           GITHUB_ACTION_REVIEWS,
-          ({ action }) => action === "pnpm/setup"
+          ({ action }) => action === "oven-sh/setup-bun"
         )
       )?.expectedInputs ?? {};
     const setupUse = actionUses[setupIndex];
@@ -112,7 +112,7 @@ describe("GitHub Action policy", () => {
     );
 
     expect(validateGithubActionPolicy(candidateUses)).toEqual([
-      `${setupUse.workflowPath} configures pnpm/setup cache as missing; approved ${cache}.`,
+      `${setupUse.workflowPath} configures oven-sh/setup-bun no-cache as missing; approved ${cache}.`,
       ".github/workflows/example.yml has an unpinned external action actions/checkout.",
       ".github/workflows/example.yml has an unpinned external action actions/checkout@.",
       "actions/download-artifact has 0 workflow usages; expected 3.",
@@ -160,14 +160,14 @@ describe("GitHub Action policy", () => {
 
     const setupIndex = Option.getOrElse(
       Arr.findFirstIndex(actionUses, ({ reference }) =>
-        reference.startsWith("pnpm/setup@")
+        reference.startsWith("oven-sh/setup-bun@")
       ),
       () => -1
     );
     const setupReview = Option.getOrUndefined(
       Arr.findFirst(
         GITHUB_ACTION_REVIEWS,
-        ({ action }) => action === "pnpm/setup"
+        ({ action }) => action === "oven-sh/setup-bun"
       )
     );
     const setupUse = actionUses[setupIndex];
@@ -183,8 +183,8 @@ describe("GitHub Action policy", () => {
           ? {
               ...setupUse,
               inputs: {
-                cache: true,
-                install: false,
+                "bun-version": "1.4.4",
+                "no-cache": false,
                 "node-version-file": ".nvmrc",
               },
             }
@@ -200,8 +200,8 @@ describe("GitHub Action policy", () => {
     expect(problems).toEqual(
       expect.arrayContaining([
         ".github/workflows/example.yml uses unreviewed GitHub Action example/unreviewed.",
-        `${setupUse.workflowPath} configures pnpm/setup cache as true; approved false.`,
-        `${setupUse.workflowPath} configures unreviewed pnpm/setup input node-version-file.`,
+        `${setupUse.workflowPath} configures oven-sh/setup-bun no-cache as false; approved true.`,
+        `${setupUse.workflowPath} configures unreviewed oven-sh/setup-bun input node-version-file.`,
       ])
     );
     expect(

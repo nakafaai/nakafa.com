@@ -1,7 +1,11 @@
+import { mutationLayer } from "@confect/server/RegisteredConvexFunction";
 import { assert } from "@effect/vitest";
+import confectSchema from "@repo/backend/confect/_generated/schema";
+import { ensureCompaction } from "@repo/backend/confect/contentRelease/compact/state";
 import { ROLLBACK_RETENTION_MS } from "@repo/backend/confect/contentRelease/spec";
 import type { Doc } from "@repo/backend/convex/_generated/dataModel";
 import type { MutationCtx } from "@repo/backend/convex/_generated/server";
+import type schema from "@repo/backend/convex/schema";
 import {
   insertTestArtifact,
   testArtifactJson,
@@ -19,7 +23,8 @@ import {
   insertZeroRelease,
   type TestIdentity,
 } from "@repo/backend/test/content/state";
-import { Array as Arr, DateTime } from "effect";
+import type { TestConvex } from "convex-test";
+import { Array as Arr, DateTime, Effect } from "effect";
 
 export const COMPACTION_OLD_TIME =
   DateTime.toEpochMillis(DateTime.nowUnsafe()) - ROLLBACK_RETENTION_MS - 1000;
@@ -251,4 +256,25 @@ export async function seedExpiredSnapshotBacklog(ctx: MutationCtx) {
       snapshotJson: "{}",
     });
   }
+}
+
+/** Runs one compaction step in its own mutation. */
+export function compact(t: TestConvex<typeof schema>) {
+  return t.mutation((ctx) =>
+    Effect.runPromise(
+      ensureCompaction().pipe(Effect.provide(mutationLayer(confectSchema, ctx)))
+    )
+  );
+}
+
+/** Marks one stored completed release as the bootstrap that replaced the retired generation. */
+export async function markBootstrap(ctx: MutationCtx, identity: TestIdentity) {
+  const release = await ctx.db
+    .query("contentReleases")
+    .withIndex("by_releaseId", (query) =>
+      query.eq("releaseId", identity.releaseId)
+    )
+    .unique();
+  assert.ok(release, `Expected release ${identity.releaseId}.`);
+  await ctx.db.patch("contentReleases", release._id, { bootstrap: true });
 }
