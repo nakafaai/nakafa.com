@@ -25,7 +25,7 @@ export class XenditDecodeFailed extends Schema.TaggedError<XenditDecodeFailed>()
 ) {}
 
 /** The Basic credentials for one call: the secret key as the user name, an empty password. */
-const readXenditSecret = Config.Redacted("XENDIT_SECRET_KEY");
+const readXenditSecret = Config.Redacted("XENDIT_API_KEY");
 
 /**
  * Sends one authenticated request to Xendit and decodes its 2xx body through
