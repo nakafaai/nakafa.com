@@ -11,6 +11,7 @@ import {
 } from "@repo/backend/confect/contentRelease/base";
 import { ensureDocumentSize } from "@repo/backend/confect/contentRelease/document";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
+import { isBootstrapCandidate } from "@repo/backend/confect/contentRelease/generation";
 import {
   ensureState,
   type ReleaseRole,
@@ -174,9 +175,12 @@ export const stageProgram = Effect.fn("contentRelease.stageRelease")(function* (
   const families = yield* deriveReleaseFamilies(signed.manifest);
   const now = yield* Clock.currentTimeMillis;
   const sequence = state.nextSequence;
+  const bootstrap =
+    role === "candidate" && isBootstrapCandidate(signed.manifest, state);
   const row = {
     ...releaseReachability(signed),
     baseFamilies: families.base,
+    ...(bootstrap ? { bootstrap: true } : {}),
     checkedIndex: -1,
     checkedItems: 0,
     createdAt: now,

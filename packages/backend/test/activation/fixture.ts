@@ -9,6 +9,10 @@ import {
 } from "@nakafa/aksara-contracts/release/snapshot/spec";
 import { RendererManifestEnvelopeSchema } from "@nakafa/aksara-contracts/renderer/contract";
 import {
+  CURRENT_CONTENT_GENERATION,
+  RETIRED_CONTENT_GENERATION,
+} from "@repo/backend/confect/contentRelease/generation";
+import {
   TEST_DIGEST,
   testRendererJson,
 } from "@repo/backend/test/content/release";
@@ -37,6 +41,104 @@ export const RECOVERY = {
   releaseId: "release-recovery",
   sequence: 2,
 } satisfies TestIdentity;
+
+/** The retired release that a bootstrap replaces, active under the 0.51 generation. */
+const RETIRED_BASE = {
+  manifestHash: `sha256:${"b".repeat(64)}`,
+  releaseId: "release-retired-base",
+  sequence: 1,
+} satisfies TestIdentity;
+
+/** The first 1.0.0 release, declared over the retired base. */
+export const BOOTSTRAP = {
+  manifestHash: `sha256:${"c".repeat(64)}`,
+  releaseId: "release-bootstrap",
+  sequence: 2,
+} satisfies TestIdentity;
+
+/** A retained inverse that a bootstrap must never carry. */
+export const BOOTSTRAP_RECOVERY = {
+  manifestHash: `sha256:${"d".repeat(64)}`,
+  releaseId: "release-bootstrap-recovery",
+  sequence: 3,
+} satisfies TestIdentity;
+
+/** Seeds one verified candidate over the retired base, with its declaration, generation and optional inverse chosen by the test. */
+export async function seedRetiredCandidate(
+  ctx: Parameters<typeof insertTestState>[0],
+  options: {
+    readonly bootstrap: boolean;
+    readonly generation?:
+      | typeof CURRENT_CONTENT_GENERATION
+      | typeof RETIRED_CONTENT_GENERATION;
+    readonly recovery?: boolean;
+  }
+) {
+  await insertZeroRelease(ctx, {
+    ...RETIRED_BASE,
+    ownership: { base: [], result: ContentFamilySchema.literals },
+    role: "candidate",
+    status: "completed",
+  });
+  await insertZeroRelease(ctx, {
+    ...BOOTSTRAP,
+    base: RETIRED_BASE,
+    bootstrap: options.bootstrap,
+    ownership: {
+      base: ContentFamilySchema.literals,
+      result: ContentFamilySchema.literals,
+    },
+    role: "candidate",
+    status: "verified",
+  });
+  if (options.recovery) {
+    await insertZeroRelease(ctx, {
+      ...BOOTSTRAP_RECOVERY,
+      base: BOOTSTRAP,
+      originReleaseId: BOOTSTRAP.releaseId,
+      ownership: { base: ContentFamilySchema.literals, result: [] },
+      role: "recovery",
+      status: "verified",
+    });
+  }
+  await insertTestState(ctx, {
+    active: RETIRED_BASE,
+    candidate: BOOTSTRAP,
+    generation: options.generation ?? RETIRED_CONTENT_GENERATION,
+    nextSequence: 4,
+    recovery: options.recovery ? BOOTSTRAP_RECOVERY : undefined,
+  });
+}
+
+/** Seeds one completed bootstrap as the active release, with a recovery row that has no slot. */
+export async function seedActiveBootstrap(
+  ctx: Parameters<typeof insertTestState>[0]
+) {
+  await insertZeroRelease(ctx, {
+    ...BOOTSTRAP,
+    base: RETIRED_BASE,
+    bootstrap: true,
+    ownership: {
+      base: ContentFamilySchema.literals,
+      result: ContentFamilySchema.literals,
+    },
+    role: "candidate",
+    status: "completed",
+  });
+  await insertZeroRelease(ctx, {
+    ...BOOTSTRAP_RECOVERY,
+    base: BOOTSTRAP,
+    originReleaseId: BOOTSTRAP.releaseId,
+    ownership: { base: ContentFamilySchema.literals, result: [] },
+    role: "recovery",
+    status: "verified",
+  });
+  await insertTestState(ctx, {
+    active: BOOTSTRAP,
+    generation: CURRENT_CONTENT_GENERATION,
+    nextSequence: 4,
+  });
+}
 
 const ACTIVATION_RENDERER = Schema.decodeSync(
   Schema.fromJsonString(RendererManifestEnvelopeSchema)

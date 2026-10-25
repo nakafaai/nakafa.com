@@ -4,6 +4,10 @@ import { convexModules } from "@repo/backend/confect/test.setup";
 import { internal } from "@repo/backend/convex/_generated/api";
 import schema from "@repo/backend/convex/schema";
 import {
+  BOOTSTRAP,
+  seedActiveBootstrap,
+} from "@repo/backend/test/activation/fixture";
+import {
   insertTestState,
   insertZeroRelease,
   patchStoredOriginRelease,
@@ -172,5 +176,24 @@ describe("contentRelease/accept", () => {
         releaseId: CANDIDATE.releaseId,
       })
     ).rejects.toMatchObject({ data: { code: "CONTENT_RELEASE_INTEGRITY" } });
+  });
+
+  it("refuses to accept a bootstrap, which has no retained inverse", async () => {
+    const t = convexTest(schema, convexModules);
+    await t.mutation((ctx) => seedActiveBootstrap(ctx));
+
+    await expect(
+      t.mutation(accept, {
+        recoveryId: "release-absent-inverse",
+        releaseId: BOOTSTRAP.releaseId,
+      })
+    ).rejects.toMatchObject({
+      data: {
+        code: "CONTENT_RELEASE_UNSUPPORTED",
+        message: expect.stringContaining(
+          "Publish a new release instead of rolling back across the contract change"
+        ),
+      },
+    });
   });
 });

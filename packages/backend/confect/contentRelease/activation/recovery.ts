@@ -12,6 +12,7 @@ import {
   validateActivationRenderer,
   validateRecovery,
 } from "@repo/backend/confect/contentRelease/activation/validate";
+import { CURRENT_CONTENT_GENERATION } from "@repo/backend/confect/contentRelease/generation";
 import { loadRelease } from "@repo/backend/confect/contentRelease/model";
 import { ensureModelBuild } from "@repo/backend/confect/contentRelease/models/build";
 import {
@@ -97,6 +98,7 @@ export const activateRecovery = Effect.fn("contentRelease.activateRecovery")(
     yield* writer
       .table("contentState")
       .patch(state._id, {
+        activeContentGeneration: CURRENT_CONTENT_GENERATION,
         activeManifestHash: manifestHash,
         activeReleaseId: releaseId,
         activeSequence: release.sequence,

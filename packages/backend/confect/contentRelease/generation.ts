@@ -1,4 +1,6 @@
 import { CompiledContentPayloadSchema } from "@nakafa/aksara-contracts/content";
+import type { ContentReleaseManifest } from "@nakafa/aksara-contracts/release";
+import type { Docs } from "@repo/backend/confect/_generated/docs";
 import { releaseFail } from "@repo/backend/confect/contentRelease/error";
 import { Effect, Option, Schema } from "effect";
 
@@ -10,7 +12,8 @@ import { Effect, Option, Schema } from "effect";
  * retired with its generation. A reader that can still meet one of those
  * records has to tell it apart from corruption, so it can ask for a republish
  * instead of reporting an integrity failure. This module owns the only
- * knowledge of what the retired markers look like.
+ * knowledge of what the retired markers look like, and of the bootstrap that
+ * replaces the retired generation with no retained inverse.
  *
  * Each marker decodes the stored bytes with its own schema, so the check never
  * widens the current contract and never narrows unknown input by hand.
@@ -89,5 +92,59 @@ export const requireCurrentRelease = Effect.fn(
   return yield* releaseFail(
     "CONTENT_RELEASE_UNSUPPORTED",
     `Content release ${releaseId} was signed under a retired content contract, so this deployment cannot read it. Republish the content to inspect that release again.`
+  );
+});
+
+/**
+ * Whether a verified candidate may replace the retired generation as a
+ * bootstrap. The backend decides from its own stored state and the signed
+ * counts, never from what the publisher declares: the candidate must extend the
+ * active release, that release must still be in the retired generation, and
+ * the result must hold only upserted heads, so no retired head survives.
+ */
+export function isBootstrapCandidate(
+  manifest: ContentReleaseManifest,
+  state: Pick<
+    Docs["contentState"],
+    "activeContentGeneration" | "activeReleaseId" | "recoveryReleaseId"
+  >
+) {
+  return (
+    manifest.baseReleaseId !== null &&
+    manifest.baseReleaseId === state.activeReleaseId &&
+    state.activeContentGeneration === RETIRED_CONTENT_GENERATION &&
+    manifest.resultCount === manifest.upsertCount &&
+    state.recoveryReleaseId === undefined
+  );
+}
+
+/** Refuses a candidate that extends the retired generation without being a bootstrap, because its untouched heads would stay unreadable. */
+export const requireCurrentBase = Effect.fn(
+  "contentRelease.requireCurrentBase"
+)(function* (
+  releaseId: string,
+  state: Pick<Docs["contentState"], "activeContentGeneration">
+) {
+  if (state.activeContentGeneration !== RETIRED_CONTENT_GENERATION) {
+    return;
+  }
+  return yield* releaseFail(
+    "CONTENT_RELEASE_STATE",
+    `Content release ${releaseId} extends a retired content generation. Only a bootstrap that replaces every head may publish over it.`
+  );
+});
+
+/** Refuses an inverse-based operation on a bootstrap, which has no retained inverse. */
+export const requireRollbackable = Effect.fn(
+  "contentRelease.requireRollbackable"
+)(function* (
+  release: Pick<Docs["contentReleases"], "bootstrap" | "releaseId">
+) {
+  if (release.bootstrap !== true) {
+    return;
+  }
+  return yield* releaseFail(
+    "CONTENT_RELEASE_UNSUPPORTED",
+    `Content release ${release.releaseId} replaced the retired content generation without a retained inverse. Publish a new release instead of rolling back across the contract change.`
   );
 });
