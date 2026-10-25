@@ -105,12 +105,11 @@ export type SectionDocument = typeof documentValidator.Type;
 /**
  * The record of the last build that finished: the release whose sections the
  * index holds, the model that embedded them, and how many sections the build
- * left out, which is none when the index is complete. A record written before
- * that count existed has none. There is one.
+ * left out, which is none when the index is complete. There is one.
  */
 export const sectionStateValidator = Schema.Struct({
   key: Schema.Literal("primary"),
-  missing: Schema.optionalKey(Schema.Finite),
+  missing: Schema.Finite,
   model: Schema.String,
   releaseId: Schema.String,
 });

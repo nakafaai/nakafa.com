@@ -70,6 +70,34 @@ function embedder(
 const embed = (drafts: readonly SectionDraft[]) =>
   embedBatch(drafts).pipe(Effect.provide(GatewayTest));
 
+/**
+ * Embeds a batch as `embed` does, and gives its answer with the log lines that
+ * the embedding wrote, each with its level, message, and annotations.
+ */
+const embedLogged = (drafts: readonly SectionDraft[]) => {
+  const logged = MutableRef.make<readonly unknown[]>([]);
+  return Effect.map(
+    embedBatch(drafts).pipe(
+      Effect.provide(
+        Layer.mergeAll(
+          GatewayTest,
+          Logger.layer([
+            Logger.formatStructured.pipe(
+              Logger.map(({ annotations, level, message }) =>
+                MutableRef.update(
+                  logged,
+                  Arr.append({ annotations, level, message })
+                )
+              )
+            ),
+          ])
+        )
+      )
+    ),
+    (found) => ({ found, logged: MutableRef.get(logged) })
+  );
+};
+
 /** Lets the given time pass for the timers of the test, after the fibers have run up to them. */
 const pass = (milliseconds: number) =>
   Effect.promise(() => vi.advanceTimersByTimeAsync(milliseconds));
@@ -145,36 +173,44 @@ describe("section embedding", () => {
     })
   );
 
-  it.live("gives up after the last new try and fails with the failure", () =>
-    Effect.gen(function* () {
-      const model = embedder(() => failures.unavailable);
-      const fiber = yield* Effect.forkChild(Effect.flip(embed([draft("abc")])));
-      // The waits are 5, 10, 20, and 40 seconds.
-      yield* pass(75_000);
-      expect(yield* Fiber.join(fiber)).toBe(failures.unavailable);
-      expect(model.doEmbedCalls).toHaveLength(EMBED_RETRIES + 1);
-    })
-  );
-
-  it.live("does not ask again after a failure that no new try changes", () =>
-    Effect.gen(function* () {
-      const model = embedder(() => failures.auth);
-      expect(yield* Effect.flip(embed([draft("abc")]))).toBe(failures.auth);
-      expect(model.doEmbedCalls).toHaveLength(1);
-    })
+  it.live(
+    "gives up on the text after the last new try, and when the probe text fails too, fails with the failure of the text",
+    () =>
+      Effect.gen(function* () {
+        const model = embedder(() => failures.unavailable);
+        const fiber = yield* Effect.forkChild(
+          Effect.flip(embed([draft("abc")]))
+        );
+        // The waits are 5, 10, 20, and 40 seconds for the text, and as much for the probe text.
+        yield* pass(75_000);
+        yield* pass(75_000);
+        expect(yield* Fiber.join(fiber)).toBe(failures.unavailable);
+        expect(model.doEmbedCalls).toHaveLength(2 * (EMBED_RETRIES + 1));
+      })
   );
 
   it.live(
-    "fails with a failure that is not a refusal, such as a configuration failure",
+    "does not ask the text again after a failure that no new try changes, and asks the probe text once",
+    () =>
+      Effect.gen(function* () {
+        const model = embedder(() => failures.auth);
+        expect(yield* Effect.flip(embed([draft("abc")]))).toBe(failures.auth);
+        // The text, and then the probe text, which the model fails the same way.
+        expect(model.doEmbedCalls).toHaveLength(2);
+      })
+  );
+
+  it.live(
+    "fails with a failure that is not a refusal, such as a configuration failure, when the probe text fails too",
     () =>
       Effect.gen(function* () {
         // A status of 404 is not a refusal of the text, so the text is not left
-        // out: the call fails, and the build names the document it was for.
+        // out on its own: the probe text decides, and here it fails as well.
         const model = embedder(() => failures.configuration);
         expect(yield* Effect.flip(embed([draft("abc")]))).toBe(
           failures.configuration
         );
-        expect(model.doEmbedCalls).toHaveLength(1);
+        expect(model.doEmbedCalls).toHaveLength(2);
       })
   );
 
@@ -195,28 +231,11 @@ describe("section embedding", () => {
         Effect.gen(function* () {
           const refusal = failures[reason];
           const model = refusing(refusal);
-          const logged = MutableRef.make<readonly unknown[]>([]);
-          const found = yield* embedBatch([
+          const { found, logged } = yield* embedLogged([
             draft("a", 0),
             draft(poison, 1),
             draft("abc", 2),
-          ]).pipe(
-            Effect.provide(
-              Layer.mergeAll(
-                GatewayTest,
-                Logger.layer([
-                  Logger.formatStructured.pipe(
-                    Logger.map(({ annotations, level, message }) =>
-                      MutableRef.update(
-                        logged,
-                        Arr.append({ annotations, level, message })
-                      )
-                    )
-                  ),
-                ])
-              )
-            )
-          );
+          ]);
           expect(found).toEqual([
             Option.some(vectorOf(1)),
             Option.none(),
@@ -225,7 +244,7 @@ describe("section embedding", () => {
           // Each text goes in a request of its own, and the model takes two
           // of them, so no probe is sent.
           expect(model.doEmbedCalls).toHaveLength(3);
-          expect(MutableRef.get(logged)).toEqual([
+          expect(logged).toEqual([
             {
               annotations: {
                 appLocale: "id",
@@ -280,6 +299,90 @@ describe("section embedding", () => {
           ).toBe(failures.invalid);
           // The two texts, and the probe text that the model refuses too.
           expect(model.doEmbedCalls).toHaveLength(3);
+        })
+    );
+  });
+
+  describe("a text that fails for another reason than a refusal", () => {
+    const poison = "BAD";
+    /** An embedder that fails every request with the failure for the poisoned text, and takes the probe text. */
+    const failingText = (failure: GatewayFailure) =>
+      embedder((_call, values) =>
+        Arr.some(values, (value) => value.includes(poison))
+          ? failure
+          : undefined
+      );
+
+    it.live(
+      "leaves out a text that the model cannot embed when it takes the probe text, and warns with its failure",
+      () =>
+        Effect.gen(function* () {
+          const model = failingText(failures.configuration);
+          const { found, logged } = yield* embedLogged([
+            draft("a", 0),
+            draft(poison, 1),
+            draft("abc", 2),
+          ]);
+          expect(found).toEqual([
+            Option.some(vectorOf(1)),
+            Option.none(),
+            Option.some(vectorOf(3)),
+          ]);
+          // Each text goes in a request of its own, and the text that fails is
+          // followed by one probe text, which the model takes.
+          expect(model.doEmbedCalls).toHaveLength(4);
+          expect(
+            Arr.filter(model.doEmbedCalls, ({ values }) =>
+              Arr.contains(values, "Nakafa")
+            )
+          ).toHaveLength(1);
+          expect(logged).toEqual([
+            {
+              annotations: {
+                appLocale: "id",
+                bytes: 3,
+                characters: 3,
+                contentKey: "material/lesson/matematika/matriks",
+                model: "google/gemini-embedding-2",
+                ordinal: 1,
+                reason: "configuration",
+                retryable: false,
+                status: 404,
+              },
+              level: "WARN",
+              message: "A section could not be embedded and is left out.",
+            },
+          ]);
+        })
+    );
+
+    it.live(
+      "leaves out a draft that comes alone once, with one probe text and no probe for the batch",
+      () =>
+        Effect.gen(function* () {
+          const model = failingText(failures.configuration);
+          expect(yield* embed([draft(poison)])).toEqual([Option.none()]);
+          // The text, and then the probe text, which the model takes.
+          expect(model.doEmbedCalls).toHaveLength(2);
+        })
+    );
+
+    it.live(
+      "leaves out a text that fails after its new tries, when the model takes the probe text",
+      () =>
+        Effect.gen(function* () {
+          const model = failingText(failures.unavailable);
+          const fiber = yield* Effect.forkChild(
+            embed([draft("a", 0), draft(poison, 1)])
+          );
+          // The text gets its new tries, which wait 5, 10, 20, and 40 seconds.
+          yield* pass(75_000);
+          expect(yield* Fiber.join(fiber)).toEqual([
+            Option.some(vectorOf(1)),
+            Option.none(),
+          ]);
+          // The first text, the text with its new tries, and the probe text.
+          expect(model.doEmbedCalls).toHaveLength(1 + (EMBED_RETRIES + 1) + 1);
         })
     );
   });

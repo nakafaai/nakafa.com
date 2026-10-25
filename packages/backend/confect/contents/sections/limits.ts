@@ -81,8 +81,8 @@ export const SECTION_TEXT_CHARS = 12_000;
 /**
  * Characters of a section sent to the embedder: the lesson title, the heading
  * path, and the start of the body. The limit of a model is in tokens, which
- * this cut does not count, so a section that a model still refuses is left out
- * of the index with a warning and counted as missing.
+ * this cut does not count, so a section that a model still refuses, or cannot
+ * embed, is left out of the index with a warning and counted as missing.
  */
 export const EMBED_TEXT_CHARS = 4000;
 

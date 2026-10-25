@@ -105,10 +105,11 @@ function standing(
  * Embeds every stored section of a language and then each question, one at a
  * time so that its latency is its own, with one candidate model, and tells
  * where the section each question names ranks among them. The sections are
- * embedded as the build embeds them: a section whose text the model refuses is
- * left out and counted, and when the model refuses every text of a batch, the
- * probe text decides whether the run fails. The answer is `empty` when no
- * section of the language is stored.
+ * embedded as the build embeds them: a section that the model refuses, or that
+ * it cannot embed after its new tries while it takes the probe text, is left
+ * out and counted, and when the model refuses every text of a batch, the probe
+ * text decides whether the run fails. The answer is `empty` when no section of
+ * the language is stored.
  */
 export const rankQuestions = Effect.fn("contents.sections.rankQuestions")(
   function* (input: Input) {

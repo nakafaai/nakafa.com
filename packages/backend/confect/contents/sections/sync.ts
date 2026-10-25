@@ -53,10 +53,11 @@ const withHash = (section: SectionFields) =>
  * then stores itself in one transaction, which records its version beside its
  * sections. A text that its document holds already, at whatever place, is not
  * sent to the embedder again, and a section whose row is the same is not
- * written again. A section whose text the model refuses is left out of the
- * index, which counts it as missing. The answer says how many sections were
- * embedded, kept, missing, written, and how many rows were removed, and whether
- * the release stopped being the active one, in which case nothing was stored.
+ * written again. A section that the model refuses, or that it cannot embed
+ * while it takes the probe text, is left out of the index, which counts it as
+ * missing. The answer says how many sections were embedded, kept, missing,
+ * written, and how many rows were removed, and whether the release stopped being
+ * the active one, in which case nothing was stored.
  * An embedding failure stops the call with the document it belongs to.
  */
 export const syncDocuments = Effect.fn("contents.sections.sync")(function* (

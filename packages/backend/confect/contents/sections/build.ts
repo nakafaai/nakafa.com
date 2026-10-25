@@ -154,7 +154,8 @@ const pruneStep = Effect.fn("contents.sections.pruneStep")(function* (
  * right version, embeds the sections the rest lacks, and stores them; the
  * steps walk the lessons, then the Quran, then delete the documents that the
  * release does not publish any more and record the build as finished, with the
- * sections it left out. A section that the model refuses is left out and
+ * sections it left out. A section that the model refuses, or that it cannot
+ * embed after its new tries while it takes the probe text, is left out and
  * counted, and the build goes on to the next document. The position of a step
  * is all a later run needs to resume, and storing the same documents again
  * changes nothing, so a build may be started again at any time, and one that

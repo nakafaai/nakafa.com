@@ -14,9 +14,16 @@ import {
   type EmbeddingModelId,
   embeddingModelId,
 } from "@repo/backend/confect/gateway/model";
-import { Array as Arr, Duration, Effect, Option, Schedule } from "effect";
+import {
+  Array as Arr,
+  Duration,
+  Effect,
+  Option,
+  Result,
+  Schedule,
+} from "effect";
 
-/** The vector of one section, or none when the model would not take its text. */
+/** The vector of one text, or none when the model answered with no vector. */
 type Vector = Option.Option<readonly number[]>;
 
 /** What an embedder needs of a section: its text, and where it is, which the log names. */
@@ -28,6 +35,8 @@ type Embeddable = Pick<
 /**
  * A text that every model takes. When the model refuses every text of a batch,
  * this text tells a model that refuses everything from a batch of refused texts.
+ * When another failure outlasts its new tries, this text tells a text that the
+ * model cannot embed from a gateway that cannot embed anything.
  */
 const PROBE_TEXT = "Nakafa";
 
@@ -63,17 +72,9 @@ const vectorOfText = Effect.fn("contents.sections.vectorOfText")(function* (
   );
 });
 
-/**
- * The vector of one section, or none when the model refuses its text, which the
- * log names. A failure that ends the call is logged with the section it belongs
- * to, and with the routing facts of the gateway's answer.
- */
-const vectorOf = Effect.fn("contents.sections.vectorOf")(function* (
-  section: Embeddable,
-  model: EmbeddingModelId
-) {
-  const text = embedInput(section.text);
-  const facts = {
+/** The facts that name a section in the log: where it is, and the size of the text that the model is given. */
+function factsOf(section: Embeddable, text: string, model: EmbeddingModelId) {
+  return {
     appLocale: section.appLocale,
     bytes: bytesOf(text),
     characters: text.length,
@@ -81,44 +82,73 @@ const vectorOf = Effect.fn("contents.sections.vectorOf")(function* (
     model,
     ordinal: section.ordinal,
   };
-  return yield* vectorOfText(text, model).pipe(
-    Effect.catchIf(refused, (failure) =>
-      Effect.logWarning(
-        "A section could not be embedded and is left out."
-      ).pipe(
-        Effect.annotateLogs({ ...facts, ...routingFacts(failure) }),
-        Effect.as<Vector>(Option.none())
-      )
-    ),
-    Effect.tapError((failure) =>
-      Effect.logError("An embedding request failed.").pipe(
-        Effect.annotateLogs({ ...facts, ...routingFacts(failure) })
-      )
-    )
+}
+
+type Facts = ReturnType<typeof factsOf>;
+
+/** Logs that a section is left out of the index, with the routing facts of the failure that left it out. */
+const leaveOut = (facts: Facts, failure: GatewayFailure) =>
+  Effect.logWarning("A section could not be embedded and is left out.").pipe(
+    Effect.annotateLogs({ ...facts, ...routingFacts(failure) })
   );
+
+/**
+ * The answer for one section. A text that the model refuses is a failure, which
+ * its batch judges. Any other failure that outlasts its new tries is probed on
+ * its own: when the model takes the probe text, the section is a success with no
+ * vector, which leaves it out, and when the probe fails too, the call fails with
+ * the failure of the section, so a gateway outage still stops the build.
+ */
+const answerOf = Effect.fn("contents.sections.answerOf")(function* (
+  section: Embeddable,
+  model: EmbeddingModelId
+) {
+  const text = embedInput(section.text);
+  const facts = factsOf(section, text, model);
+  const answer = yield* Effect.result(vectorOfText(text, model));
+  if (Result.isSuccess(answer)) {
+    return Result.succeed(answer.success);
+  }
+  const failure = answer.failure;
+  if (refused(failure)) {
+    yield* leaveOut(facts, failure);
+    return Result.fail(failure);
+  }
+  const probe = yield* Effect.result(vectorOfText(PROBE_TEXT, model));
+  if (Result.isFailure(probe)) {
+    yield* Effect.logError("An embedding request failed.").pipe(
+      Effect.annotateLogs({ ...facts, ...routingFacts(failure) })
+    );
+    return yield* failure;
+  }
+  yield* leaveOut(facts, failure);
+  return Result.succeed(Option.none());
 });
 
 /**
- * The vector of each section of a batch, in order, or none for a section whose
- * text the model refuses. Each text goes in a request of its own, because the
- * gateway refuses a request of several texts for the embedding model (see
- * `EMBED_CONCURRENCY`), and several requests run at once. When the model
- * refuses every text of a batch, the probe text decides: when the model takes
- * the probe, the refused texts are left out, and when the probe fails, the call
- * fails with that failure. The build and the model test embed with this one
+ * The vector of each section of a batch, in order, or none for a section that
+ * is left out of the index (see `answerOf`). Each text goes in a request of its
+ * own, because the gateway refuses a request of several texts for the embedding
+ * model (see `EMBED_CONCURRENCY`), and several requests run at once. When the
+ * model refuses every text of a batch, the probe text decides: when the model
+ * takes the probe, the refused texts are left out, and when the probe fails, the
+ * call fails with that failure. The build and the model test embed with this one
  * rule, each with the model it works for.
  */
 export const embedBatch = Effect.fn("contents.sections.embedBatch")(function* (
   batch: readonly Embeddable[],
   model: EmbeddingModelId = embeddingModelId
 ) {
-  const vectors = yield* Effect.forEach(
+  const answers = yield* Effect.forEach(
     batch,
-    (section) => vectorOf(section, model),
+    (section) => answerOf(section, model),
     { concurrency: EMBED_CONCURRENCY }
   );
-  if (batch.length > 0 && Arr.every(vectors, Option.isNone)) {
+  if (batch.length > 0 && Arr.every(answers, Result.isFailure)) {
     yield* vectorOfText(PROBE_TEXT, model);
   }
-  return vectors;
+  return Arr.map(
+    answers,
+    (answer): Vector => Result.getOrElse(answer, () => Option.none())
+  );
 });

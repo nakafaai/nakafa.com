@@ -18,6 +18,7 @@ import {
   refusal,
   seedKnowledge,
 } from "@repo/backend/test/knowledge";
+import { APICallError } from "ai";
 import { MockEmbeddingModelV4 } from "ai/test";
 import { getFunctionName } from "convex/server";
 import { Array as Arr, Effect, Layer, Option, Schema } from "effect";
@@ -269,6 +270,41 @@ describe("section sync", () => {
     );
     expect(await rows()).toHaveLength(2);
     // A document that lacks a section keeps its record with the count, so the next build reads it again.
+    expect(await sources()).toMatchObject([{ missing: 1, version: "first" }]);
+  });
+
+  it("leaves out a section that the model cannot embed while it takes the probe text, and counts it as missing", async () => {
+    const real = embedWithKnowledge();
+    provider.embeddingModel.mockReturnValue(
+      new MockEmbeddingModelV4({
+        doEmbed: (options) =>
+          Arr.some(options.values, (text) => text.includes("Terlarang"))
+            ? Promise.reject(
+                new APICallError({
+                  message: "private provider response",
+                  requestBodyValues: {},
+                  statusCode: 404,
+                  url: "https://provider.example.invalid",
+                })
+              )
+            : real.doEmbed(options),
+        maxEmbeddingsPerCall: 512,
+      })
+    );
+    const { rows, sources, sync } = await setup();
+    expect(
+      await sync([
+        lesson(3, (number) => (number === 2 ? "Terlarang." : "Aman.")),
+      ])
+    ).toEqual({
+      embedded: 2,
+      kept: 0,
+      missing: 1,
+      removed: 0,
+      stale: false,
+      written: 2,
+    });
+    expect(await rows()).toHaveLength(2);
     expect(await sources()).toMatchObject([{ missing: 1, version: "first" }]);
   });
 

@@ -182,4 +182,22 @@ describe("section index state", () => {
     const { ready } = against(createConvexTestWithBetterAuth());
     expect(await ready()).toBe(false);
   });
+
+  it("refuses a record of a finished build that does not say how many sections it left out", async () => {
+    const t = createConvexTestWithBetterAuth();
+    await t.mutation(seedKnowledge);
+    await expect(
+      t.mutation((ctx) =>
+        // @ts-expect-error a record without its count does not compile
+        ctx.db.insert("contentSectionState", {
+          key: "primary",
+          model: MODEL,
+          releaseId: ACTIVE,
+        })
+      )
+    ).rejects.toThrow();
+    expect(
+      await t.query((ctx) => ctx.db.query("contentSectionState").collect())
+    ).toEqual([]);
+  });
 });

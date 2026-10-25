@@ -68,7 +68,9 @@ stored section of the document with the same text and model gives its vector to
 the section that has that text now, wherever it stands, and a row is written
 again only when something about it changed, such as its place, the number of
 sections of its document, or its heading. A section that the model refuses is
-left out of the index with a warning. A document that the active release does
+left out of the index with a warning. So is a section that fails for another
+reason after its new tries while the model takes the probe text, and it is
+counted as missing. A document that the active release does
 not publish any more is deleted whole, its rows and its record in one
 transaction, up to 128 rows in a call, so that a record never names a version
 that some of its sections lack; a call stops before a document that does not fit
@@ -104,11 +106,11 @@ deployment that test found 142 of 150 right sections for this model and 146 for
 the older one, at 433 ms and 257 ms a question; with 50 questions a language
 that difference does not tell the two apart, so the benchmark, the input limit
 and the lifetime decided. The test embeds the stored sections as the build
-does: a section that a model refuses is counted and ranks last, as a build with
-that model would leave it out of the index. It costs money and minutes, so it
-runs only on the dev deployment of the checkout, through the Convex CLI and
-behind the same deployment check as the release gate. It runs again when a
-model is added or retired.
+does: a section that a model would not embed is counted and ranks last, as a
+build with that model would leave it out of the index. It costs money and
+minutes, so it runs only on the dev deployment of the checkout, through the
+Convex CLI and behind the same deployment check as the release gate. It runs
+again when a model is added or retired.
 
 ## Class Libraries
 
