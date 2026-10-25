@@ -12,7 +12,7 @@ function environment(env: Record<string, string>) {
   return ConfigProvider.fromUnknown(env);
 }
 
-const xenditKeys = { XENDIT_SECRET_KEY: "test-secret" };
+const xenditKeys = { XENDIT_API_KEY: "test-secret" };
 
 describe("billing/route", () => {
   it.effect("keeps Indonesia on Polar while the switch is unset", () =>

@@ -37,7 +37,7 @@ export const xenditRoutes = HttpRouter.add(
     );
     const expected = yield* Config.schema(
       Schema.Redacted(Schema.NonEmptyString),
-      "XENDIT_WEBHOOK_TOKEN"
+      "XENDIT_WEBHOOK_SECRET"
     );
     const received = request.headers.get("x-callback-token") ?? "";
     if (!sameCallbackToken(received, Redacted.value(expected))) {

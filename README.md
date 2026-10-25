@@ -105,22 +105,27 @@ instead of spending Convex's one-second query limit waiting for one. Start also
 serves a stand-in for PostHog ingestion on a loopback port that preparation
 reserves, because the build bakes that address into the app's analytics proxy.
 It accepts and discards every event, so analytics never leaves the machine and
-the proxy logs no failures. Use the printed Portless HTTPS URL for browser
-verification. `PORTLESS_APP_PORT` selects an internal port; `PORTLESS=0` uses the
-app port directly.
+the proxy logs no failures. Start serves the app on `http://localhost:3000`,
+without Portless.
 
-Run the browser suite from the repository root in a second terminal. Point
-Playwright at this checkout's URL and let its Node HTTP client trust the same
-local certificate authority:
+Run the browser suites from the repository root in a second terminal:
 
 ```sh
-PLAYWRIGHT_BASE_URL="$(bunx portless get nakafa)" \
-NODE_EXTRA_CA_CERTS="${PORTLESS_STATE_DIR:-$HOME/.portless}/ca.pem" \
-bun --filter www test:browser --workers=1
+bun --filter www test:browser
 ```
 
-If the proxy uses a custom state directory, set `PORTLESS_STATE_DIR` to that
-directory in both terminals.
+Each checkout prepares its own runtime, and its backend takes free ports. To
+serve a second runtime beside another one, name the app's port with
+`ACCEPTANCE_PORT` in every acceptance command and in the browser suites.
+Preparation records the origin and bakes it into the backend, the build bakes it
+into the app, and build and start refuse a port other than the recorded one:
+
+```sh
+ACCEPTANCE_PORT=3100 bun run acceptance:prepare
+ACCEPTANCE_PORT=3100 bun run acceptance:build
+ACCEPTANCE_PORT=3100 bun run acceptance:start
+ACCEPTANCE_PORT=3100 bun --filter www test:browser
+```
 
 Stop acceptance services before `bun run acceptance:clean` removes their database,
 source checkout, signer, logs, and the web app's cached signed fetch responses.

@@ -22,7 +22,7 @@ function ok(body: unknown) {
 describe("billing/xendit/sessions", () => {
   beforeEach(() => {
     fetcher.mockReset();
-    vi.stubEnv("XENDIT_SECRET_KEY", "test-secret");
+    vi.stubEnv("XENDIT_API_KEY", "test-secret");
   });
 
   it.effect(
