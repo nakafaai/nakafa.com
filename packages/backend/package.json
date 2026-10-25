@@ -33,6 +33,7 @@
     "@convex-dev/aggregate": "^0.3.4",
     "@convex-dev/ai-sdk-provider": "catalog:",
     "@convex-dev/better-auth": "0.12.5",
+    "@convex-dev/presence": "0.4.0",
     "@convex-dev/rate-limiter": "0.4.2",
     "@convex-dev/resend": "^0.2.10",
     "@convex-dev/workflow": "^0.4.10",

@@ -9,6 +9,7 @@ import accountDeletionReceipts from "./tables/accountDeletionReceipts";
 import articleBuckets from "./tables/articleBuckets";
 import articleCatalog from "./tables/articleCatalog";
 import articleCategories from "./tables/articleCategories";
+import assessmentFlags from "./tables/assessmentFlags";
 import billingAccounts from "./tables/billingAccounts";
 import billingCounters from "./tables/billingCounters";
 import billingEvents from "./tables/billingEvents";
@@ -44,6 +45,7 @@ import contentSectionState from "./tables/contentSectionState";
 import contentSections from "./tables/contentSections";
 import contentSnapshots from "./tables/contentSnapshots";
 import contentState from "./tables/contentState";
+import creditLots from "./tables/creditLots";
 import creditResetPeriods from "./tables/creditResetPeriods";
 import creditTransactions from "./tables/creditTransactions";
 import curriculumRoutes from "./tables/curriculumRoutes";
@@ -132,6 +134,7 @@ export default $defineSchema({
   articleBuckets: $Table.tableDefinition(articleBuckets),
   articleCatalog: $Table.tableDefinition(articleCatalog),
   articleCategories: $Table.tableDefinition(articleCategories),
+  assessmentFlags: $Table.tableDefinition(assessmentFlags),
   billingAccounts: $Table.tableDefinition(billingAccounts),
   billingCounters: $Table.tableDefinition(billingCounters),
   billingEvents: $Table.tableDefinition(billingEvents),
@@ -167,6 +170,7 @@ export default $defineSchema({
   contentSections: $Table.tableDefinition(contentSections),
   contentSnapshots: $Table.tableDefinition(contentSnapshots),
   contentState: $Table.tableDefinition(contentState),
+  creditLots: $Table.tableDefinition(creditLots),
   creditResetPeriods: $Table.tableDefinition(creditResetPeriods),
   creditTransactions: $Table.tableDefinition(creditTransactions),
   curriculumRoutes: $Table.tableDefinition(curriculumRoutes),

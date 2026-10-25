@@ -1,6 +1,7 @@
 import {
   billingEuroTerritoryCodes,
   proMonthlyPrices,
+  proYearlyPrices,
 } from "@repo/backend/confect/billing/catalog";
 import { HashSet, Schema } from "effect";
 
@@ -9,17 +10,18 @@ export const PricingCurrencySchema = Schema.Literals(["EUR", "IDR", "USD"]);
 
 export type PricingCurrency = typeof PricingCurrencySchema.Type;
 
-/** One monthly price as the pages show it: the amount in major units, with its currency, digits and locale. */
+/** One monthly price as the pages show it: the amount in major units, the yearly amount beside it, with its currency, digits and locale. */
 const MonthlyPriceSchema = Schema.Struct({
   amount: Schema.Finite,
   currency: PricingCurrencySchema,
   fractionDigits: Schema.Int,
   locale: Schema.String,
+  yearlyAmount: Schema.Finite,
 });
 
 type MonthlyPrice = typeof MonthlyPriceSchema.Type;
 
-/** The monthly price in one currency: the catalog's minor units, shown in the currency's own digits. */
+/** The monthly and yearly prices in one currency: the catalog's minor units, shown in the currency's own digits. */
 function monthlyPriceOf(
   currency: PricingCurrency,
   fractionDigits: number,
@@ -30,6 +32,7 @@ function monthlyPriceOf(
     currency,
     fractionDigits,
     locale,
+    yearlyAmount: proYearlyPrices[currency] / 10 ** fractionDigits,
   };
 }
 

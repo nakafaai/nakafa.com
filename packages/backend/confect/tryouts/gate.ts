@@ -7,7 +7,11 @@ import { make } from "@repo/backend/confect/assessment/gate/admit";
 import type { EndReason } from "@repo/backend/confect/assessment/gate/end";
 import type { Version } from "@repo/backend/confect/assessment/gate/rules";
 import { Answerable } from "@repo/backend/confect/assessment/gate/store";
-import type { Evaluated } from "@repo/backend/confect/response/model";
+import { evaluate } from "@repo/backend/confect/response/evaluation";
+import {
+  type Evaluated,
+  ResponseSpec,
+} from "@repo/backend/confect/response/model";
 import type { SectionTarget } from "@repo/backend/confect/tryouts/mutations/sections.spec";
 import {
   toTryoutFailure,
@@ -46,18 +50,26 @@ const Answering = Schema.Struct({
   ...Live.fields,
   ...Answerable.fields,
   placement: tryoutAttemptPlacements.Doc,
+  response: ResponseSpec,
   stored: Schema.Option(tryoutResponses.Doc),
 });
 type Answering = typeof Answering.Type;
 
-/** A consumer try-out attempt as the gate sees it: never locked, bound to no device. */
+/** A consumer try-out attempt as the gate sees it: bound to no device, and never locked. */
 function attemptOf(attempt: Live["attempt"]) {
   return {
+    binding: { kind: "free" } as const,
     deadline: attempt.expiresAt,
-    device: Option.none(),
-    locked: false,
-    open: attempt.status === "in-progress",
+    state: attemptStateOf(attempt.status),
   };
+}
+
+/** The gate's state of a try-out attempt: in progress, submitted once completed, expired when its time ran out. */
+function attemptStateOf(status: Live["attempt"]["status"]) {
+  if (status === "in-progress") {
+    return "inProgress" as const;
+  }
+  return status === "completed" ? ("submitted" as const) : ("expired" as const);
 }
 
 /** Reads one attempt by ID, none when it does not exist. Storage failures die; each write masks them. */
@@ -254,7 +266,12 @@ export const tryoutGate = {
         device: Option.none(),
         owner,
         placement: args.placementId,
-        selection: Option.fromNullOr(args.selection),
+        value: (live) =>
+          Effect.transposeOption(
+            Option.map(Option.fromNullOr(args.selection), (selection) =>
+              Effect.fromResult(evaluate(live.response, selection))
+            )
+          ),
         version: args.version,
       });
     },
@@ -268,7 +285,12 @@ export const tryoutGate = {
   /** Ends and scores the caller's running section. */
   finish: Effect.fn("tryouts.gate.finish")(
     function* (owner: Id<"users">, section: SectionTarget) {
-      yield* gate.finish({ device: Option.none(), owner, section });
+      yield* gate.finish({
+        device: Option.none(),
+        owner,
+        section,
+        settled: "refuse",
+      });
     },
     Effect.catchTag(
       "AttemptRefused",

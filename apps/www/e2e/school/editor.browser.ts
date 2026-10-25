@@ -54,10 +54,9 @@ test("a teacher creates an exam, adds questions, writes one, and finds it all wh
     "false"
   );
 
-  // The page has one header: the sidebar's trigger, the path, and Create exam share its row.
-  const header = page
-    .locator("header")
-    .filter({ has: page.getByRole("button", { name: "Create exam" }) });
+  // The page has one header, the sidebar's trigger and the path, and a school with no exam
+  // offers Create exam below it, in the empty state (K27).
+  const header = page.locator('header[data-slot="page-header"]');
   await expect(
     header.getByRole("button", { name: "Toggle Sidebar" })
   ).toBeVisible();
@@ -67,6 +66,9 @@ test("a teacher creates an exam, adds questions, writes one, and finds it all wh
   await expect(
     page.getByRole("button", { name: "Toggle Sidebar" })
   ).toHaveCount(1);
+  await expect(page.getByRole("button", { name: "Create exam" })).toHaveCount(
+    1
+  );
 
   // The dialog preselects the school's unit, so the exam needs no other choice.
   await waitUntilTakenOver(page.getByRole("button", { name: "Create exam" }));

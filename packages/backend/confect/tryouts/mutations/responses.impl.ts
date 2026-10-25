@@ -17,6 +17,7 @@ const save = FunctionImpl.make(
     return null;
   })
 );
+
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(save),
   Layer.provide(sessionMiddleware),

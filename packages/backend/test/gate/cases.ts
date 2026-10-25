@@ -47,6 +47,13 @@ export const refusals: readonly (typeof Refusal.Type)[] = [
   },
   {
     caller: "learner",
+    case: "an attempt that ran out of time is closed, whatever its deadline says",
+    changes: ["expire-attempt-status"],
+    reason: "AttemptClosed",
+    target: "running",
+  },
+  {
+    caller: "learner",
     case: "a section that ended",
     changes: ["close-section"],
     reason: "SectionClosed",

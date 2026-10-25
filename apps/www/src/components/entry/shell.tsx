@@ -9,10 +9,13 @@ export function EntryShell({ children }: { children: ReactNode }) {
   );
 }
 
-/** Owns the scrollable interactive side of an entry page. */
+/**
+ * Owns the interactive side of an entry page. It scrolls when it must, but its spacing is set so a
+ * question with its choices fits a laptop's screen, and nobody has to scroll to answer.
+ */
 export function EntryShellPanel({ children }: { children: ReactNode }) {
   return (
-    <div className="col-span-3 flex min-h-svh flex-col gap-4 overflow-y-auto p-6 sm:p-12 lg:min-h-0">
+    <div className="col-span-3 flex min-h-svh flex-col gap-4 overflow-y-auto p-6 sm:px-12 sm:py-8 lg:min-h-0">
       {children}
     </div>
   );
@@ -26,7 +29,7 @@ export function EntryShellHeader({ children }: { children: ReactNode }) {
 /** Centers the primary entry action inside the left panel. */
 export function EntryShellBody({ children }: { children: ReactNode }) {
   return (
-    <div className="flex flex-1 flex-col items-center justify-center gap-6">
+    <div className="flex flex-1 flex-col items-center justify-center gap-5">
       {children}
     </div>
   );
