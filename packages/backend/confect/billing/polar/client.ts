@@ -15,13 +15,12 @@ class PolarConfigError extends Schema.TaggedError<PolarConfigError>()(
   { message: Schema.String }
 ) {}
 
-/** The Polar server this deployment bills through, read from POLAR_SERVER. A missing value means sandbox. */
+/** The Polar server this deployment bills through, read from POLAR_SERVER, which every deployment must set. */
 export const readPolarServer = Effect.fn("polar.readServer")(function* () {
   return yield* Config.schema(
     Schema.Literals(["production", "sandbox"]),
     "POLAR_SERVER"
   ).pipe(
-    Config.withDefault("sandbox"),
     Effect.mapError(
       () =>
         new PolarConfigError({

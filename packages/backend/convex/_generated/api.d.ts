@@ -10879,6 +10879,7 @@ export declare const internal: {
         { userId: Id<"users"> },
         | {
             accountId: Id<"billingAccounts">;
+            authId: string;
             email: string;
             kind: "open";
             name: string;

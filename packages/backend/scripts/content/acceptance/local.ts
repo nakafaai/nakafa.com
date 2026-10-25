@@ -86,6 +86,7 @@ const localEnvironment = {
   [NAKAFA_MCP_EDGE_CONTRACT.secretEnvironment]: "build-mcp-edge-secret",
   OPENWEATHER_API_KEY: "build-disabled",
   POLAR_ACCESS_TOKEN: "build-disabled",
+  POLAR_SERVER: "sandbox",
   POLAR_WEBHOOK_SECRET: "build-disabled",
   POSTHOG_ERASURE_API_KEY: "build-disabled",
   POSTHOG_HOST: "https://example.invalid",

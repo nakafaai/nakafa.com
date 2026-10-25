@@ -13,6 +13,7 @@ process.env.SITE_URL = "http://localhost:3000";
 process.env.GOOGLE_AUTH_CLIENT_ID = "test-google-client";
 process.env.GOOGLE_AUTH_CLIENT_SECRET = "test-google-secret";
 process.env.POLAR_ACCESS_TOKEN = "polar_test";
+process.env.POLAR_SERVER = "sandbox";
 process.env.POLAR_WEBHOOK_SECRET = "polar_webhook_test";
 process.env.RESEND_API_KEY = "re_test_welcome_delivery";
 process.env.VAULT_ROOT_KEYS = `${TEST_ROOT_KEYS.current},${TEST_ROOT_KEYS.retired}`;
