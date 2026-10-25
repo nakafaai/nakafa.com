@@ -20,7 +20,7 @@ import {
   loadRouteBinding,
 } from "@repo/backend/confect/contentRelease/model";
 import {
-  decodeArtifactJson,
+  decodeArtifactHeaderJson,
   decodeProjectionJson,
 } from "@repo/backend/confect/contentRelease/parse";
 import type { WithoutSystemFields } from "convex/server";
@@ -53,7 +53,9 @@ const upsertVersion = Effect.fn("contentRelease.upsertVersion")(function* (
       `Artifact for ${row.releaseId}/${row.index} is missing.`
     );
   }
-  const artifact = yield* decodeArtifactJson(artifactRow.artifactJson);
+  // The proof workflow authenticated this body in Node before items are verified, so the
+  // mutation reads its header and never decodes the content tree inside the one second limit.
+  const artifact = yield* decodeArtifactHeaderJson(artifactRow.artifactJson);
   const projection = yield* decodeProjectionJson(row.projectionJson);
   const projectionHash = yield* hashText(
     "the content projection",
