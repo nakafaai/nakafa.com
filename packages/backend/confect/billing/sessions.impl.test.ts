@@ -142,6 +142,30 @@ describe("billing/sessions", () => {
     })
   );
 
+  it.effect(
+    "returns to the staging site when staging shares the deployment, and refuses it otherwise",
+    () =>
+      Effect.gen(function* () {
+        const { authed } = yield* setup();
+        const staging = {
+          ...request,
+          successUrl: "https://staging.nakafa.com/de/settings/billing",
+        };
+        yield* Effect.promise(() =>
+          expect(
+            authed.action(route.generateCheckoutLink, staging)
+          ).rejects.toThrow("INVALID_CHECKOUT_SUCCESS_URL")
+        );
+        vi.stubEnv("STAGING_SITE_URL", "https://staging.nakafa.com");
+        yield* Effect.promise(() =>
+          authed.action(route.generateCheckoutLink, staging)
+        );
+        expect(polarGateway.createCheckoutSession).toHaveBeenCalledWith(
+          expect.objectContaining({ successUrl: staging.successUrl })
+        );
+      }).pipe(Effect.ensuring(Effect.sync(() => vi.unstubAllEnvs())))
+  );
+
   it.effect("rejects an external success URL before Polar IO", () =>
     Effect.gen(function* () {
       const { authed } = yield* setup();

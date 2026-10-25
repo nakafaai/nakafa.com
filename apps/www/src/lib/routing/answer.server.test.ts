@@ -22,16 +22,24 @@ const source = vi.hoisted(() => ({ read: vi.fn() }));
 const release = vi.hoisted(() => ({ hasStaticRelease: true }));
 
 vi.mock("@/lib/routing/rendered", async () => {
-  const { isRenderedPath } = await import("@/lib/routing/template");
+  const { isBarePath, isRenderedPath } = await import("@/lib/routing/template");
+  const { routeRewrite } = await import("@/lib/routing/rewrite");
+  /** The Worker's route templates of a stand-in tree, without loading the router. */
+  const templates = [
+    "/$locale/chat",
+    "/$locale/chat/$id",
+    "/$locale/search",
+    "/$locale/try-out/$country/$exam/$track",
+    "/_missing",
+    "/api/weather",
+    "/school/$slug/exams",
+  ];
+  /** The path that the router reads, after its input rewrite. */
+  const routerPath = (url: URL) => routeRewrite.input({ url }).pathname;
   return {
-    /** Names the Worker's route templates of a stand-in tree, without loading the router. */
+    isBareRoutePath: (url: URL) => isBarePath(routerPath(url), templates),
     isRenderedRoutePath: (url: URL) =>
-      isRenderedPath(url.pathname, [
-        "/$locale/chat",
-        "/$locale/chat/$id",
-        "/$locale/search",
-        "/$locale/try-out/$country/$exam/$track",
-      ]),
+      !release.hasStaticRelease || isRenderedPath(routerPath(url), templates),
   };
 });
 
@@ -150,20 +158,6 @@ beforeEach(() => {
 });
 
 describe("decisions before the router", () => {
-  it.effect(
-    "answers an address that names no route with the static not-found page",
-    () =>
-      Effect.gen(function* () {
-        const page = new Response("<h1>Page not found</h1>", { status: 404 });
-        assets.fetch.mockResolvedValue(page);
-        const { handle, response } = yield* served("/.env");
-
-        expect(response.status).toBe(404);
-        expect(assets.fetch).toHaveBeenCalledTimes(1);
-        expect(handle).not.toHaveBeenCalled();
-      })
-  );
-
   it.effect("moves a trailing slash before the router", () =>
     Effect.gen(function* () {
       const { handle, response } = yield* served("/en/articles/belajar/");
@@ -309,18 +303,6 @@ describe("decisions before the router", () => {
     })
   );
 
-  it.effect("moves a bare profile address to the negotiated locale", () =>
-    Effect.gen(function* () {
-      const { handle, response } = yield* served("/@nabil", {
-        headers: { "accept-language": "id" },
-      });
-
-      expect(response.status).toBe(307);
-      expect(response.headers.get("location")).toBe("/id/@nabil");
-      expect(handle).not.toHaveBeenCalled();
-    })
-  );
-
   it.effect(
     "answers a school tree path and a raw user address with not found",
     () =>
@@ -399,6 +381,53 @@ describe("locale redirects", () => {
         expect(response.headers.get("location")).toBe("/id");
         expect(response.headers.get("vary")).toBe("Accept-Language, Cookie");
         expect(handle).not.toHaveBeenCalled();
+      })
+  );
+
+  it.effect(
+    "opens a bare page in the visitor's locale or English, after the moved addresses",
+    () =>
+      Effect.gen(function* () {
+        for (const [address, language, location] of [
+          ["/quran/2?ref=app", "id-ID,id;q=0.9", "/id/quran/2?ref=app"],
+          ["/quran/2", "fr-FR,fr;q=0.9", "/en/quran/2"],
+          ["/about", "id", "/"],
+        ] as const) {
+          const response = yield* answer(address, {
+            headers: { "accept-language": language },
+          });
+          expect(response.headers.get("location")).toBe(location);
+        }
+      })
+  );
+
+  it.effect(
+    "answers a bare file and an unserved locale with the static page",
+    () =>
+      Effect.gen(function* () {
+        assets.fetch.mockResolvedValue(new Response("<h1>Not found</h1>"));
+        for (const address of ["/wp-login.php", "/fr/subjects", "/EN"]) {
+          const { handle, response } = yield* served(address);
+          expect(response.status).toBe(404);
+          expect(handle).not.toHaveBeenCalled();
+        }
+      })
+  );
+
+  it.effect(
+    "leaves a School host's page and a Worker route to the router",
+    () =>
+      Effect.gen(function* () {
+        const handle = router();
+        yield* answerRequest(
+          new Request("https://harapan.nakafa.com/exams"),
+          handle
+        );
+        expect(routedRequest(handle).url).toBe(
+          "https://harapan.nakafa.com/exams"
+        );
+        const { handle: api } = yield* served("/api/weather");
+        expect(api).toHaveBeenCalledTimes(1);
       })
   );
 });
