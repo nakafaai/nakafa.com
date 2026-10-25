@@ -30,8 +30,9 @@ import {
   withOptionLabel,
   withOptionRemoved,
 } from "@/components/tenant/exams/answer";
-import { PageActions } from "@/components/tenant/exams/controls";
+import { PageActions, QuestionGrip } from "@/components/tenant/exams/controls";
 import { isLocked } from "@/components/tenant/exams/freeze";
+import { TeacherLayer } from "@/components/tenant/exams/layer";
 import {
   answerUpdate,
   type Question,
@@ -55,9 +56,9 @@ import {
  * The prompt loads when a page mounts its editors, never with the page. Until it loads, the page
  * keeps its paper on the screen, since the live paper of the page suspends until the prompt loads.
  */
-const ExamPrompt = lazy(() =>
-  import("@/components/tenant/exams/prompt").then((module) => ({
-    default: module.ExamPrompt,
+const ExamText = lazy(() =>
+  import("@/components/tenant/exams/text").then((module) => ({
+    default: module.ExamText,
   }))
 );
 
@@ -115,11 +116,17 @@ export function ExamPage({ canvas, count, index, question }: ExamPageProps) {
       aria-label={t("question", { number })}
       className="flex min-w-0 flex-col gap-2"
       data-page=""
+      data-question={question.id}
       id={`question-${question.id}`}
       ref={page}
     >
       <div className="flex min-h-9 items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-2">
+          {saved && !frozen ? (
+            <QuestionGrip number={number} questionId={question.id} />
+          ) : (
+            <span aria-hidden className="size-8 shrink-0" />
+          )}
           <h2 className="font-medium text-sm">{t("question", { number })}</h2>
           {question.key === null ? (
             <span className="flex items-center gap-1 text-muted-foreground text-xs">
@@ -143,6 +150,7 @@ export function ExamPage({ canvas, count, index, question }: ExamPageProps) {
       ) : (
         paper
       )}
+      <TeacherLayer live={live} number={number} question={question} />
     </section>
   );
 }
@@ -257,10 +265,11 @@ function LivePaper({
   return (
     <>
       <QuestionPaper>
-        <ExamPrompt
+        <ExamText
+          documentId={question.prompt}
           key={`${question.prompt}-${frozen}`}
-          number={number}
-          prompt={question.prompt}
+          label={t("question-text", { number })}
+          placeholder={t("prompt-placeholder")}
         />
         {choice === null ? null : (
           <PaperOptions>

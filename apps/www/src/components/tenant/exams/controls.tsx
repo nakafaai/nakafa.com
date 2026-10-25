@@ -4,6 +4,7 @@ import {
   ArrowUp01Icon,
   Copy01Icon,
   Delete02Icon,
+  DragDropVerticalIcon,
   MoreHorizontalIcon,
 } from "@hugeicons/core-free-icons";
 import { Button } from "@repo/design-system/components/ui/button";
@@ -19,7 +20,10 @@ import { ResponsiveDialog } from "@repo/design-system/components/ui/responsive-d
 import { useState } from "react";
 import { useTranslations } from "use-intl";
 import { useQuestionActions } from "@/components/tenant/exams/actions";
-import type { Question } from "@/components/tenant/exams/optimistic";
+import type {
+  Question,
+  QuestionId,
+} from "@/components/tenant/exams/optimistic";
 
 /**
  * The actions of a page: move up, move down, copy, add a question below, and remove. A page shows
@@ -159,5 +163,32 @@ export function PageActions({
         title={t("remove-title")}
       />
     </>
+  );
+}
+
+/**
+ * The grip of a page: the handle the teacher drags to move the question, or focuses to move it with
+ * the arrow keys. The canvas reads the handle's question from its `data-grip` attribute, so the grip
+ * holds no handler of its own.
+ */
+export function QuestionGrip({
+  number,
+  questionId,
+}: {
+  number: number;
+  questionId: QuestionId;
+}) {
+  const t = useTranslations("Exams");
+  return (
+    <Button
+      aria-label={t("reorder-of", { number })}
+      className="cursor-grab touch-none active:cursor-grabbing"
+      data-grip={questionId}
+      size="icon-sm"
+      type="button"
+      variant="ghost"
+    >
+      <HugeIcons aria-hidden="true" icon={DragDropVerticalIcon} />
+    </Button>
   );
 }

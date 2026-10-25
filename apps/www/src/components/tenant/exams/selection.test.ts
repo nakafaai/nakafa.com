@@ -34,10 +34,13 @@ const choice: Interaction = {
 /** A question of an exam, with no key. */
 const question = (id: string): Question => ({
   answers: [choice],
+  explanation: promptId(`explanation-${id}`),
   id: questionId(id),
   key: null,
+  points: 1,
   prompt: promptId(`prompt-${id}`),
   revision: 0,
+  rubric: promptId(`rubric-${id}`),
   template: "choice",
 });
 
