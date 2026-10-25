@@ -4,6 +4,7 @@ import databaseSchema from "@repo/backend/confect/_generated/schema";
 import {
   ActionCtx as ActionCtxService,
   MutationRunner,
+  QueryRunner,
 } from "@repo/backend/confect/_generated/services";
 import { requireAuth } from "@repo/backend/confect/auth/session";
 import {
@@ -13,7 +14,11 @@ import {
 import { ensureProviderCustomer } from "@repo/backend/confect/billing/customer";
 import { polarGateway } from "@repo/backend/confect/billing/polar/live";
 import spec from "@repo/backend/confect/billing/sessions.spec";
-import { checkoutSessionIoError } from "@repo/backend/confect/billing/spec";
+import {
+  checkoutSessionIoError,
+  ProAlreadyHeld,
+  proAlreadyHeldCode,
+} from "@repo/backend/confect/billing/spec";
 import sessionMiddleware from "@repo/backend/confect/middleware/session.impl";
 import { Clock, Effect, flow, Layer } from "effect";
 
@@ -25,7 +30,21 @@ const generateCheckoutLink = FunctionImpl.make(
     const ctx = yield* ActionCtxService;
     const { appUser } = yield* requireAuth();
     const { runMutation } = yield* MutationRunner;
+    const { runQuery } = yield* QueryRunner;
     const request = yield* validateCheckoutRequest(args);
+    const holdsPro = yield* runQuery(refs.internal.billing.checkout.holdsPro, {
+      userId: appUser._id,
+    }).pipe(
+      Effect.mapError(checkoutSessionIoError),
+      Effect.catchDefect(flow(checkoutSessionIoError, Effect.fail))
+    );
+    if (holdsPro) {
+      return yield* new ProAlreadyHeld({
+        code: proAlreadyHeldCode,
+        message:
+          "This account already holds Pro. Manage the plan in the customer portal.",
+      });
+    }
     const requestMetadata = yield* Effect.tryPromise({
       try: () => ctx.meta.getRequestMetadata(),
       catch: checkoutSessionIoError,

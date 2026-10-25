@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import {
   deactivatePlan,
+  ensurePlanInactive,
   getPlan,
 } from "@repo/backend/confect/billing/xendit/plans";
 import { Effect, Schema } from "effect";
@@ -31,6 +32,14 @@ function ok(body: unknown) {
   return new Response(encodeJson(body), {
     headers: { "content-type": "application/json" },
     status: 200,
+  });
+}
+
+/** A JSON error answer with the given status and Xendit error code. */
+function failed(status: number, errorCode: string) {
+  return new Response(encodeJson({ error_code: errorCode, message: "" }), {
+    headers: { "content-type": "application/json" },
+    status,
   });
 }
 
@@ -68,6 +77,93 @@ describe("billing/xendit/plans", () => {
         expect(String(url)).toBe(
           "https://api.xendit.co/recurring/plans/repl_1/deactivate"
         );
+      })
+  );
+
+  it.effect(
+    "reports a plan Xendit does not hold as already off, and deactivates nothing",
+    () =>
+      Effect.gen(function* () {
+        fetcher.mockResolvedValueOnce(failed(404, "DATA_NOT_FOUND"));
+        expect(
+          yield* ensurePlanInactive("repl_gone").pipe(
+            Effect.provideService(FetchHttpClient.Fetch, fetcher)
+          )
+        ).toBeNull();
+        expect(fetcher).toHaveBeenCalledTimes(1);
+      })
+  );
+
+  it.effect("reports an inactive plan as off, and deactivates nothing", () =>
+    Effect.gen(function* () {
+      fetcher.mockResolvedValueOnce(ok(PLAN_BODY));
+      expect(
+        yield* ensurePlanInactive("repl_1").pipe(
+          Effect.provideService(FetchHttpClient.Fetch, fetcher)
+        )
+      ).toBeNull();
+      expect(fetcher).toHaveBeenCalledTimes(1);
+    })
+  );
+
+  it.effect("deactivates an active plan once it is read as active", () =>
+    Effect.gen(function* () {
+      fetcher.mockResolvedValueOnce(ok({ ...PLAN_BODY, status: "ACTIVE" }));
+      fetcher.mockResolvedValueOnce(ok(PLAN_BODY));
+      expect(
+        yield* ensurePlanInactive("repl_1").pipe(
+          Effect.provideService(FetchHttpClient.Fetch, fetcher)
+        )
+      ).toBeNull();
+      expect(fetcher).toHaveBeenCalledTimes(2);
+      expect(fetcher.mock.calls[1]?.[1]?.method).toBe("POST");
+    })
+  );
+
+  it.effect(
+    "accepts a plan that vanishes between the read and the deactivation",
+    () =>
+      Effect.gen(function* () {
+        fetcher.mockResolvedValueOnce(ok({ ...PLAN_BODY, status: "ACTIVE" }));
+        fetcher.mockResolvedValueOnce(failed(404, "DATA_NOT_FOUND"));
+        expect(
+          yield* ensurePlanInactive("repl_1").pipe(
+            Effect.provideService(FetchHttpClient.Fetch, fetcher)
+          )
+        ).toBeNull();
+      })
+  );
+
+  it.effect(
+    "fails when Xendit cannot read the plan, so the deletion retries",
+    () =>
+      Effect.gen(function* () {
+        fetcher.mockResolvedValueOnce(failed(500, "INTERNAL_ERROR"));
+        const error = yield* ensurePlanInactive("repl_1").pipe(
+          Effect.flip,
+          Effect.provideService(FetchHttpClient.Fetch, fetcher)
+        );
+        expect(error).toMatchObject({
+          status: 500,
+          _tag: "XenditRequestFailed",
+        });
+      })
+  );
+
+  it.effect(
+    "fails when Xendit cannot deactivate an active plan, so the deletion retries",
+    () =>
+      Effect.gen(function* () {
+        fetcher.mockResolvedValueOnce(ok({ ...PLAN_BODY, status: "ACTIVE" }));
+        fetcher.mockResolvedValueOnce(failed(500, "INTERNAL_ERROR"));
+        const error = yield* ensurePlanInactive("repl_1").pipe(
+          Effect.flip,
+          Effect.provideService(FetchHttpClient.Fetch, fetcher)
+        );
+        expect(error).toMatchObject({
+          status: 500,
+          _tag: "XenditRequestFailed",
+        });
       })
   );
 });

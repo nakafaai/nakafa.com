@@ -54,4 +54,13 @@ export default GroupSpec.make()
       returns: () => checkoutAdmissionValidator,
       error: () => CheckoutSessionIoErrorWire,
     }).middleware(Atomic)
+  )
+  .addFunction(
+    FunctionSpec.internalQuery({
+      name: "holdsPro",
+      args: () => ({
+        userId: IdSchema("users"),
+      }),
+      returns: () => Schema.Boolean,
+    })
   );

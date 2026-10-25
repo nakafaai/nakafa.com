@@ -4,7 +4,7 @@ import { proProductIds } from "@repo/backend/confect/billing/polar/catalog";
 import type { PolarSubscriptionSource } from "@repo/backend/confect/billing/polar/payload";
 import type { billingSubscriptionStatusValidator } from "@repo/backend/confect/billing/schema";
 import type { BillingSubscriptionState } from "@repo/backend/confect/billing/subscriptions";
-import { Array as Arr, Match, Option } from "effect";
+import { Array as Arr, Match, Option, Schema } from "effect";
 
 type BillingSubscriptionStatus = typeof billingSubscriptionStatusValidator.Type;
 
@@ -74,4 +74,41 @@ export function polarSubscriptionState(
       subscription.modifiedAt ?? subscription.createdAt
     ).getTime(),
   });
+}
+
+/**
+ * What one Polar subscription does to the grant of its paid period. `window`
+ * writes the paid period as the grant. `endAt` ends the grant at that instant and
+ * never extends it.
+ */
+const PolarGrantAction = Schema.Union([
+  Schema.Struct({ kind: Schema.Literal("window") }),
+  Schema.Struct({ endsAt: Schema.Finite, kind: Schema.Literal("endAt") }),
+]).pipe(Schema.toTaggedUnion("kind"));
+type PolarGrantAction = typeof PolarGrantAction.Type;
+
+/**
+ * The grant action of one Polar subscription at `now`. An active subscription
+ * writes its paid period. A failed renewal ends the grant at `past_due_at`, because
+ * Polar advances the period before it charges, so the period it reports is unpaid.
+ * A canceled subscription ends at `ended_at`. An incomplete subscription never paid,
+ * so it ends now, and so does any status Nakafa does not know.
+ */
+export function polarGrantAction(
+  subscription: PolarSubscriptionSource,
+  now: number
+): PolarGrantAction {
+  return Match.value(subscription.status).pipe(
+    Match.withReturnType<PolarGrantAction>(),
+    Match.whenOr("active", "trialing", () => ({ kind: "window" as const })),
+    Match.whenOr("past_due", "unpaid", () => ({
+      kind: "endAt" as const,
+      endsAt: subscription.pastDueAt?.getTime() ?? now,
+    })),
+    Match.when("canceled", () => ({
+      kind: "endAt" as const,
+      endsAt: subscription.endedAt?.getTime() ?? now,
+    })),
+    Match.orElse(() => ({ kind: "endAt" as const, endsAt: now }))
+  );
 }

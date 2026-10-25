@@ -3,6 +3,7 @@ import { errors, type PolarCore } from "@polar-sh/sdk/2026-10";
 import { createCheckoutsService } from "@polar-sh/sdk/2026-10/services/checkouts";
 import { createCustomerSessionsService } from "@polar-sh/sdk/2026-10/services/customer_sessions";
 import { createCustomersService } from "@polar-sh/sdk/2026-10/services/customers";
+import { createSubscriptionsService } from "@polar-sh/sdk/2026-10/services/subscriptions";
 import { readPolarClient } from "@repo/backend/confect/billing/polar/client";
 import {
   decodePolarCheckout,
@@ -18,15 +19,28 @@ import {
   PolarDeleteError,
   PolarDuplicateEmailError,
   PolarPortalError,
+  PolarSubscriptionListError,
   PolarUpdateError,
   polarCheckoutErrorCode,
   polarCustomerErrorCode,
   polarDeleteErrorCode,
   polarDuplicateEmailCode,
   polarPortalErrorCode,
+  polarSubscriptionListErrorCode,
   polarUpdateErrorCode,
 } from "@repo/backend/confect/billing/polar/spec";
 import { Array as Arr, Data, Effect } from "effect";
+
+/**
+ * The subscription statuses reconciliation lists: the ones that hold access or owe
+ * a payment. A subscription that ended keeps no grant to reconcile.
+ */
+const RECONCILED_SUBSCRIPTION_STATUSES = [
+  "active",
+  "trialing",
+  "past_due",
+  "unpaid",
+] as const;
 
 class PolarRequestError extends Data.TaggedError("PolarRequestError")<{
   readonly cause: unknown;
@@ -203,6 +217,48 @@ export const polarGateway = {
       );
     }
   ),
+  /** The customer Polar holds under its own ID, or none when Polar holds none. */
+  getCustomer: Effect.fn("polar.getCustomer")(function* (customerId: string) {
+    return yield* request(
+      (client) => createCustomersService(client).get(customerId),
+      decodePolarCustomer
+    ).pipe(
+      Effect.catchTag("PolarRequestError", ({ cause }) =>
+        isMissingCustomer(cause)
+          ? Effect.succeed(null)
+          : Effect.fail(
+              new PolarCustomerError({
+                code: polarCustomerErrorCode,
+                cause,
+                message: "Failed to load Polar customer.",
+              })
+            )
+      )
+    );
+  }),
+  /** One page of the subscriptions that hold access or owe a payment, with the last page Polar lists. */
+  listSubscriptions: Effect.fn("polar.listSubscriptions")(function* (
+    page: number,
+    limit: number
+  ) {
+    const response = yield* call((client) =>
+      createSubscriptionsService(client).list({
+        limit,
+        page,
+        status: [...RECONCILED_SUBSCRIPTION_STATUSES],
+      })
+    ).pipe(
+      Effect.mapError(
+        ({ cause }) =>
+          new PolarSubscriptionListError({
+            code: polarSubscriptionListErrorCode,
+            cause,
+            message: "Failed to list Polar subscriptions.",
+          })
+      )
+    );
+    return { items: response.items, maxPage: response.pagination.max_page };
+  }),
   updateCustomer: Effect.fn("polar.updateCustomer")(function* (input: {
     readonly customerId: string;
     readonly identity: PolarCustomerIdentity;

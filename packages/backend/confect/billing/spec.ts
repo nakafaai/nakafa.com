@@ -142,6 +142,44 @@ export function checkoutSessionIoError(error: unknown) {
 /** The billing state failure as a public Convex failure. */
 export const BillingStateErrorWire = publicFailure(BillingStateError);
 
+/** Raised when a Pro checkout is asked for while the user already holds Pro, through a grant or a subscription that is active or past due. */
+export const proAlreadyHeldCode = "BILLING_PRO_ALREADY_HELD";
+export class ProAlreadyHeld extends Schema.TaggedError<ProAlreadyHeld>()(
+  "ProAlreadyHeld",
+  {
+    code: Schema.Literal(proAlreadyHeldCode),
+    message: Schema.String,
+  }
+) {
+  declare readonly code: typeof proAlreadyHeldCode;
+  declare readonly message: string;
+}
+export const ProAlreadyHeldWire = publicFailure(ProAlreadyHeld);
+
+/** Raised when a Xendit recurring plan could not be turned off, so the account deletion that needs it retries. */
+export const xenditDeactivateErrorCode = "XENDIT_DEACTIVATE_ERROR";
+export class XenditDeactivateError extends Schema.TaggedError<XenditDeactivateError>()(
+  "XenditDeactivateError",
+  {
+    code: Schema.Literal(xenditDeactivateErrorCode),
+    cause: Schema.optional(Schema.Unknown),
+    message: Schema.String,
+  }
+) {
+  declare readonly code: typeof xenditDeactivateErrorCode;
+  declare readonly message: string;
+}
+export const XenditDeactivateErrorWire = publicFailure(XenditDeactivateError);
+
+/** What linking a Polar customer to a Nakafa user did. Only `linked` links anything. */
+export const LinkPolarCustomerOutcome = Schema.Literals([
+  "linked",
+  "noUser",
+  "unavailable",
+  "conflict",
+]);
+export type LinkPolarCustomerOutcome = typeof LinkPolarCustomerOutcome.Type;
+
 /** The URL of one hosted billing page: a Polar checkout or the customer portal. */
 const billingUrlValidator = Schema.Struct({
   url: Schema.String,

@@ -88,6 +88,7 @@ describe("billing/polar/live", () => {
     Effect.gen(function* () {
       polarFetch.mockResolvedValueOnce(reply(201, customerWire));
       expect(yield* polarGateway.createCustomer(identity)).toEqual({
+        billingCountry: null,
         email: "learner@example.com",
         externalId: "user-1",
         id: "cust_1",
@@ -184,6 +185,7 @@ describe("billing/polar/live", () => {
       Effect.gen(function* () {
         polarFetch.mockResolvedValueOnce(reply(200, customerWire));
         expect(yield* polarGateway.getCustomerByExternalId("user-1")).toEqual({
+          billingCountry: null,
           email: "learner@example.com",
           externalId: "user-1",
           id: "cust_1",
@@ -197,6 +199,75 @@ describe("billing/polar/live", () => {
           yield* polarGateway.getCustomerByExternalId("user-2")
         ).toBeNull();
       })
+  );
+
+  it.effect(
+    "reads a customer by its Polar ID with its billing country, and reads an absent customer as none",
+    () =>
+      Effect.gen(function* () {
+        polarFetch.mockResolvedValueOnce(
+          reply(200, {
+            ...customerWire,
+            billing_address: { country: "ID" },
+          })
+        );
+        expect(yield* polarGateway.getCustomer("cust_1")).toEqual({
+          billingCountry: "ID",
+          email: "learner@example.com",
+          externalId: "user-1",
+          id: "cust_1",
+          name: "Learner",
+        });
+        expect(new URL(sentRequest(0).url).pathname).toBe(
+          "/v1/customers/cust_1"
+        );
+        polarFetch.mockResolvedValueOnce(reply(404, { detail: "Not found" }));
+        expect(yield* polarGateway.getCustomer("cust_2")).toBeNull();
+      })
+  );
+
+  it.effect("maps a failed customer read to the customer error", () =>
+    Effect.gen(function* () {
+      polarFetch.mockResolvedValueOnce(reply(500, { detail: "down" }));
+      expect(yield* failureOf(polarGateway.getCustomer("cust_1"))).toBe(
+        "PolarCustomerError"
+      );
+    })
+  );
+
+  it.effect(
+    "lists one page of the subscriptions that hold access or owe a payment, with the last page",
+    () =>
+      Effect.gen(function* () {
+        polarFetch.mockResolvedValueOnce(
+          reply(200, {
+            items: [{ id: "sub_1" }],
+            pagination: { max_page: 3, total_count: 250 },
+          })
+        );
+        expect(yield* polarGateway.listSubscriptions(2, 100)).toEqual({
+          items: [{ id: "sub_1" }],
+          maxPage: 3,
+        });
+        const url = new URL(sentRequest(0).url);
+        expect(url.searchParams.get("page")).toBe("2");
+        expect(url.searchParams.get("limit")).toBe("100");
+        expect(url.searchParams.getAll("status")).toEqual([
+          "active",
+          "trialing",
+          "past_due",
+          "unpaid",
+        ]);
+      })
+  );
+
+  it.effect("maps a failed subscription listing to the listing error", () =>
+    Effect.gen(function* () {
+      polarFetch.mockResolvedValueOnce(reply(500, { detail: "down" }));
+      expect(yield* failureOf(polarGateway.listSubscriptions(1, 100))).toBe(
+        "PolarSubscriptionListError"
+      );
+    })
   );
 
   it.effect("maps a failed customer lookup to the customer error", () =>

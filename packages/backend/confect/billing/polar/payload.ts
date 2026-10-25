@@ -1,3 +1,4 @@
+import { BillingCountry } from "@repo/backend/confect/billing/schema";
 import { Effect, Schema } from "effect";
 
 /** A Polar response or webhook payload that does not match the contract its handler reads. */
@@ -9,16 +10,29 @@ export class PolarPayloadError extends Schema.TaggedError<PolarPayloadError>()(
   }
 ) {}
 
-/** The customer fields Nakafa reads. Polar's type picks the email rule and is dropped after the check. */
+/**
+ * The customer fields Nakafa reads. Polar's type picks the email rule and is dropped after the check.
+ * A missing email, external ID, name, or billing country reads as null.
+ */
 const polarCustomerValidator = Schema.Struct({
+  billingAddress: Schema.optionalKey(
+    Schema.NullOr(
+      Schema.Struct({
+        country: Schema.optionalKey(Schema.NullOr(BillingCountry)),
+      })
+    )
+  ),
   email: Schema.optionalKey(Schema.NullOr(Schema.String)),
   externalId: Schema.optionalKey(Schema.NullOr(Schema.String)),
   id: Schema.String,
   name: Schema.optionalKey(Schema.NullOr(Schema.String)),
   type: Schema.Literals(["individual", "team"]),
-}).pipe(Schema.encodeKeys({ externalId: "external_id" }));
-
-/** A Polar customer as the billing model holds it: a missing email, external ID, or name reads as null. */
+}).pipe(
+  Schema.encodeKeys({
+    billingAddress: "billing_address",
+    externalId: "external_id",
+  })
+);
 
 /** The hosted checkout URL the learner is sent to. */
 const polarCheckoutValidator = Schema.Struct({
@@ -34,7 +48,8 @@ const polarCustomerSessionValidator = Schema.Struct({
  * The subscription fields the webhook handler reads. Polar's date-times decode to
  * Date values, so the billing model stores each as epoch milliseconds. Recurring
  * intervals and statuses stay open strings, because Polar may send values Nakafa
- * does not sell; the state mapping decides what they mean.
+ * does not sell; the state mapping decides what they mean. `pastDueAt` is the time
+ * a renewal payment failed, and Polar sends it only while a subscription is past due.
  */
 const polarSubscriptionValidator = Schema.Struct({
   cancelAtPeriodEnd: Schema.Boolean,
@@ -45,6 +60,7 @@ const polarSubscriptionValidator = Schema.Struct({
   endedAt: Schema.NullOr(Schema.DateFromString),
   id: Schema.String,
   modifiedAt: Schema.NullOr(Schema.DateFromString),
+  pastDueAt: Schema.optionalKey(Schema.NullOr(Schema.DateFromString)),
   priceId: Schema.optionalKey(Schema.NullOr(Schema.String)),
   productId: Schema.String,
   recurringInterval: Schema.NullOr(Schema.String),
@@ -58,6 +74,7 @@ const polarSubscriptionValidator = Schema.Struct({
     customerId: "customer_id",
     endedAt: "ended_at",
     modifiedAt: "modified_at",
+    pastDueAt: "past_due_at",
     priceId: "price_id",
     productId: "product_id",
     recurringInterval: "recurring_interval",
@@ -84,11 +101,12 @@ function payloadFailure(resource: string) {
     });
 }
 
-/** Decodes one customer from a Polar customer response. */
+/** Decodes one customer from a Polar customer response, with the billing country Polar holds for it. */
 export const decodePolarCustomer = Effect.fn("billing.polar.decodeCustomer")(
   (input: unknown) =>
     Schema.decodeUnknownEffect(polarCustomerValidator)(input).pipe(
       Effect.map((customer) => ({
+        billingCountry: customer.billingAddress?.country ?? null,
         email: customer.email ?? null,
         externalId: customer.externalId ?? null,
         id: customer.id,
@@ -115,7 +133,7 @@ export const decodePolarCustomerSession = Effect.fn(
   )
 );
 
-/** Decodes one subscription from a subscription webhook's `data`. */
+/** Decodes one subscription from a subscription webhook's `data`, or from a subscription listed for reconciliation. */
 export const decodePolarSubscription = Effect.fn(
   "billing.polar.decodeSubscription"
 )((input: unknown) =>

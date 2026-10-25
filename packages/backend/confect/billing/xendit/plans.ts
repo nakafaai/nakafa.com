@@ -32,3 +32,35 @@ export const deactivatePlan = Effect.fn("billing.xendit.deactivatePlan")(
     );
   }
 );
+
+/** The HTTP status Xendit answers for a recurring plan it does not hold. */
+const HTTP_NOT_FOUND = 404;
+
+/**
+ * Turns a recurring plan off so Xendit charges no further cycle, unless it is
+ * already off. Xendit answers 404 for a plan it does not hold, and such a plan has
+ * no cycle left to charge, so it counts as off. The plan is read first, because
+ * Xendit does not document what deactivating an inactive plan returns.
+ */
+export const ensurePlanInactive = Effect.fn(
+  "billing.xendit.ensurePlanInactive"
+)(function* (planId: string) {
+  const plan = yield* getPlan(planId).pipe(
+    Effect.catchTag("XenditRequestFailed", (error) =>
+      error.status === HTTP_NOT_FOUND
+        ? Effect.succeed(null)
+        : Effect.fail(error)
+    )
+  );
+  if (plan === null || plan.status === "INACTIVE") {
+    return null;
+  }
+  yield* deactivatePlan(planId).pipe(
+    Effect.catchTag("XenditRequestFailed", (error) =>
+      error.status === HTTP_NOT_FOUND
+        ? Effect.succeed(null)
+        : Effect.fail(error)
+    )
+  );
+  return null;
+});

@@ -63,6 +63,7 @@ describe("billing/customer", () => {
         const userId = yield* test.run(seedUser(false), Id("users"));
         vi.mocked(polarGateway.getCustomerByExternalId).mockReturnValueOnce(
           Effect.succeed({
+            billingCountry: null,
             email: "customer@example.com",
             id: "polar-linked",
             name: "Customer",

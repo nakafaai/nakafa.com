@@ -168,8 +168,12 @@ it("drains all four deletion workflows and their delayed reconciliation before r
   expect(
     Arr.filter(requests, (request) => request.method === "DELETE")
   ).toHaveLength(1);
-  // The account already holds its Polar customer, so no lookup by external ID runs.
+  // The account held its Polar customer, so the first billing step erased that one. The reconciliation
+  // step finds no account left, so it looks the customer up by the auth ID, which Polar reports as absent.
   expect(
-    Arr.filter(requests, (request) => request.method === "GET")
-  ).toHaveLength(0);
+    Arr.map(
+      Arr.filter(requests, (request) => request.method === "GET"),
+      (request) => new URL(request.url).pathname
+    )
+  ).toEqual([`/v1/customers/external/${authId}`]);
 });

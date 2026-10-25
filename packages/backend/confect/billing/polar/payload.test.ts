@@ -27,11 +27,12 @@ const subscriptionWire = {
 
 describe("billing/polar/payload", () => {
   it.effect(
-    "decodes an individual customer and reads a missing email, external ID, and name as null",
+    "decodes an individual customer with its billing country, and reads a missing email, external ID, name, or country as null",
     () =>
       Effect.gen(function* () {
         expect(
           yield* decodePolarCustomer({
+            billing_address: { country: "ID" },
             email: "learner@example.com",
             external_id: "user-1",
             id: "cust_1",
@@ -39,19 +40,72 @@ describe("billing/polar/payload", () => {
             type: "individual",
           })
         ).toEqual({
+          billingCountry: "ID",
           email: "learner@example.com",
           externalId: "user-1",
           id: "cust_1",
           name: "Learner",
         });
         expect(
-          yield* decodePolarCustomer({ id: "cust_2", type: "team" })
+          yield* decodePolarCustomer({
+            billing_address: null,
+            id: "cust_2",
+            type: "team",
+          })
         ).toEqual({
+          billingCountry: null,
           email: null,
           externalId: null,
           id: "cust_2",
           name: null,
         });
+      })
+  );
+
+  it.effect("refuses a billing country that is not a two-letter code", () =>
+    Effect.gen(function* () {
+      const exit = yield* Effect.exit(
+        decodePolarCustomer({
+          billing_address: { country: "Indonesia" },
+          id: "cust_3",
+          type: "individual",
+        })
+      );
+      expect(Exit.isFailure(exit)).toBe(true);
+    })
+  );
+
+  it.effect(
+    "reads the time a subscription became past due, and none when Polar sends none",
+    () =>
+      Effect.gen(function* () {
+        const subscription = {
+          cancel_at_period_end: false,
+          created_at: "2026-10-01T00:00:00.000Z",
+          current_period_end: "2026-11-01T00:00:00.000Z",
+          current_period_start: "2026-10-01T00:00:00.000Z",
+          customer_id: "cust_1",
+          ended_at: null,
+          id: "sub_1",
+          modified_at: "2026-10-02T00:00:00.000Z",
+          product_id: "product_1",
+          recurring_interval: "month",
+          status: "past_due",
+        };
+        const pastDue = yield* decodePolarSubscription({
+          ...subscription,
+          past_due_at: "2026-11-01T00:00:00.000Z",
+        });
+        expect(pastDue.pastDueAt?.toISOString()).toBe(
+          "2026-11-01T00:00:00.000Z"
+        );
+        const sent = yield* decodePolarSubscription({
+          ...subscription,
+          past_due_at: null,
+        });
+        expect(sent.pastDueAt).toBeNull();
+        const unsent = yield* decodePolarSubscription(subscription);
+        expect(unsent.pastDueAt).toBeUndefined();
       })
   );
 

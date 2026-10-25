@@ -54,6 +54,12 @@ export function useBillingNavigation() {
     );
   }
 
+  /** The customer portal, where a user who already holds Pro manages the plan. */
+  const portalRequest = () =>
+    Effect.tryPromise(() => createPortal({})).pipe(
+      Effect.flatMap(Effect.fromResult)
+    );
+
   return {
     isPending,
     openCheckout: ({
@@ -66,7 +72,11 @@ export function useBillingNavigation() {
             locale,
             successUrl: checkoutReturnUrl(window.location.href),
           })
-        ).pipe(Effect.flatMap(Effect.fromResult)),
+        ).pipe(
+          Effect.flatMap(Effect.fromResult),
+          // A user who already holds Pro is routed to the portal instead of a second checkout.
+          Effect.catchTag("ProAlreadyHeld", portalRequest)
+        ),
         {
           ...failure,
           copy: {
@@ -76,17 +86,12 @@ export function useBillingNavigation() {
         }
       ),
     openPortal: (source: BillingSource) =>
-      runBillingRequest(
-        Effect.tryPromise(() => createPortal({})).pipe(
-          Effect.flatMap(Effect.fromResult)
-        ),
-        {
-          ...source,
-          copy: {
-            description: "portal-error.description",
-            title: "portal-error.title",
-          },
-        }
-      ),
+      runBillingRequest(portalRequest(), {
+        ...source,
+        copy: {
+          description: "portal-error.description",
+          title: "portal-error.title",
+        },
+      }),
   };
 }

@@ -10621,7 +10621,7 @@ export declare const internal: {
           "mutation",
           "internal",
           {
-            args?: { userId: Id<"users"> };
+            args?: { authId: string; userId: Id<"users"> };
             context?: any;
             docs?: "To call a workflow directly, nest its arguments: { args: { ...yourWorkflowArgs } }";
             generationNumber?: number;
@@ -10764,6 +10764,14 @@ export declare const internal: {
     };
   };
   billing: {
+    accounts: {
+      linkPolarCustomer: FunctionReference<
+        "mutation",
+        "internal",
+        { authId: string; country: string; providerCustomerId: string },
+        "linked" | "noUser" | "unavailable" | "conflict"
+      >;
+    };
     checkout: {
       admitCheckout: FunctionReference<
         "mutation",
@@ -10873,6 +10881,12 @@ export declare const internal: {
         },
         { kind: "admitted" } | { kind: "unavailable" }
       >;
+      holdsPro: FunctionReference<
+        "query",
+        "internal",
+        { userId: Id<"users"> },
+        boolean
+      >;
       openAccount: FunctionReference<
         "mutation",
         "internal",
@@ -10912,13 +10926,16 @@ export declare const internal: {
       cleanupDeletedUserBilling: FunctionReference<
         "action",
         "internal",
-        { userId: Id<"users"> },
+        { authId: string; userId: Id<"users"> },
         null
       >;
       deleteRows: FunctionReference<
         "mutation",
         "internal",
-        { userId: Id<"users"> },
+        {
+          subscriptionIds: Array<Id<"billingSubscriptions">>;
+          userId: Id<"users">;
+        },
         boolean
       >;
       readAccounts: FunctionReference<
@@ -10931,11 +10948,37 @@ export declare const internal: {
           rail: "polar" | "xendit";
         }>
       >;
+      readSubscriptions: FunctionReference<
+        "query",
+        "internal",
+        { userId: Id<"users"> },
+        Array<{
+          subscriptionId: Id<"billingSubscriptions">;
+          xenditPlanId: string | null;
+        }>
+      >;
     };
     events: {
-      cleanup: FunctionReference<"mutation", "internal", {}, number>;
-      process: FunctionReference<
+      apply: FunctionReference<
         "mutation",
+        "internal",
+        { eventId: Id<"billingEvents"> },
+        { kind: "processed" } | { customerId: string; kind: "unknownCustomer" }
+      >;
+      cleanup: FunctionReference<"mutation", "internal", {}, number>;
+      listUnprocessed: FunctionReference<
+        "query",
+        "internal",
+        { limit: number; receivedBefore: number; receivedFrom: number },
+        Array<{
+          eventId: Id<"billingEvents">;
+          key: string;
+          receivedAt: number;
+          type: string;
+        }>
+      >;
+      process: FunctionReference<
+        "action",
         "internal",
         { eventId: Id<"billingEvents"> },
         null
@@ -10952,6 +10995,7 @@ export declare const internal: {
         },
         { eventId: Id<"billingEvents">; kind: "accepted" | "duplicate" }
       >;
+      sweep: FunctionReference<"action", "internal", {}, number>;
     };
     grants: {
       project: FunctionReference<
@@ -10966,6 +11010,19 @@ export declare const internal: {
         { cursor: string | null; tenantId: Id<"tenants"> },
         null
       >;
+    };
+    reconcile: {
+      applySubscription: FunctionReference<
+        "mutation",
+        "internal",
+        { subscription: string },
+        | "applied"
+        | "invalid"
+        | "stale"
+        | "unsupported"
+        | { customerId: string; kind: "unknownCustomer" }
+      >;
+      run: FunctionReference<"action", "internal", { page: number }, null>;
     };
   };
   classroom: {

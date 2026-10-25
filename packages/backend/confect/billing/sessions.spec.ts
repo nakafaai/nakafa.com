@@ -12,6 +12,7 @@ import {
   CheckoutUnavailable,
   checkoutRequestInputValidator,
   InvalidCheckoutSuccessUrl,
+  ProAlreadyHeldWire,
 } from "@repo/backend/confect/billing/spec";
 import Session from "@repo/backend/confect/middleware/session.spec";
 import { SiteConfigError } from "@repo/backend/confect/site/spec";
@@ -36,6 +37,7 @@ export default GroupSpec.make()
           InvalidCheckoutSuccessUrl,
           CheckoutSessionIoErrorWire,
           CheckoutUnavailable,
+          ProAlreadyHeldWire,
           PolarCustomerErrorWire,
           PolarDuplicateEmailErrorWire,
           PolarCheckoutErrorWire,

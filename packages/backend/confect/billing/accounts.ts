@@ -3,7 +3,9 @@ import {
   DatabaseReader,
   DatabaseWriter,
 } from "@repo/backend/confect/_generated/services";
+import { isAccountDeletionPending } from "@repo/backend/confect/auth/deletion/state";
 import { BillingCurrency } from "@repo/backend/confect/billing/catalog";
+import { billingCurrencyFor } from "@repo/backend/confect/billing/route";
 import {
   BillingCountry,
   BillingRail,
@@ -93,4 +95,53 @@ export const recordProviderCustomer = Effect.fn(
     .table("billingAccounts")
     .patch(accountId, { providerCustomerId })
     .pipe(Effect.orDie);
+});
+
+/**
+ * Links a Polar customer to the personal Polar account of the Nakafa user whose
+ * Better Auth ID is the customer's external ID. The account is opened on first
+ * use, in the billing country Polar holds for the customer, or unknown when it
+ * holds none. An account that already names another customer is a conflict, and
+ * nothing changes. A user whose account is being deleted links nothing.
+ */
+export const linkPolarCustomer = Effect.fn(
+  "billing.accounts.linkPolarCustomer"
+)(function* (input: {
+  readonly authId: string;
+  readonly country: BillingCountry;
+  readonly providerCustomerId: string;
+}) {
+  const reader = yield* DatabaseReader;
+  const user = yield* reader
+    .table("users")
+    .index("by_authId", (query) => query.eq("authId", input.authId))
+    .first()
+    .pipe(Effect.orDie);
+  if (Option.isNone(user)) {
+    return "noUser" as const;
+  }
+  if (isAccountDeletionPending(user.value)) {
+    return "unavailable" as const;
+  }
+  const owner = { kind: "personal" as const, userId: user.value._id };
+  const existing = yield* findAccount(owner, "polar");
+  if (Option.isNone(existing)) {
+    const accountId = yield* ensureAccount({
+      owner,
+      rail: "polar",
+      country: input.country,
+      currency: billingCurrencyFor(input.country),
+    });
+    yield* recordProviderCustomer(accountId, input.providerCustomerId);
+    return "linked" as const;
+  }
+  const linked = existing.value.providerCustomerId;
+  if (linked === input.providerCustomerId) {
+    return "linked" as const;
+  }
+  if (linked !== null) {
+    return "conflict" as const;
+  }
+  yield* recordProviderCustomer(existing.value._id, input.providerCustomerId);
+  return "linked" as const;
 });

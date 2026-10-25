@@ -7,12 +7,15 @@ import {
   ensureAccount,
   recordProviderCustomer,
 } from "@repo/backend/confect/billing/accounts";
-import { admitCheckoutProgram } from "@repo/backend/confect/billing/checkout";
+import {
+  admitCheckoutProgram,
+  holdsPro,
+} from "@repo/backend/confect/billing/checkout";
 import spec from "@repo/backend/confect/billing/checkout.spec";
 import { billingCurrencyFor } from "@repo/backend/confect/billing/route";
 import { checkoutSessionIoError } from "@repo/backend/confect/billing/spec";
 import atomic from "@repo/backend/confect/middleware/atomic.impl";
-import { Effect, flow, Layer } from "effect";
+import { Clock, Effect, flow, Layer } from "effect";
 
 /** The country a personal Polar account is made with: Polar decides the buyer's country at checkout, so Nakafa holds it as unknown. */
 const POLAR_ACCOUNT_COUNTRY = "ZZ";
@@ -96,10 +99,20 @@ const admitCheckout = FunctionImpl.make(
   })
 );
 
+const holdsProQuery = FunctionImpl.make(
+  databaseSchema,
+  spec,
+  "holdsPro",
+  Effect.fn("billing.checkout.holdsProQuery")(function* (args) {
+    return yield* holdsPro(args.userId, yield* Clock.currentTimeMillis);
+  })
+);
+
 export default GroupImpl.make(databaseSchema, spec).pipe(
   Layer.provide(openAccount),
   Layer.provide(recordCustomer),
   Layer.provide(admitCheckout),
+  Layer.provide(holdsProQuery),
   Layer.provide(atomic),
   GroupImpl.finalize
 );

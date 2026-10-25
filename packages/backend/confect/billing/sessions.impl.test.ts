@@ -3,6 +3,7 @@ import {
   PolarCheckoutError,
   polarCheckoutErrorCode,
 } from "@repo/backend/confect/billing/polar/spec";
+import { proAlreadyHeldCode } from "@repo/backend/confect/billing/spec";
 import {
   createConvexTestWithBetterAuth,
   seedAuthenticatedUser,
@@ -28,7 +29,7 @@ const request = {
   successUrl: "http://localhost:3000/de/settings/billing",
 } as const;
 
-const setup = Effect.fn("customers.sessions.test.setup")(function* () {
+const setup = Effect.fn("billing.sessions.test.setup")(function* () {
   const t = createConvexTestWithBetterAuth();
   yield* TestClock.setTime(NOW);
   const now = yield* Clock.currentTimeMillis;
@@ -157,6 +158,39 @@ describe("billing/sessions", () => {
         ).rejects.toThrow("UNAUTHORIZED")
       );
     })
+  );
+
+  it.effect(
+    "refuses a Pro checkout while the user's personal Pro grant still runs, before Polar is asked",
+    () =>
+      Effect.gen(function* () {
+        const { authed, t, user } = yield* setup();
+        yield* Effect.promise(() =>
+          t.mutation((ctx) =>
+            ctx.db.insert("billingGrants", {
+              product: "pro",
+              source: {
+                kind: "contract",
+                contractId: "contract-sessions-guard",
+              },
+              userId: user.userId,
+              validFrom: Date.UTC(2000, 0, 1),
+              validTo: Date.UTC(2099, 0, 1),
+            })
+          )
+        );
+        yield* Effect.promise(() =>
+          expect(
+            authed.action(route.generateCheckoutLink, request)
+          ).rejects.toHaveProperty("data", {
+            _tag: "ProAlreadyHeld",
+            code: proAlreadyHeldCode,
+            message:
+              "This account already holds Pro. Manage the plan in the customer portal.",
+          })
+        );
+        expect(polarGateway.createCheckoutSession).not.toHaveBeenCalled();
+      })
   );
 
   it.effect("preserves the public checkout failure contract", () =>

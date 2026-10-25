@@ -1,8 +1,13 @@
+import type { Docs } from "@repo/backend/confect/_generated/docs";
+import { DatabaseReader } from "@repo/backend/confect/_generated/services";
 import { isAccountDeletionPending } from "@repo/backend/confect/auth/deletion/state";
 import {
   accountUnavailableCode,
   accountUnavailableMessage,
 } from "@repo/backend/confect/auth/spec";
+import { findAccount } from "@repo/backend/confect/billing/accounts";
+import { billingOffer } from "@repo/backend/confect/billing/catalog";
+import { latestPersonalGrant } from "@repo/backend/confect/billing/grants";
 import {
   checkoutLocaleValidator,
   getPolarCheckoutLocale,
@@ -25,7 +30,7 @@ import {
   invalidCheckoutSuccessUrlCode,
 } from "@repo/backend/confect/billing/spec";
 import { readSiteUrl } from "@repo/backend/confect/site/config";
-import { Effect, Schema } from "effect";
+import { Effect, Option, Schema } from "effect";
 
 type CheckoutAdmissionUser = Parameters<typeof isAccountDeletionPending>[0];
 
@@ -116,4 +121,49 @@ export const createAdmittedCheckoutSession = Effect.fn(
     });
   }
   return checkout;
+});
+
+/** The billing rails a user's personal account can pay through. */
+const PERSONAL_RAILS = ["polar", "xendit"] as const;
+
+/** The statuses of a Pro subscription that still holds Pro, or still owes its payment. */
+const PRO_HOLDING_STATUSES = ["active", "pastDue"] as const;
+
+/**
+ * Whether one user already holds Pro: a personal Pro grant that runs at `now`, or a
+ * personal Pro subscription that is active or past due on either rail. Such a user
+ * manages the plan in the customer portal, so no second checkout starts for them.
+ */
+export const holdsPro = Effect.fn("billing.checkout.holdsPro")(function* (
+  userId: Docs["users"]["_id"],
+  now: number
+) {
+  if (Option.isSome(yield* latestPersonalGrant(userId, now))) {
+    return true;
+  }
+  const reader = yield* DatabaseReader;
+  const accounts = yield* Effect.forEach(PERSONAL_RAILS, (rail) =>
+    findAccount({ kind: "personal", userId }, rail)
+  );
+  for (const account of accounts) {
+    if (Option.isNone(account)) {
+      continue;
+    }
+    for (const status of PRO_HOLDING_STATUSES) {
+      const subscription = yield* reader
+        .table("billingSubscriptions")
+        .index("by_accountId_and_status", (query) =>
+          query.eq("accountId", account.value._id).eq("status", status)
+        )
+        .first()
+        .pipe(Effect.orDie);
+      if (
+        Option.isSome(subscription) &&
+        billingOffer(subscription.value.offer).product === "pro"
+      ) {
+        return true;
+      }
+    }
+  }
+  return false;
 });

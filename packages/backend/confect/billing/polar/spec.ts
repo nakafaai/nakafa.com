@@ -2,12 +2,26 @@ import { polarCheckoutLocaleValidator } from "@repo/backend/confect/billing/loca
 import { publicFailure } from "@repo/backend/confect/failure";
 import { Schema } from "effect";
 
+/** A Polar customer that Nakafa holds no account for. The caller links it to a user, then applies the event again. */
+const PolarUnknownCustomer = Schema.Struct({
+  kind: Schema.Literal("unknownCustomer"),
+  customerId: Schema.String,
+});
+
+/** What applying one Polar subscription did. Only an unknown customer is a value; the rest are outcomes. */
+export const PolarSubscriptionOutcome = Schema.Union([
+  Schema.Literals(["applied", "invalid", "stale", "unsupported"]),
+  PolarUnknownCustomer,
+]);
+export type PolarSubscriptionOutcome = typeof PolarSubscriptionOutcome.Type;
+
 export const polarCheckoutErrorCode = "POLAR_CHECKOUT_ERROR";
 export const polarCustomerErrorCode = "POLAR_CUSTOMER_ERROR";
 export const polarDeleteErrorCode = "POLAR_DELETE_ERROR";
 export const polarDuplicateEmailCode = "POLAR_DUPLICATE_EMAIL";
 export const polarPortalErrorCode = "POLAR_PORTAL_ERROR";
 export const polarUpdateErrorCode = "POLAR_UPDATE_ERROR";
+export const polarSubscriptionListErrorCode = "POLAR_SUBSCRIPTION_LIST_ERROR";
 
 /** The checkout a Polar customer starts: the customer, the products, and where the learner returns. */
 const polarCheckoutInputValidator = Schema.Struct({
@@ -106,3 +120,18 @@ export class PolarUpdateError extends Schema.TaggedError<PolarUpdateError>()(
   declare readonly message: string;
 }
 export const PolarUpdateErrorWire = publicFailure(PolarUpdateError);
+
+export class PolarSubscriptionListError extends Schema.TaggedError<PolarSubscriptionListError>()(
+  "PolarSubscriptionListError",
+  {
+    code: Schema.Literal(polarSubscriptionListErrorCode),
+    cause: Schema.optional(Schema.Unknown),
+    message: Schema.String,
+  }
+) {
+  declare readonly code: typeof polarSubscriptionListErrorCode;
+  declare readonly message: string;
+}
+export const PolarSubscriptionListErrorWire = publicFailure(
+  PolarSubscriptionListError
+);

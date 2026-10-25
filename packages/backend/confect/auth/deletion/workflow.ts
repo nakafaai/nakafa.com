@@ -63,7 +63,7 @@ const startBilling: StartCleanupWorkflow = Effect.fn(
     workflow.start(
       ctx,
       internal.auth.deletion.cleanup.cleanupDeletedUserBilling,
-      { userId: identity.userId },
+      { authId: identity.authId, userId: identity.userId },
       {
         context: {
           source: cleanupSource.accountDeletion,

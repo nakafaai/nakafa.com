@@ -2,10 +2,14 @@ import { describe, expect, it } from "@effect/vitest";
 import { Id } from "@repo/backend/confect/_generated/id";
 import { proProductIds } from "@repo/backend/confect/billing/polar/catalog";
 import { decodePolarSubscription } from "@repo/backend/confect/billing/polar/payload";
-import { polarSubscriptionState } from "@repo/backend/confect/billing/polar/subscription";
+import {
+  polarGrantAction,
+  polarSubscriptionState,
+} from "@repo/backend/confect/billing/polar/subscription";
 import { Effect, Option, Schema } from "effect";
 
 const ACCOUNT_ID = Schema.decodeUnknownSync(Id("billingAccounts"))("account_1");
+const NOW = Date.UTC(2026, 9, 25, 12, 0, 0);
 
 /** One Polar subscription wire body, a monthly Pro subscription, with the fields a test changes. */
 function wire(overrides: Record<string, unknown> = {}) {
@@ -122,6 +126,81 @@ describe("billing/polar/subscription", () => {
       Effect.gen(function* () {
         expect(yield* stateOf({ product_id: "another-product" })).toBeNull();
         expect(yield* stateOf({ recurring_interval: "week" })).toBeNull();
+      })
+  );
+
+  it.effect.each([
+    { label: "an active subscription", overrides: { status: "active" } },
+    { label: "a trialing subscription", overrides: { status: "trialing" } },
+  ])("writes the paid period for $label", ({ overrides }) =>
+    Effect.gen(function* () {
+      const subscription = yield* decodePolarSubscription(wire(overrides));
+      expect(polarGrantAction(subscription, NOW)).toEqual({ kind: "window" });
+    })
+  );
+
+  it.effect(
+    "ends a failed renewal at the failure, not at the period Polar advanced to",
+    () =>
+      Effect.gen(function* () {
+        const subscription = yield* decodePolarSubscription(
+          wire({
+            current_period_end: "2026-12-01T00:00:00.000Z",
+            past_due_at: "2026-11-01T00:00:00.000Z",
+            status: "past_due",
+          })
+        );
+        expect(polarGrantAction(subscription, NOW)).toEqual({
+          endsAt: Date.parse("2026-11-01T00:00:00.000Z"),
+          kind: "endAt",
+        });
+      })
+  );
+
+  it.effect(
+    "ends an unpaid subscription at now when Polar sends no failure time",
+    () =>
+      Effect.gen(function* () {
+        const subscription = yield* decodePolarSubscription(
+          wire({ status: "unpaid" })
+        );
+        expect(polarGrantAction(subscription, NOW)).toEqual({
+          endsAt: NOW,
+          kind: "endAt",
+        });
+      })
+  );
+
+  it.effect(
+    "ends a canceled subscription at the time it ended, and at now when Polar sends none",
+    () =>
+      Effect.gen(function* () {
+        const ended = yield* decodePolarSubscription(
+          wire({ ended_at: "2026-10-20T00:00:00.000Z", status: "canceled" })
+        );
+        expect(polarGrantAction(ended, NOW)).toEqual({
+          endsAt: Date.parse("2026-10-20T00:00:00.000Z"),
+          kind: "endAt",
+        });
+        const undated = yield* decodePolarSubscription(
+          wire({ status: "canceled" })
+        );
+        expect(polarGrantAction(undated, NOW)).toEqual({
+          endsAt: NOW,
+          kind: "endAt",
+        });
+      })
+  );
+
+  it.effect.each(["incomplete", "incomplete_expired", "some_future_status"])(
+    "ends any grant now for a %s subscription, which never granted Pro",
+    (status) =>
+      Effect.gen(function* () {
+        const subscription = yield* decodePolarSubscription(wire({ status }));
+        expect(polarGrantAction(subscription, NOW)).toEqual({
+          endsAt: NOW,
+          kind: "endAt",
+        });
       })
   );
 });

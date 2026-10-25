@@ -69,18 +69,19 @@ export const cleanupDeletedUserAnalytics = workflow.define({
 /** Erases the billing accounts and the Polar customers of a deleted user without gating Nakafa data cleanup. */
 export const cleanupDeletedUserBilling = workflow.define({
   args: {
+    authId: v.string(),
     userId: v.id("users"),
   },
   returns: v.null(),
   handler: async (step, args) => {
     await step.runAction(
       internal.billing.deletion.cleanupDeletedUserBilling,
-      { userId: args.userId },
+      { authId: args.authId, userId: args.userId },
       { retry: DELETED_USER_CLEANUP_RETRY }
     );
     await step.runAction(
       internal.billing.deletion.cleanupDeletedUserBilling,
-      { userId: args.userId },
+      { authId: args.authId, userId: args.userId },
       {
         name: "reconcile late billing writes",
         retry: DELETED_USER_CLEANUP_RETRY,

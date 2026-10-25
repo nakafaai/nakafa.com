@@ -8,6 +8,7 @@ const definitions = ConvexFunctionDefinitions.buildForGroup<typeof import("../..
 
 export default {
 ["readAccounts"]: RegisteredConvexFunction.register({ ...definitions["readAccounts"], handler: forward(definitions["readAccounts"].handler) }),
+["readSubscriptions"]: RegisteredConvexFunction.register({ ...definitions["readSubscriptions"], handler: forward(definitions["readSubscriptions"].handler) }),
 ["deleteRows"]: RegisteredConvexFunction.register({ ...definitions["deleteRows"], handler: forward(definitions["deleteRows"].handler) }),
 ["cleanupDeletedUserBilling"]: RegisteredConvexFunction.register({ ...definitions["cleanupDeletedUserBilling"], handler: forward(definitions["cleanupDeletedUserBilling"].handler) }),
 } as RegisteredFunctions.RegisteredFunctionsForGroupSpec<typeof import("../../../billing/deletion.spec")["default"]>;
