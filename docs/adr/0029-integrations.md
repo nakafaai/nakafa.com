@@ -369,21 +369,22 @@ The decision:
   leaves without that, and the Convex components above keep the package in the
   lock anyway.
 
-The 18 files that import `convex-helpers`:
+The 15 files that import `convex-helpers`:
 
 - `packages/backend/confect/functions.ts`: `customMutation`, `customCtx`, and
   `Triggers`, which wrap every mutation.
 - `packages/backend/components/betterAuth/deletion.ts`: `stream`.
-- Thirteen trigger files under `packages/backend/confect/triggers`, which import
-  only the `Change` type: `chats/chats.ts`, `comments/comments.ts`, `contents/views.ts`, `forums/postReactions.ts`,
-  `forums/posts.ts`, `forums/reactions.ts`, `materials/groups.ts`,
-  `schools/classMembers.ts`, `schools/classes.ts`, `schools/members.ts`,
-  `schools/schools.ts`, `subscriptions/subscriptions.ts`, and `tryouts/scores.ts`.
-  Those in `forums`, `materials`, and `schools` trigger on tables of the old
-  School, which the retirement in ADR 0011 removes.
-- Three test files: `packages/backend/confect/contents/metrics/apply.test.ts`
-  (`getOrThrow`), `packages/backend/confect/privacy/completion.test.ts` and
-  `packages/backend/test/content/verify.ts` (`parse`).
+- Four trigger files under `packages/backend/confect/triggers`, which import
+  only the `Change` type: `chats/chats.ts`, `comments/comments.ts`,
+  `contents/views.ts`, and `tryouts/scores.ts`.
+- Four Nina sealing modules, which import `parse`: `confect/nina/sealed.ts`,
+  `confect/nina/sealed/action.ts`, `confect/nina/sealed/rows.ts`, and
+  `confect/nina/sealed/skeleton.ts`.
+- Five test files: `packages/backend/confect/contents/metrics/apply.test.ts`
+  (`getOrThrow`), `packages/backend/confect/nina/sealed.test.ts` (`validate`),
+  `packages/backend/confect/privacy/completion.test.ts` (`parse`),
+  `packages/backend/test/content/verify.ts` (`parse`), and
+  `packages/backend/test/nina/seal.ts` (`parse`).
 
 ## Left to the change that builds it
 

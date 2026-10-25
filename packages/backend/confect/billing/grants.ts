@@ -12,15 +12,15 @@ import {
   billingOffer,
 } from "@repo/backend/confect/billing/catalog";
 import {
+  applyPlanChange,
+  type PlanSource,
+} from "@repo/backend/confect/billing/plan";
+import {
   BillingRowMissing,
   GrantOwnerMismatch,
 } from "@repo/backend/confect/billing/spec";
 import { readSubscription } from "@repo/backend/confect/billing/subscriptions";
 import type { Space } from "@repo/backend/confect/space";
-import {
-  applyPlanChange,
-  type PlanSource,
-} from "@repo/backend/confect/triggers/subscriptions/impl";
 import type { UserPlan } from "@repo/backend/confect/users/schema";
 import {
   Array as Arr,
@@ -35,6 +35,12 @@ import {
 const MAX_MEMBERSHIPS_PER_USER = 50;
 /** The members of a school one projection page reads, so a page stays inside one transaction. */
 const SCHOOL_PROJECTION_PAGE = 50;
+/**
+ * How long a renewed Pro grant runs past its paid period. Polar and Xendit report a
+ * renewal at the period end, so a projection that runs first would drop the plan to
+ * free and back; the grace keeps the plan until the renewal is recorded.
+ */
+const RENEWAL_GRACE_MS = 24 * 60 * 60 * 1000;
 
 /** The subscription a grant covers: its ID, its seats, and its paid period. */
 const SubscriptionGrantInput = Schema.Struct({
@@ -110,24 +116,24 @@ const grantFor = Effect.fn("billing.grants.grantFor")(function* (
  * Asks for the plans a grant's owner holds to be recomputed at once: one user for
  * a personal grant, every active member of the school for a school grant.
  */
-const scheduleProjection = Effect.fn("billing.grants.scheduleProjection")(
-  function* (owner: Space) {
-    const scheduler = yield* Scheduler;
-    if (owner.kind === "personal") {
-      yield* scheduler.runAfter(
-        Duration.zero,
-        refs.internal.billing.grants.project,
-        { userId: owner.userId }
-      );
-      return;
-    }
+export const scheduleProjection = Effect.fn(
+  "billing.grants.scheduleProjection"
+)(function* (owner: Space) {
+  const scheduler = yield* Scheduler;
+  if (owner.kind === "personal") {
     yield* scheduler.runAfter(
       Duration.zero,
-      refs.internal.billing.grants.projectSchool,
-      { tenantId: owner.tenantId, cursor: null }
+      refs.internal.billing.grants.project,
+      { userId: owner.userId }
     );
+    return;
   }
-);
+  yield* scheduler.runAfter(
+    Duration.zero,
+    refs.internal.billing.grants.projectSchool,
+    { tenantId: owner.tenantId, cursor: null }
+  );
+});
 
 /** Asks for every member of a school to have its plan recomputed, starting from the first page. */
 export const scheduleSchoolProjection = Effect.fn(
@@ -141,11 +147,13 @@ export const scheduleSchoolProjection = Effect.fn(
 });
 
 /**
- * Writes the grant of one subscription. Its window is the paid period, so a
- * subscription that stops renewing keeps its access until that period ends.
- * Writing it again renews the same grant rather than adding one, and the owner's
- * plans are recomputed at once. A subscription with no period end has no window,
- * so it writes no grant and returns null.
+ * Writes the grant of one active subscription. Its window is the paid period, so a
+ * subscription that stops renewing keeps its access until that period ends. An
+ * active subscription that renews keeps the grace after its period end; one that
+ * cancels at the period end keeps exactly that period. Writing it again renews the
+ * same grant rather than adding one, and the owner's plans are recomputed at once.
+ * A subscription with no period end has no window, so it writes no grant and
+ * returns null.
  */
 export const syncSubscriptionGrant = Effect.fn(
   "billing.grants.syncSubscription"
@@ -167,7 +175,9 @@ export const syncSubscriptionGrant = Effect.fn(
     id: subscriptionId,
     seats: subscription.quantity,
     validFrom: subscription.currentPeriodStart,
-    validTo: subscription.currentPeriodEnd,
+    validTo:
+      subscription.currentPeriodEnd +
+      (subscription.cancelAtPeriodEnd ? 0 : RENEWAL_GRACE_MS),
   });
   const existing = yield* reader
     .table("billingGrants")
@@ -194,7 +204,7 @@ export const syncSubscriptionGrant = Effect.fn(
 });
 
 /** The Pro grant of one user that runs latest at `now`, if any runs. */
-const latestPersonalGrant = Effect.fn("billing.grants.latestPersonal")(
+export const latestPersonalGrant = Effect.fn("billing.grants.latestPersonal")(
   function* (userId: Docs["users"]["_id"], now: number) {
     const reader = yield* DatabaseReader;
     return yield* reader

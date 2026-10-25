@@ -4,6 +4,7 @@ import {
   BillingCurrency,
   billingOffer,
 } from "@repo/backend/confect/billing/catalog";
+import { endSubscriptionGrant } from "@repo/backend/confect/billing/grantEnd";
 import { syncSubscriptionGrant } from "@repo/backend/confect/billing/grants";
 import { recordPayment } from "@repo/backend/confect/billing/payments";
 import {
@@ -85,6 +86,15 @@ const applyChange = Effect.fn("billing.xendit.process.applyChange")(function* (
   return applied.kind === "stale" ? ("stale" as const) : ("applied" as const);
 });
 
+/** Ends the grant of a subscription at the end of its paid period, when the subscription has one. */
+const endAtPaidPeriod = Effect.fn("billing.xendit.process.endAtPaidPeriod")(
+  function* (row: Docs["billingSubscriptions"]) {
+    if (row.currentPeriodEnd !== null) {
+      yield* endSubscriptionGrant(row._id, row.currentPeriodEnd);
+    }
+  }
+);
+
 /** A recurring plan turned on or off: its status changes, and its paid period stays as it is. */
 const applyPlan = Effect.fn("billing.xendit.process.plan")(function* (
   data: unknown,
@@ -100,13 +110,18 @@ const applyPlan = Effect.fn("billing.xendit.process.plan")(function* (
   }
   const row = subscription.value;
   yield* requireXenditAccount(row.accountId);
-  return yield* applyChange(row, {
+  const outcome = yield* applyChange(row, {
     status,
     cancelAtPeriodEnd: status === "canceled",
     currentPeriodStart: row.currentPeriodStart,
     currentPeriodEnd: row.currentPeriodEnd,
     providerUpdatedAt: DateTime.toEpochMillis(plan.value.updated),
   });
+  // A plan turned off keeps its paid period, and no period after it is granted.
+  if (outcome === "applied" && status === "canceled") {
+    yield* endAtPaidPeriod(row);
+  }
+  return outcome;
 });
 
 /** A cycle charged and paid: its payment is recorded, and its period becomes the paid window with a grant. */
@@ -180,13 +195,18 @@ const applyCycleFailed = Effect.fn("billing.xendit.process.failed")(function* (
   }
   const row = subscription.value;
   yield* requireXenditAccount(row.accountId);
-  return yield* applyChange(row, {
+  const outcome = yield* applyChange(row, {
     status: "pastDue",
     cancelAtPeriodEnd: row.cancelAtPeriodEnd,
     currentPeriodStart: row.currentPeriodStart,
     currentPeriodEnd: row.currentPeriodEnd,
     providerUpdatedAt: DateTime.toEpochMillis(cycle.updated),
   });
+  // The failed cycle is unpaid, so the grant ends with the paid period it renewed.
+  if (outcome === "applied") {
+    yield* endAtPaidPeriod(row);
+  }
+  return outcome;
 });
 
 /** Routes one decoded event to what it changes. Events that change no subscription are ignored. */

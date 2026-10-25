@@ -1,8 +1,6 @@
 import { QueryResult, useQuery } from "@confect/react";
 import { Diamond02Icon } from "@hugeicons/core-free-icons";
-import subscriptions from "@repo/backend/confect/_generated/refs/subscriptions";
-import { proProductIdFor } from "@repo/backend/confect/billing/polar/catalog";
-import { polarPublicKeys } from "@repo/backend/public";
+import billingRefs from "@repo/backend/confect/_generated/refs/billing";
 import { Button } from "@repo/design-system/components/ui/button";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { toast } from "@repo/design-system/lib/toast/notify";
@@ -52,10 +50,8 @@ function BillingAction({ variant }: { variant: PricingButtonVariant }) {
   const [isAuthPending, startAuthTransition] = useTransition();
 
   const subscription = useQuery(
-    subscriptions.queries.hasActiveSubscription,
-    currentUser
-      ? { productId: proProductIdFor(polarPublicKeys().VITE_POLAR_SERVER) }
-      : "skip"
+    billingRefs.queries.hasActiveSubscription,
+    currentUser ? {} : "skip"
   );
   if (QueryResult.isFailure(subscription)) {
     throw subscription.error;

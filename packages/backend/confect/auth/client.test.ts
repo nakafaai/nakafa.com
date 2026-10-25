@@ -20,9 +20,6 @@ const NOW = Date.UTC(2026, 8, 4, 10, 30, 0);
 const INVITE_TERM_MS = Duration.toMillis(INVITE_TERM);
 const claimRun = Ref.getFunctionReference(refs.internal.tenancy.claims.run);
 const claimName = getFunctionName(claimRun);
-const syncName = getFunctionName(
-  internal.customers.actions.internal.syncCustomer
-);
 
 /** A pending invite for this address, in a tenant with one Person nobody has claimed. */
 async function seedInvite(ctx: MutationCtx, email: string) {
@@ -87,7 +84,7 @@ const finalizeDeletedUserCleanupReference = makeFunctionReference<
     authId: string;
   },
   null
->("customers/deletion/workflow:finalizeDeletedUserCleanup");
+>("auth/deletion/workflow:finalizeDeletedUserCleanup");
 beforeEach(() => {
   vi.useFakeTimers();
   vi.setSystemTime(NOW);
@@ -126,10 +123,7 @@ describe("auth/client", () => {
       name: "Synthetic learner",
       username: "syntheticlearner",
     });
-    const jobNames = Arr.map(stored.jobs, ({ name }) => name);
-    expect(jobNames).toEqual([
-      getFunctionName(internal.customers.actions.internal.syncCustomer),
-    ]);
+    expect(Arr.map(stored.jobs, ({ name }) => name)).toEqual([]);
   });
   it("gives a new account the username of its name, numbered when another account holds it", async () => {
     const test = createConvexTestWithBetterAuth();
@@ -205,14 +199,6 @@ describe("auth/client", () => {
       name: "Updated name",
     });
     expect(stored.user).not.toHaveProperty("image");
-    expect(
-      Arr.filter(
-        stored.jobs,
-        ({ name }) =>
-          name ===
-          getFunctionName(internal.customers.actions.internal.syncCustomer)
-      )
-    ).toHaveLength(5);
   });
   it("copies the name and the photo that the update trigger receives as the rows before and after", async () => {
     const test = createConvexTestWithBetterAuth();
@@ -274,7 +260,7 @@ describe("auth/client", () => {
       user: await ctx.db.get("users", original._id),
     }));
     expect(stored.user?.name).toBe("Synthetic deleting");
-    expect(stored.jobs).toHaveLength(1);
+    expect(stored.jobs).toHaveLength(0);
   });
   it("ignores Better Auth users that do not have an app projection", async () => {
     const test = createConvexTestWithBetterAuth();
@@ -434,7 +420,6 @@ describe("auth/client", () => {
       );
     }
     expect(await scheduled(test, claimName)).toEqual([]);
-    expect(await scheduled(test, syncName)).toHaveLength(1);
     await test.mutation(async (ctx) => {
       const adapter = authComponent.adapter(ctx)(createAuthOptions(ctx));
       await adapter.update({
@@ -446,7 +431,6 @@ describe("auth/client", () => {
     expect(await scheduled(test, claimName)).toEqual([
       expect.objectContaining({ args: [{ cursor: null, userId: user._id }] }),
     ]);
-    expect(await scheduled(test, syncName)).toHaveLength(1);
   });
   it("asks for no claim when a verified account only changes its name", async () => {
     const test = createConvexTestWithBetterAuth();

@@ -66,7 +66,7 @@ it.each(["malformed", "unavailable"])(
         })
         .action(
           Ref.getFunctionReference(
-            refs.public.customers.actions.sessions.generateCustomerPortalUrl
+            refs.public.billing.sessions.generateCustomerPortalUrl
           ),
           {}
         )
@@ -90,9 +90,9 @@ it.each([
   [
     "action",
     Ref.getFunctionReference(
-      refs.public.customers.actions.sessions.generateCustomerPortalUrl
+      refs.public.billing.sessions.generateCustomerPortalUrl
     ),
-    refs.public.customers.actions.sessions.generateCustomerPortalUrl,
+    refs.public.billing.sessions.generateCustomerPortalUrl,
     {},
   ],
 ] as const)(

@@ -3,33 +3,44 @@ import { errors, type PolarCore } from "@polar-sh/sdk/2026-10";
 import { createCheckoutsService } from "@polar-sh/sdk/2026-10/services/checkouts";
 import { createCustomerSessionsService } from "@polar-sh/sdk/2026-10/services/customer_sessions";
 import { createCustomersService } from "@polar-sh/sdk/2026-10/services/customers";
+import { createSubscriptionsService } from "@polar-sh/sdk/2026-10/services/subscriptions";
 import { readPolarClient } from "@repo/backend/confect/billing/polar/client";
 import {
   decodePolarCheckout,
   decodePolarCustomer,
-  decodePolarCustomerPage,
   decodePolarCustomerSession,
   type PolarPayloadError,
 } from "@repo/backend/confect/billing/polar/payload";
 import {
-  type EnsurePolarCustomerInput,
   PolarCheckoutError,
   type PolarCheckoutInput,
   PolarCustomerError,
-  type PolarCustomerMetadataUpdateInput,
-  type PolarCustomerUpdateInput,
+  type PolarCustomerIdentity,
   PolarDeleteError,
   PolarDuplicateEmailError,
   PolarPortalError,
+  PolarSubscriptionListError,
   PolarUpdateError,
   polarCheckoutErrorCode,
   polarCustomerErrorCode,
   polarDeleteErrorCode,
   polarDuplicateEmailCode,
   polarPortalErrorCode,
+  polarSubscriptionListErrorCode,
   polarUpdateErrorCode,
 } from "@repo/backend/confect/billing/polar/spec";
-import { Array as Arr, Data, Effect, Option } from "effect";
+import { Array as Arr, Data, Effect } from "effect";
+
+/**
+ * The subscription statuses reconciliation lists: the ones that hold access or owe
+ * a payment. A subscription that ended keeps no grant to reconcile.
+ */
+const RECONCILED_SUBSCRIPTION_STATUSES = [
+  "active",
+  "trialing",
+  "past_due",
+  "unpaid",
+] as const;
 
 class PolarRequestError extends Data.TaggedError("PolarRequestError")<{
   readonly cause: unknown;
@@ -79,7 +90,10 @@ function isDuplicateEmail(error: unknown) {
   );
 }
 
-/** Live Polar operations keep recovery policy next to each domain operation. */
+/**
+ * The live Polar operations, each with its own failure mapping. The billing model
+ * calls them from actions only, because each one is a network request.
+ */
 export const polarGateway = {
   createCheckoutSession: Effect.fn("polar.createCheckoutSession")(function* (
     input: PolarCheckoutInput
@@ -100,12 +114,6 @@ export const polarGateway = {
           // Only the country is required at checkout; US customers still enter the full address.
           require_billing_address: false,
           success_url: input.successUrl,
-          ...(input.embedOrigin === undefined
-            ? {}
-            : { embed_origin: input.embedOrigin }),
-          ...(input.subscriptionId === undefined
-            ? {}
-            : { subscription_id: input.subscriptionId }),
         }),
       decodePolarCheckout
     ).pipe(
@@ -120,7 +128,7 @@ export const polarGateway = {
     );
   }),
   createCustomer: Effect.fn("polar.createCustomer")(function* (
-    input: EnsurePolarCustomerInput
+    input: PolarCustomerIdentity
   ) {
     return yield* request(
       (client) =>
@@ -130,7 +138,6 @@ export const polarGateway = {
           name: input.name,
           // Polar leaves the type optional, so Nakafa always states individual.
           type: "individual",
-          ...(input.metadata === undefined ? {} : { metadata: input.metadata }),
         }),
       decodePolarCustomer
     ).pipe(
@@ -170,6 +177,7 @@ export const polarGateway = {
       );
     }
   ),
+  /** Deletes the customer and anonymizes its personal data. A customer Polar no longer has counts as deleted. */
   deleteCustomer: Effect.fn("polar.deleteCustomer")(function* (id: string) {
     return yield* call((client) =>
       createCustomersService(client).delete(id, { anonymize: true })
@@ -188,30 +196,7 @@ export const polarGateway = {
       )
     );
   }),
-  findCustomerByEmail: Effect.fn("polar.findCustomerByEmail")(function* (
-    email: string
-  ) {
-    const page = yield* request(
-      (client) =>
-        createCustomersService(client).list({
-          email,
-          limit: 1,
-          // An empty list sends no sort, so the SDK's -created_at default does not apply.
-          sorting: [],
-        }),
-      decodePolarCustomerPage
-    ).pipe(
-      Effect.mapError(
-        ({ cause }) =>
-          new PolarCustomerError({
-            code: polarCustomerErrorCode,
-            cause,
-            message: "Failed to find Polar customer by email.",
-          })
-      )
-    );
-    return Option.getOrNull(Arr.head(page.items));
-  }),
+  /** The customer Polar holds for a Nakafa user ID, or none when Polar holds none. */
   getCustomerByExternalId: Effect.fn("polar.getCustomerByExternalId")(
     function* (externalId: string) {
       return yield* request(
@@ -232,9 +217,10 @@ export const polarGateway = {
       );
     }
   ),
-  getCustomerById: Effect.fn("polar.getCustomerById")(function* (id: string) {
+  /** The customer Polar holds under its own ID, or none when Polar holds none. */
+  getCustomer: Effect.fn("polar.getCustomer")(function* (customerId: string) {
     return yield* request(
-      (client) => createCustomersService(client).get(id),
+      (client) => createCustomersService(client).get(customerId),
       decodePolarCustomer
     ).pipe(
       Effect.catchTag("PolarRequestError", ({ cause }) =>
@@ -244,24 +230,45 @@ export const polarGateway = {
               new PolarCustomerError({
                 code: polarCustomerErrorCode,
                 cause,
-                message: "Failed to load Polar customer by ID.",
+                message: "Failed to load Polar customer.",
               })
             )
       )
     );
   }),
-  updateCustomer: Effect.fn("polar.updateCustomer")(function* (
-    input: PolarCustomerUpdateInput
+  /** One page of the subscriptions that hold access or owe a payment, with the last page Polar lists. */
+  listSubscriptions: Effect.fn("polar.listSubscriptions")(function* (
+    page: number,
+    limit: number
   ) {
+    const response = yield* call((client) =>
+      createSubscriptionsService(client).list({
+        limit,
+        page,
+        status: [...RECONCILED_SUBSCRIPTION_STATUSES],
+      })
+    ).pipe(
+      Effect.mapError(
+        ({ cause }) =>
+          new PolarSubscriptionListError({
+            code: polarSubscriptionListErrorCode,
+            cause,
+            message: "Failed to list Polar subscriptions.",
+          })
+      )
+    );
+    return { items: response.items, maxPage: response.pagination.max_page };
+  }),
+  updateCustomer: Effect.fn("polar.updateCustomer")(function* (input: {
+    readonly customerId: string;
+    readonly identity: PolarCustomerIdentity;
+  }) {
     return yield* request(
       (client) =>
-        createCustomersService(client).update(input.customer.id, {
-          email: input.next.email,
-          external_id: input.next.externalId,
-          name: input.next.name,
-          ...(input.next.metadata === undefined
-            ? {}
-            : { metadata: input.next.metadata }),
+        createCustomersService(client).update(input.customerId, {
+          email: input.identity.email,
+          external_id: input.identity.externalId,
+          name: input.identity.name,
         }),
       decodePolarCustomer
     ).pipe(
@@ -271,26 +278,6 @@ export const polarGateway = {
             code: polarUpdateErrorCode,
             cause,
             message: "Failed to sync customer data in Polar.",
-          })
-      )
-    );
-  }),
-  updateCustomerMetadata: Effect.fn("polar.updateCustomerMetadata")(function* (
-    input: PolarCustomerMetadataUpdateInput
-  ) {
-    return yield* request(
-      (client) =>
-        createCustomersService(client).update(input.polarCustomerId, {
-          metadata: input.metadata,
-        }),
-      decodePolarCustomer
-    ).pipe(
-      Effect.mapError(
-        ({ cause }) =>
-          new PolarUpdateError({
-            code: polarUpdateErrorCode,
-            cause,
-            message: "Failed to update customer metadata.",
           })
       )
     );

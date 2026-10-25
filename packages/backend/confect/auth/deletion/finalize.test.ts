@@ -17,7 +17,7 @@ import { Array as Arr, Effect } from "effect";
 const NOW = Date.UTC(2026, 6, 28, 10, 0, 0);
 const ATTEMPT_ID = "019fa44c-02be-7cd0-a4ed-61a7af8e0620";
 const launchCleanupName = Ref.getConvexFunctionName(
-  refs.internal.customers.deletion.workflow.launchDeletedUserCleanup
+  refs.internal.auth.deletion.workflow.launchDeletedUserCleanup
 );
 describe("auth/deletion/finalize", () => {
   afterEach(() => vi.useRealTimers());

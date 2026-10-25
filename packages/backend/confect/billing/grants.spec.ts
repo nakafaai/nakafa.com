@@ -1,7 +1,7 @@
 import { FunctionSpec, GroupSpec } from "@confect/core";
 import { Id as IdSchema } from "@repo/backend/confect/_generated/id";
+import { PlanSyncIoError } from "@repo/backend/confect/billing/spec";
 import Atomic from "@repo/backend/confect/middleware/atomic.spec";
-import { SubscriptionPlanSyncIoError } from "@repo/backend/confect/triggers/subscriptions/spec";
 import { Schema } from "effect";
 
 /**
@@ -17,7 +17,7 @@ export default GroupSpec.make()
         userId: IdSchema("users"),
       }),
       returns: () => Schema.Null,
-      error: () => SubscriptionPlanSyncIoError,
+      error: () => PlanSyncIoError,
     }).middleware(Atomic)
   )
   .addFunction(
@@ -28,6 +28,6 @@ export default GroupSpec.make()
         cursor: Schema.NullOr(Schema.String),
       }),
       returns: () => Schema.Null,
-      error: () => SubscriptionPlanSyncIoError,
+      error: () => PlanSyncIoError,
     }).middleware(Atomic)
   );

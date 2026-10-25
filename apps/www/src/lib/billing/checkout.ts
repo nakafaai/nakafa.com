@@ -1,6 +1,6 @@
 import { useAction } from "@confect/react";
 import type { ActiveAppLocaleCode } from "@nakafa/aksara-contracts/locale";
-import customers from "@repo/backend/confect/_generated/refs/customers";
+import billing from "@repo/backend/confect/_generated/refs/billing";
 import { type ToastCopy, toast } from "@repo/design-system/lib/toast/notify";
 import { useConvex } from "convex/react";
 import { Effect, Schema } from "effect";
@@ -23,12 +23,8 @@ type BillingSource = typeof BillingSourceSchema.Type;
 export function useBillingNavigation() {
   const [isPending, startTransition] = useTransition();
   const convex = useConvex();
-  const createCheckout = useAction(
-    customers.actions.sessions.generateCheckoutLink
-  );
-  const createPortal = useAction(
-    customers.actions.sessions.generateCustomerPortalUrl
-  );
+  const createCheckout = useAction(billing.sessions.generateCheckoutLink);
+  const createPortal = useAction(billing.sessions.generateCustomerPortalUrl);
 
   function runBillingRequest<E>(
     request: Effect.Effect<BillingDestination, E>,
@@ -58,6 +54,12 @@ export function useBillingNavigation() {
     );
   }
 
+  /** The customer portal, where a user who already holds Pro manages the plan. */
+  const portalRequest = () =>
+    Effect.tryPromise(() => createPortal({})).pipe(
+      Effect.flatMap(Effect.fromResult)
+    );
+
   return {
     isPending,
     openCheckout: ({
@@ -70,7 +72,11 @@ export function useBillingNavigation() {
             locale,
             successUrl: checkoutReturnUrl(window.location.href),
           })
-        ).pipe(Effect.flatMap(Effect.fromResult)),
+        ).pipe(
+          Effect.flatMap(Effect.fromResult),
+          // A user who already holds Pro is routed to the portal instead of a second checkout.
+          Effect.catchTag("ProAlreadyHeld", portalRequest)
+        ),
         {
           ...failure,
           copy: {
@@ -80,17 +86,12 @@ export function useBillingNavigation() {
         }
       ),
     openPortal: (source: BillingSource) =>
-      runBillingRequest(
-        Effect.tryPromise(() => createPortal({})).pipe(
-          Effect.flatMap(Effect.fromResult)
-        ),
-        {
-          ...source,
-          copy: {
-            description: "portal-error.description",
-            title: "portal-error.title",
-          },
-        }
-      ),
+      runBillingRequest(portalRequest(), {
+        ...source,
+        copy: {
+          description: "portal-error.description",
+          title: "portal-error.title",
+        },
+      }),
   };
 }

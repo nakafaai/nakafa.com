@@ -47,8 +47,6 @@ import contentState from "./tables/contentState";
 import creditResetPeriods from "./tables/creditResetPeriods";
 import creditTransactions from "./tables/creditTransactions";
 import curriculumRoutes from "./tables/curriculumRoutes";
-import customerDeletionTombstones from "./tables/customerDeletionTombstones";
-import customers from "./tables/customers";
 import editorClients from "./tables/editorClients";
 import editorDocuments from "./tables/editorDocuments";
 import editorSnapshots from "./tables/editorSnapshots";
@@ -96,7 +94,6 @@ import quranRows from "./tables/quranRows";
 import quranSearch from "./tables/quranSearch";
 import schoolLogins from "./tables/schoolLogins";
 import snapshotBatches from "./tables/snapshotBatches";
-import subscriptions from "./tables/subscriptions";
 import tenantAssignments from "./tables/tenantAssignments";
 import tenantCohortMembers from "./tables/tenantCohortMembers";
 import tenantCohorts from "./tables/tenantCohorts";
@@ -174,8 +171,6 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly creditResetPeriods: typeof creditResetPeriods;
   readonly creditTransactions: typeof creditTransactions;
   readonly curriculumRoutes: typeof curriculumRoutes;
-  readonly customerDeletionTombstones: typeof customerDeletionTombstones;
-  readonly customers: typeof customers;
   readonly editorClients: typeof editorClients;
   readonly editorDocuments: typeof editorDocuments;
   readonly editorSnapshots: typeof editorSnapshots;
@@ -223,7 +218,6 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   readonly quranSearch: typeof quranSearch;
   readonly schoolLogins: typeof schoolLogins;
   readonly snapshotBatches: typeof snapshotBatches;
-  readonly subscriptions: typeof subscriptions;
   readonly tenantAssignments: typeof tenantAssignments;
   readonly tenantCohortMembers: typeof tenantCohortMembers;
   readonly tenantCohorts: typeof tenantCohorts;
@@ -300,8 +294,6 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   creditResetPeriods,
   creditTransactions,
   curriculumRoutes,
-  customerDeletionTombstones,
-  customers,
   editorClients,
   editorDocuments,
   editorSnapshots,
@@ -349,7 +341,6 @@ const databaseSchema: $DatabaseSchema.DatabaseSchema<{
   quranSearch,
   schoolLogins,
   snapshotBatches,
-  subscriptions,
   tenantAssignments,
   tenantCohortMembers,
   tenantCohorts,

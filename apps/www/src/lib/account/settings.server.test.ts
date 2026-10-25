@@ -1,9 +1,9 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it } from "@effect/vitest";
 import auth from "@repo/backend/confect/_generated/refs/auth";
+import billing from "@repo/backend/confect/_generated/refs/billing";
 import learningPreferences from "@repo/backend/confect/_generated/refs/learningPreferences";
 import nina from "@repo/backend/confect/_generated/refs/nina";
-import subscriptions from "@repo/backend/confect/_generated/refs/subscriptions";
 import { isNotFound } from "@tanstack/react-router";
 import { Array as Arr, Effect, Option } from "effect";
 import {
@@ -170,7 +170,7 @@ describe("memoryScreenHandler", () => {
 describe("subscriptionsScreenHandler", () => {
   it("answers whether the visitor holds the Pro subscription and the head", async () => {
     sessionWith(Option.some("token"));
-    answerQueries([[subscriptions.queries.hasActiveSubscription, true]]);
+    answerQueries([[billing.queries.hasActiveSubscription, true]]);
     const screen = await subscriptionsScreenHandler({ data: { locale: "en" } });
     expect(screen).toMatchObject({
       subscription: true,

@@ -4,12 +4,14 @@ import {
   ACCOUNT_DELETION_ATTEMPT_SWEEP_INTERVAL_HOURS,
   ACCOUNT_DELETION_RECOVERY_SWEEP_INTERVAL_MINUTES,
 } from "@repo/backend/confect/auth/deletion/constants";
+import { BILLING_EVENT_SWEEP_INTERVAL_MINUTES } from "@repo/backend/confect/billing/sweep";
 import { PRUNE_INTERVAL } from "@repo/backend/confect/editor/prune";
 import { SWEEP_INTERVAL } from "@repo/backend/confect/nina/deadline";
 import { Cron, Duration } from "effect";
 
 const { internal } = refs;
 const BILLING_EVENT_CLEANUP_INTERVAL_HOURS = 24;
+const POLAR_RECONCILE_INTERVAL_HOURS = 24;
 const CONTENT_ANALYTICS_BACKSTOP_INTERVAL_HOURS = 1;
 const CONTENT_RELEASE_COMPACTION_INTERVAL_MINUTES = 10;
 const CREDIT_RESET_PERIOD_RECONCILE_INTERVAL_MINUTES = 10;
@@ -24,6 +26,22 @@ const VISIT_EXPIRY_SWEEP_INTERVAL_HOURS = 1;
  * never starts.
  */
 export default CronJobs.make()
+  .add(
+    CronJob.make(
+      "sweep billing webhooks",
+      Duration.minutes(BILLING_EVENT_SWEEP_INTERVAL_MINUTES),
+      internal.billing.events.sweep,
+      {}
+    )
+  )
+  .add(
+    CronJob.make(
+      "reconcile Polar subscriptions",
+      Duration.hours(POLAR_RECONCILE_INTERVAL_HOURS),
+      internal.billing.reconcile.run,
+      { page: 1 }
+    )
+  )
   .add(
     CronJob.make(
       "delete expired billing webhooks",
