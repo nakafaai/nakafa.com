@@ -22,8 +22,10 @@ import {
 import { JsonTextSchema } from "@repo/utilities/json";
 import {
   Array as Arr,
+  ConfigProvider,
   Effect,
   FileSystem,
+  Layer,
   MutableList,
   Option,
   Schema,
@@ -33,6 +35,11 @@ const mocks = vi.hoisted(() => ({ command: vi.fn() }));
 vi.mock("@repo/backend/scripts/content/acceptance/command", () => ({
   runAcceptanceCommand: mocks.command,
 }));
+// No test reads the shell's ACCEPTANCE_PORT: each one names the port it runs with.
+const services = Layer.merge(
+  nodeServicesLayer,
+  ConfigProvider.layer(ConfigProvider.fromEnvRecord({}))
+);
 const encodeJson = Schema.encodeEffect(JsonTextSchema);
 const encodeRuntime = Schema.encodeEffect(LocalRuntimeJson);
 const environment =
@@ -95,6 +102,7 @@ describe("owned signed acceptance runtime", () => {
             stdin: expect.stringMatching(LOCAL_JWKS_LINE),
           })
         );
+        expect(runtime.app).toBe("http://localhost:3000");
         expect(localApplicationEnvironment(runtime)).toMatchObject({
           CONVEX_AGENT_MODE: "anonymous",
           VITE_SITE_URL: "http://localhost:3000",
@@ -122,7 +130,38 @@ describe("owned signed acceptance runtime", () => {
         expect(yield* fs.exists(`${root}/packages/backend/.convex`)).toBe(true);
         expect(yield* readLocalRuntime(root)).toBeUndefined();
         yield* cleanLocalRuntime(root);
-      }).pipe(Effect.provide(nodeServicesLayer))
+      }).pipe(Effect.provide(services))
+  );
+
+  it.live(
+    "bakes the origin that ACCEPTANCE_PORT names into the backend, the manifest, and the app",
+    () =>
+      Effect.gen(function* () {
+        initialize();
+        const { root } = yield* fixture;
+        yield* reserveLocalRuntime(root);
+        const runtime = yield* initializeLocalRuntime(root).pipe(
+          Effect.provideService(
+            ConfigProvider.ConfigProvider,
+            ConfigProvider.fromEnvRecord({ ACCEPTANCE_PORT: "3100" })
+          )
+        );
+        expect(runtime.app).toBe("http://localhost:3100");
+        expect(mocks.command).toHaveBeenLastCalledWith(
+          expect.objectContaining({
+            stdin: expect.stringContaining(
+              `SITE_URL=${yield* encodeJson("http://localhost:3100")}`
+            ),
+          })
+        );
+        expect(yield* readLocalRuntime(root)).toEqual(runtime);
+        expect(localApplicationEnvironment(runtime)).toMatchObject({
+          SITE_URL: "http://localhost:3100",
+          VITE_POSTHOG_UI_HOST: "http://localhost:3100",
+          VITE_SITE_URL: "http://localhost:3100",
+        });
+        yield* cleanLocalRuntime(root);
+      }).pipe(Effect.provide(services))
   );
 
   it.live(
@@ -153,7 +192,7 @@ describe("owned signed acceptance runtime", () => {
           _tag: "AcceptanceRuntimeError",
           message: expect.stringContaining("in use"),
         });
-      }).pipe(Effect.provide(nodeServicesLayer))
+      }).pipe(Effect.provide(services))
   );
 
   for (const occupied of ["query", "site"]) {
@@ -180,7 +219,7 @@ describe("owned signed acceptance runtime", () => {
           expect(yield* isPortOccupied(port)).toBe(true);
           expect(yield* readLocalRuntime(root)).toEqual(runtime);
           expect(yield* leaseClaims(runtime.directory)).toEqual([]);
-        }).pipe(Effect.provide(nodeServicesLayer))
+        }).pipe(Effect.provide(services))
     );
   }
 
@@ -193,7 +232,7 @@ describe("owned signed acceptance runtime", () => {
         _tag: "AcceptanceRuntimeError",
       });
       expect(yield* fs.exists(`${root}/shared/acceptance`)).toBe(false);
-    }).pipe(Effect.provide(nodeServicesLayer))
+    }).pipe(Effect.provide(services))
   );
 
   it.live("preserves a replaced reservation before cleanup", () =>
@@ -206,7 +245,7 @@ describe("owned signed acceptance runtime", () => {
         yield* releaseLocalRuntime(reserved).pipe(Effect.flip)
       ).toMatchObject({ _tag: "AcceptanceRuntimeError" });
       expect(yield* fs.exists(reserved.directory)).toBe(true);
-    }).pipe(Effect.provide(nodeServicesLayer))
+    }).pipe(Effect.provide(services))
   );
 
   for (const change of ["file", "symlink", "missing-identity"]) {
@@ -245,7 +284,7 @@ describe("owned signed acceptance runtime", () => {
         ).toMatchObject({ _tag: "AcceptanceRuntimeError" });
         expect(yield* fs.exists(reserved.directory)).toBe(true);
         expect(yield* fs.exists(`${root}/original`)).toBe(true);
-      }).pipe(Effect.provide(nodeServicesLayer))
+      }).pipe(Effect.provide(services))
     );
   }
 
@@ -284,7 +323,7 @@ describe("owned signed acceptance runtime", () => {
             )
           ).toMatchObject({ _tag: "AcceptanceRuntimeError" });
           yield* releaseLocalRuntime(reserved);
-        }).pipe(Effect.provide(nodeServicesLayer))
+        }).pipe(Effect.provide(services))
     );
   }
 
@@ -361,7 +400,7 @@ describe("owned signed acceptance runtime", () => {
           _tag: "AcceptanceRuntimeError",
         });
         expect(yield* fs.exists(runtime.directory)).toBe(true);
-      }).pipe(Effect.provide(nodeServicesLayer))
+      }).pipe(Effect.provide(services))
     );
   }
 
@@ -385,7 +424,7 @@ describe("owned signed acceptance runtime", () => {
             yield* initializeLocalRuntime(root).pipe(Effect.flip)
           ).toMatchObject({ _tag: "AcceptanceRuntimeError" });
           yield* releaseLocalRuntime(reserved);
-        }).pipe(Effect.provide(nodeServicesLayer))
+        }).pipe(Effect.provide(services))
     );
   }
 
@@ -400,7 +439,7 @@ describe("owned signed acceptance runtime", () => {
       for (const temporaryRoot of MutableList.toArray(temporaryRoots)) {
         expect(yield* fs.exists(temporaryRoot)).toBe(false);
       }
-    }).pipe(Effect.provide(nodeServicesLayer))
+    }).pipe(Effect.provide(services))
   );
 
   for (const [title, statuses, calls, last] of [
@@ -417,7 +456,7 @@ describe("owned signed acceptance runtime", () => {
         );
         expect(mocks.command).toHaveBeenCalledTimes(calls);
         expect(failure.message).toContain(`returned ${last}`);
-      }).pipe(Effect.provide(nodeServicesLayer))
+      }).pipe(Effect.provide(services))
     );
   }
 });

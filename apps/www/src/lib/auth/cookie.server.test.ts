@@ -1,7 +1,11 @@
 // @vitest-environment node
 
 import { afterEach, describe, expect, it } from "@effect/vitest";
-import { readSessionCookie } from "@/lib/auth/cookie.server";
+import {
+  isConvexTokenCookieName,
+  readConvexTokenCookie,
+  readSessionCookie,
+} from "@/lib/auth/cookie.server";
 
 const PRODUCTION_COOKIE = "__Secure-better-auth.session_token=production.value";
 const STAGING_COOKIE = "__Secure-nakafa-dev.session_token=staging.value";
@@ -30,5 +34,28 @@ describe("readSessionCookie", () => {
     expect(
       readSessionCookie(new Headers({ cookie: PRODUCTION_COOKIE }))
     ).toBeNull();
+  });
+});
+
+describe("the Convex token cookie", () => {
+  it("reads and recognizes the site's own token cookie, with or without the secure prefix", () => {
+    vi.stubEnv("SITE_URL", "https://staging.nakafa.com");
+
+    expect(
+      readConvexTokenCookie(
+        new Headers({
+          cookie:
+            "__Secure-better-auth.convex_jwt=production; __Secure-nakafa-dev.convex_jwt=staging",
+        })
+      )
+    ).toBe("staging");
+    expect(isConvexTokenCookieName("__Secure-nakafa-dev.convex_jwt")).toBe(
+      true
+    );
+    expect(isConvexTokenCookieName("nakafa-dev.convex_jwt")).toBe(true);
+    expect(isConvexTokenCookieName("__Secure-better-auth.convex_jwt")).toBe(
+      false
+    );
+    expect(isConvexTokenCookieName("convex_jwt")).toBe(false);
   });
 });
