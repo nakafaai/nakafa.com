@@ -31,6 +31,15 @@ const MANIFEST_HEADERS: readonly WwwHeader[] = [
   { key: "Content-Type", value: "application/manifest+json" },
 ];
 
+/**
+ * A static answer is binary, but the CDN compresses only text types, and an answer
+ * is mostly text: one tenth of its bytes after compression. The browser reads it
+ * as bytes, so the declared type changes nothing it decodes.
+ */
+const STATIC_ANSWER_HEADERS: readonly WwwHeader[] = [
+  { key: "Content-Type", value: "text/plain; charset=utf-8" },
+];
+
 const SOCIAL_IMAGE_HEADERS: readonly WwwHeader[] = [
   { key: "Cache-Control", value: SOCIAL_IMAGE_CACHE_CONTROL },
 ];
@@ -58,5 +67,6 @@ export const STATIC_HEADER_RULES: readonly HeaderRule[] = [
   { path: "/rss.xml", headers: RSS_HEADERS },
   { path: "/llms.txt", headers: LLMS_HEADERS },
   { path: "/manifest.webmanifest", headers: MANIFEST_HEADERS },
+  { path: "/_data/*", headers: STATIC_ANSWER_HEADERS },
   ...SOCIAL_IMAGE_RULES,
 ];

@@ -94,6 +94,8 @@ const PayloadJson = Schema.fromJsonString(Schema.Unknown);
 /** The headers of a server function request as the browser sends it. */
 const SERVER_FUNCTION_REQUEST_HEADERS = {
   accept: "application/x-tss-framed, application/x-ndjson, application/json",
+  // Start's CSRF check accepts a server function request from the page's own site.
+  "sec-fetch-site": "same-origin",
   "x-tsr-serverFn": "true",
 };
 
@@ -150,8 +152,11 @@ const writeStaticAnswer = (
       response.headers["x-tss-serialized"] === undefined ||
       response.headers["x-tss-raw"] !== undefined
     ) {
+      const text = yield* response.text;
       return yield* Effect.die(
-        `The answer of ${call.url} is not a serialized answer (${response.status}).`
+        new Error(
+          `The answer of ${call.url} for ${address.search.slice(0, 200)} is not a serialized answer: ${response.status} ${contentType ?? "no type"}: ${text.slice(0, 300)}`
+        )
       );
     }
     const body = new Uint8Array(yield* response.arrayBuffer);
