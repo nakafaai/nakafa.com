@@ -19,6 +19,7 @@ import {
   readSlashRedirectResponse,
   readSpellingRedirectResponse,
 } from "@/lib/routing/redirect";
+import { HAS_STATIC_RELEASE } from "@/lib/routing/release";
 import { isRenderedRoutePath } from "@/lib/routing/rendered";
 import { readSchoolRefusal } from "@/lib/routing/school/refusal";
 import { isUnmatchedPath } from "@/lib/routing/unmatched";
@@ -139,7 +140,7 @@ export const answerRequest = Effect.fn("www.routing.answer.request")(function* (
   request: Request,
   route: RouterHandler
 ) {
-  if (isUnmatchedPath(new URL(request.url).pathname)) {
+  if (HAS_STATIC_RELEASE && isUnmatchedPath(new URL(request.url).pathname)) {
     return yield* answerUnmatchedRequest(request);
   }
 

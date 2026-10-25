@@ -31,6 +31,15 @@ const routes = vi.hoisted(() => ({
   },
 }));
 
+const release = vi.hoisted(() => ({ hasStaticRelease: true }));
+
+vi.mock("@/lib/routing/release", () => ({
+  /** Reads the flag of the test, so one test can run without the static release. */
+  get HAS_STATIC_RELEASE() {
+    return release.hasStaticRelease;
+  },
+}));
+
 vi.mock("@/router", () => ({
   /** Names the routes of the stand-in tree. */
   getRouter: () => ({ routesById: routes }),
@@ -59,6 +68,14 @@ describe("rendered route templates", () => {
     expect(
       Arr.filter(ROUTE_TEMPLATES, (template) => template === "/$locale/chat")
     ).toHaveLength(1);
+  });
+
+  it("renders every route when the build has no static release", () => {
+    release.hasStaticRelease = false;
+
+    expect(isRenderedRoutePath("/en/quran/2")).toBe(true);
+    expect(isRenderedRoutePath("/en/wp-login.php")).toBe(true);
+    release.hasStaticRelease = true;
   });
 
   it("classifies a locale address by its rendered route", () => {

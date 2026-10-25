@@ -19,6 +19,15 @@ const reporting = vi.hoisted(() => ({ report: vi.fn() }));
 const retired = vi.hoisted(() => ({ read: vi.fn() }));
 const source = vi.hoisted(() => ({ read: vi.fn() }));
 
+const release = vi.hoisted(() => ({ hasStaticRelease: true }));
+
+vi.mock("@/lib/routing/release", () => ({
+  /** Reads the flag of the test, so one test can run without the static release. */
+  get HAS_STATIC_RELEASE() {
+    return release.hasStaticRelease;
+  },
+}));
+
 vi.mock("@/lib/routing/rendered", async () => {
   const { isRenderedPath } = await import("@/lib/routing/template");
   return {
@@ -133,6 +142,7 @@ function routedRequest(handle: ReturnType<typeof router>) {
 }
 
 beforeEach(() => {
+  release.hasStaticRelease = true;
   assets.fetch.mockReset();
   migration.read.mockReset().mockReturnValue(Effect.succeed(null));
   projected.read.mockReset().mockReturnValue(Effect.succeed(null));
@@ -274,6 +284,20 @@ describe("decisions before the router", () => {
 
         expect(response.headers.get("content-language")).toBe("en");
         expect(routedRequest(handle).url).toBe(`${ORIGIN}/_missing`);
+      })
+  );
+
+  it.effect(
+    "renders an unknown address when the build has no static release",
+    () =>
+      Effect.gen(function* () {
+        release.hasStaticRelease = false;
+
+        const { handle, response } = yield* served("/.env");
+
+        expect(response.status).toBe(200);
+        expect(assets.fetch).not.toHaveBeenCalled();
+        expect(handle).toHaveBeenCalledTimes(1);
       })
   );
 
