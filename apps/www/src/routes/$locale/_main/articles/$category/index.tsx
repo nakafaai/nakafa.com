@@ -39,6 +39,7 @@ import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { createSeoHead, toRouterHead } from "@/lib/seo/head";
 import { getOgUrl } from "@/lib/seo/social";
 import { serverHandler } from "@/lib/server/fn";
+import { readStaticData } from "@/lib/static/data";
 
 /** The first page of a category, which the reader needs before it can answer. */
 const FIRST_PAGE: ArticlePageCursor = {
@@ -151,8 +152,10 @@ export const Route = createFileRoute("/$locale/_main/articles/$category/")({
     release: search.release,
   }),
   loader: async ({ params, deps }) => {
-    const read = await readArticleCategory({
-      data: { ...deps, category: params.category, locale: params.locale },
+    const read = await readStaticData(readArticleCategory, {
+      ...deps,
+      category: params.category,
+      locale: params.locale,
     });
     return Match.value(read).pipe(
       Match.tagsExhaustive({

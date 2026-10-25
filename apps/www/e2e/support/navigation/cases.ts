@@ -1,6 +1,13 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 import { TAILWIND_MEDIA_QUERIES } from "@repo/design-system/lib/breakpoints";
-import { Duration, Effect, Schedule, Schema } from "effect";
+import {
+  Array as Arr,
+  Duration,
+  Effect,
+  Option,
+  Schedule,
+  Schema,
+} from "effect";
 import { pinnedRoutes } from "@/e2e/support/corpus";
 import { activateUntilVisible, press } from "@/e2e/support/input";
 import { pressPreloaded } from "@/e2e/support/navigation/prefetch";
@@ -69,6 +76,8 @@ const NavigationTargetSchema = Schema.Struct({
   name: Schema.String,
   shell: InstantShellSchema,
   sourceHref: Schema.String,
+  /** The shell of the page the reader starts from. */
+  sourceShell: InstantShellSchema,
 });
 
 type NavigationTarget = typeof NavigationTargetSchema.Type;
@@ -166,22 +175,23 @@ const readVisibleLinkedHref = Effect.fn("NakafaE2E.readVisibleLinkedHref")(
     hrefPattern: RegExp,
     skipHref?: string
   ) {
-    const candidates = page.locator("a[href]");
-    const candidateCount = yield* Effect.promise(() => candidates.count());
-
-    for (let index = 0; index < candidateCount; index += 1) {
-      const candidate = candidates.nth(index);
-      const href = yield* Effect.promise(() => candidate.getAttribute("href"));
-      if (!href || href === skipHref) {
-        continue;
-      }
-      if (!hrefPattern.test(href)) {
-        continue;
-      }
-      const isVisible = yield* Effect.promise(() => candidate.isVisible());
-      if (isVisible) {
-        return href;
-      }
+    // One read of every link's address and visibility, so a page with hundreds
+    // of links costs one round trip instead of two per link.
+    const links = yield* Effect.promise(() =>
+      page.locator("a[href]").evaluateAll((nodes) =>
+        nodes.map((node) => ({
+          href: node.getAttribute("href") ?? "",
+          visible: node.checkVisibility(),
+        }))
+      )
+    );
+    const found = Arr.findFirst(
+      links,
+      ({ href, visible }) =>
+        visible && href !== "" && href !== skipHref && hrefPattern.test(href)
+    );
+    if (Option.isSome(found)) {
+      return found.value.href;
     }
 
     return yield* new NavigationLinkMissing({
@@ -280,7 +290,8 @@ const navigateClient = Effect.fn("NakafaE2E.navigateClient")(function* (
           });
         })
         .then(() => expectMarker(page, target.marker))
-    )
+    ),
+    target.sourceShell === target.shell ? 1 : 2
   );
   yield* assertSettledNavigation(page, target);
 });
@@ -302,6 +313,7 @@ const resolveHomepage: NavigationResolve = Effect.fn(
     name: "homepage",
     shell: "marketing",
     sourceHref: appRoutes.quran,
+    sourceShell: "app",
   } satisfies NavigationTarget)
 );
 
@@ -313,6 +325,7 @@ const resolveQuran: NavigationResolve = Effect.fn("NakafaE2E.resolveQuran")(
       name: "Quran",
       shell: "app",
       sourceHref: appRoutes.quranId,
+      sourceShell: "app",
     } satisfies NavigationTarget)
 );
 
@@ -324,6 +337,7 @@ const resolveTryout: NavigationResolve = Effect.fn("NakafaE2E.resolveTryout")(
       name: "tryout",
       shell: "app",
       sourceHref: "/en",
+      sourceShell: "marketing",
     } satisfies NavigationTarget)
 );
 
@@ -342,6 +356,7 @@ const resolveCurriculum: NavigationResolve = Effect.fn(
     name: "curriculum",
     shell: "app",
     sourceHref,
+    sourceShell: "marketing",
   } satisfies NavigationTarget;
 });
 
@@ -364,6 +379,7 @@ const resolveArticle: NavigationResolve = Effect.fn("NakafaE2E.resolveArticle")(
       name: "article",
       shell: "app",
       sourceHref,
+      sourceShell: "app",
     } satisfies NavigationTarget;
   }
 );
@@ -388,6 +404,7 @@ const resolveMaterial: NavigationResolve = Effect.fn(
     name: "material",
     shell: "app",
     sourceHref,
+    sourceShell: "app",
   } satisfies NavigationTarget;
 });
 

@@ -30,6 +30,7 @@ import { HOME_TARGET } from "@/lib/routing/target";
 import { createBreadcrumbItems } from "@/lib/seo/breadcrumbs";
 import { createSeoHead, toRouterHead } from "@/lib/seo/head";
 import { runServerEffect } from "@/lib/server/fn";
+import { readStaticData } from "@/lib/static/data";
 
 /**
  * Reads the curriculum chooser of one locale on the server: its cards with their
@@ -94,7 +95,7 @@ const readCurriculumIndex = createServerFn({ method: "GET" })
 /** The curriculum chooser: every track as a card, with its collection data. */
 export const Route = createFileRoute("/$locale/_main/curricula/")({
   loader: ({ params }) =>
-    readCurriculumIndex({ data: { locale: params.locale } }),
+    readStaticData(readCurriculumIndex, { locale: params.locale }),
   head: ({ loaderData }) => {
     if (loaderData === undefined) {
       return {};
